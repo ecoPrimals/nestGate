@@ -56,6 +56,7 @@ impl Default for AiAutomationSettings {
 
 impl AiAutomationSettings {
     /// Create production-optimized AI automation settings
+    #[must_use]
     pub fn production() -> Self {
         Self {
             ai_enabled: true,

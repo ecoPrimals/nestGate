@@ -9,7 +9,8 @@
 /// field assignment mutations.
 // Response builder functions
 pub mod response_builders;
-// Mock data builders for testing
+// Mock data builders for testing (dev-stubs only)
+#[cfg(feature = "dev-stubs")]
 pub mod mock_builders;
 // Configuration and utility builders
 pub mod config_builders;
@@ -19,5 +20,6 @@ pub mod json_builders;
 pub mod tests;
 // Re-export all public builder functions for backward compatibility
 pub use json_builders::build_json_response;
+#[cfg(feature = "dev-stubs")]
 pub use mock_builders::{build_access_grant, build_mock_resource_allocation};
 pub use response_builders::{build_error_response, build_success_response};

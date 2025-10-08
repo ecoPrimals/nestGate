@@ -175,8 +175,7 @@ impl IntelligenceAdapter {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn analyze_data(&self, task: &AnalysisTask) -> Result<AnalysisResults>  {
+                pub fn analyze_data(&self, task: &AnalysisTask) -> Result<AnalysisResults>  {
         info!(
             "🧠 Analyzing data via intelligence adapter: {} ({})",
             task.task_id, task.analysis_type
@@ -338,8 +337,7 @@ impl IntelligenceAdapter {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn discover_models(&self, model_type: Option<String>) -> Result<Vec<ModelMetadata>>  {
+                pub fn discover_models(&self, model_type: Option<String>) -> Result<Vec<ModelMetadata>>  {
         info!("🧠 Discovering AI models via intelligence adapter");
 
         let discovery_request = serde_json::json!({
@@ -411,8 +409,7 @@ impl IntelligenceAdapter {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn health_check(&self) -> Result<bool>  {
+                pub fn health_check(&self) -> Result<bool>  {
         info!("🧠 Performing intelligence adapter health check");
 
         let health_request = serde_json::json!({

@@ -12,7 +12,7 @@ use crate::constants::{
 
 /// **SERVICE TYPES** - Core service identification and management
 pub mod service {
-    use super::*;
+    use super::{Deserialize, HashMap, Serialize, SystemTime, DEFAULT_INSTANCE_NAME};
 
     /// Service identification
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]

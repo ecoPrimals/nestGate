@@ -11,8 +11,8 @@ pub type CacheProviderBox = Box<dyn CacheProvider<String, Vec<u8>>>;
 pub type CacheDataMap = Arc<RwLock<HashMap<String, Vec<u8>>>>;
 
 /// Cache provider trait for different storage tiers
-/// **NOTE**: Keeping async_trait for dyn compatibility - required for Box<dyn CacheProvider>
-/// This demonstrates that not all async_trait usage can be modernized when dynamic dispatch is needed
+/// **NOTE**: Keeping `async_trait` for dyn compatibility - required for Box<dyn CacheProvider>
+/// This demonstrates that not all `async_trait` usage can be modernized when dynamic dispatch is needed
 #[async_trait::async_trait]
 pub trait CacheProvider<K, V>: Send + Sync {
     /// Store a value in the cache
@@ -202,7 +202,6 @@ impl MultiTierCache {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub fn maintenance(&mut self) -> Result<()> {
         // Implementation would perform maintenance tasks
         // For now, this is a placeholder
@@ -217,7 +216,6 @@ impl MultiTierCache {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub fn flush(&mut self) -> Result<()> {
         // Implementation would flush pending writes
         // For now, this is a placeholder
@@ -366,7 +364,7 @@ mod tests {
     #[tokio::test]
     async fn test_multi_tier_cache_basic_operations() -> crate::Result<()> {
         let config = MultiTierCacheConfig::default();
-        let cache = MultiTierCache::new(config).await.unwrap_or_else(|e| {
+        let cache = MultiTierCache::new(config).unwrap_or_else(|e| {
             tracing::error!("Failed to create multi-tier cache: {:?}", e);
             panic!("Cannot proceed with test without cache");
         });
@@ -420,7 +418,7 @@ mod tests {
         config.cold_tier_config.cache_dir =
             temp_dir.path().join("cold").to_string_lossy().to_string();
 
-        let cache = MultiTierCache::new(config).await.unwrap_or_else(|e| {
+        let cache = MultiTierCache::new(config).unwrap_or_else(|e| {
             tracing::error!("Failed to create multi-tier cache: {:?}", e);
             panic!("Cannot proceed with test without cache");
         });
@@ -467,7 +465,7 @@ mod tests {
         assert_eq!(value2, Some(b"value2".to_vec()));
 
         // Test stats
-        let stats = cache.stats().await.map_err(|e| {
+        let stats = cache.stats().map_err(|e| {
             tracing::error!("Async task failed: {:?}", e);
             crate::NestGateError::internal_error(
                 format!("Task execution failed: {e:?}"),
@@ -499,7 +497,7 @@ mod tests {
     #[tokio::test]
     async fn test_tier_promotion_simulation() -> crate::Result<()> {
         let config = MultiTierCacheConfig::default();
-        let cache = MultiTierCache::new(config).await.map_err(|e| {
+        let cache = MultiTierCache::new(config).map_err(|e| {
             tracing::error!("Async task failed: {:?}", e);
             crate::NestGateError::internal_error(
                 format!("Task execution failed: {e:?}"),
@@ -534,7 +532,7 @@ mod tests {
         }
 
         // In real implementation, we would verify the key moved to hot tier
-        let stats = cache.stats().await.map_err(|e| {
+        let stats = cache.stats().map_err(|e| {
             tracing::error!("Async task failed: {:?}", e);
             crate::NestGateError::internal_error(
                 format!("Task execution failed: {e:?}"),

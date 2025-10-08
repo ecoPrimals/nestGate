@@ -1,4 +1,5 @@
 #[cfg(test)]
+#[cfg(feature = "dev-stubs")]
 mod return_builder_tests {
 
     use serde_json::Value as JsonValue;

@@ -1,20 +1,39 @@
-//! **ZFS STUB IMPLEMENTATION**
+//! **ZFS STUB IMPLEMENTATION - DEVELOPMENT ONLY**
 //!
-//! Provides stub implementations for ZFS operations during development and testing.
-//! This module contains mock ZFS services and data structures that simulate real ZFS behavior.
+//! ⚠️ **WARNING: THIS IS NOT PRODUCTION CODE** ⚠️
+//!
+//! This module provides stub implementations for ZFS operations during development and testing.
+//! All data returned is HARDCODED and does not reflect actual system state.
+//!
+//! **DO NOT USE IN PRODUCTION** - Use real ZFS implementations from `nestgate-zfs` crate instead.
+//!
+//! # Production Implementations
+//!
+//! For production use, see:
+//! - `nestgate_zfs::operations::production::ProductionZfsOperations` - Real command execution
+//! - `nestgate_zfs::RealZfsOperations` - Actual ZFS commands  
+//! - `nestgate_zfs::zero_cost::ProductionZfsManager` - Zero-cost production manager
+//!
+//! # Feature Gates
+//!
+//! This module is only available with the `dev-stubs` feature flag.
+//! Production builds will NOT include this code.
+
+#![cfg(feature = "dev-stubs")]
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use tracing::{debug, info};
 
-/// **ZFS CONFIGURATION**
+/// **ZFS CONFIGURATION (Development Stub)**
 ///
-/// Configuration structure for ZFS operations and service initialization.
+/// Configuration structure for ZFS stub operations during development.
+/// This is NOT production configuration - see `nestgate-zfs` for real implementations.
 #[derive(Debug, Clone)]
 pub struct ZfsConfig {
-    /// List of available ZFS pools
+    /// List of available ZFS pools (hardcoded for development)
     pub pools: Vec<String>,
-    /// Mapping of datasets to their parent pools
+    /// Mapping of datasets to their parent pools (hardcoded for development)
     pub datasets: HashMap<String, String>,
 }
 
@@ -27,44 +46,82 @@ impl Default for ZfsConfig {
     }
 }
 
-/// **PRODUCTION ZFS MANAGER**
+/// **DEVELOPMENT ZFS STUB MANAGER**
 ///
-/// Main production-ready ZFS management service providing high-level operations.
+/// ⚠️ **THIS IS A STUB - NOT FOR PRODUCTION USE** ⚠️
+/// ⚠️ **ONLY AVAILABLE WITH `dev-stubs` FEATURE** ⚠️
+///
+/// This manager returns HARDCODED mock data for development and testing purposes only.
+/// All operations return fake data and do not interact with real ZFS systems.
+///
+/// **For production use**, see:
+/// - `nestgate_zfs::operations::production::ProductionZfsOperations`
+/// - `nestgate_zfs::RealZfsOperations`
+/// - `nestgate_zfs::zero_cost::ProductionZfsManager`
+///
+/// # Development Use Only
+///
+/// This stub is provided to enable:
+/// - Local development without ZFS installed
+/// - Unit testing of API endpoints  
+/// - Integration testing with predictable data
+///
+/// **Never deploy this to production environments.**
+///
+/// # Naming Note
+///
+/// Despite the name `ProductionZfsManager`, this is a development stub.
+/// The name exists for API compatibility during development.
+/// Use the real `nestgate_zfs::operations::production::ProductionZfsOperations` for production.
 #[derive(Debug, Clone)]
+#[deprecated(
+    since = "0.1.0",
+    note = "Development stub only. Use nestgate_zfs::operations::production::ProductionZfsOperations for production."
+)]
 pub struct ProductionZfsManager {
     config: ZfsConfig,
 }
 
 impl ProductionZfsManager {
     /// Create a new production ZFS manager with the given configuration
-    pub fn new(config: ZfsConfig) -> Self {
+    #[must_use]
+    pub const fn new(config: ZfsConfig) -> Self {
         Self { config }
     }
 
-    /// List all available ZFS pools in the system
+    /// List all available ZFS pools (STUB - returns hardcoded data)
+    ///
+    /// ⚠️ **STUB IMPLEMENTATION** - Returns hardcoded mock data only.
+    /// Does NOT query real ZFS systems.
+    ///
+    /// # Returns
+    ///
+    /// Always returns 2 hardcoded pools:
+    /// - "tank" - 1TB total, 500GB used, 500GB available
+    /// - "backup" - 1TB total, 500GB used, 500GB available
     ///
     /// # Errors
     ///
-    /// This function will return an error if:
-    /// - The operation fails due to invalid input
-    /// - System resources are unavailable
-    /// - Network or I/O errors occur
-    #[must_use]
+    /// Currently never returns an error (stub implementation).
+    ///
+    /// # Development Note
+    ///
+    /// For production use, replace with real ZFS pool detection from `nestgate-zfs` crate.
     pub fn list_pools(&self) -> Result<Vec<ZeroCostPoolInfo>, ZfsError> {
-        debug!("Listing ZFS pools");
+        debug!("STUB: Listing ZFS pools (returning hardcoded data)");
         Ok(self
             .config
             .pools
             .iter()
             .map(|name| ZeroCostPoolInfo {
                 name: name.clone(),
-                status: "ONLINE".to_string(),
+                status: "ONLINE".to_string(), // HARDCODED
                 capacity: PoolCapacity {
-                    total: 1_000_000_000_000,   // 1TB
-                    used: 500_000_000_000,      // 500GB
-                    available: 500_000_000_000, // 500GB
+                    total: 1_000_000_000_000,   // HARDCODED: 1TB
+                    used: 500_000_000_000,      // HARDCODED: 500GB
+                    available: 500_000_000_000, // HARDCODED: 500GB
                 },
-                health: PoolHealth::Online,
+                health: PoolHealth::Online, // HARDCODED
             })
             .collect())
     }
@@ -77,7 +134,6 @@ impl ProductionZfsManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub fn create_dataset(&self, _name: &str) -> Result<(), ZfsError> {
         info!("Creating dataset: {}", _name);
         Ok(())
@@ -91,7 +147,6 @@ impl ProductionZfsManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub fn get_pool_status(&self, _pool: &str) -> Result<String, ZfsError> {
         Ok("ONLINE".to_string())
     }
@@ -129,7 +184,6 @@ impl ProductionZfsManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub fn list_datasets(&self, _pool: &str) -> Result<Vec<ZeroCostDatasetInfo>, ZfsError> {
         Ok(vec![ZeroCostDatasetInfo {
             name: format!("{_pool}/dataset1"),
@@ -154,7 +208,7 @@ impl ProductionZfsManager {
         _tier: nestgate_core::canonical_types::StorageTier,
     ) -> Result<ZeroCostDatasetInfo, ZfsError> {
         Ok(ZeroCostDatasetInfo {
-            name: format!("{}/{}", _pool, _name),
+            name: format!("{_pool}/{_name}"),
             used: 0,
             available: 1_000_000_000,
             mounted: true,
@@ -192,7 +246,7 @@ impl ProductionZfsManager {
         _name: &str,
     ) -> Result<ZeroCostSnapshotInfo, ZfsError> {
         Ok(ZeroCostSnapshotInfo {
-            name: format!("{}@{}", _dataset, _name),
+            name: format!("{_dataset}@{_name}"),
             created: chrono::Utc::now().to_rfc3339(),
             size: 0,
             referenced: 0,
@@ -243,7 +297,8 @@ pub enum PoolHealth {
 
 impl PoolHealth {
     /// Convert pool health to string representation
-    pub fn as_str(&self) -> &str {
+    #[must_use]
+    pub const fn as_str(&self) -> &str {
         match self {
             Self::Online => "ONLINE",
             Self::Degraded => "DEGRADED",
@@ -252,6 +307,7 @@ impl PoolHealth {
     }
 
     /// Convert pool health to lowercase string
+    #[must_use]
     pub fn to_lowercase(&self) -> String {
         self.as_str().to_lowercase()
     }
@@ -298,9 +354,16 @@ pub struct SnapshotInfo {
 #[derive(Debug, Clone)]
 pub struct ZeroCostZfsOperations;
 
+impl Default for ZeroCostZfsOperations {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ZeroCostZfsOperations {
     /// Create a new zero-cost ZFS operations instance
-    pub fn new() -> Self {
+    #[must_use]
+    pub const fn new() -> Self {
         Self
     }
 
@@ -312,7 +375,6 @@ impl ZeroCostZfsOperations {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub fn get_system_info(&self) -> Result<HashMap<String, String>, ZfsError> {
         let mut info = HashMap::new();
         info.insert("version".to_string(), "2.1.0".to_string());
@@ -328,7 +390,6 @@ impl ZeroCostZfsOperations {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub fn list_pools(&self) -> Result<Vec<ZeroCostPoolInfo>, ZfsError> {
         Ok(vec![
             ZeroCostPoolInfo {
@@ -387,7 +448,6 @@ impl ZeroCostZfsOperations {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub fn list_datasets(&self, _pool: &str) -> Result<Vec<ZeroCostDatasetInfo>, ZfsError> {
         Ok(vec![ZeroCostDatasetInfo {
             name: format!("{_pool}/dataset1"),
@@ -412,7 +472,7 @@ impl ZeroCostZfsOperations {
         _tier: nestgate_core::canonical_types::StorageTier,
     ) -> Result<ZeroCostDatasetInfo, ZfsError> {
         Ok(ZeroCostDatasetInfo {
-            name: format!("{}/{}", _pool, _name),
+            name: format!("{_pool}/{_name}"),
             used: 0,
             available: 1_000_000_000,
             mounted: true,
@@ -450,7 +510,7 @@ impl ZeroCostZfsOperations {
         _name: &str,
     ) -> Result<ZeroCostSnapshotInfo, ZfsError> {
         Ok(ZeroCostSnapshotInfo {
-            name: format!("{}@{}", _dataset, _name),
+            name: format!("{_dataset}@{_name}"),
             created: chrono::Utc::now().to_rfc3339(),
             size: 0,
             referenced: 0,
@@ -485,7 +545,6 @@ impl ZeroCostZfsOperations {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub fn destroy_snapshot(&self, _snapshot: &str) -> Result<(), ZfsError> {
         info!("Destroying snapshot: {}", _snapshot);
         Ok(())
@@ -498,9 +557,16 @@ impl ZeroCostZfsOperations {
 #[derive(Debug, Clone)]
 pub struct PerformanceOptimizer;
 
+impl Default for PerformanceOptimizer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl PerformanceOptimizer {
     /// Create a new performance optimizer instance
-    pub fn new() -> Self {
+    #[must_use]
+    pub const fn new() -> Self {
         Self
     }
 
@@ -512,7 +578,6 @@ impl PerformanceOptimizer {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub fn optimize_performance(&self) -> Result<(), ZfsError> {
         info!("Running ZFS performance optimization");
         Ok(())
@@ -525,14 +590,22 @@ impl PerformanceOptimizer {
 #[derive(Debug, Clone)]
 pub struct ConfidenceCalculator;
 
+impl Default for ConfidenceCalculator {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ConfidenceCalculator {
     /// Create a new confidence calculator instance
-    pub fn new() -> Self {
+    #[must_use]
+    pub const fn new() -> Self {
         Self
     }
 
     /// Calculate confidence score based on provided metrics
-    pub fn calculate_confidence(&self, _metrics: &HashMap<String, f64>) -> f64 {
+    #[must_use]
+    pub const fn calculate_confidence(&self, _metrics: &HashMap<String, f64>) -> f64 {
         0.85 // Placeholder confidence score
     }
 }
@@ -606,7 +679,7 @@ impl ZeroCostZfsOperations {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn check_zfs_available() -> Result<bool, ZfsError> {
+    pub const fn check_zfs_available() -> Result<bool, ZfsError> {
         // Placeholder implementation - would check actual ZFS availability
         Ok(true)
     }

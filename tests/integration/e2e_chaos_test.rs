@@ -1,5 +1,5 @@
 use crate::common::config::{UnifiedTestConfig, TestChaosSettings, ChaosType};
-use crate::canonical_modernization::UnifiedServiceType;
+use tests::canonical_modernization::UnifiedServiceType;
 use nestgate_core::{NestGateError, Result};
 use std::collections::HashMap;
 

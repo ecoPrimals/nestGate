@@ -30,6 +30,7 @@ pub use zfs_compatibility::DevEnvironmentZfsService;
 
 /// Check if we're running in a development environment without storage hardware
 #[cfg(feature = "dev-environment-fallbacks")]
+#[must_use]
 pub fn is_dev_environment() -> bool {
     HardwareEnvironmentDetector::is_development_environment()
 }
@@ -72,6 +73,7 @@ cargo build --features dev-environment-fallbacks
 );
 
 /// Runtime information about feature availability
+#[must_use]
 pub fn feature_info() -> FeatureInfo {
     FeatureInfo {
         dev_environment_fallbacks: cfg!(feature = "dev-environment-fallbacks"),

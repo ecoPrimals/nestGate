@@ -31,7 +31,6 @@ impl CertificateManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub fn get_certificate_info(&self, cert_id: &str) -> Result<HashMap<String, String>> {
         // Use the universal adapter for certificate operations
         let mut info = HashMap::new();

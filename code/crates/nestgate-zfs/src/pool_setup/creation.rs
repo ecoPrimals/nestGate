@@ -14,17 +14,19 @@ pub struct PoolCreator {
 
 impl PoolCreator {
     /// Create a new pool creator
+    #[must_use]
     pub fn new() -> Self {
         Self { dry_run: false }
     }
 
     /// Create a new pool creator in dry-run mode
+    #[must_use]
     pub fn new_dry_run() -> Self {
         Self { dry_run: true }
     }
 
     /// Create a ZFS pool with safety checks
-    pub fn create_pool_safe(&self, config: &PoolSetupConfig) -> CoreResult<PoolSetupResult> {
+    pub async fn create_pool_safe(&self, config: &PoolSetupConfig) -> CoreResult<PoolSetupResult> {
         info!("Creating ZFS pool: {}", config.pool_name);
 
         if self.dry_run {
@@ -104,7 +106,7 @@ impl PoolCreator {
                     "create_pool_internal",
                 ));
             }
-            cmd.args(["-o", &format!("{}={}", key, value)]);
+            cmd.args(["-o", &format!("{key}={value}")]);
         }
 
         // Add default dataset properties
@@ -193,7 +195,7 @@ impl PoolCreator {
     }
 
     /// Import an existing ZFS pool
-    pub fn import_pool(&self, pool_name: &str) -> CoreResult<PoolSetupResult> {
+    pub async fn import_pool(&self, pool_name: &str) -> CoreResult<PoolSetupResult> {
         info!("Importing ZFS pool: {}", pool_name);
 
         if self.dry_run {
@@ -237,7 +239,7 @@ impl PoolCreator {
     }
 
     /// Destroy a ZFS pool
-    pub fn destroy_pool(&self, pool_name: &str, force: bool) -> CoreResult<()> {
+    pub async fn destroy_pool(&self, pool_name: &str, force: bool) -> CoreResult<()> {
         warn!("Destroying ZFS pool: {} (force: {})", pool_name, force);
 
         if self.dry_run {

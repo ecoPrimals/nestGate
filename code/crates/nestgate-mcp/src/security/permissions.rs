@@ -101,8 +101,7 @@ impl PermissionManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn add_role(&mut self, role: Role) -> Result<()>  {
+                pub fn add_role(&mut self, role: Role) -> Result<()>  {
         let name = role.name.clone();
         self.roles.insert(name, role);
         Ok(())
@@ -121,11 +120,10 @@ impl PermissionManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn assign_role(&mut self, user_id: &str, role_name: &str) -> Result<()>  {
+                pub fn assign_role(&mut self, user_id: &str, role_name: &str) -> Result<()>  {
         if !self.roles.contains_key(role_name) {
             return Err(NestGateError::mcp_error(
-                &format!("Role '{"actual_error_details"}' does not exist"),
+                &format!("Role '{e}' does not exist"),
                 "assign_role",
                 None,
             ));
@@ -147,8 +145,7 @@ impl PermissionManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn remove_role(&mut self, user_id: &str, role_name: &str) -> Result<()>  {
+                pub fn remove_role(&mut self, user_id: &str, role_name: &str) -> Result<()>  {
         if let Some(user_roles) = self.user_roles.get_mut(user_id) {
             user_roles.remove(role_name);
         }

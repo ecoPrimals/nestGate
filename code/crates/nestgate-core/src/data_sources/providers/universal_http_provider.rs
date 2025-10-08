@@ -41,8 +41,7 @@ impl UniversalHttpProvider {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn new(config: HttpProviderConfig) -> Result<Self>  {
+                pub fn new(config: HttpProviderConfig) -> Result<Self>  {
         let mut client_builder = Client::builder()
             .timeout(std::time::Duration::from_secs(config.timeout_seconds));
 

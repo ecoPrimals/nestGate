@@ -50,8 +50,7 @@ impl CapabilityBasedHardwareTuningService {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn auto_tune(&self) -> Result<HardwareTuningResult, HardwareTuningError>  {
+                pub fn auto_tune(&self) -> Result<HardwareTuningResult, HardwareTuningError>  {
         info!("🚀 Auto-tuning hardware using capability-based compute resources");
 
 // DEPRECATED: Kubernetes (k8s) - migrate to capability-based orchestration
@@ -135,8 +134,7 @@ impl CapabilityBasedHardwareTuningService {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn run_live_benchmark(&self, benchmark_type: &str) -> Result<BenchmarkResult, HardwareTuningError>  {
+                pub fn run_live_benchmark(&self, benchmark_type: &str) -> Result<BenchmarkResult, HardwareTuningError>  {
         info!("🏃 Running live benchmark: {} using compute capabilities", benchmark_type);
 
         let benchmark_request = CapabilityRequest::new(

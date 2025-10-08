@@ -69,6 +69,7 @@ fastrand = "2.0"
 tokio-test = { workspace = true }
 tempfile = "3.8"
 criterion = { version = "0.5", features = ["html_reports"] }
+serial_test = "3.0"
 
 [[bench]]
 name = "performance_validation"
@@ -94,4 +95,6 @@ security-scanning = []
 experimental-features = []
 # **MOCK SEPARATION** - Test-only features
 mock-services = []
-test-doubles = [] 
+test-doubles = []
+# Development stubs - include mock/stub implementations for testing (CRITICAL for production safety)
+dev-stubs = [] 

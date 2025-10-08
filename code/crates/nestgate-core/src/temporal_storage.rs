@@ -400,7 +400,6 @@ impl TemporalDevice {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub fn auto_detect_any_storage() -> Result<Vec<TemporalDevice>> {
         let mut devices = Vec::new();
 
@@ -438,16 +437,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_temporal_device_detection() {
-        let devices = TemporalDevice::auto_detect_any_storage()
-            .await
-            .unwrap_or_else(|e| {
-                tracing::error!(
-                    "Expect failed ({}): {:?}",
-                    "Failed to detect temporal devices in test",
-                    e
-                );
-                vec![] // Return empty vector on error for test
-            });
+        let devices = TemporalDevice::auto_detect_any_storage().unwrap_or_else(|e| {
+            tracing::error!(
+                "Expect failed ({}): {:?}",
+                "Failed to detect temporal devices in test",
+                e
+            );
+            vec![] // Return empty vector on error for test
+        });
         // Test passes if no errors occur
         assert_eq!(devices.len(), 0); // Currently returns empty vec
     }

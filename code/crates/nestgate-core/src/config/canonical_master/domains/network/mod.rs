@@ -156,12 +156,12 @@ impl Default for CanonicalNetworkConfig {
 
 // ==================== BACKWARD COMPATIBILITY ALIASES ====================
 
-/// Backward compatibility alias for existing NetworkConfig usage
-/// **MIGRATION PATH**: All NetworkConfig variants should migrate to CanonicalNetworkConfig
+/// Backward compatibility alias for existing `NetworkConfig` usage
+/// **MIGRATION PATH**: All `NetworkConfig` variants should migrate to `CanonicalNetworkConfig`
 pub type NetworkConfig = CanonicalNetworkConfig;
 
-/// Backward compatibility alias for UnifiedNetworkConfig
+/// Backward compatibility alias for `UnifiedNetworkConfig`
 pub type UnifiedNetworkConfig = CanonicalNetworkConfig;
 
-/// Backward compatibility alias for MinimalNetworkConfig
+/// Backward compatibility alias for `MinimalNetworkConfig`
 pub type MinimalNetworkConfig = CanonicalNetworkConfig;

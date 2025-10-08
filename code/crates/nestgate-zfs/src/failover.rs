@@ -54,7 +54,7 @@ pub enum PoolState {
 
 /// **CANONICAL FAILOVER CONFIGURATION**
 ///
-/// Modern replacement for the deprecated FailoverConfig.
+/// Modern replacement for the deprecated `FailoverConfig`.
 /// Integrated into the canonical ZFS configuration system.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CanonicalFailoverConfig {
@@ -105,6 +105,7 @@ pub struct PoolTakeoverManager {
 
 impl PoolTakeoverManager {
     /// Create a new pool takeover manager
+    #[must_use]
     pub fn new(
         config: ZfsConfig,
         failover_config: CanonicalFailoverConfig,
@@ -126,8 +127,7 @@ impl PoolTakeoverManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
-    pub fn attempt_pool_takeover(&self, failed_node_id: &str) -> Result<Vec<String>> {
+    pub async fn attempt_pool_takeover(&self, failed_node_id: &str) -> Result<Vec<String>> {
         info!(
             "Attempting pool takeover from failed node: {}",
             failed_node_id
@@ -151,14 +151,14 @@ impl PoolTakeoverManager {
 
         // 3. Import pools with force if necessary
         let mut imported_pools = Vec::new();
-        for pool_name in target_pools {
-            match self.force_import_pool(&pool_name).await {
+        for pool_name in &target_pools {
+            match self.force_import_pool(pool_name).await {
                 Ok(()) => {
                     info!("Successfully imported pool: {}", pool_name);
-                    imported_pools.push(pool_name.clone());
+                    imported_pools.push(pool_name.to_string());
 
                     // Update pool metadata
-                    self.update_pool_metadata(&pool_name, PoolFailoverState::Active)
+                    self.update_pool_metadata(pool_name, PoolFailoverState::Active)
                         .await;
                 }
                 Err(e) => {
@@ -339,8 +339,7 @@ impl PoolTakeoverManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
-    pub fn export_pool(&self, pool_name: &str) -> Result<()> {
+    pub async fn export_pool(&self, pool_name: &str) -> Result<()> {
         info!("Exporting pool for handover: {}", pool_name);
 
         let output = TokioCommand::new("zpool")

@@ -37,7 +37,9 @@ pub struct TeamInfo {
 /// **CREATE TEAM HANDLER**
 ///
 /// Create a new team with the specified configuration.
-pub fn create_team(Json(request): Json<CreateTeamRequest>) -> Result<Json<TeamInfo>, StatusCode> {
+pub async fn create_team(
+    Json(request): Json<CreateTeamRequest>,
+) -> Result<Json<TeamInfo>, StatusCode> {
     let team = TeamInfo {
         id: format!(
             "team_{}",

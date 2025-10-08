@@ -50,8 +50,7 @@ impl<T: Send + 'static> ConnectionGuard<T> {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn connection_mut(&mut self) -> Result<&mut T>  {
+                pub fn connection_mut(&mut self) -> Result<&mut T>  {
         self.connection
             .as_mut()
             .ok_or_else(|| crate::NestGateError::internal_error(
@@ -68,8 +67,7 @@ impl<T: Send + 'static> ConnectionGuard<T> {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn take(mut self) -> Result<T>  {
+                pub fn take(mut self) -> Result<T>  {
         self.connection
             .take()
             .ok_or_else(|| crate::NestGateError::internal_error(

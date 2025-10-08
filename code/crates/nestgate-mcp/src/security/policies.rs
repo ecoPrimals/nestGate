@@ -173,8 +173,7 @@ impl PolicyManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn add_policy(&mut self, policy: SecurityPolicy) -> Result<()>  {
+                pub fn add_policy(&mut self, policy: SecurityPolicy) -> Result<()>  {
         let name = policy.name.clone();
         self.policies.insert(name, policy);
         Ok(())
@@ -203,11 +202,10 @@ impl PolicyManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn set_default_policy(&mut self, name: &str) -> Result<()>  {
+                pub fn set_default_policy(&mut self, name: &str) -> Result<()>  {
         if !self.policies.contains_key(name) {
             return Err(NestGateError::mcp_error(
-                &format!("Policy '{"actual_error_details"}' does not exist"),
+                &format!("Policy '{e}' does not exist"),
                 "set_default_policy",
                 None,
             ));
@@ -224,8 +222,7 @@ impl PolicyManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn remove_policy(&mut self, name: &str) -> Result<()>  {
+                pub fn remove_policy(&mut self, name: &str) -> Result<()>  {
         if name == self.default_policy {
             return Err(NestGateError::mcp_error(
                 "Cannot remove the default policy",
@@ -258,7 +255,7 @@ impl PolicyManager {
     ) -> Result<bool>  {
         let policy = self.get_policy(policy_name).ok_or_else(|| {
             NestGateError::mcp_error(
-                &format!("Policy '{"actual_error_details"}' not found"),
+                &format!("Policy '{e}' not found"),
                 "validate_access",
                 None,
             )

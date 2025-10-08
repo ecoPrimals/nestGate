@@ -13,6 +13,9 @@
 //
 // **NO HARDCODED CONNECTIONS:** All inter-primal communication goes through this adapter.
 
+pub mod config;
+pub mod discovery;
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::SystemTime;
@@ -23,7 +26,7 @@ pub use UniversalAdapter as PrimalAgnosticAdapter;
 
 // **MODULE STRUCTURE** - Organize exports for compatibility
 pub mod types {
-    use super::*;
+    use super::{Deserialize, Serialize};
 
     pub use super::CapabilityInfo;
 
@@ -68,37 +71,8 @@ pub mod canonical {
     pub use super::CapabilityRequest as CanonicalCapabilityRequest;
 }
 
-pub mod stats {
-    use std::time::SystemTime;
-
-    #[derive(Debug, Clone)]
-    pub struct AdapterStats {
-        pub requests_total: u64,
-        pub requests_successful: u64,
-        pub requests_failed: u64,
-        pub average_latency_ms: f64,
-        pub last_updated: SystemTime,
-    }
-
-    impl AdapterStats {
-        #[must_use]
-        pub fn new() -> Self {
-            Self {
-                requests_total: 0,
-                requests_successful: 0,
-                requests_failed: 0,
-                average_latency_ms: 0.0,
-                last_updated: SystemTime::now(),
-            }
-        }
-    }
-
-    impl Default for AdapterStats {
-        fn default() -> Self {
-            Self::new()
-        }
-    }
-}
+// Use comprehensive stats module from stats.rs file
+pub mod stats;
 
 pub mod consolidated_canonical {
     pub use super::UniversalAdapter as ConsolidatedCanonicalAdapter;
@@ -270,7 +244,6 @@ impl UniversalAdapter {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub fn get_capability(&self, category: &str) -> Result<CapabilityInfo, String> {
         // Check cache first
         if let Some(cached) = self.discovery_cache.get(category) {
@@ -523,7 +496,7 @@ mod tests {
         adapter.discover_capabilities().await.unwrap();
 
         // Test O(1) capability access
-        let storage_capability = adapter.get_capability("storage").await.unwrap();
+        let storage_capability = adapter.get_capability("storage").unwrap();
         assert_eq!(storage_capability.category, "storage");
         assert_eq!(storage_capability.provider, "nestgate-native");
     }

@@ -47,6 +47,7 @@ pub enum FindingSeverity {
 /// Production Readiness Validator
 pub struct ProductionReadinessValidator {
     /// Real ZFS operations handler
+    #[allow(dead_code)]
     real_ops: RealZfsOperations,
 }
 /// Real ZFS operations (placeholder for actual implementation)
@@ -69,7 +70,7 @@ impl RealZfsOperations {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-    pub fn get_pool_status(
+    pub async fn get_pool_status(
         &self,
         pool_name: Option<String>,
     ) -> Result<crate::handlers::ZfsResponse> {
@@ -142,7 +143,7 @@ impl RealZfsOperations {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-    pub fn get_dataset_list(
+    pub async fn get_dataset_list(
         &self,
         pool_name: Option<String>,
     ) -> Result<crate::handlers::ZfsResponse> {
@@ -258,8 +259,7 @@ impl ProductionReadinessValidator {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
-    pub fn assess_production_readiness(&self) -> Result<ProductionReadinessReport> {
+    pub async fn assess_production_readiness(&self) -> Result<ProductionReadinessReport> {
         info!("🔍 Starting comprehensive production readiness assessment...");
         let mut report = ProductionReadinessReport {
             ready_for_production: false,
@@ -453,7 +453,7 @@ mod tests {
         // Should have recommendations
         assert!(!report.recommendations.is_empty());
 
-        println!("Production Readiness Report: {:#?}");
+        println!("Production Readiness Report generated");
         Ok(())
     }
 

@@ -26,7 +26,7 @@ use nestgate_core::error::CanonicalResult as Result;
 /// Provides ZFS-compatible functionality for development environments
 /// without requiring dedicated ZFS storage hardware.
 ///
-/// **This replaces the confusingly-named "MockZfsService"**
+/// **This replaces the confusingly-named "`MockZfsService`"**
 pub struct DevEnvironmentZfsService {
     /// Simulated pools for development
     pools: Arc<tokio::sync::RwLock<HashMap<String, DevPool>>>,

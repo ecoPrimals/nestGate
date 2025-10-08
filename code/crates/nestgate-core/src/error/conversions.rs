@@ -3,7 +3,7 @@
 //! This module provides conversion implementations from standard library
 //! and third-party error types to `NestGate` errors.
 
-use super::variants::core_errors::*;
+use super::variants::core_errors::NestGateUnifiedError;
 
 /// Convert standard I/O errors to `NestGate` errors
 impl From<std::io::Error> for NestGateUnifiedError {

@@ -13,11 +13,11 @@ use tracing::{error, info, warn};
 
 /// Get all workspaces with real ZFS integration
 #[must_use]
-pub fn get_workspaces() -> Result<Json<Value>, StatusCode> {
+pub async fn get_workspaces() -> Result<Json<Value>, StatusCode> {
     info!("📁 Getting all workspaces from ZFS datasets");
     let pool_name =
         std::env::var("NESTGATE_WORKSPACE_POOL").unwrap_or_else(|_| "zfspool".to_string());
-    let workspaces_path = format!("{"actual_error_details"}/workspaces");
+    let workspaces_path = "self.base_url/workspaces".to_string();
 
     // Query ZFS for workspace datasets
     let list_output = Command::new("zfs")
@@ -112,7 +112,7 @@ pub fn get_workspaces() -> Result<Json<Value>, StatusCode> {
 }
 
 /// Create a new workspace with real ZFS dataset creation
-pub fn create_workspace(Json(request): Json<Value>) -> Result<Json<Value>, StatusCode> {
+pub async fn create_workspace(Json(request): Json<Value>) -> Result<Json<Value>, StatusCode> {
     info!("🆕 Creating new workspace: {:?}", request);
     let workspace_name = request
         .get("name")
@@ -206,7 +206,7 @@ pub fn create_workspace(Json(request): Json<Value>) -> Result<Json<Value>, Statu
 }
 
 /// Get workspace details with real ZFS properties
-pub fn get_workspace(Path(workspace_id): Path<String>) -> Result<Json<Value>, StatusCode> {
+pub async fn get_workspace(Path(workspace_id): Path<String>) -> Result<Json<Value>, StatusCode> {
     info!("📋 Getting workspace details: {}", workspace_id);
     // Validate workspace ID
     if workspace_id.is_empty() || workspace_id.contains('/') {
@@ -305,7 +305,7 @@ pub fn get_workspace(Path(workspace_id): Path<String>) -> Result<Json<Value>, St
 }
 
 /// Update workspace configuration with real ZFS properties
-pub fn update_workspace_config(
+pub async fn update_workspace_config(
     Path(workspace_id): Path<String>,
     Json(config): Json<Value>,
 ) -> Result<Json<Value>, StatusCode> {
@@ -360,21 +360,15 @@ pub fn update_workspace_config(
 
         match compression_result {
             Ok(output) if output.status.success() => {
-                updated_properties.push(format!("compression: {"actual_error_details"}"));
+                updated_properties.push("compression: self.base_url".to_string());
                 info!("✅ Updated compression to: {}", compression);
             }
             Ok(output) => {
                 let _error_msg = String::from_utf8_lossy(&output.stderr);
-                errors.push(format!(
-                    "Failed to update compression: {}",
-                    "actual_error_details"
-                ));
+                errors.push("Failed to update compression".to_string());
             }
             Err(_e) => {
-                errors.push(format!(
-                    "Compression update command failed: {}",
-                    "actual_error_details"
-                ));
+                errors.push("Compression update command failed".to_string());
             }
         }
     }
@@ -384,7 +378,7 @@ pub fn update_workspace_config(
         let name_result = Command::new("zfs")
             .args([
                 "set",
-                &format!("org.nestgate:workspace_name={"actual_error_details"}"),
+                "org.nestgate:workspace_name=self.base_url",
                 &dataset_name,
             ])
             .output()
@@ -392,18 +386,15 @@ pub fn update_workspace_config(
 
         match name_result {
             Ok(output) if output.status.success() => {
-                updated_properties.push(format!("name: {"actual_error_details"}"));
+                updated_properties.push("name: self.base_url".to_string());
                 info!("✅ Updated workspace name to: {}", name);
             }
             Ok(output) => {
                 let _error_msg = String::from_utf8_lossy(&output.stderr);
-                errors.push(format!("Failed to update name: {"actual_error_details"}"));
+                errors.push("Failed to update name: self.base_url".to_string());
             }
             Err(_e) => {
-                errors.push(format!(
-                    "Name update command failed: {}",
-                    "actual_error_details"
-                ));
+                errors.push("Name update command failed".to_string());
             }
         }
     }
@@ -438,11 +429,11 @@ pub fn update_workspace_config(
 /// **DELETE WORKSPACE**
 ///
 /// Delete an existing workspace by ID.
-pub fn delete_workspace(Path(workspace_id): Path<String>) -> Result<StatusCode, StatusCode> {
+pub async fn delete_workspace(Path(workspace_id): Path<String>) -> Result<StatusCode, StatusCode> {
     tracing::info!("Deleting workspace: {}", workspace_id);
 
     // Validate workspace ID format
-    if workspace_id.is_empty() || workspace_id.contains("..") || workspace_id.contains("/") {
+    if workspace_id.is_empty() || workspace_id.contains("..") || workspace_id.contains('/') {
         tracing::error!("Invalid workspace ID: {}", workspace_id);
         return Err(StatusCode::BAD_REQUEST);
     }
@@ -452,7 +443,7 @@ pub fn delete_workspace(Path(workspace_id): Path<String>) -> Result<StatusCode, 
 
     // First check if dataset exists
     let check_output = Command::new("zfs")
-        .args(&["list", "-H", "-o", "name", &dataset_name])
+        .args(["list", "-H", "-o", "name", &dataset_name])
         .output()
         .await;
 
@@ -473,7 +464,7 @@ pub fn delete_workspace(Path(workspace_id): Path<String>) -> Result<StatusCode, 
 
     // Delete the ZFS dataset (recursive to handle any child datasets/snapshots)
     let delete_output = Command::new("zfs")
-        .args(&["destroy", "-r", &dataset_name])
+        .args(["destroy", "-r", &dataset_name])
         .output()
         .await;
 
@@ -534,7 +525,7 @@ async fn get_workspace_properties(dataset_name: &str) -> (String, String, String
 async fn get_workspace_details(_workspace_id: &str) -> Value {
     let pool_name =
         std::env::var("NESTGATE_WORKSPACE_POOL").unwrap_or_else(|_| "zfspool".to_string());
-    let dataset_name = format!("{pool_name}/workspaces/{"actual_error_details"}");
+    let dataset_name = format!("{pool_name}/workspaces/self.base_url");
     let props_output = Command::new("zfs")
         .args([
             "get",

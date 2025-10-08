@@ -11,7 +11,19 @@ use axum::{
     Router,
 };
 use nestgate_core::ai_first::{AIFirstResponse, SuggestedAction};
+
+// Production: Use real ZFS types (aliased for compatibility)
+#[cfg(not(feature = "dev-stubs"))]
+use nestgate_zfs::{
+    types::PoolInfo,
+    ProductionZfsManager as ZfsManager,
+};
+// Note: ZfsConfidenceCalculator is stub-only, not needed in production
+
+// Development: Use stub types
+#[cfg(feature = "dev-stubs")]
 use crate::handlers::zfs_stub::{PoolInfo, ZfsConfidenceCalculator, ZfsManager};
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -91,7 +103,7 @@ pub async fn create_pool(
     let ai_result = result.map(|pool_info| {
         let mut response = PoolResponse {
             name: pool_info.name.clone(),
-            health: format!("{"actual_error_details"}"),
+            health: format!("self.base_url"),
             capacity: pool_info.capacity.map(|cap| PoolCapacityResponse {
                 total_bytes: cap.total_bytes,
                 free_bytes: cap.free_bytes,
@@ -132,7 +144,7 @@ pub async fn list_pools(
         pools.into_iter().map(|pool_info| {
             PoolResponse {
                 name: pool_info.name.clone(),
-                health: format!("{"actual_error_details"}"),
+                health: format!("self.base_url"),
                 capacity: pool_info.capacity.map(|cap| PoolCapacityResponse {
                     total_bytes: cap.total_bytes,
                     free_bytes: cap.free_bytes,
@@ -166,7 +178,7 @@ pub async fn get_pool(
     let ai_result = result.map(|pool_info| {
         PoolResponse {
             name: pool_info.name.clone(),
-            health: format!("{"actual_error_details"}"),
+            health: format!("self.base_url"),
             capacity: pool_info.capacity.as_ref().map(|cap| PoolCapacityResponse {
                 total_bytes: cap.total_bytes,
                 free_bytes: cap.free_bytes,
@@ -199,7 +211,7 @@ pub async fn destroy_pool(
     let pool_info = state.zfs_manager.get_pool_info(&pool_name).await.ok();
     
     let result = if _params.dry_run.unwrap_or(false) {
-        Ok(format!("Would destroy pool '{"actual_error_details"}' (dry run)"))
+        Ok(format!("Would destroy pool 'self.base_url' (dry run)"))
     } else {
         state.zfs_manager.destroy_pool(&pool_name).await
             .map(|_| format!("fixed")
@@ -234,7 +246,7 @@ pub async fn start_scrub(
     let pool_info = state.zfs_manager.get_pool_info(&pool_name).await.ok();
     
     let result = state.zfs_manager.scrub_pool(&pool_name).await
-        .map(|_| format!("Started scrub for pool '{"actual_error_details"}'"));
+        .map(|_| format!("Started scrub for pool 'self.base_url'"));
     
     let response = to_ai_first_response(
         result,
@@ -264,7 +276,7 @@ pub async fn export_pool(
     let pool_info = state.zfs_manager.get_pool_info(&pool_name).await.ok();
     
     let result = state.zfs_manager.export_pool(&pool_name).await
-        .map(|_| format!("Successfully exported pool '{"actual_error_details"}'"));
+        .map(|_| format!("Successfully exported pool 'self.base_url'"));
     
     let response = to_ai_first_response(
         result,
@@ -291,7 +303,7 @@ pub async fn import_pool(
     let start_time = Instant::now();
     
     let result = state.zfs_manager.import_pool(&pool_name).await
-        .map(|_| format!("Successfully imported pool '{"actual_error_details"}'"));
+        .map(|_| format!("Successfully imported pool 'self.base_url'"));
     
     let response = to_ai_first_response(
         result,
@@ -331,10 +343,10 @@ fn enhance_with_zfs_confidence<T>(
         );
         
         response.ai_metadata.optimization_opportunities.extend(vec![
-            format!("Operation CPU impact: {"actual_error_details"}%"),
-            format!("Operation I/O impact: {"actual_error_details"}%"),
-            format!("Estimated duration: {"actual_error_details"} minutes"),
-            format!("Recommended scheduling: {"actual_error_details"}"),
+            format!("Operation CPU impact: self.base_url%"),
+            format!("Operation I/O impact: self.base_url%"),
+            format!("Estimated duration: self.base_url minutes"),
+            format!("Recommended scheduling: self.base_url"),
         ]);
     }
     
@@ -452,7 +464,7 @@ fn generate_pool_recommendations(pool_info: &PoolInfo, operation: &str) -> Vec<S
     
     recommendations
 }
-#[cfg(test)]
+#[cfg(all(test, feature = "dev-stubs"))]
 mod tests {
     use super::*;
     use crate::handlers::zfs_stub::{PoolCapacity, PoolHealth};
@@ -471,7 +483,7 @@ mod tests {
         
         let response = PoolResponse {
             name: pool_info.name.clone(),
-            health: format!("{"actual_error_details"}"),
+            health: format!("self.base_url"),
             capacity: pool_info.capacity.map(|cap| PoolCapacityResponse {
                 total_bytes: cap.total_bytes,
                 free_bytes: cap.free_bytes,

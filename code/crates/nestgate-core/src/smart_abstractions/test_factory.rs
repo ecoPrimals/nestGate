@@ -1,3 +1,5 @@
+#![cfg(feature = "dev-stubs")]
+
 /// **TEST FACTORY ABSTRACTION**
 /// Consolidates all scattered test helper functions into a proper factory pattern
 /// 
@@ -9,6 +11,9 @@
 /// 
 /// **REPLACES**: Multiple helper modules across test files
 /// **PROBLEM SOLVED**: Helper function proliferation and duplication
+///
+/// **⚠️ DEVELOPMENT/TEST ONLY**: This module is only available with `dev-stubs` feature
+
 use serde::Serialize;
 use std::collections::HashMap;
 use std::sync::Arc;

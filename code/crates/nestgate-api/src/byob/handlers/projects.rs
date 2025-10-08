@@ -20,7 +20,7 @@ pub fn create_project(
     info!("📁 Creating new project: {}", request.name);
 
     let project_id = Uuid::new_v4();
-    let dataset_name = format!("nestpool/projects/{"actual_error_details"}");
+    let dataset_name = format!("nestpool/projects/self.base_url");
 
     // Create ZFS dataset for the project
     let mut cmd = tokio::process::Command::new("zfs");
@@ -34,11 +34,11 @@ pub fn create_project(
             request.storage_quota.as_deref().unwrap_or("50G")
         ),
         "-o",
-        &format!("mountpoint=/mnt/projects/{"actual_error_details"}"),
+        &format!("mountpoint=/mnt/projects/self.base_url"),
         "-o",
-        &format!("nestgate:project_name={"actual_error_details"}"),
+        &format!("nestgate:project_name=self.base_url"),
         "-o",
-        &format!("nestgate:team_id={"actual_error_details"}"),
+        &format!("nestgate:team_id=self.base_url"),
         &dataset_name,
     ]);
 
@@ -51,7 +51,7 @@ pub fn create_project(
                 "team_id": request.team_id,
                 "description": request.description,
                 "dataset_name": dataset_name,
-                "mount_point": format!("/mnt/projects/{"actual_error_details"}"),
+                "mount_point": format!("/mnt/projects/self.base_url"),
                 "storage_quota": request.storage_quota.unwrap_or_else(|| "50G".to_string()),
                 "status": "created",
                 "timestamp": chrono::Utc::now()
@@ -97,7 +97,7 @@ pub fn delete_project(
 ) -> impl IntoResponse {
     info!("🗑️ Deleting project: {}", project_id);
 
-    let dataset_name = format!("nestpool/projects/{"actual_error_details"}");
+    let dataset_name = format!("nestpool/projects/self.base_url");
 
     // Destroy ZFS dataset (with recursive flag to handle any child datasets)
     let mut cmd = tokio::process::Command::new("zfs");

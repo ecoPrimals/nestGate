@@ -119,7 +119,7 @@ impl HealthChecker {
 
         // Calculate overall health
         let health_score = if total_count > 0 {
-            healthy_count as f64 / total_count as f64
+            f64::from(healthy_count) / f64::from(total_count)
         } else {
             1.0 // No components registered, assume healthy
         };

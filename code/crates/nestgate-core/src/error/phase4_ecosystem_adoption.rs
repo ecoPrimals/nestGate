@@ -257,8 +257,7 @@ impl EcosystemAdoptionManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn run_performance_benchmarks(&mut self) -> Result<(), BenchmarkError>  {
+                pub fn run_performance_benchmarks(&mut self) -> Result<(), BenchmarkError>  {
         // Benchmark error construction
         let error_construction = self.benchmark_error_construction()?;
         self.benchmarks.push(error_construction);

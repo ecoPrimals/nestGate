@@ -23,6 +23,7 @@ pub struct NetworkConfig {
     /// Enable TLS
     pub enable_tls: bool,
 }
+#[allow(deprecated)] // Keeping for backwards compatibility during migration
 impl Default for NetworkConfig {
     fn default() -> Self {
         Self {

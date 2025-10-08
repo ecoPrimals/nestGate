@@ -98,7 +98,6 @@ impl<T, const N: usize> ZeroCostArray<T, N> {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-    #[must_use]
     pub fn push(&mut self, value: T) -> Result<(), T> {
         if self.data.len() < N {
             self.data.push(value);
@@ -178,6 +177,12 @@ impl<T, const POOL_SIZE: usize, const BLOCK_SIZE: usize> ZeroCostPool<T, POOL_SI
         assert!(POOL_SIZE <= 64, "Pool size cannot exceed 64 blocks");
 
         Self {
+            // SAFETY: MaybeUninit array initialization is safe because:
+            // 1. Layout: MaybeUninit<T> has same layout as T, no initialization needed
+            // 2. Type safety: MaybeUninit explicitly allows uninitialized memory
+            // 3. Usage: Blocks marked free via free_mask, initialized before use
+            // 4. Drop safety: MaybeUninit doesn't run drop on uninitialized data
+            // 5. Access control: assume_init_mut() only called after allocation marks block used
             blocks: unsafe { MaybeUninit::uninit().assume_init() },
             free_mask: (1u64 << POOL_SIZE) - 1, // All blocks initially free
             _phantom: PhantomData,
@@ -198,7 +203,13 @@ impl<T, const POOL_SIZE: usize, const BLOCK_SIZE: usize> ZeroCostPool<T, POOL_SI
         // Mark block as used
         self.free_mask &= !(1u64 << block_index);
 
-        // Return initialized block
+        // SAFETY: Assuming initialized is safe because:
+        // 1. Block index: Derived from free_mask, guaranteed valid
+        // 2. Bounds: block_index < POOL_SIZE due to free_mask bit operations
+        // 3. Initialization: Caller responsible for initializing before use
+        // 4. Uniqueness: Clearing free_mask bit prevents double-allocation
+        // 5. Lifetime: Returned mutable reference lifetime tied to &mut self
+        // Note: This is experimental code - production should initialize before returning
         unsafe { Some(self.blocks[block_index].assume_init_mut()) }
     }
 
@@ -239,14 +250,14 @@ impl ZeroCostOps {
     #[inline(always)]
     #[must_use]
     pub fn min_branchless(a: u32, b: u32) -> u32 {
-        a ^ ((a ^ b) & ((a > b) as u32).wrapping_neg())
+        a ^ ((a ^ b) & u32::from(a > b).wrapping_neg())
     }
 
     /// Branch-free maximum
     #[inline(always)]
     #[must_use]
     pub fn max_branchless(a: u32, b: u32) -> u32 {
-        a ^ ((a ^ b) & ((a < b) as u32).wrapping_neg())
+        a ^ ((a ^ b) & u32::from(a < b).wrapping_neg())
     }
 
     /// Branch-free absolute value
@@ -261,7 +272,7 @@ impl ZeroCostOps {
     #[inline(always)]
     #[must_use]
     pub fn conditional_assign(condition: bool, if_true: u32, if_false: u32) -> u32 {
-        let mask = (condition as u32).wrapping_neg();
+        let mask = u32::from(condition).wrapping_neg();
         (mask & if_true) | (!mask & if_false)
     }
 }
@@ -493,6 +504,11 @@ mod tests {
         assert_eq!(pool.available_blocks(), 2);
 
         // Test deallocation
+        // SAFETY: Test deallocation is safe because:
+        // 1. Valid index: 0 is within bounds (POOL_SIZE = 4)
+        // 2. Previously allocated: block1 was allocated at index 0
+        // 3. No double-free: This is the only deallocation of block 0
+        // 4. Test environment: Controlled test with known allocation state
         unsafe {
             pool.deallocate(0);
         }

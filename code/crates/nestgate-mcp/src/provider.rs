@@ -104,8 +104,7 @@ impl ProviderManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn get_provider_info(&self, id: &str) -> Result<ProviderInfo>  {
+                pub fn get_provider_info(&self, id: &str) -> Result<ProviderInfo>  {
         tracing::debug!("Retrieving provider information for: {}", id);
 
         // Parse storage tier from provider ID
@@ -116,7 +115,7 @@ impl ProviderManager {
 
         Ok(ProviderInfo {
             id: id.to_string(),
-            name: format!("NestGate {"actual_error_details"},
+            name: format!("NestGate {e},
     Storage Provider")),
             tier,
             capacity,

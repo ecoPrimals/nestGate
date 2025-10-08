@@ -6,28 +6,28 @@
 //! **UPDATED**: Now using NestGateUnifiedError for all modern patterns
 
 use nestgate_core::error::{
-    // Modern unified error system
-    NestGateUnifiedError,
-    ValidationErrorDetails,
-    NetworkErrorDetails,
-    StorageErrorDetails,
-    SecurityErrorDetails,
-    // Result type aliases
-    ValidationResult,
-    NetworkResult,
-    StorageResult,
-    SecurityResult,
-    // Legacy type for comparison in legacy_patterns module
-    Result as LegacyResult,
-    NestGateError,
     // Ecosystem integration types
     AnyhowResult,
     BoxedResult,
+    NestGateError,
+    // Modern unified error system
+    NestGateUnifiedError,
+    NetworkErrorDetails,
+    NetworkResult,
+    // Legacy type for comparison in legacy_patterns module
+    Result as LegacyResult,
+    SecurityErrorDetails,
+    SecurityResult,
+    StorageErrorDetails,
+    StorageResult,
+    ValidationErrorDetails,
+    // Result type aliases
+    ValidationResult,
 };
 
 use serde::{Deserialize, Serialize};
-use std::time::{Duration, SystemTime};
 use std::collections::HashMap;
+use std::time::{Duration, SystemTime};
 
 // ==================== BEFORE: NON-IDIOMATIC PATTERNS ====================
 
@@ -108,39 +108,45 @@ mod idiomatic_patterns {
     /// ✅ MODERN: Using NestGateUnifiedError with ValidationErrorDetails
     pub fn validate_user_input(input: &str) -> ValidationResult<ValidatedInput> {
         if input.is_empty() {
-            return Err(NestGateUnifiedError::Validation(Box::new(ValidationErrorDetails {
-                message: "Input cannot be empty".to_string(),
-                field: Some("input".to_string()),
-                code: Some("EMPTY_INPUT".to_string()),
-                context: HashMap::new(),
-            })));
+            return Err(NestGateUnifiedError::Validation(Box::new(
+                ValidationErrorDetails {
+                    message: "Input cannot be empty".to_string(),
+                    field: Some("input".to_string()),
+                    code: Some("EMPTY_INPUT".to_string()),
+                    context: HashMap::new(),
+                },
+            )));
         }
 
         if input.len() < 3 {
-            return Err(NestGateUnifiedError::Validation(Box::new(ValidationErrorDetails {
-                message: "Must be at least 3 characters".to_string(),
-                field: Some("input".to_string()),
-                code: Some("TOO_SHORT".to_string()),
-                context: {
-                    let mut ctx = HashMap::new();
-                    ctx.insert("actual_length".to_string(), input.len().to_string());
-                    ctx.insert("min_length".to_string(), "3".to_string());
-                    ctx
+            return Err(NestGateUnifiedError::Validation(Box::new(
+                ValidationErrorDetails {
+                    message: "Must be at least 3 characters".to_string(),
+                    field: Some("input".to_string()),
+                    code: Some("TOO_SHORT".to_string()),
+                    context: {
+                        let mut ctx = HashMap::new();
+                        ctx.insert("actual_length".to_string(), input.len().to_string());
+                        ctx.insert("min_length".to_string(), "3".to_string());
+                        ctx
+                    },
                 },
-            })));
+            )));
         }
 
         if input.contains("@") && !input.contains(".") {
-            return Err(NestGateUnifiedError::Validation(Box::new(ValidationErrorDetails {
-                message: "Invalid email format".to_string(),
-                field: Some("input".to_string()),
-                code: Some("INVALID_EMAIL".to_string()),
-                context: {
-                    let mut ctx = HashMap::new();
-                    ctx.insert("input".to_string(), input.to_string());
-                    ctx
+            return Err(NestGateUnifiedError::Validation(Box::new(
+                ValidationErrorDetails {
+                    message: "Invalid email format".to_string(),
+                    field: Some("input".to_string()),
+                    code: Some("INVALID_EMAIL".to_string()),
+                    context: {
+                        let mut ctx = HashMap::new();
+                        ctx.insert("input".to_string(), input.to_string());
+                        ctx
+                    },
                 },
-            })));
+            )));
         }
 
         Ok(ValidatedInput {
@@ -152,39 +158,45 @@ mod idiomatic_patterns {
     pub fn connect_to_service(address: &str, port: u16) -> NetworkResult<Connection> {
         // Simulate different types of network failures
         match port {
-            80 => Err(NestGateUnifiedError::Network(Box::new(NetworkErrorDetails {
-                message: "Connection refused".to_string(),
-                endpoint: Some(address.to_string()),
-                port: Some(port),
-                protocol: "HTTP".to_string(),
-                network_data: None,
-                context: None,
-            }))),
-            443 => Err(NestGateUnifiedError::Network(Box::new(NetworkErrorDetails {
-                message: "SSL handshake timeout".to_string(),
-                endpoint: Some(address.to_string()),
-                port: Some(port),
-                protocol: "HTTPS".to_string(),
-                network_data: None,
-                context: Some({
-                    let mut ctx = HashMap::new();
-                    ctx.insert("operation".to_string(), "SSL handshake".to_string());
-                    ctx.insert("duration".to_string(), "30s".to_string());
-                    ctx
-                }),
-            }))),
-            8080 => Err(NestGateUnifiedError::Network(Box::new(NetworkErrorDetails {
-                message: "DNS lookup failed".to_string(),
-                endpoint: Some(address.to_string()),
-                port: Some(port),
-                protocol: "HTTP".to_string(),
-                network_data: None,
-                context: Some({
-                    let mut ctx = HashMap::new();
-                    ctx.insert("hostname".to_string(), address.to_string());
-                    ctx
-                }),
-            }))),
+            80 => Err(NestGateUnifiedError::Network(Box::new(
+                NetworkErrorDetails {
+                    message: "Connection refused".to_string(),
+                    endpoint: Some(address.to_string()),
+                    port: Some(port),
+                    protocol: "HTTP".to_string(),
+                    network_data: None,
+                    context: None,
+                },
+            ))),
+            443 => Err(NestGateUnifiedError::Network(Box::new(
+                NetworkErrorDetails {
+                    message: "SSL handshake timeout".to_string(),
+                    endpoint: Some(address.to_string()),
+                    port: Some(port),
+                    protocol: "HTTPS".to_string(),
+                    network_data: None,
+                    context: Some({
+                        let mut ctx = HashMap::new();
+                        ctx.insert("operation".to_string(), "SSL handshake".to_string());
+                        ctx.insert("duration".to_string(), "30s".to_string());
+                        ctx
+                    }),
+                },
+            ))),
+            8080 => Err(NestGateUnifiedError::Network(Box::new(
+                NetworkErrorDetails {
+                    message: "DNS lookup failed".to_string(),
+                    endpoint: Some(address.to_string()),
+                    port: Some(port),
+                    protocol: "HTTP".to_string(),
+                    network_data: None,
+                    context: Some({
+                        let mut ctx = HashMap::new();
+                        ctx.insert("hostname".to_string(), address.to_string());
+                        ctx
+                    }),
+                },
+            ))),
             _ => Ok(Connection {
                 address: address.to_string(),
                 port,
@@ -196,43 +208,49 @@ mod idiomatic_patterns {
     /// ✅ MODERN: Storage operation with NestGateUnifiedError
     pub fn read_config_file(path: &str) -> StorageResult<Config> {
         if !std::path::Path::new(path).exists() {
-            return Err(NestGateUnifiedError::Storage(Box::new(StorageErrorDetails {
-                message: format!("File not found: {}", path),
-                resource: Some(path.to_string()),
-                storage_data: None,
-                operation: Some("read".to_string()),
-                context: None,
-            })));
+            return Err(NestGateUnifiedError::Storage(Box::new(
+                StorageErrorDetails {
+                    message: format!("File not found: {}", path),
+                    resource: Some(path.to_string()),
+                    storage_data: None,
+                    operation: Some("read".to_string()),
+                    context: None,
+                },
+            )));
         }
 
         if path.starts_with("/root/") {
-            return Err(NestGateUnifiedError::Storage(Box::new(StorageErrorDetails {
-                message: "Permission denied".to_string(),
-                resource: Some(path.to_string()),
-                storage_data: None,
-                operation: Some("read".to_string()),
-                context: Some({
-                    let mut ctx = HashMap::new();
-                    ctx.insert("reason".to_string(), "insufficient_permissions".to_string());
-                    ctx
-                }),
-            })));
+            return Err(NestGateUnifiedError::Storage(Box::new(
+                StorageErrorDetails {
+                    message: "Permission denied".to_string(),
+                    resource: Some(path.to_string()),
+                    storage_data: None,
+                    operation: Some("read".to_string()),
+                    context: Some({
+                        let mut ctx = HashMap::new();
+                        ctx.insert("reason".to_string(), "insufficient_permissions".to_string());
+                        ctx
+                    }),
+                },
+            )));
         }
 
         // Simulate disk full error
         if path.contains("large") {
-            return Err(NestGateUnifiedError::Storage(Box::new(StorageErrorDetails {
-                message: "Disk full".to_string(),
-                resource: Some(path.to_string()),
-                storage_data: None,
-                operation: Some("write".to_string()),
-                context: Some({
-                    let mut ctx = HashMap::new();
-                    ctx.insert("required".to_string(), "104857600".to_string()); // 100MB
-                    ctx.insert("available".to_string(), "10485760".to_string()); // 10MB
-                    ctx
-                }),
-            })));
+            return Err(NestGateUnifiedError::Storage(Box::new(
+                StorageErrorDetails {
+                    message: "Disk full".to_string(),
+                    resource: Some(path.to_string()),
+                    storage_data: None,
+                    operation: Some("write".to_string()),
+                    context: Some({
+                        let mut ctx = HashMap::new();
+                        ctx.insert("required".to_string(), "104857600".to_string()); // 100MB
+                        ctx.insert("available".to_string(), "10485760".to_string()); // 10MB
+                        ctx
+                    }),
+                },
+            )));
         }
 
         Ok(Config {
@@ -243,47 +261,56 @@ mod idiomatic_patterns {
     /// ✅ MODERN: Security operation with NestGateUnifiedError
     pub fn authenticate_user(token: &str) -> SecurityResult<User> {
         if token.is_empty() {
-            return Err(NestGateUnifiedError::Security(Box::new(SecurityErrorDetails {
-                message: "Authentication failed: No token provided".to_string(),
-                operation: Some("authenticate".to_string()),
-                principal: Some("unknown".to_string()),
-                security_data: None,
-                context: Some({
-                    let mut ctx = HashMap::new();
-                    ctx.insert("attempt_count".to_string(), "1".to_string());
-                    ctx
-                }),
-            })));
+            return Err(NestGateUnifiedError::Security(Box::new(
+                SecurityErrorDetails {
+                    message: "Authentication failed: No token provided".to_string(),
+                    operation: Some("authenticate".to_string()),
+                    principal: Some("unknown".to_string()),
+                    security_data: None,
+                    context: Some({
+                        let mut ctx = HashMap::new();
+                        ctx.insert("attempt_count".to_string(), "1".to_string());
+                        ctx
+                    }),
+                },
+            )));
         }
 
         if token == "expired_token" {
-            return Err(NestGateUnifiedError::Security(Box::new(SecurityErrorDetails {
-                message: "Token expired".to_string(),
-                operation: Some("authenticate".to_string()),
-                principal: Some("test_user".to_string()),
-                security_data: None,
-                context: Some({
-                    let mut ctx = HashMap::new();
-                    ctx.insert("token_type".to_string(), "JWT".to_string());
-                    ctx.insert("expired_at".to_string(), format!("{:?}", SystemTime::now() - Duration::from_secs(3600)));
-                    ctx
-                }),
-            })));
+            return Err(NestGateUnifiedError::Security(Box::new(
+                SecurityErrorDetails {
+                    message: "Token expired".to_string(),
+                    operation: Some("authenticate".to_string()),
+                    principal: Some("test_user".to_string()),
+                    security_data: None,
+                    context: Some({
+                        let mut ctx = HashMap::new();
+                        ctx.insert("token_type".to_string(), "JWT".to_string());
+                        ctx.insert(
+                            "expired_at".to_string(),
+                            format!("{:?}", SystemTime::now() - Duration::from_secs(3600)),
+                        );
+                        ctx
+                    }),
+                },
+            )));
         }
 
         if token == "invalid_permissions" {
-            return Err(NestGateUnifiedError::Security(Box::new(SecurityErrorDetails {
-                message: "Authorization denied".to_string(),
-                operation: Some("authorize".to_string()),
-                principal: Some("test_user".to_string()),
-                security_data: None,
-                context: Some({
-                    let mut ctx = HashMap::new();
-                    ctx.insert("required_permission".to_string(), "admin".to_string());
-                    ctx.insert("user_permissions".to_string(), "user,read".to_string());
-                    ctx
-                }),
-            })));
+            return Err(NestGateUnifiedError::Security(Box::new(
+                SecurityErrorDetails {
+                    message: "Authorization denied".to_string(),
+                    operation: Some("authorize".to_string()),
+                    principal: Some("test_user".to_string()),
+                    security_data: None,
+                    context: Some({
+                        let mut ctx = HashMap::new();
+                        ctx.insert("required_permission".to_string(), "admin".to_string());
+                        ctx.insert("user_permissions".to_string(), "user,read".to_string());
+                        ctx
+                    }),
+                },
+            )));
         }
 
         Ok(User {
@@ -345,12 +372,14 @@ mod migration_examples {
         // Call legacy function and convert to modern pattern
         match legacy_patterns::validate_user_input_legacy("test") {
             Ok(result) => Ok(result),
-            Err(e) => Err(NestGateUnifiedError::Validation(Box::new(ValidationErrorDetails {
-                message: e.to_string(),
-                field: Some("migrated".to_string()),
-                code: None,
-                context: HashMap::new(),
-            }))),
+            Err(e) => Err(NestGateUnifiedError::Validation(Box::new(
+                ValidationErrorDetails {
+                    message: e.to_string(),
+                    field: Some("migrated".to_string()),
+                    code: None,
+                    context: HashMap::new(),
+                },
+            ))),
         }
     }
 
@@ -359,12 +388,16 @@ mod migration_examples {
         let input = idiomatic_patterns::validate_user_input("test@example.com")?;
         let config = match legacy_patterns::read_config_file_legacy("/etc/config.toml") {
             Ok(cfg) => cfg,
-            Err(e) => return Err(NestGateUnifiedError::Validation(Box::new(ValidationErrorDetails {
-                message: format!("Config loading failed: {}", e),
-                field: Some("config".to_string()),
-                code: None,
-                context: HashMap::new(),
-            }))),
+            Err(e) => {
+                return Err(NestGateUnifiedError::Validation(Box::new(
+                    ValidationErrorDetails {
+                        message: format!("Config loading failed: {}", e),
+                        field: Some("config".to_string()),
+                        code: None,
+                        context: HashMap::new(),
+                    },
+                )))
+            }
         };
 
         Ok(ProcessedData {

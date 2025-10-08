@@ -22,7 +22,10 @@ use tracing::warn;
 use crate::{dataset::ZfsDatasetManager, error::Result, pool::ZfsPoolManager};
 // Removed unresolved monitoring import - using local types
 
-use super::types::*;
+use super::types::{
+    AccessPattern, ArcStatistics, SystemMemoryUsage, ZfsDatasetMetrics, ZfsPerformanceMetrics,
+    ZfsPoolMetrics,
+};
 
 // **CANONICAL MODERNIZATION**: Type aliases to fix clippy complexity warnings
 type PoolMetricsMap = Arc<RwLock<HashMap<String, ZfsPoolMetrics>>>;
@@ -63,6 +66,7 @@ impl RealTimePerformanceMonitor {
     }
 
     /// Get access to metrics cache for testing
+    #[must_use]
     pub fn get_metrics_cache(&self) -> MetricsCacheMap {
         self.metrics_cache.clone()
     }
@@ -73,14 +77,10 @@ impl RealTimePerformanceMonitor {
             return 0.0;
         }
 
-        let n = (values.len() as f64);
+        let n = values.len() as f64;
         let x_sum: f64 = (0..values.len()).map(|i| i as f64).sum();
         let y_sum: f64 = values.iter().sum();
-        let xy_sum: f64 = values
-            .iter()
-            .enumerate()
-            .map(|(i, &y)| i as f64 * y)
-            .sum();
+        let xy_sum: f64 = values.iter().enumerate().map(|(i, &y)| i as f64 * y).sum();
         let x_squared_sum: f64 = (0..values.len()).map(|i| (i as f64).powi(2)).sum();
 
         // Calculate slope using least squares regression
@@ -254,8 +254,7 @@ impl RealTimePerformanceMonitor {
 
                         // Calculate actual compression ratio from used vs logical used
                         if logical_used_bytes > 0 && used_bytes > 0 {
-                            _compression_ratio =
-                                logical_used_bytes as f64 / used_bytes as f64;
+                            _compression_ratio = logical_used_bytes as f64 / used_bytes as f64;
                         }
 
                         // Analyze access pattern based on dataset properties and usage
@@ -447,7 +446,7 @@ impl RealTimePerformanceMonitor {
         // Memory pressure analysis
         let memory_usage_ratios: Vec<f64> = recent_metrics
             .iter()
-            .map(|m| f64::from(m.system_memory.used) / f64::from(m.system_memory.total))
+            .map(|m| m.system_memory.used as f64 / m.system_memory.total as f64)
             .collect();
 
         let memory_trend = Self::calculate_trend(&memory_usage_ratios);

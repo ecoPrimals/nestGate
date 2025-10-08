@@ -21,6 +21,8 @@
 //! - `mocking`: Mock configurations
 //! - `environment`: Test environment configurations
 //! - `global`: Global test settings
+//!
+//! **⚠️ TEST ONLY**: This entire module is only available with `dev-stubs` feature
 
 use serde::{Deserialize, Serialize};
 

@@ -1,5 +1,5 @@
 /// Contains all individual network configuration setting structs.
-/// Extracted from the large unified_network_config.rs to achieve file size compliance.
+/// Extracted from the large `unified_network_config.rs` to achieve file size compliance.
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::net::{IpAddr, SocketAddr};

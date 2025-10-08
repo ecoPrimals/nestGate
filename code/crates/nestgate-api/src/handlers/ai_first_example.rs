@@ -162,7 +162,7 @@ pub fn create_routes() -> Router {
 ///
 /// This endpoint returns standard JSON that gets automatically wrapped
 /// by the AI-First middleware into the ecosystem-standard format.
-pub fn get_storage_info(
+pub async fn get_storage_info(
     Query(_params): Query<StorageQuery>,
 ) -> Result<Json<Vec<StorageInfo>>, StatusCode> {
     // Simulate storage data retrieval
@@ -245,7 +245,9 @@ pub struct PoolOperationRequest {
 ///
 /// This endpoint manually constructs an AI-First response to demonstrate
 /// full control over confidence scores and suggested actions.
-pub fn get_pool_info(Path(pool_name): Path<String>) -> Json<AIFirstResponse<Option<PoolInfo>>> {
+pub async fn get_pool_info(
+    Path(pool_name): Path<String>,
+) -> Json<AIFirstResponse<Option<PoolInfo>>> {
     // Simulate pool lookup
     let pool_info = if pool_name == "main-pool" {
         Some(PoolInfo {
@@ -299,7 +301,7 @@ pub fn get_pool_info(Path(pool_name): Path<String>) -> Json<AIFirstResponse<Opti
                         let mut _params = HashMap::new();
                         _params.insert(
                             "pool_name".to_string(),
-                            serde_json::Value::String(pool_name.clone()),
+                            serde_json::Value::String(pool_name),
                         );
                         _params
                     },
@@ -321,16 +323,13 @@ pub fn get_pool_info(Path(pool_name): Path<String>) -> Json<AIFirstResponse<Opti
 }
 
 /// Execute storage operation - demonstrates error handling with AI-First format
-pub fn execute_storage_operation(
+pub async fn execute_storage_operation(
     Json(request): Json<PoolOperationRequest>,
 ) -> Result<Json<AIFirstResponse<String>>, StatusCode> {
     // Simulate operation execution
     let result = match request.b_operation.as_str() {
         "scrub" => {
-            let _message = format!(
-                "Scrub operation started for pool: {}",
-                "actual_error_details"
-            );
+            let _message = "Scrub operation started for pool".to_string();
 
             let suggestions = vec![SuggestedAction {
                 action_id: "poll_scrub_status".to_string(),
@@ -356,11 +355,11 @@ pub fn execute_storage_operation(
             ai_response_with_actions(_message, suggestions)
         }
         "snapshot" => {
-            let _message = format!("Snapshot created for pool: {"actual_error_details"}");
+            let _message = "Snapshot created for pool: self.base_url".to_string();
             ai_success_with_confidence(_message, 0.95)
         }
         "export" => {
-            let _message = format!("Export initiated for pool: {"actual_error_details"}");
+            let _message = "Export initiated for pool: self.base_url".to_string();
 
             let suggestions = vec![SuggestedAction {
                 action_id: "verify_export".to_string(),
@@ -378,7 +377,7 @@ pub fn execute_storage_operation(
         _ => {
             // Unsupported operation - this would normally return an error
             // but for demo purposes, we'll return a low-confidence response
-            let _message = format!("Operation '{"actual_error_details"}' not supported");
+            let _message = "Operation 'self.base_url' not supported".to_string();
             ai_success_with_confidence(_message, 0.1)
         }
     };
@@ -387,7 +386,7 @@ pub fn execute_storage_operation(
 }
 
 /// Demonstrate different confidence levels - shows AI decision-making support
-pub fn demo_confidence_levels() -> Json<AIFirstResponse<Vec<OptimizationScenario>>> {
+pub async fn demo_confidence_levels() -> Json<AIFirstResponse<Vec<OptimizationScenario>>> {
     let demos = vec![
         OptimizationScenario {
             scenario: "High confidence - verified data".to_string(),
@@ -425,7 +424,7 @@ pub fn demo_confidence_levels() -> Json<AIFirstResponse<Vec<OptimizationScenario
 }
 
 /// Demonstrate suggested actions for AI automation
-pub fn demo_suggested_actions() -> Json<AIFirstResponse<Vec<AutomationCapability>>> {
+pub async fn demo_suggested_actions() -> Json<AIFirstResponse<Vec<AutomationCapability>>> {
     let demos = vec![
         AutomationCapability {
             category: "Monitoring".to_string(),
@@ -524,7 +523,7 @@ trait AIFirstResponseExt<T> {
     fn with_confidence(self, confidence: f64) -> AIFirstResponse<T>;
 }
 impl<T> AIFirstResponseExt<T> for AIFirstResponse<T> {
-    fn with_confidence(mut self, confidence: f64) -> AIFirstResponse<T> {
+    fn with_confidence(mut self, confidence: f64) -> Self {
         self.confidence_score = confidence.clamp(0.0, 1.0);
         self
     }
@@ -551,7 +550,7 @@ pub fn ai_pool_operation(
 pub fn ai_pool_status(Path(pool_name): Path<String>) -> Json<AIFirstResponse<PoolInfo>> {
     // AI-enhanced pool status with health analysis
     let pool_info = PoolInfo {
-        pool_name: pool_name.clone(),
+        pool_name,
         total_size_gb: 1000,
         used_size_gb: 400,
         available_size_gb: 600,

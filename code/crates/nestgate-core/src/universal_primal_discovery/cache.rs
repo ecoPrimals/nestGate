@@ -263,6 +263,7 @@ impl DiscoveryCache {
     }
 
     /// **CACHE STATISTICS**: Get cache statistics
+    #[must_use]
     pub fn get_cache_stats(&self) -> usize {
         self.port_cache.len()
             + self.endpoint_cache.len()
@@ -271,6 +272,7 @@ impl DiscoveryCache {
     }
 
     /// **DETAILED STATISTICS**: Get detailed cache statistics
+    #[must_use]
     pub fn get_detailed_stats(&self) -> HashMap<String, usize> {
         let mut stats = HashMap::new();
 

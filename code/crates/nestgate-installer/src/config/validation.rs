@@ -102,7 +102,7 @@ impl Default for HealthCheckSettings {
 
 /// Validation utilities for installer configuration
 pub mod config_validation {
-    use super::*;
+    use super::{PathBuf, SystemRequirements};
     use crate::config::InstallerConfig;
     /// Validate installer-specific configuration
     #[allow(dead_code)] // Reserved for future installer validation features
@@ -111,7 +111,7 @@ pub mod config_validation {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub fn validate_installer_config(config: &InstallerConfig) -> Result<(), String>  {
+    pub fn validate_installer_config(config: &InstallerConfig) -> Result<(), String> {
         // Note: Base validation removed as validate_domain_config doesn't exist in nestgate-core
         // Base configuration validation completed
 
@@ -138,7 +138,7 @@ pub mod config_validation {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub fn validate_system_requirements(requirements: &SystemRequirements) -> Result<(), String>  {
+    pub fn validate_system_requirements(requirements: &SystemRequirements) -> Result<(), String> {
         // This would typically check actual system resources
         // For now, we'll do basic validation of the requirements structure
 
@@ -163,11 +163,11 @@ pub mod config_validation {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub fn validate_installation_paths(
+    pub fn validate_installation_paths(
         install_dir: &PathBuf,
         config_dir: &PathBuf,
         data_dir: &PathBuf,
-    ) -> Result<(), String>  {
+    ) -> Result<(), String> {
         if !install_dir.is_absolute() {
             return Err("Install directory must be absolute".to_string());
         }

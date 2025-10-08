@@ -204,7 +204,7 @@ mod tests {
         let handler = ProductionProtocolHandler::default();
 
         // Test native async connection - no Future boxing
-        let config = crate::config::canonical_master::network_config::NetworkConfig::default();
+        let config = crate::config::canonical_master::domains::network::CanonicalNetworkConfig::development_optimized();
 
         let connection = handler.connect(&config).await;
         assert!(connection.is_ok());

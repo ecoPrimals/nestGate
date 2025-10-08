@@ -2,7 +2,7 @@
 //! Implementation patterns for idiomatic evolution in the canonical modernization. Implementations functionality and utilities.
 // Standard trait implementations for common types
 
-use super::traits::*;
+use super::traits::{SmartClone, SmartDefault};
 
 // ==================== SMART DEFAULT IMPLEMENTATIONS ====================
 

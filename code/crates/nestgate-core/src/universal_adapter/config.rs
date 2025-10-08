@@ -70,6 +70,7 @@ pub struct AdapterConfig {
 
 impl AdapterConfig {
     /// Create a new adapter configuration
+    #[must_use]
     pub fn new() -> Self {
         Self {
             discovery_timeout: Duration::from_secs(30),
@@ -82,28 +83,28 @@ impl AdapterConfig {
             fallback_enabled: true,
         }
     }
-    
+
     /// Set discovery timeout
     #[must_use]
     pub fn with_discovery_timeout(mut self, timeout: Duration) -> Self {
         self.discovery_timeout = timeout;
         self
     }
-    
+
     /// Set retry attempts
     #[must_use]
     pub fn with_retry_attempts(mut self, attempts: u32) -> Self {
         self.retry_attempts = attempts;
         self
     }
-    
+
     /// Add discovery endpoint
     #[must_use]
     pub fn add_endpoint(mut self, endpoint: String) -> Self {
         self.endpoints.push(endpoint);
         self
     }
-    
+
     /// Enable or disable fallback providers
     #[must_use]
     pub fn with_fallback(mut self, enabled: bool) -> Self {
@@ -115,5 +116,194 @@ impl AdapterConfig {
 impl Default for AdapterConfig {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_universal_adapter_config_default() {
+        let config = UniversalAdapterConfig::default();
+
+        assert!(config.auto_discovery);
+        assert_eq!(config.discovery_interval, 30);
+        assert_eq!(config.request_timeout, 30);
+        assert_eq!(config.max_retries, 3);
+        assert_eq!(config.fallback_behavior, FallbackBehavior::NoOp);
+        assert_eq!(config.discovery_methods.len(), 3);
+        assert!(config
+            .discovery_methods
+            .contains(&DiscoveryMethod::Environment));
+        assert!(config
+            .discovery_methods
+            .contains(&DiscoveryMethod::ServiceRegistry));
+        assert!(config
+            .discovery_methods
+            .contains(&DiscoveryMethod::NetworkScan));
+    }
+
+    #[test]
+    fn test_fallback_behavior_variants() {
+        let error = FallbackBehavior::Error;
+        let noop = FallbackBehavior::NoOp;
+        let local = FallbackBehavior::Local;
+
+        assert_ne!(error, noop);
+        assert_ne!(noop, local);
+        assert_ne!(error, local);
+
+        // Test cloning
+        let cloned = noop.clone();
+        assert_eq!(cloned, FallbackBehavior::NoOp);
+    }
+
+    #[test]
+    fn test_discovery_method_variants() {
+        let env = DiscoveryMethod::Environment;
+        let registry = DiscoveryMethod::ServiceRegistry;
+        let scan = DiscoveryMethod::NetworkScan;
+        let config = DiscoveryMethod::Configuration;
+
+        assert_ne!(env, registry);
+        assert_ne!(registry, scan);
+        assert_ne!(scan, config);
+
+        // Test cloning
+        let cloned = env.clone();
+        assert_eq!(cloned, DiscoveryMethod::Environment);
+    }
+
+    #[test]
+    fn test_adapter_config_default() {
+        let config = AdapterConfig::default();
+
+        assert_eq!(config.discovery_timeout, Duration::from_secs(30));
+        assert_eq!(config.retry_attempts, 3);
+        assert_eq!(config.cache_ttl, Duration::from_secs(300));
+        assert_eq!(config.endpoints.len(), 2);
+        assert!(config.fallback_enabled);
+    }
+
+    #[test]
+    fn test_adapter_config_new() {
+        let config = AdapterConfig::new();
+
+        assert_eq!(config.discovery_timeout, Duration::from_secs(30));
+        assert_eq!(config.retry_attempts, 3);
+        assert_eq!(config.cache_ttl, Duration::from_secs(300));
+        assert!(config
+            .endpoints
+            .contains(&"http://localhost:8083/discovery".to_string()));
+        assert!(config
+            .endpoints
+            .contains(&"http://localhost:8084/discovery".to_string()));
+    }
+
+    #[test]
+    fn test_adapter_config_builder_with_discovery_timeout() {
+        let timeout = Duration::from_secs(60);
+        let config = AdapterConfig::new().with_discovery_timeout(timeout);
+
+        assert_eq!(config.discovery_timeout, timeout);
+        assert_eq!(config.retry_attempts, 3); // Other fields unchanged
+    }
+
+    #[test]
+    fn test_adapter_config_builder_with_retry_attempts() {
+        let config = AdapterConfig::new().with_retry_attempts(5);
+
+        assert_eq!(config.retry_attempts, 5);
+        assert_eq!(config.discovery_timeout, Duration::from_secs(30)); // Other fields unchanged
+    }
+
+    #[test]
+    fn test_adapter_config_builder_add_endpoint() {
+        let config = AdapterConfig::new().add_endpoint("http://custom:9000/discovery".to_string());
+
+        assert_eq!(config.endpoints.len(), 3);
+        assert!(config
+            .endpoints
+            .contains(&"http://custom:9000/discovery".to_string()));
+    }
+
+    #[test]
+    fn test_adapter_config_builder_with_fallback() {
+        let config_enabled = AdapterConfig::new().with_fallback(true);
+        assert!(config_enabled.fallback_enabled);
+
+        let config_disabled = AdapterConfig::new().with_fallback(false);
+        assert!(!config_disabled.fallback_enabled);
+    }
+
+    #[test]
+    fn test_adapter_config_builder_chaining() {
+        let config = AdapterConfig::new()
+            .with_discovery_timeout(Duration::from_secs(45))
+            .with_retry_attempts(10)
+            .add_endpoint("http://endpoint1:8080/discovery".to_string())
+            .add_endpoint("http://endpoint2:8080/discovery".to_string())
+            .with_fallback(false);
+
+        assert_eq!(config.discovery_timeout, Duration::from_secs(45));
+        assert_eq!(config.retry_attempts, 10);
+        assert_eq!(config.endpoints.len(), 4); // 2 default + 2 added
+        assert!(!config.fallback_enabled);
+    }
+
+    #[test]
+    fn test_universal_adapter_config_clone() {
+        let config = UniversalAdapterConfig::default();
+        let cloned = config.clone();
+
+        assert_eq!(config.auto_discovery, cloned.auto_discovery);
+        assert_eq!(config.discovery_interval, cloned.discovery_interval);
+        assert_eq!(config.request_timeout, cloned.request_timeout);
+        assert_eq!(config.max_retries, cloned.max_retries);
+        assert_eq!(config.fallback_behavior, cloned.fallback_behavior);
+    }
+
+    #[test]
+    fn test_adapter_config_clone() {
+        let config = AdapterConfig::new();
+        let cloned = config.clone();
+
+        assert_eq!(config.retry_attempts, cloned.retry_attempts);
+        assert_eq!(config.discovery_timeout, cloned.discovery_timeout);
+        assert_eq!(config.cache_ttl, cloned.cache_ttl);
+        assert_eq!(config.fallback_enabled, cloned.fallback_enabled);
+        assert_eq!(config.endpoints.len(), cloned.endpoints.len());
+    }
+
+    #[test]
+    fn test_edge_cases_zero_values() {
+        let config = AdapterConfig::new()
+            .with_retry_attempts(0)
+            .with_discovery_timeout(Duration::from_secs(0));
+
+        assert_eq!(config.retry_attempts, 0);
+        assert_eq!(config.discovery_timeout, Duration::from_secs(0));
+    }
+
+    #[test]
+    fn test_edge_cases_large_values() {
+        let config = AdapterConfig::new()
+            .with_retry_attempts(u32::MAX)
+            .with_discovery_timeout(Duration::from_secs(86400)); // 24 hours
+
+        assert_eq!(config.retry_attempts, u32::MAX);
+        assert_eq!(config.discovery_timeout, Duration::from_secs(86400));
+    }
+
+    #[test]
+    fn test_multiple_endpoint_additions() {
+        let mut config = AdapterConfig::new();
+
+        for i in 0..10 {
+            config = config.add_endpoint(format!("http://endpoint{i}:8080/discovery"));
+        }
+
+        assert_eq!(config.endpoints.len(), 12); // 2 default + 10 added
     }
 }

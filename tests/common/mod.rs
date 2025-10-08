@@ -29,7 +29,7 @@ pub use utils::TestUtils;
 
 // Test configuration types from canonical system
 pub use config::UnifiedTestConfig as TestConfig;
-pub use nestgate_core::config::unified::NestGateUnifiedConfig as CleanTestConfig;
+pub use nestgate_core::config::canonical_master::NestGateCanonicalConfig as CleanTestConfig;
 
 /// **TEST ENVIRONMENT SYSTEM**
 pub mod test_environment;

@@ -20,7 +20,8 @@ pub struct DashboardTimeRange {
 }
 impl DashboardTimeRange {
     /// Create a new time range
-    pub fn new(start: SystemTime, end: SystemTime, granularity: Duration) -> Self {
+    #[must_use]
+    pub const fn new(start: SystemTime, end: SystemTime, granularity: Duration) -> Self {
         Self {
             start,
             end,
@@ -29,6 +30,7 @@ impl DashboardTimeRange {
     }
 
     /// Create a time range for the last N hours
+    #[must_use]
     pub fn last_hours(hours: u64) -> Self {
         let end = SystemTime::now();
         let start = end - Duration::from_secs(hours * 3600);
@@ -40,6 +42,7 @@ impl DashboardTimeRange {
     }
 
     /// Create a time range for the last N days
+    #[must_use]
     pub fn last_days(days: u64) -> Self {
         let end = SystemTime::now();
         let start = end - Duration::from_secs(days * 24 * 3600);
@@ -51,6 +54,7 @@ impl DashboardTimeRange {
     }
 
     /// Get duration of this time range
+    #[must_use]
     pub fn duration(&self) -> Duration {
         self.end
             .duration_since(self.start)
@@ -58,11 +62,13 @@ impl DashboardTimeRange {
     }
 
     /// Check if this time range is valid
+    #[must_use]
     pub fn is_valid(&self) -> bool {
         self.start < self.end && !self.granularity.is_zero()
     }
 
     /// Get the number of data points in this range
+    #[must_use]
     pub fn data_points(&self) -> usize {
         if !self.is_valid() {
             return 0;
@@ -72,6 +78,7 @@ impl DashboardTimeRange {
     }
 
     /// Split time range into intervals based on granularity
+    #[must_use]
     pub fn intervals(&self) -> Vec<(SystemTime, SystemTime)> {
         let mut intervals = Vec::new();
         let mut current = self.start;

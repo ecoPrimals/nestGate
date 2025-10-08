@@ -114,7 +114,7 @@ impl UnifiedAccessPatterns {
         Self {
             read_frequency: 0,
             write_frequency: 0,
-            daily_access_count: params.daily_access_count as u64,
+            daily_access_count: u64::from(params.daily_access_count),
             last_access: params.last_access,
             temporal_patterns: Vec::new(),
             peak_access_hours: params.peak_access_hours,

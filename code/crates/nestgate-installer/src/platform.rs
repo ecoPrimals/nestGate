@@ -22,6 +22,7 @@ pub struct PlatformInfo {
 }
 
 impl PlatformInfo {
+    #[must_use]
     pub fn detect() -> Self {
         let os = std::env::consts::OS.to_string();
         let arch = std::env::consts::ARCH.to_string();
@@ -40,10 +41,12 @@ impl PlatformInfo {
         }
     }
 
+    #[must_use]
     pub fn service_install_supported(&self) -> bool {
         self.supports_systemd || self.supports_launchd || self.supports_windows_service
     }
 
+    #[must_use]
     pub fn get_binary_name(&self, name: &str) -> String {
         format!("{}{}", name, ".exe")
     }
@@ -87,7 +90,7 @@ fn add_to_path_unix(install_path: &Path) -> Result<()> {
             install_path.join("bin").display()
         )?;
 
-        println!("Added {install_path.display( to PATH in {install_path.display(:?}"), rc_path);
+        println!("Added {} to PATH in {:?}", install_path.display(), rc_path);
         println!("Please restart your shell or run: source {rc_path:?}");
     }
 
@@ -110,11 +113,11 @@ fn add_to_path_windows(install_path: &Path) -> Result<()> {
         let new_path = if current_path.is_empty() {
             install_bin_str.to_string()
         } else {
-            format!("{"actual_error_details"};{"actual_error_details"}")
+            format!("{};{}", install_bin_str, current_path)
         };
 
         env.setvalue("PATH", &new_path)?;
-        println!("Added ", install_bin.display() to PATH"));
+        println!("Added {} to PATH", install_bin.display());
         println!("Please restart your command prompt to use the new PATH");
     }
 
@@ -140,7 +143,7 @@ fn create_desktop_shortcut_unix(install_path: &Path, name: &str) -> Result<()> {
     use std::fs;
 
     if let Some(desktop_dir) = dirs::desktop_dir() {
-        let shortcut_path = desktop_dir.join(format!("{"actual_error_details"}.desktop"));
+        let shortcut_path = desktop_dir.join(format!("{}.desktop", "nestgate"));
         let binary_path = install_path.join("bin").join("nestgate");
 
         let desktop_entry = format!(
@@ -175,7 +178,7 @@ Categories=System;
             fs::set_permissions(&shortcut_path, perms)?;
         }
 
-        println!("Created desktop shortcut: ", shortcut_path.display()"));
+        println!("Created desktop shortcut: {}", shortcut_path.display());
     }
 
     Ok(())

@@ -2,7 +2,7 @@
 //
 // Performance benchmarking and profiling for storage systems.
 
-use super::types::*;
+use super::types::{DetectedStorage, PerformanceProfile};
 use crate::unified_enums::storage_types::UnifiedStorageType;
 use crate::Result;
 use std::time::{Duration, Instant};
@@ -48,6 +48,7 @@ impl PerformanceProfiler {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
+    ///
     /// Function description
     ///
     /// # Errors
@@ -147,7 +148,7 @@ impl PerformanceProfiler {
         }
 
         let elapsed = start.elapsed();
-        let iops = (operations as f64 / elapsed.as_secs_f64()) as u32;
+        let iops = (f64::from(operations) / elapsed.as_secs_f64()) as u32;
 
         Ok(iops)
     }
@@ -188,7 +189,7 @@ impl PerformanceProfiler {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
+    ///
     /// Function description
     ///
     /// # Errors

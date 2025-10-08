@@ -282,7 +282,6 @@ impl StorageBackendMigration {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::error::NestGateError;
     use tempfile::TempDir;
 
     #[tokio::test]
@@ -331,7 +330,7 @@ mod tests {
     #[test]
     fn test_migration_template() {
         let template = StorageBackendMigration::create_migration_template();
-        assert!(template.len() > 0);
+        assert!(!template.is_empty());
     }
 
     #[test]

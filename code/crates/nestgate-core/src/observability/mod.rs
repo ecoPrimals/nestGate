@@ -74,7 +74,6 @@ impl ObservabilityManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub async fn initialize(&self) -> Result<()> {
         tracing::info!("🔍 Initializing observability systems");
 

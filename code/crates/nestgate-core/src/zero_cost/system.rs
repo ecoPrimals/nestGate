@@ -1,10 +1,15 @@
+#![allow(deprecated)]
+
 //! Zero-cost system implementation
 //!
 //! This module provides the main zero-cost system that composes providers
 //! with compile-time dependency injection, eliminating runtime overhead.
+//!
+//! Note: Uses deprecated traits for backward compatibility
+//! TODO: Migrate to canonical traits in future version
 
-use super::traits::*;
-use super::types::*;
+use super::traits::{ZeroCostCacheProvider, ZeroCostSecurityProvider, ZeroCostStorageProvider};
+use super::types::{ZeroCostRequest, ZeroCostResponse, ZeroCostError, ZeroCostMetrics};
 use std::marker::PhantomData;
 
 /// Zero-cost system with compile-time dependency injection
@@ -114,6 +119,7 @@ impl<const MAX_SIZE: usize, const TIMEOUT_MS: u64> Default
 
 impl<const MAX_SIZE: usize, const TIMEOUT_MS: u64> ZeroCostSystemBuilder<MAX_SIZE, TIMEOUT_MS> {
     /// Create new builder
+    #[must_use] 
     pub fn new() -> Self {
         Self {
             _phantom: PhantomData,
@@ -121,6 +127,7 @@ impl<const MAX_SIZE: usize, const TIMEOUT_MS: u64> ZeroCostSystemBuilder<MAX_SIZ
     }
 
     /// Build system with memory cache
+    #[must_use] 
     pub fn with_memory_cache(
         self,
     ) -> ZeroCostSystem<
@@ -138,10 +145,12 @@ impl<const MAX_SIZE: usize, const TIMEOUT_MS: u64> ZeroCostSystemBuilder<MAX_SIZ
     }
 
     /// Get compile-time configuration
+    #[must_use] 
     pub fn max_size() -> usize {
         MAX_SIZE
     }
 
+    #[must_use] 
     pub fn timeout_ms() -> u64 {
         TIMEOUT_MS
     }
@@ -151,6 +160,7 @@ impl<const MAX_SIZE: usize, const TIMEOUT_MS: u64> ZeroCostSystemBuilder<MAX_SIZ
 mod tests {
     use super::*;
     use crate::zero_cost::providers::*;
+    use crate::zero_cost::types::{ZeroCostMetadata, RequestPriority};
 
     #[test]
     fn test_zero_cost_system_creation() {

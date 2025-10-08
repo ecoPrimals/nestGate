@@ -565,8 +565,7 @@ impl EncryptionManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn encrypt(&self, data: &[u8], key_id: Option<&str>) -> Result<EncryptedData, String>  {
+                pub fn encrypt(&self, data: &[u8], key_id: Option<&str>) -> Result<EncryptedData, String>  {
         let key_id = key_id.or(self.default_key_id.as_deref())
             .ok_or("No encryption key available")?;
         
@@ -596,8 +595,7 @@ impl EncryptionManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn decrypt(&self, encrypted_data: &EncryptedData) -> Result<Vec<u8>, String>  {
+                pub fn decrypt(&self, encrypted_data: &EncryptedData) -> Result<Vec<u8>, String>  {
         let key = self.keys.get(&encrypted_data.key_id)
             .ok_or("Decryption key not found")?;
         
@@ -620,8 +618,7 @@ impl EncryptionManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn rotate_key(&mut self, old_key_id: &str, new_key_id: String, new_key: Vec<u8>) -> Result<(), String>  {
+                pub fn rotate_key(&mut self, old_key_id: &str, new_key_id: String, new_key: Vec<u8>) -> Result<(), String>  {
         if !self.keys.contains_key(old_key_id) {
             return Err("Old key not found".to_string());
         }

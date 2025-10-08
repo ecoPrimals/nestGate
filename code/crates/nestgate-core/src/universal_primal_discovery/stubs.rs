@@ -1,11 +1,15 @@
 /// Universal Primal Discovery Stub Implementations
 /// Provides fallback implementations for discovery operations when full discovery is unavailable.
 /// These stubs ensure system stability and provide sensible defaults.
+///
+/// **⚠️ DEVELOPMENT ONLY**: This module is only available with `dev-stubs` feature
 use crate::Result;
 // **MIGRATED**: Using canonical config system instead of deprecated unified_types
 use crate::capabilities::discovery::DiscoveryManager;
+#[allow(deprecated)]
 use crate::config::canonical_master::{
-    NestGateCanonicalConfig, NetworkConfig as UnifiedNetworkConfig,
+    NestGateCanonicalConfig,
+    domains::network::CanonicalNetworkConfig as UnifiedNetworkConfig,
 };
 use crate::universal_adapter::stats::AdapterStats;
 use std::collections::HashMap;
@@ -90,6 +94,7 @@ pub fn get_fallback_port(service_name: &str) -> u16 {
     since = "0.9.0",
     note = "Use canonical_master::domains::network::CanonicalNetworkConfig instead"
 )]
+#[allow(deprecated)]
 pub struct NetworkConfigAdapter {
     #[allow(dead_code)]
     service_name: String,
@@ -100,6 +105,7 @@ pub struct NetworkConfigAdapter {
     #[allow(dead_code)]
     stats: Arc<RwLock<AdapterStats>>,
 }
+#[allow(deprecated)]
 impl NetworkConfigAdapter {
     #[must_use]
     pub fn new(service_name: String) -> Self {
@@ -180,6 +186,7 @@ impl StandaloneNetworkAdapter {
 
 /// **DEPRECATED**: Use `UnifiedNetworkConfig` from `crate::config::canonical_master` instead
 /// `UnifiedNetworkConfig` helper methods
+#[allow(deprecated)] // Helper methods for deprecated type during migration
 impl UnifiedNetworkConfig {
     /// Convert to unified config (identity function now)
     #[must_use]

@@ -4,7 +4,7 @@
 
 use nestgate_core::config::canonical_master::domains::performance::MetricsConfig;
 use nestgate_core::config::canonical_master::domains::security_canonical::TlsSecurityConfig;
-use nestgate_core::config::NetworkConfig;
+use nestgate_core::config::canonical_master::domains::network::CanonicalNetworkConfig;
 use nestgate_core::config::SecurityConfig;
 
 use std::time::Duration;
@@ -13,7 +13,7 @@ use nestgate_core::canonical_modernization::CanonicalModernizedConfig;
 
 /// **CANONICAL RPC CONFIGURATION**
 /// Extends the canonical modernization system with RPC-specific settings
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct CanonicalRpcConfig {
     /// Base canonical configuration
     pub base: CanonicalModernizedConfig,
@@ -21,7 +21,7 @@ pub struct CanonicalRpcConfig {
     pub rpc_extensions: RpcExtensions,
 }
 /// RPC-specific configuration extensions
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct RpcExtensions {
     /// Connection pool settings
     pub connection_pool: ConnectionPoolConfig,
@@ -194,27 +194,6 @@ impl Default for NestGateRpcConfig {
 
 // ==================== SECTION ====================
 
-impl Default for CanonicalRpcConfig {
-    fn default() -> Self {
-        Self {
-            base: CanonicalModernizedConfig::default(),
-            rpc_extensions: RpcExtensions::default(),
-        }
-    }
-}
-
-impl Default for RpcExtensions {
-    fn default() -> Self {
-        Self {
-            connection_pool: ConnectionPoolConfig::default(),
-            load_balancing: LoadBalancingConfig::default(),
-            health_monitoring: HealthMonitoringConfig::default(),
-            metrics: MetricsConfig::default(),
-            streams: StreamConfig::default(),
-        }
-    }
-}
-
 impl CanonicalRpcConfig {
     /// Create canonical RPC config from legacy config
     #[must_use]
@@ -242,12 +221,14 @@ impl CanonicalRpcConfig {
     }
 
     /// Get network configuration from canonical base
-    pub fn network(&self) -> &NetworkConfig {
+    #[must_use]
+    pub const fn network(&self) -> &CanonicalNetworkConfig {
         &self.base.network
     }
 
     /// Get security configuration from canonical base
-    pub fn security(&self) -> &SecurityConfig {
+    #[must_use]
+    pub const fn security(&self) -> &SecurityConfig {
         &self.base.security
     }
 }

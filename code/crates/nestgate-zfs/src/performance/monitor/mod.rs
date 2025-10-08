@@ -10,7 +10,11 @@ use tokio::sync::RwLock;
 use tokio::time::interval;
 use tracing::{error, info};
 
-use super::types::*;
+use super::types::{
+    AlertCondition, AlertMetric, AlertOperator, AlertSeverity, CurrentPerformanceMetrics,
+    PerformanceTrends, TierMetrics, TierPerformanceData, TierPerformanceTargets,
+    ZfsPerformanceMonitor,
+};
 
 // Re-export specialized modules
 pub mod analysis;
@@ -20,6 +24,7 @@ pub mod reporting;
 
 impl ZfsPerformanceMonitor {
     /// Create performance monitor for testing
+    #[must_use]
     pub fn new_for_testing() -> Self {
         Self {
             pool_manager: Arc::new(ZfsPoolManager::new_production(ZfsConfig::default())),

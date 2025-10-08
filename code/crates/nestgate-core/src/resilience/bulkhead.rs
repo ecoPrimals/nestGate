@@ -205,8 +205,7 @@ impl Bulkhead {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn try_acquire_permit(&self) -> Result<Option<BulkheadPermit<'_>>>  {
+                pub fn try_acquire_permit(&self) -> Result<Option<BulkheadPermit<'_>>>  {
         match self.semaphore.try_acquire() {
             Ok(permit) => {
                 // Update metrics
@@ -246,8 +245,7 @@ impl Bulkhead {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn get_status(&self) -> Result<BulkheadStatus>  {
+                pub fn get_status(&self) -> Result<BulkheadStatus>  {
         let available_permits = self.semaphore.available_permits();
         let current_concurrent = self.config.max_concurrent - available_permits;
         let utilization = (current_concurrent as f64 / self.config.max_concurrent as f64) * 100.0;

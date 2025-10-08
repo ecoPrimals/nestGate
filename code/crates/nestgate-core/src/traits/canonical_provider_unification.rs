@@ -1,3 +1,4 @@
+#![allow(deprecated)]
 // **CANONICAL PROVIDER UNIFICATION**
 //! Trait definitions and implementations.
 // This module provides the unified provider pattern that replaces all

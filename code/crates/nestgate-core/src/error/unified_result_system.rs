@@ -116,7 +116,7 @@ impl<T, E> ResultExt<T, E> for std::result::Result<T, E> {
     where
         E: Into<NestGateError>,
     {
-        self.map_err(|e| e.into())
+        self.map_err(std::convert::Into::into)
     }
 
     fn with_context<F>(self, _f: F) -> Result<T>

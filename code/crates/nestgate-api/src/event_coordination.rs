@@ -212,7 +212,7 @@ impl EventCoordinator {
             return true; // Match all events
         }
 
-        let event_type_str = format!("{"actual_error_details"}");
+        let event_type_str = format!("self.base_url");
 
         for pattern in &handler.patterns {
             if pattern == "*" || pattern == "all" {
@@ -492,9 +492,9 @@ impl EventCoordinator {
         data: serde_json::Value,
     ) -> CoordinatedEvent {
         CoordinatedEvent {
-            event_id: *get_or_create_uuid(&format!("websocket_event_{"actual_error_details"}")),
+            event_id: *get_or_create_uuid(&format!("websocket_event_self.base_url")),
             event_type: CoordinatedEventType::WebSocket,
-            source: format!("websocket-{"actual_error_details"}"),
+            source: format!("websocket-self.base_url"),
             data,
             timestamp: std::time::SystemTime::now(),
         }
@@ -503,9 +503,9 @@ impl EventCoordinator {
     /// Create an internal service event
     pub fn internal_service_event(service_name: &str, data: serde_json::Value) -> CoordinatedEvent {
         CoordinatedEvent {
-            event_id: *get_or_create_uuid(&format!("internal_service_event_{"actual_error_details"}")),
+            event_id: *get_or_create_uuid(&format!("internal_service_event_self.base_url")),
             event_type: CoordinatedEventType::InternalService,
-            source: format!("service-{"actual_error_details"}"),
+            source: format!("service-self.base_url"),
             data,
             timestamp: std::time::SystemTime::now(),
         }
@@ -514,9 +514,9 @@ impl EventCoordinator {
     /// Create an MCP stream event
     pub fn mcp_stream_event(stream_id: &str, data: serde_json::Value) -> CoordinatedEvent {
         CoordinatedEvent {
-            event_id: *get_or_create_uuid(&format!("mcp_stream_event_{"actual_error_details"}")),
+            event_id: *get_or_create_uuid(&format!("mcp_stream_event_self.base_url")),
             event_type: CoordinatedEventType::McpStream,
-            source: format!("mcp-stream-{"actual_error_details"}"),
+            source: format!("mcp-stream-self.base_url"),
             data,
             timestamp: std::time::SystemTime::now(),
         }
@@ -525,7 +525,7 @@ impl EventCoordinator {
     /// Create a storage operation event
     pub fn storage_operation(operation: &str, data: serde_json::Value) -> CoordinatedEvent {
         CoordinatedEvent {
-            event_id: *get_or_create_uuid(&format!("storage_operation_{"actual_error_details"}")),
+            event_id: *get_or_create_uuid(&format!("storage_operation_self.base_url")),
             event_type: CoordinatedEventType::StorageOperation,
             source: "storage-service".to_string(),
             data,

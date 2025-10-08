@@ -1,8 +1,8 @@
-use crate::constants::magic_numbers_replacement;
-//! **SIMPLE IDIOMATIC ERROR DEMONSTRATION**
-//!
-//! A minimal working example showing the evolution from non-idiomatic Result<T>
-//! to idiomatic Result<T, E> patterns with our sophisticated unified error system.
+// Note: constants module not needed for this example
+// **SIMPLE IDIOMATIC ERROR DEMONSTRATION**
+//
+// A minimal working example showing the evolution from non-idiomatic Result<T>
+// to idiomatic Result<T, E> patterns with our sophisticated unified error system.
 
 use nestgate_core::error::{
     IdioResult,

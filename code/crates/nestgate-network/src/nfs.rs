@@ -113,8 +113,7 @@ impl NfsServer {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn add_export(&self, name: String, export: NfsExport) -> Result<()>  {
+                pub fn add_export(&self, name: String, export: NfsExport) -> Result<()>  {
         tracing::info!("Adding NFS export: {}", name);
 
         let mut exports = self.exports.write().await;
@@ -133,8 +132,7 @@ impl NfsServer {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn remove_export(&self, name: &str) -> Result<()>  {
+                pub fn remove_export(&self, name: &str) -> Result<()>  {
         tracing::info!("Removing NFS export: {}", name);
 
         let mut exports = self.exports.write().await;
@@ -173,7 +171,7 @@ impl NfsServer {
         let rpcbind_output = Command::new("systemctl")
             .args(["start", "rpcbind"])
             .output()
-            .map_err(|_e| NestGateError::network_error(&format!("Failed to start rpcbind: {"actual_error_details"}")))?;
+            .map_err(|_e| NestGateError::network_error(&format!("Failed to start rpcbind: self.base_url")))?;
 
         if !rpcbind_output.status.success() {
             let error = String::from_utf8_lossy(&rpcbind_output.stderr);
@@ -184,12 +182,12 @@ impl NfsServer {
         let nfs_output = Command::new("systemctl")
             .args(["start", "nfs-kernel-server"])
             .output()
-            .map_err(|_e| NestGateError::network_error(&format!("Failed to start NFS server: {"actual_error_details"}")))?;
+            .map_err(|_e| NestGateError::network_error(&format!("Failed to start NFS server: self.base_url")))?;
 
         if !nfs_output.status.success() {
             let error = String::from_utf8_lossy(&nfs_output.stderr);
             return Err(NestGateError::network_error(
-                &format!("Failed to start NFS server: {"actual_error_details"}"),
+                &format!("Failed to start NFS server: self.base_url"),
                 "start_nfs_server",
                 None
             ));
@@ -207,7 +205,7 @@ impl NfsServer {
         let nfs_output = Command::new("systemctl")
             .args(["stop", "nfs-kernel-server"])
             .output()
-            .map_err(|_e| NestGateError::network_error(&format!("Failed to stop NFS server: {"actual_error_details"}")))?;
+            .map_err(|_e| NestGateError::network_error(&format!("Failed to stop NFS server: self.base_url")))?;
 
         if !nfs_output.status.success() {
             let error = String::from_utf8_lossy(&nfs_output.stderr);
@@ -287,13 +285,13 @@ impl NfsServer {
 
             // Add each client access entry
             for client in &export.client_access {
-                exports_content.push_str(&format!("{path} {client}({"actual_error_details"})\n"));
+                exports_content.push_str(&format!("{path} {client}(self.base_url)\n"));
             }
         }
 
         // Write to temporary file first, then move to /etc/exports
         let temp_path = std::env::var("NESTGATE_NFS_EXPORTS_DIR")
-            .unwrap_or_else(|_| format!("{"actual_error_details"}/nestgate_exports").unwrap_or_else(|_| "/tmp".to_string()));
+            .unwrap_or_else(|_| format!("self.base_url/nestgate_exports").unwrap_or_else(|_| "/tmp".to_string()));
         {
             let mut file = OpenOptions::new()
                 .create(true)
@@ -313,12 +311,12 @@ impl NfsServer {
         let mv_output = Command::new("sudo")
             .args(["cp", temp_path, "/etc/exports"])
             .output()
-            .map_err(|_e| NestGateError::network_error(&format!("Failed to update /etc/exports: {"actual_error_details"}")))?;
+            .map_err(|_e| NestGateError::network_error(&format!("Failed to update /etc/exports: self.base_url")))?;
 
         if !mv_output.status.success() {
             let error = String::from_utf8_lossy(&mv_output.stderr);
             return Err(NestGateError::network_error(
-                &format!("Failed to update /etc/exports: {"actual_error_details"}"),
+                &format!("Failed to update /etc/exports: self.base_url"),
                 "update_exports",
                 None
             ));
@@ -328,7 +326,7 @@ impl NfsServer {
         let reload_output = Command::new("sudo")
             .args(["exportfs", "-ra"])
             .output()
-            .map_err(|_e| NestGateError::network_error(&format!("Failed to reload exports: {"actual_error_details"}")))?;
+            .map_err(|_e| NestGateError::network_error(&format!("Failed to reload exports: self.base_url")))?;
 
         if !reload_output.status.success() {
             let error = String::from_utf8_lossy(&reload_output.stderr);
@@ -371,7 +369,7 @@ pub fn handle_mount_request(
         return Ok(MountResponse {
             mount_id: String::new(),
             success: false,
-            message: format!("Export '{"actual_error_details"}' not found"),
+            message: format!("Export 'self.base_url' not found"),
         });
     }
 
@@ -396,7 +394,7 @@ pub fn handle_mount_request(
             return Ok(MountResponse {
                 mount_id: String::new(),
                 success: false,
-                message: format!("Mount failed: {"actual_error_details"}"),
+                message: format!("Mount failed: self.base_url"),
             });
         }
     }
@@ -430,7 +428,7 @@ fn perform_nfs_mount(
 
     if !mount_point.exists() {
         fs::create_dir_all(mount_point)
-            .map_err(|_e| NestGateError::network_error(&format!("Failed to create mount point: {"actual_error_details"}")))?;
+            .map_err(|_e| NestGateError::network_error(&format!("Failed to create mount point: self.base_url")))?;
     }
 
     // For NFS server, we don't actually mount on the server side

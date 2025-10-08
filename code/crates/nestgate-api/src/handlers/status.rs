@@ -1,4 +1,3 @@
-
 use axum::Json;
 use serde::{Deserialize, Serialize};
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -43,4 +42,84 @@ pub fn get_status() -> Json<SystemStatus> {
         uptime,
         timestamp,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_system_status_structure() {
+        let status = SystemStatus {
+            status: "healthy".to_string(),
+            version: "1.0.0".to_string(),
+            uptime: 3600,
+            timestamp: 1234567890,
+        };
+
+        assert_eq!(status.status, "healthy");
+        assert_eq!(status.version, "1.0.0");
+        assert_eq!(status.uptime, 3600);
+        assert_eq!(status.timestamp, 1234567890);
+    }
+
+    #[test]
+    fn test_system_status_serialization() {
+        let status = SystemStatus {
+            status: "healthy".to_string(),
+            version: "1.0.0".to_string(),
+            uptime: 3600,
+            timestamp: 1234567890,
+        };
+
+        let serialized = serde_json::to_string(&status);
+        assert!(serialized.is_ok(), "SystemStatus should serialize");
+
+        let json = serialized.unwrap();
+        assert!(json.contains("\"status\":\"healthy\""));
+        assert!(json.contains("\"version\":\"1.0.0\""));
+        assert!(json.contains("\"uptime\":3600"));
+    }
+
+    #[test]
+    fn test_system_status_deserialization() {
+        let json = r#"{
+            "status": "healthy",
+            "version": "1.0.0",
+            "uptime": 3600,
+            "timestamp": 1234567890
+        }"#;
+
+        let status: std::result::Result<SystemStatus, _> = serde_json::from_str(json);
+        assert!(status.is_ok(), "SystemStatus should deserialize");
+
+        let status = status.unwrap();
+        assert_eq!(status.status, "healthy");
+        assert_eq!(status.version, "1.0.0");
+    }
+
+    #[test]
+    fn test_initialize_uptime() {
+        // Initialize uptime tracking
+        initialize_uptime();
+
+        // START_TIME should be set
+        assert!(
+            START_TIME.get().is_some(),
+            "START_TIME should be initialized"
+        );
+    }
+
+    #[test]
+    fn test_get_status_returns_healthy() {
+        // Initialize uptime
+        initialize_uptime();
+
+        let status_response = get_status();
+        let status = status_response.0;
+
+        assert_eq!(status.status, "healthy");
+        assert!(!status.version.is_empty(), "Version should not be empty");
+        assert!(status.timestamp > 0, "Timestamp should be positive");
+    }
 }

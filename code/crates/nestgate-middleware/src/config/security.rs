@@ -414,7 +414,7 @@ impl MiddlewareSecuritySettings {
             cors: CorsSettings {
                 enabled: true,
                 allowed_origins: vec![
-                    format!("http://{"actual_error_details"}:3000")),
+                    format!("http://{e}:3000")),
                     "http://localhost:".to_string() + &env::var("NESTGATE_API_PORT").unwrap_or_else(|_| "8080".to_string()).to_string(),
                 ],
                 allowed_methods: vec![

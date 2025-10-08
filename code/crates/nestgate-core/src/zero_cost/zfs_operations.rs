@@ -501,8 +501,7 @@ impl MockZfsOps {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn create_pool(&self, name: &str) -> Result<String>  {
+                pub fn create_pool(&self, name: &str) -> Result<String>  {
         let mut pools = self.pools.lock().map_err(|_| {
             crate::error::NestGateError::internal_error(
                 "Failed to acquire pools lock".to_string(),
@@ -522,8 +521,7 @@ impl MockZfsOps {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn create_dataset(&self, pool: &str, name: &str) -> Result<String>  {
+                pub fn create_dataset(&self, pool: &str, name: &str) -> Result<String>  {
         let mut datasets = self.datasets.lock().map_err(|_| {
             crate::error::NestGateError::internal_error(
                 "Failed to acquire datasets lock".to_string(),

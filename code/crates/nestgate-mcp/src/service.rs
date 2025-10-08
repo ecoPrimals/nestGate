@@ -74,7 +74,7 @@ where
         let service_registration = nestgate_core::service_discovery::types::UniversalServiceRegistration {
             service_id: "enhanced-mcp-service".to_string(),
             service_type: nestgate_core::unified_enums::UnifiedServiceType::Orchestration,
-            endpoint: format!("http://{"actual_error_details"}:{"actual_error_details"}"),
+            endpoint: format!("http://{e}:{e}"),
             capabilities: vec!["mcp".to_string(), "orchestration".to_string()],
             metadata: HashMap::new(),
             health_check_endpoint: Some("/health".to_string()),

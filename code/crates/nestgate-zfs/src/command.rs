@@ -4,12 +4,12 @@ use std::collections::HashMap;
 
 // ==================== SECTION ====================
 
-/// **CANONICAL**: AnyhowResult type alias for external integration
+/// **CANONICAL**: `AnyhowResult` type alias for external integration
 type AnyhowResult<T> = anyhow::Result<T>;
-/// **CANONICAL**: ZFS command Result type using AnyhowResult for external integration
-/// This uses AnyhowResult for better ecosystem integration with external command execution
+/// **CANONICAL**: ZFS command Result type using `AnyhowResult` for external integration
+/// This uses `AnyhowResult` for better ecosystem integration with external command execution
 type ZfsCommandResult<T> = AnyhowResult<T>;
-/// **CANONICAL**: Parsed table result using AnyhowResult
+/// **CANONICAL**: Parsed table result using `AnyhowResult`
 type ParsedTableResult = AnyhowResult<Vec<HashMap<String, String>>>;
 use std::process::Command;
 use tracing::debug;
@@ -33,6 +33,7 @@ impl Default for ZfsCommand {
 }
 
 impl ZfsCommand {
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
@@ -99,7 +100,7 @@ impl ZfsCommand {
             .args(args)
             .output()
             .await
-            .with_context(|| format!("Failed to execute {"actual_error_details"} command"))?;
+            .with_context(|| "Failed to execute error details command".to_string())?;
 
         // Convert command output to strings
         let stdout_result = if output.stdout.is_empty() {
@@ -152,16 +153,19 @@ pub struct CommandResult {
 }
 impl CommandResult {
     /// Check if the command was successful
+    #[must_use]
     pub fn is_success(&self) -> bool {
         self.success
     }
 
     /// Get the output as lines
+    #[must_use]
     pub fn stdout_lines(&self) -> Vec<&str> {
         self.stdout.lines().collect()
     }
 
     /// Get the error output as lines
+    #[must_use]
     pub fn stderr_lines(&self) -> Vec<&str> {
         self.stderr.lines().collect()
     }
@@ -224,6 +228,7 @@ pub struct ZfsOperations {
     command: ZfsCommand,
 }
 impl ZfsOperations {
+    #[must_use]
     pub fn new() -> Self {
         Self {
             command: ZfsCommand::new(),
@@ -298,7 +303,10 @@ impl ZfsOperations {
     }
 
     /// List datasets in a pool
-    pub async fn list_datasets(&self, pool_name: Option<&str>) -> ZfsCommandResult<Vec<ZfsDataset>> {
+    pub async fn list_datasets(
+        &self,
+        pool_name: Option<&str>,
+    ) -> ZfsCommandResult<Vec<ZfsDataset>> {
         let mut args = vec!["list", "-H", "-o", "name,used,avail,refer,mountpoint"];
         if let Some(pool) = pool_name {
             args.push(pool);
@@ -342,7 +350,7 @@ impl ZfsOperations {
         let mut property_strings = Vec::new();
         if let Some(props) = properties {
             for (key, value) in props {
-                property_strings.push(format!("{}={}", key, value));
+                property_strings.push(format!("{key}={value}"));
             }
             for prop_string in &property_strings {
                 args.push("-o");
@@ -371,7 +379,7 @@ impl ZfsOperations {
         dataset_name: &str,
         _snapshot_name: &str,
     ) -> ZfsCommandResult<()> {
-        let full_name = format!("{dataset_name}@{"actual_error_details"}");
+        let full_name = format!("{dataset_name}@error details");
         let result = self.command.zfs(&["snapshot", &full_name]).await?;
 
         if !result.is_success() {
@@ -386,7 +394,10 @@ impl ZfsOperations {
     }
 
     /// List snapshots
-    pub async fn list_snapshots(&self, dataset_name: Option<&str>) -> ZfsCommandResult<Vec<ZfsSnapshot>> {
+    pub async fn list_snapshots(
+        &self,
+        dataset_name: Option<&str>,
+    ) -> ZfsCommandResult<Vec<ZfsSnapshot>> {
         let mut args = vec!["list", "-H", "-t", "snapshot", "-o", "name,used,creation"];
         if let Some(dataset) = dataset_name {
             args.push(dataset);
@@ -498,7 +509,7 @@ mod tests {
             CommandResult {
                 success: false,
                 stdout: String::new(),
-                stderr: format!("Operation failed: {"actual_error_details"}"),
+                stderr: format!("Operation failed: error details"),
                 exit_code: 1,
             }
         });

@@ -1,8 +1,14 @@
+#![allow(deprecated)]
+
+//! Security Provider Module
+//!
+//! Provides security provider functionality for `NestGate` core services.
+//! This module handles security provider creation and management.
+//!
+//! Note: Uses deprecated SecurityPrimalProvider for backward compatibility
+//! TODO: Migrate to CanonicalSecurity in future version
+
 // Removed unused error imports
-/// Security Provider Module
-///
-/// Provides security provider functionality for `NestGate` core services.
-/// This module handles security provider creation and management.
 use crate::{NestGateError, Result};
 // SecurityPrimalProvider has been consolidated - using unified zero-cost types
 use crate::universal_traits::SecurityPrimalProvider;

@@ -3,8 +3,8 @@
 //! This test validates dual mode authentication security functionality using canonical patterns
 //! **CANONICAL MODERNIZATION**: Updated to use simple, working patterns
 
-use nestgate_core::config::unified::NestGateUnifiedConfig as NestGateUnifiedConfig;
-use nestgate_core::config::defaults::Environment;
+use nestgate_core::config::canonical_master::NestGateCanonicalConfig as NestGateUnifiedConfig;
+use nestgate_core::constants::Environment;
 use std::time::Duration;
 use tokio::time::sleep;
 use tracing::info;
@@ -19,7 +19,7 @@ async fn test_dual_mode_auth_security_config() -> Result<(), Box<dyn std::error:
     assert!(!config.system.instance_name.is_empty());
     
     // Test environment-specific dual mode authentication security configuration
-    let dev_config = nestgate_core::config::unified::create_config_for_environment(Environment::Development);
+    let dev_config = nestgate_core::config::canonical_master::create_config_for_environment(Environment::Development);
     assert!(!dev_config.system.instance_name.is_empty());
     
     info!("✅ Dual mode authentication security configuration test completed");
@@ -172,13 +172,13 @@ async fn test_dual_mode_authentication_environments() -> Result<(), Box<dyn std:
     info!("🌍 Testing dual mode authentication security across environments");
     
     // Test development environment dual mode authentication security
-    let dev_config = nestgate_core::config::unified::create_config_for_environment(Environment::Development);
+    let dev_config = nestgate_core::config::canonical_master::create_config_for_environment(Environment::Development);
     assert!(!dev_config.system.instance_name.is_empty());
     assert!(matches!(dev_config.environment, Environment::Development));
     info!("Development dual mode authentication security configuration validated");
     
     // Test production environment dual mode authentication security
-    let prod_config = nestgate_core::config::unified::create_config_for_environment(Environment::Production);
+    let prod_config = nestgate_core::config::canonical_master::create_config_for_environment(Environment::Production);
     assert!(!prod_config.system.instance_name.is_empty());
     assert!(matches!(prod_config.environment, Environment::Production));
     info!("Production dual mode authentication security configuration validated");

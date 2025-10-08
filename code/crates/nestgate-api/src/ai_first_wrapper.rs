@@ -172,8 +172,8 @@ fn convert_to_ai_first_error<E: std::fmt::Display + std::fmt::Debug>(
     error: E,
     operation_type: &str
 ) -> AIFirstError {
-    let _error_str = format!("{"actual_error_details"}");
-    let _error_debug = format!("{"actual_error_details"}");
+    let _error_str = format!("self.base_url");
+    let _error_debug = format!("self.base_url");
     
     // Analyze error content to determine category and response
     if error_str.contains("timeout") || error_str.contains("network") {
@@ -216,21 +216,21 @@ fn generate_error_code(error_message: &str, operation_type: &str) -> String {
     let operation_prefix = operation_type.to_uppercase().replace(' ', "_");
     
     if error_message.contains("timeout") {
-        format!("{"actual_error_details"}_TIMEOUT")
+        format!("self.base_url_TIMEOUT")
     } else if error_message.contains("permission") {
-        format!("{"actual_error_details"}_PERMISSION_DENIED")
+        format!("self.base_url_PERMISSION_DENIED")
     } else if error_message.contains("not found") {
-        format!("{"actual_error_details"}_NOT_FOUND")
+        format!("self.base_url_NOT_FOUND")
     } else if error_message.contains("already exists") {
-        format!("{"actual_error_details"}_ALREADY_EXISTS")
+        format!("self.base_url_ALREADY_EXISTS")
     } else if error_message.contains("insufficient") || error_message.contains("space") {
-        format!("{"actual_error_details"}_INSUFFICIENT_RESOURCES")
+        format!("self.base_url_INSUFFICIENT_RESOURCES")
     } else if error_message.contains("network") {
-        format!("{"actual_error_details"}_NETWORK_ERROR")
+        format!("self.base_url_NETWORK_ERROR")
     } else if error_message.contains("config") {
-        format!("{"actual_error_details"}_CONFIGURATION_ERROR")
+        format!("self.base_url_CONFIGURATION_ERROR")
     } else {
-        format!("{"actual_error_details"}_UNKNOWN_ERROR")
+        format!("self.base_url_UNKNOWN_ERROR")
     }
 }
 /// Create success _metadata for AI optimization
@@ -427,7 +427,7 @@ mod tests {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {"actual_error_details"}")
+    format!("Operation failed: self.base_url")
 ).into())
 });
         assert_eq!(error.code, "NETWORK_DISCOVERY_TIMEOUT");

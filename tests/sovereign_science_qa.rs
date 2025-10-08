@@ -3,8 +3,8 @@
 //! This test validates sovereign science QA functionality using canonical patterns
 //! **CANONICAL MODERNIZATION**: Updated to use simple, working patterns
 
-use nestgate_core::config::defaults::Environment;
-use nestgate_core::config::unified::NestGateUnifiedConfig;
+use nestgate_core::config::canonical_master::NestGateCanonicalConfig;
+use nestgate_core::constants::Environment;
 use std::time::Duration;
 use tokio::time::sleep;
 use tracing::info;
@@ -19,8 +19,9 @@ async fn test_sovereign_science_qa_config() -> Result<(), Box<dyn std::error::Er
     assert!(!config.system.instance_name.is_empty());
 
     // Test environment-specific sovereign science QA configuration
-    let dev_config =
-        nestgate_core::config::unified::create_config_for_environment(Environment::Development);
+    let dev_config = nestgate_core::config::canonical_master::create_config_for_environment(
+        Environment::Development,
+    );
     assert!(!dev_config.system.instance_name.is_empty());
 
     info!("✅ Sovereign science QA configuration test completed");
@@ -181,15 +182,17 @@ async fn test_sovereign_science_environments() -> Result<(), Box<dyn std::error:
     info!("🌍 Testing sovereign science across environments");
 
     // Test development environment sovereign science
-    let dev_config =
-        nestgate_core::config::unified::create_config_for_environment(Environment::Development);
+    let dev_config = nestgate_core::config::canonical_master::create_config_for_environment(
+        Environment::Development,
+    );
     assert!(!dev_config.system.instance_name.is_empty());
     assert!(matches!(dev_config.environment, Environment::Development));
     info!("Development sovereign science configuration validated");
 
     // Test production environment sovereign science
-    let prod_config =
-        nestgate_core::config::unified::create_config_for_environment(Environment::Production);
+    let prod_config = nestgate_core::config::canonical_master::create_config_for_environment(
+        Environment::Production,
+    );
     assert!(!prod_config.system.instance_name.is_empty());
     assert!(matches!(prod_config.environment, Environment::Production));
     info!("Production sovereign science configuration validated");

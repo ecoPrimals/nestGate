@@ -1,6 +1,6 @@
 //! **REST API HANDLERS**
 //!
-//! HTTP request handlers for various NestGate API endpoints including
+//! HTTP request handlers for various `NestGate` API endpoints including
 //! monitoring, storage, system management, WebSocket, and ZFS operations.
 
 /// **MONITORING HANDLERS**

@@ -21,12 +21,16 @@ use tracing::warn;
 // use crate::automation::{EcosystemDiscovery, ServiceConnectionPool};
 
 use super::monitoring::RealTimePerformanceMonitor;
-use super::types::*;
+use super::types::{
+    AlertResponse, AppliedOptimization, ArcStatistics, BottleneckSeverity, OptimizationState,
+    OptimizationType, PerformanceAlert, PerformanceEngineConfig, PerformanceOptimizationResult,
+    SystemMemoryUsage, ZfsBottleneck, ZfsBottleneckType, ZfsPerformanceMetrics, ZfsTuningResult,
+};
 
 /// Real-time Performance Optimization Engine
 ///
 /// Monitors ZFS performance in real-time and applies optimizations based on:
-/// - NestGate's deep ZFS storage expertise
+/// - `NestGate`'s deep ZFS storage expertise
 /// - Ecosystem AI recommendations for optimization strategies
 /// - Real-time performance metrics and bottleneck detection
 #[derive(Debug)]
@@ -51,6 +55,7 @@ pub struct PerformanceOptimizationEngine {
 }
 
 impl PerformanceOptimizationEngine {
+    #[must_use]
     pub fn new(
         config: ZfsConfig,
         pool_manager: Arc<ZfsPoolManager>,
@@ -423,8 +428,8 @@ impl PerformanceOptimizationEngine {
             }
 
             // Check for memory pressure
-            let memory_usage_percent = (f64::from(latest_metrics.system_memory.used)
-                / f64::from(latest_metrics.system_memory.total))
+            let memory_usage_percent = (latest_metrics.system_memory.used as f64
+                / latest_metrics.system_memory.total as f64)
                 * 100.0;
             if memory_usage_percent > 90.0 {
                 bottlenecks.push(ZfsBottleneck {

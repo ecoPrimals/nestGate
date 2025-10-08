@@ -27,6 +27,7 @@ impl<T, const POOL_SIZE: usize> Default for CacheOptimizedMemoryPool<T, POOL_SIZ
 
 impl<T, const POOL_SIZE: usize> CacheOptimizedMemoryPool<T, POOL_SIZE> {
     /// Create new memory pool
+    #[must_use]
     pub fn new() -> Self {
         Self {
             blocks: std::array::from_fn(|_| None),
@@ -57,6 +58,13 @@ impl<T, const POOL_SIZE: usize> CacheOptimizedMemoryPool<T, POOL_SIZE> {
         ) {
             Ok(_) => {
                 // Successfully claimed slot
+                // SAFETY: Writing to pool slot is safe because:
+                // 1. Index bounds: compare_exchange verified current < POOL_SIZE
+                // 2. Uniqueness: compare_exchange ensures exclusive ownership of this slot
+                // 3. Pointer validity: blocks_ptr derived from valid self.blocks reference
+                // 4. Offset: add(current) stays within array bounds (current < POOL_SIZE)
+                // 5. Initialization: ptr::write properly initializes the Option<T> slot
+                // 6. No aliasing: Only this thread can write to claimed slot
                 unsafe {
                     let blocks_ptr = self.blocks.as_ptr() as *mut Option<T>;
                     let slot = blocks_ptr.add(current);
@@ -169,6 +177,11 @@ mod tests {
         let pool: CacheOptimizedMemoryPool<u64, 16> = CacheOptimizedMemoryPool::new();
 
         let handle = pool.allocate(42u64).unwrap();
+        // SAFETY: Test deallocation is safe because:
+        // 1. Handle validity: handle was just allocated from this pool
+        // 2. No double-free: This is the only deallocation of this handle
+        // 3. No other references: We own the handle exclusively
+        // 4. Test environment: Controlled allocation/deallocation cycle
         let value = unsafe { pool.deallocate(handle) };
         assert_eq!(value, Some(42u64));
     }

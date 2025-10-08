@@ -82,8 +82,7 @@ impl CryptoProof {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn validate_with_security_context(&self) -> Result<bool>  {
+                pub fn validate_with_security_context(&self) -> Result<bool>  {
         println!("Validating crypto proof with security provider");
 
         // Check timestamp validity (not too old)
@@ -423,8 +422,7 @@ impl ExternalBoundaryGuardian {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn check_spore_evolution(&self) -> Result<bool>  {
+                pub fn check_spore_evolution(&self) -> Result<bool>  {
         // For immutable Arc, we can't actually evolve the spore in place
         // Just check if evolution would be beneficial
         println!("🌱 Checking if spore evolution would be beneficial");
@@ -439,8 +437,7 @@ impl ExternalBoundaryGuardian {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn get_spore_status(&self) -> Result<SporeStatus>  {
+                pub fn get_spore_status(&self) -> Result<SporeStatus>  {
         Ok(SporeStatus {
             spore_id: self.spore.spore_id.clone(),
             generation: self.spore.generation,

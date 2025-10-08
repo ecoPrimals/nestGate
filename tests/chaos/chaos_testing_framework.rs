@@ -7,15 +7,15 @@
 //! principles and ensuring 100% safety.
 
 use std::sync::Arc;
-use crate::config::ConsolidatedCanonicalConfig;
+use tests::config::ConsolidatedCanonicalConfig;
 use std::time::Duration;
-use crate::config::ConsolidatedCanonicalConfig;
+use tests::config::ConsolidatedCanonicalConfig;
 use tokio::sync::RwLock;
-use crate::config::ConsolidatedCanonicalConfig;
+use tests::config::ConsolidatedCanonicalConfig;
 use uuid::Uuid;
-use crate::config::ConsolidatedCanonicalConfig;
+use tests::config::ConsolidatedCanonicalConfig;
 use serde::{Deserialize, Serialize};
-use crate::config::ConsolidatedCanonicalConfig;
+use tests::config::ConsolidatedCanonicalConfig;
 
 /// **CHAOS TEST SCENARIOS**
 ///

@@ -100,8 +100,8 @@ async fn test_concurrent_operations() -> Result<(), Box<dyn std::error::Error>> 
     for i in 0..10 {
         let backend_clone = backend.clone();
         let handle = tokio::spawn(async move {
-            let filename = format!("concurrent_{"actual_error_details"}.txt");
-            let content = format!("Content for file {"actual_error_details"}");
+            let filename = format!("concurrent_{e}.txt");
+            let content = format!("Content for file {e}");
 
             // Write file
             backend_clone

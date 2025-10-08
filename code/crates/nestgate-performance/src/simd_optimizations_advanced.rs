@@ -29,9 +29,11 @@ pub struct SimdBulkProcessor<const BUFFER_SIZE: usize = 8192> {
 }
 impl<const BUFFER_SIZE: usize> SimdBulkProcessor<BUFFER_SIZE> {
     /// Create new SIMD processor with compile-time buffer size
-    pub fn new() -> Self { Self {
+    pub fn new() -> Self {
+        Self {
             _phantom: PhantomData,
-         }
+        }
+    }
 
     /// Transform bulk data using SIMD instructions
     ///
@@ -100,7 +102,7 @@ impl<const BUFFER_SIZE: usize> CanonicalStorageBackend for SimdStorageBackend<BU
     }
 
     fn read(&self, path: &str) -> impl std::future::Future<Output = StorageResult<Vec<u8>>> + Send {
-        let full_path = format!("{"actual_error_details"}/{"actual_error_details"}");
+        let full_path = format!("{e}/{e}");
         let path = path.to_string();
         async move {
             // SIMD-accelerated file reading with vectorized decompression
@@ -121,7 +123,7 @@ impl<const BUFFER_SIZE: usize> CanonicalStorageBackend for SimdStorageBackend<BU
     }
 
     fn write(&self, path: &str, data: &[u8]) -> impl std::future::Future<Output = StorageResult<()>> + Send {
-        let full_path = format!("{"actual_error_details"}/{"actual_error_details"}");
+        let full_path = format!("{e}/{e}");
         let path = path.to_string();
         let data = data.to_vec();
         async move {
@@ -139,7 +141,7 @@ impl<const BUFFER_SIZE: usize> CanonicalStorageBackend for SimdStorageBackend<BU
     }
 
     fn delete(&self, path: &str) -> impl std::future::Future<Output = StorageResult<()>> + Send {
-        let full_path = format!("{"actual_error_details"}/{"actual_error_details"}");
+        let full_path = format!("{e}/{e}");
         async move {
             tokio::fs::remove_file(&full_path)
                 .await
@@ -194,9 +196,11 @@ pub struct SimdBatchProcessor<const BATCH_SIZE: usize = 1024> {
 }
 impl<const BATCH_SIZE: usize> SimdBatchProcessor<BATCH_SIZE> {
     /// Create new batch processor
-    pub fn new() -> Self { Self {
+    pub fn new() -> Self {
+        Self {
             _phantom: PhantomData,
-         }
+        }
+    }
 
     /// Process batch of data with SIMD acceleration
     ///
@@ -206,8 +210,7 @@ impl<const BATCH_SIZE: usize> SimdBatchProcessor<BATCH_SIZE> {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn process_batch(&self, batch: &mut [u8]) -> Result<()>  {
+                pub fn process_batch(&self, batch: &mut [u8]) -> Result<()>  {
         // SIMD batch processing implementation
         Ok(())
     }

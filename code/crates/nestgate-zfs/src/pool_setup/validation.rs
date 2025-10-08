@@ -49,11 +49,13 @@ pub struct PoolSetupValidator {
     config: PoolSetupConfig,
 }
 impl PoolSetupValidator {
+    #[must_use]
     pub fn new(config: PoolSetupConfig) -> Self {
         Self { config }
     }
 
     /// Validate device with enhanced logic
+    #[must_use]
     pub fn validate_device(&self, device: &StorageDevice) -> ValidationResult {
         let mut result = ValidationResult::new();
 
@@ -67,7 +69,7 @@ impl PoolSetupValidator {
 
         // Path validation
         if !device.device_path.starts_with("/dev/") {
-            result.add_error(format!("Invalid device path: {"actual_error_details"}"));
+            result.add_error("Invalid device path: error details".to_string());
         }
 
         // Usage validation
@@ -90,6 +92,7 @@ impl PoolSetupValidator {
     }
 
     /// Validate pool configuration with enhanced logic
+    #[must_use]
     pub fn validate_pool_config(&self, config: &PoolSetupConfig) -> ValidationResult {
         let mut issues = Vec::new();
         let warnings = Vec::new();

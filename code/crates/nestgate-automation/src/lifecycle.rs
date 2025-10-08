@@ -3,7 +3,7 @@
 
 use crate::Result;
 use nestgate_core::error::NestGateError;
-use nestgate_core::types::StorageTier;
+use nestgate_core::unified_enums::storage_types::StorageTier;
 use std::collections::HashMap;
 use std::time::Duration;
 use std::time::SystemTime;
@@ -146,7 +146,8 @@ pub struct LifecycleConfig {
     pub default_policies: Vec<String>,
 }
 impl Default for LifecycleConfig {
-    fn default() -> Self { Self {
+    fn default() -> Self {
+        Self {
             evaluation_interval: Duration::from_secs(
                 std::env::var("NESTGATE_LIFECYCLE_EVALUATION_INTERVAL_SECS")
                     .ok()
@@ -156,7 +157,8 @@ impl Default for LifecycleConfig {
             max_concurrent_actions: 5,
             require_approval_for_destructive: true,
             default_policies: vec!["standard".to_string()],
-         }
+        }
+    }
 }
 
 /// Scheduled task for lifecycle management
@@ -185,15 +187,19 @@ impl Default for DatasetLifecycleManager {
 
 impl DatasetLifecycleManager {
     #[must_use]
-    pub fn new() -> Self { Self::with_config(LifecycleConfig::default())
+    pub fn new() -> Self {
+        Self::with_config(LifecycleConfig::default())
+    }
+
     #[must_use]
-    , pub fn with_config(config: LifecycleConfig) -> Self {
+    pub fn with_config(config: LifecycleConfig) -> Self {
         let manager = Self {
-            policies: RwLock::new(Vec::new())),
+            policies: RwLock::new(Vec::new()),
             dataset_states: RwLock::new(HashMap::new()),
             scheduler: RwLock::new(None),
             config,
-            stats: RwLock::new(LifecycleStats::default()) };
+            stats: RwLock::new(LifecycleStats::default()),
+        };
 
         // Add default policies
         tokio::spawn(async move {
@@ -212,7 +218,7 @@ impl DatasetLifecycleManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn initialize(&self) -> Result<()>  {
+    pub async fn initialize(&self) -> Result<()> {
         info!("Initializing dataset lifecycle manager");
 
         // Add default policies
@@ -233,7 +239,7 @@ impl DatasetLifecycleManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn shutdown(&self) -> Result<()>  {
+    pub async fn shutdown(&self) -> Result<()> {
         info!("Shutting down dataset lifecycle manager");
 
         // Stop scheduler
@@ -253,8 +259,7 @@ impl DatasetLifecycleManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn add_dataset(&self, dataset_name: &str) -> Result<()>  {
+    pub async fn add_dataset(&self, dataset_name: &str) -> Result<()> {
         info!("Adding dataset {} to lifecycle management", dataset_name);
 
         let state = DatasetLifecycleState {
@@ -285,8 +290,7 @@ impl DatasetLifecycleManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn remove_dataset(&self, dataset_name: &str) -> Result<()>  {
+    pub async fn remove_dataset(&self, dataset_name: &str) -> Result<()> {
         info!(
             "Removing dataset {} from lifecycle management",
             dataset_name
@@ -303,8 +307,7 @@ impl DatasetLifecycleManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn evaluate_dataset(&self, dataset_name: &str) -> Result<LifecycleEvaluation>  {
+    pub async fn evaluate_dataset(&self, dataset_name: &str) -> Result<LifecycleEvaluation> {
         debug!("Evaluating lifecycle for dataset: {}", dataset_name);
 
         let start_time = SystemTime::now();
@@ -313,7 +316,7 @@ impl DatasetLifecycleManager {
         let current_state = {
             let states = self.dataset_states.read().await;
             states.get(dataset_name).cloned().ok_or_else(|| {
-                NestGateError::automation_error(format!(
+                NestGateError::automation(format!(
                     "Dataset {dataset_name} not found in lifecycle management"
                 ))
             })?
@@ -362,8 +365,7 @@ impl DatasetLifecycleManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn execute_action(&self, dataset_name: &str, action: LifecycleAction) -> Result<()>  {
+    pub async fn execute_action(&self, dataset_name: &str, action: LifecycleAction) -> Result<()> {
         info!(
             "Executing lifecycle action for {}: {:?}",
             dataset_name, action
@@ -428,8 +430,7 @@ impl DatasetLifecycleManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn add_policy(&self, policy: LifecyclePolicy) -> Result<()>  {
+    pub async fn add_policy(&self, policy: LifecyclePolicy) -> Result<()> {
         info!("Adding lifecycle policy: {}", policy.name);
         self.policies.write().await.push(policy);
         Ok(())
@@ -496,8 +497,8 @@ impl DatasetLifecycleManager {
                     from_stage: LifecycleStage::Created,
                     to_stage: LifecycleStage::Active,
                     conditions: vec![TransitionCondition::AgeExceeds(
-                        nestgate_core::constants::timeouts::HOUR,
-                    )], // 1 hour
+                        Duration::from_secs(3600), // 1 hour
+                    )],
                     min_stage_duration: Duration::from_secs(
                         std::env::var("NESTGATE_LIFECYCLE_MIN_STAGE_DURATION_SECS")
                             .ok()
@@ -505,7 +506,7 @@ impl DatasetLifecycleManager {
                             .unwrap_or(60), // 1 minute default
                     ),
                     requires_approval: false,
-                }
+                },
                 LifecycleTransition {
                     from_stage: LifecycleStage::Active,
                     to_stage: LifecycleStage::Aging,
@@ -515,7 +516,7 @@ impl DatasetLifecycleManager {
                     ],
                     min_stage_duration: Duration::from_secs(7 * 24 * 3600), // 7 days
                     requires_approval: false,
-                }
+                },
                 LifecycleTransition {
                     from_stage: LifecycleStage::Aging,
                     to_stage: LifecycleStage::Archived,
@@ -525,7 +526,7 @@ impl DatasetLifecycleManager {
                     ],
                     min_stage_duration: Duration::from_secs(30 * 24 * 3600), // 30 days
                     requires_approval: false,
-                }
+                },
             ],
             stage_actions: {
                 let mut actions = HashMap::new();
@@ -549,7 +550,7 @@ impl DatasetLifecycleManager {
                     ],
                 );
                 actions
-            }
+            },
             priority: 100,
             enabled: true,
         };
@@ -564,8 +565,8 @@ impl DatasetLifecycleManager {
                 from_stage: LifecycleStage::Created,
                 to_stage: LifecycleStage::Archived,
                 conditions: vec![TransitionCondition::AgeExceeds(
-                    nestgate_core::constants::timeouts::HOUR,
-                )], // 1 hour
+                    Duration::from_secs(3600), // 1 hour
+                )],
                 min_stage_duration: Duration::from_secs(
                     std::env::var("NESTGATE_BACKUP_LIFECYCLE_MIN_STAGE_DURATION_SECS")
                         .ok()
@@ -585,7 +586,7 @@ impl DatasetLifecycleManager {
                     ],
                 );
                 actions
-            }
+            },
             priority: 200,
             enabled: true,
         };
@@ -652,7 +653,7 @@ impl DatasetLifecycleManager {
         state: &DatasetLifecycleState,
     ) -> bool {
         for condition in conditions {
-            if !self.evaluate_single_condition(condition, state).await {
+            if !self.evaluate_single_condition(condition, state) {
                 return false; // All conditions must be true
             }
         }
@@ -672,7 +673,7 @@ impl DatasetLifecycleManager {
                     .unwrap_or_default();
                 age > *threshold
             }
-    TransitionCondition::AccessBelowThreshold(threshold) => {
+            TransitionCondition::AccessBelowThreshold(threshold) => {
                 // In a real implementation, this would check actual access patterns
                 let access_count = state.metrics.get("daily_access_count").unwrap_or(&10.0);
                 (*access_count as u32) < *threshold

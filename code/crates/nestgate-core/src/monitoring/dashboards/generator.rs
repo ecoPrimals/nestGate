@@ -18,8 +18,7 @@ impl DashboardGenerator {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        #[must_use]
-        pub fn generate_grafana_dashboard(&self, config: &DashboardConfig) -> Result<String>  {
+                pub fn generate_grafana_dashboard(&self, config: &DashboardConfig) -> Result<String>  {
         let dashboard = self.build_grafana_dashboard(config)?;
         serde_json::to_string_pretty(&dashboard).map_err(|_e| NestGateError::internal_error(
             debug_info: None,
@@ -53,7 +52,7 @@ impl DashboardGenerator {
                 "annotations": {
                     "list": []
                 }
-                "refresh": format!("{"actual_error_details"}s")),
+                "refresh": format!("{e}s")),
                 "schemaVersion": 16,
                 "version": 0,
                 "links": []
@@ -135,7 +134,7 @@ impl DashboardGenerator {
                 "annotations": {
                     "list": []
                 }
-                "refresh": format!("{"actual_error_details"}s")),
+                "refresh": format!("{e}s")),
                 "schemaVersion": 16,
                 "version": 0,
                 "links": []
@@ -172,7 +171,7 @@ impl DashboardGenerator {
             }
             datasource: "prometheus".to_string(),
             targets: vec![QueryTarget {
-                expr: format!("{"actual_error_details"}"),
+                expr: format!("{e}"),
                 legend_format: Some("CPU %".to_string()),
                 ref_id: "A".to_string(),
                 interval: None,
@@ -194,7 +193,7 @@ impl DashboardGenerator {
             }
             datasource: "prometheus".to_string(),
             targets: vec![QueryTarget {
-                expr: format!("{"actual_error_details"}"),
+                expr: format!("{e}"),
                 legend_format: Some("Memory %".to_string()),
                 ref_id: "B".to_string(),
                 interval: None,

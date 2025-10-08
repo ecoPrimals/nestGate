@@ -20,7 +20,6 @@ async fn test_basic_chaos_resilience() -> Result<(), Box<dyn std::error::Error>>
 
         // Verify system remains responsive
         assert!(delay_ms < 500, "Delay should be reasonable for testing");
-        Ok(())
     }
 
     info!("✅ Basic chaos resilience test completed");
@@ -39,7 +38,6 @@ async fn test_network_chaos_simulation() -> Result<(), Box<dyn std::error::Error
 
         // Verify delay is within bounds
         assert!(delay <= 100, "Network delay simulation within bounds");
-        Ok(())
     }
 
     info!("✅ Network chaos simulation completed");
@@ -58,9 +56,7 @@ async fn test_resource_constraint_chaos() -> Result<(), Box<dyn std::error::Erro
 
         if i % 3 == 0 {
             sleep(Duration::from_millis(5)).await;
-            Ok(())
         }
-        Ok(())
     }
 
     // Verify system handles resource constraints gracefully
@@ -93,7 +89,6 @@ async fn test_error_recovery() -> Result<(), Box<dyn std::error::Error>> {
         assert!(!error_type.is_empty(), "Error type should be specified");
 
         sleep(Duration::from_millis(10)).await;
-        Ok(())
     }
 
     info!("✅ Error recovery test completed");
@@ -120,7 +115,6 @@ async fn test_chaos_monitoring() -> Result<(), Box<dyn std::error::Error>> {
             elapsed.as_millis() > (i as u128 * 20),
             "Time tracking works"
         );
-        Ok(())
     }
 
     info!("✅ Chaos monitoring test completed");

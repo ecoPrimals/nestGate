@@ -7,10 +7,15 @@
 //! - Concurrent operation scaling
 //! - System throughput validation
 
-use crate::canonical_modernization::{UnifiedHealthStatus, UnifiedServiceType};
-use nestgate_core::config::unified::types::CanonicalConfig;
+use nestgate_core::config::canonical_master::NestGateCanonicalConfig;
 use nestgate_core::error::{NestGateError, Result};
+use std::sync::Arc;
+use std::sync::Arc;
+use std::sync::Arc;
+use tests::canonical_modernization::{UnifiedHealthStatus, UnifiedServiceType};
 
+use std::sync::Arc;
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::RwLock;
 
@@ -23,10 +28,11 @@ async fn test_zero_copy_config_performance() -> Result<()> {
     let start = Instant::now();
 
     // Create a large configuration without unnecessary cloning
-    let config = Arc::new(CanonicalConfig::default());
+    let config = Arc::new(NestGateNestGateCanonicalConfig::default());
 
     // Test that Arc sharing is zero-copy
-    let config_refs: Vec<Arc<CanonicalConfig>> = (0..10000).map(|_| Arc::clone(&config)).collect();
+    let config_refs: Vec<Arc<NestGateCanonicalConfig>> =
+        (0..10000).map(|_| Arc::clone(&config)).collect();
 
     let sharing_time = start.elapsed();
 
@@ -119,7 +125,7 @@ async fn test_canonical_memory_efficiency() -> Result<()> {
 async fn test_high_throughput_operations() -> Result<()> {
     println!("🧪 Testing high-throughput operations...");
 
-    let config = Arc::new(RwLock::new(CanonicalConfig::default()));
+    let config = Arc::new(RwLock::new(NestGateCanonicalConfig::default()));
     let operations = 10000;
 
     let start = Instant::now();
@@ -207,8 +213,8 @@ async fn test_canonical_scalability() -> Result<()> {
         // Create configurations at scale
         let configs: Vec<CanonicalConfig> = (0..scale)
             .map(|i| CanonicalConfig {
-                network: nestgate_core::config::unified::types::NetworkConfig {
-                    api: nestgate_core::config::unified::types::ApiServerConfig {
+                network: nestgate_core::config::NetworkConfig {
+                    api: nestgate_core::config::ApiServerConfig {
                         port: 8000 + (i % 1000) as u16,
                         ..Default::default()
                     },

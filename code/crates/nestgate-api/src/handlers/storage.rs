@@ -10,9 +10,16 @@ use std::process::Command;
 #[derive(Debug, Clone)]
 pub struct StorageHandler;
 
+impl Default for StorageHandler {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl StorageHandler {
     /// Create a new storage handler instance
-    pub fn new() -> Self {
+    #[must_use]
+    pub const fn new() -> Self {
         Self
     }
 }
@@ -93,7 +100,7 @@ pub struct StorageMetrics {
 ///
 /// Retrieve information about all storage pools.
 #[must_use]
-pub fn get_storage_pools() -> Result<Json<Vec<StoragePoolInfo>>, StatusCode> {
+pub async fn get_storage_pools() -> Result<Json<Vec<StoragePoolInfo>>, StatusCode> {
     let pools = vec![
         StoragePoolInfo {
             name: "main-pool".to_string(),
@@ -118,7 +125,7 @@ pub fn get_storage_pools() -> Result<Json<Vec<StoragePoolInfo>>, StatusCode> {
 ///
 /// Retrieve information about all storage datasets.
 #[must_use]
-pub fn get_storage_datasets() -> Result<Json<Vec<StorageDatasetInfo>>, StatusCode> {
+pub async fn get_storage_datasets() -> Result<Json<Vec<StorageDatasetInfo>>, StatusCode> {
     let datasets = vec![
         StorageDatasetInfo {
             name: "main-pool/data".to_string(),
@@ -143,7 +150,7 @@ pub fn get_storage_datasets() -> Result<Json<Vec<StorageDatasetInfo>>, StatusCod
 ///
 /// Retrieve information about all storage snapshots.
 #[must_use]
-pub fn get_storage_snapshots() -> Result<Json<Vec<StorageSnapshotInfo>>, StatusCode> {
+pub async fn get_storage_snapshots() -> Result<Json<Vec<StorageSnapshotInfo>>, StatusCode> {
     let snapshots = vec![
         StorageSnapshotInfo {
             name: "main-pool/data@backup-2024-01-15".to_string(),
@@ -166,7 +173,7 @@ pub fn get_storage_snapshots() -> Result<Json<Vec<StorageSnapshotInfo>>, StatusC
 ///
 /// Retrieve current storage performance metrics.
 #[must_use]
-pub fn get_storage_metrics() -> Result<Json<StorageMetrics>, StatusCode> {
+pub async fn get_storage_metrics() -> Result<Json<StorageMetrics>, StatusCode> {
     let metrics = StorageMetrics {
         total_pools: 2,
         total_datasets: 5,
@@ -245,7 +252,7 @@ async fn collect_real_storage_pools(
 
     // Get filesystem information using df command
     let output = Command::new("df")
-        .args(&["-h", "--output=source,fstype,size,used,avail,pcent,target"])
+        .args(["-h", "--output=source,fstype,size,used,avail,pcent,target"])
         .output()?;
 
     let stdout = str::from_utf8(&output.stdout)?;
@@ -268,7 +275,7 @@ async fn collect_real_storage_pools(
                 let available = parse_size_string(avail_str).unwrap_or(0);
 
                 pools.push(StoragePool {
-                    name: format!("{} ({})", source, mount_point),
+                    name: format!("{source} ({mount_point})"),
                     status: "ONLINE".to_string(),
                     size,
                     used,
@@ -291,19 +298,16 @@ async fn collect_real_storage_pools(
 /// Create fallback pool representing the root filesystem
 fn create_fallback_root_pool() -> StoragePool {
     // Get root filesystem info
-    let (size, used, available) =
-        if let Ok(output) = Command::new("df").args(&["-B1", "/"]).output() {
-            if let Ok(stdout) = std::str::from_utf8(&output.stdout) {
-                if let Some(line) = stdout.lines().nth(1) {
-                    let parts: Vec<&str> = line.split_whitespace().collect();
-                    if parts.len() >= 4 {
-                        let size = parts[1].parse::<u64>().unwrap_or(0);
-                        let used = parts[2].parse::<u64>().unwrap_or(0);
-                        let avail = parts[3].parse::<u64>().unwrap_or(0);
-                        (size, used, avail)
-                    } else {
-                        (0, 0, 0)
-                    }
+    let (size, used, available) = if let Ok(output) = Command::new("df").args(["-B1", "/"]).output()
+    {
+        if let Ok(stdout) = std::str::from_utf8(&output.stdout) {
+            if let Some(line) = stdout.lines().nth(1) {
+                let parts: Vec<&str> = line.split_whitespace().collect();
+                if parts.len() >= 4 {
+                    let size = parts[1].parse::<u64>().unwrap_or(0);
+                    let used = parts[2].parse::<u64>().unwrap_or(0);
+                    let avail = parts[3].parse::<u64>().unwrap_or(0);
+                    (size, used, avail)
                 } else {
                     (0, 0, 0)
                 }
@@ -312,7 +316,10 @@ fn create_fallback_root_pool() -> StoragePool {
             }
         } else {
             (0, 0, 0)
-        };
+        }
+    } else {
+        (0, 0, 0)
+    };
 
     StoragePool {
         name: "root (/)".to_string(),
@@ -349,7 +356,7 @@ fn parse_size_string(size_str: &str) -> Option<u64> {
         return Some(0);
     }
     let size_str = size_str.trim();
-    let (number_part, unit) = if let Some(pos) = size_str.chars().position(|c| c.is_alphabetic()) {
+    let (number_part, unit) = if let Some(pos) = size_str.chars().position(char::is_alphabetic) {
         let (num, unit) = size_str.split_at(pos);
         (num, unit)
     } else {
@@ -386,7 +393,7 @@ async fn collect_real_storage_datasets(
         if std::path::Path::new(dir).exists() {
             if let Ok((size, used, available)) = get_directory_usage(dir) {
                 datasets.push(StorageDataset {
-                    name: format!("local{"actual_error_details"}"),
+                    name: "localself.base_url".to_string(),
                     pool: "root".to_string(),
                     size,
                     used,
@@ -402,7 +409,7 @@ async fn collect_real_storage_datasets(
     if let Ok(home_dir) = std::env::var("HOME") {
         if let Ok((size, used, available)) = get_directory_usage(&home_dir) {
             datasets.push(StorageDataset {
-                name: format!("user_home"),
+                name: "user_home".to_string(),
                 pool: "root".to_string(),
                 size,
                 used,
@@ -426,7 +433,7 @@ fn get_directory_usage(
     dir: &str,
 ) -> Result<(u64, u64, u64), Box<dyn std::error::Error + Send + Sync>> {
     // Use df to get filesystem stats for the directory
-    let output = Command::new("df").args(&["-B1", dir]).output()?;
+    let output = Command::new("df").args(["-B1", dir]).output()?;
 
     let stdout = std::str::from_utf8(&output.stdout)?;
     if let Some(line) = stdout.lines().nth(1) {
@@ -463,7 +470,7 @@ async fn create_fallback_home_dataset() -> StorageDataset {
 async fn collect_real_zfs_snapshots(
 ) -> Result<Vec<StorageSnapshot>, Box<dyn std::error::Error + Send + Sync>> {
     let output = tokio::process::Command::new("zfs")
-        .args(&[
+        .args([
             "list",
             "-t",
             "snapshot",
@@ -549,7 +556,7 @@ fn parse_bandwidth_unit(value: &str) -> Option<f64> {
 async fn collect_fallback_storage_metrics() -> StorageMetrics {
     // Get basic disk space information from system
     let (total_storage, used_storage, available_storage) = match tokio::process::Command::new("df")
-        .args(&["-B1", "/"]) // Get root filesystem size in bytes
+        .args(["-B1", "/"]) // Get root filesystem size in bytes
         .output()
         .await
     {
@@ -603,9 +610,16 @@ pub struct StorageManager {
     // Placeholder fields
 }
 
+impl Default for StorageManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl StorageManager {
     /// Create a new storage manager instance
-    pub fn new() -> Self {
+    #[must_use]
+    pub const fn new() -> Self {
         Self {}
     }
 }

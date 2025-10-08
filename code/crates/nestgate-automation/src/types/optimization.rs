@@ -1,4 +1,3 @@
-
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -24,10 +23,9 @@ pub enum OptimizationPlan {
     /// Distribute optimization across multiple services
     Distributed {
         intelligence_tasks: HashMap<String, Vec<String>>,
-    }
-    ,
-/// Use single service for all optimizations
-    SingleIntelligence { intelligence_id: String }
+    },
+    /// Use single service for all optimizations
+    SingleIntelligence { intelligence_id: String },
     /// Fall back to local processing only
     LocalOnly,
 }
@@ -62,33 +60,39 @@ pub struct AgeThresholds {
     pub old: u32,
 }
 impl Default for TierThresholds {
-    fn default() -> Self { Self {
+    fn default() -> Self {
+        Self {
             hot_threshold: 10.0, // 10+ accesses per day
             warm_threshold: 1.0, // 1+ access per day
             cold_threshold: 0.1, // 0.1+ access per day
             size_thresholds: SizeThresholds::default(),
             age_thresholds: AgeThresholds::default(),
-         }
+        }
+    }
 }
 
 impl Default for SizeThresholds {
-    fn default() -> Self { Self {
+    fn default() -> Self {
+        Self {
             small_file: {
                 use nestgate_core::canonical_modernization::canonical_constants::storage::SMALL_FILE_BYTES;
                 SMALL_FILE_BYTES
-            , large_file: {
+            },
+            large_file: {
                 use nestgate_core::canonical_modernization::canonical_constants::storage::LARGE_FILE_BYTES;
                 LARGE_FILE_BYTES
-             }
+            },
         }
     }
 }
 
 impl Default for AgeThresholds {
-    fn default() -> Self { Self {
+    fn default() -> Self {
+        Self {
             recent: 7, // 7 days
             old: 90,   // 90 days
-         }
+        }
+    }
 }
 
 /// Performance expectation for storage operations
@@ -106,11 +110,13 @@ pub struct PerformanceExpectation {
     pub expected_durability_nines: u32,
 }
 impl Default for PerformanceExpectation {
-    fn default() -> Self { Self {
+    fn default() -> Self {
+        Self {
             expected_iops: 1000,
             expected_bandwidth_mbps: 100.0,
             expected_latency_ms: 10.0,
             expected_availability: 99.9,
             expected_durability_nines: 11,
-         }
+        }
+    }
 }

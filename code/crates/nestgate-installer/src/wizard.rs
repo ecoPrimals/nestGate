@@ -1,4 +1,4 @@
-/// Simplified installation wizard using canonical patterns and LegacyConfigAdapter
+/// Simplified installation wizard using canonical patterns and `LegacyConfigAdapter`
 use crate::config::InstallerConfig;
 use dialoguer::{Confirm, Input};
 // Migration utilities no longer needed - using canonical configurations
@@ -10,6 +10,7 @@ pub struct InstallationWizard {
 }
 impl InstallationWizard {
     /// Create new installation wizard
+    #[must_use]
     pub fn new(config: InstallerConfig) -> Self {
         Self { config }
     }
@@ -22,8 +23,7 @@ impl InstallationWizard {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn run(&mut self) -> Result<InstallerConfig>  {
+    pub fn run(&mut self) -> Result<InstallerConfig> {
         println!("🚀 NestGate Installation Wizard");
         println!("================================");
 
@@ -52,9 +52,7 @@ impl InstallationWizard {
             .with_prompt("Installation directory")
             .default(default_path)
             .interact_text()
-            .map_err(|_e| {
-                NestGateError::validation(format!("Input error: {"actual_error_details"}"))
-            })?;
+            .map_err(|e| NestGateError::validation(format!("Input error: {e}")))?;
 
         // Update canonical config fields - use data_dir instead of working_directory
         self.config.base_config.system.data_dir = PathBuf::from(&custom_path);
@@ -70,9 +68,7 @@ impl InstallationWizard {
             .with_prompt("Install as system service?")
             .default(false)
             .interact()
-            .map_err(|_e| {
-                NestGateError::validation(format!("Input error: {"actual_error_details"}"))
-            })?;
+            .map_err(|e| NestGateError::validation(format!("Input error: {e}")))?;
 
         if install_as_service {
             println!("✅ Will install as system service");
@@ -84,9 +80,7 @@ impl InstallationWizard {
             .with_prompt("Add to system PATH?")
             .default(true)
             .interact()
-            .map_err(|_e| {
-                NestGateError::validation(format!("Input error: {"actual_error_details"}"))
-            })?;
+            .map_err(|e| NestGateError::validation(format!("Input error: {e}")))?;
 
         if add_to_path {
             println!("✅ Will add to system PATH");
@@ -101,9 +95,7 @@ impl InstallationWizard {
             .with_prompt("Install ZFS support?")
             .default(true)
             .interact()
-            .map_err(|_e| {
-                NestGateError::validation(format!("Input error: {"actual_error_details"}"))
-            })?;
+            .map_err(|e| NestGateError::validation(format!("Input error: {e}")))?;
 
         // Note: components configuration would need to be added to canonical config
         // For now, just enable existing features if requested
@@ -120,17 +112,13 @@ impl InstallationWizard {
             .with_prompt("Enable performance monitoring?")
             .default(true)
             .interact()
-            .map_err(|_e| {
-                NestGateError::validation(format!("Input error: {"actual_error_details"}"))
-            })?;
+            .map_err(|e| NestGateError::validation(format!("Input error: {e}")))?;
 
         let enable_security = Confirm::new()
             .with_prompt("Enable security hardening?")
             .default(true)
             .interact()
-            .map_err(|_e| {
-                NestGateError::validation(format!("Input error: {"actual_error_details"}"))
-            })?;
+            .map_err(|e| NestGateError::validation(format!("Input error: {e}")))?;
 
         if enable_monitoring {
             println!("✅ Performance monitoring enabled");
@@ -157,9 +145,7 @@ impl InstallationWizard {
             .with_prompt("Proceed with installation?")
             .default(true)
             .interact()
-            .map_err(|_e| {
-                NestGateError::validation(format!("Input error: {"actual_error_details"}"))
-            })?;
+            .map_err(|e| NestGateError::validation(format!("Input error: {e}")))?;
 
         if !confirm {
             return Err(NestGateError::validation("Installation cancelled by user"));

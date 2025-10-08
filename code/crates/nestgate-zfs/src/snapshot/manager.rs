@@ -46,6 +46,7 @@ pub struct ZfsSnapshotManager {
 
     /// Shutdown signal
     shutdown_tx: Option<mpsc::Sender<()>>,
+    #[allow(dead_code)]
     background_tasks: Vec<tokio::task::JoinHandle<()>>,
 }
 
@@ -98,6 +99,7 @@ impl ZfsSnapshotManager {
     }
 
     /// Create a new snapshot manager with shared config (zero-copy optimization)
+    #[must_use]
     pub fn with_shared_config(
         config: Arc<ZfsConfig>,
         dataset_manager: Arc<ZfsDatasetManager>,
@@ -184,7 +186,7 @@ impl ZfsSnapshotManager {
     }
 
     /// Add a snapshot policy
-    pub fn add_policy(&self, policy: SnapshotPolicy) -> CoreResult<()> {
+    pub async fn add_policy(&self, policy: SnapshotPolicy) -> CoreResult<()> {
         info!("Adding snapshot policy: {}", policy.name);
 
         let mut policies = self.policies.write().await;
@@ -193,7 +195,7 @@ impl ZfsSnapshotManager {
     }
 
     /// Remove a snapshot policy
-    pub fn remove_policy(&self, name: &str) -> CoreResult<bool> {
+    pub async fn remove_policy(&self, name: &str) -> CoreResult<bool> {
         info!("Removing snapshot policy: {}", name);
 
         let mut policies = self.policies.write().await;
@@ -213,7 +215,7 @@ impl ZfsSnapshotManager {
     }
 
     /// Create a snapshot manually
-    pub fn create_snapshot(
+    pub async fn create_snapshot(
         &self,
         dataset: &str,
         name: &str,
@@ -243,7 +245,7 @@ impl ZfsSnapshotManager {
     }
 
     /// Delete a snapshot
-    pub fn delete_snapshot(&self, dataset: &str, name: &str) -> CoreResult<String> {
+    pub async fn delete_snapshot(&self, dataset: &str, name: &str) -> CoreResult<String> {
         info!("Deleting snapshot: {}@{}", dataset, name);
 
         let operation = SnapshotOperation {
@@ -268,7 +270,7 @@ impl ZfsSnapshotManager {
     }
 
     /// List snapshots for a dataset
-    pub fn list_snapshots(&self, dataset: &str) -> CoreResult<Vec<SnapshotInfo>> {
+    pub async fn list_snapshots(&self, dataset: &str) -> CoreResult<Vec<SnapshotInfo>> {
         debug!("Listing snapshots for dataset: {}", dataset);
 
         let cache = self.snapshot_cache.read().await;

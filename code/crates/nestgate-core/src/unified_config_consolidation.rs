@@ -318,7 +318,11 @@ pub type UnifiedMcpConfig = StandardDomainConfig<McpExtensions>;
 
 /// Migration utilities for converting legacy configs to unified patterns
 pub mod migration {
-    use super::*;
+    use super::{
+        HashMap, McpExtensions, McpProviderSettings, NasExtensions, NasProtocolSettings,
+        StandardDomainConfig, UnifiedMcpConfig, UnifiedNasConfig, UnifiedZfsConfig, ZfsExtensions,
+        ZfsPoolSettings,
+    };
     /// Convert legacy ZFS configs to unified pattern
     #[must_use]
     pub fn migrate_zfs_config(
@@ -333,19 +337,19 @@ pub mod migration {
                     .to_string(),
                 enable_compression: legacy_fields
                     .get("compression")
-                    .and_then(|v| v.as_bool())
+                    .and_then(serde_json::Value::as_bool)
                     .unwrap_or(true),
                 enable_deduplication: legacy_fields
                     .get("deduplication")
-                    .and_then(|v| v.as_bool())
+                    .and_then(serde_json::Value::as_bool)
                     .unwrap_or(false),
                 enable_encryption: legacy_fields
                     .get("encryption")
-                    .and_then(|v| v.as_bool())
+                    .and_then(serde_json::Value::as_bool)
                     .unwrap_or(true),
                 auto_pool_creation: legacy_fields
                     .get("auto_create")
-                    .and_then(|v| v.as_bool())
+                    .and_then(serde_json::Value::as_bool)
                     .unwrap_or(false),
             },
             ..Default::default()
@@ -363,19 +367,19 @@ pub mod migration {
             protocols: NasProtocolSettings {
                 smb_enabled: legacy_fields
                     .get("smb_enabled")
-                    .and_then(|v| v.as_bool())
+                    .and_then(serde_json::Value::as_bool)
                     .unwrap_or(true),
                 nfs_enabled: legacy_fields
                     .get("nfs_enabled")
-                    .and_then(|v| v.as_bool())
+                    .and_then(serde_json::Value::as_bool)
                     .unwrap_or(true),
                 ftp_enabled: legacy_fields
                     .get("ftp_enabled")
-                    .and_then(|v| v.as_bool())
+                    .and_then(serde_json::Value::as_bool)
                     .unwrap_or(false),
                 webdav_enabled: legacy_fields
                     .get("webdav_enabled")
-                    .and_then(|v| v.as_bool())
+                    .and_then(serde_json::Value::as_bool)
                     .unwrap_or(true),
             },
             ..Default::default()
@@ -422,7 +426,7 @@ pub mod migration {
 
 /// Validation utilities for unified configurations
 pub mod validation {
-    use super::*;
+    use super::{Serialize, StandardDomainConfig};
     /// Validate a `StandardDomainConfig`
     ///
     /// # Errors

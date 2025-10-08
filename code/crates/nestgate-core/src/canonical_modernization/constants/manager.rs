@@ -158,8 +158,7 @@ impl ConstantsConsolidationManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn generate_constants_module(&self, domain: &str) -> Result<String>  {
+                pub fn generate_constants_module(&self, domain: &str) -> Result<String>  {
         let domain_constants =
             self.domain_mappings
                 .get(domain)

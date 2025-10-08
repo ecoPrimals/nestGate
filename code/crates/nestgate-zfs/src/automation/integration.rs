@@ -45,6 +45,7 @@ pub fn check_zfs_ecosystem_availability() -> bool {
     true
 }
 #[cfg(not(feature = "network-integration"))]
+#[must_use]
 pub fn check_zfs_ecosystem_availability() -> bool {
     false
 }

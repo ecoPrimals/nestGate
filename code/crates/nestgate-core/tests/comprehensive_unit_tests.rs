@@ -76,7 +76,7 @@ fn test_storage_operation_variants() {
 
     for op in &operations {
         // Test Debug formatting
-        let debug_str = format!("{:?}", op);
+        let debug_str = format!("{op:?}");
         assert!(!debug_str.is_empty());
 
         // Test Clone
@@ -112,7 +112,7 @@ fn test_nestgate_error_creation() {
     }));
 
     assert!(error.to_string().contains("Test error"));
-    assert!(format!("{:?}", error).contains("Validation"));
+    assert!(format!("{error:?}").contains("Validation"));
 }
 
 #[test]
@@ -206,7 +206,7 @@ fn test_capability_type_variants() {
     ];
 
     for cap_type in &types {
-        let debug_str = format!("{:?}", cap_type);
+        let debug_str = format!("{cap_type:?}");
         assert!(!debug_str.is_empty());
 
         let cloned = cap_type.clone();
@@ -391,9 +391,9 @@ fn test_capability_creation_performance() {
 
     for i in 0..1000 {
         let capability = CapabilityDescriptor {
-            id: format!("capability_{}", i),
+            id: format!("capability_{i}"),
             capability_type: CapabilityType::Storage,
-            endpoint: Some(format!("http://service-{}.local", i)),
+            endpoint: Some(format!("http://service-{i}.local")),
             metadata: HashMap::from([
                 ("index".to_string(), i.to_string()),
                 ("created_at".to_string(), "2025-01-01".to_string()),
@@ -423,7 +423,7 @@ fn test_discovery_stats_update_performance() {
         stats.total_discovered += 1;
         stats.discovery_attempts += 1;
         stats.avg_discovery_time_ns = (stats.avg_discovery_time_ns + (i as u64 * 1000)) / 2;
-        stats.connection_complexity = (i as f64) / 1000.0;
+        stats.connection_complexity = f64::from(i) / 1000.0;
     }
 
     let elapsed = start.elapsed();

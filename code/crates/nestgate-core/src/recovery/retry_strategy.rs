@@ -51,11 +51,13 @@ pub struct ExponentialBackoff {
 
 impl ExponentialBackoff {
     /// Create a new exponential backoff strategy
+    #[must_use]
     pub fn new(config: RetryConfig) -> Self {
         Self { config }
     }
 
     /// Create with default configuration
+    #[must_use]
     pub fn default_config() -> Self {
         Self::new(RetryConfig::default())
     }
@@ -106,6 +108,7 @@ pub struct LinearBackoff {
 
 impl LinearBackoff {
     /// Create a new linear backoff strategy
+    #[must_use]
     pub fn new(config: RetryConfig) -> Self {
         Self { config }
     }
@@ -113,7 +116,7 @@ impl LinearBackoff {
 
 impl RetryStrategy for LinearBackoff {
     fn delay(&self, attempt: u32) -> Duration {
-        let delay_ms = self.config.initial_delay.as_millis() as u64 * (attempt + 1) as u64;
+        let delay_ms = self.config.initial_delay.as_millis() as u64 * u64::from(attempt + 1);
         let delay = Duration::from_millis(delay_ms.min(self.config.max_delay.as_millis() as u64));
 
         if self.config.jitter {

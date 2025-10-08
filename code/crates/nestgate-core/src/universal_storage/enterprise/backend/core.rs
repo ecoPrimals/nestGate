@@ -114,8 +114,7 @@ impl EnterpriseStorageBackend {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        #[must_use]
-        pub fn capabilities(&self) -> Result<Vec<ServiceCapability>>   {
+                pub fn capabilities(&self) -> Result<Vec<ServiceCapability>>   {
         Ok(vec![
             ServiceCapability {
                 capability_id: "enterprise.filesystem".to_string(),

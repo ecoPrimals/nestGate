@@ -1,17 +1,51 @@
-//! **HARDWARE TUNING HANDLERS**
+//! **HARDWARE TUNING HANDLERS - DEVELOPMENT STUBS**
 //!
-//! HTTP handlers and implementation for hardware tuning operations.
+//! ⚠️ **ONLY AVAILABLE WITH `dev-stubs` FEATURE** ⚠️
+//!
+//! HTTP handlers for hardware tuning operations.
+//! Currently contains stub implementations returning hardcoded data.
+//! Real system integration planned for future release.
+//!
+//! **For production hardware tuning**: Implement using `sysinfo` crate.
+
+#![cfg(feature = "dev-stubs")]
 
 use axum::{http::StatusCode, response::Json};
 use chrono::Utc;
 use tracing::info;
 
-use super::types::*;
+use super::types::{
+    BenchmarkResult, ComputeAllocation, ComputeResourceRequest, ComputeResources, CpuInfo,
+    CpuMonitor, GpuInfo, GpuMonitor, HardwareMonitors, HardwareTuningConfig, LiveHardwareMetrics,
+    LiveHardwareTuningSession, MemoryInfo, MemoryMonitor, SystemCapabilities,
+    SystemMetricsCollector, SystemProfile, TuningResult, TuningServiceRegistration,
+};
 use nestgate_core::{NestGateError, Result};
 
-/// **REAL HARDWARE TUNING HANDLER**
+/// **HARDWARE TUNING HANDLER (Currently Stub)**
 ///
-/// Production hardware tuning handler with real system integration.
+/// ⚠️ **PARTIAL STUB IMPLEMENTATION** - Some methods return hardcoded data.
+///
+/// This handler is being developed for production hardware tuning.
+/// Currently contains stub implementations that need to be replaced with real system integration.
+///
+/// # Stub Methods (Future Implementation)
+///
+/// - `get_system_resources()` - Returns hardcoded values (CPU: 16, RAM: 64GB, GPU: 2)
+/// - `allocate_system_resources()` - Returns hardcoded allocation
+/// - `analyze_system_profile()` - Returns hardcoded profile
+/// - `apply_tuning_optimizations()` - Returns stub results
+///
+/// # Production Implementation Needed
+///
+/// Use `sysinfo` crate for real system detection:
+/// ```ignore
+/// use sysinfo::{System, SystemExt};
+/// let mut sys = System::new_all();
+/// sys.refresh_all();
+/// let cpu_count = sys.physical_core_count();
+/// let total_memory = sys.total_memory();
+/// ```
 #[derive(Debug, Clone)]
 #[allow(dead_code)] // Fields used for configuration and monitoring
 pub struct RealHardwareTuningHandler {
@@ -23,8 +57,15 @@ pub struct RealHardwareTuningHandler {
     monitors: HardwareMonitors,
 }
 
+impl Default for RealHardwareTuningHandler {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl RealHardwareTuningHandler {
     /// Create a new real hardware tuning handler
+    #[must_use]
     pub fn new() -> Self {
         Self {
             config: HardwareTuningConfig::default(),
@@ -47,13 +88,36 @@ impl RealHardwareTuningHandler {
         Ok(())
     }
 
-    /// Get available system resources
+    /// Get available system resources (STUB - returns hardcoded values)
+    ///
+    /// ⚠️ **STUB IMPLEMENTATION** - Returns hardcoded system resources.
+    ///
+    /// # Current Behavior
+    ///
+    /// Always returns:
+    /// - CPU: 16 cores (HARDCODED)
+    /// - Memory: 64 GB (HARDCODED)
+    /// - GPU: 2 units (HARDCODED)
+    ///
+    /// # Future Production Implementation
+    ///
+    /// Replace with real system detection:
+    /// ```ignore
+    /// use sysinfo::{System, SystemExt};
+    /// let mut sys = System::new_all();
+    /// sys.refresh_all();
+    /// Ok(ComputeResources {
+    ///     available_cpu: sys.physical_core_count().unwrap_or(1) as u32,
+    ///     available_memory_gb: (sys.total_memory() / 1_073_741_824) as u32,
+    ///     available_gpu: detect_gpus().await?,
+    /// })
+    /// ```
     async fn get_system_resources(&self) -> Result<ComputeResources> {
-        // Stub implementation for getting system resources
+        // STUB: Returns hardcoded values - Real implementation pending
         Ok(ComputeResources {
-            available_cpu: 16,
-            available_memory_gb: 64,
-            available_gpu: 2,
+            available_cpu: 16,       // HARDCODED - Future: Use sysinfo crate
+            available_memory_gb: 64, // HARDCODED - Future: Use sysinfo crate
+            available_gpu: 2,        // HARDCODED - Future: Implement GPU detection
         })
     }
 
@@ -84,20 +148,30 @@ impl RealHardwareTuningHandler {
         })
     }
 
-    /// Apply tuning optimizations
+    /// Apply tuning optimizations (STUB - returns mock results)
+    ///
+    /// ⚠️ **STUB IMPLEMENTATION** - Returns hardcoded optimization results.
+    ///
+    /// # Future Production Implementation
+    ///
+    /// Implement real system tuning:
+    /// - CPU governor adjustments
+    /// - Memory allocation tuning
+    /// - Disk I/O scheduling
+    /// - Network buffer optimization
     async fn apply_tuning_optimizations(&self, _profile: &SystemProfile) -> Result<TuningResult> {
-        // Stub implementation
+        // STUB: Returns mock results - Real implementation pending
         Ok(TuningResult {
-            profile_name: "test_profile".to_string(),
-            optimizations_applied: vec!["cpu_governor_performance".to_string()],
-            estimated_power_increase: 5.0,
-            performance_improvement: 15.0,
+            profile_name: "test_profile".to_string(), // HARDCODED
+            optimizations_applied: vec!["cpu_governor_performance".to_string()], // HARDCODED
+            estimated_power_increase: 5.0,            // HARDCODED
+            performance_improvement: 15.0,            // HARDCODED
             before_metrics: LiveHardwareMetrics {
                 timestamp: Utc::now(),
-                cpu_usage: 0.0,
-                memory_usage: 0.0,
-                gpu_usage: 0.0,
-                disk_io: 0.0,
+                cpu_usage: 0.0,    // HARDCODED
+                memory_usage: 0.0, // HARDCODED
+                gpu_usage: 0.0,    // HARDCODED
+                disk_io: 0.0,      // HARDCODED
                 disk_usage: 0.0,
                 network_io: 0.0,
                 network_usage: 0.0,
@@ -221,7 +295,10 @@ impl RealHardwareTuningHandler {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn register_tuning_service(&self, registration: &TuningServiceRegistration) -> Result<()> {
+    pub async fn register_tuning_service(
+        &self,
+        registration: &TuningServiceRegistration,
+    ) -> Result<()> {
         info!(
             "Registering real hardware tuning service: {}",
             registration.service_name
@@ -246,7 +323,7 @@ impl RealHardwareTuningHandler {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn request_compute_resources(
+    pub async fn request_compute_resources(
         &self,
         request: &ComputeResourceRequest,
     ) -> Result<ComputeAllocation> {
@@ -334,8 +411,7 @@ impl RealHardwareTuningHandler {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
-    pub fn benchmark(&self, benchmark_name: &str) -> Result<BenchmarkResult> {
+    pub async fn benchmark(&self, benchmark_name: &str) -> Result<BenchmarkResult> {
         info!("Running real benchmark: {}", benchmark_name);
 
         let start_time = Utc::now();
@@ -369,8 +445,7 @@ impl RealHardwareTuningHandler {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
-    pub fn release_allocation(&self, allocation_id: &str) -> Result<()> {
+    pub async fn release_allocation(&self, allocation_id: &str) -> Result<()> {
         info!("Releasing resource allocation: {}", allocation_id);
 
         // Release actual system resources
@@ -412,7 +487,7 @@ impl RealHardwareTuningHandler {
         let cpu_info = std::fs::read_to_string("/proc/cpuinfo").map_err(|_e| {
             NestGateError::system(
                 "cpu_detection",
-                &format!("Failed to read CPU info: {"actual_error_details"}"),
+                "Failed to read CPU info: self.base_url".to_string(),
             )
         })?;
 
@@ -425,8 +500,7 @@ impl RealHardwareTuningHandler {
             .lines()
             .find(|line| line.starts_with("model name"))
             .and_then(|line| line.split(':').nth(1))
-            .map(|s| s.trim().to_string())
-            .unwrap_or_else(|| "Unknown CPU".to_string());
+            .map_or_else(|| "Unknown CPU".to_string(), |s| s.trim().to_string());
 
         Ok(CpuInfo { cores, model })
     }
@@ -436,7 +510,7 @@ impl RealHardwareTuningHandler {
         let meminfo = std::fs::read_to_string("/proc/meminfo").map_err(|_e| {
             NestGateError::system(
                 "memory_detection",
-                &format!("Failed to read memory info: {"actual_error_details"}"),
+                "Failed to read memory info: self.base_url".to_string(),
             )
         })?;
 

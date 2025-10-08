@@ -27,8 +27,8 @@ mod nas_config_tests {
         Ok(())
     }
 
-    #[tokio::test]
-    async fn test_nas_service_lifecycle() -> Result<(), Box<dyn std::error::Error>> {
+    #[test]
+    fn test_nas_service_lifecycle() -> Result<(), Box<dyn std::error::Error>> {
         let config = NasConfig {
             enabled: true,
             ..Default::default()
@@ -37,10 +37,10 @@ mod nas_config_tests {
         let service = NasService::new(config);
 
         // Test service lifecycle
-        service.start().await?;
-        let status = service.status().await?;
+        service.start()?;
+        let status = service.status()?;
         matches!(status, NasStatus::Running);
-        service.stop().await?;
+        service.stop()?;
 
         Ok(())
     }

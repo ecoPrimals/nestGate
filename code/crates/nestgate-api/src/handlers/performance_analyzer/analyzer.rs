@@ -14,7 +14,8 @@ pub struct PerformanceAnalyzer {
 
 impl PerformanceAnalyzer {
     /// Create new performance analyzer
-    pub fn new(config: AnalyzerConfig) -> Self {
+    #[must_use]
+    pub const fn new(config: AnalyzerConfig) -> Self {
         Self { config }
     }
 
@@ -60,7 +61,7 @@ impl PerformanceAnalyzer {
         ComponentAnalysis {
             status,
             score: (100.0 - cpu_usage).max(0.0),
-            details: format!("CPU usage: {:.1}%"),
+            details: format!("CPU usage: {cpu_usage:.1}%"),
         }
     }
 

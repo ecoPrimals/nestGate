@@ -6,19 +6,19 @@
 //! **CANONICAL MODERNIZATION COMPLETE**: Production-ready ZFS testing
 
 use nestgate_api::handlers::zfs::universal_zfs::{
-use crate::config::ConsolidatedCanonicalConfig;
+use tests::config::ConsolidatedCanonicalConfig;
     backends::{NativeZfsService, ZfsServiceFactory},
     traits::UniversalZfsService,
     types::{DatasetConfig, PoolConfig, SnapshotConfig},
 };
 use nestgate_core::config::canonical_master::NestGateCanonicalConfig;
-use crate::config::ConsolidatedCanonicalConfig;
+use tests::config::ConsolidatedCanonicalConfig;
 use std::sync::Arc;
-use crate::config::ConsolidatedCanonicalConfig;
+use tests::config::ConsolidatedCanonicalConfig;
 use tokio;
-use crate::config::ConsolidatedCanonicalConfig;
+use tests::config::ConsolidatedCanonicalConfig;
 use tracing::{debug, info, warn};
-use crate::config::ConsolidatedCanonicalConfig;
+use tests::config::ConsolidatedCanonicalConfig;
 
 /// Test configuration for ZFS integration tests
 struct ZfsTestConfig {
@@ -49,7 +49,7 @@ mod tests {
     async fn test_zfs_service_factory() -> Result<(), Box<dyn std::error::Error>> {
         init_test_logging();
         
-        let config = NestGateCanonicalConfig::default();
+        let config = NestGateNestGateCanonicalConfig::default();
         
         // Test availability check
         let zfs_available = ZfsServiceFactory::check_zfs_availability().await;
@@ -73,7 +73,7 @@ mod tests {
     async fn test_zfs_health_check() -> Result<(), Box<dyn std::error::Error>> {
         init_test_logging();
         
-        let config = NestGateCanonicalConfig::default();
+        let config = NestGateNestGateCanonicalConfig::default();
         let service = create_test_service(config).await;
         
         // Perform health check
@@ -100,7 +100,7 @@ mod tests {
     async fn test_zfs_metrics() -> Result<(), Box<dyn std::error::Error>> {
         init_test_logging();
         
-        let config = NestGateCanonicalConfig::default();
+        let config = NestGateNestGateCanonicalConfig::default();
         let service = create_test_service(config).await;
         
         // Get service metrics
@@ -134,7 +134,7 @@ mod tests {
     Ok(())
         }
         
-        let config = NestGateCanonicalConfig::default();
+        let config = NestGateNestGateCanonicalConfig::default();
         let service = create_test_service(config).await;
         
         // Test pool listing
@@ -188,7 +188,7 @@ mod tests {
     Ok(())
         }
         
-        let config = NestGateCanonicalConfig::default();
+        let config = NestGateNestGateCanonicalConfig::default();
         let service = create_test_service(config).await;
         
         // Test dataset listing
@@ -251,7 +251,7 @@ mod tests {
     Ok(())
         }
         
-        let config = NestGateCanonicalConfig::default();
+        let config = NestGateNestGateCanonicalConfig::default();
         let service = create_test_service(config).await;
         
         // For snapshot testing, we need an existing dataset
@@ -285,7 +285,7 @@ mod tests {
     async fn test_zfs_error_handling() -> Result<(), Box<dyn std::error::Error>> {
         init_test_logging();
         
-        let config = NestGateCanonicalConfig::default();
+        let config = NestGateNestGateCanonicalConfig::default();
         let service = create_test_service(config).await;
         
         // Test getting non-existent pool
@@ -322,7 +322,7 @@ mod tests {
         init_test_logging();
         
         // Test with custom configuration
-        let mut config = NestGateCanonicalConfig::default();
+        let mut config = NestGateNestGateCanonicalConfig::default();
         config.storage.zfs.pool_name = "custom-test-pool".to_string();
         config.storage.zfs.command_timeout = std::time::Duration::from_secs(60);
         config.storage.zfs.use_sudo = true;
@@ -343,7 +343,7 @@ mod tests {
     async fn test_concurrent_operations() -> Result<(), Box<dyn std::error::Error>> {
         init_test_logging();
         
-        let config = NestGateCanonicalConfig::default();
+        let config = NestGateNestGateCanonicalConfig::default();
         let service = Arc::new(create_test_service(config).await);
         
         // Launch multiple concurrent health checks

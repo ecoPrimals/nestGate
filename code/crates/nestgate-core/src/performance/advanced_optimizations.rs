@@ -79,6 +79,12 @@ where
     /// Create new lock-free ring buffer
     pub fn new() -> Self {
         Self {
+            // SAFETY: MaybeUninit array initialization is safe because:
+            // 1. Array layout: MaybeUninit<T> has same layout as T, no initialization required
+            // 2. Type safety: MaybeUninit explicitly allows uninitialized memory
+            // 3. Usage pattern: Elements are initialized via write() before read()
+            // 4. Drop safety: MaybeUninit doesn't run drop, preventing use of uninitialized data
+            // 5. Memory validity: Array memory is properly allocated on the stack/heap
             buffer: unsafe { std::mem::MaybeUninit::uninit().assume_init() },
             head: AtomicUsize::new(0),
             tail: AtomicUsize::new(0),
@@ -95,6 +101,12 @@ where
             return false; // Buffer full
         }
         
+        // SAFETY: Writing to buffer is safe because:
+        // 1. Bounds check: current_head is always < SIZE due to masking
+        // 2. Uniqueness: Single producer ensures no concurrent writes
+        // 3. Memory ordering: Acquire on tail ensures we see all previous writes
+        // 4. Initialization: write() properly initializes the MaybeUninit slot
+        // 5. Overwrite safety: We checked buffer isn't full (next_head != tail)
         unsafe {
             self.buffer[current_head].as_mut_ptr().write(item);
         }
@@ -112,6 +124,12 @@ where
             return None; // Buffer empty
         }
         
+        // SAFETY: Reading from buffer is safe because:
+        // 1. Bounds check: current_tail is always < SIZE due to masking
+        // 2. Initialization: Acquire on head ensures item was written
+        // 3. Uniqueness: Single consumer ensures no concurrent reads
+        // 4. Memory ordering: Acquire synchronizes with Release in push()
+        // 5. Move semantics: read() moves value out, preventing double-read
         let item = unsafe { self.buffer[current_tail].as_ptr().read() };
         let next_tail = (current_tail + 1) & (SIZE - 1); // Fast modulo for power of 2
         
@@ -166,6 +184,14 @@ impl SimdOperations {
     }
     
     /// Copy memory with optimal alignment and prefetching
+    ///
+    /// # Safety
+    /// Caller must ensure:
+    /// - `src` is valid for reads of `len` bytes
+    /// - `dst` is valid for writes of `len` bytes
+    /// - `src` and `dst` do not overlap (use copy, not copy_nonoverlapping otherwise)
+    /// - Both pointers are properly aligned for their access patterns
+    /// - Both regions are within a single allocated object
     #[inline(always)]
     pub unsafe fn optimized_copy(dst: *mut u8, src: *const u8, len: usize) {
         // Check alignment for optimal copy strategy
@@ -179,11 +205,22 @@ impl SimdOperations {
             let dst_u64 = dst as *mut u64;
             let src_u64 = src as *const u64;
             
+            // SAFETY: 64-bit aligned copy is safe because:
+            // 1. Alignment: Both pointers verified to be u64-aligned above
+            // 2. Bounds: chunks * 8 <= len, so all accesses within bounds
+            // 3. Validity: Caller guarantees src/dst validity for len bytes
+            // 4. Non-overlapping: Caller guarantees no overlap
+            // 5. Type safety: u64 is Copy and properly aligned
             for i in 0..chunks {
                 *dst_u64.add(i) = *src_u64.add(i);
             }
             
             // Handle remainder
+            // SAFETY: Remainder copy is safe because:
+            // 1. Offset: chunks * size_of::<u64>() + remainder == len (total length)
+            // 2. Bounds: Copying remainder bytes from valid end of buffers
+            // 3. Non-overlapping: Inherits from parent function guarantee
+            // 4. Validity: Both regions within caller-guaranteed valid memory
             if remainder > 0 {
                 std::ptr::copy_nonoverlapping(
                     src.add(chunks * size_of::<u64>()),
@@ -193,6 +230,10 @@ impl SimdOperations {
             }
         } else {
             // Fallback to standard copy
+            // SAFETY: Standard copy is safe because:
+            // 1. Validity: Caller guarantees src/dst valid for len bytes
+            // 2. Non-overlapping: Caller guarantees no overlap
+            // 3. Standard library: copy_nonoverlapping handles all edge cases
             std::ptr::copy_nonoverlapping(src, dst, len);
         }
     }

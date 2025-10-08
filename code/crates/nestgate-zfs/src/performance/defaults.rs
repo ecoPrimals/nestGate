@@ -1,7 +1,11 @@
 use std::collections::HashMap;
 use std::time::SystemTime;
 
-use super::types::*;
+use super::types::{
+    CurrentPerformanceMetrics, DatasetPerformanceStats, IoStatistics, PerformanceTrends,
+    PoolPerformanceMetrics, PoolProperties, SlaCompliance, SystemResourceMetrics, TierMetrics,
+    TierPerformanceTargets,
+};
 
 use crate::types::StorageTier;
 
@@ -125,6 +129,7 @@ impl Default for DatasetPerformanceStats {
 
 impl TierMetrics {
     /// Create default tier metrics for a specific tier
+    #[must_use]
     pub fn default_for_tier(tier: StorageTier) -> Self {
         match tier {
             StorageTier::Hot => Self {
@@ -233,6 +238,7 @@ impl TierMetrics {
 
 impl CurrentPerformanceMetrics {
     /// Get tier metrics for a specific tier
+    #[must_use]
     pub fn get_tier_metrics(&self, tier: StorageTier) -> Option<&TierMetrics> {
         self.tier_metrics.get(&tier)
     }
@@ -241,6 +247,7 @@ impl CurrentPerformanceMetrics {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::performance::{AlertCondition, AlertMetric, AlertOperator, AlertSeverity};
     use std::time::Duration;
 
     #[test]

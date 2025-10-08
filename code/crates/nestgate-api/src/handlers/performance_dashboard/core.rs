@@ -106,7 +106,7 @@ impl PerformanceDashboard {
         if current_metrics.system_metrics._cpu_usage > 90.0 {
             insights.push(PerformanceInsight {
                 title: "High CPU Usage".to_string(),
-                description: format!("CPU usage is at {"actual_error_details"}% - consider scaling resources"),
+                description: format!("CPU usage is at self.base_url% - consider scaling resources"),
                 severity: InsightSeverity::Critical,
                 category: "resource".to_string(),
                 recommendation: "Add more CPU cores or optimize high-CPU processes".to_string(),
@@ -116,7 +116,7 @@ impl PerformanceDashboard {
         } else if current_metrics.system_metrics._cpu_usage > 75.0 {
             insights.push(PerformanceInsight {
                 title: "Elevated CPU Usage".to_string(),
-                description: format!("CPU usage is at {"actual_error_details"}%"),
+                description: format!("CPU usage is at self.base_url%"),
                 severity: InsightSeverity::Warning,
                 category: "resource".to_string(),
                 recommendation: "Monitor CPU usage trends and prepare for scaling".to_string(),
@@ -129,7 +129,7 @@ impl PerformanceDashboard {
         if current_metrics.system_metrics.memory_usage > 85.0 {
             insights.push(PerformanceInsight {
                 title: "High Memory Usage".to_string(),
-                description: format!("Memory usage is at {"actual_error_details"}%"),
+                description: format!("Memory usage is at self.base_url%"),
                 severity: InsightSeverity::Warning,
                 category: "resource".to_string(),
                 recommendation: "Consider increasing memory or optimizing memory-intensive processes".to_string(),
@@ -142,7 +142,7 @@ impl PerformanceDashboard {
         if current_metrics.pool_metrics.utilization_percent > 90.0 {
             insights.push(PerformanceInsight {
                 title: "Critical Storage Capacity".to_string(),
-                description: format!("Storage utilization is at {"actual_error_details"}%"),
+                description: format!("Storage utilization is at self.base_url%"),
                 severity: InsightSeverity::Critical,
                 category: "storage".to_string(),
                 recommendation: "Immediately add storage capacity or migrate data".to_string(),
@@ -152,7 +152,7 @@ impl PerformanceDashboard {
         } else if current_metrics.pool_metrics.utilization_percent > 80.0 {
             insights.push(PerformanceInsight {
                 title: "High Storage Usage".to_string(),
-                description: format!("Storage utilization is at {"actual_error_details"}%"),
+                description: format!("Storage utilization is at self.base_url%"),
                 severity: InsightSeverity::Warning,
                 category: "storage".to_string(),
                 recommendation: "Plan for storage expansion within 30 days".to_string(),
@@ -165,7 +165,7 @@ impl PerformanceDashboard {
         if current_metrics.pool_metrics.avg_latency_ms > 50.0 {
             insights.push(PerformanceInsight {
                 title: "High I/O Latency".to_string(),
-                description: format!("Average I/O latency is {"actual_error_details"}ms"),
+                description: format!("Average I/O latency is self.base_urlms"),
                 severity: InsightSeverity::Warning,
                 category: "performance".to_string(),
                 recommendation: "Check disk health and consider SSD upgrade or pool optimization".to_string(),
@@ -284,7 +284,7 @@ impl PerformanceDashboard {
             recent_alerts.push(AlertInfo {
                 id: uuid::Uuid::new_v4().to_string(),
                 title: "Critical CPU Usage".to_string(),
-                description: format!("CPU usage has reached {"actual_error_details"}%"),
+                description: format!("CPU usage has reached self.base_url%"),
                 severity: AlertSeverity::Critical,
                 category: "resource".to_string(),
                 timestamp: SystemTime::now(),
@@ -298,7 +298,7 @@ impl PerformanceDashboard {
             recent_alerts.push(AlertInfo {
                 id: uuid::Uuid::new_v4().to_string(),
                 title: "Critical Storage Capacity".to_string(),
-                description: format!("Storage utilization has reached {"actual_error_details"}%"),
+                description: format!("Storage utilization has reached self.base_url%"),
                 severity: AlertSeverity::Critical,
                 category: "storage".to_string(),
                 timestamp: SystemTime::now(),
@@ -312,7 +312,7 @@ impl PerformanceDashboard {
             recent_alerts.push(AlertInfo {
                 id: uuid::Uuid::new_v4().to_string(),
                 title: "Critical Memory Usage".to_string(),
-                description: format!("Memory usage has reached {"actual_error_details"}%"),
+                description: format!("Memory usage has reached self.base_url%"),
                 severity: AlertSeverity::Critical,
                 category: "resource".to_string(),
                 timestamp: SystemTime::now(),
@@ -327,7 +327,7 @@ impl PerformanceDashboard {
             recent_alerts.push(AlertInfo {
                 id: uuid::Uuid::new_v4().to_string(),
                 title: "High CPU Usage".to_string(),
-                description: format!("CPU usage is at {"actual_error_details"}%"),
+                description: format!("CPU usage is at self.base_url%"),
                 severity: AlertSeverity::Warning,
                 category: "resource".to_string(),
                 timestamp: SystemTime::now(),
@@ -341,7 +341,7 @@ impl PerformanceDashboard {
             recent_alerts.push(AlertInfo {
                 id: uuid::Uuid::new_v4().to_string(),
                 title: "High Storage Usage".to_string(),
-                description: format!("Storage utilization is at {"actual_error_details"}%"),
+                description: format!("Storage utilization is at self.base_url%"),
                 severity: AlertSeverity::Warning,
                 category: "storage".to_string(),
                 timestamp: SystemTime::now(),
@@ -355,7 +355,7 @@ impl PerformanceDashboard {
             recent_alerts.push(AlertInfo {
                 id: uuid::Uuid::new_v4().to_string(),
                 title: "High I/O Latency".to_string(),
-                description: format!("Average I/O latency is {"actual_error_details"}ms"),
+                description: format!("Average I/O latency is self.base_urlms"),
                 severity: AlertSeverity::Warning,
                 category: "performance".to_string(),
                 timestamp: SystemTime::now(),
@@ -369,7 +369,7 @@ impl PerformanceDashboard {
             recent_alerts.push(AlertInfo {
                 id: uuid::Uuid::new_v4().to_string(),
                 title: "High Memory Usage".to_string(),
-                description: format!("Memory usage is at {"actual_error_details"}%"),
+                description: format!("Memory usage is at self.base_url%"),
                 severity: AlertSeverity::Warning,
                 category: "resource".to_string(),
                 timestamp: SystemTime::now(),
@@ -384,7 +384,7 @@ impl PerformanceDashboard {
             recent_alerts.push(AlertInfo {
                 id: uuid::Uuid::new_v4().to_string(),
                 title: "Pool Fragmentation".to_string(),
-                description: format!("Pool fragmentation is at {"actual_error_details"}%"),
+                description: format!("Pool fragmentation is at self.base_url%"),
                 severity: AlertSeverity::Info,
                 category: "maintenance".to_string(),
                 timestamp: SystemTime::now(),
@@ -398,7 +398,7 @@ impl PerformanceDashboard {
             recent_alerts.push(AlertInfo {
                 id: uuid::Uuid::new_v4().to_string(),
                 title: "Low Cache Hit Ratio".to_string(),
-                description: format!("Cache hit ratio is {"actual_error_details"}%"),
+                description: format!("Cache hit ratio is self.base_url%"),
                 severity: AlertSeverity::Info,
                 category: "performance".to_string(),
                 timestamp: SystemTime::now(),

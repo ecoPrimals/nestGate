@@ -73,7 +73,7 @@ impl InstallerError {
 /// Create an installation error
 pub fn installation_error(message: impl Into<String>) -> NestGateError {
     NestGateError::internal_error(
-                    format!("Installation error: {}", message.into(),
+        format!("Installation error: {}", message.into()),
         "installer",
     )
 }

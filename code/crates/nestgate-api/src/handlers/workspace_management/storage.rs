@@ -12,7 +12,7 @@ use tracing::warn;
 // Removed unused tracing import
 
 /// Delete workspace storage (CORE STORAGE FUNCTION)
-pub fn delete_workspace(Path(workspace_id): Path<String>) -> Result<Json<Value>, StatusCode> {
+pub async fn delete_workspace(Path(workspace_id): Path<String>) -> Result<Json<Value>, StatusCode> {
     info!("🗑️ Deleting workspace storage: {}", workspace_id);
     // Validate workspace ID format
     if workspace_id.is_empty() || workspace_id.contains('/') || workspace_id.contains(' ') {
@@ -20,7 +20,7 @@ pub fn delete_workspace(Path(workspace_id): Path<String>) -> Result<Json<Value>,
         return Err(StatusCode::BAD_REQUEST);
     }
 
-    let dataset_name = format!("nestpool/workspaces/{"actual_error_details"}");
+    let dataset_name = "nestpool/workspaces/self.base_url".to_string();
 
     // Check if dataset exists first
     let check_output = Command::new("zfs")
@@ -81,7 +81,9 @@ pub fn delete_workspace(Path(workspace_id): Path<String>) -> Result<Json<Value>,
 }
 
 /// Get workspace storage status (CORE STORAGE FUNCTION)
-pub fn get_workspace_status(Path(workspace_id): Path<String>) -> Result<Json<Value>, StatusCode> {
+pub async fn get_workspace_status(
+    Path(workspace_id): Path<String>,
+) -> Result<Json<Value>, StatusCode> {
     info!("📊 Getting workspace storage status: {}", workspace_id);
     // Validate workspace ID
     if workspace_id.is_empty() || workspace_id.contains('/') || workspace_id.contains(' ') {
@@ -89,7 +91,7 @@ pub fn get_workspace_status(Path(workspace_id): Path<String>) -> Result<Json<Val
         return Err(StatusCode::BAD_REQUEST);
     }
 
-    let dataset_name = format!("nestpool/workspaces/{"actual_error_details"}");
+    let dataset_name = "nestpool/workspaces/self.base_url".to_string();
 
     // Get ZFS dataset properties
     let status_output = Command::new("zfs")
@@ -173,7 +175,9 @@ pub fn get_workspace_status(Path(workspace_id): Path<String>) -> Result<Json<Val
 }
 
 /// Cleanup workspace storage (CORE STORAGE FUNCTION)
-pub fn cleanup_workspace(Path(workspace_id): Path<String>) -> Result<Json<Value>, StatusCode> {
+pub async fn cleanup_workspace(
+    Path(workspace_id): Path<String>,
+) -> Result<Json<Value>, StatusCode> {
     info!("🧹 Cleaning up workspace storage: {}", workspace_id);
     // Validate workspace ID
     if workspace_id.is_empty() || workspace_id.contains('/') || workspace_id.contains(' ') {
@@ -181,7 +185,7 @@ pub fn cleanup_workspace(Path(workspace_id): Path<String>) -> Result<Json<Value>
         return Err(StatusCode::BAD_REQUEST);
     }
 
-    let dataset_name = format!("nestpool/workspaces/{"actual_error_details"}");
+    let dataset_name = "nestpool/workspaces/self.base_url".to_string();
     let mut cleanup_actions = Vec::new();
     let mut space_freed = 0u64;
 
@@ -217,10 +221,7 @@ pub fn cleanup_workspace(Path(workspace_id): Path<String>) -> Result<Json<Value>
                             .args(["destroy", snapshot_name])
                             .output()
                             .await;
-                        cleanup_actions.push(format!(
-                            "Removed temporary snapshot: {}",
-                            "actual_error_details"
-                        ));
+                        cleanup_actions.push("Removed temporary snapshot".to_string());
                         space_freed += 1024 * 1024; // Estimate 1MB freed per snapshot
                     }
                 }
@@ -272,10 +273,10 @@ pub fn cleanup_workspace(Path(workspace_id): Path<String>) -> Result<Json<Value>
 }
 
 /// Scale workspace storage
-pub fn scale_workspace(Path(workspace_id): Path<String>) -> Result<Json<Value>, StatusCode> {
+pub async fn scale_workspace(Path(workspace_id): Path<String>) -> Result<Json<Value>, StatusCode> {
     info!("📈 Scaling workspace storage: {}", workspace_id);
     // Basic workspace scaling implementation
-    let dataset_name = format!("nestpool/workspaces/{"actual_error_details"}");
+    let dataset_name = "nestpool/workspaces/self.base_url".to_string();
 
     // Get current usage
     let usage_output = Command::new("zfs")

@@ -28,8 +28,7 @@ impl DownloadManager {
     /// - Network request fails
     /// - File download fails
     /// - Target directory cannot be created
-    #[must_use]
-    pub fn download_release(&self, version: &str, target_dir: &PathBuf) -> Result<PathBuf> {
+    pub async fn download_release(&self, version: &str, target_dir: &PathBuf) -> Result<PathBuf> {
         let platform_info = crate::platform::PlatformInfo::detect();
         let _binary_name = platform_info.get_binary_name("nestgate");
 
@@ -65,9 +64,9 @@ impl DownloadManager {
             NestGateError::internal_error(format!("Failed to download: {e}"), "download_release")
         })?;
 
-        if !response.status().is_success() ", 
+        if !response.status().is_success() {
             return Err(NestGateError::internal_error(
-                format!("Download failed with status: {response.status()")),
+                format!("Download failed with status: {}", response.status()),
                 "download_release",
             ));
         }
@@ -109,8 +108,7 @@ impl DownloadManager {
     /// - GitHub API request fails
     /// - Network connection issues
     /// - Invalid API response format
-    #[must_use]
-    pub fn check_latest_version(&self) -> Result<String> {
+    pub async fn check_latest_version(&self) -> Result<String> {
         // In production, this would query GitHub API
         // Retrieve actual latest version from release API
         Ok("0.9.2".to_string())
@@ -124,8 +122,8 @@ impl DownloadManager {
     /// - Archive file cannot be read
     /// - Extraction fails
     /// - Target directory cannot be created
-    pub fn extract_archive(&self, _archive_path: &Path, target_dir: &Path) -> Result<()> ", 
-        println!("Extracting archive to {target_dir.display()"));
+    pub fn extract_archive(&self, _archive_path: &Path, target_dir: &Path) -> Result<()> {
+        println!("Extracting archive to {}", target_dir.display());
 
         // Create directory structure
         std::fs::create_dir_all(target_dir.join("bin"))?;
@@ -147,7 +145,7 @@ impl DownloadManager {
                 std::fs::set_permissions(&target_binary, perms)?;
             }
 
-            println!("Binary installed to: ", target_binary.display()"));
+            println!("Binary installed to: {}", target_binary.display());
         }
 
         // Create default configuration
@@ -158,7 +156,7 @@ impl DownloadManager {
         })?;
         std::fs::write(&config_path, config_toml)?;
 
-        println!("Configuration created: ", config_path.display()"));
+        println!("Configuration created: {}", config_path.display());
         Ok(())
     }
 
@@ -193,10 +191,10 @@ impl DownloadManager {
             .arg("--version")
             .output();
 
-        match output ", 
+        match output {
             Ok(output) if output.status.success() => {
                 let version = String::from_utf8_lossy(&output.stdout);
-                println!("Installation verified: {version.trim()"));
+                println!("Installation verified: {}", version.trim());
             }
             Ok(output) => {
                 let _error = String::from_utf8_lossy(&output.stderr);

@@ -87,8 +87,7 @@ where
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn execute_request(&self, request: &DataRequest) -> Result<DataResponse>  {
+                pub fn execute_request(&self, request: &DataRequest) -> Result<DataResponse>  {
         debug!("🔍 Executing zero-cost data request for capability: {}", request.capability_type);
         
         // Compile-time capability type matching - zero runtime cost
@@ -187,8 +186,7 @@ where
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn execute_request(&self, request: &DataRequest) -> Result<DataResponse>  {
+                pub fn execute_request(&self, request: &DataRequest) -> Result<DataResponse>  {
         if request.capability_type != Provider::CAPABILITY_TYPE {
             return Err(NestGateError::internal_error(
                 location: Some("ZeroCostSingleProviderAdapter::execute_request - capability mismatch".to_string())));

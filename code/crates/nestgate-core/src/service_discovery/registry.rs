@@ -1,7 +1,10 @@
 /// Universal Service Registry Implementation  
 /// Extracted from `universal_service_discovery.rs` to maintain file size compliance
 /// Contains the main `InMemoryServiceRegistry` implementation and trait definitions
-use super::types::*;
+use super::types::{
+    SelectionPreferences, ServiceCapability, ServiceCategory, ServiceHandle, ServiceInfo,
+    ServiceRequirements, ServiceRole, UniversalServiceRegistration,
+};
 use crate::Result;
 use std::{collections::HashMap, sync::Arc};
 use tokio::sync::RwLock;

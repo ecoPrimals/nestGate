@@ -65,8 +65,7 @@ impl UniversalAdapter {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn new() -> Result<Self, NestGateError>  {
+                pub fn new() -> Result<Self, NestGateError>  {
         Ok(Self {
             discovery_methods: vec![
                 DiscoveryMethod::Environment,
@@ -113,8 +112,7 @@ impl UniversalAdapter {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn request_capability(&self, capability_id: &str, request: CapabilityRequest) -> Result<CapabilityResponse, NestGateError>  {
+                pub fn request_capability(&self, capability_id: &str, request: CapabilityRequest) -> Result<CapabilityResponse, NestGateError>  {
         // Find the capability
         let capability = self.capability_cache.values()
             .find(|c| c.id == capability_id)

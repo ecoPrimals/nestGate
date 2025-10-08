@@ -100,8 +100,7 @@ impl UniversalRpcRouter {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn new(adapter: Arc<UniversalAdapter>) -> Result<Self, RpcError>  {
+                pub fn new(adapter: Arc<UniversalAdapter>) -> Result<Self, RpcError>  {
         let connection_preferences = Self::create_default_preferences();
         
         let router = Self {
@@ -124,8 +123,7 @@ impl UniversalRpcRouter {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn route_request(&self, request: &UnifiedRpcRequest) -> Result<UnifiedRpcResponse, RpcError>  {
+                pub fn route_request(&self, request: &UnifiedRpcRequest) -> Result<UnifiedRpcResponse, RpcError>  {
         info!("🔄 Routing RPC request via universal adapter: {}", request.method);
 
         // Determine required capability from method

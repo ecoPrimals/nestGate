@@ -127,8 +127,7 @@ impl EnterpriseBackupManager {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        #[must_use]
-        pub fn perform_full_backup(&mut self, dataset_path: &str) -> Result<BackupResult>   {
+                pub fn perform_full_backup(&mut self, dataset_path: &str) -> Result<BackupResult>   {
         let backup_id = self.generate_backup_id();
         info!("Starting full backup for dataset: {} (ID: {})", dataset_path, backup_id);
 
@@ -182,8 +181,7 @@ impl EnterpriseBackupManager {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        #[must_use]
-        pub fn perform_incremental_backup(&mut self, dataset_path: &str, last_snapshot: &str) -> Result<BackupResult>   {
+                pub fn perform_incremental_backup(&mut self, dataset_path: &str, last_snapshot: &str) -> Result<BackupResult>   {
         let backup_id = self.generate_backup_id();
         info!("Starting incremental backup for dataset: {} from snapshot: {} (ID: {})", 
               dataset_path, last_snapshot, backup_id);

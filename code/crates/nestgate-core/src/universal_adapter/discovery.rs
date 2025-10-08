@@ -1,8 +1,8 @@
+use crate::canonical_types::service::{ServiceState, ServiceType};
 /// **CANONICAL ADAPTER DISCOVERY**
-/// 
+///
 /// Consolidated discovery utilities for the universal adapter system.
 use crate::Result;
-use crate::canonical_types::service::{ServiceType, ServiceState};
 // Removed unused import for pedantic perfection
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -89,25 +89,22 @@ pub struct DiscoveryResult {
     pub error: Option<String>,
 }
 /// Discover available services using canonical discovery
-#[must_use]
 pub fn discover_services(config: &DiscoveryConfig) -> Result<DiscoveryResult> {
     let start_time = std::time::Instant::now();
-    
+
     // For now, return a basic result - this would be expanded with real discovery logic
-    let services = vec![
-        DiscoveredService {
-            id: "nestgate-core".to_string(),
-            name: "NestGate Core".to_string(),
-            service_type: ServiceType::Storage,
-            state: ServiceState::Running,
-            endpoint: config.endpoint.clone(),
-            capabilities: vec!["storage".to_string(), "zfs".to_string()],
-            metadata: HashMap::new(),
-            discovered_at: SystemTime::now(),
-            last_health_check: Some(SystemTime::now()),
-        }
-    ];
-    
+    let services = vec![DiscoveredService {
+        id: "nestgate-core".to_string(),
+        name: "NestGate Core".to_string(),
+        service_type: ServiceType::Storage,
+        state: ServiceState::Running,
+        endpoint: config.endpoint.clone(),
+        capabilities: vec!["storage".to_string(), "zfs".to_string()],
+        metadata: HashMap::new(),
+        discovered_at: SystemTime::now(),
+        last_health_check: Some(SystemTime::now()),
+    }];
+
     Ok(DiscoveryResult {
         services,
         method: DiscoveryMethod::Environment,
@@ -117,18 +114,19 @@ pub fn discover_services(config: &DiscoveryConfig) -> Result<DiscoveryResult> {
     })
 }
 /// Discover services by capability
-pub async fn discover_by_capability(
+pub fn discover_by_capability(
     config: &DiscoveryConfig,
     capability: &str,
 ) -> Result<Vec<DiscoveredService>> {
-    let result = discover_services(config).await?;
-    
-    Ok(result.services.into_iter()
+    let result = discover_services(config)?;
+
+    Ok(result
+        .services
+        .into_iter()
         .filter(|service| service.capabilities.contains(&capability.to_string()))
         .collect())
 }
 /// Health check a discovered service
-#[must_use]
 pub fn health_check_service(service: &DiscoveredService) -> Result<bool> {
     // Basic health check implementation - would be expanded with real health check logic
     match service.state {
@@ -156,82 +154,104 @@ impl CapabilityDiscovery {
                 "http://localhost:8084/discovery".to_string(),
             ],
         };
-        
+
         // Initialize with default capability mappings
         discovery.initialize_default_capabilities();
-        
+
         Ok(discovery)
     }
-    
+
     /// Find capabilities by type
     pub fn find_capabilities(&self, capability_type: &str) -> crate::Result<Vec<String>> {
         debug!("Finding capabilities for type: {}", capability_type);
-        
+
         // Check local registry first - avoid clone by using Arc
         if let Some(services) = self.registry.get(capability_type) {
             // Return a new Vec with the same data to maintain API compatibility
-            return Ok(services.iter().cloned().collect());
+            return Ok(services.to_vec());
         }
-        
+
         // Query discovery endpoints for dynamic capabilities
         for endpoint in &self.discovery_endpoints {
-            if let Ok(services) = self.query_discovery_endpoint(endpoint, capability_type).await {
+            if let Ok(services) = self.query_discovery_endpoint(endpoint, capability_type) {
                 if !services.is_empty() {
                     return Ok(services);
                 }
             }
         }
-        
+
         // Return empty if no capabilities found
         warn!("No capabilities found for type: {}", capability_type);
         Ok(Vec::new())
     }
-    
+
     /// Initialize default capability mappings with environment-driven endpoints
     fn initialize_default_capabilities(&mut self) {
         let base_endpoint = std::env::var("NESTGATE_BASE_ENDPOINT")
             .unwrap_or_else(|_| "http://localhost:8080".to_string());
-        
+
         // Security capabilities
-        self.registry.insert("security".to_string(), vec![
-            format!("{base_endpoint}/security"),
-            std::env::var("NESTGATE_SECURITY_ENDPOINT")
-                .unwrap_or_else(|_| "http://localhost:8081/auth".to_string()),
-        ]);
-        
-        // AI capabilities  
-        self.registry.insert("ai".to_string(), vec![
-            format!("{base_endpoint}/ai"),
-            std::env::var("NESTGATE_AI_ENDPOINT")
-                .unwrap_or_else(|_| "http://localhost:8082/ml".to_string()),
-        ]);
-        
+        self.registry.insert(
+            "security".to_string(),
+            vec![
+                format!("{base_endpoint}/security"),
+                std::env::var("NESTGATE_SECURITY_ENDPOINT")
+                    .unwrap_or_else(|_| "http://localhost:8081/auth".to_string()),
+            ],
+        );
+
+        // AI capabilities
+        self.registry.insert(
+            "ai".to_string(),
+            vec![
+                format!("{base_endpoint}/ai"),
+                std::env::var("NESTGATE_AI_ENDPOINT")
+                    .unwrap_or_else(|_| "http://localhost:8082/ml".to_string()),
+            ],
+        );
+
         // Orchestration capabilities
-        self.registry.insert("orchestration".to_string(), vec![
-            format!("{base_endpoint}/orchestration"),
-            std::env::var("NESTGATE_ORCHESTRATION_ENDPOINT")
-                .unwrap_or_else(|_| "http://localhost:8083/workflow".to_string()),
-        ]);
-        
+        self.registry.insert(
+            "orchestration".to_string(),
+            vec![
+                format!("{base_endpoint}/orchestration"),
+                std::env::var("NESTGATE_ORCHESTRATION_ENDPOINT")
+                    .unwrap_or_else(|_| "http://localhost:8083/workflow".to_string()),
+            ],
+        );
+
         // Storage/ZFS capabilities
-        self.registry.insert("storage".to_string(), vec![
-            format!("{base_endpoint}/storage"),
-            std::env::var("NESTGATE_STORAGE_ENDPOINT")
-                .unwrap_or_else(|_| "http://localhost:8084/zfs".to_string()),
-        ]);
-        
+        self.registry.insert(
+            "storage".to_string(),
+            vec![
+                format!("{base_endpoint}/storage"),
+                std::env::var("NESTGATE_STORAGE_ENDPOINT")
+                    .unwrap_or_else(|_| "http://localhost:8084/zfs".to_string()),
+            ],
+        );
+
         // Compute capabilities
-        self.registry.insert("compute".to_string(), vec![
-            format!("{base_endpoint}/compute"),
-            std::env::var("NESTGATE_COMPUTE_ENDPOINT")
-                .unwrap_or_else(|_| "http://localhost:8085/processing".to_string()),
-        ]);
+        self.registry.insert(
+            "compute".to_string(),
+            vec![
+                format!("{base_endpoint}/compute"),
+                std::env::var("NESTGATE_COMPUTE_ENDPOINT")
+                    .unwrap_or_else(|_| "http://localhost:8085/processing".to_string()),
+            ],
+        );
     }
-    
+
     /// Query a discovery endpoint for capabilities
-    async fn query_discovery_endpoint(&self, endpoint: &str, capability_type: &str) -> crate::Result<Vec<String>> {
-        debug!("Querying discovery endpoint: {} for {}", endpoint, capability_type);
-        
+    fn query_discovery_endpoint(
+        &self,
+        endpoint: &str,
+        capability_type: &str,
+    ) -> crate::Result<Vec<String>> {
+        debug!(
+            "Querying discovery endpoint: {} for {}",
+            endpoint, capability_type
+        );
+
         // Mock implementation - in practice this would make HTTP requests
         // to actual discovery services
         match capability_type {
@@ -243,15 +263,15 @@ impl CapabilityDiscovery {
             _ => Ok(Vec::new()),
         }
     }
-    
+
     /// Register a new capability service
     pub fn register_capability(&mut self, capability_type: String, service_url: String) {
         self.registry
             .entry(capability_type)
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(service_url);
     }
-    
+
     /// Remove a capability service
     pub fn unregister_capability(&mut self, capability_type: &str, service_url: &str) {
         if let Some(services) = self.registry.get_mut(capability_type) {
@@ -262,6 +282,326 @@ impl CapabilityDiscovery {
 
 impl Default for CapabilityDiscovery {
     fn default() -> Self {
-        Self::new().expect("Failed to create default CapabilityDiscovery")
+        // CapabilityDiscovery::new() cannot actually fail - it just initializes data structures
+        // If it ever returns an error, we use empty defaults as fallback
+        Self::new().unwrap_or_else(|_| Self {
+            registry: HashMap::new(),
+            discovery_endpoints: Vec::new(),
+        })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_discovery_config_default() {
+        let config = DiscoveryConfig::default();
+
+        assert_eq!(config.max_retries, 3);
+        assert_eq!(config.timeout, Duration::from_secs(30));
+        assert_eq!(config.discovery_interval, Duration::from_secs(60));
+        assert_eq!(config.methods.len(), 2);
+        assert!(config.methods.contains(&DiscoveryMethod::Environment));
+        assert!(config.methods.contains(&DiscoveryMethod::ServiceRegistry));
+    }
+
+    #[test]
+    fn test_discovery_method_equality() {
+        assert_eq!(DiscoveryMethod::Environment, DiscoveryMethod::Environment);
+        assert_ne!(
+            DiscoveryMethod::Environment,
+            DiscoveryMethod::ServiceRegistry
+        );
+        assert_ne!(DiscoveryMethod::NetworkScan, DiscoveryMethod::Dns);
+    }
+
+    #[test]
+    fn test_discovery_method_clone() {
+        let method = DiscoveryMethod::Configuration;
+        let cloned = method.clone();
+        assert_eq!(method, cloned);
+    }
+
+    #[test]
+    fn test_discovered_service_creation() {
+        let service = DiscoveredService {
+            id: "test-service-1".to_string(),
+            name: "Test Service".to_string(),
+            service_type: ServiceType::Storage,
+            state: ServiceState::Running,
+            endpoint: "http://localhost:8080".to_string(),
+            capabilities: vec!["storage".to_string(), "backup".to_string()],
+            metadata: HashMap::new(),
+            discovered_at: SystemTime::now(),
+            last_health_check: Some(SystemTime::now()),
+        };
+
+        assert_eq!(service.id, "test-service-1");
+        assert_eq!(service.name, "Test Service");
+        assert_eq!(service.capabilities.len(), 2);
+        assert!(service.last_health_check.is_some());
+    }
+
+    #[test]
+    fn test_discovery_result_success() {
+        let result = DiscoveryResult {
+            services: vec![],
+            method: DiscoveryMethod::Environment,
+            duration: Duration::from_millis(100),
+            success: true,
+            error: None,
+        };
+
+        assert!(result.success);
+        assert!(result.error.is_none());
+        assert_eq!(result.method, DiscoveryMethod::Environment);
+    }
+
+    #[test]
+    fn test_discovery_result_failure() {
+        let result = DiscoveryResult {
+            services: vec![],
+            method: DiscoveryMethod::ServiceRegistry,
+            duration: Duration::from_millis(50),
+            success: false,
+            error: Some("Connection timeout".to_string()),
+        };
+
+        assert!(!result.success);
+        assert!(result.error.is_some());
+        assert_eq!(result.error.unwrap(), "Connection timeout");
+    }
+
+    #[test]
+    fn test_discover_services() {
+        let config = DiscoveryConfig::default();
+        let result = discover_services(&config).unwrap();
+
+        assert!(result.success);
+        assert!(result.error.is_none());
+        assert_eq!(result.services.len(), 1);
+        assert_eq!(result.services[0].name, "NestGate Core");
+    }
+
+    #[test]
+    fn test_health_check_running_service() {
+        let service = DiscoveredService {
+            id: "test-1".to_string(),
+            name: "Test".to_string(),
+            service_type: ServiceType::Storage,
+            state: ServiceState::Running,
+            endpoint: "http://localhost:8080".to_string(),
+            capabilities: vec![],
+            metadata: HashMap::new(),
+            discovered_at: SystemTime::now(),
+            last_health_check: None,
+        };
+
+        let healthy = health_check_service(&service).unwrap();
+        assert!(healthy);
+    }
+
+    #[test]
+    fn test_health_check_stopped_service() {
+        let service = DiscoveredService {
+            id: "test-2".to_string(),
+            name: "Test".to_string(),
+            service_type: ServiceType::Storage,
+            state: ServiceState::Stopped,
+            endpoint: "http://localhost:8080".to_string(),
+            capabilities: vec![],
+            metadata: HashMap::new(),
+            discovered_at: SystemTime::now(),
+            last_health_check: None,
+        };
+
+        let healthy = health_check_service(&service).unwrap();
+        assert!(!healthy);
+    }
+
+    #[test]
+    fn test_health_check_starting_service() {
+        let service = DiscoveredService {
+            id: "test-3".to_string(),
+            name: "Test".to_string(),
+            service_type: ServiceType::Storage,
+            state: ServiceState::Starting,
+            endpoint: "http://localhost:8080".to_string(),
+            capabilities: vec![],
+            metadata: HashMap::new(),
+            discovered_at: SystemTime::now(),
+            last_health_check: None,
+        };
+
+        let healthy = health_check_service(&service).unwrap();
+        assert!(!healthy);
+    }
+
+    #[test]
+    fn test_health_check_failed_service() {
+        let service = DiscoveredService {
+            id: "test-4".to_string(),
+            name: "Test".to_string(),
+            service_type: ServiceType::Storage,
+            state: ServiceState::Failed,
+            endpoint: "http://localhost:8080".to_string(),
+            capabilities: vec![],
+            metadata: HashMap::new(),
+            discovered_at: SystemTime::now(),
+            last_health_check: None,
+        };
+
+        let healthy = health_check_service(&service).unwrap();
+        assert!(!healthy);
+    }
+
+    #[test]
+    fn test_capability_discovery_new() {
+        let discovery = CapabilityDiscovery::new().unwrap();
+
+        assert_eq!(discovery.discovery_endpoints.len(), 2);
+        assert!(discovery.registry.contains_key("security"));
+        assert!(discovery.registry.contains_key("ai"));
+        assert!(discovery.registry.contains_key("orchestration"));
+        assert!(discovery.registry.contains_key("storage"));
+        assert!(discovery.registry.contains_key("compute"));
+    }
+
+    #[test]
+    fn test_capability_discovery_default() {
+        let discovery = CapabilityDiscovery::default();
+
+        assert!(!discovery.registry.is_empty());
+        assert_eq!(discovery.discovery_endpoints.len(), 2);
+    }
+
+    #[test]
+    fn test_find_capabilities_existing() {
+        let discovery = CapabilityDiscovery::new().unwrap();
+        let capabilities = discovery.find_capabilities("security").unwrap();
+
+        assert!(!capabilities.is_empty());
+        assert!(capabilities[0].contains("security"));
+    }
+
+    #[test]
+    fn test_find_capabilities_nonexistent() {
+        let discovery = CapabilityDiscovery::new().unwrap();
+        let capabilities = discovery.find_capabilities("nonexistent").unwrap();
+
+        assert!(capabilities.is_empty());
+    }
+
+    #[test]
+    fn test_register_capability() {
+        let mut discovery = CapabilityDiscovery::new().unwrap();
+
+        discovery.register_capability(
+            "custom".to_string(),
+            "http://localhost:9000/custom".to_string(),
+        );
+
+        let capabilities = discovery.find_capabilities("custom").unwrap();
+        assert_eq!(capabilities.len(), 1);
+        assert_eq!(capabilities[0], "http://localhost:9000/custom");
+    }
+
+    #[test]
+    fn test_register_multiple_capabilities() {
+        let mut discovery = CapabilityDiscovery::new().unwrap();
+
+        discovery.register_capability(
+            "custom".to_string(),
+            "http://localhost:9000/custom1".to_string(),
+        );
+        discovery.register_capability(
+            "custom".to_string(),
+            "http://localhost:9001/custom2".to_string(),
+        );
+
+        let capabilities = discovery.find_capabilities("custom").unwrap();
+        assert_eq!(capabilities.len(), 2);
+    }
+
+    #[test]
+    fn test_unregister_capability() {
+        let mut discovery = CapabilityDiscovery::new().unwrap();
+
+        discovery.register_capability("temp".to_string(), "http://localhost:9000/temp".to_string());
+
+        let before = discovery.find_capabilities("temp").unwrap();
+        assert_eq!(before.len(), 1);
+
+        discovery.unregister_capability("temp", "http://localhost:9000/temp");
+
+        let after = discovery.find_capabilities("temp").unwrap();
+        assert_eq!(after.len(), 0);
+    }
+
+    #[test]
+    fn test_unregister_nonexistent_capability() {
+        let mut discovery = CapabilityDiscovery::new().unwrap();
+
+        // Should not panic
+        discovery.unregister_capability("nonexistent", "http://localhost:9000");
+    }
+
+    #[test]
+    fn test_discovery_config_custom() {
+        let config = DiscoveryConfig {
+            endpoint: "http://custom:9000".to_string(),
+            timeout: Duration::from_secs(60),
+            max_retries: 5,
+            discovery_interval: Duration::from_secs(120),
+            methods: vec![
+                DiscoveryMethod::Environment,
+                DiscoveryMethod::NetworkScan,
+                DiscoveryMethod::Dns,
+            ],
+        };
+
+        assert_eq!(config.endpoint, "http://custom:9000");
+        assert_eq!(config.max_retries, 5);
+        assert_eq!(config.methods.len(), 3);
+    }
+
+    #[test]
+    fn test_discovered_service_with_metadata() {
+        let mut metadata = HashMap::new();
+        metadata.insert("version".to_string(), "1.0.0".to_string());
+        metadata.insert("region".to_string(), "us-west".to_string());
+
+        let service = DiscoveredService {
+            id: "test-meta".to_string(),
+            name: "Test Meta Service".to_string(),
+            service_type: ServiceType::Compute,
+            state: ServiceState::Running,
+            endpoint: "http://localhost:8080".to_string(),
+            capabilities: vec!["compute".to_string()],
+            metadata,
+            discovered_at: SystemTime::now(),
+            last_health_check: Some(SystemTime::now()),
+        };
+
+        assert_eq!(service.metadata.len(), 2);
+        assert_eq!(service.metadata.get("version"), Some(&"1.0.0".to_string()));
+        assert_eq!(service.metadata.get("region"), Some(&"us-west".to_string()));
+    }
+
+    #[test]
+    fn test_discovery_result_clone() {
+        let result = DiscoveryResult {
+            services: vec![],
+            method: DiscoveryMethod::Configuration,
+            duration: Duration::from_millis(75),
+            success: true,
+            error: None,
+        };
+
+        let cloned = result.clone();
+        assert_eq!(cloned.success, result.success);
+        assert_eq!(cloned.method, result.method);
     }
 }

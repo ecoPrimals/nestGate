@@ -3,19 +3,16 @@
 //! Comprehensive stress testing to validate performance under extreme conditions
 //! and verify zero-copy optimization claims.
 
+use nestgate_core::config::canonical_master::NestGateCanonicalConfig;
 use nestgate_core::{
-use crate::config::ConsolidatedCanonicalConfig;
+    advanced_optimizations::{UltraPerformanceBatchProcessor, ZeroAllocStringProcessor},
     error::{NestGateError, Result},
     simd::batch_processor::SimdBatchProcessor,
-    simple_memory_pool::{SimpleMemoryPool, EnhancedMemoryPool},
-    advanced_optimizations::{UltraPerformanceBatchProcessor, ZeroAllocStringProcessor},
+    simple_memory_pool::{EnhancedMemoryPool, SimpleMemoryPool},
 };
 use std::sync::Arc;
-use crate::config::ConsolidatedCanonicalConfig;
 use std::time::{Duration, Instant};
-use crate::config::ConsolidatedCanonicalConfig;
 use tokio::task::JoinSet;
-use crate::config::ConsolidatedCanonicalConfig;
 
 /// Performance benchmark configuration
 #[derive(Debug, Clone)]
@@ -59,8 +56,10 @@ impl PerformanceStressTester {
 
     /// Run comprehensive stress test
     pub async fn run_stress_test(&self) -> Result<StressTestResults> {
-        println!("🔥 Starting performance stress test with {} concurrent tasks", 
-                self.config.concurrent_tasks);
+        println!(
+            "🔥 Starting performance stress test with {} concurrent tasks",
+            self.config.concurrent_tasks
+        );
 
         let start_time = Instant::now();
         let mut total_operations = 0u64;
@@ -69,9 +68,7 @@ impl PerformanceStressTester {
         // Spawn concurrent stress tasks
         for task_id in 0..self.config.concurrent_tasks {
             let config = self.config.clone();
-            join_set.spawn(async move {
-                Self::run_task_stress(task_id, config).await
-            });
+            join_set.spawn(async move { Self::run_task_stress(task_id, config).await });
         }
 
         // Collect results
@@ -94,8 +91,10 @@ impl PerformanceStressTester {
         let elapsed = start_time.elapsed();
         let ops_per_second = total_operations as f64 / elapsed.as_secs_f64();
 
-        println!("✅ Stress test completed: {} ops in {:?} ({:.2} ops/sec)", 
-                total_operations, elapsed, ops_per_second);
+        println!(
+            "✅ Stress test completed: {} ops in {:?} ({:.2} ops/sec)",
+            total_operations, elapsed, ops_per_second
+        );
 
         Ok(StressTestResults {
             total_operations,
@@ -109,19 +108,19 @@ impl PerformanceStressTester {
     /// Run stress test for individual task
     async fn run_task_stress(task_id: usize, config: StressTestConfig) -> Result<u64> {
         let mut operations = 0u64;
-        
+
         // Memory pool stress test
         let memory_pool = Arc::new(SimpleMemoryPool::new(config.data_size_bytes, 100));
-        
+
         for _ in 0..config.operations_per_task {
             // High-frequency allocations
             let buffer = memory_pool.get_buffer();
-            
+
             // Simulate work
             if task_id % 10 == 0 {
                 tokio::task::yield_now().await;
             }
-            
+
             memory_pool.return_buffer(buffer);
             operations += 1;
         }
@@ -185,12 +184,21 @@ async fn test_concurrent_memory_pool_stress() -> Result<()> {
     let results = tester.run_stress_test().await?;
 
     // Verify performance requirements
-    assert!(results.operations_per_second > 10000.0, 
-           "Expected >10K ops/sec, got {:.2}", results.operations_per_second);
-    assert!(results.memory_efficiency > 0.9, 
-           "Expected >90% memory efficiency, got {:.2}", results.memory_efficiency);
-    
-    println!("🎯 Memory pool stress test passed: {:.2} ops/sec", results.operations_per_second);
+    assert!(
+        results.operations_per_second > 10000.0,
+        "Expected >10K ops/sec, got {:.2}",
+        results.operations_per_second
+    );
+    assert!(
+        results.memory_efficiency > 0.9,
+        "Expected >90% memory efficiency, got {:.2}",
+        results.memory_efficiency
+    );
+
+    println!(
+        "🎯 Memory pool stress test passed: {:.2} ops/sec",
+        results.operations_per_second
+    );
     Ok(())
 }
 
@@ -198,7 +206,7 @@ async fn test_concurrent_memory_pool_stress() -> Result<()> {
 async fn test_simd_performance_validation() -> Result<()> {
     let tester = PerformanceStressTester::new(StressTestConfig::default());
     let zero_copy_verified = tester.verify_zero_copy_performance().await?;
-    
+
     assert!(zero_copy_verified, "SIMD performance claims not verified");
     println!("✅ SIMD performance validation passed");
     Ok(())
@@ -208,27 +216,33 @@ async fn test_simd_performance_validation() -> Result<()> {
 async fn test_ultra_performance_batch_processor() -> Result<()> {
     let processor = UltraPerformanceBatchProcessor::new();
     let data: Vec<u8> = (0..10000).map(|i| (i % 256) as u8).collect();
-    
+
     let start = Instant::now();
     for _ in 0..1000 {
         let result = processor.process_batch(&data);
         assert!(result.is_ok());
     }
     let elapsed = start.elapsed();
-    
-    println!("🚀 Ultra performance processor: {} ops in {:?}", 1000, elapsed);
-    
+
+    println!(
+        "🚀 Ultra performance processor: {} ops in {:?}",
+        1000, elapsed
+    );
+
     // Should complete 1000 operations in under 1 second
-    assert!(elapsed < Duration::from_secs(1), 
-           "Ultra performance processor too slow: {:?}", elapsed);
-    
+    assert!(
+        elapsed < Duration::from_secs(1),
+        "Ultra performance processor too slow: {:?}",
+        elapsed
+    );
+
     Ok(())
 }
 
 #[tokio::test]
 async fn test_zero_alloc_string_processor() -> Result<()> {
     let mut processor = ZeroAllocStringProcessor::<4096>::new();
-    
+
     let start = Instant::now();
     for i in 0..1000 {
         let test_str = format!("test_string_{}", i);
@@ -237,54 +251,60 @@ async fn test_zero_alloc_string_processor() -> Result<()> {
         processor.reset();
     }
     let elapsed = start.elapsed();
-    
-    println!("📝 Zero-alloc string processor: {} ops in {:?}", 1000, elapsed);
-    
+
+    println!(
+        "📝 Zero-alloc string processor: {} ops in {:?}",
+        1000, elapsed
+    );
+
     // Should be very fast due to zero allocations
-    assert!(elapsed < Duration::from_millis(100), 
-           "Zero-alloc processor too slow: {:?}", elapsed);
-    
+    assert!(
+        elapsed < Duration::from_millis(100),
+        "Zero-alloc processor too slow: {:?}",
+        elapsed
+    );
+
     Ok(())
 }
 
-#[tokio::test] 
+#[tokio::test]
 async fn test_enhanced_memory_pool_performance() -> Result<()> {
     let pool = EnhancedMemoryPool::new(1024, 100);
-    
+
     let start = Instant::now();
     let mut buffers = Vec::new();
-    
+
     // Allocate many buffers
     for _ in 0..1000 {
         buffers.push(pool.get_managed_buffer());
     }
-    
+
     // They should auto-return when dropped
     drop(buffers);
-    
+
     let elapsed = start.elapsed();
     println!("🏊 Enhanced memory pool: 1000 allocations in {:?}", elapsed);
-    
+
     let stats = pool.stats();
     assert_eq!(stats.buffer_size, 1024);
     assert_eq!(stats.max_pool_size, 100);
-    
+
     Ok(())
 }
 
 #[tokio::test]
 async fn test_memory_pressure_resilience() -> Result<()> {
     println!("💾 Testing memory pressure resilience...");
-    
+
     let pool = Arc::new(SimpleMemoryPool::new(4096, 50));
     let mut handles = Vec::new();
-    
+
     // Create high memory pressure
     for i in 0..10 {
         let pool_clone = Arc::clone(&pool);
         let handle = tokio::spawn(async move {
             let mut local_buffers = Vec::new();
-            
+
             // Rapidly allocate and hold buffers
             for _ in 0..100 {
                 local_buffers.push(pool_clone.get_buffer());
@@ -292,25 +312,25 @@ async fn test_memory_pressure_resilience() -> Result<()> {
                     tokio::task::yield_now().await;
                 }
             }
-            
+
             // Hold for a bit then release
             tokio::time::sleep(Duration::from_millis(10)).await;
-            
+
             for buffer in local_buffers {
                 pool_clone.return_buffer(buffer);
             }
-            
+
             format!("Task {} completed", i)
         });
         handles.push(handle);
     }
-    
+
     // Wait for all tasks to complete
     for handle in handles {
         let result = handle.await;
         assert!(result.is_ok());
     }
-    
+
     println!("✅ Memory pressure resilience test passed");
     Ok(())
-} 
+}

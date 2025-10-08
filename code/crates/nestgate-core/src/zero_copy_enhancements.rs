@@ -298,6 +298,13 @@ impl ZeroCopyMemoryMap {
         if self.data.is_null() {
             &[]
         } else {
+            // SAFETY: Slice creation from raw parts is safe because:
+            // 1. Null check: We verify !is_null() before dereferencing
+            // 2. Validity: data pointer comes from memory mapping (when implemented)
+            // 3. Length: len matches the actual mapped region size
+            // 4. Lifetime: Returned slice lifetime tied to &self
+            // 5. Alignment: u8 has alignment of 1, always satisfied
+            // 6. Immutability: Returned slice is immutable (&[u8])
             unsafe { std::slice::from_raw_parts(self.data, self.len) }
         }
     }
@@ -305,6 +312,13 @@ impl ZeroCopyMemoryMap {
     /// Get zero-copy subslice
     pub fn subslice(&self, offset: usize, len: usize) -> Option<&[u8]> {
         if offset + len <= self.len && !self.data.is_null() {
+            // SAFETY: Subslice creation is safe because:
+            // 1. Bounds check: Verified offset + len <= self.len before access
+            // 2. Null check: Verified !is_null() before pointer arithmetic
+            // 3. Pointer arithmetic: add(offset) stays within mapped region
+            // 4. Validity: data pointer from memory mapping is valid
+            // 5. Lifetime: Returned slice lifetime tied to &self
+            // 6. Alignment: u8 alignment is always valid
             unsafe {
                 Some(std::slice::from_raw_parts(self.data.add(offset), len))
             }
@@ -324,8 +338,20 @@ impl ZeroCopyMemoryMap {
     }
 }
 
-// Safety: ZeroCopyMemoryMap is only safe to send if the underlying file is stable
+// SAFETY: Send implementation is safe because:
+// 1. File handle: std::fs::File is Send
+// 2. Pointer: *const u8 is just an address, safe to send if memory mapping is stable
+// 3. Invariants: Memory mapping remains valid across thread boundaries
+// 4. No thread-local state: Struct contains no thread-local data
+// Note: Real implementation should ensure memory mapping is stable before enabling Send
 unsafe impl Send for ZeroCopyMemoryMap {}
+
+// SAFETY: Sync implementation is safe because:
+// 1. Immutable access: as_slice() only provides &[u8], which is Sync
+// 2. Interior mutability: No interior mutability in this struct
+// 3. File handle: std::fs::File is Sync for read-only access
+// 4. Data race freedom: All access is read-only through shared references
+// Note: Real implementation must ensure memory mapping allows concurrent reads
 unsafe impl Sync for ZeroCopyMemoryMap {}
 
 /// **ZERO-COPY JSON PARSER**

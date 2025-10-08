@@ -9,7 +9,12 @@ use tokio::sync::RwLock;
 use tracing::{debug, warn};
 
 use super::super::types::TierMetricsMap;
-use super::super::types::*;
+use super::super::types::{
+    CurrentPerformanceMetrics, DatasetPerformanceStats, DiskIoStats, IoStatistics, IoStatsSummary,
+    MemoryInfo, PerformanceTrends, PoolIoStats, PoolPerformanceMetrics, PoolProperties,
+    SlaCompliance, SystemPerformanceMetrics, SystemResourceMetrics, TierMetrics,
+    TierPerformanceTargets, ZfsPerformanceMonitor,
+};
 
 impl ZfsPerformanceMonitor {
     /// Collect performance metrics
@@ -112,7 +117,7 @@ impl ZfsPerformanceMonitor {
         let mut fragmentation_sum = 0.0;
         let mut compression_sum = 0.0;
         let mut dedup_sum = 0.0;
-        let pool_count = (pools.len() as f64);
+        let pool_count = pools.len() as f64;
 
         for pool in &pools {
             // Get detailed pool information
@@ -139,7 +144,7 @@ impl ZfsPerformanceMonitor {
         };
 
         Ok(PoolPerformanceMetrics {
-            total_iops: read_ops as f64 + write_ops as f64,
+            total_iops: parsed_metrics.read_ops as f64 + parsed_metrics.write_ops as f64,
             total_throughput_mbs: parsed_metrics.read_throughput_mbs
                 + parsed_metrics.write_throughput_mbs,
             avg_latency_ms: (parsed_metrics.read_latency_ms + parsed_metrics.write_latency_ms)
@@ -487,7 +492,7 @@ impl ZfsPerformanceMonitor {
         let mut total_read_latency = 0.0;
         let mut total_write_latency = 0.0;
         let mut total_utilization = 0.0;
-        let dataset_count = (tier_datasets.len() as f64);
+        let dataset_count = tier_datasets.len() as f64;
 
         for dataset in &tier_datasets {
             if let Ok(stats) = Self::get_dataset_performance_stats(&dataset.name).await {

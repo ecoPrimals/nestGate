@@ -87,7 +87,6 @@ impl FsMonitor {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub fn start(&self) -> Result<(), FsMonitorError> {
         // Implementation would go here
         Ok(())
@@ -101,7 +100,6 @@ impl FsMonitor {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub fn stop(&self) -> Result<(), FsMonitorError> {
         // Implementation would go here
         Ok(())
@@ -133,17 +131,350 @@ impl FsMonitor {
 
 // ==================== CONVENIENCE FUNCTIONS ====================
 
-/// Create a new canonical FSMonitor configuration
+/// Create a new canonical `FSMonitor` configuration
+#[must_use]
 pub fn new_fsmonitor_config() -> FsMonitorConfig {
     FsMonitorConfig::default()
 }
-/// Create a development-optimized FSMonitor configuration
+/// Create a development-optimized `FSMonitor` configuration
+#[must_use]
 pub fn dev_fsmonitor_config() -> FsMonitorConfig {
     // Development-specific optimizations would go here
     FsMonitorConfig::default()
 }
-/// Create a production-optimized FSMonitor configuration
+/// Create a production-optimized `FSMonitor` configuration
+#[must_use]
 pub fn prod_fsmonitor_config() -> FsMonitorConfig {
     // Production-specific optimizations would go here
     FsMonitorConfig::default()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::time::SystemTime;
+
+    #[test]
+    fn test_fs_event_type_variants() {
+        let types = vec![
+            FsEventType::Create,
+            FsEventType::Modify,
+            FsEventType::Delete,
+            FsEventType::Move,
+            FsEventType::CreateDir,
+            FsEventType::DeleteDir,
+            FsEventType::Chmod,
+        ];
+        assert_eq!(types.len(), 7);
+    }
+
+    #[test]
+    fn test_fs_event_type_other() {
+        let event_type = FsEventType::Other("custom".to_string());
+        assert!(matches!(event_type, FsEventType::Other(_)));
+    }
+
+    #[test]
+    fn test_fs_event_type_equality() {
+        assert_eq!(FsEventType::Create, FsEventType::Create);
+        assert_ne!(FsEventType::Create, FsEventType::Modify);
+    }
+
+    #[test]
+    fn test_fs_event_type_clone() {
+        let event_type = FsEventType::Create;
+        let cloned = event_type.clone();
+        assert_eq!(event_type, cloned);
+    }
+
+    #[test]
+    fn test_fs_event_creation() {
+        let event = FsEvent {
+            event_type: FsEventType::Create,
+            path: PathBuf::from("/test/path"),
+            timestamp: SystemTime::now(),
+            metadata: None,
+        };
+        assert_eq!(event.event_type, FsEventType::Create);
+        assert_eq!(event.path, PathBuf::from("/test/path"));
+        assert!(event.metadata.is_none());
+    }
+
+    #[test]
+    fn test_fs_event_with_metadata() {
+        let metadata = serde_json::json!({"key": "value"});
+        let event = FsEvent {
+            event_type: FsEventType::Modify,
+            path: PathBuf::from("/test/file.txt"),
+            timestamp: SystemTime::now(),
+            metadata: Some(metadata.clone()),
+        };
+        assert!(event.metadata.is_some());
+        assert_eq!(event.metadata.unwrap(), metadata);
+    }
+
+    #[test]
+    fn test_fs_event_clone() {
+        let event = FsEvent {
+            event_type: FsEventType::Delete,
+            path: PathBuf::from("/test/deleted.txt"),
+            timestamp: SystemTime::now(),
+            metadata: None,
+        };
+        let cloned = event.clone();
+        assert_eq!(cloned.event_type, event.event_type);
+        assert_eq!(cloned.path, event.path);
+    }
+
+    #[test]
+    fn test_fs_monitor_creation() {
+        let config = FsMonitorConfig::default();
+        let monitor = FsMonitor::new(config);
+        assert_eq!(monitor.handlers.len(), 0);
+    }
+
+    #[test]
+    fn test_fs_monitor_add_handler() {
+        #[derive(Debug)]
+        struct TestHandler;
+
+        impl FsEventHandler for TestHandler {
+            fn handle_event(&self, _event: &FsEvent) -> Result<(), FsMonitorError> {
+                Ok(())
+            }
+
+            fn name(&self) -> &str {
+                "test_handler"
+            }
+
+            fn handles_event_type(&self, _event_type: &FsEventType) -> bool {
+                true
+            }
+        }
+
+        let config = FsMonitorConfig::default();
+        let mut monitor = FsMonitor::new(config);
+        monitor.add_handler(Box::new(TestHandler));
+        assert_eq!(monitor.handlers.len(), 1);
+    }
+
+    #[test]
+    fn test_fs_monitor_start() {
+        let config = FsMonitorConfig::default();
+        let monitor = FsMonitor::new(config);
+        let result = monitor.start();
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_fs_monitor_stop() {
+        let config = FsMonitorConfig::default();
+        let monitor = FsMonitor::new(config);
+        let result = monitor.stop();
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_new_fsmonitor_config() {
+        let config = new_fsmonitor_config();
+        // Just verify it creates without panic
+        let _monitor = FsMonitor::new(config);
+    }
+
+    #[test]
+    fn test_dev_fsmonitor_config() {
+        let config = dev_fsmonitor_config();
+        let _monitor = FsMonitor::new(config);
+    }
+
+    #[test]
+    fn test_prod_fsmonitor_config() {
+        let config = prod_fsmonitor_config();
+        let _monitor = FsMonitor::new(config);
+    }
+
+    #[test]
+    fn test_fs_event_handler_trait() {
+        #[derive(Debug)]
+        struct SelectiveHandler;
+
+        impl FsEventHandler for SelectiveHandler {
+            fn handle_event(&self, _event: &FsEvent) -> Result<(), FsMonitorError> {
+                Ok(())
+            }
+
+            fn name(&self) -> &str {
+                "selective"
+            }
+
+            fn handles_event_type(&self, event_type: &FsEventType) -> bool {
+                matches!(event_type, FsEventType::Create | FsEventType::Delete)
+            }
+        }
+
+        let handler = SelectiveHandler;
+        assert_eq!(handler.name(), "selective");
+        assert!(handler.handles_event_type(&FsEventType::Create));
+        assert!(handler.handles_event_type(&FsEventType::Delete));
+        assert!(!handler.handles_event_type(&FsEventType::Modify));
+    }
+
+    #[test]
+    fn test_fs_event_serialization() {
+        let event = FsEvent {
+            event_type: FsEventType::Create,
+            path: PathBuf::from("/test/path"),
+            timestamp: SystemTime::now(),
+            metadata: Some(serde_json::json!({"test": "data"})),
+        };
+
+        let serialized = serde_json::to_string(&event).unwrap();
+        assert!(serialized.contains("Create"));
+        assert!(serialized.contains("/test/path"));
+    }
+
+    #[test]
+    fn test_fs_event_type_serialization() {
+        let event_type = FsEventType::Modify;
+        let serialized = serde_json::to_string(&event_type).unwrap();
+        let deserialized: FsEventType = serde_json::from_str(&serialized).unwrap();
+        assert_eq!(event_type, deserialized);
+    }
+
+    #[test]
+    fn test_fs_event_type_hash() {
+        use std::collections::HashSet;
+
+        let mut set = HashSet::new();
+        set.insert(FsEventType::Create);
+        set.insert(FsEventType::Modify);
+        set.insert(FsEventType::Create); // Duplicate
+
+        assert_eq!(set.len(), 2);
+    }
+
+    #[test]
+    fn test_multiple_handlers() {
+        #[derive(Debug)]
+        struct Handler1;
+        #[derive(Debug)]
+        struct Handler2;
+
+        impl FsEventHandler for Handler1 {
+            fn handle_event(&self, _event: &FsEvent) -> Result<(), FsMonitorError> {
+                Ok(())
+            }
+            fn name(&self) -> &str {
+                "handler1"
+            }
+            fn handles_event_type(&self, _: &FsEventType) -> bool {
+                true
+            }
+        }
+
+        impl FsEventHandler for Handler2 {
+            fn handle_event(&self, _event: &FsEvent) -> Result<(), FsMonitorError> {
+                Ok(())
+            }
+            fn name(&self) -> &str {
+                "handler2"
+            }
+            fn handles_event_type(&self, _: &FsEventType) -> bool {
+                true
+            }
+        }
+
+        let config = FsMonitorConfig::default();
+        let mut monitor = FsMonitor::new(config);
+        monitor.add_handler(Box::new(Handler1));
+        monitor.add_handler(Box::new(Handler2));
+        assert_eq!(monitor.handlers.len(), 2);
+    }
+
+    #[test]
+    fn test_fs_event_different_paths() {
+        let event1 = FsEvent {
+            event_type: FsEventType::Create,
+            path: PathBuf::from("/path1"),
+            timestamp: SystemTime::now(),
+            metadata: None,
+        };
+
+        let event2 = FsEvent {
+            event_type: FsEventType::Create,
+            path: PathBuf::from("/path2"),
+            timestamp: SystemTime::now(),
+            metadata: None,
+        };
+
+        assert_ne!(event1.path, event2.path);
+    }
+
+    #[test]
+    fn test_fs_event_type_other_custom_values() {
+        let custom1 = FsEventType::Other("symlink".to_string());
+        let custom2 = FsEventType::Other("hardlink".to_string());
+
+        if let FsEventType::Other(val) = custom1 {
+            assert_eq!(val, "symlink");
+        } else {
+            panic!("Expected Other variant");
+        }
+
+        if let FsEventType::Other(val) = custom2 {
+            assert_eq!(val, "hardlink");
+        } else {
+            panic!("Expected Other variant");
+        }
+    }
+
+    #[test]
+    fn test_fs_monitor_start_stop_sequence() {
+        let config = FsMonitorConfig::default();
+        let monitor = FsMonitor::new(config);
+
+        assert!(monitor.start().is_ok());
+        assert!(monitor.stop().is_ok());
+    }
+
+    #[test]
+    fn test_fs_event_timestamp_is_recent() {
+        let event = FsEvent {
+            event_type: FsEventType::Modify,
+            path: PathBuf::from("/test"),
+            timestamp: SystemTime::now(),
+            metadata: None,
+        };
+
+        let duration = event.timestamp.elapsed().unwrap();
+        assert!(duration.as_secs() < 1); // Should be very recent
+    }
+
+    #[test]
+    fn test_fs_event_type_debug_format() {
+        let event_type = FsEventType::CreateDir;
+        let debug_str = format!("{:?}", event_type);
+        assert!(debug_str.contains("CreateDir"));
+    }
+
+    #[test]
+    fn test_fs_monitor_debug_format() {
+        let config = FsMonitorConfig::default();
+        let monitor = FsMonitor::new(config);
+        let debug_str = format!("{:?}", monitor);
+        assert!(debug_str.contains("FsMonitor"));
+    }
+
+    #[test]
+    fn test_fs_event_debug_format() {
+        let event = FsEvent {
+            event_type: FsEventType::Delete,
+            path: PathBuf::from("/test/file"),
+            timestamp: SystemTime::now(),
+            metadata: None,
+        };
+        let debug_str = format!("{:?}", event);
+        assert!(debug_str.contains("FsEvent"));
+        assert!(debug_str.contains("Delete"));
+    }
 }

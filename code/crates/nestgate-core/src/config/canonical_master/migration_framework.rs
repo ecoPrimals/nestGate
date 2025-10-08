@@ -278,7 +278,6 @@ impl ConfigMigrator {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub fn from_final_config(config: serde_json::Value, options: MigrationOptions) -> Result<Self> {
         let mut migrator = Self::new("NestGateFinalConfig".to_string(), options);
         migrator.migrate_from_final_config(config)?;
@@ -293,7 +292,6 @@ impl ConfigMigrator {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub fn migrate(mut self) -> Result<NestGateCanonicalConfig> {
         if self.options.dry_run {
             return self.dry_run_migration();
@@ -730,7 +728,6 @@ impl SafeConfigMigration {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub fn validate_migration(&self, config: &NestGateCanonicalConfig) -> Result<MigrationReport> {
         let warnings = Vec::new();
         let mut errors = Vec::new();

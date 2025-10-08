@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 /// **LOAD TEST METRICS**
 ///
 /// Comprehensive metrics collected during load testing execution.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct LoadTestMetrics {
     /// Overall performance statistics for the test
     pub performance_stats: PerformanceStats,
@@ -45,15 +45,6 @@ pub struct ResponseTimeStats {
     pub p95_ms: f64,
     /// 99th percentile response time in milliseconds
     pub p99_ms: f64,
-}
-
-impl Default for LoadTestMetrics {
-    fn default() -> Self {
-        Self {
-            performance_stats: PerformanceStats::default(),
-            response_time_stats: ResponseTimeStats::default(),
-        }
-    }
 }
 
 impl Default for PerformanceStats {

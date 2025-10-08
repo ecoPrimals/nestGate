@@ -62,5 +62,5 @@ pub struct UnifiedNetworkExtensions {
     pub security: NetworkSecuritySettings,
 }
 
-/// Network configuration using StandardDomainConfig pattern
+/// Network configuration using `StandardDomainConfig` pattern
 pub type UnifiedNetworkConfig = UnifiedNetworkExtensions;

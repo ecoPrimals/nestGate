@@ -10,10 +10,12 @@ pub mod production;
 pub mod traits;
 pub mod types;
 // Re-export all public types and traits for backward compatibility
+#[allow(deprecated)] // Re-export for backwards compatibility
+pub use traits::NativeAsyncSecurityService;
 pub use traits::{
     NativeAsyncAutomationService, NativeAsyncCommunicationProvider, NativeAsyncLoadBalancer,
-    NativeAsyncMCPProtocolHandler, NativeAsyncMcpService, NativeAsyncSecurityService,
-    NativeAsyncUniversalServiceProvider, NativeAsyncWorkflowService,
+    NativeAsyncMCPProtocolHandler, NativeAsyncMcpService, NativeAsyncUniversalServiceProvider,
+    NativeAsyncWorkflowService,
 };
 
 pub use types::{
@@ -223,7 +225,7 @@ mod tests {
         let service = NativeAsyncService::new("test_service".to_string());
 
         // Test service configuration
-        let config = service.get_config().await;
+        let config = service.get_config();
         assert!(!config.is_empty());
 
         println!("✅ Native async service created successfully");

@@ -33,11 +33,13 @@ pub struct MetricsSnapshot {
 }
 impl ZfsMetrics {
     /// Create metrics collector for testing
+    #[must_use]
     pub fn new_for_testing() -> Self {
         Self::new()
     }
 
     /// Create a new metrics collector
+    #[must_use]
     pub fn new() -> Self {
         Self {
             total_operations: AtomicU64::new(0),

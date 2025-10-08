@@ -79,7 +79,6 @@ impl NetworkDiscovery {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub async fn discover_bind_address(&self, service_name: &str) -> Result<IpAddr> {
         // Try environment first (external configuration)
         if let Ok(addr) = std::env::var(format!(
@@ -179,7 +178,6 @@ impl NetworkDiscovery {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub async fn port_is_available(&self, port: u16) -> Result<bool> {
         use tokio::net::TcpListener;
 
@@ -198,7 +196,6 @@ impl NetworkDiscovery {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub fn get_available_interfaces(&self) -> Result<Vec<InterfaceInfo>> {
         // Simplified implementation - in a real system this would use proper network interface APIs
         let mut interfaces = Vec::new();
@@ -239,11 +236,10 @@ impl NetworkDiscovery {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub async fn discover_service_endpoint(&self, service_name: &str) -> Result<String> {
         // Environment override
         if let Ok(endpoint) =
-            std::env::var(&["NESTGATE_", &service_name.to_uppercase(), "_ENDPOINT"].concat())
+            std::env::var(["NESTGATE_", &service_name.to_uppercase(), "_ENDPOINT"].concat())
         {
             return Ok(endpoint);
         }
@@ -281,11 +277,10 @@ impl NetworkDiscovery {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub async fn discover_capability_endpoint(&self, capability: &str) -> Result<String> {
         // Environment-based discovery
         if let Ok(endpoint) =
-            std::env::var(&["NESTGATE_", &capability.to_uppercase(), "_ENDPOINT"].concat())
+            std::env::var(["NESTGATE_", &capability.to_uppercase(), "_ENDPOINT"].concat())
         {
             return Ok(endpoint);
         }
@@ -306,7 +301,6 @@ impl NetworkDiscovery {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub async fn get_network_config(&self) -> Result<HashMap<String, String>> {
         let mut config = HashMap::new();
 

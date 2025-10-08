@@ -16,6 +16,7 @@ pub mod introspection;
 pub mod network;
 pub mod performance;
 pub mod registry;
+#[cfg(feature = "dev-stubs")]
 pub mod stubs;
 pub use core::UniversalPrimalDiscovery;
 
@@ -26,6 +27,8 @@ pub use introspection::{HardwareProfile, SystemCapabilities};
 pub use network::{InterfaceInfo, NetworkDiscoveryConfig};
 pub use performance::{OptimalTimeout, PerformanceTestConfig};
 pub use registry::{DiscoveryQuery, ServiceRegistryClient};
+#[cfg(feature = "dev-stubs")]
+#[allow(deprecated)]
 pub use stubs::{
     discover_bind_address, discover_endpoint, discover_limit, discover_port, discover_timeout,
     NetworkConfigAdapter, StandaloneNetworkAdapter,

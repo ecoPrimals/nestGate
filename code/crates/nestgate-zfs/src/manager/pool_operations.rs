@@ -18,7 +18,11 @@ impl ZfsManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn create_pool(&self, name: &str, devices: &[String]) -> Result<crate::pool::PoolInfo> {
+    pub async fn create_pool(
+        &self,
+        name: &str,
+        devices: &[String],
+    ) -> Result<crate::pool::PoolInfo> {
         info!("Creating ZFS pool: {}", name);
 
         let result = self
@@ -27,7 +31,7 @@ impl ZfsManager {
             .await
             .map_err(|_e| {
                 create_zfs_error(
-                    format!("Failed to create pool: {"actual_error_details"}"),
+                    "Failed to create pool: error details".to_string(),
                     ZfsOperation::PoolCreate,
                 )
             })?;
@@ -43,13 +47,12 @@ impl ZfsManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
-    pub fn destroy_pool(&self, name: &str) -> Result<()> {
+    pub async fn destroy_pool(&self, name: &str) -> Result<()> {
         info!("Destroying ZFS pool: {}", name);
 
         self.pool_manager.destroy_pool(name).await.map_err(|_e| {
             create_zfs_error(
-                format!("Failed to destroy pool: {"actual_error_details"}"),
+                "Failed to destroy pool: error details".to_string(),
                 ZfsOperation::PoolCreate,
             )
         })?;
@@ -68,7 +71,7 @@ impl ZfsManager {
     pub async fn get_pool_status(&self, name: &str) -> Result<String> {
         self.pool_manager.get_pool_status(name).await.map_err(|_e| {
             create_zfs_error(
-                format!("Failed to get pool status: {"actual_error_details"}"),
+                "Failed to get pool status: error details".to_string(),
                 ZfsOperation::PoolCreate,
             )
         })
@@ -82,13 +85,12 @@ impl ZfsManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
-    pub fn scrub_pool(&self, name: &str) -> Result<()> {
+    pub async fn scrub_pool(&self, name: &str) -> Result<()> {
         info!("Starting scrub for pool: {}", name);
 
         self.pool_manager.scrub_pool(name).await.map_err(|_e| {
             create_zfs_error(
-                format!("Failed to scrub pool: {"actual_error_details"}"),
+                "Failed to scrub pool: error details".to_string(),
                 ZfsOperation::PoolCreate,
             )
         })?;

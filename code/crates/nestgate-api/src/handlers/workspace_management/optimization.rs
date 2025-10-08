@@ -9,10 +9,12 @@ use tracing::info;
 // Removed unused tracing import
 
 /// Optimize workspace storage (STORAGE FOCUSED)
-pub fn optimize_workspace(Path(workspace_id): Path<String>) -> Result<Json<Value>, StatusCode> {
+pub async fn optimize_workspace(
+    Path(workspace_id): Path<String>,
+) -> Result<Json<Value>, StatusCode> {
     info!("⚡ Optimizing workspace storage: {}", workspace_id);
     // Real ZFS optimization implementation
-    let dataset_name = format!("nestpool/workspaces/{"actual_error_details"}");
+    let dataset_name = "nestpool/workspaces/self.base_url".to_string();
 
     let mut optimizations = Vec::new();
     let warnings: Vec<String> = Vec::new();
@@ -42,7 +44,7 @@ pub fn optimize_workspace(Path(workspace_id): Path<String>) -> Result<Json<Value
     // 5. Delegate AI analysis to any available AI primal provider
     let ai_recommendations = request_ai_optimization(&dataset_name, &pattern_analysis).await;
     if let Some(ai_rec) = ai_recommendations {
-        optimizations.push(format!("AI recommendations: {"actual_error_details"}"));
+        optimizations.push("AI recommendations: self.base_url".to_string());
         info!("🧠 AI optimization recommendations: {}", ai_rec);
     }
 
@@ -124,11 +126,7 @@ fn optimize_compression(dataset_name: &str, pattern: &StoragePattern) -> Option<
 
     // Apply compression setting
     let result = std::process::Command::new("zfs")
-        .args([
-            "set",
-            &format!("compression={"actual_error_details"}"),
-            dataset_name,
-        ])
+        .args(["set", "compression=self.base_url", dataset_name])
         .output();
 
     match result {
@@ -137,12 +135,9 @@ fn optimize_compression(dataset_name: &str, pattern: &StoragePattern) -> Option<
         )),
         Ok(output) => {
             let _error_msg = String::from_utf8_lossy(&output.stderr);
-            Some(format!("fixed"))
+            Some("fixed".to_string())
         }
-        Err(_e) => Some(format!(
-            "Compression command failed: {}",
-            "actual_error_details"
-        )),
+        Err(_e) => Some("Compression command failed".to_string()),
     }
 }
 
@@ -158,11 +153,7 @@ fn optimize_recordsize(dataset_name: &str, pattern: &StoragePattern) -> Option<S
 
     // Apply recordsize setting
     let result = std::process::Command::new("zfs")
-        .args([
-            "set",
-            &format!("recordsize={"actual_error_details"}"),
-            dataset_name,
-        ])
+        .args(["set", "recordsize=self.base_url", dataset_name])
         .output();
 
     match result {
@@ -171,12 +162,9 @@ fn optimize_recordsize(dataset_name: &str, pattern: &StoragePattern) -> Option<S
         )),
         Ok(output) => {
             let _error_msg = String::from_utf8_lossy(&output.stderr);
-            Some(format!("fixed"))
+            Some("fixed".to_string())
         }
-        Err(_e) => Some(format!(
-            "Recordsize command failed: {}",
-            "actual_error_details"
-        )),
+        Err(_e) => Some("Recordsize command failed".to_string()),
     }
 }
 
@@ -192,19 +180,11 @@ fn optimize_cache_settings(dataset_name: &str, pattern: &StoragePattern) -> Opti
 
     // Apply cache settings
     let primary_result = std::process::Command::new("zfs")
-        .args([
-            "set",
-            &format!("primarycache={"actual_error_details"}"),
-            dataset_name,
-        ])
+        .args(["set", "primarycache=self.base_url", dataset_name])
         .output();
 
     let secondary_result = std::process::Command::new("zfs")
-        .args([
-            "set",
-            &format!("secondarycache={"actual_error_details"}"),
-            dataset_name,
-        ])
+        .args(["set", "secondarycache=self.base_url", dataset_name])
         .output();
 
     match (primary_result, secondary_result) {
@@ -229,12 +209,9 @@ fn optimize_deduplication(dataset_name: &str) -> Option<String> {
         }
         Ok(output) => {
             let _error_msg = String::from_utf8_lossy(&output.stderr);
-            Some(format!("fixed"))
+            Some("fixed".to_string())
         }
-        Err(_e) => Some(format!(
-            "Deduplication command failed: {}",
-            "actual_error_details"
-        )),
+        Err(_e) => Some("Deduplication command failed".to_string()),
     }
 }
 
@@ -263,24 +240,21 @@ async fn request_ai_optimization(dataset_name: &str, pattern: &StoragePattern) -
         });
 
         let client = reqwest::Client::new();
-        match client
-            .post(format!("fixed"))
+        if let Ok(response) = client
+            .post("fixed".to_string())
             .json(&request_data)
             .send()
             .await
         {
-            Ok(response) => {
-                if response.status().is_success() {
-                    if let Ok(ai_response) = response.json::<Value>().await {
-                        if let Some(recommendations) = ai_response["recommendations"].as_str() {
-                            return Some(recommendations.to_string());
-                        }
+            if response.status().is_success() {
+                if let Ok(ai_response) = response.json::<Value>().await {
+                    if let Some(recommendations) = ai_response["recommendations"].as_str() {
+                        return Some(recommendations.to_string());
                     }
                 }
             }
-            Err(_) => {
-                // AI provider not available, continue without AI recommendations
-            }
+        } else {
+            // AI provider not available, continue without AI recommendations
         }
     }
 

@@ -73,7 +73,7 @@ impl DiagnosticsManager {
         let diagnostics = self.get_diagnostics()?;
         Ok(diagnostics
             .into_iter()
-            .filter(|d| d.is_unresolved())
+            .filter(super::diagnostic::Diagnostic::is_unresolved)
             .collect())
     }
 
@@ -164,7 +164,6 @@ impl DiagnosticsManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub fn clear_resolved(&self) -> Result<usize> {
         let mut diagnostics = self.diagnostics.write().map_err(|_| {
             NestGateError::internal_error(
@@ -174,7 +173,7 @@ impl DiagnosticsManager {
         })?;
 
         let original_count = diagnostics.len();
-        diagnostics.retain(|d| d.is_unresolved());
+        diagnostics.retain(super::diagnostic::Diagnostic::is_unresolved);
         let cleared_count = original_count - diagnostics.len();
 
         Ok(cleared_count)

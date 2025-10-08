@@ -2,8 +2,10 @@
 //! Idiomatic code patterns for the `NestGate` canonical modernization.
 // Common idiomatic Rust patterns for the canonical modernization
 
-use super::metadata::*;
-use super::traits::*;
+use super::metadata::EvolutionMetadata;
+use super::traits::{
+    CanonicalEvolution, EvolutionCompatible, IdiomaticBuilder, ModernizationTrait, SmartDefault,
+};
 
 /// Create a smart default with error handling
 pub fn safe_smart_default<T: SmartDefault>() -> Result<T, &'static str> {

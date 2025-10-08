@@ -68,8 +68,7 @@ impl SecurityAdapter {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn authenticate(&self, credentials: &Credentials) -> Result<AuthToken>  {
+                pub fn authenticate(&self, credentials: &Credentials) -> Result<AuthToken>  {
         info!(
             "🔐 Authenticating user via security adapter: {}",
             credentials.username
@@ -266,8 +265,7 @@ impl SecurityAdapter {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn encrypt(&self, data: &[u8], algorithm: &str) -> Result<Vec<u8>>  {
+                pub fn encrypt(&self, data: &[u8], algorithm: &str) -> Result<Vec<u8>>  {
         info!(
             "🔐 Encrypting data via security adapter ({} bytes, {})",
             data.len(),
@@ -346,8 +344,7 @@ impl SecurityAdapter {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn sign_data(&self, data: &[u8]) -> Result<Signature>  {
+                pub fn sign_data(&self, data: &[u8]) -> Result<Signature>  {
         info!(
             "🔐 Signing data via security adapter ({} bytes)",
             data.len()
@@ -441,8 +438,7 @@ impl SecurityAdapter {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn health_check(&self) -> Result<bool>  {
+                pub fn health_check(&self) -> Result<bool>  {
         info!("🔐 Performing security adapter health check");
 
         let health_request = serde_json::json!({

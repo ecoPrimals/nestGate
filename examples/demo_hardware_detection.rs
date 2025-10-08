@@ -1,8 +1,8 @@
 use crate::constants::magic_numbers_replacement;
-//! Hardware Detection Demonstration
-//!
-//! This script demonstrates the new hardware abstraction system and shows
-//! how it automatically detects the environment and selects the appropriate backend.
+// Hardware Detection Demonstration
+//
+// This script demonstrates the new hardware abstraction system and shows
+// how it automatically detects the environment and selects the appropriate backend.
 
 use nestgate_zfs::dev_environment::{HardwareCapabilities, HardwareEnvironmentDetector};
 

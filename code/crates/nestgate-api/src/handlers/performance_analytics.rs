@@ -71,7 +71,7 @@ pub struct PerformanceRecommendation {
 ///
 /// Retrieve current system performance metrics.
 #[must_use]
-pub fn get_performance_metrics() -> Result<Json<PerformanceMetricsResponse>, StatusCode> {
+pub async fn get_performance_metrics() -> Result<Json<PerformanceMetricsResponse>, StatusCode> {
     let mut metrics = HashMap::new();
     metrics.insert("cpu_usage".to_string(), 45.2);
     metrics.insert("memory_usage".to_string(), 67.8);
@@ -90,7 +90,7 @@ pub fn get_performance_metrics() -> Result<Json<PerformanceMetricsResponse>, Sta
 ///
 /// Retrieve active performance alerts.
 #[must_use]
-pub fn get_performance_alerts() -> Result<Json<Vec<PerformanceAlert>>, StatusCode> {
+pub async fn get_performance_alerts() -> Result<Json<Vec<PerformanceAlert>>, StatusCode> {
     let alerts = vec![
         PerformanceAlert {
             id: "alert_001".to_string(),
@@ -112,8 +112,8 @@ pub fn get_performance_alerts() -> Result<Json<Vec<PerformanceAlert>>, StatusCod
 /// **GET PERFORMANCE RECOMMENDATIONS HANDLER**
 ///
 /// Retrieve performance optimization recommendations.
-pub fn get_performance_recommendations() -> Result<Json<Vec<PerformanceRecommendation>>, StatusCode>
-{
+pub async fn get_performance_recommendations(
+) -> Result<Json<Vec<PerformanceRecommendation>>, StatusCode> {
     let recommendations = vec![
         PerformanceRecommendation {
             id: "rec_001".to_string(),

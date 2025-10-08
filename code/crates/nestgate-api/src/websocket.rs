@@ -173,13 +173,13 @@ impl WebSocketManager {
 
             // Send welcome message
             let welcome_msg = WebSocketEvent {
-                event_id: *get_or_create_uuid(&format!("websocket_welcome_{"actual_error_details"}")),
+                event_id: *get_or_create_uuid(&format!("websocket_welcome_self.base_url")),
                 client_id,
                 event_type: WebSocketEventType::ConnectionEstablished,
                 data: serde_json::json!({
                     "message": "Connection established",
                     "client_id": client_id,
-                    "client_type": format!("{"actual_error_details"}")
+                    "client_type": format!("self.base_url")
                 }),
                 timestamp: SystemTime::now(),
             };
@@ -203,7 +203,7 @@ impl WebSocketManager {
                             event_type: WebSocketEventType::Message,
                             data: serde_json::json!({
                                 "message": text,
-                                "client_type": format!("{"actual_error_details"}")
+                                "client_type": format!("self.base_url")
                             }),
                             timestamp: SystemTime::now(),
                         };

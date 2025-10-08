@@ -324,7 +324,20 @@ impl MemoryArena {
         // Check if current chunk has enough space
         if let Some(ref mut chunk) = *current_chunk {
             if chunk.capacity() - chunk.len() >= size {
+                // SAFETY: Pointer arithmetic is safe because:
+                // 1. Bounds check: We verified capacity - len >= size above
+                // 2. Validity: chunk.as_mut_ptr() returns valid pointer to allocated memory
+                // 3. Offset: add(chunk.len()) stays within allocated capacity
+                // 4. Alignment: u8 has alignment of 1, always satisfied
+                // 5. Lifetime: Returned pointer lifetime tied to arena lifetime
                 let ptr = unsafe { chunk.as_mut_ptr().add(chunk.len()) };
+                
+                // SAFETY: set_len is safe because:
+                // 1. Capacity check: We verified sufficient capacity above
+                // 2. Initialization: Caller responsible for initializing allocated memory
+                // 3. Bounds: new_len = old_len + size <= capacity (verified)
+                // 4. No drop: u8 has no drop glue, safe to extend length
+                // 5. Memory validity: All bytes up to capacity are allocated
                 unsafe { chunk.set_len(chunk.len() + size) };
                 self.allocation_count.fetch_add(1, Ordering::Relaxed);
                 return Some(ptr);
@@ -334,6 +347,13 @@ impl MemoryArena {
         // Need new chunk
         let mut new_chunk = Vec::with_capacity(self.chunk_size);
         let ptr = new_chunk.as_mut_ptr();
+        
+        // SAFETY: set_len is safe because:
+        // 1. Capacity: Vec was just created with capacity >= size
+        // 2. Bounds check: size checked to be <= chunk_size at function start
+        // 3. Initialization: Caller responsible for initializing allocated region
+        // 4. Memory validity: Vec::with_capacity allocates valid memory
+        // 5. No drop: u8 has no drop glue, safe to set length
         unsafe { new_chunk.set_len(size) };
         
         // Store old chunk if exists

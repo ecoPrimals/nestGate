@@ -28,8 +28,7 @@ impl FilesystemBackend {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        #[must_use]
-        pub fn new(connection_config: &HashMap<String, String>) -> Result<Self>   {
+                pub fn new(connection_config: &HashMap<String, String>) -> Result<Self>   {
         let mut config = FilesystemConfig::default();
 
         // Parse configuration from connection settings
@@ -110,7 +109,7 @@ impl FilesystemBackend {
         fs::read(&full_path)
             .await
             .map_err(|_e| crate::error::NestGateError::storage_error(
-                error_message: format!("Failed to read file: {"actual_error_details"}"),
+                error_message: format!("Failed to read file: {e}"),
             })
     }
 
@@ -120,7 +119,7 @@ impl FilesystemBackend {
         fs::remove_file(&full_path)
             .await
             .map_err(|_e| crate::error::NestGateError::storage_error(
-                error_message: format!("Failed to delete file: {"actual_error_details"}"),
+                error_message: format!("Failed to delete file: {e}"),
             })
     }
 
@@ -171,7 +170,7 @@ impl FilesystemBackend {
         fs::create_dir_all(&full_path)
             .await
             .map_err(|_e| crate::error::NestGateError::storage_error(
-                error_message: format!("Failed to create directory: {"actual_error_details"}"),
+                error_message: format!("Failed to create directory: {e}"),
             })
     }
 
@@ -181,7 +180,7 @@ impl FilesystemBackend {
         fs::remove_dir_all(&full_path)
             .await
             .map_err(|_e| crate::error::NestGateError::storage_error(
-                error_message: format!("Failed to delete directory: {"actual_error_details"}"),
+                error_message: format!("Failed to delete directory: {e}"),
             })
     }
 }

@@ -321,6 +321,7 @@ pub struct UnifiedNetworkConfig {
     /// Buffer size
     pub buffer_size: usize,
 }
+#[allow(deprecated)]
 impl Default for UnifiedNetworkConfig {
     fn default() -> Self {
         Self {
@@ -506,7 +507,7 @@ pub enum MetricValue {
 
 /// Migration utility to convert from legacy storage types
 pub mod migration {
-    use super::*;
+    use super::{CanonicalOptimizationCategory, CanonicalReplicationStatus};
     /// Convert legacy `ReplicationStatus` to canonical
     #[must_use]
     pub fn migrate_replication_status(legacy_status: &str) -> CanonicalReplicationStatus {

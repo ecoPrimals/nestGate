@@ -152,8 +152,7 @@ impl CompressionEngine {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        #[must_use]
-        pub fn get_stats(&self) -> Result<CompressionStats>   {
+                pub fn get_stats(&self) -> Result<CompressionStats>   {
         Ok(CompressionStats {
             total_original_bytes: 0,
             total_compressed_bytes: 0,

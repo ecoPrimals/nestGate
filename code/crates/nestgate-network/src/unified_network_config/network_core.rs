@@ -1,8 +1,12 @@
-use super::network_settings::*;
+use super::network_settings::{
+    NetworkApiSettings, NetworkConnectionSettings, NetworkFileSystemSettings,
+    NetworkLoadBalancingSettings, NetworkPortSettings, NetworkProtocolSettings, NetworkQosSettings,
+    NetworkVlanSettings,
+};
 // CANONICAL MODERNIZATION: Use canonical unified types instead
 use crate::types::NetworkConfig;
-/// Contains the main UnifiedNetworkConfig struct and core network configuration logic.
-/// Extracted from the large unified_network_config.rs to achieve file size compliance.
+/// Contains the main `UnifiedNetworkConfig` struct and core network configuration logic.
+/// Extracted from the large `unified_network_config.rs` to achieve file size compliance.
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 // ==================== SECTION ====================

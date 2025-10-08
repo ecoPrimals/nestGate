@@ -65,11 +65,11 @@ impl OrchestrationAdapter {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn request_capability(
+    pub async fn request_capability(
         &self,
         capability: &str,
         params: serde_json::Value,
-    ) -> Result<serde_json::Value>  {
+    ) -> Result<serde_json::Value> {
         debug!("🔍 Requesting orchestration capability: {}", capability);
 
         // Try to discover orchestration capability (no hardcoded names)
@@ -110,7 +110,7 @@ impl OrchestrationAdapter {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn is_available(&self) -> Result<bool>  {
+    pub async fn is_available(&self) -> Result<bool> {
         let capability_result = self.universal_adapter.get_capability("orchestration");
 
         Ok(capability_result.is_ok())
@@ -124,14 +124,12 @@ impl OrchestrationAdapter {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn execute_command(
+    pub async fn execute_command(
         &self,
         command: &str,
         args: serde_json::Value,
-    ) -> Result<serde_json::Value>  {
-        let _capability_info = self
-            .universal_adapter
-            .get_capability("orchestration")?;
+    ) -> Result<serde_json::Value> {
+        let _capability_info = self.universal_adapter.get_capability("orchestration")?;
 
         // Create request using the correct API
         let request = CapabilityRequest::new("orchestration", command)
@@ -161,7 +159,7 @@ impl OrchestrationAdapter {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn get_orchestration_metadata(&self) -> Result<Option<serde_json::Value>>  {
+    pub async fn get_orchestration_metadata(&self) -> Result<Option<serde_json::Value>> {
         match self.universal_adapter.get_capability("orchestration") {
             Ok(capability) => {
                 let metadata = serde_json::json!({

@@ -27,12 +27,14 @@ pub struct ScheduledTask {
     pub timeout: Duration,
 }
 impl SmartDefault for SchedulingSettings {
-    fn smart_default() -> Self { Self {
+    fn smart_default() -> Self {
+        Self {
             enabled: true,
             tasks: HashMap::default(),
             default_timeout: Duration::from_secs(300),
             max_concurrent: 5,
-         }
+        }
+    }
 }
 
 impl Default for SchedulingSettings {

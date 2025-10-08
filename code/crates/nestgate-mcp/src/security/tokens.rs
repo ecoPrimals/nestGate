@@ -134,8 +134,7 @@ impl TokenManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn refresh_token(&mut self, tokenvalue: &str, lifetime: Duration) -> Result<AuthToken>  {
+                pub fn refresh_token(&mut self, tokenvalue: &str, lifetime: Duration) -> Result<AuthToken>  {
         let old_token = self
             .tokens
             .get(tokenvalue)
@@ -159,8 +158,7 @@ impl TokenManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn revoke_token(&mut self, tokenvalue: &str) -> Result<()>  {
+                pub fn revoke_token(&mut self, tokenvalue: &str) -> Result<()>  {
         self.tokens.remove(tokenvalue);
         self.token_expiry.remove(tokenvalue);
         self.refresh_tokens.remove(tokenvalue);
@@ -228,8 +226,7 @@ impl SessionManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn create_session(&mut self, user_id: &str, token: Option<AuthToken>) -> Result<Session>  {
+                pub fn create_session(&mut self, user_id: &str, token: Option<AuthToken>) -> Result<Session>  {
         // Check session limits
         let user_session_count = self
             .user_sessions
@@ -297,8 +294,7 @@ impl SessionManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn update_session_activity(&mut self, session_id: &str) -> Result<()>  {
+                pub fn update_session_activity(&mut self, session_id: &str) -> Result<()>  {
         if let Some(session) = self.sessions.get_mut(session_id) {
             session.update_activity();
             Ok(())
@@ -319,8 +315,7 @@ impl SessionManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn terminate_session(&mut self, session_id: &str) -> Result<()>  {
+                pub fn terminate_session(&mut self, session_id: &str) -> Result<()>  {
         if let Some(session) = self.sessions.remove(session_id) {
             // Remove from user sessions
             if let Some(user_sessions) = self.user_sessions.get_mut(&session.user_id) {
@@ -374,8 +369,7 @@ impl SessionManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn terminate_user_sessions(&mut self, user_id: &str) -> Result<u32>  {
+                pub fn terminate_user_sessions(&mut self, user_id: &str) -> Result<u32>  {
         let session_ids = self.user_sessions.get(user_id).cloned().unwrap_or_default();
 
         let mut terminated_count = 0;

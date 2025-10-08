@@ -248,8 +248,7 @@ impl ClusterManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn new(config: ClusterConfig) -> Result<Self>  {
+                pub fn new(config: ClusterConfig) -> Result<Self>  {
         let cluster_id = Uuid::new_v4().to_string();
         let node_id = config.node_id.clone();
         
@@ -359,8 +358,7 @@ impl ClusterManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn start(&self) -> Result<()>  {
+                pub fn start(&self) -> Result<()>  {
         println!("🔗 Starting cluster manager for cluster '{self.config.cluster_name}'...");
         
         // Update local node status

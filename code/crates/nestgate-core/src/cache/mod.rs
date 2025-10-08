@@ -384,10 +384,10 @@ mod tests {
         let config = crate::config::canonical_master::CacheConfig::default();
         let cache = CacheSystem::single_tier(config).unwrap_or_else(|e| {
             tracing::error!("Cache creation failed: {:?}", e);
-            panic!("Failed to create cache: {:?}", e);
+            panic!("Failed to create cache: {e:?}");
         });
 
-        let stats = cache.stats().await.unwrap_or_else(|e| {
+        let stats = cache.stats().unwrap_or_else(|e| {
             tracing::warn!("Cache stats operation failed: {:?}", e);
             // Return default stats on error
             CacheSystemStats::SingleTier(crate::cache::types::CacheStats::default())
@@ -430,7 +430,7 @@ mod tests {
                 "cache",
             )
         })?;
-        cache.flush().await.map_err(|e| {
+        cache.flush().map_err(|e| {
             crate::error::NestGateError::internal_error(format!("Cache flush failed: {e}"), "cache")
         })?;
 
@@ -538,7 +538,7 @@ mod cache_comprehensive_tests {
 
         // Fill cache beyond capacity to trigger evictions
         for i in 0..1000 {
-            let _key = format!("key_{}", i);
+            let _key = format!("key_{i}");
             let _value = format!("largevalue_{}", "x".repeat(1000));
             // Would test cache.set(key, value) if implemented
         }
@@ -733,10 +733,7 @@ mod cache_comprehensive_tests {
         let read_duration = start_time.elapsed();
 
         // Verify performance is within acceptable bounds
-        println!(
-            "Write duration: {:?}, Read duration: {:?}",
-            write_duration, read_duration
-        );
+        println!("Write duration: {write_duration:?}, Read duration: {read_duration:?}");
 
         println!("✅ Cache performance metrics tested");
     }

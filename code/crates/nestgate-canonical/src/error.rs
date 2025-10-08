@@ -180,7 +180,409 @@ impl NestGateError {
     pub fn file_system(message: impl Into<String>, path: Option<impl Into<String>>) -> Self {
         Self::Storage {
             message: message.into(),
-            path: path.map(|p| p.into()),
+            path: path.map(std::convert::Into::into),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_configuration_error() {
+        let err = NestGateError::configuration("invalid config");
+        assert!(err.to_string().contains("Configuration Error"));
+        assert!(err.to_string().contains("invalid config"));
+    }
+
+    #[test]
+    fn test_configuration_error_with_field() {
+        let err = NestGateError::configuration_field("missing value", "port");
+        let msg = err.to_string();
+        assert!(msg.contains("Configuration Error"));
+        assert!(msg.contains("missing value"));
+        assert!(msg.contains("port"));
+    }
+
+    #[test]
+    fn test_network_error() {
+        let err = NestGateError::network("connection refused");
+        assert!(err.to_string().contains("Network Error"));
+        assert!(err.to_string().contains("connection refused"));
+    }
+
+    #[test]
+    fn test_network_error_with_endpoint() {
+        let err = NestGateError::network_endpoint("timeout", "localhost:8080");
+        let msg = err.to_string();
+        assert!(msg.contains("Network Error"));
+        assert!(msg.contains("timeout"));
+        assert!(msg.contains("localhost:8080"));
+    }
+
+    #[test]
+    fn test_storage_error() {
+        let err = NestGateError::storage("disk full");
+        assert!(err.to_string().contains("Storage Error"));
+        assert!(err.to_string().contains("disk full"));
+    }
+
+    #[test]
+    fn test_storage_error_with_path() {
+        let err = NestGateError::storage_path("read failed", "/data/file.txt");
+        let msg = err.to_string();
+        assert!(msg.contains("Storage Error"));
+        assert!(msg.contains("read failed"));
+        assert!(msg.contains("/data/file.txt"));
+    }
+
+    #[test]
+    fn test_security_error() {
+        let err = NestGateError::security("unauthorized");
+        assert!(err.to_string().contains("Security Error"));
+        assert!(err.to_string().contains("unauthorized"));
+    }
+
+    #[test]
+    fn test_internal_error() {
+        let err = NestGateError::internal("unexpected state");
+        let msg = err.to_string();
+        assert!(msg.contains("Internal Error"));
+        assert!(msg.contains("unexpected state"));
+    }
+
+    #[test]
+    fn test_validation_error() {
+        let err = NestGateError::validation("field cannot be empty");
+        let msg = err.to_string();
+        assert!(msg.contains("Validation Error"));
+        assert!(msg.contains("field cannot be empty"));
+    }
+
+    #[test]
+    fn test_file_system_error() {
+        let err = NestGateError::file_system("file not found", Some("/path/to/file"));
+        assert!(err.to_string().contains("Storage Error"));
+    }
+
+    #[test]
+    fn test_error_clone() {
+        let err1 = NestGateError::network("test");
+        let err2 = err1.clone();
+        assert_eq!(err1.to_string(), err2.to_string());
+    }
+
+    #[test]
+    fn test_error_debug() {
+        let err = NestGateError::validation("test");
+        let debug = format!("{err:?}");
+        assert!(debug.contains("Validation"));
+    }
+
+    #[test]
+    #[allow(clippy::unnecessary_literal_unwrap)]
+    fn test_result_ok() {
+        let result: Result<i32> = Ok(42);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 42);
+    }
+
+    #[test]
+    fn test_result_err() {
+        let result: Result<i32> = Err(NestGateError::validation("error"));
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_nestgate_result_type() {
+        let result: NestGateResult<String> = Ok("success".to_string());
+        assert!(result.is_ok());
+    }
+
+    // ==================== Additional Comprehensive Tests ====================
+
+    #[test]
+    fn test_configuration_error_without_field() {
+        let err = NestGateError::Configuration {
+            message: "general error".to_string(),
+            field: None,
+        };
+        let msg = err.to_string();
+        assert!(msg.contains("Configuration Error"));
+        assert!(msg.contains("general error"));
+    }
+
+    #[test]
+    fn test_network_error_without_endpoint() {
+        let err = NestGateError::Network {
+            message: "network unavailable".to_string(),
+            endpoint: None,
+        };
+        let msg = err.to_string();
+        assert!(msg.contains("Network Error"));
+        assert!(msg.contains("network unavailable"));
+    }
+
+    #[test]
+    fn test_storage_error_without_path() {
+        let err = NestGateError::Storage {
+            message: "storage failure".to_string(),
+            path: None,
+        };
+        let msg = err.to_string();
+        assert!(msg.contains("Storage Error"));
+        assert!(msg.contains("storage failure"));
+    }
+
+    #[test]
+    fn test_security_error_with_details() {
+        let err = NestGateError::Security {
+            message: "auth failed".to_string(),
+            details: Some("invalid token".to_string()),
+        };
+        let msg = err.to_string();
+        assert!(msg.contains("Security Error"));
+        assert!(msg.contains("auth failed"));
+        assert!(msg.contains("invalid token"));
+    }
+
+    #[test]
+    fn test_security_error_without_details() {
+        let err = NestGateError::Security {
+            message: "unauthorized".to_string(),
+            details: None,
+        };
+        let msg = err.to_string();
+        assert!(msg.contains("Security Error"));
+        assert!(msg.contains("unauthorized"));
+    }
+
+    #[test]
+    fn test_internal_error_component() {
+        let err = NestGateError::Internal {
+            message: "crash".to_string(),
+            component: "database".to_string(),
+        };
+        let msg = err.to_string();
+        assert!(msg.contains("Internal Error"));
+        assert!(msg.contains("crash"));
+        assert!(msg.contains("database"));
+    }
+
+    #[test]
+    fn test_validation_error_field() {
+        let err = NestGateError::Validation {
+            message: "invalid format".to_string(),
+            field: "email".to_string(),
+        };
+        let msg = err.to_string();
+        assert!(msg.contains("Validation Error"));
+        assert!(msg.contains("invalid format"));
+        assert!(msg.contains("email"));
+    }
+
+    #[test]
+    fn test_error_trait_implementation() {
+        let err = NestGateError::validation("test");
+        let _: &dyn std::error::Error = &err;
+    }
+
+    #[test]
+    fn test_error_source_is_none() {
+        let err = NestGateError::configuration("test");
+        use std::error::Error;
+        assert!(err.source().is_none());
+    }
+
+    #[test]
+    fn test_serialization_configuration() {
+        let err = NestGateError::configuration("test");
+        let json = serde_json::to_string(&err).unwrap();
+        assert!(json.contains("Configuration"));
+    }
+
+    #[test]
+    fn test_deserialization_configuration() {
+        let json = r#"{"Configuration":{"message":"test","field":null}}"#;
+        let err: NestGateError = serde_json::from_str(json).unwrap();
+        assert!(matches!(err, NestGateError::Configuration { .. }));
+    }
+
+    #[test]
+    fn test_serialization_network() {
+        let err = NestGateError::network_endpoint("test", "endpoint");
+        let json = serde_json::to_string(&err).unwrap();
+        assert!(json.contains("Network"));
+    }
+
+    #[test]
+    fn test_serialization_storage() {
+        let err = NestGateError::storage_path("test", "/path");
+        let json = serde_json::to_string(&err).unwrap();
+        assert!(json.contains("Storage"));
+    }
+
+    #[test]
+    fn test_serialization_security() {
+        let err = NestGateError::security("test");
+        let json = serde_json::to_string(&err).unwrap();
+        assert!(json.contains("Security"));
+    }
+
+    #[test]
+    fn test_serialization_internal() {
+        let err = NestGateError::internal("test");
+        let json = serde_json::to_string(&err).unwrap();
+        assert!(json.contains("Internal"));
+    }
+
+    #[test]
+    fn test_serialization_validation() {
+        let err = NestGateError::validation("test");
+        let json = serde_json::to_string(&err).unwrap();
+        assert!(json.contains("Validation"));
+    }
+
+    #[test]
+    fn test_round_trip_serialization() {
+        let original = NestGateError::network_endpoint("timeout", "localhost:8080");
+        let json = serde_json::to_string(&original).unwrap();
+        let deserialized: NestGateError = serde_json::from_str(&json).unwrap();
+        assert_eq!(original.to_string(), deserialized.to_string());
+    }
+
+    #[test]
+    fn test_clone_all_variants() {
+        let errors = vec![
+            NestGateError::configuration("test"),
+            NestGateError::network("test"),
+            NestGateError::storage("test"),
+            NestGateError::security("test"),
+            NestGateError::internal("test"),
+            NestGateError::validation("test"),
+        ];
+
+        for err in errors {
+            let cloned = err.clone();
+            assert_eq!(err.to_string(), cloned.to_string());
+        }
+    }
+
+    #[test]
+    fn test_debug_all_variants() {
+        let errors = vec![
+            NestGateError::configuration("test"),
+            NestGateError::network("test"),
+            NestGateError::storage("test"),
+            NestGateError::security("test"),
+            NestGateError::internal("test"),
+            NestGateError::validation("test"),
+        ];
+
+        for err in errors {
+            let debug_str = format!("{:?}", err);
+            assert!(!debug_str.is_empty());
+        }
+    }
+
+    #[test]
+    fn test_empty_message() {
+        let err = NestGateError::configuration("");
+        let msg = err.to_string();
+        assert!(msg.contains("Configuration Error"));
+    }
+
+    #[test]
+    fn test_long_message() {
+        let long_msg = "x".repeat(500);
+        let err = NestGateError::configuration(&long_msg);
+        let msg = err.to_string();
+        assert!(msg.contains(&long_msg));
+    }
+
+    #[test]
+    fn test_special_characters() {
+        let err = NestGateError::configuration("Error: <test> & \"quote\"");
+        let msg = err.to_string();
+        assert!(msg.contains("<test>"));
+        assert!(msg.contains("&"));
+    }
+
+    #[test]
+    fn test_unicode_message() {
+        let err = NestGateError::configuration("错误: test 🚀");
+        let msg = err.to_string();
+        assert!(msg.contains("错误"));
+        assert!(msg.contains("🚀"));
+    }
+
+    #[test]
+    fn test_result_error_propagation() {
+        fn returns_error() -> Result<()> {
+            Err(NestGateError::validation("test"))
+        }
+
+        let result = returns_error();
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_result_ok_value() {
+        fn returns_ok() -> Result<String> {
+            Ok("success".to_string())
+        }
+
+        let result = returns_ok();
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), "success");
+    }
+
+    #[test]
+    fn test_result_map() {
+        let result: Result<i32> = Ok(42);
+        let mapped = result.map(|x| x * 2);
+        assert_eq!(mapped.unwrap(), 84);
+    }
+
+    #[test]
+    fn test_result_and_then() {
+        let result: Result<i32> = Ok(42);
+        let chained = result.map(|x| x + 1);
+        assert_eq!(chained.unwrap_or(0), 43);
+    }
+
+    #[test]
+    fn test_file_system_error_with_path() {
+        let err = NestGateError::file_system("read error", Some("/tmp/file.txt"));
+        let msg = err.to_string();
+        assert!(msg.contains("Storage Error"));
+        assert!(msg.contains("read error"));
+        assert!(msg.contains("/tmp/file.txt"));
+    }
+
+    #[test]
+    fn test_file_system_error_without_path() {
+        let err = NestGateError::file_system("disk error", None::<String>);
+        let msg = err.to_string();
+        assert!(msg.contains("Storage Error"));
+        assert!(msg.contains("disk error"));
+    }
+
+    #[test]
+    fn test_nestgate_result_with_error() {
+        let result: NestGateResult<i32> = Err(NestGateError::validation("failed"));
+        assert!(result.is_err());
+        if let Err(err) = result {
+            assert!(err.to_string().contains("Validation Error"));
+        }
+    }
+
+    #[test]
+    #[allow(clippy::unnecessary_literal_unwrap)]
+    fn test_nestgate_result_with_ok() {
+        let result: NestGateResult<String> = Ok("data".to_string());
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), "data");
     }
 }

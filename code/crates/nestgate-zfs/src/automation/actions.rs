@@ -51,7 +51,10 @@ pub fn execute_lifecycle_action(
 }
 
 /// Apply automatic stage rules based on current lifecycle stage
-pub fn apply_automatic_stage_rules(dataset_name: &str, lifecycle: &DatasetLifecycle) -> Result<()> {
+pub async fn apply_automatic_stage_rules(
+    dataset_name: &str,
+    lifecycle: &DatasetLifecycle,
+) -> Result<()> {
     debug!(
         "Applying automatic stage rules for dataset '{}' in stage {:?}",
         dataset_name, lifecycle.lifecycle_stage
@@ -108,10 +111,10 @@ fn execute_migration_action(dataset_name: &str, target_tier: StorageTier) -> Res
     // Simulate migration operation
     // In a real implementation, this would coordinate with the migration engine
     let success = true;
-    let message = format!("Successfully migrated to {"actual_error_details"} tier");
+    let message = "Successfully migrated to error details tier".to_string();
 
     Ok(ActionResult {
-        action: format!("migrate_to_{"actual_error_details"}").to_lowercase(),
+        action: "migrate_to_error details".to_string().to_lowercase(),
         success,
         message,
         timestamp: SystemTime::now(),

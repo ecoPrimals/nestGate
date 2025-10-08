@@ -135,7 +135,7 @@ pub fn init_tracing(config: TracingConfig) -> Result<LogAggregator> {
             if let Some(parent) = file_path.parent() {
                 std::fs::create_dir_all(parent).map_err(|_e| {
                     NestGateError::internal_error(
-                        &format!("Failed to create log directory: {"actual_error_details"}"),
+                        &format!("Failed to create log directory: {e}"),
                         "tracing",
                     )
                 )?;
@@ -148,7 +148,7 @@ pub fn init_tracing(config: TracingConfig) -> Result<LogAggregator> {
                 .open(file_path)
                 .map_err(|_e| {
                     NestGateError::internal_error(
-                        &format!("Failed to open log file: {"actual_error_details"}"),
+                        &format!("Failed to open log file: {e}"),
                         "tracing",
                     )
                 )?;

@@ -27,8 +27,7 @@ impl SecurityAuditLogger {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn log_security_event(&self, event: &SecurityEvent) -> Result<()>  {
+                pub fn log_security_event(&self, event: &SecurityEvent) -> Result<()>  {
         if !self.config.enabled {
             return Ok(());
         }

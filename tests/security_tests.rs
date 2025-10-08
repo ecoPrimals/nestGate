@@ -241,7 +241,7 @@ async fn test_audit_logging() -> Result<(), Box<dyn std::error::Error>> {
 async fn test_secure_configuration() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔒 Testing secure configuration...");
 
-    let config = config::canonical_master::NestGateCanonicalConfig::default();
+    let config = config::canonical_master::NestGateNestGateCanonicalConfig::default();
 
     // Test that security is enabled by default
     assert!(

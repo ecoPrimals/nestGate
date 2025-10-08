@@ -126,6 +126,7 @@ fn evaluate_single_condition(
 }
 
 /// Check if dataset should transition to a new stage
+#[must_use]
 pub fn should_transition_to_stage(
     _dataset_name: &str,
     _current_lifecycle: &DatasetLifecycle,
@@ -163,6 +164,7 @@ pub fn transition_lifecycle_stage(
 }
 
 /// Get or create lifecycle tracking for a dataset
+#[must_use]
 pub fn get_or_create_lifecycle(
     dataset_name: &str,
     lifecycle_tracker: &std::collections::HashMap<String, DatasetLifecycle>,

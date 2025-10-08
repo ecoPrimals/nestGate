@@ -198,8 +198,7 @@ where
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        #[must_use]
-        pub fn update_config(&mut self, config: ModernZfsConfig) -> Result<()>   {
+                pub fn update_config(&mut self, config: ModernZfsConfig) -> Result<()>   {
         self.config = config;
         // Apply configuration changes to components
         Ok(())

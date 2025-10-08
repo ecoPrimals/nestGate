@@ -10,7 +10,7 @@ use nestgate_core::error::Result;
 use std::collections::HashMap;
 use std::env;
 use std::path::PathBuf;
-
+use std::sync::Arc;
 use tempfile::tempdir;
 use tokio::fs;
 
@@ -97,12 +97,15 @@ async fn test_config_boundary_values() -> Result<(), Box<dyn std::error::Error>>
 
     // Port boundary tests
     let port_tests = vec![
-        (1, true),      // Minimum valid port
-        (1023, true),   // Below privileged range
-        (1024, true),   // Start of unprivileged range
-        (nestgate_core::constants::canonical::network::DEFAULT_API_PORT, true),   // Common port
-        (65535, true),  // Maximum valid port
-        (0, false),     // Invalid port
+        (1, true),    // Minimum valid port
+        (1023, true), // Below privileged range
+        (1024, true), // Start of unprivileged range
+        (
+            nestgate_core::constants::canonical::network::DEFAULT_API_PORT,
+            true,
+        ), // Common port
+        (65535, true), // Maximum valid port
+        (0, false),   // Invalid port
         (65536, false), // Above maximum port
     ];
 

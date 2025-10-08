@@ -2,7 +2,7 @@
 //! Storage Errors functionality and utilities.
 //! This module provides storage-specific error types and helper functions.
 
-use super::core_errors::*;
+use super::core_errors::StorageErrorDetails;
 
 impl StorageErrorDetails {
     /// Create a storage error with just a message

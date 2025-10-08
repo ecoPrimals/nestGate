@@ -56,8 +56,7 @@ impl AuthService {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn authenticate(&self, request: AuthRequest) -> Result<AuthResponse>  {
+                pub fn authenticate(&self, request: AuthRequest) -> Result<AuthResponse>  {
         debug!("🔐 Authentication attempt for user: {}", request.username);
 
         // Update stats

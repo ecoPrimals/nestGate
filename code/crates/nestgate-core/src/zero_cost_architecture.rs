@@ -1,3 +1,5 @@
+#![allow(deprecated)]
+
 //! Zero-cost architecture implementation
 //!
 //! This module has been refactored into smaller, focused sub-modules.
@@ -18,6 +20,9 @@
 //! - `zero_cost::types` - Data structures and errors
 //! - `zero_cost::providers` - Concrete implementations
 //! - `zero_cost::system` - Main system composition
+//!
+//! Note: Uses deprecated traits for backward compatibility
+//! TODO: Migrate to canonical traits in future version
 
 use std::time::Instant;
 
@@ -36,6 +41,7 @@ pub use crate::zero_cost::{
 };
 
 // Legacy compatibility functions that were in the original file
+#[must_use]
 pub fn benchmark_traditional_vs_zero_cost() -> ZeroCostBenchmarkResults {
     let start = Instant::now();
     // Simulate traditional approach overhead

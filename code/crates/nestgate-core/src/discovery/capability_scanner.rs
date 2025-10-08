@@ -39,6 +39,7 @@ pub struct EnvironmentDiscovery {
 
 impl EnvironmentDiscovery {
     /// Create a new environment discovery scanner
+    #[must_use]
     pub fn new() -> Self {
         Self {
             capability_patterns: vec![
@@ -158,7 +159,6 @@ impl CapabilityScanner {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub async fn scan_capabilities(&mut self) -> Result<Vec<CapabilityInfo>, NestGateError> {
         let mut all_capabilities = Vec::new();
 
@@ -201,11 +201,13 @@ impl CapabilityScanner {
     }
 
     /// Get a specific capability from cache
+    #[must_use]
     pub fn get_capability(&self, capability_type: &str) -> Option<&CapabilityInfo> {
         self.capability_cache.get(capability_type)
     }
 
     /// Get all cached capabilities
+    #[must_use]
     pub fn get_all_capabilities(&self) -> Vec<&CapabilityInfo> {
         self.capability_cache.values().collect()
     }
@@ -225,9 +227,11 @@ impl Default for CapabilityScanner {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serial_test::serial;
     use std::env;
 
     #[tokio::test]
+    #[serial]
     async fn test_environment_discovery() {
         // Clean up all possible discovery endpoint environment variables first
         let discovery_patterns = vec![
@@ -301,6 +305,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_capability_scanner() {
         // Clean up all possible environment variables first
         let discovery_patterns = vec![
@@ -317,17 +322,36 @@ mod tests {
             env::remove_var(pattern);
         }
 
+        // Set up test environment BEFORE creating scanner
+        env::set_var("AI_DISCOVERY_ENDPOINT", "http://squirrel:7000");
+        env::set_var("STORAGE_DISCOVERY_ENDPOINT", "http://storage:8080");
+
         let mut scanner = CapabilityScanner::new();
 
-        // Set up test environment
-        env::set_var("AI_DISCOVERY_ENDPOINT", "http://squirrel:7000");
-
         let capabilities = scanner.scan_capabilities().await.unwrap();
-        assert!(!capabilities.is_empty());
+        assert!(
+            !capabilities.is_empty(),
+            "Expected to find capabilities, but found none. Check environment variable discovery."
+        );
+        assert_eq!(
+            capabilities.len(),
+            2,
+            "Expected to find 2 capabilities (AI and STORAGE)"
+        );
 
         let ai_capability = scanner.get_capability("ai");
-        assert!(ai_capability.is_some());
+        assert!(
+            ai_capability.is_some(),
+            "AI capability should be discovered"
+        );
         assert_eq!(ai_capability.unwrap().endpoint, "http://squirrel:7000");
+
+        let storage_capability = scanner.get_capability("storage");
+        assert!(
+            storage_capability.is_some(),
+            "STORAGE capability should be discovered"
+        );
+        assert_eq!(storage_capability.unwrap().endpoint, "http://storage:8080");
 
         // Clean up all discovery environment variables
         for pattern in &discovery_patterns {

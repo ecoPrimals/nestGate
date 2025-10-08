@@ -39,7 +39,7 @@ impl ZfsManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn create_dataset(
+    pub async fn create_dataset(
         &self,
         name: &str,
         parent: &str,
@@ -56,7 +56,7 @@ impl ZfsManager {
             .await
             .map_err(|_e| {
                 create_zfs_error(
-                    format!("Failed to create dataset: {"actual_error_details"}"),
+                    "Failed to create dataset: error details".to_string(),
                     ZfsOperation::DatasetCreate,
                 )
             })?;
@@ -72,19 +72,15 @@ impl ZfsManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
-    pub fn destroy_dataset(&self, name: &str) -> Result<()> {
+    pub async fn destroy_dataset(&self, name: &str) -> Result<()> {
         info!("Destroying dataset: {}", name);
 
-        self.dataset_manager
-            .destroy_dataset(name)
-            .await
-            .map_err(|_e| {
-                create_zfs_error(
-                    format!("Failed to destroy dataset: {"actual_error_details"}"),
-                    ZfsOperation::DatasetCreate,
-                )
-            })?;
+        self.dataset_manager.destroy_dataset(name).map_err(|_e| {
+            create_zfs_error(
+                "Failed to destroy dataset: error details".to_string(),
+                ZfsOperation::DatasetCreate,
+            )
+        })?;
 
         Ok(())
     }
@@ -106,7 +102,7 @@ impl ZfsManager {
             .await
             .map_err(|_e| {
                 create_zfs_error(
-                    format!("Failed to list snapshots: {"actual_error_details"}"),
+                    "Failed to list snapshots: error details".to_string(),
                     ZfsOperation::DatasetCreate,
                 )
             })

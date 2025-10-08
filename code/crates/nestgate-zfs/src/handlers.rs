@@ -122,22 +122,26 @@ pub struct ZfsRequestHandler {
 }
 impl ZfsRequestHandler {
     /// Create a new ZFS request handler
+    #[must_use]
     pub fn new(config: ZfsConfig) -> Self {
         Self { config }
     }
 
     /// Get the configuration
+    #[must_use]
     pub fn config(&self) -> &ZfsConfig {
         &self.config
     }
 
     /// Get the configured default pool name
+    #[must_use]
     pub fn get_default_pool_name(&self) -> String {
         // Use environment variable or fallback to default
         std::env::var("NESTGATE_DEFAULT_POOL").unwrap_or_else(|_| "tank".to_string())
     }
 
     /// Check if performance monitoring is enabled
+    #[must_use]
     pub fn is_performance_monitoring_enabled(&self) -> bool {
         // Use environment variable or default to enabled
         std::env::var("NESTGATE_PERFORMANCE_MONITORING")
@@ -146,6 +150,7 @@ impl ZfsRequestHandler {
     }
 
     /// Get the configured health check interval
+    #[must_use]
     pub fn get_health_check_interval(&self) -> Duration {
         // Use environment variable or default to 5 minutes
         let seconds = std::env::var("NESTGATE_HEALTH_CHECK_INTERVAL")
@@ -162,8 +167,7 @@ impl ZfsRequestHandler {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
-    pub fn handle_zfs_request(&self, request: ZfsRequest) -> Result<ZfsResponse> {
+    pub async fn handle_zfs_request(&self, request: ZfsRequest) -> Result<ZfsResponse> {
         match request {
             ZfsRequest::PoolStatus { name } => self.handle_pool_status(name).await,
             ZfsRequest::DatasetList { pool } => self.handle_dataset_list(pool).await,
@@ -215,11 +219,11 @@ impl ZfsRequestHandler {
             // Fallback to development environment simulation
             warn!("ZFS not available, using development environment simulation");
             let datasets = vec![DatasetInfo {
-                name: format!("{"tank"}/data"),
+                name: "tank/data".to_string(),
                 used: "100GB".to_string(),
                 available: "400GB".to_string(),
                 referenced: "100GB".to_string(),
-                mountpoint: format!("/{"tank"}/data"),
+                mountpoint: "/tank/data".to_string(),
             }];
             Ok(ZfsResponse::DatasetList { datasets })
         }

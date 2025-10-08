@@ -28,8 +28,7 @@ impl ZeroCostValidator {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn validate_async_trait_elimination() -> Result<()>  {
+                pub fn validate_async_trait_elimination() -> Result<()>  {
         // This would analyze the codebase for remaining #[async_trait] patterns
         // For now, we'll assume validation passes
         Ok(())

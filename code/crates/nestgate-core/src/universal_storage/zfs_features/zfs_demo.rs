@@ -305,8 +305,7 @@ impl ZfsFeaturesDemo {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        #[must_use]
-        pub fn demo_real_world_scenarios(&mut self) -> Result<()>   {
+                pub fn demo_real_world_scenarios(&mut self) -> Result<()>   {
         println!("🌍 **Real-World ZFS Scenarios**");
         println!("==============================");
         println!();

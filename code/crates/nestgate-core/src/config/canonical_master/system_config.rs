@@ -105,6 +105,181 @@ impl Default for LogLevel {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_system_config_const_generics() {
+        assert_eq!(SystemConfig::<1000, 65536>::max_connections(), 1000);
+        assert_eq!(SystemConfig::<1000, 65536>::buffer_size(), 65536);
+        assert_eq!(SystemConfig::<500, 32768>::max_connections(), 500);
+        assert_eq!(SystemConfig::<500, 32768>::buffer_size(), 32768);
+    }
+
+    #[test]
+    fn test_system_config_effective_values_without_override() {
+        let config = SystemConfig::<1000, 65536> {
+            instance_id: "test".to_string(),
+            instance_name: "Test".to_string(),
+            version: "1.0.0".to_string(),
+            environment: DeploymentEnvironment::Development,
+            log_level: LogLevel::Info,
+            debug_mode: false,
+            data_dir: PathBuf::from("/data"),
+            config_dir: PathBuf::from("/config"),
+            pid_file: None,
+            max_memory_mb: None,
+            max_cpu_cores: None,
+            startup_timeout: Duration::from_secs(30),
+            shutdown_timeout: Duration::from_secs(10),
+            health_check_interval: Duration::from_secs(5),
+            max_connections_override: None,
+            buffer_size_override: None,
+        };
+
+        assert_eq!(config.effective_max_connections(), 1000);
+        assert_eq!(config.effective_buffer_size(), 65536);
+    }
+
+    #[test]
+    fn test_system_config_effective_values_with_override() {
+        let config = SystemConfig::<1000, 65536> {
+            instance_id: "test".to_string(),
+            instance_name: "Test".to_string(),
+            version: "1.0.0".to_string(),
+            environment: DeploymentEnvironment::Production,
+            log_level: LogLevel::Warn,
+            debug_mode: false,
+            data_dir: PathBuf::from("/data"),
+            config_dir: PathBuf::from("/config"),
+            pid_file: None,
+            max_memory_mb: None,
+            max_cpu_cores: None,
+            startup_timeout: Duration::from_secs(30),
+            shutdown_timeout: Duration::from_secs(10),
+            health_check_interval: Duration::from_secs(5),
+            max_connections_override: Some(2000),
+            buffer_size_override: Some(131072),
+        };
+
+        assert_eq!(config.effective_max_connections(), 2000);
+        assert_eq!(config.effective_buffer_size(), 131072);
+    }
+
+    #[test]
+    fn test_deployment_environment_default() {
+        let default_env = DeploymentEnvironment::default();
+        assert_eq!(default_env, DeploymentEnvironment::Development);
+    }
+
+    #[test]
+    fn test_deployment_environment_variants() {
+        assert_eq!(
+            DeploymentEnvironment::Development,
+            DeploymentEnvironment::Development
+        );
+        assert_ne!(
+            DeploymentEnvironment::Development,
+            DeploymentEnvironment::Production
+        );
+        assert_ne!(
+            DeploymentEnvironment::Testing,
+            DeploymentEnvironment::Staging
+        );
+    }
+
+    #[test]
+    fn test_log_level_default() {
+        let default_level = LogLevel::default();
+        assert_eq!(default_level, LogLevel::Info);
+    }
+
+    #[test]
+    fn test_log_level_variants() {
+        assert_eq!(LogLevel::Error, LogLevel::Error);
+        assert_ne!(LogLevel::Error, LogLevel::Warn);
+        assert_ne!(LogLevel::Info, LogLevel::Debug);
+    }
+
+    #[test]
+    fn test_system_config_production_settings() {
+        let config = SystemConfig::<5000, 262144> {
+            instance_id: "prod-001".to_string(),
+            instance_name: "Production Instance 1".to_string(),
+            version: "2.0.0".to_string(),
+            environment: DeploymentEnvironment::Production,
+            log_level: LogLevel::Warn,
+            debug_mode: false,
+            data_dir: PathBuf::from("/var/lib/nestgate"),
+            config_dir: PathBuf::from("/etc/nestgate"),
+            pid_file: Some(PathBuf::from("/var/run/nestgate.pid")),
+            max_memory_mb: Some(16384),
+            max_cpu_cores: Some(16),
+            startup_timeout: Duration::from_secs(60),
+            shutdown_timeout: Duration::from_secs(30),
+            health_check_interval: Duration::from_secs(10),
+            max_connections_override: None,
+            buffer_size_override: None,
+        };
+
+        assert_eq!(config.environment, DeploymentEnvironment::Production);
+        assert_eq!(config.log_level, LogLevel::Warn);
+        assert!(!config.debug_mode);
+    }
+
+    #[test]
+    fn test_system_config_timeouts() {
+        let config = SystemConfig::<1000, 65536> {
+            instance_id: "test".to_string(),
+            instance_name: "Test".to_string(),
+            version: "1.0.0".to_string(),
+            environment: DeploymentEnvironment::Development,
+            log_level: LogLevel::Info,
+            debug_mode: false,
+            data_dir: PathBuf::from("/data"),
+            config_dir: PathBuf::from("/config"),
+            pid_file: None,
+            max_memory_mb: None,
+            max_cpu_cores: None,
+            startup_timeout: Duration::from_secs(45),
+            shutdown_timeout: Duration::from_secs(15),
+            health_check_interval: Duration::from_secs(3),
+            max_connections_override: None,
+            buffer_size_override: None,
+        };
+
+        assert_eq!(config.startup_timeout, Duration::from_secs(45));
+        assert_eq!(config.shutdown_timeout, Duration::from_secs(15));
+        assert_eq!(config.health_check_interval, Duration::from_secs(3));
+    }
+
+    #[test]
+    fn test_const_generics_compile_time_optimization() {
+        // Test that const generics provide compile-time type differentiation
+        let max_conn = SystemConfig::<2000, 128000>::max_connections();
+        let buffer = SystemConfig::<2000, 128000>::buffer_size();
+
+        assert_eq!(max_conn, 2000);
+        assert_eq!(buffer, 128000);
+    }
+
+    #[test]
+    fn test_different_const_generic_configurations() {
+        type SmallConfig = SystemConfig<100, 4096>;
+        assert_eq!(SmallConfig::max_connections(), 100);
+        assert_eq!(SmallConfig::buffer_size(), 4096);
+
+        type MediumConfig = SystemConfig<1000, 65536>;
+        assert_eq!(MediumConfig::max_connections(), 1000);
+        assert_eq!(MediumConfig::buffer_size(), 65536);
+
+        type LargeConfig = SystemConfig<10000, 1048576>;
+        assert_eq!(LargeConfig::max_connections(), 10000);
+        assert_eq!(LargeConfig::buffer_size(), 1048576);
+    }
+}
+
 /// Environment-specific settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EnvironmentConfig {

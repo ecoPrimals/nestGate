@@ -341,8 +341,7 @@ impl<const SIZE: usize> CompatibleConfigService<SIZE> {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn set_config(&self, _key: String, value: serde_json::Value) -> Result<()>  {
+                pub fn set_config(&self, _key: String, value: serde_json::Value) -> Result<()>  {
         // Note: This requires mutable access, which isn't available through the adapter
         // This demonstrates a limitation of the compatibility layer
         Err(NestGateError::validation_error(

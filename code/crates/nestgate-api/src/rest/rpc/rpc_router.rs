@@ -260,6 +260,7 @@ impl UnifiedRpcRouter {
     }
 
     /// Get routing statistics
+    #[must_use]
     pub fn get_routing_stats(&self) -> RoutingStats {
         RoutingStats {
             method_rules_count: self.method_rules.len(),
@@ -277,6 +278,7 @@ impl UnifiedRpcRouter {
     }
 
     /// Get connection type recommendation for a method pattern
+    #[must_use]
     pub fn recommend_connection_type(
         &self,
         method_pattern: &str,
@@ -361,9 +363,9 @@ mod tests {
         let router = UnifiedRpcRouter::new();
         let request = create_test_request("encrypt_data", "unknown");
 
-        let connection_type = router.route_request(&request).await.unwrap_or_else(|e| {
+        let connection_type = router.route_request(&request).unwrap_or_else(|e| {
             tracing::error!("Unwrap failed: {:?}", e);
-            panic!("Test failed: unable to continue: {:?}", e);
+            panic!("Test failed: unable to continue: {e:?}");
         });
         assert_eq!(connection_type, RpcConnectionType::Tarpc);
     }
@@ -373,9 +375,9 @@ mod tests {
         let router = UnifiedRpcRouter::new();
         let request = create_test_request("register_service", "unknown");
 
-        let connection_type = router.route_request(&request).await.unwrap_or_else(|e| {
+        let connection_type = router.route_request(&request).unwrap_or_else(|e| {
             tracing::error!("Unwrap failed: {:?}", e);
-            panic!("Test failed: unable to continue: {:?}", e);
+            panic!("Test failed: unable to continue: {e:?}");
         });
         assert_eq!(connection_type, RpcConnectionType::JsonRpc);
     }
@@ -385,9 +387,9 @@ mod tests {
         let router = UnifiedRpcRouter::new();
         let request = create_test_request("stream_realtime_metrics", "unknown");
 
-        let connection_type = router.route_request(&request).await.unwrap_or_else(|e| {
+        let connection_type = router.route_request(&request).unwrap_or_else(|e| {
             tracing::error!("Unwrap failed: {:?}", e);
-            panic!("Test failed: unable to continue: {:?}", e);
+            panic!("Test failed: unable to continue: {e:?}");
         });
         assert_eq!(connection_type, RpcConnectionType::WebSocket);
     }
@@ -397,9 +399,9 @@ mod tests {
         let router = UnifiedRpcRouter::new();
         let request = create_test_request("unknown_method", "security");
 
-        let connection_type = router.route_request(&request).await.unwrap_or_else(|e| {
+        let connection_type = router.route_request(&request).unwrap_or_else(|e| {
             tracing::error!("Unwrap failed: {:?}", e);
-            panic!("Test failed: unable to continue: {:?}", e);
+            panic!("Test failed: unable to continue: {e:?}");
         });
         assert_eq!(connection_type, RpcConnectionType::WebSocket);
     }
@@ -409,9 +411,9 @@ mod tests {
         let router = UnifiedRpcRouter::new();
         let request = create_test_request("decrypt_sensitive_data", "unknown_service");
 
-        let connection_type = router.route_request(&request).await.unwrap_or_else(|e| {
+        let connection_type = router.route_request(&request).unwrap_or_else(|e| {
             tracing::error!("Unwrap failed: {:?}", e);
-            panic!("Test failed: unable to continue: {:?}", e);
+            panic!("Test failed: unable to continue: {e:?}");
         });
         assert_eq!(connection_type, RpcConnectionType::Tarpc);
     }

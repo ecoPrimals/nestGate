@@ -67,7 +67,7 @@ mod tests {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {"actual_error_details"}")
+    format!("Operation failed: {e}")
 ).into())
 });
         let ca_cert = temp_dir.path().join("ca.pem");

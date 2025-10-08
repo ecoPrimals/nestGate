@@ -18,9 +18,9 @@ async fn test_string_constant_performance() -> Result<(), Box<dyn std::error::Er
     // Test with constants (optimized)
     let start = Instant::now();
     for _ in 0..ITERATIONS {
-        let _compression = nestgate_zfs::constants::defaults::COMPRESSION_LZ4;
-        let _checksum = nestgate_zfs::constants::defaults::CHECKSUM_SHA256;
-        let _recordsize = nestgate_zfs::constants::defaults::RECORDSIZE_128K;
+        let _compression = nestgate_zfs::config::defaults::COMPRESSION_LZ4;
+        let _checksum = nestgate_zfs::config::defaults::CHECKSUM_SHA256;
+        let _recordsize = nestgate_zfs::config::defaults::RECORDSIZE_128K;
         Ok(())
     }
     let constant_time = start.elapsed();
@@ -135,8 +135,8 @@ async fn test_zfs_operation_performance_baseline() -> Result<(), Box<dyn std::er
     let start = Instant::now();
     for i in 0..100 {
         let _options = DatasetCreateOptions {
-            compression: Some(nestgate_zfs::constants::defaults::COMPRESSION_LZ4.into()),
-            record_size: Some(nestgate_zfs::constants::defaults::RECORDSIZE_128K.into()),
+            compression: Some(nestgate_zfs::config::defaults::COMPRESSION_LZ4.into()),
+            record_size: Some(nestgate_zfs::config::defaults::RECORDSIZE_128K.into()),
             ..Default::default()
         };
 
@@ -170,7 +170,7 @@ async fn test_memory_stability() -> Result<(), Box<dyn std::error::Error>> {
         // Use optimized patterns
         properties.insert(
             format!("property_{}", i),
-            nestgate_zfs::constants::defaults::COMPRESSION_LZ4.to_string(),
+            nestgate_zfs::config::defaults::COMPRESSION_LZ4.to_string(),
         );
 
         // Clear periodically to simulate real usage

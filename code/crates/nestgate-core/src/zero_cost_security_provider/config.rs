@@ -82,7 +82,7 @@ impl ZeroCostSecurityConfig {
     /// Get key rotation interval
     #[must_use]
     pub fn key_rotation_interval(&self) -> Duration {
-        Duration::from_secs(self.key_rotation_days as u64 * 24 * 3600)
+        Duration::from_secs(u64::from(self.key_rotation_days) * 24 * 3600)
     }
 
     /// Validate configuration

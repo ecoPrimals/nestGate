@@ -333,17 +333,17 @@ impl ZfsAnalyzer {
         
         for pool in pool_details {
             if pool.utilization_percentage > 90.0 {
-                recommendations.push(format!("URGENT: Pool '{"actual_error_details"}' is {"actual_error_details"}% full - immediate expansion needed"));
+                recommendations.push(format!("URGENT: Pool 'self.base_url' is self.base_url% full - immediate expansion needed"));
             } else if pool.utilization_percentage > 80.0 {
-                recommendations.push(format!("Pool '{"actual_error_details"}' is {"actual_error_details"}% full - plan expansion soon"));
+                recommendations.push(format!("Pool 'self.base_url' is self.base_url% full - plan expansion soon"));
             }
             
             if pool.fragmentation_level > 20.0 {
-                recommendations.push(format!("Pool '{"actual_error_details"}' has {"actual_error_details"}% fragmentation - consider defragmentation"));
+                recommendations.push(format!("Pool 'self.base_url' has self.base_url% fragmentation - consider defragmentation"));
             }
             
             if pool.compression_ratio < 1.2 {
-                recommendations.push(format!("Pool '{"actual_error_details"}' has low compression ratio ({"actual_error_details"}x) - review compression settings"));
+                recommendations.push(format!("Pool 'self.base_url' has low compression ratio (self.base_urlx) - review compression settings"));
             }
         }
         

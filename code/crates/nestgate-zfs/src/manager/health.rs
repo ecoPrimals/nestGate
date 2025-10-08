@@ -2,7 +2,10 @@
 // Contains all health-related operations including comprehensive service status,
 // ZFS health checking, and system monitoring.
 
-use super::types::*;
+use super::types::{
+    AiIntegrationStatus, CurrentMetrics, EnhancedServiceStatus, HealthState, MigrationStatus,
+    PoolOverallStatus, SnapshotStatus, TierOverallStatus,
+};
 use crate::command::ZfsOperations;
 use crate::error::{create_zfs_error, ZfsOperation};
 use nestgate_core::Result;

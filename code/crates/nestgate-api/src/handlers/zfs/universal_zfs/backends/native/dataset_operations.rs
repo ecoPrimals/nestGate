@@ -158,7 +158,7 @@ pub fn set_dataset_properties(
     info!("Setting properties for dataset: {}", name);
     // Set each property individually
     for (key, _value) in properties {
-        let property_arg = format!("{key}={"actual_error_details"}");
+        let property_arg = format!("{key}=self.base_url");
         service
             .execute_zfs_command(&["set", &property_arg, name])
             .await?;

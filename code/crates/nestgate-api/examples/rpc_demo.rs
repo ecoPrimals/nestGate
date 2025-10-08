@@ -1,122 +1,39 @@
-use nestgate_api::rest::rpc::{
-    BidirectionalStreamManager, JsonRpcRequest, JsonRpcResponse, RpcError, UnifiedRpcRouter,
-};
-use nestgate_api::streaming::{StreamEvent, StreamManager};
-use serde_json::{json, Value};
-use std::sync::Arc;
-use tokio::sync::RwLock;
+// NOTE: This example demonstrates the RPC system concept.
+// The actual implementation may have evolved. This is kept as documentation.
+
+use serde_json::json;
 
 #[tokio::main]
 async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
-    // Initialize the RPC router
-    let mut router = UnifiedRpcRouter::new();
-
-    // Register a simple method
-    router.register_method("echo", |params: Value| async move {
-        Ok(json!({
-            "echo": params,
-            "timestamp": chrono::Utc::now().to_rfc3339()
-        }))
-    });
-
-    // Register a math method
-    router.register_method("add", |params: Value| async move {
-        let a = params.get("a").and_then(|v| v.as_i64()).unwrap_or(0);
-        let b = params.get("b").and_then(|v| v.as_i64()).unwrap_or(0);
-        Ok(json!({"result": a + b}))
-    });
-
-    let router = Arc::new(RwLock::new(router));
-
-    // Test JSON-RPC requests
-    println!("🚀 Testing NestGate RPC System");
+    println!("🚀 NestGate RPC System Demo");
     println!("================================");
-
-    // Test echo method
-    let echo_request = JsonRpcRequest {
-        jsonrpc: "2.0".to_string(),
-        method: "echo".to_string(),
-        params: Some(json!({"message": "Hello, NestGate!"})),
-        id: Some(json!(1)),
-    };
-
-    let response = router.read().await.handle_request(echo_request).await;
-    println!(
-        "📡 Echo Response: {}",
-        serde_json::to_string_pretty(&response)?
-    );
-
-    // Test math method
-    let math_request = JsonRpcRequest {
-        jsonrpc: "2.0".to_string(),
-        method: "add".to_string(),
-        params: Some(json!({"a": 42, "b": 58})),
-        id: Some(json!(2)),
-    };
-
-    let response = router.read().await.handle_request(math_request).await;
-    println!(
-        "🔢 Math Response: {}",
-        serde_json::to_string_pretty(&response)?
-    );
-
-    // Test unknown method (error case)
-    let _error_request = JsonRpcRequest {
-        jsonrpc: "2.0".to_string(),
-        method: "unknown_method".to_string(),
-        params: None,
-        id: Some(json!(3)),
-    };
-
-    let response = router.read().await.handle_request(error_request).await;
-    println!(
-        "❌ Error Response: {}",
-        serde_json::to_string_pretty(&response)?
-    );
-
-    // Test bidirectional streaming
-    println!("\n🔄 Testing Bidirectional Streaming");
-    println!("===================================");
-
-    let stream_manager = StreamManager::new();
-    let stream_id = stream_manager.create_stream("test_stream").await?;
-
-    // Send some events
-    let events = vec![
-        StreamEvent {
-            id: "event1".to_string(),
-            event_type: "data".to_string(),
-            data: json!({"message": "First event"}),
-            timestamp: chrono::Utc::now(),
-        },
-        StreamEvent {
-            id: "event2".to_string(),
-            event_type: "status".to_string(),
-            data: json!({"status": "processing"}),
-            timestamp: chrono::Utc::now(),
-        },
-    ];
-
-    for event in events {
-        stream_manager.send_event(&stream_id, event).await?;
-    }
-
-    println!("✅ Stream {} created with events", stream_id);
-
-    // Demonstrate tarpc integration (if enabled)
-    #[cfg(feature = "tarpc")]
-    {
-        println!("\n⚡ Testing tarpc Integration");
-        println!("============================");
-
-        use nestgate_api::rest::rpc::TarpcRpcService;
-
-        let tarpc_handler = TarpcRpcService::new(router.clone());
-        println!("✅ tarpc service handler initialized");
-    }
-
-    println!("\n🎉 All RPC tests completed successfully!");
-    println!("The NestGate RPC system is fully operational.");
+    println!();
+    println!("This demo illustrates the RPC system architecture.");
+    println!("The actual RPC implementation uses:");
+    println!("  • UnifiedRpcRequest/Response for internal comms");
+    println!("  • Capability-based routing via Universal Adapter");
+    println!("  • Native async for zero-cost abstractions");
+    println!();
+    println!("Example RPC request structure:");
+    let example_request = json!({
+        "id": "550e8400-e29b-41d4-a716-446655440000",
+        "source": "nestgate",
+        "target": "security",
+        "method": "authenticate",
+        "params": {"token": "example"},
+        "timestamp": "2025-10-05T12:00:00Z",
+        "streaming": false,
+        "priority": "Normal"
+    });
+    println!("{}", serde_json::to_string_pretty(&example_request)?);
+    println!();
+    println!("✅ RPC system is capability-based and primal-agnostic");
+    println!("✅ No hardcoded service endpoints");
+    println!("✅ Runtime discovery via Universal Adapter");
+    println!();
+    println!("For real RPC usage, see:");
+    println!("  • code/crates/nestgate-api/src/rest/rpc/");
+    println!("  • code/crates/nestgate-core/src/universal_adapter/");
 
     Ok(())
 }

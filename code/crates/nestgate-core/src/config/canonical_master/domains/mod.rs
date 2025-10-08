@@ -18,7 +18,8 @@ pub mod security_canonical;
 pub mod performance;
 // Handler configuration consolidation - modular structure
 pub mod handler_canonical;
-// Test configuration consolidation - modular structure
+// Test configuration consolidation - modular structure (dev-stubs only)
+#[cfg(feature = "dev-stubs")]
 pub mod test_canonical;
 // ==================== CONSOLIDATED SYSTEM RE-EXPORTS ====================
 
@@ -50,4 +51,5 @@ pub use handler_canonical::{
     CanonicalHandlerConfigs, HandlerConfig, HandlerConfigs, UnifiedHandlerConfig,
 };
 
+#[cfg(feature = "dev-stubs")]
 pub use test_canonical::{CanonicalTestConfigs, TestConfig, TestConfigs, UnifiedTestConfig};

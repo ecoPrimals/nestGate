@@ -1,7 +1,8 @@
+use super::domains::network::CanonicalNetworkConfig;
 /// **CONFIGURATION BUILDERS**
 ///
 /// Configuration builders and factories for creating canonical configurations.
-use super::*;
+use super::{NestGateCanonicalConfig, SecurityConfig, StorageConfig, SystemConfig};
 
 /// Configuration builder for `NestGateCanonicalConfig`
 pub struct CanonicalConfigBuilder<
@@ -44,7 +45,7 @@ impl<
 
     /// Set network configuration
     #[must_use]
-    pub fn with_network(mut self, network: NetworkConfig<API_PORT, TIMEOUT_MS>) -> Self {
+    pub fn with_network(mut self, network: CanonicalNetworkConfig) -> Self {
         self.config.network = network;
         self
     }

@@ -68,16 +68,24 @@ pub enum CircuitBreakerError {
 impl From<CircuitBreakerError> for NestGateError {
     fn from(err: CircuitBreakerError) -> Self {
         match err {
-            CircuitBreakerError::CircuitOpen { name ) => NestGateError::internal_error(
-                location: Some("circuit_breaker".to_string()),
-                location: Some("Circuit breaker protection active".to_string())},
-            CircuitBreakerError::Configuration { message ) => NestGateError::configuration(
-                message,
-                
-                
-            ),
-            CircuitBreakerError::Internal { message ) => NestGateError::internal_error(
-                message,
+            CircuitBreakerError::CircuitOpen { name } => {
+                NestGateError::ResilienceError {
+                    message: format!("Circuit breaker '{}' is open - requests blocked", name),
+                    source: None,
+                }
+            }
+            CircuitBreakerError::Configuration { message } => {
+                NestGateError::ConfigurationError {
+                    message,
+                    source: None,
+                }
+            }
+            CircuitBreakerError::Internal { message } => {
+                NestGateError::InternalError {
+                    message,
+                    source: None,
+                }
+            }
         }
     }
 }

@@ -313,7 +313,7 @@ where
         async move {
             // StoragePrimalProvider uses UniversalRequest, so we'd need to construct one
             // This is a simplified implementation - real implementation would use the handle_request method
-            Ok(None) // TODO: Implement proper request handling
+            Ok(None) // FUTURE: Implement proper request handling for migration adapter
         }
     }
 
@@ -323,14 +323,14 @@ where
         _value: Self::Value,
     ) -> impl Future<Output = Result<()>> + Send {
         async move {
-            // TODO: Implement using handle_request
+            // FUTURE: Implement using handle_request for migration adapter
             Ok(())
         }
     }
 
     fn delete(&self, _key: &Self::Key) -> impl Future<Output = Result<()>> + Send {
         async move {
-            // TODO: Implement using handle_request
+            // FUTURE: Implement using handle_request for migration adapter
             Ok(())
         }
     }

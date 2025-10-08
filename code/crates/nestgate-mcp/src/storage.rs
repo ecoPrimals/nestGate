@@ -94,8 +94,7 @@ impl McpStorageManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn create_volume(&self, config: VolumeConfig) -> Result<VolumeInfo>  {
+                pub fn create_volume(&self, config: VolumeConfig) -> Result<VolumeInfo>  {
         info!("Creating storage volume: {}", config.name);
 
         // Validate configuration
@@ -116,7 +115,7 @@ impl McpStorageManager {
         if volumes.contains_key(&config.name) {
             return Err(nestgate_core::NestGateError::Storage {
                 b_operation: Some("operation".to_string()),
-                details: format!("Volume {"actual_error_details"} already exists"),
+                details: format!("Volume {e} already exists"),
             });
         }
         drop(volumes);
@@ -167,8 +166,7 @@ impl McpStorageManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn get_volume(&self, name: &str) -> Result<VolumeInfo>  {
+                pub fn get_volume(&self, name: &str) -> Result<VolumeInfo>  {
         debug!("Getting volume info: {}", name);
 
         let volumes = self.volumes.read().await;
@@ -189,8 +187,7 @@ impl McpStorageManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn mount_volume(&self, name: &str) -> Result<()>  {
+                pub fn mount_volume(&self, name: &str) -> Result<()>  {
         info!("Mounting storage volume: {}", name);
 
         let mut volumes = self.volumes.write().await;
@@ -199,7 +196,7 @@ impl McpStorageManager {
                 .get_mut(name)
                 .ok_or_else(|| nestgate_core::NestGateError::Storage {
                     b_operation: Some("operation".to_string()),
-                    details: format!("Volume not found: {"actual_error_details"}"),
+                    details: format!("Volume not found: {e}"),
                 })?;
 
         if volume.mounted {
@@ -224,8 +221,7 @@ impl McpStorageManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn unmount_volume(&self, name: &str) -> Result<()>  {
+                pub fn unmount_volume(&self, name: &str) -> Result<()>  {
         info!("Unmounting storage volume: {}", name);
 
         let mut volumes = self.volumes.write().await;
@@ -234,13 +230,13 @@ impl McpStorageManager {
                 .get_mut(name)
                 .ok_or_else(|| nestgate_core::NestGateError::Storage {
                     b_operation: Some("operation".to_string()),
-                    details: format!("Volume not found: {"actual_error_details"}"),
+                    details: format!("Volume not found: {e}"),
                 })?;
 
         if !volume.mounted {
             return Err(nestgate_core::NestGateError::Storage {
                 b_operation: Some("operation".to_string()),
-                details: format!("Volume {"actual_error_details"} is not mounted"),
+                details: format!("Volume {e} is not mounted"),
             });
         }
 
@@ -259,8 +255,7 @@ impl McpStorageManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn delete_volume(&self, name: &str) -> Result<()>  {
+                pub fn delete_volume(&self, name: &str) -> Result<()>  {
         info!("Deleting storage volume: {}", name);
 
         let mut volumes = self.volumes.write().await;
@@ -268,13 +263,13 @@ impl McpStorageManager {
             .get(name)
             .ok_or_else(|| nestgate_core::NestGateError::Storage {
                 b_operation: Some("operation".to_string()),
-                details: format!("Volume not found: {"actual_error_details"}"),
+                details: format!("Volume not found: {e}"),
             })?;
 
         if volume.mounted {
             return Err(NestGateError::storage_error(
                 b_operation: Some("operation".to_string()),
-                error_message: format!("Cannot delete mounted volume: {"actual_error_details"}"),
+                error_message: format!("Cannot delete mounted volume: {e}"),
                 path: Some(name.to_string())
                 context: None,
             });
@@ -345,11 +340,11 @@ impl McpStorageManager {
         let mount_point = volume_spec
             .mount_path
             .clone()
-            .unwrap_or_else(|| format!("/management/{"actual_error_details"}/{"actual_error_details"}"));
+            .unwrap_or_else(|| format!("/management/{e}/{e}"));
 
         // Create volume configuration
         let config = VolumeConfig {
-            name: format!("management-{"actual_error_details"}-{"actual_error_details"}"),
+            name: format!("management-{e}-{e}"),
             size_bytes,
             tier: mcp_tier,
             mount_point,
@@ -410,7 +405,7 @@ impl McpStorageManager {
         biome_id: &str,
         volume_name: &str,
     ) -> Result<VolumeInfo>  {
-        let volume_key = format!("management-{biome_id}-{"actual_error_details"}");
+        let volume_key = format!("management-{biome_id}-{e}");
         self.get_volume(&volume_key).await
     }
 
@@ -423,7 +418,7 @@ impl McpStorageManager {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
         pub fn delete_management_volume(&self, biome_id: &str, volume_name: &str) -> Result<()>  {
-        let volume_key = format!("management-{biome_id}-{"actual_error_details"}");
+        let volume_key = format!("management-{biome_id}-{e}");
         self.delete_volume(&volume_key).await
     }
 
@@ -441,7 +436,7 @@ impl McpStorageManager {
         let volumes = self.volumes.read().await;
         let biome_volumes: Vec<&VolumeInfo> = volumes
             .values()
-            .filter(|v| v.name.starts_with(&format!("management-{"actual_error_details"}-")))
+            .filter(|v| v.name.starts_with(&format!("management-{e}-")))
             .collect();
 
         let total_size = biome_volumes.iter().map(|v| v.size_bytes).sum();
@@ -477,7 +472,7 @@ impl McpStorageManager {
             biome_id, volume_name, new_size_bytes
         );
 
-        let volume_key = format!("management-{biome_id}-{"actual_error_details"}");
+        let volume_key = format!("management-{biome_id}-{e}");
         let mut volumes = self.volumes.write().await;
 
         let volume =

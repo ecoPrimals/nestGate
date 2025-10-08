@@ -3,7 +3,7 @@
 // using actual system and ZFS metrics instead of mock data.
 
 use crate::handlers::metrics_collector::{DiskIOMetrics, NetworkIOMetrics, PoolMetrics};
-use crate::handlers::performance_dashboard::types::*;
+use crate::handlers::performance_dashboard::types::{RealTimeMetrics, SystemMetrics};
 use nestgate_core::Result;
 use serde_json;
 use std::collections::HashMap;
@@ -118,9 +118,11 @@ impl RealTimeMetricsCollector {
         let current_metrics = RealTimeMetrics {
             timestamp: SystemTime::now(),
             cpu_usage: system_metrics.cpu_utilization,
-            memory_usage: memory_usage_bytes as f64 / total_memory_bytes as f64 * 100.0,
+            memory_usage: (system_metrics.memory_usage_bytes as f64
+                / system_metrics.total_memory_bytes as f64)
+                * 100.0,
             disk_io: system_metrics.disk_usage_percent,
-            network_throughput: network_io_bps as f64,
+            network_throughput: system_metrics.network_io_bps as f64,
             active_connections: 25,  // Default value
             response_time_ms: 150.0, // Default value
         };
@@ -147,7 +149,7 @@ impl RealTimeMetricsCollector {
         let system_metrics = SystemMetrics {
             cpu_utilization: cpu_usage,
             memory_usage_bytes: (memory_usage * memory_total as f64 / 100.0) as u64,
-            total_memory_bytes: memory_total as u64,
+            total_memory_bytes: memory_total,
             disk_usage_percent: 45.0,
             network_io_bps: network_io.bytes_sent + network_io.bytes_received,
             load_average: [1.0, 1.2, 1.5],
@@ -238,7 +240,7 @@ impl RealTimeMetricsCollector {
                             // Calculate latency from operations and throughput
                             let total_ops = read_ops + write_ops;
                             if total_ops > 0.0 {
-                                avg_latency_ms = (1000.0_f64 / total_ops as f64).min(100.0);
+                                avg_latency_ms = (1000.0_f64 / total_ops).min(100.0);
                                 // Cap at 100ms
                             }
                         }
@@ -484,7 +486,7 @@ impl RealTimeMetricsCollector {
                 }
 
                 if count > 0 {
-                    return Ok(total_ratio / count as f64);
+                    return Ok(total_ratio / f64::from(count));
                 }
             }
         }

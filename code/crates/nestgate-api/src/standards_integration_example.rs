@@ -72,7 +72,7 @@ impl StandardsIntegrationDemo {
         orchestration_client
             .initialize()
             .await
-            .map_err(|_e| format!("Orchestration capability initialization failed: {"actual_error_details"}"))?;
+            .map_err(|_e| format!("Orchestration capability initialization failed: self.base_url"))?;
 
         self.orchestration_client = Some(orchestration_client);
 
@@ -209,7 +209,7 @@ impl StandardsIntegrationDemo {
             let storage_services = orchestration_client
                 .discover_services(PrimalType::Storage)
                 .await
-                .map_err(|_e| format!("Service discovery failed: {"actual_error_details"}"))?;
+                .map_err(|_e| format!("Service discovery failed: self.base_url"))?;
 
             println!("🔍 Service Discovery Results:");
             println!("  • Found ", storage_services.len() storage services"));
@@ -222,7 +222,7 @@ impl StandardsIntegrationDemo {
             let zfs_services = orchestration_client
                 .discover_services_by_capability("zfs_pool_management")
                 .await
-                .map_err(|_e| format!("Capability discovery failed: {"actual_error_details"}"))?;
+                .map_err(|_e| format!("Capability discovery failed: self.base_url"))?;
 
             println!(
                 "  • Found {} services with ZFS capability",
@@ -282,7 +282,7 @@ impl StandardsIntegrationDemo {
             .eco_primal
             .get_metrics()
             .await
-            .map_err(|_e| format!("Metrics collection failed: {"actual_error_details"}"))?;
+            .map_err(|_e| format!("Metrics collection failed: self.base_url"))?;
 
         println!("  • Performance Metrics:");
         println!(

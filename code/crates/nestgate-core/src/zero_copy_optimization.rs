@@ -484,7 +484,7 @@ mod benchmarks {
         let start = Instant::now();
         for i in 0..iterations {
             let mut buffer = string_pool.get_buffer();
-            buffer.push_str(&format!("Test string {"actual_error_details"}"));
+            buffer.push_str(&format!("Test string {e}"));
             string_pool.return_buffer(buffer);
 
             let mut byte_buffer = byte_pool.get_buffer();
@@ -497,7 +497,7 @@ mod benchmarks {
         // Benchmark without buffer reuse
         let start = Instant::now();
         for i in 0..iterations {
-            let _buffer = format!("Test string {"actual_error_details"}");
+            let _buffer = format!("Test string {e}");
             let _byte_buffer = b"test data".to_vec();
         }
     Ok(())

@@ -70,7 +70,7 @@ pub struct UnifiedRpcResponse {
     pub metrics: ResponseMetrics,
 }
 /// Performance metrics for RPC responses
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ResponseMetrics {
     /// Time spent processing the request (milliseconds)
     pub processing_time_ms: u64,
@@ -78,15 +78,6 @@ pub struct ResponseMetrics {
     pub network_latency_ms: Option<u64>,
     /// Connection pool utilization percentage
     pub connection_pool_utilization: Option<f32>,
-}
-impl Default for ResponseMetrics {
-    fn default() -> Self {
-        Self {
-            processing_time_ms: 0,
-            network_latency_ms: None,
-            connection_pool_utilization: None,
-        }
-    }
 }
 
 /// RPC stream event for bidirectional communication
@@ -176,7 +167,7 @@ impl DynRpcService {
         request: UnifiedRpcRequest,
     ) -> Result<(mpsc::Sender<RpcStreamEvent>, mpsc::Receiver<RpcStreamEvent>), RpcError> {
         match self {
-            DynRpcService::JsonRpc(service) => service.start_stream(request).await,
+            Self::JsonRpc(service) => service.start_stream(request).await,
         }
     }
 
@@ -184,9 +175,10 @@ impl DynRpcService {
     ///
     /// Returns the type of RPC connection this service uses for
     /// routing and compatibility purposes.
-    pub fn connection_type(&self) -> RpcConnectionType {
+    #[must_use]
+    pub const fn connection_type(&self) -> RpcConnectionType {
         match self {
-            DynRpcService::JsonRpc(_) => RpcConnectionType::JsonRpc,
+            Self::JsonRpc(_) => RpcConnectionType::JsonRpc,
         }
     }
 
@@ -203,7 +195,7 @@ impl DynRpcService {
     /// - Network or I/O errors occur
     pub async fn health_check(&self) -> Result<bool, RpcError> {
         match self {
-            DynRpcService::JsonRpc(service) => service.health_check().await,
+            Self::JsonRpc(service) => service.health_check().await,
         }
     }
 }
@@ -241,6 +233,6 @@ pub enum RpcError {
 
 impl From<serde_json::Error> for RpcError {
     fn from(err: serde_json::Error) -> Self {
-        RpcError::Serialization(err.to_string())
+        Self::Serialization(err.to_string())
     }
 }

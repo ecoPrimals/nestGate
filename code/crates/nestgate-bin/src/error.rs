@@ -18,7 +18,7 @@ use thiserror::Error;
 /// Domain-specific error type that follows canonical patterns:
 /// - Rich context with structured data
 /// - Consistent error messages
-/// - Automatic conversion to NestGateError
+/// - Automatic conversion to `NestGateError`
 /// - Serializable for logging and debugging
 #[derive(Error, Debug, Clone, Serialize, Deserialize)]
 pub enum NestGateBinError {
@@ -64,8 +64,8 @@ pub enum NestGateBinError {
 
 /// **UNIFIED ERROR SYSTEM MIGRATION**
 ///
-/// The bin crate now uses the unified NestGateError system for all operations,
-/// eliminating the fragmented NestGateBinError type.
+/// The bin crate now uses the unified `NestGateError` system for all operations,
+/// eliminating the fragmented `NestGateBinError` type.
 
 /// **CANONICAL RESULT** - Use unified Result from nestgate-core
 pub type Result<T> = nestgate_core::error::Result<T>;
@@ -151,7 +151,7 @@ impl BinErrorHelper {
 
 /// **CANONICAL CONVERSION TRAIT IMPLEMENTATION**
 ///
-/// Implements the canonical IntoNestGateError trait for seamless integration
+/// Implements the canonical `IntoNestGateError` trait for seamless integration
 impl From<NestGateBinError> for NestGateError {
     fn from(err: NestGateBinError) -> NestGateError {
         match err {
@@ -197,10 +197,7 @@ impl From<NestGateBinError> for NestGateError {
                 exit_code,
                 message,
             } => NestGateError::internal_error(
-                format!(
-                    "Command: {:?}, exit: {:?} - {}",
-                    command, exit_code, message
-                ),
+                format!("Command: {command:?}, exit: {exit_code:?} - {message}"),
                 "nestgate-bin",
             ),
         }
@@ -263,19 +260,19 @@ impl NestGateBinError {
 
 /// **CANONICAL RESULT EXTENSIONS**
 ///
-/// Provides idiomatic extensions for working with BinResult types
+/// Provides idiomatic extensions for working with `BinResult` types
 pub trait BinResultExt<T> {
-    /// Convert to canonical NestGateError with additional context
+    /// Convert to canonical `NestGateError` with additional context
     fn with_context(self, context: &str) -> CanonicalResult<T>;
 
-    /// Convert to canonical NestGateError
+    /// Convert to canonical `NestGateError`
     fn into_canonical(self) -> CanonicalResult<T>;
 }
 
 impl<T> BinResultExt<T> for BinResult<T> {
     fn with_context(self, context: &str) -> CanonicalResult<T> {
         self.map_err(|_e| {
-            NestGateError::internal_error(format!("Context: {}", context), "nestgate-bin")
+            NestGateError::internal_error(format!("Context: {context}"), "nestgate-bin")
         })
     }
 
@@ -288,7 +285,7 @@ impl<T> BinResultExt<T> for BinResult<T> {
 ///
 /// This module demonstrates the complete canonical error handling approach:
 /// 1. Domain-specific error types with rich context
-/// 2. Automatic conversion to unified NestGateError
+/// 2. Automatic conversion to unified `NestGateError`
 /// 3. Consistent error creation patterns
 /// 4. Idiomatic Result type usage
 /// 5. Seamless integration with the broader error ecosystem

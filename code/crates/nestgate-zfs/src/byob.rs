@@ -56,6 +56,7 @@ pub struct ByobStorageResponse {
 }
 impl ByobManager {
     /// Create a new BYOB manager
+    #[must_use]
     pub fn new(zfs_manager: Arc<ZfsManager>) -> Self {
         let orchestration_endpoint = std::env::var("ORCHESTRATION_URL").ok();
         let compute_endpoint = std::env::var("COMPUTE_URL").ok();
@@ -75,7 +76,7 @@ impl ByobManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn process_storage_request(
+    pub async fn process_storage_request(
         &self,
         request: ByobStorageRequest,
     ) -> Result<ByobStorageResponse> {
@@ -94,7 +95,7 @@ impl ByobManager {
         }
 
         // Create dataset name
-        let dataset_name = format!("nestpool/byob/{"actual_error_details"}");
+        let dataset_name = format!("nestpool/byob/{}", request.workspace_name);
 
         // Create the dataset
         match self.create_workspace_dataset(&dataset_name, &request).await {
@@ -168,11 +169,7 @@ impl ByobManager {
         if request.storage_size_gb > 0 {
             let _quota_bytes = request.storage_size_gb * 1024 * 1024 * 1024;
             let output = tokio::process::Command::new("zfs")
-                .args([
-                    "set",
-                    &format!("quota={"actual_error_details"}"),
-                    dataset_name,
-                ])
+                .args(["set", "quota=error details", dataset_name])
                 .output()
                 .await?;
 
@@ -186,11 +183,7 @@ impl ByobManager {
 
         // Set mount point using zfs command directly
         let output = tokio::process::Command::new("zfs")
-            .args([
-                "set",
-                &format!("mountpoint={"actual_error_details"}"),
-                dataset_name,
-            ])
+            .args(["set", "mountpoint=error details", dataset_name])
             .output()
             .await?;
 
@@ -296,11 +289,10 @@ impl ByobManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
-    pub fn cleanup_workspace(&self, workspace_name: &str) -> Result<()> {
+    pub async fn cleanup_workspace(&self, workspace_name: &str) -> Result<()> {
         info!("🧹 Cleaning up BYOB workspace: {}", workspace_name);
 
-        let dataset_name = format!("nestpool/byob/{"actual_error_details"}");
+        let dataset_name = format!("nestpool/byob/{workspace_name}");
 
         // Destroy the dataset using zfs command directly
         let output = tokio::process::Command::new("zfs")
@@ -335,7 +327,7 @@ impl ByobManager {
     }
 
     /// Notify modules about workspace cleanup
-    async fn notify_workspace_cleanup(&self, endpoint: &str, workspace_name: &str) -> Result<()> {
+    async fn notify_workspace_cleanup(&self, _endpoint: &str, workspace_name: &str) -> Result<()> {
         let notification = serde_json::json!({
             "event": "workspace_destroyed",
             "workspace_name": workspace_name,

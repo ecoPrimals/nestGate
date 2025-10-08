@@ -1,8 +1,8 @@
 //! **CANONICAL ZFS CONFIGURATION - UNIFIED**
 //!
 //! This module provides the canonical ZFS configuration that integrates with
-//! NestGate's unified configuration system, replacing all fragmented ZFS configs.
-//! **MIGRATED**: Now uses StandardDomainConfig pattern for consistency
+//! `NestGate`'s unified configuration system, replacing all fragmented ZFS configs.
+//! **MIGRATED**: Now uses `StandardDomainConfig` pattern for consistency
 
 use nestgate_core::unified_config_consolidation::StandardDomainConfig;
 use serde::{Deserialize, Serialize};
@@ -12,7 +12,7 @@ use std::time::Duration;
 
 // ==================== UNIFIED ZFS CONFIGURATION ====================
 
-/// **MIGRATED**: ZFS configuration now uses StandardDomainConfig pattern
+/// **MIGRATED**: ZFS configuration now uses `StandardDomainConfig` pattern
 /// This replaces the old fragmented ZFS configs with unified configuration
 pub type ZfsConfig = StandardDomainConfig<ZfsExtensions>;
 /// ZFS-specific configuration extensions
@@ -166,7 +166,6 @@ pub struct ZfsMigrationConfig {
 /* // Cannot implement methods for external type - entire impl block commented out
 impl ZfsConfig {
     /// Create production ZFS configuration
-    #[must_use]
     pub fn production() -> Self {
         let mut config = Self::default();
 
@@ -189,7 +188,6 @@ impl ZfsConfig {
     }
 
     /// Create development ZFS configuration
-    #[must_use]
     pub fn development() -> Self {
         let mut config = Self::default();
 
@@ -212,7 +210,6 @@ impl ZfsConfig {
     }
 
     /// Create testing ZFS configuration
-    #[must_use]
     pub fn testing() -> Self {
         let mut config = Self::default();
 

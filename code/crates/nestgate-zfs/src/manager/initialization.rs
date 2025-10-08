@@ -70,7 +70,7 @@ impl ZfsManager {
         let pool_manager = Arc::new(ZfsPoolManager::new(&shared_config).await.map_err(|e| {
             error!("Failed to initialize ZFS pool manager: {}", e);
             create_zfs_error(
-                format!("Pool manager: {"actual_error_details"}"),
+                "Pool manager: error details".to_string(),
                 ZfsOperation::SystemCheck,
             )
         })?);
@@ -119,7 +119,7 @@ impl ZfsManager {
             .map_err(|e| {
                 error!("Failed to initialize tier manager: {}", e);
                 create_zfs_error(
-                    format!("Tier manager: {"actual_error_details"}"),
+                    "Tier manager: error details".to_string(),
                     ZfsOperation::SystemCheck,
                 )
             })?,
@@ -131,7 +131,7 @@ impl ZfsManager {
                 .map_err(|e| {
                     error!("Failed to initialize ZFS health monitor: {}", e);
                     create_zfs_error(
-                        format!("Health monitor: {"actual_error_details"}"),
+                        "Health monitor: error details".to_string(),
                         ZfsOperation::SystemCheck,
                     )
                 })?,
@@ -188,7 +188,6 @@ impl ZfsManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub fn start(&mut self) -> Result<()> {
         info!("Starting Enhanced ZFS Manager");
 
@@ -210,7 +209,6 @@ impl ZfsManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub fn stop(&mut self) -> Result<()> {
         info!("Stopping Enhanced ZFS Manager");
 
@@ -228,7 +226,6 @@ impl ZfsManager {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-    #[must_use]
     pub fn register_with_orchestrator(&mut self, orchestrator_endpoint: String) -> Result<()> {
         info!(
             "Registering Enhanced ZFS service with orchestrator at: {}",

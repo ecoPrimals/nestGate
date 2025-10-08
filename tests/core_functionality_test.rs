@@ -16,7 +16,7 @@ async fn test_canonical_config_creation() -> Result<()> {
     println!("🧪 Testing canonical configuration creation");
 
     // Test default configuration
-    let config = CanonicalConfig::default();
+    let config = NestGateCanonicalConfig::default();
     println!("✅ Created default canonical config");
 
     Ok(())

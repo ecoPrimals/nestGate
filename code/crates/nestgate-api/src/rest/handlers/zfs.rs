@@ -29,7 +29,7 @@ use nestgate_core::error::Result;
 
 /// List all ZFS datasets
 /// GET /api/v1/zfs/datasets
-pub fn list_datasets(
+pub async fn list_datasets(
     State(state): State<ApiState>,
     Query(query): Query<ListQuery>,
 ) -> std::result::Result<Json<DataResponse<Vec<Dataset>>>, Json<DataError>> {
@@ -83,7 +83,7 @@ pub fn list_datasets(
     ZFS datasets (page {} of {})",
         page_datasets.len(),
         page,
-        (total + per_page as u64 - 1) / per_page as u64
+        total.div_ceil(per_page)
     );
     Ok(Json(DataResponse::paginated(
         page_datasets,
@@ -95,7 +95,7 @@ pub fn list_datasets(
 
 /// Create a new ZFS dataset
 /// POST /api/v1/zfs/datasets
-pub fn create_dataset(
+pub async fn create_dataset(
     State(state): State<ApiState>,
     Json(request): Json<CreateDatasetRequest>,
 ) -> std::result::Result<Json<DataResponse<Dataset>>, Json<DataError>> {
@@ -113,7 +113,7 @@ pub fn create_dataset(
         let engines = state.zfs_engines.read().await;
         if engines.contains_key(&request.name) {
             return Err(Json(DataError::new(
-                format!("Dataset '{request.name}' already exists"),
+                format!("Dataset '{}' already exists", request.name),
                 "DATASET_EXISTS".to_string(),
             )));
         }
@@ -125,7 +125,7 @@ pub fn create_dataset(
         Err(e) => {
             error!("Failed to create storage backend: {}", e);
             return Err(Json(DataError::new(
-                format!("Failed to create storage backend: {request.name}"),
+                format!("Failed to create storage backend: {}", request.name),
                 "BACKEND_ERROR".to_string(),
             )));
         }
@@ -134,12 +134,13 @@ pub fn create_dataset(
     // Configure ZFS _engine
     let properties = request.properties.as_ref();
     let _config = serde_json::json!({
-        "compression": properties.map(|p| p.compression).unwrap_or(false),
-        "checksum": properties.map(|p| p.checksum).unwrap_or(true)
+        "compression": properties.is_some_and(|p| p.compression),
+        "checksum": properties.is_none_or(|p| p.checksum)
     });
 
     // Create ZFS _engine placeholder
-    let _engine: Arc<dyn std::any::Any + Send + Sync> = Arc::new(format!("engine_{request.name}"));
+    let _engine: Arc<dyn std::any::Any + Send + Sync> =
+        Arc::new(format!("engine_{}", request.name));
 
     // Store _engine
     {
@@ -153,8 +154,8 @@ pub fn create_dataset(
         request.name,
         chrono::Utc::now().format("%Y-%m-%d %H:%M:%S UTC"),
         request.backend,
-        properties.map(|p| p.compression).unwrap_or(false),
-        properties.map(|p| p.checksum).unwrap_or(true)
+        properties.is_some_and(|p| p.compression),
+        properties.is_none_or(|p| p.checksum)
     );
 
     // Create welcome file for new dataset
@@ -162,8 +163,8 @@ pub fn create_dataset(
         "Welcome to your new ZFS dataset: {}\nCreated: {}\nCompression: {}\nChecksum: {}\n",
         request.name,
         chrono::Utc::now().format("%Y-%m-%d %H:%M:%S UTC"),
-        properties.map(|p| p.compression).unwrap_or(false),
-        properties.map(|p| p.checksum).unwrap_or(true)
+        properties.is_some_and(|p| p.compression),
+        properties.is_none_or(|p| p.checksum)
     );
 
     if let Err(e) = tokio::fs::write(
@@ -203,7 +204,7 @@ pub fn create_dataset(
 
 /// Get a specific ZFS dataset
 /// GET /api/v1/zfs/datasets/:dataset
-pub fn get_dataset(
+pub async fn get_dataset(
     State(state): State<ApiState>,
     Path(dataset_name): Path<String>,
 ) -> std::result::Result<Json<DataResponse<Dataset>>, Json<DataError>> {
@@ -232,7 +233,7 @@ pub fn get_dataset(
 
 /// Update dataset properties
 /// PUT /api/v1/zfs/datasets/:dataset
-pub fn update_dataset(
+pub async fn update_dataset(
     State(state): State<ApiState>,
     Path(dataset_name): Path<String>,
     Json(_request): Json<UpdateDatasetRequest>,
@@ -267,7 +268,7 @@ pub fn update_dataset(
 
 /// Delete a ZFS dataset
 /// DELETE /api/v1/zfs/datasets/:dataset
-pub fn delete_dataset(
+pub async fn delete_dataset(
     State(state): State<ApiState>,
     Path(dataset_name): Path<String>,
 ) -> std::result::Result<Json<DataResponse<serde_json::Value>>, Json<DataError>> {
@@ -292,7 +293,7 @@ pub fn delete_dataset(
 
 /// Get dataset properties
 /// GET /api/v1/zfs/datasets/:dataset/properties
-pub fn get_dataset_properties(
+pub async fn get_dataset_properties(
     State(state): State<ApiState>,
     Path(dataset_name): Path<String>,
 ) -> std::result::Result<Json<DataResponse<DatasetProperties>>, Json<DataError>> {
@@ -321,7 +322,7 @@ pub fn get_dataset_properties(
 
 /// Set dataset properties
 /// PUT /api/v1/zfs/datasets/:dataset/properties
-pub fn set_dataset_properties(
+pub async fn set_dataset_properties(
     State(state): State<ApiState>,
     Path(dataset_name): Path<String>,
     Json(properties): Json<DatasetProperties>,
@@ -345,7 +346,7 @@ pub fn set_dataset_properties(
 
 /// Get dataset statistics
 /// GET /api/v1/zfs/datasets/:dataset/stats
-pub fn get_dataset_stats(
+pub async fn get_dataset_stats(
     State(state): State<ApiState>,
     Path(dataset_name): Path<String>,
 ) -> std::result::Result<Json<DataResponse<DatasetStats>>, Json<DataError>> {
@@ -390,7 +391,7 @@ pub fn get_dataset_stats(
 
 /// List snapshots for a dataset
 /// GET /api/v1/zfs/datasets/:dataset/snapshots
-pub fn list_snapshots(
+pub async fn list_snapshots(
     State(state): State<ApiState>,
     Path(dataset_name): Path<String>,
     Query(query): Query<ListQuery>,
@@ -410,7 +411,7 @@ pub fn list_snapshots(
 
                     for (i, _metadata) in snapshot_metadata.iter().enumerate() {
                         snapshots.push(Snapshot {
-                            id: format!("{}_{}", dataset_name, i),
+                            id: format!("{dataset_name}_{i}"),
                             name: _metadata.name.clone(),
                             dataset: dataset_name.clone(),
                             created: chrono::Utc::now(), // Placeholder - would get from actual _metadata
@@ -468,7 +469,7 @@ pub fn list_snapshots(
 
 /// Create a new snapshot
 /// POST /api/v1/zfs/datasets/:dataset/snapshots
-pub fn create_snapshot(
+pub async fn create_snapshot(
     State(state): State<ApiState>,
     Path(dataset_name): Path<String>,
     Json(request): Json<CreateSnapshotRequest>,
@@ -521,7 +522,7 @@ pub fn create_snapshot(
 
 /// Get a specific snapshot
 /// GET /api/v1/zfs/datasets/:dataset/snapshots/:snapshot
-pub fn get_snapshot(
+pub async fn get_snapshot(
     State(state): State<ApiState>,
     Path((dataset_name, snapshot_name)): Path<(String, String)>,
 ) -> std::result::Result<Json<DataResponse<Snapshot>>, Json<DataError>> {
@@ -539,10 +540,10 @@ pub fn get_snapshot(
                 placeholder_snapshots,
             ) {
                 Ok(snapshots) => {
-                    for (_i, _metadata) in snapshots.iter().enumerate() {
+                    for _metadata in &snapshots {
                         if _metadata.name == snapshot_name {
                             let snapshot = Snapshot {
-                                id: format!("{}_{}", dataset_name, snapshot_name),
+                                id: format!("{dataset_name}_{snapshot_name}"),
                                 name: snapshot_name.clone(),
                                 dataset: dataset_name.clone(),
                                 created: chrono::Utc::now(), // Placeholder
@@ -582,7 +583,7 @@ pub fn get_snapshot(
 
 /// Delete a snapshot
 /// DELETE /api/v1/zfs/datasets/:dataset/snapshots/:snapshot
-pub fn delete_snapshot(
+pub async fn delete_snapshot(
     State(state): State<ApiState>,
     Path((dataset_name, snapshot_name)): Path<(String, String)>,
 ) -> std::result::Result<Json<DataResponse<serde_json::Value>>, Json<DataError>> {
@@ -612,7 +613,7 @@ pub fn delete_snapshot(
 
 /// Clone a snapshot to create a new dataset
 /// POST /api/v1/zfs/datasets/:dataset/snapshots/:snapshot/clone
-pub fn clone_snapshot(
+pub async fn clone_snapshot(
     State(_state): State<ApiState>,
     Path((dataset_name, snapshot_name)): Path<(String, String)>,
     Json(request): Json<CloneSnapshotRequest>,
@@ -640,7 +641,7 @@ pub fn clone_snapshot(
         "properties": {
             "compression": "inherit",
             "readonly": false,
-            "mountpoint": format!("/mnt/{request.clone_name}")
+            "mountpoint": format!("/mnt/{}", request.clone_name)
         }
     });
 
@@ -652,6 +653,7 @@ pub fn clone_snapshot(
 // ==================== SECTION ====================
 
 /// Convert real ZFS stats to API format, with sensible defaults if unavailable
+#[cfg(feature = "dev-stubs")]
 #[allow(dead_code)] // Utility function for ZFS statistics conversion
 fn convert_zfs_stats_to_api(
     zfs_stats: Option<crate::handlers::zfs_stub::ZeroCostDatasetInfo>,
@@ -798,14 +800,14 @@ async fn create_storage_backend(
 > {
     match _request.backend {
         StorageBackendType::Filesystem => {
-            let default_path = format!("/mnt/{_request.name}");
+            let default_path = format!("/mnt/{}", _request.name);
             let path = _request.description.as_deref().unwrap_or(&default_path);
             Ok(Arc::new(
                 serde_json::json!({"backend": "filesystem", "path": path}),
             ))
         }
         _ => Err(nestgate_core::error::NestGateUnifiedError::api_with_status(
-            format!("Storage backend not supported: {_request.backend:?}"),
+            format!("Storage backend not supported: {:?}", _request.backend),
             501,
         )
         .into()),
@@ -815,14 +817,14 @@ async fn create_storage_backend(
 impl ToString for StorageBackendType {
     fn to_string(&self) -> String {
         match self {
-            StorageBackendType::Filesystem => "zfs".to_string(),
-            StorageBackendType::Memory => "memory".to_string(),
-            StorageBackendType::Local => "local".to_string(),
-            StorageBackendType::Remote => "remote".to_string(),
-            StorageBackendType::Cloud => "cloud".to_string(),
-            StorageBackendType::Network => "network".to_string(),
-            StorageBackendType::Block => "block".to_string(),
-            StorageBackendType::File => "file".to_string(),
+            Self::Filesystem => "zfs".to_string(),
+            Self::Memory => "memory".to_string(),
+            Self::Local => "local".to_string(),
+            Self::Remote => "remote".to_string(),
+            Self::Cloud => "cloud".to_string(),
+            Self::Network => "network".to_string(),
+            Self::Block => "block".to_string(),
+            Self::File => "file".to_string(),
         }
     }
 }

@@ -111,6 +111,7 @@ impl ZfsMcpConfig {
     }
 
     /// Get tier configuration for a specific tier
+    #[must_use]
     pub fn get_tier_config(&self, tier: &StorageTier) -> TierConfig {
         match tier {
             StorageTier::Hot => TierConfig {
@@ -182,14 +183,13 @@ impl ZfsMcpStorageProvider {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
-    pub fn create_mount(&self, request: McpMountRequest) -> Result<ZfsMountInfo> {
+    pub async fn create_mount(&self, request: McpMountRequest) -> Result<ZfsMountInfo> {
         info!("Creating ZFS mount for MCP: {}", request.mount_id);
 
         let tier = request.tier.clone();
         let tier_clone = tier.clone(); // Clone before move
-        let dataset_name = format!("nestpool/mcp/mounts/{"actual_error_details"}");
-        let mount_path = format!("/mcp/mounts/{"actual_error_details"}");
+        let dataset_name = format!("nestpool/mcp/mounts/{}", request.mount_id);
+        let mount_path = format!("/mcp/mounts/{}", request.mount_id);
 
         // Create the dataset using the new API
         let dataset_name_parts: Vec<&str> = dataset_name.split('/').collect();
@@ -246,8 +246,7 @@ impl ZfsMcpStorageProvider {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
-    pub fn remove_mount(&self, mount_id: &str) -> Result<()> {
+    pub async fn remove_mount(&self, mount_id: &str) -> Result<()> {
         info!("Removing ZFS mount: {}", mount_id);
 
         if let Some(mount_info) = self.active_mounts.write().await.remove(mount_id) {
@@ -264,8 +263,7 @@ impl ZfsMcpStorageProvider {
                     error!("Failed to destroy dataset for mount {}: {}", mount_id, e);
                     Err(nestgate_core::NestGateError::internal_error(
                         format!(
-                            "MCP Integration: Failed to destroy dataset for mount {}: {}",
-                            mount_id, e
+                            "MCP Integration: Failed to destroy dataset for mount {mount_id}: {e}"
                         ),
                         "mcp-integration",
                     ))
@@ -289,13 +287,12 @@ impl ZfsMcpStorageProvider {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
-    pub fn create_volume(&self, request: McpVolumeRequest) -> Result<ZfsVolumeInfo> {
+    pub async fn create_volume(&self, request: McpVolumeRequest) -> Result<ZfsVolumeInfo> {
         info!("Creating ZFS volume for MCP: {}", request.volume_id);
 
         let tier = request.tier.clone();
         let tier_clone = tier.clone(); // Clone before move
-        let dataset_name = format!("nestpool/mcp/volumes/{"actual_error_details"}");
+        let dataset_name = format!("nestpool/mcp/volumes/{}", request.volume_id);
 
         // Create the dataset using the new API
         let dataset_name_parts: Vec<&str> = dataset_name.split('/').collect();
@@ -351,8 +348,7 @@ impl ZfsMcpStorageProvider {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
-    pub fn remove_volume(&self, volume_id: &str) -> Result<()> {
+    pub async fn remove_volume(&self, volume_id: &str) -> Result<()> {
         info!("Removing ZFS volume: {}", volume_id);
 
         if let Some(volume_info) = self.active_volumes.write().await.remove(volume_id) {
@@ -369,8 +365,7 @@ impl ZfsMcpStorageProvider {
                     error!("Failed to destroy dataset for volume {}: {}", volume_id, e);
                     Err(nestgate_core::NestGateError::internal_error(
                         format!(
-                            "MCP Integration: Failed to create snapshot for volume_id: {}",
-                            volume_id
+                            "MCP Integration: Failed to create snapshot for volume_id: {volume_id}"
                         ),
                         "mcp-integration",
                     ))

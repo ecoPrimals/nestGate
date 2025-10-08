@@ -1,5 +1,28 @@
 /// Extracted from native_async_zfs.rs to maintain file size compliance
 /// Contains production and development implementations of native async ZFS traits
+///
+/// ⚠️ **DEVELOPMENT STUBS - ONLY WITH `dev-stubs` FEATURE** ⚠️
+///
+/// While this module is named "ProductionZfsService", many methods currently return
+/// HARDCODED mock data for development purposes. This allows testing the async interface
+/// without requiring actual ZFS installation.
+
+#![cfg(feature = "dev-stubs")]
+///
+/// **Methods Returning Hardcoded Data**:
+/// - `get_metrics()` - Returns fixed values (5 pools, 50 datasets, 1TB capacity)
+/// - `list_pools()` - Returns single hardcoded "production-pool"
+/// - `get_pool()` - Only recognizes "production-pool"
+/// - `create_pool()` - Returns mock pool without actual creation
+/// - `list_datasets()` - Returns hardcoded datasets
+/// - `create_dataset()` - Returns mock dataset without actual creation
+/// - `list_snapshots()` - Returns empty list
+///
+/// **FUTURE: Production Implementation**
+/// Replace hardcoded data with real ZFS command execution:
+/// - Execute `zfs list -H -p` for pool/dataset listing
+/// - Execute `zfs create` for actual pool/dataset creation
+/// - Execute `zfs snapshot` for snapshot operations
 use std::collections::HashMap;
 use std::time::Duration;
 
@@ -10,7 +33,17 @@ use super::super::universal_zfs::types::{
 };
 use super::traits::*;
 
-/// Production ZFS service implementation with native async
+/// Production ZFS service implementation with native async (Currently Stub)
+///
+/// ⚠️ **PARTIAL STUB IMPLEMENTATION** - Returns hardcoded data for most operations.
+///
+/// This service implements the async ZFS interface but currently uses hardcoded
+/// data instead of real ZFS operations. Suitable for development and testing
+/// without ZFS installation.
+///
+/// # Production Readiness
+///
+/// **NOT PRODUCTION READY** - Requires implementation of real ZFS commands.
 pub struct ProductionZfsService {
     service_name: String,
     service_version: String,
@@ -54,17 +87,17 @@ impl NativeAsyncUniversalZfsService<1000, 10_000, 100_000, 30> for ProductionZfs
     }
 
     fn get_metrics(&self) -> UniversalZfsResult<Self::Metrics> {
-        // Production metrics collection
+        // STUB: Returns hardcoded metrics - FUTURE: Query real ZFS statistics
         tokio::time::sleep(Duration::from_millis(5)).await;
         Ok(ServiceMetrics {
             service_name: self.service_name.clone(),
             status: ServiceStatus::Running,
-            pool_count: 5,
-            dataset_count: 50,
-            snapshot_count: 200,
-            total_capacity_bytes: 1_000_000_000_000, // 1TB
-            used_capacity_bytes: 500_000_000_000,   // 500GB
-            uptime_seconds: 86400, // 1 day
+            pool_count: 5,                    // HARDCODED
+            dataset_count: 50,                // HARDCODED
+            snapshot_count: 200,              // HARDCODED
+            total_capacity_bytes: 1_000_000_000_000, // HARDCODED: 1TB
+            used_capacity_bytes: 500_000_000_000,   // HARDCODED: 500GB
+            uptime_seconds: 86400,            // HARDCODED: 1 day
         })
     }
 
@@ -75,43 +108,43 @@ impl NativeAsyncUniversalZfsService<1000, 10_000, 100_000, 30> for ProductionZfs
     }
 
     fn list_pools(&self) -> UniversalZfsResult<Vec<Self::Pool>> {
-        // Production pool listing
+        // STUB: Returns hardcoded pool - FUTURE: Execute `zfs list -H -p -o name,health,size,used,avail`
         tokio::time::sleep(Duration::from_millis(20)).await;
         Ok(vec![
             PoolInfo {
-                name: "production-pool".to_string(),
-                state: PoolState::Online,
-                health: PoolHealth::Online,
+                name: "production-pool".to_string(), // HARDCODED
+                state: PoolState::Online,             // HARDCODED
+                health: PoolHealth::Online,           // HARDCODED
                 capacity: PoolCapacity {
-                    total_bytes: 500_000_000_000,
-                    used_bytes: 250_000_000_000,
-                    available_bytes: 250_000_000_000,
-                }
-                scrub_status: ScrubStatus::None,
+                    total_bytes: 500_000_000_000,     // HARDCODED: 500GB
+                    used_bytes: 250_000_000_000,      // HARDCODED: 250GB
+                    available_bytes: 250_000_000_000, // HARDCODED: 250GB
+                },
+                scrub_status: ScrubStatus::None,      // HARDCODED
                 created_at: std::time::SystemTime::now(),
-    }
+            }
         ])
     }
 
     fn get_pool(&self, name: &str) -> UniversalZfsResult<Option<Self::Pool>> {
-        // Production pool retrieval
+        // STUB: Only recognizes hardcoded "production-pool" - FUTURE: Query real ZFS pool
         tokio::time::sleep(Duration::from_millis(10)).await;
         if name == "production-pool" {
             Ok(Some(PoolInfo {
                 name: name.to_string(),
-                state: PoolState::Online,
-                health: PoolHealth::Online,
+                state: PoolState::Online,        // HARDCODED
+                health: PoolHealth::Online,      // HARDCODED
                 capacity: PoolCapacity {
-                    total_bytes: 500_000_000_000,
-                    used_bytes: 250_000_000_000,
-                    available_bytes: 250_000_000_000,
-                }
-                scrub_status: ScrubStatus::None,
+                    total_bytes: 500_000_000_000,     // HARDCODED
+                    used_bytes: 250_000_000_000,      // HARDCODED
+                    available_bytes: 250_000_000_000, // HARDCODED
+                },
+                scrub_status: ScrubStatus::None, // HARDCODED
                 created_at: std::time::SystemTime::now(),
             }))
         } else {
             Ok(None)
-    }
+        }
     }
 
     fn create_pool(&self, config: &PoolConfig) -> UniversalZfsResult<Self::Pool> {
@@ -142,7 +175,7 @@ impl NativeAsyncUniversalZfsService<1000, 10_000, 100_000, 30> for ProductionZfs
         let pool = pool_name.unwrap_or("production-pool");
         Ok(vec![
             DatasetInfo {
-                name: format!("{"actual_error_details"}/data"),
+                name: format!("self.base_url/data"),
                 dataset_type: DatasetType::Filesystem,
                 used_bytes: 100_000_000_000,
                 available_bytes: 400_000_000_000,
@@ -199,7 +232,7 @@ impl NativeAsyncUniversalZfsService<1000, 10_000, 100_000, 30> for ProductionZfs
         let dataset = dataset_name.unwrap_or("production-pool/data");
         Ok(vec![
             SnapshotInfo {
-                name: format!("{"actual_error_details"}@backup-{"actual_error_details"}").format("%Y%m%d")),
+                name: format!("self.base_url@backup-self.base_url").format("%Y%m%d")),
                 dataset_name: dataset.to_string(),
                 used_bytes: 50_000_000_000,
                 referenced_bytes: 45_000_000_000,
@@ -368,7 +401,7 @@ impl NativeAsyncUniversalZfsService<100, 1000, 10_000, 60> for DevelopmentZfsSer
         let pool = pool_name.unwrap_or("dev-pool");
         Ok(vec![
             DatasetInfo {
-                name: format!("{"actual_error_details"}/test"),
+                name: format!("self.base_url/test"),
                 dataset_type: DatasetType::Filesystem,
                 used_bytes: 10_000_000_000,
                 available_bytes: 90_000_000_000,
@@ -417,7 +450,7 @@ impl NativeAsyncUniversalZfsService<100, 1000, 10_000, 60> for DevelopmentZfsSer
         let dataset = dataset_name.unwrap_or("dev-pool/test");
         Ok(vec![
             SnapshotInfo {
-                name: format!("{"actual_error_details"}@dev-snapshot"),
+                name: format!("self.base_url@dev-snapshot"),
                 dataset_name: dataset.to_string(),
                 used_bytes: 5_000_000_000,
                 referenced_bytes: 4_500_000_000,

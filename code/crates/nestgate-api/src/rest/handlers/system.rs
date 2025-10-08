@@ -98,10 +98,10 @@ pub async fn health_check(State(state): State<ApiState>) -> Json<DataResponse<He
     debug!("Performing health check");
     // Check service statuses
     let zfs_engines = state.zfs_engines.read().await;
-    let zfs_status = if zfs_engines.len() > 0 {
-        "online"
-    } else {
+    let zfs_status = if zfs_engines.is_empty() {
         "idle"
+    } else {
+        "online"
     };
 
     let storage_detector = state.storage_detector.try_lock();
@@ -111,15 +111,15 @@ pub async fn health_check(State(state): State<ApiState>) -> Json<DataResponse<He
         "busy"
     };
 
-    let _auto_configurator = match state.auto_configurator.lock().await.as_ref() {
-        Some(configurator) => configurator,
-        None => {
+    let _auto_configurator =
+        if let Some(configurator) = state.auto_configurator.lock().await.as_ref() {
+            configurator
+        } else {
             tracing::warn!("Auto configurator not available - continuing with degraded status");
             // Continue with degraded status rather than error
             // auto_configurator_status will be set to "unavailable" below
             &AutoConfigurator::new(Vec::new()) // Use a minimal configurator for status reporting
-        }
-    };
+        };
     let auto_configurator_status = if state.auto_configurator.lock().await.is_some() {
         "online"
     } else {
@@ -145,7 +145,7 @@ pub async fn health_check(State(state): State<ApiState>) -> Json<DataResponse<He
 
 /// Version information endpoint
 /// GET /version
-pub fn version_info() -> Json<DataResponse<VersionInfo>> {
+pub async fn version_info() -> Json<DataResponse<VersionInfo>> {
     debug!("Getting version information");
     let version = VersionInfo {
         version: env!("CARGO_PKG_VERSION").to_string(),
@@ -215,15 +215,12 @@ fn get_system_uptime() -> u64 {
     let start_time = chrono::DateTime::parse_from_rfc3339("2025-01-30T08:00:00Z")
         .unwrap_or_else(|e| {
             tracing::error!("Unwrap failed: {:?}", e);
-            let default_time = chrono::DateTime::parse_from_rfc3339("2025-01-01T00:00:00Z")
-                .unwrap_or_else(|_| {
-                    chrono::DateTime::from_timestamp(0, 0)
-                        .unwrap_or_else(|| {
-                            chrono::DateTime::from_timestamp(0, 0).unwrap_or_default()
-                        })
-                        .fixed_offset()
-                });
-            default_time
+
+            chrono::DateTime::parse_from_rfc3339("2025-01-01T00:00:00Z").unwrap_or_else(|_| {
+                chrono::DateTime::from_timestamp(0, 0)
+                    .unwrap_or_else(|| chrono::DateTime::from_timestamp(0, 0).unwrap_or_default())
+                    .fixed_offset()
+            })
         })
         .with_timezone(&chrono::Utc);
     let now = chrono::Utc::now();
@@ -310,7 +307,7 @@ fn get_engine_snapshot_count(
     let snapshot_dir = Path::new("/tmp/nestgate/snapshots");
     if snapshot_dir.exists() {
         if let Ok(entries) = fs::read_dir(snapshot_dir) {
-            let count = entries.filter_map(|entry| entry.ok()).count() as u64;
+            let count = entries.filter_map(std::result::Result::ok).count() as u64;
             return Ok(count);
         }
     }

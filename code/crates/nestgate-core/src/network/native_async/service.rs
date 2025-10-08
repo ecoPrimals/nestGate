@@ -170,8 +170,10 @@ impl NativeAsyncNetworkService {
     /// Register service for discovery (utility method)
     pub fn register(&self) -> impl Future<Output = Result<ServiceRegistration>> + Send {
         let service_id = self.service_id.clone();
-        let _host = self.config.host.clone();
-        let _port = self.config.port;
+        // Note: self.config is NetworkServiceConfig, not CanonicalNetworkConfig
+        // Use default values for now
+        let _host = "127.0.0.1".to_string();
+        let _port = 8080u16;
 
         async move {
             // CANONICAL MODERNIZATION: Use canonical service registration structure

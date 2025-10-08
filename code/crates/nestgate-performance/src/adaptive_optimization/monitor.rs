@@ -1,13 +1,13 @@
 //! Adaptive performance monitor implementation.
 
+use super::engine::OptimizationEngine;
+use super::metrics::MetricsCollector;
+use super::tuner::AutoTuner;
+use super::types::PerformanceHistory;
+use nestgate_core::error::Result;
+use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 use std::time::Duration;
-use std::sync::atomic::AtomicBool;
-use nestgate_core::error::Result;
-use super::types::*;
-use super::metrics::MetricsCollector;
-use super::engine::OptimizationEngine;
-use super::tuner::AutoTuner;
 
 /// Adaptive Performance Monitor - main orchestrator
 pub struct AdaptivePerformanceMonitor {
@@ -20,6 +20,7 @@ pub struct AdaptivePerformanceMonitor {
 }
 
 impl AdaptivePerformanceMonitor {
+    #[must_use]
     pub fn new() -> Self {
         Self {
             metrics_collector: Arc::new(MetricsCollector::new()),
@@ -27,9 +28,9 @@ impl AdaptivePerformanceMonitor {
             auto_tuner: Arc::new(AutoTuner::new()),
             monitoring_active: Arc::new(AtomicBool::new(false)),
             optimization_interval: Duration::from_secs(30),
-            performance_history: Arc::new(tokio::sync::RwLock::new(
-                PerformanceHistory::new(1000, 100)
-            )),
+            performance_history: Arc::new(tokio::sync::RwLock::new(PerformanceHistory::new(
+                1000, 100,
+            ))),
         }
     }
 
@@ -38,8 +39,7 @@ impl AdaptivePerformanceMonitor {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        #[must_use]
-        pub fn start_monitoring(&self) -> Result<()>  {
+    pub fn start_monitoring(&self) -> Result<()> {
         // Implementation would go here
         Ok(())
     }
@@ -49,8 +49,7 @@ impl AdaptivePerformanceMonitor {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        #[must_use]
-        pub fn stop_monitoring(&self) -> Result<()>  {
+    pub fn stop_monitoring(&self) -> Result<()> {
         // Implementation would go here
         Ok(())
     }
@@ -60,4 +59,4 @@ impl Default for AdaptivePerformanceMonitor {
     fn default() -> Self {
         Self::new()
     }
-} 
+}

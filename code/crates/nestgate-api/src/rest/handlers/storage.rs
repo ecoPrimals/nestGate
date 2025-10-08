@@ -105,7 +105,8 @@ pub async fn list_backends(
         match sort_field.as_str() {
             "name" => backends.sort_by(|a, b| a.name.cmp(&b.name)),
             "type" => {
-                backends.sort_by(|a, b| a.backend_type.to_string().cmp(&b.backend_type.to_string()))
+                backends
+                    .sort_by(|a, b| a.backend_type.to_string().cmp(&b.backend_type.to_string()));
             }
             "performance" => backends.sort_by(|a, b| {
                 a.performance
@@ -248,7 +249,7 @@ pub async fn scan_storage(
 
 /// Benchmark storage performance
 /// POST /api/v1/storage/benchmark
-pub fn benchmark_storage(
+pub async fn benchmark_storage(
     State(_state): State<ApiState>,
     Json(request): Json<BenchmarkStorageRequest>,
 ) -> Result<Json<DataResponse<BenchmarkResults>>, Json<DataError>> {
@@ -319,7 +320,7 @@ pub fn benchmark_storage(
 
 /// Auto-configure optimal storage setup
 /// POST /api/v1/storage/auto-config
-pub fn auto_configure(
+pub async fn auto_configure(
     State(state): State<ApiState>,
     Json(request): Json<AutoConfigInput>,
 ) -> Result<Json<DataResponse<AutoConfigResult>>, Json<DataError>> {
@@ -492,7 +493,7 @@ pub fn auto_configure(
     };
 
     let result = AutoConfigResult {
-        recommended_config: _config.clone(),
+        recommended_config: _config,
         alternatives: vec![], // Would generate alternatives in full implementation
         cost_estimate,
         performance_projection,

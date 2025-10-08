@@ -5,7 +5,7 @@
 
 use nestgate_core::{
     canonical_modernization::unified_enums::UnifiedCapabilityType,
-    config::unified::{CanonicalConfig, Environment},
+    config::canonical_master::{CanonicalConfig, Environment},
     error::{NestGateError, Result},
     UnifiedServiceState,
 };
@@ -14,7 +14,7 @@ use std::time::Duration;
 /// Test canonical configuration system
 #[tokio::test]
 async fn test_canonical_config_creation() -> Result<()> {
-    let config = CanonicalConfig::default();
+    let config = NestGateCanonicalConfig::default();
 
     // Verify system configuration
     match config.system.environment {
@@ -43,7 +43,7 @@ async fn test_canonical_config_creation() -> Result<()> {
 /// Test configuration validation
 #[tokio::test]
 async fn test_canonical_config_validation() -> Result<()> {
-    let mut config = CanonicalConfig::default();
+    let mut config = NestGateCanonicalConfig::default();
 
     // Test valid configuration
     assert!(config.validate().is_ok());
@@ -58,7 +58,7 @@ async fn test_canonical_config_validation() -> Result<()> {
 /// Test configuration serialization/deserialization
 #[tokio::test]
 async fn test_config_serialization() -> Result<()> {
-    let original_config = CanonicalConfig::default();
+    let original_config = NestGateCanonicalConfig::default();
 
     // Serialize
     let serialized =
@@ -197,7 +197,7 @@ async fn test_concurrent_operations() -> Result<()> {
         .map(|i| {
             tokio::spawn(async move {
                 // Simulate concurrent configuration access
-                let config = CanonicalConfig::default();
+                let config = NestGateCanonicalConfig::default();
                 tokio::time::sleep(Duration::from_millis(10)).await;
                 format!("Task {} completed with port {}", i, config.network.api.port)
             })
@@ -230,12 +230,12 @@ async fn test_concurrent_operations() -> Result<()> {
 async fn test_resource_cleanup() -> Result<()> {
     // Test that resources are properly cleaned up
     {
-        let _config = CanonicalConfig::default();
+        let _config = NestGateCanonicalConfig::default();
         // Config goes out of scope here
     }
 
     // Verify no memory leaks or resource issues
-    let config2 = CanonicalConfig::default();
+    let config2 = NestGateCanonicalConfig::default();
     assert!(!config2.system.instance_name.is_empty());
 
     Ok(())
@@ -273,7 +273,7 @@ async fn test_performance_characteristics() -> Result<()> {
 
     // Perform 1000 configuration creations
     for _ in 0..1000 {
-        let _config = CanonicalConfig::default();
+        let _config = NestGateCanonicalConfig::default();
         Ok(())
     }
 
@@ -292,7 +292,9 @@ async fn test_performance_characteristics() -> Result<()> {
 #[tokio::test]
 async fn test_memory_usage() -> Result<()> {
     // Test that configuration doesn't use excessive memory
-    let configs: Vec<_> = (0..100).map(|_| CanonicalConfig::default()).collect();
+    let configs: Vec<_> = (0..100)
+        .map(|_| NestGateCanonicalConfig::default())
+        .collect();
 
     // Verify all configs were created successfully
     assert_eq!(configs.len(), 100);
@@ -310,7 +312,7 @@ async fn test_memory_usage() -> Result<()> {
 #[tokio::test]
 async fn test_basic_integration() -> Result<()> {
     // Create configuration
-    let config = CanonicalConfig::default();
+    let config = NestGateCanonicalConfig::default();
 
     // Verify configuration components work together
     assert!(config.network.api.port > 0);

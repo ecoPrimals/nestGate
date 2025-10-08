@@ -291,8 +291,7 @@ impl ConstantsConsolidationManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn consolidate_scattered_constants(&mut self, source_constants: &[ScatteredConstant]) -> Result<ConsolidationResult>  {
+                pub fn consolidate_scattered_constants(&mut self, source_constants: &[ScatteredConstant]) -> Result<ConsolidationResult>  {
         let mut consolidation_result = ConsolidationResult {
             consolidated_constants: Vec::new(),
             duplicates_found: Vec::new(),
@@ -425,8 +424,7 @@ impl ConstantsConsolidationManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn generate_constants_module(&self, domain: &str) -> Result<String>  {
+                pub fn generate_constants_module(&self, domain: &str) -> Result<String>  {
         let domain_constants = self.domain_mappings.get(domain)
             .ok_or_else(|| NestGateError::internal_error(
 

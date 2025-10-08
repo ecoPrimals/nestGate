@@ -61,6 +61,7 @@ pub struct WebSocketManager {
 }
 impl WebSocketManager {
     /// Create a new WebSocket manager
+    #[must_use]
     pub fn new() -> Self {
         let (event_sender, _) = broadcast::channel(1000);
 
@@ -148,7 +149,7 @@ async fn handle_websocket_connection(
                         info!("Received WebSocket message: {}", text);
                         // Echo back for now - in production this would handle commands
                         let response = WebSocketEvent::Message {
-                            content: format!("Echo: {"actual_error_details"}"),
+                            content: "Echo: self.base_url".to_string(),
                             timestamp: chrono::Utc::now().to_rfc3339(),
                         };
 
@@ -211,6 +212,7 @@ async fn handle_websocket_connection(
 /// Helper function to create common WebSocket events
 impl WebSocketEvent {
     /// Create a storage update event
+    #[must_use]
     pub fn storage_update(operation: &str, status: &str, progress: Option<u8>) -> Self {
         Self::StorageUpdate {
             b_operation: operation.to_string(),
@@ -219,6 +221,7 @@ impl WebSocketEvent {
         }
     }
     /// Create a health update event
+    #[must_use]
     pub fn health_update(service: &str, status: &str) -> Self {
         Self::HealthUpdate {
             service: service.to_string(),
@@ -228,6 +231,7 @@ impl WebSocketEvent {
     }
 
     /// Create a metrics update event
+    #[must_use]
     pub fn metrics_update(metrics: HashMap<String, f64>) -> Self {
         Self::MetricsUpdate {
             metrics,
@@ -236,6 +240,7 @@ impl WebSocketEvent {
     }
 
     /// Create a simple message event
+    #[must_use]
     pub fn message(content: &str) -> Self {
         Self::Message {
             content: content.to_string(),
@@ -269,11 +274,9 @@ mod tests {
                 assert_eq!(progress, Some(50));
             }
             _ => {
-                return Err(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    "Expected StorageUpdate event".to_string(),
+                return Err(
+                    std::io::Error::other("Expected StorageUpdate event".to_string()).into(),
                 )
-                .into())
             }
         }
         Ok(())
@@ -286,28 +289,19 @@ mod tests {
             tracing::error!("JSON serialization failed: {:?}", e);
             std::io::Error::new(
                 std::io::ErrorKind::InvalidData,
-                format!("JSON serialization failed: {"actual_error_details"}"),
+                "JSON serialization failed: self.base_url".to_string(),
             )
         })?;
         let deserialized: WebSocketEvent = serde_json::from_str(&serialized).map_err(|e| {
             tracing::error!("Operation failed: {:?}", e);
-            std::io::Error::new(
-                std::io::ErrorKind::Other,
-                format!("Operation failed: {"actual_error_details"}"),
-            )
+            std::io::Error::other("Operation failed: self.base_url".to_string())
         })?;
 
         match deserialized {
             WebSocketEvent::Message { content, .. } => {
                 assert_eq!(content, "test message");
             }
-            _ => {
-                return Err(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    "Expected Message event".to_string(),
-                )
-                .into())
-            }
+            _ => return Err(std::io::Error::other("Expected Message event".to_string()).into()),
         }
         Ok(())
     }

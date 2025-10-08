@@ -74,6 +74,7 @@ impl StorageDetector {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
+    ///
     /// Function description
     ///
     /// # Errors

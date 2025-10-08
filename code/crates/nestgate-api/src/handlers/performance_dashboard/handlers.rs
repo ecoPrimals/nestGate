@@ -5,7 +5,10 @@ use crate::handlers::dashboard_types::{DashboardConfig, DashboardState};
 use crate::handlers::performance_analyzer::PerformanceAnalyzer;
 use crate::handlers::performance_dashboard::metrics::RealTimeMetricsCollector;
 use crate::handlers::performance_dashboard::optimizer::OptimizationEngineInterface;
-use crate::handlers::performance_dashboard::types::*;
+use crate::handlers::performance_dashboard::types::{
+    AlertSummary, CapacityForecast, DashboardOverview, PerformanceTrendAnalysis,
+    SystemPerformanceSnapshot, TimeRange,
+};
 use crate::performance_dashboard::analysis::{TrendData, TrendDirection};
 use crate::rest::models::ApiResponse;
 use axum::{
@@ -37,6 +40,7 @@ pub struct PerformanceDashboard {
 
 impl PerformanceDashboard {
     /// Create new performance dashboard
+    #[must_use]
     pub fn new(
         config: DashboardConfig,
         metrics_collector: Arc<RealTimeMetricsCollector>,
@@ -85,7 +89,7 @@ impl PerformanceDashboard {
                 end: SystemTime::now(),
                 granularity: Duration::from_secs(60), // 1 minute granularity
             },
-            health_score: health_score as f64,
+            health_score: f64::from(health_score),
             current_metrics: SystemPerformanceSnapshot {
                 timestamp: SystemTime::now(),
                 cpu_usage_percent: current_metrics.cpu_usage,
@@ -125,9 +129,10 @@ impl PerformanceDashboard {
             ],
             insights: vec![], // Simplified for now
             capacity_forecast: CapacityForecast {
-                current_usage_percentage: (current_metrics.cpu_usage
-                    + current_metrics.memory_usage)
-                    / 2.0,
+                current_usage_percentage: f64::midpoint(
+                    current_metrics.cpu_usage,
+                    current_metrics.memory_usage,
+                ),
                 projected_usage_in_30_days: 65.0,
                 projected_usage_in_90_days: 75.0,
                 growth_points: vec![],
@@ -146,7 +151,7 @@ impl PerformanceDashboard {
 
     /// Stream real-time metrics
     pub fn stream_dashboard_metrics(
-        _dashboard: Arc<PerformanceDashboard>,
+        _dashboard: Arc<Self>,
     ) -> Sse<impl Stream<Item = Result<Event>>> {
         use nestgate_core::NestGateError;
         // Create a simple stream for demo purposes

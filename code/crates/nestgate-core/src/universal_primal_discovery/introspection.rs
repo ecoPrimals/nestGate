@@ -340,7 +340,6 @@ impl SystemIntrospection {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub async fn get_introspection_summary(&mut self) -> Result<HashMap<String, String>> {
         let capabilities = if let Some(caps) = &self.capabilities {
             caps.clone()

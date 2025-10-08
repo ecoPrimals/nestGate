@@ -84,8 +84,7 @@ impl AiTierOptimizer {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
-    pub fn analyze_and_optimize(&self) -> Result<Vec<TierOptimizationRecommendation>> {
+    pub async fn analyze_and_optimize(&self) -> Result<Vec<TierOptimizationRecommendation>> {
         if !self.config.enabled {
             debug!("AI tier optimization is disabled");
             return Ok(vec![]);
@@ -219,10 +218,9 @@ impl AiTierOptimizer {
         ops: u64,
     ) -> String {
         match (current, recommended) {
-            (TierType::Cold, TierType::Hot) => format!(
-                "High activity detected: {} ops with {}μs latency",
-                ops, latency
-            ),
+            (TierType::Cold, TierType::Hot) => {
+                format!("High activity detected: {ops} ops with {latency}μs latency")
+            }
             (TierType::Cold, TierType::Warm) => format!("Moderate activity detected: {ops} ops"),
             (TierType::Warm, TierType::Hot) => {
                 format!("Performance critical: {latency}μs latency")

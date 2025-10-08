@@ -26,8 +26,7 @@ impl LogRetentionManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn cleanup_logs(&self, log_dir: &PathBuf) -> Result<()>  {
+                pub fn cleanup_logs(&self, log_dir: &PathBuf) -> Result<()>  {
         if !log_dir.exists() {
             return Ok(());
         }

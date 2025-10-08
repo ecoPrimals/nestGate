@@ -22,7 +22,9 @@ pub mod types;
 pub use compute::ComputePrimalProvider;
 pub use ecosystem::{EcosystemIntegration, UniversalPrimalProvider};
 pub use orchestration::OrchestrationPrimalProvider;
-pub use security::{SecurityDecision, SecurityPrimalProvider};
+pub use security::SecurityDecision;
+#[allow(deprecated)] // Re-export for backwards compatibility
+pub use security::SecurityPrimalProvider;
 pub use types::*;
 
 // ==================== UNIVERSAL TRAITS SYSTEM ====================

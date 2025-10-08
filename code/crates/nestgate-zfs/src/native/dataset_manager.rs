@@ -4,7 +4,7 @@
 
 use super::command_executor::NativeZfsCommandExecutor;
 use crate::types::DatasetInfo;
-use nestgate_core::canonical_modernization::canonical_constants::*;
+use nestgate_core::canonical_modernization::canonical_constants::storage;
 use nestgate_core::canonical_types::StorageTier;
 use nestgate_core::Result;
 use serde::{Deserialize, Serialize};
@@ -45,6 +45,7 @@ impl Default for DatasetCreateOptions {
 
 impl NativeZfsDatasetManager {
     /// Create a new dataset manager
+    #[must_use]
     pub fn new(command_executor: Arc<NativeZfsCommandExecutor>) -> Self {
         Self { command_executor }
     }
@@ -128,7 +129,11 @@ impl NativeZfsDatasetManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn create_dataset(&self, dataset_name: &str, options: &DatasetCreateOptions) -> Result<()> {
+    pub async fn create_dataset(
+        &self,
+        dataset_name: &str,
+        options: &DatasetCreateOptions,
+    ) -> Result<()> {
         let mut properties = HashMap::new();
 
         // Set compression
@@ -190,8 +195,7 @@ impl NativeZfsDatasetManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
-    pub fn destroy_dataset(&self, dataset_name: &str, force: bool) -> Result<()> {
+    pub async fn destroy_dataset(&self, dataset_name: &str, force: bool) -> Result<()> {
         let mut args = vec!["destroy"];
         if force {
             args.push("-f");
@@ -214,8 +218,13 @@ impl NativeZfsDatasetManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn set_property(&self, dataset_name: &str, property: &str, value: &str) -> Result<()> {
-        let propertyvalue = format!("{property}={"actual_error_details"}");
+    pub async fn set_property(
+        &self,
+        dataset_name: &str,
+        property: &str,
+        value: &str,
+    ) -> Result<()> {
+        let propertyvalue = format!("{property}={value}");
         self.command_executor
             .execute_command_expect_success(&["set", &propertyvalue, dataset_name])
             .await?;
@@ -269,8 +278,7 @@ impl NativeZfsDatasetManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
-    pub fn unmount_dataset(&self, dataset_name: &str, force: bool) -> Result<()> {
+    pub async fn unmount_dataset(&self, dataset_name: &str, force: bool) -> Result<()> {
         let mut args = vec!["unmount"];
         if force {
             args.push("-f");

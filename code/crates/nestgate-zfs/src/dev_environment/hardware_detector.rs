@@ -98,7 +98,7 @@ impl HardwareEnvironmentDetector {
         }
     }
 
-    /// Check if ZFS is available (sync version for lazy_static)
+    /// Check if ZFS is available (sync version for `lazy_static`)
     fn is_zfs_available_sync() -> bool {
         std::process::Command::new("zfs")
             .arg("version")

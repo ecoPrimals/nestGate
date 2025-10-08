@@ -23,7 +23,7 @@ impl ZfsManager {
     pub async fn _calculate_system_utilization(&self) -> Result<f64> {
         let pools = self.pool_manager.list_pools().await.map_err(|_e| {
             create_zfs_error(
-                format!("Failed to list pools: {"actual_error_details"}"),
+                "Failed to list pools: error details".to_string(),
                 ZfsOperation::SystemCheck,
             )
         })?;
@@ -42,7 +42,7 @@ impl ZfsManager {
                 .await
                 .map_err(|_e| {
                     create_zfs_error(
-                        format!("Failed to get pool status: {"actual_error_details"}"),
+                        "Failed to get pool status: error details".to_string(),
                         ZfsOperation::PoolCreate,
                     )
                 })?;
@@ -143,6 +143,7 @@ impl ZfsManager {
     }
 
     /// Parse size value from lines like "size: 1.23T"
+    #[must_use]
     pub fn _parse_sizevalue(&self, line: &str) -> Option<u64> {
         let parts: Vec<&str> = line.split(':').collect();
         if parts.len() >= 2 {
@@ -154,6 +155,7 @@ impl ZfsManager {
     }
 
     /// Parse size from segment like "1.23T allocated" or "456G"
+    #[must_use]
     pub fn _parse_size_from_segment(&self, segment: &str) -> Option<u64> {
         // Extract the size part (e.g., "1.23T" from "1.23T allocated")
         let size_str = segment.split_whitespace().next()?;

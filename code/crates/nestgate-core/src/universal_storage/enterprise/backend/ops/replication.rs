@@ -282,8 +282,7 @@ impl EnterpriseReplicationManager {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        #[must_use]
-        pub fn replicate_to_site(&mut self, site_id: &str, replication_type: ReplicationType) -> Result<ReplicationResult>   {
+                pub fn replicate_to_site(&mut self, site_id: &str, replication_type: ReplicationType) -> Result<ReplicationResult>   {
         let operation_id = self.generate_operation_id();
         info!("Starting replication to site {} (operation: {})", site_id, operation_id);
 
@@ -459,8 +458,7 @@ impl EnterpriseReplicationManager {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        #[must_use]
-        pub fn cancel_operation(&mut self, operation_id: &str) -> Result<()>   {
+                pub fn cancel_operation(&mut self, operation_id: &str) -> Result<()>   {
         if let Some(operation) = self.active_operations.get_mut(operation_id) {
             operation.status = OperationStatus::Cancelled;
             info!("Cancelled replication operation: {}", operation_id);

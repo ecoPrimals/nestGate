@@ -234,7 +234,7 @@ async fn benchmark_full_system_load() -> Result<(), Box<dyn std::error::Error>> 
     println!("🏃 Benchmarking full system under load...");
 
     // Initialize system components
-    let config = config::canonical_master::NestGateCanonicalConfig::default();
+    let config = config::canonical_master::NestGateNestGateCanonicalConfig::default();
     let registry = service_discovery::InMemoryServiceRegistry::new();
     let security_provider = security::SecurityProvider::new_test();
     let metrics = observability::PerformanceMetrics::new();

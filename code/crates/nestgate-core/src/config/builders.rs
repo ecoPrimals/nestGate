@@ -229,8 +229,7 @@ impl ConfigValidator {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn validate_production(config: &NestGateCanonicalConfig) -> Result<Vec<String>>  {
+                pub fn validate_production(config: &NestGateCanonicalConfig) -> Result<Vec<String>>  {
         let mut warnings = Vec::new();
 
         // Check production-specific requirements
@@ -261,8 +260,7 @@ impl ConfigValidator {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn validate_security(config: &NestGateCanonicalConfig) -> Result<Vec<String>>  {
+                pub fn validate_security(config: &NestGateCanonicalConfig) -> Result<Vec<String>>  {
         let mut warnings = Vec::new();
 
         // Check security-specific requirements

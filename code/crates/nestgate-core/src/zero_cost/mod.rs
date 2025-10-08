@@ -18,6 +18,9 @@
 //! - `types`: Zero-cost data structures and error types
 //! - `providers`: Concrete provider implementations
 //! - `system`: Main system with compile-time composition
+//!
+//! Note: Some traits are deprecated but maintained for backward compatibility
+//! TODO: Complete migration to canonical traits in future versions
 
 pub mod providers;
 pub mod system;
@@ -27,6 +30,8 @@ pub mod types;
 // Re-export commonly used types for convenience
 pub use providers::{ZeroCostFileStorage, ZeroCostJwtProvider, ZeroCostMemoryCache};
 pub use system::{ZeroCostSystem, ZeroCostSystemBuilder};
+
+#[allow(deprecated)]
 pub use traits::{ZeroCostCacheProvider, ZeroCostSecurityProvider, ZeroCostStorageProvider};
 pub use types::{
     RequestPriority, ZeroCostBenchmarkResults, ZeroCostError, ZeroCostMetadata, ZeroCostMetrics,

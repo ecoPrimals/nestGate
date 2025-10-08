@@ -95,12 +95,13 @@ pub enum InstallMode {
 // ==================== SECTION ====================
 
 pub mod installer_config_factory {
-    use super::*;
+    use super::InstallerConfig;
     // CANONICAL MODERNIZATION: Use canonical config builder instead of missing builders module
     use nestgate_core::config::canonical_master::NestGateCanonicalConfig;
     // Use the correct Environment enum from unified_types
 
     /// Development configuration
+    #[must_use]
     pub fn development() -> InstallerConfig {
         InstallerConfig {
             base_config: NestGateCanonicalConfig::default(),
@@ -110,6 +111,7 @@ pub mod installer_config_factory {
     }
 
     /// Production configuration
+    #[must_use]
     pub fn production() -> InstallerConfig {
         InstallerConfig {
             base_config: NestGateCanonicalConfig::default(),
@@ -131,7 +133,7 @@ impl InstallerConfigUtils {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub fn validate(config: &InstallerConfig) -> Result<(), String>  {
+    pub fn validate(config: &InstallerConfig) -> Result<(), String> {
         // Use canonical config structure - working_directory instead of services.installation
         // Skip directory existence check in debug mode (for tests)
         if !config.base_config.system.debug_mode
@@ -149,6 +151,7 @@ impl InstallerConfigUtils {
     }
 
     /// Get components selection
+    #[must_use]
     pub fn get_selected_components(_config: &InstallerConfig) -> Vec<String> {
         // For now, return default components since canonical config doesn't have components field yet
         vec![
@@ -160,6 +163,7 @@ impl InstallerConfigUtils {
     }
 
     /// Check if component is selected
+    #[must_use]
     pub fn is_component_selected(_config: &InstallerConfig, component: &str) -> bool {
         // For now, return true for core components
         matches!(component, "core" | "api" | "storage" | "network")
@@ -170,7 +174,7 @@ impl InstallerConfigUtils {
         config.installation_path = data_path.to_string();
     }
 
-    /// Set log directory (using working_directory as base)
+    /// Set log directory (using `working_directory` as base)
     pub fn set_log_directory(_config: &mut InstallerConfig, _config_path: &str) {
         // Note: canonical config doesn't have separate log_directory
         // Could be extended later if needed

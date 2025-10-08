@@ -2,7 +2,7 @@ use crate::common::config::{
 
     ChaosType, PerformanceThresholds, TestChaosSettings, TestPerformanceSettings, UnifiedTestConfig,
 };
-use crate::canonical_modernization::UnifiedServiceType;
+use tests::canonical_modernization::UnifiedServiceType;
 use nestgate_core::{NestGateError, Result};
 use std::collections::HashMap;
 

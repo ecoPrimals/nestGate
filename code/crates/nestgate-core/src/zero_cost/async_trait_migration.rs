@@ -378,8 +378,7 @@ impl AsyncTraitMigrationManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn generate_zero_cost_trait(&mut self, trait_info: &AsyncTraitInfo) -> Result<ZeroCostTraitDefinition>  {
+                pub fn generate_zero_cost_trait(&mut self, trait_info: &AsyncTraitInfo) -> Result<ZeroCostTraitDefinition>  {
         self.stats.migrated_count += 1;
         
         let mapping = self.trait_mappings.get(&trait_info.trait_name)
@@ -393,7 +392,7 @@ impl AsyncTraitMigrationManager {
                 ZeroCostMethod {
                     name: method.name.clone(),
                     parameters: method.parameters.clone(),
-                    return_type: format!("impl Future<Output = {"actual_error_details"}> + Send"),
+                    return_type: format!("impl Future<Output = {e}> + Send"),
                     is_async: true,
                     const_generic_bounds: method.const_generic_bounds.clone(),
                 }
@@ -421,8 +420,7 @@ impl AsyncTraitMigrationManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn migrate_load_balancer(&mut self, trait_info: &AsyncTraitInfo) -> Result<String>  {
+                pub fn migrate_load_balancer(&mut self, trait_info: &AsyncTraitInfo) -> Result<String>  {
         self.stats.migrated_count += 1;
 
         let zero_cost_code = format!(r"
@@ -478,8 +476,7 @@ pub trait NativeAsyncLoadBalancer<
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn migrate_protocol_handler(&mut self, trait_info: &AsyncTraitInfo) -> Result<String>  {
+                pub fn migrate_protocol_handler(&mut self, trait_info: &AsyncTraitInfo) -> Result<String>  {
         self.stats.migrated_count += 1;
 
         let zero_cost_code = format!(r"
@@ -557,7 +554,7 @@ pub trait NativeAsyncProtocolHandler<
         // Determine complexity distribution
         for (trait_name, _count) in &analysis.trait_patterns {
             if let Some(mapping) = self.trait_mappings.get(trait_name) {
-                let complexity_str = format!("{"actual_error_details"}");
+                let complexity_str = format!("{e}");
                 *analysis.complexity_distribution.entry(complexity_str).or_insert(0) += 1;
                 
                 analysis.migration_readiness.insert(

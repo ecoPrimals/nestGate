@@ -41,6 +41,7 @@ pub struct SimdCapabilities {
 
 impl SimdCapabilities {
     /// Detect SIMD capabilities of the current CPU
+    #[must_use]
     pub fn detect() -> Self {
         Self {
             has_sse2: is_x86_feature_detected!("sse2"),
@@ -52,6 +53,7 @@ impl SimdCapabilities {
     }
 
     /// Get the best available SIMD instruction set
+    #[must_use]
     pub fn best_instruction_set(&self) -> &'static str {
         if self.has_avx512 {
             "AVX-512"
@@ -69,6 +71,7 @@ impl SimdCapabilities {
     }
 
     /// Get expected performance multiplier for the best instruction set
+    #[must_use]
     pub fn performance_multiplier(&self) -> f64 {
         if self.has_avx512 {
             16.0 // AVX-512 can process 16 f32s or 8 f64s
@@ -94,6 +97,7 @@ pub struct SimdStats {
 
 impl SimdStats {
     /// Calculate SIMD utilization ratio
+    #[must_use]
     pub fn simd_utilization(&self) -> f64 {
         if self.total_elements == 0 {
             0.0
@@ -103,6 +107,7 @@ impl SimdStats {
     }
 
     /// Calculate elements processed per second
+    #[must_use]
     pub fn elements_per_second(&self) -> f64 {
         if self.processing_time_ns == 0 {
             0.0

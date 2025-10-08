@@ -17,6 +17,7 @@ pub struct DataCollector {
 
 impl DataCollector {
     /// Create new data collector
+    #[must_use]
     pub fn new(interval_seconds: u64) -> Self {
         Self {
             system_collector: Arc::new(SystemMetricsCollector::new(interval_seconds)),

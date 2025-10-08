@@ -33,7 +33,7 @@ pub async fn optimize(service: &NativeZfsService) -> UniversalZfsResult<String> 
                     .await;
                 results.push(format!(
                     "Optimized compression for {}",
-                    "actual_error_details"
+                    e
                 ));
 
                 // Optimize record size for large files
@@ -42,7 +42,7 @@ pub async fn optimize(service: &NativeZfsService) -> UniversalZfsResult<String> 
                     .await;
                 results.push(format!(
                     "Optimized record size for {}",
-                    "actual_error_details"
+                    e
                 ));
 
                 // Enable deduplication if beneficial
@@ -51,7 +51,7 @@ pub async fn optimize(service: &NativeZfsService) -> UniversalZfsResult<String> 
                     .await;
                 results.push(format!(
                     "Enabled deduplication for {}",
-                    "actual_error_details"
+                    e
                 ));
             }
         }
@@ -102,13 +102,13 @@ pub async fn get_optimization_analytics(
             if compression_ratio < 1.2 {
                 recommendations.push(format!(
                     "Consider enabling compression for {}",
-                    "actual_error_details"
+                    e
                 ));
             }
             if available < used / 10 {
                 recommendations.push(format!(
                     "Pool {} is running low on space",
-                    "actual_error_details"
+                    e
                 ));
             }
 

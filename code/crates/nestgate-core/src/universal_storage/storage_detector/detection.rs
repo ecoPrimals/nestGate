@@ -3,7 +3,7 @@
 // Core detection logic for different storage types.
 
 use super::config::DetectionConfig;
-use super::types::*;
+use super::types::{DetectedStorage, FilesystemStats};
 use crate::unified_enums::storage_types::{UnifiedStorageCapability, UnifiedStorageType};
 use crate::Result;
 use tokio::fs;
@@ -27,6 +27,7 @@ impl<'a> DetectionEngine<'a> {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
+    ///
     /// Function description
     ///
     /// # Errors
@@ -71,7 +72,7 @@ impl<'a> DetectionEngine<'a> {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
+    ///
     /// Function description
     ///
     /// # Errors
@@ -104,7 +105,7 @@ impl<'a> DetectionEngine<'a> {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
+    ///
     /// Function description
     ///
     /// # Errors
@@ -137,6 +138,7 @@ impl<'a> DetectionEngine<'a> {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
+    ///
     /// Function description
     ///
     /// # Errors
@@ -173,6 +175,7 @@ impl<'a> DetectionEngine<'a> {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
+    ///
     /// Function description
     ///
     /// # Errors
@@ -231,7 +234,7 @@ impl<'a> DetectionEngine<'a> {
         let mut storage = DetectedStorage::new(
             format!("fs_{}", mount_point.replace('/', "_")),
             UnifiedStorageType::Local,
-            format!("{} ({})", mount_point, fs_type),
+            format!("{mount_point} ({fs_type})"),
         );
 
         storage.available_space = stats.free_bytes;

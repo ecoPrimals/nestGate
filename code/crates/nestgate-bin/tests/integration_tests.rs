@@ -186,7 +186,7 @@ async fn test_binary_with_invalid_config() -> Result<(), Box<dyn std::error::Err
         );
         std::io::Error::new(
             std::io::ErrorKind::NotFound,
-            format!("Missing environment variable: {}", "actual_error_details"),
+            format!("Missing environment variable: {}", e),
         )
     })?;
     assert_eq!(portvalue, "invalid_port");
@@ -225,7 +225,7 @@ async fn test_client_binary_help() -> Result<(), Box<dyn std::error::Error>> {
     let stderr = String::from_utf8_lossy(&output.stderr);
 
     // Check for client-specific content
-    let combined_output = format!("{stdout}{}", "actual_error_details");
+    let combined_output = format!("{stdout}{}", e);
     assert!(
         combined_output.contains("client")
             || combined_output.contains("Client")
@@ -283,7 +283,7 @@ mod cli_tests {
                 tracing::error!("Unwrap failed: {:?}", e);
                 return Err(std::io::Error::new(
                     std::io::ErrorKind::Other,
-                    format!("Operation failed: {}", "actual_error_details"),
+                    format!("Operation failed: {}", e),
                 )
                 .into());
             });
@@ -333,7 +333,7 @@ mod configuration_tests {
             );
             std::io::Error::new(
                 std::io::ErrorKind::NotFound,
-                format!("Missing environment variable: {}", "actual_error_details"),
+                format!("Missing environment variable: {}", e),
             )
         })?;
         assert_eq!(port, "9090");
@@ -388,7 +388,7 @@ mod integration_mode_tests {
                 );
                 std::io::Error::new(
                     std::io::ErrorKind::NotFound,
-                    format!("Missing environment variable: {}", "actual_error_details"),
+                    format!("Missing environment variable: {}", e),
                 )
             })?,
             format!(
@@ -406,7 +406,7 @@ mod integration_mode_tests {
                 );
                 std::io::Error::new(
                     std::io::ErrorKind::NotFound,
-                    format!("Missing environment variable: {}", "actual_error_details"),
+                    format!("Missing environment variable: {}", e),
                 )
             })?,
             format!(

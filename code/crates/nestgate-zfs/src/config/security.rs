@@ -9,7 +9,7 @@ use std::path::PathBuf;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityConfig {
     /// Enable encryption metadata tracking (encryption handled by external providers)
-    /// Note: NestGate tracks encryption state but does not perform encryption itself
+    /// Note: `NestGate` tracks encryption state but does not perform encryption itself
     pub enable_encryption: bool,
     /// Default encryption algorithm hint for external providers (like security modules)
     pub encryption_algorithm: String,
@@ -61,6 +61,7 @@ impl Default for KeyManagementConfig {
 
 impl KeyManagementConfig {
     /// Create production-optimized key management configuration
+    #[must_use]
     pub fn production() -> Self {
         Self {
             key_storage_path: PathBuf::from("/etc/nestgate/zfs/keys/production"),
@@ -85,7 +86,6 @@ impl Default for AccessControlConfig {
 
 impl AccessControlConfig {
     /// Create production-optimized access control configuration
-    #[must_use]
     pub fn production() -> Self {
         let mut user_rules = HashMap::new();
         user_rules.insert("zfs-admin".to_string(), vec!["all".to_string()]);
@@ -100,7 +100,7 @@ impl AccessControlConfig {
                 "snapshot".to_string(),
             ]
             .iter()
-            .map(|s| s.to_string())
+            .map(std::string::ToString::to_string)
             .collect(),
         );
 
@@ -114,6 +114,7 @@ impl AccessControlConfig {
 
 impl SecurityConfig {
     /// Create production-optimized security configuration
+    #[must_use]
     pub fn production() -> Self {
         Self {
             enable_encryption: true,

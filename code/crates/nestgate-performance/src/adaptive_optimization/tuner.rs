@@ -1,7 +1,7 @@
 //! Auto tuner implementation.
 
+use super::types::{OptimizationDecision, OptimizationResult};
 use nestgate_core::error::Result;
-use super::types::*;
 
 /// Auto Tuner for applying optimization decisions
 pub struct AutoTuner {
@@ -9,6 +9,7 @@ pub struct AutoTuner {
 }
 
 impl AutoTuner {
+    #[must_use]
     pub fn new() -> Self {
         Self {
             // Initialize fields
@@ -20,8 +21,10 @@ impl AutoTuner {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        #[must_use]
-        pub fn apply_optimization(&self, _decision: &OptimizationDecision) -> Result<OptimizationResult>  {
+    pub fn apply_optimization(
+        &self,
+        _decision: &OptimizationDecision,
+    ) -> Result<OptimizationResult> {
         // Implementation would go here
         Ok(OptimizationResult {
             success: true,
@@ -34,4 +37,4 @@ impl Default for AutoTuner {
     fn default() -> Self {
         Self::new()
     }
-} 
+}

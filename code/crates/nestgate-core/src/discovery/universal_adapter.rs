@@ -320,7 +320,7 @@ impl UniversalAdapter {
             warn!("Capability {} not found in registry", capability_type);
             Err(NestGateError::Internal(Box::new(
                 crate::error::variants::core_errors::InternalErrorDetails {
-                    message: format!("Capability {} not discovered", capability_type),
+                    message: format!("Capability {capability_type} not discovered"),
                     component: "universal_adapter".to_string(),
                     location: Some(format!("{}:{}", file!(), line!())),
                     is_bug: false,

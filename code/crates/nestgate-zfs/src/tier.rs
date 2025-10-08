@@ -68,7 +68,7 @@ impl TierManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn new(
+    pub async fn new(
         config: &ZfsConfig,
         pool_manager: Arc<ZfsPoolManager>,
         dataset_manager: Arc<ZfsDatasetManager>,
@@ -102,7 +102,6 @@ impl TierManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub fn initialize_tiers(&self) -> Result<()> {
         // Initialize all storage tiers
         for tier in [
@@ -136,7 +135,7 @@ impl TierManager {
         let tier_stats = stats.get(&tier).cloned().unwrap_or_default();
 
         let utilization = if tier_stats.total_capacity > 0 {
-            (f64::from(tier_stats.used_capacity) / f64::from(tier_stats.total_capacity)) * 100.0
+            (tier_stats.used_capacity as f64 / tier_stats.total_capacity as f64) * 100.0
         } else {
             0.0
         };

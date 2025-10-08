@@ -8,10 +8,8 @@
 //! - Performance optimization validation
 
 use nestgate_core::canonical_types::{health::HealthStatus, service::ServiceType};
-use nestgate_core::config::unified::types::{
-    CanonicalConfig, NetworkConfig, SecurityConfig, StorageConfig,
-};
-use nestgate_core::config::unified::NestGateUnifiedConfig;
+use nestgate_core::config::canonical_master::NestGateCanonicalConfig;
+use nestgate_core::config::{CanonicalConfig, NetworkConfig, SecurityConfig, StorageConfig};
 use nestgate_core::error::{NestGateError, Result};
 use serde_json;
 use std::time::Duration;
@@ -22,7 +20,7 @@ async fn test_canonical_config_unification() -> Result<()> {
     println!("🧪 Testing canonical configuration unification...");
 
     // Verify canonical config creation works
-    let config = CanonicalConfig::default();
+    let config = NestGateCanonicalConfig::default();
 
     // Test that all major domains are present
     assert!(
@@ -67,10 +65,10 @@ async fn test_no_fragmented_patterns() -> Result<()> {
 
     // Create multiple configs to ensure they use unified patterns
     let configs = vec![
-        CanonicalConfig::default(),
+        NestGateCanonicalConfig::default(),
         CanonicalConfig {
             network: NetworkConfig {
-                api: nestgate_core::config::unified::types::ApiServerConfig {
+                api: nestgate_core::config::ApiServerConfig {
                     port: nestgate_core::constants::DEFAULT_API_PORT,
                     ..Default::default()
                 },
@@ -204,7 +202,7 @@ async fn test_backward_compatibility() -> Result<()> {
     );
 
     // Test that canonical config works
-    let canonical_config = CanonicalConfig::default();
+    let canonical_config = NestGateCanonicalConfig::default();
     let canonical_serialized =
         serde_json::to_string(&canonical_config).map_err(|e| NestGateError::Internal {
             message: format!("Canonical config serialization failed: {e}"),
@@ -248,7 +246,7 @@ async fn test_canonical_config_performance() -> Result<()> {
     let configs: Vec<CanonicalConfig> = (0..1000)
         .map(|i| CanonicalConfig {
             network: NetworkConfig {
-                api: nestgate_core::config::unified::types::ApiServerConfig {
+                api: nestgate_core::config::ApiServerConfig {
                     port: 8000 + (i % 100) as u16,
                     ..Default::default()
                 },
@@ -360,7 +358,7 @@ async fn test_canonical_concurrency() -> Result<()> {
                 // Each task creates and validates a config
                 let config = CanonicalConfig {
                     network: NetworkConfig {
-                        api: nestgate_core::config::unified::types::ApiServerConfig {
+                        api: nestgate_core::config::ApiServerConfig {
                             port: 8000 + i as u16,
                             ..Default::default()
                         },
@@ -405,7 +403,7 @@ async fn test_canonical_system_integration() -> Result<()> {
     // Create a comprehensive configuration
     let config = CanonicalConfig {
         network: NetworkConfig {
-            api: nestgate_core::config::unified::types::ApiServerConfig {
+            api: nestgate_core::config::ApiServerConfig {
                 port: nestgate_core::constants::DEFAULT_API_PORT,
                 host: "127.0.0.1".parse()?,
                 ..Default::default()

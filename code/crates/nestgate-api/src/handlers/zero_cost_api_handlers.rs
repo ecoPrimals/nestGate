@@ -1,7 +1,7 @@
 use crate::rest::models::CachedResponse;
 use crate::zfs::types::PoolConfig;
 /// **ZERO-COST API HANDLERS**
-/// This module replaces async_trait patterns in API handlers with native async methods
+/// This module replaces `async_trait` patterns in API handlers with native async methods
 /// for maximum performance in high-frequency request handling.
 use axum::{
     extract::Path,
@@ -93,6 +93,14 @@ pub struct ZeroCostPoolHandler<const MAX_REQUESTS: usize, const TIMEOUT_MS: u64>
     /// Configuration phantom
     _config: PhantomData<()>,
 }
+impl<const MAX_REQUESTS: usize, const TIMEOUT_MS: u64> Default
+    for ZeroCostPoolHandler<MAX_REQUESTS, TIMEOUT_MS>
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<const MAX_REQUESTS: usize, const TIMEOUT_MS: u64>
     ZeroCostPoolHandler<MAX_REQUESTS, TIMEOUT_MS>
 {
@@ -106,12 +114,14 @@ impl<const MAX_REQUESTS: usize, const TIMEOUT_MS: u64>
     }
 
     /// Get maximum requests (compile-time constant)
-    pub fn max_requests() -> usize {
+    #[must_use]
+    pub const fn max_requests() -> usize {
         MAX_REQUESTS
     }
 
     /// Get timeout (compile-time constant)
-    pub fn timeout_ms() -> u64 {
+    #[must_use]
+    pub const fn timeout_ms() -> u64 {
         TIMEOUT_MS
     }
 
@@ -123,7 +133,6 @@ impl<const MAX_REQUESTS: usize, const TIMEOUT_MS: u64>
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub fn handle_list_pools(&self) -> Result<Json<Vec<serde_json::Value>>, StatusCode> {
         // Basic pool listing implementation
         let pools = vec![
@@ -465,10 +474,19 @@ pub struct ZeroCostRouterBuilder<const MAX_ROUTES: usize = 100, const MAX_MIDDLE
     middleware_count: usize,
     _phantom: PhantomData<()>,
 }
+impl<const MAX_ROUTES: usize, const MAX_MIDDLEWARE: usize> Default
+    for ZeroCostRouterBuilder<MAX_ROUTES, MAX_MIDDLEWARE>
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<const MAX_ROUTES: usize, const MAX_MIDDLEWARE: usize>
     ZeroCostRouterBuilder<MAX_ROUTES, MAX_MIDDLEWARE>
 {
     /// Create new router builder
+    #[must_use]
     pub fn new() -> Self {
         Self {
             routes: Vec::with_capacity(MAX_ROUTES),
@@ -478,22 +496,26 @@ impl<const MAX_ROUTES: usize, const MAX_MIDDLEWARE: usize>
     }
 
     /// Check if we can add more routes
-    pub fn can_add_route(&self) -> bool {
+    #[must_use]
+    pub const fn can_add_route(&self) -> bool {
         self.routes.len() < MAX_ROUTES
     }
 
     /// Check if we can add more middleware
-    pub fn can_add_middleware(&self) -> bool {
+    #[must_use]
+    pub const fn can_add_middleware(&self) -> bool {
         self.middleware_count < MAX_MIDDLEWARE
     }
 
     /// Get max routes at compile-time
-    pub fn max_routes() -> usize {
+    #[must_use]
+    pub const fn max_routes() -> usize {
         MAX_ROUTES
     }
 
     /// Get max middleware at compile-time
-    pub fn max_middleware() -> usize {
+    #[must_use]
+    pub const fn max_middleware() -> usize {
         MAX_MIDDLEWARE
     }
 
@@ -504,28 +526,36 @@ impl<const MAX_ROUTES: usize, const MAX_MIDDLEWARE: usize>
     ) -> Router {
         Router::new()
             // Pool routes
-            .route("/api/v1/pools", get({
-                let handler = pool_handler.clone();
-                move || async move { handler.handle_list_pools().await }
-            }))
-            .route("/api/v1/pools/:name", get({
-                let handler = pool_handler.clone();
-                move |Path(name): Path<String>| async move {
-                    handler.handle_get_pool(name).await
-                }
-            }))
-            .route("/api/v1/pools", post({
-                let handler = pool_handler.clone();
-                move |Json(config): Json<PoolConfig>| async move {
-                    handler.handle_create_pool(config).await
-                }
-            }))
-            .route("/api/v1/pools/:name", delete({
-                let handler = pool_handler;
-                move |Path(name): Path<String>| async move {
-                    handler.handle_delete_pool(name).await
-                }
-            }))
+            .route(
+                "/api/v1/pools",
+                get({
+                    let handler = pool_handler.clone();
+                    move || async move { handler.handle_list_pools() }
+                }),
+            )
+            .route(
+                "/api/v1/pools/:name",
+                get({
+                    let handler = pool_handler.clone();
+                    move |Path(name): Path<String>| async move { handler.handle_get_pool(name) }
+                }),
+            )
+            .route(
+                "/api/v1/pools",
+                post({
+                    let handler = pool_handler.clone();
+                    move |Json(config): Json<PoolConfig>| async move {
+                        handler.handle_create_pool(config)
+                    }
+                }),
+            )
+            .route(
+                "/api/v1/pools/:name",
+                delete({
+                    let handler = pool_handler;
+                    move |Path(name): Path<String>| async move { handler.handle_delete_pool(name) }
+                }),
+            )
             // Dataset routes would be similar...
             .route("/api/v1/datasets", get(|| async { "Datasets endpoint" }))
             .route("/api/v1/health", get(|| async { "OK" }))
@@ -533,11 +563,12 @@ impl<const MAX_ROUTES: usize, const MAX_MIDDLEWARE: usize>
 }
 
 /// **MIGRATION UTILITIES**
-/// Help migrate from async_trait API handlers to zero-cost patterns
+/// Help migrate from `async_trait` API handlers to zero-cost patterns
 pub struct ApiHandlerMigrationGuide;
 
 impl ApiHandlerMigrationGuide {
     /// Get migration steps
+    #[must_use]
     pub fn migration_steps() -> Vec<String> {
         vec![
             "1. Replace #[async_trait] with native async methods".to_string(),
@@ -552,7 +583,8 @@ impl ApiHandlerMigrationGuide {
     }
 
     /// Expected performance improvements
-    pub fn expected_improvements() -> (f64, f64, f64) {
+    #[must_use]
+    pub const fn expected_improvements() -> (f64, f64, f64) {
         (
             35.0, // Performance gain % (moderate due to async_trait elimination)
             25.0, // Memory reduction % (reducing Future boxing)
@@ -579,6 +611,7 @@ impl ApiHandlerBenchmark {
     }
 
     /// Compare old vs new API handler performance
+    #[must_use]
     pub fn performance_comparison() -> (Duration, Duration, f64) {
         // Expected results based on eliminating async_trait overhead in API handlers
         let old_duration = Duration::from_millis(2000); // Old async_trait approach

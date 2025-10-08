@@ -3,6 +3,7 @@
 use super::types::{Certificate, CertificateType};
 use crate::error::NestGateError;
 use crate::Result;
+#[cfg(feature = "dev-stubs")]
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
 // CLEANED: Removed unused imports as part of canonical modernization
@@ -64,7 +65,7 @@ B05lc3RHYXBLMREWDQYDVQQKDAZOZXN0R2F0ZTERDw0GA1UEAwwITmVzdEdhdGU=
         let mut hasher = DefaultHasher::new();
         cert_data.hash(&mut hasher);
         let hash = hasher.finish();
-        format!("sha256:{:x}", hash)
+        format!("sha256:{hash:x}")
     }
 
     /// Parse certificate subject from PEM data
@@ -247,10 +248,13 @@ B05lc3RHYXBLMREWDQYDVQQKDAZOZXN0R2F0ZTERDw0GA1UEAwwITmVzdEdhdGU=
 }
 
 // 🚀 MODERN CERTIFICATE MANAGEMENT: Pure dynamic discovery architecture
+#[cfg(feature = "dev-stubs")]
 pub mod modern {
     use super::*;
 
     /// Modern certificate generation with automatic endpoint discovery
+    ///
+    /// **⚠️ DEV ONLY**: Uses stub network adapter, not for production
     ///
     /// # Errors
     ///
@@ -258,7 +262,6 @@ pub mod modern {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[must_use]
     pub fn generate_certificate(service_name: &str) -> Result<Certificate> {
         let adapter = crate::universal_primal_discovery::StandaloneNetworkAdapter::new(
             service_name.to_string(),

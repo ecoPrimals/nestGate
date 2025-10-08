@@ -34,6 +34,7 @@ impl Default for HealthMonitoringConfig {
 
 impl HealthMonitoringConfig {
     /// Create production-optimized health monitoring configuration
+    #[must_use]
     pub fn production() -> Self {
         Self {
             enabled: true,

@@ -52,6 +52,7 @@ pub struct OrchestrationCapability {
 }
 impl OrchestrationCapability {
     /// Create a new Orchestration client
+    #[must_use]
     pub fn new(base_url: String) -> Self {
         Self {
             base_url,
@@ -61,7 +62,7 @@ impl OrchestrationCapability {
 
     /// Register a service with Orchestration
     pub async fn register_service(&self, service: &ServiceInstance) -> NestGateResult<()> {
-        let url = format!("{"actual_error_details"}/api/v1/services/register");
+        let url = "self.base_url/api/v1/services/register".to_string();
 
         let response = self
             .client
@@ -69,10 +70,9 @@ impl OrchestrationCapability {
             .json(service)
             .send()
             .await
-            .map_err(|_e| {
+            .map_err(|e| {
                 nestgate_core::error::NestGateError::network_error(&format!(
-                    "Failed to register service: {}",
-                    "actual_error_details"
+                    "Failed to register service: {e}"
                 ))
             })?;
 
@@ -80,10 +80,7 @@ impl OrchestrationCapability {
             info!("✅ Service registered with Orchestration: {}", service.name);
             Ok(())
         } else {
-            let error_msg = format!(
-                "Failed to register service: HTTP {}",
-                "actual_error_details"
-            );
+            let error_msg = format!("Failed to register service: HTTP {}", response.status());
             error!("{}", error_msg);
             Err(nestgate_core::error::NestGateError::network_error(
                 &error_msg,
@@ -93,7 +90,7 @@ impl OrchestrationCapability {
 
     /// Request port allocation from Orchestration
     pub async fn allocate_port(&self, service_name: &str, port_type: &str) -> NestGateResult<u16> {
-        let url = format!("{"actual_error_details"}/api/v1/ports/allocate");
+        let url = "self.base_url/api/v1/ports/allocate".to_string();
 
         let request = PortAllocationRequest {
             service_name: service_name.to_string(),
@@ -107,18 +104,16 @@ impl OrchestrationCapability {
             .json(&request)
             .send()
             .await
-            .map_err(|_e| {
+            .map_err(|e| {
                 nestgate_core::error::NestGateError::network_error(&format!(
-                    "Failed to allocate port: {}",
-                    "actual_error_details"
+                    "Failed to allocate port: {e}"
                 ))
             })?;
 
         if response.status().is_success() {
-            let allocation: PortAllocationResponse = response.json().await.map_err(|_e| {
+            let allocation: PortAllocationResponse = response.json().await.map_err(|e| {
                 nestgate_core::error::NestGateError::network_error(&format!(
-                    "Failed to parse port allocation response: {}",
-                    "actual_error_details"
+                    "Failed to parse port allocation response: {e}"
                 ))
             })?;
 
@@ -128,7 +123,7 @@ impl OrchestrationCapability {
             );
             Ok(allocation.port)
         } else {
-            let error_msg = format!("Failed to allocate port: HTTP {"actual_error_details"}");
+            let error_msg = "Failed to allocate port: HTTP self.base_url".to_string();
             error!("{}", error_msg);
             Err(nestgate_core::error::NestGateError::network_error(
                 &error_msg,
@@ -138,7 +133,7 @@ impl OrchestrationCapability {
 
     /// Release port allocation
     pub async fn release_port(&self, service_name: &str, port: u16) -> NestGateResult<()> {
-        let url = format!("{"actual_error_details"}/api/v1/ports/release");
+        let url = "self.base_url/api/v1/ports/release".to_string();
 
         let request = PortReleaseRequest {
             service_name: service_name.to_string(),
@@ -151,11 +146,8 @@ impl OrchestrationCapability {
             .json(&request)
             .send()
             .await
-            .map_err(|_e| {
-                nestgate_core::NestGateError::network_error(&format!(
-                    "Failed to release port: {}",
-                    "actual_error_details"
-                ))
+            .map_err(|e| {
+                nestgate_core::NestGateError::network_error(&format!("Failed to release port: {e}"))
             })?;
 
         if response.status().is_success() {
@@ -182,7 +174,7 @@ impl OrchestrationCapability {
     ) -> NestGateResult<()> {
         let base_url = std::env::var("NESTGATE_API_BASE_URL")
             .unwrap_or_else(|_| "http://localhost:8080".to_string());
-        let url = format!("{}/api/v1/services/{}/health", base_url, service_name);
+        let url = format!("{base_url}/api/v1/services/{service_name}/health");
 
         let request = HealthStatusRequest {
             service_name: service_name.to_string(),
@@ -197,10 +189,9 @@ impl OrchestrationCapability {
             .json(&request)
             .send()
             .await
-            .map_err(|_e| {
+            .map_err(|e| {
                 nestgate_core::NestGateError::network_error(&format!(
-                    "Failed to send health status: {}",
-                    "actual_error_details"
+                    "Failed to send health status: {e}"
                 ))
             })?;
 
@@ -211,10 +202,7 @@ impl OrchestrationCapability {
             );
             Ok(())
         } else {
-            let error_msg = format!(
-                "Failed to send health status: HTTP {}",
-                "actual_error_details"
-            );
+            let error_msg = format!("Failed to send health status: HTTP {}", response.status());
             debug!("{}", error_msg);
             Err(nestgate_core::NestGateError::network_error(&error_msg))
         }
@@ -259,7 +247,7 @@ pub struct NetworkApi {
     allocated_ports: PortAllocationMap,
 }
 impl NetworkApi {
-    /// Create a new NetworkApi instance
+    /// Create a new `NetworkApi` instance
     #[must_use]
     pub fn new() -> Self {
         Self {
@@ -327,7 +315,7 @@ impl NetworkApi {
                 )
             })?;
 
-            orchestrator.release_port(service_name, port)?;
+            orchestrator.release_port(service_name, port).await?;
         }
         Ok(())
     }
@@ -340,8 +328,7 @@ impl NetworkApi {
             Ok(service.status.clone())
         } else {
             Err(nestgate_core::NestGateError::network_error(&format!(
-                "Service not found: {}",
-                "actual_error_details"
+                "Service not found: {service_name}"
             )))
         }
     }

@@ -49,7 +49,8 @@ pub struct TierOverrideSettings {
 // Factory methods for different environments
 impl TierAssignmentSettings {
     #[must_use]
-    pub fn development() -> Self { Self {
+    pub fn development() -> Self {
+        Self {
             enabled: false, // Disabled for development
             min_confidence_threshold: 0.5,
             algorithms: vec![
@@ -59,7 +60,8 @@ impl TierAssignmentSettings {
                     config: [("weight".to_string(), serde_json::json!(1.0))]
                         .iter().cloned().collect(),
                     weight: 1.0,
-                , ],
+                },
+            ],
             transition_rules: Vec::new(),
             manual_overrides: TierOverrideSettings {
                 allow_manual_overrides: true,
@@ -69,7 +71,8 @@ impl TierAssignmentSettings {
         }
     }
 
-    pub fn production() -> Self { Self {
+    pub fn production() -> Self {
+        Self {
             enabled: true,
             min_confidence_threshold: 0.8,
             algorithms: vec![
@@ -81,7 +84,8 @@ impl TierAssignmentSettings {
                         ("features".to_string(), serde_json::json!(["load", "latency", "throughput"])),
                     ].iter().cloned().collect(),
                     weight: 0.7,
-                , TierAssignmentAlgorithm {
+                },
+                TierAssignmentAlgorithm {
                     name: "resource_monitor".to_string(),
                     algorithm_type: "resource_based".to_string(),
                     config: [("cpu_weight".to_string(), serde_json::json!(0.4))]
@@ -112,7 +116,8 @@ impl TierAssignmentSettings {
         }
     }
 
-    pub fn performance_focused() -> Self { Self {
+    pub fn performance_focused() -> Self {
+        Self {
             enabled: true,
             min_confidence_threshold: 0.9, // Higher threshold for performance
             algorithms: vec![
@@ -124,7 +129,8 @@ impl TierAssignmentSettings {
                         ("aggressive_scaling".to_string(), serde_json::json!(true)),
                     ].iter().cloned().collect(),
                     weight: 0.8,
-                , TierAssignmentAlgorithm {
+                },
+                TierAssignmentAlgorithm {
                     name: "predictive_scaler".to_string(),
                     algorithm_type: "predictive".to_string(),
                     config: [("horizon".to_string(), serde_json::json!(300))]
@@ -155,7 +161,8 @@ impl TierAssignmentSettings {
         }
     }
 
-    pub fn reliability_focused() -> Self { Self {
+    pub fn reliability_focused() -> Self {
+        Self {
             enabled: true,
             min_confidence_threshold: 0.95, // Very conservative
             algorithms: vec![
@@ -167,7 +174,8 @@ impl TierAssignmentSettings {
                         ("error_rate_threshold".to_string(), serde_json::json!(0.01)),
                     ].iter().cloned().collect(),
                     weight: 0.6,
-                , TierAssignmentAlgorithm {
+                },
+                TierAssignmentAlgorithm {
                     name: "capacity_planner".to_string(),
                     algorithm_type: "capacity_based".to_string(),
                     config: [("buffer_percentage".to_string(), serde_json::json!(30))]
@@ -205,7 +213,8 @@ impl TierAssignmentSettings {
     }
 
     #[must_use]
-    pub fn testing() -> Self { Self {
+    pub fn testing() -> Self {
+        Self {
             enabled: false,
             min_confidence_threshold: 0.1, // Very low for testing
             algorithms: vec![
@@ -214,7 +223,8 @@ impl TierAssignmentSettings {
                     algorithm_type: "test".to_string(),
                     config: HashMap::new(),
                     weight: 1.0,
-                , ],
+                },
+            ],
             transition_rules: Vec::new(),
             manual_overrides: TierOverrideSettings {
                 allow_manual_overrides: true,
@@ -226,20 +236,24 @@ impl TierAssignmentSettings {
 }
 
 impl Default for TierAssignmentSettings {
-    fn default() -> Self { Self {
+    fn default() -> Self {
+        Self {
             enabled: false,
             min_confidence_threshold: 0.7,
             algorithms: Vec::new(),
             transition_rules: Vec::new(),
             manual_overrides: TierOverrideSettings::default(),
-         }
+        }
+    }
 }
 
 impl Default for TierOverrideSettings {
-    fn default() -> Self { Self {
+    fn default() -> Self {
+        Self {
             allow_manual_overrides: false,
             override_timeout: Duration::from_secs(3600),
             authorized_users: Vec::new(),
             audit_overrides: true,
-         }
+        }
+    }
 }

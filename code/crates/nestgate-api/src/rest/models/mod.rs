@@ -94,6 +94,7 @@ impl<T> ApiResponse<T> {
     }
 
     /// Create an error API response with error message
+    #[must_use]
     pub fn error(error: String) -> Self {
         Self {
             success: false,

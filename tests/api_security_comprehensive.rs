@@ -8,8 +8,8 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 // use urlencoding;
-use nestgate_core::config::unified::NestGateUnifiedConfig as UnifiedApiConfig;
-use nestgate_core::{NestGateError, Result};
+use nestgate_core::config::canonical_master::NestGateCanonicalConfig as UnifiedApiConfig;
+use nestgate_core::error::{NestGateError, Result};
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 use std::time::Duration;
@@ -255,7 +255,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_authentication_bypass_protection() -> Result<(), Box<dyn std::error::Error>> {
-        use super::super::common::{TestHelpers, TestSetup};
+        use crate::common::{TestHelpers, TestSetup};
         use nestgate_core::Result as TestResult;
 
         async fn run_test() -> TestResult<()> {
@@ -485,7 +485,8 @@ mod tests {
                 assert_eq!(
                     response.status_code(),
                     StatusCode::BAD_REQUEST,
-                    &format!("Failed to block injection: {}", injection),
+                    "Failed to block injection: {}",
+                    injection
                 )?;
                 Ok(())
             }

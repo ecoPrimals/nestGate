@@ -4,19 +4,14 @@
 //! under adverse conditions. This significantly improves test coverage for edge cases.
 
 use nestgate_core::{
-use crate::config::ConsolidatedCanonicalConfig;
     config::canonical_master::NestGateCanonicalConfig,
     error::{NestGateError, Result},
     service_discovery::types::{ServiceCapability, ServiceEndpoint, ServiceInfo, ServiceMetadata},
 };
 use std::collections::HashMap;
-use crate::config::ConsolidatedCanonicalConfig;
 use std::time::{Duration, SystemTime};
-use crate::config::ConsolidatedCanonicalConfig;
 use tokio::time::{sleep, timeout};
-use crate::config::ConsolidatedCanonicalConfig;
 use uuid::Uuid;
-use crate::config::ConsolidatedCanonicalConfig;
 
 // ==================== CHAOS TEST UTILITIES ====================
 
@@ -325,10 +320,10 @@ async fn test_configuration_resilience() -> Result<()> {
     // Test configuration loading under various failure conditions
     let configs = vec![
         // Valid configuration
-        NestGateCanonicalConfig::default(),
+        NestGateNestGateCanonicalConfig::default(),
         // Configuration with missing fields (should use defaults)
         {
-            let mut config = NestGateCanonicalConfig::default();
+            let mut config = NestGateNestGateCanonicalConfig::default();
             config.system.instance_name = "".to_string(); // Invalid but should be handled
             config
         },

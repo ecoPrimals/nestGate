@@ -119,8 +119,8 @@ pub struct Credentials {
     /// Domain (for SMB)
     pub domain: Option<String>,
 }
-/// Protocol handler trait - **CANONICAL MODERNIZATION**: Native async without async_trait overhead
-/// **PERFORMANCE**: 40-60% improvement over async_trait macro
+/// Protocol handler trait - **CANONICAL MODERNIZATION**: Native async without `async_trait` overhead
+/// **PERFORMANCE**: 40-60% improvement over `async_trait` macro
 pub trait ProtocolHandler: Send + Sync + std::fmt::Debug {
     /// Get the protocol type this handler supports
     fn protocol_type(&self) -> Protocol;
@@ -179,6 +179,7 @@ impl std::fmt::Debug for ProtocolManager {
 
 impl ProtocolManager {
     /// Create a new protocol manager
+    #[must_use]
     pub fn new() -> Self {
         Self {
             supported_protocols: std::collections::HashSet::new(),
@@ -198,7 +199,7 @@ impl ProtocolManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn mount(&self, request: MountRequest) -> Result<MountResponse>  {
+    pub fn mount(&self, request: MountRequest) -> Result<MountResponse> {
         if !self.supported_protocols.contains(&request.protocol) {
             return Err(NestGateError::validation(format!(
                 "Protocol not supported: {}",
@@ -210,7 +211,7 @@ impl ProtocolManager {
         Ok(MountResponse {
             mount_id: uuid::Uuid::new_v4().to_string(),
             success: true,
-            message: format!("Successfully mounted {"actual_error_details"} resource"),
+            message: "Successfully mounted self.base_url resource".to_string(),
             mount_point: request.mount_point.clone(),
         })
     }
@@ -223,7 +224,7 @@ impl ProtocolManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn unmount(&self, protocol: Protocol, _mount_id: &str) -> Result<bool>  {
+    pub fn unmount(&self, protocol: Protocol, _mount_id: &str) -> Result<bool> {
         if !self.supported_protocols.contains(&protocol) {
             return Err(NestGateError::validation(format!(
                 "Protocol not supported: {protocol}"
@@ -242,7 +243,7 @@ impl ProtocolManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn get_status(&self, protocol: Protocol, _mount_id: &str) -> Result<MountStatus>  {
+    pub fn get_status(&self, protocol: Protocol, _mount_id: &str) -> Result<MountStatus> {
         if !self.supported_protocols.contains(&protocol) {
             return Err(NestGateError::validation(format!(
                 "Protocol not supported: {protocol}"
@@ -264,6 +265,7 @@ impl ProtocolManager {
     }
 
     /// List all supported protocols
+    #[must_use]
     pub fn supported_protocols(&self) -> Vec<Protocol> {
         self.supported_protocols.iter().copied().collect()
     }

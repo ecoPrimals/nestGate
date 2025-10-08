@@ -1,10 +1,10 @@
 use crate::constants::magic_numbers_replacement;
-//! # 🚀 **NESTGATE ECOSYSTEM DEMO RUNNER**
-//!
-//! Run this example to see all of NestGate's modernization patterns in action:
-//! ```bash
-//! cargo run --example run_ecosystem_demo
-//! ```
+// # 🚀 **NESTGATE ECOSYSTEM DEMO RUNNER**
+//
+// Run this example to see all of NestGate's modernization patterns in action:
+// ```bash
+// cargo run --example run_ecosystem_demo
+// ```
 
 mod ecosystem_modernization_demo;
 

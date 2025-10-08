@@ -1,10 +1,10 @@
 use crate::constants::magic_numbers_replacement;
-//! Simple Modern NestGate Demo
-//! 
-//! Demonstrates our new modern Rust implementations:
-//! - Configuration validation
-//! - Performance monitoring
-//! - Error handling
+// Simple Modern NestGate Demo
+//
+// Demonstrates our new modern Rust implementations:
+// - Configuration validation
+// - Performance monitoring
+// - Error handling
 
 use std::time::Duration;
 use tokio::time::sleep;
@@ -16,13 +16,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // 1. Performance Monitoring Demo
     demo_performance_monitoring().await?;
-    
+
     // 2. Configuration Demo
     demo_configuration().await?;
-    
+
     println!("\n✅ **DEMO COMPLETED SUCCESSFULLY!**");
     println!("Modern systems are working perfectly! 🎉");
-    
+
     Ok(())
 }
 
@@ -30,33 +30,33 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 async fn demo_performance_monitoring() -> Result<(), Box<dyn std::error::Error>> {
     println!("📊 **PERFORMANCE MONITORING DEMO**");
     println!("----------------------------------");
-    
+
     // Create a simple metrics collector
     let collector = std::sync::Arc::new(MockMetricsCollector::new());
-    
+
     println!("📊 **Performance Monitor Started**");
-    
+
     // Simulate some operations
     println!("⚡ **Simulating Operations...**");
-    
+
     for i in 1..=5 {
         let start = std::time::Instant::now();
-        
+
         // Simulate work
         sleep(Duration::from_millis(50 + i * 10)).await;
-        
+
         let duration = start.elapsed();
         collector.record_success(duration).await;
-        
+
         println!("   ✅ Operation {} completed in {:?}", i, duration);
     }
-    
+
     // Simulate some failures
     for i in 1..=2 {
         collector.record_failure("timeout").await;
         println!("   ❌ Operation {} failed (timeout)", i);
     }
-    
+
     // Get performance snapshot
     let stats = collector.get_stats().await;
     println!("\n📈 **Performance Summary:**");
@@ -64,8 +64,11 @@ async fn demo_performance_monitoring() -> Result<(), Box<dyn std::error::Error>>
     println!("   • Successful requests: {}", stats.successful_requests);
     println!("   • Failed requests: {}", stats.failed_requests);
     println!("   • Success rate: {:.1}%", stats.success_rate);
-    println!("   • Average response time: {:?}", stats.average_response_time);
-    
+    println!(
+        "   • Average response time: {:?}",
+        stats.average_response_time
+    );
+
     Ok(())
 }
 
@@ -73,7 +76,7 @@ async fn demo_performance_monitoring() -> Result<(), Box<dyn std::error::Error>>
 async fn demo_configuration() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📋 **CONFIGURATION VALIDATION DEMO**");
     println!("------------------------------------");
-    
+
     // Create a valid configuration
     let valid_config = MockNetworkConfig {
         port: crate::constants::magic_numbers_replacement::network::DEFAULT_HTTP_PORT,
@@ -81,27 +84,41 @@ async fn demo_configuration() -> Result<(), Box<dyn std::error::Error>> {
         timeout_ms: 30000,
         enable_tls: false,
     };
-    
+
     println!("✅ **Valid Configuration:**");
     let result = valid_config.validate();
-    println!("   Status: {}", if result.is_valid { "VALID ✅" } else { "INVALID ❌" });
-    
+    println!(
+        "   Status: {}",
+        if result.is_valid {
+            "VALID ✅"
+        } else {
+            "INVALID ❌"
+        }
+    );
+
     // Create an invalid configuration
     let invalid_config = MockNetworkConfig {
-        port: 0, // Invalid port
+        port: 0,                                // Invalid port
         bind_address: "invalid_ip".to_string(), // Invalid IP
-        timeout_ms: 0, // Invalid timeout
+        timeout_ms: 0,                          // Invalid timeout
         enable_tls: false,
     };
-    
+
     println!("\n❌ **Invalid Configuration:**");
     let result = invalid_config.validate();
-    println!("   Status: {}", if result.is_valid { "VALID ✅" } else { "INVALID ❌" });
+    println!(
+        "   Status: {}",
+        if result.is_valid {
+            "VALID ✅"
+        } else {
+            "INVALID ❌"
+        }
+    );
     println!("   Errors found: {}", result.errors.len());
     for error in &result.errors {
         println!("     • {}: {}", error.field, error.message);
     }
-    
+
     Ok(())
 }
 
@@ -127,39 +144,40 @@ impl MockMetricsCollector {
 
     async fn record_success(&self, duration: Duration) {
         use std::sync::atomic::Ordering;
-        
+
         self.total_requests.fetch_add(1, Ordering::Relaxed);
         self.successful_requests.fetch_add(1, Ordering::Relaxed);
-        self.total_response_time_ns.fetch_add(duration.as_nanos() as u64, Ordering::Relaxed);
+        self.total_response_time_ns
+            .fetch_add(duration.as_nanos() as u64, Ordering::Relaxed);
     }
 
     async fn record_failure(&self, _error_type: &str) {
         use std::sync::atomic::Ordering;
-        
+
         self.total_requests.fetch_add(1, Ordering::Relaxed);
         self.failed_requests.fetch_add(1, Ordering::Relaxed);
     }
 
     async fn get_stats(&self) -> MockPerformanceStats {
         use std::sync::atomic::Ordering;
-        
+
         let total_requests = self.total_requests.load(Ordering::Relaxed);
         let successful_requests = self.successful_requests.load(Ordering::Relaxed);
         let failed_requests = self.failed_requests.load(Ordering::Relaxed);
         let total_response_time_ns = self.total_response_time_ns.load(Ordering::Relaxed);
-        
+
         let success_rate = if total_requests > 0 {
             (successful_requests as f64 / total_requests as f64) * 100.0
         } else {
             0.0
         };
-        
+
         let average_response_time = if successful_requests > 0 {
             Duration::from_nanos(total_response_time_ns / successful_requests)
         } else {
             Duration::ZERO
         };
-        
+
         MockPerformanceStats {
             total_requests,
             successful_requests,
@@ -190,7 +208,7 @@ struct MockNetworkConfig {
 impl MockNetworkConfig {
     fn validate(&self) -> MockValidationResult {
         let mut errors = Vec::new();
-        
+
         // Validate port
         if self.port == 0 {
             errors.push(MockValidationError {
@@ -198,7 +216,7 @@ impl MockNetworkConfig {
                 message: "Port cannot be 0".to_string(),
             });
         }
-        
+
         // Validate IP address
         if self.bind_address.parse::<std::net::IpAddr>().is_err() {
             errors.push(MockValidationError {
@@ -206,7 +224,7 @@ impl MockNetworkConfig {
                 message: "Invalid IP address format".to_string(),
             });
         }
-        
+
         // Validate timeout
         if self.timeout_ms == 0 {
             errors.push(MockValidationError {
@@ -214,7 +232,7 @@ impl MockNetworkConfig {
                 message: "Timeout cannot be zero".to_string(),
             });
         }
-        
+
         MockValidationResult {
             is_valid: errors.is_empty(),
             errors,
@@ -232,4 +250,4 @@ struct MockValidationResult {
 struct MockValidationError {
     field: String,
     message: String,
-} 
+}

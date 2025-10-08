@@ -140,8 +140,7 @@ impl InterfaceRegistry {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        #[must_use]
-        pub fn register(&mut self, metadata: InterfaceMetadata) -> Result<()>  {
+                pub fn register(&mut self, metadata: InterfaceMetadata) -> Result<()>  {
         let interface_id = metadata.interface_id.clone();
         self.interfaces.insert(interface_id, metadata);
         Ok(())

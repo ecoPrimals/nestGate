@@ -17,7 +17,7 @@ pub struct IntegrationTestEnvironment {
 impl IntegrationTestEnvironment {
     /// Create new test environment
     pub async fn new() -> Result<Self> {
-        let config = NestGateCanonicalConfig::default();
+        let config = NestGateNestGateCanonicalConfig::default();
         let service_registry = InMemoryServiceRegistry::new();
 
         Ok(Self {

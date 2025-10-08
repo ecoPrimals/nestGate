@@ -14,7 +14,7 @@ async fn test_storage_architecture_config() -> Result<(), Box<dyn std::error::Er
     info!("🏗️ Starting storage architecture configuration test");
 
     // Test architecture configuration creation
-    let config = NestGateCanonicalConfig::default();
+    let config = NestGateNestGateCanonicalConfig::default();
     assert!(!config.system.instance_name.is_empty());
 
     // Test that storage section exists in architecture

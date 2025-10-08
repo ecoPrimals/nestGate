@@ -56,7 +56,7 @@ impl DatasetAutomation {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn new(
+    pub async fn new(
         pool_manager: Arc<ZfsPoolManager>,
         dataset_manager: Arc<ZfsDatasetManager>,
         // migration_engine: Arc<RwLock<MigrationEngine>>, // MigrationEngine not yet implemented
@@ -203,14 +203,10 @@ impl DatasetAutomation {
                     dataset_name,
                     lifecycle,
                     &lifecycle_rule.conditions,
-                )
-                .await?
-                {
+                )? {
                     // Apply each action in the rule
                     for action in &lifecycle_rule.actions {
-                        match actions::execute_lifecycle_action(dataset_name, lifecycle, action)
-                            .await
-                        {
+                        match actions::execute_lifecycle_action(dataset_name, lifecycle, action) {
                             Ok(action_result) => {
                                 actions_taken.push(action_result);
                                 info!("✅ Applied action '{}' to dataset {}", action, dataset_name);
@@ -333,7 +329,7 @@ impl DatasetAutomation {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn evaluate_tier_for_dataset(
+    pub async fn evaluate_tier_for_dataset(
         &self,
         dataset_name: &str,
         metadata: &DatasetMetadata,

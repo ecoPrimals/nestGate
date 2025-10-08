@@ -1,11 +1,11 @@
-use crate::canonical_modernization::UnifiedServiceConfig;
-use crate::canonical_modernization::{UnifiedCapabilityType, UnifiedServiceType};
 use nestgate_core::canonical_modernization::CanonicalModernizedConfig;
 /// Expanded functional tests demonstrating more NestGate capabilities
 /// Builds on the simple working test foundation with more comprehensive coverage
 use nestgate_core::{NestGateError, Result};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
+use tests::canonical_modernization::UnifiedServiceConfig;
+use tests::canonical_modernization::{UnifiedCapabilityType, UnifiedServiceType};
 use tokio::time::sleep;
 
 #[tokio::test]

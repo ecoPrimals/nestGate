@@ -183,8 +183,8 @@ impl UnifiedErrorResponse {
     ) -> Self {
         self.request_context = Some(UnifiedRequestContext {
             request_id: request_id.to_string(),
-            method: method.map(|m| m.to_string()),
-            endpoint: endpoint.map(|e| e.to_string()),
+            method: method.map(std::string::ToString::to_string),
+            endpoint: endpoint.map(std::string::ToString::to_string),
             parameters: HashMap::new(),
             headers: HashMap::new(),
             duration: None,

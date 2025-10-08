@@ -45,6 +45,7 @@ impl NativeZfsBackend {
     }
 
     /// Get the configuration
+    #[must_use]
     pub fn config(&self) -> &CanonicalZfsConfig {
         &self.config
     }

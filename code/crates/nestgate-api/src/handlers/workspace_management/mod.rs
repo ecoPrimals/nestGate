@@ -71,9 +71,16 @@ pub struct WorkspaceManager {
     // Implementation details hidden for brevity
 }
 
+impl Default for WorkspaceManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl WorkspaceManager {
     /// Create a new workspace manager instance
-    pub fn new() -> Self {
+    #[must_use]
+    pub const fn new() -> Self {
         Self {
             // Initialize with default configuration
         }

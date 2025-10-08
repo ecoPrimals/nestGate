@@ -439,7 +439,7 @@ impl LocalMemoryInfo {
         if self.total_mb() == 0 {
             0.0
         } else {
-            (f64::from(self.used_mb) / self.total_mb() as f64) * 100.0
+            (self.used_mb as f64 / self.total_mb() as f64) * 100.0
         }
     }
 }

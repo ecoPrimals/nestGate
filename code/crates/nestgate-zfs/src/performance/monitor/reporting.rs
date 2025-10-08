@@ -7,7 +7,10 @@ use tokio::sync::{mpsc, RwLock};
 use tokio::time::interval;
 use tracing::{debug, error};
 
-use super::super::types::*;
+use super::super::types::{
+    ActiveAlert, Alert, CurrentPerformanceMetrics, PerformanceSnapshot, TierPerformanceData,
+    ZfsPerformanceMonitor,
+};
 use super::super::types::{ActiveAlertsVec, AlertConditionsVec};
 
 impl ZfsPerformanceMonitor {

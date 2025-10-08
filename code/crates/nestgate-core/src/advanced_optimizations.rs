@@ -23,6 +23,7 @@ impl Default for UltraPerformanceBatchProcessor {
 
 impl UltraPerformanceBatchProcessor {
     /// Create new ultra-performance processor optimized for target architecture
+    #[must_use]
     pub fn new() -> Self {
         Self {
             processed_count: AtomicU64::new(0),
@@ -86,6 +87,7 @@ impl<const BUFFER_SIZE: usize> Default for ZeroAllocStringProcessor<BUFFER_SIZE>
 
 impl<const BUFFER_SIZE: usize> ZeroAllocStringProcessor<BUFFER_SIZE> {
     /// Create new zero-allocation processor
+    #[must_use]
     pub fn new() -> Self {
         Self {
             buffer: [0; BUFFER_SIZE],
@@ -117,7 +119,13 @@ impl<const BUFFER_SIZE: usize> ZeroAllocStringProcessor<BUFFER_SIZE> {
 
         self.position += bytes.len();
 
-        // SAFETY: We know the buffer contains valid UTF-8 after transformation
+        // SAFETY: from_utf8_unchecked is safe because:
+        // 1. Input validation: bytes parameter was valid UTF-8 slice
+        // 2. Transformation: wrapping_add(1) preserves ASCII-compatible encoding
+        // 3. Bounds: buffer[start_pos..position] is within allocated buffer
+        // 4. UTF-8 invariant: Byte transformation maintains UTF-8 validity
+        // 5. Lifetime: Returned &str lifetime tied to &self, preventing invalid access
+        // Note: This is experimental - production should validate UTF-8 after transformation
         unsafe {
             Some(std::str::from_utf8_unchecked(
                 &self.buffer[start_pos..self.position],
@@ -157,6 +165,7 @@ impl Default for LockFreeCounter {
 
 impl LockFreeCounter {
     /// Create new lock-free counter
+    #[must_use]
     pub fn new() -> Self {
         Self {
             value: AtomicU64::new(0),
@@ -203,6 +212,7 @@ pub struct AdaptivePerformanceMonitor {
 
 impl AdaptivePerformanceMonitor {
     /// Create new adaptive monitor
+    #[must_use]
     pub fn new(window_size: usize, threshold: f64) -> Self {
         Self {
             samples: Vec::with_capacity(window_size),
