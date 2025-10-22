@@ -149,8 +149,8 @@ impl MulticastDiscovery {
     pub fn new() -> Self {
         Self {
             multicast_groups: vec![
-                "224.0.0.251:5353".parse().unwrap(),     // mDNS
-                "239.255.255.250:1900".parse().unwrap(), // SSDP
+                "224.0.0.251:5353".parse().expect("hardcoded mDNS address is valid"),     // mDNS
+                "239.255.255.250:1900".parse().expect("hardcoded SSDP address is valid"), // SSDP
             ],
             timeout_duration: Duration::from_secs(3),
             discovery_message: "NESTGATE-DISCOVERY".to_string(),
@@ -366,10 +366,13 @@ impl PortScanDiscovery {
     pub fn add_local_networks(&mut self) {
         // Add common local network ranges
         self.add_ip_range(
-            "192.168.1.1".parse().unwrap(),
-            "192.168.1.254".parse().unwrap(),
+            "192.168.1.1".parse().expect("hardcoded IP address is valid"),
+            "192.168.1.254".parse().expect("hardcoded IP address is valid"),
         );
-        self.add_ip_range("10.0.0.1".parse().unwrap(), "10.0.0.254".parse().unwrap());
+        self.add_ip_range(
+            "10.0.0.1".parse().expect("hardcoded IP address is valid"),
+            "10.0.0.254".parse().expect("hardcoded IP address is valid"),
+        );
     }
 }
 
