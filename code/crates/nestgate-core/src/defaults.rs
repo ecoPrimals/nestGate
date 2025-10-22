@@ -180,6 +180,10 @@ pub mod security {
 mod tests {
     use super::*;
     use std::env;
+    use std::sync::Mutex;
+
+    // Mutex to serialize env var tests (prevent parallel test interference)
+    static ENV_LOCK: Mutex<()> = Mutex::new(());
 
     // Existing tests
     #[test]
@@ -191,6 +195,7 @@ mod tests {
 
     #[test]
     fn test_environment_override() {
+        let _lock = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         env::set_var("NESTGATE_API_PORT", "9999");
         assert_eq!(env_helpers::api_port(), 9999);
         env::remove_var("NESTGATE_API_PORT");
@@ -257,6 +262,7 @@ mod tests {
 
     #[test]
     fn test_env_helpers_api_port() {
+        let _lock = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         // Clear any existing env var
         env::remove_var("NESTGATE_API_PORT");
 
@@ -289,6 +295,7 @@ mod tests {
 
     #[test]
     fn test_env_helpers_hostname() {
+        let _lock = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         env::remove_var("NESTGATE_HOSTNAME");
 
         assert_eq!(env_helpers::hostname(), "localhost");
