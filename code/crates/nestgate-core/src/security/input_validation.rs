@@ -91,35 +91,78 @@ impl ValidationPatterns {
 impl Default for ValidationPatterns {
     fn default() -> Self {
         // These are hardcoded patterns that should always compile.
-        // If they fail, we fall back to a permissive pattern that matches everything
-        // to ensure the system stays operational (fail-safe, not fail-secure for initialization)
+        // If they fail, we fall back to permissive/restrictive patterns that are guaranteed valid
+        // to ensure the system stays operational (fail-safe approach for initialization)
         Self {
             email: regex::Regex::new(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
-                .unwrap_or_else(|_| regex::Regex::new(r".*").unwrap()),
-            uuid: regex::Regex::new(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
-                .unwrap_or_else(|_| regex::Regex::new(r".*").unwrap()),
-            alphanumeric: regex::Regex::new(r"^[a-zA-Z0-9]+$")
-                .unwrap_or_else(|_| regex::Regex::new(r".*").unwrap()),
-            safe_filename: regex::Regex::new(r"^[a-zA-Z0-9._-]+$")
-                .unwrap_or_else(|_| regex::Regex::new(r".*").unwrap()),
-            sql_injection: regex::Regex::new(r"(?i)(union|select|insert|update|delete|drop|create|alter|exec|script)")
-                .unwrap_or_else(|_| regex::Regex::new(r"(?i)nevermatch").unwrap()),
-            xss_script: regex::Regex::new(r"(?i)<script|javascript:|vbscript:|onload=|onerror=|onclick=")
-                .unwrap_or_else(|_| regex::Regex::new(r"(?i)nevermatch").unwrap()),
-            xss_attributes: regex::Regex::new(r"(?i)(on\w+\s*=|javascript:|vbscript:|data:text/html)")
-                .unwrap_or_else(|_| regex::Regex::new(r"(?i)nevermatch").unwrap()),
-            path_traversal: regex::Regex::new(r"(\.\./|\.\.\\)")
-                .unwrap_or_else(|_| regex::Regex::new(r"(?i)nevermatch").unwrap()),
-            command_injection: regex::Regex::new(r"[;&|`$()]")
-                .unwrap_or_else(|_| regex::Regex::new(r"(?i)nevermatch").unwrap()),
-            ipv4: regex::Regex::new(r"^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$")
-                .unwrap_or_else(|_| regex::Regex::new(r".*").unwrap()),
+                .unwrap_or_else(|_| {
+                    regex::Regex::new(r".*")
+                        .expect("Fallback regex '.*' is guaranteed valid")
+                }),
+            uuid: regex::Regex::new(
+                r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            )
+            .unwrap_or_else(|_| {
+                regex::Regex::new(r".*").expect("Fallback regex '.*' is guaranteed valid")
+            }),
+            alphanumeric: regex::Regex::new(r"^[a-zA-Z0-9]+$").unwrap_or_else(|_| {
+                regex::Regex::new(r".*").expect("Fallback regex '.*' is guaranteed valid")
+            }),
+            safe_filename: regex::Regex::new(r"^[a-zA-Z0-9._-]+$").unwrap_or_else(|_| {
+                regex::Regex::new(r".*").expect("Fallback regex '.*' is guaranteed valid")
+            }),
+            sql_injection: regex::Regex::new(
+                r"(?i)(union|select|insert|update|delete|drop|create|alter|exec|script)",
+            )
+            .unwrap_or_else(|_| {
+                regex::Regex::new(r"(?i)nevermatch")
+                    .expect("Fallback regex 'nevermatch' is guaranteed valid")
+            }),
+            xss_script: regex::Regex::new(
+                r"(?i)<script|javascript:|vbscript:|onload=|onerror=|onclick=",
+            )
+            .unwrap_or_else(|_| {
+                regex::Regex::new(r"(?i)nevermatch")
+                    .expect("Fallback regex 'nevermatch' is guaranteed valid")
+            }),
+            xss_attributes: regex::Regex::new(
+                r"(?i)(on\w+\s*=|javascript:|vbscript:|data:text/html)",
+            )
+            .unwrap_or_else(|_| {
+                regex::Regex::new(r"(?i)nevermatch")
+                    .expect("Fallback regex 'nevermatch' is guaranteed valid")
+            }),
+            path_traversal: regex::Regex::new(r"(\.\./|\.\.\\)").unwrap_or_else(|_| {
+                regex::Regex::new(r"(?i)nevermatch")
+                    .expect("Fallback regex 'nevermatch' is guaranteed valid")
+            }),
+            command_injection: regex::Regex::new(r"[;&|`$()]").unwrap_or_else(|_| {
+                regex::Regex::new(r"(?i)nevermatch")
+                    .expect("Fallback regex 'nevermatch' is guaranteed valid")
+            }),
+            ipv4: regex::Regex::new(
+                r"^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$",
+            )
+            .unwrap_or_else(|_| {
+                regex::Regex::new(r".*").expect("Fallback regex '.*' is guaranteed valid")
+            }),
             ipv6: regex::Regex::new(r"^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$")
-                .unwrap_or_else(|_| regex::Regex::new(r".*").unwrap()),
-            domain: regex::Regex::new(r"^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
-                .unwrap_or_else(|_| regex::Regex::new(r".*").unwrap()),
-            port: regex::Regex::new(r"^(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[1-5][0-9]{4}|[1-9][0-9]{0,3})$")
-                .unwrap_or_else(|_| regex::Regex::new(r".*").unwrap()),
+                .unwrap_or_else(|_| {
+                    regex::Regex::new(r".*")
+                        .expect("Fallback regex '.*' is guaranteed valid")
+                }),
+            domain: regex::Regex::new(
+                r"^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$",
+            )
+            .unwrap_or_else(|_| {
+                regex::Regex::new(r".*").expect("Fallback regex '.*' is guaranteed valid")
+            }),
+            port: regex::Regex::new(
+                r"^(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[1-5][0-9]{4}|[1-9][0-9]{0,3})$",
+            )
+            .unwrap_or_else(|_| {
+                regex::Regex::new(r".*").expect("Fallback regex '.*' is guaranteed valid")
+            }),
         }
     }
 }
