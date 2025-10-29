@@ -121,7 +121,8 @@ where
     true
 }
 
-// Temporarily disabled - needs API updates (245+ errors)
-// TODO: Fix test API mismatches and re-enable
+// Temporarily disabled - needs extensive API refactoring (245+ errors)
+// These tests were written against an older trait API and need complete rewrite
+// TODO: Rewrite tests to match current CanonicalService/Provider/Storage trait APIs
 // #[cfg(test)]
 // mod canonical_hierarchy_tests;
