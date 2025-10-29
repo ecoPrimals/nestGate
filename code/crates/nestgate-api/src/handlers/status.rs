@@ -4,6 +4,10 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use tracing::info;
 // Removed unused tracing import
 
+#[cfg(test)]
+#[path = "status_comprehensive_tests.rs"]
+mod status_comprehensive_tests;
+
 #[derive(Debug, Serialize, Deserialize)]
 /// System status information
 pub struct SystemStatus {
