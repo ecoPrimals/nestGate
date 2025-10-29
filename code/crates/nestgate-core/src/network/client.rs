@@ -21,10 +21,7 @@ impl Port {
     /// Create a new port, validating the range
     pub fn new(port: u16) -> crate::Result<Self> {
         if port == 0 {
-            return Err(NestGateError::validation_error(
-                "port", 
-                "Port cannot be 0"
-            ));
+            return Err(NestGateError::validation_error("Port cannot be 0"));
         }
         Ok(Self(port))
     }
@@ -217,14 +214,14 @@ impl Response {
     /// Get response body as string
     pub async fn text(&self) -> crate::Result<String> {
         String::from_utf8(self.body.clone())
-            .map_err(|e| NestGateError::validation_error("response_body", &e.to_string()))
+            .map_err(|e| NestGateError::validation_error(&format!("Invalid response body: {}", e)))
     }
 
     /// Parse response body as JSON
     pub async fn json<T: for<'de> Deserialize<'de>>(&self) -> crate::Result<T> {
-        let text = self.text()?;
+        let text = self.text().await?;
         serde_json::from_str(&text)
-            .map_err(|e| NestGateError::validation_error("json_parse", &e.to_string()))
+            .map_err(|e| NestGateError::validation_error(&format!("Failed to parse JSON: {}", e)))
     }
 }
 
@@ -280,9 +277,9 @@ impl ConnectionPool {
     }
 
     /// Get a connection for the given endpoint
-    pub fn get_connection(&self, endpoint: &Endpoint) -> impl std::future::Future<Output = Result<Connection>> + Send {
+    pub async fn get_connection(&self, endpoint: &Endpoint) -> Result<Connection> {
         let _permit = self.semaphore.acquire().await
-            .map_err(|e| NestGateError::system_error(&format!("Failed to acquire connection: {}", e)))?;
+            .map_err(|e| NestGateError::network_error(&format!("Failed to acquire connection: {}", e)))?;
 
         let key = endpoint.url();
         let mut connections = self.connections.write().await;
@@ -328,7 +325,7 @@ pub struct Connection {
 
 impl Connection {
     /// Create a new connection
-    pub fn new(endpoint: Endpoint) -> impl std::future::Future<Output = Result<Self>> + Send {
+    pub async fn new(endpoint: Endpoint) -> Result<Self> {
         // In a real implementation, this would establish the actual connection
         let now = std::time::Instant::now();
         Ok(Self {
@@ -346,7 +343,7 @@ impl Connection {
     }
 
     /// Send a request over this connection
-    pub fn send_request(&mut self, request: &Request<'_>) -> impl std::future::Future<Output = Result<Response>> + Send {
+    pub async fn send_request(&mut self, request: &Request<'_>) -> Result<Response> {
         self.last_used = std::time::Instant::now();
         self.request_count += 1;
 
@@ -401,19 +398,19 @@ impl HttpClient {
     }
 
     /// Send a GET request
-    pub fn get(&self, endpoint: &Endpoint, path: &str) -> impl std::future::Future<Output = Result<Response>> + Send {
+    pub async fn get(&self, endpoint: &Endpoint, path: &str) -> Result<Response> {
         let request = Request::get(path);
         self.send_request(endpoint, &request).await
     }
 
     /// Send a POST request with JSON body
-    pub fn post_json(&self, endpoint: &Endpoint, path: &str, body: &str) -> impl std::future::Future<Output = Result<Response>> + Send {
+    pub async fn post_json(&self, endpoint: &Endpoint, path: &str, body: &str) -> Result<Response> {
         let request = Request::post_json(path, body);
         self.send_request(endpoint, &request).await
     }
 
     /// Send a request with retry logic
-    pub fn send_request(&self, endpoint: &Endpoint, request: &Request<'_>) -> impl std::future::Future<Output = Result<Response>> + Send {
+    pub async fn send_request(&self, endpoint: &Endpoint, request: &Request<'_>) -> Result<Response> {
         let mut attempts = 0;
         let max_attempts = 3;
 
@@ -433,14 +430,14 @@ impl HttpClient {
     }
 
     /// Send a single request attempt
-    fn send_request_once(&self, endpoint: &Endpoint, request: &Request<'_>) -> impl std::future::Future<Output = Result<Response>> + Send {
+    async fn send_request_once(&self, endpoint: &Endpoint, request: &Request<'_>) -> Result<Response> {
         let mut connection = self.pool.get_connection(endpoint).await?;
         
         let response = tokio::time::timeout(
             self.config.timeout.as_duration(),
             connection.send_request(request)
         ).await
-        .map_err(|_| NestGateError::timeout_error("Request timeout"))?;
+        .map_err(|_| NestGateError::timeout_error("Request", self.config.timeout.as_duration()))?;
 
         // Return connection to pool
         self.pool.return_connection(endpoint, connection).await;
@@ -493,10 +490,10 @@ impl From<HttpClientError> for NestGateError {
                 NestGateError::network_error(&message)
             }
             HttpClientError::Timeout { timeout } => {
-                NestGateError::timeout_error(&format!("HTTP timeout: {:?}", timeout))
+                NestGateError::timeout_error("HTTP request", timeout)
             }
             HttpClientError::InvalidResponse { message } => {
-                NestGateError::validation_error("http_response", &message)
+                NestGateError::validation_error(&format!("Invalid HTTP response: {}", message))
             }
             HttpClientError::TooManyRedirects { count } => {
                 NestGateError::network_error(&format!("Too many redirects: {}", count))
@@ -528,7 +525,7 @@ pub async fn http_endpoint(host: &str, port: u16) -> crate::Result<Endpoint> {
 
 #[cfg(test)]
 mod tests {
-    
+    use super::*;
 
     #[test]
     fn test_port_validation() {

@@ -1,7 +1,12 @@
+pub mod client;
 pub mod native_async;
 pub mod native_async_network;
 
-// Temporarily disabled - needs type imports (Port, RequestBody)
-// TODO: Fix missing imports and re-enable
-// #[cfg(test)]
-// mod client_tests;
+// Re-export commonly used types for convenience
+pub use client::{
+    Port, TimeoutMs, Method, StatusCode, Endpoint, Scheme,
+    Request, RequestBody, Response, HeaderMap,
+};
+
+#[cfg(test)]
+mod client_tests;

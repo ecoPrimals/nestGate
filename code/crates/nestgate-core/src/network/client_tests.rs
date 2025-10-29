@@ -3,6 +3,10 @@
 //! Tests for HTTP client, connection pooling, and network types.
 
 use super::*;
+use super::client::*;
+use serde::Deserialize;
+use std::time::Duration;
+use std::collections::HashMap;
 
 // ==================== PORT TESTS ====================
 
@@ -403,7 +407,7 @@ async fn test_response_json() {
         body: json_str.as_bytes().to_vec(),
     };
     
-    let result: Result<TestData> = response.json().await;
+    let result: crate::Result<TestData> = response.json().await;
     assert!(result.is_ok());
     
     let data = result.unwrap();
@@ -483,7 +487,7 @@ fn test_port_in_endpoint() {
 
 #[test]
 fn test_multiple_ports() {
-    let ports: Vec<Result<Port>> = vec![
+    let ports: Vec<crate::Result<Port>> = vec![
         Port::new(0),
         Port::new(80),
         Port::new(443),
