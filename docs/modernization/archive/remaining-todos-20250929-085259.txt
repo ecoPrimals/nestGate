@@ -1,4 +1,0 @@
-# Remaining TODO Items After Cleanup
-# Generated: Mon Sep 29 08:52:59 AM EDT 2025
-
-code/crates/nestgate-core/src/constants/migration_helpers.rs:16:            // TODO: Replace with $replacement
