@@ -25,9 +25,9 @@ pub mod canonical_master;
 /// **THE** canonical configuration for all `NestGate` systems
 #[allow(deprecated)]
 pub use canonical_master::{
-    ApiConfig, ConfigMetadata, DeploymentEnvironment, FeatureFlags, LogLevel,
-    NestGateCanonicalConfig, NetworkConfig, PerformanceConfig, SecurityConfig, StorageConfig,
-    SystemConfig,
+    ApiConfig, CanonicalNetworkConfig as NetworkConfig, ConfigMetadata, DeploymentEnvironment,
+    FeatureFlags, LogLevel, NestGateCanonicalConfig, PerformanceConfig, SecurityConfig,
+    StorageConfig, SystemConfig,
 };
 
 // Note: Detailed configuration types are defined inline in canonical_master
