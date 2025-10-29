@@ -86,7 +86,7 @@ impl SecurityHardeningManager {
                             threat_level: ThreatLevel::Medium,
                             description: "Rate limit exceeded".to_string(),
                             action_taken: SecurityAction::RateLimited,
-                        );
+                        });
                         blocked = true;
                     }
                 }

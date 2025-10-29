@@ -144,18 +144,18 @@ impl UniversalAuthAdapter {
                                 permissions: response.get("permissions")
                                     .and_then(|v| v.as_array())
                                     .map(|arr| arr.iter()
-                                        .filter_map(|v| v.as_str().map(|s| s"))
+                                        .filter_map(|v| v.as_str().map(|s| s.to_string()))
                                         .collect())
                                     .unwrap_or_default(),
                                 metadata: response.get("metadata")
                                     .and_then(|v| v.as_object())
                                     .map(|obj| obj.iter()
-                                        .map(|(k, v)| (k.clone(), v.as_str().unwrap_or("")"))
+                                        .map(|(k, v)| (k.clone(), v.as_str().unwrap_or("").to_string()))
                                         .collect())
                                     .unwrap_or_default(),
                                 message: "Access validated via security capability".to_string(),
-                            );
-    }
+                            });
+                        }
                         Err(e) => {
                             warn!("⚠️ Security capability communication failed: {}", e);
     }

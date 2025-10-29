@@ -8,6 +8,7 @@ pub mod command;
 pub mod dataset;
 pub mod error;
 pub mod pool;
+pub mod pool_helpers;
 pub mod types;
 
 // Performance and optimization

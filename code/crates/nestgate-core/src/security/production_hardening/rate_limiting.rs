@@ -59,7 +59,7 @@ impl RateLimiter {
             tokens: self.config.burst_size,
             last_refill: now,
             blocked_until: None,
-        );
+        });
 
         // Check if IP is currently blocked
         if let Some(blocked_until) = bucket.blocked_until {
@@ -101,7 +101,7 @@ impl RateLimiter {
         let cutoff = now - Duration::from_secs(3600); // 1 hour
         self.buckets.retain(|_, bucket| {
             bucket.last_refill > cutoff || bucket.blocked_until.map_or(false, |until| until > now)
-        );
+        });
     }
 
     /// Get rate limiting statistics
@@ -131,7 +131,7 @@ mod tests {
             burst_size: 2,
             block_duration: Duration::from_secs(60),
             whitelist: Vec::new(),
-        );
+        });
 
         let test_ip = IpAddr::V4(Ipv4Addr::new(192, 168, 1, 100));
 
@@ -151,7 +151,7 @@ mod tests {
             burst_size: 1,
             block_duration: Duration::from_secs(60),
             whitelist: vec![test_ip],
-        );
+        });
 
         assert!(rate_limiter.is_whitelisted(test_ip));
     }
