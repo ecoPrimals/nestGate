@@ -250,6 +250,210 @@ impl Default for NestGateConfig {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+
+    // NetworkPortDefaults tests
+    #[test]
+    fn test_network_port_defaults_api_port() {
+        assert_eq!(NetworkPortDefaults::api_port(), 8000);
+    }
+
+    #[test]
+    fn test_network_port_defaults_websocket_port() {
+        assert_eq!(NetworkPortDefaults::websocket_port(), 8080);
+    }
+
+    #[test]
+    fn test_network_port_defaults_http_port() {
+        assert_eq!(NetworkPortDefaults::http_port(), 3000);
+    }
+
+    #[test]
+    fn test_network_port_defaults_streaming_rpc_port() {
+        assert_eq!(NetworkPortDefaults::streaming_rpc_port(), 8001);
+    }
+
+    #[test]
+    fn test_network_port_defaults_nas_http_port() {
+        assert_eq!(NetworkPortDefaults::nas_http_port(), 8080);
+    }
+
+    #[test]
+    fn test_network_port_defaults_dev_server_port() {
+        assert_eq!(NetworkPortDefaults::dev_server_port(), 3000);
+    }
+
+    #[test]
+    fn test_network_port_defaults_discovery_port_start() {
+        assert_eq!(NetworkPortDefaults::discovery_port_start(), 8080);
+    }
+
+    #[test]
+    fn test_network_port_defaults_discovery_port_end() {
+        assert_eq!(NetworkPortDefaults::discovery_port_end(), 9000);
+    }
+
+    #[test]
+    fn test_network_port_defaults_common_ports() {
+        let ports = NetworkPortDefaults::common_ports();
+        assert_eq!(ports.len(), 10);
+        assert!(ports.contains(&8080));
+        assert!(ports.contains(&3000));
+        assert!(ports.contains(&9000));
+    }
+
+    #[test]
+    fn test_network_port_defaults_discovery_range_valid() {
+        let start = NetworkPortDefaults::discovery_port_start();
+        let end = NetworkPortDefaults::discovery_port_end();
+        assert!(start < end, "Discovery port start should be less than end");
+        assert_eq!(start, 8080);
+        assert_eq!(end, 9000);
+    }
+
+    #[test]
+    fn test_network_port_defaults_get_api_port_default() {
+        std::env::remove_var("NESTGATE_API_PORT");
+        assert_eq!(NetworkPortDefaults::get_api_port(), 8000);
+    }
+
+    #[test]
+    fn test_network_port_defaults_get_http_port_default() {
+        std::env::remove_var("NESTGATE_HTTP_PORT");
+        assert_eq!(NetworkPortDefaults::get_http_port(), 3000);
+    }
+
+    #[test]
+    fn test_network_port_defaults_get_metrics_port_default() {
+        std::env::remove_var("NESTGATE_METRICS_PORT");
+        assert_eq!(NetworkPortDefaults::get_metrics_port(), 9090);
+    }
+
+    #[test]
+    fn test_network_port_defaults_get_health_port_default() {
+        std::env::remove_var("NESTGATE_HEALTH_PORT");
+        assert_eq!(NetworkPortDefaults::get_health_port(), 8081);
+    }
+
+    #[test]
+    fn test_network_port_defaults_get_orchestrator_port_default() {
+        std::env::remove_var("NESTGATE_ORCHESTRATOR_PORT");
+        assert_eq!(NetworkPortDefaults::get_orchestrator_port(), 8090);
+    }
+
+    #[test]
+    fn test_network_port_defaults_ports_are_valid() {
+        // Ensure all port numbers are within valid range (1-65535)
+        assert!(NetworkPortDefaults::api_port() > 0);
+        assert!(NetworkPortDefaults::websocket_port() > 0);
+        assert!(NetworkPortDefaults::http_port() > 0);
+        assert!(NetworkPortDefaults::streaming_rpc_port() > 0);
+    }
+
+    #[test]
+    fn test_network_port_defaults_common_ports_no_duplicates() {
+        let ports = NetworkPortDefaults::common_ports();
+        let mut unique_ports = ports.clone();
+        unique_ports.sort();
+        unique_ports.dedup();
+        assert_eq!(ports.len(), unique_ports.len(), "Common ports should have no duplicates");
+    }
+
+    // NetworkAddressDefaults tests
+    #[test]
+    fn test_network_address_defaults_secure_bind() {
+        assert_eq!(NetworkAddressDefaults::secure_bind(), "127.0.0.1");
+    }
+
+    #[test]
+    fn test_network_address_defaults_development_bind() {
+        assert_eq!(NetworkAddressDefaults::development_bind(), "0.0.0.0");
+    }
+
+    #[test]
+    fn test_network_address_defaults_hostname() {
+        assert_eq!(NetworkAddressDefaults::hostname(), "localhost");
+    }
+
+    #[test]
+    fn test_network_address_defaults_get_bind_address_default() {
+        std::env::remove_var("NESTGATE_BIND_ADDRESS");
+        assert_eq!(NetworkAddressDefaults::get_bind_address(), "127.0.0.1");
+    }
+
+    #[test]
+    fn test_network_address_defaults_get_development_bind_address_default() {
+        std::env::remove_var("NESTGATE_DEV_BIND_ADDRESS");
+        assert_eq!(NetworkAddressDefaults::get_development_bind_address(), "0.0.0.0");
+    }
+
+    #[test]
+    fn test_network_address_defaults_get_hostname_default() {
+        std::env::remove_var("NESTGATE_HOSTNAME");
+        assert_eq!(NetworkAddressDefaults::get_hostname(), "localhost");
+    }
+
+    #[test]
+    fn test_network_address_defaults_get_external_hostname_default() {
+        std::env::remove_var("NESTGATE_EXTERNAL_HOSTNAME");
+        assert_eq!(NetworkAddressDefaults::get_external_hostname(), "localhost");
+    }
+
+    #[test]
+    fn test_network_address_defaults_secure_bind_is_localhost() {
+        // Security check: secure_bind should be localhost only
+        assert_eq!(NetworkAddressDefaults::secure_bind(), "127.0.0.1");
+        assert_ne!(NetworkAddressDefaults::secure_bind(), "0.0.0.0");
+    }
+
+    #[test]
+    fn test_network_address_defaults_development_bind_is_all_interfaces() {
+        // Development: should bind to all interfaces
+        assert_eq!(NetworkAddressDefaults::development_bind(), "0.0.0.0");
+    }
+
+    // TimeoutDefaults tests
+    #[test]
+    fn test_timeout_defaults_connection_timeout_ms() {
+        assert_eq!(TimeoutDefaults::connection_timeout_ms(), 3000);
+    }
+
+    #[test]
+    fn test_timeout_defaults_request_timeout_ms() {
+        assert_eq!(TimeoutDefaults::request_timeout_ms(), 30000);
+    }
+
+    #[test]
+    fn test_timeout_defaults_health_check_timeout_seconds() {
+        assert_eq!(TimeoutDefaults::health_check_timeout_seconds(), 5);
+    }
+
+    #[test]
+    fn test_timeout_defaults_get_connection_timeout_ms_default() {
+        std::env::remove_var("NESTGATE_CONNECTION_TIMEOUT_MS");
+        assert_eq!(TimeoutDefaults::get_connection_timeout_ms(), 3000);
+    }
+
+    #[test]
+    fn test_timeout_defaults_connection_reasonable() {
+        let timeout = TimeoutDefaults::connection_timeout_ms();
+        assert!(timeout > 1000, "Connection timeout should be > 1 second");
+        assert!(timeout < 10000, "Connection timeout should be < 10 seconds");
+    }
+
+    #[test]
+    fn test_timeout_defaults_request_reasonable() {
+        let timeout = TimeoutDefaults::request_timeout_ms();
+        assert!(timeout > 5000, "Request timeout should be > 5 seconds");
+        assert!(timeout < 120000, "Request timeout should be < 2 minutes");
+    }
+
+    #[test]
+    fn test_timeout_defaults_health_check_reasonable() {
+        let timeout = TimeoutDefaults::health_check_timeout_seconds();
+        assert!(timeout > 1, "Health check timeout should be > 1 second");
+        assert!(timeout < 30, "Health check timeout should be < 30 seconds");
+    }
 
     #[test]
     fn test_config_defaultvalues() {

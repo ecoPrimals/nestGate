@@ -15,3 +15,6 @@ pub use connection_pool::{
 
 // Re-export advanced optimizations
 pub use advanced_optimizations::*;
+
+#[cfg(test)]
+mod safe_optimizations_tests;

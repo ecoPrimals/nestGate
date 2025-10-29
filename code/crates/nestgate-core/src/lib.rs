@@ -176,3 +176,6 @@ pub const MODERNIZATION_COMPLETE: bool = true;
 pub const PERFORMANCE_IMPROVEMENT_PERCENT: u8 = 45; // Average 40-60% range
 /// **TECHNICAL DEBT ELIMINATION RATE** - Percentage of debt eliminated
 pub const DEBT_ELIMINATION_PERCENT: u8 = 95;
+
+#[cfg(test)]
+mod test_safe_operations;

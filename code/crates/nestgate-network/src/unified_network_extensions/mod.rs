@@ -64,3 +64,6 @@ pub struct UnifiedNetworkExtensions {
 
 /// Network configuration using `StandardDomainConfig` pattern
 pub type UnifiedNetworkConfig = UnifiedNetworkExtensions;
+
+#[cfg(test)]
+mod orchestration_tests;

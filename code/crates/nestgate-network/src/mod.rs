@@ -40,3 +40,5 @@ pub use orchestration_adapter::{
 };
 //! Use canonical Result type from nestgate-core::error
 pub use nestgate_core::error::Result; 
+#[cfg(test)]
+mod error_handling_tests;

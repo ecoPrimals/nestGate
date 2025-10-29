@@ -514,7 +514,7 @@ mod tests {
 
     #[test]
     fn test_multiple_tunable_parameters() {
-        let params = vec![
+        let params = [
             TunableParameter {
                 name: "param1".to_string(),
                 current_value: 10.0,
@@ -535,14 +535,14 @@ mod tests {
 
     #[test]
     fn test_optimization_decision_with_parameters() {
-        let params = vec![TunableParameter {
+        let params = [TunableParameter {
             name: "cache_size".to_string(),
             current_value: 100.0,
             suggested_value: 150.0,
             adjustment_confidence: 0.9,
         }];
         let decision = OptimizationDecision {
-            parameter_adjustments: params,
+            parameter_adjustments: params.to_vec(),
             confidence_score: 0.88,
             expected_improvement: 0.12,
             risk_assessment: 0.05,
