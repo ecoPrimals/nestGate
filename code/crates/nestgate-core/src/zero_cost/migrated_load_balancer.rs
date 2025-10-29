@@ -1,4 +1,4 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 use std::future::Future;
 /// **ZERO-COST LOAD BALANCER**
@@ -14,13 +14,11 @@ use std::future::Future;
 /// - Monomorphized code generation for optimal performance
 ///
 /// **EXPECTED IMPROVEMENTS**: 70% performance gain (highest of all critical targets)
-/// **REPLACES**: `nestgate_core::traits_root::load_balancer::LoadBalancer`
+/// **REPLACES**: `crate::traits_root::load_balancer::LoadBalancer`
 use crate::Result;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::time::SystemTime;
-
-// ==================== ZERO-COST LOAD BALANCER TRAIT ====================
+// ==================== SECTION ====================
 
 /// **Zero-cost load balancer trait**
 ///
@@ -31,7 +29,6 @@ pub trait ZeroCostLoadBalancer<const MAX_SERVICES: usize = 1000, const MAX_HISTO
 {
     /// Service information type
     type ServiceInfo: Clone + Send + Sync + std::fmt::Debug;
-
     /// Service request type
     type ServiceRequest: Clone + Send + Sync;
 
@@ -141,7 +138,7 @@ pub trait ZeroCostLoadBalancer<const MAX_SERVICES: usize = 1000, const MAX_HISTO
     }
 }
 
-// ==================== ZERO-COST LOAD BALANCING ALGORITHMS ====================
+// ==================== SECTION ====================
 
 /// Zero-cost load balancing algorithm enum
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Hash)]
@@ -167,7 +164,6 @@ pub enum ZeroCostLoadBalancingAlgorithm {
     /// Custom algorithm
     Custom(String),
 }
-
 impl ZeroCostLoadBalancingAlgorithm {
     /// Get algorithm name
     pub fn name(&self) -> &str {
@@ -202,7 +198,7 @@ impl ZeroCostLoadBalancingAlgorithm {
     }
 }
 
-// ==================== SUPPORTING TYPES ====================
+// ==================== SECTION ====================
 
 /// Default service information implementation
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -218,7 +214,6 @@ pub struct DefaultServiceInfo {
     pub memory_usage: f64,
     pub last_seen: SystemTime,
 }
-
 impl DefaultServiceInfo {
     pub fn new(id: String, name: String, endpoint: String) -> Self {
         Self {
@@ -285,14 +280,12 @@ impl DefaultServiceInfo {
 pub struct DefaultServiceRequest {
     pub id: String,
     pub method: String,
-    pub path: String,
     pub headers: HashMap<String, String>,
     pub body: Vec<u8>,
     pub timestamp: SystemTime,
     pub priority: RequestPriority,
     pub session_id: Option<String>,
 }
-
 /// Request priority levels
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 pub enum RequestPriority {
@@ -301,7 +294,6 @@ pub enum RequestPriority {
     High,
     Critical,
 }
-
 impl Default for RequestPriority {
     fn default() -> Self {
         Self::Normal
@@ -318,7 +310,6 @@ pub struct DefaultServiceResponse {
     pub timestamp: SystemTime,
     pub success: bool,
 }
-
 /// Default load balancer statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DefaultLoadBalancerStats {
@@ -333,7 +324,6 @@ pub struct DefaultLoadBalancerStats {
     pub uptime_seconds: u64,
     pub last_reset: SystemTime,
 }
-
 impl Default for DefaultLoadBalancerStats {
     fn default() -> Self {
         Self {
@@ -359,8 +349,7 @@ pub struct DefaultWeightUpdate {
     pub reason: String,
     pub timestamp: SystemTime,
 }
-
-// ==================== EXAMPLE IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 /// High-performance round-robin load balancer
 pub struct ZeroCostRoundRobinBalancer {
@@ -368,7 +357,6 @@ pub struct ZeroCostRoundRobinBalancer {
     stats: std::sync::RwLock<DefaultLoadBalancerStats>,
     weights: std::sync::RwLock<HashMap<String, f64>>,
 }
-
 impl Default for ZeroCostRoundRobinBalancer {
     fn default() -> Self {
         Self::new()
@@ -376,6 +364,7 @@ impl Default for ZeroCostRoundRobinBalancer {
 }
 
 impl ZeroCostRoundRobinBalancer {
+    #[must_use]
     pub fn new() -> Self {
         Self {
             current_index: std::sync::atomic::AtomicUsize::new(0),
@@ -398,25 +387,21 @@ impl ZeroCostLoadBalancer for ZeroCostRoundRobinBalancer {
         _request: &Self::ServiceRequest,
     ) -> Result<Self::ServiceInfo> {
         if services.is_empty() {
-            return Err(crate::NestGateError::Configuration {
-                message: "No services available".to_string(),
-                config_source: crate::canonical_modernization::UnifiedConfigSource::Runtime,
-                field: Some("services".to_string()),
-                suggested_fix: Some("Add at least one service to the pool".to_string()),
-            });
-        }
+            return Err(crate::NestGateError::configuration(
+                
+                
+            );
+        )
 
         // Filter healthy services
         let healthy_services: Vec<_> = services.iter().filter(|s| s.is_healthy()).collect();
 
         if healthy_services.is_empty() {
-            return Err(crate::NestGateError::Configuration {
-                message: "No healthy services available".to_string(),
-                config_source: crate::canonical_modernization::UnifiedConfigSource::Runtime,
-                field: Some("healthy_services".to_string()),
-                suggested_fix: Some("Check service health and network connectivity".to_string()),
-            });
-        }
+            return Err(crate::NestGateError::configuration(
+                
+                
+            );
+        )
 
         // Zero-cost round-robin selection
         let index = self
@@ -498,13 +483,12 @@ impl ZeroCostLoadBalancer for ZeroCostRoundRobinBalancer {
     }
 }
 
-// ==================== COMPATIBILITY BRIDGE ====================
+// ==================== SECTION ====================
 
 /// Compatibility adapter for migrating from async_trait to zero-cost
 pub struct LoadBalancerAdapter<T> {
     inner: T,
 }
-
 impl<T> LoadBalancerAdapter<T> {
     /// Create new adapter
     pub fn new(balancer: T) -> Self {

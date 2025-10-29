@@ -1,3 +1,9 @@
+use crate::unified_types::{
+    UnifiedMemoryConfig, UnifiedMonitoringConfig, UnifiedSecurityConfig, UnifiedServiceConfig,
+    UnifiedStorageConfig,
+};
+// Use canonical NetworkConfig
+use crate::config::canonical_master::domains::network::CanonicalNetworkConfig as UnifiedNetworkConfig;
 /// Unified Configuration Consolidation Module
 /// This module provides standardized patterns and utilities for consolidating
 /// the 50+ fragmented Config structs across the codebase into unified patterns.
@@ -6,11 +12,6 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use crate::unified_types::{
-    UnifiedMemoryConfig, UnifiedMonitoringConfig, UnifiedNetworkConfig, UnifiedSecurityConfig,
-    UnifiedServiceConfig, UnifiedStorageConfig,
-};
-
 // ==================== STANDARDIZED CONFIG PATTERNS ====================
 
 /// **THE** standardized config pattern for all domain-specific configurations
@@ -18,7 +19,7 @@ use crate::unified_types::{
 #[derive(Debug, Clone, Serialize)]
 pub struct StandardDomainConfig<T>
 where
-    T: Clone + Serialize + serde::de::DeserializeOwned,
+    T: Clone + Serialize,
 {
     /// Base service configuration (standardized across all services)
     pub service: UnifiedServiceConfig,
@@ -39,12 +40,31 @@ where
     /// Feature flags specific to this domain
     pub feature_flags: HashMap<String, bool>,
 }
+impl<T> Default for StandardDomainConfig<T>
+where
+    T: Clone + Serialize + Default,
+{
+    fn default() -> Self {
+        Self {
+            service: UnifiedServiceConfig::default(),
+            network: UnifiedNetworkConfig::default(),
+            security: UnifiedSecurityConfig::default(),
+            monitoring: UnifiedMonitoringConfig::default(),
+            storage: UnifiedStorageConfig::default(),
+            memory: UnifiedMemoryConfig::default(),
+            extensions: T::default(),
+            service_endpoints: HashMap::new(),
+            feature_flags: HashMap::new(),
+        }
+    }
+}
 
 impl<T> StandardDomainConfig<T>
 where
-    T: Clone + Serialize + serde::de::DeserializeOwned,
+    T: Clone + Serialize,
 {
-    /// Create a new StandardDomainConfig with the provided extensions
+    /// Create a new `StandardDomainConfig` with the given extensions
+    #[must_use]
     pub fn new(extensions: T) -> Self {
         Self {
             service: UnifiedServiceConfig::default(),
@@ -59,43 +79,34 @@ where
         }
     }
 
-    /// Get a reference to the extensions
+    /// Get the domain-specific extensions
     pub fn extensions(&self) -> &T {
         &self.extensions
     }
 
-    /// Get a mutable reference to the extensions
+    /// Get mutable reference to domain-specific extensions
     pub fn extensions_mut(&mut self) -> &mut T {
         &mut self.extensions
     }
-}
 
-impl<T> StandardDomainConfig<T>
-where
-    T: Clone + Serialize + serde::de::DeserializeOwned + Default,
-{
-    /// Create a new domain config with default extensions
-    pub fn with_defaults() -> Self {
-        Self::new(T::default())
+    /// Set a service endpoint
+    pub fn set_endpoint(&mut self, name: String, url: String) {
+        self.service_endpoints.insert(name, url);
     }
 
-    /// Create a config with specified service information
-    pub fn with_service(extensions: T, service_name: &str, version: &str) -> Self {
-        let mut config = Self::new(extensions);
-        config.service.name = service_name.to_string();
-        config.service.version = version.to_string();
-        config
+    /// Get a service endpoint
+    pub fn get_endpoint(&self, name: &str) -> Option<&String> {
+        self.service_endpoints.get(name)
     }
 
-    /// Add a service endpoint
-    pub fn add_endpoint(&mut self, name: &str, url: &str) {
-        self.service_endpoints
-            .insert(name.to_string(), url.to_string());
+    /// Enable a feature flag
+    pub fn enable_feature(&mut self, feature: String) {
+        self.feature_flags.insert(feature, true);
     }
 
-    /// Set a feature flag
-    pub fn set_feature(&mut self, feature: &str, enabled: bool) {
-        self.feature_flags.insert(feature.to_string(), enabled);
+    /// Disable a feature flag
+    pub fn disable_feature(&mut self, feature: String) {
+        self.feature_flags.insert(feature, false);
     }
 
     /// Check if a feature is enabled
@@ -103,146 +114,29 @@ where
         self.feature_flags.get(feature).copied().unwrap_or(false)
     }
 
-    /// Create a development configuration with debug settings
-    pub fn development() -> Self {
-        let mut config = Self::new(T::default());
-        config.service.environment = "development".to_string();
-        config.set_feature("debug_mode", true);
-        config.set_feature("verbose_logging", true);
-        config
-    }
+    /// Validate the configuration
+    pub fn validate(&self) -> crate::Result<()> {
+        // Validate base configurations
+        // This would call validation methods on each unified config
+        // For now, we'll do basic validation
 
-    /// Create a production configuration with optimized settings
-    pub fn production() -> Self {
-        let mut config = Self::new(T::default());
-        config.service.environment = "production".to_string();
-        config.set_feature("debug_mode", false);
-        config.set_feature("verbose_logging", false);
-        config
-    }
-}
-
-impl<T> Default for StandardDomainConfig<T>
-where
-    T: Clone + Serialize + serde::de::DeserializeOwned + Default,
-{
-    fn default() -> Self {
-        Self::new(T::default())
-    }
-}
-
-impl<'de, T> serde::Deserialize<'de> for StandardDomainConfig<T>
-where
-    T: Clone + Serialize + serde::de::DeserializeOwned,
-{
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        use serde::de::{self, MapAccess, Visitor};
-        use std::fmt;
-        use std::marker::PhantomData;
-
-        struct StandardDomainConfigVisitor<T> {
-            marker: PhantomData<T>,
+        if self.service.service_name.is_empty() {
+            return Err(crate::NestGateError::configuration_error_detailed(
+                "service.service_name".to_string(),
+                "Service name cannot be empty".to_string(),
+                Some(self.service.service_name.clone()),
+                Some("non-empty string".to_string()),
+                true,
+            ));
         }
 
-        impl<'de, T> Visitor<'de> for StandardDomainConfigVisitor<T>
-        where
-            T: Clone + Serialize + serde::de::DeserializeOwned,
-        {
-            type Value = StandardDomainConfig<T>;
-
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-                formatter.write_str("struct StandardDomainConfig")
-            }
-
-            fn visit_map<V>(self, mut map: V) -> Result<StandardDomainConfig<T>, V::Error>
-            where
-                V: MapAccess<'de>,
-            {
-                let mut service = None;
-                let mut network = None;
-                let mut security = None;
-                let mut monitoring = None;
-                let mut storage = None;
-                let mut memory = None;
-                let mut extensions = None;
-                let mut service_endpoints = None;
-                let mut feature_flags = None;
-
-                while let Some(key) = map.next_key()? {
-                    match key {
-                        "service" => {
-                            service = Some(map.next_value()?);
-                        }
-                        "network" => {
-                            network = Some(map.next_value()?);
-                        }
-                        "security" => {
-                            security = Some(map.next_value()?);
-                        }
-                        "monitoring" => {
-                            monitoring = Some(map.next_value()?);
-                        }
-                        "storage" => {
-                            storage = Some(map.next_value()?);
-                        }
-                        "memory" => {
-                            memory = Some(map.next_value()?);
-                        }
-                        "extensions" => {
-                            extensions = Some(map.next_value()?);
-                        }
-                        "service_endpoints" => {
-                            service_endpoints = Some(map.next_value()?);
-                        }
-                        "feature_flags" => {
-                            feature_flags = Some(map.next_value()?);
-                        }
-                        _ => {
-                            let _: serde_json::Value = map.next_value()?;
-                        }
-                    }
-                }
-
-                Ok(StandardDomainConfig {
-                    service: service.unwrap_or_default(),
-                    network: network.unwrap_or_default(),
-                    security: security.unwrap_or_default(),
-                    monitoring: monitoring.unwrap_or_default(),
-                    storage: storage.unwrap_or_default(),
-                    memory: memory.unwrap_or_default(),
-                    extensions: extensions.ok_or_else(|| de::Error::missing_field("extensions"))?,
-                    service_endpoints: service_endpoints.unwrap_or_default(),
-                    feature_flags: feature_flags.unwrap_or_default(),
-                })
-            }
-        }
-
-        deserializer.deserialize_struct(
-            "StandardDomainConfig",
-            &[
-                "service",
-                "network",
-                "security",
-                "monitoring",
-                "storage",
-                "memory",
-                "extensions",
-                "service_endpoints",
-                "feature_flags",
-            ],
-            StandardDomainConfigVisitor {
-                marker: PhantomData,
-            },
-        )
+        Ok(())
     }
 }
 
 // ==================== DOMAIN-SPECIFIC EXTENSIONS ====================
 
-/// ZFS service extensions for StandardDomainConfig<T>
+/// ZFS service extensions for `StandardDomainConfig`<T>
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ZfsExtensions {
     /// Pool management settings
@@ -254,7 +148,6 @@ pub struct ZfsExtensions {
     /// Health monitoring settings
     pub health: ZfsHealthSettings,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZfsPoolSettings {
     /// Default pool name
@@ -311,7 +204,7 @@ pub struct ZfsHealthSettings {
     pub alert_thresholds: HashMap<String, f64>,
 }
 
-/// NAS service extensions for StandardDomainConfig<T>
+/// NAS service extensions for `StandardDomainConfig`<T>
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct NasExtensions {
     /// Protocol settings
@@ -321,7 +214,6 @@ pub struct NasExtensions {
     /// Access control
     pub access_control: NasAccessSettings,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NasProtocolSettings {
     /// Enable SMB protocol
@@ -348,7 +240,6 @@ impl Default for NasProtocolSettings {
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct NasShareSettings {
     /// Default share path
-    pub default_share_path: String,
     /// Auto-create shares
     pub auto_create_shares: bool,
     /// Share permissions
@@ -365,7 +256,7 @@ pub struct NasAccessSettings {
     pub access_rules: Vec<String>,
 }
 
-/// MCP service extensions for StandardDomainConfig<T>
+/// MCP service extensions for `StandardDomainConfig`<T>
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct McpExtensions {
     /// Provider settings
@@ -375,7 +266,6 @@ pub struct McpExtensions {
     /// Quality of service
     pub qos: McpQosSettings,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct McpProviderSettings {
     /// Provider name
@@ -420,20 +310,21 @@ pub struct McpQosSettings {
 
 /// Standardized ZFS configuration
 pub type UnifiedZfsConfig = StandardDomainConfig<ZfsExtensions>;
-
 /// Standardized NAS configuration  
 pub type UnifiedNasConfig = StandardDomainConfig<NasExtensions>;
-
 /// Standardized MCP configuration
 pub type UnifiedMcpConfig = StandardDomainConfig<McpExtensions>;
-
 // ==================== MIGRATION UTILITIES ====================
 
 /// Migration utilities for converting legacy configs to unified patterns
 pub mod migration {
-    use super::*;
-
+    use super::{
+        HashMap, McpExtensions, McpProviderSettings, NasExtensions, NasProtocolSettings,
+        StandardDomainConfig, UnifiedMcpConfig, UnifiedNasConfig, UnifiedZfsConfig, ZfsExtensions,
+        ZfsPoolSettings,
+    };
     /// Convert legacy ZFS configs to unified pattern
+    #[must_use]
     pub fn migrate_zfs_config(
         legacy_fields: HashMap<String, serde_json::Value>,
     ) -> UnifiedZfsConfig {
@@ -446,28 +337,29 @@ pub mod migration {
                     .to_string(),
                 enable_compression: legacy_fields
                     .get("compression")
-                    .and_then(|v| v.as_bool())
+                    .and_then(serde_json::Value::as_bool)
                     .unwrap_or(true),
                 enable_deduplication: legacy_fields
                     .get("deduplication")
-                    .and_then(|v| v.as_bool())
+                    .and_then(serde_json::Value::as_bool)
                     .unwrap_or(false),
                 enable_encryption: legacy_fields
                     .get("encryption")
-                    .and_then(|v| v.as_bool())
+                    .and_then(serde_json::Value::as_bool)
                     .unwrap_or(true),
                 auto_pool_creation: legacy_fields
                     .get("auto_create")
-                    .and_then(|v| v.as_bool())
+                    .and_then(serde_json::Value::as_bool)
                     .unwrap_or(false),
             },
             ..Default::default()
         };
 
-        StandardDomainConfig::with_service(extensions, "nestgate-zfs", env!("CARGO_PKG_VERSION"))
+        StandardDomainConfig::new(extensions)
     }
 
     /// Convert legacy NAS configs to unified pattern
+    #[must_use]
     pub fn migrate_nas_config(
         legacy_fields: HashMap<String, serde_json::Value>,
     ) -> UnifiedNasConfig {
@@ -475,28 +367,29 @@ pub mod migration {
             protocols: NasProtocolSettings {
                 smb_enabled: legacy_fields
                     .get("smb_enabled")
-                    .and_then(|v| v.as_bool())
+                    .and_then(serde_json::Value::as_bool)
                     .unwrap_or(true),
                 nfs_enabled: legacy_fields
                     .get("nfs_enabled")
-                    .and_then(|v| v.as_bool())
+                    .and_then(serde_json::Value::as_bool)
                     .unwrap_or(true),
                 ftp_enabled: legacy_fields
                     .get("ftp_enabled")
-                    .and_then(|v| v.as_bool())
+                    .and_then(serde_json::Value::as_bool)
                     .unwrap_or(false),
                 webdav_enabled: legacy_fields
                     .get("webdav_enabled")
-                    .and_then(|v| v.as_bool())
+                    .and_then(serde_json::Value::as_bool)
                     .unwrap_or(true),
             },
             ..Default::default()
         };
 
-        StandardDomainConfig::with_service(extensions, "nestgate-nas", env!("CARGO_PKG_VERSION"))
+        StandardDomainConfig::new(extensions)
     }
 
     /// Convert legacy MCP configs to unified pattern
+    #[must_use]
     pub fn migrate_mcp_config(
         legacy_fields: HashMap<String, serde_json::Value>,
     ) -> UnifiedMcpConfig {
@@ -525,7 +418,7 @@ pub mod migration {
             ..Default::default()
         };
 
-        StandardDomainConfig::with_service(extensions, "nestgate-mcp", env!("CARGO_PKG_VERSION"))
+        StandardDomainConfig::new(extensions)
     }
 }
 
@@ -533,9 +426,15 @@ pub mod migration {
 
 /// Validation utilities for unified configurations
 pub mod validation {
-    use super::*;
-
-    /// Validate a StandardDomainConfig
+    use super::{Serialize, StandardDomainConfig};
+    /// Validate a `StandardDomainConfig`
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub fn validate_config<T>(config: &StandardDomainConfig<T>) -> Result<(), Vec<String>>
     where
         T: Clone + Serialize + serde::de::DeserializeOwned,
@@ -552,11 +451,11 @@ pub mod validation {
         }
 
         // Validate network configuration
-        if config.network.bind_address.to_string().is_empty() {
+        if config.network.api.bind_address.to_string().is_empty() {
             errors.push("Network host cannot be empty".to_string());
         }
 
-        if config.network.port == 0 {
+        if config.network.api.port == 0 {
             errors.push("Network port must be greater than 0".to_string());
         }
 

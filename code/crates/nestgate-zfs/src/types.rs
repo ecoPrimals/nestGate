@@ -2,17 +2,78 @@
 // This module consolidates all ZFS-related types into a single, canonical location,
 // replacing fragmented type definitions across multiple modules.
 
+use crate::error::{create_zfs_error, ZfsOperation};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::time::SystemTime;
-use nestgate_core::error::conversions::create_zfs_error;
-use nestgate_core::error::domain_errors::ZfsOperation;
 
 // Re-export core storage tier for convenience
 pub use nestgate_core::canonical_types::StorageTier;
 
-// ==================== ERROR TYPES ====================
+// ==================== SECTION: CAPACITY MONITORING TYPES ====================
+
+/// Bottleneck detection report
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BottleneckReport {
+    pub dataset: String,
+    pub bottleneck_type: String,
+    pub severity: String,
+    pub recommendations: Vec<String>,
+}
+/// Capacity monitoring report
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CapacityReport {
+    pub dataset: String,
+    pub current_usage: u64,
+    pub projected_usage: u64,
+    pub recommendations: Vec<String>,
+}
+/// Maintenance scheduling information
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MaintenanceSchedule {
+    pub dataset: String,
+    pub next_maintenance: SystemTime,
+    pub tasks: Vec<String>,
+}
+/// System information for monitoring
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SystemInfo {
+    pub timestamp: SystemTime,
+    pub cpu_usage: f64,
+    pub memory_usage: f64,
+    pub disk_usage: f64,
+}
+/// Replication performance metrics
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ReplicationPerformance {
+    pub source_dataset: String,
+    pub target_dataset: String,
+    pub transfer_rate: f64,
+    pub compression_ratio: f64,
+    pub estimated_completion: SystemTime,
+}
+/// Snapshot retention policy
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RetentionPolicy {
+    pub name: String,
+    pub keep_hourly: u32,
+    pub keep_daily: u32,
+    pub keep_weekly: u32,
+    pub keep_monthly: u32,
+}
+// ==================== SECTION: CANONICAL ERROR TYPES ====================
+
+// DEPRECATED: pub type ZfsResult<T> = Result<T, ZfsError>;
+// USE INSTEAD: nestgate_core::error::Result<T> or nestgate_core::error::ZfsResult<T>
+//
+// MIGRATION PATH:
+// ZfsResult<T> → nestgate_core::error::ZfsResult<T>
+// This provides unified error handling across the entire ecosystem
+
+pub use nestgate_core::error::{Result, ZfsResult};
+
+// ==================== SECTION ====================
 
 /// ZFS-specific error type for backward compatibility
 #[derive(Debug, thiserror::Error)]
@@ -30,13 +91,7 @@ pub enum ZfsError {
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
 }
-
-/// Result type for ZFS operations
-/// **CANONICAL**: ZFS-specific Result type using IdioResult
-/// This follows the canonical Result<T,E> pattern with domain-specific error type
-pub type ZfsResult<T> = Result<T, ZfsError>;
-
-// ==================== POOL TYPES ====================
+// ==================== SECTION ====================
 
 /// ZFS pool information
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -51,7 +106,6 @@ pub struct PoolInfo {
     pub properties: HashMap<String, String>,
     pub created_at: SystemTime,
 }
-
 /// ZFS pool health status
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum PoolHealth {
@@ -60,7 +114,6 @@ pub enum PoolHealth {
     Critical,
     Unknown,
 }
-
 /// ZFS pool state
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum PoolState {
@@ -71,7 +124,6 @@ pub enum PoolState {
     Removed,
     Unavailable,
 }
-
 /// ZFS pool capacity information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PoolCapacity {
@@ -81,8 +133,7 @@ pub struct PoolCapacity {
     pub fragmentation_percent: f64,
     pub deduplication_ratio: f64,
 }
-
-// ==================== DATASET TYPES ====================
+// ==================== SECTION ====================
 
 /// ZFS dataset information
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -100,8 +151,7 @@ pub struct DatasetInfo {
     pub properties: HashMap<String, String>,
     pub created_at: SystemTime,
 }
-
-// ==================== SNAPSHOT TYPES ====================
+// ==================== SECTION ====================
 
 /// ZFS snapshot information
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -112,11 +162,10 @@ pub struct SnapshotInfo {
     pub properties: HashMap<String, String>,
     pub created_at: SystemTime,
 }
-
-// ==================== ZERO-COST TYPES ====================
+// ==================== SECTION ====================
 
 /// Zero-cost pool information for compile-time optimization
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct ZeroCostPoolInfo {
     pub name: String,
     pub size: u64,
@@ -126,9 +175,8 @@ pub struct ZeroCostPoolInfo {
     pub properties: HashMap<String, String>,
     pub created_at: SystemTime,
 }
-
 /// Zero-cost dataset information
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct ZeroCostDatasetInfo {
     pub name: String,
     pub full_name: String,
@@ -141,9 +189,8 @@ pub struct ZeroCostDatasetInfo {
     pub properties: HashMap<String, String>,
     pub created_at: SystemTime,
 }
-
 /// Zero-cost snapshot information
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct ZeroCostSnapshotInfo {
     pub name: String,
     pub dataset: String,
@@ -151,8 +198,7 @@ pub struct ZeroCostSnapshotInfo {
     pub properties: HashMap<String, String>,
     pub created_at: SystemTime,
 }
-
-// ==================== COMMAND TYPES ====================
+// ==================== SECTION ====================
 
 /// ZFS command execution result
 #[derive(Debug, Clone)]
@@ -162,7 +208,6 @@ pub struct CommandResult {
     pub stderr: String,
     pub exit_code: Option<i32>,
 }
-
 /// ZFS command operations
 #[derive(Debug, Clone)]
 pub enum ZfsCommand {
@@ -194,8 +239,7 @@ pub enum ZfsCommand {
         value: String,
     },
 }
-
-// ==================== NATIVE ZFS TYPES ====================
+// ==================== SECTION ====================
 
 /// Native ZFS pool status from zpool command
 #[derive(Debug, Clone)]
@@ -207,8 +251,7 @@ pub enum PoolStatus {
     Removed,
     Unavailable,
 }
-
-// ==================== CONVERSION IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 impl From<PoolStatus> for PoolHealth {
     fn from(status: PoolStatus) -> Self {
@@ -223,19 +266,22 @@ impl From<PoolStatus> for PoolHealth {
     }
 }
 
-// ==================== ERROR CONVERSION IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 impl From<nestgate_core::error::NestGateError> for ZfsError {
     fn from(err: nestgate_core::error::NestGateError) -> Self {
         match err {
-            nestgate_core::error::NestGateError::Configuration { message, .. } => {
-                ZfsError::ConfigError { message }
+            nestgate_core::error::NestGateError::Configuration(details) => ZfsError::ConfigError {
+                message: details.message,
+            },
+            nestgate_core::error::NestGateError::Storage(details) => {
+                ZfsError::Io(std::io::Error::other(details.message))
             }
-            nestgate_core::error::NestGateError::Io { error_message, .. } => ZfsError::Io(
-                std::io::Error::new(std::io::ErrorKind::Other, error_message),
-            ),
+            nestgate_core::error::NestGateError::Internal(details) => ZfsError::CommandError {
+                message: details.message,
+            },
             _ => ZfsError::CommandError {
-                message: format!("ZFS operation failed: {}", err),
+                message: "ZFS operation failed".to_string().to_string(),
             },
         }
     }
@@ -257,27 +303,25 @@ impl From<PoolStatus> for PoolState {
 impl From<ZfsError> for nestgate_core::NestGateError {
     fn from(err: ZfsError) -> Self {
         match err {
-            ZfsError::PoolError { message } => {
-                create_zfs_error(message, ZfsOperation::PoolCreate)
-            }
+            ZfsError::PoolError { message } => create_zfs_error(message, ZfsOperation::PoolCreate),
             ZfsError::DatasetError { message } => {
                 create_zfs_error(message, ZfsOperation::DatasetCreate)
             }
             ZfsError::SnapshotError { message } => {
                 create_zfs_error(message, ZfsOperation::SnapshotCreate)
             }
-            ZfsError::CommandError { message } => {
-                create_zfs_error(message, ZfsOperation::Command)
+            ZfsError::CommandError { message } => create_zfs_error(message, ZfsOperation::Command),
+            ZfsError::ConfigError { message } => {
+                nestgate_core::NestGateError::storage_error(&message)
             }
-            ZfsError::ConfigError { message } => nestgate_core::NestGateError::storage_error("zfs_config", message),
             ZfsError::Io(io_err) => {
-                nestgate_core::NestGateError::storage_error("zfs_io", &format!("IO error: {io_err}"), None)
+                nestgate_core::NestGateError::storage_error(&format!("IO error: {io_err}"))
             }
         }
     }
 }
 
-// ==================== DEFAULT IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 impl Default for PoolInfo {
     fn default() -> Self {
@@ -338,12 +382,11 @@ impl Default for SnapshotInfo {
     }
 }
 
-// ==================== UTILITY FUNCTIONS ====================
+// ==================== SECTION ====================
 
 /// Create a pool info from raw ZFS output
 pub fn pool_info_from_zfs_output(name: &str, output: &str) -> ZfsResult<PoolInfo> {
     let mut properties = HashMap::new();
-
     for line in output.lines() {
         if let Some((key, value)) = line.split_once('\t') {
             properties.insert(key.trim().to_string(), value.trim().to_string());
@@ -399,7 +442,6 @@ pub fn pool_info_from_zfs_output(name: &str, output: &str) -> ZfsResult<PoolInfo
 /// Create dataset info from ZFS output
 pub fn dataset_info_from_zfs_output(output: &str) -> ZfsResult<DatasetInfo> {
     let mut properties = HashMap::new();
-
     for line in output.lines() {
         if let Some((key, value)) = line.split_once('\t') {
             properties.insert(key.trim().to_string(), value.trim().to_string());
@@ -456,7 +498,6 @@ mod tests {
         assert_eq!(pool_info.size, 0);
         assert!(matches!(pool_info.health, PoolHealth::Unknown));
     }
-
     #[test]
     fn test_dataset_info_creation() {
         let dataset_info = DatasetInfo::default();
@@ -477,7 +518,7 @@ mod tests {
     #[test]
     fn test_zfs_error_conversion() {
         let zfs_err = ZfsError::PoolError {
-            message: "Pool creation failed".to_string(),
+            message: "Pool creation failed".to_string().to_string(),
         };
         let nestgate_err: nestgate_core::NestGateError = zfs_err.into();
         assert!(nestgate_err.to_string().contains("Pool creation failed"));

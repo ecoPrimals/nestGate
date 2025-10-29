@@ -7,7 +7,6 @@ use crate::Result;
 use std::collections::HashMap;
 use std::marker::PhantomData;
 use std::sync::atomic::{AtomicUsize, Ordering};
-
 /// Zero-cost cache interface
 pub trait ZeroCostCache<K, V>
 where
@@ -16,26 +15,25 @@ where
 {
     /// Get from cache - native async
     fn get(&self, key: &K) -> impl std::future::Future<Output = Option<V>> + Send;
-
     /// Set in cache - zero-cost abstractions
     fn set(&self, key: K, value: V) -> impl std::future::Future<Output = Result<()>> + Send;
 
     /// Remove from cache
     fn remove(&self, key: &K) -> impl std::future::Future<Output = Option<V>> + Send;
-    }
+}
 
 // Cache implementations
 pub struct ProductionCache {
     data: std::sync::Arc<tokio::sync::RwLock<HashMap<String, Vec<u8>>>>,
-    }
+}
 
 impl Default for ProductionCache {
     fn default() -> Self {
         Self {
             data: std::sync::Arc::new(tokio::sync::RwLock::new(HashMap::new())),
+        }
     }
-    }
-    }
+}
 
 impl ZeroCostCache<String, Vec<u8>> for ProductionCache {
     async fn get(&self, key: &String) -> Option<Vec<u8>> {
@@ -46,18 +44,19 @@ impl ZeroCostCache<String, Vec<u8>> for ProductionCache {
     async fn set(&self, key: String, value: Vec<u8>) -> Result<()> {
         let mut data = self.data.write().await;
         data.insert(key, value);
+        Ok(())
     }
 
     async fn remove(&self, key: &String) -> Option<Vec<u8>> {
         let mut data = self.data.write().await;
         data.remove(key)
     }
-    }
+}
 
 #[derive(Default)]
 pub struct DevelopmentCache {
     data: HashMap<String, Vec<u8>>,
-    }
+}
 
 impl ZeroCostCache<String, Vec<u8>> for DevelopmentCache {
     async fn get(&self, key: &String) -> Option<Vec<u8>> {
@@ -67,6 +66,7 @@ impl ZeroCostCache<String, Vec<u8>> for DevelopmentCache {
     async fn set(&self, key: String, value: Vec<u8>) -> Result<()> {
         // For development, we simulate the operation
         let _ = (key, value);
+        Ok(())
     }
 
     async fn remove(&self, key: &String) -> Option<Vec<u8>> {
@@ -74,7 +74,7 @@ impl ZeroCostCache<String, Vec<u8>> for DevelopmentCache {
         let _ = key;
         None
     }
-    }
+}
 
 /// Universal adapter with compile-time specialization (storage-focused)
 /// Compute functionality is delegated to compute capabilities via universal adapter
@@ -83,17 +83,16 @@ pub struct ZeroCostUniversalAdapterImpl<Storage, Security, Network> {
     storage: Storage,
     security: Security,
     network: Network,
-    }
-
+}
 impl<Storage, Security, Network> ZeroCostUniversalAdapterImpl<Storage, Security, Network> {
     pub fn new(storage: Storage, security: Security, network: Network) -> Self {
         Self {
             storage,
             security,
             network,
+        }
     }
-    }
-    }
+}
 
 // Storage-focused adapter implementation
 impl<Storage, Security, Network> ZeroCostUniversalAdapterImpl<Storage, Security, Network> {
@@ -112,7 +111,7 @@ impl<Storage, Security, Network> ZeroCostUniversalAdapterImpl<Storage, Security,
     pub fn network(&self) -> &Network {
         &self.network
     }
-    }
+}
 
 // Import actual provider types from submodules
 // Compute providers moved to compute capabilities via universal adapter
@@ -126,23 +125,20 @@ pub type ProductionAdapter = ZeroCostUniversalAdapterImpl<
     ProductionSecurityProvider,
     ProductionNetworkProvider,
 >;
-
 /// Development adapter type alias
 pub type DevelopmentAdapter = ZeroCostUniversalAdapterImpl<
     DevelopmentStorageProvider,
     DevelopmentSecurityProvider,
     DevelopmentNetworkProvider,
 >;
-
-/// Zero-cost NestGate system with compile-time composition
+/// Zero-cost `NestGate` system with compile-time composition
 #[allow(dead_code)]
 pub struct ZeroCostNestGate<Adapter, Cache, const MAX_CONNECTIONS: usize = 1000> {
     adapter: Adapter,
     cache: Cache,
     connections: AtomicUsize,
     _phantom: PhantomData<()>,
-    }
-
+}
 impl<Adapter, Cache, const MAX_CONNECTIONS: usize> ZeroCostNestGate<Adapter, Cache, MAX_CONNECTIONS>
 where
     Cache: ZeroCostCache<String, Vec<u8>>,
@@ -154,7 +150,7 @@ where
             cache,
             connections: AtomicUsize::new(0),
             _phantom: PhantomData,
-    }
+        }
     }
 
     /// Get current connection count - zero overhead
@@ -168,19 +164,23 @@ where
     }
 
     /// Process request with compile-time dispatch
-    pub async fn process_request<T>(&self, _request: T) -> Result<String>
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn process_request<T>(&self, _request: T) -> Result<String>
     where
         T: Send + Sync + 'static,
-    {
+     {
         if !self.can_accept_connection() {
-            return Err(crate::error::core::NestGateError::api_simple(
-                crate::error::domain_errors::ApiError::BadRequest {
-                    message: "Maximum connections reached".to_string(),
-                    field: None,
-                    validation_errors: vec![],
-                },
+            return Err(crate::NestGateError::internal_error(
+                "Maximum connections reached",
+                "zero_cost_composition",
             ));
-    }
+        }
 
         self.connections.fetch_add(1, Ordering::Relaxed);
 
@@ -191,31 +191,28 @@ where
 
         Ok("Processed successfully with zero-cost patterns".to_string())
     }
-    }
+}
 
-/// Production-specialized NestGate system
+/// Production-specialized `NestGate` system
 pub type ProductionNestGate = ZeroCostNestGate<
     ProductionAdapter,
     ProductionCache,
     1000, // Max connections
 >;
-
-/// Development-specialized NestGate system
+/// Development-specialized `NestGate` system
 pub type DevelopmentNestGate = ZeroCostNestGate<
     DevelopmentAdapter,
     DevelopmentCache,
     100, // Max connections
 >;
-
 /// Proof-of-concept validation
 #[cfg(test)]
 mod tests {
     use super::*;
-
     #[tokio::test]
     async fn test_zero_cost_proof_of_concept() {
         // Create production system with compile-time specialization (storage-focused)
-        let storage = ProductionStorageProvider::default();
+        let storage = ProductionStorageProvider;
         // Compute functionality moved to compute capabilities via universal adapter
         let security = ProductionSecurityProvider;
         let network = ProductionNetworkProvider;
@@ -232,14 +229,13 @@ mod tests {
         // Test processing with compile-time composition
         let result = system.process_request("test_request").await;
         assert!(result.is_ok());
-        assert!(result.unwrap_or_else(|e| {
-    tracing::error!("Unwrap failed: {:?}", e);
-    return Err(std::io::Error::new(
-    std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
-).into())
-}).contains("zero-cost patterns"));
+        assert!(result
+            .unwrap_or_else(|e| {
+                tracing::error!("Unwrap failed: {:?}", e);
+                "error_occurred".to_string()
+            })
+            .contains("zero-cost patterns"));
 
         println!("✅ Zero-cost proof-of-concept validation successful!");
     }
-    }
+}

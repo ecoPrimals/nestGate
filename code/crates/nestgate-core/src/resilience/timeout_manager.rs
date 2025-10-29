@@ -1,13 +1,12 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 //
 // Provides timeout functionality for operations to prevent hanging requests
 // and ensure system responsiveness.
 
-use crate::{Result, NestGateError};
+use crate::{Result};
 use std::time::Duration;
 
 /// Execute operation with timeout
-pub async fn execute_with_timeout<F, T>(operation: F, timeout: Duration) -> Result<T>
 where
     F: Future<Output = Result<T>>,
 {
@@ -16,7 +15,6 @@ where
         Err(_) => Err(NestGateError::simple("Operation timed out")),
     }
 }
-
 /// Timeout configuration
 #[derive(Debug, Clone)]
 pub struct TimeoutConfig {
@@ -25,7 +23,6 @@ pub struct TimeoutConfig {
     pub request_timeout: Duration,
     pub long_operation_timeout: Duration,
 }
-
 impl Default for TimeoutConfig {
     fn default() -> Self {
         Self {
@@ -41,14 +38,12 @@ impl Default for TimeoutConfig {
 pub struct TimeoutManager {
     config: TimeoutConfig,
 }
-
 impl TimeoutManager {
     pub fn new(config: TimeoutConfig) -> Self {
         Self { config }
     }
 
     /// Execute with default timeout
-    pub async fn execute_default<F, T>(&self, operation: F) -> Result<T>
     where
         F: Future<Output = Result<T>>,
     {
@@ -56,7 +51,6 @@ impl TimeoutManager {
     }
 
     /// Execute with connection timeout
-    pub async fn execute_connection<F, T>(&self, operation: F) -> Result<T>
     where
         F: Future<Output = Result<T>>,
     {
@@ -64,7 +58,6 @@ impl TimeoutManager {
     }
 
     /// Execute with request timeout
-    pub async fn execute_request<F, T>(&self, operation: F) -> Result<T>
     where
         F: Future<Output = Result<T>>,
     {
@@ -72,7 +65,6 @@ impl TimeoutManager {
     }
 
     /// Execute with long operation timeout
-    pub async fn execute_long_operation<F, T>(&self, operation: F) -> Result<T>
     where
         F: Future<Output = Result<T>>,
     {

@@ -1,0 +1,14 @@
+./code/crates/nestgate-core/src/data_sources/native_async_capabilities.rs
+./code/crates/nestgate-core/src/performance/zero_cost_validators.rs
+./code/crates/nestgate-core/src/zero_cost/performance_optimization_guide.rs
+./code/crates/nestgate-core/src/zero_cost/async_trait_migration.rs
+./code/crates/nestgate-core/src/cache/zero_cost_cache.rs
+./code/crates/nestgate-core/src/performance_validation.rs
+./code/crates/nestgate-core/src/traits/native_async.rs
+./code/crates/nestgate-api/src/handlers/zero_cost_api_handlers.rs
+./scripts/async_impl_template.rs
+./examples/ecosystem_modernization_demo.rs
+./ecosystem-expansion/templates/performance-templates/mod.rs
+./ecosystem-expansion/templates/performance-templates/performance_optimization_guide.rs
+./ecosystem-expansion/templates/performance-templates/async_trait_migration.rs
+./ecosystem-expansion/templates/performance-templates/native_async_traits.rs

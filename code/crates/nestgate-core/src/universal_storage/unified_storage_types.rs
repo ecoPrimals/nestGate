@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 use crate::unified_enums::UnifiedTierType;
 
-// ==================== CORE STORAGE TYPES ====================
+// ==================== SECTION ====================
 
 /// **THE** Universal Directory Entry structure
 /// Comprehensive file system entry information for all storage protocols
@@ -37,7 +37,6 @@ pub struct UniversalDirectoryEntry {
     /// Symlink target (if applicable)
     pub symlink_target: Option<String>,
 }
-
 /// Universal entry type classification
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum UnifiedEntryType {
@@ -60,7 +59,6 @@ pub enum UnifiedEntryType {
     /// Unknown or unsupported type
     Unknown,
 }
-
 /// Universal permissions structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnifiedPermissions {
@@ -79,7 +77,6 @@ pub struct UnifiedPermissions {
     /// Special permissions (sticky bit, setuid, etc.)
     pub special_bits: SpecialPermissions,
 }
-
 /// Special file system permissions
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct SpecialPermissions {
@@ -90,7 +87,6 @@ pub struct SpecialPermissions {
     /// Set group ID
     pub setgid: bool,
 }
-
 /// **THE** Universal Range structure for file operations
 /// Generic range type for byte ranges, line ranges, etc.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -102,7 +98,6 @@ pub struct UniversalRange<T> {
     /// Total size of the range
     pub size: Option<u64>,
 }
-
 impl<T> UniversalRange<T> {
     /// Create a new range
     pub fn new(start: T, end: T) -> Self {
@@ -128,9 +123,7 @@ impl<T> UniversalRange<T> {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UniversalChange {
     /// Path that changed
-    pub path: String,
     /// Type of operation that occurred
-    pub operation: ChangeOperation,
     /// Timestamp when change occurred
     pub timestamp: DateTime<Utc>,
     /// Source of the change (user, system, replication, etc.)
@@ -148,7 +141,6 @@ pub struct UniversalChange {
     /// Related changes (for multi-step operations)
     pub related_changes: Vec<String>,
 }
-
 /// Change operation types
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ChangeOperation {
@@ -171,7 +163,6 @@ pub enum ChangeOperation {
     /// Unknown operation
     Unknown,
 }
-
 /// Source of changes
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ChangeSource {
@@ -188,7 +179,6 @@ pub enum ChangeSource {
     /// Unknown source
     Unknown,
 }
-
 /// Metadata changes for detailed tracking
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MetadataChanges {
@@ -201,8 +191,7 @@ pub struct MetadataChanges {
     /// Extended attribute changes
     pub attribute_changes: HashMap<String, (Option<String>, Option<String>)>,
 }
-
-// ==================== REPLICATION TYPES ====================
+// ==================== SECTION ====================
 
 /// **THE** Universal Replication Status structure
 /// Comprehensive replication status tracking with rich metadata
@@ -243,7 +232,6 @@ pub struct UniversalReplicationStatus {
     /// Performance metrics
     pub metrics: ReplicationMetrics,
 }
-
 /// Replication state enumeration
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ReplicationState {
@@ -266,7 +254,6 @@ pub enum ReplicationState {
     /// Cleanup phase
     Cleanup,
 }
-
 /// Replication error information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReplicationError {
@@ -275,15 +262,12 @@ pub struct ReplicationError {
     /// Error code
     pub code: String,
     /// File or path that caused the error
-    pub path: Option<String>,
     /// Timestamp when error occurred
     pub timestamp: DateTime<Utc>,
     /// Whether error is recoverable
-    pub recoverable: bool,
     /// Recovery suggestion
     pub recovery_hint: Option<String>,
 }
-
 /// Replication performance metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReplicationMetrics {
@@ -300,7 +284,6 @@ pub struct ReplicationMetrics {
     /// Disk I/O operations per second
     pub disk_iops: Option<f64>,
 }
-
 /// **THE** Universal Replication Result structure
 /// Comprehensive replication completion report
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -336,7 +319,6 @@ pub struct UniversalReplicationResult {
     /// Session ID for tracking
     pub session_id: String,
 }
-
 /// Replication result codes
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ReplicationResultCode {
@@ -359,7 +341,6 @@ pub enum ReplicationResultCode {
     /// Unknown failure
     UnknownFailure,
 }
-
 /// Verification result for replication integrity
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VerificationResult {
@@ -376,7 +357,6 @@ pub struct VerificationResult {
     /// Detailed verification errors
     pub verification_errors: Vec<VerificationError>,
 }
-
 /// Verification status
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum VerificationStatus {
@@ -389,7 +369,6 @@ pub enum VerificationStatus {
     /// Verification is in progress
     InProgress,
 }
-
 /// Verification methods
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum VerificationMethod {
@@ -404,23 +383,20 @@ pub enum VerificationMethod {
     /// Custom verification logic
     Custom(String),
 }
-
 /// Verification error details
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VerificationError {
     /// File path that failed verification
-    pub path: String,
     /// Error message
     pub message: String,
     /// Expected value
     pub expected: Option<String>,
     /// Actual value
-    pub actual: Option<String>,
+    pub currentvalue: Option<String>,
     /// Verification method that failed
     pub method: VerificationMethod,
 }
-
-// ==================== DEFAULT IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 impl Default for UniversalDirectoryEntry {
     fn default() -> Self {
@@ -459,8 +435,6 @@ impl Default for UnifiedPermissions {
 impl Default for UniversalChange {
     fn default() -> Self {
         Self {
-            path: String::new(),
-            operation: ChangeOperation::Unknown,
             timestamp: Utc::now(),
             source: ChangeSource::Unknown,
             metadata_changes: None,
@@ -535,7 +509,7 @@ impl Default for UniversalReplicationResult {
     }
 }
 
-// ==================== UTILITY IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 impl UniversalDirectoryEntry {
     /// Check if this entry is a file
@@ -556,7 +530,7 @@ impl UniversalDirectoryEntry {
     /// Get file extension if available
     pub fn extension(&self) -> Option<&str> {
         if self.is_file() {
-            std::path::Path::new(&self.name)
+            std::path::Path::new(&self.path)
                 .extension()
                 .and_then(|ext| ext.to_str())
         } else {
@@ -623,14 +597,13 @@ impl UniversalReplicationResult {
     }
 }
 
-// ==================== HELPER FUNCTIONS ====================
+// ==================== SECTION ====================
 
 /// Convert bytes to human-readable format
 fn human_readable_size(bytes: u64) -> String {
     const UNITS: &[&str] = &["B", "KB", "MB", "GB", "TB", "PB"];
     let mut size = bytes as f64;
     let mut unit_index = 0;
-
     while size >= 1024.0 && unit_index < UNITS.len() - 1 {
         size /= 1024.0;
         unit_index += 1;
@@ -643,29 +616,24 @@ fn human_readable_size(bytes: u64) -> String {
     }
 }
 
-// ==================== BACKWARD COMPATIBILITY ALIASES ====================
+// ==================== SECTION ====================
 
 /// Backward compatibility alias for DirectoryEntry
 pub type DirectoryEntry = UniversalDirectoryEntry;
-
 /// Backward compatibility alias for Range
 pub type Range<T> = UniversalRange<T>;
-
 /// Backward compatibility alias for Change
 pub type Change = UniversalChange;
-
 /// Backward compatibility alias for ReplicationStatus
 pub type ReplicationStatus = UniversalReplicationStatus;
-
 /// Backward compatibility alias for ReplicationResult
 pub type ReplicationResult = UniversalReplicationResult;
-
-// ==================== MIGRATION UTILITIES ====================
+// ==================== SECTION ====================
 
 /// Migrate from legacy DirectoryEntry structures
 impl UniversalDirectoryEntry {
     /// Create from simple name, path, and size
-    pub fn from_simple(name: String, path: String, size: u64, is_directory: bool) -> Self {
+    pub fn new(name: String, path: String, is_directory: bool, size: u64) -> Self {
         Self {
             name,
             path,

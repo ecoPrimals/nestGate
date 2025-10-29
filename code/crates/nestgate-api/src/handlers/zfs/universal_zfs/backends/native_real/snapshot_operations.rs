@@ -16,7 +16,7 @@ use crate::handlers::zfs::universal_zfs::UniversalZfsResult;
 ///
 /// # Returns
 /// * `UniversalZfsResult<Vec<SnapshotInfo>>` - List of snapshot information
-pub async fn list_snapshots(
+pub fn list_snapshots(
     service: &NativeZfsService,
     pool_name: Option<&str>,
 ) -> UniversalZfsResult<Vec<SnapshotInfo>> {
@@ -27,7 +27,6 @@ pub async fn list_snapshots(
     let output = service.execute_zfs_command("zfs", &args).await?;
     parsing::parse_snapshot_list(&output)
 }
-
 /// Create a new ZFS snapshot
 ///
 /// Creates a point-in-time snapshot of a dataset or pool.
@@ -39,15 +38,14 @@ pub async fn list_snapshots(
 ///
 /// # Returns
 /// * `UniversalZfsResult<SnapshotInfo>` - Information about the created snapshot
-pub async fn create_snapshot(
+pub fn create_snapshot(
     service: &NativeZfsService,
     config: &SnapshotConfig,
 ) -> UniversalZfsResult<SnapshotInfo> {
-    let snapshot_name = format!("{}@{}", config.dataset, config.name);
+    let snapshot_name = format!("{config.dataset}@snapshot");
     service
         .execute_zfs_command("zfs", &["snapshot", &snapshot_name])
         .await?;
-
     // Return snapshot info
     Ok(SnapshotInfo {
         name: config.name.clone(),
@@ -71,7 +69,7 @@ pub async fn create_snapshot(
 ///
 /// # Returns
 /// * `UniversalZfsResult<()>` - Success or error result
-pub async fn destroy_snapshot(
+pub fn destroy_snapshot(
     service: &NativeZfsService,
     snapshot_name: &str,
     recursive: bool,

@@ -2,10 +2,10 @@
 //! Tests the core functionality that compiles and works correctly
 
 use nestgate_core::{
+    canonical_modernization::unified_enums::{UnifiedHealthStatus, UnifiedServiceType},
     error::{NestGateError, Result},
     traits::CanonicalConfig,
     traits::{UniversalResponseStatus, UniversalServiceRequest, UniversalServiceResponse},
-    canonical_modernization::unified_enums::{UnifiedHealthStatus, UnifiedServiceType},
 };
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
@@ -16,7 +16,7 @@ async fn test_canonical_config_creation() -> Result<()> {
     println!("🧪 Testing canonical configuration creation");
 
     // Test default configuration
-    let config = CanonicalConfig::default();
+    let config = NestGateCanonicalConfig::default();
     println!("✅ Created default canonical config");
 
     Ok(())
@@ -60,7 +60,9 @@ async fn test_error_system() -> Result<()> {
         Ok(_) => unreachable!(),
         Err(_) => {
             println!("✅ Error handling works correctly");
+    Ok(())
         }
+    Ok(())
     }
 
     Ok(())
@@ -113,7 +115,7 @@ async fn test_async_operations() -> Result<()> {
     // Test async sleep
     let start = SystemTime::now();
     sleep(Duration::from_millis(50)).await;
-    let elapsed = start.elapsed().unwrap();
+    let elapsed = start.elapsed()?;
 
     assert!(
         elapsed >= Duration::from_millis(40),
@@ -152,6 +154,7 @@ async fn test_concurrent_operations() -> Result<()> {
             format!("Task {i} completed")
         });
         handles.push(handle);
+        Ok(())
     }
 
     // Wait for all tasks to complete
@@ -164,6 +167,7 @@ async fn test_concurrent_operations() -> Result<()> {
             )
         })?;
         results.push(result);
+        Ok(())
     }
 
     assert_eq!(results.len(), 5, "All tasks should complete");
@@ -237,6 +241,7 @@ async fn test_memory_operations() -> Result<()> {
             format!("value_{}_c", i),
         ];
         data_map.insert(key, values);
+        Ok(())
     }
 
     assert_eq!(data_map.len(), 100);
@@ -251,6 +256,7 @@ async fn test_memory_operations() -> Result<()> {
             "Expected key not found".to_string(),
             "test_memory_operations".to_string(),
         ));
+        Ok(())
     }
 
     println!("✅ Memory operations completed successfully");

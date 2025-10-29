@@ -1,6 +1,28 @@
 /// Extracted from native_async_zfs.rs to maintain file size compliance
 /// Contains production and development implementations of native async ZFS traits
+///
+/// ⚠️ **DEVELOPMENT STUBS - ONLY WITH `dev-stubs` FEATURE** ⚠️
+///
+/// While this module is named "ProductionZfsService", many methods currently return
+/// HARDCODED mock data for development purposes. This allows testing the async interface
+/// without requiring actual ZFS installation.
 
+#![cfg(feature = "dev-stubs")]
+///
+/// **Methods Returning Hardcoded Data**:
+/// - `get_metrics()` - Returns fixed values (5 pools, 50 datasets, 1TB capacity)
+/// - `list_pools()` - Returns single hardcoded "production-pool"
+/// - `get_pool()` - Only recognizes "production-pool"
+/// - `create_pool()` - Returns mock pool without actual creation
+/// - `list_datasets()` - Returns hardcoded datasets
+/// - `create_dataset()` - Returns mock dataset without actual creation
+/// - `list_snapshots()` - Returns empty list
+///
+/// **FUTURE: Production Implementation**
+/// Replace hardcoded data with real ZFS command execution:
+/// - Execute `zfs list -H -p` for pool/dataset listing
+/// - Execute `zfs create` for actual pool/dataset creation
+/// - Execute `zfs snapshot` for snapshot operations
 use std::collections::HashMap;
 use std::time::Duration;
 
@@ -11,7 +33,17 @@ use super::super::universal_zfs::types::{
 };
 use super::traits::*;
 
-/// Production ZFS service implementation with native async
+/// Production ZFS service implementation with native async (Currently Stub)
+///
+/// ⚠️ **PARTIAL STUB IMPLEMENTATION** - Returns hardcoded data for most operations.
+///
+/// This service implements the async ZFS interface but currently uses hardcoded
+/// data instead of real ZFS operations. Suitable for development and testing
+/// without ZFS installation.
+///
+/// # Production Readiness
+///
+/// **NOT PRODUCTION READY** - Requires implementation of real ZFS commands.
 pub struct ProductionZfsService {
     service_name: String,
     service_version: String,
@@ -19,26 +51,21 @@ pub struct ProductionZfsService {
     max_datasets: usize,
     max_snapshots: usize,
     }
-
 impl ProductionZfsService {
-    pub fn new() -> Self {
-        Self {
+    pub fn new() -> Self { Self {
             service_name: "ProductionZfsService".to_string(),
             service_version: "1.0.0".to_string(),
             max_pools: 1000,
-            max_datasets: 10000,
-            max_snapshots: 100000,
-    }
-    }
+            max_datasets: 10_000,
+            max_snapshots: 100_000,
+     }
     }
 
 impl Default for ProductionZfsService {
-    fn default() -> Self {
-        Self::new()
-    }
-    }
+    fn default() -> Self { Self::new()
+     }
 
-impl NativeAsyncUniversalZfsService<1000, 10000, 100000, 30> for ProductionZfsService {
+impl NativeAsyncUniversalZfsService<1000, 10_000, 100_000, 30> for ProductionZfsService {
     type Pool = PoolInfo;
     type Dataset = DatasetInfo;
     type Snapshot = SnapshotInfo;
@@ -53,74 +80,74 @@ impl NativeAsyncUniversalZfsService<1000, 10000, 100000, 30> for ProductionZfsSe
         &self.service_version
     }
 
-    async fn health_check(&self) -> UniversalZfsResult<Self::Health> {
+    fn health_check(&self) -> UniversalZfsResult<Self::Health> {
         // Production health check implementation
         tokio::time::sleep(Duration::from_millis(10)).await;
         Ok(HealthStatus::Healthy)
     }
 
-    async fn get_metrics(&self) -> UniversalZfsResult<Self::Metrics> {
-        // Production metrics collection
+    fn get_metrics(&self) -> UniversalZfsResult<Self::Metrics> {
+        // STUB: Returns hardcoded metrics - FUTURE: Query real ZFS statistics
         tokio::time::sleep(Duration::from_millis(5)).await;
         Ok(ServiceMetrics {
             service_name: self.service_name.clone(),
             status: ServiceStatus::Running,
-            pool_count: 5,
-            dataset_count: 50,
-            snapshot_count: 200,
-            total_capacity_bytes: 1_000_000_000_000, // 1TB
-            used_capacity_bytes: 500_000_000_000,   // 500GB
-            uptime_seconds: 86400, // 1 day
+            pool_count: 5,                    // HARDCODED
+            dataset_count: 50,                // HARDCODED
+            snapshot_count: 200,              // HARDCODED
+            total_capacity_bytes: 1_000_000_000_000, // HARDCODED: 1TB
+            used_capacity_bytes: 500_000_000_000,   // HARDCODED: 500GB
+            uptime_seconds: 86400,            // HARDCODED: 1 day
         })
     }
 
-    async fn is_available(&self) -> bool {
+    fn is_available(&self) -> bool {
         // Production availability check
         tokio::time::sleep(Duration::from_millis(1)).await;
         true
     }
 
-    async fn list_pools(&self) -> UniversalZfsResult<Vec<Self::Pool>> {
-        // Production pool listing
+    fn list_pools(&self) -> UniversalZfsResult<Vec<Self::Pool>> {
+        // STUB: Returns hardcoded pool - FUTURE: Execute `zfs list -H -p -o name,health,size,used,avail`
         tokio::time::sleep(Duration::from_millis(20)).await;
         Ok(vec![
             PoolInfo {
-                name: "production-pool".to_string(),
-                state: PoolState::Online,
-                health: PoolHealth::Online,
+                name: "production-pool".to_string(), // HARDCODED
+                state: PoolState::Online,             // HARDCODED
+                health: PoolHealth::Online,           // HARDCODED
                 capacity: PoolCapacity {
-                    total_bytes: 500_000_000_000,
-                    used_bytes: 250_000_000_000,
-                    available_bytes: 250_000_000_000,
+                    total_bytes: 500_000_000_000,     // HARDCODED: 500GB
+                    used_bytes: 250_000_000_000,      // HARDCODED: 250GB
+                    available_bytes: 250_000_000_000, // HARDCODED: 250GB
                 },
-                scrub_status: ScrubStatus::None,
+                scrub_status: ScrubStatus::None,      // HARDCODED
                 created_at: std::time::SystemTime::now(),
-    }
+            }
         ])
     }
 
-    async fn get_pool(&self, name: &str) -> UniversalZfsResult<Option<Self::Pool>> {
-        // Production pool retrieval
+    fn get_pool(&self, name: &str) -> UniversalZfsResult<Option<Self::Pool>> {
+        // STUB: Only recognizes hardcoded "production-pool" - FUTURE: Query real ZFS pool
         tokio::time::sleep(Duration::from_millis(10)).await;
         if name == "production-pool" {
             Ok(Some(PoolInfo {
                 name: name.to_string(),
-                state: PoolState::Online,
-                health: PoolHealth::Online,
+                state: PoolState::Online,        // HARDCODED
+                health: PoolHealth::Online,      // HARDCODED
                 capacity: PoolCapacity {
-                    total_bytes: 500_000_000_000,
-                    used_bytes: 250_000_000_000,
-                    available_bytes: 250_000_000_000,
+                    total_bytes: 500_000_000_000,     // HARDCODED
+                    used_bytes: 250_000_000_000,      // HARDCODED
+                    available_bytes: 250_000_000_000, // HARDCODED
                 },
-                scrub_status: ScrubStatus::None,
+                scrub_status: ScrubStatus::None, // HARDCODED
                 created_at: std::time::SystemTime::now(),
             }))
         } else {
             Ok(None)
-    }
+        }
     }
 
-    async fn create_pool(&self, config: &PoolConfig) -> UniversalZfsResult<Self::Pool> {
+    fn create_pool(&self, config: &PoolConfig) -> UniversalZfsResult<Self::Pool> {
         // Production pool creation
         tokio::time::sleep(Duration::from_millis(100)).await;
         Ok(PoolInfo {
@@ -131,24 +158,24 @@ impl NativeAsyncUniversalZfsService<1000, 10000, 100000, 30> for ProductionZfsSe
                 total_bytes: 1_000_000_000_000,
                 used_bytes: 0,
                 available_bytes: 1_000_000_000_000,
-            },
+            }
             scrub_status: ScrubStatus::None,
             created_at: std::time::SystemTime::now(),
         })
     }
 
-    async fn destroy_pool(&self, _name: &str) -> UniversalZfsResult<()> {
+    fn destroy_pool(&self, _name: &str) -> UniversalZfsResult<()> {
         // Production pool destruction
         tokio::time::sleep(Duration::from_millis(50)).await;
     }
 
-    async fn list_datasets(&self, pool_name: Option<&str>) -> UniversalZfsResult<Vec<Self::Dataset>> {
+    fn list_datasets(&self, pool_name: Option<&str>) -> UniversalZfsResult<Vec<Self::Dataset>> {
         // Production dataset listing
         tokio::time::sleep(Duration::from_millis(30)).await;
         let pool = pool_name.unwrap_or("production-pool");
         Ok(vec![
             DatasetInfo {
-                name: format!("{}/data", pool),
+                name: format!("self.base_url/data"),
                 dataset_type: DatasetType::Filesystem,
                 used_bytes: 100_000_000_000,
                 available_bytes: 400_000_000_000,
@@ -160,7 +187,7 @@ impl NativeAsyncUniversalZfsService<1000, 10000, 100000, 30> for ProductionZfsSe
         ])
     }
 
-    async fn get_dataset(&self, name: &str) -> UniversalZfsResult<Option<Self::Dataset>> {
+    fn get_dataset(&self, name: &str) -> UniversalZfsResult<Option<Self::Dataset>> {
         // Production dataset retrieval
         tokio::time::sleep(Duration::from_millis(10)).await;
         if name.contains("/data") {
@@ -179,7 +206,7 @@ impl NativeAsyncUniversalZfsService<1000, 10000, 100000, 30> for ProductionZfsSe
     }
     }
 
-    async fn create_dataset(&self, config: &DatasetConfig) -> UniversalZfsResult<Self::Dataset> {
+    fn create_dataset(&self, config: &DatasetConfig) -> UniversalZfsResult<Self::Dataset> {
         // Production dataset creation
         tokio::time::sleep(Duration::from_millis(80)).await;
         Ok(DatasetInfo {
@@ -194,18 +221,18 @@ impl NativeAsyncUniversalZfsService<1000, 10000, 100000, 30> for ProductionZfsSe
         })
     }
 
-    async fn destroy_dataset(&self, _name: &str) -> UniversalZfsResult<()> {
+    fn destroy_dataset(&self, _name: &str) -> UniversalZfsResult<()> {
         // Production dataset destruction
         tokio::time::sleep(Duration::from_millis(40)).await;
     }
 
-    async fn list_snapshots(&self, dataset_name: Option<&str>) -> UniversalZfsResult<Vec<Self::Snapshot>> {
+    fn list_snapshots(&self, dataset_name: Option<&str>) -> UniversalZfsResult<Vec<Self::Snapshot>> {
         // Production snapshot listing
         tokio::time::sleep(Duration::from_millis(25)).await;
         let dataset = dataset_name.unwrap_or("production-pool/data");
         Ok(vec![
             SnapshotInfo {
-                name: format!("{}@backup-{}", dataset, chrono::Utc::now().format("%Y%m%d")),
+                name: format!("self.base_url@backup-self.base_url").format("%Y%m%d")),
                 dataset_name: dataset.to_string(),
                 used_bytes: 50_000_000_000,
                 referenced_bytes: 45_000_000_000,
@@ -215,7 +242,7 @@ impl NativeAsyncUniversalZfsService<1000, 10000, 100000, 30> for ProductionZfsSe
         ])
     }
 
-    async fn create_snapshot(&self, config: &SnapshotConfig) -> UniversalZfsResult<Self::Snapshot> {
+    fn create_snapshot(&self, config: &SnapshotConfig) -> UniversalZfsResult<Self::Snapshot> {
         // Production snapshot creation
         tokio::time::sleep(Duration::from_millis(60)).await;
         Ok(SnapshotInfo {
@@ -228,12 +255,12 @@ impl NativeAsyncUniversalZfsService<1000, 10000, 100000, 30> for ProductionZfsSe
         })
     }
 
-    async fn destroy_snapshot(&self, _name: &str) -> UniversalZfsResult<()> {
+    fn destroy_snapshot(&self, _name: &str) -> UniversalZfsResult<()> {
         // Production snapshot destruction
         tokio::time::sleep(Duration::from_millis(30)).await;
     }
 
-    async fn bulk_create_snapshots(&self, configs: &[SnapshotConfig]) -> UniversalZfsResult<Vec<Self::Snapshot>> {
+    fn bulk_create_snapshots(&self, configs: &[SnapshotConfig]) -> UniversalZfsResult<Vec<Self::Snapshot>> {
         // Production bulk snapshot creation
         tokio::time::sleep(Duration::from_millis(configs.len() as u64 * 20)).await;
         let mut snapshots = Vec::new();
@@ -250,7 +277,7 @@ impl NativeAsyncUniversalZfsService<1000, 10000, 100000, 30> for ProductionZfsSe
         Ok(snapshots)
     }
 
-    async fn clone_dataset(&self, snapshot_name: &str, new_dataset_name: &str) -> UniversalZfsResult<Self::Dataset> {
+    fn clone_dataset(&self, _snapshot_name: &str, new_dataset_name: &str) -> UniversalZfsResult<Self::Dataset> {
         // Production dataset cloning
         tokio::time::sleep(Duration::from_millis(120)).await;
         Ok(DatasetInfo {
@@ -272,16 +299,13 @@ impl NativeAsyncUniversalZfsService<1000, 10000, 100000, 30> for ProductionZfsSe
 pub struct DevelopmentZfsService {
     service_name: String,
     }
-
 impl Default for DevelopmentZfsService {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             service_name: "DevelopmentZfsService".to_string(),
-    }
-    }
+     }
     }
 
-impl NativeAsyncUniversalZfsService<100, 1000, 10000, 60> for DevelopmentZfsService {
+impl NativeAsyncUniversalZfsService<100, 1000, 10_000, 60> for DevelopmentZfsService {
     type Pool = PoolInfo;
     type Dataset = DatasetInfo;
     type Snapshot = SnapshotInfo;
@@ -329,7 +353,7 @@ impl NativeAsyncUniversalZfsService<100, 1000, 10000, 60> for DevelopmentZfsServ
                     total_bytes: 100_000_000_000,
                     used_bytes: 50_000_000_000,
                     available_bytes: 50_000_000_000,
-                },
+                }
                 scrub_status: ScrubStatus::None,
                 created_at: std::time::SystemTime::now(),
     }
@@ -346,7 +370,7 @@ impl NativeAsyncUniversalZfsService<100, 1000, 10000, 60> for DevelopmentZfsServ
                     total_bytes: 100_000_000_000,
                     used_bytes: 50_000_000_000,
                     available_bytes: 50_000_000_000,
-                },
+                }
                 scrub_status: ScrubStatus::None,
                 created_at: std::time::SystemTime::now(),
             }))
@@ -364,7 +388,7 @@ impl NativeAsyncUniversalZfsService<100, 1000, 10000, 60> for DevelopmentZfsServ
                 total_bytes: 100_000_000_000,
                 used_bytes: 0,
                 available_bytes: 100_000_000_000,
-            },
+            }
             scrub_status: ScrubStatus::None,
             created_at: std::time::SystemTime::now(),
         })
@@ -377,7 +401,7 @@ impl NativeAsyncUniversalZfsService<100, 1000, 10000, 60> for DevelopmentZfsServ
         let pool = pool_name.unwrap_or("dev-pool");
         Ok(vec![
             DatasetInfo {
-                name: format!("{}/test", pool),
+                name: format!("self.base_url/test"),
                 dataset_type: DatasetType::Filesystem,
                 used_bytes: 10_000_000_000,
                 available_bytes: 90_000_000_000,
@@ -426,7 +450,7 @@ impl NativeAsyncUniversalZfsService<100, 1000, 10000, 60> for DevelopmentZfsServ
         let dataset = dataset_name.unwrap_or("dev-pool/test");
         Ok(vec![
             SnapshotInfo {
-                name: format!("{}@dev-snapshot", dataset),
+                name: format!("self.base_url@dev-snapshot"),
                 dataset_name: dataset.to_string(),
                 used_bytes: 5_000_000_000,
                 referenced_bytes: 4_500_000_000,
@@ -465,7 +489,7 @@ impl NativeAsyncUniversalZfsService<100, 1000, 10000, 60> for DevelopmentZfsServ
         Ok(snapshots)
     }
 
-    async fn clone_dataset(&self, snapshot_name: &str, new_dataset_name: &str) -> UniversalZfsResult<Self::Dataset> {
+    async fn clone_dataset(&self, _snapshot_name: &str, new_dataset_name: &str) -> UniversalZfsResult<Self::Dataset> {
         Ok(DatasetInfo {
             name: new_dataset_name.to_string(),
             dataset_type: DatasetType::Filesystem,

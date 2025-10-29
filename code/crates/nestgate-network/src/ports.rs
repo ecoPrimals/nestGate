@@ -7,15 +7,13 @@ pub struct PortManager {
     allocated_ports: HashMap<u16, String>,
     next_port: u16,
 }
-
 impl PortManager {
     /// Create a new port manager
-    pub fn new() -> Self {
-        Self {
+    #[must_use]
+    pub fn new() -> Self { Self {
             allocated_ports: HashMap::new(),
             next_port: 8080,
-        }
-    }
+         }
 
     /// Allocate a port for a service
     pub fn allocate_port(&mut self, service_name: &str) -> u16 {

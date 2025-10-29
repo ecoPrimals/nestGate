@@ -7,7 +7,7 @@ use std::net::IpAddr;
 use std::time::Duration;
 
 /// Network protocol configuration settings
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct NetworkProtocolSettings {
     /// TCP protocol settings
     pub tcp: TcpProtocolSettings,
@@ -20,7 +20,6 @@ pub struct NetworkProtocolSettings {
     /// Custom protocol settings
     pub custom_protocols: HashMap<String, CustomProtocolSettings>,
 }
-
 /// TCP protocol settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TcpProtocolSettings {
@@ -35,9 +34,8 @@ pub struct TcpProtocolSettings {
     /// Connection timeout
     pub connection_timeout: Duration,
 }
-
 /// UDP protocol settings
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct UdpProtocolSettings {
     /// Enable UDP broadcast
     pub enable_broadcast: bool,
@@ -48,7 +46,6 @@ pub struct UdpProtocolSettings {
     /// Socket buffer sizes
     pub buffer_sizes: SocketBufferSettings,
 }
-
 /// HTTP protocol settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HttpProtocolSettings {
@@ -63,7 +60,6 @@ pub struct HttpProtocolSettings {
     /// Compression settings
     pub compression: CompressionSettings,
 }
-
 /// WebSocket protocol settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WebSocketProtocolSettings {
@@ -78,7 +74,6 @@ pub struct WebSocketProtocolSettings {
     /// Enable compression
     pub compression_enabled: bool,
 }
-
 /// Custom protocol settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CustomProtocolSettings {
@@ -91,7 +86,6 @@ pub struct CustomProtocolSettings {
     /// Protocol enabled
     pub enabled: bool,
 }
-
 /// Socket buffer settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SocketBufferSettings {
@@ -100,7 +94,6 @@ pub struct SocketBufferSettings {
     /// Receive buffer size
     pub receive_buffer_size: usize,
 }
-
 /// Connection pool settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConnectionPoolSettings {
@@ -113,7 +106,6 @@ pub struct ConnectionPoolSettings {
     /// Idle timeout
     pub idle_timeout: Duration,
 }
-
 /// Compression settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CompressionSettings {
@@ -127,18 +119,6 @@ pub struct CompressionSettings {
     pub min_size: usize,
 }
 
-impl Default for NetworkProtocolSettings {
-    fn default() -> Self {
-        Self {
-            tcp: TcpProtocolSettings::default(),
-            udp: UdpProtocolSettings::default(),
-            http: HttpProtocolSettings::default(),
-            websocket: WebSocketProtocolSettings::default(),
-            custom_protocols: HashMap::new(),
-        }
-    }
-}
-
 impl Default for TcpProtocolSettings {
     fn default() -> Self {
         Self {
@@ -147,17 +127,6 @@ impl Default for TcpProtocolSettings {
             no_delay: true,
             buffer_sizes: SocketBufferSettings::default(),
             connection_timeout: Duration::from_secs(30),
-        }
-    }
-}
-
-impl Default for UdpProtocolSettings {
-    fn default() -> Self {
-        Self {
-            enable_broadcast: false,
-            enable_multicast: false,
-            multicast_groups: Vec::new(),
-            buffer_sizes: SocketBufferSettings::default(),
         }
     }
 }

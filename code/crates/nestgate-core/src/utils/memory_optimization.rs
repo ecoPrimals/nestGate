@@ -1,6 +1,6 @@
-//! Memory optimization utilities to reduce allocations and improve performance
-//!
-//! This module provides utilities and patterns for reducing memory allocations
+// Memory optimization utilities to reduce allocations and improve performance
+//! Memory Optimization functionality and utilities.
+// This module provides utilities and patterns for reducing memory allocations
 //! and improving performance through zero-copy patterns and efficient string handling.
 
 use std::borrow::Cow;
@@ -19,7 +19,6 @@ pub mod constants {
     pub const READ_DIRECTORY: &str = "read_directory";
     pub const ATOMIC_WRITE: &str = "atomic_write";
     pub const SYNC_FILE: &str = "sync_file";
-
     /// Common status strings
     pub const INITIALIZED: &str = "initialized";
     pub const RUNNING: &str = "running";
@@ -38,7 +37,6 @@ pub struct ErrorMessageBuilder {
     base_message: &'static str,
     details: Option<String>,
 }
-
 impl ErrorMessageBuilder {
     /// Create a new error message builder with a static base message
     pub fn new(base_message: &'static str) -> Self {
@@ -58,7 +56,7 @@ impl ErrorMessageBuilder {
     pub fn build(self) -> Cow<'static, str> {
         match self.details {
             None => Cow::Borrowed(self.base_message),
-            Some(details) => Cow::Owned(format!("{}: {}", self.base_message, details)),
+            Some(details) => Cow::Owned(format!("{}: {}", self.base_message, details),
         }
     }
 }
@@ -67,9 +65,9 @@ impl ErrorMessageBuilder {
 pub struct StringMapBuilder {
     map: HashMap<&'static str, String>,
 }
-
 impl StringMapBuilder {
     /// Create a new string map builder
+    #[must_use]
     pub fn new() -> Self {
         Self {
             map: HashMap::new(),
@@ -77,6 +75,7 @@ impl StringMapBuilder {
     }
 
     /// Add a static key-value pair (no allocation for key)
+    #[must_use]
     pub fn insert_static(mut self, key: &'static str, value: impl Into<String>) -> Self {
         self.map.insert(key, value.into());
         self
@@ -114,7 +113,6 @@ macro_rules! efficient_error {
             .build()
     };
 }
-
 /// Macro for creating string maps with static keys
 #[macro_export]
 macro_rules! static_string_map {
@@ -128,13 +126,10 @@ macro_rules! static_string_map {
         }
     };
 }
-
 /// Efficient path validation that avoids string allocations
-pub fn validate_path_efficient(path: &str) -> Result<(), &'static str> {
     if path.is_empty() {
         return Err("Path cannot be empty");
     }
-
     if path.starts_with('/') {
         return Err("Absolute paths are not allowed");
     }
@@ -172,13 +167,11 @@ pub fn detect_content_type_efficient(extension: &str) -> &'static str {
         _ => "application/octet-stream",
     }
 }
-
 /// Pool of reusable string buffers for temporary operations
 pub struct StringBufferPool {
     buffers: Vec<String>,
     max_size: usize,
 }
-
 impl StringBufferPool {
     /// Create a new string buffer pool
     pub fn new(max_size: usize) -> Self {

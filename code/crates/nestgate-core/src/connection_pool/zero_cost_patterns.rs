@@ -1,4 +1,4 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::future::Future;
 // **ZERO-COST CONNECTION POOL PATTERNS**
 //
@@ -18,7 +18,7 @@ use std::future::Future;
 use crate::error::CanonicalResult as Result;
 use std::marker::PhantomData;
 
-// ==================== ZERO-COST CONNECTION FACTORY ====================
+// ==================== SECTION ====================
 
 /// **ZERO-COST CONNECTION FACTORY TRAIT**
 /// 
@@ -27,7 +27,6 @@ use std::marker::PhantomData;
 /// ELIMINATES: Arc allocation and virtual function call costs
 pub trait ZeroCostConnectionFactory<T> {
     type Error: Send + Sync + 'static;
-
     /// Create connection with zero-cost dispatch
     fn create_connection(&self) -> impl Future<Output = std::result::Result<T, Self::Error>> + Send;
 
@@ -49,7 +48,6 @@ pub trait ZeroCostConnectionFactory<T> {
 /// ELIMINATES: Arc allocation and virtual function call costs
 pub trait ZeroCostHealthChecker<T> {
     type Error: Send + Sync + 'static;
-
     /// Check connection health with zero-cost dispatch
     fn check_health(&self, connection: &T) -> impl Future<Output = std::result::Result<(), Self::Error>> + Send;
 
@@ -64,7 +62,7 @@ pub trait ZeroCostHealthChecker<T> {
     }
 }
 
-// ==================== ZERO-COST CONNECTION POOL MANAGER ====================
+// ==================== SECTION ====================
 
 /// **ZERO-COST CONNECTION POOL MANAGER**
 /// 
@@ -93,7 +91,6 @@ where
     connection_metadata: Vec<ConnectionMetadata>,
     _phantom: PhantomData<()>,
 }
-
 impl<T, Factory, HealthChecker, const MAX_CONNECTIONS: usize, const MIN_CONNECTIONS: usize, const HEALTH_CHECK_INTERVAL_MS: u64>
     ZeroCostConnectionPoolManager<T, Factory, HealthChecker, MAX_CONNECTIONS, MIN_CONNECTIONS, HEALTH_CHECK_INTERVAL_MS>
 where
@@ -101,7 +98,7 @@ where
     HealthChecker: ZeroCostHealthChecker<T>,
 {
     /// Create new zero-cost connection pool manager - compile-time optimized
-    pub const fn new(factory: Factory, health_checker: HealthChecker) -> Self {
+    pub fn new(factory: Factory, health_checker: HealthChecker) -> Self {
         Self {
             factory,
             health_checker,
@@ -112,22 +109,29 @@ where
     }
 
     /// Get maximum connections - compile-time constant
-    pub const fn max_connections() -> usize {
+    pub fn max_connections() -> usize {
         MAX_CONNECTIONS
     }
 
     /// Get minimum connections - compile-time constant
-    pub const fn min_connections() -> usize {
+    pub fn min_connections() -> usize {
         MIN_CONNECTIONS
     }
 
     /// Get health check interval - compile-time constant
-    pub const fn health_check_interval_ms() -> u64 {
+    pub fn health_check_interval_ms() -> u64 {
         HEALTH_CHECK_INTERVAL_MS
     }
 
     /// Initialize connection pool with zero-cost patterns
-    pub async fn initialize(&mut self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn initialize(&mut self) -> Result<()>  {
         // Pre-allocate connection storage for performance
         self.connections.reserve(MAX_CONNECTIONS);
         self.connection_metadata.reserve(MAX_CONNECTIONS);
@@ -154,7 +158,14 @@ where
     }
 
     /// Get connection with zero-cost dispatch
-    pub async fn get_connection(&mut self) -> Result<Option<&T>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_connection(&mut self) -> Result<Option<&T>>  {
         // Check if we have available connections
         if self.connections.is_empty() && self.connections.len() < MAX_CONNECTIONS {
             // Create new connection using direct factory dispatch - no Arc<dyn> overhead
@@ -179,7 +190,14 @@ where
     }
 
     /// Perform health check on all connections with zero-cost dispatch
-    pub async fn health_check_all(&mut self) -> Result<HealthCheckResults> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn health_check_all(&mut self) -> Result<HealthCheckResults>  {
         let mut results = HealthCheckResults::new();
 
         for (i, connection) in self.connections.iter().enumerate() {
@@ -215,7 +233,7 @@ where
     }
 }
 
-// ==================== SUPPORTING TYPES ====================
+// ==================== SECTION ====================
 
 /// Connection metadata for tracking connection state
 #[derive(Debug, Clone)]
@@ -226,7 +244,6 @@ pub struct ConnectionMetadata {
     pub is_healthy: bool,
     pub use_count: u64,
 }
-
 impl ConnectionMetadata {
     pub fn new() -> Self {
         let now = std::time::SystemTime::now();
@@ -266,7 +283,6 @@ pub struct HealthCheckResults {
     pub unhealthy_connections: usize,
     pub total_checked: usize,
 }
-
 impl HealthCheckResults {
     pub fn new() -> Self {
         Self {
@@ -293,7 +309,6 @@ pub struct PoolStatistics {
     pub healthy_connections: usize,
     pub unhealthy_connections: usize,
 }
-
 impl PoolStatistics {
     pub fn utilization_percentage(&self) -> f64 {
         if self.max_connections == 0 {
@@ -310,14 +325,13 @@ impl PoolStatistics {
     }
 }
 
-// ==================== EXAMPLE IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 /// Example TCP connection factory implementation
 pub struct TcpConnectionFactory {
     pub host: String,
     pub port: u16,
 }
-
 impl ZeroCostConnectionFactory<std::net::TcpStream> for TcpConnectionFactory {
     type Error = std::io::Error;
 
@@ -335,7 +349,6 @@ impl ZeroCostConnectionFactory<std::net::TcpStream> for TcpConnectionFactory {
 
 /// Example TCP health checker implementation
 pub struct TcpHealthChecker;
-
 impl ZeroCostHealthChecker<std::net::TcpStream> for TcpHealthChecker {
     type Error = std::io::Error;
 
@@ -352,7 +365,7 @@ impl ZeroCostHealthChecker<std::net::TcpStream> for TcpHealthChecker {
     }
 }
 
-// ==================== TYPE ALIASES ====================
+// ==================== SECTION ====================
 
 /// Standard TCP connection pool
 pub type TcpConnectionPool = ZeroCostConnectionPoolManager<
@@ -363,7 +376,6 @@ pub type TcpConnectionPool = ZeroCostConnectionPoolManager<
     5,   // MIN_CONNECTIONS
     30000, // HEALTH_CHECK_INTERVAL_MS
 >;
-
 /// High-performance TCP connection pool
 pub type HighPerformanceTcpConnectionPool = ZeroCostConnectionPoolManager<
     std::net::TcpStream,
@@ -371,15 +383,13 @@ pub type HighPerformanceTcpConnectionPool = ZeroCostConnectionPoolManager<
     TcpHealthChecker,
     1000, // MAX_CONNECTIONS
     50,   // MIN_CONNECTIONS
-    15000, // HEALTH_CHECK_INTERVAL_MS
+    15_000, // HEALTH_CHECK_INTERVAL_MS
 >;
-
-// ==================== MIGRATION UTILITIES ====================
+// ==================== SECTION ====================
 
 /// Migration guide from Arc<dyn> to zero-cost patterns
-pub const ARC_DYN_MIGRATION_GUIDE: &str = r#"
+pub const ARC_DYN_MIGRATION_GUIDE: &str = r"
 🔄 ARC<DYN> TO ZERO-COST MIGRATION GUIDE
-
 ## Before (Arc<dyn> Runtime Dispatch)
 ```rust
 pub type ConnectionFactory<T> = Arc<dyn Fn() -> Result<T> + Send + Sync>;
@@ -408,4 +418,4 @@ where
 - ✅ Zero heap allocation for factory and health checker storage
 - ✅ Compile-time optimization and inlining
 - ✅ Type-safe interfaces with zero runtime cost
-"#; 
+"; 

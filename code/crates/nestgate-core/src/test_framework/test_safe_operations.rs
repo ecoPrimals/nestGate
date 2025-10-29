@@ -1,49 +1,39 @@
 /// Test-safe operations module using unified error handling
 /// All test errors now use NestGateError::Testing variant for consistency
-use crate::error::{NestGateError, Result};
+use crate::{NestGateError, Result};
 // Removed unused imports - test framework handles errors internally
 use serde::{de::DeserializeOwned, Serialize};
 use std::future::Future;
 use std::time::{Duration, Instant};
-
 /// Test result type using unified error system
+use crate::error::NestGateError;
 pub type TestResult<T = ()> = Result<T>;
-
 /// Safe JSON serialization for tests with rich error context
 pub fn safe_test_to_json<T: Serialize>(
     value: &T,
     test_context: &str,
     value_description: &str,
 ) -> TestResult<String> {
-    serde_json::to_string(value).map_err(|e| crate::NestGateError::Internal {
-        message: format!(
-            "JSON serialization failed in {test_context}: serializing {value_description}"
+    serde_json::to_string(value).map_err(|e| crate::NestGateError::internal_error(
+            "JSON serialization failed in {test_context): serializing {value_description}"
         ),
-        location: Some(format!("{}:{}", file!(), line!())),
-        debug_info: Some(e.to_string()),
-        is_bug: false,
-    })
+        location: Some(format!("{})
+        location: Some(e.to_string())})
     }
-
 /// Safe JSON deserialization for tests with rich error context
 pub fn safe_test_from_json<T: DeserializeOwned>(
     json: &str,
     test_context: &str,
     type_description: &str,
 ) -> TestResult<T> {
-    serde_json::from_str(json).map_err(|e| crate::NestGateError::Internal {
-        message: format!(
-            "JSON deserialization failed in {test_context}: deserializing to {type_description}"
+    serde_json::from_str(json).map_err(|e| crate::NestGateError::internal_error(
+            "JSON deserialization failed in {test_context): deserializing to {type_description}"
         ),
-        location: Some(format!("{}:{}", file!(), line!())),
-        debug_info: Some(e.to_string()),
-        is_bug: false,
-    })
+        location: Some(format!("{})
+        location: Some(e.to_string())})
     }
-
 /// Safe API call wrapper for tests
 pub async fn safe_test_api_call<F, Fut, T, E>(
-    operation: &str,
     test_context: &str,
     api_call: F,
 ) -> TestResult<T>
@@ -55,13 +45,9 @@ where
     let start_time = Instant::now();
     let result = api_call()
         .await
-        .map_err(|e| crate::NestGateError::Internal {
-            message: format!("API call failed: {} in {test_context}", operation),
-            location: Some(format!("{}:{}", file!(), line!())),
-            debug_info: Some(e.to_string()),
-            is_bug: false,
-        })?;
-
+        .map_err(|e| crate::NestGateError::internal_error(
+            location: Some(format!("{})
+            location: Some(e"))?;
     let duration = start_time.elapsed();
     if duration > Duration::from_secs(5) {
         tracing::warn!(
@@ -84,15 +70,9 @@ pub fn safe_test_get<'a, T>(
 ) -> TestResult<&'a T> {
     collection
         .get(index)
-        .ok_or_else(|| crate::NestGateError::Validation {
-            field: "collection_index".to_string(),
-            message: format!("Index {index} out of bounds in {collection_description}"),
-            current_value: Some(index.to_string()),
-            expected: Some(format!("index < {}", collection.len())),
-            user_error: false,
-        })
+        .ok_or_else(|| crate::NestGateError::validation(
+            actual: Some(index.to_string())}", collection.len()))})
     }
-
 /// Safe HashMap access for tests
 pub fn safe_test_map_get<'a, K, V>(
     map: &'a std::collections::HashMap<K, V>,
@@ -104,71 +84,46 @@ where
     K: std::fmt::Debug + std::hash::Hash + Eq,
 {
     map.get(key)
-        .ok_or_else(|| crate::NestGateError::Validation {
-            field: "map_key".to_string(),
-            message: format!("Key not found in {map_description}"),
-            current_value: Some(format!("{:?}", key)),
-            expected: Some(format!("key exists in map with {} entries", map.len())),
-            user_error: false,
-        })
+        .ok_or_else(|| crate::NestGateError::validation(
+            actual: Some(format!("{key:?}"))} entries", map.len()))})
     }
-
 /// Safe Option unwrapping for tests with context
 pub fn safe_test_unwrap_option<T>(
     option: Option<T>,
     test_context: &str,
     value_description: &str,
 ) -> TestResult<T> {
-    option.ok_or_else(|| crate::NestGateError::Validation {
-        field: "option_value".to_string(),
-        message: format!("Option was None when unwrapping {value_description} in {test_context}"),
-        current_value: Some("None".to_string()),
-        expected: Some("Some(value)".to_string()),
-        user_error: false,
-    })
+    option.ok_or_else(|| crate::NestGateError::validation(
+        actual: Some("None".to_string())})
     }
-
 /// Safe Result unwrapping for tests with context
 pub fn safe_test_unwrap_result<T, E: std::fmt::Display>(
     result: std::result::Result<T, E>,
     test_context: &str,
     operation_description: &str,
 ) -> TestResult<T> {
-    result.map_err(|e| crate::NestGateError::Internal {
-        message: format!("Result unwrapping failed in {test_context}: {operation_description}"),
-        location: Some(format!("{}:{}", file!(), line!())),
-        debug_info: Some(e.to_string()),
-        is_bug: false,
-    })
+    result.map_err(|e| crate::NestGateError::internal_error(
+        location: Some(format!("{})
+        location: Some(e.to_string())})
     }
-
 /// Safe file operations for tests
-pub async fn safe_test_read_file(path: &str, test_context: &str) -> TestResult<String> {
     tokio::fs::read_to_string(path)
         .await
         .map_err(|e| crate::NestGateError::Io {
-                operation: "file reading".to_string(),
                 error_message: e.to_string(),
                 reerror_message: Some(path.to_string()),
-                retryable: false,
-            })
+                // retryable: false})
     }
-
 /// Safe directory creation for tests
-pub async fn safe_test_create_dir(path: &str, test_context: &str) -> TestResult<()> {
     tokio::fs::create_dir_all(path)
         .await
         .map_err(|e| crate::NestGateError::Io {
-                operation: "directory creation".to_string(),
                 error_message: e.to_string(),
                 reerror_message: Some(path.to_string()),
-                retryable: false,
-            })
+                // retryable: false})
     }
-
 /// Safe network connection for tests with timeout
 pub async fn safe_test_network_call<F, Fut, T>(
-    operation: &str,
     _test_context: &str,
     timeout: Duration,
     network_call: F,
@@ -180,19 +135,14 @@ where
     match tokio::time::timeout(timeout, network_call()).await {
         Ok(result) => result,
         Err(_) => Err(crate::NestGateError::Timeout {
-            operation: operation.to_string(),
             duration: timeout,
-            retryable: true,
-            suggested_timeout: Some(timeout * 2), // Suggest doubling the timeout
+            // retryable: truesuggested_timeout: Some(timeout * 2), // Suggest doubling the timeout
         }),
     }
     }
-
 /// Safe database transaction for tests
 pub async fn safe_test_db_transaction<F, Fut, T, E>(
-    operation: &str,
     test_context: &str,
-    db_operation: F,
 ) -> TestResult<T>
 where
     F: FnOnce() -> Fut,
@@ -201,23 +151,17 @@ where
 {
     db_operation()
         .await
-        .map_err(|e| crate::NestGateError::Internal {
-            message: format!("Database operation failed: {} in {test_context}", operation),
-            location: Some(format!("{}:{}", file!(), line!())),
-            debug_info: Some(e.to_string()),
-            is_bug: false,
-        })
+        .map_err(|e| crate::NestGateError::internal_error(
+            location: Some(format!("{})
+            location: Some(e.to_string())})
     }
-
 /// Conversion helper for legacy Result<(), crate::error::NestGateError>
 pub fn convert_boxed_error(
     result: std::result::Result<(), crate::error::NestGateError>,
     test_context: &str,
-    operation: &str,
 ) -> TestResult<()> {
     result.map_err(|e| e) // Direct pass-through since it's already NestGateError
     }
-
 /// Performance assertion helper
 pub fn assert_test_performance<T>(
     operation_result: T,
@@ -227,17 +171,11 @@ pub fn assert_test_performance<T>(
     _operation_name: &str,
 ) -> TestResult<T> {
     if duration > max_duration {
-        return Err(crate::NestGateError::Validation {
-            field: "performance_duration".to_string(),
-            message: format!("Performance assertion failed in {_test_context}"),
-            current_value: Some(format!("{duration:?}")),
-            expected: Some(format!("≤ {max_duration:?}")),
-            user_error: false,
-        });
+        return Err(crate::NestGateError::validation(
+            actual: Some(format!("{duration:?}"))}")));
     }
     Ok(operation_result)
     }
-
 /// Memory usage assertion helper
 pub fn assert_test_memory_usage(
     current_memory: u64,
@@ -245,15 +183,9 @@ pub fn assert_test_memory_usage(
     test_context: &str,
 ) -> TestResult<()> {
     if current_memory > max_memory {
-        return Err(crate::NestGateError::Validation {
-            field: "memory_usage".to_string(),
-            message: format!("Memory usage assertion failed in {test_context}"),
-            current_value: Some(format!("{current_memory} bytes")),
-            expected: Some(format!("≤ {max_memory} bytes")),
-            user_error: false,
-        });
+        return Err(crate::NestGateError::validation(
+            actual: Some(format!("{current_memory} bytes"))} bytes")));
     }
-
     Ok(()) // Memory usage is within acceptable limits
     }
 
@@ -262,7 +194,6 @@ pub async fn safe_test_batch_operation<T, F, Fut, R, E>(
     items: &[T],
     operation_name: &str,
     test_context: &str,
-    operation: F,
 ) -> TestResult<Vec<R>>
 where
     F: Fn(&T) -> Fut,
@@ -270,21 +201,17 @@ where
     E: std::fmt::Display,
 {
     let mut results = Vec::with_capacity(items.len());
-
     for (index, item) in items.iter().enumerate() {
         let result = operation(item)
             .await
-            .map_err(|e| crate::NestGateError::Internal {
-                message: format!(
-                    "Batch operation failed: {} item {} of {} in {test_context}",
+            .map_err(|e| crate::NestGateError::internal_error(
+                    "Batch operation failed: {) item {} of {} in {test_context}",
                     operation_name,
                     index + 1,
                     items.len()
                 ),
-                location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: Some(e.to_string()),
-                is_bug: false,
-            })?;
+                location: Some(format!("{})
+                location: Some(e"))?;
         results.push(result);
     }
 
@@ -298,7 +225,6 @@ pub fn create_test_context(
     additional_context: &[(&str, &str)],
 ) -> String {
     let mut context = format!("Test: {test_name} | Phase: {test_phase}");
-
     for (key, value) in additional_context {
         context.push_str(&format!(" | {key}: {value}"));
     }

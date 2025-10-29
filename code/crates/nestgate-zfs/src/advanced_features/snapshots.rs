@@ -1,8 +1,8 @@
 //
 // ZFS snapshot analysis and optimization recommendations
 
-use crate::error::CanonicalResult as Result;
 use crate::types::RetentionPolicy;
+use nestgate_core::error::CanonicalResult as Result;
 use serde::{Deserialize, Serialize};
 use tracing::debug;
 
@@ -16,10 +16,16 @@ pub struct SnapshotAnalytics {
     /// Basic recommendations
     pub recommendations: Vec<String>,
 }
-
 impl SnapshotAnalytics {
     /// Analyze snapshot usage
-    pub async fn analyze_snapshots(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+    pub fn analyze_snapshots(
         dataset: &str,
         snapshots: &[String],
         retention_policy: &RetentionPolicy,
@@ -35,7 +41,7 @@ impl SnapshotAnalytics {
             recommendations.push("Consider cleaning up old snapshots".to_string());
         }
 
-        if retention_policy.daily_snapshots > 30 {
+        if retention_policy.keep_daily > 30 {
             recommendations.push("Daily snapshot retention is very high".to_string());
         }
 
@@ -43,7 +49,6 @@ impl SnapshotAnalytics {
             // 10GB
             recommendations.push("Snapshots are using significant storage".to_string());
         }
-
         Ok(Self {
             snapshot_count,
             storage_usage,

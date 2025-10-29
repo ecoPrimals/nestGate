@@ -20,7 +20,6 @@ pub enum CircuitBreakerState {
     /// Circuit is half-open, testing if service has recovered
     HalfOpen,
 }
-
 /// Circuit breaker implementation
 #[derive(Debug)]
 pub struct CircuitBreaker {
@@ -30,7 +29,6 @@ pub struct CircuitBreaker {
     last_failure_time: Arc<RwLock<Option<SystemTime>>>,
     half_open_calls: Arc<RwLock<u32>>,
 }
-
 impl CircuitBreaker {
     /// Create a new circuit breaker with the specified configuration
     ///
@@ -53,7 +51,7 @@ impl CircuitBreaker {
     ///
     /// # Returns
     /// * `true` if the circuit is open (blocking requests), `false` otherwise
-    pub async fn is_open(&self) -> bool {
+    pub fn is_open(&self) -> bool {
         if !self.config.enabled {
             return false;
         }
@@ -66,7 +64,7 @@ impl CircuitBreaker {
     ///
     /// # Returns
     /// * `true` if operations can be executed, `false` if they should be blocked
-    pub async fn can_execute(&self) -> bool {
+    pub fn can_execute(&self) -> bool {
         if !self.config.enabled {
             return true;
         }
@@ -101,7 +99,7 @@ impl CircuitBreaker {
     /// Updates the circuit breaker state based on a successful operation.
     /// In half-open state, this will transition back to closed.
     /// In closed state, this resets the failure count.
-    pub async fn record_success(&self) {
+    pub fn record_success(&self) {
         if !self.config.enabled {
             return;
         }
@@ -128,7 +126,7 @@ impl CircuitBreaker {
     /// Updates the circuit breaker state based on a failed operation.
     /// Increments failure count and may trigger state transitions
     /// if failure threshold is exceeded.
-    pub async fn record_failure(&self) {
+    pub fn record_failure(&self) {
         if !self.config.enabled {
             return;
         }

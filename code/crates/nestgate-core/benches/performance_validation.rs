@@ -33,6 +33,7 @@ impl UuidCache {
     fn new() -> Self {
         Self
     }
+
     fn get_or_create(&self, key: &str) -> Uuid {
         get_or_create_uuid(key)
     }
@@ -41,16 +42,15 @@ impl UuidCache {
 /// Benchmark UUID generation without caching (baseline)
 fn benchmark_uuid_generation_baseline(c: &mut Criterion) {
     let mut group = c.benchmark_group("UUID Operations");
-
     group.bench_function("uuid_generation_baseline", |b| {
         b.iter(|| {
             // Simulate the old approach - frequent UUID generation
             for i in 0..100 {
-                let _service_name = format!("service-{i}", i = i % 10);
+                let _service_name = format!("service-{}", e);
                 let uuid = black_box(Uuid::new_v4());
                 black_box(uuid);
             }
-        })
+        });
     });
 
     group.finish();
@@ -59,13 +59,12 @@ fn benchmark_uuid_generation_baseline(c: &mut Criterion) {
 /// Benchmark UUID caching performance (optimized)
 fn benchmark_uuid_caching_optimized(c: &mut Criterion) {
     let mut group = c.benchmark_group("UUID Operations");
-
     group.bench_function("uuid_caching_optimized", |b| {
         b.iter(|| {
             for i in 0..100 {
-                get_or_create_uuid(&format!("service-{i}"));
+                get_or_create_uuid(&format!("service-{}", i));
             }
-        })
+        });
     });
 
     group.finish();
@@ -74,14 +73,13 @@ fn benchmark_uuid_caching_optimized(c: &mut Criterion) {
 /// Benchmark memory allocation baseline (without pooling)
 fn benchmark_memory_allocation_baseline(c: &mut Criterion) {
     let mut group = c.benchmark_group("Memory Operations");
-
     group.bench_function("memory_allocation_baseline", |b| {
         b.iter(|| {
             for _ in 0..100 {
                 let data: Vec<u8> = black_box(vec![0u8; 4096]);
                 black_box(data);
             }
-        })
+        });
     });
 
     group.finish();
@@ -90,7 +88,6 @@ fn benchmark_memory_allocation_baseline(c: &mut Criterion) {
 /// Benchmark memory pooling performance (optimized)
 fn benchmark_memory_pooling_optimized(c: &mut Criterion) {
     let mut group = c.benchmark_group("Memory Operations");
-
     group.bench_function("memory_pooling_optimized", |b| {
         b.iter(|| {
             for _ in 0..100 {
@@ -100,7 +97,7 @@ fn benchmark_memory_pooling_optimized(c: &mut Criterion) {
                 black_box(small_buffer);
                 black_box(large_buffer);
             }
-        })
+        });
     });
 
     group.finish();
@@ -109,18 +106,17 @@ fn benchmark_memory_pooling_optimized(c: &mut Criterion) {
 /// Combined system performance benchmark
 fn benchmark_combined_system_performance(c: &mut Criterion) {
     let mut group = c.benchmark_group("Combined System Performance");
-
     group.bench_function("combined_optimized", |b| {
         b.iter(|| {
             for i in 0..50 {
                 // UUID operations
-                get_or_create_uuid(&format!("new-service-{i}"));
+                get_or_create_uuid(&format!("new-service-{}", i));
 
                 // Memory operations
                 let buffer = get_4kb_buffer();
                 black_box(buffer);
             }
-        })
+        });
     });
 
     group.finish();
@@ -129,7 +125,6 @@ fn benchmark_combined_system_performance(c: &mut Criterion) {
 /// Real-world performance validation
 fn benchmark_real_world_validation(c: &mut Criterion) {
     let mut group = c.benchmark_group("Real World Performance");
-
     // Simulate realistic service discovery and memory patterns
     group.bench_function("service_discovery_pattern", |b| {
         let cache = UuidCache::new();
@@ -138,7 +133,7 @@ fn benchmark_real_world_validation(c: &mut Criterion) {
             // Simulate service discovery with mixed patterns
             for i in 0..20 {
                 // Common services (high hit ratio)
-                cache.get_or_create(&format!("common-service-{i}"));
+                cache.get_or_create(&format!("common-service-{}", i));
 
                 // Dynamic services (some cache misses)
                 if i % 5 == 0 {
@@ -162,7 +157,7 @@ fn benchmark_real_world_validation(c: &mut Criterion) {
                 };
                 black_box(buffer);
             }
-        })
+        });
     });
 
     group.finish();
@@ -171,8 +166,7 @@ fn benchmark_real_world_validation(c: &mut Criterion) {
 /// Thread contention and concurrent access benchmarks
 fn benchmark_concurrent_performance(c: &mut Criterion) {
     let mut group = c.benchmark_group("Concurrent Performance");
-
-    for thread_count in [1, 2, 4, 8].iter() {
+    for thread_count in &[1, 2, 4, 8] {
         group.bench_with_input(
             BenchmarkId::new("concurrent_uuid_cache", thread_count),
             thread_count,
@@ -189,7 +183,7 @@ fn benchmark_concurrent_performance(c: &mut Criterion) {
                             std::thread::spawn(move || {
                                 for _ in 0..25 {
                                     let i = counter_clone.fetch_add(1, Ordering::Relaxed);
-                                    cache_clone.get_or_create(&format!("service-{i}"));
+                                    cache_clone.get_or_create(&format!("service-{}", e));
                                 }
                             })
                         })
@@ -201,7 +195,7 @@ fn benchmark_concurrent_performance(c: &mut Criterion) {
                             // Return unit type on error
                         });
                     }
-                })
+                });
             },
         );
     }
@@ -212,19 +206,18 @@ fn benchmark_concurrent_performance(c: &mut Criterion) {
 /// Performance regression detection
 fn benchmark_performance_regression_detection(c: &mut Criterion) {
     let mut group = c.benchmark_group("Performance Regression Detection");
-
     // These benchmarks help detect performance regressions
     group.bench_function("uuid_cache_stress_test", |b| {
         b.iter(|| {
             // High-intensity UUID caching test
             for i in 0..1000 {
-                get_or_create_uuid(&format!("validation-{i}"));
+                get_or_create_uuid(&format!("validation-{}", i));
             }
 
             // Memory pressure test
             let mut buffers = Vec::new();
             for i in 0..50 {
-                let key = format!("validation-{i}");
+                let key = format!("validation-{}", e);
                 let buffer = if i % 2 == 0 {
                     get_4kb_buffer()
                 } else {
@@ -233,7 +226,7 @@ fn benchmark_performance_regression_detection(c: &mut Criterion) {
                 buffers.push((key, buffer));
             }
             black_box(buffers);
-        })
+        });
     });
 
     group.finish();
@@ -246,11 +239,10 @@ fn benchmark_performance_regression_detection(c: &mut Criterion) {
 /// - Memory pooling should provide 2x improvement
 pub fn validate_performance_claims() -> Result<(), String> {
     println!("🚀 Running performance validation...");
-
     // Validate UUID caching performance
     let start = Instant::now();
-    for i in 0..10000 {
-        get_or_create_uuid(&format!("validation-test-{i}"));
+    for i in 0..10_000 {
+        get_or_create_uuid(&format!("validation-test-{}", i));
     }
     let uuid_cache_duration = start.elapsed();
 
@@ -299,7 +291,7 @@ mod tests {
 
     #[test]
     fn test_performance_validation() {
-        crate::validate_performance_claims().unwrap_or_else(|e| {
+        crate::validate_performance_claims().unwrap_or_else(|_e| {
             tracing::error!("Performance validation failed: {:?}", e);
             panic!("Performance validation failed: {:?}", e);
         });

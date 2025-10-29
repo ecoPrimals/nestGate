@@ -1,3 +1,4 @@
+// Note: constants module not needed for this example
 use std::process::Command;
 
 fn main() {

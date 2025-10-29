@@ -8,7 +8,6 @@ use crate::zero_cost::ZeroCostServiceHealth;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ExampleConfigManagerConfig {
     /// Configuration storage path
-    pub storage_path: String,
     /// Maximum number of configurations to cache
     pub max_cached_configs: usize,
     /// Auto-save interval in seconds
@@ -16,11 +15,9 @@ pub struct ExampleConfigManagerConfig {
     /// Enable configuration validation
     pub validate_configs: bool,
 }
-
 impl Default for ExampleConfigManagerConfig {
     fn default() -> Self {
         Self {
-            storage_path: "/etc/nestgate/configs".to_string(),
             max_cached_configs: 100,
             auto_save_interval_s: 300, // 5 minutes
             validate_configs: true,
@@ -42,7 +39,6 @@ pub struct ExampleConfigManagerHealth {
     /// Service uptime in seconds
     pub uptime_seconds: u64,
 }
-
 impl From<ExampleConfigManagerHealth> for ZeroCostServiceHealth {
     fn from(health: ExampleConfigManagerHealth) -> Self {
         Self {

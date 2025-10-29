@@ -1,22 +1,28 @@
-/// Simplified installation wizard using canonical patterns and LegacyConfigAdapter
+/// Simplified installation wizard using canonical patterns and `LegacyConfigAdapter`
 use crate::config::InstallerConfig;
 use dialoguer::{Confirm, Input};
 // Migration utilities no longer needed - using canonical configurations
 use nestgate_core::error::{NestGateError, Result};
 use std::path::PathBuf;
-
 /// Installation wizard for canonical configuration
 pub struct InstallationWizard {
     config: InstallerConfig,
 }
-
 impl InstallationWizard {
     /// Create new installation wizard
+    #[must_use]
     pub fn new(config: InstallerConfig) -> Self {
         Self { config }
     }
 
     /// Run the complete installation wizard
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub fn run(&mut self) -> Result<InstallerConfig> {
         println!("🚀 NestGate Installation Wizard");
         println!("================================");
@@ -36,8 +42,9 @@ impl InstallationWizard {
         // Using canonical configuration - access working_directory instead of domains.installation
         let default_path = self
             .config
+            .base_config
             .system
-            .working_directory
+            .data_dir
             .to_string_lossy()
             .to_string();
 
@@ -45,11 +52,11 @@ impl InstallationWizard {
             .with_prompt("Installation directory")
             .default(default_path)
             .interact_text()
-            .map_err(|e| NestGateError::validation_error("input", &format!("Input error: {e}"), None))?;
+            .map_err(|e| NestGateError::validation(format!("Input error: {e}")))?;
 
-        // Update canonical config fields - use working_directory instead of data_directory
-        self.config.system.working_directory = PathBuf::from(&custom_path);
-        // Note: log_directory doesn't exist in canonical config, using working_directory
+        // Update canonical config fields - use data_dir instead of working_directory
+        self.config.base_config.system.data_dir = PathBuf::from(&custom_path);
+        // Note: log_directory doesn't exist in canonical config, using data_dir
 
         Ok(())
     }
@@ -61,7 +68,7 @@ impl InstallationWizard {
             .with_prompt("Install as system service?")
             .default(false)
             .interact()
-            .map_err(|e| NestGateError::validation_error("input", &format!("Input error: {e}"), None))?;
+            .map_err(|e| NestGateError::validation(format!("Input error: {e}")))?;
 
         if install_as_service {
             println!("✅ Will install as system service");
@@ -73,12 +80,11 @@ impl InstallationWizard {
             .with_prompt("Add to system PATH?")
             .default(true)
             .interact()
-            .map_err(|e| NestGateError::validation_error("input", &format!("Input error: {e}"), None))?;
+            .map_err(|e| NestGateError::validation(format!("Input error: {e}")))?;
 
         if add_to_path {
             println!("✅ Will add to system PATH");
         }
-
         Ok(())
     }
 
@@ -89,14 +95,13 @@ impl InstallationWizard {
             .with_prompt("Install ZFS support?")
             .default(true)
             .interact()
-            .map_err(|e| NestGateError::validation_error("input", &format!("Input error: {e}"), None))?;
+            .map_err(|e| NestGateError::validation(format!("Input error: {e}")))?;
 
         // Note: components configuration would need to be added to canonical config
         // For now, just enable existing features if requested
         if install_zfs {
-            self.config.features.enable_metrics = true;
+            self.config.base_config.features.performance_monitoring = true;
         }
-
         Ok(())
     }
 
@@ -107,13 +112,13 @@ impl InstallationWizard {
             .with_prompt("Enable performance monitoring?")
             .default(true)
             .interact()
-            .map_err(|e| NestGateError::validation_error("input", &format!("Input error: {e}"), None))?;
+            .map_err(|e| NestGateError::validation(format!("Input error: {e}")))?;
 
         let enable_security = Confirm::new()
             .with_prompt("Enable security hardening?")
             .default(true)
             .interact()
-            .map_err(|e| NestGateError::validation_error("input", &format!("Input error: {e}"), None))?;
+            .map_err(|e| NestGateError::validation(format!("Input error: {e}")))?;
 
         if enable_monitoring {
             println!("✅ Performance monitoring enabled");
@@ -121,7 +126,6 @@ impl InstallationWizard {
         if enable_security {
             println!("✅ Security hardening enabled");
         }
-
         Ok(())
     }
 
@@ -130,27 +134,22 @@ impl InstallationWizard {
         println!("======================");
         println!(
             "Installation Path: {}",
-            self.config.system.working_directory.display()
+            self.config.base_config.system.data_dir.display()
         );
         println!(
             "Service Name: {}",
-            self.config.system.service_name
+            self.config.base_config.system.instance_name
         );
 
         let confirm: bool = Confirm::new()
             .with_prompt("Proceed with installation?")
             .default(true)
             .interact()
-            .map_err(|e| NestGateError::validation_error("input", &format!("Input error: {e}"), None))?;
+            .map_err(|e| NestGateError::validation(format!("Input error: {e}")))?;
 
         if !confirm {
-            return Err(NestGateError::validation_error(
-                "user_confirmation",
-                "Installation cancelled by user",
-                None
-            ));
+            return Err(NestGateError::validation("Installation cancelled by user"));
         }
-
         Ok(())
     }
 }
@@ -164,8 +163,8 @@ mod tests {
         let config = InstallerConfig::default();
         let wizard = InstallationWizard::new(config);
         assert_eq!(
-            wizard.config.system.instance_name,
-            Some("nestgate-instance".to_string())
+            wizard.config.base_config.system.instance_name.as_str(),
+            "nestgate-default"
         );
     }
 }

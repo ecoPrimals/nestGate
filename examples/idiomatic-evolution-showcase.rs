@@ -1,10 +1,11 @@
-//! # Idiomatic Evolution Showcase
-//!
-//! This example demonstrates how our evolved error system provides both:
-//! 1. **Idiomatic Rust patterns** for better ergonomics
-//! 2. **Unified error benefits** for operational intelligence
-//!
-//! **KEY INSIGHT**: This is evolutionary enhancement, not replacement!
+use crate::constants::magic_numbers_replacement;
+// # Idiomatic Evolution Showcase
+//
+// This example demonstrates how our evolved error system provides both:
+// 1. **Idiomatic Rust patterns** for better ergonomics
+// 2. **Unified error benefits** for operational intelligence
+//
+// **KEY INSIGHT**: This is evolutionary enhancement, not replacement!
 
 use std::collections::HashMap;
 use std::fs;
@@ -14,11 +15,12 @@ use tokio::time::sleep;
 
 use crate::canonical_modernization::{UnifiedServiceState, UnifiedServiceType};
 use anyhow::Context;
-use nestgate_core::config::canonical_unified::CanonicalConfig;
+use nestgate_core::config::unified::NestGateUnifiedConfig;
 use nestgate_core::error::{NestGateError, Result, ResultExt};
 
 /// **SCENARIO 1**: Configuration Loading (Common Use Case)
 /// Shows how idiomatic patterns make simple operations much cleaner
+use nestgate_core::error::NestGateError;
 fn load_application_config() -> Result<HashMap<String, String>> {
     // IDIOMATIC: External Result integration with context chaining
     let config_data = fs::read_to_string("app.toml")

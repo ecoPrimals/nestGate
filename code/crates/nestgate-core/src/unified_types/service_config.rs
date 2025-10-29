@@ -4,7 +4,6 @@ use std::collections::HashMap;
 // eliminating fragmentation across service implementations.
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::time::Duration;
 
 /// Unified service configuration
@@ -19,7 +18,6 @@ pub struct UnifiedServiceConfig {
     pub security_config: ServiceSecurityConfig,
     pub metadata: HashMap<String, String>,
 }
-
 impl Default for UnifiedServiceConfig {
     fn default() -> Self {
         Self {
@@ -46,21 +44,19 @@ pub enum ServiceType {
     Automation,
     Testing,
 }
-
 /// Service endpoint configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceEndpointConfig {
-    pub bind_address: String,
+    pub bind_endpoint: String,
     pub port: u16,
     pub tls_enabled: bool,
     pub max_connections: usize,
     pub keep_alive_timeout: Duration,
 }
-
 impl Default for ServiceEndpointConfig {
     fn default() -> Self {
         Self {
-            bind_address: "127.0.0.1".to_string(),
+            bind_endpoint: "127.0.0.1".to_string(),
             port: 8080,
             tls_enabled: false,
             max_connections: 10000,
@@ -73,17 +69,14 @@ impl Default for ServiceEndpointConfig {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceHealthConfig {
     pub enabled: bool,
-    pub health_check_path: String,
     pub check_interval: Duration,
     pub timeout: Duration,
     pub failure_threshold: u32,
 }
-
 impl Default for ServiceHealthConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            health_check_path: "/health".to_string(),
             check_interval: Duration::from_secs(30),
             timeout: Duration::from_secs(5),
             failure_threshold: 3,
@@ -95,17 +88,14 @@ impl Default for ServiceHealthConfig {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceMetricsConfig {
     pub enabled: bool,
-    pub metrics_path: String,
     pub collection_interval: Duration,
     pub retention_period: Duration,
     pub export_enabled: bool,
 }
-
 impl Default for ServiceMetricsConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            metrics_path: "/metrics".to_string(),
             collection_interval: Duration::from_secs(15),
             retention_period: Duration::from_secs(86400), // 24 hours
             export_enabled: false,
@@ -123,7 +113,6 @@ pub struct ServiceScalingConfig {
     pub scale_up_threshold: f64,
     pub scale_down_threshold: f64,
 }
-
 impl Default for ServiceScalingConfig {
     fn default() -> Self {
         Self {
@@ -146,7 +135,6 @@ pub struct ServiceSecurityConfig {
     pub cors_enabled: bool,
     pub allowed_origins: Vec<String>,
 }
-
 impl Default for ServiceSecurityConfig {
     fn default() -> Self {
         Self {

@@ -1,4 +1,3 @@
-
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -10,29 +9,26 @@ pub struct OptimizationResult {
     pub optimized_datasets: Vec<String>,
     pub errors: Vec<String>,
 }
-
 /// Property change recommendation
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PropertyChange {
     pub property_name: String,
-    pub current_value: String,
-    pub recommended_value: String,
+    pub currentvalue: String,
+    pub recommendedvalue: String,
     pub reason: String,
 }
-
 /// Optimization plan for distributed processing
 #[derive(Debug, Clone)]
 pub enum OptimizationPlan {
     /// Distribute optimization across multiple services
     Distributed {
-        squirrel_tasks: HashMap<String, Vec<String>>,
+        intelligence_tasks: HashMap<String, Vec<String>>,
     },
     /// Use single service for all optimizations
-    SingleSquirrel { squirrel_id: String },
+    SingleIntelligence { intelligence_id: String },
     /// Fall back to local processing only
     LocalOnly,
 }
-
 /// Tier threshold configuration for automated storage management
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TierThresholds {
@@ -47,7 +43,6 @@ pub struct TierThresholds {
     /// Age thresholds in days
     pub age_thresholds: AgeThresholds,
 }
-
 /// Size-based thresholds for tier assignment
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SizeThresholds {
@@ -56,7 +51,6 @@ pub struct SizeThresholds {
     /// Large file threshold (bytes)
     pub large_file: u64,
 }
-
 /// Age-based thresholds for tier assignment
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AgeThresholds {
@@ -65,7 +59,6 @@ pub struct AgeThresholds {
     /// Old file threshold (days)
     pub old: u32,
 }
-
 impl Default for TierThresholds {
     fn default() -> Self {
         Self {
@@ -116,7 +109,6 @@ pub struct PerformanceExpectation {
     /// Expected durability (number of 9s, e.g., 11 for 99.999999999%)
     pub expected_durability_nines: u32,
 }
-
 impl Default for PerformanceExpectation {
     fn default() -> Self {
         Self {

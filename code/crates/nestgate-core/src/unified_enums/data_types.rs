@@ -3,11 +3,10 @@
 /// and data processing classifications.
 use serde::{Deserialize, Serialize};
 use std::fmt;
+// ==================== SECTION ====================
 
-// ==================== DATA CLASSIFICATION ====================
-
-/// **THE** DataType - unified across all modules
-/// Replaces 4+ fragmented DataType definitions across temporal_storage, ecosystem_integration, etc.
+/// **THE** `DataType` - unified across all modules
+/// Replaces 4+ fragmented `DataType` definitions across `temporal_storage`, `ecosystem_integration`, etc.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum UnifiedDataType {
     // Core data types
@@ -19,7 +18,6 @@ pub enum UnifiedDataType {
     Structured,
     /// Multimedia content (images, audio, video)
     Multimedia,
-
     // Scientific and research data
     /// Genomic data and sequences
     Genomic,
@@ -73,10 +71,10 @@ impl fmt::Display for UnifiedDataType {
     }
 }
 
-// ==================== CONTENT TYPE CLASSIFICATION ====================
+// ==================== SECTION ====================
 
-/// **THE** ContentType - unified across all modules
-/// Replaces ContentType definitions in API handlers and HTTP responses
+/// **THE** `ContentType` - unified across all modules
+/// Replaces `ContentType` definitions in API handlers and HTTP responses
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum UnifiedContentType {
     /// JSON content
@@ -120,7 +118,6 @@ pub enum UnifiedContentType {
     /// Custom content type
     Custom(String),
 }
-
 impl Default for UnifiedContentType {
     fn default() -> Self {
         Self::Text
@@ -154,10 +151,10 @@ impl fmt::Display for UnifiedContentType {
     }
 }
 
-// ==================== FILE TYPE CLASSIFICATION ====================
+// ==================== SECTION ====================
 
-/// **THE** FileType - unified across all modules
-/// Replaces FileType definitions in automation and ZFS modules
+/// **THE** `FileType` - unified across all modules
+/// Replaces `FileType` definitions in automation and ZFS modules
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum UnifiedFileType {
     /// Regular file
@@ -179,7 +176,6 @@ pub enum UnifiedFileType {
     /// Custom file type
     Custom(String),
 }
-
 impl Default for UnifiedFileType {
     fn default() -> Self {
         Self::Regular

@@ -1,5 +1,5 @@
 //
-// Automation-specific configuration structures extracted from the monolithic domain_configs.rs
+// Automation-specific configuration structures extracted from the monolithic NestGateCanonicalConfig.rs
 // for better maintainability and focused responsibility.
 
 use serde::{Deserialize, Serialize};
@@ -13,7 +13,6 @@ pub struct AutomationDomainConfig {
     pub auto_scaling: bool,
     pub maintenance_windows: Vec<String>,
 }
-
 impl Default for AutomationDomainConfig {
     fn default() -> Self {
         Self {

@@ -4,8 +4,6 @@ use std::collections::HashMap;
 // for enterprise storage systems.
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::path::PathBuf;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use uuid::Uuid;
 
@@ -20,10 +18,9 @@ pub struct SnapshotInfo {
     pub description: Option<String>,
     pub tags: HashMap<String, String>,
     pub checksum: String,
-    pub storage_path: PathBuf,
 }
-
 impl SnapshotInfo {
+    #[must_use]
     pub fn new(name: String, description: Option<String>) -> Self {
         let id = Uuid::new_v4().to_string();
         let timestamp = SystemTime::now()
@@ -40,7 +37,6 @@ impl SnapshotInfo {
             description,
             tags: HashMap::new(),
             checksum: String::new(),
-            storage_path: PathBuf::from(format!("snapshots/{timestamp}/{id}")),
         }
     }
 

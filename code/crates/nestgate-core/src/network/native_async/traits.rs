@@ -1,13 +1,12 @@
+use crate::Result;
 /// Native Async Network Traits - Zero-Cost Abstractions
-/// Extracted from native_async_network.rs to maintain file size compliance
+/// Extracted from `native_async_network.rs` to maintain file size compliance
 /// Contains trait definitions for service discovery, protocol handling, and load balancing
 use std::collections::HashMap;
 use std::future::Future;
 use std::time::Duration;
 
-use crate::error::Result;
-
-/// Native async service discovery trait - replaces #[async_trait] ServiceDiscovery
+/// Native async service discovery trait - replaces #[`async_trait`] `ServiceDiscovery`
 pub trait NativeAsyncServiceDiscovery<
     const MAX_SERVICES: usize = 10000,
     const DISCOVERY_TIMEOUT_SECS: u64 = 30,
@@ -19,7 +18,6 @@ pub trait NativeAsyncServiceDiscovery<
     type ServiceEvent: Clone + Send + Sync + 'static;
     type HealthStatus: Clone + Send + Sync + 'static;
     type Query: Clone + Send + Sync + 'static;
-
     /// Register service - native async, no Future boxing
     fn register(&self, service: Self::ServiceInfo) -> impl Future<Output = Result<()>> + Send;
 
@@ -68,22 +66,25 @@ pub trait NativeAsyncServiceDiscovery<
     ) -> impl Future<Output = Result<()>> + Send;
 
     /// Maximum number of services that can be discovered at compile-time
+    #[must_use]
     fn max_services() -> usize {
         MAX_SERVICES
     }
 
     /// Discovery timeout at compile-time
+    #[must_use]
     fn discovery_timeout_seconds() -> u64 {
         DISCOVERY_TIMEOUT_SECS
     }
 
     /// Watch buffer size at compile-time
+    #[must_use]
     fn watch_buffer_size() -> usize {
         WATCH_BUFFER_SIZE
     }
 }
 
-/// Native async network protocol handler trait - replaces #[async_trait] ProtocolHandler
+/// Native async network protocol handler trait - replaces #[`async_trait`] `ProtocolHandler`
 pub trait NativeAsyncProtocolHandler<
     const MAX_CONNECTIONS: usize = 1000,
     const CONNECTION_TIMEOUT_SECS: u64 = 30,
@@ -95,7 +96,6 @@ pub trait NativeAsyncProtocolHandler<
     type Request: Clone + Send + Sync + 'static;
     type Response: Clone + Send + Sync + 'static;
     type Config: Clone + Send + Sync + 'static;
-
     /// Establish connection - native async, no Future boxing
     fn connect(
         &self,
@@ -129,22 +129,25 @@ pub trait NativeAsyncProtocolHandler<
         -> impl Future<Output = Result<Duration>> + Send;
 
     /// Max connections at compile-time
+    #[must_use]
     fn max_connections() -> usize {
         MAX_CONNECTIONS
     }
 
     /// Connection timeout at compile-time
+    #[must_use]
     fn connection_timeout_seconds() -> u64 {
         CONNECTION_TIMEOUT_SECS
     }
 
     /// Max retries at compile-time
+    #[must_use]
     fn max_retries() -> u32 {
         MAX_RETRIES
     }
 }
 
-/// Native async unified service interface trait - replaces #[async_trait] UnifiedServiceInterface
+/// Native async unified service interface trait - replaces #[`async_trait`] `UnifiedServiceInterface`
 pub trait NativeAsyncUnifiedServiceInterface<
     const MAX_REQUESTS_PER_SEC: usize = 1000,
     const HEALTH_CHECK_INTERVAL_SECS: u64 = 30,
@@ -156,7 +159,6 @@ pub trait NativeAsyncUnifiedServiceInterface<
     type Metrics: Clone + Send + Sync + 'static;
     type ServiceInfo: Clone + Send + Sync + 'static;
     type Configuration: Clone + Send + Sync + 'static;
-
     /// Get service health - native async, no Future boxing
     fn health(&self) -> impl Future<Output = Result<Self::HealthStatus>> + Send;
 
@@ -188,17 +190,19 @@ pub trait NativeAsyncUnifiedServiceInterface<
     ) -> impl Future<Output = Result<bool>> + Send;
 
     /// Max requests per second at compile-time
+    #[must_use]
     fn max_requests_per_second() -> usize {
         MAX_REQUESTS_PER_SEC
     }
 
     /// Health check interval at compile-time
+    #[must_use]
     fn health_check_interval_seconds() -> u64 {
         HEALTH_CHECK_INTERVAL_SECS
     }
 }
 
-/// Native async load balancer trait - replaces #[async_trait] LoadBalancer
+/// Native async load balancer trait - replaces #[`async_trait`] `LoadBalancer`
 pub trait NativeAsyncLoadBalancer<
     const MAX_BACKENDS: usize = 100,
     const HEALTH_CHECK_INTERVAL_SECS: u64 = 30,
@@ -209,7 +213,6 @@ pub trait NativeAsyncLoadBalancer<
     type Request: Clone + Send + Sync + 'static;
     type Response: Clone + Send + Sync + 'static;
     type HealthCheck: Clone + Send + Sync + 'static;
-
     /// Select backend - native async, no Future boxing
     fn select_backend(
         &self,
@@ -239,11 +242,13 @@ pub trait NativeAsyncLoadBalancer<
     ) -> impl Future<Output = Result<()>> + Send;
 
     /// Max backends at compile-time
+    #[must_use]
     fn max_backends() -> usize {
         MAX_BACKENDS
     }
 
     /// Health check interval at compile-time
+    #[must_use]
     fn health_check_interval_seconds() -> u64 {
         HEALTH_CHECK_INTERVAL_SECS
     }

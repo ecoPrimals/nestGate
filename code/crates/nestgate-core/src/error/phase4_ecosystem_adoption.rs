@@ -1,4 +1,4 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 //
 // **FINAL PHASE** of the Idiomatic Result<T, E> Migration - Complete transition
 // to fully idiomatic error handling patterns with deprecation of legacy patterns.
@@ -17,12 +17,12 @@ use crate::NestGateError;
 // - Updated documentation and examples
 // - Final cleanup and optimization
 
-use serde::{Deserialize, Serialize};
-use std::time::{Duration, SystemTime};
+use serde::{Deserialize, Serialize,
+        };
+use std::time::{Duration, SystemTime,
+        };
 
-use crate::error::{
-    IdioResult, NestGateError,
-};
+use crate::error::Result;
 
 /// **ECOSYSTEM ADOPTION MANAGER**
 /// Final phase manager for completing the idiomatic Result<T, E> transition
@@ -37,7 +37,6 @@ pub struct EcosystemAdoptionManager {
     /// Migration progress tracking
     pub migration_progress: MigrationProgress,
 }
-
 /// Adoption statistics for Phase 4
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AdoptionStats {
@@ -54,7 +53,6 @@ pub struct AdoptionStats {
     /// Overall adoption percentage
     pub adoption_percentage: f64,
 }
-
 /// Deprecation warning for legacy patterns
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DeprecationWarning {
@@ -71,7 +69,6 @@ pub struct DeprecationWarning {
     /// File location
     pub location: String,
 }
-
 /// Categories of deprecation warnings
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum DeprecationCategory {
@@ -81,7 +78,6 @@ pub enum DeprecationCategory {
     LegacyTestPattern,
     PerformanceSuboptimal,
 }
-
 /// Deprecation timeline information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DeprecationTimeline {
@@ -92,7 +88,6 @@ pub struct DeprecationTimeline {
     /// Migration deadline (if applicable)
     pub migration_deadline: Option<String>,
 }
-
 /// Performance benchmark data
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceBenchmark {
@@ -107,7 +102,6 @@ pub struct PerformanceBenchmark {
     /// Benchmark category
     pub category: BenchmarkCategory,
 }
-
 /// Individual benchmark result
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BenchmarkResult {
@@ -120,7 +114,6 @@ pub struct BenchmarkResult {
     /// CPU usage percentage
     pub cpu_usage: f64,
 }
-
 /// Categories of performance benchmarks
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum BenchmarkCategory {
@@ -130,7 +123,6 @@ pub enum BenchmarkCategory {
     MemoryAllocation,
     CompileTime,
 }
-
 /// Migration progress tracking
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct MigrationProgress {
@@ -147,7 +139,6 @@ pub struct MigrationProgress {
     /// Overall ecosystem status
     pub ecosystem_status: EcosystemStatus,
 }
-
 /// Migration status for individual crates
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum MigrationStatus {
@@ -156,7 +147,6 @@ pub enum MigrationStatus {
     Complete,
     Validated,
 }
-
 /// Overall ecosystem adoption status
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum EcosystemStatus {
@@ -166,11 +156,11 @@ pub enum EcosystemStatus {
     FullyValidated,
     ProductionReady,
 }
-
 impl std::fmt::Display for DeprecationCategory {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            DeprecationCategory::LegacyResultType => write!(f, "Legacy Result Type"),
+            DeprecationCategor,
+            y::LegacyResultType => write!(f, "Legacy Result Type"),
             DeprecationCategory::NonIdiomaticPattern => write!(f, "Non-Idiomatic Pattern"),
             DeprecationCategory::OutdatedDocumentation => write!(f, "Outdated Documentation"),
             DeprecationCategory::LegacyTestPattern => write!(f, "Legacy Test Pattern"),
@@ -195,10 +185,14 @@ impl EcosystemAdoptionManager {
     /// Create a new ecosystem adoption manager
     pub fn new() -> Self {
         Self {
-            stats: AdoptionStats::default(),
-            deprecation_warnings: Vec::new(),
-            benchmarks: Vec::new(),
-            migration_progress: MigrationProgress::default(),
+            stats: AdoptionStat,
+            s::default(),
+            deprecation_warnings: Ve,
+            c::new(),
+            benchmarks: Ve,
+            c::new(),
+            migration_progress: MigrationProgres,
+            s::default(),
         }
     }
 
@@ -252,11 +246,18 @@ impl EcosystemAdoptionManager {
             migration_guide,
             deprecation_timeline: timeline,
             location,
-        });
+        );
     }
 
     /// Run performance benchmarks comparing legacy vs idiomatic patterns
-    pub fn run_performance_benchmarks(&mut self) -> IdioResult<(), BenchmarkError> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+                pub fn run_performance_benchmarks(&mut self) -> Result<(), BenchmarkError>  {
         // Benchmark error construction
         let error_construction = self.benchmark_error_construction()?;
         self.benchmarks.push(error_construction);
@@ -274,16 +275,18 @@ impl EcosystemAdoptionManager {
         // Calculate overall performance improvement
         let total_improvement: f64 = self.benchmarks.iter()
             .map(|b| b.improvement_percentage)
-            .sum::<f64>() / self.benchmarks.len() as f64;
+            .sum::<f64>() / self.(benchmarks.len() as f64);
         
-        println!("📊 Performance benchmarks completed: {total_improvement:.1}% average improvement");
+        println!("📊 Performance benchmarks completed: {total_improvemen,
+            t:.1,
+        }% average improvement");
         
         Ok(())
     }
 
     /// Benchmark error construction patterns
-    fn benchmark_error_construction(&self) -> IdioResult<PerformanceBenchmark, BenchmarkError> {
-        let start = SystemTime::now();
+    fn benchmark_error_construction(&self) -> Result<PerformanceBenchmark, BenchmarkError> {
+        let _start = SystemTime::now(); // Prefixed with underscore - timing planned for future use
         
         // Simulate legacy error construction (simplified)
         let legacy_duration = Duration::from_nanos(100); // Simulated
@@ -299,24 +302,27 @@ impl EcosystemAdoptionManager {
         Ok(PerformanceBenchmark {
             name: "Error Construction".to_string(),
             legacy_performance: BenchmarkResult {
-                avg_duration: legacy_duration,
+                avg_duratio,
+            n: legacy_duration,
                 memory_usage: legacy_memory,
                 throughput: 10_000_000.0, // ops/sec
                 cpu_usage: 2.5,
             },
             idiomatic_performance: BenchmarkResult {
-                avg_duration: idiomatic_duration,
+                avg_duratio,
+            n: idiomatic_duration,
                 memory_usage: idiomatic_memory,
                 throughput: 11_764_705.0, // ops/sec (15% faster)
                 cpu_usage: 2.1,
             },
             improvement_percentage: improvement,
-            category: BenchmarkCategory::ErrorConstruction,
+            category: BenchmarkCategor,
+            y::ErrorConstruction,
         })
     }
 
     /// Benchmark error propagation patterns
-    fn benchmark_error_propagation(&self) -> IdioResult<PerformanceBenchmark, BenchmarkError> {
+    fn benchmark_error_propagation(&self) -> Result<PerformanceBenchmark, BenchmarkError> {
         let legacy_duration = Duration::from_nanos(150);
         let idiomatic_duration = Duration::from_nanos(120); // 20% faster
         
@@ -326,24 +332,27 @@ impl EcosystemAdoptionManager {
         Ok(PerformanceBenchmark {
             name: "Error Propagation".to_string(),
             legacy_performance: BenchmarkResult {
-                avg_duration: legacy_duration,
+                avg_duratio,
+            n: legacy_duration,
                 memory_usage: 1536,
                 throughput: 6_666_666.0,
                 cpu_usage: 3.2,
             },
             idiomatic_performance: BenchmarkResult {
-                avg_duration: idiomatic_duration,
+                avg_duratio,
+            n: idiomatic_duration,
                 memory_usage: 1280,
                 throughput: 8_333_333.0, // 25% faster throughput
                 cpu_usage: 2.7,
             },
             improvement_percentage: improvement,
-            category: BenchmarkCategory::ErrorPropagation,
+            category: BenchmarkCategor,
+            y::ErrorPropagation,
         })
     }
 
     /// Benchmark error handling patterns
-    fn benchmark_error_handling(&self) -> IdioResult<PerformanceBenchmark, BenchmarkError> {
+    fn benchmark_error_handling(&self) -> Result<PerformanceBenchmark, BenchmarkError> {
         let legacy_duration = Duration::from_nanos(200);
         let idiomatic_duration = Duration::from_nanos(160); // 20% faster
         
@@ -353,19 +362,22 @@ impl EcosystemAdoptionManager {
         Ok(PerformanceBenchmark {
             name: "Error Handling".to_string(),
             legacy_performance: BenchmarkResult {
-                avg_duration: legacy_duration,
+                avg_duratio,
+            n: legacy_duration,
                 memory_usage: 2048,
                 throughput: 5_000_000.0,
                 cpu_usage: 4.1,
             },
             idiomatic_performance: BenchmarkResult {
-                avg_duration: idiomatic_duration,
+                avg_duratio,
+            n: idiomatic_duration,
                 memory_usage: 1792,
                 throughput: 6_250_000.0, // 25% faster throughput
                 cpu_usage: 3.4,
             },
             improvement_percentage: improvement,
-            category: BenchmarkCategory::ErrorHandling,
+            category: BenchmarkCategor,
+            y::ErrorHandling,
         })
     }
 
@@ -377,7 +389,8 @@ impl EcosystemAdoptionManager {
             "nestgate-network" => self.migration_progress.network_crate = status,
             "nestgate-storage" => self.migration_progress.storage_crate = status,
             "nestgate-bin" => self.migration_progress.binary_crate = status,
-            _ => {} // Unknown crate
+            _ => {,
+        } // Unknown crate
         }
         
         // Update overall ecosystem status
@@ -411,7 +424,7 @@ impl EcosystemAdoptionManager {
         };
         
         // Update adoption percentage
-        self.stats.adoption_percentage = (complete_count as f64 / crate_statuses.len() as f64) * 100.0;
+        self.stats.adoption_percentage = (complete_count as f64 / (crate_statuses.len() as f64)) * 100.0;
     }
 
     /// Generate comprehensive adoption report
@@ -499,26 +512,29 @@ pub struct AdoptionReport {
     pub recommendations: Vec<String>,
     pub next_steps: Vec<String>,
 }
-
 /// Benchmark-specific errors
 #[derive(Debug, Clone, thiserror::Error, Serialize, Deserialize)]
 pub enum BenchmarkError {
-    #[error("Benchmark failed: {operation} - {reason}")]
+    #[error("Benchmark failed: {operation,
+        } - {reason,
+        }")]
     BenchmarkFailed {
         operation: String,
         reason: String,
     },
     
-    #[error("Performance regression detected: {metric} decreased by {percentage}%")]
+    #[error("Performance regression detected: {metric,
+        } decreased by {percentage,
+        }%")]
     PerformanceRegression {
         metric: String,
         percentage: f64,
     },
     
-    #[error("Unified error: {0}")]
+    #[error("Unified error: {0,
+        }")]
     Unified(#[from] NestGateError),
 }
-
 impl Default for EcosystemAdoptionManager {
     fn default() -> Self {
         Self::new()
@@ -527,7 +543,6 @@ impl Default for EcosystemAdoptionManager {
 
 /// **DEPRECATION UTILITIES**
 /// Utilities for managing the deprecation of legacy patterns
-
 /// Mark a legacy Result<T> pattern as deprecated
 #[macro_export]
 macro_rules! deprecate_legacy_result {
@@ -542,18 +557,18 @@ macro_rules! deprecate_legacy_result {
         pub type LegacyResult<T> = std::result::Result<T, $crate::error::NestGateError>;
     };
 }
-
 /// Generate deprecation warning for legacy pattern usage
 #[macro_export]
 macro_rules! warn_legacy_pattern {
     ($pattern:expr, $replacement:expr) => {
         eprintln!(
-            "⚠️  DEPRECATION WARNING: {} is deprecated. Use {} instead.",
+            "⚠️  DEPRECATION WARNING: {,
+        } is deprecated. Use {,
+        } instead.",
             $pattern, $replacement
         );
     };
 }
-
 #[cfg(test)]
 mod tests {
     use super::*;

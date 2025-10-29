@@ -7,12 +7,11 @@ use std::collections::HashMap;
 use tokio::process::Command;
 use tracing::{debug, warn};
 
-use crate::performance::types::*;
+use crate::performance::types::{PoolPerformanceMetrics, SystemResourceMetrics};
 use nestgate_core::Result as CoreResult;
 
 /// Real system metrics collector
 pub struct RealMetricsCollector;
-
 impl RealMetricsCollector {
     /// Collect real system resource metrics from the OS
     pub async fn collect_system_metrics() -> CoreResult<SystemResourceMetrics> {

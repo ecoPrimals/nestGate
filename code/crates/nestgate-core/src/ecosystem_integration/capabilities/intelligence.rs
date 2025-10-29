@@ -1,12 +1,11 @@
-/// Intelligence Capabilities (Squirrel AI Primal Integration)
+use crate::universal_adapter::{PrimalAgnosticAdapter, CapabilityCategory, CapabilityRequest};
+/// Intelligence Capabilities (Intelligence AI Primal Integration)
 ///
 /// Defines capability interfaces for AI model inference, data analysis,
-/// and optimization suggestions through the Squirrel AI primal.
+/// and optimization suggestions through the Intelligence AI primal.
 use super::{CapabilityRequest, CapabilityResponse, UniversalCapability};
-use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
 /// Model inference request parameters
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ModelInferenceRequest {
@@ -15,7 +14,6 @@ pub struct ModelInferenceRequest {
     pub parameters: HashMap<String, serde_json::Value>,
     pub timeout_seconds: Option<u64>,
 }
-
 /// Model inference response data
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ModelInferenceResponse {
@@ -24,7 +22,6 @@ pub struct ModelInferenceResponse {
     pub model_version: String,
     pub processing_time_ms: u64,
 }
-
 /// Data analysis request parameters
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DataAnalysisRequest {
@@ -32,7 +29,6 @@ pub struct DataAnalysisRequest {
     pub analysis_type: String,
     pub parameters: HashMap<String, serde_json::Value>,
 }
-
 /// Data analysis response data
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DataAnalysisResponse {
@@ -40,7 +36,6 @@ pub struct DataAnalysisResponse {
     pub insights: Vec<String>,
     pub statistics: HashMap<String, f64>,
 }
-
 /// Optimization suggestion request parameters
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OptimizationRequest {
@@ -49,7 +44,6 @@ pub struct OptimizationRequest {
     pub constraints: Vec<String>,
     pub optimization_goals: Vec<String>,
 }
-
 /// Optimization suggestion response data
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OptimizationResponse {
@@ -58,34 +52,31 @@ pub struct OptimizationResponse {
     pub confidence_score: f64,
     pub implementation_priority: Vec<String>,
 }
-
-/// Intelligence capability trait for Squirrel integration
-#[async_trait]
+/// Intelligence capability trait for Intelligence integration
+/// **MODERNIZED**: Native async patterns for zero-cost AI operations
 pub trait IntelligenceCapability: UniversalCapability {
-    /// Run AI model inference
-    async fn model_inference(
+    /// Run AI model inference - native async, no Future boxing
+    fn model_inference(
         &self,
         request: ModelInferenceRequest,
-    ) -> Result<ModelInferenceResponse, Box<dyn std::error::Error + Send + Sync>>;
-
-    /// Perform data analysis
-    async fn analyze_data(
+    ) -> impl std::future::Future<Output = Result<ModelInferenceResponse, Box<dyn std::error::Error + Send + Sync>>> + Send;
+    /// Perform data analysis - native async
+    fn analyze_data(
         &self,
         request: DataAnalysisRequest,
-    ) -> Result<DataAnalysisResponse, Box<dyn std::error::Error + Send + Sync>>;
+    ) -> impl std::future::Future<Output = Result<DataAnalysisResponse, Box<dyn std::error::Error + Send + Sync>>> + Send;
 
-    /// Generate optimization suggestions
-    async fn suggest_optimizations(
+    /// Generate optimization suggestions - native async
+    fn suggest_optimizations(
         &self,
         request: OptimizationRequest,
-    ) -> Result<OptimizationResponse, Box<dyn std::error::Error + Send + Sync>>;
+    ) -> impl std::future::Future<Output = Result<OptimizationResponse, Box<dyn std::error::Error + Send + Sync>>> + Send;
 }
 
 /// Mock implementation for testing
 pub struct MockIntelligenceCapability {
     enabled: bool,
 }
-
 impl MockIntelligenceCapability {
     pub fn new() -> Self {
         Self { enabled: true }
@@ -98,7 +89,6 @@ impl Default for MockIntelligenceCapability {
     }
 }
 
-#[async_trait]
 impl UniversalCapability for MockIntelligenceCapability {
     async fn execute(
         &self,
@@ -182,7 +172,6 @@ impl UniversalCapability for MockIntelligenceCapability {
     }
 }
 
-#[async_trait]
 impl IntelligenceCapability for MockIntelligenceCapability {
     async fn model_inference(
         &self,

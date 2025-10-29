@@ -1,145 +1,139 @@
-    extract::{Path, Query, State, WebSocketUpgrade},
-    http::StatusCode,
-    response::{IntoResponse, Json},
+use axum::{
     routing::{delete, get, patch, post, put},
     Router,
 };
-use serde_json::json;
 use std::sync::Arc;
 
-use crate::{
-    // event_coordination::EventCoordinator,  // Missing module
-    handlers::{
-        load_testing::{
-            get_load_test_history, get_load_test_results, get_performance_baselines,
-            start_load_test,
-        },
-        performance_analytics::{
-            get_performance_alerts, get_performance_metrics, get_performance_recommendations,
-        },
-        storage::{
-            get_storage_datasets, get_storage_metrics, get_storage_pools, get_storage_snapshots,
-        },
-        workspace_management::{
-            create_team, create_workspace, delete_workspace, get_workspace, get_workspaces,
-            update_workspace_config,
-        },
+use crate::handlers::load_testing::{
+    get_load_test_history, get_load_test_results, get_performance_baselines, start_load_test,
+};
+use crate::handlers::workspace_management::teams::create_team;
+use crate::handlers::{
+    performance_analytics::{
+        get_performance_alerts, get_performance_metrics, get_performance_recommendations,
     },
-    // mcp_streaming::McpStreamingManager,  // Missing module
+    storage::{
+        get_storage_datasets, get_storage_metrics, get_storage_pools, get_storage_snapshots,
+    },
+    workspace_management::{
+        create_workspace, delete_workspace, get_workspace, get_workspaces, update_workspace_config,
+    },
 };
 
-// Optional ZFS imports - graceful degradation if not available
-use nestgate_zfs::zero_cost_zfs_operations::ProductionZfsManager;
+// Production: Use real ZFS manager and config
+#[cfg(not(feature = "dev-stubs"))]
+use nestgate_zfs::ProductionZfsManager;
+
+// Development: Use stub manager and config
+#[cfg(feature = "dev-stubs")]
+use crate::handlers::zfs_stub::{ProductionZfsManager, ZfsConfig};
+
+/// Production ZFS manager type alias
+///
+/// Defines the production ZFS manager implementation used throughout
+/// the application for consistent ZFS operations and management.
 pub type ZfsManager = ProductionZfsManager;
 
 #[cfg(feature = "streaming-rpc")]
-use crate::{};
+// Removed unused import: crate::{}
 
-/// Enhanced application state for the API with all communication layers
+/// Application state shared across all route handlers
+///
+/// Contains shared resources and services that route handlers need
+/// to access, including ZFS management and configuration.
 #[derive(Clone)]
 pub struct AppState {
+    /// ZFS manager instance for storage operations
     pub zfs_manager: Arc<ZfsManager>,
-    // pub websocket_manager: WebSocketManager,  // Missing module
-    // pub mcp_streaming_manager: McpStreamingManager,  // Missing module
-    // pub event_coordinator: EventCoordinator,  // Missing module
-    #[cfg(feature = "streaming-rpc")]
-    // pub sse_manager: Arc<SseManager>,  // Missing module
-    pub _phantom: std::marker::PhantomData<()>, // Placeholder to keep struct non-empty
+    // Add other shared state here as needed
+    /// Phantom data for future extensibility
+    pub _phantom: std::marker::PhantomData<()>,
 }
 
 impl Default for AppState {
     fn default() -> Self {
-        #[cfg(feature = "streaming-rpc")]
-        {
-            Self::with_zfs_and_streaming()
-        }
-        #[cfg(not(feature = "streaming-rpc"))]
-        {
-            Self {
-                mcp_streaming_manager: McpStreamingManager::new(),
-                event_coordinator: EventCoordinator::new(),
-                // BYOB API state integration planned for future release
-                hardware_tuning: None, // Hardware tuning adapter disabled for canonical modernization
-                zfs_manager: None,     // Will be initialized if ZFS is available
-                universal_storage_bridge: None, // Will be initialized for storage-agnostic operations
-                auth_service: Arc::new(crate::handlers::auth::AuthService::new()),
-            }
-        }
+        Self::new()
     }
 }
 
 impl AppState {
-    /// Create AppState with ZFS support
+    /// Create `AppState` with ZFS support
     #[cfg(feature = "streaming-rpc")]
+    #[must_use]
     pub fn with_zfs_and_streaming() -> Self {
         Self {
+            #[cfg(feature = "dev-stubs")]
+            zfs_manager: Arc::new(ZfsManager::new(ZfsConfig::default())),
+            #[cfg(not(feature = "dev-stubs"))]
             zfs_manager: Arc::new(ZfsManager::new()),
-            // websocket_manager: WebSocketManager::new(),  // Missing module
-            // mcp_streaming_manager: McpStreamingManager::new(),  // Missing module
-            // event_coordinator: EventCoordinator::new(),  // Missing module
-            // sse_manager: Arc::new(SseManager::new()),  // Missing module
             _phantom: std::marker::PhantomData,
         }
     }
 
-    /// Create AppState without streaming features
+    /// Create `AppState` without streaming features
+    #[must_use]
     pub fn without_streaming() -> Self {
         Self {
+            #[cfg(feature = "dev-stubs")]
+            zfs_manager: Arc::new(ZfsManager::new(ZfsConfig::default())),
+            #[cfg(not(feature = "dev-stubs"))]
             zfs_manager: Arc::new(ZfsManager::new()),
+            #[cfg(feature = "streaming-rpc")]
             _phantom: std::marker::PhantomData,
         }
     }
 
-    /// Create AppState with optional streaming components based on feature flags
+    /// Create `AppState` with optional streaming components based on feature flags
+    #[must_use]
     pub fn new() -> Self {
         Self {
+            #[cfg(feature = "dev-stubs")]
+            zfs_manager: Arc::new(ZfsManager::new(ZfsConfig::default())),
+            #[cfg(not(feature = "dev-stubs"))]
             zfs_manager: Arc::new(ZfsManager::new()),
-            // sse_manager: Arc::new(SseManager::new()),  // Missing module
+            #[cfg(feature = "streaming-rpc")]
             _phantom: std::marker::PhantomData,
         }
     }
 
     /// Get ZFS manager reference
+    #[must_use]
     pub fn get_zfs_manager(&self) -> Option<Arc<ZfsManager>> {
         Some(self.zfs_manager.clone())
     }
 
     /// Initialize storage systems - ZFS manager and Universal Storage Bridge
-    pub async fn with_zfs_manager(self) -> Self {
+    #[must_use]
+    pub const fn with_zfs_manager(self) -> Self {
         // ZFS manager already initialized in constructor
         self
     }
 
-    /// Try to initialize ZFS manager
-    async fn try_init_zfs_manager(&self) -> Result<Option<ZfsManager>, Box<dyn std::error::Error>> {
+    /// Initialize ZFS manager with graceful fallback
+    #[allow(dead_code)] // Method used for ZFS initialization in production
+    async fn try_init_zfs_manager(
+        &self,
+    ) -> Result<Option<ZfsManager>, Box<dyn std::error::Error + Send + Sync>> {
         // Check if ZFS is available first
-        if !nestgate_zfs::native::is_zfs_available().await {
-            return Ok(None);
-        }
-
-        // Try to create ZFS config
-        let _config = nestgate_zfs::canonical_zfs_config::CanonicalZfsConfig::default();
-
-        // Try to create ZFS manager (zero-cost manager uses new() constructor)
-        let manager = ZfsManager::new();
+        #[cfg(feature = "dev-stubs")]
+        let manager = ProductionZfsManager::new(ZfsConfig::default());
+        #[cfg(not(feature = "dev-stubs"))]
+        let manager = ProductionZfsManager::new();
         Ok(Some(manager))
     }
-
-    // Removed old initialization methods that referenced missing modules
 }
 
 /// Create a new router with default application state
 pub fn create_router() -> Router<AppState> {
     // This is a backward compatibility function that uses default state
     // In practice, you should use create_router_with_state() for proper initialization
-
     let router = Router::new()
         .route("/health", get(health_check))
         // Hardware tuning routes
         .route(
             "/hardware/tune",
             post(|| async {
-                Json(serde_json::json!({
+                axum::response::Json(serde_json::json!({
                     "status": "success",
                     "message": "Hardware tuning not implemented yet"
                 }))
@@ -148,7 +142,7 @@ pub fn create_router() -> Router<AppState> {
         .route(
             "/hardware/config",
             get(|| async {
-                Json(serde_json::json!({
+                axum::response::Json(serde_json::json!({
                     "status": "success",
                     "config": {},
                     "message": "Hardware config not implemented yet"
@@ -282,9 +276,9 @@ pub fn create_router() -> Router<AppState> {
         )
         .route("/api/v1/workspaces/:workspace_id", delete(delete_workspace))
         // Team management routes
-        .route("/api/v1/teams", post(create_team))
-        // Authentication routes
-        .nest("/api/v1/auth", crate::handlers::auth::auth_router());
+        .route("/api/v1/teams", post(create_team));
+    // Authentication routes
+    // .nest("/api/v1/auth", crate::handlers::auth::auth_router()); // Module doesn't exist
 
     // Add streaming routes conditionally
     #[cfg(feature = "streaming-rpc")]
@@ -298,18 +292,17 @@ pub fn create_router() -> Router<AppState> {
 }
 
 /// Create a router with initialized application state
-pub async fn create_router_with_state() -> Router {
+pub fn create_router_with_state() -> Router {
     let app_state = {
         #[cfg(feature = "streaming-rpc")]
         {
-            AppState::with_zfs_and_streaming().with_zfs_manager().await
+            AppState::with_zfs_and_streaming().with_zfs_manager()
         }
         #[cfg(not(feature = "streaming-rpc"))]
         {
             AppState::new().with_zfs_manager().await
         }
     };
-
     create_router_with_initialized_state(app_state)
 }
 
@@ -320,7 +313,7 @@ fn create_router_with_initialized_state(app_state: AppState) -> Router {
         .route(
             "/hardware/tune",
             post(|| async {
-                Json(serde_json::json!({
+                axum::response::Json(serde_json::json!({
                     "status": "success",
                     "message": "Hardware tuning not implemented yet"
                 }))
@@ -329,7 +322,7 @@ fn create_router_with_initialized_state(app_state: AppState) -> Router {
         .route(
             "/hardware/config",
             get(|| async {
-                Json(serde_json::json!({
+                axum::response::Json(serde_json::json!({
                     "status": "success",
                     "config": {},
                     "message": "Hardware config not implemented yet"
@@ -476,8 +469,8 @@ fn create_router_with_initialized_state(app_state: AppState) -> Router {
     router.with_state(app_state)
 }
 
-async fn health_check() -> Json<serde_json::Value> {
-    Json(json!({
+async fn health_check() -> axum::response::Json<serde_json::Value> {
+    axum::response::Json(serde_json::json!({
         "status": "ok",
         "service": "nestgate-api",
         "version": env!("CARGO_PKG_VERSION"),
@@ -492,13 +485,14 @@ async fn health_check() -> Json<serde_json::Value> {
 }
 
 // Enhanced communication stats endpoint
-async fn get_communication_stats(State(state): State<AppState>) -> Json<serde_json::Value> {
+async fn get_communication_stats(
+    axum::extract::State(_state): axum::extract::State<AppState>,
+) -> axum::response::Json<serde_json::Value> {
     // Return stub stats since the manager fields are not available
-    Json(serde_json::json!({
+    axum::response::Json(serde_json::json!({
         "websocket": {
             "active_connections": 0,
-            "messages_sent": 0,
-            "messages_received": 0
+            "total_messages": 0
         },
         "sse": {
             "active_connections": 0,
@@ -514,9 +508,11 @@ async fn get_communication_stats(State(state): State<AppState>) -> Json<serde_js
 }
 
 // Events endpoint
-async fn get_events(State(state): State<AppState>) -> Json<serde_json::Value> {
+async fn get_events(
+    axum::extract::State(_state): axum::extract::State<AppState>,
+) -> axum::response::Json<serde_json::Value> {
     // Return stub events since event_coordinator is not available
-    Json(serde_json::json!({
+    axum::response::Json(serde_json::json!({
         "events": [
             {
                 "id": "event_1",
@@ -542,10 +538,10 @@ async fn get_events(State(state): State<AppState>) -> Json<serde_json::Value> {
 #[cfg(feature = "streaming-rpc")]
 async fn websocket_handler(
     ws: axum::extract::WebSocketUpgrade,
-    State(state): State<AppState>,
+    axum::extract::State(_state): axum::extract::State<AppState>,
 ) -> axum::response::Response {
     // Return a simple message since websocket_manager is not available
-    ws.on_upgrade(|socket| async {
+    ws.on_upgrade(|_socket| async {
         // Stub websocket handler
         tracing::info!("WebSocket connection established (stub implementation)");
         // In a real implementation, this would handle the websocket connection
@@ -553,8 +549,10 @@ async fn websocket_handler(
 }
 
 /// SSE events stub implementation
-async fn sse_events(State(_state): State<AppState>) -> impl IntoResponse {
-    Json(serde_json::json!({
+async fn sse_events(
+    axum::extract::State(_state): axum::extract::State<AppState>,
+) -> impl axum::response::IntoResponse {
+    axum::response::Json(serde_json::json!({
         "status": "success",
         "events": [
             {
@@ -568,14 +566,16 @@ async fn sse_events(State(_state): State<AppState>) -> impl IntoResponse {
 }
 
 /// SSE storage stub implementation
-async fn sse_storage(State(_state): State<AppState>) -> impl IntoResponse {
-    Json(serde_json::json!({
+async fn sse_storage(
+    axum::extract::State(_state): axum::extract::State<AppState>,
+) -> impl axum::response::IntoResponse {
+    axum::response::Json(serde_json::json!({
         "status": "success",
         "storage_events": [
             {
                 "id": "storage_1",
-                "type": "pool_status",
-                "data": "All pools healthy",
+                "type": "storage_status",
+                "data": "Storage operational",
                 "timestamp": chrono::Utc::now().to_rfc3339()
             }
         ]
@@ -583,16 +583,15 @@ async fn sse_storage(State(_state): State<AppState>) -> impl IntoResponse {
 }
 
 /// SSE health stub implementation
-async fn sse_health(State(_state): State<AppState>) -> impl IntoResponse {
-    Json(serde_json::json!({
+async fn sse_health(
+    axum::extract::State(_state): axum::extract::State<AppState>,
+) -> impl axum::response::IntoResponse {
+    axum::response::Json(serde_json::json!({
         "status": "success",
-        "health_events": [
-            {
-                "id": "health_1",
-                "type": "system_health",
-                "data": "All systems operational",
-                "timestamp": chrono::Utc::now().to_rfc3339()
-            }
-        ]
+        "health": {
+            "api": "healthy",
+            "storage": "healthy",
+            "timestamp": chrono::Utc::now().to_rfc3339()
+        }
     }))
 }

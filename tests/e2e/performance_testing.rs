@@ -5,6 +5,7 @@ use std::time::{Duration, Instant};
 use tokio::time::sleep;
 
 /// Performance testing results
+
 #[derive(Debug, Clone)]
 pub struct PerformanceTestResults {
     pub total_operations: u32,
@@ -168,12 +169,7 @@ async fn simulate_operation(batch_id: u32, op_id: u32) -> Result<()> {
     
     // Simulate 95% success rate
     if (batch_id + op_id) % 20 == 0 {
-        Err(NestGateError::Internal {
-            message: "Simulated operation failure".to_string(),
-            location: Some("performance_testing::simulate_operation".to_string()),
-            debug_info: None,
-            is_bug: false,
-        })
+        Err(NestGateError::internal_error("Simulated operation failure".to_string(), "test_component"))
     } else {
         Ok(())
     }

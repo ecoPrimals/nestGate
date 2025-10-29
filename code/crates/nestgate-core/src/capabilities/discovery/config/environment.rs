@@ -1,4 +1,3 @@
-
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -10,4 +9,4 @@ impl EnvironmentDiscoverySettings {
     pub fn validate(&self) -> crate::Result<()> {
         Ok(())
     }
-} 
+}

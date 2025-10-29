@@ -1,9 +1,8 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 //
 // Implements the Circuit Breaker pattern to prevent cascading failures by
 // temporarily blocking calls to failing services.
 
-use crate::error::NestGateError;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::RwLock;
@@ -18,7 +17,6 @@ pub enum CircuitBreakerState {
     /// Half-Open: Testing if service has recovered
     HalfOpen,
 }
-
 /// Circuit breaker configuration
 #[derive(Debug, Clone)]
 pub struct CircuitBreakerConfig {
@@ -35,7 +33,6 @@ pub struct CircuitBreakerConfig {
     /// Time window for calculating failure rate
     pub time_window: Duration,
 }
-
 impl Default for CircuitBreakerConfig {
     fn default() -> Self {
         Self {
@@ -56,13 +53,11 @@ pub struct CircuitBreaker {
     config: CircuitBreakerConfig,
     state: Arc<RwLock<CircuitBreakerData>>,
 }
-
 /// Circuit breaker error types
 #[derive(Debug, thiserror::Error)]
 pub enum CircuitBreakerError {
     #[error("Circuit breaker '{name}' is open - requests blocked")]
     CircuitOpen { name: String },
-
     #[error("Circuit breaker configuration error: {message}")]
     Configuration { message: String },
 
@@ -73,24 +68,24 @@ pub enum CircuitBreakerError {
 impl From<CircuitBreakerError> for NestGateError {
     fn from(err: CircuitBreakerError) -> Self {
         match err {
-            CircuitBreakerError::CircuitOpen { name } => NestGateError::Internal {
-                message: format!("Circuit breaker '{name}' is open - requests blocked"),
-                location: Some("circuit_breaker".to_string()),
-                debug_info: Some("Circuit breaker protection active".to_string()),
-                is_bug: false,
-            },
-            CircuitBreakerError::Configuration { message } => NestGateError::Configuration {
-                field: Some("circuit_breaker".to_string()),
-                message,
-                config_source: crate::error::UnifiedConfigSource::Defaults,
-                suggested_fix: Some("Check circuit breaker configuration parameters".to_string()),
-            },
-            CircuitBreakerError::Internal { message } => NestGateError::Internal {
-                message,
-                location: Some("circuit_breaker".to_string()),
-                debug_info: None,
-                is_bug: false,
-            },
+            CircuitBreakerError::CircuitOpen { name } => {
+                NestGateError::ResilienceError {
+                    message: format!("Circuit breaker '{}' is open - requests blocked", name),
+                    source: None,
+                }
+            }
+            CircuitBreakerError::Configuration { message } => {
+                NestGateError::ConfigurationError {
+                    message,
+                    source: None,
+                }
+            }
+            CircuitBreakerError::Internal { message } => {
+                NestGateError::InternalError {
+                    message,
+                    source: None,
+                }
+            }
         }
     }
 }
@@ -121,9 +116,9 @@ pub struct CircuitBreakerMetrics {
     pub current_state: CircuitBreakerState,
     pub last_trip_time: Option<Instant>,
 }
-
 impl CircuitBreaker {
     /// Create a new circuit breaker
+    #[must_use]
     pub fn new(name: String, config: CircuitBreakerConfig) -> Self {
         let data = CircuitBreakerData {
             state: CircuitBreakerState::Closed,
@@ -149,7 +144,14 @@ impl CircuitBreaker {
     }
 
     /// Check if the circuit breaker allows execution
-    pub async fn can_execute(&self) -> Result<bool, CircuitBreakerError> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn can_execute(&self) -> Result<bool, CircuitBreakerError>  {
         let mut data = self.state.write().await;
 
         match data.state {
@@ -183,7 +185,14 @@ impl CircuitBreaker {
     }
 
     /// Record a successful operation
-    pub async fn record_success(&self) -> Result<(), CircuitBreakerError> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn record_success(&self) -> Result<(), CircuitBreakerError>  {
         let mut data = self.state.write().await;
 
         data.metrics.total_requests += 1;
@@ -193,7 +202,7 @@ impl CircuitBreaker {
         data.request_history.push(RequestRecord {
             timestamp: Instant::now(),
             success: true,
-        });
+        );
 
         // Clean old history
         self.clean_request_history(&mut data).await;
@@ -227,7 +236,14 @@ impl CircuitBreaker {
     }
 
     /// Record a failed operation
-    pub async fn record_failure(&self) -> Result<(), CircuitBreakerError> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn record_failure(&self) -> Result<(), CircuitBreakerError>  {
         let mut data = self.state.write().await;
 
         data.metrics.total_requests += 1;
@@ -238,7 +254,7 @@ impl CircuitBreaker {
         data.request_history.push(RequestRecord {
             timestamp: Instant::now(),
             success: false,
-        });
+        );
 
         // Clean old history
         self.clean_request_history(&mut data).await;
@@ -278,13 +294,27 @@ impl CircuitBreaker {
     }
 
     /// Get current circuit breaker state
-    pub async fn get_state(&self) -> Result<CircuitBreakerState, CircuitBreakerError> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_state(&self) -> Result<CircuitBreakerState, CircuitBreakerError>  {
         let data = self.state.read().await;
         Ok(data.state.clone())
     }
 
     /// Get circuit breaker metrics
-    pub async fn get_metrics(&self) -> Result<CircuitBreakerMetrics, CircuitBreakerError> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_metrics(&self) -> Result<CircuitBreakerMetrics, CircuitBreakerError>  {
         let data = self.state.read().await;
         Ok(data.metrics.clone())
     }
@@ -304,7 +334,7 @@ impl CircuitBreaker {
                 .filter(|record| !record.success)
                 .count();
 
-            let failure_rate = failures as f64 / data.request_history.len() as f64;
+            let failure_rate = failures as f64 / data.(request_history.len() as f64);
 
             if failure_rate >= self.config.failure_rate_threshold {
                 return true;
@@ -322,7 +352,14 @@ impl CircuitBreaker {
     }
 
     /// Force circuit breaker to open (for testing/manual intervention)
-    pub async fn force_open(&self) -> Result<(), CircuitBreakerError> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn force_open(&self) -> Result<(), CircuitBreakerError>  {
         let mut data = self.state.write().await;
         data.state = CircuitBreakerState::Open;
         data.metrics.current_state = CircuitBreakerState::Open;
@@ -334,7 +371,14 @@ impl CircuitBreaker {
     }
 
     /// Force circuit breaker to close (for testing/manual intervention)
-    pub async fn force_close(&self) -> Result<(), CircuitBreakerError> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn force_close(&self) -> Result<(), CircuitBreakerError>  {
         let mut data = self.state.write().await;
         data.state = CircuitBreakerState::Closed;
         data.metrics.current_state = CircuitBreakerState::Closed;
@@ -345,7 +389,14 @@ impl CircuitBreaker {
     }
 
     /// Get detailed circuit breaker status
-    pub async fn get_detailed_status(&self) -> Result<CircuitBreakerStatus, CircuitBreakerError> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_detailed_status(&self) -> Result<CircuitBreakerStatus, CircuitBreakerError>  {
         let data = self.state.read().await;
 
         let recent_failures = data
@@ -355,7 +406,7 @@ impl CircuitBreaker {
             .count();
 
         let failure_rate = if !data.request_history.is_empty() {
-            recent_failures as f64 / data.request_history.len() as f64
+            recent_failures as f64 / data.(request_history.len() as f64)
         } else {
             0.0
         };
@@ -385,7 +436,6 @@ pub struct CircuitBreakerStatus {
     pub last_failure_time: Option<Instant>,
     pub metrics: CircuitBreakerMetrics,
 }
-
 #[cfg(test)]
 mod tests {
     use super::*;

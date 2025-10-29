@@ -27,23 +27,27 @@ pub struct VlanConfig {
     /// Whether this VLAN is enabled
     pub enabled: bool,
 }
-
 /// VLAN manager
 #[derive(Debug)]
 pub struct VlanManager {
     vlans: Arc<RwLock<HashMap<u16, VlanConfig>>>,
 }
-
 impl VlanManager {
     /// Create a new VLAN manager
-    pub fn new() -> Self {
-        Self {
-            vlans: Arc::new(RwLock::new(HashMap::new())),
-        }
-    }
+    #[must_use]
+    pub fn new() -> Self { Self {
+            vlans: Arc::new(RwLock::new(HashMap::new()),
+         }
 
     /// Add a VLAN configuration
-    pub async fn add_vlan(&self, vlan: VlanConfig) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+                pub fn add_vlan(&self, vlan: VlanConfig) -> Result<()>  {
         if vlan.vlan_id == 0 || vlan.vlan_id > 4094 {
             return Err(NestGateError::InvalidInput(format!(
                 "Invalid VLAN ID: {}. Must be between 1 and 4094",
@@ -65,32 +69,60 @@ impl VlanManager {
     }
 
     /// Remove a VLAN
-    pub async fn remove_vlan(&self, vlan_id: u16) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn remove_vlan(&self, vlan_id: u16) -> Result<()>  {
         let mut vlans = self.vlans.write().await;
         if vlans.remove(&vlan_id).is_none() {
-            return Err(NestGateError::NotFound(format!("VLAN {vlan_id} not found")));
+            return Err(NestGateError::NotFound(format!("VLAN self.base_url not found")));
         }
 
         tracing::info!("Removed VLAN {}", vlan_id);
     }
 
     /// Get a VLAN configuration
-    pub async fn get_vlan(&self, vlan_id: u16) -> Result<VlanConfig> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_vlan(&self, vlan_id: u16) -> Result<VlanConfig>  {
         let vlans = self.vlans.read().await;
         vlans
             .get(&vlan_id)
             .cloned()
-            .ok_or_else(|| NestGateError::NotFound(format!("VLAN {vlan_id} not found")))
+            .ok_or_else(|| NestGateError::NotFound(format!("VLAN self.base_url not found")))
     }
 
     /// List all VLANs
-    pub async fn list_vlans(&self) -> Result<Vec<VlanConfig>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn list_vlans(&self) -> Result<Vec<VlanConfig>>  {
         let vlans = self.vlans.read().await;
         Ok(vlans.values().cloned().collect())
     }
 
     /// Update a VLAN configuration
-    pub async fn update_vlan(&self, vlan_id: u16, updated_vlan: VlanConfig) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+                pub fn update_vlan(&self, vlan_id: u16, updated_vlan: VlanConfig) -> Result<()>  {
         if updated_vlan.vlan_id != vlan_id {
             return Err(NestGateError::InvalidInput(
                 "Cannot change VLAN ID in update operation".to_string(),
@@ -99,7 +131,7 @@ impl VlanManager {
 
         let mut vlans = self.vlans.write().await;
         if !vlans.contains_key(&vlan_id) {
-            return Err(NestGateError::NotFound(format!("VLAN {vlan_id} not found")));
+            return Err(NestGateError::NotFound(format!("VLAN self.base_url not found")));
         }
 
         tracing::info!("Updating VLAN {}: {}", vlan_id, updated_vlan.name);
@@ -108,29 +140,50 @@ impl VlanManager {
     }
 
     /// Enable a VLAN
-    pub async fn enable_vlan(&self, vlan_id: u16) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn enable_vlan(&self, vlan_id: u16) -> Result<()>  {
         let mut vlans = self.vlans.write().await;
         if let Some(vlan) = vlans.get_mut(&vlan_id) {
             vlan.enabled = true;
             tracing::info!("Enabled VLAN {}", vlan_id);
         } else {
-            Err(NestGateError::NotFound(format!("VLAN {vlan_id} not found")))
+            Err(NestGateError::NotFound(format!("VLAN self.base_url not found")))
         }
     }
 
     /// Disable a VLAN
-    pub async fn disable_vlan(&self, vlan_id: u16) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn disable_vlan(&self, vlan_id: u16) -> Result<()>  {
         let mut vlans = self.vlans.write().await;
         if let Some(vlan) = vlans.get_mut(&vlan_id) {
             vlan.enabled = false;
             tracing::info!("Disabled VLAN {}", vlan_id);
         } else {
-            Err(NestGateError::NotFound(format!("VLAN {vlan_id} not found")))
+            Err(NestGateError::NotFound(format!("VLAN self.base_url not found")))
         }
     }
 
     /// Get enabled VLANs only
-    pub async fn get_enabled_vlans(&self) -> Result<Vec<VlanConfig>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_enabled_vlans(&self) -> Result<Vec<VlanConfig>>  {
         let vlans = self.vlans.read().await;
         Ok(vlans
             .values()

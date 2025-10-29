@@ -2,7 +2,6 @@
 /// Handles file patterns, type filters, size filters, time filters, and custom filters
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
-
 /// Filter and pattern settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FilterSettings {
@@ -21,7 +20,6 @@ pub struct FilterSettings {
     /// Custom filters
     pub custom_filters: Vec<CustomFilter>,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FilePattern {
     /// Pattern string (glob format)
@@ -33,7 +31,6 @@ pub struct FilePattern {
     /// Pattern priority
     pub priority: u32,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FileTypeFilter {
     /// File extensions to match
@@ -41,7 +38,6 @@ pub struct FileTypeFilter {
     /// Filter enabled
     pub enabled: bool,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SizeFilter {
     /// Minimum file size (bytes)
@@ -51,7 +47,6 @@ pub struct SizeFilter {
     /// Filter enabled
     pub enabled: bool,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TimeFilter {
     /// Minimum age (duration since last modification)
@@ -61,7 +56,6 @@ pub struct TimeFilter {
     /// Filter enabled
     pub enabled: bool,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CustomFilter {
     /// Filter name
@@ -73,7 +67,6 @@ pub struct CustomFilter {
     /// Filter priority
     pub priority: u32,
 }
-
 impl Default for FilterSettings {
     fn default() -> Self {
         Self {

@@ -20,11 +20,11 @@ use std::collections::VecDeque;
 use std::sync::{Arc, Mutex, RwLock};
 use std::time::Duration;
 // Removed unused tracing import
-
 use serde::{Deserialize, Serialize};
 use std::time::Instant;
 use tracing::debug;
 use tracing::info;
+use crate::constants::canonical::performance::{DEFAULT_BUFFER_SIZE, NETWORK_BUFFER_SIZE};
 
 /// High-performance memory pool with configurable buffer sizes
 #[derive(Debug)]
@@ -43,7 +43,6 @@ where
     /// Statistics for pool performance tracking
     statistics: Arc<RwLock<PoolStatistics>>,
 }
-
 impl<T> MemoryPool<T>
 where
     T: Default + Clone + Send + 'static,
@@ -221,7 +220,6 @@ where
     statistics: Arc<RwLock<PoolStatistics>>,
     acquired_at: Instant,
 }
-
 impl<T> PoolGuard<T>
 where
     T: Send + 'static,
@@ -346,7 +344,6 @@ pub struct PoolStatistics {
     /// Total time buffers were in use
     pub total_usage_time: Duration,
 }
-
 impl PoolStatistics {
     fn new() -> Self {
         Self {
@@ -408,19 +405,18 @@ impl PoolStatistics {
 /// Specialized buffer pool for common data types
 pub type BufferPool = MemoryPool<Vec<u8>>;
 pub type StringPool = MemoryPool<String>;
-
 // Global buffer pools for common usage patterns
 lazy_static::lazy_static! {
     // Global 4KB buffer pool for file I/O operations
     pub static ref GLOBAL_4KB_BUFFER_POOL: BufferPool = MemoryPool::new(
-        || Vec::with_capacity(4096),
+        || Vec::with_capacity(DEFAULT_BUFFER_SIZE),
         10,  // min_size
         100  // max_size
     );
 
     // Global 64KB buffer pool for large data operations
     pub static ref GLOBAL_64KB_BUFFER_POOL: BufferPool = MemoryPool::new(
-        || Vec::with_capacity(65536),
+        || Vec::with_capacity(NETWORK_BUFFER_SIZE),
         5,   // min_size
         50   // max_size
     );
@@ -465,7 +461,6 @@ lazy_static::lazy_static! {
 pub fn get_4kb_buffer() -> PoolGuard<Vec<u8>> {
     GLOBAL_4KB_BUFFER_POOL.get()
 }
-
 pub fn get_64kb_buffer() -> PoolGuard<Vec<u8>> {
     GLOBAL_64KB_BUFFER_POOL.get()
 }
@@ -482,7 +477,6 @@ pub fn get_string_buffer() -> PoolGuard<String> {
 pub fn get_command_buffer() -> PoolGuard<Vec<u8>> {
     GLOBAL_CMD_BUFFER_POOL.get()
 }
-
 pub fn get_network_buffer() -> PoolGuard<Vec<u8>> {
     GLOBAL_NETWORK_BUFFER_POOL.get()
 }
@@ -511,12 +505,10 @@ pub fn global_buffer_pool_stats() -> (
         GLOBAL_JSON_BUFFER_POOL.statistics(),
     )
 }
-
 /// Memory pool manager for coordinating multiple pools
 pub struct MemoryPoolManager {
     pools: Vec<Arc<dyn PoolInterface>>,
 }
-
 trait PoolInterface: Send + Sync {
     fn size(&self) -> usize;
     fn clear(&self);
@@ -537,6 +529,7 @@ where
 
 impl MemoryPoolManager {
     /// Create a new memory pool manager
+    #[must_use]
     pub fn new() -> Self {
         Self { pools: Vec::new() }
     }
@@ -573,7 +566,6 @@ impl Default for MemoryPoolManager {
 mod tests {
     use super::*;
     use std::thread;
-    use std::time::Duration;
 
     #[test]
     fn test_memory_pool_basic_functionality() {
@@ -626,7 +618,7 @@ mod tests {
     }
 
     #[test]
-    fn test_concurrent_access() {
+    fn test_concurrent_access() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let pool = Arc::new(MemoryPool::new(Vec::<u8>::new, 1, 10));
         let mut handles = vec![];
 
@@ -638,24 +630,21 @@ mod tests {
                 buffer.push(i as u8);
                 thread::sleep(Duration::from_millis(10));
                 buffer[0]
-            });
+            );
             handles.push(handle);
         }
 
         // Wait for all threads
         for handle in handles {
-            let result = handle.join().unwrap_or_else(|e| {
-    tracing::error!("Unwrap failed: {:?}", e);
-    return Err(std::io::Error::new(
-    std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
-).into())
-});
+            let result = handle.join().map_err(|e| {
+                format!("Thread join failed: {e:?}")
+            })?;
             assert!(result < 5);
         }
 
         let stats = pool.statistics();
         assert_eq!(stats.total_acquisitions, 5);
+        Ok(())
     }
 
     #[test]

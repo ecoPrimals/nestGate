@@ -1,0 +1,152 @@
+# 🎯 **PEDANTIC CARGO-DENY CONFIGURATION - ABSOLUTE SECURITY & COMPLIANCE**
+#
+# This configuration enforces the most stringent security, licensing, and
+# dependency management rules possible for maximum safety and compliance.
+
+[graph]
+# Pedantic dependency graph validation
+targets = [
+    { triple = "x86_64-unknown-linux-gnu" },
+    { triple = "x86_64-pc-windows-msvc" },
+    { triple = "x86_64-apple-darwin" },
+    { triple = "aarch64-apple-darwin" },
+]
+all-features = true
+no-default-features = false
+
+[output]
+# Comprehensive output for maximum visibility
+feature-depth = 1
+
+# === ADVISORY CONFIGURATION (MAXIMUM SECURITY) ===
+[advisories]
+# Absolute security: deny ALL security vulnerabilities
+db-path = "~/.cargo/advisory-db"
+db-urls = ["https://github.com/rustsec/advisory-db"]
+vulnerability = "deny"      # ZERO tolerance for vulnerabilities
+unmaintained = "deny"       # No unmaintained dependencies
+yanked = "deny"             # No yanked crates
+notice = "warn"             # Warn on security notices
+ignore = [
+    # Only add specific advisories here if absolutely necessary
+    # and with detailed justification
+]
+
+# === LICENSE CONFIGURATION (PEDANTIC COMPLIANCE) ===
+[licenses]
+# Strict license compliance - only allow specific, approved licenses
+unlicensed = "deny"         # All crates must have licenses
+allow = [
+    "AGPL-3.0",             # PRIMARY: ecoPrimals license (strictest copyleft)
+    "AGPL-3.0-only",        # Explicit AGPL-3.0 only
+    "AGPL-3.0-or-later",    # Compatible AGPL versions
+    # Dependencies may use compatible licenses:
+    "MIT",                  # MIT License (permissive, compatible)
+    "Apache-2.0",           # Apache 2.0 (permissive, compatible)
+    "Apache-2.0 WITH LLVM-exception", # LLVM Exception
+    "BSD-2-Clause",         # 2-Clause BSD (permissive, compatible)
+    "BSD-3-Clause",         # 3-Clause BSD (permissive, compatible)
+    "ISC",                  # ISC License (permissive, compatible)
+    "Unicode-DFS-2016",     # Unicode Data Files
+]
+deny = [
+    "GPL-2.0",              # Use AGPL-3.0 instead (stronger copyleft)
+    "GPL-3.0",              # Use AGPL-3.0 instead (stronger copyleft)
+    "LGPL-2.1",             # Use AGPL-3.0 instead (stronger copyleft)
+    "LGPL-3.0",             # Use AGPL-3.0 instead (stronger copyleft)
+    "CC0-1.0",              # Public domain dedication
+]
+copyleft = "allow"          # AGPL-3.0 copyleft is REQUIRED for ecoPrimals
+allow-osi-fsf-free = "both" # Must be both OSI and FSF approved
+default = "deny"            # Default to deny unknown licenses
+confidence-threshold = 0.8  # High confidence required for license detection
+
+# License exceptions for specific crates (use sparingly)
+[[licenses.exceptions]]
+allow = ["Unicode-DFS-2016"]
+name = "unicode-ident"
+version = "*"
+
+# === BANS CONFIGURATION (PEDANTIC DEPENDENCY CONTROL) ===
+[bans]
+# Comprehensive banning of problematic dependencies
+multiple-versions = "deny"  # No duplicate versions allowed
+wildcards = "deny"         # No wildcard version dependencies
+highlight = "all"          # Highlight all issues
+workspace-default-features = "allow"
+external-default-features = "allow"
+allow-wildcard-paths = false
+
+# Deny specific crates that are problematic
+deny = [
+    # Insecure or deprecated crates
+    { name = "openssl", version = "*" },        # Use rustls instead
+    { name = "native-tls", version = "*" },     # Use rustls instead
+    { name = "md5", version = "*" },            # Cryptographically broken
+    { name = "sha1", version = "*" },           # Cryptographically weak
+    
+    # Performance problematic crates
+    { name = "lazy_static", version = "*" },    # Use once_cell or std::sync::LazyLock
+    { name = "regex", version = "<1.5" },       # Old versions have issues
+    
+    # Maintenance issues
+    { name = "time", version = "<0.3" },        # Old versions unmaintained
+    { name = "chrono", version = "<0.4.20" },   # Security issues in old versions
+    
+    # Duplicate functionality
+    { name = "failure", version = "*" },        # Use thiserror/anyhow instead
+    { name = "error-chain", version = "*" },    # Use thiserror instead
+]
+
+# Skip certain crates from multiple version checks (use very sparingly)
+skip = [
+    # Only add here if absolutely necessary with detailed justification
+]
+
+# Skip tree analysis for specific crates
+skip-tree = [
+    # Build dependencies that don't affect runtime
+]
+
+# === SOURCES CONFIGURATION (PEDANTIC SOURCE CONTROL) ===
+[sources]
+# Strict control over dependency sources
+unknown-registry = "deny"  # Only allow known registries
+unknown-git = "deny"       # No unknown git sources
+allow-registry = [
+    "https://github.com/rust-lang/crates.io-index"  # Only crates.io
+]
+allow-git = [
+    # Only allow specific, trusted git sources
+    # Add only if absolutely necessary with detailed justification
+]
+
+# === PEDANTIC ADDITIONAL RULES ===
+
+# Specific version requirements for critical dependencies
+[[bans.features]]
+name = "serde"
+version = ">=1.0.130"  # Require recent version for security
+
+[[bans.features]]
+name = "tokio"
+version = ">=1.20.0"   # Require recent version for performance
+
+[[bans.features]]
+name = "clap"
+version = ">=4.0.0"    # Use modern clap API
+
+# === DOCUMENTATION AND JUSTIFICATION ===
+# This configuration implements the following pedantic policies:
+#
+# 1. ZERO TOLERANCE SECURITY: No vulnerabilities, unmaintained, or yanked crates
+# 2. STRICT LICENSING: Only permissive licenses, no copyleft
+# 3. NO DUPLICATES: Single version of each dependency
+# 4. TRUSTED SOURCES: Only crates.io registry allowed
+# 5. MODERN VERSIONS: Require recent versions of critical dependencies
+# 6. SECURE DEFAULTS: Ban known insecure or problematic crates
+#
+# Any exceptions to these rules must be:
+# - Documented with detailed justification
+# - Approved by security review
+# - Regularly reviewed for removal 

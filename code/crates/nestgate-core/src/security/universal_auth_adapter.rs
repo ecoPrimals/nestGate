@@ -1,5 +1,5 @@
-//! Universal Authentication Adapter
-//! **MODERNIZED**: Updated to use direct method calls instead of deprecated trait patterns
+// Universal Authentication Adapter
+// **MODERNIZED**: Updated to use direct method calls instead of deprecated trait patterns
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -11,13 +11,10 @@ pub struct StorageAccessRequest {
     /// Token to validate (from security capability authentication)
     pub token: String,
     /// Storage operation being requested
-    pub operation: String,
     /// Storage resource being accessed
-    pub resource: String,
     /// Additional context from storage system
     pub context: HashMap<String, String>,
 }
-
 /// Simple response from security capability about storage access
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StorageAccessResponse {
@@ -30,7 +27,6 @@ pub struct StorageAccessResponse {
     /// Response message from security capability
     pub message: String,
 }
-
 /// Standalone authentication configuration for fallback mode
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StandaloneAuthConfig {
@@ -43,7 +39,6 @@ pub struct StandaloneAuthConfig {
     /// Token validation settings
     pub token_validation: bool,
 }
-
 impl Default for StandaloneAuthConfig {
     fn default() -> Self {
         Self {
@@ -59,7 +54,7 @@ impl Default for StandaloneAuthConfig {
 #[derive(Debug)]
 pub struct UniversalAuthAdapter {
     /// Reference to the universal adapter for ecosystem communication
-    adapter: Option<crate::ecosystem_integration::universal_adapter::adapter::UniversalAdapter>,
+    adapter: Option<crate::universal_adapter::PrimalAgnosticAdapter>,
     /// Maximum number of authentication attempts before lockout
     #[allow(dead_code)]
     max_auth_attempts: u32,
@@ -69,11 +64,10 @@ pub struct UniversalAuthAdapter {
     /// Whether to enable secure authentication features
     secure_mode: bool,
 }
-
 impl UniversalAuthAdapter {
     /// Creates a new UniversalAuthAdapter with the provided universal adapter
     pub fn new(
-        adapter: Option<crate::ecosystem_integration::universal_adapter::adapter::UniversalAdapter>,
+        adapter: Option<crate::universal_adapter::PrimalAgnosticAdapter>,
     ) -> Self {
         Self {
             adapter,
@@ -117,19 +111,24 @@ impl UniversalAuthAdapter {
 
         // Fallback to standalone mode
         warn!("🔄 No security capability found, using standalone mode");
-        Err(crate::error::NestGateError::Configuration {
-            message: "No security capability available".to_string(),
-            config_source: crate::error::UnifiedConfigSource::Runtime,
-            field: Some("security_capability".to_string()),
-            suggested_fix: Some("Configure universal adapter with security capability".to_string()),
-        })
+        Err(crate::error::NestGateError::configuration(
+            
+            
+        ))
     }
 
     /// Delegate storage access validation to security capability
-    pub async fn validate_storage_access(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn validate_storage_access(
         &self,
         request: StorageAccessRequest,
-    ) -> Result<StorageAccessResponse, crate::error::NestGateError> {
+    ) -> Result<StorageAccessResponse, crate::error::NestGateError>  {
         // Try to use security capability via universal adapter
         match self.find_security_capability().await {
             Ok(security_endpoint) => {
@@ -156,7 +155,7 @@ impl UniversalAuthAdapter {
                                     .unwrap_or_default(),
                                 message: "Access validated via security capability".to_string(),
                             });
-    }
+                        }
                         Err(e) => {
                             warn!("⚠️ Security capability communication failed: {}", e);
     }
@@ -182,11 +181,7 @@ impl UniversalAuthAdapter {
                 crate::error::SecurityErrorData {
                     message: "Secure mode disabled and no security capability available"
                         .to_string(),
-                    operation: request.operation.clone(),
-                    resource: Some(request.resource.clone()),
-                    principal: None,
-                    context: None,
-                },
+                    principal: None},
             )));
         }
 
@@ -226,12 +221,6 @@ impl UniversalAuthAdapter {
         Ok(StorageAccessResponse {
             allowed,
             permissions,
-            metadata: {
-                let mut meta = HashMap::new();
-                meta.insert("auth_mode".to_string(), "standalone".to_string());
-                meta.insert("security_level".to_string(), "high".to_string());
-                meta
-            },
             message:
                 "Standalone mode authentication - configure security capability for production"
                     .to_string(),
@@ -239,7 +228,7 @@ impl UniversalAuthAdapter {
     }
 
     /// Check if security capability is available
-    pub async fn security_capability_available(&self) -> bool {
+    pub fn security_capability_available(&self) -> bool {
         // Use universal adapter to check security capability availability
         // This replaces hardcoded primal availability checks
 
@@ -264,10 +253,17 @@ impl UniversalAuthAdapter {
     }
 
     /// Configure the universal adapter for security capability communication
-    pub async fn configure_adapter(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn configure_adapter(
         &mut self,
-        adapter: crate::ecosystem_integration::universal_adapter::adapter::UniversalAdapter,
-    ) -> Result<(), crate::error::NestGateError> {
+        adapter: crate::universal_adapter::PrimalAgnosticAdapter,
+    ) -> Result<(), crate::error::NestGateError>  {
         info!("🔧 Configuring universal adapter for security capability integration");
         self.adapter = Some(adapter);
 
@@ -287,7 +283,7 @@ impl UniversalAuthAdapter {
     }
 
     /// Get authentication status without security capability (standalone mode)
-    pub async fn standalone_auth_status(&self) -> StorageAccessResponse {
+    pub fn standalone_auth_status(&self) -> StorageAccessResponse {
         StorageAccessResponse {
             allowed: true, // Allow in standalone mode
             permissions: vec!["read".to_string(), "write".to_string()],

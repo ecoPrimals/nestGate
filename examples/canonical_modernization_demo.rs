@@ -44,9 +44,9 @@ fn demo_canonical_configuration() -> Result<()> {
     );
 
     // Validation works out of the box
-    config.validate().map_err(|errors| {
-        NestGateError::validation_error("config", &format!("Validation failed: {:?}", errors))
-    })?;
+    config
+        .validate()
+        .map_err(|errors| NestGateError::validation_error("validation error"))?;
 
     println!("✅ Configuration validation passed!");
     Ok(())
@@ -242,7 +242,7 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_canonical_modernization() {
+    async fn test_canonical_modernization() -> Result<(), Box<dyn std::error::Error>> {
         // Test that all canonical systems work together
         let config = NestGateCanonicalUnifiedConfig::default();
         assert_eq!(config.network.api_port, DEFAULT_API_PORT);
@@ -256,10 +256,11 @@ mod tests {
         let _metrics = service.metrics().await.unwrap();
 
         println!("✅ Canonical modernization test passed!");
+        Ok(())
     }
 
     #[test]
-    fn test_canonical_constants() {
+    fn test_canonical_constants() -> Result<(), Box<dyn std::error::Error>> {
         // Test that constants are accessible and consistent
         assert!(DEFAULT_API_PORT > 0);
         assert!(REQUEST_TIMEOUT_SECS > 0);
@@ -268,5 +269,6 @@ mod tests {
         assert!(!COMPRESSION_LZ4.is_empty());
 
         println!("✅ Canonical constants test passed!");
+        Ok(())
     }
 }

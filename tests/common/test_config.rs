@@ -68,7 +68,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_canonical_config_migration() {
+    fn test_canonical_config_migration() -> Result<(), Box<dyn std::error::Error>> {
         let unit_config = create_unit_test_config();
         let integration_config = create_integration_test_config();
         let performance_config = create_performance_test_config();
@@ -77,10 +77,11 @@ mod tests {
         assert_eq!(unit_config.test_domain.test_type, "unit");
         assert_eq!(integration_config.test_domain.test_type, "integration");
         assert_eq!(performance_config.test_domain.test_type, "performance");
+        Ok(())
     }
 
     #[test]
-    fn test_configuration_consistency() {
+    fn test_configuration_consistency() -> Result<(), Box<dyn std::error::Error>> {
         let configs = vec![
             create_unit_test_config(),
             create_integration_test_config(),
@@ -92,5 +93,7 @@ mod tests {
             assert!(!config.service.service_id.is_empty());
             assert!(config.test_domain.timeout_seconds > 0);
         }
+
+        Ok(())
     }
 }

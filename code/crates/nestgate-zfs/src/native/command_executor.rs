@@ -18,7 +18,6 @@ pub struct NativeZfsCommandExecutor {
     /// Whether to log all commands (for debugging)
     verbose_logging: bool,
 }
-
 /// Result of a ZFS command execution
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZfsCommandResult {
@@ -27,9 +26,9 @@ pub struct ZfsCommandResult {
     pub stderr: String,
     pub exit_code: i32,
 }
-
 impl NativeZfsCommandExecutor {
     /// Create a new command executor
+    #[must_use]
     pub fn new() -> Self {
         Self {
             timeout_seconds: 300, // 5 minutes default timeout
@@ -38,6 +37,7 @@ impl NativeZfsCommandExecutor {
     }
 
     /// Create with custom timeout
+    #[must_use]
     pub fn with_timeout(timeout_seconds: u64) -> Self {
         Self {
             timeout_seconds,
@@ -46,6 +46,13 @@ impl NativeZfsCommandExecutor {
     }
 
     /// Execute a ZFS command safely
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn execute_command(&self, args: &[&str]) -> Result<ZfsCommandResult> {
         if self.verbose_logging {
             debug!("🔧 Executing ZFS command: zfs {}", args.join(" "));
@@ -67,22 +74,14 @@ impl NativeZfsCommandExecutor {
             Ok(Ok(output)) => output,
             Ok(Err(e)) => {
                 error!("ZFS command execution failed: {}", e);
-                return Err(NestGateError::storage_error(
-                    "zfs_command_execution",
-                    &format!("ZFS command execution failed: {e}"),
-                    None
-                ));
+                return Err(NestGateError::storage_error("zfs_command_execution"));
             }
             Err(_) => {
                 error!(
                     "ZFS command timed out after {} seconds",
                     self.timeout_seconds
                 );
-                return Err(NestGateError::storage_error(
-                    "zfs_command_timeout",
-                    &format!("ZFS command timed out after {} seconds", self.timeout_seconds),
-                    None
-                ));
+                return Err(NestGateError::storage_error("zfs_command_timeout"));
             }
         };
 
@@ -105,21 +104,31 @@ impl NativeZfsCommandExecutor {
     }
 
     /// Execute a ZFS command and expect success
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn execute_command_expect_success(&self, args: &[&str]) -> Result<String> {
         let result = self.execute_command(args).await?;
 
         if !result.success {
-            return Err(NestGateError::storage_error(
-                "zfs_command_failed",
-                &format!("ZFS command failed: {}", result.stderr),
-                None
-            ));
+            return Err(NestGateError::storage_error("zfs_command_failed"));
         }
 
         Ok(result.stdout)
     }
 
     /// Get ZFS pool list
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn list_pools(&self) -> Result<Vec<String>> {
         let output = self
             .execute_command_expect_success(&["list", "-H", "-o", "name", "-t", "filesystem"])
@@ -133,6 +142,13 @@ impl NativeZfsCommandExecutor {
     }
 
     /// Get ZFS dataset information
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn get_dataset_info(&self, dataset: &str) -> Result<HashMap<String, String>> {
         let output = self
             .execute_command_expect_success(&["get", "-H", "-p", "all", dataset])
@@ -153,6 +169,13 @@ impl NativeZfsCommandExecutor {
     }
 
     /// Create a ZFS dataset
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn create_dataset(
         &self,
         dataset: &str,
@@ -181,6 +204,13 @@ impl NativeZfsCommandExecutor {
     }
 
     /// Create a ZFS snapshot
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn create_snapshot(&self, dataset: &str, snapshot_name: &str) -> Result<()> {
         let snapshot_full = format!("{dataset}@{snapshot_name}");
         self.execute_command_expect_success(&["snapshot", &snapshot_full])
@@ -195,10 +225,7 @@ impl NativeZfsCommandExecutor {
         // Security: prevent command injection
         for arg in args {
             if arg.contains(';') || arg.contains('&') || arg.contains('|') || arg.contains('`') {
-                return Err(NestGateError::security_error(
-                    "command_validation",
-                    format!("Invalid command argument detected: {arg}")
-                ));
+                return Err(NestGateError::security("Invalid command argument detected"));
             }
         }
 
@@ -211,10 +238,9 @@ impl NativeZfsCommandExecutor {
                     // These are safe ZFS commands
                 }
                 _ => {
-                    return Err(NestGateError::security_error(
-                        "command_validation",
-                        format!("Unsafe ZFS command: {command}")
-                    ));
+                    return Err(NestGateError::security(&format!(
+                        "Unsafe ZFS command: {command}"
+                    )));
                 }
             }
         }

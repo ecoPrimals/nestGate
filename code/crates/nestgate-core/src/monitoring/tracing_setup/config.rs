@@ -3,10 +3,7 @@ use std::collections::HashMap;
 /// This module contains all configuration structures for the comprehensive
 /// tracing and logging system.
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::path::PathBuf;
 // use std::time::Duration; // Unused - removed for cleaner builds
-
 /// **Tracing configuration**
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TracingConfig {
@@ -17,7 +14,6 @@ pub struct TracingConfig {
     /// Enable file logging
     pub file_enabled: bool,
     /// Log file path
-    pub file_path: Option<PathBuf>,
     /// Enable JSON formatting
     pub json_format: bool,
     /// Enable distributed tracing
@@ -33,14 +29,12 @@ pub struct TracingConfig {
     /// Security configuration
     pub security: SecurityConfig,
 }
-
 impl Default for TracingConfig {
     fn default() -> Self {
         Self {
             level: "info".to_string(),
             console_enabled: true,
             file_enabled: true,
-            file_path: Some(PathBuf::from("logs/nestgate.log")),
             json_format: true,
             distributed_tracing: false,
             jaeger_endpoint: None,
@@ -70,7 +64,6 @@ pub struct LogAggregationConfig {
     /// External system configurations
     pub external_systems: ExternalSystemsConfig,
 }
-
 impl Default for LogAggregationConfig {
     fn default() -> Self {
         Self {
@@ -100,9 +93,7 @@ pub struct LogRetentionConfig {
     /// Archive old logs instead of deleting
     pub archive_old_logs: bool,
     /// Archive directory path
-    pub archive_path: Option<PathBuf>,
 }
-
 impl Default for LogRetentionConfig {
     fn default() -> Self {
         Self {
@@ -111,7 +102,6 @@ impl Default for LogRetentionConfig {
             max_size_mb: 1024, // 1GB
             max_files: 100,
             archive_old_logs: true,
-            archive_path: Some(PathBuf::from("logs/archive")),
         }
     }
 }
@@ -130,7 +120,6 @@ pub struct RetryConfig {
     /// Enable jitter to prevent thundering herd
     pub enable_jitter: bool,
 }
-
 impl Default for RetryConfig {
     fn default() -> Self {
         Self {
@@ -155,7 +144,6 @@ pub struct ExternalSystemsConfig {
     /// Custom webhook configuration
     pub webhooks: Vec<WebhookConfig>,
 }
-
 /// **ELK (Elasticsearch, Logstash, Kibana) configuration**
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ElkConfig {
@@ -170,9 +158,7 @@ pub struct ElkConfig {
     /// Enable TLS
     pub tls_enabled: bool,
     /// TLS certificate path
-    pub tls_cert_path: Option<PathBuf>,
 }
-
 impl Default for ElkConfig {
     fn default() -> Self {
         Self {
@@ -181,7 +167,6 @@ impl Default for ElkConfig {
             auth: None,
             timeout_secs: 30,
             tls_enabled: false,
-            tls_cert_path: None,
         }
     }
 }
@@ -200,7 +185,6 @@ pub struct LokiConfig {
     /// Enable TLS
     pub tls_enabled: bool,
 }
-
 impl Default for LokiConfig {
     fn default() -> Self {
         Self {
@@ -227,7 +211,6 @@ pub struct JaegerConfig {
     /// Enable baggage propagation
     pub enable_baggage: bool,
 }
-
 impl Default for JaegerConfig {
     fn default() -> Self {
         Self {
@@ -258,7 +241,6 @@ pub struct WebhookConfig {
     /// Enable for specific log categories
     pub category_filter: Vec<String>,
 }
-
 /// **Authentication configuration**
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthConfig {
@@ -275,7 +257,6 @@ pub struct AuthConfig {
     /// API key header name
     pub api_key_header: Option<String>,
 }
-
 /// **Performance configuration**
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceConfig {
@@ -294,7 +275,6 @@ pub struct PerformanceConfig {
     /// Deduplication window in seconds
     pub deduplication_window_secs: u64,
 }
-
 impl Default for PerformanceConfig {
     fn default() -> Self {
         Self {
@@ -317,28 +297,23 @@ pub struct SecurityConfig {
     /// Encryption algorithm
     pub encryption_algorithm: String,
     /// Encryption key path
-    pub encryption_key_path: Option<PathBuf>,
     /// Enable log signing
     pub signing_enabled: bool,
     /// Signing algorithm
     pub signing_algorithm: String,
     /// Signing key path
-    pub signing_key_path: Option<PathBuf>,
     /// Enable PII (Personally Identifiable Information) filtering
     pub pii_filtering_enabled: bool,
     /// PII filter patterns
     pub pii_patterns: Vec<String>,
 }
-
 impl Default for SecurityConfig {
     fn default() -> Self {
         Self {
             encryption_enabled: false,
             encryption_algorithm: "AES-256-GCM".to_string(),
-            encryption_key_path: None,
             signing_enabled: false,
             signing_algorithm: "HMAC-SHA256".to_string(),
-            signing_key_path: None,
             pii_filtering_enabled: true,
             pii_patterns: vec![
                 r"\b\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}\b".to_string(), // Credit cards
@@ -356,6 +331,7 @@ impl TracingConfig {
     }
 
     /// Create a development configuration
+    #[must_use]
     pub fn development() -> Self {
         Self {
             level: "debug".to_string(),
@@ -379,6 +355,7 @@ impl TracingConfig {
     }
 
     /// Create a production configuration
+    #[must_use]
     pub fn production() -> Self {
         Self {
             level: "info".to_string(),
@@ -403,10 +380,17 @@ impl TracingConfig {
     }
 
     /// Validate configuration
-    pub fn validate(&self) -> Result<(), String> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn validate(&self) -> Result<(), String>  {
         // Validate log level
         if !["trace", "debug", "info", "warn", "error"].contains(&self.level.as_str()) {
-            return Err(format!("Invalid log level: {}", self.level));
+            return Err(format!("Invalid log level: {self.level}"));
         }
 
         // Validate file path if file logging is enabled

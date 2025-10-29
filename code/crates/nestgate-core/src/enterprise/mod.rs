@@ -1,4 +1,4 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 //
 // Advanced enterprise capabilities for production NestGate deployments
@@ -23,13 +23,12 @@ pub use disaster_recovery::{DisasterRecoveryManager, BackupStrategy, RecoveryPla
 pub use compliance::{ComplianceManager, AuditLogger, PolicyEngine};
 pub use analytics::{AnalyticsEngine, DataPipeline, InsightGenerator};
 
-use crate::{Result, NestGateError};
+use crate::{Result};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-/// Enterprise deployment configuration
+// Enterprise deployment configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EnterpriseConfig {
     pub cluster: ClusterConfig,
@@ -40,8 +39,7 @@ pub struct EnterpriseConfig {
     pub compliance: ComplianceConfig,
     pub analytics: AnalyticsConfig,
 }
-
-/// Enterprise monitoring configuration
+// Enterprise monitoring configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EnterpriseMonitoringConfig {
     pub metrics_retention_days: u32,
@@ -50,8 +48,7 @@ pub struct EnterpriseMonitoringConfig {
     pub custom_metrics: Vec<CustomMetric>,
     pub sla_targets: SLATargets,
 }
-
-/// Alert channel configuration
+// Alert channel configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AlertChannel {
     pub name: String,
@@ -59,8 +56,7 @@ pub struct AlertChannel {
     pub config: HashMap<String, String>,
     pub severity_filter: Vec<AlertSeverity>,
 }
-
-/// Alert channel types
+// Alert channel types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AlertChannelType {
     Email,
@@ -70,8 +66,7 @@ pub enum AlertChannelType {
     SMS,
     Teams,
 }
-
-/// Alert severity levels
+// Alert severity levels
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 pub enum AlertSeverity {
     Critical,
@@ -80,16 +75,14 @@ pub enum AlertSeverity {
     Low,
     Info,
 }
-
-/// Dashboard configuration
+// Dashboard configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DashboardConfig {
     pub refresh_interval_seconds: u32,
     pub panels: Vec<DashboardPanel>,
     pub custom_queries: Vec<CustomQuery>,
 }
-
-/// Dashboard panel configuration
+// Dashboard panel configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DashboardPanel {
     pub title: String,
@@ -97,8 +90,7 @@ pub struct DashboardPanel {
     pub metrics: Vec<String>,
     pub time_range: TimeRange,
 }
-
-/// Panel types for dashboards
+// Panel types for dashboards
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum PanelType {
     Graph,
@@ -108,15 +100,13 @@ pub enum PanelType {
     Gauge,
     Alert,
 }
-
-/// Time range for metrics
+// Time range for metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TimeRange {
     pub from: String,
     pub to: String,
 }
-
-/// Custom metric definition
+// Custom metric definition
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CustomMetric {
     pub name: String,
@@ -125,8 +115,7 @@ pub struct CustomMetric {
     pub unit: String,
     pub thresholds: Vec<MetricThreshold>,
 }
-
-/// Metric threshold for alerting
+// Metric threshold for alerting
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MetricThreshold {
     pub value: f64,
@@ -134,8 +123,7 @@ pub struct MetricThreshold {
     pub severity: AlertSeverity,
     pub duration_seconds: u32,
 }
-
-/// Threshold operators
+// Threshold operators
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ThresholdOperator {
     GreaterThan,
@@ -145,16 +133,14 @@ pub enum ThresholdOperator {
     GreaterThanOrEqual,
     LessThanOrEqual,
 }
-
-/// Custom query for dashboards
+// Custom query for dashboards
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CustomQuery {
     pub name: String,
     pub query: String,
     pub description: String,
 }
-
-/// SLA targets configuration
+// SLA targets configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SLATargets {
     pub availability_percent: f64,
@@ -162,8 +148,7 @@ pub struct SLATargets {
     pub error_rate_percent: f64,
     pub throughput_requests_per_second: f64,
 }
-
-/// Scaling configuration
+// Scaling configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ScalingConfig {
     pub auto_scaling_enabled: bool,
@@ -174,8 +159,7 @@ pub struct ScalingConfig {
     pub scale_up_cooldown_seconds: u32,
     pub scale_down_cooldown_seconds: u32,
 }
-
-/// Disaster recovery configuration
+// Disaster recovery configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DisasterRecoveryConfig {
     pub backup_enabled: bool,
@@ -186,8 +170,7 @@ pub struct DisasterRecoveryConfig {
     pub recovery_time_objective_minutes: u32,
     pub recovery_point_objective_minutes: u32,
 }
-
-/// Replication target
+// Replication target
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReplicationTarget {
     pub name: String,
@@ -195,8 +178,7 @@ pub struct ReplicationTarget {
     pub region: String,
     pub priority: u32,
 }
-
-/// Compliance configuration
+// Compliance configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComplianceConfig {
     pub audit_enabled: bool,
@@ -205,8 +187,7 @@ pub struct ComplianceConfig {
     pub data_classification: DataClassificationConfig,
     pub access_control: AccessControlConfig,
 }
-
-/// Compliance standards
+// Compliance standards
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ComplianceStandard {
     SOC2,
@@ -216,16 +197,14 @@ pub enum ComplianceStandard {
     ISO27001,
     NIST,
 }
-
-/// Data classification configuration
+// Data classification configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DataClassificationConfig {
     pub enabled: bool,
     pub classification_levels: Vec<DataClassificationLevel>,
     pub auto_classification: bool,
 }
-
-/// Data classification level
+// Data classification level
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DataClassificationLevel {
     pub name: String,
@@ -234,8 +213,7 @@ pub struct DataClassificationLevel {
     pub encryption_required: bool,
     pub access_restrictions: Vec<String>,
 }
-
-/// Access control configuration
+// Access control configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AccessControlConfig {
     pub rbac_enabled: bool,
@@ -243,8 +221,7 @@ pub struct AccessControlConfig {
     pub session_timeout_minutes: u32,
     pub audit_all_access: bool,
 }
-
-/// Password policy
+// Password policy
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PasswordPolicy {
     pub min_length: u32,
@@ -255,8 +232,7 @@ pub struct PasswordPolicy {
     pub max_age_days: u32,
     pub history_count: u32,
 }
-
-/// Analytics configuration
+// Analytics configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AnalyticsConfig {
     pub enabled: bool,
@@ -266,8 +242,7 @@ pub struct AnalyticsConfig {
     pub predictive_analytics: bool,
     pub custom_dashboards: Vec<CustomDashboard>,
 }
-
-/// Custom dashboard configuration
+// Custom dashboard configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CustomDashboard {
     pub name: String,
@@ -275,8 +250,7 @@ pub struct CustomDashboard {
     pub widgets: Vec<DashboardWidget>,
     pub refresh_interval_seconds: u32,
 }
-
-/// Dashboard widget
+// Dashboard widget
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DashboardWidget {
     pub title: String,
@@ -284,8 +258,7 @@ pub struct DashboardWidget {
     pub data_source: String,
     pub config: HashMap<String, serde_json::Value>,
 }
-
-/// Widget types
+// Widget types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum WidgetType {
     LineChart,
@@ -297,8 +270,7 @@ pub enum WidgetType {
     Heatmap,
     Map,
 }
-
-/// Enterprise manager - coordinates all enterprise features
+// Enterprise manager - coordinates all enterprise features
 pub struct EnterpriseManager {
     config: Arc<EnterpriseConfig>,
     cluster_manager: Arc<RwLock<ClusterManager>>,
@@ -309,10 +281,16 @@ pub struct EnterpriseManager {
     compliance_manager: Arc<RwLock<ComplianceManager>>,
     analytics_engine: Arc<RwLock<AnalyticsEngine>>,
 }
-
 impl EnterpriseManager {
     /// Create new enterprise manager
-    pub async fn new(config: EnterpriseConfig) -> Result<Self> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn new(config: EnterpriseConfig) -> Result<Self>  {
         let config_arc = Arc::new(config);
         
         // Initialize all enterprise components
@@ -357,7 +335,14 @@ impl EnterpriseManager {
     }
     
     /// Start all enterprise services
-    pub async fn start(&self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn start(&self) -> Result<()>  {
         println!("🏢 Starting enterprise services...");
         
         // Start services in dependency order
@@ -374,7 +359,14 @@ impl EnterpriseManager {
     }
     
     /// Stop all enterprise services
-    pub async fn stop(&self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn stop(&self) -> Result<()>  {
         println!("🛑 Stopping enterprise services...");
         
         // Stop services in reverse dependency order
@@ -391,7 +383,14 @@ impl EnterpriseManager {
     }
     
     /// Get comprehensive enterprise status
-    pub async fn get_status(&self) -> Result<EnterpriseStatus> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_status(&self) -> Result<EnterpriseStatus>  {
         let cluster_status = self.cluster_manager.read().await.get_status().await?;
         let ha_status = self.ha_manager.read().await.get_status().await?;
         let monitoring_status = self.monitoring.read().await.get_status().await?;
@@ -419,7 +418,7 @@ impl EnterpriseManager {
     }
 }
 
-/// Enterprise status aggregation
+// Enterprise status aggregation
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EnterpriseStatus {
     pub cluster: ClusterStatus,
@@ -431,8 +430,7 @@ pub struct EnterpriseStatus {
     pub analytics: String, // Placeholder for AnalyticsStatus
     pub overall_health: HealthStatus,
 }
-
-/// Overall health status
+// Overall health status
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum HealthStatus {
     Healthy,
@@ -440,7 +438,6 @@ pub enum HealthStatus {
     Unhealthy,
     Critical,
 }
-
 impl Default for EnterpriseConfig {
     fn default() -> Self {
         Self {

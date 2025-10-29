@@ -8,7 +8,7 @@
 // - configuration: Configuration and utility methods
 
 mod configuration;
-mod core;
+pub mod core;
 mod dataset_operations;
 mod optimization;
 mod pool_operations;

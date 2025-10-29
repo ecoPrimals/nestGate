@@ -1,11 +1,10 @@
 use std::collections::HashMap;
 //
-// API-specific configuration structures extracted from the monolithic domain_configs.rs
+// API-specific configuration structures extracted from the monolithic NestGateCanonicalConfig.rs
 // for better maintainability and focused responsibility.
 
 use super::security::RateLimitConfig;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 /// API domain configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -16,7 +15,6 @@ pub struct ApiDomainConfig {
     pub documentation_enabled: bool,
     pub endpoints: HashMap<String, String>,
 }
-
 impl Default for ApiDomainConfig {
     fn default() -> Self {
         let mut endpoints = HashMap::new();

@@ -19,7 +19,6 @@ pub struct ZfsMetrics {
     /// Start time for metrics collection
     start_time: SystemTime,
 }
-
 /// Current metrics snapshot
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MetricsSnapshot {
@@ -32,9 +31,15 @@ pub struct MetricsSnapshot {
     pub uptime_seconds: u64,
     pub timestamp: SystemTime,
 }
-
 impl ZfsMetrics {
+    /// Create metrics collector for testing
+    #[must_use]
+    pub fn new_for_testing() -> Self {
+        Self::new()
+    }
+
     /// Create a new metrics collector
+    #[must_use]
     pub fn new() -> Self {
         Self {
             total_operations: AtomicU64::new(0),
@@ -65,7 +70,7 @@ impl ZfsMetrics {
     }
 
     /// Get current metrics snapshot
-    pub async fn get_current_metrics(&self) -> MetricsSnapshot {
+    pub fn get_current_metrics(&self) -> MetricsSnapshot {
         let now = SystemTime::now();
         let uptime = now
             .duration_since(self.start_time)

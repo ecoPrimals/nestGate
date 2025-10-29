@@ -1,4 +1,3 @@
-
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
@@ -18,7 +17,6 @@ pub struct ConnectionStats {
     /// Number of consecutive failures (resets on success)
     pub consecutive_failures: u32,
 }
-
 impl ConnectionStats {
     /// Create new connection stats
     pub fn new() -> Self {
@@ -66,7 +64,6 @@ pub enum ConnectionError {
     /// Connection timeout occurred
     #[error("Connection timeout: {0}")]
     Timeout(String),
-
     /// Connection was refused by the remote service
     #[error("Connection refused: {0}")]
     Refused(String),

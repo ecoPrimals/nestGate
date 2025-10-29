@@ -1,11 +1,11 @@
-//! Universal Cryptographic Spore Integration Demo
-//!
-//! This demo shows how the Universal Cryptographic Spore system works
+// Universal Cryptographic Spore Integration Demo
+//! Spore Integration Demo functionality and utilities.
+// This demo shows how the Universal Cryptographic Spore system works
 //! and how it can be easily integrated into any primal in the ecosystem.
-//!
-//! Key Features Demonstrated:
-//! - Autonomous spore operation without BearDog
-//! - BearDog integration for enhanced capabilities
+//! Spore Integration Demo functionality and utilities.
+// Key Features Demonstrated:
+//! - Autonomous spore operation without Security
+//! - Security integration for enhanced capabilities
 //! - Individual vs corporate user detection
 //! - Frictionless access for individuals
 //! - License negotiation for corporations
@@ -21,7 +21,8 @@ use std::time::SystemTime;
 use tracing::{info, warn};
 
 /// Demo: Individual User Experience (Frictionless)
-pub async fn demo_individual_user_experience() -> Result<()> {
+#[must_use]
+pub fn demo_individual_user_experience() -> Result<()> {
     println!("\n🧑‍💻 DEMO: Individual User Experience");
     println!("=====================================");
     
@@ -32,7 +33,7 @@ pub async fn demo_individual_user_experience() -> Result<()> {
     let user_context = UserContext {
         user_id: Some("alice_individual".to_string()),
         session_id: "session_123".to_string(),
-        ip_address: "192.168.1.100".to_string(),
+        ip_endpoint: "192.168.1.100".to_string(),
         user_agent: Some("Individual Developer Environment".to_string()),
         environment_info: {
             let mut env = HashMap::new();
@@ -45,7 +46,6 @@ pub async fn demo_individual_user_experience() -> Result<()> {
     // Create operation request
     let operation = OperationRequest {
         operation_type: "data_access".to_string(),
-        resource_path: "/sensitive/research_data".to_string(),
         user_context,
         metadata: HashMap::new(),
         timestamp: SystemTime::now(),
@@ -55,11 +55,11 @@ pub async fn demo_individual_user_experience() -> Result<()> {
     let decision = spore.authorize_operation(&operation).await?;
     
     match decision {
-        AuthorizationDecision::Allow { enhanced_by_beardog, .. } => {
+        AuthorizationDecision::Allow { enhanced_by_security, .. } => {
             println!("✅ Individual user Alice gets FULL ACCESS instantly");
             println!("   - No restrictions");
             println!("   - No licensing required"); 
-            println!("   - BearDog enhanced: {}", enhanced_by_beardog);
+            println!("   - Security enhanced: {enhanced_by_security}");
             println!("   - Zero friction experience");
         },
         _ => {
@@ -69,9 +69,9 @@ pub async fn demo_individual_user_experience() -> Result<()> {
     
     Ok(())
 }
-
 /// Demo: Corporate User Experience (License Required)
-pub async fn demo_corporate_user_experience() -> Result<()> {
+#[must_use]
+pub fn demo_corporate_user_experience() -> Result<()> {
     println!("\n🏢 DEMO: Corporate User Experience");
     println!("==================================");
     
@@ -82,7 +82,7 @@ pub async fn demo_corporate_user_experience() -> Result<()> {
     let user_context = UserContext {
         user_id: Some("corp_user_123".to_string()),
         session_id: "corp_session_456".to_string(),
-        ip_address: "10.0.0.50".to_string(),  // Corporate IP range
+        ip_endpoint: "10.0.0.50".to_string(),  // Corporate IP range
         user_agent: Some("Corporate Automation System v2.1".to_string()),
         environment_info: {
             let mut env = HashMap::new();
@@ -96,7 +96,6 @@ pub async fn demo_corporate_user_experience() -> Result<()> {
     // Create operation request
     let operation = OperationRequest {
         operation_type: "bulk_data_extraction".to_string(),
-        resource_path: "/datasets/customer_data".to_string(),
         user_context,
         metadata: HashMap::new(),
         timestamp: SystemTime::now(),
@@ -108,11 +107,11 @@ pub async fn demo_corporate_user_experience() -> Result<()> {
     match decision {
         AuthorizationDecision::RequireLicense { terms, contact, organization_profile } => {
             println!("🚫 Corporate user requires license negotiation:");
-            println!("   - Organization: {}", organization_profile.organization_name);
-            println!("   - Base monthly rate: ${}", terms.base_monthly_rate);
-            println!("   - Automation tax: {}x multiplier", terms.automation_tax_multiplier);
-            println!("   - Contact for negotiation: {}", contact);
-            println!("   - Entropy requirements: {:?}", terms.entropy_requirements);
+            println!("   - Organization: {organization_profile.organization_name}");
+            println!("   - Base monthly rate: ${terms.base_monthly_rate}");
+            println!("   - Automation tax: {terms.automation_tax_multiplier}x multiplier");
+            println!("   - Contact for negotiation: {contact}");
+            println!("   - Entropy requirements: {terms.entropy_requirements:?}");
         },
         _ => {
             println!("❌ Unexpected result - corporations should require license");
@@ -121,16 +120,16 @@ pub async fn demo_corporate_user_experience() -> Result<()> {
     
     Ok(())
 }
-
 /// Demo: Spore Evolution (Autonomous Security Improvement)
-pub async fn demo_spore_evolution() -> Result<()> {
+#[must_use]
+pub fn demo_spore_evolution() -> Result<()> {
     println!("\n🌱 DEMO: Autonomous Spore Evolution");
     println!("===================================");
     
     // Create parent spore
     let mut parent_spore = UniversalCryptographicSpore::new_for_primal("demo_primal")?;
-    println!("📍 Parent spore created: {}", parent_spore.spore_id);
-    println!("   - Generation: {}", parent_spore.generation);
+    println!("📍 Parent spore created: {parent_spore.spore_id}");
+    println!("   - Generation: {parent_spore.generation}");
     
     // Simulate usage to trigger evolution
     // (In real implementation, this would be based on actual usage patterns)
@@ -141,47 +140,47 @@ pub async fn demo_spore_evolution() -> Result<()> {
     match parent_spore.spawn_child().await {
         Ok(child_spore) => {
             println!("🌿 Child spore spawned autonomously:");
-            println!("   - Child ID: {}", child_spore.spore_id);
-            println!("   - Generation: {}", child_spore.generation);
-            println!("   - Parent lineage: {:?}", child_spore.parent_lineage);
+            println!("   - Child ID: {child_spore.spore_id}");
+            println!("   - Generation: {child_spore.generation}");
+            println!("   - Parent lineage: {child_spore.parent_lineage:?}");
             println!("   - Evolved genetics with improved security");
         },
         Err(e) => {
-            println!("ℹ️ Evolution not needed: {}", e);
+            println!("ℹ️ Evolution not needed: {e}");
         }
     }
     
     Ok(())
 }
-
 /// Demo: Security Service Integration (Enhanced Capabilities)
-pub async fn demo_security_integration() -> Result<()> {
-    println!("\n🧬 DEMO: BearDog Integration");
+#[must_use]
+pub fn demo_security_integration() -> Result<()> {
+    println!("\n🧬 DEMO: Security Integration");
     println!("============================");
     
-    // Create spore without BearDog
+    // Create spore without Security
     let mut spore_standalone = UniversalCryptographicSpore::new_for_primal("demo_primal")?;
-    println!("📍 Standalone spore: {}", spore_standalone.spore_id);
-    println!("   - BearDog integrated: {}", spore_standalone.beardog_integration.is_some());
+    println!("📍 Standalone spore: {spore_standalone.spore_id}");
+    println!("   - Security integrated: ", spore_standalone.security_integration.is_some()"));
     
-    // Initialize with BearDog integration
+    // Initialize with Security integration
     let security_endpoint = Some("https://security.local:8443".to_string());
-    spore_standalone.initialize_with_beardog(security_endpoint).await?;
+    spore_standalone.initialize_with_security(security_endpoint).await?;
     
     println!("🔗 After security integration:");
-    println!("   - BearDog integrated: {}", spore_standalone.beardog_integration.is_some());
+    println!("   - Security integrated: ", spore_standalone.security_integration.is_some()"));
     
-    if let Some(integration) = &spore_standalone.beardog_integration {
-        println!("   - Genetics ID: {}", integration.genetics_id);
-        println!("   - Extended capabilities: {:?}", integration.extended_capabilities);
-        println!("   - Status: {:?}", integration.status);
+    if let Some(integration) = &spore_standalone.security_integration {
+        println!("   - Genetics ID: {integration.genetics_id}");
+        println!("   - Extended capabilities: {integration.extended_capabilities:?}");
+        println!("   - Status: {integration.status:?}");
     }
     
     Ok(())
 }
-
 /// Demo: Copy-Paste Integration Pattern for Any Primal
-pub async fn demo_universal_integration_pattern() -> Result<()> {
+#[must_use]
+pub fn demo_universal_integration_pattern() -> Result<()> {
     println!("\n📋 DEMO: Universal Integration Pattern");
     println!("======================================");
     println!("This pattern works identically for ALL primals:");
@@ -199,12 +198,11 @@ pub async fn demo_universal_integration_pattern() -> Result<()> {
     println!("1. Copy universal_spore.rs to your primal");
     println!("2. Add spore to your main struct"); 
     println!("3. Call spore.authorize_operation() before sensitive operations");
-    println!("4. Optionally initialize BearDog integration");
+    println!("4. Optionally initialize Security integration");
     println!("5. Your primal now has autonomous security with your terms!");
     
     Ok(())
 }
-
 /// Run all demos
 pub async fn run_all_spore_demos() -> Result<()> {
     println!("🧬 UNIVERSAL CRYPTOGRAPHIC SPORE SYSTEM DEMO");
@@ -214,7 +212,7 @@ pub async fn run_all_spore_demos() -> Result<()> {
     demo_individual_user_experience().await?;
     demo_corporate_user_experience().await?;
     demo_spore_evolution().await?;
-    demo_beardog_integration().await?;
+    demo_security_integration().await?;
     demo_universal_integration_pattern().await?;
     
     println!("\n🎉 ALL DEMOS COMPLETED");

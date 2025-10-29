@@ -131,7 +131,7 @@ mod tests {
     use crate::common::config::UnifiedTestConfig;
 
     #[tokio::test]
-    async fn test_comprehensive_e2e_development() {
+    async fn test_comprehensive_e2e_development() -> Result<(), Box<dyn std::error::Error>> {
         let config = UnifiedTestConfig::development();
         let results = run_comprehensive_e2e_test(&config).await;
 
@@ -140,6 +140,7 @@ mod tests {
                 assert!(test_results.workflow_results.phases_completed > 0);
                 assert!(test_results.performance_results.total_operations > 0);
                 println!("✅ Development E2E test completed successfully");
+    Ok(())
             }
             Err(e) => {
                 println!(
@@ -147,12 +148,15 @@ mod tests {
                     e
                 );
                 // In development, we accept failures due to missing services
+    Ok(())
             }
+    Ok(())
         }
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_comprehensive_e2e_ci() {
+    async fn test_comprehensive_e2e_ci() -> Result<(), Box<dyn std::error::Error>> {
         let config = UnifiedTestConfig::ci();
         let results = run_comprehensive_e2e_test(&config).await;
 
@@ -161,6 +165,7 @@ mod tests {
                 assert!(test_results.workflow_results.phases_completed > 0);
                 assert!(test_results.total_duration < Duration::from_secs(30)); // CI timeout
                 println!("✅ CI E2E test completed successfully");
+    Ok(())
             }
             Err(e) => {
                 println!(
@@ -168,7 +173,10 @@ mod tests {
                     e
                 );
                 // In CI, we may have limited resources
+    Ok(())
             }
+    Ok(())
         }
+        Ok(())
     }
 }

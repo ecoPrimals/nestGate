@@ -1,7 +1,8 @@
-//! # Unwrap() Elimination Showcase
-//!
-//! This example demonstrates the systematic elimination of unwrap() patterns
-//! using our idiomatic evolution utilities, making the code safer and more canonical.
+// Note: constants module not needed for this example
+// # Unwrap() Elimination Showcase
+//
+// This example demonstrates the systematic elimination of unwrap() patterns
+// using our idiomatic evolution utilities, making the code safer and more canonical.
 
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
@@ -9,6 +10,7 @@ use std::time::Duration;
 
 // ==================== BEFORE: UNWRAP() PATTERNS ====================
 
+use nestgate_core::error::NestGateError;
 mod before_unwrap {
     use super::*;
 

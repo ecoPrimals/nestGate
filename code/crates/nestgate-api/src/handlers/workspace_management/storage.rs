@@ -14,14 +14,13 @@ use tracing::warn;
 /// Delete workspace storage (CORE STORAGE FUNCTION)
 pub async fn delete_workspace(Path(workspace_id): Path<String>) -> Result<Json<Value>, StatusCode> {
     info!("🗑️ Deleting workspace storage: {}", workspace_id);
-
     // Validate workspace ID format
     if workspace_id.is_empty() || workspace_id.contains('/') || workspace_id.contains(' ') {
         warn!("❌ Invalid workspace ID format: {}", workspace_id);
         return Err(StatusCode::BAD_REQUEST);
     }
 
-    let dataset_name = format!("nestpool/workspaces/{workspace_id}");
+    let dataset_name = "nestpool/workspaces/self.base_url".to_string();
 
     // Check if dataset exists first
     let check_output = Command::new("zfs")
@@ -70,8 +69,8 @@ pub async fn delete_workspace(Path(workspace_id): Path<String>) -> Result<Json<V
             })))
         }
         Ok(output) => {
-            let error_msg = String::from_utf8_lossy(&output.stderr);
-            error!("❌ Failed to delete ZFS dataset: {}", error_msg);
+            let _error_msg = String::from_utf8_lossy(&output.stderr);
+            error!("❌ Failed to delete ZFS dataset: {}", _error_msg);
             Err(StatusCode::INTERNAL_SERVER_ERROR)
         }
         Err(e) => {
@@ -86,14 +85,13 @@ pub async fn get_workspace_status(
     Path(workspace_id): Path<String>,
 ) -> Result<Json<Value>, StatusCode> {
     info!("📊 Getting workspace storage status: {}", workspace_id);
-
     // Validate workspace ID
     if workspace_id.is_empty() || workspace_id.contains('/') || workspace_id.contains(' ') {
         warn!("❌ Invalid workspace ID format: {}", workspace_id);
         return Err(StatusCode::BAD_REQUEST);
     }
 
-    let dataset_name = format!("nestpool/workspaces/{workspace_id}");
+    let dataset_name = "nestpool/workspaces/self.base_url".to_string();
 
     // Get ZFS dataset properties
     let status_output = Command::new("zfs")
@@ -181,14 +179,13 @@ pub async fn cleanup_workspace(
     Path(workspace_id): Path<String>,
 ) -> Result<Json<Value>, StatusCode> {
     info!("🧹 Cleaning up workspace storage: {}", workspace_id);
-
     // Validate workspace ID
     if workspace_id.is_empty() || workspace_id.contains('/') || workspace_id.contains(' ') {
         warn!("❌ Invalid workspace ID format: {}", workspace_id);
         return Err(StatusCode::BAD_REQUEST);
     }
 
-    let dataset_name = format!("nestpool/workspaces/{workspace_id}");
+    let dataset_name = "nestpool/workspaces/self.base_url".to_string();
     let mut cleanup_actions = Vec::new();
     let mut space_freed = 0u64;
 
@@ -224,8 +221,7 @@ pub async fn cleanup_workspace(
                             .args(["destroy", snapshot_name])
                             .output()
                             .await;
-                        cleanup_actions
-                            .push(format!("Removed temporary snapshot: {snapshot_name}"));
+                        cleanup_actions.push("Removed temporary snapshot".to_string());
                         space_freed += 1024 * 1024; // Estimate 1MB freed per snapshot
                     }
                 }
@@ -233,9 +229,9 @@ pub async fn cleanup_workspace(
         }
     }
 
-    // 2. Clear ZFS metadata cache
+    // 2. Clear ZFS _metadata cache
     let cache_output = Command::new("zfs")
-        .args(["set", "primarycache=metadata", &dataset_name])
+        .args(["set", "primarycache=_metadata", &dataset_name])
         .output()
         .await;
 
@@ -279,9 +275,8 @@ pub async fn cleanup_workspace(
 /// Scale workspace storage
 pub async fn scale_workspace(Path(workspace_id): Path<String>) -> Result<Json<Value>, StatusCode> {
     info!("📈 Scaling workspace storage: {}", workspace_id);
-
     // Basic workspace scaling implementation
-    let dataset_name = format!("nestpool/workspaces/{workspace_id}");
+    let dataset_name = "nestpool/workspaces/self.base_url".to_string();
 
     // Get current usage
     let usage_output = Command::new("zfs")
@@ -323,7 +318,6 @@ pub async fn scale_workspace(Path(workspace_id): Path<String>) -> Result<Json<Va
                 } else {
                     scale_actions.push("Storage utilization is healthy".to_string());
                 }
-
                 Ok(Json(json!({
                     "status": "success",
                     "workspace_id": workspace_id,

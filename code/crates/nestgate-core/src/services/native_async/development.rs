@@ -1,13 +1,15 @@
 /// Development Service Implementations
-/// Extracted from native_async_final_services.rs to maintain file size compliance
-/// Contains development/testing implementations of native async service traits
+/// Contains development-focused implementations with enhanced debugging capabilities
+/// Extracted for file size compliance and development workflow optimization
+use crate::error::CanonicalResult as Result;
+// Import missing ServiceRequest type
+use crate::universal_traits::ServiceRequest;
 use std::collections::HashMap;
+use std::env;
 use std::time::{Duration, SystemTime};
 
-use crate::Result;
-
 use super::traits::NativeAsyncLoadBalancer;
-use super::types::{LoadBalancerStats, ServiceRequest, ServiceResponse, ServiceStats};
+use super::types::{LoadBalancerStats, ServiceResponse, ServiceStats};
 use crate::service_discovery::types::ServiceInfo;
 use uuid::Uuid;
 
@@ -15,7 +17,6 @@ use uuid::Uuid;
 pub struct DevelopmentLoadBalancer {
     service_count: std::sync::Arc<std::sync::atomic::AtomicUsize>,
 }
-
 impl Default for DevelopmentLoadBalancer {
     fn default() -> Self {
         Self {
@@ -52,7 +53,7 @@ impl NativeAsyncLoadBalancer<100, 1000, 3600, 60> for DevelopmentLoadBalancer {
             success: true,
             data: b"Development response".to_vec(),
             request_id: Some("dev-request-123".to_string()),
-            status: crate::traits::UniversalResponseStatus::Success,
+            status: crate::canonical_types::ResponseStatus::Success,
             headers: HashMap::new(),
             payload: serde_json::json!({"status": "dev_success"}),
             timestamp: SystemTime::now()
@@ -95,12 +96,14 @@ impl NativeAsyncLoadBalancer<100, 1000, 3600, 60> for DevelopmentLoadBalancer {
         })
     }
 
-    async fn health_check_all(&self) -> Result<Vec<(String, bool)>> {
-        // Mock health check - all services healthy in development
-        Ok(vec![
-            ("dev-service-1".to_string(), true),
-            ("dev-service-2".to_string(), true),
-        ])
+    fn health_check_all(&self) -> crate::services::native_async::traits::HealthCheckFuture {
+        Box::pin(async move {
+            // Mock health check - all services healthy in development
+            Ok(vec![
+                ("dev-service-1".to_string(), true),
+                ("dev-service-2".to_string(), true),
+            ])
+        })
     }
 
     async fn update_service_weight(&self, service_id: &str, weight: f64) -> Result<()> {
@@ -131,8 +134,9 @@ impl NativeAsyncLoadBalancer<100, 1000, 3600, 60> for DevelopmentLoadBalancer {
                     version: "1.0.0".to_string(),
                 }],
                 endpoints: vec![crate::service_discovery::types::ServiceEndpoint {
-                    url: "http://localhost:8080".to_string(),
-                    protocol: crate::service_discovery::types::CommunicationProtocol::HTTP,
+                    url: "http://localhost:".to_string()
+                        + &env::var("NESTGATE_API_PORT").unwrap_or_else(|_| "8080".to_string()),
+                    protocol: crate::service_discovery::types::CommunicationProtocol::Http,
                     health_check: Some("/health".to_string()),
                 }],
                 last_seen: SystemTime::now(),

@@ -19,12 +19,11 @@ pub struct PoolDiscoveryConfig {
     /// Validate pool health on discovery
     pub validate_health: bool,
 }
-
 impl Default for PoolDiscoveryConfig {
     fn default() -> Self {
         Self {
             auto_discovery: true,
-            default_pool: "nestpool".to_string(),
+            default_pool: "zfspool".to_string(),
             include_pools: vec![],
             exclude_pools: vec!["rpool".to_string()], // Exclude system pool by default
             discovery_interval_seconds: 300,
@@ -35,10 +34,11 @@ impl Default for PoolDiscoveryConfig {
 
 impl PoolDiscoveryConfig {
     /// Create production-optimized pool discovery configuration
+    #[must_use]
     pub fn production() -> Self {
         Self {
             auto_discovery: true,
-            default_pool: "nestpool".to_string(),
+            default_pool: "zfspool".to_string(),
             include_pools: vec![],
             exclude_pools: vec!["rpool".to_string()], // Exclude system pool by default
             discovery_interval_seconds: 30,

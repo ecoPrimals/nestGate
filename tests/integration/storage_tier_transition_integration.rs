@@ -13,6 +13,8 @@ use std::time::{Duration, SystemTime};
 use tokio::time::{sleep, timeout};
 
 use nestgate_core::{
+
+use nestgate_core::canonical_types::StorageTier;
     error::{NestGateError, Result},
     universal_storage::{
         backends::{
@@ -120,7 +122,7 @@ mod tier_prediction_tests {
     #[tokio::test]
     async fn test_tier_migration_workflow() -> Result<()> {
         // Setup storage backends for different tiers
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new()?;
         
         // Hot tier: Memory backend (fastest access)
         let hot_config = MemoryBackendConfig {
@@ -178,7 +180,7 @@ mod tier_prediction_tests {
     /// Test concurrent access during tier transitions
     #[tokio::test]
     async fn test_concurrent_access_during_transition() -> Result<()> {
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new()?;
         
         // Setup source and destination backends
         let source_config = FilesystemBackendConfig {
@@ -208,8 +210,8 @@ mod tier_prediction_tests {
         let migration_task = tokio::spawn(async move {
             // Simulate slow migration
             sleep(Duration::from_millis(100)).await;
-            let content = source_clone.read_file(&file_name_clone).await.unwrap();
-            dest_clone.write_file(&file_name_clone, &content).await.unwrap();
+            let content = source_clone.read_file(&file_name_clone).await?;
+            dest_clone.write_file(&file_name_clone, &content).await?;
         });
         
         let reader_tasks: Vec<_> = (0..5).map(|i| {
@@ -222,12 +224,12 @@ mod tier_prediction_tests {
         }).collect();
         
         // Wait for all tasks to complete
-        migration_task.await.unwrap();
+        migration_task.await?;
         
         for reader_task in reader_tasks {
-            let result = reader_task.await.unwrap();
+            let result = reader_task.await?;
             assert!(result.is_ok());
-            assert_eq!(result.unwrap(), test_content);
+            assert_eq!(result?, test_content);
         }
         
         // Verify migration completed successfully
@@ -249,7 +251,7 @@ mod performance_optimization_tests {
     /// Test performance characteristics of different storage tiers
     #[tokio::test]
     async fn test_storage_tier_performance_characteristics() -> Result<()> {
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new()?;
         
         // Setup different tier backends
         let memory_config = MemoryBackendConfig {
@@ -298,7 +300,7 @@ mod performance_optimization_tests {
     /// Test batch migration optimization
     #[tokio::test]
     async fn test_batch_migration_optimization() -> Result<()> {
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new()?;
         
         let source_config = FilesystemBackendConfig {
             root_path: temp_dir.path().join("batch_source").to_string_lossy().to_string(),
@@ -321,6 +323,7 @@ mod performance_optimization_tests {
         for i in 0..file_count {
             let file_name = format!("batch_file_{}.txt", i);
             source_backend.write_file(&file_name, test_content).await?;
+    Ok(())
         }
         
         // Test batch migration performance
@@ -335,15 +338,17 @@ mod performance_optimization_tests {
             let dest_clone = dest_backend.clone();
             
             let task = tokio::spawn(async move {
-                let content = source_clone.read_file(&file_name).await.unwrap();
-                dest_clone.write_file(&file_name, &content).await.unwrap();
+                let content = source_clone.read_file(&file_name).await?;
+                dest_clone.write_file(&file_name, &content).await?;
             });
             migration_tasks.push(task);
+    Ok(())
         }
         
         // Wait for all migrations to complete
         for task in migration_tasks {
-            task.await.unwrap();
+            task.await?;
+    Ok(())
         }
         
         let batch_duration = batch_start.elapsed();
@@ -372,7 +377,7 @@ mod data_integrity_tests {
     /// Test data integrity during tier transitions
     #[tokio::test]
     async fn test_data_integrity_during_transitions() -> Result<()> {
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new()?;
         
         // Setup backends
         let source_config = FilesystemBackendConfig {
@@ -435,7 +440,7 @@ mod data_integrity_tests {
     /// Test corruption detection and recovery
     #[tokio::test]
     async fn test_corruption_detection_and_recovery() -> Result<()> {
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new()?;
         
         let backend_config = FilesystemBackendConfig {
             root_path: temp_dir.path().to_string_lossy().to_string(),
@@ -526,6 +531,7 @@ mod intelligent_tier_management_tests {
             
             assert_eq!(predicted_tier, expected_tier, 
                 "Wrong tier prediction for frequency {}", frequency);
+    Ok(())
         }
         
         println!("✅ Intelligent tier recommendations tested");
@@ -535,7 +541,7 @@ mod intelligent_tier_management_tests {
     /// Test adaptive tier management based on system load
     #[tokio::test]
     async fn test_adaptive_tier_management() -> Result<()> {
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new()?;
         
         // Setup memory backend (hot tier) with limited capacity
         let hot_config = MemoryBackendConfig {
@@ -566,6 +572,7 @@ mod intelligent_tier_management_tests {
             // Verify file is accessible from warm tier
             let warm_content = warm_backend.read_file("hot_file_2.txt").await?;
             assert_eq!(warm_content, small_content);
+    Ok(())
         }
         
         println!("✅ Adaptive tier management tested");
@@ -588,18 +595,20 @@ mod intelligent_tier_management_tests {
         
         // Analyze distribution and generate recommendations
         let total_files = current_distribution.values().sum::<u32>() as f64;
-        let hot_percentage = (*current_distribution.get(&StorageTier::Hot).unwrap() as f64 / total_files) * 100.0;
-        let cold_percentage = (*current_distribution.get(&StorageTier::Cold).unwrap() as f64 / total_files) * 100.0;
+        let hot_percentage = (*current_distribution.get(&StorageTier::Hot)? as f64 / total_files) * 100.0;
+        let cold_percentage = (*current_distribution.get(&StorageTier::Cold)? as f64 / total_files) * 100.0;
         
         // Generate recommendations
         let mut recommendations = Vec::new();
         
         if hot_percentage > 50.0 {
             recommendations.push("Consider moving infrequently accessed files from hot to warm tier".to_string());
+    Ok(())
         }
         
         if cold_percentage < 20.0 {
             recommendations.push("Consider moving old files to cold tier for cost optimization".to_string());
+    Ok(())
         }
         
         // Verify recommendations were generated
@@ -610,6 +619,7 @@ mod intelligent_tier_management_tests {
         println!("Generated optimization recommendations:");
         for recommendation in &recommendations {
             println!("  - {}", recommendation);
+    Ok(())
         }
         
         println!("✅ Tier optimization recommendations tested");

@@ -1,327 +1,254 @@
 //
 // ZFS pool creation, tier setup, and management operations
 
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::time::{Duration, Instant};
-use tokio::process::Command;
-use tracing::{debug, error, info, warn};
-
-use super::{
-    config::{PoolSetupConfiguration, TierProperties},
-    validation::{PoolSetupConfig, PoolTopology},
-};
-use crate::types::StorageTier;
+use super::config::{PoolSetupConfig, PoolTopology};
+use super::PoolSetupResult;
 use nestgate_core::{NestGateError, Result as CoreResult};
+use tokio::process::Command as AsyncCommand;
+use tracing::{error, info, warn};
 
-/// Result of pool setup operations
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PoolSetupResult {
-    /// Pool name that was created
-    pub pool_name: String,
-    /// Devices used
-    pub devices_used: Vec<String>,
-    /// Tier datasets created
-    pub tiers_created: Vec<StorageTier>,
-    /// Pool properties set
-    pub properties_set: HashMap<String, String>,
-    /// Setup duration in milliseconds
-    pub setup_duration_ms: u64,
-    /// Any warnings during setup
-    pub warnings: Vec<String>,
-}
-
-/// Pool creator for ZFS pool creation operations
+/// ZFS pool creator implementation
 pub struct PoolCreator {
-    config: PoolSetupConfiguration,
+    dry_run: bool,
 }
 
 impl PoolCreator {
-    pub fn new(config: PoolSetupConfiguration) -> Self {
-        Self { config }
+    /// Create a new pool creator
+    #[must_use]
+    pub fn new() -> Self {
+        Self { dry_run: false }
     }
 
-    /// Safe pool creation with comprehensive validation and rollback
+    /// Create a new pool creator in dry-run mode
+    #[must_use]
+    pub fn new_dry_run() -> Self {
+        Self { dry_run: true }
+    }
+
+    /// Create a ZFS pool with safety checks
     pub async fn create_pool_safe(&self, config: &PoolSetupConfig) -> CoreResult<PoolSetupResult> {
-        let start_time = Instant::now();
-        let mut warnings = Vec::new();
+        info!("Creating ZFS pool: {}", config.pool_name);
 
-        info!("Starting safe pool creation: {}", config.pool_name);
-
-        // Safety confirmation if required
-        if self.config.safety.require_confirmation {
-            info!("Pool creation requires confirmation (safety.require_confirmation = true)");
-            if self.config.safety.default_dry_run {
-                info!(
-                    "DRY RUN: Would create pool with configuration: {:#?}",
-                    config
-                );
-                return Ok(PoolSetupResult {
-                    pool_name: format!("{} (DRY RUN)", config.pool_name),
-                    devices_used: config.devices.clone(),
-                    tiers_created: Vec::new(),
-                    properties_set: config.properties.clone(),
-                    setup_duration_ms: start_time.elapsed().as_millis() as u64,
-                    warnings,
-                });
-            }
+        if self.dry_run {
+            return self.dry_run_pool_creation(config).await;
         }
 
-        // Backup existing data if requested
-        if self.config.safety.auto_backup {
-            warnings.push("Auto-backup requested but not yet implemented".to_string());
-        }
-
-        // Create pool with enhanced error handling
-        match self.create_pool_internal(config).await {
-            Ok(mut result) => {
-                result.warnings.extend(warnings);
-                Ok(result)
-            }
-            Err(e) => {
-                error!("Pool creation failed, initiating cleanup: {}", e);
-
-                // Attempt to cleanup failed pool creation
-                if let Err(cleanup_error) = self.cleanup_failed_creation(&config.pool_name).await {
-                    warn!(
-                        "Cleanup after failed creation also failed: {}",
-                        cleanup_error
-                    );
-                }
-
-                Err(e)
-            }
-        }
+        self.create_pool_internal(config).await
     }
 
-    /// Internal pool creation with proper error handling
+    /// Internal pool creation logic
     async fn create_pool_internal(&self, config: &PoolSetupConfig) -> CoreResult<PoolSetupResult> {
-        let start_time = Instant::now();
-
-        // Build zpool create command with validation
-        let mut cmd = Command::new("zpool");
-        cmd.arg("create");
-
-        // Add pool properties with validation
-        for (key, value) in &config.properties {
-            if key.is_empty() || value.is_empty() {
-                return Err(NestGateError::Internal {
-                    message: format!("Invalid property: {key}={value}"),
-                    location: Some(format!("{}:{}", file!(), line!())),
-                    debug_info: None,
-                    is_bug: false,
-                });
-            }
-            cmd.args(["-o", &format!("{key}={value}")]);
+        // Validate configuration
+        if config.pool_name.is_empty() {
+            return Err(NestGateError::internal_error(
+                "Pool name cannot be empty",
+                "create_pool_internal",
+            ));
         }
 
-        // Add dataset properties
-        cmd.args(["-O", "compression=lz4"]);
-        cmd.args(["-O", "atime=off"]);
-        cmd.args(["-O", "xattr=sa"]);
-        cmd.args(["-O", "dnodesize=auto"]);
-        cmd.args(["-O", "normalization=formD"]);
-        cmd.args(["-O", "mountpoint=none"]);
+        if config.devices.is_empty() {
+            return Err(NestGateError::internal_error(
+                "No devices specified for pool creation",
+                "create_pool_internal",
+            ));
+        }
+
+        // Build ZFS create command
+        let mut cmd = AsyncCommand::new("zpool");
+        cmd.arg("create");
 
         // Add pool name
         cmd.arg(&config.pool_name);
 
-        // Add topology and devices
+        // Add topology-specific arguments
         match config.topology {
             PoolTopology::Single => {
-                cmd.args(&config.devices);
+                // Single device pool
+                if config.devices.len() != 1 {
+                    return Err(NestGateError::internal_error(
+                        "Single topology requires exactly one device",
+                        "create_pool_internal",
+                    ));
+                }
+                cmd.arg(&config.devices[0]);
             }
             PoolTopology::Mirror => {
                 cmd.arg("mirror");
-                cmd.args(&config.devices);
+                for device in &config.devices {
+                    cmd.arg(device);
+                }
             }
             PoolTopology::RaidZ1 => {
                 cmd.arg("raidz1");
-                cmd.args(&config.devices);
+                for device in &config.devices {
+                    cmd.arg(device);
+                }
             }
             PoolTopology::RaidZ2 => {
                 cmd.arg("raidz2");
-                cmd.args(&config.devices);
+                for device in &config.devices {
+                    cmd.arg(device);
+                }
             }
             PoolTopology::RaidZ3 => {
                 cmd.arg("raidz3");
-                cmd.args(&config.devices);
-            }
-        }
-
-        // Execute with timeout
-        let timeout_duration = Duration::from_secs(
-            std::env::var("NESTGATE_ZFS_CREATION_TIMEOUT_SECS")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(300), // 5 minutes default
-        );
-
-        let output = tokio::time::timeout(timeout_duration, cmd.output())
-            .await
-            .map_err(|_| NestGateError::Internal {
-                message: "Pool creation timed out".to_string(),
-                location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
-                is_bug: false,
-            })?
-            .map_err(|e| NestGateError::Internal {
-                message: format!("Failed to execute zpool create: {e}"),
-                location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
-                is_bug: false,
-            })?;
-
-        if !output.status.success() {
-            let error_msg = String::from_utf8_lossy(&output.stderr);
-            let stdout_msg = String::from_utf8_lossy(&output.stdout);
-            return Err(NestGateError::Internal {
-                message: format!("Pool creation failed: stderr: {error_msg}, stdout: {stdout_msg}"),
-                location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
-                is_bug: false,
-            });
-        }
-
-        info!("Successfully created ZFS pool: {}", config.pool_name);
-
-        // Create tier structure if requested
-        let mut tiers_created = Vec::new();
-        if config.create_tiers {
-            match self.create_tier_structure_safe(&config.pool_name).await {
-                Ok(tiers) => tiers_created = tiers,
-                Err(e) => {
-                    warn!("Failed to create tier structure: {}", e);
-                    // Don't fail the entire operation for tier creation failure
+                for device in &config.devices {
+                    cmd.arg(device);
                 }
             }
         }
 
-        let duration = start_time.elapsed();
-
-        Ok(PoolSetupResult {
-            pool_name: config.pool_name.clone(),
-            devices_used: config.devices.clone(),
-            tiers_created,
-            properties_set: config.properties.clone(),
-            setup_duration_ms: duration.as_millis() as u64,
-            warnings: Vec::new(),
-        })
-    }
-
-    /// Create tier structure with enhanced error handling
-    async fn create_tier_structure_safe(&self, pool_name: &str) -> CoreResult<Vec<StorageTier>> {
-        info!("Creating tier structure for pool: {}", pool_name);
-
-        let tiers = vec![
-            (StorageTier::Hot, "hot"),
-            (StorageTier::Warm, "warm"),
-            (StorageTier::Cold, "cold"),
-        ];
-
-        let mut created_tiers = Vec::new();
-
-        for (tier, name) in tiers {
-            match self.create_single_tier(pool_name, &tier, name).await {
-                Ok(()) => {
-                    info!("Created tier dataset: {}/{}", pool_name, name);
-                    created_tiers.push(tier);
-                }
-                Err(e) => {
-                    warn!("Failed to create tier {}: {}", name, e);
-                    // Continue with other tiers
-                }
+        // Add pool properties
+        for (key, value) in &config.properties {
+            if key.is_empty() || value.is_empty() {
+                return Err(NestGateError::internal_error(
+                    "Invalid pool property: key or value is empty",
+                    "create_pool_internal",
+                ));
             }
+            cmd.args(["-o", &format!("{key}={value}")]);
         }
 
-        Ok(created_tiers)
-    }
+        // Add default dataset properties
+        cmd.args(["-O", "compression=lz4"]);
+        cmd.args(["-O", "atime=off"]);
 
-    /// Create a single tier with proper configuration
-    async fn create_single_tier(
-        &self,
-        pool_name: &str,
-        _tier: &StorageTier,
-        tier_name: &str,
-    ) -> CoreResult<()> {
-        let dataset_name = format!("{pool_name}/{tier_name}");
-        let mountpoint = format!("/{dataset_name}");
-
-        // Get tier-specific properties from configuration
-        let tier_props = self
-            .config
-            .tier_config
-            .tier_properties
-            .get(tier_name)
-            .cloned()
-            .unwrap_or_else(|| {
-                warn!("No tier properties found for {}, using defaults", tier_name);
-                TierProperties {
-                    compression: "lz4".to_string(),
-                    recordsize: "128K".to_string(),
-                    primarycache: "all".to_string(),
-                    secondarycache: "all".to_string(),
-                    logbias: "throughput".to_string(),
-                    sync: "standard".to_string(),
-                    atime: "off".to_string(),
-                }
-            });
-
-        // Create dataset with tier-specific properties
-        let mut cmd = Command::new("zfs");
-        cmd.arg("create");
-
-        // Set tier-specific properties
-        cmd.args(["-o", &format!("compression={}", tier_props.compression)]);
-        cmd.args(["-o", &format!("recordsize={}", tier_props.recordsize)]);
-        cmd.args(["-o", &format!("primarycache={}", tier_props.primarycache)]);
-        cmd.args([
-            "-o",
-            &format!("secondarycache={}", tier_props.secondarycache),
-        ]);
-        cmd.args(["-o", &format!("logbias={}", tier_props.logbias)]);
-        cmd.args(["-o", &format!("sync={}", tier_props.sync)]);
-        cmd.args(["-o", &format!("atime={}", tier_props.atime)]);
-        cmd.args(["-o", &format!("mountpoint={mountpoint}")]);
-
-        cmd.arg(&dataset_name);
-
-        let output = cmd.output().await.map_err(|e| NestGateError::Internal {
-            message: format!("Failed to execute zfs create: {e}"),
-            location: Some(format!("{}:{}", file!(), line!())),
-            debug_info: None,
-            is_bug: false,
+        // Execute the command
+        info!("Executing ZFS pool creation command");
+        let output = cmd.output().await.map_err(|_| {
+            NestGateError::internal_error(
+                "Failed to execute ZFS pool creation command",
+                "create_pool_internal",
+            )
         })?;
 
         if !output.status.success() {
-            let error_msg = String::from_utf8_lossy(&output.stderr);
-            return Err(NestGateError::Internal {
-                message: format!("Failed to create tier dataset {dataset_name}: {error_msg}"),
-                location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
-                is_bug: false,
-            });
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            error!("ZFS pool creation failed: {}", stderr);
+            return Err(NestGateError::internal_error(
+                format!("ZFS pool creation failed: {stderr}"),
+                "create_pool_internal",
+            ));
         }
-        Ok(())
+
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        info!("ZFS pool created successfully: {}", stdout);
+
+        Ok(PoolSetupResult {
+            pool_name: config.pool_name.clone(),
+            success: true,
+            message: "Pool created successfully".to_string(),
+            devices_used: config.devices.clone(),
+            topology: config.topology.clone(),
+        })
     }
 
-    /// Destroy pool with safety checks
-    pub async fn destroy_pool_safe(&self, pool_name: &str, force: bool) -> CoreResult<()> {
-        info!("Destroying pool: {} (force: {})", pool_name, force);
+    /// Perform a dry run of pool creation
+    async fn dry_run_pool_creation(&self, config: &PoolSetupConfig) -> CoreResult<PoolSetupResult> {
+        info!("DRY RUN: Would create ZFS pool: {}", config.pool_name);
+        info!("DRY RUN: Topology: {:?}", config.topology);
+        info!("DRY RUN: Devices: {:?}", config.devices);
+        info!("DRY RUN: Properties: {:?}", config.properties);
 
-        if !force && self.config.safety.require_confirmation {
-            return Err(NestGateError::Internal {
-                message:
-                    "Pool destruction requires explicit force flag when confirmation is required"
-                        .to_string(),
-                location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
-                is_bug: false,
+        // Validate configuration without actually creating
+        if config.pool_name.is_empty() {
+            return Err(NestGateError::internal_error(
+                "Pool name cannot be empty",
+                "dry_run_pool_creation",
+            ));
+        }
+
+        if config.devices.is_empty() {
+            return Err(NestGateError::internal_error(
+                "No devices specified for pool creation",
+                "dry_run_pool_creation",
+            ));
+        }
+
+        // Check if devices exist
+        for device in &config.devices {
+            if !self.device_exists(device).await? {
+                warn!("DRY RUN: Device does not exist: {}", device);
+            }
+        }
+
+        Ok(PoolSetupResult {
+            pool_name: config.pool_name.clone(),
+            success: true,
+            message: "Dry run completed successfully - pool would be created".to_string(),
+            devices_used: config.devices.clone(),
+            topology: config.topology.clone(),
+        })
+    }
+
+    /// Check if a device exists
+    async fn device_exists(&self, device: &str) -> CoreResult<bool> {
+        let output = AsyncCommand::new("test")
+            .args(["-b", device])
+            .output()
+            .await
+            .map_err(|_| {
+                NestGateError::internal_error("Failed to check device existence", "device_exists")
+            })?;
+
+        Ok(output.status.success())
+    }
+
+    /// Import an existing ZFS pool
+    pub async fn import_pool(&self, pool_name: &str) -> CoreResult<PoolSetupResult> {
+        info!("Importing ZFS pool: {}", pool_name);
+
+        if self.dry_run {
+            info!("DRY RUN: Would import ZFS pool: {}", pool_name);
+            return Ok(PoolSetupResult {
+                pool_name: pool_name.to_string(),
+                success: true,
+                message: "Dry run - pool would be imported".to_string(),
+                devices_used: vec![],
+                topology: PoolTopology::Single, // Unknown topology
             });
         }
 
-        let mut cmd = Command::new("zpool");
-        cmd.arg("destroy");
+        let output = AsyncCommand::new("zpool")
+            .args(["import", pool_name])
+            .output()
+            .await
+            .map_err(|_| {
+                NestGateError::internal_error(
+                    "Failed to execute pool import command",
+                    "import_pool",
+                )
+            })?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            error!("ZFS pool import failed: {}", stderr);
+            return Err(NestGateError::internal_error(
+                format!("ZFS pool import failed: {stderr}"),
+                "import_pool",
+            ));
+        }
+
+        Ok(PoolSetupResult {
+            pool_name: pool_name.to_string(),
+            success: true,
+            message: "Pool imported successfully".to_string(),
+            devices_used: vec![], // Would need to query for actual devices
+            topology: PoolTopology::Single, // Would need to query for actual topology
+        })
+    }
+
+    /// Destroy a ZFS pool
+    pub async fn destroy_pool(&self, pool_name: &str, force: bool) -> CoreResult<()> {
+        warn!("Destroying ZFS pool: {} (force: {})", pool_name, force);
+
+        if self.dry_run {
+            warn!("DRY RUN: Would destroy ZFS pool: {}", pool_name);
+            return Ok(());
+        }
+
+        let mut cmd = AsyncCommand::new("zpool");
+        cmd.args(["destroy"]);
 
         if force {
             cmd.arg("-f");
@@ -329,155 +256,119 @@ impl PoolCreator {
 
         cmd.arg(pool_name);
 
-        let output = cmd.output().await.map_err(|e| NestGateError::Internal {
-            message: format!("Failed to execute zpool destroy: {e}"),
-            location: Some(format!("{}:{}", file!(), line!())),
-            debug_info: None,
-            is_bug: false,
+        let output = cmd.output().await.map_err(|_| {
+            NestGateError::internal_error("Failed to execute pool destroy command", "destroy_pool")
         })?;
 
         if !output.status.success() {
-            let error_msg = String::from_utf8_lossy(&output.stderr);
-            return Err(NestGateError::Internal {
-                message: format!("Failed to destroy pool {pool_name}: {error_msg}"),
-                location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
-                is_bug: false,
-            });
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            error!("ZFS pool destruction failed: {}", stderr);
+            return Err(NestGateError::internal_error(
+                format!("ZFS pool destruction failed: {stderr}"),
+                "destroy_pool",
+            ));
         }
 
-        info!("Successfully destroyed pool: {}", pool_name);
+        info!("ZFS pool destroyed successfully: {}", pool_name);
         Ok(())
     }
 
-    /// Cleanup after failed pool creation
-    async fn cleanup_failed_creation(&self, pool_name: &str) -> CoreResult<()> {
-        info!("Cleaning up failed pool creation: {}", pool_name);
-
-        // Try to destroy the partially created pool
-        let destroy_result = tokio::process::Command::new("zpool")
-            .args(["destroy", "-f", pool_name])
+    /// List available ZFS pools
+    pub async fn list_pools(&self) -> CoreResult<Vec<String>> {
+        let output = AsyncCommand::new("zpool")
+            .args(["list", "-H", "-o", "name"])
             .output()
-            .await;
+            .await
+            .map_err(|_| {
+                NestGateError::internal_error("Failed to execute pool list command", "list_pools")
+            })?;
 
-        match destroy_result {
-            Ok(output) => {
-                if output.status.success() {
-                    info!("Successfully cleaned up failed pool: {}", pool_name);
-                } else {
-                    warn!(
-                        "Pool cleanup command failed (pool may not exist): {}",
-                        String::from_utf8_lossy(&output.stderr)
-                    );
-                }
-            }
-            Err(e) => {
-                warn!("Failed to execute cleanup command: {}", e);
-            }
-        }
-        Ok(())
-    }
-
-    /// Log pool creation attempt
-    #[allow(dead_code)]
-    async fn log_creation_attempt(&self, config: &PoolSetupConfig) -> CoreResult<()> {
-        info!("Attempting to create ZFS pool: {}", config.pool_name);
-        info!("  Devices: {:?}", config.devices);
-        info!("  Topology: {:?}", config.topology);
-        info!("  Properties: {:?}", config.properties);
-        Ok(())
-    }
-
-    /// Cleanup after failed pool creation
-    #[allow(dead_code)]
-    async fn cleanup_failed_pool_creation(&self, pool_name: &str) -> CoreResult<()> {
-        info!("🧹 Cleaning up failed pool creation: {}", pool_name);
-
-        // Check if pool exists in any state
-        let pool_check = tokio::process::Command::new("zpool")
-            .args(["status", pool_name])
-            .output()
-            .await;
-
-        match pool_check {
-            Ok(output) if output.status.success() => {
-                // Pool exists, attempt to destroy it
-                warn!("🗑️ Destroying partially created pool: {}", pool_name);
-
-                let destroy_result = tokio::process::Command::new("zpool")
-                    .args(["destroy", "-f", pool_name])
-                    .output()
-                    .await;
-
-                match destroy_result {
-                    Ok(destroy_output) if destroy_output.status.success() => {
-                        info!("✅ Successfully cleaned up failed pool: {}", pool_name);
-                    }
-                    Ok(destroy_output) => {
-                        let stderr = String::from_utf8_lossy(&destroy_output.stderr);
-                        warn!("⚠️ Pool cleanup may have failed: {}", stderr);
-                    }
-                    Err(e) => {
-                        error!("❌ Failed to destroy pool during cleanup: {}", e);
-                        return Err(NestGateError::Internal {
-                            message: format!("Cleanup destroy command failed: {e}"),
-                            location: Some(format!("{}:{}", file!(), line!())),
-                            debug_info: None,
-                            is_bug: false,
-                        });
-                    }
-                }
-            }
-            Ok(_) => {
-                // Pool doesn't exist, no cleanup needed
-                debug!("Pool {} not found during cleanup (expected)", pool_name);
-            }
-            Err(e) => {
-                warn!("Could not check pool status during cleanup: {}", e);
-            }
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            return Err(NestGateError::internal_error(
+                format!("Failed to list pools: {stderr}"),
+                "list_pools",
+            ));
         }
 
-        // Additional cleanup: check for device labels that might need clearing
-        // This helps prevent "device busy" errors on retry
-        self.cleanup_device_labels(pool_name).await?;
-        Ok(())
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let pools: Vec<String> = stdout
+            .lines()
+            .filter(|line| !line.is_empty())
+            .map(|line| line.trim().to_string())
+            .collect();
+
+        Ok(pools)
+    }
+}
+
+impl Default for PoolCreator {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::pool_setup::config::RedundancyLevel;
+    use std::collections::HashMap;
+
+    #[tokio::test]
+    async fn test_dry_run_pool_creation() {
+        let creator = PoolCreator::new_dry_run();
+        let config = PoolSetupConfig {
+            pool_name: "test-pool".to_string(),
+            devices: vec!["/dev/sdb".to_string()],
+            topology: PoolTopology::Single,
+            properties: HashMap::new(),
+            tier_mappings: HashMap::new(),
+            redundancy: RedundancyLevel::None,
+            device_detection: crate::pool_setup::config::DeviceDetectionConfig::default(),
+            create_tiers: false,
+        };
+
+        let result = creator.create_pool_safe(&config).await;
+        assert!(result.is_ok());
+
+        let result = result.unwrap();
+        assert!(result.success);
+        assert!(result.message.contains("Dry run"));
     }
 
-    /// Clear ZFS labels from devices that were part of failed pool creation
-    #[allow(dead_code)]
-    async fn cleanup_device_labels(&self, pool_name: &str) -> CoreResult<()> {
-        debug!("🏷️ Checking for device labels to clear after failed pool creation");
+    #[tokio::test]
+    async fn test_invalid_pool_name() {
+        let creator = PoolCreator::new_dry_run();
+        let config = PoolSetupConfig {
+            pool_name: "".to_string(),
+            devices: vec!["/dev/sdb".to_string()],
+            topology: PoolTopology::Single,
+            properties: HashMap::new(),
+            tier_mappings: HashMap::new(),
+            redundancy: RedundancyLevel::None,
+            device_detection: crate::pool_setup::config::DeviceDetectionConfig::default(),
+            create_tiers: false,
+        };
 
-        // Get list of devices that might have ZFS labels
-        let import_check = tokio::process::Command::new("zpool")
-            .args(["import"])
-            .output()
-            .await;
+        let result = creator.create_pool_safe(&config).await;
+        assert!(result.is_err());
+    }
 
-        if let Ok(output) = import_check {
-            let stdout = String::from_utf8_lossy(&output.stdout);
+    #[tokio::test]
+    async fn test_no_devices() {
+        let creator = PoolCreator::new_dry_run();
+        let config = PoolSetupConfig {
+            pool_name: "test-pool".to_string(),
+            devices: vec![],
+            topology: PoolTopology::Single,
+            properties: HashMap::new(),
+            tier_mappings: HashMap::new(),
+            redundancy: RedundancyLevel::None,
+            device_detection: crate::pool_setup::config::DeviceDetectionConfig::default(),
+            create_tiers: false,
+        };
 
-            // Look for references to our failed pool
-            if stdout.contains(pool_name) {
-                warn!("🔧 Found traces of failed pool in import list, attempting cleanup");
-
-                // Force cleanup of the importable pool
-                let force_cleanup = tokio::process::Command::new("zpool")
-                    .args(["import", "-f", "-D", pool_name])
-                    .output()
-                    .await;
-
-                if let Ok(cleanup_output) = force_cleanup {
-                    if cleanup_output.status.success() {
-                        // Now destroy it properly
-                        let _ = tokio::process::Command::new("zpool")
-                            .args(["destroy", "-f", pool_name])
-                            .output()
-                            .await;
-                    }
-                }
-            }
-        }
-        Ok(())
+        let result = creator.create_pool_safe(&config).await;
+        assert!(result.is_err());
     }
 }

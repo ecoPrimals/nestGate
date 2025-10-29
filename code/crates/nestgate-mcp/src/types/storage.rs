@@ -28,7 +28,6 @@ pub enum StorageProtocol {
     /// Custom protocol with name.
     Custom(String),
 }
-
 /// NFS protocol versions
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum NfsVersion {
@@ -41,7 +40,6 @@ pub enum NfsVersion {
     /// NFS version 4.2.
     V42,
 }
-
 /// SMB protocol versions
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum SmbVersion {
@@ -52,7 +50,6 @@ pub enum SmbVersion {
     /// SMB version 3.1.
     V31,
 }
-
 /// Volume information for MCP storage operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VolumeInfo {
@@ -66,7 +63,6 @@ pub struct VolumeInfo {
     pub created_at: SystemTime,
     pub metadata: HashMap<String, String>,
 }
-
 /// Mount information for storage volumes
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MountInfo {
@@ -77,7 +73,6 @@ pub struct MountInfo {
     pub status: MountStatus,
     pub mounted_at: SystemTime,
 }
-
 /// Mount options for storage volumes
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MountOptions {
@@ -88,7 +83,6 @@ pub struct MountOptions {
     pub timeout_seconds: Option<u32>,
     pub custom_options: HashMap<String, String>,
 }
-
 /// Mount status for storage volumes
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 pub enum MountStatus {
@@ -98,7 +92,6 @@ pub enum MountStatus {
     Unmounted,
     Error,
 }
-
 /// Mount request for storage operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MountRequest {
@@ -107,7 +100,6 @@ pub struct MountRequest {
     pub options: MountOptions,
     pub force: bool,
 }
-
 /// Storage capacity information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StorageCapacity {
@@ -116,7 +108,6 @@ pub struct StorageCapacity {
     pub available_bytes: u64,
     pub tier: StorageTier,
 }
-
 /// Storage metrics for monitoring
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StorageMetrics {

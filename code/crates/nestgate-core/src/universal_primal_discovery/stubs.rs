@@ -1,17 +1,20 @@
 /// Universal Primal Discovery Stub Implementations
 /// Provides fallback implementations for discovery operations when full discovery is unavailable.
 /// These stubs ensure system stability and provide sensible defaults.
-use crate::error::Result;
-use crate::unified_types::NetworkConfig;
-// 🚀 ECOSYSTEM UNIFICATION: Import unified types
-use crate::unified_types::{UnifiedConfig, UnifiedNetworkConfig};
-use crate::universal_adapter::discovery::DiscoveryManager;
+///
+/// **⚠️ DEVELOPMENT ONLY**: This module is only available with `dev-stubs` feature
+use crate::Result;
+// **MIGRATED**: Using canonical config system instead of deprecated unified_types
+use crate::capabilities::discovery::DiscoveryManager;
+#[allow(deprecated)]
+use crate::config::canonical_master::{
+    domains::network::CanonicalNetworkConfig as UnifiedNetworkConfig, NestGateCanonicalConfig,
+};
 use crate::universal_adapter::stats::AdapterStats;
 use std::collections::HashMap;
 use std::net::{IpAddr, SocketAddr};
 use std::sync::{Arc, RwLock};
 use std::time::Duration;
-
 // Deprecated type alias removed - use UnifiedNetworkConfig directly
 
 /// Discover bind address for a service
@@ -36,14 +39,12 @@ pub fn discover_bind_address(service_name: &str) -> Result<IpAddr> {
         )),
     }
 }
-
 /// Discover endpoint for a service
 pub fn discover_endpoint(service_name: &str) -> Result<SocketAddr> {
     let port = get_fallback_port(service_name);
     let addr = discover_bind_address(service_name)?;
     Ok(SocketAddr::new(addr, port))
 }
-
 /// Discover limit for a service
 pub fn discover_limit(resource_type: &str) -> Result<usize> {
     match resource_type {
@@ -54,14 +55,12 @@ pub fn discover_limit(resource_type: &str) -> Result<usize> {
         _ => Ok(100),
     }
 }
-
 /// Discover port for a service
 pub fn discover_port(service_name: &str) -> Result<u16> {
     Ok(get_fallback_port(service_name))
 }
-
 /// Discover timeout for a service
-pub fn discover_timeout(operation: &str) -> Result<Duration> {
+pub fn discover_timeout(operation: &str) -> crate::Result<Duration> {
     match operation {
         "connect" => Ok(Duration::from_secs(10)),
         "request" => Ok(Duration::from_secs(30)),
@@ -70,8 +69,8 @@ pub fn discover_timeout(operation: &str) -> Result<Duration> {
         _ => Ok(Duration::from_secs(30)),
     }
 }
-
 /// Get fallback port for a service
+#[must_use]
 pub fn get_fallback_port(service_name: &str) -> u16 {
     match service_name {
         "api" => 8080,
@@ -88,28 +87,33 @@ pub fn get_fallback_port(service_name: &str) -> u16 {
         _ => 8080,
     }
 }
-
 /// Network configuration adapter for universal discovery
+/// **⚠️ DEPRECATED**: Use `CanonicalNetworkConfig` from `canonical_master::domains::network`
+#[deprecated(
+    since = "0.9.0",
+    note = "Use canonical_master::domains::network::CanonicalNetworkConfig instead"
+)]
+#[allow(deprecated)]
 pub struct NetworkConfigAdapter {
     #[allow(dead_code)]
     service_name: String,
     #[allow(dead_code)]
-    config: UnifiedConfig,
+    config: NestGateCanonicalConfig,
     #[allow(dead_code)]
     discovery_manager: Arc<RwLock<DiscoveryManager>>,
     #[allow(dead_code)]
     stats: Arc<RwLock<AdapterStats>>,
 }
-
+#[allow(deprecated)]
 impl NetworkConfigAdapter {
+    #[must_use]
     pub fn new(service_name: String) -> Self {
         let network_config = UnifiedNetworkConfig {
-            service_name: service_name.clone(),
-            api_port: get_fallback_port(&service_name),
+            // Use default NetworkConfig structure - fields updated to match unified config
             ..Default::default()
         };
 
-        let config = crate::unified_types::UnifiedConfig {
+        let config = crate::config::canonical_master::NestGateCanonicalConfig {
             network: network_config,
             ..Default::default()
         };
@@ -117,13 +121,12 @@ impl NetworkConfigAdapter {
         Self {
             service_name,
             config,
-            discovery_manager: Arc::new(RwLock::new(DiscoveryManager::new(
-                UnifiedConfig::default(),
-            ))),
-            stats: Arc::new(RwLock::new(AdapterStats::new())),
+            discovery_manager: Arc::new(RwLock::new(DiscoveryManager::new())),
+            stats: Arc::new(RwLock::new(AdapterStats::default())),
         }
     }
 
+    #[must_use]
     pub fn config(&self) -> &UnifiedNetworkConfig {
         &self.config.network
     }
@@ -134,15 +137,15 @@ pub struct StandaloneNetworkAdapter {
     #[allow(dead_code)]
     service_name: String,
     #[allow(dead_code)]
-    config: UnifiedConfig,
+    config: NestGateCanonicalConfig,
     #[allow(dead_code)]
     discovery_manager: Arc<RwLock<DiscoveryManager>>,
     #[allow(dead_code)]
     stats: Arc<RwLock<AdapterStats>>,
     endpoints: HashMap<String, SocketAddr>,
 }
-
 impl StandaloneNetworkAdapter {
+    #[must_use]
     pub fn new(service_name: String) -> Self {
         let mut endpoints = HashMap::new();
         let port = get_fallback_port(&service_name);
@@ -153,33 +156,40 @@ impl StandaloneNetworkAdapter {
 
         Self {
             service_name,
-            config: UnifiedConfig::default(), // Placeholder, needs proper initialization
-            discovery_manager: Arc::new(RwLock::new(DiscoveryManager::new(
-                UnifiedConfig::default(),
-            ))),
-            stats: Arc::new(RwLock::new(AdapterStats::new())),
+            config: NestGateCanonicalConfig::default(), // Placeholder, needs proper initialization
+            discovery_manager: Arc::new(RwLock::new(DiscoveryManager::new())),
+            stats: Arc::new(RwLock::new(AdapterStats::default())),
             endpoints,
         }
     }
 
+    /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
     pub fn discover_endpoint(&self, service: &str) -> Result<SocketAddr> {
         discover_endpoint(service)
     }
 
+    #[must_use]
     pub fn all_endpoints(&self) -> HashMap<String, SocketAddr> {
         self.endpoints.clone()
     }
 
+    #[must_use]
     pub fn is_standalone(&self) -> bool {
         true
     }
 }
 
-/// **DEPRECATED**: Use UnifiedNetworkConfig from crate::unified_types instead
-/// NetworkConfig uses the same Default implementation as UnifiedNetworkConfig
-impl NetworkConfig {
-    /// Convert legacy NetworkConfig to UnifiedNetworkConfig
-    pub fn to_unified(&self) -> crate::unified_types::UnifiedNetworkConfig {
-        crate::unified_types::UnifiedNetworkConfig::default()
+/// **DEPRECATED**: Use `UnifiedNetworkConfig` from `crate::config::canonical_master` instead
+/// `UnifiedNetworkConfig` helper methods
+#[allow(deprecated)] // Helper methods for deprecated type during migration
+impl UnifiedNetworkConfig {
+    /// Convert to unified config (identity function now)
+    #[must_use]
+    pub fn to_unified(&self) -> Self {
+        self.clone()
     }
 }

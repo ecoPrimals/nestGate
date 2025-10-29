@@ -1,0 +1,40 @@
+//! System-level configuration structures
+
+use serde::{Deserialize, Serialize};
+
+/// System-level configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SystemConfig {
+    /// Service instance name
+    pub instance_name: String,
+    /// Service version
+    pub version: String,
+    /// Environment (development, staging, production)
+    /// Log level (trace, debug, info, warn, error)
+    pub log_level: String,
+    /// Working directory
+    pub working_directory: PathBuf,
+    /// Process ID file path
+    pub pid_file: PathBuf,
+    // COMPATIBILITY: Add missing fields for legacy code
+    pub debug_mode: bool,
+    /// Maximum connections
+    pub max_connections: u32,
+    /// Worker threads
+    pub worker_threads: u32,
+}
+
+impl Default for SystemConfig {
+    fn default() -> Self {
+        Self {
+            instance_name: "nestgate".to_string(),
+            version: "1.0.0".to_string(),
+            log_level: "info".to_string(),
+            working_directory: PathBuf::from("."),
+            pid_file: PathBuf::from("/var/run/nestgate.pid"),
+            debug_mode: false,
+            max_connections: 1000,
+            worker_threads: 4,
+        }
+    }
+}

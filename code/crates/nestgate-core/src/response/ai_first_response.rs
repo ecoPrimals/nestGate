@@ -1,21 +1,19 @@
 /// AI-First Response Module
-/// Implements the EcoPrimals AI-First Citizen API Standard for NestGate
-/// **ECOSYSTEM ALIGNMENT**: Enhances NestGate from 70% to 85%+ AI-First compliance
+/// Implements the `EcoPrimals` AI-First Citizen API Standard for `NestGate`
+/// **ECOSYSTEM ALIGNMENT**: Enhances `NestGate` from 70% to 85%+ AI-First compliance
 use axum::response::{IntoResponse, Json};
 // Removed unused import: use chrono::DateTime;
+use crate::error::NestGateError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use uuid::Uuid;
 
-use crate::error::NestGateError;
-
 /// Universal AI-First response format - ALL ENDPOINTS SHOULD USE THIS
-/// Based on the EcoPrimals AI-First Citizen API Standard
+/// Based on the `EcoPrimals` AI-First Citizen API Standard
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AIFirstResponse<T> {
     /// Operation success status (machine-readable)
     pub success: bool,
-
     /// Strongly-typed response data
     pub data: T,
 
@@ -44,9 +42,8 @@ pub struct AIFirstResponse<T> {
 /// AI-optimized error structure with automation hints
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AIFirstError {
-    /// Machine-readable error code (UPPER_SNAKE_CASE)
+    /// Machine-readable error code (`UPPER_SNAKE_CASE`)
     pub code: String,
-
     /// Human-readable message (for logging/debugging)
     pub message: String,
 
@@ -74,7 +71,6 @@ pub struct AIFirstError {
 pub struct AIResponseMetadata {
     /// Service capabilities relevant to this response
     pub capabilities: Vec<String>,
-
     /// Resource utilization metrics
     pub resource_usage: ResourceUsage,
 
@@ -96,7 +92,6 @@ pub struct AIResponseMetadata {
 pub struct HumanInteractionContext {
     /// Whether human review is recommended
     pub requires_human_review: bool,
-
     /// Priority level for human attention
     pub human_priority: HumanPriority,
 
@@ -115,7 +110,6 @@ pub struct HumanInteractionContext {
 pub struct SuggestedAction {
     /// Action type identifier
     pub action_type: String,
-
     /// Action description
     pub description: String,
 
@@ -132,7 +126,7 @@ pub struct SuggestedAction {
     pub expected_outcome: String,
 }
 
-// ==================== SUPPORTING TYPES ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AIErrorCategory {
@@ -264,7 +258,7 @@ pub struct UIHints {
     pub icon_suggestions: Vec<String>,
 }
 
-// ==================== IMPLEMENTATION ====================
+// ==================== SECTION ====================
 
 impl<T> AIFirstResponse<T> {
     /// Create a successful AI-First response
@@ -298,24 +292,28 @@ impl<T> AIFirstResponse<T> {
     }
 
     /// Add AI metadata to the response
+    #[must_use]
     pub fn with_ai_metadata(mut self, metadata: AIResponseMetadata) -> Self {
         self.ai_metadata = metadata;
         self
     }
 
     /// Add human context to the response
+    #[must_use]
     pub fn with_human_context(mut self, context: HumanInteractionContext) -> Self {
         self.human_context = Some(context);
         self
     }
 
     /// Set confidence score
+    #[must_use]
     pub fn with_confidence(mut self, confidence: f64) -> Self {
         self.confidence_score = confidence.clamp(0.0, 1.0);
         self
     }
 
     /// Add suggested actions
+    #[must_use]
     pub fn with_suggested_actions(mut self, actions: Vec<SuggestedAction>) -> Self {
         self.suggested_actions = actions;
         self
@@ -323,7 +321,8 @@ impl<T> AIFirstResponse<T> {
 }
 
 impl AIFirstError {
-    /// Create a new AI-First error from NestGateError
+    /// Create a new AI-First error from `NestGateError`
+    #[must_use]
     pub fn from_nestgate_error(error: &NestGateError) -> Self {
         let (category, retry_strategy, automation_hints) = match error {
             NestGateError::Configuration { .. } => (
@@ -334,7 +333,7 @@ impl AIFirstError {
                     "Validate environment variables".to_string(),
                 ],
             ),
-            NestGateError::Network(_) => (
+            NestGateError::Network { .. } => (
                 AIErrorCategory::Network,
                 RetryStrategy::ExponentialBackoff {
                     base_delay_ms: 1000,
@@ -345,7 +344,7 @@ impl AIFirstError {
                     "Retry with backoff".to_string(),
                 ],
             ),
-            NestGateError::Security(_) => (
+            NestGateError::Security { .. } => (
                 AIErrorCategory::Security,
                 RetryStrategy::None,
                 vec![
@@ -384,6 +383,7 @@ impl AIFirstError {
     }
 
     /// Create a simple AI-First error
+    #[must_use]
     pub fn simple(code: &str, message: &str, category: AIErrorCategory) -> Self {
         Self {
             code: code.to_string(),
@@ -445,14 +445,13 @@ impl<T: Serialize> IntoResponse for AIFirstResponse<T> {
     }
 }
 
-// ==================== CONVERSION UTILITIES ====================
+// ==================== SECTION ====================
 
 /// Trait for converting standard responses to AI-First format
 pub trait IntoAIFirstResponse<T> {
     /// Convert to AI-First response format
     fn into_ai_first(self, request_id: Uuid, processing_time_ms: u64) -> AIFirstResponse<T>;
 }
-
 impl<T> IntoAIFirstResponse<T> for Result<T, NestGateError> {
     fn into_ai_first(self, request_id: Uuid, processing_time_ms: u64) -> AIFirstResponse<T> {
         match self {
@@ -470,7 +469,7 @@ impl<T> IntoAIFirstResponse<T> for Result<T, NestGateError> {
 }
 
 impl<T> AIFirstResponse<T> {
-    /// Create an error response from NestGateError with default data
+    /// Create an error response from `NestGateError` with default data
     pub fn error_from_nestgate(
         default_data: T,
         error: NestGateError,

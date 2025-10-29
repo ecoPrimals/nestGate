@@ -5,15 +5,13 @@
 /// maintainability and 2000-line compliance.
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
-
-// ==================== STORAGE METRICS TYPES ====================
+// ==================== SECTION ====================
 
 /// Comprehensive storage metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StorageMetrics {
     /// Performance metrics
     pub performance: StoragePerformanceMetrics,
-
     /// I/O statistics
     pub io_stats: StorageIOStats,
 
@@ -38,7 +36,6 @@ pub struct StorageMetrics {
 pub struct StoragePerformanceMetrics {
     /// Read IOPS (Input/Output Operations Per Second)
     pub read_iops: f64,
-
     /// Write IOPS
     pub write_iops: f64,
 
@@ -66,7 +63,6 @@ pub struct StoragePerformanceMetrics {
 pub struct StorageIOStats {
     /// Total read operations
     pub read_ops: u64,
-
     /// Total write operations
     pub write_ops: u64,
 
@@ -94,7 +90,6 @@ pub struct StorageIOStats {
 pub struct StorageCacheStats {
     /// Cache hits
     pub cache_hits: u64,
-
     /// Cache misses
     pub cache_misses: u64,
 
@@ -122,7 +117,6 @@ pub struct StorageCacheStats {
 pub struct StorageReplicationStats {
     /// Number of replicas
     pub replica_count: u32,
-
     /// Healthy replicas
     pub healthy_replicas: u32,
 
@@ -144,7 +138,6 @@ pub struct StorageReplicationStats {
 pub struct StorageSnapshotStats {
     /// Total snapshots
     pub total_snapshots: u32,
-
     /// Snapshot size in bytes
     pub snapshot_size: u64,
 
@@ -161,14 +154,13 @@ pub struct StorageSnapshotStats {
     pub oldest_snapshot_age: Duration,
 }
 
-// ==================== PERFORMANCE REQUIREMENTS ====================
+// ==================== SECTION ====================
 
 /// Storage performance requirements
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StoragePerformanceRequirements {
     /// Minimum IOPS requirement
     pub min_iops: Option<u32>,
-
     /// Minimum throughput in MB/s
     pub min_throughput_mb: Option<u32>,
 
@@ -194,7 +186,6 @@ pub enum ConsistencyLevel {
     /// Bounded staleness
     BoundedStaleness,
 }
-
 /// Storage durability levels
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum DurabilityLevel {
@@ -207,8 +198,7 @@ pub enum DurabilityLevel {
     /// Cross-region durability
     CrossRegion,
 }
-
-// ==================== DEFAULT IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 impl Default for StorageMetrics {
     fn default() -> Self {
@@ -266,7 +256,7 @@ impl Default for StoragePerformanceRequirements {
     }
 }
 
-// ==================== UTILITY IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 impl StorageMetrics {
     /// Update all metrics with current timestamp

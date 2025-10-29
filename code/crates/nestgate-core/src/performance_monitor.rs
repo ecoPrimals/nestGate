@@ -1,4 +1,4 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 //
 // This module provides comprehensive performance monitoring and metrics
@@ -6,7 +6,6 @@ use std::collections::HashMap;
 
 use crate::idiomatic_evolution::SafeResultExt;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
 use std::time::{Duration, Instant};
@@ -26,7 +25,6 @@ pub struct PerformanceMonitor {
     /// Start time for uptime tracking
     start_time: Instant,
 }
-
 impl PerformanceMonitor {
     /// **IDIOMATIC EVOLUTION**: Safe lock acquisition utilities
     /// Provides safe access to performance data with proper error handling
@@ -35,9 +33,8 @@ impl PerformanceMonitor {
             .read()
             .map_err(|_| crate::error::NestGateError::System {
                 message: "Failed to acquire read lock on performance metrics".to_string(),
-                resource: crate::error::SystemResource::Memory,
                 utilization: Some(100.0),
-                recovery: crate::error::RecoveryStrategy::Retry,
+                recovery: crate::error::core::RecoveryStrategy::Retry,
             })
     }
 
@@ -50,15 +47,13 @@ impl PerformanceMonitor {
     fn safe_write_lock(&self) -> crate::Result<MetricsWriteGuard> {
         self.metrics
             .write()
-            .map_err(|e| crate::error::NestGateError::Internal {
-                message: format!("Failed to acquire write lock on metrics: {e}"),
+            .map_err(|e| crate::error::NestGateError::internal_error(
                 location: Some("performance_monitor.rs".to_string()),
-                debug_info: Some("safe_write_lock".to_string()),
-                is_bug: false,
-            })
+                location: Some("safe_write_lock".to_string())})
     }
 
     /// Create a new performance monitor
+    #[must_use]
     pub fn new() -> Self {
         Self {
             metrics: Arc::new(RwLock::new(HashMap::new())),
@@ -68,13 +63,13 @@ impl PerformanceMonitor {
     }
 
     /// Record an operation duration
-    pub async fn record_operation(&self, name: &str, duration: Duration) {
-        self.operation_counter.fetch_add(1, Ordering::Relaxed);
+    pub fn record_operation(&self, name: &str, duration: Duration) {
+        self.b_operation_counter.fetch_add(1, Ordering::Relaxed);
 
         if let Ok(mut metrics) = self.metrics.write() {
             let metric_json = metrics.entry(name.to_string()).or_insert_with(|| {
                 serde_json::to_string(&PerformanceMetric::new(name)).unwrap_or_default()
-            });
+            );
 
             if let Ok(mut metric) = serde_json::from_str::<PerformanceMetric>(metric_json) {
                 metric.record_duration(duration);
@@ -86,11 +81,11 @@ impl PerformanceMonitor {
     }
 
     /// Increment a counter metric
-    pub async fn increment_counter(&self, name: &str) {
+    pub fn increment_counter(&self, name: &str) {
         if let Ok(mut metrics) = self.metrics.write() {
             let metric_json = metrics.entry(name.to_string()).or_insert_with(|| {
                 serde_json::to_string(&PerformanceMetric::new(name)).unwrap_or_default()
-            });
+            );
 
             if let Ok(mut metric) = serde_json::from_str::<PerformanceMetric>(metric_json) {
                 metric.increment_count();
@@ -102,7 +97,7 @@ impl PerformanceMonitor {
     }
 
     /// Record a performance metric
-    pub async fn record_metric(&self, name: &str, duration: Duration) -> crate::Result<()> {
+    pub fn record_metric(&self, name: &str, duration: Duration) -> crate::Result<()> {
         // ✅ IDIOMATIC EVOLUTION: Safe lock acquisition instead of unwrap()
         let mut metrics = self.safe_write_lock()?;
 
@@ -110,7 +105,7 @@ impl PerformanceMonitor {
         let metric_json = metrics.get(name).cloned().unwrap_or_else(|| {
             serde_json::to_string(&PerformanceMetric::new(name))
                 .unwrap_or_default_with_log("metric_creation")
-        });
+        );
 
         // Parse and update metric
         if let Ok(mut metric) = serde_json::from_str::<PerformanceMetric>(&metric_json) {
@@ -124,13 +119,12 @@ impl PerformanceMonitor {
         }
 
         // Increment operation counter
-        self.operation_counter.fetch_add(1, Ordering::Relaxed);
+        self.b_operation_counter.fetch_add(1, Ordering::Relaxed);
 
         Ok(())
     }
 
     /// Time an operation and record it
-    pub fn time_operation<F, R>(&self, name: &str, operation: F) -> R
     where
         F: FnOnce() -> R,
     {
@@ -140,17 +134,17 @@ impl PerformanceMonitor {
         // Use a blocking approach for sync context
         tokio::task::block_in_place(|| {
             tokio::runtime::Handle::current().block_on(self.record_operation(name, duration))
-        });
+        );
         result
     }
 
     /// Get all metrics
-    pub async fn get_metrics(&self) -> HashMap<String, PerformanceMetric> {
+    pub fn get_metrics(&self) -> HashMap<String, PerformanceMetric> {
         let mut result = HashMap::new();
         if let Ok(metrics) = self.metrics.read() {
             for (name, json_str) in metrics.iter() {
                 if let Ok(metric) = serde_json::from_str::<PerformanceMetric>(json_str) {
-                    result.insert(name.clone(), metric);
+                    result.insert(name, metric);
                 }
             }
         }
@@ -158,7 +152,8 @@ impl PerformanceMonitor {
     }
 
     /// Get a specific metric
-    pub async fn get_metric(&self, name: &str) -> Option<PerformanceMetric> {
+    #[must_use]
+    pub fn get_metric(&self, name: &str) -> Option<PerformanceMetric> {
         self.metrics
             .read()
             .ok()?
@@ -169,7 +164,7 @@ impl PerformanceMonitor {
     /// Get performance summary
     pub async fn get_summary(&self) -> PerformanceSummary {
         let metrics = self.get_metrics().await;
-        let total_operations = self.operation_counter.load(Ordering::Relaxed);
+        let total_operations = self.b_operation_counter.load(Ordering::Relaxed);
         let uptime = self.start_time.elapsed();
 
         let mut total_time = Duration::ZERO;
@@ -214,11 +209,11 @@ impl PerformanceMonitor {
     }
 
     /// Reset all metrics
-    pub async fn reset(&self) {
+    pub fn reset(&self) {
         if let Ok(mut metrics) = self.metrics.write() {
             metrics.clear();
         }
-        self.operation_counter.store(0, Ordering::Relaxed);
+        self.b_operation_counter.store(0, Ordering::Relaxed);
     }
 
     /// Get uptime
@@ -231,7 +226,7 @@ impl Clone for PerformanceMonitor {
     fn clone(&self) -> Self {
         Self {
             metrics: Arc::clone(&self.metrics),
-            operation_counter: Arc::clone(&self.operation_counter),
+            operation_counter: Arc::clone(&self.b_operation_counter),
             start_time: self.start_time,
         }
     }
@@ -259,7 +254,6 @@ pub struct PerformanceMetric {
     /// Last recorded duration
     pub last_duration: Option<Duration>,
 }
-
 impl PerformanceMetric {
     /// Create a new performance metric
     pub fn new(name: &str) -> Self {
@@ -328,13 +322,10 @@ pub struct PerformanceSummary {
     /// Number of different metrics
     pub metrics_count: usize,
     /// Slowest operation (name, average duration)
-    pub slowest_operation: Option<(String, Duration)>,
     /// Fastest operation (name, average duration)
-    pub fastest_operation: Option<(String, Duration)>,
     /// Operations per second
     pub operations_per_second: f64,
 }
-
 impl PerformanceSummary {
     /// Get efficiency percentage (0-100)
     pub fn efficiency_percentage(&self) -> f64 {
@@ -348,7 +339,7 @@ impl PerformanceSummary {
 
     /// Get performance assessment
     pub fn performance_assessment(&self) -> &'static str {
-        match self.operations_per_second {
+        match self.b_operations_per_second {
             ops if ops > 10000.0 => "Excellent",
             ops if ops > 1000.0 => "Very Good",
             ops if ops > 100.0 => "Good",
@@ -369,32 +360,27 @@ pub fn record_operation(name: &str, duration: Duration) {
     tokio::task::block_in_place(|| {
         tokio::runtime::Handle::current()
             .block_on(GLOBAL_PERFORMANCE_MONITOR.record_operation(name, duration))
-    });
+    );
 }
-
 /// Convenience function for incrementing counters globally
 pub fn increment_counter(name: &str) {
     tokio::task::block_in_place(|| {
         tokio::runtime::Handle::current()
             .block_on(GLOBAL_PERFORMANCE_MONITOR.increment_counter(name))
-    });
+    );
 }
-
 /// Convenience function for timing operations globally
-pub fn time_operation<F, R>(name: &str, operation: F) -> R
 where
     F: FnOnce() -> R,
 {
     GLOBAL_PERFORMANCE_MONITOR.time_operation(name, operation)
 }
-
 /// Get global performance summary
 pub fn global_performance_summary() -> PerformanceSummary {
     tokio::task::block_in_place(|| {
         tokio::runtime::Handle::current().block_on(GLOBAL_PERFORMANCE_MONITOR.get_summary())
     })
 }
-
 /// Macro for easy performance timing
 #[macro_export]
 macro_rules! time_it {
@@ -404,9 +390,8 @@ macro_rules! time_it {
         let duration = start.elapsed();
         $crate::performance_monitor::record_operation($name, duration);
         result
-    }};
+    };
 }
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -432,7 +417,7 @@ mod tests {
                 "Expected metric not found".to_string(),
                 "test_performance_monitoring".to_string(),
             )
-        })?;
+        )?;
 
         assert!(metric.total_operations > 0);
         assert!(metric.average_duration.as_millis() >= 10);

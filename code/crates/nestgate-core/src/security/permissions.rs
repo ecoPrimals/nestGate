@@ -2,7 +2,6 @@ use crate::error::{NetworkError};
 /// Permissions module for NestGate
 ///
 /// This module provides permission-related functionality for the NestGate system.
-
 use std::collections::{HashMap, HashSet};
 // Removed unused std import
 
@@ -13,7 +12,6 @@ use crate::security::{Role, Permission, AccessLevel};
 pub struct PermissionManager {
     /// Permissions by role
     role_permissions: HashMap<Role, HashSet<String>>,
-
     /// Custom permissions by user
     user_permissions: HashMap<String, HashSet<String>>,
 
@@ -23,6 +21,7 @@ pub struct PermissionManager {
 
 impl PermissionManager {
     /// Create a new permission manager
+    #[must_use]
     pub fn new() -> Self {
         let mut manager = Self {
             role_permissions: HashMap::new(),

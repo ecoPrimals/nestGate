@@ -11,6 +11,7 @@ mod wizard;
 // GUI feature removed - using API endpoints for UI primals instead
 
 use crate::installer::NestGateInstaller;
+use nestgate_core::error::{ConfigurationErrorDetails, NestGateUnifiedError};
 
 #[derive(Parser)]
 #[command(name = "nestgate-installer")]
@@ -49,7 +50,6 @@ enum Commands {
         #[arg(long)]
         skip_zfs: bool,
     },
-
     /// Uninstall NestGate
     Uninstall {
         /// Remove configuration files
@@ -60,14 +60,12 @@ enum Commands {
         #[arg(long)]
         remove_data: bool,
     },
-
     /// Update existing installation
     Update {
         /// Update to specific version
         #[arg(long)]
         version: Option<String>,
     },
-
     /// Configure existing installation
     Configure {
         /// Configuration file path
@@ -78,13 +76,12 @@ enum Commands {
         #[arg(long)]
         wizard: bool,
     },
-
     /// Check system requirements
     Doctor,
     // GUI installer removed - using API endpoints for UI primals instead
 }
 
-fn setup_logging(verbose: bool) -> Result<()> {
+fn setup_logging(verbose: bool) -> nestgate_core::Result<()> {
     let log_level = if verbose { "debug" } else { "info" };
 
     tracing_subscriber::fmt()
@@ -102,14 +99,22 @@ fn setup_logging(verbose: bool) -> Result<()> {
 }
 
 #[tokio::main]
-async fn main() -> Result<()> {
+async fn main() -> nestgate_core::Result<()> {
     let cli = Cli::parse();
 
     setup_logging(cli.verbose)?;
 
     info!("NestGate Installer starting...");
 
-    let mut installer = NestGateInstaller::new(cli.install_dir.clone())?;
+    let mut installer = NestGateInstaller::new(cli.install_dir.clone()).map_err(|e| {
+        NestGateUnifiedError::Configuration(Box::new(ConfigurationErrorDetails {
+            field: "installer".to_string(),
+            message: format!("Failed to create installer: {e}"),
+            currentvalue: None,
+            expected: None,
+            user_error: false,
+        }))
+    })?;
 
     match cli.command {
         Some(Commands::Install {
@@ -118,7 +123,15 @@ async fn main() -> Result<()> {
             skip_zfs: _,
         }) => {
             let config = crate::config::installer_config_factory::development();
-            installer.install(&config).await?;
+            installer.install(&config).map_err(|e| {
+                NestGateUnifiedError::Configuration(Box::new(ConfigurationErrorDetails {
+                    field: "install".to_string(),
+                    message: format!("Installation failed: {e}"),
+                    currentvalue: None,
+                    expected: None,
+                    user_error: false,
+                }))
+            })?;
         }
 
         Some(Commands::Uninstall {
@@ -127,23 +140,63 @@ async fn main() -> Result<()> {
         }) => {
             installer
                 .uninstall(remove_config, remove_data, cli.yes)
-                .await?;
+                .map_err(|e| {
+                    NestGateUnifiedError::Configuration(Box::new(ConfigurationErrorDetails {
+                        field: "uninstall".to_string(),
+                        message: format!("Uninstallation failed: {e}"),
+                        currentvalue: None,
+                        expected: None,
+                        user_error: false,
+                    }))
+                })?;
         }
 
         Some(Commands::Update { version }) => {
-            installer.update(version, cli.yes).await?;
+            installer.update(version, cli.yes).await.map_err(|e| {
+                NestGateUnifiedError::Configuration(Box::new(ConfigurationErrorDetails {
+                    field: "update".to_string(),
+                    message: format!("Update failed: {e}"),
+                    currentvalue: None,
+                    expected: None,
+                    user_error: false,
+                }))
+            })?;
         }
 
         Some(Commands::Configure { config, wizard }) => {
             if wizard {
-                installer.run_configuration_wizard().await?;
+                installer.run_configuration_wizard().map_err(|e| {
+                    NestGateUnifiedError::Configuration(Box::new(ConfigurationErrorDetails {
+                        field: "wizard".to_string(),
+                        message: format!("Configuration wizard failed: {e}"),
+                        currentvalue: None,
+                        expected: None,
+                        user_error: false,
+                    }))
+                })?;
             } else {
-                installer.configure(config).await?;
+                installer.configure(config).map_err(|e| {
+                    NestGateUnifiedError::Configuration(Box::new(ConfigurationErrorDetails {
+                        field: "configure".to_string(),
+                        message: format!("Configuration failed: {e}"),
+                        currentvalue: None,
+                        expected: None,
+                        user_error: false,
+                    }))
+                })?;
             }
         }
 
         Some(Commands::Doctor) => {
-            installer.doctor().await?;
+            installer.doctor().await.map_err(|e| {
+                NestGateUnifiedError::Configuration(Box::new(ConfigurationErrorDetails {
+                    field: "doctor".to_string(),
+                    message: format!("Doctor check failed: {e}"),
+                    currentvalue: None,
+                    expected: None,
+                    user_error: false,
+                }))
+            })?;
         }
 
         // GUI installer removed - using API endpoints for UI primals instead
@@ -151,7 +204,15 @@ async fn main() -> Result<()> {
             // Default: run installation wizard
             info!("No command specified, running installation wizard...");
             let config = crate::config::installer_config_factory::development();
-            installer.install(&config).await?;
+            installer.install(&config).map_err(|e| {
+                NestGateUnifiedError::Configuration(Box::new(ConfigurationErrorDetails {
+                    field: "default_install".to_string(),
+                    message: format!("Installation failed: {e}"),
+                    currentvalue: None,
+                    expected: None,
+                    user_error: false,
+                }))
+            })?;
         }
     }
 

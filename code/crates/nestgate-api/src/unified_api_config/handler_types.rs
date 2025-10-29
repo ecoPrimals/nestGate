@@ -1,13 +1,12 @@
 /// 
 /// Specific configuration structures for different handler types.
 /// Each handler type has its own specialized configuration.
-
 use super::handler_common::{HandlerConfig, HandlerExtensions};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
 
-// ==================== HANDLER-SPECIFIC CONFIGURATION TYPES ====================
+// ==================== SECTION ====================
 
 /// ZFS handler specific configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -27,7 +26,6 @@ pub struct ZfsHandlerSpecificConfig {
     /// Pool-specific configurations
     pub pools: HashMap<String, ZfsPoolConfig>,
 }
-
 /// Performance handler specific configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceHandlerSpecificConfig {
@@ -40,7 +38,6 @@ pub struct PerformanceHandlerSpecificConfig {
     /// Benchmark configuration
     pub benchmark: BenchmarkConfig,
 }
-
 /// Dashboard handler specific configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DashboardHandlerSpecificConfig {
@@ -53,7 +50,6 @@ pub struct DashboardHandlerSpecificConfig {
     /// Theme configuration
     pub theme: DashboardTheme,
 }
-
 /// Load testing handler specific configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LoadTestingHandlerSpecificConfig {
@@ -66,7 +62,6 @@ pub struct LoadTestingHandlerSpecificConfig {
     /// Result retention period
     pub result_retention: Duration,
 }
-
 /// Workspace handler specific configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WorkspaceHandlerSpecificConfig {
@@ -79,7 +74,6 @@ pub struct WorkspaceHandlerSpecificConfig {
     /// Access control settings
     pub access_control: WorkspaceAccessConfig,
 }
-
 /// Authentication handler specific configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthHandlerSpecificConfig {
@@ -92,28 +86,21 @@ pub struct AuthHandlerSpecificConfig {
     /// Password policy
     pub password_policy: PasswordPolicy,
 }
-
-// ==================== TYPE ALIASES FOR SPECIFIC HANDLERS ====================
+// ==================== SECTION ====================
 
 /// ZFS handler configuration type alias
 pub type ZfsHandlerConfig = HandlerConfig<ZfsHandlerSpecificConfig>;
-
 /// Performance handler configuration type alias
 pub type PerformanceHandlerConfig = HandlerConfig<PerformanceHandlerSpecificConfig>;
-
 /// Dashboard handler configuration type alias
 pub type DashboardHandlerConfig = HandlerConfig<DashboardHandlerSpecificConfig>;
-
 /// Load testing handler configuration type alias
 pub type LoadTestingHandlerConfig = HandlerConfig<LoadTestingHandlerSpecificConfig>;
-
 /// Workspace handler configuration type alias
 pub type WorkspaceHandlerConfig = HandlerConfig<WorkspaceHandlerSpecificConfig>;
-
 /// Authentication handler configuration type alias
 pub type AuthHandlerConfig = HandlerConfig<AuthHandlerSpecificConfig>;
-
-// ==================== SUPPORTING CONFIGURATION STRUCTURES ====================
+// ==================== SECTION ====================
 
 /// ZFS pool configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -133,7 +120,6 @@ pub struct ZfsPoolConfig {
     /// Custom properties
     pub custom_properties: HashMap<String, String>,
 }
-
 /// ZFS dataset configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZfsDatasetConfig {
@@ -150,7 +136,6 @@ pub struct ZfsDatasetConfig {
     /// Mount point
     pub mount_point: Option<String>,
 }
-
 /// ZFS snapshot configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZfsSnapshotConfig {
@@ -163,7 +148,6 @@ pub struct ZfsSnapshotConfig {
     /// Include properties in snapshot
     pub include_properties: bool,
 }
-
 /// Snapshot retention policy
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SnapshotRetentionPolicy {
@@ -176,7 +160,6 @@ pub struct SnapshotRetentionPolicy {
     /// Archive old snapshots instead of deleting
     pub archive_old: bool,
 }
-
 /// ZFS service configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZfsServiceConfig {
@@ -191,8 +174,7 @@ pub struct ZfsServiceConfig {
     /// Environment variables for commands
     pub environment: HashMap<String, String>,
 }
-
-// ==================== PERFORMANCE CONFIGURATION STRUCTURES ====================
+// ==================== SECTION ====================
 
 /// Performance thresholds configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -214,7 +196,6 @@ pub struct PerformanceThresholds {
     /// Response time critical threshold (milliseconds)
     pub response_time_critical: u64,
 }
-
 /// Benchmark configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BenchmarkConfig {
@@ -229,7 +210,6 @@ pub struct BenchmarkConfig {
     /// Benchmark scenarios
     pub scenarios: Vec<BenchmarkScenario>,
 }
-
 /// Individual benchmark scenario
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BenchmarkScenario {
@@ -242,8 +222,7 @@ pub struct BenchmarkScenario {
     /// Expected performance metrics
     pub expected_metrics: HashMap<String, f64>,
 }
-
-// ==================== DASHBOARD CONFIGURATION STRUCTURES ====================
+// ==================== SECTION ====================
 
 /// Widget configuration for dashboard
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -261,21 +240,18 @@ pub struct WidgetConfig {
     /// Widget-specific configuration
     pub config: HashMap<String, serde_json::Value>,
 }
-
 /// Widget position on dashboard
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WidgetPosition {
     pub x: u32,
     pub y: u32,
 }
-
 /// Widget size configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WidgetSize {
     pub width: u32,
     pub height: u32,
 }
-
 /// Dashboard theme configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DashboardTheme {
@@ -292,8 +268,7 @@ pub struct DashboardTheme {
     /// Custom CSS overrides
     pub custom_css: Option<String>,
 }
-
-// ==================== LOAD TESTING CONFIGURATION STRUCTURES ====================
+// ==================== SECTION ====================
 
 /// Ramp-up configuration for load testing
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -307,7 +282,6 @@ pub struct RampUpConfig {
     /// Target user count
     pub target_users: usize,
 }
-
 /// Ramp-up strategy options
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum RampUpStrategy {
@@ -316,7 +290,6 @@ pub enum RampUpStrategy {
     Step,
     Custom(Vec<RampUpStep>),
 }
-
 /// Individual ramp-up step
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RampUpStep {
@@ -325,8 +298,7 @@ pub struct RampUpStep {
     /// Target user count for this step
     pub target_users: usize,
 }
-
-// ==================== WORKSPACE CONFIGURATION STRUCTURES ====================
+// ==================== SECTION ====================
 
 /// Workspace backup configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -342,7 +314,6 @@ pub struct WorkspaceBackupConfig {
     /// Compression for backups
     pub compression: bool,
 }
-
 /// Workspace access control configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WorkspaceAccessConfig {
@@ -353,7 +324,6 @@ pub struct WorkspaceAccessConfig {
     /// Enable audit logging
     pub audit_logging: bool,
 }
-
 /// Access level enumeration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AccessLevel {
@@ -362,7 +332,6 @@ pub enum AccessLevel {
     Write,
     Admin,
 }
-
 /// Access control rule
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AccessRule {
@@ -373,8 +342,7 @@ pub struct AccessRule {
     /// Rule conditions
     pub conditions: HashMap<String, String>,
 }
-
-// ==================== AUTHENTICATION CONFIGURATION STRUCTURES ====================
+// ==================== SECTION ====================
 
 /// JWT configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -392,7 +360,6 @@ pub struct JwtConfig {
     /// JWT audience
     pub audience: Vec<String>,
 }
-
 /// OAuth provider configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OAuthProviderConfig {
@@ -411,7 +378,6 @@ pub struct OAuthProviderConfig {
     /// Scopes to request
     pub scopes: Vec<String>,
 }
-
 /// Session configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SessionConfig {
@@ -424,15 +390,13 @@ pub struct SessionConfig {
     /// Same-site cookie policy
     pub same_site: String,
 }
-
 /// Session storage options
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SessionStorage {
     Memory,
-    Redis { url: String },
-    Database { table: String },
+    Redis { url: String }
+    Database { table: String }
 }
-
 /// Password policy configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PasswordPolicy {
@@ -451,12 +415,10 @@ pub struct PasswordPolicy {
     /// Password expiration period
     pub expiration: Option<Duration>,
 }
-
-// ==================== DEFAULT IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 impl Default for ZfsHandlerSpecificConfig {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             command_timeout: Duration::from_secs(30),
             monitoring_enabled: true,
             pool_discovery_interval: Duration::from_secs(60),
@@ -464,29 +426,24 @@ impl Default for ZfsHandlerSpecificConfig {
             snapshot_retention: SnapshotRetentionPolicy::default(),
             service: ZfsServiceConfig::default(),
             pools: HashMap::new(),
-        }
-    }
+         }
 }
 
 impl Default for SnapshotRetentionPolicy {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             keep_duration: Duration::from_secs(7 * 24 * 3600), // 7 days
             max_snapshots: Some(50),
             cleanup_schedule: Some("0 2 * * *".to_string()), // Daily at 2 AM
             archive_old: false,
-        }
-    }
+         }
 }
 
 impl Default for ZfsServiceConfig {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             zfs_binary: "/usr/sbin/zfs".to_string(),
             zpool_binary: "/usr/sbin/zpool".to_string(),
             command_timeout: Duration::from_secs(30),
             use_sudo: true,
             environment: HashMap::new(),
-        }
-    }
+         }
 } 

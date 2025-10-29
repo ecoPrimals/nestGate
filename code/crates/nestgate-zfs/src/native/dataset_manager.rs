@@ -3,9 +3,9 @@
 // with real dataset operations and monitoring.
 
 use super::command_executor::NativeZfsCommandExecutor;
-use nestgate_core::canonical_modernization::canonical_constants::*;
 use crate::types::DatasetInfo;
-use nestgate_core::types::StorageTier;
+use nestgate_core::canonical_modernization::canonical_constants::storage;
+use nestgate_core::canonical_types::StorageTier;
 use nestgate_core::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -16,7 +16,6 @@ use tracing::info;
 pub struct NativeZfsDatasetManager {
     command_executor: Arc<NativeZfsCommandExecutor>,
 }
-
 /// Dataset creation options
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DatasetCreateOptions {
@@ -29,7 +28,6 @@ pub struct DatasetCreateOptions {
     pub record_size: Option<String>,
     pub storage_tier: Option<StorageTier>,
 }
-
 impl Default for DatasetCreateOptions {
     fn default() -> Self {
         Self {
@@ -47,11 +45,19 @@ impl Default for DatasetCreateOptions {
 
 impl NativeZfsDatasetManager {
     /// Create a new dataset manager
+    #[must_use]
     pub fn new(command_executor: Arc<NativeZfsCommandExecutor>) -> Self {
         Self { command_executor }
     }
 
     /// List all datasets
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn list_datasets(&self) -> Result<Vec<String>> {
         let output = self
             .command_executor
@@ -66,6 +72,13 @@ impl NativeZfsDatasetManager {
     }
 
     /// Get dataset information
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn get_dataset_info(&self, dataset_name: &str) -> Result<DatasetInfo> {
         let properties = self.command_executor.get_dataset_info(dataset_name).await?;
 
@@ -97,7 +110,7 @@ impl NativeZfsDatasetManager {
             available: available_bytes,
             compression: compression_ratio.map_or_else(|| "lz4".into(), |r| r.to_string()),
             checksum: "sha256".into(), // Default checksum
-            tier: nestgate_core::types::StorageTier::Warm, // Default tier
+            tier: nestgate_core::canonical_types::StorageTier::Warm, // Default tier
             mount_point: if mount_point.is_empty() || mount_point == "none" {
                 None
             } else {
@@ -109,6 +122,13 @@ impl NativeZfsDatasetManager {
     }
 
     /// Create a new dataset
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn create_dataset(
         &self,
         dataset_name: &str,
@@ -125,7 +145,11 @@ impl NativeZfsDatasetManager {
         if let Some(dedup) = options.deduplication {
             properties.insert(
                 "dedup".to_string(),
-                if dedup { "on" } else { "off" }.to_string(),
+                if dedup {
+                    "on".to_string()
+                } else {
+                    "off".to_string()
+                },
             );
         }
 
@@ -164,6 +188,13 @@ impl NativeZfsDatasetManager {
     }
 
     /// Destroy a dataset
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn destroy_dataset(&self, dataset_name: &str, force: bool) -> Result<()> {
         let mut args = vec!["destroy"];
         if force {
@@ -180,15 +211,22 @@ impl NativeZfsDatasetManager {
     }
 
     /// Set dataset property
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn set_property(
         &self,
         dataset_name: &str,
         property: &str,
         value: &str,
     ) -> Result<()> {
-        let property_value = format!("{property}={value}");
+        let propertyvalue = format!("{property}={value}");
         self.command_executor
-            .execute_command_expect_success(&["set", &property_value, dataset_name])
+            .execute_command_expect_success(&["set", &propertyvalue, dataset_name])
             .await?;
 
         info!(
@@ -199,6 +237,13 @@ impl NativeZfsDatasetManager {
     }
 
     /// Get dataset property
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn get_property(&self, dataset_name: &str, property: &str) -> Result<String> {
         let output = self
             .command_executor
@@ -209,6 +254,13 @@ impl NativeZfsDatasetManager {
     }
 
     /// Mount a dataset
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn mount_dataset(&self, dataset_name: &str) -> Result<()> {
         self.command_executor
             .execute_command_expect_success(&["mount", dataset_name])
@@ -219,6 +271,13 @@ impl NativeZfsDatasetManager {
     }
 
     /// Unmount a dataset
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn unmount_dataset(&self, dataset_name: &str, force: bool) -> Result<()> {
         let mut args = vec!["unmount"];
         if force {
@@ -235,6 +294,13 @@ impl NativeZfsDatasetManager {
     }
 
     /// Get dataset usage statistics
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn get_dataset_usage(&self, dataset_name: &str) -> Result<HashMap<String, u64>> {
         let properties = self.command_executor.get_dataset_info(dataset_name).await?;
 

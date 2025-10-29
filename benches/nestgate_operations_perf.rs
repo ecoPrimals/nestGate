@@ -8,7 +8,7 @@ use std::sync::{Arc, Mutex};
 use uuid::Uuid;
 
 // Use the unified benchmark configuration system
-use nestgate_core::config::canonical_unified::{
+use nestgate_core::config::unified::{
     BenchmarkMockConfiguration, BenchmarkMockService, UnifiedBenchmarkConfig,
 };
 

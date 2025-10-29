@@ -1,14 +1,10 @@
-//
-// This module provides analytics functionality for enterprise storage,
-// extracted from the monolithic enterprise_ops.rs file.
-//
-// **STATUS**: Placeholder module - implementation to be extracted
-//
-// **WILL PROVIDE**:
-// - Performance metrics collection and analysis
-// - Storage usage analytics and reporting
-// - Deduplication analysis and optimization
-// - Capacity planning and trend analysis
+//! Enterprise Storage Analytics Operations
+//!
+//! This module provides comprehensive analytics functionality for enterprise storage,
+//! including performance monitoring, usage analysis, trend prediction, and optimization insights.
 
-// Placeholder - implementation will be moved from enterprise_ops.rs
-// This ensures the module structure compiles while we complete the migration 
+// Re-export everything from the analytics module for backward compatibility
+pub use self::analytics::*;
+
+/// Analytics submodule containing the refactored implementation
+pub mod analytics; 

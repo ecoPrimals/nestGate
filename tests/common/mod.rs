@@ -1,8 +1,8 @@
 use std::future::Future;
 // Test common utilities and helpers
 // **MODERNIZED**: Removed async_trait dependency for zero-cost async
-use nestgate_core::error::Result;
 use nestgate_core::canonical_modernization::UnifiedCapabilityType;
+use nestgate_core::error::Result;
 use nestgate_core::{UnifiedServiceState, UniversalService};
 
 // Re-export configuration modules
@@ -16,16 +16,28 @@ pub mod mocks;
 pub mod test_config;
 pub mod test_doubles;
 pub mod test_error_handling;
+pub mod test_service_manager; // ✅ NEW: Dynamic test port allocation
 pub mod utils;
 
 // Re-export commonly used test utilities
-pub use test_helpers::{TestHelpers, TestSetup};
 pub use mocks::{MockServiceRegistry, MockStorageService, MockUniversalService};
+pub use test_helpers::{TestHelpers, TestSetup};
+pub use test_service_manager::{
+    get_test_api_endpoint, get_test_endpoint, TestConfig as DynamicTestConfig, TestServiceManager,
+}; // ✅ NEW: Export test service manager
 pub use utils::TestUtils;
 
 // Test configuration types from canonical system
 pub use config::UnifiedTestConfig as TestConfig;
-pub use nestgate_core::config::canonical_unified::CanonicalTestConfig as CleanTestConfig;
+pub use nestgate_core::config::canonical_master::NestGateCanonicalConfig as CleanTestConfig;
+
+/// **TEST ENVIRONMENT SYSTEM**
+pub mod test_environment;
+pub use test_environment::{
+    get_test_environment, init_test_environment, test_service_address, test_url,
+    test_websocket_url, TestDatabaseConfig, TestEnvironment, TestEnvironmentBuilder,
+    TestStorageConfig, TestTimeouts,
+};
 
 /// Simple test service for mocking
 #[derive(Clone, Debug)]
@@ -44,7 +56,10 @@ impl UniversalService for SimpleTestService {
     type Config = String;
     type Health = bool;
 
-    fn initialize(&mut self, _config: Self::Config) -> impl std::future::Future<Output = Result<()>> + Send {
+    fn initialize(
+        &mut self,
+        _config: Self::Config,
+    ) -> impl std::future::Future<Output = Result<()>> + Send {
         async move { Ok(()) }
     }
 
@@ -72,7 +87,10 @@ impl UniversalService for SimpleTestService {
         UnifiedCapabilityType::Storage
     }
 
-    fn handle_request<'a>(&self, _request: &'a str) -> impl std::future::Future<Output = Result<String>> + Send {
+    fn handle_request<'a>(
+        &self,
+        _request: &'a str,
+    ) -> impl std::future::Future<Output = Result<String>> + Send {
         async move { Ok("test_response".to_string()) }
     }
 

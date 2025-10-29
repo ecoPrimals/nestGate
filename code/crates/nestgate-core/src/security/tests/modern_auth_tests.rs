@@ -1,10 +1,11 @@
-//! Modern Authentication Tests
-//!
-//! This module contains modernized authentication tests using canonical error patterns
+// Modern Authentication Tests
+//! Modern Auth Tests functionality and utilities.
+// This module contains modernized authentication tests using canonical error patterns
 //! and robust test infrastructure.
 
-use crate::error::{NestGateError, Result};
+use crate::{NestGateError, Result};
 use crate::security::auth_types::{
+use crate::error::NestGateError;
     AccessLevel, AuthContext, AuthMethod, Permission, Role, TokenType,
 };
 use std::collections::HashMap;
@@ -15,7 +16,6 @@ use std::time::{Duration, SystemTime};
 struct ModernAuthManager {
     users: HashMap<String, String>, // username -> password hash
 }
-
 impl ModernAuthManager {
     fn new() -> Self {
         let mut users = HashMap::new();
@@ -36,9 +36,9 @@ impl ModernAuthManager {
 
     fn create_token(&self, username: &str) -> Result<String> {
         if self.users.contains_key(username) {
-            Ok(format!("modern_token_for_{}", username))
+            Ok(format!("modern_token_for_{username}"))
         } else {
-            Err(NestGateError::security_error(
+            Err(NestGateError::security(
                 "User not found",
                 "authentication",
                 None,
@@ -52,7 +52,7 @@ impl ModernAuthManager {
             let username = token.strip_prefix("modern_token_for_").unwrap_or("unknown");
             Ok(username.to_string())
         } else {
-            Err(NestGateError::security_error(
+            Err(NestGateError::security(
                 "Invalid token format",
                 "token_validation",
                 None,
@@ -105,6 +105,7 @@ async fn test_modern_authentication_flow() -> Result<()> {
         assert_eq!(security_data.message, "User not found");
     } else {
         panic!("Expected Security error");
+    Ok(())
     }
 
     Ok(())
@@ -141,6 +142,7 @@ async fn test_modern_token_operations() -> Result<()> {
         assert!(security_data.message.contains("Authentication failed"));
     } else {
         panic!("Expected Security error");
+    Ok(())
     }
 
     Ok(())
@@ -149,14 +151,14 @@ async fn test_modern_token_operations() -> Result<()> {
 #[tokio::test]
 async fn test_modern_security_error_patterns() -> Result<()> {
     // Test canonical security error creation patterns
-    let auth_failed = NestGateError::security_error(
+    let auth_failed = NestGateError::security(
         "Invalid credentials",
         "authentication",
         Some("user_database"),
         Some("test_user"),
     );
 
-    let auth_denied = NestGateError::security_error(
+    let auth_denied = NestGateError::security(
         "Insufficient permissions",
         "authorization",
         Some("sensitive_data"),
@@ -164,7 +166,7 @@ async fn test_modern_security_error_patterns() -> Result<()> {
     );
 
     let token_error =
-        NestGateError::security_error("Token expired", "token_validation", None, Some("test_user"));
+        NestGateError::security("Token expired", "token_validation", None, Some("test_user"));
 
     // Verify error types are correct
     assert!(matches!(auth_failed, NestGateError::Security(_)));
@@ -175,16 +177,19 @@ async fn test_modern_security_error_patterns() -> Result<()> {
     if let NestGateError::Security(data) = auth_failed {
         assert_eq!(data.message, "Invalid credentials");
         assert_eq!(data.operation, "authentication");
+    Ok(())
     }
 
     if let NestGateError::Security(data) = auth_denied {
         assert_eq!(data.message, "Insufficient permissions");
         assert_eq!(data.operation, "authorization");
+    Ok(())
     }
 
     if let NestGateError::Security(data) = token_error {
         assert_eq!(data.message, "Token expired");
         assert_eq!(data.operation, "token_validation");
+    Ok(())
     }
 
     Ok(())
@@ -202,8 +207,8 @@ async fn test_role_and_permission_system() -> Result<()> {
     );
 
     // Test role display
-    assert_eq!(format!("{:?}", admin_role), "Admin");
-    assert_eq!(format!("{:?}", user_role), "User");
+    assert_eq!(format!("{admin_role:?}"), "Admin");
+    assert_eq!(format!("{user_role:?}"), "User");
 
     Ok(())
 }
@@ -255,6 +260,7 @@ async fn test_error_handling_robustness() -> Result<()> {
             result.is_ok(),
             "Authentication should handle edge cases gracefully"
         );
+    Ok(())
     }
 
     Ok(())

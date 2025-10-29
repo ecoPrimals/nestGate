@@ -22,7 +22,10 @@ use tracing::warn;
 use crate::{dataset::ZfsDatasetManager, error::Result, pool::ZfsPoolManager};
 // Removed unresolved monitoring import - using local types
 
-use super::types::*;
+use super::types::{
+    AccessPattern, ArcStatistics, SystemMemoryUsage, ZfsDatasetMetrics, ZfsPerformanceMetrics,
+    ZfsPoolMetrics,
+};
 
 // **CANONICAL MODERNIZATION**: Type aliases to fix clippy complexity warnings
 type PoolMetricsMap = Arc<RwLock<HashMap<String, ZfsPoolMetrics>>>;
@@ -41,7 +44,6 @@ pub struct RealTimePerformanceMonitor {
     alert_thresholds: AlertThresholdsArc,
     metrics_cache: MetricsCacheMap,
 }
-
 impl Default for RealTimePerformanceMonitor {
     fn default() -> Self {
         Self::new()
@@ -49,6 +51,7 @@ impl Default for RealTimePerformanceMonitor {
 }
 
 impl RealTimePerformanceMonitor {
+    #[must_use]
     pub fn new() -> Self {
         Self {
             pool_metrics: Arc::new(RwLock::new(HashMap::new())),
@@ -63,6 +66,7 @@ impl RealTimePerformanceMonitor {
     }
 
     /// Get access to metrics cache for testing
+    #[must_use]
     pub fn get_metrics_cache(&self) -> MetricsCacheMap {
         self.metrics_cache.clone()
     }
@@ -83,6 +87,11 @@ impl RealTimePerformanceMonitor {
         (n * xy_sum - x_sum * y_sum) / (n * x_squared_sum - x_sum.powi(2))
     }
 
+    /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
     pub async fn collect_metrics(
         &self,
         _pool_manager: &ZfsPoolManager,
@@ -230,7 +239,7 @@ impl RealTimePerformanceMonitor {
                                     }
                                     "recordsize" => {
                                         record_size =
-                                            Self::parse_size_value(fields[2]).unwrap_or(128 * 1024);
+                                            Self::parse_sizevalue(fields[2]).unwrap_or(128 * 1024);
                                     }
                                     "used" => {
                                         used_bytes = fields[2].parse().unwrap_or(0);
@@ -416,7 +425,8 @@ impl RealTimePerformanceMonitor {
                 if iops_trend < -0.15 {
                     // 15% IOPS degradation
                     warn!(
-                        "📉 Pool {} IOPS degrading: {:.2}% trend",
+                        "📉 Pool {},
+    IOPS degrading: {:.2}% trend",
                         pool_name,
                         iops_trend * 100.0
                     );
@@ -454,7 +464,7 @@ impl RealTimePerformanceMonitor {
     }
 
     /// Parse ZFS size values (e.g., "128K", "1M", "2G")
-    fn parse_size_value(size_str: &str) -> Result<u64> {
+    fn parse_sizevalue(size_str: &str) -> Result<u64> {
         if let Some(num_str) = size_str.strip_suffix('K') {
             Ok(num_str.parse::<u64>().map_err(|e| {
                 crate::error::ZfsErrorBuilder::new(&format!(
@@ -495,6 +505,13 @@ impl RealTimePerformanceMonitor {
     }
 
     /// Get trending data for analysis
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn get_trending_data(&self) -> Result<Vec<ZfsPerformanceMetrics>> {
         let cache = self.metrics_cache.read().await;
         Ok(cache.values().cloned().collect())

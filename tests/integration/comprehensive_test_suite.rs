@@ -3,15 +3,15 @@
 //! This test validates comprehensive system functionality using canonical patterns
 //! **CANONICAL MODERNIZATION**: Updated to use simple, working patterns
 
-use nestgate_core::config::canonical_unified::NestGateCanonicalUnifiedConfig as NestGateCanonicalUnifiedConfig;
-use nestgate_core::config::defaults::Environment;
+use nestgate_core::config::canonical_master::NestGateCanonicalConfig as NestGateUnifiedConfig;
+use nestgate_core::constants::Environment;
 use std::time::Duration;
 use tokio::time::sleep;
 use tracing::info;
 
 /// Test comprehensive suite configuration
 #[tokio::test]
-async fn test_comprehensive_suite_config() {
+async fn test_comprehensive_suite_config() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔬 Starting comprehensive suite configuration test");
     
     // Test comprehensive suite configuration creation
@@ -19,15 +19,16 @@ async fn test_comprehensive_suite_config() {
     assert!(!config.system.instance_name.is_empty());
     
     // Test environment-specific comprehensive suite configuration
-    let dev_config = nestgate_core::config::canonical_unified::create_config_for_environment(Environment::Development);
+    let dev_config = nestgate_core::config::canonical_master::create_config_for_environment(Environment::Development);
     assert!(!dev_config.system.instance_name.is_empty());
     
     info!("✅ Comprehensive suite configuration test completed");
+    Ok(())
 }
 
 /// Test comprehensive system validation
 #[tokio::test]
-async fn test_comprehensive_system_validation() {
+async fn test_comprehensive_system_validation() -> Result<(), Box<dyn std::error::Error>> {
     info!("⚡ Testing comprehensive system validation");
     
     // Test comprehensive system validation operations
@@ -47,14 +48,16 @@ async fn test_comprehensive_system_validation() {
         // Verify validation operation is valid
         assert!(!operation.is_empty(), "Operation should be specified");
         assert!(duration > 0, "Duration should be positive");
+    Ok(())
     }
     
     info!("✅ Comprehensive system validation completed");
+    Ok(())
 }
 
 /// Test comprehensive test execution
 #[tokio::test]
-async fn test_comprehensive_test_execution() {
+async fn test_comprehensive_test_execution() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔍 Testing comprehensive test execution");
     
     // Test comprehensive test execution phases
@@ -74,14 +77,16 @@ async fn test_comprehensive_test_execution() {
         // Verify execution phase is valid
         assert!(!phase.is_empty(), "Phase should be specified");
         assert!(duration > 0, "Duration should be positive");
+    Ok(())
     }
     
     info!("✅ Comprehensive test execution completed");
+    Ok(())
 }
 
 /// Test comprehensive monitoring and metrics
 #[tokio::test]
-async fn test_comprehensive_monitoring() {
+async fn test_comprehensive_monitoring() -> Result<(), Box<dyn std::error::Error>> {
     info!("📊 Testing comprehensive monitoring and metrics");
     
     let start_time = std::time::Instant::now();
@@ -96,14 +101,16 @@ async fn test_comprehensive_monitoring() {
         
         // Verify monitoring timing is accurate
         assert!(elapsed.as_millis() >= cycle_time as u128, "Comprehensive timing should be accurate");
+    Ok(())
     }
     
     info!("✅ Comprehensive monitoring and metrics completed");
+    Ok(())
 }
 
 /// Test comprehensive error handling
 #[tokio::test]
-async fn test_comprehensive_error_handling() {
+async fn test_comprehensive_error_handling() -> Result<(), Box<dyn std::error::Error>> {
     info!("💥 Testing comprehensive error handling");
     
     // Test comprehensive error scenarios
@@ -126,14 +133,16 @@ async fn test_comprehensive_error_handling() {
         // Verify error handling is valid
         assert!(!error_type.is_empty(), "Error type should be specified");
         assert!(recovery_time > 0, "Recovery time should be positive");
+    Ok(())
     }
     
     info!("✅ Comprehensive error handling completed");
+    Ok(())
 }
 
 /// Test comprehensive performance characteristics
 #[tokio::test]
-async fn test_comprehensive_performance() {
+async fn test_comprehensive_performance() -> Result<(), Box<dyn std::error::Error>> {
     info!("🚀 Testing comprehensive performance characteristics");
     
     // Test comprehensive performance scenarios
@@ -153,27 +162,30 @@ async fn test_comprehensive_performance() {
         // Verify performance scenario is valid
         assert!(!scenario.is_empty(), "Scenario should be specified");
         assert!(benchmark_time > 0, "Benchmark time should be positive");
+    Ok(())
     }
     
     info!("✅ Comprehensive performance characteristics completed");
+    Ok(())
 }
 
 /// Test comprehensive environments
 #[tokio::test]
-async fn test_comprehensive_environments() {
+async fn test_comprehensive_environments() -> Result<(), Box<dyn std::error::Error>> {
     info!("🌍 Testing comprehensive functionality across environments");
     
     // Test development environment comprehensive functionality
-    let dev_config = nestgate_core::config::canonical_unified::create_config_for_environment(Environment::Development);
+    let dev_config = nestgate_core::config::canonical_master::create_config_for_environment(Environment::Development);
     assert!(!dev_config.system.instance_name.is_empty());
     assert!(matches!(dev_config.environment, Environment::Development));
     info!("Development comprehensive configuration validated");
     
     // Test production environment comprehensive functionality
-    let prod_config = nestgate_core::config::canonical_unified::create_config_for_environment(Environment::Production);
+    let prod_config = nestgate_core::config::canonical_master::create_config_for_environment(Environment::Production);
     assert!(!prod_config.system.instance_name.is_empty());
     assert!(matches!(prod_config.environment, Environment::Production));
     info!("Production comprehensive configuration validated");
     
     info!("✅ Comprehensive environment test completed");
+    Ok(())
 }

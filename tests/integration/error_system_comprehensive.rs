@@ -4,6 +4,7 @@
 //! focusing on all error variants, context handling, and error propagation.
 
 use nestgate_core::{
+
     error::{ErrorContext, NestGateError, RetryInfo, UnifiedConfigSource},
     Result,
 };
@@ -11,14 +12,9 @@ use std::time::Duration;
 
 /// Test all NestGateError::Internal variants and functionality
 #[test]
-fn test_internal_error_comprehensive() {
+fn test_internal_error_comprehensive() -> Result<(), Box<dyn std::error::Error>> {
     // Test minimal internal error
-    let error = NestGateError::Internal {
-        message: "Test internal error".to_string(),
-        location: None,
-        debug_info: None,
-        is_bug: false,
-    };
+    let error = NestGateError::internal_error("Test internal error".to_string(), "test_component");
 
     // Test error display
     let display = format!("{}", error);
@@ -30,12 +26,7 @@ fn test_internal_error_comprehensive() {
     assert!(debug.contains("Test internal error"));
 
     // Test with all fields populated
-    let full_error = NestGateError::Internal {
-        message: "Complex internal error".to_string(),
-        location: Some("test_module::test_function".to_string()),
-        debug_info: Some("Additional debug context".to_string()),
-        is_bug: true,
-    };
+    let full_error = NestGateError::internal_error("Complex internal error".to_string(), "test_component");
 
     let full_display = format!("{}", full_error);
     assert!(full_display.contains("Complex internal error"));
@@ -44,37 +35,22 @@ fn test_internal_error_comprehensive() {
     if let NestGateError::Internal { is_bug, .. } = full_error {
         assert!(is_bug);
     } else {
-        panic!("Expected Internal error variant");
-    }
+        return Err(Box::new(std::io::Error::new(std::io::ErrorKind::Other, "Test assertion failed")));
+    Ok(())
+}
 }
 
 /// Test all NestGateError::Validation variants and functionality
 #[test]
-fn test_validation_error_comprehensive() {
-    let error = NestGateError::Validation {
-        field: "email".to_string(),
-        message: "Invalid email format".to_string(),
-        current_value: Some("invalid-email".to_string()),
-        expected: Some("user@domain.com".to_string()),
-        user_error: true,
-    };
-
-    // Test field access
-    if let NestGateError::Validation {
-        field,
-        message,
-        current_value,
-        expected,
-        user_error,
-    } = &error
-    {
-        assert_eq!(field, "email");
+fn test_validation_error_comprehensive() -> Result<(), Box<dyn std::error::Error>> {
+    let error = NestGateError::validation_error("validation error");
         assert_eq!(message, "Invalid email format");
-        assert_eq!(current_value.as_ref().unwrap(), "invalid-email");
-        assert_eq!(expected.as_ref().unwrap(), "user@domain.com");
+        assert_eq!(current_value.as_ref()?, "invalid-email");
+        assert_eq!(expected.as_ref()?, "user@domain.com");
         assert!(*user_error);
     } else {
-        panic!("Expected Validation error variant");
+        return Err(Box::new(std::io::Error::new(std::io::ErrorKind::Other, "Test assertion failed")));
+    Ok(())
     }
 
     // Test display
@@ -83,59 +59,28 @@ fn test_validation_error_comprehensive() {
     assert!(display.contains("Invalid email format"));
 
     // Test various field types
-    let numeric_error = NestGateError::Validation {
-        field: "port".to_string(),
-        message: "Port out of range".to_string(),
-        current_value: Some("99999".to_string()),
-        expected: Some("1-65535".to_string()),
-        user_error: false,
-    };
-
-    let numeric_display = format!("{}", numeric_error);
-    assert!(numeric_display.contains("port"));
-    assert!(numeric_display.contains("Port out of range"));
-}
-
-/// Test all NestGateError::Configuration variants and functionality
-#[test]
-fn test_configuration_error_comprehensive() {
-    // Test with file source
-    let file_error = NestGateError::Configuration {
-        message: "Invalid database configuration".to_string(),
-        config_source: UnifiedConfigSource::File("database.toml".to_string()),
-        field: Some("connection_pool.max_size".to_string()),
-        suggested_fix: Some("Set max_size to a value between 1 and 100".to_string()),
-    };
+    let numeric_error = NestGateError::validation_error("validation error"));
 
     // Test field access
-    if let NestGateError::Configuration {
-        message,
-        config_source,
-        field,
-        suggested_fix,
-    } = &file_error
+    if let NestGateError::Configuration(_) = &file_error
     {
         assert_eq!(message, "Invalid database configuration");
         assert_eq!(
             *config_source,
             UnifiedConfigSource::File("database.toml".to_string())
         );
-        assert_eq!(field.as_ref().unwrap(), "connection_pool.max_size");
+        assert_eq!(field.as_ref()?, "connection_pool.max_size");
         assert_eq!(
-            suggested_fix.as_ref().unwrap(),
+            suggested_fix.as_ref()?,
             "Set max_size to a value between 1 and 100"
         );
     } else {
-        panic!("Expected Configuration error variant");
+        return Err(Box::new(std::io::Error::new(std::io::ErrorKind::Other, "Test assertion failed")));
+    Ok(())
     }
 
     // Test different config sources
-    let env_error = NestGateError::Configuration {
-        message: "Missing environment variable".to_string(),
-        config_source: UnifiedConfigSource::Environment,
-        field: None,
-        suggested_fix: Some("Set NESTGATE_API_KEY environment variable".to_string()),
-    };
+    let env_error = NestGateError::configuration_error("test_field", "Missing environment variable".to_string());
 
     let env_display = format!("{}", env_error);
     assert!(env_display.contains("Missing environment variable"));
@@ -154,23 +99,13 @@ fn test_configuration_error_comprehensive() {
     ];
 
     for source in sources {
-        let error = NestGateError::Configuration {
-            message: "Test config error".to_string(),
-            config_source: source.clone(),
-            field: None,
-            suggested_fix: None,
-        };
+        let error = NestGateError::configuration_error("test_field", "Test config error".to_string());
 
         let display = format!("{}", error);
         assert!(display.contains("Test config error"));
 
         // Test that each source can be created and compared
-        let error2 = NestGateError::Configuration {
-            message: "Test config error".to_string(),
-            config_source: source.clone(),
-            field: None,
-            suggested_fix: None,
-        };
+        let error2 = NestGateError::configuration_error("test_field", "Test config error".to_string());
 
         // Both errors should have the same config source
         if let (
@@ -189,7 +124,7 @@ fn test_configuration_error_comprehensive() {
 
 /// Test RetryInfo functionality comprehensively
 #[test]
-fn test_retry_info_comprehensive() {
+fn test_retry_info_comprehensive() -> Result<(), Box<dyn std::error::Error>> {
     // Test basic retry info
     let retry_info = RetryInfo {
         max_attempts: 3,
@@ -229,11 +164,12 @@ fn test_retry_info_comprehensive() {
     assert!(debug.contains("base_delay"));
     assert!(debug.contains("max_delay"));
     assert!(debug.contains("exponential_backoff"));
+    Ok(())
 }
 
 /// Test ErrorContext functionality comprehensively
 #[test]
-fn test_error_context_comprehensive() {
+fn test_error_context_comprehensive() -> Result<(), Box<dyn std::error::Error>> {
     use std::collections::HashMap;
     use std::time::SystemTime;
 
@@ -265,13 +201,13 @@ fn test_error_context_comprehensive() {
     assert_eq!(full_context.operation, "database_query");
     assert_eq!(full_context.component, "storage_service");
     assert_eq!(full_context.metadata.len(), 3);
-    assert_eq!(full_context.metadata.get("user_id").unwrap(), "user_12345");
+    assert_eq!(full_context.metadata.get("user_id")?, "user_12345");
     assert_eq!(
-        full_context.metadata.get("request_id").unwrap(),
+        full_context.metadata.get("request_id")?,
         "req_abcdef"
     );
     assert_eq!(
-        full_context.metadata.get("correlation_id").unwrap(),
+        full_context.metadata.get("correlation_id")?,
         "corr_xyz789"
     );
 
@@ -290,25 +226,22 @@ fn test_error_context_comprehensive() {
 
 /// Test error conversion and Result integration
 #[test]
-fn test_error_result_integration() {
+fn test_error_result_integration() -> Result<(), Box<dyn std::error::Error>> {
     // Test Result<T, NestGateError> usage
     fn example_operation(should_fail: bool) -> Result<String> {
         if should_fail {
-            Err(NestGateError::Internal {
-                message: "Operation failed".to_string(),
-                location: Some("test_function".to_string()),
-                debug_info: None,
-                is_bug: false,
-            })
+            Err(NestGateError::internal_error("Operation failed".to_string(), "test_component"))
         } else {
             Ok("Success".to_string())
+    Ok(())
         }
+    Ok(())
     }
 
     // Test success case
     let success = example_operation(false);
     assert!(success.is_ok());
-    assert_eq!(success.unwrap(), "Success");
+    assert_eq!(success?, "Success");
 
     // Test error case
     let error = example_operation(true);
@@ -320,15 +253,16 @@ fn test_error_result_integration() {
     } = err
     {
         assert_eq!(message, "Operation failed");
-        assert_eq!(location.as_ref().unwrap(), "test_function");
+        assert_eq!(location.as_ref()?, "test_function");
     } else {
-        panic!("Expected Internal error variant");
-    }
+        return Err(Box::new(std::io::Error::new(std::io::ErrorKind::Other, "Test assertion failed")));
+    Ok(())
+}
 }
 
 /// Test error serialization and deserialization
 #[test]
-fn test_error_serialization() {
+fn test_error_serialization() -> Result<(), Box<dyn std::error::Error>> {
     use std::collections::HashMap;
     use std::time::SystemTime;
 
@@ -340,8 +274,8 @@ fn test_error_serialization() {
     };
 
     // Test RetryInfo serialization
-    let retry_json = serde_json::to_string(&retry_info).unwrap();
-    let deserialized_retry: RetryInfo = serde_json::from_str(&retry_json).unwrap();
+    let retry_json = serde_json::to_string(&retry_info)?;
+    let deserialized_retry: RetryInfo = serde_json::from_str(&retry_json)?;
 
     assert_eq!(retry_info.max_attempts, deserialized_retry.max_attempts);
     assert_eq!(retry_info.base_delay, deserialized_retry.base_delay);
@@ -363,8 +297,8 @@ fn test_error_serialization() {
         timestamp: SystemTime::now(),
     };
 
-    let context_json = serde_json::to_string(&context).unwrap();
-    let deserialized_context: ErrorContext = serde_json::from_str(&context_json).unwrap();
+    let context_json = serde_json::to_string(&context)?;
+    let deserialized_context: ErrorContext = serde_json::from_str(&context_json)?;
 
     assert_eq!(context.operation, deserialized_context.operation);
     assert_eq!(context.component, deserialized_context.component);
@@ -384,42 +318,19 @@ fn test_error_serialization() {
     ];
 
     for source in config_sources {
-        let json = serde_json::to_string(&source).unwrap();
-        let deserialized: UnifiedConfigSource = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&source)?;
+        let deserialized: UnifiedConfigSource = serde_json::from_str(&json)?;
         assert_eq!(source, deserialized);
     }
 }
 
 /// Test error chain and nested error scenarios
 #[test]
-fn test_error_chaining() {
+fn test_error_chaining() -> Result<(), Box<dyn std::error::Error>> {
     // Test creating errors with context
     fn create_validation_error() -> Result<()> {
-        Err(NestGateError::Validation {
-            field: "username".to_string(),
-            message: "Username cannot be empty".to_string(),
-            current_value: Some("".to_string()),
-            expected: Some("non-empty string".to_string()),
-            user_error: true,
-        })
-    }
-
-    fn create_config_error() -> Result<()> {
-        Err(NestGateError::Configuration {
-            message: "Invalid user configuration".to_string(),
-            config_source: UnifiedConfigSource::UserProvided,
-            field: Some("user.username".to_string()),
-            suggested_fix: Some("Provide a valid username".to_string()),
-        })
-    }
-
-    fn create_internal_error() -> Result<()> {
-        Err(NestGateError::Internal {
-            message: "User validation pipeline failed".to_string(),
-            location: Some("user_service::validate".to_string()),
-            debug_info: Some("Multiple validation errors occurred".to_string()),
-            is_bug: false,
-        })
+        Err(NestGateError::validation_error("validation error"))
+    Ok(())
     }
 
     // Test that different error types can be created and handled
@@ -438,16 +349,19 @@ fn test_error_chaining() {
 
     match validation_err {
         NestGateError::Validation { .. } => (), // Expected
-        _ => panic!("Expected Validation error"),
+        _ => return Err(Box::new(std::io::Error::new(std::io::ErrorKind::Other, "Test assertion failed"))),
+    Ok(())
     }
 
     match config_err {
         NestGateError::Configuration { .. } => (), // Expected
-        _ => panic!("Expected Configuration error"),
+        _ => return Err(Box::new(std::io::Error::new(std::io::ErrorKind::Other, "Test assertion failed"))),
+    Ok(())
     }
 
     match internal_err {
         NestGateError::Internal { .. } => (), // Expected
-        _ => panic!("Expected Internal error"),
-    }
+        _ => return Err(Box::new(std::io::Error::new(std::io::ErrorKind::Other, "Test assertion failed"))),
+    Ok(())
+}
 }

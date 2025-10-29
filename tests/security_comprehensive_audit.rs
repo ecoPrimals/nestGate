@@ -4,9 +4,9 @@
 //! for the NestGate system, ensuring production-ready security.
 
 use nestgate_core::{
-    config::canonical_unified::CanonicalConfig,
-    error::{NestGateError, Result},
     canonical_modernization::unified_enums::{UnifiedServiceState, UnifiedServiceType},
+    config::canonical_master::NestGateUnifiedConfig,
+    error::{NestGateError, Result},
     zero_cost_security_provider::{
         ZeroCostAuthenticationResult, ZeroCostCredentials, ZeroCostSecurityProvider,
     },
@@ -87,7 +87,7 @@ pub enum SecurityPriority {
 impl SecurityAuditFramework {
     /// Create new security audit framework
     pub async fn new() -> Result<Self> {
-        let config = CanonicalConfig::default();
+        let config = NestGateCanonicalConfig::default();
         let security_provider = Arc::new(MockSecurityProvider::new());
         let audit_results = Arc::new(RwLock::new(SecurityAuditResults::default()));
 
@@ -310,7 +310,9 @@ impl SecurityAuditFramework {
                     "Implement stronger password complexity requirements",
                 )
                 .await;
+                Ok(())
             }
+            Ok(())
         }
 
         Ok(())
@@ -336,6 +338,7 @@ impl SecurityAuditFramework {
                 "Implement exponential backoff for failed authentication attempts",
             )
             .await;
+            Ok(())
         }
 
         Ok(())
@@ -535,6 +538,7 @@ impl SecurityAuditFramework {
             location: location.to_string(),
             remediation: remediation.to_string(),
         });
+        Ok(())
     }
 }
 
@@ -564,7 +568,12 @@ impl ZeroCostSecurityProvider for MockSecurityProvider {
         }
     }
 
-    fn authorize(&self, _user_id: &str, _resource: &str, _action: &str) -> impl std::future::Future<Output = Result<bool>> + Send {
+    fn authorize(
+        &self,
+        _user_id: &str,
+        _resource: &str,
+        _action: &str,
+    ) -> impl std::future::Future<Output = Result<bool>> + Send {
         async move {
             // Mock authorization - always denies for testing
             Ok(false)
@@ -579,7 +588,10 @@ impl ZeroCostSecurityProvider for MockSecurityProvider {
         }
     }
 
-    fn decrypt(&self, encrypted_data: &[u8]) -> impl std::future::Future<Output = Result<Vec<u8>>> + Send {
+    fn decrypt(
+        &self,
+        encrypted_data: &[u8],
+    ) -> impl std::future::Future<Output = Result<Vec<u8>>> + Send {
         let encrypted_data = encrypted_data.to_vec();
         async move {
             // Mock decryption - reverse XOR for testing
@@ -592,9 +604,7 @@ impl ZeroCostSecurityProvider for MockSecurityProvider {
     }
 
     fn health_check(&self) -> impl std::future::Future<Output = Result<bool>> + Send {
-        async move {
-            Ok(true)
-        }
+        async move { Ok(true) }
     }
 }
 

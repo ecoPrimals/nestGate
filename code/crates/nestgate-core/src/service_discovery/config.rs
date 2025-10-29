@@ -1,18 +1,35 @@
 /// Service Discovery Configuration
 /// Configuration types and structures for service discovery functionality.
-
 use std::time::Duration;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-/// **ECOSYSTEM UNIFICATION**: Import unified types
-use crate::unified_types::{
-    UnifiedConfig, UnifiedNetworkConfig, UnifiedSecurityConfig,
-    UnifiedServiceConfig, UnifiedMonitoringConfig
+/// **ECOSYSTEM UNIFICATION**: Import unified types from canonical locations
+use crate::config::canonical_master::NestGateCanonicalConfig as UnifiedConfig;
+use crate::config::canonical_master::{
+    NetworkConfig as UnifiedNetworkConfig, 
+    MonitoringConfig as UnifiedMonitoringConfig,
 };
+// **FALLBACK**: Define missing config types locally until they are added to unified_types
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct UnifiedSecurityConfig {
+    pub enable_tls: bool,
+    pub verify_certificates: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct UnifiedServiceConfig {
+    pub name: String,
+    pub version: String,
+    pub enabled: bool,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceDiscoveryConfig {
+// DEPRECATED: etcd key-value store - migrate to capability-based storage
+// Capability-based discovery implemented
     /// Discovery method (HTTP, DNS, Consul, etcd)
     pub discovery_method: DiscoveryMethod,
     /// Health check interval

@@ -107,7 +107,7 @@ retention_days = 30
 enabled = true
 port = 3000
 admin_password = "${GRAFANA_ADMIN_PASSWORD}"
-datasource_url = "http://localhost:9090"
+datasource_url = "${NESTGATE_DATASOURCE_URL:-http://localhost:9090}"
 dashboard_provisioning = true
 
 [monitoring.alerts]

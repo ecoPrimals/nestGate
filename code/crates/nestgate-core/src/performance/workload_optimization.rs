@@ -4,7 +4,6 @@ use std::collections::HashMap;
 
 use crate::error::CanonicalResult as Result;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 /// Workload patterns for optimization
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -35,7 +34,6 @@ pub enum WorkloadPattern {
         latency_requirement_ms: f64,
     },
 }
-
 /// Optimization result with recommendations
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OptimizationResult {
@@ -44,7 +42,6 @@ pub struct OptimizationResult {
     pub recommendations: Vec<String>,
     pub estimated_savings: OptimizationSavings,
 }
-
 /// Estimated savings from optimizations
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OptimizationSavings {
@@ -53,15 +50,14 @@ pub struct OptimizationSavings {
     pub memory_savings_mb: f64,
     pub cpu_savings_percent: f64,
 }
-
 /// Workload optimizer with pattern recognition
 pub struct WorkloadOptimizer {
     pattern_history: Vec<WorkloadPattern>,
     optimization_cache: HashMap<String, OptimizationResult>,
     current_pattern: Option<WorkloadPattern>,
 }
-
 impl WorkloadOptimizer {
+    #[must_use]
     pub fn new() -> Self {
         Self {
             pattern_history: Vec::new(),
@@ -70,10 +66,15 @@ impl WorkloadOptimizer {
         }
     }
 
-    pub async fn analyze_workload(
+    /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub fn analyze_workload(
         &mut self,
         metrics: &super::metrics::PerformanceMetrics,
-    ) -> Result<WorkloadPattern> {
+    ) -> Result<WorkloadPattern>  {
         // Analyze metrics to determine workload pattern
         let pattern = if metrics.throughput_ops_per_sec > 1000.0 && metrics.cache_hit_ratio > 0.8 {
             WorkloadPattern::ReadHeavy {
@@ -103,10 +104,15 @@ impl WorkloadOptimizer {
         Ok(pattern)
     }
 
-    pub async fn optimize_for_pattern(
+    /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub fn optimize_for_pattern(
         &mut self,
         pattern: &WorkloadPattern,
-    ) -> Result<OptimizationResult> {
+    ) -> Result<OptimizationResult>  {
         let pattern_key = format!("{pattern:?}");
 
         // Check cache first
@@ -242,7 +248,7 @@ impl WorkloadOptimizer {
     ) -> Result<OptimizationResult> {
         let optimizations = vec![
             "Increased transfer buffer size".to_string(),
-            format!("Optimized for {}MB average file size", average_file_size_mb),
+            format!("Optimized for {average_file_size_mb}MB average file size"),
             format!(
                 "Configured for {} concurrent transfers",
                 concurrent_transfers
@@ -275,7 +281,7 @@ impl WorkloadOptimizer {
     ) -> Result<OptimizationResult> {
         let optimizations = vec![
             "Enabled low-latency mode".to_string(),
-            format!("Optimized for {} concurrent streams", stream_count),
+            format!("Optimized for {stream_count} concurrent streams"),
             format!(
                 "Configured for {}ms latency requirement",
                 latency_requirement_ms
@@ -358,7 +364,7 @@ impl WorkloadOptimizer {
             } => {
                 vec![
                     "Increased transfer buffer size".to_string(),
-                    format!("Optimized for {}MB average file size", average_file_size_mb),
+                    format!("Optimized for {average_file_size_mb}MB average file size"),
                     format!(
                         "Configured for {} concurrent transfers",
                         concurrent_transfers
@@ -371,7 +377,7 @@ impl WorkloadOptimizer {
             } => {
                 vec![
                     "Enabled low-latency mode".to_string(),
-                    format!("Optimized for {} concurrent streams", stream_count),
+                    format!("Optimized for {stream_count} concurrent streams"),
                     format!(
                         "Configured for {}ms latency requirement",
                         latency_requirement_ms

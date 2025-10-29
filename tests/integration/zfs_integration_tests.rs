@@ -3,15 +3,15 @@
 //! This test validates ZFS integration functionality using canonical patterns
 //! **CANONICAL MODERNIZATION**: Updated to use simple, working patterns
 
-use nestgate_core::config::canonical_unified::NestGateCanonicalUnifiedConfig as NestGateCanonicalUnifiedConfig;
-use nestgate_core::config::defaults::Environment;
+use nestgate_core::config::canonical_master::NestGateCanonicalConfig as NestGateUnifiedConfig;
+use nestgate_core::constants::Environment;
 use std::time::Duration;
 use tokio::time::sleep;
 use tracing::info;
 
 /// Test ZFS integration configuration
 #[tokio::test]
-async fn test_zfs_integration_config() {
+async fn test_zfs_integration_config() -> Result<(), Box<dyn std::error::Error>> {
     info!("💾 Starting ZFS integration configuration test");
     
     // Test ZFS integration configuration creation
@@ -19,15 +19,16 @@ async fn test_zfs_integration_config() {
     assert!(!config.system.instance_name.is_empty());
     
     // Test environment-specific ZFS integration configuration
-    let dev_config = nestgate_core::config::canonical_unified::create_config_for_environment(Environment::Development);
+    let dev_config = nestgate_core::config::canonical_master::create_config_for_environment(Environment::Development);
     assert!(!dev_config.system.instance_name.is_empty());
     
     info!("✅ ZFS integration configuration test completed");
+    Ok(())
 }
 
 /// Test ZFS pool operations
 #[tokio::test]
-async fn test_zfs_pool_operations() {
+async fn test_zfs_pool_operations() -> Result<(), Box<dyn std::error::Error>> {
     info!("🏊 Testing ZFS pool operations");
     
     // Test ZFS pool operation simulations
@@ -47,14 +48,16 @@ async fn test_zfs_pool_operations() {
         // Verify pool operation is valid
         assert!(!operation.is_empty(), "Operation should be specified");
         assert!(duration > 0, "Duration should be positive");
+    Ok(())
     }
     
     info!("✅ ZFS pool operations completed");
+    Ok(())
 }
 
 /// Test ZFS dataset management
 #[tokio::test]
-async fn test_zfs_dataset_management() {
+async fn test_zfs_dataset_management() -> Result<(), Box<dyn std::error::Error>> {
     info!("📂 Testing ZFS dataset management");
     
     // Test ZFS dataset management operations
@@ -74,14 +77,16 @@ async fn test_zfs_dataset_management() {
         // Verify dataset operation is valid
         assert!(!operation.is_empty(), "Operation should be specified");
         assert!(duration > 0, "Duration should be positive");
+    Ok(())
     }
     
     info!("✅ ZFS dataset management completed");
+    Ok(())
 }
 
 /// Test ZFS performance monitoring
 #[tokio::test]
-async fn test_zfs_performance_monitoring() {
+async fn test_zfs_performance_monitoring() -> Result<(), Box<dyn std::error::Error>> {
     info!("📊 Testing ZFS performance monitoring");
     
     let start_time = std::time::Instant::now();
@@ -96,14 +101,16 @@ async fn test_zfs_performance_monitoring() {
         
         // Verify monitoring timing is accurate
         assert!(elapsed.as_millis() >= cycle_time as u128, "ZFS monitoring timing should be accurate");
+    Ok(())
     }
     
     info!("✅ ZFS performance monitoring completed");
+    Ok(())
 }
 
 /// Test ZFS backup and recovery
 #[tokio::test]
-async fn test_zfs_backup_recovery() {
+async fn test_zfs_backup_recovery() -> Result<(), Box<dyn std::error::Error>> {
     info!("💾 Testing ZFS backup and recovery");
     
     // Test ZFS backup and recovery scenarios
@@ -123,14 +130,16 @@ async fn test_zfs_backup_recovery() {
         // Verify backup scenario is valid
         assert!(!scenario.is_empty(), "Scenario should be specified");
         assert!(backup_time > 0, "Backup time should be positive");
+    Ok(())
     }
     
     info!("✅ ZFS backup and recovery completed");
+    Ok(())
 }
 
 /// Test ZFS security and encryption
 #[tokio::test]
-async fn test_zfs_security_encryption() {
+async fn test_zfs_security_encryption() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔒 Testing ZFS security and encryption");
     
     // Test ZFS security and encryption features
@@ -150,27 +159,30 @@ async fn test_zfs_security_encryption() {
         // Verify security feature is valid
         assert!(!feature.is_empty(), "Feature should be specified");
         assert!(processing_time > 0, "Processing time should be positive");
+    Ok(())
     }
     
     info!("✅ ZFS security and encryption completed");
+    Ok(())
 }
 
 /// Test ZFS environments
 #[tokio::test]
-async fn test_zfs_environments() {
+async fn test_zfs_environments() -> Result<(), Box<dyn std::error::Error>> {
     info!("🌍 Testing ZFS integration across environments");
     
     // Test development environment ZFS integration
-    let dev_config = nestgate_core::config::canonical_unified::create_config_for_environment(Environment::Development);
+    let dev_config = nestgate_core::config::canonical_master::create_config_for_environment(Environment::Development);
     assert!(!dev_config.system.instance_name.is_empty());
     assert!(matches!(dev_config.environment, Environment::Development));
     info!("Development ZFS integration configuration validated");
     
     // Test production environment ZFS integration
-    let prod_config = nestgate_core::config::canonical_unified::create_config_for_environment(Environment::Production);
+    let prod_config = nestgate_core::config::canonical_master::create_config_for_environment(Environment::Production);
     assert!(!prod_config.system.instance_name.is_empty());
     assert!(matches!(prod_config.environment, Environment::Production));
     info!("Production ZFS integration configuration validated");
     
     info!("✅ ZFS integration environment test completed");
+    Ok(())
 } 
