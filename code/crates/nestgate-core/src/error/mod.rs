@@ -433,9 +433,8 @@ mod error_path_tests {
 }
 
 // Temporarily disabled - needs API updates
-// TODO: Fix API mismatches and re-enable
-// #[cfg(test)]
-// mod comprehensive_tests;
+#[cfg(test)]
+mod comprehensive_tests;
 
-// #[cfg(test)]
-// mod comprehensive_unit_tests;
+#[cfg(test)]
+mod comprehensive_unit_tests;
