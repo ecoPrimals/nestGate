@@ -5,12 +5,10 @@
 /// reducing memory allocations and improving performance.
 use std::borrow::Cow;
 use std::sync::Arc;
-
 /// Utility for creating Cow&lt;str&gt; from various string types
 pub trait IntoCow<'a> {
     fn into_cow(self) -> Cow<'a, str>;
 }
-
 impl<'a> IntoCow<'a> for &'a str {
     fn into_cow(self) -> Cow<'a, str> {
         Cow::Borrowed(self)
@@ -31,17 +29,14 @@ impl<'a> IntoCow<'a> for Cow<'a, str> {
 
 /// Utility for efficient string operations
 pub struct StringUtils;
-
 /// Optimized string conversion for command output
 pub fn optimize_command_output(output: &[u8]) -> Cow<str> {
     String::from_utf8_lossy(output)
 }
-
 /// Optimized string trimming that preserves zero-copy when possible
 pub fn trim_efficient(s: &str) -> &str {
     s.trim()
 }
-
 impl StringUtils {
     /// Create a Cow&lt;str&gt; from static string literals (zero-copy)
     pub fn static_cow(s: &'static str) -> Cow<'static, str> {
@@ -68,9 +63,9 @@ pub struct BufferManager {
     buffers: Vec<Vec<u8>>,
     buffer_size: usize,
 }
-
 impl BufferManager {
     /// Create a new buffer manager with specified buffer size
+    #[must_use]
     pub fn new(buffer_size: usize) -> Self {
         Self {
             buffers: Vec::new(),
@@ -103,7 +98,6 @@ impl BufferManager {
 pub struct SharedConfig<T> {
     data: Arc<T>,
 }
-
 impl<T> Clone for SharedConfig<T> {
     fn clone(&self) -> Self {
         Self {
@@ -139,12 +133,10 @@ pub fn slice_cow(s: &str, start: usize, len: usize) -> Cow<str> {
         Cow::Borrowed(s)
     }
 }
-
 /// Efficient line iteration without allocating
 pub fn lines_zero_copy(s: &str) -> impl Iterator<Item = &str> {
     s.lines()
 }
-
 /// Zero-copy JSON value extraction (for simple cases)
 pub fn extract_json_string<'a>(json: &'a str, key: &str) -> Option<&'a str> {
     // Simple JSON string extraction without parsing
@@ -160,7 +152,6 @@ pub fn extract_json_string<'a>(json: &'a str, key: &str) -> Option<&'a str> {
     }
     None
 }
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -313,21 +304,21 @@ mod tests {
 
     #[test]
     fn test_extract_json_string_found() {
-        let json = r#"{"name": "John", "age": 30}"#;
+        let json = r"{"name": "John", "age": 30}";
         let name = extract_json_string(json, "name");
         assert_eq!(name, Some("John"));
     }
 
     #[test]
     fn test_extract_json_string_not_found() {
-        let json = r#"{"name": "John", "age": 30}"#;
+        let json = r"{"name": "John", "age": 30}";
         let email = extract_json_string(json, "email");
         assert_eq!(email, None);
     }
 
     #[test]
     fn test_extract_json_string_malformed() {
-        let json = r#"{"name": "John"#;
+        let json = r"{"name": "John";
         let name = extract_json_string(json, "name");
         assert_eq!(name, None);
     }

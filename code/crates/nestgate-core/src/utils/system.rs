@@ -1,16 +1,15 @@
-//! System utilities for NestGate core functionality
-//!
-//! Provides safe system operations and utilities.
+// System utilities for NestGate core functionality
+//! System functionality and utilities.
+// Provides safe system operations and utilities.
 
-use crate::error::{NestGateError, Result};
+use crate::{NestGateError, Result};
 
-// ==================== OS INFORMATION ====================
+// ==================== SECTION ====================
 
 /// Get the operating system name
 pub fn get_os_name() -> String {
     #[cfg(target_os = "linux")]
     return "Linux".to_string();
-
     #[cfg(target_os = "macos")]
     return "macOS".to_string();
 
@@ -25,7 +24,6 @@ pub fn get_os_name() -> String {
 pub fn get_architecture() -> String {
     std::env::consts::ARCH.to_string()
 }
-
 /// Get the operating system version
 pub fn get_os_version() -> Result<String> {
     #[cfg(target_os = "linux")]
@@ -58,7 +56,6 @@ pub fn get_os_version() -> Result<String> {
         Ok("unknown".to_string())
     }
 }
-
 /// Get detailed OS information
 pub fn get_os_info() -> Result<OsInfo> {
     Ok(OsInfo {
@@ -68,7 +65,6 @@ pub fn get_os_info() -> Result<OsInfo> {
         kernel_version: get_kernel_version()?,
     })
 }
-
 /// OS information structure
 #[derive(Debug, Clone)]
 pub struct OsInfo {
@@ -77,7 +73,6 @@ pub struct OsInfo {
     pub architecture: String,
     pub kernel_version: String,
 }
-
 /// Get kernel version
 pub fn get_kernel_version() -> Result<String> {
     #[cfg(target_os = "linux")]
@@ -99,19 +94,16 @@ pub fn get_kernel_version() -> Result<String> {
         Ok("unknown".to_string())
     }
 }
-
-// ==================== HARDWARE INFORMATION ====================
+// ==================== SECTION ====================
 
 /// Get the number of CPU cores
 pub fn get_cpu_count() -> usize {
     num_cpus::get()
 }
-
 /// Get the number of physical CPU cores
 pub fn get_physical_cpu_count() -> usize {
     num_cpus::get_physical()
 }
-
 /// Get CPU information
 pub fn get_cpu_info() -> CpuInfo {
     CpuInfo {
@@ -121,7 +113,6 @@ pub fn get_cpu_info() -> CpuInfo {
         frequency: get_cpu_frequency(),
     }
 }
-
 /// CPU information structure
 #[derive(Debug, Clone)]
 pub struct CpuInfo {
@@ -130,7 +121,6 @@ pub struct CpuInfo {
     pub model: String,
     pub frequency: Option<f64>, // in GHz
 }
-
 /// Get CPU model name
 pub fn get_cpu_model() -> String {
     #[cfg(target_os = "linux")]
@@ -154,7 +144,6 @@ pub fn get_cpu_model() -> String {
         "Unknown CPU".to_string()
     }
 }
-
 /// Get CPU frequency in GHz (if available)
 pub fn get_cpu_frequency() -> Option<f64> {
     #[cfg(target_os = "linux")]
@@ -173,8 +162,7 @@ pub fn get_cpu_frequency() -> Option<f64> {
     }
     None
 }
-
-// ==================== MEMORY INFORMATION ====================
+// ==================== SECTION ====================
 
 /// Get total system memory in bytes
 pub fn get_total_memory() -> Result<u64> {
@@ -202,7 +190,6 @@ pub fn get_total_memory() -> Result<u64> {
         Ok(8 * 1024 * 1024 * 1024) // Default to 8GB
     }
 }
-
 /// Get free system memory in bytes
 pub fn get_free_memory() -> Result<u64> {
     #[cfg(target_os = "linux")]
@@ -229,14 +216,12 @@ pub fn get_free_memory() -> Result<u64> {
         Ok(4 * 1024 * 1024 * 1024) // Default to 4GB free
     }
 }
-
 /// Get used system memory in bytes
 pub fn get_used_memory() -> Result<u64> {
     let total = get_total_memory()?;
     let free = get_free_memory()?;
     Ok(total.saturating_sub(free))
 }
-
 /// Get memory information
 pub fn get_memory_info() -> Result<MemoryInfo> {
     Ok(MemoryInfo {
@@ -254,7 +239,6 @@ pub fn get_memory_info() -> Result<MemoryInfo> {
         },
     })
 }
-
 /// Memory information structure
 #[derive(Debug, Clone)]
 pub struct MemoryInfo {
@@ -263,8 +247,7 @@ pub struct MemoryInfo {
     pub used: u64,
     pub usage_percent: f64,
 }
-
-// ==================== DISK INFORMATION ====================
+// ==================== SECTION ====================
 
 /// Get total disk space in bytes for the root filesystem
 ///
@@ -278,17 +261,13 @@ pub fn get_total_disk() -> Result<u64> {
             Ok(1024 * 1024 * 1024 * 100) // 100GB safe default estimate
         }
         Err(e) => Err(NestGateError::Io {
-            operation: "get_total_disk".to_string(),
             error_message: format!(
                 "Could not access root filesystem: {e
             }"
             ),
-            resource: Some("/".to_string()),
-            retryable: true,
-        }),
+            // retryable: true}),
     }
 }
-
 /// Get free disk space in bytes for the root filesystem
 ///
 /// **100% SAFE**: This function uses completely safe filesystem operations
@@ -301,32 +280,22 @@ pub fn get_free_disk() -> Result<u64> {
             Ok(1024 * 1024 * 1024 * 50) // 50GB safe default estimate
         }
         Err(e) => Err(NestGateError::Io {
-            operation: "get_free_disk".to_string(),
             error_message: format!(
                 "Could not access filesystem: {e
             }"
             ),
-            resource: Some("/tmp".to_string()),
-            retryable: true,
-        }),
+            // retryable: true}),
     }
 }
-
-// ==================== SYSTEM IDENTIFICATION ====================
+// ==================== SECTION ====================
 
 /// Get system hostname
 pub fn get_hostname() -> Result<String> {
     gethostname::gethostname()
         .to_str()
         .map(|s| s.to_string())
-        .ok_or_else(|| NestGateError::Internal {
-            message: "Failed to get hostname".to_string(),
-            location: Some("get_hostname".to_string()),
-            debug_info: None,
-            is_bug: false,
-        })
+        .ok_or_else(|| NestGateError::internal_error(
 }
-
 /// Get system uptime in seconds
 pub fn get_uptime() -> Result<u64> {
     #[cfg(target_os = "linux")]
@@ -348,7 +317,6 @@ pub fn get_uptime() -> Result<u64> {
         Ok(0) // Default for non-Linux systems
     }
 }
-
 /// Get load average (Linux only)
 pub fn get_load_average() -> Result<LoadAverage> {
     #[cfg(target_os = "linux")]
@@ -359,12 +327,11 @@ pub fn get_load_average() -> Result<LoadAverage> {
                 let one_min = parts[0].parse::<f64>().unwrap_or(0.0);
                 let five_min = parts[1].parse::<f64>().unwrap_or(0.0);
                 let fifteen_min = parts[2].parse::<f64>().unwrap_or(0.0);
-
                 return Ok(LoadAverage {
                     one_minute: one_min,
                     five_minutes: five_min,
                     fifteen_minutes: fifteen_min,
-                });
+                );
             }
         }
     }
@@ -383,26 +350,22 @@ pub struct LoadAverage {
     pub five_minutes: f64,
     pub fifteen_minutes: f64,
 }
-
-// ==================== PROCESS INFORMATION ====================
+// ==================== SECTION ====================
 
 /// Get current process ID
 pub fn get_current_pid() -> u32 {
     std::process::id()
 }
-
 /// Get parent process ID
 ///
 /// **100% SAFE**: Uses completely safe process information reading
 pub fn get_parent_pid() -> Option<u32> {
     crate::utils::completely_safe_system::SafeSystemOps::get_parent_process_id().ok()
 }
-
 /// Check if running as root (safe system operation)
 pub fn is_root() -> bool {
     crate::utils::completely_safe_system::SafeSystemOps::is_running_as_root()
 }
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -419,10 +382,10 @@ mod tests {
             tracing::error!("Unwrap failed: {:?}", e);
             return Err(std::io::Error::new(
                 std::io::ErrorKind::Other,
-                format!("Operation failed: {:?}", e),
+                format!("Operation failed: {e:?}"),
             )
             .into());
-        });
+        );
         assert!(!os_info.name.is_empty());
         assert!(!os_info.architecture.is_empty());
     }
@@ -447,30 +410,30 @@ mod tests {
             tracing::error!("Unwrap failed: {:?}", e);
             return Err(std::io::Error::new(
                 std::io::ErrorKind::Other,
-                format!("Operation failed: {:?}", e),
+                format!("Operation failed: {e:?}"),
             )
             .into());
-        });
+        );
         assert!(total > 0);
 
         let free = get_free_memory().unwrap_or_else(|e| {
             tracing::error!("Unwrap failed: {:?}", e);
             return Err(std::io::Error::new(
                 std::io::ErrorKind::Other,
-                format!("Operation failed: {:?}", e),
+                format!("Operation failed: {e:?}"),
             )
             .into());
-        });
+        );
         assert!(free > 0);
 
         let memory_info = get_memory_info().unwrap_or_else(|e| {
             tracing::error!("Unwrap failed: {:?}", e);
             return Err(std::io::Error::new(
                 std::io::ErrorKind::Other,
-                format!("Operation failed: {:?}", e),
+                format!("Operation failed: {e:?}"),
             )
             .into());
-        });
+        );
         assert!(memory_info.total > 0);
         assert!(memory_info.usage_percent >= 0.0);
         assert!(memory_info.usage_percent <= 100.0);

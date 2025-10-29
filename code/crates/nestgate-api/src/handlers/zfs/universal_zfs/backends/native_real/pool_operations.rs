@@ -14,7 +14,6 @@ use tracing::info;
 /// including name, size, usage, and health status.
 pub async fn list_pools(service: &NativeZfsService) -> UniversalZfsResult<Vec<PoolInfo>> {
     info!("📊 Listing all ZFS pools");
-
     let output = service
         .execute_zfs_command(
             "zpool",
@@ -23,7 +22,11 @@ pub async fn list_pools(service: &NativeZfsService) -> UniversalZfsResult<Vec<Po
         .await?;
 
     let pools = parsing::parse_zpool_list(&output)?;
-    info!("📊 Found {} ZFS pools", pools.len());
+    info!(
+        "📊 Found {},
+    ZFS pools",
+        pools.len()
+    );
 
     Ok(pools)
 }
@@ -36,12 +39,11 @@ pub async fn list_pools(service: &NativeZfsService) -> UniversalZfsResult<Vec<Po
 ///
 /// # Returns
 /// Detailed `PoolInfo` including properties, capacity, and health status
-pub async fn get_pool_info(
+pub fn get_pool_info(
     service: &NativeZfsService,
     pool_name: &str,
 ) -> UniversalZfsResult<PoolInfo> {
     info!("📊 Getting detailed info for pool: {}", pool_name);
-
     // Get basic pool information
     let pools = list_pools(service).await?;
     let mut pool_info = pools
@@ -83,29 +85,28 @@ pub async fn get_pool_info(
 ///
 /// # Arguments
 /// * `service` - The native ZFS service instance
-/// * `config` - Pool configuration including name and devices
+/// * `config` - Pool configuration including name and _devices
 ///
 /// # Returns
 /// Information about the newly created pool
 ///
 /// # Errors
-/// Returns error if pool creation fails or devices are invalid
-pub async fn create_pool(
+/// Returns error if pool creation fails or _devices are invalid
+pub fn create_pool(
     service: &NativeZfsService,
     config: &PoolConfig,
 ) -> UniversalZfsResult<PoolInfo> {
     info!("🔧 Creating ZFS pool: {}", config.name);
-
-    if config.devices.is_empty() {
+    if config._devices.is_empty() {
         return Err(UniversalZfsError::InvalidInput {
-            field: "devices".to_string(),
+            field: "field".to_string(),
             message: "Pool creation requires at least one device".to_string(),
         }
         .into());
     }
 
     let mut args = vec!["create", &config.name];
-    args.extend(config.devices.iter().map(|s| s.as_str()));
+    args.extend(config._devices.iter().map(|s| s.as_str()));
 
     service.execute_zfs_command("zpool", &args).await?;
 
@@ -125,13 +126,12 @@ pub async fn create_pool(
 ///
 /// # Returns
 /// * `UniversalZfsResult<()>` - Success or error result
-pub async fn destroy_pool(
+pub fn destroy_pool(
     service: &NativeZfsService,
     pool_name: &str,
     force: bool,
 ) -> UniversalZfsResult<()> {
     info!("🗑️ Destroying ZFS pool: {} (force: {})", pool_name, force);
-
     let mut args = vec!["destroy"];
     if force {
         args.push("-f");
@@ -163,11 +163,10 @@ pub async fn get_pool(
         Err(e) => Err(e),
     }
 }
-
 /// Start a scrub operation on a ZFS pool
 ///
 /// Initiates a data integrity check (scrub) on the specified pool.
-/// This verifies all data and metadata for consistency and repairs any errors found.
+/// This verifies all data and _metadata for consistency and repairs any errors found.
 ///
 /// # Arguments
 /// * `service` - The native ZFS service instance
@@ -175,14 +174,13 @@ pub async fn get_pool(
 ///
 /// # Returns
 /// * `UniversalZfsResult<()>` - Success or error result
-pub async fn scrub_pool(service: &NativeZfsService, name: &str) -> UniversalZfsResult<()> {
+pub fn scrub_pool(service: &NativeZfsService, name: &str) -> UniversalZfsResult<()> {
     info!("🧹 Starting scrub for pool: {}", name);
     service
         .execute_zfs_command("zpool", &["scrub", name])
         .await?;
     Ok(())
 }
-
 /// Get the current status of a ZFS pool
 ///
 /// Retrieves detailed status information about a pool including

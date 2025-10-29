@@ -6,7 +6,7 @@
 // - `tiers` - Tier configurations and performance profiles
 // - `migration` - Migration settings and capacity limits
 // - `pool` - Pool discovery and management settings
-// - `health` - Health monitoring configuration  
+// - `health` - Health monitoring configuration
 // - `metrics` - Metrics collection and export settings
 // - `security` - Security configuration and access control
 // - `automation` - Dataset automation and AI settings
@@ -14,7 +14,7 @@
 pub mod automation;
 pub mod health;
 pub mod metrics;
-pub mod migration;
+// Migration module removed as part of cleanup
 pub mod pool;
 pub mod security;
 pub mod tiers;
@@ -33,7 +33,6 @@ pub enum PoolType {
     RaidZ2,
     RaidZ3,
 }
-
 /// Compression type configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub enum CompressionType {
@@ -43,12 +42,17 @@ pub enum CompressionType {
     Gzip,
     Zstd,
 }
-
 pub use automation::{AiAutomationSettings, DatasetAutomationConfig};
 pub use health::HealthMonitoringConfig;
-pub use metrics::{MetricsConfig, MetricsFormat};
-pub use migration::{CapacityLimits, MigrationConfig, MigrationRules};
+// pub use metrics::{MetricsConfig, MetricsFormat}; // Metrics module not yet implemented
+// pub use migration::{CapacityLimits, MigrationConfig, MigrationRules}; // Migration module not yet implemented
+pub use crate::automation::policies::MigrationRules;
 pub use pool::PoolDiscoveryConfig;
 pub use security::{AccessControlConfig, KeyManagementConfig, SecurityConfig};
+pub use tiers::CapacityLimits; // Using local definition from tiers.rs
 pub use tiers::{PerformanceProfile, TierConfig, TierConfigurations};
-pub use unified_zfs_config::ZfsConfig;
+// pub use unified_zfs_config::ZfsConfig; // Module not yet implemented
+// pub use nestgate_core::config::unified_types::ZfsConfig; // Module not available
+// pub use nestgate_core::config::canonical::types::ZfsConfig; // Module not available
+// pub use nestgate_core::config::domains::ZfsConfig; // Module not available
+pub use nestgate_core::services::storage::config::ZfsConfig;

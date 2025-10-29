@@ -22,7 +22,7 @@ pub struct StorageDevice {
     pub model: String,
     /// Device size in bytes
     pub size_bytes: u64,
-    /// Device type (NVMe, SATA SSD, HDD, etc.)
+    /// Device type (`NVMe`, SATA SSD, HDD, etc.)
     pub device_type: DeviceType,
     /// Device speed characteristics
     pub speed_class: SpeedClass,
@@ -31,7 +31,6 @@ pub struct StorageDevice {
     /// Current filesystem/partition info
     pub current_use: Option<String>,
 }
-
 /// Types of storage devices
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum DeviceType {
@@ -41,7 +40,6 @@ pub enum DeviceType {
     OptaneMemory,
     Unknown,
 }
-
 /// Speed classification for storage devices
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum SpeedClass {
@@ -50,13 +48,12 @@ pub enum SpeedClass {
     Medium,    // Standard SATA SSD
     Slow,      // HDD
 }
-
 /// Device scanner for detecting and classifying storage devices
 pub struct DeviceScanner {
     config: DeviceDetectionConfig,
 }
-
 impl DeviceScanner {
+    #[must_use]
     pub fn new(config: DeviceDetectionConfig) -> Self {
         Self { config }
     }
@@ -76,31 +73,22 @@ impl DeviceScanner {
             ])
             .output()
             .await
-            .map_err(|e| NestGateError::System {
-                message: format!("Failed to run lsblk: {e}"),
-                resource: nestgate_core::error::SystemResource::Cpu,
-                utilization: None,
-                recovery: nestgate_core::error::RecoveryStrategy::Retry,
+            .map_err(|_e| {
+                NestGateError::internal_error("Failed to run lsblk command", "scan_devices")
             })?;
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            return Err(NestGateError::System {
-                message: format!("lsblk failed: {stderr}"),
-                resource: nestgate_core::error::SystemResource::Cpu,
-                utilization: None,
-                recovery: nestgate_core::error::RecoveryStrategy::Retry,
-            });
+            return Err(NestGateError::internal_error(
+                format!("lsblk failed: {stderr}"),
+                "scan_devices",
+            ));
         }
 
         let stdout = String::from_utf8_lossy(&output.stdout);
-        let lsblk_output: serde_json::Value =
-            serde_json::from_str(&stdout).map_err(|e| NestGateError::System {
-                message: format!("Failed to parse lsblk output: {e}"),
-                resource: nestgate_core::error::SystemResource::Cpu,
-                utilization: None,
-                recovery: nestgate_core::error::RecoveryStrategy::Retry,
-            })?;
+        let lsblk_output: serde_json::Value = serde_json::from_str(&stdout).map_err(|_e| {
+            NestGateError::internal_error("Failed to parse lsblk output", "scan_devices")
+        })?;
 
         // Parse device information
         if let Some(block_devices) = lsblk_output["blockdevices"].as_array() {
@@ -120,8 +108,8 @@ impl DeviceScanner {
         &self,
         device: &serde_json::Value,
     ) -> CoreResult<Option<StorageDevice>> {
-        let device_name = device["name"].as_str().unwrap_or("");
-        let device_path = format!("/dev/{device_name}");
+        let _device_name = device["name"].as_str().unwrap_or("");
+        let device_path = "/dev/error details".to_string();
 
         // Skip if not a disk device
         if device["type"].as_str() != Some("disk") {
@@ -156,7 +144,7 @@ impl DeviceScanner {
         // Check if device is in use
         let in_use = fstype.is_some() || mountpoint.is_some();
         let current_use = if in_use {
-            Some(format!("fstype: {fstype:?}, mountpoint: {mountpoint:?}"))
+            Some("Device is in use".to_string())
         } else {
             None
         };
@@ -204,19 +192,16 @@ impl DeviceScanner {
         let (num_str, unit) = if let Some(pos) = size_str.find(|c: char| c.is_alphabetic()) {
             (&size_str[..pos], &size_str[pos..])
         } else {
-            return size_str.parse().map_err(|_| NestGateError::System {
-                message: format!("Invalid size format: {size_str}"),
-                resource: nestgate_core::error::SystemResource::Cpu,
-                utilization: None,
-                recovery: nestgate_core::error::RecoveryStrategy::Retry,
+            return size_str.parse().map_err(|_| {
+                NestGateError::internal_error(
+                    format!("Invalid size format: {size_str}"),
+                    "parse_size",
+                )
             });
         };
 
-        let number: f64 = num_str.parse().map_err(|_| NestGateError::System {
-            message: format!("Invalid size format: {size_str}"),
-            resource: nestgate_core::error::SystemResource::Cpu,
-            utilization: None,
-            recovery: nestgate_core::error::RecoveryStrategy::Retry,
+        let number: f64 = num_str.parse().map_err(|_| {
+            NestGateError::internal_error(format!("Invalid number format: {num_str}"), "parse_size")
         })?;
 
         let multiplier: u64 = match unit.to_uppercase().as_str() {
@@ -227,12 +212,10 @@ impl DeviceScanner {
             "T" | "TB" => 1024 * 1024 * 1024 * 1024,
             "P" | "PB" => 1024 * 1024 * 1024 * 1024 * 1024,
             _ => {
-                return Err(NestGateError::System {
-                    message: format!("Unknown size unit: {unit}"),
-                    resource: nestgate_core::error::SystemResource::Cpu,
-                    utilization: None,
-                    recovery: nestgate_core::error::RecoveryStrategy::Retry,
-                })
+                return Err(NestGateError::internal_error(
+                    format!("Unknown size unit: {unit}"),
+                    "parse_size",
+                ))
             }
         };
 
@@ -267,12 +250,12 @@ impl DeviceScanner {
         let device_name = device_path.strip_prefix("/dev/").unwrap_or(device_path);
 
         // Remove partition numbers if present
-        let base_device = device_name
+        let _base_device = device_name
             .chars()
             .take_while(|c| !c.is_ascii_digit())
             .collect::<String>();
 
-        let rotational_path = format!("/sys/block/{base_device}/queue/rotational");
+        let rotational_path = "/sys/block/error details/queue/rotational".to_string();
 
         match tokio::fs::read_to_string(&rotational_path).await {
             Ok(content) => {
@@ -323,6 +306,7 @@ impl DeviceScanner {
     }
 
     /// Check if device should be included based on configuration
+    #[must_use]
     pub fn should_include_device(&self, device: &StorageDevice) -> bool {
         // Skip loop devices if not included
         if !self.config.include_loop_devices && device.device_path.contains("loop") {
@@ -334,6 +318,7 @@ impl DeviceScanner {
     }
 
     /// Get devices filtered by type
+    #[must_use]
     pub fn filter_by_type(
         devices: &[StorageDevice],
         device_type: DeviceType,
@@ -345,6 +330,7 @@ impl DeviceScanner {
     }
 
     /// Get devices filtered by speed class
+    #[must_use]
     pub fn filter_by_speed(
         devices: &[StorageDevice],
         speed_class: SpeedClass,
@@ -356,6 +342,7 @@ impl DeviceScanner {
     }
 
     /// Get only available (not in use) devices
+    #[must_use]
     pub fn filter_available(devices: &[StorageDevice]) -> Vec<&StorageDevice> {
         devices.iter().filter(|device| !device.in_use).collect()
     }

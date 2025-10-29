@@ -1,6 +1,5 @@
 /// Simple certificate types and validation for API compatibility
 use serde::{Deserialize, Serialize};
-
 /// Certificate validation mode
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum CertMode {
@@ -14,16 +13,13 @@ pub enum CertMode {
     /// Custom validation mode
     Custom(String),
 }
-
 /// Certificate types module
 pub mod types {
     pub use super::CertMode;
 }
-
 /// Certificate validator module
 pub mod validator {
     use super::*;
-
     /// Simple certificate validator
     #[derive(Debug, Clone)]
     pub struct CertificateValidator {

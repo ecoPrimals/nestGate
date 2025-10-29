@@ -3,7 +3,7 @@
 
 use crate::Result;
 use nestgate_core::error::NestGateError;
-use nestgate_core::types::StorageTier;
+use nestgate_core::unified_enums::storage_types::StorageTier;
 use std::collections::HashMap;
 use std::time::Duration;
 use std::time::SystemTime;
@@ -29,7 +29,6 @@ pub enum LifecycleStage {
     /// Deleted dataset
     Deleted,
 }
-
 /// Lifecycle policy for dataset management
 #[derive(Debug, Clone)]
 pub struct LifecyclePolicy {
@@ -44,7 +43,6 @@ pub struct LifecyclePolicy {
     /// Whether this policy is active
     pub enabled: bool,
 }
-
 /// Transition rule between lifecycle stages
 #[derive(Debug, Clone)]
 pub struct LifecycleTransition {
@@ -56,7 +54,6 @@ pub struct LifecycleTransition {
     /// Whether this transition requires manual approval
     pub requires_approval: bool,
 }
-
 /// Condition for stage transitions
 #[derive(Debug, Clone)]
 pub enum TransitionCondition {
@@ -71,7 +68,6 @@ pub enum TransitionCondition {
     /// Custom condition based on metrics
     CustomMetric(String, f64, ComparisonOperator),
 }
-
 /// Comparison operators for conditions
 #[derive(Debug, Clone)]
 pub enum ComparisonOperator {
@@ -81,7 +77,6 @@ pub enum ComparisonOperator {
     GreaterThanOrEqual,
     LessThanOrEqual,
 }
-
 /// Actions to perform during lifecycle management
 #[derive(Debug, Clone)]
 pub enum LifecycleAction {
@@ -102,7 +97,6 @@ pub enum LifecycleAction {
     /// Update dataset properties
     UpdateProperties(HashMap<String, String>),
 }
-
 /// Dataset lifecycle state
 #[derive(Debug, Clone)]
 pub struct DatasetLifecycleState {
@@ -114,7 +108,6 @@ pub struct DatasetLifecycleState {
     pub pending_actions: Vec<LifecycleAction>,
     pub metrics: HashMap<String, f64>,
 }
-
 /// Lifecycle evaluation result
 #[derive(Debug, Clone)]
 pub struct LifecycleEvaluation {
@@ -126,7 +119,6 @@ pub struct LifecycleEvaluation {
     pub evaluation_timestamp: SystemTime,
     pub next_evaluation: SystemTime,
 }
-
 /// Dataset lifecycle manager
 #[derive(Debug)]
 pub struct DatasetLifecycleManager {
@@ -141,7 +133,6 @@ pub struct DatasetLifecycleManager {
     /// Statistics
     stats: RwLock<LifecycleStats>,
 }
-
 /// Configuration for lifecycle management
 #[derive(Debug, Clone)]
 pub struct LifecycleConfig {
@@ -154,7 +145,6 @@ pub struct LifecycleConfig {
     /// Default policies to apply to new datasets
     pub default_policies: Vec<String>,
 }
-
 impl Default for LifecycleConfig {
     fn default() -> Self {
         Self {
@@ -179,7 +169,6 @@ pub enum ScheduledTask {
     PolicyUpdate,
     StatsCollection,
 }
-
 /// Lifecycle management statistics
 #[derive(Debug, Clone, Default)]
 pub struct LifecycleStats {
@@ -190,7 +179,6 @@ pub struct LifecycleStats {
     pub last_evaluation_time: Option<SystemTime>,
     pub average_evaluation_duration: Duration,
 }
-
 impl Default for DatasetLifecycleManager {
     fn default() -> Self {
         Self::new()
@@ -198,10 +186,12 @@ impl Default for DatasetLifecycleManager {
 }
 
 impl DatasetLifecycleManager {
+    #[must_use]
     pub fn new() -> Self {
         Self::with_config(LifecycleConfig::default())
     }
 
+    #[must_use]
     pub fn with_config(config: LifecycleConfig) -> Self {
         let manager = Self {
             policies: RwLock::new(Vec::new()),
@@ -221,6 +211,13 @@ impl DatasetLifecycleManager {
     }
 
     /// Initialize the lifecycle manager
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn initialize(&self) -> Result<()> {
         info!("Initializing dataset lifecycle manager");
 
@@ -235,6 +232,13 @@ impl DatasetLifecycleManager {
     }
 
     /// Shutdown the lifecycle manager
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn shutdown(&self) -> Result<()> {
         info!("Shutting down dataset lifecycle manager");
 
@@ -248,6 +252,13 @@ impl DatasetLifecycleManager {
     }
 
     /// Add a dataset to lifecycle management
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn add_dataset(&self, dataset_name: &str) -> Result<()> {
         info!("Adding dataset {} to lifecycle management", dataset_name);
 
@@ -272,6 +283,13 @@ impl DatasetLifecycleManager {
     }
 
     /// Remove a dataset from lifecycle management
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn remove_dataset(&self, dataset_name: &str) -> Result<()> {
         info!(
             "Removing dataset {} from lifecycle management",
@@ -282,6 +300,13 @@ impl DatasetLifecycleManager {
     }
 
     /// Evaluate a specific dataset's lifecycle
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn evaluate_dataset(&self, dataset_name: &str) -> Result<LifecycleEvaluation> {
         debug!("Evaluating lifecycle for dataset: {}", dataset_name);
 
@@ -291,7 +316,7 @@ impl DatasetLifecycleManager {
         let current_state = {
             let states = self.dataset_states.read().await;
             states.get(dataset_name).cloned().ok_or_else(|| {
-                NestGateError::automation_error(format!(
+                NestGateError::automation(format!(
                     "Dataset {dataset_name} not found in lifecycle management"
                 ))
             })?
@@ -333,6 +358,13 @@ impl DatasetLifecycleManager {
     }
 
     /// Execute a lifecycle action
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn execute_action(&self, dataset_name: &str, action: LifecycleAction) -> Result<()> {
         info!(
             "Executing lifecycle action for {}: {:?}",
@@ -391,6 +423,13 @@ impl DatasetLifecycleManager {
     }
 
     /// Add a lifecycle policy
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn add_policy(&self, policy: LifecyclePolicy) -> Result<()> {
         info!("Adding lifecycle policy: {}", policy.name);
         self.policies.write().await.push(policy);
@@ -458,8 +497,8 @@ impl DatasetLifecycleManager {
                     from_stage: LifecycleStage::Created,
                     to_stage: LifecycleStage::Active,
                     conditions: vec![TransitionCondition::AgeExceeds(
-                        nestgate_core::constants::timeouts::HOUR,
-                    )], // 1 hour
+                        Duration::from_secs(3600), // 1 hour
+                    )],
                     min_stage_duration: Duration::from_secs(
                         std::env::var("NESTGATE_LIFECYCLE_MIN_STAGE_DURATION_SECS")
                             .ok()
@@ -526,8 +565,8 @@ impl DatasetLifecycleManager {
                 from_stage: LifecycleStage::Created,
                 to_stage: LifecycleStage::Archived,
                 conditions: vec![TransitionCondition::AgeExceeds(
-                    nestgate_core::constants::timeouts::HOUR,
-                )], // 1 hour
+                    Duration::from_secs(3600), // 1 hour
+                )],
                 min_stage_duration: Duration::from_secs(
                     std::env::var("NESTGATE_BACKUP_LIFECYCLE_MIN_STAGE_DURATION_SECS")
                         .ok()
@@ -614,7 +653,7 @@ impl DatasetLifecycleManager {
         state: &DatasetLifecycleState,
     ) -> bool {
         for condition in conditions {
-            if !self.evaluate_single_condition(condition, state).await {
+            if !self.evaluate_single_condition(condition, state) {
                 return false; // All conditions must be true
             }
         }
@@ -622,7 +661,7 @@ impl DatasetLifecycleManager {
     }
 
     /// Evaluate a single transition condition
-    async fn evaluate_single_condition(
+    fn evaluate_single_condition(
         &self,
         condition: &TransitionCondition,
         state: &DatasetLifecycleState,

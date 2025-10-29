@@ -1,7 +1,6 @@
-//! Core types and configuration for the filesystem storage backend
+// Core types and configuration for the filesystem storage backend
 
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
 
 // Type aliases for compatibility
 pub type DataChunk = Vec<u8>;
@@ -10,7 +9,6 @@ pub type StorageProtocolInfo = std::collections::HashMap<String, String>;
 /// File metadata structure containing comprehensive file information
 #[derive(Debug, Clone)]
 pub struct FileMetadata {
-    pub path: String,
     pub size: u64,
     pub permissions: String,
     pub owner: String,
@@ -26,7 +24,7 @@ pub struct FileMetadata {
     pub modified_at: Option<std::time::SystemTime>,
     pub tags: std::collections::HashMap<String, String>,
 }
-
+}
 /// Response metadata for operations
 #[derive(Debug, Clone)]
 pub struct ResponseMetadata {
@@ -34,7 +32,7 @@ pub struct ResponseMetadata {
     pub timestamp: chrono::DateTime<chrono::Utc>,
     pub request_id: String,
 }
-
+}
 /// File system entry types
 #[derive(Debug, Clone, PartialEq)]
 pub enum EntryType {
@@ -42,7 +40,7 @@ pub enum EntryType {
     Directory,
     Symlink,
 }
-
+}
 /// Filesystem storage backend configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FilesystemConfig {
@@ -57,15 +55,15 @@ pub struct FilesystemConfig {
     /// Maximum file size (in bytes, 0 = unlimited)
     pub max_file_size: u64,
 }
-
+}
 impl Default for FilesystemConfig {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             root_dir: PathBuf::from("./data"),
             atomic_writes: true,
             track_metadata: true,
             enable_watching: false,
             max_file_size: 0, // Unlimited
-        }
-    }
+         }
+         }
+}
 }

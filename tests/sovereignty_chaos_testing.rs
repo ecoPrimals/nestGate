@@ -3,8 +3,8 @@
 //! **CANONICAL MODERNIZATION COMPLETE** - Integrated with unified test configuration system.
 //! Uses CanonicalTestConfig with chaos testing domain configuration.
 
-use nestgate_core::config::canonical_unified::NestGateCanonicalUnifiedConfig as NestGateCanonicalUnifiedConfig;
-use nestgate_core::config::defaults::Environment;
+use nestgate_core::config::canonical_master::NestGateCanonicalConfig;
+use nestgate_core::constants::Environment;
 use nestgate_core::error::{NestGateError, Result};
 use std::time::Duration;
 use tracing::info;
@@ -565,12 +565,12 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_sovereignty_chaos_framework_creation() {
+    async fn test_sovereignty_chaos_framework_creation() -> Result<(), Box<dyn std::error::Error>> {
         let config = ChaosTestParameters::default();
         let framework = SovereigntyChaosFramework::new(config);
 
         // Test environment setup
-        framework.setup_test_environment().await.unwrap();
+        framework.setup_test_environment().await?;
 
         let registry = framework.service_registry.read()?;
         assert!(!registry.is_empty());
@@ -578,35 +578,36 @@ mod tests {
         // All test services should be sovereignty compliant
         for service in registry.values() {
             assert!(service.enabled);
+            Ok(())
         }
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_chaos_event_injection() {
+    async fn test_chaos_event_injection() -> Result<(), Box<dyn std::error::Error>> {
         let config = ChaosTestParameters {
             test_duration: Duration::from_secs(1),
             ..Default::default()
         };
         let framework = SovereigntyChaosFramework::new(config);
 
-        framework.setup_test_environment().await.unwrap();
+        framework.setup_test_environment().await?;
 
         // Test individual chaos events
         framework
             .inject_chaos_event(SovereigntyChaosType::ConfigurationViolation)
-            .await
-            .unwrap();
+            .await?;
         framework
             .inject_chaos_event(SovereigntyChaosType::EnvironmentOverride)
-            .await
-            .unwrap();
+            .await?;
 
         let metrics = framework.chaos_metrics.read()?;
         assert!(metrics.chaos_events_injected >= 2);
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_sovereignty_compliance_validation() {
+    async fn test_sovereignty_compliance_validation() -> Result<(), Box<dyn std::error::Error>> {
         let config = ChaosTestParameters {
             test_duration: Duration::from_secs(2),
             chaos_probability: 1.0, // Always inject chaos for testing
@@ -615,19 +616,21 @@ mod tests {
         };
         let framework = SovereigntyChaosFramework::new(config);
 
-        let results = framework.run_sovereignty_chaos_test().await.unwrap();
+        let results = framework.run_sovereignty_chaos_test().await?;
 
         // Should have detected sovereignty violations
         assert!(results.chaos_events_injected > 0);
         // Stability score should reflect the impact of violations
         assert!(results.overall_stability_score >= 0.0 && results.overall_stability_score <= 1.0);
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_basic_sovereignty_chaos() {
-        let results = run_basic_sovereignty_chaos_test().await.unwrap();
+    async fn test_basic_sovereignty_chaos() -> Result<(), Box<dyn std::error::Error>> {
+        let results = run_basic_sovereignty_chaos_test().await?;
 
         assert!(results.test_duration > Duration::ZERO);
         assert!(results.overall_stability_score >= 0.0 && results.overall_stability_score <= 1.0);
+        Ok(())
     }
 }

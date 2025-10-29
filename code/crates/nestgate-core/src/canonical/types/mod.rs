@@ -7,11 +7,12 @@ pub mod core_types;
 
 // Re-export all canonical types
 // Specific re-exports to avoid ambiguous glob conflicts
+#[allow(deprecated)] // CanonicalNetworkConfig moved to canonical_master::domains::network
+pub use config_registry::CanonicalNetworkConfig;
 pub use config_registry::{
-    CanonicalStorageConfig, CanonicalNetworkConfig, CanonicalSecurityConfig,
-    CanonicalMonitoringConfig
+    CanonicalMonitoringConfig, CanonicalSecurityConfig, CanonicalStorageConfig,
 };
 pub use core_types::{
-    ProviderRegistry, CapabilityIndexMap, HealthMonitorRegistry,
-    ServiceRegistry, AlertChannel, AlertRule, Alert, TimestampChangesMap
-}; 
+    Alert, AlertChannel, AlertRule, CapabilityIndexMap, HealthMonitorRegistry, ProviderRegistry,
+    ServiceRegistry, TimestampChangesMap,
+};

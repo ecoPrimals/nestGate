@@ -15,13 +15,11 @@ pub struct UnifiedDynamicDiscoveryExtensions {
     /// Security discovery settings
     pub security: SecurityDiscoverySettings,
     /// Environment discovery settings
-    pub environment: EnvironmentDiscoverySettings,
     /// Storage discovery settings
     pub storage: StorageDiscoverySettings,
     /// Cache discovery settings
     pub cache: CacheDiscoverySettings,
 }
-
 /// Timeout discovery configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TimeoutDiscoverySettings {
@@ -34,7 +32,6 @@ pub struct TimeoutDiscoverySettings {
     /// Default timeout fallback
     pub default_timeout: Duration,
 }
-
 /// Network discovery configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkDiscoverySettings {
@@ -47,7 +44,6 @@ pub struct NetworkDiscoverySettings {
     /// Network timeout
     pub network_timeout: Duration,
 }
-
 /// Security discovery configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityDiscoverySettings {
@@ -58,7 +54,6 @@ pub struct SecurityDiscoverySettings {
     /// Security scan interval
     pub scan_interval: Duration,
 }
-
 /// Environment discovery configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EnvironmentDiscoverySettings {
@@ -69,7 +64,6 @@ pub struct EnvironmentDiscoverySettings {
     /// Maximum environment variables to track
     pub max_env_vars: usize,
 }
-
 /// Storage discovery configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StorageDiscoverySettings {
@@ -80,7 +74,6 @@ pub struct StorageDiscoverySettings {
     /// Storage scan interval
     pub scan_interval: Duration,
 }
-
 /// Cache discovery configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CacheDiscoverySettings {
@@ -91,7 +84,6 @@ pub struct CacheDiscoverySettings {
     /// Cache TTL
     pub default_ttl: Duration,
 }
-
 /// Certificate discovery configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CertificateDiscoverySettings {
@@ -102,7 +94,6 @@ pub struct CertificateDiscoverySettings {
     /// Certificate renewal threshold (days)
     pub renewal_threshold_days: u32,
 }
-
 /// Storage capacity threshold settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StorageCapacityThresholds {
@@ -111,14 +102,12 @@ pub struct StorageCapacityThresholds {
     /// Critical threshold percentage
     pub critical_threshold: f64,
 }
-
 impl Default for UnifiedDynamicDiscoveryExtensions {
     fn default() -> Self {
         Self {
             timeout: TimeoutDiscoverySettings::default(),
             network: NetworkDiscoverySettings::default(),
             security: SecurityDiscoverySettings::default(),
-            environment: EnvironmentDiscoverySettings::default(),
             storage: StorageDiscoverySettings::default(),
             cache: CacheDiscoverySettings::default(),
         }

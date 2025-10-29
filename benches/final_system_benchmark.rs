@@ -107,7 +107,8 @@ fn benchmark_system_integration(c: &mut Criterion) {
 
                 // Validate configuration
                 let json = serde_json::to_string(&config).unwrap();
-                let _deserialized: NestGateCanonicalUnifiedConfig = serde_json::from_str(&json).unwrap();
+                let _deserialized: NestGateCanonicalUnifiedConfig =
+                    serde_json::from_str(&json).unwrap();
 
                 black_box(config)
             })

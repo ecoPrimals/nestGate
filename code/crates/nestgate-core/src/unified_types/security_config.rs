@@ -5,11 +5,10 @@ use std::collections::HashMap;
 /// Split from unified_types/mod.rs for better maintainability and 2000-line compliance.
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
-
 // Import timeout config from the existing module
 use super::timeout_config::UnifiedTimeoutConfig;
 
-// ==================== UNIFIED SECURITY CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Unified Security Configuration - consolidates all security settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -37,7 +36,6 @@ pub struct UnifiedSecurityConfig {
     /// Compliance settings
     pub compliance: ComplianceConfig,
 }
-
 impl Default for UnifiedSecurityConfig {
     fn default() -> Self {
         Self {
@@ -56,7 +54,7 @@ impl Default for UnifiedSecurityConfig {
     }
 }
 
-// ==================== AUTHENTICATION CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Authentication configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -69,7 +67,6 @@ pub struct AuthConfig {
     pub multi_factor_auth: MfaConfig,
     pub single_sign_on: SsoConfig,
 }
-
 impl Default for AuthConfig {
     fn default() -> Self {
         Self {
@@ -95,7 +92,6 @@ pub enum AuthMethod {
     Kerberos,
     Custom(String),
 }
-
 /// Password policy configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PasswordPolicy {
@@ -107,7 +103,6 @@ pub struct PasswordPolicy {
     pub max_age_days: Option<u32>,
     pub history_count: u32,
 }
-
 impl Default for PasswordPolicy {
     fn default() -> Self {
         Self {
@@ -130,7 +125,6 @@ pub struct MfaConfig {
     pub methods: Vec<MfaMethod>,
     pub backup_codes: bool,
 }
-
 impl Default for MfaConfig {
     fn default() -> Self {
         Self {
@@ -151,7 +145,6 @@ pub enum MfaMethod {
     Hardware,
     Biometric,
 }
-
 /// Single sign-on configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SsoConfig {
@@ -160,7 +153,6 @@ pub struct SsoConfig {
     pub auto_provision: bool,
     pub attribute_mapping: std::collections::HashMap<String, String>,
 }
-
 impl Default for SsoConfig {
     fn default() -> Self {
         Self {
@@ -182,8 +174,7 @@ pub enum SsoProvider {
     ActiveDirectory,
     Custom(String),
 }
-
-// ==================== ENCRYPTION CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Encryption configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -191,14 +182,10 @@ pub struct EncryptionConfig {
     pub enable_tls: bool,
     pub tls_version: TlsVersion,
     pub cipher_suites: Vec<String>,
-    pub certificate_path: Option<String>,
-    pub private_key_path: Option<String>,
-    pub ca_certificate_path: Option<String>,
     pub verify_certificates: bool,
     pub encryption_at_rest: bool,
     pub key_rotation_interval: Duration,
 }
-
 impl Default for EncryptionConfig {
     fn default() -> Self {
         Self {
@@ -209,9 +196,6 @@ impl Default for EncryptionConfig {
                 "TLS_CHACHA20_POLY1305_SHA256".to_string(),
                 "TLS_AES_128_GCM_SHA256".to_string(),
             ],
-            certificate_path: None,
-            private_key_path: None,
-            ca_certificate_path: None,
             verify_certificates: true,
             encryption_at_rest: false,
             key_rotation_interval: Duration::from_secs(86400 * 30), // 30 days
@@ -225,8 +209,7 @@ pub enum TlsVersion {
     V1_2,
     V1_3,
 }
-
-// ==================== ACCESS CONTROL CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Access control configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -237,7 +220,6 @@ pub struct AccessControlConfig {
     pub resource_permissions: std::collections::HashMap<String, Vec<Permission>>,
     pub role_definitions: std::collections::HashMap<String, Role>,
 }
-
 impl Default for AccessControlConfig {
     fn default() -> Self {
         Self {
@@ -257,7 +239,6 @@ pub enum AccessPolicy {
     Deny,
     Conditional,
 }
-
 /// Permissions
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum Permission {
@@ -268,7 +249,6 @@ pub enum Permission {
     Admin,
     Custom(String),
 }
-
 /// Role definition
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Role {
@@ -277,8 +257,7 @@ pub struct Role {
     pub permissions: Vec<Permission>,
     pub inherits_from: Vec<String>,
 }
-
-// ==================== AUDIT CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Security audit configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -290,9 +269,7 @@ pub struct AuditConfig {
     pub log_privilege_escalation: bool,
     pub log_data_access: bool,
     pub retention_days: u32,
-    pub audit_storage_path: String,
 }
-
 impl Default for AuditConfig {
     fn default() -> Self {
         Self {
@@ -303,7 +280,6 @@ impl Default for AuditConfig {
             log_privilege_escalation: true,
             log_data_access: false,
             retention_days: 90,
-            audit_storage_path: "/var/log/nestgate/audit".to_string(),
         }
     }
 }
@@ -316,8 +292,7 @@ pub enum AuditLevel {
     Verbose,
     Debug,
 }
-
-// ==================== CERTIFICATE CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Certificate configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -329,7 +304,6 @@ pub struct CertificateConfig {
     pub key_size: u32,
     pub certificate_lifetime_days: u32,
 }
-
 impl Default for CertificateConfig {
     fn default() -> Self {
         Self {
@@ -351,7 +325,6 @@ pub enum CertificateAuthority {
     Internal,
     External(String),
 }
-
 /// Key algorithms
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum KeyAlgorithm {
@@ -359,8 +332,7 @@ pub enum KeyAlgorithm {
     Ecdsa,
     Ed25519,
 }
-
-// ==================== SECURITY RATE LIMITING ====================
+// ==================== SECTION ====================
 
 /// Security rate limiting configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -371,7 +343,6 @@ pub struct SecurityRateLimitConfig {
     pub password_reset_per_hour: u32,
     pub account_creation_per_hour: u32,
 }
-
 impl Default for SecurityRateLimitConfig {
     fn default() -> Self {
         Self {
@@ -384,7 +355,7 @@ impl Default for SecurityRateLimitConfig {
     }
 }
 
-// ==================== INTRUSION DETECTION ====================
+// ==================== SECTION ====================
 
 /// Intrusion detection configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -395,7 +366,6 @@ pub struct IntrusionDetectionConfig {
     pub alert_on_multiple_failures: bool,
     pub geo_blocking: GeoBlockingConfig,
 }
-
 impl Default for IntrusionDetectionConfig {
     fn default() -> Self {
         Self {
@@ -416,8 +386,7 @@ pub struct GeoBlockingConfig {
     pub allowed_countries: Vec<String>,
     pub block_unknown_locations: bool,
 }
-
-// ==================== SECURITY LOGGING ====================
+// ==================== SECTION ====================
 
 /// Security logging configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -429,7 +398,6 @@ pub struct SecurityLoggingConfig {
     pub include_request_details: bool,
     pub include_response_details: bool,
 }
-
 impl Default for SecurityLoggingConfig {
     fn default() -> Self {
         Self {
@@ -454,7 +422,6 @@ pub enum SecurityLogLevel {
     Debug,
     Trace,
 }
-
 /// Security log formats
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum SecurityLogFormat {
@@ -462,7 +429,6 @@ pub enum SecurityLogFormat {
     Text,
     Structured,
 }
-
 /// Security log destinations
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SecurityLogDestination {
@@ -471,8 +437,7 @@ pub enum SecurityLogDestination {
     Remote(String),
     Database,
 }
-
-// ==================== COMPLIANCE CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Compliance configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -485,7 +450,6 @@ pub struct ComplianceConfig {
     pub data_anonymization: bool,
     pub privacy_controls: PrivacyControls,
 }
-
 impl Default for ComplianceConfig {
     fn default() -> Self {
         Self {
@@ -509,7 +473,6 @@ pub struct PrivacyControls {
     pub right_to_erasure: bool,
     pub data_portability: bool,
 }
-
 impl Default for PrivacyControls {
     fn default() -> Self {
         Self {

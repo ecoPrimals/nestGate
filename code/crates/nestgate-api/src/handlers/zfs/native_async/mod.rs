@@ -1,5 +1,9 @@
-/// This module was split from native_async_zfs.rs to maintain the 2000-line limit
-/// while preserving all functionality and maintaining backward compatibility
+//! This module was split from native_async_zfs.rs to maintain the 2000-line limit
+//! while preserving all functionality and maintaining backward compatibility
+//!
+//! ⚠️ **DEVELOPMENT STUBS - ONLY WITH `dev-stubs` FEATURE** ⚠️
+
+#![cfg(feature = "dev-stubs")]
 
 // Sub-module declarations
 pub mod traits;
@@ -12,36 +16,32 @@ pub use implementations::*;
 // Convenience re-exports for common usage patterns
 pub use implementations::{ProductionZfsService, DevelopmentZfsService};
 
-/// Convenience function to create a production ZFS service
+//! Convenience function to create a production ZFS service
 pub fn create_production_zfs_service() -> ProductionZfsService {
     ProductionZfsService::new()
     }
-
-/// Convenience function to create a development ZFS service
+//! Convenience function to create a development ZFS service
 pub fn create_development_zfs_service() -> DevelopmentZfsService {
     DevelopmentZfsService::default()
     }
-
-#[cfg(test)]
+    #[cfg(test)]
 mod tests {
     use super::*;
     use super::super::universal_zfs::types::*;
-
     #[tokio::test]
     async fn test_production_service_creation() {
         let service = create_production_zfs_service();
         assert_eq!(service.service_name(), "ProductionZfsService");
         assert_eq!(service.service_version(), "1.0.0");
     }
-
     #[tokio::test]
     async fn test_production_health_check() {
         let service = create_production_zfs_service();
-        let health = service.health_check().await.unwrap_or_else(|e| {
+        let health = service.health_check().await.unwrap_or_else(|_e| {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
+    format!("Operation failed: self.base_url")
 ).into())
 });
         assert!(matches!(health, HealthStatus::Healthy));
@@ -59,30 +59,30 @@ mod tests {
         let service = create_production_zfs_service();
         
         // Test pool listing
-        let pools = service.list_pools().await.unwrap_or_else(|e| {
+        let pools = service.list_pools().await.unwrap_or_else(|_e| {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
+    format!("Operation failed: self.base_url")
 ).into())
 });
         assert_eq!(pools.len(), 1);
         assert_eq!(pools[0].name, "production-pool");
         
         // Test pool retrieval
-        let pool = service.get_pool("production-pool").await.unwrap_or_else(|e| {
+        let pool = service.get_pool("production-pool").await.unwrap_or_else(|_e| {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
+    format!("Operation failed: self.base_url")
 ).into())
 });
         assert!(pool.is_some());
-        assert_eq!(pool.unwrap_or_else(|e| {
+        assert_eq!(pool.unwrap_or_else(|_e| {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
+    format!("Operation failed: self.base_url")
 ).into())
 }).name, "production-pool");
     }
@@ -99,30 +99,30 @@ mod tests {
         let service = create_development_zfs_service();
         
         // Test pool listing
-        let pools = service.list_pools().await.unwrap_or_else(|e| {
+        let pools = service.list_pools().await.unwrap_or_else(|_e| {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
+    format!("Operation failed: self.base_url")
 ).into())
 });
         assert_eq!(pools.len(), 1);
         assert_eq!(pools[0].name, "dev-pool");
         
         // Test pool retrieval
-        let pool = service.get_pool("dev-pool").await.unwrap_or_else(|e| {
+        let pool = service.get_pool("dev-pool").await.unwrap_or_else(|_e| {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
+    format!("Operation failed: self.base_url")
 ).into())
 });
         assert!(pool.is_some());
-        assert_eq!(pool.unwrap_or_else(|e| {
+        assert_eq!(pool.unwrap_or_else(|_e| {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
+    format!("Operation failed: self.base_url")
 ).into())
 }).name, "dev-pool");
     }
@@ -132,30 +132,30 @@ mod tests {
         let service = create_production_zfs_service();
         
         // Test dataset listing
-        let datasets = service.list_datasets(Some("production-pool")).await.unwrap_or_else(|e| {
+        let datasets = service.list_datasets(Some("production-pool")).await.unwrap_or_else(|_e| {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
+    format!("Operation failed: self.base_url")
 ).into())
 });
         assert_eq!(datasets.len(), 1);
         assert_eq!(datasets[0].name, "production-pool/data");
         
         // Test dataset retrieval
-        let dataset = service.get_dataset("production-pool/data").await.unwrap_or_else(|e| {
+        let dataset = service.get_dataset("production-pool/data").await.unwrap_or_else(|_e| {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
+    format!("Operation failed: self.base_url")
 ).into())
 });
         assert!(dataset.is_some());
-        assert_eq!(dataset.unwrap_or_else(|e| {
+        assert_eq!(dataset.unwrap_or_else(|_e| {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
+    format!("Operation failed: self.base_url")
 ).into())
 }).name, "production-pool/data");
     }
@@ -165,11 +165,11 @@ mod tests {
         let service = create_production_zfs_service();
         
         // Test snapshot listing
-        let snapshots = service.list_snapshots(Some("production-pool/data")).await.unwrap_or_else(|e| {
+        let snapshots = service.list_snapshots(Some("production-pool/data")).await.unwrap_or_else(|_e| {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
+    format!("Operation failed: self.base_url")
 ).into())
 });
         assert_eq!(snapshots.len(), 1);
@@ -183,11 +183,11 @@ mod tests {
             properties: std::collections::HashMap::new(),
         };
         
-        let snapshot = service.create_snapshot(&snapshot_config).await.unwrap_or_else(|e| {
+        let snapshot = service.create_snapshot(&snapshot_config).await.unwrap_or_else(|_e| {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
+    format!("Operation failed: self.base_url")
 ).into())
 });
         assert_eq!(snapshot.name, "production-pool/data@test-snapshot");
@@ -205,20 +205,20 @@ mod tests {
                 dataset_name: "production-pool/data".to_string(),
                 recursive: false,
                 properties: std::collections::HashMap::new(),
-            },
+            }
             SnapshotConfig {
                 name: "production-pool/data@bulk-2".to_string(),
                 dataset_name: "production-pool/data".to_string(),
                 recursive: false,
                 properties: std::collections::HashMap::new(),
-            },
+            }
         ];
         
-        let snapshots = service.bulk_create_snapshots(&configs).await.unwrap_or_else(|e| {
+        let snapshots = service.bulk_create_snapshots(&configs).await.unwrap_or_else(|_e| {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
+    format!("Operation failed: self.base_url")
 ).into())
 });
         assert_eq!(snapshots.len(), 2);

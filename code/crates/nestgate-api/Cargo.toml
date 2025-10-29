@@ -2,103 +2,132 @@
 name = "nestgate-api"
 version = "0.1.0"
 edition = "2021"
-authors = ["DataScienceBioLab"]
+authors = ["NestGate Development Team <dev@nestgate.io>"]
 description = "API server and interface definitions for NestGate with enhanced streaming capabilities"
-license = "AGPL-3.0-or-later"
-repository = "https://github.com/DataScienceBioLab/NestGateV2"
-keywords = ["api", "kubernetes", "network", "gateway", "service-mesh", "streaming", "sse", "rpc"]
-categories = ["network-programming", "api-bindings", "web-programming"]
+license = "AGPL-3.0-only"
+repository = "https://github.com/nestgate/nestgate"
+keywords = [ "api", "kubernetes", "network", "gateway", "service-mesh", "streaming", "sse", "rpc",]
+categories = [ "network-programming", "api-bindings", "web-programming",]
+homepage = "https://nestgate.io"
+documentation = "https://docs.rs/nestgate-api"
+readme = "README.md"
 
 [dependencies]
-# Core HTTP and web framework
-axum = { workspace = true }
-tower = { workspace = true }
-tower-http = { workspace = true }
 hyper = "0.14"
-tokio = { workspace = true }
-
-# Serialization and JSON
-serde = { workspace = true }
-serde_json = { workspace = true }
-
-# Async and concurrency
-futures = { workspace = true }
 futures-util = "0.3"
-async-trait = { workspace = true }
-
-# HTTP client for remote services
-reqwest = { version = "0.11", features = ["json", "rustls-tls"], default-features = false }
-
-# Streaming utilities
-tokio-stream = { version = "0.1", features = ["sync"] }
-
-# System utilities
 num_cpus = "1.16"
-
-# Utilities
-uuid = { workspace = true }
-anyhow = { workspace = true }
-thiserror = { workspace = true }
-tracing = { workspace = true }
-chrono = { workspace = true }
-
-# Random number generation for testing
 fastrand = "2.0"
 toml = "0.8"
-
-# Cryptographic utilities for authentication
 sha2 = "0.10"
-
-# NestGate dependencies
-nestgate-core = { path = "../nestgate-core" }
-nestgate-zfs = { path = "../nestgate-zfs" }
-nestgate-network = { path = "../nestgate-network" }
-nestgate-automation = { path = "../nestgate-automation" }
-
-# Configuration
-config = { workspace = true }
-
-# Enhanced communication
-warp = { workspace = true }
-
-# MCP dependencies - MessagePack removed due to unmaintained paste dependency
-# Using JSON/bincode alternatives for serialization
-
-# Streaming RPC with tarpc for bidirectional communication
-tarpc = { version = "0.37", features = ["tokio1", "serde1", "serde-transport", "tcp"], optional = true }
-bincode = { version = "1.3", optional = true }
-tokio-serde = { version = "0.8", features = ["bincode"], optional = true }
-
-# Enhanced streaming capabilities
-tokio-util = { version = "0.7", features = ["codec"], optional = true }
-
-# Service discovery and mesh
 rand = "0.8"
+sysinfo = "0.37.0"
+url = "2.5.7"
+async-stream = "0.3"
 
 [dev-dependencies]
-# Testing framework
 axum-test = "15.0"
 tokio-test = "0.4"
 mockall = "0.12"
 rstest = "0.18"
-
-# HTTP client for testing
-reqwest = { version = "0.11", features = ["json"] }
-
-# Test utilities
 tempfile = "3.10"
 
-# Tracing support for development
-tracing-subscriber = { workspace = true }
-
 [features]
-default = ["sse", "streaming-rpc"]
-
-# SSE streaming support (built into axum 0.7)
+default = [ "sse", "streaming-rpc",]
 sse = []
-
-# Streaming RPC support for enhanced bidirectional communication
-streaming-rpc = ["tarpc", "bincode", "tokio-util", "tokio-serde"]
+streaming-rpc = [ "tarpc", "bincode", "tokio-util", "tokio-serde",]
+dev-stubs = []  # ⚠️ Development stubs - DO NOT use in production builds
 
 [lints]
-workspace = true 
+workspace = true
+
+[dependencies.axum]
+workspace = true
+
+[dependencies.tower]
+workspace = true
+
+[dependencies.tower-http]
+workspace = true
+
+[dependencies.tokio]
+workspace = true
+
+[dependencies.serde]
+workspace = true
+
+[dependencies.serde_json]
+workspace = true
+
+[dependencies.futures]
+workspace = true
+
+[dependencies.async-trait]
+workspace = true
+
+[dependencies.reqwest]
+version = "0.11"
+features = [ "json", "rustls-tls",]
+default-features = false
+
+[dependencies.tokio-stream]
+version = "0.1"
+features = [ "sync",]
+
+[dependencies.uuid]
+workspace = true
+
+[dependencies.anyhow]
+workspace = true
+
+[dependencies.thiserror]
+workspace = true
+
+[dependencies.tracing]
+workspace = true
+
+[dependencies.chrono]
+workspace = true
+
+[dependencies.nestgate-core]
+path = "../nestgate-core"
+
+[dependencies.nestgate-zfs]
+path = "../nestgate-zfs"
+
+[dependencies.nestgate-network]
+path = "../nestgate-network"
+
+[dependencies.nestgate-automation]
+path = "../nestgate-automation"
+
+[dependencies.config]
+workspace = true
+
+[dependencies.warp]
+workspace = true
+
+[dependencies.tarpc]
+version = "0.37"
+features = [ "tokio1", "serde1", "serde-transport", "tcp",]
+optional = true
+
+[dependencies.bincode]
+version = "1.3"
+optional = true
+
+[dependencies.tokio-serde]
+version = "0.8"
+features = [ "bincode",]
+optional = true
+
+[dependencies.tokio-util]
+version = "0.7"
+features = [ "codec",]
+optional = true
+
+[dev-dependencies.reqwest]
+version = "0.11"
+features = [ "json",]
+
+[dev-dependencies.tracing-subscriber]
+workspace = true

@@ -47,26 +47,28 @@ async fn run_comprehensive_tests_with_config(config: UnifiedTestConfig) {
 
 /// Test configuration builder functionality
 #[tokio::test]
-async fn test_unified_config_builder() {
+async fn test_unified_config_builder() -> Result<(), Box<dyn std::error::Error>> {
     let config = UnifiedTestConfigBuilder::new()
         .with_test_name("builder-test".to_string())
         .with_test_description("Testing the unified config builder".to_string())
         .with_max_duration(Duration::from_secs(60))
         .build()
-        .expect("Should build config successfully");
+        ?;
     
     assert_eq!(config.test_name, "builder-test");
     assert_eq!(config.test_description, "Testing the unified config builder");
     assert_eq!(config.test_settings.max_duration, Duration::from_secs(60));
+    Ok(())
 }
 
 /// Test performance configuration integration
 #[tokio::test]
-async fn test_performance_config_integration() {
+async fn test_performance_config_integration() -> Result<(), Box<dyn std::error::Error>> {
     let config = create_comprehensive_test_config();
     
     // Verify performance config is properly set
     assert!(config.performance.load_testing_enabled);
     
     tracing::info!("Performance configuration validated successfully");
+    Ok(())
 } 

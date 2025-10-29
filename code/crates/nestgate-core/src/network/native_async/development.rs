@@ -1,19 +1,19 @@
+use crate::diagnostics::types::ServiceInfo;
+use crate::Result;
 /// Development Network Implementations
-/// Extracted from native_async_network.rs to maintain file size compliance
+/// Extracted from `native_async_network.rs` to maintain file size compliance
 /// Contains development/testing implementations of native async traits
 use std::collections::HashMap;
-
-use crate::diagnostics::types::ServiceInfo;
-use crate::error::Result;
 
 use super::traits::NativeAsyncServiceDiscovery;
 use super::types::{ServiceEvent, ServiceQuery};
 
 /// Development service discovery for testing
+/// Development-optimized service discovery implementation
+/// Provides lightweight service discovery for development environments
 pub struct DevelopmentServiceDiscovery {
     service_count: std::sync::Arc<std::sync::atomic::AtomicUsize>,
 }
-
 impl Default for DevelopmentServiceDiscovery {
     fn default() -> Self {
         Self {
@@ -55,9 +55,6 @@ impl NativeAsyncServiceDiscovery<1000, 60, 100, 120> for DevelopmentServiceDisco
                 memory_bytes: Some(0),
                 start_time: Some(std::time::SystemTime::now()),
                 description: Some("Test service for development".to_string()),
-                config_path: None,
-                log_path: None,
-                environment: Some("development".to_string()),
                 dependencies: None,
                 command_line: Some("nestgate-test".to_string()),
             }])
@@ -98,9 +95,6 @@ impl NativeAsyncServiceDiscovery<1000, 60, 100, 120> for DevelopmentServiceDisco
                 memory_bytes: Some(0),
                 start_time: Some(std::time::SystemTime::now()),
                 description: Some("Test service for development".to_string()),
-                config_path: None,
-                log_path: None,
-                environment: Some("development".to_string()),
                 dependencies: None,
                 command_line: Some("nestgate-test".to_string()),
             }))

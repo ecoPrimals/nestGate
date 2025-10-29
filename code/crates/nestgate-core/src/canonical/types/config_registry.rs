@@ -11,20 +11,18 @@ use std::collections::HashMap;
 // - All other fragmented config structures
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::path::PathBuf;
 use std::time::Duration;
 
-// ==================== CANONICAL CONFIGURATION REGISTRY ====================
+// ==================== SECTION ====================
 
 /// **THE CANONICAL STORAGE CONFIGURATION**
 ///
 /// Consolidates ALL storage configuration patterns:
-/// - `StorageConfig` from canonical_storage.rs
-/// - `StorageResourceConfig` from unified_types/storage/config.rs
+/// - `StorageConfig` from `canonical_storage.rs`
+/// - `StorageResourceConfig` from `unified_types/storage/config.rs`
 /// - `StorageConfig` from config/storage.rs
-/// - `CanonicalStorageConfig` from config/canonical/domain_configs/storage_configs.rs
-/// - `StorageConfig` from unified_final_config/domain_configs/storage.rs
+/// - `CanonicalStorageConfig` from `config/canonical/NestGateCanonicalConfig/storage_configs.rs`
+/// - `StorageConfig` from `unified_final_config/NestGateCanonicalConfig/storage.rs`
 /// - `FsMonitorStorageSettings` from fsmonitor storage config
 /// - `McpStorageConfig` from mcp storage config
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -50,15 +48,21 @@ pub struct CanonicalStorageConfig {
     /// Environment-specific overrides
     pub environment_overrides: HashMap<String, serde_json::Value>,
 }
-
 /// **THE CANONICAL NETWORK CONFIGURATION**
 ///
+/// **⚠️ DEPRECATED**: This is a duplicate. Use `CanonicalNetworkConfig` from `canonical_master::domains::network`
 /// Consolidates ALL network configuration patterns:
-/// - `NetworkConfig` from canonical_modernization/core_config.rs
-/// - `CanonicalNetworkConfig` from canonical_modernization/domain_configs.rs
-/// - Network settings from unified_network_extensions.rs
+/// - `NetworkConfig` from `canonical_modernization/core_config.rs`
+/// - `CanonicalNetworkConfig` from `canonical_modernization/NestGateCanonicalConfig.rs`
+/// - Network settings from `unified_network_extensions.rs`
 /// - Network configs from various service modules
+///
+/// **⚠️ DEPRECATED**: Duplicate. Use the one from `canonical_master::domains::network`
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[deprecated(
+    since = "0.10.0",
+    note = "Use canonical_master::domains::network::CanonicalNetworkConfig instead"
+)]
 pub struct CanonicalNetworkConfig {
     /// Interface bindings
     pub interfaces: NetworkInterfaceConfig,
@@ -77,7 +81,6 @@ pub struct CanonicalNetworkConfig {
     /// Monitoring settings
     pub monitoring: NetworkMonitoringConfig,
 }
-
 /// **THE CANONICAL SECURITY CONFIGURATION**
 ///
 /// Consolidates ALL security configuration patterns across the ecosystem
@@ -98,7 +101,6 @@ pub struct CanonicalSecurityConfig {
     /// Compliance settings
     pub compliance: SecurityComplianceConfig,
 }
-
 /// **THE CANONICAL MONITORING CONFIGURATION**
 ///
 /// Consolidates ALL monitoring configuration patterns
@@ -119,14 +121,13 @@ pub struct CanonicalMonitoringConfig {
     /// Performance monitoring
     pub performance: MonitoringPerformanceConfig,
 }
-
-// ==================== STORAGE CONFIGURATION COMPONENTS ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum StorageBackendType {
     Filesystem,
     Memory,
-    ZFS,
+    Zfs,
     Remote,
     Hybrid,
     Cloud,
@@ -252,7 +253,6 @@ pub struct StorageProtocolsConfig {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NfsProtocolConfig {
     pub version: String,
-    pub export_path: String,
     pub allowed_clients: Vec<String>,
     pub mount_options: HashMap<String, String>,
 }
@@ -275,7 +275,7 @@ pub struct SmbAuthConfig {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IscsiProtocolConfig {
     pub target_name: String,
-    pub portal_address: String,
+    pub portal_endpoint: String,
     pub portal_port: u16,
     pub authentication: IscsiAuthConfig,
 }
@@ -326,7 +326,7 @@ pub struct StorageResourceConfig {
     pub resource_limits: HashMap<String, u64>,
 }
 
-// ==================== NETWORK CONFIGURATION COMPONENTS ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct NetworkInterfaceConfig {
@@ -360,9 +360,6 @@ pub struct NetworkConnectionConfig {
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct NetworkSecurityConfig {
     pub tls_enabled: bool,
-    pub cert_path: Option<PathBuf>,
-    pub key_path: Option<PathBuf>,
-    pub ca_path: Option<PathBuf>,
     pub client_auth_required: bool,
     pub cipher_suites: Vec<String>,
 }
@@ -407,10 +404,9 @@ impl Default for LoadBalancingStrategy {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BackendConfig {
-    pub address: String,
+    pub endpoint: String,
     pub port: u16,
     pub weight: u32,
-    pub health_check_path: Option<String>,
     pub max_connections: Option<usize>,
 }
 
@@ -425,7 +421,7 @@ pub struct NetworkServiceDiscoveryConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ServiceDiscoveryMethod {
-    DNS,
+    Dns,
     Consul,
     Etcd,
     Kubernetes,
@@ -434,7 +430,7 @@ pub enum ServiceDiscoveryMethod {
 
 impl Default for ServiceDiscoveryMethod {
     fn default() -> Self {
-        Self::DNS
+        Self::Dns
     }
 }
 
@@ -447,7 +443,7 @@ pub struct NetworkMonitoringConfig {
     pub metrics_export: bool,
 }
 
-// ==================== SECURITY CONFIGURATION COMPONENTS ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct SecurityAuthenticationConfig {
@@ -464,8 +460,8 @@ pub enum AuthenticationMethod {
     Token,
     Certificate,
     OAuth,
-    SAML,
-    LDAP,
+    Saml,
+    Ldap,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -497,9 +493,6 @@ pub struct KeyDerivationConfig {
 pub struct SecurityTlsConfig {
     pub enabled: bool,
     pub version: String,
-    pub cert_path: Option<PathBuf>,
-    pub key_path: Option<PathBuf>,
-    pub ca_path: Option<PathBuf>,
     pub cipher_suites: Vec<String>,
     pub client_auth_required: bool,
 }
@@ -530,7 +523,7 @@ pub struct SecurityComplianceConfig {
     pub compliance_level: String,
 }
 
-// ==================== MONITORING CONFIGURATION COMPONENTS ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct MonitoringMetricsConfig {
@@ -647,29 +640,33 @@ pub struct MonitoringPerformanceConfig {
 /// This struct provides access to all canonical configuration types
 /// and includes utilities for migration from legacy configurations.
 pub struct CanonicalConfigTypeRegistry;
-
 impl CanonicalConfigTypeRegistry {
     /// Get the canonical storage configuration type
+    #[must_use]
     pub fn storage_config() -> &'static str {
         "CanonicalStorageConfig"
     }
 
     /// Get the canonical network configuration type
+    #[must_use]
     pub fn network_config() -> &'static str {
         "CanonicalNetworkConfig"
     }
 
     /// Get the canonical security configuration type
+    #[must_use]
     pub fn security_config() -> &'static str {
         "CanonicalSecurityConfig"
     }
 
     /// Get the canonical monitoring configuration type
+    #[must_use]
     pub fn monitoring_config() -> &'static str {
         "CanonicalMonitoringConfig"
     }
 
     /// List all legacy configuration types that should be migrated
+    #[must_use]
     pub fn legacy_types() -> Vec<&'static str> {
         vec![
             "StorageConfig", // From various modules
@@ -685,7 +682,8 @@ impl CanonicalConfigTypeRegistry {
     }
 
     /// Check if a type name is a legacy configuration type
+    #[must_use]
     pub fn is_legacy_type(type_name: &str) -> bool {
         Self::legacy_types().contains(&type_name)
     }
-} 
+}

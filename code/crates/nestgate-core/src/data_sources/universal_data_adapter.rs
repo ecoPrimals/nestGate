@@ -1,8 +1,8 @@
-//! Universal Data Adapter
-//!
-//! Routes data requests to any available data capability provider.
-//! NestGate doesn't care if data comes from NCBI, HuggingFace, or any other source.
-//! It only cares about the capability to provide the requested data.
+// Universal Data Adapter
+//! Universal Data Adapter functionality and utilities.
+// Routes data requests to any available data capability provider.
+// NestGate doesn't care if data comes from NCBI, HuggingFace, or any other source.
+// It only cares about the capability to provide the requested data.
 
 use crate::data_sources::data_capabilities::*;
 use crate::{NestGateError, Result};
@@ -17,9 +17,9 @@ pub struct UniversalDataAdapter {
     /// Fallback providers for when primary providers fail
     fallback_providers: HashMap<String, Vec<Arc<dyn DataCapability>>>,
 }
-
 impl UniversalDataAdapter {
     /// Create a new universal data adapter
+    #[must_use]
     pub fn new() -> Self {
         Self {
             providers: HashMap::new(),
@@ -43,7 +43,14 @@ impl UniversalDataAdapter {
     }
     
     /// Execute a data request using any available provider
-    pub async fn execute_request(&self, request: &DataRequest) -> Result<DataResponse> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+                pub fn execute_request(&self, request: &DataRequest) -> Result<DataResponse>  {
         debug!("🔍 Executing data request for capability: {}", request.capability_type);
         
         // Try primary provider first
@@ -89,12 +96,8 @@ impl UniversalDataAdapter {
             }
         }
         
-        Err(NestGateError::Internal {
-            message: format!("No available provider for capability: {}", request.capability_type),
-            location: Some("UniversalDataAdapter::execute_request".to_string()),
-            debug_info: None,
-            is_bug: false,
-        })
+        Err(NestGateError::internal_error(
+            location: Some("UniversalDataAdapter::execute_request".to_string())})
     }
     
     /// Get available capabilities
@@ -118,7 +121,6 @@ impl Default for UniversalDataAdapter {
 pub struct UniversalDataAdapterBuilder {
     adapter: UniversalDataAdapter,
 }
-
 impl UniversalDataAdapterBuilder {
     pub fn new() -> Self {
         Self {
@@ -127,12 +129,14 @@ impl UniversalDataAdapterBuilder {
     }
     
     /// Add a data capability provider
+    #[must_use]
     pub fn with_provider(mut self, provider: Arc<dyn DataCapability>) -> Self {
         self.adapter.register_provider(provider);
         self
     }
     
     /// Add a fallback provider
+    #[must_use]
     pub fn with_fallback_provider(mut self, capability_type: String, provider: Arc<dyn DataCapability>) -> Self {
         self.adapter.register_fallback_provider(capability_type, provider);
         self

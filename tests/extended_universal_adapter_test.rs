@@ -7,20 +7,21 @@
 //! - Performance under load
 //! - Error handling across adapters
 
-use crate::canonical_modernization::{UnifiedHealthStatus, UnifiedServiceType};
-use nestgate_core::config::canonical_unified::types::CanonicalConfig;
+use nestgate_core::config::canonical_master::NestGateCanonicalConfig;
 use nestgate_core::error::{NestGateError, Result};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
+use tests::canonical_modernization::{UnifiedHealthStatus, UnifiedServiceType};
 
 /// Test universal adapter configuration consistency
+
 #[tokio::test]
 async fn test_universal_adapter_config_consistency() -> Result<()> {
     println!("🧪 Testing universal adapter configuration consistency...");
 
     // Create configurations for different adapter types
     let storage_config = CanonicalConfig {
-        storage: nestgate_core::config::canonical_unified::types::StorageConfig {
+        storage: nestgate_core::config::StorageConfig {
             backend_type: "universal".to_string(),
             ..Default::default()
         },
@@ -28,10 +29,10 @@ async fn test_universal_adapter_config_consistency() -> Result<()> {
     };
 
     let network_config = CanonicalConfig {
-        network: nestgate_core::config::canonical_unified::types::NetworkConfig {
-            api: nestgate_core::config::canonical_unified::types::ApiServerConfig {
-                port: 8080,
-                host: "0.0.0.0".parse().unwrap(),
+        network: nestgate_core::config::NetworkConfig {
+            api: nestgate_core::config::ApiServerConfig {
+                port: nestgate_core::constants::DEFAULT_API_PORT,
+                host: "0.0.0.0".parse()?,
                 ..Default::default()
             },
             ..Default::default()
@@ -119,6 +120,7 @@ async fn test_adapter_service_type_unification() -> Result<()> {
 
         // Store metadata after serialization test
         adapter_metadata.insert(service_type, metadata);
+        Ok(())
     }
 
     // Verify all service types are represented
@@ -201,28 +203,18 @@ async fn test_adapter_error_handling_consistency() -> Result<()> {
     let adapter_errors = vec![
         (
             "storage",
-            NestGateError::Storage {
-                operation: "adapter_operation".to_string(),
-                details: "Storage adapter error".to_string(),
-            },
+            NestGateError::storage_error("Storage adapter error".to_string()),
         ),
         (
             "internal",
-            NestGateError::Internal {
-                message: "Internal adapter error".to_string(),
-                location: Some("internal_adapter".to_string()),
-                debug_info: None,
-                is_bug: false,
-            },
+            NestGateError::internal_error("Internal adapter error".to_string(), "test_component"),
         ),
         (
             "config",
-            NestGateError::Configuration {
-                message: "Configuration adapter error".to_string(),
-                config_source: nestgate_core::error::UnifiedConfigSource::Environment,
-                field: Some("adapter_field".to_string()),
-                suggested_fix: Some("Check adapter configuration".to_string()),
-            },
+            NestGateError::configuration_error(
+                "test_field",
+                "Configuration adapter error".to_string(),
+            ),
         ),
     ];
 
@@ -248,7 +240,7 @@ async fn test_adapter_error_handling_consistency() -> Result<()> {
 
         // Test error context tracking
         match &error {
-            NestGateError::Storage { operation, details } => {
+            NestGateError::Storage(_) => {
                 assert!(
                     !operation.is_empty(),
                     "Storage error should have operation for {adapter_type}"
@@ -257,18 +249,19 @@ async fn test_adapter_error_handling_consistency() -> Result<()> {
                     details.contains("adapter"),
                     "Details should mention adapter"
                 );
+                Ok(())
             }
-            NestGateError::Internal { location, .. } => {
+            NestGateError::Internal(_) => {
                 assert!(
                     location.is_some(),
                     "Internal error should have location for {adapter_type}"
                 );
                 assert!(
-                    location.as_ref().unwrap().contains("adapter"),
+                    location.as_ref()?.contains("adapter"),
                     "Location should mention adapter"
                 );
             }
-            NestGateError::Configuration { message, field, .. } => {
+            NestGateError::Configuration(_) => {
                 assert!(
                     !message.is_empty(),
                     "Config error should have message for {adapter_type}"
@@ -302,8 +295,8 @@ async fn test_adapter_concurrent_performance() -> Result<()> {
                 for op_id in 0..operations_per_adapter {
                     // Simulate adapter operations
                     let config = CanonicalConfig {
-                        network: nestgate_core::config::canonical_unified::types::NetworkConfig {
-                            api: nestgate_core::config::canonical_unified::types::ApiServerConfig {
+                        network: nestgate_core::config::NetworkConfig {
+                            api: nestgate_core::config::ApiServerConfig {
                                 port: 8000 + adapter_id as u16,
                                 ..Default::default()
                             },
@@ -315,6 +308,7 @@ async fn test_adapter_concurrent_performance() -> Result<()> {
                     // Simulate adapter processing
                     let result = format!("adapter_{adapter_id}_op_{op_id}");
                     results.push((config, result));
+                    Ok(())
                 }
 
                 results.len()
@@ -360,21 +354,21 @@ async fn test_adapter_configuration_validation() -> Result<()> {
     // Test valid configurations
     let valid_configs = vec![
         CanonicalConfig {
-            storage: nestgate_core::config::canonical_unified::types::StorageConfig {
+            storage: nestgate_core::config::StorageConfig {
                 backend_type: "memory".to_string(),
                 ..Default::default()
             },
             ..Default::default()
         },
         CanonicalConfig {
-            storage: nestgate_core::config::canonical_unified::types::StorageConfig {
+            storage: nestgate_core::config::StorageConfig {
                 backend_type: "filesystem".to_string(),
                 ..Default::default()
             },
             ..Default::default()
         },
         CanonicalConfig {
-            storage: nestgate_core::config::canonical_unified::types::StorageConfig {
+            storage: nestgate_core::config::StorageConfig {
                 backend_type: "hybrid".to_string(),
                 ..Default::default()
             },
@@ -398,6 +392,7 @@ async fn test_adapter_configuration_validation() -> Result<()> {
                 debug_info: None,
                 is_bug: false,
             })?;
+        Ok(())
     }
 
     println!("✅ Adapter configuration validation completed");

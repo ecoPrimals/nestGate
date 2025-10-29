@@ -1,25 +1,23 @@
-//! Universal Data Provider Example
-//!
-//! This module demonstrates how external systems can implement data capabilities
+// Universal Data Provider Example
+//! Model Provider Example functionality and utilities.
+// This module demonstrates how external systems can implement data capabilities
 //! for NestGate without NestGate being coupled to specific providers.
-//!
-//! **ARCHITECTURAL PRINCIPLE**: NestGate defines what it needs (data capabilities),
+//! Model Provider Example functionality and utilities.
+// **ARCHITECTURAL PRINCIPLE**: NestGate defines what it needs (data capabilities),
 //! external providers implement how they provide it.
 
-use async_trait::async_trait;
 use serde_json::Value;
 use std::collections::HashMap;
 use crate::Result;
 
 /// Example of how external systems can provide model data to NestGate
-/// This would be implemented by AI primals like Squirrel, not by NestGate itself
+/// This would be implemented by AI primals like Intelligence, not by NestGate itself
 #[derive(Debug, Clone)]
 pub struct ExternalModelDataProvider {
     pub provider_name: String,
     pub endpoint: String,
     pub capabilities: Vec<String>,
 }
-
 impl ExternalModelDataProvider {
     pub fn new(provider_name: String, endpoint: String) -> Self {
         Self {
@@ -35,13 +33,11 @@ impl ExternalModelDataProvider {
 }
 
 /// Data capability trait that external providers implement
-#[async_trait]
 pub trait DataCapability: Send + Sync {
-    async fn handle_request(&self, request: &DataRequest) -> Result<DataResponse>;
+    fn handle_request(&self, request: &DataRequest) -> impl std::future::Future<Output = Result<DataResponse>> + Send;
     fn supported_capabilities(&self) -> Vec<String>;
     fn provider_info(&self) -> ProviderInfo;
 }
-
 #[derive(Debug, Clone)]
 pub struct DataRequest {
     pub capability_type: String,
@@ -63,14 +59,13 @@ pub struct ProviderInfo {
     pub capabilities: Vec<String>,
 }
 
-#[async_trait]
 impl DataCapability for ExternalModelDataProvider {
     async fn handle_request(&self, request: &DataRequest) -> Result<DataResponse> {
-        // This would be implemented by external AI systems (like Squirrel)
+        // This would be implemented by external AI systems (like Intelligence)
         // NestGate just defines the interface
         Ok(DataResponse {
             data: serde_json::json!({
-                "message": "Model data requests should be handled by AI primals like Squirrel",
+                "message": "Model data requests should be handled by AI primals like Intelligence",
                 "delegation_pattern": "Use universal adapter to route to AI capabilities"
             }),
             metadata: HashMap::new(),
@@ -89,4 +84,3 @@ impl DataCapability for ExternalModelDataProvider {
             capabilities: self.capabilities.clone(),
         }
     }
-} 

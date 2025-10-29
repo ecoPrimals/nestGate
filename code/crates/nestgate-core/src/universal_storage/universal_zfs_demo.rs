@@ -16,7 +16,6 @@ use crate::universal_storage::{
 pub struct UniversalZfsDemo {
     detector: StorageDetector,
 }
-
 impl UniversalZfsDemo {
     /// Create new demo instance
     pub fn new() -> Self {
@@ -33,7 +32,19 @@ impl UniversalZfsDemo {
 
     /// **MAIN DEMO: HOME NAS SETUP**
     /// Automatically configure a home NAS with ZFS features on any available storage
-    pub async fn demo_home_nas_setup(&mut self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub async fn demo_home_nas_setup(&mut self) -> Result<()>   ", 
         println!("🏠 **NESTGATE UNIVERSAL HOME NAS DEMO**");
         println!("=====================================");
         println!();
@@ -42,7 +53,7 @@ impl UniversalZfsDemo {
         println!("🔍 **Step 1: Detecting Available Storage**");
         let detected_storage = self.detector.scan_available_storage().await?;
 
-        println!("Found {} storage systems:", detected_storage.len());
+        println!("Found {detected_storage.len() storage systems:"));
         for (i, storage) in detected_storage.iter().enumerate() {
             println!(
                 "  {}. {} ({:?}) - {:.1} GB - {:.0} MB/s",
@@ -98,7 +109,7 @@ impl UniversalZfsDemo {
             "  • Estimated Cost: ${:.2}/month",
             _config.cost_estimation.monthly_cost_usd
         );
-        println!("  • Redundancy: {:?}", _config.redundancy_strategy);
+        println!("  • Redundancy: {_config.redundancy_strategy:?}");
         println!();
 
         // Step 4: Show implementation plan
@@ -112,7 +123,7 @@ impl UniversalZfsDemo {
                 "  Phase {}: {} ({} min)",
                 phase.phase_number, phase.name, phase.estimated_duration_minutes
             );
-            println!("    {}", phase.description);
+            println!("    {phase.description}");
         }
         println!();
 
@@ -127,7 +138,19 @@ impl UniversalZfsDemo {
 
     /// **CLOUD-NATIVE DEMO**
     /// Show how to set up ZFS-like features on cloud storage
-    pub async fn demo_cloud_native_setup(&mut self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub async fn demo_cloud_native_setup(&mut self) -> Result<()>   {
         println!("☁️  **NESTGATE CLOUD-NATIVE ZFS DEMO**");
         println!("====================================");
         println!();
@@ -151,7 +174,7 @@ impl UniversalZfsDemo {
             return Ok(());
         }
 
-        println!("Found {} cloud storage systems", cloud_storage.len());
+        println!("Found ", cloud_storage.len() cloud storage systems"));
 
         let requirements = StorageRequirements {
             min_throughput_mbps: Some(100.0),   // Good cloud performance
@@ -192,7 +215,19 @@ impl UniversalZfsDemo {
 
     /// **HYBRID DEMO**
     /// Combine local NVMe + cloud storage in a hybrid architecture
-    pub async fn demo_hybrid_setup(&mut self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub async fn demo_hybrid_setup(&mut self) -> Result<()>   {
         println!("🔀 **NESTGATE HYBRID ZFS DEMO**");
         println!("==============================");
         println!();
@@ -215,8 +250,8 @@ impl UniversalZfsDemo {
             })
             .collect();
 
-        println!("🚀 Fast Local Storage: {} systems", local_fast.len());
-        println!("☁️  Cloud Storage: {} systems", cloud_storage.len());
+        println!("🚀 Fast Local Storage: ", local_fast.len() systems"));
+        println!("☁️  Cloud Storage: ", cloud_storage.len() systems"));
         println!();
 
         if !local_fast.is_empty() && !cloud_storage.is_empty() {
@@ -300,7 +335,20 @@ impl UniversalZfsDemo {
     }
 
     /// Show real-world deployment scenarios
-    pub async fn show_deployment_scenarios(&self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub fn show_deployment_scenarios(&self) -> Result<()>   {
         println!("🌍 **REAL-WORLD DEPLOYMENT SCENARIOS**");
         println!("====================================");
         println!();
@@ -346,20 +394,19 @@ impl Default for UniversalZfsDemo {
 /// Run all demos
 pub async fn run_all_demos() -> Result<()> {
     let mut demo = UniversalZfsDemo::new();
-
     demo.demo_home_nas_setup().await?;
     println!();
-    println!("{}", "=".repeat(80));
+    println!("{"=".repeat(80}"));
     println!();
 
     demo.demo_cloud_native_setup().await?;
     println!();
-    println!("{}", "=".repeat(80));
+    println!("{"=".repeat(80}"));
     println!();
 
     demo.demo_hybrid_setup().await?;
     println!();
-    println!("{}", "=".repeat(80));
+    println!("{"=".repeat(80}"));
     println!();
 
     demo.show_deployment_scenarios().await?;

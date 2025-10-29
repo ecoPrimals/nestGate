@@ -1,8 +1,6 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 
-use std::collections::HashMap;
-use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::SystemTime;
 use tokio::sync::{watch, RwLock};
@@ -11,20 +9,17 @@ use uuid::Uuid;
 use super::types::*;
 use super::validators::*;
 use crate::canonical::dynamic_config::ConfigSection;
-use crate::config::canonical_unified::CanonicalConfig;
-use crate::{Result, NestGateError};
+use crate::config::canonical_master::NestGateCanonicalConfig as CanonicalConfig;
+use crate::{Result};
 
 // **CANONICAL MODERNIZATION**: Type aliases to fix clippy complexity errors
 /// Type alias for configuration validator registry
 type ValidatorRegistry =
     Arc<RwLock<HashMap<ConfigSection, Box<dyn ConfigValidator + Send + Sync>>>>;
-
 /// Type alias for configuration storage
 type ConfigStorage = Arc<RwLock<CanonicalConfig>>;
-
 /// Type alias for version history storage
 type VersionHistory = Arc<RwLock<Vec<ConfigVersion>>>;
-
 /// Dynamic configuration manager for canonical configuration
 pub struct DynamicConfigManager {
     /// Current configuration state
@@ -34,16 +29,12 @@ pub struct DynamicConfigManager {
     /// Configuration change watcher
     config_watcher: watch::Sender<CanonicalConfig>,
     /// Path to the configuration file on disk
-    config_path: PathBuf,
     /// Path to the backup directory for configuration snapshots
-    backup_path: PathBuf,
     /// Registered configuration validators for different config sections
     validators: ValidatorRegistry,
 }
-
 impl DynamicConfigManager {
     /// Create a new dynamic configuration manager
-    pub async fn new(config_path: &Path, backup_path: &Path) -> Result<Self> {
         // For now, use default config since from_file is not implemented yet
         let initial_config = CanonicalConfig::default();
         let (tx, _rx) = watch::channel(initial_config.clone());
@@ -66,8 +57,6 @@ impl DynamicConfigManager {
             current_config: Arc::new(RwLock::new(initial_config)),
             version_history: Arc::new(RwLock::new(Vec::new())),
             config_watcher: tx,
-            config_path: config_path.to_path_buf(),
-            backup_path: backup_path.to_path_buf(),
             validators: Arc::new(RwLock::new(validators)),
         })
     }
@@ -88,34 +77,42 @@ impl DynamicConfigManager {
     }
 
     /// Save current configuration to file
-    pub async fn save_config_to_file(&self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn save_config_to_file(&self) -> Result<()>  ", 
         let config = self.current_config.read().await.clone();
         // For now, create a simple TOML save since the config loader is in a different module
-        let content = toml::to_string_pretty(&config).map_err(|e| NestGateError::Internal {
-            message: format!("Failed to serialize configuration: {e}"),
+        let content = toml::to_string_pretty(&config).map_err(|e| NestGateError::internal_error(
             location: Some("DynamicConfigManager::save_config_to_file".to_string()),
-            debug_info: Some(format!("Path: {}", self.config_path.display())),
-            is_bug: false,
-        })?;
+            location: Some(format!("Path: {self.config_path.display()"))))?;
 
         tokio::fs::write(&self.config_path, content)
             .await
             .map_err(|e| NestGateError::Io {
-                operation: "save_config".to_string(),
                 error_message: format!("Failed to write config file: {e}"),
-                resource: Some(self.config_path.to_string_lossy().to_string()),
-                retryable: true,
-            })?;
+                // retryable: true)?;
 
         Ok(())
     }
 
     /// Create a version snapshot of the current configuration
-    pub async fn create_version_snapshot(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn create_version_snapshot(
         &self,
         description: String,
         author: String,
-    ) -> Result<ConfigVersion> {
+    ) -> Result<ConfigVersion>  {
         let current_config = self.current_config.read().await.clone();
         let version = ConfigVersion::new(current_config, description, author);
 
@@ -131,43 +128,49 @@ impl DynamicConfigManager {
     }
 
     /// Apply a single configuration change
-    pub async fn apply_config_change(&self, change: &ConfigChange) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn apply_config_change(&self, change: &ConfigChange) -> Result<()>  {
         // Validate the change first
         let validation_report = self.validate_change_with_validators(change).await?;
         if !validation_report.is_valid {
-            return Err(NestGateError::Configuration {
-                message: format!(
-                    "Configuration change validation failed: {}",
+            return Err(NestGateError::configuration(
+                    "Configuration change validation failed: {)",
                     validation_report
                         .errors
                         .first()
                         .map(|e| &e.message)
                         .unwrap_or(&"Unknown error".to_string())
                 ),
-                config_source: crate::error::core::UnifiedConfigSource::Runtime,
-                field: Some(change.path.clone()),
+                
+                field: change.path.clone(),
                 suggested_fix: validation_report
                     .errors
                     .first()
                     .and_then(|_| validation_report.recommendations.first().cloned()),
-            });
+            );
         }
 
         // Apply the change to the current configuration
         let mut current_config = self.current_config.write().await;
         match change.section {
             ConfigSection::Storage => {
-                if let Ok(storage_config) = serde_json::from_value(change.new_value.clone()) {
+                if let Ok(storage_config) = serde_json::from_value(change.newvalue.clone()) {
                     current_config.storage = storage_config;
                 }
             }
             ConfigSection::Network => {
-                if let Ok(network_config) = serde_json::from_value(change.new_value.clone()) {
+                if let Ok(network_config) = serde_json::from_value(change.newvalue.clone()) {
                     current_config.network = network_config;
                 }
             }
             ConfigSection::Security => {
-                if let Ok(security_config) = serde_json::from_value(change.new_value.clone()) {
+                if let Ok(security_config) = serde_json::from_value(change.newvalue.clone()) {
                     current_config.security = security_config;
                 }
             }
@@ -191,10 +194,17 @@ impl DynamicConfigManager {
     }
 
     /// Validate a configuration change using registered validators
-    pub async fn validate_change_with_validators(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn validate_change_with_validators(
         &self,
         change: &ConfigChange,
-    ) -> Result<ValidationReport> {
+    ) -> Result<ValidationReport>  {
         let validators = self.validators.read().await;
         let current_config = self.current_config.read().await;
 
@@ -268,15 +278,13 @@ impl DynamicConfiguration for DynamicConfigManager {
 
         if let Some(version) = history.iter().find(|v| v.id == version_id) {
             if !version.rollback_available {
-                return Err(NestGateError::Configuration {
-                    message: "Configuration version is not available for rollback".to_string(),
+                return Err(NestGateError::configuration(
                     config_source: crate::error::core::UnifiedConfigSource::File(
                         "version_id".to_string(),
                     ),
-                    field: Some("version_id".to_string()),
-                    suggested_fix: Some("Choose a different version".to_string()),
-                });
-            }
+                    
+                );
+            )
 
             // Apply the rollback
             let mut current_config = self.current_config.write().await;
@@ -292,22 +300,21 @@ impl DynamicConfiguration for DynamicConfigManager {
             );
             Ok(())
         } else {
-            Err(NestGateError::Configuration {
-                message: format!("Configuration version not found: {version_id}"),
+            Err(NestGateError::configuration(
                 config_source: crate::error::core::UnifiedConfigSource::File(
                     "version_id".to_string(),
                 ),
-                field: Some("version_id".to_string()),
-                suggested_fix: Some("Check available versions".to_string()),
+                field: Some("field".to_string()),
+                
             })
         }
     }
 
-    async fn apply_changes_atomic(&self, changes: Vec<ConfigChange>) -> Result<String> {
+    async fn apply_changes_atomic(&self, changes: Vec<ConfigChange>) -> Result<String> ", 
         // Create a snapshot before applying changes
         let snapshot = self
             .create_version_snapshot(
-                format!("Atomic update with {} changes", changes.len()),
+                format!("Atomic update with {changes.len() changes")),
                 "system".to_string(),
             )
             .await?;
@@ -323,13 +330,11 @@ impl DynamicConfiguration for DynamicConfigManager {
         }
 
         if !all_valid {
-            return Err(NestGateError::Configuration {
-                message: "One or more configuration changes failed validation".to_string(),
-                config_source: crate::error::core::UnifiedConfigSource::Runtime,
-                field: None,
-                suggested_fix: Some("Check validation reports and fix issues".to_string()),
-            });
-        }
+            return Err(NestGateError::configuration(
+                
+                
+            );
+        )
 
         // Apply all changes
         for change in &changes {
@@ -388,7 +393,7 @@ impl DynamicConfiguration for DynamicConfigManager {
         // Create a snapshot of current state before import
         let snapshot = self
             .create_version_snapshot(
-                format!("Pre-import snapshot (importing {})", backup.backup_id),
+                format!("Pre-import snapshot (importing {backup.backup_id})"),
                 "system".to_string(),
             )
             .await?;

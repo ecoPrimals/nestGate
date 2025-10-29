@@ -1,4 +1,4 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 //
 // Transparent compression layer that works on any storage backend:
@@ -10,7 +10,6 @@ use std::collections::HashMap;
 
 use crate::error::CanonicalResult as Result;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 // Type aliases for complex compression types
 type CompressionAlgorithmBox = Box<dyn CompressionAlgorithm + Send + Sync>;
@@ -22,7 +21,6 @@ pub struct CompressionEngine {
     default_type: CompressionType,
     min_compression_size: usize,
 }
-
 impl Default for CompressionEngine {
     fn default() -> Self {
         Self::new()
@@ -31,6 +29,7 @@ impl Default for CompressionEngine {
 
 impl CompressionEngine {
     /// Create new compression engine with all supported algorithms
+    #[must_use]
     pub fn new() -> Self {
         let mut algorithms: CompressionAlgorithmMap = HashMap::new();
 
@@ -47,11 +46,23 @@ impl CompressionEngine {
     }
 
     /// Compress data using the specified algorithm
-    pub async fn compress(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub fn compress(
         &self,
         data: &[u8],
         compression_type: CompressionType,
-    ) -> Result<Vec<u8>> {
+    ) -> Result<Vec<u8>>   {
         // Skip compression for small data
         if data.len() < self.min_compression_size {
             return Ok(data.to_vec());
@@ -77,11 +88,23 @@ impl CompressionEngine {
     }
 
     /// Decompress data using the specified algorithm
-    pub async fn decompress(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub fn decompress(
         &self,
         data: &[u8],
         compression_type: CompressionType,
-    ) -> Result<Vec<u8>> {
+    ) -> Result<Vec<u8>>   {
         if compression_type == CompressionType::None {
             return Ok(data.to_vec());
         }
@@ -116,7 +139,20 @@ impl CompressionEngine {
     }
 
     /// Get compression statistics
-    pub async fn get_stats(&self) -> Result<CompressionStats> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+                pub fn get_stats(&self) -> Result<CompressionStats>   {
         Ok(CompressionStats {
             total_original_bytes: 0,
             total_compressed_bytes: 0,
@@ -135,7 +171,6 @@ pub struct CompressionLevelManager {
     zstd_algorithm: ZstdAlgorithm,
     gzip_algorithm: GzipAlgorithm,
 }
-
 impl CompressionLevelManager {
     /// Create a new compression level manager with default levels
     pub fn new() -> Self {
@@ -206,17 +241,15 @@ impl Default for CompressionLevelManager {
     }
 }
 
-// ==================== COMPRESSION ALGORITHMS ====================
+// ==================== SECTION ====================
 
 /// Trait for compression algorithms
 trait CompressionAlgorithm {
     fn compress(&self, data: &[u8]) -> Result<Vec<u8>>;
     fn decompress(&self, data: &[u8]) -> Result<Vec<u8>>;
 }
-
 /// LZ4 compression algorithm implementation
 struct Lz4Algorithm;
-
 impl Lz4Algorithm {
     fn new() -> Self {
         Self
@@ -227,7 +260,7 @@ impl CompressionAlgorithm for Lz4Algorithm {
     fn compress(&self, data: &[u8]) -> Result<Vec<u8>> {
         // In a real implementation, this would use the lz4 crate
         // For now, we'll simulate compression with a simple placeholder
-        let compressed_size = (data.len() as f64 * 0.7) as usize; // Simulate 30% compression
+        let compressed_size = (((data.len() as f64)) * 0.7) as usize; // Simulate 30% compression
         let mut compressed = vec![0u8; compressed_size];
         compressed[..std::cmp::min(data.len(), compressed_size)]
             .copy_from_slice(&data[..std::cmp::min(data.len(), compressed_size)]);
@@ -245,7 +278,6 @@ impl CompressionAlgorithm for Lz4Algorithm {
 struct ZstdAlgorithm {
     level: i32,
 }
-
 impl ZstdAlgorithm {
     fn new(level: i32) -> Self {
         Self {
@@ -262,7 +294,7 @@ impl CompressionAlgorithm for ZstdAlgorithm {
     fn compress(&self, data: &[u8]) -> Result<Vec<u8>> {
         // In a real implementation, this would use the zstd crate
         // Simulate better compression ratio than LZ4
-        let compressed_size = (data.len() as f64 * 0.6) as usize; // Simulate 40% compression
+        let compressed_size = (((data.len() as f64)) * 0.6) as usize; // Simulate 40% compression
         let mut compressed = vec![0u8; compressed_size];
         compressed[..std::cmp::min(data.len(), compressed_size)]
             .copy_from_slice(&data[..std::cmp::min(data.len(), compressed_size)]);
@@ -279,7 +311,6 @@ impl CompressionAlgorithm for ZstdAlgorithm {
 struct GzipAlgorithm {
     level: u32,
 }
-
 impl GzipAlgorithm {
     fn new(level: u32) -> Self {
         Self {
@@ -296,7 +327,7 @@ impl CompressionAlgorithm for GzipAlgorithm {
     fn compress(&self, data: &[u8]) -> Result<Vec<u8>> {
         // In a real implementation, this would use the flate2 crate
         // Simulate standard compression ratio
-        let compressed_size = (data.len() as f64 * 0.65) as usize; // Simulate 35% compression
+        let compressed_size = (((data.len() as f64)) * 0.65) as usize; // Simulate 35% compression
         let mut compressed = vec![0u8; compressed_size];
         compressed[..std::cmp::min(data.len(), compressed_size)]
             .copy_from_slice(&data[..std::cmp::min(data.len(), compressed_size)]);
@@ -309,7 +340,7 @@ impl CompressionAlgorithm for GzipAlgorithm {
     }
 }
 
-// ==================== DATA STRUCTURES ====================
+// ==================== SECTION ====================
 
 #[allow(dead_code)] // Reserved for future compression header implementation
 const COMPRESSION_HEADER_SIZE: usize = 12;
@@ -323,7 +354,6 @@ pub enum CompressionType {
     Zstd = 2,
     Gzip = 3,
 }
-
 /// Configuration for compression engine
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CompressionConfig {
@@ -340,7 +370,6 @@ pub struct CompressionConfig {
     /// GZIP compression level (1-9)
     pub gzip_level: u32,
 }
-
 impl Default for CompressionConfig {
     fn default() -> Self {
         Self {
@@ -374,7 +403,6 @@ pub struct CompressionStats {
     /// Usage count per algorithm
     pub algorithm_usage: HashMap<CompressionType, u64>,
 }
-
 impl CompressionStats {
     /// Calculate compression ratio
     pub fn compression_ratio(&self) -> f64 {
@@ -415,7 +443,6 @@ struct CompressionHeader {
     algorithm: CompressionType,
     original_size: usize,
 }
-
 impl std::fmt::Debug for CompressionEngine {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("CompressionEngine")

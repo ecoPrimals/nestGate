@@ -1,4 +1,4 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 //
 // This module provides a high-performance replacement for the Arc<dyn Fn> based connection
 // pool factory, using zero-cost abstractions and compile-time optimization.
@@ -7,13 +7,13 @@ use crate::NestGateError;
 // **PROVIDES**: 50% performance improvement through direct dispatch
 // **ELIMINATES**: Arc allocation overhead and closure call penalties
 
-use crate::{Result, NestGateError};
+use crate::{Result};
 use crate::zero_cost_migrations::ZeroCostConnectionFactory;
 use std::marker::PhantomData;
 use std::time::{Duration, Instant};
 use tracing::{info, warn};
 
-// ==================== ZERO-COST CONNECTION POOL ====================
+// ==================== SECTION ====================
 
 /// Zero-cost connection pool with compile-time factory specialization
 pub struct ZeroCostConnectionPool<Factory, Connection, const POOL_SIZE: usize = 10>
@@ -29,7 +29,6 @@ where
     /// Phantom data for const generics
     _phantom: PhantomData<()>,
 }
-
 /// Zero-cost pool statistics
 #[derive(Debug, Clone)]
 pub struct ZeroCostPoolStats {
@@ -39,14 +38,13 @@ pub struct ZeroCostPoolStats {
     pub max_pool_size: usize,
     pub connection_failures: u64,
 }
-
 impl<Factory, Connection, const POOL_SIZE: usize> ZeroCostConnectionPool<Factory, Connection, POOL_SIZE>
 where
     Factory: ZeroCostConnectionFactory<Connection>,
     Connection: Clone + Send + Sync + 'static,
 {
     /// Create new connection pool with zero allocation
-    pub const fn new(factory: Factory) -> Self {
+    pub fn new(factory: Factory) -> Self {
         Self {
             factory,
             connections: [const { None }; POOL_SIZE],
@@ -62,7 +60,14 @@ where
     }
 
     /// Get connection with zero overhead - direct factory dispatch
-    pub async fn get_connection(&mut self) -> Result<Connection> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_connection(&mut self) -> Result<Connection>  {
         info!("Acquiring zero-cost connection from pool");
 
         // First, try to reuse an existing connection from the pool
@@ -97,7 +102,7 @@ where
             Err(err) => {
                 self.stats.connection_failures += 1;
                 warn!("Failed to create connection: {:?}", err);
-                Err(NestGateError::Network("Failed to create connection".to_string()))
+                Err(NestGateError::Network("Failed to create connection"))
             }
         }
     }
@@ -122,12 +127,12 @@ where
     }
 
     /// Get pool statistics at compile time
-    pub const fn get_statistics(&self) -> &ZeroCostPoolStats {
+    pub fn get_statistics(&self) -> &ZeroCostPoolStats {
         &self.stats
     }
 
     /// Get pool capacity at compile time
-    pub const fn capacity() -> usize {
+    pub fn capacity() -> usize {
         POOL_SIZE
     }
 
@@ -172,7 +177,14 @@ where
     }
 
     /// Get connection with timeout
-    pub async fn get_connection_with_timeout(&mut self, timeout: Duration) -> Result<Connection> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+                pub fn get_connection_with_timeout(&mut self, timeout: Duration) -> Result<Connection>  {
         let start = Instant::now();
         
         // Try to get connection with timeout
@@ -182,13 +194,13 @@ where
             }
             _ = tokio::time::sleep(timeout) => {
                 warn!("Connection acquisition timed out after {:?}", timeout);
-                Err(NestGateError::Network("Connection timeout".to_string()))
+                Err(NestGateError::Network("Connection timeout"))
             }
         }
     }
 }
 
-// ==================== ZERO-COST BUILDER PATTERN ====================
+// ==================== SECTION ====================
 
 /// Zero-cost connection pool builder with compile-time configuration
 pub struct ZeroCostConnectionPoolBuilder<Factory, Connection, const POOL_SIZE: usize = 10>
@@ -198,14 +210,13 @@ where
     factory: Option<Factory>,
     _phantom: PhantomData<Connection>,
 }
-
 impl<Factory, Connection, const POOL_SIZE: usize> ZeroCostConnectionPoolBuilder<Factory, Connection, POOL_SIZE>
 where
     Factory: ZeroCostConnectionFactory<Connection>,
     Connection: Clone + Send + Sync + 'static,
 {
     /// Create new builder
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             factory: None,
             _phantom: PhantomData,
@@ -213,33 +224,40 @@ where
     }
 
     /// Set connection factory with zero overhead
+    #[must_use]
     pub fn with_factory(mut self, factory: Factory) -> Self {
         self.factory = Some(factory);
         self
     }
 
     /// Build the connection pool with compile-time optimization
-    pub fn build(self) -> Result<ZeroCostConnectionPool<Factory, Connection, POOL_SIZE>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn build(self) -> Result<ZeroCostConnectionPool<Factory, Connection, POOL_SIZE>>  {
         let factory = self.factory.ok_or_else(|| {
             NestGateError::Configuration("Factory is required for connection pool".to_string())
-        })?;
+        )?;
 
         Ok(ZeroCostConnectionPool::new(factory))
     }
 }
 
-// ==================== PRACTICAL IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 /// Zero-cost TCP connection factory implementation
 pub struct ZeroCostTcpConnectionFactory {
-    address: String,
+    endpoint: String,
     port: u16,
     connection_timeout: Duration,
 }
-
 impl ZeroCostTcpConnectionFactory {
     /// Create new TCP connection factory
-    pub fn new(address: String, port: u16, connection_timeout: Duration) -> Self {
+    pub fn new(endpoint: String, port: u16, connection_timeout: Duration) -> Self {
         Self {
             address,
             port,
@@ -251,24 +269,23 @@ impl ZeroCostTcpConnectionFactory {
 /// TCP connection wrapper
 #[derive(Debug, Clone)]
 pub struct TcpConnection {
-    pub address: String,
+    pub endpoint: String,
     pub port: u16,
     pub connected_at: Instant,
     pub connection_id: u64,
 }
-
 impl ZeroCostConnectionFactory<TcpConnection> for ZeroCostTcpConnectionFactory {
     type Error = NestGateError;
 
     async fn create_connection(&self) -> Result<TcpConnection, Self::Error> {
         // Direct TCP connection creation - no Arc<dyn Fn> overhead
-        info!("Creating zero-cost TCP connection to {}:{}", self.address, self.port);
+        info!("Creating zero-cost TCP connection to {}:{}", self.endpoint, self.port);
         
         // Simulate connection creation (in real implementation, this would use tokio::net::TcpStream)
         tokio::time::sleep(Duration::from_millis(10)).await;
         
         Ok(TcpConnection {
-            address: self.address.clone(),
+            endpoint: self.endpoint.clone(),
             port: self.port,
             connected_at: Instant::now(),
             connection_id: fastrand::u64(..),
@@ -284,15 +301,14 @@ impl ZeroCostConnectionFactory<TcpConnection> for ZeroCostTcpConnectionFactory {
     }
 }
 
-// ==================== PERFORMANCE COMPARISON ====================
+// ==================== SECTION ====================
 
 /// Performance benchmarking utilities
 pub mod performance {
     use super::*;
     use std::sync::Arc;
-
     /// Benchmark zero-cost connection pool vs traditional Arc<dyn Fn> version
-    pub async fn benchmark_connection_pool_operations() -> (u64, u64, f64) {
+    pub fn benchmark_connection_pool_operations() -> (u64, u64, f64) {
         // Zero-cost connection pool
         let factory = ZeroCostTcpConnectionFactory::new("127.0.0.1".to_string(), 8080, Duration::from_secs(30));
         let mut zero_cost_pool = ZeroCostConnectionPool::<_, _, 100>::new(factory);
@@ -302,12 +318,12 @@ pub mod performance {
             // Simulate Arc<dyn Fn> overhead
             std::thread::sleep(Duration::from_nanos(200));
             Ok(TcpConnection {
-                address: "127.0.0.1".to_string(),
+                endpoint: "127.0.0.1".to_string(),
                 port: 8080,
                 connected_at: Instant::now(),
                 connection_id: fastrand::u64(..),
             })
-        });
+        );
 
         // Benchmark zero-cost operations
         let start = Instant::now();
@@ -333,23 +349,21 @@ pub mod performance {
     /// Display performance comparison results
     pub fn display_connection_pool_results(zero_cost_ns: u64, traditional_ns: u64, improvement: f64) {
         println!("🚀 Zero-Cost Connection Pool Performance Results:");
-        println!("   Zero-cost time: {} ns", zero_cost_ns);
-        println!("   Traditional time: {} ns", traditional_ns);
-        println!("   Performance improvement: {:.1}%", improvement);
+        println!("   Zero-cost time: {zero_cost_ns} ns");
+        println!("   Traditional time: {traditional_ns} ns");
+        println!("   Performance improvement: {:.1}%");
         println!("   Arc<dyn Fn> overhead eliminated: 100%");
         println!("   Memory allocation reduction: ~60%");
     }
 }
 
-// ==================== MIGRATION GUIDE ====================
+// ==================== SECTION ====================
 
 /// Migration guide from Arc<dyn Fn> connection pool to zero-cost version
-pub const CONNECTION_POOL_MIGRATION_GUIDE: &str = r#"
+pub const CONNECTION_POOL_MIGRATION_GUIDE: &str = r"
 🔄 CONNECTION POOL ZERO-COST MIGRATION GUIDE
-
 ## Before (Arc<dyn Fn> Runtime Overhead)
 ```rust
-use std::sync::Arc;
 
 pub type ConnectionFactory<T> = Arc<dyn Fn() -> Result<T> + Send + Sync>;
 pub type HealthCheckFn<T> = Arc<dyn Fn(&T) -> Result<()> + Send + Sync>;
@@ -361,6 +375,7 @@ pub struct ConnectionPool<T> {
 }
 
 impl<T> ConnectionPool<T> {
+    #[must_use]
     pub fn new(factory: ConnectionFactory<T>) -> Self {
         Self {
             factory,
@@ -369,7 +384,12 @@ impl<T> ConnectionPool<T> {
         }
     }
     
-    pub async fn get_connection(&mut self) -> Result<T> {
+    /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+                pub fn get_connection(&mut self) -> Result<T>  {
         // Arc<dyn Fn> call overhead
         (self.factory)()
     }
@@ -378,7 +398,6 @@ impl<T> ConnectionPool<T> {
 
 ## After (Zero-Cost Direct Composition)
 ```rust
-use crate::zero_cost_migrations::ZeroCostConnectionFactory;
 
 pub struct ZeroCostConnectionPool<Factory, Connection, const POOL_SIZE: usize>
 where
@@ -393,14 +412,19 @@ impl<Factory, Connection, const POOL_SIZE: usize>
 where
     Factory: ZeroCostConnectionFactory<Connection>,
 {
-    pub const fn new(factory: Factory) -> Self {
+    pub fn new(factory: Factory) -> Self {
         Self {
             factory,
             connections: [const { None }; POOL_SIZE],
         }
     }
     
-    pub async fn get_connection(&mut self) -> Result<Connection> {
+    /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub async fn get_connection(&mut self) -> Result<Connection>  {
         // Direct method call - zero overhead
         self.factory.create_connection().await
     }
@@ -419,9 +443,9 @@ where
 - ✅ 60% memory overhead reduction
 - ✅ 100% elimination of Arc<dyn Fn> calls
 - ✅ Compile-time pool sizing and validation
-"#;
+";
 
-// ==================== TYPE ALIASES ====================
+// ==================== SECTION ====================
 
 /// Common zero-cost connection pool configurations
 pub type StandardTcpConnectionPool = ZeroCostConnectionPool<ZeroCostTcpConnectionFactory, TcpConnection, 50>;

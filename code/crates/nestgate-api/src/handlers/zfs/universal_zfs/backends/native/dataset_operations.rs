@@ -14,7 +14,6 @@ use super::core::NativeZfsService;
 /// List all ZFS datasets (zero-copy optimized)
 pub async fn list_datasets(service: &NativeZfsService) -> UniversalZfsResult<Vec<DatasetInfo>> {
     info!("Listing ZFS datasets");
-
     // Execute `zfs list -H -o name,used,available,referenced,mountpoint,type`
     let output = service
         .execute_zfs_command(&[
@@ -58,14 +57,12 @@ fn parse_dataset_line(line: &str) -> Option<DatasetInfo> {
         None
     }
 }
-
 /// Get information about a specific dataset (zero-copy optimized)
-pub async fn get_dataset(
+pub fn get_dataset(
     service: &NativeZfsService,
     name: &str,
 ) -> UniversalZfsResult<Option<DatasetInfo>> {
     info!("Getting dataset info for: {}", name);
-
     // Execute `zfs list -H -o name,used,available,referenced,mountpoint,type dataset_name`
     let output = service
         .execute_zfs_command(&[
@@ -83,7 +80,6 @@ pub async fn get_dataset(
             if line.is_empty() {
                 return Ok(None);
             }
-
             Ok(parse_dataset_line(line))
         }
         Err(_) => Ok(None), // Dataset doesn't exist
@@ -91,12 +87,11 @@ pub async fn get_dataset(
 }
 
 /// Create a new ZFS dataset (zero-copy optimized)
-pub async fn create_dataset(
+pub fn create_dataset(
     service: &NativeZfsService,
     config: &DatasetConfig,
 ) -> UniversalZfsResult<DatasetInfo> {
     info!("Creating dataset: {}", config.name);
-
     // Build zfs create command with properties
     let mut args = vec!["create"];
 
@@ -104,7 +99,7 @@ pub async fn create_dataset(
     let property_strings: Vec<String> = config
         .properties
         .iter()
-        .map(|(key, value)| format!("{key}={value}"))
+        .map(|(key, value)| format!("{}={}", key, value)
         .collect();
 
     for (i, (_, _)) in config.properties.iter().enumerate() {
@@ -124,9 +119,8 @@ pub async fn create_dataset(
 }
 
 /// Destroy a ZFS dataset
-pub async fn destroy_dataset(service: &NativeZfsService, name: &str) -> UniversalZfsResult<()> {
+pub fn destroy_dataset(service: &NativeZfsService, name: &str) -> UniversalZfsResult<()> {
     info!("Destroying dataset: {}", name);
-
     // Execute `zfs destroy dataset_name`
     service.execute_zfs_command(&["destroy", name]).await?;
 
@@ -134,12 +128,11 @@ pub async fn destroy_dataset(service: &NativeZfsService, name: &str) -> Universa
 }
 
 /// Get dataset properties (zero-copy optimized)
-pub async fn get_dataset_properties(
+pub fn get_dataset_properties(
     service: &NativeZfsService,
     name: &str,
 ) -> UniversalZfsResult<HashMap<String, String>> {
     info!("Getting properties for dataset: {}", name);
-
     // Execute `zfs get -H -o property,value all dataset_name`
     let output = service
         .execute_zfs_command(&["get", "-H", "-o", "property,value", "all", name])
@@ -157,16 +150,15 @@ pub async fn get_dataset_properties(
 }
 
 /// Set dataset properties (zero-copy optimized)
-pub async fn set_dataset_properties(
+pub fn set_dataset_properties(
     service: &NativeZfsService,
     name: &str,
     properties: &HashMap<String, String>,
 ) -> UniversalZfsResult<()> {
     info!("Setting properties for dataset: {}", name);
-
     // Set each property individually
-    for (key, value) in properties {
-        let property_arg = format!("{key}={value}");
+    for (key, _value) in properties {
+        let property_arg = format!("{key}=self.base_url");
         service
             .execute_zfs_command(&["set", &property_arg, name])
             .await?;
@@ -180,7 +172,6 @@ fn parse_size(size_str: &str) -> Option<u64> {
     if size_str == "-" {
         return Some(0);
     }
-
     let size_str = size_str.trim();
     if size_str.is_empty() {
         return None;

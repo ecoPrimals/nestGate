@@ -1,8 +1,8 @@
 //! # Optimized Performance Module
-//!
-//! **100% SAFE RUST** - High performance optimizations using only safe code
-//!
-//! This module provides zero-copy buffer operations and optimized data structures
+//! Module definitions and exports.
+// **100% SAFE RUST** - High performance optimizations using only safe code
+//! Module definitions and exports.
+// This module provides zero-copy buffer operations and optimized data structures
 //! without any unsafe code blocks, achieving high performance through:
 //! - Compile-time optimizations
 //! - Smart use of Rust's type system
@@ -27,15 +27,15 @@
 // pub type LargeBuffer = CompletlySafeBuffer<1024>;
 // pub type NetworkBuffer = CompletlySafeBuffer<9216>;
 // pub type StorageBuffer = CompletlySafeBuffer<65536>;
-// pub type ZfsBuffer = CompletlySafeBuffer<131072>;
+// pub type ZfsBuffer = CompletlySafeBuffer<131_072>;
 
 // String builder aliases (100% safe)
 // pub type SmallStringBuilder = CompletlySafeStringBuilder<64>;
 // pub type MediumStringBuilder = CompletlySafeStringBuilder<256>;
 // pub type LargeStringBuilder = CompletlySafeStringBuilder<1024>;
 
-/// **PERFORMANCE VALIDATION**
-/// Buffer size validation at compile time
+// **PERFORMANCE VALIDATION**
+// Buffer size validation at compile time
 const _: () = {
     // Buffer size validation is handled by the type system
     // These assertions are not needed as the type system ensures correctness

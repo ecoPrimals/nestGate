@@ -1,4 +1,4 @@
-//! Core Alert Types and Enums
+// Core Alert Types and Enums
 
 use serde::{Deserialize, Serialize};
 use std::time::{Duration, SystemTime};
@@ -11,15 +11,14 @@ pub enum AlertSeverity {
     Error,
     Critical,
 }
-
 impl AlertSeverity {
     /// Get numeric value for comparison
     pub fn level(&self) -> u8 {
         match self {
-            AlertSeverity::Info => 0,
-            AlertSeverity::Warning => 1,
-            AlertSeverity::Error => 2,
-            AlertSeverity::Critical => 3,
+            Self::Info => 0,
+            Self::Warning => 1,
+            Self::Error => 2,
+            Self::Critical => 3,
         }
     }
 
@@ -59,7 +58,6 @@ pub enum AlertCondition {
     /// Custom condition with expression
     Custom { expression: String },
 }
-
 /// Threshold comparison operators
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ThresholdOperator {
@@ -70,7 +68,6 @@ pub enum ThresholdOperator {
     Equal,
     NotEqual,
 }
-
 /// Active alert instance
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Alert {
@@ -95,7 +92,6 @@ pub struct Alert {
     /// Number of times this alert has been triggered
     pub trigger_count: u32,
 }
-
 /// Alert status states
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum AlertStatus {

@@ -1,0 +1,213 @@
+# 🏛️ **NESTGATE CANONICAL MASTER CONFIGURATION**
+#
+# Single source of truth for all NestGate configuration.
+# **CANONICAL MODERNIZATION COMPLETE**: Unified configuration system.
+#
+# This file replaces all fragmented configuration files and provides
+# a comprehensive, well-structured configuration for all NestGate components.
+
+[system]
+# Core system configuration
+instance_name = "nestgate-production"
+environment = "production"
+version = "2.0.0-canonical"
+log_level = "info"
+max_connections = 10000
+worker_threads = 16
+enable_metrics = true
+enable_tracing = true
+startup_timeout_seconds = 30
+shutdown_timeout_seconds = 10
+
+[system.performance]
+# Performance optimization settings
+zero_copy_enabled = true
+native_async_enabled = true
+memory_pool_size_mb = 1024
+cpu_affinity_enabled = true
+numa_aware = true
+prefetch_enabled = true
+
+[network]
+# Network configuration
+
+[network.api]
+# Main API server configuration
+host = "0.0.0.0"
+port = 8443
+enable_tls = true
+tls_cert_path = "/etc/nestgate/certs/server.crt"
+tls_key_path = "/etc/nestgate/certs/server.key"
+tls_ca_path = "/etc/nestgate/certs/ca.crt"
+request_timeout_seconds = 30
+max_request_size_mb = 100
+keepalive_timeout_seconds = 60
+max_concurrent_requests = 1000
+
+[network.protocols]
+# Storage protocol configuration
+nfs_enabled = true
+nfs_port = 2049
+smb_enabled = true
+smb_port = 445
+iscsi_enabled = true
+iscsi_port = 3260
+ftp_enabled = false
+sftp_enabled = true
+sftp_port = 22
+
+[network.cluster]
+# Cluster networking (if clustering enabled)
+enabled = false
+bind_address = "0.0.0.0:8444"
+cluster_name = "nestgate-cluster"
+discovery_enabled = true
+discovery_multicast = "224.0.0.1:8445"
+election_timeout_ms = 5000
+heartbeat_interval_ms = 1000
+max_missed_heartbeats = 3
+encryption_enabled = true
+
+[storage]
+# Core storage configuration
+backend_type = "zfs_native"
+data_path = "/data/nestgate"
+backup_path = "/backup/nestgate"
+temp_path = "/tmp/nestgate"
+max_file_size_gb = 100
+compression_enabled = true
+deduplication_enabled = true
+snapshot_enabled = true
+
+[storage.zfs]
+# ZFS-specific configuration
+pool_name = "nestgate-pool"
+dataset_name = "nestgate-data"
+compression = "lz4"
+deduplication = true
+encryption = "aes-256-gcm"
+checksum = "sha256"
+atime = false
+recordsize = "128K"
+command_timeout_seconds = 30
+use_sudo = true
+auto_scrub_enabled = true
+scrub_interval_days = 7
+
+[storage.zfs.pools]
+# ZFS pool configuration
+auto_create = false
+default_pool = "nestgate-pool"
+raid_level = "raidz2"
+spare_devices = 1
+cache_devices = []
+log_devices = []
+
+[storage.zfs.snapshots]
+# ZFS snapshot configuration
+auto_snapshot = true
+snapshot_interval_hours = 4
+retention_days = 30
+retention_weeks = 12
+retention_months = 12
+retention_years = 7
+
+[storage.nas]
+# NAS functionality configuration
+shares_enabled = true
+user_quotas_enabled = true
+group_quotas_enabled = true
+access_control_enabled = true
+audit_logging_enabled = true
+
+[security]
+# Security configuration (basic - complex security delegated to BearDog)
+encryption_at_rest = true
+encryption_in_transit = true
+authentication_required = true
+authorization_enabled = true
+audit_logging = true
+session_timeout_minutes = 30
+
+[security.basic_encryption]
+# Basic encryption settings (complex encryption delegated to BearDog primal)
+algorithm = "aes-256-gcm"
+key_rotation_interval_days = 90
+compression_before_encryption = true
+
+[monitoring]
+# Monitoring and observability
+metrics_enabled = true
+metrics_port = 9090
+metrics_path = "/metrics"
+tracing_enabled = true
+tracing_endpoint = "http://jaeger:14268/api/traces"
+logging_structured = true
+logging_format = "json"
+
+[monitoring.health_checks]
+# Health check configuration
+enabled = true
+interval_seconds = 30
+timeout_seconds = 5
+failure_threshold = 3
+success_threshold = 1
+
+[performance]
+# Performance optimization
+cache_enabled = true
+cache_size_mb = 512
+cache_ttl_seconds = 300
+connection_pooling = true
+max_pool_size = 100
+min_pool_size = 10
+prefetch_enabled = true
+compression_enabled = true
+
+[universal_adapter]
+# Universal adapter configuration for primal delegation
+enabled = true
+timeout_seconds = 30
+retry_attempts = 3
+circuit_breaker_enabled = true
+
+[universal_adapter.primals]
+# DEPRECATED: Hardcoded primal endpoints replaced with universal adapter discovery
+# Primal service endpoints for delegation
+# squirrel_ai_endpoint = "http://squirrel:8080"              # Use universal_adapter.artificial_intelligence discovery
+# beardog_security_endpoint = "http://beardog:8443"          # Use universal_adapter.security discovery  
+# songbird_orchestration_endpoint = "http://songbird:8444"   # Use universal_adapter.orchestration discovery
+
+# ✅ MODERN ENDPOINT DISCOVERY - Dynamic capability-based routing
+[endpoint_discovery]
+enabled = true
+discovery_methods = ["environment", "network_scan", "service_registry"]
+discovery_timeout_ms = 5000
+health_check_interval_secs = 60
+auto_failover_enabled = true
+
+[universal_adapter.capabilities]
+# Capability delegation settings
+intelligence_delegation = true
+security_delegation = true
+orchestration_delegation = true
+fallback_enabled = true
+
+[development]
+# Development and testing configuration
+debug_enabled = false
+mock_services_enabled = false
+test_data_enabled = false
+profiling_enabled = false
+hot_reload_enabled = false
+
+[development.testing]
+# Testing configuration
+integration_tests_enabled = true
+performance_tests_enabled = true
+chaos_testing_enabled = false
+load_testing_enabled = false
+
+# 🏛️ **CANONICAL MODERNIZATION COMPLETE**
+# This configuration provides a single, comprehensive source of truth
+# for all NestGate functionality, replacing fragmented configuration files.

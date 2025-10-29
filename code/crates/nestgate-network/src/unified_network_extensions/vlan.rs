@@ -11,7 +11,6 @@ pub struct NetworkVlanSettings {
     /// Default VLAN ID
     pub default_vlan_id: u16,
 }
-
 impl Default for NetworkVlanSettings {
     fn default() -> Self {
         Self {

@@ -10,7 +10,7 @@
 //!
 //! **Status**: Production-validated excellence demonstration
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId};
+use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use std::time::{Duration, Instant};
 use tokio::runtime::Runtime;
 
@@ -71,7 +71,7 @@ impl ModernAsyncService for ModernService {
         let name = self.name.clone();
         let processing_time = self.processing_time;
         let data_len = data.len();
-        
+
         async move {
             // Zero-cost native async - no Future boxing overhead
             tokio::time::sleep(processing_time).await;
@@ -102,19 +102,19 @@ impl ModernAsyncService for ModernService {
 
 fn benchmark_nestgate_async_migration(c: &mut Criterion) {
     let rt = Runtime::new().unwrap();
-    
+
     let legacy_service = LegacyService {
         name: "NestGate-Legacy".to_string(),
         processing_time: Duration::from_micros(500),
     };
-    
+
     let modern_service = ModernService {
         name: "NestGate-Modern".to_string(),
         processing_time: Duration::from_micros(300), // 40% faster
     };
 
     let mut group = c.benchmark_group("NestGate Async Migration");
-    
+
     // Legacy async_trait pattern
     group.bench_function("Legacy async_trait", |b| {
         b.to_async(&rt).iter(|| async {
@@ -122,7 +122,7 @@ fn benchmark_nestgate_async_migration(c: &mut Criterion) {
             black_box(result);
         });
     });
-    
+
     // Modern zero-cost pattern
     group.bench_function("Modern native async", |b| {
         b.to_async(&rt).iter(|| async {
@@ -130,7 +130,7 @@ fn benchmark_nestgate_async_migration(c: &mut Criterion) {
             black_box(result);
         });
     });
-    
+
     group.finish();
 }
 
@@ -138,14 +138,14 @@ fn benchmark_nestgate_async_migration(c: &mut Criterion) {
 
 fn benchmark_songbird_dual_trait_pattern(c: &mut Criterion) {
     let rt = Runtime::new().unwrap();
-    
+
     let modern_service = ModernService {
         name: "Songbird-Universal".to_string(),
         processing_time: Duration::from_micros(200), // 60% faster than legacy
     };
 
     let mut group = c.benchmark_group("Songbird Dual-Trait Architecture");
-    
+
     // Zero-cost primary path
     group.bench_function("Zero-cost primary path", |b| {
         b.to_async(&rt).iter(|| async {
@@ -154,7 +154,7 @@ fn benchmark_songbird_dual_trait_pattern(c: &mut Criterion) {
             black_box((health, metrics));
         });
     });
-    
+
     // Dynamic dispatch compatibility path (when needed)
     group.bench_function("Dynamic dispatch compatibility", |b| {
         b.to_async(&rt).iter(|| async {
@@ -164,7 +164,7 @@ fn benchmark_songbird_dual_trait_pattern(c: &mut Criterion) {
             black_box((health, metrics));
         });
     });
-    
+
     group.finish();
 }
 
@@ -172,7 +172,7 @@ fn benchmark_songbird_dual_trait_pattern(c: &mut Criterion) {
 
 fn benchmark_ecosystem_throughput(c: &mut Criterion) {
     let rt = Runtime::new().unwrap();
-    
+
     let services = vec![
         ModernService {
             name: "NestGate-ZFS".to_string(),
@@ -189,7 +189,7 @@ fn benchmark_ecosystem_throughput(c: &mut Criterion) {
     ];
 
     let mut group = c.benchmark_group("Ecosystem Throughput");
-    
+
     for service_count in [1, 5, 10, 20].iter() {
         group.bench_with_input(
             BenchmarkId::new("Concurrent Services", service_count),
@@ -197,7 +197,7 @@ fn benchmark_ecosystem_throughput(c: &mut Criterion) {
             |b, &service_count| {
                 b.to_async(&rt).iter(|| async {
                     let mut handles = Vec::new();
-                    
+
                     for i in 0..service_count {
                         let service = &services[i % services.len()];
                         let handle = tokio::spawn(async move {
@@ -207,42 +207,50 @@ fn benchmark_ecosystem_throughput(c: &mut Criterion) {
                         });
                         handles.push(handle);
                     }
-                    
+
                     let results = futures::future::join_all(handles).await;
                     black_box(results);
                 });
             },
         );
     }
-    
+
     group.finish();
 }
 
 // ==================== CONFIGURATION UNIFICATION VALIDATION ====================
 
 fn benchmark_configuration_performance(c: &mut Criterion) {
-    use std::collections::HashMap;
     use serde_json;
-    
+    use std::collections::HashMap;
+
     // Simulate fragmented configuration (old approach)
-    let fragmented_configs = (0..100).map(|i| {
-        let mut config = HashMap::new();
-        config.insert(format!("service_{}", i), format!("config_value_{}", i));
-        config.insert(format!("timeout_{}", i), i.to_string());
-        config.insert(format!("enabled_{}", i), (i % 2 == 0).to_string());
-        config
-    }).collect::<Vec<_>>();
-    
+    let fragmented_configs = (0..100)
+        .map(|i| {
+            let mut config = HashMap::new();
+            config.insert(format!("service_{}", i), format!("config_value_{}", i));
+            config.insert(format!("timeout_{}", i), i.to_string());
+            config.insert(format!("enabled_{}", i), (i % 2 == 0).to_string());
+            config
+        })
+        .collect::<Vec<_>>();
+
     // Simulate unified configuration (new approach)
     let mut unified_config = HashMap::new();
     for i in 0..100 {
-        unified_config.insert(format!("services.service_{}.value", i), format!("config_value_{}", i));
+        unified_config.insert(
+            format!("services.service_{}.value", i),
+            format!("config_value_{}", i),
+        );
         unified_config.insert(format!("services.service_{}.timeout", i), i.to_string());
-        unified_config.insert(format!("services.service_{}.enabled", i), (i % 2 == 0).to_string());
+        unified_config.insert(
+            format!("services.service_{}.enabled", i),
+            (i % 2 == 0).to_string(),
+        );
     }
 
     let mut group = c.benchmark_group("Configuration Performance");
-    
+
     group.bench_function("Fragmented Config Access", |b| {
         b.iter(|| {
             let mut total = 0;
@@ -256,7 +264,7 @@ fn benchmark_configuration_performance(c: &mut Criterion) {
             black_box(total);
         });
     });
-    
+
     group.bench_function("Unified Config Access", |b| {
         b.iter(|| {
             let mut total = 0;
@@ -268,7 +276,7 @@ fn benchmark_configuration_performance(c: &mut Criterion) {
             black_box(total);
         });
     });
-    
+
     group.finish();
 }
 
@@ -276,7 +284,7 @@ fn benchmark_configuration_performance(c: &mut Criterion) {
 
 fn benchmark_memory_efficiency(c: &mut Criterion) {
     let rt = Runtime::new().unwrap();
-    
+
     // Simulate Arc<dyn> pattern (when appropriate)
     let dynamic_services: Vec<Box<dyn LegacyAsyncService + Send + Sync>> = vec![
         Box::new(LegacyService {
@@ -288,7 +296,7 @@ fn benchmark_memory_efficiency(c: &mut Criterion) {
             processing_time: Duration::from_micros(300),
         }),
     ];
-    
+
     // Zero-cost static dispatch
     let static_services = vec![
         ModernService {
@@ -302,7 +310,7 @@ fn benchmark_memory_efficiency(c: &mut Criterion) {
     ];
 
     let mut group = c.benchmark_group("Memory Efficiency");
-    
+
     group.bench_function("Dynamic Dispatch Pattern", |b| {
         b.to_async(&rt).iter(|| async {
             let mut results = Vec::new();
@@ -313,7 +321,7 @@ fn benchmark_memory_efficiency(c: &mut Criterion) {
             black_box(results);
         });
     });
-    
+
     group.bench_function("Static Dispatch Pattern", |b| {
         b.to_async(&rt).iter(|| async {
             let mut results = Vec::new();
@@ -324,7 +332,7 @@ fn benchmark_memory_efficiency(c: &mut Criterion) {
             black_box(results);
         });
     });
-    
+
     group.finish();
 }
 
@@ -332,9 +340,9 @@ fn benchmark_memory_efficiency(c: &mut Criterion) {
 
 fn benchmark_ecosystem_excellence_summary(c: &mut Criterion) {
     let rt = Runtime::new().unwrap();
-    
+
     let mut group = c.benchmark_group("Ecosystem Excellence Summary");
-    
+
     // Comprehensive ecosystem benchmark
     group.bench_function("Full Ecosystem Simulation", |b| {
         b.to_async(&rt).iter(|| async {
@@ -343,30 +351,30 @@ fn benchmark_ecosystem_excellence_summary(c: &mut Criterion) {
                 name: "NestGate-Production".to_string(),
                 processing_time: Duration::from_micros(150),
             };
-            
+
             // Songbird: Service orchestration
             let songbird = ModernService {
                 name: "Songbird-Production".to_string(),
                 processing_time: Duration::from_micros(100),
             };
-            
+
             // BiomeOS: System services
             let biomeos = ModernService {
                 name: "BiomeOS-Production".to_string(),
                 processing_time: Duration::from_micros(200),
             };
-            
+
             // Simulate full ecosystem interaction
             let (nestgate_health, songbird_metrics, biomeos_result) = tokio::join!(
                 nestgate.health_check(),
                 songbird.get_metrics(),
                 biomeos.process_request("system_request")
             );
-            
+
             black_box((nestgate_health, songbird_metrics, biomeos_result));
         });
     });
-    
+
     group.finish();
 }
 
@@ -396,7 +404,7 @@ EXPECTED BENCHMARK RESULTS:
 
 🎯 Songbird Dual-Trait Pattern:
 - Zero-cost primary:      ~200-300ns per operation
-- Dynamic compatibility:  ~300-400ns per operation  
+- Dynamic compatibility:  ~300-400ns per operation
 - Improvement:            60-85% faster than legacy ✅
 
 🎯 Ecosystem Throughput:
@@ -419,4 +427,4 @@ OVERALL ECOSYSTEM PERFORMANCE:
 🏆 40-85% improvement across all components
 🏆 World-class Rust architecture validated
 🏆 Production-ready performance confirmed
-*/ 
+*/

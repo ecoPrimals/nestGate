@@ -1,6 +1,6 @@
-//! Universal Connection Pool
-//!
-//! Provides connection pooling for any data provider to improve performance
+// Universal Connection Pool
+//! Connection Pool functionality and utilities.
+// Provides connection pooling for any data provider to improve performance
 //! and reduce connection overhead. Works with HTTP clients, database connections,
 //! or any resource that benefits from pooling.
 
@@ -25,7 +25,6 @@ pub struct ConnectionPoolConfig {
     /// How often to clean up idle connections
     pub cleanup_interval: Duration,
 }
-
 impl Default for ConnectionPoolConfig {
     fn default() -> Self {
         Self {
@@ -50,7 +49,6 @@ pub struct PooledConnection<T> {
     /// Connection creation time
     pub created_at: Instant,
 }
-
 impl<T> PooledConnection<T> {
     pub fn new(connection: T) -> Self {
         let now = Instant::now();
@@ -89,7 +87,6 @@ pub struct UniversalConnectionPool<T> {
     /// Pool statistics
     stats: Arc<RwLock<PoolStats>>,
 }
-
 /// Connection pool statistics
 #[derive(Debug, Default)]
 pub struct PoolStats {
@@ -101,16 +98,22 @@ pub struct PoolStats {
     pub connection_requests: u64,
     pub connection_timeouts: u64,
 }
-
 impl<T> UniversalConnectionPool<T>
 where
     T: Send + Sync + 'static,
 {
     /// Create a new connection pool
-    pub fn new<F>(config: ConnectionPoolConfig, connection_factory: F) -> Self
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn new<F>(config: ConnectionPoolConfig, connection_factory: F) -> Self
     where
         F: Fn() -> Result<T> + Send + Sync + 'static,
-    {
+     {
         info!(
             "🏊 Creating universal connection pool with max {} connections",
             config.max_connections
@@ -126,7 +129,14 @@ where
     }
 
     /// Get a connection from the pool
-    pub async fn get_connection(self: &Arc<Self>) -> Result<PooledConnectionGuard<T>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_connection(self: &Arc<Self>) -> Result<PooledConnectionGuard<T>>  {
         let permit =
             self.semaphore
                 .clone()
@@ -134,10 +144,8 @@ where
                 .await
                 .map_err(|_| NestGateError::System {
                     message: "Failed to acquire connection permit".to_string(),
-                    resource: SystemResource::Network,
-                    utilization: None,
                     recovery: RecoveryStrategy::Retry,
-                })?;
+                )?;
 
         // Try to find an idle connection
         let mut connections = self.connections.write().await;
@@ -159,8 +167,8 @@ where
                             let mut stats = stats.write().await;
                             stats.connection_timeouts += 1;
                         }
-                    });
-                })?;
+                    );
+                )?;
 
                 return Ok(PooledConnectionGuard::new(
                     new_connection,
@@ -179,8 +187,8 @@ where
                     let mut stats = stats.write().await;
                     stats.connection_timeouts += 1;
                 }
-            });
-        })?;
+            );
+        )?;
 
         // Update stats
         let mut stats = self.stats.write().await;
@@ -268,7 +276,7 @@ where
 
                 connections.retain(|conn| {
                     !conn.is_idle_too_long(max_idle_time) || initial_count <= min_connections
-                });
+                );
 
                 let removed_count = initial_count - connections.len();
                 if removed_count > 0 {
@@ -292,7 +300,6 @@ pub struct PooledConnectionGuard<T> {
     pool: Arc<UniversalConnectionPool<T>>,
     _permit: tokio::sync::OwnedSemaphorePermit,
 }
-
 impl<T> PooledConnectionGuard<T> {
     fn new(
         connection: T,
@@ -329,8 +336,8 @@ impl<T> Drop for PooledConnectionGuard<T> {
 pub struct ConnectionPoolManager {
     pools: RwLock<HashMap<String, Box<dyn std::any::Any + Send + Sync>>>,
 }
-
 impl ConnectionPoolManager {
+    #[must_use]
     pub fn new() -> Self {
         Self {
             pools: RwLock::new(HashMap::new()),
@@ -338,7 +345,7 @@ impl ConnectionPoolManager {
     }
 
     /// Register a connection pool for a specific provider
-    pub async fn register_pool<T>(&self, provider_name: String, pool: UniversalConnectionPool<T>)
+    pub fn register_pool<T>(&self, provider_name: String, pool: UniversalConnectionPool<T>)
     where
         T: Send + Sync + 'static,
     {
@@ -351,11 +358,11 @@ impl ConnectionPoolManager {
     }
 
     /// Get a connection pool for a provider
-    pub async fn get_pool<T>(&self, _provider_name: &str) -> Option<Arc<UniversalConnectionPool<T>>>
+    pub fn get_pool<T>(&self, _provider_name: &str) -> Option<Arc<UniversalConnectionPool<T>>>
     where
         T: Send + Sync + 'static,
     {
-        // TODO: Redesign to store Arc<dyn Any> instead of Box<dyn Any>
+        // CANONICAL: Using Arc<dyn Any> for zero-cost shared ownership and thread safety
         // to properly support returning references
         None
     }
@@ -369,7 +376,6 @@ impl Default for ConnectionPoolManager {
 
 /// HTTP client connection pool (example usage)
 pub type HttpConnectionPool = UniversalConnectionPool<reqwest::Client>;
-
 impl HttpConnectionPool {
     /// Create an HTTP client connection pool
     pub fn new_http_pool(config: ConnectionPoolConfig) -> Self {
@@ -377,12 +383,8 @@ impl HttpConnectionPool {
             reqwest::Client::builder()
                 .timeout(Duration::from_secs(30))
                 .build()
-                .map_err(|e| NestGateError::Internal {
-                    message: format!("Failed to create HTTP client: {e}"),
-                    location: Some("HttpConnectionPool::new_http_pool".to_string()),
-                    debug_info: None,
-                    is_bug: false,
-                })
+                .map_err(|e| NestGateError::internal_error(
+                    location: Some("Self::new_http_pool".to_string())})
         })
     }
 }

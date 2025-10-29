@@ -2,73 +2,40 @@
 name = "nestgate-zfs"
 version = "0.1.0"
 edition = "2021"
+authors = ["NestGate Development Team <dev@nestgate.io>"]
 description = "ZFS storage management for NestGate with intelligent automation"
-license = "AGPL-3.0-or-later"
-repository = "https://github.com/strandgeek/nestgate"
-keywords = ["zfs", "storage", "nas", "automation"]
+license = "AGPL-3.0-only"
+repository = "https://github.com/nestgate/nestgate"
+homepage = "https://nestgate.io"
+documentation = "https://docs.rs/nestgate-zfs"
+keywords = [ "zfs", "storage", "nas", "automation",]
+readme = "README.md"
+categories = [ "filesystem", "storage",]
 
 [features]
-default = ["dev-environment-fallbacks"]
+default = [ "dev-environment-fallbacks",]
 zfs = []
 orchestrator = []
-network-integration = ["nestgate-automation/network-integration"]
-advanced = ["zfs", "network-integration"]
-ai = ["advanced", "network-integration"]  
-performance = ["zfs"]
-
-# Development environment support
+network-integration = [ "nestgate-automation/network-integration",]
+advanced = [ "zfs", "network-integration",]
+ai = [ "advanced", "network-integration",]
+performance = [ "zfs",]
 dev-environment-fallbacks = []
-# Hardware detection capabilities  
 hardware-detection = []
-# Container environment support
-container-support = []
-# Verbose development logging
+container = []
 dev-verbose-logging = []
 
 [dependencies]
-# Core dependencies
-nestgate-core = { path = "../nestgate-core" }
-nestgate-automation = { path = "../nestgate-automation" }
-nestgate-mcp = { path = "../nestgate-mcp" }
-
-# Async runtime
-tokio = { version = "1.0", features = ["full"] }
 futures = "0.3"
-
-# Serialization
-serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_yaml = "0.9"
-
-# Logging
 tracing = "0.1"
-
-# Error handling
 thiserror = "1.0"
 anyhow = "1.0"
-
-# UUID generation
-uuid = { version = "1.0", features = ["v4"] }
-
-# Date/time handling
 chrono = "0.4"
-
-# Concurrent data structures
 dashmap = "5.5"
-
-# Random number generation
 rand = "0.8"
-
-# HTTP client
-reqwest = { version = "0.11", features = ["json"] }
-
-# ZFS integration removed due to security vulnerabilities in libzfs 0.6
-# Using command-line ZFS tools instead for better security and compatibility
-
-# URL parsing
 url = "2.4"
-
-# Additional dependencies
 bytes = "1.0"
 async-trait = "0.1"
 regex = "1.10"
@@ -76,30 +43,65 @@ regex = "1.10"
 [dev-dependencies]
 tokio-test = "0.4"
 tempfile = "3.8"
-tokio = { version = "1.0", features = ["full"] }
 futures = "0.3"
-chrono = { version = "0.4", features = ["serde"] }
 rand = "0.8"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 proptest = "1.4"
 quickcheck = "1.0"
 serial_test = "3.0"
 rstest = "0.18"
 mockall = "0.12"
-criterion = { version = "0.5", features = ["html_reports", "async_tokio"] }
-
-# Additional testing infrastructure dependencies
 axum-test = "14.0"
 wiremock = "0.6"
 testcontainers = "0.15"
 assert_matches = "1.5"
 approx = "0.5"
-fake = { version = "2.9", features = ["derive", "chrono"] }
-test-log = { version = "0.2", features = ["trace"] }
+num_cpus = "1.16"
 
-# Benchmark temporarily disabled
-# [[bench]]
-# name = "performance_benchmarks"
-# harness = false 
+[dependencies.nestgate-core]
+path = "../nestgate-core"
 
-num_cpus = "1.16" 
+[dependencies.nestgate-automation]
+path = "../nestgate-automation"
+
+[dependencies.nestgate-mcp]
+path = "../nestgate-mcp"
+
+[dependencies.tokio]
+version = "1.0"
+features = [ "full",]
+
+[dependencies.serde]
+version = "1.0"
+features = [ "derive",]
+
+[dependencies.uuid]
+version = "1.0"
+features = [ "v4",]
+
+[dependencies.reqwest]
+version = "0.11"
+features = [ "json",]
+
+[dev-dependencies.tokio]
+version = "1.0"
+features = [ "full",]
+
+[dev-dependencies.chrono]
+version = "0.4"
+features = [ "serde",]
+
+[dev-dependencies.tracing-subscriber]
+version = "0.3"
+features = [ "env-filter",]
+
+[dev-dependencies.criterion]
+version = "0.5"
+features = [ "html_reports", "async_tokio",]
+
+[dev-dependencies.fake]
+version = "2.9"
+features = [ "derive", "chrono",]
+
+[dev-dependencies.test-log]
+version = "0.2"
+features = [ "trace",]

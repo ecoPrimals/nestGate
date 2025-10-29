@@ -4,8 +4,7 @@
 /// Split from unified_types/mod.rs for better maintainability and 2000-line compliance.
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
-
-// ==================== UNIFIED CONNECTION POOL CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Unified Connection Pool Configuration - consolidates all connection pooling settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -35,7 +34,6 @@ pub struct UnifiedConnectionPoolConfig {
     /// Connection validation
     pub validation: ConnectionValidationConfig,
 }
-
 impl Default for UnifiedConnectionPoolConfig {
     fn default() -> Self {
         Self {
@@ -55,7 +53,7 @@ impl Default for UnifiedConnectionPoolConfig {
     }
 }
 
-// ==================== CONNECTION RETRY CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Connection retry configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -77,7 +75,6 @@ pub struct ConnectionRetryConfig {
     /// Custom retry conditions
     pub custom_conditions: Vec<RetryCondition>,
 }
-
 impl Default for ConnectionRetryConfig {
     fn default() -> Self {
         Self {
@@ -105,8 +102,7 @@ pub struct RetryCondition {
     /// Custom retry delay for this condition
     pub custom_delay: Option<Duration>,
 }
-
-// ==================== POOL MONITORING CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Pool monitoring configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -122,7 +118,6 @@ pub struct PoolMonitoringConfig {
     /// Alert configuration
     pub alerts: PoolAlertConfig,
 }
-
 impl Default for PoolMonitoringConfig {
     fn default() -> Self {
         Self {
@@ -161,7 +156,6 @@ pub enum PoolMetric {
     /// Custom pool metric
     Custom(String),
 }
-
 /// Pool performance thresholds
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PoolThresholds {
@@ -174,7 +168,6 @@ pub struct PoolThresholds {
     /// Minimum number of healthy connections
     pub min_healthy_connections: u32,
 }
-
 impl Default for PoolThresholds {
     fn default() -> Self {
         Self {
@@ -196,7 +189,6 @@ pub struct PoolAlertConfig {
     /// Alert cooldown period
     pub cooldown: Duration,
 }
-
 impl Default for PoolAlertConfig {
     fn default() -> Self {
         Self {
@@ -232,7 +224,6 @@ pub struct PoolAlertRule {
     /// Duration condition must be true
     pub duration: Duration,
 }
-
 /// Pool alert conditions
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum PoolAlertCondition {
@@ -247,7 +238,6 @@ pub enum PoolAlertCondition {
     /// Custom alert condition
     Custom(String),
 }
-
 /// Pool alert severity levels
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 pub enum PoolAlertSeverity {
@@ -258,8 +248,7 @@ pub enum PoolAlertSeverity {
     /// Critical alert
     Critical,
 }
-
-// ==================== CONNECTION VALIDATION CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Connection validation configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -281,7 +270,6 @@ pub struct ConnectionValidationConfig {
     /// Validation interval for idle connections
     pub validation_interval: Duration,
 }
-
 impl Default for ConnectionValidationConfig {
     fn default() -> Self {
         Self {
@@ -309,8 +297,7 @@ pub enum ValidationStrategy {
     /// Custom validation strategy
     Custom(String),
 }
-
-// ==================== CONNECTION POOL TYPES ====================
+// ==================== SECTION ====================
 
 /// Connection pool types
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -326,8 +313,7 @@ pub enum PoolType {
     /// Custom connection pool type
     Custom(String),
 }
-
-// ==================== CONNECTION LIFECYCLE CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// Connection lifecycle configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -341,7 +327,6 @@ pub struct ConnectionLifecycleConfig {
     /// Connection pooling strategy
     pub pooling_strategy: PoolingStrategy,
 }
-
 impl Default for ConnectionLifecycleConfig {
     fn default() -> Self {
         Self {
@@ -365,7 +350,6 @@ pub struct LifecycleHook {
     /// Whether hook failure should fail the operation
     pub fail_on_error: bool,
 }
-
 /// Types of lifecycle hooks
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum LifecycleHookType {
@@ -380,7 +364,6 @@ pub enum LifecycleHookType {
     /// Custom hook type
     Custom(String),
 }
-
 /// Connection state tracking configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConnectionStateTracking {
@@ -393,7 +376,6 @@ pub struct ConnectionStateTracking {
     /// State history retention period
     pub history_retention: Duration,
 }
-
 impl Default for ConnectionStateTracking {
     fn default() -> Self {
         Self {
@@ -421,8 +403,7 @@ pub enum PoolingStrategy {
     /// Custom pooling strategy
     Custom(String),
 }
-
-// ==================== CONNECTION LOAD BALANCING ====================
+// ==================== SECTION ====================
 
 /// Connection load balancing configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -436,7 +417,6 @@ pub struct ConnectionLoadBalancingConfig {
     /// Failover configuration
     pub failover: FailoverConfig,
 }
-
 impl Default for ConnectionLoadBalancingConfig {
     fn default() -> Self {
         Self {
@@ -466,7 +446,6 @@ pub enum LoadBalancingStrategy {
     /// Custom load balancing strategy
     Custom(String),
 }
-
 /// Load balancer health check configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LoadBalancerHealthCheck {
@@ -483,7 +462,6 @@ pub struct LoadBalancerHealthCheck {
     /// Health check method
     pub method: HealthCheckMethod,
 }
-
 impl Default for LoadBalancerHealthCheck {
     fn default() -> Self {
         Self {
@@ -511,7 +489,6 @@ pub enum HealthCheckMethod {
     /// Custom health check method
     Custom(String),
 }
-
 /// Failover configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FailoverConfig {
@@ -526,7 +503,6 @@ pub struct FailoverConfig {
     /// Failback configuration
     pub failback: FailbackConfig,
 }
-
 impl Default for FailoverConfig {
     fn default() -> Self {
         Self {
@@ -551,7 +527,6 @@ pub enum FailoverStrategy {
     /// Custom failover strategy
     Custom(String),
 }
-
 /// Failback configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FailbackConfig {
@@ -562,7 +537,6 @@ pub struct FailbackConfig {
     /// Number of consecutive health checks before failback
     pub health_check_threshold: u32,
 }
-
 impl Default for FailbackConfig {
     fn default() -> Self {
         Self {

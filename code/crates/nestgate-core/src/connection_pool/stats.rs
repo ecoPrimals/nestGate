@@ -14,7 +14,6 @@ pub struct PoolStats {
     /// Average connection acquisition time
     pub avg_acquisition_time_ms: f64,
 }
-
 impl Default for PoolStats {
     fn default() -> Self {
         Self {

@@ -2,34 +2,43 @@
 // This module provides HTTP API endpoints for ZFS operations using the new
 // canonical zero-cost architecture with compile-time dispatch.
 
+// Production: Use real ZFS types
+#[cfg(not(feature = "dev-stubs"))]
+use nestgate_zfs::{
+    zero_cost_zfs_operations::{ZeroCostDatasetInfo, ZeroCostPoolInfo, ZeroCostSnapshotInfo},
+    ProductionZfsManager,
+};
+
+// Development: Use stubs for local development without ZFS
+#[cfg(feature = "dev-stubs")]
+use crate::handlers::zfs_stub::{
+    ProductionZfsManager, ZeroCostDatasetInfo, ZeroCostPoolInfo, ZeroCostSnapshotInfo,
+};
+
 use crate::routes::AppState;
 use axum::{
-    extract::{Path, Query, State},
+    extract::{Path, State},
     http::StatusCode,
     response::Json,
 };
-use nestgate_core::types::StorageTier;
-use nestgate_zfs::zero_cost_zfs_operations::{
-    ProductionZfsManager, ZeroCostDatasetInfo, ZeroCostPoolInfo, ZeroCostSnapshotInfo,
-    ZeroCostZfsOperations,
-};
-use serde::{Deserialize, Serialize};
+use nestgate_core::canonical_types::StorageTier;
+// Removed unused imports: Deserialize, Serialize
 use std::collections::HashMap;
 use std::sync::Arc;
 use tracing::{error, info, warn};
 
-// ==================== REQUEST/RESPONSE TYPES ====================
+// ==================== SECTION ====================
 
 /// **ZFS API REQUEST - CREATE POOL**
 ///
-/// Request structure for creating a new ZFS pool with specified devices.
+/// Request structure for creating a new ZFS pool with specified _devices.
 /// Part of the canonical modernized ZFS API.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct CreatePoolRequest {
     /// Name of the ZFS pool to create
     pub name: String,
     /// List of device paths to use for the pool
-    pub devices: Vec<String>,
+    pub _devices: Vec<String>,
 }
 
 /// **ZFS API REQUEST - CREATE DATASET**
@@ -70,7 +79,7 @@ pub struct ZfsHealthResponse {
     pub issues: Vec<String>,
 }
 
-// ==================== HELPER FUNCTIONS ====================
+// ==================== SECTION ====================
 
 /// Get ZFS service instance using zero-cost operations
 async fn get_zfs_service(state: &AppState) -> Result<Arc<ProductionZfsManager>, String> {
@@ -79,7 +88,7 @@ async fn get_zfs_service(state: &AppState) -> Result<Arc<ProductionZfsManager>, 
         .ok_or_else(|| "ZFS service not available".to_string())
 }
 
-// ==================== POOL OPERATIONS ====================
+// ==================== SECTION ====================
 
 /// List all ZFS pools
 pub async fn list_pools(
@@ -88,7 +97,7 @@ pub async fn list_pools(
     info!("📋 API: Listing ZFS pools");
 
     match get_zfs_service(&state).await {
-        Ok(service) => match service.list_pools().await {
+        Ok(service) => match service.list_pools() {
             Ok(pools) => {
                 info!("✅ Found {} ZFS pools", pools.len());
                 Ok(Json(pools))
@@ -115,7 +124,7 @@ pub async fn get_pool(
     match get_zfs_service(&state).await {
         Ok(service) => {
             // List all pools and find the requested one
-            match service.list_pools().await {
+            match service.list_pools() {
                 Ok(pools) => {
                     if let Some(pool) = pools.into_iter().find(|p| p.name == name) {
                         info!("✅ Found pool: {}", name);
@@ -144,33 +153,21 @@ pub async fn create_pool(
     Json(request): Json<CreatePoolRequest>,
 ) -> Result<Json<ZeroCostPoolInfo>, StatusCode> {
     info!(
-        "🔨 API: Creating pool '{}' with devices: {:?}",
-        request.name, request.devices
+        "🔨 API: Creating pool '{}' with _devices: {:?}",
+        request.name, request._devices
     );
 
     match get_zfs_service(&state).await {
-        Ok(service) => {
-            match service
-                .create_pool(
-                    &request.name,
-                    &request
-                        .devices
-                        .iter()
-                        .map(|s| s.as_str())
-                        .collect::<Vec<_>>(),
-                )
-                .await
-            {
-                Ok(pool) => {
-                    info!("✅ Pool created successfully: {}", request.name);
-                    Ok(Json(pool))
-                }
-                Err(e) => {
-                    error!("❌ Failed to create pool: {}", e);
-                    Err(StatusCode::INTERNAL_SERVER_ERROR)
-                }
+        Ok(service) => match service.create_pool(&request.name, &request._devices.clone()) {
+            Ok(pool) => {
+                info!("✅ Pool created successfully: {}", request.name);
+                Ok(Json(pool))
             }
-        }
+            Err(e) => {
+                error!("❌ Failed to create pool: {}", e);
+                Err(StatusCode::INTERNAL_SERVER_ERROR)
+            }
+        },
         Err(e) => {
             error!("❌ ZFS service unavailable: {}", e);
             Err(StatusCode::SERVICE_UNAVAILABLE)
@@ -188,7 +185,7 @@ pub async fn delete_pool(
     match get_zfs_service(&state).await {
         Ok(service) => {
             // First check if pool exists by listing pools
-            match service.list_pools().await {
+            match service.list_pools() {
                 Ok(pools) => {
                     if !pools.iter().any(|p| p.name == name) {
                         warn!("⚠️ Pool not found: {}", name);
@@ -213,7 +210,7 @@ pub async fn delete_pool(
     }
 }
 
-// ==================== DATASET OPERATIONS ====================
+// ==================== SECTION ====================
 
 /// List datasets in a pool
 pub async fn list_datasets(
@@ -225,10 +222,10 @@ pub async fn list_datasets(
     match get_zfs_service(&state).await {
         Ok(service) => {
             // First get the pool, then list its datasets
-            match service.list_pools().await {
+            match service.list_pools() {
                 Ok(pools) => {
                     if let Some(pool) = pools.into_iter().find(|p| p.name == pool_name) {
-                        match service.list_datasets(&pool).await {
+                        match service.list_datasets(&pool.name) {
                             Ok(datasets) => {
                                 info!(
                                     "✅ Found {} datasets in pool '{}'",
@@ -271,10 +268,10 @@ pub async fn get_dataset(
     );
 
     match get_zfs_service(&state).await {
-        Ok(service) => match service.list_pools().await {
+        Ok(service) => match service.list_pools() {
             Ok(pools) => {
                 if let Some(pool) = pools.into_iter().find(|p| p.name == pool_name) {
-                    match service.list_datasets(&pool).await {
+                    match service.list_datasets(&pool.name) {
                         Ok(datasets) => {
                             if let Some(dataset) =
                                 datasets.into_iter().find(|d| d.name == dataset_name)
@@ -317,18 +314,16 @@ pub async fn create_dataset(
     info!("🔨 API: Creating dataset '{}/{}''", pool_name, request.name);
 
     match get_zfs_service(&state).await {
-        Ok(service) => match service.list_pools().await {
+        Ok(service) => match service.list_pools() {
             Ok(pools) => {
                 if let Some(pool) = pools.into_iter().find(|p| p.name == pool_name) {
-                    match service
-                        .create_dataset(&pool, &request.name, StorageTier::Warm)
-                        .await
-                    {
+                    match service.create_dataset_with_tier(
+                        &pool.name,
+                        &request.name,
+                        StorageTier::Warm,
+                    ) {
                         Ok(dataset) => {
-                            info!(
-                                "✅ Dataset created successfully: {}/{}",
-                                pool_name, request.name
-                            );
+                            info!("✅ Dataset {} created successfully", request.name);
                             Ok(Json(dataset))
                         }
                         Err(e) => {
@@ -353,7 +348,7 @@ pub async fn create_dataset(
     }
 }
 
-// ==================== SNAPSHOT OPERATIONS ====================
+// ==================== SECTION ====================
 
 /// List snapshots for a dataset
 pub async fn list_snapshots(
@@ -366,15 +361,15 @@ pub async fn list_snapshots(
     );
 
     match get_zfs_service(&state).await {
-        Ok(service) => match service.list_pools().await {
+        Ok(service) => match service.list_pools() {
             Ok(pools) => {
                 if let Some(pool) = pools.into_iter().find(|p| p.name == pool_name) {
-                    match service.list_datasets(&pool).await {
+                    match service.list_datasets(&pool.name) {
                         Ok(datasets) => {
                             if let Some(dataset) =
                                 datasets.into_iter().find(|d| d.name == dataset_name)
                             {
-                                match service.list_snapshots(&dataset).await {
+                                match service.list_snapshots(&dataset.name) {
                                     Ok(snapshots) => {
                                         info!(
                                             "✅ Found {} snapshots for dataset '{}/{}''",
@@ -428,15 +423,15 @@ pub async fn create_snapshot(
     );
 
     match get_zfs_service(&state).await {
-        Ok(service) => match service.list_pools().await {
+        Ok(service) => match service.list_pools() {
             Ok(pools) => {
                 if let Some(pool) = pools.into_iter().find(|p| p.name == pool_name) {
-                    match service.list_datasets(&pool).await {
+                    match service.list_datasets(&pool.name) {
                         Ok(datasets) => {
                             if let Some(dataset) =
                                 datasets.into_iter().find(|d| d.name == dataset_name)
                             {
-                                match service.create_snapshot(&dataset, &request.name).await {
+                                match service.create_snapshot(&dataset.name, &request.name) {
                                     Ok(snapshot) => {
                                         info!(
                                             "✅ Snapshot created successfully: {}/{}@{}",
@@ -476,7 +471,7 @@ pub async fn create_snapshot(
     }
 }
 
-// ==================== HEALTH AND MONITORING ====================
+// ==================== SECTION ====================
 
 /// Get ZFS health status
 pub async fn get_zfs_health(
@@ -485,7 +480,7 @@ pub async fn get_zfs_health(
     info!("🏥 API: Getting ZFS health status");
 
     match get_zfs_service(&state).await {
-        Ok(service) => match service.list_pools().await {
+        Ok(service) => match service.list_pools() {
             Ok(pools) => {
                 let mut issues = Vec::new();
                 let mut healthy = true;
@@ -527,7 +522,7 @@ pub async fn get_zfs_health(
     }
 }
 
-// ==================== PERFORMANCE AND ANALYTICS ====================
+// ==================== SECTION ====================
 
 /// Get performance analytics (placeholder for future implementation)
 pub async fn get_performance_analytics(
@@ -646,4 +641,22 @@ pub async fn predict_tier(
     );
 
     Ok(Json(response))
+}
+
+/// ZFS handler implementation for the API
+#[derive(Debug, Clone)]
+pub struct ZfsHandlerImpl;
+
+impl Default for ZfsHandlerImpl {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl ZfsHandlerImpl {
+    /// Create a new ZFS handler instance
+    #[must_use]
+    pub const fn new() -> Self {
+        Self
+    }
 }

@@ -1,23 +1,16 @@
-//! Universal Data Source Capabilities
+//! **DATA SOURCES MODULE**
 //!
-//! NestGate doesn't know about specific data providers like NCBI or HuggingFace.
-//! Instead, it defines universal capabilities that any data provider can implement.
-//! This enables true ecosystem agnosticism - we can leverage any data structure
-//! without hardcoding specific providers.
+//! Data source integrations for NestGate data service.
+//!
+//! This module implements the concrete data source integrations specified
+//! in the NestGate Data Service Specification, including Steam gaming data
+//! and NCBI genomic data.
 
-pub mod universal_data_adapter;
-pub mod data_capabilities;
-pub mod providers;
+pub mod steam_data_service;
 
-// Re-export the universal interfaces
-pub use universal_data_adapter::UniversalDataAdapter;
-pub use data_capabilities::{
-    DataCapability, DataRequest, DataResponse, 
-    GenomeDataCapability, ModelDataCapability, ResearchDataCapability
-};
-
-// Re-export example providers
-pub use providers::{
-    UniversalGenomeProvider, UniversalHttpProvider,
-    // Other providers will be added as they're implemented
+// Re-export main types for convenience
+pub use steam_data_service::{
+    Achievement, AchievementData, ConflictResolution, FederationNode, GameLibraryStorage,
+    GameMetadata, LibraryStats, PlayStats, SaveDataFederation, ServiceHealth, SteamAppId,
+    SteamDataProvider, SteamDataService,
 };

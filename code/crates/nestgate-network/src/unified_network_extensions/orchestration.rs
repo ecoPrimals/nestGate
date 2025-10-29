@@ -23,7 +23,6 @@ pub struct NetworkOrchestrationSettings {
     /// Service registration settings
     pub service_registration: ServiceRegistrationSettings,
 }
-
 /// Orchestration retry configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OrchestrationRetryConfig {
@@ -38,7 +37,6 @@ pub struct OrchestrationRetryConfig {
     /// Enable exponential backoff
     pub exponential_backoff: bool,
 }
-
 /// Service registration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceRegistrationSettings {
@@ -51,7 +49,6 @@ pub struct ServiceRegistrationSettings {
     /// Service metadata
     pub service_metadata: HashMap<String, String>,
 }
-
 impl Default for NetworkOrchestrationSettings {
     fn default() -> Self {
         Self {

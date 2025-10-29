@@ -13,7 +13,6 @@ use tracing::debug;
 pub struct RetryExecutor {
     config: RetryPolicy,
 }
-
 impl RetryExecutor {
     /// Create a new retry executor with the specified retry policy
     ///

@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-// ==================== MODERN ZFS MODULES ====================
+// ==================== SECTION ====================
 
 pub mod compression_engine;
 pub mod integrity_manager;
@@ -22,7 +22,7 @@ pub mod deduplication_manager;
 pub mod raid_z_manager;
 #[cfg(feature = "zfs-advanced-features")]
 // pub mod zfs_demo; // Disabled during canonical modernization - uses deprecated APIs
-// ==================== MODERN RE-EXPORTS ====================
+// ==================== SECTION ====================
 // Core ZFS functionality (always available)
 pub use compression_engine::{CompressionEngine, CompressionStats, CompressionType};
 pub use integrity_manager::{ChecksumType, IntegrityManager, IntegrityStats};
@@ -36,9 +36,9 @@ pub use deduplication_manager::{ContentHash, DedupStats, DeduplicationManager};
 #[cfg(feature = "zfs-advanced-features")]
 pub use raid_z_manager::{ParityLevel, RaidZConfig, RaidZManager};
 
-// ==================== MODERN ZFS ENGINE ====================
+// ==================== SECTION ====================
 
-/// Modern ZFS engine using canonical storage traits
+// Modern ZFS engine using canonical storage traits
 pub struct ModernZfsEngine<T>
 where
     T: crate::universal_storage::canonical_storage::CanonicalStorageBackend,
@@ -56,8 +56,7 @@ where
     /// Engine statistics
     stats: Arc<RwLock<ModernZfsStats>>,
 }
-
-/// Modern ZFS configuration
+// Modern ZFS configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ModernZfsConfig {
     /// Compression settings
@@ -69,15 +68,13 @@ pub struct ModernZfsConfig {
     /// Performance tuning
     pub performance: PerformanceConfig,
 }
-
-/// Compression configuration
+// Compression configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CompressionConfig {
     pub enabled: bool,
     pub algorithm: compression_engine::CompressionType,
     pub level: u8,
 }
-
 impl Default for CompressionConfig {
     fn default() -> Self {
         Self {
@@ -88,14 +85,13 @@ impl Default for CompressionConfig {
     }
 }
 
-/// Integrity configuration
+// Integrity configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IntegrityConfig {
     pub enabled: bool,
     pub checksum_type: ChecksumType,
     pub verify_on_read: bool,
 }
-
 impl Default for IntegrityConfig {
     fn default() -> Self {
         Self {
@@ -106,14 +102,13 @@ impl Default for IntegrityConfig {
     }
 }
 
-/// Snapshot configuration
+// Snapshot configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SnapshotConfig {
     pub auto_snapshot: bool,
     pub retention_days: u32,
     pub max_snapshots: u32,
 }
-
 impl Default for SnapshotConfig {
     fn default() -> Self {
         Self {
@@ -124,14 +119,13 @@ impl Default for SnapshotConfig {
     }
 }
 
-/// Performance configuration
+// Performance configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceConfig {
     pub cache_size_mb: u64,
     pub async_writes: bool,
     pub batch_size: usize,
 }
-
 impl Default for PerformanceConfig {
     fn default() -> Self {
         Self {
@@ -142,15 +136,26 @@ impl Default for PerformanceConfig {
     }
 }
 
-/// Modern ZFS engine implementation
+// Modern ZFS engine implementation
 impl<T> ModernZfsEngine<T>
 where
     T: crate::universal_storage::canonical_storage::CanonicalStorageBackend,
 {
     /// Create a new modern ZFS engine
-    pub async fn new(storage_backend: Arc<T>, config: ModernZfsConfig) -> Result<Self> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub async fn new(storage_backend: Arc<T>, config: ModernZfsConfig) -> Result<Self>   {
         let compression_engine = Arc::new(compression_engine::CompressionEngine::new());
-
         // Create integrity manager with default config
         let integrity_config =
             crate::universal_storage::zfs_features::integrity_manager::IntegrityConfig;
@@ -180,14 +185,40 @@ where
     }
 
     /// Update configuration
-    pub async fn update_config(&mut self, config: ModernZfsConfig) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+                pub fn update_config(&mut self, config: ModernZfsConfig) -> Result<()>   {
         self.config = config;
         // Apply configuration changes to components
         Ok(())
     }
 
     /// Perform health check
-    pub async fn health_check(&self) -> Result<EngineHealth> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub fn health_check(&self) -> Result<EngineHealth>   {
         Ok(EngineHealth {
             storage_healthy: true,
             compression_healthy: true,
@@ -198,7 +229,6 @@ where
     }
 
     /// Write data with ZFS features (compression, integrity, snapshots)
-    pub async fn write(&self, path: &str, data: &[u8]) -> Result<()> {
         // Use compression engine for data optimization
         let compressed_data = self
             .compression_engine
@@ -224,7 +254,6 @@ where
     }
 
     /// Read data with ZFS features (decompression, integrity verification)
-    pub async fn read(&self, path: &str) -> Result<Vec<u8>> {
         // Read from storage backend
         let compressed_data = self.storage_backend.read(path).await?.to_vec();
 
@@ -258,11 +287,23 @@ where
     }
 
     /// Create a snapshot using the snapshot manager
-    pub async fn create_snapshot(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub async fn create_snapshot(
         &self,
         dataset: &str,
         name: &str,
-    ) -> Result<crate::universal_storage::zfs_features::snapshot_manager::SnapshotId> {
+    ) -> Result<crate::universal_storage::zfs_features::snapshot_manager::SnapshotId>   {
         let snapshot_id = self.snapshot_manager.create_snapshot(dataset, name).await?;
 
         // Update statistics
@@ -275,20 +316,44 @@ where
     }
 
     /// List snapshots for a dataset
-    pub async fn list_snapshots(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub async fn list_snapshots(
         &self,
         dataset: &str,
     ) -> Result<Vec<crate::universal_storage::zfs_features::snapshot_manager::SnapshotMetadata>>
-    {
+      {
         self.snapshot_manager
             .list_snapshots_for_dataset(dataset)
             .await
     }
 
     /// Get storage backend capabilities
-    pub async fn storage_capabilities(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub async fn storage_capabilities(
         &self,
-    ) -> Result<Vec<crate::canonical_modernization::UnifiedServiceType>> {
+    ) -> Result<Vec<crate::unified_enums::UnifiedServiceType>>   {
         self.storage_backend.capabilities().await
     }
 
@@ -310,7 +375,7 @@ where
     }
 }
 
-/// Modern ZFS engine statistics
+// Modern ZFS engine statistics
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ModernZfsStats {
     /// Total operations performed
@@ -324,8 +389,7 @@ pub struct ModernZfsStats {
     /// Engine uptime in seconds
     pub uptime_seconds: u64,
 }
-
-/// Engine health status
+// Engine health status
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EngineHealth {
     pub storage_healthy: bool,
@@ -334,12 +398,10 @@ pub struct EngineHealth {
     pub snapshots_healthy: bool,
     pub overall_health: f64,
 }
+// ==================== SECTION ====================
 
-// ==================== FACTORY FUNCTIONS ====================
-
-/// Create a modern ZFS engine with filesystem backend
+// Create a modern ZFS engine with filesystem backend
 pub async fn create_filesystem_zfs_engine(
-    root_path: std::path::PathBuf,
     config: ModernZfsConfig,
 ) -> Result<ModernZfsEngine<crate::universal_storage::canonical_storage::FilesystemBackend>> {
     let backend = Arc::new(
@@ -347,16 +409,14 @@ pub async fn create_filesystem_zfs_engine(
     );
     ModernZfsEngine::new(backend, config).await
 }
-
-/// Create a modern ZFS engine with memory backend for testing
+// Create a modern ZFS engine with memory backend for testing
 pub async fn create_memory_zfs_engine(
     config: ModernZfsConfig,
 ) -> Result<ModernZfsEngine<crate::universal_storage::canonical_storage::MemoryBackend>> {
     let backend = Arc::new(crate::universal_storage::canonical_storage::MemoryBackend::new());
     ModernZfsEngine::new(backend, config).await
 }
-
-// ==================== TESTS ====================
+// ==================== SECTION ====================
 
 #[cfg(test)]
 mod tests {

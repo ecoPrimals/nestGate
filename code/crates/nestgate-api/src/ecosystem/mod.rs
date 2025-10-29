@@ -1,11 +1,11 @@
 //
 // **CANONICAL MODERNIZATION**: Universal ecosystem integration that works with
-// any management system (BiomeOS, Kubernetes, Docker, etc.) without hardcoded dependencies.
+// any management system (Management, Kubernetes, Docker, etc.) without hardcoded dependencies.
 //
-// **ELIMINATES**: Hardcoded biomeOS integration and endpoint dependencies
+// **ELIMINATES**: Hardcoded management integration and endpoint dependencies
 // **PROVIDES**: Capability-based ecosystem discovery and integration
 
-// **UNIVERSAL ECOSYSTEM INTEGRATION** - Replaces hardcoded BiomeOS integration
+// **UNIVERSAL ECOSYSTEM INTEGRATION** - Replaces hardcoded Management integration
 pub mod universal_ecosystem_integration;
 
 // Re-export main types

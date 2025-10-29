@@ -1,4 +1,3 @@
-
 use std::time::SystemTime;
 use tokio::sync::RwLock;
 use tracing::info;
@@ -17,7 +16,6 @@ pub struct RemoteZfsService {
     start_time: SystemTime,
     connection_stats: RwLock<ConnectionStats>,
 }
-
 impl Clone for RemoteZfsService {
     fn clone(&self) -> Self {
         Self {

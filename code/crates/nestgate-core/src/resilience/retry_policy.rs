@@ -1,9 +1,9 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 //
 // Provides configurable retry policies with exponential backoff for
 // handling transient failures.
 
-use crate::{Result, NestGateError};
+use crate::{Result};
 use std::time::Duration;
 
 /// Retry configuration
@@ -20,7 +20,6 @@ pub struct RetryConfig {
     /// Jitter factor to randomize delays
     pub jitter_factor: f64,
 }
-
 impl Default for RetryConfig {
     fn default() -> Self {
         Self {
@@ -35,7 +34,6 @@ impl Default for RetryConfig {
 
 /// Execute operation with retry policy
 pub async fn execute_with_retry<F, T, E>(
-    mut operation: impl FnMut() -> F,
     config: &RetryConfig,
 ) -> Result<T>
 where
@@ -43,7 +41,6 @@ where
     E: std::fmt::Debug,
 {
     let mut current_delay = config.initial_delay;
-
     for attempt in 1..=config.max_attempts {
         match operation().await {
             Ok(result) => return Ok(result),

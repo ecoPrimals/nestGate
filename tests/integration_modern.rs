@@ -3,15 +3,15 @@
 //! This test validates core system integration using canonical patterns
 //! **CANONICAL MODERNIZATION**: Updated to use simple, working patterns
 
-use nestgate_core::config::canonical_unified::NestGateCanonicalUnifiedConfig as NestGateCanonicalUnifiedConfig;
-use nestgate_core::config::defaults::Environment;
+use nestgate_core::config::canonical_master::NestGateCanonicalConfig;
+use nestgate_core::constants::Environment;
 use std::time::Duration;
 use tokio::time::sleep;
 use tracing::info;
 
 /// Test basic system integration
 #[tokio::test]
-async fn test_basic_integration() {
+async fn test_basic_integration() -> Result<(), Box<dyn std::error::Error>> {
     info!("🚀 Starting basic integration test");
 
     // Test configuration creation
@@ -19,16 +19,18 @@ async fn test_basic_integration() {
     assert!(!config.system.instance_name.is_empty());
 
     // Test environment configuration
-    let dev_config =
-        nestgate_core::config::canonical_unified::create_config_for_environment(Environment::Development);
+    let dev_config = nestgate_core::config::canonical_master::create_config_for_environment(
+        Environment::Development,
+    );
     assert!(matches!(dev_config.environment, Environment::Development));
 
     info!("✅ Basic integration test completed");
+    Ok(())
 }
 
 /// Test system startup simulation
 #[tokio::test]
-async fn test_system_startup() {
+async fn test_system_startup() -> Result<(), Box<dyn std::error::Error>> {
     info!("⚡ Testing system startup simulation");
 
     // Simulate system startup phases
@@ -42,38 +44,43 @@ async fn test_system_startup() {
 
         // Verify phase is valid
         assert!(!phase.is_empty(), "Startup phase should be specified");
+        Ok(())
     }
 
     info!("✅ System startup simulation completed");
+    Ok(())
 }
 
 /// Test configuration validation - simplified
 #[tokio::test]
-async fn test_configuration_validation() {
+async fn test_configuration_validation() -> Result<(), Box<dyn std::error::Error>> {
     info!("⚙️  Testing configuration validation");
 
     // Test development environment
-    let dev_config =
-        nestgate_core::config::canonical_unified::create_config_for_environment(Environment::Development);
+    let dev_config = nestgate_core::config::canonical_master::create_config_for_environment(
+        Environment::Development,
+    );
     assert!(!dev_config.system.instance_name.is_empty());
     assert!(!dev_config.system.log_level.is_empty());
     assert!(matches!(dev_config.environment, Environment::Development));
     info!("Development environment configuration validated");
 
     // Test production environment
-    let prod_config =
-        nestgate_core::config::canonical_unified::create_config_for_environment(Environment::Production);
+    let prod_config = nestgate_core::config::canonical_master::create_config_for_environment(
+        Environment::Production,
+    );
     assert!(!prod_config.system.instance_name.is_empty());
     assert!(!prod_config.system.log_level.is_empty());
     assert!(matches!(prod_config.environment, Environment::Production));
     info!("Production environment configuration validated");
 
     info!("✅ Configuration validation completed");
+    Ok(())
 }
 
 /// Test service lifecycle simulation
 #[tokio::test]
-async fn test_service_lifecycle() {
+async fn test_service_lifecycle() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔄 Testing service lifecycle simulation");
 
     // Simulate service lifecycle states
@@ -90,11 +97,12 @@ async fn test_service_lifecycle() {
     sleep(Duration::from_millis(10)).await;
 
     info!("✅ Service lifecycle simulation completed");
+    Ok(())
 }
 
 /// Test error handling patterns
 #[tokio::test]
-async fn test_error_handling() {
+async fn test_error_handling() -> Result<(), Box<dyn std::error::Error>> {
     info!("💥 Testing error handling patterns");
 
     // Test individual error scenarios
@@ -116,14 +124,16 @@ async fn test_error_handling() {
         // Verify error type is valid
         assert!(!error_type.is_empty(), "Error type should be specified");
         assert!(recovery_time > 0, "Recovery time should be positive");
+        Ok(())
     }
 
     info!("✅ Error handling patterns test completed");
+    Ok(())
 }
 
 /// Test performance characteristics
 #[tokio::test]
-async fn test_performance_characteristics() {
+async fn test_performance_characteristics() -> Result<(), Box<dyn std::error::Error>> {
     info!("📊 Testing performance characteristics");
 
     let start_time = std::time::Instant::now();
@@ -146,7 +156,9 @@ async fn test_performance_characteristics() {
             elapsed.as_millis() >= operation_time as u128,
             "Performance timing should be accurate"
         );
+        Ok(())
     }
 
     info!("✅ Performance characteristics test completed");
+    Ok(())
 }

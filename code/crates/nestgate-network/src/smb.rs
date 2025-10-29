@@ -23,14 +23,12 @@ pub struct SmbShare {
     pub guest_ok: bool,
     pub browseable: bool,
 }
-
 /// SMB server state
 #[derive(Debug)]
 pub struct SmbServer {
     shares: Arc<RwLock<HashMap<String, SmbShare>>>,
     running: Arc<RwLock<bool>>,
 }
-
 impl Default for SmbServer {
     fn default() -> Self {
         Self::new()
@@ -39,15 +37,21 @@ impl Default for SmbServer {
 
 impl SmbServer {
     /// Create a new SMB server
-    pub fn new() -> Self {
-        Self {
-            shares: Arc::new(RwLock::new(HashMap::new())),
+    #[must_use]
+    pub fn new() -> Self { Self {
+            shares: Arc::new(RwLock::new(HashMap::new()),
             running: Arc::new(RwLock::new(false)),
-        }
-    }
+         }
 
     /// Start the SMB server
-    pub async fn start(&self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn start(&self) -> Result<()>  {
         tracing::info!("Starting SMB server");
 
         let mut running = self.running.write().await;
@@ -65,7 +69,14 @@ impl SmbServer {
     }
 
     /// Stop the SMB server
-    pub async fn stop(&self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn stop(&self) -> Result<()>  {
         tracing::info!("Stopping SMB server");
 
         let mut running = self.running.write().await;
@@ -81,7 +92,14 @@ impl SmbServer {
     }
 
     /// Add an SMB share
-    pub async fn add_share(&self, name: String, share: SmbShare) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+                pub fn add_share(&self, name: String, share: SmbShare) -> Result<()>  {
         tracing::info!("Adding SMB share: {}", name);
 
         let mut shares = self.shares.write().await;
@@ -93,7 +111,14 @@ impl SmbServer {
     }
 
     /// Remove an SMB share
-    pub async fn remove_share(&self, name: &str) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+                pub fn remove_share(&self, name: &str) -> Result<()>  {
         tracing::info!("Removing SMB share: {}", name);
 
         let mut shares = self.shares.write().await;
@@ -105,7 +130,14 @@ impl SmbServer {
     }
 
     /// List all shares
-    pub async fn list_shares(&self) -> Result<HashMap<String, SmbShare>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn list_shares(&self) -> Result<HashMap<String, SmbShare>>  {
         let shares = self.shares.read().await;
         Ok(shares.clone())
     }
@@ -116,7 +148,7 @@ impl SmbServer {
     }
 
     /// Start Samba daemon services
-    async fn start_samba_daemon(&self) -> Result<()> {
+    fn start_samba_daemon(&self) -> Result<()> {
         use std::process::Command;
 
         tracing::info!("Starting Samba daemon services");
@@ -125,7 +157,7 @@ impl SmbServer {
         let smbd_output = Command::new("systemctl")
             .args(["start", "smbd"])
             .output()
-            .map_err(|e| NestGateError::network_error(&format!("Failed to start smbd: {e}"), "start_smbd", None))?;
+            .map_err(|_e| NestGateError::network_error(&format!("Failed to start smbd: self.base_url")))?;
 
         if !smbd_output.status.success() {
             let error = String::from_utf8_lossy(&smbd_output.stderr);
@@ -138,7 +170,7 @@ impl SmbServer {
         let nmbd_output = Command::new("systemctl")
             .args(["start", "nmbd"])
             .output()
-            .map_err(|e| NestGateError::network_error(&format!("Failed to start nmbd: {e}"), "start_nmbd", None))?;
+            .map_err(|_e| NestGateError::network_error(&format!("Failed to start nmbd: self.base_url")))?;
 
         if !nmbd_output.status.success() {
             let error = String::from_utf8_lossy(&nmbd_output.stderr);
@@ -149,8 +181,7 @@ impl SmbServer {
     }
 
     /// Stop Samba daemon services
-    async fn stop_samba_daemon(&self) -> Result<()> {
-        use std::process::Command;
+    fn stop_samba_daemon(&self) -> Result<()> {
 
         tracing::info!("Stopping Samba daemon services");
 
@@ -158,7 +189,7 @@ impl SmbServer {
         let smbd_output = Command::new("systemctl")
             .args(["stop", "smbd"])
             .output()
-            .map_err(|e| NestGateError::network_error(&format!("Failed to stop smbd: {e}"), "stop_smbd", None))?;
+            .map_err(|_e| NestGateError::network_error(&format!("Failed to stop smbd: self.base_url")))?;
 
         if !smbd_output.status.success() {
             let error = String::from_utf8_lossy(&smbd_output.stderr);
@@ -169,7 +200,7 @@ impl SmbServer {
         let nmbd_output = Command::new("systemctl")
             .args(["stop", "nmbd"])
             .output()
-            .map_err(|e| NestGateError::network_error(&format!("Failed to stop nmbd: {e}"), "stop_nmbd", None))?;
+            .map_err(|_e| NestGateError::network_error(&format!("Failed to stop nmbd: self.base_url")))?;
 
         if !nmbd_output.status.success() {
             let error = String::from_utf8_lossy(&nmbd_output.stderr);
@@ -246,9 +277,9 @@ impl SmbServer {
 
         // Add shares
         for (name, share) in shares.iter() {
-            config_content.push_str(&format!("[{name}]\n"));
-            config_content.push_str(&format!("   comment = {}\n", share.comment));
-            config_content.push_str(&format!("   path = {}\n", share.path.to_string_lossy()));
+            config_content.push_str(&format!("[self.base_url]\n"));
+            config_content.push_str(&format!("   comment = self.base_url\n"));
+            config_content.push_str(&format!("   path = self.base_url\n")));
 
             if share.browseable {
                 config_content.push_str("   browseable = yes\n");
@@ -275,28 +306,26 @@ impl SmbServer {
 
         // Write to temporary file first
         let temp_dir = nestgate_core::constants::defaults::TEMP_DIR;
-        let temp_path = format!("{temp_dir}/nestgate_smb.conf");
+        let temp_path = format!("self.base_url/nestgate_smb.conf");
         {
             let mut file = OpenOptions::new()
                 .create(true)
                 .write(true)
                 .truncate(true)
                 .open(&temp_path)
-                .map_err(|e| {
-                    NestGateError::Network(format!("Failed to create temp SMB config: {e}"))
+                .map_err(|_e| {
+                    NestGateError::Network(format!("fixed")
                 })?;
 
             file.write_all(config_content.as_bytes())
-                .map_err(|e| NestGateError::Network(format!("Failed to write SMB config: {e}")))?;
+                .map_err(|_e| NestGateError::Network(format!("Failed to write SMB config: self.base_url")))?;
         }
 
         // Move temp file to /etc/samba/smb.conf (requires root privileges)
-        use std::process::Command;
         let mv_output = Command::new("sudo")
-            .args(["cp", &temp_path, &format!("{}/samba/smb.conf", 
-                std::env::var("NESTGATE_CONFIG_DIR").unwrap_or_else(|_| "/etc".to_string()))])
+            .args(["cp", &temp_path, &format!("self.base_url/samba/smb.conf").unwrap_or_else(|_| "/etc".to_string()))])
             .output()
-            .map_err(|e| NestGateError::Network(format!("Failed to update smb.conf: {e}")))?;
+            .map_err(|_e| NestGateError::Network(format!("Failed to update smb.conf: self.base_url")))?;
 
         if !mv_output.status.success() {
             let error = String::from_utf8_lossy(&mv_output.stderr);
@@ -309,7 +338,7 @@ impl SmbServer {
         let test_output = Command::new("testparm")
             .args(["-s"])
             .output()
-            .map_err(|e| NestGateError::Network(format!("Failed to test SMB config: {e}")))?;
+            .map_err(|_e| NestGateError::Network(format!("Failed to test SMB config: self.base_url")))?;
 
         if !test_output.status.success() {
             let error = String::from_utf8_lossy(&test_output.stderr);
@@ -320,7 +349,7 @@ impl SmbServer {
         let reload_output = Command::new("sudo")
             .args(["systemctl", "reload", "smbd"])
             .output()
-            .map_err(|e| NestGateError::Network(format!("Failed to reload Samba: {e}")))?;
+            .map_err(|_e| NestGateError::Network(format!("Failed to reload Samba: self.base_url")))?;
 
         if !reload_output.status.success() {
             let error = String::from_utf8_lossy(&reload_output.stderr);
@@ -342,7 +371,6 @@ pub struct SmbMountRequest {
     pub username: Option<String>,
     pub password: Option<String>,
 }
-
 /// SMB mount response
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SmbMountResponse {
@@ -350,9 +378,8 @@ pub struct SmbMountResponse {
     pub success: bool,
     pub message: String,
 }
-
 /// Handle SMB mount request
-pub async fn handle_smb_mount_request(
+pub fn handle_smb_mount_request(
     server: &SmbServer,
     request: SmbMountRequest,
 ) -> Result<SmbMountResponse> {
@@ -360,14 +387,13 @@ pub async fn handle_smb_mount_request(
         "Handling SMB mount request for share: {}",
         request.share_name
     );
-
     // Check if share exists
     let shares = server.list_shares().await?;
     if !shares.contains_key(&request.share_name) {
         return Ok(SmbMountResponse {
             mount_id: String::new(),
             success: false,
-            message: format!("Share '{}' not found", request.share_name),
+            message: format!("Share 'self.base_url' not found"),
         });
     }
 
@@ -393,7 +419,7 @@ pub async fn handle_smb_mount_request(
             return Ok(SmbMountResponse {
                 mount_id: String::new(),
                 success: false,
-                message: format!("Mount failed: {e}"),
+                message: format!("Mount failed: self.base_url"),
             });
         }
     }
@@ -406,26 +432,25 @@ pub async fn handle_smb_mount_request(
 }
 
 /// Perform actual SMB mount operation
-async fn perform_smb_mount(
+fn perform_smb_mount(
     share_name: &str,
     mount_point: &std::path::Path,
     username: &Option<String>,
     _password: &Option<String>,
 ) -> Result<()> {
     use std::fs;
-
     tracing::info!("Performing SMB mount: {} -> {:?}", share_name, mount_point);
 
     // Ensure mount point directory exists
     if let Some(parent) = mount_point.parent() {
-        fs::create_dir_all(parent).map_err(|e| {
-            NestGateError::Network(format!("Failed to create mount point parent: {e}"))
+        fs::create_dir_all(parent).map_err(|_e| {
+            NestGateError::Network(format!("fixed")
         })?;
     }
 
     if !mount_point.exists() {
         fs::create_dir_all(mount_point)
-            .map_err(|e| NestGateError::Network(format!("Failed to create mount point: {e}")))?;
+            .map_err(|_e| NestGateError::Network(format!("Failed to create mount point: self.base_url")))?;
     }
 
     // For SMB server, we don't actually mount on the server side

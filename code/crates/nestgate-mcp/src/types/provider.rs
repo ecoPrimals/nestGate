@@ -13,7 +13,6 @@ pub struct ProviderConfig {
     pub credentials: Option<AuthConfig>,
     pub custom_config: HashMap<String, serde_json::Value>,
 }
-
 /// Capabilities supported by a storage provider.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProviderCapabilities {
@@ -28,17 +27,14 @@ pub struct ProviderCapabilities {
     /// Availability zones
     pub availability_zones: Vec<String>,
 }
-
 impl Default for ProviderCapabilities {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             protocols: vec!["nfs".to_string(), "smb".to_string()],
             max_capacity: 1_000_000_000_000, // 1TB default
             iops: IopsCapabilities::default(),
             throughput: ThroughputCapabilities::default(),
             availability_zones: vec!["local".to_string()],
-        }
-    }
+         }
 }
 
 /// IOPS capabilities of a storage provider.
@@ -51,15 +47,12 @@ pub struct IopsCapabilities {
     /// Burst IOPS limit.
     pub burst_iops: Option<u32>,
 }
-
 impl Default for IopsCapabilities {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             min_iops: 1000,
             max_iops: 50000,
-            burst_iops: Some(10000),
-        }
-    }
+            burst_iops: Some(10_000),
+         }
 }
 
 /// Throughput capabilities of a storage provider.
@@ -72,15 +65,12 @@ pub struct ThroughputCapabilities {
     /// Burst throughput limit in MB/s.
     pub burst_throughput_mbs: Option<u32>,
 }
-
 impl Default for ThroughputCapabilities {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             min_throughput_mbs: 100,          // 100MB/s
             max_throughput_mbs: 1000,         // 1GB/s
             burst_throughput_mbs: Some(2000), // 2GB/s burst
-        }
-    }
+         }
 }
 
 /// Status of a storage provider.
@@ -95,7 +85,6 @@ pub enum ProviderStatus {
     /// Provider is in an error state.
     Error(String),
 }
-
 /// Information about a storage provider.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProviderInfo {
@@ -110,7 +99,6 @@ pub struct ProviderInfo {
     /// Available storage capacity in bytes.
     pub available_capacity: u64,
 }
-
 /// Filter criteria for listing providers.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProviderFilter {

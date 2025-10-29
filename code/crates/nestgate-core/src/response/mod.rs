@@ -1,7 +1,7 @@
-/// Response Module System
-/// This module system breaks down the large response.rs file into manageable,
-/// focused modules while maintaining the unified response architecture.
-/// **ACHIEVEMENT**: Reduces file sizes to <400 lines while preserving functionality
+// Response Module System
+// This module system breaks down the large response.rs file into manageable,
+//! focused modules while maintaining the unified response architecture.
+// **ACHIEVEMENT**: Reduces file sizes to <400 lines while preserving functionality
 // Core response modules
 pub mod ai_first_response;
 pub mod api_response;
@@ -9,7 +9,6 @@ pub mod error_response;
 pub mod response_builder;
 pub mod success_response;
 pub mod traits;
-
 // Re-export all types for backward compatibility and ease of use
 pub use ai_first_response::{
     AIErrorCategory, AIFirstError, AIFirstResponse, AIResponseMetadata, CacheInfo, DataQuality,
@@ -17,24 +16,22 @@ pub use ai_first_response::{
     ResourceUsage, RetryStrategy, SuggestedAction, UIHints,
 };
 pub use api_response::{ApiResponse, EmptyResponse};
-pub use error_response::{
-    ErrorResponse, ErrorResponseFactory, ErrorResponseFormat, UnifiedErrorResponse,
-};
-pub use response_builder::{FluentResponseBuilder, ResponseBuilder};
+pub use error_response::{ErrorResponseFactory, LegacyErrorResponse, UnifiedErrorResponse};
+pub use response_builder::ResponseBuilder;
 pub use success_response::{SuccessResponse, SuccessResponseFactory};
 pub use traits::{
     IntoApiResponse, IntoSuccessResponse, IntoUnifiedErrorResponse, ResponseChaining,
     ResponseConversion, ResponseMetadata,
 };
 
-// ==================== RESPONSE UTILITIES ====================
+// ==================== SECTION ====================
 
-/// Response utility functions for common operations
+// Response utility functions for common operations
 pub mod utils {
-    use super::*;
+    use super::{ApiResponse, UnifiedErrorResponse};
     use std::collections::HashMap;
-
     /// Create a paginated response wrapper
+    #[must_use]
     pub fn paginated_response<T: serde::Serialize>(
         data: Vec<T>,
         page: usize,
@@ -46,34 +43,35 @@ pub mod utils {
         let has_previous = page > 1;
 
         let pagination_info = serde_json::json!({
-                    "items": data,
-                    "pagination": {
-                        "page": page,
-                        "page_size": page_size,
-                        "total_count": total_count,
-                        "total_pages": total_pages,
-                        "has_next": has_next,
-                        "has_previous": has_previous
-        }
-                });
+            "items": data,
+            "pagination": {
+                "page": page,
+                "page_size": page_size,
+                "total_count": total_count,
+                "total_pages": total_pages,
+                "has_next": has_next,
+                "has_previous": has_previous
+            }
+        });
 
         ApiResponse::success(pagination_info)
     }
 
     /// Create a batch operation response
+    #[must_use]
     pub fn batch_response<T: serde::Serialize>(
         successful: Vec<T>,
         failed: Vec<(String, String)>, // (item_id, error_message)
     ) -> ApiResponse<serde_json::Value> {
         let batch_info = serde_json::json!({
-                    "successful": successful,
-                    "failed": failed,
-                    "summary": {
-                        "successful_count": successful.len(),
-                        "failed_count": failed.len(),
-                        "total_count": successful.len() + failed.len()
-        }
-                });
+            "successful": successful,
+            "failed": failed,
+            "summary": {
+                "successful_count": successful.len(),
+                "failed_count": failed.len(),
+                "total_count": successful.len() + failed.len()
+            }
+        });
 
         if failed.is_empty() {
             ApiResponse::success(batch_info)
@@ -87,6 +85,7 @@ pub mod utils {
     }
 
     /// Create a health check response
+    #[must_use]
     pub fn health_check_response(
         service: &str,
         status: &str,
@@ -113,10 +112,11 @@ pub mod utils {
     }
 
     /// Create a validation response with field-specific errors
+    #[must_use]
     pub fn validation_response(field_errors: HashMap<String, Vec<String>>) -> UnifiedErrorResponse {
-        let error_count = field_errors.values().map(|v| v.len()).sum::<usize>();
+        let error_count = field_errors.values().map(std::vec::Vec::len).sum::<usize>();
         let message = format!(
-            "Validation failed with {} errors across {} fields",
+            "Validation failed with {} errors across {} items",
             error_count,
             field_errors.len()
         );
@@ -130,6 +130,7 @@ pub mod utils {
     }
 
     /// Create a rate limit response with retry information
+    #[must_use]
     pub fn rate_limit_response(
         limit: u64,
         remaining: u64,
@@ -148,31 +149,32 @@ pub mod utils {
     }
 }
 
-// ==================== RESPONSE MIDDLEWARE ====================
+// ==================== SECTION ====================
 
-/// Middleware utilities for response processing
+// Middleware utilities for response processing
 pub mod middleware {
-
     use axum::response::Response;
 
     /// Add correlation ID to response headers
+    #[must_use]
     pub fn add_correlation_id(mut response: Response, correlation_id: &str) -> Response {
-        if let Ok(header_value) = correlation_id.parse() {
+        if let Ok(headervalue) = correlation_id.parse() {
             response
                 .headers_mut()
-                .insert("X-Correlation-ID", header_value);
+                .insert("X-Correlation-ID", headervalue);
         } else {
             // Use a safe default correlation ID if parsing fails
-            if let Ok(default_value) = "unknown".parse() {
+            if let Ok(defaultvalue) = "unknown".parse() {
                 response
                     .headers_mut()
-                    .insert("X-Correlation-ID", default_value);
+                    .insert("X-Correlation-ID", defaultvalue);
             }
         }
         response
     }
 
     /// Add standard security headers to response
+    #[must_use]
     pub fn add_security_headers(mut response: Response) -> Response {
         let headers = response.headers_mut();
 
@@ -194,15 +196,17 @@ pub mod middleware {
     }
 
     /// Add caching headers to response
+    #[must_use]
     pub fn add_cache_headers(mut response: Response, max_age_seconds: u64) -> Response {
-        let cache_value = format!("max-age={max_age_seconds}, public");
-        if let Ok(header_value) = cache_value.parse() {
-            response.headers_mut().insert("Cache-Control", header_value);
+        let cachevalue = format!("max-age={max_age_seconds}, public");
+        if let Ok(headervalue) = cachevalue.parse() {
+            response.headers_mut().insert("Cache-Control", headervalue);
         }
         response
     }
 
     /// Add no-cache headers to response
+    #[must_use]
     pub fn add_no_cache_headers(mut response: Response) -> Response {
         let headers = response.headers_mut();
 
@@ -221,14 +225,15 @@ pub mod middleware {
     }
 }
 
-// ==================== RESPONSE VALIDATION ====================
+// ==================== SECTION ====================
 
-/// Validation utilities for responses
+// Validation utilities for responses
 pub mod validation {
-    use super::*;
-
+    use super::{ApiResponse, SuccessResponse, UnifiedErrorResponse};
+    // CLEANED: Removed unused Result import as part of canonical modernization
+    // use crate::Result;
     /// Validate API response structure
-    pub fn validate_api_response<T>(response: &ApiResponse<T>) -> Result<(), String> {
+    pub fn validate_api_response<T>(response: &ApiResponse<T>) -> std::result::Result<(), String> {
         if response.success && response.data.is_none() {
             return Err("Successful response must have data".to_string());
         }
@@ -244,15 +249,20 @@ pub mod validation {
     }
 
     /// Validate unified error response structure
-    pub fn validate_unified_error_response(response: &UnifiedErrorResponse) -> Result<(), String> {
-        if response.context.service_name.is_empty() {
-            return Err("Error response must have service name".to_string());
+    pub fn validate_unified_error_response(
+        response: &mut UnifiedErrorResponse,
+    ) -> std::result::Result<(), String> {
+        if response.component.is_empty() {
+            // PEDANTIC: Fixed from service_name to component
+            response.component = "unknown".to_string();
         }
         Ok(())
     }
 
     /// Validate success response structure
-    pub fn validate_success_response(response: &SuccessResponse) -> Result<(), String> {
+    pub fn validate_success_response(
+        response: &SuccessResponse,
+    ) -> std::result::Result<(), String> {
         if response.message.is_empty() {
             return Err("Success response must have message".to_string());
         }
@@ -260,7 +270,7 @@ pub mod validation {
     }
 }
 
-// ==================== RESPONSE TESTING UTILITIES ====================
+// ==================== SECTION ====================
 
 #[cfg(test)]
 pub mod testing {

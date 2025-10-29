@@ -47,7 +47,6 @@ pub enum PrimalError {
     /// Unknown errors
     Unknown(String),
 }
-
 impl fmt::Display for PrimalError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -73,7 +72,7 @@ impl fmt::Display for PrimalError {
 
 impl std::error::Error for PrimalError {}
 
-// ==================== NESTGATE ERROR INTEGRATION ====================
+// ==================== SECTION ====================
 
 /// Convert PrimalError to unified NestGateError
 impl From<PrimalError> for NestGateError {
@@ -96,14 +95,13 @@ impl From<PrimalError> for NestGateError {
             PrimalError::ServiceUnavailable(msg) => (msg, PrimalOperation::ServiceUnavailable),
             PrimalError::Unknown(msg) => (msg, PrimalOperation::Internal),
         };
-
         NestGateError::Primal(Box::new(PrimalErrorData {
             message,
             operation,
             primal_id: None,
             request_context: None,
             capability: None,
-            metadata: HashMap::new(),
+            _metadata: HashMap::new(),
         }))
     }
 }

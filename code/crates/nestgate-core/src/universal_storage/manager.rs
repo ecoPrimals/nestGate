@@ -7,7 +7,6 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tracing::{debug, info, warn};
-
 use super::types::*;
 use crate::{NestGateError, Result};
 
@@ -18,7 +17,12 @@ pub struct SyncEngine;
 pub struct MetadataStore;
 
 impl ReplicationManager {
-    pub fn new() -> Result<Self> {
+    /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub fn new() -> Result<Self>  {
         Ok(Self)
     }
 }
@@ -30,13 +34,29 @@ impl StorageEventBroadcaster {
 }
 
 impl SyncEngine {
-    pub fn new() -> Result<Self> {
+    /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub fn new() -> Result<Self>  {
         Ok(Self)
     }
 }
 
 impl MetadataStore {
-    pub async fn new() -> Result<Self> {
+    /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        #[must_use]
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub fn new() -> Result<Self>   {
         Ok(Self)
     }
 }
@@ -46,7 +66,6 @@ pub struct UniversalStorageManager {
     _protocol_handlers: HashMap<String, Box<dyn StorageProtocolHandler>>,
     _config: UniversalStorageConfig,
 }
-
 /// Universal Storage Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UniversalStorageConfig {
@@ -61,7 +80,6 @@ pub struct UniversalStorageConfig {
     /// Replication lag tolerance in seconds
     pub replication_lag_tolerance: u32,
 }
-
 impl Default for UniversalStorageConfig {
     fn default() -> Self {
         Self {
@@ -76,7 +94,19 @@ impl Default for UniversalStorageConfig {
 
 impl UniversalStorageManager {
     /// Create a new Universal Storage Manager
-    pub async fn new(config: UniversalStorageConfig) -> Result<Self> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub async fn new(config: UniversalStorageConfig) -> Result<Self>   {
         info!("Initializing Universal Storage Manager");
 
         // Initialize components (not stored in struct for now)
@@ -93,7 +123,19 @@ impl UniversalStorageManager {
     }
 
     /// Start the universal storage manager
-    pub async fn start(&self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub async fn start(&self) -> Result<()>   {
         info!("Starting Universal Storage Manager");
 
         self.start_background_services().await?;
@@ -104,27 +146,36 @@ impl UniversalStorageManager {
     }
 
     /// Register a storage backend with the manager
-    pub async fn register_storage_backend(&self, backend: StorageBackend) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub fn register_storage_backend(&self, backend: StorageBackend) -> Result<()>   {
         info!("Registering storage backend: {}", backend.name);
 
         // Validate backend configuration
         if backend.name.trim().is_empty() {
-            return Err(NestGateError::Configuration {
-                message: "Backend name cannot be empty".to_string(),
-                config_source: ConfigSource::UserProvided,
-                field: Some("name".to_string()),
-                suggested_fix: Some("Provide a valid backend name".to_string()),
-            });
-        }
+            return Err(NestGateError::configuration(
+                
+                
+            );
+        )
 
         if backend.endpoint.trim().is_empty() {
-            return Err(NestGateError::Configuration {
-                message: "Backend endpoint cannot be empty".to_string(),
-                config_source: ConfigSource::UserProvided,
-                field: Some("endpoint".to_string()),
-                suggested_fix: Some("Provide a valid backend endpoint URL".to_string()),
-            });
-        }
+            return Err(NestGateError::configuration(
+                
+                
+            );
+        )
 
         // Check if backend is healthy before registering
         match self.check_backend_health(&backend).await {
@@ -150,10 +201,22 @@ impl UniversalStorageManager {
     }
 
     /// Coordinate a storage request across multiple protocols
-    pub async fn coordinate_storage_request(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub fn coordinate_storage_request(
         &self,
         request: StorageRequest,
-    ) -> Result<StorageResponse> {
+    ) -> Result<StorageResponse>   {
         debug!("Coordinating storage request: {:?}", request);
 
         // Initialize coordinator
@@ -182,7 +245,19 @@ impl UniversalStorageManager {
     }
 
     /// Stream storage events for real-time coordination
-    pub async fn stream_storage_events(&self) -> Result<StorageEventStream> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub async fn stream_storage_events(&self) -> Result<StorageEventStream>   {
         info!("🔄 Starting storage event stream");
 
         // Initialize event broadcaster

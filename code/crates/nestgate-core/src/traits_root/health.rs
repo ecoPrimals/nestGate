@@ -3,12 +3,10 @@
 ///
 /// This module provides health monitoring capabilities that can be implemented
 /// by any service in the ecosystem for status reporting and diagnostics.
-use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
 use std::time::SystemTime;
-
 /// Health status levels
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum HealthStatus {
@@ -17,7 +15,6 @@ pub enum HealthStatus {
     Unhealthy,
     Unknown,
 }
-
 /// Detailed health state information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HealthState {
@@ -27,7 +24,6 @@ pub struct HealthState {
     pub details: HashMap<String, String>,
     pub metrics: HashMap<String, f64>,
 }
-
 impl Default for HealthState {
     fn default() -> Self {
         Self {
@@ -41,11 +37,9 @@ impl Default for HealthState {
 }
 
 /// Health check trait for individual components
-#[async_trait]
 pub trait HealthCheck: Send + Sync {
     /// Perform a health check and return the current state
-    async fn check_health(&self) -> crate::Result<HealthState>;
-
+    fn check_health(&self) -> impl std::future::Future<Output = Result<HealthState>> + Send;
     /// Get the name of this health check
     fn check_name(&self) -> &str;
 
@@ -56,32 +50,29 @@ pub trait HealthCheck: Send + Sync {
 }
 
 /// Health monitoring trait for services
-#[async_trait]
 pub trait HealthMonitor: Send + Sync {
     /// Start health monitoring
-    async fn start_monitoring(&self) -> crate::Result<()>;
-
+    fn start_monitoring(&self) -> impl std::future::Future<Output = Result<()>> + Send;
     /// Stop health monitoring
-    async fn stop_monitoring(&self) -> crate::Result<()>;
+    fn stop_monitoring(&self) -> impl std::future::Future<Output = Result<()>> + Send;
 
     /// Get current overall health status
-    async fn get_health_status(&self) -> crate::Result<HealthState>;
+    fn get_health_status(&self) -> impl std::future::Future<Output = Result<HealthState>> + Send;
 
     /// Get detailed health information for all components
-    async fn get_detailed_health(&self) -> crate::Result<HashMap<String, HealthState>>;
+    fn get_detailed_health(&self) -> impl std::future::Future<Output = Result<HashMap<String, HealthState>> + Send;
 
     /// Register a health check
-    async fn register_health_check(&self, check: Box<dyn HealthCheck>) -> crate::Result<()>;
+    fn register_health_check(&self, check: Box<dyn HealthCheck>) -> impl std::future::Future<Output = Result<()>> + Send;
 
     /// Unregister a health check by name
-    async fn unregister_health_check(&self, check_name: &str) -> crate::Result<()>;
+    fn unregister_health_check(&self, check_name: &str) -> impl std::future::Future<Output = Result<()>> + Send;
 }
 
 /// Health state builder for creating health states
 pub struct HealthStateBuilder {
     state: HealthState,
 }
-
 impl HealthStateBuilder {
     pub fn new(status: HealthStatus) -> Self {
         Self {

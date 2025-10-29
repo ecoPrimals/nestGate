@@ -30,14 +30,14 @@ pub use zfs_compatibility::DevEnvironmentZfsService;
 
 /// Check if we're running in a development environment without storage hardware
 #[cfg(feature = "dev-environment-fallbacks")]
+#[must_use]
 pub fn is_dev_environment() -> bool {
     HardwareEnvironmentDetector::is_development_environment()
 }
-
 /// Get the appropriate storage service for the current environment
 #[cfg(feature = "dev-environment-fallbacks")]
 pub async fn create_storage_service(
-) -> crate::error::CanonicalResult<std::sync::Arc<DevEnvironmentStorageService>> {
+) -> nestgate_core::error::CanonicalResult<std::sync::Arc<DevEnvironmentStorageService>> {
     match HardwareEnvironmentDetector::detect_capabilities().await {
         HardwareCapabilities::NativeZfs => {
             tracing::info!("🔧 Native ZFS hardware detected");
@@ -58,13 +58,11 @@ pub async fn create_storage_service(
         }
     }
 }
-
 /// Compile-time check for development environment support
 #[cfg(not(feature = "dev-environment-fallbacks"))]
 compile_error!(
     "
 ❌ Development environment fallbacks are disabled.
-
 To enable development environment support, add to your Cargo.toml:
 [features]
 default = [\"dev-environment-fallbacks\"]
@@ -75,15 +73,15 @@ cargo build --features dev-environment-fallbacks
 );
 
 /// Runtime information about feature availability
+#[must_use]
 pub fn feature_info() -> FeatureInfo {
     FeatureInfo {
         dev_environment_fallbacks: cfg!(feature = "dev-environment-fallbacks"),
         hardware_detection: cfg!(feature = "hardware-detection"),
-        container_support: cfg!(feature = "container-support"),
+        container_support: cfg!(feature = "container"),
         dev_verbose_logging: cfg!(feature = "dev-verbose-logging"),
     }
 }
-
 /// Information about enabled features
 #[derive(Debug, Clone)]
 pub struct FeatureInfo {

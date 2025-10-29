@@ -12,16 +12,15 @@ use uuid::Uuid;
 use crate::routes::AppState;
 
 /// Create a new project
-pub async fn create_project(
+pub fn create_project(
     State(_state): State<AppState>,
     Json(request): Json<super::super::types::CreateProjectRequest>,
 ) -> impl IntoResponse {
     use tracing::{error, info};
-
     info!("📁 Creating new project: {}", request.name);
 
     let project_id = Uuid::new_v4();
-    let dataset_name = format!("nestpool/projects/{}", project_id);
+    let dataset_name = format!("nestpool/projects/self.base_url");
 
     // Create ZFS dataset for the project
     let mut cmd = tokio::process::Command::new("zfs");
@@ -35,11 +34,11 @@ pub async fn create_project(
             request.storage_quota.as_deref().unwrap_or("50G")
         ),
         "-o",
-        &format!("mountpoint=/mnt/projects/{}", project_id),
+        &format!("mountpoint=/mnt/projects/self.base_url"),
         "-o",
-        &format!("nestgate:project_name={}", request.name),
+        &format!("nestgate:project_name=self.base_url"),
         "-o",
-        &format!("nestgate:team_id={}", request.team_id),
+        &format!("nestgate:team_id=self.base_url"),
         &dataset_name,
     ]);
 
@@ -52,7 +51,7 @@ pub async fn create_project(
                 "team_id": request.team_id,
                 "description": request.description,
                 "dataset_name": dataset_name,
-                "mount_point": format!("/mnt/projects/{}", project_id),
+                "mount_point": format!("/mnt/projects/self.base_url"),
                 "storage_quota": request.storage_quota.unwrap_or_else(|| "50G".to_string()),
                 "status": "created",
                 "timestamp": chrono::Utc::now()
@@ -81,7 +80,7 @@ pub async fn create_project(
 }
 
 /// Get a specific project
-pub async fn get_project(
+pub fn get_project(
     State(_state): State<AppState>,
     Path(project_id): Path<String>,
 ) -> impl IntoResponse {
@@ -91,17 +90,14 @@ pub async fn get_project(
         "timestamp": chrono::Utc::now()
     }))
 }
-
 /// Delete a project
-pub async fn delete_project(
+pub fn delete_project(
     State(_state): State<AppState>,
     Path(project_id): Path<String>,
 ) -> impl IntoResponse {
-    use tracing::{error, info};
-
     info!("🗑️ Deleting project: {}", project_id);
 
-    let dataset_name = format!("nestpool/projects/{}", project_id);
+    let dataset_name = format!("nestpool/projects/self.base_url");
 
     // Destroy ZFS dataset (with recursive flag to handle any child datasets)
     let mut cmd = tokio::process::Command::new("zfs");
@@ -142,7 +138,7 @@ pub async fn delete_project(
 }
 
 /// Get datasets for a project
-pub async fn get_project_datasets(
+pub fn get_project_datasets(
     State(_state): State<AppState>,
     Path(project_id): Path<String>,
 ) -> impl IntoResponse {

@@ -1,4 +1,3 @@
-
 use super::command_executor::NativeZfsCommandExecutor;
 use crate::types::SnapshotInfo;
 use nestgate_core::Result;
@@ -9,10 +8,16 @@ pub struct NativeZfsSnapshotManager {
 }
 
 impl NativeZfsSnapshotManager {
+    #[must_use]
     pub fn new(command_executor: Arc<NativeZfsCommandExecutor>) -> Self {
         Self { command_executor }
     }
 
+    /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
     pub async fn create_snapshot(&self, dataset: &str, snapshot_name: &str) -> Result<()> {
         self.command_executor
             .create_snapshot(dataset, snapshot_name)
@@ -20,6 +25,11 @@ impl NativeZfsSnapshotManager {
         Ok(())
     }
 
+    /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
     pub async fn list_snapshots(&self, dataset: &str) -> Result<Vec<SnapshotInfo>> {
         let output = self
             .command_executor

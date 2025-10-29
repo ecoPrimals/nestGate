@@ -1,10 +1,8 @@
 use crate::error::{NetworkError};
-use std::path::PathBuf;
 use std::marker::PhantomData;
-use async_trait::async_trait;
 use serde::de::DeserializeOwned;
 
-use crate::error::Result;
+use crate::Result;
 use crate::traits::config::ConfigProvider;
 use serde::Deserialize;
 
@@ -17,13 +15,10 @@ pub enum ConfigFormat {
 
 /// File-based configuration provider
 pub struct FileConfigProvider<T> {
-    path: PathBuf,
     format: ConfigFormat,
     _phantom: PhantomData<T>,
 }
-
 impl<T> FileConfigProvider<T> {
-    pub fn new(path: PathBuf, format: ConfigFormat) -> Self {
         Self {
             path,
             format,
@@ -42,7 +37,6 @@ impl<T> FileConfigProvider<T> {
     }
 }
 
-#[async_trait]
 impl<T> ConfigProvider<T> for FileConfigProvider<T>
 where
     T: DeserializeOwned + Send + Sync + 'static,
@@ -60,7 +54,6 @@ where
     }
 
     async fn provider_info(&self) -> String {
-        format!("FileConfigProvider(path: {:?}, format: {:?})", self.path, self.format)
     }
 
     async fn watch_config(&self) -> Result<impl futures_util::Stream<Item = Result<T>> + Send> {
@@ -68,4 +61,3 @@ where
         // In a real implementation, this would watch the file for changes
         Ok(futures_util::stream::empty())
     }
-}

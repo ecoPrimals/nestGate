@@ -1,6 +1,6 @@
-//! Universal Spore Integration Module
-//! Provides seamless integration with the Spore ecosystem
-//! **MODERNIZED**: Updated to use current patterns and remove deprecated code
+// Universal Spore Integration Module
+// Provides seamless integration with the Spore ecosystem
+// **MODERNIZED**: Updated to use current patterns and remove deprecated code
 
 use crate::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
@@ -13,7 +13,6 @@ use uuid::Uuid;
 pub struct UniversalCryptographicSpore {
     /// Unique spore identifier
     pub spore_id: String,
-
     /// Which primal this spore belongs to
     pub primal_identity: String,
 
@@ -56,7 +55,6 @@ pub struct UniversalCryptographicSpore {
 pub struct GeneticBlueprint {
     /// Evolution rules embedded in the spore
     pub evolution_rules: Vec<EvolutionRule>,
-
     /// Mutation rate for spawning children
     pub mutation_rate: f64,
 
@@ -75,7 +73,6 @@ pub struct GeneticBlueprint {
 pub struct PermissionMatrix {
     /// Individual user permissions (always full)
     pub individual_permissions: IndividualPermissions,
-
     /// Corporate permissions (negotiated terms)
     pub corporate_permissions: HashMap<String, CorporatePermissions>,
 
@@ -91,7 +88,6 @@ pub struct PermissionMatrix {
 pub struct PolicyContract {
     /// Your terms for corporate usage
     pub corporate_terms: CorporateTerms,
-
     /// Individual access policy (always free)
     pub individual_policy: IndividualPolicy,
 
@@ -110,7 +106,6 @@ pub struct PolicyContract {
 pub struct ViolationDetector {
     /// Corporate usage detection patterns
     pub corporate_patterns: Vec<CorporatePattern>,
-
     /// Automation detection rules
     pub automation_detectors: Vec<AutomationDetector>,
 
@@ -126,7 +121,6 @@ pub struct ViolationDetector {
 pub struct EvolutionEngine {
     /// Conditions that trigger evolution
     pub evolution_triggers: Vec<EvolutionTrigger>,
-
     /// Child spawning parameters
     pub spawn_parameters: SpawnParameters,
 
@@ -153,11 +147,17 @@ pub struct SecurityProviderIntegration {
     /// Provider endpoint for extended operations
     pub provider_endpoint: Option<String>,
 }
-
 impl UniversalCryptographicSpore {
     /// Create a new spore for a primal
-    pub fn new_for_primal(primal_name: &str) -> Result<Self> {
-        let spore_id = format!("spore_{}_{}", primal_name, Uuid::new_v4());
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn new_for_primal(primal_name: &str) -> Result<Self>  {
+        let spore_id = format!("spore_{}_{}", primal_name, Uuid::new_v4();
         let now = SystemTime::now();
 
         Ok(Self {
@@ -178,12 +178,19 @@ impl UniversalCryptographicSpore {
     }
 
     /// Initialize with security provider integration (if available)
-    pub async fn initialize_with_security_provider(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn initialize_with_security_provider(
         &mut self,
         provider_type: String,
         provider_id: String,
         provider_endpoint: Option<String>,
-    ) -> Result<()> {
+    ) -> Result<()>  {
         if let Some(endpoint) = provider_endpoint {
             // Try to connect to security provider for enhanced capabilities
             match self
@@ -211,10 +218,16 @@ impl UniversalCryptographicSpore {
     }
 
     /// Authorize an operation (core spore functionality)
-    pub async fn authorize_operation(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn authorize_operation(
         &self,
-        operation: &OperationRequest,
-    ) -> Result<AuthorizationDecision> {
+    ) -> Result<AuthorizationDecision>  {
         // Step 1: Detect user type (individual vs corporate)
         let user_classification = self.classify_user(operation).await?;
 
@@ -225,7 +238,7 @@ impl UniversalCryptographicSpore {
                 reason: violation.reason,
                 violation_type: violation.violation_type,
                 remediation: violation.suggested_remediation,
-            });
+            );
         }
 
         // Step 3: Apply permission matrix
@@ -279,18 +292,20 @@ impl UniversalCryptographicSpore {
     }
 
     /// Spawn a child spore (autonomous evolution)
-    pub async fn spawn_child(&mut self) -> Result<UniversalCryptographicSpore> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+                pub fn spawn_child(&mut self) -> Result<UniversalCryptographicSpore>  {
         // Check if evolution is needed
         if !self.should_evolve()? {
-            return Err(NestGateError::Internal {
-                message: "Evolution not required at this time".to_string(),
-                location: Some("UniversalCryptographicSpore::spawn_child".to_string()),
-                debug_info: Some(format!(
-                    "Generation: {}, Last evolution: {:?}",
+            return Err(NestGateError::internal_error(
+                    "Generation: {), Last evolution: {:?}",
                     self.generation, self.last_evolution
-                )),
-                is_bug: false,
-            });
+                )));
         }
 
         // Create child with evolved genetics
@@ -342,13 +357,12 @@ impl UniversalCryptographicSpore {
     }
 
     /// Classify user as individual or corporate
-    async fn classify_user(&self, operation: &OperationRequest) -> Result<UserClassification> {
         // Use embedded detection patterns
         for pattern in &self.violation_detector.corporate_patterns {
             if pattern.matches(operation)? {
                 return Ok(UserClassification::Corporate {
                     organization_profile: pattern.extract_organization_profile(operation)?,
-                });
+                );
             }
         }
 
@@ -384,22 +398,19 @@ impl UniversalCryptographicSpore {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OperationRequest {
     pub operation_type: String,
-    pub resource_path: String,
     pub user_context: UserContext,
     pub metadata: HashMap<String, String>,
     pub timestamp: SystemTime,
 }
-
 /// User context information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserContext {
     pub user_id: Option<String>,
     pub session_id: String,
-    pub ip_address: String,
+    pub ip_endpoint: String,
     pub user_agent: Option<String>,
     pub environment_info: HashMap<String, String>,
 }
-
 /// Authorization decision from spore
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AuthorizationDecision {
@@ -419,7 +430,6 @@ pub enum AuthorizationDecision {
         organization_profile: OrganizationProfile,
     },
 }
-
 /// User classification result
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum UserClassification {
@@ -428,7 +438,6 @@ pub enum UserClassification {
         organization_profile: OrganizationProfile,
     },
 }
-
 // Supporting types with sensible defaults
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IndividualPermissions {
@@ -618,7 +627,6 @@ impl ViolationDetector {
 
     fn check_for_violations(
         &self,
-        _operation: &OperationRequest,
     ) -> Result<Option<ViolationResult>> {
         // Placeholder - will implement corporate detection logic
         Ok(None)
@@ -677,13 +685,11 @@ pub struct ViolationResponse;
 pub struct CorporatePattern;
 
 impl CorporatePattern {
-    fn matches(&self, _operation: &OperationRequest) -> Result<bool> {
         Ok(false) // Placeholder
     }
 
     fn extract_organization_profile(
         &self,
-        _operation: &OperationRequest,
     ) -> Result<OrganizationProfile> {
         // Placeholder
         Ok(OrganizationProfile {

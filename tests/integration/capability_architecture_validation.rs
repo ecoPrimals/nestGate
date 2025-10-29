@@ -3,15 +3,15 @@
 //! This test validates capability architecture functionality using canonical patterns
 //! **CANONICAL MODERNIZATION**: Updated to use simple, working patterns
 
-use nestgate_core::config::canonical_unified::NestGateCanonicalUnifiedConfig as NestGateCanonicalUnifiedConfig;
-use nestgate_core::config::defaults::Environment;
+use nestgate_core::config::canonical_master::NestGateCanonicalConfig as NestGateUnifiedConfig;
+use nestgate_core::constants::Environment;
 use std::time::Duration;
 use tokio::time::sleep;
 use tracing::info;
 
 /// Test capability architecture validation configuration
 #[tokio::test]
-async fn test_capability_architecture_config() {
+async fn test_capability_architecture_config() -> Result<(), Box<dyn std::error::Error>> {
     info!("🏗️ Starting capability architecture validation configuration test");
     
     // Test capability architecture configuration creation
@@ -19,15 +19,16 @@ async fn test_capability_architecture_config() {
     assert!(!config.system.instance_name.is_empty());
     
     // Test environment-specific capability architecture configuration
-    let dev_config = nestgate_core::config::canonical_unified::create_config_for_environment(Environment::Development);
+    let dev_config = nestgate_core::config::canonical_master::create_config_for_environment(Environment::Development);
     assert!(!dev_config.system.instance_name.is_empty());
     
     info!("✅ Capability architecture validation configuration test completed");
+    Ok(())
 }
 
 /// Test capability discovery mechanisms
 #[tokio::test]
-async fn test_capability_discovery() {
+async fn test_capability_discovery() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔍 Testing capability discovery mechanisms");
     
     // Test capability discovery processes
@@ -47,14 +48,16 @@ async fn test_capability_discovery() {
         // Verify discovery process is valid
         assert!(!process.is_empty(), "Discovery process should be specified");
         assert!(discovery_time > 0, "Discovery time should be positive");
+    Ok(())
     }
     
     info!("✅ Capability discovery mechanisms completed");
+    Ok(())
 }
 
 /// Test capability architecture patterns
 #[tokio::test]
-async fn test_capability_architecture_patterns() {
+async fn test_capability_architecture_patterns() -> Result<(), Box<dyn std::error::Error>> {
     info!("🧩 Testing capability architecture patterns");
     
     // Test architecture patterns validation
@@ -74,14 +77,16 @@ async fn test_capability_architecture_patterns() {
         // Verify pattern is valid
         assert!(!pattern.is_empty(), "Pattern should be specified");
         assert!(validation_time > 0, "Validation time should be positive");
+    Ok(())
     }
     
     info!("✅ Capability architecture patterns completed");
+    Ok(())
 }
 
 /// Test capability interface validation
 #[tokio::test]
-async fn test_capability_interface_validation() {
+async fn test_capability_interface_validation() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔌 Testing capability interface validation");
     
     // Test interface validation components
@@ -101,14 +106,16 @@ async fn test_capability_interface_validation() {
         // Verify interface component is valid
         assert!(!component.is_empty(), "Component should be specified");
         assert!(check_time > 0, "Check time should be positive");
+    Ok(())
     }
     
     info!("✅ Capability interface validation completed");
+    Ok(())
 }
 
 /// Test capability dependency management
 #[tokio::test]
-async fn test_capability_dependency_management() {
+async fn test_capability_dependency_management() -> Result<(), Box<dyn std::error::Error>> {
     info!("📦 Testing capability dependency management");
     
     // Test dependency management aspects
@@ -128,14 +135,16 @@ async fn test_capability_dependency_management() {
         // Verify dependency aspect is valid
         assert!(!aspect.is_empty(), "Aspect should be specified");
         assert!(management_time > 0, "Management time should be positive");
+    Ok(())
     }
     
     info!("✅ Capability dependency management completed");
+    Ok(())
 }
 
 /// Test capability runtime validation
 #[tokio::test]
-async fn test_capability_runtime_validation() {
+async fn test_capability_runtime_validation() -> Result<(), Box<dyn std::error::Error>> {
     info!("⚡ Testing capability runtime validation");
     
     let start_time = std::time::Instant::now();
@@ -150,27 +159,30 @@ async fn test_capability_runtime_validation() {
         
         // Verify runtime validation timing is accurate
         assert!(elapsed.as_millis() >= validation_cycle as u128, "Runtime validation timing should be accurate");
+    Ok(())
     }
     
     info!("✅ Capability runtime validation completed");
+    Ok(())
 }
 
 /// Test capability architecture environments
 #[tokio::test]
-async fn test_capability_architecture_environments() {
+async fn test_capability_architecture_environments() -> Result<(), Box<dyn std::error::Error>> {
     info!("🌍 Testing capability architecture across environments");
     
     // Test development environment capability architecture
-    let dev_config = nestgate_core::config::canonical_unified::create_config_for_environment(Environment::Development);
+    let dev_config = nestgate_core::config::canonical_master::create_config_for_environment(Environment::Development);
     assert!(!dev_config.system.instance_name.is_empty());
     assert!(matches!(dev_config.environment, Environment::Development));
     info!("Development capability architecture configuration validated");
     
     // Test production environment capability architecture
-    let prod_config = nestgate_core::config::canonical_unified::create_config_for_environment(Environment::Production);
+    let prod_config = nestgate_core::config::canonical_master::create_config_for_environment(Environment::Production);
     assert!(!prod_config.system.instance_name.is_empty());
     assert!(matches!(prod_config.environment, Environment::Production));
     info!("Production capability architecture configuration validated");
     
     info!("✅ Capability architecture environment test completed");
+    Ok(())
 }

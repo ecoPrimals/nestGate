@@ -1,7 +1,7 @@
 
 /// Validation result type
-pub type ValidationResult<T> = Result<T, ValidationError>;
-
+// Use canonical ValidationResult from error::idiomatic
+pub use crate::error::idiomatic::ValidationResult;
 /// Validation error types
 #[derive(Debug, Clone)]
 pub enum ValidationError {
@@ -16,7 +16,6 @@ pub enum ValidationError {
         max: Option<i64>,
     },
 }
-
 impl std::fmt::Display for ValidationError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -41,7 +40,6 @@ impl std::error::Error for ValidationError {}
 /// Basic validation utilities
 pub mod utils {
     use super::{ValidationError, ValidationResult};
-
     /// Validate that a string is not empty
     pub fn validate_non_empty(field: &str, value: &str) -> ValidationResult<()> {
         if value.trim().is_empty() {
@@ -66,7 +64,7 @@ pub mod utils {
                     field: field.to_string(),
                     min,
                     max,
-                });
+                );
             }
         }
         if let Some(max_val) = max {
@@ -75,7 +73,7 @@ pub mod utils {
                     field: field.to_string(),
                     min,
                     max,
-                });
+                );
             }
         }
         Ok(())

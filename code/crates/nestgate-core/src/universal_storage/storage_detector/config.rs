@@ -23,7 +23,6 @@ pub struct DetectionConfig {
     /// Whether to perform deep analysis
     pub enable_deep_analysis: bool,
 }
-
 impl Default for DetectionConfig {
     fn default() -> Self {
         Self {
@@ -41,6 +40,7 @@ impl Default for DetectionConfig {
 
 impl DetectionConfig {
     /// Create a fast detection configuration (minimal profiling)
+    #[must_use]
     pub fn fast() -> Self {
         Self {
             enable_performance_profiling: false,
@@ -51,6 +51,7 @@ impl DetectionConfig {
     }
 
     /// Create a comprehensive detection configuration (full profiling)
+    #[must_use]
     pub fn comprehensive() -> Self {
         Self {
             include_virtual_devices: true,
@@ -63,6 +64,7 @@ impl DetectionConfig {
     }
 
     /// Create a cloud-only detection configuration
+    #[must_use]
     pub fn cloud_only() -> Self {
         Self {
             enable_cloud_detection: true,
@@ -73,6 +75,7 @@ impl DetectionConfig {
     }
 
     /// Create a local-only detection configuration
+    #[must_use]
     pub fn local_only() -> Self {
         Self {
             enable_cloud_detection: false,
@@ -82,11 +85,18 @@ impl DetectionConfig {
     }
 
     /// Validate configuration settings
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub fn validate(&self) -> Result<(), String> {
         if self.minimum_storage_size == 0 {
             return Err("minimum_storage_size must be greater than 0".to_string());
         }
-        
+
         if self.detection_timeout_secs == 0 {
             return Err("detection_timeout_secs must be greater than 0".to_string());
         }
@@ -97,4 +107,4 @@ impl DetectionConfig {
 
         Ok(())
     }
-} 
+}

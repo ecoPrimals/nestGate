@@ -1,15 +1,14 @@
 //
 // Contains the main service structure and core functionality.
 
-// REMOVED: async_trait - using zero-cost native async patterns
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::SystemTime;
 use tokio::sync::RwLock;
 // Removed unused tracing import
 
-use crate::handlers::zfs::universal_zfs::config::{FailSafeConfig, TimeoutConfig};
-use crate::handlers::zfs::universal_zfs::traits::UniversalZfsService;
+use crate::handlers::zfs::universal_zfs::config::TimeoutConfig;
+use crate::handlers::zfs::universal_zfs::traits::{UniversalZfsService, UniversalZfsServiceEnum};
 
 use crate::handlers::zfs::universal_zfs::types::{
     DatasetConfig, DatasetInfo, HealthStatus, PoolConfig, PoolInfo, ServiceMetrics, SnapshotConfig,
@@ -22,8 +21,8 @@ use super::retry_executor::RetryExecutor;
 
 /// Fail-safe service wrapper
 pub struct FailSafeZfsService {
-    pub(crate) primary: Arc<dyn UniversalZfsService>,
-    pub(crate) fallback: Option<Arc<dyn UniversalZfsService>>,
+    pub(crate) primary: Arc<UniversalZfsServiceEnum>,
+    pub(crate) fallback: Option<Arc<UniversalZfsServiceEnum>>,
     pub(crate) circuit_breaker: CircuitBreaker,
     pub(crate) retry_executor: RetryExecutor,
     pub(crate) timeout_config: TimeoutConfig,
@@ -32,7 +31,6 @@ pub struct FailSafeZfsService {
     pub(crate) start_time: SystemTime,
     pub(crate) metrics: Arc<RwLock<ServiceMetrics>>,
 }
-
 impl std::fmt::Debug for FailSafeZfsService {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("FailSafeZfsService")
@@ -53,14 +51,35 @@ impl FailSafeZfsService {
     ///
     /// # Returns
     /// * New fail-safe service instance
-    pub fn new(primary: Arc<dyn UniversalZfsService>, config: FailSafeConfig) -> Self {
+    pub fn new(
+        primary: Arc<UniversalZfsServiceEnum>,
+        config: nestgate_core::config::canonical_master::handler_config::ZfsFailSafeConfig,
+    ) -> Self {
         Self {
             primary,
             fallback: None,
-            circuit_breaker: CircuitBreaker::new(config.circuit_breaker),
-            retry_executor: RetryExecutor::new(config.retry_policy),
-            timeout_config: config.timeout,
-            graceful_degradation: config.graceful_degradation,
+            circuit_breaker: CircuitBreaker::new(
+                crate::handlers::zfs::universal_zfs::config::CircuitBreakerConfig {
+                    enabled: config.circuit_breaker.enabled,
+                    failure_threshold: config.failure_threshold,
+                    recovery_timeout: config.circuit_timeout,
+                    half_open_max_calls: 3,
+                },
+            ),
+            retry_executor: RetryExecutor::new(
+                crate::handlers::zfs::universal_zfs::config::RetryPolicy {
+                    max_attempts: 3,
+                    initial_delay: std::time::Duration::from_millis(100),
+                    max_delay: std::time::Duration::from_secs(10),
+                    backoff_multiplier: 2.0,
+                },
+            ),
+            timeout_config: TimeoutConfig {
+                operation_timeout: config.circuit_timeout,
+                connection_timeout: std::time::Duration::from_secs(30),
+                health_check_timeout: std::time::Duration::from_secs(5),
+            },
+            graceful_degradation: config.enable_graceful_degradation,
             service_name: "fail-safe-zfs".to_string(),
             start_time: SystemTime::now(),
             metrics: Arc::new(RwLock::new(ServiceMetrics::default())),
@@ -74,7 +93,8 @@ impl FailSafeZfsService {
     ///
     /// # Returns
     /// * Self for method chaining
-    pub fn with_fallback(mut self, fallback: Arc<dyn UniversalZfsService>) -> Self {
+    #[must_use]
+    pub fn with_fallback(mut self, fallback: Arc<UniversalZfsServiceEnum>) -> Self {
         self.fallback = Some(fallback);
         self
     }
@@ -91,10 +111,10 @@ impl FailSafeZfsService {
         }
     }
 
-    pub(crate) async fn execute_fallback_operation(
+    pub(crate) fn execute_fallback_operation(
         &self,
         operation: &str,
-        _fallback: &Arc<dyn UniversalZfsService>,
+        _fallback: &Arc<UniversalZfsServiceEnum>,
     ) -> UniversalZfsResult<()> {
         warn!("Executing fallback operation: {}", operation);
         // For now, just return success from fallback
@@ -103,6 +123,7 @@ impl FailSafeZfsService {
 }
 
 // **ZERO-COST NATIVE ASYNC**: Converted from async_trait for 40-60% performance improvement
+#[async_trait::async_trait]
 impl UniversalZfsService for FailSafeZfsService {
     fn service_name(&self) -> &str {
         &self.service_name
@@ -112,28 +133,22 @@ impl UniversalZfsService for FailSafeZfsService {
         self.primary.service_version()
     }
 
-    fn health_check(&self) -> impl std::future::Future<Output = UniversalZfsResult<HealthStatus>> + Send {
-        async move {
-            health_check(self).await
-        }
+    async fn health_check(&self) -> UniversalZfsResult<HealthStatus> {
+        health_check(self).await
     }
 
-    fn get_metrics(&self) -> impl std::future::Future<Output = UniversalZfsResult<ServiceMetrics>> + Send {
-        async move {
-            let mut metrics = self.metrics.read().await.clone();
-            metrics.service_name = self.service_name.clone();
-            metrics.timestamp = SystemTime::now();
-            metrics.uptime = SystemTime::now()
-                .duration_since(self.start_time)
-                .unwrap_or_default();
-            Ok(metrics)
-        }
+    async fn get_metrics(&self) -> UniversalZfsResult<ServiceMetrics> {
+        let mut metrics = self.metrics.read().await.clone();
+        metrics.service_name = self.service_name.clone();
+        metrics.timestamp = SystemTime::now();
+        metrics.uptime = SystemTime::now()
+            .duration_since(self.start_time)
+            .unwrap_or_default();
+        Ok(metrics)
     }
 
-    fn is_available(&self) -> impl std::future::Future<Output = bool> + Send {
-        async move {
-            !self.circuit_breaker.is_open().await && self.primary.is_available().await
-        }
+    async fn is_available(&self) -> bool {
+        !self.circuit_breaker.is_open().await && self.primary.is_available().await
     }
 
     // Forward all operations to their respective modules
@@ -228,10 +243,8 @@ impl UniversalZfsService for FailSafeZfsService {
         super::optimization::update_configuration(self, config).await
     }
 
-    fn shutdown(&self) -> impl std::future::Future<Output = UniversalZfsResult<()>> + Send {
-        async move {
-            super::optimization::shutdown(self).await
-        }
+    async fn shutdown(&self) -> UniversalZfsResult<()> {
+        super::optimization::shutdown(self).await
     }
 }
 

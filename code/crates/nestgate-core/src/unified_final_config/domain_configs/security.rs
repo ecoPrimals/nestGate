@@ -1,5 +1,5 @@
 //
-// Security-specific configuration structures extracted from the monolithic domain_configs.rs
+// Security-specific configuration structures extracted from the monolithic NestGateCanonicalConfig.rs
 // for better maintainability and focused responsibility.
 
 use serde::{Deserialize, Serialize};
@@ -17,7 +17,6 @@ pub struct SecurityDomainConfig {
     pub enable_dynamic_security: bool, // For backward compatibility
     pub enable_encryption_by_default: bool, // For ZFS crate compatibility
 }
-
 /// Rate limiting configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RateLimitConfig {
@@ -25,7 +24,6 @@ pub struct RateLimitConfig {
     pub burst_size: u32,
     pub enabled: bool,
 }
-
 impl Default for SecurityDomainConfig {
     fn default() -> Self {
         Self {

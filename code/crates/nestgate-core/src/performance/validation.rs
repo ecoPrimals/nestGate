@@ -1,8 +1,8 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 //
 // Core framework for validating zero-cost performance improvements.
 
-use crate::{Result, NestGateError};
+use crate::{Result};
 
 /// Performance benchmark results
 #[derive(Debug, Clone)]
@@ -14,7 +14,6 @@ pub struct BenchmarkResults {
     pub memory_reduction_percentage: f64,
     pub iterations: usize,
 }
-
 impl BenchmarkResults {
     /// Create new benchmark results
     pub fn new(
@@ -63,10 +62,9 @@ pub struct PerformanceValidator {
     iterations: usize,
     warmup_iterations: usize,
 }
-
 impl PerformanceValidator {
     /// Create new performance validator
-    pub const fn new(iterations: usize, warmup_iterations: usize) -> Self {
+    pub fn new(iterations: usize, warmup_iterations: usize) -> Self {
         Self {
             iterations,
             warmup_iterations,
@@ -158,7 +156,14 @@ impl PerformanceValidator {
     }
 
     /// Validate that all benchmarks meet performance targets
-    pub fn validate_performance_targets(&self, results: &[BenchmarkResults]) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+                pub fn validate_performance_targets(&self, results: &[BenchmarkResults]) -> Result<()>  {
         const TARGET_IMPROVEMENT: f64 = 20.0; // 20% minimum improvement
 
         let mut failures = Vec::new();
@@ -175,7 +180,7 @@ impl PerformanceValidator {
         if !failures.is_empty() {
             return Err(NestGateError::validation_error(
                 "performance_targets",
-                &format!("Performance targets not met: {}", failures.join(", ")),
+                &format!("Performance targets not met: {}", failures.join(", "),
                 Some(failures.join(", ")),
             ));
         }

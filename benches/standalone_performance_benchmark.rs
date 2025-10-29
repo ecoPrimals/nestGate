@@ -1,9 +1,9 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId};
-use std::sync::Arc;
+use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use std::collections::HashMap;
+use std::sync::Arc;
 
 /// Standalone performance benchmarks demonstrating NestGate modernization patterns
-/// These benchmarks validate the performance improvements without depending on 
+/// These benchmarks validate the performance improvements without depending on
 /// potentially problematic crates, focusing on the core architectural patterns.
 
 /// Benchmark: Configuration Unification vs Fragmentation
@@ -21,7 +21,7 @@ fn benchmark_configuration_patterns(c: &mut Criterion) {
         security_enabled: bool,
         security_timeout_secs: u64,
     }
-    
+
     impl UnifiedConfig {
         fn new() -> Self {
             Self {
@@ -35,16 +35,16 @@ fn benchmark_configuration_patterns(c: &mut Criterion) {
                 security_timeout_secs: 3600,
             }
         }
-        
+
         fn get_service_name(&self) -> &str {
             &self.system_service_name
         }
-        
+
         fn get_port(&self) -> u16 {
             self.network_port
         }
     }
-    
+
     // Fragmented configuration pattern (legacy approach)
     #[derive(Debug, Clone)]
     struct FragmentedConfigs {
@@ -53,25 +53,25 @@ fn benchmark_configuration_patterns(c: &mut Criterion) {
         storage: Arc<HashMap<String, String>>,
         security: Arc<HashMap<String, String>>,
     }
-    
+
     impl FragmentedConfigs {
         fn new() -> Self {
             let mut system = HashMap::new();
             system.insert("service_name".to_string(), "nestgate".to_string());
             system.insert("environment".to_string(), "production".to_string());
-            
+
             let mut network = HashMap::new();
             network.insert("host".to_string(), "0.0.0.0".to_string());
             network.insert("port".to_string(), "8080".to_string());
-            
+
             let mut storage = HashMap::new();
             storage.insert("base_path".to_string(), "/var/lib/nestgate".to_string());
             storage.insert("cache_size_mb".to_string(), "1024".to_string());
-            
+
             let mut security = HashMap::new();
             security.insert("enabled".to_string(), "true".to_string());
             security.insert("timeout_secs".to_string(), "3600".to_string());
-            
+
             Self {
                 system: Arc::new(system),
                 network: Arc::new(network),
@@ -79,30 +79,30 @@ fn benchmark_configuration_patterns(c: &mut Criterion) {
                 security: Arc::new(security),
             }
         }
-        
+
         fn get_service_name(&self) -> Option<&String> {
             self.system.get("service_name")
         }
-        
+
         fn get_port(&self) -> Option<u16> {
             self.network.get("port")?.parse().ok()
         }
     }
-    
+
     c.bench_function("unified_config_creation", |b| {
         b.iter(|| {
             let config = UnifiedConfig::new();
             black_box(config);
         })
     });
-    
+
     c.bench_function("fragmented_config_creation", |b| {
         b.iter(|| {
             let config = FragmentedConfigs::new();
             black_box(config);
         })
     });
-    
+
     c.bench_function("unified_config_access", |b| {
         let config = UnifiedConfig::new();
         b.iter(|| {
@@ -111,7 +111,7 @@ fn benchmark_configuration_patterns(c: &mut Criterion) {
             black_box((service_name, port));
         })
     });
-    
+
     c.bench_function("fragmented_config_access", |b| {
         let config = FragmentedConfigs::new();
         b.iter(|| {
@@ -132,7 +132,7 @@ fn benchmark_error_patterns(c: &mut Criterion) {
         field: Option<String>,
         context: HashMap<String, String>,
     }
-    
+
     impl UnifiedError {
         fn new(message: &str) -> Self {
             Self {
@@ -141,49 +141,60 @@ fn benchmark_error_patterns(c: &mut Criterion) {
                 context: HashMap::new(),
             }
         }
-        
+
         fn with_field(mut self, field: &str) -> Self {
             self.field = Some(field.to_string());
             self
         }
-        
+
         fn add_context(&mut self, key: &str, value: &str) {
             self.context.insert(key.to_string(), value.to_string());
         }
     }
-    
+
     // Legacy fragmented error pattern
     #[derive(Debug, Clone)]
     enum FragmentedError {
-        Validation { message: String, field: Option<String> },
-        Network { message: String, endpoint: Option<String> },
-        Storage { message: String, path: Option<String> },
-        Security { message: String, resource: Option<String> },
+        Validation {
+            message: String,
+            field: Option<String>,
+        },
+        Network {
+            message: String,
+            endpoint: Option<String>,
+        },
+        Storage {
+            message: String,
+            path: Option<String>,
+        },
+        Security {
+            message: String,
+            resource: Option<String>,
+        },
     }
-    
+
     c.bench_function("unified_error_creation", |b| {
         b.iter(|| {
-            let mut error = UnifiedError::new("Test validation error")
-                .with_field("test_field");
+            let mut error = UnifiedError::new("Test validation error").with_field("test_field");
             error.add_context("operation", "benchmark_test");
             error.add_context("component", "performance_validation");
             error.add_context("timestamp", "2025-01-30");
             black_box(error);
         })
     });
-    
+
     c.bench_function("fragmented_error_creation", |b| {
         b.iter(|| {
             let errors = vec![
-                FragmentedError::Validation { 
+                FragmentedError::Validation {
                     message: "Test validation error".to_string(),
                     field: Some("test_field".to_string()),
                 },
-                FragmentedError::Network { 
+                FragmentedError::Network {
                     message: "Network error".to_string(),
                     endpoint: Some("localhost:8080".to_string()),
                 },
-                FragmentedError::Storage { 
+                FragmentedError::Storage {
                     message: "Storage error".to_string(),
                     path: Some("/tmp/test".to_string()),
                 },
@@ -198,14 +209,14 @@ fn benchmark_error_patterns(c: &mut Criterion) {
 fn benchmark_async_patterns(c: &mut Criterion) {
     use std::future::Future;
     use std::pin::Pin;
-    
+
     // Modern zero-cost async trait pattern
     trait ModernAsyncService {
         fn process_data(&self, data: Vec<u8>) -> impl Future<Output = Vec<u8>> + Send;
     }
-    
+
     struct ModernService;
-    
+
     impl ModernAsyncService for ModernService {
         fn process_data(&self, data: Vec<u8>) -> impl Future<Output = Vec<u8>> + Send {
             async move {
@@ -217,14 +228,14 @@ fn benchmark_async_patterns(c: &mut Criterion) {
             }
         }
     }
-    
+
     // Legacy async_trait pattern (with boxing overhead)
     trait LegacyAsyncService {
         fn process_data(&self, data: Vec<u8>) -> Pin<Box<dyn Future<Output = Vec<u8>> + Send>>;
     }
-    
+
     struct LegacyService;
-    
+
     impl LegacyAsyncService for LegacyService {
         fn process_data(&self, data: Vec<u8>) -> Pin<Box<dyn Future<Output = Vec<u8>> + Send>> {
             Box::pin(async move {
@@ -236,9 +247,9 @@ fn benchmark_async_patterns(c: &mut Criterion) {
             })
         }
     }
-    
+
     let rt = tokio::runtime::Runtime::new().unwrap();
-    
+
     c.bench_function("zero_cost_async_processing", |b| {
         let service = ModernService;
         b.iter(|| {
@@ -249,7 +260,7 @@ fn benchmark_async_patterns(c: &mut Criterion) {
             })
         })
     });
-    
+
     c.bench_function("boxed_future_processing", |b| {
         let service = LegacyService;
         b.iter(|| {
@@ -271,26 +282,23 @@ fn benchmark_memory_patterns(c: &mut Criterion) {
         // All data in contiguous memory for better cache locality
         entries: Vec<(String, String, u64)>, // key, value, timestamp
     }
-    
+
     impl UnifiedDataStore {
         fn new() -> Self {
             let mut entries = Vec::with_capacity(1000);
             for i in 0..1000 {
-                entries.push((
-                    format!("key_{}", i),
-                    format!("value_{}", i),
-                    i as u64,
-                ));
+                entries.push((format!("key_{}", i), format!("value_{}", i), i as u64));
             }
             Self { entries }
         }
-        
+
         fn get(&self, key: &str) -> Option<&String> {
-            self.entries.iter()
+            self.entries
+                .iter()
                 .find(|(k, _, _)| k == key)
                 .map(|(_, v, _)| v)
         }
-        
+
         fn update(&mut self, key: &str, value: String) {
             if let Some(entry) = self.entries.iter_mut().find(|(k, _, _)| k == key) {
                 entry.1 = value;
@@ -298,7 +306,7 @@ fn benchmark_memory_patterns(c: &mut Criterion) {
             }
         }
     }
-    
+
     // Fragmented data structure with poor cache locality
     #[derive(Debug)]
     struct FragmentedDataStore {
@@ -307,31 +315,31 @@ fn benchmark_memory_patterns(c: &mut Criterion) {
         values: Arc<HashMap<String, Arc<String>>>,
         timestamps: Arc<HashMap<String, Arc<u64>>>,
     }
-    
+
     impl FragmentedDataStore {
         fn new() -> Self {
             let keys: Vec<String> = (0..1000).map(|i| format!("key_{}", i)).collect();
             let mut values = HashMap::new();
             let mut timestamps = HashMap::new();
-            
+
             for i in 0..1000 {
                 let key = format!("key_{}", i);
                 values.insert(key.clone(), Arc::new(format!("value_{}", i)));
                 timestamps.insert(key, Arc::new(i as u64));
             }
-            
+
             Self {
                 keys: Arc::new(keys),
                 values: Arc::new(values),
                 timestamps: Arc::new(timestamps),
             }
         }
-        
+
         fn get(&self, key: &str) -> Option<Arc<String>> {
             self.values.get(key).cloned()
         }
     }
-    
+
     c.bench_function("unified_data_access", |b| {
         let store = UnifiedDataStore::new();
         b.iter(|| {
@@ -339,7 +347,7 @@ fn benchmark_memory_patterns(c: &mut Criterion) {
             black_box(result);
         })
     });
-    
+
     c.bench_function("fragmented_data_access", |b| {
         let store = FragmentedDataStore::new();
         b.iter(|| {
@@ -347,7 +355,7 @@ fn benchmark_memory_patterns(c: &mut Criterion) {
             black_box(result);
         })
     });
-    
+
     c.bench_function("unified_data_update", |b| {
         let mut store = UnifiedDataStore::new();
         b.iter(|| {
@@ -368,7 +376,7 @@ fn benchmark_const_generic_patterns(c: &mut Criterion) {
         }
         hash
     }
-    
+
     // Runtime version - dynamic dispatch
     fn process_buffer_runtime(buffer: &[u8], size: usize) -> u64 {
         assert_eq!(buffer.len(), size);
@@ -378,12 +386,14 @@ fn benchmark_const_generic_patterns(c: &mut Criterion) {
         }
         hash
     }
-    
+
     let mut group = c.benchmark_group("const_generics");
-    
+
     for size in [64, 256, 1024, 4096].iter() {
-        group.bench_with_input(BenchmarkId::new("const_generic", size), size, |b, &size| {
-            match size {
+        group.bench_with_input(
+            BenchmarkId::new("const_generic", size),
+            size,
+            |b, &size| match size {
                 64 => {
                     let buffer: [u8; 64] = [1; 64];
                     b.iter(|| {
@@ -413,18 +423,22 @@ fn benchmark_const_generic_patterns(c: &mut Criterion) {
                     });
                 }
                 _ => unreachable!(),
-            }
-        });
-        
-        group.bench_with_input(BenchmarkId::new("runtime_dispatch", size), size, |b, &size| {
-            let buffer = vec![1u8; size];
-            b.iter(|| {
-                let result = process_buffer_runtime(&buffer, size);
-                black_box(result);
-            });
-        });
+            },
+        );
+
+        group.bench_with_input(
+            BenchmarkId::new("runtime_dispatch", size),
+            size,
+            |b, &size| {
+                let buffer = vec![1u8; size];
+                b.iter(|| {
+                    let result = process_buffer_runtime(&buffer, size);
+                    black_box(result);
+                });
+            },
+        );
     }
-    
+
     group.finish();
 }
 
@@ -436,50 +450,50 @@ fn benchmark_compilation_patterns(c: &mut Criterion) {
         type Output;
         fn process(&self, input: T) -> Self::Output;
     }
-    
+
     struct StringProcessor;
-    
+
     impl UnifiedService<String> for StringProcessor {
         type Output = String;
-        
+
         fn process(&self, input: String) -> Self::Output {
             format!("processed: {}", input)
         }
     }
-    
+
     impl UnifiedService<Vec<u8>> for StringProcessor {
         type Output = Vec<u8>;
-        
+
         fn process(&self, mut input: Vec<u8>) -> Self::Output {
             input.extend_from_slice(b"_processed");
             input
         }
     }
-    
+
     // Fragmented type system approach
     trait StringService {
         fn process_string(&self, input: String) -> String;
     }
-    
+
     trait ByteService {
         fn process_bytes(&self, input: Vec<u8>) -> Vec<u8>;
     }
-    
+
     struct FragmentedProcessor;
-    
+
     impl StringService for FragmentedProcessor {
         fn process_string(&self, input: String) -> String {
             format!("processed: {}", input)
         }
     }
-    
+
     impl ByteService for FragmentedProcessor {
         fn process_bytes(&self, mut input: Vec<u8>) -> Vec<u8> {
             input.extend_from_slice(b"_processed");
             input
         }
     }
-    
+
     c.bench_function("unified_type_processing", |b| {
         let processor = StringProcessor;
         b.iter(|| {
@@ -488,7 +502,7 @@ fn benchmark_compilation_patterns(c: &mut Criterion) {
             black_box((string_result, bytes_result));
         })
     });
-    
+
     c.bench_function("fragmented_type_processing", |b| {
         let processor = FragmentedProcessor;
         b.iter(|| {
@@ -509,4 +523,4 @@ criterion_group!(
     benchmark_compilation_patterns
 );
 
-criterion_main!(benches); 
+criterion_main!(benches);

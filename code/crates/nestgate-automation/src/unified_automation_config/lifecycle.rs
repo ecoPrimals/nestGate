@@ -4,7 +4,6 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
-
 /// Lifecycle management settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LifecycleSettings {
@@ -21,8 +20,7 @@ pub struct LifecycleSettings {
     /// Service dependencies
     pub dependencies: DependencySettings,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StartupSettings {
     /// Enable automatic startup
     pub auto_start: bool,
@@ -35,8 +33,7 @@ pub struct StartupSettings {
     /// Parallel startup
     pub parallel: bool,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ShutdownSettings {
     /// Enable graceful shutdown
     pub graceful: bool,
@@ -47,8 +44,7 @@ pub struct ShutdownSettings {
     /// Cleanup on shutdown
     pub cleanup: bool,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HealthCheckSettings {
     /// Enable health checks
     pub enabled: bool,
@@ -61,8 +57,7 @@ pub struct HealthCheckSettings {
     /// Recovery threshold
     pub recovery_threshold: u32,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RecoverySettings {
     /// Enable automatic recovery
     pub enabled: bool,
@@ -75,8 +70,7 @@ pub struct RecoverySettings {
     /// Recovery delay
     pub delay: Duration,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DependencySettings {
     /// Service dependencies
     pub services: HashMap<String, ServiceDependency>,
@@ -85,8 +79,7 @@ pub struct DependencySettings {
     /// Wait for dependencies on startup
     pub wait_on_startup: bool,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceDependency {
     /// Dependency name
     pub name: String,
@@ -97,7 +90,6 @@ pub struct ServiceDependency {
     /// Health check endpoint
     pub health_endpoint: Option<String>,
 }
-
 impl SmartDefault for LifecycleSettings {
     fn smart_default() -> Self {
         Self {

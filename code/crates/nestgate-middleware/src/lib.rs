@@ -14,7 +14,6 @@ mod additional_tests {
         assert_eq!(2 + 2, 4);
         assert!(is_middleware_available());
     }
-
     #[test]
     fn test_middleware_configuration_validation() {
         // Test configuration validation
@@ -78,7 +77,7 @@ mod additional_tests {
 
     fn handle_middleware_error(error: Result<(), String>) -> Result<String, String> {
         match error {
-            Ok(_) => Ok("Success".to_string()),
+            Ok(()) => Ok("Success".to_string()),
             Err(_) => Ok("Recovered".to_string()),
         }
     }

@@ -8,21 +8,17 @@
 // - `zero_cost_implementations.rs` - Zero-cost native async implementations
 // - `performance_comparison.rs` - Performance benchmarking utilities
 
-// ==================== MODULE DECLARATIONS ====================
+// ==================== SECTION ====================
 
-/// Configuration management service examples
+// Configuration management service examples
 pub mod config_manager;
-
-/// Legacy async_trait implementations
+// Legacy async_trait implementations
 pub mod legacy_implementations;
-
-/// Zero-cost native async implementations
+// Zero-cost native async implementations
 pub mod zero_cost_implementations;
-
-/// Performance comparison utilities
+// Performance comparison utilities
 pub mod performance_comparison;
-
-// ==================== RE-EXPORTS ====================
+// ==================== SECTION ====================
 
 pub use config_manager::*;
 pub use legacy_implementations::*;

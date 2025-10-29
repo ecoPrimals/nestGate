@@ -14,7 +14,6 @@ use crate::error::CanonicalResult as Result;
 use crate::universal_storage::{
     canonical_storage::CanonicalStorageBackend, zero_copy::ZeroCopyStorage,
 };
-// REMOVED: async_trait - using zero-cost native async patterns
 
 /// Enterprise storage capabilities trait - **ZERO-COST NATIVE ASYNC**
 ///
@@ -24,7 +23,6 @@ use crate::universal_storage::{
 pub trait EnterpriseStorageCapabilities: CanonicalStorageBackend + ZeroCopyStorage {
     /// Create a snapshot of the current storage state
     fn create_snapshot(&self, name: &str, description: Option<&str>) -> impl std::future::Future<Output = Result<SnapshotInfo>> + Send;
-
     /// List all available snapshots
     fn list_snapshots(&self) -> impl std::future::Future<Output = Result<Vec<SnapshotInfo>>> + Send;
 

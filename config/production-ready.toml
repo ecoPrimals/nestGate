@@ -1,0 +1,99 @@
+# NestGate Production Configuration
+# Generated: September 17, 2025
+# Status: Production Ready
+
+[api]
+# API Server Configuration
+host = "${NESTGATE_API_HOST:-0.0.0.0}"  # Bind to all interfaces in production
+port = "${NESTGATE_API_PORT:-8080}"
+base_path = "${NESTGATE_API_BASE_PATH:-/api/v1}"
+max_connections = "${NESTGATE_MAX_CONNECTIONS:-1000}"
+timeout_seconds = "${NESTGATE_TIMEOUT_SECONDS:-30}"
+
+[network]
+# Network Configuration
+localhost = "${NESTGATE_LOCALHOST:-127.0.0.1}"
+bind_address = "${NESTGATE_BIND_ADDRESS:-0.0.0.0}"
+loopback = "${NESTGATE_LOOPBACK:-127.0.0.1}"
+api_base_url = "${NESTGATE_API_BASE_URL:-http://localhost:8080/api/v1}"
+
+# Service Discovery
+discovery_port = "${NESTGATE_DISCOVERY_PORT:-8081}"
+health_check_port = "${NESTGATE_HEALTH_CHECK_PORT:-8082}"
+metrics_port = "${NESTGATE_METRICS_PORT:-8083}"
+
+[database]
+# Database Configuration
+host = "${NESTGATE_DB_HOST:-localhost}"
+port = "${NESTGATE_DB_PORT:-5432}"
+database = "${NESTGATE_DB_NAME:-nestgate}"
+username = "${NESTGATE_DB_USER:-nestgate_user}"
+# password should be set via environment variable: NESTGATE_DB_PASSWORD
+max_connections = "${NESTGATE_DB_MAX_CONNECTIONS:-20}"
+connection_timeout = "${NESTGATE_DB_CONNECTION_TIMEOUT:-5}"
+
+[redis]
+# Redis Cache Configuration
+host = "${NESTGATE_REDIS_HOST:-localhost}"
+port = "${NESTGATE_REDIS_PORT:-6379}"
+# password should be set via environment variable: NESTGATE_REDIS_PASSWORD
+database = "${NESTGATE_REDIS_DB:-0}"
+max_connections = "${NESTGATE_REDIS_MAX_CONNECTIONS:-10}"
+
+[storage]
+# Storage Configuration
+data_directory = "/var/lib/nestgate/data"
+temp_directory = "/tmp/nestgate"
+max_file_size_mb = 1024
+compression_enabled = true
+
+[zfs]
+# ZFS Configuration
+pool_name = "nestgate-pool"
+dataset_prefix = "nestgate"
+compression = "lz4"
+deduplication = false
+auto_snapshot = true
+
+[performance]
+# Performance Tuning
+worker_threads = 0  # 0 = auto-detect CPU cores
+max_blocking_threads = 512
+stack_size_kb = 2048
+enable_zero_copy = true
+
+[logging]
+# Logging Configuration
+level = "info"  # debug, info, warn, error
+format = "json"  # json, pretty
+file = "/var/log/nestgate/nestgate.log"
+max_size_mb = 100
+max_files = 10
+
+[security]
+# Security Configuration
+enable_tls = true
+cert_file = "/etc/nestgate/tls/cert.pem"
+key_file = "/etc/nestgate/tls/key.pem"
+ca_file = "/etc/nestgate/tls/ca.pem"
+require_client_cert = false
+
+# JWT Configuration
+jwt_secret_env = "NESTGATE_JWT_SECRET"  # Environment variable name
+jwt_expiry_hours = 24
+
+[monitoring]
+# Monitoring & Observability
+enable_metrics = true
+metrics_endpoint = "/metrics"
+health_endpoint = "/health"
+enable_tracing = true
+jaeger_endpoint = "http://localhost:14268/api/traces"
+
+[features]
+# Feature Flags
+debug_mode = false
+experimental_features = false
+capability_discovery = true
+sovereignty_mode = true
+zero_copy_optimization = true 

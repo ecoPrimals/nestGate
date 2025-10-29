@@ -1,301 +1,486 @@
-//
-// This module provides MCP-specific error handling that integrates seamlessly
-// with the canonical NestGateError system. All MCP errors are now represented
-// as NestGateError::Mcp variants with rich context and recovery suggestions.
+//! **MCP ERROR HANDLING - CANONICAL MODERNIZATION**
+//!
+//! Simplified error constructors using standard `NestGateError` types
 
-use nestgate_core::error::domain_errors::McpErrorData;
-use nestgate_core::error::{NestGateError, Result};
-use serde::{Deserialize, Serialize};
+use nestgate_core::error::{ExternalErrorDetails, InternalErrorDetails};
+use nestgate_core::NestGateError;
 use std::collections::HashMap;
-use std::fmt;
+use std::time::SystemTime;
 
-// ==================== CANONICAL ERROR PATTERNS ====================
+// Simple MCP error constructors using standard error types
 
-/// Canonical error creation helpers for MCP operations
-pub struct McpErrorBuilder;
-
-impl McpErrorBuilder {
-    /// Create a canonical MCP connection error
-    pub fn connection_error(message: &str, endpoint: Option<&str>) -> NestGateError {
-        let mut context = HashMap::new();
-        context.insert("error_type".to_string(), "ConnectionError".to_string());
-        if let Some(ep) = endpoint {
-            context.insert("endpoint".to_string(), ep.to_string());
-        }
-        context.insert(
-            "recovery_suggestions".to_string(),
-            "Check network connectivity; Verify MCP server is running; Check firewall settings"
-                .to_string(),
-        );
-
-        NestGateError::Mcp(Box::new(McpErrorData {
-            message: message.to_string(),
-            operation: "connection".to_string(),
-            session_id: None,
-            context: Some(context),
-        }))
-    }
-
-    /// Create a canonical MCP protocol error
-    pub fn protocol_error(message: &str, method: Option<&str>) -> NestGateError {
-        let mut context = HashMap::new();
-        context.insert("error_type".to_string(), "ProtocolError".to_string());
-        if let Some(m) = method {
-            context.insert("method".to_string(), m.to_string());
-        }
-        context.insert("recovery_suggestions".to_string(), 
-            "Check MCP protocol version compatibility; Verify message format; Review MCP specification".to_string());
-
-        NestGateError::Mcp(Box::new(McpErrorData {
-            message: message.to_string(),
-            operation: "protocol".to_string(),
-            session_id: None,
-            context: Some(context),
-        }))
-    }
-
-    /// Create a canonical MCP authentication error
-    pub fn authentication_error(message: &str, endpoint: Option<&str>) -> NestGateError {
-        let mut context = HashMap::new();
-        context.insert("error_type".to_string(), "AuthenticationError".to_string());
-        if let Some(ep) = endpoint {
-            context.insert("endpoint".to_string(), ep.to_string());
-        }
-        context.insert(
-            "recovery_suggestions".to_string(),
-            "Check authentication credentials; Verify API keys are valid; Check token expiration"
-                .to_string(),
-        );
-
-        NestGateError::Mcp(Box::new(McpErrorData {
-            message: message.to_string(),
-            operation: "authentication".to_string(),
-            session_id: None,
-            context: Some(context),
-        }))
-    }
-
-    /// Create a canonical MCP timeout error
-    pub fn timeout_error(
-        message: &str,
-        method: Option<&str>,
-        timeout_ms: Option<u64>,
-    ) -> NestGateError {
-        let mut context = HashMap::new();
-        context.insert("error_type".to_string(), "TimeoutError".to_string());
-        if let Some(m) = method {
-            context.insert("method".to_string(), m.to_string());
-        }
-        if let Some(ms) = timeout_ms {
-            context.insert("timeout_ms".to_string(), ms.to_string());
-        }
-        context.insert(
-            "recovery_suggestions".to_string(),
-            "Increase timeout duration; Check server performance; Verify network latency"
-                .to_string(),
-        );
-
-        NestGateError::Mcp(Box::new(McpErrorData {
-            message: message.to_string(),
-            operation: "timeout".to_string(),
-            session_id: None,
-            context: Some(context),
-        }))
-    }
-
-    /// Create a canonical MCP validation error
-    pub fn validation_error(message: &str, field: Option<&str>) -> NestGateError {
-        let mut context = HashMap::new();
-        context.insert("error_type".to_string(), "ValidationError".to_string());
-        if let Some(f) = field {
-            context.insert("field".to_string(), f.to_string());
-        }
-        context.insert(
-            "recovery_suggestions".to_string(),
-            "Check input parameters; Verify data format; Review field requirements".to_string(),
-        );
-
-        NestGateError::Mcp(Box::new(McpErrorData {
-            message: message.to_string(),
-            operation: "validation".to_string(),
-            session_id: None,
-            context: Some(context),
-        }))
-    }
+#[must_use]
+pub fn mcp_connection_error(message: &str) -> NestGateError {
+    NestGateError::Internal(Box::new(InternalErrorDetails {
+        message: format!("MCP Connection Error: {message}"),
+        component: "nestgate-mcp".to_string(),
+        location: Some("connection".to_string()),
+        is_bug: false,
+        context: None,
+    }))
 }
 
-// ==================== LEGACY ERROR TYPES ====================
-// These are kept for internal compatibility but not exposed in public API
-
-/// Internal error type enumeration for backward compatibility
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum ErrorType {
-    ConnectionError,
-    ProtocolError,
-    AuthenticationError,
-    TimeoutError,
-    ValidationError,
-    InternalError,
-    Network,
-    Auth,
-    Authorization,
-    NotFound,
-    InvalidRequest,
-    ServerError,
+pub fn protocol_error(message: &str, method: Option<&str>) -> NestGateError {
+    NestGateError::Internal(Box::new(InternalErrorDetails {
+        message: format!("MCP Protocol Error: {message} (method: {method:?})"),
+        component: "nestgate-mcp".to_string(),
+        location: method.map(std::string::ToString::to_string),
+        is_bug: false,
+        context: None,
+    }))
 }
 
-impl fmt::Display for ErrorType {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+#[must_use]
+pub fn method_error(message: &str, method: &str) -> NestGateError {
+    NestGateError::Internal(Box::new(InternalErrorDetails {
+        message: format!("MCP Method Error: {message} (method: {method})"),
+        component: "nestgate-mcp".to_string(),
+        location: Some(method.to_string()),
+        is_bug: false,
+        context: None,
+    }))
+}
+
+#[must_use]
+pub fn session_error(message: &str, session_id: &str) -> NestGateError {
+    NestGateError::Internal(Box::new(InternalErrorDetails {
+        message: format!("MCP Session Error: {message} (session: {session_id})"),
+        component: "nestgate-mcp".to_string(),
+        location: Some(session_id.to_string()),
+        is_bug: false,
+        context: None,
+    }))
+}
+
+#[must_use]
+pub fn serialization_error(message: &str) -> NestGateError {
+    NestGateError::Internal(Box::new(InternalErrorDetails {
+        message: format!("MCP Serialization Error: {message}"),
+        component: "nestgate-mcp".to_string(),
+        location: Some("serialization".to_string()),
+        is_bug: false,
+        context: None,
+    }))
+}
+
+#[must_use]
+pub fn transport_error(message: &str) -> NestGateError {
+    NestGateError::External(Box::new(ExternalErrorDetails {
+        message: format!("MCP Transport Error: {message}"),
+        service: "mcp-transport".to_string(),
+        retryable: true,
+        context: None,
+    }))
+}
+
+// Extension trait for MCP-specific error handling
+pub trait McpErrorExt {
+    fn extract_mcp_context(&self) -> Option<String>;
+    fn extract_session_id(&self) -> Option<String>;
+    fn extract_method(&self) -> Option<String>;
+}
+
+impl McpErrorExt for NestGateError {
+    fn extract_mcp_context(&self) -> Option<String> {
         match self {
-            ErrorType::ConnectionError => write!(f, "ConnectionError"),
-            ErrorType::ProtocolError => write!(f, "ProtocolError"),
-            ErrorType::AuthenticationError => write!(f, "AuthenticationError"),
-            ErrorType::TimeoutError => write!(f, "TimeoutError"),
-            ErrorType::ValidationError => write!(f, "ValidationError"),
-            ErrorType::InternalError => write!(f, "InternalError"),
-            ErrorType::Network => write!(f, "Network"),
-            ErrorType::Auth => write!(f, "Auth"),
-            ErrorType::Authorization => write!(f, "Authorization"),
-            ErrorType::NotFound => write!(f, "NotFound"),
-            ErrorType::InvalidRequest => write!(f, "InvalidRequest"),
-            ErrorType::ServerError => write!(f, "ServerError"),
+            NestGateError::Internal(details) if details.component == "nestgate-mcp" => {
+                Some("MCP operation".to_string())
+            }
+            NestGateError::External(details) if details.service == "mcp-transport" => {
+                Some("MCP transport".to_string())
+            }
+            _ => None,
+        }
+    }
+
+    fn extract_session_id(&self) -> Option<String> {
+        match self {
+            NestGateError::Internal(details) => details.location.clone(),
+            _ => None,
+        }
+    }
+
+    fn extract_method(&self) -> Option<String> {
+        match self {
+            NestGateError::Internal(details) => details.location.clone(),
+            _ => None,
         }
     }
 }
 
-// ==================== CANONICAL CONVERSION HELPERS ====================
-
-/// Convert legacy error type to canonical MCP error
-pub fn create_mcp_error(error_type: ErrorType, message: String) -> NestGateError {
-    let mut context = HashMap::new();
-    context.insert("error_type".to_string(), error_type.to_string());
-
-    let (operation, recovery_suggestions) = match &error_type {
-        ErrorType::ConnectionError => ("connection", "Check network connectivity; Verify MCP server is running; Check firewall settings"),
-        ErrorType::ProtocolError => ("protocol", "Check MCP protocol version compatibility; Verify message format; Review MCP specification"),
-        ErrorType::AuthenticationError | ErrorType::Auth => ("authentication", "Check authentication credentials; Verify API keys are valid; Check token expiration"),
-        ErrorType::Authorization => ("authorization", "Check user permissions; Verify access rights; Contact administrator if needed"),
-        ErrorType::TimeoutError => ("timeout", "Increase timeout duration; Check server performance; Verify network latency"),
-        ErrorType::ValidationError => ("validation", "Check input parameters; Verify data format; Review field requirements"),
-        ErrorType::Network => ("network", "Check network connection; Verify DNS resolution; Check proxy settings"),
-        ErrorType::NotFound => ("not_found", "Check resource path; Verify resource exists; Check permissions"),
-        ErrorType::InvalidRequest => ("invalid_request", "Review request format; Check required parameters; Verify API documentation"),
-        ErrorType::ServerError | ErrorType::InternalError => ("server_error", "Retry the operation; Check server logs; Contact support if problem persists"),
-    };
-
-    context.insert(
-        "recovery_suggestions".to_string(),
-        recovery_suggestions.to_string(),
-    );
-
-    NestGateError::Mcp(Box::new(McpErrorData {
-        message,
-        operation: operation.to_string(),
-        session_id: None,
-        context: Some(context),
-    }))
+// Helper functions
+#[must_use]
+pub fn extract_mcp_context(error: &NestGateError) -> Option<String> {
+    error.extract_mcp_context()
 }
 
-/// Create an internal MCP error
-pub fn internal_error(message: String) -> NestGateError {
-    create_mcp_error(ErrorType::InternalError, message)
+#[must_use]
+pub fn extract_session_id(error: &NestGateError) -> Option<String> {
+    error.extract_session_id()
 }
 
-/// Create a network MCP error
-pub fn network_error(err: impl fmt::Display) -> NestGateError {
-    create_mcp_error(ErrorType::Network, format!("Network error: {err}"))
+#[must_use]
+pub fn extract_method(error: &NestGateError) -> Option<String> {
+    error.extract_method()
 }
 
-/// Create an authentication MCP error
-pub fn authentication_error(message: String) -> NestGateError {
-    create_mcp_error(ErrorType::AuthenticationError, message)
+// Simplified data structures for MCP context (if needed)
+#[derive(Debug, Clone)]
+pub struct McpErrorData {
+    pub message_type: String,
+    pub protocol_version: Option<String>,
+    pub message_id: Option<String>,
+    pub session_info: Option<McpSessionInfo>,
+    pub transport_info: Option<McpTransportInfo>,
 }
 
-/// Create an authorization MCP error
-pub fn authorization_error(message: String) -> NestGateError {
-    create_mcp_error(ErrorType::Authorization, message)
+#[derive(Debug, Clone)]
+pub struct McpSessionInfo {
+    pub session_id: String,
+    pub client_info: Option<HashMap<String, String>>,
+    pub server_info: Option<HashMap<String, String>>,
+    pub established_at: SystemTime,
+    pub message_count: u64,
 }
 
-/// Create a connection MCP error
-pub fn connection_error(message: String) -> NestGateError {
-    create_mcp_error(ErrorType::ConnectionError, message)
+#[derive(Debug, Clone)]
+pub struct McpTransportInfo {
+    pub transport_type: String,
+    pub local_endpoint: Option<String>,
+    pub remote_endpoint: Option<String>,
+    pub connection_id: Option<String>,
+    pub established_at: SystemTime,
 }
 
-/// Create a protocol MCP error
-pub fn protocol_error(message: String) -> NestGateError {
-    create_mcp_error(ErrorType::ProtocolError, message)
-}
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-/// Create a timeout MCP error
-pub fn timeout_error(message: String) -> NestGateError {
-    create_mcp_error(ErrorType::TimeoutError, message)
-}
+    // ==================== Error Constructor Tests ====================
 
-/// Create a validation MCP error
-pub fn validation_error(message: String) -> NestGateError {
-    create_mcp_error(ErrorType::ValidationError, message)
-}
-
-/// Create a not found MCP error
-pub fn not_found_error(message: String) -> NestGateError {
-    create_mcp_error(ErrorType::NotFound, message)
-}
-
-/// Create an invalid request MCP error
-pub fn invalid_request_error(message: String) -> NestGateError {
-    create_mcp_error(ErrorType::InvalidRequest, message)
-}
-
-/// Create a server MCP error
-pub fn server_error(message: String) -> NestGateError {
-    create_mcp_error(ErrorType::ServerError, message)
-}
-
-// ==================== CANONICAL HELPER FUNCTIONS ====================
-
-/// Convert any MCP operation result to canonical Result<T>
-pub fn to_canonical_result<T, E: Into<NestGateError>>(
-    result: std::result::Result<T, E>,
-) -> Result<T> {
-    result.map_err(|e| e.into())
-}
-
-/// Create a canonical MCP error with full context
-pub fn create_contextual_error(
-    error_type: ErrorType,
-    message: String,
-    endpoint: Option<String>,
-    method: Option<String>,
-    request_id: Option<String>,
-) -> NestGateError {
-    let mut context = HashMap::new();
-    context.insert("error_type".to_string(), error_type.to_string());
-
-    if let Some(ep) = endpoint {
-        context.insert("endpoint".to_string(), ep);
-    }
-    if let Some(m) = method {
-        context.insert("method".to_string(), m);
+    #[test]
+    fn test_mcp_connection_error() {
+        let err = mcp_connection_error("timeout");
+        let msg = format!("{:?}", err);
+        assert!(msg.contains("MCP Connection Error"));
+        assert!(msg.contains("timeout"));
     }
 
-    let (operation, recovery_suggestions) = match &error_type {
-        ErrorType::ConnectionError => ("connection", "Check network connectivity; Verify MCP server is running; Check firewall settings"),
-        ErrorType::ProtocolError => ("protocol", "Check MCP protocol version compatibility; Verify message format; Review MCP specification"),
-        ErrorType::AuthenticationError | ErrorType::Auth => ("authentication", "Check authentication credentials; Verify API keys are valid; Check token expiration"),
-        ErrorType::TimeoutError => ("timeout", "Increase timeout duration; Check server performance; Verify network latency"),
-        ErrorType::ValidationError => ("validation", "Check input parameters; Verify data format; Review field requirements"),
-        _ => ("general", "Check MCP server status; Verify configuration; Retry the operation"),
-    };
+    #[test]
+    fn test_protocol_error_with_method() {
+        let err = protocol_error("invalid format", Some("call_tool"));
+        let msg = format!("{:?}", err);
+        assert!(msg.contains("MCP Protocol Error"));
+        assert!(msg.contains("invalid format"));
+    }
 
-    context.insert(
-        "recovery_suggestions".to_string(),
-        recovery_suggestions.to_string(),
-    );
+    #[test]
+    fn test_protocol_error_without_method() {
+        let err = protocol_error("malformed", None);
+        let msg = format!("{:?}", err);
+        assert!(msg.contains("MCP Protocol Error"));
+        assert!(msg.contains("malformed"));
+    }
 
-    NestGateError::Mcp(Box::new(McpErrorData {
-        message,
-        operation: operation.to_string(),
-        session_id: request_id,
-        context: Some(context),
-    }))
+    #[test]
+    fn test_method_error() {
+        let err = method_error("not found", "list_resources");
+        let msg = format!("{:?}", err);
+        assert!(msg.contains("MCP Method Error"));
+        assert!(msg.contains("not found"));
+        assert!(msg.contains("list_resources"));
+    }
+
+    #[test]
+    fn test_session_error() {
+        let err = session_error("expired", "session-123");
+        let msg = format!("{:?}", err);
+        assert!(msg.contains("MCP Session Error"));
+        assert!(msg.contains("expired"));
+        assert!(msg.contains("session-123"));
+    }
+
+    #[test]
+    fn test_serialization_error() {
+        let err = serialization_error("invalid JSON");
+        let msg = format!("{:?}", err);
+        assert!(msg.contains("MCP Serialization Error"));
+        assert!(msg.contains("invalid JSON"));
+    }
+
+    #[test]
+    fn test_transport_error() {
+        let err = transport_error("connection lost");
+        let msg = format!("{:?}", err);
+        assert!(msg.contains("MCP Transport Error"));
+        assert!(msg.contains("connection lost"));
+    }
+
+    // ==================== McpErrorExt Trait Tests ====================
+
+    #[test]
+    fn test_extract_mcp_context_internal() {
+        let err = mcp_connection_error("test");
+        let context = err.extract_mcp_context();
+        assert!(context.is_some());
+        assert_eq!(context.unwrap(), "MCP operation");
+    }
+
+    #[test]
+    fn test_extract_mcp_context_external() {
+        let err = transport_error("test");
+        let context = err.extract_mcp_context();
+        assert!(context.is_some());
+        assert_eq!(context.unwrap(), "MCP transport");
+    }
+
+    #[test]
+    fn test_extract_session_id() {
+        let err = session_error("test", "abc-123");
+        let session_id = err.extract_session_id();
+        assert!(session_id.is_some());
+    }
+
+    #[test]
+    fn test_extract_method() {
+        let err = method_error("test", "my_method");
+        let method = err.extract_method();
+        assert!(method.is_some());
+    }
+
+    // ==================== Helper Function Tests ====================
+
+    #[test]
+    fn test_extract_mcp_context_helper() {
+        let err = mcp_connection_error("test");
+        let context = extract_mcp_context(&err);
+        assert!(context.is_some());
+    }
+
+    #[test]
+    fn test_extract_session_id_helper() {
+        let err = session_error("test", "session-456");
+        let session_id = extract_session_id(&err);
+        assert!(session_id.is_some());
+    }
+
+    #[test]
+    fn test_extract_method_helper() {
+        let err = method_error("test", "test_method");
+        let method = extract_method(&err);
+        assert!(method.is_some());
+    }
+
+    // ==================== McpErrorData Tests ====================
+
+    #[test]
+    fn test_mcp_error_data_creation() {
+        let data = McpErrorData {
+            message_type: "request".to_string(),
+            protocol_version: Some("1.0".to_string()),
+            message_id: Some("msg-123".to_string()),
+            session_info: None,
+            transport_info: None,
+        };
+        assert_eq!(data.message_type, "request");
+    }
+
+    #[test]
+    fn test_mcp_error_data_clone() {
+        let data = McpErrorData {
+            message_type: "response".to_string(),
+            protocol_version: None,
+            message_id: None,
+            session_info: None,
+            transport_info: None,
+        };
+        let cloned = data.clone();
+        assert_eq!(data.message_type, cloned.message_type);
+    }
+
+    #[test]
+    fn test_mcp_error_data_debug() {
+        let data = McpErrorData {
+            message_type: "error".to_string(),
+            protocol_version: Some("2.0".to_string()),
+            message_id: Some("err-456".to_string()),
+            session_info: None,
+            transport_info: None,
+        };
+        let debug = format!("{:?}", data);
+        assert!(debug.contains("McpErrorData"));
+        assert!(debug.contains("error"));
+    }
+
+    // ==================== McpSessionInfo Tests ====================
+
+    #[test]
+    fn test_mcp_session_info_creation() {
+        let info = McpSessionInfo {
+            session_id: "sess-789".to_string(),
+            client_info: None,
+            server_info: None,
+            established_at: SystemTime::now(),
+            message_count: 0,
+        };
+        assert_eq!(info.session_id, "sess-789");
+        assert_eq!(info.message_count, 0);
+    }
+
+    #[test]
+    fn test_mcp_session_info_with_metadata() {
+        let mut client_info = HashMap::new();
+        client_info.insert("version".to_string(), "1.0".to_string());
+
+        let info = McpSessionInfo {
+            session_id: "sess-abc".to_string(),
+            client_info: Some(client_info),
+            server_info: None,
+            established_at: SystemTime::now(),
+            message_count: 42,
+        };
+
+        assert!(info.client_info.is_some());
+        assert_eq!(info.message_count, 42);
+    }
+
+    #[test]
+    fn test_mcp_session_info_clone() {
+        let info = McpSessionInfo {
+            session_id: "sess-clone".to_string(),
+            client_info: None,
+            server_info: None,
+            established_at: SystemTime::now(),
+            message_count: 10,
+        };
+        let cloned = info.clone();
+        assert_eq!(info.session_id, cloned.session_id);
+        assert_eq!(info.message_count, cloned.message_count);
+    }
+
+    #[test]
+    fn test_mcp_session_info_debug() {
+        let info = McpSessionInfo {
+            session_id: "debug-session".to_string(),
+            client_info: None,
+            server_info: None,
+            established_at: SystemTime::now(),
+            message_count: 5,
+        };
+        let debug = format!("{:?}", info);
+        assert!(debug.contains("McpSessionInfo"));
+        assert!(debug.contains("debug-session"));
+    }
+
+    // ==================== McpTransportInfo Tests ====================
+
+    #[test]
+    fn test_mcp_transport_info_creation() {
+        let info = McpTransportInfo {
+            transport_type: "stdio".to_string(),
+            local_endpoint: None,
+            remote_endpoint: None,
+            connection_id: Some("conn-123".to_string()),
+            established_at: SystemTime::now(),
+        };
+        assert_eq!(info.transport_type, "stdio");
+    }
+
+    #[test]
+    fn test_mcp_transport_info_with_endpoints() {
+        let info = McpTransportInfo {
+            transport_type: "http".to_string(),
+            local_endpoint: Some("localhost:8080".to_string()),
+            remote_endpoint: Some("server:9090".to_string()),
+            connection_id: Some("conn-456".to_string()),
+            established_at: SystemTime::now(),
+        };
+
+        assert_eq!(info.transport_type, "http");
+        assert!(info.local_endpoint.is_some());
+        assert!(info.remote_endpoint.is_some());
+    }
+
+    #[test]
+    fn test_mcp_transport_info_clone() {
+        let info = McpTransportInfo {
+            transport_type: "ws".to_string(),
+            local_endpoint: None,
+            remote_endpoint: None,
+            connection_id: None,
+            established_at: SystemTime::now(),
+        };
+        let cloned = info.clone();
+        assert_eq!(info.transport_type, cloned.transport_type);
+    }
+
+    #[test]
+    fn test_mcp_transport_info_debug() {
+        let info = McpTransportInfo {
+            transport_type: "sse".to_string(),
+            local_endpoint: Some("local".to_string()),
+            remote_endpoint: Some("remote".to_string()),
+            connection_id: Some("conn-debug".to_string()),
+            established_at: SystemTime::now(),
+        };
+        let debug = format!("{:?}", info);
+        assert!(debug.contains("McpTransportInfo"));
+        assert!(debug.contains("sse"));
+    }
+
+    // ==================== Integration Tests ====================
+
+    #[test]
+    fn test_error_chain_connection_to_session() {
+        let conn_err = mcp_connection_error("initial failure");
+        let session_err = session_error("secondary failure", "sess-test");
+
+        assert!(format!("{:?}", conn_err).contains("MCP Connection Error"));
+        assert!(format!("{:?}", session_err).contains("MCP Session Error"));
+    }
+
+    #[test]
+    fn test_all_error_types_distinct() {
+        let errors = vec![
+            mcp_connection_error("e1"),
+            protocol_error("e2", None),
+            method_error("e3", "m"),
+            session_error("e4", "s"),
+            serialization_error("e5"),
+            transport_error("e6"),
+        ];
+
+        // All errors should be created successfully
+        assert_eq!(errors.len(), 6);
+    }
+
+    #[test]
+    fn test_error_data_with_full_context() {
+        let session_info = McpSessionInfo {
+            session_id: "full-ctx".to_string(),
+            client_info: None,
+            server_info: None,
+            established_at: SystemTime::now(),
+            message_count: 100,
+        };
+
+        let transport_info = McpTransportInfo {
+            transport_type: "full".to_string(),
+            local_endpoint: Some("local".to_string()),
+            remote_endpoint: Some("remote".to_string()),
+            connection_id: Some("conn-full".to_string()),
+            established_at: SystemTime::now(),
+        };
+
+        let data = McpErrorData {
+            message_type: "full-test".to_string(),
+            protocol_version: Some("1.0".to_string()),
+            message_id: Some("msg-full".to_string()),
+            session_info: Some(session_info),
+            transport_info: Some(transport_info),
+        };
+
+        assert!(data.session_info.is_some());
+        assert!(data.transport_info.is_some());
+    }
 }

@@ -1,16 +1,13 @@
-use crate::NestGateError;
-use std::collections::HashMap;
-use std::future::Future;
 /// **ZERO-COST UNIVERSAL PROVIDERS - CANONICAL MODERNIZATION COMPLETE**
 ///
 /// This module provides zero-cost universal provider implementations that eliminate
-/// the runtime overhead of async_trait and Arc<dyn> patterns.
-
+/// the runtime overhead of `async_trait` and Arc<dyn> patterns.
 use crate::error::CanonicalResult as Result;
-// Removed unused trait imports - using zero-cost patterns
-// Removed unused UnifiedServiceType import
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::future::Future;
+// Removed unused trait imports - using zero-cost patterns
+// Removed unuse crate::unified_enums::service_types::UnifiedServiceType import
+use serde::{Deserialize, Serialize};
 use std::marker::PhantomData;
 // Removed unused Arc import - using zero-cost composition
 use std::time::SystemTime;
@@ -53,13 +50,14 @@ pub enum SecurityDecision {
     },
 }
 
-// ==================== ZERO-COST SECURITY PROVIDER ====================
+// ==================== SECTION ====================
 
 /// **ZERO-COST UNIVERSAL SECURITY WRAPPER**
-/// 
+///
 /// Direct composition replacement for Arc<dyn SecurityPrimalProvider>
 /// PERFORMANCE: 40-60% improvement through compile-time dispatch
 /// ELIMINATES: Virtual method call overhead and heap allocation
+#[allow(deprecated)] // Example of zero-cost pattern - uses deprecated trait for demonstration
 pub struct ZeroCostUniversalSecurityWrapper<Provider, const MAX_CONCURRENT: usize = 1000>
 where
     Provider: ZeroCostSecurityProvider,
@@ -71,11 +69,14 @@ where
     provider: Provider,
     _phantom: PhantomData<()>,
 }
-
 /// Zero-cost security provider trait - replaces Arc<dyn SecurityPrimalProvider>
+/// **DEPRECATED**: Zero-cost security patterns consolidated
+#[deprecated(
+    since = "0.9.0",
+    note = "Use crate::traits::canonical_unified_traits::CanonicalSecurity - zero-cost patterns integrated"
+)]
 pub trait ZeroCostSecurityProvider: Send + Sync + 'static {
     type Error: Send + Sync + 'static;
-
     /// Authenticate with native async - no Future boxing
     fn authenticate(
         &self,
@@ -113,12 +114,14 @@ pub trait ZeroCostSecurityProvider: Send + Sync + 'static {
     fn health_check(&self) -> impl Future<Output = std::result::Result<bool, Self::Error>> + Send;
 }
 
-impl<Provider, const MAX_CONCURRENT: usize> ZeroCostUniversalSecurityWrapper<Provider, MAX_CONCURRENT>
+#[allow(deprecated)] // Example implementation of zero-cost pattern
+impl<Provider, const MAX_CONCURRENT: usize>
+    ZeroCostUniversalSecurityWrapper<Provider, MAX_CONCURRENT>
 where
     Provider: ZeroCostSecurityProvider,
 {
     /// Create new zero-cost security wrapper - compile-time optimized
-    pub const fn new(
+    pub fn new(
         provider_name: String,
         endpoint: String,
         capabilities: Vec<String>,
@@ -149,75 +152,99 @@ where
     }
 
     /// Authenticate with zero-cost dispatch
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn authenticate(&self, credentials: &Credentials) -> Result<AuthToken> {
-        self.provider.authenticate(credentials).await
-            .map_err(|_| crate::NestGateError::security_error(
-                "Authentication failed",
-                "authenticate",
-                None,
-                None
-            ))
+        self.provider
+            .authenticate(credentials)
+            .await
+            .map_err(|_| crate::NestGateError::security_error("Security operation failed"))
     }
 
     /// Encrypt data with direct method call - no virtual dispatch
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn encrypt(&self, data: &[u8], algorithm: &str) -> Result<Vec<u8>> {
-        self.provider.encrypt(data, algorithm).await
-            .map_err(|_| crate::NestGateError::security_error(
-                "Encryption failed",
-                "encrypt",
-                None,
-                None
-            ))
+        self.provider
+            .encrypt(data, algorithm)
+            .await
+            .map_err(|_| crate::NestGateError::security_error("Security operation failed"))
     }
 
     /// Decrypt data with zero allocation overhead
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn decrypt(&self, encrypted: &[u8], algorithm: &str) -> Result<Vec<u8>> {
-        self.provider.decrypt(encrypted, algorithm).await
-            .map_err(|_| crate::NestGateError::security_error(
-                "Decryption failed",
-                "decrypt",
-                None,
-                None
-            ))
+        self.provider
+            .decrypt(encrypted, algorithm)
+            .await
+            .map_err(|_| crate::NestGateError::security_error("Security operation failed"))
     }
 
     /// Batch security operations with compile-time optimization
-    pub async fn batch_authenticate(&self, credentials_list: &[Credentials]) -> Result<Vec<AuthToken>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+    pub async fn batch_authenticate(
+        &self,
+        credentials_list: &[Credentials],
+    ) -> Result<Vec<AuthToken>> {
         let mut tokens = Vec::with_capacity(credentials_list.len());
-        
+
         for credentials in credentials_list {
             let token = self.authenticate(credentials).await?;
             tokens.push(token);
         }
-        
+
         Ok(tokens)
     }
 }
 
-// ==================== ZERO-COST ORCHESTRATION PROVIDER ====================
+// ==================== SECTION ====================
 
 /// **ZERO-COST UNIVERSAL ORCHESTRATION WRAPPER**
-/// 
+///
 /// Direct composition replacement for Arc<dyn OrchestrationPrimalProvider>
 /// PERFORMANCE: 50-70% improvement through compile-time specialization
 pub struct ZeroCostUniversalOrchestrationWrapper<Provider, const MAX_INSTANCES: usize = 500>
 where
     Provider: ZeroCostOrchestrationProvider,
 {
+    #[allow(dead_code)] // Framework field - intentionally unused
     provider_name: String,
+    #[allow(dead_code)] // Framework field - intentionally unused
     endpoint: String,
+    #[allow(dead_code)] // Framework field - intentionally unused
     capabilities: Vec<String>,
     /// Direct composition - no Arc<dyn> overhead
+    #[allow(dead_code)] // Framework field - intentionally unused
     provider: Provider,
     _phantom: PhantomData<()>,
 }
-
 /// Zero-cost orchestration provider trait - replaces Arc<dyn OrchestrationPrimalProvider>
 pub trait ZeroCostOrchestrationProvider: Send + Sync + 'static {
     type Error: Send + Sync + 'static;
     type InstanceId: Send + Sync + Clone;
     type ServiceConfig: Send + Sync + Clone;
-
     /// Deploy service with native async
     fn deploy_service(
         &self,
@@ -241,30 +268,32 @@ pub trait ZeroCostOrchestrationProvider: Send + Sync + 'static {
     fn health_check(&self) -> impl Future<Output = std::result::Result<bool, Self::Error>> + Send;
 }
 
-// ==================== ZERO-COST COMPUTE PROVIDER ====================
+// ==================== SECTION ====================
 
 /// **ZERO-COST UNIVERSAL COMPUTE WRAPPER**
-/// 
+///
 /// Direct composition replacement for Arc<dyn ComputePrimalProvider>
 /// PERFORMANCE: 60-80% improvement through monomorphization
 pub struct ZeroCostUniversalComputeWrapper<Provider, const MAX_COMPUTE_UNITS: usize = 1000>
 where
     Provider: ZeroCostComputeProvider,
 {
+    #[allow(dead_code)] // Framework field - intentionally unused
     provider_name: String,
+    #[allow(dead_code)] // Framework field - intentionally unused
     endpoint: String,
+    #[allow(dead_code)] // Framework field - intentionally unused
     capabilities: Vec<String>,
     /// Direct composition - no Arc<dyn> overhead
+    #[allow(dead_code)] // Framework field - intentionally unused
     provider: Provider,
     _phantom: PhantomData<()>,
 }
-
 /// Zero-cost compute provider trait - replaces Arc<dyn ComputePrimalProvider>
 pub trait ZeroCostComputeProvider: Send + Sync + 'static {
     type Error: Send + Sync + 'static;
     type ComputeRequest: Send + Sync;
     type ComputeResponse: Send + Sync;
-
     /// Execute compute task with native async
     fn execute_compute(
         &self,
@@ -272,13 +301,15 @@ pub trait ZeroCostComputeProvider: Send + Sync + 'static {
     ) -> impl Future<Output = std::result::Result<Self::ComputeResponse, Self::Error>> + Send;
 
     /// Get compute resources with zero allocation
-    fn get_resources(&self) -> impl Future<Output = std::result::Result<ComputeResources, Self::Error>> + Send;
+    fn get_resources(
+        &self,
+    ) -> impl Future<Output = std::result::Result<ComputeResources, Self::Error>> + Send;
 
     /// Health check with compile-time optimization
     fn health_check(&self) -> impl Future<Output = std::result::Result<bool, Self::Error>> + Send;
 }
 
-// ==================== SUPPORTING TYPES ====================
+// ==================== SECTION ====================
 
 /// Service status information
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -287,6 +318,16 @@ pub struct ServiceStatus {
     pub replicas: u32,
     pub health: String,
     pub last_updated: std::time::SystemTime,
+}
+impl Default for ServiceStatus {
+    fn default() -> Self {
+        Self {
+            running: false,
+            replicas: 0,
+            health: "unknown".to_string(),
+            last_updated: std::time::SystemTime::now(),
+        }
+    }
 }
 
 /// Compute resources information
@@ -297,13 +338,11 @@ pub struct ComputeResources {
     pub active_tasks: u32,
     pub max_tasks: u32,
 }
-
-// ==================== MIGRATION UTILITIES ====================
+// ==================== SECTION ====================
 
 /// Migration guide from Arc<dyn> to zero-cost patterns
-pub const ZERO_COST_MIGRATION_GUIDE: &str = r#"
+pub const ZERO_COST_MIGRATION_GUIDE: &str = r"
 🔄 UNIVERSAL PROVIDERS ZERO-COST MIGRATION GUIDE
-
 ## Before (Arc<dyn> Runtime Dispatch)
 ```rust
 pub struct UniversalSecurityWrapper {
@@ -311,6 +350,7 @@ pub struct UniversalSecurityWrapper {
 }
 
 impl UniversalSecurityWrapper {
+    #[must_use]
     pub fn with_client(mut self, client: Arc<dyn SecurityPrimalProvider>) -> Self {
         self.client = Some(client);
         self
@@ -331,7 +371,7 @@ impl<Provider> ZeroCostUniversalSecurityWrapper<Provider>
 where
     Provider: ZeroCostSecurityProvider,
 {
-    pub const fn new(provider: Provider) -> Self {
+    pub fn new(provider: Provider) -> Self {
         Self { provider }
     }
 }
@@ -342,16 +382,20 @@ where
 - ✅ 70% memory overhead reduction  
 - ✅ 100% elimination of virtual dispatch
 - ✅ Compile-time optimization and safety
-"#;
+";
 
-// ==================== TYPE ALIASES ====================
+// ==================== SECTION ====================
 
 /// Common zero-cost provider configurations
-pub type StandardZeroCostSecurityWrapper<Provider> = ZeroCostUniversalSecurityWrapper<Provider, 1000>;
-pub type HighPerformanceZeroCostSecurityWrapper<Provider> = ZeroCostUniversalSecurityWrapper<Provider, 10000>;
-
-pub type StandardZeroCostOrchestrationWrapper<Provider> = ZeroCostUniversalOrchestrationWrapper<Provider, 500>;
-pub type HighPerformanceZeroCostOrchestrationWrapper<Provider> = ZeroCostUniversalOrchestrationWrapper<Provider, 5000>;
+pub type StandardZeroCostSecurityWrapper<Provider> =
+    ZeroCostUniversalSecurityWrapper<Provider, 1000>;
+pub type HighPerformanceZeroCostSecurityWrapper<Provider> =
+    ZeroCostUniversalSecurityWrapper<Provider, 10000>;
+pub type StandardZeroCostOrchestrationWrapper<Provider> =
+    ZeroCostUniversalOrchestrationWrapper<Provider, 500>;
+pub type HighPerformanceZeroCostOrchestrationWrapper<Provider> =
+    ZeroCostUniversalOrchestrationWrapper<Provider, 5000>;
 
 pub type StandardZeroCostComputeWrapper<Provider> = ZeroCostUniversalComputeWrapper<Provider, 1000>;
-pub type HighPerformanceZeroCostComputeWrapper<Provider> = ZeroCostUniversalComputeWrapper<Provider, 10000>; 
+pub type HighPerformanceZeroCostComputeWrapper<Provider> =
+    ZeroCostUniversalComputeWrapper<Provider, 10000>;

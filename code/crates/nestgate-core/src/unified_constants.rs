@@ -17,14 +17,12 @@
 /// - Compile-time constant validation
 /// - Easy maintenance and updates
 use std::time::Duration;
-
-// ==================== API CONSTANTS ====================
+// ==================== SECTION ====================
 
 /// API versioning and endpoint constants
 pub mod api {
     /// Current API version
     pub const VERSION: &str = "v1";
-
     /// API prefix for all endpoints
     pub const PREFIX: &str = "/api/v1";
 
@@ -97,11 +95,10 @@ pub mod api {
     }
 }
 
-// ==================== PROTOCOL CONSTANTS ====================
+// ==================== SECTION ====================
 
 /// Protocol-specific constants
 pub mod protocols {
-
     /// HTTP protocol constants
     pub mod http {
         pub const DEFAULT_PORT: u16 = 80;
@@ -137,7 +134,7 @@ pub mod protocols {
 
     /// ZFS protocol constants
     pub mod zfs {
-        pub const DEFAULT_RECORD_SIZE: u32 = 131072; // 128KB
+        pub const DEFAULT_RECORD_SIZE: u32 = 131_072; // 128KB
         pub const MIN_RECORD_SIZE: u32 = 512;
         pub const MAX_RECORD_SIZE: u32 = 1048576; // 1MB
         pub const DEFAULT_COMPRESSION: &str = "lz4";
@@ -170,12 +167,10 @@ pub mod protocols {
     }
 }
 
-// ==================== NETWORK CONSTANTS ====================
+// ==================== SECTION ====================
 
 /// Network and connectivity constants
 pub mod network {
-    use std::time::Duration;
-
     /// Default network addresses (configurable via environment)
     pub mod addresses {
         pub const LOCALHOST: &str = "127.0.0.1";
@@ -272,7 +267,7 @@ pub mod network {
     }
 }
 
-// ==================== STORAGE CONSTANTS ====================
+// ==================== SECTION ====================
 
 /// Storage system constants
 pub mod storage {
@@ -282,7 +277,6 @@ pub mod storage {
         pub const WARM: &str = "warm";
         pub const COLD: &str = "cold";
         pub const ARCHIVE: &str = "archive";
-
         /// Tier transition thresholds (configurable)
         pub mod thresholds {
             pub const HOT_TO_WARM_DAYS: u32 = 30;
@@ -329,7 +323,7 @@ pub mod storage {
     }
 }
 
-// ==================== PERFORMANCE CONSTANTS ====================
+// ==================== SECTION ====================
 
 /// Performance and optimization constants
 pub mod performance {
@@ -340,7 +334,6 @@ pub mod performance {
         pub const MAX_CACHE_SIZE_MB: u64 = 16 * 1024; // 16GB
         pub const DEFAULT_TTL_SECS: u64 = 300; // 5 minutes
         pub const CACHE_LINE_SIZE: usize = 64;
-
         pub fn cache_size_bytes() -> u64 {
             std::env::var("NESTGATE_CACHE_SIZE_MB")
                 .ok()
@@ -376,11 +369,10 @@ pub mod performance {
     }
 }
 
-// ==================== SECURITY CONSTANTS ====================
+// ==================== SECTION ====================
 
 /// Security and cryptography constants
 pub mod security {
-
     /// Authentication constants
     pub mod auth {
         pub const DEFAULT_SESSION_TIMEOUT_SECS: u64 = 3600; // 1 hour
@@ -417,11 +409,10 @@ pub mod security {
     }
 }
 
-// ==================== MONITORING CONSTANTS ====================
+// ==================== SECTION ====================
 
 /// Monitoring and observability constants
 pub mod monitoring {
-
     /// Metrics constants
     pub mod metrics {
         pub const COLLECTION_INTERVAL_SECS: u64 = 15;
@@ -456,11 +447,10 @@ pub mod monitoring {
     }
 }
 
-// ==================== TEST CONSTANTS ====================
+// ==================== SECTION ====================
 
 /// Testing framework constants
 pub mod testing {
-
     /// Test execution constants
     pub mod execution {
         pub const DEFAULT_TEST_TIMEOUT_SECS: u64 = 60;
@@ -499,21 +489,18 @@ pub mod testing {
     }
 }
 
-// REMOVED: Duplicate protocols module - consolidated into main protocols module above
 
-// REMOVED: Duplicate storage module eliminated
 // Use the original storage module definition above instead
 
-// ==================== ZFS CONSTANTS ====================
+// ==================== SECTION ====================
 
 /// ZFS-specific constants for properties, pools, and datasets
 pub mod zfs {
     /// ZFS pool names
     pub mod pools {
-        pub const DEFAULT: &str = "nestpool";
+        pub const DEFAULT: &str = "zfspool";
         pub const PRODUCTION: &str = "nestpool-prod";
     }
-
     /// ZFS property names
     pub mod properties {
         pub const COMPRESSION: &str = "compression";
@@ -557,12 +544,11 @@ pub mod zfs {
     }
 }
 
-// ==================== NETWORK CONSTANTS ====================
+// ==================== SECTION ====================
 
-// REMOVED: Duplicate network module eliminated
 // Use the original network module definition above instead
 
-// ==================== SERVICE CONSTANTS ====================
+// ==================== SECTION ====================
 
 /// Service names and identifiers
 pub mod services {
@@ -573,7 +559,6 @@ pub mod services {
         pub const MAINTAINER_EMAIL: &str = "team@nestgate.dev";
         pub const ORGANIZATION: &str = "EcoPrimals Foundation";
     }
-
     /// Universal service types
     pub mod types {
         pub const UNIVERSAL_SECURITY: &str = "universal-security-service";
@@ -586,12 +571,10 @@ pub mod services {
     }
 }
 
-// ==================== TIMEOUT CONSTANTS ====================
+// ==================== SECTION ====================
 
 /// Timeout configurations for various operations
 pub mod timeouts {
-    use super::Duration;
-
     /// File operation timeouts
     pub const MOUNT_TIMEOUT: Duration = Duration::from_secs(5);
     pub const UNMOUNT_TIMEOUT: Duration = Duration::from_secs(5);
@@ -610,10 +593,9 @@ pub mod timeouts {
     pub const SSE_KEEP_ALIVE: Duration = Duration::from_secs(30);
 }
 
-// REMOVED: Duplicate performance, monitoring, and testing modules eliminated
 // Use the original module definitions above instead
 
-// ==================== COMPILE-TIME CONSTANTS ====================
+// ==================== SECTION ====================
 
 /// Compile-time validated constants using const generics
 pub mod compile_time {
@@ -636,13 +618,12 @@ pub mod compile_time {
     pub const SIZE_16384: usize = 16384;
     pub const SIZE_32768: usize = 32768;
     pub const SIZE_65536: usize = 65536;
-    pub const SIZE_131072: usize = 131072;
-    pub const SIZE_262144: usize = 262144;
+    pub const SIZE_131072: usize = 131_072;
+    pub const SIZE_262144: usize = 262_144;
     pub const SIZE_524288: usize = 524288;
     pub const SIZE_1048576: usize = 1048576; // 1MB
 }
-
-// ==================== CONVENIENCE FUNCTIONS ====================
+// ==================== SECTION ====================
 
 /// Convenience functions for working with unified constants
 impl UnifiedConstants {
@@ -656,7 +637,6 @@ impl UnifiedConstants {
             _ => 80,                          // HTTP default
         }
     }
-
     /// Get compression algorithm for storage tier
     pub fn compression_for_tier(tier: &str) -> &'static str {
         match tier {
@@ -680,8 +660,7 @@ impl UnifiedConstants {
 
 /// Main unified constants struct for namespace organization
 pub struct UnifiedConstants;
-
-// ==================== CONSTANTS CLEANUP COMPLETED ====================
+// ==================== SECTION ====================
 
 pub use api::capabilities::*;
 pub use api::roles::*;
@@ -690,7 +669,6 @@ pub use api::roles::*;
 // API constants
 pub use api::PREFIX as API_PREFIX_V1;
 pub use api::VERSION as API_VERSION_V1;
-
 // Network constants
 pub use network::ports::*;
 

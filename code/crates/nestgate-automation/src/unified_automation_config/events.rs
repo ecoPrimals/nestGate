@@ -1,6 +1,5 @@
 /// Contains all configuration related to events
 /// Extracted from unified_automation_config.rs for better maintainability
-
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
@@ -12,10 +11,10 @@ pub struct EventsSettings {
 }
 
 impl EventsSettings {
-    pub fn development() -> Self { Self::default() }
-    pub fn production() -> Self { Self::default() }
-    pub fn performance_focused() -> Self { Self::default() }
-    pub fn reliability_focused() -> Self { Self::default() }
+    #[must_use]
+    pub fn development() -> Self { Self::default() , pub fn production() -> Self { Self::default()  }
+    #[must_use]
+    pub fn performance_focused() -> Self { Self::default() , pub fn reliability_focused() -> Self { Self::default()  }
     pub fn testing() -> Self { Self::default() }
 }
 

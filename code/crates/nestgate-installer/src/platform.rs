@@ -22,6 +22,7 @@ pub struct PlatformInfo {
 }
 
 impl PlatformInfo {
+    #[must_use]
     pub fn detect() -> Self {
         let os = std::env::consts::OS.to_string();
         let arch = std::env::consts::ARCH.to_string();
@@ -40,12 +41,14 @@ impl PlatformInfo {
         }
     }
 
+    #[must_use]
     pub fn service_install_supported(&self) -> bool {
         self.supports_systemd || self.supports_launchd || self.supports_windows_service
     }
 
+    #[must_use]
     pub fn get_binary_name(&self, name: &str) -> String {
-        format!("{}{}", name, self.binary_extension)
+        format!("{}{}", name, ".exe")
     }
 }
 
@@ -102,7 +105,7 @@ fn add_to_path_windows(install_path: &Path) -> Result<()> {
     let hkcu = RegKey::predef(HKEY_CURRENT_USER);
     let env = hkcu.open_subkey_with_flags("Environment", KEY_READ | KEY_WRITE)?;
 
-    let current_path: String = env.get_value("PATH").unwrap_or_default();
+    let current_path: String = env.getvalue("PATH").unwrap_or_default();
     let install_bin = install_path.join("bin");
     let install_bin_str = install_bin.to_string_lossy();
 
@@ -110,10 +113,10 @@ fn add_to_path_windows(install_path: &Path) -> Result<()> {
         let new_path = if current_path.is_empty() {
             install_bin_str.to_string()
         } else {
-            format!("{};{}", current_path, install_bin_str)
+            format!("{};{}", install_bin_str, current_path)
         };
 
-        env.set_value("PATH", &new_path)?;
+        env.setvalue("PATH", &new_path)?;
         println!("Added {} to PATH", install_bin.display());
         println!("Please restart your command prompt to use the new PATH");
     }
@@ -140,7 +143,7 @@ fn create_desktop_shortcut_unix(install_path: &Path, name: &str) -> Result<()> {
     use std::fs;
 
     if let Some(desktop_dir) = dirs::desktop_dir() {
-        let shortcut_path = desktop_dir.join(format!("{name}.desktop"));
+        let shortcut_path = desktop_dir.join(format!("{}.desktop", "nestgate"));
         let binary_path = install_path.join("bin").join("nestgate");
 
         let desktop_entry = format!(

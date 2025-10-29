@@ -1,0 +1,363 @@
+# NestGate Production Configuration Template
+# 
+# This template provides a comprehensive production configuration for NestGate
+# following canonical modernization principles with environment-driven values.
+#
+# Copy this file to production.toml and customize for your environment.
+
+[metadata]
+version = "2.1.0"
+config_type = "production"
+created_by = "canonical_modernization"
+description = "Production-ready NestGate configuration with zero hardcoded values"
+
+# =============================================================================
+# CORE SYSTEM CONFIGURATION
+# =============================================================================
+
+[system]
+# Environment: production, staging, development
+environment = "${NESTGATE_ENVIRONMENT:production}"
+
+# System identification
+system_id = "${NESTGATE_SYSTEM_ID:nestgate-prod-001}"
+cluster_id = "${NESTGATE_CLUSTER_ID:primary}"
+datacenter = "${NESTGATE_DATACENTER:us-east-1}"
+
+# Resource limits (canonical modernization - no hardcoded limits)
+max_memory_mb = "${NESTGATE_MAX_MEMORY_MB:8192}"
+max_cpu_cores = "${NESTGATE_MAX_CPU_CORES:8}"
+max_file_descriptors = "${NESTGATE_MAX_FD:65536}"
+
+# =============================================================================
+# NETWORK CONFIGURATION (ZERO HARDCODED ADDRESSES)
+# =============================================================================
+
+[network]
+# Primary service binding
+host = "${NESTGATE_HOST:0.0.0.0}"
+port = "${NESTGATE_PORT:8080}"
+
+# API configuration
+api_host = "${NESTGATE_API_HOST:0.0.0.0}"
+api_port = "${NESTGATE_API_PORT:8080}"
+
+# WebSocket configuration
+websocket_host = "${NESTGATE_WS_HOST:0.0.0.0}"
+websocket_port = "${NESTGATE_WS_PORT:8081}"
+
+# Admin interface (restricted)
+admin_host = "${NESTGATE_ADMIN_HOST:127.0.0.1}"
+admin_port = "${NESTGATE_ADMIN_PORT:8082}"
+
+# Health check endpoint
+health_host = "${NESTGATE_HEALTH_HOST:0.0.0.0}"
+health_port = "${NESTGATE_HEALTH_PORT:8083}"
+
+# External service endpoints
+discovery_endpoint = "${NESTGATE_DISCOVERY_ENDPOINT:http://consul:8500}"
+metrics_endpoint = "${NESTGATE_METRICS_ENDPOINT:http://prometheus:9090}"
+
+# Network timeouts (canonical modernization - configurable timeouts)
+connection_timeout_ms = "${NESTGATE_CONNECTION_TIMEOUT_MS:5000}"
+request_timeout_ms = "${NESTGATE_REQUEST_TIMEOUT_MS:30000}"
+keepalive_timeout_ms = "${NESTGATE_KEEPALIVE_TIMEOUT_MS:60000}"
+
+# =============================================================================
+# SECURITY CONFIGURATION (ENVIRONMENT-DRIVEN)
+# =============================================================================
+
+[security]
+# TLS Configuration
+tls_enabled = "${NESTGATE_TLS_ENABLED:true}"
+tls_cert_path = "${NESTGATE_TLS_CERT_PATH:/etc/nestgate/certs/server.crt}"
+tls_key_path = "${NESTGATE_TLS_KEY_PATH:/etc/nestgate/certs/server.key}"
+tls_ca_path = "${NESTGATE_TLS_CA_PATH:/etc/nestgate/certs/ca.crt}"
+
+# Authentication
+auth_provider = "${NESTGATE_AUTH_PROVIDER:oauth2}"
+auth_endpoint = "${NESTGATE_AUTH_ENDPOINT:https://auth.company.com/oauth2}"
+jwt_secret_key = "${NESTGATE_JWT_SECRET}" # Required - no default
+jwt_expiry_hours = "${NESTGATE_JWT_EXPIRY_HOURS:24}"
+
+# API Security
+api_key_required = "${NESTGATE_API_KEY_REQUIRED:true}"
+rate_limit_enabled = "${NESTGATE_RATE_LIMIT_ENABLED:true}"
+rate_limit_requests_per_minute = "${NESTGATE_RATE_LIMIT_RPM:1000}"
+
+# CORS Configuration
+cors_enabled = "${NESTGATE_CORS_ENABLED:true}"
+cors_allowed_origins = "${NESTGATE_CORS_ORIGINS:https://app.company.com}"
+cors_allowed_methods = "${NESTGATE_CORS_METHODS:GET,POST,PUT,DELETE,OPTIONS}"
+
+# =============================================================================
+# DATABASE CONFIGURATION (NO HARDCODED CONNECTIONS)
+# =============================================================================
+
+[database]
+# Primary database
+primary_url = "${NESTGATE_DATABASE_URL}" # Required - no default
+primary_pool_size = "${NESTGATE_DB_POOL_SIZE:20}"
+primary_timeout_ms = "${NESTGATE_DB_TIMEOUT_MS:10000}"
+
+# Read replica (optional)
+replica_url = "${NESTGATE_DATABASE_REPLICA_URL:}"
+replica_pool_size = "${NESTGATE_DB_REPLICA_POOL_SIZE:10}"
+
+# Connection security
+ssl_mode = "${NESTGATE_DB_SSL_MODE:require}"
+ssl_cert_path = "${NESTGATE_DB_SSL_CERT_PATH:}"
+
+# Performance tuning
+connection_max_lifetime_minutes = "${NESTGATE_DB_MAX_LIFETIME_MIN:30}"
+idle_timeout_minutes = "${NESTGATE_DB_IDLE_TIMEOUT_MIN:10}"
+
+# =============================================================================
+# CACHING CONFIGURATION (CANONICAL MODERNIZATION)
+# =============================================================================
+
+[cache]
+# Cache provider: redis, memcached, memory
+provider = "${NESTGATE_CACHE_PROVIDER:redis}"
+
+# Redis configuration
+redis_url = "${NESTGATE_REDIS_URL:redis://localhost:6379}"
+redis_pool_size = "${NESTGATE_REDIS_POOL_SIZE:20}"
+redis_timeout_ms = "${NESTGATE_REDIS_TIMEOUT_MS:5000}"
+
+# Cache TTL settings (environment-driven)
+default_ttl_seconds = "${NESTGATE_CACHE_DEFAULT_TTL:3600}"
+session_ttl_seconds = "${NESTGATE_CACHE_SESSION_TTL:1800}"
+api_cache_ttl_seconds = "${NESTGATE_CACHE_API_TTL:300}"
+
+# Memory cache (fallback)
+memory_cache_size_mb = "${NESTGATE_MEMORY_CACHE_SIZE_MB:256}"
+
+# =============================================================================
+# STORAGE CONFIGURATION (ZERO-COPY OPTIMIZED)
+# =============================================================================
+
+[storage]
+# Primary storage backend
+backend = "${NESTGATE_STORAGE_BACKEND:s3}"
+
+# S3/Object Storage
+s3_endpoint = "${NESTGATE_S3_ENDPOINT:https://s3.amazonaws.com}"
+s3_region = "${NESTGATE_S3_REGION:us-east-1}"
+s3_bucket = "${NESTGATE_S3_BUCKET}" # Required - no default
+s3_access_key = "${NESTGATE_S3_ACCESS_KEY}" # Required - no default
+s3_secret_key = "${NESTGATE_S3_SECRET_KEY}" # Required - no default
+
+# Local storage (development/testing)
+local_storage_path = "${NESTGATE_LOCAL_STORAGE_PATH:/var/lib/nestgate/storage}"
+
+# Zero-copy optimization settings
+zero_copy_enabled = "${NESTGATE_ZERO_COPY_ENABLED:true}"
+buffer_pool_size = "${NESTGATE_BUFFER_POOL_SIZE:1000}"
+mmap_cache_size_mb = "${NESTGATE_MMAP_CACHE_SIZE_MB:512}"
+
+# =============================================================================
+# MONITORING AND OBSERVABILITY
+# =============================================================================
+
+[monitoring]
+# Metrics collection
+metrics_enabled = "${NESTGATE_METRICS_ENABLED:true}"
+metrics_port = "${NESTGATE_METRICS_PORT:9090}"
+metrics_path = "${NESTGATE_METRICS_PATH:/metrics}"
+
+# Prometheus integration
+prometheus_enabled = "${NESTGATE_PROMETHEUS_ENABLED:true}"
+prometheus_push_gateway = "${NESTGATE_PROMETHEUS_PUSH_GATEWAY:}"
+
+# Health checks
+health_check_enabled = "${NESTGATE_HEALTH_CHECK_ENABLED:true}"
+health_check_interval_seconds = "${NESTGATE_HEALTH_CHECK_INTERVAL:30}"
+
+# =============================================================================
+# LOGGING CONFIGURATION
+# =============================================================================
+
+[logging]
+# Log level: error, warn, info, debug, trace
+level = "${NESTGATE_LOG_LEVEL:info}"
+
+# Log format: json, text
+format = "${NESTGATE_LOG_FORMAT:json}"
+
+# Log output: stdout, file, syslog
+output = "${NESTGATE_LOG_OUTPUT:stdout}"
+
+# File logging (if output = file)
+file_path = "${NESTGATE_LOG_FILE_PATH:/var/log/nestgate/nestgate.log}"
+file_max_size_mb = "${NESTGATE_LOG_FILE_MAX_SIZE_MB:100}"
+file_max_files = "${NESTGATE_LOG_FILE_MAX_FILES:10}"
+
+# Structured logging
+include_request_id = "${NESTGATE_LOG_INCLUDE_REQUEST_ID:true}"
+include_user_id = "${NESTGATE_LOG_INCLUDE_USER_ID:false}" # Privacy consideration
+
+# =============================================================================
+# PERFORMANCE TUNING (CANONICAL MODERNIZATION)
+# =============================================================================
+
+[performance]
+# Thread pool configuration
+worker_threads = "${NESTGATE_WORKER_THREADS:0}" # 0 = auto-detect
+blocking_threads = "${NESTGATE_BLOCKING_THREADS:512}"
+
+# Request handling
+max_concurrent_requests = "${NESTGATE_MAX_CONCURRENT_REQUESTS:10000}"
+request_queue_size = "${NESTGATE_REQUEST_QUEUE_SIZE:1000}"
+
+# Zero-copy optimizations
+zero_copy_threshold_bytes = "${NESTGATE_ZERO_COPY_THRESHOLD:4096}"
+simd_enabled = "${NESTGATE_SIMD_ENABLED:true}"
+
+# Memory management
+gc_interval_seconds = "${NESTGATE_GC_INTERVAL:300}"
+memory_pressure_threshold = "${NESTGATE_MEMORY_PRESSURE_THRESHOLD:0.8}"
+
+# =============================================================================
+# CHAOS TESTING CONFIGURATION (PRODUCTION SAFETY)
+# =============================================================================
+
+[chaos_testing]
+# Chaos testing (disabled by default in production)
+enabled = "${NESTGATE_CHAOS_TESTING_ENABLED:false}"
+dry_run_only = "${NESTGATE_CHAOS_DRY_RUN:true}"
+
+# Safety limits
+max_concurrent_tests = "${NESTGATE_CHAOS_MAX_CONCURRENT:1}"
+max_test_duration_minutes = "${NESTGATE_CHAOS_MAX_DURATION:5}"
+
+# Allowed scenarios (comma-separated)
+allowed_scenarios = "${NESTGATE_CHAOS_ALLOWED_SCENARIOS:network_partition,cpu_stress}"
+
+# =============================================================================
+# FEATURE FLAGS (CANONICAL MODERNIZATION)
+# =============================================================================
+
+[features]
+# API features
+api_v2_enabled = "${NESTGATE_API_V2_ENABLED:true}"
+websocket_enabled = "${NESTGATE_WEBSOCKET_ENABLED:true}"
+graphql_enabled = "${NESTGATE_GRAPHQL_ENABLED:false}"
+
+# Storage features
+multi_region_replication = "${NESTGATE_MULTI_REGION_REPLICATION:false}"
+encryption_at_rest = "${NESTGATE_ENCRYPTION_AT_REST:true}"
+
+# Advanced features
+machine_learning_enabled = "${NESTGATE_ML_ENABLED:false}"
+blockchain_integration = "${NESTGATE_BLOCKCHAIN_ENABLED:false}"
+
+# =============================================================================
+# DEPLOYMENT CONFIGURATION
+# =============================================================================
+
+[deployment]
+# Deployment metadata
+version = "${NESTGATE_VERSION:2.1.0}"
+build_id = "${NESTGATE_BUILD_ID:}"
+deploy_timestamp = "${NESTGATE_DEPLOY_TIMESTAMP:}"
+
+# Rolling update configuration
+max_unavailable_percentage = "${NESTGATE_MAX_UNAVAILABLE_PCT:25}"
+max_surge_percentage = "${NESTGATE_MAX_SURGE_PCT:25}"
+
+# Health check configuration for deployment
+startup_probe_delay_seconds = "${NESTGATE_STARTUP_PROBE_DELAY:10}"
+readiness_probe_delay_seconds = "${NESTGATE_READINESS_PROBE_DELAY:5}"
+liveness_probe_delay_seconds = "${NESTGATE_LIVENESS_PROBE_DELAY:30}"
+
+# =============================================================================
+# ENVIRONMENT-SPECIFIC OVERRIDES
+# =============================================================================
+
+# Production-specific settings
+[production]
+debug_enabled = false
+dev_tools_enabled = false
+cors_strict_mode = true
+audit_logging_enabled = true
+
+# Staging-specific settings (if environment = staging)
+[staging]
+debug_enabled = true
+dev_tools_enabled = true
+cors_strict_mode = false
+audit_logging_enabled = true
+
+# Development-specific settings (if environment = development)
+[development]
+debug_enabled = true
+dev_tools_enabled = true
+cors_strict_mode = false
+audit_logging_enabled = false
+mock_services_enabled = true
+
+# =============================================================================
+# VALIDATION RULES
+# =============================================================================
+
+[validation]
+# Required environment variables (will fail if not set)
+required_vars = [
+    "NESTGATE_JWT_SECRET",
+    "NESTGATE_DATABASE_URL",
+    "NESTGATE_S3_BUCKET",
+    "NESTGATE_S3_ACCESS_KEY",
+    "NESTGATE_S3_SECRET_KEY"
+]
+
+# Numeric validation ranges
+[validation.ranges]
+port = { min = 1024, max = 65535 }
+timeout_ms = { min = 1000, max = 300000 }
+pool_size = { min = 1, max = 1000 }
+memory_mb = { min = 128, max = 32768 }
+
+# =============================================================================
+# CANONICAL MODERNIZATION METADATA
+# =============================================================================
+
+[canonical_modernization]
+# This section tracks canonical modernization compliance
+version = "2.1.0"
+compliance_level = "full"
+zero_hardcoded_values = true
+environment_driven = true
+zero_copy_optimized = true
+chaos_testing_ready = true
+e2e_testing_ready = true
+
+# Modernization features enabled
+features_enabled = [
+    "unified_error_handling",
+    "canonical_adapters",
+    "zero_copy_operations",
+    "environment_driven_config",
+    "comprehensive_testing",
+    "production_monitoring"
+]
+
+# Security compliance
+security_features = [
+    "tls_encryption",
+    "jwt_authentication",
+    "rate_limiting",
+    "cors_protection",
+    "input_validation",
+    "audit_logging"
+]
+
+# Performance optimizations
+performance_features = [
+    "zero_copy_buffers",
+    "simd_operations",
+    "connection_pooling",
+    "memory_mapped_files",
+    "async_processing",
+    "smart_caching"
+] 

@@ -2,19 +2,18 @@ use crate::NestGateError;
 use std::collections::HashMap;
 ///
 /// This module provides pre-built dashboard templates for common monitoring scenarios.
-use super::types::{DashboardConfig, TimeRange};
+use super::types::{}, DashboardConfig, TimeRange;
 use crate::{NestGateError, Result};
 use std::collections::HashMap;
 use std::time::Duration;
-
 /// Dashboard template manager
 pub struct DashboardTemplates {
     /// Predefined dashboard templates
     templates: HashMap<String, DashboardConfig>,
 }
-
 impl DashboardTemplates {
     /// Create new template manager
+    #[must_use]
     pub fn new() -> Self {
         let mut templates = Self {
             templates: HashMap::new(),
@@ -37,7 +36,7 @@ impl DashboardTemplates {
                 refresh_interval: Duration::from_secs(30),
                 time_range: TimeRange::default(),
                 variables: vec![],
-            },
+            }
         );
 
         // Provider Performance Template
@@ -52,7 +51,7 @@ impl DashboardTemplates {
                 refresh_interval: Duration::from_secs(15),
                 time_range: TimeRange::default(),
                 variables: vec![],
-            },
+            }
         );
     }
 
@@ -62,11 +61,16 @@ impl DashboardTemplates {
     }
 
     /// Get template by name
-    pub fn get_template(&self, name: &str) -> Result<&DashboardConfig> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn get_template(&self, name: &str) -> Result<&DashboardConfig>  {
         self.templates.get(name).ok_or_else(|| {
-            NestGateError::validation_error(
-                "template_name",
-                &format!("Dashboard template '{name}' not found"),
+            NestGateError::validation("template_name"),
                 Some(name.to_string()),
             )
         })

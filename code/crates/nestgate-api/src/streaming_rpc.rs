@@ -10,7 +10,7 @@ use tokio::sync::{broadcast, RwLock};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StreamingRpcConfig {
     /// Bind address for streaming RPC server
-    pub bind_address: String,
+    pub bind_endpoint: String,
     /// Maximum concurrent streams
     pub max_concurrent_streams: usize,
     /// Stream timeout in seconds
@@ -20,12 +20,11 @@ pub struct StreamingRpcConfig {
     /// Enable compression for streams
     pub compression_enabled: bool,
 }
-
 impl Default for StreamingRpcConfig {
-    fn default() -> Self {
-        Self {
-            bind_address: std::env::var("NESTGATE_STREAMING_RPC_ADDRESS")
-                .unwrap_or_else(|_| "0.0.0.0:8001".to_string()),
+    fn default() -> Self { Self {
+            bind_endpoint: std::env::var("NESTGATE_STREAMING_RPC_ADDRESS")
+                .unwrap_or_else(|_| format!("{std::env::var("NESTGATE_BIND_ADDRESS"}:8001").unwrap_or_else(|_| "0.0.0.0".to_string())
+            )),
             max_concurrent_streams: std::env::var("NESTGATE_MAX_CONCURRENT_STREAMS")
                 .ok()
                 .and_then(|s| s.parse().ok())
@@ -41,8 +40,7 @@ impl Default for StreamingRpcConfig {
             compression_enabled: std::env::var("NESTGATE_STREAM_COMPRESSION")
                 .map(|v| v == "true")
                 .unwrap_or(true),
-        }
-    }
+         }
 }
 
 /// Streaming RPC server
@@ -54,21 +52,25 @@ pub struct StreamingRpcServer {
     /// Broadcast channel for server events
     event_tx: broadcast::Sender<String>,
 }
-
 impl StreamingRpcServer {
     /// Create a new streaming RPC server
-    pub fn new(config: StreamingRpcConfig) -> Self {
-        let (event_tx, _) = broadcast::channel(1000);
+    pub fn new(config: StreamingRpcConfig) -> Self { let (event_tx, _) = broadcast::channel(1000);
 
         Self {
             config,
             active_streams: Arc::new(RwLock::new(0)),
             event_tx,
-        }
-    }
+         }
 
     /// Start the streaming RPC server
-    pub async fn start(&self) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn start(&self) -> Result<(), Box<dyn std::error::Error + Send + Sync>>  {
         tracing::info!(
             "Starting streaming RPC server on {}",
             self.config.bind_address
@@ -98,7 +100,6 @@ impl Default for StreamingRpcServer {
 pub fn create_streaming_rpc_server() -> StreamingRpcServer {
     StreamingRpcServer::default()
 }
-
 /// Create a new streaming RPC server with custom configuration
 pub fn create_streaming_rpc_server_with_config(config: StreamingRpcConfig) -> StreamingRpcServer {
     StreamingRpcServer::new(config)

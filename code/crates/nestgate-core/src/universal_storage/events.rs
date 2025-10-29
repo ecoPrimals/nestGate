@@ -7,7 +7,6 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::broadcast;
 // Removed unused tracing import
-
 use super::types::*;
 use crate::Result;
 use tracing::warn;
@@ -21,7 +20,6 @@ pub struct StorageEventBroadcaster {
     /// Event history for replay
     event_history: Arc<EventHistory>,
 }
-
 impl Default for StorageEventBroadcaster {
     fn default() -> Self {
         Self::new()
@@ -30,6 +28,7 @@ impl Default for StorageEventBroadcaster {
 
 impl StorageEventBroadcaster {
     /// Create a new event broadcaster
+    #[must_use]
     pub fn new() -> Self {
         Self {
             event_channels: HashMap::new(),
@@ -39,12 +38,37 @@ impl StorageEventBroadcaster {
     }
 
     /// Subscribe to storage events
-    pub async fn subscribe(&self) -> Result<StorageEventStream> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub fn subscribe(&self) -> Result<StorageEventStream>   {
         self.subscription_manager.create_subscription()
     }
 
     /// Broadcast a storage event to all subscribers
-    pub async fn broadcast(&self, event: StorageEvent) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub async fn broadcast(&self, event: StorageEvent) -> Result<()>   {
         // Store in history
         self.event_history.store_event(event.clone()).await?;
 
@@ -65,22 +89,17 @@ impl StorageEventBroadcaster {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum StorageEvent {
     FileCreated {
-        path: String,
         size: u64,
         metadata: Box<FileMetadata>,
     },
     FileModified {
-        path: String,
         changes: Vec<Change>,
     },
     FileDeleted {
-        path: String,
     },
     DirectoryCreated {
-        path: String,
     },
     DirectoryDeleted {
-        path: String,
     },
     ReplicationStarted {
         source: String,
@@ -92,7 +111,6 @@ pub enum StorageEvent {
         result: ReplicationResult,
     },
     SyncEvent {
-        operation: SyncOperation,
         status: SyncStatus,
     },
     BackupProgress {
@@ -105,7 +123,6 @@ pub enum StorageEvent {
         metrics: HashMap<String, f64>,
     },
 }
-
 impl StorageEvent {
     /// Create a storage event from a storage response
     pub fn from_response(response: &StorageResponse) -> Self {
@@ -117,7 +134,6 @@ impl StorageEvent {
             } => {
                 if operation == "create_file" {
                     StorageEvent::FileCreated {
-                        path: metadata.path.clone(),
                         size: metadata.size.unwrap_or(0),
                         metadata: Box::new(FileMetadata::default()),
                     }
@@ -140,7 +156,14 @@ impl StorageEvent {
 
 impl SubscriptionManager {
     /// Create a new subscription to storage events
-    pub fn create_subscription(&self) -> Result<StorageEventStream> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn create_subscription(&self) -> Result<StorageEventStream>  {
         // Create placeholder event stream
         Ok(StorageEventStream)
     }

@@ -200,7 +200,7 @@ fn benchmark_configuration_system(c: &mut Criterion) {
     group.bench_function("unified_config_creation", |b| {
         b.iter(|| {
             use nestgate_core::config::defaults::*;
-            use nestgate_core::config::canonical_unified::NestGateCanonicalUnifiedConfig;
+            use nestgate_core::config::unified::NestGateUnifiedConfig;
 
             // Test canonical configuration creation
             let configs = (0..100)

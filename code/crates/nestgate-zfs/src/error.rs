@@ -2,97 +2,177 @@
 // This module provides canonical error handling for ZFS operations, integrating
 // with the unified NestGateError system for consistent error reporting.
 
-use nestgate_core::error::NestGateError;
+use nestgate_core::error::{InternalErrorDetails, NestGateError};
 
-// ==================== CANONICAL ERROR CREATION HELPERS ====================
+// ==================== SECTION ====================
 
 /// Canonical error creation helpers for ZFS operations
 pub struct ZfsErrorBuilder;
-
 impl ZfsErrorBuilder {
     /// Create a generic ZFS error (for backward compatibility)
+    #[allow(clippy::new_ret_no_self)]
+    #[must_use]
     pub fn new(message: &str) -> NestGateError {
-        NestGateError::Internal {
-            message: message.to_string(),
-            location: Some("zfs_operation".to_string()),
-            debug_info: None,
-            is_bug: false,
-        }
+        NestGateError::internal_error(message, "zfs-generic")
     }
 
     /// Create a ZFS error with operation context (for backward compatibility)
     pub fn new_with_operation(message: &str, _operation: impl std::fmt::Debug) -> NestGateError {
-        NestGateError::Internal {
-            message: message.to_string(),
-            location: Some("zfs_operation".to_string()),
-            debug_info: Some(format!("Operation: {:?}", _operation)),
-            is_bug: false,
-        }
+        NestGateError::internal_error(message, "zfs-operation")
     }
 
     /// Create a canonical ZFS pool error
+    #[must_use]
     pub fn pool_error(message: &str, pool: &str) -> NestGateError {
-        NestGateError::Internal {
-            message: format!("Pool '{}': {}", pool, message),
-            location: Some("zfs_pool_operation".to_string()),
-            debug_info: None,
+        NestGateError::Internal(Box::new(InternalErrorDetails {
+            message: format!("Pool error: {message}"),
+            component: "zfs-pool".to_string(),
+            location: Some(format!("pool:{pool}")),
+            context: None,
             is_bug: false,
-        }
+        }))
     }
 
     /// Create a canonical ZFS dataset error
+    #[must_use]
     pub fn dataset_error(message: &str, dataset: &str) -> NestGateError {
-        NestGateError::Internal {
-            message: format!("Dataset '{}': {}", dataset, message),
-            location: Some("zfs_dataset_operation".to_string()),
-            debug_info: None,
+        NestGateError::Internal(Box::new(InternalErrorDetails {
+            message: format!("Dataset error: {message}"),
+            component: "zfs-dataset".to_string(),
+            location: Some(format!("dataset:{dataset}")),
+            context: None,
             is_bug: false,
-        }
+        }))
     }
 
     /// Create a canonical ZFS snapshot error
+    #[must_use]
     pub fn snapshot_error(message: &str, snapshot: &str) -> NestGateError {
-        NestGateError::Internal {
-            message: format!("Snapshot '{}': {}", snapshot, message),
-            location: Some("zfs_snapshot_operation".to_string()),
-            debug_info: None,
+        NestGateError::Internal(Box::new(InternalErrorDetails {
+            message: format!("Snapshot error: {message}"),
+            component: "zfs-snapshot".to_string(),
+            location: Some(format!("snapshot:{snapshot}")),
+            context: None,
             is_bug: false,
-        }
+        }))
     }
 
     /// Create a canonical ZFS command error
+    #[must_use]
     pub fn command_error(command: &str, details: &str) -> NestGateError {
-        NestGateError::Internal {
-            message: format!("ZFS command '{}' failed: {}", command, details),
+        NestGateError::Internal(Box::new(InternalErrorDetails {
+            message: format!("Command '{command}' failed: {details}"),
+            component: "zfs-command".to_string(),
             location: Some("zfs_command_execution".to_string()),
-            debug_info: None,
+            context: None,
             is_bug: false,
-        }
+        }))
+    }
+
+    /// Create a simple ZFS error
+    #[must_use]
+    pub fn zfs_error(message: &str) -> NestGateError {
+        NestGateError::internal_error(message, "zfs-core")
+    }
+
+    /// Create a ZFS error with operation context
+    #[must_use]
+    pub fn zfs_operation_error(message: &str) -> NestGateError {
+        NestGateError::internal_error(message, "zfs-operation")
+    }
+
+    /// Create a generic internal error with component and location (migration helper)
+    #[must_use]
+    pub fn internal(message: String, component: String, location: Option<String>) -> NestGateError {
+        NestGateError::Internal(Box::new(InternalErrorDetails {
+            message,
+            component,
+            location,
+            context: None,
+            is_bug: false,
+        }))
     }
 }
 
-// ==================== UNIFIED ERROR CONVERSION UTILITIES ====================
+// ==================== MIGRATION HELPERS ====================
+// These functions help migrate old error creation patterns
+
+/// Create ZFS internal error from old struct pattern (migration helper)
+#[must_use]
+pub fn zfs_internal(
+    message: String,
+    component: String,
+    location: Option<String>,
+    _is_bug: bool,
+    _context: Option<()>,
+) -> NestGateError {
+    ZfsErrorBuilder::internal(message, component, location)
+}
+
+// ==================== SECTION ====================
 
 /// Convert ZFS command output to appropriate error
+#[must_use]
 pub fn zfs_command_error(command: &str, output: &str) -> NestGateError {
     ZfsErrorBuilder::command_error(command, output)
 }
 
 /// Convert ZFS operation context to error  
+#[must_use]
 pub fn zfs_operation_error(operation: &str, details: &str) -> NestGateError {
-    NestGateError::Internal {
-        message: format!("ZFS {} operation failed: {}", operation, details),
-        location: Some(format!("zfs_{}_operation", operation.to_lowercase())),
-        debug_info: None,
+    NestGateError::Internal(Box::new(InternalErrorDetails {
+        message: format!("ZFS operation failed: {operation} - {details}"),
+        component: "zfs-operation".to_string(),
+        location: Some(format!("zfs_{operation}_operation")),
+        context: None,
         is_bug: false,
-    }
+    }))
 }
 
-// ==================== CANONICAL MODERNIZATION ====================
+/// Create ZFS error with operation context - helper function
+#[must_use]
+pub fn create_zfs_error(message: String, operation: ZfsOperation) -> NestGateError {
+    NestGateError::Internal(Box::new(InternalErrorDetails {
+        message,
+        component: "zfs-core".to_string(),
+        location: Some(format!("{operation:?}").to_lowercase()),
+        context: None,
+        is_bug: false,
+    }))
+}
 
-/// **CANONICAL**: ZFS-specific Result type using IdioResult with ZfsError from types.rs
-pub type ZfsResult<T> = std::result::Result<T, crate::types::ZfsError>;
+/// ZFS operation types for error context
+#[derive(Debug, Clone)]
+pub enum ZfsOperation {
+    PoolCreate,
+    PoolDestroy,
+    PoolImport,
+    PoolExport,
+    DatasetCreate,
+    DatasetDestroy,
+    DatasetMount,
+    DatasetUnmount,
+    SnapshotCreate,
+    SnapshotDestroy,
+    Command,
+    SystemCheck,
+    Configuration,
+}
 
-/// **CANONICAL**: Unified Result type for ZFS operations
-/// Uses the canonical NestGateError for consistency
-pub type Result<T> = nestgate_core::error::Result<T>;
+// ==================== SECTION: CANONICAL ERROR SYSTEM ====================
+
+// CANONICAL MODERNIZATION: Remove duplicate type aliases
+// All ZFS errors now use the unified nestgate_core error system
+
+// REMOVED DUPLICATES:
+// - pub type ZfsResult<T> = std::result::Result<T, crate::types::ZfsError>;
+// - pub type Result<T> = nestgate_core::error::Result<T, ZfsError>;
+
+// USE CANONICAL TYPES:
+pub use nestgate_core::error::Result;
+// Re-export ZfsError from types module for backward compatibility
+pub use crate::types::ZfsError;
+// Define ZfsResult as an alias to Result with ZfsError
+pub type ZfsResult<T> = Result<T>;
+
+// ==================== SECTION ====================

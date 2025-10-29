@@ -17,7 +17,7 @@ pub async fn realtime_metrics() -> Result<Json<ApiResponse<RealTimeMetrics>>, St
         Ok(metrics) => {
             debug!("Real-time metrics retrieved successfully");
             Ok(Json(ApiResponse::success(metrics)))
-        },
+        }
         Err(e) => {
             error!("Realtime metrics error: {}", e);
             Err(StatusCode::INTERNAL_SERVER_ERROR)

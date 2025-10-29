@@ -12,15 +12,16 @@ use tokio::test;
 
 /// Test string allocation performance with constants
 #[tokio::test]
-async fn test_string_constant_performance() {
+async fn test_string_constant_performance() -> Result<(), Box<dyn std::error::Error>> {
     const ITERATIONS: usize = 10_000;
 
     // Test with constants (optimized)
     let start = Instant::now();
     for _ in 0..ITERATIONS {
-        let _compression = nestgate_zfs::constants::defaults::COMPRESSION_LZ4;
-        let _checksum = nestgate_zfs::constants::defaults::CHECKSUM_SHA256;
-        let _recordsize = nestgate_zfs::constants::defaults::RECORDSIZE_128K;
+        let _compression = nestgate_zfs::config::defaults::COMPRESSION_LZ4;
+        let _checksum = nestgate_zfs::config::defaults::CHECKSUM_SHA256;
+        let _recordsize = nestgate_zfs::config::defaults::RECORDSIZE_128K;
+        Ok(())
     }
     let constant_time = start.elapsed();
 
@@ -30,6 +31,7 @@ async fn test_string_constant_performance() {
         let _compression = "lz4".to_string();
         let _checksum = "sha256".to_string();
         let _recordsize = "128K".to_string();
+        Ok(())
     }
     let allocation_time = start.elapsed();
 
@@ -43,11 +45,12 @@ async fn test_string_constant_performance() {
         constant_time < allocation_time / 10,
         "String constants should be at least 10x faster than allocations"
     );
+    Ok(())
 }
 
 /// Test Cow<str> optimization performance
 #[tokio::test]
-async fn test_cow_str_performance() {
+async fn test_cow_str_performance() -> Result<(), Box<dyn std::error::Error>> {
     use std::borrow::Cow;
 
     const ITERATIONS: usize = 1_000;
@@ -61,6 +64,7 @@ async fn test_cow_str_performance() {
         } else {
             Cow::Owned(test_string.to_uppercase())
         };
+        Ok(())
     }
     let cow_time = start.elapsed();
 
@@ -72,6 +76,7 @@ async fn test_cow_str_performance() {
         } else {
             test_string.to_uppercase()
         };
+        Ok(())
     }
     let string_time = start.elapsed();
 
@@ -82,11 +87,12 @@ async fn test_cow_str_performance() {
         cow_time < string_time,
         "Cow<str> should be faster than String allocation for borrowed strings"
     );
+    Ok(())
 }
 
 /// Test into_owned() vs to_string() performance
 #[tokio::test]
-async fn test_into_owned_performance() {
+async fn test_into_owned_performance() -> Result<(), Box<dyn std::error::Error>> {
     const ITERATIONS: usize = 1_000;
     let test_bytes = b"test output from zfs command";
 
@@ -94,6 +100,7 @@ async fn test_into_owned_performance() {
     let start = Instant::now();
     for _ in 0..ITERATIONS {
         let _result = String::from_utf8_lossy(test_bytes).into_owned();
+        Ok(())
     }
     let into_owned_time = start.elapsed();
 
@@ -101,6 +108,7 @@ async fn test_into_owned_performance() {
     let start = Instant::now();
     for _ in 0..ITERATIONS {
         let _result = String::from_utf8_lossy(test_bytes).to_string();
+        Ok(())
     }
     let to_string_time = start.elapsed();
 
@@ -114,11 +122,12 @@ async fn test_into_owned_performance() {
         into_owned_time <= to_string_time * 2,
         "into_owned() should not be significantly slower than to_string()"
     );
+    Ok(())
 }
 
 /// Benchmark overall ZFS operation performance
 #[tokio::test]
-async fn test_zfs_operation_performance_baseline() {
+async fn test_zfs_operation_performance_baseline() -> Result<(), Box<dyn std::error::Error>> {
     let executor = Arc::new(NativeZfsCommandExecutor::new());
     let manager = NativeZfsDatasetManager::new(executor);
 
@@ -126,13 +135,14 @@ async fn test_zfs_operation_performance_baseline() {
     let start = Instant::now();
     for i in 0..100 {
         let _options = DatasetCreateOptions {
-            compression: Some(nestgate_zfs::constants::defaults::COMPRESSION_LZ4.into()),
-            record_size: Some(nestgate_zfs::constants::defaults::RECORDSIZE_128K.into()),
+            compression: Some(nestgate_zfs::config::defaults::COMPRESSION_LZ4.into()),
+            record_size: Some(nestgate_zfs::config::defaults::RECORDSIZE_128K.into()),
             ..Default::default()
         };
 
         // Simulate some processing
         let _dataset_name = format!("test_dataset_{}", i);
+        Ok(())
     }
     let creation_time = start.elapsed();
 
@@ -143,11 +153,12 @@ async fn test_zfs_operation_performance_baseline() {
         creation_time < Duration::from_millis(100),
         "Dataset options creation should be fast"
     );
+    Ok(())
 }
 
 /// Test memory usage doesn't grow with string operations
 #[tokio::test]
-async fn test_memory_stability() {
+async fn test_memory_stability() -> Result<(), Box<dyn std::error::Error>> {
     use std::collections::HashMap;
 
     const ITERATIONS: usize = 1_000;
@@ -159,13 +170,15 @@ async fn test_memory_stability() {
         // Use optimized patterns
         properties.insert(
             format!("property_{}", i),
-            nestgate_zfs::constants::defaults::COMPRESSION_LZ4.to_string(),
+            nestgate_zfs::config::defaults::COMPRESSION_LZ4.to_string(),
         );
 
         // Clear periodically to simulate real usage
         if i % 100 == 0 {
             properties.clear();
+            Ok(())
         }
+        Ok(())
     }
 
     // Should not have excessive memory usage
@@ -173,6 +186,7 @@ async fn test_memory_stability() {
         properties.len() < 100,
         "Memory should be managed efficiently"
     );
+    Ok(())
 }
 
 #[cfg(test)]
@@ -191,5 +205,6 @@ mod benchmarks {
         test_memory_stability();
 
         println!("✅ All performance regression tests passed!");
+        Ok(())
     }
 }

@@ -7,25 +7,32 @@ use nestgate_zfs::ZfsManager;
 use std::sync::Arc;
 use tracing::{debug, info, warn};
 
+// Temporary type alias until nestgate_zfs performance types are available
+type PerformanceSnapshot = serde_json::Value;
+
 #[derive(Debug, Clone)]
 pub struct ZfsAnalyzer {
     zfs_manager: Arc<ZfsManager>,
 }
 
 impl ZfsAnalyzer {
-    pub fn new(zfs_manager: Arc<ZfsManager>) -> Self {
-        Self { zfs_manager }
-    }
+    pub fn new(zfs_manager: Arc<ZfsManager>) -> Self { Self { zfs_manager  }
 
     /// Create with default configuration - PRODUCTION READY
     /// Real ZFS integration for production use
-    pub async fn new_with_default_config() -> Result<Self> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn new_with_default_config() -> Result<Self>  {
         let config = nestgate_zfs::ZfsConfig::default();
-        let zfs_manager = Arc::new(ZfsManager::new(config).await.map_err(|e| {
-            NestGateError::Internal {
-                message: format!("Failed to initialize ZFS manager for analytics: {}", e),
+        let zfs_manager = Arc::new(ZfsManager::new(config).await.map_err(|_e| {
+            NestGateError::internal_error(
                 location: Some(file!().to_string()),
-                debug_info: None,
+                context: None,
                 is_bug: false,
             }
         })?);
@@ -33,7 +40,14 @@ impl ZfsAnalyzer {
     }
 
     /// Collect comprehensive pool trend analysis
-    pub async fn collect_pool_trends(&self) -> Result<Vec<PoolTrendAnalysis>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn collect_pool_trends(&self) -> Result<Vec<PoolTrendAnalysis>>  {
         debug!("🏊 Collecting comprehensive ZFS pool trend analysis");
         
         match self.zfs_manager.get_performance_analytics().await {
@@ -49,16 +63,16 @@ impl ZfsAnalyzer {
                         capacity_trend: CapacityTrend {
                             direction: if pool.utilization_percentage > 75.0 { "increasing" } else { "stable" }.to_string(),
                             rate_per_day: pool.utilization_percentage * 0.1, // Estimated daily growth rate
-                        },
+                        }
                         performance_trend: PerformanceTrend {
                             read_latency_direction: "stable".to_string(),
                             write_latency_direction: if pool.utilization_percentage > 80.0 { "increasing" } else { "stable" }.to_string(),
                             throughput_direction: "stable".to_string(),
-                        },
+                        }
                         health_trend: HealthTrend {
                             status_changes: 0,
                             error_rate_trend: "stable".to_string(),
-                        },
+                        }
                         throughput_patterns,
                     });
                 }
@@ -74,16 +88,16 @@ impl ZfsAnalyzer {
                     capacity_trend: CapacityTrend {
                         direction: "stable".to_string(),
                         rate_per_day: 2.5,
-                    },
+                    }
                     performance_trend: PerformanceTrend {
                         read_latency_direction: "stable".to_string(),
                         write_latency_direction: "stable".to_string(),
                         throughput_direction: "increasing".to_string(),
-                    },
+                    }
                     health_trend: HealthTrend {
                         status_changes: 0,
                         error_rate_trend: "stable".to_string(),
-                    },
+                    }
                     throughput_patterns: vec![],
                 }])
             }
@@ -91,7 +105,14 @@ impl ZfsAnalyzer {
     }
 
     /// Perform comprehensive capacity analysis
-    pub async fn perform_capacity_analysis(&self) -> Result<CapacityAnalysis> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn perform_capacity_analysis(&self) -> Result<CapacityAnalysis>  {
         debug!("💾 Performing comprehensive capacity analysis");
         
         match self.zfs_manager.get_performance_analytics().await {
@@ -121,7 +142,7 @@ impl ZfsAnalyzer {
                             Some("2025-03-01".to_string()) // Rough projection
                         } else {
                             None
-                        },
+                        }
                         fragmentation_level: pool.fragmentation_level.unwrap_or(5.0),
                         compression_ratio: 1.4, // Default compression ratio
                     });
@@ -140,7 +161,7 @@ impl ZfsAnalyzer {
                 Ok(CapacityAnalysis {
                     overall_utilization,
                     pool_details,
-                    projected_exhaustion_days: if overall_utilization > 90.0 { Some(30) } else { None },
+                    projected_exhaustion_days: if overall_utilization > 90.0 { Some(30) } else { None }
                     recommendations,
                     critical_pools,
                 })
@@ -169,7 +190,14 @@ impl ZfsAnalyzer {
     }
 
     /// Analyze I/O performance characteristics
-    pub async fn analyze_io_performance(&self) -> Result<IOPerformanceAnalysis> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn analyze_io_performance(&self) -> Result<IOPerformanceAnalysis>  {
         debug!("⚡ Analyzing I/O performance characteristics");
         
         match self.zfs_manager.get_performance_analytics().await {
@@ -210,7 +238,7 @@ impl ZfsAnalyzer {
                 
                 let bottlenecks = if average_read_latency > 20.0 || average_write_latency > 50.0 {
                     vec!["High I/O latency detected".to_string()]
-                } else if total_read_iops + total_write_iops > 10000.0 {
+                } else if total_read_iops + total_write_iops > 10_000.0 {
                     vec!["High IOPS load".to_string()]
                 } else {
                     vec![]
@@ -218,7 +246,7 @@ impl ZfsAnalyzer {
                 
                 let recommendations = if !bottlenecks.is_empty() {
                     vec![
-                        "Consider adding L2ARC devices for read caching".to_string(),
+                        "Consider adding L2ARC _devices for read caching".to_string(),
                         "Optimize ZFS recordsize for your workload".to_string(),
                         "Monitor pool fragmentation levels".to_string(),
                     ]
@@ -257,7 +285,14 @@ impl ZfsAnalyzer {
     }
 
     /// Analyze cache performance from ZFS metrics
-    pub async fn analyze_cache_performance(&self) -> Result<CachePerformanceAnalysis> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn analyze_cache_performance(&self) -> Result<CachePerformanceAnalysis>  {
         debug!("🎯 Analyzing ZFS cache performance");
         
         match self.zfs_manager.get_performance_analytics().await {
@@ -298,21 +333,17 @@ impl ZfsAnalyzer {
         
         for pool in pool_details {
             if pool.utilization_percentage > 90.0 {
-                recommendations.push(format!("URGENT: Pool '{}' is {}% full - immediate expansion needed", 
-                                           pool.pool_name, pool.utilization_percentage as u32));
+                recommendations.push(format!("URGENT: Pool 'self.base_url' is self.base_url% full - immediate expansion needed"));
             } else if pool.utilization_percentage > 80.0 {
-                recommendations.push(format!("Pool '{}' is {}% full - plan expansion soon", 
-                                           pool.pool_name, pool.utilization_percentage as u32));
+                recommendations.push(format!("Pool 'self.base_url' is self.base_url% full - plan expansion soon"));
             }
             
             if pool.fragmentation_level > 20.0 {
-                recommendations.push(format!("Pool '{}' has {:.1}% fragmentation - consider defragmentation", 
-                                           pool.pool_name, pool.fragmentation_level));
+                recommendations.push(format!("Pool 'self.base_url' has self.base_url% fragmentation - consider defragmentation"));
             }
             
             if pool.compression_ratio < 1.2 {
-                recommendations.push(format!("Pool '{}' has low compression ratio ({:.1}x) - review compression settings", 
-                                           pool.pool_name, pool.compression_ratio));
+                recommendations.push(format!("Pool 'self.base_url' has low compression ratio (self.base_urlx) - review compression settings"));
             }
         }
         
@@ -324,7 +355,7 @@ impl ZfsAnalyzer {
     }
 
     /// Analyze throughput patterns from performance history
-    async fn analyze_throughput_patterns(history: &[nestgate_zfs::performance::types::PerformanceSnapshot]) -> Vec<ThroughputPattern> {
+    fn analyze_throughput_patterns(history: &[PerformanceSnapshot]) -> Vec<ThroughputPattern> {
         let mut patterns = Vec::new();
         
         if history.len() < 2 {
@@ -337,7 +368,7 @@ impl ZfsAnalyzer {
         if !recent_snapshots.is_empty() {
             let avg_throughput = recent_snapshots.iter()
                 .map(|s| s.total_throughput_mbs)
-                .sum::<f64>() / recent_snapshots.len() as f64;
+                .sum::<f64>() / (recent_snapshots.len() as f64);
             
             patterns.push(ThroughputPattern {
                 time_period: "24_hours".to_string(),
@@ -365,7 +396,7 @@ impl ZfsAnalyzer {
         }
         
         if l2arc_hit_ratio < 60.0 {
-            optimizations.push("L2ARC hit ratio is low - consider faster L2ARC devices (NVMe SSDs)".to_string());
+            optimizations.push("L2ARC hit ratio is low - consider faster L2ARC _devices (NVMe SSDs)".to_string());
             optimizations.push("Review L2ARC size configuration".to_string());
         }
         

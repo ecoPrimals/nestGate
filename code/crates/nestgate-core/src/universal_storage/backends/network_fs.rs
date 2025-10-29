@@ -1,15 +1,14 @@
-//! Network Filesystem Storage Backend
-//!
-//! Provides network filesystem support including NFS, SMB/CIFS, and other
+// Network Filesystem Storage Backend
+//! Network Fs functionality and utilities.
+// Provides network filesystem support including NFS, SMB/CIFS, and other
 //! network-mounted filesystems with unified storage interface.
 
-use async_trait::async_trait;
+// Removed async_trait - migrated to native async patterns
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::path::PathBuf;
 
 use super::{BackendBuilder, StorageBackend};
-use crate::error::{NestGateError, Result, UnifiedConfigSource};
+use crate::error::{}, NestGateError, Result, UnifiedConfigSource;
 // Removed unused imports - using the correct backend trait
 
 /// Network filesystem types supported
@@ -26,7 +25,6 @@ pub enum NetworkFsType {
     /// Secure File Transfer Protocol
     Sftp,
 }
-
 /// Network filesystem configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkFsConfig {
@@ -35,7 +33,6 @@ pub struct NetworkFsConfig {
     /// Remote server address
     pub server: String,
     /// Remote path or share
-    pub remote_path: String,
     /// Local mount point
     pub mount_point: PathBuf,
     /// Authentication credentials
@@ -45,7 +42,6 @@ pub struct NetworkFsConfig {
     /// Mount options
     pub mount_options: HashMap<String, String>,
 }
-
 /// Network filesystem credentials
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkCredentials {
@@ -58,21 +54,17 @@ pub struct NetworkCredentials {
     /// Domain for SMB/CIFS
     pub domain: Option<String>,
 }
-
 /// Network filesystem storage backend
 pub struct NetworkFsBackend {
     config: NetworkFsConfig,
     is_mounted: bool,
 }
-
 impl NetworkFsBackend {
     /// Create new network filesystem backend
-    pub fn new(config: NetworkFsConfig) -> Self {
-        Self {
+    pub fn new(config: NetworkFsConfig) -> Self { Self {
             config,
             is_mounted: false,
-        }
-    }
+         }
 
     /// Mount the network filesystem
     #[allow(dead_code)]
@@ -84,24 +76,19 @@ impl NetworkFsBackend {
         // Create mount point if it doesn't exist
         tokio::fs::create_dir_all(&self.config.mount_point)
             .await
-            .map_err(|e| NestGateError::Io {
-                operation: "create_mount_point".to_string(),
-                resource: Some(self.config.mount_point.to_string_lossy().to_string()),
-                error_message: e.to_string(),
-                retryable: true,
-            })?;
+            .map_err(|_e| NestGateError::storage_error(
+                error_message: e.to_string()
+            )?;
 
         match self.config.fs_type {
             NetworkFsType::Nfs => self.mount_nfs().await?,
             NetworkFsType::SmbCifs => self.mount_smb().await?,
             NetworkFsType::Sshfs => self.mount_sshfs().await?,
             NetworkFsType::Ftp => {
-                return Err(NestGateError::Configuration {
-                    message: "FTP mounting not supported in this implementation".to_string(),
+                return Err(NestGateError::configuration(
                     config_source: UnifiedConfigSource::UserProvided,
-                    field: Some("fs_type".to_string()),
                     suggested_fix: Some("Check configuration and try again".to_string()),
-                })
+                ))
             }
             NetworkFsType::Sftp => self.mount_sftp().await?,
         }
@@ -116,7 +103,7 @@ impl NetworkFsBackend {
     }
 
     #[allow(dead_code)]
-    async fn mount_nfs(&self) -> Result<()> {
+    fn mount_nfs(&self) -> Result<()> {
         // In a real implementation, this would call mount command or NFS library
         tracing::info!(
             "Mounting NFS: {}:{} -> {:?}",
@@ -131,7 +118,7 @@ impl NetworkFsBackend {
     }
 
     #[allow(dead_code)]
-    async fn mount_smb(&self) -> Result<()> {
+    fn mount_smb(&self) -> Result<()> {
         tracing::info!(
             "Mounting SMB/CIFS: //{}{}-> {:?}",
             self.config.server,
@@ -145,7 +132,7 @@ impl NetworkFsBackend {
     }
 
     #[allow(dead_code)]
-    async fn mount_sshfs(&self) -> Result<()> {
+    fn mount_sshfs(&self) -> Result<()> {
         tracing::info!(
             "Mounting SSHFS: {}:{} -> {:?}",
             self.config.server,
@@ -159,7 +146,7 @@ impl NetworkFsBackend {
     }
 
     #[allow(dead_code)]
-    async fn mount_sftp(&self) -> Result<()> {
+    fn mount_sftp(&self) -> Result<()> {
         tracing::info!(
             "Mounting SFTP: {}:{} -> {:?}",
             self.config.server,
@@ -173,7 +160,7 @@ impl NetworkFsBackend {
 
     /// Unmount the network filesystem
     #[allow(dead_code)]
-    async fn unmount(&mut self) -> Result<()> {
+    fn unmount(&mut self) -> Result<()> {
         if !self.is_mounted {
             return Ok(());
         }
@@ -189,7 +176,6 @@ impl NetworkFsBackend {
     }
 
     /// Get the effective path for operations (mount point + relative path)
-    fn get_effective_path(&self, path: &str) -> PathBuf {
         if self.is_mounted {
             self.config.mount_point.join(path.trim_start_matches('/'))
         } else {
@@ -198,38 +184,29 @@ impl NetworkFsBackend {
     }
 }
 
-#[async_trait]
+// CANONICAL MODERNIZATION: Migrated from async_trait to native async
 impl StorageBackend for NetworkFsBackend {
-    async fn read(&self, path: &str) -> Result<Vec<u8>> {
         if !self.is_mounted {
-            return Err(NestGateError::Configuration {
-                message: "Network filesystem not mounted".to_string(),
+            return Err(NestGateError::configuration(
                 config_source: UnifiedConfigSource::UserProvided,
-                field: Some("mount_status".to_string()),
                 suggested_fix: Some("Check configuration and try again".to_string()),
-            });
-        }
+            );
+        )
 
         let effective_path = self.get_effective_path(path);
         tokio::fs::read(&effective_path)
             .await
-            .map_err(|e| NestGateError::Io {
-                operation: "read".to_string(),
-                resource: Some(effective_path.to_string_lossy().to_string()),
-                error_message: e.to_string(),
-                retryable: true,
+            .map_err(|_e| NestGateError::storage_error(
+                error_message: e.to_string()
             })
     }
 
-    async fn write(&self, path: &str, data: &[u8]) -> Result<()> {
         if !self.is_mounted {
-            return Err(NestGateError::Configuration {
-                message: "Network filesystem not mounted".to_string(),
+            return Err(NestGateError::configuration(
                 config_source: UnifiedConfigSource::UserProvided,
-                field: Some("mount_status".to_string()),
                 suggested_fix: Some("Check configuration and try again".to_string()),
-            });
-        }
+            );
+        )
 
         let effective_path = self.get_effective_path(path);
 
@@ -237,46 +214,33 @@ impl StorageBackend for NetworkFsBackend {
         if let Some(parent) = effective_path.parent() {
             tokio::fs::create_dir_all(parent)
                 .await
-                .map_err(|e| NestGateError::Io {
-                    operation: "create_parent_dirs".to_string(),
-                    resource: Some(parent.to_string_lossy().to_string()),
-                    error_message: e.to_string(),
-                    retryable: true,
-                })?;
+                .map_err(|_e| NestGateError::storage_error(
+                    error_message: e.to_string()
+                )?;
         }
 
         tokio::fs::write(&effective_path, data)
             .await
-            .map_err(|e| NestGateError::Io {
-                operation: "write".to_string(),
-                resource: Some(effective_path.to_string_lossy().to_string()),
-                error_message: e.to_string(),
-                retryable: true,
+            .map_err(|_e| NestGateError::storage_error(
+                error_message: e.to_string()
             })
     }
 
-    async fn delete(&self, path: &str) -> Result<()> {
         if !self.is_mounted {
-            return Err(NestGateError::Configuration {
-                message: "Network filesystem not mounted".to_string(),
+            return Err(NestGateError::configuration(
                 config_source: UnifiedConfigSource::UserProvided,
-                field: Some("mount_status".to_string()),
                 suggested_fix: Some("Check configuration and try again".to_string()),
-            });
-        }
+            );
+        )
 
         let effective_path = self.get_effective_path(path);
         tokio::fs::remove_file(&effective_path)
             .await
-            .map_err(|e| NestGateError::Io {
-                operation: "delete".to_string(),
-                resource: Some(effective_path.to_string_lossy().to_string()),
-                error_message: e.to_string(),
-                retryable: true,
+            .map_err(|_e| NestGateError::storage_error(
+                error_message: e.to_string()
             })
     }
 
-    async fn exists(&self, path: &str) -> Result<bool> {
         if !self.is_mounted {
             return Ok(false);
         }
@@ -285,63 +249,49 @@ impl StorageBackend for NetworkFsBackend {
         Ok(effective_path.exists())
     }
 
-    async fn list(&self, prefix: &str) -> Result<Vec<String>> {
+    fn list(&self, prefix: &str) -> Result<Vec<String>> {
         if !self.is_mounted {
-            return Err(NestGateError::Configuration {
-                message: "Network filesystem not mounted".to_string(),
+            return Err(NestGateError::configuration(
                 config_source: UnifiedConfigSource::UserProvided,
-                field: Some("mount_status".to_string()),
                 suggested_fix: Some("Check configuration and try again".to_string()),
-            });
-        }
+            );
+        )
 
         let effective_path = self.get_effective_path(prefix);
         let mut entries =
             tokio::fs::read_dir(&effective_path)
                 .await
-                .map_err(|e| NestGateError::Io {
-                    operation: "list".to_string(),
-                    resource: Some(effective_path.to_string_lossy().to_string()),
-                    error_message: e.to_string(),
-                    retryable: true,
-                })?;
+                .map_err(|_e| NestGateError::storage_error(
+                    error_message: e.to_string()
+                )?;
 
         let mut files = Vec::new();
 
-        while let Some(entry) = entries.next_entry().await.map_err(|e| NestGateError::Io {
-            operation: "read_dir_entry".to_string(),
-            resource: Some(effective_path.to_string_lossy().to_string()),
-            error_message: e.to_string(),
-            retryable: true,
+        while let Some(entry) = entries.next_entry().await.map_err(|_e| NestGateError::storage_error(
+            error_message: e.to_string()
         })? {
             let file_name = entry.file_name().to_string_lossy().to_string();
-            let full_path = format!("{}/{}", prefix.trim_end_matches('/'), file_name);
+            let full_path = format!("{}/{}", prefix.unwrap_or(""), file_name);
             files.push(full_path);
         }
 
         Ok(files)
     }
 
-    async fn metadata(&self, path: &str) -> Result<super::StorageMetadata> {
         if !self.is_mounted {
-            return Err(NestGateError::Configuration {
-                message: "Network filesystem not mounted".to_string(),
+            return Err(NestGateError::configuration(
                 config_source: UnifiedConfigSource::UserProvided,
-                field: Some("mount_status".to_string()),
                 suggested_fix: Some("Check configuration and try again".to_string()),
-            });
-        }
+            );
+        )
 
         let effective_path = self.get_effective_path(path);
         let metadata =
             tokio::fs::metadata(&effective_path)
                 .await
-                .map_err(|e| NestGateError::Io {
-                    operation: "metadata".to_string(),
-                    resource: Some(effective_path.to_string_lossy().to_string()),
-                    error_message: e.to_string(),
-                    retryable: true,
-                })?;
+                .map_err(|_e| NestGateError::storage_error(
+                    error_message: e.to_string()
+                )?;
 
         Ok(super::StorageMetadata {
             size: metadata.len(),
@@ -362,7 +312,6 @@ impl StorageBackend for NetworkFsBackend {
 pub struct NetworkFsBuilder {
     config: Option<NetworkFsConfig>,
 }
-
 impl Default for NetworkFsBuilder {
     fn default() -> Self {
         Self::new()
@@ -370,16 +319,11 @@ impl Default for NetworkFsBuilder {
 }
 
 impl NetworkFsBuilder {
-    pub fn new() -> Self {
-        Self { config: None }
-    }
+    pub fn new() -> Self { Self { config: None  }
 
-    pub fn with_config(mut self, config: NetworkFsConfig) -> Self {
-        self.config = Some(config);
+    #[must_use]
+    pub fn with_config(mut self, config: NetworkFsConfig) -> Self { self.config = Some(config);
         self
-    }
-
-    pub fn with_nfs(mut self, server: String, remote_path: String, mount_point: PathBuf) -> Self {
         self.config = Some(NetworkFsConfig {
             fs_type: NetworkFsType::Nfs,
             server,
@@ -387,8 +331,7 @@ impl NetworkFsBuilder {
             mount_point,
             credentials: None,
             timeout: 30,
-            mount_options: HashMap::new(),
-        });
+            mount_options: HashMap::new() );
         self
     }
 
@@ -405,17 +348,16 @@ impl NetworkFsBuilder {
             password,
             key_file: None,
             domain: None,
-        });
+        );
 
         self.config = Some(NetworkFsConfig {
             fs_type: NetworkFsType::SmbCifs,
             server,
-            remote_path: share,
             mount_point,
             credentials,
             timeout: 30,
             mount_options: HashMap::new(),
-        });
+        );
         self
     }
 }
@@ -429,16 +371,14 @@ impl BackendBuilder for NetworkFsBuilder {
         let config = self
             .config
             .clone()
-            .ok_or_else(|| NestGateError::Configuration {
-                message: "Network filesystem configuration required".to_string(),
+            .ok_or_else(|| NestGateError::configuration(
                 config_source: UnifiedConfigSource::UserProvided,
-                field: Some("config".to_string()),
                 suggested_fix: Some("Check configuration and try again".to_string()),
-            })?;
+            )?;
 
         let backend = NetworkFsBackend::new(config);
         // Note: In a real implementation, we'd await the mount here
         // For now, return the backend as a boxed trait object
         Ok(Box::new(backend))
-    }
+    )
 }

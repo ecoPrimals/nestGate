@@ -24,7 +24,6 @@ pub struct ApiStreamingSettings {
     /// Stream backpressure threshold
     pub stream_backpressure_threshold: usize,
 }
-
 /// Server-Sent Events (SSE) configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ApiSseSettings {
@@ -41,10 +40,8 @@ pub struct ApiSseSettings {
     /// Enable SSE compression
     pub enable_sse_compression: bool,
 }
-
 impl Default for ApiStreamingSettings {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             enable_mcp_streaming: true,
             stream_buffer_size: 64 * 1024, // 64KB
             max_concurrent_streams: 100,
@@ -53,19 +50,16 @@ impl Default for ApiStreamingSettings {
             stream_heartbeat_interval: Duration::from_secs(30),
             max_stream_message_size: 1024 * 1024, // 1MB
             stream_backpressure_threshold: 1000,
-        }
-    }
+         }
 }
 
 impl Default for ApiSseSettings {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             enable_sse: true,
             sse_timeout: Duration::from_secs(300), // 5 minutes
             sse_keep_alive_interval: Duration::from_secs(30),
             max_sse_connections_per_client: 10,
             sse_message_buffer_size: 1024, // 1KB
             enable_sse_compression: false,
-        }
-    }
+         }
 } 

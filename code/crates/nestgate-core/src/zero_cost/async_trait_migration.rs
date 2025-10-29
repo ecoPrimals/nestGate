@@ -33,7 +33,6 @@ pub struct AsyncTraitMigrationManager {
     /// Trait migration mappings
     pub trait_mappings: HashMap<String, TraitMigration>,
 }
-
 /// Migration statistics
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct MigrationStats {
@@ -50,7 +49,6 @@ pub struct MigrationStats {
     /// Domain-specific migration counts
     pub domain_counts: HashMap<String, u32>,
 }
-
 /// Performance improvement estimates
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct PerformanceImprovements {
@@ -63,7 +61,6 @@ pub struct PerformanceImprovements {
     /// CPU cycles saved per operation
     pub cpu_cycles_saved: u64,
 }
-
 /// Migration warning
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MigrationWarning {
@@ -76,7 +73,6 @@ pub struct MigrationWarning {
     /// Suggested action
     pub suggested_action: String,
 }
-
 /// Migration warning categories
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum MigrationWarningCategory {
@@ -91,7 +87,6 @@ pub enum MigrationWarningCategory {
     /// Lifetime parameter complexity
     LifetimeComplexity,
 }
-
 impl std::fmt::Display for MigrationWarningCategory {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -124,7 +119,6 @@ pub struct TraitMigration {
     /// Performance improvement estimate
     pub performance_gain_percent: f64,
 }
-
 /// Migration complexity levels
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum MigrationComplexity {
@@ -137,7 +131,6 @@ pub enum MigrationComplexity {
     /// Requires complete redesign
     RequiresRedesign,
 }
-
 /// Const generic parameter
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConstGenericParam {
@@ -146,13 +139,13 @@ pub struct ConstGenericParam {
     /// Parameter type
     pub param_type: String,
     /// Default value
-    pub default_value: String,
+    pub defaultvalue: String,
     /// Description
     pub description: String,
 }
-
 impl AsyncTraitMigrationManager {
     /// Create new migration manager
+    #[must_use]
     pub fn new() -> Self {
         let mut manager = Self {
             stats: MigrationStats::default(),
@@ -178,15 +171,15 @@ impl AsyncTraitMigrationManager {
                 ConstGenericParam {
                     name: "MAX_SERVICES".to_string(),
                     param_type: "usize".to_string(),
-                    default_value: "1000".to_string(),
+                    defaultvalue: "1000".to_string(),
                     description: "Maximum number of services".to_string(),
-                },
+                }
                 ConstGenericParam {
                     name: "HEALTH_CHECK_INTERVAL_SECS".to_string(),
                     param_type: "u64".to_string(),
-                    default_value: "60".to_string(),
+                    defaultvalue: "60".to_string(),
                     description: "Health check interval in seconds".to_string(),
-                },
+                }
             ],
             25.0,
         );
@@ -203,15 +196,15 @@ impl AsyncTraitMigrationManager {
                 ConstGenericParam {
                     name: "MAX_SERVICES".to_string(),
                     param_type: "usize".to_string(),
-                    default_value: "10000".to_string(),
+                    defaultvalue: "10_000".to_string(),
                     description: "Maximum services to track".to_string(),
-                },
+                }
                 ConstGenericParam {
                     name: "DISCOVERY_TIMEOUT_SECS".to_string(),
                     param_type: "u64".to_string(),
-                    default_value: "30".to_string(),
+                    defaultvalue: "30".to_string(),
                     description: "Discovery timeout in seconds".to_string(),
-                },
+                }
             ],
             30.0,
         );
@@ -228,15 +221,15 @@ impl AsyncTraitMigrationManager {
                 ConstGenericParam {
                     name: "MAX_CONNECTIONS".to_string(),
                     param_type: "usize".to_string(),
-                    default_value: "1000".to_string(),
+                    defaultvalue: "1000".to_string(),
                     description: "Maximum concurrent connections".to_string(),
-                },
+                }
                 ConstGenericParam {
                     name: "BUFFER_SIZE".to_string(),
                     param_type: "usize".to_string(),
-                    default_value: "8192".to_string(),
+                    defaultvalue: "8192".to_string(),
                     description: "Buffer size for connections".to_string(),
-                },
+                }
             ],
             35.0,
         );
@@ -253,15 +246,15 @@ impl AsyncTraitMigrationManager {
                 ConstGenericParam {
                     name: "MAX_WORKFLOWS".to_string(),
                     param_type: "usize".to_string(),
-                    default_value: "1000".to_string(),
+                    defaultvalue: "1000".to_string(),
                     description: "Maximum concurrent workflows".to_string(),
-                },
+                }
                 ConstGenericParam {
                     name: "EXECUTION_TIMEOUT_SECS".to_string(),
                     param_type: "u64".to_string(),
-                    default_value: "300".to_string(),
+                    defaultvalue: "300".to_string(),
                     description: "Workflow execution timeout".to_string(),
-                },
+                }
             ],
             40.0,
         );
@@ -278,15 +271,15 @@ impl AsyncTraitMigrationManager {
                 ConstGenericParam {
                     name: "MAX_SESSIONS".to_string(),
                     param_type: "usize".to_string(),
-                    default_value: "10000".to_string(),
+                    defaultvalue: "10_000".to_string(),
                     description: "Maximum active sessions".to_string(),
-                },
+                }
                 ConstGenericParam {
                     name: "SESSION_TIMEOUT_SECS".to_string(),
                     param_type: "u64".to_string(),
-                    default_value: "3600".to_string(),
+                    defaultvalue: "3600".to_string(),
                     description: "Session timeout in seconds".to_string(),
-                },
+                }
             ],
             20.0,
         );
@@ -303,15 +296,15 @@ impl AsyncTraitMigrationManager {
                 ConstGenericParam {
                     name: "MAX_CONNECTIONS".to_string(),
                     param_type: "usize".to_string(),
-                    default_value: "1000".to_string(),
+                    defaultvalue: "1000".to_string(),
                     description: "Maximum MCP connections".to_string(),
-                },
+                }
                 ConstGenericParam {
                     name: "REQUEST_TIMEOUT_SECS".to_string(),
                     param_type: "u64".to_string(),
-                    default_value: "300".to_string(),
+                    defaultvalue: "300".to_string(),
                     description: "Request timeout in seconds".to_string(),
-                },
+                }
             ],
             45.0,
         );
@@ -328,15 +321,15 @@ impl AsyncTraitMigrationManager {
                 ConstGenericParam {
                     name: "MAX_CONCURRENT_OPS".to_string(),
                     param_type: "usize".to_string(),
-                    default_value: "100".to_string(),
+                    defaultvalue: "100".to_string(),
                     description: "Maximum concurrent operations".to_string(),
-                },
+                }
                 ConstGenericParam {
                     name: "OPERATION_TIMEOUT_SECS".to_string(),
                     param_type: "u64".to_string(),
-                    default_value: "60".to_string(),
+                    defaultvalue: "60".to_string(),
                     description: "Operation timeout in seconds".to_string(),
-                },
+                }
             ],
             50.0,
         );
@@ -369,7 +362,7 @@ impl AsyncTraitMigrationManager {
                 custom_migrator: migrator.map(|s| s.to_string()),
                 const_generics,
                 performance_gain_percent: performance_gain,
-            },
+            }
         );
         
         // Update domain counts
@@ -378,14 +371,19 @@ impl AsyncTraitMigrationManager {
 
     /// **GENERATE ZERO-COST TRAIT**
     /// Generate native async trait from async_trait pattern
-    pub fn generate_zero_cost_trait(&mut self, trait_info: &AsyncTraitInfo) -> Result<ZeroCostTraitDefinition> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+                pub fn generate_zero_cost_trait(&mut self, trait_info: &AsyncTraitInfo) -> Result<ZeroCostTraitDefinition>  {
         self.stats.migrated_count += 1;
         
         let mapping = self.trait_mappings.get(&trait_info.trait_name)
-            .ok_or_else(|| NestGateError::Internal {
-                location: format!("async_trait_migration::generate_zero_cost_trait::{}", trait_info.trait_name),
-                is_bug: false,
-            })?;
+            .ok_or_else(|| NestGateError::internal_error(
+            )?;
 
         let zero_cost_trait = ZeroCostTraitDefinition {
             trait_name: mapping.target_trait.clone(),
@@ -394,7 +392,7 @@ impl AsyncTraitMigrationManager {
                 ZeroCostMethod {
                     name: method.name.clone(),
                     parameters: method.parameters.clone(),
-                    return_type: format!("impl Future<Output = {}> + Send", method.return_type),
+                    return_type: format!("impl Future<Output = {e}> + Send"),
                     is_async: true,
                     const_generic_bounds: method.const_generic_bounds.clone(),
                 }
@@ -407,7 +405,7 @@ impl AsyncTraitMigrationManager {
                 no_future_boxing: true,
                 compile_time_optimization: true,
                 estimated_speedup_percent: mapping.performance_gain_percent,
-            },
+            }
         };
 
         Ok(zero_cost_trait)
@@ -415,10 +413,17 @@ impl AsyncTraitMigrationManager {
 
     /// **MIGRATE LOAD BALANCER TRAIT**
     /// Convert async_trait LoadBalancer to native async
-    pub fn migrate_load_balancer(&mut self, trait_info: &AsyncTraitInfo) -> Result<String> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+                pub fn migrate_load_balancer(&mut self, trait_info: &AsyncTraitInfo) -> Result<String>  {
         self.stats.migrated_count += 1;
 
-        let zero_cost_code = format!(r#"
+        let zero_cost_code = format!(r"
 /// Native async load balancer trait - replaces #[async_trait] LoadBalancer
 pub trait NativeAsyncLoadBalancer<
     const MAX_SERVICES: usize = 1000,
@@ -429,7 +434,6 @@ pub trait NativeAsyncLoadBalancer<
 {{
     type Service: Clone + Send + Sync + 'static;
     type HealthStatus: Clone + Send + Sync + 'static;
-
     /// Add service - native async, no Future boxing
     fn add_service(
         &self,
@@ -437,7 +441,7 @@ pub trait NativeAsyncLoadBalancer<
     ) -> impl Future<Output = Result<()>> + Send;
 
     /// Remove service - direct async method
-    fn remove_service(&self, service_id: &str) -> impl Future<Output = Result<()>> + Send;
+    fn remove_service(&self, _service_id: &str) -> impl Future<Output = Result<()>> + Send;
 
     /// Get next service - no Future boxing
     fn get_next_service(&self) -> impl Future<Output = Result<Self::Service>> + Send;
@@ -448,27 +452,34 @@ pub trait NativeAsyncLoadBalancer<
     /// Update service health - compile-time optimization
     fn update_health(
         &self,
-        service_id: &str,
+        _service_id: &str,
         health: Self::HealthStatus,
     ) -> impl Future<Output = Result<()>> + Send;
 
     /// Compile-time constants
-    fn max_services() -> usize {{ MAX_SERVICES }}
-    fn health_check_interval_seconds() -> u64 {{ HEALTH_CHECK_INTERVAL_SECS }}
-    fn max_retries() -> u32 {{ MAX_RETRIES }}
-    fn load_balance_algorithm() -> &'static str {{ LOAD_BALANCE_ALGORITHM }}
-}}
-"#);
+    fn max_services() -> usize {{ MAX_SERVICES }
+    fn health_check_interval_seconds() -> u64 {{ HEALTH_CHECK_INTERVAL_SECS }
+    fn max_retries() -> u32 {{ MAX_RETRIES }
+    fn load_balance_algorithm() -> &'static str {{ LOAD_BALANCE_ALGORITHM }
+}
+");
 
         Ok(zero_cost_code)
     }
 
     /// **MIGRATE PROTOCOL HANDLER TRAIT**
     /// Convert async_trait ProtocolHandler to native async
-    pub fn migrate_protocol_handler(&mut self, trait_info: &AsyncTraitInfo) -> Result<String> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+                pub fn migrate_protocol_handler(&mut self, trait_info: &AsyncTraitInfo) -> Result<String>  {
         self.stats.migrated_count += 1;
 
-        let zero_cost_code = format!(r#"
+        let zero_cost_code = format!(r"
 /// Native async protocol handler trait - replaces #[async_trait] ProtocolHandler
 pub trait NativeAsyncProtocolHandler<
     const MAX_CONNECTIONS: usize = 1000,
@@ -481,7 +492,6 @@ pub trait NativeAsyncProtocolHandler<
     type Request: Clone + Send + Sync + 'static;
     type Response: Clone + Send + Sync + 'static;
     type Config: Clone + Send + Sync + 'static;
-
     /// Establish connection - native async, no Future boxing
     fn connect(
         &self,
@@ -508,12 +518,12 @@ pub trait NativeAsyncProtocolHandler<
     ) -> impl Future<Output = Result<()>> + Send;
 
     /// Compile-time constants
-    fn max_connections() -> usize {{ MAX_CONNECTIONS }}
-    fn connection_timeout_seconds() -> u64 {{ CONNECTION_TIMEOUT_SECS }}
-    fn max_retries() -> u32 {{ MAX_RETRIES }}
-    fn buffer_size() -> usize {{ BUFFER_SIZE }}
-}}
-"#);
+    fn max_connections() -> usize {{ MAX_CONNECTIONS }
+    fn connection_timeout_seconds() -> u64 {{ CONNECTION_TIMEOUT_SECS }
+    fn max_retries() -> u32 {{ MAX_RETRIES }
+    fn buffer_size() -> usize {{ BUFFER_SIZE }
+}
+");
 
         Ok(zero_cost_code)
     }
@@ -529,7 +539,7 @@ pub trait NativeAsyncProtocolHandler<
         };
 
         // Count async_trait occurrences
-        analysis.total_async_traits = source_code.matches("#[async_trait]").count() as u32;
+        analysis.total_async_traits = source_code.matches("[async_trait]").count() as u32;
         
         // Analyze trait patterns (simplified analysis)
         for line in source_code.lines() {
@@ -544,7 +554,7 @@ pub trait NativeAsyncProtocolHandler<
         // Determine complexity distribution
         for (trait_name, _count) in &analysis.trait_patterns {
             if let Some(mapping) = self.trait_mappings.get(trait_name) {
-                let complexity_str = format!("{:?}", mapping.complexity);
+                let complexity_str = format!("{e}");
                 *analysis.complexity_distribution.entry(complexity_str).or_insert(0) += 1;
                 
                 analysis.migration_readiness.insert(
@@ -559,7 +569,7 @@ pub trait NativeAsyncProtocolHandler<
 
     /// Calculate performance improvements
     fn calculate_performance_improvements(&mut self) {
-        let total_traits = self.trait_mappings.len() as f64;
+        let total_traits = self.(trait_mappings.len() as f64);
         if total_traits == 0.0 {
             return;
         }
@@ -589,7 +599,7 @@ pub trait NativeAsyncProtocolHandler<
             message,
             source_trait,
             suggested_action,
-        });
+        );
     }
 
     /// Get migration summary
@@ -604,7 +614,7 @@ pub trait NativeAsyncProtocolHandler<
             stats: MigrationStats {
                 migration_progress: progress,
                 ..self.stats.clone()
-            },
+            }
             warnings_count: self.warnings.len(),
             automatic_migrations: self.trait_mappings.values().filter(|m| m.automatic_migration).count(),
             manual_migrations: self.trait_mappings.values().filter(|m| !m.automatic_migration).count(),
@@ -624,7 +634,6 @@ pub struct AsyncTraitInfo {
     pub generic_parameters: Vec<String>,
     pub trait_bounds: Vec<String>,
 }
-
 /// Async method information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AsyncMethod {
@@ -634,7 +643,6 @@ pub struct AsyncMethod {
     pub is_async: bool,
     pub const_generic_bounds: Vec<String>,
 }
-
 /// Zero-cost trait definition
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZeroCostTraitDefinition {
@@ -645,7 +653,6 @@ pub struct ZeroCostTraitDefinition {
     pub trait_bounds: Vec<String>,
     pub performance_characteristics: PerformanceCharacteristics,
 }
-
 /// Zero-cost method definition
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZeroCostMethod {
@@ -655,7 +662,6 @@ pub struct ZeroCostMethod {
     pub is_async: bool,
     pub const_generic_bounds: Vec<String>,
 }
-
 /// Performance characteristics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceCharacteristics {
@@ -665,7 +671,6 @@ pub struct PerformanceCharacteristics {
     pub compile_time_optimization: bool,
     pub estimated_speedup_percent: f64,
 }
-
 /// Async trait analysis results
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AsyncTraitAnalysis {
@@ -674,7 +679,6 @@ pub struct AsyncTraitAnalysis {
     pub complexity_distribution: HashMap<String, u32>,
     pub migration_readiness: HashMap<String, String>,
 }
-
 /// Migration summary
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MigrationSummary {
@@ -684,7 +688,6 @@ pub struct MigrationSummary {
     pub manual_migrations: usize,
     pub estimated_performance_gain: f64,
 }
-
 impl Default for AsyncTraitMigrationManager {
     fn default() -> Self {
         Self::new()
@@ -705,10 +708,8 @@ fn extract_trait_name(line: &str) -> Option<String> {
         None
     }
 }
-
 /// **MIGRATION CONVENIENCE MACROS**
 /// Macros to help with async_trait migration
-
 /// Generate zero-cost trait from async_trait
 #[macro_export]
 macro_rules! migrate_async_trait {
@@ -722,7 +723,6 @@ macro_rules! migrate_async_trait {
         })
     };
 }
-
 /// Generate load balancer trait migration
 #[macro_export]
 macro_rules! migrate_load_balancer_trait {

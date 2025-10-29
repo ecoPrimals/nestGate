@@ -3,10 +3,8 @@ use std::collections::HashMap;
 /// This module provides configuration for integration testing including external services,
 /// databases, message queues, service mesh, and service discovery.
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::time::Duration;
-
-// ==================== INTEGRATION TESTING CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// **Unified integration testing configuration**
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -20,7 +18,6 @@ pub struct TestIntegrationConfig {
     /// Service mesh configuration
     pub service_mesh: ServiceMeshConfig,
 }
-
 /// **External service configuration**
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ExternalServiceConfig {
@@ -33,7 +30,6 @@ pub struct ExternalServiceConfig {
     /// Service timeouts
     pub timeouts: HashMap<String, Duration>,
 }
-
 /// **Service authentication configuration**
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ServiceAuthConfig {
@@ -44,7 +40,6 @@ pub struct ServiceAuthConfig {
     /// Basic auth credentials
     pub basic_auth: HashMap<String, String>,
 }
-
 /// **OAuth configuration**
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct OAuthConfig {
@@ -55,7 +50,6 @@ pub struct OAuthConfig {
     /// Token endpoint
     pub token_endpoint: String,
 }
-
 /// **Database configuration**
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct DatabaseConfig {
@@ -68,7 +62,6 @@ pub struct DatabaseConfig {
     /// Test data setup
     pub test_data: HashMap<String, String>,
 }
-
 /// **Migration configuration**
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct MigrationConfig {
@@ -79,7 +72,6 @@ pub struct MigrationConfig {
     /// Migration timeout
     pub timeout: Duration,
 }
-
 /// **Message queue configuration**
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct MessageQueueConfig {
@@ -92,7 +84,6 @@ pub struct MessageQueueConfig {
     /// Message timeout
     pub message_timeout: Duration,
 }
-
 /// **Service mesh configuration**
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ServiceMeshConfig {
@@ -105,7 +96,6 @@ pub struct ServiceMeshConfig {
     /// Health check configuration
     pub health_checks: HealthCheckConfig,
 }
-
 /// **Service discovery configuration**
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ServiceDiscoveryConfig {
@@ -116,7 +106,6 @@ pub struct ServiceDiscoveryConfig {
     /// Discovery timeout
     pub timeout: Duration,
 }
-
 /// **Load balancing configuration**
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct LoadBalancingConfig {
@@ -127,7 +116,6 @@ pub struct LoadBalancingConfig {
     /// Health check interval
     pub health_check_interval: Duration,
 }
-
 /// **Health check configuration**
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct HealthCheckConfig {
@@ -138,7 +126,6 @@ pub struct HealthCheckConfig {
     /// Check interval
     pub interval: Duration,
 }
-
 /// **Circuit breaker configuration**
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct CircuitBreakerConfig {
@@ -149,7 +136,6 @@ pub struct CircuitBreakerConfig {
     /// Recovery timeout
     pub recovery_timeout: Duration,
 }
-
 /// **Retry configuration**
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct RetryConfig {

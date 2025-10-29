@@ -3,7 +3,6 @@
 /// **PROBLEM SOLVED**: Eliminates duplicate retry logic across 7+ different implementations
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
-
 /// **THE** Unified Retry Configuration - consolidates all retry patterns
 /// Eliminates duplicate retry logic across 7+ different implementations
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -23,7 +22,6 @@ pub struct UnifiedRetryConfig {
     /// Whether to use exponential backoff
     pub exponential_backoff: bool,
 }
-
 impl Default for UnifiedRetryConfig {
     fn default() -> Self {
         Self {
@@ -40,6 +38,7 @@ impl Default for UnifiedRetryConfig {
 
 impl UnifiedRetryConfig {
     /// Get retry delay for a specific attempt number
+    #[must_use]
     pub fn delay_for_attempt(&self, attempt: u32) -> Duration {
         if attempt == 0 {
             return Duration::from_millis(0);
@@ -68,6 +67,7 @@ impl UnifiedRetryConfig {
     }
 
     /// Create a fast retry configuration for low-latency operations
+    #[must_use]
     pub fn fast() -> Self {
         Self {
             max_attempts: 5,
@@ -81,6 +81,7 @@ impl UnifiedRetryConfig {
     }
 
     /// Create a slow retry configuration for high-latency operations
+    #[must_use]
     pub fn slow() -> Self {
         Self {
             max_attempts: 3,
@@ -94,6 +95,7 @@ impl UnifiedRetryConfig {
     }
 
     /// Create a linear retry configuration (no exponential backoff)
+    #[must_use]
     pub fn linear() -> Self {
         Self {
             max_attempts: 4,
@@ -107,6 +109,7 @@ impl UnifiedRetryConfig {
     }
 
     /// Create a high-frequency retry configuration for very frequent operations
+    #[must_use]
     pub fn high_frequency() -> Self {
         Self {
             max_attempts: 10,
@@ -120,6 +123,7 @@ impl UnifiedRetryConfig {
     }
 
     /// Create a critical operations retry configuration with extended patience
+    #[must_use]
     pub fn critical_operations() -> Self {
         Self {
             max_attempts: 8,

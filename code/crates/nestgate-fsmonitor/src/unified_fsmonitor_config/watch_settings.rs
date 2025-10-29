@@ -4,7 +4,6 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::time::Duration;
-
 /// Watch configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WatchSettings {
@@ -23,7 +22,6 @@ pub struct WatchSettings {
     /// Debouncing settings to reduce noise
     pub debouncing: DebouncingSettings,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WatchPath {
     pub path: PathBuf,
@@ -32,7 +30,6 @@ pub struct WatchPath {
     pub priority: u32,
     pub custom_settings: HashMap<String, serde_json::Value>,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum WatchMode {
     /// Use native file system events
@@ -45,7 +42,6 @@ pub enum WatchMode {
         polling_interval: Duration,
     },
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RecursiveWatchSettings {
     /// Maximum depth for recursive watching (0 = unlimited)
@@ -59,7 +55,6 @@ pub struct RecursiveWatchSettings {
     /// Maximum number of directories to watch
     pub max_directories: Option<u32>,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DebouncingSettings {
     /// Enable debouncing
@@ -94,7 +89,7 @@ impl Default for RecursiveWatchSettings {
                 "node_modules".to_string(),
                 "target".to_string(),
             ],
-            max_directories: Some(10000),
+            max_directories: Some(10_000),
         }
     }
 }

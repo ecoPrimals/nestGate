@@ -1,18 +1,17 @@
-//! Security Fallback Provider
-//! Local cryptographic operations when external security primals are unavailable
+// Security Fallback Provider
+// Local cryptographic operations when external security primals are unavailable
 
-use async_trait::async_trait;
 use base64::{engine::general_purpose, Engine as _};
 use std::collections::HashMap;
 use tracing::debug;
 
-use crate::ecosystem_integration::mock_router::{FallbackProvider, MockRoutingError};
+use crate::ecosystem_integration::capability_router::{FallbackProvider, CapabilityRoutingError};
 
 /// Security fallback provider using local cryptographic functions
+#[derive(Debug)]
 pub struct SecurityFallbackProvider {
     config: SecurityFallbackConfig,
 }
-
 #[derive(Debug, Clone)]
 pub struct SecurityFallbackConfig {
     pub key_size: usize,
@@ -47,11 +46,11 @@ impl SecurityFallbackProvider {
     async fn encrypt_fallback(
         &self,
         params: serde_json::Value,
-    ) -> Result<serde_json::Value, MockRoutingError> {
+    ) -> Result<serde_json::Value, CapabilityRoutingError> {
         debug!("🔄 Security fallback: Local encryption");
 
         let data = params.get("data").and_then(|v| v.as_str()).ok_or_else(|| {
-            MockRoutingError::FallbackError("Missing data to encrypt".to_string())
+            CapabilityRoutingError::FallbackError("Missing data to encrypt".to_string())
         })?;
 
         // Simple base64 encoding as placeholder for real encryption
@@ -70,21 +69,21 @@ impl SecurityFallbackProvider {
     async fn decrypt_fallback(
         &self,
         params: serde_json::Value,
-    ) -> Result<serde_json::Value, MockRoutingError> {
+    ) -> Result<serde_json::Value, CapabilityRoutingError> {
         debug!("🔄 Security fallback: Local decryption");
 
         let encrypted_data = params
             .get("encrypted_data")
             .and_then(|v| v.as_str())
-            .ok_or_else(|| MockRoutingError::FallbackError("Missing encrypted data".to_string()))?;
+            .ok_or_else(|| CapabilityRoutingError::FallbackError("Missing encrypted data".to_string()))?;
 
         // Simple base64 decoding as placeholder for real decryption
         let decoded = general_purpose::STANDARD
             .decode(encrypted_data)
-            .map_err(|e| MockRoutingError::FallbackError(format!("Decryption failed: {e}")))?;
+            .map_err(|e| CapabilityRoutingError::FallbackError(format!("Decryption failed: {e}")))?;
 
         let decrypted = String::from_utf8(decoded)
-            .map_err(|e| MockRoutingError::FallbackError(format!("Invalid UTF-8: {e}")))?;
+            .map_err(|e| CapabilityRoutingError::FallbackError(format!("Invalid UTF-8: {e}")))?;
 
         Ok(serde_json::json!({
             "success": true,
@@ -97,11 +96,11 @@ impl SecurityFallbackProvider {
     async fn generate_key_fallback(
         &self,
         _params: serde_json::Value,
-    ) -> Result<serde_json::Value, MockRoutingError> {
+    ) -> Result<serde_json::Value, CapabilityRoutingError> {
         debug!("🔄 Security fallback: Key generation");
 
         // Generate a simple random key (placeholder for real key generation)
-        let key = format!("fallback_key_{}", uuid::Uuid::new_v4());
+        let key = format!("fallback_key_{uuid::Uuid::new_v4(}"));
 
         Ok(serde_json::json!({
             "success": true,
@@ -113,15 +112,14 @@ impl SecurityFallbackProvider {
     }
 
     #[allow(dead_code)]
-    async fn decrypt_data(&self, encrypted_data: &str) -> Result<String, MockRoutingError> {
+    async fn decrypt_data(&self, encrypted_data: &str) -> Result<String, CapabilityRoutingError> {
         // Simple mock decryption - in reality this would use proper cryptography
-        use base64::{engine::general_purpose, Engine as _};
         let decoded = general_purpose::STANDARD
             .decode(encrypted_data)
-            .map_err(|e| MockRoutingError::FallbackError(format!("Decryption failed: {e}")))?;
+            .map_err(|e| CapabilityRoutingError::FallbackError(format!("Decryption failed: {e}")))?;
 
         String::from_utf8(decoded)
-            .map_err(|e| MockRoutingError::FallbackError(format!("Invalid UTF-8: {e}")))
+            .map_err(|e| CapabilityRoutingError::FallbackError(format!("Invalid UTF-8: {e}")))
     }
 
     #[allow(dead_code)]
@@ -129,31 +127,30 @@ impl SecurityFallbackProvider {
         &self,
         operation: &str,
         _params: &str,
-    ) -> Result<String, MockRoutingError> {
+    ) -> Result<String, CapabilityRoutingError> {
         match operation {
             "authenticate" => Ok("Authentication successful".to_string()),
             "authorize" => Ok("Authorization granted".to_string()),
             "encrypt_data" => Ok("Data encrypted successfully".to_string()),
-            _ => Err(MockRoutingError::FallbackError(format!(
+            _ => Err(CapabilityRoutingError::FallbackError(format!(
                 "Unsupported security operation: {operation}"
             ))),
         }
     }
 }
 
-#[async_trait]
 impl FallbackProvider for SecurityFallbackProvider {
     async fn execute(
         &self,
         operation: &str,
         params: serde_json::Value,
-    ) -> Result<serde_json::Value, MockRoutingError> {
+    ) -> Result<serde_json::Value, CapabilityRoutingError> {
         match operation {
             "encrypt" => self.encrypt_fallback(params).await,
             "decrypt" => self.decrypt_fallback(params).await,
             "generate_key" => self.generate_key_fallback(params).await,
-            _ => Err(MockRoutingError::FallbackError(format!(
-                "Unsupported security operation: {operation}"
+            _ => Err(CapabilityRoutingError::FallbackError(format!(
+                "Unsupported fallback operation: {operation}"
             ))),
         }
     }

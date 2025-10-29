@@ -11,7 +11,6 @@ pub struct NetworkRoutingSettings {
     /// Load balancing algorithm
     pub load_balancing_algorithm: String,
 }
-
 impl Default for NetworkRoutingSettings {
     fn default() -> Self {
         Self {

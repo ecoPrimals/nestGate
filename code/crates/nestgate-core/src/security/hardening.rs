@@ -1,11 +1,10 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 //
 // This module implements additional security measures to protect against
 // common vulnerabilities and ensure robust security posture.
 
-use crate::{Result, NestGateError};
-use std::collections::HashMap;
+use crate::{Result};
 use std::time::{Duration, SystemTime};
 use tracing::{debug, warn};
 
@@ -19,7 +18,6 @@ pub struct RateLimitConfig {
     /// Cleanup interval for expired entries
     pub cleanup_interval: Duration,
 }
-
 impl Default for RateLimitConfig {
     fn default() -> Self {
         Self {
@@ -37,9 +35,9 @@ pub struct RateLimiter {
     requests: HashMap<String, Vec<SystemTime>>,
     last_cleanup: SystemTime,
 }
-
 impl RateLimiter {
     /// Create a new rate limiter
+    #[must_use]
     pub fn new(config: RateLimitConfig) -> Self {
         Self {
             config,
@@ -49,7 +47,14 @@ impl RateLimiter {
     }
 
     /// Check if a request should be allowed
-    pub fn check_rate_limit(&mut self, client_id: &str) -> Result<bool> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+                pub fn check_rate_limit(&mut self, client_id: &str) -> Result<bool>  {
         let now = SystemTime::now();
 
         // Periodic cleanup of expired entries
@@ -64,7 +69,7 @@ impl RateLimiter {
         // Remove requests outside the current window
         client_requests.retain(|&request_time| {
             now.duration_since(request_time).unwrap_or(Duration::MAX) <= self.config.window_duration
-        });
+        );
 
         // Check if limit is exceeded
         if client_requests.len() >= self.config.max_requests as usize {
@@ -90,20 +95,26 @@ impl RateLimiter {
             requests.retain(|&request_time| {
                 now.duration_since(request_time).unwrap_or(Duration::MAX)
                     <= self.config.window_duration
-            });
+            );
             !requests.is_empty()
-        });
+        );
     }
 }
 
 /// Input validation utilities
 pub struct InputValidator;
-
 impl InputValidator {
     /// Validate that input contains only safe characters
-    pub fn validate_safe_string(input: &str, max_length: usize) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn validate_safe_string(input: &str, max_length: usize) -> Result<()>  {
         if input.len() > max_length {
-            return Err(NestGateError::security_error(
+            return Err(NestGateError::security(
                 "Input exceeds maximum length",
                 "validate_input",
                 Some("input_validation"),
@@ -113,7 +124,7 @@ impl InputValidator {
 
         // Check for potentially dangerous characters
         if input.contains('\0') || input.contains('\x1b') {
-            return Err(NestGateError::security_error(
+            return Err(NestGateError::security(
                 "Input contains potentially dangerous characters",
                 "validate_input",
                 Some("input_validation"),
@@ -129,7 +140,7 @@ impl InputValidator {
                     "Potentially dangerous pattern detected in input: {}",
                     pattern
                 );
-                return Err(NestGateError::security_error(
+                return Err(NestGateError::security(
                     "Input contains potentially dangerous SQL patterns",
                     "validate_input",
                     Some("sql_injection_prevention"),
@@ -142,10 +153,9 @@ impl InputValidator {
     }
 
     /// Validate file paths to prevent directory traversal
-    pub fn validate_file_path(path: &str) -> Result<()> {
         // Check for directory traversal attempts
         if path.contains("..") || path.contains("./") || path.starts_with('/') {
-            return Err(NestGateError::security_error(
+            return Err(NestGateError::security(
                 "Path contains directory traversal patterns",
                 "validate_path",
                 Some("directory_traversal_prevention"),
@@ -155,7 +165,7 @@ impl InputValidator {
 
         // Check for null bytes
         if path.contains('\0') {
-            return Err(NestGateError::security_error(
+            return Err(NestGateError::security(
                 "Path contains null bytes",
                 "validate_path",
                 Some("path_validation"),
@@ -167,12 +177,19 @@ impl InputValidator {
     }
 
     /// Validate command arguments to prevent injection
-    pub fn validate_command_args(args: &[String]) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn validate_command_args(args: &[String]) -> Result<()>  {
         for arg in args {
             // Check for command injection patterns
             let dangerous_chars = ['|', '&', ';', '>', '<', '`', '$', '(', ')'];
             if arg.chars().any(|c| dangerous_chars.contains(&c)) {
-                return Err(NestGateError::security_error(
+                return Err(NestGateError::security(
                     "Command argument contains potentially dangerous characters",
                     "validate_command",
                     Some("command_injection_prevention"),
@@ -186,7 +203,6 @@ impl InputValidator {
 
 /// Security headers for HTTP responses
 pub struct SecurityHeaders;
-
 impl SecurityHeaders {
     /// Get recommended security headers
     pub fn get_security_headers() -> HashMap<String, String> {
@@ -225,7 +241,6 @@ impl SecurityHeaders {
 
 /// Audit logging for security events
 pub struct SecurityAuditor;
-
 impl SecurityAuditor {
     /// Log authentication events
     pub fn log_auth_event(event_type: &str, user: &str, success: bool, details: Option<&str>) {
@@ -249,7 +264,6 @@ impl SecurityAuditor {
     }
 
     /// Log authorization events
-    pub fn log_authz_event(user: &str, resource: &str, action: &str, allowed: bool) {
         if allowed {
             tracing::info!(
                 user = user,

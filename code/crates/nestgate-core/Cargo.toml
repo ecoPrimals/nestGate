@@ -2,8 +2,15 @@
 name = "nestgate-core"
 version = "0.1.0"
 edition = "2021"
-description = "Core functionality and utilities for NestGate"
-license = "AGPL-3.0-or-later"
+authors = ["NestGate Development Team <dev@nestgate.io>"]
+description = "Core functionality and canonical patterns for the NestGate storage management system"
+repository = "https://github.com/nestgate/nestgate"
+readme = "README.md"
+license = "AGPL-3.0-only"
+keywords = ["storage", "zfs", "nas", "management", "canonical"]
+categories = ["filesystem", "network-programming", "asynchronous", "api-bindings", "data-structures"]
+homepage = "https://nestgate.io"
+documentation = "https://docs.rs/nestgate-core"
 
 [dependencies]
 anyhow = "1.0"
@@ -20,6 +27,7 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["json", "env-filter"] }
 uuid = { version = "1.6", features = ["v4", "serde"] }
 
+
 # Enhanced dependencies for advanced integration capabilities
 config = "0.14"
 
@@ -30,13 +38,10 @@ log = "0.4"
 lru = "0.12"
 
 # System dependencies for cross-platform functionality
-libc = "0.2"
-uzers = "0.11"  # ✅ SAFE: Actively maintained fork of users crate, fixes security vulnerabilities
 url = "2.4"
 
 # Zero-copy optimization dependencies
 bytes = "1.7"
-memmap2 = "0.9"
 
 # Data source integration dependencies
 urlencoding = "2.0"
@@ -59,13 +64,23 @@ tempfile = "3.8"
 regex = "1.10"
 fastrand = "2.0"
 
+
 [dev-dependencies]
 tokio-test = { workspace = true }
 tempfile = "3.8"
 criterion = { version = "0.5", features = ["html_reports"] }
+serial_test = "3.0"
 
 [[bench]]
 name = "performance_validation"
+harness = false
+
+[[bench]]
+name = "comprehensive_reality_check"
+harness = false
+
+[[bench]]
+name = "working_performance_benchmark"
 harness = false
 
 [features]
@@ -77,4 +92,9 @@ experimental-zero-cost = []
 zero-cost-optimizations = []
 advanced-monitoring = []
 security-scanning = []
-experimental-features = [] 
+experimental-features = []
+# **MOCK SEPARATION** - Test-only features
+mock-services = []
+test-doubles = []
+# Development stubs - include mock/stub implementations for testing (CRITICAL for production safety)
+dev-stubs = [] 

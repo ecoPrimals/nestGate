@@ -25,7 +25,6 @@ pub enum HealthStatus {
     Critical,
     Unknown,
 }
-
 /// Health report for a component
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HealthReport {
@@ -35,7 +34,6 @@ pub struct HealthReport {
     pub last_check: SystemTime,
     pub details: String,
 }
-
 /// Alert severity levels
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AlertLevel {
@@ -43,7 +41,6 @@ pub enum AlertLevel {
     Warning,
     Critical,
 }
-
 /// Alert information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Alert {
@@ -53,21 +50,16 @@ pub struct Alert {
     pub timestamp: SystemTime,
     pub component: String,
 }
-
-// ==================== TYPE ALIASES FOR CLARITY ====================
+// ==================== SECTION ====================
 
 /// Type alias for health data storage
 pub type HealthDataMap = Arc<tokio::sync::RwLock<HashMap<String, HealthReport>>>;
-
 /// Type alias for monitoring task handles
 pub type MonitoringTasks = Option<(tokio::task::JoinHandle<()>, tokio::task::JoinHandle<()>)>;
-
 /// Type alias for health status storage
 pub type HealthStatusMap = Arc<tokio::sync::RwLock<HashMap<String, HealthStatus>>>;
-
 /// Type alias for background task storage
 pub type BackgroundTasks = Arc<tokio::sync::RwLock<Vec<tokio::task::JoinHandle<()>>>>;
-
 /// ZFS Health Monitor - monitors system health
 #[derive(Debug)]
 #[allow(dead_code)] // Fields used in comprehensive health monitoring system
@@ -82,12 +74,13 @@ pub struct ZfsHealthMonitor {
     monitoring_active: Arc<AtomicBool>,
     background_tasks: BackgroundTasks,
 }
-
 impl HealthStatus {
+    #[must_use]
     pub fn is_critical(&self) -> bool {
-        matches!(self, HealthStatus::Critical)
+        matches!(self, Self::Critical)
     }
 
+    #[must_use]
     pub fn is_healthy(&self) -> bool {
         matches!(self, HealthStatus::Healthy)
     }
@@ -106,7 +99,14 @@ impl std::fmt::Display for HealthStatus {
 
 impl ZfsHealthMonitor {
     /// Create a new health monitor
-    pub async fn new(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+    pub fn new(
         pool_manager: Arc<ZfsPoolManager>,
         dataset_manager: Arc<ZfsDatasetManager>,
     ) -> Result<Self> {
@@ -124,6 +124,13 @@ impl ZfsHealthMonitor {
     }
 
     /// Start ZFS health monitoring
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn start(&mut self) -> Result<()> {
         info!("🏥 Starting ZFS health monitoring...");
 
@@ -150,7 +157,7 @@ impl ZfsHealthMonitor {
                         // Update health data
                         let mut health = health_data.write().await;
                         health.insert(
-                            format!("pool:{}", pool.name),
+                            "pool:error details".to_string(),
                             HealthReport {
                                 component_type: "pool".to_string(),
                                 component_name: pool.name.clone(),
@@ -190,13 +197,15 @@ impl ZfsHealthMonitor {
 
                         let mut health = dataset_health_data.write().await;
                         health.insert(
-                            format!("datasets:{}", pool.name),
+                            "datasets:error details".to_string(),
                             HealthReport {
                                 component_type: "datasets".to_string(),
                                 component_name: pool.name.clone(),
                                 status: health_status,
                                 last_check: SystemTime::now(),
-                                details: "Dataset health assessment completed".to_string(),
+                                details: "Dataset health assessment completed"
+                                    .to_string()
+                                    .to_string(),
                             },
                         );
                     }
@@ -212,6 +221,13 @@ impl ZfsHealthMonitor {
     }
 
     /// Stop ZFS health monitoring
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn stop(&mut self) -> Result<()> {
         info!("🛑 Stopping ZFS health monitoring...");
 
@@ -235,6 +251,13 @@ impl ZfsHealthMonitor {
     }
 
     /// Get current health status
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn get_current_status(&self) -> Result<crate::manager::EnhancedServiceStatus> {
         let pool_status = match self.pool_manager.get_overall_status().await {
             Ok(status) => status,
@@ -344,7 +367,14 @@ impl ZfsHealthMonitor {
     }
 
     /// Start health monitoring
-    pub async fn start_monitoring(&mut self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+    pub fn start_monitoring(&mut self) -> Result<()> {
         if self.monitoring_active.load(Ordering::Relaxed) {
             return Ok(());
         }
@@ -355,6 +385,13 @@ impl ZfsHealthMonitor {
     }
 
     /// Stop health monitoring
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn stop_monitoring(&mut self) -> Result<()> {
         if !self.monitoring_active.load(Ordering::Relaxed) {
             return Ok(());

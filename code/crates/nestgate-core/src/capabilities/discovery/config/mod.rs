@@ -14,41 +14,33 @@
 // **ELIMINATES**: 909-line monolithic configuration file
 // **PROVIDES**: Focused, maintainable discovery configuration modules
 
-// ==================== MODULE DECLARATIONS ====================
+// ==================== SECTION ====================
 
-/// Core unified structures and coordination
+// Core unified structures and coordination
 pub mod core;
-
-/// Timeout discovery settings and logic
+// Timeout discovery settings and logic
 pub mod timeout;
-
-/// Network discovery configuration
+// Network discovery configuration
 pub mod network;
-
-/// Security discovery settings
+// Security discovery settings
 pub mod security;
-
-/// Environment discovery configuration
+// Environment discovery configuration
 pub mod environment;
-
-/// Storage discovery settings
+// Storage discovery settings
 pub mod storage;
-
-/// Cache discovery configuration
+// Cache discovery configuration
 pub mod cache;
-
-// ==================== RE-EXPORTS ====================
+// ==================== SECTION ====================
 
 // Re-export all functionality for backward compatibility
+pub use cache::*;
 pub use core::*;
-pub use timeout::*;
 pub use network::*;
 pub use security::*;
-pub use environment::*;
 pub use storage::*;
-pub use cache::*;
+pub use timeout::*;
 
-// ==================== COMMON IMPORTS ====================
+// ==================== SECTION ====================
 
 // Removed unused imports - using available types from canonical modernization
 // Removed unused imports - using available types from canonical modernization
@@ -58,4 +50,4 @@ pub use cache::*;
 //
 // The unified dynamic discovery configuration has been successfully split from a 909-line
 // monolithic implementation into focused, maintainable modules following the proven patterns
-// established in the canonical modernization process. 
+// established in the canonical modernization process.

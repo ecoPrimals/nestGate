@@ -1,9 +1,9 @@
-use crate::NestGateError;
+// Removed unused imports: NestGateError, Result
 //
 // Analysis tools and reporting functionality for storage systems.
 
-use super::types::*;
-use crate::{Result, NestGateError};
+use super::types::{DetectedStorage, StorageAnalysisReport};
+use crate::unified_enums::storage_types::{UnifiedStorageCapability, UnifiedStorageType};
 
 /// Storage analyzer for generating insights and recommendations
 pub struct StorageAnalyzer {
@@ -12,7 +12,6 @@ pub struct StorageAnalyzer {
     /// Performance threshold for warnings
     performance_threshold: f64,
 }
-
 impl Default for StorageAnalyzer {
     fn default() -> Self {
         Self::new()
@@ -21,14 +20,16 @@ impl Default for StorageAnalyzer {
 
 impl StorageAnalyzer {
     /// Create new storage analyzer with default thresholds
+    #[must_use]
     pub fn new() -> Self {
         Self {
-            low_space_threshold: 10.0, // 10% free space warning
+            low_space_threshold: 10.0,   // 10% free space warning
             performance_threshold: 50.0, // 50 MB/s minimum throughput
         }
     }
 
     /// Create analyzer with custom thresholds
+    #[must_use]
     pub fn with_thresholds(low_space_threshold: f64, performance_threshold: f64) -> Self {
         Self {
             low_space_threshold,
@@ -37,7 +38,11 @@ impl StorageAnalyzer {
     }
 
     /// Analyze storage systems and generate comprehensive report
-    pub fn analyze_storage_systems(&self, storage_list: &[DetectedStorage]) -> StorageAnalysisReport {
+    #[must_use]
+    pub fn analyze_storage_systems(
+        &self,
+        storage_list: &[DetectedStorage],
+    ) -> StorageAnalysisReport {
         let mut total_space = 0u64;
         let mut total_used = 0u64;
         let mut recommendations = Vec::new();
@@ -45,7 +50,7 @@ impl StorageAnalyzer {
         // Calculate totals and analyze each storage system
         for storage in storage_list {
             total_space += storage.available_space;
-            
+
             // Estimate used space (this would come from filesystem stats in real implementation)
             let estimated_used = (storage.available_space as f64 * 0.6) as u64; // Assume 60% used
             total_used += estimated_used;
@@ -63,15 +68,15 @@ impl StorageAnalyzer {
         // Add system-wide recommendations
         if usage_percent > (100.0 - self.low_space_threshold) {
             recommendations.push(format!(
-                "Overall storage usage is high ({:.1}%). Consider adding more storage capacity.",
-                usage_percent
+                "Overall storage usage is high ({usage_percent:.1}%). Consider adding more storage capacity."
             ));
         }
 
         // Mock memory stats (in real implementation, would query system)
         let memory_total = 16 * 1024 * 1024 * 1024u64; // 16GB
-        let memory_free = 8 * 1024 * 1024 * 1024u64;   // 8GB free
-        let memory_usage_percent = ((memory_total - memory_free) as f64 / memory_total as f64) * 100.0;
+        let memory_free = 8 * 1024 * 1024 * 1024u64; // 8GB free
+        let memory_usage_percent =
+            ((memory_total - memory_free) as f64 / memory_total as f64) * 100.0;
 
         StorageAnalysisReport {
             filesystem_total: total_space,
@@ -98,7 +103,8 @@ impl StorageAnalyzer {
         }
 
         // Check latency
-        if storage.performance_profile.read_latency_us > 10000.0 { // 10ms
+        if storage.performance_profile.read_latency_us > 10000.0 {
+            // 10ms
             recommendations.push(format!(
                 "Storage '{}' has high latency ({:.1}ms). Consider using local storage for better performance.",
                 storage.display_name,
@@ -124,21 +130,26 @@ impl StorageAnalyzer {
         }
 
         // Check cost efficiency for cloud storage
-        if matches!(storage.storage_type, UnifiedStorageType::Cloud) {
-            if storage.cost_profile.storage_cost_per_gb_month > 0.05 {
-                recommendations.push(format!(
+        if matches!(storage.storage_type, UnifiedStorageType::Cloud)
+            && storage.cost_profile.storage_cost_per_gb_month > 0.05
+        {
+            recommendations.push(format!(
                     "Storage '{}' has high cost (${:.3}/GB/month). Consider cheaper storage tiers for archival data.",
                     storage.display_name,
                     storage.cost_profile.storage_cost_per_gb_month
                 ));
-            }
         }
 
         recommendations
     }
 
     /// Find best storage for specific use case
-    pub fn recommend_storage_for_use_case(&self, storage_list: &[DetectedStorage], use_case: StorageUseCase) -> Option<&DetectedStorage> {
+    #[must_use]
+    pub fn recommend_storage_for_use_case<'a>(
+        &self,
+        storage_list: &'a [DetectedStorage],
+        use_case: StorageUseCase,
+    ) -> Option<&'a DetectedStorage> {
         let mut best_storage: Option<&DetectedStorage> = None;
         let mut best_score = 0.0f64;
 
@@ -154,27 +165,35 @@ impl StorageAnalyzer {
     }
 
     /// Score storage system for specific use case
-    fn score_storage_for_use_case(&self, storage: &DetectedStorage, use_case: StorageUseCase) -> f64 {
+    fn score_storage_for_use_case(
+        &self,
+        storage: &DetectedStorage,
+        use_case: StorageUseCase,
+    ) -> f64 {
         let mut score = 0.0f64;
 
         match use_case {
             StorageUseCase::HighPerformance => {
                 // Prioritize throughput and low latency
                 score += storage.performance_profile.read_throughput_mbps / 1000.0; // Max 1.0 point
-                score += (10000.0 - storage.performance_profile.read_latency_us.min(10000.0)) / 10000.0; // Max 1.0 point
-                score += storage.performance_profile.iops as f64 / 50000.0; // Max 1.0 point for 50k IOPS
+                score +=
+                    (10000.0 - storage.performance_profile.read_latency_us.min(10000.0)) / 10000.0; // Max 1.0 point
+                score += f64::from(storage.performance_profile.iops) / 50000.0; // Max 1.0 point for 50k IOPS
             }
             StorageUseCase::LowCost => {
                 // Prioritize low cost
                 if matches!(storage.storage_type, UnifiedStorageType::Cloud) {
-                    score += (0.1 - storage.cost_profile.storage_cost_per_gb_month.min(0.1)) / 0.1; // Max 1.0 point
+                    score += (0.1 - storage.cost_profile.storage_cost_per_gb_month.min(0.1)) / 0.1;
+                // Max 1.0 point
                 } else {
                     score += 1.0; // Local storage is "free" after initial cost
                 }
             }
             StorageUseCase::HighCapacity => {
                 // Prioritize available space
-                score += (storage.available_space as f64 / (1024.0 * 1024.0 * 1024.0 * 1024.0)).min(1.0); // Max 1.0 point for 1TB+
+                score +=
+                    (storage.available_space as f64 / (1024.0 * 1024.0 * 1024.0 * 1024.0)).min(1.0);
+                // Max 1.0 point for 1TB+
             }
             StorageUseCase::Backup => {
                 // Prioritize reliability and cost
@@ -188,9 +207,12 @@ impl StorageAnalyzer {
             }
             StorageUseCase::Archive => {
                 // Prioritize low cost and high capacity
-                score += (storage.available_space as f64 / (1024.0 * 1024.0 * 1024.0 * 1024.0)).min(0.5); // Max 0.5 for capacity
+                score +=
+                    (storage.available_space as f64 / (1024.0 * 1024.0 * 1024.0 * 1024.0)).min(0.5); // Max 0.5 for capacity
                 if matches!(storage.storage_type, UnifiedStorageType::Cloud) {
-                    score += (0.05 - storage.cost_profile.storage_cost_per_gb_month.min(0.05)) / 0.05 * 0.5; // Max 0.5 for low cost
+                    score += (0.05 - storage.cost_profile.storage_cost_per_gb_month.min(0.05))
+                        / 0.05
+                        * 0.5; // Max 0.5 for low cost
                 }
             }
         }
@@ -199,11 +221,16 @@ impl StorageAnalyzer {
     }
 
     /// Generate optimization suggestions
-    pub fn generate_optimization_suggestions(&self, storage_list: &[DetectedStorage]) -> Vec<String> {
+    #[must_use]
+    pub fn generate_optimization_suggestions(
+        &self,
+        storage_list: &[DetectedStorage],
+    ) -> Vec<String> {
         let mut suggestions = Vec::new();
 
         // Check for storage consolidation opportunities
-        let local_storage: Vec<_> = storage_list.iter()
+        let local_storage: Vec<_> = storage_list
+            .iter()
             .filter(|s| matches!(s.storage_type, UnifiedStorageType::Local))
             .collect();
 
@@ -214,7 +241,8 @@ impl StorageAnalyzer {
         }
 
         // Check for cloud storage optimization
-        let cloud_storage: Vec<_> = storage_list.iter()
+        let cloud_storage: Vec<_> = storage_list
+            .iter()
             .filter(|s| matches!(s.storage_type, UnifiedStorageType::Cloud))
             .collect();
 
@@ -225,7 +253,8 @@ impl StorageAnalyzer {
         }
 
         // Check for encryption gaps
-        let unencrypted: Vec<_> = storage_list.iter()
+        let unencrypted: Vec<_> = storage_list
+            .iter()
             .filter(|s| !s.has_capability(&UnifiedStorageCapability::Encryption))
             .collect();
 
@@ -240,16 +269,19 @@ impl StorageAnalyzer {
     }
 
     /// Calculate storage efficiency score
+    #[must_use]
     pub fn calculate_efficiency_score(&self, storage: &DetectedStorage) -> f64 {
+        #[allow(unused_assignments)] // Value is overwritten in calculations below
         let mut efficiency = 0.0f64;
 
         // Performance efficiency (throughput per latency)
-        let perf_efficiency = storage.performance_profile.read_throughput_mbps / 
-            (storage.performance_profile.read_latency_us / 1000.0); // MB/s per ms
+        let perf_efficiency = storage.performance_profile.read_throughput_mbps
+            / (storage.performance_profile.read_latency_us / 1000.0); // MB/s per ms
 
         // Cost efficiency (performance per dollar for cloud storage)
         let cost_efficiency = if matches!(storage.storage_type, UnifiedStorageType::Cloud) {
-            storage.performance_profile.read_throughput_mbps / storage.cost_profile.storage_cost_per_gb_month
+            storage.performance_profile.read_throughput_mbps
+                / storage.cost_profile.storage_cost_per_gb_month
         } else {
             storage.performance_profile.read_throughput_mbps * 10.0 // Local storage bonus
         };
@@ -275,9 +307,9 @@ pub enum StorageUseCase {
     Backup,
     Archive,
 }
-
 impl StorageAnalysisReport {
     /// Generate human-readable summary
+    #[must_use]
     pub fn generate_summary(&self) -> String {
         format!(
             "Storage Analysis Summary:\n\
@@ -296,4 +328,4 @@ impl StorageAnalysisReport {
             self.recommendations.join("\n- ")
         )
     }
-} 
+}

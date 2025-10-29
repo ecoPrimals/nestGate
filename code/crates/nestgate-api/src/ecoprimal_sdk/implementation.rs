@@ -13,8 +13,8 @@ use tracing::info;
 /// NestGate EcoPrimal implementation
 #[derive(Debug)]
 pub struct NestGateEcoPrimal {
-    /// Primal metadata
-    pub metadata: PrimalMetadata,
+    /// Primal _metadata
+    pub _metadata: PrimalMetadata,
     /// Supported capabilities
     pub capabilities: Vec<PrimalCapability>,
     /// Current configuration
@@ -24,11 +24,9 @@ pub struct NestGateEcoPrimal {
     /// Unique identifier for the primal
     pub id: String,
 }
-
 impl Default for NestGateEcoPrimal {
-    fn default() -> Self {
-        Self {
-            metadata: PrimalMetadata {
+    fn default() -> Self { Self {
+            _metadata: PrimalMetadata {
                 name: "NestGate".to_string(),
                 version: "0.1.0".to_string(),
                 primal_type: PrimalType::Infrastructure,
@@ -38,7 +36,7 @@ impl Default for NestGateEcoPrimal {
                 documentation: Some("https://docs.nestgate.org".to_string()),
                 license: "Apache-2.0".to_string(),
                 supported_platforms: vec!["linux".to_string(), "darwin".to_string()],
-                min_biomeos_version: "1.0.0".to_string(),
+                min_management_version: "1.0.0".to_string(),
                 tags: vec![
                     "storage".to_string(),
                     "compute".to_string(),
@@ -46,8 +44,7 @@ impl Default for NestGateEcoPrimal {
                 ],
                 created_at: chrono::Utc::now(),
                 updated_at: chrono::Utc::now(),
-            },
-            capabilities: vec![
+            , capabilities: vec![
                 PrimalCapability::FileSystem,
                 PrimalCapability::Network,
                 PrimalCapability::Monitoring,
@@ -60,16 +57,15 @@ impl Default for NestGateEcoPrimal {
                 memory_usage_bytes: 0,
                 cpu_usage_percent: 0.0,
                 uptime_seconds: 0,
-                custom_metrics: HashMap::new(),
-            },
+                custom_metrics: HashMap::new() }
             id: uuid::Uuid::new_v4().to_string(),
         }
     }
 }
 
 impl EcoPrimal for NestGateEcoPrimal {
-    fn metadata(&self) -> &PrimalMetadata {
-        &self.metadata
+    fn _metadata(&self) -> &PrimalMetadata {
+        &self._metadata
     }
 
     fn capabilities(&self) -> &[PrimalCapability] {
@@ -154,7 +150,7 @@ impl EcoPrimal for NestGateEcoPrimal {
                 headers.insert("Content-Type".to_string(), "application/json".to_string());
                 headers.insert("X-Primal-ID".to_string(), self.id.clone());
                 headers
-            },
+            }
             body: Some(response_body),
             timestamp: chrono::Utc::now(),
             duration_ms: duration.as_millis() as u64,

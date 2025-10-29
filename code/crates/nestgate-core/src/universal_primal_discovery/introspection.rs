@@ -4,9 +4,8 @@
 /// - Hardware profiling and resource limits
 /// - Runtime environment analysis
 /// - Optimal configuration recommendations
-use crate::error::{NestGateError, Result};
+use crate::{NestGateError, Result};
 use std::collections::HashMap;
-
 /// System capabilities profile
 #[derive(Debug, Clone)]
 pub struct SystemCapabilities {
@@ -18,7 +17,6 @@ pub struct SystemCapabilities {
     pub container_runtime: Option<String>,
     pub os_type: String,
 }
-
 /// Hardware performance profile
 #[derive(Debug, Clone)]
 pub struct HardwareProfile {
@@ -29,7 +27,6 @@ pub struct HardwareProfile {
     pub overall_score: f64,
     pub recommended_limits: HashMap<String, usize>,
 }
-
 /// System introspection subsystem
 #[derive(Debug)]
 #[allow(dead_code)]
@@ -37,7 +34,6 @@ pub struct SystemIntrospection {
     capabilities: Option<SystemCapabilities>,
     hardware_profile: Option<HardwareProfile>,
 }
-
 impl Default for SystemIntrospection {
     fn default() -> Self {
         Self::new()
@@ -46,6 +42,7 @@ impl Default for SystemIntrospection {
 
 impl SystemIntrospection {
     /// Create new system introspection subsystem
+    #[must_use]
     pub fn new() -> Self {
         Self {
             capabilities: None,
@@ -54,24 +51,25 @@ impl SystemIntrospection {
     }
 
     /// **SYSTEM ANALYSIS**: Discover resource limits through system analysis
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn discover_resource_limits(&mut self, resource_type: &str) -> Result<usize> {
         // Ensure we have system capabilities
         if self.capabilities.is_none() {
             self.capabilities = Some(self.detect_system_capabilities().await?);
         }
 
-        let capabilities = self
-            .capabilities
-            .as_ref()
-            .ok_or_else(|| NestGateError::Internal {
-                message: "Capabilities not initialized after detection attempt".to_string(),
-                location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: Some(
-                    "discover_resource_limits: capabilities still None after initialization"
-                        .to_string(),
-                ),
-                is_bug: true,
-            })?;
+        let capabilities = self.capabilities.as_ref().ok_or_else(|| {
+            NestGateError::internal_error(
+                "Capabilities not initialized after detection attempt",
+                "introspection",
+            )
+        })?;
 
         match resource_type {
             "connections" => {
@@ -96,7 +94,7 @@ impl SystemIntrospection {
             "queue_size" => {
                 // Queue size based on memory and expected load
                 let base_queue = (capabilities.memory_gb * 1000.0) as usize;
-                Ok(base_queue.clamp(1000, 100000))
+                Ok(base_queue.clamp(1000, 100_000))
             }
             _ => {
                 // Generic limit based on system capacity
@@ -106,6 +104,13 @@ impl SystemIntrospection {
     }
 
     /// **CAPABILITY DETECTION**: Detect system capabilities
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn detect_system_capabilities(&self) -> Result<SystemCapabilities> {
         Ok(SystemCapabilities {
             cpu_cores: num_cpus::get_physical(),
@@ -119,24 +124,25 @@ impl SystemIntrospection {
     }
 
     /// **HARDWARE PROFILING**: Create hardware performance profile
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn create_hardware_profile(&mut self) -> Result<HardwareProfile> {
         // Ensure we have capabilities
         if self.capabilities.is_none() {
             self.capabilities = Some(self.detect_system_capabilities().await?);
         }
 
-        let capabilities = self
-            .capabilities
-            .as_ref()
-            .ok_or_else(|| NestGateError::Internal {
-                message: "Capabilities not initialized after detection attempt".to_string(),
-                location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: Some(
-                    "create_hardware_profile: capabilities still None after initialization"
-                        .to_string(),
-                ),
-                is_bug: true,
-            })?;
+        let capabilities = self.capabilities.as_ref().ok_or_else(|| {
+            NestGateError::internal_error(
+                "Capabilities not initialized after detection attempt",
+                "introspection",
+            )
+        })?;
 
         // Score components (0.0 to 1.0)
         let cpu_score = self.calculate_cpu_score(capabilities).await?;
@@ -180,7 +186,7 @@ impl SystemIntrospection {
                 if line.starts_with("MemTotal:") {
                     if let Some(kb_str) = line.split_whitespace().nth(1) {
                         if let Ok(kb) = kb_str.parse::<u64>() {
-                            return Ok((kb as f64) / 1024.0 / 1024.0); // Convert KB to GB
+                            return Ok(kb as f64 / 1024.0 / 1024.0); // Convert KB to GB
                         }
                     }
                 }
@@ -219,18 +225,52 @@ impl SystemIntrospection {
         }
     }
 
-    /// **CONTAINER RUNTIME DETECTION**: Detect container runtime
+    /// **CONTAINER RUNTIME DETECTION**: Detect container runtime using capability-based approach
     async fn detect_container_runtime(&self) -> Option<String> {
-        // Check for various container runtime indicators
-        if std::env::var("KUBERNETES_NAMESPACE").is_ok() {
-            Some("kubernetes".to_string())
-        } else if std::env::var("DOCKER_COMPOSE_PROJECT").is_ok() {
-            Some("docker-compose".to_string())
-        } else if std::path::Path::new("/.dockerenv").exists() {
-            Some("docker".to_string())
-        } else {
-            None
+        // Modern capability-based detection (preferred)
+        if let Ok(compute_type) = std::env::var("COMPUTE_CAPABILITY_TYPE") {
+            tracing::info!(
+                "Using modern capability-based compute detection: {}",
+                compute_type
+            );
+            return Some(format!("capability-based-{compute_type}"));
         }
+
+        // DEPRECATED: Legacy vendor-specific detection patterns
+        // These will be removed in version 4.0.0
+
+        // DEPRECATED: Kubernetes namespace detection
+        if std::env::var("KUBERNETES_NAMESPACE").is_ok() {
+            tracing::warn!(
+                "DEPRECATED: KUBERNETES_NAMESPACE detected for container runtime detection. \
+                Please migrate to COMPUTE_CAPABILITY_TYPE=orchestrated. \
+                This Kubernetes-specific detection will be removed in version 4.0.0."
+            );
+            return Some("legacy-orchestrated".to_string());
+        }
+
+        // DEPRECATED: Docker Compose detection
+        if std::env::var("DOCKER_COMPOSE_PROJECT").is_ok() {
+            tracing::warn!(
+                "DEPRECATED: DOCKER_COMPOSE_PROJECT detected for container runtime detection. \
+                Please migrate to COMPUTE_CAPABILITY_TYPE=containerized. \
+                This Docker-specific detection will be removed in version 4.0.0."
+            );
+            return Some("legacy-containerized".to_string());
+        }
+
+        // DEPRECATED: Docker environment file detection
+        if std::path::Path::new("/.dockerenv").exists() {
+            tracing::warn!(
+                "DEPRECATED: /.dockerenv file detected for container runtime detection. \
+                Please migrate to COMPUTE_CAPABILITY_TYPE=containerized. \
+                This Docker-specific detection will be removed in version 4.0.0."
+            );
+            return Some("legacy-containerized".to_string());
+        }
+
+        // No containerization detected
+        None
     }
 
     /// **OS TYPE DETECTION**: Detect operating system type
@@ -268,7 +308,7 @@ impl SystemIntrospection {
     /// **STORAGE SCORING**: Calculate storage performance score
     async fn calculate_storage_score(&self) -> Result<f64> {
         // Simplified storage scoring - in a real system would benchmark I/O
-        if std::path::Path::new("/proc/mounts").exists() {
+        if std::path::Path::new("/sys/block").exists() {
             // Assume SSD if on modern Linux system
             Ok(0.8)
         } else {
@@ -293,14 +333,20 @@ impl SystemIntrospection {
     }
 
     /// **INTROSPECTION SUMMARY**: Get system introspection summary
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn get_introspection_summary(&mut self) -> Result<HashMap<String, String>> {
-        let capabilities = match &self.capabilities {
-            Some(caps) => caps.clone(),
-            None => {
-                let caps = self.detect_system_capabilities().await?;
-                self.capabilities = Some(caps.clone());
-                caps
-            }
+        let capabilities = if let Some(caps) = &self.capabilities {
+            caps.clone()
+        } else {
+            let caps = self.detect_system_capabilities().await?;
+            self.capabilities = Some(caps.clone());
+            caps
         };
 
         let mut summary = HashMap::new();

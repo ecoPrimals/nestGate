@@ -1,0 +1,16 @@
+./code/crates/nestgate-core/src/config/migration_helpers/securityconfig_migration.rs
+./code/crates/nestgate-core/src/config/migration_helpers/networkconfig_migration.rs
+./code/crates/nestgate-core/src/config/migration_helpers/testconfig_migration.rs
+./code/crates/nestgate-core/src/config/migration_helpers/performanceconfig_migration.rs
+./code/crates/nestgate-core/src/config/migration_helpers/storageconfig_migration.rs
+./code/crates/nestgate-core/src/config/sovereignty.rs
+./code/crates/nestgate-core/src/environment.rs
+./code/crates/nestgate-core/src/error/migration_helpers/storageerror_migration.rs
+./code/crates/nestgate-core/src/error/migration_helpers/moduleerror_migration.rs
+./code/crates/nestgate-core/src/error/migration_helpers/networkerror_migration.rs
+./code/crates/nestgate-core/src/error/migration_helpers/validationerror_migration.rs
+./code/crates/nestgate-core/src/error/migration_helpers/securityerror_migration.rs
+./code/crates/nestgate-core/src/error/migration_helpers/configerror_migration.rs
+./code/crates/nestgate-core/src/error/migration_helper.rs
+./code/crates/nestgate-core/src/constants/mod.rs
+./code/crates/nestgate-api/src/rest/rpc/primal_agnostic_rpc.rs

@@ -2,8 +2,7 @@
 // Contains all dataset-related operations including creation, destruction,
 // and snapshot management.
 
-use nestgate_core::error::conversions::create_zfs_error;
-use nestgate_core::error::domain_errors::ZfsOperation;
+use crate::error::{create_zfs_error, ZfsOperation};
 use crate::types::StorageTier;
 use nestgate_core::Result;
 // Removed unused tracing import
@@ -16,8 +15,8 @@ use tracing::info;
 pub struct DatasetAnalyzer {
     pub config: std::collections::HashMap<String, String>,
 }
-
 impl DatasetAnalyzer {
+    #[must_use]
     pub fn new() -> Self {
         Self {
             config: std::collections::HashMap::new(),
@@ -33,6 +32,13 @@ impl Default for DatasetAnalyzer {
 
 impl ZfsManager {
     /// Create a new dataset
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn create_dataset(
         &self,
         name: &str,
@@ -48,10 +54,10 @@ impl ZfsManager {
             .dataset_manager
             .create_dataset(name, parent, tier)
             .await
-            .map_err(|e| {
+            .map_err(|_e| {
                 create_zfs_error(
-                    format!("Failed to create dataset: {e}"),
-                    ZfsOperation::DatasetCreate
+                    "Failed to create dataset: error details".to_string(),
+                    ZfsOperation::DatasetCreate,
                 )
             })?;
 
@@ -59,23 +65,34 @@ impl ZfsManager {
     }
 
     /// Destroy a dataset
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn destroy_dataset(&self, name: &str) -> Result<()> {
         info!("Destroying dataset: {}", name);
 
-        self.dataset_manager
-            .destroy_dataset(name)
-            .await
-            .map_err(|e| {
-                create_zfs_error(
-                    format!("Failed to destroy dataset: {e}"),
-                    ZfsOperation::DatasetCreate
-                )
-            })?;
+        self.dataset_manager.destroy_dataset(name).map_err(|_e| {
+            create_zfs_error(
+                "Failed to destroy dataset: error details".to_string(),
+                ZfsOperation::DatasetCreate,
+            )
+        })?;
 
         Ok(())
     }
 
     /// List snapshots for a dataset
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn list_snapshots(
         &self,
         dataset: &str,
@@ -83,10 +100,10 @@ impl ZfsManager {
         self.snapshot_manager
             .list_snapshots(dataset)
             .await
-            .map_err(|e| {
+            .map_err(|_e| {
                 create_zfs_error(
-                    format!("Failed to list snapshots: {e}"),
-                    ZfsOperation::DatasetCreate
+                    "Failed to list snapshots: error details".to_string(),
+                    ZfsOperation::DatasetCreate,
                 )
             })
     }

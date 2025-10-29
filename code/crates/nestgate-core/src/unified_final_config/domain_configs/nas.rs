@@ -1,5 +1,5 @@
 //
-// NAS-specific configuration structures extracted from the monolithic domain_configs.rs
+// NAS-specific configuration structures extracted from the monolithic NestGateCanonicalConfig.rs
 // for better maintainability and focused responsibility.
 
 use serde::{Deserialize, Serialize};
@@ -13,7 +13,6 @@ pub struct NasDomainConfig {
     pub raid_level: String,
     pub default_share_permissions: String,
 }
-
 impl Default for NasDomainConfig {
     fn default() -> Self {
         Self {

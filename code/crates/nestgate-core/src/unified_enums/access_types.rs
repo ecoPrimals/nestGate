@@ -2,7 +2,6 @@
 /// Unified access type definitions for consistent access control
 /// across all NestGate components.
 use serde::{Deserialize, Serialize};
-
 /// Unified access types for consistent permission management
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum UnifiedAccessType {
@@ -19,7 +18,6 @@ pub enum UnifiedAccessType {
     /// No access
     None,
 }
-
 impl Default for UnifiedAccessType {
     fn default() -> Self {
         Self::Read
@@ -60,7 +58,6 @@ pub enum AccessLevel {
     /// Restricted access - special approval required
     Restricted,
 }
-
 impl Default for AccessLevel {
     fn default() -> Self {
         Self::Authenticated

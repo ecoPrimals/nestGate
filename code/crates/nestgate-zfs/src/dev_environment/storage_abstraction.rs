@@ -8,15 +8,14 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{info, warn};
 
-use crate::error::CanonicalResult as Result;
-use nestgate_core::error::conversions::create_zfs_error;
-use nestgate_core::error::domain_errors::ZfsOperation;
-use nestgate_core::types::StorageTier;
+use crate::error::{create_zfs_error, ZfsOperation};
+use nestgate_core::canonical_types::StorageTier;
+use nestgate_core::error::CanonicalResult as Result;
 
 /// Development Environment Storage Service
 ///
 /// Provides storage operations using filesystem calls instead of ZFS commands.
-/// This allows full NestGate functionality on development machines without
+/// This allows full `NestGate` functionality on development machines without
 /// requiring dedicated ZFS pools.
 pub struct DevEnvironmentStorageService {
     /// Base directory for all storage operations
@@ -26,7 +25,6 @@ pub struct DevEnvironmentStorageService {
     /// Configuration
     config: StorageAbstractionConfig,
 }
-
 /// Configuration for storage abstraction
 #[derive(Debug, Clone)]
 pub struct StorageAbstractionConfig {
@@ -39,7 +37,6 @@ pub struct StorageAbstractionConfig {
     /// Simulate ZFS features (compression, deduplication, etc.)
     pub simulate_zfs_features: bool,
 }
-
 impl Default for StorageAbstractionConfig {
     fn default() -> Self {
         Self {
@@ -61,7 +58,6 @@ struct SimulatedPool {
     tier: StorageTier,
     created_at: std::time::SystemTime,
 }
-
 impl SimulatedPool {
     /// Create a new simulated pool
     #[allow(dead_code)] // Development environment simulation
@@ -87,13 +83,12 @@ struct SimulatedDataset {
     tier: StorageTier,
     properties: HashMap<String, String>,
 }
-
 impl SimulatedDataset {
     /// Create a new simulated dataset
     #[allow(dead_code)]
     pub fn new(name: String, tier: StorageTier) -> Self {
-        let path = PathBuf::from(format!("/dev/datasets/{name}"));
-        let mount_point = PathBuf::from(format!("/mnt/{name}"));
+        let path = PathBuf::from("/dev/datasets/error details".to_string());
+        let mount_point = PathBuf::from("/mnt/error details".to_string());
 
         Self {
             name,
@@ -109,12 +104,10 @@ impl SimulatedDataset {
     pub fn size(&self) -> u64 {
         self.size_bytes
     }
-
     #[allow(dead_code)]
     pub fn tier(&self) -> &StorageTier {
         &self.tier
     }
-
     #[allow(dead_code)]
     pub fn properties(&self) -> &HashMap<String, String> {
         &self.properties
@@ -149,13 +142,23 @@ impl DevEnvironmentStorageService {
     }
 
     /// Initialize the storage abstraction layer
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn initialize(&self) -> Result<()> {
         // Create base directory
         if let Err(e) = tokio::fs::create_dir_all(&self.base_path).await {
             warn!("Failed to create base storage directory: {}", e);
             return Err(create_zfs_error(
-                format!("Failed to create storage directory: {e}"),
-                ZfsOperation::Configuration
+                format!(
+                    "Failed to create storage directory: {}",
+                    "actual_error_details"
+                ),
+                ZfsOperation::Configuration,
             ));
         }
 
@@ -164,8 +167,11 @@ impl DevEnvironmentStorageService {
         if let Err(e) = tokio::fs::create_dir_all(&pools_dir).await {
             warn!("Failed to create pools directory: {}", e);
             return Err(create_zfs_error(
-                format!("Failed to create pools directory: {e}"),
-                ZfsOperation::Configuration
+                format!(
+                    "Failed to create pools directory: {}",
+                    "actual_error_details"
+                ),
+                ZfsOperation::Configuration,
             ));
         }
 
@@ -173,9 +179,9 @@ impl DevEnvironmentStorageService {
         let datasets_dir = self.base_path.join("datasets");
         if let Err(e) = tokio::fs::create_dir_all(&datasets_dir).await {
             warn!("Failed to create datasets directory: {}", e);
-            return Err(modern_zfs::storage_error(
-                &format!("Failed to create datasets directory: {e}"),
-                None,
+            return Err(create_zfs_error(
+                format!("Failed to create datasets directory: {e}"),
+                ZfsOperation::Configuration,
             ));
         }
 
@@ -192,6 +198,13 @@ impl DevEnvironmentStorageService {
     }
 
     /// Create a simulated storage pool
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn create_simulated_pool(&self, name: &str, size_bytes: u64) -> Result<()> {
         let mut pools = self.pools.write().await;
 
@@ -200,9 +213,9 @@ impl DevEnvironmentStorageService {
         // Create physical directory
         if let Err(e) = tokio::fs::create_dir_all(&pool_path).await {
             warn!("Failed to create pool directory: {}", e);
-            return Err(modern_zfs::storage_error(
-                &format!("Failed to create pool directory: {e}"),
-                Some(name),
+            return Err(create_zfs_error(
+                format!("Failed to create pool directory: {e}"),
+                ZfsOperation::PoolCreate,
             ));
         }
 
@@ -228,6 +241,13 @@ impl DevEnvironmentStorageService {
     }
 
     /// Create a simulated dataset
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn create_simulated_dataset(
         &self,
         pool_name: &str,
@@ -237,10 +257,9 @@ impl DevEnvironmentStorageService {
         let mut pools = self.pools.write().await;
 
         let pool = pools.get_mut(pool_name).ok_or_else(|| {
-            modern_zfs::pool_error(
-                &format!("Pool not found: {pool_name}"),
-                nestgate_core::error::domain_errors::ZfsOperation::SystemCheck,
-                Some(pool_name),
+            create_zfs_error(
+                format!("Pool not found: {pool_name}"),
+                ZfsOperation::DatasetCreate,
             )
         })?;
 
@@ -248,22 +267,22 @@ impl DevEnvironmentStorageService {
         let mount_point = self
             .base_path
             .join("datasets")
-            .join(format!("{pool_name}_{dataset_name}"));
+            .join(format!("{pool_name}_error details"));
 
         // Create physical directories
         if let Err(e) = tokio::fs::create_dir_all(&dataset_path).await {
             warn!("Failed to create dataset directory: {}", e);
-            return Err(modern_zfs::storage_error(
-                &format!("Failed to create dataset directory: {e}"),
-                Some(pool_name),
+            return Err(create_zfs_error(
+                format!("Failed to create dataset directory: {e}"),
+                ZfsOperation::DatasetCreate,
             ));
         }
 
         if let Err(e) = tokio::fs::create_dir_all(&mount_point).await {
             warn!("Failed to create mount point: {}", e);
-            return Err(modern_zfs::storage_error(
-                &format!("Failed to create mount point: {e}"),
-                Some(pool_name),
+            return Err(create_zfs_error(
+                format!("Failed to create mount point: {e}"),
+                ZfsOperation::DatasetCreate,
             ));
         }
 
@@ -272,7 +291,7 @@ impl DevEnvironmentStorageService {
             path: dataset_path,
             mount_point,
             size_bytes: 0,
-            tier,
+            tier: tier.clone(),
             properties: HashMap::new(),
         };
 
@@ -350,7 +369,6 @@ pub struct StorageStats {
     pub available_bytes: u64,
     pub abstraction_type: String,
 }
-
 impl Default for DevEnvironmentStorageService {
     fn default() -> Self {
         Self::new()
@@ -371,15 +389,14 @@ mod tests {
         assert_eq!(stats.total_pools, 1); // Should have default dev-pool
         Ok(())
     }
-
     #[tokio::test]
     async fn test_pool_creation() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let service = DevEnvironmentStorageService::new();
         service.initialize().await.map_err(|e| {
             tracing::error!("Async task failed: {:?}", e);
             nestgate_core::NestGateError::internal_error(
-                format!("Task execution failed: {:?}", e),
-                "async_task".to_string(),
+                format!("Task execution failed: {e}"),
+                "storage-abstraction",
             )
         })?;
 
@@ -399,8 +416,8 @@ mod tests {
         service.initialize().await.map_err(|e| {
             tracing::error!("Async task failed: {:?}", e);
             nestgate_core::NestGateError::internal_error(
-                format!("Task execution failed: {:?}", e),
-                "async_task".to_string(),
+                format!("Task execution failed: {e}"),
+                "storage-abstraction",
             )
         })?;
 

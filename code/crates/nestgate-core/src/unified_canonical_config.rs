@@ -1,8 +1,7 @@
 /// **UNIFIED CANONICAL CONFIGURATION - ROOT SYSTEM**
 /// This is the ultimate configuration unification that brings together all domain-specific
 /// unified configurations under a single canonical root system following the proven patterns.
-
-use nestgate_core::unified_config_consolidation::StandardDomainConfig;
+use crate::unified_config_consolidation::StandardDomainConfig;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -18,7 +17,7 @@ use nestgate_network::unified_network_extensions::UnifiedNetworkConfig;
 use nestgate_zfs::unified_zfs_config::UnifiedZfsConfig;
 
 // Re-export the existing canonical types for compatibility
-pub use crate::config::canonical::{
+pub use crate::config::canonical_master:{
     CanonicalConfig as LegacyCanonicalConfig, CanonicalConfigBuilder as LegacyCanonicalConfigBuilder,
     Environment, EnvironmentConfig, IntegrationsConfig, MonitoringConfig, NetworkConfig,
     PerformanceConfig, SecurityConfig, StorageConfig, SystemConfig,
@@ -26,6 +25,8 @@ pub use crate::config::canonical::{
 
 /// **UNIFIED CANONICAL EXTENSIONS**
 /// Consolidates all unified domain configurations into a single root system
+/// Unified canonical extensions for cross-domain integrations
+/// Provides extensibility points for custom domain-specific configurations
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnifiedCanonicalExtensions {
     /// API and HTTP server configuration
@@ -53,12 +54,12 @@ pub struct UnifiedCanonicalExtensions {
     /// Cross-domain integration settings
     pub integrations: CrossDomainIntegrations,
 }
-
 /// **UNIFIED CANONICAL CONFIGURATION**
 /// The ultimate single source of truth for ALL NestGate configuration across ALL domains
 pub type UnifiedCanonicalConfig = StandardDomainConfig<UnifiedCanonicalExtensions>;
-
 /// Domain feature flags for selective enablement
+/// Domain-specific feature flags for conditional functionality
+/// Enables fine-grained control over domain features across environments
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DomainFeatureFlags {
     /// Enable API server functionality
@@ -82,8 +83,9 @@ pub struct DomainFeatureFlags {
     /// Enable experimental features
     pub experimental_enabled: bool,
 }
-
 /// Cross-domain integration settings
+/// Cross-domain integration configurations
+/// Manages inter-domain communication and data sharing patterns
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CrossDomainIntegrations {
     /// API to storage integration
@@ -97,7 +99,6 @@ pub struct CrossDomainIntegrations {
     /// Custom integration configurations
     pub custom_bridges: HashMap<String, serde_json::Value>,
 }
-
 /// API to storage integration bridge
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ApiStorageBridge {
@@ -110,20 +111,17 @@ pub struct ApiStorageBridge {
     /// Maximum concurrent storage operations
     pub max_concurrent_ops: u32,
 }
-
 /// Automation to monitoring integration bridge
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AutomationMonitoringBridge {
     /// Enable automation event monitoring
     pub event_monitoring: bool,
     /// Enable performance metrics collection
-    pub performance_metrics: bool,
     /// Metrics collection interval
     pub metrics_interval: std::time::Duration,
     /// Alert thresholds
     pub alert_thresholds: HashMap<String, f64>,
 }
-
 /// Network to security integration bridge
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkSecurityBridge {
@@ -136,7 +134,6 @@ pub struct NetworkSecurityBridge {
     /// Security policy enforcement
     pub policy_enforcement: SecurityPolicyEnforcement,
 }
-
 /// Security policy enforcement configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityPolicyEnforcement {
@@ -151,7 +148,6 @@ pub struct SecurityPolicyEnforcement {
     /// Blocked IP ranges
     pub blocked_ip_ranges: Vec<String>,
 }
-
 /// Middleware to authentication integration bridge
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MiddlewareAuthBridge {
@@ -164,7 +160,6 @@ pub struct MiddlewareAuthBridge {
     /// Session management
     pub session_management: SessionManagement,
 }
-
 /// Authentication provider configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthProvider {
@@ -177,7 +172,6 @@ pub struct AuthProvider {
     /// Provider priority
     pub priority: u32,
 }
-
 /// Authentication provider types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AuthProviderType {
@@ -192,7 +186,6 @@ pub enum AuthProviderType {
     /// Custom provider
     Custom(String),
 }
-
 /// Session management configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SessionManagement {
@@ -205,7 +198,6 @@ pub struct SessionManagement {
     /// Enable session encryption
     pub encryption: bool,
 }
-
 /// Session storage backends
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SessionStorageBackend {
@@ -218,9 +210,9 @@ pub enum SessionStorageBackend {
     /// Custom storage
     Custom(String),
 }
-
 impl UnifiedCanonicalConfig {
     /// Create development configuration with all domains enabled
+    #[must_use]
     pub fn development() -> Self {
         let mut config = Self::create_for_environment("development");
         config.extensions.domain_features = DomainFeatureFlags::development();
@@ -228,6 +220,7 @@ impl UnifiedCanonicalConfig {
     }
 
     /// Create production configuration with selective domain enablement
+    #[must_use]
     pub fn production() -> Self {
         let mut config = Self::create_for_environment("production");
         config.extensions.domain_features = DomainFeatureFlags::production();
@@ -235,6 +228,7 @@ impl UnifiedCanonicalConfig {
     }
 
     /// Create testing configuration optimized for integration tests
+    #[must_use]
     pub fn testing() -> Self {
         let mut config = Self::create_for_environment("testing");
         config.extensions.domain_features = DomainFeatureFlags::testing();
@@ -242,6 +236,7 @@ impl UnifiedCanonicalConfig {
     }
 
     /// Create staging configuration for pre-production testing
+    #[must_use]
     pub fn staging() -> Self {
         let mut config = Self::create_for_environment("staging");
         config.extensions.domain_features = DomainFeatureFlags::staging();
@@ -249,6 +244,7 @@ impl UnifiedCanonicalConfig {
     }
 
     /// Create minimal configuration with only essential domains
+    #[must_use]
     pub fn minimal() -> Self {
         let mut config = Self::create_for_environment("minimal");
         config.extensions.domain_features = DomainFeatureFlags::minimal();
@@ -256,6 +252,7 @@ impl UnifiedCanonicalConfig {
     }
 
     /// Create custom configuration for specific use cases
+    #[must_use]
     pub fn custom(domains: &[&str]) -> Self {
         let mut config = Self::create_for_environment("custom");
         config.extensions.domain_features = DomainFeatureFlags::custom(domains);
@@ -307,37 +304,31 @@ impl UnifiedCanonicalConfig {
 
     /// Get enabled domains
     pub fn get_enabled_domains(&self) -> Vec<String> {
-        let mut domains = Vec::new();
-        
-        if self.extensions.domain_features.api_enabled {
-            domains.push("api".to_string());
-        }
-        if self.extensions.domain_features.primal_enabled {
-            domains.push("primal".to_string());
-        }
-        if self.extensions.domain_features.network_enabled {
-            domains.push("network".to_string());
-        }
-        if self.extensions.domain_features.zfs_enabled {
-            domains.push("zfs".to_string());
-        }
-        if self.extensions.domain_features.nas_enabled {
-            domains.push("nas".to_string());
-        }
-        if self.extensions.domain_features.mcp_enabled {
-            domains.push("mcp".to_string());
-        }
-        if self.extensions.domain_features.middleware_enabled {
-            domains.push("middleware".to_string());
-        }
-        if self.extensions.domain_features.automation_enabled {
-            domains.push("automation".to_string());
-        }
-        if self.extensions.domain_features.fsmonitor_enabled {
-            domains.push("fsmonitor".to_string());
-        }
-        if self.extensions.domain_features.experimental_enabled {
-            domains.push("experimental".to_string());
+        let mut domains = Vec::with_capacity(10); // Pre-allocate for performance
+
+        // Use const strings to avoid allocations
+        const DOMAIN_NAMES: [&str; 10] = [
+            "api", "primal", "network", "zfs", "nas",
+            "mcp", "middleware", "automation", "fsmonitor", "experimental"
+        ];
+
+        let enabled_flags = [
+            self.extensions.domain_features.api_enabled,
+            self.extensions.domain_features.primal_enabled,
+            self.extensions.domain_features.network_enabled,
+            self.extensions.domain_features.zfs_enabled,
+            self.extensions.domain_features.nas_enabled,
+            self.extensions.domain_features.mcp_enabled,
+            self.extensions.domain_features.middleware_enabled,
+            self.extensions.domain_features.automation_enabled,
+            self.extensions.domain_features.fsmonitor_enabled,
+            self.extensions.domain_features.experimental_enabled,
+        ];
+
+        for (name, enabled) in DOMAIN_NAMES.iter().zip(enabled_flags.iter()) {
+            if *enabled {
+                domains.push((*name).to_string());
+            }
         }
 
         // Add custom domains
@@ -353,7 +344,14 @@ impl UnifiedCanonicalConfig {
     }
 
     /// Validate configuration consistency across domains
-    pub fn validate_cross_domain_consistency(&self) -> Result<(), String> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn validate_cross_domain_consistency(&self) -> Result<(), String>  {
         // API domain requires network domain
         if self.extensions.domain_features.api_enabled && !self.extensions.domain_features.network_enabled {
             return Err("API domain requires network domain to be enabled".to_string());
@@ -480,9 +478,10 @@ impl DomainFeatureFlags {
     }
 
     /// Custom environment - enable specific domains
+    #[must_use]
     pub fn custom(domains: &[&str]) -> Self {
         let mut flags = Self::minimal(); // Start with minimal
-        
+
         for domain in domains {
             match *domain {
                 "api" => flags.api_enabled = true,
@@ -498,7 +497,7 @@ impl DomainFeatureFlags {
                 _ => {} // Ignore unknown domains
             }
         }
-        
+
         flags
     }
 }
@@ -536,7 +535,6 @@ impl Default for AutomationMonitoringBridge {
     fn default() -> Self {
         Self {
             event_monitoring: true,
-            performance_metrics: true,
             metrics_interval: std::time::Duration::from_secs(60),
             alert_thresholds: HashMap::new(),
         }
@@ -594,7 +592,6 @@ impl UnifiedCanonicalConfig {
     pub fn api_only() -> Self {
         Self::custom(&["api", "network", "middleware"])
     }
-
     /// Create a configuration for storage-only deployment
     pub fn storage_only() -> Self {
         Self::custom(&["zfs", "nas", "network"])
@@ -614,4 +611,200 @@ impl UnifiedCanonicalConfig {
     pub fn primal_integration() -> Self {
         Self::custom(&["primal", "api", "network", "middleware", "mcp"])
     }
-} 
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_unified_canonical_config_default() {
+        let config = UnifiedCanonicalConfig::default();
+        
+        // Test that all major sections exist
+        assert!(config.extensions.api.enabled);
+        assert!(config.extensions.network.enabled);
+        assert!(config.extensions.zfs.enabled);
+        
+        // Test legacy compatibility
+        assert_eq!(config.legacy.system.instance_name, "nestgate-default");
+        assert!(config.legacy.system.debug_mode);
+    }
+
+    #[test]
+    fn test_unified_canonical_config_production() {
+        let config = UnifiedCanonicalConfig::production();
+        
+        // Production should have specific characteristics
+        assert!(!config.legacy.system.debug_mode);
+        assert_eq!(config.legacy.environment, Environment::Production);
+        
+        // Network should be configured for production
+        assert!(config.extensions.network.enabled);
+        assert!(config.extensions.zfs.enabled);
+    }
+
+    #[test]
+    fn test_unified_canonical_config_development() {
+        let config = UnifiedCanonicalConfig::development();
+        
+        // Development should have debug enabled
+        assert!(config.legacy.system.debug_mode);
+        assert_eq!(config.legacy.environment, Environment::Development);
+        
+        // All extensions should be enabled in development
+        assert!(config.extensions.api.enabled);
+        assert!(config.extensions.network.enabled);
+        assert!(config.extensions.zfs.enabled);
+    }
+
+    #[test]
+    fn test_unified_canonical_config_minimal() {
+        let config = UnifiedCanonicalConfig::minimal();
+        
+        // Minimal config should have reduced functionality
+        assert!(config.legacy.system.debug_mode);
+        
+        // Should still have core functionality
+        assert!(config.extensions.network.enabled);
+    }
+
+    #[test]
+    fn test_unified_canonical_config_custom() {
+        let config = UnifiedCanonicalConfig::custom(&["api", "network"]);
+        
+        // Custom config should be configurable
+        assert!(config.extensions.api.enabled);
+        assert!(config.extensions.network.enabled);
+    }
+
+    #[test]
+    fn test_unified_canonical_config_full_stack() {
+        let config = UnifiedCanonicalConfig::full_stack();
+        
+        // Full stack should enable everything
+        assert!(config.extensions.api.enabled);
+        assert!(config.extensions.network.enabled);
+        assert!(config.extensions.zfs.enabled);
+        assert!(config.extensions.nas.enabled);
+        assert!(config.extensions.mcp.enabled);
+        assert!(config.extensions.middleware.enabled);
+        assert!(config.extensions.automation.enabled);
+        assert!(config.extensions.fsmonitor.enabled);
+    }
+
+    #[test]
+    fn test_unified_canonical_config_web_service() {
+        let config = UnifiedCanonicalConfig::web_service();
+        
+        // Web service should focus on API and network
+        assert!(config.extensions.api.enabled);
+        assert!(config.extensions.network.enabled);
+        assert!(config.extensions.middleware.enabled);
+    }
+
+    #[test]
+    fn test_unified_canonical_config_storage_service() {
+        let config = UnifiedCanonicalConfig::storage_service();
+        
+        // Storage service should focus on ZFS and NAS
+        assert!(config.extensions.zfs.enabled);
+        assert!(config.extensions.nas.enabled);
+        assert!(config.extensions.fsmonitor.enabled);
+    }
+
+    #[test]
+    fn test_unified_canonical_config_network_service() {
+        let config = UnifiedCanonicalConfig::network_service();
+        
+        // Network service should focus on network and MCP
+        assert!(config.extensions.network.enabled);
+        assert!(config.extensions.mcp.enabled);
+    }
+
+    #[test]
+    fn test_unified_canonical_config_automation_only() {
+        let config = UnifiedCanonicalConfig::automation_only();
+        
+        // Automation only should include automation, network, and ZFS
+        assert!(config.extensions.automation.enabled);
+        assert!(config.extensions.network.enabled);
+        assert!(config.extensions.zfs.enabled);
+    }
+
+    #[test]
+    fn test_unified_canonical_config_primal_integration() {
+        let config = UnifiedCanonicalConfig::primal_integration();
+        
+        // Primal integration should include primal, API, network, middleware, MCP
+        assert!(config.extensions.primal.enabled);
+        assert!(config.extensions.api.enabled);
+        assert!(config.extensions.network.enabled);
+        assert!(config.extensions.middleware.enabled);
+        assert!(config.extensions.mcp.enabled);
+    }
+
+    #[test]
+    fn test_unified_canonical_extensions_default() {
+        let extensions = UnifiedCanonicalExtensions::default();
+        
+        // All extensions should be enabled by default
+        assert!(extensions.api.enabled);
+        assert!(extensions.primal.enabled);
+        assert!(extensions.network.enabled);
+        assert!(extensions.zfs.enabled);
+        assert!(extensions.nas.enabled);
+        assert!(extensions.mcp.enabled);
+        assert!(extensions.middleware.enabled);
+        assert!(extensions.automation.enabled);
+        assert!(extensions.fsmonitor.enabled);
+        
+        // Custom domains should be empty by default
+        assert!(extensions.custom_domains.is_empty());
+    }
+
+    #[test]
+    fn test_unified_canonical_extensions_serialization() {
+        let extensions = UnifiedCanonicalExtensions::default();
+        
+        // Test serialization to JSON
+        let json = serde_json::to_string(&extensions).expect("Should serialize to JSON");
+        assert!(!json.is_empty());
+        
+        // Test deserialization from JSON
+        let deserialized: UnifiedCanonicalExtensions = 
+            serde_json::from_str(&json).expect("Should deserialize from JSON");
+        
+        assert_eq!(extensions.api.enabled, deserialized.api.enabled);
+        assert_eq!(extensions.network.enabled, deserialized.network.enabled);
+    }
+
+    #[test]
+    fn test_custom_domain_config() {
+        let mut config = StandardDomainConfig::default();
+        config.enabled = false;
+        config.metadata.insert("test_key".to_string(), "test_value".to_string());
+        
+        assert!(!config.enabled);
+        assert_eq!(config.metadata.get("test_key").unwrap(), "test_value");
+    }
+
+    #[test]
+    fn test_unified_canonical_config_clone() {
+        let config1 = UnifiedCanonicalConfig::production();
+        let config2 = config1.clone();
+        
+        assert_eq!(config1.legacy.environment, config2.legacy.environment);
+        assert_eq!(config1.extensions.api.enabled, config2.extensions.api.enabled);
+    }
+
+    #[test]
+    fn test_unified_canonical_config_debug() {
+        let config = UnifiedCanonicalConfig::development();
+        let debug_str = format!("{config:?}");
+        
+        assert!(debug_str.contains("UnifiedCanonicalConfig"));
+        assert!(debug_str.contains("extensions"));
+        assert!(debug_str.contains("legacy"));
+    }
+}

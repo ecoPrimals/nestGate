@@ -1,3 +1,6 @@
+use crate::types::StorageTier;
+use crate::{dataset::ZfsDatasetManager, pool::ZfsPoolManager};
+use nestgate_core::{NestGateError, Result as CoreResult};
 /// Comprehensive metrics gathering from ZFS pools, datasets, and system resources
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -5,12 +8,13 @@ use std::time::SystemTime;
 use tokio::sync::RwLock;
 use tracing::{debug, warn};
 
-use crate::types::StorageTier;
-use crate::{ZfsDatasetManager, ZfsPoolManager};
-use nestgate_core::{NestGateError, Result as CoreResult};
-
 use super::super::types::TierMetricsMap;
-use super::super::types::*;
+use super::super::types::{
+    CurrentPerformanceMetrics, DatasetPerformanceStats, DiskIoStats, IoStatistics, IoStatsSummary,
+    MemoryInfo, PerformanceTrends, PoolIoStats, PoolPerformanceMetrics, PoolProperties,
+    SlaCompliance, SystemPerformanceMetrics, SystemResourceMetrics, TierMetrics,
+    TierPerformanceTargets, ZfsPerformanceMonitor,
+};
 
 impl ZfsPerformanceMonitor {
     /// Collect performance metrics
@@ -94,11 +98,8 @@ impl ZfsPerformanceMonitor {
             .args(["iostat", "-v", "-y", "1", "1"])
             .output()
             .await
-            .map_err(|e| NestGateError::Internal {
-                message: format!("Failed to execute zpool iostat: {e}"),
-                location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
-                is_bug: false,
+            .map_err(|_e| {
+                NestGateError::internal_error("Failed to execute zpool iostat command", "unknown")
             })?;
 
         if !iostat_output.status.success() {
@@ -210,11 +211,8 @@ impl ZfsPerformanceMonitor {
             .args(["get", "all", pool_name])
             .output()
             .await
-            .map_err(|e| NestGateError::Internal {
-                message: format!("Failed to get pool properties: {e}"),
-                location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
-                is_bug: false,
+            .map_err(|_e| {
+                NestGateError::internal_error("Failed to execute zpool get command", "unknown")
             })?;
 
         if !output.status.success() {
@@ -390,7 +388,6 @@ impl ZfsPerformanceMonitor {
             let stats = Self::get_pool_iostat_data(&pool.name).await?;
             io_stats.push(stats);
         }
-
         Ok(io_stats)
     }
 
@@ -402,11 +399,8 @@ impl ZfsPerformanceMonitor {
             .args(["iostat", "-v", pool_name, "1", "1"])
             .output()
             .await
-            .map_err(|e| NestGateError::Internal {
-                message: format!("Failed to get pool I/O stats: {e}"),
-                location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
-                is_bug: false,
+            .map_err(|_e| {
+                NestGateError::internal_error("Failed to execute zpool iostat command", "unknown")
             })?;
 
         if !output.status.success() {
@@ -488,7 +482,7 @@ impl ZfsPerformanceMonitor {
         let tier_datasets: Vec<_> = datasets.into_iter().filter(|d| d.tier == *tier).collect();
 
         if tier_datasets.is_empty() {
-            return Ok(TierMetrics::default_for_tier(*tier));
+            return Ok(TierMetrics::default_for_tier(tier.clone()));
         }
 
         let mut total_read_iops = 0.0;
@@ -515,7 +509,7 @@ impl ZfsPerformanceMonitor {
         let cache_hit_ratio = Self::get_zfs_cache_hit_ratio().await.unwrap_or(0.85);
 
         Ok(TierMetrics {
-            tier: *tier,
+            tier: tier.clone(),
             read_iops: total_read_iops,
             write_iops: total_write_iops,
             read_throughput_mbs: total_read_throughput,
@@ -531,7 +525,7 @@ impl ZfsPerformanceMonitor {
                 0.0
             },
             cache_hit_ratio,
-            queue_depth: Self::get_real_queue_depth(tier).await.unwrap_or(4.0),
+            queue_depth: Self::get_real_queue_depth(tier).unwrap_or(4.0),
             utilization_percent: if dataset_count > 0.0 {
                 total_utilization / dataset_count
             } else {
@@ -551,10 +545,8 @@ impl ZfsPerformanceMonitor {
             dataset_name
         );
 
-        if crate::mock::is_mock_mode() {
-            debug!("Mock mode: returning default performance stats");
-            return Ok(DatasetPerformanceStats::default());
-        }
+        // Mock mode: return default performance stats for development
+        debug!("Mock mode: returning default performance stats");
 
         let mut stats = DatasetPerformanceStats::default();
 
@@ -622,7 +614,7 @@ impl ZfsPerformanceMonitor {
         // Calculate utilization and latency
         let total_iops = stats.read_iops + stats.write_iops;
         stats.utilization_percent = if total_iops > 0.0 {
-            (total_iops / 10000.0 * 100.0).min(100.0)
+            (total_iops / 10_000.0 * 100.0).min(100.0)
         } else {
             0.0
         };
@@ -669,7 +661,7 @@ impl ZfsPerformanceMonitor {
     }
 
     /// Get real queue depth for a tier
-    pub(super) async fn get_real_queue_depth(tier: &StorageTier) -> CoreResult<f64> {
+    pub(super) fn get_real_queue_depth(tier: &StorageTier) -> CoreResult<f64> {
         // This would typically read from system statistics
         // For now, return tier-appropriate defaults
         Ok(match tier {

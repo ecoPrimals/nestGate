@@ -2,10 +2,9 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
-
 use super::types::{HttpResponseFormat, MiddlewareType};
 
-// ==================== REQUEST PROCESSING ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct RequestProcessingSettings {
@@ -18,8 +17,7 @@ pub struct RequestProcessingSettings {
     /// Request routing
     pub routing: RequestRoutingSettings,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RequestParsingSettings {
     /// Maximum request size
     pub max_size: usize,
@@ -36,8 +34,7 @@ pub struct RequestParsingSettings {
     /// Parse JSON
     pub parse_json: bool,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+    #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct RequestValidationSettings {
     /// Enable request validation
     pub enabled: bool,
@@ -48,8 +45,7 @@ pub struct RequestValidationSettings {
     /// Custom validators
     pub custom_validators: HashMap<String, ValidatorConfig>,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ValidationRule {
     /// Field path
     pub field: String,
@@ -60,18 +56,17 @@ pub struct ValidationRule {
     /// Required field
     pub required: bool,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ValidationType {
     String {
         min_length: Option<usize>,
         max_length: Option<usize>,
         pattern: Option<String>,
-    },
+    }
     Number {
         min: Option<f64>,
         max: Option<f64>,
-    },
+    }
     Email,
     Url,
     Custom(String),
@@ -84,16 +79,14 @@ pub struct ValidatorConfig {
     /// Validator parameters
     pub parameters: HashMap<String, serde_json::Value>,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+    #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct RequestTransformationSettings {
     /// Enable request transformation
     pub enabled: bool,
     /// Transformation rules
     pub rules: Vec<TransformationRule>,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TransformationRule {
     /// Rule name
     pub name: String,
@@ -104,15 +97,13 @@ pub struct TransformationRule {
     /// Transformation type
     pub transformation: TransformationType,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum TransformationType {
     Map(HashMap<String, String>),
     Format(String),
     Custom(String),
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+    #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct RequestRoutingSettings {
     /// Enable custom routing
     pub enabled: bool,
@@ -121,8 +112,7 @@ pub struct RequestRoutingSettings {
     /// Default route
     pub default_route: Option<String>,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RoutingRule {
     /// Path pattern
     pub pattern: String,
@@ -134,7 +124,7 @@ pub struct RoutingRule {
     pub middleware: Option<Vec<MiddlewareType>>,
 }
 
-// ==================== RESPONSE HANDLING ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ResponseHandlingSettings {
@@ -147,8 +137,7 @@ pub struct ResponseHandlingSettings {
     /// Response headers
     pub headers: ResponseHeadersSettings,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResponseFormattingSettings {
     /// Default response format
     pub default_format: ResponseFormat,
@@ -159,8 +148,7 @@ pub struct ResponseFormattingSettings {
     /// Include metadata
     pub include_metadata: bool,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ResponseFormat {
     Json,
     Xml,
@@ -168,8 +156,7 @@ pub enum ResponseFormat {
     Text,
     Custom(String),
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ErrorHandlingSettings {
     /// Include stack traces
     pub include_stack_trace: bool,
@@ -182,24 +169,21 @@ pub struct ErrorHandlingSettings {
     /// Error templates
     pub templates: HashMap<u16, String>,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ErrorHandlerConfig {
     /// Handler implementation
     pub handler: String,
     /// Handler configuration
     pub config: HashMap<String, serde_json::Value>,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+    #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ResponseTransformationSettings {
     /// Enable response transformation
     pub enabled: bool,
     /// Transformation rules
     pub rules: Vec<ResponseTransformationRule>,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResponseTransformationRule {
     /// Rule name
     pub name: String,
@@ -210,16 +194,14 @@ pub struct ResponseTransformationRule {
     /// Transformation
     pub transformation: ResponseTransformationType,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ResponseTransformationType {
     Filter(Vec<String>),
     Map(HashMap<String, String>),
     Template(String),
     Custom(String),
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResponseHeadersSettings {
     /// Default headers
     pub default_headers: HashMap<String, String>,
@@ -228,8 +210,7 @@ pub struct ResponseHeadersSettings {
     /// Remove headers
     pub remove_headers: Vec<String>,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HeaderRule {
     /// Header name
     pub name: String,
@@ -238,16 +219,14 @@ pub struct HeaderRule {
     /// Condition
     pub condition: Option<HeaderCondition>,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HeaderCondition {
     /// Condition type
     pub condition_type: HeaderConditionType,
     /// Condition value
     pub value: String,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum HeaderConditionType {
     Path,
     Method,
@@ -256,7 +235,7 @@ pub enum HeaderConditionType {
     Custom(String),
 }
 
-// ==================== CHAIN MANAGEMENT ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ChainManagementSettings {
@@ -269,8 +248,7 @@ pub struct ChainManagementSettings {
     /// Parallel execution
     pub parallel_execution: ParallelExecutionSettings,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ChainOptimizationSettings {
     /// Enable optimization
     pub enabled: bool,
@@ -281,8 +259,7 @@ pub struct ChainOptimizationSettings {
     /// Lazy initialization
     pub lazy_init: bool,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ErrorPropagationSettings {
     /// Stop on first error
     pub stop_on_error: bool,
@@ -291,8 +268,7 @@ pub struct ErrorPropagationSettings {
     /// Rollback on error
     pub rollback_on_error: bool,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+    #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ParallelExecutionSettings {
     /// Enable parallel execution
     pub enabled: bool,
@@ -301,8 +277,7 @@ pub struct ParallelExecutionSettings {
     /// Synchronization points
     pub sync_points: Vec<MiddlewareType>,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ParallelGroup {
     /// Group name
     pub name: String,
@@ -312,11 +287,10 @@ pub struct ParallelGroup {
     pub max_concurrency: usize,
 }
 
-// ==================== DEFAULT IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 impl Default for RequestParsingSettings {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             max_size: 1024 * 1024 * 10, // 10MB
             timeout: Duration::from_secs(30),
             supported_content_types: vec![
@@ -329,36 +303,30 @@ impl Default for RequestParsingSettings {
             parse_query: true,
             parse_form: true,
             parse_json: true,
-        }
-    }
+         }
 }
 
 impl Default for ResponseFormattingSettings {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             default_format: ResponseFormat::Json,
             content_negotiation: true,
             pretty_json: false,
             include_metadata: false,
-        }
-    }
+         }
 }
 
 impl Default for ErrorHandlingSettings {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             include_stack_trace: false,
             format: HttpResponseFormat::Json,
             custom_handlers: HashMap::new(),
             log_errors: true,
             templates: HashMap::new(),
-        }
-    }
+         }
 }
 
 impl Default for ResponseHeadersSettings {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             default_headers: {
                 let mut headers = HashMap::new();
                 headers.insert("Content-Type".to_string(), "application/json".to_string());
@@ -367,16 +335,13 @@ impl Default for ResponseHeadersSettings {
                     "NestGateMiddleware/2.0".to_string(),
                 );
                 headers
-            },
-            header_rules: Vec::new(),
-            remove_headers: Vec::new(),
-        }
+            , header_rules: Vec::new(),
+            remove_headers: Vec::new() }
     }
 }
 
 impl Default for ChainManagementSettings {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             execution_order: vec![
                 MiddlewareType::Security,
                 MiddlewareType::Auth,
@@ -388,27 +353,22 @@ impl Default for ChainManagementSettings {
             optimization: ChainOptimizationSettings::default(),
             error_propagation: ErrorPropagationSettings::default(),
             parallel_execution: ParallelExecutionSettings::default(),
-        }
-    }
+         }
 }
 
 impl Default for ChainOptimizationSettings {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             enabled: true,
             skip_disabled: true,
             cache_decisions: true,
             lazy_init: true,
-        }
-    }
+         }
 }
 
 impl Default for ErrorPropagationSettings {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             stop_on_error: true,
             aggregate_errors: false,
             rollback_on_error: false,
-        }
-    }
+         }
 }

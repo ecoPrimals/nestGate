@@ -8,19 +8,63 @@ use serde::{Deserialize, Serialize};
 pub struct IntegrityManager;
 
 impl IntegrityManager {
-    pub async fn new(_config: IntegrityConfig) -> Result<Self> {
+    /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        #[must_use]
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub fn new(_config: IntegrityConfig) -> Result<Self>   {
         Ok(Self)
     }
 
-    pub async fn compute_checksum(&self, _data: &[u8]) -> Result<String> {
+    /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        #[must_use]
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub fn compute_checksum(&self, _data: &[u8]) -> Result<String>   {
         Ok("placeholder_checksum".to_string())
     }
 
-    pub async fn verify_checksum(&self, _data: &[u8], _checksum: String) -> Result<()> {
+    /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        #[must_use]
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub fn verify_checksum(&self, _data: &[u8], _checksum: String) -> Result<()>   {
         Ok(())
     }
 
-    pub async fn get_stats(&self) -> Result<IntegrityStats> {
+    /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        #[must_use]
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub fn get_stats(&self) -> Result<IntegrityStats>   {
         Ok(IntegrityStats::default())
     }
 }

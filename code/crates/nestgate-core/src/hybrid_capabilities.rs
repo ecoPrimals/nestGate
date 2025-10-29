@@ -1,4 +1,4 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 //
 // **Architecture**: Local Smart + Universal Adapter + Failsafe Defaults
@@ -10,13 +10,11 @@ use std::collections::HashMap;
 // - **Failsafe**: Always-working defaults for standalone operation
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
 
-use crate::error::NestGateError;
-use crate::universal_adapter::UniversalAdapter;
+use crate::universal_adapter::PrimalAgnosticAdapter;
 
 /// Capability execution modes
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -28,7 +26,6 @@ pub enum CapabilityMode {
     /// Basic functionality that always works
     Failsafe,
 }
-
 /// Fallback strategy when external capabilities fail
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum FallbackStrategy {
@@ -39,7 +36,6 @@ pub enum FallbackStrategy {
     /// No fallback - fail if external unavailable
     None,
 }
-
 /// Configuration for a specific capability
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CapabilityConfig {
@@ -48,7 +44,6 @@ pub struct CapabilityConfig {
     pub timeout_ms: Option<u64>,
     pub retry_attempts: Option<u32>,
 }
-
 /// Hybrid capability resolver that maintains primal sovereignty
 pub struct HybridCapabilityResolver {
     /// Local storage-specific smart capabilities (NestGate's domain)
@@ -60,7 +55,6 @@ pub struct HybridCapabilityResolver {
     /// Configuration for each capability
     capability_configs: Arc<RwLock<HashMap<String, CapabilityConfig>>>,
 }
-
 impl HybridCapabilityResolver {
     pub fn new(
         universal_adapter: Arc<UniversalAdapter>,
@@ -78,10 +72,17 @@ impl HybridCapabilityResolver {
     /// 1. Try configured mode (local smart or external heavy)
     /// 2. Fall back according to strategy
     /// 3. Always have failsafe as final option
-    pub async fn resolve_storage_tier_recommendation(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn resolve_storage_tier_recommendation(
         &self,
         file_metrics: &FileMetrics,
-    ) -> Result<TierRecommendation, NestGateError> {
+    ) -> Result<TierRecommendation, NestGateError>  {
         let capability_name = "storage.tier_recommendation";
         let config = self.get_capability_config(capability_name).await?;
 
@@ -129,7 +130,7 @@ impl HybridCapabilityResolver {
         let request = CapabilityRequest {
             capability_type: capability_type.to_string(),
             data: serde_json::to_value(file_metrics)
-                .map_err(|e| NestGateError::SerializationError(e.to_string()))?,
+                .map_err(|e| NestGateError::SerializationError(e"))?,
             timeout_ms: Some(5000), // 5 second timeout for external calls
         };
 
@@ -138,7 +139,7 @@ impl HybridCapabilityResolver {
             .await
             .and_then(|response| {
                 serde_json::from_value(response.data)
-                    .map_err(|e| NestGateError::DeserializationError(e.to_string()))
+                    .map_err(|e| NestGateError::DeserializationError(e"))
             })
     }
 
@@ -186,7 +187,6 @@ impl HybridCapabilityResolver {
 pub struct LocalStorageCapabilities {
     // Storage-specific intelligence that doesn't require external compute
 }
-
 impl Default for LocalStorageCapabilities {
     fn default() -> Self {
         Self::new()
@@ -200,10 +200,17 @@ impl LocalStorageCapabilities {
 
     /// Smart tier recommendation based on storage heuristics
     /// Fast, local analysis without external dependencies
-    pub async fn recommend_tier(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn recommend_tier(
         &self,
         file: &FileMetrics,
-    ) -> Result<TierRecommendation, NestGateError> {
+    ) -> Result<TierRecommendation, NestGateError>  {
         // Use sophisticated pattern analysis
         let pattern = self.analyze_storage_patterns(file);
         let recommended_tier = pattern.recommended_tier();
@@ -255,7 +262,6 @@ pub struct FailsafeDefaults {
     default_tier: StorageTier,
     default_compression: CompressionType,
 }
-
 impl Default for FailsafeDefaults {
     fn default() -> Self {
         Self::new()
@@ -438,8 +444,8 @@ mod tests {
 
         let recommendation = local_caps.recommend_tier(&hot_file).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    std::io::Error::new(std::io::ErrorKind::Other, format!("Operation failed: {:?}", e))
-})?;
+    std::io::Error::new(std::io::ErrorKind::Other, format!("Operation failed: {e:?}"))
+)?;
         assert_eq!(recommendation.tier, StorageTier::Hot);
         assert!(recommendation.confidence > 0.8);
     }

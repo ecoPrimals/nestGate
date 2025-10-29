@@ -1,6 +1,7 @@
 //
 // Snapshot operations with circuit breaker and retry logic.
 
+use crate::handlers::zfs::universal_zfs::traits::UniversalZfsService;
 use crate::handlers::zfs::universal_zfs::types::{
     SnapshotConfig, SnapshotInfo, UniversalZfsError, UniversalZfsResult,
 };

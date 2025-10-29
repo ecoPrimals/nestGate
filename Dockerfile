@@ -1,102 +1,73 @@
-# ==============================================================================
-# NestGate Production Dockerfile
-# Multi-stage build for optimal security and performance
-# ==============================================================================
-
-# Build Stage - Using official Rust image
+# Multi-stage build for optimal container size and security
 FROM rust:1.75-slim as builder
 
-LABEL maintainer="NestGate Team"
-LABEL description="NestGate Storage System - Production Build"
-
-# Install build dependencies
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     pkg-config \
     libssl-dev \
-    libzfslinux-dev \
-    build-essential \
-    curl \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Set working directory
-WORKDIR /usr/src/nestgate
+# Create app user
+RUN useradd -m -u 1001 nestgate
 
-# Copy dependency files first for better caching
+# Set working directory
+WORKDIR /app
+
+# Copy dependency files
 COPY Cargo.toml Cargo.lock ./
-COPY code/crates/nestgate-core/Cargo.toml ./code/crates/nestgate-core/
-COPY code/crates/nestgate-api/Cargo.toml ./code/crates/nestgate-api/
-COPY code/crates/nestgate-bin/Cargo.toml ./code/crates/nestgate-bin/
-COPY code/crates/nestgate-zfs/Cargo.toml ./code/crates/nestgate-zfs/
-COPY code/crates/nestgate-automation/Cargo.toml ./code/crates/nestgate-automation/
-COPY code/crates/nestgate-network/Cargo.toml ./code/crates/nestgate-network/
-COPY code/crates/nestgate-mcp/Cargo.toml ./code/crates/nestgate-mcp/
+COPY code/crates ./code/crates
 
 # Build dependencies (cached layer)
-RUN cargo fetch
+RUN cargo build --release --workspace
 
 # Copy source code
-COPY code/ ./code/
-COPY benches/ ./benches/
-COPY tests/ ./tests/
+COPY . .
 
-# Build for production with optimizations
-ENV RUSTFLAGS="-C target-cpu=native -C opt-level=3"
-RUN cargo build --release --bin nestgate
+# Build application
+RUN cargo build --release --workspace
 
-# Runtime Stage - Minimal Debian image
-FROM debian:bookworm-slim
-
-LABEL maintainer="NestGate Team"
-LABEL description="NestGate Storage System - Production Runtime"
-LABEL version="2.0.0"
+# Runtime stage
+FROM debian:bookworm-slim as runtime
 
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y \
     ca-certificates \
     libssl3 \
-    zfsutils-linux \
-    curl \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean
+    && rm -rf /var/lib/apt/lists/*
 
-# Create non-root user for security
-RUN groupadd -r nestgate && useradd -r -g nestgate nestgate
+# Create app user
+RUN useradd -m -u 1001 nestgate
 
-# Create necessary directories
-RUN mkdir -p /opt/nestgate/{bin,config,data,logs} \
-    && chown -R nestgate:nestgate /opt/nestgate
+# Create directories
+RUN mkdir -p /app/data /app/logs /app/config \
+    && chown -R nestgate:nestgate /app
 
-# Copy binary from builder stage
-COPY --from=builder /usr/src/nestgate/target/release/nestgate /opt/nestgate/bin/
+# Copy binary from builder
+COPY --from=builder /app/target/release/nestgate-api /usr/local/bin/nestgate-api
+COPY --from=builder /app/target/release/nestgate-installer /usr/local/bin/nestgate-installer
 
-# Copy production configuration template
-COPY --chown=nestgate:nestgate docker/production.toml /opt/nestgate/config/default.toml
+# Copy configuration
+COPY --chown=nestgate:nestgate config/ /app/config/
 
-# Set working directory and user
-WORKDIR /opt/nestgate
+# Switch to non-root user
 USER nestgate
 
-# Environment variables for production
-ENV NESTGATE_ENVIRONMENT=production
-ENV NESTGATE_CONFIG_DIR=/opt/nestgate/config
-ENV NESTGATE_DATA_DIR=/opt/nestgate/data
-ENV NESTGATE_LOG_DIR=/opt/nestgate/logs
-ENV NESTGATE_LOG_LEVEL=info
-ENV NESTGATE_API_PORT=8000
-ENV NESTGATE_WEBSOCKET_PORT=8080
-ENV RUST_LOG=nestgate=info
-ENV RUST_BACKTRACE=1
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:${NESTGATE_API_PORT}/health || exit 1
+# Set working directory
+WORKDIR /app
 
 # Expose ports
-EXPOSE 8000 8080 9090
+EXPOSE 8080 8081 8082
 
-# Volume mounts for persistence
-VOLUME ["/opt/nestgate/data", "/opt/nestgate/logs", "/opt/nestgate/config"]
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
 
-# Entrypoint
-ENTRYPOINT ["/opt/nestgate/bin/nestgate"]
-CMD ["--config", "/opt/nestgate/config/default.toml"] 
+# Environment variables
+ENV RUST_LOG=info
+ENV NESTGATE_CONFIG_PATH=/app/config
+ENV NESTGATE_DATA_PATH=/app/data
+ENV NESTGATE_LOG_PATH=/app/logs
+
+# Default command
+CMD ["nestgate-api"] 

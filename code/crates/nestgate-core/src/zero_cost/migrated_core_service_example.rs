@@ -1,4 +1,4 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 use crate::zero_cost::universal_service::ZeroCostUniversalService;
 /// **MIGRATED CORE SERVICE EXAMPLE**
@@ -8,31 +8,26 @@ use crate::zero_cost::universal_service::ZeroCostUniversalService;
 /// and a template for migrating other services.
 ///
 /// **PERFORMANCE TARGET**: 30-50% improvement over async_trait version
-use crate::{NestGateError, Result};
+use crate::{Result};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 use tokio::sync::RwLock;
 use uuid::Uuid;
-
-// ==================== ZERO-COST CONFIGURATION SERVICE ====================
+// ==================== SECTION ====================
 
 /// **Configuration for the zero-cost configuration service**
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZeroCostConfigServiceConfig {
     pub service_name: String,
-    pub config_store_path: String,
     pub refresh_interval_secs: u64,
     pub max_cache_size: usize,
     pub enable_hot_reload: bool,
 }
-
 impl Default for ZeroCostConfigServiceConfig {
     fn default() -> Self {
         Self {
             service_name: "zero-cost-config-service".to_string(),
-            config_store_path: "/etc/nestgate/config".to_string(),
             refresh_interval_secs: 30,
             max_cache_size: 1000,
             enable_hot_reload: true,
@@ -50,7 +45,6 @@ pub struct ZeroCostConfigServiceHealth {
     pub hot_reload_enabled: bool,
     pub uptime_seconds: u64,
 }
-
 /// **Metadata for the zero-cost configuration service**
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZeroCostConfigServiceMetadata {
@@ -59,7 +53,6 @@ pub struct ZeroCostConfigServiceMetadata {
     pub capabilities: Vec<String>,
     pub performance_profile: String,
 }
-
 impl Default for ZeroCostConfigServiceMetadata {
     fn default() -> Self {
         Self {
@@ -76,7 +69,7 @@ impl Default for ZeroCostConfigServiceMetadata {
     }
 }
 
-// ==================== ZERO-COST CONFIGURATION SERVICE IMPLEMENTATION ====================
+// ==================== SECTION ====================
 
 /// **Zero-cost configuration service implementation**
 ///
@@ -92,7 +85,6 @@ pub struct ZeroCostConfigService<const MAX_CACHE_SIZE: usize = 1000> {
     start_time: Option<SystemTime>,
     last_refresh: Option<SystemTime>,
 }
-
 impl<const MAX_CACHE_SIZE: usize> Default for ZeroCostConfigService<MAX_CACHE_SIZE> {
     fn default() -> Self {
         Self::new()
@@ -101,6 +93,7 @@ impl<const MAX_CACHE_SIZE: usize> Default for ZeroCostConfigService<MAX_CACHE_SI
 
 impl<const MAX_CACHE_SIZE: usize> ZeroCostConfigService<MAX_CACHE_SIZE> {
     /// Create new zero-cost configuration service
+    #[must_use]
     pub fn new() -> Self {
         Self {
             service_id: Uuid::new_v4(),
@@ -112,13 +105,27 @@ impl<const MAX_CACHE_SIZE: usize> ZeroCostConfigService<MAX_CACHE_SIZE> {
     }
 
     /// Get configuration value with zero-cost caching
-    pub async fn get_config_value(&self, key: &str) -> Result<Option<serde_json::Value>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_configvalue(&self, key: &str) -> Result<Option<serde_json::Value>>  {
         let cache = self.config_cache.read().await;
         Ok(cache.get(key).cloned())
     }
 
     /// Set configuration value with zero-cost validation
-    pub async fn set_config_value(&self, key: String, value: serde_json::Value) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn set_configvalue(&self, key: String, value: serde_json::Value) -> Result<()>  {
         // Validate cache size at compile time
         let mut cache = self.config_cache.write().await;
         if cache.len() >= MAX_CACHE_SIZE {
@@ -158,7 +165,7 @@ impl<const MAX_CACHE_SIZE: usize> ZeroCostConfigService<MAX_CACHE_SIZE> {
     }
 }
 
-// ==================== ZERO-COST UNIVERSAL SERVICE IMPLEMENTATION ====================
+// ==================== SECTION ====================
 
 impl<const MAX_CACHE_SIZE: usize> ZeroCostUniversalService
     for ZeroCostConfigService<MAX_CACHE_SIZE>
@@ -235,7 +242,7 @@ impl<const MAX_CACHE_SIZE: usize> ZeroCostUniversalService
     fn service_name(&self) -> &str {
         self.config
             .as_ref()
-            .map(|c| c.service_name.as_str())
+            .map(|c| c.name.as_str())
             .unwrap_or("zero-cost-config-service")
     }
 
@@ -293,25 +300,21 @@ impl<const MAX_CACHE_SIZE: usize> ZeroCostUniversalService
     }
 }
 
-// ==================== SPECIALIZED IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 /// **Production configuration service** (high cache size)
 pub type ProductionConfigService = ZeroCostConfigService<10000>;
-
 /// **Development configuration service** (smaller cache)
 pub type DevelopmentConfigService = ZeroCostConfigService<100>;
-
 /// **Testing configuration service** (minimal cache)
 pub type TestingConfigService = ZeroCostConfigService<10>;
-
-// ==================== COMPATIBILITY WRAPPER ====================
+// ==================== SECTION ====================
 
 /// **Async_trait compatibility wrapper**
 ///
 /// Allows the zero-cost service to be used in existing async_trait-based code
 pub type CompatibleConfigService<const SIZE: usize> =
     ZeroCostServiceAdapter<ZeroCostConfigService<SIZE>>;
-
 impl<const SIZE: usize> CompatibleConfigService<SIZE> {
     /// Create new compatible configuration service
     pub fn new_config_service() -> Self {
@@ -319,12 +322,26 @@ impl<const SIZE: usize> CompatibleConfigService<SIZE> {
     }
 
     /// Get configuration value through compatibility layer
-    pub async fn get_config(&self, key: &str) -> Result<Option<serde_json::Value>> {
-        self.inner().get_config_value(key).await
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_config(&self, key: &str) -> Result<Option<serde_json::Value>>  {
+        self.inner().get_configvalue(key).await
     }
 
     /// Set configuration value through compatibility layer
-    pub async fn set_config(&self, _key: String, _value: serde_json::Value) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+                pub fn set_config(&self, _key: String, value: serde_json::Value) -> Result<()>  {
         // Note: This requires mutable access, which isn't available through the adapter
         // This demonstrates a limitation of the compatibility layer
         Err(NestGateError::validation_error(
@@ -335,14 +352,13 @@ impl<const SIZE: usize> CompatibleConfigService<SIZE> {
     }
 }
 
-// ==================== PERFORMANCE BENCHMARKING ====================
+// ==================== SECTION ====================
 
 /// **Performance comparison utilities for this specific service**
 pub mod config_service_benchmarks {
     use super::*;
     use crate::zero_cost::compatibility_bridge::performance_comparison::MigrationBenchmark;
     use std::time::Instant;
-
     /// Benchmark zero-cost vs async_trait configuration service performance
     pub async fn benchmark_config_service_performance(operations: usize) -> MigrationBenchmark {
         // Benchmark zero-cost version
@@ -367,8 +383,8 @@ pub mod config_service_benchmarks {
 
         for i in 0..operations {
             let key = format!("test_key_{i}");
-            let value = serde_json::Value::String(format!("test_value_{i}"));
-            let _ = zero_cost_service.set_config_value(key, value).await;
+            let value = serde_json::Value::String(format!("testvalue_{i}"));
+            let _ = zero_cost_service.set_configvalue(key, value).await;
         }
 
         let _ = zero_cost_service.health_check().await;
@@ -417,16 +433,21 @@ pub mod config_service_benchmarks {
     }
 }
 
-// ==================== MIGRATION EXAMPLE ====================
+// ==================== SECTION ====================
 
 /// **Complete migration example**
 ///
 /// Shows how to migrate from async_trait to zero-cost patterns
 pub mod migration_example {
-    use super::*;
-
     /// Example of migrating a service collection
-    pub async fn demonstrate_migration() -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn demonstrate_migration() -> Result<()>  {
         println!("🔄 Demonstrating zero-cost service migration...");
 
         // Step 1: Create zero-cost service
@@ -438,9 +459,9 @@ pub mod migration_example {
 
         // Step 3: Use service with native async methods (no boxing!)
         zero_cost_service
-            .set_config_value(
+            .set_configvalue(
                 "demo_key".to_string(),
-                serde_json::Value::String("demo_value".to_string()),
+                serde_json::Value::String("demovalue".to_string()),
             )
             .await?;
 
@@ -464,7 +485,6 @@ pub mod migration_example {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[tokio::test]
     async fn test_zero_cost_config_service() {
@@ -474,41 +494,38 @@ mod tests {
         // Test service lifecycle
         service.start(config).await.map_err(|e| {
             tracing::error!("Failed to start service: {:?}", e);
-            NestGateError::Internal {
-                message: format!("Service startup failed: {:?}", e),
+            NestGateError::internal_error(
                 location: Some("migrated_core_service_example.rs:476".to_string()),
-                debug_info: Some("start operation".to_string()),
-                is_bug: false,
-            }
-        })?;
+                location: Some("start operation".to_string())}
+        )?;
 
         // Test configuration operations
         service
-            .set_config_value(
+            .set_configvalue(
                 "test_key".to_string(),
-                serde_json::Value::String("test_value".to_string()),
+                serde_json::Value::String("testvalue".to_string()),
             )
             .await
             .unwrap_or_else(|e| {
                 tracing::error!("Unwrap failed: {:?}", e);
                 return Err(std::io::Error::new(
                     std::io::ErrorKind::Other,
-                    format!("Operation failed: {:?}", e),
+                    format!("Operation failed: {e:?}"),
                 )
                 .into());
-            });
+            );
 
         let value = service
-            .get_config_value("test_key")
+            .get_configvalue("test_key")
             .await
             .unwrap_or_else(|e| {
                 tracing::error!("Unwrap failed: {:?}", e);
                 return Err(std::io::Error::new(
                     std::io::ErrorKind::Other,
-                    format!("Operation failed: {:?}", e),
+                    format!("Operation failed: {e:?}"),
                 )
                 .into());
-            });
+            );
         assert!(value.is_some());
 
         // Test health check
@@ -518,13 +535,10 @@ mod tests {
 
         service.stop().await.map_err(|e| {
             tracing::error!("Failed to stop service: {:?}", e);
-            NestGateError::Internal {
-                message: format!("Service shutdown failed: {:?}", e),
+            NestGateError::internal_error(
                 location: Some("migrated_core_service_example.rs:520".to_string()),
-                debug_info: Some("stop operation".to_string()),
-                is_bug: false,
-            }
-        })?;
+                location: Some("stop operation".to_string())}
+        )?;
     }
 
     #[tokio::test]
@@ -534,19 +548,16 @@ mod tests {
 
         service.start(config).await.map_err(|e| {
             tracing::error!("Failed to start service: {:?}", e);
-            NestGateError::Internal {
-                message: format!("Service startup failed: {:?}", e),
+            NestGateError::internal_error(
                 location: Some("migrated_core_service_example.rs:536".to_string()),
-                debug_info: Some("start operation".to_string()),
-                is_bug: false,
-            }
-        })?;
+                location: Some("start operation".to_string())}
+        )?;
 
         // Should fail due to cache size limit (3 default configs + 1 new = 4 > 2)
         let result = service
-            .set_config_value(
+            .set_configvalue(
                 "test_key".to_string(),
-                serde_json::Value::String("test_value".to_string()),
+                serde_json::Value::String("testvalue".to_string()),
             )
             .await;
 

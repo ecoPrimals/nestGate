@@ -1,8 +1,8 @@
 //
 // ZFS replication analysis and optimization recommendations
 
-use crate::error::CanonicalResult as Result;
 use crate::types::ReplicationPerformance;
+use nestgate_core::error::CanonicalResult as Result;
 use serde::{Deserialize, Serialize};
 use tracing::debug;
 
@@ -16,10 +16,16 @@ pub struct ReplicationAnalytics {
     /// Basic recommendations
     pub recommendations: Vec<String>,
 }
-
 impl ReplicationAnalytics {
     /// Analyze replication performance
-    pub async fn analyze_replication(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+    pub fn analyze_replication(
         source: &str,
         targets: &[String],
         performance_data: &ReplicationPerformance,
@@ -33,14 +39,13 @@ impl ReplicationAnalytics {
             recommendations.push("Consider async replication for better performance".to_string());
         }
 
-        if performance_data.error_rate > 0.1 {
+        if performance_data.transfer_rate < 1.0 {
             recommendations.push("Investigate network connectivity issues".to_string());
         }
 
-        if performance_data.latency > 100.0 {
-            recommendations.push("Consider local replication targets".to_string());
+        if performance_data.compression_ratio < 1.2 {
+            recommendations.push("Consider enabling compression for better efficiency".to_string());
         }
-
         Ok(Self {
             strategy: "sync".to_string(),
             performance: performance_data.clone(),

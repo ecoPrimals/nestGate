@@ -12,7 +12,7 @@
 // - **backend**: Enterprise filesystem backend implementation
 // - **advanced_features**: ML-driven optimization and predictive analytics
 
-pub mod advanced_features;
+pub mod features;
 pub mod analytics;
 pub mod backend;
 pub mod replication;

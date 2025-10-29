@@ -1,14 +1,13 @@
-//! Comprehensive tests for the filesystem storage backend
+// Comprehensive tests for the filesystem storage backend
 
 use super::*;
 use std::fs;
-use std::path::Path;
 use tempfile::TempDir;
 use tokio::runtime::Runtime;
 
 /// Test filesystem backend initialization and configuration
 #[test]
-fn test_filesystem_backend_initialization() {
+async fn test_filesystem_backend_initialization() -> Result<(), Box<dyn std::error::Error>> {
     let temp_dir = TempDir::new().unwrap();
     let mut config = std::collections::HashMap::new();
     config.insert(
@@ -18,16 +17,16 @@ fn test_filesystem_backend_initialization() {
     config.insert("atomic_writes".to_string(), "true".to_string());
     config.insert("track_metadata".to_string(), "true".to_string());
     config.insert("max_file_size".to_string(), (1024 * 1024).to_string()); // 1MB
-
     let backend = FilesystemBackend::new(&config);
     assert!(backend.is_ok());
 
     println!("✅ Filesystem backend initialization tested");
+    Ok(())
 }
 
 /// Test file operations error paths
 #[tokio::test]
-async fn test_file_operation_errors() {
+async fn test_file_operation_errors() -> Result<(), Box<dyn std::error::Error>> {
     let temp_dir = TempDir::new().unwrap();
     let mut config = std::collections::HashMap::new();
     config.insert(
@@ -35,7 +34,6 @@ async fn test_file_operation_errors() {
         temp_dir.path().to_string_lossy().to_string(),
     );
     config.insert("max_file_size".to_string(), "1024".to_string());
-
     let backend = FilesystemBackend::new(&config).unwrap();
 
     // Test file not found
@@ -48,18 +46,18 @@ async fn test_file_operation_errors() {
     assert!(result.is_err());
 
     println!("✅ File operation error paths tested");
+    Ok(())
 }
 
 /// Test path traversal security
 #[tokio::test]
-async fn test_path_traversal_security() {
+async fn test_path_traversal_security() -> Result<(), Box<dyn std::error::Error>> {
     let temp_dir = TempDir::new().unwrap();
     let mut config = std::collections::HashMap::new();
     config.insert(
         "root_dir".to_string(),
         temp_dir.path().to_string_lossy().to_string(),
     );
-
     let backend = FilesystemBackend::new(&config).unwrap();
 
     // Test various path traversal attempts
@@ -78,21 +76,22 @@ async fn test_path_traversal_security() {
             "Should reject path traversal: {}",
             malicious_path
         );
+    Ok(())
     }
 
     println!("✅ Path traversal security tested");
+    Ok(())
 }
 
 /// Test concurrent operations
 #[tokio::test]
-async fn test_concurrent_operations() {
+async fn test_concurrent_operations() -> Result<(), Box<dyn std::error::Error>> {
     let temp_dir = TempDir::new().unwrap();
     let mut config = std::collections::HashMap::new();
     config.insert(
         "root_dir".to_string(),
         temp_dir.path().to_string_lossy().to_string(),
     );
-
     let backend = std::sync::Arc::new(FilesystemBackend::new(&config).unwrap());
 
     // Test concurrent reads and writes
@@ -101,8 +100,8 @@ async fn test_concurrent_operations() {
     for i in 0..10 {
         let backend_clone = backend.clone();
         let handle = tokio::spawn(async move {
-            let filename = format!("concurrent_{}.txt", i);
-            let content = format!("Content for file {}", i);
+            let filename = format!("concurrent_{e}.txt");
+            let content = format!("Content for file {e}");
 
             // Write file
             backend_clone
@@ -113,21 +112,24 @@ async fn test_concurrent_operations() {
             // Read file back
             let read_content = backend_clone.read_file(&filename).await.unwrap();
             assert_eq!(read_content, content.as_bytes());
-        });
+        );
         handles.push(handle);
+    Ok(())
     }
 
     // Wait for all operations to complete
     for handle in handles {
         handle.await.unwrap();
+    Ok(())
     }
 
     println!("✅ Concurrent operations tested");
+    Ok(())
 }
 
 /// Test atomic write operations
 #[tokio::test]
-async fn test_atomic_operations() {
+async fn test_atomic_operations() -> Result<(), Box<dyn std::error::Error>> {
     let temp_dir = TempDir::new().unwrap();
     let mut config = std::collections::HashMap::new();
     config.insert(
@@ -135,7 +137,6 @@ async fn test_atomic_operations() {
         temp_dir.path().to_string_lossy().to_string(),
     );
     config.insert("atomic_writes".to_string(), "true".to_string());
-
     let backend = FilesystemBackend::new(&config).unwrap();
 
     // Test atomic write operations
@@ -150,18 +151,18 @@ async fn test_atomic_operations() {
     assert_eq!(read_content, content);
 
     println!("✅ Atomic operations tested");
+    Ok(())
 }
 
 /// Test directory operations
 #[tokio::test]
-async fn test_directory_operations() {
+async fn test_directory_operations() -> Result<(), Box<dyn std::error::Error>> {
     let temp_dir = TempDir::new().unwrap();
     let mut config = std::collections::HashMap::new();
     config.insert(
         "root_dir".to_string(),
         temp_dir.path().to_string_lossy().to_string(),
     );
-
     let backend = FilesystemBackend::new(&config).unwrap();
 
     // Test directory creation
@@ -178,25 +179,25 @@ async fn test_directory_operations() {
 
     // Test directory listing
     let files = backend.list_directory("test_dir").await.unwrap();
-    assert!(files.contains(&"file.txt".to_string()));
+    assert!(files.contains(&"file.txt"));
 
     // Test directory deletion
     backend.delete_directory("test_dir").await.unwrap();
     assert!(!backend.file_exists("test_dir").await.unwrap());
 
     println!("✅ Directory operations tested");
+    Ok(())
 }
 
 /// Test metadata operations
 #[tokio::test]
-async fn test_metadata_operations() {
+async fn test_metadata_operations() -> Result<(), Box<dyn std::error::Error>> {
     let temp_dir = TempDir::new().unwrap();
     let mut config = std::collections::HashMap::new();
     config.insert(
         "root_dir".to_string(),
         temp_dir.path().to_string_lossy().to_string(),
     );
-
     let backend = FilesystemBackend::new(&config).unwrap();
 
     // Create test file
@@ -211,25 +212,25 @@ async fn test_metadata_operations() {
     assert_eq!(metadata.size, content.len() as u64);
     assert!(metadata.created.is_some());
     assert!(metadata.modified.is_some());
-    assert_eq!(metadata.mime_type, Some("text/plain".to_string()));
+    assert_eq!(metadata.mime_type, Some("text/plain"));
 
     println!("✅ Metadata operations tested");
+    Ok(())
 }
 
 /// Test edge cases and boundary conditions
 #[tokio::test]
-async fn test_edge_cases() {
+async fn test_edge_cases() -> Result<(), Box<dyn std::error::Error>> {
     let temp_dir = TempDir::new().unwrap();
     let mut config = std::collections::HashMap::new();
     config.insert(
         "root_dir".to_string(),
         temp_dir.path().to_string_lossy().to_string(),
     );
-
     let backend = FilesystemBackend::new(&config).unwrap();
 
     // Test empty file
-    backend.write_file("empty.txt", b"").await.unwrap();
+    backend.write_file("empty.txt", b").await.unwrap();
     let content = backend.read_file("empty.txt").await.unwrap();
     assert_eq!(content.len(), 0);
 
@@ -254,18 +255,18 @@ async fn test_edge_cases() {
     assert_eq!(content, b"updated");
 
     println!("✅ Edge cases tested");
+    Ok(())
 }
 
 /// Test error recovery scenarios
 #[tokio::test]
-async fn test_error_recovery() {
+async fn test_error_recovery() -> Result<(), Box<dyn std::error::Error>> {
     let temp_dir = TempDir::new().unwrap();
     let mut config = std::collections::HashMap::new();
     config.insert(
         "root_dir".to_string(),
         temp_dir.path().to_string_lossy().to_string(),
     );
-
     let backend = FilesystemBackend::new(&config).unwrap();
 
     // Test recovery from non-existent directory
@@ -277,13 +278,13 @@ async fn test_error_recovery() {
     assert!(result.is_err());
 
     println!("✅ Error recovery scenarios tested");
+    Ok(())
 }
 
 /// Test configuration variations
 #[test]
-fn test_configuration_variations() {
+fn test_configuration_variations() -> Result<(), Box<dyn std::error::Error>> {
     let temp_dir = TempDir::new().unwrap();
-
     // Test minimal configuration
     let mut minimal_config = std::collections::HashMap::new();
     minimal_config.insert(
@@ -308,4 +309,5 @@ fn test_configuration_variations() {
     assert!(backend.is_ok());
 
     println!("✅ Configuration variations tested");
+    Ok(())
 }

@@ -5,7 +5,6 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use uuid::Uuid;
-
 /// Unified event structure for system-wide event handling
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnifiedEvent {
@@ -26,7 +25,6 @@ pub struct UnifiedEvent {
     /// Event correlation ID for tracking related events
     pub correlation_id: Option<String>,
 }
-
 /// Event priority levels
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum EventPriority {
@@ -39,7 +37,6 @@ pub enum EventPriority {
     /// Critical event requiring immediate attention
     Critical,
 }
-
 /// Event subscription configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EventSubscription {
@@ -58,7 +55,6 @@ pub struct EventSubscription {
     /// Whether subscription is active
     pub is_active: bool,
 }
-
 /// Event handler configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EventHandler {
@@ -75,7 +71,6 @@ pub struct EventHandler {
     /// Whether handler is enabled
     pub enabled: bool,
 }
-
 impl Default for UnifiedEvent {
     fn default() -> Self {
         Self {
@@ -129,24 +124,28 @@ impl UnifiedEvent {
     }
 
     /// Create event with data
+    #[must_use]
     pub fn with_data(mut self, data: serde_json::Value) -> Self {
         self.data = data;
         self
     }
 
     /// Set event priority
+    #[must_use]
     pub fn with_priority(mut self, priority: EventPriority) -> Self {
         self.priority = priority;
         self
     }
 
     /// Add metadata
+    #[must_use]
     pub fn with_metadata(mut self, key: &str, value: &str) -> Self {
         self.metadata.insert(key.to_string(), value.to_string());
         self
     }
 
     /// Set correlation ID for event tracing
+    #[must_use]
     pub fn with_correlation_id(mut self, correlation_id: &str) -> Self {
         self.correlation_id = Some(correlation_id.to_string());
         self
@@ -174,17 +173,17 @@ impl UnifiedEvent {
         }
 
         // Check filters
-        for (filter_key, filter_value) in &subscription.filters {
+        for (filter_key, filtervalue) in &subscription.filters {
             match filter_key.as_str() {
                 "source" => {
-                    if let Some(expected_source) = filter_value.as_str() {
+                    if let Some(expected_source) = filtervalue.as_str() {
                         if self.source != expected_source {
                             return false;
                         }
                     }
                 }
                 "priority" => {
-                    if let Some(expected_priority) = filter_value.as_str() {
+                    if let Some(expected_priority) = filtervalue.as_str() {
                         let priority_str = match self.priority {
                             EventPriority::Low => "low",
                             EventPriority::Normal => "normal",
@@ -198,9 +197,9 @@ impl UnifiedEvent {
                 }
                 _ => {
                     // Check metadata filters
-                    if let Some(metadata_value) = self.metadata.get(filter_key) {
-                        if let Some(expected_value) = filter_value.as_str() {
-                            if metadata_value != expected_value {
+                    if let Some(metadatavalue) = self.metadata.get(filter_key) {
+                        if let Some(expectedvalue) = filtervalue.as_str() {
+                            if metadatavalue != expectedvalue {
                                 return false;
                             }
                         }

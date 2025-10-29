@@ -4,8 +4,7 @@
 /// Consolidates: PerformanceMetricsConfig, StressTestConfig, LoadTestConfig, BenchmarkConfig
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
-
-// ==================== PERFORMANCE TESTING CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// **Unified performance testing configuration**
 /// Consolidates: PerformanceMetricsConfig, StressTestConfig, LoadTestConfig, BenchmarkConfig
@@ -20,7 +19,6 @@ pub struct TestPerformanceConfig {
     /// Performance metrics collection
     pub metrics: PerformanceMetricsConfig,
 }
-
 /// **Load testing configuration**
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LoadTestingConfig {
@@ -35,7 +33,6 @@ pub struct LoadTestingConfig {
     /// Load testing scenarios
     pub scenarios: Vec<LoadTestScenario>,
 }
-
 impl Default for LoadTestingConfig {
     fn default() -> Self {
         Self {
@@ -64,7 +61,6 @@ pub struct LoadTestScenario {
     /// Weight in load distribution
     pub weight: f64,
 }
-
 impl Default for LoadTestScenario {
     fn default() -> Self {
         Self {
@@ -90,7 +86,6 @@ pub struct StressTestingConfig {
     /// Resource limits
     pub resource_limits: ResourceLimits,
 }
-
 impl Default for StressTestingConfig {
     fn default() -> Self {
         Self {
@@ -114,7 +109,6 @@ pub struct ResourceLimits {
     /// Maximum network bandwidth in Mbps
     pub max_network_mbps: f64,
 }
-
 impl Default for ResourceLimits {
     fn default() -> Self {
         Self {
@@ -140,7 +134,6 @@ pub struct BenchmarkingConfig {
     /// Benchmark suites
     pub suites: Vec<String>,
 }
-
 impl Default for BenchmarkingConfig {
     fn default() -> Self {
         Self {
@@ -167,7 +160,6 @@ pub struct PerformanceMetricsConfig {
     /// Performance thresholds
     pub thresholds: PerformanceThresholds,
 }
-
 impl Default for PerformanceMetricsConfig {
     fn default() -> Self {
         Self {
@@ -200,7 +192,6 @@ pub struct PerformanceThresholds {
     /// Maximum error rate percentage
     pub max_error_rate: f64,
 }
-
 impl Default for PerformanceThresholds {
     fn default() -> Self {
         Self {

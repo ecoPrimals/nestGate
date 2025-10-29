@@ -13,12 +13,15 @@ use tracing::debug;
 pub struct SystemMetricsCollector;
 
 impl SystemMetricsCollector {
-    pub fn new() -> Self {
-        Self
-    }
-
-    /// Collect comprehensive system resource metrics
-    pub async fn collect_system_resources(&self) -> Result<SystemResourceMetrics> {
+    #[must_use]
+    pub fn new() -> Self { Self
+    , /// Collect comprehensive system resource metrics
+    /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub async fn collect_system_resources(&self) -> Result<SystemResourceMetrics>  {
         debug!("🖥️ Collecting comprehensive system resource metrics");
         
         // Collect all system metrics in parallel
@@ -43,8 +46,7 @@ impl SystemMetricsCollector {
             network_interfaces,
             load_average,
             arc_stats,
-            l2arc_stats,
-        })
+            l2arc_stats })
     }
 
     /// Get real CPU usage from /proc/stat
@@ -316,11 +318,9 @@ impl SystemMetricsCollector {
 }
 
 impl Default for ArcStats {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             hit_ratio: 85.0,
             size_bytes: 2 * 1024 * 1024 * 1024,     // 2GB
             max_size_bytes: 4 * 1024 * 1024 * 1024, // 4GB
-        }
-    }
+         }
 } 

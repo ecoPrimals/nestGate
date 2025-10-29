@@ -1,4 +1,4 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 /// **CLONE OPTIMIZATION MODULE**
 ///
 /// This module provides patterns and utilities to minimize unnecessary cloning
@@ -11,12 +11,10 @@ use crate::NestGateError;
 use std::borrow::Cow;
 use std::rc::Rc;
 use std::sync::Arc;
-
 /// **SMART REFERENCE PATTERNS**
 ///
 /// Utilities for choosing optimal reference types based on usage patterns
 pub struct SmartRef;
-
 impl SmartRef {
     /// Choose between owned and borrowed based on lifetime requirements
     pub fn choose_ref<'a, T: Clone>(data: &'a T, needs_ownership: bool) -> Cow<'a, T> {
@@ -38,7 +36,14 @@ impl SmartRef {
     }
 
     /// Extract from Arc without cloning if possible
-    pub fn try_unwrap_arc<T>(arc: Arc<T>) -> Result<T, Arc<T>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn try_unwrap_arc<T>(arc: Arc<T>) -> Result<T, Arc<T>>  {
         Arc::try_unwrap(arc)
     }
 }
@@ -50,7 +55,6 @@ impl SmartRef {
 pub struct SharedConfiguration<T> {
     data: Arc<T>,
 }
-
 impl<T> Clone for SharedConfiguration<T> {
     fn clone(&self) -> Self {
         Self {
@@ -78,13 +82,15 @@ impl<T> SharedConfiguration<T> {
     }
 
     /// Get mutable reference if unique, otherwise clone
-    pub fn get_mut(&mut self) -> Result<&mut T, NestGateError> {
-        Arc::get_mut(&mut self.data).ok_or_else(|| NestGateError::Internal {
-            message: "Cannot get mutable reference to shared configuration".to_string(),
-            location: Some("clone_optimization.rs:83".to_string()),
-            debug_info: Some("SharedConfiguration::get_mut".to_string()),
-            is_bug: false,
-        })
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+                pub fn get_mut(&mut self) -> Result<&mut T, NestGateError>  {
+        Arc::get_mut(&mut self.data).ok_or_else(|| NestGateError::internal_error(
     }
 }
 
@@ -92,7 +98,6 @@ impl<T> SharedConfiguration<T> {
 ///
 /// Utilities for efficient string handling without unnecessary cloning
 pub struct StringOptimizer;
-
 impl StringOptimizer {
     /// Create Cow string that borrows when possible
     pub fn efficient_string<'a>(s: &'a str, needs_modification: bool) -> Cow<'a, str> {
@@ -133,7 +138,6 @@ impl StringOptimizer {
 ///
 /// Utilities for efficient collection operations
 pub struct CollectionOptimizer;
-
 impl CollectionOptimizer {
     /// Share vector data using Arc
     pub fn share_vec<T>(vec: Vec<T>) -> Arc<Vec<T>> {
@@ -164,13 +168,19 @@ impl CollectionOptimizer {
 ///
 /// Patterns for returning results without unnecessary cloning
 pub struct ZeroCopyResults;
-
 impl ZeroCopyResults {
     /// Return reference when possible, owned when necessary
-    pub fn result_ref_or_owned<'a, T: Clone>(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn result_ref_or_owned<'a, T: Clone>(
         data: &'a T,
         condition: bool,
-    ) -> Result<Cow<'a, T>, NestGateError> {
+    ) -> Result<Cow<'a, T>, NestGateError>  {
         if condition {
             Ok(Cow::Borrowed(data))
         } else {
@@ -179,12 +189,26 @@ impl ZeroCopyResults {
     }
 
     /// Share result across multiple consumers
-    pub fn shared_result<T>(result: Result<T, NestGateError>) -> Result<Arc<T>, NestGateError> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn shared_result<T>(result: Result<T, NestGateError>) -> Result<Arc<T>, NestGateError>  {
         result.map(Arc::new)
     }
 
     /// Convert owned result to borrowed when safe
-    pub fn borrow_result<T>(result: &Result<T, NestGateError>) -> Result<&T, &NestGateError> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn borrow_result<T>(result: &Result<T, NestGateError>) -> Result<&T, &NestGateError>  {
         result.as_ref()
     }
 }
@@ -197,7 +221,6 @@ pub struct CloneMetrics {
     pub memory_saved_bytes: u64,
     pub performance_improvement_percent: f64,
 }
-
 impl Default for CloneMetrics {
     fn default() -> Self {
         Self::new()
@@ -230,7 +253,6 @@ impl CloneMetrics {
 ///
 /// Utilities to help migrate existing code to zero-copy patterns
 pub struct MigrationHelper;
-
 impl MigrationHelper {
     /// Replace .clone() with efficient alternative
     pub fn replace_clone<'a, T: Clone>(
@@ -254,21 +276,19 @@ pub enum CloneUsage {
     /// Needs modification - must clone
     Modification,
 }
-
 /// Optimized reference types
 pub enum OptimizedReference<'a, T> {
     Borrowed(&'a T),
     Shared(Arc<T>),
     Owned(T),
 }
-
 impl<'a, T> OptimizedReference<'a, T> {
     /// Get reference regardless of storage type
     pub fn get_ref(&self) -> &T {
         match self {
-            OptimizedReference::Borrowed(r) => r,
-            OptimizedReference::Shared(arc) => arc,
-            OptimizedReference::Owned(owned) => owned,
+            Self::Borrowed(r) => r,
+            Self::Shared(arc) => arc,
+            Self::Owned(owned) => owned,
         }
     }
 }
@@ -324,10 +344,10 @@ mod tests {
 
     // Helper functions for testing
     fn process_string_reference(s: &str) -> String {
-        format!("processed: {}", s)
+        format!("processed: {s}")
     }
 
     fn process_owned_string(s: String) -> String {
-        format!("processed: {}", s)
+        format!("processed: {s}")
     }
 }

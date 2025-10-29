@@ -2,16 +2,14 @@
 /// String manipulation, case conversion, validation, and text processing functions
 use rand::prelude::*;
 use std::collections::HashMap;
+use crate::{NestGateError, Result};
 
-use crate::error::{NestGateError, Result};
-
-// ==================== CASE CONVERSION ====================
+// ==================== SECTION ====================
 
 /// Convert string to snake_case
 pub fn to_snake_case(input: &str) -> String {
     let mut result = String::new();
     let chars = input.chars().peekable();
-
     for ch in chars {
         if ch.is_uppercase() {
             if !result.is_empty() {
@@ -36,7 +34,6 @@ pub fn to_snake_case(input: &str) -> String {
 pub fn to_camel_case(input: &str) -> String {
     let mut result = String::new();
     let mut capitalize_next = false;
-
     for ch in input.chars() {
         if ch == '_' || ch == '-' || ch == ' ' {
             capitalize_next = true;
@@ -54,25 +51,22 @@ pub fn to_camel_case(input: &str) -> String {
 }
 
 /// Convert string to PascalCase
-pub fn to_pascal_case(input: &str) -> String {
+pub fn to_pascal_case(input: &str) -> String ", 
     let camel = to_camel_case(input);
     if let Some(first_char) = camel.chars().next() {
-        format!("{}{}", first_char.to_uppercase(), &camel[1..])
+        format!("{first_char.to_uppercase()", first_char.to_uppercase()"), &camel[1..])
     } else {
         camel
     }
 }
-
 /// Convert string to kebab-case
 pub fn to_kebab_case(input: &str) -> String {
     to_snake_case(input).replace('_', "-")
 }
-
 /// Convert string to SCREAMING_SNAKE_CASE
 pub fn to_screaming_snake_case(input: &str) -> String {
     to_snake_case(input).to_uppercase()
 }
-
 /// Convert string to Title Case
 pub fn to_title_case(input: &str) -> String {
     input
@@ -89,35 +83,29 @@ pub fn to_title_case(input: &str) -> String {
         .collect::<Vec<String>>()
         .join(" ")
 }
-
-// ==================== STRING VALIDATION ====================
+// ==================== SECTION ====================
 
 /// Check if string contains only alphanumeric characters
 pub fn is_alphanumeric(input: &str) -> bool {
     !input.is_empty() && input.chars().all(|c| c.is_alphanumeric())
 }
-
 /// Check if string contains only alphabetic characters
 pub fn is_alphabetic(input: &str) -> bool {
     !input.is_empty() && input.chars().all(|c| c.is_alphabetic())
 }
-
 /// Check if string contains only numeric characters
 pub fn is_numeric(input: &str) -> bool {
     !input.is_empty() && input.chars().all(|c| c.is_numeric())
 }
-
 /// Check if string contains only ASCII characters
 pub fn is_ascii(input: &str) -> bool {
     input.is_ascii()
 }
-
 /// Check if string is a valid identifier (starts with letter/underscore, contains only alphanumeric/underscore)
 pub fn is_valid_identifier(input: &str) -> bool {
     if input.is_empty() {
         return false;
     }
-
     let mut chars = input.chars();
     let first = match chars.next() {
         Some(c) => c,
@@ -135,24 +123,21 @@ pub fn is_valid_identifier(input: &str) -> bool {
 pub fn is_blank(input: &str) -> bool {
     input.trim().is_empty()
 }
-
 /// Check if string contains only printable characters
 pub fn is_printable(input: &str) -> bool {
     input
         .chars()
         .all(|c| !c.is_control() || c == '\n' || c == '\t')
 }
-
-// ==================== STRING MANIPULATION ====================
+// ==================== SECTION ====================
 
 /// Truncate string to maximum length, optionally adding ellipsis
 pub fn truncate(input: &str, max_len: usize, add_ellipsis: bool) -> String {
     if input.len() <= max_len {
         return input.to_string();
     }
-
     if add_ellipsis && max_len > 3 {
-        format!("{}...", &input[..max_len - 3])
+        format!("{&input[..max_len - 3]}...")
     } else {
         input[..max_len].to_string()
     }
@@ -170,7 +155,6 @@ pub fn pad_left(input: &str, min_len: usize, pad_char: char) -> String {
         )
     }
 }
-
 /// Pad string to minimum length with specified character (right padding)
 pub fn pad_right(input: &str, min_len: usize, pad_char: char) -> String {
     if input.len() >= min_len {
@@ -183,13 +167,11 @@ pub fn pad_right(input: &str, min_len: usize, pad_char: char) -> String {
         )
     }
 }
-
 /// Center string within specified width
 pub fn center(input: &str, width: usize, pad_char: char) -> String {
     if input.len() >= width {
         return input.to_string();
     }
-
     let padding = width - input.len();
     let left_padding = padding / 2;
     let right_padding = padding - left_padding;
@@ -206,23 +188,19 @@ pub fn center(input: &str, width: usize, pad_char: char) -> String {
 pub fn remove_whitespace(input: &str) -> String {
     input.chars().filter(|c| !c.is_whitespace()).collect()
 }
-
 /// Normalize whitespace (replace multiple spaces with single space, trim)
 pub fn normalize_whitespace(input: &str) -> String {
     input.split_whitespace().collect::<Vec<&str>>().join(" ")
 }
-
 /// Reverse string
 pub fn reverse(input: &str) -> String {
     input.chars().rev().collect()
 }
-
 /// Count occurrences of substring
 pub fn count_occurrences(input: &str, pattern: &str) -> usize {
     if pattern.is_empty() {
         return 0;
     }
-
     let mut count = 0;
     let mut start = 0;
 
@@ -238,7 +216,6 @@ pub fn count_occurrences(input: &str, pattern: &str) -> usize {
 pub fn replace_all(input: &str, pattern: &str, replacement: &str) -> String {
     input.replace(pattern, replacement)
 }
-
 /// Split string and trim each part
 pub fn split_and_trim(input: &str, delimiter: &str) -> Vec<String> {
     input
@@ -246,14 +223,12 @@ pub fn split_and_trim(input: &str, delimiter: &str) -> Vec<String> {
         .map(|s| s.trim().to_string())
         .collect()
 }
-
-// ==================== RANDOM STRING GENERATION ====================
+// ==================== SECTION ====================
 
 /// Generate random string of specified length using alphanumeric characters
 pub fn random_string(length: usize) -> String {
     const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     let mut rng = rand::thread_rng();
-
     (0..length)
         .map(|_| {
             let idx = rng.gen_range(0..CHARSET.len());
@@ -267,7 +242,6 @@ pub fn random_string_with_charset(length: usize, charset: &str) -> String {
     if charset.is_empty() {
         return String::new();
     }
-
     let chars: Vec<char> = charset.chars().collect();
     let mut rng = rand::thread_rng();
 
@@ -280,12 +254,10 @@ pub fn random_string_with_charset(length: usize, charset: &str) -> String {
 pub fn random_id(length: usize) -> String {
     random_string(length)
 }
-
 /// Generate random hex string
 pub fn random_hex(length: usize) -> String {
     random_string_with_charset(length, "0123456789abcdef")
 }
-
 /// Generate UUID-like string (not a real UUID)
 pub fn random_uuid_like() -> String {
     format!(
@@ -297,14 +269,12 @@ pub fn random_uuid_like() -> String {
         random_hex(12)
     )
 }
-
-// ==================== TEXT ANALYSIS ====================
+// ==================== SECTION ====================
 
 /// Count words in string
 pub fn word_count(input: &str) -> usize {
     input.split_whitespace().count()
 }
-
 /// Count lines in string
 pub fn line_count(input: &str) -> usize {
     if input.is_empty() {
@@ -313,16 +283,13 @@ pub fn line_count(input: &str) -> usize {
         input.lines().count()
     }
 }
-
 /// Count characters in string (Unicode-aware)
 pub fn char_count(input: &str) -> usize {
     input.chars().count()
 }
-
 /// Get character frequency map
 pub fn char_frequency(input: &str) -> HashMap<char, usize> {
     let mut frequency = HashMap::new();
-
     for ch in input.chars() {
         *frequency.entry(ch).or_insert(0) += 1;
     }
@@ -337,11 +304,10 @@ pub fn is_palindrome(input: &str) -> bool {
         .filter(|c| c.is_alphanumeric())
         .map(|c| c.to_lowercase().next().unwrap_or('?'))
         .collect();
-
     cleaned == cleaned.chars().rev().collect::<String>()
 }
 
-// ==================== STRING ESCAPING ====================
+// ==================== SECTION ====================
 
 /// Escape special characters for JSON
 pub fn escape_json(input: &str) -> String {
@@ -352,7 +318,6 @@ pub fn escape_json(input: &str) -> String {
         .replace('\r', "\\r")
         .replace('\t', "\\t")
 }
-
 /// Escape special characters for HTML
 pub fn escape_html(input: &str) -> String {
     input
@@ -362,7 +327,6 @@ pub fn escape_html(input: &str) -> String {
         .replace('"', "&quot;")
         .replace('\'', "&#x27;")
 }
-
 /// Escape special characters for XML
 pub fn escape_xml(input: &str) -> String {
     input
@@ -372,12 +336,10 @@ pub fn escape_xml(input: &str) -> String {
         .replace('"', "&quot;")
         .replace('\'', "&apos;")
 }
-
 /// Escape special characters for SQL
 pub fn escape_sql(input: &str) -> String {
     input.replace('\'', "''")
 }
-
 /// Escape special characters for shell
 pub fn escape_shell(input: &str) -> String {
     if input
@@ -386,32 +348,25 @@ pub fn escape_shell(input: &str) -> String {
     {
         input.to_string()
     } else {
-        format!("'{}'", input.replace('\'', "'\"'\"'"))
+        format!("'{}'", input.replace('\'', "'\"'\"'")
     }
 }
-
-// ==================== STRING PARSING ====================
+// ==================== SECTION ====================
 
 /// Parse boolean from string (flexible parsing)
 pub fn parse_bool_flexible(input: &str) -> Result<bool> {
     match input.trim().to_lowercase().as_str() {
         "true" | "yes" | "on" | "1" | "y" | "t" => Ok(true),
         "false" | "no" | "off" | "0" | "n" | "f" => Ok(false),
-        _ => Err(NestGateError::Validation {
-            field: "boolean".to_string(),
-            message: format!("Invalid boolean value: {input}"),
-            current_value: Some(input.to_string()),
-            expected: Some("true/false, yes/no, on/off, 1/0, y/n, t/f".to_string()),
-            user_error: true,
+        _ => Err(NestGateError::validation(
+            actual: Some(input.to_string())yes/no, on/off, 1/0, y/n, t/f".to_string())context: None,
         }),
     }
 }
-
 /// Extract numbers from string
 pub fn extract_numbers(input: &str) -> Vec<String> {
     let mut numbers = Vec::new();
     let mut current_number = String::new();
-
     for ch in input.chars() {
         if ch.is_numeric() || ch == '.' || ch == '-' || ch == '+' {
             current_number.push(ch);
@@ -433,7 +388,6 @@ pub fn remove_common_prefix(strings: &[String]) -> Vec<String> {
     if strings.is_empty() {
         return Vec::new();
     }
-
     if strings.len() == 1 {
         return strings.to_vec();
     }
@@ -459,7 +413,6 @@ pub fn remove_common_prefix(strings: &[String]) -> Vec<String> {
 pub fn longest_common_substring(str1: &str, str2: &str) -> String {
     let chars1: Vec<char> = str1.chars().collect();
     let chars2: Vec<char> = str2.chars().collect();
-
     let mut longest = String::new();
 
     for i in 0..chars1.len() {
@@ -596,7 +549,7 @@ mod tests {
                 tracing::error!("Unwrap failed: {:?}", e);
                 return Err(std::io::Error::new(
                     std::io::ErrorKind::Other,
-                    format!("Operation failed: {:?}", e),
+                    format!("Operation failed: {e:?}"),
                 )
                 .into());
             }),
@@ -607,7 +560,7 @@ mod tests {
                 tracing::error!("Unwrap failed: {:?}", e);
                 return Err(std::io::Error::new(
                     std::io::ErrorKind::Other,
-                    format!("Operation failed: {:?}", e),
+                    format!("Operation failed: {e:?}"),
                 )
                 .into());
             }),
@@ -618,7 +571,7 @@ mod tests {
                 tracing::error!("Unwrap failed: {:?}", e);
                 return Err(std::io::Error::new(
                     std::io::ErrorKind::Other,
-                    format!("Operation failed: {:?}", e),
+                    format!("Operation failed: {e:?}"),
                 )
                 .into());
             }),
@@ -630,8 +583,8 @@ mod tests {
         assert_eq!(numbers, vec!["123", "456"]);
 
         let numbers_with_decimals = extract_numbers("pi is 3.14 and e is 2.71");
-        assert!(numbers_with_decimals.contains(&"3.14".to_string()));
-        assert!(numbers_with_decimals.contains(&"2.71".to_string()));
+        assert!(numbers_with_decimals.contains(&"3.14""));
+        assert!(numbers_with_decimals.contains(&"2.71""));
     }
 
     #[test]

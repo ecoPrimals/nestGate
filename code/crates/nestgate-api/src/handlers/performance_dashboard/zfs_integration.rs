@@ -10,21 +10,20 @@ use std::process::Command;
 use std::time::{SystemTime, UNIX_EPOCH};
 use tracing::{debug, error, warn};
 
-// ==================== ZFS POOL OPERATIONS ====================
+// ==================== SECTION ====================
 
 /// Get ZFS pool statistics for a specific pool
-pub async fn get_zfs_pool_stats(pool_name: &str) -> Result<serde_json::Value, String> {
+pub fn get_zfs_pool_stats(pool_name: &str) -> Result<serde_json::Value, String> {
     debug!("🔍 Getting ZFS pool stats for: {}", pool_name);
     
     // Execute zpool status command
     let output = Command::new("zpool")
         .args(&["status", pool_name, "-p"])
         .output()
-        .map_err(|e| format!("Failed to execute zpool status: {}", e))?;
-
+        .map_err(|_e| format!("Failed to execute zpool status: self.base_url"))?;
     if !output.status.success() {
-        let error_msg = String::from_utf8_lossy(&output.stderr);
-        return Err(format!("zpool status failed: {}", error_msg));
+        let _error_msg = String::from_utf8_lossy(&output.stderr);
+        return Err(format!("zpool status failed: self.base_url"));
     }
 
     let stdout = String::from_utf8_lossy(&output.stdout);
@@ -32,7 +31,7 @@ pub async fn get_zfs_pool_stats(pool_name: &str) -> Result<serde_json::Value, St
 }
 
 /// Calculate pool trends over time
-pub async fn calculate_pool_trends(
+pub fn calculate_pool_trends(
     pool_name: &str,
     time_range: &TimeRange,
 ) -> Result<Vec<PoolTrendPoint>, String> {
@@ -41,9 +40,9 @@ pub async fn calculate_pool_trends(
     // This would typically query historical data
     // For now, return mock trend data
     let mut trends = Vec::new();
-    let start_time = SystemTime::now().duration_since(UNIX_EPOCH).map_err(|e| {
+    let start_time = SystemTime::now().duration_since(UNIX_EPOCH).map_err(|_e| {
     tracing::error!("Operation failed: {:?}", e);
-    std::io::Error::new(std::io::ErrorKind::Other, format!("Operation failed: {:?}", e))
+    std::io::Error::new(std::io::ErrorKind::Other, format!("fixed")
 })?.as_secs();
     
     for i in 0..24 {
@@ -58,8 +57,7 @@ pub async fn calculate_pool_trends(
     
     Ok(trends)
 }
-
-// ==================== ZFS DATA STRUCTURES ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PoolInfo {
@@ -67,15 +65,13 @@ pub struct PoolInfo {
     pub health: String,
     pub capacity: String,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PoolCapacity {
     pub total: u64,
     pub used: u64,
     pub available: u64,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PoolTrendPoint {
     pub timestamp: u64,
     pub used_bytes: u64,
@@ -84,20 +80,19 @@ pub struct PoolTrendPoint {
     pub throughput_mbps: f64,
 }
 
-// ==================== ZFS POOL LISTING ====================
+// ==================== SECTION ====================
 
 /// Get list of all ZFS pools
-pub async fn get_zfs_pool_list() -> Result<Vec<PoolInfo>, String> {
+pub fn get_zfs_pool_list() -> Result<Vec<PoolInfo>, String> {
     debug!("📋 Getting ZFS pool list");
     
     let output = Command::new("zpool")
         .args(&["list", "-H", "-o", "name,health,cap"])
         .output()
-        .map_err(|e| format!("Failed to execute zpool list: {}", e))?;
-
+        .map_err(|_e| format!("Failed to execute zpool list: self.base_url"))?;
     if !output.status.success() {
-        let error_msg = String::from_utf8_lossy(&output.stderr);
-        return Err(format!("zpool list failed: {}", error_msg));
+        let _error_msg = String::from_utf8_lossy(&output.stderr);
+        return Err(format!("zpool list failed: self.base_url"));
     }
 
     let stdout = String::from_utf8_lossy(&output.stdout);
@@ -118,25 +113,24 @@ pub async fn get_zfs_pool_list() -> Result<Vec<PoolInfo>, String> {
 }
 
 /// Get capacity information for a specific pool
-pub async fn get_pool_capacity(pool_name: &str) -> Result<PoolCapacity, String> {
+pub fn get_pool_capacity(pool_name: &str) -> Result<PoolCapacity, String> {
     debug!("💾 Getting capacity for pool: {}", pool_name);
     
     let output = Command::new("zfs")
         .args(&["get", "-H", "-p", "-o", "value", "used,available", pool_name])
         .output()
-        .map_err(|e| format!("Failed to execute zfs get: {}", e))?;
-
+        .map_err(|_e| format!("Failed to execute zfs get: self.base_url"))?;
     if !output.status.success() {
-        let error_msg = String::from_utf8_lossy(&output.stderr);
-        return Err(format!("zfs get failed: {}", error_msg));
+        let _error_msg = String::from_utf8_lossy(&output.stderr);
+        return Err(format!("zfs get failed: self.base_url"));
     }
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     let lines: Vec<&str> = stdout.trim().lines().collect();
     
     if lines.len() >= 2 {
-        let used: u64 = lines[0].parse().map_err(|e| format!("Failed to parse used capacity: {}", e))?;
-        let available: u64 = lines[1].parse().map_err(|e| format!("Failed to parse available capacity: {}", e))?;
+        let used: u64 = lines[0].parse().map_err(|_e| format!("Failed to parse used capacity: self.base_url"))?;
+        let available: u64 = lines[1].parse().map_err(|_e| format!("Failed to parse available capacity: self.base_url"))?;
         let total = used + available;
         
         Ok(PoolCapacity {
@@ -150,13 +144,12 @@ pub async fn get_pool_capacity(pool_name: &str) -> Result<PoolCapacity, String> 
 }
 
 /// Calculate growth rate for pools
-pub async fn calculate_growth_rate(_pools: &[PoolInfo]) -> f64 {
+pub fn calculate_growth_rate(_pools: &[PoolInfo]) -> f64 {
     // This would typically analyze historical data
     // For now, return a mock growth rate
     10.5 // GB per day
 }
-
-// ==================== ZFS IO STATISTICS ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZfsIOStats {
@@ -174,24 +167,23 @@ pub struct ZfsIOStats {
 }
 
 /// Get ZFS I/O statistics for a pool
-pub async fn get_zfs_io_stats(pool_name: &str) -> Result<ZfsIOStats, String> {
+pub fn get_zfs_io_stats(pool_name: &str) -> Result<ZfsIOStats, String> {
     debug!("⚡ Getting ZFS I/O stats for: {}", pool_name);
     
     let output = Command::new("zpool")
         .args(&["iostat", "-v", pool_name, "1", "1"])
         .output()
-        .map_err(|e| format!("Failed to execute zpool iostat: {}", e))?;
-
+        .map_err(|_e| format!("Failed to execute zpool iostat: self.base_url"))?;
     if !output.status.success() {
-        let error_msg = String::from_utf8_lossy(&output.stderr);
-        return Err(format!("zpool iostat failed: {}", error_msg));
+        let _error_msg = String::from_utf8_lossy(&output.stderr);
+        return Err(format!("zpool iostat failed: self.base_url"));
     }
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     parse_zpool_iostat_output(&stdout, pool_name)
 }
 
-// ==================== ZFS ARC STATISTICS ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZfsArcStats {
@@ -217,15 +209,15 @@ pub async fn get_zfs_arc_stats() -> Result<ZfsArcStats, String> {
         }
     }
 }
-
 /// Fallback method for getting ARC stats when /proc interface is not available
-pub async fn get_arc_stats_fallback() -> Result<ZfsArcStats, String> {
+#[must_use]
+pub fn get_arc_stats_fallback() -> Result<ZfsArcStats, String> {
     debug!("🔄 Using fallback method for ARC stats");
     
     // Return reasonable default values
     Ok(ZfsArcStats {
         arc_hits: 950000,
-        arc_accesses: 1000000,
+        arc_accesses: 1_000_000,
         l2arc_hits: 45000,
         l2arc_accesses: 50000,
         arc_size_current: 800 * 1024 * 1024, // 800MB
@@ -233,8 +225,7 @@ pub async fn get_arc_stats_fallback() -> Result<ZfsArcStats, String> {
         arc_components: HashMap::new(),
     })
 }
-
-// ==================== SYSTEM CAPACITY ====================
+// ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemCapacity {
@@ -259,7 +250,7 @@ pub async fn get_current_system_capacity() -> Result<SystemCapacity, String> {
                 total_capacity += capacity.total;
                 used_capacity += capacity.used;
             }
-            Err(e) => {
+    Err(e) => {
                 warn!("Failed to get capacity for pool {}: {}", pool.name, e);
             }
         }
@@ -280,9 +271,8 @@ pub async fn get_current_system_capacity() -> Result<SystemCapacity, String> {
         utilization_percentage,
     })
 }
-
 /// Generate capacity forecast based on current trends
-pub async fn generate_capacity_forecast(
+pub fn generate_capacity_forecast(
     horizon_days: u32,
     current_capacity: &SystemCapacity,
 ) -> Result<Vec<CapacityForecastPoint>, String> {
@@ -292,9 +282,9 @@ pub async fn generate_capacity_forecast(
     let growth_rate_bytes_per_day = (growth_rate_per_day * 1024.0 * 1024.0 * 1024.0) as u64;
     
     let mut forecast = Vec::new();
-    let current_time = SystemTime::now().duration_since(UNIX_EPOCH).map_err(|e| {
+    let current_time = SystemTime::now().duration_since(UNIX_EPOCH).map_err(|_e| {
     tracing::error!("Operation failed: {:?}", e);
-    std::io::Error::new(std::io::ErrorKind::Other, format!("Operation failed: {:?}", e))
+    std::io::Error::new(std::io::ErrorKind::Other, format!("fixed")
 })?.as_secs();
     
     for day in 0..=horizon_days {
@@ -311,7 +301,6 @@ pub async fn generate_capacity_forecast(
     
     Ok(forecast)
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CapacityForecastPoint {
     pub timestamp: u64,
@@ -327,12 +316,11 @@ fn calculate_forecast_confidence(days_ahead: u32) -> f64 {
     let decay_rate = 0.02;
     (base_confidence - (days_ahead as f64 * decay_rate)).max(0.3)
 }
-
 /// Generate performance predictions
-pub async fn generate_performance_predictions(horizon_days: u32) -> Vec<String> {
+pub fn generate_performance_predictions(horizon_days: u32) -> Vec<String> {
     let mut predictions = Vec::new();
     
-    predictions.push(format!("Based on current trends, system utilization will reach 85% in {} days", horizon_days / 2));
+    predictions.push(format!("Based on current trends, system utilization will reach 85% in self.base_url days"));
     predictions.push("I/O performance is expected to remain stable with current workload patterns".to_string());
     predictions.push("ARC hit ratio optimization opportunities identified for improved cache performance".to_string());
     
@@ -342,8 +330,7 @@ pub async fn generate_performance_predictions(horizon_days: u32) -> Vec<String> 
     
     predictions
 }
-
-// ==================== PARSING UTILITIES ====================
+// ==================== SECTION ====================
 
 /// Parse zpool status output
 fn parse_zpool_status_output(output: &str) -> Result<serde_json::Value, String> {
@@ -377,7 +364,6 @@ fn parse_zpool_status_output(output: &str) -> Result<serde_json::Value, String> 
         "raw_output": output
     }))
 }
-
 /// Parse zpool iostat output
 fn parse_zpool_iostat_output(output: &str, pool_name: &str) -> Result<ZfsIOStats, String> {
     // Parse the iostat output - this is a simplified version
@@ -392,14 +378,14 @@ fn parse_zpool_iostat_output(output: &str, pool_name: &str) -> Result<ZfsIOStats
                     pool_name: pool_name.to_string(),
                     read_ops_per_sec: parts[3].parse().unwrap_or(0.0),
                     write_ops_per_sec: parts[4].parse().unwrap_or(0.0),
-                    read_throughput_mbps: parse_throughput_value(parts[5]).unwrap_or(0.0),
-                    write_throughput_mbps: parse_throughput_value(parts[6]).unwrap_or(0.0),
+                    read_throughput_mbps: parse_throughputvalue(parts[5]).unwrap_or(0.0),
+                    write_throughput_mbps: parse_throughputvalue(parts[6]).unwrap_or(0.0),
                     average_read_latency: 2.5,  // Mock values
                     average_write_latency: 3.1,
                     peak_read_latency: 8.7,
                     peak_write_latency: 12.3,
                     queue_depth_average: 1.2,
-                    io_sizes: vec![4096, 8192, 16384, 32768, 65536],
+                    io_sizes: vec![4096, 8192, 16384, 32_768, 65_536],
                 });
             }
         }
@@ -407,9 +393,8 @@ fn parse_zpool_iostat_output(output: &str, pool_name: &str) -> Result<ZfsIOStats
     
     Err("Could not parse iostat output".to_string())
 }
-
 /// Parse throughput values (handles units like M, K, etc.)
-fn parse_throughput_value(value: &str) -> Option<f64> {
+fn parse_throughputvalue(value: &str) -> Option<f64> {
     if value.ends_with('M') {
         value.trim_end_matches('M').parse::<f64>().ok()
     } else if value.ends_with('K') {
@@ -418,7 +403,6 @@ fn parse_throughput_value(value: &str) -> Option<f64> {
         value.parse::<f64>().map(|v| v / 1024.0 / 1024.0).ok() // Assume bytes
     }
 }
-
 /// Parse ARC statistics from /proc/spl/kstat/zfs/arcstats
 fn parse_arc_stats(content: &str) -> Result<ZfsArcStats, String> {
     let mut arc_hits = 0u64;

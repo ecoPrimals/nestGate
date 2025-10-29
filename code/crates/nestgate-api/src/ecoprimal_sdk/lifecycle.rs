@@ -8,7 +8,6 @@ pub type LifecycleCallbacks = std::collections::HashMap<
     PrimalLifecycleState,
     Vec<Box<dyn Fn(&PrimalLifecycleState) + Send + Sync>>,
 >;
-
 /// Advanced primal lifecycle states for 100% completion
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum PrimalLifecycleState {

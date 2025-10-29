@@ -1,0 +1,7 @@
+# Configuration Consolidation Map
+# Format: source_file:struct_name -> target_location
+
+code/crates/nestgate-api/src/unified_api_config/standardized_handlers.rs:ConfigError -> nestgate_core::error::NestGateError
+code/crates/nestgate-zfs/src/pool_setup/mod.rs:PoolSetupError -> nestgate_core::error::NestGateError
+code/crates/nestgate-core/src/config/dynamic_config.rs:ConfigError -> nestgate_core::error::NestGateError
+code/crates/nestgate-core/src/config/validation.rs:ValidationError -> nestgate_core::error::NestGateError

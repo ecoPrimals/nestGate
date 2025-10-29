@@ -7,7 +7,6 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, Instant, SystemTime};
 
-// REMOVED: async_trait - using zero-cost native async patterns
 use std::process::Command;
 use tracing::{info, warn};
 
@@ -27,7 +26,6 @@ pub struct ArcStatistics {
     /// Target cache size in bytes
     pub target_size_bytes: u64,
 }
-
 /// Helper struct for I/O statistics
 #[derive(Debug, Clone)]
 pub struct IoStatistics {
@@ -42,7 +40,6 @@ pub struct IoStatistics {
     /// Average latency in milliseconds
     pub avg_latency: f64,
 }
-
 /// Native ZFS service implementation using real zfs/zpool commands
 #[derive(Debug)]
 pub struct NativeZfsService {
@@ -56,7 +53,6 @@ pub struct NativeZfsService {
     total_response_time: Arc<AtomicU64>,
     active_connections: Arc<AtomicU64>,
 }
-
 impl NativeZfsService {
     /// Create a new native ZFS service
     pub fn new() -> Self {
@@ -121,12 +117,8 @@ impl NativeZfsService {
                     command, args, error_msg
                 );
                 Err(UniversalZfsError::CommandFailed {
-                    command: format!("{} {:?}", command, args),
-                    message: format!(
-                        "Exit code: {}, Error: {}",
-                        output.status.code().unwrap_or(-1),
-                        error_msg
-                    ),
+                    command: format!("zfs {args.join(" "}")),
+                    message: format!("Execution failed: {error_msg}"),
                 }
                 .into())
             }
@@ -137,8 +129,8 @@ impl NativeZfsService {
                     command, args, e
                 );
                 Err(UniversalZfsError::CommandFailed {
-                    command: format!("{} {:?}", command, args),
-                    message: format!("Execution failed: {}", e),
+                    command: e.to_string(),
+                    message: format!("Execution failed: self.base_url"),
                 }
                 .into())
             }
@@ -182,6 +174,7 @@ impl Default for NativeZfsService {
 }
 
 // **ZERO-COST NATIVE ASYNC**: Converted from async_trait for 40-60% performance improvement
+#[async_trait::async_trait]
 impl UniversalZfsService for NativeZfsService {
     fn service_name(&self) -> &str {
         "native-zfs"
@@ -191,12 +184,11 @@ impl UniversalZfsService for NativeZfsService {
         "1.0.0"
     }
 
-    fn is_available(&self) -> impl std::future::Future<Output = bool> + Send {
-        async move { self.zfs_available }
+    async fn is_available(&self) -> bool {
+        self.zfs_available
     }
 
-    fn health_check(&self) -> impl std::future::Future<Output = UniversalZfsResult<HealthStatus>> + Send {
-        async move {
+    async fn health_check(&self) -> UniversalZfsResult<HealthStatus> {
         let output = Command::new("modprobe").args(&["zfs"]).output();
         let zfs_available = output.is_ok()
             && output
@@ -204,7 +196,7 @@ impl UniversalZfsService for NativeZfsService {
                     tracing::error!("Operation failed: {:?}", e);
                     std::io::Error::new(
                         std::io::ErrorKind::Other,
-                        format!("Operation failed: {:?}", e),
+                        format!("Operation failed: self.base_url"),
                     )
                 })?
                 .status
@@ -238,20 +230,15 @@ impl UniversalZfsService for NativeZfsService {
             }],
             metrics: None, // No metrics for basic health check
         })
-        }
     }
 
-    fn get_metrics(&self) -> impl std::future::Future<Output = UniversalZfsResult<ServiceMetrics>> + Send {
-        async move {
-            Ok(self.get_service_metrics())
-        }
+    async fn get_metrics(&self) -> UniversalZfsResult<ServiceMetrics> {
+        Ok(self.get_service_metrics())
     }
 
-    fn shutdown(&self) -> impl std::future::Future<Output = UniversalZfsResult<()>> + Send {
-        async move {
-            info!("🔄 Shutting down Native ZFS service");
-            Ok(())
-        }
+    async fn shutdown(&self) -> UniversalZfsResult<()> {
+        info!("🔄 Shutting down Native ZFS service");
+        Ok(())
     }
 
     // Forward all other methods to their respective modules
@@ -355,20 +342,20 @@ impl UniversalZfsService for NativeZfsService {
     }
 
     async fn optimize(&self) -> UniversalZfsResult<String> {
-        super::configuration::optimize(self, "general".to_string()).await
+        super::configuration::optimize(self, "general".to_string())
     }
 
     async fn get_optimization_analytics(&self) -> UniversalZfsResult<serde_json::Value> {
-        let analytics = super::configuration::get_optimization_analytics(self).await?;
+        let analytics = super::configuration::get_optimization_analytics(self)?;
         Ok(serde_json::Value::Object(analytics.into_iter().collect()))
     }
 
     async fn predict_tier(&self, dataset_name: &str) -> UniversalZfsResult<String> {
-        super::configuration::predict_tier(self, dataset_name).await
+        Ok(super::configuration::predict_tier(self, dataset_name)?)
     }
 
     async fn get_configuration(&self) -> UniversalZfsResult<serde_json::Value> {
-        let config = super::configuration::get_configuration(self).await?;
+        let config = super::configuration::get_configuration(self)?;
         Ok(serde_json::Value::Object(config.into_iter().collect()))
     }
 
@@ -380,6 +367,6 @@ impl UniversalZfsService for NativeZfsService {
                 .collect::<HashMap<String, serde_json::Value>>(),
             _ => HashMap::new(),
         };
-        super::configuration::update_configuration(self, config_map).await
+        super::configuration::update_configuration(self, config_map)
     }
 }

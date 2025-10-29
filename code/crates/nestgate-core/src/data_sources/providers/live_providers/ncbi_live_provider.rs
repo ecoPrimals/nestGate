@@ -1,13 +1,12 @@
-//! NCBI Live Provider
-//!
-//! A real implementation that connects to NCBI's actual APIs to provide
+// NCBI Live Provider
+//! Ncbi Live Provider functionality and utilities.
+// A real implementation that connects to NCBI's actual APIs to provide
 //! genome data capabilities. This demonstrates how external databases
 //! can integrate with NestGate without NestGate being coupled to NCBI.
 
 use crate::data_sources::data_capabilities::*;
 use crate::data_sources::providers::universal_http_provider::{HttpProviderConfigBuilder, UniversalHttpProvider};
 use crate::{NestGateError, Result};
-use async_trait::async_trait;
 use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -19,10 +18,16 @@ pub struct NCBILiveProvider {
     api_key: Option<String>,
     email: Option<String>, // NCBI requires email for API usage
 }
-
 impl NCBILiveProvider {
     /// Create a new NCBI provider with optional API key and email
-    pub fn new(api_key: Option<String>, email: Option<String>) -> Result<Self> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+                pub fn new(api_key: Option<String>, email: Option<String>) -> Result<Self>  {
         let mut config_builder = HttpProviderConfigBuilder::new(
             "https://eutils.ncbi.nlm.nih.gov/entrez/eutils".to_string(),
             "genome_data".to_string()
@@ -61,7 +66,7 @@ impl NCBILiveProvider {
     }
 
     /// Search NCBI databases using ESearch
-    async fn esearch(&self, database: &str, query: &str, max_results: Option<u32>) -> Result<Vec<String>> {
+    fn esearch(&self, database: &str, query: &str, max_results: Option<u32>) -> impl std::future::Future<Output = Result<Vec<String>> + Send;
         let mut params = HashMap::new();
         params.insert("db".to_string(), database.to_string());
         params.insert("term".to_string(), query.to_string());
@@ -81,22 +86,12 @@ impl NCBILiveProvider {
         // Parse NCBI ESearch response
         let esearch_result = response
             .get("esearchresult")
-            .ok_or_else(|| NestGateError::Internal {
-                message: "Invalid NCBI ESearch response format".to_string(),
-                location: Some("NCBILiveProvider::esearch".to_string()),
-                debug_info: None,
-                is_bug: false,
-            })?;
+            .ok_or_else(|| NestGateError::internal_error(
 
         let id_list = esearch_result
             .get("idlist")
             .and_then(|v| v.as_array())
-            .ok_or_else(|| NestGateError::Internal {
-                message: "No ID list in NCBI response".to_string(),
-                location: Some("NCBILiveProvider::esearch".to_string()),
-                debug_info: None,
-                is_bug: false,
-            })?;
+            .ok_or_else(|| NestGateError::internal_error(
 
         let ids: Vec<String> = id_list
             .iter()
@@ -104,12 +99,12 @@ impl NCBILiveProvider {
             .map(|s| s.to_string())
             .collect();
 
-        debug!("🔍 NCBI ESearch found {} results for query: {}", ids.len(), query);
+        debug!("🔍 NCBI ESearch found {) results for query: {}", ids.len(), query);
         Ok(ids)
     }
 
     /// Fetch summaries using ESummary
-    async fn esummary(&self, database: &str, ids: &[String]) -> Result<Value> {
+    fn esummary(&self, database: &str, ids: &[String]) -> impl std::future::Future<Output = Result<Value>> + Send;
         if ids.is_empty() {
             return Ok(json!({}));
         }
@@ -133,7 +128,7 @@ impl NCBILiveProvider {
     }
 
     /// Fetch sequences using EFetch
-    async fn efetch(&self, database: &str, id: &str, format: &str) -> Result<Value> {
+    fn efetch(&self, database: &str, id: &str, format: &str) -> impl std::future::Future<Output = Result<Value>> + Send;
         let mut params = HashMap::new();
         params.insert("db".to_string(), database.to_string());
         params.insert("id".to_string(), id.to_string());
@@ -156,7 +151,7 @@ impl NCBILiveProvider {
     /// Parse NCBI summary data into GenomeResult
     fn parse_ncbi_summary_to_genome_result(&self, id: &str, summary: &Value) -> Option<GenomeResult> {
         let title = summary.get("title")?.as_str()?.to_string();
-        
+
         let organism = summary.get("organism")
             .or_else(|| summary.get("orgname"))
             .and_then(|v| v.as_str())
@@ -176,7 +171,6 @@ impl NCBILiveProvider {
     }
 }
 
-#[async_trait]
 impl DataCapability for NCBILiveProvider {
     fn capability_type(&self) -> &str {
         "genome_data"
@@ -194,12 +188,7 @@ impl DataCapability for NCBILiveProvider {
         let query = request.parameters
             .get("query")
             .and_then(|v| v.as_str())
-            .ok_or_else(|| NestGateError::Internal {
-                message: "Missing 'query' parameter for NCBI request".to_string(),
-                location: Some("NCBILiveProvider::execute_request".to_string()),
-                debug_info: None,
-                is_bug: false,
-            })?;
+            .ok_or_else(|| NestGateError::internal_error(
 
         // Determine database (default to nucleotide)
         let database = request.parameters
@@ -215,7 +204,7 @@ impl DataCapability for NCBILiveProvider {
 
         // Search NCBI
         let ids = self.esearch(database, query, max_results).await?;
-        
+
         if ids.is_empty() {
             return Ok(DataResponse {
                 data: json!({
@@ -223,21 +212,21 @@ impl DataCapability for NCBILiveProvider {
                     "total_count": 0,
                     "query": query,
                     "database": database
-                }),
+                )),
                 metadata: request.metadata.clone(),
                 source_info: Some(SourceInfo {
                     provider_type: "genome_database".to_string(),
                     provider_name: Some("NCBI".to_string()),
                     license: Some("NCBI Usage Guidelines".to_string()),
                 }),
-            });
+            );
         }
 
         // Get summaries
         let summaries = self.esummary(database, &ids).await?;
-        
+
         // Parse results
-        let mut results = Vec::new();
+        let mut results = Vec::with_capacity(ids.len());
         if let Some(result_obj) = summaries.get("result") {
             for id in &ids {
                 if let Some(summary) = result_obj.get(id) {
@@ -256,7 +245,7 @@ impl DataCapability for NCBILiveProvider {
             "database": database,
             "provider": "NCBI",
             "api_version": "E-utilities"
-        });
+        );
 
         Ok(DataResponse {
             data: response_data,
@@ -282,7 +271,6 @@ impl DataCapability for NCBILiveProvider {
     }
 }
 
-#[async_trait]
 impl GenomeDataCapability for NCBILiveProvider {
     async fn search_genomes(&self, query: &str) -> Result<Vec<GenomeResult>> {
         debug!("🔍 Searching NCBI genomes with query: {}", query);
@@ -299,7 +287,7 @@ impl GenomeDataCapability for NCBILiveProvider {
         };
 
         let response = self.execute_request(&request).await?;
-        
+
         // Extract results from response
         let results = response.data
             .get("results")
@@ -317,7 +305,7 @@ impl GenomeDataCapability for NCBILiveProvider {
 
         // Fetch the sequence using EFetch
         let sequence_data = self.efetch("nucleotide", genome_id, "fasta").await?;
-        
+
         // Parse FASTA format (simplified)
         let sequence_text = sequence_data.as_str()
             .unwrap_or("")
@@ -341,20 +329,40 @@ impl GenomeDataCapability for NCBILiveProvider {
 
 /// Factory for creating NCBI providers
 pub struct NCBIProviderFactory;
-
 impl NCBIProviderFactory {
     /// Create NCBI provider with API key (recommended for production)
-    pub fn create_with_api_key(api_key: String, email: String) -> Result<Arc<NCBILiveProvider>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn create_with_api_key(api_key: String, email: String) -> Result<Arc<NCBILiveProvider>>  {
         Ok(Arc::new(NCBILiveProvider::new(Some(api_key), Some(email))?))
     }
 
     /// Create NCBI provider without API key (rate limited)
-    pub fn create_basic(email: String) -> Result<Arc<NCBILiveProvider>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn create_basic(email: String) -> Result<Arc<NCBILiveProvider>>  {
         Ok(Arc::new(NCBILiveProvider::new(None, Some(email))?))
     }
 
     /// Create NCBI provider from environment variables
-    pub fn create_from_env() -> Result<Arc<NCBILiveProvider>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn create_from_env() -> Result<Arc<NCBILiveProvider>>  {
         let api_key = std::env::var("NCBI_API_KEY").ok();
         let email = std::env::var("NCBI_EMAIL")
             .or_else(|_| std::env::var("USER_EMAIL"))
@@ -367,4 +375,3 @@ impl NCBIProviderFactory {
 
         Ok(Arc::new(NCBILiveProvider::new(api_key, email)?))
     }
-} 

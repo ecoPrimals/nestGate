@@ -2,8 +2,14 @@
 /// Configuration structures for native async network implementation
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
-
 /// Network configuration for native async implementation
+/// Network configuration for native async networking
+/// Defines connection parameters, timeouts, and performance settings
+/// **⚠️ DEPRECATED**: Use `CanonicalNetworkConfig` from `canonical_master::domains::network`
+#[deprecated(
+    since = "0.9.0",
+    note = "Use canonical_master::domains::network::CanonicalNetworkConfig instead"
+)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkConfig {
     /// Server host
@@ -17,11 +23,11 @@ pub struct NetworkConfig {
     /// Enable TLS
     pub enable_tls: bool,
 }
-
+#[allow(deprecated)] // Keeping for backwards compatibility during migration
 impl Default for NetworkConfig {
     fn default() -> Self {
         Self {
-            host: "localhost".to_string(),
+            host: crate::constants::canonical_defaults::network::LOCALHOST.to_string(),
             port: 8080,
             connection_timeout: Duration::from_secs(30),
             request_timeout: Duration::from_secs(60),

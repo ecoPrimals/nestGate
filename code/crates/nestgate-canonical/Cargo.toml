@@ -2,8 +2,15 @@
 name = "nestgate-canonical"
 version = "0.1.0"
 edition = "2021"
-description = "Canonical configuration and types for NestGate - Unified Single Source of Truth"
-license = "AGPL-3.0-or-later"
+authors = ["NestGate Development Team <dev@nestgate.io>"]
+description = "Canonical modernization patterns and unified interfaces for NestGate"
+repository = "https://github.com/nestgate/nestgate"
+readme = "README.md"
+license = "AGPL-3.0-only"
+keywords = ["canonical", "modernization", "patterns", "unification", "architecture"]
+categories = ["development-tools", "api-bindings", "asynchronous", "data-structures", "config"]
+homepage = "https://nestgate.io"
+documentation = "https://docs.rs/nestgate-canonical"
 
 [dependencies]
 # Core serialization and error handling

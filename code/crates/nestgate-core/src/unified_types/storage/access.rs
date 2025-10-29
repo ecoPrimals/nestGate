@@ -4,19 +4,16 @@ use std::collections::HashMap;
 /// This module contains storage access control, permissions, and metadata types.
 /// Split from consolidated_storage_types.rs for better maintainability and 2000-line compliance.
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-
 // Import unified enums
 // use crate::canonical_modernization::UnifiedAccessType; // Currently unused
 
-// ==================== ACCESS CONTROL TYPES ====================
+// ==================== SECTION ====================
 
 /// Storage access control configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StorageAccessControl {
     /// Access control enabled
     pub enabled: bool,
-
     /// Access control type
     pub control_type: AccessControlType,
 
@@ -50,7 +47,6 @@ pub enum AccessControlType {
     /// Custom access control
     Custom(String),
 }
-
 /// Storage permissions
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum StoragePermission {
@@ -77,13 +73,11 @@ pub enum StoragePermission {
     /// Custom permission
     Custom(String),
 }
-
 /// Storage access audit log entry
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StorageAccessAuditEntry {
     /// Audit entry ID
     pub id: String,
-
     /// Timestamp of the access
     pub timestamp: DateTime<Utc>,
 
@@ -91,7 +85,6 @@ pub struct StorageAccessAuditEntry {
     pub user: String,
 
     /// Resource that was accessed
-    pub resource: String,
 
     /// Action that was performed
     pub action: StorageAccessAction,
@@ -135,7 +128,6 @@ pub enum StorageAccessAction {
     /// Custom action
     Custom(String),
 }
-
 /// Access attempt result
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum AccessResult {
@@ -156,15 +148,13 @@ pub enum AccessResult {
     /// Access denied - custom reason
     Custom(String),
 }
-
-// ==================== METADATA TYPES ====================
+// ==================== SECTION ====================
 
 /// Storage resource metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StorageResourceMetadata {
     /// Creation timestamp
     pub created_at: DateTime<Utc>,
-
     /// Last modification timestamp
     pub modified_at: DateTime<Utc>,
 
@@ -195,7 +185,6 @@ pub struct StorageResourceMetadata {
 pub struct StorageResourceTags {
     /// System tags (managed by the system)
     pub system_tags: HashMap<String, String>,
-
     /// User tags (managed by users)
     pub user_tags: HashMap<String, String>,
 
@@ -214,7 +203,6 @@ pub struct StorageResourceTags {
 pub struct StorageLifecyclePolicy {
     /// Policy name
     pub name: String,
-
     /// Policy enabled
     pub enabled: bool,
 
@@ -233,7 +221,6 @@ pub struct StorageLifecyclePolicy {
 pub struct LifecycleRule {
     /// Rule name
     pub name: String,
-
     /// Rule enabled
     pub enabled: bool,
 
@@ -252,7 +239,6 @@ pub struct LifecycleRule {
 pub struct LifecycleConditions {
     /// Age-based conditions
     pub age: Option<LifecycleAgeCondition>,
-
     /// Size-based conditions
     pub size: Option<LifecycleSizeCondition>,
 
@@ -271,7 +257,6 @@ pub struct LifecycleConditions {
 pub struct LifecycleAgeCondition {
     /// Minimum age for rule activation
     pub min_age: Option<chrono::Duration>,
-
     /// Maximum age for rule activation
     pub max_age: Option<chrono::Duration>,
 
@@ -291,13 +276,11 @@ pub enum AgeCalculationMethod {
     /// Custom age calculation
     Custom(String),
 }
-
 /// Size-based lifecycle condition
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LifecycleSizeCondition {
     /// Minimum size in bytes
     pub min_size: Option<u64>,
-
     /// Maximum size in bytes
     pub cache_size_bytes: Option<u64>,
 }
@@ -307,7 +290,6 @@ pub struct LifecycleSizeCondition {
 pub struct LifecycleAccessCondition {
     /// Minimum access frequency
     pub min_access_frequency: Option<f64>,
-
     /// Maximum access frequency
     pub max_access_frequency: Option<f64>,
 
@@ -338,8 +320,7 @@ pub enum LifecycleAction {
         parameters: HashMap<String, serde_json::Value>,
     },
 }
-
-// ==================== DEFAULT IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 impl Default for StorageAccessControl {
     fn default() -> Self {
@@ -385,7 +366,7 @@ impl Default for StorageResourceTags {
     }
 }
 
-// ==================== UTILITY IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 impl StorageAccessControl {
     /// Check if a user has specific permission

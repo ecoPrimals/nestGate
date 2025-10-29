@@ -1,11 +1,9 @@
-
 use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
 
 use nestgate_core::unified_enums::StorageTier;
 /// **PREDICTION TYPES - CANONICAL IMPLEMENTATION**
 /// Clean type definitions for prediction and analysis functionality
-
 /// Tier type enumeration for backward compatibility
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum TierType {
@@ -13,7 +11,6 @@ pub enum TierType {
     Warm,
     Cold,
 }
-
 /// Data pattern enumeration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum DataPattern {
@@ -22,7 +19,6 @@ pub enum DataPattern {
     Mixed,
     Unknown,
 }
-
 /// File type enumeration  
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum FileType {
@@ -36,7 +32,6 @@ pub enum FileType {
     Other(String),
     Unknown,
 }
-
 /// Access type enumeration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AccessType {
@@ -45,7 +40,6 @@ pub enum AccessType {
     Delete,
     Modify,
 }
-
 /// Access event structure with canonical fields
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AccessEvent {
@@ -54,7 +48,6 @@ pub struct AccessEvent {
     pub timestamp: SystemTime,
     pub size_bytes: u64,
 }
-
 /// File characteristics structure with canonical fields
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FileCharacteristics {
@@ -63,7 +56,6 @@ pub struct FileCharacteristics {
     pub access_frequency: f64, // Accesses per day
     pub size_category: SizeCategory,
 }
-
 impl Default for FileCharacteristics {
     fn default() -> Self {
         Self {
@@ -84,7 +76,6 @@ pub enum SizeCategory {
     XLarge, // > 1GB
     Unknown,
 }
-
 /// Access pattern structure with canonical fields
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AccessPattern {
@@ -96,7 +87,6 @@ pub struct AccessPattern {
     pub peak_access_times: Vec<u8>, // Hours of day (0-23)
     pub read_write_ratio: f64,      // Read operations / Write operations
 }
-
 impl Default for AccessPattern {
     fn default() -> Self {
         Self {
@@ -121,7 +111,6 @@ pub struct FileAnalysis {
     pub accessed_at: SystemTime,
     pub file_type: String,
 }
-
 /// Tier prediction structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TierPrediction {
@@ -134,7 +123,6 @@ pub struct TierPrediction {
     pub file_type: String,
     pub recommendation_reason: String,
 }
-
 /// Data migration instruction
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DataMigration {
@@ -146,7 +134,6 @@ pub struct DataMigration {
     pub accessed_at: SystemTime,
     pub tier_prediction: TierPrediction,
 }
-
 /// Legacy tier prediction for compatibility
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LegacyTierPrediction {
@@ -157,14 +144,14 @@ pub struct LegacyTierPrediction {
     pub created_at: SystemTime,
     pub valid_until: SystemTime,
 }
-
 impl LegacyTierPrediction {
+    #[must_use]
     pub fn is_valid(&self) -> bool {
         SystemTime::now() < self.valid_until
     }
 }
 
-/// Convert TierType to legacy StorageTier
+/// Convert `TierType` to legacy `StorageTier`
 impl From<TierType> for StorageTier {
     fn from(tier_type: TierType) -> Self {
         match tier_type {
@@ -174,20 +161,19 @@ impl From<TierType> for StorageTier {
         }
     }
 }
-
-/// Convert legacy StorageTier to TierType
+/// Convert legacy `StorageTier` to `TierType`
 impl From<StorageTier> for TierType {
     fn from(tier: StorageTier) -> Self {
         match tier {
             StorageTier::Hot => TierType::Hot,
             StorageTier::Warm => TierType::Warm,
             StorageTier::Cold => TierType::Cold,
-            StorageTier::Cool => TierType::Cold,  // Map cool to cold
+            StorageTier::Cool => TierType::Cold, // Map cool to cold
             StorageTier::Frozen => TierType::Cold, // Map frozen to cold
+            _ => TierType::Cold,                 // Default for any other variants
         }
     }
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum TierClassification {
     Performance,
@@ -201,8 +187,9 @@ impl From<StorageTier> for TierClassification {
             StorageTier::Hot => TierClassification::Performance,
             StorageTier::Warm => TierClassification::Balanced,
             StorageTier::Cold => TierClassification::Archive,
-            StorageTier::Cool => TierClassification::Archive,  // Map cool to archive
+            StorageTier::Cool => TierClassification::Archive, // Map cool to archive
             StorageTier::Frozen => TierClassification::Archive, // Map frozen to archive
+            _ => TierClassification::Balanced,                // Default for any other variants
         }
     }
 }

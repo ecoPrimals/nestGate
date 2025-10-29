@@ -3,11 +3,11 @@
 // used by the hardware tuning system.
 
 use chrono::{DateTime, Utc};
-use crate::canonical_modernization::UnifiedHealthStatus};
+use crate::canonical_modernization::UnifiedHealthStatus;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-/// Service registration for Toadstool
+/// Service registration for Compute
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TuningServiceRegistration {
     /// Name of the tuning service
@@ -21,8 +21,7 @@ pub struct TuningServiceRegistration {
     /// URL endpoint for health check monitoring
     pub health_check_url: String,
 }
-
-/// Compute resource request to Toadstool
+/// Compute resource request to Compute
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComputeResourceRequest {
     /// Unique identifier for this tuning session
@@ -38,8 +37,7 @@ pub struct ComputeResourceRequest {
     /// Priority level for resource allocation
     pub priority: ComputePriority,
 }
-
-/// Compute allocation response from Toadstool
+/// Compute allocation response from Compute
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComputeAllocation {
     /// Unique identifier for this allocation
@@ -55,7 +53,6 @@ pub struct ComputeAllocation {
     /// Name of the compute node where resources are allocated
     pub compute_node: String,
 }
-
 /// GPU allocation details
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GpuAllocation {
@@ -66,7 +63,6 @@ pub struct GpuAllocation {
     /// Amount of GPU memory in gigabytes
     pub memory_gb: u32,
 }
-
 /// Compute priority levels
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ComputePriority {
@@ -79,7 +75,6 @@ pub enum ComputePriority {
     /// Critical priority - highest priority, cannot be preempted
     Critical,
 }
-
 /// Compute request structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComputeRequest {
@@ -92,7 +87,6 @@ pub struct ComputeRequest {
     /// Maximum duration for the request in minutes
     pub duration_minutes: Option<u32>,
 }
-
 /// Compute resources structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComputeResources {
@@ -105,8 +99,7 @@ pub struct ComputeResources {
     /// Amount of storage available in gigabytes
     pub storage_gb: u32,
 }
-
-/// Live hardware metrics from Toadstool
+/// Live hardware metrics from Compute
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LiveHardwareMetrics {
     /// Timestamp when these metrics were collected
@@ -126,7 +119,6 @@ pub struct LiveHardwareMetrics {
     /// Disk I/O statistics
     pub disk_io: DiskIoMetrics,
 }
-
 /// Network I/O metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkIoMetrics {
@@ -139,7 +131,6 @@ pub struct NetworkIoMetrics {
     /// Total packets received over network
     pub packets_received: u64,
 }
-
 /// Disk I/O performance metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DiskIoMetrics {
@@ -152,8 +143,7 @@ pub struct DiskIoMetrics {
     /// Number of write operations performed
     pub write_ops: u64,
 }
-
-/// Hardware event with timestamp and metadata
+/// Hardware event with timestamp and _metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HardwareEvent {
     /// Timestamp when the event occurred
@@ -163,7 +153,6 @@ pub struct HardwareEvent {
     /// Additional event data in JSON format
     pub data: serde_json::Value,
 }
-
 /// Types of hardware events that can be monitored
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum HardwareEventType {
@@ -178,7 +167,6 @@ pub enum HardwareEventType {
     /// A system alert has been triggered
     SystemAlert,
 }
-
 /// Hardware requirements for a workload or service
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResourceRequirements {
@@ -193,7 +181,6 @@ pub struct ResourceRequirements {
     /// Whether GPU acceleration is required
     pub gpu_required: bool,
 }
-
 /// Information about a compute node in the cluster
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PlatformInfo {
@@ -207,10 +194,9 @@ pub struct PlatformInfo {
     pub memory_gb: u32,
     /// Number of GPUs available
     pub gpu_count: u32,
-    /// Storage devices attached to this node
+    /// Storage _devices attached to this node
     pub storage_devices: Vec<StorageDevice>,
 }
-
 /// Information about a storage device
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StorageDevice {
@@ -225,7 +211,6 @@ pub struct StorageDevice {
     /// Mount point where the device is accessible
     pub mount_point: String,
 }
-
 /// Storage I/O metrics for performance monitoring
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StorageIoMetrics {
@@ -238,7 +223,6 @@ pub struct StorageIoMetrics {
     /// Number of write operations performed
     pub write_ops: u64,
 }
-
 /// System load averages over different time periods
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemLoadMetrics {
@@ -249,7 +233,6 @@ pub struct SystemLoadMetrics {
     /// Load average over 15 minutes
     pub load_15m: f64,
 }
-
 /// Real-time performance metrics for a compute node
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceMetrics {
@@ -270,7 +253,6 @@ pub struct PerformanceMetrics {
     /// System load metrics
     pub system_load: SystemLoadMetrics,
 }
-
 /// Information about a compute node in the cluster
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComputeNode {
@@ -284,10 +266,9 @@ pub struct ComputeNode {
     pub memory_gb: u32,
     /// Number of GPUs available
     pub gpu_count: u32,
-    /// Storage devices attached to this node
+    /// Storage _devices attached to this node
     pub storage_devices: Vec<StorageDevice>,
 }
-
 /// Compute discovery information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComputeDiscovery {
@@ -306,7 +287,6 @@ pub struct ComputeDiscovery {
     /// Available GPUs not currently allocated
     pub available_gpu_count: u32,
 }
-
 /// System health information
 ///
 /// Comprehensive health status for all major system components,
@@ -326,7 +306,6 @@ pub struct SystemHealth {
     /// List of active system alerts
     pub alerts: Vec<SystemAlert>,
 }
-
 /// Hardware health status enumeration
 ///
 /// **DEPRECATED**: Use `nestgate_core::unified_enums::UnifiedHealthStatus` instead.
@@ -349,7 +328,6 @@ pub struct SystemHealth {
 /// - `Unknown` → `UnifiedHealthStatus::Unknown`
 // Deprecated HealthStatus removed - use crate::canonical_modernization::UnifiedHealthStatus
 pub use crate::canonical_modernization::UnifiedHealthStatus as HealthStatus;
-
 /// System alert information
 ///
 /// Represents an alert or notification about system conditions
@@ -367,7 +345,6 @@ pub struct SystemAlert {
     /// System component that generated the alert
     pub component: String,
 }
-
 /// Alert severity levels
 ///
 /// Categorizes alerts by their importance and urgency.
@@ -382,7 +359,6 @@ pub enum AlertSeverity {
     /// Critical condition, immediate action required
     Critical,
 }
-
 /// Storage workload information
 ///
 /// Represents a storage-intensive workload that needs to be
@@ -402,7 +378,6 @@ pub struct StorageWorkload {
     /// Current status of the workload
     pub status: WorkloadStatus,
 }
-
 /// Workload resource requirements
 ///
 /// Specifies the computational and storage resources
@@ -418,7 +393,6 @@ pub struct WorkloadResourceRequirements {
     /// Network bandwidth required in gigabits per second
     pub network_bandwidth_gbps: f64,
 }
-
 /// Workload execution information
 ///
 /// Tracks the execution of a workload including progress,
@@ -440,7 +414,6 @@ pub struct WorkloadExecution {
     /// Current execution status
     pub status: WorkloadStatus,
 }
-
 /// Allocated resources information
 ///
 /// Represents the actual resources allocated to a workload
@@ -458,7 +431,6 @@ pub struct AllocatedResources {
     /// List of compute nodes where resources are allocated
     pub compute_nodes: Vec<String>,
 }
-
 /// Workload status
 ///
 /// Represents the current state of a workload in the execution pipeline.
@@ -475,7 +447,6 @@ pub enum WorkloadStatus {
     /// Workload was cancelled before completion
     Cancelled,
 }
-
 /// Storage resource request
 ///
 /// Request for specific storage resources to support a workload.
@@ -492,7 +463,6 @@ pub struct StorageResourceRequest {
     /// Duration for which the resource is requested in minutes
     pub duration_minutes: u32,
 }
-
 /// Storage resource allocation
 ///
 /// Represents the actual allocation of storage resources
@@ -510,7 +480,6 @@ pub struct StorageResourceAllocation {
     /// Timestamp when this allocation expires
     pub expires_at: DateTime<Utc>,
 }
-
 /// Storage process request
 ///
 /// Request to execute a specific storage-related process
@@ -524,7 +493,6 @@ pub struct StorageProcessRequest {
     /// Process-specific configuration parameters
     pub parameters: serde_json::Value,
 }
-
 /// Process management information
 ///
 /// Information about a running or completed storage process,
@@ -542,7 +510,6 @@ pub struct ProcessManagement {
     /// Current resource usage by this process
     pub resource_usage: ResourceUsage,
 }
-
 /// Resource usage information
 ///
 /// Current resource consumption metrics for a process or workload.
@@ -557,7 +524,6 @@ pub struct ResourceUsage {
     /// Disk write activity in megabytes
     pub disk_write_mb: u64,
 }
-
 /// Storage optimization request
 ///
 /// Request to perform optimization on storage systems
@@ -573,7 +539,6 @@ pub struct StorageOptimizationRequest {
     /// Optimization-specific parameters
     pub parameters: serde_json::Value,
 }
-
 /// Storage optimization result
 ///
 /// Results and metrics from a completed storage optimization.
@@ -590,7 +555,6 @@ pub struct StorageOptimization {
     /// Timestamp when optimization completed
     pub completion_time: DateTime<Utc>,
 }
-
 /// Resource savings information
 ///
 /// Quantifies the resource savings achieved by an optimization.
@@ -605,7 +569,6 @@ pub struct ResourceSavings {
     /// Network bandwidth saved in gigabits per second
     pub network_bandwidth_saved_gbps: f64,
 }
-
 /// Tuning mode enum
 ///
 /// Different modes for hardware tuning behavior.
@@ -622,7 +585,6 @@ pub enum TuningMode {
     /// Balanced tuning between performance and stability
     Balanced,
 }
-
 /// Session status enum
 ///
 /// Current state of a tuning session.
@@ -641,7 +603,6 @@ pub enum SessionStatus {
     /// Session completed successfully
     Completed,
 }
-
 /// Tuning session information
 ///
 /// Information about an active or completed hardware tuning session.
@@ -662,7 +623,6 @@ pub struct TuningSession {
     /// List of active tuning profiles
     pub active_profiles: Vec<String>,
 }
-
 /// Hardware tuning request
 ///
 /// Request to start or modify a hardware tuning operation.
@@ -675,7 +635,6 @@ pub struct HardwareTuningRequest {
     /// List of hardware components to target
     pub target_hardware: Vec<String>,
 }
-
 /// Hardware tuning response
 ///
 /// Response containing the results of a hardware tuning operation.
@@ -700,7 +659,6 @@ pub struct HardwareTuningResponse {
     /// Any warnings or issues encountered
     pub warnings: Vec<String>,
 }
-
 /// Tuning query parameters
 ///
 /// Parameters for querying tuning session information.
@@ -713,7 +671,6 @@ pub struct TuningQuery {
     /// Whether to include tuning recommendations in results
     pub include_recommendations: Option<bool>,
 }
-
 /// External access requirements
 ///
 /// Requirements for external access to hardware tuning systems.
@@ -730,7 +687,6 @@ pub struct ExternalAccessRequirements {
     /// ID of the user requesting access
     pub requester_id: String,
 }
-
 /// Benchmark result
 ///
 /// Results from running a performance benchmark.
@@ -744,10 +700,9 @@ pub struct BenchmarkResult {
     pub score: f64,
     /// Time taken to complete the benchmark in milliseconds
     pub duration_ms: u64,
-    /// Additional benchmark-specific metadata
-    pub metadata: serde_json::Value,
+    /// Additional benchmark-specific _metadata
+    pub _metadata: serde_json::Value,
 }
-
 /// External access status
 ///
 /// Status information about external access permissions
@@ -763,7 +718,6 @@ pub struct ExternalAccessStatus {
     /// Optional expiration time for the access
     pub expires_at: Option<DateTime<Utc>>,
 }
-
 /// Tuning recommendations
 ///
 /// Hardware-specific recommendations for improving system performance.
@@ -778,7 +732,6 @@ pub struct TuningRecommendations {
     /// Network-related performance recommendations
     pub network_recommendations: Vec<String>,
 }
-
 /// Live performance metrics
 ///
 /// Real-time performance metrics collected from the system.
@@ -803,6 +756,5 @@ pub struct LivePerformanceMetrics {
     /// Current power consumption in watts
     pub power_consumption: f64,
 }
-
 // Re-export from nestgate_core for convenience
 // Removed import - hardware_tuning module moved or deprecated

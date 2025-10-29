@@ -14,13 +14,11 @@ pub struct ProviderInfo {
     pub capacity: u64,
     pub available: u64,
 }
-
 /// Provider manager for MCP integration
 #[derive(Debug, Clone)]
 pub struct ProviderManager {
     // Internal provider state
 }
-
 impl Default for ProviderManager {
     fn default() -> Self {
         Self::new()
@@ -29,14 +27,19 @@ impl Default for ProviderManager {
 
 impl ProviderManager {
     /// Create a new provider manager
-    pub fn new() -> Self {
-        Self {
+    pub fn new() -> Self { Self {
             // Initialize provider state
-        }
-    }
+         }
 
     /// Initialize the provider manager
-    pub async fn initialize(&self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn initialize(&self) -> Result<()>  {
         tracing::info!("Initializing MCP provider manager");
 
         // Initialize basic provider capabilities
@@ -67,7 +70,7 @@ impl ProviderManager {
                 error::Error::validation("Insufficient memory available".to_string()).into(),
             );
         }
-        Ok(())
+    Ok(())
     }
 
     /// Get available system memory
@@ -94,7 +97,14 @@ impl ProviderManager {
     }
 
     /// Get provider information
-    pub async fn get_provider_info(&self, id: &str) -> Result<ProviderInfo> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+                pub fn get_provider_info(&self, id: &str) -> Result<ProviderInfo>  {
         tracing::debug!("Retrieving provider information for: {}", id);
 
         // Parse storage tier from provider ID
@@ -105,7 +115,8 @@ impl ProviderManager {
 
         Ok(ProviderInfo {
             id: id.to_string(),
-            name: format!("NestGate {} Storage Provider", tier.as_str()),
+            name: format!("NestGate {e},
+    Storage Provider")),
             tier,
             capacity,
             available,
@@ -125,7 +136,7 @@ impl ProviderManager {
     }
 
     /// Get capacity information for a storage tier
-    async fn get_tier_capacity(&self, tier: &crate::types::StorageTier) -> Result<(u64, u64)> {
+    fn get_tier_capacity(&self, tier: &crate::types::StorageTier) -> Result<(u64, u64)> {
         // In a real implementation, this would query actual storage systems
         let (base_capacity, availability_factor) = match tier {
             crate::types::StorageTier::Hot => (10_737_418_240_u64, 0.7), // 10GB, 70% available

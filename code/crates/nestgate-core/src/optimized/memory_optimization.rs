@@ -1,15 +1,14 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 //
 // This module provides sophisticated memory management and optimization
 // strategies for maximum performance with zero unsafe code.
 
-use std::collections::HashMap;
 use std::sync::{Arc, Weak};
 use std::time::{Duration, Instant};
 use tokio::sync::RwLock;
 
-use crate::{Result, NestGateError};
+use crate::{Result};
 
 /// Advanced memory optimization manager
 pub struct MemoryOptimizationManager {
@@ -18,7 +17,6 @@ pub struct MemoryOptimizationManager {
     metrics: Arc<RwLock<MemoryMetrics>>,
     config: MemoryConfig,
 }
-
 /// Memory optimization configuration
 #[derive(Debug, Clone)]
 pub struct MemoryConfig {
@@ -30,7 +28,6 @@ pub struct MemoryConfig {
     pub memory_mapped_threshold: u64,
     pub zero_copy_threshold: u64,
 }
-
 impl Default for MemoryConfig {
     fn default() -> Self {
         Self {
@@ -61,7 +58,6 @@ pub struct MemoryMetrics {
     pub zero_copy_operations: u64,
     pub memory_savings_bytes: u64,
 }
-
 /// Smart cache manager with LRU and adaptive sizing
 pub struct CacheManager {
     cache: Arc<RwLock<HashMap<String, CacheEntry>>>,
@@ -69,7 +65,6 @@ pub struct CacheManager {
     config: MemoryConfig,
     stats: Arc<RwLock<CacheStats>>,
 }
-
 /// Cache entry with metadata
 #[derive(Debug, Clone)]
 pub struct CacheEntry {
@@ -80,7 +75,6 @@ pub struct CacheEntry {
     pub access_count: u64,
     pub ttl: Option<Duration>,
 }
-
 /// Cache statistics
 #[derive(Debug, Default, Clone)]
 pub struct CacheStats {
@@ -90,7 +84,6 @@ pub struct CacheStats {
     pub total_size: u64,
     pub entry_count: u64,
 }
-
 /// Memory pool manager for buffer reuse
 pub struct PoolManager {
     small_buffers: Arc<RwLock<Vec<Vec<u8>>>>,    // < 1KB
@@ -99,7 +92,6 @@ pub struct PoolManager {
     stats: Arc<RwLock<PoolStats>>,
     config: MemoryConfig,
 }
-
 /// Pool statistics
 #[derive(Debug, Default, Clone)]
 pub struct PoolStats {
@@ -110,7 +102,6 @@ pub struct PoolStats {
     pub total_reuses: u64,
     pub memory_saved: u64,
 }
-
 /// Memory optimization strategies
 pub enum OptimizationStrategy {
     ZeroCopy,
@@ -120,7 +111,6 @@ pub enum OptimizationStrategy {
     LazyLoading,
     Compression,
 }
-
 impl MemoryOptimizationManager {
     /// Create new memory optimization manager
     pub fn new(config: MemoryConfig) -> Self {
@@ -137,7 +127,14 @@ impl MemoryOptimizationManager {
     }
 
     /// Get optimized buffer for data
-    pub async fn get_optimized_buffer(&self, size: usize) -> Result<OptimizedBuffer> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_optimized_buffer(&self, size: usize) -> Result<OptimizedBuffer>  {
         if size < self.config.zero_copy_threshold as usize {
             // Use zero-copy for small data
             self.increment_zero_copy_operations().await;
@@ -150,7 +147,14 @@ impl MemoryOptimizationManager {
     }
 
     /// Cache data with optimal strategy
-    pub async fn cache_data(&self, key: String, data: Vec<u8>) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn cache_data(&self, key: String, data: Vec<u8>) -> Result<()>  {
         let size = data.len() as u64;
         
         // Update metrics
@@ -169,7 +173,14 @@ impl MemoryOptimizationManager {
     }
 
     /// Get cached data
-    pub async fn get_cached_data(&self, key: &str) -> Result<Option<Arc<Vec<u8>>>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_cached_data(&self, key: &str) -> Result<Option<Arc<Vec<u8>>>>  {
         match self.cache_manager.get(key).await? {
             Some(data) => {
                 let mut metrics = self.metrics.write().await;
@@ -185,7 +196,14 @@ impl MemoryOptimizationManager {
     }
 
     /// Apply optimization strategy
-    pub async fn apply_optimization(&self, strategy: OptimizationStrategy) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn apply_optimization(&self, strategy: OptimizationStrategy) -> Result<()>  {
         match strategy {
             OptimizationStrategy::ZeroCopy => self.optimize_zero_copy().await,
             OptimizationStrategy::BufferReuse => self.optimize_buffer_reuse().await,
@@ -202,7 +220,14 @@ impl MemoryOptimizationManager {
     }
 
     /// Perform memory cleanup
-    pub async fn cleanup(&self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn cleanup(&self) -> Result<()>  {
         println!("🧹 Starting memory cleanup...");
         
         // Clean up cache
@@ -274,6 +299,7 @@ impl MemoryOptimizationManager {
 
 impl CacheManager {
     /// Create new cache manager
+    #[must_use]
     pub fn new(config: MemoryConfig) -> Self {
         Self {
             cache: Arc::new(RwLock::new(HashMap::new())),
@@ -284,7 +310,14 @@ impl CacheManager {
     }
 
     /// Insert data into cache
-    pub async fn insert(&self, key: String, data: Vec<u8>) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+                pub fn insert(&self, key: String, data: Vec<u8>) -> Result<()>  {
         let size = data.len() as u64;
         let now = Instant::now();
         
@@ -329,7 +362,14 @@ impl CacheManager {
     }
 
     /// Get data from cache
-    pub async fn get(&self, key: &str) -> Result<Option<Arc<Vec<u8>>>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get(&self, key: &str) -> Result<Option<Arc<Vec<u8>>>>  {
         let mut cache = self.cache.write().await;
         let mut access_order = self.access_order.write().await;
         
@@ -349,7 +389,14 @@ impl CacheManager {
     }
 
     /// Clean up expired entries
-    pub async fn cleanup(&self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn cleanup(&self) -> Result<()>  {
         let mut cache = self.cache.write().await;
         let mut access_order = self.access_order.write().await;
         let mut stats = self.stats.write().await;
@@ -384,6 +431,7 @@ impl CacheManager {
 
 impl PoolManager {
     /// Create new pool manager
+    #[must_use]
     pub fn new(config: MemoryConfig) -> Self {
         Self {
             small_buffers: Arc::new(RwLock::new(Vec::new())),
@@ -395,7 +443,14 @@ impl PoolManager {
     }
 
     /// Get buffer from appropriate pool
-    pub async fn get_buffer(&self, size: usize) -> Result<Vec<u8>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn get_buffer(&self, size: usize) -> Result<Vec<u8>>  {
         let mut stats = self.stats.write().await;
         stats.total_allocations += 1;
 
@@ -441,7 +496,14 @@ impl PoolManager {
     }
 
     /// Return buffer to appropriate pool
-    pub async fn return_buffer(&self, buffer: Vec<u8>) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn return_buffer(&self, buffer: Vec<u8>) -> Result<()>  {
         let capacity = buffer.capacity();
         
         if capacity < 1024 {
@@ -471,7 +533,14 @@ impl PoolManager {
     }
 
     /// Clean up pools
-    pub async fn cleanup(&self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn cleanup(&self) -> Result<()>  {
         // Trim pools to reasonable sizes
         {
             let mut small_pool = self.small_buffers.write().await;
@@ -511,14 +580,13 @@ pub enum OptimizedBuffer {
     Pooled(Vec<u8>),
     MemoryMapped(Vec<u8>), // Placeholder for memory-mapped buffers
 }
-
 impl OptimizedBuffer {
     /// Get the underlying buffer
     pub fn as_slice(&self) -> &[u8] {
         match self {
-            OptimizedBuffer::ZeroCopy(buf) => buf,
-            OptimizedBuffer::Pooled(buf) => buf,
-            OptimizedBuffer::MemoryMapped(buf) => buf,
+            Self::ZeroCopy(buf) => buf,
+            Self::Pooled(buf) => buf,
+            Self::MemoryMapped(buf) => buf,
         }
     }
 

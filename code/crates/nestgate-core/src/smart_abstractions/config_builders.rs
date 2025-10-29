@@ -14,18 +14,16 @@
 /// - Smart validation patterns
 /// - Environment-driven configuration loading
 /// - Configuration merging and composition
-use crate::error::{NestGateError, Result};
+use crate::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::env;
 use std::fmt::Debug;
 use std::marker::PhantomData;
 use std::time::Duration;
-
 /// Type alias for validator functions to reduce complexity
 pub type ValidatorFn<T> = Box<dyn Fn(&T) -> Result<()> + Send + Sync>;
-
-// ==================== SMART CONFIGURATION BUILDER TRAIT ====================
+// ==================== SECTION ====================
 
 /// **SMART CONFIGURATION BUILDER TRAIT**
 /// Generic trait for intelligent configuration builders with validation and environment loading
@@ -35,7 +33,6 @@ where
 {
     /// Build the configuration with validation
     fn build(self) -> Result<T>;
-
     /// Build with environment variable overrides
     fn build_with_env(self, prefix: &str) -> Result<T>;
 
@@ -49,13 +46,13 @@ where
     fn merge(self, other: Self) -> Self;
 
     /// Set a configuration value by key
-    fn set_value(self, key: &str, value: serde_json::Value) -> Self;
+    fn setvalue(self, key: &str, value: serde_json::Value) -> Self;
 
     /// Get configuration schema for documentation
     fn schema() -> serde_json::Value;
 }
 
-// ==================== SMART ENVIRONMENT LOADER ====================
+// ==================== SECTION ====================
 
 /// **SMART ENVIRONMENT LOADER**
 /// Intelligent environment variable loading with type conversion and validation
@@ -64,7 +61,6 @@ pub struct SmartEnvLoader {
     separator: String,
     case_sensitive: bool,
 }
-
 impl SmartEnvLoader {
     /// Create a new environment loader with prefix
     pub fn new(prefix: &str) -> Self {
@@ -76,12 +72,14 @@ impl SmartEnvLoader {
     }
 
     /// Set the separator for nested keys
+    #[must_use]
     pub fn with_separator(mut self, separator: &str) -> Self {
         self.separator = separator.to_string();
         self
     }
 
     /// Enable case-sensitive matching
+    #[must_use]
     pub fn case_sensitive(mut self, enabled: bool) -> Self {
         self.case_sensitive = enabled;
         self
@@ -183,7 +181,7 @@ impl SmartEnvLoader {
     }
 }
 
-// ==================== SMART VALIDATION PATTERNS ====================
+// ==================== SECTION ====================
 
 /// Smart validator for configuration fields
 pub struct SmartValidator<T> {
@@ -191,15 +189,14 @@ pub struct SmartValidator<T> {
     field_name: String,
     validators: Vec<ValidatorFn<T>>,
 }
-
-impl<T: std::fmt::Debug> std::fmt::Debug for SmartValidator<T> {
+impl<T: std::fmt::Debug> std::fmt::Debug for SmartValidator<T> ", 
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("SmartValidator")
             .field("value", &self.value)
             .field("field_name", &self.field_name)
             .field(
                 "validators",
-                &format!("[{} validators]", self.validators.len()),
+                &format!("[{self.validators.len() validators]")),
             )
             .finish()
     }
@@ -210,6 +207,7 @@ where
     T: Clone + Debug,
 {
     /// Create a new validator for a value
+    #[must_use]
     pub fn new(value: T, field_name: &str) -> Self {
         Self {
             value,
@@ -219,16 +217,30 @@ where
     }
 
     /// Add a validation rule
-    pub fn rule<F>(mut self, validator: F) -> Self
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn rule<F>(mut self, validator: F) -> Self
     where
         F: Fn(&T) -> Result<()> + Send + Sync + 'static,
-    {
+     {
         self.validators.push(Box::new(validator));
         self
     }
 
     /// Validate all rules
-    pub fn validate(self) -> Result<T> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn validate(self) -> Result<T>  {
         for validator in &self.validators {
             validator(&self.value)?;
         }
@@ -242,14 +254,12 @@ impl SmartValidator<String> {
     pub fn not_empty(self) -> Self {
         self.rule(|value| {
             if value.is_empty() {
-                Err(NestGateError::Configuration {
-                    message: "Value cannot be empty".to_string(),
-                    config_source: crate::error::UnifiedConfigSource::Validation(
+                Err(NestGateError::configuration(
+                    config_source: crate::error::core::UnifiedConfigSource::Validation(
                         "SmartValidator".to_string(),
                     ),
-                    field: Some("value".to_string()),
-                    suggested_fix: Some("Provide a non-empty value".to_string()),
-                })
+                    
+                ))
             } else {
                 Ok(())
             }
@@ -261,12 +271,11 @@ impl SmartValidator<String> {
         self.rule(move |value| {
             let len = value.len();
             if len < min || len > max {
-                Err(NestGateError::Configuration {
-                    message: format!("Length must be between {min} and {max}, got {len}"),
-                    config_source: crate::error::UnifiedConfigSource::Validation(
+                Err(NestGateError::configuration(
+                    config_source: crate::error::core::UnifiedConfigSource::Validation(
                         "SmartValidator".to_string(),
                     ),
-                    field: Some("length".to_string()),
+                    field: Some("field".to_string()),
                     suggested_fix: Some(format!(
                         "Provide a value with length between {min} and {max}"
                     )),
@@ -284,12 +293,11 @@ impl SmartValidator<String> {
             if value.contains(&pattern) {
                 Ok(())
             } else {
-                Err(NestGateError::Configuration {
-                    message: format!("Value must contain pattern: {pattern}"),
-                    config_source: crate::error::UnifiedConfigSource::Validation(
+                Err(NestGateError::configuration(
+                    config_source: crate::error::core::UnifiedConfigSource::Validation(
                         "SmartValidator".to_string(),
                     ),
-                    field: Some("value".to_string()),
+                    field: Some("field".to_string()),
                     suggested_fix: Some(format!(
                         "Provide a value that matches the pattern: {pattern}"
                     )),
@@ -306,13 +314,12 @@ impl SmartValidator<u16> {
             if *value > 0 {
                 Ok(())
             } else {
-                Err(NestGateError::Configuration {
-                    message: format!("Port must be between 1 and 65535, got {value}"),
-                    config_source: crate::error::UnifiedConfigSource::Validation(
+                Err(NestGateError::configuration(
+                    config_source: crate::error::core::UnifiedConfigSource::Validation(
                         "SmartValidator".to_string(),
                     ),
-                    field: Some("value".to_string()),
-                    suggested_fix: Some("Fix the validation error".to_string()),
+                    field: Some("field".to_string()),
+                    
                 })
             }
         })
@@ -322,13 +329,12 @@ impl SmartValidator<u16> {
     pub fn not_reserved(self) -> Self {
         self.rule(|value| {
             if *value < 1024 {
-                Err(NestGateError::Configuration {
-                    message: format!("Port {value} is in reserved range (< 1024)"),
-                    config_source: crate::error::UnifiedConfigSource::Validation(
+                Err(NestGateError::configuration(
+                    config_source: crate::error::core::UnifiedConfigSource::Validation(
                         "SmartValidator".to_string(),
                     ),
-                    field: Some("value".to_string()),
-                    suggested_fix: Some("Fix the validation error".to_string()),
+                    field: Some("field".to_string()),
+                    
                 })
             } else {
                 Ok(())
@@ -344,13 +350,12 @@ impl SmartValidator<u64> {
             if *value >= min && *value <= max {
                 Ok(())
             } else {
-                Err(NestGateError::Configuration {
-                    message: format!("Value must be between {min} and {max}, got {value}"),
-                    config_source: crate::error::UnifiedConfigSource::Validation(
+                Err(NestGateError::configuration(
+                    config_source: crate::error::core::UnifiedConfigSource::Validation(
                         "SmartValidator".to_string(),
                     ),
-                    field: Some("value".to_string()),
-                    suggested_fix: Some("Fix the validation error".to_string()),
+                    field: Some("field".to_string()),
+                    
                 })
             }
         })
@@ -362,14 +367,12 @@ impl SmartValidator<u64> {
             if *value > 0 {
                 Ok(())
             } else {
-                Err(NestGateError::Configuration {
-                    message: "Value must be positive".to_string(),
-                    config_source: crate::error::UnifiedConfigSource::Validation(
+                Err(NestGateError::configuration(
+                    config_source: crate::error::core::UnifiedConfigSource::Validation(
                         "SmartValidator".to_string(),
                     ),
-                    field: Some("value".to_string()),
-                    suggested_fix: Some("Provide a positive value".to_string()),
-                })
+                    
+                ))
             }
         })
     }
@@ -382,13 +385,12 @@ impl SmartValidator<Duration> {
             if *value >= min && *value <= max {
                 Ok(())
             } else {
-                Err(NestGateError::Configuration {
-                    message: format!("Duration must be between {min:?} and {max:?}, got {value:?}"),
-                    config_source: crate::error::UnifiedConfigSource::Validation(
+                Err(NestGateError::configuration(
+                    config_source: crate::error::core::UnifiedConfigSource::Validation(
                         "SmartValidator".to_string(),
                     ),
-                    field: Some("value".to_string()),
-                    suggested_fix: Some("Fix the validation error".to_string()),
+                    field: Some("field".to_string()),
+                    
                 })
             }
         })
@@ -400,20 +402,18 @@ impl SmartValidator<Duration> {
             if !value.is_zero() {
                 Ok(())
             } else {
-                Err(NestGateError::Configuration {
-                    message: "Duration cannot be zero".to_string(),
-                    config_source: crate::error::UnifiedConfigSource::Validation(
+                Err(NestGateError::configuration(
+                    config_source: crate::error::core::UnifiedConfigSource::Validation(
                         "SmartValidator".to_string(),
                     ),
-                    field: Some("value".to_string()),
-                    suggested_fix: Some("Fix the validation error".to_string()),
-                })
+                    
+                ))
             }
         })
     }
 }
 
-// ==================== SMART CONFIGURATION MERGER ====================
+// ==================== SECTION ====================
 
 /// **SMART CONFIGURATION MERGER**
 /// Intelligent configuration merging with conflict resolution
@@ -422,7 +422,6 @@ pub struct SmartConfigMerger<T> {
     merge_strategy: MergeStrategy,
     _phantom: PhantomData<T>,
 }
-
 /// Configuration merge strategies
 #[derive(Debug, Clone)]
 pub enum MergeStrategy {
@@ -435,7 +434,6 @@ pub enum MergeStrategy {
     /// Custom merge function
     Custom(fn(&serde_json::Value, &serde_json::Value) -> serde_json::Value),
 }
-
 impl<T> SmartConfigMerger<T>
 where
     T: Clone + Serialize + for<'de> Deserialize<'de>,
@@ -450,13 +448,21 @@ where
     }
 
     /// Set merge strategy
+    #[must_use]
     pub fn with_strategy(mut self, strategy: MergeStrategy) -> Self {
         self.merge_strategy = strategy;
         self
     }
 
     /// Merge with another configuration
-    pub fn merge(self, other: T) -> Result<T> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn merge(self, other: T) -> Result<T>  {
         let base_json = serde_json::to_value(&self.base_config)?;
         let other_json = serde_json::to_value(&other)?;
 
@@ -477,8 +483,8 @@ where
             (serde_json::Value::Object(base_obj), serde_json::Value::Object(other_obj)) => {
                 let mut result = base_obj.clone();
                 for (key, value) in other_obj {
-                    if let Some(base_value) = base_obj.get(key) {
-                        result.insert(key.clone(), Self::smart_merge(base_value, value));
+                    if let Some(basevalue) = base_obj.get(key) {
+                        result.insert(key.clone(), Self::smart_merge(basevalue, value));
                     } else {
                         result.insert(key.clone(), value.clone());
                     }
@@ -490,12 +496,11 @@ where
     }
 }
 
-// ==================== CONFIGURATION PRESETS ====================
+// ==================== SECTION ====================
 
 /// **SMART CONFIGURATION PRESETS**
 /// Pre-defined configuration presets for common scenarios
 pub struct SmartConfigPresets;
-
 impl SmartConfigPresets {
     /// Development environment preset
     pub fn development() -> HashMap<String, serde_json::Value> {
@@ -618,13 +623,12 @@ impl SmartConfigPresets {
     }
 }
 
-// ==================== CONVENIENCE FUNCTIONS ====================
+// ==================== SECTION ====================
 
 /// Create a smart environment loader
 pub fn env_loader(prefix: &str) -> SmartEnvLoader {
     SmartEnvLoader::new(prefix)
 }
-
 /// Create a smart validator for a value
 pub fn validate<T>(value: T, field_name: &str) -> SmartValidator<T>
 where
@@ -632,7 +636,6 @@ where
 {
     SmartValidator::new(value, field_name)
 }
-
 /// Create a smart configuration merger
 pub fn merge_configs<T>(base: T) -> SmartConfigMerger<T>
 where
@@ -640,7 +643,6 @@ where
 {
     SmartConfigMerger::new(base)
 }
-
 /// Load configuration with environment overrides
 pub fn load_config_with_env<T>(base: T, env_prefix: &str) -> Result<T>
 where
@@ -648,7 +650,6 @@ where
 {
     let env_loader = SmartEnvLoader::new(env_prefix);
     let env_vars = env_loader.load_all();
-
     if env_vars.is_empty() {
         return Ok(base);
     }

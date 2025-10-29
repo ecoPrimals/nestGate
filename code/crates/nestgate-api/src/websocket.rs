@@ -30,7 +30,6 @@ pub enum WebSocketEventType {
     /// A pong frame was sent or received
     Pong,
 }
-
 /// WebSocket event structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WebSocketEvent {
@@ -45,7 +44,6 @@ pub struct WebSocketEvent {
     /// Event occurrence timestamp
     pub timestamp: SystemTime,
 }
-
 /// Connection parameters for WebSocket upgrade
 #[derive(Debug, Deserialize)]
 pub struct ConnectionParams {
@@ -54,7 +52,6 @@ pub struct ConnectionParams {
     /// Optional client identifier
     pub client_id: Option<String>,
 }
-
 /// WebSocket connection statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WebSocketStats {
@@ -71,7 +68,6 @@ pub struct WebSocketStats {
     /// Number of errors encountered
     pub errors: u64,
 }
-
 /// WebSocket client types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ClientType {
@@ -86,7 +82,6 @@ pub enum ClientType {
     /// API client for programmatic access
     ApiClient,
 }
-
 /// WebSocket connection information
 #[derive(Debug, Clone, Serialize)]
 pub struct ConnectionInfo {
@@ -101,14 +96,12 @@ pub struct ConnectionInfo {
     /// List of subscribed channels or topics
     pub subscriptions: Vec<String>,
 }
-
 /// WebSocket manager for handling connections
 pub struct WebSocketManager {
     connections: Arc<RwLock<HashMap<Uuid, ConnectionInfo>>>,
     event_broadcaster: broadcast::Sender<WebSocketEvent>,
     stats: Arc<RwLock<WebSocketStats>>,
 }
-
 impl Default for WebSocketManager {
     fn default() -> Self {
         Self::new()
@@ -117,11 +110,12 @@ impl Default for WebSocketManager {
 
 impl WebSocketManager {
     /// Create a new WebSocket manager
+    #[must_use]
     pub fn new() -> Self {
         let (event_broadcaster, _) = broadcast::channel(1000);
 
         Self {
-            connections: Arc::new(RwLock::new(HashMap::new())),
+            connections: Arc::new(RwLock::new(HashMap::new()),
             event_broadcaster,
             stats: Arc::new(RwLock::new(WebSocketStats {
                 total_connections: 0,
@@ -130,7 +124,7 @@ impl WebSocketManager {
                 messages_received: 0,
                 bytes_transferred: 0,
                 errors: 0,
-            })),
+            }),
         }
     }
 
@@ -140,13 +134,13 @@ impl WebSocketManager {
     }
 
     /// Handle WebSocket upgrade
-    pub async fn handle_websocket_upgrade(
+    pub fn handle_websocket_upgrade(
         &self,
         ws: axum::extract::WebSocketUpgrade,
-        params: ConnectionParams,
+        _params: ConnectionParams,
     ) -> axum::response::Response {
         let client_id = *get_or_create_uuid("websocket_client");
-        let client_type = match params.client_type.as_deref() {
+        let client_type = match _params.client_type.as_deref() {
             Some("WebUI") => ClientType::WebUI,
             Some("Monitor") => ClientType::Monitor,
             Some("Integration") => ClientType::Integration,
@@ -179,13 +173,13 @@ impl WebSocketManager {
 
             // Send welcome message
             let welcome_msg = WebSocketEvent {
-                event_id: *get_or_create_uuid(&format!("websocket_welcome_{client_id}")),
+                event_id: *get_or_create_uuid(&format!("websocket_welcome_self.base_url")),
                 client_id,
                 event_type: WebSocketEventType::ConnectionEstablished,
                 data: serde_json::json!({
                     "message": "Connection established",
                     "client_id": client_id,
-                    "client_type": format!("{:?}", client_type)
+                    "client_type": format!("self.base_url")
                 }),
                 timestamp: SystemTime::now(),
             };
@@ -209,7 +203,7 @@ impl WebSocketManager {
                             event_type: WebSocketEventType::Message,
                             data: serde_json::json!({
                                 "message": text,
-                                "client_type": format!("{:?}", client_type)
+                                "client_type": format!("self.base_url")
                             }),
                             timestamp: SystemTime::now(),
                         };
@@ -231,10 +225,17 @@ impl WebSocketManager {
     }
 
     /// Broadcast event to all connected clients
-    pub async fn broadcast_event(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn broadcast_event(
         &self,
         event: WebSocketEvent,
-    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>>  {
         let connections = self.connections.read().await;
 
         // Pre-serialize event to avoid repeated serialization for each client (zero-copy optimization)
@@ -266,11 +267,9 @@ impl WebSocketManager {
 }
 
 impl Clone for WebSocketManager {
-    fn clone(&self) -> Self {
-        Self {
+    fn clone(&self) -> Self { Self {
             connections: Arc::clone(&self.connections),
             event_broadcaster: self.event_broadcaster.clone(),
             stats: Arc::clone(&self.stats),
-        }
-    }
+         }
 }

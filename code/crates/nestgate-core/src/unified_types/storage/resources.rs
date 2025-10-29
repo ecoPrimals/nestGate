@@ -6,7 +6,6 @@
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use uuid::Uuid;
-
 // Import unified enums
 use crate::canonical_modernization::{UnifiedHealthStatus, UnifiedStorageTier, UnifiedStorageType};
 
@@ -15,14 +14,13 @@ use super::access::{StorageAccessControl, StorageResourceMetadata};
 use super::config::StorageResourceConfig;
 use super::metrics::StorageMetrics;
 
-// ==================== CORE STORAGE RESOURCE TYPES ====================
+// ==================== SECTION ====================
 
 /// **THE** unified storage resource - consolidates all resource definitions
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnifiedStorageResource {
     /// Unique resource identifier
     pub resource_id: String,
-
     /// Human-readable name
     pub name: String,
 
@@ -33,7 +31,6 @@ pub struct UnifiedStorageResource {
     pub tier: UnifiedStorageTier,
 
     /// Storage path or location
-    pub path: String,
 
     /// Resource capacity information
     pub capacity: StorageCapacity,
@@ -62,7 +59,6 @@ pub struct UnifiedStorageResource {
 pub struct StorageCapacity {
     /// Total capacity in bytes
     pub total_bytes: u64,
-
     /// Currently used capacity in bytes
     pub used_bytes: u64,
 
@@ -115,7 +111,6 @@ impl StorageCapacity {
 pub struct StorageHealthInfo {
     /// Overall health status
     pub status: UnifiedHealthStatus,
-
     /// Detailed health state
     pub state: StorageHealthState,
 
@@ -158,8 +153,7 @@ pub enum StorageHealthState {
     /// Storage is being initialized
     Initializing,
 }
-
-// ==================== DEFAULT IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 impl Default for UnifiedStorageResource {
     fn default() -> Self {
@@ -168,7 +162,6 @@ impl Default for UnifiedStorageResource {
             name: "default-storage".to_string(),
             storage_type: UnifiedStorageType::Local,
             tier: UnifiedStorageTier::Hot,
-            path: "/default".to_string(),
             capacity: StorageCapacity::default(),
             health: StorageHealthInfo::default(),
             metrics: StorageMetrics::default(),
@@ -195,7 +188,7 @@ impl Default for StorageHealthInfo {
     }
 }
 
-// ==================== UTILITY IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 impl UnifiedStorageResource {
     /// Create a new storage resource with default values

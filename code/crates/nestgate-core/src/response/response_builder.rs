@@ -1,251 +1,244 @@
-/// Response Builder Module
-/// Utilities for building consistent HTTP responses
-/// **PROBLEM SOLVED**: Centralized response building patterns
+// Response builder utilities
+// Provides convenient methods for building HTTP responses
+
+use super::error_response::ErrorResponseFactory;
 use axum::{
     http::StatusCode,
     response::{IntoResponse, Json},
 };
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+// CLEANED: Removed unused import as part of canonical modernization
+// use super::success_response::SuccessResponseFactory;
 
-use super::error_response::{ErrorResponseFactory, UnifiedErrorResponse};
-
-/// Response builder for creating consistent HTTP responses
+/// Response builder for creating standardized HTTP responses
 pub struct ResponseBuilder;
-
 impl ResponseBuilder {
-    /// Create an error JSON response
-    pub fn error_json(message: String) -> Json<serde_json::Value> {
-        Json(serde_json::json!({
-            "success": false,
-            "error": message,
-            "timestamp": chrono::Utc::now()
-        }))
+    /// Create a JSON success response
+    pub fn success<T: Serialize>(data: T) -> impl IntoResponse {
+        (StatusCode::OK, Json(data))
     }
 
-    /// Create a success JSON response with message
-    pub fn success_json(message: String) -> Json<serde_json::Value> {
-        Json(serde_json::json!({
-            "success": true,
-            "message": message,
-            "timestamp": chrono::Utc::now()
-        }))
+    /// Create a created response with location
+    pub fn created<T: Serialize>(data: T, location: Option<&str>) -> impl IntoResponse {
+        let mut headers = axum::http::HeaderMap::new();
+        if let Some(location) = location {
+            if let Ok(locationvalue) = axum::http::HeaderValue::from_str(location) {
+                headers.insert(axum::http::header::LOCATION, locationvalue);
+            }
+        }
+        (StatusCode::CREATED, headers, Json(data))
     }
 
-    /// Create a success JSON response with data
-    pub fn success_json_with_data<T: Serialize>(
-        message: String,
-        data: T,
-    ) -> Json<serde_json::Value> {
-        Json(serde_json::json!({
-            "success": true,
-            "message": message,
-            "data": data,
-            "timestamp": chrono::Utc::now()
-        }))
+    /// Create an accepted response for async operations
+    pub fn accepted<T: Serialize>(data: T) -> impl IntoResponse {
+        (StatusCode::ACCEPTED, Json(data))
     }
 
-    /// Create an error response with custom status code
-    pub fn error_with_status(status: StatusCode, message: String) -> impl IntoResponse {
-        (status, Self::error_json(message))
+    /// Create a no content response
+    #[must_use]
+    pub fn no_content() -> impl IntoResponse {
+        StatusCode::NO_CONTENT
     }
 
-    /// Create a success response with custom status code
-    pub fn success_with_status(status: StatusCode, message: String) -> impl IntoResponse {
-        (status, Self::success_json(message))
-    }
-
-    /// Create a service unavailable response
-    pub fn service_unavailable(service: &str) -> impl IntoResponse {
-        let error = ErrorResponseFactory::service_unavailable(service);
-        (StatusCode::SERVICE_UNAVAILABLE, Json(error.serialize()))
-    }
-
-    /// Create an internal server error response
-    pub fn internal_error(error: String) -> impl IntoResponse {
-        let error_response = ErrorResponseFactory::internal_error(&error);
-        error_response.into_response()
-    }
-
-    /// Create a not found response
-    pub fn not_found(resource: &str) -> impl IntoResponse {
-        let error = ErrorResponseFactory::not_found(resource);
-        error.into_response()
+    /// Create a not modified response
+    #[must_use]
+    pub fn not_modified() -> impl IntoResponse {
+        StatusCode::NOT_MODIFIED
     }
 
     /// Create a bad request response
-    pub fn bad_request(message: String) -> impl IntoResponse {
-        (StatusCode::BAD_REQUEST, Self::error_json(message))
+    #[must_use]
+    pub fn bad_request(message: &str) -> impl IntoResponse {
+        let error = ErrorResponseFactory::bad_request(message);
+        error.into_response()
     }
 
     /// Create an unauthorized response
+    #[must_use]
     pub fn unauthorized(operation: &str) -> impl IntoResponse {
         let error = ErrorResponseFactory::unauthorized(operation);
         error.into_response()
     }
 
     /// Create a forbidden response
+    #[must_use]
     pub fn forbidden(resource: &str) -> impl IntoResponse {
-        let error = UnifiedErrorResponse::simple(
-            &format!("Access to {resource} is forbidden"),
-            "FORBIDDEN",
-            "nestgate-core",
-        );
-        (StatusCode::FORBIDDEN, Json(error.serialize()))
+        let error = ErrorResponseFactory::forbidden(resource);
+        error.into_response()
     }
 
-    /// Create a timeout response
-    pub fn timeout(operation: &str) -> impl IntoResponse {
-        let error = ErrorResponseFactory::timeout_error(operation, 30000);
+    /// Create a not found response
+    #[must_use]
+    pub fn not_found(path: &str) -> impl IntoResponse {
+        let error = ErrorResponseFactory::not_found(path);
+        error.into_response()
+    }
+
+    /// Create a conflict response
+    #[must_use]
+    pub fn conflict(resource: &str) -> impl IntoResponse {
+        let error = ErrorResponseFactory::conflict(resource);
         error.into_response()
     }
 
     /// Create a validation error response
+    #[must_use]
     pub fn validation_error(field: &str, message: &str) -> impl IntoResponse {
         let error = ErrorResponseFactory::validation_error(field, message);
         error.into_response()
     }
 
-    /// Create a created response (201)
-    pub fn created(resource: &str, id: &str) -> impl IntoResponse {
-        let success = super::success_response::SuccessResponseFactory::created(resource, id);
-        (StatusCode::CREATED, Json(success))
+    /// Create a rate limited response
+    #[must_use]
+    pub fn rate_limited(retry_after: Option<u64>) -> impl IntoResponse {
+        let error = ErrorResponseFactory::rate_limited(retry_after);
+        error.into_response()
     }
 
-    /// Create an accepted response (202)
-    pub fn accepted(message: &str) -> impl IntoResponse {
-        (
-            StatusCode::ACCEPTED,
-            Self::success_json(message.to_string()),
-        )
+    /// Create an internal server error response
+    #[must_use]
+    pub fn internal(message: &str) -> impl IntoResponse {
+        let error = ErrorResponseFactory::internal(message);
+        error.into_response()
     }
 
-    /// Create a no content response (204)
-    pub fn no_content() -> impl IntoResponse {
-        StatusCode::NO_CONTENT
+    /// Create a service unavailable response
+    #[must_use]
+    pub fn service_unavailable(service: &str) -> impl IntoResponse {
+        let error = ErrorResponseFactory::service_unavailable(service);
+        error.into_response()
     }
 
-    /// Create a rate limited response (429)
-    pub fn rate_limited(retry_after_seconds: u64) -> impl IntoResponse {
-        let mut headers = axum::http::HeaderMap::new();
-        if let Ok(header_value) = retry_after_seconds.to_string().parse() {
-            headers.insert(axum::http::header::RETRY_AFTER, header_value);
-        } else {
-            tracing::error!(
-                "Failed to parse retry_after_seconds as header value: {}",
-                retry_after_seconds
-            );
-            // Use default of 60 seconds if parsing fails
-            headers.insert(
-                axum::http::header::RETRY_AFTER,
-                "60".parse()
-                    .unwrap_or_else(|_| axum::http::HeaderValue::from_static("60")),
-            );
-        }
-
-        let error =
-            UnifiedErrorResponse::simple("Rate limit exceeded", "RATE_LIMITED", "nestgate-core");
-
-        (
-            StatusCode::TOO_MANY_REQUESTS,
-            headers,
-            Json(error.serialize()),
-        )
+    /// Create a timeout response
+    #[must_use]
+    pub fn timeout(operation: &str) -> impl IntoResponse {
+        let error = ErrorResponseFactory::timeout(operation);
+        error.into_response()
     }
 
-    /// Create a maintenance response (503)
-    pub fn maintenance(message: &str) -> impl IntoResponse {
-        let error = UnifiedErrorResponse::simple(message, "MAINTENANCE", "nestgate-core");
-
-        (StatusCode::SERVICE_UNAVAILABLE, Json(error.serialize()))
-    }
-}
-
-/// Advanced response builder with fluent API
-pub struct FluentResponseBuilder {
-    status: StatusCode,
-    headers: HashMap<String, String>,
-    data: Option<serde_json::Value>,
-    error: Option<String>,
-    metadata: HashMap<String, serde_json::Value>,
-}
-
-impl FluentResponseBuilder {
-    /// Create a new fluent response builder
-    pub fn new() -> Self {
-        Self {
-            status: StatusCode::OK,
-            headers: HashMap::new(),
-            data: None,
-            error: None,
-            metadata: HashMap::new(),
-        }
+    /// Create a paginated response
+    #[must_use]
+    pub fn paginated<T: Serialize>(
+        data: Vec<T>,
+        page: u32,
+        per_page: u32,
+        total: u64,
+    ) -> impl IntoResponse {
+        let response = PaginatedResponse {
+            data,
+            pagination: PaginationMetadata {
+                page,
+                per_page,
+                total,
+                total_pages: (total as f64 / f64::from(per_page)).ceil() as u32,
+            },
+        };
+        (StatusCode::OK, Json(response))
     }
 
-    /// Set the HTTP status code
-    pub fn status(mut self, status: StatusCode) -> Self {
-        self.status = status;
-        self
-    }
-
-    /// Add a header
-    pub fn header(mut self, key: &str, value: &str) -> Self {
-        self.headers.insert(key.to_string(), value.to_string());
-        self
-    }
-
-    /// Set the response data
-    pub fn data<T: Serialize>(mut self, data: T) -> Self {
-        self.data = Some(serde_json::to_value(data).unwrap_or_default());
-        self
-    }
-
-    /// Set an error message
-    pub fn error(mut self, message: &str) -> Self {
-        self.error = Some(message.to_string());
-        self
-    }
-
-    /// Add metadata
-    pub fn metadata(mut self, key: &str, value: serde_json::Value) -> Self {
-        self.metadata.insert(key.to_string(), value);
-        self
-    }
-
-    /// Build the final response
-    pub fn build(self) -> impl IntoResponse {
-        let mut response_headers = axum::http::HeaderMap::new();
-        for (key, value) in self.headers {
-            if let (Ok(name), Ok(val)) = (
+    /// Create a response with custom headers
+    pub fn with_headers<T: Serialize>(
+        data: T,
+        status: StatusCode,
+        headers: HashMap<String, String>,
+    ) -> impl IntoResponse {
+        let mut header_map = axum::http::HeaderMap::new();
+        for (key, value) in headers {
+            if let (Ok(header_name), Ok(headervalue)) = (
                 axum::http::HeaderName::from_bytes(key.as_bytes()),
                 axum::http::HeaderValue::from_str(&value),
             ) {
-                response_headers.insert(name, val);
+                header_map.insert(header_name, headervalue);
+            }
+        }
+        (status, header_map, Json(data))
+    }
+
+    /// Create a response with cache headers
+    pub fn with_cache<T: Serialize>(
+        data: T,
+        max_age: u32,
+        etag: Option<&str>,
+    ) -> impl IntoResponse {
+        let mut headers = axum::http::HeaderMap::new();
+
+        // Set Cache-Control header
+        if let Ok(cachevalue) = axum::http::HeaderValue::from_str(&format!("max-age={max_age}")) {
+            headers.insert(axum::http::header::CACHE_CONTROL, cachevalue);
+        }
+
+        // Set ETag if provided
+        if let Some(etag) = etag {
+            if let Ok(etagvalue) = axum::http::HeaderValue::from_str(&format!("\"{etag}\"")) {
+                headers.insert(axum::http::header::ETAG, etagvalue);
             }
         }
 
-        let response_body = if let Some(error) = self.error {
-            serde_json::json!({
-                "success": false,
-                "error": error,
-                "metadata": self.metadata,
-                "timestamp": chrono::Utc::now()
-            })
-        } else {
-            serde_json::json!({
-                "success": true,
-                "data": self.data,
-                "metadata": self.metadata,
-                "timestamp": chrono::Utc::now()
-            })
-        };
+        (StatusCode::OK, headers, Json(data))
+    }
 
-        (self.status, response_headers, Json(response_body))
+    /// Create a streaming response placeholder
+    #[must_use]
+    pub fn stream_placeholder() -> impl IntoResponse {
+        (
+            StatusCode::OK,
+            "Streaming response would be implemented here",
+        )
+    }
+
+    /// Helper method to create error JSON
+    #[allow(dead_code)] // Framework method - intentionally unused
+    fn error_json(message: String) -> Json<ErrorMessage> {
+        Json(ErrorMessage { error: message })
     }
 }
 
-impl Default for FluentResponseBuilder {
-    fn default() -> Self {
-        Self::new()
+/// Paginated response structure
+#[derive(Debug, Serialize, Deserialize)]
+pub struct PaginatedResponse<T> {
+    pub data: Vec<T>,
+    pub pagination: PaginationMetadata,
+}
+/// Pagination metadata
+#[derive(Debug, Serialize, Deserialize)]
+pub struct PaginationMetadata {
+    pub page: u32,
+    pub per_page: u32,
+    pub total: u64,
+    pub total_pages: u32,
+}
+/// Simple error message structure
+#[derive(Debug, Serialize, Deserialize)]
+struct ErrorMessage {
+    error: String,
+}
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_response_builder_success() {
+        let data = serde_json::json!({"message": "success"});
+        let _response = ResponseBuilder::success(data);
+        // Response building test would require axum test utilities
+        // This is a placeholder for the actual test implementation
+    }
+
+    #[test]
+    fn test_paginated_response() {
+        let data = vec!["item1", "item2", "item3"];
+        let _response = ResponseBuilder::paginated(data, 1, 10, 3);
+        // Response building test would require axum test utilities
+        // This is a placeholder for the actual test implementation
+    }
+
+    #[test]
+    fn test_error_responses() {
+        let _bad_request = ResponseBuilder::bad_request("Invalid input");
+        let _not_found = ResponseBuilder::not_found("/api/test");
+        let _unauthorized = ResponseBuilder::unauthorized("read");
+        // Response building tests would require axum test utilities
+        // These are placeholders for actual test implementations
     }
 }

@@ -7,12 +7,11 @@ use arbitrary::Arbitrary;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
-
 // Import the standardized config pattern
 use crate::unified_config_consolidation::StandardDomainConfig;
-use crate::unified_enums::{UnifiedHealthStatus, UnifiedServiceType};
+use crate::unified_enums::service_types::UnifiedServiceType};
 
-// ==================== FUZZ-SPECIFIC EXTENSIONS ====================
+// ==================== SECTION ====================
 
 /// Fuzz-specific configuration extensions
 /// Domain-specific fields for comprehensive fuzz testing
@@ -30,12 +29,11 @@ pub struct FuzzExtensions {
     pub path_validation: FuzzPathValidationSettings,
     /// Serialization fuzzing
     pub serialization: FuzzSerializationSettings,
-    /// BiomeOS manifest fuzzing
-    pub biomeos_manifests: FuzzBioMeOSManifestSettings,
+    /// Management manifest fuzzing
+    pub management_manifests: FuzzBioMeOSManifestSettings,
     /// Universal adapter fuzzing
     pub universal_adapter: FuzzUniversalAdapterSettings,
     }
-
 /// Configuration parsing fuzz settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FuzzConfigParsingSettings {
@@ -52,7 +50,6 @@ pub struct FuzzConfigParsingSettings {
     /// Maximum memory usage (MB)
     pub max_memory_mb: u64,
     }
-
 /// API endpoint fuzz settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FuzzApiEndpointSettings {
@@ -67,7 +64,6 @@ pub struct FuzzApiEndpointSettings {
     /// Maximum request body size
     pub max_request_body_size: usize,
     }
-
 /// ZFS command fuzz settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FuzzZfsCommandSettings {
@@ -82,7 +78,6 @@ pub struct FuzzZfsCommandSettings {
     /// Maximum command length
     pub max_command_length: usize,
     }
-
 /// Network protocol fuzz settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FuzzNetworkProtocolSettings {
@@ -95,7 +90,6 @@ pub struct FuzzNetworkProtocolSettings {
     /// Maximum packet size
     pub max_packet_size: usize,
     }
-
 /// Path validation fuzz settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FuzzPathValidationSettings {
@@ -108,7 +102,6 @@ pub struct FuzzPathValidationSettings {
     /// Maximum path length
     pub max_path_length: usize,
     }
-
 /// Serialization fuzz settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FuzzSerializationSettings {
@@ -121,8 +114,7 @@ pub struct FuzzSerializationSettings {
     /// Maximum serialized data size
     pub max_serialized_size: usize,
     }
-
-/// BiomeOS manifest fuzz settings
+/// Management manifest fuzz settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FuzzBioMeOSManifestSettings {
     /// Manifest structures to test
@@ -134,7 +126,6 @@ pub struct FuzzBioMeOSManifestSettings {
     /// Maximum manifest size
     pub max_manifest_size: usize,
     }
-
 /// Universal adapter fuzz settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FuzzUniversalAdapterSettings {
@@ -147,8 +138,7 @@ pub struct FuzzUniversalAdapterSettings {
     /// Maximum configuration complexity
     pub max_config_complexity: usize,
     }
-
-// ==================== FUZZ DATA STRUCTURES ====================
+// ==================== SECTION ====================
 
 /// Configuration formats for fuzzing
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -158,7 +148,6 @@ pub enum ConfigFormat {
     Toml,
     RawString(String),
     }
-
 /// Fuzzable configuration data
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FuzzConfigData {
@@ -170,7 +159,6 @@ pub struct FuzzConfigData {
     pub security: FuzzSecurityConfigData,
     pub raw_fields: HashMap<String, String>,
     }
-
 /// Database configuration for fuzzing
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FuzzDatabaseConfig {
@@ -181,18 +169,15 @@ pub struct FuzzDatabaseConfig {
     pub connection_pool_size: u16,
     pub ssl_mode: String,
     }
-
 /// Logging configuration for fuzzing
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FuzzLoggingConfig {
     pub level: String,
-    pub file_path: String,
     pub max_size_mb: u64,
     pub format: String,
     pub rotation_policy: String,
     pub retention_days: u32,
     }
-
 /// ZFS configuration data for fuzzing
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FuzzZfsConfigData {
@@ -203,29 +188,24 @@ pub struct FuzzZfsConfigData {
     pub compression: String,
     pub deduplication: bool,
     }
-
 /// API configuration data for fuzzing
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FuzzApiConfigData {
     pub host: String,
     pub port: u16,
-    pub ssl_cert_path: String,
-    pub ssl_key_path: String,
     pub cors_origins: Vec<String>,
     pub rate_limit: u32,
     pub timeout_seconds: u64,
     }
-
 /// Network configuration data for fuzzing
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FuzzNetworkConfigData {
-    pub bind_address: String,
+    pub bind_endpoint: String,
     pub port_range: (u16, u16),
     pub max_connections: u32,
     pub buffer_size: usize,
     pub protocol_version: String,
     }
-
 /// Security configuration data for fuzzing
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FuzzSecurityConfigData {
@@ -235,7 +215,6 @@ pub struct FuzzSecurityConfigData {
     pub auth_methods: Vec<String>,
     pub session_timeout: u64,
     }
-
 /// Malicious content types for testing
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum MaliciousContent {
@@ -268,18 +247,15 @@ pub enum MaliciousContent {
     /// NoSQL injection
     NoSqlInjection(String),
     }
-
 /// HTTP request structure for API fuzzing
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FuzzHttpRequest {
     pub method: HttpMethod,
-    pub path: String,
     pub headers: HashMap<String, String>,
     pub query_params: HashMap<String, String>,
     pub body: FuzzRequestBody,
     pub attack_vectors: Vec<AttackVector>,
     }
-
 /// HTTP methods for fuzzing
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum HttpMethod {
@@ -294,7 +270,6 @@ pub enum HttpMethod {
     Connect,
     Malformed(String),
     }
-
 /// Request body types for fuzzing
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum FuzzRequestBody {
@@ -304,7 +279,6 @@ pub enum FuzzRequestBody {
     Multipart(Vec<MultipartField>),
     Empty,
     }
-
 /// Multipart field for request body fuzzing
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MultipartField {
@@ -313,7 +287,6 @@ pub struct MultipartField {
     pub content_type: String,
     pub data: Vec<u8>,
     }
-
 /// Attack vectors for comprehensive security testing
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AttackVector {
@@ -350,7 +323,6 @@ pub enum AttackVector {
     /// Deserialization attacks
     DeserializationAttack(String),
     }
-
 /// ZFS command structure for fuzzing
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FuzzZfsCommand {
@@ -360,7 +332,6 @@ pub struct FuzzZfsCommand {
     pub properties: HashMap<String, String>,
     pub raw_args: Vec<String>,
     }
-
 /// ZFS command types for fuzzing
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum FuzzCommandType {
@@ -375,7 +346,6 @@ pub enum FuzzCommandType {
     Status,
     RawCommand(String),
     }
-
 /// Network packet structure for fuzzing
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FuzzNetworkPacket {
@@ -385,7 +355,6 @@ pub struct FuzzNetworkPacket {
     pub payload: Vec<u8>,
     pub headers: HashMap<String, String>,
     }
-
 /// Network protocol types for fuzzing
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum NetworkProtocolType {
@@ -396,7 +365,6 @@ pub enum NetworkProtocolType {
     Websocket,
     Custom(String),
     }
-
 /// Serialization formats for fuzzing
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SerializationFormat {
@@ -408,8 +376,7 @@ pub enum SerializationFormat {
     Protobuf,
     Custom(String),
     }
-
-/// BiomeOS manifest structure for fuzzing
+/// Management manifest structure for fuzzing
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FuzzBioMeOSManifest {
     pub name: String,
@@ -418,7 +385,6 @@ pub struct FuzzBioMeOSManifest {
     pub configuration: HashMap<String, serde_json::Value>,
     pub metadata: HashMap<String, String>,
     }
-
 /// Provider configuration for universal adapter fuzzing
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FuzzProviderConfig {
@@ -428,7 +394,6 @@ pub struct FuzzProviderConfig {
     pub configuration: HashMap<String, serde_json::Value>,
     pub authentication: Option<FuzzAuthConfig>,
     }
-
 /// Authentication configuration for fuzzing
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FuzzAuthConfig {
@@ -437,8 +402,7 @@ pub struct FuzzAuthConfig {
     pub token_endpoint: Option<String>,
     pub scopes: Vec<String>,
     }
-
-// ==================== DEFAULT IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 impl Default for FuzzExtensions {
     fn default() -> Self {
@@ -449,7 +413,7 @@ impl Default for FuzzExtensions {
             network_protocols: FuzzNetworkProtocolSettings::default(),
             path_validation: FuzzPathValidationSettings::default(),
             serialization: FuzzSerializationSettings::default(),
-            biomeos_manifests: FuzzBioMeOSManifestSettings::default(),
+            management_manifests: FuzzBioMeOSManifestSettings::default(),
             universal_adapter: FuzzUniversalAdapterSettings::default(),
     }
     }
@@ -486,6 +450,8 @@ impl Default for FuzzDatabaseConfig {
     fn default() -> Self {
         Self {
             url: format!(
+// DEPRECATED: PostgreSQL database - migrate to capability-based persistence
+// Capability-based discovery implemented
                 "postgresql://{}:{}/test",
                 crate::constants::addresses::localhost_hostname(),
                 crate::constants::port_defaults::POSTGRES_DEFAULT_PORT
@@ -503,7 +469,6 @@ impl Default for FuzzLoggingConfig {
     fn default() -> Self {
         Self {
             level: "info".to_string(),
-            file_path: "/tmp/fuzz.log".to_string(),
             max_size_mb: 100,
             format: "json".to_string(),
             rotation_policy: "daily".to_string(),
@@ -530,8 +495,6 @@ impl Default for FuzzApiConfigData {
         Self {
             host: "localhost".to_string(),
             port: 8080,
-            ssl_cert_path: "/path/to/cert.pem".to_string(),
-            ssl_key_path: "/path/to/key.pem".to_string(),
             cors_origins: vec!["*".to_string()],
             rate_limit: 1000,
             timeout_seconds: 30,
@@ -542,7 +505,7 @@ impl Default for FuzzApiConfigData {
 impl Default for FuzzNetworkConfigData {
     fn default() -> Self {
         Self {
-            bind_address: "0.0.0.0".to_string(),
+            bind_endpoint: "0.0.0.0".to_string(),
             port_range: (8000, 9000),
             max_connections: 1000,
             buffer_size: 8192,
@@ -643,15 +606,15 @@ impl Default for FuzzUniversalAdapterSettings {
     }
     }
 
-// ==================== TYPE ALIAS FOR UNIFIED FUZZ CONFIG ====================
+// ==================== SECTION ====================
 
 /// Standardized Fuzz configuration
 pub type UnifiedFuzzConfig = StandardDomainConfig<FuzzExtensions>;
-
-// ==================== BUILDER PATTERN ====================
+// ==================== SECTION ====================
 
 impl UnifiedFuzzConfig {
     /// Create a comprehensive fuzz configuration
+    #[must_use]
     pub fn comprehensive() -> Self {
         let mut config = StandardDomainConfig::with_service(
             FuzzExtensions::default(),
@@ -666,13 +629,13 @@ impl UnifiedFuzzConfig {
 
         // Configure fuzz-specific network settings
         config.network.port = 0; // Random port for fuzzing
-        config.network.bind_address = "127.0.0.1".parse().unwrap_or_else(|e| {
+        config.network.bind_endpoint = "127.0.0.1".parse().unwrap_or_else(|e| {
     tracing::error!("Expect failed ({}): {:?}", "Valid IP address", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
     format!("Operation failed - {}: {:?}", "Valid IP address", e)
 ).into())
-});
+);
         // config.network.enable_tls = false; // Field doesn't exist in current UnifiedNetworkConfig
         config.network.max_connections = 1000;
 
@@ -685,6 +648,7 @@ impl UnifiedFuzzConfig {
     }
 
     /// Create configuration for API endpoint fuzzing
+    #[must_use]
     pub fn api_fuzzing() -> Self {
         let mut config = Self::comprehensive();
         config.service.name = "api-fuzz-test".to_string();
@@ -694,6 +658,7 @@ impl UnifiedFuzzConfig {
     }
 
     /// Create configuration for configuration parsing fuzzing
+    #[must_use]
     pub fn config_parsing_fuzzing() -> Self {
         let mut config = Self::comprehensive();
         config.service.name = "config-parsing-fuzz-test".to_string();
@@ -703,6 +668,7 @@ impl UnifiedFuzzConfig {
     }
 
     /// Create configuration for ZFS command fuzzing
+    #[must_use]
     pub fn zfs_command_fuzzing() -> Self {
         let mut config = Self::comprehensive();
         config.service.name = "zfs-command-fuzz-test".to_string();
@@ -721,7 +687,6 @@ impl UnifiedFuzzConfig {
 pub struct UnifiedFuzzConfigBuilder {
     config: UnifiedFuzzConfig,
     }
-
 impl UnifiedFuzzConfigBuilder {
     pub fn new() -> Self {
         Self {
@@ -729,11 +694,13 @@ impl UnifiedFuzzConfigBuilder {
     }
     }
 
+    #[must_use]
     pub fn test_name(mut self, name: &str) -> Self {
         self.config.service.name = name.to_string();
         self
     }
 
+    #[must_use]
     pub fn enable_config_parsing_fuzzing(mut self, enabled: bool) -> Self {
         self.config
             .extensions
@@ -742,6 +709,7 @@ impl UnifiedFuzzConfigBuilder {
         self
     }
 
+    #[must_use]
     pub fn enable_api_fuzzing(mut self, enabled: bool) -> Self {
         self.config
             .extensions
@@ -751,6 +719,7 @@ impl UnifiedFuzzConfigBuilder {
         self
     }
 
+    #[must_use]
     pub fn enable_zfs_fuzzing(mut self, enabled: bool) -> Self {
         self.config.extensions.zfs_commands.enable_pool_validation = enabled;
         self.config
@@ -760,6 +729,7 @@ impl UnifiedFuzzConfigBuilder {
         self
     }
 
+    #[must_use]
     pub fn max_parsing_time(mut self, seconds: u64) -> Self {
         self.config.extensions.config_parsing.max_parsing_time = seconds;
         self

@@ -1,4 +1,4 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 //
 // Intelligent connection pooling with adaptive scaling for high-throughput scenarios.
 
@@ -21,7 +21,6 @@ pub struct IntelligentConnectionPool<T> {
     metrics: Arc<PoolMetrics>,
     semaphore: Arc<Semaphore>,
 }
-
 /// Connection pool configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConnectionPoolConfig {
@@ -33,7 +32,6 @@ pub struct ConnectionPoolConfig {
     pub scale_up_threshold: f64,
     pub scale_down_threshold: f64,
 }
-
 impl Default for ConnectionPoolConfig {
     fn default() -> Self {
         Self {
@@ -58,7 +56,6 @@ pub struct PoolMetrics {
     pub connection_failures: AtomicU64,
     pub average_wait_time: AtomicU64,
 }
-
 /// Pooled connection wrapper
 pub struct PooledConnection<T> {
     pub connection: T,
@@ -67,7 +64,6 @@ pub struct PooledConnection<T> {
     pub use_count: u64,
     pub is_healthy: bool,
 }
-
 impl<T> PooledConnection<T> {
     pub fn new(connection: T) -> Self {
         let now = Instant::now();
@@ -100,7 +96,12 @@ impl<T: Send + Sync + 'static> IntelligentConnectionPool<T> {
         }
     }
 
-    pub async fn get_connection(&self) -> Result<PooledConnection<T>> {
+    /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub async fn get_connection(&self) -> Result<PooledConnection<T>>  {
         // Acquire semaphore permit
         let _permit = self.semaphore.acquire().await?;
 
@@ -131,7 +132,7 @@ impl<T: Send + Sync + 'static> IntelligentConnectionPool<T> {
             .fetch_sub(1, Ordering::Relaxed);
     }
 
-    pub async fn get_metrics(&self) -> PoolMetrics {
+    pub fn get_metrics(&self) -> PoolMetrics {
         PoolMetrics {
             total_connections: AtomicUsize::new(
                 self.metrics.total_connections.load(Ordering::Relaxed),

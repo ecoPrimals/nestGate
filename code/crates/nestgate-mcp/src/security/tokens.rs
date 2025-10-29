@@ -6,7 +6,6 @@ use nestgate_core::error::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
-
 /// Session information for MCP connections
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Session {
@@ -25,7 +24,6 @@ pub struct Session {
     /// Active token for this session
     pub token: Option<AuthToken>,
 }
-
 impl Session {
     /// Check if session is expired
     pub fn is_expired(&self) -> bool {
@@ -53,30 +51,35 @@ pub struct TokenManager {
     /// Token refresh capabilities
     refresh_tokens: HashMap<String, String>,
 }
-
 impl TokenManager {
     /// Create new token manager
-    pub fn new() -> Self {
-        Self {
+    #[must_use]
+    pub fn new() -> Self { Self {
             tokens: HashMap::new(),
             token_expiry: HashMap::new(),
             refresh_tokens: HashMap::new(),
-        }
-    }
+         }
 
     /// Generate a new token
-    pub fn generate_token(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn generate_token(
         &mut self,
         user_id: &str,
         scopes: Vec<String>,
         lifetime: Duration,
-    ) -> Result<AuthToken> {
-        let token_value = format!(
+    ) -> Result<AuthToken>  {
+        let tokenvalue = format!(
             "mcp_{}_{}",
             user_id,
             SystemTime::now()
                 .duration_since(SystemTime::UNIX_EPOCH)
-                .unwrap_or_else(|e| {
+                .unwrap_or_else(|_e| {
                     tracing::error!("Unwrap failed: {:?}", e);
                     // Return a safe default duration (current timestamp approximation)
                     Duration::from_secs(1700000000) // Approximate timestamp around 2023
@@ -86,23 +89,30 @@ impl TokenManager {
         let expires_at = SystemTime::now() + lifetime;
 
         let token = AuthToken {
-            token: token_value.clone(),
+            token: tokenvalue.clone(),
             expires_at,
-            subject: user_id.to_string(),
+            principal: user_id.to_string(),
             scopes,
         };
 
-        self.tokens.insert(token_value.clone(), token.clone());
-        self.token_expiry.insert(token_value, expires_at);
+        self.tokens.insert(tokenvalue.clone(), token.clone());
+        self.token_expiry.insert(tokenvalue, expires_at);
 
         Ok(token)
     }
 
     /// Validate a token
-    pub fn validate_token(&self, token_value: &str) -> Result<&AuthToken> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn validate_token(&self, tokenvalue: &str) -> Result<&AuthToken>  {
         let token = self
             .tokens
-            .get(token_value)
+            .get(tokenvalue)
             .ok_or_else(|| NestGateError::mcp_error("Token not found", "validate_token", None))?;
 
         if token.is_expired() {
@@ -117,27 +127,41 @@ impl TokenManager {
     }
 
     /// Refresh a token
-    pub fn refresh_token(&mut self, token_value: &str, lifetime: Duration) -> Result<AuthToken> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+                pub fn refresh_token(&mut self, tokenvalue: &str, lifetime: Duration) -> Result<AuthToken>  {
         let old_token = self
             .tokens
-            .get(token_value)
+            .get(tokenvalue)
             .ok_or_else(|| NestGateError::mcp_error("Token not found", "refresh_token", None))?
             .clone();
 
         // Generate new token with same scopes
-        let new_token = self.generate_token(&old_token.subject, old_token.scopes, lifetime)?;
+        let new_token = self.generate_token(&old_token.principal, old_token.scopes, lifetime)?;
 
         // Remove old token
-        self.revoke_token(token_value)?;
+        self.revoke_token(tokenvalue)?;
 
         Ok(new_token)
     }
 
     /// Revoke a token
-    pub fn revoke_token(&mut self, token_value: &str) -> Result<()> {
-        self.tokens.remove(token_value);
-        self.token_expiry.remove(token_value);
-        self.refresh_tokens.remove(token_value);
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+                pub fn revoke_token(&mut self, tokenvalue: &str) -> Result<()>  {
+        self.tokens.remove(tokenvalue);
+        self.token_expiry.remove(tokenvalue);
+        self.refresh_tokens.remove(tokenvalue);
         Ok(())
     }
 
@@ -160,7 +184,7 @@ impl TokenManager {
     pub fn list_user_tokens(&self, user_id: &str) -> Vec<&AuthToken> {
         self.tokens
             .values()
-            .filter(|token| token.subject == user_id && !token.is_expired())
+            .filter(|token| token.principal == user_id && !token.is_expired())
             .collect()
     }
 }
@@ -183,21 +207,26 @@ pub struct SessionManager {
     default_session_lifetime: Duration,
     idle_timeout: Duration,
 }
-
 impl SessionManager {
     /// Create new session manager
-    pub fn new() -> Self {
-        Self {
+    #[must_use]
+    pub fn new() -> Self { Self {
             sessions: HashMap::new(),
             user_sessions: HashMap::new(),
             max_sessions_per_user: 10,
             default_session_lifetime: Duration::from_secs(3600), // 1 hour
             idle_timeout: Duration::from_secs(1800),             // 30 minutes
-        }
-    }
+         }
 
     /// Create a new session
-    pub fn create_session(&mut self, user_id: &str, token: Option<AuthToken>) -> Result<Session> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+                pub fn create_session(&mut self, user_id: &str, token: Option<AuthToken>) -> Result<Session>  {
         // Check session limits
         let user_session_count = self
             .user_sessions
@@ -218,7 +247,7 @@ impl SessionManager {
             user_id,
             SystemTime::now()
                 .duration_since(SystemTime::UNIX_EPOCH)
-                .unwrap_or_else(|e| {
+                .unwrap_or_else(|_e| {
                     tracing::error!("Unwrap failed: {:?}", e);
                     // Return a safe default duration (current timestamp approximation)
                     Duration::from_secs(1700000000) // Approximate timestamp around 2023
@@ -252,12 +281,20 @@ impl SessionManager {
     }
 
     /// Get a mutable session by ID
+    #[must_use]
     pub fn get_session_mut(&mut self, session_id: &str) -> Option<&mut Session> {
         self.sessions.get_mut(session_id)
     }
 
     /// Update session activity
-    pub fn update_session_activity(&mut self, session_id: &str) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+                pub fn update_session_activity(&mut self, session_id: &str) -> Result<()>  {
         if let Some(session) = self.sessions.get_mut(session_id) {
             session.update_activity();
             Ok(())
@@ -271,7 +308,14 @@ impl SessionManager {
     }
 
     /// Terminate a session
-    pub fn terminate_session(&mut self, session_id: &str) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+                pub fn terminate_session(&mut self, session_id: &str) -> Result<()>  {
         if let Some(session) = self.sessions.remove(session_id) {
             // Remove from user sessions
             if let Some(user_sessions) = self.user_sessions.get_mut(&session.user_id) {
@@ -318,7 +362,14 @@ impl SessionManager {
     }
 
     /// Terminate all sessions for a user
-    pub fn terminate_user_sessions(&mut self, user_id: &str) -> Result<u32> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+                pub fn terminate_user_sessions(&mut self, user_id: &str) -> Result<u32>  {
         let session_ids = self.user_sessions.get(user_id).cloned().unwrap_or_default();
 
         let mut terminated_count = 0;
@@ -343,7 +394,6 @@ pub struct TokenValidator {
     /// Validation rules
     validation_rules: TokenValidationRules,
 }
-
 /// Token validation rules
 #[derive(Debug, Clone)]
 pub struct TokenValidationRules {
@@ -356,28 +406,30 @@ pub struct TokenValidationRules {
     /// Allowed token formats
     pub allowed_formats: Vec<String>,
 }
-
 impl Default for TokenValidationRules {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             min_token_length: 32,
             max_token_age: Duration::from_secs(3600),
             required_prefix: Some("mcp_".to_string()),
             allowed_formats: vec!["bearer".to_string()],
-        }
-    }
+         }
 }
 
 impl TokenValidator {
     /// Create new token validator
-    pub fn new(rules: TokenValidationRules) -> Self {
-        Self {
+    pub fn new(rules: TokenValidationRules) -> Self { Self {
             validation_rules: rules,
-        }
-    }
+         }
 
     /// Validate token format and basic properties
-    pub fn validate_format(&self, token: &str) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn validate_format(&self, token: &str) -> Result<()>  {
         if token.len() < self.validation_rules.min_token_length {
             return Err(NestGateError::mcp_error(
                 "Token too short",

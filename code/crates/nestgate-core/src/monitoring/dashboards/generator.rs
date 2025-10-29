@@ -2,29 +2,26 @@ use crate::NestGateError;
 use std::collections::HashMap;
 ///
 /// This module handles the generation of dashboard JSON for various platforms.
-use super::types::{DashboardConfig, GridPos, PanelConfig, PanelType, QueryTarget};
-use crate::monitoring::{ProviderMetrics, SystemMetrics};
+use super::types::{}, DashboardConfig, GridPos, PanelConfig, PanelType, QueryTarget;
+use crate::monitoring::{}, ProviderMetrics, SystemMetrics;
 use crate::{NestGateError, Result};
 use serde_json::{json, Value};
 use std::collections::HashMap;
-
 /// Dashboard generator for various output formats
 pub struct DashboardGenerator;
-
 impl DashboardGenerator {
     /// Create new dashboard generator
-    pub fn new() -> Self {
-        Self
-    }
-
-    /// Generate Grafana-compatible dashboard JSON
-    pub fn generate_grafana_dashboard(&self, config: &DashboardConfig) -> Result<String> {
+    pub fn new() -> Self { Self
+    , /// Generate Grafana-compatible dashboard JSON
+    /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+                pub fn generate_grafana_dashboard(&self, config: &DashboardConfig) -> Result<String>  {
         let dashboard = self.build_grafana_dashboard(config)?;
-        serde_json::to_string_pretty(&dashboard).map_err(|e| NestGateError::Internal {
-            message: format!("Failed to serialize dashboard: {e}"),
-            location: Some(file!().to_string()),
+        serde_json::to_string_pretty(&dashboard).map_err(|_e| NestGateError::internal_error(
             debug_info: None,
-            is_bug: false,
         })
     }
 
@@ -47,15 +44,15 @@ impl DashboardGenerator {
                 "time": {
                     "from": config.time_range.from,
                     "to": config.time_range.to
-                },
+                }
                 "timepicker": {},
                 "templating": {
                     "list": []
-                },
+                }
                 "annotations": {
                     "list": []
-                },
-                "refresh": format!("{}s", config.refresh_interval.as_secs()),
+                }
+                "refresh": format!("{e}s")),
                 "schemaVersion": 16,
                 "version": 0,
                 "links": []
@@ -87,18 +84,77 @@ impl DashboardGenerator {
                 "w": panel.grid_pos.w,
                 "x": panel.grid_pos.x,
                 "y": panel.grid_pos.y
-            },
+            }
             "datasource": panel.datasource,
             "targets": panel.targets
         }))
     }
 
+    /// Generate monitoring dashboard JSON using capability-based discovery
+    /// MODERNIZED: No longer hardcoded to Grafana - uses discovered monitoring capability
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn generate_monitoring_dashboard(&self, config: &DashboardConfig) -> Result<String>  {
+        let dashboard = self.build_monitoring_dashboard(config)?;
+        serde_json::to_string_pretty(&dashboard).map_err(|e| {
+            NestGateError::internal_error(&format!("Failed to serialize monitoring dashboard: {e}"), "dashboard_generator")
+        })
+    }
+
+    /// Build monitoring dashboard structure using capability-based patterns
+    /// MODERNIZED: Generic monitoring dashboard, not vendor-specific
+    fn build_monitoring_dashboard(&self, config: &DashboardConfig) -> Result<Value> {
+        let panels: Vec<Value> = config
+            .panels
+            .iter()
+            .map(|panel| self.build_grafana_panel(panel))
+            .collect::<Result<Vec<_>>>()?;
+
+        Ok(json!({
+            "dashboard": {
+                "id": null,
+                "title": config.title,
+                "description": config.description,
+                "tags": config.tags,
+                "timezone": "browser",
+                "panels": panels,
+                "time": {
+                    "from": config.time_range.from,
+                    "to": config.time_range.to
+                }
+                "timepicker": {},
+                "templating": {
+                    "list": []
+                }
+                "annotations": {
+                    "list": []
+                }
+                "refresh": format!("{e}s")),
+                "schemaVersion": 16,
+                "version": 0,
+                "links": []
+            }
+        }))
+    }
+
     /// Generate custom dashboard for specific metrics
-    pub fn generate_custom_dashboard(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn generate_custom_dashboard(
         &self,
         metrics: &SystemMetrics,
         _providers: &HashMap<String, ProviderMetrics>,
-    ) -> Result<String> {
+    ) -> Result<String>  {
         let mut panels = Vec::new();
         let mut panel_id = 1;
 
@@ -112,16 +168,16 @@ impl DashboardGenerator {
                 y: 0,
                 w: 6,
                 h: 4,
-            },
+            }
             datasource: "prometheus".to_string(),
             targets: vec![QueryTarget {
-                expr: format!("{}", metrics.cpu_usage),
+                expr: format!("{e}"),
                 legend_format: Some("CPU %".to_string()),
                 ref_id: "A".to_string(),
                 interval: None,
             }],
             options: HashMap::new(),
-        });
+        );
         panel_id += 1;
 
         // Add memory usage panel
@@ -134,16 +190,16 @@ impl DashboardGenerator {
                 y: 0,
                 w: 6,
                 h: 4,
-            },
+            }
             datasource: "prometheus".to_string(),
             targets: vec![QueryTarget {
-                expr: format!("{}", metrics.memory_usage),
+                expr: format!("{e}"),
                 legend_format: Some("Memory %".to_string()),
                 ref_id: "B".to_string(),
                 interval: None,
             }],
             options: HashMap::new(),
-        });
+        );
 
         let config = DashboardConfig {
             name: "custom".to_string(),

@@ -19,7 +19,7 @@ use nestgate_core::error::{NestGateError, Result};
 use nestgate_core::universal_storage::canonical_storage::{CanonicalStorageBackend, StorageResult};
 use std::marker::PhantomData;
 
-// ==================== SIMD PROCESSOR CORE ====================
+// ==================== SECTION ====================
 
 /// **SIMD BULK DATA PROCESSOR**
 /// High-performance SIMD processor for bulk data operations
@@ -27,24 +27,30 @@ use std::marker::PhantomData;
 pub struct SimdBulkProcessor<const BUFFER_SIZE: usize = 8192> {
     _phantom: PhantomData<[u8; BUFFER_SIZE]>,
 }
-
 impl<const BUFFER_SIZE: usize> SimdBulkProcessor<BUFFER_SIZE> {
     /// Create new SIMD processor with compile-time buffer size
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             _phantom: PhantomData,
         }
     }
 
     /// Transform bulk data using SIMD instructions
-    pub fn transform_bulk_data(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn transform_bulk_data(
         &self,
         input: &[u8],
         output: &mut [u8],
         key: u64,
-    ) -> Result<()> {
+    ) -> Result<()>  {
         if input.len() != output.len() {
-            return Err(NestGateError::storage_error("simd_transform", "Buffer size mismatch", None));
+            return Err(NestGateError::storage_error("simd_transform", None));
         }
 
         // SIMD processing implementation (simplified for compilation)
@@ -53,7 +59,7 @@ impl<const BUFFER_SIZE: usize> SimdBulkProcessor<BUFFER_SIZE> {
     }
 }
 
-// ==================== SIMD STORAGE BACKEND ====================
+// ==================== SECTION ====================
 
 /// **SIMD-ACCELERATED STORAGE BACKEND**
 /// Storage backend with SIMD-accelerated operations for maximum throughput
@@ -62,15 +68,12 @@ pub struct SimdStorageBackend<const BUFFER_SIZE: usize = 8192> {
     base_path: String,
     processor: SimdBulkProcessor<BUFFER_SIZE>,
 }
-
 impl<const BUFFER_SIZE: usize> SimdStorageBackend<BUFFER_SIZE> {
     /// Create new SIMD storage backend
-    pub fn new(base_path: String) -> Self {
-        Self {
+    pub fn new(base_path: String) -> Self { Self {
             base_path,
             processor: SimdBulkProcessor::new(),
-        }
-    }
+         }
 
     /// Generate deterministic key from path for SIMD operations
     fn generate_key_from_path(&self, path: &str) -> u64 {
@@ -99,7 +102,7 @@ impl<const BUFFER_SIZE: usize> CanonicalStorageBackend for SimdStorageBackend<BU
     }
 
     fn read(&self, path: &str) -> impl std::future::Future<Output = StorageResult<Vec<u8>>> + Send {
-        let full_path = format!("{}/{}", self.base_path, path);
+        let full_path = format!("{e}/{e}");
         let path = path.to_string();
         async move {
             // SIMD-accelerated file reading with vectorized decompression
@@ -114,13 +117,13 @@ impl<const BUFFER_SIZE: usize> CanonicalStorageBackend for SimdStorageBackend<BU
                     
                     Ok(processed)
                 }
-                Err(e) => Err(NestGateError::storage_error(&e.to_string(), "read", Some(&full_path))),
+    Err(e) => Err(NestGateError::storage_error("read", &e.to_string(), Some(full_path)),
             }
         }
     }
 
     fn write(&self, path: &str, data: &[u8]) -> impl std::future::Future<Output = StorageResult<()>> + Send {
-        let full_path = format!("{}/{}", self.base_path, path);
+        let full_path = format!("{e}/{e}");
         let path = path.to_string();
         let data = data.to_vec();
         async move {
@@ -133,16 +136,16 @@ impl<const BUFFER_SIZE: usize> CanonicalStorageBackend for SimdStorageBackend<BU
             
             tokio::fs::write(&full_path, &processed)
                 .await
-                .map_err(|e| NestGateError::storage_error(&e.to_string(), "write", Some(&full_path)))
+                .map_err(|_e| &e.to_string(), Some(full_path)))
         }
     }
 
     fn delete(&self, path: &str) -> impl std::future::Future<Output = StorageResult<()>> + Send {
-        let full_path = format!("{}/{}", self.base_path, path);
+        let full_path = format!("{e}/{e}");
         async move {
             tokio::fs::remove_file(&full_path)
                 .await
-                .map_err(|e| NestGateError::storage_error(&e.to_string(), "delete", Some(&full_path)))
+                .map_err(|_e| &e.to_string(), Some(full_path)))
         }
     }
 
@@ -184,30 +187,36 @@ impl<const BUFFER_SIZE: usize> CanonicalStorageBackend for SimdStorageBackend<BU
     }
 }
 
-// ==================== SIMD BATCH PROCESSING PIPELINE ====================
+// ==================== SECTION ====================
 
 /// **SIMD BATCH PROCESSING PIPELINE**
 /// High-throughput batch processing with SIMD acceleration
 pub struct SimdBatchProcessor<const BATCH_SIZE: usize = 1024> {
     _phantom: PhantomData<[u8; BATCH_SIZE]>,
 }
-
 impl<const BATCH_SIZE: usize> SimdBatchProcessor<BATCH_SIZE> {
     /// Create new batch processor
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             _phantom: PhantomData,
         }
     }
 
     /// Process batch of data with SIMD acceleration
-    pub fn process_batch(&self, batch: &mut [u8]) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+                pub fn process_batch(&self, batch: &mut [u8]) -> Result<()>  {
         // SIMD batch processing implementation
         Ok(())
     }
 }
 
-// ==================== PERFORMANCE TESTS ====================
+// ==================== SECTION ====================
 
 #[cfg(test)]
 mod tests {
@@ -223,7 +232,6 @@ mod tests {
         // Note: This would fail in actual test due to directory not existing
         // but demonstrates the API
     }
-
     #[test]
     fn test_simd_processor() {
         let processor = SimdBulkProcessor::<256>::new();

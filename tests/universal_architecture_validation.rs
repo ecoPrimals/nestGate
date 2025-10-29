@@ -11,27 +11,12 @@ use crate::common::config::{
     ArchitectureValidationSettings, CanonicalTestConfig, TestConfigMigrationUtilities,
 };
 
-// ==================== DEPRECATED CONFIG REMOVED ====================
+// ==================== MODERNIZATION COMPLETE ====================
 //
-// **CANONICAL MODERNIZATION COMPLETE**: Deprecated ArchitectureValidationConfig eliminated
+// **CANONICAL MODERNIZATION COMPLETE**: All configurations use canonical system
 // Use CanonicalTestConfig::architecture_validation_tests() from tests::common::config instead
 //
 // **MIGRATION COMPLETE**: All architecture validation now uses canonical patterns
-                "storage".to_string(),
-                "network".to_string(),
-                "security".to_string(),
-                "performance".to_string(),
-            ],
-            performance_thresholds: {
-                let mut thresholds = HashMap::new();
-                thresholds.insert("response_time_ms".to_string(), 100.0);
-                thresholds.insert("throughput_ops_sec".to_string(), 1000.0);
-                thresholds.insert("memory_usage_mb".to_string(), 512.0);
-                thresholds
-            },
-        }
-    }
-}
 
 /// **CANONICAL MIGRATION UTILITY**: Create architecture validation configuration using canonical system
 pub fn create_architecture_validation_config() -> CanonicalTestConfig {
@@ -41,7 +26,7 @@ pub fn create_architecture_validation_config() -> CanonicalTestConfig {
 /// **CANONICAL ARCHITECTURE VALIDATION TESTS**
 
 #[tokio::test]
-async fn test_universal_architecture_validation() {
+async fn test_universal_architecture_validation() -> Result<(), Box<dyn std::error::Error>> {
     let config = CanonicalTestConfig::architecture_validation_tests();
 
     // Test that canonical config is properly structured
@@ -68,10 +53,11 @@ async fn test_universal_architecture_validation() {
         .is_empty());
 
     println!("✅ Universal architecture validation configuration verified");
+    Ok(())
 }
 
 #[tokio::test]
-async fn test_architecture_validation_strict_mode() {
+async fn test_architecture_validation_strict_mode() -> Result<(), Box<dyn std::error::Error>> {
     let config = CanonicalTestConfig::architecture_validation_tests();
 
     // Strict mode should be enabled for architecture validation tests
@@ -84,10 +70,12 @@ async fn test_architecture_validation_strict_mode() {
     );
 
     println!("✅ Architecture validation strict mode verified");
+    Ok(())
 }
 
 #[tokio::test]
-async fn test_architecture_validation_performance_thresholds() {
+async fn test_architecture_validation_performance_thresholds(
+) -> Result<(), Box<dyn std::error::Error>> {
     let config = CanonicalTestConfig::architecture_validation_tests();
     let thresholds = &config
         .test_domain
@@ -108,10 +96,11 @@ async fn test_architecture_validation_performance_thresholds() {
     assert!(thresholds["cpu_usage_percent"] > 0.0);
 
     println!("✅ Architecture validation performance thresholds verified");
+    Ok(())
 }
 
 #[tokio::test]
-async fn test_architecture_validation_components() {
+async fn test_architecture_validation_components() -> Result<(), Box<dyn std::error::Error>> {
     let config = CanonicalTestConfig::architecture_validation_tests();
     let components = &config
         .test_domain
@@ -127,10 +116,12 @@ async fn test_architecture_validation_components() {
     assert!(components.contains(&"configuration".to_string()));
 
     println!("✅ Architecture validation components verified");
+    Ok(())
 }
 
 #[tokio::test]
-async fn test_architecture_validation_timeout_configuration() {
+async fn test_architecture_validation_timeout_configuration(
+) -> Result<(), Box<dyn std::error::Error>> {
     let config = CanonicalTestConfig::architecture_validation_tests();
 
     // Test execution timeout should be reasonable for architecture validation
@@ -148,6 +139,7 @@ async fn test_architecture_validation_timeout_configuration() {
     );
 
     println!("✅ Architecture validation timeout configuration verified");
+    Ok(())
 }
 
 // **CANONICAL MODERNIZATION COMPLETE**

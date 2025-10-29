@@ -21,7 +21,6 @@ use std::sync::Arc;
 pub struct ZfsFeaturesDemo {
     engine: Option<ZfsEngine>,
 }
-
 impl ZfsFeaturesDemo {
     /// Create new demo instance
     pub fn new() -> Self {
@@ -29,7 +28,19 @@ impl ZfsFeaturesDemo {
     }
 
     /// **MAIN DEMO: ZFS Features on Any Storage**
-    pub async fn demo_zfs_features(&mut self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub async fn demo_zfs_features(&mut self) -> Result<()>   {
         println!("🚀 **ZFS FEATURES ENGINE DEMO**");
         println!("===============================");
         println!();
@@ -92,7 +103,6 @@ impl ZfsFeaturesDemo {
         backends.push(Arc::new(memory_backend));
 
         // Create filesystem backend (simulated)
-        let fs_backend = FileSystemBackend::new(std::path::Path::new("/tmp/zfs_demo")).await?;
         let concrete_backend = ConcreteStorageBackend::FileSystem(fs_backend);
         backends.push(Arc::new(concrete_backend));
 
@@ -100,14 +110,14 @@ impl ZfsFeaturesDemo {
     }
 
     /// Demonstrate Copy-on-Write operations
-    async fn demo_cow_operations(&self) -> Result<()> {
+    async fn demo_cow_operations(&self) -> Result<()> ", 
         println!("📝 **Copy-on-Write (COW) Operations**");
 
         if let Some(ref engine) = self.engine {
             // Write initial data
             let data1 = b"Hello, ZFS World! This is the initial version.";
             engine.write("demo/file1.txt", data1).await?;
-            println!("  • Initial write: {} bytes", data1.len());
+            println!("  • Initial write: {data1.len() bytes"));
 
             // Create snapshot before modification
             let snapshot_id = engine.create_snapshot("demo", "before_edit").await?;
@@ -116,11 +126,11 @@ impl ZfsFeaturesDemo {
             // Modify the file (triggers COW)
             let data2 = b"Hello, ZFS World! This is the MODIFIED version with more data!";
             engine.write("demo/file1.txt", data2).await?;
-            println!("  • Modified write: {} bytes (COW triggered)", data2.len());
+            println!("  • Modified write: ", data2.len() bytes (COW triggered)"));
 
             // Verify both versions exist
             let current_data = engine.read("demo/file1.txt").await?;
-            println!("  • Current version: {} bytes read", current_data.len());
+            println!("  • Current version: ", current_data.len() bytes read"));
 
             println!("  ✅ COW operations successful - old version preserved in snapshot");
         }
@@ -147,7 +157,7 @@ impl ZfsFeaturesDemo {
 
             // Read it back
             let read_data = engine.read("demo/compressible.txt").await?;
-            println!("  • Read back: {} bytes", read_data.len());
+            println!("  • Read back: ", read_data.len() bytes"));
 
             if read_data == compressible_bytes {
                 println!("  ✅ Compression/decompression successful - data integrity preserved");
@@ -198,7 +208,7 @@ impl ZfsFeaturesDemo {
 
             // List all snapshots
             let snapshots = engine.list_snapshots("demo").await?;
-            println!("  • Total snapshots created: {}", snapshots.len());
+            println!("  • Total snapshots created: ", snapshots.len()"));
 
             println!("  ✅ Multiple snapshots created - point-in-time recovery available");
         }
@@ -252,8 +262,8 @@ impl ZfsFeaturesDemo {
                 "  • Total Data Written: {} KB",
                 stats.total_data_written / 1024
             );
-            println!("  • Total Data Read: {} KB", stats.total_data_read / 1024);
-            println!("  • Space Saved: {} KB", stats.space_saved_bytes / 1024);
+            println!("  • Total Data Read: {stats.total_data_read / 1024} KB");
+            println!("  • Space Saved: {stats.space_saved_bytes / 1024} KB");
 
             if let Some(ref compression_stats) = stats.compression_stats {
                 println!(
@@ -274,15 +284,28 @@ impl ZfsFeaturesDemo {
                 "  • Total Data Written: {} KB",
                 stats.total_data_written / 1024
             );
-            println!("  • Total Data Read: {} KB", stats.total_data_read / 1024);
-            println!("  • Space Saved: {} KB", stats.space_saved_bytes / 1024);
+            println!("  • Total Data Read: {stats.total_data_read / 1024} KB");
+            println!("  • Space Saved: {stats.space_saved_bytes / 1024} KB");
         }
         println!();
         Ok(())
     }
 
     /// Demonstrate real-world use cases
-    pub async fn demo_real_world_scenarios(&mut self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        #[must_use]
+        /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+                pub fn demo_real_world_scenarios(&mut self) -> Result<()>   {
         println!("🌍 **Real-World ZFS Scenarios**");
         println!("==============================");
         println!();
@@ -328,9 +351,8 @@ impl Default for ZfsFeaturesDemo {
 /// Run the complete ZFS features demo
 pub async fn run_zfs_features_demo() -> Result<()> {
     let mut demo = ZfsFeaturesDemo::new();
-
     demo.demo_zfs_features().await?;
-    println!("{}", "=".repeat(80));
+    println!("{"=".repeat(80}"));
     demo.demo_real_world_scenarios().await?;
 
     println!("🎉 **ZFS Features Demo Complete!**");

@@ -1,8 +1,7 @@
-
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::env;
 use std::time::Duration;
-
 
 /// **AUTOMATION CONFIG TYPES**
 /// Configuration type definitions for the automation system
@@ -26,9 +25,8 @@ pub struct AutomationConfig {
     /// Minimum confidence threshold for predictions
     pub min_confidence_threshold: f64,
     /// Orchestration endpoint
-    pub orchestration_endpoint: Option<String>,
+    pub _orchestration_endpoint: Option<String>,
 }
-
 impl Default for AutomationConfig {
     fn default() -> Self {
         Self {
@@ -40,13 +38,14 @@ impl Default for AutomationConfig {
             enable_intelligent_tier_assignment: true,
             enable_automatic_optimization: true,
             min_confidence_threshold: 0.7,
-            orchestration_endpoint: None,
+            _orchestration_endpoint: None,
         }
     }
 }
 
 impl AutomationConfig {
     /// Create production configuration
+    #[must_use]
     pub fn production() -> Self {
         Self {
             analysis: AnalysisConfig::default(),
@@ -57,11 +56,17 @@ impl AutomationConfig {
             enable_intelligent_tier_assignment: true,
             enable_automatic_optimization: true,
             min_confidence_threshold: 0.8, // Higher confidence for production
-            orchestration_endpoint: Some("http://localhost:8080".to_string()),
+            _orchestration_endpoint: Some(
+                "http://localhost:".to_string()
+                    + &env::var("NESTGATE_API_PORT")
+                        .unwrap_or_else(|_| "8080".to_string())
+                        .to_string(),
+            ),
         }
     }
 
     /// Create development configuration
+    #[must_use]
     pub fn development() -> Self {
         Self {
             analysis: AnalysisConfig::default(),
@@ -72,7 +77,12 @@ impl AutomationConfig {
             enable_intelligent_tier_assignment: true,
             enable_automatic_optimization: false, // Disable auto-optimization in dev
             min_confidence_threshold: 0.5,        // Lower confidence for development
-            orchestration_endpoint: Some("http://localhost:8080".to_string()),
+            _orchestration_endpoint: Some(
+                "http://localhost:".to_string()
+                    + &env::var("NESTGATE_API_PORT")
+                        .unwrap_or_else(|_| "8080".to_string())
+                        .to_string(),
+            ),
         }
     }
 }
@@ -89,7 +99,6 @@ pub struct AnalysisConfig {
     /// File extensions to exclude
     pub exclude_extensions: Vec<String>,
 }
-
 impl Default for AnalysisConfig {
     fn default() -> Self {
         Self {
@@ -111,7 +120,6 @@ pub struct PredictionConfig {
     /// Model parameters
     pub model_params: HashMap<String, f64>,
 }
-
 impl Default for PredictionConfig {
     fn default() -> Self {
         Self {
@@ -134,7 +142,6 @@ pub struct LifecycleConfig {
     /// Enable automatic migration
     pub auto_migration: bool,
 }
-
 impl Default for LifecycleConfig {
     fn default() -> Self {
         Self {
@@ -156,23 +163,23 @@ pub struct DiscoveryConfig {
     pub multicast_enabled: bool,
     pub mdns_enabled: bool,
 }
-
 #[cfg(feature = "network-integration")]
 impl DiscoveryConfig {
+    #[must_use]
     pub fn from_automation_config(config: &AutomationConfig) -> Self {
         Self {
             known_orchestration_endpoints: vec![
                 config
-                    .orchestration_endpoint
+                    ._orchestration_endpoint
                     .clone()
-                    .unwrap_or_else(|| "http://localhost:8080".to_string()),
+                    .unwrap_or_else(|| "http://localhost:".to_string() + &env::var("NESTGATE_API_PORT").unwrap_or_else(|_| "8080".to_string()).to_string()),
                 std::env::var("NESTGATE_ORCHESTRATION_BACKUP_ENDPOINT_1").unwrap_or_else(|_| {
                     format!(
                         "http://{}:{}",
                         std::env::var("NESTGATE_ORCHESTRATION_IP")
                             .unwrap_or_else(|_| "127.0.0.1".to_string()),
                         std::env::var("NESTGATE_ORCHESTRATION_PORT")
-                            .unwrap_or_else(|_| "8080".to_string())
+                            .unwrap_or_else(|_| nestgate_core::constants::canonical_defaults::network::DEFAULT_API_PORT.to_string())
                     )
                 }),
                 std::env::var("NESTGATE_ORCHESTRATION_BACKUP_ENDPOINT_2").unwrap_or_else(|_| {
@@ -180,7 +187,7 @@ impl DiscoveryConfig {
                         "http://{}:{}",
                         std::env::var("NESTGATE_MCP_IP")
                             .unwrap_or_else(|_| "127.0.0.1".to_string()),
-                        std::env::var("NESTGATE_MCP_PORT").unwrap_or_else(|_| "8081".to_string())
+                        std::env::var("NESTGATE_MCP_PORT").unwrap_or_else(|_| nestgate_core::constants::canonical_defaults::network::DEFAULT_INTERNAL_PORT.to_string())
                     )
                 }),
             ],

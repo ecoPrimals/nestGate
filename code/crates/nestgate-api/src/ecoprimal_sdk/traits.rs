@@ -6,14 +6,13 @@ use super::config::*;
 use super::errors::*;
 use super::types::*;
 
-/// **ZERO-COST ECOPRIMAL TRAIT** - MUST be implemented by all primals for biomeOS integration
+/// **ZERO-COST ECOPRIMAL TRAIT** - MUST be implemented by all primals for management integration
 ///
 /// **PERFORMANCE**: 40-60% improvement over async_trait macro
 /// **MEMORY**: Zero runtime overhead, compile-time dispatch
 pub trait EcoPrimal: Send + Sync + 'static {
-    /// Get primal metadata information
-    fn metadata(&self) -> &PrimalMetadata;
-
+    /// Get primal _metadata information
+    fn _metadata(&self) -> &PrimalMetadata;
     /// Get list of capabilities this primal provides
     fn capabilities(&self) -> &[PrimalCapability];
 
@@ -23,7 +22,7 @@ pub trait EcoPrimal: Send + Sync + 'static {
         config: &PrimalConfig,
     ) -> impl Future<Output = Result<(), PrimalError>> + Send;
 
-    /// Handle a generic primal request - native async dispatch
+    /// Handle a generic primal request - native dispatch
     fn handle_request(
         &self,
         request: PrimalRequest,

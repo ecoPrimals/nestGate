@@ -44,7 +44,6 @@ pub struct SseParams {
     /// Buffer size preference
     pub buffer_size: Option<usize>,
 }
-
 /// SSE event types that can be streamed
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SseEventType {
@@ -63,7 +62,6 @@ pub enum SseEventType {
     /// General system events
     SystemEvent,
 }
-
 /// SSE event payload
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SseEvent {
@@ -80,7 +78,6 @@ pub struct SseEvent {
     /// Event priority
     pub priority: EventPriority,
 }
-
 /// Event priority for SSE streaming
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum EventPriority {
@@ -93,7 +90,6 @@ pub enum EventPriority {
     /// Critical priority events (urgent system alerts)
     Critical = 4,
 }
-
 /// SSE stream manager
 pub struct SseManager {
     /// Active SSE connections
@@ -105,7 +101,6 @@ pub struct SseManager {
     /// Event coordinator integration
     event_coordinator: Option<Arc<EventCoordinator>>,
 }
-
 /// SSE connection information
 #[derive(Debug, Clone)]
 pub struct SseConnection {
@@ -122,7 +117,6 @@ pub struct SseConnection {
     /// Connection configuration
     pub config: SseConnectionConfig,
 }
-
 /// SSE connection configuration
 #[derive(Debug, Clone)]
 pub struct SseConnectionConfig {
@@ -135,7 +129,6 @@ pub struct SseConnectionConfig {
     /// Maximum event size
     pub max_event_size: usize,
 }
-
 /// SSE streaming statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SseStats {
@@ -152,7 +145,6 @@ pub struct SseStats {
     /// Last reset time
     pub last_reset: SystemTime,
 }
-
 impl Default for SseManager {
     fn default() -> Self {
         Self::new()
@@ -187,7 +179,7 @@ impl SseManager {
     /// ```rust
     /// use nestgate_api::sse::SseManager;
     ///
-    /// let sse_manager = SseManager::new();
+    /// let sse_manager = Self::new();
     ///
     /// // Start background cleanup
     /// let _cleanup_task = sse_manager.start_cleanup_task();
@@ -202,11 +194,12 @@ impl SseManager {
     /// The manager uses a large broadcast channel (10,000 events) to handle
     /// high-throughput scenarios and provides efficient event distribution
     /// to multiple concurrent connections.
+    #[must_use]
     pub fn new() -> Self {
-        let (event_broadcaster, _) = broadcast::channel(10000); // Large buffer for SSE
+        let (event_broadcaster, _) = broadcast::channel(10_000); // Large buffer for SSE
 
         Self {
-            connections: Arc::new(RwLock::new(HashMap::new())),
+            connections: Arc::new(RwLock::new(HashMap::new()),
             event_broadcaster,
             stats: Arc::new(RwLock::new(SseStats {
                 total_connections: 0,
@@ -215,39 +208,42 @@ impl SseManager {
                 bytes_transferred: 0,
                 errors: 0,
                 last_reset: SystemTime::now(),
-            })),
+            }),
             event_coordinator: None,
         }
     }
 
     /// Set event coordinator for integration
-    pub fn with_event_coordinator(mut self, coordinator: Arc<EventCoordinator>) -> Self {
-        self.event_coordinator = Some(coordinator);
+    #[must_use]
+    pub fn with_event_coordinator(mut self, coordinator: Arc<EventCoordinator>) -> Self { self.event_coordinator = Some(coordinator);
         self
-    }
-
-    /// Create a new SSE stream for a client
-    pub async fn create_stream(
+    , /// Create a new SSE stream for a client
+    /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub fn create_stream(
         &self,
-        params: SseParams,
+        _params: SseParams,
         _headers: HeaderMap,
-    ) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>>>, Infallible> {
+    ) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>>>, Infallible>  {
         let connection_id = Uuid::new_v4();
-        let client_id = params.client_id.clone();
+        let client_id = _params.client_id.clone();
 
         // Create connection configuration
         let config = SseConnectionConfig {
-            buffer_size: params.buffer_size.unwrap_or(1000),
-            compression: params.compress.unwrap_or(false),
+            buffer_size: _params.buffer_size.unwrap_or(1000),
+            compression: _params.compress.unwrap_or(false),
             keep_alive_interval: Duration::from_secs(30),
             max_event_size: 64 * 1024, // 64KB max event size
-        };
+         };
 
         // Register connection
         let connection = SseConnection {
             id: connection_id,
             client_id: client_id.clone(),
-            subscriptions: vec![params.stream.unwrap_or_else(|| "all".into())],
+            subscriptions: vec![_params.stream.unwrap_or_else(|| "all".into())],
             connected_at: SystemTime::now(),
             last_activity: SystemTime::now(),
             config: config.clone(),
@@ -332,10 +328,17 @@ impl SseManager {
     }
 
     /// Broadcast an event to all SSE clients
-    pub async fn broadcast_event(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn broadcast_event(
         &self,
         event: SseEvent,
-    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>>  {
         debug!("Broadcasting SSE event: {:?}", event.event_type);
 
         match self.event_broadcaster.send(event) {
@@ -391,10 +394,17 @@ impl SseManager {
     }
 
     /// Create storage operations stream
-    pub async fn create_storage_stream(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn create_storage_stream(
         &self,
-    ) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>>>, Infallible> {
-        let params = SseParams {
+    ) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>>>, Infallible>  {
+        let _params = SseParams {
             stream: Some("storage".into()),
             client_id: Some("storage-client".into()),
             token: None,
@@ -402,14 +412,21 @@ impl SseManager {
             buffer_size: Some(500),
         };
 
-        self.create_stream(params, HeaderMap::new()).await
+        self.create_stream(_params, HeaderMap::new()).await
     }
 
     /// Create system health stream
-    pub async fn create_health_stream(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn create_health_stream(
         &self,
-    ) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>>>, Infallible> {
-        let params = SseParams {
+    ) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>>>, Infallible>  {
+        let _params = SseParams {
             stream: Some("health".into()),
             client_id: Some("health-client".into()),
             token: None,
@@ -417,14 +434,21 @@ impl SseManager {
             buffer_size: Some(100),
         };
 
-        self.create_stream(params, HeaderMap::new()).await
+        self.create_stream(_params, HeaderMap::new()).await
     }
 
     /// Create performance metrics stream
-    pub async fn create_metrics_stream(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn create_metrics_stream(
         &self,
-    ) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>>>, Infallible> {
-        let params = SseParams {
+    ) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>>>, Infallible>  {
+        let _params = SseParams {
             stream: Some("metrics".into()),
             client_id: Some("metrics-client".into()),
             token: None,
@@ -432,25 +456,23 @@ impl SseManager {
             buffer_size: Some(1000),
         };
 
-        self.create_stream(params, HeaderMap::new()).await
+        self.create_stream(_params, HeaderMap::new()).await
     }
 }
 
 impl Clone for SseManager {
-    fn clone(&self) -> Self {
-        Self {
+    fn clone(&self) -> Self { Self {
             connections: self.connections.clone(),
             event_broadcaster: self.event_broadcaster.clone(),
             stats: self.stats.clone(),
             event_coordinator: self.event_coordinator.clone(),
-        }
-    }
+         }
 }
 
 /// SSE endpoint handlers
 /// Generic SSE endpoint for all event types
 pub async fn sse_events(
-    Query(params): Query<SseParams>,
+    Query(_params): Query<SseParams>,
     State(app_state): State<crate::routes::AppState>,
     _headers: HeaderMap,
 ) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
@@ -458,11 +480,10 @@ pub async fn sse_events(
     // We can safely unwrap since Infallible means it cannot fail
     app_state
         .sse_manager
-        .create_stream(params, HeaderMap::new())
+        .create_stream(_params, HeaderMap::new())
         .await
         .unwrap_or_else(|never| match never {})
 }
-
 /// Storage operations SSE endpoint
 pub async fn sse_storage(
     State(app_state): State<crate::routes::AppState>,
@@ -473,7 +494,6 @@ pub async fn sse_storage(
         .await
         .unwrap_or_else(|never| match never {})
 }
-
 /// Health monitoring SSE endpoint
 pub async fn sse_health(
     State(app_state): State<crate::routes::AppState>,
@@ -484,7 +504,6 @@ pub async fn sse_health(
         .await
         .unwrap_or_else(|never| match never {})
 }
-
 /// Metrics SSE endpoint
 pub async fn sse_metrics(
     State(app_state): State<crate::routes::AppState>,
@@ -495,7 +514,6 @@ pub async fn sse_metrics(
         .await
         .unwrap_or_else(|never| match never {})
 }
-
 /// Utility functions for creating SSE events
 /// Create a storage operation SSE event
 pub fn create_storage_event(operation: &str, path: &str, data: serde_json::Value) -> SseEvent {
@@ -512,7 +530,6 @@ pub fn create_storage_event(operation: &str, path: &str, data: serde_json::Value
         priority: EventPriority::Normal,
     }
 }
-
 /// Create a system health SSE event
 pub fn create_health_event(component: &str, status: &str, metrics: serde_json::Value) -> SseEvent {
     SseEvent {
@@ -529,10 +546,9 @@ pub fn create_health_event(component: &str, status: &str, metrics: serde_json::V
             EventPriority::Critical
         } else {
             EventPriority::Normal
-        },
+        }
     }
 }
-
 /// Create a performance metrics SSE event
 pub fn create_metrics_event(metrics: HashMap<String, f64>) -> SseEvent {
     SseEvent {

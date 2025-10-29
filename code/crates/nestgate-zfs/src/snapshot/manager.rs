@@ -9,7 +9,9 @@ use tokio::sync::{mpsc, RwLock};
 use tokio::time::interval;
 // Removed unused tracing import
 
-use crate::{config::ZfsConfig, dataset::ZfsDatasetManager, types::StorageTier};
+use crate::{
+    config::ZfsConfig, dataset::ZfsDatasetManager, pool::ZfsPoolManager, types::StorageTier,
+};
 use nestgate_core::Result as CoreResult;
 
 use super::operations::SnapshotOperationType;
@@ -30,7 +32,6 @@ pub struct ZfsSnapshotManager {
     #[allow(dead_code)]
     config: ZfsConfig,
     dataset_manager: Arc<ZfsDatasetManager>,
-
     /// Snapshot policies
     policies: SnapshotPolicyMap,
     /// Snapshot cache
@@ -45,33 +46,60 @@ pub struct ZfsSnapshotManager {
 
     /// Shutdown signal
     shutdown_tx: Option<mpsc::Sender<()>>,
+    #[allow(dead_code)]
+    background_tasks: Vec<tokio::task::JoinHandle<()>>,
 }
 
 impl ZfsSnapshotManager {
+    /// Create snapshot manager for testing
+    #[must_use]
+    pub fn new_for_testing() -> Self {
+        let config = ZfsConfig::default();
+        let pool_manager = Arc::new(ZfsPoolManager::new_production(config.clone()));
+        let dataset_manager = Arc::new(ZfsDatasetManager::new(config, pool_manager));
+        let policies = Arc::new(RwLock::new(HashMap::new()));
+        let operation_queue = Arc::new(RwLock::new(Vec::new()));
+
+        Self {
+            config: ZfsConfig::default(),
+            dataset_manager: dataset_manager.clone(),
+            policies: policies.clone(),
+            snapshot_cache: Arc::new(RwLock::new(HashMap::new())),
+            operation_queue: operation_queue.clone(),
+            statistics: Arc::new(RwLock::new(SnapshotStatistics::default())),
+            policy_scheduler: PolicyScheduler::new(dataset_manager, policies, operation_queue),
+            shutdown_tx: None,
+            background_tasks: Vec::new(),
+        }
+    }
+
     /// Create a new snapshot manager
+    #[must_use]
     pub fn new(config: ZfsConfig, dataset_manager: Arc<ZfsDatasetManager>) -> Self {
         let policies = Arc::new(RwLock::new(HashMap::new()));
         let operation_queue = Arc::new(RwLock::new(Vec::new()));
 
-        let policy_scheduler = PolicyScheduler::new(
-            Arc::clone(&dataset_manager),
-            Arc::clone(&policies),
-            Arc::clone(&operation_queue),
-        );
+        let dataset_manager_clone = Arc::clone(&dataset_manager);
 
         Self {
             config,
             dataset_manager,
-            policies,
+            policies: Arc::clone(&policies),
             snapshot_cache: Arc::new(RwLock::new(HashMap::new())),
-            operation_queue,
+            operation_queue: Arc::clone(&operation_queue),
             statistics: Arc::new(RwLock::new(SnapshotStatistics::default())),
-            policy_scheduler,
+            policy_scheduler: PolicyScheduler::new(
+                dataset_manager_clone,
+                Arc::clone(&policies),
+                Arc::clone(&operation_queue),
+            ),
             shutdown_tx: None,
+            background_tasks: Vec::new(),
         }
     }
 
     /// Create a new snapshot manager with shared config (zero-copy optimization)
+    #[must_use]
     pub fn with_shared_config(
         config: Arc<ZfsConfig>,
         dataset_manager: Arc<ZfsDatasetManager>,
@@ -79,21 +107,22 @@ impl ZfsSnapshotManager {
         let policies = Arc::new(RwLock::new(HashMap::new()));
         let operation_queue = Arc::new(RwLock::new(Vec::new()));
 
-        let policy_scheduler = PolicyScheduler::new(
-            Arc::clone(&dataset_manager),
-            Arc::clone(&policies),
-            Arc::clone(&operation_queue),
-        );
+        let dataset_manager_clone = Arc::clone(&dataset_manager);
 
         Self {
-            config: (*config).clone(), // Dereference Arc to get ZfsConfig for compatibility
+            config: (*config).clone(),
             dataset_manager,
-            policies,
+            policies: Arc::clone(&policies),
             snapshot_cache: Arc::new(RwLock::new(HashMap::new())),
-            operation_queue,
+            operation_queue: Arc::clone(&operation_queue),
             statistics: Arc::new(RwLock::new(SnapshotStatistics::default())),
-            policy_scheduler,
+            policy_scheduler: PolicyScheduler::new(
+                dataset_manager_clone,
+                Arc::clone(&policies),
+                Arc::clone(&operation_queue),
+            ),
             shutdown_tx: None,
+            background_tasks: Vec::new(),
         }
     }
 
@@ -269,70 +298,67 @@ impl ZfsSnapshotManager {
     async fn load_default_policies(&self) -> CoreResult<()> {
         info!("Loading default snapshot policies");
 
-        // Hot tier policy - frequent snapshots, shorter retention
         let hot_policy = SnapshotPolicy {
-            name: "hot-tier".to_string(),
-            description: "High-frequency snapshots for hot tier data".to_string(),
+            name: "Hot Tier Snapshots".to_string(),
+            description: "Frequent snapshots for hot tier data".to_string(),
             enabled: true,
             frequency: ScheduleFrequency::Hours(1),
             retention: RetentionPolicy::Custom {
-                hourly_hours: 48,
-                daily_days: 14,
+                hourly_hours: 24,
+                daily_days: 7,
                 weekly_weeks: 4,
                 monthly_months: 3,
                 yearly_years: 1,
             },
             dataset_patterns: vec!["*/hot/*".to_string()],
             tiers: vec![StorageTier::Hot],
-            name_prefix: "hot-auto".to_string(),
+            name_prefix: "hot".to_string(),
             include_properties: true,
             recursive: true,
-            max_snapshots_per_run: 50,
-            priority: 90,
+            max_snapshots_per_run: 10,
+            priority: 3,
         };
 
-        // Warm tier policy - moderate snapshots, medium retention
         let warm_policy = SnapshotPolicy {
-            name: "warm-tier".to_string(),
-            description: "Moderate snapshots for warm tier data".to_string(),
+            name: "Warm Tier Snapshots".to_string(),
+            description: "Regular snapshots for warm tier data".to_string(),
             enabled: true,
-            frequency: ScheduleFrequency::Hours(6),
+            frequency: ScheduleFrequency::Daily(2),
             retention: RetentionPolicy::Custom {
-                hourly_hours: 24,
-                daily_days: 30,
-                weekly_weeks: 12,
+                hourly_hours: 0,
+                daily_days: 14,
+                weekly_weeks: 8,
                 monthly_months: 6,
                 yearly_years: 2,
             },
             dataset_patterns: vec!["*/warm/*".to_string()],
             tiers: vec![StorageTier::Warm],
-            name_prefix: "warm-auto".to_string(),
+            name_prefix: "warm".to_string(),
             include_properties: true,
             recursive: true,
-            max_snapshots_per_run: 25,
-            priority: 70,
+            max_snapshots_per_run: 5,
+            priority: 2,
         };
 
-        // Cold tier policy - infrequent snapshots, long retention
         let cold_policy = SnapshotPolicy {
-            name: "cold-tier".to_string(),
-            description: "Infrequent snapshots for cold tier data with long retention".to_string(),
+            name: "Cold Tier Snapshots".to_string(),
+            description: "Infrequent snapshots for cold tier data".to_string(),
             enabled: true,
-            frequency: ScheduleFrequency::Daily(2), // 2 AM daily
+            frequency: ScheduleFrequency::Weekly { day: 0, hour: 3 },
             retention: RetentionPolicy::Custom {
-                hourly_hours: 0, // No hourly snapshots
-                daily_days: 90,
-                weekly_weeks: 52,
-                monthly_months: 24,
-                yearly_years: 10,
+                hourly_hours: 0,
+                daily_days: 0,
+                weekly_weeks: 12,
+                monthly_months: 12,
+                yearly_years: 5,
             },
             dataset_patterns: vec!["*/cold/*".to_string()],
             tiers: vec![StorageTier::Cold],
-            name_prefix: "cold-auto".to_string(),
+            name_prefix: "cold".to_string(),
             include_properties: true,
             recursive: true,
-            max_snapshots_per_run: 10,
-            priority: 50,
+            max_snapshots_per_run: 2,
+            priority: 1,
         };
 
         // Add policies

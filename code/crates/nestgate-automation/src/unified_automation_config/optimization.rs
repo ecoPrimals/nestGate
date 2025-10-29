@@ -2,7 +2,6 @@
 /// Performance optimization configuration - extracted from monolithic config
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
-
 /// Optimization settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OptimizationSettings {
@@ -17,7 +16,6 @@ pub struct OptimizationSettings {
     /// Optimization interval
     pub optimization_interval: Duration,
 }
-
 impl SmartDefault for OptimizationSettings {
     fn smart_default() -> Self {
         Self {

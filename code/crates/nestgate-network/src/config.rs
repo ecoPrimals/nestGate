@@ -1,8 +1,7 @@
 ///
 /// Core network configuration types and utilities.
 use serde::{Deserialize, Serialize};
-
-// ==================== UNIFIED NETWORK CONFIGURATION ====================
+// ==================== SECTION ====================
 
 // Re-export the canonical network configuration
 pub use crate::canonical_modernization::network_config::UnifiedNetworkConfig;
@@ -10,17 +9,16 @@ pub use crate::canonical_modernization::network_config::UnifiedNetworkConfig;
 // Alias for backward compatibility during transition
 pub type NetworkConfig = UnifiedNetworkConfig;
 
-// ==================== LEGACY CONFIGURATION REMOVED ====================
+// ==================== SECTION ====================
 // All legacy network configuration has been successfully migrated to UnifiedNetworkConfig
 // No deprecated types remain - migration complete
 
-// ==================== HELPER FUNCTIONS ====================
+// ==================== SECTION ====================
 
 /// Create default network configuration
 pub fn create_default_config() -> UnifiedNetworkConfig {
     UnifiedNetworkConfig::default()
 }
-
 /// Validate network configuration
 pub fn validate_config(config: &UnifiedNetworkConfig) -> Result<(), String> {
     // Basic validation - can be expanded as needed
@@ -31,10 +29,8 @@ pub fn validate_config(config: &UnifiedNetworkConfig) -> Result<(), String> {
     if config.base.timeouts.connection_timeout_ms == 0 {
         return Err("Connection timeout cannot be 0".to_string());
     }
-    
     Ok(())
 }
-
 /// Network service status
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum ServiceStatus {
@@ -53,7 +49,6 @@ pub enum ServiceStatus {
     /// Service status is unknown
     Unknown,
 }
-
 impl Default for ServiceStatus {
     fn default() -> Self {
         ServiceStatus::Unknown

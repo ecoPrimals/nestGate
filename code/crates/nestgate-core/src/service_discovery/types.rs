@@ -1,10 +1,9 @@
 /// Universal Service Discovery Types
-/// Extracted from universal_service_discovery.rs to maintain file size compliance
+/// Extracted from `universal_service_discovery.rs` to maintain file size compliance
 /// Contains all type definitions for the Universal Primal Architecture Standard
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use uuid::Uuid;
-
 /// Universal service registration following the Universal Primal Architecture Standard
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UniversalServiceRegistration {
@@ -23,9 +22,8 @@ pub struct UniversalServiceRegistration {
     /// Extension points for custom data
     pub extensions: HashMap<String, serde_json::Value>,
 }
-
 /// Service metadata information
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ServiceMetadata {
     /// Human-readable service name
     pub name: String,
@@ -40,11 +38,11 @@ pub struct ServiceMetadata {
     /// Metrics endpoint
     pub metrics_endpoint: Option<String>,
 }
-
 /// Service category enumeration
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, Default)]
 pub enum ServiceCategory {
     /// Storage and persistence services
+    #[default]
     Storage,
     /// AI and machine learning services
     AI,
@@ -67,7 +65,6 @@ pub enum ServiceCategory {
     /// Custom category (specify in description)
     Custom(String),
 }
-
 /// Service capability enumeration - what a service can do
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum ServiceCapability {
@@ -88,7 +85,6 @@ pub enum ServiceCapability {
         version: String,
     },
 }
-
 /// Storage type capabilities
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum StorageType {
@@ -105,7 +101,6 @@ pub enum StorageType {
     /// Archive storage
     Archive,
 }
-
 /// Security domain capabilities
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum SecurityDomain {
@@ -122,12 +117,11 @@ pub enum SecurityDomain {
     /// Threat detection
     ThreatDetection,
 }
-
 /// Integration type capabilities
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum IntegrationType {
     /// API integration
-    API,
+    Api,
     /// Event-driven integration
     EventDriven,
     /// Batch integration
@@ -137,7 +131,6 @@ pub enum IntegrationType {
     /// File-based integration
     File,
 }
-
 /// Integration pattern capabilities
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum IntegrationPattern {
@@ -148,28 +141,26 @@ pub enum IntegrationPattern {
     /// Event sourcing pattern
     EventSourcing,
     /// Command query responsibility segregation
-    CQRS,
+    Cqrs,
     /// Microservices pattern
     Microservices,
 }
-
 /// Communication protocol capabilities
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum CommunicationProtocol {
     /// HTTP/HTTPS protocol
-    HTTP,
+    Http,
     /// gRPC protocol
-    GRPC,
+    Grpc,
     /// WebSocket protocol
     WebSocket,
     /// TCP protocol
-    TCP,
+    Tcp,
     /// UDP protocol
-    UDP,
+    Udp,
     /// Message queue protocols
     MessageQueue,
 }
-
 /// Resource specification
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ResourceSpec {
@@ -184,7 +175,6 @@ pub struct ResourceSpec {
     /// Resource constraints
     pub constraints: ResourceConstraints,
 }
-
 /// Integration preferences
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IntegrationPreferences {
@@ -197,7 +187,6 @@ pub struct IntegrationPreferences {
     /// Cost sensitivity
     pub cost_sensitivity: CostSensitivity,
 }
-
 /// Resource constraints
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ResourceConstraints {
@@ -210,7 +199,6 @@ pub struct ResourceConstraints {
     /// Performance requirements
     pub performance: PerformanceRequirements,
 }
-
 /// Performance requirements
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceRequirements {
@@ -221,7 +209,6 @@ pub struct PerformanceRequirements {
     /// Availability requirement (percentage)
     pub availability_percent: Option<f64>,
 }
-
 /// Cost sensitivity levels
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum CostSensitivity {
@@ -234,7 +221,6 @@ pub enum CostSensitivity {
     /// High cost sensitivity (optimize for cost)
     High,
 }
-
 /// Data operation capabilities
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum DataOperation {
@@ -251,7 +237,6 @@ pub enum DataOperation {
     /// Analytics operations
     Analytics,
 }
-
 /// Consistency level requirements
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ConsistencyLevel {
@@ -262,7 +247,6 @@ pub enum ConsistencyLevel {
     /// Session consistency
     Session,
 }
-
 /// Durability level requirements
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum DurabilityLevel {
@@ -275,7 +259,6 @@ pub enum DurabilityLevel {
     /// Replicated durability
     Replicated,
 }
-
 /// Security function capabilities
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum SecurityFunction {
@@ -292,22 +275,20 @@ pub enum SecurityFunction {
     /// Intrusion detection
     IntrusionDetection,
 }
-
 /// Compliance framework requirements
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum ComplianceFramework {
     /// GDPR compliance
-    GDPR,
+    Gdpr,
     /// HIPAA compliance
-    HIPAA,
+    Hipaa,
     /// SOC2 compliance
     SOC2,
     /// ISO27001 compliance
     ISO27001,
     /// PCI DSS compliance
-    PCIDSS,
+    Pcidss,
 }
-
 /// Trust level requirements
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum TrustLevel {
@@ -320,7 +301,6 @@ pub enum TrustLevel {
     /// Restricted (maximum trust)
     Restricted,
 }
-
 /// Orchestration scope capabilities
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum OrchestrationScope {
@@ -333,7 +313,6 @@ pub enum OrchestrationScope {
     /// Infrastructure orchestration
     Infrastructure,
 }
-
 /// Coordination pattern capabilities
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum CoordinationPattern {
@@ -346,7 +325,6 @@ pub enum CoordinationPattern {
     /// Peer-to-peer coordination
     PeerToPeer,
 }
-
 /// Consistency model requirements
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum ConsistencyModel {
@@ -359,7 +337,6 @@ pub enum ConsistencyModel {
     /// Eventual consistency
     Eventual,
 }
-
 /// Fault tolerance level requirements
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum FaultToleranceLevel {
@@ -372,12 +349,11 @@ pub enum FaultToleranceLevel {
     /// Maximum fault tolerance
     Maximum,
 }
-
 /// AI modality capabilities
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum AIModality {
     /// Natural language processing
-    NLP,
+    Nlp,
     /// Computer vision
     Vision,
     /// Speech processing
@@ -389,24 +365,22 @@ pub enum AIModality {
     /// Reinforcement learning
     ReinforcementLearning,
 }
-
 /// AI model type capabilities
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum AIModelType {
     /// Large language model
-    LLM,
+    Llm,
     /// Convolutional neural network
-    CNN,
+    Cnn,
     /// Recurrent neural network
-    RNN,
+    Rnn,
     /// Transformer model
     Transformer,
     /// Decision tree
     DecisionTree,
     /// Support vector machine
-    SVM,
+    Svm,
 }
-
 /// AI task capabilities
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum AITask {
@@ -423,22 +397,20 @@ pub enum AITask {
     /// Recommendation
     Recommendation,
 }
-
 /// AI interface capabilities
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum AIInterface {
     /// REST API interface
-    REST,
+    Rest,
     /// gRPC interface
-    GRPC,
+    Grpc,
     /// WebSocket interface
     WebSocket,
     /// Command line interface
-    CLI,
+    Cli,
     /// Library interface
     Library,
 }
-
 /// Development context capabilities
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum DevelopmentContext {
@@ -451,9 +423,8 @@ pub enum DevelopmentContext {
     /// Production environment
     Production,
     /// CI/CD pipeline
-    CICD,
+    Cicd,
 }
-
 /// Service role definition
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceRole {
@@ -468,7 +439,6 @@ pub struct ServiceRole {
     /// Performance requirements
     pub performance_requirements: PerformanceRequirements,
 }
-
 /// Capability requirement
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CapabilityRequirement {
@@ -481,7 +451,6 @@ pub struct CapabilityRequirement {
     /// Additional parameters
     pub parameters: HashMap<String, serde_json::Value>,
 }
-
 /// Service handle for external references
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceHandle {
@@ -489,7 +458,6 @@ pub struct ServiceHandle {
     pub name: String,
     pub endpoints: Vec<ServiceEndpoint>,
 }
-
 /// Service information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceInfo {
@@ -499,7 +467,6 @@ pub struct ServiceInfo {
     pub endpoints: Vec<ServiceEndpoint>,
     pub last_seen: std::time::SystemTime,
 }
-
 /// Service endpoint definition
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceEndpoint {
@@ -507,7 +474,6 @@ pub struct ServiceEndpoint {
     pub protocol: CommunicationProtocol,
     pub health_check: Option<String>,
 }
-
 /// Service requirements for discovery
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceRequirements {
@@ -515,7 +481,6 @@ pub struct ServiceRequirements {
     pub resource_constraints: Option<ResourceConstraints>,
     pub performance_requirements: Option<PerformanceRequirements>,
 }
-
 /// Selection preferences for service discovery
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SelectionPreferences {
@@ -523,8 +488,7 @@ pub struct SelectionPreferences {
     pub cost_sensitivity: CostSensitivity,
     pub performance_priority: bool,
 }
-
-// ==================== DEFAULT IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 impl Default for PerformanceRequirements {
     fn default() -> Self {
@@ -539,9 +503,9 @@ impl Default for PerformanceRequirements {
 impl Default for IntegrationPreferences {
     fn default() -> Self {
         Self {
-            preferred_types: vec![IntegrationType::API],
+            preferred_types: vec![IntegrationType::Api],
             preferred_patterns: vec![IntegrationPattern::RequestResponse],
-            preferred_protocols: vec![CommunicationProtocol::HTTP],
+            preferred_protocols: vec![CommunicationProtocol::Http],
             cost_sensitivity: CostSensitivity::Medium,
         }
     }
@@ -568,7 +532,6 @@ pub struct DiscoveredService {
     pub metadata: HashMap<String, String>,
     pub discovered_at: std::time::SystemTime,
 }
-
 impl Default for DiscoveredService {
     fn default() -> Self {
         Self {

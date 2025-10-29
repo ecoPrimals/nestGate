@@ -7,7 +7,7 @@ use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use std::time::Duration;
 
 // Use the canonical configuration system
-use nestgate_core::config::canonical_unified::CanonicalConfig;
+use nestgate_core::config::unified::NestGateUnifiedConfig;
 
 /// Demonstrate comprehensive benchmark configuration
 fn bench_unified_config_creation(c: &mut Criterion) {

@@ -1,24 +1,21 @@
-//! Notification Channel Trait System
-//!
-//! Advanced smart abstraction for unified notification handling across all alert channels.
-//! This trait system eliminates the large enum pattern and provides type-safe, extensible
+// Notification Channel Trait System
+//! Notification Channels functionality and utilities.
+// Advanced smart abstraction for unified notification handling across all alert channels.
+// This trait system eliminates the large enum pattern and provides type-safe, extensible
 //! notification channels with consistent behavior and error handling.
 
 use crate::smart_abstractions::prelude::*;
-use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::SystemTime;
 
 /// Unified result type for notification operations
 pub type NotificationResult<T> = std::result::Result<T, NotificationError>;
-
 /// Notification errors with smart defaults
 #[derive(Debug, Clone, Serialize, Deserialize, thiserror::Error)]
 pub enum NotificationError {
     #[error("Channel configuration error: {message}")]
     Configuration { message: String },
-
     #[error("Network error sending notification: {message}")]
     Network { message: String },
 
@@ -54,7 +51,6 @@ pub enum DeliveryStatus {
     /// Notification was suppressed by rules
     Suppressed,
 }
-
 impl SmartDefault for DeliveryStatus {
     fn smart_default() -> Self {
         Self::Pending
@@ -75,7 +71,6 @@ pub struct DeliveryRecord {
     /// Response metadata from the channel
     pub metadata: HashMap<String, serde_json::Value>,
 }
-
 impl SmartDefault for DeliveryRecord {
     fn smart_default() -> Self {
         Self {
@@ -102,7 +97,6 @@ pub struct NotificationContent {
     /// Formatting hints for the channel
     pub formatting: NotificationFormatting,
 }
-
 impl SmartDefault for NotificationContent {
     fn smart_default() -> Self {
         Self {
@@ -127,7 +121,6 @@ pub struct NotificationFormatting {
     /// Whether to include timestamp
     pub include_timestamp: bool,
 }
-
 impl SmartDefault for NotificationFormatting {
     fn smart_default() -> Self {
         Self {
@@ -147,7 +140,6 @@ pub enum NotificationPriority {
     High,
     Critical,
 }
-
 impl SmartDefault for NotificationPriority {
     fn smart_default() -> Self {
         Self::Normal
@@ -159,11 +151,11 @@ impl SmartDefault for NotificationPriority {
 /// This trait provides a unified interface for all notification channels,
 /// eliminating the need for large enum patterns and enabling type-safe,
 /// extensible notification handling.
-#[async_trait]
+/// 
+/// **MODERNIZED**: Native async trait without async_trait overhead
 pub trait NotificationChannel: Send + Sync + std::fmt::Debug {
     /// Get the unique identifier for this channel
     fn channel_id(&self) -> &str;
-
     /// Get the human-readable name for this channel
     fn channel_name(&self) -> &str;
 
@@ -173,20 +165,20 @@ pub trait NotificationChannel: Send + Sync + std::fmt::Debug {
     /// Check if the channel is currently enabled
     fn is_enabled(&self) -> bool;
 
-    /// Send a notification through this channel
-    async fn send_notification(
+    /// Send a notification through this channel - native async
+    fn send_notification(
         &self,
         content: &NotificationContent,
-    ) -> NotificationResult<DeliveryRecord>;
+    ) -> impl std::future::Future<Output = NotificationResult<DeliveryRecord>> + Send;
 
-    /// Validate the channel configuration
-    async fn validate_configuration(&self) -> NotificationResult<()>;
+    /// Validate the channel configuration - native async
+    fn validate_configuration(&self) -> impl std::future::Future<Output = NotificationResult<()>> + Send;
 
     /// Get channel-specific configuration as JSON
     fn get_configuration(&self) -> serde_json::Value;
 
-    /// Test the channel connectivity
-    async fn test_connection(&self) -> NotificationResult<bool>;
+    /// Test the channel connectivity - native async
+    fn test_connection(&self) -> impl std::future::Future<Output = NotificationResult<bool>> + Send;
 
     /// Get rate limit information for this channel
     fn get_rate_limits(&self) -> Option<RateLimitConfig>;
@@ -204,7 +196,6 @@ pub struct RateLimitConfig {
     /// When the current window started
     pub window_start: SystemTime,
 }
-
 impl SmartDefault for RateLimitConfig {
     fn smart_default() -> Self {
         Self {
@@ -230,7 +221,6 @@ pub struct EmailNotificationChannel {
     pub use_tls: bool,
     pub rate_limits: Option<RateLimitConfig>,
 }
-
 impl SmartDefault for EmailNotificationChannel {
     fn smart_default() -> Self {
         Self {
@@ -248,7 +238,6 @@ impl SmartDefault for EmailNotificationChannel {
     }
 }
 
-#[async_trait]
 impl NotificationChannel for EmailNotificationChannel {
     fn channel_id(&self) -> &str {
         &self.id
@@ -266,10 +255,11 @@ impl NotificationChannel for EmailNotificationChannel {
         self.enabled
     }
 
-    async fn send_notification(
+    fn send_notification(
         &self,
         content: &NotificationContent,
-    ) -> NotificationResult<DeliveryRecord> {
+    ) -> impl std::future::Future<Output = NotificationResult<DeliveryRecord>> + Send {
+        async move {
         if !self.is_enabled() {
             return Ok(DeliveryRecord {
                 channel_id: self.id.clone(),
@@ -277,7 +267,7 @@ impl NotificationChannel for EmailNotificationChannel {
                 status: DeliveryStatus::Suppressed,
                 error_message: Some("Channel is disabled".to_string()),
                 metadata: HashMap::smart_default(),
-            });
+            );
         }
 
         // **PRODUCTION READY**: Email sending logic with proper error handling
@@ -300,26 +290,21 @@ impl NotificationChannel for EmailNotificationChannel {
             sent_at: SystemTime::now(),
             status: DeliveryStatus::Delivered,
             error_message: None,
-            metadata: {
-                let mut meta = HashMap::smart_default();
-                meta.insert("recipients".to_string(), serde_json::json!(self.recipients));
-                meta.insert("subject".to_string(), serde_json::json!(content.title));
-                meta
-            },
         })
+        }
     }
 
-    async fn validate_configuration(&self) -> NotificationResult<()> {
+    fn validate_configuration(&self) -> impl std::future::Future<Output = Result<()>> + Send;
         if self.recipients.is_empty() {
             return Err(NotificationError::Configuration {
                 message: "No recipients configured".to_string(),
-            });
+            );
         }
 
         if self.smtp_server.is_empty() {
             return Err(NotificationError::Configuration {
                 message: "SMTP server not configured".to_string(),
-            });
+            );
         }
 
         Ok(())
@@ -337,7 +322,7 @@ impl NotificationChannel for EmailNotificationChannel {
         })
     }
 
-    async fn test_connection(&self) -> NotificationResult<bool> {
+    fn test_connection(&self) -> impl std::future::Future<Output = Result<bool>> + Send;
         // **PRODUCTION READY**: SMTP connection test with timeout
         if !self.enabled {
             return Ok(false);
@@ -380,7 +365,6 @@ pub struct SlackNotificationChannel {
     pub icon_emoji: Option<String>,
     pub rate_limits: Option<RateLimitConfig>,
 }
-
 impl SmartDefault for SlackNotificationChannel {
     fn smart_default() -> Self {
         Self {
@@ -388,7 +372,7 @@ impl SmartDefault for SlackNotificationChannel {
             name: "Default Slack Channel".to_string(),
             enabled: true,
             webhook_url: "https://hooks.slack.com/services/default".to_string(),
-            channel: "#alerts".to_string(),
+            channel: "alerts".to_string(),
             username: Some("NestGate".to_string()),
             icon_emoji: Some(":warning:".to_string()),
             rate_limits: Some(RateLimitConfig::smart_default()),
@@ -396,7 +380,6 @@ impl SmartDefault for SlackNotificationChannel {
     }
 }
 
-#[async_trait]
 impl NotificationChannel for SlackNotificationChannel {
     fn channel_id(&self) -> &str {
         &self.id
@@ -425,7 +408,7 @@ impl NotificationChannel for SlackNotificationChannel {
                 status: DeliveryStatus::Suppressed,
                 error_message: Some("Channel is disabled".to_string()),
                 metadata: HashMap::smart_default(),
-            });
+            );
         }
 
         // **PRODUCTION READY**: Slack webhook sending with proper formatting
@@ -436,15 +419,6 @@ impl NotificationChannel for SlackNotificationChannel {
             sent_at: SystemTime::now(),
             status: DeliveryStatus::Delivered,
             error_message: None,
-            metadata: {
-                let mut meta = HashMap::smart_default();
-                meta.insert("channel".to_string(), serde_json::json!(self.channel));
-                meta.insert(
-                    "webhook_url".to_string(),
-                    serde_json::json!(self.webhook_url),
-                );
-                meta
-            },
         })
     }
 
@@ -452,13 +426,13 @@ impl NotificationChannel for SlackNotificationChannel {
         if self.webhook_url.is_empty() || !self.webhook_url.starts_with("https://") {
             return Err(NotificationError::Configuration {
                 message: "Invalid webhook URL".to_string(),
-            });
+            );
         }
 
         if self.channel.is_empty() {
             return Err(NotificationError::Configuration {
                 message: "Channel not specified".to_string(),
-            });
+            );
         }
 
         Ok(())
@@ -509,7 +483,6 @@ pub struct LogNotificationChannel {
     pub enabled: bool,
     pub log_level: String,
 }
-
 impl SmartDefault for LogNotificationChannel {
     fn smart_default() -> Self {
         Self {
@@ -521,7 +494,6 @@ impl SmartDefault for LogNotificationChannel {
     }
 }
 
-#[async_trait]
 impl NotificationChannel for LogNotificationChannel {
     fn channel_id(&self) -> &str {
         &self.id
@@ -550,7 +522,7 @@ impl NotificationChannel for LogNotificationChannel {
                 status: DeliveryStatus::Suppressed,
                 error_message: Some("Channel is disabled".to_string()),
                 metadata: HashMap::smart_default(),
-            });
+            );
         }
 
         // Log the notification
@@ -567,15 +539,6 @@ impl NotificationChannel for LogNotificationChannel {
             sent_at: SystemTime::now(),
             status: DeliveryStatus::Delivered,
             error_message: None,
-            metadata: {
-                let mut meta = HashMap::smart_default();
-                meta.insert("log_level".to_string(), serde_json::json!(self.log_level));
-                meta.insert(
-                    "logged_at".to_string(),
-                    serde_json::json!(SystemTime::now()),
-                );
-                meta
-            },
         })
     }
 
@@ -583,8 +546,8 @@ impl NotificationChannel for LogNotificationChannel {
         let valid_levels = ["error", "warn", "info", "debug", "trace"];
         if !valid_levels.contains(&self.log_level.as_str()) {
             return Err(NotificationError::Configuration {
-                message: format!("Invalid log level: {}", self.log_level),
-            });
+                message: format!("Invalid log level: {self.log_level}"),
+            );
         }
         Ok(())
     }
@@ -612,7 +575,6 @@ impl NotificationChannel for LogNotificationChannel {
 pub struct NotificationChannelManager {
     channels: HashMap<String, Box<dyn NotificationChannel>>,
 }
-
 impl Default for NotificationChannelManager {
     fn default() -> Self {
         Self::new()
@@ -620,6 +582,7 @@ impl Default for NotificationChannelManager {
 }
 
 impl NotificationChannelManager {
+    #[must_use]
     pub fn new() -> Self {
         Self {
             channels: HashMap::new(),

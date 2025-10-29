@@ -141,7 +141,7 @@
 // async fn main() -> nestgate_installer::Result<()> {
 //     // Launch GUI installer
 //     let gui_installer = GuiInstaller::new();
-//     
+//
 //     // Display installation wizard
 //     gui_installer.show_wizard().await?;
 //
@@ -162,20 +162,20 @@
 //     install_path: "/opt/nestgate".to_string(),
 //     data_path: "/var/lib/nestgate".to_string(),
 //     config_path: "/etc/nestgate".to_string(),
-//     
+//
 //     // Service configuration
 //     enable_service: true,
 //     service_user: "nestgate".to_string(),
 //     service_group: "nestgate".to_string(),
-//     
+//
 //     // Network configuration
 //     api_port: 8080,
 //     configure_firewall: true,
-//     
+//
 //     // Security options
 //     setup_user: true,
 //     setup_ssl: false,
-//     
+//
 //     // Installation mode
 //     silent_mode: false,
 //     force_reinstall: false,
@@ -195,7 +195,7 @@
 //         create_test_pool: false,
 //         optimize_for_ssd: true,
 //     }),
-//     
+//
 //     // Security configuration
 //     security_config: Some(SecurityConfig {
 //         enable_tls: true,
@@ -203,11 +203,11 @@
 //         require_auth: true,
 //         audit_logging: true,
 //     }),
-//     
+//
 //     // Performance tuning
 //     performance_tuning: true,
 //     optimize_kernel_params: true,
-//     
+//
 //     ..Default::default()
 // };
 // ```
@@ -382,17 +382,17 @@
 // match installer.install().await {
 //     Ok(()) => println!("Installation successful!"),
 //     Err(InstallationError::DependencyMissing { dependency, .. }) => {
-//         eprintln!("Missing dependency: {}", dependency);
-//         eprintln!("Please install {} and retry", dependency);
+//         eprintln!("Missing dependency: {dependency}");
+//         eprintln!("Please install {dependency} and retry");
 //     }
 //     Err(InstallationError::InsufficientPermissions { required_action }) => {
-//         eprintln!("Need elevated permissions for: {}", required_action);
+//         eprintln!("Need elevated permissions for: {required_action}");
 //         eprintln!("Please run as administrator/root");
 //     }
 //     Err(InstallationError::PlatformNotSupported { platform }) => {
-//         eprintln!("Platform not supported: {}", platform);
+//         eprintln!("Platform not supported: {platform}");
 //     }
-//     Err(e) => eprintln!("Installation failed: {}", e),
+//     Err(e) => eprintln!("Installation failed: {e}"),
 // }
 // ```
 //
@@ -407,20 +407,20 @@
 // async fn test_installation() -> nestgate_installer::Result<()> {
 //     let config = InstallationConfig::for_testing();
 //     let mut installer = Installer::new(config);
-//     
+//
 //     // Run test installation
 //     installer.install_test_mode().await?;
-//     
+//
 //     // Validate installation
 //     let validator = InstallationValidator::new();
 //     let result = validator.validate_installation().await?;
-//     
+//
 //     assert!(result.is_valid);
 //     assert!(result.all_services_running);
-//     
+//
 //     // Cleanup test installation
 //     installer.cleanup_test().await?;
-//     
+//
 //     Ok(())
 // }
 // ```
@@ -514,15 +514,11 @@ mod tests {
         let config = InstallerConfig::default();
 
         // Test that config has sensible defaults
-        assert!(config
-            .system
-            .instance_name
-            .as_ref()
-            .map_or(false, |name| !name.is_empty()));
+        assert!(!config.base_config.system.instance_name.is_empty());
         // Test other available fields exist using unified structure
-        let _monitoring = &config.domains.monitoring;
-        let _security = &config.domains.security;
-        let _storage = &config.domains.storage;
+        let _zfs = &config.base_config.domains.zfs;
+        let _api = &config.base_config.domains.api;
+        let _mcp = &config.base_config.domains.mcp;
     }
 
     #[test]
@@ -565,16 +561,12 @@ mod tests {
         let config = InstallerConfig::default();
 
         // Test basic config validation
-        assert!(config
-            .system
-            .instance_name
-            .as_ref()
-            .map_or(false, |name| !name.is_empty()));
+        assert!(!config.base_config.system.instance_name.is_empty());
 
         // Test domain configurations access using unified structure
-        let _monitoring = &config.domains.monitoring;
-        let _security = &config.domains.security;
-        let _storage = &config.domains.storage;
+        let _zfs = &config.base_config.domains.zfs;
+        let _api = &config.base_config.domains.api;
+        let _mcp = &config.base_config.domains.mcp;
 
         Ok(())
     }

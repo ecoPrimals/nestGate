@@ -1,7 +1,6 @@
 /// **CONST GENERIC CONFIGURATION SYSTEM**
 /// This module replaces runtime configuration lookups with compile-time const generics
 /// for maximum performance by eliminating HashMap lookups and string parsing.
-
 use std::collections::HashMap;
 use std::marker::PhantomData;
 use std::time::Duration;
@@ -10,7 +9,7 @@ use std::time::Duration;
 /// Provides compile-time configuration values without runtime overhead
 pub trait ZeroCostConfig {
     /// Get configuration value at compile-time
-    const fn get_value<T: ConfigValue>() -> T::Output;
+    const fn getvalue<T: ConfigValue>() -> T::Output;
     
     /// Validate configuration consistency at compile-time
     const fn validate() -> bool;
@@ -18,13 +17,11 @@ pub trait ZeroCostConfig {
     /// Get configuration name for debugging
     fn config_name() -> &'static str;
 }
-
 /// **CONFIGURATION VALUE TYPES**
 /// Marker traits for different configuration value types
 pub trait ConfigValue {
     type Output;
 }
-
 /// **SYSTEM CONFIGURATION**
 /// Compile-time system configuration with const generics
 pub struct ZeroCostSystemConfig<
@@ -36,39 +33,38 @@ pub struct ZeroCostSystemConfig<
 > {
     _phantom: PhantomData<()>,
 }
-
 impl<const MAX_CONNECTIONS: usize, const BUFFER_SIZE: usize, const TIMEOUT_MS: u64, const WORKER_THREADS: usize, const LOG_LEVEL: u8>
     ZeroCostSystemConfig<MAX_CONNECTIONS, BUFFER_SIZE, TIMEOUT_MS, WORKER_THREADS, LOG_LEVEL>
 {
     /// Create new system configuration
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             _phantom: PhantomData,
         }
     }
 
     /// Get max connections at compile-time
-    pub const fn max_connections() -> usize {
+    pub fn max_connections() -> usize {
         MAX_CONNECTIONS
     }
 
     /// Get buffer size at compile-time
-    pub const fn buffer_size() -> usize {
+    pub fn buffer_size() -> usize {
         BUFFER_SIZE
     }
 
     /// Get timeout at compile-time
-    pub const fn timeout() -> Duration {
+    pub fn timeout() -> Duration {
         Duration::from_millis(TIMEOUT_MS)
     }
 
     /// Get worker threads at compile-time
-    pub const fn worker_threads() -> usize {
+    pub fn worker_threads() -> usize {
         WORKER_THREADS
     }
 
     /// Get log level at compile-time
-    pub const fn log_level() -> LogLevel {
+    pub fn log_level() -> LogLevel {
         match LOG_LEVEL {
             0 => LogLevel::Error,
             1 => LogLevel::Warn,
@@ -85,17 +81,17 @@ impl<const MAX_CONNECTIONS: usize, const BUFFER_SIZE: usize, const TIMEOUT_MS: u
     }
 
     /// Check if debug logging is enabled at compile-time
-    pub const fn is_debug_enabled() -> bool {
+    pub fn is_debug_enabled() -> bool {
         LOG_LEVEL >= 3
     }
 
     /// Check if trace logging is enabled at compile-time
-    pub const fn is_trace_enabled() -> bool {
+    pub fn is_trace_enabled() -> bool {
         LOG_LEVEL >= 4
     }
 
     /// Validate configuration consistency at compile-time
-    pub const fn validate() -> bool {
+    pub fn validate() -> bool {
         MAX_CONNECTIONS > 0 && 
         BUFFER_SIZE > 0 && 
         TIMEOUT_MS > 0 && 
@@ -113,14 +109,13 @@ pub enum LogLevel {
     Debug,
     Trace,
 }
-
 /// **STORAGE CONFIGURATION**
 /// Compile-time storage configuration with const generics
 pub struct ZeroCostStorageConfig<
     const MAX_POOLS: usize = 100,
     const MAX_DATASETS: usize = 10000,
-    const MAX_SNAPSHOTS: usize = 100000,
-    const POOL_TIMEOUT_MS: u64 = 60000,
+    const MAX_SNAPSHOTS: usize = 100_000,
+    const POOL_TIMEOUT_MS: u64 = 60_000,
     const SNAPSHOT_RETENTION_DAYS: u32 = 30,
     const COMPRESSION_LEVEL: u8 = 6, // 1-9 for gzip
     const ENABLE_DEDUPLICATION: bool = false,
@@ -128,7 +123,6 @@ pub struct ZeroCostStorageConfig<
 > {
     _phantom: PhantomData<()>,
 }
-
 impl<const MAX_POOLS: usize, const MAX_DATASETS: usize, const MAX_SNAPSHOTS: usize, 
      const POOL_TIMEOUT_MS: u64, const SNAPSHOT_RETENTION_DAYS: u32, const COMPRESSION_LEVEL: u8,
      const ENABLE_DEDUPLICATION: bool, const ENABLE_ENCRYPTION: bool>
@@ -136,54 +130,54 @@ impl<const MAX_POOLS: usize, const MAX_DATASETS: usize, const MAX_SNAPSHOTS: usi
                           SNAPSHOT_RETENTION_DAYS, COMPRESSION_LEVEL, ENABLE_DEDUPLICATION, ENABLE_ENCRYPTION>
 {
     /// Create new storage configuration
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             _phantom: PhantomData,
         }
     }
 
     /// Get max pools at compile-time
-    pub const fn max_pools() -> usize {
+    pub fn max_pools() -> usize {
         MAX_POOLS
     }
 
     /// Get max datasets at compile-time
-    pub const fn max_datasets() -> usize {
+    pub fn max_datasets() -> usize {
         MAX_DATASETS
     }
 
     /// Get max snapshots at compile-time
-    pub const fn max_snapshots() -> usize {
+    pub fn max_snapshots() -> usize {
         MAX_SNAPSHOTS
     }
 
     /// Get pool timeout at compile-time
-    pub const fn pool_timeout() -> Duration {
+    pub fn pool_timeout() -> Duration {
         Duration::from_millis(POOL_TIMEOUT_MS)
     }
 
     /// Get snapshot retention at compile-time
-    pub const fn snapshot_retention_days() -> u32 {
+    pub fn snapshot_retention_days() -> u32 {
         SNAPSHOT_RETENTION_DAYS
     }
 
     /// Get compression level at compile-time
-    pub const fn compression_level() -> u8 {
+    pub fn compression_level() -> u8 {
         COMPRESSION_LEVEL
     }
 
     /// Check if deduplication is enabled at compile-time
-    pub const fn is_deduplication_enabled() -> bool {
+    pub fn is_deduplication_enabled() -> bool {
         ENABLE_DEDUPLICATION
     }
 
     /// Check if encryption is enabled at compile-time
-    pub const fn is_encryption_enabled() -> bool {
+    pub fn is_encryption_enabled() -> bool {
         ENABLE_ENCRYPTION
     }
 
     /// Get compression algorithm at compile-time
-    pub const fn compression_algorithm() -> CompressionAlgorithm {
+    pub fn compression_algorithm() -> CompressionAlgorithm {
         match COMPRESSION_LEVEL {
             1..=3 => CompressionAlgorithm::Lz4,
             4..=6 => CompressionAlgorithm::Gzip,
@@ -193,7 +187,7 @@ impl<const MAX_POOLS: usize, const MAX_DATASETS: usize, const MAX_SNAPSHOTS: usi
     }
 
     /// Calculate estimated storage overhead at compile-time
-    pub const fn estimated_overhead_percent() -> u8 {
+    pub fn estimated_overhead_percent() -> u8 {
         let mut overhead = 5; // Base overhead
         
         if ENABLE_DEDUPLICATION {
@@ -208,7 +202,7 @@ impl<const MAX_POOLS: usize, const MAX_DATASETS: usize, const MAX_SNAPSHOTS: usi
     }
 
     /// Validate storage configuration at compile-time
-    pub const fn validate() -> bool {
+    pub fn validate() -> bool {
         MAX_POOLS > 0 && 
         MAX_DATASETS > 0 && 
         MAX_SNAPSHOTS > 0 && 
@@ -226,14 +220,13 @@ pub enum CompressionAlgorithm {
     Gzip,
     Gzip9,
 }
-
 /// **NETWORK CONFIGURATION**
 /// Compile-time network configuration with const generics
 pub struct ZeroCostNetworkConfig<
     const API_PORT: u16 = 8080,
     const INTERNAL_PORT: u16 = 9090,
     const MAX_REQUEST_SIZE_MB: u32 = 100,
-    const KEEPALIVE_TIMEOUT_MS: u64 = 60000,
+    const KEEPALIVE_TIMEOUT_MS: u64 = 60_000,
     const RATE_LIMIT_REQUESTS_PER_MINUTE: u32 = 1000,
     const ENABLE_TLS: bool = true,
     const ENABLE_HTTP2: bool = true,
@@ -241,7 +234,6 @@ pub struct ZeroCostNetworkConfig<
 > {
     _phantom: PhantomData<()>,
 }
-
 impl<const API_PORT: u16, const INTERNAL_PORT: u16, const MAX_REQUEST_SIZE_MB: u32,
      const KEEPALIVE_TIMEOUT_MS: u64, const RATE_LIMIT_REQUESTS_PER_MINUTE: u32,
      const ENABLE_TLS: bool, const ENABLE_HTTP2: bool, const ENABLE_COMPRESSION: bool>
@@ -249,69 +241,69 @@ impl<const API_PORT: u16, const INTERNAL_PORT: u16, const MAX_REQUEST_SIZE_MB: u
                           RATE_LIMIT_REQUESTS_PER_MINUTE, ENABLE_TLS, ENABLE_HTTP2, ENABLE_COMPRESSION>
 {
     /// Create new network configuration
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             _phantom: PhantomData,
         }
     }
 
     /// Get API port at compile-time
-    pub const fn api_port() -> u16 {
+    pub fn api_port() -> u16 {
         API_PORT
     }
 
     /// Get internal port at compile-time
-    pub const fn internal_port() -> u16 {
+    pub fn internal_port() -> u16 {
         INTERNAL_PORT
     }
 
     /// Get max request size at compile-time
-    pub const fn max_request_size_bytes() -> u64 {
+    pub fn max_request_size_bytes() -> u64 {
         MAX_REQUEST_SIZE_MB as u64 * 1024 * 1024
     }
 
     /// Get keepalive timeout at compile-time
-    pub const fn keepalive_timeout() -> Duration {
+    pub fn keepalive_timeout() -> Duration {
         Duration::from_millis(KEEPALIVE_TIMEOUT_MS)
     }
 
     /// Get rate limit at compile-time
-    pub const fn rate_limit_per_minute() -> u32 {
+    pub fn rate_limit_per_minute() -> u32 {
         RATE_LIMIT_REQUESTS_PER_MINUTE
     }
 
     /// Get rate limit per second at compile-time
-    pub const fn rate_limit_per_second() -> u32 {
+    pub fn rate_limit_per_second() -> u32 {
         RATE_LIMIT_REQUESTS_PER_MINUTE / 60
     }
 
     /// Check if TLS is enabled at compile-time
-    pub const fn is_tls_enabled() -> bool {
+    pub fn is_tls_enabled() -> bool {
         ENABLE_TLS
     }
 
     /// Check if HTTP/2 is enabled at compile-time
-    pub const fn is_http2_enabled() -> bool {
+    pub fn is_http2_enabled() -> bool {
         ENABLE_HTTP2
     }
 
     /// Check if compression is enabled at compile-time
-    pub const fn is_compression_enabled() -> bool {
+    pub fn is_compression_enabled() -> bool {
         ENABLE_COMPRESSION
     }
 
     /// Get bind address at compile-time
     pub fn bind_address() -> String {
-        format!("0.0.0.0:{}", API_PORT)
+        format!("0.0.0.0:{API_PORT}")
     }
 
     /// Get internal bind address at compile-time
     pub fn internal_bind_address() -> String {
-        format!("127.0.0.1:{}", INTERNAL_PORT)
+        format!("127.0.0.1:{INTERNAL_PORT}")
     }
 
     /// Validate network configuration at compile-time
-    pub const fn validate() -> bool {
+    pub fn validate() -> bool {
         API_PORT > 0 && 
         INTERNAL_PORT > 0 && 
         API_PORT != INTERNAL_PORT && 
@@ -324,7 +316,7 @@ impl<const API_PORT: u16, const INTERNAL_PORT: u16, const MAX_REQUEST_SIZE_MB: u
 /// **CACHE CONFIGURATION**
 /// Compile-time cache configuration with const generics
 pub struct ZeroCostCacheConfig<
-    const MAX_ENTRIES: usize = 100000,
+    const MAX_ENTRIES: usize = 100_000,
     const MAX_MEMORY_MB: u32 = 1024,
     const TTL_SECONDS: u64 = 3600,
     const CLEANUP_INTERVAL_SECONDS: u64 = 300,
@@ -333,51 +325,50 @@ pub struct ZeroCostCacheConfig<
 > {
     _phantom: PhantomData<()>,
 }
-
 impl<const MAX_ENTRIES: usize, const MAX_MEMORY_MB: u32, const TTL_SECONDS: u64,
      const CLEANUP_INTERVAL_SECONDS: u64, const ENABLE_LRU: bool, const ENABLE_PERSISTENCE: bool>
     ZeroCostCacheConfig<MAX_ENTRIES, MAX_MEMORY_MB, TTL_SECONDS, CLEANUP_INTERVAL_SECONDS,
                         ENABLE_LRU, ENABLE_PERSISTENCE>
 {
     /// Create new cache configuration
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             _phantom: PhantomData,
         }
     }
 
     /// Get max entries at compile-time
-    pub const fn max_entries() -> usize {
+    pub fn max_entries() -> usize {
         MAX_ENTRIES
     }
 
     /// Get max memory in bytes at compile-time
-    pub const fn max_memory_bytes() -> u64 {
+    pub fn max_memory_bytes() -> u64 {
         MAX_MEMORY_MB as u64 * 1024 * 1024
     }
 
     /// Get TTL at compile-time
-    pub const fn ttl() -> Duration {
+    pub fn ttl() -> Duration {
         Duration::from_secs(TTL_SECONDS)
     }
 
     /// Get cleanup interval at compile-time
-    pub const fn cleanup_interval() -> Duration {
+    pub fn cleanup_interval() -> Duration {
         Duration::from_secs(CLEANUP_INTERVAL_SECONDS)
     }
 
     /// Check if LRU is enabled at compile-time
-    pub const fn is_lru_enabled() -> bool {
+    pub fn is_lru_enabled() -> bool {
         ENABLE_LRU
     }
 
     /// Check if persistence is enabled at compile-time
-    pub const fn is_persistence_enabled() -> bool {
+    pub fn is_persistence_enabled() -> bool {
         ENABLE_PERSISTENCE
     }
 
     /// Calculate estimated entry size at compile-time
-    pub const fn estimated_entry_size_bytes() -> usize {
+    pub fn estimated_entry_size_bytes() -> usize {
         if MAX_MEMORY_MB > 0 && MAX_ENTRIES > 0 {
             (MAX_MEMORY_MB as usize * 1024 * 1024) / MAX_ENTRIES
         } else {
@@ -386,7 +377,7 @@ impl<const MAX_ENTRIES: usize, const MAX_MEMORY_MB: u32, const TTL_SECONDS: u64,
     }
 
     /// Validate cache configuration at compile-time
-    pub const fn validate() -> bool {
+    pub fn validate() -> bool {
         MAX_ENTRIES > 0 && 
         MAX_MEMORY_MB > 0 && 
         TTL_SECONDS > 0 && 
@@ -408,7 +399,6 @@ where
     network: Network,
     cache: Cache,
 }
-
 impl<System, Storage, Network, Cache> ZeroCostUnifiedConfig<System, Storage, Network, Cache>
 where
     System: ZeroCostConfig,
@@ -417,7 +407,7 @@ where
     Cache: ZeroCostConfig,
 {
     /// Create new unified configuration
-    pub const fn new(system: System, storage: Storage, network: Network, cache: Cache) -> Self {
+    pub fn new(system: System, storage: Storage, network: Network, cache: Cache) -> Self {
         Self {
             system,
             storage,
@@ -427,7 +417,7 @@ where
     }
 
     /// Validate all configurations at compile-time
-    pub const fn validate_all() -> bool {
+    pub fn validate_all() -> bool {
         System::validate() && 
         Storage::validate() && 
         Network::validate() && 
@@ -435,29 +425,28 @@ where
     }
 
     /// Get system configuration
-    pub const fn system(&self) -> &System {
+    pub fn system(&self) -> &System {
         &self.system
     }
 
     /// Get storage configuration
-    pub const fn storage(&self) -> &Storage {
+    pub fn storage(&self) -> &Storage {
         &self.storage
     }
 
     /// Get network configuration
-    pub const fn network(&self) -> &Network {
+    pub fn network(&self) -> &Network {
         &self.network
     }
 
     /// Get cache configuration
-    pub const fn cache(&self) -> &Cache {
+    pub fn cache(&self) -> &Cache {
         &self.cache
     }
 }
 
 /// **TYPE ALIASES FOR COMMON CONFIGURATIONS**
 /// Pre-configured systems for different deployment scenarios
-
 /// Development configuration: Small limits, fast timeouts, debug enabled
 pub type DevelopmentConfig = ZeroCostUnifiedConfig<
     ZeroCostSystemConfig<100, 8192, 10000, 2, 4>,      // Small, debug enabled
@@ -465,15 +454,13 @@ pub type DevelopmentConfig = ZeroCostUnifiedConfig<
     ZeroCostNetworkConfig<8080, 9090, 10, 30000, 100, false, false, false>, // Simple
     ZeroCostCacheConfig<1000, 64, 300, 60, true, false>, // Small cache
 >;
-
 /// Production configuration: Large limits, standard timeouts, optimized
 pub type ProductionConfig = ZeroCostUnifiedConfig<
     ZeroCostSystemConfig<10000, 65536, 30000, 16, 2>,  // Large, info level
-    ZeroCostStorageConfig<100, 10000, 100000, 60000, 30, 6, true, true>, // Enterprise
-    ZeroCostNetworkConfig<8080, 9090, 100, 60000, 1000, true, true, true>, // Full featured
-    ZeroCostCacheConfig<100000, 2048, 3600, 300, true, true>, // Large cache
+    ZeroCostStorageConfig<100, 10000, 100_000, 60_000, 30, 6, true, true>, // Enterprise
+    ZeroCostNetworkConfig<8080, 9090, 100, 60_000, 1000, true, true, true>, // Full featured
+    ZeroCostCacheConfig<100_000, 2048, 3600, 300, true, true>, // Large cache
 >;
-
 /// Testing configuration: Tiny limits, very fast timeouts, minimal features
 pub type TestingConfig = ZeroCostUnifiedConfig<
     ZeroCostSystemConfig<10, 1024, 5000, 1, 1>,        // Minimal, warnings only
@@ -481,18 +468,15 @@ pub type TestingConfig = ZeroCostUnifiedConfig<
     ZeroCostNetworkConfig<8081, 9091, 1, 10000, 10, false, false, false>, // Basic
     ZeroCostCacheConfig<100, 16, 60, 30, true, false>, // Tiny cache
 >;
-
 /// High-performance configuration: Very large limits, optimized for throughput
 pub type HighPerformanceConfig = ZeroCostUnifiedConfig<
-    ZeroCostSystemConfig<100000, 1048576, 60000, 32, 1>, // Massive, error only
-    ZeroCostStorageConfig<1000, 100000, 1000000, 120000, 90, 9, true, true>, // Enterprise++
+    ZeroCostSystemConfig<100_000, 1048576, 60_000, 32, 1>, // Massive, error only
+    ZeroCostStorageConfig<1000, 100_000, 1000000, 120000, 90, 9, true, true>, // Enterprise++
     ZeroCostNetworkConfig<8080, 9090, 1000, 120000, 10000, true, true, true>, // High throughput
     ZeroCostCacheConfig<1000000, 8192, 7200, 600, true, true>, // Massive cache
 >;
-
 /// **MIGRATION UTILITIES**
 /// Help migrate from runtime configuration to const generics
-
 pub struct ConfigMigrationGuide;
 
 impl ConfigMigrationGuide {
@@ -522,7 +506,6 @@ impl ConfigMigrationGuide {
 
 /// **PERFORMANCE BENCHMARKING**
 /// Tools for measuring configuration access performance
-
 pub struct ConfigBenchmark;
 
 impl ConfigBenchmark {

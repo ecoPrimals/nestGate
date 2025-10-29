@@ -1,3 +1,4 @@
+use nestgate_core::Result as CoreResult;
 /// Trend analysis, performance evaluation, and predictive monitoring
 use std::collections::VecDeque;
 use std::sync::Arc;
@@ -6,27 +7,33 @@ use tokio::sync::RwLock;
 use tokio::time::interval;
 use tracing::{debug, error};
 
-use nestgate_core::Result as CoreResult;
-
-use super::super::types::*;
+use super::super::types::{CurrentPerformanceMetrics, PerformanceSnapshot, ZfsPerformanceMonitor};
 
 // Type alias for complex metrics history type
 type MetricsHistoryQueue = Arc<RwLock<VecDeque<PerformanceSnapshot>>>;
 
 /// Performance analysis engine
 pub struct PerformanceAnalyzer;
-
 impl PerformanceAnalyzer {
     /// Analyze performance trends
-    /// **CANONICAL MODERNIZATION**: Use metrics_history parameter
+    /// **CANONICAL MODERNIZATION**: Use `metrics_history` parameter
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn analyze_trends(
         metrics_history: &MetricsHistoryQueue,
     ) -> Result<AnalysisReport, Box<dyn std::error::Error>> {
         // Analyze performance trends from metrics history
         let history = metrics_history.read().await;
         if history.len() >= 2 {
-            let latest = history.back().unwrap();
-            let previous = history.get(history.len() - 2).unwrap();
+            let latest = history.back().ok_or("No latest metrics available")?;
+            let previous = history
+                .get(history.len() - 2)
+                .ok_or("No previous metrics available")?;
 
             tracing::debug!(
                 "Performance trend: Score {} -> {}, Timestamp {:?} -> {:?}",
@@ -45,7 +52,6 @@ impl PerformanceAnalyzer {
 pub struct AnalysisReport {
     // ... existing fields
 }
-
 impl ZfsPerformanceMonitor {
     /// Start analysis task
     pub(super) async fn start_analysis_task(&mut self) -> CoreResult<()> {

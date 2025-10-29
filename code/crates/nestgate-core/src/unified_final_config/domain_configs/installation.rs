@@ -1,11 +1,9 @@
 use std::collections::HashMap;
 //
-// Installation-specific configuration structures extracted from the monolithic domain_configs.rs
+// Installation-specific configuration structures extracted from the monolithic NestGateCanonicalConfig.rs
 // for better maintainability and focused responsibility.
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::path::PathBuf;
 use std::time::Duration;
 
 /// Installation domain configuration for installer crate
@@ -19,13 +17,11 @@ pub struct InstallationDomainConfig {
     pub verbose: bool,
     pub force_install: bool,
 }
-
 /// Components domain configuration for installer crate
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ComponentsDomainConfig {
     pub selected_components: SelectedComponents,
 }
-
 /// Selected components for installation
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SelectedComponents {
@@ -41,15 +37,12 @@ pub struct SelectedComponents {
     pub install_fsmonitor: bool,
     pub custom_components: Vec<String>,
 }
-
 /// System integration configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemIntegrationConfig {
     pub install_as_service: bool,
-    pub add_to_path: bool,
     pub desktop_integration: bool,
 }
-
 /// Datasets domain configuration for ZFS crate
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DatasetsDomainConfig {
@@ -65,7 +58,6 @@ pub struct DatasetsDomainConfig {
     pub max_datasets_per_pool: u32,
     pub snapshot_settings: SnapshotSettings,
 }
-
 /// Validation domain configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ValidationDomainConfig {
@@ -73,7 +65,6 @@ pub struct ValidationDomainConfig {
     pub pre_install_checks: PreInstallChecks,
     pub post_install_validation: bool,
 }
-
 /// System requirements for validation
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemRequirements {
@@ -81,7 +72,6 @@ pub struct SystemRequirements {
     pub min_disk_space_mb: u64,
     pub required_features: Vec<String>,
 }
-
 /// Pre-installation checks configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PreInstallChecks {
@@ -90,7 +80,6 @@ pub struct PreInstallChecks {
     pub check_network: bool,
     pub check_storage: bool,
 }
-
 /// Snapshot settings configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SnapshotSettings {
@@ -100,7 +89,6 @@ pub struct SnapshotSettings {
     pub retention_period: Duration,
     pub snapshot_frequency: Duration,
 }
-
 impl Default for InstallationDomainConfig {
     fn default() -> Self {
         Self {
@@ -137,7 +125,6 @@ impl Default for SystemIntegrationConfig {
     fn default() -> Self {
         Self {
             install_as_service: true,
-            add_to_path: true,
             desktop_integration: false,
         }
     }

@@ -9,7 +9,6 @@ use serde::{Deserialize, Serialize};
 
 /// Calculate confidence for ZFS operations based on system state
 pub struct ZfsConfidenceCalculator;
-
 impl ZfsConfidenceCalculator {
     /// Calculate confidence for pool operations
     ///
@@ -52,43 +51,43 @@ impl ZfsConfidenceCalculator {
     pub fn generate_error_suggestions(error_type: &str) -> Vec<String> {
         match error_type {
             "INSUFFICIENT_SPACE" => vec![
-                "Consider enabling compression on datasets".to_string(),
-                "Review dataset quotas and reservations".to_string(),
-                "Check for snapshots that can be deleted".to_string(),
-                "Consider adding more storage devices to the pool".to_string(),
+                "Consider enabling compression on datasets"
+                "Review dataset quotas and reservations"
+                "Check for snapshots that can be deleted"
+                "Consider adding more storage devices to the pool"
             ],
             "PERMISSION_DENIED" => vec![
-                "Verify ZFS delegation permissions".to_string(),
-                "Check if operation requires root privileges".to_string(),
-                "Review ZFS allow permissions for user".to_string(),
-                "Validate user is in appropriate groups".to_string(),
+                "Verify ZFS delegation permissions"
+                "Check if operation requires root privileges"
+                "Review ZFS allow permissions for user"
+                "Validate user is in appropriate groups"
             ],
             "DEVICE_BUSY" => vec![
-                "Wait for current operation to complete".to_string(),
-                "Check for active scrub or resilver operations".to_string(),
-                "Consider scheduling operation for off-peak hours".to_string(),
-                "Monitor pool status with 'zpool status'".to_string(),
+                "Wait for current operation to complete"
+                "Check for active scrub or resilver operations"
+                "Consider scheduling operation for off-peak hours"
+                "Monitor pool status with 'zpool status'"
             ],
             "POOL_NOT_FOUND" => vec![
-                "Verify pool name spelling and case".to_string(),
-                "Check if pool needs to be imported".to_string(),
-                "Confirm pool exists with 'zpool list'".to_string(),
+                "Verify pool name spelling and case"
+                "Check if pool needs to be imported"
+                "Confirm pool exists with 'zpool list'"
             ],
             "DATASET_NOT_FOUND" => vec![
-                "Verify dataset path is correct".to_string(),
-                "Check if dataset was destroyed or renamed".to_string(),
-                "Confirm dataset exists with 'zfs list'".to_string(),
+                "Verify dataset path is correct"
+                "Check if dataset was destroyed or renamed"
+                "Confirm dataset exists with 'zfs list'"
             ],
             "CHECKSUM_ERRORS" => vec![
-                "Run pool scrub to identify and repair errors".to_string(),
-                "Check disk health with SMART tools".to_string(),
-                "Consider replacing failing storage devices".to_string(),
-                "Review pool redundancy configuration".to_string(),
+                "Run pool scrub to identify and repair errors"
+                "Check disk health with SMART tools"
+                "Consider replacing failing storage devices"
+                "Review pool redundancy configuration"
             ],
             _ => vec![
-                "Refer to ZFS documentation for specific error".to_string(),
-                "Check system logs for additional context".to_string(),
-                "Consider retrying operation after addressing underlying issues".to_string(),
+                "Refer to ZFS documentation for specific error"
+                "Check system logs for additional context"
+                "Consider retrying operation after addressing underlying issues"
             ],
         }
     }
@@ -105,25 +104,25 @@ impl ZfsConfidenceCalculator {
                 io_impact: 0.8,  // High I/O impact
                 duration_estimate_minutes: Self::estimate_scrub_duration(pool_info),
                 recommended_scheduling: SchedulingRecommendation::OffPeak,
-            },
+            }
             "resilver" => PerformanceImpact {
                 cpu_impact: 0.5, // Higher CPU for rebuilding
                 io_impact: 0.9,  // Very high I/O impact
                 duration_estimate_minutes: Self::estimate_resilver_duration(pool_info),
                 recommended_scheduling: SchedulingRecommendation::OffPeak,
-            },
+            }
             "snapshot" => PerformanceImpact {
                 cpu_impact: 0.1, // Very low CPU
                 io_impact: 0.1,  // Minimal I/O
                 duration_estimate_minutes: 1,
                 recommended_scheduling: SchedulingRecommendation::Anytime,
-            },
+            }
             "clone" => PerformanceImpact {
                 cpu_impact: 0.2, // Low CPU
                 io_impact: 0.3,  // Moderate I/O for metadata
                 duration_estimate_minutes: Self::estimate_clone_duration(dataset_info),
                 recommended_scheduling: SchedulingRecommendation::BusinessHours,
-            },
+            }
             _ => PerformanceImpact::default(),
         }
     }
@@ -145,7 +144,7 @@ impl ZfsConfidenceCalculator {
                 // In a real implementation, this would check pool utilization
                 0.8
             }
-            None => 0.2, // Pool doesn't exist - low confidence for destruction
+    None => 0.2, // Pool doesn't exist - low confidence for destruction
         }
     }
 
@@ -156,7 +155,7 @@ impl ZfsConfidenceCalculator {
                 PoolHealth::Warning => 0.8,
                 PoolHealth::Critical => 0.4,
                 PoolHealth::Unknown => 0.6,
-            },
+            }
             None => 0.2, // Can't scrub non-existent pool
         }
     }
@@ -168,7 +167,7 @@ impl ZfsConfidenceCalculator {
                 PoolHealth::Warning => 0.6,  // May need resilver
                 PoolHealth::Critical => 0.9, // High confidence - resilver needed
                 PoolHealth::Unknown => 0.5,  // Unknown state - may need resilver
-            },
+            }
             None => 0.1,
         }
     }
@@ -180,7 +179,7 @@ impl ZfsConfidenceCalculator {
                 PoolHealth::Warning => 0.8,
                 PoolHealth::Critical => 0.6,
                 PoolHealth::Unknown => 0.7,
-            },
+            }
             None => 0.1, // Can't export non-existent pool
         }
     }
@@ -239,7 +238,7 @@ impl ZfsConfidenceCalculator {
                     info.available_space as f64 / (info.used_space + info.available_space) as f64;
                 0.7 + (space_factor * 0.25) // Scale confidence with available space
             }
-            None => 0.3, // Source dataset doesn't exist
+    None => 0.3, // Source dataset doesn't exist
         }
     }
 
@@ -265,7 +264,7 @@ impl ZfsConfidenceCalculator {
                 // Default estimate - in real implementation, would use pool size
                 120 // 2 hours default
             }
-            None => 0,
+    None => 0,
         }
     }
 
@@ -275,7 +274,7 @@ impl ZfsConfidenceCalculator {
                 // Default estimate - in real implementation, would use used space
                 180 // 3 hours default
             }
-            None => 0,
+    None => 0,
         }
     }
 
@@ -285,7 +284,7 @@ impl ZfsConfidenceCalculator {
                 let size_gb = info.used_space as f64 / 1_000_000_000.0;
                 (size_gb * 0.1) as u64 // Very fast - mostly metadata
             }
-            None => 5, // Default 5 minutes
+    None => 5, // Default 5 minutes
         }
     }
 }
@@ -302,7 +301,6 @@ pub struct PerformanceImpact {
     /// Recommended scheduling window
     pub recommended_scheduling: SchedulingRecommendation,
 }
-
 /// Scheduling recommendation for operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SchedulingRecommendation {
@@ -315,16 +313,13 @@ pub enum SchedulingRecommendation {
     /// Requires maintenance window
     MaintenanceWindow,
 }
-
 impl Default for PerformanceImpact {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             cpu_impact: 0.5,
             io_impact: 0.5,
             duration_estimate_minutes: 10,
             recommended_scheduling: SchedulingRecommendation::BusinessHours,
-        }
-    }
+         }
 }
 
 /// Generate operation-specific recommendations for AI agents
@@ -334,7 +329,6 @@ pub fn generate_operation_recommendations(
     _dataset_info: Option<&DatasetInfo>,
 ) -> Vec<String> {
     let mut recommendations = vec![];
-
     match operation {
         "create" => {
             recommendations.push("Consider pool layout for performance and redundancy".to_string());
@@ -376,7 +370,6 @@ mod tests {
         // Note: In real implementation, would test with actual PoolInfo structure
         // Skipping pool exists test due to PoolInfo structure complexity
     }
-
     #[test]
     fn test_pool_scrub_confidence() {
         // Test scrub confidence with healthy pool

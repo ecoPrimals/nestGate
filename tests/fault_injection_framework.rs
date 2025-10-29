@@ -3,15 +3,15 @@
 //! This test validates fault injection and resilience using canonical patterns
 //! **CANONICAL MODERNIZATION**: Updated to use simple, working patterns
 
-use nestgate_core::config::canonical_unified::NestGateCanonicalUnifiedConfig as NestGateCanonicalUnifiedConfig;
-use nestgate_core::config::defaults::Environment;
+use nestgate_core::config::canonical_master::NestGateCanonicalConfig;
+use nestgate_core::constants::Environment;
 use std::time::Duration;
 use tokio::time::sleep;
 use tracing::info;
 
 /// Test fault injection configuration
 #[tokio::test]
-async fn test_fault_injection_config() {
+async fn test_fault_injection_config() -> Result<(), Box<dyn std::error::Error>> {
     info!("💉 Starting fault injection configuration test");
 
     // Test fault injection configuration creation
@@ -19,16 +19,18 @@ async fn test_fault_injection_config() {
     assert!(!config.system.instance_name.is_empty());
 
     // Test environment-specific fault injection configuration
-    let dev_config =
-        nestgate_core::config::canonical_unified::create_config_for_environment(Environment::Development);
+    let dev_config = nestgate_core::config::canonical_master::create_config_for_environment(
+        Environment::Development,
+    );
     assert!(!dev_config.system.instance_name.is_empty());
 
     info!("✅ Fault injection configuration test completed");
+    Ok(())
 }
 
 /// Test fault injection types simulation
 #[tokio::test]
-async fn test_fault_injection_types() {
+async fn test_fault_injection_types() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔧 Testing fault injection types simulation");
 
     // Simulate different fault injection types
@@ -49,14 +51,16 @@ async fn test_fault_injection_types() {
         assert!(!fault_type.is_empty(), "Fault type should be specified");
         assert!(severity > 0, "Severity should be positive");
         assert!(severity <= 100, "Severity should be within bounds");
+        Ok(())
     }
 
     info!("✅ Fault injection types simulation completed");
+    Ok(())
 }
 
 /// Test fault injection recovery simulation
 #[tokio::test]
-async fn test_fault_injection_recovery() {
+async fn test_fault_injection_recovery() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔄 Testing fault injection recovery simulation");
 
     // Simulate fault injection and recovery cycles
@@ -82,14 +86,16 @@ async fn test_fault_injection_recovery() {
             "Recovery type should be specified"
         );
         assert!(recovery_time > 0, "Recovery time should be positive");
+        Ok(())
     }
 
     info!("✅ Fault injection recovery simulation completed");
+    Ok(())
 }
 
 /// Test fault injection monitoring
 #[tokio::test]
-async fn test_fault_injection_monitoring() {
+async fn test_fault_injection_monitoring() -> Result<(), Box<dyn std::error::Error>> {
     info!("📊 Testing fault injection monitoring simulation");
 
     let start_time = std::time::Instant::now();
@@ -112,14 +118,16 @@ async fn test_fault_injection_monitoring() {
             elapsed.as_millis() >= monitor_cycle as u128,
             "Monitoring timing should be accurate"
         );
+        Ok(())
     }
 
     info!("✅ Fault injection monitoring simulation completed");
+    Ok(())
 }
 
 /// Test fault injection resilience patterns
 #[tokio::test]
-async fn test_fault_injection_resilience() {
+async fn test_fault_injection_resilience() -> Result<(), Box<dyn std::error::Error>> {
     info!("🛡️ Testing fault injection resilience patterns");
 
     // Test different resilience patterns
@@ -139,14 +147,16 @@ async fn test_fault_injection_resilience() {
         // Verify pattern is valid
         assert!(!pattern.is_empty(), "Pattern should be specified");
         assert!(response_time > 0, "Response time should be positive");
+        Ok(())
     }
 
     info!("✅ Fault injection resilience patterns test completed");
+    Ok(())
 }
 
 /// Test fault injection chaos scenarios
 #[tokio::test]
-async fn test_fault_injection_chaos() {
+async fn test_fault_injection_chaos() -> Result<(), Box<dyn std::error::Error>> {
     info!("🌪️ Testing fault injection chaos scenarios");
 
     // Simulate chaos scenarios with fault injection
@@ -170,29 +180,34 @@ async fn test_fault_injection_chaos() {
         assert!(!scenario.is_empty(), "Scenario should be specified");
         assert!(impact_level > 0, "Impact level should be positive");
         assert!(impact_level <= 100, "Impact level should be within bounds");
+        Ok(())
     }
 
     info!("✅ Fault injection chaos scenarios test completed");
+    Ok(())
 }
 
 /// Test fault injection environments
 #[tokio::test]
-async fn test_fault_injection_environments() {
+async fn test_fault_injection_environments() -> Result<(), Box<dyn std::error::Error>> {
     info!("🌍 Testing fault injection across environments");
 
     // Test development environment fault injection
-    let dev_config =
-        nestgate_core::config::canonical_unified::create_config_for_environment(Environment::Development);
+    let dev_config = nestgate_core::config::canonical_master::create_config_for_environment(
+        Environment::Development,
+    );
     assert!(!dev_config.system.instance_name.is_empty());
     assert!(matches!(dev_config.environment, Environment::Development));
     info!("Development fault injection configuration validated");
 
     // Test production environment fault injection
-    let prod_config =
-        nestgate_core::config::canonical_unified::create_config_for_environment(Environment::Production);
+    let prod_config = nestgate_core::config::canonical_master::create_config_for_environment(
+        Environment::Production,
+    );
     assert!(!prod_config.system.instance_name.is_empty());
     assert!(matches!(prod_config.environment, Environment::Production));
     info!("Production fault injection configuration validated");
 
     info!("✅ Fault injection environment test completed");
+    Ok(())
 }

@@ -8,8 +8,8 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 // use urlencoding;
-use nestgate_core::config::canonical_unified::CanonicalConfig as UnifiedApiConfig;
-use nestgate_core::{NestGateError, Result};
+use nestgate_core::config::canonical_master::NestGateCanonicalConfig as UnifiedApiConfig;
+use nestgate_core::error::{NestGateError, Result};
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 use std::time::Duration;
@@ -254,8 +254,8 @@ mod tests {
     use serde_json::json;
 
     #[tokio::test]
-    async fn test_authentication_bypass_protection() {
-        use super::super::common::{TestHelpers, TestSetup};
+    async fn test_authentication_bypass_protection() -> Result<(), Box<dyn std::error::Error>> {
+        use crate::common::{TestHelpers, TestSetup};
         use nestgate_core::Result as TestResult;
 
         async fn run_test() -> TestResult<()> {
@@ -290,7 +290,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_authorization_boundary_enforcement() {
+    async fn test_authorization_boundary_enforcement() -> Result<(), Box<dyn std::error::Error>> {
         use crate::common::{
             helpers::assert_equals, helpers::create_test_server, test_error_handling::TestResult,
         };
@@ -341,9 +341,9 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_input_validation_comprehensive() {
+    async fn test_input_validation_comprehensive() -> Result<(), Box<dyn std::error::Error>> {
         let app = create_test_app();
-        let server = TestServer::new(app).unwrap();
+        let server = TestServer::new(app)?;
 
         // Test valid input
         let response = server
@@ -414,9 +414,9 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_rate_limiting_enforcement() {
+    async fn test_rate_limiting_enforcement() -> Result<(), Box<dyn std::error::Error>> {
         let app = create_test_app();
-        let server = TestServer::new(app).unwrap();
+        let server = TestServer::new(app)?;
 
         let client_ip = "192.168.1.100";
 
@@ -430,6 +430,7 @@ mod tests {
 
             let data: serde_json::Value = response.json();
             assert_eq!(data["count"], i);
+            Ok(())
         }
 
         // 6th request should be rate limited
@@ -445,10 +446,11 @@ mod tests {
             .add_header("x-client-ip", "192.168.1.101")
             .await;
         assert_eq!(response.status_code(), StatusCode::OK);
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_sql_injection_protection() {
+    async fn test_sql_injection_protection() -> Result<(), Box<dyn std::error::Error>> {
         use crate::common::{
             helpers::assert_equals, helpers::create_test_server, test_error_handling::TestResult,
         };
@@ -483,8 +485,10 @@ mod tests {
                 assert_eq!(
                     response.status_code(),
                     StatusCode::BAD_REQUEST,
-                    &format!("Failed to block injection: {}", injection),
+                    "Failed to block injection: {}",
+                    injection
                 )?;
+                Ok(())
             }
 
             Ok(())
@@ -494,9 +498,9 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_authentication_flow_comprehensive() {
+    async fn test_authentication_flow_comprehensive() -> Result<(), Box<dyn std::error::Error>> {
         let app = create_test_app();
-        let server = TestServer::new(app).unwrap();
+        let server = TestServer::new(app)?;
 
         // Test successful login
         let response = server
@@ -531,12 +535,13 @@ mod tests {
             }))
             .await;
         assert_eq!(response.status_code(), StatusCode::UNAUTHORIZED);
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_security_headers_and_cors() {
+    async fn test_security_headers_and_cors() -> Result<(), Box<dyn std::error::Error>> {
         let app = create_test_app();
-        let server = TestServer::new(app).unwrap();
+        let server = TestServer::new(app)?;
 
         // Test that sensitive endpoints don't leak information
         let response = server
@@ -546,12 +551,13 @@ mod tests {
         // Should return 401 Unauthorized, not 404 Not Found
         // This prevents information leakage about resource existence
         assert_eq!(response.status_code(), StatusCode::UNAUTHORIZED);
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_malformed_request_handling() {
+    async fn test_malformed_request_handling() -> Result<(), Box<dyn std::error::Error>> {
         let app = create_test_app();
-        let server = TestServer::new(app).unwrap();
+        let server = TestServer::new(app)?;
 
         // Test malformed JSON - server returns 415 for unsupported media type with invalid JSON
         let response = server
@@ -582,5 +588,6 @@ mod tests {
             "Expected 400 or 422, got {}",
             response.status_code().as_u16()
         );
+        Ok(())
     }
 }

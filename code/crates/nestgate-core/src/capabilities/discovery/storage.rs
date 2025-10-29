@@ -1,10 +1,9 @@
 /// **STORAGE CAPABILITY DISCOVERY**
 /// Discovery and management of storage-related capabilities
 /// Replaces hardcoded storage configurations with dynamic discovery
-use crate::error::Result;
+use crate::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
 /// Storage capability types that can be discovered
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum StorageCapabilityType {
@@ -17,7 +16,6 @@ pub enum StorageCapabilityType {
     Monitoring,
     Encryption,
 }
-
 /// Storage capability metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StorageCapabilityInfo {
@@ -27,16 +25,15 @@ pub struct StorageCapabilityInfo {
     pub supported_operations: Vec<String>,
     pub metadata: HashMap<String, String>,
 }
-
 /// Storage capability discovery manager
 #[derive(Debug)]
 pub struct StorageCapabilityDiscovery {
     discovered_capabilities:
         tokio::sync::RwLock<HashMap<StorageCapabilityType, StorageCapabilityInfo>>,
 }
-
 impl StorageCapabilityDiscovery {
     /// Create new storage capability discovery manager
+    #[must_use]
     pub fn new() -> Self {
         Self {
             discovered_capabilities: tokio::sync::RwLock::new(HashMap::new()),
@@ -44,6 +41,13 @@ impl StorageCapabilityDiscovery {
     }
 
     /// Discover available storage capabilities
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn discover_capabilities(&self) -> Result<Vec<StorageCapabilityInfo>> {
         // Dynamic discovery logic - replaces hardcoded storage endpoints
         let mut capabilities = Vec::new();
@@ -68,6 +72,13 @@ impl StorageCapabilityDiscovery {
     }
 
     /// Get specific storage capability by type
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn get_capability(
         &self,
         capability_type: &StorageCapabilityType,
@@ -119,11 +130,10 @@ impl Default for StorageCapabilityDiscovery {
 
 /// Get ZFS endpoint for routing compatibility (replaces hardcoded ZFS constants)
 pub async fn get_zfs_endpoint(
-    _adapter: &crate::ecosystem_integration::universal_adapter::UniversalAdapter,
+    _adapter: &crate::universal_adapter::PrimalAgnosticAdapter,
 ) -> Result<String> {
     let discovery = StorageCapabilityDiscovery::new();
     let capabilities = discovery.discover_capabilities().await?;
-
     // Find ZFS pool capability
     for capability in capabilities {
         if matches!(capability.capability_type, StorageCapabilityType::ZfsPool) {

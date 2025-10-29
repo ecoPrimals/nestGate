@@ -9,6 +9,7 @@ use nestgate_core::StorageTier as CoreStorageTier;
 use nestgate_zfs::performance::TierMetrics;
 use nestgate_zfs::performance::{AlertCondition, AlertMetric, AlertOperator, AlertSeverity};
 use nestgate_zfs::{
+use nestgate_core::canonical_types::StorageTier;
     automation::{DatasetLifecycle, LifecycleRule, LifecycleStage},
     config::ZfsConfig,
     migration::{MigrationJob, MigrationPriority, MigrationStatus},
@@ -21,7 +22,7 @@ mod unit_tests_comprehensive {
     use super::*;
 
     #[test]
-    fn test_zfs_pool_config_validation() {
+    fn test_zfs_pool_config_validation() -> Result<(), Box<dyn std::error::Error>> {
         let config = ZfsConfig::default();
 
         // Test valid configuration
@@ -35,10 +36,10 @@ mod unit_tests_comprehensive {
         let valid_pool_name = "test-pool";
         assert!(!valid_pool_name.is_empty());
         assert!(config.validate().is_ok());
+    Ok(())
     }
-
     #[test]
-    fn test_integration_consistency() {
+    fn test_integration_consistency() -> Result<(), Box<dyn std::error::Error>> {
         // Test that all components work together consistently
         let config = ZfsConfig::default();
         assert!(config.validate().is_ok());
@@ -56,10 +57,11 @@ mod unit_tests_comprehensive {
         // Verify migration rules progression
         assert!(hot_config.migration_rules.age_threshold_days <= warm_config.migration_rules.age_threshold_days);
         assert!(warm_config.migration_rules.age_threshold_days <= cold_config.migration_rules.age_threshold_days);
+    Ok(())
     }
 
     #[test]
-    fn test_system_wide_defaults() {
+    fn test_system_wide_defaults() -> Result<(), Box<dyn std::error::Error>> {
         let config = ZfsConfig::default();
         
         // Test that all systems have sensible defaults
@@ -69,10 +71,11 @@ mod unit_tests_comprehensive {
         assert!(config.monitoring_interval > 0);
         assert!(config.health_monitoring.check_interval_seconds > 0);
         assert!(config.metrics.collection_interval_seconds > 0);
+    Ok(())
     }
 
     #[test]
-    fn test_error_handling_consistency() {
+    fn test_error_handling_consistency() -> Result<(), Box<dyn std::error::Error>> {
         let config = ZfsConfig::default();
         
         // Test that validation consistently returns proper results
@@ -82,5 +85,7 @@ mod unit_tests_comprehensive {
         // Test that configuration fields are properly initialized
         assert!(!config.default_pool.is_empty());
         assert!(config.api_endpoint.starts_with("http://"));
+    Ok(())
     }
+    Ok(())
 } 

@@ -1,9 +1,9 @@
-//! Filesystem Storage Backend - Modular Implementation
-//!
-//! This module provides a complete filesystem-based storage implementation with
+// Filesystem Storage Backend - Modular Implementation
+//! Module definitions and exports.
+// This module provides a complete filesystem-based storage implementation with
 //! features like atomic operations, metadata tracking, and directory watching.
-//!
-//! The implementation is broken down into focused modules for maintainability:
+//! Module definitions and exports.
+// The implementation is broken down into focused modules for maintainability:
 //! - `types`: Core types and configuration structures
 //! - `backend`: Main backend implementation  
 //! - `operations`: File and directory operations

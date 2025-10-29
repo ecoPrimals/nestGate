@@ -13,10 +13,10 @@ use uuid;
 use super::types::{
     AutomationEvent, AutomationEventType, AutomationPolicy, DatasetLifecycle, LifecycleStage,
 };
-use nestgate_core::{types::StorageTier as CoreStorageTier, Result};
+use nestgate_core::{canonical_types::StorageTier as CoreStorageTier, Result};
 
 /// Update lifecycle stage based on policy rules
-pub async fn update_lifecycle_stage(
+pub fn update_lifecycle_stage(
     lifecycle: &mut DatasetLifecycle,
     _policy: &AutomationPolicy,
 ) -> Result<()> {
@@ -32,7 +32,6 @@ pub async fn update_lifecycle_stage(
         ))
         .as_secs()
         / (24 * 3600);
-
     // Update stage based on age and access patterns
     lifecycle.lifecycle_stage = match age_days {
         0..=7 => LifecycleStage::New,
@@ -57,7 +56,7 @@ pub async fn update_lifecycle_stage(
 }
 
 /// Evaluate lifecycle conditions to determine if actions should be taken
-pub async fn evaluate_lifecycle_conditions(
+pub fn evaluate_lifecycle_conditions(
     dataset_name: &str,
     lifecycle: &DatasetLifecycle,
     conditions: &[String],
@@ -66,9 +65,8 @@ pub async fn evaluate_lifecycle_conditions(
         "Evaluating lifecycle conditions for dataset: {}",
         dataset_name
     );
-
     for condition in conditions {
-        if !evaluate_single_condition(dataset_name, lifecycle, condition).await? {
+        if !evaluate_single_condition(dataset_name, lifecycle, condition)? {
             return Ok(false);
         }
     }
@@ -77,13 +75,12 @@ pub async fn evaluate_lifecycle_conditions(
 }
 
 /// Evaluate a single lifecycle condition
-async fn evaluate_single_condition(
+fn evaluate_single_condition(
     _dataset_name: &str,
     lifecycle: &DatasetLifecycle,
     condition: &str,
 ) -> Result<bool> {
     let condition_lower = condition.to_lowercase();
-
     if condition_lower.starts_with("age_days_gt_") {
         if let Some(threshold_str) = condition_lower.strip_prefix("age_days_gt_") {
             if let Ok(threshold) = threshold_str.parse::<u64>() {
@@ -129,16 +126,16 @@ async fn evaluate_single_condition(
 }
 
 /// Check if dataset should transition to a new stage
-pub async fn should_transition_to_stage(
+#[must_use]
+pub fn should_transition_to_stage(
     _dataset_name: &str,
     _current_lifecycle: &DatasetLifecycle,
 ) -> bool {
     // Default implementation - could be made more sophisticated
     false
 }
-
 /// Transition dataset to new lifecycle stage
-pub async fn transition_lifecycle_stage(
+pub fn transition_lifecycle_stage(
     dataset_name: &str,
     new_stage: LifecycleStage,
     lifecycle_tracker: &mut std::collections::HashMap<String, DatasetLifecycle>,
@@ -146,7 +143,6 @@ pub async fn transition_lifecycle_stage(
     if let Some(lifecycle) = lifecycle_tracker.get_mut(dataset_name) {
         let old_stage = lifecycle.lifecycle_stage.clone();
         lifecycle.lifecycle_stage = new_stage.clone();
-
         // Add automation event
         lifecycle.automation_history.push(AutomationEvent {
             event_id: uuid::Uuid::new_v4().to_string(),
@@ -168,6 +164,7 @@ pub async fn transition_lifecycle_stage(
 }
 
 /// Get or create lifecycle tracking for a dataset
+#[must_use]
 pub fn get_or_create_lifecycle(
     dataset_name: &str,
     lifecycle_tracker: &std::collections::HashMap<String, DatasetLifecycle>,

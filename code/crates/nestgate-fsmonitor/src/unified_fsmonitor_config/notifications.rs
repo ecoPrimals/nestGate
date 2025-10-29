@@ -3,7 +3,6 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
-
 /// Notification settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NotificationSettings {
@@ -20,7 +19,6 @@ pub struct NotificationSettings {
     /// Notification routing
     pub routing: NotificationRoutingSettings,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NotificationChannel {
     /// Channel name
@@ -34,7 +32,6 @@ pub struct NotificationChannel {
     /// Priority threshold
     pub priority_threshold: u32,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NotificationFormattingSettings {
     /// Enable rich formatting
@@ -46,7 +43,6 @@ pub struct NotificationFormattingSettings {
     /// Template configurations
     pub templates: HashMap<String, String>,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NotificationThrottlingSettings {
     /// Enable throttling
@@ -58,7 +54,6 @@ pub struct NotificationThrottlingSettings {
     /// Burst limit
     pub burst_limit: u32,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct NotificationRoutingSettings {
     /// Enable routing
@@ -68,7 +63,6 @@ pub struct NotificationRoutingSettings {
     /// Default route
     pub default_route: Option<String>,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RoutingRule {
     /// Rule name
@@ -80,7 +74,6 @@ pub struct RoutingRule {
     /// Rule priority
     pub priority: u32,
 }
-
 impl Default for NotificationSettings {
     fn default() -> Self {
         Self {

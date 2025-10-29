@@ -4,7 +4,6 @@
 pub struct SIMDHasher {
     state: [u64; 4], // SIMD-friendly state vector
 }
-
 impl Default for SIMDHasher {
     fn default() -> Self {
         Self::new()
@@ -12,7 +11,7 @@ impl Default for SIMDHasher {
 }
 
 impl SIMDHasher {
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             state: [
                 0x6a09e667f3bcc908,
@@ -84,7 +83,6 @@ impl SIMDHasher {
 ///
 /// Vectorized operations on f32 arrays  
 pub struct SIMDArrayOps;
-
 impl SIMDArrayOps {
     /// Add two arrays element-wise using SIMD
     pub fn add_arrays(a: &[f32], b: &[f32], result: &mut [f32]) {
@@ -178,7 +176,6 @@ impl SIMDArrayOps {
 
 /// **SIMD-OPTIMIZED STRING OPERATIONS**
 pub struct SIMDStringOps;
-
 impl SIMDStringOps {
     /// Find first occurrence of byte using SIMD
     pub fn find_byte_simd(haystack: &[u8], needle: u8) -> Option<usize> {
@@ -253,7 +250,6 @@ impl SIMDStringOps {
 
 /// **SIMD-OPTIMIZED CHECKSUM OPERATIONS**
 pub struct SIMDChecksum;
-
 impl SIMDChecksum {
     /// Compute CRC32 using SIMD when available
     pub fn crc32_simd(data: &[u8]) -> u32 {
@@ -331,16 +327,12 @@ impl SIMDChecksum {
 /// **TYPE ALIASES FOR SIMD OPERATIONS**
 /// High-performance hasher for critical paths
 pub type FastHasher = SIMDHasher;
-
 /// Vectorized array operations
 pub type VectorOps = SIMDArrayOps;
-
 /// High-speed string search
 pub type FastStringSearch = SIMDStringOps;
-
 /// Accelerated checksum computation
 pub type FastChecksum = SIMDChecksum;
-
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -11,30 +11,23 @@
 // - `cache.rs` - Cache performance analysis endpoints
 // - `events.rs` - Server-sent events and real-time streaming
 
-// ==================== MODULE DECLARATIONS ====================
+// ==================== SECTION ====================
 
-/// Dashboard overview and summary endpoints
+//! Dashboard overview and summary endpoints
 pub mod overview;
-
-/// Real-time metrics and monitoring endpoints
+//! Real-time metrics and monitoring endpoints
 pub mod metrics;
-
-/// Pool-specific performance endpoints
+//! Pool-specific performance endpoints
 pub mod pools;
-
-/// Capacity analysis and forecasting endpoints
+//! Capacity analysis and forecasting endpoints
 pub mod capacity;
-
-/// I/O performance analysis endpoints
+//! I/O performance analysis endpoints
 pub mod io_performance;
-
-/// Cache performance analysis endpoints
+//! Cache performance analysis endpoints
 pub mod cache;
-
-/// Server-sent events and real-time streaming
+//! Server-sent events and real-time streaming
 pub mod events;
-
-// ==================== RE-EXPORTS ====================
+// ==================== SECTION ====================
 
 pub use overview::*;
 pub use metrics::*;

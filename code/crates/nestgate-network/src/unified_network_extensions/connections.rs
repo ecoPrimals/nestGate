@@ -11,7 +11,6 @@ pub struct NetworkConnectionSettings {
     /// Connection timeout
     pub connection_timeout: std::time::Duration,
 }
-
 impl Default for NetworkConnectionSettings {
     fn default() -> Self {
         Self {

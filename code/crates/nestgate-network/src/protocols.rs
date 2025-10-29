@@ -12,7 +12,6 @@ pub enum Protocol {
     Websocket,
     Grpc,
 }
-
 impl std::fmt::Display for Protocol {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -34,19 +33,16 @@ pub struct ProtocolConfig {
     pub enabled: bool,
     pub options: HashMap<String, String>,
 }
-
 /// Protocol manager
 pub struct ProtocolManager {
     protocols: HashMap<Protocol, ProtocolConfig>,
 }
-
 impl ProtocolManager {
     /// Create a new protocol manager
-    pub fn new() -> Self {
-        Self {
+    #[must_use]
+    pub fn new() -> Self { Self {
             protocols: HashMap::new(),
-        }
-    }
+         }
 
     /// Add protocol configuration
     pub fn add_protocol(&mut self, config: ProtocolConfig) {

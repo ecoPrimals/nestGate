@@ -2,7 +2,6 @@
 /// Machine learning and prediction configuration - extracted from monolithic config
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
-
 /// ML prediction settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MlPredictionSettings {
@@ -15,7 +14,6 @@ pub struct MlPredictionSettings {
     /// Confidence threshold
     pub confidence_threshold: f64,
 }
-
 impl SmartDefault for MlPredictionSettings {
     fn smart_default() -> Self {
         Self {

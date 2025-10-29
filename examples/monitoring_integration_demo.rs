@@ -4,6 +4,7 @@
 //! and observability features for a production deployment.
 
 use nestgate_core::{
+    canonical_types::StorageTier,
     monitoring::{
         health_checks::{HealthCheckManager, HealthStatus},
         metrics::{MetricsCollector, MetricsExporter},
@@ -383,21 +384,23 @@ impl nestgate_core::data_sources::DataCapability for MockDataProvider {
         &self.provider_type
     }
 
-    fn can_handle(&self, request: &nestgate_core::data_sources::DataRequest) -> impl std::future::Future<Output = Result<bool>> + Send {
+    fn can_handle(
+        &self,
+        request: &nestgate_core::data_sources::DataRequest,
+    ) -> impl std::future::Future<Output = Result<bool>> + Send {
         let provider_type = self.provider_type.clone();
-        async move {
-            Ok(request.capability_type == provider_type)
-        }
+        async move { Ok(request.capability_type == provider_type) }
     }
 
     fn execute_request(
         &self,
         request: &nestgate_core::data_sources::DataRequest,
-    ) -> impl std::future::Future<Output = Result<nestgate_core::data_sources::DataResponse>> + Send {
+    ) -> impl std::future::Future<Output = Result<nestgate_core::data_sources::DataResponse>> + Send
+    {
         let name = self.name.clone();
         let provider_type = self.provider_type.clone();
         let request_id = request.id.clone();
-        
+
         async move {
             // Simulate processing time
             tokio::time::sleep(Duration::from_millis(50 + rand::random::<u64>() % 200)).await;

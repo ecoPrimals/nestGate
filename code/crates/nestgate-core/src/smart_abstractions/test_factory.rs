@@ -1,3 +1,5 @@
+#![cfg(feature = "dev-stubs")]
+
 /// **TEST FACTORY ABSTRACTION**
 /// Consolidates all scattered test helper functions into a proper factory pattern
 /// 
@@ -9,8 +11,9 @@
 /// 
 /// **REPLACES**: Multiple helper modules across test files
 /// **PROBLEM SOLVED**: Helper function proliferation and duplication
+///
+/// **⚠️ DEVELOPMENT/TEST ONLY**: This module is only available with `dev-stubs` feature
 
-use async_trait::async_trait;
 use serde::Serialize;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -19,30 +22,32 @@ use uuid::Uuid;
 
 use crate::{Result, NestGateError};
 use crate::traits::{UniversalService, UniversalServiceRequest, UniversalServiceResponse};
-use crate::unified_enums::service_types::{UnifiedServiceType, UnifiedServiceState};
-use crate::unified_types::{UnifiedConfig, UnifiedServiceConfig};
+use crate::unified_enums::{UnifiedServiceType, UnifiedServiceState};
+// **MIGRATED**: Using canonical config system instead of deprecated unified_types
+use crate::config::canonical_master::NestGateCanonicalConfig as NestGateCanonicalConfig;
+// **MIGRATED**: Using local UnifiedServiceConfig definition
+use crate::service_discovery::config::UnifiedServiceConfig;
 
-// ==================== FACTORY TRAIT ====================
+// ==================== SECTION ====================
 
 /// Universal Test Factory trait for creating test objects
-#[async_trait]
+use crate::error::NestGateError;
 pub trait TestFactory<T> {
     type Config;
     type Error: std::error::Error + Send + Sync + 'static;
     
     /// Create a test instance with default configuration
-    async fn create_default() -> std::result::Result<T, Self::Error>;
+    fn create_default() -> impl std::future::Future<Output = Result<T, Self::Error>> + Send;
     
     /// Create a test instance with custom configuration
-    async fn create_with_config(config: Self::Config) -> std::result::Result<T, Self::Error>;
+    fn create_with_config(config: Self::Config) -> impl std::future::Future<Output = Result<T, Self::Error>> + Send;
     
     /// Create a test instance for specific scenario
-    async fn create_for_scenario(scenario: TestScenario) -> std::result::Result<T, Self::Error>;
+    fn create_for_scenario(scenario: TestScenario) -> impl std::future::Future<Output = Result<T, Self::Error>> + Send;
     
     /// Create multiple test instances
-    async fn create_batch(count: usize) -> std::result::Result<Vec<T>, Self::Error>;
+    fn create_batch(count: usize) -> impl std::future::Future<Output = Result<Vec<T>> + Send;
 }
-
 /// Test scenarios for different testing contexts
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TestScenario {
@@ -59,18 +64,23 @@ pub enum TestScenario {
     /// Custom scenario with name
     Custom(String),
 }
-
-// ==================== SERVICE FACTORY ====================
+// ==================== SECTION ====================
 
 /// Factory for creating test services
 pub struct ServiceTestFactory;
-
 impl ServiceTestFactory {
     /// Create a mock service with specified behavior
-    pub async fn create_mock_service(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn create_mock_service(
         service_type: UnifiedServiceType,
         behavior: ServiceBehavior,
-    ) -> Result<Arc<dyn UniversalService<Config = UnifiedServiceConfig, Health = bool>>> {
+    ) -> Result<Arc<dyn UniversalService<Config = UnifiedServiceConfig, Health = bool>>>  {
         let service = MockTestService::new(service_type, behavior);
         Ok(Arc::new(service))
     }
@@ -81,9 +91,16 @@ impl ServiceTestFactory {
     }
     
     /// Create a service with realistic delays and behaviors
-    pub async fn create_realistic_service(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn create_realistic_service(
         service_type: UnifiedServiceType,
-    ) -> Result<Arc<dyn UniversalService<Config = UnifiedServiceConfig, Health = bool>>> {
+    ) -> Result<Arc<dyn UniversalService<Config = UnifiedServiceConfig, Health = bool>>>  {
         let behavior = ServiceBehavior {
             response_delay: Duration::from_millis(50),
             success_rate: 0.95,
@@ -100,7 +117,6 @@ pub struct ServiceBehavior {
     pub success_rate: f64,
     pub enable_realistic_errors: bool,
 }
-
 impl Default for ServiceBehavior {
     fn default() -> Self {
         Self {
@@ -111,16 +127,22 @@ impl Default for ServiceBehavior {
     }
 }
 
-// ==================== STORAGE FACTORY ====================
+// ==================== SECTION ====================
 
 /// Factory for creating test storage objects
 pub struct StorageTestFactory;
-
 impl StorageTestFactory {
     /// Create a test storage backend
-    pub async fn create_storage_backend(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn create_storage_backend(
         storage_type: crate::universal_storage::UniversalStorageType,
-    ) -> Result<Arc<dyn crate::universal_storage::UniversalStorageBackend>> {
+    ) -> Result<Arc<dyn crate::universal_storage::UniversalStorageBackend>>  {
         match storage_type {
             crate::universal_storage::UniversalStorageType::Memory => {
                 Ok(Arc::new(MemoryStorageBackend::new()))
@@ -145,7 +167,6 @@ impl StorageTestFactory {
             name: name.to_string(),
             storage_type,
             resource_type: StorageResourceType::Dataset,
-            path: format!("/test/{}", name).into(),
             size_bytes: 1024 * 1024, // 1MB
             available_bytes: 1024 * 1024,
             used_bytes: 0,
@@ -163,14 +184,13 @@ impl StorageTestFactory {
     }
 }
 
-// ==================== CONFIGURATION FACTORY ====================
+// ==================== SECTION ====================
 
 /// Factory for creating test configurations
 pub struct ConfigTestFactory;
-
 impl ConfigTestFactory {
     /// Create a test configuration for specific scenario
-    pub fn create_for_scenario(scenario: TestScenario) -> UnifiedConfig {
+    pub fn create_for_scenario(scenario: TestScenario) -> NestGateCanonicalConfig {
         match scenario {
             TestScenario::Unit => Self::create_unit_test_config(),
             TestScenario::Integration => Self::create_integration_test_config(),
@@ -182,8 +202,8 @@ impl ConfigTestFactory {
     }
     
     /// Create configuration optimized for unit tests
-    pub fn create_unit_test_config() -> UnifiedConfig {
-        let mut config = UnifiedConfig::default();
+    pub fn create_unit_test_config() -> NestGateCanonicalConfig {
+        let mut config = NestGateCanonicalConfig::default();
         config.network.port = 0; // Random port
         config.timeouts.connection_timeout = Duration::from_millis(100);
         config.retry.max_attempts = 1;
@@ -191,8 +211,8 @@ impl ConfigTestFactory {
     }
     
     /// Create configuration optimized for integration tests
-    pub fn create_integration_test_config() -> UnifiedConfig {
-        let mut config = UnifiedConfig::default();
+    pub fn create_integration_test_config() -> NestGateCanonicalConfig {
+        let mut config = NestGateCanonicalConfig::default();
         config.network.port = 0; // Random port
         config.timeouts.connection_timeout = Duration::from_millis(500);
         config.retry.max_attempts = 2;
@@ -201,8 +221,8 @@ impl ConfigTestFactory {
     }
     
     /// Create configuration optimized for performance tests
-    pub fn create_performance_test_config() -> UnifiedConfig {
-        let mut config = UnifiedConfig::default();
+    pub fn create_performance_test_config() -> NestGateCanonicalConfig {
+        let mut config = NestGateCanonicalConfig::default();
         config.network.port = 0;
         config.timeouts.connection_timeout = Duration::from_secs(1);
         config.retry.max_attempts = 3;
@@ -212,8 +232,8 @@ impl ConfigTestFactory {
     }
     
     /// Create configuration for chaos testing
-    pub fn create_chaos_test_config() -> UnifiedConfig {
-        let mut config = UnifiedConfig::default();
+    pub fn create_chaos_test_config() -> NestGateCanonicalConfig {
+        let mut config = NestGateCanonicalConfig::default();
         config.network.port = 0;
         config.timeouts.connection_timeout = Duration::from_millis(50); // Aggressive timeouts
         config.retry.max_attempts = 5; // More retries for chaos
@@ -221,8 +241,8 @@ impl ConfigTestFactory {
     }
     
     /// Create configuration simulating production
-    pub fn create_production_sim_config() -> UnifiedConfig {
-        let mut config = UnifiedConfig::default();
+    pub fn create_production_sim_config() -> NestGateCanonicalConfig {
+        let mut config = NestGateCanonicalConfig::default();
         config.network.port = 8080;
         config.timeouts.connection_timeout = Duration::from_secs(30);
         config.retry.max_attempts = 3;
@@ -233,16 +253,15 @@ impl ConfigTestFactory {
     }
     
     /// Create default test configuration
-    pub fn create_default_config() -> UnifiedConfig {
+    pub fn create_default_config() -> NestGateCanonicalConfig {
         Self::create_unit_test_config()
     }
 }
 
-// ==================== DATA FACTORY ====================
+// ==================== SECTION ====================
 
 /// Factory for creating test data
 pub struct TestDataFactory;
-
 impl TestDataFactory {
     /// Generate test data for specific scenario
     pub fn generate_data<T>(scenario: TestScenario, count: usize) -> Vec<T>
@@ -278,8 +297,7 @@ impl TestDataFactory {
 pub trait TestDataGenerator {
     fn generate_for_scenario(scenario: &TestScenario, index: usize) -> Self;
 }
-
-// ==================== MOCK IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 /// Mock service for testing
 pub struct MockTestService {
@@ -287,7 +305,6 @@ pub struct MockTestService {
     behavior: ServiceBehavior,
     config: UnifiedServiceConfig,
 }
-
 impl MockTestService {
     pub fn new(service_type: UnifiedServiceType, behavior: ServiceBehavior) -> Self {
         Self {
@@ -298,7 +315,6 @@ impl MockTestService {
     }
 }
 
-#[async_trait]
 impl UniversalService for MockTestService {
     type Config = UnifiedServiceConfig;
     type Health = bool;
@@ -332,7 +348,7 @@ impl UniversalService for MockTestService {
         Ok(UniversalServiceResponse {
             request_id: Uuid::new_v4().to_string(),
             status: crate::traits::UniversalResponseStatus::Success,
-            data: Some(serde_json::json!({"message": "test response"})),
+            data: Some(serde_json::json!({"message": "test response"}),
             error: None,
             metadata: HashMap::new(),
         })
@@ -377,13 +393,12 @@ pub struct ServiceHealth {
     pub uptime: Duration,
     pub memory_usage: f64,
 }
-
 /// Test service registry
 pub struct TestServiceRegistry {
     services: HashMap<String, Arc<dyn UniversalService<Config = UnifiedServiceConfig, Health = ServiceHealth>>>,
 }
-
 impl TestServiceRegistry {
+    #[must_use]
     pub fn new() -> Self {
         Self {
             services: HashMap::new(),
@@ -403,14 +418,14 @@ impl TestServiceRegistry {
     }
 }
 
-// ==================== STORAGE MOCK IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 /// Mock memory storage backend
 pub struct MemoryStorageBackend {
     data: Arc<tokio::sync::RwLock<HashMap<String, Vec<u8>>>>,
 }
-
 impl MemoryStorageBackend {
+    #[must_use]
     pub fn new() -> Self {
         Self {
             data: Arc::new(tokio::sync::RwLock::new(HashMap::new())),
@@ -418,7 +433,6 @@ impl MemoryStorageBackend {
     }
 }
 
-#[async_trait]
 impl crate::universal_storage::UniversalStorageBackend for MemoryStorageBackend {
     async fn handle_request(
         &self,
@@ -491,18 +505,13 @@ impl crate::universal_storage::UniversalStorageBackend for MemoryStorageBackend 
 
 /// Mock local storage backend
 pub struct LocalStorageBackend {
-    base_path: std::path::PathBuf,
 }
-
 impl LocalStorageBackend {
-    pub fn new(base_path: &str) -> Self {
         Self {
-            base_path: std::path::PathBuf::from(base_path),
         }
     }
 }
 
-#[async_trait]
 impl UnifiedStorageBackend for LocalStorageBackend {
     async fn handle_request(
         &self,
@@ -553,14 +562,12 @@ impl UnifiedStorageBackend for LocalStorageBackend {
 pub struct MockStorageBackend {
     storage_type: crate::universal_storage::UniversalStorageType,
 }
-
 impl MockStorageBackend {
     pub fn new(storage_type: crate::universal_storage::UniversalStorageType) -> Self {
         Self { storage_type }
     }
 }
 
-#[async_trait]
 impl crate::universal_storage::UniversalStorageBackend for MockStorageBackend {
     async fn handle_request(
         &self,
@@ -599,4 +606,3 @@ impl crate::universal_storage::UniversalStorageBackend for MockStorageBackend {
     async fn shutdown(&mut self) -> Result<()> {
         Ok(())
     }
-} 

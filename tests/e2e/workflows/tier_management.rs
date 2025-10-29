@@ -30,11 +30,14 @@ pub async fn test_tier_management_workflow(config: &UnifiedTestConfig) -> Result
                 "    ✅ Tier prediction completed: {} predictions generated",
                 prediction_count
             );
+    Ok(())
         }
         Err(e) => {
             error_messages.push(format!("Tier prediction failed: {e}"));
             println!("    ❌ Tier prediction failed: {e}");
+    Ok(())
         }
+    Ok(())
     }
 
     // Step 2: Tier migration
@@ -43,11 +46,14 @@ pub async fn test_tier_management_workflow(config: &UnifiedTestConfig) -> Result
         Ok(_) => {
             steps_completed += 1;
             println!("    ✅ Tier migration completed");
+    Ok(())
         }
         Err(e) => {
             error_messages.push(format!("Tier migration failed: {e}"));
             println!("    ❌ Tier migration failed: {e}");
+    Ok(())
         }
+    Ok(())
     }
 
     // Step 3: Performance optimization
@@ -56,11 +62,14 @@ pub async fn test_tier_management_workflow(config: &UnifiedTestConfig) -> Result
         Ok(_) => {
             steps_completed += 1;
             println!("    ✅ Performance optimization completed");
+    Ok(())
         }
         Err(e) => {
             error_messages.push(format!("Performance optimization failed: {e}"));
             println!("    ❌ Performance optimization failed: {e}");
+    Ok(())
         }
+    Ok(())
     }
 
     let execution_time = start_time.elapsed();

@@ -14,7 +14,6 @@ use super::core::NativeZfsService;
 /// List all ZFS snapshots (zero-copy optimized)
 pub async fn list_snapshots(service: &NativeZfsService) -> UniversalZfsResult<Vec<SnapshotInfo>> {
     info!("Listing ZFS snapshots");
-
     // Execute `zfs list -t snapshot -H -o name,used,creation`
     let output = service
         .execute_zfs_command(&["list", "-t", "snapshot", "-H", "-o", "name,used,creation"])
@@ -46,14 +45,12 @@ fn parse_snapshot_line(line: &str) -> Option<SnapshotInfo> {
         None
     }
 }
-
 /// List snapshots for a specific dataset (zero-copy optimized)
-pub async fn list_dataset_snapshots(
+pub fn list_dataset_snapshots(
     service: &NativeZfsService,
     dataset: &str,
 ) -> UniversalZfsResult<Vec<SnapshotInfo>> {
     info!("Listing snapshots for dataset: {}", dataset);
-
     // Execute `zfs list -t snapshot -H -o name,used,creation -r dataset`
     let output = service
         .execute_zfs_command(&[
@@ -79,12 +76,11 @@ pub async fn list_dataset_snapshots(
 }
 
 /// Create a new ZFS snapshot (zero-copy optimized)
-pub async fn create_snapshot(
+pub fn create_snapshot(
     service: &NativeZfsService,
     config: &SnapshotConfig,
 ) -> UniversalZfsResult<SnapshotInfo> {
     info!("Creating snapshot: {}", config.name);
-
     // Execute `zfs snapshot dataset@snapshot_name`
     let snapshot_name = if config.name.contains('@') {
         config.name.clone()
@@ -120,9 +116,8 @@ pub async fn create_snapshot(
 }
 
 /// Destroy a ZFS snapshot
-pub async fn destroy_snapshot(service: &NativeZfsService, name: &str) -> UniversalZfsResult<()> {
+pub fn destroy_snapshot(service: &NativeZfsService, name: &str) -> UniversalZfsResult<()> {
     info!("Destroying snapshot: {}", name);
-
     // Execute `zfs destroy snapshot_name`
     service.execute_zfs_command(&["destroy", name]).await?;
 
@@ -134,7 +129,6 @@ fn parse_size(size_str: &str) -> Option<u64> {
     if size_str == "-" {
         return Some(0);
     }
-
     let size_str = size_str.trim();
     if size_str.is_empty() {
         return None;

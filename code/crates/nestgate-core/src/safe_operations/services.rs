@@ -1,25 +1,26 @@
-/// **UNIFIED**: Use the main Result type from parent module
-pub use super::Result;
+// Safe service operations
 
-/// Safe service call with error context
-pub async fn safe_service_call<F, T>(
-    operation_name: &str,
-    _context: &str,
-    service_call: F,
-) -> Result<T>
+use crate::error::NestGateError;
+use crate::Result;
+
+/// Safely call a service operation with error handling
+pub fn safe_service_call<T, F>(operation_name: &str, operation: F) -> Result<T>
 where
-    F: std::future::Future<
-        Output = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>,
-    >,
+    F: FnOnce() -> Result<T>,
 {
-    service_call
-        .await
-        .map_err(|e| crate::error::NestGateError::Internal {
-            message: format!("Service call failed for '{operation_name}': {e}"),
-            location: Some(std::panic::Location::caller().to_string()),
-            debug_info: Some(format!(
-                "Service call error for operation: {operation_name}"
-            )),
-            is_bug: false,
-        })
+    match operation() {
+        Ok(result) => Ok(result),
+        Err(e) => {
+            eprintln!("Service operation '{operation_name}' failed: {e}");
+            Err(e)
+        }
+    }
+}
+/// Create a service error with context
+#[must_use]
+pub fn create_service_error(operation_name: &str, message: &str) -> NestGateError {
+    NestGateError::internal_error(
+        format!("Service operation '{operation_name}' failed: {message}"),
+        "safe_operations",
+    )
 }

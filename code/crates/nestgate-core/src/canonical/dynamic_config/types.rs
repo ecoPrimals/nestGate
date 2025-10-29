@@ -1,12 +1,11 @@
 use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::sync::watch;
 use uuid::Uuid;
 
-use crate::config::canonical_unified::CanonicalConfig;
+use crate::config::canonical_master::NestGateCanonicalConfig as CanonicalConfig;
 use crate::error::CanonicalResult as Result;
 
 /// Configuration version with metadata
@@ -22,7 +21,6 @@ pub struct ConfigVersion {
     pub applied_successfully: bool,
     pub rollback_available: bool,
 }
-
 impl ConfigVersion {
     pub fn new(config: CanonicalConfig, description: String, author: String) -> Self {
         let timestamp = SystemTime::now();
@@ -58,12 +56,10 @@ pub enum ValidationStatus {
 pub struct ConfigChange {
     pub section: ConfigSection,
     pub change_type: ChangeType,
-    pub old_value: Option<serde_json::Value>,
-    pub new_value: serde_json::Value,
-    pub path: String,
+    pub oldvalue: Option<serde_json::Value>,
+    pub newvalue: serde_json::Value,
     pub description: String,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum ConfigSection {
     Storage,
@@ -89,12 +85,10 @@ pub struct ValidationReport {
     pub recommendations: Vec<String>,
     pub estimated_impact: ImpactAssessment,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ValidationError {
     pub code: String,
     pub message: String,
-    pub path: String,
     pub severity: ErrorSeverity,
 }
 
@@ -102,7 +96,6 @@ pub struct ValidationError {
 pub struct ValidationWarning {
     pub code: String,
     pub message: String,
-    pub path: String,
     pub recommendation: Option<String>,
 }
 
@@ -136,7 +129,6 @@ pub enum PerformanceImpact {
 pub trait DynamicConfiguration {
     /// Reload a specific configuration section
     fn reload_config(&self, section: ConfigSection) -> impl std::future::Future<Output = Result<()>> + Send;
-
     /// Validate a configuration change before applying
     fn validate_config_change(&self, change: &ConfigChange) -> impl std::future::Future<Output = Result<ValidationReport>> + Send;
 
@@ -169,7 +161,6 @@ pub struct ConfigBackup {
     pub version_history: Option<Vec<ConfigVersion>>,
     pub metadata: HashMap<String, String>,
 }
-
 /// Configuration validator trait - **ZERO-COST NATIVE ASYNC**
 pub trait ConfigValidator {
     /// Validate a configuration change

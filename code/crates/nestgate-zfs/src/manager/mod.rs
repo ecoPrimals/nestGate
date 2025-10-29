@@ -8,9 +8,14 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 
 use crate::{
-    automation::DatasetAutomation, config::ZfsConfig, dataset::ZfsDatasetManager,
-    health::ZfsHealthMonitor, metrics::ZfsMetrics, migration::MigrationEngine,
-    performance::ZfsPerformanceMonitor, pool::ZfsPoolManager, snapshot::ZfsSnapshotManager,
+    automation::DatasetAutomation,
+    config::ZfsConfig,
+    dataset::ZfsDatasetManager,
+    health::ZfsHealthMonitor,
+    metrics::ZfsMetrics, // migration::MigrationEngine,
+    performance::ZfsPerformanceMonitor,
+    pool::ZfsPoolManager,
+    snapshot::ZfsSnapshotManager,
     tier::TierManager,
 };
 
@@ -35,10 +40,10 @@ pub struct ZfsManager {
     pub dataset_manager: Arc<ZfsDatasetManager>,
     /// Snapshot management operations
     pub snapshot_manager: Arc<ZfsSnapshotManager>,
-    /// Migration engine for tier optimization
-    pub migration_engine: Arc<RwLock<MigrationEngine>>,
-    /// Dataset analysis and automation
-    pub dataset_analyzer: Arc<crate::migration::discovery::DatasetAnalyzer>,
+    /// Migration engine for tier optimization (placeholder - not yet implemented)
+    // pub migration_engine: Arc<RwLock<MigrationEngine>>,
+    /// Dataset analysis and automation (placeholder - migration module not yet implemented)
+    // pub dataset_analyzer: Arc<crate::migration::discovery::DatasetAnalyzer>,
     /// Performance monitoring
     pub performance_monitor: Arc<RwLock<ZfsPerformanceMonitor>>,
     /// Tiered storage management
@@ -56,15 +61,14 @@ pub struct ZfsManager {
     #[allow(dead_code)] // Future orchestrator integration
     orchestrator_enabled: bool,
 }
-
 impl std::fmt::Debug for ZfsManager {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("ZfsManager")
             .field("pool_manager", &self.pool_manager)
             .field("dataset_manager", &self.dataset_manager)
             .field("snapshot_manager", &self.snapshot_manager)
-            .field("migration_engine", &self.migration_engine)
-            .field("dataset_analyzer", &self.dataset_analyzer)
+            // .field("migration_engine", &self.migration_engine) // Commented out - not yet implemented
+            // .field("dataset_analyzer", &self.dataset_analyzer) // Commented out - not yet implemented
             .field("performance_monitor", &self.performance_monitor)
             .field("tier_manager", &self.tier_manager)
             .field("health_monitor", &self.health_monitor)

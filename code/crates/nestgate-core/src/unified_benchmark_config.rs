@@ -1,18 +1,22 @@
+#![cfg(feature = "dev-stubs")]
+
 /// Unified Benchmark Configuration System for NestGate
 /// This module provides standardized benchmark configuration that replaces the
 /// fragmented benchmark config structs scattered across the benchmark test suite.
 /// **PROBLEM SOLVED**: Eliminates duplicate benchmark config structs with
 /// inconsistent fields and approaches.
+///
+/// **⚠️ BENCHMARKING ONLY**: This module is only available with `dev-stubs` feature
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
 use uuid::Uuid;
-
 // Import the standardized config pattern
 use crate::unified_config_consolidation::StandardDomainConfig;
-use crate::unified_enums::UnifiedServiceType;
+use crate::unified_enums::service_types::UnifiedServiceType;
 
-// ==================== BENCHMARK-SPECIFIC EXTENSIONS ====================
+// ==================== SECTION ====================
 
 /// Benchmark-specific configuration extensions
 /// Domain-specific fields for comprehensive benchmark testing
@@ -35,7 +39,6 @@ pub struct BenchmarkExtensions {
     /// Stress testing configuration
     pub stress: BenchmarkStressSettings,
     }
-
 /// Performance benchmark settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BenchmarkPerformanceSettings {
@@ -56,7 +59,6 @@ pub struct BenchmarkPerformanceSettings {
     /// Performance thresholds
     pub thresholds: BenchmarkThresholds,
     }
-
 /// Memory benchmark settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BenchmarkMemorySettings {
@@ -73,7 +75,6 @@ pub struct BenchmarkMemorySettings {
     /// Memory pool testing
     pub pool_testing_enabled: bool,
     }
-
 /// CPU benchmark settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BenchmarkCpuSettings {
@@ -88,7 +89,6 @@ pub struct BenchmarkCpuSettings {
     /// Enable SIMD optimization testing
     pub simd_testing_enabled: bool,
     }
-
 /// I/O benchmark settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BenchmarkIoSettings {
@@ -105,7 +105,6 @@ pub struct BenchmarkIoSettings {
     /// Target IOPS (Input/Output Operations Per Second)
     pub target_iops: u64,
     }
-
 /// Network benchmark settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BenchmarkNetworkSettings {
@@ -122,7 +121,6 @@ pub struct BenchmarkNetworkSettings {
     /// Maximum packet size to test
     pub max_packet_size: usize,
     }
-
 /// Mock service benchmark settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BenchmarkMockingSettings {
@@ -137,7 +135,6 @@ pub struct BenchmarkMockingSettings {
     /// Mock data generation patterns
     pub data_patterns: Vec<MockDataPattern>,
     }
-
 /// Zero-copy optimization benchmark settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BenchmarkZeroCopySettings {
@@ -152,7 +149,6 @@ pub struct BenchmarkZeroCopySettings {
     /// Arc vs traditional clone comparison
     pub arc_comparison_enabled: bool,
     }
-
 /// Stress testing configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BenchmarkStressSettings {
@@ -169,8 +165,7 @@ pub struct BenchmarkStressSettings {
     /// Recovery time after stress
     pub recovery_time: Duration,
     }
-
-// ==================== BENCHMARK DATA STRUCTURES ====================
+// ==================== SECTION ====================
 
 /// Performance benchmark thresholds
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -186,7 +181,6 @@ pub struct BenchmarkThresholds {
     /// Maximum acceptable memory usage (MB)
     pub max_memory_mb: u64,
     }
-
 /// Memory allocation patterns for testing
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum MemoryAllocationPattern {
@@ -201,7 +195,6 @@ pub enum MemoryAllocationPattern {
     /// Fragmentation inducing pattern
     Fragmentation,
     }
-
 /// CPU workload types for benchmarking
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum CpuWorkloadType {
@@ -218,7 +211,6 @@ pub enum CpuWorkloadType {
     /// Cryptographic operations
     Cryptographic,
     }
-
 /// I/O operation types for benchmarking
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum IoOperationType {
@@ -233,7 +225,6 @@ pub enum IoOperationType {
     /// Mixed read/write operations
     Mixed,
     }
-
 /// Network protocol types for benchmarking
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum NetworkProtocolType {
@@ -250,7 +241,6 @@ pub enum NetworkProtocolType {
     /// gRPC protocol testing
     Grpc,
     }
-
 /// Mock service for benchmarking
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BenchmarkMockService {
@@ -267,7 +257,6 @@ pub struct BenchmarkMockService {
     /// Mock service configuration
     pub configuration: BenchmarkMockConfiguration,
     }
-
 /// Mock service configuration for benchmarking
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BenchmarkMockConfiguration {
@@ -282,12 +271,11 @@ pub struct BenchmarkMockConfiguration {
     /// Enabled features
     pub features: Vec<String>,
     /// Environment name
-    pub environment: String,
     /// Response timeout
     pub timeout: Duration,
     }
-
 /// Mock data generation patterns
+#[cfg(test)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum MockDataPattern {
     /// Fixed size data
@@ -301,7 +289,6 @@ pub enum MockDataPattern {
     /// Text data with patterns
     TextPattern(String),
     }
-
 /// Benchmark results structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BenchmarkResults {
@@ -330,8 +317,7 @@ pub struct BenchmarkResults {
     /// Additional metrics
     pub additional_metrics: HashMap<String, f64>,
     }
-
-// ==================== DEFAULT IMPLEMENTATIONS ====================
+// ==================== SECTION ====================
 
 impl Default for BenchmarkExtensions {
     fn default() -> Self {
@@ -492,7 +478,7 @@ impl Default for BenchmarkMockService {
             id: Uuid::new_v4().to_string(),
             name: "mock-benchmark-service".to_string(),
             version: "1.0.0".to_string(),
-            endpoints: vec!["http://localhost:8080".to_string()],
+            endpoints: vec!["http://localhost:".to_string() + &env::var("NESTGATE_API_PORT").unwrap_or_else(|_| "8080".to_string()).to_string()],
             metadata: HashMap::new(),
             configuration: BenchmarkMockConfiguration::default(),
     }
@@ -503,25 +489,26 @@ impl Default for BenchmarkMockConfiguration {
     fn default() -> Self {
         Self {
             service_name: "nestgate-benchmark".to_string(),
+// DEPRECATED: PostgreSQL database - migrate to capability-based persistence
+// Capability-based discovery implemented
             database_url: "postgresql://localhost/benchmark".to_string(),
             port: 8080,
             debug_mode: false,
             features: vec!["api".to_string(), "benchmark".to_string()],
-            environment: "benchmark".to_string(),
             timeout: Duration::from_secs(30),
     }
     }
     }
 
-// ==================== TYPE ALIAS FOR UNIFIED BENCHMARK CONFIG ====================
+// ==================== SECTION ====================
 
 /// Standardized Benchmark configuration
 pub type UnifiedBenchmarkConfig = StandardDomainConfig<BenchmarkExtensions>;
-
-// ==================== BUILDER PATTERN ====================
+// ==================== SECTION ====================
 
 impl UnifiedBenchmarkConfig {
     /// Create a comprehensive benchmark configuration
+    #[must_use]
     pub fn comprehensive() -> Self {
         let mut config = StandardDomainConfig::with_service(
             BenchmarkExtensions::default(),
@@ -536,10 +523,10 @@ impl UnifiedBenchmarkConfig {
 
         // Configure benchmark-specific network settings
         config.network.port = 0; // Random port for benchmarking
-        config.network.bind_address = "127.0.0.1".parse().unwrap_or_else(|e| {
-            tracing::error!("Failed to parse IP address: {:?}", e);
+        config.network.bind_endpoint = "127.0.0.1".parse().unwrap_or_else(|e| {
+            tracing::error!("Failed to parse IP endpoint: {:?}", e);
             std::net::IpAddr::V4(std::net::Ipv4Addr::new(127, 0, 0, 1))
-        });
+        );
         // config.network.enable_tls = false; // Field doesn't exist in current UnifiedNetworkConfig
         config.network.max_connections = 1000;
 
@@ -552,6 +539,7 @@ impl UnifiedBenchmarkConfig {
     }
 
     /// Create configuration for performance benchmarking
+    #[must_use]
     pub fn performance_benchmarking() -> Self {
         let mut config = Self::comprehensive();
         config.service.name = "performance-benchmark-test".to_string();
@@ -562,6 +550,7 @@ impl UnifiedBenchmarkConfig {
     }
 
     /// Create configuration for zero-copy optimization benchmarking
+    #[must_use]
     pub fn zero_copy_benchmarking() -> Self {
         let mut config = Self::comprehensive();
         config.service.name = "zero-copy-benchmark-test".to_string();
@@ -572,6 +561,7 @@ impl UnifiedBenchmarkConfig {
     }
 
     /// Create configuration for stress testing
+    #[must_use]
     pub fn stress_benchmarking() -> Self {
         let mut config = Self::comprehensive();
         config.service.name = "stress-benchmark-test".to_string();
@@ -593,7 +583,6 @@ impl UnifiedBenchmarkConfig {
 pub struct UnifiedBenchmarkConfigBuilder {
     config: UnifiedBenchmarkConfig,
     }
-
 impl UnifiedBenchmarkConfigBuilder {
     pub fn new() -> Self {
         Self {
@@ -601,46 +590,55 @@ impl UnifiedBenchmarkConfigBuilder {
     }
     }
 
+    #[must_use]
     pub fn test_name(mut self, name: &str) -> Self {
         self.config.service.name = name.to_string();
         self
     }
 
+    #[must_use]
     pub fn test_duration(mut self, duration: Duration) -> Self {
         self.config.extensions.performance.measurement_interval = duration;
         self
     }
 
+    #[must_use]
     pub fn concurrent_threads(mut self, threads: usize) -> Self {
         self.config.extensions.performance.concurrent_threads = threads;
         self
     }
 
+    #[must_use]
     pub fn target_ops_per_second(mut self, ops: u64) -> Self {
         self.config.extensions.performance.target_ops_per_second = ops;
         self
     }
 
+    #[must_use]
     pub fn enable_memory_stress(mut self, enabled: bool) -> Self {
         self.config.extensions.memory.memory_stress_enabled = enabled;
         self
     }
 
+    #[must_use]
     pub fn enable_cpu_stress(mut self, enabled: bool) -> Self {
         self.config.extensions.cpu.cpu_stress_enabled = enabled;
         self
     }
 
+    #[must_use]
     pub fn enable_io_stress(mut self, enabled: bool) -> Self {
         self.config.extensions.io.io_stress_enabled = enabled;
         self
     }
 
+    #[must_use]
     pub fn enable_zero_copy_testing(mut self, enabled: bool) -> Self {
         self.config.extensions.zero_copy.enabled = enabled;
         self
     }
 
+    #[must_use]
     pub fn enable_profiling(mut self, enabled: bool) -> Self {
         self.config.extensions.performance.enable_profiling = enabled;
         self
