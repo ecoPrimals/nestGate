@@ -1,0 +1,38 @@
+# Test Wiring Audit Summary
+Generated: Wed Oct 29 11:20:32 AM EDT 2025
+
+## Overview
+- Total test files found: 90
+- Files with inline tests: 424
+- Wired test files: 21
+- Orphaned test files: 69
+- Orphan rate: 76.7%
+
+## Test Function Counts
+- #[test] functions: 4739
+- #[tokio::test] functions: 928
+- Total test functions: 5667
+
+## Per-Crate Breakdown
+nestgate-api: 1 wired, 39 orphaned, 40 total
+nestgate-bin: 0 wired, 3 orphaned, 3 total
+nestgate-core: 10 wired, 14 orphaned, 24 total
+nestgate-installer: 0 wired, 1 orphaned, 1 total
+nestgate-mcp: 0 wired, 1 orphaned, 1 total
+nestgate-nas: 0 wired, 2 orphaned, 2 total
+nestgate-network: 0 wired, 5 orphaned, 5 total
+nestgate-zfs: 10 wired, 4 orphaned, 14 total
+
+## Next Steps
+1. Review orphaned_tests.txt for files to wire up
+2. Start with highest-impact crates (see crate_breakdown.txt)
+3. Use wire_up_test.sh to systematically add module imports
+4. Verify compilation and test execution after each crate
+
+## Files Generated
+- all_test_files.txt: Complete list of test files
+- inline_test_files.txt: Files with #[cfg(test)] blocks
+- orphaned_tests.txt: Test files not imported
+- wired_tests.txt: Test files properly imported
+- crate_breakdown.txt: Per-crate statistics
+- SUMMARY.txt: This file

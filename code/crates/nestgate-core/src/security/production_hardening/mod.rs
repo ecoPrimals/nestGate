@@ -30,3 +30,5 @@ pub use types::{
     SuspiciousPattern,
 };
 pub use validation::RequestValidator; 
+#[cfg(test)]
+mod tests;

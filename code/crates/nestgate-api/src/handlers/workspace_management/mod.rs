@@ -86,3 +86,27 @@ impl WorkspaceManager {
         }
     }
 }
+
+#[cfg(test)]
+mod lifecycle_tests;
+
+#[cfg(test)]
+mod optimization_tests;
+
+#[cfg(test)]
+mod collaboration_tests;
+
+#[cfg(test)]
+mod storage_workspace_tests;
+
+#[cfg(test)]
+mod tests;
+
+#[cfg(test)]
+mod secrets_tests;
+
+#[cfg(test)]
+mod crud_tests;
+
+#[cfg(test)]
+mod teams_tests;

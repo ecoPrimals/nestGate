@@ -23,3 +23,12 @@ pub use reports::{MultiFormatReport, PerformanceReport, ReportConfig, ReportGene
 
 // Re-export legacy types for backward compatibility
 pub use types::*;
+
+#[cfg(test)]
+mod types_tests;
+
+#[cfg(test)]
+mod collectors_tests;
+
+#[cfg(test)]
+mod metrics_tests;

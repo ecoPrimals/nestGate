@@ -61,3 +61,6 @@ pub use universal_pools::*;
 pub use production_placeholders::*;
 
 pub use zero_cost_factory::*;
+
+#[cfg(test)]
+mod production_handler_tests;

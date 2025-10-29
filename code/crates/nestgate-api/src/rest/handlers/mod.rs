@@ -34,3 +34,9 @@ pub use storage::*;
 pub use system::*;
 pub use websocket::*;
 pub use zfs::*;
+
+#[cfg(test)]
+mod storage_tests;
+
+#[cfg(test)]
+mod websocket_tests;
