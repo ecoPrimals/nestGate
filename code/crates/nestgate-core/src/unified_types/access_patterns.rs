@@ -1,9 +1,21 @@
 /// Unified Access Patterns Module
-/// Consolidates duplicate AccessPatterns structs from automation modules
-/// **PROBLEM SOLVED**: Eliminates AccessPatterns duplication between analysis.rs and types/mod.rs
+/// Consolidates duplicate `AccessPatterns` structs from automation modules
+/// **PROBLEM SOLVED**: Eliminates `AccessPatterns` duplication between analysis.rs and types/mod.rs
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::SystemTime;
+
+/// Parameters for creating access patterns from simple data
+#[derive(Debug)]
+pub struct SimplePatternParams {
+    pub daily_access_count: u32,
+    pub last_access: Option<SystemTime>,
+    pub access_types: Vec<String>,
+    pub average_file_size: u64,
+    pub read_write_ratio: f64,
+    pub sequential_access_ratio: f64,
+    pub peak_access_hours: Vec<u8>,
+}
 
 /// **THE** unified access patterns structure for all storage analysis
 /// Combines fields from both automation/analysis.rs and automation/types/mod.rs
@@ -14,7 +26,6 @@ pub struct UnifiedAccessPatterns {
     pub read_frequency: u64,
     pub write_frequency: u64,
     pub daily_access_count: u64, // Note: using u64 for consistency, was u32 in types/mod.rs
-
     // Temporal tracking
     pub last_access: Option<SystemTime>,
     pub temporal_patterns: Vec<AccessTimePattern>,
@@ -39,7 +50,6 @@ pub struct AccessTimePattern {
     pub day_of_week: u8,
     pub access_count: u64,
 }
-
 impl Default for UnifiedAccessPatterns {
     fn default() -> Self {
         Self {
@@ -61,11 +71,13 @@ impl Default for UnifiedAccessPatterns {
 
 impl UnifiedAccessPatterns {
     /// Create a new access patterns instance with basic metrics
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
     #[allow(clippy::too_many_arguments)]
+    #[must_use]
     pub fn from_analysis_patterns(
         read_frequency: u64,
         write_frequency: u64,
@@ -96,43 +108,39 @@ impl UnifiedAccessPatterns {
         }
     }
 
-    /// Create from legacy types/mod.rs AccessPatterns (partial conversion)
-    pub fn from_simple_patterns(
-        daily_access_count: u32, // Note: converting from u32 to u64
-        last_access: Option<SystemTime>,
-        access_types: Vec<String>,
-        average_file_size: u64,
-        read_write_ratio: f64,
-        sequential_access_ratio: f64,
-        peak_access_hours: Vec<u8>,
-    ) -> Self {
+    /// Create from legacy types/mod.rs `AccessPatterns` (partial conversion)
+    #[must_use]
+    pub fn from_simple_patterns(params: SimplePatternParams) -> Self {
         Self {
             read_frequency: 0,
             write_frequency: 0,
-            daily_access_count: daily_access_count as u64,
-            last_access,
+            daily_access_count: u64::from(params.daily_access_count),
+            last_access: params.last_access,
             temporal_patterns: Vec::new(),
-            peak_access_hours,
+            peak_access_hours: params.peak_access_hours,
             access_methods: Vec::new(),
-            access_types,
+            access_types: params.access_types,
             user_access_count: HashMap::new(),
-            read_write_ratio,
-            sequential_access_ratio,
-            average_file_size,
+            read_write_ratio: params.read_write_ratio,
+            sequential_access_ratio: params.sequential_access_ratio,
+            average_file_size: params.average_file_size,
         }
     }
 
     /// Calculate total access frequency
+    #[must_use]
     pub fn total_frequency(&self) -> u64 {
         self.read_frequency + self.write_frequency
     }
 
     /// Check if this represents an active access pattern
+    #[must_use]
     pub fn is_active(&self) -> bool {
         self.total_frequency() > 0 || self.daily_access_count > 0
     }
 
     /// Get the dominant access type (read vs write)
+    #[must_use]
     pub fn dominant_access_type(&self) -> &'static str {
         if self.read_frequency > self.write_frequency {
             "read-heavy"

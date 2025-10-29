@@ -10,13 +10,18 @@ use axum::{
 use std::collections::HashMap;
 use tracing::{debug, info};
 
-use crate::rest::models::*;
+use crate::rest::models::{
+    costs::CostEstimate, performance::PerformanceMetrics, AutoConfigInput, AutoConfigResult,
+    BenchmarkResults, BenchmarkScenario, BenchmarkStorageRequest, PerformanceProjection,
+    PerformanceRequirements, ScanStorageRequest, StorageBackend, StorageBackendType,
+    StorageConfiguration, StoragePerformance, StorageTier,
+};
 use crate::rest::{ApiState, DataError, DataResponse, ListQuery};
 use nestgate_core::universal_storage::AutoConfigurator;
 
-// ============================================================================
+// ==================== SECTION ====================
 // STORAGE BACKEND DATA HANDLERS
-// ============================================================================
+// ==================== SECTION ====================
 
 /// List available storage backends
 /// GET /api/v1/storage/backends
@@ -25,7 +30,6 @@ pub async fn list_backends(
     Query(query): Query<ListQuery>,
 ) -> Result<Json<DataResponse<Vec<StorageBackend>>>, Json<DataError>> {
     debug!("Listing available storage backends");
-
     let _detector = state.storage_detector.lock().await;
 
     // Get detected storage backends
@@ -35,23 +39,27 @@ pub async fn list_backends(
     backends.push(StorageBackend {
         backend_type: StorageBackendType::Memory,
         name: "Memory Storage".to_string(),
-        description: "High-speed in-memory storage for temporary data".to_string(),
-        available_bytes: 1024 * 1024 * 1024, // 1GB
-        total_bytes: 1024 * 1024 * 1024,
-        capabilities: vec![
-            StorageCapability::BasicOperations,
-            StorageCapability::Volatile,
-            StorageCapability::AtomicWrites,
-        ],
+        config: [
+            (
+                "description".to_string(),
+                "High-speed in-memory storage for temporary data".to_string(),
+            ),
+            ("available_gb".to_string(), "1".to_string()),
+            (
+                "capabilities".to_string(),
+                "volatile,atomic_writes".to_string(),
+            ),
+        ]
+        .iter()
+        .cloned()
+        .collect(),
         performance: StoragePerformance {
-            read_throughput_mbps: 10000.0,
-            write_throughput_mbps: 8000.0,
-            avg_latency_ms: 0.001,
-            iops: 1000000,
-            tier: PerformanceTier::High,
+            read_iops: 100000,
+            write_iops: 80000,
+            read_throughput_mbps: 1000.0,
+            write_throughput_mbps: 800.0,
+            avg_latency_ms: 0.1,
         },
-        status: StorageBackendStatus::Online,
-        config_schema: None,
     });
 
     // Add filesystem backend (check if available)
@@ -59,33 +67,28 @@ pub async fn list_backends(
         backends.push(StorageBackend {
             backend_type: StorageBackendType::Filesystem,
             name: "Local Filesystem".to_string(),
-            description: "Local filesystem storage with persistence".to_string(),
-            available_bytes: get_filesystem_space("/tmp").unwrap_or(10 * 1024 * 1024 * 1024), // 10GB default
-            total_bytes: get_filesystem_space("/tmp").unwrap_or(10 * 1024 * 1024 * 1024),
-            capabilities: vec![
-                StorageCapability::BasicOperations,
-                StorageCapability::Durable,
-                StorageCapability::Snapshots,
-                StorageCapability::Checksumming,
-            ],
+            config: [
+                (
+                    "description".to_string(),
+                    "Local filesystem storage with persistence".to_string(),
+                ),
+                ("available_gb".to_string(), "10".to_string()),
+                (
+                    "capabilities".to_string(),
+                    "durable,snapshots,checksumming".to_string(),
+                ),
+                ("path".to_string(), "/tmp".to_string()),
+            ]
+            .iter()
+            .cloned()
+            .collect(),
             performance: StoragePerformance {
-                read_throughput_mbps: 500.0,
-                write_throughput_mbps: 400.0,
-                avg_latency_ms: 1.0,
-                iops: 50000,
-                tier: PerformanceTier::Medium,
+                read_iops: 5000,
+                write_iops: 3000,
+                read_throughput_mbps: 150.0,
+                write_throughput_mbps: 100.0,
+                avg_latency_ms: 2.0,
             },
-            status: StorageBackendStatus::Online,
-            config_schema: Some(serde_json::json!({
-                "type": "object",
-                "properties": {
-                    "path": {
-                        "type": "string",
-                        "description": "Base path for filesystem storage"
-                    }
-                },
-                "required": ["path"]
-            })),
         });
     }
 
@@ -102,7 +105,8 @@ pub async fn list_backends(
         match sort_field.as_str() {
             "name" => backends.sort_by(|a, b| a.name.cmp(&b.name)),
             "type" => {
-                backends.sort_by(|a, b| a.backend_type.to_string().cmp(&b.backend_type.to_string()))
+                backends
+                    .sort_by(|a, b| a.backend_type.to_string().cmp(&b.backend_type.to_string()));
             }
             "performance" => backends.sort_by(|a, b| {
                 a.performance
@@ -143,7 +147,6 @@ pub async fn scan_storage(
     Json(request): Json<ScanStorageRequest>,
 ) -> Result<Json<DataResponse<Vec<StorageBackend>>>, Json<DataError>> {
     info!("Scanning for available storage systems");
-
     let _detector = state.storage_detector.lock().await;
 
     // Configure scan parameters
@@ -163,54 +166,50 @@ pub async fn scan_storage(
     discovered_backends.push(StorageBackend {
         backend_type: StorageBackendType::Memory,
         name: "Memory Storage".to_string(),
-        description: "Discovered in-memory storage".to_string(),
-        available_bytes: 2 * 1024 * 1024 * 1024, // 2GB
-        total_bytes: 2 * 1024 * 1024 * 1024,
-        capabilities: vec![
-            StorageCapability::BasicOperations,
-            StorageCapability::Volatile,
-        ],
+        config: [
+            (
+                "description".to_string(),
+                "Discovered in-memory storage".to_string(),
+            ),
+            ("available_gb".to_string(), "2".to_string()),
+            ("capabilities".to_string(), "volatile".to_string()),
+        ]
+        .iter()
+        .cloned()
+        .collect(),
         performance: StoragePerformance {
-            read_throughput_mbps: 12000.0,
-            write_throughput_mbps: 9000.0,
-            avg_latency_ms: 0.001,
-            iops: 1200000,
-            tier: PerformanceTier::High,
+            read_iops: 100000,
+            write_iops: 80000,
+            read_throughput_mbps: 1000.0,
+            write_throughput_mbps: 800.0,
+            avg_latency_ms: 0.1,
         },
-        status: StorageBackendStatus::Online,
-        config_schema: None,
     });
 
     if let Some(path) = &request.path {
         if std::path::Path::new(path).exists() {
             discovered_backends.push(StorageBackend {
                 backend_type: StorageBackendType::Filesystem,
-                name: format!("Filesystem at {}", path),
-                description: format!("Discovered filesystem storage at {}", path),
-                available_bytes: get_filesystem_space(path).unwrap_or(5 * 1024 * 1024 * 1024),
-                total_bytes: get_filesystem_space(path).unwrap_or(5 * 1024 * 1024 * 1024),
-                capabilities: vec![
-                    StorageCapability::BasicOperations,
-                    StorageCapability::Durable,
-                    StorageCapability::Snapshots,
-                ],
+                name: format!("Filesystem at {path}"),
+                config: [
+                    (
+                        "description".to_string(),
+                        format!("Discovered filesystem storage at {path}"),
+                    ),
+                    ("available_gb".to_string(), "5".to_string()),
+                    ("capabilities".to_string(), "durable,snapshots".to_string()),
+                    ("path".to_string(), path.clone()),
+                ]
+                .iter()
+                .cloned()
+                .collect(),
                 performance: StoragePerformance {
-                    read_throughput_mbps: 450.0,
-                    write_throughput_mbps: 350.0,
-                    avg_latency_ms: 1.2,
-                    iops: 45000,
-                    tier: PerformanceTier::Medium,
+                    read_iops: 5000,
+                    write_iops: 3000,
+                    read_throughput_mbps: 150.0,
+                    write_throughput_mbps: 100.0,
+                    avg_latency_ms: 2.0,
                 },
-                status: StorageBackendStatus::Online,
-                config_schema: Some(serde_json::json!({
-                    "type": "object",
-                    "properties": {
-                        "path": {
-                            "type": "string",
-                            "default": path
-                        }
-                    }
-                })),
             });
         }
     }
@@ -220,33 +219,27 @@ pub async fn scan_storage(
         discovered_backends.push(StorageBackend {
             backend_type: StorageBackendType::Cloud,
             name: "Cloud Storage (Mock)".to_string(),
-            description: "Simulated cloud storage backend".to_string(),
-            available_bytes: 100 * 1024 * 1024 * 1024, // 100GB
-            total_bytes: 100 * 1024 * 1024 * 1024,
-            capabilities: vec![
-                StorageCapability::BasicOperations,
-                StorageCapability::Scalable,
-                StorageCapability::Durable,
-                StorageCapability::Backup,
-            ],
+            config: [
+                (
+                    "description".to_string(),
+                    "Simulated cloud storage backend".to_string(),
+                ),
+                ("available_gb".to_string(), "100".to_string()),
+                (
+                    "capabilities".to_string(),
+                    "scalable,durable,backup".to_string(),
+                ),
+            ]
+            .iter()
+            .cloned()
+            .collect(),
             performance: StoragePerformance {
-                read_throughput_mbps: 100.0,
-                write_throughput_mbps: 80.0,
-                avg_latency_ms: 50.0,
-                iops: 5000,
-                tier: PerformanceTier::Low,
+                read_iops: 2000,
+                write_iops: 1500,
+                read_throughput_mbps: 50.0,
+                write_throughput_mbps: 30.0,
+                avg_latency_ms: 10.0,
             },
-            status: StorageBackendStatus::Online,
-            config_schema: Some(serde_json::json!({
-                "type": "object",
-                "properties": {
-                    "access_key": {"type": "string"},
-                    "secret_key": {"type": "string"},
-                    "region": {"type": "string"},
-                    "bucket": {"type": "string"}
-                },
-                "required": ["access_key", "secret_key", "bucket"]
-            })),
         });
     }
 
@@ -261,94 +254,54 @@ pub async fn benchmark_storage(
     Json(request): Json<BenchmarkStorageRequest>,
 ) -> Result<Json<DataResponse<BenchmarkResults>>, Json<DataError>> {
     info!("Benchmarking storage backend: {:?}", request.backend);
-
     let duration = request.duration_seconds.unwrap_or(30);
-    let test_size_mb = request.test_size_mb.unwrap_or(100);
+    let _test_size_mb = request.test_size_mb.unwrap_or(100);
 
     // Simulate benchmark (in real implementation, would perform actual I/O tests)
     tokio::time::sleep(std::time::Duration::from_millis(500)).await; // Simulate test time
 
     let results = match request.backend {
         StorageBackendType::Memory => BenchmarkResults {
+            scenario: BenchmarkScenario::Mixed,
             backend: StorageBackendType::Memory,
-            duration_seconds: duration,
-            test_size_mb,
-            read_performance: PerformanceMetrics {
+            performance: PerformanceMetrics {
                 throughput_mbps: 8500.0,
                 avg_latency_ms: 0.001,
                 p95_latency_ms: 0.002,
                 p99_latency_ms: 0.005,
                 iops: 850000,
+                cpu_usage: 15.0,
+                memory_usage: 25.0,
             },
-            write_performance: PerformanceMetrics {
-                throughput_mbps: 7200.0,
-                avg_latency_ms: 0.002,
-                p95_latency_ms: 0.003,
-                p99_latency_ms: 0.008,
-                iops: 720000,
-            },
-            mixed_performance: Some(PerformanceMetrics {
-                throughput_mbps: 6800.0,
-                avg_latency_ms: 0.003,
-                p95_latency_ms: 0.005,
-                p99_latency_ms: 0.012,
-                iops: 680000,
-            }),
-            timestamp: chrono::Utc::now(),
+            duration_seconds: duration,
         },
         StorageBackendType::Filesystem => BenchmarkResults {
+            scenario: BenchmarkScenario::Mixed,
             backend: StorageBackendType::Filesystem,
-            duration_seconds: duration,
-            test_size_mb,
-            read_performance: PerformanceMetrics {
+            performance: PerformanceMetrics {
                 throughput_mbps: 425.3,
                 avg_latency_ms: 0.9,
                 p95_latency_ms: 1.2,
                 p99_latency_ms: 2.1,
                 iops: 42530,
+                cpu_usage: 12.0,
+                memory_usage: 18.0,
             },
-            write_performance: PerformanceMetrics {
-                throughput_mbps: 398.7,
-                avg_latency_ms: 1.1,
-                p95_latency_ms: 1.5,
-                p99_latency_ms: 2.8,
-                iops: 39870,
-            },
-            mixed_performance: Some(PerformanceMetrics {
-                throughput_mbps: 380.2,
-                avg_latency_ms: 1.3,
-                p95_latency_ms: 1.8,
-                p99_latency_ms: 3.2,
-                iops: 38020,
-            }),
-            timestamp: chrono::Utc::now(),
+            duration_seconds: duration,
         },
         StorageBackendType::Cloud => BenchmarkResults {
+            scenario: BenchmarkScenario::Mixed,
             backend: StorageBackendType::Cloud,
-            duration_seconds: duration,
-            test_size_mb,
-            read_performance: PerformanceMetrics {
+            performance: PerformanceMetrics {
                 throughput_mbps: 95.2,
                 avg_latency_ms: 45.0,
                 p95_latency_ms: 120.0,
                 p99_latency_ms: 250.0,
                 iops: 9520,
+                cpu_usage: 8.0,
+                memory_usage: 12.0,
             },
-            write_performance: PerformanceMetrics {
-                throughput_mbps: 78.5,
-                avg_latency_ms: 55.0,
-                p95_latency_ms: 150.0,
-                p99_latency_ms: 300.0,
-                iops: 7850,
-            },
-            mixed_performance: Some(PerformanceMetrics {
-                throughput_mbps: 82.1,
-                avg_latency_ms: 50.0,
-                p95_latency_ms: 135.0,
-                p99_latency_ms: 275.0,
-                iops: 8210,
-            }),
-            timestamp: chrono::Utc::now(),
+            duration_seconds: duration,
         },
         _ => {
             return Err(Json(DataError::new(
@@ -369,13 +322,12 @@ pub async fn benchmark_storage(
 /// POST /api/v1/storage/auto-config
 pub async fn auto_configure(
     State(state): State<ApiState>,
-    Json(request): Json<AutoConfigRequest>,
+    Json(request): Json<AutoConfigInput>,
 ) -> Result<Json<DataResponse<AutoConfigResult>>, Json<DataError>> {
     info!(
         "Auto-configuring storage for use case: {:?}",
         request.use_case
     );
-
     // Create auto-configurator if not exists
     let mut auto_config_opt = state.auto_configurator.lock().await;
     if auto_config_opt.is_none() {
@@ -385,142 +337,136 @@ pub async fn auto_configure(
     // Auto configurator would be used here in full implementation
     // let _auto_configurator = auto_config_opt.as_ref();
 
-    let _config = match request.use_case {
-        UseCase::Development => StorageConfiguration {
+    let _config = match request.use_case.as_str() {
+        "Development" => StorageConfiguration {
             name: "Development Setup".to_string(),
-            tiers: vec![StorageTier {
-                name: "Dev Storage".to_string(),
-                backend: StorageBackendType::Memory,
-                capacity_gb: 2,
-                purpose: "Fast development storage".to_string(),
+            backends: vec![StorageBackend {
+                backend_type: StorageBackendType::Memory,
+                name: "memory-dev".to_string(),
+                config: [("capacity_gb".to_string(), "2".to_string())]
+                    .iter()
+                    .cloned()
+                    .collect(),
                 performance: StoragePerformance {
-                    read_throughput_mbps: 8000.0,
-                    write_throughput_mbps: 6000.0,
-                    avg_latency_ms: 0.001,
-                    iops: 800000,
-                    tier: PerformanceTier::High,
+                    read_iops: 100000,
+                    write_iops: 80000,
+                    read_throughput_mbps: 1000.0,
+                    write_throughput_mbps: 800.0,
+                    avg_latency_ms: 0.1,
                 },
             }],
-            total_capacity_gb: 2,
-            redundancy: RedundancyLevel::None,
-            features: vec![
-                StorageCapability::BasicOperations,
-                StorageCapability::Volatile,
-            ],
-            implementation_steps: vec![
-                "Create memory-based storage backend".to_string(),
-                "Configure development datasets".to_string(),
-                "Set up basic monitoring".to_string(),
-            ],
+            tier: StorageTier::Hot,
+            performance_requirements: PerformanceRequirements {
+                min_iops: 800000,
+                min_throughput_mbps: 6000.0,
+                max_latency_ms: 0.001,
+                availability_percent: 99.9,
+            },
         },
-        UseCase::HomeNas => StorageConfiguration {
+        "HomeNas" => StorageConfiguration {
             name: "Home NAS Setup".to_string(),
-            tiers: vec![StorageTier {
-                name: "Primary Storage".to_string(),
-                backend: StorageBackendType::Filesystem,
-                capacity_gb: request.min_capacity_gb.unwrap_or(1000),
-                purpose: "Main file storage with redundancy".to_string(),
+            backends: vec![StorageBackend {
+                backend_type: StorageBackendType::Filesystem,
+                name: "filesystem-nas".to_string(),
+                config: [(
+                    "capacity_gb".to_string(),
+                    request.min_capacity_gb.unwrap_or(1000).to_string(),
+                )]
+                .iter()
+                .cloned()
+                .collect(),
                 performance: StoragePerformance {
-                    read_throughput_mbps: 400.0,
-                    write_throughput_mbps: 300.0,
-                    avg_latency_ms: 1.0,
-                    iops: 40000,
-                    tier: PerformanceTier::Medium,
+                    read_iops: 5000,
+                    write_iops: 3000,
+                    read_throughput_mbps: 150.0,
+                    write_throughput_mbps: 100.0,
+                    avg_latency_ms: 2.0,
                 },
             }],
-            total_capacity_gb: request.min_capacity_gb.unwrap_or(1000),
-            redundancy: request.redundancy_level.unwrap_or(RedundancyLevel::Mirror),
-            features: vec![
-                StorageCapability::BasicOperations,
-                StorageCapability::Durable,
-                StorageCapability::Snapshots,
-                StorageCapability::Compression,
-                StorageCapability::Checksumming,
-            ],
-            implementation_steps: vec![
-                "Set up filesystem backend".to_string(),
-                "Configure RAID mirror for redundancy".to_string(),
-                "Enable compression and checksumming".to_string(),
-                "Set up automated snapshots".to_string(),
-                "Configure monitoring and alerts".to_string(),
-            ],
+            tier: StorageTier::Warm,
+            performance_requirements: PerformanceRequirements {
+                min_iops: 40000,
+                min_throughput_mbps: 300.0,
+                max_latency_ms: 1.0,
+                availability_percent: 99.5,
+            },
         },
-        UseCase::Database => StorageConfiguration {
+        "Database" => StorageConfiguration {
             name: "Database Storage Setup".to_string(),
-            tiers: vec![StorageTier {
-                name: "High-Performance Tier".to_string(),
-                backend: StorageBackendType::Filesystem,
-                capacity_gb: request.min_capacity_gb.unwrap_or(500),
-                purpose: "High-IOPS database storage".to_string(),
+            backends: vec![StorageBackend {
+                backend_type: StorageBackendType::Filesystem,
+                name: "database-storage".to_string(),
+                config: [(
+                    "capacity_gb".to_string(),
+                    request.min_capacity_gb.unwrap_or(500).to_string(),
+                )]
+                .iter()
+                .cloned()
+                .collect(),
                 performance: StoragePerformance {
-                    read_throughput_mbps: 600.0,
-                    write_throughput_mbps: 500.0,
-                    avg_latency_ms: 0.5,
-                    iops: 80000,
-                    tier: PerformanceTier::High,
+                    read_iops: 8000,
+                    write_iops: 6000,
+                    read_throughput_mbps: 200.0,
+                    write_throughput_mbps: 150.0,
+                    avg_latency_ms: 1.0,
                 },
             }],
-            total_capacity_gb: request.min_capacity_gb.unwrap_or(500),
-            redundancy: RedundancyLevel::RaidZ2,
-            features: vec![
-                StorageCapability::BasicOperations,
-                StorageCapability::Durable,
-                StorageCapability::AtomicWrites,
-                StorageCapability::Checksumming,
-            ],
-            implementation_steps: vec![
-                "Configure high-performance storage backend".to_string(),
-                "Set up RAID-Z2 for fault tolerance".to_string(),
-                "Enable atomic writes for consistency".to_string(),
-                "Configure low-latency monitoring".to_string(),
-            ],
+            tier: StorageTier::Hot,
+            performance_requirements: PerformanceRequirements {
+                min_iops: 80000,
+                min_throughput_mbps: 500.0,
+                max_latency_ms: 0.5,
+                availability_percent: 99.99,
+            },
         },
         _ => StorageConfiguration {
             name: "Generic Setup".to_string(),
-            tiers: vec![StorageTier {
-                name: "General Purpose".to_string(),
-                backend: StorageBackendType::Filesystem,
-                capacity_gb: request.min_capacity_gb.unwrap_or(100),
-                purpose: "General purpose storage".to_string(),
+            backends: vec![StorageBackend {
+                backend_type: StorageBackendType::Filesystem,
+                name: "generic-storage".to_string(),
+                config: [(
+                    "capacity_gb".to_string(),
+                    request.min_capacity_gb.unwrap_or(100).to_string(),
+                )]
+                .iter()
+                .cloned()
+                .collect(),
                 performance: StoragePerformance {
-                    read_throughput_mbps: 300.0,
-                    write_throughput_mbps: 250.0,
-                    avg_latency_ms: 2.0,
-                    iops: 30000,
-                    tier: PerformanceTier::Medium,
+                    read_iops: 4000,
+                    write_iops: 2500,
+                    read_throughput_mbps: 120.0,
+                    write_throughput_mbps: 80.0,
+                    avg_latency_ms: 3.0,
                 },
             }],
-            total_capacity_gb: request.min_capacity_gb.unwrap_or(100),
-            redundancy: RedundancyLevel::None,
-            features: vec![
-                StorageCapability::BasicOperations,
-                StorageCapability::Durable,
-            ],
-            implementation_steps: vec![
-                "Set up basic storage backend".to_string(),
-                "Configure monitoring".to_string(),
-            ],
+            tier: StorageTier::Warm,
+            performance_requirements: PerformanceRequirements {
+                min_iops: 30000,
+                min_throughput_mbps: 250.0,
+                max_latency_ms: 2.0,
+                availability_percent: 99.0,
+            },
         },
     };
 
     // Generate cost estimate
     let cost_estimate = CostEstimate {
-        setup_cost: match request.use_case {
-            UseCase::Development => 0.0,
-            UseCase::HomeNas => 50.0,
-            UseCase::Database => 200.0,
+        setup_cost: match request.use_case.as_str() {
+            "Development" => 0.0,
+            "HomeNas" => 50.0,
+            "Database" => 200.0,
             _ => 25.0,
         },
-        monthly_cost: match request.use_case {
-            UseCase::Development => 0.0,
-            UseCase::HomeNas => 5.0,
-            UseCase::Database => 25.0,
+        monthly_cost: match request.use_case.as_str() {
+            "Development" => 0.0,
+            "HomeNas" => 5.0,
+            "Database" => 25.0,
             _ => 10.0,
         },
-        cost_per_gb_monthly: match request.use_case {
-            UseCase::Development => 0.0,
-            UseCase::HomeNas => 0.005,
-            UseCase::Database => 0.05,
+        cost_per_gb_monthly: match request.use_case.as_str() {
+            "Development" => 0.0,
+            "HomeNas" => 0.005,
+            "Database" => 0.05,
             _ => 0.01,
         },
         breakdown: {
@@ -530,39 +476,25 @@ pub async fn auto_configure(
             breakdown.insert("monitoring".to_string(), 2.0);
             breakdown
         },
+        total_cost: match request.use_case.as_str() {
+            "Development" => 0.0,
+            "HomeNas" => 55.0,
+            "Database" => 225.0,
+            _ => 35.0,
+        },
     };
 
     // Generate performance projection (using placeholder values)
     let performance_projection = PerformanceProjection {
         expected_throughput_mbps: 1000.0, // Placeholder
         expected_latency_ms: 5.0,         // Placeholder
-        expected_iops: 10000,             // Placeholder
-        scalability: match request.use_case {
-            UseCase::Development => "Limited scalability, optimized for speed".to_string(),
-            UseCase::HomeNas => "Moderate scalability, can add drives".to_string(),
-            UseCase::Database => "High scalability with performance focus".to_string(),
-            _ => "Basic scalability".to_string(),
-        },
+        expected_iops: 10_000,            // Placeholder
+        confidence_percent: 85.0,         // Placeholder confidence level
     };
 
     let result = AutoConfigResult {
-        recommended_config: StorageConfiguration {
-            name: format!("{:?} Configuration", request.use_case),
-            tiers: vec![], // Placeholder - would be populated with actual tiers
-            total_capacity_gb: 1000, // Placeholder
-            redundancy: RedundancyLevel::RaidZ1, // Placeholder
-            features: vec![StorageCapability::BasicOperations], // Placeholder
-            implementation_steps: vec![
-                "Configure storage backend".to_string(),
-                "Set up monitoring".to_string(),
-                "Test configuration".to_string(),
-            ],
-        },
+        recommended_config: _config,
         alternatives: vec![], // Would generate alternatives in full implementation
-        rationale: format!(
-            "Optimized configuration for {} use case with default settings",
-            format!("{:?}", request.use_case).to_lowercase()
-        ),
         cost_estimate,
         performance_projection,
     };
@@ -574,14 +506,14 @@ pub async fn auto_configure(
     Ok(Json(DataResponse::new(result)))
 }
 
-// ============================================================================
+// ==================== SECTION ====================
 // HELPER FUNCTIONS
-// ============================================================================
+// ==================== SECTION ====================
 
 /// Get available filesystem space (simplified)
+#[allow(dead_code)] // Utility function for filesystem monitoring
 fn get_filesystem_space(path: &str) -> Option<u64> {
     use std::fs;
-
     match fs::metadata(path) {
         Ok(_) => {
             // In a real implementation, would use statvfs or similar

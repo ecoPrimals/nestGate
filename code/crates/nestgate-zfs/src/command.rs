@@ -1,13 +1,15 @@
+use anyhow::{self, Context};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-// ==================== CANONICAL MODERNIZATION ====================
+// ==================== SECTION ====================
 
-/// **CANONICAL**: ZFS command Result type using AnyhowResult for external integration
-/// This uses AnyhowResult for better ecosystem integration with external command execution
+/// **CANONICAL**: `AnyhowResult` type alias for external integration
+type AnyhowResult<T> = anyhow::Result<T>;
+/// **CANONICAL**: ZFS command Result type using `AnyhowResult` for external integration
+/// This uses `AnyhowResult` for better ecosystem integration with external command execution
 type ZfsCommandResult<T> = AnyhowResult<T>;
-
-/// **CANONICAL**: Parsed table result using AnyhowResult
+/// **CANONICAL**: Parsed table result using `AnyhowResult`
 type ParsedTableResult = AnyhowResult<Vec<HashMap<String, String>>>;
 use std::process::Command;
 use tracing::debug;
@@ -15,14 +17,12 @@ use tracing::error;
 use tracing::info;
 use tracing::warn;
 // Removed unused tracing import
-
 /// ZFS command execution framework
 #[derive(Debug, Clone)]
 pub struct ZfsCommand {
     pub dry_run: bool,
     pub timeout_seconds: u64,
 }
-
 impl Default for ZfsCommand {
     fn default() -> Self {
         Self {
@@ -33,15 +33,18 @@ impl Default for ZfsCommand {
 }
 
 impl ZfsCommand {
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
+    #[must_use]
     pub fn with_dry_run(mut self, dry_run: bool) -> Self {
         self.dry_run = dry_run;
         self
     }
 
+    #[must_use]
     pub fn with_timeout(mut self, timeout_seconds: u64) -> Self {
         self.timeout_seconds = timeout_seconds;
         self
@@ -58,7 +61,7 @@ impl ZfsCommand {
     }
 
     /// Check if ZFS is available on the system
-    pub async fn check_zfs_available() -> ZfsCommandResult<bool> {
+    pub fn check_zfs_available() -> ZfsCommandResult<bool> {
         let result = Command::new("which").arg("zfs").output();
 
         match result {
@@ -97,7 +100,7 @@ impl ZfsCommand {
             .args(args)
             .output()
             .await
-            .with_context(|| format!("Failed to execute {command} command"))?;
+            .with_context(|| "Failed to execute error details command".to_string())?;
 
         // Convert command output to strings
         let stdout_result = if output.stdout.is_empty() {
@@ -148,19 +151,21 @@ pub struct CommandResult {
     pub stderr: String,
     pub exit_code: i32,
 }
-
 impl CommandResult {
     /// Check if the command was successful
+    #[must_use]
     pub fn is_success(&self) -> bool {
         self.success
     }
 
     /// Get the output as lines
+    #[must_use]
     pub fn stdout_lines(&self) -> Vec<&str> {
         self.stdout.lines().collect()
     }
 
     /// Get the error output as lines
+    #[must_use]
     pub fn stderr_lines(&self) -> Vec<&str> {
         self.stderr.lines().collect()
     }
@@ -222,14 +227,15 @@ impl CommandResult {
 pub struct ZfsOperations {
     command: ZfsCommand,
 }
-
 impl ZfsOperations {
+    #[must_use]
     pub fn new() -> Self {
         Self {
             command: ZfsCommand::new(),
         }
     }
 
+    #[must_use]
     pub fn with_dry_run(mut self, dry_run: bool) -> Self {
         self.command = self.command.with_dry_run(dry_run);
         self
@@ -371,9 +377,9 @@ impl ZfsOperations {
     pub async fn create_snapshot(
         &self,
         dataset_name: &str,
-        snapshot_name: &str,
+        _snapshot_name: &str,
     ) -> ZfsCommandResult<()> {
-        let full_name = format!("{dataset_name}@{snapshot_name}");
+        let full_name = format!("{dataset_name}@error details");
         let result = self.command.zfs(&["snapshot", &full_name]).await?;
 
         if !result.is_success() {
@@ -448,7 +454,6 @@ pub struct ZfsPool {
     pub free: String,
     pub health: String,
 }
-
 /// Pool status information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PoolStatus {
@@ -458,7 +463,6 @@ pub struct PoolStatus {
     pub errors: String,
     pub raw_output: String,
 }
-
 /// ZFS Dataset information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZfsDataset {
@@ -468,7 +472,6 @@ pub struct ZfsDataset {
     pub referenced: String,
     pub mountpoint: String,
 }
-
 /// ZFS Snapshot information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZfsSnapshot {
@@ -476,22 +479,20 @@ pub struct ZfsSnapshot {
     pub used: String,
     pub creation: String,
 }
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use tokio;
-
     #[tokio::test]
     async fn test_zfs_availability() -> std::result::Result<(), Box<dyn std::error::Error>> {
-        let available = ZfsCommand::check_zfs_available().await.unwrap_or_else(|e| {
+        let available = ZfsCommand::check_zfs_available().unwrap_or_else(|e| {
             tracing::warn!("ZFS not available in test environment: {:?}", e);
             false // Return false instead of trying to return an error
         });
 
         // In CI/test environments, ZFS might not be available
         // This is acceptable for unit tests
-        println!("ZFS available: {}", available);
+        println!("ZFS available: {available}");
         Ok(())
     }
 
@@ -508,7 +509,7 @@ mod tests {
             CommandResult {
                 success: false,
                 stdout: String::new(),
-                stderr: format!("Operation failed: {:?}", e),
+                stderr: format!("Operation failed: error details"),
                 exit_code: 1,
             }
         });

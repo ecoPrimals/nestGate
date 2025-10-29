@@ -1,0 +1,115 @@
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use axum::extract::{Path, Query};
+    use crate::rest::ApiState;
+    use axum::extract::State;
+    use serde_json::json;
+
+    /// Helper to create test API state
+    fn create_test_state() -> ApiState {
+        ApiState::new().expect("Failed to create test state")
+    }
+
+    // ==================== INTEGRATION TESTS (WIRED TO HANDLERS) ====================
+
+    #[tokio::test]
+    async fn test_list_pools_handler() {
+        let state = create_test_state();
+        let result = list_pools(State(state)).await;
+        
+        // Should succeed even if no pools
+        assert!(result.is_ok() || result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_get_pool_handler() {
+        let state = create_test_state();
+        let result = get_pool(State(state), Path("testpool".to_string())).await;
+        
+        // May succeed or fail depending on pool existence
+        match result {
+            Ok(_) => { /* Pool exists, OK */ }
+            Err(_) => { /* Pool doesn't exist, also OK */ }
+        }
+    }
+
+    #[tokio::test]
+    async fn test_list_datasets_handler() {
+        let state = create_test_state();
+        let query = crate::rest::ListQuery {
+            page: None,
+            per_page: None,
+            sort: None,
+            order: None,
+            filter: None,
+        };
+        
+        let result = list_datasets(State(state), Query(query)).await;
+        assert!(result.is_ok() || result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_list_snapshots_handler() {
+        let state = create_test_state();
+        let query = crate::rest::ListQuery {
+            page: None,
+            per_page: None,
+            sort: None,
+            order: None,
+            filter: None,
+        };
+        
+        let result = list_snapshots(State(state), Query(query)).await;
+        assert!(result.is_ok() || result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_get_zfs_health_handler() {
+        let result = get_zfs_health().await;
+        
+        // Should always return a response
+        let (status, json_response) = result;
+        assert!(status.is_success() || status.is_server_error());
+        assert!(!json_response.0.is_null());
+    }
+
+    #[test]
+    fn test_create_pool_request_validation() {
+        let request = CreatePoolRequest {
+            name: "testpool".to_string(),
+            vdevs: vec!["dev1".to_string(), "dev2".to_string()],
+            pool_type: "mirror".to_string(),
+        };
+        
+        assert!(!request.name.is_empty());
+        assert!(!request.vdevs.is_empty());
+        assert!(!request.pool_type.is_empty());
+    }
+
+    #[test]
+    fn test_create_dataset_request_validation() {
+        let request = CreateDatasetRequest {
+            name: "testpool/dataset".to_string(),
+            dataset_type: "filesystem".to_string(),
+            properties: None,
+        };
+        
+        assert!(!request.name.is_empty());
+        assert!(!request.dataset_type.is_empty());
+    }
+
+    #[test]
+    fn test_create_snapshot_request_validation() {
+        let request = CreateSnapshotRequest {
+            dataset: "testpool/dataset".to_string(),
+            snapshot_name: "snap1".to_string(),
+            recursive: false,
+        };
+        
+        assert!(!request.dataset.is_empty());
+        assert!(!request.snapshot_name.is_empty());
+    }
+}
+

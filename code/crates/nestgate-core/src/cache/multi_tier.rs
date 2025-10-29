@@ -1,16 +1,22 @@
-//! Multi-tier caching system with automatic tiering and eviction
-//! **MODERNIZED**: Updated to use current patterns and proper error handling
-use crate::error::Result;
+//! Multi-tier cache implementation with hot, warm, and cold storage tiers
+//! Provides intelligent data placement and retrieval across performance tiers.
+
+use crate::Result;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
+// Type aliases for complex cache types
+pub type CacheProviderBox = Box<dyn CacheProvider<String, Vec<u8>>>;
+pub type CacheDataMap = Arc<RwLock<HashMap<String, Vec<u8>>>>;
+
 /// Cache provider trait for different storage tiers
+/// **NOTE**: Keeping `async_trait` for dyn compatibility - required for Box<dyn CacheProvider>
+/// This demonstrates that not all `async_trait` usage can be modernized when dynamic dispatch is needed
 #[async_trait::async_trait]
 pub trait CacheProvider<K, V>: Send + Sync {
     /// Store a value in the cache
     async fn set(&self, key: K, value: V) -> Result<()>;
-
     /// Retrieve a value from the cache
     async fn get(&self, key: &str) -> Result<Option<V>>;
 
@@ -34,7 +40,6 @@ pub struct SimpleCacheConfig {
     /// Cache directory path
     pub cache_dir: String,
 }
-
 /// Configuration for multi-tier cache
 #[derive(Debug, Clone)]
 pub struct MultiTierCacheConfig {
@@ -49,26 +54,31 @@ pub struct MultiTierCacheConfig {
     /// Automatic tier demotion threshold
     pub demotion_threshold: u32,
 }
-
 /// Multi-tier cache that manages data across different performance tiers
 pub struct MultiTierCache {
     /// Hot tier for frequently accessed data (RAM-based, fastest)
     #[allow(dead_code)]
-    hot_tier: Box<dyn CacheProvider<String, Vec<u8>>>,
+    hot_tier: CacheProviderBox,
     /// Warm tier for moderately accessed data (SSD-based, fast)
     #[allow(dead_code)]
-    warm_tier: Box<dyn CacheProvider<String, Vec<u8>>>,
+    warm_tier: CacheProviderBox,
     /// Cold tier for infrequently accessed data (HDD-based, slow but large)
     #[allow(dead_code)]
-    cold_tier: Box<dyn CacheProvider<String, Vec<u8>>>,
+    cold_tier: CacheProviderBox,
     /// Global cache configuration
     #[allow(dead_code)]
-    config: crate::unified_types::UnifiedCacheConfig,
+    config: crate::config::canonical_master::CacheConfig,
 }
-
 impl MultiTierCache {
     /// Create new multi-tier cache with specified configuration
-    pub async fn new(_config: MultiTierCacheConfig) -> Result<Self> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+    pub fn new(_config: MultiTierCacheConfig) -> Result<Self> {
         // This is a placeholder implementation
         // In a real implementation, we would initialize actual cache providers
         // for each tier based on the configuration
@@ -83,21 +93,42 @@ impl MultiTierCache {
             hot_tier,
             warm_tier,
             cold_tier,
-            config: crate::unified_types::UnifiedCacheConfig::default(),
+            config: crate::config::canonical_master::CacheConfig::default(),
         })
     }
 
     /// Set a value in the hot tier cache
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn set(&self, key: String, value: Vec<u8>) -> Result<()> {
         self.hot_tier.set(key, value).await
     }
 
     /// Store data (alias for set - for compatibility)
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn put(&mut self, key: &str, data: Vec<u8>) -> Result<()> {
         self.set(key.to_string(), data).await
     }
 
     /// Retrieve data from any tier
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn get(&self, key: &str) -> Result<Option<Vec<u8>>> {
         // Try tiers in order of performance: hot -> warm -> cold
 
@@ -124,6 +155,13 @@ impl MultiTierCache {
     }
 
     /// Remove data from all tiers
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn remove(&self, key: &str) -> Result<bool> {
         let mut removed = false;
 
@@ -142,6 +180,13 @@ impl MultiTierCache {
     }
 
     /// Clear all tiers
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn clear(&self) -> Result<()> {
         self.hot_tier.clear().await?;
         self.warm_tier.clear().await?;
@@ -150,14 +195,28 @@ impl MultiTierCache {
     }
 
     /// Perform cache maintenance (cleanup, compaction, etc.)
-    pub async fn maintenance(&mut self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+    pub fn maintenance(&mut self) -> Result<()> {
         // Implementation would perform maintenance tasks
         // For now, this is a placeholder
         Ok(())
     }
 
     /// Flush all pending writes
-    pub async fn flush(&mut self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+    pub fn flush(&mut self) -> Result<()> {
         // Implementation would flush pending writes
         // For now, this is a placeholder
         Ok(())
@@ -179,7 +238,14 @@ impl MultiTierCache {
     }
 
     /// Get cache statistics across all tiers
-    pub async fn stats(&self) -> Result<MultiTierCacheStats> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+    pub fn stats(&self) -> Result<MultiTierCacheStats> {
         // In a real implementation, we would collect stats from each tier
         Ok(MultiTierCacheStats {
             hot_tier_hits: 0,
@@ -217,9 +283,9 @@ pub struct MultiTierCacheStats {
     /// Number of tier demotion events
     pub demotion_events: u64,
 }
-
 impl MultiTierCacheStats {
     /// Calculate overall hit ratio
+    #[must_use]
     pub fn overall_hit_ratio(&self) -> f64 {
         let total_operations = self.total_hits + self.total_misses;
         if total_operations == 0 {
@@ -234,7 +300,6 @@ impl MultiTierCacheStats {
 struct InMemoryCache {
     data: Arc<RwLock<HashMap<String, Vec<u8>>>>,
 }
-
 impl InMemoryCache {
     fn new() -> Self {
         Self {
@@ -295,25 +360,24 @@ impl Default for MultiTierCacheConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::TempDir;
 
     #[tokio::test]
     async fn test_multi_tier_cache_basic_operations() -> crate::Result<()> {
         let config = MultiTierCacheConfig::default();
-        let cache = MultiTierCache::new(config).await.unwrap_or_else(|e| {
+        let cache = MultiTierCache::new(config).unwrap_or_else(|e| {
             tracing::error!("Failed to create multi-tier cache: {:?}", e);
             panic!("Cannot proceed with test without cache");
         });
 
         let key = "test_key".to_string();
-        let value = b"test_value".to_vec();
+        let value = b"testvalue".to_vec();
 
         // Test set operation
         cache.set(key.clone(), value.clone()).await.map_err(|e| {
             tracing::error!("Async task failed: {:?}", e);
             crate::NestGateError::internal_error(
-                format!("Task execution failed: {:?}", e),
-                "async_task".to_string(),
+                format!("Task execution failed: {e:?}"),
+                "async_task",
             )
         })?;
 
@@ -342,9 +406,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_multi_tier_cache_with_temp_dir() -> crate::Result<()> {
-        let temp_dir = TempDir::new().unwrap_or_else(|e| {
+        let temp_dir = tempfile::TempDir::new().unwrap_or_else(|e| {
             tracing::error!("Failed to create temp dir: {:?}", e);
-            panic!("Cannot proceed with test without temp directory");
+            panic!("Cannot proceed with test without temp dir");
         });
         let mut config = MultiTierCacheConfig::default();
         config.hot_tier_config.cache_dir =
@@ -354,7 +418,7 @@ mod tests {
         config.cold_tier_config.cache_dir =
             temp_dir.path().join("cold").to_string_lossy().to_string();
 
-        let cache = MultiTierCache::new(config).await.unwrap_or_else(|e| {
+        let cache = MultiTierCache::new(config).unwrap_or_else(|e| {
             tracing::error!("Failed to create multi-tier cache: {:?}", e);
             panic!("Cannot proceed with test without cache");
         });
@@ -366,8 +430,8 @@ mod tests {
             .map_err(|e| {
                 tracing::error!("Operation failed: {:?}", e);
                 crate::NestGateError::internal_error(
-                    format!("Operation failed: {:?}", e),
-                    "automated_migration".to_string(),
+                    format!("Operation failed: {e:?}"),
+                    "automated_migration",
                 )
             })?;
         cache
@@ -376,8 +440,8 @@ mod tests {
             .map_err(|e| {
                 tracing::error!("Operation failed: {:?}", e);
                 crate::NestGateError::internal_error(
-                    format!("Operation failed: {:?}", e),
-                    "automated_migration".to_string(),
+                    format!("Operation failed: {e:?}"),
+                    "automated_migration",
                 )
             })?;
 
@@ -385,15 +449,15 @@ mod tests {
         let value1 = cache.get("key1").await.map_err(|e| {
             tracing::error!("Async task failed: {:?}", e);
             crate::NestGateError::internal_error(
-                format!("Task execution failed: {:?}", e),
-                "async_task".to_string(),
+                format!("Task execution failed: {e:?}"),
+                "async_task",
             )
         })?;
         let value2 = cache.get("key2").await.map_err(|e| {
             tracing::error!("Async task failed: {:?}", e);
             crate::NestGateError::internal_error(
-                format!("Task execution failed: {:?}", e),
-                "async_task".to_string(),
+                format!("Task execution failed: {e:?}"),
+                "async_task",
             )
         })?;
 
@@ -401,11 +465,11 @@ mod tests {
         assert_eq!(value2, Some(b"value2".to_vec()));
 
         // Test stats
-        let stats = cache.stats().await.map_err(|e| {
+        let stats = cache.stats().map_err(|e| {
             tracing::error!("Async task failed: {:?}", e);
             crate::NestGateError::internal_error(
-                format!("Task execution failed: {:?}", e),
-                "async_task".to_string(),
+                format!("Task execution failed: {e:?}"),
+                "async_task",
             )
         })?;
         assert_eq!(stats.hot_tier_hits, 0); // Since we're using mock implementation
@@ -414,27 +478,29 @@ mod tests {
         cache.clear().await.map_err(|e| {
             tracing::error!("Async task failed: {:?}", e);
             crate::NestGateError::internal_error(
-                format!("Task execution failed: {:?}", e),
-                "async_task".to_string(),
+                format!("Task execution failed: {e:?}"),
+                "async_task",
             )
         })?;
         let value1_after_clear = cache.get("key1").await.map_err(|e| {
             tracing::error!("Async task failed: {:?}", e);
             crate::NestGateError::internal_error(
-                format!("Task execution failed: {:?}", e),
-                "async_task".to_string(),
+                format!("Task execution failed: {e:?}"),
+                "async_task",
             )
         })?;
-        assert!(value1_after_clear.is_none());
+        assert_eq!(value1_after_clear, None);
+
+        Ok(())
     }
 
     #[tokio::test]
     async fn test_tier_promotion_simulation() -> crate::Result<()> {
         let config = MultiTierCacheConfig::default();
-        let cache = MultiTierCache::new(config).await.map_err(|e| {
+        let cache = MultiTierCache::new(config).map_err(|e| {
             tracing::error!("Async task failed: {:?}", e);
             crate::NestGateError::internal_error(
-                format!("Task execution failed: {:?}", e),
+                format!("Task execution failed: {e:?}"),
                 "async_task".to_string(),
             )
         })?;
@@ -444,12 +510,12 @@ mod tests {
         // would promote it to higher tiers
 
         cache
-            .set("promoted_key".to_string(), b"promoted_value".to_vec())
+            .set("promoted_key".to_string(), b"promotedvalue".to_vec())
             .await
             .map_err(|e| {
                 tracing::error!("Operation failed: {:?}", e);
                 crate::NestGateError::internal_error(
-                    format!("Operation failed: {:?}", e),
+                    format!("Operation failed: {e:?}"),
                     "automated_migration".to_string(),
                 )
             })?;
@@ -459,17 +525,17 @@ mod tests {
             let _value = cache.get("promoted_key").await.map_err(|e| {
                 tracing::error!("Async task failed: {:?}", e);
                 crate::NestGateError::internal_error(
-                    format!("Task execution failed: {:?}", e),
+                    format!("Task execution failed: {e:?}"),
                     "async_task".to_string(),
                 )
             })?;
         }
 
         // In real implementation, we would verify the key moved to hot tier
-        let stats = cache.stats().await.map_err(|e| {
+        let stats = cache.stats().map_err(|e| {
             tracing::error!("Async task failed: {:?}", e);
             crate::NestGateError::internal_error(
-                format!("Task execution failed: {:?}", e),
+                format!("Task execution failed: {e:?}"),
                 "async_task".to_string(),
             )
         })?;

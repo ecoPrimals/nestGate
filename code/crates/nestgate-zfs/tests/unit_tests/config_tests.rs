@@ -9,6 +9,7 @@ use nestgate_core::StorageTier as CoreStorageTier;
 use nestgate_zfs::performance::TierMetrics;
 use nestgate_zfs::performance::{AlertCondition, AlertMetric, AlertOperator, AlertSeverity};
 use nestgate_zfs::{
+use nestgate_core::canonical_types::StorageTier;
     automation::{DatasetLifecycle, LifecycleRule, LifecycleStage},
     config::ZfsConfig,
     migration::{MigrationJob, MigrationPriority, MigrationStatus},
@@ -21,12 +22,12 @@ mod config_unit_tests {
     use super::*;
 
     #[test]
-    fn test_zfs_config_defaults() {
+    fn test_zfs_config_defaults() -> Result<(), Box<dyn std::error::Error>> {
         let config = ZfsConfig::default();
 
         // Test configuration defaults (using actual field names from struct)
         assert!(config.api_endpoint.starts_with("http://localhost:"));
-        assert_eq!(config.default_pool, "nestpool");
+        assert_eq!(config.default_pool, "zfspool");
         assert!(config.use_real_zfs);
         assert_eq!(config.tiers.hot.name, "hot");
         assert_eq!(config.tiers.warm.name, "warm");
@@ -37,10 +38,10 @@ mod config_unit_tests {
         assert!(config.metrics.enabled);
         assert_eq!(config.metrics.collection_interval_seconds, 60);
         assert_eq!(config.monitoring_interval, 300);
+    Ok(())
     }
-
     #[test]
-    fn test_tier_config_hierarchy() {
+    fn test_tier_config_hierarchy() -> Result<(), Box<dyn std::error::Error>> {
         let config = ZfsConfig::default();
 
         let hot = config.get_tier_config(&CoreStorageTier::Hot);
@@ -48,25 +49,25 @@ mod config_unit_tests {
         let cold = config.get_tier_config(&CoreStorageTier::Cold);
 
         // Verify compression algorithms
-        assert_eq!(hot.properties.get("compression").unwrap_or_else(|e| {
+        assert_eq!(hot.properties.get("compression").unwrap_or_else(|_e| {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
+    format!("Operation failed: {}", "actual_error_details")
 ).into())
 }), "lz4");
-        assert_eq!(warm.properties.get("compression").unwrap_or_else(|e| {
+        assert_eq!(warm.properties.get("compression").unwrap_or_else(|_e| {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
+    format!("Operation failed: {}", "actual_error_details")
 ).into())
 }), "zstd");
-        assert_eq!(cold.properties.get("compression").unwrap_or_else(|e| {
+        assert_eq!(cold.properties.get("compression").unwrap_or_else(|_e| {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
+    format!("Operation failed: {}", "actual_error_details")
 ).into())
 }), "gzip-9");
 
@@ -83,10 +84,11 @@ mod config_unit_tests {
             cold.performance_profile,
             nestgate_zfs::config::PerformanceProfile::HighCompression
         ));
+    Ok(())
     }
 
     #[test]
-    fn test_migration_rules_thresholds() {
+    fn test_migration_rules_thresholds() -> Result<(), Box<dyn std::error::Error>> {
         let config = ZfsConfig::default();
 
         let hot = config.get_tier_config(&CoreStorageTier::Hot);
@@ -102,10 +104,11 @@ mod config_unit_tests {
             hot.migration_rules.access_frequency_threshold
                 > warm.migration_rules.access_frequency_threshold
         );
+    Ok(())
     }
 
     #[test]
-    fn test_capacity_limits() {
+    fn test_capacity_limits() -> Result<(), Box<dyn std::error::Error>> {
         let config = ZfsConfig::default();
 
         let hot = config.get_tier_config(&CoreStorageTier::Hot);
@@ -115,5 +118,7 @@ mod config_unit_tests {
         // Cold tier should allow higher utilization
         assert!(cold.capacity_limits.max_utilization > warm.capacity_limits.max_utilization);
         assert!(warm.capacity_limits.max_utilization > hot.capacity_limits.max_utilization);
+    Ok(())
     }
+    Ok(())
 } 

@@ -1,3 +1,5 @@
+use crate::types::StorageTier;
+use nestgate_core::Result as CoreResult;
 /// Alert management, notifications, and public metrics access API
 use std::sync::Arc;
 use std::time::Duration;
@@ -5,10 +7,10 @@ use tokio::sync::{mpsc, RwLock};
 use tokio::time::interval;
 use tracing::{debug, error};
 
-use crate::types::StorageTier;
-use nestgate_core::Result as CoreResult;
-
-use super::super::types::*;
+use super::super::types::{
+    ActiveAlert, Alert, CurrentPerformanceMetrics, PerformanceSnapshot, TierPerformanceData,
+    ZfsPerformanceMonitor,
+};
 use super::super::types::{ActiveAlertsVec, AlertConditionsVec};
 
 impl ZfsPerformanceMonitor {
@@ -33,9 +35,7 @@ impl ZfsPerformanceMonitor {
                         &alert_conditions,
                         &active_alerts,
                         sender,
-                    )
-                    .await
-                    {
+                    ) {
                         error!("Alert checking failed: {}", e);
                     }
                 }
@@ -47,7 +47,7 @@ impl ZfsPerformanceMonitor {
     }
 
     /// Check alert conditions
-    pub(super) async fn check_alert_conditions(
+    pub(super) fn check_alert_conditions(
         _current_metrics: &Arc<RwLock<CurrentPerformanceMetrics>>,
         _alert_conditions: &AlertConditionsVec,
         _active_alerts: &ActiveAlertsVec,

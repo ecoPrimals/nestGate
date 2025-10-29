@@ -3,15 +3,15 @@
 //! This test validates security integration functionality using canonical patterns
 //! **CANONICAL MODERNIZATION**: Updated to use simple, working patterns
 
-use nestgate_core::config::canonical_unified::NestGateCanonicalUnifiedConfig as NestGateCanonicalUnifiedConfig;
-use nestgate_core::config::defaults::Environment;
+use nestgate_core::config::canonical_master::NestGateCanonicalConfig as NestGateUnifiedConfig;
+use nestgate_core::constants::Environment;
 use std::time::Duration;
 use tokio::time::sleep;
 use tracing::info;
 
 /// Test security integration configuration
 #[tokio::test]
-async fn test_security_integration_config() {
+async fn test_security_integration_config() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔐 Starting security integration configuration test");
     
     // Test security integration configuration creation
@@ -19,15 +19,16 @@ async fn test_security_integration_config() {
     assert!(!config.system.instance_name.is_empty());
     
     // Test environment-specific security integration configuration
-    let dev_config = nestgate_core::config::canonical_unified::create_config_for_environment(Environment::Development);
+    let dev_config = nestgate_core::config::canonical_master::create_config_for_environment(Environment::Development);
     assert!(!dev_config.system.instance_name.is_empty());
     
     info!("✅ Security integration configuration test completed");
+    Ok(())
 }
 
 /// Test security authentication processes
 #[tokio::test]
-async fn test_security_authentication() {
+async fn test_security_authentication() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔑 Testing security authentication processes");
     
     // Test security authentication operations
@@ -47,14 +48,16 @@ async fn test_security_authentication() {
         // Verify authentication operation is valid
         assert!(!operation.is_empty(), "Operation should be specified");
         assert!(duration > 0, "Duration should be positive");
+    Ok(())
     }
     
     info!("✅ Security authentication processes completed");
+    Ok(())
 }
 
 /// Test security authorization validation
 #[tokio::test]
-async fn test_security_authorization() {
+async fn test_security_authorization() -> Result<(), Box<dyn std::error::Error>> {
     info!("🛡️ Testing security authorization validation");
     
     // Test security authorization validation steps
@@ -74,14 +77,16 @@ async fn test_security_authorization() {
         // Verify authorization step is valid
         assert!(!step.is_empty(), "Step should be specified");
         assert!(duration > 0, "Duration should be positive");
+    Ok(())
     }
     
     info!("✅ Security authorization validation completed");
+    Ok(())
 }
 
 /// Test security encryption and decryption
 #[tokio::test]
-async fn test_security_encryption() {
+async fn test_security_encryption() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔒 Testing security encryption and decryption");
     
     let start_time = std::time::Instant::now();
@@ -96,14 +101,16 @@ async fn test_security_encryption() {
         
         // Verify encryption timing is accurate
         assert!(elapsed.as_millis() >= cycle_time as u128, "Encryption timing should be accurate");
+    Ok(())
     }
     
     info!("✅ Security encryption and decryption completed");
+    Ok(())
 }
 
 /// Test security threat detection
 #[tokio::test]
-async fn test_security_threat_detection() {
+async fn test_security_threat_detection() -> Result<(), Box<dyn std::error::Error>> {
     info!("🚨 Testing security threat detection");
     
     // Test security threat detection scenarios
@@ -123,14 +130,16 @@ async fn test_security_threat_detection() {
         // Verify threat detection is valid
         assert!(!scenario.is_empty(), "Scenario should be specified");
         assert!(detection_time > 0, "Detection time should be positive");
+    Ok(())
     }
     
     info!("✅ Security threat detection completed");
+    Ok(())
 }
 
 /// Test security audit and compliance
 #[tokio::test]
-async fn test_security_audit_compliance() {
+async fn test_security_audit_compliance() -> Result<(), Box<dyn std::error::Error>> {
     info!("📋 Testing security audit and compliance");
     
     // Test security audit and compliance checks
@@ -150,27 +159,30 @@ async fn test_security_audit_compliance() {
         // Verify audit check is valid
         assert!(!check.is_empty(), "Check should be specified");
         assert!(audit_time > 0, "Audit time should be positive");
+    Ok(())
     }
     
     info!("✅ Security audit and compliance completed");
+    Ok(())
 }
 
 /// Test security environments
 #[tokio::test]
-async fn test_security_environments() {
+async fn test_security_environments() -> Result<(), Box<dyn std::error::Error>> {
     info!("🌍 Testing security integration across environments");
     
     // Test development environment security integration
-    let dev_config = nestgate_core::config::canonical_unified::create_config_for_environment(Environment::Development);
+    let dev_config = nestgate_core::config::canonical_master::create_config_for_environment(Environment::Development);
     assert!(!dev_config.system.instance_name.is_empty());
     assert!(matches!(dev_config.environment, Environment::Development));
     info!("Development security integration configuration validated");
     
     // Test production environment security integration
-    let prod_config = nestgate_core::config::canonical_unified::create_config_for_environment(Environment::Production);
+    let prod_config = nestgate_core::config::canonical_master::create_config_for_environment(Environment::Production);
     assert!(!prod_config.system.instance_name.is_empty());
     assert!(matches!(prod_config.environment, Environment::Production));
     info!("Production security integration configuration validated");
     
     info!("✅ Security integration environment test completed");
+    Ok(())
 }

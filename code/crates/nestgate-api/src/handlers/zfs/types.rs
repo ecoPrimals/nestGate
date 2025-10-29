@@ -6,8 +6,15 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use nestgate_core::types::StorageTier;
-use nestgate_zfs::zero_cost_zfs_operations::ProductionZfsManager;
+// Production: Use real ZFS manager
+#[cfg(not(feature = "dev-stubs"))]
+use nestgate_zfs::ProductionZfsManager;
+
+// Development: Use stub manager
+#[cfg(feature = "dev-stubs")]
+use crate::handlers::zfs_stub::ProductionZfsManager;
+
+use nestgate_core::canonical_types::StorageTier;
 
 /// ZFS API state container
 #[derive(Clone)]
@@ -15,18 +22,16 @@ pub struct ZfsApiState {
     /// ZFS manager instance
     pub zfs_manager: Arc<ProductionZfsManager>,
 }
-
 /// Pool creation request
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CreatePoolRequest {
     /// Pool name
     pub name: String,
     /// Device paths
-    pub devices: Vec<String>,
+    pub _devices: Vec<String>,
     /// Pool configuration
     pub config: Option<PoolConfig>,
 }
-
 /// Pool configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PoolConfig {
@@ -39,7 +44,6 @@ pub struct PoolConfig {
     /// Encryption enabled
     pub encryption: Option<bool>,
 }
-
 /// Dataset creation request
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CreateDatasetRequest {
@@ -52,7 +56,6 @@ pub struct CreateDatasetRequest {
     /// Dataset properties
     pub properties: Option<HashMap<String, String>>,
 }
-
 /// Snapshot creation request
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CreateSnapshotRequest {
@@ -65,7 +68,6 @@ pub struct CreateSnapshotRequest {
     /// Snapshot properties
     pub properties: Option<HashMap<String, String>>,
 }
-
 /// Tier migration request
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TierMigrationRequest {
@@ -80,7 +82,6 @@ pub struct TierMigrationRequest {
     /// Force migration even if not recommended
     pub force: Option<bool>,
 }
-
 /// Query parameters for listing operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ListQuery {
@@ -93,17 +94,14 @@ pub struct ListQuery {
     /// Filter by tier
     pub tier: Option<StorageTier>,
 }
-
 /// Re-export universal API response from nestgate-core to eliminate duplication
 pub use nestgate_core::response::ApiResponse;
-
 /// Tier prediction request
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TierPredictionRequest {
     /// Path to the file for tier prediction
     pub file_path: String,
 }
-
 /// Performance analytics request
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceAnalyticsRequest {
@@ -114,7 +112,6 @@ pub struct PerformanceAnalyticsRequest {
     /// Time range for analysis
     pub time_range: Option<String>,
 }
-
 /// Optimization request
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OptimizationRequest {
@@ -125,7 +122,6 @@ pub struct OptimizationRequest {
     /// Priority level
     pub priority: Option<u8>,
 }
-
 /// Manifest provisioning request
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ManifestProvisioningRequest {
@@ -134,10 +130,9 @@ pub struct ManifestProvisioningRequest {
     /// Provisioning options
     pub options: Option<HashMap<String, String>>,
 }
-
-/// BiomeOS volume request
+/// Management volume request
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct BiomeOSVolumeRequest {
+pub struct ManagementVolumeRequest {
     /// Volume name
     pub name: String,
     /// Size in bytes
@@ -147,7 +142,6 @@ pub struct BiomeOSVolumeRequest {
     /// Additional properties
     pub properties: Option<HashMap<String, String>>,
 }
-
 /// Agent runtime request
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AgentRuntimeRequest {
@@ -158,7 +152,6 @@ pub struct AgentRuntimeRequest {
     /// Runtime configuration
     pub config: serde_json::Value,
 }
-
 /// Health check response
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HealthCheckResponse {
@@ -169,7 +162,6 @@ pub struct HealthCheckResponse {
     /// Timestamp
     pub timestamp: chrono::DateTime<chrono::Utc>,
 }
-
 /// Status response
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StatusResponse {
@@ -179,6 +171,6 @@ pub struct StatusResponse {
     pub uptime: u64,
     /// Version information
     pub version: String,
-    /// Additional metadata
-    pub metadata: HashMap<String, serde_json::Value>,
+    /// Additional _metadata
+    pub _metadata: HashMap<String, serde_json::Value>,
 }

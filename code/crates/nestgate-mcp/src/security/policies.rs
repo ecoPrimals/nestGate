@@ -5,7 +5,6 @@ use nestgate_core::error::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
-
 /// Security policy for MCP operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityPolicy {
@@ -22,7 +21,6 @@ pub struct SecurityPolicy {
     /// Audit requirements
     pub audit_requirements: AuditRequirements,
 }
-
 /// Access control configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AccessControl {
@@ -39,7 +37,6 @@ pub struct AccessControl {
     /// Allowed authentication methods
     pub allowed_auth_methods: Vec<String>,
 }
-
 /// Rate limiting configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RateLimits {
@@ -52,7 +49,6 @@ pub struct RateLimits {
     /// Rate limit window duration
     pub window_duration: Duration,
 }
-
 /// Session policy configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SessionPolicy {
@@ -65,7 +61,6 @@ pub struct SessionPolicy {
     /// Maximum sessions per user
     pub max_sessions_per_user: u32,
 }
-
 /// Audit requirements
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuditRequirements {
@@ -78,7 +73,6 @@ pub struct AuditRequirements {
     /// Retention period for audit logs
     pub log_retention_days: u32,
 }
-
 /// Policy manager for MCP security
 #[derive(Debug)]
 pub struct PolicyManager {
@@ -87,9 +81,9 @@ pub struct PolicyManager {
     /// Default policy name
     default_policy: String,
 }
-
 impl PolicyManager {
     /// Create new policy manager with default policies
+    #[must_use]
     pub fn new() -> Self {
         let mut manager = Self {
             policies: HashMap::new(),
@@ -114,25 +108,25 @@ impl PolicyManager {
                 require_tls: false, // Development-friendly default
                 min_tls_version: "1.2".to_string(),
                 allowed_auth_methods: vec!["token".to_string(), "certificate".to_string()],
-            },
+            }
             rate_limits: RateLimits {
                 requests_per_minute: 1000,
                 max_concurrent_connections: 100,
                 burst_size: 50,
                 window_duration: Duration::from_secs(60),
-            },
+            }
             session_policy: SessionPolicy {
                 max_session_duration: Duration::from_secs(3600), // 1 hour
                 idle_timeout: Duration::from_secs(1800),         // 30 minutes
                 require_renewal: false,
                 max_sessions_per_user: 10,
-            },
+            }
             audit_requirements: AuditRequirements {
                 log_access_attempts: true,
                 log_failed_auth: true,
                 log_admin_actions: true,
                 log_retention_days: 30,
-            },
+            }
         };
 
         // Strict security policy for production
@@ -146,25 +140,25 @@ impl PolicyManager {
                 require_tls: true,
                 min_tls_version: "1.3".to_string(),
                 allowed_auth_methods: vec!["certificate".to_string()],
-            },
+            }
             rate_limits: RateLimits {
                 requests_per_minute: 100,
                 max_concurrent_connections: 20,
                 burst_size: 10,
                 window_duration: Duration::from_secs(60),
-            },
+            }
             session_policy: SessionPolicy {
                 max_session_duration: Duration::from_secs(1800), // 30 minutes
                 idle_timeout: Duration::from_secs(600),          // 10 minutes
                 require_renewal: true,
                 max_sessions_per_user: 3,
-            },
+            }
             audit_requirements: AuditRequirements {
                 log_access_attempts: true,
                 log_failed_auth: true,
                 log_admin_actions: true,
                 log_retention_days: 90,
-            },
+            }
         };
 
         self.policies.insert("default".to_string(), default_policy);
@@ -172,7 +166,14 @@ impl PolicyManager {
     }
 
     /// Add a new security policy
-    pub fn add_policy(&mut self, policy: SecurityPolicy) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+                pub fn add_policy(&mut self, policy: SecurityPolicy) -> Result<()>  {
         let name = policy.name.clone();
         self.policies.insert(name, policy);
         Ok(())
@@ -194,10 +195,17 @@ impl PolicyManager {
     }
 
     /// Set the default policy
-    pub fn set_default_policy(&mut self, name: &str) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+                pub fn set_default_policy(&mut self, name: &str) -> Result<()>  {
         if !self.policies.contains_key(name) {
             return Err(NestGateError::mcp_error(
-                &format!("Policy '{name}' does not exist"),
+                &format!("Policy '{e}' does not exist"),
                 "set_default_policy",
                 None,
             ));
@@ -207,7 +215,14 @@ impl PolicyManager {
     }
 
     /// Remove a policy
-    pub fn remove_policy(&mut self, name: &str) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+                pub fn remove_policy(&mut self, name: &str) -> Result<()>  {
         if name == self.default_policy {
             return Err(NestGateError::mcp_error(
                 "Cannot remove the default policy",
@@ -225,15 +240,22 @@ impl PolicyManager {
     }
 
     /// Validate access against a policy
-    pub fn validate_access(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn validate_access(
         &self,
         policy_name: &str,
         client_ip: &str,
         user_agent: &str,
-    ) -> Result<bool> {
+    ) -> Result<bool>  {
         let policy = self.get_policy(policy_name).ok_or_else(|| {
             NestGateError::mcp_error(
-                &format!("Policy '{policy_name}' not found"),
+                &format!("Policy '{e}' not found"),
                 "validate_access",
                 None,
             )

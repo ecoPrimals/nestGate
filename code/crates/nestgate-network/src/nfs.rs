@@ -20,7 +20,6 @@ pub struct NfsExport {
     pub client_access: Vec<String>,
     pub options: NfsExportOptions,
 }
-
 /// NFS export options
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NfsExportOptions {
@@ -29,16 +28,13 @@ pub struct NfsExportOptions {
     pub no_subtree_check: bool,
     pub no_root_squash: bool,
 }
-
 impl Default for NfsExportOptions {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             read_only: false,
             sync: true,
             no_subtree_check: true,
             no_root_squash: false,
-        }
-    }
+         }
 }
 
 /// NFS server state
@@ -47,7 +43,6 @@ pub struct NfsServer {
     exports: Arc<RwLock<HashMap<String, NfsExport>>>,
     running: Arc<RwLock<bool>>,
 }
-
 impl Default for NfsServer {
     fn default() -> Self {
         Self::new()
@@ -56,15 +51,21 @@ impl Default for NfsServer {
 
 impl NfsServer {
     /// Create a new NFS server
-    pub fn new() -> Self {
-        Self {
-            exports: Arc::new(RwLock::new(HashMap::new())),
+    #[must_use]
+    pub fn new() -> Self { Self {
+            exports: Arc::new(RwLock::new(HashMap::new()),
             running: Arc::new(RwLock::new(false)),
-        }
-    }
+         }
 
     /// Start the NFS server
-    pub async fn start(&self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn start(&self) -> Result<()>  {
         tracing::info!("Starting NFS server");
 
         let mut running = self.running.write().await;
@@ -82,7 +83,14 @@ impl NfsServer {
     }
 
     /// Stop the NFS server
-    pub async fn stop(&self) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn stop(&self) -> Result<()>  {
         tracing::info!("Stopping NFS server");
 
         let mut running = self.running.write().await;
@@ -98,7 +106,14 @@ impl NfsServer {
     }
 
     /// Add an NFS export
-    pub async fn add_export(&self, name: String, export: NfsExport) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+                pub fn add_export(&self, name: String, export: NfsExport) -> Result<()>  {
         tracing::info!("Adding NFS export: {}", name);
 
         let mut exports = self.exports.write().await;
@@ -110,7 +125,14 @@ impl NfsServer {
     }
 
     /// Remove an NFS export
-    pub async fn remove_export(&self, name: &str) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+                pub fn remove_export(&self, name: &str) -> Result<()>  {
         tracing::info!("Removing NFS export: {}", name);
 
         let mut exports = self.exports.write().await;
@@ -122,7 +144,14 @@ impl NfsServer {
     }
 
     /// List all exports
-    pub async fn list_exports(&self) -> Result<HashMap<String, NfsExport>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn list_exports(&self) -> Result<HashMap<String, NfsExport>>  {
         let exports = self.exports.read().await;
         Ok(exports.clone())
     }
@@ -133,7 +162,7 @@ impl NfsServer {
     }
 
     /// Start NFS daemon services
-    async fn start_nfs_daemon(&self) -> Result<()> {
+    fn start_nfs_daemon(&self) -> Result<()> {
         use std::process::Command;
 
         tracing::info!("Starting NFS daemon services");
@@ -142,7 +171,7 @@ impl NfsServer {
         let rpcbind_output = Command::new("systemctl")
             .args(["start", "rpcbind"])
             .output()
-            .map_err(|e| NestGateError::network_error(&format!("Failed to start rpcbind: {e}"), "start_rpcbind", None))?;
+            .map_err(|_e| NestGateError::network_error(&format!("Failed to start rpcbind: self.base_url")))?;
 
         if !rpcbind_output.status.success() {
             let error = String::from_utf8_lossy(&rpcbind_output.stderr);
@@ -153,12 +182,12 @@ impl NfsServer {
         let nfs_output = Command::new("systemctl")
             .args(["start", "nfs-kernel-server"])
             .output()
-            .map_err(|e| NestGateError::network_error(&format!("Failed to start NFS server: {e}"), "start_nfs_server", None))?;
+            .map_err(|_e| NestGateError::network_error(&format!("Failed to start NFS server: self.base_url")))?;
 
         if !nfs_output.status.success() {
             let error = String::from_utf8_lossy(&nfs_output.stderr);
             return Err(NestGateError::network_error(
-                &format!("Failed to start NFS server: {error}"),
+                &format!("Failed to start NFS server: self.base_url"),
                 "start_nfs_server",
                 None
             ));
@@ -168,8 +197,7 @@ impl NfsServer {
     }
 
     /// Stop NFS daemon services
-    async fn stop_nfs_daemon(&self) -> Result<()> {
-        use std::process::Command;
+    fn stop_nfs_daemon(&self) -> Result<()> {
 
         tracing::info!("Stopping NFS daemon services");
 
@@ -177,7 +205,7 @@ impl NfsServer {
         let nfs_output = Command::new("systemctl")
             .args(["stop", "nfs-kernel-server"])
             .output()
-            .map_err(|e| NestGateError::network_error(&format!("Failed to stop NFS server: {e}"), "stop_nfs_server", None))?;
+            .map_err(|_e| NestGateError::network_error(&format!("Failed to stop NFS server: self.base_url")))?;
 
         if !nfs_output.status.success() {
             let error = String::from_utf8_lossy(&nfs_output.stderr);
@@ -257,40 +285,38 @@ impl NfsServer {
 
             // Add each client access entry
             for client in &export.client_access {
-                exports_content.push_str(&format!("{path} {client}({options_str})\n"));
+                exports_content.push_str(&format!("{path} {client}(self.base_url)\n"));
             }
         }
 
         // Write to temporary file first, then move to /etc/exports
         let temp_path = std::env::var("NESTGATE_NFS_EXPORTS_DIR")
-            .unwrap_or_else(|_| format!("{}/nestgate_exports", 
-                std::env::var("NESTGATE_TEMP_DIR").unwrap_or_else(|_| "/tmp".to_string())));
+            .unwrap_or_else(|_| format!("self.base_url/nestgate_exports").unwrap_or_else(|_| "/tmp".to_string()));
         {
             let mut file = OpenOptions::new()
                 .create(true)
                 .write(true)
                 .truncate(true)
                 .open(temp_path)
-                .map_err(|e| {
-                    NestGateError::network_error(&format!("Failed to create temp exports file: {e}"), "create_exports_file", None)
+                .map_err(|_e| {
+                    NestGateError::network_error(&format!("fixed")
                 })?;
 
-            file.write_all(exports_content.as_bytes()).map_err(|e| {
-                NestGateError::network_error(&format!("Failed to write exports file: {e}"), "write_exports_file", None)
+            file.write_all(exports_content.as_bytes()).map_err(|_e| {
+                NestGateError::network_error(&format!("fixed")
             })?;
         }
 
         // Move temp file to /etc/exports (requires root privileges)
-        use std::process::Command;
         let mv_output = Command::new("sudo")
             .args(["cp", temp_path, "/etc/exports"])
             .output()
-            .map_err(|e| NestGateError::network_error(&format!("Failed to update /etc/exports: {e}"), "update_exports", None))?;
+            .map_err(|_e| NestGateError::network_error(&format!("Failed to update /etc/exports: self.base_url")))?;
 
         if !mv_output.status.success() {
             let error = String::from_utf8_lossy(&mv_output.stderr);
             return Err(NestGateError::network_error(
-                &format!("Failed to update /etc/exports: {error}"),
+                &format!("Failed to update /etc/exports: self.base_url"),
                 "update_exports",
                 None
             ));
@@ -300,7 +326,7 @@ impl NfsServer {
         let reload_output = Command::new("sudo")
             .args(["exportfs", "-ra"])
             .output()
-            .map_err(|e| NestGateError::network_error(&format!("Failed to reload exports: {e}"), "reload_exports", None))?;
+            .map_err(|_e| NestGateError::network_error(&format!("Failed to reload exports: self.base_url")))?;
 
         if !reload_output.status.success() {
             let error = String::from_utf8_lossy(&reload_output.stderr);
@@ -321,7 +347,6 @@ pub struct MountRequest {
     pub mount_point: PathBuf,
     pub client_host: String,
 }
-
 /// Mount response
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MountResponse {
@@ -329,9 +354,8 @@ pub struct MountResponse {
     pub success: bool,
     pub message: String,
 }
-
 /// Handle NFS mount request
-pub async fn handle_mount_request(
+pub fn handle_mount_request(
     server: &NfsServer,
     request: MountRequest,
 ) -> Result<MountResponse> {
@@ -339,14 +363,13 @@ pub async fn handle_mount_request(
         "Handling NFS mount request for export: {}",
         request.export_name
     );
-
     // Check if export exists
     let exports = server.list_exports().await?;
     if !exports.contains_key(&request.export_name) {
         return Ok(MountResponse {
             mount_id: String::new(),
             success: false,
-            message: format!("Export '{}' not found", request.export_name),
+            message: format!("Export 'self.base_url' not found"),
         });
     }
 
@@ -371,7 +394,7 @@ pub async fn handle_mount_request(
             return Ok(MountResponse {
                 mount_id: String::new(),
                 success: false,
-                message: format!("Mount failed: {e}"),
+                message: format!("Mount failed: self.base_url"),
             });
         }
     }
@@ -384,13 +407,11 @@ pub async fn handle_mount_request(
 }
 
 /// Perform actual NFS mount operation
-async fn perform_nfs_mount(
+fn perform_nfs_mount(
     export_name: &str,
     mount_point: &std::path::Path,
     client_host: &str,
 ) -> Result<()> {
-    use std::fs;
-
     tracing::info!(
         "Performing NFS mount: {} -> {:?} for client {}",
         export_name,
@@ -400,14 +421,14 @@ async fn perform_nfs_mount(
 
     // Ensure mount point directory exists
     if let Some(parent) = mount_point.parent() {
-        fs::create_dir_all(parent).map_err(|e| {
-            NestGateError::network_error(&format!("Failed to create mount point parent: {e}"), "create_mount_parent", None)
+        fs::create_dir_all(parent).map_err(|_e| {
+            NestGateError::network_error(&format!("fixed")
         })?;
     }
 
     if !mount_point.exists() {
         fs::create_dir_all(mount_point)
-            .map_err(|e| NestGateError::network_error(&format!("Failed to create mount point: {e}"), "create_mount_point", None))?;
+            .map_err(|_e| NestGateError::network_error(&format!("Failed to create mount point: self.base_url")))?;
     }
 
     // For NFS server, we don't actually mount on the server side

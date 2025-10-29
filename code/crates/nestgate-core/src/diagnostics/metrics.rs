@@ -2,7 +2,6 @@
 /// This module contains structures for collecting and representing system metrics.
 use crate::unified_enums::UnifiedServiceState as ServiceStatus;
 use serde::{Deserialize, Serialize};
-
 /// System-wide metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemMetrics {
@@ -35,7 +34,6 @@ pub struct SystemMetrics {
     /// System uptime in seconds
     pub uptime_seconds: u64,
 }
-
 impl Default for SystemMetrics {
     fn default() -> Self {
         Self {
@@ -83,7 +81,6 @@ pub struct DiskMetrics {
     /// Write bytes per second
     pub write_bytes_per_sec: u64,
 }
-
 /// Network interface metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkMetrics {
@@ -112,7 +109,6 @@ pub struct NetworkMetrics {
     /// Duplex mode (full/half)
     pub duplex: String,
 }
-
 /// Service information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceInfo {
@@ -131,13 +127,10 @@ pub struct ServiceInfo {
     /// Service description
     pub description: Option<String>,
     /// Service configuration path
-    pub config_path: Option<std::path::PathBuf>,
     /// Service log path
-    pub log_path: Option<std::path::PathBuf>,
     /// Service dependencies
     pub dependencies: Vec<String>,
     /// Service environment variables
-    pub environment: std::collections::HashMap<String, String>,
     /// Service command line
     pub command_line: Option<String>,
 }

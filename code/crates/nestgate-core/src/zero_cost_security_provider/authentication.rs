@@ -1,22 +1,21 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::collections::HashMap;
 //
-// Routes to BearDog for complex authentication when available,
+// Routes to Security for complex authentication when available,
 // falls back to local token validation for standalone operation.
 
 use super::types::{AuthMethod, ZeroCostAuthToken, ZeroCostCredentials};
-use crate::{NestGateError, Result};
+use crate::Result;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
 use tracing::{debug, info, warn};
 
 /// Authentication configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthenticationConfig {
-    /// Enable external BearDog authentication
+    /// Enable external Security authentication
     pub use_external_auth: bool,
-    /// BearDog endpoint for authentication
+    /// Security endpoint for authentication
     pub external_auth_endpoint: Option<String>,
     /// Local token validation settings
     pub local_token_settings: LocalTokenConfig,
@@ -25,7 +24,6 @@ pub struct AuthenticationConfig {
     /// Maximum authentication attempts
     pub max_auth_attempts: u32,
 }
-
 impl Default for AuthenticationConfig {
     fn default() -> Self {
         Self {
@@ -48,7 +46,6 @@ pub struct LocalTokenConfig {
     /// Enable token refresh
     pub enable_refresh: bool,
 }
-
 impl Default for LocalTokenConfig {
     fn default() -> Self {
         Self {
@@ -67,7 +64,6 @@ pub struct HybridAuthenticationManager {
     token_cache: tokio::sync::RwLock<HashMap<String, CachedToken>>,
     auth_attempts: tokio::sync::RwLock<HashMap<String, u32>>,
 }
-
 /// Cached token information
 #[derive(Debug, Clone)]
 struct CachedToken {
@@ -76,9 +72,9 @@ struct CachedToken {
     #[allow(dead_code)]
     last_validated: SystemTime,
 }
-
 impl HybridAuthenticationManager {
     /// Create new hybrid authentication manager
+    #[must_use]
     pub fn new(config: AuthenticationConfig) -> Self {
         info!("Initializing hybrid authentication manager");
         Self {
@@ -89,6 +85,13 @@ impl HybridAuthenticationManager {
     }
 
     /// Authenticate user credentials
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn authenticate(
         &self,
         credentials: &ZeroCostCredentials,
@@ -97,15 +100,7 @@ impl HybridAuthenticationManager {
 
         // Check rate limiting
         if !self.check_rate_limit(&credentials.username).await? {
-            return Err(NestGateError::Security(Box::new(
-                crate::error::domain_errors::SecurityErrorData {
-                    message: "Too many authentication attempts".to_string(),
-                    operation: "authentication".to_string(),
-                    resource: None,
-                    principal: None,
-                    context: None,
-                },
-            )));
+            return Err(NestGateError::security_error("Security error"));
         }
 
         // Try external authentication first if configured
@@ -129,6 +124,13 @@ impl HybridAuthenticationManager {
     }
 
     /// Validate authentication token
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn validate_token(&self, token_str: &str) -> Result<bool> {
         debug!("Validating token");
 
@@ -162,19 +164,18 @@ impl HybridAuthenticationManager {
     }
 
     /// Refresh authentication token
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn refresh_token(&self, token_str: &str) -> Result<ZeroCostAuthToken> {
         debug!("Refreshing token");
 
         if !self.config.local_token_settings.enable_refresh {
-            return Err(NestGateError::Security(Box::new(
-                crate::error::domain_errors::SecurityErrorData {
-                    message: "Token refresh not enabled".to_string(),
-                    operation: "token_refresh".to_string(),
-                    resource: None,
-                    principal: None,
-                    context: None,
-                },
-            )));
+            return Err(NestGateError::security_error("Security error"));
         }
 
         // Try external refresh first if configured
@@ -195,6 +196,13 @@ impl HybridAuthenticationManager {
     }
 
     /// Revoke authentication token
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn revoke_token(&self, token_str: &str) -> Result<()> {
         debug!("Revoking token");
 
@@ -238,12 +246,12 @@ impl HybridAuthenticationManager {
         attempts.remove(username);
     }
 
-    /// External authentication via BearDog
+    /// External authentication via Security
     async fn authenticate_external(
         &self,
         credentials: &ZeroCostCredentials,
     ) -> Result<ZeroCostAuthToken> {
-        // In a real implementation, this would make HTTP calls to BearDog
+        // In a real implementation, this would make HTTP calls to Security
         // For now, simulate external authentication
         debug!("Attempting external authentication");
 
@@ -308,15 +316,7 @@ impl HybridAuthenticationManager {
 
                     Ok(token)
                 } else {
-                    Err(NestGateError::Security(Box::new(
-                        crate::error::domain_errors::SecurityErrorData {
-                            message: "Invalid credentials".to_string(),
-                            operation: "authentication".to_string(),
-                            resource: None,
-                            principal: None,
-                            context: None,
-                        },
-                    )))
+                    Err(NestGateError::security_error("Security error"))
                 }
             }
             AuthMethod::Token => {
@@ -330,54 +330,24 @@ impl HybridAuthenticationManager {
                     );
                     Ok(token)
                 } else {
-                    Err(NestGateError::Security(Box::new(
-                        crate::error::domain_errors::SecurityErrorData {
-                            message: "Invalid API key".to_string(),
-                            operation: "api_key_validation".to_string(),
-                            resource: None,
-                            principal: None,
-                            context: None,
-                        },
-                    )))
+                    Err(NestGateError::security_error("Security error"))
                 }
             }
             AuthMethod::Certificate => {
                 // Certificate-based authentication not implemented in local fallback
-                Err(NestGateError::Security(Box::new(
-                    crate::error::domain_errors::SecurityErrorData {
-                        message: "Certificate authentication requires external provider"
-                            .to_string(),
-                        operation: "certificate_auth".to_string(),
-                        resource: None,
-                        principal: None,
-                        context: None,
-                    },
-                )))
+                Err(NestGateError::security_error("Security error"))
             }
             AuthMethod::Biometric => {
                 // Biometric authentication not implemented in local fallback
-                Err(NestGateError::Security(Box::new(
-                    crate::error::domain_errors::SecurityErrorData {
-                        message: "Biometric authentication requires external provider".to_string(),
-                        operation: "biometric_auth".to_string(),
-                        resource: None,
-                        principal: None,
-                        context: None,
-                    },
-                )))
+                Err(NestGateError::security_error(
+                    "Biometric authentication requires external provider",
+                ))
             }
             AuthMethod::MultiFactor { .. } => {
                 // Multi-factor authentication not implemented in local fallback
-                Err(NestGateError::Security(Box::new(
-                    crate::error::domain_errors::SecurityErrorData {
-                        message: "Multi-factor authentication requires external provider"
-                            .to_string(),
-                        operation: "mfa_auth".to_string(),
-                        resource: None,
-                        principal: None,
-                        context: None,
-                    },
-                )))
+                Err(NestGateError::security_error(
+                    "Multi-factor authentication requires external provider",
+                ))
             }
         }
     }
@@ -427,15 +397,7 @@ impl HybridAuthenticationManager {
             );
             Ok(new_token)
         } else {
-            Err(NestGateError::Security(Box::new(
-                crate::error::domain_errors::SecurityErrorData {
-                    message: "Token not found for refresh".to_string(),
-                    operation: "token_refresh".to_string(),
-                    resource: None,
-                    principal: None,
-                    context: None,
-                },
-            )))
+            Err(NestGateError::security_error("Token not found for refresh"))
         }
     }
 
@@ -452,12 +414,13 @@ impl HybridAuthenticationManager {
 pub struct AuthTokenManager {
     signing_key: String,
 }
-
 impl AuthTokenManager {
+    #[must_use]
     pub fn new(signing_key: String) -> Self {
         Self { signing_key }
     }
 
+    #[must_use]
     pub fn create_token(
         &self,
         user_id: &str,
@@ -472,10 +435,26 @@ impl AuthTokenManager {
         )
     }
 
+    #[must_use]
     pub fn validate_token_signature(&self, _token: &str) -> bool {
         // Simple signature validation
         // In a real implementation, this would use proper cryptographic verification
         true
+    }
+
+    pub fn create_workspace_secret(
+        &self,
+        workspace_id: &str,
+    ) -> std::result::Result<String, Box<dyn std::error::Error + Send + Sync>> {
+        // Generate a unique secret ID for the workspace
+        let secret_id = format!("secret_{}_{}", workspace_id, uuid::Uuid::new_v4());
+
+        // In a real implementation, this would:
+        // 1. Generate a cryptographically secure secret
+        // 2. Store it in a secure key management system
+        // 3. Associate it with the workspace
+
+        Ok(secret_id)
     }
 }
 
@@ -488,7 +467,8 @@ mod tests {
         let config = AuthenticationConfig::default();
         let auth_manager = HybridAuthenticationManager::new(config);
 
-        let credentials = ZeroCostCredentials::new_password("admin".to_string(), "admin".to_string());
+        let credentials =
+            ZeroCostCredentials::new_password("admin".to_string(), "admin".to_string());
         let token = auth_manager.authenticate(&credentials).await?;
 
         assert!(!token.token.is_empty());

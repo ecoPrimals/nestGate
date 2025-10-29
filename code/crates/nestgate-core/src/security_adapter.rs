@@ -1,9 +1,9 @@
-//! Security Adapter
-//!
-//! This module provides the adapter-based implementation for security operations,
-//! replacing hardcoded BearDog integrations with the universal adapter pattern.
+// Security Adapter
+//! Security Adapter functionality and utilities.
+// This module provides the adapter-based implementation for security operations,
+//! replacing hardcoded Security integrations with the universal adapter pattern.
 
-use crate::ecosystem_integration::universal_adapter::CapabilityRequest;
+use crate::universal_adapter::CapabilityRequest;
 use crate::ecosystem_integration::{
     AuthenticationRequest, AuthenticationResponse, AuthorizationRequest, AuthorizationResponse,
     EncryptionRequest, EncryptionResponse, UniversalAdapter,
@@ -22,7 +22,6 @@ pub struct Credentials {
     pub password: String,
     pub additional_fields: HashMap<String, serde_json::Value>,
 }
-
 /// Authentication token
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthToken {
@@ -31,7 +30,6 @@ pub struct AuthToken {
     pub permissions: Vec<String>,
     pub metadata: HashMap<String, String>,
 }
-
 /// Digital signature
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Signature {
@@ -39,7 +37,6 @@ pub struct Signature {
     pub signature_data: Vec<u8>,
     pub key_id: Option<String>,
 }
-
 /// Security adapter using universal adapter pattern
 #[derive(Debug, Clone)]
 pub struct SecurityAdapter {
@@ -48,7 +45,6 @@ pub struct SecurityAdapter {
     /// Service name for security operations
     service_name: String,
 }
-
 impl SecurityAdapter {
     /// Create new security adapter
     pub fn new(adapter: Arc<UniversalAdapter>, service_name: String) -> Self {
@@ -61,20 +57,18 @@ impl SecurityAdapter {
         }
     }
 
-    /// Create adapter with mock capabilities for testing
-    pub fn new_with_mock() -> Result<Self> {
-        // For now, return an error since we need the actual adapter infrastructure
-        // This will be implemented when the universal adapter is fully available
-        Err(NestGateError::Internal {
-            message: "Mock security adapter not yet implemented - use real adapter".to_string(),
-            location: Some(format!("{}:{}", file!(), line!())),
-            debug_info: None,
-            is_bug: false,
-        })
-    }
+    // CANONICAL MODERNIZATION: Mock methods removed from production code
+    // All testing should use proper test doubles or feature-gated test implementations
 
     /// Authenticate user credentials via security adapter
-    pub async fn authenticate(&self, credentials: &Credentials) -> Result<AuthToken> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+                pub fn authenticate(&self, credentials: &Credentials) -> Result<AuthToken>  {
         info!(
             "🔐 Authenticating user via security adapter: {}",
             credentials.username
@@ -97,18 +91,15 @@ impl SecurityAdapter {
             },
             context: Some({
                 let mut context = HashMap::new();
-                context.insert("service".to_string(), self.service_name.clone());
+                context.insert("service".to_string(), self.name.clone());
                 context.insert("auth_type".to_string(), "user_login".to_string());
                 context
             }),
         };
 
-        let payload = serde_json::to_vec(&auth_request).map_err(|e| NestGateError::Internal {
-            message: format!("Failed to serialize authentication request: {e}"),
-            location: Some(format!("{}:{}", file!(), line!())),
-            debug_info: None,
-            is_bug: false,
-        })?;
+        let payload = serde_json::to_vec(&auth_request).map_err(|e| NestGateError::internal_error(
+            location: Some(format!("{})
+            context: None)?;
 
         let request = CapabilityRequest {
             request_id: uuid::Uuid::new_v4().to_string(),
@@ -127,15 +118,12 @@ impl SecurityAdapter {
                 if response.success {
                     let auth_response: AuthenticationResponse =
                         serde_json::from_slice(&response.payload).map_err(|e| {
-                            NestGateError::Internal {
-                                message: format!(
-                                    "Failed to deserialize authentication response: {e}"
+                            NestGateError::internal_error(
+                                    "Failed to deserialize authentication response: {e)"
                                 ),
-                                location: Some(format!("{}:{}", file!(), line!())),
-                                debug_info: None,
-                                is_bug: false,
-                            }
-                        })?;
+                                location: Some(format!("{})
+                                context: None}
+                        )?;
 
                     if auth_response.authenticated {
                         let token = AuthToken {
@@ -159,7 +147,7 @@ impl SecurityAdapter {
                         );
                         Err(NestGateError::Unauthorized {
                             message: "Authentication failed".to_string(),
-                            location: Some(format!("{}:{}", file!(), line!())),
+                            location: Some(format!("{})
                         })
                     }
                 } else {
@@ -170,24 +158,20 @@ impl SecurityAdapter {
                     error!("❌ Authentication failed via adapter: {}", error_msg);
                     Err(NestGateError::Unauthorized {
                         message: format!("Authentication failed: {error_msg}"),
-                        location: Some(format!("{}:{}", file!(), line!())),
+                        location: Some(format!("{e})
                     })
                 }
             }
             Err(e) => {
-                error!("❌ Security adapter communication failed: {}", e);
-                Err(NestGateError::Internal {
-                    message: format!("Security adapter communication failed: {e}"),
-                    location: Some(format!("{}:{}", file!(), line!())),
-                    debug_info: None,
-                    is_bug: false,
-                })
+                error!("❌ Security adapter communication failed: {e}");
+                Err(NestGateError::internal_error(
+                    location: Some(format!("{})
+                    context: None})
             }
         }
     }
 
     /// Check authorization for resource access via security adapter
-    pub async fn authorize(&self, user_id: &str, resource: &str, action: &str) -> Result<bool> {
         info!(
             "🔐 Checking authorization via security adapter: {} -> {} ({})",
             user_id, resource, action
@@ -195,13 +179,12 @@ impl SecurityAdapter {
 
         let auth_request = AuthorizationRequest {
             user_id: user_id.to_string(),
-            resource: resource.to_string(),
             action: action.to_string(),
             context: {
                 let mut context = HashMap::new();
                 context.insert(
                     "service".to_string(),
-                    serde_json::Value::String(self.service_name.clone()),
+                    serde_json::Value::String(self.name.clone()),
                 );
                 context.insert(
                     "timestamp".to_string(),
@@ -211,12 +194,9 @@ impl SecurityAdapter {
             },
         };
 
-        let payload = serde_json::to_vec(&auth_request).map_err(|e| NestGateError::Internal {
-            message: format!("Failed to serialize authorization request: {e}"),
-            location: Some(format!("{}:{}", file!(), line!())),
-            debug_info: None,
-            is_bug: false,
-        })?;
+        let payload = serde_json::to_vec(&auth_request).map_err(|e| NestGateError::internal_error(
+            location: Some(format!("{})
+            context: None)?;
 
         let request = CapabilityRequest {
             request_id: uuid::Uuid::new_v4().to_string(),
@@ -234,15 +214,12 @@ impl SecurityAdapter {
                 if response.success {
                     let auth_response: AuthorizationResponse =
                         serde_json::from_slice(&response.payload).map_err(|e| {
-                            NestGateError::Internal {
-                                message: format!(
-                                    "Failed to deserialize authorization response: {e}"
+                            NestGateError::internal_error(
+                                    "Failed to deserialize authorization response: {e)"
                                 ),
-                                location: Some(format!("{}:{}", file!(), line!())),
-                                debug_info: None,
-                                is_bug: false,
-                            }
-                        })?;
+                                location: Some(format!("{})
+                                context: None}
+                        )?;
 
                     if auth_response.authorized {
                         info!(
@@ -266,28 +243,29 @@ impl SecurityAdapter {
                         .map(|e| format!("{e:?}"))
                         .unwrap_or_else(|| "Unknown error".to_string());
                     error!("❌ Authorization check failed via adapter: {}", error_msg);
-                    Err(NestGateError::Internal {
-                        message: format!("Authorization check failed: {error_msg}"),
-                        location: Some(format!("{}:{}", file!(), line!())),
-                        debug_info: None,
-                        is_bug: false,
-                    })
+                    Err(NestGateError::internal_error(
+                        location: Some(format!("{e})
+                        context: None})
                 }
             }
             Err(e) => {
-                error!("❌ Security adapter communication failed: {}", e);
-                Err(NestGateError::Internal {
-                    message: format!("Security adapter communication failed: {e}"),
-                    location: Some(format!("{}:{}", file!(), line!())),
-                    debug_info: None,
-                    is_bug: false,
-                })
+                error!("❌ Security adapter communication failed: {e}");
+                Err(NestGateError::internal_error(
+                    location: Some(format!("{})
+                    context: None})
             }
         }
     }
 
     /// Encrypt data via security adapter
-    pub async fn encrypt(&self, data: &[u8], algorithm: &str) -> Result<Vec<u8>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+                pub fn encrypt(&self, data: &[u8], algorithm: &str) -> Result<Vec<u8>>  {
         info!(
             "🔐 Encrypting data via security adapter ({} bytes, {})",
             data.len(),
@@ -298,21 +276,12 @@ impl SecurityAdapter {
             data: general_purpose::STANDARD.encode(data),
             algorithm: algorithm.to_string(),
             key_id: None, // Let the security primal choose the key
-            metadata: {
-                let mut metadata = HashMap::new();
-                metadata.insert("service".to_string(), self.service_name.clone());
-                metadata.insert("operation".to_string(), "encrypt".to_string());
-                metadata
-            },
         };
 
         let payload =
-            serde_json::to_vec(&encryption_request).map_err(|e| NestGateError::Internal {
-                message: format!("Failed to serialize encryption request: {e}"),
-                location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
-                is_bug: false,
-            })?;
+            serde_json::to_vec(&encryption_request).map_err(|e| NestGateError::internal_error(
+                location: Some(format!("{})
+                context: None)?;
 
         let request = CapabilityRequest {
             request_id: uuid::Uuid::new_v4().to_string(),
@@ -330,22 +299,16 @@ impl SecurityAdapter {
                 if response.success {
                     let encryption_response: EncryptionResponse =
                         serde_json::from_slice(&response.payload).map_err(|e| {
-                            NestGateError::Internal {
-                                message: format!("Failed to deserialize encryption response: {e}"),
-                                location: Some(format!("{}:{}", file!(), line!())),
-                                debug_info: None,
-                                is_bug: false,
-                            }
-                        })?;
+                            NestGateError::internal_error(
+                                location: Some(format!("{})
+                                context: None}
+                        )?;
 
                     let encrypted_data = general_purpose::STANDARD
                         .decode(&encryption_response.encrypted_data)
-                        .map_err(|e| NestGateError::Internal {
-                            message: format!("Failed to decode encrypted data: {e}"),
-                            location: Some(format!("{}:{}", file!(), line!())),
-                            debug_info: None,
-                            is_bug: false,
-                        })?;
+                        .map_err(|e| NestGateError::internal_error(
+                            location: Some(format!("{})
+                            context: None)?;
 
                     info!(
                         "✅ Data encrypted via security adapter ({} bytes -> {} bytes)",
@@ -359,28 +322,29 @@ impl SecurityAdapter {
                         .map(|e| format!("{e:?}"))
                         .unwrap_or_else(|| "Unknown error".to_string());
                     error!("❌ Encryption failed via adapter: {}", error_msg);
-                    Err(NestGateError::Internal {
-                        message: format!("Encryption failed: {error_msg}"),
-                        location: Some(format!("{}:{}", file!(), line!())),
-                        debug_info: None,
-                        is_bug: false,
-                    })
+                    Err(NestGateError::internal_error(
+                        location: Some(format!("{e})
+                        context: None})
                 }
             }
             Err(e) => {
-                error!("❌ Security adapter communication failed: {}", e);
-                Err(NestGateError::Internal {
-                    message: format!("Security adapter communication failed: {e}"),
-                    location: Some(format!("{}:{}", file!(), line!())),
-                    debug_info: None,
-                    is_bug: false,
-                })
+                error!("❌ Security adapter communication failed: {e}");
+                Err(NestGateError::internal_error(
+                    location: Some(format!("{})
+                    context: None})
             }
         }
     }
 
     /// Sign data via security adapter
-    pub async fn sign_data(&self, data: &[u8]) -> Result<Signature> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+                pub fn sign_data(&self, data: &[u8]) -> Result<Signature>  {
         info!(
             "🔐 Signing data via security adapter ({} bytes)",
             data.len()
@@ -389,16 +353,13 @@ impl SecurityAdapter {
         let signing_request = serde_json::json!({
             "data": general_purpose::STANDARD.encode(data),
             "algorithm": "RSA-SHA256", // Default signing algorithm
-            "service": self.service_name
-        });
+            "service": self.name
+        );
 
         let payload =
-            serde_json::to_vec(&signing_request).map_err(|e| NestGateError::Internal {
-                message: format!("Failed to serialize signing request: {e}"),
-                location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
-                is_bug: false,
-            })?;
+            serde_json::to_vec(&signing_request).map_err(|e| NestGateError::internal_error(
+                location: Some(format!("{})
+                context: None)?;
 
         let request = CapabilityRequest {
             request_id: uuid::Uuid::new_v4().to_string(),
@@ -416,23 +377,16 @@ impl SecurityAdapter {
                 if response.success {
                     let signing_response: serde_json::Value =
                         serde_json::from_slice(&response.payload).map_err(|e| {
-                            NestGateError::Internal {
-                                message: format!("Failed to deserialize signing response: {e}"),
-                                location: Some(format!("{}:{}", file!(), line!())),
-                                debug_info: None,
-                                is_bug: false,
-                            }
-                        })?;
+                            NestGateError::internal_error(
+                                location: Some(format!("{})
+                                context: None}
+                        )?;
 
                     let signature_data = signing_response
                         .get("signature")
                         .and_then(|s| s.as_str())
-                        .ok_or_else(|| NestGateError::Internal {
-                            message: "Missing signature in response".to_string(),
-                            location: Some(format!("{}:{}", file!(), line!())),
-                            debug_info: None,
-                            is_bug: false,
-                        })?;
+                        .ok_or_else(|| NestGateError::internal_error(
+                            context: None)?;
 
                     let signature = Signature {
                         algorithm: signing_response
@@ -441,12 +395,9 @@ impl SecurityAdapter {
                             .unwrap_or("RSA-SHA256")
                             .to_string(),
                         signature_data: general_purpose::STANDARD.decode(signature_data).map_err(
-                            |e| NestGateError::Internal {
-                                message: format!("Failed to decode signature data: {e}"),
-                                location: Some(format!("{}:{}", file!(), line!())),
-                                debug_info: None,
-                                is_bug: false,
-                            },
+                            |e| NestGateError::internal_error(
+                                location: Some(format!("{})
+                                context: None},
                         )?,
                         key_id: signing_response
                             .get("key_id")
@@ -465,41 +416,39 @@ impl SecurityAdapter {
                         .map(|e| format!("{e:?}"))
                         .unwrap_or_else(|| "Unknown error".to_string());
                     error!("❌ Data signing failed via adapter: {}", error_msg);
-                    Err(NestGateError::Internal {
-                        message: format!("Data signing failed: {error_msg}"),
-                        location: Some(format!("{}:{}", file!(), line!())),
-                        debug_info: None,
-                        is_bug: false,
-                    })
+                    Err(NestGateError::internal_error(
+                        location: Some(format!("{e})
+                        context: None})
                 }
             }
             Err(e) => {
-                error!("❌ Security adapter communication failed: {}", e);
-                Err(NestGateError::Internal {
-                    message: format!("Security adapter communication failed: {e}"),
-                    location: Some(format!("{}:{}", file!(), line!())),
-                    debug_info: None,
-                    is_bug: false,
-                })
+                error!("❌ Security adapter communication failed: {e}");
+                Err(NestGateError::internal_error(
+                    location: Some(format!("{})
+                    context: None})
             }
         }
     }
 
     /// Health check for security adapter
-    pub async fn health_check(&self) -> Result<bool> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+                pub fn health_check(&self) -> Result<bool>  {
         info!("🔐 Performing security adapter health check");
 
         let health_request = serde_json::json!({
-            "service": self.service_name,
+            "service": self.name,
             "check_type": "connectivity"
-        });
+        );
 
-        let payload = serde_json::to_vec(&health_request).map_err(|e| NestGateError::Internal {
-            message: format!("Failed to serialize health check request: {e}"),
-            location: Some(format!("{}:{}", file!(), line!())),
-            debug_info: None,
-            is_bug: false,
-        })?;
+        let payload = serde_json::to_vec(&health_request).map_err(|e| NestGateError::internal_error(
+            location: Some(format!("{})
+            context: None)?;
 
         let request = CapabilityRequest {
             request_id: uuid::Uuid::new_v4().to_string(),

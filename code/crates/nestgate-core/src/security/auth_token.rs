@@ -2,11 +2,10 @@
 /// This module handles JWT tokens, API keys, and other authentication tokens
 /// used in the NestGate system.
 use super::auth_types::TokenType;
-use crate::error::{NestGateError, Result};
+use crate::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
-
 /// Authentication token with metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthToken {
@@ -27,9 +26,9 @@ pub struct AuthToken {
     /// When the token was issued
     pub issued_at: SystemTime,
 }
-
 impl AuthToken {
     /// Create a new authentication token
+    #[must_use]
     pub fn new(token: String, token_type: TokenType) -> Self {
         let now = SystemTime::now();
         Self {
@@ -45,6 +44,7 @@ impl AuthToken {
     }
 
     /// Create a token with expiration
+    #[must_use]
     pub fn with_expiration(token: String, token_type: TokenType, expires_in: Duration) -> Self {
         let now = SystemTime::now();
         Self {
@@ -70,36 +70,42 @@ impl AuthToken {
     }
 
     /// Get the remaining time until expiration
-    pub fn time_until_expiration(&self) -> Result<Duration> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn time_until_expiration(&self) -> Result<Duration>  {
         self.expires_at
             .duration_since(SystemTime::now())
-            .map_err(|_| NestGateError::Internal {
-                message: "Token has expired".to_string(),
-                location: Some(file!().to_string()),
-                debug_info: None,
-                is_bug: false,
-            })
+            .map_err(|_| NestGateError::internal_error("Token expired or time went backwards"))
     }
 
     /// Set user ID
+    #[must_use]
     pub fn with_user_id(mut self, user_id: String) -> Self {
         self.user_id = Some(user_id);
         self
     }
 
     /// Add a role
+    #[must_use]
     pub fn with_role(mut self, role: String) -> Self {
         self.roles.push(role);
         self
     }
 
     /// Add a permission
+    #[must_use]
     pub fn with_permission(mut self, permission: String) -> Self {
         self.permissions.push(permission);
         self
     }
 
     /// Add metadata
+    #[must_use]
     pub fn with_metadata(mut self, key: String, value: String) -> Self {
         self.metadata.insert(key, value);
         self

@@ -6,8 +6,7 @@ use super::types::{ZeroCostAuthToken, ZeroCostCredentials, ZeroCostSignature};
 /// using zero-cost abstractions for maximum performance.
 ///
 use crate::Result;
-
-// ==================== ZERO-COST SECURITY PROVIDER TRAIT ====================
+// ==================== SECTION ====================
 
 /// **Zero-cost security provider trait**
 ///
@@ -16,10 +15,11 @@ use crate::Result;
 /// - Compile-time specialization through const generics
 /// - Direct method dispatch (no vtable overhead)
 /// - Memory-efficient security operations
+/// **DEPRECATED**: Zero-cost patterns integrated into canonical security
+#[deprecated(since = "0.9.0", note = "Use crate::traits::canonical_unified_traits::CanonicalSecurity - zero-cost patterns integrated")]
 pub trait ZeroCostSecurityProvider: Send + Sync + 'static {
     /// Security provider configuration type
     type Config: Clone + Send + Sync + 'static;
-
     /// Security health information type
     type Health: Clone + Send + Sync + 'static;
 
@@ -127,7 +127,6 @@ pub trait AuthenticationProvider: Send + Sync {
         &self,
         credentials: &ZeroCostCredentials,
     ) -> impl std::future::Future<Output = Result<ZeroCostAuthToken>> + Send;
-
     /// Validate token
     fn validate_token(&self, token: &str)
         -> impl std::future::Future<Output = Result<bool>> + Send;
@@ -151,7 +150,6 @@ pub trait EncryptionProvider: Send + Sync {
         data: &[u8],
         algorithm: &str,
     ) -> impl std::future::Future<Output = Result<Vec<u8>>> + Send;
-
     /// Decrypt data with specified algorithm
     fn decrypt(
         &self,
@@ -176,7 +174,6 @@ pub trait SigningProvider: Send + Sync {
         &self,
         data: &[u8],
     ) -> impl std::future::Future<Output = Result<ZeroCostSignature>> + Send;
-
     /// Verify signature
     fn verify_signature(
         &self,
@@ -193,10 +190,11 @@ pub trait SigningProvider: Send + Sync {
 
 /// **Security health provider trait**
 /// Specialized trait for security health monitoring
+/// **DEPRECATED**: Health monitoring integrated into canonical security
+#[deprecated(since = "0.9.0", note = "Use crate::traits::canonical_unified_traits::CanonicalSecurity health_check method")]
 pub trait SecurityHealthProvider: Send + Sync {
     /// Health information type
     type Health: Clone + Send + Sync + 'static;
-
     /// Get security health status
     fn health_check(&self) -> impl std::future::Future<Output = Self::Health> + Send;
 
@@ -206,10 +204,11 @@ pub trait SecurityHealthProvider: Send + Sync {
 
 /// **Security metrics provider trait**
 /// Specialized trait for security metrics collection
+/// **DEPRECATED**: Metrics integrated into canonical security
+#[deprecated(since = "0.9.0", note = "Use crate::traits::canonical_unified_traits::CanonicalSecurity metrics methods")]
 pub trait SecurityMetricsProvider: Send + Sync {
     /// Metrics type
     type Metrics: Clone + Send + Sync + 'static;
-
     /// Get security metrics
     fn get_metrics(&self) -> impl std::future::Future<Output = Self::Metrics> + Send;
 

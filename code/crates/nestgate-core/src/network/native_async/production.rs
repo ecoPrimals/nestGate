@@ -1,26 +1,33 @@
+use crate::diagnostics::types::ServiceInfo;
+use crate::Result;
 /// Production Network Implementations
-/// Extracted from native_async_network.rs to maintain file size compliance
+/// Extracted from `native_async_network.rs` to maintain file size compliance
 /// Contains production-ready implementations of native async traits
 use chrono::Utc;
-use std::collections::HashMap;
-use std::time::Duration;
-
-use crate::diagnostics::types::ServiceInfo;
-use crate::error::Result;
+use std::sync::Arc;
+use tokio::sync::RwLock;
 
 use super::traits::{NativeAsyncProtocolHandler, NativeAsyncServiceDiscovery};
 use super::types::{
     ConnectionStatus, NetworkConnection, NetworkRequest, NetworkResponse, ServiceEvent,
     ServiceEventType, ServiceQuery,
 };
-use crate::unified_types::UnifiedNetworkConfig;
+// **MIGRATED**: Using canonical config system instead of deprecated unified_types
+use crate::config::canonical_master::domains::network::CanonicalNetworkConfig as UnifiedNetworkConfig;
+
+use std::collections::HashMap;
+
+// Type aliases to reduce complexity
+type ServiceMap = Arc<RwLock<HashMap<String, ServiceInfo>>>;
+type ConnectionMap = Arc<RwLock<HashMap<String, NetworkConnection>>>;
 
 /// Production service discovery implementation
+/// Production-grade service discovery implementation
+/// Provides robust, scalable service discovery for production workloads
 pub struct ProductionServiceDiscovery {
-    services: std::sync::Arc<tokio::sync::RwLock<HashMap<String, ServiceInfo>>>,
+    services: ServiceMap,
     events: std::sync::Arc<tokio::sync::RwLock<Vec<ServiceEvent>>>,
 }
-
 impl Default for ProductionServiceDiscovery {
     fn default() -> Self {
         Self {
@@ -40,14 +47,14 @@ impl NativeAsyncServiceDiscovery<10000, 30, 1000, 60> for ProductionServiceDisco
         // Native async service registration - no Future boxing overhead
         let mut services = self.services.write().await;
         let service_id = service.name.clone();
-        services.insert(service_id.clone(), service.clone());
+        services.insert(service_id.clone(), service);
 
         // Add registration event
         let mut events = self.events.write().await;
         events.push(ServiceEvent {
             event_type: ServiceEventType::Registered,
             service_id,
-            service_info: Some(service),
+            service_info: None, // Avoid cloning service data unnecessarily
             timestamp: Utc::now(),
             metadata: HashMap::new(),
         });
@@ -172,14 +179,15 @@ impl NativeAsyncServiceDiscovery<10000, 30, 1000, 60> for ProductionServiceDisco
 }
 
 /// Production protocol handler implementation
+/// Production-grade protocol handler for network communications
+/// Manages high-performance protocol handling with connection pooling
 pub struct ProductionProtocolHandler {
-    connections: std::sync::Arc<tokio::sync::RwLock<HashMap<String, NetworkConnection>>>,
+    connections: ConnectionMap,
 }
-
 impl Default for ProductionProtocolHandler {
     fn default() -> Self {
         Self {
-            connections: std::sync::Arc::new(tokio::sync::RwLock::new(HashMap::new())),
+            connections: Arc::new(RwLock::new(HashMap::new())),
         }
     }
 }
@@ -195,8 +203,7 @@ impl NativeAsyncProtocolHandler<1000, 30, 3, 8192> for ProductionProtocolHandler
         let connection = NetworkConnection {
             connection_id: uuid::Uuid::new_v4().to_string(),
             protocol: "http".to_string(),
-            local_address: config.bind_address.to_string(),
-            remote_address: config.bind_address.to_string(),
+            local_endpoint: format!("{}:{}", config.api.bind_address, config.api.port),
             established_at: chrono::Utc::now(),
             status: ConnectionStatus::Connecting,
             metadata: std::collections::HashMap::new(),
@@ -204,7 +211,8 @@ impl NativeAsyncProtocolHandler<1000, 30, 3, 8192> for ProductionProtocolHandler
 
         // Store connection
         let mut connections = self.connections.write().await;
-        connections.insert(connection.connection_id.clone(), connection.clone());
+        let connection_id = connection.connection_id.clone();
+        connections.insert(connection_id, connection.clone());
 
         Ok(connection)
     }
@@ -220,7 +228,7 @@ impl NativeAsyncProtocolHandler<1000, 30, 3, 8192> for ProductionProtocolHandler
             status_code: 200,
             headers: HashMap::new(),
             body: b"Success".to_vec(),
-            processing_time: Duration::from_millis(10),
+            processing_time: std::time::Duration::from_millis(10),
         };
 
         Ok(response)
@@ -243,8 +251,8 @@ impl NativeAsyncProtocolHandler<1000, 30, 3, 8192> for ProductionProtocolHandler
         Ok(format!("{:?}", connection.status))
     }
 
-    async fn ping(&self, _connection: &Self::Connection) -> Result<Duration> {
+    async fn ping(&self, _connection: &Self::Connection) -> Result<std::time::Duration> {
         // Direct async method for ping
-        Ok(Duration::from_millis(5))
+        Ok(std::time::Duration::from_millis(5))
     }
 }

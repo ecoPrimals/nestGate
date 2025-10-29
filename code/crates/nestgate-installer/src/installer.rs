@@ -18,7 +18,7 @@
 // use nestgate_installer::installer::NestGateInstaller;
 // use nestgate_installer::config::InstallerConfig;
 //
-// # async fn example() -> anyhow::Result<()> {
+// # fn example() -> anyhow::Result<()> {
 // let config = InstallerConfig::default();
 // let installer = NestGateInstaller::new(config).await?;
 // installer.install().await?;
@@ -59,6 +59,11 @@ pub struct NestGateInstaller {
 }
 
 impl NestGateInstaller {
+    /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
     pub fn new(install_dir: Option<PathBuf>) -> Result<Self> {
         let platform = PlatformInfo::detect();
         let downloader = DownloadManager::new();
@@ -70,24 +75,34 @@ impl NestGateInstaller {
         })
     }
 
-    pub async fn install(&self, config: &InstallerConfig) -> Result<()> {
+    /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+    pub fn install(&self, config: &InstallerConfig) -> Result<()> {
         // Note: domains field doesn't exist in canonical config - using system config instead
-        let system_config = &config.system;
-        
+        let system_config = &config.base_config.system;
+
         // System integration logic would be based on system config
         // For now, just log that we're doing system integration
-        info!("Performing system integration for: {}", system_config.service_name);
+        info!(
+            "Performing system integration for: {}",
+            system_config.instance_name
+        );
 
         Ok(())
     }
 
     /// Uninstall the application
-    pub async fn uninstall(
-        &self,
-        remove_config: bool,
-        remove_data: bool,
-        force: bool,
-    ) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+    pub fn uninstall(&self, remove_config: bool, remove_data: bool, force: bool) -> Result<()> {
         let red = Style::new().red().bold();
         let yellow = Style::new().yellow().bold();
 
@@ -99,7 +114,7 @@ impl NestGateInstaller {
             .context("NestGate is not installed or installation info is corrupted")?;
 
         if !force {
-            let message = format!(
+            let _message = format!(
                 "This will remove NestGate from {}{}{}",
                 installation_info.install_path.display(),
                 if remove_config {
@@ -111,7 +126,10 @@ impl NestGateInstaller {
             );
 
             if !Confirm::new()
-                .with_prompt(format!("{message}. Continue?"))
+                .with_prompt(format!(
+                    "Directory {} already exists. Overwrite?",
+                    self.install_dir.as_ref().unwrap().display()
+                ))
                 .interact()?
             {
                 println!("Uninstallation cancelled.");
@@ -166,6 +184,11 @@ impl NestGateInstaller {
         Ok(())
     }
 
+    /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
     pub async fn update(&mut self, version: Option<String>, yes: bool) -> Result<()> {
         let blue = Style::new().blue().bold();
 
@@ -246,7 +269,12 @@ impl NestGateInstaller {
         Ok(())
     }
 
-    pub async fn configure(&mut self, config_path: Option<PathBuf>) -> Result<()> {
+    /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+    pub fn configure(&mut self, config_path: Option<PathBuf>) -> Result<()> {
         let installation_info = self
             .get_installation_info()
             .context("NestGate is not installed")?;
@@ -264,7 +292,12 @@ impl NestGateInstaller {
         Ok(())
     }
 
-    pub async fn run_configuration_wizard(&mut self) -> Result<()> {
+    /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+    pub fn run_configuration_wizard(&mut self) -> Result<()> {
         let installation_info = self
             .get_installation_info()
             .context("NestGate is not installed")?;
@@ -274,7 +307,7 @@ impl NestGateInstaller {
 
         // Save new configuration
         let config_toml = toml::to_string(&config)
-            .map_err(|e| anyhow::anyhow!("Failed to serialize config: {}", e))?;
+            .map_err(|e| anyhow::anyhow!("Failed to serialize config: {e}"))?;
         fs::write(&installation_info.config_path, config_toml)?;
 
         println!(
@@ -284,6 +317,11 @@ impl NestGateInstaller {
         Ok(())
     }
 
+    /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
     pub async fn doctor(&mut self) -> Result<()> {
         let green = Style::new().green();
         let red = Style::new().red();
@@ -381,13 +419,17 @@ impl NestGateInstaller {
             .unwrap_or(false)
     }
 
-    async fn setup_system_integration(&self, config: &InstallerConfig) -> Result<()> {
+    #[allow(dead_code)]
+    fn setup_system_integration(&self, config: &InstallerConfig) -> Result<()> {
         // Note: domains field doesn't exist in canonical config - using system config instead
-        let system_config = &config.system;
-        
+        let system_config = &config.base_config.system;
+
         // System integration logic would be based on system config
         // For now, just log that we're doing system integration
-        info!("Performing system integration for: {}", system_config.service_name);
+        info!(
+            "Performing system integration for: {}",
+            system_config.instance_name
+        );
 
         Ok(())
     }

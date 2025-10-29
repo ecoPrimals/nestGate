@@ -3,11 +3,10 @@
 /// and communication patterns.
 use serde::{Deserialize, Serialize};
 use std::fmt;
+// ==================== SECTION ====================
 
-// ==================== MESSAGE CLASSIFICATION ====================
-
-/// **THE** MessageType - unified across all modules
-/// Replaces 3+ fragmented MessageType definitions across MCP, network, and communication modules
+/// **THE** `MessageType` - unified across all modules
+/// Replaces 3+ fragmented `MessageType` definitions across MCP, network, and communication modules
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum UnifiedMessageType {
     /// Request message
@@ -33,7 +32,6 @@ pub enum UnifiedMessageType {
     /// Custom message type
     Custom(String),
 }
-
 impl Default for UnifiedMessageType {
     fn default() -> Self {
         Self::Request
@@ -58,10 +56,10 @@ impl fmt::Display for UnifiedMessageType {
     }
 }
 
-// ==================== EVENT CLASSIFICATION ====================
+// ==================== SECTION ====================
 
-/// **THE** EventType - unified across all modules
-/// Replaces 5+ fragmented EventType definitions across various event systems
+/// **THE** `EventType` - unified across all modules
+/// Replaces 5+ fragmented `EventType` definitions across various event systems
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum UnifiedEventType {
     /// System startup/initialization event
@@ -93,7 +91,6 @@ pub enum UnifiedEventType {
     /// Custom event type
     Custom(String),
 }
-
 impl Default for UnifiedEventType {
     fn default() -> Self {
         Self::SystemStart
@@ -121,10 +118,10 @@ impl fmt::Display for UnifiedEventType {
     }
 }
 
-// ==================== OPERATION CLASSIFICATION ====================
+// ==================== SECTION ====================
 
-/// **THE** OperationType - unified across all modules
-/// Replaces OperationType definitions across service operations and handlers
+/// **THE** `OperationType` - unified across all modules
+/// Replaces `OperationType` definitions across service operations and handlers
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum UnifiedOperationType {
     /// Create operation
@@ -156,7 +153,6 @@ pub enum UnifiedOperationType {
     /// Custom operation type
     Custom(String),
 }
-
 impl Default for UnifiedOperationType {
     fn default() -> Self {
         Self::Read
@@ -184,10 +180,10 @@ impl fmt::Display for UnifiedOperationType {
     }
 }
 
-// ==================== ALERT CLASSIFICATION ====================
+// ==================== SECTION ====================
 
-/// **THE** AlertType - unified across all modules
-/// Replaces AlertType definitions in monitoring and notification systems
+/// **THE** `AlertType` - unified across all modules
+/// Replaces `AlertType` definitions in monitoring and notification systems
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum UnifiedAlertType {
     /// System performance alert
@@ -209,15 +205,14 @@ pub enum UnifiedAlertType {
     /// Custom alert type
     Custom(String),
 }
-
 impl Default for UnifiedAlertType {
     fn default() -> Self {
         Self::Performance
     }
 }
 
-/// **THE** AlertSeverity - unified across all modules
-/// Replaces AlertSeverity definitions in monitoring and notification systems
+/// **THE** `AlertSeverity` - unified across all modules
+/// Replaces `AlertSeverity` definitions in monitoring and notification systems
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum UnifiedAlertSeverity {
     /// Critical severity - immediate attention required
@@ -233,7 +228,6 @@ pub enum UnifiedAlertSeverity {
     /// Custom severity level
     Custom(String),
 }
-
 impl Default for UnifiedAlertSeverity {
     fn default() -> Self {
         Self::Info

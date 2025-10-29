@@ -9,7 +9,7 @@ use std::path::PathBuf;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityConfig {
     /// Enable encryption metadata tracking (encryption handled by external providers)
-    /// Note: NestGate tracks encryption state but does not perform encryption itself
+    /// Note: `NestGate` tracks encryption state but does not perform encryption itself
     pub enable_encryption: bool,
     /// Default encryption algorithm hint for external providers (like security modules)
     pub encryption_algorithm: String,
@@ -18,7 +18,6 @@ pub struct SecurityConfig {
     /// Access control settings
     pub access_control: AccessControlConfig,
 }
-
 /// Key management configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KeyManagementConfig {
@@ -29,7 +28,6 @@ pub struct KeyManagementConfig {
     /// Backup key locations
     pub backup_locations: Vec<PathBuf>,
 }
-
 /// Access control configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AccessControlConfig {
@@ -40,7 +38,6 @@ pub struct AccessControlConfig {
     /// Group access rules
     pub group_rules: HashMap<String, Vec<String>>,
 }
-
 impl Default for SecurityConfig {
     fn default() -> Self {
         Self {
@@ -64,6 +61,7 @@ impl Default for KeyManagementConfig {
 
 impl KeyManagementConfig {
     /// Create production-optimized key management configuration
+    #[must_use]
     pub fn production() -> Self {
         Self {
             key_storage_path: PathBuf::from("/etc/nestgate/zfs/keys/production"),
@@ -96,10 +94,14 @@ impl AccessControlConfig {
         let mut group_rules = HashMap::new();
         group_rules.insert(
             "zfs-operators".to_string(),
-            ["read", "create", "snapshot"]
-                .iter()
-                .map(|s| s.to_string())
-                .collect(),
+            [
+                "read".to_string(),
+                "create".to_string(),
+                "snapshot".to_string(),
+            ]
+            .iter()
+            .map(std::string::ToString::to_string)
+            .collect(),
         );
 
         Self {
@@ -112,6 +114,7 @@ impl AccessControlConfig {
 
 impl SecurityConfig {
     /// Create production-optimized security configuration
+    #[must_use]
     pub fn production() -> Self {
         Self {
             enable_encryption: true,

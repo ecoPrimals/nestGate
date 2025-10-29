@@ -3,7 +3,6 @@
 // Core type definitions for the unified RPC layer including requests,
 // responses, configurations, and error types.
 
-// REMOVED: async_trait - using zero-cost native async patterns
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
@@ -22,9 +21,9 @@ pub struct UnifiedRpcRequest {
     /// RPC method name
     pub method: String,
     /// Request parameters
-    pub params: serde_json::Value,
-    /// Request metadata
-    pub metadata: HashMap<String, String>,
+    pub _params: serde_json::Value,
+    /// Request _metadata
+    pub _metadata: HashMap<String, String>,
     /// Request timestamp
     pub timestamp: chrono::DateTime<chrono::Utc>,
     /// Whether this request expects a streaming response
@@ -34,7 +33,6 @@ pub struct UnifiedRpcRequest {
     /// Timeout for the request
     pub timeout: Option<Duration>,
 }
-
 /// Request priority levels for processing order
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum RequestPriority {
@@ -47,7 +45,6 @@ pub enum RequestPriority {
     /// Critical priority - system operations
     Critical = 4,
 }
-
 impl Default for RequestPriority {
     fn default() -> Self {
         Self::Normal
@@ -65,16 +62,15 @@ pub struct UnifiedRpcResponse {
     pub data: Option<serde_json::Value>,
     /// Error message (if failed)
     pub error: Option<String>,
-    /// Response metadata
-    pub metadata: HashMap<String, String>,
+    /// Response _metadata
+    pub _metadata: HashMap<String, String>,
     /// Response timestamp
     pub timestamp: chrono::DateTime<chrono::Utc>,
     /// Performance metrics
     pub metrics: ResponseMetrics,
 }
-
 /// Performance metrics for RPC responses
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ResponseMetrics {
     /// Time spent processing the request (milliseconds)
     pub processing_time_ms: u64,
@@ -82,16 +78,6 @@ pub struct ResponseMetrics {
     pub network_latency_ms: Option<u64>,
     /// Connection pool utilization percentage
     pub connection_pool_utilization: Option<f32>,
-}
-
-impl Default for ResponseMetrics {
-    fn default() -> Self {
-        Self {
-            processing_time_ms: 0,
-            network_latency_ms: None,
-            connection_pool_utilization: None,
-        }
-    }
 }
 
 /// RPC stream event for bidirectional communication
@@ -106,29 +92,31 @@ pub struct RpcStreamEvent {
     /// Event timestamp
     pub timestamp: chrono::DateTime<chrono::Utc>,
 }
-
 /// RPC connection type
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RpcConnectionType {
-    /// Binary RPC via tarpc (for beardog, high-performance)
+    /// Binary RPC via tarpc (for security, high-performance)
     Tarpc,
-    /// JSON RPC via HTTP (for songbird, standard)
+    /// JSON RPC via HTTP (for orchestration, standard)
     JsonRpc,
     /// WebSocket (for real-time streams)
     WebSocket,
 }
-
 /// Unified RPC service trait - **ZERO-COST NATIVE ASYNC**
 /// **CANONICAL MODERNIZATION**: High-performance native async patterns for RPC operations
 pub trait UnifiedRpcService: Send + Sync {
     /// Send a request and wait for response
-    fn call(&self, request: UnifiedRpcRequest) -> impl std::future::Future<Output = Result<UnifiedRpcResponse, RpcError>> + Send;
-
+    fn call(
+        &self,
+        request: UnifiedRpcRequest,
+    ) -> impl std::future::Future<Output = Result<UnifiedRpcResponse, RpcError>> + Send;
     /// Start a bidirectional stream
     fn start_stream(
         &self,
         request: UnifiedRpcRequest,
-    ) -> impl std::future::Future<Output = Result<(mpsc::Sender<RpcStreamEvent>, mpsc::Receiver<RpcStreamEvent>), RpcError>> + Send;
+    ) -> impl std::future::Future<
+        Output = Result<(mpsc::Sender<RpcStreamEvent>, mpsc::Receiver<RpcStreamEvent>), RpcError>,
+    > + Send;
 
     /// Get connection type
     fn connection_type(&self) -> RpcConnectionType;
@@ -137,13 +125,87 @@ pub trait UnifiedRpcService: Send + Sync {
     fn health_check(&self) -> impl std::future::Future<Output = Result<bool, RpcError>> + Send;
 }
 
+/// **DYN-COMPATIBLE RPC SERVICE WRAPPER**
+/// Wrapper enum for dynamic dispatch of RPC services
+#[derive(Debug)]
+pub enum DynRpcService {
+    /// JSON-RPC service implementation for HTTP-based communication
+    JsonRpc(crate::rest::rpc::json_rpc_service::JsonRpcService),
+}
+
+impl DynRpcService {
+    /// Execute an RPC call with the given request
+    ///
+    /// Dispatches the request to the appropriate underlying service implementation
+    /// and returns the response or an error if the call fails.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+    pub async fn call(&self, request: UnifiedRpcRequest) -> Result<UnifiedRpcResponse, RpcError> {
+        match self {
+            Self::JsonRpc(service) => service.call(request).await,
+        }
+    }
+
+    /// Start a bidirectional RPC stream
+    ///
+    /// Establishes a bidirectional communication stream for real-time
+    /// data exchange between client and server.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+    pub async fn start_stream(
+        &self,
+        request: UnifiedRpcRequest,
+    ) -> Result<(mpsc::Sender<RpcStreamEvent>, mpsc::Receiver<RpcStreamEvent>), RpcError> {
+        match self {
+            Self::JsonRpc(service) => service.start_stream(request).await,
+        }
+    }
+
+    /// Get the connection type supported by this service
+    ///
+    /// Returns the type of RPC connection this service uses for
+    /// routing and compatibility purposes.
+    #[must_use]
+    pub const fn connection_type(&self) -> RpcConnectionType {
+        match self {
+            Self::JsonRpc(_) => RpcConnectionType::JsonRpc,
+        }
+    }
+
+    /// Perform a health check on the RPC service
+    ///
+    /// Verifies that the underlying service is healthy and ready
+    /// to handle requests.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+    pub async fn health_check(&self) -> Result<bool, RpcError> {
+        match self {
+            Self::JsonRpc(service) => service.health_check().await,
+        }
+    }
+}
+
 /// RPC operation errors
 #[derive(Debug, thiserror::Error, serde::Serialize)]
 pub enum RpcError {
     /// Failed to establish RPC connection
     #[error("Connection failed: {0}")]
     ConnectionFailed(String),
-
     /// RPC request timed out
     #[error("Request timeout: {0}")]
     Timeout(String),
@@ -151,6 +213,10 @@ pub enum RpcError {
     /// Failed to serialize/deserialize RPC data
     #[error("Serialization error: {0}")]
     Serialization(String),
+
+    /// Invalid configuration
+    #[error("Invalid configuration: {0}")]
+    InvalidConfiguration(String),
 
     /// RPC service is not available
     #[error("Service unavailable: {0}")]
@@ -167,6 +233,6 @@ pub enum RpcError {
 
 impl From<serde_json::Error> for RpcError {
     fn from(err: serde_json::Error) -> Self {
-        RpcError::Serialization(err.to_string())
+        Self::Serialization(err.to_string())
     }
 }

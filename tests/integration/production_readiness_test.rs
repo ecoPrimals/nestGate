@@ -10,6 +10,8 @@ use tokio::time::timeout;
 // Core imports
 use nestgate_core::{Result as CoreResult, NestGateError, StorageTier};
 use nestgate_zfs::{
+
+use nestgate_core::canonical_types::StorageTier;
     manager::ZfsManager,
     config::ZfsConfig,
     pool::ZfsPoolManager,
@@ -94,18 +96,15 @@ async fn test_concurrent_operations() -> CoreResult<()> {
             manager.get_zfs_health().await
         });
         handles.push(handle);
+    Ok(())
     }
 
     // Wait for all operations to complete
     let start = std::time::Instant::now();
     for handle in handles {
-        let result = handle.await.map_err(|e| NestGateError::Internal {
-            message: e.to_string(),
-            location: Some(file!().to_string()),
-            debug_info: None,
-            is_bug: false,
-        })?;
+        let result = handle.await.map_err(|e| NestGateError::internal_error(e.to_string(), "test_component"))?;
         assert!(result.is_ok(), "Concurrent operation failed");
+    Ok(())
     }
 
     let total_time = start.elapsed();
@@ -144,7 +143,9 @@ async fn test_error_handling_robustness() -> CoreResult<()> {
             let error_str = error.to_string();
             assert!(!error_str.is_empty(), "Error message should not be empty");
             assert!(!error_str.contains("panic"), "Error should not contain panic information");
+    Ok(())
         }
+    Ok(())
     }
 
     info!("✅ Error handling robustness test passed");
@@ -164,6 +165,7 @@ async fn test_resource_cleanup() -> CoreResult<()> {
     for dataset in &temp_datasets {
         // Simulate resource creation (with fallback for testing)
         let _ = zfs_manager.create_dataset(dataset, "testpool", StorageTier::Warm).await;
+    Ok(())
     }
 
     // Test cleanup
@@ -173,7 +175,9 @@ async fn test_resource_cleanup() -> CoreResult<()> {
         match result {
             Ok(_) => info!("Dataset {} cleaned up successfully", dataset),
             Err(e) => info!("Dataset {} cleanup handled: {}", dataset, e),
+    Ok(())
         }
+    Ok(())
     }
 
     info!("✅ Resource cleanup test passed");
@@ -227,14 +231,18 @@ async fn test_security_validation() -> CoreResult<()> {
             Ok(_) => {
                 // If accepted, should not cause system compromise
                 info!("Input handled safely: {}", input.chars().take(20).collect::<String>());
+    Ok(())
             }
             Err(e) => {
                 // Error should not leak sensitive information
                 let error_msg = e.to_string();
                 assert!(!error_msg.contains("/etc/"), "Error should not leak file paths");
                 assert!(!error_msg.contains("password"), "Error should not leak sensitive data");
+    Ok(())
             }
+    Ok(())
         }
+    Ok(())
     }
 
     info!("✅ Security validation test passed");
@@ -259,7 +267,9 @@ async fn test_scalability_limits() -> CoreResult<()> {
         if start.elapsed() > nestgate_core::constants::test_defaults::TEST_MEDIUM_TIMEOUT {
             warn!("Scalability test stopped early at {} operations", i);
             break;
+    Ok(())
         }
+    Ok(())
     }
 
     let total_time = start.elapsed();
@@ -311,6 +321,7 @@ async fn get_memory_usage() -> CoreResult<MemoryInfo> {
         used_mb: 45, // Simulated current usage
         available_mb: 1955, // Simulated available memory
     })
+    Ok(())
 }
 
 #[tokio::test]

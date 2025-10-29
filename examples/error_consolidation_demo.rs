@@ -10,8 +10,8 @@
 //! - Backward compatibility during migration
 
 use nestgate_core::error::{
-    ErrorConsolidationManager, NestGateError,
-    ZfsErrorInfo, ApiErrorInfo, NetworkErrorInfo, SecurityErrorInfo,
+    ApiErrorInfo, ErrorConsolidationManager, NestGateError, NetworkErrorInfo, SecurityErrorInfo,
+    ZfsErrorInfo,
 };
 use std::collections::HashMap;
 
@@ -19,7 +19,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔧 **NESTGATE ERROR SYSTEM CONSOLIDATION DEMONSTRATION**\n");
 
     // ==================== PHASE 1: FRAGMENTED ERROR LANDSCAPE ====================
-    
+
     println!("📊 **PHASE 1: FRAGMENTED ERROR LANDSCAPE (BEFORE)**");
     println!("Current state: 30+ scattered error types across all crates\n");
 
@@ -42,28 +42,43 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   - Maintenance burden with scattered error types\n");
 
     // ==================== PHASE 2: ERROR CONSOLIDATION PROCESS ====================
-    
+
     println!("🔄 **PHASE 2: ERROR CONSOLIDATION PROCESS**");
-    
+
     let mut consolidation_manager = ErrorConsolidationManager::new();
-    
+
     println!("📋 **CONSOLIDATION MANAGER INITIALIZED**:");
     let initial_summary = consolidation_manager.get_summary();
-    println!("   - Total error types identified: {}", initial_summary.stats.total_error_types);
-    println!("   - Automatic migrations available: {}", initial_summary.automatic_migrations);
-    println!("   - Manual migrations required: {}", initial_summary.manual_migrations);
-    
+    println!(
+        "   - Total error types identified: {}",
+        initial_summary.stats.total_error_types
+    );
+    println!(
+        "   - Automatic migrations available: {}",
+        initial_summary.automatic_migrations
+    );
+    println!(
+        "   - Manual migrations required: {}",
+        initial_summary.manual_migrations
+    );
+
     println!("\n🗺️  **ERROR TYPE MAPPINGS**:");
     for (source, mapping) in &consolidation_manager.mappings {
-        let migration_type = if mapping.automatic_migration { "AUTO" } else { "MANUAL" };
-        println!("   {} → NestGateError::{} [{}] ({})", 
-            source, mapping.target_variant, mapping.category, migration_type);
+        let migration_type = if mapping.automatic_migration {
+            "AUTO"
+        } else {
+            "MANUAL"
+        };
+        println!(
+            "   {} → NestGateError::{} [{}] ({})",
+            source, mapping.target_variant, mapping.category, migration_type
+        );
     }
 
     // ==================== PHASE 3: SYSTEMATIC ERROR MIGRATION ====================
-    
+
     println!("\n🔧 **PHASE 3: SYSTEMATIC ERROR MIGRATION**");
-    
+
     // Migrate ZFS errors
     println!("\n🗂️  **MIGRATING ZFS ERRORS**:");
     let zfs_error_info = ZfsErrorInfo {
@@ -80,7 +95,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             meta
         }),
     };
-    
+
     let unified_zfs_error = consolidation_manager.migrate_zfs_error(&zfs_error_info);
     println!("   ✅ ZfsError → NestGateError::Zfs");
     println!("      Operation: {}", zfs_error_info.operation);
@@ -103,10 +118,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             meta
         }),
     };
-    
+
     let unified_api_error = consolidation_manager.migrate_api_error(&api_error_info);
     println!("   ✅ ApiError → NestGateError::Api");
-    println!("      Endpoint: {} {}", api_error_info.method, api_error_info.endpoint);
+    println!(
+        "      Endpoint: {} {}",
+        api_error_info.method, api_error_info.endpoint
+    );
     println!("      Status: {}", api_error_info.status_code);
     println!("      Error: {}", unified_api_error);
 
@@ -126,7 +144,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             meta
         }),
     };
-    
+
     let unified_network_error = consolidation_manager.migrate_network_error(&network_error_info);
     println!("   ✅ NetworkError → NestGateError::Network");
     println!("      Endpoint: {}", network_error_info.endpoint);
@@ -148,11 +166,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             meta
         }),
     };
-    
+
     let unified_security_error = consolidation_manager.migrate_security_error(&security_error_info);
     println!("   ✅ SecurityError → NestGateError::Security");
     println!("      Domain: {}", security_error_info.security_domain);
-    println!("      User: {}", security_error_info.user_id.as_ref().unwrap());
+    println!(
+        "      User: {}",
+        security_error_info.user_id.as_ref().unwrap()
+    );
     println!("      Error: {}", unified_security_error);
 
     // Generic error consolidation
@@ -161,22 +182,31 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "CustomDomainError",
         "process_data",
         "Failed to process custom domain data",
-        "custom_domain"
+        "custom_domain",
     );
     println!("   ✅ CustomDomainError → NestGateError::Internal");
     println!("      Error: {}", generic_error);
 
     // ==================== PHASE 4: CONSOLIDATION RESULTS ====================
-    
+
     println!("\n📈 **PHASE 4: CONSOLIDATION RESULTS**");
-    
+
     let final_summary = consolidation_manager.get_summary();
     println!("✅ **CONSOLIDATION STATISTICS**:");
-    println!("   - Total error types: {}", final_summary.stats.total_error_types);
-    println!("   - Successfully consolidated: {}", final_summary.stats.consolidated_count);
-    println!("   - Consolidation progress: {:.1}%", final_summary.stats.consolidation_progress);
+    println!(
+        "   - Total error types: {}",
+        final_summary.stats.total_error_types
+    );
+    println!(
+        "   - Successfully consolidated: {}",
+        final_summary.stats.consolidated_count
+    );
+    println!(
+        "   - Consolidation progress: {:.1}%",
+        final_summary.stats.consolidation_progress
+    );
     println!("   - Warnings generated: {}", final_summary.warnings_count);
-    
+
     println!("\n📊 **DOMAIN CONSOLIDATION BREAKDOWN**:");
     for (domain, count) in &final_summary.stats.domain_counts {
         println!("   - {}: {} error types", domain, count);
@@ -192,33 +222,33 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // ==================== PHASE 5: UNIFIED ERROR SYSTEM BENEFITS ====================
-    
+
     println!("\n🎯 **PHASE 5: UNIFIED ERROR SYSTEM BENEFITS**");
-    
+
     println!("✅ **CONSISTENCY**:");
     println!("   - Single NestGateError enum for all error handling");
     println!("   - Consistent error context with operation, component, metadata");
     println!("   - Unified error severity and recovery guidance");
-    
+
     println!("\n✅ **RICH CONTEXT**:");
     println!("   - Domain-specific error data structures");
     println!("   - Structured metadata for debugging");
     println!("   - Recovery suggestions and retry information");
-    
+
     println!("\n✅ **MAINTAINABILITY**:");
     println!("   - Single error type to maintain");
     println!("   - Consistent error handling patterns");
     println!("   - Centralized error documentation");
-    
+
     println!("\n✅ **DEBUGGING**:");
     println!("   - Unified error logging and reporting");
     println!("   - Cross-domain error correlation");
     println!("   - Rich error context for troubleshooting");
 
     // ==================== PHASE 6: MIGRATION STRATEGY ====================
-    
+
     println!("\n🔄 **PHASE 6: MIGRATION STRATEGY**");
-    
+
     println!("📋 **STEP-BY-STEP MIGRATION PLAN**:");
     println!("   1. **Identify** - Catalog all existing error types");
     println!("   2. **Map** - Create mappings to NestGateError variants");
@@ -226,7 +256,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   4. **Test** - Verify error handling behavior is preserved");
     println!("   5. **Replace** - Replace old error types with unified errors");
     println!("   6. **Cleanup** - Remove deprecated error definitions");
-    
+
     println!("\n🛡️  **BACKWARD COMPATIBILITY**:");
     println!("   - Gradual migration with compatibility layers");
     println!("   - Conversion utilities for existing error handling code");
@@ -234,7 +264,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   - Migration validation and testing");
 
     // ==================== SUMMARY ====================
-    
+
     println!("\n🎉 **ERROR SYSTEM CONSOLIDATION COMPLETE**");
     println!("📈 **BENEFITS ACHIEVED**:");
     println!("   ✅ Single unified error system (NestGateError)");
@@ -243,15 +273,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   ✅ Consistent error handling patterns");
     println!("   ✅ Comprehensive consolidation statistics");
     println!("   ✅ Backward compatibility during migration");
-    
+
     println!("\n🔄 **MIGRATION PROGRESS**:");
     println!("   - Framework: ✅ COMPLETE");
     println!("   - ZFS errors: ✅ MIGRATED");
-    println!("   - API errors: ✅ MIGRATED"); 
+    println!("   - API errors: ✅ MIGRATED");
     println!("   - Network errors: ✅ MIGRATED");
     println!("   - Security errors: ✅ MIGRATED");
     println!("   - Remaining errors: 🔄 Ready for migration");
-    
+
     println!("\n🎯 **NEXT STEPS**:");
     println!("   - Apply migrations across all crates");
     println!("   - Update error handling code to use unified errors");
@@ -266,14 +296,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_error_consolidation_manager() {
+    fn test_error_consolidation_manager() -> Result<(), Box<dyn std::error::Error>> {
         let mut manager = ErrorConsolidationManager::new();
-        
+
         // Test initial state
         let summary = manager.get_summary();
         assert!(summary.stats.total_error_types > 0);
         assert_eq!(summary.stats.consolidated_count, 0);
-        
+
         // Test ZFS error migration
         let zfs_error = ZfsErrorInfo {
             operation: "test_operation".to_string(),
@@ -284,20 +314,21 @@ mod tests {
             recovery_suggestion: None,
             metadata: None,
         };
-        
+
         let unified_error = manager.migrate_zfs_error(&zfs_error);
         assert!(matches!(unified_error, NestGateError::Zfs(_)));
-        
+
         // Test statistics update
         let final_summary = manager.get_summary();
         assert_eq!(final_summary.stats.consolidated_count, 1);
         assert!(final_summary.stats.consolidation_progress > 0.0);
+        Ok(())
     }
 
     #[test]
-    fn test_api_error_migration() {
+    fn test_api_error_migration() -> Result<(), Box<dyn std::error::Error>> {
         let mut manager = ErrorConsolidationManager::new();
-        
+
         let api_error = ApiErrorInfo {
             endpoint: "/test".to_string(),
             method: "GET".to_string(),
@@ -307,22 +338,24 @@ mod tests {
             debug_info: None,
             metadata: None,
         };
-        
+
         let unified_error = manager.migrate_api_error(&api_error);
         assert!(matches!(unified_error, NestGateError::Api(_)));
+        Ok(())
     }
 
     #[test]
-    fn test_generic_error_consolidation() {
+    fn test_generic_error_consolidation() -> Result<(), Box<dyn std::error::Error>> {
         let mut manager = ErrorConsolidationManager::new();
-        
+
         let generic_error = manager.consolidate_generic_error(
             "TestError",
-            "test_operation", 
+            "test_operation",
             "Test error message",
-            "test_domain"
+            "test_domain",
         );
-        
+
         assert!(matches!(generic_error, NestGateError::Internal { .. }));
+        Ok(())
     }
-} 
+}

@@ -8,7 +8,7 @@ use std::fs;
 
 #[test]
 #[ignore = "Code quality test - non-blocking for functionality"]
-fn test_no_hardcoded_network_values() {
+fn test_no_hardcoded_network_values() -> Result<(), Box<dyn std::error::Error>> {
     let violations = scan_specific_files_for_hardcoded_values();
 
     if !violations.is_empty() {
@@ -26,6 +26,7 @@ fn test_no_hardcoded_network_values() {
     }
 
     println!("✅ No hardcoded values detected - all configuration is properly externalized!");
+    Ok(())
 }
 
 #[derive(Debug)]
@@ -44,7 +45,6 @@ fn scan_specific_files_for_hardcoded_values() -> Vec<Violation> {
         "code/crates/nestgate-network/src/lib.rs",
         "code/crates/nestgate-core/src/config.rs",
         "code/crates/nestgate-nas/src/lib.rs",
-        "code/crates/nestgate-network/src/songbird.rs",
         "code/crates/nestgate-core/src/security_config.rs",
     ];
 
@@ -96,7 +96,7 @@ fn check_ports_agnostic(
     violations: &mut Vec<Violation>,
 ) {
     // Find any port pattern (:NNNN)
-    let port_regex = Regex::new(r":(\d{3,5})\b").unwrap();
+    let port_regex = Regex::new(r":(\d{3,5})\b")?;
 
     for cap in port_regex.captures_iter(line) {
         if let Some(port_match) = cap.get(1) {
@@ -120,7 +120,7 @@ fn check_ips_agnostic(
     violations: &mut Vec<Violation>,
 ) {
     // Find any IP address pattern
-    let ip_regex = Regex::new(r"\b(?:\d{1,3}\.){3}\d{1,3}\b").unwrap();
+    let ip_regex = Regex::new(r"\b(?:\d{1,3}\.){3}\d{1,3}\b")?;
 
     for ip_match in ip_regex.find_iter(line) {
         let ip = ip_match.as_str();
@@ -142,7 +142,7 @@ fn check_urls_agnostic(
     violations: &mut Vec<Violation>,
 ) {
     // Find any HTTP/HTTPS URL
-    let url_regex = Regex::new(r#"https?://[^\s"']+  "#).unwrap();
+    let url_regex = Regex::new(r#"https?://[^\s"']+  "#)?;
 
     for url_match in url_regex.find_iter(line) {
         let url = url_match.as_str();
@@ -206,11 +206,12 @@ fn is_explicitly_allowed_url(url: &str, line: &str) -> bool {
     line.contains("const") ||
     line.contains("unwrap_or(") ||
     url.contains("example.com") || // Documentation examples only
-    url.contains("localhost") && line.contains("unwrap_or") // Localhost with fallback
+    url.contains(nestgate_core::constants::TEST_HOSTNAME) && line.contains("unwrap_or")
+    // Localhost with fallback
 }
 
 #[test]
-fn test_whitelist_validation() {
+fn test_whitelist_validation() -> Result<(), Box<dyn std::error::Error>> {
     // Test that our whitelisting logic works correctly
 
     // Ports
@@ -237,7 +238,7 @@ fn test_whitelist_validation() {
 
     // URLs
     assert!(is_explicitly_allowed_url(
-        "http://localhost:8080",
+        nestgate_core::constants::TEST_API_BASE,
         "env::var(\"API_URL\").unwrap_or(\"http://localhost:8080\")"
     ));
     assert!(!is_explicitly_allowed_url(
@@ -246,10 +247,11 @@ fn test_whitelist_validation() {
     ));
 
     println!("✅ Whitelist validation tests passed");
+    Ok(())
 }
 
 #[test]
-fn test_environment_variable_standards() {
+fn test_environment_variable_standards() -> Result<(), Box<dyn std::error::Error>> {
     // Ensure we follow NESTGATE_* naming convention
     let config_files = vec![
         "code/crates/nestgate-core/src/config.rs",
@@ -271,4 +273,5 @@ fn test_environment_variable_standards() {
     }
 
     println!("✅ Environment variable naming standards validated");
+    Ok(())
 }

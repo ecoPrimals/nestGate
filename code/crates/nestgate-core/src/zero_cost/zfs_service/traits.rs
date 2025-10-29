@@ -4,11 +4,9 @@ use std::future::Future;
 // High-performance replacement for async_trait-based UniversalZfsService
 // with native async methods and compile-time optimization for ZFS operations.
 
-use std::future::Future;
 
 use crate::Result;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 // Re-export supporting types that are needed by the trait
 use super::types::ZfsOperationStats;
@@ -20,12 +18,11 @@ use super::types::ZfsOperationStats;
 pub trait ZeroCostUniversalZfsService<
     const MAX_POOLS: usize = 256,
     const MAX_DATASETS: usize = 10000,
-    const MAX_SNAPSHOTS: usize = 100000,
+    const MAX_SNAPSHOTS: usize = 100_000,
 >: Send + Sync + 'static
 {
     /// Pool information type
     type PoolInfo: Clone + Send + Sync + Serialize + for<'de> Deserialize<'de>;
-
     /// Dataset information type
     type DatasetInfo: Clone + Send + Sync + Serialize + for<'de> Deserialize<'de>;
 

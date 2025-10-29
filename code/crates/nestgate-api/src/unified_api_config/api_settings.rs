@@ -23,7 +23,6 @@ mod tests {
         assert!(settings.enable_compression);
         assert!(settings.enable_http2);
     }
-
     #[test]
     fn test_streaming_settings_default() {
         let settings = ApiStreamingSettings::default();

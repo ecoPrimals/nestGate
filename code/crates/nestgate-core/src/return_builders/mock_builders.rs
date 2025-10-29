@@ -1,90 +1,130 @@
-use crate::universal_traits::PerformanceMetrics;
+///! Mock Builders for Return Types
+///!
+///! **⚠️ DEVELOPMENT/TEST ONLY**: This module is only available with `dev-stubs` feature
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+/// Simple performance metrics for mock builders
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PerformanceMetrics {
+    pub cpu_usage: f64,
+    pub memory_usage: f64,
+    pub disk_io: f64,
+    pub network_io: f64,
+}
+/// Resource allocation structure for mock builders
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct ResourceAllocation {
+    pub id: String,
+    pub resource_type: String,
+    pub status: String,
+    pub allocated_at: String,
+    pub expires_at: String,
+    pub metadata: serde_json::Value,
+}
+/// Workload result structure for mock builders
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WorkloadResult {
+    pub performance_metrics: PerformanceMetrics,
+    pub workload_id: String,
+    pub success: bool,
+    pub execution_time_ms: u64,
+    pub resources_used: ResourceAllocation,
+    pub result_data: serde_json::Value,
+}
 /// Build mock resource allocation response
 /// **PURE FUNCTION**: Mock resource allocation construction
 /// **TESTABLE**: Can verify mock data field assignments
+#[must_use]
 pub fn build_mock_resource_allocation(
     cpu_cores: u32,
     memory_gb: u32,
     storage_gb: u32,
     network_mbps: u32,
-) -> crate::types::ResourceAllocation {
-    crate::types::ResourceAllocation {
+) -> ResourceAllocation {
+    ResourceAllocation {
         id: Uuid::new_v4().to_string(),
         resource_type: format!("compute-{cpu_cores}-{memory_gb}-{storage_gb}-{network_mbps}"),
         status: "active".to_string(),
-        amount: cpu_cores as u64,
-        cpu_cores,
-        memory_mb: (memory_gb * 1024) as u64,
-        disk_gb: storage_gb as u64,
-        network_bandwidth_mbps: network_mbps,
-        allocated_at: std::time::SystemTime::now(),
-        expires_at: Some(std::time::SystemTime::now() + std::time::Duration::from_secs(24 * 3600)),
-        metadata: {
-            let mut meta = std::collections::HashMap::new();
-            meta.insert("cpu_cores".to_string(), cpu_cores.to_string());
-            meta.insert("memory_gb".to_string(), memory_gb.to_string());
-            meta.insert("storage_gb".to_string(), storage_gb.to_string());
-            meta.insert("network_mbps".to_string(), network_mbps.to_string());
-            meta
-        },
+        allocated_at: std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs()
+            .to_string(),
+        expires_at: (std::time::SystemTime::now() + std::time::Duration::from_secs(24 * 3600))
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs()
+            .to_string(),
+        metadata: serde_json::json!({
+            "cpu_cores": cpu_cores,
+            "memory_gb": memory_gb,
+            "storage_gb": storage_gb,
+            "network_mbps": network_mbps
+        }),
     }
 }
-
 /// Build mock workload result
 /// **PURE FUNCTION**: Mock workload result construction
 /// **TESTABLE**: Can verify mock workload field assignments
+#[must_use]
 pub fn build_mock_workload_result(
     workload_id: String,
     success: bool,
     processing_time_ms: u64,
-) -> crate::types::WorkloadResult {
-    crate::types::WorkloadResult {
+) -> WorkloadResult {
+    WorkloadResult {
+        performance_metrics: PerformanceMetrics {
+            cpu_usage: 0.75,
+            memory_usage: 0.60,
+            disk_io: processing_time_ms as f64,
+            network_io: 0.50,
+        },
         workload_id,
         success,
-        status: if success {
-            "completed".to_string()
-        } else {
-            "failed".to_string()
-        },
-        message: if success {
-            "Mock workload completed successfully".to_string()
-        } else {
-            "Mock workload failed".to_string()
-        },
         execution_time_ms: processing_time_ms,
-        resources_used: crate::types::ResourceAllocation::default(),
+        resources_used: ResourceAllocation::default(),
         result_data: if success {
             serde_json::json!({"status": "completed", "output": "mock_result", "processing_time_ms": processing_time_ms})
         } else {
             serde_json::Value::Null
         },
-        metrics: {
-            let mut metrics = std::collections::HashMap::new();
-            metrics.insert("processing_time_ms".to_string(), processing_time_ms as f64);
-            metrics.insert("cpu_usage".to_string(), 0.75);
-            metrics.insert("memory_usage".to_string(), 0.60);
-            metrics
-        },
-        started_at: std::time::SystemTime::now()
-            - std::time::Duration::from_millis(processing_time_ms),
-        completed_at: Some(std::time::SystemTime::now()),
-        error_message: if !success {
-            Some("Mock error message".to_string())
-        } else {
-            None
-        },
     }
 }
-
 /// Build mock performance metrics for testing
 pub fn build_mock_performance_metrics() -> crate::Result<PerformanceMetrics> {
     Ok(PerformanceMetrics {
-        timestamp: std::time::SystemTime::now(),
-        _cpu_usage: 45.2,
+        cpu_usage: 45.2,
         memory_usage: 67.8,
         disk_io: 1024.0 * 1024.0,   // 1MB/s
         network_io: 512.0 * 1024.0, // 512KB/s
     })
+}
+
+/// Access grant structure for testing
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AccessGrant {
+    pub permissions: Vec<String>,
+    pub valid_until: u64,
+    pub proof_data: String,
+    pub consensus_nodes: Vec<String>,
+    pub confidence_score: f64,
+}
+
+/// Build mock access grant for testing
+#[must_use]
+pub fn build_access_grant(
+    permissions: &[String],
+    valid_until: u64,
+    proof_data: &str,
+    consensus_nodes: &[String],
+    confidence_score: f64,
+) -> AccessGrant {
+    AccessGrant {
+        permissions: permissions.to_vec(),
+        valid_until,
+        proof_data: proof_data.to_string(),
+        consensus_nodes: consensus_nodes.to_vec(),
+        confidence_score,
+    }
 }

@@ -1,53 +1,144 @@
+//! **NESTGATE NETWORK CRATE**
+//!
+//! This crate provides network functionality for the `NestGate` ecosystem,
+//! including connection management, protocol handling, and service discovery.
+
+use std::time::Duration;
+
+/// CANONICAL MODERNIZATION: Use canonical Result type from nestgate-core
+/// Type alias for Results used throughout the crate - migrated to canonical
+pub use nestgate_core::Result;
+// ==================== SECTION ====================
+
+/// API module for network services
+pub mod api;
+/// Protocol handlers and management
+pub mod handlers;
+/// Orchestration adapter
+pub mod orchestration_adapter;
+/// Protocol definitions
+pub mod protocol;
+/// Main network service implementation
+pub mod service;
+/// Service discovery client (sovereignty compliant)
+pub mod service_discovery_client;
+/// Network types and configuration
+pub mod types;
+/// Unified network configuration
+pub mod unified_network_config;
+/// Unified network extensions
+pub mod unified_network_extensions;
+// Removed: Zero-cost orchestration types (delegated to orchestration primal)
+/// Orchestration functionality
+pub use orchestration_adapter::{OrchestrationAdapter, OrchestrationConfig};
+/// Configuration migration utilities
+/// These utilities help migrate from legacy configurations
+/// to the new modular network system.
+/// Main network service
+pub use service::RealNetworkService as NetworkService;
+/// Service discovery client (sovereignty compliant)
+pub use service_discovery_client::{LocalServiceRegistry, ServiceDiscoveryClient};
+/// Network configuration
+pub use types::{NetworkConfig, NetworkConfigBuilder};
+// Removed: Universal orchestration modules (delegated to orchestration primal via capability discovery)
+// ==================== SECTION ====================
+
+// **DEPRECATED CODE REMOVED**
 //
-// Provides network services and connection management
+// The following deprecated compatibility layers have been eliminated:
+// - `real_network_service.rs` (893 lines) - Deprecated compatibility layer
+//
+// **Migration Path**:
+// All functionality has been migrated to the modular system:
+// - Use `service::NetworkService` for main network operations
+// - Use `types::NetworkConfig` for configuration
+// - Use `handlers::*` for protocol-specific operations
+//
+// **Performance Impact**:
+// - Removed 893 lines of deprecated code
+// - Eliminated compatibility overhead
+// - Improved compile times and memory usage
 
-pub mod connection_manager;
-pub mod real_network_service;
-
-// **CANONICAL MODERNIZATION**: Use canonical trait system
-pub use nestgate_core::traits::{UniversalService, ServiceRegistration};
-pub use connection_manager::{OrchestrationClient, ConnectionManager};
-
-// Re-export key types for external use
-// Note: orchestration_adapter module needs to be implemented
-// Removed unresolved universal_orchestration import
-
-// Re-exports for universal orchestration
-// Removed unresolved universal_orchestration imports - these need to be implemented or removed
-
-// Legacy compatibility re-exports (migrated to universal patterns)
-// Removed unresolved universal_orchestration imports
-
-// Common types and utilities
-// Removed unresolved error imports - use nestgate_core::error instead
-// Re-export core error types
-
-// Re-export core types - using correct paths
-pub use nestgate_core::types::ServiceInstance;
-
-// Re-export universal provider traits
-// Note: OrchestrationPrimalProvider path needs verification
+// ==================== CONFIGURATION FUNCTIONS ====================
 
 /// Default network configuration
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct NetworkConfig {
-    /// Enable universal orchestration discovery
-    pub enable_orchestration: bool,
-    /// Orchestration discovery timeout in seconds
-    pub orchestration_timeout: u64,
-    /// Service discovery interval in seconds
-    pub discovery_interval: u64,
-    /// Health check interval in seconds
-    pub health_check_interval: u64,
+#[must_use]
+pub fn default_network_config() -> NetworkConfig {
+    NetworkConfig::default()
+}
+/// Create production network configuration
+#[must_use]
+pub fn production_network_config() -> NetworkConfig {
+    let mut config = NetworkConfig::default();
+    config.network.api.max_connections = 2000;
+    config.network.api.connection_timeout = Duration::from_secs(10);
+    config
+}
+/// Create development network configuration  
+#[must_use]
+pub fn development_network_config() -> NetworkConfig {
+    let mut config = NetworkConfig::default();
+    config.network.api.max_connections = 100;
+    config.network.api.connection_timeout = Duration::from_secs(30);
+    config
+}
+// ==================== SECTION ====================
+
+/// Network-specific result type
+// Use canonical NetworkResult from nestgate_core::error
+pub use nestgate_core::error::NetworkResult;
+/// Network error types
+#[derive(Debug, thiserror::Error)]
+pub enum NetworkError {
+    #[error("Connection failed: {message}")]
+    ConnectionFailed { message: String },
+    #[error("Timeout occurred: {b_operation:?}")]
+    Timeout { b_operation: Option<String> },
+    #[error("Configuration error: {field} - {message}")]
+    Configuration { field: String, message: String },
+    #[error("Protocol error: {protocol} - {message}")]
+    Protocol { protocol: String, message: String },
+    #[error("Service unavailable: {service}")]
+    ServiceUnavailable { service: String },
+}
+// ==================== SECTION ====================
+
+/// Network constants - use canonical constants system
+pub mod constants {
+    /// Default API port - use canonical constant
+    pub use nestgate_core::constants::canonical_defaults::network::DEFAULT_API_PORT;
+    /// Default internal port
+    pub const DEFAULT_INTERNAL_PORT: u16 = 8081;
+
+    /// Default connection timeout
+    pub const DEFAULT_CONNECTION_TIMEOUT_SECONDS: u64 = 30;
 }
 
-impl Default for NetworkConfig {
-    fn default() -> Self {
-        Self {
-            enable_orchestration: true,
-            orchestration_timeout: 10,
-            discovery_interval: 60,
-            health_check_interval: 30,
-        }
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_default_config_creation() {
+        let config = default_network_config();
+        // Test that config is created successfully
+        assert!(
+            !config.extensions.port_range_start == 0 || config.extensions.port_range_start >= 1024
+        );
+    }
+    #[test]
+    fn test_production_config() {
+        let config = production_network_config();
+        assert_eq!(config.extensions.load_balancing.max_failures, 3);
+        // Test production settings - config creation successful
+        assert!(config.extensions.keep_alive_timeout_seconds > 0);
+    }
+
+    #[test]
+    fn test_development_config() {
+        let config = development_network_config();
+        assert_eq!(config.extensions.load_balancing.max_failures, 3);
+        // Test development settings - config creation successful
+        assert!(config.extensions.keep_alive_timeout_seconds > 0);
     }
 }

@@ -1,7 +1,6 @@
 //
 // Real-time metrics collection and data aggregation for the performance dashboard.
 
-use axum::{extract::State, response::Json};
 use nestgate_core::Result;
 // use crate::error::SystemResource;  // Missing module
 use serde::{Deserialize, Serialize};
@@ -12,143 +11,230 @@ use tokio::sync::broadcast;
 use tokio::time::{Duration, Instant};
 // Removed unused tracing import
 
-use super::dashboard_types::{DashboardEvent, TimeRange};
-use nestgate_core::NestGateError;
+use super::dashboard_types::{DashboardEvent, DashboardTimeRange};
+
 use tracing::debug;
 use tracing::info;
 use tracing::warn;
 
-/// Real-time metrics aggregation structure
+/// **REAL TIME METRICS**
+///
+/// Real-time system and storage metrics collection.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RealTimeMetrics {
+    /// Timestamp when these metrics were collected
     pub timestamp: SystemTime,
+    /// Metrics for individual storage pools
     pub pool_metrics: Vec<PoolMetrics>,
+    /// System-wide performance metrics
     pub system_metrics: SystemMetrics,
+    /// ARC cache hit ratio (0.0 to 1.0)
     pub arc_hit_ratio: f64,
+    /// L2ARC cache hit ratio (0.0 to 1.0)
     pub l2arc_hit_ratio: f64,
+    /// Data compression ratio achieved
     pub compression_ratio: f64,
+    /// Total system throughput in bytes per second
     pub total_throughput: f64,
+    /// Average read latency in milliseconds
     pub average_read_latency: f64,
+    /// Average write latency in milliseconds
     pub average_write_latency: f64,
 }
 
-/// ZFS pool performance metrics
+/// **POOL METRICS**
+///
+/// Performance and utilization metrics for a storage pool.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PoolMetrics {
+    /// Name of the storage pool
     pub name: String,
+    /// Current health status of the pool
     pub health_status: String,
+    /// Pool capacity utilization as percentage (0.0 to 100.0)
     pub utilization_percentage: f64,
+    /// Total pool capacity in bytes
     pub total_capacity: u64,
+    /// Currently used space in bytes
     pub used_space: u64,
+    /// Available free space in bytes
     pub available_space: u64,
+    /// Read operations per second
     pub read_iops: u64,
+    /// Write operations per second
     pub write_iops: u64,
+    /// Read throughput in bytes per second
     pub read_throughput: f64,
+    /// Write throughput in bytes per second
     pub write_throughput: f64,
+    /// Pool fragmentation level (0.0 to 1.0)
     pub fragmentation_level: f64,
+    /// Number of errors encountered
     pub error_count: u32,
 }
 
-/// System-level performance metrics
+/// **SYSTEM METRICS**
+///
+/// System-wide performance and resource utilization metrics.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemMetrics {
+    /// CPU usage percentage (currently unused, prefixed with _)
     pub _cpu_usage: f64,
+    /// Memory usage percentage (0.0 to 100.0)
     pub memory_usage: f64,
+    /// Total system memory in bytes
     pub memory_total: u64,
+    /// Available memory in bytes
     pub memory_available: u64,
+    /// Network I/O metrics
     pub network_io: NetworkIOMetrics,
+    /// Disk I/O metrics
     pub disk_io: DiskIOMetrics,
 }
 
-/// Network I/O metrics
+/// **NETWORK I/O METRICS**
+///
+/// Network input/output performance statistics.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkIOMetrics {
+    /// Total bytes sent over network
     pub bytes_sent: u64,
+    /// Total bytes received over network
     pub bytes_received: u64,
+    /// Total packets sent
     pub packets_sent: u64,
+    /// Total packets received
     pub packets_received: u64,
 }
 
-/// Disk I/O metrics
+/// **DISK I/O METRICS**
+///
+/// Disk input/output performance statistics.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DiskIOMetrics {
+    /// Total bytes read from disk
     pub read_bytes: u64,
+    /// Total bytes written to disk
     pub write_bytes: u64,
+    /// Total read operations performed
     pub read_operations: u64,
+    /// Total write operations performed
     pub write_operations: u64,
 }
 
-/// System resource overview metrics
+/// **SYSTEM SNAPSHOT**
+///
+/// Point-in-time snapshot of system resource utilization.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SystemResourceMetrics {
+pub struct SystemSnapshot {
+    /// Timestamp when this snapshot was taken
     pub timestamp: SystemTime,
+    /// Number of CPU cores available
     pub cpu_cores: u32,
+    /// Current CPU usage percentage
     pub cpu_usage_percent: f64,
+    /// Total system memory in gigabytes
     pub memory_total_gb: u32,
+    /// Currently used memory in gigabytes
     pub memory_used_gb: u32,
+    /// Total disk space in gigabytes
     pub disk_total_gb: u64,
+    /// Currently used disk space in gigabytes
     pub disk_used_gb: u64,
+    /// List of available network interfaces
     pub network_interfaces: Vec<String>,
 }
 
-/// I/O performance metrics over time
+/// **I/O METRICS POINT**
+///
+/// Single data point for I/O performance metrics.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IOMetricsPoint {
+    /// Timestamp for this measurement
     pub timestamp: SystemTime,
+    /// Read operations per second at this time
     pub read_iops: u64,
+    /// Write operations per second at this time
     pub write_iops: u64,
+    /// Read latency in milliseconds
     pub read_latency: f64,
+    /// Write latency in milliseconds
     pub write_latency: f64,
 }
 
-/// Cache performance metrics over time
+/// **CACHE METRICS POINT**
+///
+/// Single data point for cache performance metrics.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CacheMetricsPoint {
+    /// Timestamp for this measurement
     pub timestamp: SystemTime,
+    /// ARC hit ratio at this time (0.0 to 1.0)
     pub arc_hit_ratio: f64,
+    /// L2ARC hit ratio at this time (0.0 to 1.0)
     pub l2arc_hit_ratio: f64,
+    /// ARC size in bytes
     pub arc_size: u64,
+    /// L2ARC size in bytes
     pub l2arc_size: u64,
 }
 
-/// Comprehensive metrics point combining multiple metric types
+/// **COMPREHENSIVE METRICS POINT**
+///
+/// Complete metrics data point for time series analysis.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComprehensiveMetricsPoint {
+    /// Timestamp for this comprehensive measurement
     pub timestamp: SystemTime,
+    /// I/O performance metrics at this time
     pub io_metrics: IOMetricsPoint,
+    /// Cache performance metrics at this time
     pub cache_metrics: CacheMetricsPoint,
+    /// Capacity utilization metrics at this time
     pub capacity_metrics: CapacityMetricsPoint,
 }
 
-/// Storage capacity metrics over time
+/// **CAPACITY METRICS POINT**
+///
+/// Single data point for capacity utilization metrics.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CapacityMetricsPoint {
+    /// Timestamp for this measurement
     pub timestamp: SystemTime,
+    /// Total system capacity in bytes
     pub total_capacity: u64,
+    /// Currently used space in bytes
     pub used_space: u64,
+    /// Rate of capacity growth in bytes per day
     pub growth_rate: f64,
 }
-
-/// Real-time metrics collection engine
+/// Real-time metrics collection _engine
 #[derive(Debug)]
 pub struct RealTimeMetricsCollector {
     // Implementation details
 }
-
 impl RealTimeMetricsCollector {
     /// Create a new metrics collector
-    pub fn new() -> Self {
+    #[must_use]
+    pub const fn new() -> Self {
         Self {}
     }
 
     /// Start real-time metrics collection with event broadcasting
-    pub async fn start_collection(&self, _broadcaster: Arc<broadcast::Sender<DashboardEvent>>) {
+    pub fn start_collection(&self, _broadcaster: Arc<broadcast::Sender<DashboardEvent>>) {
         // Implementation for starting real-time metrics collection
         info!("Starting real-time metrics collection");
         // This would spawn background tasks to continuously collect metrics
     }
 
     /// Get current system and storage metrics with real data collection
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn get_current_metrics(&self) -> Result<RealTimeMetrics> {
         info!("📊 Collecting real-time system and storage metrics");
 
@@ -165,21 +251,21 @@ impl RealTimeMetricsCollector {
             Self::collect_zfs_cache_stats().await?;
 
         // Calculate total throughput from pool metrics or system I/O
-        let total_throughput = if !pool_metrics.is_empty() {
+        let total_throughput = if pool_metrics.is_empty() {
+            // Fallback to system disk I/O throughput estimation
+            (system_metrics.disk_io.read_bytes + system_metrics.disk_io.write_bytes) as f64
+                / (1024.0 * 1024.0) // MB/s
+        } else {
             pool_metrics
                 .iter()
                 .map(|p| p.read_throughput + p.write_throughput)
                 .sum()
-        } else {
-            // Fallback to system disk I/O throughput estimation
-            (system_metrics.disk_io.read_bytes + system_metrics.disk_io.write_bytes) as f64
-                / (1024.0 * 1024.0) // MB/s
         };
 
         // Calculate average latencies from system disk metrics
         let average_read_latency = if pool_metrics.is_empty() {
             // Estimate from system I/O (simplified calculation)
-            let read_ops = system_metrics.disk_io.read_operations.max(1);
+            let read_ops = system_metrics.disk_io.read_bytes.max(1);
             (system_metrics.disk_io.read_bytes as f64 / read_ops as f64) / 1000.0
         // Rough latency estimate
         } else {
@@ -188,7 +274,7 @@ impl RealTimeMetricsCollector {
         };
 
         let average_write_latency = if pool_metrics.is_empty() {
-            let write_ops = system_metrics.disk_io.write_operations.max(1);
+            let write_ops = system_metrics.disk_io.write_bytes.max(1);
             (system_metrics.disk_io.write_bytes as f64 / write_ops as f64) / 1000.0
         // Rough latency estimate
         } else {
@@ -355,7 +441,9 @@ impl RealTimeMetricsCollector {
                 }
 
                 debug!(
-                    "🌐 Real network I/O: RX {} MB, TX {} MB",
+                    "🌐 Real network I/O: RX {},
+    MB, TX {},
+    MB",
                     total_bytes_received / (1024 * 1024),
                     total_bytes_sent / (1024 * 1024)
                 );
@@ -414,7 +502,9 @@ impl RealTimeMetricsCollector {
                 }
 
                 debug!(
-                    "💾 Real disk I/O: Read {} MB, Write {} MB",
+                    "💾 Real disk I/O: Read {},
+    MB, Write {},
+    MB",
                     total_read_bytes / (1024 * 1024),
                     total_write_bytes / (1024 * 1024)
                 );
@@ -431,7 +521,7 @@ impl RealTimeMetricsCollector {
                 Ok(DiskIOMetrics {
                     read_bytes: 1024 * 1024 * 1024, // 1GB fallback
                     write_bytes: 512 * 1024 * 1024, // 512MB fallback
-                    read_operations: 10000,
+                    read_operations: 10_000,
                     write_operations: 5000,
                 })
             }
@@ -442,7 +532,7 @@ impl RealTimeMetricsCollector {
     async fn collect_zfs_pool_metrics() -> Result<Vec<PoolMetrics>> {
         // Try to get ZFS pool statistics
         match tokio::process::Command::new("zpool")
-            .args(&["list", "-H", "-p"])
+            .args(["list", "-H", "-p"])
             .output()
             .await
         {
@@ -481,7 +571,11 @@ impl RealTimeMetricsCollector {
                     }
                 }
 
-                debug!("🏊 Collected {} ZFS pool metrics", pools.len());
+                debug!(
+                    "🏊 Collected {},
+    ZFS pool metrics",
+                    pools.len()
+                );
                 Ok(pools)
             }
             Ok(_) | Err(_) => {
@@ -494,92 +588,117 @@ impl RealTimeMetricsCollector {
     /// Collect ZFS ARC cache statistics
     async fn collect_zfs_cache_stats() -> Result<(f64, f64, f64)> {
         // Try to read ZFS ARC stats from /proc/spl/kstat/zfs/arcstats (Linux ZFS)
-        match tokio::fs::read_to_string("/proc/spl/kstat/zfs/arcstats").await {
-            Ok(content) => {
-                let mut arc_hits = 0u64;
-                let mut arc_misses = 0u64;
-                let mut l2arc_hits = 0u64;
-                let mut l2arc_misses = 0u64;
+        if let Ok(content) = tokio::fs::read_to_string("/proc/spl/kstat/zfs/arcstats").await {
+            let mut arc_hits = 0u64;
+            let mut arc_misses = 0u64;
+            let mut l2arc_hits = 0u64;
+            let mut l2arc_misses = 0u64;
 
-                for line in content.lines() {
-                    let parts: Vec<&str> = line.split_whitespace().collect();
-                    if parts.len() >= 3 {
-                        match parts[0] {
-                            "hits" => arc_hits = parts[2].parse().unwrap_or(0),
-                            "misses" => arc_misses = parts[2].parse().unwrap_or(0),
-                            "l2_hits" => l2arc_hits = parts[2].parse().unwrap_or(0),
-                            "l2_misses" => l2arc_misses = parts[2].parse().unwrap_or(0),
-                            _ => {}
-                        }
+            for line in content.lines() {
+                let parts: Vec<&str> = line.split_whitespace().collect();
+                if parts.len() >= 3 {
+                    match parts[0] {
+                        "hits" => arc_hits = parts[2].parse().unwrap_or(0),
+                        "misses" => arc_misses = parts[2].parse().unwrap_or(0),
+                        "l2_hits" => l2arc_hits = parts[2].parse().unwrap_or(0),
+                        "l2_misses" => l2arc_misses = parts[2].parse().unwrap_or(0),
+                        _ => {}
                     }
                 }
-
-                let arc_total = arc_hits + arc_misses;
-                let arc_hit_ratio = if arc_total > 0 {
-                    (arc_hits as f64 / arc_total as f64) * 100.0
-                } else {
-                    90.0 // Default good ratio
-                };
-
-                let l2arc_total = l2arc_hits + l2arc_misses;
-                let l2arc_hit_ratio = if l2arc_total > 0 {
-                    (l2arc_hits as f64 / l2arc_total as f64) * 100.0
-                } else {
-                    70.0 // Default reasonable L2ARC ratio
-                };
-
-                debug!(
-                    "🎯 Real ZFS cache stats: ARC {:.1}%, L2ARC {:.1}%",
-                    arc_hit_ratio, l2arc_hit_ratio
-                );
-
-                // Compression ratio would come from pool-specific stats
-                Ok((arc_hit_ratio, l2arc_hit_ratio, 1.4)) // Default 1.4x compression
             }
-            Err(_) => {
-                debug!("⚠️ ZFS ARC stats not available, using defaults");
-                Ok((85.0, 65.0, 1.2)) // Reasonable defaults
-            }
+
+            let arc_total = arc_hits + arc_misses;
+            let arc_hit_ratio = if arc_total > 0 {
+                (arc_hits as f64 / arc_total as f64) * 100.0
+            } else {
+                90.0 // Default good ratio
+            };
+
+            let l2arc_total = l2arc_hits + l2arc_misses;
+            let l2arc_hit_ratio = if l2arc_total > 0 {
+                (l2arc_hits as f64 / l2arc_total as f64) * 100.0
+            } else {
+                70.0 // Default reasonable L2ARC ratio
+            };
+
+            debug!(
+                "🎯 Real ZFS cache stats: ARC {:.1}%, L2ARC {:.1}%",
+                arc_hit_ratio, l2arc_hit_ratio
+            );
+
+            // Compression ratio would come from pool-specific stats
+            Ok((arc_hit_ratio, l2arc_hit_ratio, 1.4)) // Default 1.4x compression
+        } else {
+            debug!("⚠️ ZFS ARC stats not available, using defaults");
+            Ok((85.0, 65.0, 1.2)) // Reasonable defaults
         }
     }
 
     /// Get historical performance data for a specific pool
-    pub async fn get_historical_data(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+    pub fn get_historical_data(
         &self,
         _pool_name: &str,
-        _time_range: &TimeRange,
+        _time_range: &DashboardTimeRange,
     ) -> Result<Vec<PoolMetrics>> {
         // Implementation for getting historical data
         debug!("Getting historical data for pool: {}", _pool_name);
         Ok(vec![])
     }
 
-    /// Get comprehensive system resource metrics
-    pub async fn get_system_resources(&self) -> Result<SystemResourceMetrics> {
-        // Implementation for getting system resources
-        Ok(SystemResourceMetrics {
+    /// Get system resource metrics and utilization
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+    pub fn get_system_resources(&self) -> Result<SystemSnapshot> {
+        // Stub implementation
+        Ok(SystemSnapshot {
             timestamp: SystemTime::now(),
             cpu_cores: 16,
             cpu_usage_percent: 45.0,
             memory_total_gb: 32,
             memory_used_gb: 20,
-            disk_total_gb: 10000,
+            disk_total_gb: 10_000,
             disk_used_gb: 6500,
             network_interfaces: vec!["eth0".to_string(), "lo".to_string()],
         })
     }
 
     /// Get metrics for all storage pools
-    pub async fn get_all_pool_metrics(&self) -> Result<HashMap<String, PoolMetrics>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+    pub fn get_all_pool_metrics(&self) -> Result<HashMap<String, PoolMetrics>> {
         // Implementation for getting all pool metrics
         debug!("Getting all pool metrics");
         Ok(HashMap::new())
     }
 
     /// Get I/O performance historical data
-    pub async fn get_io_historical_data(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+    pub fn get_io_historical_data(
         &self,
-        _time_range: &TimeRange,
+        _time_range: &DashboardTimeRange,
     ) -> Result<Vec<IOMetricsPoint>> {
         // Implementation for I/O historical data
         debug!("Getting I/O historical data");
@@ -587,25 +706,44 @@ impl RealTimeMetricsCollector {
     }
 
     /// Get cache performance metrics
-    pub async fn get_cache_metrics(&self) -> Result<Vec<CacheMetricsPoint>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+    pub fn get_cache_metrics(&self) -> Result<Vec<CacheMetricsPoint>> {
         // Implementation for cache metrics
         debug!("Getting cache metrics");
         Ok(vec![])
     }
 
     /// Get comprehensive historical metrics combining all metric types
-    pub async fn get_comprehensive_historical_data(
-        &self,
-    ) -> Result<Vec<ComprehensiveMetricsPoint>> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+    pub fn get_comprehensive_historical_data(&self) -> Result<Vec<ComprehensiveMetricsPoint>> {
         // Implementation for comprehensive historical data
         debug!("Getting comprehensive historical data");
         Ok(vec![])
     }
 
     /// Get storage capacity historical data
-    pub async fn get_capacity_historical_data(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+    pub fn get_capacity_historical_data(
         &self,
-        _time_range: &TimeRange,
+        _time_range: &DashboardTimeRange,
     ) -> Result<Vec<CapacityMetricsPoint>> {
         // Implementation for capacity historical data
         debug!("Getting capacity historical data");
@@ -616,5 +754,30 @@ impl RealTimeMetricsCollector {
 impl Default for RealTimeMetricsCollector {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+/// State structure for the metrics collector
+#[derive(Debug, Clone)]
+pub struct MetricsCollectorState {
+    /// Real-time metrics data
+    pub current_metrics: Arc<tokio::sync::RwLock<Option<RealTimeMetrics>>>,
+    /// Metrics collection interval
+    pub collection_interval: Duration,
+    /// Event broadcaster for real-time updates
+    pub event_sender: Arc<broadcast::Sender<DashboardEvent>>,
+    /// Last collection timestamp
+    pub last_collection: Arc<tokio::sync::RwLock<Option<Instant>>>,
+}
+
+impl Default for MetricsCollectorState {
+    fn default() -> Self {
+        let (sender, _) = broadcast::channel(1000);
+        Self {
+            current_metrics: Arc::new(tokio::sync::RwLock::new(None)),
+            collection_interval: Duration::from_secs(5),
+            event_sender: Arc::new(sender),
+            last_collection: Arc::new(tokio::sync::RwLock::new(None)),
+        }
     }
 }

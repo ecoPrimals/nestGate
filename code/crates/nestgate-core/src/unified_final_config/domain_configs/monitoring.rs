@@ -1,5 +1,5 @@
 //
-// Monitoring-specific configuration structures extracted from the monolithic domain_configs.rs
+// Monitoring-specific configuration structures extracted from the monolithic NestGateCanonicalConfig.rs
 // for better maintainability and focused responsibility.
 
 use serde::{Deserialize, Serialize};
@@ -15,7 +15,6 @@ pub struct MonitoringDomainConfig {
     pub metrics_interval: Duration,
     pub health_check_interval: Duration,
 }
-
 impl Default for MonitoringDomainConfig {
     fn default() -> Self {
         Self {

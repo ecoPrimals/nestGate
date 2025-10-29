@@ -3,57 +3,59 @@
 /// Extracted from complex cache logic to enable precise testing
 /// and catch arithmetic mutations (+= vs -=, + vs -, > vs >=).
 /// **MUTATION TESTING TARGET**: This module specifically addresses:
-/// - `stats.current_size += size` mutations in CacheManager
+/// - `stats.current_size += size` mutations in `CacheManager`
 /// - `current_size + size > max_size` comparison mutations
 /// - `hits as f64 / total_requests as f64` division mutations
 /// - Pool size and eviction threshold calculations
-
+///
 /// Calculate if cache needs eviction based on current and new sizes
+///
 /// **PURE FUNCTION**: No side effects, deterministic output with overflow protection
+///
 /// **TESTABLE**: Can verify exact arithmetic with boundary conditions
+#[must_use]
 pub fn needs_eviction(current_size: u64, new_item_size: u64, max_size: u64) -> bool {
     if max_size == 0 {
         return false; // No size limit
     }
-
     // Prevent overflow by checking if addition would exceed max 🛡️
     if current_size > max_size {
         return true; // Already over limit
     }
 
     new_item_size > max_size - current_size
-    }
+}
 
 /// Calculate total cache size from item sizes
 /// **PURE FUNCTION**: Simple addition with overflow protection
 /// **TESTABLE**: Can verify sum calculation with edge cases and overflow protection
+#[must_use]
 pub fn calculate_total_cache_size(item_sizes: &[u64]) -> u64 {
     // Use saturating fold to prevent overflow 🛡️
     item_sizes
         .iter()
         .fold(0u64, |acc, &size| acc.saturating_add(size))
-    }
-
+}
 /// Calculate how much space needs to be evicted
 /// **PURE FUNCTION**: Safe subtraction with minimum eviction amount
 /// **TESTABLE**: Can verify exact eviction calculations
+#[must_use]
 pub fn calculate_eviction_size(current_size: u64, new_item_size: u64, max_size: u64) -> u64 {
     if current_size + new_item_size <= max_size {
         return 0; // No eviction needed
     }
-
     (current_size + new_item_size) - max_size
-    }
+}
 
 /// Calculate cache hit ratio from hit and miss counts
 /// **PURE FUNCTION**: Safe division with zero handling and extreme value logic
 /// **TESTABLE**: Can verify exact floating point precision
+#[must_use]
 pub fn calculate_hit_ratio(hits: u64, misses: u64) -> f64 {
     // Handle extreme cases where both values are near max 🛡️
     if hits == u64::MAX && misses == u64::MAX {
         return 0.5; // Logically, equal hits and misses = 50% hit rate
     }
-
     // Use saturating addition to prevent overflow
     let total_requests = hits.saturating_add(misses);
     if total_requests == 0 {
@@ -61,36 +63,37 @@ pub fn calculate_hit_ratio(hits: u64, misses: u64) -> f64 {
     } else {
         hits as f64 / total_requests as f64
     }
-    }
+}
 
 /// Update cache size after adding an item
 /// **PURE FUNCTION**: Simple addition with overflow protection
 /// **TESTABLE**: Can verify size updates with boundary conditions
+#[must_use]
 pub fn add_to_cache_size(current_size: u64, item_size: u64) -> u64 {
     current_size.saturating_add(item_size)
-    }
-
+}
 /// Update cache size after removing an item
 /// **PURE FUNCTION**: Safe subtraction preventing underflow
 /// **TESTABLE**: Can verify size updates with underflow protection
+#[must_use]
 pub fn subtract_from_cache_size(current_size: u64, item_size: u64) -> u64 {
     current_size.saturating_sub(item_size)
-    }
-
+}
 /// Check if cache has reached maximum size threshold
 /// **PURE FUNCTION**: Simple comparison logic
 /// **TESTABLE**: Can verify boundary conditions precisely
+#[must_use]
 pub fn is_at_max_size(current_size: u64, max_size: u64) -> bool {
     if max_size == 0 {
         return false; // No size limit
     }
-
     current_size >= max_size
-    }
+}
 
 /// Calculate memory pool threshold for expansion
 /// **PURE FUNCTION**: Percentage-based threshold calculation
 /// **TESTABLE**: Can verify threshold arithmetic with precision
+#[must_use]
 pub fn calculate_pool_expansion_threshold(
     current_size: usize,
     max_size: usize,
@@ -99,22 +102,21 @@ pub fn calculate_pool_expansion_threshold(
     if max_size == 0 {
         return false; // No expansion needed if no limit
     }
-
     let threshold_size = max_size as f64 * threshold_percent / 100.0;
     (current_size as f64) >= threshold_size
-    }
+}
 
 /// Calculate optimal eviction count based on access patterns
 /// **PURE FUNCTION**: Strategy-based eviction calculation
 /// **TESTABLE**: Can verify eviction count with different strategies
+#[must_use]
 pub fn calculate_optimal_eviction_count(total_items: usize, target_free_percent: f64) -> usize {
     if total_items == 0 {
         return 0;
     }
-
     let target_free_items = (total_items as f64 * target_free_percent / 100.0) as usize;
     target_free_items.min(total_items) // Ensure we don't evict more than we have
-    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -285,4 +287,4 @@ mod tests {
         let size_after_remove = subtract_from_cache_size(size_after_add2, 50);
         assert_eq!(size_after_remove, 200); // 0 + 100 + 150 - 50 = 200
     }
-    }
+}

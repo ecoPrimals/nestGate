@@ -12,20 +12,18 @@
 /// - Unified configuration hierarchy using StandardDomainConfig<ApiHandlerExtensions>
 /// - Domain-specific extensions for each handler type
 /// - Consistent validation and environment loading patterns
-
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
 use nestgate_core::unified_final_config::supporting_types::StandardDomainConfig;
 use nestgate_core::types::StorageTier;
 
-// ==================== UNIFIED API HANDLER CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// **THE** unified configuration type for all API handlers
 /// This replaces 20+ scattered config structs across handlers with a single, consistent interface
 /// CANONICAL MODERNIZATION: Simplified type alias without type parameters
 pub type UnifiedApiHandlerConfig = StandardDomainConfig;
-
 /// API handler-specific configuration extensions
 /// Domain-specific fields that don't belong in unified base configs
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -43,8 +41,7 @@ pub struct ApiHandlerExtensions {
     /// Authentication and authorization configurations
     pub auth: AuthHandlerConfig,
 }
-
-// ==================== ZFS HANDLER CONFIGURATIONS ====================
+// ==================== SECTION ====================
 
 /// **UNIFIED ZFS HANDLER CONFIGURATION**
 /// Replaces: PoolConfig (3 variants), DatasetConfig (2 variants), SnapshotConfig, ZfsServiceConfig
@@ -59,16 +56,13 @@ pub struct ZfsHandlerConfig {
     /// Service-level ZFS settings
     pub service: ZfsServiceSettings,
 }
-
 impl Default for ZfsHandlerConfig {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             pool: UnifiedPoolConfig::default(),
             dataset: UnifiedDatasetConfig::default(),
             snapshot: UnifiedSnapshotConfig::default(),
             service: ZfsServiceSettings::default(),
-        }
-    }
+         }
 }
 
 /// **UNIFIED POOL CONFIGURATION**
@@ -92,10 +86,8 @@ pub struct UnifiedPoolConfig {
     /// Log device settings
     pub log_devices: Vec<String>,
 }
-
 impl Default for UnifiedPoolConfig {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             raid_level: Some("mirror".to_string()),
             compression: Some("lz4".to_string()),
             dedup: Some(false),
@@ -104,8 +96,7 @@ impl Default for UnifiedPoolConfig {
             auto_expand: true,
             cache_devices: Vec::new(),
             log_devices: Vec::new(),
-        }
-    }
+         }
 }
 
 /// **UNIFIED DATASET CONFIGURATION**
@@ -127,10 +118,8 @@ pub struct UnifiedDatasetConfig {
     /// Mount point settings
     pub mount_point: Option<String>,
 }
-
 impl Default for UnifiedDatasetConfig {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             tier: StorageTier::Standard,
             properties: HashMap::new(),
             quota: None,
@@ -138,8 +127,7 @@ impl Default for UnifiedDatasetConfig {
             compression: None,
             record_size: Some("128K".to_string()),
             mount_point: None,
-        }
-    }
+         }
 }
 
 /// **UNIFIED SNAPSHOT CONFIGURATION**
@@ -157,7 +145,6 @@ pub struct UnifiedSnapshotConfig {
     /// Snapshot naming pattern
     pub naming_pattern: String,
 }
-
 /// **ZFS SERVICE SETTINGS**
 /// Consolidates service-level settings from universal_zfs/config.rs::ZfsServiceConfig
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -169,15 +156,12 @@ pub struct ZfsServiceSettings {
     /// Performance optimization settings
     pub performance: ZfsPerformanceConfig,
 }
-
 impl Default for ZfsServiceSettings {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             backend: ZfsBackendConfig::Auto,
             fail_safe: ZfsFailSafeConfig::default(),
             performance: ZfsPerformanceConfig::default(),
-        }
-    }
+         }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -185,7 +169,7 @@ pub enum ZfsBackendConfig {
     Auto,
     Native,
     Mock,
-    Remote { endpoint: String, timeout: Duration },
+    Remote { endpoint: String, timeout: Duration }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -195,8 +179,7 @@ pub struct ZfsFailSafeConfig {
     pub timeout_seconds: u64,
     pub graceful_degradation: bool,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZfsPerformanceConfig {
     pub connection_pool_size: u32,
     pub max_concurrent_operations: u32,
@@ -206,18 +189,16 @@ pub struct ZfsPerformanceConfig {
 }
 
 impl Default for ZfsPerformanceConfig {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             connection_pool_size: 10,
             max_concurrent_operations: 100,
             cache_enabled: true,
             cache_ttl_seconds: 300,
             batch_size: 10,
-        }
-    }
+         }
 }
 
-// ==================== PERFORMANCE HANDLER CONFIGURATIONS ====================
+// ==================== SECTION ====================
 
 /// **UNIFIED PERFORMANCE HANDLER CONFIGURATION**
 /// Replaces: performance_analytics/types.rs::PerformanceConfig, universal_zfs/config.rs::PerformanceConfig
@@ -230,15 +211,12 @@ pub struct PerformanceHandlerConfig {
     /// Alert threshold settings
     pub alerts: PerformanceAlertConfig,
 }
-
 impl Default for PerformanceHandlerConfig {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             metrics: PerformanceMetricsConfig::default(),
             analytics: PerformanceAnalyticsConfig::default(),
             alerts: PerformanceAlertConfig::default(),
-        }
-    }
+         }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -250,8 +228,7 @@ pub struct PerformanceMetricsConfig {
 }
 
 impl Default for PerformanceMetricsConfig {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             collection_interval_seconds: 60,
             retention_days: 30,
             enabled_metrics: vec![
@@ -262,8 +239,7 @@ impl Default for PerformanceMetricsConfig {
                 "zfs_health".to_string(),
             ],
             custom_metrics: HashMap::new(),
-        }
-    }
+         }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -273,8 +249,7 @@ pub struct PerformanceAnalyticsConfig {
     pub trend_analysis_enabled: bool,
     pub anomaly_detection_enabled: bool,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceAlertConfig {
     pub cpu_threshold: f64,
     pub memory_threshold: f64,
@@ -285,19 +260,17 @@ pub struct PerformanceAlertConfig {
 }
 
 impl Default for PerformanceAlertConfig {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             cpu_threshold: 80.0,
             memory_threshold: 85.0,
             disk_threshold: 90.0,
             network_latency_threshold: 100.0,
             zfs_health_threshold: 95.0,
             custom_thresholds: HashMap::new(),
-        }
-    }
+         }
 }
 
-// ==================== DASHBOARD HANDLER CONFIGURATIONS ====================
+// ==================== SECTION ====================
 
 /// **UNIFIED DASHBOARD HANDLER CONFIGURATION**
 /// Replaces: dashboard_types.rs::DashboardConfig, performance_dashboard/types.rs::DashboardConfig
@@ -310,15 +283,12 @@ pub struct DashboardHandlerConfig {
     /// Visualization settings
     pub visualization: DashboardVisualizationConfig,
 }
-
 impl Default for DashboardHandlerConfig {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             layout: DashboardLayoutConfig::default(),
             data: DashboardDataConfig::default(),
             visualization: DashboardVisualizationConfig::default(),
-        }
-    }
+         }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -328,8 +298,7 @@ pub struct DashboardLayoutConfig {
     pub auto_refresh_enabled: bool,
     pub refresh_interval_seconds: u64,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DashboardDataConfig {
     pub cache_enabled: bool,
     pub cache_ttl_seconds: u64,
@@ -338,8 +307,7 @@ pub struct DashboardDataConfig {
 }
 
 impl Default for DashboardDataConfig {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             cache_enabled: true,
             cache_ttl_seconds: 30,
             max_data_points: 1000,
@@ -348,8 +316,7 @@ impl Default for DashboardDataConfig {
                 "zfs_metrics".to_string(),
                 "performance_metrics".to_string(),
             ],
-        }
-    }
+         }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -360,7 +327,7 @@ pub struct DashboardVisualizationConfig {
     pub responsive_design: bool,
 }
 
-// ==================== LOAD TESTING HANDLER CONFIGURATIONS ====================
+// ==================== SECTION ====================
 
 /// **UNIFIED LOAD TESTING HANDLER CONFIGURATION**
 /// Replaces: load_testing.rs::LoadTestConfig, load_testing.rs::TestDataConfig
@@ -373,15 +340,12 @@ pub struct LoadTestingHandlerConfig {
     /// Test scenario definitions
     pub scenarios: LoadTestScenariosConfig,
 }
-
 impl Default for LoadTestingHandlerConfig {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             execution: LoadTestExecutionConfig::default(),
             data: LoadTestDataConfig::default(),
             scenarios: LoadTestScenariosConfig::default(),
-        }
-    }
+         }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -394,15 +358,13 @@ pub struct LoadTestExecutionConfig {
 }
 
 impl Default for LoadTestExecutionConfig {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             duration_seconds: 300,
             concurrent_users: 10,
             requests_per_second: 1.0,
             ramp_up_seconds: 30,
             ramp_down_seconds: 30,
-        }
-    }
+         }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -415,15 +377,13 @@ pub struct LoadTestDataConfig {
 }
 
 impl Default for LoadTestDataConfig {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             test_workspaces: 5,
             dataset_size_mb: 100,
             concurrent_zfs_ops: 10,
             use_real_zfs: false,
             data_patterns: vec!["random".to_string(), "sequential".to_string()],
-        }
-    }
+         }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -435,7 +395,7 @@ pub struct LoadTestScenariosConfig {
     pub custom_scenarios: HashMap<String, serde_json::Value>,
 }
 
-// ==================== WORKSPACE HANDLER CONFIGURATIONS ====================
+// ==================== SECTION ====================
 
 /// **UNIFIED WORKSPACE HANDLER CONFIGURATION**
 /// Consolidates workspace management settings from various handlers
@@ -445,32 +405,28 @@ pub struct WorkspaceHandlerConfig {
     pub lifecycle: WorkspaceLifecycleConfig,
     pub security: WorkspaceSecurityConfig,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+    #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct WorkspaceOptimizationConfig {
     pub auto_cleanup_enabled: bool,
     pub cleanup_interval_hours: u64,
     pub storage_optimization_enabled: bool,
     pub compression_enabled: bool,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+    #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct WorkspaceLifecycleConfig {
     pub auto_backup_enabled: bool,
     pub backup_interval_hours: u64,
     pub snapshot_retention_days: u32,
     pub archival_enabled: bool,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+    #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct WorkspaceSecurityConfig {
     pub access_control_enabled: bool,
     pub encryption_enabled: bool,
     pub audit_logging_enabled: bool,
     pub isolation_level: String,
 }
-
-// ==================== AUTH HANDLER CONFIGURATIONS ====================
+// ==================== SECTION ====================
 
 /// **UNIFIED AUTH HANDLER CONFIGURATION**
 /// Consolidates authentication and authorization settings
@@ -480,56 +436,49 @@ pub struct AuthHandlerConfig {
     pub authorization: AuthorizationConfig,
     pub session: SessionConfig,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+    #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AuthenticationConfig {
     pub methods: Vec<String>,
     pub token_lifetime_seconds: u64,
     pub multi_factor_enabled: bool,
     pub password_policy_enabled: bool,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+    #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AuthorizationConfig {
     pub rbac_enabled: bool,
     pub permissions_model: String,
     pub default_permissions: Vec<String>,
     pub admin_permissions: Vec<String>,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SessionConfig {
     pub timeout_seconds: u64,
     pub concurrent_sessions_limit: u32,
     pub session_persistence_enabled: bool,
     pub secure_cookies_enabled: bool,
 }
-
 impl Default for SessionConfig {
-    fn default() -> Self {
-        Self {
+    fn default() -> Self { Self {
             timeout_seconds: 3600,
             concurrent_sessions_limit: 5,
             session_persistence_enabled: true,
             secure_cookies_enabled: true,
-        }
-    }
+         }
 }
 
-// ==================== BUILDER PATTERNS ====================
+// ==================== SECTION ====================
 
 impl UnifiedApiHandlerConfig {
     /// Create a development configuration with debug settings
-    pub fn development() -> Self {
-        let mut config = Self::default();
+    #[must_use]
+    pub fn development() -> Self { let mut config = Self::default();
         config.set_feature("debug_mode", true);
         config.set_feature("verbose_logging", true);
         config.extensions.zfs.service.backend = ZfsBackendConfig::Mock;
         config.extensions.load_testing.data.use_real_zfs = false;
         config
-    }
-
-    /// Create a production configuration with optimized settings
+    , /// Create a production configuration with optimized settings
+    #[must_use]
     pub fn production() -> Self {
         let mut config = Self::default();
         config.set_feature("debug_mode", false);
@@ -539,9 +488,10 @@ impl UnifiedApiHandlerConfig {
         config.extensions.zfs.service.performance.connection_pool_size = 50;
         config.extensions.zfs.service.performance.max_concurrent_operations = 500;
         config
-    }
+     }
 
     /// Create a testing configuration with minimal resources
+    #[must_use]
     pub fn testing() -> Self {
         let mut config = Self::default();
         config.set_feature("testing_mode", true);

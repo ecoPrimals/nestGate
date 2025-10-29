@@ -1,8 +1,8 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 //
 // Provides structured logging and distributed tracing setup.
 
-use crate::{Result, NestGateError};
+use crate::Result;
 
 /// Tracing configuration
 #[derive(Debug, Clone)]
@@ -18,7 +18,6 @@ pub struct TracingConfig {
     /// Environment name
     pub environment: String,
 }
-
 impl Default for TracingConfig {
     fn default() -> Self {
         Self {
@@ -34,7 +33,6 @@ impl Default for TracingConfig {
 /// Initialize tracing with the given configuration
 pub fn init_tracing(config: TracingConfig) -> Result<()> {
     use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-
     let level = match config.level.as_str() {
         "trace" => tracing::Level::TRACE,
         "debug" => tracing::Level::DEBUG,
@@ -52,8 +50,8 @@ pub fn init_tracing(config: TracingConfig) -> Result<()> {
             .try_init()
             .map_err(|e| {
                 NestGateError::configuration_error(
-                    format!("Failed to initialize JSON tracing: {e}"),
-                    Some("tracing".to_string()),
+                    "tracing",
+                    &format!("Failed to initialize JSON tracing: {e}"),
                 )
             })?;
     } else {
@@ -64,8 +62,8 @@ pub fn init_tracing(config: TracingConfig) -> Result<()> {
             .try_init()
             .map_err(|e| {
                 NestGateError::configuration_error(
-                    format!("Failed to initialize tracing: {e}"),
-                    Some("tracing".to_string()),
+                    "tracing",
+                    &format!("Failed to initialize tracing: {e}"),
                 )
             })?;
     }

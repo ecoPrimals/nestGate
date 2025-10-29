@@ -1,365 +1,206 @@
+// **DOMAIN-SPECIFIC TRAIT EXTENSIONS**
+//! Domain-specific extensions and traits for the `NestGate` system.
+// This module provides domain-specific extensions to the canonical trait system.
+
 use std::collections::HashMap;
 use std::future::Future;
-// **DOMAIN-SPECIFIC SERVICE EXTENSIONS**
-//
-// This module provides domain-specific extensions to the canonical UniversalService trait,
-// consolidating the specialized service traits found throughout the codebase.
-//
-// **CONSOLIDATES**:
-// - `UniversalZfsService` → `ZfsServiceExtension`
-// - `StoragePrimalProvider` → `StorageServiceExtension`
-// - `EcoPrimal` → `EcoPrimalExtension`
-// - `UniversalServiceProvider` → Core UniversalService
-// - `UniversalServiceRegistry` → `RegistryServiceExtension`
-//
-// **USAGE**:
-// Instead of implementing multiple specialized traits, services implement
-// UniversalService with the appropriate domain extension.
-//
-// **ZERO-COST**: All traits use native async methods for maximum performance.
 
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::time::Duration;
-use uuid::Uuid;
+// Use canonical trait system
+use crate::traits::canonical_unified_traits::CanonicalService;
 
-use crate::error::CanonicalResult as Result;
-use crate::traits::UniversalService;
-use crate::canonical_modernization::UnifiedHealthStatus;
-
-// ==================== ZFS SERVICE EXTENSION ====================
-
-/// ZFS-specific service extension data
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ZfsServiceData {
-    /// Available ZFS pools
-    pub pools: Vec<ZfsPoolInfo>,
-    /// ZFS version information  
-    pub zfs_version: String,
-    /// Pool creation capabilities
-    pub pool_creation_enabled: bool,
-    /// Snapshot management capabilities
-    pub snapshot_management_enabled: bool,
-}
-
-/// ZFS pool information
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ZfsPoolInfo {
-    pub name: String,
-    pub size: u64,
-    pub used: u64,
-    pub available: u64,
-    pub health: String,
-    pub datasets: Vec<String>,
-}
+use crate::Result;
 
 /// ZFS service extension trait
-/// Consolidates UniversalZfsService functionality into UniversalService pattern
-pub trait ZfsServiceExtension: UniversalService {
+pub trait ZfsServiceExtension: CanonicalService {
     /// ZFS-specific configuration type
-    type ZfsConfig: Clone + Send + Sync + Serialize + for<'de> Deserialize<'de>;
+    type ZfsConfig: Clone + Send + Sync + 'static;
 
-    /// ZFS-specific health information
-    type ZfsHealth: Send + Sync + Serialize;
+    /// ZFS pool information type
+    type PoolInfo: Clone + Send + Sync + 'static;
 
-    // Pool Management
-    fn list_pools(&self) -> impl Future<Output = Result<Vec<ZfsPoolInfo>>> + Send;
-    fn create_pool(
-        &self,
-        name: &str,
-        config: &Self::ZfsConfig,
-    ) -> impl Future<Output = Result<ZfsPoolInfo>> + Send;
-    fn destroy_pool(&self, name: &str) -> impl Future<Output = Result<()>> + Send;
-    fn get_pool_status(&self, name: &str) -> impl Future<Output = Result<String>> + Send;
+    /// ZFS dataset information type
+    type DatasetInfo: Clone + Send + Sync + 'static;
+    /// List ZFS pools
+    fn list_pools(&self) -> impl Future<Output = Result<Vec<Self::PoolInfo>>> + Send;
 
-    // Dataset Management
-    fn list_datasets(&self, pool: Option<&str>)
-        -> impl Future<Output = Result<Vec<String>>> + Send;
+    /// Create ZFS dataset
     fn create_dataset(
         &self,
-        path: &str,
-        config: &Self::ZfsConfig,
-    ) -> impl Future<Output = Result<()>> + Send;
-    fn destroy_dataset(&self, path: &str) -> impl Future<Output = Result<()>> + Send;
+        pool: &str,
+        dataset: &str,
+        config: Self::ZfsConfig,
+    ) -> impl Future<Output = Result<Self::DatasetInfo>> + Send;
 
-    // Snapshot Management
-    fn create_snapshot(&self, dataset: &str, name: &str)
-        -> impl Future<Output = Result<()>> + Send;
-    fn destroy_snapshot(&self, snapshot: &str) -> impl Future<Output = Result<()>> + Send;
+    /// Delete ZFS dataset
+    fn delete_dataset(&self, pool: &str, dataset: &str) -> impl Future<Output = Result<()>> + Send;
+
+    /// Get ZFS pool status
+    fn pool_status(&self, pool: &str) -> impl Future<Output = Result<Self::PoolInfo>> + Send;
+
+    /// Scrub ZFS pool
+    fn scrub_pool(&self, pool: &str) -> impl Future<Output = Result<()>> + Send;
+
+    /// Create ZFS snapshot
+    fn create_snapshot(
+        &self,
+        dataset: &str,
+        snapshot: &str,
+    ) -> impl Future<Output = Result<()>> + Send;
+
+    /// List ZFS snapshots
     fn list_snapshots(&self, dataset: &str) -> impl Future<Output = Result<Vec<String>>> + Send;
 
-    // ZFS-specific health check
-    fn zfs_health_check(&self) -> impl Future<Output = Result<Self::ZfsHealth>> + Send;
-}
-
-// ==================== STORAGE SERVICE EXTENSION ====================
-
-/// Storage-specific service extension data
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct StorageServiceData {
-    /// Storage backends available
-    pub backends: Vec<String>,
-    /// Total storage capacity
-    pub total_capacity: u64,
-    /// Available storage
-    pub available_capacity: u64,
-    /// Supported operations
-    pub supported_operations: Vec<String>,
+    /// Rollback to snapshot
+    fn rollback_snapshot(
+        &self,
+        dataset: &str,
+        snapshot: &str,
+    ) -> impl Future<Output = Result<()>> + Send;
 }
 
 /// Storage service extension trait
-/// Consolidates StoragePrimalProvider functionality
-pub trait StorageServiceExtension: UniversalService {
-    /// Storage-specific configuration
-    type StorageConfig: Clone + Send + Sync + Serialize + for<'de> Deserialize<'de>;
+pub trait StorageServiceExtension: CanonicalService {
+    /// Storage item type
+    type StorageItem: Clone + Send + Sync + 'static;
 
-    // Core storage operations
-    fn store_data(&self, key: &str, data: &[u8]) -> impl Future<Output = Result<()>> + Send;
-    fn retrieve_data(&self, key: &str) -> impl Future<Output = Result<Option<Vec<u8>>>> + Send;
-    fn delete_data(&self, key: &str) -> impl Future<Output = Result<()>> + Send;
-    fn list_keys(&self, prefix: Option<&str>) -> impl Future<Output = Result<Vec<String>>> + Send;
+    /// Storage metadata type
+    type StorageMetadata: Clone + Send + Sync + 'static;
+    /// List storage items
+    fn list_items(&self, path: &str)
+        -> impl Future<Output = Result<Vec<Self::StorageItem>>> + Send;
 
-    // Storage metadata
-    fn get_storage_info(&self) -> impl Future<Output = Result<StorageServiceData>> + Send;
-    fn get_data_size(&self, key: &str) -> impl Future<Output = Result<Option<u64>>> + Send;
+    /// Get storage item metadata
+    fn get_metadata(
+        &self,
+        path: &str,
+    ) -> impl Future<Output = Result<Self::StorageMetadata>> + Send;
 
-    // Storage management
-    fn create_backup(&self, keys: &[String]) -> impl Future<Output = Result<String>> + Send;
-    fn restore_backup(&self, backup_id: &str) -> impl Future<Output = Result<()>> + Send;
+    /// Move storage item
+    fn move_item(&self, from: &str, to: &str) -> impl Future<Output = Result<()>> + Send;
+
+    /// Copy storage item
+    fn copy_item(&self, from: &str, to: &str) -> impl Future<Output = Result<()>> + Send;
+
+    /// Get storage usage
+    fn get_usage(&self) -> impl Future<Output = Result<u64>> + Send;
+
+    /// Get available space
+    fn get_available_space(&self) -> impl Future<Output = Result<u64>> + Send;
 }
 
-// ==================== ECOPRIMAL EXTENSION ====================
+/// `EcoPrimal` service extension trait
+pub trait EcoPrimalExtension: CanonicalService {
+    /// Primal metadata type
+    type PrimalMetadata: Clone + Send + Sync + 'static;
+    /// Register with ecosystem
+    fn register_with_ecosystem(&self) -> impl Future<Output = Result<()>> + Send;
 
-/// EcoPrimal-specific service data
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct EcoPrimalServiceData {
-    /// Primal type (beardog, squirrel, songbird, etc.)
-    pub primal_type: String,
-    /// Integration capabilities
-    pub integration_capabilities: Vec<String>,
-    /// Ecosystem version
-    pub ecosystem_version: String,
-    /// Compatibility matrix
-    pub compatibility: HashMap<String, String>,
-}
+    /// Discover other primals
+    fn discover_primals(&self) -> impl Future<Output = Result<Vec<String>>> + Send;
 
-/// EcoPrimal service extension trait
-/// Consolidates EcoPrimal trait functionality
-pub trait EcoPrimalExtension: UniversalService {
-    /// EcoPrimal-specific configuration
-    type PrimalConfig: Clone + Send + Sync + Serialize + for<'de> Deserialize<'de>;
-
-    // Primal identification
-    fn get_primal_info(&self) -> impl Future<Output = Result<EcoPrimalServiceData>> + Send;
-    fn get_ecosystem_status(
+    /// Get primal capabilities
+    fn get_primal_capabilities(
         &self,
-    ) -> impl Future<Output = Result<HashMap<String, serde_json::Value>>> + Send;
+    ) -> impl Future<Output = Result<HashMap<String, String>>> + Send;
 
-    // Cross-primal communication
-    fn send_primal_message(
-        &self,
-        target: &str,
-        message: &[u8],
-    ) -> impl Future<Output = Result<Vec<u8>>> + Send;
-    fn broadcast_to_ecosystem(
-        &self,
-        message: &[u8],
-    ) -> impl Future<Output = Result<Vec<String>>> + Send;
+    /// Connect to primal
+    fn connect_to_primal(&self, primal_id: &str) -> impl Future<Output = Result<()>> + Send;
 
-    // Capability negotiation
-    fn negotiate_capabilities(
-        &self,
-        requested: &[String],
-    ) -> impl Future<Output = Result<Vec<String>>> + Send;
-    fn update_capabilities(
-        &self,
-        capabilities: &[String],
-    ) -> impl Future<Output = Result<()>> + Send;
-}
+    /// Disconnect from primal
+    fn disconnect_from_primal(&self, primal_id: &str) -> impl Future<Output = Result<()>> + Send;
 
-// ==================== REGISTRY SERVICE EXTENSION ====================
+    /// Send message to primal
+    fn send_to_primal(
+        &self,
+        primal_id: &str,
+        message: &str,
+    ) -> impl Future<Output = Result<String>> + Send;
 
-/// Service registry extension data
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct RegistryServiceData {
-    /// Number of registered services
-    pub service_count: usize,
-    /// Registry health status
-    pub registry_health: UnifiedHealthStatus,
-    /// Available service categories
-    pub available_categories: Vec<String>,
+    /// Get primal metadata
+    fn get_primal_metadata(
+        &self,
+        primal_id: &str,
+    ) -> impl Future<Output = Result<Self::PrimalMetadata>> + Send;
 }
 
 /// Registry service extension trait
-/// Consolidates UniversalServiceRegistry functionality
-pub trait RegistryServiceExtension: UniversalService {
-    /// Service registration information
-    type ServiceRegistration: Clone + Send + Sync + Serialize + for<'de> Deserialize<'de>;
-
-    // Service registration
+pub trait RegistryServiceExtension: CanonicalService {
+    /// Registry entry type
+    type RegistryEntry: Clone + Send + Sync + 'static;
+    /// Register service
     fn register_service(
         &self,
-        registration: Self::ServiceRegistration,
-    ) -> impl Future<Output = Result<Uuid>> + Send;
-    fn deregister_service(&self, service_id: Uuid) -> impl Future<Output = Result<()>> + Send;
-    fn update_service_registration(
-        &self,
-        service_id: Uuid,
-        updates: HashMap<String, serde_json::Value>,
+        service_id: &str,
+        metadata: HashMap<String, String>,
     ) -> impl Future<Output = Result<()>> + Send;
 
-    // Service discovery
+    /// Unregister service
+    fn unregister_service(&self, service_id: &str) -> impl Future<Output = Result<()>> + Send;
+
+    /// Discover services
     fn discover_services(
         &self,
-        criteria: HashMap<String, serde_json::Value>,
-    ) -> impl Future<Output = Result<Vec<Self::ServiceRegistration>>> + Send;
-    fn get_service_by_id(
-        &self,
-        service_id: Uuid,
-    ) -> impl Future<Output = Result<Option<Self::ServiceRegistration>>> + Send;
-    fn list_all_services(
-        &self,
-    ) -> impl Future<Output = Result<Vec<Self::ServiceRegistration>>> + Send;
+        service_type: Option<&str>,
+    ) -> impl Future<Output = Result<Vec<Self::RegistryEntry>>> + Send;
 
-    // Registry management
-    fn get_registry_info(&self) -> impl Future<Output = Result<RegistryServiceData>> + Send;
-    fn cleanup_stale_services(
+    /// Get service metadata
+    fn get_service_metadata(
         &self,
-        max_age: Duration,
-    ) -> impl Future<Output = Result<usize>> + Send;
-}
+        service_id: &str,
+    ) -> impl Future<Output = Result<HashMap<String, String>>> + Send;
 
-// ==================== NETWORK SERVICE EXTENSION ====================
-
-/// Network service extension data
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct NetworkServiceData {
-    /// Active connections
-    pub active_connections: usize,
-    /// Supported protocols
-    pub protocols: Vec<String>,
-    /// Network interfaces
-    pub interfaces: Vec<String>,
-    /// Bandwidth utilization
-    pub bandwidth_usage: HashMap<String, u64>,
+    /// Update service metadata
+    fn update_service_metadata(
+        &self,
+        service_id: &str,
+        metadata: HashMap<String, String>,
+    ) -> impl Future<Output = Result<()>> + Send;
 }
 
 /// Network service extension trait
-pub trait NetworkServiceExtension: UniversalService {
-    /// Network-specific configuration
-    type NetworkConfig: Clone + Send + Sync + Serialize + for<'de> Deserialize<'de>;
+pub trait NetworkServiceExtension: CanonicalService {
+    /// Network connection type
+    type Connection: Clone + Send + Sync + 'static;
 
-    // Connection management
-    fn establish_connection(
+    /// Network endpoint type
+    type Endpoint: Clone + Send + Sync + 'static;
+    /// Establish connection
+    fn connect(
         &self,
-        target: &str,
-        protocol: &str,
-    ) -> impl Future<Output = Result<String>> + Send;
-    fn close_connection(&self, connection_id: &str) -> impl Future<Output = Result<()>> + Send;
-    fn list_connections(&self) -> impl Future<Output = Result<Vec<String>>> + Send;
+        endpoint: Self::Endpoint,
+    ) -> impl Future<Output = Result<Self::Connection>> + Send;
 
-    // Data transmission
-    fn send_data(
+    /// Close connection
+    fn disconnect(&self, connection: Self::Connection) -> impl Future<Output = Result<()>> + Send;
+
+    /// Send data
+    fn send(
         &self,
-        connection_id: &str,
+        connection: &Self::Connection,
         data: &[u8],
-    ) -> impl Future<Output = Result<usize>> + Send;
-    fn receive_data(
-        &self,
-        connection_id: &str,
-        buffer: &mut [u8],
-    ) -> impl Future<Output = Result<usize>> + Send;
+    ) -> impl Future<Output = Result<()>> + Send;
 
-    // Network monitoring
-    fn get_network_status(&self) -> impl Future<Output = Result<NetworkServiceData>> + Send;
-    fn monitor_bandwidth(
+    /// Receive data
+    fn receive(
         &self,
-        duration: Duration,
-    ) -> impl Future<Output = Result<HashMap<String, u64>>> + Send;
+        connection: &Self::Connection,
+    ) -> impl Future<Output = Result<Vec<u8>>> + Send;
+
+    /// List active connections
+    fn list_connections(&self) -> impl Future<Output = Result<Vec<Self::Connection>>> + Send;
+
+    /// Get connection status
+    fn connection_status(
+        &self,
+        connection: &Self::Connection,
+    ) -> impl Future<Output = Result<String>> + Send;
 }
 
-// ==================== MIGRATION UTILITIES ====================
-
-/// Helper trait to migrate from specialized traits to UniversalService extensions
-pub trait ServiceMigrationHelper {
-    /// Check if a service implements a specific extension
-    fn supports_extension(&self, extension_name: &str) -> bool;
-
-    /// Get available extensions for this service
-    fn available_extensions(&self) -> Vec<String>;
-
-    /// Migrate from old trait pattern to new extension pattern
-    fn create_migration_guide(&self) -> HashMap<String, String>;
-}
-
-/// Default implementation for all UniversalService implementations
-impl<T> ServiceMigrationHelper for T
+/// Generic service extension with type parameter
+pub fn extend_service<T>(service: T) -> Result<T>
 where
-    T: UniversalService,
+    T: CanonicalService,
 {
-    fn supports_extension(&self, extension_name: &str) -> bool {
-        // Default implementation - can be overridden by specific services
-        matches!(
-            extension_name,
-            "zfs" | "storage" | "network" | "registry" | "ecoprimal"
-        )
-    }
-
-    fn available_extensions(&self) -> Vec<String> {
-        vec![
-            "zfs".to_string(),
-            "storage".to_string(),
-            "network".to_string(),
-            "registry".to_string(),
-            "ecoprimal".to_string(),
-        ]
-    }
-
-    fn create_migration_guide(&self) -> HashMap<String, String> {
-        let mut guide = HashMap::new();
-        guide.insert(
-            "UniversalZfsService".to_string(),
-            "ZfsServiceExtension".to_string(),
-        );
-        guide.insert(
-            "StoragePrimalProvider".to_string(),
-            "StorageServiceExtension".to_string(),
-        );
-        guide.insert("EcoPrimal".to_string(), "EcoPrimalExtension".to_string());
-        guide.insert(
-            "UniversalServiceRegistry".to_string(),
-            "RegistryServiceExtension".to_string(),
-        );
-        guide.insert(
-            "NetworkService".to_string(),
-            "NetworkServiceExtension".to_string(),
-        );
-        guide
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_extension_patterns() {
-        // Test that the extension patterns are well-defined
-        // Just test the trait functionality directly without complex mocks
-        let mut expected_guide = HashMap::new();
-        expected_guide.insert(
-            "UniversalZfsService".to_string(),
-            "ZfsServiceExtension".to_string(),
-        );
-
-        // Test that the expected keys exist in our migration mapping
-        assert!(expected_guide.contains_key("UniversalZfsService"));
-        assert_eq!(
-            expected_guide.get("UniversalZfsService").map_err(|e| {
-    tracing::error!("Operation failed: {:?}", e);
-    std::io::Error::new(std::io::ErrorKind::Other, format!("Operation failed: {:?}", e))
-})?,
-            "ZfsServiceExtension"
-        );
-    }
+    // Extension logic would go here
+    Ok(service)
 }

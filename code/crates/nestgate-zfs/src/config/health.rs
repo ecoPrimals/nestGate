@@ -19,7 +19,6 @@ pub struct HealthMonitoringConfig {
     /// Alert endpoints
     pub alert_endpoints: Vec<String>,
 }
-
 impl Default for HealthMonitoringConfig {
     fn default() -> Self {
         Self {
@@ -35,6 +34,7 @@ impl Default for HealthMonitoringConfig {
 
 impl HealthMonitoringConfig {
     /// Create production-optimized health monitoring configuration
+    #[must_use]
     pub fn production() -> Self {
         Self {
             enabled: true,

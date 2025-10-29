@@ -1,39 +1,53 @@
+use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
 /// **RETURN BUILDERS - CONFIG BUILDERS MODULE**
 /// Contains configuration and utility builder functions.
-/// Extracted from the large return_builders.rs to achieve file size compliance.
+/// Extracted from the large `return_builders.rs` to achieve file size compliance.
 use std::collections::HashMap;
 use uuid::Uuid;
-
-/// Build AccessGrant response with all required fields
+/// Access grant structure for config builders
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AccessGrant {
+    pub permissions: Vec<String>,
+    pub valid_until: DateTime<Utc>,
+    pub consensus_nodes: Vec<String>,
+    pub consensus_percentage: f64,
+    pub grant_id: String,
+    pub granted_at: DateTime<Utc>,
+    pub metadata: HashMap<String, String>,
+}
+/// Build `AccessGrant` response with all required fields
 /// **PURE FUNCTION**: No side effects, deterministic field construction
 /// **TESTABLE**: Can verify all field assignments and computed values
 /// **ZERO-COPY OPTIMIZED**: Accepts references to avoid unnecessary cloning
+#[must_use]
 pub fn build_access_grant(
     permissions: &[String],
     valid_until: i64,
-    proof_data: &str,
+    _proof_data: &str, // Prefixed with underscore - planned for cryptographic verification
     consensus_nodes: &[String],
     consensus_percentage: f64,
-) -> crate::types::AccessGrant {
-    crate::types::AccessGrant {
+) -> AccessGrant {
+    AccessGrant {
         permissions: permissions.to_vec(),
-        valid_until,
-        proof_hash: format!("{:x}", md5::compute(proof_data.as_bytes())),
+        valid_until: DateTime::from_timestamp(valid_until, 0).unwrap_or_default(),
         consensus_nodes: consensus_nodes.to_vec(),
         consensus_percentage,
+        grant_id: Uuid::new_v4().to_string(),
+        granted_at: Utc::now(),
+        metadata: HashMap::new(),
     }
 }
-
 /// Build diagnostic entry with timestamp and defaults
 /// **PURE FUNCTION**: Diagnostic construction with ID generation
 /// **TESTABLE**: Can verify ID generation and timestamp consistency
+#[must_use]
 pub fn build_diagnostic(
     level: crate::diagnostics::DiagnosticLevel,
     component: crate::diagnostics::ComponentType,
     message: String,
 ) -> crate::diagnostics::Diagnostic {
     let diagnostic_id = Uuid::new_v4();
-
     crate::diagnostics::Diagnostic {
         id: diagnostic_id.to_string(),
         level,
@@ -41,7 +55,7 @@ pub fn build_diagnostic(
         message,
         timestamp: std::time::SystemTime::now(),
         details: None,
-        resource: None,
+        path: None,
         resolved: false,
         resolved_at: None,
     }
@@ -50,30 +64,20 @@ pub fn build_diagnostic(
 /// Build error context with comprehensive details
 /// **PURE FUNCTION**: Error context construction
 /// **TESTABLE**: Can verify context field assignments
+#[must_use]
 pub fn build_error_context(
-    operation: String,
-    details: String,
-    code: Option<String>,
-    retry_info: Option<crate::error::RetryInfo>,
+    operation: &str,
+    _details: String,      // Prefixed with underscore - planned for error enrichment
+    _code: Option<String>, // Prefixed with underscore - planned for error code mapping
 ) -> crate::error::ErrorContext {
-    let mut metadata = HashMap::new();
-    if let Some(c) = code {
-        metadata.insert("error_code".to_string(), c);
-    }
-    if let Some(op) = Some(operation) {
-        metadata.insert("operation".to_string(), op);
-    }
-    if let Some(det) = Some(details) {
-        metadata.insert("details".to_string(), det);
-    }
-    if let Some(_retry) = retry_info {
-        metadata.insert("retry_available".to_string(), "true".to_string());
-    }
+    use std::time::SystemTime;
 
     crate::error::ErrorContext {
-        operation: "config_validation".to_string(),
+        operation: operation.to_string(),
         component: "config_builder".to_string(),
-        metadata,
-        timestamp: std::time::SystemTime::now(),
+        timestamp: SystemTime::now(),
+        metadata: std::collections::HashMap::new(),
+        request_id: None,
+        user_id: None,
     }
 }

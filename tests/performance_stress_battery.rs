@@ -8,17 +8,17 @@ use std::collections::HashMap;
 use std::time::Instant;
 use tokio::time::{sleep, Duration};
 
-use nestgate_core::config::canonical_unified::PerformanceConfig;
+use nestgate_core::config::canonical_config::performance_config::PerformanceConfig;
 use nestgate_core::{
-    config::canonical_unified::CanonicalConfig,
-    error::{NestGateError, Result},
     canonical_modernization::unified_enums::{UnifiedServiceState, UnifiedServiceType},
+    config::canonical_master::NestGateCanonicalConfig,
+    error::{NestGateError, Result},
 };
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-// **DEPRECATED CONFIGURATION REMOVED**
+// **MODERNIZATION COMPLETE**
 // Use UnifiedBenchmarkConfig with BenchmarkPerformanceSettings for all performance testing.
 
 /// Performance test results with detailed metrics
@@ -468,7 +468,7 @@ fn print_performance_results(results: &PerformanceResults) {
 // Performance Test Suite Implementation
 
 #[tokio::test]
-async fn test_basic_performance() {
+async fn test_basic_performance() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 Basic Performance Test");
 
     let config = PerformanceConfig {
@@ -492,11 +492,12 @@ async fn test_basic_performance() {
         results.error_rate_percent <= 10.0,
         "Error rate should be reasonable"
     );
+    Ok(())
 }
 
 #[tokio::test]
 #[ignore = "Heavy test - use 'cargo bench' for full performance testing"]
-async fn test_modular_performance_components() {
+async fn test_modular_performance_components() -> Result<(), Box<dyn std::error::Error>> {
     println!("⚡ High Throughput Performance Test");
 
     let config = PerformanceConfig {
@@ -520,10 +521,11 @@ async fn test_modular_performance_components() {
         results.total_operations >= 15000,
         "Should complete substantial operations"
     );
+    Ok(())
 }
 
 #[tokio::test]
-async fn test_sustained_performance() {
+async fn test_sustained_performance() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔄 Sustained Performance Test");
 
     let config = PerformanceConfig {
@@ -549,10 +551,11 @@ async fn test_sustained_performance() {
         results.throughput_efficiency >= 70.0,
         "Should maintain good throughput efficiency"
     );
+    Ok(())
 }
 
 #[tokio::test]
-async fn test_comprehensive_performance_suite() {
+async fn test_comprehensive_performance_suite() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔥 COMPREHENSIVE PERFORMANCE SUITE 🔥");
 
     let test_scenarios = vec![
@@ -602,6 +605,7 @@ async fn test_comprehensive_performance_suite() {
 
         // Brief pause between tests
         sleep(Duration::from_secs(1)).await;
+        Ok(())
     }
 
     // Suite analysis

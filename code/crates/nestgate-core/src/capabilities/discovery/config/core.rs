@@ -11,23 +11,19 @@
 // **EXTRACTED FROM**: unified_dynamic_config.rs lines 26-42 (core structure)
 
 use super::{
-    timeout::TimeoutDiscoverySettings,
-    network::NetworkDiscoverySettings,
-    security::SecurityDiscoverySettings,
-    environment::EnvironmentDiscoverySettings,
-    storage::StorageDiscoverySettings,
-    cache::CacheDiscoverySettings,
+    cache::CacheDiscoverySettings, environment::EnvironmentDiscoverySettings,
+    network::NetworkDiscoverySettings, security::SecurityDiscoverySettings,
+    storage::StorageDiscoverySettings, timeout::TimeoutDiscoverySettings,
 };
 use serde::{Deserialize, Serialize};
 
-// ==================== CORE UNIFIED STRUCTURE ====================
+// ==================== SECTION ====================
 
 /// **UNIFIED DYNAMIC DISCOVERY EXTENSIONS**
-/// 
+///
 /// Consolidates all dynamic discovery configuration patterns into a single,
 /// comprehensive structure that coordinates discovery across all domains.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct UnifiedDynamicDiscoveryExtensions {
     /// Timeout discovery settings
     pub timeout: TimeoutDiscoverySettings,
@@ -42,17 +38,17 @@ pub struct UnifiedDynamicDiscoveryExtensions {
     /// Cache discovery settings
     pub cache: CacheDiscoverySettings,
 }
-
-// ==================== DEFAULT IMPLEMENTATIONS ====================
-
+// ==================== SECTION ====================
 
 impl UnifiedDynamicDiscoveryExtensions {
     /// Create a new unified discovery configuration with default settings
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
     /// Create a new unified discovery configuration with custom settings
+    #[must_use]
     pub fn with_custom_settings() -> UnifiedDynamicDiscoveryExtensionsBuilder {
         UnifiedDynamicDiscoveryExtensionsBuilder::new()
     }
@@ -71,9 +67,9 @@ impl UnifiedDynamicDiscoveryExtensions {
     }
 }
 
-// ==================== BUILDER PATTERN ====================
+// ==================== SECTION ====================
 
-/// Builder for creating UnifiedDynamicDiscoveryExtensions with custom settings
+/// Builder for creating `UnifiedDynamicDiscoveryExtensions` with custom settings
 pub struct UnifiedDynamicDiscoveryExtensionsBuilder {
     timeout: Option<TimeoutDiscoverySettings>,
     network: Option<NetworkDiscoverySettings>,
@@ -82,9 +78,9 @@ pub struct UnifiedDynamicDiscoveryExtensionsBuilder {
     storage: Option<StorageDiscoverySettings>,
     cache: Option<CacheDiscoverySettings>,
 }
-
 impl UnifiedDynamicDiscoveryExtensionsBuilder {
     /// Create a new builder
+    #[must_use]
     pub fn new() -> Self {
         Self {
             timeout: None,
@@ -97,42 +93,49 @@ impl UnifiedDynamicDiscoveryExtensionsBuilder {
     }
 
     /// Set timeout discovery settings
+    #[must_use]
     pub fn with_timeout(mut self, timeout: TimeoutDiscoverySettings) -> Self {
         self.timeout = Some(timeout);
         self
     }
 
     /// Set network discovery settings
+    #[must_use]
     pub fn with_network(mut self, network: NetworkDiscoverySettings) -> Self {
         self.network = Some(network);
         self
     }
 
     /// Set security discovery settings
+    #[must_use]
     pub fn with_security(mut self, security: SecurityDiscoverySettings) -> Self {
         self.security = Some(security);
         self
     }
 
     /// Set environment discovery settings
+    #[must_use]
     pub fn with_environment(mut self, environment: EnvironmentDiscoverySettings) -> Self {
         self.environment = Some(environment);
         self
     }
 
     /// Set storage discovery settings
+    #[must_use]
     pub fn with_storage(mut self, storage: StorageDiscoverySettings) -> Self {
         self.storage = Some(storage);
         self
     }
 
     /// Set cache discovery settings
+    #[must_use]
     pub fn with_cache(mut self, cache: CacheDiscoverySettings) -> Self {
         self.cache = Some(cache);
         self
     }
 
     /// Build the unified discovery configuration
+    #[must_use]
     pub fn build(self) -> UnifiedDynamicDiscoveryExtensions {
         UnifiedDynamicDiscoveryExtensions {
             timeout: self.timeout.unwrap_or_default(),
@@ -149,4 +152,4 @@ impl Default for UnifiedDynamicDiscoveryExtensionsBuilder {
     fn default() -> Self {
         Self::new()
     }
-} 
+}

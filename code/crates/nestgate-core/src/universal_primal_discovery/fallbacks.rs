@@ -1,12 +1,13 @@
 /// Fallback utilities for universal primal discovery
 /// This module provides fallback values when universal adapter discovery fails
 /// Get fallback port for a service when discovery fails
+#[must_use]
 pub fn get_fallback_port(service_name: &str) -> u16 {
     match service_name {
         "api" => 8080,
         "web" => 3000,
         "metrics" => 9090,
-        "prometheus" => 9090,
+        "metrics_export" => 9090, // Capability-based instead of vendor-specific
         "nfs" => 2049,
         "smb" => 445,
         "cifs" => 445,

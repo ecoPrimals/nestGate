@@ -6,9 +6,7 @@ use std::collections::HashMap;
 /// 2. **Standalone**: Self-contained operation with direct network protocols
 ///
 /// The system automatically detects the environment and configures itself accordingly.
-use std::collections::HashMap;
 use std::env;
-
 /// Operating mode for NestGate
 #[derive(Debug, Clone, PartialEq)]
 pub enum OperationMode {
@@ -17,7 +15,6 @@ pub enum OperationMode {
     /// Orchestration-enhanced mode: Orchestration module handles networking
     OrchestrationEnhanced,
 }
-
 /// Environment detection and configuration
 #[derive(Debug, Clone)]
 pub struct Environment {
@@ -30,11 +27,11 @@ pub struct Environment {
     /// External service endpoints
     pub external_services: HashMap<String, String>,
 }
-
 /// **CANONICAL MODERNIZATION** - Use canonical service configuration
 pub use crate::canonical_types::service::ServiceConfig;
-
 /// Network configuration
+/// **⚠️ DEPRECATED**: Use `CanonicalNetworkConfig` from `canonical_master::domains::network`
+#[deprecated(since = "0.9.0", note = "Use canonical_master::domains::network::CanonicalNetworkConfig instead")]
 #[derive(Debug, Clone)]
 pub struct NetworkConfig {
     /// Bind interface (127.0.0.1 for standalone, delegated for orchestration)
@@ -46,7 +43,6 @@ pub struct NetworkConfig {
     /// Enable service discovery
     pub discovery_enabled: bool,
 }
-
 impl Default for Environment {
     fn default() -> Self {
         Self::detect()

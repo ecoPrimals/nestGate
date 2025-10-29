@@ -7,7 +7,6 @@ use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 use std::time::SystemTime;
 // Removed unused tracing import
-
 /// Type of metric being collected
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum MetricType {
@@ -15,7 +14,6 @@ pub enum MetricType {
     Gauge,
     Histogram,
 }
-
 /// Individual metric entry
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Metric {
@@ -24,15 +22,14 @@ pub struct Metric {
     pub metric_type: MetricType,
     pub timestamp: std::time::SystemTime,
 }
-
 /// Metrics collector for system monitoring
 #[derive(Debug, Clone)]
 pub struct MetricsCollector {
     metrics: Arc<RwLock<HashMap<String, Metric>>>,
 }
-
 impl MetricsCollector {
     /// Create a new metrics collector
+    #[must_use]
     pub fn new() -> Self {
         Self {
             metrics: Arc::new(RwLock::new(HashMap::new())),
@@ -53,7 +50,7 @@ impl MetricsCollector {
             value: 0.0,
             metric_type: MetricType::Counter,
             timestamp: std::time::SystemTime::now(),
-        });
+        );
         entry.value += 1.0;
         entry.timestamp = std::time::SystemTime::now();
     }
@@ -124,7 +121,6 @@ impl MetricsCollector {
         metrics.clear();
     }
 
-    pub fn record_operation(&self, operation: &str, duration_ms: f64, success: bool) {
         let mut metrics = match self.metrics.write() {
             Ok(metrics) => metrics,
             Err(e) => {
@@ -140,7 +136,7 @@ impl MetricsCollector {
                 value: 0.0,
                 metric_type: MetricType::Counter,
                 timestamp: SystemTime::now(),
-            });
+            );
 
         entry.value += 1.0;
         if success {
@@ -159,7 +155,7 @@ impl MetricsCollector {
                 return;
             }
         };
-        metrics.insert(metric.name.clone(), metric);
+        metrics.insert(metric.name, metric);
     }
 
     pub fn update_metric(&self, name: &str, value: f64) {
@@ -199,7 +195,7 @@ mod tests {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
+    format!("Operation failed: {e:?}")
 ).into())
 }).value, 1.0);
 
@@ -211,7 +207,7 @@ mod tests {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
+    format!("Operation failed: {e:?}")
 ).into())
 }).value, 75.5);
 
@@ -223,7 +219,7 @@ mod tests {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
+    format!("Operation failed: {e:?}")
 ).into())
 }).value, 250.0);
 
@@ -245,12 +241,12 @@ mod tests {
         let metric_type = MetricType::Histogram;
         let serialized = serde_json::to_string(&metric_type).map_err(|e| {
     tracing::error!("JSON serialization failed: {}", e);
-    std::io::Error::new(std::io::ErrorKind::InvalidData, format!("JSON serialization error: {}", e))
-})?;
+    std::io::Error::new(std::io::ErrorKind::InvalidData, format!("JSON serialization error: {e}"))
+)?;
         let deserialized: MetricType = serde_json::from_str(&serialized).map_err(|e| {
     tracing::error!("JSON parsing failed: {}", e);
-    std::io::Error::new(std::io::ErrorKind::InvalidData, format!("JSON parsing error: {}", e))
-})?;
+    std::io::Error::new(std::io::ErrorKind::InvalidData, format!("JSON parsing error: {e}"))
+)?;
         assert_eq!(metric_type, deserialized);
     }
 }

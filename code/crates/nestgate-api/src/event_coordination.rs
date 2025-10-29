@@ -23,7 +23,6 @@ pub struct EventCoordinator {
     /// Event processing statistics
     stats: Arc<RwLock<EventStats>>,
 }
-
 /// Event coordination metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EventStats {
@@ -36,7 +35,6 @@ pub struct EventStats {
     /// Total number of errors encountered
     pub errors: u64,
 }
-
 /// Event handler configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EventHandler {
@@ -53,7 +51,6 @@ pub struct EventHandler {
     /// Handler configuration
     pub config: serde_json::Value,
 }
-
 /// Handler priority levels
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum Priority {
@@ -66,7 +63,6 @@ pub enum Priority {
     /// Critical priority (processed first)
     Critical = 4,
 }
-
 /// Coordinated event structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CoordinatedEvent {
@@ -81,7 +77,6 @@ pub struct CoordinatedEvent {
     /// Event timestamp
     pub timestamp: std::time::SystemTime,
 }
-
 /// Types of coordinated events
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum CoordinatedEventType {
@@ -98,7 +93,6 @@ pub enum CoordinatedEventType {
     /// Health monitoring event
     HealthMonitoring,
 }
-
 /// Event processing result with detailed information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EventProcessingResult {
@@ -113,7 +107,6 @@ pub struct EventProcessingResult {
     /// Optional error message if processing failed
     pub error_message: Option<String>,
 }
-
 impl Default for EventCoordinator {
     fn default() -> Self {
         Self::new()
@@ -122,26 +115,34 @@ impl Default for EventCoordinator {
 
 impl EventCoordinator {
     /// Create a new event coordinator
+    #[must_use]
     pub fn new() -> Self {
         let (event_broadcaster, _) = broadcast::channel(1000);
 
         Self {
-            handlers: Arc::new(RwLock::new(HashMap::new())),
+            handlers: Arc::new(RwLock::new(HashMap::new()),
             event_broadcaster,
             stats: Arc::new(RwLock::new(EventStats {
                 total_events: 0,
                 events_processed: 0,
                 active_handlers: 0,
                 errors: 0,
-            })),
+            }),
         }
     }
 
     /// Register an event handler
-    pub async fn register_handler(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn register_handler(
         &self,
         handler: EventHandler,
-    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>>  {
         let handler_id = handler.id.to_string();
 
         {
@@ -160,10 +161,17 @@ impl EventCoordinator {
     }
 
     /// Emit an event to all registered handlers
-    pub async fn emit_event(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub async fn emit_event(
         &self,
         event: CoordinatedEvent,
-    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>>  {
         let handlers = self.handlers.read().await;
 
         for handler in handlers.values() {
@@ -204,7 +212,7 @@ impl EventCoordinator {
             return true; // Match all events
         }
 
-        let event_type_str = format!("{:?}", event.event_type);
+        let event_type_str = format!("self.base_url");
 
         for pattern in &handler.patterns {
             if pattern == "*" || pattern == "all" {
@@ -238,7 +246,7 @@ impl EventCoordinator {
             CoordinatedEventType::InternalService => {
                 self.handle_internal_service_event(&event).await
             }
-            CoordinatedEventType::McpStream => self.handle_mcp_stream_event(&event).await,
+    CoordinatedEventType::McpStream => self.handle_mcp_stream_event(&event).await,
             CoordinatedEventType::StorageOperation => {
                 self.handle_storage_operation_event(&event).await
             }
@@ -347,7 +355,7 @@ impl EventCoordinator {
             let mut stats = self.stats.write().await;
             stats.events_processed += 1;
         }
-        Ok(())
+    Ok(())
     }
 
     /// Handle MCP stream events
@@ -401,7 +409,7 @@ impl EventCoordinator {
             let mut stats = self.stats.write().await;
             stats.events_processed += 1;
         }
-        Ok(())
+    Ok(())
     }
 
     /// Handle storage operation events
@@ -459,13 +467,13 @@ impl EventCoordinator {
                 // Coordinate health monitoring
             }
             _ => {
-                info!("Processing generic storage operation: {}", operation);
+                info!("Processing generic storage b_operation: {}", operation;
             }
         }
 
         // Log the storage operation completion (avoid recursion)
         debug!(
-            "Storage operation {} completed for pool {} (operation: {})",
+            "Storage operation {} completed for pool {} (b_operation: {}",
             event.event_id, pool_name, operation
         );
 
@@ -474,7 +482,7 @@ impl EventCoordinator {
             let mut stats = self.stats.write().await;
             stats.events_processed += 1;
         }
-        Ok(())
+    Ok(())
     }
 
     /// Create a WebSocket event
@@ -484,9 +492,9 @@ impl EventCoordinator {
         data: serde_json::Value,
     ) -> CoordinatedEvent {
         CoordinatedEvent {
-            event_id: *get_or_create_uuid(&format!("websocket_event_{client_id}")),
+            event_id: *get_or_create_uuid(&format!("websocket_event_self.base_url")),
             event_type: CoordinatedEventType::WebSocket,
-            source: format!("websocket-{client_id}"),
+            source: format!("websocket-self.base_url"),
             data,
             timestamp: std::time::SystemTime::now(),
         }
@@ -495,9 +503,9 @@ impl EventCoordinator {
     /// Create an internal service event
     pub fn internal_service_event(service_name: &str, data: serde_json::Value) -> CoordinatedEvent {
         CoordinatedEvent {
-            event_id: *get_or_create_uuid(&format!("internal_service_event_{service_name}")),
+            event_id: *get_or_create_uuid(&format!("internal_service_event_self.base_url")),
             event_type: CoordinatedEventType::InternalService,
-            source: format!("service-{service_name}"),
+            source: format!("service-self.base_url"),
             data,
             timestamp: std::time::SystemTime::now(),
         }
@@ -506,9 +514,9 @@ impl EventCoordinator {
     /// Create an MCP stream event
     pub fn mcp_stream_event(stream_id: &str, data: serde_json::Value) -> CoordinatedEvent {
         CoordinatedEvent {
-            event_id: *get_or_create_uuid(&format!("mcp_stream_event_{stream_id}")),
+            event_id: *get_or_create_uuid(&format!("mcp_stream_event_self.base_url")),
             event_type: CoordinatedEventType::McpStream,
-            source: format!("mcp-stream-{stream_id}"),
+            source: format!("mcp-stream-self.base_url"),
             data,
             timestamp: std::time::SystemTime::now(),
         }
@@ -517,7 +525,7 @@ impl EventCoordinator {
     /// Create a storage operation event
     pub fn storage_operation(operation: &str, data: serde_json::Value) -> CoordinatedEvent {
         CoordinatedEvent {
-            event_id: *get_or_create_uuid(&format!("storage_operation_{operation}")),
+            event_id: *get_or_create_uuid(&format!("storage_operation_self.base_url")),
             event_type: CoordinatedEventType::StorageOperation,
             source: "storage-service".to_string(),
             data,
@@ -527,11 +535,9 @@ impl EventCoordinator {
 }
 
 impl Clone for EventCoordinator {
-    fn clone(&self) -> Self {
-        Self {
+    fn clone(&self) -> Self { Self {
             handlers: self.handlers.clone(),
             event_broadcaster: self.event_broadcaster.clone(),
             stats: self.stats.clone(),
-        }
-    }
+         }
 }

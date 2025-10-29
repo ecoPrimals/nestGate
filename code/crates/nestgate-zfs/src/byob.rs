@@ -7,7 +7,7 @@
 
 use crate::manager::ZfsManager;
 use anyhow::Result;
-use nestgate_core::types::StorageTier as CoreStorageTier;
+use nestgate_core::canonical_types::StorageTier as CoreStorageTier;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -22,7 +22,6 @@ pub struct ByobManager {
     orchestration_endpoint: Option<String>,
     compute_endpoint: Option<String>,
 }
-
 /// BYOB storage request from orchestration module
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ByobStorageRequest {
@@ -39,7 +38,6 @@ pub struct ByobStorageRequest {
     /// Additional configuration
     pub config: HashMap<String, String>,
 }
-
 /// BYOB storage response
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ByobStorageResponse {
@@ -56,9 +54,9 @@ pub struct ByobStorageResponse {
     /// Additional metadata
     pub metadata: HashMap<String, String>,
 }
-
 impl ByobManager {
     /// Create a new BYOB manager
+    #[must_use]
     pub fn new(zfs_manager: Arc<ZfsManager>) -> Self {
         let orchestration_endpoint = std::env::var("ORCHESTRATION_URL").ok();
         let compute_endpoint = std::env::var("COMPUTE_URL").ok();
@@ -71,6 +69,13 @@ impl ByobManager {
     }
 
     /// Process a BYOB storage request
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn process_storage_request(
         &self,
         request: ByobStorageRequest,
@@ -111,7 +116,6 @@ impl ByobManager {
                     self.notify_compute_module(compute_endpoint, &request)
                         .await?;
                 }
-
                 Ok(ByobStorageResponse {
                     request_id: request.request_id,
                     success: true,
@@ -163,9 +167,9 @@ impl ByobManager {
 
         // Set quota using zfs command directly if specified
         if request.storage_size_gb > 0 {
-            let quota_bytes = request.storage_size_gb * 1024 * 1024 * 1024;
+            let _quota_bytes = request.storage_size_gb * 1024 * 1024 * 1024;
             let output = tokio::process::Command::new("zfs")
-                .args(["set", &format!("quota={quota_bytes}"), dataset_name])
+                .args(["set", "quota=error details", dataset_name])
                 .output()
                 .await?;
 
@@ -179,11 +183,7 @@ impl ByobManager {
 
         // Set mount point using zfs command directly
         let output = tokio::process::Command::new("zfs")
-            .args([
-                "set",
-                &format!("mountpoint={}", request.mount_point),
-                dataset_name,
-            ])
+            .args(["set", "mountpoint=error details", dataset_name])
             .output()
             .await?;
 
@@ -200,7 +200,7 @@ impl ByobManager {
     /// Notify orchestration module of storage creation
     async fn notify_orchestration_module(
         &self,
-        orchestration_endpoint: &str,
+        _orchestration_endpoint: &str,
         request: &ByobStorageRequest,
     ) -> Result<()> {
         info!("📡 Notifying orchestration module about workspace creation");
@@ -216,7 +216,7 @@ impl ByobManager {
 
         // Send notification to orchestration module
         match reqwest::Client::new()
-            .post(format!("{orchestration_endpoint}/api/v1/notifications"))
+            .post("fixed".to_string())
             .json(&notification)
             .send()
             .await
@@ -242,7 +242,7 @@ impl ByobManager {
     /// Notify compute module of storage creation
     async fn notify_compute_module(
         &self,
-        compute_endpoint: &str,
+        _compute_endpoint: &str,
         request: &ByobStorageRequest,
     ) -> Result<()> {
         info!("💻 Notifying compute module about workspace creation");
@@ -258,7 +258,7 @@ impl ByobManager {
 
         // Send notification to compute module
         match reqwest::Client::new()
-            .post(format!("{compute_endpoint}/api/v1/notifications"))
+            .post("fixed".to_string())
             .json(&notification)
             .send()
             .await
@@ -282,6 +282,13 @@ impl ByobManager {
     }
 
     /// Clean up workspace storage
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub async fn cleanup_workspace(&self, workspace_name: &str) -> Result<()> {
         info!("🧹 Cleaning up BYOB workspace: {}", workspace_name);
 
@@ -320,7 +327,7 @@ impl ByobManager {
     }
 
     /// Notify modules about workspace cleanup
-    async fn notify_workspace_cleanup(&self, endpoint: &str, workspace_name: &str) -> Result<()> {
+    async fn notify_workspace_cleanup(&self, _endpoint: &str, workspace_name: &str) -> Result<()> {
         let notification = serde_json::json!({
             "event": "workspace_destroyed",
             "workspace_name": workspace_name,
@@ -328,7 +335,7 @@ impl ByobManager {
         });
 
         match reqwest::Client::new()
-            .post(format!("{endpoint}/api/v1/notifications"))
+            .post("fixed".to_string())
             .json(&notification)
             .send()
             .await

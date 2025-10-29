@@ -3,7 +3,6 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
-
 /// Event processing settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EventProcessingSettings {
@@ -18,7 +17,6 @@ pub struct EventProcessingSettings {
     /// Error handling configuration
     pub error_handling: EventErrorHandlingSettings,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EventBatchingSettings {
     /// Enable event batching
@@ -28,7 +26,6 @@ pub struct EventBatchingSettings {
     /// Batch timeout duration
     pub batch_timeout: Duration,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EventQueueSettings {
     /// Maximum queue size
@@ -38,7 +35,6 @@ pub struct EventQueueSettings {
     /// Queue persistence settings
     pub persistence: QueuePersistenceSettings,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum QueueOverflowStrategy {
     /// Drop oldest events
@@ -50,7 +46,6 @@ pub enum QueueOverflowStrategy {
     /// Reject new events
     Reject,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct QueuePersistenceSettings {
     /// Enable queue persistence
@@ -60,7 +55,6 @@ pub struct QueuePersistenceSettings {
     /// Sync frequency
     pub sync_frequency: Duration,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EventPipelineSettings {
     /// Enable event pipeline
@@ -72,7 +66,6 @@ pub struct EventPipelineSettings {
     /// Worker thread count
     pub worker_threads: u32,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PipelineStage {
     /// Stage name
@@ -82,7 +75,6 @@ pub struct PipelineStage {
     /// Stage configuration
     pub config: HashMap<String, serde_json::Value>,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EventErrorHandlingSettings {
     /// Enable error handling
@@ -96,7 +88,6 @@ pub struct EventErrorHandlingSettings {
     /// Error notification settings
     pub error_notifications: ErrorNotificationSettings,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RetryPolicy {
     /// Enable retries
@@ -110,7 +101,6 @@ pub struct RetryPolicy {
     /// Backoff multiplier
     pub backoff_multiplier: f64,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DeadLetterQueueSettings {
     /// Enable dead letter queue
@@ -120,7 +110,6 @@ pub struct DeadLetterQueueSettings {
     /// Maximum queue size
     pub max_size: u32,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ErrorLoggingSettings {
     /// Enable error logging
@@ -130,7 +119,6 @@ pub struct ErrorLoggingSettings {
     /// Enable structured logging
     pub structured_logging: bool,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ErrorNotificationSettings {
     /// Enable error notifications
@@ -142,7 +130,6 @@ pub struct ErrorNotificationSettings {
     /// Notification frequency limit
     pub frequency_limit: Duration,
 }
-
 impl Default for EventProcessingSettings {
     fn default() -> Self {
         Self {
@@ -168,7 +155,7 @@ impl Default for EventBatchingSettings {
 impl Default for EventQueueSettings {
     fn default() -> Self {
         Self {
-            max_queue_size: 10000,
+            max_queue_size: 10_000,
             overflow_strategy: QueueOverflowStrategy::DropOldest,
             persistence: QueuePersistenceSettings::default(),
         }

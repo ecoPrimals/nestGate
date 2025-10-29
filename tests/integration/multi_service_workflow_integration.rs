@@ -14,6 +14,7 @@ use tokio::time::{sleep, timeout};
 use uuid::Uuid;
 
 use nestgate_core::{
+
     error::{NestGateError, Result},
     service_discovery::{
         registry::{InMemoryServiceRegistry, UniversalServiceRegistry},
@@ -219,8 +220,10 @@ mod configuration_migration_tests {
                             name: "storage-service".to_string(),
                             capabilities: vec!["storage".to_string(), "backup".to_string()],
                             endpoint: "http://discovered:8002".to_string(),
+    Ok(())
                         }
                     ]
+    Ok(())
                 }
             ],
             refresh_interval: 30,
@@ -242,7 +245,7 @@ mod configuration_migration_tests {
         // Test: Verify best service selection
         let best_auth_service = capability_manager.get_best_service_for_capability("authentication")?;
         assert!(best_auth_service.is_some());
-        assert_eq!(best_auth_service.unwrap().endpoint, "http://discovered:8001");
+        assert_eq!(best_auth_service?.endpoint, "http://discovered:8001");
         
         println!("✅ Legacy to capability-based configuration migration tested");
         Ok(())
@@ -262,8 +265,10 @@ mod configuration_migration_tests {
                             name: "test-service".to_string(),
                             capabilities: vec!["storage".to_string()],
                             endpoint: "http://v1:8000".to_string(),
+    Ok(())
                         }
                     ]
+    Ok(())
                 }
             ],
             refresh_interval: 30,
@@ -289,8 +294,10 @@ mod configuration_migration_tests {
                             name: "test-service".to_string(),
                             capabilities: vec!["storage".to_string(), "backup".to_string()],
                             endpoint: "http://v2:8000".to_string(),
+    Ok(())
                         }
                     ]
+    Ok(())
                 }
             ],
             refresh_interval: 30,
@@ -541,8 +548,8 @@ fn create_test_service_registration(
         capabilities,
         endpoint: ServiceEndpoint {
             protocol: CommunicationProtocol::Http,
-            address: "localhost".to_string(),
-            port: 8080,
+            address: nestgate_core::constants::TEST_HOSTNAME.to_string(),
+            port: nestgate_core::constants::DEFAULT_API_PORT,
             path: Some("/".to_string()),
         },
         metadata: ServiceMetadata {
@@ -570,8 +577,8 @@ fn create_test_service_with_metadata(
         capabilities,
         endpoint: ServiceEndpoint {
             protocol: CommunicationProtocol::Http,
-            address: "localhost".to_string(),
-            port: 8080,
+            address: nestgate_core::constants::TEST_HOSTNAME.to_string(),
+            port: nestgate_core::constants::DEFAULT_API_PORT,
             path: Some("/".to_string()),
         },
         metadata: ServiceMetadata {
@@ -608,7 +615,7 @@ impl SmartService for TestSmartService {
         ServiceMetadata {
             service_id: self.service_id.clone(),
             service_type: UnifiedServiceType::Storage,
-            endpoints: vec!["http://localhost:8080".to_string()],
+            endpoints: vec![nestgate_core::constants::TEST_API_BASE.to_string()],
             capabilities: self.capabilities.clone(),
         }
     }

@@ -8,10 +8,8 @@
 //! - Performance optimization validation
 
 use nestgate_core::canonical_types::{health::HealthStatus, service::ServiceType};
-use nestgate_core::config::canonical_unified::types::{
-    CanonicalConfig, NetworkConfig, SecurityConfig, StorageConfig,
-};
-use nestgate_core::config::canonical_unified::NestGateCanonicalUnifiedConfig as NestGateCanonicalUnifiedConfig;
+use nestgate_core::config::canonical_master::NestGateCanonicalConfig;
+use nestgate_core::config::{CanonicalConfig, NetworkConfig, SecurityConfig, StorageConfig};
 use nestgate_core::error::{NestGateError, Result};
 use serde_json;
 use std::time::Duration;
@@ -22,7 +20,7 @@ async fn test_canonical_config_unification() -> Result<()> {
     println!("🧪 Testing canonical configuration unification...");
 
     // Verify canonical config creation works
-    let config = CanonicalConfig::default();
+    let config = NestGateCanonicalConfig::default();
 
     // Test that all major domains are present
     assert!(
@@ -67,11 +65,11 @@ async fn test_no_fragmented_patterns() -> Result<()> {
 
     // Create multiple configs to ensure they use unified patterns
     let configs = vec![
-        CanonicalConfig::default(),
+        NestGateCanonicalConfig::default(),
         CanonicalConfig {
             network: NetworkConfig {
-                api: nestgate_core::config::canonical_unified::types::ApiServerConfig {
-                    port: 8080,
+                api: nestgate_core::config::ApiServerConfig {
+                    port: nestgate_core::constants::DEFAULT_API_PORT,
                     ..Default::default()
                 },
                 ..Default::default()
@@ -109,6 +107,7 @@ async fn test_no_fragmented_patterns() -> Result<()> {
             !serialized.contains("\"fragmented\""),
             "Should not contain 'fragmented' patterns"
         );
+        Ok(())
     }
 
     println!("✅ No fragmented configuration patterns found");
@@ -145,6 +144,7 @@ async fn test_unified_type_system() -> Result<()> {
                 debug_info: None,
                 is_bug: false,
             })?;
+        Ok(())
     }
 
     // Test unified health status
@@ -202,7 +202,7 @@ async fn test_backward_compatibility() -> Result<()> {
     );
 
     // Test that canonical config works
-    let canonical_config = CanonicalConfig::default();
+    let canonical_config = NestGateCanonicalConfig::default();
     let canonical_serialized =
         serde_json::to_string(&canonical_config).map_err(|e| NestGateError::Internal {
             message: format!("Canonical config serialization failed: {e}"),
@@ -246,7 +246,7 @@ async fn test_canonical_config_performance() -> Result<()> {
     let configs: Vec<CanonicalConfig> = (0..1000)
         .map(|i| CanonicalConfig {
             network: NetworkConfig {
-                api: nestgate_core::config::canonical_unified::types::ApiServerConfig {
+                api: nestgate_core::config::ApiServerConfig {
                     port: 8000 + (i % 100) as u16,
                     ..Default::default()
                 },
@@ -266,7 +266,7 @@ async fn test_canonical_config_performance() -> Result<()> {
     let start = std::time::Instant::now();
     let _serialized: Vec<String> = configs
         .iter()
-        .map(|config| serde_json::to_string(config).unwrap())
+        .map(|config| serde_json::to_string(config)?)
         .collect();
     let serialization_time = start.elapsed();
 
@@ -294,22 +294,9 @@ async fn test_canonical_error_handling() -> Result<()> {
 
     // Test various error scenarios use unified error types
     let errors = vec![
-        NestGateError::Internal {
-            message: "Test internal error".to_string(),
-            location: Some("test_canonical_error_handling".to_string()),
-            debug_info: None,
-            is_bug: false,
-        },
-        NestGateError::Storage {
-            operation: "test_operation".to_string(),
-            details: "Test storage error".to_string(),
-        },
-        NestGateError::Configuration {
-            message: "Test configuration error".to_string(),
-            config_source: nestgate_core::error::UnifiedConfigSource::Environment,
-            field: Some("test_field".to_string()),
-            suggested_fix: Some("Use correct field name".to_string()),
-        },
+        NestGateError::internal_error("Test internal error".to_string(), "test_component"),
+        NestGateError::storage_error("Test storage error".to_string()),
+        NestGateError::configuration_error("test_field", "Test configuration error".to_string()),
     ];
 
     for error in errors {
@@ -326,17 +313,19 @@ async fn test_canonical_error_handling() -> Result<()> {
 
         // Verify error maintains meaningful information
         match &error {
-            NestGateError::Internal { location, .. } => {
+            NestGateError::Internal(_) => {
                 assert!(
                     location.is_some(),
                     "Internal error should have location information"
                 );
+    Ok(())
             }
-            NestGateError::Storage { operation, details } => {
+            NestGateError::Storage(_) => {
                 assert!(!operation.is_empty(), "Storage error should have operation");
                 assert!(!details.is_empty(), "Storage error should have details");
+    Ok(())
             }
-            NestGateError::Configuration { message, field, .. } => {
+            NestGateError::Configuration(_) => {
                 assert!(
                     !message.is_empty(),
                     "Configuration error should have message"
@@ -345,9 +334,12 @@ async fn test_canonical_error_handling() -> Result<()> {
                     field.is_some(),
                     "Configuration error should have field info"
                 );
+    Ok(())
             }
             _ => {} // Other error types have their own validation
+    Ok(())
         }
+        Ok(())
     }
 
     println!("✅ Canonical error handling consistency validated");
@@ -366,7 +358,7 @@ async fn test_canonical_concurrency() -> Result<()> {
                 // Each task creates and validates a config
                 let config = CanonicalConfig {
                     network: NetworkConfig {
-                        api: nestgate_core::config::canonical_unified::types::ApiServerConfig {
+                        api: nestgate_core::config::ApiServerConfig {
                             port: 8000 + i as u16,
                             ..Default::default()
                         },
@@ -376,8 +368,8 @@ async fn test_canonical_concurrency() -> Result<()> {
                 };
 
                 // Serialize and deserialize to test thread safety
-                let serialized = serde_json::to_string(&config).unwrap();
-                let _deserialized: CanonicalConfig = serde_json::from_str(&serialized).unwrap();
+                let serialized = serde_json::to_string(&config)?;
+                let _deserialized: CanonicalConfig = serde_json::from_str(&serialized)?;
 
                 i
             })
@@ -396,6 +388,7 @@ async fn test_canonical_concurrency() -> Result<()> {
             is_bug: false,
         })?;
         assert_eq!(task_id, i, "Task should return correct ID");
+        Ok(())
     }
 
     println!("✅ Canonical concurrency patterns validated");
@@ -410,9 +403,9 @@ async fn test_canonical_system_integration() -> Result<()> {
     // Create a comprehensive configuration
     let config = CanonicalConfig {
         network: NetworkConfig {
-            api: nestgate_core::config::canonical_unified::types::ApiServerConfig {
-                port: 8080,
-                host: "127.0.0.1".parse().unwrap(),
+            api: nestgate_core::config::ApiServerConfig {
+                port: nestgate_core::constants::DEFAULT_API_PORT,
+                host: "127.0.0.1".parse()?,
                 ..Default::default()
             },
             ..Default::default()

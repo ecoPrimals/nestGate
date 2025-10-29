@@ -1,69 +1,86 @@
+[[bin]]
+name = "nestgate-installer"
+path = "src/main.rs"
+
 [package]
 name = "nestgate-installer"
 version = "0.1.0"
 edition = "2021"
 description = "NestGate Installation and Configuration Tool"
-authors = ["NestGate Team"]
-license = "AGPL-3.0-or-later"
+authors = [ "NestGate Team",]
+license = "AGPL-3.0-only"
+repository = "https://github.com/eastgate/nestgate"
+readme = "README.md"
+keywords = [ "installer", "deployment", "rust", "nestgate",]
+categories = [ "development-tools", "deployment",]
 
 [lib]
 name = "nestgate_installer"
 path = "src/lib.rs"
 
-[[bin]]
-name = "nestgate-installer"
-path = "src/main.rs"
-
 [dependencies]
-# Core dependencies
-tokio = { version = "1.0", features = ["full"] }
-serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 toml = "0.8"
-clap = { version = "4.0", features = ["derive"] }
 anyhow = "1.0"
 thiserror = "1.0"
-chrono = { version = "0.4", features = ["serde"] }
-uuid = { version = "1.0", features = ["v4"] }
-
-# File system and OS integration
 dirs = "5.0"
-
-# NestGate dependencies
-nestgate-core = { path = "../nestgate-core" }
 tempfile = "3.0"
 tar = "0.4"
 flate2 = "1.0"
 zip = "0.6"
-
-# HTTP client for downloads
-reqwest = { version = "0.11", features = ["json", "stream"] }
-
-# System integration
 sysinfo = "0.30"
-
-# Terminal UI
-dialoguer = { version = "0.11", features = ["completion"] }
 console = "0.15"
 indicatif = "0.17"
-
-# Logging
 tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+futures-util = "0.3"
 
-# GUI removed - using API endpoints for UI primals instead
+[features]
+default = [ "cli",]
+cli = []
 
-# Platform-specific dependencies
-[target.'cfg(windows)'.dependencies]
+[dependencies.tokio]
+version = "1.0"
+features = [ "full",]
+
+[dependencies.serde]
+version = "1.0"
+features = [ "derive",]
+
+[dependencies.clap]
+version = "4.0"
+features = [ "derive",]
+
+[dependencies.chrono]
+version = "0.4"
+features = [ "serde",]
+
+[dependencies.uuid]
+version = "1.0"
+features = [ "v4",]
+
+[dependencies.nestgate-core]
+path = "../nestgate-core"
+
+[dependencies.reqwest]
+version = "0.11"
+features = [ "json", "stream",]
+
+[dependencies.dialoguer]
+version = "0.11"
+features = [ "completion",]
+
+[dependencies.tracing-subscriber]
+version = "0.3"
+features = [ "env-filter",]
+
+[target."cfg(windows)".dependencies]
 winreg = "0.52"
 windows-service = "0.6"
-winapi = { version = "0.3", features = ["winuser", "winsvc"] }
 
-[target.'cfg(unix)'.dependencies]
-nix = { version = "0.27", features = ["user"] }
+[target."cfg(windows)".dependencies.winapi]
+version = "0.3"
+features = [ "winuser", "winsvc",]
 
-# Features
-[features]
-default = ["cli"]
-cli = []
-# GUI feature removed - using API-driven UI primals instead 
+[target."cfg(unix)".dependencies.nix]
+version = "0.27"
+features = [ "user",]

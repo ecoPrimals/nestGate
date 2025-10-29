@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 ///
 /// This module contains all the core security data structures and types
 /// used throughout the zero-cost security provider system.
@@ -7,8 +6,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::SystemTime;
 use uuid::Uuid;
-
-// ==================== CORE SECURITY TYPES ====================
+// ==================== SECTION ====================
 
 /// **Credentials for authentication**
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -22,9 +20,9 @@ pub struct ZeroCostCredentials {
     /// Additional metadata for authentication
     pub metadata: HashMap<String, String>,
 }
-
 impl ZeroCostCredentials {
     /// Create new credentials with password authentication
+    #[must_use]
     pub fn new_password(username: String, password: String) -> Self {
         Self {
             username,
@@ -35,6 +33,7 @@ impl ZeroCostCredentials {
     }
 
     /// Create new credentials with token authentication
+    #[must_use]
     pub fn new_token(username: String, token: String) -> Self {
         Self {
             username,
@@ -45,6 +44,7 @@ impl ZeroCostCredentials {
     }
 
     /// Create new credentials with certificate authentication
+    #[must_use]
     pub fn new_certificate(username: String, cert_data: String) -> Self {
         Self {
             username,
@@ -55,12 +55,14 @@ impl ZeroCostCredentials {
     }
 
     /// Add metadata to credentials
+    #[must_use]
     pub fn with_metadata(mut self, key: String, value: String) -> Self {
         self.metadata.insert(key, value);
         self
     }
 
     /// Check if credentials are valid (non-empty)
+    #[must_use]
     pub fn is_valid(&self) -> bool {
         !self.username.is_empty() && !self.password.is_empty()
     }
@@ -84,14 +86,15 @@ pub enum AuthMethod {
         methods: Vec<String>,
     },
 }
-
 impl AuthMethod {
     /// Check if this is a multi-factor authentication method
+    #[must_use]
     pub fn is_multi_factor(&self) -> bool {
-        matches!(self, AuthMethod::MultiFactor { .. })
+        matches!(self, Self::MultiFactor { .. })
     }
 
     /// Get the primary authentication method name
+    #[must_use]
     pub fn name(&self) -> &'static str {
         match self {
             AuthMethod::Password => "password",
@@ -103,6 +106,7 @@ impl AuthMethod {
     }
 
     /// Check if this method requires secure transport
+    #[must_use]
     pub fn requires_secure_transport(&self) -> bool {
         matches!(self, AuthMethod::Password | AuthMethod::MultiFactor { .. })
     }
@@ -130,9 +134,9 @@ pub struct ZeroCostAuthToken {
     /// Token metadata
     pub metadata: HashMap<String, String>,
 }
-
 impl ZeroCostAuthToken {
     /// Create a new authentication token
+    #[must_use]
     pub fn new(
         token: String,
         user_id: String,
@@ -154,33 +158,39 @@ impl ZeroCostAuthToken {
     }
 
     /// Check if the token is expired
+    #[must_use]
     pub fn is_expired(&self) -> bool {
         SystemTime::now() > self.expires_at
     }
 
     /// Check if the token has a specific permission
+    #[must_use]
     pub fn has_permission(&self, permission: &str) -> bool {
         self.permissions.contains(&permission.to_string())
     }
 
     /// Get remaining validity duration
+    #[must_use]
     pub fn remaining_validity(&self) -> Option<std::time::Duration> {
         self.expires_at.duration_since(SystemTime::now()).ok()
     }
 
     /// Add metadata to the token
+    #[must_use]
     pub fn with_metadata(mut self, key: String, value: String) -> Self {
         self.metadata.insert(key, value);
         self
     }
 
     /// Set token issuer
+    #[must_use]
     pub fn with_issuer(mut self, issuer: String) -> Self {
         self.issuer = Some(issuer);
         self
     }
 
     /// Set token audience
+    #[must_use]
     pub fn with_audience(mut self, audience: String) -> Self {
         self.audience = Some(audience);
         self
@@ -201,9 +211,9 @@ pub struct ZeroCostSignature {
     /// Additional signature metadata
     pub metadata: HashMap<String, String>,
 }
-
 impl ZeroCostSignature {
     /// Create a new signature
+    #[must_use]
     pub fn new(algorithm: String, signature: String, key_id: String) -> Self {
         Self {
             algorithm,
@@ -215,17 +225,20 @@ impl ZeroCostSignature {
     }
 
     /// Add metadata to the signature
+    #[must_use]
     pub fn with_metadata(mut self, key: String, value: String) -> Self {
         self.metadata.insert(key, value);
         self
     }
 
     /// Check if the signature is valid (non-empty fields)
+    #[must_use]
     pub fn is_valid(&self) -> bool {
         !self.algorithm.is_empty() && !self.signature.is_empty() && !self.key_id.is_empty()
     }
 
     /// Get signature age
+    #[must_use]
     pub fn age(&self) -> std::time::Duration {
         SystemTime::now()
             .duration_since(self.timestamp)
@@ -247,7 +260,6 @@ pub struct SecurityOperationResult<T> {
     /// Operation timestamp
     pub timestamp: SystemTime,
 }
-
 impl<T> SecurityOperationResult<T> {
     /// Create a successful operation result
     pub fn success(data: T, duration: std::time::Duration) -> Self {
@@ -261,6 +273,7 @@ impl<T> SecurityOperationResult<T> {
     }
 
     /// Create a failed operation result
+    #[must_use]
     pub fn failure(error: String, duration: std::time::Duration) -> Self {
         Self {
             success: false,
@@ -303,9 +316,9 @@ pub struct SecurityContext {
     /// Additional context metadata
     pub metadata: HashMap<String, String>,
 }
-
 impl SecurityContext {
     /// Create a new security context
+    #[must_use]
     pub fn new(user_id: String, session_id: String) -> Self {
         Self {
             user_id,
@@ -318,6 +331,7 @@ impl SecurityContext {
     }
 
     /// Add client information
+    #[must_use]
     pub fn with_client_info(mut self, ip: Option<String>, user_agent: Option<String>) -> Self {
         self.client_ip = ip;
         self.user_agent = user_agent;
@@ -325,6 +339,7 @@ impl SecurityContext {
     }
 
     /// Add metadata
+    #[must_use]
     pub fn with_metadata(mut self, key: String, value: String) -> Self {
         self.metadata.insert(key, value);
         self

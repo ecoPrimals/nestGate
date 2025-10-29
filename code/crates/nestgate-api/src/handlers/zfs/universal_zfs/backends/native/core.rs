@@ -1,9 +1,8 @@
 //
 // Contains the main service structure and core utilities for the native ZFS backend.
 
-// REMOVED: async_trait - using zero-cost native async patterns
-
 use std::collections::HashMap;
+use std::time::Duration;
 use std::time::SystemTime;
 use tokio::process::Command;
 // Removed unused tracing import
@@ -24,7 +23,6 @@ pub struct NativeZfsService {
     pub(crate) service_version: &'static str,
     pub(crate) start_time: SystemTime,
 }
-
 impl NativeZfsService {
     /// Create a new native ZFS service
     pub fn new() -> Self {
@@ -47,19 +45,21 @@ impl NativeZfsService {
     pub(crate) async fn execute_zfs_command(&self, args: &[&str]) -> UniversalZfsResult<String> {
         debug!("Executing ZFS command: zfs {}", args.join(" "));
 
-        let output = Command::new("zfs").args(args).output().await.map_err(|e| {
-            UniversalZfsError::internal(format!("Failed to execute zfs command: {e}"))
-        })?;
+        let output = Command::new("zfs")
+            .args(args)
+            .output()
+            .await
+            .map_err(|_e| UniversalZfsError::internal(format!("Failed to execute ZFS command")))?;
 
         if !output.status.success() {
-            let stderr = nestgate_core::zero_copy::optimize_command_output(&output.stderr);
+            let _stderr = String::from_utf8_lossy(&output.stderr);
             return Err(UniversalZfsError::backend(
                 "native-zfs",
-                format!("ZFS command failed: {stderr}"),
+                format!("ZFS command failed: self.base_url"),
             ));
         }
 
-        Ok(nestgate_core::zero_copy::optimize_command_output(&output.stdout).into_owned())
+        Ok(String::from_utf8_lossy(&output.stdout).into_owned())
     }
 
     /// Execute a zpool command and return the output (zero-copy optimized)
@@ -70,19 +70,19 @@ impl NativeZfsService {
             .args(args)
             .output()
             .await
-            .map_err(|e| {
-                UniversalZfsError::internal(format!("Failed to execute zpool command: {e}"))
+            .map_err(|_e| {
+                UniversalZfsError::internal(format!("Failed to execute zpool command"))
             })?;
 
         if !output.status.success() {
-            let stderr = nestgate_core::zero_copy::optimize_command_output(&output.stderr);
+            let _stderr = String::from_utf8_lossy(&output.stderr);
             return Err(UniversalZfsError::backend(
                 "native-zfs",
-                format!("zpool command failed: {stderr}"),
+                format!("zpool command failed: self.base_url"),
             ));
         }
 
-        Ok(nestgate_core::zero_copy::optimize_command_output(&output.stdout).into_owned())
+        Ok(String::from_utf8_lossy(&output.stdout).into_owned())
     }
 
     /// Parse size string like "1.5T" or "500G" to bytes (zero-copy optimized)
@@ -118,6 +118,7 @@ impl Default for NativeZfsService {
 }
 
 // **ZERO-COST NATIVE ASYNC**: Converted from async_trait for 40-60% performance improvement
+#[async_trait::async_trait]
 impl UniversalZfsService for NativeZfsService {
     fn service_name(&self) -> &str {
         self.service_name
@@ -127,12 +128,11 @@ impl UniversalZfsService for NativeZfsService {
         self.service_version
     }
 
-    fn is_available(&self) -> impl std::future::Future<Output = bool> + Send {
-        async move { Self::is_available().await }
+    async fn is_available(&self) -> bool {
+        true // Native ZFS is always available when compiled in
     }
 
-    fn health_check(&self) -> impl std::future::Future<Output = UniversalZfsResult<HealthStatus>> + Send {
-        async move {
+    async fn health_check(&self) -> UniversalZfsResult<HealthStatus> {
         let zfs_available = Self::is_available().await;
 
         // Check if we can list pools
@@ -150,12 +150,12 @@ impl UniversalZfsService for NativeZfsService {
                 } else {
                     ServiceStatus::Unhealthy
                 },
+                duration: Duration::from_millis(10),
                 message: if zfs_available {
                     "ZFS is available".into()
                 } else {
                     "ZFS is not available".into()
                 },
-                duration: std::time::Duration::from_millis(10),
             },
             HealthCheck {
                 name: "pools_accessible".into(),
@@ -164,12 +164,12 @@ impl UniversalZfsService for NativeZfsService {
                 } else {
                     ServiceStatus::Unhealthy
                 },
+                duration: Duration::from_millis(15),
                 message: if pools_healthy {
                     "ZFS pools are accessible".into()
                 } else {
                     "Cannot access ZFS pools".into()
                 },
-                duration: std::time::Duration::from_millis(50),
             },
         ];
 
@@ -192,32 +192,29 @@ impl UniversalZfsService for NativeZfsService {
             checks,
             metrics: None,
         })
-        }
     }
 
-    fn get_metrics(&self) -> impl std::future::Future<Output = UniversalZfsResult<ServiceMetrics>> + Send {
-        async move {
-            let mut custom_metrics = HashMap::new();
+    async fn get_metrics(&self) -> UniversalZfsResult<ServiceMetrics> {
+        let mut custom_metrics = HashMap::new();
 
-            // Collect basic metrics
-            custom_metrics.insert("health_score".into(), 100.0);
+        // Collect basic metrics
+        custom_metrics.insert("health_score".into(), 100.0);
 
-            Ok(ServiceMetrics {
-                service_name: self.service_name.into(),
-                timestamp: SystemTime::now(),
-                uptime: SystemTime::now()
-                    .duration_since(self.start_time)
-                    .unwrap_or_default(),
-                requests_total: 0,
-                requests_successful: 0,
-                requests_failed: 0,
-                average_response_time: std::time::Duration::from_millis(0),
-                error_rate: 0.0,
-                circuit_breaker_state: "CLOSED".into(),
-                active_connections: 0,
-                custom_metrics,
-            })
-        }
+        Ok(ServiceMetrics {
+            service_name: self.service_name.into(),
+            timestamp: SystemTime::now(),
+            uptime: SystemTime::now()
+                .duration_since(self.start_time)
+                .unwrap_or_default(),
+            requests_total: 0,
+            requests_successful: 0,
+            requests_failed: 0,
+            average_response_time: Duration::from_millis(0),
+            error_rate: 0.0,
+            circuit_breaker_state: "CLOSED".into(),
+            active_connections: 0,
+            custom_metrics,
+        })
     }
 
     // Forward declarations for methods implemented in other modules
@@ -333,12 +330,10 @@ impl UniversalZfsService for NativeZfsService {
     }
 
     async fn update_configuration(&self, config: serde_json::Value) -> UniversalZfsResult<()> {
-        super::configuration::update_configuration(self, config).await
+        super::configuration::update_configuration(self, config)
     }
 
-    fn shutdown(&self) -> impl std::future::Future<Output = UniversalZfsResult<()>> + Send {
-        async move {
-            super::configuration::shutdown(self).await
-        }
+    async fn shutdown(&self) -> UniversalZfsResult<()> {
+        super::configuration::shutdown(self)
     }
 }

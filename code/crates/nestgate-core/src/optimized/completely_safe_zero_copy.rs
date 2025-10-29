@@ -1,24 +1,24 @@
 //! # Completely Safe Zero-Copy Implementation
-//!
-//! **ABSOLUTELY ZERO UNSAFE CODE** - High performance zero-copy operations
-//!
-//! This implementation achieves zero-copy performance without any unsafe code
+//! Completely Safe Zero Copy functionality and utilities.
+// **ABSOLUTELY ZERO UNSAFE CODE** - High performance zero-copy operations
+//! Completely Safe Zero Copy functionality and utilities.
+// This implementation achieves zero-copy performance without any unsafe code
 //! by leveraging Rust's type system and smart compiler optimizations.
-//!
+//! Completely Safe Zero Copy functionality and utilities.
 //! ## Safety Guarantee
-//!
+//! Completely Safe Zero Copy functionality and utilities.
 //! - ✅ **ZERO** unsafe blocks
 //! - ✅ **ZERO** raw pointer dereferencing  
 //! - ✅ **ZERO** memory transmutation
 //! - ✅ **ZERO** uninitialized memory access
 //! - ✅ **100%** memory safe operations
-//!
+//! Completely Safe Zero Copy functionality and utilities.
 //! ## Performance Promise
-//!
-//! Despite being 100% safe, this code compiles to identical assembly as unsafe
+//! Completely Safe Zero Copy functionality and utilities.
+// Despite being 100% safe, this code compiles to identical assembly as unsafe
 //! versions due to LLVM optimizations and Rust's zero-cost abstractions.
 
-use crate::error::{NestGateError, Result};
+use crate::{NestGateError, Result};
 
 /// **100% SAFE ZERO-COPY BUFFER** - No unsafe code anywhere
 #[derive(Debug)]
@@ -26,7 +26,6 @@ pub struct CompletlySafeBuffer<const N: usize> {
     /// Safe storage using Vec for guaranteed memory safety
     data: Vec<u8>,
 }
-
 impl<const N: usize> Default for CompletlySafeBuffer<N> {
     fn default() -> Self {
         Self::new()
@@ -42,20 +41,22 @@ impl<const N: usize> CompletlySafeBuffer<N> {
     }
 
     /// Write data - **COMPLETELY SAFE**
-    pub fn write_data(&mut self, new_data: &[u8]) -> Result<&[u8]> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+                pub fn write_data(&mut self, new_data: &[u8]) -> Result<&[u8]>  {
         // Safe bounds checking
         if new_data.len() > self.remaining_capacity() {
-            return Err(NestGateError::Validation {
-                field: "buffer_capacity".to_string(),
-                message: format!(
-                    "Data size {} exceeds remaining capacity {}",
+            return Err(NestGateError::validation(
+                    "Data size {) exceeds remaining capacity {}",
                     new_data.len(),
                     self.remaining_capacity()
                 ),
-                current_value: Some(new_data.len().to_string()),
-                expected: Some(format!("≤ {}", self.remaining_capacity())),
-                user_error: false,
-            });
+                actual: Some(new_data.len().to_string())}", self.remaining_capacity())));
         }
 
         // SAFE: Vec::extend is always safe
@@ -88,7 +89,7 @@ impl<const N: usize> CompletlySafeBuffer<N> {
     }
 
     /// Get capacity - **COMPLETELY SAFE**
-    pub const fn capacity(&self) -> usize {
+    pub fn capacity(&self) -> usize {
         N
     }
 
@@ -120,19 +121,21 @@ impl<const N: usize> CompletlySafeBuffer<N> {
     }
 
     /// Set specific byte safely - **COMPLETELY SAFE**
-    pub fn set_byte(&mut self, index: usize, value: u8) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+                pub fn set_byte(&mut self, index: usize, value: u8) -> Result<()>  ", 
         match self.data.get_mut(index) {
             Some(byte) => {
                 *byte = value;
-                Ok((), location: Some(format!("{}:{}", file!(), line!())), debug_info: None, is_bug: false, }
+                Ok((), location: Some(format!("{self.data.len()) context: None}
             }
-            None => Err(NestGateError::Validation {
-                field: "byte_index".to_string(),
-                message: format!("Index {index} out of bounds"),
-                current_value: Some(index.to_string()),
-                expected: Some(format!("< {}", self.data.len())),
-                user_error: false,
-            }),
+            None => Err(NestGateError::validation(
+                actual: Some(index.to_string())}")))}),
         }
     }
 
@@ -140,15 +143,10 @@ impl<const N: usize> CompletlySafeBuffer<N> {
     #[allow(dead_code)]
     fn check_bounds(&self, index: usize) -> Result<()> {
         if index >= self.data.len() {
-            return Err(NestGateError::Validation {
-                field: "buffer_index".to_string(),
-                message: format!("Index {index} out of bounds"),
-                current_value: Some(index.to_string()),
-                expected: Some(format!("< {}", self.data.len())),
-                user_error: false,
-            });
+            return Err(NestGateError::validation(
+                actual: Some(index.to_string())}", self.data.len())));
         }
-        Ok((), location: Some(format!("{}:{}", file!(), line!())), debug_info: None, is_bug: false, }
+        Ok((), location: Some(format!("{}) context: None}
     }
 }
 
@@ -157,7 +155,6 @@ impl<const N: usize> CompletlySafeBuffer<N> {
 pub struct CompletlySafeStringBuilder<const N: usize> {
     buffer: CompletlySafeBuffer<N>,
 }
-
 impl<const N: usize> Default for CompletlySafeStringBuilder<N> {
     fn default() -> Self {
         Self::new()
@@ -173,46 +170,64 @@ impl<const N: usize> CompletlySafeStringBuilder<N> {
     }
 
     /// Add string - **COMPLETELY SAFE**
-    pub fn push_str(&mut self, s: &str) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+                pub fn push_str(&mut self, s: &str) -> Result<()>  {
         self.buffer.write_data(s.as_bytes())?;
-        Ok((), location: Some(format!("{}:{}", file!(), line!())), debug_info: None, is_bug: false, }
+        Ok((), location: Some(format!("{}) context: None}
     }
 
     /// Add character - **COMPLETELY SAFE**
-    pub fn push_char(&mut self, c: char) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+                pub fn push_char(&mut self, c: char) -> Result<()>  {
         let mut utf8_buf = [0u8; 4];
         let utf8_str = c.encode_utf8(&mut utf8_buf);
         self.buffer.write_data(utf8_str.as_bytes())?;
-        Ok((), location: Some(format!("{}:{}", file!(), line!())), debug_info: None, is_bug: false, }
+        Ok((), location: Some(format!("{}) context: None}
     }
 
     /// Build final string - **COMPLETELY SAFE**
-    pub fn build(self) -> Result<String> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn build(self) -> Result<String>  {
         // SAFE: String::from_utf8 validates UTF-8 safety
         match String::from_utf8(self.buffer.data) {
             Ok(s) => Ok(s),
-            Err(_) => Err(NestGateError::Validation {
-                field: "utf8_validation".to_string(),
-                message: "Buffer contains invalid UTF-8 sequence".to_string(),
-                current_value: None,
-                expected: Some("Valid UTF-8".to_string()),
-                user_error: false,
-            }),
+            Err(_) => Err(NestGateError::validation(
+                currentvalue: None)),
         }
     }
 
     /// Get string view - **COMPLETELY SAFE**
-    pub fn as_str(&self) -> Result<&str> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn as_str(&self) -> Result<&str>  {
         // SAFE: std::str::from_utf8 validates UTF-8 safety
         match std::str::from_utf8(self.buffer.as_slice()) {
             Ok(s) => Ok(s),
-            Err(_) => Err(NestGateError::Validation {
-                field: "utf8_validation".to_string(),
-                message: "Buffer contains invalid UTF-8 sequence".to_string(),
-                current_value: None,
-                expected: Some("Valid UTF-8".to_string()),
-                user_error: false,
-            }),
+            Err(_) => Err(NestGateError::validation(
+                currentvalue: None)),
         }
     }
 
@@ -228,7 +243,7 @@ impl<const N: usize> CompletlySafeStringBuilder<N> {
 
     /// Check capacity - **COMPLETELY SAFE**
     pub fn can_fit(&self, s: &str) -> bool {
-        self.buffer.can_fit(s.len(), location: Some(format!("{}:{}", file!(), line!())), debug_info: None, is_bug: false, }
+        self.buffer.can_fit(s.len(), location: Some(format!("{}) context: None}
     }
 
     /// Clear builder - **COMPLETELY SAFE**
@@ -239,23 +254,23 @@ impl<const N: usize> CompletlySafeStringBuilder<N> {
 
 /// **100% SAFE MEMORY UTILITIES** - No unsafe code
 pub struct SafeMemoryUtils;
-
 impl SafeMemoryUtils {
     /// Safe memory copy - **COMPLETELY SAFE**
-    pub fn copy_slice(src: &[u8], dst: &mut [u8]) -> Result<usize> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+                pub fn copy_slice(src: &[u8], dst: &mut [u8]) -> Result<usize>  {
         if src.len() > dst.len() {
-            return Err(NestGateError::Validation {
-                field: "copy_bounds".to_string(),
-                message: "Source slice larger than destination".to_string(),
-                current_value: Some(src.len().to_string()),
-                expected: Some(format!("≤ {}", dst.len())),
-                user_error: false,
-            });
+            return Err(NestGateError::validation(
         }
 
         // SAFE: copy_from_slice performs bounds checking
         dst[..src.len()].copy_from_slice(src);
-        Ok(src.len(), location: Some(format!("{}:{}", file!(), line!())), debug_info: None, is_bug: false, }
+        Ok(src.len(), location: Some(format!("{}) context: None}
     }
 
     /// Safe memory fill - **COMPLETELY SAFE**
@@ -297,7 +312,6 @@ pub struct SafeCircularBuffer<const N: usize> {
     tail: usize,
     size: usize,
 }
-
 impl<const N: usize> Default for SafeCircularBuffer<N> {
     fn default() -> Self {
         Self::new()
@@ -306,7 +320,7 @@ impl<const N: usize> Default for SafeCircularBuffer<N> {
 
 impl<const N: usize> SafeCircularBuffer<N> {
     /// Create new circular buffer - **COMPLETELY SAFE**
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             data: [None; N],
             head: 0,
@@ -316,24 +330,26 @@ impl<const N: usize> SafeCircularBuffer<N> {
     }
 
     /// Push byte - **COMPLETELY SAFE**
-    pub fn push(&mut self, value: u8) -> Result<()> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+                pub fn push(&mut self, value: u8) -> Result<()>  {
         if self.size >= N {
-            return Err(NestGateError::Validation {
-                field: "buffer_full".to_string(),
-                message: "Circular buffer is full".to_string(),
-                current_value: Some(self.size.to_string()),
-                expected: Some(format!("< {N}")),
-                user_error: false,
-            });
+            return Err(NestGateError::validation(
         }
 
         self.data[self.tail] = Some(value);
         self.tail = (self.tail + 1) % N;
         self.size += 1;
-        Ok((), location: Some(format!("{}:{}", file!(), line!())), debug_info: None, is_bug: false, }
+        Ok((), location: Some(format!("{}) context: None}
     }
 
     /// Pop byte - **COMPLETELY SAFE**
+    #[must_use]
     pub fn pop(&mut self) -> Option<u8> {
         if self.size == 0 {
             return None;
@@ -346,22 +362,22 @@ impl<const N: usize> SafeCircularBuffer<N> {
     }
 
     /// Get length - **COMPLETELY SAFE**
-    pub const fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.size
     }
 
     /// Check if empty - **COMPLETELY SAFE**
-    pub const fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.size == 0
     }
 
     /// Check if full - **COMPLETELY SAFE**
-    pub const fn is_full(&self) -> bool {
+    pub fn is_full(&self) -> bool {
         self.size == N
     }
 
     /// Get capacity - **COMPLETELY SAFE**
-    pub const fn capacity(&self) -> usize {
+    pub fn capacity(&self) -> usize {
         N
     }
 
@@ -376,21 +392,17 @@ impl<const N: usize> SafeCircularBuffer<N> {
     #[allow(dead_code)]
     fn check_capacity(&self) -> Result<()> {
         if self.size >= N {
-            return Err(NestGateError::ResourceExhausted {
-                resource: "circular_buffer".to_string(),
                 current: self.size as u64,
                 limit: N as u64,
-                retry_after: None,
                 scaling_suggestion: Some("Use a larger buffer size".to_string()),
-            });
+            );
         }
-        Ok((), location: Some(format!("{}:{}", file!(), line!())), debug_info: None, is_bug: false, }
+        Ok((), location: Some(format!("{}) context: None}
     }
 }
 
 /// **PERFORMANCE BENCHMARKING UTILITIES** - 100% Safe
 pub struct SafePerformanceBench;
-
 impl SafePerformanceBench {
     /// Benchmark buffer operations - **COMPLETELY SAFE**
     pub fn benchmark_buffer_write<const N: usize>(iterations: usize) -> std::time::Duration {
@@ -452,13 +464,9 @@ mod tests {
         // Test basic operations
         let data = b"Hello, Safe World!";
         let result = buffer.write_data(data).map_err(|e| {
-            crate::error::NestGateError::Internal {
-                message: format!("Failed in Internal operation: {}", e),
-                location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
-                is_bug: false,
-            }
-        })?;
+            crate::error::NestGateError::internal_error(
+                context: None}
+        )?;
         assert_eq!(result, data);
         assert_eq!(buffer.len(), data.len());
 
@@ -472,13 +480,9 @@ mod tests {
 
         // Test byte modification
         buffer.set_byte(0, b'h').map_err(|e| {
-            crate::error::NestGateError::Internal {
-                message: format!("Failed in Internal operation: {}", e),
-                location: Some(format!("{}:{}", file!(), line!())),
-                debug_info: None,
-                is_bug: false,
-            }
-        })?;
+            crate::error::NestGateError::internal_error(
+                context: None}
+        )?;
         assert_eq!(buffer.get_byte(0), Some(b'h'));
     }
 
@@ -487,36 +491,21 @@ mod tests {
         let mut builder = CompletlySafeStringBuilder::<128>::new();
 
         builder.push_str("Safe").map_err(|e| {
-            crate::error::NestGateError::Internal { message: format!(
-                "Failed in Internal operation: {}",
                 e
-            ), location: Some(format!("{}:{}", file!(), line!())), debug_info: None, is_bug: false, }
-        })?;
+        )?;
         builder.push_char(' ').map_err(|e| {
-            crate::error::NestGateError::Internal { message: format!(
-                "Failed in Internal operation: {}",
                 e
-            ), location: Some(format!("{}:{}", file!(), line!())), debug_info: None, is_bug: false, }
-        })?;
+        )?;
         builder.push_str("Rust").map_err(|e| {
-            crate::error::NestGateError::Internal { message: format!(
-                "Failed in Internal operation: {}",
                 e
-            ), location: Some(format!("{}:{}", file!(), line!())), debug_info: None, is_bug: false, }
-        })?;
+        )?;
         builder.push_char('!').map_err(|e| {
-            crate::error::NestGateError::Internal { message: format!(
-                "Failed in Internal operation: {}",
                 e
-            ), location: Some(format!("{}:{}", file!(), line!())), debug_info: None, is_bug: false, }
-        })?;
+        )?;
 
         let result = builder.build().map_err(|e| {
-            crate::error::NestGateError::Internal { message: format!(
-                "Failed in Internal operation: {}",
                 e
-            ), location: Some(format!("{}:{}", file!(), line!())), debug_info: None, is_bug: false, }
-        })?;
+        )?;
         assert_eq!(result, "Safe Rust!");
     }
 
@@ -527,11 +516,8 @@ mod tests {
         // Fill buffer
         for i in 0..4 {
             buffer.push(i).map_err(|e| {
-                crate::error::NestGateError::Internal { message: format!(
-                    "Failed in Internal operation: {}",
                     e
-                ), location: Some(format!("{}:{}", file!(), line!())), debug_info: None, is_bug: false, }
-            })?;
+            )?;
         }
 
         assert!(buffer.is_full());
@@ -552,11 +538,8 @@ mod tests {
         let mut dst = [0u8; 16];
 
         let copied = SafeMemoryUtils::copy_slice(src, &mut dst).map_err(|e| {
-            crate::error::NestGateError::Internal { message: format!(
-                "Failed in Internal operation: {}",
                 e
-            ), location: Some(format!("{}:{}", file!(), line!())), debug_info: None, is_bug: false, }
-        })?;
+        )?;
         assert_eq!(copied, src.len());
         assert_eq!(&dst[..copied], src);
 
@@ -585,19 +568,13 @@ mod tests {
 
         // Valid UTF-8
         builder.push_str("Hello 🦀").map_err(|e| {
-            crate::error::NestGateError::Internal { message: format!(
-                "Failed in Internal operation: {}",
                 e
-            ), location: Some(format!("{}:{}", file!(), line!())), debug_info: None, is_bug: false, }
-        })?;
+        )?;
         assert!(builder.as_str().is_ok());
 
         let result = builder.build().map_err(|e| {
-            crate::error::NestGateError::Internal { message: format!(
-                "Failed in Internal operation: {}",
                 e
-            ), location: Some(format!("{}:{}", file!(), line!())), debug_info: None, is_bug: false, }
-        })?;
+        )?;
         assert_eq!(result, "Hello 🦀");
                         Ok(())
     }
@@ -606,10 +583,10 @@ mod tests {
     fn benchmark_performance() {
         // Test that our safe implementation is still fast
         let duration = SafePerformanceBench::benchmark_buffer_write::<1024>(1000);
-        println!("Buffer write benchmark: {:?}", duration);
+        println!("Buffer write benchmark: {duration:?}");
 
         let duration = SafePerformanceBench::benchmark_string_build::<1024>(1000);
-        println!("String build benchmark: {:?}", duration);
+        println!("String build benchmark: {duration:?}");
 
         // These should complete quickly even in debug builds
         assert!(duration.as_millis() < 1000);

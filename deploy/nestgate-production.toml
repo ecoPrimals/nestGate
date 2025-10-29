@@ -1,0 +1,298 @@
+# **NESTGATE PRODUCTION DEPLOYMENT CONFIGURATION**
+#
+# Complete production-ready configuration for NestGate deployment
+# with environment variable support and best practices.
+
+[service]
+name = "nestgate"
+version = "1.0.0"
+environment = "production"
+
+# Service identity and discovery
+[service.identity]
+instance_name = "${NESTGATE_INSTANCE_NAME:-nestgate-prod}"
+cluster_id = "${NESTGATE_CLUSTER_ID:-nestgate-cluster-1}"
+datacenter = "${NESTGATE_DATACENTER:-primary}"
+region = "${NESTGATE_REGION:-us-east-1}"
+
+# Network configuration
+[network]
+# API server configuration
+[network.api]
+host = "${NESTGATE_API_HOST:-0.0.0.0}"
+port = "${NESTGATE_API_PORT:-8080}"
+tls_enabled = "${NESTGATE_TLS_ENABLED:-true}"
+tls_cert_path = "${NESTGATE_TLS_CERT_PATH:-/etc/nestgate/tls/cert.pem}"
+tls_key_path = "${NESTGATE_TLS_KEY_PATH:-/etc/nestgate/tls/key.pem}"
+
+# Health check endpoint
+[network.health]
+enabled = true
+path = "/health"
+port = "${NESTGATE_HEALTH_PORT:-8081}"
+
+# Metrics endpoint
+[network.metrics]
+enabled = true
+path = "/metrics"
+port = "${NESTGATE_METRICS_PORT:-9090}"
+format = "prometheus"
+
+# Discovery configuration
+[discovery]
+# Environment variable discovery (primary)
+[discovery.environment]
+enabled = true
+timeout_ms = "${NESTGATE_DISCOVERY_TIMEOUT_MS:-5000}"
+
+# DNS-SRV discovery
+[discovery.dns]
+enabled = "${NESTGATE_DNS_DISCOVERY_ENABLED:-true}"
+domain = "${NESTGATE_DISCOVERY_DOMAIN:-nestgate.local}"
+timeout_ms = "${NESTGATE_DNS_TIMEOUT_MS:-3000}"
+
+# Multicast discovery
+[discovery.multicast]
+enabled = "${NESTGATE_MULTICAST_DISCOVERY_ENABLED:-false}"
+timeout_ms = "${NESTGATE_MULTICAST_TIMEOUT_MS:-2000}"
+
+# Port scanning discovery (disabled in production by default)
+[discovery.port_scan]
+enabled = "${NESTGATE_PORT_SCAN_ENABLED:-false}"
+timeout_ms = "${NESTGATE_PORT_SCAN_TIMEOUT_MS:-500}"
+
+# Universal adapter configuration
+[universal_adapter]
+connection_timeout_ms = "${NESTGATE_CONNECTION_TIMEOUT_MS:-30000}"
+max_connections_per_capability = "${NESTGATE_MAX_CONNECTIONS_PER_CAPABILITY:-100}"
+connection_pool_size = "${NESTGATE_CONNECTION_POOL_SIZE:-1000}"
+health_check_interval_ms = "${NESTGATE_HEALTH_CHECK_INTERVAL_MS:-30000}"
+
+# Circuit breaker configuration
+[universal_adapter.circuit_breaker]
+failure_threshold = "${NESTGATE_CIRCUIT_BREAKER_FAILURE_THRESHOLD:-5}"
+success_threshold = "${NESTGATE_CIRCUIT_BREAKER_SUCCESS_THRESHOLD:-3}"
+timeout_ms = "${NESTGATE_CIRCUIT_BREAKER_TIMEOUT_MS:-60000}"
+window_size_ms = "${NESTGATE_CIRCUIT_BREAKER_WINDOW_MS:-60000}"
+
+# Retry configuration
+[universal_adapter.retry]
+max_attempts = "${NESTGATE_RETRY_MAX_ATTEMPTS:-3}"
+initial_delay_ms = "${NESTGATE_RETRY_INITIAL_DELAY_MS:-100}"
+max_delay_ms = "${NESTGATE_RETRY_MAX_DELAY_MS:-30000}"
+backoff_multiplier = "${NESTGATE_RETRY_BACKOFF_MULTIPLIER:-2.0}"
+jitter_enabled = "${NESTGATE_RETRY_JITTER_ENABLED:-true}"
+
+# Data services configuration
+[data_services]
+# Steam data service
+[data_services.steam]
+enabled = "${NESTGATE_STEAM_ENABLED:-false}"
+api_key = "${STEAM_API_KEY:-}"
+federation_enabled = "${NESTGATE_STEAM_FEDERATION_ENABLED:-false}"
+sync_interval_ms = "${NESTGATE_STEAM_SYNC_INTERVAL_MS:-300000}" # 5 minutes
+
+# Steam federation nodes
+[[data_services.steam.federation_nodes]]
+id = "gaming-rig-1"
+endpoint = "${STEAM_FEDERATION_NODE_1:-http://gaming-rig-1:8080}"
+priority = 100
+
+[[data_services.steam.federation_nodes]]
+id = "gaming-rig-2"  
+endpoint = "${STEAM_FEDERATION_NODE_2:-http://gaming-rig-2:8080}"
+priority = 90
+
+# NCBI data service (future implementation)
+[data_services.ncbi]
+enabled = "${NESTGATE_NCBI_ENABLED:-false}"
+api_key = "${NCBI_API_KEY:-}"
+cache_ttl_ms = "${NESTGATE_NCBI_CACHE_TTL_MS:-3600000}" # 1 hour
+
+# Storage configuration
+[storage]
+# ZFS configuration
+[storage.zfs]
+enabled = "${NESTGATE_ZFS_ENABLED:-true}"
+pool_name = "${NESTGATE_ZFS_POOL:-nestgate-pool}"
+dataset_prefix = "${NESTGATE_ZFS_DATASET_PREFIX:-nestgate/data}"
+compression_enabled = "${NESTGATE_ZFS_COMPRESSION:-true}"
+deduplication_enabled = "${NESTGATE_ZFS_DEDUPLICATION:-true}"
+
+# Tiered storage configuration
+[storage.tiers]
+# Hot tier (SSD)
+[storage.tiers.hot]
+enabled = true
+max_size_gb = "${NESTGATE_HOT_TIER_SIZE_GB:-1000}"
+access_pattern = "frequent"
+
+# Warm tier (HDD)
+[storage.tiers.warm]
+enabled = true
+max_size_gb = "${NESTGATE_WARM_TIER_SIZE_GB:-10000}"
+access_pattern = "occasional"
+
+# Cold tier (Archive)
+[storage.tiers.cold]
+enabled = true
+max_size_gb = "${NESTGATE_COLD_TIER_SIZE_GB:-100000}"
+access_pattern = "rare"
+
+# Performance configuration
+[performance]
+# Zero-copy optimizations
+zero_copy_enabled = "${NESTGATE_ZERO_COPY_ENABLED:-true}"
+buffer_pool_size = "${NESTGATE_BUFFER_POOL_SIZE:-1000}"
+connection_pool_size = "${NESTGATE_CONNECTION_POOL_SIZE:-1000}"
+
+# Async configuration
+worker_threads = "${NESTGATE_WORKER_THREADS:-0}" # 0 = auto-detect
+max_blocking_threads = "${NESTGATE_MAX_BLOCKING_THREADS:-512}"
+
+# Memory configuration
+max_memory_mb = "${NESTGATE_MAX_MEMORY_MB:-2048}"
+gc_threshold_mb = "${NESTGATE_GC_THRESHOLD_MB:-1536}"
+
+# Logging configuration
+[logging]
+level = "${NESTGATE_LOG_LEVEL:-info}"
+format = "${NESTGATE_LOG_FORMAT:-json}"
+output = "${NESTGATE_LOG_OUTPUT:-stdout}"
+
+# Log file configuration (if output = "file")
+[logging.file]
+path = "${NESTGATE_LOG_PATH:-/var/log/nestgate/nestgate.log}"
+max_size_mb = "${NESTGATE_LOG_MAX_SIZE_MB:-100}"
+max_files = "${NESTGATE_LOG_MAX_FILES:-10}"
+rotate_daily = "${NESTGATE_LOG_ROTATE_DAILY:-true}"
+
+# Structured logging
+[logging.fields]
+service = "nestgate"
+version = "1.0.0"
+environment = "production"
+component = "main"
+
+# Monitoring configuration
+[monitoring]
+# Health checks
+[monitoring.health]
+enabled = true
+interval_ms = "${NESTGATE_HEALTH_CHECK_INTERVAL_MS:-30000}"
+timeout_ms = "${NESTGATE_HEALTH_CHECK_TIMEOUT_MS:-5000}"
+
+# Metrics collection
+[monitoring.metrics]
+enabled = true
+collection_interval_ms = "${NESTGATE_METRICS_INTERVAL_MS:-60000}"
+retention_hours = "${NESTGATE_METRICS_RETENTION_HOURS:-24}"
+
+# Alerting (integration with external systems)
+[monitoring.alerting]
+enabled = "${NESTGATE_ALERTING_ENABLED:-true}"
+webhook_url = "${NESTGATE_ALERT_WEBHOOK_URL:-}"
+critical_threshold_percent = "${NESTGATE_CRITICAL_THRESHOLD:-90}"
+warning_threshold_percent = "${NESTGATE_WARNING_THRESHOLD:-75}"
+
+# Security configuration
+[security]
+# Authentication (delegated to BearDog primal)
+[security.auth]
+enabled = "${NESTGATE_AUTH_ENABLED:-true}"
+provider = "beardog" # Universal adapter will discover BearDog
+timeout_ms = "${NESTGATE_AUTH_TIMEOUT_MS:-5000}"
+
+# Encryption
+[security.encryption]
+enabled = "${NESTGATE_ENCRYPTION_ENABLED:-true}"
+algorithm = "${NESTGATE_ENCRYPTION_ALGORITHM:-AES-256-GCM}"
+key_rotation_interval_hours = "${NESTGATE_KEY_ROTATION_HOURS:-24}"
+
+# Rate limiting
+[security.rate_limiting]
+enabled = "${NESTGATE_RATE_LIMITING_ENABLED:-true}"
+requests_per_second = "${NESTGATE_RATE_LIMIT_RPS:-1000}"
+burst_size = "${NESTGATE_RATE_LIMIT_BURST:-2000}"
+
+# Capability discovery endpoints
+[capabilities]
+# Orchestration (Songbird)
+orchestration_discovery_endpoint = "${ORCHESTRATION_DISCOVERY_ENDPOINT:-}"
+orchestration_timeout_ms = "${ORCHESTRATION_TIMEOUT_MS:-10000}"
+
+# Security (BearDog)
+security_discovery_endpoint = "${SECURITY_DISCOVERY_ENDPOINT:-}"
+security_timeout_ms = "${SECURITY_TIMEOUT_MS:-5000}"
+
+# AI/Intelligence (Squirrel)
+ai_discovery_endpoint = "${AI_DISCOVERY_ENDPOINT:-}"
+ai_timeout_ms = "${AI_TIMEOUT_MS:-30000}"
+
+# Storage (self)
+storage_discovery_endpoint = "${STORAGE_DISCOVERY_ENDPOINT:-http://localhost:8080}"
+storage_timeout_ms = "${STORAGE_TIMEOUT_MS:-5000}"
+
+# Compute (Toadstool)
+compute_discovery_endpoint = "${COMPUTE_DISCOVERY_ENDPOINT:-}"
+compute_timeout_ms = "${COMPUTE_TIMEOUT_MS:-15000}"
+
+# Monitoring (external)
+monitoring_discovery_endpoint = "${MONITORING_DISCOVERY_ENDPOINT:-}"
+monitoring_timeout_ms = "${MONITORING_TIMEOUT_MS:-5000}"
+
+# Deployment configuration
+[deployment]
+# Container configuration
+[deployment.container]
+image = "nestgate/nestgate:1.0.0"
+cpu_limit = "${NESTGATE_CPU_LIMIT:-2.0}"
+memory_limit_mb = "${NESTGATE_MEMORY_LIMIT_MB:-2048}"
+disk_limit_gb = "${NESTGATE_DISK_LIMIT_GB:-100}"
+
+# Scaling configuration
+[deployment.scaling]
+min_replicas = "${NESTGATE_MIN_REPLICAS:-2}"
+max_replicas = "${NESTGATE_MAX_REPLICAS:-10}"
+cpu_threshold_percent = "${NESTGATE_CPU_SCALE_THRESHOLD:-70}"
+memory_threshold_percent = "${NESTGATE_MEMORY_SCALE_THRESHOLD:-80}"
+
+# Environment variables for container
+[deployment.environment]
+RUST_LOG = "${RUST_LOG:-nestgate=info}"
+RUST_BACKTRACE = "${RUST_BACKTRACE:-1}"
+NESTGATE_CONFIG_PATH = "/etc/nestgate/nestgate-production.toml"
+
+# Volume mounts
+[[deployment.volumes]]
+name = "nestgate-config"
+mount_path = "/etc/nestgate"
+type = "configmap"
+
+[[deployment.volumes]]
+name = "nestgate-data"
+mount_path = "/var/lib/nestgate"
+type = "persistent"
+size_gb = "${NESTGATE_DATA_VOLUME_SIZE_GB:-1000}"
+
+[[deployment.volumes]]
+name = "nestgate-logs"
+mount_path = "/var/log/nestgate"
+type = "persistent"
+size_gb = "${NESTGATE_LOG_VOLUME_SIZE_GB:-10}"
+
+# Backup configuration
+[backup]
+enabled = "${NESTGATE_BACKUP_ENABLED:-true}"
+interval_hours = "${NESTGATE_BACKUP_INTERVAL_HOURS:-6}"
+retention_days = "${NESTGATE_BACKUP_RETENTION_DAYS:-30}"
+storage_backend = "${NESTGATE_BACKUP_STORAGE:-s3}"
+encryption_enabled = "${NESTGATE_BACKUP_ENCRYPTION:-true}"
+
+# S3 backup configuration
+[backup.s3]
+bucket = "${NESTGATE_BACKUP_S3_BUCKET:-nestgate-backups}"
+region = "${NESTGATE_BACKUP_S3_REGION:-us-east-1}"
+prefix = "${NESTGATE_BACKUP_S3_PREFIX:-nestgate/}"
+access_key = "${AWS_ACCESS_KEY_ID:-}"
+secret_key = "${AWS_SECRET_ACCESS_KEY:-}" 

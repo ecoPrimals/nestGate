@@ -23,13 +23,12 @@ pub mod types;
 /// **CANONICAL**: Use ZFS-specific Result type for automation
 pub use crate::error::ZfsResult as Result;
 // Removed unresolved automation imports - using local implementations
-
 // Import canonical types from the types module
 // Removed unresolved automation types - using local definitions
 
 // Import core types
-pub use nestgate_core::traits::{ServiceHealth};
-pub use nestgate_core::canonical_types::{StorageTier};
+pub use nestgate_core::canonical_types::StorageTier;
+pub use nestgate_core::traits::native_async::ServiceHealth;
 
 // Remove references to deleted discovery module
 // pub use nestgate_automation::discovery::EcosystemDiscovery;

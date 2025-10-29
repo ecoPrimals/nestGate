@@ -1,11 +1,11 @@
-use crate::canonical_modernization::{UnifiedCapabilityType, UnifiedServiceType};
-use crate::canonical_modernization::{UnifiedConfig, UnifiedServiceConfig};
 use nestgate_core::canonical_modernization::CanonicalModernizedConfig;
 /// Expanded functional tests demonstrating more NestGate capabilities
 /// Builds on the simple working test foundation with more comprehensive coverage
 use nestgate_core::{NestGateError, Result};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
+use tests::canonical_modernization::UnifiedServiceConfig;
+use tests::canonical_modernization::{UnifiedCapabilityType, UnifiedServiceType};
 use tokio::time::sleep;
 
 #[tokio::test]
@@ -59,6 +59,7 @@ async fn test_service_type_categorization() -> Result<()> {
         };
 
         println!("✅ Service {service_type:?} -> Capability {capability:?}");
+        Ok(())
     }
 
     println!("🎉 Service categorization test passed!");
@@ -94,7 +95,9 @@ async fn test_error_propagation_patterns() -> Result<()> {
                 format!("Wrapper failed: {e:?}"),
                 "wrapper_context".to_string(),
             )),
+    Ok(())
         }
+        Ok(())
     }
 
     // Test the error chain
@@ -103,9 +106,11 @@ async fn test_error_propagation_patterns() -> Result<()> {
             return Err(NestGateError::internal_error(
                 "Expected error but got success".to_string(),
                 "test_error".to_string(),
-            ))
+            ));
+    Ok(())
         }
         Err(e) => println!("✅ Caught expected error: {e:?}"),
+    Ok(())
     }
 
     println!("🎉 Error propagation test passed!");
@@ -129,8 +134,10 @@ async fn test_async_patterns_and_timeouts() -> Result<()> {
             return Err(NestGateError::timeout_error(
                 "quick_operation",
                 Duration::from_millis(100),
-            ))
+            ));
+    Ok(())
         }
+    Ok(())
     }
 
     // Test timeout detection
@@ -145,9 +152,11 @@ async fn test_async_patterns_and_timeouts() -> Result<()> {
             return Err(NestGateError::internal_error(
                 "Expected timeout but operation completed".to_string(),
                 "timeout_test".to_string(),
-            ))
+            ));
+    Ok(())
         }
         Err(_) => println!("✅ Correctly detected timeout"),
+    Ok(())
     }
 
     println!("🎉 Async patterns test passed!");
@@ -180,12 +189,15 @@ async fn test_concurrent_service_simulation() -> Result<()> {
                 sleep(Duration::from_millis(5)).await;
                 if i % 2 == 0 {
                     println!("🔧 {service_name} service: operation {i} completed");
+                    Ok(())
                 }
+                Ok(())
             }
 
             (service_name, service_type, operations)
         });
         handles.push(handle);
+        Ok(())
     }
 
     // Collect results
@@ -198,6 +210,7 @@ async fn test_concurrent_service_simulation() -> Result<()> {
             )
         })?;
         results.push(result);
+        Ok(())
     }
 
     println!("✅ All {} services completed successfully", results.len());
@@ -243,7 +256,9 @@ async fn test_performance_metrics_collection() -> Result<()> {
             failed_operations += 1;
         } else {
             successful_operations += 1;
+            Ok(())
         }
+        Ok(())
     }
 
     let total_duration = start_time.elapsed();
@@ -278,7 +293,7 @@ async fn test_performance_metrics_collection() -> Result<()> {
 }
 
 #[test]
-fn test_configuration_defaults_and_validation() {
+fn test_configuration_defaults_and_validation() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔍 Testing configuration defaults and validation");
 
     // Test default configurations
@@ -303,6 +318,7 @@ fn test_configuration_defaults_and_validation() {
     println!("🎛️ Service enabled: {}", service_config.enabled);
 
     println!("🎉 Configuration validation test passed!");
+    Ok(())
 }
 
 #[tokio::test]
@@ -339,6 +355,7 @@ async fn test_resource_management_patterns() -> Result<()> {
                     ),
                     "resource_allocation".to_string(),
                 ));
+                Ok(())
             }
 
             self.allocated_resources
@@ -378,7 +395,7 @@ async fn test_resource_management_patterns() -> Result<()> {
             return Err(NestGateError::internal_error(
                 "Expected resource limit error".to_string(),
                 "test_error".to_string(),
-            ))
+            ));
         }
         Err(_) => println!("✅ Resource limit correctly enforced"),
     }

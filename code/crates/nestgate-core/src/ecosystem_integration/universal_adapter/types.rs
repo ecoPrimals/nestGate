@@ -4,16 +4,12 @@ use crate::error::NestGateError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
-
 /// Capability-specific error type
 pub type CapabilityError = NestGateError;
-
 /// Adapter-specific error type
 pub type AdapterError = NestGateError;
-
 /// Generic capability alias for backward compatibility
 pub type Capability = ServiceCapability;
-
 /// Service capability description
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceCapability {
@@ -40,7 +36,6 @@ pub struct ServiceCapability {
     /// Additional metadata
     pub metadata: HashMap<String, String>,
 }
-
 /// Categories of capabilities available through the universal adapter
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum CapabilityCategory {
@@ -69,7 +64,6 @@ pub enum CapabilityCategory {
     /// Custom capability category
     Custom(String),
 }
-
 // CONSOLIDATED: Use UnifiedContentType as it better matches the granular data type needs
 // of the universal adapter system. This eliminates duplicate DataType definitions.
 pub use crate::unified_enums::UnifiedContentType as DataType;
@@ -88,7 +82,6 @@ pub struct PerformanceMetrics {
     /// Availability percentage (0.0 to 100.0)
     pub availability_percent: f64,
 }
-
 /// Scalability rating for capabilities
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ScalabilityRating {
@@ -101,7 +94,6 @@ pub enum ScalabilityRating {
     /// Virtually unlimited scalability
     Unlimited,
 }
-
 /// Resource requirements for capabilities
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResourceRequirements {
@@ -118,7 +110,6 @@ pub struct ResourceRequirements {
     /// Special hardware requirements
     pub special_hardware: Vec<String>,
 }
-
 /// GPU requirements specification
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GpuRequirements {
@@ -131,7 +122,6 @@ pub struct GpuRequirements {
     /// Specific GPU models supported
     pub supported_models: Vec<String>,
 }
-
 /// Request for capability information or execution
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CapabilityRequest {
@@ -152,7 +142,6 @@ pub struct CapabilityRequest {
     /// Whether the request requires encryption
     pub requires_encryption: bool,
 }
-
 /// Query for discovering capabilities
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum CapabilityQuery {
@@ -171,7 +160,6 @@ pub enum CapabilityQuery {
     /// Get specific capability by ID
     ById(String),
 }
-
 /// Performance requirements for capability selection
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceRequirements {
@@ -186,7 +174,6 @@ pub struct PerformanceRequirements {
     /// Minimum required availability percentage
     pub min_availability_percent: Option<f64>,
 }
-
 /// Response from capability request
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CapabilityResponse {
@@ -203,7 +190,6 @@ pub struct CapabilityResponse {
     /// Error information (if any)
     pub error: Option<CapabilityError>,
 }
-
 /// Execution metrics for capability responses
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ExecutionMetrics {
@@ -214,7 +200,6 @@ pub struct ExecutionMetrics {
     /// Quality metrics (if applicable)
     pub quality_metrics: Option<QualityMetrics>,
 }
-
 /// Resource usage during capability execution
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResourceUsage {
@@ -229,7 +214,6 @@ pub struct ResourceUsage {
     /// GPU usage percentage (if applicable)
     pub gpu_usage_percent: Option<f64>,
 }
-
 /// Quality metrics for capability outputs
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct QualityMetrics {
@@ -246,7 +230,6 @@ pub struct QualityMetrics {
     /// Custom quality metrics
     pub custom_metrics: HashMap<String, f64>,
 }
-
 impl Default for PerformanceMetrics {
     fn default() -> Self {
         Self {
@@ -316,11 +299,11 @@ impl DataType {
             // Exact matches
             (a, b) if a == b => true,
             // Text-based compatibility
-            (DataType::Text, DataType::Json) | (DataType::Json, DataType::Text) => true,
-            (DataType::Text, DataType::Xml) | (DataType::Xml, DataType::Text) => true,
-            (DataType::Text, DataType::Csv) | (DataType::Csv, DataType::Text) => true,
+            (Self::Text, Self::Json) | (Self::Json, Self::Text) => true,
+            (Self::Text, Self::Xml) | (Self::Xml, Self::Text) => true,
+            (Self::Text, Self::Csv) | (Self::Csv, Self::Text) => true,
             // Binary compatibility
-            (DataType::Binary, DataType::Compressed) | (DataType::Compressed, DataType::Binary) => {
+            (Self::Binary, Self::Compressed) | (Self::Compressed, Self::Binary) => {
                 true
             }
             (DataType::Binary, DataType::Encrypted) | (DataType::Encrypted, DataType::Binary) => {

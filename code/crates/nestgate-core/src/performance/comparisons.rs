@@ -3,11 +3,9 @@ use std::collections::HashMap;
 // Utilities for comparing performance between different implementations.
 
 use super::validation::BenchmarkResults;
-use std::collections::HashMap;
 
 /// Performance comparison utilities
 pub struct PerformanceComparison;
-
 impl PerformanceComparison {
     /// Compare benchmark results between different implementations
     pub fn compare_implementations(
@@ -71,7 +69,6 @@ pub struct ComparisonReport {
     pub regressions: HashMap<String, f64>,
     pub total_patterns_compared: usize,
 }
-
 impl ComparisonReport {
     /// Generate a summary of the comparison
     pub fn summary(&self) -> String {
@@ -95,7 +92,6 @@ pub struct TrendAnalysis {
     pub trends: HashMap<String, Vec<(usize, f64)>>,
     pub total_snapshots: usize,
 }
-
 impl TrendAnalysis {
     /// Calculate the trend direction for a specific pattern
     pub fn trend_direction(&self, pattern_name: &str) -> TrendDirection {

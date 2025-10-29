@@ -1,5 +1,5 @@
 //
-// This module provides network services and port management through Songbird orchestration.
+// This module provides network services and port management through Orchestration orchestration.
 
 use axum::{extract::State, http::StatusCode, response::Json, routing::get, Router};
 use serde::{Deserialize, Serialize};
@@ -11,7 +11,7 @@ use tokio::sync::RwLock;
 // Type alias to reduce complexity
 type PortAllocationMap = Arc<RwLock<HashMap<String, u16>>>;
 
-use nestgate_core::error::{IdioResult, NestGateError};
+use nestgate_core::error::Result as NestGateResult;
 use tracing::debug;
 use tracing::error;
 use tracing::info;
@@ -26,7 +26,6 @@ pub enum ServiceStatus {
     Stopped,
     Failed,
 }
-
 /// Service instance information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceInstance {
@@ -38,24 +37,22 @@ pub struct ServiceInstance {
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub updated_at: chrono::DateTime<chrono::Utc>,
 }
-
 /// Network API state
 type NetworkApiState = Arc<RwLock<HashMap<String, ServiceInstance>>>;
-
 // Type alias to reduce complexity
 type ServiceRegistry = Arc<RwLock<HashMap<String, ServiceInstance>>>;
 
-/// Songbird orchestrator client for network operations
+/// Orchestration orchestrator client for network operations
 #[derive(Debug, Clone)]
-pub struct SongbirdClient {
-    /// Base URL for Songbird orchestrator
+pub struct OrchestrationCapability {
+    /// Base URL for Orchestration orchestrator
     pub base_url: String,
     /// HTTP client for communication
     pub client: reqwest::Client,
 }
-
-impl SongbirdClient {
-    /// Create a new Songbird client
+impl OrchestrationCapability {
+    /// Create a new Orchestration client
+    #[must_use]
     pub fn new(base_url: String) -> Self {
         Self {
             base_url,
@@ -63,9 +60,9 @@ impl SongbirdClient {
         }
     }
 
-    /// Register a service with Songbird
-    pub async fn register_service(&self, service: &ServiceInstance) -> IdioResult<(), NestGateError> {
-        let url = format!("{}/api/v1/services/register", self.base_url);
+    /// Register a service with Orchestration
+    pub async fn register_service(&self, service: &ServiceInstance) -> NestGateResult<()> {
+        let url = "self.base_url/api/v1/services/register".to_string();
 
         let response = self
             .client
@@ -74,30 +71,26 @@ impl SongbirdClient {
             .send()
             .await
             .map_err(|e| {
-                nestgate_core::error::NestGateError::network_error(
-                    &format!("Failed to register service: {e}"),
-                    "service_registration",
-                    Some("service_registry"),
-                )
+                nestgate_core::error::NestGateError::network_error(&format!(
+                    "Failed to register service: {e}"
+                ))
             })?;
 
         if response.status().is_success() {
-            info!("✅ Service registered with Songbird: {}", service.name);
+            info!("✅ Service registered with Orchestration: {}", service.name);
             Ok(())
         } else {
             let error_msg = format!("Failed to register service: HTTP {}", response.status());
             error!("{}", error_msg);
             Err(nestgate_core::error::NestGateError::network_error(
                 &error_msg,
-                "service_registration",
-                Some("service_registry"),
             ))
         }
     }
 
-    /// Request port allocation from Songbird
-    pub async fn allocate_port(&self, service_name: &str, port_type: &str) -> IdioResult<u16, NestGateError> {
-        let url = format!("{}/api/v1/ports/allocate", self.base_url);
+    /// Request port allocation from Orchestration
+    pub async fn allocate_port(&self, service_name: &str, port_type: &str) -> NestGateResult<u16> {
+        let url = "self.base_url/api/v1/ports/allocate".to_string();
 
         let request = PortAllocationRequest {
             service_name: service_name.to_string(),
@@ -112,41 +105,35 @@ impl SongbirdClient {
             .send()
             .await
             .map_err(|e| {
-                nestgate_core::error::NestGateError::network_error(
-                    &format!("Failed to allocate port: {e}"),
-                    "port_allocation",
-                    Some("port-allocation"),
-                )
+                nestgate_core::error::NestGateError::network_error(&format!(
+                    "Failed to allocate port: {e}"
+                ))
             })?;
 
         if response.status().is_success() {
             let allocation: PortAllocationResponse = response.json().await.map_err(|e| {
-                nestgate_core::error::NestGateError::network_error(
-                    &format!("Failed to parse port allocation response: {e}"),
-                    "port_allocation_parsing",
-                    Some("port-allocation"),
-                )
+                nestgate_core::error::NestGateError::network_error(&format!(
+                    "Failed to parse port allocation response: {e}"
+                ))
             })?;
 
             info!(
-                "✅ Port allocated by Songbird: {} -> {}",
+                "✅ Port allocated by Orchestration: {} -> {}",
                 service_name, allocation.port
             );
             Ok(allocation.port)
         } else {
-            let error_msg = format!("Failed to allocate port: HTTP {}", response.status());
+            let error_msg = "Failed to allocate port: HTTP self.base_url".to_string();
             error!("{}", error_msg);
             Err(nestgate_core::error::NestGateError::network_error(
                 &error_msg,
-                "port_allocation",
-                Some("port-allocation"),
             ))
         }
     }
 
     /// Release port allocation
-    pub async fn release_port(&self, service_name: &str, port: u16) -> IdioResult<(), NestGateError> {
-        let url = format!("{}/api/v1/ports/release", self.base_url);
+    pub async fn release_port(&self, service_name: &str, port: u16) -> NestGateResult<()> {
+        let url = "self.base_url/api/v1/ports/release".to_string();
 
         let request = PortReleaseRequest {
             service_name: service_name.to_string(),
@@ -160,15 +147,14 @@ impl SongbirdClient {
             .send()
             .await
             .map_err(|e| {
-                nestgate_core::NestGateError::network_error(
-                    &format!("Failed to release port: {e}"),
-                    "port_release",
-                    Some("port-release"),
-                )
+                nestgate_core::NestGateError::network_error(&format!("Failed to release port: {e}"))
             })?;
 
         if response.status().is_success() {
-            info!("✅ Port released by Songbird: {} -> {}", service_name, port);
+            info!(
+                "✅ Port released by Orchestration: {} -> {}",
+                service_name, port
+            );
             Ok(())
         } else {
             warn!(
@@ -180,13 +166,15 @@ impl SongbirdClient {
         }
     }
 
-    /// Send health status to Songbird
+    /// Send health status to Orchestration
     pub async fn send_health_status(
         &self,
         service_name: &str,
         status: ServiceStatus,
-    ) -> IdioResult<(), NestGateError> {
-        let url = format!("{}/api/v1/services/{}/health", self.base_url, service_name);
+    ) -> NestGateResult<()> {
+        let base_url = std::env::var("NESTGATE_API_BASE_URL")
+            .unwrap_or_else(|_| "http://localhost:8080".to_string());
+        let url = format!("{base_url}/api/v1/services/{service_name}/health");
 
         let request = HealthStatusRequest {
             service_name: service_name.to_string(),
@@ -202,54 +190,45 @@ impl SongbirdClient {
             .send()
             .await
             .map_err(|e| {
-                nestgate_core::NestGateError::network_error(
-                    &format!("Failed to send health status: {e}"),
-                    "health_status_send",
-                    Some("health-status"),
-                )
+                nestgate_core::NestGateError::network_error(&format!(
+                    "Failed to send health status: {e}"
+                ))
             })?;
 
         if response.status().is_success() {
             debug!(
-                "✅ Health status sent to Songbird: {} -> {:?}",
+                "✅ Health status sent to Orchestration: {} -> {:?}",
                 service_name, status
             );
             Ok(())
         } else {
             let error_msg = format!("Failed to send health status: HTTP {}", response.status());
             debug!("{}", error_msg);
-            Err(nestgate_core::NestGateError::network_error(
-                &error_msg,
-                "health_status",
-                Some("health-status"),
-            ))
+            Err(nestgate_core::NestGateError::network_error(&error_msg))
         }
     }
 }
 
-/// Port allocation request for Songbird
+/// Port allocation request for Orchestration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct PortAllocationRequest {
     service_name: String,
     port_type: String,
     preferred_port: Option<u16>,
 }
-
-/// Port allocation response from Songbird
+/// Port allocation response from Orchestration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct PortAllocationResponse {
     port: u16,
     expires_at: Option<String>,
 }
-
-/// Port release request for Songbird
+/// Port release request for Orchestration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct PortReleaseRequest {
     service_name: String,
     port: u16,
 }
-
-/// Health status request for Songbird
+/// Health status request for Orchestration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct HealthStatusRequest {
     service_name: String,
@@ -257,20 +236,19 @@ struct HealthStatusRequest {
     timestamp: chrono::DateTime<chrono::Utc>,
     metadata: std::collections::HashMap<String, String>,
 }
-
-/// Network API with Songbird integration
+/// Network API with Orchestration integration
 #[derive(Debug)]
 pub struct NetworkApi {
-    /// Songbird client for orchestration
-    orchestration_client: Option<SongbirdClient>,
+    /// Orchestration client for orchestration
+    orchestration_client: Option<OrchestrationCapability>,
     /// Local service registry
     services: ServiceRegistry,
     /// Allocated ports
     allocated_ports: PortAllocationMap,
 }
-
 impl NetworkApi {
-    /// Create a new NetworkApi instance
+    /// Create a new `NetworkApi` instance
+    #[must_use]
     pub fn new() -> Self {
         Self {
             orchestration_client: None,
@@ -280,38 +258,35 @@ impl NetworkApi {
     }
 
     /// Initialize with orchestration capability
-    pub async fn initialize_with_orchestration(
+    pub fn initialize_with_orchestration(
         &mut self,
-        orchestration_endpoint: String,
-    ) -> IdioResult<(), NestGateError> {
-        self.orchestration_client = Some(SongbirdClient::new(orchestration_endpoint));
+        _orchestration_endpoint: String,
+    ) -> NestGateResult<()> {
+        self.orchestration_client = Some(OrchestrationCapability::new(_orchestration_endpoint));
         info!("🌐 NetworkApi initialized with orchestration capability");
         Ok(())
     }
 
     /// Register a service
-    pub async fn register_service(&self, service: ServiceInstance) -> IdioResult<(), NestGateError> {
-        // Register with Songbird if available
-        if let Some(songbird) = &self.orchestration_client {
-            songbird.register_service(&service).await?;
+    pub async fn register_service(&self, service: ServiceInstance) -> NestGateResult<()> {
+        // Register with Orchestration if available
+        if let Some(orchestration) = &self.orchestration_client {
+            orchestration.register_service(&service).await?;
         }
 
-        // Store locally
-        let mut services = self.services.write().await;
-        services.insert(service.name.clone(), service.clone());
-
+        // Store locally - log before moving service
         info!("✅ Service registered: {}", service.name);
+        let mut services = self.services.write().await;
+        services.insert(service.name.clone(), service);
         Ok(())
     }
 
     /// Allocate a port for a service
-    pub async fn allocate_port(&self, service_name: &str, port_type: &str) -> IdioResult<u16, NestGateError> {
+    pub async fn allocate_port(&self, service_name: &str, port_type: &str) -> NestGateResult<u16> {
         // ✅ ORCHESTRATION CAPABILITY IS MANDATORY - NO LOCAL FALLBACK
         let orchestration_client = self.orchestration_client.as_ref()
             .ok_or_else(|| nestgate_core::NestGateError::network_error(
-                "Orchestration capability is required for port allocation. Initialize with initialize_with_orchestration() first.",
-                "orchestration_check",
-                Some("orchestration")
+                "Orchestration capability is required for port allocation. Initialize with initialize_with_orchestration() first."
             ))?;
 
         let port = orchestration_client
@@ -326,7 +301,7 @@ impl NetworkApi {
     }
 
     /// Release a port
-    pub async fn release_port(&self, service_name: &str) -> IdioResult<(), NestGateError> {
+    pub async fn release_port(&self, service_name: &str) -> NestGateResult<()> {
         let port = {
             let mut allocated = self.allocated_ports.write().await;
             allocated.remove(service_name)
@@ -337,8 +312,6 @@ impl NetworkApi {
             let orchestrator = self.orchestration_client.as_ref().ok_or_else(|| {
                 nestgate_core::NestGateError::network_error(
                     "Orchestration capability is required for port release.",
-                    "orchestration_check",
-                    Some("orchestration-service"),
                 )
             })?;
 
@@ -348,22 +321,20 @@ impl NetworkApi {
     }
 
     /// Get service status
-    pub async fn get_service_status(&self, service_name: &str) -> IdioResult<ServiceStatus, NestGateError> {
+    pub async fn get_service_status(&self, service_name: &str) -> NestGateResult<ServiceStatus> {
         let services = self.services.read().await;
 
         if let Some(service) = services.get(service_name) {
             Ok(service.status.clone())
         } else {
-            Err(nestgate_core::NestGateError::network_error(
-                &format!("Service not found: {service_name}"),
-                "service_discovery",
-                Some(service_name),
-            ))
+            Err(nestgate_core::NestGateError::network_error(&format!(
+                "Service not found: {service_name}"
+            )))
         }
     }
 
     /// List all registered services
-    pub async fn list_services(&self) -> IdioResult<Vec<ServiceInstance, NestGateError>> {
+    pub async fn list_services(&self) -> NestGateResult<Vec<ServiceInstance>> {
         let services = self.services.read().await;
         Ok(services.values().cloned().collect())
     }
@@ -385,7 +356,6 @@ impl Default for NetworkApi {
 
 /// Re-export universal API response from nestgate-core to eliminate duplication
 pub use nestgate_core::response::api_response::ApiResponse;
-
 // API Handlers
 
 async fn health_check() -> (StatusCode, Json<ApiResponse<String>>) {

@@ -1,8 +1,11 @@
-use std::collections::HashMap;
-///
-/// This module generates HTML dashboards for development and quick viewing.
+// **HTML DASHBOARD GENERATION**
+//! Html functionality and utilities.
+// HTML dashboard generation functionality for development and standalone monitoring.
+// Extracted from dashboards.rs for file size compliance.
+
 use crate::monitoring::{ProviderMetrics, SystemMetrics};
 use std::collections::HashMap;
+use std::time::SystemTime;
 
 /// Generate a simple HTML dashboard for development
 pub fn generate_html_dashboard(
@@ -10,7 +13,7 @@ pub fn generate_html_dashboard(
     provider_metrics: &HashMap<String, ProviderMetrics>,
 ) -> String {
     let mut html = String::from(
-        r#"
+        r"
 <!DOCTYPE html>
 <html>
 <head>
@@ -38,97 +41,104 @@ pub fn generate_html_dashboard(
         </div>
         
         <div class="metrics-grid">
-"#,
+",
     );
-
     // System metrics
     html.push_str(&format!(
-        r#"
+        r"
             <div class="metric-card">
-                <div class="metric-title">System CPU Usage</div>
-                <div class="metric-value status-{}">{}%</div>
+                <div class="metric-title">CPU Usage</div>
+                <div class="metric-value {}">{:.1}%</div>
                 <div class="metric-description">Current CPU utilization</div>
             </div>
             
             <div class="metric-card">
                 <div class="metric-title">Memory Usage</div>
-                <div class="metric-value status-{}">{}%</div>
-                <div class="metric-description">Current memory utilization</div>
+                <div class="metric-value {}">{:.1}%</div>
+                <div class="metric-description">{} MB / {} MB</div>
             </div>
             
             <div class="metric-card">
-                <div class="metric-title">Disk Usage</div>
-                <div class="metric-value status-{}">{}%</div>
-                <div class="metric-description">Current disk utilization</div>
+                <div class="metric-title">Active Connections</div>
+                <div class="metric-value">{}</div>
+                <div class="metric-description">Current network connections</div>
             </div>
-"#,
-        get_status_class(system_metrics.cpu_usage),
+",
+        if system_metrics.cpu_usage > 80.0 {
+            "status-error"
+        } else if system_metrics.cpu_usage > 60.0 {
+            "status-warning"
+        } else {
+            "status-healthy"
+        },
         system_metrics.cpu_usage,
-        get_status_class(system_metrics.memory_usage as f64),
-        system_metrics.memory_usage,
-        get_status_class(system_metrics.disk_usage as f64),
-        system_metrics.disk_usage,
+        if system_metrics.memory_usage > 0 && system_metrics.memory_available > 0 {
+            let total = system_metrics.memory_usage + system_metrics.memory_available;
+            let percent = (system_metrics.memory_usage as f64 / total as f64) * 100.0;
+            if percent > 80.0 {
+                "status-error"
+            } else if percent > 60.0 {
+                "status-warning"
+            } else {
+                "status-healthy"
+            }
+        } else {
+            "status-healthy"
+        },
+        if system_metrics.memory_usage > 0 && system_metrics.memory_available > 0 {
+            let total = system_metrics.memory_usage + system_metrics.memory_available;
+            (system_metrics.memory_usage as f64 / total as f64) * 100.0
+        } else {
+            0.0
+        },
+        system_metrics.memory_usage / 1024 / 1024,
+        (system_metrics.memory_usage + system_metrics.memory_available) / 1024 / 1024,
+        system_metrics.active_connections
     ));
 
     // Provider metrics
-    for (provider_name, metrics) in provider_metrics {
+    for (name, metrics) in provider_metrics {
+        let success_rate = if metrics.total_requests > 0 {
+            (metrics.successful_requests as f64 / metrics.total_requests as f64) * 100.0
+        } else {
+            100.0
+        };
+
         html.push_str(&format!(
-            r#"
+            r"
             <div class="metric-card">
                 <div class="metric-title">Provider: {}</div>
-                <div class="metric-value status-{}">{}ms</div>
-                <div class="metric-description">Average response time</div>
+                <div class="metric-value {}">{:.1}%</div>
+                <div class="metric-description">Success rate ({} requests, {:.1}ms avg)</div>
             </div>
-"#,
-            provider_name,
-            get_latency_status_class(metrics.avg_response_time_ms as u64),
-            metrics.avg_response_time_ms,
+",
+            name,
+            if success_rate < 95.0 {
+                "status-error"
+            } else if success_rate < 99.0 {
+                "status-warning"
+            } else {
+                "status-healthy"
+            },
+            success_rate,
+            metrics.total_requests,
+            metrics.avg_response_time_ms
         ));
     }
 
-    html.push_str(
-        r#"
+    html.push_str(&format!(
+        r"
         </div>
         
         <div class="timestamp">
-            Last updated: <span id="timestamp"></span>
+            Last updated: {:?}
         </div>
     </div>
-    
-    <script>
-        document.getElementById('timestamp').textContent = new Date().toLocaleString();
-        
-        // Auto-refresh every 30 seconds
-        setInterval(() => {
-            location.reload();
-        }, 30000);
-    </script>
 </body>
 </html>
-"#,
-    );
+",
+        SystemTime::now()
+    ));
 
     html
-}
-
-/// Get CSS class for status based on percentage
-fn get_status_class(percentage: f64) -> &'static str {
-    if percentage < 70.0 {
-        "healthy"
-    } else if percentage < 90.0 {
-        "warning"
-    } else {
-        "error"
-    }
-}
-
-/// Get CSS class for latency status
-fn get_latency_status_class(latency_ms: u64) -> &'static str {
-    if latency_ms < 100 {
-        "healthy"
-    } else if latency_ms < 500 {
-        "warning"
-    } else {
-        "error"
-    }
 }

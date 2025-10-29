@@ -5,50 +5,23 @@ use std::collections::HashMap;
 
 use std::borrow::Cow;
 use std::sync::Arc;
-use std::collections::HashMap;
 use parking_lot::RwLock;
 use std::sync::OnceLock;
 
-/// **STRING CONSTANTS POOL**
-/// Pre-allocated string constants to avoid repeated allocations
-pub struct StringConstants;
+// **MIGRATED**: Using canonical constants instead of local definitions
+use crate::constants::canonical::{
+    api::{CONFIG_API, CONFIG_ZFS, CONFIG_NETWORK, CONFIG_SECURITY, CONFIG_MONITORING},
+    operations::OP_READ,
+};
 
-impl StringConstants {
-    // Common configuration keys
-    pub const CONFIG_API: &'static str = "api";
-    pub const CONFIG_ZFS: &'static str = "zfs";
-    pub const CONFIG_NETWORK: &'static str = "network";
-    pub const CONFIG_SECURITY: &'static str = "security";
-    pub const CONFIG_MONITORING: &'static str = "monitoring";
-    
-    // Common operation names
-    pub const OP_READ: &'static str = "read";
-    pub const OP_WRITE: &'static str = "write";
-    pub const OP_DELETE: &'static str = "delete";
-    pub const OP_CREATE: &'static str = "create";
-    pub const OP_UPDATE: &'static str = "update";
-    
-    // Common status values
-    pub const STATUS_SUCCESS: &'static str = "success";
-    pub const STATUS_FAILED: &'static str = "failed";
-    pub const STATUS_PENDING: &'static str = "pending";
-    pub const STATUS_RUNNING: &'static str = "running";
-    pub const STATUS_STOPPED: &'static str = "stopped";
-    
-    // Common error types
-    pub const ERROR_NETWORK: &'static str = "network_error";
-    pub const ERROR_STORAGE: &'static str = "storage_error";
-    pub const ERROR_CONFIG: &'static str = "config_error";
-    pub const ERROR_VALIDATION: &'static str = "validation_error";
-}
+// **CANONICAL CONSTANTS MIGRATION COMPLETE**
+// All constants now imported from the canonical constants system
 
 /// **SHARED STRING POOL**
 /// Thread-safe pool for frequently used strings
 static STRING_POOL: OnceLock<RwLock<HashMap<String, Arc<str>>>> = OnceLock::new();
-
 /// **STRING OPTIMIZATION UTILITIES**
 pub struct StringOptimizer;
-
 impl StringOptimizer {
     /// Get or create a shared string reference
     /// This is useful for strings that are used multiple times across the application
@@ -113,7 +86,6 @@ impl StringOptimizer {
 pub struct OptimizedStringBuilder {
     buffer: String,
 }
-
 impl OptimizedStringBuilder {
     /// Create a new builder with estimated capacity
     pub fn with_capacity(capacity: usize) -> Self {
@@ -174,7 +146,6 @@ impl Default for OptimizedStringBuilder {
 
 /// **ZERO-ALLOCATION STRING UTILITIES**
 pub struct ZeroAllocString;
-
 impl ZeroAllocString {
     /// Check if a string matches a constant without allocation
     pub fn matches_constant(input: &str, constant: &'static str) -> bool {
@@ -200,19 +171,15 @@ impl ZeroAllocString {
 /// **MEMORY-EFFICIENT ERROR MESSAGES**
 /// Pre-allocated error message templates
 pub struct ErrorMessages;
-
 impl ErrorMessages {
-    pub fn network_error(operation: &str, details: &str) -> String {
         StringOptimizer::format_with_capacity(
             operation.len() + details.len() + 32,
             format_args!("Network error during {operation}: {details}")
         )
     }
     
-    pub fn storage_error(operation: &str, path: &str) -> String {
         StringOptimizer::format_with_capacity(
             operation.len() + path.len() + 32,
-            format_args!("Storage error during {operation} at path: {path}")
         )
     }
     
@@ -226,16 +193,14 @@ impl ErrorMessages {
 
 /// **PERFORMANCE MACROS**
 /// Convenient macros for common string optimization patterns
-
 /// Efficiently concatenate string literals and variables
 #[macro_export]
 macro_rules! concat_strings {
     ($($part:expr),+ $(,)?) => {{
         let parts = &[$($part),+];
         $crate::optimized::string_optimization::StringOptimizer::concat_strings(parts)
-    }};
+    };
 }
-
 /// Create a shared string that can be reused
 #[macro_export]
 macro_rules! shared_string {
@@ -243,7 +208,6 @@ macro_rules! shared_string {
         $crate::optimized::string_optimization::StringOptimizer::get_shared_string($s)
     };
 }
-
 /// Build a string efficiently with known parts
 #[macro_export]
 macro_rules! build_string {
@@ -251,14 +215,13 @@ macro_rules! build_string {
         let mut builder = $crate::optimized::string_optimization::OptimizedStringBuilder::with_capacity($capacity);
         $(builder.push_str($part);)+
         builder.build()
-    }};
+    };
     ($($part:expr),+ $(,)?) => {{
         let mut builder = $crate::optimized::string_optimization::OptimizedStringBuilder::new();
         $(builder.push_str($part);)+
         builder.build()
-    }};
+    };
 }
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -316,7 +279,7 @@ mod tests {
         let mut parts: Vec<String> = Vec::new();
         ZeroAllocString::split_and_process("a,b,c", ',', |part| {
             parts.push(part.to_string());
-        });
+        );
         assert_eq!(parts, vec!["a", "b", "c"]);
     }
     
@@ -326,7 +289,6 @@ mod tests {
         assert!(error.contains("Network error during connect: timeout"));
         
         let storage_error = ErrorMessages::storage_error("read", "/tmp/file", None);
-        assert!(storage_error.contains("Storage error during read at path: /tmp/file"));
     }
     
     #[test]

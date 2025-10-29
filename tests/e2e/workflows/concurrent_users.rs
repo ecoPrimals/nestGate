@@ -12,6 +12,7 @@ use std::time::Instant;
 use tokio::time::sleep;
 
 /// Test concurrent user workflow
+
 pub async fn test_concurrent_user_workflow(config: &UnifiedTestConfig) -> Result<WorkflowResults> {
     let start_time = Instant::now();
     let mut error_messages = Vec::new();
@@ -33,7 +34,9 @@ pub async fn test_concurrent_user_workflow(config: &UnifiedTestConfig) -> Result
     for user_id in 0..concurrent_users {
         for op_id in 0..operations_per_user {
             tasks.push(simulate_user_operation(user_id as usize, op_id as usize));
+    Ok(())
         }
+    Ok(())
     }
 
     // Execute all operations concurrently
@@ -44,7 +47,9 @@ pub async fn test_concurrent_user_workflow(config: &UnifiedTestConfig) -> Result
         match result {
             Ok(_) => steps_completed += 1,
             Err(e) => error_messages.push(format!("User operation failed: {e}")),
+    Ok(())
         }
+    Ok(())
     }
 
     let execution_time = start_time.elapsed();

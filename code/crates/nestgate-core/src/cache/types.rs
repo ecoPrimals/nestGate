@@ -4,38 +4,34 @@ use chrono;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
-
 // Import EvictionPolicy from services module
 
 // Internal re-exports will be handled by the module system
 
-/// Storage tier for caching
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum StorageTier {
-    /// Fast access, limited capacity (SSD, RAM)
-    Hot,
-    /// Moderate access, larger capacity (fast HDD)
-    Warm,
-    /// Slow access, unlimited capacity (archive storage)
-    Cold,
-}
-
+/// Storage tier for caching - use canonical definition
+pub use crate::canonical_types::StorageTier;
 impl StorageTier {
     /// Get tier priority (lower number = higher priority)
+    #[must_use]
     pub fn priority(&self) -> u8 {
         match self {
-            StorageTier::Hot => 0,
-            StorageTier::Warm => 1,
-            StorageTier::Cold => 2,
+            Self::Cache => 0, // Ultra-fast cache has highest priority
+            Self::Hot => 1,
+            Self::Warm => 2,
+            Self::Cold => 3,
+            Self::Archive => 4, // Archive has lowest priority
         }
     }
 
     /// Get typical access time for this tier
+    #[must_use]
     pub fn typical_access_time(&self) -> Duration {
         match self {
+            StorageTier::Cache => Duration::from_micros(100), // Ultra-fast cache
             StorageTier::Hot => Duration::from_millis(1),
             StorageTier::Warm => Duration::from_millis(10),
             StorageTier::Cold => Duration::from_millis(100),
+            StorageTier::Archive => Duration::from_secs(10), // Archive can be very slow
         }
     }
 }
@@ -53,7 +49,6 @@ pub enum CachePolicy {
     /// Write-back caching (writes go to cache, then are flushed to backing store)
     WriteBack,
 }
-
 impl std::fmt::Display for CachePolicy {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -65,63 +60,8 @@ impl std::fmt::Display for CachePolicy {
     }
 }
 
-/// Use this instead of the deprecated CacheConfig
-impl crate::unified_types::UnifiedCacheConfig {
-    /// High-performance cache configuration optimized for production workloads
-    pub fn high_performance() -> Self {
-        Self {
-            name: "high-perf-cache".to_string(),
-            max_size: 2 * 1024 * 1024 * 1024, // 2GB
-            eviction_policy: "lru".to_string(),
-            ttl_seconds: 1800, // 30 minutes
-            cache_dir: "/tmp/nestgate-high-perf-cache".to_string(),
-            policy: "write-back".to_string(),
-            hot_tier_size: 500_000_000,
-            warm_tier_size: 1_000_000_000,
-            cold_tier_unlimited: true,
-            enable_compression: true,
-            compression_level: 3,
-            default_ttl_seconds: 1800,
-            enable_metrics: true,
-            metrics_interval_seconds: 30,
-            enable_persistence: false,
-            persistence_interval_seconds: 60,
-            max_memory_percent: 90.0,
-            enable_lru: true,
-            concurrent_threads: (num_cpus::get() * 2) as u32,
-            ..Default::default()
-        }
-    }
-
-    /// Development-friendly cache configuration with debugging features
-    pub fn development() -> Self {
-        Self {
-            name: "dev-cache".to_string(),
-            max_size: 50 * 1024 * 1024, // 50MB
-            eviction_policy: "lru".to_string(),
-            ttl_seconds: 7200, // 2 hours
-            cache_dir: "/tmp/nestgate-dev-cache".to_string(),
-            policy: "write-through".to_string(),
-            hot_tier_size: 10_000_000,
-            warm_tier_size: 30_000_000,
-            cold_tier_unlimited: false,
-            enable_compression: false,
-            compression_level: 6,
-            default_ttl_seconds: 7200,
-            enable_metrics: true,
-            metrics_interval_seconds: 120,
-            enable_persistence: true,
-            persistence_path: "/tmp/nestgate-dev-cache.db".to_string(),
-            persistence_interval_seconds: 600,
-            max_memory_percent: 60.0,
-            enable_lru: true,
-            concurrent_threads: 2,
-            ..Default::default()
-        }
-    }
-}
-
-/// Cache statistics
+/// Use this instead of the deprecated `CacheConfig`
+// All duplicate UnifiedCacheConfig implementations removed
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CacheStats {
     /// Number of cache hits
@@ -151,7 +91,6 @@ pub struct CacheStats {
     /// Cache efficiency metrics
     pub efficiency_metrics: EfficiencyMetrics,
 }
-
 impl Default for CacheStats {
     fn default() -> Self {
         let mut tier_access_times = HashMap::new();
@@ -179,6 +118,7 @@ impl Default for CacheStats {
 
 impl CacheStats {
     /// Calculate hit ratio (0.0 to 1.0)
+    #[must_use]
     pub fn hit_ratio(&self) -> f64 {
         let total = self.hits + self.misses;
         if total == 0 {
@@ -189,16 +129,19 @@ impl CacheStats {
     }
 
     /// Get total number of items across all tiers
+    #[must_use]
     pub fn total_items(&self) -> usize {
         self.hot_tier_items + self.warm_tier_items + self.cold_tier_items
     }
 
     /// Get total size across all tiers
+    #[must_use]
     pub fn total_size_bytes(&self) -> u64 {
         self.hot_tier_size_bytes + self.warm_tier_size_bytes + self.cold_tier_size_bytes
     }
 
     /// Get total evictions across all tiers
+    #[must_use]
     pub fn total_evictions(&self) -> u64 {
         self.hot_tier_evictions + self.warm_tier_evictions + self.cold_tier_evictions
     }
@@ -244,7 +187,6 @@ pub struct EfficiencyMetrics {
     last_operations: Vec<bool>, // true = hit, false = miss
     max_operations_tracked: usize,
 }
-
 impl Default for EfficiencyMetrics {
     fn default() -> Self {
         Self {
@@ -336,12 +278,12 @@ impl EfficiencyMetrics {
             return 0.0;
         }
 
-        let mean = window_hit_ratios.iter().sum::<f64>() / window_hit_ratios.len() as f64;
+        let mean = window_hit_ratios.iter().sum::<f64>() / (window_hit_ratios.len() as f64);
         let variance = window_hit_ratios
             .iter()
             .map(|ratio| (ratio - mean).powi(2))
             .sum::<f64>()
-            / window_hit_ratios.len() as f64;
+            / (window_hit_ratios.len() as f64);
 
         variance
     }
@@ -367,9 +309,9 @@ pub struct CacheEntry {
     /// Time to live
     pub ttl: Option<Duration>,
 }
-
 impl CacheEntry {
     /// Create a new cache entry
+    #[must_use]
     pub fn new(key: String, data: Vec<u8>, tier: StorageTier) -> Self {
         let now = chrono::Utc::now();
         let size = data.len() as u64;
@@ -386,6 +328,7 @@ impl CacheEntry {
     }
 
     /// Check if entry has expired
+    #[must_use]
     pub fn is_expired(&self) -> bool {
         if let Some(ttl) = self.ttl {
             let expiry_time = self.created_at + chrono::Duration::from_std(ttl).unwrap_or_default();
@@ -402,6 +345,7 @@ impl CacheEntry {
     }
 
     /// Get age of entry
+    #[must_use]
     pub fn age(&self) -> chrono::Duration {
         chrono::Utc::now() - self.created_at
     }

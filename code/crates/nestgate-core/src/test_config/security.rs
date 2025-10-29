@@ -3,10 +3,8 @@ use std::collections::HashMap;
 /// This module provides configuration for security testing including authentication,
 /// authorization, penetration testing, and vulnerability scanning.
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::time::Duration;
-
-// ==================== SECURITY TESTING CONFIGURATION ====================
+// ==================== SECTION ====================
 
 /// **Unified security testing configuration**
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -22,7 +20,6 @@ pub struct TestSecurityConfig {
     /// Vulnerability testing
     pub vulnerability: VulnerabilityTestConfig,
 }
-
 /// **Authentication test configuration**
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AuthTestConfig {
@@ -33,7 +30,6 @@ pub struct AuthTestConfig {
     /// Test credentials
     pub test_credentials: HashMap<String, String>,
 }
-
 /// **Authorization test configuration**
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AuthzTestConfig {
@@ -44,7 +40,6 @@ pub struct AuthzTestConfig {
     /// Permission matrix
     pub permissions: HashMap<String, Vec<String>>,
 }
-
 /// **Penetration test configuration**
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct PenetrationTestConfig {
@@ -55,7 +50,6 @@ pub struct PenetrationTestConfig {
     /// Attack scenarios
     pub attack_scenarios: Vec<String>,
 }
-
 /// **Security scan configuration**
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct SecurityScanConfig {
@@ -66,7 +60,6 @@ pub struct SecurityScanConfig {
     /// Scan depth
     pub scan_depth: String,
 }
-
 /// **Vulnerability test configuration**
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct VulnerabilityTestConfig {

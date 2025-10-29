@@ -3,30 +3,31 @@
 //! This test validates ZFS performance optimization using canonical patterns
 //! **CANONICAL MODERNIZATION**: Updated to use simple, working patterns
 
-use nestgate_core::config::canonical_unified::NestGateCanonicalUnifiedConfig as NestGateCanonicalUnifiedConfig;
-use nestgate_core::config::defaults::Environment;
+use nestgate_core::config::canonical_master::NestGateCanonicalConfig;
+use nestgate_core::config::DeploymentEnvironment;
 use std::time::Duration;
 use tokio::time::sleep;
 use tracing::info;
 
 /// Test ZFS performance configuration
 #[tokio::test]
-async fn test_zfs_performance_config() {
+async fn test_zfs_performance_config() -> Result<(), Box<dyn std::error::Error>> {
     info!("⚡ Starting ZFS performance configuration test");
 
     // Test ZFS performance configuration creation
-    let config = NestGateCanonicalUnifiedConfig::default();
+    let config = NestGateNestGateCanonicalConfig::default();
     assert!(!config.system.instance_name.is_empty());
 
     // Test that storage section exists for ZFS
     let _storage_config = &config.storage;
 
     info!("✅ ZFS performance configuration test completed");
+    Ok(())
 }
 
 /// Test ZFS performance optimization simulation
 #[tokio::test]
-async fn test_zfs_performance_optimization() {
+async fn test_zfs_performance_optimization() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔧 Testing ZFS performance optimization simulation");
 
     // Simulate ZFS optimization phases
@@ -45,14 +46,16 @@ async fn test_zfs_performance_optimization() {
 
         // Verify phase is valid
         assert!(!phase.is_empty(), "Optimization phase should be specified");
+        Ok(())
     }
 
     info!("✅ ZFS performance optimization simulation completed");
+    Ok(())
 }
 
 /// Test ZFS performance metrics simulation
 #[tokio::test]
-async fn test_zfs_performance_metrics() {
+async fn test_zfs_performance_metrics() -> Result<(), Box<dyn std::error::Error>> {
     info!("📊 Testing ZFS performance metrics simulation");
 
     // Simulate different performance metrics
@@ -72,14 +75,16 @@ async fn test_zfs_performance_metrics() {
         // Verify metric is valid
         assert!(!metric_name.is_empty(), "Metric name should be specified");
         assert!(metric_value > 0, "Metric value should be positive");
+        Ok(())
     }
 
     info!("✅ ZFS performance metrics simulation completed");
+    Ok(())
 }
 
 /// Test ZFS performance bottleneck detection
 #[tokio::test]
-async fn test_zfs_bottleneck_detection() {
+async fn test_zfs_bottleneck_detection() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔍 Testing ZFS bottleneck detection simulation");
 
     // Simulate bottleneck detection scenarios
@@ -106,14 +111,16 @@ async fn test_zfs_bottleneck_detection() {
         );
         assert!(severity > 0, "Severity should be positive");
         assert!(severity <= 100, "Severity should be within bounds");
+        Ok(())
     }
 
     info!("✅ ZFS bottleneck detection simulation completed");
+    Ok(())
 }
 
 /// Test ZFS performance tuning simulation
 #[tokio::test]
-async fn test_zfs_performance_tuning() {
+async fn test_zfs_performance_tuning() -> Result<(), Box<dyn std::error::Error>> {
     info!("🎛️ Testing ZFS performance tuning simulation");
 
     // Simulate performance tuning operations
@@ -133,14 +140,16 @@ async fn test_zfs_performance_tuning() {
         // Verify operation is valid
         assert!(!operation.is_empty(), "Operation should be specified");
         assert!(processing_time > 0, "Processing time should be positive");
+        Ok(())
     }
 
     info!("✅ ZFS performance tuning simulation completed");
+    Ok(())
 }
 
 /// Test ZFS performance monitoring
 #[tokio::test]
-async fn test_zfs_performance_monitoring() {
+async fn test_zfs_performance_monitoring() -> Result<(), Box<dyn std::error::Error>> {
     info!("📈 Testing ZFS performance monitoring simulation");
 
     let start_time = std::time::Instant::now();
@@ -163,29 +172,34 @@ async fn test_zfs_performance_monitoring() {
             elapsed.as_millis() >= cycle_time as u128,
             "Monitoring timing should be accurate"
         );
+        Ok(())
     }
 
     info!("✅ ZFS performance monitoring simulation completed");
+    Ok(())
 }
 
 /// Test ZFS performance environments
 #[tokio::test]
-async fn test_zfs_performance_environments() {
+async fn test_zfs_performance_environments() -> Result<(), Box<dyn std::error::Error>> {
     info!("🌍 Testing ZFS performance across environments");
 
     // Test development environment ZFS performance
-    let dev_config =
-        nestgate_core::config::canonical_unified::create_config_for_environment(Environment::Development);
+    let dev_config = nestgate_core::config::canonical_master::create_config_for_environment(
+        Environment::Development,
+    );
     assert!(!dev_config.system.instance_name.is_empty());
     assert!(matches!(dev_config.environment, Environment::Development));
     info!("Development ZFS performance configuration validated");
 
     // Test production environment ZFS performance
-    let prod_config =
-        nestgate_core::config::canonical_unified::create_config_for_environment(Environment::Production);
+    let prod_config = nestgate_core::config::canonical_master::create_config_for_environment(
+        Environment::Production,
+    );
     assert!(!prod_config.system.instance_name.is_empty());
     assert!(matches!(prod_config.environment, Environment::Production));
     info!("Production ZFS performance configuration validated");
 
     info!("✅ ZFS performance environment test completed");
+    Ok(())
 }

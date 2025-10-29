@@ -13,19 +13,15 @@ use crate::types::{
 };
 use nestgate_core::diagnostics::SystemMetrics;
 
-// ==================== CANONICAL MODERNIZATION ====================
+// ==================== SECTION: CANONICAL ERROR TYPES ====================
 
-/// **CANONICAL**: MCP protocol-specific Result type using IdioResult
-/// This follows the canonical Result<T,E> pattern with domain-specific error type
-pub type McpResult<T> = IdioResult<T, McpProtocolError>;
+// CANONICAL MODERNIZATION: Use unified error system
+// REMOVED: pub type Result<T> = McpResult<T>;
+// USE INSTEAD: Canonical types from nestgate-core
 
-// **CANONICAL MODERNIZATION COMPLETE**: Deprecated Result type alias removed
-// Use McpResult<T> for domain-specific MCP errors
+pub use nestgate_core::error::{Result, McpResult};
 
-/// Convenience Result type for internal use in this crate
-pub type Result<T> = McpResult<T>;
-
-// ==================== MCP PROTOCOL TYPES ====================
+// ==================== SECTION ====================
 
 /// MCP message structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -34,7 +30,6 @@ pub struct McpMessage {
     pub payload: serde_json::Value,
     pub metadata: HashMap<String, String>,
 }
-
 /// MCP session information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct McpSession {
@@ -42,14 +37,12 @@ pub struct McpSession {
     pub client_info: ClientInfo,
     pub server_capabilities: ServerCapabilities,
 }
-
 /// Client information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ClientInfo {
     pub name: String,
     pub version: String,
 }
-
 /// Server capabilities
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServerCapabilities {
@@ -57,7 +50,6 @@ pub struct ServerCapabilities {
     pub resources: Vec<String>,
     pub prompts: Vec<String>,
 }
-
 /// Enhanced MCP Message with advanced capabilities
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Message {
@@ -69,10 +61,9 @@ pub struct Message {
     pub payload: MessagePayload,
     pub metadata: HashMap<String, String>,
 }
-
 impl Message {
-    pub fn new(message_type: MessageType, payload: MessagePayload) -> Self {
-        Self {
+    #[must_use]
+    pub fn new(message_type: MessageType, payload: MessagePayload) -> Self { Self {
             id: Uuid::new_v4().to_string(),
             timestamp: std::time::SystemTime::now(),
             source: "nestgate-v2".to_string(),
@@ -80,18 +71,16 @@ impl Message {
             message_type,
             payload,
             metadata: HashMap::new(),
-        }
-    }
+         }
 
-    pub fn with_destination(mut self, destination: String) -> Self {
-        self.destination = Some(destination);
+    #[must_use]
+    pub fn with_destination(mut self, destination: String) -> Self { self.destination = Some(destination);
         self
-    }
-
-    pub fn with_metadata(mut self, key: String, value: String) -> Self {
+    #[must_use]
+    , pub fn with_metadata(mut self, key: String, value: String) -> Self {
         self.metadata.insert(key, value);
         self
-    }
+     }
 }
 
 /// Enhanced Message Types with advanced capabilities
@@ -101,7 +90,6 @@ pub enum MessageType {
     CapabilityRegistration,
     CapabilityQuery,
     CapabilityResponse,
-
     // Storage operations
     VolumeCreate,
     VolumeDelete,
@@ -140,7 +128,6 @@ pub enum MessagePayload {
     CapabilityRegistration(CapabilityRegistrationPayload),
     CapabilityQuery(CapabilityQueryPayload),
     CapabilityResponse(CapabilityResponsePayload),
-
     // Storage operation payloads
     VolumeCreate(VolumeCreatePayload),
     VolumeDelete(VolumeDeletePayload),
@@ -183,10 +170,9 @@ pub struct Response {
     pub error: Option<ErrorPayload>,
     pub metadata: HashMap<String, String>,
 }
-
 impl Response {
-    pub fn success(request_id: String, payload: ResponsePayload) -> Self {
-        Self {
+    #[must_use]
+    pub fn success(request_id: String, payload: ResponsePayload) -> Self { Self {
             id: Uuid::new_v4().to_string(),
             request_id,
             timestamp: std::time::SystemTime::now(),
@@ -194,11 +180,10 @@ impl Response {
             payload: Some(payload),
             error: None,
             metadata: HashMap::new(),
-        }
-    }
+         }
 
-    pub fn error(request_id: String, error: ErrorPayload) -> Self {
-        Self {
+    #[must_use]
+    pub fn error(request_id: String, error: ErrorPayload) -> Self { Self {
             id: Uuid::new_v4().to_string(),
             request_id,
             timestamp: std::time::SystemTime::now(),
@@ -206,8 +191,7 @@ impl Response {
             payload: None,
             error: Some(error),
             metadata: HashMap::new(),
-        }
-    }
+         }
 }
 
 /// Response Status
@@ -218,7 +202,6 @@ pub enum ResponseStatus {
     Pending,
     Timeout,
 }
-
 /// Enhanced Response Payload with advanced capabilities
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ResponsePayload {
@@ -233,7 +216,6 @@ pub enum ResponsePayload {
     LoadBalancingInfo(LoadBalancingInfo),
     Empty,
 }
-
 // Service Information (v2 specific)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceInfo {
@@ -255,7 +237,6 @@ pub enum ServiceStatus {
     Maintenance,
     Error,
 }
-
 /// Load Balancing Algorithms
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum LoadBalancingAlgorithm {
@@ -265,7 +246,6 @@ pub enum LoadBalancingAlgorithm {
     HealthBased,
     Random,
 }
-
 /// Load Balancing Information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LoadBalancingInfo {
@@ -274,7 +254,6 @@ pub struct LoadBalancingInfo {
     pub weights: HashMap<String, f64>,
     pub health_scores: HashMap<String, f64>,
 }
-
 /// Health Status
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HealthStatus {
@@ -283,7 +262,6 @@ pub struct HealthStatus {
     pub last_check: std::time::SystemTime,
     pub details: HashMap<String, String>,
 }
-
 /// Federation Status
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FederationStatus {
@@ -292,7 +270,6 @@ pub struct FederationStatus {
     pub node_role: NodeRole,
     pub cluster_health: ClusterHealth,
 }
-
 /// Node Role in Federation
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum NodeRole {
@@ -301,7 +278,6 @@ pub enum NodeRole {
     Candidate,
     Observer,
 }
-
 /// Cluster Health
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ClusterHealth {
@@ -310,7 +286,6 @@ pub enum ClusterHealth {
     Unhealthy,
     Partitioned,
 }
-
 // Payload Structures
 
 /// Capability Registration Payload
@@ -320,14 +295,12 @@ pub struct CapabilityRegistrationPayload {
     pub endpoint: String,
     pub metadata: HashMap<String, String>,
 }
-
 /// Capability Query Payload
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CapabilityQueryPayload {
     pub query_type: CapabilityQueryType,
     pub filters: HashMap<String, String>,
 }
-
 /// Capability Query Types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum CapabilityQueryType {
@@ -336,14 +309,12 @@ pub enum CapabilityQueryType {
     ByTier(StorageTier),
     ByProvider(String),
 }
-
 /// Capability Response Payload
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CapabilityResponsePayload {
     pub capabilities: Vec<ProviderCapabilities>,
     pub total_count: usize,
 }
-
 /// Volume Create Payload
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VolumeCreatePayload {
@@ -353,14 +324,12 @@ pub struct VolumeCreatePayload {
     pub protocol: StorageProtocol,
     pub options: HashMap<String, String>,
 }
-
 /// Volume Delete Payload
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VolumeDeletePayload {
     pub volume_id: String,
     pub force: bool,
 }
-
 /// Volume Mount Payload
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VolumeMountPayload {
@@ -368,7 +337,6 @@ pub struct VolumeMountPayload {
     pub mount_point: String,
     pub options: MountOptions,
 }
-
 /// Volume Unmount Payload
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VolumeUnmountPayload {
@@ -376,7 +344,6 @@ pub struct VolumeUnmountPayload {
     pub mount_point: String,
     pub force: bool,
 }
-
 /// Volume List Payload
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VolumeListPayload {
@@ -384,21 +351,18 @@ pub struct VolumeListPayload {
     pub limit: Option<usize>,
     pub offset: Option<usize>,
 }
-
 /// Volume Info Payload
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VolumeInfoPayload {
     pub volume_id: String,
     pub include_metrics: bool,
 }
-
 /// Metrics Report Payload
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MetricsReportPayload {
     pub metrics: SystemMetrics,
     pub node_id: String,
 }
-
 /// Metrics Query Payload
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MetricsQueryPayload {
@@ -406,14 +370,12 @@ pub struct MetricsQueryPayload {
     pub time_range: Option<TimeRange>,
     pub metric_types: Vec<MetricType>,
 }
-
 /// Time Range for queries
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TimeRange {
     pub start: std::time::SystemTime,
     pub end: std::time::SystemTime,
 }
-
 /// Metric Types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum MetricType {
@@ -422,14 +384,12 @@ pub enum MetricType {
     Performance,
     Network,
 }
-
 /// Health Check Payload
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HealthCheckPayload {
     pub check_type: HealthCheckType,
     pub include_details: bool,
 }
-
 /// Health Check Types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum HealthCheckType {
@@ -438,14 +398,12 @@ pub enum HealthCheckType {
     Storage,
     Network,
 }
-
 /// Status Update Payload
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StatusUpdatePayload {
     pub status: ServiceStatus,
     pub details: HashMap<String, String>,
 }
-
 /// Federation Join Payload
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FederationJoinPayload {
@@ -454,21 +412,18 @@ pub struct FederationJoinPayload {
     pub capabilities: ProviderCapabilities,
     pub metadata: HashMap<String, String>,
 }
-
 /// Federation Leave Payload
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FederationLeavePayload {
     pub node_id: String,
     pub reason: String,
 }
-
 /// Federation Sync Payload
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FederationSyncPayload {
     pub sync_type: FederationSyncType,
     pub data: HashMap<String, serde_json::Value>,
 }
-
 /// Federation Sync Types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum FederationSyncType {
@@ -477,7 +432,6 @@ pub enum FederationSyncType {
     Capabilities,
     Metrics,
 }
-
 /// Federation Heartbeat Payload
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FederationHeartbeatPayload {
@@ -485,7 +439,6 @@ pub struct FederationHeartbeatPayload {
     pub timestamp: std::time::SystemTime,
     pub status: ServiceStatus,
 }
-
 /// Orchestrator Route Payload (v2 specific)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OrchestratorRoutePayload {
@@ -493,7 +446,6 @@ pub struct OrchestratorRoutePayload {
     pub route_type: RouteType,
     pub message: Box<Message>,
 }
-
 /// Route Types for orchestrator
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum RouteType {
@@ -502,7 +454,6 @@ pub enum RouteType {
     Failover,
     Broadcast,
 }
-
 /// Service Registration Payload (v2 specific)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceRegistrationPayload {
@@ -510,14 +461,12 @@ pub struct ServiceRegistrationPayload {
     pub health_check_endpoint: String,
     pub metadata: HashMap<String, String>,
 }
-
 /// Service Discovery Payload (v2 specific)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceDiscoveryPayload {
     pub service_type: String,
     pub filters: HashMap<String, String>,
 }
-
 /// Load Balancing Payload (v2 specific)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LoadBalancingPayload {
@@ -525,7 +474,6 @@ pub struct LoadBalancingPayload {
     pub target_services: Vec<String>,
     pub weights: HashMap<String, f64>,
 }
-
 /// Error Payload
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ErrorPayload {
@@ -534,14 +482,12 @@ pub struct ErrorPayload {
     pub details: HashMap<String, String>,
     pub timestamp: std::time::SystemTime,
 }
-
 /// Acknowledgment Payload
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AcknowledmentPayload {
     pub ack_type: AcknowledmentType,
     pub message: String,
 }
-
 /// Acknowledgment Types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AcknowledmentType {
@@ -550,82 +496,65 @@ pub enum AcknowledmentType {
     Completed,
     Failed,
 }
-
 /// MCP protocol-specific error types with rich context
 #[derive(Error, Debug, Clone, Serialize, Deserialize)]
 pub enum McpProtocolError {
     #[error("Protocol error: {message}")]
-    ProtocolError { message: String },
-    
+    ProtocolError { message: String }
     #[error("Connection error: {message}")]
-    ConnectionError { message: String },
-    
+    ConnectionError { message: String }
     #[error("Message parsing error: {message}")]
-    MessageParsingError { message: String },
-    
+    MessageParsingError { message: String }
     #[error("Authentication error: {message}")]
-    AuthenticationError { message: String },
-    
+    AuthenticationError { message: String }
     #[error("Session error: {message}")]
-    SessionError { message: String },
+    SessionError { message: String }
 }
-
-// ==================== CONVERSION TRAITS ====================
+// ==================== SECTION ====================
 
 impl From<McpProtocolError> for NestGateError {
-    fn from(err: McpProtocolError) -> Self {
-        match err {
-            McpProtocolError::ProtocolError { message } => {
-                NestGateError::simple(format!("MCP protocol error: {}", message))
+    fn from(err: McpProtocolError) -> Self { match err {
+            McpProtocolError::ProtocolError { message , => {
+                NestGateError::simple(format!("fixed")
             }
             McpProtocolError::ConnectionError { message } => {
-                NestGateError::network("mcp_connection", message)
+                NestGateError::network_error("mcp_connection", message)
             }
             McpProtocolError::MessageParsingError { message } => {
-                NestGateError::simple(format!("MCP message parsing error: {}", message))
+                NestGateError::simple(format!("fixed")
             }
             McpProtocolError::AuthenticationError { message } => {
-                NestGateError::simple(format!("MCP authentication error: {}", message))
+                NestGateError::simple(format!("fixed")
             }
             McpProtocolError::SessionError { message } => {
-                NestGateError::simple(format!("MCP session error: {}", message))
+                NestGateError::simple(format!("fixed")
             }
         }
     }
 }
 
-// ==================== CONVENIENCE CONSTRUCTORS ====================
+// ==================== SECTION ====================
 
 impl McpProtocolError {
-    pub fn protocol_error(message: impl Into<String>) -> Self {
-        Self::ProtocolError {
+    pub fn protocol_error(message: impl Into<String>) -> Self { Self::ProtocolError {
             message: message.into(),
-        }
-    }
+         }
     
-    pub fn connection_error(message: impl Into<String>) -> Self {
-        Self::ConnectionError {
+    pub fn connection_error(message: impl Into<String>) -> Self { Self::ConnectionError {
             message: message.into(),
-        }
-    }
+         }
     
-    pub fn message_parsing_error(message: impl Into<String>) -> Self {
-        Self::MessageParsingError {
+    pub fn message_parsing_error(message: impl Into<String>) -> Self { Self::MessageParsingError {
             message: message.into(),
-        }
-    }
+         }
     
-    pub fn authentication_error(message: impl Into<String>) -> Self {
-        Self::AuthenticationError {
+    pub fn authentication_error(message: impl Into<String>) -> Self { Self::AuthenticationError {
             message: message.into(),
-        }
-    }
+         }
     
-    pub fn session_error(message: impl Into<String>) -> Self {
-        Self::SessionError {
+    pub fn session_error(message: impl Into<String>) -> Self { Self::SessionError {
             message: message.into(),
-        }
-    }
+         }
 }
 
 /// Enhanced Protocol Handler with advanced integration with v2 orchestrator
@@ -634,28 +563,28 @@ pub struct ProtocolHandler {
     capabilities: ProviderCapabilities,
     orchestrator_endpoint: Option<String>,
 }
-
 impl ProtocolHandler {
-    pub fn new(node_id: String, capabilities: ProviderCapabilities) -> Self {
-        Self {
+    pub fn new(node_id: String, capabilities: ProviderCapabilities) -> Self { Self {
             _node_id: node_id,
             capabilities,
             orchestrator_endpoint: None,
-        }
-    }
+         }
 
-    pub fn with_orchestrator(mut self, endpoint: String) -> Self {
-        self.orchestrator_endpoint = Some(endpoint);
+    #[must_use]
+    pub fn with_orchestrator(mut self, endpoint: String) -> Self { self.orchestrator_endpoint = Some(endpoint);
         self
-    }
-
-    /// Handle incoming MCP message with v2 orchestrator integration
-    pub async fn handle_message(&self, message: Message) -> Result<Response> {
+    , /// Handle incoming MCP message with v2 orchestrator integration
+    /// Function description
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the operation fails.
+        pub async fn handle_message(&self, message: Message) -> Result<Response>  {
         match message.message_type {
             MessageType::CapabilityRegistration => {
                 self.handle_capability_registration(message).await
-            }
-            MessageType::CapabilityQuery => self.handle_capability_query(message).await,
+             }
+    MessageType::CapabilityQuery => self.handle_capability_query(message).await,
             MessageType::VolumeCreate => self.handle_volume_create(message).await,
             MessageType::VolumeMount => self.handle_volume_mount(message).await,
             MessageType::MetricsReport => self.handle_metrics_report(message).await,
@@ -666,7 +595,7 @@ impl ProtocolHandler {
             _ => Err(crate::error::Error::unsupported(format!(
                 "Message type {:?} not supported",
                 message.message_type
-            ))),
+            )),
         }
     }
 
@@ -684,7 +613,7 @@ impl ProtocolHandler {
         ))
     }
 
-    async fn handle_capability_query(&self, _message: Message) -> Result<Response> {
+    fn handle_capability_query(&self, _message: Message) -> Result<Response> {
         // Return our capabilities
         Ok(Response::success(
             _message.id,
@@ -726,7 +655,7 @@ impl ProtocolHandler {
         Ok(Response::success(message.id, ResponsePayload::Empty))
     }
 
-    async fn handle_health_check(&self, message: Message) -> Result<Response> {
+    fn handle_health_check(&self, message: Message) -> Result<Response> {
         let health_status = HealthStatus {
             status: ServiceStatus::Online,
             uptime: nestgate_core::constants::timeouts::REQUEST_DEFAULT,
@@ -753,7 +682,7 @@ impl ProtocolHandler {
     }
 
     /// Handle orchestrator routing
-    async fn handle_orchestrator_route(&self, message: Message) -> Result<Response> {
+    fn handle_orchestrator_route(&self, message: Message) -> Result<Response> {
         // Forward to orchestrator instead of recursing
         match &message.payload {
             MessagePayload::OrchestratorRoute(_payload) => {
@@ -767,7 +696,7 @@ impl ProtocolHandler {
                     error_message: "Invalid orchestrator route payload".to_string(),
                     details: HashMap::new(),
                     timestamp: std::time::SystemTime::now(),
-                },
+                }
             )),
         }
     }
@@ -784,7 +713,7 @@ impl ProtocolHandler {
         ))
     }
 
-    async fn route_to_orchestrator(&self, message: Message) -> Result<Response> {
+    fn route_to_orchestrator(&self, message: Message) -> Result<Response> {
         // In a real implementation, this would make an HTTP request to the orchestrator
         // Process the actual request and return real response
         Ok(Response::success(message.id, ResponsePayload::Empty))

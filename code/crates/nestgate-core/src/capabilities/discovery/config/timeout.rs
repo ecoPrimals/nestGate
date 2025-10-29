@@ -1,4 +1,3 @@
-use crate::NestGateError;
 //
 // This module provides timeout discovery functionality,
 // extracted from the monolithic unified_dynamic_config.rs file.
@@ -14,7 +13,7 @@ use crate::NestGateError;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
-// ==================== TIMEOUT DISCOVERY SETTINGS ====================
+// ==================== SECTION ====================
 
 /// Timeout discovery configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -32,7 +31,6 @@ pub struct TimeoutDiscoverySettings {
     /// Adaptive timeout adjustment factor
     pub adjustment_factor: f64,
 }
-
 impl Default for TimeoutDiscoverySettings {
     fn default() -> Self {
         Self {
@@ -48,17 +46,20 @@ impl Default for TimeoutDiscoverySettings {
 
 impl TimeoutDiscoverySettings {
     /// Create new timeout discovery settings with defaults
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
     /// Create timeout settings with custom default timeout
+    #[must_use]
     pub fn with_default_timeout(mut self, timeout: Duration) -> Self {
         self.default_timeout = timeout;
         self
     }
 
     /// Create timeout settings with custom cache TTL
+    #[must_use]
     pub fn with_cache_ttl(mut self, ttl: Duration) -> Self {
         self.cache_ttl = ttl;
         self
@@ -68,17 +69,13 @@ impl TimeoutDiscoverySettings {
     pub fn validate(&self) -> crate::Result<()> {
         if self.min_timeout > self.max_timeout {
             return Err(crate::error::NestGateError::validation_error(
-                "timeout_validation",
-                "Minimum timeout cannot be greater than maximum timeout",
-                None
+                "Invalid argument",
             ));
         }
 
         if self.default_timeout > self.max_timeout || self.default_timeout < self.min_timeout {
             return Err(crate::error::NestGateError::validation_error(
-                "timeout_validation",
-                "Default timeout must be within min/max range",
-                None
+                "Invalid argument",
             ));
         }
 
@@ -86,7 +83,12 @@ impl TimeoutDiscoverySettings {
     }
 
     /// Calculate adaptive timeout based on historical performance
-    pub fn calculate_adaptive_timeout(&self, base_timeout: Duration, success_rate: f64) -> Duration {
+    #[must_use]
+    pub fn calculate_adaptive_timeout(
+        &self,
+        base_timeout: Duration,
+        success_rate: f64,
+    ) -> Duration {
         if !self.enable_dynamic_timeouts {
             return self.default_timeout;
         }
@@ -100,7 +102,7 @@ impl TimeoutDiscoverySettings {
         };
 
         let adjusted = Duration::from_secs_f64(base_timeout.as_secs_f64() * adjustment);
-        
+
         // Clamp to min/max bounds
         if adjusted > self.max_timeout {
             self.max_timeout
@@ -110,4 +112,4 @@ impl TimeoutDiscoverySettings {
             adjusted
         }
     }
-} 
+}

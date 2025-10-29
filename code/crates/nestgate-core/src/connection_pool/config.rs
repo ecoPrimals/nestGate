@@ -1,10 +1,9 @@
 // 🚀 ECOSYSTEM UNIFICATION: Import unified types
 
 /// **MODERNIZED**: UnifiedConfig now uses UnifiedConnectionPoolConfig directly
-pub type PoolConfig = crate::unified_types::UnifiedConnectionPoolConfig;
-
+pub type PoolConfig = crate::config::canonical_master::UnifiedConnectionPoolConfig;
 // 🚀 MODERN CONVENIENCE METHODS: Extend UnifiedConnectionPoolConfig with pool-specific methods
-impl crate::unified_types::UnifiedConnectionPoolConfig {
+impl crate::config::canonical_master::UnifiedConnectionPoolConfig {
     /// Create a new pool configuration with custom parameters
     pub fn new_pool_config(
         min_connections: usize,
@@ -28,6 +27,7 @@ impl crate::unified_types::UnifiedConnectionPoolConfig {
     }
 
     /// Create high-performance pool configuration
+    #[must_use]
     pub fn high_performance() -> Self {
         let mut config = Self::default();
         config.min_connections = 10;
@@ -44,6 +44,7 @@ impl crate::unified_types::UnifiedConnectionPoolConfig {
     }
 
     /// Create minimal pool configuration for development
+    #[must_use]
     pub fn minimal() -> Self {
         let mut config = Self::default();
         config.min_connections = 1;
@@ -60,6 +61,7 @@ impl crate::unified_types::UnifiedConnectionPoolConfig {
     }
 
     /// Create production-ready pool configuration
+    #[must_use]
     pub fn production() -> Self {
         let mut config = Self::default();
         config.min_connections = 5;

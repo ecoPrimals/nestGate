@@ -3,8 +3,6 @@ use std::collections::HashMap;
 /// Unified health status definitions for consistent health monitoring
 /// across all NestGate services and components.
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-
 /// Unified health status enumeration for all services
 /// Provides consistent health reporting across the ecosystem
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -34,7 +32,6 @@ pub enum UnifiedHealthStatus {
     /// Custom health status with description
     Custom(String),
 }
-
 impl Default for UnifiedHealthStatus {
     fn default() -> Self {
         Self::Unknown
@@ -107,7 +104,6 @@ pub struct HealthReport {
     /// Any health-related errors
     pub errors: Vec<String>,
 }
-
 impl Default for HealthReport {
     fn default() -> Self {
         Self {
@@ -124,6 +120,7 @@ impl Default for HealthReport {
 
 impl HealthReport {
     /// Create a healthy report
+    #[must_use]
     pub fn healthy(component_id: String) -> Self {
         Self {
             status: UnifiedHealthStatus::Healthy,
@@ -137,6 +134,7 @@ impl HealthReport {
     }
 
     /// Create a warning report
+    #[must_use]
     pub fn warning(component_id: String, message: String) -> Self {
         Self {
             status: UnifiedHealthStatus::Warning,
@@ -150,6 +148,7 @@ impl HealthReport {
     }
 
     /// Create a critical report
+    #[must_use]
     pub fn critical(component_id: String, message: String) -> Self {
         Self {
             status: UnifiedHealthStatus::Critical,

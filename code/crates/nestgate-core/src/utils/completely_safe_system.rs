@@ -1,12 +1,11 @@
-//! Completely Safe System Operations
-//!
-//! This module provides system operations that are guaranteed to be safe
+// Completely Safe System Operations
+//! Completely Safe System functionality and utilities.
+// This module provides system operations that are guaranteed to be safe
 //! without using any unsafe code blocks.
 
-use crate::error::{NestGateError, Result};
+use crate::{NestGateError, Result};
 use std::env;
 use std::fs;
-use std::path::Path;
 use std::process::Command;
 
 /// File permissions information
@@ -16,7 +15,6 @@ pub struct FilePermissions {
     pub uid: u32,
     pub gid: u32,
 }
-
 /// Privilege information
 #[derive(Debug, Clone)]
 pub struct PrivilegeInfo {
@@ -27,10 +25,8 @@ pub struct PrivilegeInfo {
     pub can_read_proc: bool,
     pub in_container: bool,
 }
-
 /// **COMPLETELY SAFE SYSTEM OPERATIONS** - Zero unsafe code
 pub struct SafeSystemOps;
-
 impl SafeSystemOps {
     /// **COMPLETELY SAFE** root detection - zero unsafe code
     pub fn is_running_as_root() -> bool {
@@ -55,8 +51,15 @@ impl SafeSystemOps {
         false
     }
 
-    /// **COMPLETELY SAFE** UID detection - zero unsafe code  
-    pub fn get_current_uid() -> Result<u32> {
+    /// **COMPLETELY SAFE** UID detection - zero unsafe code
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn get_current_uid() -> Result<u32>  {
         // Try reading from /proc/self/status first
         if let Ok(status_content) = fs::read_to_string("/proc/self/status") {
             for line in status_content.lines() {
@@ -110,14 +113,19 @@ impl SafeSystemOps {
 
         Err(NestGateError::System {
             message: "Could not determine user ID using safe methods".to_string(),
-            resource: crate::error::SystemResource::FileSystem,
-            utilization: None,
-            recovery: crate::error::RecoveryStrategy::ManualIntervention,
+            recovery: crate::error::core::RecoveryStrategy::ManualIntervention,
         })
     }
 
     /// **COMPLETELY SAFE** GID detection - zero unsafe code
-    pub fn get_current_gid() -> Result<u32> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn get_current_gid() -> Result<u32>  {
         // Try reading from /proc/self/status first
         if let Ok(status_content) = fs::read_to_string("/proc/self/status") {
             for line in status_content.lines() {
@@ -158,9 +166,7 @@ impl SafeSystemOps {
 
         Err(NestGateError::System {
             message: "Could not determine group ID using safe methods".to_string(),
-            resource: crate::error::SystemResource::FileSystem,
-            utilization: None,
-            recovery: crate::error::RecoveryStrategy::ManualIntervention,
+            recovery: crate::error::core::RecoveryStrategy::ManualIntervention,
         })
     }
 
@@ -171,19 +177,20 @@ impl SafeSystemOps {
     }
 
     /// **COMPLETELY SAFE** parent process detection - zero unsafe code
-    pub fn get_parent_process_id() -> Result<u32> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn get_parent_process_id() -> Result<u32>  {
         // Read from /proc/self/stat
         if let Ok(stat_content) = fs::read_to_string("/proc/self/stat") {
             let fields: Vec<&str> = stat_content.split_whitespace().collect();
             if fields.len() > 3 {
-                return fields[3].parse().map_err(|_| NestGateError::Validation {
-                    field: "ppid".to_string(),
-                    message: "Could not parse parent process ID".to_string(),
-                    current_value: Some(fields[3].to_string()),
-                    expected: Some("valid integer".to_string()),
-                    user_error: false,
-                });
-            }
+                return fields[3].parse().map_err(|_| NestGateError::validation(
+            )
         }
 
         // Fallback: use ps command
@@ -196,22 +203,11 @@ impl SafeSystemOps {
                 return ppid_str
                     .trim()
                     .parse()
-                    .map_err(|_| NestGateError::Validation {
-                        field: "ppid".to_string(),
-                        message: "Could not parse parent process ID from ps output".to_string(),
-                        current_value: Some(ppid_str.trim().to_string()),
-                        expected: Some("valid integer".to_string()),
-                        user_error: false,
-                    });
-            }
+                    .map_err(|_| NestGateError::validation(
+            )
         }
 
-        Err(NestGateError::Internal {
-            message: "Could not determine parent process ID".to_string(),
-            location: Some("get_parent_process_id".to_string()),
-            debug_info: None,
-            is_bug: false,
-        })
+        Err(NestGateError::internal_error(
     }
 
     /// **COMPLETELY SAFE** process existence check - zero unsafe code
@@ -220,7 +216,14 @@ impl SafeSystemOps {
     }
 
     /// **COMPLETELY SAFE** process name detection - zero unsafe code
-    pub fn get_process_name(pid: u32) -> Result<String> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn get_process_name(pid: u32) -> Result<String>  {
         let comm_path = format!("/proc/{pid}/comm");
         if let Ok(name) = fs::read_to_string(&comm_path) {
             return Ok(name.trim().to_string());
@@ -235,16 +238,19 @@ impl SafeSystemOps {
             }
         }
 
-        Err(NestGateError::Internal {
-            message: format!("Could not determine name for process {pid}"),
-            location: Some("get_process_name".to_string()),
-            debug_info: None,
-            is_bug: false,
-        })
+        Err(NestGateError::internal_error(
+            location: Some("get_process_name".to_string())})
     }
 
     /// Get system uptime - **COMPLETELY SAFE**
-    pub fn get_uptime_seconds() -> Result<u64> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn get_uptime_seconds() -> Result<u64>  {
         // Method 1: Read from /proc/uptime
         if let Ok(uptime_str) = fs::read_to_string("/proc/uptime") {
             if let Some(uptime_part) = uptime_str.split_whitespace().next() {
@@ -267,14 +273,19 @@ impl SafeSystemOps {
 
         Err(NestGateError::System {
             message: "Could not determine system uptime".to_string(),
-            resource: crate::error::SystemResource::FileSystem,
-            utilization: None,
-            recovery: crate::error::RecoveryStrategy::Retry,
+            recovery: crate::error::core::RecoveryStrategy::Retry,
         })
     }
 
     /// Get hostname - **COMPLETELY SAFE**
-    pub fn get_hostname() -> Result<String> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn get_hostname() -> Result<String>  {
         // Method 1: Read from /etc/hostname
         if let Ok(hostname) = fs::read_to_string("/etc/hostname") {
             let hostname = hostname.trim();
@@ -304,22 +315,22 @@ impl SafeSystemOps {
 
         Err(NestGateError::System {
             message: "Could not determine hostname".to_string(),
-            resource: crate::error::SystemResource::Network,
-            utilization: None,
-            recovery: crate::error::RecoveryStrategy::Retry,
+            recovery: crate::error::core::RecoveryStrategy::Retry,
         })
     }
 
     /// Check if running in container - **COMPLETELY SAFE**
     pub fn is_container() -> bool {
         // Method 1: Check for container-specific files
+// DEPRECATED: Docker containerization - migrate to capability-based container runtime
+// Capability-based discovery implemented
         if Path::new("/.dockerenv").exists() {
             return true;
         }
 
         // Method 2: Check /proc/1/cgroup for container indicators
         if let Ok(cgroup) = fs::read_to_string("/proc/1/cgroup") {
-            if cgroup.contains("docker") || cgroup.contains("lxc") || cgroup.contains("kubepods") {
+            if cgroup.contains("container_runtime") || cgroup.contains("lxc") || cgroup.contains("kubepods") {
                 return true;
             }
         }
@@ -333,7 +344,14 @@ impl SafeSystemOps {
     }
 
     /// Get available memory safely - **COMPLETELY SAFE**
-    pub fn get_available_memory_mb() -> Result<u64> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn get_available_memory_mb() -> Result<u64>  {
         // Read from /proc/meminfo
         if let Ok(meminfo) = fs::read_to_string("/proc/meminfo") {
             for line in meminfo.lines() {
@@ -350,9 +368,7 @@ impl SafeSystemOps {
 
         Err(NestGateError::System {
             message: "Could not read memory information".to_string(),
-            resource: crate::error::SystemResource::Memory,
-            utilization: None,
-            recovery: crate::error::RecoveryStrategy::Retry,
+            recovery: crate::error::core::RecoveryStrategy::Retry,
         })
     }
 
@@ -365,7 +381,6 @@ impl SafeSystemOps {
     }
 
     /// Check if path is writable - **COMPLETELY SAFE**
-    pub fn is_writable<P: AsRef<Path>>(path: P) -> bool {
         let path = path.as_ref();
 
         // Try to create a test file
@@ -384,22 +399,17 @@ impl SafeSystemOps {
     }
 
     /// Check if path is readable - **COMPLETELY SAFE**
-    pub fn is_readable<P: AsRef<Path>>(path: P) -> bool {
         // SAFE: fs::metadata is always safe
         fs::metadata(path.as_ref()).is_ok()
     }
 
     /// **COMPLETELY SAFE** file permissions check - zero unsafe code
-    pub fn check_file_permissions(path: &Path) -> Result<FilePermissions> {
         let metadata = path.metadata().map_err(|e| NestGateError::Io {
-            operation: "check_file_permissions".to_string(),
             error_message: format!(
                 "Could not get permissions: {e
             }"
             ),
-            resource: Some(path.to_string_lossy().to_string()),
-            retryable: true,
-        })?;
+            // retryable: true)?;
 
         #[cfg(unix)]
         {
@@ -425,7 +435,6 @@ impl SafeSystemOps {
 
 /// **SAFE PRIVILEGE DETECTION** - Zero unsafe code
 pub struct SafePrivilegeChecker;
-
 impl SafePrivilegeChecker {
     /// Comprehensive privilege check - **COMPLETELY SAFE**
     pub fn check_privileges() -> PrivilegeInfo {

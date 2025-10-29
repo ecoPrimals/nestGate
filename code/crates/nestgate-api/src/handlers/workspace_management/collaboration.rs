@@ -1,40 +1,90 @@
 //
 // Sharing and collaboration functionality for workspaces.
-// These are stub implementations that can be extended when
-// user management and UI components are available.
+// These features require external dependencies for user management and authentication.
 
 use axum::{extract::Json, extract::Path, http::StatusCode};
-use serde_json::{json, Value};
+use serde_json::Value;
 use tracing::info;
-// Removed unused tracing import
 
-/// Share workspace (COLLABORATION FEATURE)
-/// Note: This is beyond core storage scope - implement if needed
-pub async fn share_workspace(Path(workspace_id): Path<String>) -> Result<Json<Value>, StatusCode> {
-    info!("🤝 Sharing workspace: {}", workspace_id);
+/// Share workspace (REQUIRES AUTHENTICATION & USER MANAGEMENT)
+/// This feature requires Security security module and Management UI components
+pub fn share_workspace(Path(workspace_id): Path<String>) -> Result<Json<Value>, StatusCode> {
+    info!("🤝 Workspace sharing requested for: {}", workspace_id);
+    // Workspace sharing requires external dependencies:
+    // - Authentication and authorization (Security security module)
+    // - User management system
+    // - Permission management
+    // - UI components for sharing interface (Management)
 
-    // STUB: Sharing is a collaboration feature that may be implemented later
-    // This involves user management (security module's domain) and UI (biomeOS's domain)
-
-    Ok(Json(json!({
-        "status": "stub",
-        "message": "Workspace sharing feature not yet implemented",
-        "workspace_id": workspace_id,
-        "note": "This feature requires integration with security module (auth) and biomeOS (UI)"
-    })))
+    Err(StatusCode::NOT_IMPLEMENTED)
 }
 
-/// Unshare workspace (COLLABORATION FEATURE)
-pub async fn unshare_workspace(
-    Path(workspace_id): Path<String>,
-) -> Result<Json<Value>, StatusCode> {
-    info!("🔒 Unsharing workspace: {}", workspace_id);
+/// Unshare workspace (REQUIRES AUTHENTICATION & USER MANAGEMENT)
+/// This feature requires Security security module and Management UI components
+pub fn unshare_workspace(Path(workspace_id): Path<String>) -> Result<Json<Value>, StatusCode> {
+    info!("🔒 Workspace unsharing requested for: {}", workspace_id);
+    // Workspace unsharing requires external dependencies:
+    // - Authentication and authorization (Security security module)
+    // - User management system
+    // - Permission revocation system
 
-    // STUB: Unsharing is a collaboration feature that may be implemented later
+    Err(StatusCode::NOT_IMPLEMENTED)
+}
 
-    Ok(Json(json!({
-        "status": "stub",
-        "message": "Workspace unsharing feature not yet implemented",
-        "workspace_id": workspace_id
-    })))
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use axum::extract::Path;
+
+    #[test]
+    fn test_share_workspace_returns_not_implemented() {
+        let workspace_id = "test-workspace".to_string();
+        let result = share_workspace(Path(workspace_id));
+
+        // Should return NOT_IMPLEMENTED status
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), StatusCode::NOT_IMPLEMENTED);
+    }
+
+    #[test]
+    fn test_unshare_workspace_returns_not_implemented() {
+        let workspace_id = "test-workspace".to_string();
+        let result = unshare_workspace(Path(workspace_id));
+
+        // Should return NOT_IMPLEMENTED status
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), StatusCode::NOT_IMPLEMENTED);
+    }
+
+    #[test]
+    fn test_share_workspace_with_various_ids() {
+        let workspace_ids = vec![
+            "workspace-1",
+            "org-123-ws",
+            "my_workspace",
+            "test-ws-abc-123",
+        ];
+
+        for workspace_id in workspace_ids {
+            let result = share_workspace(Path(workspace_id.to_string()));
+            assert!(result.is_err());
+            assert_eq!(result.unwrap_err(), StatusCode::NOT_IMPLEMENTED);
+        }
+    }
+
+    #[test]
+    fn test_unshare_workspace_with_various_ids() {
+        let workspace_ids = vec![
+            "workspace-1",
+            "org-123-ws",
+            "my_workspace",
+            "test-ws-abc-123",
+        ];
+
+        for workspace_id in workspace_ids {
+            let result = unshare_workspace(Path(workspace_id.to_string()));
+            assert!(result.is_err());
+            assert_eq!(result.unwrap_err(), StatusCode::NOT_IMPLEMENTED);
+        }
+    }
 }

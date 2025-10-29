@@ -1,16 +1,17 @@
 pub mod access_patterns;
+pub mod cache_config;
 pub mod error_types;
-pub mod network_config;
+// pub mod network_config; // Module file removed - NetworkConfig defined inline below
 pub mod retry_config;
+pub mod service_config;
 pub mod service_metadata;
-/// Unified Types Module System
-/// This module system breaks down the large unified_types.rs file into manageable,
-/// focused modules while maintaining the unified architecture principles.
+// Unified Types Module System
+// This module system breaks down the large unified_types.rs file into manageable,
+// focused modules while maintaining the unified architecture principles.
 /// **ACHIEVEMENT**: Reduces file sizes to <2k lines while preserving functionality
 // Core configuration modules
 pub mod timeout_config;
 // Note: unified_storage_types was already created in the root unified_types/ directory
-
 // Re-export all types for backward compatibility and ease of use
 pub use access_patterns::{AccessTimePattern, UnifiedAccessPatterns};
 pub use error_types::{
@@ -18,16 +19,19 @@ pub use error_types::{
     UnifiedErrorSeverity, UnifiedErrorStatistics, UnifiedErrorType, UnifiedRequestContext,
     UnifiedSystemContext, UnifiedUserContext,
 };
-pub use network_config::{
-    LoadBalanceHealthCheck, NetworkLoadBalanceConfig, NetworkProxyConfig, NetworkQosConfig,
-    NetworkRateLimitConfig, NetworkTlsConfig, UnifiedNetworkConfig,
-};
+// pub use network_config::{
+//     LoadBalanceHealthCheck, NetworkLoadBalanceConfig, NetworkProxyConfig, NetworkQosConfig,
+//     NetworkRateLimitConfig, NetworkTlsConfig, UnifiedNetworkConfig,
+// }; // Module removed - use canonical_master network config instead
 pub use retry_config::UnifiedRetryConfig;
 pub use service_metadata::{
     CommunicationProtocol, ContactInfo, EndpointType, HealthState, ResourceRequirements,
     ServiceCapability, ServiceEndpoint, ServiceStatus, UniversalServiceMetadata,
     UniversalServiceMetadataBuilder,
 };
+
+// Service configuration types - defined inline in this file
+// pub use UnifiedServiceConfig; // Already public in this module
 // Migration utilities removed - system is mature
 pub use timeout_config::UnifiedTimeoutConfig;
 // Storage types moved to unified_types - define locally if needed
@@ -36,11 +40,12 @@ pub use timeout_config::UnifiedTimeoutConfig;
 // };
 
 // Re-export unified enums for easy access alongside config types
+pub use crate::unified_enums::storage_types::UnifiedStorageType;
 pub use crate::unified_enums::{
     UnifiedAccessType, UnifiedAlertSeverity, UnifiedAlertType, UnifiedConnectionStatus,
     UnifiedContentType, UnifiedDataType, UnifiedEventType, UnifiedFileType, UnifiedHealthStatus,
     UnifiedIntegrationType, UnifiedMessageType, UnifiedOperationType, UnifiedProtocolType,
-    UnifiedProxyType, UnifiedServiceType, UnifiedStorageType, UnifiedTestType, UnifiedTierType,
+    UnifiedProxyType, UnifiedServiceType, UnifiedTestType, UnifiedTierType,
 };
 
 // Additional unified types needed by the system
@@ -53,7 +58,12 @@ pub enum UnifiedConfigSource {
     Remote(String),
 }
 
-/// Network configuration for backward compatibility
+// Network configuration for backward compatibility
+/// **⚠️ DEPRECATED**: Use `CanonicalNetworkConfig` from `canonical_master::domains::network`
+#[deprecated(
+    since = "0.9.0",
+    note = "Use canonical_master::domains::network::CanonicalNetworkConfig instead"
+)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkConfig {
     pub host: String,
@@ -62,25 +72,26 @@ pub struct NetworkConfig {
     pub timeout_ms: u64,
     pub max_connections: usize,
 }
-
-/// Helper function for response verification
+// Helper function for response verification
 pub fn verify_response(response: &serde_json::Value) -> Result<bool, crate::NestGateError> {
     match response.get("success") {
         Some(serde_json::Value::Bool(success)) => Ok(*success),
         _ => Ok(false),
     }
 }
-
 // Imports for remaining types that haven't been modularized yet
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::time::{Duration, SystemTime};
+use std::time::Duration;
+// CLEANED: Removed unused SystemTime import as part of canonical modernization
+// CANONICAL MODERNIZATION: Migrated from deprecated UnifiedConfig
+use crate::config::canonical_master::NestGateCanonicalConfig as UnifiedConfig;
 
-// ==================== REMAINING UNIFIED CONFIGURATIONS ====================
+// ==================== SECTION ====================
 // These will be moved to dedicated modules in subsequent phases
 
-/// Unified Security Configuration - consolidates all security settings
-/// **WILL BE MOVED**: To security_config.rs module
+// Unified Security Configuration - consolidates all security settings
+// **WILL BE MOVED**: To security_config.rs module
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnifiedSecurityConfig {
     /// Enable security features
@@ -97,7 +108,6 @@ pub struct UnifiedSecurityConfig {
     pub cert_config: CertificateConfig,
     /// Security timeout overrides
     pub security_timeouts: UnifiedTimeoutConfig,
-
     // Legacy compatibility fields - direct access
     /// Authentication method (legacy compatibility)
     pub auth_method: String,
@@ -108,9 +118,7 @@ pub struct UnifiedSecurityConfig {
     /// Enable TLS (legacy compatibility)
     pub enable_tls: bool,
     /// Certificate path (legacy compatibility)
-    pub cert_path: Option<String>,
     /// Private key path (legacy compatibility)
-    pub key_path: Option<String>,
     /// Encryption algorithm (legacy compatibility)
     pub encryption_algorithm: String,
     /// Key rotation days (legacy compatibility)
@@ -137,7 +145,7 @@ pub struct UnifiedSecurityConfig {
     pub retry: UnifiedRetryConfig,
 }
 
-/// Authentication configuration
+// Authentication configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthConfig {
     /// Authentication method (jwt, oauth2, basic)
@@ -153,8 +161,7 @@ pub struct AuthConfig {
     /// Session configuration
     pub session_config: SessionConfig,
 }
-
-/// Session management configuration
+// Session management configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SessionConfig {
     /// Session timeout
@@ -166,8 +173,7 @@ pub struct SessionConfig {
     /// Secure cookie settings
     pub secure_cookies: bool,
 }
-
-/// Encryption configuration
+// Encryption configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EncryptionConfig {
     /// Enable encryption
@@ -179,8 +185,7 @@ pub struct EncryptionConfig {
     /// Key rotation interval
     pub key_rotation_interval: Duration,
 }
-
-/// Access control configuration
+// Access control configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AccessControlConfig {
     /// Enable role-based access control
@@ -192,8 +197,7 @@ pub struct AccessControlConfig {
     /// Access control lists
     pub acls: HashMap<String, Vec<String>>,
 }
-
-/// Security audit configuration
+// Security audit configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuditConfig {
     /// Enable audit logging
@@ -205,8 +209,7 @@ pub struct AuditConfig {
     /// Log sensitive data
     pub log_sensitive_data: bool,
 }
-
-/// Certificate management configuration
+// Certificate management configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CertificateConfig {
     /// Auto-generate certificates
@@ -216,18 +219,14 @@ pub struct CertificateConfig {
     /// Certificate authority settings
     pub ca_config: Option<CaConfig>,
 }
-
-/// Certificate Authority configuration
+// Certificate Authority configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CaConfig {
     /// CA certificate path
-    pub cert_path: String,
     /// CA private key path
-    pub key_path: String,
     /// CA common name
     pub common_name: String,
 }
-
 impl Default for UnifiedSecurityConfig {
     fn default() -> Self {
         Self {
@@ -275,8 +274,6 @@ impl Default for UnifiedSecurityConfig {
             require_auth: true,
             max_failed_attempts: 3,
             enable_tls: false,
-            cert_path: None,
-            key_path: None,
             encryption_algorithm: "aes-256-gcm".to_string(),
             key_rotation_days: 30,
             allowed_origins: vec!["*".to_string()],
@@ -293,72 +290,33 @@ impl Default for UnifiedSecurityConfig {
     }
 }
 
-/// **THE** Master Unified Configuration - consolidates ALL system configuration
-/// This is the root configuration structure that ties everything together
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct UnifiedConfig {
-    /// Service identification and metadata
-    pub service: UnifiedServiceConfig,
-    /// Network configuration
-    pub network: UnifiedNetworkConfig,
-    /// Security configuration
-    pub security: UnifiedSecurityConfig,
-    /// Global timeout configuration
-    pub timeouts: UnifiedTimeoutConfig,
-    /// Global retry configuration
-    pub retry: UnifiedRetryConfig,
-    /// Monitoring and telemetry configuration
-    pub monitoring: UnifiedMonitoringConfig,
-    /// Cache configuration
-    pub cache: UnifiedCacheConfig,
-    /// Storage configuration
-    pub storage: UnifiedStorageConfig,
-    /// Memory configuration
-    pub memory: UnifiedMemoryConfig,
-    /// Connection pool configuration
-    pub connection_pool: UnifiedConnectionPoolConfig,
-    /// Environment-specific settings
-    pub environment: HashMap<String, serde_json::Value>,
-    /// Feature flags
-    pub features: HashMap<String, bool>,
-    /// Configuration version for compatibility
-    pub config_version: String,
-    /// Configuration timestamp
-    pub config_timestamp: SystemTime,
-
-    // Legacy compatibility fields
-    /// Minimum connections (legacy compatibility)
-    pub min_connections: usize,
-    /// Health check interval (legacy compatibility)
-    pub health_check_interval: Duration,
-    /// Health check timeout (legacy compatibility)
-    pub health_check_timeout: Duration,
-    /// Preferred network interfaces (legacy compatibility)
-    pub preferred_interfaces: Vec<String>,
-    /// Port scan range (legacy compatibility)
-    pub port_scan_range: String,
-    /// Scan timeout (legacy compatibility)
-    pub scan_timeout: Duration,
-    /// Custom configuration values (legacy compatibility)
-    pub custom: HashMap<String, serde_json::Value>,
-    /// Discovery endpoint (legacy compatibility)
-    pub discovery_endpoint: String,
-    /// Installer configuration
-    pub installer: UnifiedInstallerConfig,
-}
+// **THE** Master Unified Configuration - consolidates ALL system configuration
+// This is the root configuration structure that ties everything together
+// PEDANTIC: Removed duplicate derive macro - conflicts resolved
+// ==================== SECTION ====================
+//
+// **DEPRECATED**: This UnifiedConfig definition is superseded by the canonical
+// NestGateCanonicalConfig in crate::config::canonical_master. Use the canonical version instead.
+//
+// **MIGRATION PATH**:
+// - Old: use crate::unified_types::UnifiedConfig
+// - New: use crate::config::canonical_master::NestGateCanonicalConfig
+//
+// ==================== SECTION ====================
+// UnifiedConfig has been removed. Use crate::config::canonical_master::NestGateCanonicalConfig instead.
+// Deprecated struct completely removed - use canonical_master::NestGateCanonicalConfig
 
 // Placeholder implementations for configurations not yet modularized
 // These will be moved to their respective modules
 
-/// Service configuration placeholder
-#[derive(Debug, Clone, Serialize, Deserialize)]
+// Service configuration placeholder
+#[derive(Debug, Clone, Serialize, Deserialize)] // PEDANTIC: Single derive macro only
 pub struct UnifiedServiceConfig {
     pub name: String,
     pub version: String,
     pub description: String,
     pub service_name: String,
     pub service_type: crate::unified_enums::UnifiedServiceType,
-    pub environment: String,
     pub enabled: bool,
     pub auto_start: bool,
     pub priority: u8,
@@ -370,7 +328,6 @@ pub struct UnifiedServiceConfig {
     pub timeouts: UnifiedTimeoutConfig,
     pub retry: UnifiedRetryConfig,
 }
-
 impl Default for UnifiedServiceConfig {
     fn default() -> Self {
         Self {
@@ -382,7 +339,6 @@ impl Default for UnifiedServiceConfig {
             service_name: std::env::var("NESTGATE_SERVICE_NAME")
                 .unwrap_or_else(|_| format!("nestgate-{}", uuid::Uuid::new_v4().simple())),
             service_type: crate::unified_enums::UnifiedServiceType::Storage,
-            environment: "development".to_string(),
             enabled: true,
             auto_start: true,
             priority: 5,
@@ -397,7 +353,7 @@ impl Default for UnifiedServiceConfig {
     }
 }
 
-/// Monitoring configuration placeholder
+// Monitoring configuration placeholder
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnifiedMonitoringConfig {
     pub enabled: bool,
@@ -408,7 +364,6 @@ pub struct UnifiedMonitoringConfig {
     pub enable_tracing: bool,
     pub log_level: String,
 }
-
 impl Default for UnifiedMonitoringConfig {
     fn default() -> Self {
         Self {
@@ -423,7 +378,7 @@ impl Default for UnifiedMonitoringConfig {
     }
 }
 
-/// Cache configuration placeholder
+// Cache configuration placeholder
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnifiedCacheConfig {
     pub enabled: bool,
@@ -445,13 +400,11 @@ pub struct UnifiedCacheConfig {
     pub enable_metrics: bool,
     pub metrics_interval_seconds: u64,
     pub enable_persistence: bool,
-    pub persistence_path: String,
     pub persistence_interval_seconds: u64,
     pub max_memory_percent: f64,
     pub enable_lru: bool,
     pub concurrent_threads: u32,
 }
-
 impl Default for UnifiedCacheConfig {
     fn default() -> Self {
         Self {
@@ -474,7 +427,6 @@ impl Default for UnifiedCacheConfig {
             enable_metrics: true,
             metrics_interval_seconds: 60,
             enable_persistence: false,
-            persistence_path: "/var/lib/nestgate/cache-persist".to_string(),
             persistence_interval_seconds: 300,
             max_memory_percent: 0.8,
             enable_lru: true,
@@ -483,29 +435,84 @@ impl Default for UnifiedCacheConfig {
     }
 }
 
-/// Storage configuration placeholder
+impl UnifiedCacheConfig {
+    /// Development cache configuration with debugging enabled
+    #[must_use]
+    pub fn development() -> Self {
+        Self {
+            enabled: true,
+            max_size: 100,
+            ttl: Duration::from_secs(60),
+            ttl_seconds: 60,
+            hot_tier_size: 10 * 1024 * 1024,  // 10MB
+            warm_tier_size: 50 * 1024 * 1024, // 50MB
+            cold_tier_unlimited: false,
+            cache_dir: "/tmp/nestgate-dev-cache".to_string(),
+            policy: "lru".to_string(),
+            name: "development-cache".to_string(),
+            eviction_policy: "lru".to_string(),
+            enable_compression: false,
+            compression_level: 1,
+            default_ttl_seconds: 60,
+            enable_metrics: true,
+            metrics_interval_seconds: 30,
+            enable_persistence: false,
+            persistence_interval_seconds: 60,
+            max_memory_percent: 0.5,
+            enable_lru: true,
+            concurrent_threads: 2,
+        }
+    }
+
+    /// High performance cache configuration for production
+    #[must_use]
+    pub fn high_performance() -> Self {
+        Self {
+            enabled: true,
+            max_size: 10000,
+            ttl: Duration::from_secs(600),
+            ttl_seconds: 600,
+            hot_tier_size: 500 * 1024 * 1024,       // 500MB
+            warm_tier_size: 2 * 1024 * 1024 * 1024, // 2GB
+            cold_tier_unlimited: true,
+            cache_dir: "/var/lib/nestgate/cache-performance".to_string(),
+            policy: "lfu".to_string(),
+            name: "high-performance-cache".to_string(),
+            eviction_policy: "lfu".to_string(),
+            enable_compression: true,
+            compression_level: 3,
+            default_ttl_seconds: 600,
+            enable_metrics: true,
+            metrics_interval_seconds: 10,
+            enable_persistence: true,
+            persistence_interval_seconds: 120,
+            max_memory_percent: 0.9,
+            enable_lru: false,
+            concurrent_threads: 8,
+        }
+    }
+}
+
+// Storage configuration placeholder
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnifiedStorageConfig {
     pub enabled: bool,
     pub backend: String,
     pub pool_name: String,
-    pub data_path: String,
     pub cache: UnifiedCacheConfig,
 }
-
 impl Default for UnifiedStorageConfig {
     fn default() -> Self {
         Self {
             enabled: true,
             backend: "zfs".to_string(),
             pool_name: "nestgate".to_string(),
-            data_path: "/var/lib/nestgate".to_string(),
             cache: UnifiedCacheConfig::default(),
         }
     }
 }
 
-/// Memory configuration placeholder
+// Memory configuration placeholder
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnifiedMemoryConfig {
     pub enabled: bool,
@@ -513,7 +520,6 @@ pub struct UnifiedMemoryConfig {
     pub gc_threshold: f64,
     pub buffer_pools: bool,
 }
-
 impl Default for UnifiedMemoryConfig {
     fn default() -> Self {
         Self {
@@ -525,7 +531,7 @@ impl Default for UnifiedMemoryConfig {
     }
 }
 
-/// Connection pool configuration placeholder  
+// Connection pool configuration placeholder
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnifiedConnectionPoolConfig {
     pub enabled: bool,
@@ -545,7 +551,6 @@ pub struct UnifiedConnectionPoolConfig {
     pub enable_metrics: bool,
     pub pool_name: String,
 }
-
 impl Default for UnifiedConnectionPoolConfig {
     fn default() -> Self {
         Self {
@@ -569,7 +574,7 @@ impl Default for UnifiedConnectionPoolConfig {
     }
 }
 
-/// Performance test configuration placeholder
+// Performance test configuration placeholder
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnifiedPerformanceTestConfig {
     pub enabled: bool,
@@ -586,7 +591,6 @@ pub struct UnifiedPerformanceTestConfig {
     pub max_timeout_seconds: u64,
     pub percentile_target: f64,
 }
-
 impl Default for UnifiedPerformanceTestConfig {
     fn default() -> Self {
         Self {
@@ -607,40 +611,10 @@ impl Default for UnifiedPerformanceTestConfig {
     }
 }
 
-// Note: UnifiedConfig, UnifiedServiceConfig, etc. are automatically exported
+// Note: UnifiedServiceConfig, etc. are automatically exported
 // because they're defined as pub structs in this module
 
-impl Default for UnifiedConfig {
-    fn default() -> Self {
-        Self {
-            service: UnifiedServiceConfig::default(),
-            network: UnifiedNetworkConfig::default(),
-            security: UnifiedSecurityConfig::default(),
-            timeouts: UnifiedTimeoutConfig::default(),
-            retry: UnifiedRetryConfig::default(),
-            monitoring: UnifiedMonitoringConfig::default(),
-            cache: UnifiedCacheConfig::default(),
-            storage: UnifiedStorageConfig::default(),
-            memory: UnifiedMemoryConfig::default(),
-            connection_pool: UnifiedConnectionPoolConfig::default(),
-            environment: HashMap::new(),
-            features: HashMap::new(),
-            config_version: "2.0.0".to_string(),
-            config_timestamp: SystemTime::now(),
-            min_connections: 10_usize,
-            health_check_interval: Duration::from_secs(30),
-            health_check_timeout: Duration::from_secs(5),
-            preferred_interfaces: vec!["eth0".to_string(), "wlan0".to_string()],
-            port_scan_range: "1-65535".to_string(),
-            scan_timeout: Duration::from_secs(10),
-            custom: HashMap::new(),
-            discovery_endpoint: "http://localhost:8080/discovery".to_string(),
-            installer: UnifiedInstallerConfig::default(),
-        }
-    }
-}
-
-/// Installer configuration placeholder
+// Installer configuration placeholder
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnifiedInstallerConfig {
     pub enabled: bool,
@@ -655,7 +629,6 @@ pub struct UnifiedInstallerConfig {
     pub enable_systemd: bool,
     pub components: HashMap<String, bool>,
 }
-
 impl Default for UnifiedInstallerConfig {
     fn default() -> Self {
         Self {
@@ -681,30 +654,9 @@ impl Default for UnifiedInstallerConfig {
 }
 
 impl UnifiedConfig {
-    /// Create a production-optimized configuration
-    pub fn production() -> Self {
-        Self {
-            network: UnifiedNetworkConfig::production(),
-            timeouts: UnifiedTimeoutConfig::production(),
-            retry: UnifiedRetryConfig::slow(),
-            ..Default::default()
-        }
-    }
-
-    /// Create a development-optimized configuration
-    pub fn development() -> Self {
-        Self {
-            network: UnifiedNetworkConfig::development(),
-            timeouts: UnifiedTimeoutConfig::development(),
-            retry: UnifiedRetryConfig::fast(),
-            ..Default::default()
-        }
-    }
-
-    /// Validate the entire configuration
-    pub fn validate(&self) -> crate::Result<()> {
-        // Implementation would validate unified storage configuration
-        // For now, this is a placeholder
-        Ok(())
+    // PEDANTIC: Implementation methods
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
     }
 }

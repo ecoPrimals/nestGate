@@ -1,6 +1,6 @@
-//! Example Data Capability Providers
-//!
-//! These are reference implementations showing how external data sources
+// Example Data Capability Providers
+//! Module definitions and exports.
+// These are reference implementations showing how external data sources
 //! can implement NestGate's universal data capabilities. Any system that
 //! can provide genome data, model data, or research data can implement
 //! these interfaces without NestGate knowing their specific identity.

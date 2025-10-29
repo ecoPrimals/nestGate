@@ -8,7 +8,7 @@ use std::time::Duration;
 
 /// Test basic metrics collection
 #[test]
-fn test_basic_metrics_collection() {
+async fn test_basic_metrics_collection() -> Result<(), Box<dyn std::error::Error>> {
     let mut collector = MetricsCollector::new();
     
     // Test counter metrics
@@ -19,11 +19,12 @@ fn test_basic_metrics_collection() {
     assert_eq!(collector.get_counter("requests_total"), Some(2));
     assert_eq!(collector.get_counter("errors_total"), Some(1));
     assert_eq!(collector.get_counter("nonexistent"), None);
+    Ok(())
 }
 
 /// Test gauge metrics
 #[test]
-fn test_gauge_metrics() {
+async fn test_gauge_metrics() -> Result<(), Box<dyn std::error::Error>> {
     let mut collector = MetricsCollector::new();
     
     // Test setting gauge values
@@ -38,11 +39,12 @@ fn test_gauge_metrics() {
     // Test updating gauge values
     collector.set_gauge("cpu_usage", 80.0);
     assert_eq!(collector.get_gauge("cpu_usage"), Some(80.0));
+    Ok(())
 }
 
 /// Test histogram metrics
 #[test]
-fn test_histogram_metrics() {
+async fn test_histogram_metrics() -> Result<(), Box<dyn std::error::Error>> {
     let mut collector = MetricsCollector::new();
     
     // Test recording histogram values
@@ -60,12 +62,13 @@ fn test_histogram_metrics() {
         assert_eq!(hist.average(), 0.1875);
         assert_eq!(hist.min(), 0.1);
         assert_eq!(hist.max(), 0.3);
-    }
+    Ok(())
+}
 }
 
 /// Test metrics with labels
 #[test]
-fn test_metrics_with_labels() {
+async fn test_metrics_with_labels() -> Result<(), Box<dyn std::error::Error>> {
     let mut collector = MetricsCollector::new();
     
     // Test labeled metrics
@@ -78,11 +81,12 @@ fn test_metrics_with_labels() {
     
     assert_eq!(collector.get_counter_with_labels("http_requests_total", &labels), Some(2));
     assert_eq!(collector.get_counter_with_labels("http_requests_total", &labels_404), Some(1));
+    Ok(())
 }
 
 /// Test metrics timing utilities
 #[test]
-fn test_metrics_timing() {
+async fn test_metrics_timing() -> Result<(), Box<dyn std::error::Error>> {
     let mut collector = MetricsCollector::new();
     
     // Test timing a block of code
@@ -101,12 +105,13 @@ fn test_metrics_timing() {
     if let Some(hist) = histogram {
         assert_eq!(hist.count(), 1);
         assert!(hist.sum() >= 0.01); // At least 10ms in seconds
-    }
+    Ok(())
+}
 }
 
 /// Test metrics export formats
 #[test]
-fn test_metrics_export() {
+async fn test_metrics_export() -> Result<(), Box<dyn std::error::Error>> {
     let mut collector = MetricsCollector::new();
     
     // Add various metrics
@@ -127,13 +132,14 @@ fn test_metrics_export() {
     assert!(json_output.contains("test_histogram"));
     
     // Verify JSON is valid
-    let parsed: serde_json::Value = serde_json::from_str(&json_output).unwrap();
+    let parsed: serde_json::Value = serde_json::from_str(&json_output)?;
     assert!(parsed.is_object());
+    Ok(())
 }
 
 /// Test metrics aggregation
 #[test]
-fn test_metrics_aggregation() {
+async fn test_metrics_aggregation() -> Result<(), Box<dyn std::error::Error>> {
     let mut collector1 = MetricsCollector::new();
     let mut collector2 = MetricsCollector::new();
     
@@ -155,11 +161,12 @@ fn test_metrics_aggregation() {
     
     // Gauges should use the latest value (from collector2)
     assert_eq!(merged.get_gauge("shared_gauge"), Some(20.0));
+    Ok(())
 }
 
 /// Test metrics thresholds and alerts
 #[test]
-fn test_metrics_thresholds() {
+async fn test_metrics_thresholds() -> Result<(), Box<dyn std::error::Error>> {
     let mut collector = MetricsCollector::new();
     
     // Set up threshold monitoring
@@ -184,11 +191,12 @@ fn test_metrics_thresholds() {
     let alerts = collector.check_thresholds();
     assert_eq!(alerts.len(), 1);
     assert_eq!(alerts[0].level, AlertLevel::Critical);
+    Ok(())
 }
 
 /// Test metrics persistence and recovery
 #[tokio::test]
-async fn test_metrics_persistence() {
+async fn test_metrics_persistence() -> Result<(), Box<dyn std::error::Error>> {
     init_test_logging();
     
     let mut collector = MetricsCollector::new();
@@ -211,11 +219,12 @@ async fn test_metrics_persistence() {
     // Verify metrics were restored
     assert_eq!(new_collector.get_counter("persistent_counter"), Some(2));
     assert_eq!(new_collector.get_gauge("persistent_gauge"), Some(123.45));
+    Ok(())
 }
 
 /// Test concurrent metrics collection
 #[tokio::test]
-async fn test_concurrent_metrics() {
+async fn test_concurrent_metrics() -> Result<(), Box<dyn std::error::Error>> {
     init_test_logging();
     
     let collector = std::sync::Arc::new(std::sync::Mutex::new(MetricsCollector::new()));
@@ -226,36 +235,41 @@ async fn test_concurrent_metrics() {
         let collector_clone = collector.clone();
         let handle = tokio::spawn(async move {
             for _ in 0..100 {
-                let mut c = collector_clone.lock().unwrap();
+                let mut c = collector_clone.lock()?;
                 c.increment_counter(&format!("thread_{}_counter", i));
                 c.set_gauge(&format!("thread_{}_gauge", i), i as f64 * 10.0);
+    Ok(())
             }
         });
         handles.push(handle);
+    Ok(())
     }
     
     // Wait for all tasks to complete
     for handle in handles {
-        handle.await.unwrap();
+        handle.await?;
+    Ok(())
     }
     
     // Verify all metrics were recorded correctly
-    let final_collector = collector.lock().unwrap();
+    let final_collector = collector.lock()?;
     for i in 0..10 {
         assert_eq!(final_collector.get_counter(&format!("thread_{}_counter", i)), Some(100));
         assert_eq!(final_collector.get_gauge(&format!("thread_{}_gauge", i)), Some(i as f64 * 10.0));
-    }
+    Ok(())
+}
 }
 
 /// Test metrics cleanup and rotation
 #[test]
-fn test_metrics_cleanup() {
+fn test_metrics_cleanup() -> Result<(), Box<dyn std::error::Error>> {
     let mut collector = MetricsCollector::new();
     
     // Add many metrics
     for i in 0..1000 {
         collector.increment_counter(&format!("counter_{}", i));
         collector.set_gauge(&format!("gauge_{}", i), i as f64);
+    Ok(())
     }
     
     // Verify metrics count
@@ -274,11 +288,12 @@ fn test_metrics_cleanup() {
     collector.clear_all_metrics();
     assert_eq!(collector.counter_count(), 0);
     assert_eq!(collector.gauge_count(), 0);
+    Ok(())
 }
 
 /// Comprehensive metrics integration test
 #[test]
-fn test_comprehensive_metrics_workflow() {
+fn test_comprehensive_metrics_workflow() -> Result<(), Box<dyn std::error::Error>> {
     let mut collector = MetricsCollector::new();
     
     // Simulate a web server metrics scenario
@@ -317,9 +332,13 @@ fn test_comprehensive_metrics_workflow() {
                         _ => 0.1,
                     };
                     collector.record_histogram("http_response_duration", response_time);
+    Ok(())
                 }
+    Ok(())
             }
+    Ok(())
         }
+    Ok(())
     }
     
     // Test that we have realistic metrics
@@ -330,7 +349,7 @@ fn test_comprehensive_metrics_workflow() {
     assert_eq!(collector.get_counter_with_labels("http_requests_total", &error_labels), Some(2));
     
     // Verify histogram data
-    let response_histogram = collector.get_histogram("http_response_duration").unwrap();
+    let response_histogram = collector.get_histogram("http_response_duration")?;
     assert!(response_histogram.count() > 0);
     assert!(response_histogram.average() > 0.0);
     

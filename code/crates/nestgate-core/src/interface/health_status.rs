@@ -3,7 +3,6 @@
 /// **CONSOLIDATION**: Unifies health status patterns across the system
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
 /// Universal health status enumeration
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum HealthStatus {
@@ -16,7 +15,6 @@ pub enum HealthStatus {
     /// Service status cannot be determined
     Unknown,
 }
-
 impl Default for HealthStatus {
     fn default() -> Self {
         Self::Unknown
@@ -26,7 +24,7 @@ impl Default for HealthStatus {
 impl HealthStatus {
     /// Check if the status represents a healthy state
     pub fn is_healthy(&self) -> bool {
-        matches!(self, HealthStatus::Healthy)
+        matches!(self, Self::Healthy)
     }
 
     /// Check if the status represents an unhealthy state
@@ -57,13 +55,10 @@ pub struct HealthCheckResult {
     /// Optional error message
     pub error: Option<String>,
 }
-
 /// Unified health status type alias for compatibility
 pub type UnifiedHealthStatus = HealthStatus;
-
 /// Health state type alias for compatibility
 pub type HealthState = HealthStatus;
-
 /// Service metrics for health monitoring
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnifiedServiceMetrics {

@@ -3,7 +3,6 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
-
 /// Scheduling settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SchedulingSettings {
@@ -16,8 +15,7 @@ pub struct SchedulingSettings {
     /// Max concurrent tasks
     pub max_concurrent: u32,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ScheduledTask {
     /// Task name
     pub name: String,
@@ -28,7 +26,6 @@ pub struct ScheduledTask {
     /// Task timeout
     pub timeout: Duration,
 }
-
 impl SmartDefault for SchedulingSettings {
     fn smart_default() -> Self {
         Self {

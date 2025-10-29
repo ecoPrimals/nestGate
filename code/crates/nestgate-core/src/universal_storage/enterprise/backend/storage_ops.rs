@@ -1,14 +1,12 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 use std::future::Future;
 
-use std::future::Future;
 
 use std::time::SystemTime;
 
-use crate::{Result, NestGateError};
+use crate::{Result};
+use crate::error::StorageResult; // Use canonical StorageResult
 
-/// Storage operation result type
-pub type StorageResult<T> = Result<T>;
 use crate::universal_storage::{
     canonical_storage::{
         CanonicalStorageBackend, CanonicalStorageHealth, CanonicalStorageMetadata,
@@ -21,18 +19,17 @@ use super::core::EnterpriseStorageBackend;
 impl CanonicalStorageBackend for EnterpriseStorageBackend {
     async fn capabilities(
         &self,
-    ) -> Result<Vec<crate::canonical_modernization::UnifiedServiceType>> {
+    ) -> Result<Vec<crate::unified_enums::UnifiedServiceType>> {
         // Convert ServiceCapability to UnifiedServiceType for trait compatibility
         Ok(vec![
-            crate::canonical_modernization::UnifiedServiceType::Storage,
-            crate::canonical_modernization::UnifiedServiceType::Network,
-            crate::canonical_modernization::UnifiedServiceType::Security,
-            crate::canonical_modernization::UnifiedServiceType::Monitoring,
-            crate::canonical_modernization::UnifiedServiceType::Generic,
+            crate::unified_enums::UnifiedServiceType::Storage,
+            crate::unified_enums::UnifiedServiceType::Network,
+            crate::unified_enums::UnifiedServiceType::Security,
+            crate::unified_enums::UnifiedServiceType::Monitoring,
+            crate::unified_enums::UnifiedServiceType::Generic,
         ])
     }
 
-    fn read(&self, path: &str) -> impl Future<Output = StorageResult<Vec<u8>>> + Send {
         let path = path.to_string();
         let full_path = self.full_path(&path);
         let metrics = self.metrics.clone();
@@ -55,7 +52,7 @@ impl CanonicalStorageBackend for EnterpriseStorageBackend {
                     metrics_guard.concurrent_operations.saturating_add(1);
                 if result.is_ok() {
                     if let Ok(data) = &result {
-                        metrics_guard.throughput_mb_per_sec += data.len() as f64 / 1024.0 / 1024.0;
+                        metrics_guard.throughput_mb_per_sec += ((data.len() as f64)) / 1024.0 / 1024.0;
                     }
                 } else {
                     metrics_guard.error_rate += 0.01; // Increment error rate
@@ -67,7 +64,6 @@ impl CanonicalStorageBackend for EnterpriseStorageBackend {
         }
     }
 
-    fn write(&self, path: &str, data: &[u8]) -> impl Future<Output = StorageResult<()>> + Send {
         let path = path.to_string();
         let full_path = self.full_path(&path);
         let data = data.to_vec();
@@ -102,7 +98,7 @@ impl CanonicalStorageBackend for EnterpriseStorageBackend {
                 metrics_guard.concurrent_operations =
                     metrics_guard.concurrent_operations.saturating_add(1);
                 if result.is_ok() {
-                    metrics_guard.throughput_mb_per_sec += data.len() as f64 / 1024.0 / 1024.0;
+                    metrics_guard.throughput_mb_per_sec += ((data.len() as f64)) / 1024.0 / 1024.0;
                 } else {
                     metrics_guard.error_rate += 0.01; // Increment error rate
                 }
@@ -113,7 +109,6 @@ impl CanonicalStorageBackend for EnterpriseStorageBackend {
         }
     }
 
-    fn delete(&self, path: &str) -> impl Future<Output = StorageResult<()>> + Send {
         let path = path.to_string();
         let full_path = self.full_path(&path);
         let metrics = self.metrics.clone();
@@ -145,7 +140,6 @@ impl CanonicalStorageBackend for EnterpriseStorageBackend {
         }
     }
 
-    fn list(&self, path: &str) -> impl Future<Output = StorageResult<Vec<String>>> + Send {
         let path = path.to_string();
         let full_path = self.full_path(&path);
 
@@ -181,7 +175,6 @@ impl CanonicalStorageBackend for EnterpriseStorageBackend {
 
     fn metadata(
         &self,
-        path: &str,
     ) -> impl Future<Output = StorageResult<CanonicalStorageMetadata>> + Send {
         let path = path.to_string();
         let full_path = self.full_path(&path);
@@ -197,7 +190,6 @@ impl CanonicalStorageBackend for EnterpriseStorageBackend {
                     ))?;
 
             Ok(CanonicalStorageMetadata {
-                path: path.clone(),
                 size: metadata.len(),
                 created: metadata.created().unwrap_or(SystemTime::now()),
                 modified: metadata.modified().unwrap_or(SystemTime::now()),

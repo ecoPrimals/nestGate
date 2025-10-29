@@ -4,7 +4,6 @@ use std::collections::HashMap;
 // that were previously scattered across different modules.
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::time::SystemTime;
 
 /// **SERVICE CAPABILITY**
@@ -23,7 +22,6 @@ pub struct ServiceCapability {
     /// Whether this capability is enabled
     pub enabled: bool,
 }
-
 impl Default for ServiceCapability {
     fn default() -> Self {
         Self {
@@ -66,7 +64,6 @@ pub struct UniversalServiceMetadata {
     /// Service status
     pub status: ServiceStatus,
 }
-
 impl Default for UniversalServiceMetadata {
     fn default() -> Self {
         let now = SystemTime::now();
@@ -95,7 +92,7 @@ pub struct ServiceEndpoint {
     /// Endpoint name
     pub name: String,
     /// Endpoint URL or address
-    pub address: String,
+    pub endpoint: String,
     /// Endpoint port
     pub port: u16,
     /// Endpoint protocol
@@ -105,12 +102,11 @@ pub struct ServiceEndpoint {
     /// Endpoint metadata
     pub metadata: HashMap<String, String>,
 }
-
 impl Default for ServiceEndpoint {
     fn default() -> Self {
         Self {
             name: "default".to_string(),
-            address: "localhost".to_string(),
+            endpoint: "localhost".to_string(),
             port: 8080,
             protocol: "http".to_string(),
             secure: false,
@@ -133,7 +129,6 @@ pub struct ServiceDependency {
     /// Dependency metadata
     pub metadata: HashMap<String, String>,
 }
-
 impl Default for ServiceDependency {
     fn default() -> Self {
         Self {
@@ -165,7 +160,6 @@ pub enum ServiceStatus {
     /// Service status is unknown
     Unknown,
 }
-
 impl Default for ServiceStatus {
     fn default() -> Self {
         Self::Unknown

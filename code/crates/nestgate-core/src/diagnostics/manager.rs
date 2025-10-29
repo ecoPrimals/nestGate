@@ -1,11 +1,10 @@
+use super::{Diagnostic, DiagnosticLevel, SystemMetrics};
+use crate::unified_enums::UnifiedHealthStatus as HealthStatus;
+use crate::{NestGateError, Result};
 /// Diagnostics Management
-/// This module contains the main DiagnosticsManager for coordinating system diagnostics.
+/// This module contains the main `DiagnosticsManager` for coordinating system diagnostics.
 use std::sync::{Arc, RwLock};
 use tokio::sync::broadcast;
-
-use super::{Diagnostic, DiagnosticLevel, SystemMetrics};
-use crate::error::{NestGateError, Result};
-use crate::unified_enums::UnifiedHealthStatus as HealthStatus;
 
 /// Main diagnostics manager
 pub struct DiagnosticsManager {
@@ -16,9 +15,9 @@ pub struct DiagnosticsManager {
     /// System metrics cache
     metrics: Arc<RwLock<SystemMetrics>>,
 }
-
 impl DiagnosticsManager {
     /// Create a new diagnostics manager
+    #[must_use]
     pub fn new() -> Self {
         let (event_sender, _) = broadcast::channel(1000);
 
@@ -30,6 +29,13 @@ impl DiagnosticsManager {
     }
 
     /// Add a diagnostic entry
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub fn add_diagnostic(&self, _diagnostic: Diagnostic) -> Result<()> {
         // Implementation would add diagnostic to storage
         // For now, this is a placeholder
@@ -37,30 +43,48 @@ impl DiagnosticsManager {
     }
 
     /// Get all diagnostics
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub fn get_diagnostics(&self) -> Result<Vec<Diagnostic>> {
-        let diagnostics = self
-            .diagnostics
-            .read()
-            .map_err(|_| NestGateError::Internal {
-                message: "Failed to acquire diagnostics read lock".to_string(),
-                location: Some(file!().to_string()),
-                debug_info: None,
-                is_bug: false,
-            })?;
+        let diagnostics = self.diagnostics.read().map_err(|_| {
+            NestGateError::internal_error(
+                "Failed to acquire diagnostics read lock",
+                "diagnostics_manager",
+            )
+        })?;
 
         Ok(diagnostics.clone())
     }
 
     /// Get unresolved diagnostics
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub fn get_unresolved_diagnostics(&self) -> Result<Vec<Diagnostic>> {
         let diagnostics = self.get_diagnostics()?;
         Ok(diagnostics
             .into_iter()
-            .filter(|d| d.is_unresolved())
+            .filter(super::diagnostic::Diagnostic::is_unresolved)
             .collect())
     }
 
     /// Calculate overall health status
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub fn calculate_health_status(&self) -> Result<HealthStatus> {
         let diagnostics = self.get_unresolved_diagnostics()?;
 
@@ -94,11 +118,19 @@ impl DiagnosticsManager {
     }
 
     /// Subscribe to diagnostic events
+    #[must_use]
     pub fn subscribe(&self) -> broadcast::Receiver<Diagnostic> {
         self.event_sender.subscribe()
     }
 
     /// Update system metrics
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub fn update_metrics(&self, _metrics: SystemMetrics) -> Result<()> {
         // Implementation would update internal metrics storage
         // For now, this is a placeholder that accepts metrics
@@ -106,31 +138,42 @@ impl DiagnosticsManager {
     }
 
     /// Get current system metrics
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub fn get_metrics(&self) -> Result<SystemMetrics> {
-        let metrics = self.metrics.read().map_err(|_| NestGateError::Internal {
-            message: "Failed to acquire metrics read lock".to_string(),
-            location: Some(file!().to_string()),
-            debug_info: None,
-            is_bug: false,
+        let metrics = self.metrics.read().map_err(|_| {
+            NestGateError::internal_error(
+                "Failed to acquire metrics read lock",
+                "diagnostics_manager",
+            )
         })?;
 
         Ok(metrics.clone())
     }
 
     /// Clear all resolved diagnostics
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub fn clear_resolved(&self) -> Result<usize> {
-        let mut diagnostics = self
-            .diagnostics
-            .write()
-            .map_err(|_| NestGateError::Internal {
-                message: "Failed to acquire diagnostics write lock".to_string(),
-                location: Some(file!().to_string()),
-                debug_info: None,
-                is_bug: false,
-            })?;
+        let mut diagnostics = self.diagnostics.write().map_err(|_| {
+            NestGateError::internal_error(
+                "Failed to acquire diagnostics write lock",
+                "diagnostics_manager",
+            )
+        })?;
 
         let original_count = diagnostics.len();
-        diagnostics.retain(|d| d.is_unresolved());
+        diagnostics.retain(super::diagnostic::Diagnostic::is_unresolved);
         let cleared_count = original_count - diagnostics.len();
 
         Ok(cleared_count)

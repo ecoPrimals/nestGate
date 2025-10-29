@@ -14,29 +14,30 @@
 // - Kernel bypass networking where available
 
 use std::io::{IoSlice, IoSliceMut};
+use std::marker::PhantomData;
 use std::net::SocketAddr;
 use std::sync::Arc;
-use std::marker::PhantomData;
-// **CANONICAL MODERNIZATION**: Use canonical error types and reference internal modules
+// **CANONICAL MODERNIZATION**: Use canonical error types and SAFE concurrent structures
+use crate::safe_concurrent::{SafeConcurrentHashMap, SafeConcurrentQueue};
 use nestgate_core::error::{NestGateError, Result};
-use crate::lock_free_structures::{LockFreeMpscQueue, LockFreeHashMap};
 // Removed unresolved ZeroCostSimdProcessor import
 
-// ==================== ZERO-COPY BUFFER MANAGEMENT ====================
+// ==================== SECTION ====================
 
 /// **ZERO-COPY BUFFER POOL**
-/// 
+///
 /// Memory pool for zero-copy networking operations
 /// Pre-allocated buffers eliminate allocation overhead during I/O
-pub struct ZeroCopyBufferPool<const BUFFER_SIZE: usize = 65536, const POOL_SIZE: usize = 1024> {
-    available_buffers: LockFreeMpscQueue<ZeroCopyBuffer<BUFFER_SIZE>>,
+///
+/// **✅ 100% SAFE** - Uses safe concurrent queue (zero unsafe code)
+pub struct ZeroCopyBufferPool<const BUFFER_SIZE: usize = 65_536, const POOL_SIZE: usize = 1024> {
+    available_buffers: SafeConcurrentQueue<ZeroCopyBuffer<BUFFER_SIZE>>,
     total_buffers: std::sync::atomic::AtomicUsize,
     buffer_hits: std::sync::atomic::AtomicU64,
     buffer_misses: std::sync::atomic::AtomicU64,
 }
-
 /// **ZERO-COPY BUFFER**
-/// 
+///
 /// Pre-allocated buffer for zero-copy operations
 /// Aligned for optimal DMA and SIMD performance
 #[repr(align(64))] // Cache line aligned for optimal performance
@@ -46,12 +47,12 @@ pub struct ZeroCopyBuffer<const SIZE: usize> {
     capacity: usize,
     reference_count: std::sync::atomic::AtomicUsize,
 }
-
-impl<const BUFFER_SIZE: usize, const POOL_SIZE: usize> ZeroCopyBufferPool<BUFFER_SIZE, POOL_SIZE> {
-    /// Create new zero-copy buffer pool
-    pub fn new() -> Self {
+impl<const BUFFER_SIZE: usize, const POOL_SIZE: usize> Default
+    for ZeroCopyBufferPool<BUFFER_SIZE, POOL_SIZE>
+{
+    fn default() -> Self {
         let pool = Self {
-            available_buffers: LockFreeMpscQueue::new(),
+            available_buffers: SafeConcurrentQueue::new(),
             total_buffers: std::sync::atomic::AtomicUsize::new(0),
             buffer_hits: std::sync::atomic::AtomicU64::new(0),
             buffer_misses: std::sync::atomic::AtomicU64::new(0),
@@ -60,20 +61,32 @@ impl<const BUFFER_SIZE: usize, const POOL_SIZE: usize> ZeroCopyBufferPool<BUFFER
         // Pre-allocate buffers
         for _ in 0..POOL_SIZE {
             let buffer = ZeroCopyBuffer::new();
-            pool.available_buffers.enqueue(buffer);
-            pool.total_buffers.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            pool.available_buffers.push(buffer); // ✅ SAFE
+            pool.total_buffers
+                .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         }
 
         pool
     }
+}
+
+impl<const BUFFER_SIZE: usize, const POOL_SIZE: usize> ZeroCopyBufferPool<BUFFER_SIZE, POOL_SIZE> {
+    /// Create new zero-copy buffer pool (100% SAFE)
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
+    }
 
     /// Get buffer from pool (zero-copy acquisition)
     pub fn acquire_buffer(&self) -> Option<ZeroCopyBuffer<BUFFER_SIZE>> {
-        if let Some(buffer) = self.available_buffers.dequeue() {
-            self.buffer_hits.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        if let Some(buffer) = self.available_buffers.try_pop() {
+            // ✅ SAFE
+            self.buffer_hits
+                .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
             Some(buffer)
         } else {
-            self.buffer_misses.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            self.buffer_misses
+                .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
             // Fallback: create new buffer (rare case)
             Some(ZeroCopyBuffer::new())
         }
@@ -82,29 +95,40 @@ impl<const BUFFER_SIZE: usize, const POOL_SIZE: usize> ZeroCopyBufferPool<BUFFER
     /// Return buffer to pool (zero-copy release)
     pub fn release_buffer(&self, mut buffer: ZeroCopyBuffer<BUFFER_SIZE>) {
         buffer.reset();
-        self.available_buffers.enqueue(buffer);
+        self.available_buffers.push(buffer); // ✅ SAFE
     }
 
     /// Get pool statistics
     pub fn stats(&self) -> BufferPoolStats {
         BufferPoolStats {
-            total_buffers: self.total_buffers.load(std::sync::atomic::Ordering::Relaxed),
+            total_buffers: self
+                .total_buffers
+                .load(std::sync::atomic::Ordering::Relaxed),
             available_buffers: self.available_buffers.len(),
             buffer_hits: self.buffer_hits.load(std::sync::atomic::Ordering::Relaxed),
-            buffer_misses: self.buffer_misses.load(std::sync::atomic::Ordering::Relaxed),
+            buffer_misses: self
+                .buffer_misses
+                .load(std::sync::atomic::Ordering::Relaxed),
         }
     }
 }
 
-impl<const SIZE: usize> ZeroCopyBuffer<SIZE> {
-    /// Create new zero-copy buffer
-    pub fn new() -> Self {
+impl<const SIZE: usize> Default for ZeroCopyBuffer<SIZE> {
+    fn default() -> Self {
         Self {
             data: [0u8; SIZE],
             length: 0,
             capacity: SIZE,
             reference_count: std::sync::atomic::AtomicUsize::new(1),
         }
+    }
+}
+
+impl<const SIZE: usize> ZeroCopyBuffer<SIZE> {
+    /// Create new zero-copy buffer
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
     }
 
     /// Get buffer data as slice
@@ -135,7 +159,8 @@ impl<const SIZE: usize> ZeroCopyBuffer<SIZE> {
     /// Reset buffer for reuse
     pub fn reset(&mut self) {
         self.length = 0;
-        self.reference_count.store(1, std::sync::atomic::Ordering::Relaxed);
+        self.reference_count
+            .store(1, std::sync::atomic::Ordering::Relaxed);
     }
 
     /// Get buffer capacity
@@ -147,6 +172,11 @@ impl<const SIZE: usize> ZeroCopyBuffer<SIZE> {
     pub fn len(&self) -> usize {
         self.length
     }
+
+    /// Check if buffer is empty
+    pub fn is_empty(&self) -> bool {
+        self.length == 0
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -157,31 +187,37 @@ pub struct BufferPoolStats {
     pub buffer_misses: u64,
 }
 
-// ==================== ZERO-COPY NETWORK INTERFACE ====================
+// ==================== SECTION ====================
 
 /// **ZERO-COPY NETWORK INTERFACE**
-/// 
+///
 /// High-performance networking interface with zero-copy I/O
 /// Integrates with kernel bypass and hardware acceleration
-pub struct ZeroCopyNetworkInterface<const BUFFER_SIZE: usize = 65536> {
+///
+/// **✅ 100% SAFE** - Uses safe concurrent structures (zero unsafe code)
+pub struct ZeroCopyNetworkInterface<const BUFFER_SIZE: usize = 65_536> {
     buffer_pool: Arc<ZeroCopyBufferPool<BUFFER_SIZE, 1024>>,
-    connection_registry: LockFreeHashMap<String, Arc<ZeroCopyConnection>>,
-    // TODO: Re-integrate SIMD processor when available
+    connection_registry: SafeConcurrentHashMap<String, Arc<ZeroCopyConnection<BUFFER_SIZE>>>,
+    /// SIMD processor for high-performance packet processing (feature-gated)
+    // TODO: Re-enable when simd_optimizations_advanced module is properly exposed
+    // #[cfg(feature = "simd")]
+    // simd_processor: Arc<crate::simd_optimizations_advanced::SimdBulkProcessor<BUFFER_SIZE>>,
     stats: NetworkStats,
 }
-
 /// **ZERO-COPY CONNECTION**
-/// 
+///
 /// Individual network connection with zero-copy capabilities
-pub struct ZeroCopyConnection {
+///
+/// **✅ 100% SAFE** - Uses safe concurrent queues (zero unsafe code)
+#[allow(dead_code)]
+pub struct ZeroCopyConnection<const BUFFER_SIZE: usize = 65_536> {
     connection_id: u64,
     remote_addr: SocketAddr,
     local_addr: SocketAddr,
-    tx_queue: LockFreeMpscQueue<ZeroCopyBuffer<65536>>,
-    rx_queue: LockFreeMpscQueue<ZeroCopyBuffer<65536>>,
+    tx_queue: SafeConcurrentQueue<ZeroCopyBuffer<BUFFER_SIZE>>,
+    rx_queue: SafeConcurrentQueue<ZeroCopyBuffer<BUFFER_SIZE>>,
     connection_stats: ConnectionStats,
 }
-
 #[derive(Debug, Default)]
 pub struct NetworkStats {
     pub bytes_sent: std::sync::atomic::AtomicU64,
@@ -191,7 +227,6 @@ pub struct NetworkStats {
     pub zero_copy_operations: std::sync::atomic::AtomicU64,
     pub cpu_cycles_saved: std::sync::atomic::AtomicU64,
 }
-
 #[derive(Debug, Default)]
 pub struct ConnectionStats {
     pub bytes_transmitted: std::sync::atomic::AtomicU64,
@@ -200,53 +235,80 @@ pub struct ConnectionStats {
     pub last_activity: std::sync::atomic::AtomicU64,
 }
 
-impl<const BUFFER_SIZE: usize> ZeroCopyNetworkInterface<BUFFER_SIZE> {
-    /// Create new zero-copy network interface
-    pub fn new() -> Self {
+impl<const BUFFER_SIZE: usize> Default for ZeroCopyNetworkInterface<BUFFER_SIZE> {
+    fn default() -> Self {
         Self {
             buffer_pool: Arc::new(ZeroCopyBufferPool::new()),
-            connection_registry: LockFreeHashMap::with_capacity(1024),
-            // TODO: Re-integrate SIMD processor when available
+            connection_registry: SafeConcurrentHashMap::with_capacity(1024),
+            // SIMD processor initialization (feature-gated for optimal performance)
+            // TODO: Re-enable when simd_optimizations_advanced module is properly exposed
+            // #[cfg(feature = "simd")]
+            // simd_processor: Arc::new(crate::simd_optimizations_advanced::SimdBulkProcessor::new()),
             stats: NetworkStats::default(),
         }
     }
+}
+
+impl<const BUFFER_SIZE: usize> ZeroCopyNetworkInterface<BUFFER_SIZE> {
+    /// Create new zero-copy network interface (100% SAFE)
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
+    }
 
     /// Establish zero-copy connection
-    pub async fn connect(&self, remote_addr: SocketAddr) -> Result<u64> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+    pub fn connect(&self, remote_addr: SocketAddr) -> Result<u64> {
         let connection_id = self.generate_connection_id(&remote_addr);
-        
+
         // Create zero-copy connection
         let connection = Arc::new(ZeroCopyConnection {
             connection_id,
             remote_addr,
-            local_addr: "0.0.0.0:0".parse().unwrap(), // Would be set by actual socket
-            tx_queue: LockFreeMpscQueue::new(),
-            rx_queue: LockFreeMpscQueue::new(),
+            local_addr: "0.0.0.0:0".parse().map_err(|e| {
+                NestGateError::network_error(&format!("Failed to parse local endpoint: {e}"))
+            })?,
+            tx_queue: SafeConcurrentQueue::new(),
+            rx_queue: SafeConcurrentQueue::new(),
             connection_stats: ConnectionStats::default(),
         });
 
         // Register connection
-        self.connection_registry.insert(connection_id.to_string(), connection);
+        self.connection_registry
+            .insert(connection_id.to_string(), connection);
 
-        tracing::info!("Zero-copy connection established: {} -> {}", 
-                      connection_id, remote_addr);
+        tracing::info!(
+            "Zero-copy connection established: {} -> {}",
+            connection_id,
+            remote_addr
+        );
 
         Ok(connection_id)
     }
 
     /// Send data with zero-copy optimization
-    /// PERFORMANCE: 5-20x improvement over traditional send()
-    pub async fn zero_copy_send(
-        &self,
-        connection_id: u64,
-        data: &[u8],
-    ) -> Result<usize> {
+    /// PERFORMANCE: 5-20x improvement over traditional `send()`
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+    pub fn zero_copy_send(&self, connection_id: u64, data: &[u8]) -> Result<usize> {
         let connection = self.get_connection(connection_id)?;
-        
+
         // Acquire buffer from pool (zero allocation)
-        let mut buffer = self.buffer_pool
+        let mut buffer = self
+            .buffer_pool
             .acquire_buffer()
-            .ok_or_else(|| NestGateError::network_error("No buffers available", "buffer_pool", None))?;
+            .ok_or_else(|| NestGateError::network_error("No buffers available in buffer pool"))?;
 
         // Direct copy to buffer (SIMD optimization available when processor is integrated)
         let copy_len = data.len().min(buffer.capacity());
@@ -254,37 +316,65 @@ impl<const BUFFER_SIZE: usize> ZeroCopyNetworkInterface<BUFFER_SIZE> {
         buffer.set_length(copy_len);
 
         // Queue for zero-copy transmission
-        connection.tx_queue.enqueue(buffer);
+        connection.tx_queue.push(buffer); // ✅ SAFE
 
         // Update statistics
-        self.stats.bytes_sent.fetch_add(data.len() as u64, std::sync::atomic::Ordering::Relaxed);
-        self.stats.packets_sent.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        self.stats.zero_copy_operations.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        self.stats
+            .bytes_sent
+            .fetch_add(data.len() as u64, std::sync::atomic::Ordering::Relaxed);
+        self.stats
+            .packets_sent
+            .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        self.stats
+            .zero_copy_operations
+            .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
 
         // Simulate CPU cycles saved (zero-copy eliminates memory copy overhead)
         let cycles_saved = (data.len() as u64) * 2; // Rough estimate
-        self.stats.cpu_cycles_saved.fetch_add(cycles_saved, std::sync::atomic::Ordering::Relaxed);
+        self.stats
+            .cpu_cycles_saved
+            .fetch_add(cycles_saved, std::sync::atomic::Ordering::Relaxed);
 
-        tracing::debug!("Zero-copy send queued: {} bytes on connection {}", data.len(), connection_id);
-        
+        tracing::debug!(
+            "Zero-copy send queued: {} bytes on connection {}",
+            data.len(),
+            connection_id
+        );
+
         Ok(data.len())
     }
 
     /// Receive data with zero-copy optimization
     /// PERFORMANCE: Direct buffer access without intermediate copies
-    pub async fn zero_copy_receive(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+    pub fn zero_copy_receive(
         &self,
         connection_id: u64,
     ) -> Result<Option<ZeroCopyBuffer<BUFFER_SIZE>>> {
         let connection = self.get_connection(connection_id)?;
-        
-        if let Some(buffer) = connection.rx_queue.dequeue() {
+
+        if let Some(buffer) = connection.rx_queue.try_pop() {
+            // ✅ SAFE
             // Update statistics
-            self.stats.bytes_received.fetch_add(buffer.len() as u64, std::sync::atomic::Ordering::Relaxed);
-            self.stats.packets_received.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-            
-            tracing::debug!("Zero-copy receive: {} bytes on connection {}", buffer.len(), connection_id);
-            
+            self.stats
+                .bytes_received
+                .fetch_add(buffer.len() as u64, std::sync::atomic::Ordering::Relaxed);
+            self.stats
+                .packets_received
+                .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+
+            tracing::debug!(
+                "Zero-copy receive: {} bytes on connection {}",
+                buffer.len(),
+                connection_id
+            );
+
             Ok(Some(buffer))
         } else {
             Ok(None)
@@ -293,68 +383,96 @@ impl<const BUFFER_SIZE: usize> ZeroCopyNetworkInterface<BUFFER_SIZE> {
 
     /// Vectored I/O send (scatter-gather)
     /// PERFORMANCE: Single system call for multiple buffers
-    pub async fn vectored_send(
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+    pub fn vectored_send(
         &self,
         connection_id: u64,
         buffers: &[ZeroCopyBuffer<BUFFER_SIZE>],
     ) -> Result<usize> {
         let _connection = self.get_connection(connection_id)?;
-        
+
         // Create IoSlice array for vectored I/O
-        let io_slices: Vec<IoSlice> = buffers.iter()
-            .map(|buf| buf.as_io_slice())
-            .collect();
+        let _io_slices: Vec<IoSlice> = buffers.iter().map(|buf| buf.as_io_slice()).collect();
 
         // In a real implementation, this would use writev() system call
         // For now, simulate the operation
-        let total_bytes: usize = buffers.iter().map(|buf| buf.len()).sum();
-        
+        let total_bytes: usize = buffers.iter().map(ZeroCopyBuffer::len).sum();
+
         // Update statistics
-        self.stats.bytes_sent.fetch_add(total_bytes as u64, std::sync::atomic::Ordering::Relaxed);
-        self.stats.packets_sent.fetch_add(buffers.len() as u64, std::sync::atomic::Ordering::Relaxed);
-        
-        tracing::debug!("Vectored send: {} bytes in {} buffers on connection {}", 
-                       total_bytes, buffers.len(), connection_id);
-        
+        self.stats
+            .bytes_sent
+            .fetch_add(total_bytes as u64, std::sync::atomic::Ordering::Relaxed);
+        self.stats
+            .packets_sent
+            .fetch_add(buffers.len() as u64, std::sync::atomic::Ordering::Relaxed);
+
+        tracing::debug!(
+            "Vectored send: {} bytes in {} buffers on connection {}",
+            total_bytes,
+            buffers.len(),
+            connection_id
+        );
+
         Ok(total_bytes)
     }
 
     /// Get network interface statistics
     pub fn get_stats(&self) -> NetworkInterfaceStats {
         let pool_stats = self.buffer_pool.stats();
-        
+
         NetworkInterfaceStats {
-            bytes_sent: self.stats.bytes_sent.load(std::sync::atomic::Ordering::Relaxed),
-            bytes_received: self.stats.bytes_received.load(std::sync::atomic::Ordering::Relaxed),
-            packets_sent: self.stats.packets_sent.load(std::sync::atomic::Ordering::Relaxed),
-            packets_received: self.stats.packets_received.load(std::sync::atomic::Ordering::Relaxed),
-            zero_copy_operations: self.stats.zero_copy_operations.load(std::sync::atomic::Ordering::Relaxed),
-            cpu_cycles_saved: self.stats.cpu_cycles_saved.load(std::sync::atomic::Ordering::Relaxed),
+            bytes_sent: self
+                .stats
+                .bytes_sent
+                .load(std::sync::atomic::Ordering::Relaxed),
+            bytes_received: self
+                .stats
+                .bytes_received
+                .load(std::sync::atomic::Ordering::Relaxed),
+            packets_sent: self
+                .stats
+                .packets_sent
+                .load(std::sync::atomic::Ordering::Relaxed),
+            packets_received: self
+                .stats
+                .packets_received
+                .load(std::sync::atomic::Ordering::Relaxed),
+            zero_copy_operations: self
+                .stats
+                .zero_copy_operations
+                .load(std::sync::atomic::Ordering::Relaxed),
+            cpu_cycles_saved: self
+                .stats
+                .cpu_cycles_saved
+                .load(std::sync::atomic::Ordering::Relaxed),
             active_connections: self.connection_registry.len(),
             buffer_pool_stats: pool_stats,
         }
     }
 
     // Helper methods
-    fn get_connection(&self, connection_id: u64) -> Result<Arc<ZeroCopyConnection>> {
+    fn get_connection(&self, connection_id: u64) -> Result<Arc<ZeroCopyConnection<BUFFER_SIZE>>> {
         self.connection_registry
             .get(&connection_id.to_string())
-            .ok_or_else(|| NestGateError::network_error("connection", "Connection not found", None))
+            .ok_or_else(|| NestGateError::network_error("Connection not found"))
     }
 
     fn generate_connection_id(&self, remote_addr: &SocketAddr) -> u64 {
         // Simple hash-based connection ID generation
         use std::collections::hash_map::DefaultHasher;
         use std::hash::{Hash, Hasher};
-        
+
         let mut hasher = DefaultHasher::new();
         remote_addr.hash(&mut hasher);
-        std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_nanos()
-            .hash(&mut hasher);
-        
+        if let Ok(duration) = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH) {
+            duration.as_nanos().hash(&mut hasher);
+        }
         hasher.finish()
     }
 }
@@ -371,10 +489,10 @@ pub struct NetworkInterfaceStats {
     pub buffer_pool_stats: BufferPoolStats,
 }
 
-// ==================== KERNEL BYPASS NETWORKING ====================
+// ==================== SECTION ====================
 
 /// **KERNEL BYPASS NETWORK ADAPTER**
-/// 
+///
 /// Direct hardware access for maximum performance
 /// Bypasses kernel network stack for ultra-low latency
 pub struct KernelBypassAdapter<const RING_SIZE: usize = 4096> {
@@ -383,9 +501,8 @@ pub struct KernelBypassAdapter<const RING_SIZE: usize = 4096> {
     hardware_stats: HardwareStats,
     _phantom: PhantomData<()>,
 }
-
 /// **ZERO-COPY RING BUFFER**
-/// 
+///
 /// Lock-free ring buffer for kernel bypass networking
 /// Direct DMA integration with network hardware
 pub struct ZeroCopyRing<const SIZE: usize> {
@@ -394,7 +511,6 @@ pub struct ZeroCopyRing<const SIZE: usize> {
     tail: std::sync::atomic::AtomicUsize,
     _phantom: PhantomData<()>,
 }
-
 #[derive(Debug)]
 pub struct HardwareStats {
     pub dma_transfers: std::sync::atomic::AtomicU64,
@@ -407,10 +523,22 @@ impl Clone for HardwareStats {
     fn clone(&self) -> Self {
         use std::sync::atomic::AtomicU64;
         Self {
-            dma_transfers: AtomicU64::new(self.dma_transfers.load(std::sync::atomic::Ordering::Relaxed)),
-            hardware_interrupts: AtomicU64::new(self.hardware_interrupts.load(std::sync::atomic::Ordering::Relaxed)),
-            kernel_bypassed_packets: AtomicU64::new(self.kernel_bypassed_packets.load(std::sync::atomic::Ordering::Relaxed)),
-            latency_microseconds: AtomicU64::new(self.latency_microseconds.load(std::sync::atomic::Ordering::Relaxed)),
+            dma_transfers: AtomicU64::new(
+                self.dma_transfers
+                    .load(std::sync::atomic::Ordering::Relaxed),
+            ),
+            hardware_interrupts: AtomicU64::new(
+                self.hardware_interrupts
+                    .load(std::sync::atomic::Ordering::Relaxed),
+            ),
+            kernel_bypassed_packets: AtomicU64::new(
+                self.kernel_bypassed_packets
+                    .load(std::sync::atomic::Ordering::Relaxed),
+            ),
+            latency_microseconds: AtomicU64::new(
+                self.latency_microseconds
+                    .load(std::sync::atomic::Ordering::Relaxed),
+            ),
         }
     }
 }
@@ -426,9 +554,8 @@ impl Default for HardwareStats {
     }
 }
 
-impl<const RING_SIZE: usize> KernelBypassAdapter<RING_SIZE> {
-    /// Create new kernel bypass adapter
-    pub fn new() -> Self {
+impl<const RING_SIZE: usize> Default for KernelBypassAdapter<RING_SIZE> {
+    fn default() -> Self {
         Self {
             tx_ring: ZeroCopyRing::new(),
             rx_ring: ZeroCopyRing::new(),
@@ -436,8 +563,23 @@ impl<const RING_SIZE: usize> KernelBypassAdapter<RING_SIZE> {
             _phantom: PhantomData,
         }
     }
+}
+
+impl<const RING_SIZE: usize> KernelBypassAdapter<RING_SIZE> {
+    /// Create new kernel bypass adapter
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
+    }
 
     /// Initialize hardware for kernel bypass
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub fn initialize_hardware(&mut self) -> Result<()> {
         // In a real implementation, this would:
         // 1. Map hardware registers
@@ -445,36 +587,61 @@ impl<const RING_SIZE: usize> KernelBypassAdapter<RING_SIZE> {
         // 3. Configure interrupt handling
         // 4. Enable kernel bypass mode
 
-        tracing::info!("Kernel bypass adapter initialized with {} ring entries", RING_SIZE);
+        tracing::info!(
+            "Kernel bypass adapter initialized with {} ring entries",
+            RING_SIZE
+        );
         Ok(())
     }
 
     /// Send packet with direct hardware access
     /// PERFORMANCE: Sub-microsecond latency, no kernel overhead
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub fn hardware_send(&mut self, buffer: ZeroCopyBuffer<2048>) -> Result<()> {
         // Direct DMA transmission
         if let Some(slot) = self.tx_ring.acquire_slot() {
             self.tx_ring.set_buffer(slot, buffer)?;
-            
+
             // Trigger hardware transmission (would be hardware register write)
-            self.hardware_stats.dma_transfers.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-            self.hardware_stats.kernel_bypassed_packets.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-            
+            self.hardware_stats
+                .dma_transfers
+                .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            self.hardware_stats
+                .kernel_bypassed_packets
+                .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+
             tracing::trace!("Hardware send initiated for slot {}", slot);
             Ok(())
         } else {
-            Err(NestGateError::network_error("hardware_send", "No available TX slots", None))
+            Err(NestGateError::network_error(
+                "No available TX slots for hardware send",
+            ))
         }
     }
 
     /// Receive packet from hardware
     /// PERFORMANCE: Direct DMA access, zero-copy from NIC
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub fn hardware_receive(&mut self) -> Result<Option<ZeroCopyBuffer<2048>>> {
         if let Some(slot) = self.rx_ring.completed_slot() {
             let buffer = self.rx_ring.take_buffer(slot)?;
-            
-            self.hardware_stats.hardware_interrupts.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-            
+
+            self.hardware_stats
+                .hardware_interrupts
+                .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+
             tracing::trace!("Hardware receive completed for slot {}", slot);
             Ok(Some(buffer))
         } else {
@@ -488,9 +655,8 @@ impl<const RING_SIZE: usize> KernelBypassAdapter<RING_SIZE> {
     }
 }
 
-impl<const SIZE: usize> ZeroCopyRing<SIZE> {
-    /// Create new zero-copy ring buffer
-    pub fn new() -> Self {
+impl<const SIZE: usize> Default for ZeroCopyRing<SIZE> {
+    fn default() -> Self {
         Self {
             buffers: [const { None }; SIZE],
             head: std::sync::atomic::AtomicUsize::new(0),
@@ -498,15 +664,24 @@ impl<const SIZE: usize> ZeroCopyRing<SIZE> {
             _phantom: PhantomData,
         }
     }
+}
+
+impl<const SIZE: usize> ZeroCopyRing<SIZE> {
+    /// Create new zero-copy ring buffer
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
+    }
 
     /// Acquire slot for transmission
     pub fn acquire_slot(&self) -> Option<usize> {
         let head = self.head.load(std::sync::atomic::Ordering::Acquire);
         let next_head = (head + 1) % SIZE;
         let tail = self.tail.load(std::sync::atomic::Ordering::Acquire);
-        
+
         if next_head != tail {
-            self.head.store(next_head, std::sync::atomic::Ordering::Release);
+            self.head
+                .store(next_head, std::sync::atomic::Ordering::Release);
             Some(head)
         } else {
             None
@@ -517,7 +692,7 @@ impl<const SIZE: usize> ZeroCopyRing<SIZE> {
     pub fn completed_slot(&self) -> Option<usize> {
         let tail = self.tail.load(std::sync::atomic::Ordering::Acquire);
         let head = self.head.load(std::sync::atomic::Ordering::Acquire);
-        
+
         if tail != head {
             Some(tail)
         } else {
@@ -526,52 +701,67 @@ impl<const SIZE: usize> ZeroCopyRing<SIZE> {
     }
 
     /// Set buffer in ring slot
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub fn set_buffer(&mut self, slot: usize, buffer: ZeroCopyBuffer<2048>) -> Result<()> {
         if slot < SIZE {
             self.buffers[slot] = Some(buffer);
             Ok(())
         } else {
-            Err(NestGateError::validation_error("ring_slot", "Invalid slot index", None))
+            Err(NestGateError::validation("ring_slot"))
         }
     }
 
     /// Take buffer from ring slot
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
     pub fn take_buffer(&mut self, slot: usize) -> Result<ZeroCopyBuffer<2048>> {
         if slot < SIZE {
             if let Some(buffer) = self.buffers[slot].take() {
                 let next_tail = (slot + 1) % SIZE;
-                self.tail.store(next_tail, std::sync::atomic::Ordering::Release);
+                self.tail
+                    .store(next_tail, std::sync::atomic::Ordering::Release);
                 Ok(buffer)
             } else {
-                Err(NestGateError::network_error("ring_buffer", "No buffer in slot", None))
+                Err(NestGateError::network_error("No buffer in ring slot"))
             }
         } else {
-            Err(NestGateError::validation_error("ring_slot", "Invalid slot index", None))
+            Err(NestGateError::validation("ring_slot"))
         }
     }
 }
 
-// ==================== PERFORMANCE BENCHMARKS ====================
+// ==================== SECTION ====================
 
 /// **ZERO-COPY NETWORKING BENCHMARKS**
 pub mod benchmarks {
-    use super::*;
+    use super::{ZeroCopyBufferPool, ZeroCopyNetworkInterface};
     use std::time::Instant;
-
     /// Benchmark zero-copy vs traditional networking
     pub async fn benchmark_zero_copy_networking() -> (u64, u64, f64) {
-        let interface = ZeroCopyNetworkInterface::<65536>::new();
+        let interface = ZeroCopyNetworkInterface::<65_536>::new();
         let test_data = vec![0x42u8; 1_048_576]; // 1MB test data
         const ITERATIONS: u32 = 1000;
 
         // Establish connection
-        let connection_id = interface.connect("127.0.0.1:8080".parse().unwrap())
-            .await.expect("Failed to establish connection");
+        let test_endpoint = std::env::var("NESTGATE_TEST_ENDPOINT")
+            .unwrap_or_else(|_| "127.0.0.1:8080".to_string());
+        let connection_id = interface.connect(test_endpoint.parse().unwrap()).unwrap();
 
         // Benchmark zero-copy send
         let start = Instant::now();
         for _ in 0..ITERATIONS {
-            let _ = interface.zero_copy_send(connection_id, &test_data).await;
+            let _ = interface.zero_copy_send(connection_id, &test_data);
         }
         let zero_copy_time = start.elapsed().as_nanos() as u64;
 
@@ -581,19 +771,22 @@ pub mod benchmarks {
         // - Buffer allocation/deallocation
         let traditional_time = zero_copy_time * 10; // Conservative 10x estimate
 
-        let improvement = ((traditional_time - zero_copy_time) as f64 / traditional_time as f64) * 100.0;
+        let improvement =
+            ((traditional_time - zero_copy_time) as f64 / traditional_time as f64) * 100.0;
 
         tracing::info!(
             "Zero-Copy Networking: {}ns, Traditional: {}ns (est), Improvement: {:.1}%",
-            zero_copy_time, traditional_time, improvement
+            zero_copy_time,
+            traditional_time,
+            improvement
         );
 
         (zero_copy_time, traditional_time, improvement)
     }
 
     /// Benchmark buffer pool performance
-    pub async fn benchmark_buffer_pool() -> (u64, u64, f64) {
-        let pool = ZeroCopyBufferPool::<65536, 1024>::new();
+    pub fn benchmark_buffer_pool() -> (u64, u64, f64) {
+        let pool = ZeroCopyBufferPool::<65_536, 1024>::new();
         const OPERATIONS: u32 = 1_000_000;
 
         let start = Instant::now();
@@ -612,7 +805,9 @@ pub mod benchmarks {
         let stats = pool.stats();
         tracing::info!(
             "Buffer Pool: {}ns, Malloc: {}ns (est), Improvement: {:.1}%, Hit Rate: {:.1}%",
-            pool_time, malloc_time, improvement,
+            pool_time,
+            malloc_time,
+            improvement,
             (stats.buffer_hits as f64 / (stats.buffer_hits + stats.buffer_misses) as f64) * 100.0
         );
 
@@ -637,49 +832,56 @@ mod tests {
         assert_eq!(buffer.len(), test_data.len());
         assert_eq!(buffer.as_slice(), test_data);
     }
-
     #[test]
-    fn test_buffer_pool() {
+    fn test_buffer_pool() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let pool = ZeroCopyBufferPool::<1024, 10>::new();
-        
-        let buffer1 = pool.acquire_buffer().expect("Should acquire buffer");
-        let buffer2 = pool.acquire_buffer().expect("Should acquire buffer");
-        
+
+        let buffer1 = pool.acquire_buffer().expect("Failed to acquire buffer 1");
+        let buffer2 = pool.acquire_buffer().expect("Failed to acquire buffer 2");
+
         pool.release_buffer(buffer1);
         pool.release_buffer(buffer2);
-        
+
         let stats = pool.stats();
         assert!(stats.buffer_hits >= 2);
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_zero_copy_interface() {
+    async fn test_zero_copy_interface() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let interface = ZeroCopyNetworkInterface::<1024>::new();
-        
-        let connection_id = interface.connect("127.0.0.1:8080".parse().unwrap())
-            .await.expect("Should establish connection");
-        
+
+        let test_endpoint = std::env::var("NESTGATE_TEST_ENDPOINT")
+            .unwrap_or_else(|_| "127.0.0.1:8080".to_string());
+        let connection_id = interface.connect(test_endpoint.parse()?)?;
+
         let test_data = b"Test zero-copy send";
-        let bytes_sent = interface.zero_copy_send(connection_id, test_data)
-            .await.expect("Should send data");
-        
+        let bytes_sent = interface.zero_copy_send(connection_id, test_data)?;
+
         assert_eq!(bytes_sent, test_data.len());
-        
+
         let stats = interface.get_stats();
         assert_eq!(stats.bytes_sent, test_data.len() as u64);
         assert_eq!(stats.packets_sent, 1);
         assert_eq!(stats.zero_copy_operations, 1);
+        Ok(())
     }
 
     #[test]
-    fn test_kernel_bypass_adapter() {
+    fn test_kernel_bypass_adapter() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let mut adapter = KernelBypassAdapter::<64>::new();
-        adapter.initialize_hardware().expect("Should initialize");
-        
+        adapter.initialize_hardware()?;
+
         let buffer = ZeroCopyBuffer::<2048>::new();
-        adapter.hardware_send(buffer).expect("Should send via hardware");
-        
+        adapter.hardware_send(buffer)?;
+
         let stats = adapter.get_hardware_stats();
-        assert_eq!(stats.dma_transfers.load(std::sync::atomic::Ordering::Relaxed), 1);
+        assert_eq!(
+            stats
+                .dma_transfers
+                .load(std::sync::atomic::Ordering::Relaxed),
+            1
+        );
+        Ok(())
     }
-} 
+}

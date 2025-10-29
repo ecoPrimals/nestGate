@@ -1,9 +1,8 @@
-use std::collections::HashMap;
-///
-/// This module contains all type definitions for the dashboard system including
-/// dashboard configuration, panel types, and variable definitions.
+// **DASHBOARD TYPES**
+//! Type definitions and data structures.
+// Core types and configuration structures for dashboard generation.
+
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use std::collections::HashMap;
 use std::time::Duration;
 
@@ -27,7 +26,6 @@ pub struct DashboardConfig {
     /// Dashboard variables
     pub variables: Vec<VariableConfig>,
 }
-
 /// Panel configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PanelConfig {
@@ -44,12 +42,10 @@ pub struct PanelConfig {
     /// Panel targets (queries)
     pub targets: Vec<QueryTarget>,
     /// Panel options
-    pub options: HashMap<String, Value>,
+    pub options: PanelOptions,
 }
-
 /// Panel types
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
 pub enum PanelType {
     Graph,
     Stat,
@@ -58,12 +54,11 @@ pub enum PanelType {
     Gauge,
     BarGauge,
     Logs,
-    AlertList,
-    DashList,
     Text,
+    Alert,
+    Piechart,
 }
-
-/// Panel grid position
+/// Grid position for panels
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GridPos {
     pub x: u32,
@@ -71,55 +66,66 @@ pub struct GridPos {
     pub w: u32,
     pub h: u32,
 }
-
 /// Query target for panels
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct QueryTarget {
-    /// Query expression
     pub expr: String,
-    /// Legend format
     pub legend_format: Option<String>,
-    /// Ref ID
-    pub ref_id: String,
-    /// Interval
     pub interval: Option<String>,
+    pub ref_id: String,
 }
-
+/// Panel options
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PanelOptions {
+    pub legend: Option<LegendConfig>,
+    pub tooltip: Option<TooltipConfig>,
+    pub axes: Option<AxesConfig>,
+    pub thresholds: Vec<Threshold>,
+    pub colors: Vec<String>,
+}
+/// Legend configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LegendConfig {
+    pub show: bool,
+    pub as_table: bool,
+    pub to_the_right: bool,
+    pub values: Vec<String>,
+}
+/// Tooltip configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TooltipConfig {
+    pub shared: bool,
+    pub sort: u32,
+    pub value_type: String,
+}
+/// Axes configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AxesConfig {
+    pub left: AxisConfig,
+    pub right: Option<AxisConfig>,
+}
+/// Axis configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AxisConfig {
+    pub show: bool,
+    pub label: String,
+    pub min: Option<f64>,
+    pub max: Option<f64>,
+    pub unit: String,
+}
+/// Threshold configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Threshold {
+    pub value: f64,
+    pub color: String,
+    pub op: String,
+}
 /// Time range configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TimeRange {
-    /// Start time (relative, e.g., "now-1h")
     pub from: String,
-    /// End time (relative, e.g., "now")
     pub to: String,
 }
-
-/// Dashboard variable configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct VariableConfig {
-    /// Variable name
-    pub name: String,
-    /// Variable type
-    pub var_type: VariableType,
-    /// Variable query
-    pub query: String,
-    /// Current value
-    pub current: Option<String>,
-    /// Available options
-    pub options: Vec<String>,
-}
-
-/// Variable types
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
-pub enum VariableType {
-    Query,
-    Custom,
-    Constant,
-    Interval,
-    Datasource,
-}
-
 impl Default for TimeRange {
     fn default() -> Self {
         Self {
@@ -129,13 +135,56 @@ impl Default for TimeRange {
     }
 }
 
-impl Default for GridPos {
-    fn default() -> Self {
-        Self {
-            x: 0,
-            y: 0,
-            w: 12,
-            h: 8,
-        }
-    }
+/// Dashboard variable configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct VariableConfig {
+    pub name: String,
+    pub display_name: String,
+    pub var_type: VariableType,
+    pub query: Option<String>,
+    pub options: Vec<VariableOption>,
+    pub multi: bool,
+    pub include_all: bool,
+}
+/// Variable types
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum VariableType {
+    Query,
+    Custom,
+    Constant,
+    Datasource,
+    Interval,
+    Textbox,
+}
+/// Variable option
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct VariableOption {
+    pub text: String,
+    pub value: String,
+    pub selected: bool,
+}
+/// Dashboard template
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DashboardTemplate {
+    pub name: String,
+    pub description: String,
+    pub category: String,
+    pub config: DashboardConfig,
+    pub metadata: HashMap<String, String>,
+}
+/// Dashboard export format
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ExportFormat {
+    Json,
+    Yaml,
+    Grafana,
+    Prometheus,
+}
+/// Dashboard generation result
+#[derive(Debug, Clone)]
+pub struct DashboardResult {
+    pub config: DashboardConfig,
+    pub json: String,
+    pub format: ExportFormat,
+    pub metadata: HashMap<String, String>,
 }

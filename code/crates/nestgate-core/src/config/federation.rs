@@ -7,7 +7,6 @@ use uuid;
 pub struct McpConfig {
     /// Enable MCP integration
     pub enabled: bool,
-
     /// Cluster endpoint
     pub cluster_endpoint: String,
 
@@ -26,7 +25,6 @@ pub struct McpConfig {
 pub struct McpCapabilitiesConfig {
     /// Supported storage protocols
     pub storage_protocols: Vec<String>,
-
     /// Supported storage tiers
     pub storage_tiers: Vec<String>,
 
@@ -42,7 +40,6 @@ pub struct McpCapabilitiesConfig {
 pub struct FederationConfig {
     /// Enable federation
     pub enabled: bool,
-
     /// Cluster name
     pub cluster_name: String,
 
@@ -69,7 +66,7 @@ impl Default for McpConfig {
             cluster_endpoint: std::env::var("NESTGATE_CLUSTER_ENDPOINT")
                 // SOVEREIGNTY FIX: Use environment-based cluster endpoint discovery
             .unwrap_or_else(|_| std::env::var("NESTGATE_CLUSTER_ENDPOINT")
-                .unwrap_or_else(|_| "dynamic://cluster-capability".to_string())),
+                .unwrap_or_else(|_| "dynamic://cluster-capability")),
             node_id,
             federation_enabled: false,
             capabilities: McpCapabilitiesConfig::default(),
@@ -122,7 +119,14 @@ impl McpConfig {
     }
 
     /// Validate MCP configuration
-    pub fn validate(&self) -> Result<(), String> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn validate(&self) -> Result<(), String>  {
         if self.enabled {
             if self.cluster_endpoint.is_empty() {
                 return Err("Cluster endpoint cannot be empty when MCP is enabled".to_string());
@@ -173,7 +177,14 @@ impl McpCapabilitiesConfig {
     }
 
     /// Validate capabilities configuration
-    pub fn validate(&self) -> Result<(), String> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn validate(&self) -> Result<(), String>  {
         if self.max_volume_size == 0 {
             return Err("Max volume size must be greater than 0".to_string());
         }
@@ -242,7 +253,14 @@ impl FederationConfig {
     }
 
     /// Validate federation configuration
-    pub fn validate(&self) -> Result<(), String> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+        pub fn validate(&self) -> Result<(), String>  {
         if self.enabled {
             if self.cluster_name.is_empty() {
                 return Err("Cluster name cannot be empty when federation is enabled".to_string());
@@ -336,7 +354,7 @@ mod tests {
         // Test adding peer
         config.add_peer("node1.example.com".to_string());
         assert_eq!(config.peers().len(), 1);
-        assert!(config.peers().contains(&"node1.example.com".to_string()));
+        assert!(config.peers().contains(&"node1.example.com"));
 
         // Test removing peer
         config.remove_peer("node1.example.com");

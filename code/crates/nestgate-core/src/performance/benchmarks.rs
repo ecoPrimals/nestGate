@@ -1,4 +1,4 @@
-use crate::NestGateError;
+use crate::error::NestGateError;
 //
 // Specific benchmark implementations for different performance patterns.
 
@@ -20,12 +20,11 @@ pub async fn run_arc_dyn_benchmark(
         "security_provider" => run_security_provider_benchmark(iterations).await,
         _ => Err(crate::error::NestGateError::validation_error(
             "benchmark_name",
-            &format!("Unknown Arc<dyn> benchmark: {}", benchmark_name),
+            &format!("Unknown Arc<dyn> benchmark: {benchmark_name}"),
             Some(benchmark_name.to_string()),
         )),
     }
 }
-
 /// Run async_trait vs native async benchmark
 pub async fn run_async_trait_benchmark(
     benchmark_name: &str,
@@ -36,14 +35,13 @@ pub async fn run_async_trait_benchmark(
         "storage_operations" => run_storage_operations_benchmark(iterations).await,
         _ => Err(crate::error::NestGateError::validation_error(
             "benchmark_name",
-            &format!("Unknown async_trait benchmark: {}", benchmark_name),
+            &format!("Unknown async_trait benchmark: {benchmark_name}"),
             Some(benchmark_name.to_string()),
         )),
     }
 }
-
 /// Run configuration lookup benchmark
-pub async fn run_config_lookup_benchmark(
+pub fn run_config_lookup_benchmark(
     _benchmark_name: &str,
     iterations: usize,
 ) -> Result<BenchmarkResults> {
@@ -54,7 +52,6 @@ pub async fn run_config_lookup_benchmark(
         let _port: u16 = _config.parse().unwrap_or(8080);
     }
     let traditional_time = start.elapsed().as_nanos() as u64;
-
     // Zero-cost: Compile-time constants with configurable overrides
     let start = Instant::now();
     for _ in 0..iterations {
@@ -71,18 +68,17 @@ pub async fn run_config_lookup_benchmark(
 }
 
 /// Run string allocation benchmark
-pub async fn run_string_allocation_benchmark(
+pub fn run_string_allocation_benchmark(
     _benchmark_name: &str,
     iterations: usize,
 ) -> Result<BenchmarkResults> {
     // Traditional: String allocations
     let start = Instant::now();
     for i in 0..iterations {
-        let _s = format!("operation_{}", i);
+        let _s = format!("operation_{i}");
         let _result = _s.clone();
     }
     let traditional_time = start.elapsed().as_nanos() as u64;
-
     // Zero-cost: String constants and Cow patterns
     let start = Instant::now();
     for i in 0..iterations {
@@ -107,7 +103,6 @@ pub async fn run_string_allocation_benchmark(
 async fn run_storage_backend_benchmark(iterations: usize) -> Result<BenchmarkResults> {
     // Traditional Arc<dyn> pattern timing would go here
     let traditional_time = simulate_arc_dyn_overhead(iterations);
-
     // Zero-cost generic pattern
     let start = Instant::now();
     let backend = ZeroCostFileBackendImpl::new("test");
@@ -128,7 +123,6 @@ async fn run_storage_backend_benchmark(iterations: usize) -> Result<BenchmarkRes
 /// Connection factory benchmark implementation
 async fn run_connection_factory_benchmark(iterations: usize) -> Result<BenchmarkResults> {
     let traditional_time = simulate_arc_dyn_overhead(iterations);
-
     // Zero-cost connection factory
     let start = Instant::now();
     // Mock connection factory - this is a trait, not a concrete type
@@ -150,7 +144,6 @@ async fn run_connection_factory_benchmark(iterations: usize) -> Result<Benchmark
 /// Security provider benchmark implementation
 async fn run_security_provider_benchmark(iterations: usize) -> Result<BenchmarkResults> {
     let traditional_time = simulate_arc_dyn_overhead(iterations);
-
     // Zero-cost security provider
     let start = Instant::now();
     let provider = ZeroCostJwtSecurityProviderImpl::new([0u8; 32], 3600);
@@ -170,7 +163,6 @@ async fn run_security_provider_benchmark(iterations: usize) -> Result<BenchmarkR
 /// Universal service benchmark implementation
 async fn run_universal_service_benchmark(iterations: usize) -> Result<BenchmarkResults> {
     let traditional_time = simulate_async_trait_overhead(iterations);
-
     // Zero-cost universal service
     let start = Instant::now();
     // Mock universal service - this is a trait, not a concrete type
@@ -192,7 +184,6 @@ async fn run_universal_service_benchmark(iterations: usize) -> Result<BenchmarkR
 /// Storage operations benchmark implementation  
 async fn run_storage_operations_benchmark(iterations: usize) -> Result<BenchmarkResults> {
     let traditional_time = simulate_async_trait_overhead(iterations);
-
     // Zero-cost storage operations
     let start = Instant::now();
     let backend = ZeroCostFileBackendImpl::new("test");
@@ -213,7 +204,6 @@ async fn run_storage_operations_benchmark(iterations: usize) -> Result<Benchmark
 /// Simulate Arc<dyn> overhead for comparison
 fn simulate_arc_dyn_overhead(iterations: usize) -> u64 {
     let start = Instant::now();
-
     // Simulate the overhead of Arc<dyn> dispatch
     for _ in 0..iterations {
         // This represents the additional overhead of:
@@ -232,13 +222,12 @@ fn simulate_arc_dyn_overhead(iterations: usize) -> u64 {
 /// Simulate async_trait overhead for comparison
 fn simulate_async_trait_overhead(iterations: usize) -> u64 {
     let start = Instant::now();
-
     // Simulate async_trait overhead:
     // - Box allocation for future
     // - Dynamic dispatch
     // - Additional indirection
     for _ in 0..iterations {
-        let _boxed_future = Box::new(async { 42u64 });
+        let _boxed_future = Box::new(async { 42u64 );
         let _dispatch_cost = std::hint::black_box(&_boxed_future);
     }
 

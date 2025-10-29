@@ -11,7 +11,7 @@
 ///
 /// **PROBLEM SOLVED**: Single source of truth for all test helper functions
 
-use async_trait::async_trait;
+// **CANONICAL MODERNIZATION**: Removed async_trait for zero-cost native async patterns
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -21,6 +21,7 @@ use uuid::Uuid;
 
 // Import canonical types and configurations
 use nestgate_core::{
+    constants::canonical::network::DEFAULT_API_PORT,
     traits::{UniversalService, UniversalServiceRequest, UniversalServiceResponse},
     canonical_modernization::canonical_modernization::unified_enums::{UnifiedServiceType, UnifiedServiceState},
     canonical_types::{UnifiedConfig, UnifiedServiceConfig},
@@ -48,7 +49,7 @@ pub fn create_test_performance_monitor() -> nestgate_zfs::performance::Performan
 /// **CONSOLIDATED**: Create test NAS server with canonical configuration
 /// Replaces NAS server creation across multiple integration tests
 pub async fn create_test_nas_server() -> Result<nestgate_nas::NasServer> {
-            let config = nestgate_core::config::canonical_unified::NestGateCanonicalUnifiedConfig::default();
+            let config = nestgate_core::config::canonical_master::NestGateNestGateCanonicalConfig::default();
     nestgate_nas::NasServer::new(config).await
 }
 
@@ -188,9 +189,18 @@ pub mod test_data {
     /// Generate test network endpoints for service discovery testing
     pub fn generate_test_endpoints() -> HashMap<String, String> {
         HashMap::from([
-            ("health".to_string(), "http://localhost:8080/health".to_string()),
-            ("metrics".to_string(), "http://localhost:8080/metrics".to_string()),
-            ("api".to_string(), "http://localhost:8080/api/v1".to_string()),
+            ("health".to_string(), format!("http://{}:{}/health", 
+                std::env::var("NESTGATE_HOSTNAME").unwrap_or_else(|_| nestgate_core::constants::TEST_HOSTNAME.to_string()),
+                std::env::var("NESTGATE_API_PORT").unwrap_or_else(|_| DEFAULT_API_PORT.to_string())
+            )),
+            ("metrics".to_string(), format!("http://{}:{}/metrics", 
+                std::env::var("NESTGATE_HOSTNAME").unwrap_or_else(|_| nestgate_core::constants::TEST_HOSTNAME.to_string()),
+                std::env::var("NESTGATE_API_PORT").unwrap_or_else(|_| DEFAULT_API_PORT.to_string())
+            )),
+            ("api".to_string(), format!("http://{}:{}/api/v1", 
+                std::env::var("NESTGATE_HOSTNAME").unwrap_or_else(|_| nestgate_core::constants::TEST_HOSTNAME.to_string()),
+                std::env::var("NESTGATE_API_PORT").unwrap_or_else(|_| DEFAULT_API_PORT.to_string())
+            )),
         ])
     }
     
@@ -295,15 +305,21 @@ pub mod cleanup {
     
     /// Reset environment variables used in tests
     pub fn cleanup_test_environment() {
-        let test_vars = [
+        // Environment cleanup
+        let env_vars = [
             "NESTGATE_TEST_MODE",
-            "NESTGATE_TEST_CONFIG",
-            "MCP_CLUSTER_ENDPOINT",
-            "MCP_NODE_ID",
-            "NESTGATE_ENABLE_LEGACY_ENDPOINTS",
+            "NESTGATE_LOG_LEVEL",
+            "NESTGATE_CONFIG_PATH",
+            "NESTGATE_TEMP_DIR",
+            "NESTGATE_ENABLE_DEBUG",
+            "NESTGATE_PERFORMANCE_MODE",
+            // REMOVED: Legacy endpoint reference
+            "NESTGATE_TEST_TIMEOUT",
+            "NESTGATE_MOCK_SERVICES",
+            "NESTGATE_INTEGRATION_MODE",
         ];
         
-        for var in &test_vars {
+        for var in &env_vars {
             std::env::remove_var(var);
         }
     }

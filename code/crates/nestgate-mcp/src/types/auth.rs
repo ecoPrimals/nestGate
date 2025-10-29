@@ -11,7 +11,6 @@ pub enum AuthMethod {
     Certificate,
     Token,
 }
-
 /// Authentication credentials.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthCredentials {
@@ -22,7 +21,6 @@ pub struct AuthCredentials {
     /// Optional OAuth2 client secret.
     pub client_secret: Option<String>,
 }
-
 /// Authentication configuration for a provider (Enhanced with proven patterns)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthConfig {
@@ -34,7 +32,6 @@ pub struct AuthConfig {
     pub token: Option<String>,
     pub realm: Option<String>,
 }
-
 /// TLS configuration for secure connections (Enhanced with proven patterns)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TlsConfig {

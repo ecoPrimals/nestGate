@@ -3,48 +3,36 @@
 /// Comprehensive file and directory operations for NestGate
 use std::fs as stdfs;
 use std::io;
-use std::path::{Path, PathBuf};
-
-// ==================== BASIC FILE OPERATIONS ====================
+// ==================== SECTION ====================
 
 /// Checks if a path exists.
 #[must_use]
-pub fn exists(path: &Path) -> bool {
     path.exists()
 }
-
 /// Creates a directory and all its parent directories if they don't exist.
 ///
 /// # Errors
 /// Returns an error if the directory cannot be created.
-pub fn ensure_dir(path: &Path) -> io::Result<()> {
     stdfs::create_dir_all(path)
 }
-
 /// Removes a file or directory and all its contents.
 ///
 /// # Errors
 /// Returns an error if the path cannot be removed.
-pub fn remove_path(path: &Path) -> io::Result<()> {
     if path.is_dir() {
         stdfs::remove_dir_all(path)
     } else {
         stdfs::remove_file(path)
     }
 }
-
 /// Gets the size of a file in bytes.
 ///
 /// # Errors
 /// Returns an error if the file size cannot be determined.
-pub fn get_file_size(path: &Path) -> io::Result<u64> {
     stdfs::metadata(path).map(|m| m.len())
 }
-
 /// Recursively calculates the size of a directory
-pub fn get_directory_size(path: &Path) -> io::Result<u64> {
     let mut total_size = 0;
-
     if path.is_dir() {
         for entry in stdfs::read_dir(path)? {
             let entry = entry?;
@@ -82,11 +70,9 @@ pub fn copy_recursive(src: &Path, dst: &Path) -> io::Result<()> {
         Ok(())
     }
 }
-
-// ==================== PERMISSION CHECKS ====================
+// ==================== SECTION ====================
 
 /// Check if a path is readable
-pub fn is_readable(path: &Path) -> bool {
     match stdfs::metadata(path) {
         Ok(metadata) => {
             #[cfg(unix)]
@@ -105,14 +91,11 @@ pub fn is_readable(path: &Path) -> bool {
         Err(_) => false,
     }
 }
-
 /// Check if a path is writable
-pub fn is_writable(path: &Path) -> bool {
     match stdfs::metadata(path) {
         Ok(metadata) => {
             #[cfg(unix)]
             {
-                use std::os::unix::fs::MetadataExt;
                 let mode = metadata.mode();
                 // Check if owner has write permission (simplified check)
                 (mode & 0o200) != 0
@@ -139,14 +122,11 @@ pub fn is_writable(path: &Path) -> bool {
         Err(_) => false,
     }
 }
-
 /// Check if a path is executable
-pub fn is_executable(path: &Path) -> bool {
     match stdfs::metadata(path) {
         Ok(metadata) => {
             #[cfg(unix)]
             {
-                use std::os::unix::fs::MetadataExt;
                 let mode = metadata.mode();
                 // Check if owner has execute permission (simplified check)
                 (mode & 0o100) != 0
@@ -167,8 +147,7 @@ pub fn is_executable(path: &Path) -> bool {
         Err(_) => false,
     }
 }
-
-// ==================== ADVANCED FILE OPERATIONS ====================
+// ==================== SECTION ====================
 
 /// Find files matching a pattern recursively
 pub fn find_files<P: AsRef<Path>>(dir: P, pattern: &str) -> io::Result<Vec<PathBuf>> {
@@ -176,7 +155,6 @@ pub fn find_files<P: AsRef<Path>>(dir: P, pattern: &str) -> io::Result<Vec<PathB
     find_files_recursive(dir.as_ref(), pattern, &mut results)?;
     Ok(results)
 }
-
 fn find_files_recursive(dir: &Path, pattern: &str, results: &mut Vec<PathBuf>) -> io::Result<()> {
     if dir.is_dir() {
         for entry in stdfs::read_dir(dir)? {
@@ -198,32 +176,24 @@ fn find_files_recursive(dir: &Path, pattern: &str, results: &mut Vec<PathBuf>) -
 }
 
 /// Get file extension as string
-pub fn get_extension(path: &Path) -> Option<String> {
     path.extension()
         .and_then(|ext| ext.to_str())
         .map(|s| s.to_lowercase())
 }
-
 /// Get filename without extension
-pub fn get_stem(path: &Path) -> Option<String> {
     path.file_stem()
         .and_then(|stem| stem.to_str())
         .map(|s| s.to_string())
 }
-
 /// Check if a path has a specific extension
-pub fn has_extension(path: &Path, ext: &str) -> bool {
     get_extension(path)
         .map(|e| e == ext.to_lowercase())
         .unwrap_or(false)
 }
-
 /// Create a unique filename by appending a number if the file exists
-pub fn make_unique_filename(base_path: &Path) -> PathBuf {
     if !base_path.exists() {
         return base_path.to_path_buf();
     }
-
     let parent = base_path.parent().unwrap_or(Path::new(""));
     let stem = get_stem(base_path).unwrap_or_else(|| "file".to_string());
     let ext = get_extension(base_path);
@@ -256,13 +226,12 @@ pub fn make_unique_filename(base_path: &Path) -> PathBuf {
     parent.join(filename)
 }
 
-// ==================== UTILITY FUNCTIONS ====================
+// ==================== SECTION ====================
 
 /// Get temporary directory path
 pub fn temp_dir() -> PathBuf {
     std::env::temp_dir()
 }
-
 /// Create a temporary file with a unique name
 pub fn create_temp_file(prefix: &str, suffix: &str) -> io::Result<PathBuf> {
     let temp_dir = temp_dir();
@@ -270,7 +239,6 @@ pub fn create_temp_file(prefix: &str, suffix: &str) -> io::Result<PathBuf> {
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap_or_default()
         .as_nanos();
-
     let filename = format!("{prefix}{timestamp}{suffix}");
     let temp_path = temp_dir.join(filename);
 
@@ -287,39 +255,26 @@ pub fn home_dir() -> Option<PathBuf> {
         .ok()
         .map(PathBuf::from)
 }
-
-// ==================== PATH UTILITIES ====================
+// ==================== SECTION ====================
 
 /// Check if a path is a directory
-pub fn is_directory(path: &Path) -> bool {
     path.is_dir()
 }
-
 /// Check if a path is a file
-pub fn is_file(path: &Path) -> bool {
     path.is_file()
 }
-
 /// Check if a path is absolute
-pub fn is_absolute(path: &Path) -> bool {
     path.is_absolute()
 }
-
 /// Convert path to absolute path
-pub fn to_absolute<P: AsRef<Path>>(path: P) -> io::Result<PathBuf> {
     stdfs::canonicalize(path)
 }
-
 /// Get parent directory of a path
-pub fn parent_dir(path: &Path) -> Option<&Path> {
     path.parent()
 }
-
 /// Join two paths
-pub fn join_path<P1: AsRef<Path>, P2: AsRef<Path>>(base: P1, path: P2) -> PathBuf {
     base.as_ref().join(path)
 }
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -334,7 +289,7 @@ mod tests {
                 "Test setup failed: cannot create temporary directory: {:?}",
                 e
             );
-        });
+        );
         let file_path = dir.path().join("test.txt");
         let dir_path = dir.path().join("subdir");
 
@@ -362,14 +317,14 @@ mod tests {
                     ),
                 )
                 .into());
-            });
+            );
 
         assert_eq!(
             get_file_size(&file_path).unwrap_or_else(|e| {
                 tracing::error!("Unwrap failed: {:?}", e);
                 return Err(std::io::Error::new(
                     std::io::ErrorKind::Other,
-                    format!("Operation failed: {:?}", e),
+                    format!("Operation failed: {e:?}"),
                 )
                 .into());
             }),
@@ -389,7 +344,7 @@ mod tests {
                 ),
             )
             .into());
-        });
+        );
         assert!(exists(&dir_path));
         assert!(is_directory(&dir_path));
 
@@ -401,7 +356,7 @@ mod tests {
                 format!("Operation failed - {}: {:?}", "Failed to remove file", e),
             )
             .into());
-        });
+        );
         assert!(!exists(&file_path));
 
         // Test directory removal
@@ -415,7 +370,7 @@ mod tests {
                 ),
             )
             .into());
-        });
+        );
         assert!(!exists(&dir_path));
     }
 
@@ -423,8 +378,8 @@ mod tests {
     fn test_path_utilities() {
         let path = Path::new("/home/user/file.txt");
 
-        assert_eq!(get_extension(path), Some("txt".to_string()));
-        assert_eq!(get_stem(path), Some("file".to_string()));
+        assert_eq!(get_extension(path), Some("txt"));
+        assert_eq!(get_stem(path), Some("file"));
         assert!(has_extension(path, "txt"));
         assert!(!has_extension(path, "rs"));
     }
@@ -441,7 +396,7 @@ mod tests {
                 ),
             )
             .into());
-        });
+        );
         let base_path = temp_dir.path().join("test.txt");
 
         // Create the base file
@@ -455,7 +410,7 @@ mod tests {
                 ),
             )
             .into());
-        });
+        );
 
         // Get unique filename
         let unique_path = make_unique_filename(&base_path);

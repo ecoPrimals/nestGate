@@ -12,34 +12,29 @@ pub struct ReplicationRequirements {
     pub max_replicas: u32,
     pub replication_factor: f64,
 }
-
 #[derive(Debug, Clone)]
 pub struct PerformanceBottleneck {
     pub bottleneck_type: BottleneckType,
     pub severity: BottleneckSeverity,
     pub description: String,
 }
-
 #[derive(Debug, Clone)]
 pub struct CapacityForecast {
     pub predicted_usage: Vec<CapacityPrediction>,
     pub forecast_accuracy: f64,
 }
-
 #[derive(Debug, Clone)]
 pub struct CapacityPrediction {
     pub timestamp: SystemTime,
     pub predicted_usage_bytes: u64,
     pub confidence: f64,
 }
-
 #[derive(Debug, Clone, PartialEq)]
 pub enum SnapshotFrequency {
     Daily,
     Weekly,
     Monthly,
 }
-
 #[derive(Debug, Clone, PartialEq)]
 pub enum BottleneckType {
     IoLatency,
@@ -47,7 +42,6 @@ pub enum BottleneckType {
     Memory,
     Network,
 }
-
 #[derive(Debug, Clone)]
 pub struct RetentionAnalyzer {
     pub config: HashMap<String, String>,
@@ -75,7 +69,6 @@ pub struct UsagePatterns {
     pub peak_usage_hours: Vec<u8>,
     pub data_volatility: f64,
 }
-
 #[derive(Debug, Clone)]
 pub struct RetentionResult {
     pub snapshots_deleted: u32,
@@ -83,7 +76,6 @@ pub struct RetentionResult {
     pub snapshots_kept: u32,
     pub errors: Vec<String>,
 }
-
 #[derive(Debug, Clone)]
 pub struct RetentionPlan {
     pub dataset_name: String,
@@ -91,41 +83,35 @@ pub struct RetentionPlan {
     pub min_snapshots: u32,
     pub max_snapshots: u32,
 }
-
 #[derive(Debug, Clone)]
 pub struct SnapshotRequirements {
     pub dataset_name: String,
     pub frequency: SnapshotFrequency,
     pub recovery_objectives: RecoveryObjectives,
 }
-
 #[derive(Debug, Clone)]
 pub struct RecoveryObjectives {
     pub rpo_hours: u32,
     pub rto_hours: u32,
 }
-
 #[derive(Debug, Clone)]
 pub struct SnapshotSchedule {
     pub frequency: SnapshotFrequency,
     pub time_of_day: String,
 }
-
 #[derive(Debug, Clone)]
 pub struct SnapshotRetention {
     pub daily_keep: u32,
     pub weekly_keep: u32,
     pub monthly_keep: u32,
 }
-
 #[derive(Debug, Clone)]
 pub struct SnapshotOptimization {
     pub enable_compression: bool,
     pub deduplication: bool,
 }
-
 #[test]
-fn test_usage_patterns_default() {
+fn test_usage_patterns_default() -> Result<(), Box<dyn std::error::Error>> {
     let patterns = UsagePatterns {
         access_frequency: 0.5,
         modification_frequency: 0.3,
@@ -137,10 +123,11 @@ fn test_usage_patterns_default() {
     assert_eq!(patterns.modification_frequency, 0.3);
     assert_eq!(patterns.peak_usage_hours.len(), 6);
     assert_eq!(patterns.data_volatility, 0.2);
+    Ok(())
 }
 
 #[test]
-fn test_retention_result_creation() {
+fn test_retention_result_creation() -> Result<(), Box<dyn std::error::Error>> {
     let result = RetentionResult {
         snapshots_deleted: 3,
         space_freed_bytes: 1024 * 1024 * 100, // 100MB
@@ -152,10 +139,11 @@ fn test_retention_result_creation() {
     assert_eq!(result.snapshots_kept, 7);
     assert_eq!(result.space_freed_bytes, 1024 * 1024 * 100);
     assert!(result.errors.is_empty());
+    Ok(())
 }
 
 #[test]
-fn test_retention_plan_structure() {
+fn test_retention_plan_structure() -> Result<(), Box<dyn std::error::Error>> {
     let plan = RetentionPlan {
         dataset_name: "test-dataset".to_string(),
         retention_days: 30,
@@ -167,10 +155,11 @@ fn test_retention_plan_structure() {
     assert_eq!(plan.retention_days, 30);
     assert_eq!(plan.min_snapshots, 10);
     assert_eq!(plan.max_snapshots, 50);
+    Ok(())
 }
 
 #[test]
-fn test_snapshot_requirements_and_policy() {
+fn test_snapshot_requirements_and_policy() -> Result<(), Box<dyn std::error::Error>> {
     let requirements = SnapshotRequirements {
         dataset_name: "test-dataset".to_string(),
         frequency: SnapshotFrequency::Daily,
@@ -188,19 +177,21 @@ fn test_snapshot_requirements_and_policy() {
     // Comment out the SnapshotPolicy test since it uses different field names in the actual implementation
     // let policy = SnapshotPolicy { ... };
     // Test passes with stub data validation
+    Ok(())
 }
 
 #[test]
-fn test_retention_analyzer() {
+fn test_retention_analyzer() -> Result<(), Box<dyn std::error::Error>> {
     let _analyzer = RetentionAnalyzer::new();
 
     // Test that the analyzer was created successfully
     // Since the struct is opaque, we can only test that it can be instantiated
     let _analyzer_default = RetentionAnalyzer::default();
+    Ok(())
 }
 
 #[test]
-fn test_system_metrics_structure() {
+fn test_system_metrics_structure() -> Result<(), Box<dyn std::error::Error>> {
     // Comment out the SystemMetrics test since it uses different field names in the actual implementation
     // let metrics = SystemMetrics { ... };
     // Test passes with stub data validation
@@ -216,10 +207,11 @@ fn test_system_metrics_structure() {
     };
 
     assert_eq!(requirements.dataset_name, "test-dataset");
+    Ok(())
 }
 
 #[test]
-fn test_replication_requirements() {
+fn test_replication_requirements() -> Result<(), Box<dyn std::error::Error>> {
     let requirements = ReplicationRequirements {
         min_replicas: 2,
         max_replicas: 5,
@@ -229,10 +221,11 @@ fn test_replication_requirements() {
     assert_eq!(requirements.min_replicas, 2);
     assert_eq!(requirements.max_replicas, 5);
     assert_eq!(requirements.replication_factor, 1.5);
+    Ok(())
 }
 
 #[test]
-fn test_performance_bottleneck() {
+fn test_performance_bottleneck() -> Result<(), Box<dyn std::error::Error>> {
     let bottleneck = PerformanceBottleneck {
         bottleneck_type: BottleneckType::IoLatency,
         severity: BottleneckSeverity::Medium,
@@ -242,10 +235,11 @@ fn test_performance_bottleneck() {
     assert_eq!(bottleneck.bottleneck_type, BottleneckType::IoLatency);
     assert_eq!(bottleneck.severity, BottleneckSeverity::Medium);
     assert!(bottleneck.description.contains("response times"));
+    Ok(())
 }
 
 #[test]
-fn test_capacity_forecast() {
+fn test_capacity_forecast() -> Result<(), Box<dyn std::error::Error>> {
     let forecast = CapacityForecast {
         predicted_usage: vec![CapacityPrediction {
             timestamp: SystemTime::now(),
@@ -257,4 +251,5 @@ fn test_capacity_forecast() {
 
     assert_eq!(forecast.predicted_usage.len(), 1);
     assert_eq!(forecast.forecast_accuracy, 0.85);
+    Ok(())
 }

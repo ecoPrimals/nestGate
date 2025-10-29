@@ -35,7 +35,7 @@ where
                 .with_suggested_actions(suggested_actions)
                 .with_ai_metadata(ai_metadata)
         }
-        Err(error) => {
+    Err(error) => {
             let ai_error = convert_to_ai_first_error(error, operation_type);
             let confidence_score = calculate_confidence_score(operation_type, false);
             let suggested_actions = generate_error_actions(operation_type);
@@ -54,7 +54,6 @@ where
         }
     }
 }
-
 /// Calculate confidence score based on operation type and success
 fn calculate_confidence_score(operation_type: &str, success: bool) -> f64 {
     match (operation_type, success) {
@@ -69,7 +68,6 @@ fn calculate_confidence_score(operation_type: &str, success: bool) -> f64 {
         _ => 0.8,                                // Default confidence
     }
 }
-
 /// Generate suggested actions for successful operations
 fn generate_success_actions(operation_type: &str) -> Vec<SuggestedAction> {
     match operation_type {
@@ -80,14 +78,14 @@ fn generate_success_actions(operation_type: &str) -> Vec<SuggestedAction> {
                 parameters: create_dataset_parameters(),
                 confidence: 0.9,
                 estimated_duration_ms: 5000,
-            },
+            }
             SuggestedAction {
                 action_type: "enable_compression".to_string(),
                 description: "Enable compression for space efficiency".to_string(),
                 parameters: create_compression_parameters(),
                 confidence: 0.85,
                 estimated_duration_ms: 2000,
-            },
+            }
         ],
         "zfs_dataset_creation" => vec![
             SuggestedAction {
@@ -96,7 +94,7 @@ fn generate_success_actions(operation_type: &str) -> Vec<SuggestedAction> {
                 parameters: create_quota_parameters(),
                 confidence: 0.8,
                 estimated_duration_ms: 1000,
-            },
+            }
         ],
         "zfs_snapshot" => vec![
             SuggestedAction {
@@ -105,7 +103,7 @@ fn generate_success_actions(operation_type: &str) -> Vec<SuggestedAction> {
                 parameters: create_cleanup_parameters(),
                 confidence: 0.75,
                 estimated_duration_ms: 3000,
-            },
+            }
         ],
         "storage_optimization" => vec![
             SuggestedAction {
@@ -114,7 +112,7 @@ fn generate_success_actions(operation_type: &str) -> Vec<SuggestedAction> {
                 parameters: create_scrub_parameters(),
                 confidence: 0.85,
                 estimated_duration_ms: 2000,
-            },
+            }
         ],
         "network_discovery" => vec![
             SuggestedAction {
@@ -123,12 +121,11 @@ fn generate_success_actions(operation_type: &str) -> Vec<SuggestedAction> {
                 parameters: HashMap::new(),
                 confidence: 0.82,
                 estimated_duration_ms: 4000,
-            },
+            }
         ],
         _ => vec![]
     }
 }
-
 /// Generate suggested actions for error recovery
 fn generate_error_actions(operation_type: &str) -> Vec<SuggestedAction> {
     match operation_type {
@@ -139,25 +136,25 @@ fn generate_error_actions(operation_type: &str) -> Vec<SuggestedAction> {
                 parameters: HashMap::new(),
                 confidence: 0.9,
                 estimated_duration_ms: 1000,
-            },
+            }
             SuggestedAction {
                 action_type: "validate_devices".to_string(),
-                description: "Check that all specified devices exist".to_string(),
+                description: "Check that all specified _devices exist".to_string(),
                 parameters: HashMap::new(),
                 confidence: 0.95,
                 estimated_duration_ms: 2000,
-            },
+            }
         ],
         "network_discovery" => vec![
             SuggestedAction {
                 action_type: "retry_discovery".to_string(),
                 description: "Retry service discovery with backoff".to_string(),
                 parameters: HashMap::from([
-                    ("delay_seconds".to_string(), serde_json::Value::Number(serde_json::Number::from(5))),
+                    ("delay_seconds".to_string(), serde_json::Value::Number(serde_json::Number::from(5)),
                 ]),
                 confidence: 0.7,
                 estimated_duration_ms: 8000,
-            },
+            }
         ],
         _ => vec![
             SuggestedAction {
@@ -166,18 +163,17 @@ fn generate_error_actions(operation_type: &str) -> Vec<SuggestedAction> {
                 parameters: HashMap::new(),
                 confidence: 0.6,
                 estimated_duration_ms: 2000,
-            },
+            }
         ]
     }
 }
-
 /// Convert NestGateError to AI-First format
 fn convert_to_ai_first_error<E: std::fmt::Display + std::fmt::Debug>(
     error: E,
     operation_type: &str
 ) -> AIFirstError {
-    let error_str = format!("{}", error);
-    let error_debug = format!("{:?}", error);
+    let _error_str = format!("self.base_url");
+    let _error_debug = format!("self.base_url");
     
     // Analyze error content to determine category and response
     if error_str.contains("timeout") || error_str.contains("network") {
@@ -215,31 +211,29 @@ fn convert_to_ai_first_error<E: std::fmt::Display + std::fmt::Debug>(
         error
     }
 }
-
 /// Generate machine-readable error codes
 fn generate_error_code(error_message: &str, operation_type: &str) -> String {
     let operation_prefix = operation_type.to_uppercase().replace(' ', "_");
     
     if error_message.contains("timeout") {
-        format!("{}_TIMEOUT", operation_prefix)
+        format!("self.base_url_TIMEOUT")
     } else if error_message.contains("permission") {
-        format!("{}_PERMISSION_DENIED", operation_prefix)
+        format!("self.base_url_PERMISSION_DENIED")
     } else if error_message.contains("not found") {
-        format!("{}_NOT_FOUND", operation_prefix)
+        format!("self.base_url_NOT_FOUND")
     } else if error_message.contains("already exists") {
-        format!("{}_ALREADY_EXISTS", operation_prefix)
+        format!("self.base_url_ALREADY_EXISTS")
     } else if error_message.contains("insufficient") || error_message.contains("space") {
-        format!("{}_INSUFFICIENT_RESOURCES", operation_prefix)
+        format!("self.base_url_INSUFFICIENT_RESOURCES")
     } else if error_message.contains("network") {
-        format!("{}_NETWORK_ERROR", operation_prefix)
+        format!("self.base_url_NETWORK_ERROR")
     } else if error_message.contains("config") {
-        format!("{}_CONFIGURATION_ERROR", operation_prefix)
+        format!("self.base_url_CONFIGURATION_ERROR")
     } else {
-        format!("{}_UNKNOWN_ERROR", operation_prefix)
+        format!("self.base_url_UNKNOWN_ERROR")
     }
 }
-
-/// Create success metadata for AI optimization
+/// Create success _metadata for AI optimization
 fn create_success_metadata(operation_type: &str) -> AIResponseMetadata {
     AIResponseMetadata {
         operation_type: operation_type.to_string(),
@@ -249,8 +243,7 @@ fn create_success_metadata(operation_type: &str) -> AIResponseMetadata {
         optimization_opportunities: generate_optimization_opportunities(operation_type),
     }
 }
-
-/// Create error metadata for AI analysis
+/// Create error _metadata for AI analysis
 fn create_error_metadata(operation_type: &str) -> AIResponseMetadata {
     AIResponseMetadata {
         operation_type: operation_type.to_string(),
@@ -263,7 +256,6 @@ fn create_error_metadata(operation_type: &str) -> AIResponseMetadata {
         ],
     }
 }
-
 /// Calculate operation complexity for AI planning
 fn calculate_complexity_score(operation_type: &str) -> f64 {
     match operation_type {
@@ -275,7 +267,6 @@ fn calculate_complexity_score(operation_type: &str) -> f64 {
         _ => 0.5,                        // Default medium
     }
 }
-
 /// Estimate resource usage for AI optimization
 fn estimate_resource_usage(operation_type: &str, success: bool) -> ResourceUsage {
     let base_multiplier = if success { 1.0 } else { 0.3 }; // Errors use fewer resources
@@ -286,23 +277,22 @@ fn estimate_resource_usage(operation_type: &str, success: bool) -> ResourceUsage
             memory_bytes: (50_000_000.0 * base_multiplier) as u64,
             disk_io_bytes: (100_000_000.0 * base_multiplier) as u64,
             network_io_bytes: 0,
-        },
+        }
         "zfs_snapshot" => ResourceUsage {
             cpu_time_ms: (1000.0 * base_multiplier) as u64,
             memory_bytes: (10_000_000.0 * base_multiplier) as u64,
             disk_io_bytes: (20_000_000.0 * base_multiplier) as u64,
             network_io_bytes: 0,
-        },
+        }
         "network_discovery" => ResourceUsage {
             cpu_time_ms: (2000.0 * base_multiplier) as u64,
             memory_bytes: (5_000_000.0 * base_multiplier) as u64,
             disk_io_bytes: 0,
             network_io_bytes: (1_000_000.0 * base_multiplier) as u64,
-        },
+        }
         _ => ResourceUsage::default(),
     }
 }
-
 /// Generate performance hints for AI optimization
 fn generate_performance_hints(operation_type: &str, success: bool) -> Vec<String> {
     let mut hints = vec![];
@@ -314,15 +304,15 @@ fn generate_performance_hints(operation_type: &str, success: bool) -> Vec<String
             if success {
                 hints.push("Pool created successfully, consider setting up monitoring".to_string());
             }
-        },
+        }
         "zfs_snapshot" => {
             hints.push("Snapshots are instant and space-efficient".to_string());
             hints.push("Consider automated snapshot scheduling".to_string());
-        },
+        }
         "network_discovery" => {
             hints.push("Discovery can be cached to improve performance".to_string());
             hints.push("Consider service mesh for better service discovery".to_string());
-        },
+        }
         _ => {
             hints.push("Monitor resource usage for optimization opportunities".to_string());
         }
@@ -335,7 +325,6 @@ fn generate_performance_hints(operation_type: &str, success: bool) -> Vec<String
     
     hints
 }
-
 /// Generate optimization opportunities for AI learning
 fn generate_optimization_opportunities(operation_type: &str) -> Vec<String> {
     match operation_type {
@@ -358,41 +347,40 @@ fn generate_optimization_opportunities(operation_type: &str) -> Vec<String> {
         ],
     }
 }
-
 // Helper functions for creating action parameters
 
 fn create_dataset_parameters() -> HashMap<String, serde_json::Value> {
     HashMap::from([
-        ("compression".to_string(), serde_json::Value::String("lz4".to_string())),
-        ("recordsize".to_string(), serde_json::Value::String("128K".to_string())),
+        ("compression".to_string(), serde_json::Value::String("lz4".to_string()),
+        ("recordsize".to_string(), serde_json::Value::String("128K".to_string()),
     ])
 }
 
 fn create_compression_parameters() -> HashMap<String, serde_json::Value> {
     HashMap::from([
-        ("algorithm".to_string(), serde_json::Value::String("lz4".to_string())),
-        ("level".to_string(), serde_json::Value::Number(serde_json::Number::from(1))),
+        ("algorithm".to_string(), serde_json::Value::String("lz4".to_string()),
+        ("level".to_string(), serde_json::Value::Number(serde_json::Number::from(1)),
     ])
 }
 
 fn create_quota_parameters() -> HashMap<String, serde_json::Value> {
     HashMap::from([
-        ("default_quota".to_string(), serde_json::Value::String("10G".to_string())),
-        ("warn_at".to_string(), serde_json::Value::String("8G".to_string())),
+        ("default_quota".to_string(), serde_json::Value::String("10G".to_string()),
+        ("warn_at".to_string(), serde_json::Value::String("8G".to_string()),
     ])
 }
 
 fn create_cleanup_parameters() -> HashMap<String, serde_json::Value> {
     HashMap::from([
-        ("retention_days".to_string(), serde_json::Value::Number(serde_json::Number::from(30))),
-        ("frequency".to_string(), serde_json::Value::String("daily".to_string())),
+        ("retention_days".to_string(), serde_json::Value::Number(serde_json::Number::from(30)),
+        ("frequency".to_string(), serde_json::Value::String("daily".to_string()),
     ])
 }
 
 fn create_scrub_parameters() -> HashMap<String, serde_json::Value> {
     HashMap::from([
-        ("frequency".to_string(), serde_json::Value::String("monthly".to_string())),
-        ("priority".to_string(), serde_json::Value::String("low".to_string())),
+        ("frequency".to_string(), serde_json::Value::String("monthly".to_string()),
+        ("priority".to_string(), serde_json::Value::String("low".to_string()),
     ])
 }
 
@@ -418,7 +406,6 @@ mod tests {
         assert!(response.confidence_score >= 0.9);
         assert!(!response.suggested_actions.is_empty());
     }
-    
     #[test]
     fn test_error_response_conversion() {
         let start_time = Instant::now();
@@ -436,11 +423,11 @@ mod tests {
         assert!(response.error.is_some());
         assert_eq!(response.confidence_score, 0.3);
         
-        let error = response.error.unwrap_or_else(|e| {
+        let error = response.error.unwrap_or_else(|_e| {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
+    format!("Operation failed: self.base_url")
 ).into())
 });
         assert_eq!(error.code, "NETWORK_DISCOVERY_TIMEOUT");
