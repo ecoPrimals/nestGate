@@ -73,7 +73,7 @@ impl IntrusionDetectionSystem {
             return Ok(());
         }
 
-        let combined_input = format!("{} {} {}", method, path, String::from_utf8_lossy(body);
+        let combined_input = format!("{} {} {}", method, path, String::from_utf8_lossy(body));
 
         for pattern in &self.suspicious_patterns {
             if pattern.pattern.is_match(&combined_input) {

@@ -60,11 +60,6 @@
 // }
 // ```
 
-use crate::constants::canonical_defaults::network;
-use crate::constants::canonical_defaults::network;
-use crate::constants::canonical_defaults::network;
-use crate::constants::canonical_defaults::network;
-use std::env;
 use std::env;
 use std::process::{Command, Stdio};
 use std::time::Duration;
@@ -73,22 +68,7 @@ use std::time::Duration;
 async fn test_binary_help_output() -> Result<(), Box<dyn std::error::Error>> {
     let output = Command::new("cargo")
         .args(["run", "--bin", "nestgate", "--", "--help"])
-        .output()
-        .unwrap_or_else(|_e| {
-            tracing::error!(
-                "Expect failed ({}): {:?}",
-                "Failed to execute nestgate binary",
-                e
-            );
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                format!(
-                    "Operation failed - {}: {:?}",
-                    "Failed to execute nestgate binary", e
-                ),
-            )
-            .into());
-        });
+        .output()?;
 
     assert!(output.status.success());
     let stdout = String::from_utf8_lossy(&output.stdout);
@@ -114,21 +94,10 @@ async fn test_binary_starts_successfully() -> Result<(), Box<dyn std::error::Err
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()
-        .unwrap_or_else(|_e| {
-            tracing::error!(
-                "Expect failed ({}): {:?}",
-                "Failed to start nestgate binary",
-                e
-            );
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                format!(
-                    "Operation failed - {}: {:?}",
-                    "{}", "Failed to start nestgate binary", e
-                ),
-            )
-            .into());
-        });
+        .map_err(|e| {
+            eprintln!("Failed to start nestgate binary: {:?}", e);
+            e
+        })?;
 
     // Give it time to start
     tokio::time::sleep(Duration::from_secs(
@@ -178,12 +147,8 @@ async fn test_binary_with_invalid_config() -> Result<(), Box<dyn std::error::Err
     std::env::set_var("NESTGATE_PORT", "invalid_port");
 
     // Test that we can detect invalid configuration without running the binary
-    let portvalue = std::env::var("NESTGATE_PORT").map_err(|_e| {
-        tracing::error!(
-            "Environment variable '{}' not found: {}",
-            "NESTGATE_PORT",
-            e
-        );
+    let portvalue = std::env::var("NESTGATE_PORT").map_err(|e| {
+        eprintln!("Environment variable 'NESTGATE_PORT' not found: {}", e);
         std::io::Error::new(
             std::io::ErrorKind::NotFound,
             format!("Missing environment variable: {}", e),

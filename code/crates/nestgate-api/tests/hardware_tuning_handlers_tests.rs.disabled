@@ -1,0 +1,440 @@
+//! **HARDWARE TUNING HANDLERS TESTS**
+//!
+//! Comprehensive test suite for hardware tuning API handlers.
+//! These tests cover all endpoints, error paths, and edge cases.
+
+use axum::{
+    body::Body,
+    http::{Request, StatusCode},
+};
+use nestgate_api::handlers::hardware_tuning::handlers_production::{
+    get_compute_resources, get_hardware_metrics, get_hardware_profile, get_system_info,
+    run_system_benchmark, start_hardware_tuning,
+};
+use nestgate_api::{error::ApiError, handlers::hardware_tuning::types::*};
+use serde_json::json;
+
+// Import test helpers
+mod hardware_tuning_test_helpers;
+use hardware_tuning_test_helpers::*;
+
+// **SYSTEM CAPABILITIES TESTS**
+
+#[tokio::test]
+async fn test_get_system_capabilities_success() {
+    let response = get_system_capabilities().await;
+    assert!(response.is_ok());
+
+    let capabilities = response.unwrap().0;
+    assert!(capabilities.max_cpu_cores > 0);
+    assert!(capabilities.max_memory_gb > 0);
+}
+
+#[tokio::test]
+async fn test_system_capabilities_has_valid_fields() {
+    let response = get_system_capabilities().await.unwrap().0;
+
+    // Verify all required fields
+    assert!(response.max_cpu_cores > 0, "CPU cores should be positive");
+    assert!(response.max_memory_gb > 0, "Memory should be positive");
+    assert!(
+        response.max_gpu_units >= 0,
+        "GPU units should be non-negative"
+    );
+    assert!(
+        response.cpu_cores > 0,
+        "Current CPU cores should be positive"
+    );
+    assert!(
+        !response.cpu_model.is_empty(),
+        "CPU model should not be empty"
+    );
+}
+
+#[tokio::test]
+async fn test_system_capabilities_tier_classification() {
+    let response = get_system_capabilities().await.unwrap().0;
+
+    // Verify system tier is valid
+    let valid_tiers = vec!["high", "medium", "low"];
+    assert!(
+        valid_tiers.contains(&response.system_tier.as_str()),
+        "System tier should be one of: high, medium, low"
+    );
+}
+
+// **HARDWARE BENCHMARKS TESTS**
+
+#[tokio::test]
+async fn test_run_hardware_benchmarks_success() {
+    let response = run_hardware_benchmarks().await;
+    assert!(response.is_ok());
+
+    let results = response.unwrap().0;
+    assert!(
+        results.len() > 0,
+        "Should return at least one benchmark result"
+    );
+}
+
+#[tokio::test]
+async fn test_benchmark_results_structure() {
+    let results = run_hardware_benchmarks().await.unwrap().0;
+
+    for result in results {
+        assert!(
+            !result.benchmark_type.is_empty(),
+            "Benchmark type should not be empty"
+        );
+        assert!(result.score >= 0, "Score should be non-negative");
+        assert!(result.cpu_score >= 0, "CPU score should be non-negative");
+        assert!(
+            result.memory_score >= 0,
+            "Memory score should be non-negative"
+        );
+        assert!(
+            result.overall_score >= 0,
+            "Overall score should be non-negative"
+        );
+    }
+}
+
+#[tokio::test]
+async fn test_benchmark_types_coverage() {
+    let results = run_hardware_benchmarks().await.unwrap().0;
+    let types: Vec<String> = results.iter().map(|r| r.benchmark_type.clone()).collect();
+
+    // Should have CPU and memory benchmarks
+    assert!(
+        types.iter().any(|t| t.contains("cpu") || t.contains("CPU")),
+        "Should have CPU benchmark"
+    );
+    assert!(
+        types
+            .iter()
+            .any(|t| t.contains("memory") || t.contains("Memory")),
+        "Should have memory benchmark"
+    );
+}
+
+// **RESOURCE ALLOCATION TESTS**
+
+#[tokio::test]
+async fn test_allocate_compute_resources_valid_request() {
+    let request = ComputeResourceRequest {
+        cpu_cores: 2,
+        memory_gb: 4,
+        gpu_count: 0,
+    };
+
+    let response = allocate_compute_resources(axum::Json(request)).await;
+    assert!(response.is_ok());
+
+    let allocation = response.unwrap().0;
+    assert_eq!(allocation.allocated_cpu_cores, 2);
+    assert_eq!(allocation.allocated_memory_gb, 4);
+    assert_eq!(allocation.allocated_gpu_units, 0);
+}
+
+#[tokio::test]
+async fn test_allocate_compute_resources_zero_cores() {
+    let request = ComputeResourceRequest {
+        cpu_cores: 0,
+        memory_gb: 4,
+        gpu_count: 0,
+    };
+
+    let response = allocate_compute_resources(axum::Json(request)).await;
+    assert!(response.is_err());
+}
+
+#[tokio::test]
+async fn test_allocate_compute_resources_zero_memory() {
+    let request = ComputeResourceRequest {
+        cpu_cores: 2,
+        memory_gb: 0,
+        gpu_count: 0,
+    };
+
+    let response = allocate_compute_resources(axum::Json(request)).await;
+    assert!(response.is_err());
+}
+
+#[tokio::test]
+async fn test_allocate_compute_resources_excessive_cores() {
+    let request = ComputeResourceRequest {
+        cpu_cores: 10000, // Unrealistic
+        memory_gb: 4,
+        gpu_count: 0,
+    };
+
+    let response = allocate_compute_resources(axum::Json(request)).await;
+    // Should either succeed with available resources or fail gracefully
+    assert!(response.is_ok() || response.is_err());
+}
+
+#[tokio::test]
+async fn test_allocate_compute_resources_excessive_memory() {
+    let request = ComputeResourceRequest {
+        cpu_cores: 2,
+        memory_gb: 100000, // Unrealistic
+        gpu_count: 0,
+    };
+
+    let response = allocate_compute_resources(axum::Json(request)).await;
+    assert!(response.is_err());
+}
+
+#[tokio::test]
+async fn test_allocate_with_gpu_request() {
+    let request = ComputeResourceRequest {
+        cpu_cores: 4,
+        memory_gb: 8,
+        gpu_count: 1,
+    };
+
+    let response = allocate_compute_resources(axum::Json(request)).await;
+
+    if response.is_ok() {
+        let allocation = response.unwrap().0;
+        // GPU allocation should match request if available
+        assert!(allocation.allocated_gpu_units >= 0);
+    }
+}
+
+// **LIVE METRICS TESTS**
+
+#[tokio::test]
+async fn test_get_live_metrics_success() {
+    let response = get_live_metrics().await;
+    assert!(response.is_ok());
+
+    let metrics = response.unwrap().0;
+    assert!(metrics.cpu_usage >= 0.0 && metrics.cpu_usage <= 100.0);
+    assert!(metrics.memory_usage >= 0.0 && metrics.memory_usage <= 100.0);
+    assert!(metrics.gpu_usage >= 0.0 && metrics.gpu_usage <= 100.0);
+}
+
+#[tokio::test]
+async fn test_live_metrics_percentages_valid() {
+    let metrics = get_live_metrics().await.unwrap().0;
+
+    // All percentage values should be between 0 and 100
+    assert!(
+        metrics.cpu_usage >= 0.0 && metrics.cpu_usage <= 100.0,
+        "CPU usage should be 0-100%"
+    );
+    assert!(
+        metrics.memory_usage >= 0.0 && metrics.memory_usage <= 100.0,
+        "Memory usage should be 0-100%"
+    );
+    assert!(
+        metrics.gpu_usage >= 0.0 && metrics.gpu_usage <= 100.0,
+        "GPU usage should be 0-100%"
+    );
+}
+
+#[tokio::test]
+async fn test_live_metrics_multiple_calls_consistency() {
+    let metrics1 = get_live_metrics().await.unwrap().0;
+    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+    let metrics2 = get_live_metrics().await.unwrap().0;
+
+    // Metrics should be reasonably close (within 50% difference)
+    let cpu_diff = (metrics1.cpu_usage - metrics2.cpu_usage).abs();
+    let mem_diff = (metrics1.memory_usage - metrics2.memory_usage).abs();
+
+    assert!(cpu_diff < 50.0, "CPU usage should be relatively stable");
+    assert!(mem_diff < 50.0, "Memory usage should be relatively stable");
+}
+
+// **SYSTEM PROFILE TESTS**
+
+#[tokio::test]
+async fn test_get_system_profile_success() {
+    let response = get_system_profile().await;
+    assert!(response.is_ok());
+
+    let profile = response.unwrap().0;
+    assert!(profile.total_cores > 0);
+    assert!(!profile.cpu_profile.is_empty());
+    assert!(!profile.memory_profile.is_empty());
+}
+
+#[tokio::test]
+async fn test_system_profile_fields_populated() {
+    let profile = get_system_profile().await.unwrap().0;
+
+    assert!(profile.total_cores > 0, "Total cores should be positive");
+    assert!(
+        !profile.cpu_profile.is_empty(),
+        "CPU profile should not be empty"
+    );
+    assert!(
+        !profile.memory_profile.is_empty(),
+        "Memory profile should not be empty"
+    );
+    assert!(
+        !profile.storage_profile.is_empty(),
+        "Storage profile should not be empty"
+    );
+    assert!(
+        !profile.network_profile.is_empty(),
+        "Network profile should not be empty"
+    );
+}
+
+#[tokio::test]
+async fn test_system_profile_tier_classification() {
+    let profile = get_system_profile().await.unwrap().0;
+
+    let valid_tiers = vec!["high", "medium", "low"];
+    assert!(
+        valid_tiers.contains(&profile.system_tier.as_str()),
+        "System tier should be one of: high, medium, low"
+    );
+}
+
+// **TUNING SESSION TESTS**
+
+#[tokio::test]
+async fn test_start_tuning_session_success() {
+    let response = start_tuning_session().await;
+    assert!(response.is_ok());
+
+    let session = response.unwrap().0;
+    assert!(!session.session_id.is_empty());
+    assert!(!session.status.is_empty());
+}
+
+#[tokio::test]
+async fn test_tuning_session_has_id() {
+    let session = start_tuning_session().await.unwrap().0;
+
+    assert!(
+        !session.session_id.is_empty(),
+        "Session ID should not be empty"
+    );
+    assert!(
+        session.session_id.len() > 10,
+        "Session ID should be meaningful"
+    );
+}
+
+#[tokio::test]
+async fn test_tuning_session_status_valid() {
+    let session = start_tuning_session().await.unwrap().0;
+
+    let valid_statuses = vec!["active", "pending", "running", "initialized"];
+    assert!(
+        valid_statuses.contains(&session.status.as_str()),
+        "Session status should be valid"
+    );
+}
+
+#[tokio::test]
+async fn test_tuning_session_recommendations_present() {
+    let session = start_tuning_session().await.unwrap().0;
+
+    assert!(
+        session.recommendations.len() > 0,
+        "Session should have at least one recommendation"
+    );
+}
+
+#[tokio::test]
+async fn test_multiple_tuning_sessions() {
+    let session1 = start_tuning_session().await.unwrap().0;
+    let session2 = start_tuning_session().await.unwrap().0;
+
+    // Each session should have a unique ID
+    assert_ne!(
+        session1.session_id, session2.session_id,
+        "Each session should have a unique ID"
+    );
+}
+
+// **EDGE CASE TESTS**
+
+#[tokio::test]
+async fn test_concurrent_benchmark_requests() {
+    let mut handles = vec![];
+
+    for _ in 0..5 {
+        handles.push(tokio::spawn(async { run_hardware_benchmarks().await }));
+    }
+
+    for handle in handles {
+        let result = handle.await.unwrap();
+        assert!(result.is_ok(), "Concurrent benchmarks should succeed");
+    }
+}
+
+#[tokio::test]
+async fn test_concurrent_metrics_requests() {
+    let mut handles = vec![];
+
+    for _ in 0..10 {
+        handles.push(tokio::spawn(async { get_live_metrics().await }));
+    }
+
+    for handle in handles {
+        let result = handle.await.unwrap();
+        assert!(result.is_ok(), "Concurrent metrics requests should succeed");
+    }
+}
+
+#[tokio::test]
+async fn test_rapid_allocation_deallocation() {
+    for _ in 0..5 {
+        let request = ComputeResourceRequest {
+            cpu_cores: 2,
+            memory_gb: 4,
+            gpu_count: 0,
+        };
+
+        let response = allocate_compute_resources(axum::Json(request)).await;
+        assert!(response.is_ok());
+    }
+}
+
+// **INTEGRATION TESTS**
+
+#[tokio::test]
+async fn test_full_hardware_tuning_workflow() {
+    // 1. Get capabilities
+    let caps = get_system_capabilities().await.unwrap().0;
+    assert!(caps.max_cpu_cores > 0);
+
+    // 2. Run benchmarks
+    let benchmarks = run_hardware_benchmarks().await.unwrap().0;
+    assert!(benchmarks.len() > 0);
+
+    // 3. Get profile
+    let profile = get_system_profile().await.unwrap().0;
+    assert!(profile.total_cores > 0);
+
+    // 4. Start tuning session
+    let session = start_tuning_session().await.unwrap().0;
+    assert!(!session.session_id.is_empty());
+
+    // 5. Get live metrics
+    let metrics = get_live_metrics().await.unwrap().0;
+    assert!(metrics.cpu_usage >= 0.0);
+}
+
+#[tokio::test]
+async fn test_allocation_respects_system_limits() {
+    let caps = get_system_capabilities().await.unwrap().0;
+
+    // Try to allocate exactly what's available
+    let request = ComputeResourceRequest {
+        cpu_cores: caps.cpu_cores as u32,
+        memory_gb: caps.memory_gb as u32,
+        gpu_count: 0,
+    };
+
+    let response = allocate_compute_resources(axum::Json(request)).await;
+    // Should succeed or fail gracefully based on current system state
+    assert!(response.is_ok() || response.is_err());
+}

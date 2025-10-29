@@ -2,9 +2,9 @@
 // **MIGRATION COMPLETE**: This module now uses canonical modernization patterns.
 // Legacy fragmented config structs have been replaced with canonical equivalents.
 
+use nestgate_core::config::canonical_master::domains::network::CanonicalNetworkConfig;
 use nestgate_core::config::canonical_master::domains::performance::MetricsConfig;
 use nestgate_core::config::canonical_master::domains::security_canonical::TlsSecurityConfig;
-use nestgate_core::config::canonical_master::domains::network::CanonicalNetworkConfig;
 use nestgate_core::config::SecurityConfig;
 
 use std::time::Duration;

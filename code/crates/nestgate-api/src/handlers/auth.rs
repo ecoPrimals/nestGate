@@ -2,6 +2,10 @@
 // Handles authentication using any available security primal provider,
 // eliminating hardcoded dependencies on specific security implementations.
 
+#[cfg(test)]
+#[path = "auth_comprehensive_tests.rs"]
+mod auth_comprehensive_tests;
+
 use axum::{
     debug_handler,
     extract::State,

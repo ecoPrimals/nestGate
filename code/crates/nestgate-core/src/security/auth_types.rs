@@ -133,6 +133,7 @@ impl AuthContext {
     }
 
     /// Get access level for a resource
+    pub fn get_access_level(&self, resource: &str) -> AccessLevel {
         if self.is_admin() {
             return AccessLevel::Admin;
         }
@@ -201,12 +202,17 @@ pub enum AuthMethod {
     /// Custom authentication method
     Custom(HashMap<String, String>),
 }
+
 /// Resource-specific permission helpers
+pub fn read_permission_for(resource: &str) -> Permission {
     Permission::with_scope("read", resource)
 }
+
+pub fn write_permission_for(resource: &str) -> Permission {
     Permission::with_scope("write", resource)
 }
 
+pub fn admin_permission_for(resource: &str) -> Permission {
     Permission::with_scope("admin", resource)
 }
 

@@ -66,6 +66,13 @@ pub mod response;
 pub mod return_builders;
 /// Safe operations utilities
 pub mod safe_operations;
+// TODO: Security module needs additional work beyond syntax fixes
+// ✅ Syntax errors fixed (20+): auth_types.rs, intrusion_detection.rs, manager.rs, 
+//    rate_limiting.rs, validation.rs, universal_auth_adapter.rs
+// ⚠️ Integration issues remain (32 errors): async/await mismatches, function signatures,
+//    attribute usage. Needs refactoring work (estimated 2-3 hours).
+// Temporarily disabled - re-enable after integration fixes
+// pub mod security;
 /// Security provider system
 pub mod security_provider;
 /// Temporal storage management

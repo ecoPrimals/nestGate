@@ -68,12 +68,12 @@ impl RequestValidator {
                 threat_level: ThreatLevel::Medium,
                 description: format!("Disallowed HTTP method: {method}"),
                 action_taken: SecurityAction::Rejected,
-            );
+            });
             blocked = true;
         }
 
         // 2. Check request size
-        if body.len() > self.config.max_request_size ", 
+        if body.len() > self.config.max_request_size {
             events.push(SecurityEvent {
                 timestamp: SystemTime::now(),
                 event_type: SecurityEventType::InvalidInput,
@@ -81,14 +81,14 @@ impl RequestValidator {
                 user_id: None,
                 request_details: None,
                 threat_level: ThreatLevel::Medium,
-                description: format!("Request size {body.len() exceeds limit ", body.len()"), self.config.max_request_size),
+                description: format!("Request size {} exceeds limit {}", body.len(), self.config.max_request_size),
                 action_taken: SecurityAction::Rejected,
-            );
+            });
             blocked = true;
         }
 
         // 3. Check header count and length
-        if headers.len() > self.config.max_headers ", 
+        if headers.len() > self.config.max_headers {
             events.push(SecurityEvent {
                 timestamp: SystemTime::now(),
                 event_type: SecurityEventType::InvalidInput,
@@ -96,9 +96,9 @@ impl RequestValidator {
                 user_id: None,
                 request_details: None,
                 threat_level: ThreatLevel::Medium,
-                description: format!("Too many headers: {headers.len()")),
+                description: format!("Too many headers: {}", headers.len()),
                 action_taken: SecurityAction::Rejected,
-            );
+            });
             blocked = true;
         }
 
@@ -113,14 +113,14 @@ impl RequestValidator {
                     threat_level: ThreatLevel::Medium,
                     description: format!("Header too long: {name}"),
                     action_taken: SecurityAction::Rejected,
-                );
+                });
                 blocked = true;
             }
         }
 
         // 4. SQL injection detection
         if self.config.sql_injection_detection {
-            let combined_input = format!("{} {}", path, String::from_utf8_lossy(body);
+            let combined_input = format!("{} {}", path, String::from_utf8_lossy(body));
             for pattern in &self.sql_injection_patterns {
                 if pattern.is_match(&combined_input) {
                     events.push(SecurityEvent {
@@ -132,7 +132,7 @@ impl RequestValidator {
                         threat_level: ThreatLevel::High,
                         description: "SQL injection attempt detected".to_string(),
                         action_taken: SecurityAction::Blocked,
-                    );
+                    });
                     blocked = true;
                     break;
                 }
@@ -141,7 +141,7 @@ impl RequestValidator {
 
         // 5. XSS detection
         if self.config.xss_detection {
-            let combined_input = format!("{} {}", path, String::from_utf8_lossy(body);
+            let combined_input = format!("{} {}", path, String::from_utf8_lossy(body));
             for pattern in &self.xss_patterns {
                 if pattern.is_match(&combined_input) {
                     events.push(SecurityEvent {
@@ -153,7 +153,7 @@ impl RequestValidator {
                         threat_level: ThreatLevel::High,
                         description: "XSS attempt detected".to_string(),
                         action_taken: SecurityAction::Blocked,
-                    );
+                    });
                     blocked = true;
                     break;
                 }

@@ -190,15 +190,6 @@ impl Default for ApiKeyConfig {
     }
 }
 
-/// Permission functions
-    Permission::new(&format!("{path}.read"))
-}
-/// Write permission function
-    Permission::new(&format!("{path}.write"))
-}
-/// Admin permission function
-    Permission::new(&format!("{path}.admin"))
-}
 /// Auth middleware to enforce permissions
 pub struct AuthMiddleware {
     /// Required permissions for the endpoint

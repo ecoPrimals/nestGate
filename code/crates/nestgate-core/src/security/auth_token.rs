@@ -80,7 +80,7 @@ impl AuthToken {
         pub fn time_until_expiration(&self) -> Result<Duration>  {
         self.expires_at
             .duration_since(SystemTime::now())
-            .map_err(|_| NestGateError::internal_error(
+            .map_err(|_| NestGateError::internal_error("Token expired or time went backwards"))
     }
 
     /// Set user ID

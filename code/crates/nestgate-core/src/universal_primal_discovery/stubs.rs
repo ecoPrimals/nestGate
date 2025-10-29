@@ -8,8 +8,7 @@ use crate::Result;
 use crate::capabilities::discovery::DiscoveryManager;
 #[allow(deprecated)]
 use crate::config::canonical_master::{
-    NestGateCanonicalConfig,
-    domains::network::CanonicalNetworkConfig as UnifiedNetworkConfig,
+    domains::network::CanonicalNetworkConfig as UnifiedNetworkConfig, NestGateCanonicalConfig,
 };
 use crate::universal_adapter::stats::AdapterStats;
 use std::collections::HashMap;
