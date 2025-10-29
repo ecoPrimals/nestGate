@@ -1,8 +1,0 @@
-nestgate-api: 1 wired, 39 orphaned, 40 total
-nestgate-bin: 0 wired, 3 orphaned, 3 total
-nestgate-core: 10 wired, 14 orphaned, 24 total
-nestgate-installer: 0 wired, 1 orphaned, 1 total
-nestgate-mcp: 0 wired, 1 orphaned, 1 total
-nestgate-nas: 0 wired, 2 orphaned, 2 total
-nestgate-network: 0 wired, 5 orphaned, 5 total
-nestgate-zfs: 10 wired, 4 orphaned, 14 total
