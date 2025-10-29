@@ -828,9 +828,9 @@ mod tests {
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
-        
+
         manager.add_retention_policy(policy);
-        
+
         // Legal hold should override retention period
         assert!(manager.check_data_retention("legal-data", 1000));
     }
@@ -838,7 +838,7 @@ mod tests {
     #[test]
     fn test_multiple_retention_policies() {
         let mut manager = ComplianceManager::new();
-        
+
         for i in 1..=5 {
             let policy = RetentionPolicy {
                 id: format!("policy-{}", i),
@@ -854,7 +854,7 @@ mod tests {
             };
             manager.add_retention_policy(policy);
         }
-        
+
         assert_eq!(manager.retention_policies.len(), 5);
     }
 
@@ -866,7 +866,7 @@ mod tests {
             end_time: "17:00".to_string(),
             timezone: "UTC".to_string(),
         };
-        
+
         let policy = AccessPolicy {
             id: "time-restricted".to_string(),
             name: "Business Hours Only".to_string(),
@@ -878,7 +878,7 @@ mod tests {
             audit_access: true,
             created_at: Utc::now(),
         };
-        
+
         assert_eq!(policy.time_restrictions.len(), 1);
         assert_eq!(policy.time_restrictions[0].day_of_week, 1);
     }
@@ -886,7 +886,7 @@ mod tests {
     #[test]
     fn test_audit_event_logging_multiple() {
         let mut manager = ComplianceManager::new();
-        
+
         let event_types = vec![
             AuditEventType::DataAccess,
             AuditEventType::DataModification,
@@ -894,7 +894,7 @@ mod tests {
             AuditEventType::PolicyChange,
             AuditEventType::Authentication,
         ];
-        
+
         for (i, event_type) in event_types.into_iter().enumerate() {
             let event = AuditEvent {
                 id: format!("event-{}", i),
@@ -910,7 +910,7 @@ mod tests {
             };
             manager.log_audit_event(event);
         }
-        
+
         assert_eq!(manager.audit_logs.len(), 5);
     }
 
@@ -925,14 +925,14 @@ mod tests {
             RegulatoryType::FedRAMP,
             RegulatoryType::Custom("Custom Framework".to_string()),
         ];
-        
+
         assert_eq!(frameworks.len(), 7);
     }
 
     #[test]
     fn test_compliance_violation_tracking() {
         let mut manager = ComplianceManager::new();
-        
+
         let violation = ComplianceViolation {
             id: "v1".to_string(),
             timestamp: Utc::now(),
@@ -945,39 +945,40 @@ mod tests {
             resolution_deadline: Some(Utc::now() + ChronoDuration::days(7)),
             assigned_to: Some("compliance-team".to_string()),
         };
-        
+
         manager.record_violation(violation);
-        
+
         assert_eq!(manager.violations.len(), 1);
-        assert_eq!(manager.violations[0].assigned_to, Some("compliance-team".to_string()));
+        assert_eq!(
+            manager.violations[0].assigned_to,
+            Some("compliance-team".to_string())
+        );
     }
 
     #[test]
     fn test_compliance_score_with_multiple_violations() {
         let mut manager = ComplianceManager::new();
-        
+
         let framework = RegulatoryFramework {
             id: "multi-test".to_string(),
             name: "Multi Violation Test".to_string(),
             framework_type: RegulatoryType::HIPAA,
-            required_controls: vec![
-                ComplianceControl {
-                    id: "ctrl-1".to_string(),
-                    name: "Control 1".to_string(),
-                    description: "Test control".to_string(),
-                    control_type: ControlType::Preventive,
-                    implementation_status: ImplementationStatus::FullyImplemented,
-                    last_assessment: None,
-                    next_assessment_due: None,
-                }
-            ],
+            required_controls: vec![ComplianceControl {
+                id: "ctrl-1".to_string(),
+                name: "Control 1".to_string(),
+                description: "Test control".to_string(),
+                control_type: ControlType::Preventive,
+                implementation_status: ImplementationStatus::FullyImplemented,
+                last_assessment: None,
+                next_assessment_due: None,
+            }],
             audit_frequency_days: 365,
             last_audit: None,
             compliance_status: ComplianceStatus::Compliant,
         };
-        
+
         manager.add_regulatory_framework(framework);
-        
+
         // Add violations of different severities
         manager.record_violation(ComplianceViolation {
             id: "v1".to_string(),
@@ -991,7 +992,7 @@ mod tests {
             resolution_deadline: None,
             assigned_to: None,
         });
-        
+
         manager.record_violation(ComplianceViolation {
             id: "v2".to_string(),
             timestamp: Utc::now(),
@@ -1004,7 +1005,7 @@ mod tests {
             resolution_deadline: None,
             assigned_to: None,
         });
-        
+
         let score = manager.calculate_compliance_score();
         assert!(score < 100.0);
         assert!(score >= 0.0);
@@ -1019,14 +1020,14 @@ mod tests {
             DataClassification::Restricted,
             DataClassification::TopSecret,
         ];
-        
+
         assert_eq!(classifications.len(), 5);
     }
 
     #[test]
     fn test_compliance_report_generation_detailed() {
         let mut manager = ComplianceManager::new();
-        
+
         // Add multiple policies
         manager.add_retention_policy(RetentionPolicy {
             id: "r1".to_string(),
@@ -1040,7 +1041,7 @@ mod tests {
             created_at: Utc::now(),
             updated_at: Utc::now(),
         });
-        
+
         manager.add_access_policy(AccessPolicy {
             id: "a1".to_string(),
             name: "Access 1".to_string(),
@@ -1052,7 +1053,7 @@ mod tests {
             audit_access: true,
             created_at: Utc::now(),
         });
-        
+
         manager.add_access_policy(AccessPolicy {
             id: "a2".to_string(),
             name: "Access 2".to_string(),
@@ -1064,9 +1065,9 @@ mod tests {
             audit_access: true,
             created_at: Utc::now(),
         });
-        
+
         let report = manager.generate_compliance_report();
-        
+
         assert_eq!(report.total_policies, 3); // 1 retention + 2 access
         assert_eq!(report.total_violations, 0);
         assert_eq!(report.compliance_score, 100.0);
@@ -1074,11 +1075,20 @@ mod tests {
 
     #[test]
     fn test_violation_type_display() {
-        assert_eq!(format!("{}", ViolationType::DataRetention), "Data Retention");
-        assert_eq!(format!("{}", ViolationType::AccessControl), "Access Control");
+        assert_eq!(
+            format!("{}", ViolationType::DataRetention),
+            "Data Retention"
+        );
+        assert_eq!(
+            format!("{}", ViolationType::AccessControl),
+            "Access Control"
+        );
         assert_eq!(format!("{}", ViolationType::Encryption), "Encryption");
         assert_eq!(format!("{}", ViolationType::AuditLogging), "Audit Logging");
-        assert_eq!(format!("{}", ViolationType::DataResidency), "Data Residency");
+        assert_eq!(
+            format!("{}", ViolationType::DataResidency),
+            "Data Residency"
+        );
         assert_eq!(format!("{}", ViolationType::Backup), "Backup");
         assert_eq!(format!("{}", ViolationType::Documentation), "Documentation");
     }
@@ -1086,25 +1096,40 @@ mod tests {
     #[test]
     fn test_audit_event_type_display() {
         assert_eq!(format!("{}", AuditEventType::DataAccess), "Data Access");
-        assert_eq!(format!("{}", AuditEventType::DataModification), "Data Modification");
+        assert_eq!(
+            format!("{}", AuditEventType::DataModification),
+            "Data Modification"
+        );
         assert_eq!(format!("{}", AuditEventType::DataDeletion), "Data Deletion");
         assert_eq!(format!("{}", AuditEventType::PolicyChange), "Policy Change");
-        assert_eq!(format!("{}", AuditEventType::Authentication), "Authentication");
-        assert_eq!(format!("{}", AuditEventType::Authorization), "Authorization");
-        assert_eq!(format!("{}", AuditEventType::SystemConfiguration), "System Configuration");
-        assert_eq!(format!("{}", AuditEventType::ComplianceViolation), "Compliance Violation");
+        assert_eq!(
+            format!("{}", AuditEventType::Authentication),
+            "Authentication"
+        );
+        assert_eq!(
+            format!("{}", AuditEventType::Authorization),
+            "Authorization"
+        );
+        assert_eq!(
+            format!("{}", AuditEventType::SystemConfiguration),
+            "System Configuration"
+        );
+        assert_eq!(
+            format!("{}", AuditEventType::ComplianceViolation),
+            "Compliance Violation"
+        );
     }
 
     #[test]
     fn test_initialize_compliance_manager_gdpr() {
         let manager = initialize_compliance_manager();
-        
+
         // Check GDPR framework was added
         assert!(manager.regulatory_frameworks.contains_key("gdpr"));
         let gdpr = &manager.regulatory_frameworks["gdpr"];
         assert_eq!(gdpr.name, "General Data Protection Regulation");
         assert!(matches!(gdpr.framework_type, RegulatoryType::GDPR));
-        
+
         // Check required controls
         assert!(!gdpr.required_controls.is_empty());
     }
@@ -1112,7 +1137,7 @@ mod tests {
     #[test]
     fn test_initialize_compliance_manager_default_retention() {
         let manager = initialize_compliance_manager();
-        
+
         // Check default retention policy was added
         assert!(manager.retention_policies.contains_key("default-retention"));
         let policy = &manager.retention_policies["default-retention"];

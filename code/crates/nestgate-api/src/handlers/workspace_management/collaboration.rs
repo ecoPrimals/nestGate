@@ -40,7 +40,7 @@ mod tests {
     fn test_share_workspace_returns_not_implemented() {
         let workspace_id = "test-workspace".to_string();
         let result = share_workspace(Path(workspace_id));
-        
+
         // Should return NOT_IMPLEMENTED status
         assert!(result.is_err());
         assert_eq!(result.unwrap_err(), StatusCode::NOT_IMPLEMENTED);
@@ -50,7 +50,7 @@ mod tests {
     fn test_unshare_workspace_returns_not_implemented() {
         let workspace_id = "test-workspace".to_string();
         let result = unshare_workspace(Path(workspace_id));
-        
+
         // Should return NOT_IMPLEMENTED status
         assert!(result.is_err());
         assert_eq!(result.unwrap_err(), StatusCode::NOT_IMPLEMENTED);
@@ -64,7 +64,7 @@ mod tests {
             "my_workspace",
             "test-ws-abc-123",
         ];
-        
+
         for workspace_id in workspace_ids {
             let result = share_workspace(Path(workspace_id.to_string()));
             assert!(result.is_err());
@@ -80,7 +80,7 @@ mod tests {
             "my_workspace",
             "test-ws-abc-123",
         ];
-        
+
         for workspace_id in workspace_ids {
             let result = unshare_workspace(Path(workspace_id.to_string()));
             assert!(result.is_err());

@@ -319,7 +319,7 @@ mod tests {
             load_average_15m: 1.8,
             core_count: 8,
         };
-        
+
         assert_eq!(cpu.usage_percent, 45.2);
         assert_eq!(cpu.core_count, 8);
     }
@@ -333,7 +333,7 @@ mod tests {
             load_average_15m: 0.0,
             core_count: 1,
         };
-        
+
         assert_eq!(cpu.usage_percent, 0.0);
         assert_eq!(cpu.core_count, 1);
     }
@@ -349,7 +349,7 @@ mod tests {
             usage_percent: 50.0,
             swap_used_bytes: 1_000_000_000,
         };
-        
+
         assert_eq!(memory.total_bytes, 16_000_000_000);
         assert_eq!(memory.usage_percent, 50.0);
     }
@@ -363,7 +363,7 @@ mod tests {
             usage_percent: 75.0,
             swap_used_bytes: 0,
         };
-        
+
         assert_eq!(memory.usage_percent, 75.0);
         assert_eq!(memory.available_bytes, 2_500_000_000);
     }
@@ -379,7 +379,7 @@ mod tests {
             write_bytes_per_sec: 5_000_000.0,
             avg_queue_depth: 2.5,
         };
-        
+
         assert_eq!(disk.read_ops_per_sec, 150.0);
         assert_eq!(disk.write_ops_per_sec, 75.0);
     }
@@ -393,7 +393,7 @@ mod tests {
             write_bytes_per_sec: 0.0,
             avg_queue_depth: 0.0,
         };
-        
+
         assert_eq!(disk.avg_queue_depth, 0.0);
     }
 
@@ -407,7 +407,7 @@ mod tests {
             rx_packets_per_sec: 1000.0,
             tx_packets_per_sec: 500.0,
         };
-        
+
         assert_eq!(network.rx_bytes_per_sec, 1_000_000.0);
         assert_eq!(network.tx_packets_per_sec, 500.0);
     }
@@ -426,7 +426,7 @@ mod tests {
             dataset_count: 10,
             snapshot_count: 25,
         };
-        
+
         assert_eq!(zfs.arc_hit_ratio, 0.95);
         assert_eq!(zfs.pool_health, "ONLINE");
         assert_eq!(zfs.dataset_count, 10);
@@ -435,7 +435,7 @@ mod tests {
     #[test]
     fn test_zfs_metrics_various_health_states() {
         let health_states = vec!["ONLINE", "DEGRADED", "FAULTED", "OFFLINE"];
-        
+
         for health in health_states {
             let zfs = ZfsMetrics {
                 arc_hit_ratio: 0.9,
@@ -447,7 +447,7 @@ mod tests {
                 dataset_count: 5,
                 snapshot_count: 10,
             };
-            
+
             assert_eq!(zfs.pool_health, health);
         }
     }
@@ -496,7 +496,7 @@ mod tests {
                 snapshot_count: 15,
             },
         };
-        
+
         assert_eq!(snapshot.cpu.core_count, 4);
         assert_eq!(snapshot.memory.usage_percent, 50.0);
         assert_eq!(snapshot.zfs.pool_health, "ONLINE");
@@ -507,7 +507,7 @@ mod tests {
     #[test]
     fn test_performance_analysis_config_default() {
         let config = PerformanceAnalysisConfig::default();
-        
+
         assert!(config.enable_cpu_monitoring);
         assert!(config.enable_memory_monitoring);
         assert!(config.enable_disk_monitoring);
@@ -528,7 +528,7 @@ mod tests {
             analysis_interval_seconds: 60,
             max_history_entries: 500,
         };
-        
+
         assert!(!config.enable_disk_monitoring);
         assert_eq!(config.analysis_interval_seconds, 60);
     }
@@ -544,7 +544,7 @@ mod tests {
             anomalies: vec!["Spike detected at 14:30".to_string()],
             recommendations: vec!["Consider load balancing".to_string()],
         };
-        
+
         assert_eq!(analysis.component_name, "CPU");
         assert_eq!(analysis.current_usage, 65.5);
         assert_eq!(analysis.anomalies.len(), 1);
@@ -562,7 +562,7 @@ mod tests {
             network_trend: PerformanceTrend::Stable,
             zfs_trend: PerformanceTrend::Stable,
         };
-        
+
         // All trends should be stable
         assert!(matches!(trends.cpu_trend, PerformanceTrend::Stable));
         assert!(matches!(trends.memory_trend, PerformanceTrend::Stable));
@@ -577,7 +577,7 @@ mod tests {
             network_trend: PerformanceTrend::Unknown,
             zfs_trend: PerformanceTrend::Improving,
         };
-        
+
         assert!(matches!(trends.cpu_trend, PerformanceTrend::Improving));
         assert!(matches!(trends.memory_trend, PerformanceTrend::Degrading));
     }
@@ -592,7 +592,7 @@ mod tests {
             priority: 8,
             estimated_impact: "High".to_string(),
         };
-        
+
         assert_eq!(recommendation.priority, 8);
         assert_eq!(recommendation.estimated_impact, "High");
     }
@@ -600,7 +600,7 @@ mod tests {
     #[test]
     fn test_performance_recommendation_priority_levels() {
         let priorities = vec![1, 5, 10];
-        
+
         for priority in priorities {
             let rec = PerformanceRecommendation {
                 category: "Test".to_string(),
@@ -608,7 +608,7 @@ mod tests {
                 priority,
                 estimated_impact: "Medium".to_string(),
             };
-            
+
             assert_eq!(rec.priority, priority);
         }
     }
@@ -618,7 +618,7 @@ mod tests {
     #[test]
     fn test_performance_analyzer_state_default() {
         let state = PerformanceAnalyzerState::default();
-        
+
         assert!(!state.is_running);
         assert_eq!(state.total_analyses, 0);
         assert!(state.last_analysis.is_none());
@@ -630,7 +630,7 @@ mod tests {
         state.is_running = true;
         state.total_analyses = 5;
         state.last_analysis = Some(Utc::now());
-        
+
         assert!(state.is_running);
         assert_eq!(state.total_analyses, 5);
         assert!(state.last_analysis.is_some());
@@ -646,7 +646,7 @@ mod tests {
             average_usage: 60.0,
             trend: PerformanceTrend::Stable,
         };
-        
+
         assert_eq!(analysis.current_usage, 55.0);
         assert_eq!(analysis.peak_usage, 85.0);
         assert!(matches!(analysis.trend, PerformanceTrend::Stable));
@@ -662,7 +662,7 @@ mod tests {
             average_usage_percent: 75.0,
             trend: PerformanceTrend::Degrading,
         };
-        
+
         assert_eq!(analysis.current_usage_percent, 70.0);
         assert!(matches!(analysis.trend, PerformanceTrend::Degrading));
     }
@@ -677,7 +677,7 @@ mod tests {
             average_iops: 3000.0,
             trend: PerformanceTrend::Improving,
         };
-        
+
         assert_eq!(analysis.peak_iops, 5000.0);
         assert!(matches!(analysis.trend, PerformanceTrend::Improving));
     }
@@ -692,7 +692,7 @@ mod tests {
             average_bandwidth_mbps: 500.0,
             trend: PerformanceTrend::Stable,
         };
-        
+
         assert_eq!(analysis.peak_bandwidth_mbps, 950.0);
         assert_eq!(analysis.average_bandwidth_mbps, 500.0);
     }
@@ -707,7 +707,7 @@ mod tests {
             pool_health: "ONLINE".to_string(),
             trend: PerformanceTrend::Improving,
         };
-        
+
         assert_eq!(analysis.current_arc_hit_ratio, 0.92);
         assert_eq!(analysis.pool_health, "ONLINE");
     }
@@ -734,7 +734,7 @@ mod tests {
             analysis_period_start: Utc::now(),
             analysis_period_end: Utc::now(),
         };
-        
+
         assert_eq!(report.overall_health_score, 85.0);
         assert_eq!(report.system_uptime_seconds, 86400);
     }
@@ -752,21 +752,19 @@ mod tests {
                 zfs_trend: PerformanceTrend::Stable,
             },
             component_analyses: vec![],
-            recommendations: vec![
-                PerformanceRecommendation {
-                    category: "CPU".to_string(),
-                    description: "Reduce load".to_string(),
-                    priority: 9,
-                    estimated_impact: "High".to_string(),
-                }
-            ],
+            recommendations: vec![PerformanceRecommendation {
+                category: "CPU".to_string(),
+                description: "Reduce load".to_string(),
+                priority: 9,
+                estimated_impact: "High".to_string(),
+            }],
             critical_issues: vec!["High CPU usage detected".to_string()],
             warnings: vec!["Memory usage above 80%".to_string()],
             system_uptime_seconds: 3600,
             analysis_period_start: Utc::now(),
             analysis_period_end: Utc::now(),
         };
-        
+
         assert_eq!(report.overall_health_score, 60.0);
         assert_eq!(report.critical_issues.len(), 1);
         assert_eq!(report.warnings.len(), 1);
