@@ -20,8 +20,7 @@ use serde::{Deserialize, Serialize};
 
 // System-level configuration types
 pub mod system_config;
-// Network and connectivity configuration types
-pub mod network_config;
+// REMOVED: network_config → Use domains/network instead
 // Storage and ZFS configuration types
 pub mod storage_config;
 // Security and authentication configuration types
@@ -52,7 +51,7 @@ pub mod phase2c_types;
 pub use api_config::*;
 pub use builders::*;
 pub use handler_config::*;
-pub use network_config::*;
+// REMOVED: network_config::* → Use domains::CanonicalNetworkConfig instead
 pub use performance_config::*;
 pub use security_config::*;
 pub use storage_config::*;

@@ -14,7 +14,7 @@
 
 use crate::simd::StandardBatchProcessor;
 use crate::zero_cost::{
-    RequestPriority, ZeroCostCacheProvider, ZeroCostError, ZeroCostFileStorage,
+    RequestPriority, ZeroCostError, ZeroCostFileStorage,
     ZeroCostJwtProvider, ZeroCostMemoryCache, ZeroCostMetadata, ZeroCostRequest, ZeroCostSystem,
     ZeroCostSystemBuilder,
 };
