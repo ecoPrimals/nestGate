@@ -393,10 +393,7 @@ mod async_error_tests {
     #[tokio::test]
     async fn test_async_error_recovery() {
         async fn primary_async() -> Result<i32> {
-            Err(NestGateError::network_error(
-                "Network error".to_string(),
-                "network".to_string(),
-            ))
+            Err(NestGateError::network_error("Network error"))
         }
 
         async fn fallback_async() -> Result<i32> {
