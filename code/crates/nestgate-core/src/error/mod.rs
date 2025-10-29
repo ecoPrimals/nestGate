@@ -420,7 +420,7 @@ mod error_path_tests {
 
     #[test]
     fn test_error_severity_ordering() {
-        let severities = vec![
+        let severities = [
             ErrorSeverity::Info,
             ErrorSeverity::Warning,
             ErrorSeverity::Error,
@@ -431,3 +431,9 @@ mod error_path_tests {
         assert!(severities.contains(&ErrorSeverity::Critical));
     }
 }
+
+#[cfg(test)]
+mod comprehensive_tests;
+
+#[cfg(test)]
+mod comprehensive_unit_tests;

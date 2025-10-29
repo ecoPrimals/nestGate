@@ -22,3 +22,6 @@ pub mod types;
 // Re-export the main types and functions
 pub use handlers::*;
 pub use types::*;
+
+#[cfg(test)]
+mod types_tests;

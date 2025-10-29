@@ -104,3 +104,6 @@ impl<T> ApiResponse<T> {
         }
     }
 }
+
+#[cfg(test)]
+mod types_tests;

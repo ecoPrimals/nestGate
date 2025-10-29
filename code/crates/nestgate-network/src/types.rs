@@ -612,7 +612,7 @@ mod tests {
 
     #[test]
     fn test_service_status_variants() {
-        let statuses = vec![
+        let statuses = [
             ServiceStatus::Running,
             ServiceStatus::Stopped,
             ServiceStatus::Error,

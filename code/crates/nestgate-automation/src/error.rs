@@ -58,7 +58,7 @@ mod tests {
 
     #[test]
     fn test_automation_error_variants() {
-        let variants = vec![
+        let variants = [
             AutomationError::AnalysisError("test".to_string()),
             AutomationError::PredictionError("test".to_string()),
             AutomationError::ConfigError("test".to_string()),
@@ -177,7 +177,7 @@ mod tests {
 
     #[test]
     fn test_empty_error_messages() {
-        let errors = vec![
+        let errors = [
             AutomationError::AnalysisError(String::new()),
             AutomationError::PredictionError(String::new()),
             AutomationError::ConfigError(String::new()),
@@ -240,7 +240,7 @@ mod tests {
 
     #[test]
     fn test_multiple_error_types() {
-        let errors = vec![
+        let errors = [
             AutomationError::AnalysisError("error1".to_string()),
             AutomationError::PredictionError("error2".to_string()),
             AutomationError::ConfigError("error3".to_string()),
@@ -287,7 +287,7 @@ mod tests {
 
     #[test]
     fn test_all_variants_displayable() {
-        let variants = vec![
+        let variants = [
             AutomationError::AnalysisError("a".to_string()),
             AutomationError::PredictionError("p".to_string()),
             AutomationError::ConfigError("c".to_string()),
@@ -303,7 +303,7 @@ mod tests {
 
     #[test]
     fn test_all_variants_debuggable() {
-        let variants = vec![
+        let variants = [
             AutomationError::AnalysisError("a".to_string()),
             AutomationError::PredictionError("p".to_string()),
             AutomationError::ConfigError("c".to_string()),

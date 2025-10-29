@@ -687,3 +687,48 @@ impl ApiRouter {
         }
     }
 }
+
+#[cfg(test)]
+mod status_comprehensive_tests;
+
+#[cfg(test)]
+mod storage_tests;
+
+#[cfg(test)]
+mod zero_cost_api_handlers_additional_tests;
+
+#[cfg(test)]
+mod performance_analytics_tests;
+
+#[cfg(test)]
+mod ai_first_example_tests;
+
+#[cfg(test)]
+mod health_tests;
+
+#[cfg(test)]
+mod dashboard_types_tests;
+
+#[cfg(test)]
+mod metrics_collector_enhanced_tests;
+
+#[cfg(test)]
+mod auth_comprehensive_tests;
+
+#[cfg(test)]
+mod zero_cost_api_handlers_tests;
+
+#[cfg(test)]
+mod mod_tests;
+
+#[cfg(test)]
+mod compliance_types_tests;
+
+#[cfg(test)]
+mod auth_tests;
+
+#[cfg(test)]
+mod zero_cost_tests;
+
+#[cfg(test)]
+mod auth_production_tests;

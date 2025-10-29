@@ -153,3 +153,15 @@ pub async fn get_performance_baselines() -> Result<Json<Vec<PerformanceBaseline>
 pub use config::{LoadTestConfig, LoadTestExecution};
 pub use metrics::{LoadTestMetrics, PerformanceStats, ResponseTimeStats};
 pub use scenarios::TestResult;
+
+#[cfg(test)]
+mod tests;
+
+#[cfg(test)]
+mod scenarios_tests;
+
+#[cfg(test)]
+mod config_tests;
+
+#[cfg(test)]
+mod handler_tests;

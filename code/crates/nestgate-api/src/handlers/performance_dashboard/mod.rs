@@ -17,3 +17,6 @@ pub use handlers::{
     get_dashboard_overview, get_performance_analysis, stream_dashboard_metrics, DashboardQuery,
     PerformanceDashboard,
 };
+
+#[cfg(test)]
+mod handlers_tests;

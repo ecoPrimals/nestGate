@@ -120,3 +120,6 @@ where
     // Provider validation logic would go here
     true
 }
+
+#[cfg(test)]
+mod canonical_hierarchy_tests;

@@ -28,3 +28,6 @@ pub use tokens::{SessionManager, TokenManager, TokenValidator};
 //! **Benefit**: Each module is now focused, testable, and maintainable
 //! **Compatibility**: 100% backward compatibility maintained through re-exports
 pub struct McpSecurityModularizationComplete;
+
+#[cfg(test)]
+mod tests;
