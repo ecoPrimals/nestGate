@@ -215,7 +215,7 @@ mod tests {
         let state = create_test_state();
         let result = get_compliance_dashboard(State(state)).await;
         assert!(result.is_ok());
-        let json = result.unwrap().0;
+        let json = result.expect("Operation failed").0;
         assert_eq!(json["status"], "success");
         assert!(json["data"].is_object());
     }
@@ -225,7 +225,7 @@ mod tests {
         let state = create_test_state();
         let result = get_compliance_dashboard(State(state)).await;
         assert!(result.is_ok());
-        let json = result.unwrap().0;
+        let json = result.expect("Operation failed").0;
         assert!(json["data"]["report"].is_object());
     }
 
@@ -234,7 +234,7 @@ mod tests {
         let state = create_test_state();
         let result = get_compliance_dashboard(State(state)).await;
         assert!(result.is_ok());
-        let json = result.unwrap().0;
+        let json = result.expect("Operation failed").0;
         assert!(json["data"]["total_audit_events"].is_number());
         assert!(json["data"]["active_frameworks"].is_number());
     }
@@ -244,7 +244,7 @@ mod tests {
         let state = create_test_state();
         let result = get_retention_policies(State(state)).await;
         assert!(result.is_ok());
-        let json = result.unwrap().0;
+        let json = result.expect("Operation failed").0;
         assert_eq!(json["status"], "success");
         assert_eq!(json["data"]["total"], 0);
     }
@@ -258,7 +258,7 @@ mod tests {
         }
         let result = get_retention_policies(State(state)).await;
         assert!(result.is_ok());
-        let json = result.unwrap().0;
+        let json = result.expect("Operation failed").0;
         assert_eq!(json["data"]["total"], 1);
     }
 
@@ -268,7 +268,7 @@ mod tests {
         let policy = create_test_retention_policy();
         let result = create_retention_policy(State(state.clone()), Json(policy)).await;
         assert!(result.is_ok());
-        let json = result.unwrap().0;
+        let json = result.expect("Operation failed").0;
         assert_eq!(json["status"], "success");
         assert!(json["data"]["policy"].is_object());
     }
@@ -280,8 +280,8 @@ mod tests {
         policy.id = String::new(); // Empty ID should be replaced
         let result = create_retention_policy(State(state), Json(policy)).await;
         assert!(result.is_ok());
-        let json = result.unwrap().0;
-        assert!(!json["data"]["policy"]["id"].as_str().unwrap().is_empty());
+        let json = result.expect("Operation failed").0;
+        assert!(!json["data"]["policy"]["id"].as_str().expect("Operation failed").is_empty());
     }
 
     #[tokio::test]
@@ -292,9 +292,9 @@ mod tests {
         let result = create_retention_policy(State(state), Json(policy)).await;
         let after = Utc::now();
         assert!(result.is_ok());
-        let json = result.unwrap().0;
-        let created_at = json["data"]["policy"]["created_at"].as_str().unwrap();
-        let created: DateTime<Utc> = created_at.parse().unwrap();
+        let json = result.expect("Operation failed").0;
+        let created_at = json["data"]["policy"]["created_at"].as_str().expect("Operation failed");
+        let created: DateTime<Utc> = created_at.parse().expect("Failed to parse value");
         assert!(created >= before && created <= after);
     }
 
@@ -304,7 +304,7 @@ mod tests {
         let params = Query(HashMap::new());
         let result = get_audit_logs(State(state), params).await;
         assert!(result.is_ok());
-        let json = result.unwrap().0;
+        let json = result.expect("Operation failed").0;
         assert_eq!(json["status"], "success");
         assert_eq!(json["data"]["total"], 0);
     }
@@ -333,7 +333,7 @@ mod tests {
         let params = Query(HashMap::new());
         let result = get_violations(State(state), params).await;
         assert!(result.is_ok());
-        let json = result.unwrap().0;
+        let json = result.expect("Operation failed").0;
         assert_eq!(json["status"], "success");
         assert_eq!(json["data"]["total"], 0);
     }
@@ -451,7 +451,7 @@ mod tests {
         }
         let result = get_retention_policies(State(state)).await;
         assert!(result.is_ok());
-        let json = result.unwrap().0;
+        let json = result.expect("Operation failed").0;
         assert_eq!(json["data"]["total"], 5);
     }
 
@@ -464,7 +464,7 @@ mod tests {
         
         let result = create_retention_policy(State(state), Json(policy)).await;
         assert!(result.is_ok());
-        let json = result.unwrap().0;
+        let json = result.expect("Operation failed").0;
         assert_eq!(json["data"]["policy"]["name"], "Unique Policy Name");
         assert_eq!(json["data"]["policy"]["retention_days"], 999);
     }
@@ -489,8 +489,8 @@ mod tests {
         }
         let result = get_compliance_dashboard(State(state)).await;
         assert!(result.is_ok());
-        let json = result.unwrap().0;
-        assert!(json["data"]["active_frameworks"].as_u64().unwrap() > 0);
+        let json = result.expect("Operation failed").0;
+        assert!(json["data"]["active_frameworks"].as_u64().expect("Operation failed") > 0);
     }
 
     #[test]
@@ -519,7 +519,7 @@ mod tests {
         let params = Query(HashMap::new());
         let result = get_violations(State(state), params).await;
         assert!(result.is_ok());
-        let json = result.unwrap().0;
+        let json = result.expect("Operation failed").0;
         assert!(json["data"]["violations"].is_array());
     }
 }

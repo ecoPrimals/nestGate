@@ -136,11 +136,11 @@ mod tests {
         let test_ip = IpAddr::V4(Ipv4Addr::new(192, 168, 1, 100));
 
         // First two requests should be allowed
-        assert!(rate_limiter.check_rate_limit(test_ip).await.unwrap());
-        assert!(rate_limiter.check_rate_limit(test_ip).await.unwrap());
+        assert!(rate_limiter.check_rate_limit(test_ip).await.expect("Security operation failed"));
+        assert!(rate_limiter.check_rate_limit(test_ip).await.expect("Security operation failed"));
 
         // Third request should be blocked
-        assert!(!rate_limiter.check_rate_limit(test_ip).await.unwrap());
+        assert!(!rate_limiter.check_rate_limit(test_ip).await.expect("Security operation failed"));
     }
 
     #[tokio::test]

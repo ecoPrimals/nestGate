@@ -5,15 +5,13 @@
 
 #[cfg(test)]
 mod error_creation_tests {
-    use crate::error::{NestGateError, NestGateUnifiedError, Result};
+    use crate::error::NestGateError;
 
     #[test]
     fn test_internal_error_creation() {
-        let error = NestGateError::internal_error(
-            "Test error".to_string(),
-            "test_context".to_string(),
-        );
-        
+        let error =
+            NestGateError::internal_error("Test error".to_string(), "test_context".to_string());
+
         assert!(format!("{:?}", error).contains("Test error"));
         assert!(format!("{:?}", error).contains("test_context"));
     }
@@ -21,50 +19,49 @@ mod error_creation_tests {
     #[test]
     fn test_validation_error_creation() {
         let error = NestGateError::validation_error("Invalid input");
-        
+
         assert!(format!("{:?}", error).contains("Invalid input"));
     }
 
     #[test]
     fn test_io_error_creation() {
         let error = NestGateError::io_error("File not found");
-        
+
         assert!(format!("{:?}", error).contains("File not found"));
     }
 
     #[test]
     fn test_network_error_creation() {
         let error = NestGateError::network_error("Connection refused");
-        
+
         assert!(format!("{:?}", error).contains("Connection refused"));
     }
 
     #[test]
     fn test_configuration_error_creation() {
         let error = NestGateError::configuration_error("config_field", "Missing config");
-        
+
         assert!(format!("{:?}", error).contains("Missing config"));
     }
 
     #[test]
     fn test_authentication_error_creation() {
         let error = NestGateError::security_authentication_failed("user123", "Invalid token");
-        
+
         assert!(format!("{:?}", error).contains("Invalid token"));
     }
 
     #[test]
     fn test_authorization_error_creation() {
         let error = NestGateError::security_authorization_failed("user123", "write", "resource");
-        
+
         assert!(format!("{:?}", error).contains("Authorization failed"));
     }
 
     #[test]
-    #[ignore] // TODO: API no longer has not_found_error - use api_error or storage_error instead
-    fn test_not_found_error_creation() {
+    fn test_api_error_creation() {
         let error = NestGateError::api_error("Resource not found");
-        
+
         assert!(format!("{:?}", error).contains("Resource not found"));
     }
 }
@@ -77,7 +74,7 @@ mod error_result_tests {
     fn test_ok_result() {
         let result: Result<i32> = Ok(42);
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), 42);
+        assert_eq!(result.expect("Test setup failed"), 42);
     }
 
     #[test]
@@ -86,14 +83,14 @@ mod error_result_tests {
             "Test error".to_string(),
             "test".to_string(),
         ));
-        
+
         assert!(result.is_err());
     }
 
     #[test]
     fn test_result_with_string() {
         let result: Result<String> = Ok("test".to_string());
-        assert_eq!(result.unwrap(), "test");
+        assert_eq!(result.expect("Test setup failed"), "test");
     }
 
     #[test]
@@ -117,12 +114,9 @@ mod error_result_tests {
     #[test]
     fn test_result_with_match() {
         let result: Result<i32> = Ok(100);
-        
-        let value = match result {
-            Ok(v) => v,
-            Err(_) => 0,
-        };
-        
+
+        let value = result.unwrap_or_default();
+
         assert_eq!(value, 100);
     }
 
@@ -132,12 +126,9 @@ mod error_result_tests {
             "Error".to_string(),
             "test".to_string(),
         ));
-        
-        let value = match result {
-            Ok(v) => v,
-            Err(_) => -1,
-        };
-        
+
+        let value = result.unwrap_or(-1);
+
         assert_eq!(value, -1);
     }
 }
@@ -151,7 +142,7 @@ mod error_conversion_tests {
     fn test_from_io_error() {
         let io_err = io::Error::new(io::ErrorKind::NotFound, "file not found");
         let nestgate_err = NestGateError::from(io_err);
-        
+
         assert!(format!("{:?}", nestgate_err).contains("file not found"));
     }
 
@@ -168,9 +159,9 @@ mod error_conversion_tests {
             Err(io::Error::new(io::ErrorKind::NotFound, "config not found"))
         }
 
-        let result = read_config().map_err(|e| NestGateError::from(e));
+        let result = read_config().map_err(NestGateError::from);
         assert!(result.is_err());
-        
+
         Ok(())
     }
 }
@@ -181,11 +172,9 @@ mod error_context_tests {
 
     #[test]
     fn test_error_with_context() {
-        let error = NestGateError::internal_error(
-            "Base error".to_string(),
-            "original_context".to_string(),
-        );
-        
+        let error =
+            NestGateError::internal_error("Base error".to_string(), "original_context".to_string());
+
         // Error should contain context information
         let debug_string = format!("{:?}", error);
         assert!(debug_string.contains("Base error") || debug_string.contains("original_context"));
@@ -220,7 +209,10 @@ mod error_context_tests {
             match error_type {
                 1 => Err(NestGateError::validation_error("Validation failed")),
                 2 => Err(NestGateError::network_error("Network failed")),
-                3 => Err(NestGateError::security_authentication_failed("user", "Auth failed")),
+                3 => Err(NestGateError::security_authentication_failed(
+                    "user",
+                    "Auth failed",
+                )),
                 _ => Ok("Success".to_string()),
             }
         }
@@ -238,11 +230,9 @@ mod error_display_tests {
 
     #[test]
     fn test_error_debug_format() {
-        let error = NestGateError::internal_error(
-            "Debug test".to_string(),
-            "debug_context".to_string(),
-        );
-        
+        let error =
+            NestGateError::internal_error("Debug test".to_string(), "debug_context".to_string());
+
         let debug = format!("{:?}", error);
         assert!(!debug.is_empty());
     }
@@ -253,7 +243,7 @@ mod error_display_tests {
             "Display test".to_string(),
             "display_context".to_string(),
         );
-        
+
         let display = format!("{}", error);
         assert!(!display.is_empty());
     }
@@ -292,21 +282,21 @@ mod error_pattern_tests {
 
         let result = fallible_operation().or_else(|_| fallback_operation());
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), 42);
+        assert_eq!(result.expect("Test setup failed"), 42);
     }
 
     #[test]
     fn test_error_mapping() {
         let result: Result<i32> = Ok(10);
         let mapped = result.map(|v| v * 2);
-        
-        assert_eq!(mapped.unwrap(), 20);
+
+        assert_eq!(mapped.expect("Test setup failed"), 20);
     }
 
     #[test]
     fn test_error_and_then() {
         let result: Result<i32> = Ok(5);
-        
+
         let chained = result.and_then(|v| {
             if v > 0 {
                 Ok(v * 2)
@@ -314,14 +304,14 @@ mod error_pattern_tests {
                 Err(NestGateError::validation_error("Value must be positive"))
             }
         });
-        
-        assert_eq!(chained.unwrap(), 10);
+
+        assert_eq!(chained.expect("Test setup failed"), 10);
     }
 
     #[test]
     fn test_error_unwrap_or() {
         let result: Result<i32> = Err(NestGateError::internal_error("Error", "test"));
-        
+
         let value = result.unwrap_or(0);
         assert_eq!(value, 0);
     }
@@ -332,8 +322,8 @@ mod error_pattern_tests {
             "Error".to_string(),
             "test".to_string(),
         ));
-        
-        let value = result.unwrap_or_else(|_| 99);
+
+        let value = result.unwrap_or(99);
         assert_eq!(value, 99);
     }
 }
@@ -374,9 +364,15 @@ mod async_error_tests {
 
     #[tokio::test]
     async fn test_multiple_async_operations() {
-        async fn op1() -> Result<i32> { Ok(1) }
-        async fn op2() -> Result<i32> { Ok(2) }
-        async fn op3() -> Result<i32> { Ok(3) }
+        async fn op1() -> Result<i32> {
+            Ok(1)
+        }
+        async fn op2() -> Result<i32> {
+            Ok(2)
+        }
+        async fn op3() -> Result<i32> {
+            Ok(3)
+        }
 
         let r1 = op1().await;
         let r2 = op2().await;
@@ -388,27 +384,22 @@ mod async_error_tests {
 
 #[cfg(test)]
 mod error_edge_cases {
-    use crate::error::{NestGateError, Result};
+    use crate::error::NestGateError;
 
     #[test]
     fn test_empty_error_message() {
-        let error = NestGateError::internal_error(
-            String::new(),
-            "empty_test".to_string(),
-        );
-        
-        // Should still be a valid error
-        assert!(format!("{:?}", error).contains("empty_test") || true);
+        let error = NestGateError::internal_error(String::new(), "empty_test".to_string());
+
+        // Should still be a valid error - check that debug formatting doesn't panic
+        let debug_str = format!("{:?}", error);
+        assert!(!debug_str.is_empty());
     }
 
     #[test]
     fn test_very_long_error_message() {
         let long_message = "error".repeat(1000);
-        let error = NestGateError::internal_error(
-            long_message.clone(),
-            "long_test".to_string(),
-        );
-        
+        let error = NestGateError::internal_error(long_message.clone(), "long_test".to_string());
+
         let debug = format!("{:?}", error);
         assert!(!debug.is_empty());
     }
@@ -419,7 +410,7 @@ mod error_edge_cases {
             "Error with special chars: <>&\"'".to_string(),
             "special_test".to_string(),
         );
-        
+
         let msg = format!("{}", error);
         assert!(!msg.is_empty());
     }
@@ -430,7 +421,7 @@ mod error_edge_cases {
             "Error with unicode: 你好 🚀 مرحبا".to_string(),
             "unicode_test".to_string(),
         );
-        
+
         let msg = format!("{}", error);
         assert!(!msg.is_empty());
     }

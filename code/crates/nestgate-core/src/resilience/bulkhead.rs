@@ -349,15 +349,15 @@ mod tests {
         let bulkhead = Bulkhead::new("test".to_string(), config);
 
         // Should be able to acquire permits
-        let permit1 = bulkhead.acquire_permit().await.unwrap();
-        let permit2 = bulkhead.acquire_permit().await.unwrap();
+        let permit1 = bulkhead.acquire_permit().await.expect("Operation failed");
+        let permit2 = bulkhead.acquire_permit().await.expect("Operation failed");
 
         // Should be at capacity
         assert!(bulkhead.is_at_capacity());
         assert_eq!(bulkhead.available_permits(), 0);
 
         // Try acquire should fail
-        assert!(bulkhead.try_acquire_permit().unwrap().is_none());
+        assert!(bulkhead.try_acquire_permit().expect("Operation failed").is_none());
 
         // Drop one permit
         drop(permit1);
@@ -378,13 +378,13 @@ mod tests {
         let bulkhead = Bulkhead::new("test".to_string(), config);
 
         // Acquire the only permit
-        let _permit = bulkhead.acquire_permit().await.unwrap();
+        let _permit = bulkhead.acquire_permit().await.expect("Operation failed");
 
         // This should timeout
         let result = bulkhead.acquire_permit().await;
         assert!(result.is_err());
 
-        let metrics = bulkhead.get_metrics().await.unwrap();
+        let metrics = bulkhead.get_metrics().await.expect("Operation failed");
         assert_eq!(metrics.timeouts, 1);
     }
 
@@ -402,6 +402,6 @@ mod tests {
             .await;
 
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), "success");
+        assert_eq!(result.expect("Operation failed"), "success");
     }
 }

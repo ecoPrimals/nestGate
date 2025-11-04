@@ -282,7 +282,12 @@ impl RateLimiter {
     }
     
     fn check_bucket(&self, key: &str, limit: &RateLimit) -> bool {
-        let mut buckets = self.buckets.lock().unwrap();
+        // ✅ SAFE: Mutex lock - handle poisoned mutex gracefully
+        // If another thread panicked while holding this lock, we recover by creating a new state
+        let mut buckets = self.buckets.lock().unwrap_or_else(|poisoned| {
+            // Mutex was poisoned, but we can recover by accessing the underlying data
+            poisoned.into_inner()
+        });
         
         let bucket = buckets.entry(key.to_string()).or_insert_with(|| {
             self.stats.buckets_created.fetch_add(1, Ordering::Relaxed);
@@ -437,7 +442,9 @@ impl SecurityMonitor {
     pub fn record_event(&self, event: SecurityEvent) {
         self.stats.events_recorded.fetch_add(1, Ordering::Relaxed);
         
-        let mut events = self.events.lock().unwrap();
+        // ✅ SAFE: Mutex lock - handle poisoned mutex gracefully
+        // If poisoned, we can still record events by recovering the underlying data
+        let mut events = self.events.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
         events.push(event);
         
         // Trim if over max capacity
@@ -490,7 +497,9 @@ impl SecurityMonitor {
     
     /// Get security events
     pub fn get_events(&self, severity_filter: Option<SecuritySeverity>) -> Vec<SecurityEvent> {
-        let events = self.events.lock().unwrap();
+        // ✅ SAFE: Mutex lock - handle poisoned mutex gracefully
+        // If poisoned, we can still read events by recovering the underlying data
+        let events = self.events.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
         
         match severity_filter {
             Some(severity) => events.iter()
@@ -729,9 +738,222 @@ mod tests {
         manager.add_key("test_key".to_string(), key);
         
         let data = b"Hello, World!";
-        let encrypted = manager.encrypt(data, None).unwrap();
-        let decrypted = manager.decrypt(&encrypted).unwrap();
+        let encrypted = manager.encrypt(data, None).expect("Security operation failed");
+        let decrypted = manager.decrypt(&encrypted).expect("Security operation failed");
         
         assert_eq!(data.to_vec(), decrypted);
+    }
+    
+    // **COMPREHENSIVE ENCRYPTION MANAGER TESTS** (Added Nov 3, 2025)
+    
+    #[test]
+    fn test_encryption_manager_new_empty() {
+        let manager = EncryptionManager::new();
+        assert!(manager.keys.is_empty());
+        assert!(manager.default_key_id.is_none());
+    }
+
+    #[test]
+    fn test_add_valid_32_byte_key() {
+        let mut manager = EncryptionManager::new();
+        manager.add_key("key1".to_string(), vec![42u8; 32]);
+        
+        assert_eq!(manager.keys.len(), 1);
+        assert_eq!(manager.default_key_id, Some("key1".to_string()));
+    }
+
+    #[test]
+    #[should_panic(expected = "Key must be 32 bytes")]
+    fn test_add_key_too_short() {
+        let mut manager = EncryptionManager::new();
+        manager.add_key("short".to_string(), vec![0u8; 16]);
+    }
+
+    #[test]
+    #[should_panic(expected = "Key must be 32 bytes")]
+    fn test_add_key_too_long() {
+        let mut manager = EncryptionManager::new();
+        manager.add_key("long".to_string(), vec![0u8; 64]);
+    }
+
+    #[test]
+    fn test_multiple_keys_first_is_default() {
+        let mut manager = EncryptionManager::new();
+        manager.add_key("first".to_string(), vec![1u8; 32]);
+        manager.add_key("second".to_string(), vec![2u8; 32]);
+        
+        assert_eq!(manager.keys.len(), 2);
+        assert_eq!(manager.default_key_id, Some("first".to_string()));
+    }
+
+    #[test]
+    fn test_encrypt_with_specific_key() {
+        let mut manager = EncryptionManager::new();
+        manager.add_key("key1".to_string(), vec![1u8; 32]);
+        manager.add_key("key2".to_string(), vec![2u8; 32]);
+        
+        let encrypted = manager.encrypt(b"test", Some("key2")).unwrap();
+        assert_eq!(encrypted.key_id, "key2");
+    }
+
+    #[test]
+    fn test_encrypt_no_key_error() {
+        let manager = EncryptionManager::new();
+        let result = manager.encrypt(b"data", None);
+        
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), "No encryption key available");
+    }
+
+    #[test]
+    fn test_encrypt_nonexistent_key_error() {
+        let mut manager = EncryptionManager::new();
+        manager.add_key("exists".to_string(), vec![1u8; 32]);
+        
+        let result = manager.encrypt(b"data", Some("missing"));
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), "Encryption key not found");
+    }
+
+    #[test]
+    fn test_decrypt_roundtrip() {
+        let mut manager = EncryptionManager::new();
+        manager.add_key("key1".to_string(), vec![99u8; 32]);
+        
+        let original = b"Secret message to encrypt and decrypt!";
+        let encrypted = manager.encrypt(original, None).unwrap();
+        let decrypted = manager.decrypt(&encrypted).unwrap();
+        
+        assert_eq!(decrypted.as_slice(), original);
+    }
+
+    #[test]
+    fn test_encrypt_empty_data() {
+        let mut manager = EncryptionManager::new();
+        manager.add_key("key1".to_string(), vec![42u8; 32]);
+        
+        let encrypted = manager.encrypt(b"", None).unwrap();
+        let decrypted = manager.decrypt(&encrypted).unwrap();
+        
+        assert_eq!(decrypted, b"");
+    }
+
+    #[test]
+    fn test_encrypt_large_data() {
+        let mut manager = EncryptionManager::new();
+        manager.add_key("key1".to_string(), vec![77u8; 32]);
+        
+        let large = vec![42u8; 50_000];
+        let encrypted = manager.encrypt(&large, None).unwrap();
+        let decrypted = manager.decrypt(&encrypted).unwrap();
+        
+        assert_eq!(decrypted, large);
+    }
+
+    #[test]
+    fn test_decrypt_key_not_found() {
+        let manager = EncryptionManager::new();
+        
+        let fake = EncryptedData {
+            key_id: "nonexistent".to_string(),
+            data: vec![1, 2, 3],
+            timestamp: SystemTime::now(),
+        };
+        
+        let result = manager.decrypt(&fake);
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), "Decryption key not found");
+    }
+
+    #[test]
+    fn test_rotate_key_success() {
+        let mut manager = EncryptionManager::new();
+        manager.add_key("old".to_string(), vec![1u8; 32]);
+        
+        let result = manager.rotate_key("old", "new".to_string(), vec![2u8; 32]);
+        assert!(result.is_ok());
+        
+        assert_eq!(manager.keys.len(), 2);
+        assert_eq!(manager.default_key_id, Some("new".to_string()));
+    }
+
+    #[test]
+    fn test_rotate_nonexistent_key() {
+        let manager = EncryptionManager::new();
+        
+        let result = manager.rotate_key("missing", "new".to_string(), vec![1u8; 32]);
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), "Old key not found");
+    }
+
+    #[test]
+    fn test_stats_tracking() {
+        let mut manager = EncryptionManager::new();
+        manager.add_key("key1".to_string(), vec![42u8; 32]);
+        
+        let enc = manager.encrypt(b"test", None).unwrap();
+        manager.decrypt(&enc).unwrap();
+        manager.rotate_key("key1", "key2".to_string(), vec![43u8; 32]).unwrap();
+        
+        let (encryptions, decryptions, rotations) = manager.stats();
+        assert_eq!(encryptions, 1);
+        assert_eq!(decryptions, 1);
+        assert_eq!(rotations, 1);
+    }
+
+    #[test]
+    fn test_xor_is_reversible() {
+        let mut manager = EncryptionManager::new();
+        let key = vec![123u8; 32];
+        manager.add_key("key".to_string(), key.clone());
+        
+        let original = b"Test XOR property";
+        let encrypted = manager.encrypt(original, None).unwrap();
+        
+        // Manual XOR should recover original
+        let mut manual = Vec::new();
+        for (i, &byte) in encrypted.data.iter().enumerate() {
+            manual.push(byte ^ key[i % key.len()]);
+        }
+        
+        assert_eq!(manual.as_slice(), original);
+    }
+
+    #[test]
+    fn test_different_keys_different_ciphertext() {
+        let mut manager = EncryptionManager::new();
+        manager.add_key("key1".to_string(), vec![1u8; 32]);
+        manager.add_key("key2".to_string(), vec![2u8; 32]);
+        
+        let plaintext = b"Same plaintext";
+        let enc1 = manager.encrypt(plaintext, Some("key1")).unwrap();
+        let enc2 = manager.encrypt(plaintext, Some("key2")).unwrap();
+        
+        assert_ne!(enc1.data, enc2.data);
+    }
+
+    #[test]
+    fn test_timestamp_recorded() {
+        let mut manager = EncryptionManager::new();
+        manager.add_key("key1".to_string(), vec![42u8; 32]);
+        
+        let before = SystemTime::now();
+        let encrypted = manager.encrypt(b"test", None).unwrap();
+        let after = SystemTime::now();
+        
+        assert!(encrypted.timestamp >= before);
+        assert!(encrypted.timestamp <= after);
+    }
+
+    #[test]
+    fn test_all_byte_values() {
+        let mut manager = EncryptionManager::new();
+        manager.add_key("key1".to_string(), vec![128u8; 32]);
+        
+        let all_bytes: Vec<u8> = (0..=255).collect();
+        let encrypted = manager.encrypt(&all_bytes, None).unwrap();
+        let decrypted = manager.decrypt(&encrypted).unwrap();
+        
+        assert_eq!(decrypted, all_bytes);
     }
 } 

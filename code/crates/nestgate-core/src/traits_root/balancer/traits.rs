@@ -5,26 +5,29 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use crate::{NestGateError, Result};
 use crate::universal_traits::{ServiceInfo, ServiceRequest, ServiceResponse};
+use crate::Result;
 
 /// Load balancer trait
 pub trait LoadBalancer: Send + Sync {
     /// Select a service instance for a request
-    async fn select_service(
+    fn select_service(
         &self,
         services: &[ServiceInfo],
         request: &ServiceRequest,
-    ) -> Result<ServiceInfo>;
+    ) -> impl std::future::Future<Output = Result<ServiceInfo>> + Send;
     /// Record the response for learning
-    async fn record_response(
+    fn record_response(
         &self,
         service: &ServiceInfo,
         response: &ServiceResponse,
-    ) -> Result<()>;
+    ) -> impl std::future::Future<Output = Result<()>> + Send;
 
     /// Update service weights
-    fn update_weights(&self, weights: HashMap<String, f64>) -> impl std::future::Future<Output = Result<()>> + Send;
+    fn update_weights(
+        &self,
+        weights: HashMap<String, f64>,
+    ) -> impl std::future::Future<Output = Result<()>> + Send;
 
     /// Get load balancer statistics
     fn get_stats(&self) -> impl std::future::Future<Output = Result<LoadBalancerStats>> + Send;
@@ -87,4 +90,4 @@ impl Default for LoadBalancerStats {
             health_aware: false,
         }
     }
-} 
+}

@@ -223,7 +223,7 @@ mod tests {
         let err = mcp_connection_error("test");
         let context = err.extract_mcp_context();
         assert!(context.is_some());
-        assert_eq!(context.unwrap(), "MCP operation");
+        assert_eq!(context.expect("Operation failed"), "MCP operation");
     }
 
     #[test]
@@ -231,7 +231,7 @@ mod tests {
         let err = transport_error("test");
         let context = err.extract_mcp_context();
         assert!(context.is_some());
-        assert_eq!(context.unwrap(), "MCP transport");
+        assert_eq!(context.expect("Operation failed"), "MCP transport");
     }
 
     #[test]
@@ -441,7 +441,7 @@ mod tests {
 
     #[test]
     fn test_all_error_types_distinct() {
-        let errors = vec![
+        let errors = [
             mcp_connection_error("e1"),
             protocol_error("e2", None),
             method_error("e3", "m"),

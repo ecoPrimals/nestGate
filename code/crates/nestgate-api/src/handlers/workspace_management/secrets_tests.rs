@@ -23,7 +23,7 @@ mod tests {
 
         assert!(result.is_ok(), "Should return Ok result");
 
-        let response = result.unwrap();
+        let response = result.expect("Test setup failed");
         let json = response.0;
 
         // Should have status field
@@ -47,7 +47,7 @@ mod tests {
                 "Should succeed for workspace_id: {workspace_id}"
             );
 
-            let response = result.unwrap();
+            let response = result.expect("Test setup failed");
             let json = response.0;
 
             // Verify workspace_id is in response
@@ -65,7 +65,7 @@ mod tests {
 
         assert!(result.is_ok());
 
-        let response = result.unwrap();
+        let response = result.expect("Test setup failed");
         let json = response.0;
 
         // Verify required fields
@@ -84,7 +84,7 @@ mod tests {
 
         assert!(result.is_ok());
 
-        let response = result.unwrap();
+        let response = result.expect("Test setup failed");
         let json = response.0;
 
         let status = json.get("status").and_then(|v| v.as_str());
@@ -102,7 +102,7 @@ mod tests {
 
         assert!(result.is_ok());
 
-        let response = result.unwrap();
+        let response = result.expect("Test setup failed");
         let json = response.0;
 
         // If status is success, should have created_at timestamp
@@ -121,7 +121,7 @@ mod tests {
 
         assert!(result.is_ok());
 
-        let response = result.unwrap();
+        let response = result.expect("Test setup failed");
         let json = response.0;
 
         // If status is success, should have secret_id
@@ -140,7 +140,7 @@ mod tests {
 
         assert!(result.is_ok(), "Fallback should still return Ok");
 
-        let response = result.unwrap();
+        let response = result.expect("Test setup failed");
         let json = response.0;
 
         // Fallback response should have appropriate fields
@@ -167,12 +167,12 @@ mod tests {
 
         assert!(result.is_ok());
 
-        let response = result.unwrap();
+        let response = result.expect("Test setup failed");
         let json = response.0;
 
         let message = json.get("message").and_then(|v| v.as_str());
         assert!(message.is_some(), "Should have message field");
-        assert!(!message.unwrap().is_empty(), "Message should not be empty");
+        assert!(!message.expect("Test setup failed").is_empty(), "Message should not be empty");
     }
 
     #[tokio::test]
@@ -209,7 +209,7 @@ mod tests {
 
         assert!(result.is_ok(), "Should handle long workspace_id");
 
-        let response = result.unwrap();
+        let response = result.expect("Test setup failed");
         let json = response.0;
 
         // Should preserve the full workspace_id
@@ -257,14 +257,14 @@ mod tests {
 
         assert!(result.is_ok());
 
-        let response = result.unwrap();
+        let response = result.expect("Test setup failed");
         let json = response.0;
 
         // Response should be serializable
         let serialized = serde_json::to_string(&json);
         assert!(serialized.is_ok(), "Response should serialize to JSON");
 
-        let json_string = serialized.unwrap();
+        let json_string = serialized.expect("Test setup failed");
         assert!(
             !json_string.is_empty(),
             "Serialized JSON should not be empty"
@@ -282,7 +282,7 @@ mod tests {
         let create_result = create_workspace_secret(Path(workspace_id.clone())).await;
         assert!(create_result.is_ok(), "Secret creation should succeed");
 
-        let response = create_result.unwrap();
+        let response = create_result.expect("Test setup failed");
         let json = response.0;
 
         // Step 2: Verify response structure
@@ -325,7 +325,7 @@ mod tests {
 
         assert!(result.is_ok(), "Should handle UUID workspace_id");
 
-        let response = result.unwrap();
+        let response = result.expect("Test setup failed");
         let json = response.0;
 
         assert_eq!(
@@ -349,7 +349,7 @@ mod tests {
 
         assert!(result.is_ok());
 
-        let response = result.unwrap();
+        let response = result.expect("Test setup failed");
         let json = response.0;
 
         // Verify all expected fields are present
@@ -370,7 +370,7 @@ mod tests {
 
         assert!(result.is_ok());
 
-        let response = result.unwrap();
+        let response = result.expect("Test setup failed");
         let json = response.0;
 
         // If fallback, verify delegation information
@@ -378,7 +378,7 @@ mod tests {
             let note = json.get("note").and_then(|v| v.as_str());
             assert!(note.is_some(), "Fallback should include note");
 
-            let note_text = note.unwrap();
+            let note_text = note.expect("Test setup failed");
             assert!(
                 note_text.contains("NestGate") || note_text.contains("storage"),
                 "Note should mention NestGate's focus on storage"

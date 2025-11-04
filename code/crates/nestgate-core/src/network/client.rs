@@ -1,13 +1,13 @@
 //! Modern HTTP Client Module
-//! 
+//!
 //! Provides a high-performance, type-safe HTTP client with connection pooling,
 //! retry mechanisms, and comprehensive error handling using modern Rust patterns.
 
-use std::time::Duration;
-use std::sync::Arc;
-use std::collections::HashMap;
-use tokio::sync::{RwLock, Semaphore};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::sync::Arc;
+use std::time::Duration;
+use tokio::sync::{RwLock, Semaphore};
 
 use crate::error::{NestGateError, Result};
 
@@ -117,12 +117,20 @@ pub struct Endpoint {
 impl Endpoint {
     /// Create HTTP endpoint
     pub fn http(host: String, port: Port) -> Self {
-        Self { host, port, scheme: Scheme::Http }
+        Self {
+            host,
+            port,
+            scheme: Scheme::Http,
+        }
     }
 
     /// Create HTTPS endpoint
     pub fn https(host: String, port: Port) -> Self {
-        Self { host, port, scheme: Scheme::Https }
+        Self {
+            host,
+            port,
+            scheme: Scheme::Https,
+        }
     }
 
     /// Get the full URL
@@ -173,7 +181,7 @@ impl<'a> Request<'a> {
     pub fn post_json(path: &'a str, body: &'a str) -> Self {
         let mut headers = HeaderMap::new();
         headers.insert("content-type".to_string(), "application/json".to_string());
-        
+
         Self {
             method: Method::Post,
             path,
@@ -278,12 +286,13 @@ impl ConnectionPool {
 
     /// Get a connection for the given endpoint
     pub async fn get_connection(&self, endpoint: &Endpoint) -> Result<Connection> {
-        let _permit = self.semaphore.acquire().await
-            .map_err(|e| NestGateError::network_error(&format!("Failed to acquire connection: {}", e)))?;
+        let _permit = self.semaphore.acquire().await.map_err(|e| {
+            NestGateError::network_error(&format!("Failed to acquire connection: {}", e))
+        })?;
 
         let key = endpoint.url();
         let mut connections = self.connections.write().await;
-        
+
         if let Some(pool) = connections.get_mut(&key) {
             if let Some(conn) = pool.pop() {
                 if conn.is_alive() {
@@ -304,7 +313,7 @@ impl ConnectionPool {
 
         let key = endpoint.url();
         let mut connections = self.connections.write().await;
-        
+
         let pool = connections.entry(key).or_insert_with(Vec::new);
         if pool.len() < self.config.max_connections_per_host {
             pool.push(connection);
@@ -347,12 +356,64 @@ impl Connection {
         self.last_used = std::time::Instant::now();
         self.request_count += 1;
 
-        // In a real implementation, this would send the actual HTTP request
-        // For now, return a mock response
+        // Build the full URL
+        let url = format!("{}{}", self.endpoint.url(), request.path);
+
+        // Create reqwest client
+        let client = reqwest::Client::new();
+
+        // Convert method
+        let method = match request.method {
+            Method::Get => reqwest::Method::GET,
+            Method::Post => reqwest::Method::POST,
+            Method::Put => reqwest::Method::PUT,
+            Method::Delete => reqwest::Method::DELETE,
+            Method::Patch => reqwest::Method::PATCH,
+            Method::Head => reqwest::Method::HEAD,
+            Method::Options => reqwest::Method::OPTIONS,
+        };
+
+        // Build request
+        let mut req_builder = client.request(method, &url);
+
+        // Add headers
+        for (key, value) in &request.headers {
+            req_builder = req_builder.header(key, value);
+        }
+
+        // Add body if present
+        req_builder = match &request.body {
+            RequestBody::Empty => req_builder,
+            RequestBody::Bytes(bytes) => req_builder.body(bytes.to_vec()),
+            RequestBody::String(s) => req_builder.body(s.to_string()),
+        };
+
+        // Send request
+        let resp = req_builder
+            .send()
+            .await
+            .map_err(|e| NestGateError::network_error(&format!("HTTP request failed: {}", e)))?;
+
+        // Convert response
+        let status = StatusCode::new(resp.status().as_u16());
+
+        // Extract headers
+        let mut headers = HeaderMap::new();
+        for (key, value) in resp.headers() {
+            if let Ok(value_str) = value.to_str() {
+                headers.insert(key.to_string(), value_str.to_string());
+            }
+        }
+
+        // Get body
+        let body = resp.bytes().await.map_err(|e| {
+            NestGateError::network_error(&format!("Failed to read response body: {}", e))
+        })?;
+
         Ok(Response {
-            status: StatusCode::OK,
-            headers: HeaderMap::new(),
-            body: b"Mock response".to_vec(),
+            status,
+            headers,
+            body: body.to_vec(),
         })
     }
 
@@ -392,11 +453,6 @@ impl HttpClient {
         Self { pool, config }
     }
 
-    /// Create a client with default configuration
-    pub fn default() -> Self {
-        Self::new(ClientConfig::default())
-    }
-
     /// Send a GET request
     pub async fn get(&self, endpoint: &Endpoint, path: &str) -> Result<Response> {
         let request = Request::get(path);
@@ -410,13 +466,17 @@ impl HttpClient {
     }
 
     /// Send a request with retry logic
-    pub async fn send_request(&self, endpoint: &Endpoint, request: &Request<'_>) -> Result<Response> {
+    pub async fn send_request(
+        &self,
+        endpoint: &Endpoint,
+        request: &Request<'_>,
+    ) -> Result<Response> {
         let mut attempts = 0;
         let max_attempts = 3;
 
         loop {
             attempts += 1;
-            
+
             match self.send_request_once(endpoint, request).await {
                 Ok(response) => return Ok(response),
                 Err(e) if attempts >= max_attempts => return Err(e),
@@ -430,13 +490,18 @@ impl HttpClient {
     }
 
     /// Send a single request attempt
-    async fn send_request_once(&self, endpoint: &Endpoint, request: &Request<'_>) -> Result<Response> {
+    async fn send_request_once(
+        &self,
+        endpoint: &Endpoint,
+        request: &Request<'_>,
+    ) -> Result<Response> {
         let mut connection = self.pool.get_connection(endpoint).await?;
-        
+
         let response = tokio::time::timeout(
             self.config.timeout.as_duration(),
-            connection.send_request(request)
-        ).await
+            connection.send_request(request),
+        )
+        .await
         .map_err(|_| NestGateError::timeout_error("Request", self.config.timeout.as_duration()))?;
 
         // Return connection to pool
@@ -456,6 +521,12 @@ impl HttpClient {
     }
 }
 
+impl Default for HttpClient {
+    fn default() -> Self {
+        Self::new(ClientConfig::default())
+    }
+}
+
 /// Client statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ClientStats {
@@ -472,13 +543,13 @@ pub struct ClientStats {
 pub enum HttpClientError {
     #[error("Connection failed: {message}")]
     ConnectionFailed { message: String },
-    
+
     #[error("Request timeout after {timeout:?}")]
     Timeout { timeout: Duration },
-    
+
     #[error("Invalid response: {message}")]
     InvalidResponse { message: String },
-    
+
     #[error("Too many redirects: {count}")]
     TooManyRedirects { count: usize },
 }
@@ -486,9 +557,7 @@ pub enum HttpClientError {
 impl From<HttpClientError> for NestGateError {
     fn from(err: HttpClientError) -> Self {
         match err {
-            HttpClientError::ConnectionFailed { message } => {
-                NestGateError::network_error(&message)
-            }
+            HttpClientError::ConnectionFailed { message } => NestGateError::network_error(&message),
             HttpClientError::Timeout { timeout } => {
                 NestGateError::timeout_error("HTTP request", timeout)
             }
@@ -531,7 +600,10 @@ mod tests {
     fn test_port_validation() {
         assert!(Port::new(0).is_err());
         assert!(Port::new(8080).is_ok());
-        assert_eq!(Port::new(8080).unwrap().get(), 8080);
+        assert_eq!(
+            Port::new(8080).expect("Network operation failed").get(),
+            8080
+        );
     }
 
     #[test]
@@ -551,9 +623,17 @@ mod tests {
 
     #[test]
     fn test_endpoint_creation() {
-        let port = Port::new(8080).unwrap();
-        let endpoint = Endpoint::http("localhost".to_string(), port);
-        assert_eq!(endpoint.url(), "http://localhost:8080");
+        use crate::constants::hardcoding::{addresses, ports};
+        let port = Port::new(ports::HTTP_DEFAULT).expect("Network operation failed");
+        let endpoint = Endpoint::http(addresses::LOCALHOST_NAME.to_string(), port);
+        assert_eq!(
+            endpoint.url(),
+            format!(
+                "http://{}:{}",
+                addresses::LOCALHOST_NAME,
+                ports::HTTP_DEFAULT
+            )
+        );
     }
 
     #[tokio::test]
@@ -567,10 +647,16 @@ mod tests {
     async fn test_connection_pool() {
         let config = ClientConfig::default();
         let pool = ConnectionPool::new(config);
-        
-        let endpoint = Endpoint::http("example.com".to_string(), Port::new(80).unwrap());
-        let connection = pool.get_connection(&endpoint).await.unwrap();
-        
+
+        let endpoint = Endpoint::http(
+            "example.com".to_string(),
+            Port::new(80).expect("Network operation failed"),
+        );
+        let connection = pool
+            .get_connection(&endpoint)
+            .await
+            .expect("Network operation failed");
+
         assert!(connection.is_alive());
     }
 
@@ -578,7 +664,7 @@ mod tests {
     fn test_request_builder() {
         let request = Request::get("/api/test")
             .with_header("authorization".to_string(), "Bearer token".to_string());
-        
+
         assert_eq!(request.method, Method::Get);
         assert_eq!(request.path, "/api/test");
         assert!(request.headers.contains_key("authorization"));

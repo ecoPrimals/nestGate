@@ -19,9 +19,19 @@ impl Default for IntegrationPreferences {
 
 impl Default for ServiceEndpoint {
     fn default() -> Self {
+        use nestgate_core::constants::hardcoding::{addresses, ports};
+        use std::env;
+        
+        let host = env::var("NESTGATE_API_HOST")
+            .unwrap_or_else(|_| addresses::LOCALHOST_NAME.to_string());
+        let port = env::var("NESTGATE_API_PORT")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(ports::HTTP_DEFAULT);
+        
         Self {
             name: "default".to_string(),
-            url: "http://localhost:".to_string() + &env::var("NESTGATE_API_PORT").unwrap_or_else(|_| "8080".to_string()).to_string(),
+            url: format!("http://{}:{}", host, port),
             protocol: "HTTP".to_string(),
             health_check: Some("/health".to_string()),
             _metadata: HashMap::new(),

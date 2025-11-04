@@ -451,17 +451,17 @@ mod tests {
         let cb = CircuitBreaker::new("test".to_string(), config);
 
         // Should start closed
-        assert_eq!(cb.get_state().await.unwrap(), CircuitBreakerState::Closed);
-        assert!(cb.can_execute().await.unwrap());
+        assert_eq!(cb.get_state().await.expect("Operation failed"), CircuitBreakerState::Closed);
+        assert!(cb.can_execute().await.expect("Operation failed"));
 
         // Record failures
-        cb.record_failure().await.unwrap();
-        cb.record_failure().await.unwrap();
-        cb.record_failure().await.unwrap();
+        cb.record_failure().await.expect("Operation failed");
+        cb.record_failure().await.expect("Operation failed");
+        cb.record_failure().await.expect("Operation failed");
 
         // Should now be open
-        assert_eq!(cb.get_state().await.unwrap(), CircuitBreakerState::Open);
-        assert!(!cb.can_execute().await.unwrap());
+        assert_eq!(cb.get_state().await.expect("Operation failed"), CircuitBreakerState::Open);
+        assert!(!cb.can_execute().await.expect("Operation failed"));
     }
 
     #[tokio::test]
@@ -476,22 +476,22 @@ mod tests {
         let cb = CircuitBreaker::new("test".to_string(), config);
 
         // Trip the circuit
-        cb.record_failure().await.unwrap();
-        cb.record_failure().await.unwrap();
-        assert_eq!(cb.get_state().await.unwrap(), CircuitBreakerState::Open);
+        cb.record_failure().await.expect("Operation failed");
+        cb.record_failure().await.expect("Operation failed");
+        assert_eq!(cb.get_state().await.expect("Operation failed"), CircuitBreakerState::Open);
 
         // Wait for timeout
         sleep(Duration::from_millis(150)).await;
 
         // Should transition to half-open
-        assert!(cb.can_execute().await.unwrap());
-        assert_eq!(cb.get_state().await.unwrap(), CircuitBreakerState::HalfOpen);
+        assert!(cb.can_execute().await.expect("Operation failed"));
+        assert_eq!(cb.get_state().await.expect("Operation failed"), CircuitBreakerState::HalfOpen);
 
         // Record successes
-        cb.record_success().await.unwrap();
-        cb.record_success().await.unwrap();
+        cb.record_success().await.expect("Operation failed");
+        cb.record_success().await.expect("Operation failed");
 
         // Should now be closed
-        assert_eq!(cb.get_state().await.unwrap(), CircuitBreakerState::Closed);
+        assert_eq!(cb.get_state().await.expect("Operation failed"), CircuitBreakerState::Closed);
     }
 }

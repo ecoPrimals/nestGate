@@ -294,7 +294,7 @@ mod tests {
         .await;
 
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), "success");
+        assert_eq!(result.expect("Operation failed"), "success");
         assert_eq!(attempt_count.load(Ordering::SeqCst), 3);
     }
 

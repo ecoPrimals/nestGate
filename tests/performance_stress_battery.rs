@@ -8,18 +8,21 @@ use std::collections::HashMap;
 use std::time::Instant;
 use tokio::time::{sleep, Duration};
 
-use nestgate_core::config::canonical_config::performance_config::PerformanceConfig;
-use nestgate_core::{
-    canonical_modernization::unified_enums::{UnifiedServiceState, UnifiedServiceType},
-    config::canonical_master::NestGateCanonicalConfig,
-    error::{NestGateError, Result},
-};
+use nestgate_core::error::{NestGateError, Result};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
-use tokio::sync::RwLock;
 
-// **MODERNIZATION COMPLETE**
-// Use UnifiedBenchmarkConfig with BenchmarkPerformanceSettings for all performance testing.
+/// Performance configuration for stress tests
+#[derive(Debug, Clone)]
+pub struct PerformanceConfig {
+    pub test_duration_seconds: u64,
+    pub concurrent_threads: usize,
+    pub target_ops_per_second: u64,
+    pub memory_stress_enabled: bool,
+    pub cpu_stress_enabled: bool,
+    pub io_stress_enabled: bool,
+    pub network_stress_enabled: bool,
+}
 
 /// Performance test results with detailed metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -468,7 +471,7 @@ fn print_performance_results(results: &PerformanceResults) {
 // Performance Test Suite Implementation
 
 #[tokio::test]
-async fn test_basic_performance() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_basic_performance() -> Result<()> {
     println!("🚀 Basic Performance Test");
 
     let config = PerformanceConfig {
@@ -478,6 +481,7 @@ async fn test_basic_performance() -> Result<(), Box<dyn std::error::Error>> {
         memory_stress_enabled: true,
         cpu_stress_enabled: true,
         io_stress_enabled: true,
+        network_stress_enabled: true,
     };
 
     let battery = PerformanceStressBattery::new(config);
@@ -497,7 +501,7 @@ async fn test_basic_performance() -> Result<(), Box<dyn std::error::Error>> {
 
 #[tokio::test]
 #[ignore = "Heavy test - use 'cargo bench' for full performance testing"]
-async fn test_modular_performance_components() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_modular_performance_components() -> Result<()> {
     println!("⚡ High Throughput Performance Test");
 
     let config = PerformanceConfig {
@@ -507,6 +511,7 @@ async fn test_modular_performance_components() -> Result<(), Box<dyn std::error:
         memory_stress_enabled: true,
         cpu_stress_enabled: true,
         io_stress_enabled: true,
+        network_stress_enabled: true,
     };
 
     let battery = PerformanceStressBattery::new(config);
@@ -525,7 +530,7 @@ async fn test_modular_performance_components() -> Result<(), Box<dyn std::error:
 }
 
 #[tokio::test]
-async fn test_sustained_performance() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_sustained_performance() -> Result<()> {
     println!("🔄 Sustained Performance Test");
 
     let config = PerformanceConfig {
@@ -535,6 +540,7 @@ async fn test_sustained_performance() -> Result<(), Box<dyn std::error::Error>> 
         memory_stress_enabled: true,
         cpu_stress_enabled: true,
         io_stress_enabled: true,
+        network_stress_enabled: true,
     };
 
     let battery = PerformanceStressBattery::new(config);
@@ -555,7 +561,7 @@ async fn test_sustained_performance() -> Result<(), Box<dyn std::error::Error>> 
 }
 
 #[tokio::test]
-async fn test_comprehensive_performance_suite() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_comprehensive_performance_suite() -> Result<()> {
     println!("🔥 COMPREHENSIVE PERFORMANCE SUITE 🔥");
 
     let test_scenarios = vec![
@@ -568,6 +574,7 @@ async fn test_comprehensive_performance_suite() -> Result<(), Box<dyn std::error
                 memory_stress_enabled: true,
                 cpu_stress_enabled: true,
                 io_stress_enabled: true,
+                network_stress_enabled: true,
             },
         ),
         (
@@ -579,6 +586,7 @@ async fn test_comprehensive_performance_suite() -> Result<(), Box<dyn std::error
                 memory_stress_enabled: true,
                 cpu_stress_enabled: true,
                 io_stress_enabled: true,
+                network_stress_enabled: true,
             },
         ),
         (
@@ -590,6 +598,7 @@ async fn test_comprehensive_performance_suite() -> Result<(), Box<dyn std::error
                 memory_stress_enabled: true,
                 cpu_stress_enabled: true,
                 io_stress_enabled: true,
+                network_stress_enabled: true,
             },
         ),
     ];
@@ -605,7 +614,6 @@ async fn test_comprehensive_performance_suite() -> Result<(), Box<dyn std::error
 
         // Brief pause between tests
         sleep(Duration::from_secs(1)).await;
-        Ok(())
     }
 
     // Suite analysis
@@ -644,4 +652,6 @@ async fn test_comprehensive_performance_suite() -> Result<(), Box<dyn std::error
         total_operations >= 5000,
         "Should complete substantial operations across all tests"
     );
+
+    Ok(())
 }

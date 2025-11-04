@@ -94,18 +94,32 @@ impl PooledBuffer {
     }
 
     /// Get a mutable reference to the buffer
+    ///
+    /// # Panics
+    ///
+    /// Panics if the buffer has been taken (logic error)
     pub fn buffer_mut(&mut self) -> &mut Vec<u8> {
-        self.buffer
-            .as_mut()
-            .expect("Buffer should always be present")
+        // Safety: Buffer should always be Some during normal usage (before drop)
+        // If this fails, it indicates a serious logic error in the buffer lifecycle
+        self.buffer.as_mut().unwrap_or_else(|| {
+            // This should never happen in correct usage
+            panic!("Logic error: Buffer has been taken before drop")
+        })
     }
 
     /// Get a reference to the buffer
+    ///
+    /// # Panics
+    ///
+    /// Panics if the buffer has been taken (logic error)
     #[must_use]
     pub fn buffer_ref(&self) -> &Vec<u8> {
-        self.buffer
-            .as_ref()
-            .expect("Buffer should always be present")
+        // Safety: Buffer should always be Some during normal usage (before drop)
+        // If this fails, it indicates a serious logic error in the buffer lifecycle
+        self.buffer.as_ref().unwrap_or_else(|| {
+            // This should never happen in correct usage
+            panic!("Logic error: Buffer has been taken before drop")
+        })
     }
 
     /// Get the length of the buffer

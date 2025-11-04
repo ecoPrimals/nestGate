@@ -38,7 +38,7 @@ mod tests {
         let config = ProductionServiceConfig::default();
         let monitor = HealthMonitor::new(config);
         
-        let health = monitor.perform_health_check().await.unwrap();
+        let health = monitor.perform_health_check().await.expect("Operation failed");
         // Health status should be available (may be healthy, degraded, or unhealthy)
         assert!(!health.message.is_empty());
     }

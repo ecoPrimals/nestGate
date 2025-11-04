@@ -132,7 +132,7 @@ mod tests {
         };
 
         assert_eq!(response.metrics.len(), 1);
-        assert_eq!(response.metrics.get("cpu").unwrap(), &50.0);
+        assert_eq!(response.metrics.get("cpu").expect("Test setup failed"), &50.0);
     }
 
     #[test]
@@ -163,7 +163,7 @@ mod tests {
             timestamp: std::time::SystemTime::now(),
         };
 
-        let json = serde_json::to_string(&response).unwrap();
+        let json = serde_json::to_string(&response).expect("Test setup failed");
         assert!(json.contains("test_metric"));
         assert!(json.contains("100"));
     }
@@ -223,7 +223,7 @@ mod tests {
             timestamp: std::time::SystemTime::now(),
         };
 
-        let json = serde_json::to_string(&alert).unwrap();
+        let json = serde_json::to_string(&alert).expect("Test setup failed");
         assert!(json.contains("alert_test"));
         assert!(json.contains("Serialization test"));
         assert!(json.contains("info"));
@@ -302,7 +302,7 @@ mod tests {
             priority: 2,
         };
 
-        let json = serde_json::to_string(&rec).unwrap();
+        let json = serde_json::to_string(&rec).expect("Test setup failed");
         assert!(json.contains("rec_test"));
         assert!(json.contains("Test Title"));
         assert!(json.contains("priority"));
@@ -346,7 +346,7 @@ mod tests {
         let result = get_performance_metrics().await;
 
         assert!(result.is_ok());
-        let response = result.unwrap();
+        let response = result.expect("Test setup failed");
 
         assert!(response.0.metrics.len() > 0);
         assert!(response.0.metrics.contains_key("cpu_usage"));
@@ -358,7 +358,7 @@ mod tests {
         let result = get_performance_alerts().await;
 
         assert!(result.is_ok());
-        let alerts = result.unwrap();
+        let alerts = result.expect("Test setup failed");
 
         assert_eq!(alerts.0.len(), 2);
         assert_eq!(alerts.0[0].id, "alert_001");
@@ -370,7 +370,7 @@ mod tests {
         let result = get_performance_recommendations().await;
 
         assert!(result.is_ok());
-        let recommendations = result.unwrap();
+        let recommendations = result.expect("Test setup failed");
 
         assert_eq!(recommendations.0.len(), 2);
         assert_eq!(recommendations.0[0].id, "rec_001");
@@ -384,7 +384,7 @@ mod tests {
             let result = get_performance_metrics().await;
             assert!(result.is_ok());
 
-            let response = result.unwrap();
+            let response = result.expect("Test setup failed");
             assert_eq!(response.0.metrics.len(), 4); // Always returns 4 metrics
         }
     }
@@ -396,7 +396,7 @@ mod tests {
             let result = get_performance_alerts().await;
             assert!(result.is_ok());
 
-            let alerts = result.unwrap();
+            let alerts = result.expect("Test setup failed");
             assert_eq!(alerts.0.len(), 2); // Always returns 2 alerts
         }
     }
@@ -408,7 +408,7 @@ mod tests {
             let result = get_performance_recommendations().await;
             assert!(result.is_ok());
 
-            let recommendations = result.unwrap();
+            let recommendations = result.expect("Test setup failed");
             assert_eq!(recommendations.0.len(), 2); // Always returns 2 recommendations
         }
     }
@@ -430,9 +430,9 @@ mod tests {
         assert!(recs_result.is_ok());
 
         // Verify all succeeded
-        let metrics = metrics_result.unwrap();
-        let alerts = alerts_result.unwrap();
-        let recs = recs_result.unwrap();
+        let metrics = metrics_result.expect("Test setup failed");
+        let alerts = alerts_result.expect("Test setup failed");
+        let recs = recs_result.expect("Test setup failed");
 
         assert!(metrics.0.metrics.len() > 0);
         assert!(alerts.0.len() > 0);

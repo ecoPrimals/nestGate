@@ -413,10 +413,20 @@ impl MiddlewareSecuritySettings {
         Self {
             cors: CorsSettings {
                 enabled: true,
-                allowed_origins: vec![
-                    format!("http://{e}:3000")),
-                    "http://localhost:".to_string() + &env::var("NESTGATE_API_PORT").unwrap_or_else(|_| "8080".to_string()).to_string(),
-                ],
+                allowed_origins: {
+                    use nestgate_core::constants::hardcoding::{addresses, ports};
+                    vec![
+                        format!("http://{}:3000", addresses::LOCALHOST_NAME),
+                        format!(
+                            "http://{}:{}",
+                            addresses::LOCALHOST_NAME,
+                            env::var("NESTGATE_API_PORT")
+                                .ok()
+                                .and_then(|s| s.parse().ok())
+                                .unwrap_or(ports::HTTP_DEFAULT)
+                        ),
+                    ]
+                },
                 allowed_methods: vec![
                     "GET".to_string(),
                     "POST".to_string(),

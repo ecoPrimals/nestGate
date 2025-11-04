@@ -40,9 +40,10 @@ pub struct NetworkServiceHealth {
 }
 impl Default for NetworkServiceConfig {
     fn default() -> Self {
+        use crate::constants::hardcoding::{addresses, ports};
         Self {
-            host: "127.0.0.1".to_string(),
-            port: 8080,
+            host: addresses::LOCALHOST_IPV4.to_string(),
+            port: ports::HTTP_DEFAULT,
             max_connections: 1000,
         }
     }

@@ -392,7 +392,7 @@ fn test_auth_credentials_serialization() {
     let json = serde_json::to_string(&creds);
     assert!(json.is_ok(), "Should serialize successfully");
     
-    let json_str = json.unwrap();
+    let json_str = json.expect("Authentication failed");
     assert!(json_str.contains("testuser"));
     assert!(json_str.contains("testpass"));
 }
@@ -403,7 +403,7 @@ fn test_auth_credentials_deserialization() {
     let creds: Result<AuthCredentials, _> = serde_json::from_str(json);
     
     assert!(creds.is_ok(), "Should deserialize successfully");
-    let creds = creds.unwrap();
+    let creds = creds.expect("Authentication failed");
     assert_eq!(creds.username, "user1");
     assert_eq!(creds.password, "pass1");
 }
@@ -435,7 +435,7 @@ fn test_auth_response_deserialization() {
     let response: Result<AuthResponse, _> = serde_json::from_str(json);
     assert!(response.is_ok(), "Should deserialize successfully");
     
-    let response = response.unwrap();
+    let response = response.expect("Authentication failed");
     assert!(response.success);
     assert_eq!(response.token, Some("token_xyz".to_string()));
     assert_eq!(response.permissions.len(), 2);
@@ -448,8 +448,8 @@ fn test_api_key_request_round_trip() {
         name: "test_key".to_string(),
     };
     
-    let json = serde_json::to_string(&original).unwrap();
-    let deserialized: ApiKeyRequest = serde_json::from_str(&json).unwrap();
+    let json = serde_json::to_string(&original).expect("Authentication failed");
+    let deserialized: ApiKeyRequest = serde_json::from_str(&json).expect("Authentication failed");
     
     assert_eq!(original.user_id, deserialized.user_id);
     assert_eq!(original.name, deserialized.name);
@@ -464,8 +464,8 @@ fn test_create_user_request_round_trip() {
         permissions: vec!["read".to_string(), "write".to_string()],
     };
     
-    let json = serde_json::to_string(&original).unwrap();
-    let deserialized: CreateUserRequest = serde_json::from_str(&json).unwrap();
+    let json = serde_json::to_string(&original).expect("Authentication failed");
+    let deserialized: CreateUserRequest = serde_json::from_str(&json).expect("Authentication failed");
     
     assert_eq!(original.user_id, deserialized.user_id);
     assert_eq!(original.username, deserialized.username);

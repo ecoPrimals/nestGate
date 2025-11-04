@@ -1,10 +1,70 @@
 # 🍼 **INFANT DISCOVERY ARCHITECTURE SPECIFICATION**
 
-**Version**: 3.0.0  
+**Version**: 4.0.0  
 **Status**: ✅ **OPERATIONAL** - Revolutionary Architecture Active  
-**Date**: September 12, 2025  
+**Date**: October 30, 2025  
 **Classification**: **PRIMARY ARCHITECTURE SPECIFICATION**  
-**Scope**: Complete NestGate ecosystem architecture
+**Scope**: Complete NestGate ecosystem + Primal integration architecture
+
+---
+
+## 🌟 **PRIMAL ECOSYSTEM INTEGRATION**
+
+### **NestGate's Dual Nature**
+
+NestGate operates as both:
+1. **Sovereign Standalone** - Self-contained storage system (works independently)
+2. **Cooperative Primal** - Auto-discovers and leverages other primals for network effects
+
+### **Primal Integration Architecture**
+
+```
+┌─────────────────────────────────────────────────┐
+│  NESTGATE (Data Primal)                         │
+│  • Sovereign: Built-in storage, security, net   │
+│  • Cooperative: Discovers enhancements          │
+├─────────────────────────────────────────────────┤
+│  LAYER 1: STANDALONE FEATURES                   │
+│  ✅ Software ZFS (compression, checksums, etc)  │
+│  ✅ Basic security (auth, encryption)           │
+│  ✅ Basic networking (connections, discovery)   │
+│                                                  │
+│  LAYER 2: NETWORK EFFECTS (Auto-Discovered)     │
+│  ⚡ BearDog → Enhanced security (HSM, advanced)  │
+│  ⚡ Songbird → Enhanced networking (mesh, etc)   │
+│  ⚡ Squirrel → AI-driven optimization            │
+│  ⚡ Toadstool → Distributed compute              │
+└─────────────────────────────────────────────────┘
+```
+
+### **Other Primals Using NestGate**
+
+Any primal can use NestGate for data storage via Infant Discovery:
+- **BearDog** (security) → Uses NestGate for secure credential storage
+- **Songbird** (networking) → Uses NestGate for connection state/routing tables
+- **Squirrel** (AI) → Uses NestGate for model/training data
+- **Toadstool** (compute) → Uses NestGate for job queues/results
+
+### **Zero Hardcoding Principle**
+
+```rust
+// ❌ OLD: Hardcoded primal dependencies
+use beardog::SecurityService;
+let security = SecurityService::new("http://beardog:9000");
+
+// ✅ NEW: Infant Discovery pattern
+let security_cap = infant_discovery
+    .discover_capability("security")
+    .await?;
+
+if let Some(beardog) = security_cap {
+    // Enhanced security available - use it
+    use_beardog_security(beardog).await?;
+} else {
+    // Standalone mode - use built-in security
+    use_builtin_security().await?;
+}
+```
 
 ---
 

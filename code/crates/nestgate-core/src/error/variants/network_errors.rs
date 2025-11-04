@@ -157,6 +157,6 @@ mod tests {
         assert_eq!(error.message, expected_message);
 
         // Verify the endpoint is stored separately
-        assert_eq!(error.endpoint.unwrap(), endpoint);
+        assert_eq!(error.endpoint.expect("Network operation failed"), endpoint);
     }
 }

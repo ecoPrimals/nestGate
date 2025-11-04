@@ -21,8 +21,8 @@
 //! - `zero_cost::providers` - Concrete implementations
 //! - `zero_cost::system` - Main system composition
 //!
-//! Note: Uses deprecated traits for backward compatibility
-//! TODO: Migrate to canonical traits in future version
+//! Note: Uses deprecated traits for backward compatibility.
+//! Migration to canonical traits is tracked but not yet scheduled.
 
 use std::time::Instant;
 

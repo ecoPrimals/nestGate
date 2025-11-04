@@ -21,21 +21,9 @@ async fn create_test_zfs_manager() -> Arc<ZfsManager> {
     config.use_real_zfs = !use_mock;
     config.default_pool = "zfspool".to_string();
 
-    let manager = ZfsManager::new(config).await.unwrap_or_else(|_e| {
-        tracing::error!(
-            "Expect failed ({}): {:?}",
-            "Failed to create test ZFS manager",
-            e
-        );
-        return Err(std::io::Error::new(
-            std::io::ErrorKind::Other,
-            format!(
-                "Operation failed - {}: {:?}",
-                "{}", "Failed to create test ZFS manager", e
-            ),
-        )
-        .into());
-    });
+    let manager = ZfsManager::new(config)
+        .await
+        .expect("Failed to create test ZFS manager");
     Arc::new(manager)
 }
 
@@ -43,21 +31,7 @@ async fn create_test_zfs_manager() -> Arc<ZfsManager> {
 async fn create_test_server() -> TestServer {
     let _zfs_manager = create_test_zfs_manager().await; // Keep for future use
     let app = create_app(); // Use create_app() instead of create_router() to include CORS middleware
-    TestServer::new(app).unwrap_or_else(|_e| {
-        tracing::error!(
-            "Expect failed ({}): {:?}",
-            "Failed to create test server",
-            e
-        );
-        return Err(std::io::Error::new(
-            std::io::ErrorKind::Other,
-            format!(
-                "Operation failed - {}: {:?}",
-                "{}", "Failed to create test server", e
-            ),
-        )
-        .into());
-    })
+    TestServer::new(app).expect("Failed to create test server")
 }
 #[tokio::test]
 async fn test_health_endpoint() -> Result<(), Box<dyn std::error::Error>> {

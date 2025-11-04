@@ -317,7 +317,7 @@ mod tests {
             metadata: HashMap::new(),
         };
         
-        let response = adapter.execute_request(&request).await.unwrap();
+        let response = adapter.execute_request(&request).await.expect("Operation failed");
         assert!(response.data.is_object());
     }
 
@@ -331,7 +331,7 @@ mod tests {
             metadata: HashMap::new(),
         };
         
-        let response = adapter.execute_request(&request).await.unwrap();
+        let response = adapter.execute_request(&request).await.expect("Operation failed");
         assert!(response.data.is_object());
     }
 } 

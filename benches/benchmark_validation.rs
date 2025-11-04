@@ -2,7 +2,6 @@ use criterion::{black_box, criterion_group, criterion_main, Criterion};
 
 /// Validation benchmark to test if our benchmarks are doing real work
 /// This will help us identify if compiler optimizations are eliminating work
-
 fn validate_real_work_vs_stub(c: &mut Criterion) {
     c.bench_function("real_work_benchmark", |b| {
         b.iter(|| {

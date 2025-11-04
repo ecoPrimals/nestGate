@@ -19,22 +19,23 @@ pub fn is_valid_ipv6(ip: &str) -> bool {
 }
 /// Parse an IP address string to IpAddr
 pub fn parse_ip(ip: &str) -> Result<IpAddr> {
-    ip.parse::<IpAddr>().map_err(|_| NestGateError::validation(
-        actual: Some(ip.to_string())})
+    ip.parse::<IpAddr>().map_err(|_| NestGateError::validation_error(
+        &format!("Invalid IP address: '{}'", ip)
+    ))
 }
 /// Parse an IPv4 address string
 pub fn parse_ipv4(ip: &str) -> Result<Ipv4Addr> {
     ip.parse::<Ipv4Addr>()
-        .map_err(|_| NestGateError::validation(
-            actual: Some(ip.to_string())192.168.1.1)".to_string())context: None,
-        })
+        .map_err(|_| NestGateError::validation_error(
+            &format!("Invalid IPv4 address: '{}' (expected format: 192.168.1.1)", ip)
+        ))
 }
 /// Parse an IPv6 address string
 pub fn parse_ipv6(ip: &str) -> Result<Ipv6Addr> {
     ip.parse::<Ipv6Addr>()
-        .map_err(|_| NestGateError::validation(
-            actual: Some(ip.to_string())::1)".to_string())context: None,
-        })
+        .map_err(|_| NestGateError::validation_error(
+            &format!("Invalid IPv6 address: '{}' (expected format: ::1)", ip)
+        ))
 }
 // ==================== SECTION ====================
 
@@ -46,29 +47,33 @@ pub fn is_valid_cidr(cidr: &str) -> bool {
 pub fn parse_cidr(input: &str) -> Result<(IpAddr, u8)> {
     let parts: Vec<&str> = input.split('/').collect();
     if parts.len() != 2 {
-        return Err(NestGateError::validation(
-            actual: Some(input.to_string())192.168.1.0/24)".to_string())context: None,
-        );
+        return Err(NestGateError::validation_error(
+            &format!("Invalid CIDR notation: '{}' (expected format: 192.168.1.0/24)", input)
+        ));
     }
     let ip = parts[0]
         .parse::<IpAddr>()
-        .map_err(|_| NestGateError::validation(
-            actual: Some(parts[0]"))?;
+        .map_err(|_| NestGateError::validation_error(
+            &format!("Invalid IP address in CIDR: '{}'", parts[0])
+        ))?;
 
     let prefix = parts[1]
         .parse::<u8>()
-        .map_err(|_| NestGateError::validation(
-            actual: Some(parts[1]"))?;
+        .map_err(|_| NestGateError::validation_error(
+            &format!("Invalid prefix length in CIDR: '{}'", parts[1])
+        ))?;
 
     // Validate prefix length based on IP address type
     match ip {
         IpAddr::V4(_) if prefix > 32 => {
-            return Err(NestGateError::validation(
-                actual: Some(prefix"));
+            return Err(NestGateError::validation_error(
+                &format!("Invalid IPv4 prefix length: {} (max: 32)", prefix)
+            ));
         }
         IpAddr::V6(_) if prefix > 128 => {
-            return Err(NestGateError::validation(
-                actual: Some(prefix"));
+            return Err(NestGateError::validation_error(
+                &format!("Invalid IPv6 prefix length: {} (max: 128)", prefix)
+            ));
         }
         _ => {}
     }
@@ -139,8 +144,9 @@ pub fn is_dynamic_port(port: u16) -> bool {
     (49152..=65535).contains(&port)
 }
 /// Check if a port is available by attempting to bind to it
-pub fn is_port_available(port: u16) -> bool {
-    let addr = format!("127.0.0.1:{port}");
+pub async fn is_port_available(port: u16) -> bool {
+    use crate::constants::hardcoding::addresses;
+    let addr = format!("{}:{}", addresses::LOCALHOST_IPV4, port);
     tokio::net::TcpListener::bind(&addr).await.is_ok()
 }
 /// Find an available port starting from a given port
@@ -168,8 +174,9 @@ pub fn is_valid_http_url(url: &str) -> bool {
 }
 /// Parse a URL and return its components
 pub fn parse_url(url: &str) -> Result<url::Url> {
-    url::Url::parse(url).map_err(|e| NestGateError::validation(
-        actual: Some(url.to_string())})
+    url::Url::parse(url).map_err(|e| NestGateError::validation_error(
+        &format!("Invalid URL: '{}' - {}", url, e)
+    ))
 }
 // ==================== SECTION ====================
 
@@ -243,11 +250,12 @@ pub fn is_multicast_ip(ip: &IpAddr) -> bool {
 }
 /// Get the localhost IP address as a string
 pub fn localhost() -> &'static str {
-    "127.0.0.1"
+    use crate::constants::hardcoding::addresses;
+    addresses::LOCALHOST_IPV4
 }
 /// Get the IPv6 localhost address as a string
 pub fn localhost_ipv6() -> &'static str {
-    "::1"
+    "::1"  // IPv6 localhost - standard, not configurable
 }
 #[cfg(test)]
 mod tests {
@@ -315,7 +323,7 @@ mod tests {
     fn test_url_validation() {
         // Valid URLs
         assert!(is_valid_url("https://example.com"));
-        assert!(is_valid_url("http://localhost:".to_string() + &env::var("NESTGATE_API_PORT").unwrap_or_else(|_| "8080".to_string())));
+        assert!(is_valid_url("http://localhost:8080"));
         assert!(is_valid_http_url("https://example.com"));
 
         // Invalid URLs
@@ -348,16 +356,367 @@ mod tests {
     #[test]
     fn test_private_ip_detection() {
         // Private IPv4 addresses
-        assert!(is_private_ip(&"10.0.0.1".parse().unwrap()));
-        assert!(is_private_ip(&"172.16.0.1".parse().unwrap()));
-        assert!(is_private_ip(&"192.168.1.1".parse().unwrap()));
+        assert!(is_private_ip(&"10.0.0.1".parse().expect("Network operation failed")));
+        assert!(is_private_ip(&"172.16.0.1".parse().expect("Network operation failed")));
+        assert!(is_private_ip(&"192.168.1.1".parse().expect("Network operation failed")));
 
         // Public IPv4 addresses
-        assert!(!is_private_ip(&"8.8.8.8".parse().unwrap()));
-        assert!(!is_private_ip(&"1.1.1.1".parse().unwrap()));
+        assert!(!is_private_ip(&"8.8.8.8".parse().expect("Network operation failed")));
+        assert!(!is_private_ip(&"1.1.1.1".parse().expect("Network operation failed")));
 
         // Loopback addresses
+        assert!(is_loopback_ip(&"127.0.0.1".parse().expect("Network operation failed")));
+        assert!(is_loopback_ip(&"::1".parse().expect("Network operation failed")));
+    }
+    
+    // **COMPREHENSIVE NETWORK UTILITIES TESTS** (Added Nov 3, 2025)
+    
+    #[test]
+    fn test_ip_parsing_success() {
+        // IPv4 parsing
+        let ipv4 = parse_ipv4("192.168.1.100").expect("Should parse valid IPv4");
+        assert_eq!(ipv4.to_string(), "192.168.1.100");
+        
+        // IPv6 parsing
+        let ipv6 = parse_ipv6("2001:db8::1").expect("Should parse valid IPv6");
+        assert_eq!(ipv6.to_string(), "2001:db8::1");
+        
+        // Generic IP parsing
+        let ip_v4 = parse_ip("10.0.0.1").expect("Should parse IPv4 as IP");
+        assert!(matches!(ip_v4, IpAddr::V4(_)));
+        
+        let ip_v6 = parse_ip("::1").expect("Should parse IPv6 as IP");
+        assert!(matches!(ip_v6, IpAddr::V6(_)));
+    }
+    
+    #[test]
+    fn test_ip_parsing_errors() {
+        // Invalid IPv4
+        assert!(parse_ipv4("256.256.256.256").is_err());
+        assert!(parse_ipv4("192.168.1").is_err());
+        assert!(parse_ipv4("not-an-ip").is_err());
+        assert!(parse_ipv4("::1").is_err()); // IPv6 as IPv4
+        
+        // Invalid IPv6
+        assert!(parse_ipv6("192.168.1.1").is_err()); // IPv4 as IPv6
+        assert!(parse_ipv6("gggg::1").is_err());
+        assert!(parse_ipv6("not-an-ip").is_err());
+        
+        // Invalid generic IP
+        assert!(parse_ip("invalid").is_err());
+        assert!(parse_ip("999.999.999.999").is_err());
+    }
+    
+    #[test]
+    fn test_cidr_parsing_success() {
+        // IPv4 CIDR
+        let (ip, prefix) = parse_cidr("192.168.1.0/24").expect("Should parse IPv4 CIDR");
+        assert_eq!(ip.to_string(), "192.168.1.0");
+        assert_eq!(prefix, 24);
+        
+        // IPv6 CIDR
+        let (ip6, prefix6) = parse_cidr("2001:db8::/32").expect("Should parse IPv6 CIDR");
+        assert_eq!(ip6.to_string(), "2001:db8::");
+        assert_eq!(prefix6, 32);
+        
+        // Edge cases - minimum and maximum prefix lengths
+        assert!(parse_cidr("10.0.0.0/0").is_ok());
+        assert!(parse_cidr("10.0.0.0/32").is_ok());
+        assert!(parse_cidr("::1/0").is_ok());
+        assert!(parse_cidr("::1/128").is_ok());
+    }
+    
+    #[test]
+    fn test_cidr_parsing_errors() {
+        // Missing prefix
+        assert!(parse_cidr("192.168.1.0").is_err());
+        
+        // Invalid prefix for IPv4
+        assert!(parse_cidr("192.168.1.0/33").is_err());
+        assert!(parse_cidr("192.168.1.0/256").is_err());
+        
+        // Invalid prefix for IPv6
+        assert!(parse_cidr("::1/129").is_err());
+        assert!(parse_cidr("::1/200").is_err());
+        
+        // Completely invalid
+        assert!(parse_cidr("not-a-cidr/24").is_err());
+        assert!(parse_cidr("192.168.1.0/invalid").is_err());
+        
+        // Multiple slashes
+        assert!(parse_cidr("192.168.1.0/24/32").is_err());
+    }
+    
+    #[test]
+    fn test_hostname_label_validation() {
+        // Valid labels
+        assert!(is_valid_hostname("localhost"));
+        assert!(is_valid_hostname("example"));
+        assert!(is_valid_hostname("my-server"));
+        assert!(is_valid_hostname("server123"));
+        
+        // Invalid - starts with hyphen
+        assert!(!is_valid_hostname("-server"));
+        
+        // Invalid - ends with hyphen
+        assert!(!is_valid_hostname("server-"));
+        
+        // Invalid - double hyphen (based on test at line 297)
+        assert!(!is_valid_hostname("ex--ample"));
+    }
+    
+    #[test]
+    fn test_hostname_length_limits() {
+        // Valid - max label length (63 characters)
+        let max_label = "a".repeat(63);
+        assert!(is_valid_hostname(&max_label));
+        
+        // Invalid - label too long (64 characters)
+        let too_long_label = "a".repeat(64);
+        assert!(!is_valid_hostname(&too_long_label));
+        
+        // Valid - max total length (253 characters)
+        let max_hostname = format!("{}.{}.{}.com", "a".repeat(60), "b".repeat(60), "c".repeat(60));
+        // Should be under 253
+        if max_hostname.len() <= 253 {
+            assert!(is_valid_hostname(&max_hostname));
+        }
+        
+        // Invalid - empty hostname
+        assert!(!is_valid_hostname(""));
+    }
+    
+    #[test]
+    fn test_domain_validation() {
+        // Valid domains
+        assert!(is_valid_domain("example.com"));
+        assert!(is_valid_domain("sub.example.com"));
+        assert!(is_valid_domain("deep.sub.example.com"));
+        
+        // Invalid - no dot
+        assert!(!is_valid_domain("localhost"));
+        assert!(!is_valid_domain("example"));
+        
+        // Invalid - empty
+        assert!(!is_valid_domain(""));
+        
+        // Invalid - too long
+        let too_long = "a".repeat(254);
+        assert!(!is_valid_domain(&too_long));
+    }
+    
+    #[test]
+    fn test_port_ranges() {
+        // Well-known ports (1-1023)
+        assert!(is_well_known_port(1));
+        assert!(is_well_known_port(80));
+        assert!(is_well_known_port(443));
+        assert!(is_well_known_port(1023));
+        assert!(!is_well_known_port(0));
+        assert!(!is_well_known_port(1024));
+        
+        // Registered ports (1024-49151)
+        assert!(is_registered_port(1024));
+        assert!(is_registered_port(8080));
+        assert!(is_registered_port(49151));
+        assert!(!is_registered_port(1023));
+        assert!(!is_registered_port(49152));
+        
+        // Dynamic ports (49152-65535)
+        assert!(is_dynamic_port(49152));
+        assert!(is_dynamic_port(50000));
+        assert!(is_dynamic_port(65535));
+        assert!(!is_dynamic_port(49151));
+    }
+    
+    #[test]
+    fn test_url_parsing() {
+        // Valid HTTP URLs
+        let url1 = parse_url("https://example.com").expect("Should parse HTTPS URL");
+        assert_eq!(url1.scheme(), "https");
+        assert_eq!(url1.host_str(), Some("example.com"));
+        
+        // Valid URL with port
+        let url2 = parse_url("http://localhost:8080").expect("Should parse URL with port");
+        assert_eq!(url2.port(), Some(8080));
+        
+        // Valid URL with path
+        let url3 = parse_url("https://example.com/path/to/resource").expect("Should parse URL with path");
+        assert_eq!(url3.path(), "/path/to/resource");
+        
+        // Invalid URLs
+        assert!(parse_url("not-a-url").is_err());
+        assert!(parse_url("://invalid").is_err());
+    }
+    
+    #[test]
+    fn test_http_url_filtering() {
+        // Valid HTTP/HTTPS
+        assert!(is_valid_http_url("http://example.com"));
+        assert!(is_valid_http_url("https://example.com"));
+        
+        // Invalid - other schemes
+        assert!(!is_valid_http_url("ftp://example.com"));
+        assert!(!is_valid_http_url("ws://example.com"));
+        assert!(!is_valid_http_url("file:///path/to/file"));
+        
+        // Invalid - not a URL
+        assert!(!is_valid_http_url("not-a-url"));
+    }
+    
+    #[test]
+    fn test_mac_address_edge_cases() {
+        // Valid formats
+        assert!(is_valid_mac_address("00:00:00:00:00:00"));
+        assert!(is_valid_mac_address("FF:FF:FF:FF:FF:FF"));
+        assert!(is_valid_mac_address("aA:bB:cC:dD:eE:fF")); // Mixed case
+        
+        // Invalid - wrong separator
+        assert!(!is_valid_mac_address("00-11-22-33-44-55"));
+        
+        // Invalid - wrong length
+        assert!(!is_valid_mac_address("00:11:22:33:44"));
+        assert!(!is_valid_mac_address("00:11:22:33:44:55:66"));
+        
+        // Invalid - non-hex characters
+        assert!(!is_valid_mac_address("GG:HH:II:JJ:KK:LL"));
+        assert!(!is_valid_mac_address("00:11:22:33:44:ZZ"));
+    }
+    
+    #[test]
+    fn test_mac_address_normalization() {
+        // Normalize with different separators
+        assert_eq!(
+            normalize_mac_address("00-11-22-33-44-55"),
+            Some("00:11:22:33:44:55".to_string())
+        );
+        
+        // Normalize without separators
+        assert_eq!(
+            normalize_mac_address("001122334455"),
+            Some("00:11:22:33:44:55".to_string())
+        );
+        
+        // Normalize with mixed case
+        assert_eq!(
+            normalize_mac_address("AA:BB:CC:DD:EE:FF"),
+            Some("aa:bb:cc:dd:ee:ff".to_string())
+        );
+        
+        // Invalid - too short
+        assert_eq!(normalize_mac_address("0011223344"), None);
+        
+        // Invalid - too long
+        assert_eq!(normalize_mac_address("00112233445566"), None);
+        
+        // Invalid - non-hex
+        assert_eq!(normalize_mac_address("GHIJKLMNOPQR"), None);
+    }
+    
+    #[test]
+    fn test_private_ip_ranges_comprehensive() {
+        // All private IPv4 ranges
+        // 10.0.0.0/8
+        assert!(is_private_ip(&"10.0.0.0".parse().unwrap()));
+        assert!(is_private_ip(&"10.255.255.255".parse().unwrap()));
+        
+        // 172.16.0.0/12
+        assert!(is_private_ip(&"172.16.0.0".parse().unwrap()));
+        assert!(is_private_ip(&"172.31.255.255".parse().unwrap()));
+        assert!(!is_private_ip(&"172.15.0.0".parse().unwrap())); // Just outside range
+        assert!(!is_private_ip(&"172.32.0.0".parse().unwrap())); // Just outside range
+        
+        // 192.168.0.0/16
+        assert!(is_private_ip(&"192.168.0.0".parse().unwrap()));
+        assert!(is_private_ip(&"192.168.255.255".parse().unwrap()));
+        
+        // Public IPs
+        assert!(!is_private_ip(&"8.8.8.8".parse().unwrap()));
+        assert!(!is_private_ip(&"1.1.1.1".parse().unwrap()));
+        assert!(!is_private_ip(&"74.125.224.72".parse().unwrap())); // Google
+    }
+    
+    #[test]
+    fn test_loopback_addresses() {
+        // IPv4 loopback (127.0.0.0/8)
         assert!(is_loopback_ip(&"127.0.0.1".parse().unwrap()));
+        assert!(is_loopback_ip(&"127.0.0.2".parse().unwrap()));
+        assert!(is_loopback_ip(&"127.255.255.255".parse().unwrap()));
+        
+        // IPv6 loopback (::1)
         assert!(is_loopback_ip(&"::1".parse().unwrap()));
+        
+        // Not loopback
+        assert!(!is_loopback_ip(&"192.168.1.1".parse().unwrap()));
+        assert!(!is_loopback_ip(&"8.8.8.8".parse().unwrap()));
+    }
+    
+    #[test]
+    fn test_multicast_addresses() {
+        // IPv4 multicast (224.0.0.0/4)
+        assert!(is_multicast_ip(&"224.0.0.1".parse().unwrap()));
+        assert!(is_multicast_ip(&"239.255.255.255".parse().unwrap()));
+        
+        // IPv6 multicast (ff00::/8)
+        assert!(is_multicast_ip(&"ff02::1".parse().unwrap()));
+        
+        // Not multicast
+        assert!(!is_multicast_ip(&"192.168.1.1".parse().unwrap()));
+        assert!(!is_multicast_ip(&"8.8.8.8".parse().unwrap()));
+        assert!(!is_multicast_ip(&"::1".parse().unwrap()));
+    }
+    
+    #[test]
+    fn test_localhost_helper() {
+        let localhost = localhost();
+        assert_eq!(localhost, "127.0.0.1");
+        assert!(is_valid_ipv4(localhost));
+        assert!(is_loopback_ip(&localhost.parse().unwrap()));
+    }
+    
+    #[test]
+    fn test_edge_case_ips() {
+        // All zeros
+        assert!(is_valid_ipv4("0.0.0.0"));
+        assert!(is_valid_ipv6("::"));
+        
+        // All ones (IPv4 broadcast)
+        assert!(is_valid_ipv4("255.255.255.255"));
+        
+        // IPv6 with compressed zeros
+        assert!(is_valid_ipv6("2001:db8::"));
+        assert!(is_valid_ipv6("::1"));
+        assert!(is_valid_ipv6("fe80::"));
+        
+        // IPv6 full form
+        assert!(is_valid_ipv6("2001:0db8:0000:0000:0000:0000:0000:0001"));
+    }
+    
+    #[test]
+    fn test_port_zero() {
+        // Port 0 is technically valid for binding (OS chooses port)
+        // but our is_valid_port requires > 0
+        assert!(!is_valid_port(0));
+        assert!(is_valid_port(1));
+        assert!(is_valid_port(65535));
+    }
+    
+    #[test]
+    fn test_hostname_special_cases() {
+        // Single character labels
+        assert!(is_valid_hostname("a"));
+        assert!(is_valid_hostname("a.b.c"));
+        
+        // Numbers in hostnames
+        assert!(is_valid_hostname("server1"));
+        assert!(is_valid_hostname("web-01"));
+        assert!(is_valid_hostname("123"));
+        
+        // Mixed alphanumeric
+        assert!(is_valid_hostname("web1-app2-db3"));
+        
+        // Special characters not allowed
+        assert!(!is_valid_hostname("server_01")); // underscore
+        assert!(!is_valid_hostname("web.server!")); // exclamation
     }
 }

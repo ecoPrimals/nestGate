@@ -572,9 +572,8 @@ impl AlertManager {
         let expr = expression.trim();
         
         // Handle simple comparison expressions like "cpu_usage > 80"
-        if let Some(captures) = regex::Regex::new(r"(\w+)\s*([><=!]+)\s*(\d+(?:\.\d+)?)")
-            .unwrap_or_else(|_| regex::Regex::new(r").unwrap())
-            .captures(expr) 
+        if let Ok(re) = regex::Regex::new(r"(\w+)\s*([><=!]+)\s*(\d+(?:\.\d+)?)")  {
+            if let Some(captures) = re.captures(expr) 
         {
             if captures.len() >= 4 {
                 let variable = &captures[1];
@@ -592,7 +591,7 @@ impl AlertManager {
                     }
                 }
             }
-        }
+        }}
         
         // Handle compound expressions with AND/OR
         if expr.contains(" AND ") {
@@ -604,9 +603,8 @@ impl AlertManager {
         }
         
         // Handle string comparisons like "status == 'healthy'"
-        if let Some(captures) = regex::Regex::new(r"(\w+)\s*([=!]+)\s*["']([^"']+)["']")
-            .unwrap_or_else(|_| regex::Regex::new(r").unwrap())
-            .captures(expr)
+        if let Ok(re) = regex::Regex::new(r"(\w+)\s*([=!]+)\s*["']([^"']+)["']") {
+            if let Some(captures) = re.captures(expr)
         {
             if captures.len() >= 4 {
                 let variable = &captures[1];
@@ -621,7 +619,7 @@ impl AlertManager {
                     }
                 }
             }
-        }
+        }}
         
         // Default: try to evaluate as a simple metric threshold
         // Format: "metric_name" (returns true if metric exists and > 0)

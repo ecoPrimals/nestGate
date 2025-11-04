@@ -523,12 +523,12 @@ mod tests {
     async fn test_rate_limiter() {
         let limiter = EnhancedRateLimiter::new(Duration::from_secs(1), 2);
 
-        assert!(limiter.is_allowed("test").await.unwrap());
-        assert!(limiter.is_allowed("test").await.unwrap());
-        assert!(!limiter.is_allowed("test").await.unwrap());
+        assert!(limiter.is_allowed("test").await.expect("Security operation failed"));
+        assert!(limiter.is_allowed("test").await.expect("Security operation failed"));
+        assert!(!limiter.is_allowed("test").await.expect("Security operation failed"));
 
         tokio::time::sleep(Duration::from_secs(1)).await;
-        assert!(limiter.is_allowed("test").await.unwrap());
+        assert!(limiter.is_allowed("test").await.expect("Security operation failed"));
     }
 
     #[tokio::test]
@@ -550,15 +550,15 @@ mod tests {
     async fn test_brute_force_protection() {
         let protection = BruteForceProtection::new(2, Duration::from_secs(1));
 
-        assert!(!protection.is_locked_out("test").await.unwrap());
+        assert!(!protection.is_locked_out("test").await.expect("Security operation failed"));
 
-        protection.record_failed_attempt("test").await.unwrap();
-        protection.record_failed_attempt("test").await.unwrap();
+        protection.record_failed_attempt("test").await.expect("Security operation failed");
+        protection.record_failed_attempt("test").await.expect("Security operation failed");
 
-        assert!(protection.is_locked_out("test").await.unwrap());
+        assert!(protection.is_locked_out("test").await.expect("Security operation failed"));
 
         tokio::time::sleep(Duration::from_secs(1)).await;
-        assert!(!protection.is_locked_out("test").await.unwrap());
+        assert!(!protection.is_locked_out("test").await.expect("Security operation failed"));
     }
 
     #[tokio::test]
@@ -571,13 +571,13 @@ mod tests {
             .validate_request(client_ip, "/api/status", Some("Mozilla/5.0"))
             .await;
         assert!(result.is_ok());
-        assert!(result.unwrap());
+        assert!(result.expect("Security operation failed"));
 
         // Suspicious user agent
         let result = middleware
             .validate_request(client_ip, "/api/status", Some("sqlmap/1.0"))
             .await;
         assert!(result.is_ok());
-        assert!(!result.unwrap());
+        assert!(!result.expect("Security operation failed"));
     }
 }

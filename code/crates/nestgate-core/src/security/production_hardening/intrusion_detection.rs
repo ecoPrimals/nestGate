@@ -6,11 +6,28 @@ use std::collections::HashMap;
 use std::net::IpAddr;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime};
+use lazy_static::lazy_static;
+use regex::Regex;
 use tokio::sync::RwLock;
 
 use crate::error::Result;
 use super::config::{IntrusionDetectionConfig, ThreatLevel};
 use super::types::{IntrusionDetectionStatistics, SuspiciousPattern};
+
+// Lazy-initialized intrusion detection patterns
+lazy_static! {
+    static ref PORT_SCANNING_PATTERN: Regex = 
+        Regex::new(r"(?i)(nmap|masscan|zmap)")
+            .expect("Port scanning regex is hardcoded and valid");
+    
+    static ref DIRECTORY_TRAVERSAL_PATTERN: Regex = 
+        Regex::new(r"(\.\./|\.\.\\|%2e%2e%2f)")
+            .expect("Directory traversal regex is hardcoded and valid");
+    
+    static ref COMMAND_INJECTION_PATTERN_IDS: Regex = 
+        Regex::new(r"(?i)(;|&&|\|\||\$\(|\`|nc\s|wget\s|curl\s)")
+            .expect("Command injection regex is hardcoded and valid");
+}
 
 /// **INTRUSION DETECTION SYSTEM**
 ///
@@ -31,17 +48,17 @@ impl IntrusionDetectionSystem {
         let suspicious_patterns = vec![
             SuspiciousPattern {
                 name: "Port Scanning".to_string(),
-                pattern: regex::Regex::new(r"(?i)(nmap|masscan|zmap)").unwrap(),
+                pattern: PORT_SCANNING_PATTERN.clone(),
                 threat_level: ThreatLevel::High,
             },
             SuspiciousPattern {
                 name: "Directory Traversal".to_string(),
-                pattern: regex::Regex::new(r"(\.\./|\.\.\\|%2e%2e%2f)").unwrap(),
+                pattern: DIRECTORY_TRAVERSAL_PATTERN.clone(),
                 threat_level: ThreatLevel::High,
             },
             SuspiciousPattern {
                 name: "Command Injection".to_string(),
-                pattern: regex::Regex::new(r"(?i)(;|&&|\|\||\$\(|\`|nc\s|wget\s|curl\s)").unwrap(),
+                pattern: COMMAND_INJECTION_PATTERN_IDS.clone(),
                 threat_level: ThreatLevel::Critical,
             },
         ];
@@ -211,10 +228,10 @@ mod tests {
         let test_ip = IpAddr::V4(Ipv4Addr::new(192, 168, 1, 100));
 
         // Record two failed authentication attempts
-        ids.record_auth_failure(test_ip).await.unwrap();
-        ids.record_auth_failure(test_ip).await.unwrap();
+        ids.record_auth_failure(test_ip).await.expect("Security operation failed");
+        ids.record_auth_failure(test_ip).await.expect("Security operation failed");
 
-        let stats = ids.get_statistics().await.unwrap();
+        let stats = ids.get_statistics().await.expect("Security operation failed");
         assert_eq!(stats.failed_auth_attempts, 2);
     }
 
@@ -232,12 +249,12 @@ mod tests {
         let test_ip = IpAddr::V4(Ipv4Addr::new(192, 168, 1, 100));
 
         // Initially not blocked
-        assert!(!ids.is_ip_blocked(test_ip).await.unwrap());
+        assert!(!ids.is_ip_blocked(test_ip).await.expect("Security operation failed"));
 
         // Block IP
-        ids.block_ip(test_ip, Duration::from_secs(60)).await.unwrap();
+        ids.block_ip(test_ip, Duration::from_secs(60)).await.expect("Security operation failed");
 
         // Should now be blocked
-        assert!(ids.is_ip_blocked(test_ip).await.unwrap());
+        assert!(ids.is_ip_blocked(test_ip).await.expect("Security operation failed"));
     }
 } 

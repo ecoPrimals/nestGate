@@ -1,6 +1,6 @@
 //! **ZERO-COST ZFS OPERATIONS MODULE**
 //! This module provides zero-cost abstractions for ZFS operations
-//! Replaces Arc<dyn> patterns with compile-time dispatch for maximum performance
+//! Replaces `Arc<dyn>` patterns with compile-time dispatch for maximum performance
 
 mod manager;
 mod traits;

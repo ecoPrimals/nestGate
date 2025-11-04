@@ -131,8 +131,8 @@ mod tests {
     #[test]
     fn test_middleware_type_serialization() {
         let mw = MiddlewareType::Auth;
-        let json = serde_json::to_string(&mw).unwrap();
-        let deserialized: MiddlewareType = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&mw).expect("Configuration error");
+        let deserialized: MiddlewareType = serde_json::from_str(&json).expect("Configuration error");
         assert_eq!(mw, deserialized);
     }
 

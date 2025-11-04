@@ -4,20 +4,18 @@
 //! for the NestGate system, ensuring production-ready security.
 
 use nestgate_core::{
-    canonical_modernization::unified_enums::{UnifiedServiceState, UnifiedServiceType},
-    config::canonical_master::NestGateUnifiedConfig,
+    config::canonical_master::NestGateCanonicalConfig,
     error::{NestGateError, Result},
     zero_cost_security_provider::{
-        ZeroCostAuthenticationResult, ZeroCostCredentials, ZeroCostSecurityProvider,
+        ZeroCostAuthToken, ZeroCostCredentials, ZeroCostSecurityProvider,
     },
 };
-use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
 /// Comprehensive security audit framework
 pub struct SecurityAuditFramework {
-    config: CanonicalConfig,
+    config: NestGateCanonicalConfig,
     security_provider: Arc<dyn ZeroCostSecurityProvider>,
     audit_results: Arc<RwLock<SecurityAuditResults>>,
 }
@@ -554,11 +552,13 @@ impl MockSecurityProvider {
 // **CANONICAL MODERNIZATION**: Native async implementation
 impl ZeroCostSecurityProvider for MockSecurityProvider {
     type Config = String;
+    type Health = String;
+    type Metrics = String;
 
     fn authenticate(
         &self,
         _credentials: &ZeroCostCredentials,
-    ) -> impl std::future::Future<Output = Result<ZeroCostAuthenticationResult>> + Send {
+    ) -> impl std::future::Future<Output = Result<ZeroCostAuthToken>> + Send {
         async move {
             // Mock authentication - always fails for testing
             Err(NestGateError::internal_error(
@@ -568,19 +568,34 @@ impl ZeroCostSecurityProvider for MockSecurityProvider {
         }
     }
 
-    fn authorize(
+    fn validate_token(
         &self,
-        _user_id: &str,
-        _resource: &str,
-        _action: &str,
+        _token: &str,
     ) -> impl std::future::Future<Output = Result<bool>> + Send {
+        async move { Ok(false) }
+    }
+
+    fn refresh_token(
+        &self,
+        _token: &str,
+    ) -> impl std::future::Future<Output = Result<ZeroCostAuthToken>> + Send {
         async move {
-            // Mock authorization - always denies for testing
-            Ok(false)
+            Err(NestGateError::internal_error(
+                "Mock token refresh failure".to_string(),
+                "mock_security_provider".to_string(),
+            ))
         }
     }
 
-    fn encrypt(&self, data: &[u8]) -> impl std::future::Future<Output = Result<Vec<u8>>> + Send {
+    fn revoke_token(&self, _token: &str) -> impl std::future::Future<Output = Result<()>> + Send {
+        async move { Ok(()) }
+    }
+
+    fn encrypt(
+        &self,
+        data: &[u8],
+        _algorithm: &str,
+    ) -> impl std::future::Future<Output = Result<Vec<u8>>> + Send {
         let data = data.to_vec();
         async move {
             // Mock encryption - simple XOR for testing
@@ -591,6 +606,7 @@ impl ZeroCostSecurityProvider for MockSecurityProvider {
     fn decrypt(
         &self,
         encrypted_data: &[u8],
+        _algorithm: &str,
     ) -> impl std::future::Future<Output = Result<Vec<u8>>> + Send {
         let encrypted_data = encrypted_data.to_vec();
         async move {
@@ -599,12 +615,38 @@ impl ZeroCostSecurityProvider for MockSecurityProvider {
         }
     }
 
-    fn get_config(&self) -> Self::Config {
-        "mock_config".to_string()
+    fn sign_data(
+        &self,
+        _data: &[u8],
+    ) -> impl std::future::Future<
+        Output = Result<nestgate_core::zero_cost_security_provider::ZeroCostSignature>,
+    > + Send {
+        async move {
+            Err(NestGateError::internal_error(
+                "Mock signing not implemented".to_string(),
+                "mock_security_provider".to_string(),
+            ))
+        }
     }
 
-    fn health_check(&self) -> impl std::future::Future<Output = Result<bool>> + Send {
-        async move { Ok(true) }
+    fn verify_signature(
+        &self,
+        _data: &[u8],
+        _signature: &nestgate_core::zero_cost_security_provider::ZeroCostSignature,
+    ) -> impl std::future::Future<Output = Result<bool>> + Send {
+        async move { Ok(false) }
+    }
+
+    fn get_health(&self) -> impl std::future::Future<Output = Result<Self::Health>> + Send {
+        async move { Ok("healthy".to_string()) }
+    }
+
+    fn get_metrics(&self) -> impl std::future::Future<Output = Result<Self::Metrics>> + Send {
+        async move { Ok("metrics".to_string()) }
+    }
+
+    fn get_config(&self) -> Self::Config {
+        "mock_config".to_string()
     }
 }
 

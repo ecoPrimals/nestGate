@@ -164,7 +164,7 @@ mod tests {
 
         let result = processor.process_u64_batch(&input, &mut output);
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), 8);
+        assert_eq!(result.expect("Operation failed"), 8);
         assert_eq!(output, vec![2, 3, 4, 5, 6, 7, 8, 9]);
     }
 
@@ -176,7 +176,7 @@ mod tests {
 
         let result = processor.process_f32_batch(&input, &mut output);
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), 4);
+        assert_eq!(result.expect("Operation failed"), 4);
         assert_eq!(output, vec![2.0, 4.0, 6.0, 8.0]);
     }
 
@@ -198,7 +198,7 @@ mod tests {
 
         let result = processor.add_arrays(&a, &b, &mut out);
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), 4);
+        assert_eq!(result.expect("Operation failed"), 4);
         assert_eq!(out, vec![6.0, 8.0, 10.0, 12.0]);
     }
 
@@ -211,7 +211,7 @@ mod tests {
 
         let result = processor.mul_arrays(&a, &b, &mut out);
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), 4);
+        assert_eq!(result.expect("Operation failed"), 4);
         assert_eq!(out, vec![6.0, 12.0, 20.0, 30.0]);
     }
 

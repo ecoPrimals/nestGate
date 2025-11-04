@@ -16,7 +16,7 @@ async fn test_collect_metrics_success() {
     let result = collector.collect_metrics().await;
 
     assert!(result.is_ok(), "Metrics collection should succeed");
-    let metrics = result.unwrap();
+    let metrics = result.expect("Test setup failed");
 
     assert!(metrics.cpu_usage_percent >= 0.0);
     assert!(
@@ -32,7 +32,7 @@ async fn test_collect_metrics_success() {
 #[tokio::test]
 async fn test_system_metrics_structure() {
     let collector = SystemMetricsCollector::new(60);
-    let metrics = collector.collect_metrics().await.unwrap();
+    let metrics = collector.collect_metrics().await.expect("Test setup failed");
 
     // Verify all fields are populated
     assert!(metrics.cpu_usage_percent >= 0.0);
@@ -77,8 +77,8 @@ fn test_network_metrics_structure() {
 async fn test_multiple_collections_consistency() {
     let collector = SystemMetricsCollector::new(10);
 
-    let metrics1 = collector.collect_metrics().await.unwrap();
-    let metrics2 = collector.collect_metrics().await.unwrap();
+    let metrics1 = collector.collect_metrics().await.expect("Test setup failed");
+    let metrics2 = collector.collect_metrics().await.expect("Test setup failed");
 
     // Both collections should succeed
     assert!(metrics1.cpu_usage_percent >= 0.0);
@@ -110,7 +110,7 @@ fn test_metrics_serialization() {
     let json = serde_json::to_string(&metrics);
     assert!(json.is_ok(), "Metrics should serialize to JSON");
 
-    let json_str = json.unwrap();
+    let json_str = json.expect("Test setup failed");
     assert!(json_str.contains("cpu_usage_percent"));
     assert!(json_str.contains("memory_usage_bytes"));
     assert!(json_str.contains("disk_io_metrics"));
@@ -143,7 +143,7 @@ fn test_metrics_deserialization() {
     let metrics: Result<SystemMetrics, _> = serde_json::from_str(json);
     assert!(metrics.is_ok(), "Should deserialize from JSON");
 
-    let metrics = metrics.unwrap();
+    let metrics = metrics.expect("Test setup failed");
     assert_eq!(metrics.cpu_usage_percent, 45.5);
     assert_eq!(metrics.memory_usage_bytes, 1073741824);
 }
@@ -201,13 +201,13 @@ fn test_network_metrics_clone() {
 #[tokio::test]
 async fn test_metrics_timestamp_validity() {
     let collector = SystemMetricsCollector::new(60);
-    let metrics = collector.collect_metrics().await.unwrap();
+    let metrics = collector.collect_metrics().await.expect("Test setup failed");
 
     let now = std::time::SystemTime::now();
     let duration = now.duration_since(metrics.timestamp);
 
     // Timestamp should be very recent (within 1 second)
     assert!(duration.is_ok());
-    let duration = duration.unwrap();
+    let duration = duration.expect("Test setup failed");
     assert!(duration.as_secs() < 1, "Timestamp should be recent");
 }

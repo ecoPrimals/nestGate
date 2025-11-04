@@ -56,14 +56,21 @@ mod tests {
     #[cfg(test)]
     impl Default for MockServiceInfo {
         fn default() -> Self {
+            use crate::constants::hardcoding::{addresses, ports};
+
             Self {
                 id: "test-service-123".to_string(),
                 name: "test-service".to_string(),
                 version: "1.0.0".to_string(),
-                endpoints: vec![
-                    "http://localhost:".to_string()
-                        + &env::var("NESTGATE_API_PORT").unwrap_or_else(|_| "8080".to_string()),
-                ],
+                endpoints: vec![format!(
+                    "http://{}:{}",
+                    env::var("NESTGATE_API_HOST")
+                        .unwrap_or_else(|_| addresses::LOCALHOST_NAME.to_string()),
+                    env::var("NESTGATE_API_PORT")
+                        .ok()
+                        .and_then(|s| s.parse().ok())
+                        .unwrap_or(ports::HTTP_DEFAULT)
+                )],
             }
         }
     }

@@ -1,10 +1,13 @@
 // Removed unused error imports
 /// Configuration traits for universal service orchestration
-use futures_util::Stream;
 use serde::{Deserialize, Serialize};
-use crate::config::federation::FederationConfig;
+// TODO: FederationConfig module needs to be created or imported from correct location
+// use crate::config::federation::FederationConfig;
 use crate::config::canonical_master::domains::network::protocols::{HttpConfig, WebSocketConfig};
 use crate::Result;
+
+// Temporary placeholder until federation module is properly implemented
+type FederationConfig = (); // Placeholder
 
 /// Configuration provider trait
 pub trait ConfigProvider<T>: Send + Sync
@@ -44,7 +47,10 @@ pub struct ConfigMetadata {
 }
 /// Network configuration
 /// **⚠️ DEPRECATED**: Use `CanonicalNetworkConfig` from `canonical_master::domains::network`
-#[deprecated(since = "0.9.0", note = "Use canonical_master::domains::network::CanonicalNetworkConfig instead")]
+#[deprecated(
+    since = "0.9.0",
+    note = "Use canonical_master::domains::network::CanonicalNetworkConfig instead"
+)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkConfig {
     pub websocket: WebSocketConfig,

@@ -79,10 +79,13 @@ impl ZeroCostUniversalZfsService for ZeroCostZfsService {
     }
 
     async fn create_pool(&self, _config: &Self::PoolConfig) -> Result<Self::PoolInfo> {
-        Err(crate::error::NestGateError::NotImplemented {
-            feature: "Pool creation".to_string(),
-            location: Some("ZeroCostZfsService".to_string()),
-        })
+        Err(crate::error::NestGateError::NotImplemented(Box::new(
+            crate::error::variants::core_errors::NotImplementedErrorDetails {
+                feature: "Pool creation".to_string(),
+                message: Some("ZeroCostZfsService pool creation not yet implemented".to_string()),
+                planned_version: None,
+            }
+        )))
     }
 
     async fn destroy_pool(&self, _name: &str) -> Result<()> {

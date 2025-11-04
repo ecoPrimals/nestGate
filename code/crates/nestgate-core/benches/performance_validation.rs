@@ -46,7 +46,7 @@ fn benchmark_uuid_generation_baseline(c: &mut Criterion) {
         b.iter(|| {
             // Simulate the old approach - frequent UUID generation
             for i in 0..100 {
-                let _service_name = format!("service-{}", e);
+                let _service_name = format!("service-{}", i);
                 let uuid = black_box(Uuid::new_v4());
                 black_box(uuid);
             }
@@ -183,7 +183,7 @@ fn benchmark_concurrent_performance(c: &mut Criterion) {
                             std::thread::spawn(move || {
                                 for _ in 0..25 {
                                     let i = counter_clone.fetch_add(1, Ordering::Relaxed);
-                                    cache_clone.get_or_create(&format!("service-{}", e));
+                                    cache_clone.get_or_create(&format!("service-{}", i));
                                 }
                             })
                         })
@@ -217,7 +217,7 @@ fn benchmark_performance_regression_detection(c: &mut Criterion) {
             // Memory pressure test
             let mut buffers = Vec::new();
             for i in 0..50 {
-                let key = format!("validation-{}", e);
+                let key = format!("validation-{}", i);
                 let buffer = if i % 2 == 0 {
                     get_4kb_buffer()
                 } else {

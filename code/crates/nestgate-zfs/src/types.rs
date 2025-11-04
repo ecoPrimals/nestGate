@@ -523,4 +523,375 @@ mod tests {
         let nestgate_err: nestgate_core::NestGateError = zfs_err.into();
         assert!(nestgate_err.to_string().contains("Pool creation failed"));
     }
+
+    // ==================== EXTENDED TEST COVERAGE ====================
+
+    #[test]
+    fn test_pool_health_all_variants() {
+        let healthy = PoolHealth::Healthy;
+        let warning = PoolHealth::Warning;
+        let critical = PoolHealth::Critical;
+        let unknown = PoolHealth::Unknown;
+
+        // Verify all variants can be created and cloned
+        assert!(matches!(healthy.clone(), PoolHealth::Healthy));
+        assert!(matches!(warning.clone(), PoolHealth::Warning));
+        assert!(matches!(critical.clone(), PoolHealth::Critical));
+        assert!(matches!(unknown.clone(), PoolHealth::Unknown));
+    }
+
+    #[test]
+    fn test_pool_state_all_variants() {
+        let states = vec![
+            PoolState::Online,
+            PoolState::Offline,
+            PoolState::Degraded,
+            PoolState::Faulted,
+            PoolState::Removed,
+            PoolState::Unavailable,
+        ];
+
+        // Verify all states can be created
+        assert_eq!(states.len(), 6);
+        for state in states {
+            let _cloned = state.clone();
+        }
+    }
+
+    #[test]
+    fn test_pool_capacity_calculations() {
+        let capacity = PoolCapacity {
+            total_bytes: 1_000_000,
+            used_bytes: 600_000,
+            available_bytes: 400_000,
+            fragmentation_percent: 15.5,
+            deduplication_ratio: 1.2,
+        };
+
+        assert_eq!(capacity.total_bytes, 1_000_000);
+        assert_eq!(
+            capacity.used_bytes + capacity.available_bytes,
+            capacity.total_bytes
+        );
+        assert!(capacity.fragmentation_percent > 0.0);
+        assert!(capacity.deduplication_ratio >= 1.0);
+    }
+
+    #[test]
+    fn test_pool_info_with_properties() {
+        let mut properties = HashMap::new();
+        properties.insert("compression".to_string(), "lz4".to_string());
+        properties.insert("atime".to_string(), "off".to_string());
+
+        let pool = PoolInfo {
+            name: "test-pool".to_string(),
+            size: 1_000_000,
+            used: 500_000,
+            available: 500_000,
+            health: PoolHealth::Healthy,
+            state: PoolState::Online,
+            capacity: PoolCapacity {
+                total_bytes: 1_000_000,
+                used_bytes: 500_000,
+                available_bytes: 500_000,
+                fragmentation_percent: 10.0,
+                deduplication_ratio: 1.0,
+            },
+            properties: properties.clone(),
+            created_at: SystemTime::now(),
+        };
+
+        assert_eq!(pool.name, "test-pool");
+        assert_eq!(pool.properties.get("compression").unwrap(), "lz4");
+        assert!(pool.properties.contains_key("atime"));
+    }
+
+    #[test]
+    fn test_dataset_info_with_mount_point() {
+        let dataset = DatasetInfo {
+            name: "test-dataset".to_string(),
+            full_name: "pool/test-dataset".to_string(),
+            pool: "pool".to_string(),
+            size: 100_000,
+            used: 50_000,
+            available: 50_000,
+            mount_point: Some(PathBuf::from("/mnt/test")),
+            compression: "lz4".to_string(),
+            checksum: "sha256".to_string(),
+            tier: StorageTier::Hot,
+            properties: HashMap::new(),
+            created_at: SystemTime::now(),
+        };
+
+        assert_eq!(dataset.name, "test-dataset");
+        assert!(dataset.mount_point.is_some());
+        assert_eq!(dataset.mount_point.unwrap(), PathBuf::from("/mnt/test"));
+        assert!(matches!(dataset.tier, StorageTier::Hot));
+    }
+
+    #[test]
+    fn test_snapshot_info_creation() {
+        let mut props = HashMap::new();
+        props.insert("used".to_string(), "1024".to_string());
+
+        let snapshot = SnapshotInfo {
+            name: "snap1".to_string(),
+            dataset: "pool/dataset".to_string(),
+            size: 1024,
+            properties: props,
+            created_at: SystemTime::now(),
+        };
+
+        assert_eq!(snapshot.name, "snap1");
+        assert_eq!(snapshot.dataset, "pool/dataset");
+        assert_eq!(snapshot.size, 1024);
+        assert!(snapshot.properties.contains_key("used"));
+    }
+
+    #[test]
+    fn test_command_result_success() {
+        let result = CommandResult {
+            success: true,
+            stdout: "Operation completed".to_string(),
+            stderr: String::new(),
+            exit_code: Some(0),
+        };
+
+        assert!(result.success);
+        assert_eq!(result.exit_code, Some(0));
+        assert!(result.stderr.is_empty());
+        assert!(!result.stdout.is_empty());
+    }
+
+    #[test]
+    fn test_command_result_failure() {
+        let result = CommandResult {
+            success: false,
+            stdout: String::new(),
+            stderr: "Command failed: pool not found".to_string(),
+            exit_code: Some(1),
+        };
+
+        assert!(!result.success);
+        assert_eq!(result.exit_code, Some(1));
+        assert!(!result.stderr.is_empty());
+        assert!(result.stderr.contains("pool not found"));
+    }
+
+    #[test]
+    fn test_zfs_command_variants() {
+        let create_pool = ZfsCommand::CreatePool {
+            name: "test-pool".to_string(),
+            devices: vec!["/dev/disk1".to_string(), "/dev/disk2".to_string()],
+        };
+
+        let create_dataset = ZfsCommand::CreateDataset {
+            name: "pool/dataset".to_string(),
+            properties: HashMap::new(),
+        };
+
+        let create_snapshot = ZfsCommand::CreateSnapshot {
+            dataset: "pool/dataset".to_string(),
+            name: "snap1".to_string(),
+        };
+
+        // Verify all command types can be created
+        assert!(matches!(create_pool, ZfsCommand::CreatePool { .. }));
+        assert!(matches!(create_dataset, ZfsCommand::CreateDataset { .. }));
+        assert!(matches!(create_snapshot, ZfsCommand::CreateSnapshot { .. }));
+    }
+
+    #[test]
+    fn test_zfs_error_types() {
+        let pool_err = ZfsError::PoolError {
+            message: "Pool error".to_string(),
+        };
+        let dataset_err = ZfsError::DatasetError {
+            message: "Dataset error".to_string(),
+        };
+        let snapshot_err = ZfsError::SnapshotError {
+            message: "Snapshot error".to_string(),
+        };
+        let command_err = ZfsError::CommandError {
+            message: "Command error".to_string(),
+        };
+        let config_err = ZfsError::ConfigError {
+            message: "Config error".to_string(),
+        };
+
+        // Verify error messages
+        assert!(pool_err.to_string().contains("Pool error"));
+        assert!(dataset_err.to_string().contains("Dataset error"));
+        assert!(snapshot_err.to_string().contains("Snapshot error"));
+        assert!(command_err.to_string().contains("Command error"));
+        assert!(config_err.to_string().contains("Config error"));
+    }
+
+    #[test]
+    fn test_bottleneck_report() {
+        let report = BottleneckReport {
+            dataset: "pool/dataset".to_string(),
+            bottleneck_type: "IO".to_string(),
+            severity: "High".to_string(),
+            recommendations: vec!["Increase cache".to_string(), "Add more disks".to_string()],
+        };
+
+        assert_eq!(report.dataset, "pool/dataset");
+        assert_eq!(report.bottleneck_type, "IO");
+        assert_eq!(report.recommendations.len(), 2);
+    }
+
+    #[test]
+    fn test_capacity_report() {
+        let report = CapacityReport {
+            dataset: "pool/dataset".to_string(),
+            current_usage: 800_000,
+            projected_usage: 950_000,
+            recommendations: vec!["Add storage".to_string()],
+        };
+
+        assert!(report.projected_usage > report.current_usage);
+        assert!(!report.recommendations.is_empty());
+    }
+
+    #[test]
+    fn test_retention_policy() {
+        let policy = RetentionPolicy {
+            name: "standard".to_string(),
+            keep_hourly: 24,
+            keep_daily: 7,
+            keep_weekly: 4,
+            keep_monthly: 12,
+        };
+
+        assert_eq!(policy.name, "standard");
+        assert_eq!(policy.keep_hourly, 24);
+        assert_eq!(policy.keep_daily, 7);
+        assert_eq!(policy.keep_weekly, 4);
+        assert_eq!(policy.keep_monthly, 12);
+    }
+
+    #[test]
+    fn test_zero_cost_pool_info() {
+        let pool = ZeroCostPoolInfo {
+            name: "zero-pool".to_string(),
+            size: 1_000_000,
+            used: 400_000,
+            available: 600_000,
+            health: "healthy".to_string(),
+            properties: HashMap::new(),
+            created_at: SystemTime::now(),
+        };
+
+        assert_eq!(pool.name, "zero-pool");
+        assert_eq!(pool.health, "healthy");
+        assert!(pool.used + pool.available <= pool.size);
+    }
+
+    #[test]
+    fn test_zero_cost_dataset_info() {
+        let dataset = ZeroCostDatasetInfo {
+            name: "zero-dataset".to_string(),
+            full_name: "pool/zero-dataset".to_string(),
+            pool: "pool".to_string(),
+            size: 50_000,
+            used: 25_000,
+            available: 25_000,
+            mount_point: Some(PathBuf::from("/mnt/zero")),
+            tier: StorageTier::Cold,
+            properties: HashMap::new(),
+            created_at: SystemTime::now(),
+        };
+
+        assert_eq!(dataset.name, "zero-dataset");
+        assert!(matches!(dataset.tier, StorageTier::Cold));
+    }
+
+    #[test]
+    fn test_zero_cost_snapshot_info() {
+        let snapshot = ZeroCostSnapshotInfo {
+            name: "zero-snap".to_string(),
+            dataset: "pool/dataset".to_string(),
+            size: 2048,
+            properties: HashMap::new(),
+            created_at: SystemTime::now(),
+        };
+
+        assert_eq!(snapshot.name, "zero-snap");
+        assert_eq!(snapshot.size, 2048);
+    }
+
+    #[test]
+    fn test_replication_performance() {
+        let perf = ReplicationPerformance {
+            source_dataset: "source/dataset".to_string(),
+            target_dataset: "target/dataset".to_string(),
+            transfer_rate: 1024.0 * 1024.0, // 1 MB/s
+            compression_ratio: 2.5,
+            estimated_completion: SystemTime::now(),
+        };
+
+        assert!(perf.transfer_rate > 0.0);
+        assert!(perf.compression_ratio > 1.0);
+    }
+
+    #[test]
+    fn test_maintenance_schedule() {
+        let schedule = MaintenanceSchedule {
+            dataset: "pool/dataset".to_string(),
+            next_maintenance: SystemTime::now(),
+            tasks: vec!["scrub".to_string(), "backup".to_string()],
+        };
+
+        assert_eq!(schedule.tasks.len(), 2);
+        assert!(schedule.tasks.contains(&"scrub".to_string()));
+    }
+
+    #[test]
+    fn test_retention_policy_serialization() {
+        let policy = RetentionPolicy {
+            name: "standard".to_string(),
+            keep_hourly: 24,
+            keep_daily: 7,
+            keep_weekly: 4,
+            keep_monthly: 12,
+        };
+
+        // Test JSON serialization
+        let json = serde_json::to_string(&policy).expect("Failed to serialize");
+        let deserialized: RetentionPolicy =
+            serde_json::from_str(&json).expect("Failed to deserialize");
+
+        assert_eq!(policy.name, deserialized.name);
+        assert_eq!(policy.keep_hourly, deserialized.keep_hourly);
+    }
+
+    #[test]
+    fn test_replication_performance_metrics() {
+        let perf = ReplicationPerformance {
+            source_dataset: "source/dataset".to_string(),
+            target_dataset: "target/dataset".to_string(),
+            transfer_rate: 1024.0 * 1024.0 * 10.0, // 10 MB/s
+            compression_ratio: 3.0,
+            estimated_completion: SystemTime::now(),
+        };
+
+        assert_eq!(perf.source_dataset, "source/dataset");
+        assert_eq!(perf.target_dataset, "target/dataset");
+        assert!(perf.transfer_rate > 0.0);
+        assert!(perf.compression_ratio > 1.0);
+    }
+
+    #[test]
+    fn test_maintenance_schedule_clone() {
+        let schedule = MaintenanceSchedule {
+            dataset: "pool/dataset".to_string(),
+            next_maintenance: SystemTime::now(),
+            tasks: vec!["scrub".to_string(), "backup".to_string()],
+        };
+
+        let cloned = schedule.clone();
+        assert_eq!(schedule.dataset, cloned.dataset);
+        assert_eq!(schedule.tasks.len(), cloned.tasks.len());
+    }
 }

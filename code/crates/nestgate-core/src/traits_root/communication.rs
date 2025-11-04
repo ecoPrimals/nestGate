@@ -1,24 +1,29 @@
 // Removed unused error imports
+use crate::Result;
 /// Communication Traits
 use chrono::{DateTime, Utc};
 use futures_util::Stream;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use crate::Result;
 
 /// Communication layer trait
 pub trait CommunicationLayer: Send + Sync {
     /// Send a message to a specific service
-    async fn send_message(
+    fn send_message(
         &self,
         target: ServiceAddress,
         message: ServiceMessage,
-    ) -> Result<CommunicationResponse>;
+    ) -> impl std::future::Future<Output = Result<CommunicationResponse>> + Send;
     /// Broadcast a message to all services
-    fn broadcast(&self, message: ServiceMessage) -> impl std::future::Future<Output = Result<Vec<CommunicationResponse>> + Send;
+    fn broadcast(
+        &self,
+        message: ServiceMessage,
+    ) -> impl std::future::Future<Output = Result<Vec<CommunicationResponse>>> + Send;
 
     /// Listen for incoming messages
-    fn listen(&self) -> impl std::future::Future<Output = impl Stream<Item = (ServiceAddress, ServiceMessage)>> + Send;
+    fn listen(
+        &self,
+    ) -> impl std::future::Future<Output = impl Stream<Item = (ServiceAddress, ServiceMessage)>> + Send;
 
     /// Subscribe to a topic
     fn subscribe(&self, topic: &str) -> impl std::future::Future<Output = Result<()>> + Send;

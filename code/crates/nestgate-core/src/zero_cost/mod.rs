@@ -19,8 +19,8 @@
 //! - `providers`: Concrete provider implementations
 //! - `system`: Main system with compile-time composition
 //!
-//! Note: Some traits are deprecated but maintained for backward compatibility
-//! TODO: Complete migration to canonical traits in future versions
+//! Note: Some traits are deprecated but maintained for backward compatibility.
+//! Migration to canonical traits is tracked but not yet scheduled.
 
 pub mod providers;
 pub mod system;
@@ -62,7 +62,7 @@ mod integration_tests {
         let response = system.process_request(request);
         assert!(response.is_ok());
 
-        let response = response.unwrap();
+        let response = response.expect("Operation failed");
         assert_eq!(response.id, 42);
         assert_eq!(response.data, vec![1, 2, 3, 4, 5]);
         assert!(response.success);

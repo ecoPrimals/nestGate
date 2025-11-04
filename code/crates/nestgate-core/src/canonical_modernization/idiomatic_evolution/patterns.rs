@@ -8,6 +8,10 @@ use super::traits::{
 };
 
 /// Create a smart default with error handling
+///
+/// # Errors
+///
+/// Returns an error if smart default creation fails (currently infallible).
 pub fn safe_smart_default<T: SmartDefault>() -> Result<T, &'static str> {
     Ok(T::smart_default())
 }
@@ -16,6 +20,10 @@ pub fn with_evolution_metadata<T>(value: T, metadata: EvolutionMetadata) -> (T, 
     (value, metadata)
 }
 /// Apply modernization pattern to any compatible type
+///
+/// # Errors
+///
+/// Returns an error if modernization fails.
 pub fn apply_modernization_pattern<T>(value: T) -> crate::Result<T>
 where
     T: ModernizationTrait,
@@ -31,6 +39,10 @@ where
     B::builder()
 }
 /// Smart conversion pattern with evolution tracking
+///
+/// # Errors
+///
+/// Returns an error if compatibility check fails.
 pub fn smart_conversion_pattern<T, U>(value: T) -> crate::Result<U>
 where
     T: Into<U> + EvolutionCompatible,
@@ -43,6 +55,10 @@ where
     Ok(value.into())
 }
 /// Pattern for safe evolution with rollback capability
+///
+/// # Errors
+///
+/// Returns an error if both evolution and rollback fail (currently uses fallback).
 pub fn safe_evolution_pattern<T>(value: T) -> crate::Result<T>
 where
     T: Clone + CanonicalEvolution,
@@ -58,6 +74,10 @@ where
     }
 }
 /// Batch evolution pattern for collections
+///
+/// # Errors
+///
+/// Returns an error if any value fails to evolve.
 pub fn batch_evolution_pattern<T>(values: Vec<T>) -> crate::Result<Vec<T>>
 where
     T: CanonicalEvolution,

@@ -108,7 +108,7 @@ pub mod constants {
     /// Default API port - use canonical constant
     pub use nestgate_core::constants::canonical_defaults::network::DEFAULT_API_PORT;
     /// Default internal port
-    pub const DEFAULT_INTERNAL_PORT: u16 = 8081;
+    pub use nestgate_core::constants::hardcoding::ports::HEALTH_CHECK as DEFAULT_INTERNAL_PORT;
 
     /// Default connection timeout
     pub const DEFAULT_CONNECTION_TIMEOUT_SECONDS: u64 = 30;
