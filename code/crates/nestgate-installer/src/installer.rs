@@ -128,7 +128,10 @@ impl NestGateInstaller {
             if !Confirm::new()
                 .with_prompt(format!(
                     "Directory {} already exists. Overwrite?",
-                    self.install_dir.as_ref().unwrap().display()
+                    self.install_dir
+                        .as_ref()
+                        .expect("Operation failed")
+                        .display()
                 ))
                 .interact()?
             {

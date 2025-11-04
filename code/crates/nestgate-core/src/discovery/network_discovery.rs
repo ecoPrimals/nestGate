@@ -348,11 +348,19 @@ impl PortScanDiscovery {
     /// Create a new port scan discovery
     #[must_use]
     pub fn new() -> Self {
+        use crate::constants::hardcoding::ports;
+
         let mut capability_ports = HashMap::new();
-        capability_ports.insert("orchestration".to_string(), vec![8080, 8443, 9090]);
+        capability_ports.insert(
+            "orchestration".to_string(),
+            vec![ports::HTTP_DEFAULT, 8443, ports::METRICS_DEFAULT],
+        );
         capability_ports.insert("security".to_string(), vec![9000, 9443]);
         capability_ports.insert("ai".to_string(), vec![7000, 7443, 8000]);
-        capability_ports.insert("storage".to_string(), vec![8081, 8082]);
+        capability_ports.insert(
+            "storage".to_string(),
+            vec![ports::HEALTH_CHECK, ports::WEBSOCKET_DEFAULT],
+        );
 
         Self {
             ip_ranges: Vec::new(),
@@ -472,7 +480,9 @@ mod tests {
 
         // Test announcement parsing
         let announcement = "NESTGATE-DISCOVERY:orchestration:http://songbird:8080:priority=100";
-        let capability = discovery.parse_announcement(announcement).unwrap();
+        let capability = discovery
+            .parse_announcement(announcement)
+            .expect("Network operation failed");
 
         assert_eq!(capability.capability_type, "orchestration");
         assert_eq!(capability.endpoint, "http://songbird:8080");
@@ -485,7 +495,10 @@ mod tests {
     #[tokio::test]
     async fn test_port_scan_discovery() {
         let mut discovery = PortScanDiscovery::new();
-        discovery.add_ip_range("127.0.0.1".parse().unwrap(), "127.0.0.1".parse().unwrap());
+        discovery.add_ip_range(
+            "127.0.0.1".parse().expect("Network operation failed"),
+            "127.0.0.1".parse().expect("Network operation failed"),
+        );
 
         // Test that discovery method is created correctly
         assert_eq!(discovery.method_name(), "port-scan");

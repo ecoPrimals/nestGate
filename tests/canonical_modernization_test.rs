@@ -8,18 +8,17 @@ use nestgate_core::config::DeploymentEnvironment;
 /// Test that canonical configuration works
 #[tokio::test]
 async fn test_canonical_config_creation() -> Result<(), Box<dyn std::error::Error>> {
-    // Test default configuration creation
-    let config = NestGateNestGateCanonicalConfig::default();
+    // Test default configuration creation with explicit type parameters
+    let config: NestGateCanonicalConfig = NestGateCanonicalConfig::default();
 
     // Verify basic structure using correct field names
     assert!(
         !config.system.instance_name.is_empty(),
         "Instance name should not be empty"
     );
-    assert!(
-        !config.system.log_level.is_empty(),
-        "Log level should not be empty"
-    );
+    // LogLevel is an enum, not a string - just verify it exists
+    // by accessing it (compilation ensures it's valid)
+    let _log_level = &config.system.log_level;
 
     println!("✅ Canonical configuration creation works");
     Ok(())
@@ -49,7 +48,7 @@ async fn test_environment_driven_config() -> Result<(), Box<dyn std::error::Erro
 /// Test that deprecated fields are not present
 #[tokio::test]
 async fn test_no_deprecated_fields() -> Result<(), Box<dyn std::error::Error>> {
-    let config = NestGateNestGateCanonicalConfig::default();
+    let config: NestGateCanonicalConfig = NestGateCanonicalConfig::default();
 
     // Test that config can be serialized (validates structure)
     let serialized = serde_json::to_string(&config)?;
@@ -71,11 +70,12 @@ async fn test_no_deprecated_fields() -> Result<(), Box<dyn std::error::Error>> {
 /// Test basic configuration validation
 #[tokio::test]
 async fn test_config_validation() -> Result<(), Box<dyn std::error::Error>> {
-    let config = NestGateNestGateCanonicalConfig::default();
+    let config: NestGateCanonicalConfig = NestGateCanonicalConfig::default();
 
     // Test system configuration with correct field names
     assert!(!config.system.instance_name.is_empty());
-    assert!(!config.system.log_level.is_empty());
+    // LogLevel is an enum, not a string - just verify it exists
+    let _log_level = &config.system.log_level;
     assert!(!config.system.data_dir.as_os_str().is_empty());
     assert!(!config.system.config_dir.as_os_str().is_empty());
 

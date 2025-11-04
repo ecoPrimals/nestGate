@@ -31,9 +31,32 @@ impl Default for UniversalAdapterConfig {
 
 impl Default for PrimalsConfig {
     fn default() -> Self {
+        use crate::constants::hardcoding::{addresses, ports};
+        use std::env;
+        
+        let intelligence_endpoint = env::var("NESTGATE_AI_ENDPOINT")
+            .unwrap_or_else(|_| {
+                format!(
+                    "http://{}:{}",
+                    addresses::LOCALHOST_NAME,
+                    env::var("NESTGATE_API_PORT")
+                        .unwrap_or_else(|_| ports::HTTP_DEFAULT.to_string())
+                )
+            });
+            
+        let security_endpoint = env::var("NESTGATE_SECURITY_ENDPOINT")
+            .unwrap_or_else(|_| {
+                format!(
+                    "http://{}:{}",
+                    addresses::LOCALHOST_NAME,
+                    env::var("NESTGATE_SECURITY_PORT")
+                        .unwrap_or_else(|_| ports::HEALTH_CHECK.to_string())
+                )
+            });
+        
         Self {
-            intelligence_ai_endpoint: "http://localhost:".to_string() + &env::var("NESTGATE_API_PORT").unwrap_or_else(|_| "8080".to_string()).to_string(),
-            security_security_endpoint: "http://localhost:".to_string() + &env::var("NESTGATE_SECURITY_PORT").unwrap_or_else(|_| "8081".to_string()).to_string(),
+            intelligence_ai_endpoint: intelligence_endpoint,
+            security_security_endpoint: security_endpoint,
             ecosystem_integration_enabled: true,
         }
     }

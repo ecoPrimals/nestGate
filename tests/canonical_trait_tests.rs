@@ -303,16 +303,13 @@ async fn test_canonical_error_handling() -> NestGateResult<()> {
     match storage.read("nonexistent").await {
         Err(NestGateError::FileSystem { .. }) => {
             println!("✅ Proper error handling verified");
-    Ok(())
         }
         _ => {
             return Err(Box::new(std::io::Error::new(
                 std::io::ErrorKind::Other,
                 "Test assertion failed",
             )));
-    Ok(())
         }
-    Ok(())
     }
 
     Ok(())

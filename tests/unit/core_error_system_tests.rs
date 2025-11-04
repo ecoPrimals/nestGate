@@ -23,8 +23,9 @@ mod error_creation_tests {
             nestgate_core::error::InternalErrorDetails {
                 message: "Test error message".to_string(),
                 component: "test".to_string(),
-                context: HashMap::new(),
-                recoverable: true,
+                location: None,
+                is_bug: false,
+                context: None,
             }
         ));
         assert!(error.to_string().contains("Test error message"));
@@ -77,12 +78,9 @@ mod error_creation_tests {
             nestgate_core::error::InternalErrorDetails {
                 message: "Base error".to_string(),
                 component: "test".to_string(),
-                context: {
-                    let mut ctx = HashMap::new();
-                    ctx.insert("context".to_string(), "Additional context".to_string());
-                    ctx
-                },
-                recoverable: true,
+                location: Some("test.rs:42".to_string()),
+                is_bug: false,
+                context: None,
             }
         ));
         assert!(error.to_string().contains("Base error"));
@@ -111,8 +109,9 @@ mod error_conversion_tests {
             nestgate_core::error::InternalErrorDetails {
                 message: string_error,
                 component: "string_conversion".to_string(),
-                context: HashMap::new(),
-                recoverable: true,
+                location: None,
+                is_bug: false,
+                context: None,
             }
         ));
         assert!(nestgate_error.to_string().contains("String error message"));
@@ -144,13 +143,9 @@ mod error_context_tests {
             nestgate_core::error::InternalErrorDetails {
                 message: "Original error".to_string(),
                 component: "test".to_string(),
-                context: {
-                    let mut ctx = HashMap::new();
-                    ctx.insert("context1".to_string(), "First context".to_string());
-                    ctx.insert("context2".to_string(), "Second context".to_string());
-                    ctx
-                },
-                recoverable: true,
+                location: Some("test.rs:100".to_string()),
+                is_bug: false,
+                context: None,
             }
         ));
         
@@ -211,8 +206,9 @@ mod result_type_tests {
             nestgate_core::error::InternalErrorDetails {
                 message: "Test error".to_string(),
                 component: "test".to_string(),
-                context: HashMap::new(),
-                recoverable: true,
+                location: None,
+                is_bug: false,
+                context: None,
             }
         ));
         let result: Result<String> = Err(error);
@@ -240,8 +236,9 @@ mod result_type_tests {
                     nestgate_core::error::InternalErrorDetails {
                         message: "Too small".to_string(),
                         component: "test".to_string(),
-                        context: HashMap::new(),
-                        recoverable: true,
+                        location: None,
+                        is_bug: false,
+                        context: None,
                     }
                 )))
             }
@@ -312,8 +309,9 @@ mod error_debugging_tests {
             nestgate_core::error::InternalErrorDetails {
                 message: "Debug test error".to_string(),
                 component: "test".to_string(),
-                context: HashMap::new(),
-                recoverable: true,
+                location: None,
+                is_bug: false,
+                context: None,
             }
         ));
         let debug_output = format!("{:?}", error);
@@ -327,8 +325,9 @@ mod error_debugging_tests {
             nestgate_core::error::InternalErrorDetails {
                 message: "Display test error".to_string(),
                 component: "test".to_string(),
-                context: HashMap::new(),
-                recoverable: true,
+                location: None,
+                is_bug: false,
+                context: None,
             }
         ));
         let display_output = format!("{}", error);

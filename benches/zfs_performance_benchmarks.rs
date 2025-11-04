@@ -4,12 +4,10 @@
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::time::{Duration, SystemTime};
+use std::time::SystemTime;
 use tokio::runtime::Runtime;
 
-use nestgate_zfs::performance_engine::{
-    engine::PerformanceOptimizationEngine, monitoring::RealTimePerformanceMonitor, types::*,
-};
+use nestgate_zfs::performance_engine::{monitoring::RealTimePerformanceMonitor, types::*};
 use nestgate_zfs::{config::ZfsConfig, dataset::ZfsDatasetManager, pool::ZfsPoolManager};
 
 /// Benchmark performance monitoring creation and operations

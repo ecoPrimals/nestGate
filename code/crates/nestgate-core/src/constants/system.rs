@@ -133,7 +133,7 @@ mod tests {
 
     #[test]
     fn test_timeout_ms_default() {
-        let _lock = ENV_TEST_LOCK.lock().unwrap();
+        let _lock = ENV_TEST_LOCK.lock().expect("Failed to acquire lock");
         // Save original value, remove var, test default, then restore
         let original = env::var("NESTGATE_TIMEOUT_MS").ok();
         env::remove_var("NESTGATE_TIMEOUT_MS");
@@ -146,21 +146,21 @@ mod tests {
 
     #[test]
     fn test_timeout_ms_from_env() {
-        let _lock = ENV_TEST_LOCK.lock().unwrap();
+        let _lock = ENV_TEST_LOCK.lock().expect("Failed to acquire lock");
         let _guard = EnvGuard::new("NESTGATE_TIMEOUT_MS", "10000");
         assert_eq!(timeout_ms(), 10000);
     }
 
     #[test]
     fn test_timeout_ms_invalid_env() {
-        let _lock = ENV_TEST_LOCK.lock().unwrap();
+        let _lock = ENV_TEST_LOCK.lock().expect("Failed to acquire lock");
         let _guard = EnvGuard::new("NESTGATE_TIMEOUT_MS", "invalid");
         assert_eq!(timeout_ms(), 5000);
     }
 
     #[test]
     fn test_max_connections_default() {
-        let _lock = ENV_TEST_LOCK.lock().unwrap();
+        let _lock = ENV_TEST_LOCK.lock().expect("Failed to acquire lock");
         // Save original value, remove var, test default, then restore
         let original = env::var("NESTGATE_MAX_CONNECTIONS").ok();
         env::remove_var("NESTGATE_MAX_CONNECTIONS");
@@ -173,21 +173,21 @@ mod tests {
 
     #[test]
     fn test_max_connections_from_env() {
-        let _lock = ENV_TEST_LOCK.lock().unwrap();
+        let _lock = ENV_TEST_LOCK.lock().expect("Failed to acquire lock");
         let _guard = EnvGuard::new("NESTGATE_MAX_CONNECTIONS", "2000");
         assert_eq!(max_connections(), 2000);
     }
 
     #[test]
     fn test_max_connections_invalid_env() {
-        let _lock = ENV_TEST_LOCK.lock().unwrap();
+        let _lock = ENV_TEST_LOCK.lock().expect("Failed to acquire lock");
         let _guard = EnvGuard::new("NESTGATE_MAX_CONNECTIONS", "not_a_number");
         assert_eq!(max_connections(), 1000);
     }
 
     #[test]
     fn test_buffer_size_default() {
-        let _lock = ENV_TEST_LOCK.lock().unwrap();
+        let _lock = ENV_TEST_LOCK.lock().expect("Failed to acquire lock");
         // Save original value, remove var, test default, then restore
         let original = env::var("NESTGATE_BUFFER_SIZE").ok();
         env::remove_var("NESTGATE_BUFFER_SIZE");
@@ -200,7 +200,7 @@ mod tests {
 
     #[test]
     fn test_buffer_size_from_env() {
-        let _lock = ENV_TEST_LOCK.lock().unwrap();
+        let _lock = ENV_TEST_LOCK.lock().expect("Failed to acquire lock");
         // This test reads from the environment variable set by the guard
         let _guard = EnvGuard::new("NESTGATE_BUFFER_SIZE", "16384");
         assert_eq!(buffer_size(), 16384);
@@ -208,14 +208,14 @@ mod tests {
 
     #[test]
     fn test_buffer_size_invalid_env() {
-        let _lock = ENV_TEST_LOCK.lock().unwrap();
+        let _lock = ENV_TEST_LOCK.lock().expect("Failed to acquire lock");
         let _guard = EnvGuard::new("NESTGATE_BUFFER_SIZE", "invalid");
         assert_eq!(buffer_size(), 8192);
     }
 
     #[test]
     fn test_default_retry_attempts_default() {
-        let _lock = ENV_TEST_LOCK.lock().unwrap();
+        let _lock = ENV_TEST_LOCK.lock().expect("Failed to acquire lock");
         // Save original value, remove var, test default, then restore
         let original = env::var("NESTGATE_RETRY_ATTEMPTS").ok();
         env::remove_var("NESTGATE_RETRY_ATTEMPTS");
@@ -228,21 +228,21 @@ mod tests {
 
     #[test]
     fn test_default_retry_attempts_from_env() {
-        let _lock = ENV_TEST_LOCK.lock().unwrap();
+        let _lock = ENV_TEST_LOCK.lock().expect("Failed to acquire lock");
         let _guard = EnvGuard::new("NESTGATE_RETRY_ATTEMPTS", "5");
         assert_eq!(default_retry_attempts(), 5);
     }
 
     #[test]
     fn test_default_retry_attempts_invalid_env() {
-        let _lock = ENV_TEST_LOCK.lock().unwrap();
+        let _lock = ENV_TEST_LOCK.lock().expect("Failed to acquire lock");
         let _guard = EnvGuard::new("NESTGATE_RETRY_ATTEMPTS", "not_a_number");
         assert_eq!(default_retry_attempts(), 3);
     }
 
     #[test]
     fn test_health_check_interval_default() {
-        let _lock = ENV_TEST_LOCK.lock().unwrap();
+        let _lock = ENV_TEST_LOCK.lock().expect("Failed to acquire lock");
         let _guard = EnvGuard::new("NESTGATE_HEALTH_CHECK_INTERVAL", "");
         env::remove_var("NESTGATE_HEALTH_CHECK_INTERVAL");
         assert_eq!(health_check_interval(), 30);
@@ -250,12 +250,16 @@ mod tests {
 
     #[test]
     fn test_health_check_interval_from_env() {
-        let _lock = ENV_TEST_LOCK.lock().unwrap();
+        let _lock = ENV_TEST_LOCK.lock().expect("Failed to acquire lock");
         // Set the test value directly
         let _test_guard = EnvGuard::new("NESTGATE_HEALTH_CHECK_INTERVAL", "60");
 
         // Verify the environment variable is actually set
-        assert_eq!(env::var("NESTGATE_HEALTH_CHECK_INTERVAL").unwrap(), "60");
+        assert_eq!(
+            env::var("NESTGATE_HEALTH_CHECK_INTERVAL")
+                .expect("Failed to read environment variable"),
+            "60"
+        );
 
         // Test the function
         let result = health_check_interval();
@@ -264,14 +268,14 @@ mod tests {
 
     #[test]
     fn test_health_check_interval_invalid_env() {
-        let _lock = ENV_TEST_LOCK.lock().unwrap();
+        let _lock = ENV_TEST_LOCK.lock().expect("Failed to acquire lock");
         let _guard = EnvGuard::new("NESTGATE_HEALTH_CHECK_INTERVAL", "invalid");
         assert_eq!(health_check_interval(), 30);
     }
 
     #[test]
     fn test_edge_cases() {
-        let _lock = ENV_TEST_LOCK.lock().unwrap();
+        let _lock = ENV_TEST_LOCK.lock().expect("Failed to acquire lock");
         // Test zero values
         let _guard1 = EnvGuard::new("NESTGATE_TIMEOUT_MS", "0");
         assert_eq!(timeout_ms(), 0);
@@ -287,7 +291,7 @@ mod tests {
 
     #[test]
     fn test_multiple_env_vars_simultaneously() {
-        let _lock = ENV_TEST_LOCK.lock().unwrap();
+        let _lock = ENV_TEST_LOCK.lock().expect("Failed to acquire lock");
         let _guard1 = EnvGuard::new("NESTGATE_TIMEOUT_MS", "2000");
         let _guard2 = EnvGuard::new("NESTGATE_MAX_CONNECTIONS", "500");
         let _guard3 = EnvGuard::new("NESTGATE_BUFFER_SIZE", "4096");

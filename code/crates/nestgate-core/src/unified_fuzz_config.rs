@@ -492,9 +492,10 @@ impl Default for FuzzZfsConfigData {
 
 impl Default for FuzzApiConfigData {
     fn default() -> Self {
+        use crate::constants::hardcoding::{addresses, ports};
         Self {
-            host: "localhost".to_string(),
-            port: 8080,
+            host: addresses::LOCALHOST_NAME.to_string(),
+            port: ports::HTTP_DEFAULT,
             cors_origins: vec!["*".to_string()],
             rate_limit: 1000,
             timeout_seconds: 30,
@@ -504,8 +505,9 @@ impl Default for FuzzApiConfigData {
 
 impl Default for FuzzNetworkConfigData {
     fn default() -> Self {
+        use crate::constants::hardcoding::addresses;
         Self {
-            bind_endpoint: "0.0.0.0".to_string(),
+            bind_endpoint: addresses::BIND_ALL_IPV4.to_string(),
             port_range: (8000, 9000),
             max_connections: 1000,
             buffer_size: 8192,

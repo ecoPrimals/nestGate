@@ -16,8 +16,8 @@ mod tests {
             refresh: Some(30),
         };
 
-        assert_eq!(query.range.unwrap(), "1h");
-        assert_eq!(query.refresh.unwrap(), 30);
+        assert_eq!(query.range.expect("Test setup failed"), "1h");
+        assert_eq!(query.refresh.expect("Test setup failed"), 30);
     }
 
     #[test]
@@ -58,7 +58,7 @@ mod tests {
                 refresh: None,
             };
 
-            assert_eq!(query.range.unwrap(), range);
+            assert_eq!(query.range.expect("Test setup failed"), range);
         }
     }
 
@@ -72,7 +72,7 @@ mod tests {
                 refresh: Some(interval),
             };
 
-            assert_eq!(query.refresh.unwrap(), interval);
+            assert_eq!(query.refresh.expect("Test setup failed"), interval);
         }
     }
 
@@ -92,25 +92,25 @@ mod tests {
     #[test]
     fn test_dashboard_query_deserialization_full() {
         let json = r#"{"range":"1h","refresh":30}"#;
-        let query: DashboardQuery = serde_json::from_str(json).unwrap();
+        let query: DashboardQuery = serde_json::from_str(json).expect("Test setup failed");
 
-        assert_eq!(query.range.unwrap(), "1h");
-        assert_eq!(query.refresh.unwrap(), 30);
+        assert_eq!(query.range.expect("Test setup failed"), "1h");
+        assert_eq!(query.refresh.expect("Test setup failed"), 30);
     }
 
     #[test]
     fn test_dashboard_query_deserialization_partial() {
         let json = r#"{"range":"24h"}"#;
-        let query: DashboardQuery = serde_json::from_str(json).unwrap();
+        let query: DashboardQuery = serde_json::from_str(json).expect("Test setup failed");
 
-        assert_eq!(query.range.unwrap(), "24h");
+        assert_eq!(query.range.expect("Test setup failed"), "24h");
         assert!(query.refresh.is_none());
     }
 
     #[test]
     fn test_dashboard_query_deserialization_empty() {
         let json = r#"{}"#;
-        let query: DashboardQuery = serde_json::from_str(json).unwrap();
+        let query: DashboardQuery = serde_json::from_str(json).expect("Test setup failed");
 
         assert!(query.range.is_none());
         assert!(query.refresh.is_none());
@@ -150,8 +150,8 @@ mod tests {
                 refresh: Some(interval),
             };
 
-            assert!(query.refresh.unwrap() > 0);
-            assert!(query.refresh.unwrap() <= 600); // Max 10 minutes
+            assert!(query.refresh.expect("Test setup failed") > 0);
+            assert!(query.refresh.expect("Test setup failed") <= 600); // Max 10 minutes
         }
     }
 
@@ -166,7 +166,7 @@ mod tests {
                 refresh: Some(interval),
             };
 
-            assert_eq!(query.refresh.unwrap(), interval);
+            assert_eq!(query.refresh.expect("Test setup failed"), interval);
         }
     }
 
@@ -191,7 +191,7 @@ mod tests {
                 refresh: None,
             };
 
-            let range_value = query.range.unwrap();
+            let range_value = query.range.expect("Test setup failed");
             assert!(!range_value.is_empty());
         }
     }
@@ -207,7 +207,7 @@ mod tests {
             };
 
             // All should be accepted as strings
-            assert_eq!(query.range.unwrap(), range);
+            assert_eq!(query.range.expect("Test setup failed"), range);
         }
     }
 
@@ -220,7 +220,7 @@ mod tests {
             refresh: Some(30),
         };
 
-        let json = serde_json::to_string(&query).unwrap();
+        let json = serde_json::to_string(&query).expect("Test setup failed");
         assert!(json.contains("\"range\":\"1h\"") || json.contains("\"range\":\"1h\""));
         assert!(json.contains("\"refresh\":30"));
     }
@@ -232,8 +232,8 @@ mod tests {
             refresh: Some(60),
         };
 
-        let json = serde_json::to_string(&original).unwrap();
-        let deserialized: DashboardQuery = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&original).expect("Test setup failed");
+        let deserialized: DashboardQuery = serde_json::from_str(&json).expect("Test setup failed");
 
         assert_eq!(original.range, deserialized.range);
         assert_eq!(original.refresh, deserialized.refresh);
@@ -246,8 +246,8 @@ mod tests {
             refresh: None,
         };
 
-        let json = serde_json::to_string(&original).unwrap();
-        let deserialized: DashboardQuery = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&original).expect("Test setup failed");
+        let deserialized: DashboardQuery = serde_json::from_str(&json).expect("Test setup failed");
 
         assert_eq!(original.range, deserialized.range);
         assert_eq!(original.refresh, deserialized.refresh);
@@ -289,8 +289,8 @@ mod tests {
         };
 
         // Typical defaults: 1 hour range, 30 second refresh
-        assert_eq!(query.range.unwrap(), "1h");
-        assert_eq!(query.refresh.unwrap(), 30);
+        assert_eq!(query.range.expect("Test setup failed"), "1h");
+        assert_eq!(query.refresh.expect("Test setup failed"), 30);
     }
 
     // ==================== STRING CONTENT TESTS ====================
@@ -302,7 +302,7 @@ mod tests {
             refresh: None,
         };
 
-        let range = query.range.unwrap();
+        let range = query.range.expect("Test setup failed");
         assert!(range.len() > 0);
         assert!(range.contains("custom"));
         assert!(range.contains("12345"));
@@ -333,14 +333,14 @@ mod tests {
             range: None,
             refresh: Some(1),
         };
-        assert_eq!(min_query.refresh.unwrap(), 1);
+        assert_eq!(min_query.refresh.expect("Test setup failed"), 1);
 
         // Test maximum practical refresh (1 hour = 3600 seconds)
         let max_query = DashboardQuery {
             range: None,
             refresh: Some(3600),
         };
-        assert_eq!(max_query.refresh.unwrap(), 3600);
+        assert_eq!(max_query.refresh.expect("Test setup failed"), 3600);
     }
 
     #[test]
@@ -358,7 +358,7 @@ mod tests {
                 refresh: None,
             };
 
-            let range_value = query.range.unwrap();
+            let range_value = query.range.expect("Test setup failed");
             assert_eq!(range_value.len(), range.len());
         }
     }
@@ -380,7 +380,7 @@ mod tests {
                 refresh: None,
             };
 
-            assert_eq!(query.range.unwrap(), range);
+            assert_eq!(query.range.expect("Test setup failed"), range);
         }
     }
 
@@ -394,7 +394,7 @@ mod tests {
                 refresh: None,
             };
 
-            assert_eq!(query.range.unwrap(), range);
+            assert_eq!(query.range.expect("Test setup failed"), range);
         }
     }
 
@@ -416,9 +416,9 @@ mod tests {
 
         // Should succeed, extra fields are ignored by default in serde
         assert!(result.is_ok());
-        let query = result.unwrap();
-        assert_eq!(query.range.unwrap(), "1h");
-        assert_eq!(query.refresh.unwrap(), 30);
+        let query = result.expect("Test setup failed");
+        assert_eq!(query.range.expect("Test setup failed"), "1h");
+        assert_eq!(query.refresh.expect("Test setup failed"), 30);
     }
 
     // ==================== CONSISTENCY TESTS ====================
@@ -428,9 +428,9 @@ mod tests {
         let json = r#"{"range":"1h","refresh":30}"#;
 
         for _ in 0..5 {
-            let query: DashboardQuery = serde_json::from_str(json).unwrap();
-            assert_eq!(query.range.as_ref().unwrap(), "1h");
-            assert_eq!(query.refresh.unwrap(), 30);
+            let query: DashboardQuery = serde_json::from_str(json).expect("Test setup failed");
+            assert_eq!(query.range.as_ref().expect("Test setup failed"), "1h");
+            assert_eq!(query.refresh.expect("Test setup failed"), 30);
         }
     }
 }

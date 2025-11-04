@@ -102,7 +102,7 @@ mod tests {
         let serialized = serde_json::to_string(&request);
         assert!(serialized.is_ok(), "Request should serialize");
 
-        let json = serialized.unwrap();
+        let json = serialized.expect("Test setup failed");
         assert!(json.contains("\"request_id\":\"test-req\""));
     }
 
@@ -118,7 +118,7 @@ mod tests {
         let request: Result<ZeroCostApiRequest<serde_json::Value>, _> = serde_json::from_str(json);
         assert!(request.is_ok(), "Request should deserialize");
 
-        let request = request.unwrap();
+        let request = request.expect("Test setup failed");
         assert_eq!(request.request_id, "req-123");
     }
 
@@ -208,7 +208,7 @@ mod tests {
         let serialized = serde_json::to_string(&response);
         assert!(serialized.is_ok(), "Response should serialize");
 
-        let json = serialized.unwrap();
+        let json = serialized.expect("Test setup failed");
         assert!(json.contains("\"request_id\":\"test\""));
         assert!(json.contains("\"processing_time_ms\":10"));
     }

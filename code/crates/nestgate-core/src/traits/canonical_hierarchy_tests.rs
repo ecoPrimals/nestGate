@@ -140,7 +140,7 @@ async fn test_canonical_service_health_check() {
     let health = service.health().await;
     assert!(health.is_ok());
     
-    let health_status = health.unwrap();
+    let health_status = health.expect("Test setup failed");
     assert_eq!(health_status.status, "healthy");
     assert_eq!(health_status.uptime_seconds, 0);
 }
@@ -152,7 +152,7 @@ async fn test_canonical_service_metrics() {
     let metrics = service.metrics().await;
     assert!(metrics.is_ok());
     
-    let metric_data = metrics.unwrap();
+    let metric_data = metrics.expect("Test setup failed");
     assert_eq!(metric_data.requests, 0);
     assert_eq!(metric_data.errors, 0);
     assert_eq!(metric_data.latency_ms, 50);
@@ -249,7 +249,7 @@ async fn test_provider_provision() {
     
     let value = provider.provide("key1".to_string()).await;
     assert!(value.is_ok());
-    assert_eq!(value.unwrap(), "value1");
+    assert_eq!(value.expect("Test setup failed"), "value1");
 }
 
 #[tokio::test]
@@ -260,7 +260,7 @@ async fn test_provider_deprovision() {
     provider
         .provision("key1".to_string(), "value1".to_string())
         .await
-        .unwrap();
+        .expect("Test setup failed");
     
     // Verify it exists
     assert!(provider.provide("key1".to_string()).await.is_ok());
@@ -277,21 +277,21 @@ async fn test_provider_list_keys() {
     let mut provider: MockProvider = MockProvider::new();
     
     // Empty list
-    let keys = provider.list_keys().await.unwrap();
+    let keys = provider.list_keys().await.expect("Test setup failed");
     assert_eq!(keys.len(), 0);
     
     // Add some items
     provider
         .provision("key1".to_string(), "value1".to_string())
         .await
-        .unwrap();
+        .expect("Test setup failed");
     provider
         .provision("key2".to_string(), "value2".to_string())
         .await
-        .unwrap();
+        .expect("Test setup failed");
     
     // Verify list
-    let keys = provider.list_keys().await.unwrap();
+    let keys = provider.list_keys().await.expect("Test setup failed");
     assert_eq!(keys.len(), 2);
     assert!(keys.contains(&"key1".to_string()));
     assert!(keys.contains(&"key2".to_string()));
@@ -385,7 +385,7 @@ async fn test_storage_write_read() {
     
     let read_data = storage.read("test.bin".to_string()).await;
     assert!(read_data.is_ok());
-    assert_eq!(read_data.unwrap(), data);
+    assert_eq!(read_data.expect("Test setup failed"), data);
 }
 
 #[tokio::test]
@@ -396,16 +396,16 @@ async fn test_storage_delete() {
     storage
         .write("test.bin".to_string(), vec![1, 2, 3])
         .await
-        .unwrap();
+        .expect("Test setup failed");
     
     // Verify exists
-    assert!(storage.exists("test.bin".to_string()).await.unwrap());
+    assert!(storage.exists("test.bin".to_string()).await.expect("Test setup failed"));
     
     // Delete
     assert!(storage.delete("test.bin".to_string()).await.is_ok());
     
     // Verify deleted
-    assert!(!storage.exists("test.bin".to_string()).await.unwrap());
+    assert!(!storage.exists("test.bin".to_string()).await.expect("Test setup failed"));
 }
 
 #[tokio::test]
@@ -413,16 +413,16 @@ async fn test_storage_exists() {
     let mut storage = MockStorage::new();
     
     // Non-existent file
-    assert!(!storage.exists("missing.bin".to_string()).await.unwrap());
+    assert!(!storage.exists("missing.bin".to_string()).await.expect("Test setup failed"));
     
     // Create file
     storage
         .write("present.bin".to_string(), vec![1, 2, 3])
         .await
-        .unwrap();
+        .expect("Test setup failed");
     
     // Verify exists
-    assert!(storage.exists("present.bin".to_string()).await.unwrap());
+    assert!(storage.exists("present.bin".to_string()).await.expect("Test setup failed"));
 }
 
 #[tokio::test]
@@ -433,12 +433,12 @@ async fn test_storage_metadata() {
     storage
         .write("test.bin".to_string(), data.clone())
         .await
-        .unwrap();
+        .expect("Test setup failed");
     
     let metadata = storage.metadata("test.bin".to_string()).await;
     assert!(metadata.is_ok());
     
-    let meta = metadata.unwrap();
+    let meta = metadata.expect("Test setup failed");
     assert_eq!(meta.size_bytes, data.len() as u64);
 }
 
@@ -450,17 +450,17 @@ async fn test_storage_overwrite() {
     storage
         .write("test.bin".to_string(), vec![1, 2, 3])
         .await
-        .unwrap();
+        .expect("Test setup failed");
     
     // Overwrite with new data
     let new_data = vec![4, 5, 6, 7, 8];
     storage
         .write("test.bin".to_string(), new_data.clone())
         .await
-        .unwrap();
+        .expect("Test setup failed");
     
     // Verify new data
-    let read_data = storage.read("test.bin".to_string()).await.unwrap();
+    let read_data = storage.read("test.bin".to_string()).await.expect("Test setup failed");
     assert_eq!(read_data, new_data);
 }
 
@@ -556,7 +556,7 @@ async fn test_security_authenticate_success() {
     let result = security.authenticate(credentials).await;
     assert!(result.is_ok());
     
-    let token = result.unwrap();
+    let token = result.expect("Test setup failed");
     assert_eq!(token, "token-testuser");
 }
 
@@ -589,12 +589,12 @@ async fn test_security_authorize() {
     // Authorized action
     let result = security.authorize(token.clone(), "read".to_string()).await;
     assert!(result.is_ok());
-    assert!(result.unwrap());
+    assert!(result.expect("Test setup failed"));
     
     // Unauthorized action
     let result = security.authorize(token, "delete".to_string()).await;
     assert!(result.is_ok());
-    assert!(!result.unwrap());
+    assert!(!result.expect("Test setup failed"));
 }
 
 #[tokio::test]
@@ -607,13 +607,13 @@ async fn test_security_revoke() {
     let token = "token-testuser".to_string();
     
     // Verify valid before revoke
-    assert!(security.validate(token.clone()).await.unwrap());
+    assert!(security.validate(token.clone()).await.expect("Test setup failed"));
     
     // Revoke
     assert!(security.revoke(token.clone()).await.is_ok());
     
     // Verify invalid after revoke
-    assert!(!security.validate(token).await.unwrap());
+    assert!(!security.validate(token).await.expect("Test setup failed"));
 }
 
 #[tokio::test]
@@ -621,7 +621,7 @@ async fn test_security_validate_token() {
     let mut security = MockSecurity::new();
     
     // Invalid token
-    assert!(!security.validate("token-invalid".to_string()).await.unwrap());
+    assert!(!security.validate("token-invalid".to_string()).await.expect("Test setup failed"));
     
     // Add user
     security
@@ -629,7 +629,7 @@ async fn test_security_validate_token() {
         .insert("testuser".to_string(), true);
     
     // Valid token
-    assert!(security.validate("token-testuser".to_string()).await.unwrap());
+    assert!(security.validate("token-testuser".to_string()).await.expect("Test setup failed"));
 }
 
 // ==================== ZERO-COST SERVICE TESTS ====================
@@ -678,7 +678,7 @@ async fn test_zero_cost_service_execute() {
     let service: MockZeroCostService<1024> = MockZeroCostService::new();
     let result: Result<u64, TestError> = service.execute(1024).await;
     assert!(result.is_ok());
-    assert_eq!(result.unwrap(), 0u64);
+    assert_eq!(result.expect("Test setup failed"), 0u64);
 }
 
 // ==================== INTEGRATION TESTS ====================
@@ -692,11 +692,11 @@ async fn test_trait_hierarchy_integration() {
     assert!(service.start().await.is_ok());
     
     // Test health while running
-    let health = service.health().await.unwrap();
+    let health = service.health().await.expect("Test setup failed");
     assert_eq!(health.status, "healthy");
     
     // Test metrics while running
-    let metrics = service.metrics().await.unwrap();
+    let metrics = service.metrics().await.expect("Test setup failed");
     assert_eq!(metrics.requests, 0);
     
     // Test config access

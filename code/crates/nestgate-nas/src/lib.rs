@@ -164,7 +164,10 @@ mod tests {
         let service = NasService::new(config);
         let result = service.status();
         assert!(result.is_ok());
-        assert!(matches!(result.unwrap(), NasStatus::Running));
+        assert!(matches!(
+            result.expect("Operation failed"),
+            NasStatus::Running
+        ));
     }
 
     #[test]
@@ -213,22 +216,23 @@ mod tests {
     #[test]
     fn test_nas_status_serialize() {
         let status = NasStatus::Running;
-        let json = serde_json::to_string(&status).unwrap();
+        let json = serde_json::to_string(&status).expect("String operation failed");
         assert!(json.contains("Running"));
     }
 
     #[test]
     fn test_nas_status_deserialize() {
         let json = r#""Running""#;
-        let status: NasStatus = serde_json::from_str(json).unwrap();
+        let status: NasStatus = serde_json::from_str(json).expect("Failed to convert from string");
         assert!(matches!(status, NasStatus::Running));
     }
 
     #[test]
     fn test_nas_status_round_trip() {
         let original = NasStatus::Stopped;
-        let json = serde_json::to_string(&original).unwrap();
-        let deserialized: NasStatus = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&original).expect("String operation failed");
+        let deserialized: NasStatus =
+            serde_json::from_str(&json).expect("Failed to convert from string");
         assert!(matches!(deserialized, NasStatus::Stopped));
     }
 

@@ -10,14 +10,17 @@ use nestgate_core::{
     canonical_modernization::unified_enums::{
         UnifiedHealthStatus, UnifiedServiceState, UnifiedServiceType,
     },
+    canonical_types::ResponseStatus,
     error::{NestGateError, Result},
-    response::{ApiResponse, ResponseStatus},
+    response::ApiResponse,
 };
 use std::time::Duration;
 use tokio::time::sleep;
 
 // Import our canonical test framework
-use crate::common::{CanonicalTestConfig, CanonicalTestService, TestConfig};
+// Note: These types are defined in tests/common/mod.rs
+// Using the available types from the test framework
+use crate::common::{SimpleTestService, TestConfig, UnifiedTestConfig};
 
 /// **CANONICAL TEST SUITE: CORE FUNCTIONALITY**
 #[tokio::test]

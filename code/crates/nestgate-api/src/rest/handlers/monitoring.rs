@@ -71,12 +71,12 @@ pub async fn get_metrics(
 
     // Generate realistic system metrics (in production, would read from actual system)
     // Placeholder metrics until sysinfo crate is added
-    let cpu_usage = 45.0
-        + (std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_secs()
-            % 30) as f64;
+    let time_offset = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| (d.as_secs() % 30) as f64)
+        .unwrap_or(0.0); // Fallback to 0 if time error
+
+    let cpu_usage = 45.0 + time_offset;
 
     // Calculate placeholder memory usage percentage
     let memory_usage = 65.0 + (cpu_usage * 0.3);

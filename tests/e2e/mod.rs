@@ -7,6 +7,7 @@ pub mod framework;
 pub mod workflow_runner;
 pub mod chaos_testing;
 pub mod performance_testing;
+pub mod critical_workflows;
 
 // Re-export the main framework for backward compatibility
 pub use framework::E2ETestingFramework; 

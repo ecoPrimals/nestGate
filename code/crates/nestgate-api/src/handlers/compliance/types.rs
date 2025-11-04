@@ -512,7 +512,7 @@ pub struct ComplianceReport {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_compliance_manager_new() {
         let manager = ComplianceManager::new();
@@ -522,13 +522,13 @@ mod tests {
         assert_eq!(manager.regulatory_frameworks.len(), 0);
         assert_eq!(manager.violations.len(), 0);
     }
-    
+
     #[test]
     fn test_compliance_manager_default() {
         let manager = ComplianceManager::default();
         assert_eq!(manager.retention_policies.len(), 0);
     }
-    
+
     #[test]
     fn test_add_retention_policy() {
         let mut manager = ComplianceManager::new();
@@ -544,12 +544,19 @@ mod tests {
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
-        
+
         manager.add_retention_policy(policy.clone());
         assert_eq!(manager.retention_policies.len(), 1);
-        assert_eq!(manager.retention_policies.get("pol1").unwrap().name, "Test Policy");
+        assert_eq!(
+            manager
+                .retention_policies
+                .get("pol1")
+                .expect("Operation failed")
+                .name,
+            "Test Policy"
+        );
     }
-    
+
     #[test]
     fn test_add_access_policy() {
         let mut manager = ComplianceManager::new();
@@ -564,11 +571,11 @@ mod tests {
             audit_access: true,
             created_at: Utc::now(),
         };
-        
+
         manager.add_access_policy(policy.clone());
         assert_eq!(manager.access_policies.len(), 1);
     }
-    
+
     #[test]
     fn test_log_audit_event() {
         let mut manager = ComplianceManager::new();
@@ -584,11 +591,11 @@ mod tests {
             source_ip: Some("192.168.1.1".to_string()),
             user_agent: Some("Mozilla/5.0".to_string()),
         };
-        
+
         manager.log_audit_event(event);
         assert_eq!(manager.audit_logs.len(), 1);
     }
-    
+
     #[test]
     fn test_record_violation() {
         let mut manager = ComplianceManager::new();
@@ -604,11 +611,11 @@ mod tests {
             resolution_deadline: None,
             assigned_to: None,
         };
-        
+
         manager.record_violation(violation);
         assert_eq!(manager.violations.len(), 1);
     }
-    
+
     #[test]
     fn test_check_data_retention_compliant() {
         let mut manager = ComplianceManager::new();
@@ -624,16 +631,16 @@ mod tests {
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
-        
+
         manager.add_retention_policy(policy);
-        
+
         // Data is 100 days old, should be compliant
         assert!(manager.check_data_retention("documents", 100));
-        
+
         // Data is 400 days old, should not be compliant
         assert!(!manager.check_data_retention("documents", 400));
     }
-    
+
     #[test]
     fn test_check_data_retention_legal_hold() {
         let mut manager = ComplianceManager::new();
@@ -649,13 +656,13 @@ mod tests {
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
-        
+
         manager.add_retention_policy(policy);
-        
+
         // With legal hold, any age should be compliant
         assert!(manager.check_data_retention("legal_docs", 1000));
     }
-    
+
     #[test]
     fn test_check_access_compliance() {
         let mut manager = ComplianceManager::new();
@@ -670,24 +677,28 @@ mod tests {
             audit_access: true,
             created_at: Utc::now(),
         };
-        
+
         manager.add_access_policy(policy);
-        
-        let permissions = vec!["read".to_string(), "write".to_string(), "delete".to_string()];
+
+        let permissions = vec![
+            "read".to_string(),
+            "write".to_string(),
+            "delete".to_string(),
+        ];
         assert!(manager.check_access_compliance(&permissions, 3));
-        
+
         // Too low clearance level
         assert!(!manager.check_access_compliance(&permissions, 2));
-        
+
         // Missing required permission
         let limited_permissions = vec!["read".to_string()];
         assert!(!manager.check_access_compliance(&limited_permissions, 5));
     }
-    
+
     #[test]
     fn test_generate_compliance_report() {
         let mut manager = ComplianceManager::new();
-        
+
         let policy = RetentionPolicy {
             id: "pol1".to_string(),
             name: "Test Policy".to_string(),
@@ -701,7 +712,7 @@ mod tests {
             updated_at: Utc::now(),
         };
         manager.add_retention_policy(policy);
-        
+
         let violation = ComplianceViolation {
             id: "vio1".to_string(),
             timestamp: Utc::now(),
@@ -715,26 +726,35 @@ mod tests {
             assigned_to: None,
         };
         manager.record_violation(violation);
-        
+
         let report = manager.generate_compliance_report();
         assert_eq!(report.total_policies, 1);
         assert_eq!(report.total_violations, 1);
         assert_eq!(report.critical_violations, 1);
         assert!(report.compliance_score <= 100.0);
     }
-    
+
     #[test]
     fn test_audit_event_type_display() {
         assert_eq!(AuditEventType::DataAccess.to_string(), "Data Access");
-        assert_eq!(AuditEventType::DataModification.to_string(), "Data Modification");
+        assert_eq!(
+            AuditEventType::DataModification.to_string(),
+            "Data Modification"
+        );
         assert_eq!(AuditEventType::DataDeletion.to_string(), "Data Deletion");
         assert_eq!(AuditEventType::PolicyChange.to_string(), "Policy Change");
         assert_eq!(AuditEventType::Authentication.to_string(), "Authentication");
         assert_eq!(AuditEventType::Authorization.to_string(), "Authorization");
-        assert_eq!(AuditEventType::SystemConfiguration.to_string(), "System Configuration");
-        assert_eq!(AuditEventType::ComplianceViolation.to_string(), "Compliance Violation");
+        assert_eq!(
+            AuditEventType::SystemConfiguration.to_string(),
+            "System Configuration"
+        );
+        assert_eq!(
+            AuditEventType::ComplianceViolation.to_string(),
+            "Compliance Violation"
+        );
     }
-    
+
     #[test]
     fn test_violation_type_display() {
         assert_eq!(ViolationType::DataRetention.to_string(), "Data Retention");
@@ -745,7 +765,7 @@ mod tests {
         assert_eq!(ViolationType::Backup.to_string(), "Backup");
         assert_eq!(ViolationType::Documentation.to_string(), "Documentation");
     }
-    
+
     #[test]
     fn test_data_classification_serialization() {
         let classifications = vec![
@@ -755,42 +775,52 @@ mod tests {
             DataClassification::Restricted,
             DataClassification::TopSecret,
         ];
-        
+
         for classification in classifications {
-            let json = serde_json::to_string(&classification).unwrap();
-            let deserialized = serde_json::from_str::<DataClassification>(&json).unwrap();
-            assert!(matches!(deserialized, DataClassification::Public | DataClassification::Internal | DataClassification::Confidential | DataClassification::Restricted | DataClassification::TopSecret));
+            let json = serde_json::to_string(&classification).expect("String operation failed");
+            let deserialized = serde_json::from_str::<DataClassification>(&json)
+                .expect("Failed to convert from string");
+            assert!(matches!(
+                deserialized,
+                DataClassification::Public
+                    | DataClassification::Internal
+                    | DataClassification::Confidential
+                    | DataClassification::Restricted
+                    | DataClassification::TopSecret
+            ));
         }
     }
-    
+
     #[test]
     fn test_regulatory_type_serialization() {
         let reg_type = RegulatoryType::GDPR;
-        let json = serde_json::to_string(&reg_type).unwrap();
-        let deserialized = serde_json::from_str::<RegulatoryType>(&json).unwrap();
+        let json = serde_json::to_string(&reg_type).expect("String operation failed");
+        let deserialized =
+            serde_json::from_str::<RegulatoryType>(&json).expect("Failed to convert from string");
         assert!(matches!(deserialized, RegulatoryType::GDPR));
     }
-    
+
     #[test]
     fn test_regulatory_type_custom() {
         let custom = RegulatoryType::Custom("Custom Framework".to_string());
-        let json = serde_json::to_string(&custom).unwrap();
-        let deserialized = serde_json::from_str::<RegulatoryType>(&json).unwrap();
-        
+        let json = serde_json::to_string(&custom).expect("String operation failed");
+        let deserialized =
+            serde_json::from_str::<RegulatoryType>(&json).expect("Failed to convert from string");
+
         if let RegulatoryType::Custom(name) = deserialized {
             assert_eq!(name, "Custom Framework");
         } else {
             panic!("Expected Custom variant");
         }
     }
-    
+
     #[test]
     fn test_compliance_score_no_violations() {
         let manager = ComplianceManager::new();
         let report = manager.generate_compliance_report();
         assert_eq!(report.compliance_score, 100.0);
     }
-    
+
     #[test]
     fn test_time_restriction_creation() {
         let restriction = TimeRestriction {
@@ -799,12 +829,12 @@ mod tests {
             end_time: "17:00".to_string(),
             timezone: "UTC".to_string(),
         };
-        
+
         assert_eq!(restriction.day_of_week, 1);
         assert_eq!(restriction.start_time, "09:00");
         assert_eq!(restriction.end_time, "17:00");
     }
-    
+
     #[test]
     fn test_compliance_control_creation() {
         let control = ComplianceControl {
@@ -816,11 +846,11 @@ mod tests {
             last_assessment: Some(Utc::now()),
             next_assessment_due: None,
         };
-        
+
         assert_eq!(control.id, "ctrl1");
         assert!(matches!(control.control_type, ControlType::Preventive));
     }
-    
+
     #[test]
     fn test_regulatory_framework_creation() {
         let framework = RegulatoryFramework {
@@ -832,7 +862,7 @@ mod tests {
             last_audit: None,
             compliance_status: ComplianceStatus::Compliant,
         };
-        
+
         assert_eq!(framework.name, "GDPR Compliance");
         assert_eq!(framework.audit_frequency_days, 90);
     }

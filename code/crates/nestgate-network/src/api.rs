@@ -172,8 +172,14 @@ impl OrchestrationCapability {
         service_name: &str,
         status: ServiceStatus,
     ) -> NestGateResult<()> {
-        let base_url = std::env::var("NESTGATE_API_BASE_URL")
-            .unwrap_or_else(|_| "http://localhost:8080".to_string());
+        let base_url = std::env::var("NESTGATE_API_BASE_URL").unwrap_or_else(|_| {
+            use nestgate_core::constants::hardcoding::{addresses, ports};
+            format!(
+                "http://{}:{}",
+                addresses::LOCALHOST_NAME,
+                ports::HTTP_DEFAULT
+            )
+        });
         let url = format!("{base_url}/api/v1/services/{service_name}/health");
 
         let request = HealthStatusRequest {

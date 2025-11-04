@@ -709,7 +709,7 @@ mod tests {
         collector.record_request_success(Duration::from_millis(100)).await;
         collector.update_memory_usage(200);
         
-        let alerts = monitor.check_alerts().await.unwrap();
+        let alerts = monitor.check_alerts().await.expect("Operation failed");
         assert!(!alerts.is_empty());
     }
 

@@ -122,7 +122,7 @@ mod tests {
     async fn test_service_creation() {
         let service = create_service();
         assert!(service.initialize(&config).await.is_ok());
-        assert_eq!(service.health_check().await.unwrap(), HealthStatus::Healthy);
+        assert_eq!(service.health_check().await.expect("Network operation failed"), HealthStatus::Healthy);
         assert!(service.shutdown().await.is_ok());
     async fn test_metrics() {
         let metrics = service.get_metrics().await;

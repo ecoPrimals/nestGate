@@ -119,7 +119,7 @@ fn test_nestgate_error_creation() {
 fn test_nestgate_result_ok() {
     let result: NestGateResult<i32> = Ok(42);
     assert!(result.is_ok());
-    assert_eq!(result.unwrap(), 42);
+    assert_eq!(result.expect("Test setup failed"), 42);
 }
 
 #[test]
@@ -285,7 +285,7 @@ async fn test_infant_discovery_system_capability_discovery() {
     let result = system.discover_capabilities().await;
     assert!(result.is_ok());
 
-    let capabilities = result.unwrap();
+    let capabilities = result.expect("Test setup failed");
     assert!(!capabilities.is_empty());
 
     // All discovered capabilities should be sovereignty compliant
@@ -310,7 +310,7 @@ async fn test_infant_discovery_system_connection_establishment() {
     let connection_result = system.establish_connection(&capabilities[0].id).await;
     assert!(connection_result.is_ok());
 
-    let connection = connection_result.unwrap();
+    let connection = connection_result.expect("Test setup failed");
     assert_eq!(connection.id, capabilities[0].id);
     assert_eq!(connection.complexity_order, 1); // Should be O(1)
 }

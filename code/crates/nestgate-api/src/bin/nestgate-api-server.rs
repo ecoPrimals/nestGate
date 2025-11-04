@@ -8,6 +8,7 @@
 // - Intelligent RPC routing
 
 use nestgate_api::routes::{create_router, AppState};
+use nestgate_core::constants::hardcoding::{addresses, ports};
 use std::net::SocketAddr;
 use tokio::signal;
 use tower_http::trace::TraceLayer;
@@ -35,10 +36,13 @@ pub struct ServerConfig {
 }
 impl Default for ServerConfig {
     fn default() -> Self {
+        // Construct default bind address from constants
+        let default_bind = format!("{}:{}", addresses::BIND_ALL_IPV4, ports::HTTP_DEFAULT);
         Self {
-            bind_endpoint: "0.0.0.0:8080"
-                .parse()
-                .unwrap_or_else(|_| SocketAddr::from(([0, 0, 0, 0], 8080))),
+            bind_endpoint: default_bind.parse().unwrap_or_else(|_| {
+                // Fallback to IPv4 representation if parsing fails
+                SocketAddr::from(([0, 0, 0, 0], ports::HTTP_DEFAULT))
+            }),
             enable_cors: true,
             enable_tracing: true,
             log_level: "info".to_string(),

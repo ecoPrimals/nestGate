@@ -69,7 +69,7 @@ async fn test_validation_predicates_canonical_patterns() -> Result<(), Box<dyn s
 }
 
 #[test]
-async fn test_canonical_error_handling() -> Result<(), Box<dyn std::error::Error>> {
+fn test_canonical_error_handling() -> Result<(), Box<dyn std::error::Error>> {
     // Test unified error system
     let error = NestGateError::Configuration {
         field: "test_field".to_string(),
@@ -86,7 +86,7 @@ async fn test_canonical_error_handling() -> Result<(), Box<dyn std::error::Error
 }
 
 #[test]
-async fn test_canonical_configuration_patterns() -> Result<(), Box<dyn std::error::Error>> {
+fn test_canonical_configuration_patterns() -> Result<(), Box<dyn std::error::Error>> {
     // Test that canonical config can be created
     let config = NestGateCanonicalUnifiedConfig::default();
     assert_eq!(config.service.name, "nestgate");
@@ -98,7 +98,7 @@ async fn test_canonical_configuration_patterns() -> Result<(), Box<dyn std::erro
 }
 
 #[test]
-async fn test_sovereignty_compliance() -> Result<(), Box<dyn std::error::Error>> {
+fn test_sovereignty_compliance() -> Result<(), Box<dyn std::error::Error>> {
     // Test that no hardcoded primal names exist in canonical types
     let config = NestGateCanonicalUnifiedConfig::default();
     let config_str = serde_json::to_string(&config)?;
@@ -112,7 +112,7 @@ async fn test_sovereignty_compliance() -> Result<(), Box<dyn std::error::Error>>
 }
 
 #[test]
-async fn test_zero_cost_abstractions() -> Result<(), Box<dyn std::error::Error>> {
+fn test_zero_cost_abstractions() -> Result<(), Box<dyn std::error::Error>> {
     // Test that canonical patterns don't introduce runtime overhead
     use std::time::Instant;
 
@@ -137,7 +137,7 @@ async fn test_zero_cost_abstractions() -> Result<(), Box<dyn std::error::Error>>
 }
 
 #[test]
-async fn test_canonical_type_safety() -> Result<(), Box<dyn std::error::Error>> {
+fn test_canonical_type_safety() -> Result<(), Box<dyn std::error::Error>> {
     // Test compile-time type safety guarantees
     let config = NestGateCanonicalUnifiedConfig::default();
 

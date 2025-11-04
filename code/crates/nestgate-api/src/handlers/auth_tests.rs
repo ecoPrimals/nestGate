@@ -65,7 +65,7 @@ mod auth_handler_tests {
         
         assert!(response.success);
         assert!(response.token.is_some());
-        assert_eq!(response.token.unwrap(), token);
+        assert_eq!(response.token.expect("Authentication failed"), token);
         assert_eq!(response.message, "Login successful");
     }
 
@@ -114,9 +114,9 @@ mod auth_handler_tests {
         
         assert!(response.valid);
         assert!(response.username.is_some());
-        assert_eq!(response.username.as_ref().unwrap(), "testuser");
+        assert_eq!(response.username.as_ref().expect("Authentication failed"), "testuser");
         assert!(response.expires_at.is_some());
-        assert_eq!(response.expires_at.unwrap(), 1234567890);
+        assert_eq!(response.expires_at.expect("Authentication failed"), 1234567890);
     }
 
     #[test]
@@ -136,7 +136,7 @@ mod auth_handler_tests {
     fn test_token_validation_response_expired() {
         let now = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
+            .expect("Authentication failed")
             .as_secs();
         
         let response = TokenValidationResponse {
@@ -156,7 +156,7 @@ mod auth_handler_tests {
     fn test_session_info_creation() {
         let now = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
+            .expect("Authentication failed")
             .as_secs();
         
         let session = SessionInfo {
@@ -178,7 +178,7 @@ mod auth_handler_tests {
     fn test_session_info_is_active() {
         let now = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
+            .expect("Authentication failed")
             .as_secs();
         
         let active_session = SessionInfo {
@@ -198,7 +198,7 @@ mod auth_handler_tests {
     fn test_session_info_is_expired() {
         let now = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
+            .expect("Authentication failed")
             .as_secs();
         
         let expired_session = SessionInfo {
@@ -216,7 +216,7 @@ mod auth_handler_tests {
     fn test_session_info_lifecycle() {
         let now = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
+            .expect("Authentication failed")
             .as_secs();
         
         let session = SessionInfo {
@@ -312,7 +312,7 @@ mod auth_handler_tests {
     fn test_session_timeout_calculation() {
         let now = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
+            .expect("Authentication failed")
             .as_secs();
         
         let default_timeout = 3600; // 1 hour
@@ -332,7 +332,7 @@ mod auth_handler_tests {
     fn test_session_activity_update() {
         let now = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
+            .expect("Authentication failed")
             .as_secs();
         
         let mut session = SessionInfo {
@@ -356,7 +356,7 @@ mod auth_handler_tests {
     fn test_multiple_sessions_same_user() {
         let now = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
+            .expect("Authentication failed")
             .as_secs();
         
         let session1 = SessionInfo {
@@ -431,7 +431,7 @@ mod auth_handler_tests {
     fn test_session_id_uniqueness() {
         let now = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
+            .expect("Authentication failed")
             .as_secs();
         
         let sessions: Vec<SessionInfo> = (0..10)
@@ -475,7 +475,7 @@ mod auth_handler_tests {
                 message: "Success".to_string(),
             };
             assert!(response.token.is_some());
-            assert_eq!(response.token.unwrap(), token);
+            assert_eq!(response.token.expect("Authentication failed"), token);
         }
     }
 
@@ -483,7 +483,7 @@ mod auth_handler_tests {
     fn test_concurrent_session_timestamps() {
         let now = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
+            .expect("Authentication failed")
             .as_secs();
         
         // Create multiple sessions at "same" time

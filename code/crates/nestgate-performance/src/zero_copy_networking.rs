@@ -198,10 +198,6 @@ pub struct BufferPoolStats {
 pub struct ZeroCopyNetworkInterface<const BUFFER_SIZE: usize = 65_536> {
     buffer_pool: Arc<ZeroCopyBufferPool<BUFFER_SIZE, 1024>>,
     connection_registry: SafeConcurrentHashMap<String, Arc<ZeroCopyConnection<BUFFER_SIZE>>>,
-    /// SIMD processor for high-performance packet processing (feature-gated)
-    // TODO: Re-enable when simd_optimizations_advanced module is properly exposed
-    // #[cfg(feature = "simd")]
-    // simd_processor: Arc<crate::simd_optimizations_advanced::SimdBulkProcessor<BUFFER_SIZE>>,
     stats: NetworkStats,
 }
 /// **ZERO-COPY CONNECTION**
@@ -240,10 +236,6 @@ impl<const BUFFER_SIZE: usize> Default for ZeroCopyNetworkInterface<BUFFER_SIZE>
         Self {
             buffer_pool: Arc::new(ZeroCopyBufferPool::new()),
             connection_registry: SafeConcurrentHashMap::with_capacity(1024),
-            // SIMD processor initialization (feature-gated for optimal performance)
-            // TODO: Re-enable when simd_optimizations_advanced module is properly exposed
-            // #[cfg(feature = "simd")]
-            // simd_processor: Arc::new(crate::simd_optimizations_advanced::SimdBulkProcessor::new()),
             stats: NetworkStats::default(),
         }
     }
@@ -756,7 +748,9 @@ pub mod benchmarks {
         // Establish connection
         let test_endpoint = std::env::var("NESTGATE_TEST_ENDPOINT")
             .unwrap_or_else(|_| "127.0.0.1:8080".to_string());
-        let connection_id = interface.connect(test_endpoint.parse().unwrap()).unwrap();
+        let connection_id = interface
+            .connect(test_endpoint.parse().expect("Network operation failed"))
+            .expect("Network operation failed");
 
         // Benchmark zero-copy send
         let start = Instant::now();

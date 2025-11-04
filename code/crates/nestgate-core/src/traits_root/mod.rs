@@ -1,13 +1,12 @@
-// Removed unused error imports
-// Core traits for the Orchestration Orchestrator
-///
-// This module defines the fundamental traits that enable universal service orchestration
+//! Core traits for the Orchestration Orchestrator
+//!
+//! This module defines the fundamental traits that enable universal service orchestration
 //! across different project types and deployment environments.
+pub mod balancer;
 pub mod communication;
 pub mod config;
 pub mod discovery;
 pub mod health;
-pub mod balancer;
 pub mod service;
 // Re-export all trait types
 pub use communication::CommunicationLayer;

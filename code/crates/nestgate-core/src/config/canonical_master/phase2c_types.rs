@@ -365,19 +365,27 @@ mod tests {
     #[test]
     fn test_environment_from_str() {
         assert_eq!(
-            "development".parse::<Environment>().unwrap(),
+            "development"
+                .parse::<Environment>()
+                .expect("Configuration error"),
             Environment::Development
         );
         assert_eq!(
-            "production".parse::<Environment>().unwrap(),
+            "production"
+                .parse::<Environment>()
+                .expect("Configuration error"),
             Environment::Production
         );
         assert_eq!(
-            "staging".parse::<Environment>().unwrap(),
+            "staging"
+                .parse::<Environment>()
+                .expect("Configuration error"),
             Environment::Staging
         );
         assert_eq!(
-            "testing".parse::<Environment>().unwrap(),
+            "testing"
+                .parse::<Environment>()
+                .expect("Configuration error"),
             Environment::Testing
         );
     }

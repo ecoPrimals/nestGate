@@ -108,7 +108,7 @@ mod tests {
         let serialized = serde_json::to_string(&metrics);
         assert!(serialized.is_ok(), "RealTimeMetrics should serialize");
 
-        let json = serialized.unwrap();
+        let json = serialized.expect("Test setup failed");
         assert!(json.contains("arc_hit_ratio"));
         assert!(json.contains("0.9"));
     }
@@ -158,7 +158,7 @@ mod tests {
         let serialized = serde_json::to_string(&pool);
         assert!(serialized.is_ok(), "PoolMetrics should serialize");
 
-        let json = serialized.unwrap();
+        let json = serialized.expect("Test setup failed");
         assert!(json.contains("data-pool"));
         assert!(json.contains("DEGRADED"));
         assert!(json.contains("\"error_count\":3"));
@@ -238,7 +238,7 @@ mod tests {
         let serialized = serde_json::to_string(&system);
         assert!(serialized.is_ok(), "SystemMetrics should serialize");
 
-        let json = serialized.unwrap();
+        let json = serialized.expect("Test setup failed");
         assert!(json.contains("memory_usage"));
         assert!(json.contains("70"));
     }
@@ -285,7 +285,7 @@ mod tests {
         let serialized = serde_json::to_string(&network);
         assert!(serialized.is_ok());
 
-        let json = serialized.unwrap();
+        let json = serialized.expect("Test setup failed");
         assert!(json.contains("\"bytes_sent\":5000"));
         assert!(json.contains("\"packets_received\":100"));
     }
@@ -332,7 +332,7 @@ mod tests {
         let serialized = serde_json::to_string(&disk);
         assert!(serialized.is_ok());
 
-        let json = serialized.unwrap();
+        let json = serialized.expect("Test setup failed");
         assert!(json.contains("\"read_bytes\":25000"));
         assert!(json.contains("\"write_operations\":150"));
     }
@@ -373,7 +373,7 @@ mod tests {
         let serialized = serde_json::to_string(&snapshot);
         assert!(serialized.is_ok());
 
-        let json = serialized.unwrap();
+        let json = serialized.expect("Test setup failed");
         assert!(json.contains("\"cpu_cores\":8"));
         assert!(json.contains("enp0s3"));
     }
@@ -425,7 +425,7 @@ mod tests {
         let serialized = serde_json::to_string(&io_point);
         assert!(serialized.is_ok());
 
-        let json = serialized.unwrap();
+        let json = serialized.expect("Test setup failed");
         assert!(json.contains("\"read_iops\":8000"));
         assert!(json.contains("\"write_latency\":1.8"));
     }
@@ -475,7 +475,7 @@ mod tests {
         let serialized = serde_json::to_string(&cache_point);
         assert!(serialized.is_ok());
 
-        let json = serialized.unwrap();
+        let json = serialized.expect("Test setup failed");
         assert!(json.contains("0.88"));
         assert!(json.contains("\"arc_size\":4000000000"));
     }
@@ -522,7 +522,7 @@ mod tests {
         let serialized = serde_json::to_string(&capacity_point);
         assert!(serialized.is_ok());
 
-        let json = serialized.unwrap();
+        let json = serialized.expect("Test setup failed");
         assert!(json.contains("\"total_capacity\":2000000000000"));
         assert!(json.contains("5000000000"));
     }
@@ -601,7 +601,7 @@ mod tests {
         let serialized = serde_json::to_string(&comprehensive);
         assert!(serialized.is_ok());
 
-        let json = serialized.unwrap();
+        let json = serialized.expect("Test setup failed");
         assert!(json.contains("io_metrics"));
         assert!(json.contains("cache_metrics"));
         assert!(json.contains("capacity_metrics"));

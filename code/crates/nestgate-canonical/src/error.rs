@@ -285,7 +285,7 @@ mod tests {
     fn test_result_ok() {
         let result: Result<i32> = Ok(42);
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), 42);
+        assert_eq!(result.expect("Operation failed"), 42);
     }
 
     #[test]
@@ -398,57 +398,58 @@ mod tests {
     #[test]
     fn test_serialization_configuration() {
         let err = NestGateError::configuration("test");
-        let json = serde_json::to_string(&err).unwrap();
+        let json = serde_json::to_string(&err).expect("String operation failed");
         assert!(json.contains("Configuration"));
     }
 
     #[test]
     fn test_deserialization_configuration() {
         let json = r#"{"Configuration":{"message":"test","field":null}}"#;
-        let err: NestGateError = serde_json::from_str(json).unwrap();
+        let err: NestGateError = serde_json::from_str(json).expect("Failed to convert from string");
         assert!(matches!(err, NestGateError::Configuration { .. }));
     }
 
     #[test]
     fn test_serialization_network() {
         let err = NestGateError::network_endpoint("test", "endpoint");
-        let json = serde_json::to_string(&err).unwrap();
+        let json = serde_json::to_string(&err).expect("String operation failed");
         assert!(json.contains("Network"));
     }
 
     #[test]
     fn test_serialization_storage() {
         let err = NestGateError::storage_path("test", "/path");
-        let json = serde_json::to_string(&err).unwrap();
+        let json = serde_json::to_string(&err).expect("String operation failed");
         assert!(json.contains("Storage"));
     }
 
     #[test]
     fn test_serialization_security() {
         let err = NestGateError::security("test");
-        let json = serde_json::to_string(&err).unwrap();
+        let json = serde_json::to_string(&err).expect("String operation failed");
         assert!(json.contains("Security"));
     }
 
     #[test]
     fn test_serialization_internal() {
         let err = NestGateError::internal("test");
-        let json = serde_json::to_string(&err).unwrap();
+        let json = serde_json::to_string(&err).expect("String operation failed");
         assert!(json.contains("Internal"));
     }
 
     #[test]
     fn test_serialization_validation() {
         let err = NestGateError::validation("test");
-        let json = serde_json::to_string(&err).unwrap();
+        let json = serde_json::to_string(&err).expect("String operation failed");
         assert!(json.contains("Validation"));
     }
 
     #[test]
     fn test_round_trip_serialization() {
         let original = NestGateError::network_endpoint("timeout", "localhost:8080");
-        let json = serde_json::to_string(&original).unwrap();
-        let deserialized: NestGateError = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&original).expect("String operation failed");
+        let deserialized: NestGateError =
+            serde_json::from_str(&json).expect("Failed to convert from string");
         assert_eq!(original.to_string(), deserialized.to_string());
     }
 
@@ -535,14 +536,14 @@ mod tests {
 
         let result = returns_ok();
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), "success");
+        assert_eq!(result.expect("Operation failed"), "success");
     }
 
     #[test]
     fn test_result_map() {
         let result: Result<i32> = Ok(42);
         let mapped = result.map(|x| x * 2);
-        assert_eq!(mapped.unwrap(), 84);
+        assert_eq!(mapped.expect("Operation failed"), 84);
     }
 
     #[test]
@@ -583,6 +584,6 @@ mod tests {
     fn test_nestgate_result_with_ok() {
         let result: NestGateResult<String> = Ok("data".to_string());
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), "data");
+        assert_eq!(result.expect("Operation failed"), "data");
     }
 }

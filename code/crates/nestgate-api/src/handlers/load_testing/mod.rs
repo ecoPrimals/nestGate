@@ -66,7 +66,7 @@ pub async fn start_load_test(
             "test_{}",
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
+                .expect("Test setup failed")
                 .as_secs()
         ),
     };
@@ -156,7 +156,7 @@ pub use scenarios::TestResult;
 
 // TEMP_DISABLED: #[cfg(test)]
 // TEMP_DISABLED: mod tests;
-// TEMP_DISABLED: 
+// TEMP_DISABLED:
 // TEMP_DISABLED: #[cfg(test)]
 // TEMP_DISABLED: mod scenarios_tests;
 

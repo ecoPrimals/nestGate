@@ -213,6 +213,7 @@ pub struct SecurityConfig {
 }
 /// Canonical Password Policy
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(clippy::struct_excessive_bools)] // Policy flags are semantically correct here
 pub struct PasswordPolicy {
     pub min_length: u32,
     pub require_uppercase: bool,
@@ -220,6 +221,7 @@ pub struct PasswordPolicy {
     pub require_numbers: bool,
     pub require_special: bool,
 }
+
 /// Canonical Performance Configuration,
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceConfig {
@@ -322,7 +324,7 @@ impl Default for SecurityConfig {
 impl Default for PerformanceConfig {
     fn default() -> Self {
         Self {
-            thread_pool_size: num_cpus::get() as u32,
+            thread_pool_size: u32::try_from(num_cpus::get()).unwrap_or(4),
             buffer_size_kb: 1024,
             batch_size: 100,
             enable_metrics: true,
@@ -407,14 +409,15 @@ mod tests {
     #[test]
     fn test_unified_service_type_serialization() {
         let service = UnifiedServiceType::Storage;
-        let json = serde_json::to_string(&service).unwrap();
+        let json = serde_json::to_string(&service).expect("String operation failed");
         assert!(json.contains("Storage"));
     }
 
     #[test]
     fn test_unified_service_type_deserialization() {
         let json = "\"Storage\"";
-        let service: UnifiedServiceType = serde_json::from_str(json).unwrap();
+        let service: UnifiedServiceType =
+            serde_json::from_str(json).expect("Failed to convert from string");
         assert_eq!(service, UnifiedServiceType::Storage);
     }
 
@@ -471,7 +474,7 @@ mod tests {
             "zfs".to_string(),
             "1.0.0".to_string(),
         );
-        let json = serde_json::to_string(&cap_id).unwrap();
+        let json = serde_json::to_string(&cap_id).expect("String operation failed");
         assert!(json.contains("storage"));
         assert!(json.contains("zfs"));
     }
@@ -608,7 +611,7 @@ mod tests {
     #[test]
     fn test_service_metrics_serialization() {
         let metrics = ServiceMetrics::default();
-        let json = serde_json::to_string(&metrics).unwrap();
+        let json = serde_json::to_string(&metrics).expect("String operation failed");
         assert!(json.contains("cpu_usage"));
         assert!(json.contains("memory_usage"));
     }
@@ -716,7 +719,7 @@ mod tests {
     #[test]
     fn test_password_policy_serialization() {
         let policy = PasswordPolicy::default();
-        let json = serde_json::to_string(&policy).unwrap();
+        let json = serde_json::to_string(&policy).expect("String operation failed");
         assert!(json.contains("min_length"));
         assert!(json.contains("require_uppercase"));
     }
@@ -821,7 +824,10 @@ mod tests {
         };
         assert!(!response.success);
         assert!(response.error.is_some());
-        assert_eq!(response.error.as_ref().unwrap(), "Operation failed");
+        assert_eq!(
+            response.error.as_ref().expect("Operation failed"),
+            "Operation failed"
+        );
     }
 
     #[test]
@@ -844,7 +850,14 @@ mod tests {
             metrics: Some(metrics),
         };
         assert!(response.metrics.is_some());
-        assert_eq!(response.metrics.as_ref().unwrap().request_count, 50);
+        assert_eq!(
+            response
+                .metrics
+                .as_ref()
+                .expect("Operation failed")
+                .request_count,
+            50
+        );
     }
 
     // ==================== CanonicalConfig Tests ====================

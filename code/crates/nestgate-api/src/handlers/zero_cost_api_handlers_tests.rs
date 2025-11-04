@@ -64,7 +64,7 @@ mod tests {
         let serialized = serde_json::to_string(&request);
         assert!(serialized.is_ok(), "Request should serialize");
 
-        let json = serialized.unwrap();
+        let json = serialized.expect("Test setup failed");
         assert!(json.contains("req-999"));
         assert!(json.contains("key"));
         assert!(json.contains("value"));
@@ -177,7 +177,7 @@ mod tests {
         let serialized = serde_json::to_string(&response);
         assert!(serialized.is_ok(), "Response should serialize");
 
-        let json = serialized.unwrap();
+        let json = serialized.expect("Test setup failed");
         assert!(json.contains("req-ser"));
         assert!(json.contains("\"processing_time_ms\":10"));
     }
@@ -262,7 +262,7 @@ mod tests {
         let status = ApiStatus::Success;
         let serialized = serde_json::to_string(&status);
         assert!(serialized.is_ok());
-        assert!(serialized.unwrap().contains("Success"));
+        assert!(serialized.expect("Test setup failed").contains("Success"));
     }
 
     #[test]
@@ -273,7 +273,7 @@ mod tests {
         let serialized = serde_json::to_string(&status);
         assert!(serialized.is_ok());
 
-        let json = serialized.unwrap();
+        let json = serialized.expect("Test setup failed");
         assert!(json.contains("Warning"));
         assert!(json.contains("Low memory"));
     }
@@ -287,7 +287,7 @@ mod tests {
         let serialized = serde_json::to_string(&status);
         assert!(serialized.is_ok());
 
-        let json = serialized.unwrap();
+        let json = serialized.expect("Test setup failed");
         assert!(json.contains("Error"));
         assert!(json.contains("E001"));
         assert!(json.contains("Test error"));

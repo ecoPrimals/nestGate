@@ -5,6 +5,7 @@ use std::collections::HashMap;
 // to prevent injection attacks and ensure data integrity.
 
 use crate::{Result};
+use lazy_static::lazy_static;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -54,145 +55,87 @@ impl Default for ValidationConfig {
     }
 }
 
+// Lazy-initialized regex patterns (compiled once, reused forever)
+// This eliminates all regex compilation unwraps and improves performance
+//
+// NOTE: `.expect()` calls in this block are SAFE because:
+// 1. All regex patterns are hardcoded and validated
+// 2. Compilation happens once at first use (lazy initialization)
+// 3. Failure here is fail-fast (startup failure, not runtime panic)
+// 4. Invalid regex would be caught during development/testing
+lazy_static! {
+    static ref EMAIL_PATTERN: Regex = 
+        Regex::new(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+            .expect("Email regex is hardcoded and valid");
+    
+    static ref UUID_PATTERN: Regex = 
+        Regex::new(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
+            .expect("UUID regex is hardcoded and valid");
+    
+    static ref ALPHANUMERIC_PATTERN: Regex = 
+        Regex::new(r"^[a-zA-Z0-9]+$")
+            .expect("Alphanumeric regex is hardcoded and valid");
+    
+    static ref SAFE_FILENAME_PATTERN: Regex = 
+        Regex::new(r"^[a-zA-Z0-9._-]+$")
+            .expect("Filename regex is hardcoded and valid");
+    
+    static ref SQL_INJECTION_PATTERN: Regex = 
+        Regex::new(r"(?i)(union|select|insert|update|delete|drop|create|alter|exec|script)")
+            .expect("SQL injection regex is hardcoded and valid");
+    
+    static ref XSS_SCRIPT_PATTERN: Regex = 
+        Regex::new(r"(?i)<script|javascript:|vbscript:|onload=|onerror=|onclick=")
+            .expect("XSS script regex is hardcoded and valid");
+    
+    static ref XSS_ATTRIBUTES_PATTERN: Regex = 
+        Regex::new(r"(?i)(on\w+\s*=|javascript:|vbscript:|data:text/html)")
+            .expect("XSS attributes regex is hardcoded and valid");
+    
+    static ref PATH_TRAVERSAL_PATTERN: Regex = 
+        Regex::new(r"(\.\./|\.\.\\)")
+            .expect("Path traversal regex is hardcoded and valid");
+    
+    static ref COMMAND_INJECTION_PATTERN: Regex = 
+        Regex::new(r"[;&|`$()]")
+            .expect("Command injection regex is hardcoded and valid");
+    
+    static ref IPV4_PATTERN: Regex = 
+        Regex::new(r"^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$")
+            .expect("IPv4 regex is hardcoded and valid");
+    
+    static ref IPV6_PATTERN: Regex = 
+        Regex::new(r"^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$")
+            .expect("IPv6 regex is hardcoded and valid");
+    
+    static ref DOMAIN_PATTERN: Regex = 
+        Regex::new(r"^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
+            .expect("Domain regex is hardcoded and valid");
+    
+    static ref PORT_PATTERN: Regex = 
+        Regex::new(r"^(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[1-5][0-9]{4}|[1-9][0-9]{0,3})$")
+            .expect("Port regex is hardcoded and valid");
+}
+
 /// Input validator with security hardening
 #[derive(Debug)]
 pub struct InputValidator {
     config: ValidationConfig,
-    patterns: ValidationPatterns,
-}
-/// Compiled regex patterns for validation
-#[derive(Debug)]
-struct ValidationPatterns {
-    // Basic patterns
-    email: Regex,
-    uuid: Regex,
-    alphanumeric: Regex,
-    safe_filename: Regex,
-    // Security patterns
-    sql_injection: Regex,
-    xss_script: Regex,
-    xss_attributes: Regex,
-    path_traversal: Regex,
-    command_injection: Regex,
-
-    // Network patterns
-    ipv4: Regex,
-    ipv6: Regex,
-    domain: Regex,
-    port: Regex,
-}
-
-impl ValidationPatterns {
-    fn new() -> Result<Self> {
-        Ok(Self::default())
-    }
-}
-
-impl Default for ValidationPatterns {
-    fn default() -> Self {
-        // These are hardcoded patterns that should always compile.
-        // If they fail, we fall back to permissive/restrictive patterns that are guaranteed valid
-        // to ensure the system stays operational (fail-safe approach for initialization)
-        Self {
-            email: regex::Regex::new(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
-                .unwrap_or_else(|_| {
-                    regex::Regex::new(r".*")
-                        .expect("Fallback regex '.*' is guaranteed valid")
-                }),
-            uuid: regex::Regex::new(
-                r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-            )
-            .unwrap_or_else(|_| {
-                regex::Regex::new(r".*").expect("Fallback regex '.*' is guaranteed valid")
-            }),
-            alphanumeric: regex::Regex::new(r"^[a-zA-Z0-9]+$").unwrap_or_else(|_| {
-                regex::Regex::new(r".*").expect("Fallback regex '.*' is guaranteed valid")
-            }),
-            safe_filename: regex::Regex::new(r"^[a-zA-Z0-9._-]+$").unwrap_or_else(|_| {
-                regex::Regex::new(r".*").expect("Fallback regex '.*' is guaranteed valid")
-            }),
-            sql_injection: regex::Regex::new(
-                r"(?i)(union|select|insert|update|delete|drop|create|alter|exec|script)",
-            )
-            .unwrap_or_else(|_| {
-                regex::Regex::new(r"(?i)nevermatch")
-                    .expect("Fallback regex 'nevermatch' is guaranteed valid")
-            }),
-            xss_script: regex::Regex::new(
-                r"(?i)<script|javascript:|vbscript:|onload=|onerror=|onclick=",
-            )
-            .unwrap_or_else(|_| {
-                regex::Regex::new(r"(?i)nevermatch")
-                    .expect("Fallback regex 'nevermatch' is guaranteed valid")
-            }),
-            xss_attributes: regex::Regex::new(
-                r"(?i)(on\w+\s*=|javascript:|vbscript:|data:text/html)",
-            )
-            .unwrap_or_else(|_| {
-                regex::Regex::new(r"(?i)nevermatch")
-                    .expect("Fallback regex 'nevermatch' is guaranteed valid")
-            }),
-            path_traversal: regex::Regex::new(r"(\.\./|\.\.\\)").unwrap_or_else(|_| {
-                regex::Regex::new(r"(?i)nevermatch")
-                    .expect("Fallback regex 'nevermatch' is guaranteed valid")
-            }),
-            command_injection: regex::Regex::new(r"[;&|`$()]").unwrap_or_else(|_| {
-                regex::Regex::new(r"(?i)nevermatch")
-                    .expect("Fallback regex 'nevermatch' is guaranteed valid")
-            }),
-            ipv4: regex::Regex::new(
-                r"^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$",
-            )
-            .unwrap_or_else(|_| {
-                regex::Regex::new(r".*").expect("Fallback regex '.*' is guaranteed valid")
-            }),
-            ipv6: regex::Regex::new(r"^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$")
-                .unwrap_or_else(|_| {
-                    regex::Regex::new(r".*")
-                        .expect("Fallback regex '.*' is guaranteed valid")
-                }),
-            domain: regex::Regex::new(
-                r"^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$",
-            )
-            .unwrap_or_else(|_| {
-                regex::Regex::new(r".*").expect("Fallback regex '.*' is guaranteed valid")
-            }),
-            port: regex::Regex::new(
-                r"^(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[1-5][0-9]{4}|[1-9][0-9]{0,3})$",
-            )
-            .unwrap_or_else(|_| {
-                regex::Regex::new(r".*").expect("Fallback regex '.*' is guaranteed valid")
-            }),
-        }
-    }
 }
 
 impl InputValidator {
     /// Create a new input validator with default patterns
-    ///
-    /// # Errors
-    ///
-    /// This function will return an error if:
-    /// - The operation fails due to invalid input
-    /// - System resources are unavailable
-    /// - Network or I/O errors occur
-        pub fn new() -> Result<Self>  {
-        let patterns = ValidationPatterns::new()?;
-        let config = ValidationConfig::default();
-        Ok(Self { patterns, config })
+    #[must_use]
+    pub fn new() -> Self {
+        Self {
+            config: ValidationConfig::default(),
+        }
     }
 
     /// Create a new input validator with custom configuration
-    ///
-    /// # Errors
-    ///
-    /// This function will return an error if:
-    /// - The operation fails due to invalid input
-    /// - System resources are unavailable
-    /// - Network or I/O errors occur
-        pub fn with_config(config: ValidationConfig) -> Result<Self>  {
-        let patterns = ValidationPatterns::new()?;
-        Ok(Self { patterns, config })
+    #[must_use]
+    pub fn with_config(config: ValidationConfig) -> Self {
+        Self { config }
     }
 
     /// Validate a string input with security checks
@@ -235,7 +178,7 @@ impl InputValidator {
 
     /// Validate an email address
     pub fn validate_email(&self, field: &str, email: &str) -> ValidationResult<String> {
-        if !self.patterns.email.is_match(email) {
+        if !EMAIL_PATTERN.is_match(email) {
             return Err(ValidationError::InvalidField {
                 field: field.to_string(),
                 reason: "invalid email format".to_string(),
@@ -251,7 +194,7 @@ impl InputValidator {
 
     /// Validate a UUID
     pub fn validate_uuid(&self, field: &str, uuid: &str) -> ValidationResult<String> {
-        if !self.patterns.uuid.is_match(uuid) {
+        if !UUID_PATTERN.is_match(uuid) {
             return Err(ValidationError::InvalidField {
                 field: field.to_string(),
                 reason: "invalid UUID format".to_string(),
@@ -283,7 +226,7 @@ impl InputValidator {
 
     /// Validate a filename for safe filesystem operations
     pub fn validate_filename(&self, field: &str, filename: &str) -> ValidationResult<String> {
-        if !self.patterns.safe_filename.is_match(filename) {
+        if !SAFE_FILENAME_PATTERN.is_match(filename) {
             return Err(ValidationError::InvalidField {
                 field: field.to_string(),
                 reason: "unsafe filename format".to_string(),
@@ -292,7 +235,7 @@ impl InputValidator {
 
         // Check for path traversal
         if self.config.enable_path_traversal_detection
-            && self.patterns.path_traversal.is_match(filename)
+            && PATH_TRAVERSAL_PATTERN.is_match(filename)
         {
             return Err(ValidationError::InvalidField {
                 field: field.to_string(),
@@ -310,17 +253,17 @@ impl InputValidator {
     /// Validate a network address (IP or domain)
     pub fn validate_network_address(&self, field: &str, address: &str) -> ValidationResult<String> {
         // Try IPv4 first
-        if self.patterns.ipv4.is_match(address) {
+        if IPV4_PATTERN.is_match(address) {
             return Ok(address.to_string());
         }
 
         // Try IPv6
-        if self.patterns.ipv6.is_match(address) {
+        if IPV6_PATTERN.is_match(address) {
             return Ok(address.to_string());
         }
 
         // Try domain name
-        if self.patterns.domain.is_match(address) {
+        if DOMAIN_PATTERN.is_match(address) {
             Ok(address.to_string())
         } else {
             Err(ValidationError::InvalidField {
@@ -332,7 +275,7 @@ impl InputValidator {
 
     /// Validate a port number
     pub fn validate_port(&self, field: &str, port: &str) -> ValidationResult<u16> {
-        if !self.patterns.port.is_match(port) {
+        if !PORT_PATTERN.is_match(port) {
             return Err(ValidationError::InvalidField {
                 field: field.to_string(),
                 reason: "invalid port format".to_string(),
@@ -367,7 +310,7 @@ impl InputValidator {
     /// Check for security violations in input
     fn check_security_violations(&self, field: &str, value: &str) -> SecurityResult<()> {
         // SQL injection detection
-        if self.config.enable_sql_injection_detection && self.patterns.sql_injection.is_match(value)
+        if self.config.enable_sql_injection_detection && SQL_INJECTION_PATTERN.is_match(value)
         {
             return Err(SecurityError::InjectionAttempt {
                 attack_type: "SQL injection".to_string(),
@@ -378,8 +321,8 @@ impl InputValidator {
 
         // XSS detection
         if self.config.enable_xss_detection
-            && (self.patterns.xss_script.is_match(value)
-                || self.patterns.xss_attributes.is_match(value))
+            && (XSS_SCRIPT_PATTERN.is_match(value)
+                || XSS_ATTRIBUTES_PATTERN.is_match(value))
         {
             return Err(SecurityError::InjectionAttempt {
                 attack_type: "XSS".to_string(),
@@ -390,7 +333,7 @@ impl InputValidator {
 
         // Path traversal detection
         if self.config.enable_path_traversal_detection
-            && self.patterns.path_traversal.is_match(value)
+            && PATH_TRAVERSAL_PATTERN.is_match(value)
         {
             return Err(SecurityError::InjectionAttempt {
                 attack_type: "path traversal".to_string(),
@@ -400,7 +343,7 @@ impl InputValidator {
         }
 
         // Command injection detection
-        if self.patterns.command_injection.is_match(value) {
+        if COMMAND_INJECTION_PATTERN.is_match(value) {
             return Err(SecurityError::InjectionAttempt {
                 attack_type: "command injection".to_string(),
                 field: field.to_string(),

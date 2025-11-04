@@ -172,8 +172,9 @@ mod tests {
             .with_provider("auth-service".to_string())
             .with_version("1.2.3".to_string());
 
-        let serialized = serde_json::to_string(&cap).unwrap();
-        let deserialized: Capability = serde_json::from_str(&serialized).unwrap();
+        let serialized = serde_json::to_string(&cap).expect("String operation failed");
+        let deserialized: Capability =
+            serde_json::from_str(&serialized).expect("Failed to convert from string");
 
         assert_eq!(cap.capability_type, deserialized.capability_type);
         assert_eq!(cap.endpoint, deserialized.endpoint);
@@ -201,26 +202,6 @@ mod tests {
         let cap = Capability::new(CapabilityType::Management, "http://mgmt:8080".to_string());
         assert!(cap.metadata.is_empty());
     }
-
-    // TODO: Fix SafeUnwrap imports - helper trait not available in error::helpers
-    // #[test]
-    // fn test_capability_json_serialization() -> crate::Result<()> {
-    //     use crate::error::helpers::{ErrorCategory, SafeUnwrap};
-    //
-    //     let cap = Capability::new(
-    //         CapabilityType::MessageQueue,
-    //         "amqp://queue:5672".to_string(),
-    //     );
-    //
-    //     let serialized = serde_json::to_string(&cap)
-    //         .safe_unwrap(ErrorCategory::Validation, "Should serialize")?;
-    //     let deserialized: Capability = serde_json::from_str(&serialized)
-    //         .safe_unwrap(ErrorCategory::Validation, "Should deserialize")?;
-    //
-    //     assert_eq!(cap.capability_type, deserialized.capability_type);
-    //     assert_eq!(cap.endpoint, deserialized.endpoint);
-    //     Ok(())
-    // }
 
     #[test]
     fn test_empty_endpoint() {

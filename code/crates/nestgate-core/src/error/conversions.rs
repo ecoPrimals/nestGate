@@ -32,3 +32,11 @@ impl From<&str> for NestGateUnifiedError {
         Self::internal_error(error, "str_conversion")
     }
 }
+
+/// Convert anyhow errors to `NestGate` errors
+/// This enables use of `?` operator with anyhow::Result in test code
+impl From<anyhow::Error> for NestGateUnifiedError {
+    fn from(error: anyhow::Error) -> Self {
+        Self::external_service_unavailable("anyhow", format!("External error: {error}"))
+    }
+}

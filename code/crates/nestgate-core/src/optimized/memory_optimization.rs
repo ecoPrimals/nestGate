@@ -629,7 +629,7 @@ mod tests {
         
         let cached = manager.get_cached_data("test_key").await?;
         assert!(cached.is_some());
-        assert_eq!(*cached.unwrap(), data);
+        assert_eq!(*cached.expect("Operation failed"), data);
 
         // Test metrics
         let metrics = manager.get_metrics().await;
@@ -650,7 +650,7 @@ mod tests {
         
         let retrieved = cache.get("test").await?;
         assert!(retrieved.is_some());
-        assert_eq!(*retrieved.unwrap(), data);
+        assert_eq!(*retrieved.expect("Operation failed"), data);
 
         // Test cache miss
         let missing = cache.get("nonexistent").await?;

@@ -45,7 +45,7 @@ mod tests {
         let json = serde_json::to_string(&config);
         assert!(json.is_ok());
 
-        let json_str = json.unwrap();
+        let json_str = json.expect("Test setup failed");
         assert!(json_str.contains("\"cpu_cores\""));
         assert!(json_str.contains("\"memory_gb\""));
     }
@@ -64,7 +64,7 @@ mod tests {
         let config: Result<HardwareTuningConfig, _> = serde_json::from_str(json);
         assert!(config.is_ok());
 
-        let config = config.unwrap();
+        let config = config.expect("Test setup failed");
         assert_eq!(config.cpu_cores, 12);
         assert_eq!(config.memory_gb, 24);
         assert!(!config.memory_optimization_enabled);

@@ -96,7 +96,9 @@ fn check_ports_agnostic(
     violations: &mut Vec<Violation>,
 ) {
     // Find any port pattern (:NNNN)
-    let port_regex = Regex::new(r":(\d{3,5})\b")?;
+    let Ok(port_regex) = Regex::new(r":(\d{3,5})\b") else {
+        return;
+    };
 
     for cap in port_regex.captures_iter(line) {
         if let Some(port_match) = cap.get(1) {
@@ -120,7 +122,9 @@ fn check_ips_agnostic(
     violations: &mut Vec<Violation>,
 ) {
     // Find any IP address pattern
-    let ip_regex = Regex::new(r"\b(?:\d{1,3}\.){3}\d{1,3}\b")?;
+    let Ok(ip_regex) = Regex::new(r"\b(?:\d{1,3}\.){3}\d{1,3}\b") else {
+        return;
+    };
 
     for ip_match in ip_regex.find_iter(line) {
         let ip = ip_match.as_str();
@@ -142,7 +146,9 @@ fn check_urls_agnostic(
     violations: &mut Vec<Violation>,
 ) {
     // Find any HTTP/HTTPS URL
-    let url_regex = Regex::new(r#"https?://[^\s"']+  "#)?;
+    let Ok(url_regex) = Regex::new(r#"https?://[^\s"']+  "#) else {
+        return;
+    };
 
     for url_match in url_regex.find_iter(line) {
         let url = url_match.as_str();

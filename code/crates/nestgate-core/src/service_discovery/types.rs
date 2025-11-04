@@ -534,11 +534,12 @@ pub struct DiscoveredService {
 }
 impl Default for DiscoveredService {
     fn default() -> Self {
+        use crate::constants::hardcoding::{addresses, ports};
         Self {
             id: Uuid::new_v4().to_string(),
             name: "unknown".to_string(),
-            endpoint: "localhost".to_string(),
-            port: 8080,
+            endpoint: addresses::LOCALHOST_NAME.to_string(),
+            port: ports::HTTP_DEFAULT,
             capabilities: vec![],
             metadata: HashMap::new(),
             discovered_at: std::time::SystemTime::now(),

@@ -236,7 +236,7 @@ mod tests {
         }
 
         for handle in handles {
-            handle.join().unwrap();
+            handle.join().expect("Test setup failed");
         }
     }
 
@@ -440,7 +440,7 @@ mod tests {
         }
 
         for handle in handles {
-            handle.join().unwrap();
+            handle.join().expect("Test setup failed");
         }
 
         assert_eq!(counter.load(Ordering::SeqCst), 100);

@@ -39,7 +39,7 @@ impl Default for HealthState {
 /// Health check trait for individual components
 pub trait HealthCheck: Send + Sync {
     /// Perform a health check and return the current state
-    fn check_health(&self) -> impl std::future::Future<Output = Result<HealthState>> + Send;
+    fn check_health(&self) -> impl std::future::Future<Output = crate::Result<HealthState>> + Send;
     /// Get the name of this health check
     fn check_name(&self) -> &str;
 
@@ -52,21 +52,33 @@ pub trait HealthCheck: Send + Sync {
 /// Health monitoring trait for services
 pub trait HealthMonitor: Send + Sync {
     /// Start health monitoring
-    fn start_monitoring(&self) -> impl std::future::Future<Output = Result<()>> + Send;
+    fn start_monitoring(&self) -> impl std::future::Future<Output = crate::Result<()>> + Send;
     /// Stop health monitoring
-    fn stop_monitoring(&self) -> impl std::future::Future<Output = Result<()>> + Send;
+    fn stop_monitoring(&self) -> impl std::future::Future<Output = crate::Result<()>> + Send;
 
     /// Get current overall health status
-    fn get_health_status(&self) -> impl std::future::Future<Output = Result<HealthState>> + Send;
+    fn get_health_status(
+        &self,
+    ) -> impl std::future::Future<Output = crate::Result<HealthState>> + Send;
 
     /// Get detailed health information for all components
-    fn get_detailed_health(&self) -> impl std::future::Future<Output = Result<HashMap<String, HealthState>> + Send;
+    fn get_detailed_health(
+        &self,
+    ) -> impl std::future::Future<Output = crate::Result<HashMap<String, HealthState>>> + Send;
 
     /// Register a health check
-    fn register_health_check(&self, check: Box<dyn HealthCheck>) -> impl std::future::Future<Output = Result<()>> + Send;
+    /// Note: Due to trait object limitations with async traits, implementations should
+    /// use Arc<impl HealthCheck> or similar instead of Box<dyn HealthCheck>
+    fn register_health_check<H: HealthCheck + 'static>(
+        &self,
+        check: H,
+    ) -> impl std::future::Future<Output = crate::Result<()>> + Send;
 
     /// Unregister a health check by name
-    fn unregister_health_check(&self, check_name: &str) -> impl std::future::Future<Output = Result<()>> + Send;
+    fn unregister_health_check(
+        &self,
+        check_name: &str,
+    ) -> impl std::future::Future<Output = crate::Result<()>> + Send;
 }
 
 /// Health state builder for creating health states

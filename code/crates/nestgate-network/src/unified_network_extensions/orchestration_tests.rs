@@ -98,7 +98,7 @@ fn test_retry_config_deserialization() {
     let config: Result<OrchestrationRetryConfig, _> = serde_json::from_str(json);
     assert!(config.is_ok(), "Should deserialize successfully");
 
-    let config = config.unwrap();
+    let config = config.expect("Network operation failed");
     assert_eq!(config.max_attempts, 5);
     assert_eq!(config.multiplier, 2.5);
 }
@@ -113,8 +113,9 @@ fn test_retry_config_round_trip() {
         exponential_backoff: true,
     };
 
-    let json = serde_json::to_string(&original).unwrap();
-    let deserialized: OrchestrationRetryConfig = serde_json::from_str(&json).unwrap();
+    let json = serde_json::to_string(&original).expect("Network operation failed");
+    let deserialized: OrchestrationRetryConfig =
+        serde_json::from_str(&json).expect("Network operation failed");
 
     assert_eq!(original.max_attempts, deserialized.max_attempts);
     assert_eq!(original.initial_delay, deserialized.initial_delay);
@@ -207,7 +208,7 @@ fn test_orchestration_settings_deserialization() {
     let settings: Result<NetworkOrchestrationSettings, _> = serde_json::from_str(json);
     assert!(settings.is_ok(), "Should deserialize successfully");
 
-    let settings = settings.unwrap();
+    let settings = settings.expect("Network operation failed");
     assert_eq!(settings.orchestration_timeout, Duration::from_secs(45));
     assert_eq!(settings.max_orchestration_connections, 200);
 }
@@ -303,7 +304,7 @@ fn test_service_registration_deserialization() {
     let settings: Result<ServiceRegistrationSettings, _> = serde_json::from_str(json);
     assert!(settings.is_ok(), "Should deserialize successfully");
 
-    let settings = settings.unwrap();
+    let settings = settings.expect("Network operation failed");
     assert!(!settings.auto_register);
     assert_eq!(settings.service_ttl, Duration::from_secs(450));
     assert_eq!(settings.registration_retries, 7);

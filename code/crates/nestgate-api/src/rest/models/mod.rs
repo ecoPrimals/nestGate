@@ -105,6 +105,6 @@ impl<T> ApiResponse<T> {
     }
 }
 
-// TEMP_DISABLED: Needs struct field updates  
+// TEMP_DISABLED: Needs struct field updates
 // #[cfg(test)]
 // mod types_tests;

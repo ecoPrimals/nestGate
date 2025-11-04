@@ -166,7 +166,7 @@ mod tests {
         let provider = ZeroCostJwtProvider::new([0u8; 32]);
         let result = provider.authenticate(&"testuser".to_string());
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), "jwt_token_testuser");
+        assert_eq!(result.expect("Operation failed"), "jwt_token_testuser");
     }
 
     #[test]

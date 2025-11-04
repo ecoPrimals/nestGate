@@ -134,31 +134,31 @@ fn test_result_type_safety() {
 #[test]
 fn test_storage_tier_serialization() {
     let tier = StorageTier::Hot;
-    let json = serde_json::to_string(&tier).unwrap();
+    let json = serde_json::to_string(&tier).expect("Test setup failed");
     assert!(!json.is_empty());
 
-    let deserialized: StorageTier = serde_json::from_str(&json).unwrap();
+    let deserialized: StorageTier = serde_json::from_str(&json).expect("Test setup failed");
     assert_eq!(format!("{:?}", tier), format!("{:?}", deserialized));
 }
 
 #[test]
 fn test_storage_tier_deserialize_hot() {
     let json = r#""Hot""#;
-    let tier: StorageTier = serde_json::from_str(json).unwrap();
+    let tier: StorageTier = serde_json::from_str(json).expect("Test setup failed");
     assert_eq!(format!("{:?}", tier), "Hot");
 }
 
 #[test]
 fn test_storage_tier_deserialize_warm() {
     let json = r#""Warm""#;
-    let tier: StorageTier = serde_json::from_str(json).unwrap();
+    let tier: StorageTier = serde_json::from_str(json).expect("Test setup failed");
     assert_eq!(format!("{:?}", tier), "Warm");
 }
 
 #[test]
 fn test_storage_tier_deserialize_cold() {
     let json = r#""Cold""#;
-    let tier: StorageTier = serde_json::from_str(json).unwrap();
+    let tier: StorageTier = serde_json::from_str(json).expect("Test setup failed");
     assert_eq!(format!("{:?}", tier), "Cold");
 }
 
@@ -240,14 +240,14 @@ fn test_result_unwrap_or() {
 fn test_result_map() {
     let result: Result<i32> = Ok(21);
     let doubled = result.map(|x| x * 2);
-    assert_eq!(doubled.unwrap(), 42);
+    assert_eq!(doubled.expect("Test setup failed"), 42);
 }
 
 #[test]
 fn test_result_and_then() {
     let result: Result<i32> = Ok(21);
     let doubled = result.map(|x| x * 2);
-    assert_eq!(doubled.unwrap(), 42);
+    assert_eq!(doubled.expect("Test setup failed"), 42);
 }
 
 // ==================== BOUNDARY TESTS ====================

@@ -1,13 +1,13 @@
 // Removed unused error imports
+use crate::service_discovery::types::ServiceInfo;
+use crate::unified_enums::service_types::UnifiedServiceState as HealthStatus;
+use crate::Result;
 /// Service discovery traits and types
-/// 
+///
 /// **MIGRATION NOTE**: This module has been updated to use canonical trait types
-/// **FIXED**: ServiceRegistration import corrected to use ServiceInfo from service_discovery
+/// **FIXED**: ServiceRegistration import corrected to use ServiceInfo from service_discovery::types
 use futures_util::stream::Stream;
 use std::collections::HashMap;
-use crate::Result;
-use crate::unified_enums::service_types::UnifiedServiceState as HealthStatus;
-use crate::service_discovery::registry::ServiceInfo;
 
 /// Service query for filtering discovered services
 #[derive(Debug, Clone)]
@@ -29,7 +29,7 @@ impl ServiceQuery {
     }
 
     pub fn with_name<S: Into<String>>(mut self, name: S) -> Self {
-        self.instance_name = Some(name.into());
+        self.service_name = Some(name.into());
         self
     }
 
@@ -59,31 +59,43 @@ impl Default for ServiceQuery {
 /// Service discovery trait for finding and managing services
 pub trait ServiceDiscovery: Send + Sync {
     /// Register a service with the discovery system
-    fn register(&self, service: ServiceInfo) -> impl std::future::Future<Output = Result<()>> + Send;
+    fn register(
+        &self,
+        service: ServiceInfo,
+    ) -> impl std::future::Future<Output = Result<()>> + Send;
     /// Deregister a service from the discovery system
     fn deregister(&self, service_id: &str) -> impl std::future::Future<Output = Result<()>> + Send;
 
     /// Discover services by name
-    fn discover(&self, service_name: &str) -> impl std::future::Future<Output = Result<Vec<ServiceInfo>> + Send;
+    fn discover(
+        &self,
+        service_name: &str,
+    ) -> impl std::future::Future<Output = Result<Vec<ServiceInfo>>> + Send;
 
     /// Watch for service changes
-    fn watch(&self) -> impl std::future::Future<Output = Result<impl Stream<Item = ServiceEvent>> + Send;
+    fn watch(
+        &self,
+    ) -> impl std::future::Future<Output = Result<impl Stream<Item = ServiceEvent>>> + Send;
 
     /// Update health status for a service
-    fn health_update(&self, service_id: &str, status: HealthStatus) -> impl std::future::Future<Output = Result<()>> + Send;
+    fn health_update(
+        &self,
+        service_id: &str,
+        status: HealthStatus,
+    ) -> impl std::future::Future<Output = Result<()>> + Send;
 
     /// List all registered services
-    fn list_all(&self) -> impl std::future::Future<Output = Result<Vec<ServiceInfo>> + Send;
+    fn list_all(&self) -> impl std::future::Future<Output = Result<Vec<ServiceInfo>>> + Send;
 
     /// Check if a service exists
     fn exists(&self, service_id: &str) -> impl std::future::Future<Output = Result<bool>> + Send;
 
     /// Update service metadata
-    async fn update_metadata(
+    fn update_metadata(
         &self,
         service_id: &str,
         metadata: HashMap<String, String>,
-    ) -> Result<()>;
+    ) -> impl std::future::Future<Output = Result<()>> + Send;
 }
 
 /// Service event types for discovery notifications

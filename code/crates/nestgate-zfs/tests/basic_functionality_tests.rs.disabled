@@ -1,11 +1,9 @@
 //
 // Tests the core ZFS functionality without complex integrations
 
-use nestgate_core::StorageTier;
+use nestgate_core::canonical_types::StorageTier;
 use nestgate_zfs::{config::ZfsConfig, dataset::ZfsDatasetManager, pool::ZfsPoolManager};
 use std::sync::Arc;
-
-use nestgate_core::canonical_types::StorageTier;
 #[tokio::test]
 async fn test_zfs_config_validation() -> Result<(), Box<dyn std::error::Error>> {
     let config = ZfsConfig::default();
@@ -38,8 +36,8 @@ async fn test_storage_tier_functionality() -> Result<(), Box<dyn std::error::Err
     assert_ne!(warm_tier, cold_tier);
     assert_ne!(hot_tier, cold_tier);
 
-    // Test serialization/deserialization
-    let tier_str = format!("{}", "actual_error_details");
+    // Test tier display/debug
+    let tier_str = format!("{:?}", hot_tier);
     assert!(tier_str.contains("Hot"));
     Ok(())
 }

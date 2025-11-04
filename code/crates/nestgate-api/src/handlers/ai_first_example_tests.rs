@@ -59,7 +59,7 @@ fn test_handler_type_signature() {
 #[test]
 fn test_handler_not_null() {
     let router = create_handler();
-    // Router should exist (this is a sanity check)
+    // Router should exist (this is a validation check)
     drop(router);
     // If we get here, the test passed
 }

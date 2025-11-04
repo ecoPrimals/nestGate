@@ -46,7 +46,7 @@ mod tests {
         let serialized = serde_json::to_string(&config);
         assert!(serialized.is_ok(), "Config should serialize");
 
-        let json = serialized.unwrap();
+        let json = serialized.expect("Test setup failed");
         assert!(json.contains("duration_seconds"));
         assert!(json.contains("concurrent_users"));
     }
@@ -76,7 +76,7 @@ mod tests {
         let config: Result<LoadTestConfig, _> = serde_json::from_str(json);
         assert!(config.is_ok(), "Should deserialize successfully");
 
-        let config = config.unwrap();
+        let config = config.expect("Test setup failed");
         assert_eq!(config.duration_seconds, 90);
         assert_eq!(config.concurrent_users, 25);
     }
@@ -514,7 +514,7 @@ mod tests {
         let serialized = serde_json::to_string(&result);
         assert!(serialized.is_ok());
 
-        let json = serialized.unwrap();
+        let json = serialized.expect("Test setup failed");
         assert!(json.contains("\"success\":true"));
     }
 
@@ -545,7 +545,7 @@ mod tests {
         let result = runner.run();
 
         assert!(result.is_ok(), "Runner should execute successfully");
-        let result = result.unwrap();
+        let result = result.expect("Test setup failed");
         assert!(result.success);
         assert_eq!(result.duration_seconds, 30);
     }

@@ -514,11 +514,14 @@ mod tests {
             last_played: None,
         };
 
-        storage.update_game_metadata(game.clone()).await.unwrap();
+        storage
+            .update_game_metadata(game.clone())
+            .await
+            .expect("Operation failed");
 
         let retrieved = storage.get_game_metadata(12345).await;
         assert!(retrieved.is_some());
-        assert_eq!(retrieved.unwrap().name, "Test Game");
+        assert_eq!(retrieved.expect("Operation failed").name, "Test Game");
     }
 
     #[tokio::test]
@@ -533,7 +536,10 @@ mod tests {
             healthy: true,
         };
 
-        federation.add_federation_node(node).await.unwrap();
+        federation
+            .add_federation_node(node)
+            .await
+            .expect("Operation failed");
 
         let status = federation.get_federation_status().await;
         assert_eq!(status.total_nodes, 1);
@@ -553,7 +559,7 @@ mod tests {
             healthy: true,
         }];
 
-        service.initialize(nodes).await.unwrap();
+        service.initialize(nodes).await.expect("Operation failed");
 
         let health = service.health_check().await;
         assert_eq!(health.service_name, "steam_data_service");

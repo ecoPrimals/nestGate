@@ -1,4 +1,6 @@
 use std::collections::HashMap;
+use std::env;
+
 /// Environment detection and configuration for NestGate
 ///
 /// Supports two primary modes:
@@ -6,7 +8,9 @@ use std::collections::HashMap;
 /// 2. **Standalone**: Self-contained operation with direct network protocols
 ///
 /// The system automatically detects the environment and configures itself accordingly.
-use std::env;
+/// **CANONICAL MODERNIZATION** - Use canonical service configuration
+pub use crate::canonical_types::service::ServiceConfig;
+
 /// Operating mode for NestGate
 #[derive(Debug, Clone, PartialEq)]
 pub enum OperationMode {
@@ -15,33 +19,27 @@ pub enum OperationMode {
     /// Orchestration-enhanced mode: Orchestration module handles networking
     OrchestrationEnhanced,
 }
+
 /// Environment detection and configuration
+///
+/// **MODERNIZED**: Simplified structure - removed deprecated NetworkConfig
+/// For comprehensive network configuration, use `config::canonical_master::domains::network::CanonicalNetworkConfig`
 #[derive(Debug, Clone)]
 pub struct Environment {
     /// Current operation mode
     pub mode: OperationMode,
     /// Service configuration
     pub service: ServiceConfig,
-    /// Network configuration
-    pub network: NetworkConfig,
-    /// External service endpoints
-    pub external_services: HashMap<String, String>,
-}
-/// **CANONICAL MODERNIZATION** - Use canonical service configuration
-pub use crate::canonical_types::service::ServiceConfig;
-/// Network configuration
-/// **⚠️ DEPRECATED**: Use `CanonicalNetworkConfig` from `canonical_master::domains::network`
-#[deprecated(since = "0.9.0", note = "Use canonical_master::domains::network::CanonicalNetworkConfig instead")]
-#[derive(Debug, Clone)]
-pub struct NetworkConfig {
-    /// Bind interface (127.0.0.1 for standalone, delegated for orchestration)
+    /// Network bind interface (127.0.0.1 for standalone, 0.0.0.0 for orchestration)
     pub bind_interface: String,
-    /// Port (0 for auto in orchestration, configured for standalone)
+    /// Network port
     pub port: u16,
     /// Service name for orchestration mode
     pub service_name: String,
     /// Enable service discovery
     pub discovery_enabled: bool,
+    /// External service endpoints
+    pub external_services: HashMap<String, String>,
 }
 impl Default for Environment {
     fn default() -> Self {
@@ -54,13 +52,17 @@ impl Environment {
     pub fn detect() -> Self {
         let mode = Self::detect_mode();
         let service = Self::detect_service_config();
-        let network = Self::detect_network_config(&mode);
+        let (bind_interface, port, service_name, discovery_enabled) =
+            Self::detect_network_settings(&mode);
         let external_services = Self::detect_external_services(&mode);
 
         Self {
             mode,
             service,
-            network,
+            bind_interface,
+            port,
+            service_name,
+            discovery_enabled,
             external_services,
         }
     }
@@ -77,55 +79,56 @@ impl Environment {
 
     /// Detect service configuration
     fn detect_service_config() -> ServiceConfig {
+        use crate::canonical_types::service::{ServiceId, ServiceState, ServiceType};
+        let mut metadata = std::collections::HashMap::new();
+        metadata.insert(
+            "environment".to_string(),
+            env::var("ENVIRONMENT").unwrap_or_else(|_| "development".to_string()),
+        );
+
         ServiceConfig {
-            name: env::var("SERVICE_NAME")
-                .unwrap_or_else(|_| crate::canonical_modernization::canonical_constants::strings::DEFAULT_SERVICE_NAME.to_string()),
-            version: env::var("SERVICE_VERSION")
-                .unwrap_or_else(|_| crate::canonical_modernization::canonical_constants::strings::DEFAULT_SERVICE_VERSION.to_string()),
-            description: env::var("SERVICE_DESCRIPTION").unwrap_or_else(|_| {
-                crate::canonical_modernization::canonical_constants::strings::DEFAULT_SERVICE_DESCRIPTION.to_string()
-            }),
+            id: ServiceId::default(),
+            name: env::var("SERVICE_NAME").unwrap_or_else(|_| "nestgate".to_string()),
+            service_type: ServiceType::Api,
+            state: ServiceState::Running,
+            port: None,
+            host: None,
+            metadata,
+            created_at: std::time::SystemTime::now(),
+            updated_at: std::time::SystemTime::now(),
         }
     }
 
-    /// Detect network configuration based on mode
-    fn detect_network_config(mode: &OperationMode) -> NetworkConfig {
-        match mode {
-            OperationMode::Standalone => NetworkConfig {
-                bind_interface: env::var("NESTGATE_BIND_INTERFACE").unwrap_or_else(|_| {
-                    crate::sovereignty_config::migration_helpers::get_bind_address().to_string()
-                }), // Sovereignty-compliant default
-                port: env::var("NESTGATE_PORT")
-                    .unwrap_or_else(|_| {
-                        crate::sovereignty_config::migration_helpers::get_api_port().to_string()
-                    })
-                    .parse()
-                    .unwrap_or(8080),
-                service_name: env::var("NESTGATE_SERVICE_NAME").unwrap_or_else(|_| {
-                    crate::sovereignty_config::migration_helpers::get_service_name()
-                }),
-                discovery_enabled: env::var("NESTGATE_DISCOVERY_ENABLED")
-                    .map(|v| v.parse().unwrap_or(false))
-                    .unwrap_or(false),
-            },
-            OperationMode::OrchestrationEnhanced => NetworkConfig {
-                bind_interface: env::var("NESTGATE_BIND_INTERFACE").unwrap_or_else(|_| {
-                    crate::sovereignty_config::migration_helpers::get_bind_address().to_string()
-                }), // Sovereignty-compliant default
-                port: env::var("NESTGATE_PORT")
-                    .unwrap_or_else(|_| {
-                        crate::sovereignty_config::migration_helpers::get_api_port().to_string()
-                    }) // Use proper port instead of 0
-                    .parse()
-                    .unwrap_or(8080),
-                service_name: env::var("NESTGATE_SERVICE_NAME").unwrap_or_else(|_| {
-                    crate::sovereignty_config::migration_helpers::get_service_name()
-                }),
-                discovery_enabled: env::var("NESTGATE_DISCOVERY_ENABLED")
-                    .map(|v| v.parse().unwrap_or(true))
-                    .unwrap_or(true), // Enable discovery in orchestration mode
-            },
-        }
+    /// Detect network settings based on mode
+    /// Returns: (bind_interface, port, service_name, discovery_enabled)
+    fn detect_network_settings(mode: &OperationMode) -> (String, u16, String, bool) {
+        let bind_interface = match mode {
+            OperationMode::Standalone => {
+                env::var("NESTGATE_BIND_INTERFACE").unwrap_or_else(|_| "127.0.0.1".to_string())
+            } // Sovereignty-compliant default
+            OperationMode::OrchestrationEnhanced => {
+                env::var("NESTGATE_BIND_INTERFACE").unwrap_or_else(|_| "0.0.0.0".to_string())
+            }
+        };
+
+        let port = env::var("NESTGATE_PORT")
+            .unwrap_or_else(|_| "8080".to_string())
+            .parse()
+            .unwrap_or(8080);
+
+        let service_name =
+            env::var("NESTGATE_SERVICE_NAME").unwrap_or_else(|_| "nestgate".to_string());
+
+        let discovery_enabled = match mode {
+            OperationMode::Standalone => env::var("NESTGATE_DISCOVERY_ENABLED")
+                .map(|v| v.parse().unwrap_or(false))
+                .unwrap_or(false),
+            OperationMode::OrchestrationEnhanced => env::var("NESTGATE_DISCOVERY_ENABLED")
+                .map(|v| v.parse().unwrap_or(true))
+                .unwrap_or(true), // Enable discovery in orchestration mode
+        };
+
+        (bind_interface, port, service_name, discovery_enabled)
     }
 
     /// Detect external service endpoints

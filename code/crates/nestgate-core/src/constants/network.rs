@@ -2,6 +2,9 @@
 //!
 //! Network-related constants and default values.
 
+// Re-export shared network constants
+pub use super::shared::{DEFAULT_BUFFER_SIZE, DEFAULT_MAX_CONNECTIONS, DEFAULT_TIMEOUT_MS};
+
 /// Default API port for `NestGate` services
 pub const DEFAULT_API_PORT: u16 = 8080;
 

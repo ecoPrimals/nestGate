@@ -5,24 +5,24 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use crate::{NestGateError, Result};
-use crate::universal_traits::{ServiceInfo, ServiceRequest, ServiceResponse};
 use super::traits::{LoadBalancer, LoadBalancerStats};
+use crate::universal_traits::{ServiceInfo, ServiceRequest, ServiceResponse};
+use crate::{NestGateError, Result};
 
 /// Health-aware load balancer wrapper
-pub struct HealthAwareLoadBalancer {
-    inner: Box<dyn LoadBalancer>,
+pub struct HealthAwareLoadBalancer<L: LoadBalancer> {
+    inner: L,
     stats: Arc<parking_lot::RwLock<LoadBalancerStats>>,
 }
-impl HealthAwareLoadBalancer ", 
+impl<L: LoadBalancer> HealthAwareLoadBalancer<L> {
     #[must_use]
-    pub fn new(inner: Box<dyn LoadBalancer>) -> Self {
+    pub fn new(inner: L) -> Self {
         Self {
             stats: Arc::new(parking_lot::RwLock::new(LoadBalancerStats {
-                algorithm: format!("health_aware_{inner.algorithm()")),
+                algorithm: format!("health_aware_{}", inner.algorithm()),
                 health_aware: true,
                 ..LoadBalancerStats::default()
-            }),
+            })),
             inner,
         }
     }
@@ -41,7 +41,7 @@ impl HealthAwareLoadBalancer ",
     }
 }
 
-impl LoadBalancer for HealthAwareLoadBalancer {
+impl<L: LoadBalancer> LoadBalancer for HealthAwareLoadBalancer<L> {
     async fn select_service(
         &self,
         services: &[ServiceInfo],
@@ -55,14 +55,20 @@ impl LoadBalancer for HealthAwareLoadBalancer {
             .collect();
 
         if healthy_services.is_empty() {
-            return Err(NestGateError::LoadBalancer {
-                message: "No healthy services available".to_string(),
-                available_services: Some(0),
-            );
+            return Err(NestGateError::LoadBalancer(Box::new(
+                crate::error::variants::core_errors::LoadBalancerErrorDetails {
+                    message: "No healthy services available".to_string(),
+                    available_services: Some(0),
+                    algorithm: Some("health_aware".to_string()),
+                },
+            )));
         }
 
         // Delegate to the inner load balancer with only healthy services
-        let selected = self.inner.select_service(&healthy_services, request).await?;
+        let selected = self
+            .inner
+            .select_service(&healthy_services, request)
+            .await?;
 
         // Update our own stats
         {
@@ -110,4 +116,4 @@ impl LoadBalancer for HealthAwareLoadBalancer {
         // Return the inner algorithm name since we're a wrapper
         self.inner.algorithm()
     }
-} 
+}

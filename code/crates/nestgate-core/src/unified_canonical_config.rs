@@ -786,7 +786,7 @@ mod tests {
         config.metadata.insert("test_key".to_string(), "test_value".to_string());
         
         assert!(!config.enabled);
-        assert_eq!(config.metadata.get("test_key").unwrap(), "test_value");
+        assert_eq!(config.metadata.get("test_key").expect("Configuration error"), "test_value");
     }
 
     #[test]

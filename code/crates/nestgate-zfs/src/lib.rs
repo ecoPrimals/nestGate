@@ -19,6 +19,8 @@ pub mod zero_cost_zfs_operations;
 // Configuration and management
 pub mod canonical_zfs_config;
 pub mod health;
+#[cfg(test)]
+mod health_tests;
 pub mod metrics;
 pub mod production_readiness;
 
@@ -58,6 +60,12 @@ pub mod native;
 
 // Constants
 pub mod constants;
+
+// Additional test modules
+#[cfg(test)]
+mod command_tests;
+#[cfg(test)]
+mod pool_types_tests;
 
 // Re-exports for common usage
 pub use command::ZfsCommand;
