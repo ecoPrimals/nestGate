@@ -30,8 +30,8 @@ pub struct RateLimitConfig {
     pub burst_size: u32,
     /// Block duration for rate limit violations
     pub block_duration: Duration,
-    /// Whitelist of IPs exempt from rate limiting
-    pub whitelist: Vec<IpAddr>,
+    /// Allowlist of IPs exempt from rate limiting
+    pub allowlist: Vec<IpAddr>,
 }
 /// **REQUEST VALIDATION CONFIGURATION**
 #[derive(Debug, Clone)]
@@ -120,7 +120,7 @@ impl Default for RateLimitConfig {
             requests_per_minute: 100,
             burst_size: 20,
             block_duration: Duration::from_secs(300), // 5 minutes
-            whitelist: Vec::new(),
+            allowlist: Vec::new(),
         }
     }
 }

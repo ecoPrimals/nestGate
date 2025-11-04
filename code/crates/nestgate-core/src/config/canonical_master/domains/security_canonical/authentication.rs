@@ -385,8 +385,8 @@ pub struct PasswordPolicyConfig {
     /// Password expiration
     pub expiration: Option<Duration>,
 
-    /// Common password blacklist
-    pub blacklist: Vec<String>,
+    /// Common password denylist (prohibited passwords)
+    pub denylist: Vec<String>,
 
     /// Dictionary check
     pub dictionary_check: bool,
@@ -634,7 +634,7 @@ impl Default for PasswordPolicyConfig {
             allowed_special_chars: "!@#$%^&*()_+-=[]{}|;:,.<>?".to_string(),
             history_count: 5,
             expiration: Some(Duration::from_secs(90 * 24 * 60 * 60)), // 90 days
-            blacklist: vec![],
+            denylist: vec![],
             dictionary_check: true,
         }
     }
@@ -689,7 +689,7 @@ impl AuthenticationConfig {
                 allowed_special_chars: "!@#$%^&*()_+-=[]{}|;:,.<>?".to_string(),
                 history_count: 10,
                 expiration: Some(Duration::from_secs(60 * 24 * 60 * 60)), // 60 days
-                blacklist: vec![], // Would be populated from external source
+                denylist: vec![], // Would be populated from external source
                 dictionary_check: true,
             },
             lockout: AccountLockoutConfig {
@@ -724,7 +724,7 @@ impl AuthenticationConfig {
                 allowed_special_chars: "!@#$%^&*()_+-=[]{}|;:,.<>?".to_string(),
                 history_count: 1,
                 expiration: None,
-                blacklist: vec![],
+                denylist: vec![],
                 dictionary_check: false,
             },
             lockout: AccountLockoutConfig {
