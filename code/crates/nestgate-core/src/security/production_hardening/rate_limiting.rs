@@ -32,9 +32,9 @@ impl RateLimiter {
         }
     }
 
-    /// Check if IP is whitelisted
-    pub fn is_whitelisted(&self, ip: IpAddr) -> bool {
-        self.config.whitelist.contains(&ip)
+    /// Check if IP is in the allowlist
+    pub fn is_allowed(&self, ip: IpAddr) -> bool {
+        self.config.allowlist.contains(&ip)
     }
 
     /// Check rate limit for IP
@@ -130,7 +130,7 @@ mod tests {
             requests_per_minute: 2,
             burst_size: 2,
             block_duration: Duration::from_secs(60),
-            whitelist: Vec::new(),
+            allowlist: Vec::new(),
         });
 
         let test_ip = IpAddr::V4(Ipv4Addr::new(192, 168, 1, 100));
@@ -144,15 +144,15 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_whitelist() {
+    async fn test_allowlist() {
         let test_ip = IpAddr::V4(Ipv4Addr::new(192, 168, 1, 100));
         let rate_limiter = RateLimiter::new(RateLimitConfig {
             requests_per_minute: 1,
             burst_size: 1,
             block_duration: Duration::from_secs(60),
-            whitelist: vec![test_ip],
+            allowlist: vec![test_ip],
         });
 
-        assert!(rate_limiter.is_whitelisted(test_ip));
+        assert!(rate_limiter.is_allowed(test_ip));
     }
 } 

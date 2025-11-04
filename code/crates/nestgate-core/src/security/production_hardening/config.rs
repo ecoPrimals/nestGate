@@ -29,8 +29,8 @@ pub struct RateLimitConfig {
     pub burst_size: u32,
     /// Block duration for rate limit violations
     pub block_duration: Duration,
-    /// Whitelist of IPs exempt from rate limiting
-    pub whitelist: Vec<IpAddr>,
+    /// Allowlist of IPs exempt from rate limiting
+    pub allowlist: Vec<IpAddr>,
 }
 /// **REQUEST VALIDATION CONFIGURATION**
 #[derive(Debug, Clone)]
@@ -135,7 +135,7 @@ impl Default for SecurityHardeningConfig {
                 requests_per_minute: 1000,
                 burst_size: 100,
                 block_duration: Duration::from_secs(300),
-                whitelist: Vec::new(),
+                allowlist: Vec::new(),
             },
             validation: ValidationConfig {
                 max_request_size: 10 * 1024 * 1024, // 10MB

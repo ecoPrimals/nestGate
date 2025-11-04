@@ -31,18 +31,18 @@ pub struct AccessControlSettings {
     pub default_policy: String,
     /// Access control rules
     pub rules: Vec<String>,
-    /// IP whitelist
-    pub ip_whitelist: Vec<String>,
-    /// IP blacklist
-    pub ip_blacklist: Vec<String>,
-    /// User whitelist
-    pub user_whitelist: Vec<String>,
-    /// User blacklist
-    pub user_blacklist: Vec<String>,
-    /// Process whitelist
-    pub process_whitelist: Vec<String>,
-    /// Process blacklist
-    pub process_blacklist: Vec<String>,
+    /// IP allowlist
+    pub ip_allowlist: Vec<String>,
+    /// IP denylist
+    pub ip_denylist: Vec<String>,
+    /// User allowlist
+    pub user_allowlist: Vec<String>,
+    /// User denylist
+    pub user_denylist: Vec<String>,
+    /// Process allowlist
+    pub process_allowlist: Vec<String>,
+    /// Process denylist
+    pub process_denylist: Vec<String>,
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EncryptionSettings {

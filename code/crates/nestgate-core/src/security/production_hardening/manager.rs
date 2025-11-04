@@ -68,7 +68,7 @@ impl SecurityHardeningManager {
         let mut blocked = false;
 
         // 1. Rate limiting check
-        if !self.rate_limiter.read().await.is_whitelisted(source_ip) {
+        if !self.rate_limiter.read().await.is_allowed(source_ip) {
             match self.rate_limiter.write().await.check_rate_limit(source_ip).await {
                 Ok(allowed) => {
                     if !allowed {
