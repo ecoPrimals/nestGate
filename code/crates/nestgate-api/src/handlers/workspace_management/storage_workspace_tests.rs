@@ -511,8 +511,8 @@ mod tests {
         // Both should either succeed or fail consistently
         // (Second deletion should handle "already deleted" gracefully)
         if result1.is_ok() && result2.is_ok() {
-            let json1 = result1.unwrap().0;
-            let json2 = result2.unwrap().0;
+            let json1 = result1.expect("Storage operation failed").0;
+            let json2 = result2.expect("Storage operation failed").0;
 
             // Both should indicate success (even if already deleted)
             assert!(json1.get("status").is_some());

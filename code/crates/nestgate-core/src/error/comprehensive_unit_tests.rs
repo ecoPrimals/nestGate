@@ -98,7 +98,7 @@ mod error_comprehensive_tests {
     fn test_result_map() {
         let result: Result<i32> = Ok(42);
         let mapped = result.map(|x| x * 2);
-        assert_eq!(mapped.unwrap(), 84);
+        assert_eq!(mapped.expect("Test setup failed"), 84);
     }
 
     #[test]
@@ -117,7 +117,7 @@ mod error_comprehensive_tests {
     fn test_result_and_then() {
         let result: Result<i32> = Ok(42);
         let chained = result.map(|x| x + 10);
-        assert_eq!(chained.unwrap(), 52);
+        assert_eq!(chained.expect("Test setup failed"), 52);
     }
 
     #[test]
@@ -127,7 +127,7 @@ mod error_comprehensive_tests {
             "context".to_string(),
         ));
         let recovered: Result<i32> = result.or(Ok(100));
-        assert_eq!(recovered.unwrap(), 100);
+        assert_eq!(recovered.expect("Test setup failed"), 100);
     }
 
     #[test]

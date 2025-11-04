@@ -7,9 +7,9 @@ use rand::{Rng, SeedableRng};
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use crate::{NestGateError, Result};
-use crate::universal_traits::{ServiceInfo, ServiceRequest, ServiceResponse};
 use super::traits::{LoadBalancer, LoadBalancerStats};
+use crate::universal_traits::{ServiceInfo, ServiceRequest, ServiceResponse};
+use crate::{NestGateError, Result};
 
 /// Weighted round-robin load balancer
 pub struct WeightedRoundRobinLoadBalancer {
@@ -26,7 +26,7 @@ impl WeightedRoundRobinLoadBalancer {
             stats: Arc::new(parking_lot::RwLock::new(LoadBalancerStats {
                 algorithm: "weighted_round_robin".to_string(),
                 ..LoadBalancerStats::default()
-            }),
+            })),
         }
     }
 }
@@ -44,10 +44,13 @@ impl LoadBalancer for WeightedRoundRobinLoadBalancer {
         _request: &ServiceRequest,
     ) -> Result<ServiceInfo> {
         if services.is_empty() {
-            return Err(NestGateError::LoadBalancer {
-                message: "No services available".to_string(),
-                available_services: Some(0),
-            );
+            return Err(NestGateError::LoadBalancer(Box::new(
+                crate::error::variants::core_errors::LoadBalancerErrorDetails {
+                    message: "No services available".to_string(),
+                    available_services: Some(0),
+                    algorithm: Some("weighted_round_robin".to_string()),
+                },
+            )));
         }
 
         let weights = self.weights.read();
@@ -66,10 +69,12 @@ impl LoadBalancer for WeightedRoundRobinLoadBalancer {
 
         for service in services {
             let service_weight = weights.get(&service.name).copied().unwrap_or(1.0);
-            let current_weight = current_weights.get_mut(&service.name)
-            .ok_or_else(|| crate::error::NestGateError::internal_error(
-                format!("Service {service.name} not found in weight map")
-            ))?;
+            let current_weight = current_weights.get_mut(&service.name).ok_or_else(|| {
+                crate::error::NestGateError::internal_error(
+                    "weighted_balancer",
+                    format!("Service {} not found in weight map", service.name),
+                )
+            })?;
             *current_weight += service_weight;
 
             if *current_weight > max_weight {
@@ -84,7 +89,7 @@ impl LoadBalancer for WeightedRoundRobinLoadBalancer {
                 .iter()
                 .map(|s| weights.get(&s.name).copied().unwrap_or(1.0))
                 .sum();
-            
+
             if let Some(current_weight) = current_weights.get_mut(&selected.name) {
                 *current_weight -= total_weight;
             }
@@ -99,9 +104,14 @@ impl LoadBalancer for WeightedRoundRobinLoadBalancer {
                 .requests += 1;
         }
 
-        selected_service.ok_or_else(|| NestGateError::LoadBalancer {
-            message: "Failed to select service with weighted round-robin".to_string(),
-            available_services: Some(services.len()),
+        selected_service.ok_or_else(|| {
+            NestGateError::LoadBalancer(Box::new(
+                crate::error::variants::core_errors::LoadBalancerErrorDetails {
+                    message: "Failed to select service with weighted round-robin".to_string(),
+                    available_services: Some(services.len()),
+                    algorithm: Some("weighted_round_robin".to_string()),
+                },
+            ))
         })
     }
 
@@ -148,7 +158,7 @@ impl WeightedRandomLoadBalancer {
             stats: Arc::new(parking_lot::RwLock::new(LoadBalancerStats {
                 algorithm: "weighted_random".to_string(),
                 ..LoadBalancerStats::default()
-            }),
+            })),
         }
     }
 }
@@ -166,10 +176,13 @@ impl LoadBalancer for WeightedRandomLoadBalancer {
         _request: &ServiceRequest,
     ) -> Result<ServiceInfo> {
         if services.is_empty() {
-            return Err(NestGateError::LoadBalancer {
-                message: "No services available".to_string(),
-                available_services: Some(0),
-            );
+            return Err(NestGateError::LoadBalancer(Box::new(
+                crate::error::variants::core_errors::LoadBalancerErrorDetails {
+                    message: "No services available".to_string(),
+                    available_services: Some(0),
+                    algorithm: Some("weighted_random".to_string()),
+                },
+            )));
         }
 
         // Implement proper weighted random algorithm
@@ -183,19 +196,29 @@ impl LoadBalancer for WeightedRandomLoadBalancer {
 
         if total_weight <= 0.0 {
             // Fallback to uniform random if no valid weights
-            let mut rng = self.rng.lock().map_err(|_| NestGateError::LoadBalancer {
-                message: "Random number generator lock poisoned".to_string(),
-                available_services: Some(services.len()),
-            )?;
+            let mut rng = self.rng.lock().map_err(|_| {
+                NestGateError::LoadBalancer(Box::new(
+                    crate::error::variants::core_errors::LoadBalancerErrorDetails {
+                        message: "Random number generator lock poisoned".to_string(),
+                        available_services: Some(services.len()),
+                        algorithm: Some("weighted_random".to_string()),
+                    },
+                ))
+            })?;
             let index = rng.gen_range(0..services.len());
             return Ok(services[index].clone());
         }
 
         // Generate random number in [0, total_weight)
-        let mut rng = self.rng.lock().map_err(|_| NestGateError::LoadBalancer {
-            message: "Random number generator lock poisoned".to_string(),
-            available_services: Some(services.len()),
-        )?;
+        let mut rng = self.rng.lock().map_err(|_| {
+            NestGateError::LoadBalancer(Box::new(
+                crate::error::variants::core_errors::LoadBalancerErrorDetails {
+                    message: "Random number generator lock poisoned".to_string(),
+                    available_services: Some(services.len()),
+                    algorithm: Some("weighted_random".to_string()),
+                },
+            ))
+        })?;
         let random_weight = rng.gen::<f64>() * total_weight;
         drop(rng);
 
@@ -248,4 +271,4 @@ impl LoadBalancer for WeightedRandomLoadBalancer {
     fn algorithm(&self) -> &'static str {
         "weighted_random"
     }
-} 
+}

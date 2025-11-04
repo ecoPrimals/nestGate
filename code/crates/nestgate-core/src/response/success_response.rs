@@ -215,7 +215,7 @@ mod tests {
         let response = SuccessResponse::new("Test").add_data("key", serde_json::json!("value"));
 
         assert!(response.data.is_some());
-        let data = response.data.unwrap();
+        let data = response.data.expect("Operation failed");
         assert_eq!(data["key"], serde_json::json!("value"));
     }
 

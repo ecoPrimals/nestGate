@@ -258,6 +258,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[allow(deprecated)]
     async fn test_authentication_success() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let provider = MockSecurityProvider::new();
         let credentials = Credentials {
@@ -277,6 +278,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[allow(deprecated)]
     async fn test_authentication_failure() {
         let provider = MockSecurityProvider::new();
         let credentials = Credentials {
@@ -295,7 +297,10 @@ mod tests {
         let provider = MockSecurityProvider::new();
         let data = b"Hello, World!";
 
-        let encrypted = provider.encrypt(data, "AES256").await.unwrap();
+        let encrypted = provider
+            .encrypt(data, "AES256")
+            .await
+            .expect("Security operation failed");
         assert_ne!(encrypted.as_slice(), data);
 
         let decrypted = provider.decrypt(&encrypted, "AES256").await?;

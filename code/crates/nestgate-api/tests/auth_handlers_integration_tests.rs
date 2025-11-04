@@ -306,7 +306,11 @@ fn test_auth_status_special_chars_in_user_id() {
         permissions: vec![],
     };
 
-    assert!(status.user_id.as_ref().unwrap().contains('@'));
+    assert!(status
+        .user_id
+        .as_ref()
+        .expect("Authentication failed")
+        .contains('@'));
     assert!(status.user_id.is_some());
 }
 
@@ -367,7 +371,14 @@ fn test_auth_status_empty_string_user_id() {
     };
 
     assert!(status.user_id.is_some());
-    assert_eq!(status.user_id.as_ref().unwrap().len(), 0);
+    assert_eq!(
+        status
+            .user_id
+            .as_ref()
+            .expect("Authentication failed")
+            .len(),
+        0
+    );
 }
 
 // ==================== CLONE AND DEBUG TESTS ====================

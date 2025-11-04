@@ -368,7 +368,7 @@ mod compliance_types_tests {
 
         assert_eq!(context.frameworks.len(), 2);
         assert_eq!(context.metadata.len(), 2);
-        assert_eq!(context.metadata.get("region").unwrap(), "eu-west-1");
+        assert_eq!(context.metadata.get("region").expect("Test setup failed"), "eu-west-1");
     }
 
     // ==================== COMPLIANCE SCAN REQUEST TESTS ====================

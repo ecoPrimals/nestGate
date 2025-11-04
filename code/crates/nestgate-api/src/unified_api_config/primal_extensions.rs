@@ -371,13 +371,17 @@ impl Default for PrimalDiscoverySettings {
 }
 
 impl Default for NetworkDiscoverySettings {
-    fn default() -> Self { Self {
+    fn default() -> Self { 
+        use nestgate_core::constants::hardcoding::ports;
+        
+        Self {
             mdns_enabled: true,
             mdns_service_name: "_nestgate._tcp".to_string(),
             broadcast_enabled: false,
-            discovery_port_range: (8000, 8100),
+            discovery_port_range: (ports::HTTP_DEFAULT, ports::ADMIN_DEFAULT),
             discovery_timeout: Duration::from_secs(5),
-         }
+        }
+    }
 }
 
 impl Default for ServiceRegistrySettings {
@@ -464,13 +468,25 @@ impl Default for CircuitBreakerSettings {
 }
 
 impl Default for PrimalEndpointSettings {
-    fn default() -> Self { Self {
-            base_url: "http://localhost:".to_string() + &env::var("NESTGATE_API_PORT").unwrap_or_else(|_| "8080".to_string()).to_string(),
+    fn default() -> Self { 
+        use nestgate_core::constants::hardcoding::{addresses, ports};
+        use std::env;
+        
+        let host = env::var("NESTGATE_API_HOST")
+            .unwrap_or_else(|_| addresses::LOCALHOST_NAME.to_string());
+        let port = env::var("NESTGATE_API_PORT")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(ports::HTTP_DEFAULT);
+        
+        Self {
+            base_url: format!("http://{}:{}", host, port),
             api_version: "v1".to_string(),
             endpoints: HashMap::new(),
             request_timeout: Duration::from_secs(30),
             retry_config: RetrySettings::default(),
-         }
+        }
+    }
 }
 
 impl Default for RetrySettings {

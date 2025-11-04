@@ -605,7 +605,7 @@ mod tests {
             new_value: 2.0,
             timestamp: SystemTime::now(),
         };
-        let elapsed = action.timestamp.elapsed().unwrap();
+        let elapsed = action.timestamp.elapsed().expect("Operation failed");
         assert!(elapsed.as_secs() < 1);
     }
 

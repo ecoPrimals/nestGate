@@ -157,7 +157,7 @@ mod tests {
         let serialized = serde_json::to_string(&error);
         assert!(serialized.is_ok(), "ErrorResponse should serialize");
 
-        let json = serialized.unwrap();
+        let json = serialized.expect("Operation failed");
         assert!(json.contains("\"error\":\"Test error\""));
         assert!(json.contains("\"code\":\"TEST_ERROR\""));
     }

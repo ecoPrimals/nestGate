@@ -347,7 +347,7 @@ mod tests {
         let result = create_api_key(State(handler), Json(request)).await;
         assert!(result.is_ok());
         
-        let Json(response) = result.unwrap();
+        let Json(response) = result.expect("Authentication failed");
         assert!(response.api_key.starts_with("nestgate_"));
         assert_eq!(response.user_id, "testuser");
         assert_eq!(response.name, "test_key");
@@ -401,7 +401,7 @@ mod tests {
         let json = serde_json::to_string(&creds);
         assert!(json.is_ok());
         
-        let json_str = json.unwrap();
+        let json_str = json.expect("Authentication failed");
         assert!(json_str.contains("testuser"));
         assert!(json_str.contains("testpass"));
     }
@@ -644,7 +644,7 @@ mod tests {
         let response: Result<AuthResponse, _> = serde_json::from_str(json_str);
         assert!(response.is_ok());
         
-        let response = response.unwrap();
+        let response = response.expect("Authentication failed");
         assert_eq!(response.role, "moderator");
         assert_eq!(response.permissions.len(), 2);
     }

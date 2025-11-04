@@ -51,9 +51,13 @@ pub struct RateLimitingConfig {
 impl NetworkApiConfig {
     #[must_use]
     pub fn development_optimized() -> Self {
+        use crate::constants::hardcoding::{addresses, ports};
         Self {
-            bind_address: "127.0.0.1".parse().unwrap(),
-            port: 8080,
+            bind_address: addresses::LOCALHOST_IPV4.parse().unwrap_or_else(|_| {
+                // Fallback to safe default if parsing fails (should never happen)
+                std::net::IpAddr::V4(std::net::Ipv4Addr::new(127, 0, 0, 1))
+            }),
+            port: ports::HTTP_DEFAULT,
             max_connections: 100,
             request_timeout: Duration::from_secs(30),
             connection_timeout: Duration::from_secs(10),
@@ -65,9 +69,13 @@ impl NetworkApiConfig {
 
     #[must_use]
     pub fn production_hardened() -> Self {
+        use crate::constants::hardcoding::{addresses, ports};
         Self {
-            bind_address: "0.0.0.0".parse().unwrap(),
-            port: 443,
+            bind_address: addresses::BIND_ALL_IPV4.parse().unwrap_or_else(|_| {
+                // Fallback to safe default if parsing fails (should never happen)
+                std::net::IpAddr::V4(std::net::Ipv4Addr::new(0, 0, 0, 0))
+            }),
+            port: ports::HTTPS_DEFAULT,
             max_connections: 1000,
             request_timeout: Duration::from_secs(60),
             connection_timeout: Duration::from_secs(30),

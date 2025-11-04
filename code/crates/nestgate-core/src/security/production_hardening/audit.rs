@@ -75,6 +75,6 @@ mod tests {
         };
 
         // Should not panic
-        logger.log_security_event(&event).await.unwrap();
+        logger.log_security_event(&event).await.expect("Security operation failed");
     }
 } 

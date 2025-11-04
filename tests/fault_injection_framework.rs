@@ -4,7 +4,6 @@
 //! **CANONICAL MODERNIZATION**: Updated to use simple, working patterns
 
 use nestgate_core::config::canonical_master::NestGateCanonicalConfig;
-use nestgate_core::constants::Environment;
 use std::time::Duration;
 use tokio::time::sleep;
 use tracing::info;
@@ -15,7 +14,7 @@ async fn test_fault_injection_config() -> Result<(), Box<dyn std::error::Error>>
     info!("💉 Starting fault injection configuration test");
 
     // Test fault injection configuration creation
-    let config = NestGateCanonicalUnifiedConfig::default();
+    let config = NestGateCanonicalConfig::default();
     assert!(!config.system.instance_name.is_empty());
 
     // Test environment-specific fault injection configuration

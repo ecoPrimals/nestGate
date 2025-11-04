@@ -52,7 +52,7 @@ mod tests {
 
         assert!(result.is_ok(), "get_storage_pools should succeed");
 
-        let pools = result.unwrap();
+        let pools = result.expect("Storage operation failed");
 
         // Verify we get pools back
         assert_eq!(pools.0.len(), 2, "Should return 2 mock pools");
@@ -77,7 +77,7 @@ mod tests {
 
         assert!(result.is_ok(), "get_storage_datasets should succeed");
 
-        let datasets = result.unwrap();
+        let datasets = result.expect("Storage operation failed");
 
         // Verify we get datasets back
         assert_eq!(datasets.0.len(), 2, "Should return 2 mock datasets");
@@ -102,7 +102,7 @@ mod tests {
 
         assert!(result.is_ok(), "get_storage_snapshots should succeed");
 
-        let snapshots = result.unwrap();
+        let snapshots = result.expect("Storage operation failed");
 
         // Verify we get snapshots back
         assert_eq!(snapshots.0.len(), 2, "Should return 2 mock snapshots");
@@ -125,7 +125,7 @@ mod tests {
 
         assert!(result.is_ok(), "get_storage_metrics should succeed");
 
-        let metrics = result.unwrap();
+        let metrics = result.expect("Storage operation failed");
 
         // Verify all metric fields
         assert_eq!(metrics.0.total_pools, 2);
@@ -360,7 +360,7 @@ mod tests {
             let result = get_storage_pools().await;
             assert!(result.is_ok(), "Each request should succeed");
 
-            let pools = result.unwrap();
+            let pools = result.expect("Storage operation failed");
 
             assert_eq!(pools.0.len(), 2, "Should always return 2 pools");
         }
@@ -369,7 +369,7 @@ mod tests {
     #[tokio::test]
     async fn test_storage_metrics_calculations() {
         let result = get_storage_metrics().await;
-        let metrics = result.unwrap();
+        let metrics = result.expect("Storage operation failed");
 
         // Verify storage calculations
         assert_eq!(

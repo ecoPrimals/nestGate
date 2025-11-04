@@ -4,7 +4,7 @@
 //! and reduce connection overhead. Works with HTTP clients, database connections,
 //! or any resource that benefits from pooling.
 
-use crate::error::{NestGateError, RecoveryStrategy, Result, SystemResource};
+use crate::error::{NestGateError, Result};
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -110,10 +110,10 @@ where
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn new<F>(config: ConnectionPoolConfig, connection_factory: F) -> Self
+    pub fn new<F>(config: ConnectionPoolConfig, connection_factory: F) -> Self
     where
         F: Fn() -> Result<T> + Send + Sync + 'static,
-     {
+    {
         info!(
             "🏊 Creating universal connection pool with max {} connections",
             config.max_connections
@@ -136,16 +136,16 @@ where
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn get_connection(self: &Arc<Self>) -> Result<PooledConnectionGuard<T>>  {
-        let permit =
-            self.semaphore
-                .clone()
-                .acquire_owned()
-                .await
-                .map_err(|_| NestGateError::System {
-                    message: "Failed to acquire connection permit".to_string(),
-                    recovery: RecoveryStrategy::Retry,
-                )?;
+    pub async fn get_connection(self: &Arc<Self>) -> Result<PooledConnectionGuard<T>> {
+        let permit = self.semaphore.clone().acquire_owned().await.map_err(|_| {
+            NestGateError::Internal(Box::new(crate::error::InternalErrorDetails {
+                message: "Failed to acquire connection permit".to_string(),
+                component: "connection_pool".to_string(),
+                location: None,
+                is_bug: false,
+                context: None,
+            }))
+        })?;
 
         // Try to find an idle connection
         let mut connections = self.connections.write().await;
@@ -161,14 +161,12 @@ where
                 drop(connections); // Release the lock
 
                 let new_connection = (self.connection_factory)().inspect_err(|_e| {
-                    tokio::spawn({
-                        let stats = self.stats.clone();
-                        async move {
-                            let mut stats = stats.write().await;
-                            stats.connection_timeouts += 1;
-                        }
-                    );
-                )?;
+                    let stats = self.stats.clone();
+                    tokio::spawn(async move {
+                        let mut stats = stats.write().await;
+                        stats.connection_timeouts += 1;
+                    });
+                })?;
 
                 return Ok(PooledConnectionGuard::new(
                     new_connection,
@@ -181,14 +179,12 @@ where
         // No idle connection available, create a new one
         debug!("🆕 Creating new connection for pool");
         let new_connection = (self.connection_factory)().inspect_err(|_e| {
-            tokio::spawn({
-                let stats = self.stats.clone();
-                async move {
-                    let mut stats = stats.write().await;
-                    stats.connection_timeouts += 1;
-                }
-            );
-        )?;
+            let stats = self.stats.clone();
+            tokio::spawn(async move {
+                let mut stats = stats.write().await;
+                stats.connection_timeouts += 1;
+            });
+        })?;
 
         // Update stats
         let mut stats = self.stats.write().await;
@@ -276,7 +272,7 @@ where
 
                 connections.retain(|conn| {
                     !conn.is_idle_too_long(max_idle_time) || initial_count <= min_connections
-                );
+                });
 
                 let removed_count = initial_count - connections.len();
                 if removed_count > 0 {
@@ -345,7 +341,7 @@ impl ConnectionPoolManager {
     }
 
     /// Register a connection pool for a specific provider
-    pub fn register_pool<T>(&self, provider_name: String, pool: UniversalConnectionPool<T>)
+    pub async fn register_pool<T>(&self, provider_name: String, pool: UniversalConnectionPool<T>)
     where
         T: Send + Sync + 'static,
     {
@@ -383,8 +379,15 @@ impl HttpConnectionPool {
             reqwest::Client::builder()
                 .timeout(Duration::from_secs(30))
                 .build()
-                .map_err(|e| NestGateError::internal_error(
-                    location: Some("Self::new_http_pool".to_string())})
+                .map_err(|e| {
+                    NestGateError::Internal(Box::new(crate::error::InternalErrorDetails {
+                        message: format!("HTTP client creation failed: {}", e),
+                        component: "http_connection_pool".to_string(),
+                        location: None,
+                        is_bug: false,
+                        context: None,
+                    }))
+                })
         })
     }
 }

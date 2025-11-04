@@ -226,10 +226,19 @@ impl ZfsServiceFactory {
 
     /// Detect remote ZFS services
     async fn detect_remote_services() -> Option<Arc<dyn UniversalZfsService>> {
+        use nestgate_core::constants::hardcoding::{addresses, ports};
+        
         // Check common service discovery endpoints
         let endpoints = vec![
-            "http://localhost:8080/api/v1/zfs/health",
-            "http://zfs-service:8080/api/v1/zfs/health",
+            format!("http://{}:{}/api/v1/zfs/health", 
+                std::env::var("NESTGATE_ZFS_SERVICE_HOST")
+                    .unwrap_or_else(|_| addresses::LOCALHOST_NAME.to_string()),
+                std::env::var("NESTGATE_ZFS_SERVICE_PORT")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(ports::HTTP_DEFAULT)
+            ),
+            format!("http://zfs-service:{}/api/v1/zfs/health", ports::HTTP_DEFAULT),
         ];
 
         for endpoint in endpoints {

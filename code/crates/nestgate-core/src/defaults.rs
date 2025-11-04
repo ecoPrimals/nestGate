@@ -3,28 +3,33 @@
 //! This module provides centralized default values to eliminate hardcoding
 //! throughout the codebase while maintaining sovereignty principles.
 
+use crate::constants::hardcoding::{addresses, ports};
 use std::time::Duration;
 
 /// **NETWORK DEFAULTS**
 pub mod network {
+    use super::*;
+
     /// Default API port - can be overridden with `NESTGATE_API_PORT`
-    pub const DEFAULT_API_PORT: u16 = 8080;
+    pub const DEFAULT_API_PORT: u16 = ports::HTTP_DEFAULT;
 
     /// Default bind address - can be overridden with `NESTGATE_BIND_ADDRESS`  
-    pub const DEFAULT_BIND_ADDRESS: &str = "0.0.0.0";
+    pub const DEFAULT_BIND_ADDRESS: &str = addresses::BIND_ALL_IPV4;
 
     /// Default hostname for development - can be overridden with `NESTGATE_HOSTNAME`
-    pub const DEFAULT_HOSTNAME: &str = "localhost";
+    pub const DEFAULT_HOSTNAME: &str = addresses::LOCALHOST_NAME;
 
     /// Default WebSocket port - can be overridden with `NESTGATE_WS_PORT`
-    pub const DEFAULT_WS_PORT: u16 = 8081;
+    pub const DEFAULT_WS_PORT: u16 = ports::WEBSOCKET_DEFAULT;
 
     /// Default health check port - can be overridden with `NESTGATE_HEALTH_PORT`
-    pub const DEFAULT_HEALTH_PORT: u16 = 8082;
+    pub const DEFAULT_HEALTH_PORT: u16 = ports::HEALTH_CHECK;
 }
 
 /// **DATABASE DEFAULTS**
 pub mod database {
+    use super::addresses;
+
     /// Default `PostgreSQL` port - can be overridden with `NESTGATE_DB_PORT`
     pub const DEFAULT_POSTGRES_PORT: u16 = 5432;
 
@@ -32,7 +37,7 @@ pub mod database {
     pub const DEFAULT_REDIS_PORT: u16 = 6379;
 
     /// Default database host - can be overridden with `NESTGATE_DB_HOST`
-    pub const DEFAULT_DB_HOST: &str = "localhost";
+    pub const DEFAULT_DB_HOST: &str = addresses::LOCALHOST_NAME;
 }
 
 /// **MONITORING DEFAULTS**
@@ -221,8 +226,8 @@ mod tests {
         assert_eq!(network::DEFAULT_API_PORT, 8080);
         assert_eq!(network::DEFAULT_BIND_ADDRESS, "0.0.0.0");
         assert_eq!(network::DEFAULT_HOSTNAME, "localhost");
-        assert_eq!(network::DEFAULT_WS_PORT, 8081);
-        assert_eq!(network::DEFAULT_HEALTH_PORT, 8082);
+        assert_eq!(network::DEFAULT_WS_PORT, 8082); // WEBSOCKET_DEFAULT = 8082
+        assert_eq!(network::DEFAULT_HEALTH_PORT, 8081); // HEALTH_CHECK = 8081
     }
 
     #[test]
@@ -342,6 +347,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_websocket_url_format() {
         env::remove_var("NESTGATE_HOSTNAME");
         env::remove_var("NESTGATE_WS_PORT");
@@ -349,10 +355,11 @@ mod tests {
         let url = urls::websocket_url();
         assert!(url.starts_with("ws://"));
         assert!(url.contains("localhost"));
-        assert!(url.contains("8081"));
+        assert!(url.contains("8082")); // WEBSOCKET_DEFAULT = 8082
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_health_url_format() {
         env::remove_var("NESTGATE_HOSTNAME");
         env::remove_var("NESTGATE_HEALTH_PORT");
@@ -360,7 +367,7 @@ mod tests {
         let url = urls::health_url();
         assert!(url.starts_with("http://"));
         assert!(url.contains("localhost"));
-        assert!(url.contains("8082"));
+        assert!(url.contains("8081")); // HEALTH_CHECK = 8081
         assert!(url.ends_with("/health"));
     }
 

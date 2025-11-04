@@ -5,7 +5,7 @@ pub use super::Result;
 use crate::error::NestGateError;
 use std::collections::HashMap;
 /// **SAFE COLLECTION ACCESS**
-/// Replaces vec[index], map; `safe_unwrap!(.get()`, "map access") etc.
+/// Replaces `vec[index]`, `map.get()`, and similar operations that might panic.
 pub fn safe_get<T: Clone>(collection: &[T], index: usize, context: &str) -> Result<T> {
     collection.get(index).cloned().ok_or_else(|| {
         NestGateError::internal_error(

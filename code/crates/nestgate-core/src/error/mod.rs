@@ -191,6 +191,8 @@ pub fn analyze_error_patterns(errors: &[NestGateError]) -> HashMap<String, usize
             NestGateError::Testing(_) => "Testing",
             NestGateError::Performance(_) => "Performance",
             NestGateError::Handler(_) => "Handler",
+            NestGateError::LoadBalancer(_) => "LoadBalancer",
+            NestGateError::NotImplemented(_) => "NotImplemented",
         };
 
         *patterns.entry(pattern.to_string()).or_insert(0) += 1;
@@ -404,7 +406,7 @@ mod error_path_tests {
         let canonical_result = migrate_result(legacy_result);
 
         assert!(canonical_result.is_ok());
-        assert_eq!(canonical_result.unwrap(), 42);
+        assert_eq!(canonical_result.expect("Operation failed"), 42);
     }
 
     // ==================== Error Utility Tests (2 tests) ====================
@@ -415,7 +417,7 @@ mod error_path_tests {
         let canonical: Result<String> = to_canonical(result.map_err(|_| internal_error!("Failed")));
 
         assert!(canonical.is_ok());
-        assert_eq!(canonical.unwrap(), "success");
+        assert_eq!(canonical.expect("Operation failed"), "success");
     }
 
     #[test]

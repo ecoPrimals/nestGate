@@ -286,7 +286,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_zero_cost_filesystem_backend() -> crate::Result<()> {
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new().expect("Storage operation failed");
         let mut backend =
             ZeroCostFilesystemBackend::<100, 10, 5>::new(temp_dir.path().to_path_buf());
 
@@ -296,25 +296,31 @@ mod tests {
             sync_writes: false,
         };
 
-        backend.initialize(config).await.unwrap();
+        backend
+            .initialize(config)
+            .await
+            .expect("Storage operation failed");
 
         let test_data = vec![72, 101, 108, 108, 111, 44, 32, 119, 111, 114, 108, 100, 33];
-        backend.write(test_data.clone()).await.unwrap();
+        backend
+            .write(test_data.clone())
+            .await
+            .expect("Storage operation failed");
 
-        let read_data = backend.read().await.unwrap();
+        let read_data = backend.read().await.expect("Storage operation failed");
         assert_eq!(read_data, test_data);
 
-        assert!(backend.exists().await.unwrap());
+        assert!(backend.exists().await.expect("Storage operation failed"));
 
-        let metadata = backend.metadata().await.unwrap();
+        let metadata = backend.metadata().await.expect("Storage operation failed");
         assert_eq!(metadata.size, test_data.len() as u64);
         assert!(!metadata.is_dir);
 
-        let entries = backend.list().await.unwrap();
+        let entries = backend.list().await.expect("Storage operation failed");
         assert!(!entries.is_empty());
 
-        backend.delete().await.unwrap();
-        assert!(!backend.exists().await.unwrap());
+        backend.delete().await.expect("Storage operation failed");
+        assert!(!backend.exists().await.expect("Storage operation failed"));
         Ok(())
     }
 

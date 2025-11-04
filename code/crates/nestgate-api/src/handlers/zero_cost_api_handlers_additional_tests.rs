@@ -12,7 +12,7 @@ fn test_pool_handler_list_pools() {
     let result = handler.handle_list_pools();
 
     assert!(result.is_ok());
-    let pools = result.unwrap().0;
+    let pools = result.expect("Test setup failed").0;
     assert_eq!(pools.len(), 2);
     assert!(pools[0].get("name").is_some());
 }
@@ -23,7 +23,7 @@ fn test_pool_handler_get_pool_tank() {
     let result = handler.handle_get_pool("tank".to_string());
 
     assert!(result.is_ok());
-    let pool = result.unwrap().0;
+    let pool = result.expect("Test setup failed").0;
     assert_eq!(pool.get("name").and_then(|v| v.as_str()), Some("tank"));
     assert_eq!(pool.get("state").and_then(|v| v.as_str()), Some("ONLINE"));
 }
@@ -34,7 +34,7 @@ fn test_pool_handler_get_pool_backup() {
     let result = handler.handle_get_pool("backup".to_string());
 
     assert!(result.is_ok());
-    let pool = result.unwrap().0;
+    let pool = result.expect("Test setup failed").0;
     assert_eq!(pool.get("name").and_then(|v| v.as_str()), Some("backup"));
 }
 
@@ -60,7 +60,7 @@ fn test_pool_handler_create_pool() {
     let result = handler.handle_create_pool(config);
     assert!(result.is_ok());
 
-    let response = result.unwrap().0;
+    let response = result.expect("Test setup failed").0;
     assert_eq!(
         response.get("status").and_then(|v| v.as_str()),
         Some("created")
@@ -73,7 +73,7 @@ fn test_pool_handler_delete_pool_tank() {
     let result = handler.handle_delete_pool("tank".to_string());
 
     assert!(result.is_ok());
-    let response = result.unwrap().0;
+    let response = result.expect("Test setup failed").0;
     assert_eq!(
         response.get("status").and_then(|v| v.as_str()),
         Some("deleted")
@@ -184,7 +184,7 @@ fn test_dataset_type_volume() {
     let json = serde_json::to_string(&dataset_type);
     assert!(json.is_ok());
 
-    let json_str = json.unwrap();
+    let json_str = json.expect("Test setup failed");
     assert!(json_str.contains("Volume"));
 }
 
@@ -346,7 +346,7 @@ fn test_api_status_warning_serialization() {
     };
     let json = serde_json::to_string(&status);
     assert!(json.is_ok());
-    assert!(json.unwrap().contains("Deprecation"));
+    assert!(json.expect("Test setup failed").contains("Deprecation"));
 }
 
 #[test]
@@ -358,7 +358,7 @@ fn test_api_status_error_serialization() {
     let json = serde_json::to_string(&status);
     assert!(json.is_ok());
 
-    let json_str = json.unwrap();
+    let json_str = json.expect("Test setup failed");
     assert!(json_str.contains("ERR500"));
     assert!(json_str.contains("Internal server error"));
 }
@@ -382,7 +382,7 @@ fn test_dataset_config_serialization() {
     let json = serde_json::to_string(&config);
     assert!(json.is_ok());
 
-    let json_str = json.unwrap();
+    let json_str = json.expect("Test setup failed");
     assert!(json_str.contains("test"));
     assert!(json_str.contains("tank"));
 }

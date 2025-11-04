@@ -179,7 +179,7 @@ mod tests {
         let result = router.route_to_storage("create").await;
         assert!(result.is_ok());
 
-        let endpoint = result.unwrap();
+        let endpoint = result.expect("Operation failed");
         assert!(endpoint.starts_with("storage://"));
         assert!(endpoint.contains("universal"));
     }
@@ -189,10 +189,16 @@ mod tests {
         let router = create_test_router();
 
         // First call - should be stored in cache
-        let result1 = router.route_to_storage("create").await.unwrap();
+        let result1 = router
+            .route_to_storage("create")
+            .await
+            .expect("Operation failed");
 
         // Second call - should return cached value
-        let result2 = router.route_to_storage("read").await.unwrap();
+        let result2 = router
+            .route_to_storage("read")
+            .await
+            .expect("Operation failed");
 
         assert_eq!(result1, result2);
     }
@@ -204,7 +210,7 @@ mod tests {
         let result = router.route_to_orchestration("deploy").await;
         assert!(result.is_ok());
 
-        let endpoint = result.unwrap();
+        let endpoint = result.expect("Operation failed");
         assert!(endpoint.starts_with("orchestration://"));
         assert!(endpoint.contains("universal"));
     }
@@ -213,8 +219,14 @@ mod tests {
     async fn test_route_to_orchestration_caching() {
         let router = create_test_router();
 
-        let result1 = router.route_to_orchestration("deploy").await.unwrap();
-        let result2 = router.route_to_orchestration("scale").await.unwrap();
+        let result1 = router
+            .route_to_orchestration("deploy")
+            .await
+            .expect("Operation failed");
+        let result2 = router
+            .route_to_orchestration("scale")
+            .await
+            .expect("Operation failed");
 
         assert_eq!(result1, result2);
     }
@@ -226,7 +238,7 @@ mod tests {
         let result = router.route_to_security("authenticate").await;
         assert!(result.is_ok());
 
-        let endpoint = result.unwrap();
+        let endpoint = result.expect("Operation failed");
         assert!(endpoint.starts_with("security://"));
         assert!(endpoint.contains("universal"));
     }
@@ -235,8 +247,14 @@ mod tests {
     async fn test_route_to_security_caching() {
         let router = create_test_router();
 
-        let result1 = router.route_to_security("auth").await.unwrap();
-        let result2 = router.route_to_security("authorize").await.unwrap();
+        let result1 = router
+            .route_to_security("auth")
+            .await
+            .expect("Operation failed");
+        let result2 = router
+            .route_to_security("authorize")
+            .await
+            .expect("Operation failed");
 
         assert_eq!(result1, result2);
     }
@@ -248,7 +266,7 @@ mod tests {
         let result = router.route_to_ai("predict").await;
         assert!(result.is_ok());
 
-        let endpoint = result.unwrap();
+        let endpoint = result.expect("Operation failed");
         assert!(endpoint.starts_with("ai://"));
         assert!(endpoint.contains("universal"));
     }
@@ -257,8 +275,14 @@ mod tests {
     async fn test_route_to_ai_caching() {
         let router = create_test_router();
 
-        let result1 = router.route_to_ai("predict").await.unwrap();
-        let result2 = router.route_to_ai("analyze").await.unwrap();
+        let result1 = router
+            .route_to_ai("predict")
+            .await
+            .expect("Operation failed");
+        let result2 = router
+            .route_to_ai("analyze")
+            .await
+            .expect("Operation failed");
 
         assert_eq!(result1, result2);
     }
@@ -269,7 +293,7 @@ mod tests {
 
         let result = router.route_to_capability("storage").await;
         assert!(result.is_ok());
-        assert!(result.unwrap().starts_with("storage://"));
+        assert!(result.expect("Operation failed").starts_with("storage://"));
     }
 
     #[tokio::test]
@@ -278,7 +302,7 @@ mod tests {
 
         let result = router.route_to_capability("zfs").await;
         assert!(result.is_ok());
-        assert!(result.unwrap().starts_with("storage://"));
+        assert!(result.expect("Operation failed").starts_with("storage://"));
     }
 
     #[tokio::test]
@@ -287,7 +311,7 @@ mod tests {
 
         let result = router.route_to_capability("nas").await;
         assert!(result.is_ok());
-        assert!(result.unwrap().starts_with("storage://"));
+        assert!(result.expect("Operation failed").starts_with("storage://"));
     }
 
     #[tokio::test]
@@ -296,7 +320,9 @@ mod tests {
 
         let result = router.route_to_capability("orchestration").await;
         assert!(result.is_ok());
-        assert!(result.unwrap().starts_with("orchestration://"));
+        assert!(result
+            .expect("Operation failed")
+            .starts_with("orchestration://"));
     }
 
     #[tokio::test]
@@ -305,7 +331,9 @@ mod tests {
 
         let result = router.route_to_capability("workflow").await;
         assert!(result.is_ok());
-        assert!(result.unwrap().starts_with("orchestration://"));
+        assert!(result
+            .expect("Operation failed")
+            .starts_with("orchestration://"));
     }
 
     #[tokio::test]
@@ -314,7 +342,9 @@ mod tests {
 
         let result = router.route_to_capability("service-mesh").await;
         assert!(result.is_ok());
-        assert!(result.unwrap().starts_with("orchestration://"));
+        assert!(result
+            .expect("Operation failed")
+            .starts_with("orchestration://"));
     }
 
     #[tokio::test]
@@ -323,7 +353,7 @@ mod tests {
 
         let result = router.route_to_capability("security").await;
         assert!(result.is_ok());
-        assert!(result.unwrap().starts_with("security://"));
+        assert!(result.expect("Operation failed").starts_with("security://"));
     }
 
     #[tokio::test]
@@ -332,7 +362,7 @@ mod tests {
 
         let result = router.route_to_capability("auth").await;
         assert!(result.is_ok());
-        assert!(result.unwrap().starts_with("security://"));
+        assert!(result.expect("Operation failed").starts_with("security://"));
     }
 
     #[tokio::test]
@@ -341,7 +371,7 @@ mod tests {
 
         let result = router.route_to_capability("authorization").await;
         assert!(result.is_ok());
-        assert!(result.unwrap().starts_with("security://"));
+        assert!(result.expect("Operation failed").starts_with("security://"));
     }
 
     #[tokio::test]
@@ -350,7 +380,7 @@ mod tests {
 
         let result = router.route_to_capability("ai").await;
         assert!(result.is_ok());
-        assert!(result.unwrap().starts_with("ai://"));
+        assert!(result.expect("Operation failed").starts_with("ai://"));
     }
 
     #[tokio::test]
@@ -359,7 +389,7 @@ mod tests {
 
         let result = router.route_to_capability("ml").await;
         assert!(result.is_ok());
-        assert!(result.unwrap().starts_with("ai://"));
+        assert!(result.expect("Operation failed").starts_with("ai://"));
     }
 
     #[tokio::test]
@@ -368,7 +398,7 @@ mod tests {
 
         let result = router.route_to_capability("analytics").await;
         assert!(result.is_ok());
-        assert!(result.unwrap().starts_with("ai://"));
+        assert!(result.expect("Operation failed").starts_with("ai://"));
     }
 
     #[tokio::test]
@@ -380,7 +410,7 @@ mod tests {
         let result = router.route_to_capability("custom-service").await;
         // Generic capabilities that aren't discovered will fail
         // This is correct - the router can't route to non-existent services
-        assert!(result.is_err() || result.unwrap().contains("universal"));
+        assert!(result.is_err() || result.expect("Operation failed").contains("universal"));
     }
 
     #[tokio::test]
@@ -427,13 +457,19 @@ mod tests {
         let router = create_test_router();
 
         // Route to storage (caches endpoint)
-        let endpoint1 = router.route_to_storage("create").await.unwrap();
+        let endpoint1 = router
+            .route_to_storage("create")
+            .await
+            .expect("Operation failed");
 
         // Clear cache
         router.clear_cache().await;
 
         // Route again (should re-discover)
-        let endpoint2 = router.route_to_storage("read").await.unwrap();
+        let endpoint2 = router
+            .route_to_storage("read")
+            .await
+            .expect("Operation failed");
 
         // Should get same endpoint (though it was re-discovered)
         assert_eq!(endpoint1, endpoint2);
@@ -444,10 +480,19 @@ mod tests {
         let router = create_test_router();
 
         // Route to multiple capabilities
-        let storage = router.route_to_storage("test").await.unwrap();
-        let orchestration = router.route_to_orchestration("test").await.unwrap();
-        let security = router.route_to_security("test").await.unwrap();
-        let ai = router.route_to_ai("test").await.unwrap();
+        let storage = router
+            .route_to_storage("test")
+            .await
+            .expect("Operation failed");
+        let orchestration = router
+            .route_to_orchestration("test")
+            .await
+            .expect("Operation failed");
+        let security = router
+            .route_to_security("test")
+            .await
+            .expect("Operation failed");
+        let ai = router.route_to_ai("test").await.expect("Operation failed");
 
         // Verify all are different
         assert_ne!(storage, orchestration);
@@ -475,7 +520,7 @@ mod tests {
         let results = tokio::try_join!(h1, h2, h3);
         assert!(results.is_ok());
 
-        let (storage, orchestration, security) = results.unwrap();
+        let (storage, orchestration, security) = results.expect("Operation failed");
         assert!(storage.is_ok());
         assert!(orchestration.is_ok());
         assert!(security.is_ok());
@@ -496,7 +541,12 @@ mod tests {
         // Capability with special characters - may not be discovered
         let result = router.route_to_capability("test-capability-123").await;
         // This can fail if capability is not found, which is expected
-        assert!(result.is_err() || result.unwrap().contains("test-capability-123"));
+        assert!(
+            result.is_err()
+                || result
+                    .expect("Operation failed")
+                    .contains("test-capability-123")
+        );
     }
 
     #[tokio::test]
@@ -504,7 +554,10 @@ mod tests {
         let router = create_test_router();
 
         // First call populates cache
-        router.route_to_storage("test").await.unwrap();
+        router
+            .route_to_storage("test")
+            .await
+            .expect("Operation failed");
 
         // Verify cache has storage endpoint
         let cache = router.endpoint_cache.read().await;

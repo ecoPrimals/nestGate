@@ -6,7 +6,8 @@
 use nestgate_core::{
     config::canonical_master::NestGateCanonicalConfig,
     error::{NestGateError, Result},
-    service_discovery::types::{ServiceCapability, ServiceEndpoint, ServiceInfo, ServiceMetadata},
+    service_discovery::types::{ServiceInfo, ServiceMetadata},
+    CanonicalNetwork, CanonicalSecurity, CanonicalService, CanonicalStorage,
 };
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
@@ -249,9 +250,7 @@ async fn test_storage_fault_tolerance() -> Result<()> {
                 "⏰ Storage operation {} timed out (expected under chaos)",
                 i
             ),
-    Ok(())
         }
-        Ok(())
     }
 
     println!("✅ Storage fault tolerance test completed");
@@ -296,9 +295,7 @@ async fn test_concurrent_operations_under_stress() -> Result<()> {
             Ok(Ok(_)) => successful += 1,
             Ok(Err(_)) => failed += 1,
             Err(_) => failed += 1,
-    Ok(())
         }
-        Ok(())
     }
 
     // Should handle concurrent stress gracefully
@@ -320,10 +317,10 @@ async fn test_configuration_resilience() -> Result<()> {
     // Test configuration loading under various failure conditions
     let configs = vec![
         // Valid configuration
-        NestGateNestGateCanonicalConfig::default(),
+        NestGateCanonicalConfig::default(),
         // Configuration with missing fields (should use defaults)
         {
-            let mut config = NestGateNestGateCanonicalConfig::default();
+            let mut config = NestGateCanonicalConfig::default();
             config.system.instance_name = "".to_string(); // Invalid but should be handled
             config
         },
@@ -422,7 +419,6 @@ async fn test_graceful_degradation() -> Result<()> {
         Ok(Ok(_)) => println!("✅ System maintained functionality under resource pressure"),
         Ok(Err(e)) => println!("⚠️ System degraded gracefully: {}", e),
         Err(_) => println!("⏰ System response degraded but didn't crash"),
-    Ok(())
     }
 
     println!("✅ Graceful degradation test completed");
@@ -455,15 +451,11 @@ async fn test_partial_failure_isolation() -> Result<()> {
             Ok(_) => {
                 healthy_components += 1;
                 println!("✅ Component {} is healthy", component);
-    Ok(())
             }
             Err(e) => {
                 println!("⚠️ Component {} failed: {}", component, e);
-    Ok(())
             }
-    Ok(())
         }
-        Ok(())
     }
 
     // System should continue operating with partial failures
@@ -513,7 +505,7 @@ async fn test_circuit_breaker_behavior() -> Result<()> {
             Ok(result) => {
                 println!("✅ {}", result);
                 failure_count = 0; // Reset on success
-    Ok(())
+                Ok(())
             }
             Err(e) => {
                 println!("❌ Operation {} failed: {}", i, e);
@@ -521,13 +513,9 @@ async fn test_circuit_breaker_behavior() -> Result<()> {
                 if failure_count >= failure_threshold {
                     circuit_open = true;
                     println!("🚫 Circuit breaker opened after {} failures", failure_count);
-    Ok(())
                 }
-    Ok(())
             }
-    Ok(())
         }
-        Ok(())
     }
 
     assert!(
@@ -682,9 +670,7 @@ async fn test_timeout_and_deadline_handling() -> Result<()> {
             (Ok(Err(e)), _) => println!("⚠️ {} failed: {}", operation_name, e),
             (Err(_), false) => println!("✅ {} properly timed out as expected", operation_name),
             (Err(_), true) => panic!("Operation should not have timed out: {}", operation_name),
-    Ok(())
         }
-        Ok(())
     }
 
     println!("✅ Timeout handling test completed");
@@ -787,7 +773,7 @@ async fn test_memory_leak_detection() -> Result<()> {
 }
 
 #[test]
-fn test_compilation_time_optimization() -> Result<(), Box<dyn std::error::Error>> {
+fn test_compilation_time_optimization() -> std::result::Result<(), Box<dyn std::error::Error>> {
     // Test that canonical traits compile quickly
     let start = std::time::Instant::now();
 

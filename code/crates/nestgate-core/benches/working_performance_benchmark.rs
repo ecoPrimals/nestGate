@@ -198,7 +198,7 @@ fn benchmark_concurrency_patterns(c: &mut Criterion) {
                 .collect();
 
             for handle in handles {
-                handle.join().unwrap();
+                handle.join().expect("Thread join failed");
             }
         });
     });

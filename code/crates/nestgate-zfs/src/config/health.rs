@@ -42,10 +42,17 @@ impl HealthMonitoringConfig {
             failure_threshold: 3,
             recovery_threshold: 1,
             alerting_enabled: true,
-            alert_endpoints: vec![
-                "email:admin@localhost".to_string(),
-                "webhook:http://localhost:8080/alerts".to_string(),
-            ],
+            alert_endpoints: {
+                use nestgate_core::constants::hardcoding::{addresses, ports};
+                vec![
+                    format!("email:admin@{}", addresses::LOCALHOST_NAME),
+                    format!(
+                        "webhook:http://{}:{}/alerts",
+                        addresses::LOCALHOST_NAME,
+                        ports::HTTP_DEFAULT
+                    ),
+                ]
+            },
         }
     }
 }

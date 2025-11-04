@@ -16,7 +16,10 @@ impl AdvancedEcoPrimal for NestGateEcoPrimal {
             // Create universal adapter for ecosystem integration
             let mut adapter = UniversalAdapter::new(
                 std::env::var("NESTGATE_ECOSYSTEM_ENDPOINT")
-                    .unwrap_or_else(|_| "http://localhost:8080".to_string())
+                    .unwrap_or_else(|_| {
+                        use nestgate_core::constants::hardcoding::{addresses, ports};
+                        format!("http://{}:{}", addresses::LOCALHOST_NAME, ports::HTTP_DEFAULT)
+                    })
             );
             
             // Discover available capabilities

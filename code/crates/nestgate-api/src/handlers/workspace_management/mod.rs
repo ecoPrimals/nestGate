@@ -101,7 +101,7 @@ impl WorkspaceManager {
 
 // TEMP_DISABLED: #[cfg(test)]
 // TEMP_DISABLED: mod tests;
-// TEMP_DISABLED: 
+// TEMP_DISABLED:
 // TEMP_DISABLED: #[cfg(test)]
 // TEMP_DISABLED: mod secrets_tests;
 

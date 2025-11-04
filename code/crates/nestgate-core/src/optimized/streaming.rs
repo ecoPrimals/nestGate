@@ -206,16 +206,11 @@ impl AdvancedStreamReader {
         
         match Pin::new(&mut self.source).poll_read(&mut Context::from_waker(futures::task::noop_waker_ref()), &mut read_buf) {
             Poll::Ready(Ok(())) => {
-                let bytes_read = read_buf.filled().len();
-                // SAFETY: set_len is safe because:
-                // 1. ReadBuf validation: read_buf.filled() returns only initialized bytes
-                // 2. Capacity check: ReadBuf was created from spare_capacity_mut()
-                // 3. Bounds: bytes_read is guaranteed <= adaptive_chunk_size
-                // 4. Initialization: AsyncRead trait guarantees bytes are initialized
-                // 5. Vec invariants: new len = old len + bytes_read stays within capacity
-                unsafe {
-                    self.buffer.set_len(self.buffer.len() + bytes_read);
-                }
+                // ✅ SAFE: Use BytesMut's safe API to extend with the filled bytes
+                // read_buf.filled() returns only the initialized bytes from AsyncRead
+                let filled_bytes = read_buf.filled();
+                let bytes_read = filled_bytes.len();
+                self.buffer.extend_from_slice(filled_bytes);
                 Ok(bytes_read)
             }
             Poll::Ready(Err(e)) => Err(NestGateError::internal_error(

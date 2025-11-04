@@ -12,7 +12,9 @@ pub use config::UnifiedTestConfig;
 // Test utilities
 // REMOVED: helpers module - use test_helpers directly
 // pub mod helpers;
+pub mod builders; // ✅ NEW: Test data builders
 pub mod mocks;
+pub mod templates; // ✅ NEW: Test templates and macros
 pub mod test_config;
 pub mod test_doubles;
 pub mod test_error_handling;

@@ -93,7 +93,7 @@ mod tests {
         let json = serde_json::to_string(&health);
         assert!(json.is_ok(), "HealthCheck should serialize");
         
-        let serialized = json.unwrap();
+        let serialized = json.expect("Test setup failed");
         assert!(serialized.contains("\"healthy\":true"));
         assert!(serialized.contains("\"test\""));
     }
@@ -112,7 +112,7 @@ mod tests {
         let health: std::result::Result<HealthCheck, _> = serde_json::from_str(json);
         assert!(health.is_ok(), "HealthCheck should deserialize");
         
-        let health = health.unwrap();
+        let health = health.expect("Test setup failed");
         assert!(health.healthy);
         assert_eq!(health.checks.len(), 1);
         assert_eq!(health.checks[0].name, "service1");
@@ -128,7 +128,7 @@ mod tests {
         
         assert!(service.healthy);
         assert!(service.message.is_some());
-        assert_eq!(service.message.as_ref().unwrap(), "Connected to Redis");
+        assert_eq!(service.message.as_ref().expect("Test setup failed"), "Connected to Redis");
     }
 
     #[test]
@@ -189,11 +189,11 @@ mod tests {
             ],
         };
         
-        let json = serde_json::to_value(&health).unwrap();
+        let json = serde_json::to_value(&health).expect("Test setup failed");
         
-        assert!(json["healthy"].as_bool().unwrap());
+        assert!(json["healthy"].as_bool().expect("Test setup failed"));
         assert!(json["checks"].is_array());
-        assert_eq!(json["checks"].as_array().unwrap().len(), 1);
+        assert_eq!(json["checks"].as_array().expect("Test setup failed").len(), 1);
     }
 }
 

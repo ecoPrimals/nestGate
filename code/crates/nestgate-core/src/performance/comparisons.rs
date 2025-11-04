@@ -100,8 +100,9 @@ impl TrendAnalysis {
                 return TrendDirection::Stable;
             }
 
-            let first = data.first().unwrap().1;
-            let last = data.last().unwrap().1;
+            // Safe: we just checked that data.len() >= 2
+            let first = data.first().map(|d| d.1).unwrap_or(0.0);
+            let last = data.last().map(|d| d.1).unwrap_or(0.0);
             let change = last - first;
 
             if change > 5.0 {

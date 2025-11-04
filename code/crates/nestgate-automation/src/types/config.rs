@@ -56,12 +56,17 @@ impl AutomationConfig {
             enable_intelligent_tier_assignment: true,
             enable_automatic_optimization: true,
             min_confidence_threshold: 0.8, // Higher confidence for production
-            _orchestration_endpoint: Some(
-                "http://localhost:".to_string()
-                    + &env::var("NESTGATE_API_PORT")
-                        .unwrap_or_else(|_| "8080".to_string())
-                        .to_string(),
-            ),
+            _orchestration_endpoint: Some({
+                use nestgate_core::constants::hardcoding::{addresses, ports};
+                format!(
+                    "http://{}:{}",
+                    addresses::LOCALHOST_NAME,
+                    env::var("NESTGATE_API_PORT")
+                        .ok()
+                        .and_then(|s| s.parse().ok())
+                        .unwrap_or(ports::HTTP_DEFAULT)
+                )
+            }),
         }
     }
 
@@ -77,12 +82,17 @@ impl AutomationConfig {
             enable_intelligent_tier_assignment: true,
             enable_automatic_optimization: false, // Disable auto-optimization in dev
             min_confidence_threshold: 0.5,        // Lower confidence for development
-            _orchestration_endpoint: Some(
-                "http://localhost:".to_string()
-                    + &env::var("NESTGATE_API_PORT")
-                        .unwrap_or_else(|_| "8080".to_string())
-                        .to_string(),
-            ),
+            _orchestration_endpoint: Some({
+                use nestgate_core::constants::hardcoding::{addresses, ports};
+                format!(
+                    "http://{}:{}",
+                    addresses::LOCALHOST_NAME,
+                    env::var("NESTGATE_API_PORT")
+                        .ok()
+                        .and_then(|s| s.parse().ok())
+                        .unwrap_or(ports::HTTP_DEFAULT)
+                )
+            }),
         }
     }
 }
@@ -172,7 +182,17 @@ impl DiscoveryConfig {
                 config
                     ._orchestration_endpoint
                     .clone()
-                    .unwrap_or_else(|| "http://localhost:".to_string() + &env::var("NESTGATE_API_PORT").unwrap_or_else(|_| "8080".to_string()).to_string()),
+                    .unwrap_or_else(|| {
+                        use nestgate_core::constants::hardcoding::{addresses, ports};
+                        format!(
+                            "http://{}:{}",
+                            addresses::LOCALHOST_NAME,
+                            env::var("NESTGATE_API_PORT")
+                                .ok()
+                                .and_then(|s| s.parse().ok())
+                                .unwrap_or(ports::HTTP_DEFAULT)
+                        )
+                    }),
                 std::env::var("NESTGATE_ORCHESTRATION_BACKUP_ENDPOINT_1").unwrap_or_else(|_| {
                     format!(
                         "http://{}:{}",

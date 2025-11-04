@@ -421,16 +421,18 @@ mod tests {
     #[test]
     fn test_capability_type_serialization() {
         let cap_type = CapabilityType::Orchestration;
-        let serialized = serde_json::to_string(&cap_type).unwrap();
-        let deserialized: CapabilityType = serde_json::from_str(&serialized).unwrap();
+        let serialized = serde_json::to_string(&cap_type).expect("String operation failed");
+        let deserialized: CapabilityType =
+            serde_json::from_str(&serialized).expect("Failed to convert from string");
         assert_eq!(cap_type, deserialized);
     }
 
     #[test]
     fn test_capability_category_serialization() {
         let category = CapabilityCategory::Infrastructure;
-        let serialized = serde_json::to_string(&category).unwrap();
-        let deserialized: CapabilityCategory = serde_json::from_str(&serialized).unwrap();
+        let serialized = serde_json::to_string(&category).expect("String operation failed");
+        let deserialized: CapabilityCategory =
+            serde_json::from_str(&serialized).expect("Failed to convert from string");
         assert_eq!(category, deserialized);
     }
 }

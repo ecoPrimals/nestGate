@@ -471,7 +471,10 @@ mod tests {
         let mut adapter = UniversalAdapter::new(adapter_endpoint);
 
         // Test capability discovery without hardcoded primal names
-        let capabilities = adapter.discover_capabilities().await.unwrap();
+        let capabilities = adapter
+            .discover_capabilities()
+            .await
+            .expect("Operation failed");
 
         // Verify no hardcoded primal names in providers
         for capability in capabilities {
@@ -493,10 +496,13 @@ mod tests {
             )
         });
         let mut adapter = UniversalAdapter::new(adapter_endpoint);
-        adapter.discover_capabilities().await.unwrap();
+        adapter
+            .discover_capabilities()
+            .await
+            .expect("Operation failed");
 
         // Test O(1) capability access
-        let storage_capability = adapter.get_capability("storage").unwrap();
+        let storage_capability = adapter.get_capability("storage").expect("Operation failed");
         assert_eq!(storage_capability.category, "storage");
         assert_eq!(storage_capability.provider, "nestgate-native");
     }

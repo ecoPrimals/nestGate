@@ -28,6 +28,7 @@ impl EvolutionTracker {
     }
 
     #[must_use]
+    #[allow(clippy::cast_precision_loss)]
     pub fn get_overall_score(&self) -> f64 {
         if self.evolution_scores.is_empty() {
             return 0.0;
@@ -41,6 +42,7 @@ impl EvolutionTracker {
 /// Migration manager for handling evolution migrations
 #[derive(Debug, Clone, Default)]
 #[allow(dead_code)] // Framework infrastructure
+#[allow(clippy::struct_field_names)]
 pub struct MigrationManager {
     completed_migrations: HashMap<String, String>,
     #[allow(dead_code)] // Framework field - intentionally unused
@@ -65,6 +67,11 @@ impl MigrationManager {
         Self::default()
     }
 
+    /// Update migration status for a component.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the migration tracking fails (currently infallible).
     pub fn update_migration_status(&mut self, component: &str, version: &str) -> crate::Result<()> {
         self.completed_migrations
             .insert(component.to_string(), version.to_string());
@@ -73,9 +80,14 @@ impl MigrationManager {
 
     #[must_use]
     pub fn get_completed_count(&self) -> u32 {
-        self.completed_migrations.len() as u32
+        u32::try_from(self.completed_migrations.len()).unwrap_or(u32::MAX)
     }
 
+    /// Validate the migration manager state.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if validation fails (currently infallible).
     pub fn validate(&self) -> crate::Result<()> {
         Ok(())
     }

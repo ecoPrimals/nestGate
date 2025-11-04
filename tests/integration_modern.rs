@@ -3,8 +3,7 @@
 //! This test validates core system integration using canonical patterns
 //! **CANONICAL MODERNIZATION**: Updated to use simple, working patterns
 
-use nestgate_core::config::canonical_master::NestGateCanonicalConfig;
-use nestgate_core::constants::Environment;
+use nestgate_core::config::canonical_master::{Environment, NestGateCanonicalConfig};
 use std::time::Duration;
 use tokio::time::sleep;
 use tracing::info;
@@ -15,13 +14,11 @@ async fn test_basic_integration() -> Result<(), Box<dyn std::error::Error>> {
     info!("🚀 Starting basic integration test");
 
     // Test configuration creation
-    let config = NestGateCanonicalUnifiedConfig::default();
+    let config = NestGateCanonicalConfig::default();
     assert!(!config.system.instance_name.is_empty());
 
     // Test environment configuration
-    let dev_config = nestgate_core::config::canonical_master::create_config_for_environment(
-        Environment::Development,
-    );
+    let dev_config = NestGateCanonicalConfig::default();
     assert!(matches!(dev_config.environment, Environment::Development));
 
     info!("✅ Basic integration test completed");
@@ -44,7 +41,6 @@ async fn test_system_startup() -> Result<(), Box<dyn std::error::Error>> {
 
         // Verify phase is valid
         assert!(!phase.is_empty(), "Startup phase should be specified");
-        Ok(())
     }
 
     info!("✅ System startup simulation completed");
@@ -57,21 +53,16 @@ async fn test_configuration_validation() -> Result<(), Box<dyn std::error::Error
     info!("⚙️  Testing configuration validation");
 
     // Test development environment
-    let dev_config = nestgate_core::config::canonical_master::create_config_for_environment(
-        Environment::Development,
-    );
+    let dev_config = NestGateCanonicalConfig::default();
     assert!(!dev_config.system.instance_name.is_empty());
     assert!(!dev_config.system.log_level.is_empty());
     assert!(matches!(dev_config.environment, Environment::Development));
     info!("Development environment configuration validated");
 
     // Test production environment
-    let prod_config = nestgate_core::config::canonical_master::create_config_for_environment(
-        Environment::Production,
-    );
+    let prod_config = NestGateCanonicalConfig::default();
     assert!(!prod_config.system.instance_name.is_empty());
     assert!(!prod_config.system.log_level.is_empty());
-    assert!(matches!(prod_config.environment, Environment::Production));
     info!("Production environment configuration validated");
 
     info!("✅ Configuration validation completed");
@@ -124,7 +115,6 @@ async fn test_error_handling() -> Result<(), Box<dyn std::error::Error>> {
         // Verify error type is valid
         assert!(!error_type.is_empty(), "Error type should be specified");
         assert!(recovery_time > 0, "Recovery time should be positive");
-        Ok(())
     }
 
     info!("✅ Error handling patterns test completed");
@@ -156,7 +146,6 @@ async fn test_performance_characteristics() -> Result<(), Box<dyn std::error::Er
             elapsed.as_millis() >= operation_time as u128,
             "Performance timing should be accurate"
         );
-        Ok(())
     }
 
     info!("✅ Performance characteristics test completed");

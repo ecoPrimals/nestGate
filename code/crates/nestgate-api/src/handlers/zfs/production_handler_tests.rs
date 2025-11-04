@@ -61,7 +61,7 @@ mod production_handler_tests {
         let request: Result<CreatePoolRequest, _> = serde_json::from_str(json_str);
         assert!(request.is_ok());
 
-        let request = request.unwrap();
+        let request = request.expect("ZFS operation failed");
         assert_eq!(request.name, "my-pool");
         assert_eq!(request.devices.len(), 2);
         assert_eq!(request.raid_type, "mirror");
@@ -77,7 +77,7 @@ mod production_handler_tests {
         let request: Result<CreatePoolRequest, _> = serde_json::from_str(json_str);
         assert!(request.is_ok());
 
-        let request = request.unwrap();
+        let request = request.expect("ZFS operation failed");
         assert_eq!(request.raid_type, ""); // Default empty string
     }
 
@@ -159,7 +159,7 @@ mod production_handler_tests {
         let request: Result<CreateDatasetRequest, _> = serde_json::from_str(json_str);
         assert!(request.is_ok());
 
-        let request = request.unwrap();
+        let request = request.expect("ZFS operation failed");
         assert_eq!(request.pool, "tank");
         assert_eq!(request.name, "data");
     }
@@ -175,7 +175,7 @@ mod production_handler_tests {
         let request: Result<CreateDatasetRequest, _> = serde_json::from_str(json_str);
         assert!(request.is_ok());
 
-        let request = request.unwrap();
+        let request = request.expect("ZFS operation failed");
         assert_eq!(request.pool, "mypool");
         assert_eq!(request.name, "dataset1");
     }
@@ -191,7 +191,7 @@ mod production_handler_tests {
         assert!(request.is_ok());
 
         // Default tier should be used
-        let _request = request.unwrap();
+        let _request = request.expect("ZFS operation failed");
     }
 
     // ==================== CREATE SNAPSHOT REQUEST VALIDATION TESTS ====================
@@ -228,7 +228,7 @@ mod production_handler_tests {
         let request: Result<CreateSnapshotRequest, _> = serde_json::from_str(json_str);
         assert!(request.is_ok());
 
-        let request = request.unwrap();
+        let request = request.expect("ZFS operation failed");
         assert_eq!(request.dataset, "tank/data");
         assert_eq!(request.name, "backup-2024");
     }
@@ -243,7 +243,7 @@ mod production_handler_tests {
         let request: Result<CreateSnapshotRequest, _> = serde_json::from_str(json_str);
         assert!(request.is_ok());
 
-        let request = request.unwrap();
+        let request = request.expect("ZFS operation failed");
         assert_eq!(request.name, "snap");
     }
 

@@ -334,15 +334,16 @@ impl NetworkConfigBuilder {
     /// Set host
     #[must_use]
     pub fn host(mut self, host: impl Into<String>) -> Self {
+        use nestgate_core::constants::hardcoding::addresses;
         self.config.network.api.bind_address = host.into().parse().unwrap_or(
             std::env::var("NESTGATE_BIND_ADDRESS")
                 .unwrap_or_else(|_| {
                     std::env::var("NESTGATE_HOSTNAME")
-                        .unwrap_or_else(|_| "localhost".to_string())
+                        .unwrap_or_else(|_| addresses::LOCALHOST_NAME.to_string())
                         .to_string()
                 })
                 .parse()
-                .unwrap(),
+                .expect("Network operation failed"),
         );
         self
     }
@@ -598,14 +599,14 @@ mod tests {
         let serialized = serde_json::to_string(&stats);
         assert!(serialized.is_ok(), "Network statistics should serialize");
 
-        let json = serialized.unwrap();
+        let json = serialized.expect("Network operation failed");
         let deserialized: std::result::Result<NetworkStatistics, _> = serde_json::from_str(&json);
         assert!(
             deserialized.is_ok(),
             "Network statistics should deserialize"
         );
 
-        let deserialized_stats = deserialized.unwrap();
+        let deserialized_stats = deserialized.expect("Network operation failed");
         assert_eq!(deserialized_stats.active_connections, 10);
         assert_eq!(deserialized_stats.registered_services, 5);
     }

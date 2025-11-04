@@ -56,6 +56,7 @@
 //! - **Zero vendor lock-in**: No platform assumptions
 
 use std::env;
+use crate::constants::hardcoding::{addresses, ports, timeouts};
 
 // ==================== API SERVER ====================
 
@@ -68,7 +69,7 @@ use std::env;
 /// Returns `"127.0.0.1"` if not set (safe for development)
 #[must_use]
 pub fn api_host() -> String {
-    env::var("NESTGATE_API_HOST").unwrap_or_else(|_| "127.0.0.1".to_string())
+    env::var("NESTGATE_API_HOST").unwrap_or_else(|_| addresses::LOCALHOST_IPV4.to_string())
 }
 
 /// Default API server port (overridable via `NESTGATE_API_PORT`)
@@ -83,7 +84,7 @@ pub fn api_port() -> u16 {
     env::var("NESTGATE_API_PORT")
         .ok()
         .and_then(|s| s.parse().ok())
-        .unwrap_or(8080)
+        .unwrap_or(ports::HTTP_DEFAULT)
 }
 
 /// Full API bind address (overridable via `NESTGATE_API_BIND`)
@@ -124,7 +125,7 @@ pub fn metrics_port() -> u16 {
     env::var("NESTGATE_METRICS_PORT")
         .ok()
         .and_then(|s| s.parse().ok())
-        .unwrap_or(9090)
+        .unwrap_or(ports::METRICS_DEFAULT)
 }
 
 /// Metrics bind address (overridable via `NESTGATE_METRICS_BIND`)
@@ -148,13 +149,13 @@ pub fn metrics_bind_address() -> String {
 /// - `NESTGATE_WS_PORT`: Custom WebSocket port
 ///
 /// # Default
-/// Returns `8081` if not set
+/// Returns `8082` if not set
 #[must_use]
 pub fn websocket_port() -> u16 {
     env::var("NESTGATE_WS_PORT")
         .ok()
         .and_then(|s| s.parse().ok())
-        .unwrap_or(8081)
+        .unwrap_or(ports::WEBSOCKET_DEFAULT)
 }
 
 /// WebSocket bind address (overridable via `NESTGATE_WS_BIND`)
@@ -190,13 +191,13 @@ pub fn websocket_url() -> String {
 /// - `NESTGATE_HEALTH_PORT`: Custom health check port
 ///
 /// # Default
-/// Returns `8082` if not set
+/// Returns `8081` if not set
 #[must_use]
 pub fn health_port() -> u16 {
     env::var("NESTGATE_HEALTH_PORT")
         .ok()
         .and_then(|s| s.parse().ok())
-        .unwrap_or(8082)
+        .unwrap_or(ports::HEALTH_CHECK)
 }
 
 /// Health check bind address (overridable via `NESTGATE_HEALTH_BIND`)
@@ -238,7 +239,7 @@ pub fn storage_port() -> u16 {
     env::var("NESTGATE_STORAGE_PORT")
         .ok()
         .and_then(|s| s.parse().ok())
-        .unwrap_or(5000)
+        .unwrap_or(ports::STORAGE_DEFAULT)
 }
 
 /// Storage bind address (overridable via `NESTGATE_STORAGE_BIND`)
@@ -268,7 +269,7 @@ pub fn connect_timeout_ms() -> u64 {
     env::var("NESTGATE_CONNECT_TIMEOUT_MS")
         .ok()
         .and_then(|s| s.parse().ok())
-        .unwrap_or(5_000)
+        .unwrap_or(timeouts::CONNECT_MS)
 }
 
 /// Default request timeout in milliseconds (overridable via `NESTGATE_REQUEST_TIMEOUT_MS`)
@@ -283,7 +284,7 @@ pub fn request_timeout_ms() -> u64 {
     env::var("NESTGATE_REQUEST_TIMEOUT_MS")
         .ok()
         .and_then(|s| s.parse().ok())
-        .unwrap_or(30_000)
+        .unwrap_or(timeouts::REQUEST_MS)
 }
 
 /// Default long operation timeout in milliseconds (overridable via `NESTGATE_LONG_OP_TIMEOUT_MS`)
@@ -298,7 +299,7 @@ pub fn long_operation_timeout_ms() -> u64 {
     env::var("NESTGATE_LONG_OP_TIMEOUT_MS")
         .ok()
         .and_then(|s| s.parse().ok())
-        .unwrap_or(300_000)
+        .unwrap_or(timeouts::LONG_OPERATION_MS)
 }
 
 // ==================== BIND ADDRESSES ====================
@@ -313,7 +314,7 @@ pub fn long_operation_timeout_ms() -> u64 {
 /// Use with caution and proper firewall configuration.
 #[must_use]
 pub fn bind_all_interfaces(port: u16) -> String {
-    format!("0.0.0.0:{port}")
+    format!("{}:{port}", addresses::BIND_ALL_IPV4)
 }
 
 /// Get localhost bind address
@@ -321,7 +322,7 @@ pub fn bind_all_interfaces(port: u16) -> String {
 /// This is the safe default for development.
 #[must_use]
 pub fn bind_localhost(port: u16) -> String {
-    format!("127.0.0.1:{port}")
+    format!("{}:{port}", addresses::LOCALHOST_IPV4)
 }
 
 #[cfg(test)]

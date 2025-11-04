@@ -402,7 +402,7 @@ mod tests {
         cache
             .put("test".to_string(), b"data".to_vec())
             .await
-            .unwrap();
+            .expect("Cache operation failed");
         let result = cache.get("test");
         assert_eq!(result, Some(b"data".to_vec()));
 
@@ -434,15 +434,15 @@ mod tests {
         cache
             .put("key1".to_string(), b"data1".to_vec())
             .await
-            .unwrap();
+            .expect("Cache operation failed");
         cache
             .put("key2".to_string(), b"data2".to_vec())
             .await
-            .unwrap();
+            .expect("Cache operation failed");
         cache
             .put("key3".to_string(), b"data3".to_vec())
             .await
-            .unwrap();
+            .expect("Cache operation failed");
 
         // Should have evicted oldest entry
         assert!(cache.total_size() <= 2);
@@ -462,7 +462,7 @@ mod tests {
         cache
             .put("test".to_string(), b"data".to_vec())
             .await
-            .unwrap();
+            .expect("Cache operation failed");
 
         // Should be expired now
         cache.maintenance().await.unwrap_or_else(|e| {

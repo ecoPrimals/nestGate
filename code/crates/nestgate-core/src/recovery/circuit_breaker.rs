@@ -397,7 +397,7 @@ mod tests {
         // Should succeed and close circuit
         let result = cb.execute(|| async { Ok("success") }).await;
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), "success");
+        assert_eq!(result.expect("Operation failed"), "success");
         assert_eq!(cb.state().await, CircuitState::Closed);
     }
 }

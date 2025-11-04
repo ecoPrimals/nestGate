@@ -39,10 +39,11 @@ impl StandardsIntegrationDemo {
         let eco_primal = NestGateEcoPrimal::new();
 
         // Create service registration
+        use nestgate_core::constants::hardcoding::{addresses, ports};
         let service_registration = NestGateServiceRegistration::create_registration(
             "demo-instance".to_string(),
-            "127.0.0.1".to_string(),
-            8080,
+            addresses::LOCALHOST_IPV4.to_string(),
+            ports::HTTP_DEFAULT,
             Some("demo-biome".to_string()),
         );
 
@@ -365,10 +366,11 @@ mod tests {
     }
     #[test]
     fn test_service_registration_creation() {
+        use nestgate_core::constants::hardcoding::{addresses, ports};
         let registration = NestGateServiceRegistration::create_registration(
             "test-instance".to_string(),
-            "127.0.0.1".to_string(),
-            8080,
+            addresses::LOCALHOST_IPV4.to_string(),
+            ports::HTTP_DEFAULT,
             None,
         );
 

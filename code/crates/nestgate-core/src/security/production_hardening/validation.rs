@@ -4,10 +4,31 @@
 
 use std::collections::HashMap;
 use std::time::SystemTime;
+use lazy_static::lazy_static;
+use regex::Regex;
 
 use crate::error::Result;
 use super::config::{SecurityAction, SecurityEventType, ThreatLevel, ValidationConfig};
 use super::types::{RequestValidationResult, SecurityEvent};
+
+// Lazy-initialized validation patterns
+lazy_static! {
+    static ref SQL_INJECTION_PATTERN_1: Regex = 
+        Regex::new(r"(?i)(union\s+select|select\s+.*\s+from|drop\s+table|delete\s+from|insert\s+into)")
+            .expect("SQL injection regex is hardcoded and valid");
+    
+    static ref SQL_INJECTION_PATTERN_2: Regex = 
+        Regex::new(r"(?i)(\'\s*or\s+\'\s*1\s*=\s*1|--|\#|/\*|\*/)")
+            .expect("SQL injection regex is hardcoded and valid");
+    
+    static ref XSS_PATTERN_1: Regex = 
+        Regex::new(r"(?i)(<script|javascript:|on\w+\s*=)")
+            .expect("XSS regex is hardcoded and valid");
+    
+    static ref XSS_PATTERN_2: Regex = 
+        Regex::new(r"(?i)(eval\s*\(|expression\s*\(|vbscript:)")
+            .expect("XSS regex is hardcoded and valid");
+}
 
 /// **REQUEST VALIDATOR**
 ///
@@ -24,13 +45,13 @@ impl RequestValidator {
     /// Create new request validator
     pub fn new(config: ValidationConfig) -> Self {
         let sql_injection_patterns = vec![
-            regex::Regex::new(r"(?i)(union\s+select|select\s+.*\s+from|drop\s+table|delete\s+from|insert\s+into)").unwrap(),
-            regex::Regex::new(r"(?i)(\'\s*or\s+\'\s*1\s*=\s*1|--|\#|/\*|\*/)").unwrap(),
+            SQL_INJECTION_PATTERN_1.clone(),
+            SQL_INJECTION_PATTERN_2.clone(),
         ];
 
         let xss_patterns = vec![
-            regex::Regex::new(r"(?i)(<script|javascript:|on\w+\s*=)").unwrap(),
-            regex::Regex::new(r"(?i)(eval\s*\(|expression\s*\(|vbscript:)").unwrap(),
+            XSS_PATTERN_1.clone(),
+            XSS_PATTERN_2.clone(),
         ];
 
         Self {
@@ -185,7 +206,7 @@ mod tests {
         let result = validator
             .validate_request("POST", "/api/data", &headers, malicious_body)
             .await
-            .unwrap();
+            .expect("Security operation failed");
 
         assert!(result.blocked);
         assert!(!result.security_events.is_empty());
@@ -209,7 +230,7 @@ mod tests {
         let result = validator
             .validate_request("POST", "/api/data", &headers, malicious_body)
             .await
-            .unwrap();
+            .expect("Security operation failed");
 
         assert!(result.blocked);
         assert!(!result.security_events.is_empty());

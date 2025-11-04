@@ -119,18 +119,10 @@ impl<const BUFFER_SIZE: usize> ZeroAllocStringProcessor<BUFFER_SIZE> {
 
         self.position += bytes.len();
 
-        // SAFETY: from_utf8_unchecked is safe because:
-        // 1. Input validation: bytes parameter was valid UTF-8 slice
-        // 2. Transformation: wrapping_add(1) preserves ASCII-compatible encoding
-        // 3. Bounds: buffer[start_pos..position] is within allocated buffer
-        // 4. UTF-8 invariant: Byte transformation maintains UTF-8 validity
-        // 5. Lifetime: Returned &str lifetime tied to &self, preventing invalid access
-        // Note: This is experimental - production should validate UTF-8 after transformation
-        unsafe {
-            Some(std::str::from_utf8_unchecked(
-                &self.buffer[start_pos..self.position],
-            ))
-        }
+        // ✅ SAFE: Use from_utf8 with proper validation
+        // The transformation may invalidate UTF-8, so we validate before returning
+        // This is the correct approach for production code
+        std::str::from_utf8(&self.buffer[start_pos..self.position]).ok()
     }
 
     /// Reset processor state
@@ -317,7 +309,7 @@ mod tests {
     fn test_zero_alloc_string_processor() {
         let mut processor = ZeroAllocStringProcessor::<1024>::new();
 
-        let result = processor.process_str("hello").unwrap();
+        let result = processor.process_str("hello").expect("Operation failed");
         assert_eq!(result.len(), 5);
         assert_eq!(processor.utilization(), 5.0 / 1024.0);
 

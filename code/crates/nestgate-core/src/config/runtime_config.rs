@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::env;
 use std::net::SocketAddr;
 use std::str::FromStr;
+use crate::constants::hardcoding::{addresses, ports};
 
 /// Runtime configuration manager that eliminates hardcoded values
 #[derive(Debug, Clone)]
@@ -32,7 +33,7 @@ pub struct NetworkRuntimeConfig {
     /// Metrics port (from NESTGATE_METRICS_PORT or api_port + 3)
     pub metrics_port: u16,
     /// Bind address (from NESTGATE_BIND_ADDRESS or secure default)
-    pub bind_endpoint: String,
+    pub bind_address: String,
     /// External hostname (from NESTGATE_HOSTNAME or localhost)
     pub hostname: String,
     /// Custom service endpoints
@@ -46,6 +47,7 @@ pub struct ServiceRuntimeConfig {
     /// Service name (from NESTGATE_SERVICE_NAME or default)
     pub service_name: String,
     /// Environment (from NESTGATE_ENV or "development")
+    pub environment: String,
     /// Log level (from NESTGATE_LOG_LEVEL or "info")
     pub log_level: String,
 }
@@ -55,6 +57,7 @@ pub struct StorageRuntimeConfig {
     /// ZFS backend (from NESTGATE_ZFS_BACKEND or "auto")
     pub zfs_backend: String,
     /// Storage root path (from NESTGATE_STORAGE_PATH or "/var/lib/nestgate")
+    pub storage_path: String,
     /// Temporary directory (from NESTGATE_TEMP_DIR or "/tmp/nestgate")
     pub temp_dir: String,
 }
@@ -71,10 +74,10 @@ pub struct SecurityRuntimeConfig {
 impl RuntimeConfig {
     /// Create configuration from environment with intelligent defaults
     pub fn from_environment() -> Self {
-        let network = NetworkSelf::from_environment();
-        let service = ServiceSelf::from_environment();
-        let storage = StorageSelf::from_environment();
-        let security = SecuritySelf::from_environment();
+        let network = NetworkRuntimeConfig::from_environment();
+        let service = ServiceRuntimeConfig::from_environment();
+        let storage = StorageRuntimeConfig::from_environment();
+        let security = SecurityRuntimeConfig::from_environment();
 
         Self {
             network,
@@ -87,14 +90,15 @@ impl RuntimeConfig {
     /// Get the primary API socket address
     pub fn api_socket_addr(&self) -> SocketAddr {
         let addr = if self.security.localhost_only {
-            format!("127.0.0.1:{self.network.api_port}")
+            format!("{}:{}", addresses::LOCALHOST_IPV4, self.network.api_port)
         } else {
-            format!("{}:{}", self.network.bind_endpoint, self.network.api_port)
+            format!("{}:{}", self.network.bind_address, self.network.api_port)
         };
 
         SocketAddr::from_str(&addr).unwrap_or_else(|_| {
-            SocketAddr::from_str("127.0.0.1:8000")
-                .unwrap_or_else(|_| SocketAddr::from(([127, 0, 0, 1], 8000)))
+            format!("{}:{}", addresses::LOCALHOST_IPV4, ports::HTTP_DEFAULT)
+                .parse()
+                .unwrap_or_else(|_| SocketAddr::from(([127, 0, 0, 1], ports::HTTP_DEFAULT)))
         })
     }
 
@@ -158,7 +162,7 @@ impl NetworkRuntimeConfig {
                 if env_type == "production" {
                     8000
                 } else {
-                    8080
+                    ports::HTTP_DEFAULT
                 }
             );
 
@@ -180,13 +184,13 @@ impl NetworkRuntimeConfig {
         let bind_address = env::var("NESTGATE_BIND_ADDRESS").unwrap_or_else(|_| {
             // Secure default: localhost only unless explicitly configured
             if env::var("NESTGATE_ALLOW_EXTERNAL").is_ok() {
-                "0.0.0.0".to_string()
+                addresses::BIND_ALL_IPV4.to_string()
             } else {
-                "127.0.0.1".to_string()
+                addresses::LOCALHOST_IPV4.to_string()
             }
         );
 
-        let hostname = env::var("NESTGATE_HOSTNAME").unwrap_or_else(|_| "localhost".to_string());
+        let hostname = env::var("NESTGATE_HOSTNAME").unwrap_or_else(|| addresses::LOCALHOST_NAME.to_string());
 
         // Load custom service endpoints from environment
         let mut service_endpoints = HashMap::new();
@@ -213,7 +217,7 @@ impl NetworkRuntimeConfig {
 impl ServiceRuntimeConfig {
     fn from_environment() -> Self {
         let service_id = env::var("NESTGATE_SERVICE_ID")
-            .unwrap_or_else(|_| format!("nestgate-{uuid::Uuid::new_v4(}").simple()));
+            .unwrap_or_else(|_| format!("nestgate-{}", uuid::Uuid::new_v4().simple()));
 
         let service_name =
             env::var("NESTGATE_SERVICE_NAME").unwrap_or_else(|_| "nestgate".to_string());

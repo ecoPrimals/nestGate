@@ -3,15 +3,15 @@
 //! **CANONICAL MODERNIZATION COMPLETE** - Integrated with unified test configuration system.
 //! Uses CanonicalTestConfig with chaos testing domain configuration.
 
+use nestgate_core::config::canonical_master::Environment;
 use nestgate_core::config::canonical_master::NestGateCanonicalConfig;
-use nestgate_core::constants::Environment;
 use nestgate_core::error::{NestGateError, Result};
 use std::time::Duration;
 use tracing::info;
 
 // Import canonical test configuration
-use crate::common::config::{
-    CanonicalTestConfig, StressTestConfig, TestDomainConfig, TestPerformanceSettings,
+use nestgate_core::config::canonical_master::test_config::{
+    CanonicalTestConfigs, ChaosTestConfig, MockingConfig,
 };
 
 /// **CANONICAL SOVEREIGNTY CHAOS TYPES**
@@ -117,10 +117,7 @@ pub struct SovereigntyChaosFramework {
     >,
     service_registry: std::sync::Arc<
         std::sync::RwLock<
-            std::collections::HashMap<
-                String,
-                nestgate_core::canonical_modernization::canonical_types::UnifiedServiceConfig,
-            >,
+            std::collections::HashMap<String, nestgate_core::canonical_types::UnifiedServiceConfig>,
         >,
     >,
     chaos_metrics: std::sync::Arc<std::sync::RwLock<SovereigntyChaosResults>>,
@@ -194,7 +191,7 @@ impl SovereigntyChaosFramework {
 
         // Register test services with sovereignty-compliant configurations
         let test_services = vec![
-            nestgate_core::canonical_modernization::canonical_types::UnifiedServiceConfig {
+            nestgate_core::canonical_types::UnifiedServiceConfig {
                 name: "orchestration-service".to_string(),
                 version: "1.0.0".to_string(),
                 description: "Test orchestration service".to_string(),
@@ -209,10 +206,10 @@ impl SovereigntyChaosFramework {
                 capabilities: vec!["orchestration".to_string()],
                 dependencies: vec![],
                 metadata: std::collections::HashMap::new(),
-                timeouts: nestgate_core::canonical_modernization::canonical_types::UnifiedTimeoutConfig::default(),
-                retry: nestgate_core::canonical_modernization::canonical_types::UnifiedRetryConfig::default(),
+                timeouts: nestgate_core::canonical_types::UnifiedTimeoutConfig::default(),
+                retry: nestgate_core::canonical_types::UnifiedRetryConfig::default(),
             },
-            nestgate_core::canonical_modernization::canonical_types::UnifiedServiceConfig {
+            nestgate_core::canonical_types::UnifiedServiceConfig {
                 name: "security-service".to_string(),
                 version: "1.0.0".to_string(),
                 description: "Test security service".to_string(),
@@ -227,10 +224,10 @@ impl SovereigntyChaosFramework {
                 capabilities: vec!["security".to_string()],
                 dependencies: vec![],
                 metadata: std::collections::HashMap::new(),
-                timeouts: nestgate_core::canonical_modernization::canonical_types::UnifiedTimeoutConfig::default(),
-                retry: nestgate_core::canonical_modernization::canonical_types::UnifiedRetryConfig::default(),
+                timeouts: nestgate_core::canonical_types::UnifiedTimeoutConfig::default(),
+                retry: nestgate_core::canonical_types::UnifiedRetryConfig::default(),
             },
-            nestgate_core::canonical_modernization::canonical_types::UnifiedServiceConfig {
+            nestgate_core::canonical_types::UnifiedServiceConfig {
                 name: "compute-service".to_string(),
                 version: "1.0.0".to_string(),
                 description: "Test compute service".to_string(),
@@ -245,8 +242,8 @@ impl SovereigntyChaosFramework {
                 capabilities: vec!["compute".to_string()],
                 dependencies: vec![],
                 metadata: std::collections::HashMap::new(),
-                timeouts: nestgate_core::canonical_modernization::canonical_types::UnifiedTimeoutConfig::default(),
-                retry: nestgate_core::canonical_modernization::canonical_types::UnifiedRetryConfig::default(),
+                timeouts: nestgate_core::canonical_types::UnifiedTimeoutConfig::default(),
+                retry: nestgate_core::canonical_types::UnifiedRetryConfig::default(),
             },
         ];
 
@@ -355,12 +352,13 @@ impl SovereigntyChaosFramework {
         let mut registry = self.service_registry.write()?;
 
         // Add a service that violates configuration sovereignty
-        let violating_service = nestgate_core::canonical_modernization::canonical_types::UnifiedServiceConfig {
+        let violating_service = nestgate_core::canonical_types::UnifiedServiceConfig {
             name: "config-violator".to_string(),
             version: "1.0.0".to_string(),
             description: "Service that violates configuration sovereignty".to_string(),
             service_name: "violator".to_string(),
-            service_type: nestgate_core::canonical_modernization::unified_enums::UnifiedServiceType::Storage,
+            service_type:
+                nestgate_core::canonical_modernization::unified_enums::UnifiedServiceType::Storage,
             environment: "test".to_string(),
             enabled: false,
             auto_start: false,
@@ -374,8 +372,8 @@ impl SovereigntyChaosFramework {
                 meta.insert("sovereignty_compliant".to_string(), "false".to_string());
                 meta
             },
-            timeouts: nestgate_core::canonical_modernization::canonical_types::UnifiedTimeoutConfig::default(),
-            retry: nestgate_core::canonical_modernization::canonical_types::UnifiedRetryConfig::default(),
+            timeouts: nestgate_core::canonical_types::UnifiedTimeoutConfig::default(),
+            retry: nestgate_core::canonical_types::UnifiedRetryConfig::default(),
         };
 
         registry.insert(violating_service.name.clone(), violating_service);
@@ -398,12 +396,13 @@ impl SovereigntyChaosFramework {
         let mut registry = self.service_registry.write()?;
 
         // Simulate a port conflict by binding the same port to multiple services
-        let conflicting_service = nestgate_core::canonical_modernization::canonical_types::UnifiedServiceConfig {
+        let conflicting_service = nestgate_core::canonical_types::UnifiedServiceConfig {
             name: "port-conflict-service".to_string(),
             version: "1.0.0".to_string(),
             description: "Service causing port conflict".to_string(),
             service_name: "conflict-port".to_string(),
-            service_type: nestgate_core::canonical_modernization::unified_enums::UnifiedServiceType::Compute,
+            service_type:
+                nestgate_core::canonical_modernization::unified_enums::UnifiedServiceType::Compute,
             environment: "test".to_string(),
             enabled: true,
             auto_start: true,
@@ -413,8 +412,8 @@ impl SovereigntyChaosFramework {
             capabilities: vec!["compute".to_string()],
             dependencies: vec![],
             metadata: std::collections::HashMap::new(),
-            timeouts: nestgate_core::canonical_modernization::canonical_types::UnifiedTimeoutConfig::default(),
-            retry: nestgate_core::canonical_modernization::canonical_types::UnifiedRetryConfig::default(),
+            timeouts: nestgate_core::canonical_types::UnifiedTimeoutConfig::default(),
+            retry: nestgate_core::canonical_types::UnifiedRetryConfig::default(),
         };
 
         registry.insert(conflicting_service.name.clone(), conflicting_service);

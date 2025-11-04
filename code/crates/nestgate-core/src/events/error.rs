@@ -1,20 +1,12 @@
-use std::collections::HashMap;
-use std::sync::Arc;
-use std::time::Duration;
-use serde::{Deserialize, Serialize};
-use crate::error::{NestGateError, NestGateUnifiedError, Result};
-
 //! Modern error Module
-//! 
+//!
 //! This module provides core functionality using modern Rust patterns
 //! and zero-cost abstractions.
 
-use std::time::Duration;
-use std::sync::Arc;
-use std::collections::HashMap;
-use serde::{Deserialize, Serialize};
-
 use crate::error::{NestGateError, Result};
+use serde::{Deserialize, Serialize};
+use std::sync::Arc;
+use std::time::Duration;
 
 // ==================== MODULE CONSTANTS ====================
 
@@ -24,7 +16,7 @@ pub use crate::constants::shared::MODULE_VERSION;
 /// Default configuration values
 /// Default configuration values from canonical constants
 pub use crate::constants::network::{
-    DEFAULT_TIMEOUT_MS, DEFAULT_BUFFER_SIZE, DEFAULT_MAX_CONNECTIONS
+    DEFAULT_BUFFER_SIZE, DEFAULT_MAX_CONNECTIONS, DEFAULT_TIMEOUT_MS,
 };
 
 // ==================== CORE TYPES ====================
@@ -86,6 +78,7 @@ impl Default for Metrics {
 /// Default implementation of the service
 #[derive(Debug)]
 pub struct DefaultService {
+    #[allow(dead_code)] // Stored for future use
     config: Config,
     metrics: Arc<tokio::sync::RwLock<Metrics>>,
 }
@@ -98,7 +91,7 @@ impl DefaultService {
             metrics: Arc::new(tokio::sync::RwLock::new(Metrics::default())),
         }
     }
-    
+
     /// Get current metrics
     pub async fn get_metrics(&self) -> Metrics {
         self.metrics.read().await.clone()
@@ -106,22 +99,31 @@ impl DefaultService {
 }
 
 impl Service for DefaultService {
-    fn initialize(&self) -> impl std::future::Future<Output = Result<()>> + Send {
-        // Initialization implementation
-        tracing::info!("Initializing {} service with config: {:?}", 
-                      stringify!(error), config);
+    fn name(&self) -> &str {
+        "error"
+    }
+
+    async fn initialize(&self) -> Result<()> {
+        tracing::info!("Initializing error service");
         Ok(())
     }
-    
-    fn health_check(&self) -> impl std::future::Future<Output = Result<HealthStatus>> + Send {
-        // Health check implementation
-        Ok(HealthStatus::Healthy)
+
+    async fn start(&self) -> Result<()> {
+        tracing::info!("Starting error service");
+        Ok(())
     }
-    
+
+    async fn stop(&self) -> Result<()> {
+        tracing::info!("Stopping error service");
+        Ok(())
+    }
+
+    async fn health_check(&self) -> Result<bool> {
+        Ok(true)
+    }
+
     fn shutdown(&self) -> impl std::future::Future<Output = Result<()>> + Send {
-        // Shutdown implementation
-        tracing::info!("Shutting down {} service", stringify!(error));
-        Ok(())
+        self.stop()
     }
 }
 
@@ -137,17 +139,17 @@ pub async fn validate_config(config: &Config) -> crate::Result<()> {
     if config.max_connections == 0 {
         return Err(NestGateError::configuration_error(
             "events_error",
-            "max_connections must be greater than 0"
+            "max_connections must be greater than 0",
         ));
     }
-    
+
     if config.buffer_size == 0 {
         return Err(NestGateError::configuration_error(
             "events_error",
-            "buffer_size must be greater than 0"
+            "buffer_size must be greater than 0",
         ));
     }
-    
+
     Ok(())
 }
 
@@ -155,7 +157,8 @@ pub async fn validate_config(config: &Config) -> crate::Result<()> {
 
 #[cfg(test)]
 mod tests {
-    
+    use super::*;
+    use crate::constants::DEFAULT_MAX_CONNECTIONS;
 
     #[test]
     fn test_config_default() {
@@ -164,22 +167,22 @@ mod tests {
         assert_eq!(config.max_connections, DEFAULT_MAX_CONNECTIONS);
     }
 
-    #[test]
-    fn test_config_validation() {
+    #[tokio::test]
+    async fn test_config_validation() {
         let mut config = Config::default();
-        assert!(validate_config(&config).is_ok());
-        
+        assert!(validate_config(&config).await.is_ok());
+
         config.max_connections = 0;
-        assert!(validate_config(&config).is_err());
+        assert!(validate_config(&config).await.is_err());
     }
 
     #[tokio::test]
     async fn test_service_creation() {
         let service = create_service();
-        let config = Config::default();
-        
-        assert!(service.initialize(&config).await.is_ok());
-        assert_eq!(service.health_check().await.unwrap(), HealthStatus::Healthy);
+
+        assert!(service.initialize().await.is_ok());
+        // health_check() now returns bool, not HealthStatus
+        assert!(service.health_check().await.expect("Operation failed"));
         assert!(service.shutdown().await.is_ok());
     }
 
@@ -187,7 +190,7 @@ mod tests {
     async fn test_metrics() {
         let service = create_service();
         let metrics = service.get_metrics().await;
-        
+
         assert_eq!(metrics.requests_processed, 0);
         assert_eq!(metrics.errors_encountered, 0);
     }

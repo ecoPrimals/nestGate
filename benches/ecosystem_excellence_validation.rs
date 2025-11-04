@@ -11,7 +11,7 @@
 //! **Status**: Production-validated excellence demonstration
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
-use std::time::{Duration, Instant};
+use std::time::Duration;
 use tokio::runtime::Runtime;
 
 // ==================== ECOSYSTEM PERFORMANCE VALIDATION ====================
@@ -221,7 +221,6 @@ fn benchmark_ecosystem_throughput(c: &mut Criterion) {
 // ==================== CONFIGURATION UNIFICATION VALIDATION ====================
 
 fn benchmark_configuration_performance(c: &mut Criterion) {
-    use serde_json;
     use std::collections::HashMap;
 
     // Simulate fragmented configuration (old approach)

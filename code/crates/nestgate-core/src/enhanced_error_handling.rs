@@ -327,7 +327,10 @@ impl CircuitBreaker {
                     }
                 } {
                     if last_failure.elapsed() >= self.recovery_timeout {
-                        *self.state.lock().unwrap() = CircuitState::HalfOpen;
+                        *self.state.lock().unwrap_or_else(|poisoned| {
+                            // Mutex was poisoned, but we can recover by accessing the underlying data
+                            poisoned.into_inner()
+                        }) = CircuitState::HalfOpen;
                     } else {
                         return Err(EnhancedError::system_error(
                             "Circuit breaker is open".to_string(),
@@ -346,16 +349,25 @@ impl CircuitBreaker {
             Ok(result) => {
                 // Success - reset circuit breaker
                 self.failure_count.store(0, Ordering::Relaxed);
-                *self.state.lock().unwrap() = CircuitState::Closed;
+                *self.state.lock().unwrap_or_else(|poisoned| {
+                    // Mutex was poisoned, but we can recover by accessing the underlying data
+                    poisoned.into_inner()
+                }) = CircuitState::Closed;
                 Ok(result)
             }
             Err(error) => {
                 // Failure - update circuit breaker
                 let failures = self.failure_count.fetch_add(1, Ordering::Relaxed) + 1;
-                *self.last_failure_time.lock().unwrap() = Some(Instant::now());
+                *self.last_failure_time.lock().unwrap_or_else(|poisoned| {
+                    // Mutex was poisoned, but we can recover by accessing the underlying data
+                    poisoned.into_inner()
+                }) = Some(Instant::now());
                 
                 if failures >= self.failure_threshold as u64 {
-                    *self.state.lock().unwrap() = CircuitState::Open;
+                    *self.state.lock().unwrap_or_else(|poisoned| {
+                        // Mutex was poisoned, but we can recover by accessing the underlying data
+                        poisoned.into_inner()
+                    }) = CircuitState::Open;
                 }
                 
                 Err(error)
@@ -365,7 +377,7 @@ impl CircuitBreaker {
     
     /// Get current circuit breaker state
     pub fn state(&self) -> CircuitState {
-        *self.state.lock().unwrap()
+        *self.state.lock().expect("Failed to acquire lock")
     }
     
     /// Get current failure count
@@ -548,14 +560,14 @@ impl ErrorAggregator {
         }
         
         {
-            let mut component_stats = self.stats.errors_by_component.lock().unwrap();
+            let mut component_stats = self.stats.errors_by_component.lock().expect("Failed to acquire lock");
             component_stats.entry(error.context.component.clone())
                 .or_insert_with(|| AtomicU64::new(0))
                 .fetch_add(1, Ordering::Relaxed);
         }
         
         // Store error
-        let mut errors = self.errors.lock().unwrap();
+        let mut errors = self.errors.lock().expect("Failed to acquire lock");
         errors.push(error);
         
         // Trim if over max capacity
@@ -566,12 +578,12 @@ impl ErrorAggregator {
     
     /// Get all errors
     pub fn get_errors(&self) -> Vec<EnhancedError> {
-        self.errors.lock().unwrap().clone()
+        self.errors.lock().expect("Failed to acquire lock").clone()
     }
     
     /// Get errors by severity
     pub fn get_errors_by_severity(&self, severity: ErrorSeverity) -> Vec<EnhancedError> {
-        self.errors.lock().unwrap()
+        self.errors.lock().expect("Failed to acquire lock")
             .iter()
             .filter(|e| e.context.severity == severity)
             .cloned()
@@ -585,7 +597,7 @@ impl ErrorAggregator {
     
     /// Clear all errors
     pub fn clear(&self) {
-        self.errors.lock().unwrap().clear();
+        self.errors.lock().expect("Failed to acquire lock").clear();
     }
 }
 

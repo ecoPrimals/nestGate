@@ -26,10 +26,10 @@ mod tests {
     #[test]
     fn test_performance_trend_serialization() {
         let trend = PerformanceTrend::Improving;
-        let json = serde_json::to_string(&trend).unwrap();
+        let json = serde_json::to_string(&trend).expect("Test setup failed");
         assert!(!json.is_empty());
 
-        let deserialized: PerformanceTrend = serde_json::from_str(&json).unwrap();
+        let deserialized: PerformanceTrend = serde_json::from_str(&json).expect("Test setup failed");
         assert!(matches!(deserialized, PerformanceTrend::Improving));
     }
 
@@ -69,11 +69,11 @@ mod tests {
             recommendations: vec!["Add RAM".to_string()],
         };
 
-        let json = serde_json::to_string(&analysis).unwrap();
+        let json = serde_json::to_string(&analysis).expect("Test setup failed");
         assert!(json.contains("Memory"));
         assert!(json.contains("82.3"));
 
-        let deserialized: ComponentAnalysis = serde_json::from_str(&json).unwrap();
+        let deserialized: ComponentAnalysis = serde_json::from_str(&json).expect("Test setup failed");
         assert_eq!(deserialized.component_name, "Memory");
         assert_eq!(deserialized.current_usage, 82.3);
     }
@@ -119,7 +119,7 @@ mod tests {
             core_count: 4,
         };
 
-        let json = serde_json::to_string(&metrics).unwrap();
+        let json = serde_json::to_string(&metrics).expect("Test setup failed");
         assert!(json.contains("50"));
         assert!(json.contains("\"core_count\":4"));
     }
@@ -150,8 +150,8 @@ mod tests {
             swap_used_bytes: 0,
         };
 
-        let json = serde_json::to_string(&metrics).unwrap();
-        let deserialized: MemoryMetrics = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&metrics).expect("Test setup failed");
+        let deserialized: MemoryMetrics = serde_json::from_str(&json).expect("Test setup failed");
         assert_eq!(deserialized.total_bytes, metrics.total_bytes);
     }
 
@@ -219,7 +219,7 @@ mod tests {
             snapshot_count: 20,
         };
 
-        let json = serde_json::to_string(&metrics).unwrap();
+        let json = serde_json::to_string(&metrics).expect("Test setup failed");
         assert!(json.contains("ONLINE"));
         assert!(json.contains("0.9"));
     }
@@ -308,8 +308,8 @@ mod tests {
     #[test]
     fn test_performance_analysis_config_serialization() {
         let config = PerformanceAnalysisConfig::default();
-        let json = serde_json::to_string(&config).unwrap();
-        let deserialized: PerformanceAnalysisConfig = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&config).expect("Test setup failed");
+        let deserialized: PerformanceAnalysisConfig = serde_json::from_str(&json).expect("Test setup failed");
 
         assert_eq!(
             deserialized.analysis_interval_seconds,
@@ -341,7 +341,7 @@ mod tests {
             estimated_impact: "Very High".to_string(),
         };
 
-        let json = serde_json::to_string(&rec).unwrap();
+        let json = serde_json::to_string(&rec).expect("Test setup failed");
         assert!(json.contains("Memory"));
         assert!(json.contains("\"priority\":9"));
     }
@@ -468,7 +468,7 @@ mod tests {
             trend: PerformanceTrend::Improving,
         };
 
-        let json = serde_json::to_string(&analysis).unwrap();
+        let json = serde_json::to_string(&analysis).expect("Test setup failed");
         assert!(json.contains("ONLINE"));
     }
 }

@@ -2,11 +2,11 @@
 //!
 //! Tests for HTTP client, connection pooling, and network types.
 
-use super::*;
 use super::client::*;
+// Tests moved inline or removed - module-level imports not needed
 use serde::Deserialize;
-use std::time::Duration;
 use std::collections::HashMap;
+use std::time::Duration;
 
 // ==================== PORT TESTS ====================
 
@@ -14,7 +14,7 @@ use std::collections::HashMap;
 fn test_port_new_valid() {
     let port = Port::new(8080);
     assert!(port.is_ok());
-    assert_eq!(port.unwrap().get(), 8080);
+    assert_eq!(port.expect("Network operation failed").get(), 8080);
 }
 
 #[test]
@@ -27,28 +27,28 @@ fn test_port_new_zero_invalid() {
 fn test_port_new_max_valid() {
     let port = Port::new(65535);
     assert!(port.is_ok());
-    assert_eq!(port.unwrap().get(), 65535);
+    assert_eq!(port.expect("Network operation failed").get(), 65535);
 }
 
 #[test]
 fn test_port_get() {
-    let port = Port::new(3000).unwrap();
+    let port = Port::new(3000).expect("Network operation failed");
     assert_eq!(port.get(), 3000);
 }
 
 #[test]
 fn test_port_equality() {
-    let port1 = Port::new(8080).unwrap();
-    let port2 = Port::new(8080).unwrap();
-    let port3 = Port::new(8081).unwrap();
-    
+    let port1 = Port::new(8080).expect("Network operation failed");
+    let port2 = Port::new(8080).expect("Network operation failed");
+    let port3 = Port::new(8081).expect("Network operation failed");
+
     assert_eq!(port1, port2);
     assert_ne!(port1, port3);
 }
 
 #[test]
 fn test_port_serialization() {
-    let port = Port::new(8080).unwrap();
+    let port = Port::new(8080).expect("Network operation failed");
     let json = serde_json::to_string(&port);
     assert!(json.is_ok());
 }
@@ -232,9 +232,9 @@ fn test_scheme_equality() {
 
 #[test]
 fn test_endpoint_http() {
-    let port = Port::new(8080).unwrap();
+    let port = Port::new(8080).expect("Network operation failed");
     let endpoint = Endpoint::http("localhost".to_string(), port);
-    
+
     assert_eq!(endpoint.host, "localhost");
     assert_eq!(endpoint.port.get(), 8080);
     assert_eq!(endpoint.scheme, Scheme::Http);
@@ -242,9 +242,9 @@ fn test_endpoint_http() {
 
 #[test]
 fn test_endpoint_https() {
-    let port = Port::new(443).unwrap();
+    let port = Port::new(443).expect("Network operation failed");
     let endpoint = Endpoint::https("example.com".to_string(), port);
-    
+
     assert_eq!(endpoint.host, "example.com");
     assert_eq!(endpoint.port.get(), 443);
     assert_eq!(endpoint.scheme, Scheme::Https);
@@ -252,33 +252,33 @@ fn test_endpoint_https() {
 
 #[test]
 fn test_endpoint_url_http() {
-    let port = Port::new(8080).unwrap();
+    let port = Port::new(8080).expect("Network operation failed");
     let endpoint = Endpoint::http("localhost".to_string(), port);
-    
+
     assert_eq!(endpoint.url(), "http://localhost:8080");
 }
 
 #[test]
 fn test_endpoint_url_https() {
-    let port = Port::new(443).unwrap();
+    let port = Port::new(443).expect("Network operation failed");
     let endpoint = Endpoint::https("example.com".to_string(), port);
-    
+
     assert_eq!(endpoint.url(), "https://example.com:443");
 }
 
 #[test]
 fn test_endpoint_equality() {
-    let port1 = Port::new(8080).unwrap();
-    let port2 = Port::new(8080).unwrap();
+    let port1 = Port::new(8080).expect("Network operation failed");
+    let port2 = Port::new(8080).expect("Network operation failed");
     let endpoint1 = Endpoint::http("localhost".to_string(), port1);
     let endpoint2 = Endpoint::http("localhost".to_string(), port2);
-    
+
     assert_eq!(endpoint1, endpoint2);
 }
 
 #[test]
 fn test_endpoint_serialization() {
-    let port = Port::new(8080).unwrap();
+    let port = Port::new(8080).expect("Network operation failed");
     let endpoint = Endpoint::http("localhost".to_string(), port);
     let json = serde_json::to_string(&endpoint);
     assert!(json.is_ok());
@@ -289,7 +289,7 @@ fn test_endpoint_serialization() {
 #[test]
 fn test_request_get() {
     let request = Request::get("/api/users");
-    
+
     assert_eq!(request.method, Method::Get);
     assert_eq!(request.path, "/api/users");
     assert!(request.headers.is_empty());
@@ -299,7 +299,7 @@ fn test_request_get() {
 fn test_request_post_json() {
     let body = r#"{"name":"test"}"#;
     let request = Request::post_json("/api/users", body);
-    
+
     assert_eq!(request.method, Method::Post);
     assert_eq!(request.path, "/api/users");
     assert!(request.headers.contains_key("content-type"));
@@ -309,8 +309,11 @@ fn test_request_post_json() {
 fn test_request_with_header() {
     let request = Request::get("/api/users")
         .with_header("authorization".to_string(), "Bearer token123".to_string());
-    
-    assert_eq!(request.headers.get("authorization"), Some(&"Bearer token123".to_string()));
+
+    assert_eq!(
+        request.headers.get("authorization"),
+        Some(&"Bearer token123".to_string())
+    );
 }
 
 #[test]
@@ -318,7 +321,7 @@ fn test_request_multiple_headers() {
     let request = Request::get("/api/users")
         .with_header("authorization".to_string(), "Bearer token".to_string())
         .with_header("accept".to_string(), "application/json".to_string());
-    
+
     assert_eq!(request.headers.len(), 2);
 }
 
@@ -337,7 +340,7 @@ fn test_request_body_empty() {
 fn test_request_body_bytes() {
     let data = b"test data";
     let body = RequestBody::Bytes(data);
-    
+
     match body {
         RequestBody::Bytes(b) => assert_eq!(b, data),
         _ => panic!("Expected Bytes body"),
@@ -348,7 +351,7 @@ fn test_request_body_bytes() {
 fn test_request_body_string() {
     let data = "test string";
     let body = RequestBody::String(data);
-    
+
     match body {
         RequestBody::String(s) => assert_eq!(s, data),
         _ => panic!("Expected String body"),
@@ -364,7 +367,7 @@ fn test_response_is_success_200() {
         headers: HashMap::new(),
         body: vec![],
     };
-    
+
     assert!(response.is_success());
 }
 
@@ -375,7 +378,7 @@ fn test_response_is_not_success_404() {
         headers: HashMap::new(),
         body: vec![],
     };
-    
+
     assert!(!response.is_success());
 }
 
@@ -386,10 +389,10 @@ async fn test_response_text() {
         headers: HashMap::new(),
         body: b"test response".to_vec(),
     };
-    
+
     let text = response.text().await;
     assert!(text.is_ok());
-    assert_eq!(text.unwrap(), "test response");
+    assert_eq!(text.expect("Network operation failed"), "test response");
 }
 
 #[tokio::test]
@@ -399,18 +402,18 @@ async fn test_response_json() {
         name: String,
         value: i32,
     }
-    
+
     let json_str = r#"{"name":"test","value":42}"#;
     let response = Response {
         status: StatusCode::OK,
         headers: HashMap::new(),
         body: json_str.as_bytes().to_vec(),
     };
-    
+
     let result: crate::Result<TestData> = response.json().await;
     assert!(result.is_ok());
-    
-    let data = result.unwrap();
+
+    let data = result.expect("Network operation failed");
     assert_eq!(data.name, "test");
     assert_eq!(data.value, 42);
 }
@@ -420,7 +423,7 @@ async fn test_response_json() {
 #[test]
 fn test_client_config_default() {
     let config = ClientConfig::<30000>::default();
-    
+
     assert_eq!(config.timeout.as_duration(), Duration::from_millis(30000));
     assert_eq!(config.max_connections, 100);
     assert_eq!(config.max_connections_per_host, 10);
@@ -448,7 +451,7 @@ fn test_client_config_serialization() {
 fn test_connection_pool_new() {
     let config = ClientConfig::<30000>::default();
     let pool = ConnectionPool::new(config);
-    
+
     // Pool should be created successfully
     assert!(std::mem::size_of_val(&pool) > 0);
 }
@@ -457,19 +460,23 @@ fn test_connection_pool_new() {
 
 #[tokio::test]
 async fn test_connection_is_alive_new() {
-    let port = Port::new(8080).unwrap();
+    let port = Port::new(8080).expect("Network operation failed");
     let endpoint = Endpoint::http("localhost".to_string(), port);
-    let connection = Connection::new(endpoint).await.unwrap();
-    
+    let connection = Connection::new(endpoint)
+        .await
+        .expect("Network operation failed");
+
     assert!(connection.is_alive());
 }
 
 #[tokio::test]
 async fn test_connection_stats() {
-    let port = Port::new(8080).unwrap();
+    let port = Port::new(8080).expect("Network operation failed");
     let endpoint = Endpoint::http("localhost".to_string(), port);
-    let connection = Connection::new(endpoint).await.unwrap();
-    
+    let connection = Connection::new(endpoint)
+        .await
+        .expect("Network operation failed");
+
     let stats = connection.stats();
     assert_eq!(stats.request_count, 0);
     assert!(stats.age < Duration::from_secs(1));
@@ -479,9 +486,9 @@ async fn test_connection_stats() {
 
 #[test]
 fn test_port_in_endpoint() {
-    let port = Port::new(3000).unwrap();
+    let port = Port::new(3000).expect("Network operation failed");
     let endpoint = Endpoint::http("api.example.com".to_string(), port);
-    
+
     assert_eq!(endpoint.url(), "http://api.example.com:3000");
 }
 
@@ -494,7 +501,7 @@ fn test_multiple_ports() {
         Port::new(8080),
         Port::new(65535),
     ];
-    
+
     assert!(ports[0].is_err()); // 0 is invalid
     assert!(ports[1].is_ok());
     assert!(ports[2].is_ok());
@@ -504,7 +511,7 @@ fn test_multiple_ports() {
 
 #[test]
 fn test_all_methods() {
-    let methods = vec![
+    let methods = [
         Method::Get,
         Method::Post,
         Method::Put,
@@ -513,13 +520,13 @@ fn test_all_methods() {
         Method::Head,
         Method::Options,
     ];
-    
+
     assert_eq!(methods.len(), 7);
 }
 
 #[test]
 fn test_status_code_ranges() {
-    let codes = vec![
+    let codes = [
         StatusCode::new(200),
         StatusCode::new(201),
         StatusCode::new(299),
@@ -529,7 +536,7 @@ fn test_status_code_ranges() {
         StatusCode::new(404),
         StatusCode::new(500),
     ];
-    
+
     assert!(codes[0].is_success()); // 200
     assert!(codes[1].is_success()); // 201
     assert!(codes[2].is_success()); // 299
@@ -539,4 +546,3 @@ fn test_status_code_ranges() {
     assert!(codes[6].is_error()); // 404
     assert!(codes[7].is_error()); // 500
 }
-

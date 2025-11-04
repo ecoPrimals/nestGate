@@ -22,8 +22,8 @@ mod tests {
         ];
 
         for dataset_type in types {
-            let serialized = serde_json::to_string(&dataset_type).unwrap();
-            let deserialized: DatasetType = serde_json::from_str(&serialized).unwrap();
+            let serialized = serde_json::to_string(&dataset_type).expect("Test setup failed");
+            let deserialized: DatasetType = serde_json::from_str(&serialized).expect("Test setup failed");
             assert_eq!(dataset_type, deserialized);
         }
     }
@@ -57,8 +57,8 @@ mod tests {
         ];
 
         for status in statuses {
-            let json = serde_json::to_string(&status).unwrap();
-            let parsed: DatasetStatus = serde_json::from_str(&json).unwrap();
+            let json = serde_json::to_string(&status).expect("Test setup failed");
+            let parsed: DatasetStatus = serde_json::from_str(&json).expect("Test setup failed");
             assert_eq!(status, parsed);
         }
     }
@@ -89,8 +89,8 @@ mod tests {
         ];
 
         for status in statuses {
-            let json = serde_json::to_value(&status).unwrap();
-            let parsed: AlertStatus = serde_json::from_value(json).unwrap();
+            let json = serde_json::to_value(&status).expect("Test setup failed");
+            let parsed: AlertStatus = serde_json::from_value(json).expect("Test setup failed");
             assert_eq!(status, parsed);
         }
     }
@@ -107,8 +107,8 @@ mod tests {
         ];
 
         for op in operators {
-            let serialized = serde_json::to_string(&op).unwrap();
-            let deserialized: ComparisonOperator = serde_json::from_str(&serialized).unwrap();
+            let serialized = serde_json::to_string(&op).expect("Test setup failed");
+            let deserialized: ComparisonOperator = serde_json::from_str(&serialized).expect("Test setup failed");
             assert_eq!(op, deserialized);
         }
     }
@@ -127,7 +127,7 @@ mod tests {
         ];
 
         for backend in backends {
-            let json = serde_json::to_string(&backend).unwrap();
+            let json = serde_json::to_string(&backend).expect("Test setup failed");
             assert!(!json.is_empty());
         }
     }
@@ -142,8 +142,8 @@ mod tests {
         ];
 
         for compression in types {
-            let json = serde_json::to_string(&compression).unwrap();
-            let parsed: CompressionType = serde_json::from_str(&json).unwrap();
+            let json = serde_json::to_string(&compression).expect("Test setup failed");
+            let parsed: CompressionType = serde_json::from_str(&json).expect("Test setup failed");
             assert_eq!(compression, parsed);
         }
     }
@@ -173,8 +173,8 @@ mod tests {
         ];
 
         for alert_type in types {
-            let serialized = serde_json::to_value(&alert_type).unwrap();
-            let deserialized: AlertType = serde_json::from_value(serialized).unwrap();
+            let serialized = serde_json::to_value(&alert_type).expect("Test setup failed");
+            let deserialized: AlertType = serde_json::from_value(serialized).expect("Test setup failed");
             assert_eq!(alert_type, deserialized);
         }
     }
@@ -208,8 +208,8 @@ mod tests {
             write_ops_per_sec: 50.0,
         };
 
-        let json = serde_json::to_string(&metrics).unwrap();
-        let parsed: StorageMetrics = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&metrics).expect("Test setup failed");
+        let parsed: StorageMetrics = serde_json::from_str(&json).expect("Test setup failed");
 
         assert_eq!(metrics.total_bytes, parsed.total_bytes);
         assert_eq!(metrics.used_bytes, parsed.used_bytes);
@@ -248,8 +248,8 @@ mod tests {
             tx_packets_per_sec: 4.0,
         };
 
-        let json = serde_json::to_string(&metrics).unwrap();
-        let parsed: NetworkIoMetrics = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&metrics).expect("Test setup failed");
+        let parsed: NetworkIoMetrics = serde_json::from_str(&json).expect("Test setup failed");
 
         assert_eq!(metrics.bytes_sent, parsed.bytes_sent);
         assert_eq!(metrics.rx_bytes_per_sec, parsed.rx_bytes_per_sec);
@@ -288,8 +288,8 @@ mod tests {
             avg_queue_depth: 1.0,
         };
 
-        let json = serde_json::to_string(&metrics).unwrap();
-        let parsed: DiskIoMetrics = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&metrics).expect("Test setup failed");
+        let parsed: DiskIoMetrics = serde_json::from_str(&json).expect("Test setup failed");
 
         assert_eq!(metrics.read_iops, parsed.read_iops);
         assert_eq!(metrics.write_iops, parsed.write_iops);
@@ -331,8 +331,8 @@ mod tests {
             conditions: vec![],
         };
 
-        let json = serde_json::to_string(&alert).unwrap();
-        let parsed: Alert = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&alert).expect("Test setup failed");
+        let parsed: Alert = serde_json::from_str(&json).expect("Test setup failed");
 
         assert_eq!(alert.id, parsed.id);
         assert_eq!(alert.name, parsed.name);
@@ -381,8 +381,8 @@ mod tests {
             currentvalue: 5.0,
         };
 
-        let json = serde_json::to_string(&condition).unwrap();
-        let parsed: AlertCondition = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&condition).expect("Test setup failed");
+        let parsed: AlertCondition = serde_json::from_str(&json).expect("Test setup failed");
 
         assert_eq!(condition.metric_name, parsed.metric_name);
         assert_eq!(condition.threshold, parsed.threshold);
@@ -409,8 +409,8 @@ mod tests {
             reset_timeout_seconds: 30,
         };
 
-        let json = serde_json::to_string(&config).unwrap();
-        let parsed: CircuitBreakerConfig = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&config).expect("Test setup failed");
+        let parsed: CircuitBreakerConfig = serde_json::from_str(&json).expect("Test setup failed");
 
         assert_eq!(config.failure_threshold, parsed.failure_threshold);
         assert_eq!(config.timeout_seconds, parsed.timeout_seconds);
@@ -437,8 +437,8 @@ mod tests {
             idle_timeout_ms: 10000,
         };
 
-        let json = serde_json::to_string(&config).unwrap();
-        let parsed: TimeoutConfig = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&config).expect("Test setup failed");
+        let parsed: TimeoutConfig = serde_json::from_str(&json).expect("Test setup failed");
 
         assert_eq!(config.connect_timeout_ms, parsed.connect_timeout_ms);
         assert_eq!(config.request_timeout_ms, parsed.request_timeout_ms);
@@ -469,8 +469,8 @@ mod tests {
             backoff_multiplier: 1.5,
         };
 
-        let json = serde_json::to_string(&policy).unwrap();
-        let parsed: RetryPolicy = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&policy).expect("Test setup failed");
+        let parsed: RetryPolicy = serde_json::from_str(&json).expect("Test setup failed");
 
         assert_eq!(policy.max_retries, parsed.max_retries);
         assert_eq!(policy.backoff_multiplier, parsed.backoff_multiplier);
@@ -494,8 +494,8 @@ mod tests {
             allow_unsafe_names: true,
         };
 
-        let json = serde_json::to_string(&context).unwrap();
-        let parsed: ValidationContext = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&context).expect("Test setup failed");
+        let parsed: ValidationContext = serde_json::from_str(&json).expect("Test setup failed");
 
         assert_eq!(context.strict_mode, parsed.strict_mode);
         assert_eq!(context.allow_unsafe_names, parsed.allow_unsafe_names);
@@ -538,8 +538,8 @@ mod tests {
             total_used_bytes: 3_000_000_000,
         };
 
-        let json = serde_json::to_string(&metrics).unwrap();
-        let parsed: ZfsMetrics = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&metrics).expect("Test setup failed");
+        let parsed: ZfsMetrics = serde_json::from_str(&json).expect("Test setup failed");
 
         assert_eq!(metrics.arc_hit_ratio, parsed.arc_hit_ratio);
         assert_eq!(metrics.compression_ratio, parsed.compression_ratio);

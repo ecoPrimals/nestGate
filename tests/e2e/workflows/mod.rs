@@ -131,3 +131,14 @@ impl WorkflowTestUtilities {
 }
 
 // **MIGRATION COMPLETE**: All workflow configurations use canonical patterns
+
+// ==================== WORKFLOW TEST MODULES ====================
+
+pub mod administration;
+pub mod concurrent_users;
+pub mod file_management;
+pub mod nas_setup;
+pub mod network_protocols;
+pub mod performance_optimization;
+pub mod pool_lifecycle_complete;
+pub mod tier_management;

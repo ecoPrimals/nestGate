@@ -31,7 +31,7 @@ mod handler_tests {
 
     #[tokio::test]
     async fn test_start_load_test_success() {
-        let server = TestServer::new(create_test_router()).unwrap();
+        let server = TestServer::new(create_test_router()).expect("Test setup failed");
 
         let config = json!({
             "duration_seconds": 60,
@@ -65,7 +65,7 @@ mod handler_tests {
 
     #[tokio::test]
     async fn test_start_load_test_with_ramp_scenario() {
-        let server = TestServer::new(create_test_router()).unwrap();
+        let server = TestServer::new(create_test_router()).expect("Test setup failed");
 
         let config = json!({
             "duration_seconds": 120,
@@ -98,12 +98,12 @@ mod handler_tests {
         response.assert_status_ok();
 
         let body: serde_json::Value = response.json();
-        assert!(body["test_id"].as_str().unwrap().starts_with("test_"));
+        assert!(body["test_id"].as_str().expect("Test setup failed").starts_with("test_"));
     }
 
     #[tokio::test]
     async fn test_start_load_test_with_spike_scenario() {
-        let server = TestServer::new(create_test_router()).unwrap();
+        let server = TestServer::new(create_test_router()).expect("Test setup failed");
 
         let config = json!({
             "duration_seconds": 90,
@@ -138,7 +138,7 @@ mod handler_tests {
 
     #[tokio::test]
     async fn test_start_load_test_with_step_scenario() {
-        let server = TestServer::new(create_test_router()).unwrap();
+        let server = TestServer::new(create_test_router()).expect("Test setup failed");
 
         let config = json!({
             "duration_seconds": 180,
@@ -173,7 +173,7 @@ mod handler_tests {
 
     #[tokio::test]
     async fn test_start_load_test_with_custom_headers() {
-        let server = TestServer::new(create_test_router()).unwrap();
+        let server = TestServer::new(create_test_router()).expect("Test setup failed");
 
         let config = json!({
             "duration_seconds": 45,
@@ -213,7 +213,7 @@ mod handler_tests {
 
     #[tokio::test]
     async fn test_start_load_test_minimal_config() {
-        let server = TestServer::new(create_test_router()).unwrap();
+        let server = TestServer::new(create_test_router()).expect("Test setup failed");
 
         let config = json!({
             "duration_seconds": 30,
@@ -242,7 +242,7 @@ mod handler_tests {
 
     #[tokio::test]
     async fn test_start_load_test_multiple_endpoints() {
-        let server = TestServer::new(create_test_router()).unwrap();
+        let server = TestServer::new(create_test_router()).expect("Test setup failed");
 
         let config = json!({
             "duration_seconds": 90,
@@ -269,13 +269,13 @@ mod handler_tests {
         response.assert_status_ok();
 
         let body: serde_json::Value = response.json();
-        let endpoints = body["config"]["endpoints"].as_array().unwrap();
+        let endpoints = body["config"]["endpoints"].as_array().expect("Test setup failed");
         assert_eq!(endpoints.len(), 3);
     }
 
     #[tokio::test]
     async fn test_start_load_test_high_concurrency() {
-        let server = TestServer::new(create_test_router()).unwrap();
+        let server = TestServer::new(create_test_router()).expect("Test setup failed");
 
         let config = json!({
             "duration_seconds": 300,
@@ -304,7 +304,7 @@ mod handler_tests {
 
     #[tokio::test]
     async fn test_start_load_test_strict_thresholds() {
-        let server = TestServer::new(create_test_router()).unwrap();
+        let server = TestServer::new(create_test_router()).expect("Test setup failed");
 
         let config = json!({
             "duration_seconds": 60,
@@ -340,14 +340,14 @@ mod handler_tests {
 
     #[tokio::test]
     async fn test_get_load_test_results_success() {
-        let server = TestServer::new(create_test_router()).unwrap();
+        let server = TestServer::new(create_test_router()).expect("Test setup failed");
 
         let response = server.get("/load-test/results").await;
 
         response.assert_status_ok();
 
         let body: serde_json::Value = response.json();
-        let results = body.as_array().unwrap();
+        let results = body.as_array().expect("Test setup failed");
         assert!(!results.is_empty());
 
         // Check first result structure
@@ -362,38 +362,38 @@ mod handler_tests {
 
     #[tokio::test]
     async fn test_get_load_test_results_returns_multiple() {
-        let server = TestServer::new(create_test_router()).unwrap();
+        let server = TestServer::new(create_test_router()).expect("Test setup failed");
 
         let response = server.get("/load-test/results").await;
 
         response.assert_status_ok();
 
         let body: serde_json::Value = response.json();
-        let results = body.as_array().unwrap();
+        let results = body.as_array().expect("Test setup failed");
         assert!(results.len() >= 2, "Should return multiple results");
     }
 
     #[tokio::test]
     async fn test_get_load_test_results_validates_data() {
-        let server = TestServer::new(create_test_router()).unwrap();
+        let server = TestServer::new(create_test_router()).expect("Test setup failed");
 
         let response = server.get("/load-test/results").await;
 
         response.assert_status_ok();
 
         let body: serde_json::Value = response.json();
-        let results = body.as_array().unwrap();
+        let results = body.as_array().expect("Test setup failed");
 
         for result in results {
-            let total = result["total_requests"].as_u64().unwrap();
-            let successful = result["successful_requests"].as_u64().unwrap();
-            let failed = result["failed_requests"].as_u64().unwrap();
+            let total = result["total_requests"].as_u64().expect("Test setup failed");
+            let successful = result["successful_requests"].as_u64().expect("Test setup failed");
+            let failed = result["failed_requests"].as_u64().expect("Test setup failed");
 
             // Validate totals match
             assert_eq!(total, successful + failed, "Request counts should match");
 
             // Validate response time is reasonable
-            let avg_time = result["avg_response_time_ms"].as_f64().unwrap();
+            let avg_time = result["avg_response_time_ms"].as_f64().expect("Test setup failed");
             assert!(avg_time > 0.0, "Response time should be positive");
         }
     }
@@ -402,14 +402,14 @@ mod handler_tests {
 
     #[tokio::test]
     async fn test_get_load_test_history_success() {
-        let server = TestServer::new(create_test_router()).unwrap();
+        let server = TestServer::new(create_test_router()).expect("Test setup failed");
 
         let response = server.get("/load-test/history").await;
 
         response.assert_status_ok();
 
         let body: serde_json::Value = response.json();
-        let history = body.as_array().unwrap();
+        let history = body.as_array().expect("Test setup failed");
         assert!(!history.is_empty());
 
         // Check first history entry
@@ -423,29 +423,29 @@ mod handler_tests {
 
     #[tokio::test]
     async fn test_get_load_test_history_validates_structure() {
-        let server = TestServer::new(create_test_router()).unwrap();
+        let server = TestServer::new(create_test_router()).expect("Test setup failed");
 
         let response = server.get("/load-test/history").await;
 
         response.assert_status_ok();
 
         let body: serde_json::Value = response.json();
-        let history = body.as_array().unwrap();
+        let history = body.as_array().expect("Test setup failed");
 
         for entry in history {
             // Validate test_id format
-            let test_id = entry["test_id"].as_str().unwrap();
+            let test_id = entry["test_id"].as_str().expect("Test setup failed");
             assert!(
                 test_id.starts_with("test_"),
                 "Test ID should have expected prefix"
             );
 
             // Validate test_name is not empty
-            let test_name = entry["test_name"].as_str().unwrap();
+            let test_name = entry["test_name"].as_str().expect("Test setup failed");
             assert!(!test_name.is_empty(), "Test name should not be empty");
 
             // Validate duration is positive
-            let duration = entry["duration_seconds"].as_u64().unwrap();
+            let duration = entry["duration_seconds"].as_u64().expect("Test setup failed");
             assert!(duration > 0, "Duration should be positive");
 
             // Validate result contains expected fields
@@ -459,14 +459,14 @@ mod handler_tests {
 
     #[tokio::test]
     async fn test_get_performance_baselines_success() {
-        let server = TestServer::new(create_test_router()).unwrap();
+        let server = TestServer::new(create_test_router()).expect("Test setup failed");
 
         let response = server.get("/load-test/baselines").await;
 
         response.assert_status_ok();
 
         let body: serde_json::Value = response.json();
-        let baselines = body.as_array().unwrap();
+        let baselines = body.as_array().expect("Test setup failed");
         assert!(!baselines.is_empty());
 
         // Check first baseline
@@ -480,45 +480,45 @@ mod handler_tests {
 
     #[tokio::test]
     async fn test_get_performance_baselines_multiple() {
-        let server = TestServer::new(create_test_router()).unwrap();
+        let server = TestServer::new(create_test_router()).expect("Test setup failed");
 
         let response = server.get("/load-test/baselines").await;
 
         response.assert_status_ok();
 
         let body: serde_json::Value = response.json();
-        let baselines = body.as_array().unwrap();
+        let baselines = body.as_array().expect("Test setup failed");
         assert!(baselines.len() >= 2, "Should return multiple baselines");
     }
 
     #[tokio::test]
     async fn test_get_performance_baselines_validates_metrics() {
-        let server = TestServer::new(create_test_router()).unwrap();
+        let server = TestServer::new(create_test_router()).expect("Test setup failed");
 
         let response = server.get("/load-test/baselines").await;
 
         response.assert_status_ok();
 
         let body: serde_json::Value = response.json();
-        let baselines = body.as_array().unwrap();
+        let baselines = body.as_array().expect("Test setup failed");
 
         for baseline in baselines {
             // Validate baseline_id format
-            let baseline_id = baseline["baseline_id"].as_str().unwrap();
+            let baseline_id = baseline["baseline_id"].as_str().expect("Test setup failed");
             assert!(
                 baseline_id.starts_with("baseline_"),
                 "Baseline ID should have expected prefix"
             );
 
             // Validate metrics are positive
-            let response_time = baseline["expected_response_time_ms"].as_f64().unwrap();
+            let response_time = baseline["expected_response_time_ms"].as_f64().expect("Test setup failed");
             assert!(response_time > 0.0, "Response time should be positive");
 
-            let throughput = baseline["expected_throughput_rps"].as_f64().unwrap();
+            let throughput = baseline["expected_throughput_rps"].as_f64().expect("Test setup failed");
             assert!(throughput > 0.0, "Throughput should be positive");
 
             // Validate error rate is a valid percentage (0-100)
-            let error_rate = baseline["max_error_rate_percent"].as_f64().unwrap();
+            let error_rate = baseline["max_error_rate_percent"].as_f64().expect("Test setup failed");
             assert!(
                 error_rate >= 0.0 && error_rate <= 100.0,
                 "Error rate should be 0-100%"
@@ -530,7 +530,7 @@ mod handler_tests {
 
     #[tokio::test]
     async fn test_start_load_test_with_zero_duration() {
-        let server = TestServer::new(create_test_router()).unwrap();
+        let server = TestServer::new(create_test_router()).expect("Test setup failed");
 
         let config = json!({
             "duration_seconds": 0,
@@ -560,7 +560,7 @@ mod handler_tests {
 
     #[tokio::test]
     async fn test_start_load_test_with_empty_endpoints() {
-        let server = TestServer::new(create_test_router()).unwrap();
+        let server = TestServer::new(create_test_router()).expect("Test setup failed");
 
         let config = json!({
             "duration_seconds": 60,
@@ -590,7 +590,7 @@ mod handler_tests {
 
     #[tokio::test]
     async fn test_start_load_test_with_large_payload() {
-        let server = TestServer::new(create_test_router()).unwrap();
+        let server = TestServer::new(create_test_router()).expect("Test setup failed");
 
         let config = json!({
             "duration_seconds": 60,
@@ -619,13 +619,13 @@ mod handler_tests {
         let body: serde_json::Value = response.json();
         let payload_size = body["config"]["test_data"]["payload_size_bytes"]
             .as_u64()
-            .unwrap();
+            .expect("Test setup failed");
         assert_eq!(payload_size, 10485760);
     }
 
     #[tokio::test]
     async fn test_start_load_test_with_very_low_rps() {
-        let server = TestServer::new(create_test_router()).unwrap();
+        let server = TestServer::new(create_test_router()).expect("Test setup failed");
 
         let config = json!({
             "duration_seconds": 60,
@@ -654,7 +654,7 @@ mod handler_tests {
 
     #[tokio::test]
     async fn test_start_load_test_with_fractional_rps() {
-        let server = TestServer::new(create_test_router()).unwrap();
+        let server = TestServer::new(create_test_router()).expect("Test setup failed");
 
         let config = json!({
             "duration_seconds": 60,
@@ -681,13 +681,13 @@ mod handler_tests {
         response.assert_status_ok();
 
         let body: serde_json::Value = response.json();
-        let rps = body["config"]["requests_per_second"].as_f64().unwrap();
+        let rps = body["config"]["requests_per_second"].as_f64().expect("Test setup failed");
         assert_eq!(rps, 2.5);
     }
 
     #[tokio::test]
     async fn test_start_load_test_with_single_user() {
-        let server = TestServer::new(create_test_router()).unwrap();
+        let server = TestServer::new(create_test_router()).expect("Test setup failed");
 
         let config = json!({
             "duration_seconds": 60,
@@ -718,7 +718,7 @@ mod handler_tests {
 
     #[tokio::test]
     async fn test_start_load_test_malformed_json() {
-        let server = TestServer::new(create_test_router()).unwrap();
+        let server = TestServer::new(create_test_router()).expect("Test setup failed");
 
         let response = server
             .post("/load-test/start")
@@ -739,7 +739,7 @@ mod handler_tests {
 
     #[tokio::test]
     async fn test_start_load_test_missing_required_fields() {
-        let server = TestServer::new(create_test_router()).unwrap();
+        let server = TestServer::new(create_test_router()).expect("Test setup failed");
 
         let config = json!({
             "duration_seconds": 60
@@ -754,7 +754,7 @@ mod handler_tests {
 
     #[tokio::test]
     async fn test_start_load_test_wrong_content_type() {
-        let server = TestServer::new(create_test_router()).unwrap();
+        let server = TestServer::new(create_test_router()).expect("Test setup failed");
 
         let response = server
             .post("/load-test/start")
@@ -768,7 +768,7 @@ mod handler_tests {
 
     #[tokio::test]
     async fn test_get_methods_with_post() {
-        let server = TestServer::new(create_test_router()).unwrap();
+        let server = TestServer::new(create_test_router()).expect("Test setup failed");
 
         // GET endpoints should not accept POST
         let response = server.post("/load-test/results").await;
@@ -778,7 +778,7 @@ mod handler_tests {
 
     #[tokio::test]
     async fn test_post_method_with_get() {
-        let server = TestServer::new(create_test_router()).unwrap();
+        let server = TestServer::new(create_test_router()).expect("Test setup failed");
 
         // POST endpoint should not accept GET
         let response = server.get("/load-test/start").await;
@@ -788,7 +788,7 @@ mod handler_tests {
 
     #[tokio::test]
     async fn test_nonexistent_endpoint() {
-        let server = TestServer::new(create_test_router()).unwrap();
+        let server = TestServer::new(create_test_router()).expect("Test setup failed");
 
         let response = server.get("/load-test/nonexistent").await;
 
@@ -799,7 +799,7 @@ mod handler_tests {
 
     #[tokio::test]
     async fn test_responses_have_correct_content_type() {
-        let server = TestServer::new(create_test_router()).unwrap();
+        let server = TestServer::new(create_test_router()).expect("Test setup failed");
 
         let response = server.get("/load-test/results").await;
 
@@ -811,7 +811,7 @@ mod handler_tests {
 
     #[tokio::test]
     async fn test_start_load_test_response_structure() {
-        let server = TestServer::new(create_test_router()).unwrap();
+        let server = TestServer::new(create_test_router()).expect("Test setup failed");
 
         let config = json!({
             "duration_seconds": 60,

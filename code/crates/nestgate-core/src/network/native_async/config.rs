@@ -26,9 +26,10 @@ pub struct NetworkConfig {
 #[allow(deprecated)] // Keeping for backwards compatibility during migration
 impl Default for NetworkConfig {
     fn default() -> Self {
+        use crate::constants::hardcoding::ports;
         Self {
             host: crate::constants::canonical_defaults::network::LOCALHOST.to_string(),
-            port: 8080,
+            port: ports::HTTP_DEFAULT,
             connection_timeout: Duration::from_secs(30),
             request_timeout: Duration::from_secs(60),
             enable_tls: false,

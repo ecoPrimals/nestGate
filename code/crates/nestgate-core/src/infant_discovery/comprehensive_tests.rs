@@ -35,7 +35,7 @@ async fn test_capability_discovery_success() {
     let result = system.discover_capabilities().await;
 
     assert!(result.is_ok(), "Capability discovery should succeed");
-    let capabilities = result.unwrap();
+    let capabilities = result.expect("Test setup failed");
     assert!(
         !capabilities.is_empty(),
         "Should discover at least one capability"
@@ -46,7 +46,10 @@ async fn test_capability_discovery_success() {
 async fn test_discover_capabilities_sovereignty_compliance() {
     let mut system = InfantDiscoverySystem::<100>::new();
 
-    let capabilities = system.discover_capabilities().await.unwrap();
+    let capabilities = system
+        .discover_capabilities()
+        .await
+        .expect("Test setup failed");
 
     // Verify all discovered capabilities are sovereignty compliant
     for cap in &capabilities {
@@ -63,7 +66,10 @@ async fn test_establish_connection_success() {
     let mut system = InfantDiscoverySystem::<100>::new();
 
     // First discover capabilities
-    let capabilities = system.discover_capabilities().await.unwrap();
+    let capabilities = system
+        .discover_capabilities()
+        .await
+        .expect("Test setup failed");
     assert!(
         !capabilities.is_empty(),
         "Should have discovered capabilities"
@@ -73,7 +79,7 @@ async fn test_establish_connection_success() {
     let result = system.establish_connection(&capabilities[0].id).await;
     assert!(result.is_ok(), "Connection should succeed");
 
-    let connection = result.unwrap();
+    let connection = result.expect("Test setup failed");
     assert_eq!(
         connection.id, capabilities[0].id,
         "Connection ID should match capability ID"
@@ -100,7 +106,10 @@ async fn test_o1_complexity_verification() {
     let mut system = InfantDiscoverySystem::<100>::new();
 
     // Discover capabilities
-    let capabilities = system.discover_capabilities().await.unwrap();
+    let capabilities = system
+        .discover_capabilities()
+        .await
+        .expect("Test setup failed");
     assert!(!capabilities.is_empty());
 
     // Verify O(1) connection establishment
@@ -114,7 +123,7 @@ async fn test_o1_complexity_verification() {
         "Connection should be fast (O(1))"
     );
 
-    let connection = result.unwrap();
+    let connection = result.expect("Test setup failed");
     assert_eq!(
         connection.complexity_order, 1,
         "Must maintain O(1) complexity order"
@@ -126,7 +135,10 @@ async fn test_discovery_statistics() {
     let mut system = InfantDiscoverySystem::<100>::new();
 
     // Perform discovery
-    let _capabilities = system.discover_capabilities().await.unwrap();
+    let _capabilities = system
+        .discover_capabilities()
+        .await
+        .expect("Test setup failed");
 
     // Check statistics
     let stats = system.get_discovery_stats().await;
@@ -150,7 +162,10 @@ async fn test_multiple_connections_maintain_o1() {
     let mut system = InfantDiscoverySystem::<100>::new();
 
     // Discover capabilities
-    let capabilities = system.discover_capabilities().await.unwrap();
+    let capabilities = system
+        .discover_capabilities()
+        .await
+        .expect("Test setup failed");
     assert!(!capabilities.is_empty());
 
     // Establish multiple connections
@@ -158,7 +173,7 @@ async fn test_multiple_connections_maintain_o1() {
         let result = system.establish_connection(&capability.id).await;
         assert!(result.is_ok(), "Each connection should succeed");
 
-        let connection = result.unwrap();
+        let connection = result.expect("Test setup failed");
         assert_eq!(
             connection.complexity_order, 1,
             "All connections must be O(1)"
@@ -361,11 +376,14 @@ fn test_capability_metadata_operations() {
 #[tokio::test]
 async fn test_connection_creation() {
     let mut system = InfantDiscoverySystem::<100>::new();
-    let capabilities = system.discover_capabilities().await.unwrap();
+    let capabilities = system
+        .discover_capabilities()
+        .await
+        .expect("Test setup failed");
     let connection = system
         .establish_connection(&capabilities[0].id)
         .await
-        .unwrap();
+        .expect("Test setup failed");
 
     assert_eq!(connection.id, capabilities[0].id);
     assert_eq!(connection.complexity_order, 1, "Must be O(1)");
@@ -374,13 +392,16 @@ async fn test_connection_creation() {
 #[tokio::test]
 async fn test_connection_timestamp() {
     let mut system = InfantDiscoverySystem::<100>::new();
-    let capabilities = system.discover_capabilities().await.unwrap();
+    let capabilities = system
+        .discover_capabilities()
+        .await
+        .expect("Test setup failed");
 
     let before = std::time::SystemTime::now();
     let connection = system
         .establish_connection(&capabilities[0].id)
         .await
-        .unwrap();
+        .expect("Test setup failed");
     let after = std::time::SystemTime::now();
 
     assert!(
@@ -396,12 +417,15 @@ async fn test_connection_timestamp() {
 #[tokio::test]
 async fn test_connection_endpoint_matches_capability() {
     let mut system = InfantDiscoverySystem::<100>::new();
-    let capabilities = system.discover_capabilities().await.unwrap();
+    let capabilities = system
+        .discover_capabilities()
+        .await
+        .expect("Test setup failed");
 
     let connection = system
         .establish_connection(&capabilities[0].id)
         .await
-        .unwrap();
+        .expect("Test setup failed");
 
     assert_eq!(
         connection.endpoint, capabilities[0].endpoint,
@@ -428,7 +452,10 @@ async fn test_discovery_stats_tracking() {
     assert_eq!(initial_stats.discovery_attempts, 0);
 
     // Perform discovery
-    let _capabilities = system.discover_capabilities().await.unwrap();
+    let _capabilities = system
+        .discover_capabilities()
+        .await
+        .expect("Test setup failed");
 
     // Updated stats
     let updated_stats = system.get_discovery_stats().await;
@@ -452,7 +479,10 @@ async fn test_discovery_stats_multiple_discoveries() {
 
     // Perform multiple discoveries
     for _ in 0..3 {
-        let _capabilities = system.discover_capabilities().await.unwrap();
+        let _capabilities = system
+            .discover_capabilities()
+            .await
+            .expect("Test setup failed");
     }
 
     let stats = system.get_discovery_stats().await;
@@ -472,14 +502,14 @@ async fn test_end_to_end_discovery_and_connection() {
     let capabilities = system.discover_capabilities().await;
     assert!(capabilities.is_ok(), "Discovery should succeed");
 
-    let caps = capabilities.unwrap();
+    let caps = capabilities.expect("Test setup failed");
     assert!(!caps.is_empty(), "Should discover at least one capability");
 
     // Step 2: Establish connection
     let connection = system.establish_connection(&caps[0].id).await;
     assert!(connection.is_ok(), "Connection should succeed");
 
-    let conn = connection.unwrap();
+    let conn = connection.expect("Test setup failed");
     assert_eq!(conn.id, caps[0].id);
     assert_eq!(conn.endpoint, caps[0].endpoint);
     assert_eq!(conn.complexity_order, 1);
@@ -490,8 +520,14 @@ async fn test_discovery_multiple_times() {
     let mut system = InfantDiscoverySystem::<100>::new();
 
     // Discover multiple times
-    let caps1 = system.discover_capabilities().await.unwrap();
-    let caps2 = system.discover_capabilities().await.unwrap();
+    let caps1 = system
+        .discover_capabilities()
+        .await
+        .expect("Test setup failed");
+    let caps2 = system
+        .discover_capabilities()
+        .await
+        .expect("Test setup failed");
 
     // Both should succeed
     assert!(!caps1.is_empty());
@@ -510,7 +546,10 @@ async fn test_sovereignty_compliance_end_to_end() {
     assert!(system.verify_sovereignty_compliance());
 
     // Discover capabilities
-    let capabilities = system.discover_capabilities().await.unwrap();
+    let capabilities = system
+        .discover_capabilities()
+        .await
+        .expect("Test setup failed");
 
     // All discovered capabilities should be sovereignty compliant
     for cap in &capabilities {

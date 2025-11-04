@@ -264,7 +264,7 @@ mod tests {
         env::set_var("SECURITY_DISCOVERY_ENDPOINT", "http://beardog:9000");
 
         let discovery = EnvironmentDiscovery::new();
-        let capabilities = discovery.discover().await.unwrap();
+        let capabilities = discovery.discover().await.expect("Operation failed");
 
         // Debug output to help troubleshoot
         if capabilities.len() != 2 {
@@ -288,7 +288,7 @@ mod tests {
         let orchestration = capabilities
             .iter()
             .find(|c| c.capability_type == "orchestration")
-            .unwrap();
+            .expect("Operation failed");
         assert_eq!(orchestration.endpoint, "http://songbird:8080");
         assert_eq!(orchestration.confidence, 0.95);
 
@@ -328,7 +328,7 @@ mod tests {
 
         let mut scanner = CapabilityScanner::new();
 
-        let capabilities = scanner.scan_capabilities().await.unwrap();
+        let capabilities = scanner.scan_capabilities().await.expect("Operation failed");
         assert!(
             !capabilities.is_empty(),
             "Expected to find capabilities, but found none. Check environment variable discovery."
@@ -344,14 +344,20 @@ mod tests {
             ai_capability.is_some(),
             "AI capability should be discovered"
         );
-        assert_eq!(ai_capability.unwrap().endpoint, "http://squirrel:7000");
+        assert_eq!(
+            ai_capability.expect("Operation failed").endpoint,
+            "http://squirrel:7000"
+        );
 
         let storage_capability = scanner.get_capability("storage");
         assert!(
             storage_capability.is_some(),
             "STORAGE capability should be discovered"
         );
-        assert_eq!(storage_capability.unwrap().endpoint, "http://storage:8080");
+        assert_eq!(
+            storage_capability.expect("Operation failed").endpoint,
+            "http://storage:8080"
+        );
 
         // Clean up all discovery environment variables
         for pattern in &discovery_patterns {

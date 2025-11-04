@@ -244,7 +244,7 @@ fn handle_config_command(action: ConfigAction) -> Result<()> {
             println!("storage.compression: true");
             println!("storage.checksumming: true");
             println!("service.port: nestgate_core::constants::canonical::network::DEFAULT_API_PORT");
-            println!("service.bind: 0.0.0.0");
+            println!("service.bind: nestgate_core::constants::hardcoding::addresses::BIND_ALL_IPV4");
             println!("logging.level: info");
         }
     ConfigAction::Set { key, value } => {

@@ -56,14 +56,16 @@ pub struct ZfsServiceConfig {
 
 impl Default for ZfsServiceConfig {
     fn default() -> Self {
+        use nestgate_core::constants::hardcoding::{addresses, ports};
+
         Self {
             service_name: "nestgate-zfs".to_string(),
             bind_address: std::env::var("NESTGATE_BIND_ADDRESS")
-                .unwrap_or_else(|_| "0.0.0.0".to_string()),
+                .unwrap_or_else(|_| addresses::BIND_ALL_IPV4.to_string()),
             port: std::env::var("NESTGATE_API_PORT")
-                .unwrap_or_else(|_| "8080".to_string())
-                .parse()
-                .unwrap_or(8080),
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(ports::HTTP_DEFAULT),
             orchestrator_endpoints: vec![],
             health_check_interval: 30,
             capabilities: vec![

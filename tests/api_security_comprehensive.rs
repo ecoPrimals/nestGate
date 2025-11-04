@@ -255,12 +255,12 @@ mod tests {
 
     #[tokio::test]
     async fn test_authentication_bypass_protection() -> Result<(), Box<dyn std::error::Error>> {
-        use crate::common::{TestHelpers, TestSetup};
+        use nestgate::common::{TestHelpers, TestSetup};
         use nestgate_core::Result as TestResult;
 
         async fn run_test() -> TestResult<()> {
             let app = create_test_app();
-            let app = create_test_app();
+            let server = TestServer::new(app)?;
 
             // Test access to protected resource without token
             let response = server
@@ -291,7 +291,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_authorization_boundary_enforcement() -> Result<(), Box<dyn std::error::Error>> {
-        use crate::common::{
+        use nestgate::common::{
             helpers::assert_equals, helpers::create_test_server, test_error_handling::TestResult,
         };
 
@@ -451,7 +451,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_sql_injection_protection() -> Result<(), Box<dyn std::error::Error>> {
-        use crate::common::{
+        use nestgate::common::{
             helpers::assert_equals, helpers::create_test_server, test_error_handling::TestResult,
         };
 

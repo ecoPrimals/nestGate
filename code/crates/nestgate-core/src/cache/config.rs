@@ -182,7 +182,7 @@ mod tests {
         let config = Config::default();
         
         assert!(service.initialize(&config).await.is_ok());
-        assert_eq!(service.health_check().await.unwrap(), HealthStatus::Healthy);
+        assert_eq!(service.health_check().await.expect("Configuration error"), HealthStatus::Healthy);
         assert!(service.shutdown().await.is_ok());
     }
 

@@ -10,13 +10,8 @@
 use nestgate_core::config::canonical_master::NestGateCanonicalConfig;
 use nestgate_core::error::{NestGateError, Result};
 use std::sync::Arc;
-use std::sync::Arc;
-use std::sync::Arc;
-use tests::canonical_modernization::{UnifiedHealthStatus, UnifiedServiceType};
-
-use std::sync::Arc;
-use std::sync::Arc;
 use std::time::{Duration, Instant};
+use tests::canonical_modernization::{UnifiedHealthStatus, UnifiedServiceType};
 use tokio::sync::RwLock;
 
 /// Test zero-copy configuration operations performance

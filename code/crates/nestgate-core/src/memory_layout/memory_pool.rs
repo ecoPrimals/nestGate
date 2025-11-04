@@ -65,6 +65,14 @@ impl<T, const POOL_SIZE: usize> CacheOptimizedMemoryPool<T, POOL_SIZE> {
                 // 4. Offset: add(current) stays within array bounds (current < POOL_SIZE)
                 // 5. Initialization: ptr::write properly initializes the Option<T> slot
                 // 6. No aliasing: Only this thread can write to claimed slot
+                //
+                // SAFETY PROOF:
+                // - blocks_ptr is derived from self.blocks which is always valid
+                // - current < POOL_SIZE verified by bounds check above
+                // - add(current) produces valid pointer within array bounds
+                // - No data races: AtomicUsize ensures exclusive access to this slot
+                // - ptr::write initializes previously uninitialized or None slot
+                // - No aliasing: This is the only write to this specific slot after claim
                 unsafe {
                     let blocks_ptr = self.blocks.as_ptr() as *mut Option<T>;
                     let slot = blocks_ptr.add(current);
@@ -105,6 +113,16 @@ impl<T, const POOL_SIZE: usize> CacheOptimizedMemoryPool<T, POOL_SIZE> {
     /// - The handle has not been used for deallocation before
     /// - No other references to the object exist
     /// - The object at the handle's index is in a valid state
+    ///
+    /// # Safety Proof
+    ///
+    /// - **Bounds**: handle.index checked against POOL_SIZE before dereferencing
+    /// - **Validity**: blocks_ptr derived from valid self.blocks reference
+    /// - **Offset**: add(handle.index) stays within array bounds (handle.index < POOL_SIZE)
+    /// - **Read safety**: ptr::read assumes initialized data, guaranteed by handle provenance
+    /// - **Write safety**: ptr::write(None) properly clears the slot for reuse
+    /// - **No aliasing**: Caller guarantees exclusive ownership per function contract
+    /// - **No double-free**: Caller guarantees handle not previously deallocated
     pub unsafe fn deallocate(&self, handle: PoolHandle<T>) -> Option<T> {
         if handle.index >= POOL_SIZE {
             return None;
@@ -154,16 +172,19 @@ pub struct PoolStats {
 }
 
 #[cfg(test)]
+#[allow(deprecated)] // Testing deprecated CacheOptimizedMemoryPool for backwards compatibility
 mod tests {
     use super::*;
 
     #[test]
+    #[allow(deprecated)]
     fn test_memory_pool_creation() {
         let pool: CacheOptimizedMemoryPool<u64, 16> = CacheOptimizedMemoryPool::new();
         assert_eq!(pool.utilization(), 0.0);
     }
 
     #[test]
+    #[allow(deprecated)]
     fn test_memory_pool_allocation() {
         let pool: CacheOptimizedMemoryPool<u64, 16> = CacheOptimizedMemoryPool::new();
 
@@ -173,10 +194,11 @@ mod tests {
     }
 
     #[test]
+    #[allow(deprecated)]
     fn test_memory_pool_deallocation() {
         let pool: CacheOptimizedMemoryPool<u64, 16> = CacheOptimizedMemoryPool::new();
 
-        let handle = pool.allocate(42u64).unwrap();
+        let handle = pool.allocate(42u64).expect("Operation failed");
         // SAFETY: Test deallocation is safe because:
         // 1. Handle validity: handle was just allocated from this pool
         // 2. No double-free: This is the only deallocation of this handle
@@ -187,6 +209,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(deprecated)]
     fn test_memory_pool_exhaustion() {
         let pool: CacheOptimizedMemoryPool<u64, 2> = CacheOptimizedMemoryPool::new();
 
@@ -200,6 +223,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(deprecated)]
     fn test_memory_pool_statistics() {
         let pool: CacheOptimizedMemoryPool<u64, 16> = CacheOptimizedMemoryPool::new();
 

@@ -28,7 +28,7 @@ async fn test_list_backends_default() {
     let result = list_backends(State(state), Query(query)).await;
     assert!(result.is_ok(), "list_backends should succeed");
 
-    let response = result.unwrap();
+    let response = result.expect("Storage operation failed");
     let backends = &response.0.data;
 
     assert!(!backends.is_empty(), "Should have at least one backend");
@@ -86,50 +86,25 @@ async fn test_list_backends_page_two() {
 // NOTE: get_backend_performance handler not yet implemented
 // Tests disabled until handler is added
 
-// #[tokio::test]
-// async fn test_get_backend_performance_memory() {
-//     // TODO: Implement when get_backend_performance handler is available
-// }
-
 // ==================== SCAN STORAGE TESTS ====================
 // NOTE: ScanStorageRequest struct has changed - tests need updating
 // Current struct has: scan_depth, include_performance, include_costs, target_backends, path, include_cloud
 // Old struct had: performance_requirements, capacity_gb, tier, additional_filters
 // Tests disabled until updated to match current API
 
-// #[tokio::test]
-// async fn test_scan_storage_basic() {
-//     // TODO: Update to new ScanStorageRequest structure
-// }
-
 // ==================== AUTO CONFIGURE TESTS ====================
 // NOTE: AutoConfigInput struct has changed - tests need updating
 // Actual struct has: hardware, performance_requirements, reliability_requirements, budget_constraints, workload_pattern
 // Tests disabled until updated to match current API
 
-// #[tokio::test]
-// async fn test_auto_configure_basic() {
-//     // TODO: Update to use new AutoConfigInput structure
-// }
-
 // ==================== COST ESTIMATION TESTS ====================
 // NOTE: estimate_costs handler not yet implemented
 // Tests disabled until handler is added
-
-// #[tokio::test]
-// async fn test_estimate_costs_memory_hot_tier() {
-//     // TODO: Implement when estimate_costs handler is available
-// }
 
 // ==================== BENCHMARK TESTS ====================
 // NOTE: BenchmarkStorageRequest struct has changed - tests need updating
 // Actual struct has: storage_config, benchmark_config, backend, test_size_mb
 // Tests disabled until updated to match current API
-
-// #[tokio::test]
-// async fn test_benchmark_storage_sequential_read() {
-//     // TODO: Update to use new BenchmarkStorageRequest structure
-// }
 
 // ==================== PERFORMANCE PROJECTION TESTS ====================
 // NOTE: project_performance handler not yet implemented

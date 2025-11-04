@@ -126,6 +126,10 @@ impl EvolutionMetadata {
     }
 
     /// Track component evolution
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if component tracking fails (currently infallible).
     pub fn track_component_evolution(
         &mut self,
         component: &str,
@@ -139,10 +143,14 @@ impl EvolutionMetadata {
     /// Get component count
     #[must_use]
     pub fn get_component_count(&self) -> u32 {
-        self.components.len() as u32
+        u32::try_from(self.components.len()).unwrap_or(u32::MAX)
     }
 
     /// Validate metadata consistency
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if version is empty or metadata is inconsistent.
     pub fn validate(&self) -> crate::Result<()> {
         if self.version.is_empty() {
             return Err(crate::NestGateError::validation_error(

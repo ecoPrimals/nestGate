@@ -397,7 +397,7 @@ mod utility_tests {
     fn test_result_type() {
         let success: Result<i32> = Ok(42);
         assert!(success.is_ok());
-        assert_eq!(success.unwrap(), 42);
+        assert_eq!(success.expect("Test setup failed"), 42);
     }
 
     #[test]
@@ -440,7 +440,7 @@ mod async_tests {
     async fn test_async_function() {
         let result = async { Ok::<_, NestGateError>(42) }.await;
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), 42);
+        assert_eq!(result.expect("Test setup failed"), 42);
     }
 
     #[tokio::test]
@@ -491,7 +491,7 @@ mod edge_case_tests {
     fn test_option_some() {
         let some: Option<i32> = Some(42);
         assert!(some.is_some());
-        assert_eq!(some.unwrap(), 42);
+        assert_eq!(some.expect("Test setup failed"), 42);
     }
 
     #[test]

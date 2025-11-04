@@ -26,13 +26,21 @@ use tokio::test;
 /// Test RemoteZfsService creation and connection
 #[test]
 fn test_remote_service_creation() -> Result<(), Box<dyn std::error::Error>> {
+    use std::env;
     // Test successful connection
-    let endpoint = "http://localhost:".to_string()
-        + &env::var("NESTGATE_API_PORT").unwrap_or_else(|_| "8080".to_string());
+    let endpoint = format!(
+        "http://{}:{}",
+        env::var("NESTGATE_HOSTNAME").unwrap_or_else(|_| {
+            nestgate_core::constants::hardcoding::addresses::LOCALHOST_NAME.to_string()
+        }),
+        env::var("NESTGATE_API_PORT").unwrap_or_else(|_| {
+            nestgate_core::constants::hardcoding::ports::HTTP_DEFAULT.to_string()
+        })
+    );
     // Note: This would require a mock server in a real test environment
     // For now, we test the error handling path
     let config = RemoteConfig {
-        endpoint: endpoint.to_string(),
+        endpoint,
         timeout: Duration::from_secs(30),
         max_retries: 3,
     };

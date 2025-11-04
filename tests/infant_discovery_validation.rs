@@ -6,7 +6,6 @@
 //! - O(1) universal adapter connections
 //! - Complete vendor independence
 
-use nestgate_core::config::canonical_master::NestGateCanonicalConfig;
 use std::collections::HashMap;
 
 /// Test the core infant discovery principle: zero hardcoded knowledge

@@ -134,8 +134,18 @@ impl NativeAsyncLoadBalancer<100, 1000, 3600, 60> for DevelopmentLoadBalancer {
                     version: "1.0.0".to_string(),
                 }],
                 endpoints: vec![crate::service_discovery::types::ServiceEndpoint {
-                    url: "http://localhost:".to_string()
-                        + &env::var("NESTGATE_API_PORT").unwrap_or_else(|_| "8080".to_string()),
+                    url: {
+                        use crate::constants::hardcoding::{addresses, ports};
+                        format!(
+                            "http://{}:{}",
+                            env::var("NESTGATE_API_HOST")
+                                .unwrap_or_else(|_| addresses::LOCALHOST_NAME.to_string()),
+                            env::var("NESTGATE_API_PORT")
+                                .ok()
+                                .and_then(|s| s.parse().ok())
+                                .unwrap_or(ports::HTTP_DEFAULT)
+                        )
+                    },
                     protocol: crate::service_discovery::types::CommunicationProtocol::Http,
                     health_check: Some("/health".to_string()),
                 }],

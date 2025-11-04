@@ -129,6 +129,14 @@ where
         // 3. Lifetime: Returned Pin<&mut F> has same lifetime as self
         // 4. Invariants: TimeoutFuture doesn't implement Unpin, preserving pin guarantees
         // 5. No drop glue: We're not interfering with drop order or moving pinned data
+        //
+        // SAFETY PROOF:
+        // - **Pin projection**: map_unchecked_mut maintains Pin invariants during field access
+        // - **Structural pin**: future field never moved after TimeoutFuture pinned
+        // - **No Unpin impl**: TimeoutFuture doesn't implement Unpin, enforcing pin contract
+        // - **Lifetime**: Mutable borrow &mut s.future has same lifetime as Pin<&mut Self>
+        // - **No Drop**: No Drop impl means no drop glue interference
+        // - **Address stability**: Field address remains stable while parent pinned
         let future = unsafe { self.as_mut().map_unchecked_mut(|s| &mut s.future) };
         match future.poll(cx) {
             Poll::Ready(result) => Poll::Ready(Ok(result)),
@@ -318,7 +326,7 @@ mod tests {
         let results = processor.process_batch(items).await;
 
         assert!(results.is_ok());
-        let results = results.unwrap();
+        let results = results.expect("Operation failed");
         assert_eq!(results.len(), 25);
         assert_eq!(results[0], 2);
         assert_eq!(results[24], 50);
@@ -340,12 +348,12 @@ mod tests {
         // First call should execute
         let result1 = executor.execute().await;
         assert!(result1.is_ok());
-        assert_eq!(result1.unwrap(), 42);
+        assert_eq!(result1.expect("Operation failed"), 42);
 
         // Second call should use cache
         let result2 = executor.execute().await;
         assert!(result2.is_ok());
-        assert_eq!(result2.unwrap(), 42);
+        assert_eq!(result2.expect("Operation failed"), 42);
 
         // Verify caching worked (only one call made)
         assert_eq!(call_count.load(std::sync::atomic::Ordering::SeqCst), 1);

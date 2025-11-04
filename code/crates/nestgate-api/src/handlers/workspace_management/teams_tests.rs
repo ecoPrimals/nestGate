@@ -27,7 +27,7 @@ mod tests {
         let result = create_team(Json(request)).await;
         assert!(result.is_ok(), "Team creation should succeed");
 
-        let team = result.unwrap().0;
+        let team = result.expect("Test setup failed").0;
         assert_eq!(team.name, "Test Team");
         assert_eq!(team.description, Some("A test team".to_string()));
         assert_eq!(team.members.len(), 2);
@@ -44,7 +44,7 @@ mod tests {
         let result = create_team(Json(request)).await;
         assert!(result.is_ok());
 
-        let team = result.unwrap().0;
+        let team = result.expect("Test setup failed").0;
         assert_eq!(team.name, "No Description Team");
         assert!(team.description.is_none());
     }
@@ -60,7 +60,7 @@ mod tests {
         let result = create_team(Json(request)).await;
         assert!(result.is_ok());
 
-        let team = result.unwrap().0;
+        let team = result.expect("Test setup failed").0;
         assert!(team.members.is_empty());
     }
 
@@ -77,7 +77,7 @@ mod tests {
         let result = create_team(Json(request)).await;
         assert!(result.is_ok());
 
-        let team = result.unwrap().0;
+        let team = result.expect("Test setup failed").0;
         assert_eq!(team.members.len(), 50);
         assert_eq!(team.members, members);
     }
@@ -93,7 +93,7 @@ mod tests {
         let result = create_team(Json(request)).await;
         assert!(result.is_ok());
 
-        let team = result.unwrap().0;
+        let team = result.expect("Test setup failed").0;
         assert!(!team.id.is_empty(), "Team ID should not be empty");
         assert!(
             team.id.starts_with("team_"),
@@ -115,12 +115,12 @@ mod tests {
             members: vec![],
         };
 
-        let team1 = create_team(Json(request1)).await.unwrap().0;
+        let team1 = create_team(Json(request1)).await.expect("Test setup failed").0;
 
         // Longer delay to ensure different timestamp (1 second minimum for timestamp-based IDs)
         tokio::time::sleep(tokio::time::Duration::from_millis(1001)).await;
 
-        let team2 = create_team(Json(request2)).await.unwrap().0;
+        let team2 = create_team(Json(request2)).await.expect("Test setup failed").0;
 
         assert_ne!(team1.id, team2.id, "Team IDs should be unique");
     }
@@ -139,7 +139,7 @@ mod tests {
 
         assert!(result.is_ok());
 
-        let team = result.unwrap().0;
+        let team = result.expect("Test setup failed").0;
 
         // Timestamp should be between before and after
         assert!(
@@ -163,7 +163,7 @@ mod tests {
         let result = create_team(Json(request)).await;
         assert!(result.is_ok());
 
-        let team = result.unwrap().0;
+        let team = result.expect("Test setup failed").0;
         // Should preserve duplicates as-is (validation would be in business logic)
         assert_eq!(team.members.len(), 3);
     }
@@ -179,7 +179,7 @@ mod tests {
         let result = create_team(Json(request)).await;
         assert!(result.is_ok());
 
-        let team = result.unwrap().0;
+        let team = result.expect("Test setup failed").0;
         assert_eq!(team.name, "Team with-dashes_and_underscores");
     }
 
@@ -195,7 +195,7 @@ mod tests {
         let result = create_team(Json(request)).await;
         assert!(result.is_ok());
 
-        let team = result.unwrap().0;
+        let team = result.expect("Test setup failed").0;
         assert_eq!(team.name, long_name);
     }
 
@@ -212,7 +212,7 @@ mod tests {
         let result = get_teams();
         assert!(result.is_ok());
 
-        let teams = result.unwrap().0;
+        let teams = result.expect("Test setup failed").0;
         assert!(!teams.is_empty(), "Should return some teams");
     }
 
@@ -221,7 +221,7 @@ mod tests {
         let result = get_teams();
         assert!(result.is_ok());
 
-        let teams = result.unwrap().0;
+        let teams = result.expect("Test setup failed").0;
         assert_eq!(teams.len(), 2, "Should return exactly 2 teams");
     }
 
@@ -230,7 +230,7 @@ mod tests {
         let result = get_teams();
         assert!(result.is_ok());
 
-        let teams = result.unwrap().0;
+        let teams = result.expect("Test setup failed").0;
 
         for team in teams {
             assert!(!team.id.is_empty(), "Team should have ID");
@@ -244,12 +244,12 @@ mod tests {
         let result = get_teams();
         assert!(result.is_ok());
 
-        let teams = result.unwrap().0;
+        let teams = result.expect("Test setup failed").0;
         let dev_team = teams.iter().find(|t| t.id == "team_001");
 
         assert!(dev_team.is_some(), "Should include Development Team");
 
-        let dev_team = dev_team.unwrap();
+        let dev_team = dev_team.expect("Test setup failed");
         assert_eq!(dev_team.name, "Development Team");
         assert_eq!(dev_team.members.len(), 2);
         assert!(dev_team.members.contains(&"alice".to_string()));
@@ -261,12 +261,12 @@ mod tests {
         let result = get_teams();
         assert!(result.is_ok());
 
-        let teams = result.unwrap().0;
+        let teams = result.expect("Test setup failed").0;
         let ops_team = teams.iter().find(|t| t.id == "team_002");
 
         assert!(ops_team.is_some(), "Should include Operations Team");
 
-        let ops_team = ops_team.unwrap();
+        let ops_team = ops_team.expect("Test setup failed");
         assert_eq!(ops_team.name, "Operations Team");
         assert_eq!(ops_team.members.len(), 2);
         assert!(ops_team.members.contains(&"charlie".to_string()));
@@ -278,7 +278,7 @@ mod tests {
         let result = get_teams();
         assert!(result.is_ok());
 
-        let teams = result.unwrap().0;
+        let teams = result.expect("Test setup failed").0;
 
         for team in teams {
             assert!(
@@ -294,7 +294,7 @@ mod tests {
         let result = get_teams();
         assert!(result.is_ok());
 
-        let teams = result.unwrap().0;
+        let teams = result.expect("Test setup failed").0;
         let ids: Vec<_> = teams.iter().map(|t| &t.id).collect();
 
         // Check uniqueness
@@ -307,7 +307,7 @@ mod tests {
         let result = get_teams();
         assert!(result.is_ok());
 
-        let teams = result.unwrap().0;
+        let teams = result.expect("Test setup failed").0;
         let names: Vec<_> = teams.iter().map(|t| &t.name).collect();
 
         // Check uniqueness
@@ -364,7 +364,7 @@ mod tests {
         let serialized = serde_json::to_string(&team);
         assert!(serialized.is_ok(), "TeamInfo should serialize");
 
-        let json = serialized.unwrap();
+        let json = serialized.expect("Test setup failed");
         assert!(json.contains("team_ser"));
         assert!(json.contains("Serialize Team"));
         assert!(json.contains("user1"));
@@ -384,7 +384,7 @@ mod tests {
         let result: Result<TeamInfo, _> = serde_json::from_str(json);
         assert!(result.is_ok(), "Should deserialize TeamInfo");
 
-        let team = result.unwrap();
+        let team = result.expect("Test setup failed");
         assert_eq!(team.id, "team_deser");
         assert_eq!(team.name, "Deserialize Team");
         assert_eq!(team.members.len(), 2);
@@ -401,7 +401,7 @@ mod tests {
         let result: Result<CreateTeamRequest, _> = serde_json::from_str(json);
         assert!(result.is_ok(), "Should deserialize CreateTeamRequest");
 
-        let request = result.unwrap();
+        let request = result.expect("Test setup failed");
         assert_eq!(request.name, "New Team");
         assert_eq!(request.description, Some("A new team".to_string()));
         assert_eq!(request.members.len(), 3);
@@ -421,14 +421,14 @@ mod tests {
         let create_result = create_team(Json(request)).await;
         assert!(create_result.is_ok());
 
-        let created_team = create_result.unwrap().0;
+        let created_team = create_result.expect("Test setup failed").0;
         assert_eq!(created_team.name, "Integration Team");
 
         // List teams
         let list_result = get_teams();
         assert!(list_result.is_ok());
 
-        let teams = list_result.unwrap().0;
+        let teams = list_result.expect("Test setup failed").0;
         assert!(!teams.is_empty());
     }
 
@@ -461,7 +461,7 @@ mod tests {
         let result = create_team(Json(request)).await;
         assert!(result.is_ok(), "Should handle empty name");
 
-        let team = result.unwrap().0;
+        let team = result.expect("Test setup failed").0;
         assert!(team.name.is_empty());
     }
 
@@ -514,8 +514,8 @@ mod tests {
         assert!(result3.is_ok());
 
         // Should return consistent results
-        let teams1 = result1.unwrap().0;
-        let teams2 = result2.unwrap().0;
+        let teams1 = result1.expect("Test setup failed").0;
+        let teams2 = result2.expect("Test setup failed").0;
 
         assert_eq!(teams1.len(), teams2.len());
     }

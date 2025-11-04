@@ -62,11 +62,11 @@ mod tests {
         // Test small allocations (returns size, not slice)
         let size1 = arena.allocate(64);
         assert!(size1.is_some());
-        assert_eq!(size1.unwrap(), 64);
+        assert_eq!(size1.expect("Test setup failed"), 64);
 
         let size2 = arena.allocate(128);
         assert!(size2.is_some());
-        assert_eq!(size2.unwrap(), 128);
+        assert_eq!(size2.expect("Test setup failed"), 128);
 
         // Test reset
         arena.reset();

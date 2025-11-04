@@ -156,7 +156,7 @@ mod tests {
 
     #[test]
     fn test_fs_event_type_variants() {
-        let types = vec![
+        let types = [
             FsEventType::Create,
             FsEventType::Modify,
             FsEventType::Delete,
@@ -210,7 +210,7 @@ mod tests {
             metadata: Some(metadata.clone()),
         };
         assert!(event.metadata.is_some());
-        assert_eq!(event.metadata.unwrap(), metadata);
+        assert_eq!(event.metadata.expect("Operation failed"), metadata);
     }
 
     #[test]
@@ -328,7 +328,7 @@ mod tests {
             metadata: Some(serde_json::json!({"test": "data"})),
         };
 
-        let serialized = serde_json::to_string(&event).unwrap();
+        let serialized = serde_json::to_string(&event).expect("String operation failed");
         assert!(serialized.contains("Create"));
         assert!(serialized.contains("/test/path"));
     }
@@ -336,8 +336,9 @@ mod tests {
     #[test]
     fn test_fs_event_type_serialization() {
         let event_type = FsEventType::Modify;
-        let serialized = serde_json::to_string(&event_type).unwrap();
-        let deserialized: FsEventType = serde_json::from_str(&serialized).unwrap();
+        let serialized = serde_json::to_string(&event_type).expect("String operation failed");
+        let deserialized: FsEventType =
+            serde_json::from_str(&serialized).expect("Failed to convert from string");
         assert_eq!(event_type, deserialized);
     }
 
@@ -446,7 +447,7 @@ mod tests {
             metadata: None,
         };
 
-        let duration = event.timestamp.elapsed().unwrap();
+        let duration = event.timestamp.elapsed().expect("Operation failed");
         assert!(duration.as_secs() < 1); // Should be very recent
     }
 

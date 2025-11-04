@@ -88,6 +88,14 @@ pub enum NestGateUnifiedError {
     /// Handler execution errors (boxed for size efficiency)
     #[error("Handler error: {0}")]
     Handler(Box<HandlerErrorDetails>),
+
+    /// Load balancer errors (boxed for size efficiency)
+    #[error("Load balancer error: {0}")]
+    LoadBalancer(Box<LoadBalancerErrorDetails>),
+
+    /// Not implemented functionality (boxed for size efficiency)
+    #[error("Not implemented: {0}")]
+    NotImplemented(Box<NotImplementedErrorDetails>),
 }
 
 // ==================== ERROR DETAIL STRUCTURES ====================
@@ -352,6 +360,30 @@ pub struct HandlerErrorDetails {
     pub handler_data: Option<Box<HandlerErrorDetails>>,
     /// Error context
     pub context: Option<Box<ErrorContext>>,
+}
+
+/// Load balancer error details
+#[derive(Debug, Clone, Error, Serialize, Deserialize)]
+#[error("Load balancer error: {message}")]
+pub struct LoadBalancerErrorDetails {
+    /// Error message
+    pub message: String,
+    /// Number of available services
+    pub available_services: Option<usize>,
+    /// Algorithm being used
+    pub algorithm: Option<String>,
+}
+
+/// Not implemented error details
+#[derive(Debug, Clone, Error, Serialize, Deserialize)]
+#[error("Not implemented: {feature}")]
+pub struct NotImplementedErrorDetails {
+    /// Feature that is not implemented
+    pub feature: String,
+    /// Additional context
+    pub message: Option<String>,
+    /// Planned version for implementation
+    pub planned_version: Option<String>,
 }
 
 // ==================== SUPPORTING TYPES ====================

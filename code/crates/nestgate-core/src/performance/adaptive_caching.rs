@@ -415,14 +415,14 @@ mod tests {
         let cache: AdaptiveCache<String, String> = AdaptiveCache::new(config);
         
         // Fill cache to capacity
-        cache.insert("key1".to_string(), "value1".to_string(), None).await.unwrap();
-        cache.insert("key2".to_string(), "value2".to_string(), None).await.unwrap();
+        cache.insert("key1".to_string(), "value1".to_string(), None).await.expect("String operation failed");
+        cache.insert("key2".to_string(), "value2".to_string(), None).await.expect("String operation failed");
         
         // Access key1 to make it more recently used
         let _ = cache.get(&"key1".to_string()).await;
         
         // Insert third item, should evict key2 (least recently used)
-        cache.insert("key3".to_string(), "value3".to_string(), None).await.unwrap();
+        cache.insert("key3".to_string(), "value3".to_string(), None).await.expect("String operation failed");
         
         // key1 and key3 should be present, key2 should be evicted
         assert!(cache.get(&"key1".to_string()).await.is_some());
@@ -444,11 +444,11 @@ mod tests {
         let cache: AdaptiveCache<String, String> = AdaptiveCache::new(config);
         
         // Fill cache to capacity
-        cache.insert("key1".to_string(), "value1".to_string(), None).await.unwrap();
-        cache.insert("key2".to_string(), "value2".to_string(), None).await.unwrap();
+        cache.insert("key1".to_string(), "value1".to_string(), None).await.expect("String operation failed");
+        cache.insert("key2".to_string(), "value2".to_string(), None).await.expect("String operation failed");
         
         // Insert third item with eviction disabled
-        cache.insert("key3".to_string(), "value3".to_string(), None).await.unwrap();
+        cache.insert("key3".to_string(), "value3".to_string(), None).await.expect("String operation failed");
         
         // All items should still be accessible (no eviction occurred)
         assert!(cache.get(&"key1".to_string()).await.is_some());
@@ -476,7 +476,7 @@ mod tests {
                 let value = format!("value_{i}");
                 
                 // Insert
-                cache_clone.insert(key.clone(), value.clone(), None).await.unwrap();
+                cache_clone.insert(key.clone(), value.clone(), None).await.expect("Operation failed");
                 
                 // Read back
                 let result = cache_clone.get(&key).await;
@@ -487,7 +487,7 @@ mod tests {
         
         // Wait for all tasks to complete
         for handle in handles {
-            handle.await.unwrap();
+            handle.await.expect("Operation failed");
         }
         
         // Verify final state
@@ -502,8 +502,8 @@ mod tests {
         let cache: AdaptiveCache<String, String> = AdaptiveCache::new(config);
         
         // Perform various operations
-        cache.insert("key1".to_string(), "value1".to_string(), None).await.unwrap();
-        cache.insert("key2".to_string(), "value2".to_string(), None).await.unwrap();
+        cache.insert("key1".to_string(), "value1".to_string(), None).await.expect("String operation failed");
+        cache.insert("key2".to_string(), "value2".to_string(), None).await.expect("String operation failed");
         
         // Cache hits
         let _ = cache.get(&"key1".to_string()).await;
@@ -532,7 +532,7 @@ mod tests {
         for i in 0..500 {
             let key = format!("key_{i}");
             let value = format!("value_{i}");
-            cache.insert(key, value, None).await.unwrap();
+            cache.insert(key, value, None).await.expect("Operation failed");
         }
         
         // Verify all items are accessible
@@ -558,13 +558,13 @@ mod tests {
         }).await;
         
         assert!(insert_result.is_ok());
-        assert!(insert_result.unwrap().is_ok());
+        assert!(insert_result.expect("Operation failed").is_ok());
         
         let get_result = timeout(Duration::from_secs(1), async {
             cache.get(&"key".to_string()).await
         }).await;
         
         assert!(get_result.is_ok());
-        assert_eq!(get_result.unwrap(), Some("value".to_string()));
+        assert_eq!(get_result.expect("String operation failed"), Some("value".to_string()));
     }
 }

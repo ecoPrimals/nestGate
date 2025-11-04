@@ -1,4 +1,5 @@
 use crate::canonical_types::service::{ServiceState, ServiceType};
+use crate::constants::hardcoding::ports;
 /// **CANONICAL ADAPTER DISCOVERY**
 ///
 /// Consolidated discovery utilities for the universal adapter system.
@@ -147,12 +148,29 @@ pub struct CapabilityDiscovery {
 impl CapabilityDiscovery {
     /// Create a new capability discovery instance
     pub fn new() -> crate::Result<Self> {
+        use crate::constants::hardcoding::addresses;
+
+        // Use environment variables or build from constants
+        let discovery_endpoints = std::env::var("NESTGATE_DISCOVERY_ENDPOINTS")
+            .map(|s| s.split(',').map(|e| e.trim().to_string()).collect())
+            .unwrap_or_else(|_| {
+                vec![
+                    format!(
+                        "http://{}:{}/discovery",
+                        addresses::LOCALHOST_NAME,
+                        ports::ORCHESTRATION_DEFAULT
+                    ),
+                    format!(
+                        "http://{}:{}/discovery",
+                        addresses::LOCALHOST_NAME,
+                        ports::STORAGE_DISCOVERY_DEFAULT
+                    ),
+                ]
+            });
+
         let mut discovery = Self {
             registry: HashMap::new(),
-            discovery_endpoints: vec![
-                "http://localhost:8083/discovery".to_string(),
-                "http://localhost:8084/discovery".to_string(),
-            ],
+            discovery_endpoints,
         };
 
         // Initialize with default capability mappings
@@ -187,16 +205,28 @@ impl CapabilityDiscovery {
 
     /// Initialize default capability mappings with environment-driven endpoints
     fn initialize_default_capabilities(&mut self) {
-        let base_endpoint = std::env::var("NESTGATE_BASE_ENDPOINT")
-            .unwrap_or_else(|_| "http://localhost:8080".to_string());
+        use crate::constants::hardcoding::{addresses, ports};
+
+        let base_endpoint = std::env::var("NESTGATE_BASE_ENDPOINT").unwrap_or_else(|_| {
+            format!(
+                "http://{}:{}",
+                addresses::LOCALHOST_NAME,
+                ports::HTTP_DEFAULT
+            )
+        });
 
         // Security capabilities
         self.registry.insert(
             "security".to_string(),
             vec![
                 format!("{base_endpoint}/security"),
-                std::env::var("NESTGATE_SECURITY_ENDPOINT")
-                    .unwrap_or_else(|_| "http://localhost:8081/auth".to_string()),
+                std::env::var("NESTGATE_SECURITY_ENDPOINT").unwrap_or_else(|_| {
+                    format!(
+                        "http://{}:{}/auth",
+                        addresses::LOCALHOST_NAME,
+                        ports::HEALTH_CHECK
+                    )
+                }),
             ],
         );
 
@@ -205,8 +235,13 @@ impl CapabilityDiscovery {
             "ai".to_string(),
             vec![
                 format!("{base_endpoint}/ai"),
-                std::env::var("NESTGATE_AI_ENDPOINT")
-                    .unwrap_or_else(|_| "http://localhost:8082/ml".to_string()),
+                std::env::var("NESTGATE_AI_ENDPOINT").unwrap_or_else(|_| {
+                    format!(
+                        "http://{}:{}/ml",
+                        addresses::LOCALHOST_NAME,
+                        ports::WEBSOCKET_DEFAULT
+                    )
+                }),
             ],
         );
 
@@ -215,8 +250,13 @@ impl CapabilityDiscovery {
             "orchestration".to_string(),
             vec![
                 format!("{base_endpoint}/orchestration"),
-                std::env::var("NESTGATE_ORCHESTRATION_ENDPOINT")
-                    .unwrap_or_else(|_| "http://localhost:8083/workflow".to_string()),
+                std::env::var("NESTGATE_ORCHESTRATION_ENDPOINT").unwrap_or_else(|_| {
+                    format!(
+                        "http://{}:{}/workflow",
+                        addresses::LOCALHOST_NAME,
+                        ports::ORCHESTRATION_DEFAULT
+                    )
+                }),
             ],
         );
 
@@ -225,8 +265,13 @@ impl CapabilityDiscovery {
             "storage".to_string(),
             vec![
                 format!("{base_endpoint}/storage"),
-                std::env::var("NESTGATE_STORAGE_ENDPOINT")
-                    .unwrap_or_else(|_| "http://localhost:8084/zfs".to_string()),
+                std::env::var("NESTGATE_STORAGE_ENDPOINT").unwrap_or_else(|_| {
+                    format!(
+                        "http://{}:{}/zfs",
+                        addresses::LOCALHOST_NAME,
+                        ports::STORAGE_DISCOVERY_DEFAULT
+                    )
+                }),
             ],
         );
 
@@ -235,8 +280,13 @@ impl CapabilityDiscovery {
             "compute".to_string(),
             vec![
                 format!("{base_endpoint}/compute"),
-                std::env::var("NESTGATE_COMPUTE_ENDPOINT")
-                    .unwrap_or_else(|_| "http://localhost:8085/processing".to_string()),
+                std::env::var("NESTGATE_COMPUTE_ENDPOINT").unwrap_or_else(|_| {
+                    format!(
+                        "http://{}:{}/processing",
+                        addresses::LOCALHOST_NAME,
+                        ports::COMPUTE_DEFAULT
+                    )
+                }),
             ],
         );
     }
@@ -371,13 +421,16 @@ mod tests {
 
         assert!(!result.success);
         assert!(result.error.is_some());
-        assert_eq!(result.error.unwrap(), "Connection timeout");
+        assert_eq!(
+            result.error.expect("Operation failed"),
+            "Connection timeout"
+        );
     }
 
     #[test]
     fn test_discover_services() {
         let config = DiscoveryConfig::default();
-        let result = discover_services(&config).unwrap();
+        let result = discover_services(&config).expect("Operation failed");
 
         assert!(result.success);
         assert!(result.error.is_none());
@@ -399,7 +452,7 @@ mod tests {
             last_health_check: None,
         };
 
-        let healthy = health_check_service(&service).unwrap();
+        let healthy = health_check_service(&service).expect("Operation failed");
         assert!(healthy);
     }
 
@@ -417,7 +470,7 @@ mod tests {
             last_health_check: None,
         };
 
-        let healthy = health_check_service(&service).unwrap();
+        let healthy = health_check_service(&service).expect("Operation failed");
         assert!(!healthy);
     }
 
@@ -435,7 +488,7 @@ mod tests {
             last_health_check: None,
         };
 
-        let healthy = health_check_service(&service).unwrap();
+        let healthy = health_check_service(&service).expect("Operation failed");
         assert!(!healthy);
     }
 
@@ -453,13 +506,13 @@ mod tests {
             last_health_check: None,
         };
 
-        let healthy = health_check_service(&service).unwrap();
+        let healthy = health_check_service(&service).expect("Operation failed");
         assert!(!healthy);
     }
 
     #[test]
     fn test_capability_discovery_new() {
-        let discovery = CapabilityDiscovery::new().unwrap();
+        let discovery = CapabilityDiscovery::new().expect("Operation failed");
 
         assert_eq!(discovery.discovery_endpoints.len(), 2);
         assert!(discovery.registry.contains_key("security"));
@@ -479,8 +532,10 @@ mod tests {
 
     #[test]
     fn test_find_capabilities_existing() {
-        let discovery = CapabilityDiscovery::new().unwrap();
-        let capabilities = discovery.find_capabilities("security").unwrap();
+        let discovery = CapabilityDiscovery::new().expect("Operation failed");
+        let capabilities = discovery
+            .find_capabilities("security")
+            .expect("Operation failed");
 
         assert!(!capabilities.is_empty());
         assert!(capabilities[0].contains("security"));
@@ -488,29 +543,33 @@ mod tests {
 
     #[test]
     fn test_find_capabilities_nonexistent() {
-        let discovery = CapabilityDiscovery::new().unwrap();
-        let capabilities = discovery.find_capabilities("nonexistent").unwrap();
+        let discovery = CapabilityDiscovery::new().expect("Operation failed");
+        let capabilities = discovery
+            .find_capabilities("nonexistent")
+            .expect("Operation failed");
 
         assert!(capabilities.is_empty());
     }
 
     #[test]
     fn test_register_capability() {
-        let mut discovery = CapabilityDiscovery::new().unwrap();
+        let mut discovery = CapabilityDiscovery::new().expect("Operation failed");
 
         discovery.register_capability(
             "custom".to_string(),
             "http://localhost:9000/custom".to_string(),
         );
 
-        let capabilities = discovery.find_capabilities("custom").unwrap();
+        let capabilities = discovery
+            .find_capabilities("custom")
+            .expect("Operation failed");
         assert_eq!(capabilities.len(), 1);
         assert_eq!(capabilities[0], "http://localhost:9000/custom");
     }
 
     #[test]
     fn test_register_multiple_capabilities() {
-        let mut discovery = CapabilityDiscovery::new().unwrap();
+        let mut discovery = CapabilityDiscovery::new().expect("Operation failed");
 
         discovery.register_capability(
             "custom".to_string(),
@@ -521,28 +580,34 @@ mod tests {
             "http://localhost:9001/custom2".to_string(),
         );
 
-        let capabilities = discovery.find_capabilities("custom").unwrap();
+        let capabilities = discovery
+            .find_capabilities("custom")
+            .expect("Operation failed");
         assert_eq!(capabilities.len(), 2);
     }
 
     #[test]
     fn test_unregister_capability() {
-        let mut discovery = CapabilityDiscovery::new().unwrap();
+        let mut discovery = CapabilityDiscovery::new().expect("Operation failed");
 
         discovery.register_capability("temp".to_string(), "http://localhost:9000/temp".to_string());
 
-        let before = discovery.find_capabilities("temp").unwrap();
+        let before = discovery
+            .find_capabilities("temp")
+            .expect("Operation failed");
         assert_eq!(before.len(), 1);
 
         discovery.unregister_capability("temp", "http://localhost:9000/temp");
 
-        let after = discovery.find_capabilities("temp").unwrap();
+        let after = discovery
+            .find_capabilities("temp")
+            .expect("Operation failed");
         assert_eq!(after.len(), 0);
     }
 
     #[test]
     fn test_unregister_nonexistent_capability() {
-        let mut discovery = CapabilityDiscovery::new().unwrap();
+        let mut discovery = CapabilityDiscovery::new().expect("Operation failed");
 
         // Should not panic
         discovery.unregister_capability("nonexistent", "http://localhost:9000");

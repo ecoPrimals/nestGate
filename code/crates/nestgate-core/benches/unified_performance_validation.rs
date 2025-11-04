@@ -161,7 +161,7 @@ impl ZeroCostOptimized for UnifiedMockStorage {}
 // ==================== BENCHMARKS ====================
 
 fn bench_unified_service_initialization(c: &mut Criterion) {
-    let rt = Runtime::new().unwrap();
+    let rt = Runtime::new().expect("Operation failed");
 
     c.bench_function("unified_service_init", |b| {
         b.to_async(&rt).iter(|| async {
@@ -170,26 +170,26 @@ fn bench_unified_service_initialization(c: &mut Criterion) {
                 name: "test".to_string(),
             };
 
-            black_box(service.initialize(config)).unwrap();
+            black_box(service.initialize(config)).expect("Operation failed");
         });
     });
 }
 
 fn bench_unified_service_operations(c: &mut Criterion) {
-    let rt = Runtime::new().unwrap();
+    let rt = Runtime::new().expect("Operation failed");
     let service = UnifiedMockService { initialized: true };
 
     let mut group = c.benchmark_group("unified_service_ops");
 
     group.bench_function("health_check", |b| {
         b.to_async(&rt).iter(|| async {
-            black_box(service.health_check()).unwrap();
+            black_box(service.health_check()).expect("Operation failed");
         });
     });
 
     group.bench_function("get_metrics", |b| {
         b.to_async(&rt).iter(|| async {
-            black_box(service.get_metrics().await).unwrap();
+            black_box(service.get_metrics().await).expect("Operation failed");
         });
     });
 
@@ -197,7 +197,7 @@ fn bench_unified_service_operations(c: &mut Criterion) {
 }
 
 fn bench_unified_storage_operations(c: &mut Criterion) {
-    let rt = Runtime::new().unwrap();
+    let rt = Runtime::new().expect("Operation failed");
     let storage = UnifiedMockStorage;
 
     let mut group = c.benchmark_group("unified_storage_ops");
@@ -214,13 +214,13 @@ fn bench_unified_storage_operations(c: &mut Criterion) {
 
         group.bench_with_input(BenchmarkId::new("store", size), size, |b, _| {
             b.to_async(&rt).iter(|| async {
-                black_box(storage.store("test_key", data.clone())).unwrap();
+                black_box(storage.store("test_key", data.clone())).expect("Operation failed");
             });
         });
 
         group.bench_with_input(BenchmarkId::new("retrieve", size), size, |b, _| {
             b.to_async(&rt).iter(|| async {
-                black_box(storage.retrieve("test_key").await).unwrap();
+                black_box(storage.retrieve("test_key").await).expect("Operation failed");
             });
         });
     }
@@ -246,7 +246,8 @@ fn bench_unified_config_loading(c: &mut Criterion) {
                 cache_size = 1024
             "#;
 
-            black_box(toml::from_str::<toml::Value>(config_str)).unwrap();
+            black_box(toml::from_str::<toml::Value>(config_str))
+                .expect("Failed to convert from string");
         });
     });
 }
@@ -264,7 +265,7 @@ fn bench_unified_constants_access(c: &mut Criterion) {
 }
 
 fn bench_concurrent_operations(c: &mut Criterion) {
-    let rt = Runtime::new().unwrap();
+    let rt = Runtime::new().expect("Operation failed");
 
     let mut group = c.benchmark_group("concurrent_ops");
 
@@ -305,7 +306,7 @@ fn bench_memory_efficiency(c: &mut Criterion) {
 // ==================== PERFORMANCE VALIDATION ====================
 
 fn validate_performance_improvements(c: &mut Criterion) {
-    let rt = Runtime::new().unwrap();
+    let rt = Runtime::new().expect("Operation failed");
 
     c.bench_function("performance_validation_suite", |b| {
         b.to_async(&rt).iter(|| async {
@@ -317,19 +318,21 @@ fn validate_performance_improvements(c: &mut Criterion) {
             };
 
             // Initialize
-            service.initialize(config).unwrap();
+            service.initialize(config).expect("Operation failed");
 
             // Run operations
-            let health = service.health_check().unwrap();
-            let metrics = service.get_metrics().unwrap();
+            let health = service.health_check().expect("Operation failed");
+            let metrics = service.get_metrics().expect("Operation failed");
 
             // Storage operations
-            storage.store("bench_key", vec![1, 2, 3]).unwrap();
-            let data = storage.retrieve("bench_key").unwrap();
-            storage.delete("bench_key").unwrap();
+            storage
+                .store("bench_key", vec![1, 2, 3])
+                .expect("Operation failed");
+            let data = storage.retrieve("bench_key").expect("Operation failed");
+            storage.delete("bench_key").expect("Operation failed");
 
             // Shutdown
-            service.shutdown().unwrap();
+            service.shutdown().expect("Operation failed");
 
             black_box((health, metrics, data));
         });
@@ -361,18 +364,18 @@ mod tests {
         };
 
         // Test initialization
-        service.initialize(config).await.unwrap();
+        service.initialize(config).await.expect("Operation failed");
         assert!(service.initialized);
 
         // Test operations
-        let health = service.health_check().await.unwrap();
+        let health = service.health_check().await.expect("Operation failed");
         assert_eq!(health.status, "healthy");
 
-        let metrics = service.get_metrics().await.unwrap();
+        let metrics = service.get_metrics().await.expect("Operation failed");
         assert_eq!(metrics.requests, 1000);
 
         // Test shutdown
-        service.shutdown().await.unwrap();
+        service.shutdown().await.expect("Operation failed");
         assert!(!service.initialized);
     }
 
@@ -382,11 +385,14 @@ mod tests {
         let test_data = vec![1, 2, 3, 4, 5];
 
         // Test storage lifecycle
-        storage.store("test", test_data.clone()).await.unwrap();
-        let retrieved = storage.retrieve("test").await.unwrap();
+        storage
+            .store("test", test_data.clone())
+            .await
+            .expect("Operation failed");
+        let retrieved = storage.retrieve("test").await.expect("Operation failed");
         assert_eq!(retrieved, vec![1, 2, 3, 4, 5]); // Mock returns fixed data
 
-        storage.delete("test").await.unwrap();
+        storage.delete("test").await.expect("Operation failed");
     }
 
     #[test]

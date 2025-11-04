@@ -1,6 +1,7 @@
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use nestgate_core::constants::hardcoding::ports;
 
 /// Port allocation manager
 pub struct PortManager {
@@ -12,7 +13,7 @@ impl PortManager {
     #[must_use]
     pub fn new() -> Self { Self {
             allocated_ports: HashMap::new(),
-            next_port: 8080,
+            next_port: ports::HTTP_DEFAULT,
          }
 
     /// Allocate a port for a service

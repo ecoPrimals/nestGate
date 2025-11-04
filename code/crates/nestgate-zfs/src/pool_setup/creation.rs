@@ -331,7 +331,7 @@ mod tests {
         let result = creator.create_pool_safe(&config).await;
         assert!(result.is_ok());
 
-        let result = result.unwrap();
+        let result = result.expect("ZFS operation failed");
         assert!(result.success);
         assert!(result.message.contains("Dry run"));
     }

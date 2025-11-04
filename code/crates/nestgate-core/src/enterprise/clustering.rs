@@ -664,7 +664,7 @@ impl Default for ClusterConfig {
         Self {
             cluster_name: "nestgate-cluster".to_string(),
             node_id: Uuid::new_v4().to_string(),
-            bind_endpoint: "0.0.0.0:8080".parse().unwrap(),
+            bind_endpoint: "0.0.0.0:8080".parse().expect("Failed to parse value"),
             nodes: vec![],
             election_timeout_ms: 5000,
             heartbeat_interval_ms: 1000,

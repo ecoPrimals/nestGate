@@ -136,7 +136,7 @@ mod tests {
             // Allow small timing differences
             let diff = interval_start
                 .duration_since(expected)
-                .unwrap_or_else(|_| expected.duration_since(interval_start).unwrap());
+                .unwrap_or_else(|_| expected.duration_since(interval_start).expect("Test setup failed"));
             assert!(
                 diff < Duration::from_millis(10),
                 "Interval {} should be at expected time",

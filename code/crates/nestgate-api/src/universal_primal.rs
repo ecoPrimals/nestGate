@@ -424,11 +424,21 @@ impl NestGateStoragePrimal {
     /// Discover other primals on the local network
     async fn discover_local_primals(&self) -> Result<Vec<DiscoveredPrimal>, String> {
         // Removed unused tracing import
+        use nestgate_core::constants::hardcoding::ports;
 
         let mut discovered_primals = Vec::new();
 
         // Check common primal ports (8080-8090, 3000-3010)
-        let common_ports = vec![8080, 8081, 8082, 8090, 3000, 3001, 3002, 3010];
+        let common_ports = vec![
+            ports::HTTP_DEFAULT,
+            ports::HEALTH_CHECK,
+            ports::WEBSOCKET_DEFAULT,
+            ports::METRICS_DEFAULT,
+            3000, // Custom port for extended services
+            3001, // Custom port for extended services
+            3002, // Custom port for extended services
+            3010, // Custom port for discovery
+        ];
 
         for port in common_ports {
             if port == self.config.port {

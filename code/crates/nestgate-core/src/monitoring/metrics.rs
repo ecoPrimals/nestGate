@@ -305,7 +305,10 @@ impl PerformanceMetrics {
         }
 
         let mut sorted_samples = self.latency_samples.clone();
-        sorted_samples.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        sorted_samples.sort_by(|a, b| {
+            // Handle NaN values by treating them as greater than any other value
+            a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Greater)
+        });
 
         let len = sorted_samples.len();
         self.latency_p50 = sorted_samples[len * 50 / 100];
@@ -641,7 +644,11 @@ impl MetricsExporter {
         let mut output = String::new();
         let timestamp = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
-            .expect("System time should be after UNIX epoch")
+            .unwrap_or_else(|_| {
+                // System time is before UNIX epoch (should never happen on modern systems)
+                // Fall back to zero
+                std::time::Duration::from_secs(0)
+            })
             .as_nanos();
 
         // System metrics in InfluxDB line protocol

@@ -11,47 +11,67 @@ pub struct NetworkPortDefaults;
 impl NetworkPortDefaults {
     /// Default API port - configurable via NESTGATE_API_PORT
     pub fn api_port() -> u16 {
-        8000
+        use crate::constants::hardcoding::ports;
+        ports::API_DEFAULT
     }
 
     /// Default WebSocket port - configurable via NESTGATE_WEBSOCKET_PORT
     pub fn websocket_port() -> u16 {
-        8080
+        use crate::constants::hardcoding::ports;
+        ports::WEBSOCKET_DEFAULT
     }
 
     /// Default HTTP port - configurable via NESTGATE_HTTP_PORT
     pub fn http_port() -> u16 {
-        3000
+        use crate::constants::hardcoding::ports;
+        ports::HTTP_DEFAULT
     }
 
     /// Default streaming RPC port - configurable via NESTGATE_STREAMING_RPC_PORT
     pub fn streaming_rpc_port() -> u16 {
-        8001
+        use crate::constants::hardcoding::ports;
+        ports::API_ALT
     }
 
     /// Default NAS HTTP port - configurable via NESTGATE_NAS_HTTP_PORT
     pub fn nas_http_port() -> u16 {
-        8080
+        use crate::constants::hardcoding::ports;
+        ports::HTTP_DEFAULT
     }
 
     /// Default development server port - configurable via NESTGATE_DEV_SERVER_PORT
     pub fn dev_server_port() -> u16 {
-        3000
+        use crate::constants::hardcoding::ports;
+        ports::API_DEFAULT
     }
 
     /// Port range for auto-discovery - start
     pub fn discovery_port_start() -> u16 {
-        8080
+        use crate::constants::hardcoding::ports;
+        ports::HTTP_DEFAULT
     }
 
     /// Port range for auto-discovery - end
     pub fn discovery_port_end() -> u16 {
-        9000
+        use crate::constants::hardcoding::ports;
+        ports::ADMIN_DEFAULT
     }
 
     /// Common service discovery ports
     pub fn common_ports() -> Vec<u16> {
-        vec![8080, 8081, 8082, 8090, 3000, 3001, 3002, 3010, 9000, 9001]
+        use crate::constants::hardcoding::ports;
+        vec![
+            ports::HTTP_DEFAULT,
+            ports::HEALTH_CHECK,
+            ports::WEBSOCKET_DEFAULT,
+            ports::METRICS_DEFAULT,
+            ports::API_DEFAULT,
+            ports::API_ALT,
+            ports::EXTENDED_SERVICES,
+            ports::DISCOVERY_SERVICE,
+            ports::ADMIN_DEFAULT,
+            ports::METRICS_ALT,
+        ]
     }
 
     /// Get API port from environment or default
@@ -96,26 +116,29 @@ impl NetworkPortDefaults {
 
     /// Get metrics port from environment or default
     pub fn get_metrics_port() -> u16 {
+        use crate::constants::hardcoding::ports;
         std::env::var("NESTGATE_METRICS_PORT")
             .ok()
             .and_then(|s| s.parse().ok())
-            .unwrap_or(9090)
+            .unwrap_or(ports::METRICS_PROMETHEUS)
     }
 
     /// Get health check port from environment or default
     pub fn get_health_port() -> u16 {
+        use crate::constants::hardcoding::ports;
         std::env::var("NESTGATE_HEALTH_PORT")
             .ok()
             .and_then(|s| s.parse().ok())
-            .unwrap_or(8081)
+            .unwrap_or(ports::HEALTH_DEFAULT)
     }
 
     /// Get orchestrator port from environment or default
     pub fn get_orchestrator_port() -> u16 {
+        use crate::constants::hardcoding::ports;
         std::env::var("NESTGATE_ORCHESTRATOR_PORT")
             .ok()
             .and_then(|s| s.parse().ok())
-            .unwrap_or(8090)
+            .unwrap_or(ports::ORCHESTRATOR_DEFAULT)
     }
 
     /// Get WebSocket base URL from environment or build from config
@@ -136,17 +159,20 @@ pub struct NetworkAddressDefaults;
 impl NetworkAddressDefaults {
     /// Default bind address for production (localhost only - secure default)
     pub fn secure_bind() -> &'static str {
-        "127.0.0.1"
+        // Use centralized constant to eliminate hardcoding
+        crate::constants::network_defaults::DEFAULT_LOCALHOST_IPV4
     }
 
     /// Default bind address for development (all interfaces)
     pub fn development_bind() -> &'static str {
-        "0.0.0.0"
+        // Use centralized constant to eliminate hardcoding
+        crate::constants::network_defaults::DEFAULT_BIND_ALL_IPV4
     }
 
     /// Default hostname
     pub fn hostname() -> &'static str {
-        "localhost"
+        // Use centralized constant to eliminate hardcoding
+        crate::constants::network_defaults::DEFAULT_HOSTNAME
     }
 
     /// Get bind address from environment or secure default

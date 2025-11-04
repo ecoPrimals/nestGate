@@ -5,7 +5,7 @@
 //! Trait definitions and implementations.
 // **REPLACES**:
 //! - 381+ `async_trait` usages across all crates
-//! - Arc<dyn> patterns causing runtime overhead
+//! - `Arc<dyn>` patterns causing runtime overhead
 //! - Boxing and virtual dispatch in async code
 //!
 //! Trait definitions and implementations.

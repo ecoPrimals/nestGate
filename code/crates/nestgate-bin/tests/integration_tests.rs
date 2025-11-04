@@ -60,7 +60,6 @@
 // }
 // ```
 
-use std::env;
 use std::process::{Command, Stdio};
 use std::time::Duration;
 
@@ -113,32 +112,29 @@ async fn test_binary_starts_successfully() -> Result<(), Box<dyn std::error::Err
         Ok(Some(status)) => {
             return Err(std::io::Error::new(
                 std::io::ErrorKind::Other,
-                "Process exited unexpectedly with status: {status}".to_string(),
+                format!("Process exited unexpectedly with status: {}", status),
             )
             .into());
-            Ok(())
         }
         Ok(None) => {
             // Process is still running, which is good
             println!("✅ Binary started successfully and is running");
-            Ok(())
         }
         Err(e) => {
             return Err(std::io::Error::new(
                 std::io::ErrorKind::Other,
-                "Error checking process status: {e}".to_string(),
+                format!("Error checking process status: {}", e),
             )
             .into());
         }
     }
 
-    // Clean up
+    // Cleanup
     let _ = child.kill();
     let _ = child.wait();
-
-    // Clean up environment
     std::env::remove_var("NESTGATE_PORT");
     std::env::remove_var("NESTGATE_SERVICE_NAME");
+    Ok(())
 }
 
 #[tokio::test]
@@ -170,27 +166,26 @@ async fn test_client_binary_help() -> Result<(), Box<dyn std::error::Error>> {
     let output = Command::new("cargo")
         .args(["run", "--bin", "nestgate-client", "--", "--help"])
         .output()
-        .unwrap_or_else(|_e| {
+        .map_err(|e| {
             tracing::error!(
                 "Expect failed ({}): {:?}",
                 "Failed to execute nestgate-client binary",
                 e
             );
-            return Err(std::io::Error::new(
+            std::io::Error::new(
                 std::io::ErrorKind::Other,
                 format!(
                     "Operation failed - {}: {:?}",
-                    "{}", "Failed to execute nestgate-client binary", e
+                    "Failed to execute nestgate-client binary", e
                 ),
             )
-            .into());
-        });
+        })?;
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
 
     // Check for client-specific content
-    let combined_output = format!("{stdout}{}", e);
+    let combined_output = format!("{stdout}{stderr}");
     assert!(
         combined_output.contains("client")
             || combined_output.contains("Client")
@@ -212,7 +207,7 @@ async fn test_gui_binary_exists() -> Result<(), Box<dyn std::error::Error>> {
         println!("✅ GUI binary source file exists");
     } else {
         println!("ℹ️ GUI binary source not found at expected location");
-        Ok(())
+        return Ok(());
     }
 
     // Test GUI-related environment variables
@@ -232,29 +227,26 @@ mod cli_tests {
     fn test_environment_variable_parsing() -> Result<(), Box<dyn std::error::Error>> {
         // Test various environment variable combinations
         let test_cases = vec![
-            ("NESTGATE_PORT", "8080"),
-            ("NESTGATE_SERVICE_NAME", "test-service"),
+            ("NESTGATE_PORT", "8080".to_string()),
+            ("NESTGATE_SERVICE_NAME", "test-service".to_string()),
             (
                 "SONGBIRD_URL",
-                "http://localhost:".to_string()
-                    + &env::var("NESTGATE_SECURITY_PORT").unwrap_or_else(|_| "8081".to_string()),
+                format!(
+                    "http://localhost:{}",
+                    std::env::var("NESTGATE_SECURITY_PORT").unwrap_or_else(|_| "8081".to_string())
+                ),
             ),
-            ("BEARDOG_URL", "http://localhost:8082"),
+            ("BEARDOG_URL", "http://localhost:8082".to_string()),
         ];
 
         for (key, value) in test_cases {
-            std::env::set_var(key, value);
-            let retrieved = std::env::var(key).unwrap_or_else(|_e| {
+            std::env::set_var(key, &value);
+            let retrieved = std::env::var(key).unwrap_or_else(|e| {
                 tracing::error!("Unwrap failed: {:?}", e);
-                return Err(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    format!("Operation failed: {}", e),
-                )
-                .into());
+                String::new()
             });
             assert_eq!(retrieved, value);
             std::env::remove_var(key);
-            Ok(())
         }
         Ok(())
     }
@@ -290,7 +282,7 @@ mod configuration_tests {
         // Test that environment variables override defaults
         std::env::set_var("NESTGATE_PORT", "9090");
 
-        let port = std::env::var("NESTGATE_PORT").map_err(|_e| {
+        let port = std::env::var("NESTGATE_PORT").map_err(|e| {
             tracing::error!(
                 "Environment variable '{}' not found: {}",
                 "NESTGATE_PORT",
@@ -330,8 +322,8 @@ mod integration_mode_tests {
             "ORCHESTRATION_ENDPOINT",
             format!(
                 "http://{}:{}",
-                nestgate_core::constants::addresses::localhost(),
-                nestgate_core::constants::addresses::orchestrator_port()
+                nestgate_core::constants::hardcoding::addresses::LOCALHOST_IPV4,
+                nestgate_core::constants::hardcoding::ports::ORCHESTRATION_DEFAULT
             ),
         );
         // ✅ SOVEREIGNTY COMPLIANT: Using capability-based endpoints
@@ -339,13 +331,13 @@ mod integration_mode_tests {
             "SECURITY_ENDPOINT",
             format!(
                 "http://{}:{}",
-                nestgate_core::constants::addresses::localhost(),
-                nestgate_core::constants::addresses::DEFAULT_PORT
+                nestgate_core::constants::hardcoding::addresses::LOCALHOST_IPV4,
+                nestgate_core::constants::hardcoding::ports::HTTP_DEFAULT
             ),
         );
 
         assert_eq!(
-            std::env::var("ORCHESTRATION_ENDPOINT").map_err(|_e| {
+            std::env::var("ORCHESTRATION_ENDPOINT").map_err(|e| {
                 tracing::error!(
                     "Environment variable '{}' not found: {}",
                     "ORCHESTRATION_ENDPOINT",
@@ -358,12 +350,12 @@ mod integration_mode_tests {
             })?,
             format!(
                 "http://{}:{}",
-                nestgate_core::constants::addresses::localhost(),
-                nestgate_core::constants::addresses::orchestrator_port()
+                nestgate_core::constants::hardcoding::addresses::LOCALHOST_IPV4,
+                nestgate_core::constants::hardcoding::ports::ORCHESTRATION_DEFAULT
             )
         );
         assert_eq!(
-            std::env::var("SECURITY_ENDPOINT").map_err(|_e| {
+            std::env::var("SECURITY_ENDPOINT").map_err(|e| {
                 tracing::error!(
                     "Environment variable '{}' not found: {}",
                     "SECURITY_ENDPOINT",
@@ -376,13 +368,14 @@ mod integration_mode_tests {
             })?,
             format!(
                 "http://{}:{}",
-                nestgate_core::constants::addresses::localhost(),
-                nestgate_core::constants::addresses::DEFAULT_PORT
+                nestgate_core::constants::hardcoding::addresses::LOCALHOST_IPV4,
+                nestgate_core::constants::hardcoding::ports::HTTP_DEFAULT
             )
         );
 
         // Cleanup capability-based environment variables
         std::env::remove_var("ORCHESTRATION_ENDPOINT");
         std::env::remove_var("SECURITY_ENDPOINT");
+        Ok(())
     }
 }

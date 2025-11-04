@@ -10,18 +10,15 @@
 //! - **Parallel Processing**: 10x improvement in parallel workloads
 
 use nestgate_core::error::{NestGateError as NestGateUnifiedError, Result};
-// use crate::constants::unified::performance;  // TODO: Fix this import path
-// SIMD intrinsics imported via safe_simd module
 use std::mem;
+
+/// SIMD batch size multiplier for optimal vectorization
+/// This determines how many vector widths to process in a single batch
+const SIMD_BATCH_MULTIPLIER: usize = 4;
 
 // Re-export SIMD modules
 // ✅ **SAFE SIMD** - Zero unsafe code, portable across all platforms
 pub mod safe_simd;
-
-// ✅ ELIMINATED: data_processing (8 unsafe blocks) - Use safe_simd instead
-// pub mod math_operations;  // TODO: Implement math_operations module
-// pub mod memory_operations;  // TODO: Implement memory_operations module
-// pub mod benchmarks;  // TODO: Implement benchmarks module
 
 /// SIMD capability detection and feature flags
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -186,7 +183,7 @@ impl BatchProcessor {
     #[must_use]
     pub fn new() -> Self {
         let engine = SimdEngine::new();
-        let batch_size = engine.vector_width() * 4; // TODO: Use performance::SIMD_BATCH_MULTIPLIER when constants module is available
+        let batch_size = engine.vector_width() * SIMD_BATCH_MULTIPLIER;
 
         Self { engine, batch_size }
     }
@@ -369,7 +366,7 @@ mod tests {
         });
 
         assert!(result.is_ok(), "Batch processing should succeed");
-        let processed = result.unwrap();
+        let processed = result.expect("Operation failed");
         assert_eq!(
             processed.len(),
             data.len(),
@@ -416,7 +413,7 @@ mod tests {
         let result = initialize();
         assert!(result.is_ok(), "SIMD initialization should succeed");
 
-        let engine = result.unwrap();
+        let engine = result.expect("Operation failed");
         assert!(
             engine.capabilities().sse2,
             "Should have at least SSE2 support"

@@ -181,7 +181,7 @@ mod tests {
         let config = Config::default();
         
         assert!(service.initialize(&config).await.is_ok());
-        assert_eq!(service.health_check().await.unwrap(), HealthStatus::Healthy);
+        assert_eq!(service.health_check().await.expect("ZFS operation failed"), HealthStatus::Healthy);
         assert!(service.shutdown().await.is_ok());
     }
 

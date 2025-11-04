@@ -79,7 +79,7 @@ fn test_log_entry_serialization() {
     let json = serde_json::to_string(&entry);
     assert!(json.is_ok());
 
-    let json_str = json.unwrap();
+    let json_str = json.expect("Test setup failed");
     assert!(json_str.contains("ERROR"));
     assert!(json_str.contains("Error occurred"));
 }
@@ -175,7 +175,7 @@ fn test_system_event_serialization() {
     let json = serde_json::to_string(&event);
     assert!(json.is_ok());
 
-    let json_str = json.unwrap();
+    let json_str = json.expect("Test setup failed");
     assert!(json_str.contains("threshold_exceeded"));
     assert!(json_str.contains("warning"));
 }
@@ -322,7 +322,7 @@ fn test_websocket_query_deserialize() {
     let query: Result<WebSocketQuery, _> = serde_json::from_str(json);
 
     assert!(query.is_ok());
-    let q = query.unwrap();
+    let q = query.expect("Test setup failed");
     assert_eq!(q.interval, Some(5));
     assert_eq!(q.level, Some("debug".to_string()));
 }
@@ -333,7 +333,7 @@ fn test_websocket_query_deserialize_partial() {
     let query: Result<WebSocketQuery, _> = serde_json::from_str(json);
 
     assert!(query.is_ok());
-    let q = query.unwrap();
+    let q = query.expect("Test setup failed");
     assert_eq!(q.interval, Some(10));
     assert!(q.level.is_none());
 }
@@ -348,8 +348,8 @@ fn test_log_entry_complete_roundtrip() {
         thread: "worker-3".to_string(),
     };
 
-    let json = serde_json::to_string(&original).unwrap();
-    let deserialized: serde_json::Value = serde_json::from_str(&json).unwrap();
+    let json = serde_json::to_string(&original).expect("Test setup failed");
+    let deserialized: serde_json::Value = serde_json::from_str(&json).expect("Test setup failed");
 
     assert_eq!(deserialized["level"], "WARN");
     assert_eq!(deserialized["message"], "Test warning message");
@@ -366,8 +366,8 @@ fn test_system_event_complete_roundtrip() {
         severity: "info".to_string(),
     };
 
-    let json = serde_json::to_string(&original).unwrap();
-    let deserialized: serde_json::Value = serde_json::from_str(&json).unwrap();
+    let json = serde_json::to_string(&original).expect("Test setup failed");
+    let deserialized: serde_json::Value = serde_json::from_str(&json).expect("Test setup failed");
 
     assert_eq!(deserialized["event_type"], "snapshot_taken");
     assert_eq!(deserialized["severity"], "info");

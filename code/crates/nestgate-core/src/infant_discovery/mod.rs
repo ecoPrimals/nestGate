@@ -399,7 +399,7 @@ mod tests {
         let capabilities = system.discover_capabilities().await;
         assert!(capabilities.is_ok());
 
-        let caps = capabilities.unwrap();
+        let caps = capabilities.expect("Operation failed");
         assert!(!caps.is_empty());
 
         // Verify all discovered capabilities are sovereignty compliant
@@ -413,14 +413,17 @@ mod tests {
         let mut system: InfantDiscoverySystem<64> = InfantDiscoverySystem::new();
 
         // First discover capabilities
-        let capabilities = system.discover_capabilities().await.unwrap();
+        let capabilities = system
+            .discover_capabilities()
+            .await
+            .expect("Operation failed");
         assert!(!capabilities.is_empty());
 
         // Then establish connection with O(1) complexity
         let connection = system.establish_connection(&capabilities[0].id).await;
         assert!(connection.is_ok());
 
-        let conn = connection.unwrap();
+        let conn = connection.expect("Operation failed");
         assert_eq!(conn.complexity_order, 1); // Verify O(1)
     }
 
@@ -428,7 +431,10 @@ mod tests {
     async fn test_discovery_statistics() {
         let mut system: InfantDiscoverySystem<32> = InfantDiscoverySystem::new();
 
-        let _capabilities = system.discover_capabilities().await.unwrap();
+        let _capabilities = system
+            .discover_capabilities()
+            .await
+            .expect("Operation failed");
         let stats = system.get_discovery_stats().await;
 
         assert!(stats.total_discovered > 0);

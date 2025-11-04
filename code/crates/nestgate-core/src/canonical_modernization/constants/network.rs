@@ -4,26 +4,58 @@
 
 use super::types::*;
 
-/// Default operation timeout in seconds
-pub const DEFAULT_TIMEOUT_SECS: u64 = 30;
+// ==================== NETWORK ADDRESSES ====================
+
+/// Localhost IPv4 address
+pub const LOCALHOST_IPV4: &str = "127.0.0.1";
+/// Localhost name
+pub const LOCALHOST_NAME: &str = "localhost";
+/// Bind all interfaces IPv4
+pub const BIND_ALL_IPV4: &str = "0.0.0.0";
+/// Bind all interfaces IPv6
+pub const BIND_ALL_IPV6: &str = "::";
+/// Default bind address (alias for LOCALHOST_IPV4)
+pub const DEFAULT_BIND_ADDRESS: &str = LOCALHOST_IPV4;
+
+// ==================== DEFAULT PORTS ====================
+
 /// Default API server port
 pub const DEFAULT_API_PORT: u16 = 8080;
-/// Default bind address
-pub const DEFAULT_BIND_ADDRESS: &str = "127.0.0.1";
-/// Maximum concurrent connections
-pub const MAX_CONNECTIONS: u32 = 1000;
+/// Default metrics/monitoring port
+pub const DEFAULT_METRICS_PORT: u16 = 9090;
+/// Default WebSocket port
+pub const DEFAULT_WEBSOCKET_PORT: u16 = 8081;
+/// Default health check port
+pub const DEFAULT_HEALTH_PORT: u16 = 8082;
+/// Default storage port
+pub const DEFAULT_STORAGE_PORT: u16 = 5000;
+/// Default HTTPS port
+pub const DEFAULT_HTTPS_PORT: u16 = 8443;
+
+// ==================== TIMEOUTS ====================
+
+/// Default operation timeout in seconds
+pub const DEFAULT_TIMEOUT_SECS: u64 = 30;
 /// Connection establishment timeout in seconds
 pub const CONNECTION_TIMEOUT_SECS: u64 = 10;
 /// HTTP request timeout in seconds
 pub const REQUEST_TIMEOUT_SECS: u64 = 30;
 /// Keep-alive connection timeout in seconds
 pub const KEEP_ALIVE_TIMEOUT_SECS: u64 = 75;
+
+// ==================== CONNECTION LIMITS ====================
+
+/// Maximum concurrent connections
+pub const MAX_CONNECTIONS: u32 = 1000;
+/// Default retry attempts for network operations
+pub const DEFAULT_RETRY_ATTEMPTS: u32 = 3;
+
+// ==================== BUFFER SIZES ====================
+
 /// Default buffer size for network operations
 pub const DEFAULT_BUFFER_SIZE: usize = 65_536;
 /// Maximum request body size in bytes
 pub const MAX_REQUEST_SIZE: u64 = 10 * 1024 * 1024; // 10MB
-/// Default retry attempts for network operations
-pub const DEFAULT_RETRY_ATTEMPTS: u32 = 3;
 /// Network constants registration helper
 pub fn register_network_constants() -> Vec<(String, ConstantValue, String)> {
     vec![

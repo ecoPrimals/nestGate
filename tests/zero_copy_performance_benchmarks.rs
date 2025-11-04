@@ -1,4 +1,4 @@
-use nestgate_core::memory_pool::{MemoryPool, PoolStatistics};
+use nestgate_core::memory_layout::memory_pool_safe::{PoolStats, SafeMemoryPool};
 use nestgate_core::return_builders::config_builders::build_access_grant;
 /// Zero-Copy Performance Benchmarks
 /// Demonstrates the performance improvements from our optimization work

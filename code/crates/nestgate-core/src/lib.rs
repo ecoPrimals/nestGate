@@ -21,6 +21,8 @@ pub mod defaults;
 pub mod error;
 /// **PRIMARY**: Canonical trait system with native async
 pub mod traits;
+/// Canonical trait definitions - root level service interfaces
+pub mod traits_root;
 // ==================== DOMAIN-SPECIFIC MODULES ====================
 
 /// Capability-based service discovery
@@ -31,6 +33,8 @@ pub mod data_sources;
 pub mod discovery;
 /// Ecosystem integration patterns
 pub mod ecosystem_integration;
+/// Environment configuration utilities
+pub mod environment;
 /// Infant Discovery Architecture implementation
 pub mod infant_discovery;
 /// Error recovery and resilience patterns
@@ -56,6 +60,8 @@ pub mod cache;
 pub mod cert;
 /// Diagnostic tools
 pub mod diagnostics;
+/// Events system for event bus, routing, and pubsub
+pub mod events;
 /// Hardware tuning and optimization
 pub mod hardware_tuning;
 /// Observability and monitoring
@@ -66,15 +72,17 @@ pub mod response;
 pub mod return_builders;
 /// Safe operations utilities
 pub mod safe_operations;
-// TODO: Security module needs additional work beyond syntax fixes
+// ⚠️ Security module temporarily disabled
 // ✅ Syntax errors fixed (20+): auth_types.rs, intrusion_detection.rs, manager.rs,
 //    rate_limiting.rs, validation.rs, universal_auth_adapter.rs
 // ⚠️ Integration issues remain (32 errors): async/await mismatches, function signatures,
 //    attribute usage. Needs refactoring work (estimated 2-3 hours).
-// Temporarily disabled - re-enable after integration fixes
+// Re-enable after integration fixes are complete
 // pub mod security;
 /// Security provider system
 pub mod security_provider;
+/// Sovereignty configuration helpers
+pub mod sovereignty_config;
 /// Temporal storage management
 pub mod temporal_storage;
 // ==================== ZERO-COST ARCHITECTURE ====================
@@ -99,6 +107,8 @@ pub mod interface;
 pub mod memory_layout;
 /// Performance optimizations
 pub mod optimized;
+/// Performance optimization system (connection pooling, advanced optimizations)
+pub mod performance;
 /// SIMD optimizations
 pub mod simd;
 /// Unified enumerations
@@ -178,3 +188,6 @@ pub const PERFORMANCE_IMPROVEMENT_PERCENT: u8 = 45; // Average 40-60% range
 pub const DEBT_ELIMINATION_PERCENT: u8 = 95;
 
 // Note: test_safe_operations module removed - file does not exist
+
+#[cfg(test)]
+mod edge_case_tests;

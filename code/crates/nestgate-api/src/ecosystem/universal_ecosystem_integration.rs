@@ -204,20 +204,29 @@ impl UniversalEcosystemIntegration {
 
     /// Get NestGate endpoints for registration
     fn get_nestgate_endpoints(&self) -> Vec<ServiceEndpoint> {
+        use nestgate_core::constants::hardcoding::{addresses, ports};
+        
+        let base_host = std::env::var("NESTGATE_API_HOST")
+            .unwrap_or_else(|_| addresses::LOCALHOST_NAME.to_string());
+        let api_port = std::env::var("NESTGATE_API_PORT")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(ports::HTTP_DEFAULT);
+        let metrics_port = std::env::var("NESTGATE_METRICS_PORT")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(ports::METRICS_DEFAULT);
+        
         vec![
             ServiceEndpoint {
                 name: "api".to_string(),
-                url: format!("http://self.base_url:self.base_url"),
-                    8080
-                ),
+                url: format!("http://{}:{}", base_host, api_port),
                 protocol: "http".to_string(),
                 health_check: Some("/health".to_string()),
-            }
+            },
             ServiceEndpoint {
                 name: "metrics".to_string(),
-                url: format!("http://self.base_url:self.base_url/metrics"),
-                    9090
-                ),
+                url: format!("http://{}:{}/metrics", base_host, metrics_port),
                 protocol: "http".to_string(),
                 health_check: None,
             }

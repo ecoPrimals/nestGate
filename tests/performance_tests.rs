@@ -9,7 +9,7 @@ const PERFORMANCE_THRESHOLD_MS: u128 = 100; // 100ms max for operations
 const THROUGHPUT_THRESHOLD: usize = 1000; // 1000 ops/sec minimum
 
 #[tokio::test]
-async fn benchmark_service_discovery() -> Result<(), Box<dyn std::error::Error>> {
+async fn benchmark_service_discovery() -> std::result::Result<(), Box<dyn std::error::Error>> {
     println!("🏃 Benchmarking service discovery performance...");
 
     let registry = service_discovery::InMemoryServiceRegistry::new();
@@ -61,7 +61,7 @@ async fn benchmark_service_discovery() -> Result<(), Box<dyn std::error::Error>>
 }
 
 #[tokio::test]
-async fn benchmark_error_handling() -> Result<(), Box<dyn std::error::Error>> {
+async fn benchmark_error_handling() -> std::result::Result<(), Box<dyn std::error::Error>> {
     println!("🏃 Benchmarking error handling performance...");
 
     let iterations = 10000;
@@ -103,7 +103,7 @@ async fn benchmark_error_handling() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[tokio::test]
-async fn benchmark_zero_cost_abstractions() -> Result<(), Box<dyn std::error::Error>> {
+async fn benchmark_zero_cost_abstractions() -> std::result::Result<(), Box<dyn std::error::Error>> {
     println!("🏃 Benchmarking zero-cost abstractions...");
 
     let iterations = 100000;
@@ -150,7 +150,7 @@ async fn benchmark_zero_cost_abstractions() -> Result<(), Box<dyn std::error::Er
 }
 
 #[tokio::test]
-async fn benchmark_memory_operations() -> Result<(), Box<dyn std::error::Error>> {
+async fn benchmark_memory_operations() -> std::result::Result<(), Box<dyn std::error::Error>> {
     println!("🏃 Benchmarking memory operations...");
 
     let iterations = 50000;
@@ -181,7 +181,7 @@ async fn benchmark_memory_operations() -> Result<(), Box<dyn std::error::Error>>
 }
 
 #[tokio::test]
-async fn benchmark_concurrent_operations() -> Result<(), Box<dyn std::error::Error>> {
+async fn benchmark_concurrent_operations() -> std::result::Result<(), Box<dyn std::error::Error>> {
     println!("🏃 Benchmarking concurrent operations...");
 
     let concurrent_tasks = 100;
@@ -230,7 +230,7 @@ async fn benchmark_concurrent_operations() -> Result<(), Box<dyn std::error::Err
 }
 
 #[tokio::test]
-async fn benchmark_full_system_load() -> Result<(), Box<dyn std::error::Error>> {
+async fn benchmark_full_system_load() -> std::result::Result<(), Box<dyn std::error::Error>> {
     println!("🏃 Benchmarking full system under load...");
 
     // Initialize system components

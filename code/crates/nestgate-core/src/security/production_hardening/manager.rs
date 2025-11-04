@@ -252,7 +252,7 @@ mod tests {
         let manager = SecurityHardeningManager::new(config);
         
         let test_ip = IpAddr::V4(Ipv4Addr::new(192, 168, 1, 100));
-        let blocked = manager.is_ip_blocked(test_ip).await.unwrap();
+        let blocked = manager.is_ip_blocked(test_ip).await.expect("Security operation failed");
         assert!(!blocked);
     }
 

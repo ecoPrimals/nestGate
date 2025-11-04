@@ -113,47 +113,77 @@ mod pool_manager_tests {
     #[test]
     fn test_parse_size_bytes() {
         let _manager = ZfsPoolManager::new_for_testing();
-        assert_eq!(parse_size_with_units("1024").unwrap(), 1024);
-        assert_eq!(parse_size_with_units("512B").unwrap(), 512);
+        assert_eq!(
+            parse_size_with_units("1024").expect("ZFS operation failed"),
+            1024
+        );
+        assert_eq!(
+            parse_size_with_units("512B").expect("ZFS operation failed"),
+            512
+        );
     }
 
     #[test]
     fn test_parse_size_kilobytes() {
         let _manager = ZfsPoolManager::new_for_testing();
-        assert_eq!(parse_size_with_units("1K").unwrap(), 1024);
-        assert_eq!(parse_size_with_units("10K").unwrap(), 10240);
+        assert_eq!(
+            parse_size_with_units("1K").expect("ZFS operation failed"),
+            1024
+        );
+        assert_eq!(
+            parse_size_with_units("10K").expect("ZFS operation failed"),
+            10240
+        );
     }
 
     #[test]
     fn test_parse_size_megabytes() {
         let _manager = ZfsPoolManager::new_for_testing();
-        assert_eq!(parse_size_with_units("1M").unwrap(), 1_048_576);
-        assert_eq!(parse_size_with_units("5M").unwrap(), 5_242_880);
+        assert_eq!(
+            parse_size_with_units("1M").expect("ZFS operation failed"),
+            1_048_576
+        );
+        assert_eq!(
+            parse_size_with_units("5M").expect("ZFS operation failed"),
+            5_242_880
+        );
     }
 
     #[test]
     fn test_parse_size_gigabytes() {
         let _manager = ZfsPoolManager::new_for_testing();
-        assert_eq!(parse_size_with_units("1G").unwrap(), 1_073_741_824);
-        assert_eq!(parse_size_with_units("2G").unwrap(), 2_147_483_648);
+        assert_eq!(
+            parse_size_with_units("1G").expect("ZFS operation failed"),
+            1_073_741_824
+        );
+        assert_eq!(
+            parse_size_with_units("2G").expect("ZFS operation failed"),
+            2_147_483_648
+        );
     }
 
     #[test]
     fn test_parse_size_terabytes() {
         let _manager = ZfsPoolManager::new_for_testing();
-        assert_eq!(parse_size_with_units("1T").unwrap(), 1_099_511_627_776);
+        assert_eq!(
+            parse_size_with_units("1T").expect("ZFS operation failed"),
+            1_099_511_627_776
+        );
     }
 
     #[test]
     fn test_parse_size_petabytes() {
         let _manager = ZfsPoolManager::new_for_testing();
-        assert_eq!(parse_size_with_units("1P").unwrap(), 1_125_899_906_842_624);
+        assert_eq!(
+            parse_size_with_units("1P").expect("ZFS operation failed"),
+            1_125_899_906_842_624
+        );
     }
 
     #[test]
     fn test_parse_size_dash() {
         let _manager = ZfsPoolManager::new_for_testing();
-        assert_eq!(parse_size_with_units("-").unwrap(), 0);
+        assert_eq!(parse_size_with_units("-").expect("ZFS operation failed"), 0);
     }
 
     #[test]
@@ -166,8 +196,14 @@ mod pool_manager_tests {
     #[test]
     fn test_parse_size_decimal() {
         let _manager = ZfsPoolManager::new_for_testing();
-        assert_eq!(parse_size_with_units("1.5G").unwrap(), 1_610_612_736);
-        assert_eq!(parse_size_with_units("0.5M").unwrap(), 524_288);
+        assert_eq!(
+            parse_size_with_units("1.5G").expect("ZFS operation failed"),
+            1_610_612_736
+        );
+        assert_eq!(
+            parse_size_with_units("0.5M").expect("ZFS operation failed"),
+            524_288
+        );
     }
 
     // ==================== Pool Line Parsing Tests ====================
@@ -176,10 +212,10 @@ mod pool_manager_tests {
     fn test_parse_pool_line_valid() {
         let manager = ZfsPoolManager::new_for_testing();
         let line = "testpool\t10G\t5G\t5G\t50%\tONLINE";
-        let result = manager.parse_pool_line(line).unwrap();
+        let result = manager.parse_pool_line(line).expect("ZFS operation failed");
 
         assert!(result.is_some());
-        let pool = result.unwrap();
+        let pool = result.expect("ZFS operation failed");
         assert_eq!(pool.name, "testpool");
         assert_eq!(pool.state, PoolState::Online);
         assert_eq!(pool.health, PoolHealth::Healthy);
@@ -190,10 +226,10 @@ mod pool_manager_tests {
     fn test_parse_pool_line_degraded() {
         let manager = ZfsPoolManager::new_for_testing();
         let line = "degraded_pool\t20G\t15G\t5G\t75%\tDEGRADED";
-        let result = manager.parse_pool_line(line).unwrap();
+        let result = manager.parse_pool_line(line).expect("ZFS operation failed");
 
         assert!(result.is_some());
-        let pool = result.unwrap();
+        let pool = result.expect("ZFS operation failed");
         assert_eq!(pool.name, "degraded_pool");
         assert_eq!(pool.state, PoolState::Degraded);
         assert_eq!(pool.health, PoolHealth::Warning);
@@ -203,10 +239,10 @@ mod pool_manager_tests {
     fn test_parse_pool_line_faulted() {
         let manager = ZfsPoolManager::new_for_testing();
         let line = "faulted_pool\t100G\t50G\t50G\t50%\tFAULTED";
-        let result = manager.parse_pool_line(line).unwrap();
+        let result = manager.parse_pool_line(line).expect("ZFS operation failed");
 
         assert!(result.is_some());
-        let pool = result.unwrap();
+        let pool = result.expect("ZFS operation failed");
         assert_eq!(pool.name, "faulted_pool");
         assert_eq!(pool.state, PoolState::Faulted);
         assert_eq!(pool.health, PoolHealth::Critical);
@@ -216,10 +252,10 @@ mod pool_manager_tests {
     fn test_parse_pool_line_offline() {
         let manager = ZfsPoolManager::new_for_testing();
         let line = "offline_pool\t50G\t0G\t50G\t0%\tOFFLINE";
-        let result = manager.parse_pool_line(line).unwrap();
+        let result = manager.parse_pool_line(line).expect("ZFS operation failed");
 
         assert!(result.is_some());
-        let pool = result.unwrap();
+        let pool = result.expect("ZFS operation failed");
         assert_eq!(pool.name, "offline_pool");
         assert_eq!(pool.state, PoolState::Offline);
     }
@@ -228,7 +264,7 @@ mod pool_manager_tests {
     fn test_parse_pool_line_insufficient_fields() {
         let manager = ZfsPoolManager::new_for_testing();
         let line = "incomplete\t10G";
-        let result = manager.parse_pool_line(line).unwrap();
+        let result = manager.parse_pool_line(line).expect("ZFS operation failed");
 
         assert!(result.is_none());
     }
@@ -237,10 +273,10 @@ mod pool_manager_tests {
     fn test_parse_pool_line_unknown_health() {
         let manager = ZfsPoolManager::new_for_testing();
         let line = "unknown_pool\t10G\t5G\t5G\t50%\tUNKNOWN";
-        let result = manager.parse_pool_line(line).unwrap();
+        let result = manager.parse_pool_line(line).expect("ZFS operation failed");
 
         assert!(result.is_some());
-        let pool = result.unwrap();
+        let pool = result.expect("ZFS operation failed");
         assert_eq!(pool.health, PoolHealth::Unknown);
         assert_eq!(pool.state, PoolState::Unknown);
     }
@@ -328,7 +364,7 @@ mod pool_manager_tests {
 
         let pool: std::result::Result<PoolInfo, _> = serde_json::from_str(json);
         assert!(pool.is_ok());
-        let pool = pool.unwrap();
+        let pool = pool.expect("ZFS operation failed");
         assert_eq!(pool.name, "deserialize_test");
     }
 

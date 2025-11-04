@@ -242,7 +242,7 @@ mod tests {
         let result = get_storage_datasets().await;
         // Should return empty list for now (pending backend integration)
         assert!(result.is_ok());
-        let datasets = result.unwrap().0;
+        let datasets = result.expect("Storage operation failed").0;
         assert_eq!(datasets.len(), 0, "Datasets not yet implemented");
     }
 
@@ -251,7 +251,7 @@ mod tests {
         let result = get_storage_snapshots().await;
         // Should return empty list for now (pending backend integration)
         assert!(result.is_ok());
-        let snapshots = result.unwrap().0;
+        let snapshots = result.expect("Storage operation failed").0;
         assert_eq!(snapshots.len(), 0, "Snapshots not yet implemented");
     }
 
@@ -266,7 +266,7 @@ mod tests {
     async fn test_storage_metrics_structure() {
         let result = get_storage_metrics().await;
         assert!(result.is_ok());
-        let metrics = result.unwrap().0;
+        let metrics = result.expect("Storage operation failed").0;
 
         // Verify structure (all values are unsigned, so always >= 0)
         assert!(metrics.total_storage < u64::MAX);
@@ -356,7 +356,7 @@ mod tests {
         let result = get_storage_pools().await;
         assert!(result.is_ok());
         // Result should be a Vec, even if empty
-        let _pools = result.unwrap().0;
+        let _pools = result.expect("Storage operation failed").0;
     }
 
     #[tokio::test]

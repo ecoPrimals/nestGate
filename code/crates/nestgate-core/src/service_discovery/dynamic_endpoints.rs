@@ -177,12 +177,18 @@ mod tests {
         let resolver = DynamicEndpointResolver::new();
 
         // Test API endpoint resolution
-        let api_endpoint = resolver.resolve_endpoint("api").await.unwrap();
+        let api_endpoint = resolver
+            .resolve_endpoint("api")
+            .await
+            .expect("Operation failed");
         assert!(api_endpoint.starts_with("http://"));
         assert!(!api_endpoint.contains("hardcoded"));
 
         // Test WebSocket endpoint resolution
-        let ws_endpoint = resolver.resolve_endpoint("websocket").await.unwrap();
+        let ws_endpoint = resolver
+            .resolve_endpoint("websocket")
+            .await
+            .expect("Operation failed");
         assert!(ws_endpoint.starts_with("ws://"));
     }
 
@@ -191,7 +197,10 @@ mod tests {
         std::env::set_var("API_ENDPOINT", "http://custom-api:9090");
 
         let resolver = DynamicEndpointResolver::new();
-        let endpoint = resolver.resolve_endpoint("api").await.unwrap();
+        let endpoint = resolver
+            .resolve_endpoint("api")
+            .await
+            .expect("Operation failed");
 
         assert_eq!(endpoint, "http://custom-api:9090");
 
@@ -203,10 +212,16 @@ mod tests {
         let resolver = DynamicEndpointResolver::new();
 
         // First resolution
-        let endpoint1 = resolver.resolve_endpoint("test_service").await.unwrap();
+        let endpoint1 = resolver
+            .resolve_endpoint("test_service")
+            .await
+            .expect("Operation failed");
 
         // Second resolution should use cache
-        let endpoint2 = resolver.resolve_endpoint("test_service").await.unwrap();
+        let endpoint2 = resolver
+            .resolve_endpoint("test_service")
+            .await
+            .expect("Operation failed");
 
         assert_eq!(endpoint1, endpoint2);
 
@@ -220,7 +235,10 @@ mod tests {
         let resolver = DynamicEndpointResolver::new();
 
         for service in &["api", "websocket", "metrics", "health", "admin"] {
-            let endpoint = resolver.resolve_endpoint(service).await.unwrap();
+            let endpoint = resolver
+                .resolve_endpoint(service)
+                .await
+                .expect("Operation failed");
 
             // Should not contain hardcoded port numbers
             assert!(

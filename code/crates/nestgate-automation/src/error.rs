@@ -214,7 +214,7 @@ mod tests {
     #[test]
     fn test_serialization() {
         let err = AutomationError::AnalysisError("test".to_string());
-        let serialized = serde_json::to_string(&err).unwrap();
+        let serialized = serde_json::to_string(&err).expect("String operation failed");
         assert!(serialized.contains("AnalysisError"));
         assert!(serialized.contains("test"));
     }
@@ -222,7 +222,8 @@ mod tests {
     #[test]
     fn test_deserialization() {
         let json = r#"{"AnalysisError":"test message"}"#;
-        let err: AutomationError = serde_json::from_str(json).unwrap();
+        let err: AutomationError =
+            serde_json::from_str(json).expect("Failed to convert from string");
         if let AutomationError::AnalysisError(msg) = err {
             assert_eq!(msg, "test message");
         } else {
@@ -233,8 +234,9 @@ mod tests {
     #[test]
     fn test_round_trip_serialization() {
         let original = AutomationError::PredictionError("round trip test".to_string());
-        let json = serde_json::to_string(&original).unwrap();
-        let deserialized: AutomationError = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&original).expect("String operation failed");
+        let deserialized: AutomationError =
+            serde_json::from_str(&json).expect("Failed to convert from string");
         assert_eq!(format!("{}", original), format!("{}", deserialized));
     }
 

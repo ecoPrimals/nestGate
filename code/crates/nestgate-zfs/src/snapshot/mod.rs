@@ -12,6 +12,10 @@ mod types;
 #[cfg(test)]
 mod tests;
 
+// Tests for snapshot manager
+#[cfg(test)]
+mod manager_tests;
+
 // Re-export public API
 pub use events::{PolicyStats, SnapshotAutomationStatus, SnapshotEvent, SnapshotEventType};
 pub use manager::ZfsSnapshotManager;

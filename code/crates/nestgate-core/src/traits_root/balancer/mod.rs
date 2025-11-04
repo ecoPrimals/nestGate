@@ -23,32 +23,30 @@ mod tests {
     fn create_test_services() -> Vec<ServiceInfo> {
         vec![
             ServiceInfo {
+                id: "service1".to_string(),
                 name: "service1".to_string(),
-                endpoint: "127.0.0.1:8001".to_string(),
-                port: 8001,
-                protocol: "http".to_string(),
-                version: Some("1.0.0".to_string()),
-                metadata: std::collections::HashMap::new(),
+                version: "1.0.0".to_string(),
+                capabilities: vec![],
+                status: crate::universal_traits::orchestration::ServiceStatus::Healthy,
+                last_seen: std::time::SystemTime::now(),
             },
             ServiceInfo {
+                id: "service2".to_string(),
                 name: "service2".to_string(),
-                endpoint: "127.0.0.1:8002".to_string(),
-                port: 8002,
-                protocol: "http".to_string(),
-                version: Some("1.0.0".to_string()),
-                metadata: std::collections::HashMap::new(),
+                version: "1.0.0".to_string(),
+                capabilities: vec![],
+                status: crate::universal_traits::orchestration::ServiceStatus::Healthy,
+                last_seen: std::time::SystemTime::now(),
             },
         ]
     }
 
     fn create_test_request() -> ServiceRequest {
         ServiceRequest {
-            id: "test-request".to_string(),
-            method: "GET".to_string(),
-            headers: std::collections::HashMap::new(),
-            body: None,
-            timeout: Some(std::time::Duration::from_secs(30)),
-            metadata: std::collections::HashMap::new(),
+            service_id: "test-service".to_string(),
+            action: "GET".to_string(),
+            parameters: std::collections::HashMap::new(),
+            timeout_seconds: Some(30),
         }
     }
 
@@ -59,8 +57,14 @@ mod tests {
         let request = create_test_request();
 
         // Test service selection
-        let service1 = lb.select_service(&services, &request).await.unwrap();
-        let service2 = lb.select_service(&services, &request).await.unwrap();
+        let service1 = lb
+            .select_service(&services, &request)
+            .await
+            .expect("Operation failed");
+        let service2 = lb
+            .select_service(&services, &request)
+            .await
+            .expect("Operation failed");
 
         // Should rotate between services
         assert_ne!(service1.name, service2.name);
@@ -74,7 +78,10 @@ mod tests {
         let request = create_test_request();
 
         // Test service selection
-        let selected = lb.select_service(&services, &request).await.unwrap();
+        let selected = lb
+            .select_service(&services, &request)
+            .await
+            .expect("Operation failed");
         assert!(services.iter().any(|s| s.name == selected.name));
         assert_eq!(lb.algorithm(), "random");
     }
@@ -86,14 +93,17 @@ mod tests {
         let request = create_test_request();
 
         // Test service selection
-        let selected = lb.select_service(&services, &request).await.unwrap();
+        let selected = lb
+            .select_service(&services, &request)
+            .await
+            .expect("Operation failed");
         assert!(services.iter().any(|s| s.name == selected.name));
         assert_eq!(lb.algorithm(), "least_connections");
     }
 
     #[tokio::test]
     async fn test_weighted_round_robin_load_balancer() {
-        let mut lb = WeightedRoundRobinLoadBalancer::new();
+        let lb = WeightedRoundRobinLoadBalancer::new();
         let services = create_test_services();
         let request = create_test_request();
 
@@ -101,17 +111,20 @@ mod tests {
         let mut weights = std::collections::HashMap::new();
         weights.insert("service1".to_string(), 2.0);
         weights.insert("service2".to_string(), 1.0);
-        lb.update_weights(weights).await.unwrap();
+        lb.update_weights(weights).await.expect("Operation failed");
 
         // Test service selection
-        let selected = lb.select_service(&services, &request).await.unwrap();
+        let selected = lb
+            .select_service(&services, &request)
+            .await
+            .expect("Operation failed");
         assert!(services.iter().any(|s| s.name == selected.name));
         assert_eq!(lb.algorithm(), "weighted_round_robin");
     }
 
     #[tokio::test]
     async fn test_weighted_random_load_balancer() {
-        let mut lb = WeightedRandomLoadBalancer::new();
+        let lb = WeightedRandomLoadBalancer::new();
         let services = create_test_services();
         let request = create_test_request();
 
@@ -119,23 +132,29 @@ mod tests {
         let mut weights = std::collections::HashMap::new();
         weights.insert("service1".to_string(), 2.0);
         weights.insert("service2".to_string(), 1.0);
-        lb.update_weights(weights).await.unwrap();
+        lb.update_weights(weights).await.expect("Operation failed");
 
         // Test service selection
-        let selected = lb.select_service(&services, &request).await.unwrap();
+        let selected = lb
+            .select_service(&services, &request)
+            .await
+            .expect("Operation failed");
         assert!(services.iter().any(|s| s.name == selected.name));
         assert_eq!(lb.algorithm(), "weighted_random");
     }
 
     #[tokio::test]
     async fn test_health_aware_load_balancer() {
-        let inner = Box::new(RoundRobinLoadBalancer::new());
+        let inner = RoundRobinLoadBalancer::new();
         let lb = HealthAwareLoadBalancer::new(inner);
         let services = create_test_services();
         let request = create_test_request();
 
         // Test service selection
-        let selected = lb.select_service(&services, &request).await.unwrap();
+        let selected = lb
+            .select_service(&services, &request)
+            .await
+            .expect("Operation failed");
         assert!(services.iter().any(|s| s.name == selected.name));
         assert_eq!(lb.algorithm(), "round_robin"); // Returns inner algorithm
     }
@@ -158,26 +177,29 @@ mod tests {
         let request = create_test_request();
 
         // Initial stats should be empty
-        let stats = lb.get_stats().await.unwrap();
+        let stats = lb.get_stats().await.expect("Operation failed");
         assert_eq!(stats.total_requests, 0);
         assert_eq!(stats.algorithm, "round_robin");
 
         // Select a service to update stats
-        let selected = lb.select_service(&services, &request).await.unwrap();
+        let selected = lb
+            .select_service(&services, &request)
+            .await
+            .expect("Operation failed");
         let response = crate::universal_traits::ServiceResponse {
-            id: "test-response".to_string(),
-            status_code: 200,
-            headers: std::collections::HashMap::new(),
-            body: None,
-            latency: Some(std::time::Duration::from_millis(100)),
-            metadata: std::collections::HashMap::new(),
+            success: true,
+            data: None,
+            error_message: None,
+            execution_time_ms: 100,
         };
 
         // Record response
-        lb.record_response(&selected, &response).await.unwrap();
+        lb.record_response(&selected, &response)
+            .await
+            .expect("Operation failed");
 
         // Stats should be updated
-        let stats = lb.get_stats().await.unwrap();
+        let stats = lb.get_stats().await.expect("Operation failed");
         assert_eq!(stats.total_requests, 1);
     }
-} 
+}

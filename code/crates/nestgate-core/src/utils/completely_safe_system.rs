@@ -487,7 +487,7 @@ mod tests {
     fn test_privilege_checking() {
         let privileges = SafePrivilegeChecker::check_privileges();
 
-        // Basic sanity checks
+        // Basic validation checks
         assert!(privileges.user_id >= 0);
         assert!(privileges.group_id >= 0);
 

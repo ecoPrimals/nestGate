@@ -22,7 +22,7 @@ impl ZeroCopyFilesystemBackend {
         Self {
             base_path: base_path.into(),
             mmap_cache: Arc::new(tokio::sync::RwLock::new(
-                lru::LruCache::new(std::num::NonZeroUsize::new(1000).unwrap())
+                lru::LruCache::new(std::num::NonZeroUsize::new(1000).expect("Storage operation failed"))
             )),
         }
     }

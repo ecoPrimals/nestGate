@@ -294,7 +294,9 @@ mod tests {
 
         registry.register_service(service);
 
-        let discovered = registry.discover_services("storage").unwrap();
+        let discovered = registry
+            .discover_services("storage")
+            .expect("Network operation failed");
         assert_eq!(discovered.len(), 1);
         assert_eq!(discovered[0].name, "test-service");
     }

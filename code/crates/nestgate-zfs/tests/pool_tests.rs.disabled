@@ -46,8 +46,7 @@ mod pool_manager_tests {
         // Should handle gracefully whether ZFS is available or not
         match result {
             Ok(pools) => {
-                println!("Discovered {
-        Ok(())} pools", pools.len());
+                println!("Discovered {} pools", pools.len());
                 // Verify pool structure if any pools exist
                 for pool in pools {
                     assert!(!pool.name.is_empty(), "Pool name should not be empty");
@@ -73,15 +72,7 @@ mod pool_manager_tests {
 
         // Should always succeed with valid structure
         assert!(result.is_ok(), "Should be able to get overall status");
-        let status = result.unwrap_or_else(|_e| {
-            tracing::error!("Unwrap failed: {:?
-        Ok(())}", e);
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                format!("Operation failed: {}", "actual_error_details"),
-            )
-            .into());
-        });
+        let status = result.expect("Failed to get overall status");
 
         // Verify status structure
         // These are always true for unsigned integers, but kept for documentation
@@ -201,7 +192,6 @@ mod pool_info_tests {
                 used_bytes: 1024 * 1024 * 1024 * 512,      // 512GB
                 available_bytes: 1024 * 1024 * 1024 * 512, // 512GB
                 utilization_percent: 50.0,
-        Ok(())
             },
             devices: vec!["/dev/sda1".to_string(), "/dev/sdb1".to_string()],
             properties: HashMap::new(),

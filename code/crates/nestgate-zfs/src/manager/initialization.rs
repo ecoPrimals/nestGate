@@ -240,10 +240,10 @@ impl ZfsManager {
                 "capabilities".to_string(),
                 "dataset_management,snapshot_operations,tier_management".to_string(),
             );
-            details.insert(
-                "endpoint".to_string(),
-                "localhost:8080".to_string(), // Default endpoint since config.endpoints doesn't exist
-            );
+            details.insert("endpoint".to_string(), {
+                use nestgate_core::constants::hardcoding::{addresses, ports};
+                format!("{}:{}", addresses::LOCALHOST_NAME, ports::HTTP_DEFAULT)
+            });
             details.insert("version".to_string(), env!("CARGO_PKG_VERSION").to_string());
             details
         });

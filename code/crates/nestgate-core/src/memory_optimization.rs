@@ -117,7 +117,10 @@ impl<T> ObjectPool<T> {
     
     /// Get object from pool or create new one
     pub fn acquire(&self) -> T {
-        let mut objects = self.objects.lock().unwrap();
+        let mut objects = self.objects.lock().unwrap_or_else(|poisoned| {
+            // Mutex was poisoned, but we can recover by accessing the underlying data
+            poisoned.into_inner()
+        });
         
         if let Some(obj) = objects.pop() {
             self.stats.hits.fetch_add(1, Ordering::Relaxed);
@@ -131,7 +134,10 @@ impl<T> ObjectPool<T> {
     
     /// Return object to pool
     pub fn release(&self, obj: T) {
-        let mut objects = self.objects.lock().unwrap();
+        let mut objects = self.objects.lock().unwrap_or_else(|poisoned| {
+            // Mutex was poisoned, but we can recover by accessing the underlying data
+            poisoned.into_inner()
+        });
         
         if objects.len() < self.max_size {
             objects.push(obj);
@@ -180,7 +186,10 @@ where
     /// Get value from cache
     #[must_use]
     pub fn get(&self, key: &K) -> Option<Arc<V>> {
-        let mut cache = self.cache.lock().unwrap();
+        let mut cache = self.cache.lock().unwrap_or_else(|poisoned| {
+            // Mutex was poisoned, but we can recover by accessing the underlying data
+            poisoned.into_inner()
+        });
         
         if let Some(weak_ref) = cache.get(key) {
             if let Some(strong_ref) = weak_ref.upgrade() {
@@ -199,13 +208,19 @@ where
     
     /// Insert value into cache
     pub fn insert(&self, key: K, value: Arc<V>) {
-        let mut cache = self.cache.lock().unwrap();
+        let mut cache = self.cache.lock().unwrap_or_else(|poisoned| {
+            // Mutex was poisoned, but we can recover by accessing the underlying data
+            poisoned.into_inner()
+        });
         cache.insert(key, Arc::downgrade(&value));
     }
     
     /// Clean up dead weak references
     pub fn cleanup(&self) {
-        let mut cache = self.cache.lock().unwrap();
+        let mut cache = self.cache.lock().unwrap_or_else(|poisoned| {
+            // Mutex was poisoned, but we can recover by accessing the underlying data
+            poisoned.into_inner()
+        });
         let mut to_remove = Vec::new();
         
         for (key, weak_ref) in cache.iter() {
@@ -228,7 +243,10 @@ where
         let misses = self.stats.misses.load(Ordering::Relaxed);
         let total = hits + misses;
         let hit_rate = if total > 0 { hits as f64 / total as f64 } else { 0.0 };
-        let size = self.cache.lock().unwrap().len();
+        let size = self.cache.lock().unwrap_or_else(|poisoned| {
+            // Mutex was poisoned, but we can recover by accessing the underlying data
+            poisoned.into_inner()
+        }).len();
         (hits, misses, hit_rate, size)
     }
 }
@@ -259,13 +277,19 @@ impl MemoryPressureDetector {
     where
         F: Fn() + Send + Sync + 'static,
     {
-        let mut callbacks = self.callbacks.lock().unwrap();
+        let mut callbacks = self.callbacks.lock().unwrap_or_else(|poisoned| {
+            // Mutex was poisoned, but we can recover by accessing the underlying data
+            poisoned.into_inner()
+        });
         callbacks.push(Box::new(callback));
     }
     
     /// Check for memory pressure and trigger callbacks if needed
     pub fn check_pressure(&self) {
-        let mut last_check = self.last_check.lock().unwrap();
+        let mut last_check = self.last_check.lock().unwrap_or_else(|poisoned| {
+            // Mutex was poisoned, but we can recover by accessing the underlying data
+            poisoned.into_inner()
+        });
         let now = Instant::now();
         
         if now.duration_since(*last_check) < self.check_interval {
@@ -276,7 +300,10 @@ impl MemoryPressureDetector {
         
         if let Ok(memory_usage) = self.get_memory_usage_percentage() {
             if memory_usage > self.memory_threshold {
-                let callbacks = self.callbacks.lock().unwrap();
+                let callbacks = self.callbacks.lock().unwrap_or_else(|poisoned| {
+                    // Mutex was poisoned, but we can recover by accessing the underlying data
+                    poisoned.into_inner()
+                });
                 for callback in callbacks.iter() {
                     callback();
                 }
@@ -319,46 +346,36 @@ impl MemoryArena {
             return None; // Too large for arena
         }
         
-        let mut current_chunk = self.current_chunk.lock().unwrap();
+        let mut current_chunk = self.current_chunk.lock().unwrap_or_else(|poisoned| {
+            // Mutex was poisoned, but we can recover by accessing the underlying data
+            poisoned.into_inner()
+        });
         
         // Check if current chunk has enough space
         if let Some(ref mut chunk) = *current_chunk {
             if chunk.capacity() - chunk.len() >= size {
-                // SAFETY: Pointer arithmetic is safe because:
-                // 1. Bounds check: We verified capacity - len >= size above
-                // 2. Validity: chunk.as_mut_ptr() returns valid pointer to allocated memory
-                // 3. Offset: add(chunk.len()) stays within allocated capacity
-                // 4. Alignment: u8 has alignment of 1, always satisfied
-                // 5. Lifetime: Returned pointer lifetime tied to arena lifetime
-                let ptr = unsafe { chunk.as_mut_ptr().add(chunk.len()) };
-                
-                // SAFETY: set_len is safe because:
-                // 1. Capacity check: We verified sufficient capacity above
-                // 2. Initialization: Caller responsible for initializing allocated memory
-                // 3. Bounds: new_len = old_len + size <= capacity (verified)
-                // 4. No drop: u8 has no drop glue, safe to extend length
-                // 5. Memory validity: All bytes up to capacity are allocated
-                unsafe { chunk.set_len(chunk.len() + size) };
+                // ✅ SAFE: Use resize to extend the vector safely
+                // This initializes memory with zeros (safe for u8)
+                let start_idx = chunk.len();
+                chunk.resize(chunk.len() + size, 0);
+                let ptr = chunk[start_idx..].as_mut_ptr();
                 self.allocation_count.fetch_add(1, Ordering::Relaxed);
                 return Some(ptr);
             }
         }
         
         // Need new chunk
-        let mut new_chunk = Vec::with_capacity(self.chunk_size);
+        // ✅ SAFE: Use vec! macro or resize to create initialized vector
+        let mut new_chunk = vec![0u8; size];
+        new_chunk.reserve(self.chunk_size - size); // Reserve remaining capacity
         let ptr = new_chunk.as_mut_ptr();
-        
-        // SAFETY: set_len is safe because:
-        // 1. Capacity: Vec was just created with capacity >= size
-        // 2. Bounds check: size checked to be <= chunk_size at function start
-        // 3. Initialization: Caller responsible for initializing allocated region
-        // 4. Memory validity: Vec::with_capacity allocates valid memory
-        // 5. No drop: u8 has no drop glue, safe to set length
-        unsafe { new_chunk.set_len(size) };
         
         // Store old chunk if exists
         if let Some(old_chunk) = current_chunk.replace(new_chunk) {
-            let mut chunks = self.chunks.lock().unwrap();
+            let mut chunks = self.chunks.lock().unwrap_or_else(|poisoned| {
+                // Mutex was poisoned, but we can recover by accessing the underlying data
+                poisoned.into_inner()
+            });
             chunks.push(old_chunk);
         }
         
@@ -368,10 +385,16 @@ impl MemoryArena {
     
     /// Reset arena (deallocate all memory)
     pub fn reset(&self) {
-        let mut chunks = self.chunks.lock().unwrap();
+        let mut chunks = self.chunks.lock().unwrap_or_else(|poisoned| {
+            // Mutex was poisoned, but we can recover by accessing the underlying data
+            poisoned.into_inner()
+        });
         chunks.clear();
         
-        let mut current_chunk = self.current_chunk.lock().unwrap();
+        let mut current_chunk = self.current_chunk.lock().unwrap_or_else(|poisoned| {
+            // Mutex was poisoned, but we can recover by accessing the underlying data
+            poisoned.into_inner()
+        });
         *current_chunk = None;
         
         self.allocation_count.store(0, Ordering::Relaxed);
@@ -449,7 +472,10 @@ impl MemoryProfiler {
     
     /// Record an allocation for profiling
     pub fn record_allocation(&self, category: &str, size: usize) {
-        let mut allocations = self.allocations.lock().unwrap();
+        let mut allocations = self.allocations.lock().unwrap_or_else(|poisoned| {
+            // Mutex was poisoned, but we can recover by accessing the underlying data
+            poisoned.into_inner()
+        });
         let info = allocations.entry(category.to_string()).or_insert(AllocationInfo {
             count: 0,
             total_size: 0,
@@ -465,7 +491,10 @@ impl MemoryProfiler {
     
     /// Generate memory usage report
     pub fn generate_report(&self) -> MemoryReport {
-        let allocations = self.allocations.lock().unwrap();
+        let allocations = self.allocations.lock().unwrap_or_else(|poisoned| {
+            // Mutex was poisoned, but we can recover by accessing the underlying data
+            poisoned.into_inner()
+        });
         let mut categories = Vec::new();
         
         for (category, info) in allocations.iter() {
@@ -878,7 +907,7 @@ mod tests {
         // Find the strings category
         let strings_category = report.categories.iter()
             .find(|c| c.name == "strings")
-            .unwrap();
+            .expect("Operation failed");
         
         assert_eq!(strings_category.allocation_count, 2);
         assert_eq!(strings_category.total_size, 3000);

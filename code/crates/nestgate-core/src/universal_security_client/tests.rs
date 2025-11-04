@@ -16,7 +16,7 @@ mod tests {
         let result = UniversalSecurityClient::new(config).await;
         assert!(result.is_ok(), "Should create security client successfully");
         
-        let client = result.unwrap();
+        let client = result.expect("Security operation failed");
         assert!(!client.available_nodes.is_empty() || client.available_nodes.is_empty(), "Nodes list should be initialized");
     Ok(())
     }
@@ -74,7 +74,7 @@ mod tests {
     #[tokio::test]
     async fn test_security_client_refresh_services() -> Result<(), Box<dyn std::error::Error>> {
         let config = NestGateCanonicalConfig::default();
-        let mut client = UniversalSecurityClient::new(config).await.unwrap();
+        let mut client = UniversalSecurityClient::new(config).await.expect("Security operation failed");
         
         let result = client.refresh_services().await;
         // Should not fail even if no services are available
@@ -85,7 +85,7 @@ mod tests {
     #[tokio::test]
     async fn test_security_client_service_availability() -> Result<(), Box<dyn std::error::Error>> {
         let config = NestGateCanonicalConfig::default();
-        let client = UniversalSecurityClient::new(config).await.unwrap();
+        let client = UniversalSecurityClient::new(config).await.expect("Security operation failed");
         
         let result = client.is_service_available("test-service").await;
         // Should handle non-existent service gracefully

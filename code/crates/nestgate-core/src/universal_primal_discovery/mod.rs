@@ -18,6 +18,8 @@ pub mod performance;
 pub mod registry;
 #[cfg(feature = "dev-stubs")]
 pub mod stubs;
+#[cfg(test)]
+mod tests;
 pub use core::UniversalPrimalDiscovery;
 
 // Re-export commonly used types

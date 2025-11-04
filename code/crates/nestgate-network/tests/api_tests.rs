@@ -47,7 +47,7 @@ fn test_service_instance_serialization() {
     assert!(json.is_ok());
 
     // Test that JSON contains expected fields
-    let json_str = json.unwrap();
+    let json_str = json.expect("Network operation failed");
     assert!(json_str.contains("test-002"));
     assert!(json_str.contains("api-service"));
     assert!(json_str.contains("9090"));
@@ -141,7 +141,7 @@ fn test_service_instance_deserialization() {
     let result: Result<ServiceInstance, _> = serde_json::from_str(json);
     assert!(result.is_ok());
 
-    let instance = result.unwrap();
+    let instance = result.expect("Network operation failed");
     assert_eq!(instance.id, "test-004");
     assert_eq!(instance.name, "deserialize-test");
     assert_eq!(instance.host, "192.168.1.1");

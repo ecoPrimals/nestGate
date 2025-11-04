@@ -83,7 +83,7 @@ mod tests {
         let serialized = serde_json::to_string(&request);
         assert!(serialized.is_ok(), "LoginRequest should serialize");
 
-        let json = serialized.unwrap();
+        let json = serialized.expect("Operation failed");
         assert!(json.contains("\"username\":\"testuser\""));
         assert!(json.contains("\"password\":\"password123\""));
     }

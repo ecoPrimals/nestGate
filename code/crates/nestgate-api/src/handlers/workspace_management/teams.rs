@@ -40,14 +40,16 @@ pub struct TeamInfo {
 pub async fn create_team(
     Json(request): Json<CreateTeamRequest>,
 ) -> Result<Json<TeamInfo>, StatusCode> {
+    let timestamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or_else(|_| {
+            tracing::warn!("System time before UNIX_EPOCH, using 0");
+            0
+        });
+
     let team = TeamInfo {
-        id: format!(
-            "team_{}",
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
-                .as_secs()
-        ),
+        id: format!("team_{timestamp}"),
         name: request.name,
         description: request.description,
         members: request.members,

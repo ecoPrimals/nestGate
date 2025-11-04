@@ -13,18 +13,24 @@ pub struct NetworkOrchestrationConfig {
 impl NetworkOrchestrationConfig {
     #[must_use]
     pub fn development_optimized() -> Self {
+        use crate::constants::hardcoding::{addresses, ports};
         Self {
             enabled: false,
-            coordinator_address: "127.0.0.1:9090".to_string(),
+            coordinator_address: format!(
+                "{}:{}",
+                addresses::LOCALHOST_IPV4,
+                ports::METRICS_DEFAULT
+            ),
             heartbeat_interval_secs: 30,
         }
     }
 
     #[must_use]
     pub fn production_hardened() -> Self {
+        use crate::constants::hardcoding::ports;
         Self {
             enabled: true,
-            coordinator_address: "coordinator.nestgate.local:9090".to_string(),
+            coordinator_address: format!("coordinator.nestgate.local:{}", ports::METRICS_DEFAULT),
             heartbeat_interval_secs: 10,
         }
     }

@@ -493,7 +493,7 @@ mod tests {
     #[tokio::test]
     async fn test_fallback_provider_creation() {
         let provider = ZfsFallbackProvider::new();
-        let health = provider.health_check().await.unwrap();
+        let health = provider.health_check().await.expect("ZFS operation failed");
         assert_eq!(health["status"], "healthy");
     }
 
@@ -507,10 +507,10 @@ mod tests {
             pool_type: "test".to_string(),
         };
 
-        let result = provider.create_pool_fallback(&config).await.unwrap();
+        let result = provider.create_pool_fallback(&config).await.expect("ZFS operation failed");
         assert_eq!(result["success"], true);
 
-        let pools = provider.list_pools_fallback().await.unwrap();
+        let pools = provider.list_pools_fallback().await.expect("ZFS operation failed");
         assert_eq!(pools.len(), 1);
         assert_eq!(pools[0].name, "test-pool");
     }

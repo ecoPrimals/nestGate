@@ -3,7 +3,7 @@
 //! This benchmark suite validates our claims of zero-cost abstractions,
 //! pedantic performance optimization, and industry-leading efficiency.
 
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
 use std::time::Duration;
 
 // ==================== ZERO-COPY PERFORMANCE BENCHMARKS ====================

@@ -41,4 +41,4 @@ mod tests {
         assert_eq!(DEFAULT_BUFFER_SIZE, 8192);
         assert_eq!(DEFAULT_MAX_CONNECTIONS, 1000);
     }
-} 
+}

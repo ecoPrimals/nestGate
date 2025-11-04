@@ -388,13 +388,15 @@ pub fn migrate_workspace(
     }
 
     // Step 2: Create migration snapshot
+    let timestamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or_else(|_| 0); // Fallback to 0 if system time is before UNIX_EPOCH
+    
     let migration_snapshot = format!(
         "{}@migrate_{}",
         source_dataset,
-        std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_secs()
+        timestamp
     );
 
     let snapshot_result = Command::new("zfs")

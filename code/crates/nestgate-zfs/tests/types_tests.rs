@@ -228,7 +228,7 @@ mod tests {
         let result = pool_info_from_zfs_output("testpool", output);
 
         assert!(result.is_ok());
-        let pool = result.unwrap();
+        let pool = result.expect("ZFS operation failed");
         assert_eq!(pool.name, "testpool");
         assert_eq!(pool.size, 1_000_000_000);
         assert_eq!(pool.used, 500_000_000);
@@ -241,7 +241,7 @@ mod tests {
         let result = pool_info_from_zfs_output("degraded_pool", output);
 
         assert!(result.is_ok());
-        let pool = result.unwrap();
+        let pool = result.expect("ZFS operation failed");
         assert_eq!(pool.name, "degraded_pool");
         assert!(matches!(pool.health, PoolHealth::Warning));
         assert!(matches!(pool.state, PoolState::Degraded));
@@ -253,7 +253,7 @@ mod tests {
         let result = dataset_info_from_zfs_output(output);
 
         assert!(result.is_ok());
-        let dataset = result.unwrap();
+        let dataset = result.expect("ZFS operation failed");
         assert_eq!(dataset.full_name, "pool/dataset");
         assert_eq!(dataset.pool, "pool");
         assert_eq!(dataset.compression, "lz4");
@@ -265,9 +265,12 @@ mod tests {
         let result = dataset_info_from_zfs_output(output);
 
         assert!(result.is_ok());
-        let dataset = result.unwrap();
+        let dataset = result.expect("ZFS operation failed");
         assert!(dataset.mount_point.is_some());
-        assert_eq!(dataset.mount_point.unwrap(), PathBuf::from("/mnt/data"));
+        assert_eq!(
+            dataset.mount_point.expect("ZFS operation failed"),
+            PathBuf::from("/mnt/data")
+        );
     }
 
     #[test]
@@ -276,7 +279,7 @@ mod tests {
         let result = dataset_info_from_zfs_output(output);
 
         assert!(result.is_ok());
-        let dataset = result.unwrap();
+        let dataset = result.expect("ZFS operation failed");
         assert!(dataset.mount_point.is_none());
     }
 

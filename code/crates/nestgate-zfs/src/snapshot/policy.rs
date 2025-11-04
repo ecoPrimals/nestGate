@@ -101,3 +101,148 @@ impl Default for SnapshotPolicy {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_retention_policy_default() {
+        let policy = RetentionPolicy::default();
+        match policy {
+            RetentionPolicy::Custom {
+                hourly_hours,
+                daily_days,
+                weekly_weeks,
+                monthly_months,
+                yearly_years,
+            } => {
+                assert_eq!(hourly_hours, 24);
+                assert_eq!(daily_days, 30);
+                assert_eq!(weekly_weeks, 12);
+                assert_eq!(monthly_months, 12);
+                assert_eq!(yearly_years, 5);
+            }
+            _ => panic!("Expected Custom retention policy"),
+        }
+    }
+
+    #[test]
+    fn test_retention_policy_duration() {
+        let policy = RetentionPolicy::Duration(Duration::from_secs(3600));
+        assert!(matches!(policy, RetentionPolicy::Duration(_)));
+    }
+
+    #[test]
+    fn test_retention_policy_count() {
+        let policy = RetentionPolicy::Count(100);
+        assert!(matches!(policy, RetentionPolicy::Count(100)));
+    }
+
+    #[test]
+    fn test_schedule_frequency_variants() {
+        let minutes = ScheduleFrequency::Minutes(15);
+        let hours = ScheduleFrequency::Hours(6);
+        let daily = ScheduleFrequency::Daily(12);
+        let weekly = ScheduleFrequency::Weekly { day: 1, hour: 0 };
+        let monthly = ScheduleFrequency::Monthly { day: 1, hour: 0 };
+        let custom = ScheduleFrequency::Custom("0 0 * * *".to_string());
+
+        assert!(matches!(minutes, ScheduleFrequency::Minutes(15)));
+        assert!(matches!(hours, ScheduleFrequency::Hours(6)));
+        assert!(matches!(daily, ScheduleFrequency::Daily(12)));
+        assert!(matches!(
+            weekly,
+            ScheduleFrequency::Weekly { day: 1, hour: 0 }
+        ));
+        assert!(matches!(
+            monthly,
+            ScheduleFrequency::Monthly { day: 1, hour: 0 }
+        ));
+        assert!(matches!(custom, ScheduleFrequency::Custom(_)));
+    }
+
+    #[test]
+    fn test_snapshot_policy_default() {
+        let policy = SnapshotPolicy::default();
+
+        assert_eq!(policy.name, "default");
+        assert_eq!(policy.description, "Default snapshot policy");
+        assert!(policy.enabled);
+        assert!(matches!(policy.frequency, ScheduleFrequency::Hours(1)));
+        assert_eq!(policy.dataset_patterns, vec!["*"]);
+        assert_eq!(policy.tiers.len(), 3);
+        assert_eq!(policy.name_prefix, "auto");
+        assert!(policy.include_properties);
+        assert!(policy.recursive);
+        assert_eq!(policy.max_snapshots_per_run, 100);
+        assert_eq!(policy.priority, 50);
+    }
+
+    #[test]
+    fn test_snapshot_policy_custom() {
+        let policy = SnapshotPolicy {
+            name: "custom".to_string(),
+            description: "Custom policy".to_string(),
+            enabled: false,
+            frequency: ScheduleFrequency::Daily(2),
+            retention: RetentionPolicy::Count(50),
+            dataset_patterns: vec!["tank/*".to_string()],
+            tiers: vec![StorageTier::Hot],
+            name_prefix: "custom".to_string(),
+            include_properties: false,
+            recursive: false,
+            max_snapshots_per_run: 50,
+            priority: 100,
+        };
+
+        assert_eq!(policy.name, "custom");
+        assert!(!policy.enabled);
+        assert!(matches!(policy.frequency, ScheduleFrequency::Daily(2)));
+        assert!(matches!(policy.retention, RetentionPolicy::Count(50)));
+    }
+
+    #[test]
+    fn test_snapshot_policy_serialization() {
+        let policy = SnapshotPolicy::default();
+        let serialized = serde_json::to_string(&policy).expect("Failed to serialize");
+        let deserialized: SnapshotPolicy =
+            serde_json::from_str(&serialized).expect("Failed to deserialize");
+
+        assert_eq!(policy.name, deserialized.name);
+        assert_eq!(policy.enabled, deserialized.enabled);
+        assert_eq!(policy.priority, deserialized.priority);
+    }
+
+    #[test]
+    fn test_retention_policy_serialization() {
+        let policy = RetentionPolicy::default();
+        let serialized = serde_json::to_string(&policy).expect("Failed to serialize");
+        let deserialized: RetentionPolicy =
+            serde_json::from_str(&serialized).expect("Failed to deserialize");
+
+        match (policy, deserialized) {
+            (
+                RetentionPolicy::Custom {
+                    hourly_hours: h1, ..
+                },
+                RetentionPolicy::Custom {
+                    hourly_hours: h2, ..
+                },
+            ) => {
+                assert_eq!(h1, h2);
+            }
+            _ => panic!("Expected Custom retention policy"),
+        }
+    }
+
+    #[test]
+    fn test_schedule_frequency_serialization() {
+        let freq = ScheduleFrequency::Hours(6);
+        let serialized = serde_json::to_string(&freq).expect("Failed to serialize");
+        let deserialized: ScheduleFrequency =
+            serde_json::from_str(&serialized).expect("Failed to deserialize");
+
+        assert!(matches!(deserialized, ScheduleFrequency::Hours(6)));
+    }
+}

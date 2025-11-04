@@ -108,7 +108,7 @@ impl Default for MinimalSystemConfig {
 impl Default for MinimalNetworkConfig {
     fn default() -> Self {
         Self {
-            host: "127.0.0.1".parse().unwrap(),
+            host: "127.0.0.1".parse().expect("Failed to parse value"),
             port: 8080,
             max_connections: 1000,
         }

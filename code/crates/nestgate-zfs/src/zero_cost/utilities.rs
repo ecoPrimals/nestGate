@@ -107,7 +107,7 @@ mod tests {
         assert!(serialized.is_ok(), "Pool info should serialize");
 
         // Test that deserialization works
-        let json = serialized.unwrap();
+        let json = serialized.expect("ZFS operation failed");
         let deserialized: std::result::Result<ZeroCostPoolInfo, _> = serde_json::from_str(&json);
         assert!(deserialized.is_ok(), "Pool info should deserialize");
     }
@@ -230,7 +230,7 @@ mod tests {
         let serialized = serde_json::to_string(&dataset_info);
         assert!(serialized.is_ok(), "Dataset info should serialize");
 
-        let json = serialized.unwrap();
+        let json = serialized.expect("ZFS operation failed");
         let deserialized: std::result::Result<ZeroCostDatasetInfo, _> = serde_json::from_str(&json);
         assert!(deserialized.is_ok(), "Dataset info should deserialize");
     }
@@ -306,7 +306,7 @@ mod tests {
         let serialized = serde_json::to_string(&snapshot_info);
         assert!(serialized.is_ok(), "Snapshot info should serialize");
 
-        let json = serialized.unwrap();
+        let json = serialized.expect("ZFS operation failed");
         let deserialized: std::result::Result<ZeroCostSnapshotInfo, _> =
             serde_json::from_str(&json);
         assert!(deserialized.is_ok(), "Snapshot info should deserialize");

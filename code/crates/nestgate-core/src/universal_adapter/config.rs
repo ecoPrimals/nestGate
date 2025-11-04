@@ -72,14 +72,23 @@ impl AdapterConfig {
     /// Create a new adapter configuration
     #[must_use]
     pub fn new() -> Self {
+        use crate::constants::hardcoding::{addresses, limits};
+
+        // Use environment variables or build from constants
+        let endpoints = std::env::var("NESTGATE_DISCOVERY_ENDPOINTS")
+            .map(|s| s.split(',').map(|e| e.trim().to_string()).collect())
+            .unwrap_or_else(|_| {
+                vec![
+                    format!("http://{}:8083/discovery", addresses::LOCALHOST_NAME),
+                    format!("http://{}:8084/discovery", addresses::LOCALHOST_NAME),
+                ]
+            });
+
         Self {
-            discovery_timeout: Duration::from_secs(30),
-            retry_attempts: 3,
+            discovery_timeout: Duration::from_secs(limits::TIMEOUT_SECS),
+            retry_attempts: limits::MAX_RETRIES,
             cache_ttl: Duration::from_secs(300), // 5 minutes
-            endpoints: vec![
-                "http://localhost:8083/discovery".to_string(),
-                "http://localhost:8084/discovery".to_string(),
-            ],
+            endpoints,
             fallback_enabled: true,
         }
     }

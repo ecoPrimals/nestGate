@@ -392,7 +392,7 @@ mod tests {
 
         // Wait for producers
         for handle in handles {
-            handle.join().unwrap();
+            handle.join().expect("Thread join failed");
         }
 
         // Verify all items present
@@ -426,7 +426,7 @@ mod tests {
 
         let removed = map.remove("a");
         assert!(removed.is_some());
-        let (key, val) = removed.unwrap();
+        let (key, val) = removed.expect("Operation failed");
         assert_eq!(key, "a".to_string());
         assert_eq!(val, 10);
         assert_eq!(map.len(), 1);
@@ -459,7 +459,7 @@ mod tests {
 
         // Wait for all threads
         for handle in handles {
-            handle.join().unwrap();
+            handle.join().expect("Thread join failed");
         }
 
         // Verify count

@@ -69,28 +69,28 @@ async fn test_modern_authentication_flow() -> Result<()> {
     // Test successful authentication
     let auth_result = manager.authenticate("test_user", "correct_password");
     assert!(auth_result.is_ok(), "Authentication should succeed");
-    assert_eq!(auth_result.unwrap(), true);
+    assert_eq!(auth_result.expect("Security operation failed"), true);
 
     // Test failed authentication
     let auth_result = manager.authenticate("test_user", "wrong_password");
     assert!(auth_result.is_ok(), "Authentication check should not error");
-    assert_eq!(auth_result.unwrap(), false);
+    assert_eq!(auth_result.expect("Security operation failed"), false);
 
     // Test authentication for non-existent user
     let auth_result = manager.authenticate("nonexistent_user", "any_password");
     assert!(auth_result.is_ok(), "Authentication check should not error");
-    assert_eq!(auth_result.unwrap(), false);
+    assert_eq!(auth_result.expect("Security operation failed"), false);
 
     // Test token creation for valid user
     let token_result = manager.create_token("test_user");
     assert!(token_result.is_ok(), "Token creation should succeed");
-    let token = token_result.unwrap();
+    let token = token_result.expect("Security operation failed");
     assert!(token.starts_with("modern_token_for_"));
 
     // Test token validation
     let validation_result = manager.validate_token(&token);
     assert!(validation_result.is_ok(), "Token validation should succeed");
-    assert_eq!(validation_result.unwrap(), "test_user");
+    assert_eq!(validation_result.expect("Security operation failed"), "test_user");
 
     // Test token creation for invalid user
     let result = manager.create_token("nonexistent_user");

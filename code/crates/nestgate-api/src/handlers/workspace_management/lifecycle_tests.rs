@@ -51,8 +51,8 @@ mod tests {
         };
 
         assert_eq!(config.backup_name, "backup-001");
-        assert_eq!(config.target_workspace_id.unwrap(), "new-workspace");
-        assert_eq!(config.restore_point.unwrap(), "snapshot-20240115");
+        assert_eq!(config.target_workspace_id.expect("Test setup failed"), "new-workspace");
+        assert_eq!(config.restore_point.expect("Test setup failed"), "snapshot-20240115");
         assert!(config.force);
     }
 
@@ -80,9 +80,9 @@ mod tests {
         };
 
         assert_eq!(config.target_pool, "backup-pool");
-        assert_eq!(config.target_host.unwrap(), "backup-server.local");
+        assert_eq!(config.target_host.expect("Test setup failed"), "backup-server.local");
         assert_eq!(config.strategy, MigrationStrategy::Replicate);
-        assert_eq!(config.bandwidth_limit.unwrap(), 10_485_760);
+        assert_eq!(config.bandwidth_limit.expect("Test setup failed"), 10_485_760);
     }
 
     #[test]
@@ -141,7 +141,7 @@ mod tests {
             description: Some("Test description".to_string()),
         };
 
-        let json = serde_json::to_string(&config).unwrap();
+        let json = serde_json::to_string(&config).expect("Test setup failed");
         assert!(json.contains("\"backup_name\":\"test-backup\""));
         assert!(json.contains("\"compression_level\":3"));
         assert!(json.contains("\"include_snapshots\":true"));
@@ -157,7 +157,7 @@ mod tests {
             "description": null
         }"#;
 
-        let config: BackupConfig = serde_json::from_str(json).unwrap();
+        let config: BackupConfig = serde_json::from_str(json).expect("Test setup failed");
         assert_eq!(config.backup_name, "restored-backup");
         assert!(!config.include_snapshots);
         assert_eq!(config.compression_level, 7);
@@ -174,7 +174,7 @@ mod tests {
             force: true,
         };
 
-        let json = serde_json::to_string(&config).unwrap();
+        let json = serde_json::to_string(&config).expect("Test setup failed");
         assert!(json.contains("\"backup_name\":\"backup-001\""));
         assert!(json.contains("\"force\":true"));
     }
@@ -188,7 +188,7 @@ mod tests {
             bandwidth_limit: Some(1000000),
         };
 
-        let json = serde_json::to_string(&config).unwrap();
+        let json = serde_json::to_string(&config).expect("Test setup failed");
         assert!(json.contains("\"target_pool\":\"pool2\""));
         assert!(json.contains("\"bandwidth_limit\":1000000"));
     }
@@ -196,15 +196,15 @@ mod tests {
     #[test]
     fn test_migration_strategy_serialization() {
         let copy = MigrationStrategy::Copy;
-        let json = serde_json::to_string(&copy).unwrap();
+        let json = serde_json::to_string(&copy).expect("Test setup failed");
         assert!(json.contains("Copy"));
 
         let move_strat = MigrationStrategy::Move;
-        let json = serde_json::to_string(&move_strat).unwrap();
+        let json = serde_json::to_string(&move_strat).expect("Test setup failed");
         assert!(json.contains("Move"));
 
         let replicate = MigrationStrategy::Replicate;
-        let json = serde_json::to_string(&replicate).unwrap();
+        let json = serde_json::to_string(&replicate).expect("Test setup failed");
         assert!(json.contains("Replicate"));
     }
 
@@ -217,8 +217,8 @@ mod tests {
         ];
 
         for strategy in strategies {
-            let json = serde_json::to_string(&strategy).unwrap();
-            let deserialized: MigrationStrategy = serde_json::from_str(&json).unwrap();
+            let json = serde_json::to_string(&strategy).expect("Test setup failed");
+            let deserialized: MigrationStrategy = serde_json::from_str(&json).expect("Test setup failed");
             assert_eq!(strategy, deserialized);
         }
     }
@@ -352,8 +352,8 @@ mod tests {
                 bandwidth_limit: Some(limit),
             };
 
-            assert_eq!(config.bandwidth_limit.unwrap(), limit);
-            assert!(config.bandwidth_limit.unwrap() > 0);
+            assert_eq!(config.bandwidth_limit.expect("Test setup failed"), limit);
+            assert!(config.bandwidth_limit.expect("Test setup failed") > 0);
         }
     }
 
