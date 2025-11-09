@@ -3,7 +3,7 @@
 // Provides caching infrastructure including multi-tier caching,
 // TTL management, and performance optimization.
 
-use crate::config::canonical_master::NestGateCanonicalConfig;
+use crate::config::canonical_primary::NestGateCanonicalConfig;
 
 #[cfg(test)]
 mod tests;
@@ -19,7 +19,7 @@ mod tests;
 // ### Basic Single-Tier Cache
 // ```rust
 // use crate::cache::{CacheManager, NestGateCanonicalConfig};
-// let config = crate::config::canonical_master::NestGateCanonicalConfig::default();
+// let config = crate::config::canonical_primary::NestGateCanonicalConfig::default();
 // let cache = CacheManager::new(config)?;
 // // Put data in cache
 // cache.put("key", b"data".to_vec()).await?;
@@ -31,7 +31,7 @@ mod tests;
 // ### Multi-Tier Cache
 // ```rust
 // use crate::cache::{MultiTierCache, MultiTierCacheConfig};
-// let config = crate::config::canonical_master::NestGateCanonicalConfig::default();
+// let config = crate::config::canonical_primary::NestGateCanonicalConfig::default();
 // let cache = MultiTierCache::new(config)?;
 // // Data automatically starts in hot tier and may be promoted/demoted
 // cache.put("key", b"data".to_vec()).await?;
@@ -59,7 +59,7 @@ pub enum CacheSystem {
 impl CacheSystem {
     /// Create a cache with a single tier for small deployments
     pub fn single_tier(
-        cache_config: crate::config::canonical_master::CacheConfig,
+        cache_config: crate::config::canonical_primary::CacheConfig,
     ) -> crate::Result<Self> {
         // Convert to UnifiedCacheConfig
         let unified_config = crate::cache::manager::UnifiedCacheConfig {
@@ -216,7 +216,7 @@ impl CacheSystemStats {
 
 // Cache builder for easy configuration
 pub struct CacheBuilder {
-    config: crate::config::canonical_master::CacheConfig,
+    config: crate::config::canonical_primary::CacheConfig,
     multi_tier: bool,
     multi_tier_config: Option<MultiTierCacheConfig>,
 }
@@ -225,7 +225,7 @@ impl CacheBuilder {
     #[must_use]
     pub fn new() -> Self {
         Self {
-            config: crate::config::canonical_master::CacheConfig::default(),
+            config: crate::config::canonical_primary::CacheConfig::default(),
             multi_tier: false,
             multi_tier_config: None,
         }

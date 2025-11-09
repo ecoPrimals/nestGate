@@ -8,7 +8,7 @@ use crate::cache::*;
 
 #[tokio::test]
 async fn test_cache_system_operations() -> crate::Result<()> {
-    let cache_config = crate::config::canonical_master::CacheConfig {
+    let cache_config = crate::config::canonical_primary::CacheConfig {
         enabled: true,
         size_bytes: 1024 * 1024, // 1MB
         cache_type: "lru".to_string(),
@@ -44,7 +44,7 @@ async fn test_cache_system_operations() -> crate::Result<()> {
 
 #[tokio::test]
 async fn test_single_tier_creation() -> crate::Result<()> {
-    let cache_config = crate::config::canonical_master::CacheConfig {
+    let cache_config = crate::config::canonical_primary::CacheConfig {
         enabled: true,
         size_bytes: 1024 * 1024, // 1MB
         cache_type: "lru".to_string(),
@@ -109,7 +109,7 @@ async fn test_multi_tier_creation() -> crate::Result<()> {
 
 #[tokio::test]
 async fn test_cache_miss() -> crate::Result<()> {
-    let cache_config = crate::config::canonical_master::CacheConfig {
+    let cache_config = crate::config::canonical_primary::CacheConfig {
         enabled: true,
         size_bytes: 1024 * 1024, // 1MB
         cache_type: "lru".to_string(),
@@ -133,7 +133,7 @@ async fn test_cache_miss() -> crate::Result<()> {
 
 #[tokio::test]
 async fn test_cache_overwrite() -> crate::Result<()> {
-    let cache_config = crate::config::canonical_master::CacheConfig {
+    let cache_config = crate::config::canonical_primary::CacheConfig {
         enabled: true,
         size_bytes: 1024 * 1024, // 1MB
         cache_type: "lru".to_string(),
@@ -163,7 +163,7 @@ async fn test_cache_overwrite() -> crate::Result<()> {
 
 #[tokio::test]
 async fn test_cache_multiple_keys() -> crate::Result<()> {
-    let cache_config = crate::config::canonical_master::CacheConfig {
+    let cache_config = crate::config::canonical_primary::CacheConfig {
         enabled: true,
         size_bytes: 1024 * 1024, // 1MB
         cache_type: "lru".to_string(),
@@ -202,7 +202,7 @@ async fn test_cache_multiple_keys() -> crate::Result<()> {
 
 #[tokio::test]
 async fn test_clear_cache() -> crate::Result<()> {
-    let cache_config = crate::config::canonical_master::CacheConfig {
+    let cache_config = crate::config::canonical_primary::CacheConfig {
         enabled: true,
         size_bytes: 1024 * 1024, // 1MB
         cache_type: "lru".to_string(),

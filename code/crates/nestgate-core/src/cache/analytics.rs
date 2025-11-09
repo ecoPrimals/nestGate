@@ -32,14 +32,14 @@ pub mod defaults {
 
 /// Configuration for this module
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Config {
+pub struct CacheAnalyticsConfig {
     pub enabled: bool,
     pub timeout: Duration,
     pub max_connections: usize,
     pub buffer_size: usize,
 }
 
-impl Default for Config {
+impl Default for CacheAnalyticsConfig {
     fn default() -> Self {
         Self {
             enabled: true,
@@ -51,8 +51,8 @@ impl Default for Config {
 }
 
 /// Service interface re-exported from canonical source
-/// See: `crate::traits_root::service::Service` for the unified implementation
-pub use crate::traits_root::service::Service;
+/// See: `crate::traits::Service` for the unified implementation
+pub use crate::traits::Service;
 
 /// Health status enumeration
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -87,13 +87,13 @@ impl Default for Metrics {
 /// Default implementation of the service
 #[derive(Debug)]
 pub struct DefaultService {
-    config: Config,
+    config: CacheAnalyticsConfig,
     metrics: Arc<tokio::sync::RwLock<Metrics>>,
 }
 
 impl DefaultService {
     /// Create a new service instance
-    pub fn new(config: Config) -> Self {
+    pub fn new(config: CacheAnalyticsConfig) -> Self {
         Self {
             config,
             metrics: Arc::new(tokio::sync::RwLock::new(Metrics::default())),
@@ -130,11 +130,11 @@ impl Service for DefaultService {
 
 /// Create a default service instance
 pub fn create_service() -> DefaultService {
-    DefaultService::new(Config::default())
+    DefaultService::new(CacheAnalyticsConfig::default())
 }
 
 /// Validate configuration
-pub async fn validate_config(config: &Config) -> crate::Result<()> {
+pub async fn validate_config(config: &CacheAnalyticsConfig) -> crate::Result<()> {
     if config.max_connections == 0 {
         return Err(NestGateError::configuration_error(
             "cache_analytics",
@@ -160,7 +160,7 @@ mod tests {
 
     #[test]
     fn test_config_default() {
-        let config = Config::default();
+        let config = CacheAnalyticsConfig::default();
         assert!(config.enabled);
         assert_eq!(config.max_connections, DEFAULT_MAX_CONNECTIONS);
     }
@@ -177,7 +177,7 @@ mod tests {
     #[tokio::test]
     async fn test_service_creation() {
         let service = create_service();
-        let config = Config::default();
+        let config = CacheAnalyticsConfig::default();
         
         assert!(service.initialize(&config).await.is_ok());
         assert_eq!(service.health_check().await.expect("Cache operation failed"), HealthStatus::Healthy);
