@@ -22,7 +22,7 @@ pub use types::{
 };
 
 // **MIGRATED**: Using canonical config system from domains/network
-pub use crate::config::canonical_master::domains::network::CanonicalNetworkConfig as UnifiedNetworkConfig;
+pub use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig as UnifiedNetworkConfig;
 
 pub use production::{
     // ProductionNetworkManager, ProductionServiceDiscovery, // These will be implemented as needed
@@ -54,11 +54,13 @@ mod tests {
 
         /// Mock service discovery for testing
         #[derive(Debug, Clone)]
+        #[allow(dead_code)]
         pub(super) struct MockServiceDiscovery {
             services: HashMap<String, String>,
         }
 
         impl MockServiceDiscovery {
+            #[allow(dead_code)]
             pub(super) fn new() -> Self {
                 let mut services = HashMap::new();
                 // SOVEREIGNTY FIX: Use environment-based service registration instead of hardcoded services
@@ -72,6 +74,7 @@ mod tests {
                 Self { services }
             }
 
+            #[allow(dead_code)]
             pub(super) fn discover(&self, service_name: &str) -> Result<Vec<String>> {
                 self.services
                     .get(service_name)
@@ -81,6 +84,7 @@ mod tests {
 
         /// Mock protocol config for testing
         #[derive(Debug, Clone)]
+        #[allow(dead_code)]
         pub(super) struct MockProtocolConfig {
             protocol: String,
             timeout_ms: u64,
@@ -97,7 +101,7 @@ mod tests {
             fn default() -> Self {
                 Self {
                     protocol: "http".to_string(),
-                    timeout_ms: crate::constants::canonical_defaults::timeouts::DEFAULT_TIMEOUT_MS,
+                    timeout_ms: crate::constants::canonical::timeouts::DEFAULT_TIMEOUT_MS,
                     protocol_type: "HTTP".to_string(),
                     host: crate::constants::canonical_defaults::network::LOCALHOST.to_string(),
                     port: crate::constants::DEFAULT_API_PORT,
@@ -111,6 +115,7 @@ mod tests {
 
         /// Mock service event type for testing
         #[derive(Debug, Clone)]
+        #[allow(dead_code)]
         pub(super) enum MockServiceEventType {
             ServiceUp,
             ServiceDown,
@@ -120,6 +125,7 @@ mod tests {
 
         /// Mock service info for testing
         #[derive(Debug, Clone)]
+        #[allow(dead_code)]
         pub(super) struct MockServiceInfo {
             name: String,
             status: crate::unified_enums::UnifiedServiceState,
@@ -204,7 +210,7 @@ mod tests {
         let handler = ProductionProtocolHandler::default();
 
         // Test native async connection - no Future boxing
-        let config = crate::config::canonical_master::domains::network::CanonicalNetworkConfig::development_optimized();
+        let config = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig::development_optimized();
 
         let connection = handler.connect(&config).await;
         assert!(connection.is_ok());

@@ -13,7 +13,7 @@ use super::types::{
     ServiceEventType, ServiceQuery,
 };
 // **MIGRATED**: Using canonical config system instead of deprecated unified_types
-use crate::config::canonical_master::domains::network::CanonicalNetworkConfig as UnifiedNetworkConfig;
+use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig as UnifiedNetworkConfig;
 
 use std::collections::HashMap;
 
