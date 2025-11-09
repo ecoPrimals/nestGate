@@ -11,7 +11,7 @@ pub type CacheProviderBox = Box<dyn CacheProvider<String, Vec<u8>>>;
 pub type CacheDataMap = Arc<RwLock<HashMap<String, Vec<u8>>>>;
 
 /// Cache provider trait for different storage tiers
-/// **NOTE**: Keeping `async_trait` for dyn compatibility - required for Box<dyn CacheProvider>
+/// **NOTE**: Keeping `async_trait` for dyn compatibility - required for `Box<dyn CacheProvider>`
 /// This demonstrates that not all `async_trait` usage can be modernized when dynamic dispatch is needed
 #[async_trait::async_trait]
 pub trait CacheProvider<K, V>: Send + Sync {
@@ -67,7 +67,7 @@ pub struct MultiTierCache {
     cold_tier: CacheProviderBox,
     /// Global cache configuration
     #[allow(dead_code)]
-    config: crate::config::canonical_master::CacheConfig,
+    config: crate::config::canonical_primary::CacheConfig,
 }
 impl MultiTierCache {
     /// Create new multi-tier cache with specified configuration
@@ -93,7 +93,7 @@ impl MultiTierCache {
             hot_tier,
             warm_tier,
             cold_tier,
-            config: crate::config::canonical_master::CacheConfig::default(),
+            config: crate::config::canonical_primary::CacheConfig::default(),
         })
     }
 
