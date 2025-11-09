@@ -86,16 +86,16 @@ pub type WorkflowResult<T> = Result<T>;
 /// **MONITORING OPERATIONS** - Metrics, logging, and observability
 pub type MonitoringResult<T> = Result<T>;
 
-/// **CONFIGURATION OPERATIONS** - Alias for validation results
-pub type ConfigResult<T> = ValidationResult<T>;
+/// **CONFIGURATION OPERATIONS** - Configuration validation and loading
+pub type ConfigResult<T> = Result<T>;
 // ==================== UTILITY TYPES ====================
 
 /// **VOID RESULT** - For operations that return no data on success
 pub type VoidResult = Result<()>;
-/// **OPTIONAL RESULT** - For operations that may return no data
-pub type OptionalResult<T> = Result<Option<T>>;
-/// **COLLECTION RESULT** - For operations that return collections
-pub type CollectionResult<T> = Result<Vec<T>>;
+
+// NOTE: OptionalResult and CollectionResult removed as they provide
+// minimal value over `Result<Option<T>>` and `Result<Vec<T>>` directly.
+// Use the explicit forms for clarity.
 // ==================== RESULT EXTENSION TRAITS ====================
 
 /// Extension trait for Result types to provide additional utility methods
