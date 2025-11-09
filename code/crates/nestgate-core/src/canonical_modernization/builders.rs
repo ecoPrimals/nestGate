@@ -1,8 +1,8 @@
 //
 // Builder patterns for creating and validating canonical configurations.
 
-use crate::config::canonical_master::system_config::DeploymentEnvironment;
-use crate::config::canonical_master::NestGateCanonicalConfig;
+use crate::config::canonical_primary::system_config::DeploymentEnvironment;
+use crate::config::canonical_primary::NestGateCanonicalConfig;
 use crate::error::Result;
 // Removed unused imports: serde::{Deserialize, Serialize}
 

@@ -1,7 +1,7 @@
 /// 
 /// Shared configuration structures used across all handler types.
 /// This module contains the base configuration patterns and common types.
-use nestgate_core::unified_final_config::supporting_types::StandardDomainConfig;
+use nestgate_core::config::canonical_primary::domains::ConsolidatedDomainConfigs;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;

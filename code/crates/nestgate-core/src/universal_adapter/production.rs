@@ -20,12 +20,12 @@ pub use crate::constants::network::{
 // ==================== CORE TYPES ====================
 /// Configuration for this module
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Config {
+pub struct UniversalAdapterProductionConfig {
     pub enabled: bool,
     pub timeout: Duration,
     pub max_connections: usize,
     pub buffer_size: usize,
-impl Default for Config {
+impl Default for UniversalAdapterProductionConfig {
     fn default() -> Self {
         Self {
             enabled: true,

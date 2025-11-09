@@ -59,6 +59,7 @@ impl std::error::Error for TestError {}
 // ==================== MOCK SERVICE IMPLEMENTATION ====================
 
 /// Mock service implementation for testing CanonicalService trait
+#[allow(dead_code)]
 struct MockService {
     config: TestConfig,
     started: bool,

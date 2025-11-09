@@ -3,8 +3,10 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
 // Type alias to reduce complexity
+#[allow(dead_code)] // Reserved for future component configuration
 type ComponentConfigMap = HashMap<String, HashMap<String, String>>;
 
+#[allow(dead_code)] // Reserved for future installation settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InstallationSettings {
     /// Installation mode
@@ -26,6 +28,7 @@ pub struct InstallationSettings {
     /// Enable verbose output
     pub verbose: bool,
 }
+#[allow(dead_code)] // Reserved for future component settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComponentSettings {
     /// Component selection
@@ -39,6 +42,7 @@ pub struct ComponentSettings {
     /// Enable component validation
     pub validate_components: bool,
 }
+#[allow(dead_code)] // Reserved for future component selection
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComponentSelection {
     /// Install API component
@@ -64,6 +68,7 @@ pub struct ComponentSelection {
     /// Custom components
     pub custom_components: Vec<String>,
 }
+#[allow(dead_code)] // Reserved for future system integration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemIntegrationSettings {
     /// Install as system service
@@ -83,6 +88,7 @@ pub struct SystemIntegrationSettings {
     /// Desktop integration
     pub desktop_integration: bool,
 }
+#[allow(dead_code)] // Reserved for future package management
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PackageManagementSettings {
     /// Package manager type
@@ -100,6 +106,7 @@ pub struct PackageManagementSettings {
 }
 
 /// Installation mode enumeration
+#[allow(dead_code)] // Reserved for future installation modes
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum InstallMode {
     /// Default installation
@@ -122,6 +129,7 @@ pub enum InstallMode {
     Cloud,
 }
 /// Deployment mode enumeration
+#[allow(dead_code)] // Reserved for future deployment modes
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum DeploymentMode {
     /// Single node deployment
@@ -154,6 +162,7 @@ pub enum PlatformType {
     FreeBsd,
 }
 /// Package manager types
+#[allow(dead_code)] // Reserved for future package manager support
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum PackageManagerType {
     /// Debian/Ubuntu APT
@@ -197,6 +206,7 @@ pub struct SystemRequirements {
     /// Optional dependencies
     pub optional_packages: Vec<String>,
 }
+#[allow(dead_code)] // Reserved for future resource constraints
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResourceConstraints {
     /// CPU limit
@@ -310,6 +320,7 @@ impl Default for SystemRequirements {
 }
 
 /// Post-installation settings
+#[allow(dead_code)] // Reserved for future post-install settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PostInstallSettings {
     /// Run initial setup
@@ -330,6 +341,7 @@ impl Default for PostInstallSettings {
 }
 
 /// Deployment settings
+#[allow(dead_code)] // Reserved for future deployment settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DeploymentSettings {
     /// Deployment mode

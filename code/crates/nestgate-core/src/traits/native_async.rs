@@ -20,7 +20,7 @@ use crate::error::Result;
 use std::collections::HashMap;
 use std::future::Future;
 // Removed unused imports: UnifiedServiceType, UnifiedServiceState
-use crate::config::canonical_master::NestGateCanonicalConfig;
+use crate::config::canonical_primary::NestGateCanonicalConfig;
 
 // ==================== SECTION ====================
 
@@ -397,4 +397,4 @@ pub struct ServiceMetrics {
 }
 
 // Include monitoring config type
-use crate::config::canonical_master::monitoring::MonitoringConfig;
+use crate::config::canonical_primary::monitoring::MonitoringConfig;

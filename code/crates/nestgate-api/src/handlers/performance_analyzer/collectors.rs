@@ -107,7 +107,7 @@ impl BatchCollector {
     #[must_use]
     pub fn new(batch_size: usize) -> Self {
         let mut collectors = Vec::new();
-        for i in 0..batch_size {
+        for _i in 0..batch_size {
             collectors.push(Arc::new(SystemMetricsCollector::new(60))); // 60 second intervals
         }
 

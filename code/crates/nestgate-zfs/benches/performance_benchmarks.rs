@@ -33,12 +33,12 @@ pub struct OptimizationOpportunity {
 /// Benchmark configuration creation
 fn bench_config_creation(c: &mut Criterion) {
     c.bench_function("config_creation", |b| {
-        b.iter(|| black_box(ZfsUnifiedUnifiedMcpConfig::default()))
+        b.iter(|| black_box(canonical_zfs_config::ZfsConfig::default()))
     });
 }
 /// Benchmark configuration validation
 fn bench_config_validation(c: &mut Criterion) {
-    let config = ZfsUnifiedUnifiedMcpConfig::default();
+    let config = canonical_zfs_config::ZfsConfig::default();
     c.bench_function("config_validation", |b| {
         b.iter(|| {
             black_box(config.validate()).unwrap_or_else(|_e| {
@@ -55,7 +55,7 @@ fn bench_config_validation(c: &mut Criterion) {
 
 /// Benchmark tier configuration access
 fn bench_tier_config_access(c: &mut Criterion) {
-    let config = ZfsUnifiedUnifiedMcpConfig::default();
+    let config = canonical_zfs_config::ZfsConfig::default();
     let tiers = [StorageTier::Hot, StorageTier::Warm, StorageTier::Cold];
     c.bench_function("tier_config_access", |b| {
         b.iter(|| {
@@ -251,7 +251,7 @@ fn bench_error_handling(c: &mut Criterion) {
 
 /// Benchmark serialization performance
 fn bench_serialization(c: &mut Criterion) {
-    let config = ZfsUnifiedUnifiedMcpConfig::default();
+    let config = canonical_zfs_config::ZfsConfig::default();
     let metrics = crate::performance::CurrentPerformanceMetrics::default();
     let mut group = c.benchmark_group("serialization");
 

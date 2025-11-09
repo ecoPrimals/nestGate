@@ -54,7 +54,7 @@ fn test_mcp_health_status_debug() {
     let status = McpHealthStatus::healthy();
     let debug_str = format!("{:?}", status);
 
-    assert!(debug_str.len() > 0);
+    assert!(!debug_str.is_empty());
     assert!(debug_str.contains("McpHealthStatus"));
 }
 
@@ -165,7 +165,7 @@ fn test_create_default_config() {
     let config = create_default_config();
     let debug_str = format!("{:?}", config);
 
-    assert!(debug_str.len() > 0);
+    assert!(!debug_str.is_empty());
 }
 
 // ==================== CONSTANTS TESTS ====================

@@ -1,7 +1,7 @@
 // Simplified, unified installer configuration using canonical patterns
 
 // Migration utilities no longer needed - using canonical configurations
-use nestgate_core::config::canonical_master::NestGateCanonicalConfig;
+use nestgate_core::config::canonical_primary::NestGateCanonicalConfig;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
@@ -74,6 +74,7 @@ impl InstallerConfig {
 
 /// Installer-specific configuration extensions
 /// Domain-specific fields that don't belong in unified base configs
+#[allow(dead_code)] // Reserved for future installer extensions
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct InstallerExtensions {
     /// Installation mode and behavior
@@ -85,6 +86,7 @@ pub struct InstallerExtensions {
     /// Enable verbose output
     pub verbose: bool,
 }
+#[allow(dead_code)] // Reserved for future installation modes
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub enum InstallMode {
     #[default]
@@ -97,7 +99,7 @@ pub enum InstallMode {
 pub mod installer_config_factory {
     use super::InstallerConfig;
     // CANONICAL MODERNIZATION: Use canonical config builder instead of missing builders module
-    use nestgate_core::config::canonical_master::NestGateCanonicalConfig;
+    use nestgate_core::config::canonical_primary::NestGateCanonicalConfig;
     // Use the correct Environment enum from unified_types
 
     /// Development configuration
@@ -112,6 +114,7 @@ pub mod installer_config_factory {
 
     /// Production configuration
     #[must_use]
+    #[allow(dead_code)] // Reserved for future production config
     pub fn production() -> InstallerConfig {
         InstallerConfig {
             base_config: NestGateCanonicalConfig::default(),

@@ -100,7 +100,7 @@ trait SecurityProvider {
 
 #### **2. Unified Security Configuration**
 ```rust
-use nestgate_core::config::canonical_master::SecurityConfig;
+use nestgate_core::config::canonical_primary::SecurityConfig;
 
 pub struct BeardogConfig {
     pub security: SecurityConfig,  // Use proven security config

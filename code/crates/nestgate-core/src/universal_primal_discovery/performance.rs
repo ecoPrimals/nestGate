@@ -33,7 +33,7 @@ impl std::fmt::Display for TestType {
 
 // 🚀 MODERNIZATION: UnifiedConfig now uses UnifiedPerformanceTestConfig directly
 /// **MODERNIZED**: `UnifiedConfig` now uses `UnifiedPerformanceTestConfig` directly  
-pub type PerformanceTestConfig = crate::config::canonical_master::PerformanceConfig;
+pub type PerformanceTestConfig = crate::config::canonical_primary::PerformanceConfig;
 // 🚀 FULLY MODERN: All performance testing functionality now uses UnifiedPerformanceTestConfig directly
 // No legacy implementation needed - use UnifiedPerformanceTestConfig::default() and methods
 
@@ -72,12 +72,12 @@ pub struct TestResult {
 /// Enhanced Performance Test Runner with unified configuration
 #[derive(Debug)]
 pub struct PerformanceTestRunner {
-    pub config: crate::config::canonical_master::PerformanceConfig,
+    pub config: crate::config::canonical_primary::PerformanceConfig,
 }
 impl PerformanceTestRunner {
     /// Create new performance test runner
     #[must_use]
-    pub fn new(config: crate::config::canonical_master::PerformanceConfig) -> Self {
+    pub fn new(config: crate::config::canonical_primary::PerformanceConfig) -> Self {
         Self { config }
     }
 
@@ -189,7 +189,7 @@ impl PerformanceDiscovery {
     /// - Network or I/O errors occur
     pub async fn discover_optimal_timeout(&self, _service_name: &str) -> Result<Duration> {
         // Use default performance test config for discovery
-        let config = crate::config::canonical_master::PerformanceConfig::default();
+        let config = crate::config::canonical_primary::PerformanceConfig::default();
         let runner = PerformanceTestRunner::new(config);
 
         let optimal = runner.discover_optimal_timeout().await?;

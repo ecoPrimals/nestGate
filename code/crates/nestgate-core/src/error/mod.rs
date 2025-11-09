@@ -9,7 +9,14 @@ pub mod context;
 pub mod conversions;
 pub mod data;
 pub mod unified_result_system;
+pub mod utilities; // Consolidated error helpers
 pub mod variants;
+
+// Deprecated modules - will be removed in v0.12.0
+#[deprecated(since = "0.11.1", note = "Use error::utilities instead")]
+pub mod helpers;
+#[deprecated(since = "0.11.1", note = "Use error::utilities instead")]
+pub mod modernized_error_helpers;
 
 // ==================== EXPORTS ====================
 
@@ -89,7 +96,7 @@ pub enum ErrorSeverity {
     Critical,
 }
 
-/// Convert legacy Result<T> to canonical Result<T>
+/// Convert legacy `Result<T>` to canonical `Result<T>`
 pub fn migrate_result<T>(legacy_result: std::result::Result<T, NestGateError>) -> Result<T> {
     legacy_result
 }
@@ -222,10 +229,8 @@ pub mod test_utils {
         internal_error!("Test internal error")
     }
 }
-pub mod modernized_error_helpers;
-pub use modernized_error_helpers::*;
-pub mod helpers;
-pub use helpers::*;
+
+// Note: helpers and modernized_error_helpers are now deprecated (see top of file)
 
 #[cfg(test)]
 mod error_path_tests {
@@ -440,3 +445,6 @@ mod comprehensive_tests;
 
 #[cfg(test)]
 mod comprehensive_unit_tests;
+
+// Test expansion for error handling was completed Nov 6, 2025
+// Tests are now in comprehensive_tests.rs

@@ -3,10 +3,8 @@
 // with the NestGate ecosystem and external services.
 
 // Removed unresolved automation imports - use local implementations
-use nestgate_core::config::canonical_master::NestGateCanonicalConfig;
-use nestgate_core::error::NestGateError;
-// use nestgate_core::error::IdioResult; // IdioResult not available - using standard Result
-type IdioResult<T> = Result<T, NestGateError>;
+use nestgate_core::config::canonical_primary::NestGateCanonicalConfig;
+use nestgate_core::Result;
 
 // Placeholder types until automation crate is fully integrated
 pub struct IntelligentDatasetManager;
@@ -21,7 +19,7 @@ impl Default for AutomationConfig {
 /// Initialize automation integration with canonical configuration
 pub fn initialize_automation(
     config: NestGateCanonicalConfig,
-) -> IdioResult<IntelligentDatasetManager> {
+) -> Result<IntelligentDatasetManager> {
     let _automation_config = AutomationConfig;
     let _config = config; // Use config parameter to avoid warnings
                           // Placeholder implementation until automation crate is fully integrated
@@ -31,7 +29,7 @@ pub fn initialize_automation(
 pub fn initialize_automation_with_config(
     config: NestGateCanonicalConfig,
     automation_config: AutomationConfig,
-) -> IdioResult<IntelligentDatasetManager> {
+) -> Result<IntelligentDatasetManager> {
     let _config = config; // Use parameters to avoid warnings
     let _automation_config = automation_config;
     // Placeholder implementation until automation crate is fully integrated

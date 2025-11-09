@@ -12,7 +12,7 @@ use super::domains::{
     ApiConfig, ServerConfig, StorageConfig, NetworkConfig, SecurityConfig,
     MonitoringConfig, EnvironmentConfig, McpConfig
 };
-use super::canonical_master::SystemConfig;
+use super::canonical_primary::SystemConfig;
 
 // ==================== SECTION ====================
 
@@ -52,7 +52,7 @@ pub struct NestGateCanonicalConfig<
     /// Environment-specific overrides
     pub environment_overrides: HashMap<String, String>,
 }
-// SystemConfig is now imported from canonical_master
+// SystemConfig is now imported from canonical_primary
 
 /// Log level enumeration
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]

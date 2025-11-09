@@ -46,7 +46,7 @@ fn test_health_status_display() {
 fn test_health_status_debug() {
     let status = HealthStatus::Healthy;
     let debug_str = format!("{:?}", status);
-    assert!(debug_str.len() > 0);
+    assert!(!debug_str.is_empty());
 }
 
 #[test]
@@ -118,7 +118,7 @@ fn test_health_report_debug() {
     };
 
     let debug_str = format!("{:?}", report);
-    assert!(debug_str.len() > 0);
+    assert!(!debug_str.is_empty());
 }
 
 #[test]
@@ -148,7 +148,7 @@ fn test_alert_level_variants() {
 fn test_alert_level_debug() {
     let level = AlertLevel::Warning;
     let debug_str = format!("{:?}", level);
-    assert!(debug_str.len() > 0);
+    assert!(!debug_str.is_empty());
 }
 
 #[test]
@@ -212,7 +212,7 @@ fn test_alert_debug() {
     };
 
     let debug_str = format!("{:?}", alert);
-    assert!(debug_str.len() > 0);
+    assert!(!debug_str.is_empty());
 }
 
 #[test]
@@ -236,7 +236,7 @@ fn test_alert_clone() {
 fn test_health_status_serialization() {
     let status = HealthStatus::Healthy;
     let json = serde_json::to_string(&status).expect("Failed to serialize");
-    assert!(json.len() > 0);
+    assert!(!json.is_empty());
 }
 
 #[test]
@@ -282,7 +282,7 @@ fn test_health_report_deserialization() {
 fn test_alert_level_serialization() {
     let level = AlertLevel::Critical;
     let json = serde_json::to_string(&level).expect("Failed to serialize");
-    assert!(json.len() > 0);
+    assert!(!json.is_empty());
 }
 
 #[test]

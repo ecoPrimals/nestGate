@@ -43,11 +43,11 @@
 #### **1.2 Critical Files to Fix**
 ```
 High Priority Files:
-- code/crates/nestgate-core/src/config/canonical_master/migration_framework.rs
-- code/crates/nestgate-core/src/config/canonical_master/mod.rs
+- code/crates/nestgate-core/src/config/canonical_primary/migration_framework.rs
+- code/crates/nestgate-core/src/config/canonical_primary/mod.rs
 - code/crates/nestgate-core/src/services/native_async/production.rs
 - code/crates/nestgate-core/src/services/native_async/development.rs
-- code/crates/nestgate-core/src/config/canonical_master/phase2c_types.rs
+- code/crates/nestgate-core/src/config/canonical_primary/phase2c_types.rs
 ```
 
 #### **1.3 Systematic Error Resolution Strategy**

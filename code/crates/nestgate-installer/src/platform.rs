@@ -18,6 +18,7 @@ pub struct PlatformInfo {
     pub supports_systemd: bool,
     pub supports_launchd: bool,
     pub supports_windows_service: bool,
+    #[allow(dead_code)] // Reserved for future binary extension support
     pub binary_extension: String,
 }
 

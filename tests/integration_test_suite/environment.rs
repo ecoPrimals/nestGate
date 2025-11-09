@@ -3,10 +3,9 @@
 //! Test environment setup and management for integration tests.
 
 use nestgate_core::{
-    config::canonical_master::NestGateCanonicalConfig, error::Result,
+    config::canonical_primary::NestGateCanonicalConfig, error::Result,
     service_discovery::registry::InMemoryServiceRegistry,
 };
-use std::sync::Arc;
 
 /// Integration test environment
 pub struct IntegrationTestEnvironment {
@@ -17,7 +16,7 @@ pub struct IntegrationTestEnvironment {
 impl IntegrationTestEnvironment {
     /// Create new test environment
     pub async fn new() -> Result<Self> {
-        let config = NestGateNestGateCanonicalConfig::default();
+        let config: NestGateCanonicalConfig = NestGateCanonicalConfig::default();
         let service_registry = InMemoryServiceRegistry::new();
 
         Ok(Self {

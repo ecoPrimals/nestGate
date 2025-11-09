@@ -54,8 +54,8 @@ pub async fn list_backends(
         .cloned()
         .collect(),
         performance: StoragePerformance {
-            read_iops: 100000,
-            write_iops: 80000,
+            read_iops: 100_000,
+            write_iops: 80_000,
             read_throughput_mbps: 1000.0,
             write_throughput_mbps: 800.0,
             avg_latency_ms: 0.1,
@@ -178,8 +178,8 @@ pub async fn scan_storage(
         .cloned()
         .collect(),
         performance: StoragePerformance {
-            read_iops: 100000,
-            write_iops: 80000,
+            read_iops: 100_000,
+            write_iops: 80_000,
             read_throughput_mbps: 1000.0,
             write_throughput_mbps: 800.0,
             avg_latency_ms: 0.1,
@@ -269,7 +269,7 @@ pub async fn benchmark_storage(
                 avg_latency_ms: 0.001,
                 p95_latency_ms: 0.002,
                 p99_latency_ms: 0.005,
-                iops: 850000,
+                iops: 850_000,
                 cpu_usage: 15.0,
                 memory_usage: 25.0,
             },
@@ -348,8 +348,8 @@ pub async fn auto_configure(
                     .cloned()
                     .collect(),
                 performance: StoragePerformance {
-                    read_iops: 100000,
-                    write_iops: 80000,
+                    read_iops: 100_000,
+                    write_iops: 80_000,
                     read_throughput_mbps: 1000.0,
                     write_throughput_mbps: 800.0,
                     avg_latency_ms: 0.1,
@@ -357,7 +357,7 @@ pub async fn auto_configure(
             }],
             tier: StorageTier::Hot,
             performance_requirements: PerformanceRequirements {
-                min_iops: 800000,
+                min_iops: 800_000,
                 min_throughput_mbps: 6000.0,
                 max_latency_ms: 0.001,
                 availability_percent: 99.9,

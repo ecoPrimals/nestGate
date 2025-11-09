@@ -22,7 +22,7 @@ pub mod types;
 // Re-export all types for backward compatibility
 pub use config::CachePolicies;
 // ZfsConfig moved to unified_types
-pub use crate::config::canonical_master::StorageConfig;
+pub use crate::config::canonical_primary::StorageConfig;
 pub use service::StorageManagerService;
 pub use types::{
     CacheConfig, CacheType, EvictionPolicy, PoolHealth, QuotaEnforcement, StorageOperationResult,

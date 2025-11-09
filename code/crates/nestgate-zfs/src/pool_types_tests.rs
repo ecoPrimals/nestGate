@@ -3,14 +3,14 @@
 //! Tests for pool information, state, health, and capacity types
 
 #[cfg(test)]
-mod pool_types_tests {
+mod tests {
     use crate::pool::types::{PoolCapacity, PoolHealth, PoolInfo, PoolState};
     use std::collections::HashMap;
 
     /// Test 1: PoolState enum variants
     #[test]
     fn test_pool_state_variants() {
-        let states = vec![
+        let states = [
             PoolState::Online,
             PoolState::Offline,
             PoolState::Degraded,
@@ -34,7 +34,7 @@ mod pool_types_tests {
     /// Test 3: PoolHealth enum variants
     #[test]
     fn test_pool_health_variants() {
-        let health_states = vec![
+        let health_states = [
             PoolHealth::Healthy,
             PoolHealth::Warning,
             PoolHealth::Critical,

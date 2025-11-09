@@ -1,194 +1,137 @@
-use std::collections::HashMap;
-use std::sync::Arc;
-use std::time::Duration;
-use serde::{Deserialize, Serialize};
-use crate::error::{NestGateError, NestGateUnifiedError, Result};
+//! Memory Optimization Module - Use Rust Standard Library
+//!
+//! **ARCHITECTURE NOTE**: NestGate uses Rust's standard memory management.
+//! We are a **storage primal**, not a memory management framework.
+//!
+//! # Deleted Stubs
+//!
+//! **Previously had these stub implementations** (DELETED):
+//! - `allocators.rs` - Custom allocators (use stdlib)
+//! - `leak_detection.rs` - Leak detection (use valgrind/heaptrack)
+//! - `profiling.rs` - Memory profiling (use external tools)
+//! - `stats.rs` - Memory statistics (use external tools)
+//! - `structures.rs` - Memory structures (use stdlib)
+//! - `zero_copy.rs` - Generic zero-copy (implement per-module as needed)
+//!
+//! # Modern Approach
+//!
+//! ## Use Rust's Standard Allocator
+//!
+//! Rust's default allocator is excellent. Don't reinvent the wheel.
+//!
+//! ```rust
+//! // Just use standard collections
+//! use std::collections::{HashMap, Vec};
+//!
+//! let mut cache: HashMap<String, Vec<u8>> = HashMap::new();
+//! cache.insert("key".to_string(), vec![1, 2, 3]);
+//! ```
+//!
+//! ## Memory Pools (Where Needed)
+//!
+//! For hot paths that need object pooling, use existing crates:
+//! - `object-pool` crate - Simple object pooling
+//! - `lockfree` crate - Lock-free data structures
+//! - `crossbeam` crate - Concurrent collections
+//!
+//! ## Zero-Copy (Where Applicable)
+//!
+//! Implement zero-copy patterns in specific modules:
+//! - Use `&[u8]` instead of `Vec<u8>` when possible
+//! - Use `Cow<'_, [u8]>` for flexibility
+//! - Use `bytes::Bytes` for reference-counted buffers
+//! - Avoid cloning large data structures
+//!
+//! ```rust
+//! use std::borrow::Cow;
+//!
+//! // Zero-copy when possible, owned when needed
+//! pub fn process_data(data: Cow<'_, [u8]>) -> Result<Output> {
+//!     // Works with both borrowed and owned data
+//! }
+//! ```
+//!
+//! ## Memory Profiling Tools
+//!
+//! Use external tools for memory analysis:
+//! - **Valgrind** - Memory leak detection
+//! - **Heaptrack** - Heap profiling
+//! - **Massif** - Heap profiler
+//! - **jemalloc** - Alternative allocator with profiling
+//! - **cargo flamegraph** - CPU and memory profiling
+//!
+//! ## Benchmarking
+//!
+//! Use Criterion for memory benchmarks:
+//! ```rust
+//! use criterion::{black_box, criterion_group, criterion_main, Criterion};
+//!
+//! fn bench_allocation(c: &mut Criterion) {
+//!     c.bench_function("allocate_vec", |b| {
+//!         b.iter(|| {
+//!             let v: Vec<u8> = black_box(vec![0; 1024]);
+//!             v
+//!         });
+//!     });
+//! }
+//! ```
 
-//! Modern mod Module
-//! 
-//! This module provides core functionality using modern Rust patterns
-//! and zero-cost abstractions.
+// Keep the memory pool if it's actually used (check usage first)
+pub mod pools;
 
-use std::time::Duration;
-use std::sync::Arc;
-use std::collections::HashMap;
-use serde::{Deserialize, Serialize};
+// Re-export commonly used types
+pub use std::sync::Arc;
+pub use std::rc::Rc;
+pub use std::borrow::Cow;
 
-use crate::error::{NestGateError, Result};
-
-// ==================== MODULE CONSTANTS ====================
-
-/// Module version for compatibility tracking
-pub use crate::constants::shared::MODULE_VERSION;
-
-/// Default configuration values
-/// Default configuration values from canonical constants
-pub use crate::constants::network::{
-    DEFAULT_TIMEOUT_MS, DEFAULT_BUFFER_SIZE, DEFAULT_MAX_CONNECTIONS
-};
-
-// ==================== CORE TYPES ====================
-
-/// Configuration for this module
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Config {
-    pub enabled: bool,
-    pub timeout: Duration,
-    pub max_connections: usize,
-    pub buffer_size: usize,
+/// Memory statistics (simple wrapper around stdlib)
+#[derive(Debug, Clone, Copy)]
+pub struct MemoryStats {
+    pub allocated_bytes: usize,
+    pub deallocated_bytes: usize,
 }
 
-impl Default for Config {
-    fn default() -> Self {
+impl MemoryStats {
+    /// Get current memory usage from the system
+    ///
+    /// Note: Use external tools like `sysinfo` crate for real stats
+    pub fn current() -> Self {
+        // This is a placeholder - use sysinfo crate for real implementation
         Self {
-            enabled: true,
-            timeout: Duration::from_millis(DEFAULT_TIMEOUT_MS),
-            max_connections: DEFAULT_MAX_CONNECTIONS,
-            buffer_size: DEFAULT_BUFFER_SIZE,
+            allocated_bytes: 0,
+            deallocated_bytes: 0,
         }
     }
 }
-
-/// Service interface re-exported from canonical source
-/// See: `crate::traits_root::service::Service` for the unified implementation
-pub use crate::traits_root::service::Service;
-
-/// Health status enumeration
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-pub enum HealthStatus {
-    Healthy,
-    Degraded,
-    Unhealthy,
-}
-
-/// Performance metrics for monitoring
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Metrics {
-    pub requests_processed: u64,
-    pub errors_encountered: u64,
-    pub average_response_time: Duration,
-    pub memory_usage_bytes: u64,
-}
-
-impl Default for Metrics {
-    fn default() -> Self {
-        Self {
-            requests_processed: 0,
-            errors_encountered: 0,
-            average_response_time: Duration::from_millis(0),
-            memory_usage_bytes: 0,
-        }
-    }
-}
-
-// ==================== IMPLEMENTATION STUB ====================
-
-/// Default implementation of the service
-#[derive(Debug)]
-pub struct DefaultService {
-    config: Config,
-    metrics: Arc<tokio::sync::RwLock<Metrics>>,
-}
-
-impl DefaultService {
-    /// Create a new service instance
-    pub fn new(config: Config) -> Self {
-        Self {
-            config,
-            metrics: Arc::new(tokio::sync::RwLock::new(Metrics::default())),
-        }
-    }
-    
-    /// Get current metrics
-    pub async fn get_metrics(&self) -> Metrics {
-        self.metrics.read().await.clone()
-    }
-}
-
-impl Service for DefaultService {
-    fn initialize(&self) -> impl std::future::Future<Output = Result<()>> + Send {
-        // Initialization implementation
-        tracing::info!("Initializing {} service with config: {:?}", 
-                      stringify!(mod), config);
-        Ok(())
-    }
-    
-    fn health_check(&self) -> impl std::future::Future<Output = Result<HealthStatus>> + Send {
-        // Health check implementation
-        Ok(HealthStatus::Healthy)
-    }
-    
-    fn shutdown(&self) -> impl std::future::Future<Output = Result<()>> + Send {
-        // Shutdown implementation
-        tracing::info!("Shutting down {} service", stringify!(mod));
-        Ok(())
-    }
-}
-
-// ==================== UTILITY FUNCTIONS ====================
-
-/// Create a default service instance
-pub fn create_service() -> DefaultService {
-    DefaultService::new(Config::default())
-}
-
-/// Validate configuration
-pub async fn validate_config(config: &Config) -> crate::Result<()> {
-    if config.max_connections == 0 {
-        return Err(NestGateError::configuration_error(
-            "memory_optimization",
-            "max_connections must be greater than 0"
-        ));
-    }
-    
-    if config.buffer_size == 0 {
-        return Err(NestGateError::configuration_error(
-            "memory_optimization",
-            "buffer_size must be greater than 0"
-        ));
-    }
-    
-    Ok(())
-}
-
-// ==================== TESTS ====================
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     
-
     #[test]
-    fn test_config_default() {
-        let config = Config::default();
-        assert!(config.enabled);
-        assert_eq!(config.max_connections, DEFAULT_MAX_CONNECTIONS);
+    fn test_standard_collections() {
+        use std::collections::HashMap;
+        
+        let mut map: HashMap<String, Vec<u8>> = HashMap::new();
+        map.insert("test".to_string(), vec![1, 2, 3]);
+        
+        assert_eq!(map.get("test"), Some(&vec![1, 2, 3]));
     }
-
+    
     #[test]
-    fn test_config_validation() {
-        let mut config = Config::default();
-        assert!(validate_config(&config).is_ok());
+    fn test_zero_copy_pattern() {
+        use std::borrow::Cow;
         
-        config.max_connections = 0;
-        assert!(validate_config(&config).is_err());
-    }
-
-    #[tokio::test]
-    async fn test_service_creation() {
-        let service = create_service();
-        let config = Config::default();
+        fn process(data: Cow<'_, [u8]>) -> usize {
+            data.len()
+        }
         
-        assert!(service.initialize(&config).await.is_ok());
-        assert_eq!(service.health_check().await.expect("Operation failed"), HealthStatus::Healthy);
-        assert!(service.shutdown().await.is_ok());
-    }
-
-    #[tokio::test]
-    async fn test_metrics() {
-        let service = create_service();
-        let metrics = service.get_metrics().await;
+        // Borrowed
+        let borrowed_data = &[1, 2, 3][..];
+        assert_eq!(process(Cow::Borrowed(borrowed_data)), 3);
         
-        assert_eq!(metrics.requests_processed, 0);
-        assert_eq!(metrics.errors_encountered, 0);
+        // Owned
+        let owned_data = vec![1, 2, 3, 4];
+        assert_eq!(process(Cow::Owned(owned_data)), 4);
     }
 }

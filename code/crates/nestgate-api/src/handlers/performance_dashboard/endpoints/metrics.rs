@@ -10,6 +10,10 @@ use crate::handlers::performance_dashboard::{
 };
 
 /// GET /dashboard/metrics/realtime
+///
+/// # Errors
+///
+/// Returns `StatusCode::INTERNAL_SERVER_ERROR` if metrics collection fails.
 pub async fn realtime_metrics() -> Result<Json<ApiResponse<RealTimeMetrics>>, StatusCode> {
     let collector = RealTimeMetricsCollector::new();
     

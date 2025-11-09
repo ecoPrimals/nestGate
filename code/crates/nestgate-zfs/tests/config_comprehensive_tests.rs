@@ -29,7 +29,7 @@ fn test_pool_type_debug() {
     let pool_type = PoolType::Mirror;
     let debug_str = format!("{:?}", pool_type);
 
-    assert!(debug_str.len() > 0);
+    assert!(!debug_str.is_empty());
     assert!(debug_str.contains("Mirror"));
 }
 
@@ -48,7 +48,7 @@ fn test_pool_type_serialization() {
     let pool_type = PoolType::RaidZ1;
     let json = serde_json::to_string(&pool_type).expect("Failed to serialize");
 
-    assert!(json.len() > 0);
+    assert!(!json.is_empty());
 }
 
 #[test]
@@ -72,7 +72,7 @@ fn test_all_pool_types_serialize() {
 
     for pool_type in types {
         let json = serde_json::to_string(&pool_type).expect("Failed to serialize");
-        assert!(json.len() > 0);
+        assert!(!json.is_empty());
     }
 }
 
@@ -101,7 +101,7 @@ fn test_compression_type_debug() {
     let compression = CompressionType::Lz4;
     let debug_str = format!("{:?}", compression);
 
-    assert!(debug_str.len() > 0);
+    assert!(!debug_str.is_empty());
     assert!(debug_str.contains("Lz4"));
 }
 
@@ -120,7 +120,7 @@ fn test_compression_type_serialization() {
     let compression = CompressionType::Gzip;
     let json = serde_json::to_string(&compression).expect("Failed to serialize");
 
-    assert!(json.len() > 0);
+    assert!(!json.is_empty());
 }
 
 #[test]
@@ -143,7 +143,7 @@ fn test_all_compression_types_serialize() {
 
     for compression in types {
         let json = serde_json::to_string(&compression).expect("Failed to serialize");
-        assert!(json.len() > 0);
+        assert!(!json.is_empty());
     }
 }
 
@@ -330,7 +330,7 @@ fn test_serialize_pool_type_vector() {
     let types = vec![PoolType::Standard, PoolType::Mirror, PoolType::RaidZ1];
 
     let json = serde_json::to_string(&types).expect("Failed to serialize");
-    assert!(json.len() > 0);
+    assert!(!json.is_empty());
 }
 
 #[test]
@@ -342,7 +342,7 @@ fn test_serialize_compression_type_vector() {
     ];
 
     let json = serde_json::to_string(&types).expect("Failed to serialize");
-    assert!(json.len() > 0);
+    assert!(!json.is_empty());
 }
 
 #[test]

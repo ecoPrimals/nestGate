@@ -3,7 +3,7 @@
 //! Unit tests for the canonical configuration system to achieve 50% coverage target
 
 use nestgate_core::config::{
-    canonical_master::NestGateCanonicalConfig,
+    canonical_primary::NestGateCanonicalConfig,
     defaults::{Environment, ConfigDefaults},
     network::NetworkConfig,
 };
@@ -185,7 +185,7 @@ mod config_merge_tests {
     fn test_config_merge_operation() -> Result<(), Box<dyn std::error::Error>> {
         let mut base_config = NestGateNestGateCanonicalConfig::default();
         let override_config = NestGateCanonicalConfig {
-            system: nestgate_core::config::canonical_master::SystemConfig {
+            system: nestgate_core::config::canonical_primary::SystemConfig {
                 instance_name: "test-override".to_string(),
                 ..base_config.system.clone()
             },

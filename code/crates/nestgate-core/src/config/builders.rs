@@ -148,7 +148,7 @@ pub fn create_testing_config() -> Result<NestGateCanonicalConfig> {
 
 // ==================== SECTION ====================
 // Migration utilities have been removed as migration is complete.
-// All configurations now use canonical_master::NestGateCanonicalConfig directly.
+// All configurations now use canonical_primary::NestGateCanonicalConfig directly.
 
         // Migrate common environment variables
         if let Ok(service_name) = std::env::var("NESTGATE_SERVICE_NAME") {

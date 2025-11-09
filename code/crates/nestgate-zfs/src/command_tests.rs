@@ -3,7 +3,7 @@
 //! Tests for ZfsCommand struct and command execution patterns
 
 #[cfg(test)]
-mod command_tests {
+mod tests {
     use crate::command::ZfsCommand;
 
     /// Test 1: ZfsCommand default creation
@@ -179,8 +179,7 @@ mod command_tests {
         // This will succeed or fail based on system ZFS installation
         // Test that the method doesn't panic
         let _result = ZfsCommand::check_zfs_available();
-        // Just verify the method is callable
-        assert!(true);
+        // Just verify the method is callable without panicking
     }
 
     /// Test 20: ZfsCommand configuration combinations
@@ -272,7 +271,7 @@ mod command_async_tests {
         let cmd = ZfsCommand::new().with_dry_run(true);
 
         let mut handles = vec![];
-        for i in 0..10 {
+        for _ in 0..10 {
             let cmd_clone = cmd.clone();
             let handle = tokio::spawn(async move { cmd_clone.zpool(&["list"]).await });
             handles.push(handle);

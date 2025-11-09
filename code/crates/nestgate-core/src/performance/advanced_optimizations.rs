@@ -343,10 +343,11 @@ impl<const BLOCK_SIZE: usize, const POOL_SIZE: usize> MemoryPool<BLOCK_SIZE, POO
             let start = current_free * BLOCK_SIZE;
             let end = start + std::mem::size_of::<usize>();
             let next_free_bytes = &self.pool[start..end];
+            #[allow(clippy::expect_used)] // Slice length guaranteed by usize size
             let next_free = usize::from_ne_bytes(
                 next_free_bytes
                     .try_into()
-                    .expect("Slice has correct length"),
+                    .expect("BUG: Slice length matches usize size"),
             );
 
             // Try to update free list atomically

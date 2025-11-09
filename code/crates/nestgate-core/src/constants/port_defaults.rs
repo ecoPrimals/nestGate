@@ -156,7 +156,8 @@ mod tests {
     #[test]
     fn test_port_constants_valid() {
         // All ports should be non-zero (u16 type ensures they're <= 65535)
-        assert!(DEFAULT_API_PORT > 0);
+        // Note: DEFAULT_API_PORT is a const, so we test it at runtime
+        assert_ne!(DEFAULT_API_PORT, 0);
         assert!(DEFAULT_METRICS_PORT > 0);
         assert!(DEFAULT_POSTGRES_PORT > 0);
         assert!(DEFAULT_REDIS_PORT > 0);

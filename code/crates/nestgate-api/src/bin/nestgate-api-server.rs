@@ -1,11 +1,38 @@
-//
-// Production-ready API server with integrated real-time bidirectional communication.
-// Features:
-// - Pure data layer for management consumption
-// - tarpc integration with security (security)
-// - JSON RPC integration with orchestration (orchestration)
-// - WebSocket streams for real-time data
-// - Intelligent RPC routing
+//! `NestGate` API Server
+//!
+//! Production-ready REST API server for `NestGate` universal storage platform.
+//!
+//! # Features
+//!
+//! - Universal storage operations (filesystem, object, block storage)
+//! - ZFS integration (optional, feature-gated with `dev-stubs`)
+//! - Real-time monitoring and metrics
+//! - Health check endpoints
+//! - Sovereignty-compliant operations
+//! - WebSocket streams for real-time data
+//! - Intelligent RPC routing (tarpc + JSON RPC)
+//!
+//! # Usage
+//!
+//! Start the server with default configuration:
+//! ```bash
+//! cargo run --bin nestgate-api-server
+//! ```
+//!
+//! Configure via environment variables:
+//! - `NESTGATE_API_PORT`: API server port (default: 8080)
+//! - `NESTGATE_BIND_ADDRESS`: Bind address (default: 0.0.0.0)
+//! - `NESTGATE_METRICS_PORT`: Metrics endpoint port (default: 9090)
+//!
+//! # Architecture
+//!
+//! The API server provides `RESTful` endpoints for:
+//! - Storage pool management
+//! - Dataset operations
+//! - Snapshot management
+//! - Performance analytics
+//! - Health monitoring
+//! - Real-time bidirectional communication
 
 use nestgate_api::routes::{create_router, AppState};
 use nestgate_core::constants::hardcoding::{addresses, ports};
@@ -292,7 +319,8 @@ fn print_enhanced_api_endpoints(config: &ServerConfig) {
 
     println!("\n🌐 Server Configuration:");
     println!(
-        "  📡 API Server: http://localhost:{}",
+        "  📡 API Server: http://{}:{}",
+        addresses::LOCALHOST_NAME,
         config.bind_endpoint.port()
     );
     if let Some(security_addr) = &config.security_capability {
@@ -304,21 +332,25 @@ fn print_enhanced_api_endpoints(config: &ServerConfig) {
 
     println!("\n🧪 Example Usage:");
     println!(
-        "  📊 Health: curl http://localhost:{}/health",
+        "  📊 Health: curl http://{}:{}/health",
+        addresses::LOCALHOST_NAME,
         config.bind_endpoint.port()
     );
     println!(
-        "  📈 Metrics: curl http://localhost:{}/api/v1/monitoring/metrics",
+        "  📈 Metrics: curl http://{}:{}/api/v1/monitoring/metrics",
+        addresses::LOCALHOST_NAME,
         config.bind_endpoint.port()
     );
     println!(
-        "  🗄️ Datasets: curl http://localhost:{}/api/v1/zfs/datasets",
+        "  🗄️ Datasets: curl http://{}:{}/api/v1/zfs/datasets",
+        addresses::LOCALHOST_NAME,
         config.bind_endpoint.port()
     );
 
     if config.enable_rpc {
         println!(
-            "  🔐 Security RPC: curl -X POST http://localhost:{}/api/v1/rpc/call \\",
+            "  🔐 Security RPC: curl -X POST http://{}:{}/api/v1/rpc/call \\",
+            addresses::LOCALHOST_NAME,
             config.bind_endpoint.port()
         );
         println!("    -H 'Content-Type: application/json' \\");
@@ -326,7 +358,8 @@ fn print_enhanced_api_endpoints(config: &ServerConfig) {
             "    -d '{{\"id\":\"123\",\"source\":\"test\",\"target\":\"security\",\"method\":\"encrypt_data\",\"_params\":{{\"data\":\"secret\"}},\"timestamp\":\"2025-01-30T10:00:00Z\",\"streaming\":false,\"_metadata\":{{}}}}''"
         );
         println!(
-            "  🎼 Orchestration RPC: curl -X POST http://localhost:{}/api/v1/rpc/call \\",
+            "  🎼 Orchestration RPC: curl -X POST http://{}:{}/api/v1/rpc/call \\",
+            addresses::LOCALHOST_NAME,
             config.bind_endpoint.port()
         );
         println!("    -H 'Content-Type: application/json' \\");
@@ -336,7 +369,8 @@ fn print_enhanced_api_endpoints(config: &ServerConfig) {
     }
 
     println!(
-        "  🔌 WebSocket: ws://localhost:{}/ws/metrics",
+        "  🔌 WebSocket: ws://{}:{}/ws/metrics",
+        addresses::LOCALHOST_NAME,
         config.bind_endpoint.port()
     );
     println!();

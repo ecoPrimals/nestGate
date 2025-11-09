@@ -20,14 +20,14 @@ fn test_protocol_variants() {
     // Test all protocol variants can be created
     let nfs = Protocol::Nfs;
     let smb = Protocol::Smb;
-    let ftp = Protocol::Ftp;
-    let sftp = Protocol::Sftp;
-    let http = Protocol::Http;
-    let tcp = Protocol::Tcp;
+    let _ftp = Protocol::Ftp;
+    let _sftp = Protocol::Sftp;
+    let _http = Protocol::Http;
+    let _tcp = Protocol::Tcp;
 
     // Verify they can be cloned
-    let _nfs_clone = nfs.clone();
-    let _smb_clone = smb.clone();
+    let _nfs_clone = nfs;
+    let _smb_clone = smb;
 
     // Verify Debug works
     let debug_str = format!("{:?}", nfs);
@@ -82,12 +82,12 @@ fn test_protocol_hash() {
 #[test]
 fn test_performance_preference_variants() {
     let speed = PerformancePreference::Speed;
-    let reliability = PerformancePreference::Reliability;
-    let compatibility = PerformancePreference::Compatibility;
+    let _reliability = PerformancePreference::Reliability;
+    let _compatibility = PerformancePreference::Compatibility;
     let balanced = PerformancePreference::Balanced;
 
     // Verify cloning
-    let _speed_clone = speed.clone();
+    let _speed_clone = speed;
 
     // Verify Debug
     let debug_str = format!("{:?}", balanced);

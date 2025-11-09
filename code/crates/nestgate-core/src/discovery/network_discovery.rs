@@ -4,8 +4,8 @@
 
 use super::capability_scanner::{CapabilityInfo, DiscoveryMethod};
 use crate::error::NestGateError;
-use async_trait::async_trait;
 use std::collections::HashMap;
+use std::future::Future;
 use std::net::{IpAddr, SocketAddr};
 use std::time::Duration;
 use tokio::net::UdpSocket;
@@ -13,6 +13,7 @@ use tokio::time::timeout;
 use tracing::{debug, info, warn};
 
 /// DNS-SRV record discovery method
+#[derive(Debug)]
 pub struct DnsServiceDiscovery {
     /// Domain to search for SRV records
     domain: String,
@@ -50,9 +51,9 @@ impl DnsServiceDiscovery {
     }
 }
 
-#[async_trait]
 impl DiscoveryMethod for DnsServiceDiscovery {
-    async fn discover(&self) -> Result<Vec<CapabilityInfo>, NestGateError> {
+    fn discover(&self) -> impl Future<Output = Result<Vec<CapabilityInfo>, NestGateError>> + Send {
+        async move {
         let mut capabilities = Vec::new();
 
         debug!("Starting DNS-SRV discovery for domain: {}", self.domain);
@@ -95,6 +96,7 @@ impl DiscoveryMethod for DnsServiceDiscovery {
         }
 
         Ok(capabilities)
+        }
     }
 
     fn method_name(&self) -> &str {
@@ -133,6 +135,7 @@ pub struct SrvRecord {
 }
 
 /// Multicast discovery method
+#[derive(Debug)]
 pub struct MulticastDiscovery {
     /// Multicast groups to listen on
     multicast_groups: Vec<SocketAddr>,
@@ -147,14 +150,18 @@ impl MulticastDiscovery {
     /// Create a new multicast discovery
     #[must_use]
     pub fn new() -> Self {
+        // SAFETY: These are well-known, standard multicast addresses that will never fail to parse
+        // mDNS: 224.0.0.251:5353 (RFC 6762)
+        // SSDP: 239.255.255.250:1900 (UPnP specification)
+        #[allow(clippy::expect_used)]
         Self {
             multicast_groups: vec![
                 "224.0.0.251:5353"
                     .parse()
-                    .expect("hardcoded mDNS address is valid"), // mDNS
+                    .expect("BUG: mDNS multicast address is standard and must parse"), // mDNS
                 "239.255.255.250:1900"
                     .parse()
-                    .expect("hardcoded SSDP address is valid"), // SSDP
+                    .expect("BUG: SSDP multicast address is standard and must parse"), // SSDP
             ],
             timeout_duration: Duration::from_secs(3),
             discovery_message: "NESTGATE-DISCOVERY".to_string(),
@@ -178,9 +185,9 @@ impl Default for MulticastDiscovery {
     }
 }
 
-#[async_trait]
 impl DiscoveryMethod for MulticastDiscovery {
-    async fn discover(&self) -> Result<Vec<CapabilityInfo>, NestGateError> {
+    fn discover(&self) -> impl Future<Output = Result<Vec<CapabilityInfo>, NestGateError>> + Send {
+        async move {
         let mut capabilities = Vec::new();
 
         debug!(
@@ -213,6 +220,7 @@ impl DiscoveryMethod for MulticastDiscovery {
         }
 
         Ok(capabilities)
+        }
     }
 
     fn method_name(&self) -> &str {
@@ -327,6 +335,7 @@ impl MulticastDiscovery {
 }
 
 /// Network port scanning discovery
+#[derive(Debug)]
 pub struct PortScanDiscovery {
     /// IP ranges to scan
     ip_ranges: Vec<IpRange>,
@@ -376,19 +385,27 @@ impl PortScanDiscovery {
 
     /// Add local network ranges (192.168.x.x, 10.x.x.x, 172.16-31.x.x)
     pub fn add_local_networks(&mut self) {
+        // SAFETY: These are hardcoded RFC 1918 private IP addresses that will never fail to parse
+        #[allow(clippy::expect_used)]
         // Add common local network ranges
-        self.add_ip_range(
-            "192.168.1.1"
-                .parse()
-                .expect("hardcoded IP address is valid"),
-            "192.168.1.254"
-                .parse()
-                .expect("hardcoded IP address is valid"),
-        );
-        self.add_ip_range(
-            "10.0.0.1".parse().expect("hardcoded IP address is valid"),
-            "10.0.0.254".parse().expect("hardcoded IP address is valid"),
-        );
+        {
+            self.add_ip_range(
+                "192.168.1.1"
+                    .parse()
+                    .expect("BUG: RFC 1918 private IP address must parse"),
+                "192.168.1.254"
+                    .parse()
+                    .expect("BUG: RFC 1918 private IP address must parse"),
+            );
+            self.add_ip_range(
+                "10.0.0.1"
+                    .parse()
+                    .expect("BUG: RFC 1918 private IP address must parse"),
+                "10.0.0.254"
+                    .parse()
+                    .expect("BUG: RFC 1918 private IP address must parse"),
+            );
+        }
     }
 }
 
@@ -400,9 +417,9 @@ impl Default for PortScanDiscovery {
     }
 }
 
-#[async_trait]
 impl DiscoveryMethod for PortScanDiscovery {
-    async fn discover(&self) -> Result<Vec<CapabilityInfo>, NestGateError> {
+    fn discover(&self) -> impl Future<Output = Result<Vec<CapabilityInfo>, NestGateError>> + Send {
+        async move {
         let mut capabilities = Vec::new();
 
         info!(
@@ -436,6 +453,7 @@ impl DiscoveryMethod for PortScanDiscovery {
         }
 
         Ok(capabilities)
+        }
     }
 
     fn method_name(&self) -> &str {

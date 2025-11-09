@@ -5,7 +5,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::sync::watch;
 use uuid::Uuid;
 
-use crate::config::canonical_master::NestGateCanonicalConfig as CanonicalConfig;
+use crate::config::canonical_primary::NestGateCanonicalConfig as CanonicalConfig;
 use crate::error::CanonicalResult as Result;
 
 /// Configuration version with metadata

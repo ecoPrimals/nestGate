@@ -21,10 +21,10 @@ pub mod defaults;
 pub mod error;
 /// **PRIMARY**: Canonical trait system with native async
 pub mod traits;
-/// Canonical trait definitions - root level service interfaces
-pub mod traits_root;
+/// ⚠️ REMOVED: traits_root was deprecated and removed in v0.11.0 (November 2025)
+/// Use traits::canonical_unified_traits instead
+// pub mod traits_root; // REMOVED - use traits::canonical_unified_traits
 // ==================== DOMAIN-SPECIFIC MODULES ====================
-
 /// Capability-based service discovery
 pub mod capabilities;
 /// Data source integrations (Steam, NCBI, etc.)
@@ -125,14 +125,15 @@ pub mod network;
 pub mod services;
 // ==================== UNIFIED TYPES ====================
 
-/// Unified configuration consolidation system
-pub mod unified_config_consolidation;
-/// Unified types system
-pub mod unified_types;
+/// ⚠️ REMOVED: unified_config_consolidation was deprecated and removed in v0.11.0 (November 2025)
+/// Use config::canonical_primary instead
+// pub mod unified_config_consolidation; // REMOVED - use config::canonical_primary
+/// ⚠️ REMOVED: unified_types was deprecated and removed in v0.11.0 (November 2025)
+/// Use config::canonical_primary for configuration types
+// pub mod unified_types; // REMOVED - use config::canonical_primary
 // ==================== CANONICAL RE-EXPORTS ====================
-
 /// **THE CANONICAL CONFIGURATION** - Single source of truth
-pub use config::canonical_master::NestGateCanonicalConfig;
+pub use config::canonical_primary::NestGateCanonicalConfig;
 /// **CANONICAL CONSTANTS** - Single source for all constants
 pub use constants::*;
 /// **DOMAIN-SPECIFIC RESULT TYPES** - Rich error context

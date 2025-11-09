@@ -5,12 +5,20 @@
 //!
 //! **CANONICAL USAGE**:
 //! ```rust
-//! use nestgate_core::config::canonical_master::test_config::CanonicalTestConfigs;
+//! use nestgate_core::config::canonical_primary::test_config::CanonicalTestConfigs;
 //! let config = CanonicalTestConfigs::default();
 //! ```
 
 // Clean canonical re-exports - no deprecated code
-pub use nestgate_core::config::canonical_master::test_config::*;
+#[cfg(feature = "dev-stubs")]
+pub use nestgate_core::config::canonical_primary::test_config::*;
 
 // Environment support
-pub use nestgate_core::constants::Environment;
+pub use nestgate_core::config::canonical_primary::phase2c_types::Environment;
+
+// For tests without dev-stubs feature, provide basic types
+#[cfg(not(feature = "dev-stubs"))]
+pub use nestgate_core::config::NestGateCanonicalConfig as CanonicalTestConfig;
+
+#[cfg(not(feature = "dev-stubs"))]
+pub use nestgate_core::config::NestGateCanonicalConfig as TestDomainConfig;

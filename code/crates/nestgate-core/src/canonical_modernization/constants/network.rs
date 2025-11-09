@@ -18,29 +18,48 @@ pub const BIND_ALL_IPV6: &str = "::";
 pub const DEFAULT_BIND_ADDRESS: &str = LOCALHOST_IPV4;
 
 // ==================== DEFAULT PORTS ====================
+// NOTE: Port constants have been consolidated to port_defaults module
+// Use: nestgate_core::constants::port_defaults::DEFAULT_API_PORT
 
 /// Default API server port
+#[deprecated(since = "0.2.0", note = "Use nestgate_core::constants::port_defaults::DEFAULT_API_PORT")]
 pub const DEFAULT_API_PORT: u16 = 8080;
+
 /// Default metrics/monitoring port
+#[deprecated(since = "0.2.0", note = "Use nestgate_core::constants::port_defaults::DEFAULT_METRICS_PORT")]
 pub const DEFAULT_METRICS_PORT: u16 = 9090;
+
 /// Default WebSocket port
+#[deprecated(since = "0.2.0", note = "Use nestgate_core::constants::port_defaults::DEFAULT_WEBSOCKET_PORT or DEFAULT_ADMIN_PORT")]
 pub const DEFAULT_WEBSOCKET_PORT: u16 = 8081;
+
 /// Default health check port
+#[deprecated(since = "0.2.0", note = "Use nestgate_core::constants::port_defaults::DEFAULT_HEALTH_PORT")]
 pub const DEFAULT_HEALTH_PORT: u16 = 8082;
-/// Default storage port
+
+/// Default storage port (domain-specific, may keep)
 pub const DEFAULT_STORAGE_PORT: u16 = 5000;
-/// Default HTTPS port
+
+/// Default HTTPS port (standard, may keep)
 pub const DEFAULT_HTTPS_PORT: u16 = 8443;
 
 // ==================== TIMEOUTS ====================
+// NOTE: Timeout constants have been consolidated to canonical::timeouts module
+// Use: nestgate_core::constants::canonical::timeouts::DEFAULT_TIMEOUT_SECS
 
 /// Default operation timeout in seconds
+#[deprecated(since = "0.2.0", note = "Use nestgate_core::constants::canonical::timeouts::DEFAULT_TIMEOUT_SECS")]
 pub const DEFAULT_TIMEOUT_SECS: u64 = 30;
+
 /// Connection establishment timeout in seconds
+#[deprecated(since = "0.2.0", note = "Use nestgate_core::constants::canonical::timeouts::CONNECTION_TIMEOUT_SECS")]
 pub const CONNECTION_TIMEOUT_SECS: u64 = 10;
+
 /// HTTP request timeout in seconds
+#[deprecated(since = "0.2.0", note = "Use nestgate_core::constants::canonical::timeouts::REQUEST_TIMEOUT_MS (30000ms)")]
 pub const REQUEST_TIMEOUT_SECS: u64 = 30;
-/// Keep-alive connection timeout in seconds
+
+/// Keep-alive connection timeout in seconds (domain-specific, may keep)
 pub const KEEP_ALIVE_TIMEOUT_SECS: u64 = 75;
 
 // ==================== CONNECTION LIMITS ====================

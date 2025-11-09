@@ -4,7 +4,7 @@ use crate::universal_adapter::{PrimalAgnosticAdapter, CapabilityCategory, Capabi
 #[cfg(test)]
 mod tests {
     use super::super::client::{UniversalSecurityClient, UniversalSecurityError, UniversalSecurityCapability};
-    use crate::config::canonical_master::NestGateCanonicalConfig;
+    use crate::config::canonical_primary::NestGateCanonicalConfig;
     use crate::service_discovery::config::UnifiedSecurityConfig;
     use crate::canonical_types::SecurityServiceNode;
     use std::sync::Arc;

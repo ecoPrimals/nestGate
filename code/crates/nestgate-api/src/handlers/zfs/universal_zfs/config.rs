@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
 // Export canonical types as primary API
-pub use nestgate_core::config::canonical_master::{
+pub use nestgate_core::config::canonical_primary::{
     ZfsBackendConfig, ZfsFailSafeConfig, ZfsHandlerConfig, ZfsObservabilityConfig,
     ZfsPerformanceConfig, ZfsSecurityConfig,
 };
@@ -29,7 +29,7 @@ pub fn default_zfs_config() -> ZfsHandlerConfig {
 }
 /// Create ZFS configuration from environment using canonical system
 pub fn zfs_config_from_env() -> ZfsHandlerConfig {
-    use nestgate_core::config::canonical_master::handler_config::CanonicalHandlerConfigs;
+    use nestgate_core::config::canonical_primary::handler_config::CanonicalHandlerConfigs;
     // Use specific default for handlers since the full config may be complex
     let handlers_config = CanonicalHandlerConfigs::default();
     handlers_config.zfs

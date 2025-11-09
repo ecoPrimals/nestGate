@@ -18,11 +18,12 @@ pub struct ZeroCopyFilesystemBackend {
 
 impl ZeroCopyFilesystemBackend {
     /// Create a new zero-copy filesystem backend
+    #[allow(clippy::expect_used)] // Constant 1000 is non-zero
     pub fn new(base_path: impl Into<std::path::PathBuf>) -> Self {
         Self {
             base_path: base_path.into(),
             mmap_cache: Arc::new(tokio::sync::RwLock::new(
-                lru::LruCache::new(std::num::NonZeroUsize::new(1000).expect("Storage operation failed"))
+                lru::LruCache::new(std::num::NonZeroUsize::new(1000).expect("BUG: 1000 is non-zero"))
             )),
         }
     }
@@ -199,36 +200,39 @@ impl CanonicalStorageBackend for ZeroCopyMemoryBackend {
 }
 
 impl ZeroCopyStorage for ZeroCopyMemoryBackend {
-    fn write_zero_copy_data(&self, key: &str, data: &[u8]) -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>> {
+    /// **MODERNIZED**: Native async eliminates Pin<Box<>> overhead
+    fn write_zero_copy_data(&self, key: &str, data: &[u8]) -> impl Future<Output = Result<()>> + Send + '_ {
         let data = Bytes::copy_from_slice(data);
         let key = key.to_string();
         let storage = Arc::clone(&self.data);
         
-        Box::pin(async move {
+        async move {
             let mut guard = storage.write().await;
             guard.insert(key, data);
             Ok(())
-        })
+        }
     }
 
-    fn read_zero_copy_data(&self, key: &str) -> Pin<Box<dyn Future<Output = Result<Bytes>> + Send + '_>> {
+    /// **MODERNIZED**: Direct async method, zero heap allocation
+    fn read_zero_copy_data(&self, key: &str) -> impl Future<Output = Result<Bytes>> + Send + '_ {
         let key = key.to_string();
         let storage = Arc::clone(&self.data);
         
-        Box::pin(async move {
+        async move {
             let guard = storage.read().await;
             match guard.get(&key) {
                 Some(data) => Ok(data.clone()),
                 None => Err(NestGateError::storage_error(&format!("Key not found: {key}"))),
             }
-        })
+        }
     }
 
-    fn stream_zero_copy_data(&self, key: &str, chunk_size: usize) -> Pin<Box<dyn Future<Output = Result<Vec<Bytes>>> + Send + '_>> {
+    /// **MODERNIZED**: Native async streaming, compile-time optimization
+    fn stream_zero_copy_data(&self, key: &str, chunk_size: usize) -> impl Future<Output = Result<Vec<Bytes>>> + Send + '_ {
         let key = key.to_string();
         let storage = Arc::clone(&self.data);
         
-        Box::pin(async move {
+        async move {
             let guard = storage.read().await;
             match guard.get(&key) {
                 Some(data) => {
@@ -240,6 +244,6 @@ impl ZeroCopyStorage for ZeroCopyMemoryBackend {
                 }
                 None => Err(NestGateError::storage_error(&format!("Key not found: {key}"))),
             }
-        })
+        }
     }
 } 

@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 //
 // **⚠️ EXPERIMENTAL MODULE - NOT FOR PRODUCTION USE**
 //
@@ -7,6 +6,8 @@ use std::collections::HashMap;
 //
 // To enable: `cargo build --features "experimental-zero-cost"`
 
+#[cfg(debug_assertions)]
+use std::collections::HashMap;
 use std::marker::PhantomData;
 use std::mem::MaybeUninit;
 
@@ -51,7 +52,7 @@ impl ZeroCostConfig for ProductionConfig {
         crate::constants::canonical_defaults::performance::NETWORK_BUFFER_SIZE;
     const MAX_CONNECTIONS: usize =
         crate::constants::canonical_defaults::performance::MAX_CONNECTIONS;
-    const TIMEOUT_MS: u64 = crate::constants::canonical_defaults::timeouts::DEFAULT_TIMEOUT_MS;
+    const TIMEOUT_MS: u64 = crate::constants::canonical::timeouts::DEFAULT_TIMEOUT_MS;
     const DEBUG: bool = false;
 }
 
@@ -62,7 +63,7 @@ impl ZeroCostConfig for DevelopmentConfig {
         crate::constants::canonical_defaults::performance::DEFAULT_BUFFER_SIZE;
     const MAX_CONNECTIONS: usize =
         crate::constants::canonical_defaults::performance::MAX_CONNECTIONS;
-    const TIMEOUT_MS: u64 = crate::constants::canonical_defaults::timeouts::DEFAULT_TIMEOUT_MS;
+    const TIMEOUT_MS: u64 = crate::constants::canonical::timeouts::DEFAULT_TIMEOUT_MS;
     const DEBUG: bool = true;
 }
 
@@ -462,7 +463,7 @@ mod tests {
         // All these are compile-time constants
         assert_eq!(ZeroCostService::<ProductionConfig>::buffer_size(), 8192);
         assert_eq!(ZeroCostService::<ProductionConfig>::max_connections(), 1000);
-        assert_eq!(ZeroCostService::<ProductionConfig>::timeout_ms(), 5000);
+        assert_eq!(ZeroCostService::<ProductionConfig>::timeout_ms(), 30000); // Updated: canonical value (was 5000)
         assert!(!ZeroCostService::<ProductionConfig>::is_debug());
 
         // Test data processing

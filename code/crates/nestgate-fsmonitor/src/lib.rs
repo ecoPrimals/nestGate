@@ -4,7 +4,7 @@
 //! scattered FSMonitor-specific configuration structures.
 
 // Re-export from canonical configuration system
-pub use nestgate_core::config::canonical_master::{FsMonitorConfig, NestGateCanonicalConfig};
+pub use nestgate_core::config::canonical_primary::{FsMonitorConfig, NestGateCanonicalConfig};
 
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -123,7 +123,7 @@ impl FsMonitor {
 // Use the canonical configuration system instead:
 //
 // ```rust
-// use nestgate_core::config::canonical_master::{NestGateCanonicalConfig, FsMonitorConfig};
+// use nestgate_core::config::canonical_primary::{NestGateCanonicalConfig, FsMonitorConfig};
 //
 // let config = NestGateCanonicalConfig::default();
 // let fsmonitor_config = config.services.fsmonitor;

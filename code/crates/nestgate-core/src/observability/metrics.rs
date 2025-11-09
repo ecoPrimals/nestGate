@@ -7,6 +7,19 @@ use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 use tokio::sync::RwLock;
 
+/// Metric value types for custom metrics
+#[derive(Debug, Clone)]
+pub enum MetricValue {
+    Gauge(f64),
+    Counter(u64),
+    Histogram(Vec<f64>),
+    Summary { sum: f64, count: u64 },
+    String(String),
+}
+
+/// Type alias for custom metrics storage
+pub type CustomMetricsMap = HashMap<String, MetricValue>;
+
 /// Performance metrics structure
 #[derive(Debug, Clone)]
 pub struct PerformanceMetrics {
@@ -44,7 +57,7 @@ impl Default for PerformanceMetrics {
 pub struct MetricsRegistry {
     metrics_history: Arc<RwLock<Vec<PerformanceMetrics>>>,
     max_history: usize,
-    custom_metrics: Arc<RwLock<crate::canonical_modernization::unified_types::CustomMetricsMap>>,
+    custom_metrics: Arc<RwLock<CustomMetricsMap>>,
 }
 impl Default for MetricsRegistry {
     fn default() -> Self {
@@ -109,7 +122,7 @@ impl MetricsRegistry {
         let mut custom = self.custom_metrics.write().await;
         custom.insert(
             name.to_string(),
-            crate::canonical_modernization::unified_types::MetricValue::Gauge(value),
+            MetricValue::Gauge(value),
         );
 
         tracing::debug!("Recorded custom metric: {} = {}", name, value);
@@ -152,11 +165,11 @@ impl MetricsRegistry {
             network_bytes_per_sec: 1024.0 * 1024.0, // Mock 1MB/s
             custom_metrics: custom.iter().map(|(k, v)| {
                 (k.clone(), match v {
-                    crate::canonical_modernization::unified_types::MetricValue::Gauge(val) => *val,
-                    crate::canonical_modernization::unified_types::MetricValue::Counter(val) => *val as f64,
-                    crate::canonical_modernization::unified_types::MetricValue::Histogram(val) => val.iter().sum::<f64>() / (val.len() as f64),
-                    crate::canonical_modernization::unified_types::MetricValue::Summary { sum, count: _ } => *sum,
-                    crate::canonical_modernization::unified_types::MetricValue::String(_) => 0.0,
+                    MetricValue::Gauge(val) => *val,
+                    MetricValue::Counter(val) => *val as f64,
+                    MetricValue::Histogram(val) => val.iter().sum::<f64>() / (val.len() as f64),
+                    MetricValue::Summary { sum, count: _ } => *sum,
+                    MetricValue::String(_) => 0.0,
                 })
             }).collect(),
         })

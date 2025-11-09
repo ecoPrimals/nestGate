@@ -1,5 +1,5 @@
 // Removed unused import for pedantic perfection
-use crate::config::canonical_master::NestGateCanonicalConfig;
+use crate::config::canonical_primary::NestGateCanonicalConfig;
 use crate::Result;
 /// Certificate Validator
 /// Unified certificate validation for the `NestGate` ecosystem

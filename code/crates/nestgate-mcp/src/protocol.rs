@@ -2,7 +2,7 @@
 // Advanced MCP protocol handling integrating enhanced NestGate capabilities
 // with v2 orchestrator-centric architecture
 
-use nestgate_core::error::{IdioResult, NestGateError};
+use nestgate_core::error::NestGateError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use thiserror::Error;

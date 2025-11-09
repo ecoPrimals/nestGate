@@ -78,7 +78,7 @@ impl IntoResponse for ApiError {
                 e.to_string(),
             ),
             Self::Io(e) => (StatusCode::INTERNAL_SERVER_ERROR, "IO_ERROR", e.to_string()),
-            Self::Json(e) => (
+            Self::Json(_e) => (
                 StatusCode::BAD_REQUEST,
                 "JSON_ERROR",
                 "Invalid JSON: self.base_url".to_string(),
