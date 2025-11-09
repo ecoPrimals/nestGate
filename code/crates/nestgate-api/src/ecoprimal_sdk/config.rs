@@ -25,8 +25,8 @@ pub struct PrimalConfig {
     pub environment: HashMap<String, String>,
 }
 /// Network configuration
-/// **⚠️ DEPRECATED**: Use `CanonicalNetworkConfig` from `nestgate_core::config::canonical_master::domains::network`
-#[deprecated(since = "0.9.0", note = "Use nestgate_core::config::canonical_master::domains::network::CanonicalNetworkConfig instead")]
+/// **⚠️ DEPRECATED**: Use `CanonicalNetworkConfig` from `nestgate_core::config::canonical_primary::domains::network`
+#[deprecated(since = "0.9.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkConfig {
     /// Bind address

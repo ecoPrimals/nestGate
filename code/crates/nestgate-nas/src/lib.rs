@@ -4,7 +4,7 @@
 //! scattered NAS-specific configuration structures.
 
 // Re-export from canonical configuration system
-pub use nestgate_core::config::canonical_master::{NasConfig, NestGateCanonicalConfig};
+pub use nestgate_core::config::canonical_primary::{NasConfig, NestGateCanonicalConfig};
 
 use serde::{Deserialize, Serialize};
 
@@ -88,7 +88,7 @@ pub enum NasError {
 // Use the canonical configuration system instead:
 //
 // ```rust
-// use nestgate_core::config::canonical_master::{NestGateCanonicalConfig, NasConfig};
+// use nestgate_core::config::canonical_primary::{NestGateCanonicalConfig, NasConfig};
 //
 // let config = NestGateCanonicalConfig::default();
 // let nas_config = config.services.nas;
@@ -390,7 +390,7 @@ mod tests {
 
     #[test]
     fn test_error_variants_distinct() {
-        let errors = vec![
+        let errors = [
             NasError::Configuration("msg".to_string()),
             NasError::Network("msg".to_string()),
             NasError::Storage("msg".to_string()),
@@ -406,7 +406,7 @@ mod tests {
 
     #[test]
     fn test_status_variants_distinct() {
-        let statuses = vec![
+        let statuses = [
             NasStatus::Running,
             NasStatus::Stopped,
             NasStatus::Error("msg".to_string()),

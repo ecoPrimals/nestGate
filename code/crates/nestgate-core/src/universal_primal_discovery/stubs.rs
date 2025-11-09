@@ -7,7 +7,7 @@ use crate::Result;
 // **MIGRATED**: Using canonical config system instead of deprecated unified_types
 use crate::capabilities::discovery::DiscoveryManager;
 #[allow(deprecated)]
-use crate::config::canonical_master::{
+use crate::config::canonical_primary::{
     domains::network::CanonicalNetworkConfig as UnifiedNetworkConfig, NestGateCanonicalConfig,
 };
 use crate::universal_adapter::stats::AdapterStats;
@@ -88,10 +88,10 @@ pub fn get_fallback_port(service_name: &str) -> u16 {
     }
 }
 /// Network configuration adapter for universal discovery
-/// **⚠️ DEPRECATED**: Use `CanonicalNetworkConfig` from `canonical_master::domains::network`
+/// **⚠️ DEPRECATED**: Use `CanonicalNetworkConfig` from `canonical_primary::domains::network`
 #[deprecated(
     since = "0.9.0",
-    note = "Use canonical_master::domains::network::CanonicalNetworkConfig instead"
+    note = "Use canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
 #[allow(deprecated)]
 pub struct NetworkConfigAdapter {
@@ -113,7 +113,7 @@ impl NetworkConfigAdapter {
             ..Default::default()
         };
 
-        let config = crate::config::canonical_master::NestGateCanonicalConfig {
+        let config = crate::config::canonical_primary::NestGateCanonicalConfig {
             network: network_config,
             ..Default::default()
         };
@@ -183,7 +183,7 @@ impl StandaloneNetworkAdapter {
     }
 }
 
-/// **DEPRECATED**: Use `UnifiedNetworkConfig` from `crate::config::canonical_master` instead
+/// **DEPRECATED**: Use `UnifiedNetworkConfig` from `crate::config::canonical_primary` instead
 /// `UnifiedNetworkConfig` helper methods
 #[allow(deprecated)] // Helper methods for deprecated type during migration
 impl UnifiedNetworkConfig {

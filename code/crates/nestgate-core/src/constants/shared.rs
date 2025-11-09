@@ -6,20 +6,14 @@
 /// Module version for compatibility tracking across the codebase
 pub const MODULE_VERSION: &str = "0.6.0";
 
-/// Default timeout in milliseconds for network operations
-pub const DEFAULT_TIMEOUT_MS: u64 = 30_000;
-
-/// Default buffer size in bytes for I/O operations
-pub const DEFAULT_BUFFER_SIZE: usize = 8192;
-
 /// Default maximum number of concurrent connections
 pub const DEFAULT_MAX_CONNECTIONS: usize = 1000;
 
-/// Default retry attempts for failed operations
-pub const DEFAULT_RETRY_ATTEMPTS: u32 = 3;
-
-/// Default backoff multiplier for exponential backoff (milliseconds)
-pub const DEFAULT_BACKOFF_MS: u64 = 1000;
+// NOTE: Following constants moved to canonical.rs for consolidation:
+// - DEFAULT_TIMEOUT_MS → canonical::timeouts::DEFAULT_TIMEOUT_MS (30,000 ms)
+// - DEFAULT_RETRY_ATTEMPTS → canonical::timeouts::DEFAULT_RETRY_ATTEMPTS (3)
+// - DEFAULT_BACKOFF_MS → canonical::timeouts::DEFAULT_RETRY_DELAY_MS (1,000 ms)
+// - DEFAULT_BUFFER_SIZE → See network::NETWORK_BUFFER_SIZE or canonical_defaults::sizes::DEFAULT_BUFFER_SIZE
 
 /// Default health check interval in seconds
 pub const DEFAULT_HEALTH_CHECK_INTERVAL_SECS: u64 = 30;
@@ -37,8 +31,11 @@ mod tests {
     #[test]
     fn test_shared_constants() {
         assert_eq!(MODULE_VERSION, "0.6.0");
-        assert_eq!(DEFAULT_TIMEOUT_MS, 30_000);
-        assert_eq!(DEFAULT_BUFFER_SIZE, 8192);
         assert_eq!(DEFAULT_MAX_CONNECTIONS, 1000);
+        // Migrated constants (now in canonical.rs):
+        // - DEFAULT_TIMEOUT_MS → canonical::timeouts::DEFAULT_TIMEOUT_MS
+        // - DEFAULT_RETRY_ATTEMPTS → canonical::timeouts::DEFAULT_RETRY_ATTEMPTS
+        // - DEFAULT_BACKOFF_MS → canonical::timeouts::DEFAULT_RETRY_DELAY_MS
+        // - DEFAULT_BUFFER_SIZE → network::NETWORK_BUFFER_SIZE or canonical_defaults::sizes::DEFAULT_BUFFER_SIZE
     }
 }

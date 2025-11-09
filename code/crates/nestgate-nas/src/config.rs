@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::time::Duration;
-use nestgate_core::unified_final_config::supporting_types::StandardDomainConfig;
+use nestgate_core::config::canonical_primary::domains::ConsolidatedDomainConfigs;
 
 /// User access levels for NAS shares
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]

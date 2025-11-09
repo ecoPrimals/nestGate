@@ -29,8 +29,8 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use uuid::Uuid;
 // **MIGRATED**: Using canonical config instead of deprecated unified_types
-use crate::config::canonical_master::NestGateCanonicalConfig;
-use crate::config::canonical_master::SecurityConfig as UnifiedSecurityConfig;
+use crate::config::canonical_primary::NestGateCanonicalConfig;
+use crate::config::canonical_primary::SecurityConfig as UnifiedSecurityConfig;
 use std::time::Duration;
 
 /// Universal Security Capability definition

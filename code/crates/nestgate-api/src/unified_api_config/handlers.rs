@@ -15,7 +15,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
-use nestgate_core::unified_final_config::supporting_types::StandardDomainConfig;
+use nestgate_core::config::canonical_primary::domains::ConsolidatedDomainConfigs;
 use nestgate_core::types::StorageTier;
 
 // ==================== SECTION ====================
@@ -23,7 +23,8 @@ use nestgate_core::types::StorageTier;
 /// **THE** unified configuration type for all API handlers
 /// This replaces 20+ scattered config structs across handlers with a single, consistent interface
 /// CANONICAL MODERNIZATION: Simplified type alias without type parameters
-pub type UnifiedApiHandlerConfig = StandardDomainConfig;
+/// Migrated from unified_final_config to canonical_primary (Nov 8, 2025)
+pub type UnifiedApiHandlerConfig = ConsolidatedDomainConfigs;
 /// API handler-specific configuration extensions
 /// Domain-specific fields that don't belong in unified base configs
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]

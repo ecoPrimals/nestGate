@@ -4,6 +4,9 @@
 use serde::{Deserialize, Serialize};
 use std::fmt::{self, Display};
 
+#[cfg(test)]
+mod types_tests;
+
 /// Allocation status for resources
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum AllocationStatus {

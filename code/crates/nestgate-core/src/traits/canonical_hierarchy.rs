@@ -119,17 +119,15 @@ pub trait CanonicalService: Send + Sync + 'static {
     /// configuration updates are supported. If not supported, don't implement.
     fn update_config(
         &mut self,
-        config: Self::Config,
+        _config: Self::Config,
     ) -> impl Future<Output = Result<(), Self::Error>> + Send
     where
         Self: Sized,
     {
         async move {
-            // Default: Drop the config to avoid "must use" warnings
-            let _ = config;
-            // This default implementation will not be called in practice
-            // as implementations should override this method
-            unreachable!("update_config not implemented - this service does not support dynamic configuration updates")
+            // Default: Not supported
+            // Implementations should override this method to support dynamic configuration
+            panic!("update_config not implemented - this service does not support dynamic configuration updates")
         }
     }
 
@@ -333,9 +331,10 @@ pub trait CanonicalStorage: CanonicalService {
         &self,
         keys: &[Self::Key],
     ) -> impl Future<Output = Result<Vec<Option<Self::Value>>, Self::Error>> + Send {
-        async {
+        let keys = keys.to_vec();  // Clone to avoid borrowing issues
+        async move {
             let mut results = Vec::with_capacity(keys.len());
-            for key in keys {
+            for key in &keys {
                 results.push(self.read(key).await?);
             }
             Ok(results)
@@ -400,7 +399,7 @@ pub trait CanonicalStorage: CanonicalService {
         to: Self::Key,
     ) -> impl Future<Output = Result<(), Self::Error>> + Send {
         async {
-            self.copy(from, &to).await?;
+            self.copy(from, to).await?;
             self.delete(from).await?;
             Ok(())
         }
@@ -613,8 +612,7 @@ pub trait CanonicalSecurity: CanonicalService {
     {
         async {
             // Default: not supported - implementations must override
-            // We use unreachable here as a placeholder since we can't construct Self::Error generically
-            unimplemented!("hash_data not implemented - override this method to provide hashing")
+            panic!("hash_data not implemented - override this method to provide hashing")
         }
     }
 
@@ -628,17 +626,17 @@ pub trait CanonicalSecurity: CanonicalService {
     {
         async {
             // Default: not supported - implementations must override
-            unimplemented!("generate_random not implemented - override this method to provide random generation")
+            panic!("generate_random not implemented - override this method to provide random generation")
         }
     }
 
-    /// Derive key from master key (optional)
+    /// Derive key from primary key (optional)
     /// 
     /// Default implementation returns "not supported" error.
     /// Override to provide key derivation capabilities.
     fn derive_key(
         &self,
-        _master_key: &[u8],
+        _primary_key: &[u8],
         _salt: &[u8],
         _info: &[u8],
     ) -> impl Future<Output = Result<Vec<u8>, Self::Error>> + Send
@@ -647,7 +645,7 @@ pub trait CanonicalSecurity: CanonicalService {
     {
         async {
             // Default: not supported - implementations must override
-            unimplemented!("derive_key not implemented - override this method to provide key derivation")
+            panic!("derive_key not implemented - override this method to provide key derivation")
         }
     }
 

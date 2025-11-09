@@ -178,10 +178,10 @@ pub struct CanonicalConfig {
     pub performance: PerformanceConfig,
 }
 /// Canonical Network Configuration,
-/// **⚠️ DEPRECATED**: Use `CanonicalNetworkConfig` from `nestgate_core::config::canonical_master::domains::network`
+/// **⚠️ DEPRECATED**: Use `CanonicalNetworkConfig` from `nestgate_core::config::canonical_primary::domains::network`
 #[deprecated(
     since = "0.9.0",
-    note = "Use nestgate_core::config::canonical_master::domains::network::CanonicalNetworkConfig instead"
+    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkConfig {

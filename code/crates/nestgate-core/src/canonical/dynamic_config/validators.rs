@@ -1,6 +1,6 @@
 
 use super::types::*;
-use crate::config::canonical_master::{NestGateCanonicalConfig as CanonicalConfig};
+use crate::config::canonical_primary::{NestGateCanonicalConfig as CanonicalConfig};
 use crate::error::CanonicalResult as Result;
 
 /// Storage configuration validator

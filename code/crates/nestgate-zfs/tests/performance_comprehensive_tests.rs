@@ -115,24 +115,11 @@ mod test_utils {
             impact_score: 0.8,
         }
     }
-
-    pub fn create_test_workload_pattern() -> WorkloadPattern {
-        let mut io_size_distribution = HashMap::new();
-        io_size_distribution.insert("small".to_string(), 0.3);
-        io_size_distribution.insert("medium".to_string(), 0.5);
-        io_size_distribution.insert("large".to_string(), 0.2);
-
-        WorkloadPattern {
-            access_pattern: AccessPattern::Random,
-            io_size_distribution,
-            read_write_ratio: 0.7,
-            temporal_locality: 0.6,
-        }
-    }
 }
 
 #[cfg(test)]
 mod performance_metrics_tests {
+    use super::test_utils::*;
     use super::*;
 
     #[test]
@@ -170,6 +157,8 @@ mod performance_metrics_tests {
 
 #[cfg(test)]
 mod bottleneck_detection_tests {
+    use super::test_utils::*;
+    use super::*;
 
     #[test]
     fn test_bottleneck_creation() -> Result<(), Box<dyn std::error::Error>> {
@@ -216,6 +205,8 @@ mod bottleneck_detection_tests {
 
 #[cfg(test)]
 mod optimization_tests {
+    use super::test_utils::*;
+    use super::*;
 
     #[test]
     fn test_applied_optimization_creation() -> Result<(), Box<dyn std::error::Error>> {
@@ -251,18 +242,18 @@ mod optimization_tests {
         assert_eq!(result.performance_improvement, 30.0);
         assert_eq!(result.bottlenecks_resolved.len(), 1);
         assert_eq!(result.recommendations.len(), 1);
+        Ok(())
     }
 
     #[test]
     fn test_optimization_result_merge() -> Result<(), Box<dyn std::error::Error>> {
         let mut result1 = PerformanceOptimizationResult {
             applied_optimizations: vec![AppliedOptimization {
-                    optimization_type: OptimizationType::CacheOptimization,
-                    description: "Cache optimization".to_string(),
-                    performance_impact: 0.2,
-                    applied_at: SystemTime::now(),
-            Ok(())
-                }],
+                optimization_type: OptimizationType::CacheOptimization,
+                description: "Cache optimization".to_string(),
+                performance_impact: 0.2,
+                applied_at: SystemTime::now(),
+            }],
             performance_improvement: 20.0,
             bottlenecks_resolved: vec![create_test_bottleneck(BottleneckSeverity::Low)],
             recommendations: vec!["First recommendation".to_string()],
@@ -286,6 +277,7 @@ mod optimization_tests {
         assert_eq!(result1.performance_improvement, 35.0);
         assert_eq!(result1.bottlenecks_resolved.len(), 2);
         assert_eq!(result1.recommendations.len(), 2);
+        Ok(())
     }
 
     #[test]
@@ -307,6 +299,8 @@ mod optimization_tests {
 
 #[cfg(test)]
 mod alert_handling_tests {
+    use super::test_utils::*;
+    use super::*;
 
     #[test]
     fn test_performance_alert_creation() -> Result<(), Box<dyn std::error::Error>> {
@@ -330,12 +324,11 @@ mod alert_handling_tests {
     fn test_alert_response_creation() -> Result<(), Box<dyn std::error::Error>> {
         let optimization_result = PerformanceOptimizationResult {
             applied_optimizations: vec![AppliedOptimization {
-                    optimization_type: OptimizationType::CacheOptimization,
-                    description: "Applied cache optimization".to_string(),
-                    performance_impact: 0.25,
-                    applied_at: SystemTime::now(),
-            Ok(())
-                }],
+                optimization_type: OptimizationType::CacheOptimization,
+                description: "Applied cache optimization".to_string(),
+                performance_impact: 0.25,
+                applied_at: SystemTime::now(),
+            }],
             performance_improvement: 25.0,
             bottlenecks_resolved: vec![],
             recommendations: vec!["Monitor cache hit ratio".to_string()],
@@ -350,6 +343,7 @@ mod alert_handling_tests {
         assert!(response.mitigation_applied);
         assert!(response.optimization_result.is_some());
         assert!(!response.follow_up_required);
+        Ok(())
     }
 
     #[test]
@@ -381,6 +375,8 @@ mod alert_handling_tests {
 
 #[cfg(test)]
 mod tuning_tests {
+    use super::test_utils::*;
+    use super::*;
 
     #[test]
     fn test_tuning_recommendation_creation() -> Result<(), Box<dyn std::error::Error>> {
@@ -426,7 +422,6 @@ mod tuning_tests {
                 recommendedvalue: "1M".to_string(),
                 confidence: 0.90,
                 expected_impact: 0.35,
-        Ok(())
             },
             ZfsTuningRecommendation {
                 parameter: "compression".to_string(),
@@ -466,12 +461,14 @@ mod tuning_tests {
                 )
             })?;
         assert_eq!(compression_rec.recommendedvalue, "zstd");
+        Ok(())
     }
 }
 
 #[cfg(test)]
 mod configuration_tests {
     use super::test_utils::*;
+    use super::*;
 
     #[test]
     fn test_workload_pattern_creation() -> Result<(), Box<dyn std::error::Error>> {
@@ -514,6 +511,8 @@ mod configuration_tests {
 
 #[cfg(test)]
 mod integration_tests {
+    use super::test_utils::*;
+    use super::*;
 
     #[test]
     fn test_comprehensive_performance_scenario() -> Result<(), Box<dyn std::error::Error>> {
@@ -530,7 +529,6 @@ mod integration_tests {
                 dataset_name: Some("testpool/data".to_string()),
                 description: "Low cache hit ratio".to_string(),
                 impact_score: 0.6,
-        Ok(())
             },
         ];
 
@@ -576,6 +574,7 @@ mod integration_tests {
 
         assert!(alert_response.mitigation_applied);
         assert!(alert_response.optimization_result.is_some());
+        Ok(())
     }
 
     #[test]
@@ -590,7 +589,6 @@ mod integration_tests {
                 recommendedvalue: "1M".to_string(),
                 confidence: 0.90,
                 expected_impact: 0.40,
-        Ok(())
             },
             ZfsTuningRecommendation {
                 parameter: "compression".to_string(),
@@ -618,5 +616,6 @@ mod integration_tests {
         assert_eq!(tuning_result.parameter_changes.len(), 2);
         assert_eq!(tuning_result.expected_improvement, 65.0);
         assert!(tuning_result.validation_required);
+        Ok(())
     }
 }

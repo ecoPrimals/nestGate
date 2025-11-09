@@ -178,10 +178,11 @@ pub async fn detect_storage_backend() -> BackendCapabilities {
     let backends = detect_all_backends().await;
 
     // Select backend with highest score
+    #[allow(clippy::expect_used)] // Filesystem backend always available
     backends
         .into_iter()
         .max_by_key(|b| b.score())
-        .expect("At least one backend should be available")
+        .expect("BUG: At least filesystem backend should always be available")
 }
 
 /// Check if a specific path is on ZFS
@@ -248,10 +249,11 @@ pub async fn get_backend_report() -> String {
     }
 
     // Select best backend
+    #[allow(clippy::expect_used)] // Filesystem backend always available
     let selected = backends
         .iter()
         .max_by_key(|b| b.score())
-        .expect("At least one backend");
+        .expect("BUG: At least filesystem backend should always be available");
 
     report.push_str(&format!("Recommended: {}\n", selected.backend_type.name()));
 

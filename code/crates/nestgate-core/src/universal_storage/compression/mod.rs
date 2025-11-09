@@ -31,6 +31,9 @@
 use std::io::{Read, Write};
 use thiserror::Error;
 
+// Use canonical Result type from error module
+use crate::error::Result;
+
 /// Compression-related errors
 #[derive(Debug, Error)]
 pub enum CompressionError {
@@ -51,8 +54,8 @@ pub enum CompressionError {
     IoError(#[from] std::io::Error),
 }
 
-/// Result type for compression operations
-pub type Result<T> = std::result::Result<T, CompressionError>;
+// Note: Now using crate::error::Result<T> instead of local Result type
+// CompressionError is converted to NestGateError via From trait when needed
 
 /// Compression algorithms supported by NestGate
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]

@@ -748,9 +748,14 @@ pub mod benchmarks {
         // Establish connection
         let test_endpoint = std::env::var("NESTGATE_TEST_ENDPOINT")
             .unwrap_or_else(|_| "127.0.0.1:8080".to_string());
+        #[allow(clippy::expect_used)] // Test endpoint parsing for benchmark
         let connection_id = interface
-            .connect(test_endpoint.parse().expect("Network operation failed"))
-            .expect("Network operation failed");
+            .connect(
+                test_endpoint
+                    .parse()
+                    .expect("BUG: Test endpoint must be valid socket address"),
+            )
+            .expect("BUG: Benchmark connection must succeed");
 
         // Benchmark zero-copy send
         let start = Instant::now();

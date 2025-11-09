@@ -1,19 +1,11 @@
-use std::collections::HashMap;
-use std::sync::Arc;
-use std::time::Duration;
-use serde::{Deserialize, Serialize};
-use crate::error::{NestGateError, NestGateUnifiedError, Result};
-
 //! Modern async_migration_system Module
 //! 
 //! This module provides core functionality using modern Rust patterns
 //! and zero-cost abstractions.
 
-use std::time::Duration;
 use std::sync::Arc;
-use std::collections::HashMap;
+use std::time::Duration;
 use serde::{Deserialize, Serialize};
-
 use crate::error::{NestGateError, Result};
 
 // ==================== MODULE CONSTANTS ====================
@@ -21,40 +13,39 @@ use crate::error::{NestGateError, Result};
 /// Module version - moved to constants::shared
 pub use crate::constants::shared::MODULE_VERSION;
 
-/// Default configuration values - moved to constants::shared
+/// Default configuration values
 pub mod defaults {
-    
-    
-    pub use crate::constants::shared::{
-        DEFAULT_TIMEOUT_MS, DEFAULT_BUFFER_SIZE, DEFAULT_MAX_CONNECTIONS
-    };
+    // Constants from consolidated locations
+    pub use crate::constants::canonical::timeouts::DEFAULT_TIMEOUT_MS;
+    pub use crate::constants::network::DEFAULT_BUFFER_SIZE;
+    pub use crate::constants::shared::DEFAULT_MAX_CONNECTIONS;
 }
 
 // ==================== CORE TYPES ====================
 
 /// Configuration for this module
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Config {
+pub struct TraitsAsyncMigrationSystemConfig {
     pub enabled: bool,
     pub timeout: Duration,
     pub max_connections: usize,
     pub buffer_size: usize,
 }
 
-impl Default for Config {
+impl Default for TraitsAsyncMigrationSystemConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            timeout: Duration::from_millis(DEFAULT_TIMEOUT_MS),
-            max_connections: DEFAULT_MAX_CONNECTIONS,
-            buffer_size: DEFAULT_BUFFER_SIZE,
+            timeout: Duration::from_millis(defaults::DEFAULT_TIMEOUT_MS),
+            max_connections: defaults::DEFAULT_MAX_CONNECTIONS,
+            buffer_size: defaults::DEFAULT_BUFFER_SIZE,
         }
     }
 }
 
 /// Service interface re-exported from canonical source
-/// See: `crate::traits_root::service::Service` for the unified implementation
-pub use crate::traits_root::service::Service;
+/// See: `crate::traits::Service` for the unified implementation
+pub use crate::traits::Service;
 
 /// Health status enumeration
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -89,13 +80,13 @@ impl Default for Metrics {
 /// Default implementation of the service
 #[derive(Debug)]
 pub struct DefaultService {
-    config: Config,
+    config: TraitsAsyncMigrationSystemConfig,
     metrics: Arc<tokio::sync::RwLock<Metrics>>,
 }
 
 impl DefaultService {
     /// Create a new service instance
-    pub fn new(config: Config) -> Self {
+    pub fn new(config: TraitsAsyncMigrationSystemConfig) -> Self {
         Self {
             config,
             metrics: Arc::new(tokio::sync::RwLock::new(Metrics::default())),
@@ -109,22 +100,42 @@ impl DefaultService {
 }
 
 impl Service for DefaultService {
-    fn initialize(&self) -> impl std::future::Future<Output = Result<()>> + Send {
-        // Initialization implementation
-        tracing::info!("Initializing {} service with config: {:?}", 
-                      stringify!(async_migration_system), config);
-        Ok(())
+    fn name(&self) -> &str {
+        "async_migration_system"
     }
     
-    fn health_check(&self) -> impl std::future::Future<Output = Result<HealthStatus>> + Send {
-        // Health check implementation
-        Ok(HealthStatus::Healthy)
+    fn start(&self) -> impl std::future::Future<Output = Result<()>> + Send {
+        async move {
+            tracing::info!("Starting {} service", self.name());
+            Ok(())
+        }
+    }
+    
+    fn stop(&self) -> impl std::future::Future<Output = Result<()>> + Send {
+        async move {
+            tracing::info!("Stopping {} service", self.name());
+            Ok(())
+        }
+    }
+    
+    fn initialize(&self) -> impl std::future::Future<Output = Result<()>> + Send {
+        async move {
+            tracing::info!("Initializing {} service", self.name());
+            Ok(())
+        }
+    }
+    
+    fn health_check(&self) -> impl std::future::Future<Output = Result<bool>> + Send {
+        async move {
+            Ok(true)
+        }
     }
     
     fn shutdown(&self) -> impl std::future::Future<Output = Result<()>> + Send {
-        // Shutdown implementation
-        tracing::info!("Shutting down {} service", stringify!(async_migration_system));
-        Ok(())
+        async move {
+            tracing::info!("Shutting down {} service", self.name());
+            Ok(())
+        }
     }
 }
 
@@ -132,11 +143,11 @@ impl Service for DefaultService {
 
 /// Create a default service instance
 pub fn create_service() -> DefaultService {
-    DefaultService::new(Config::default())
+    DefaultService::new(TraitsAsyncMigrationSystemConfig::default())
 }
 
 /// Validate configuration
-pub async fn validate_config(config: &Config) -> crate::Result<()> {
+pub async fn validate_config(config: &TraitsAsyncMigrationSystemConfig) -> crate::Result<()> {
     if config.max_connections == 0 {
         return Err(NestGateError::configuration_error(
             "traits_async_migration",
@@ -158,37 +169,38 @@ pub async fn validate_config(config: &Config) -> crate::Result<()> {
 
 #[cfg(test)]
 mod tests {
-    
+    use super::*;
 
     #[test]
     fn test_config_default() {
-        let config = Config::default();
+        let config = TraitsAsyncMigrationSystemConfig::default();
         assert!(config.enabled);
-        assert_eq!(config.max_connections, DEFAULT_MAX_CONNECTIONS);
+        assert_eq!(config.max_connections, defaults::DEFAULT_MAX_CONNECTIONS);
     }
 
-    #[test]
-    fn test_config_validation() {
+    #[tokio::test]
+    async fn test_config_validation() {
         let mut config = Config::default();
-        assert!(validate_config(&config).is_ok());
+        assert!(validate_config(&config).await.is_ok());
         
         config.max_connections = 0;
-        assert!(validate_config(&config).is_err());
+        assert!(validate_config(&config).await.is_err());
     }
 
     #[tokio::test]
     async fn test_service_creation() {
-        let service = create_service();
-        let config = Config::default();
+        let config = TraitsAsyncMigrationSystemConfig::default();
+        let service = DefaultService::new(config);
         
-        assert!(service.initialize(&config).await.is_ok());
-        assert_eq!(service.health_check().await.expect("Operation failed"), HealthStatus::Healthy);
+        assert!(service.initialize().await.is_ok());
+        assert_eq!(service.health_check().await.expect("Operation failed"), true);
         assert!(service.shutdown().await.is_ok());
     }
 
     #[tokio::test]
     async fn test_metrics() {
-        let service = create_service();
+        let config = TraitsAsyncMigrationSystemConfig::default();
+        let service = DefaultService::new(config);
         let metrics = service.get_metrics().await;
         
         assert_eq!(metrics.requests_processed, 0);

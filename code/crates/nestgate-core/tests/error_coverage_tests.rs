@@ -65,7 +65,12 @@ fn test_error_from_string() {
 #[test]
 fn test_result_ok() {
     let result: Result<i32> = Ok(42);
-    assert_eq!(result.expect("Test setup failed"), 42);
+    assert!(result.is_ok());
+    // Use pattern matching instead of unwrap_or for test clarity
+    match result {
+        Ok(value) => assert_eq!(value, 42),
+        Err(_) => panic!("Expected Ok, got Err"),
+    }
 }
 
 #[test]
@@ -196,9 +201,11 @@ fn test_and_then_pattern() {
 
 #[test]
 fn test_error_recovery_with_default() {
-    let result: Result<String> = Err(NestGateError::storage_error("config default not found"));
+    let error = NestGateError::storage_error("config default not found");
 
-    let value = result.unwrap_or_else(|_| "default_value".to_string());
+    // Test error recovery with unwrap_or on a real Result
+    let fallback_fn = || -> Result<String> { Err(error) };
+    let value = fallback_fn().unwrap_or_else(|_| "default_value".to_string());
     assert_eq!(value, "default_value");
 }
 

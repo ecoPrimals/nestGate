@@ -28,7 +28,7 @@ Estimated Breakdown:
 2. `universal_adapter/discovery.rs` - 20 unwraps
 3. `cache/manager.rs` - 18 unwraps
 4. `network/client.rs` - 17 unwraps
-5. `config/canonical_master/mod.rs` - 8 unwraps
+5. `config/canonical_primary/mod.rs` - 8 unwraps
 
 ---
 
@@ -55,7 +55,7 @@ Estimated Breakdown:
 - `universal_adapter/discovery.rs` (20 unwraps)
 - `cache/manager.rs` (18 unwraps)
 - `discovery/capability_scanner.rs` (9 unwraps)
-- `config/canonical_master/mod.rs` (8 unwraps)
+- `config/canonical_primary/mod.rs` (8 unwraps)
 - Service implementations across crates
 
 **Expected Outcome**: 250 total unwraps migrated
@@ -180,7 +180,7 @@ pub async fn connect(&self, url: &str) -> Result<Response> {
 
 **Impact**: Graceful handling of invalid URLs and connection failures.
 
-### **Example 2: Configuration Loading (config/canonical_master/mod.rs)**
+### **Example 2: Configuration Loading (config/canonical_primary/mod.rs)**
 
 **Before (8 unwraps)**:
 ```rust

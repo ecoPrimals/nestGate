@@ -5,7 +5,7 @@
 //! to discover services dynamically without hardcoded values.
 
 use crate::capabilities::discovery::DiscoveryManager;
-use crate::config::canonical_master::NestGateCanonicalConfig;
+use crate::config::canonical_primary::NestGateCanonicalConfig;
 use crate::Result;
 use std::collections::HashMap;
 use std::env;

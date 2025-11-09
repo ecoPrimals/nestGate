@@ -49,7 +49,7 @@ pub fn create_test_performance_monitor() -> nestgate_zfs::performance::Performan
 /// **CONSOLIDATED**: Create test NAS server with canonical configuration
 /// Replaces NAS server creation across multiple integration tests
 pub async fn create_test_nas_server() -> Result<nestgate_nas::NasServer> {
-            let config = nestgate_core::config::canonical_master::NestGateNestGateCanonicalConfig::default();
+            let config = nestgate_core::config::canonical_primary::NestGateNestGateCanonicalConfig::default();
     nestgate_nas::NasServer::new(config).await
 }
 

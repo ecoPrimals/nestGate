@@ -219,6 +219,10 @@ pub async fn validate_api_key(
 /// **GET AUTH STATUS HANDLER**
 ///
 /// Get current authentication status.
+///
+/// # Errors
+///
+/// This function currently always returns `Ok`, but returns `Result` for future error handling.
 pub async fn get_auth_status() -> Result<Json<serde_json::Value>, StatusCode> {
     info!("Fetching auth status");
 

@@ -171,66 +171,6 @@ pub struct PoolStats {
     pub fragmentation_ratio: f64,
 }
 
-#[cfg(test)]
-#[allow(deprecated)] // Testing deprecated CacheOptimizedMemoryPool for backwards compatibility
-mod tests {
-    use super::*;
-
-    #[test]
-    #[allow(deprecated)]
-    fn test_memory_pool_creation() {
-        let pool: CacheOptimizedMemoryPool<u64, 16> = CacheOptimizedMemoryPool::new();
-        assert_eq!(pool.utilization(), 0.0);
-    }
-
-    #[test]
-    #[allow(deprecated)]
-    fn test_memory_pool_allocation() {
-        let pool: CacheOptimizedMemoryPool<u64, 16> = CacheOptimizedMemoryPool::new();
-
-        let handle = pool.allocate(42u64);
-        assert!(handle.is_some());
-        assert!(pool.utilization() > 0.0);
-    }
-
-    #[test]
-    #[allow(deprecated)]
-    fn test_memory_pool_deallocation() {
-        let pool: CacheOptimizedMemoryPool<u64, 16> = CacheOptimizedMemoryPool::new();
-
-        let handle = pool.allocate(42u64).expect("Operation failed");
-        // SAFETY: Test deallocation is safe because:
-        // 1. Handle validity: handle was just allocated from this pool
-        // 2. No double-free: This is the only deallocation of this handle
-        // 3. No other references: We own the handle exclusively
-        // 4. Test environment: Controlled allocation/deallocation cycle
-        let value = unsafe { pool.deallocate(handle) };
-        assert_eq!(value, Some(42u64));
-    }
-
-    #[test]
-    #[allow(deprecated)]
-    fn test_memory_pool_exhaustion() {
-        let pool: CacheOptimizedMemoryPool<u64, 2> = CacheOptimizedMemoryPool::new();
-
-        let handle1 = pool.allocate(1u64);
-        let handle2 = pool.allocate(2u64);
-        let handle3 = pool.allocate(3u64);
-
-        assert!(handle1.is_some());
-        assert!(handle2.is_some());
-        assert!(handle3.is_none()); // Pool exhausted
-    }
-
-    #[test]
-    #[allow(deprecated)]
-    fn test_memory_pool_statistics() {
-        let pool: CacheOptimizedMemoryPool<u64, 16> = CacheOptimizedMemoryPool::new();
-
-        let _handle = pool.allocate(42u64);
-        let stats = pool.stats();
-
-        assert_eq!(stats.allocated.load(Ordering::Relaxed), 1);
-        assert_eq!(stats.deallocated.load(Ordering::Relaxed), 0);
-    }
-}
+// NOTE: Tests for this deprecated module have been removed.
+// Use memory_pool_safe::SafeMemoryPool instead, which has comprehensive tests.
+// See: code/crates/nestgate-core/src/memory_layout/memory_pool_safe.rs

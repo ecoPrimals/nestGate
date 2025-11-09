@@ -792,7 +792,8 @@ mod tests {
         manager.add_key("key1".to_string(), vec![1u8; 32]);
         manager.add_key("key2".to_string(), vec![2u8; 32]);
         
-        let encrypted = manager.encrypt(b"test", Some("key2")).unwrap();
+        let encrypted = manager.encrypt(b"test", Some("key2"))
+            .expect("Encryption with specific key should succeed");
         assert_eq!(encrypted.key_id, "key2");
     }
 
@@ -821,8 +822,10 @@ mod tests {
         manager.add_key("key1".to_string(), vec![99u8; 32]);
         
         let original = b"Secret message to encrypt and decrypt!";
-        let encrypted = manager.encrypt(original, None).unwrap();
-        let decrypted = manager.decrypt(&encrypted).unwrap();
+        let encrypted = manager.encrypt(original, None)
+            .expect("Encryption should succeed for roundtrip test");
+        let decrypted = manager.decrypt(&encrypted)
+            .expect("Decryption should succeed for roundtrip test");
         
         assert_eq!(decrypted.as_slice(), original);
     }
@@ -832,8 +835,10 @@ mod tests {
         let mut manager = EncryptionManager::new();
         manager.add_key("key1".to_string(), vec![42u8; 32]);
         
-        let encrypted = manager.encrypt(b"", None).unwrap();
-        let decrypted = manager.decrypt(&encrypted).unwrap();
+        let encrypted = manager.encrypt(b"", None)
+            .expect("Encrypting empty data should succeed");
+        let decrypted = manager.decrypt(&encrypted)
+            .expect("Decrypting empty data should succeed");
         
         assert_eq!(decrypted, b"");
     }
@@ -844,8 +849,10 @@ mod tests {
         manager.add_key("key1".to_string(), vec![77u8; 32]);
         
         let large = vec![42u8; 50_000];
-        let encrypted = manager.encrypt(&large, None).unwrap();
-        let decrypted = manager.decrypt(&encrypted).unwrap();
+        let encrypted = manager.encrypt(&large, None)
+            .expect("Encrypting large data should succeed");
+        let decrypted = manager.decrypt(&encrypted)
+            .expect("Decrypting large data should succeed");
         
         assert_eq!(decrypted, large);
     }
@@ -891,9 +898,12 @@ mod tests {
         let mut manager = EncryptionManager::new();
         manager.add_key("key1".to_string(), vec![42u8; 32]);
         
-        let enc = manager.encrypt(b"test", None).unwrap();
-        manager.decrypt(&enc).unwrap();
-        manager.rotate_key("key1", "key2".to_string(), vec![43u8; 32]).unwrap();
+        let enc = manager.encrypt(b"test", None)
+            .expect("Encryption should succeed before rotation");
+        manager.decrypt(&enc)
+            .expect("Decryption should succeed before rotation");
+        manager.rotate_key("key1", "key2".to_string(), vec![43u8; 32])
+            .expect("Key rotation should succeed");
         
         let (encryptions, decryptions, rotations) = manager.stats();
         assert_eq!(encryptions, 1);
@@ -908,7 +918,8 @@ mod tests {
         manager.add_key("key".to_string(), key.clone());
         
         let original = b"Test XOR property";
-        let encrypted = manager.encrypt(original, None).unwrap();
+        let encrypted = manager.encrypt(original, None)
+            .expect("Encryption should succeed for XOR test");
         
         // Manual XOR should recover original
         let mut manual = Vec::new();
@@ -926,8 +937,10 @@ mod tests {
         manager.add_key("key2".to_string(), vec![2u8; 32]);
         
         let plaintext = b"Same plaintext";
-        let enc1 = manager.encrypt(plaintext, Some("key1")).unwrap();
-        let enc2 = manager.encrypt(plaintext, Some("key2")).unwrap();
+        let enc1 = manager.encrypt(plaintext, Some("key1"))
+            .expect("Encryption with key1 should succeed");
+        let enc2 = manager.encrypt(plaintext, Some("key2"))
+            .expect("Encryption with key2 should succeed");
         
         assert_ne!(enc1.data, enc2.data);
     }
@@ -938,7 +951,8 @@ mod tests {
         manager.add_key("key1".to_string(), vec![42u8; 32]);
         
         let before = SystemTime::now();
-        let encrypted = manager.encrypt(b"test", None).unwrap();
+        let encrypted = manager.encrypt(b"test", None)
+            .expect("Encryption should succeed for timestamp test");
         let after = SystemTime::now();
         
         assert!(encrypted.timestamp >= before);
@@ -951,8 +965,10 @@ mod tests {
         manager.add_key("key1".to_string(), vec![128u8; 32]);
         
         let all_bytes: Vec<u8> = (0..=255).collect();
-        let encrypted = manager.encrypt(&all_bytes, None).unwrap();
-        let decrypted = manager.decrypt(&encrypted).unwrap();
+        let encrypted = manager.encrypt(&all_bytes, None)
+            .expect("Encrypting all byte values should succeed");
+        let decrypted = manager.decrypt(&encrypted)
+            .expect("Decrypting all byte values should succeed");
         
         assert_eq!(decrypted, all_bytes);
     }

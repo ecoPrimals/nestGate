@@ -6,6 +6,7 @@ mod return_builder_tests {
 
     // Simple replacement for removed UniversalResponseStatus
     #[derive(Debug, PartialEq)]
+    #[allow(dead_code)]
     pub enum ResponseStatus {
         Success,
         Error,

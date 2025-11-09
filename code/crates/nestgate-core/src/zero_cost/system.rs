@@ -14,7 +14,7 @@ use super::types::{ZeroCostError, ZeroCostMetrics, ZeroCostRequest, ZeroCostResp
 use std::marker::PhantomData;
 
 /// Zero-cost system with compile-time dependency injection
-/// This replaces Arc<dyn Trait> patterns with direct composition
+/// This replaces `Arc<dyn Trait>` patterns with direct composition
 pub struct ZeroCostSystem<Cache, Security, Storage, const MAX_SIZE: usize, const TIMEOUT_MS: u64> {
     cache: Cache,
     security: Security,

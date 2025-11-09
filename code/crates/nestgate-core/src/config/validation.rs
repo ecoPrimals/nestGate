@@ -367,8 +367,8 @@ impl ValidationUtils {
 /// Network configuration
 /// 
 /// **CONSOLIDATED**: Now uses `CanonicalNetworkConfig` from 
-/// `crate::config::canonical_master::domains::network::CanonicalNetworkConfig`
-pub use crate::config::canonical_master::domains::network::CanonicalNetworkConfig as NetworkConfig;
+/// `crate::config::canonical_primary::domains::network::CanonicalNetworkConfig`
+pub use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig as NetworkConfig;
 
 // Note: Original validation impl has been moved to the CanonicalNetworkConfig's own validation
 // This section is preserved for backward compatibility if any code directly calls

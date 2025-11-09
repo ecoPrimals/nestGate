@@ -9,15 +9,19 @@ use std::net::SocketAddr;
 use std::time::{Duration, SystemTime};
 
 // Import the canonical configuration system
-use nestgate_core::unified_config_consolidation::StandardDomainConfig;
+use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // ==================== SECTION ====================
 
-/// **MIGRATED**: Network service configuration now uses `StandardDomainConfig` pattern
-/// This replaces the old fragmented `NetworkConfig` with unified configuration
-pub type NetworkConfig = StandardDomainConfig<NetworkExtensions>;
+/// **CANONICAL**: Network service configuration using canonical_primary
+/// This is the unified NetworkConfig for the entire ecosystem
+pub type NetworkConfig = CanonicalNetworkConfig;
 /// Network-specific configuration extensions
 /// Domain-specific fields that don't belong in unified base configs
+///
+/// **ECOSYSTEM SOVEREIGNTY**: Load balancing and circuit breaking are delegated
+/// to networking capabilities discovered at runtime. NestGate does NOT hardcode
+/// any specific networking primal - it discovers "networking" capability providers.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkExtensions {
     /// Port range start for service allocation
@@ -28,43 +32,11 @@ pub struct NetworkExtensions {
     pub keep_alive_timeout_seconds: u64,
     /// Protocol-specific settings
     pub protocol_settings: HashMap<String, String>,
-    /// Load balancing configuration
-    pub load_balancing: LoadBalancingConfig,
-    /// Circuit breaker settings
-    pub circuit_breaker: CircuitBreakerConfig,
-}
-/// Load balancing configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct LoadBalancingConfig {
-    pub algorithm: String,
-    pub health_check_interval: Duration,
-    pub max_failures: u32,
-}
-impl Default for LoadBalancingConfig {
-    fn default() -> Self {
-        Self {
-            algorithm: "round_robin".to_string(),
-            health_check_interval: Duration::from_secs(30),
-            max_failures: 3,
-        }
-    }
-}
-
-/// Circuit breaker configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CircuitBreakerConfig {
-    pub failure_threshold: u32,
-    pub timeout_duration: Duration,
-    pub half_open_max_calls: u32,
-}
-impl Default for CircuitBreakerConfig {
-    fn default() -> Self {
-        Self {
-            failure_threshold: 5,
-            timeout_duration: Duration::from_secs(60),
-            half_open_max_calls: 10,
-        }
-    }
+    // REMOVED: load_balancing and circuit_breaker configs
+    // These are now discovered via capability system:
+    // - Discover capability: "networking" or "load-balancing"
+    // - Provider implements these features
+    // - No hardcoded primal names or configuration
 }
 
 impl Default for NetworkExtensions {
@@ -74,8 +46,6 @@ impl Default for NetworkExtensions {
             port_range_end: 9999,
             keep_alive_timeout_seconds: 60,
             protocol_settings: HashMap::new(),
-            load_balancing: LoadBalancingConfig::default(),
-            circuit_breaker: CircuitBreakerConfig::default(),
         }
     }
 }
@@ -335,43 +305,48 @@ impl NetworkConfigBuilder {
     #[must_use]
     pub fn host(mut self, host: impl Into<String>) -> Self {
         use nestgate_core::constants::hardcoding::addresses;
-        self.config.network.api.bind_address = host.into().parse().unwrap_or(
+        let localhost_addr = addresses::LOCALHOST_NAME
+            .parse()
+            .unwrap_or_else(|_| "127.0.0.1".parse().unwrap());
+
+        self.config.api.bind_address = host.into().parse().unwrap_or_else(|_| {
             std::env::var("NESTGATE_BIND_ADDRESS")
-                .unwrap_or_else(|_| {
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .or_else(|| {
                     std::env::var("NESTGATE_HOSTNAME")
-                        .unwrap_or_else(|_| addresses::LOCALHOST_NAME.to_string())
-                        .to_string()
+                        .ok()
+                        .and_then(|s| s.parse().ok())
                 })
-                .parse()
-                .expect("Network operation failed"),
-        );
+                .unwrap_or(localhost_addr)
+        });
         self
     }
     /// Set port
     #[must_use]
     pub fn port(mut self, port: u16) -> Self {
-        self.config.network.api.port = port;
+        self.config.api.port = port;
         self
     }
 
     /// Set max connections
     #[must_use]
     pub fn max_connections(mut self, max_connections: u32) -> Self {
-        self.config.network.api.max_connections = max_connections;
+        self.config.api.max_connections = max_connections;
         self
     }
     /// Set connection timeout
     #[must_use]
     pub fn connection_timeout(mut self, timeout_seconds: u64) -> Self {
-        self.config.network.api.connection_timeout = Duration::from_secs(timeout_seconds);
+        self.config.api.connection_timeout = Duration::from_secs(timeout_seconds);
         self
     }
 
     /// Set port range
     #[must_use]
     pub fn port_range(mut self, start: u16, end: u16) -> Self {
-        self.config.extensions.port_range_start = start;
-        self.config.extensions.port_range_end = end;
+        self.config.api.port_range_start = start;
+        self.config.api.port_range_end = end;
         self
     }
     /// Enable/disable keep-alive
@@ -386,7 +361,7 @@ impl NetworkConfigBuilder {
     /// Set keep-alive timeout
     #[must_use]
     pub fn keep_alive_timeout(mut self, timeout_seconds: u64) -> Self {
-        self.config.extensions.keep_alive_timeout_seconds = timeout_seconds;
+        self.config.performance.keep_alive_timeout_seconds = timeout_seconds;
         self
     }
 
@@ -517,16 +492,16 @@ mod tests {
             .max_connections(100)
             .build();
 
-        assert_eq!(config.network.api.port, 8888);
-        assert_eq!(config.network.api.max_connections, 100);
+        assert_eq!(config.api.port, 8888);
+        assert_eq!(config.api.max_connections, 100);
     }
 
     #[test]
     fn test_network_config_builder_port_range() {
         let config = NetworkConfigBuilder::new().port_range(10000, 20000).build();
 
-        assert_eq!(config.extensions.port_range_start, 10000);
-        assert_eq!(config.extensions.port_range_end, 20000);
+        assert_eq!(config.api.port_range_start, 10000);
+        assert_eq!(config.api.port_range_end, 20000);
     }
 
     #[test]
@@ -536,32 +511,11 @@ mod tests {
             .keep_alive_timeout(300)
             .build();
 
-        assert_eq!(
-            config.network.api.connection_timeout,
-            Duration::from_secs(120)
-        );
-        assert_eq!(config.extensions.keep_alive_timeout_seconds, 300);
+        assert_eq!(config.api.connection_timeout, Duration::from_secs(120));
+        assert_eq!(config.performance.keep_alive_timeout_seconds, 300);
     }
 
     // ==================== LoadBalancing & CircuitBreaker Tests (3 tests) ====================
-
-    #[test]
-    fn test_load_balancing_config_default() {
-        let config = LoadBalancingConfig::default();
-
-        assert_eq!(config.algorithm, "round_robin");
-        assert_eq!(config.health_check_interval, Duration::from_secs(30));
-        assert_eq!(config.max_failures, 3);
-    }
-
-    #[test]
-    fn test_circuit_breaker_config_default() {
-        let config = CircuitBreakerConfig::default();
-
-        assert_eq!(config.failure_threshold, 5);
-        assert_eq!(config.timeout_duration, Duration::from_secs(60));
-        assert_eq!(config.half_open_max_calls, 10);
-    }
 
     #[test]
     fn test_network_extensions_default() {

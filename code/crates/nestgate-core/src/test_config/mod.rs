@@ -5,14 +5,14 @@
 //! consolidated into the canonical domains system.
 
 // Re-export the canonical test configuration system
-pub use crate::config::canonical_master::test_config::{
+pub use crate::config::canonical_primary::test_config::{
     CanonicalTestConfigs as TestConfig,
     TestConfiguration,
     default_test_config,
 };
 
 // Re-export specific test configuration types from canonical domains
-pub use crate::config::canonical_master::domains::test_canonical::{
+pub use crate::config::canonical_primary::domains::test_canonical::{
     CanonicalTestConfigs,
     UnitTestConfig,
     IntegrationTestConfig,

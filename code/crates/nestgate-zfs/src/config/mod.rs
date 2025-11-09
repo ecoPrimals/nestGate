@@ -18,7 +18,7 @@ pub mod metrics;
 pub mod pool;
 pub mod security;
 pub mod tiers;
-pub mod unified_zfs_config;
+// unified_zfs_config removed - use canonical types from nestgate_core
 
 // Re-export main types for backward compatibility
 use serde::{Deserialize, Serialize};

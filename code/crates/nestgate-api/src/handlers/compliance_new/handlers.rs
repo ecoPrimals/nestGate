@@ -362,7 +362,7 @@ mod tests {
     #[test]
     fn test_initialize_compliance_manager_creates_manager() {
         let manager = initialize_compliance_manager();
-        assert!(manager.regulatory_frameworks.len() > 0);
+        assert!(manager.regulatory_frameworks!debug_str.is_empty());
     }
 
     #[test]

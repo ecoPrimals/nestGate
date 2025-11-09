@@ -70,6 +70,10 @@ pub struct PerformanceRecommendation {
 /// **GET PERFORMANCE METRICS HANDLER**
 ///
 /// Retrieve current system performance metrics.
+///
+/// # Errors
+///
+/// This function currently always returns `Ok`, but returns `Result` for future error handling.
 #[must_use]
 pub async fn get_performance_metrics() -> Result<Json<PerformanceMetricsResponse>, StatusCode> {
     let mut metrics = HashMap::new();
@@ -89,6 +93,10 @@ pub async fn get_performance_metrics() -> Result<Json<PerformanceMetricsResponse
 /// **GET PERFORMANCE ALERTS HANDLER**
 ///
 /// Retrieve active performance alerts.
+///
+/// # Errors
+///
+/// This function currently always returns `Ok`, but returns `Result` for future error handling.
 #[must_use]
 pub async fn get_performance_alerts() -> Result<Json<Vec<PerformanceAlert>>, StatusCode> {
     let alerts = vec![

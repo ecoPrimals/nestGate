@@ -200,7 +200,7 @@ async fn test_api_first_architecture() -> Result<(), Box<dyn std::error::Error>>
     println!("  📈 Structured data optimized for machine learning");
     println!("  🔧 Extensible plugin architecture for new technologies");
 
-    assert!(true, "API-first architecture successfully demonstrated");
+    // API-first architecture successfully demonstrated
     Ok(())
 }
 
@@ -245,6 +245,6 @@ async fn test_complete_universality() -> Result<(), Box<dyn std::error::Error>> 
     println!("  ✅ Use-case-agnostic: Gaming to genomics to AI");
     println!("  ✅ AI-ready: Pure API architecture for autonomous operation");
 
-    assert!(true, "Complete universality successfully demonstrated");
+    // Complete universality successfully demonstrated
     Ok(())
 }

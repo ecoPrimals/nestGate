@@ -29,7 +29,38 @@ pub mod performance {
     pub const MAX_BACKENDS: usize = 100;
     pub const MAX_CONCURRENT_OPS: usize = 1000;
 
-    /// Buffer sizes (consolidated from multiple files)
+    /// Buffer sizes (domain-specific, DO NOT consolidate)
+    ///
+    /// # Why Different Buffer Sizes?
+    ///
+    /// Different I/O operations have different optimal buffer sizes based on:
+    /// - Hardware characteristics (disk vs network)
+    /// - Protocol requirements (TCP window sizes)
+    /// - Cache line sizes (L1/L2/L3)
+    /// - System call overhead vs throughput tradeoffs
+    ///
+    /// ## DEFAULT_BUFFER_SIZE (4096 bytes)
+    /// **Use for**: General I/O, disk operations, file system operations
+    /// **Why 4KB**: Matches typical page size, optimal for disk I/O
+    /// **Performance**: Minimizes system calls while fitting in L1 cache
+    ///
+    /// ## NETWORK_BUFFER_SIZE (65536 bytes)
+    /// **Use for**: Network I/O, socket operations, streaming
+    /// **Why 64KB**: Matches typical TCP window size
+    /// **Performance**: Reduces context switches for network operations
+    ///
+    /// # Usage Guidelines
+    /// ```rust
+    /// use nestgate_core::constants::canonical::performance;
+    ///
+    /// // For disk I/O
+    /// let mut disk_buffer = vec![0u8; performance::DEFAULT_BUFFER_SIZE];
+    ///
+    /// // For network I/O
+    /// let mut network_buffer = vec![0u8; performance::NETWORK_BUFFER_SIZE];
+    /// ```
+    ///
+    /// **Important**: These values are performance-tuned. Do not consolidate!
     pub const DEFAULT_BUFFER_SIZE: usize = 4096;
     pub const NETWORK_BUFFER_SIZE: usize = 65536;
     pub const SIMD_BATCH_SIZE: usize = 32;
@@ -73,11 +104,10 @@ pub mod timeouts {
 
 /// Network and protocol constants
 pub mod network {
-    /// Default ports (consolidated from multiple definitions)
-    pub const DEFAULT_API_PORT: u16 = 8080;
-    pub const DEFAULT_PORT: u16 = 8080;
-    pub const API_PORT: u16 = 8080;
-
+    // Port constants are now in port_defaults module (single source of truth)
+    // Use: constants::port_defaults::DEFAULT_API_PORT
+    // Or via re-export: constants::DEFAULT_API_PORT
+    
     /// Network addresses
     pub const DEFAULT_BIND_ADDRESS: &str = "0.0.0.0";
     pub const LOCALHOST: &str = "127.0.0.1";
@@ -395,26 +425,31 @@ pub mod validation {
     /// Validate network constants at compile time
     #[must_use]
     pub fn validate_network_constants() -> bool {
-        network::DEFAULT_API_PORT > 0
-            && network::MAX_SERVICES > 0
+        // Port validation moved to port_defaults module tests
+        network::MAX_SERVICES > 0
             && network::MAX_CONCURRENT_REQUESTS > 0
     }
 
-    // Compile-time assertions
-    const _: () = assert!(validate_performance_constants());
-    const _: () = assert!(validate_timeout_constants());
-    const _: () = assert!(validate_network_constants());
+    // NOTE: Compile-time assertions removed - const fn limitations
+    // All constants are validated through unit tests instead
 }
 // ==================== SECTION ====================
 
 // Re-export key constants for easy access
 pub use api::{CONTENT_TYPE_JSON, CURRENT_API_VERSION, STATUS_OK};
-pub use network::{DEFAULT_API_PORT, DEFAULT_BIND_ADDRESS};
+pub use network::{DEFAULT_BIND_ADDRESS};
 pub use performance::*;
 pub use security::{ROLE_ADMIN, ROLE_USER};
 pub use storage::{GB, KB, MB, TB, TIER_COLD, TIER_HOT, TIER_WARM};
 pub use system::{DEFAULT_SERVICE_NAME, ENV_DEVELOPMENT, ENV_PRODUCTION};
 pub use timeouts::{DEFAULT_RETRY_ATTEMPTS, DEFAULT_TIMEOUT_SECS};
+
+// Re-export port constants from port_defaults (single source of truth)
+// Use these instead of defining ports in multiple places
+pub use super::port_defaults::{
+    DEFAULT_API_PORT, DEFAULT_ADMIN_PORT, DEFAULT_METRICS_PORT, DEFAULT_HEALTH_PORT,
+    DEFAULT_GRAFANA_PORT, DEFAULT_POSTGRES_PORT, DEFAULT_REDIS_PORT,
+};
 
 /// Constants consolidation complete marker
 pub const CONSTANTS_CONSOLIDATION_COMPLETE: bool = true;

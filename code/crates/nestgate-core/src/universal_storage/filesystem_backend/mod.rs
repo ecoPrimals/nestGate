@@ -71,6 +71,9 @@ use thiserror::Error;
 use tokio::fs;
 use tokio::io::AsyncWriteExt;
 
+// Use canonical Result type from error module
+use crate::error::Result;
+
 /// Filesystem backend errors
 #[derive(Debug, Error)]
 pub enum FilesystemError {
@@ -107,8 +110,8 @@ pub enum FilesystemError {
     SerializationError(String),
 }
 
-/// Result type for filesystem operations
-pub type Result<T> = std::result::Result<T, FilesystemError>;
+// Note: Now using crate::error::Result<T> instead of local Result type
+// FilesystemError is converted to NestGateError via From trait when needed
 
 /// File metadata tracked by the backend
 #[derive(Debug, Clone, Serialize, Deserialize)]

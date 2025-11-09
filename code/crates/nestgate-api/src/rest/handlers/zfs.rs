@@ -45,7 +45,6 @@ pub async fn list_datasets(
                     "Failed to convert _engine to dataset for {}: {}",
                     dataset_name, e
                 );
-                continue;
             }
         }
     }

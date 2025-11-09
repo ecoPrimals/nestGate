@@ -4,6 +4,7 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 
 /// Installer error type alias
+#[allow(dead_code)] // Reserved for future error handling
 pub type InstallerError = NestGateError;
 pub struct DownloadManager {
     #[allow(dead_code)] // Used for future download functionality
@@ -212,6 +213,7 @@ impl DownloadManager {
     }
 
     /// Download components based on configuration
+    #[allow(dead_code)] // Reserved for future component downloads
     pub fn download_components(
         &self,
         _config: &crate::config::InstallerConfig,

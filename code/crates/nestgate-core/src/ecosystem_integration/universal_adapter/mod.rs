@@ -1,4 +1,4 @@
-use crate::config::canonical_master::NestGateCanonicalConfig;
+use crate::config::canonical_primary::NestGateCanonicalConfig;
 // **REMOVED**: InterfaceResult import - using unified Result<T> instead
 
 // Remove deprecated imports - use unified types instead

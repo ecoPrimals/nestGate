@@ -117,7 +117,7 @@ pub struct FileChangeEvent {
 }
 /// **UNIFIED** Sync Configuration using canonical config pattern
 /// Consolidates `DeltaSyncConfig`, `SyncSessionConfig`, and `SyncServiceConfig` into unified approach
-pub type UnifiedSyncConfig = crate::config::canonical_master::NestGateCanonicalConfig;
+pub type UnifiedSyncConfig = crate::config::canonical_primary::NestGateCanonicalConfig;
 /// Sync-specific configuration extensions
 /// Domain-specific fields that don't belong in unified base configs
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -348,7 +348,7 @@ mod tests {
         assert!(result.is_ok());
         let response = result.expect("Test setup failed");
 
-        assert!(response.0.metrics.len() > 0);
+        assert!(response.0.metrics!debug_str.is_empty());
         assert!(response.0.metrics.contains_key("cpu_usage"));
         assert!(response.0.metrics.contains_key("memory_usage"));
     }
@@ -434,9 +434,9 @@ mod tests {
         let alerts = alerts_result.expect("Test setup failed");
         let recs = recs_result.expect("Test setup failed");
 
-        assert!(metrics.0.metrics.len() > 0);
-        assert!(alerts.0.len() > 0);
-        assert!(recs.0.len() > 0);
+        assert!(metrics.0.metrics!debug_str.is_empty());
+        assert!(alerts.0!debug_str.is_empty());
+        assert!(recs.0!debug_str.is_empty());
     }
 
     // ==================== EDGE CASE TESTS ====================

@@ -47,7 +47,7 @@
 4. ✅ Updated nestgate-canonical with migration guidance
 
 **Files Modified**:
-- `code/crates/nestgate-core/src/config/canonical_master/performance_config.rs`
+- `code/crates/nestgate-core/src/config/canonical_primary/performance_config.rs`
 - `code/crates/nestgate-canonical/src/types.rs`
 
 ---
@@ -62,7 +62,7 @@
 4. ✅ Updated nestgate-api UnifiedApiConfig
 
 **Files Modified**:
-- `code/crates/nestgate-core/src/config/canonical_master/api_config.rs`
+- `code/crates/nestgate-core/src/config/canonical_primary/api_config.rs`
 - `code/crates/nestgate-api/src/config/unified_api_config.rs`
 
 ---
@@ -77,7 +77,7 @@
 4. ✅ Build passes with zero new errors
 
 **Files Modified**:
-- `code/crates/nestgate-core/src/config/canonical_master/supporting_types.rs`
+- `code/crates/nestgate-core/src/config/canonical_primary/supporting_types.rs`
 
 ---
 

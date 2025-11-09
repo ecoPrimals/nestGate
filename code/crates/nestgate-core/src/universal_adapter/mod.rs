@@ -16,6 +16,11 @@
 pub mod config;
 pub mod discovery;
 
+// Capability-based adapters (no hardcoded primal names)
+pub mod capability_discovery;
+pub mod networking_capability;
+pub mod security_capability;
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::SystemTime;
@@ -23,6 +28,17 @@ use std::time::SystemTime;
 // **COMPATIBILITY EXPORTS** - For modules expecting legacy structure
 pub use CapabilityRequest as CanonicalCapabilityRequest;
 pub use UniversalAdapter as PrimalAgnosticAdapter;
+
+// **NEW CAPABILITY ADAPTERS** - Zero hardcoded primal names
+pub use capability_discovery::{CapabilityDiscovery, CapabilityProvider, CapabilityType};
+pub use networking_capability::{
+    CircuitBreakerRequest, CircuitBreakerResponse, LoadBalanceRequest, LoadBalanceResponse,
+    NetworkingCapability,
+};
+pub use security_capability::{
+    InputValidationRequest, InputValidationResponse, IntrusionDetectionRequest,
+    IntrusionDetectionResponse, RateLimitRequest, RateLimitResponse, SecurityCapability,
+};
 
 // **MODULE STRUCTURE** - Organize exports for compatibility
 pub mod types {
