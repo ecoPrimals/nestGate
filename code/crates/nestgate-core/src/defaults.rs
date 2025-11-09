@@ -324,6 +324,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_env_helpers_metrics_port() {
         env::remove_var("NESTGATE_METRICS_PORT");
 

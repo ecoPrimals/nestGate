@@ -1,6 +1,9 @@
 //
 // Contains all snapshot-related operations for the native ZFS backend.
 
+#[cfg(test)]
+mod snapshot_operations_tests;
+
 use std::collections::HashMap;
 // Removed unused tracing import
 
@@ -30,7 +33,7 @@ pub async fn list_snapshots(service: &NativeZfsService) -> UniversalZfsResult<Ve
 }
 
 /// Parse a single snapshot line (zero-copy optimized)
-fn parse_snapshot_line(line: &str) -> Option<SnapshotInfo> {
+pub(crate) fn parse_snapshot_line(line: &str) -> Option<SnapshotInfo> {
     let parts: Vec<&str> = line.split('\t').collect();
     if parts.len() >= 3 {
         Some(SnapshotInfo {
@@ -125,7 +128,7 @@ pub fn destroy_snapshot(service: &NativeZfsService, name: &str) -> UniversalZfsR
 }
 
 /// Helper function to parse ZFS size strings (zero-copy optimized)
-fn parse_size(size_str: &str) -> Option<u64> {
+pub(crate) fn parse_size(size_str: &str) -> Option<u64> {
     if size_str == "-" {
         return Some(0);
     }

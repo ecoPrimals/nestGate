@@ -1,21 +1,68 @@
-//
-// This module provides modularized network configuration extensions,
-// split from the original 937-line monolithic file for better maintainability.
-//
-// **MODULAR ORGANIZATION**:
-// - `orchestration.rs` - Service discovery and orchestration settings
-// - `protocols.rs` - TCP/UDP and protocol-specific settings
-// - `vlan.rs` - VLAN and network segmentation settings
-// - `connections.rs` - Connection management and pooling settings
-// - `routing.rs` - Load balancing and routing settings
-// - `qos.rs` - Quality of Service settings
-// - `security.rs` - Network security settings
+//! **ADVANCED NETWORK FEATURES**
+//!
+//! Optional advanced networking capabilities for specialized deployments.
+//! Extends `unified_network_config` with orchestration and service discovery.
+//!
+//! ## Purpose
+//!
+//! Provides advanced networking features beyond core functionality:
+//! - Service discovery and orchestration
+//! - Advanced routing and load balancing
+//! - Complex QoS policies
+//! - Network segmentation (VLANs)
+//! - Enhanced security policies
+//!
+//! ## When to Use
+//!
+//! Use this module when you need:
+//! - ✅ Service discovery and orchestration
+//! - ✅ Complex routing policies
+//! - ✅ Advanced QoS and traffic shaping
+//! - ✅ Multi-service coordination
+//! - ✅ Distributed system networking
+//!
+//! For basic networking, use `unified_network_config` instead.
+//!
+//! ## Distinction from Core Config
+//!
+//! | Feature | Core Config | Extensions |
+//! |---------|-------------|------------|
+//! | **Purpose** | Essential networking | Advanced features |
+//! | **Use Case** | Basic connectivity | Orchestration |
+//! | **Complexity** | Simple | Advanced |
+//! | **Required** | Yes | Optional |
+//!
+//! ## Module Organization
+//!
+//! - `orchestration` - Service discovery and orchestration settings
+//! - `protocols` - TCP/UDP and protocol-specific settings
+//! - `vlan` - VLAN and network segmentation settings
+//! - `connections` - Connection management and pooling settings
+//! - `routing` - Load balancing and routing settings
+//! - `qos` - Quality of Service settings
+//! - `security` - Network security settings
+//!
+//! ## Example
+//!
+//! ```rust,ignore
+//! use nestgate_network::unified_network_extensions::{
+//!     UnifiedNetworkExtensions,
+//!     NetworkOrchestrationSettings,
+//! };
+//!
+//! let extensions = UnifiedNetworkExtensions::default();
+//! // Enable service discovery
+//! extensions.orchestration.service_discovery_enabled = true;
+//! ```
+//!
+//! ## See Also
+//!
+//! - `unified_network_config` - Core networking (use this first)
+//! - Architecture docs: `UNIFIED_NETWORK_STRUCTURE_EVALUATION_NOV_8_2025.md`
 
-// ==================== SECTION ====================
-
-//! Service discovery and orchestration settings
 /// Connection management and pooling settings
 pub mod connections;
+/// Service discovery and orchestration settings
 pub mod orchestration;
 /// TCP/UDP and protocol-specific settings
 pub mod protocols;

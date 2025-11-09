@@ -202,7 +202,7 @@ impl Default for CanonicalAccessPatterns {
 
 // **DEPRECATED CODE REMOVED** - UnifiedConfig has been successfully migrated
 // to the canonical NestGateCanonicalConfig system. All usage has been updated
-// to use crate::config::canonical_master::NestGateCanonicalConfig instead.
+// to use crate::config::canonical_primary::NestGateCanonicalConfig instead.
 //
 // **MIGRATION COMPLETE**: This deprecated struct has been eliminated as part
 // of the canonical modernization cleanup.
@@ -304,11 +304,11 @@ impl Default for UnifiedServiceConfig {
 
 /// **UNIFIED NETWORK CONFIG**
 ///
-/// **⚠️ DEPRECATED**: Use `CanonicalNetworkConfig` from `canonical_master::domains::network`
+/// **⚠️ DEPRECATED**: Use `CanonicalNetworkConfig` from `canonical_primary::domains::network`
 /// Network-specific configuration
 #[deprecated(
     since = "0.9.0",
-    note = "Use canonical_master::domains::network::CanonicalNetworkConfig instead"
+    note = "Use canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnifiedNetworkConfig {

@@ -9,7 +9,7 @@ use uuid::Uuid;
 use super::types::*;
 use super::validators::*;
 use crate::canonical::dynamic_config::ConfigSection;
-use crate::config::canonical_master::NestGateCanonicalConfig as CanonicalConfig;
+use crate::config::canonical_primary::NestGateCanonicalConfig as CanonicalConfig;
 use crate::{Result};
 
 // **CANONICAL MODERNIZATION**: Type aliases to fix clippy complexity errors

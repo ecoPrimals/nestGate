@@ -303,7 +303,7 @@ mod tests {
         };
 
         let range = query.range.expect("Test setup failed");
-        assert!(range.len() > 0);
+        assert!(range!debug_str.is_empty());
         assert!(range.contains("custom"));
         assert!(range.contains("12345"));
     }

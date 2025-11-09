@@ -80,7 +80,7 @@ assert_eq!(config.compliance_reporting, true);
 
 ### **Performance Configuration**
 **Module**: `performance::CanonicalPerformanceConfig`  
-**Location**: `code/crates/nestgate-core/src/config/canonical_master/domains/performance/`
+**Location**: `code/crates/nestgate-core/src/config/canonical_primary/domains/performance/`
 
 #### **Configuration Structure**
 ```rust
@@ -100,7 +100,7 @@ pub struct CanonicalPerformanceConfig {
 
 #### **Usage Examples**
 ```rust
-use nestgate_core::config::canonical_master::domains::performance::*;
+use nestgate_core::config::canonical_primary::domains::performance::*;
 
 // Production-hardened performance configuration
 let perf_config = CanonicalPerformanceConfig::production_hardened();
@@ -142,7 +142,7 @@ assert_eq!(compliance_perf.monitoring.detailed_metrics, true);
 
 ### **Network Configuration**
 **Module**: `network::CanonicalNetworkConfig`  
-**Location**: `code/crates/nestgate-core/src/config/canonical_master/domains/network/`
+**Location**: `code/crates/nestgate-core/src/config/canonical_primary/domains/network/`
 
 #### **Configuration Structure**
 ```rust
@@ -162,7 +162,7 @@ pub struct CanonicalNetworkConfig {
 
 #### **Usage Examples**
 ```rust
-use nestgate_core::config::canonical_master::domains::network::*;
+use nestgate_core::config::canonical_primary::domains::network::*;
 
 // Enterprise-grade network configuration
 let network_config = CanonicalNetworkConfig::production_hardened();
@@ -263,7 +263,7 @@ match operation_result {
 Build complex configurations by composing multiple modules:
 
 ```rust
-use nestgate_core::config::canonical_master::domains::*;
+use nestgate_core::config::canonical_primary::domains::*;
 
 #[derive(Debug, Clone)]
 pub struct SystemConfiguration {

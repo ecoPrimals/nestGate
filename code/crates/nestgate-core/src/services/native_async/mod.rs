@@ -46,6 +46,7 @@ mod tests {
     #[cfg(test)]
     /// Mock service info for testing
     #[derive(Debug, Clone)]
+    #[allow(dead_code)]
     struct MockServiceInfo {
         id: String,
         name: String,
@@ -204,6 +205,7 @@ mod tests {
     }
 
     // Mock types for testing
+    #[allow(dead_code)]
     struct ServiceRequest {
         service_name: String,
         data: Vec<u8>,
@@ -213,6 +215,7 @@ mod tests {
         name: String,
     }
 
+    #[allow(dead_code)]
     impl NativeAsyncService {
         fn new(name: String) -> Self {
             Self { name }

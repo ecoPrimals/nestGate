@@ -76,7 +76,7 @@ impl RealNetworkService {
     pub async fn start(&self) -> nestgate_core::Result<()> {
         info!(
             "Starting real network service on {}:{}",
-            self.config.network.api.bind_address, self.config.network.api.port
+            self.config.api.bind_address, self.config.api.port
         );
 
         let addr = format!(
@@ -148,8 +148,7 @@ impl RealNetworkService {
         let mut allocated_ports = self.allocated_ports.write().await;
 
         // Find an available port in the configured range
-        for port in self.config.extensions.port_range_start..=self.config.extensions.port_range_end
-        {
+        for port in self.config.api.port_range_start..=self.config.api.port_range_end {
             if let std::collections::hash_map::Entry::Vacant(e) = allocated_ports.entry(port) {
                 e.insert(service_name.to_string());
                 info!("Allocated port {} for service {}", port, service_name);
@@ -217,11 +216,9 @@ impl RealNetworkService {
 
         // Consider healthy if we have reasonable resource usage
         let healthy = (stats.active_connections as usize)
-            < self.config.network.api.max_connections as usize
+            < self.config.api.max_connections as usize
             && stats.allocated_ports
-                < u32::from(
-                    self.config.extensions.port_range_end - self.config.extensions.port_range_start,
-                );
+                < u32::from(self.config.api.port_range_end - self.config.api.port_range_start);
 
         if healthy {
             debug!("Network service health check: OK");

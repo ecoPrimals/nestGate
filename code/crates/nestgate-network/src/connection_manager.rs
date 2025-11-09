@@ -6,7 +6,7 @@ use crate::universal_adapter::{PrimalAgnosticAdapter, CapabilityCategory, Capabi
 
 use std::future::Future;
 use nestgate_core::ecosystem_integration::fallback_providers::orchestration::OrchestrationFallbackProvider;
-use nestgate_core::error::{IdioResult, NestGateError};
+use nestgate_core::error::{Result, NestGateError};
 use nestgate_core::traits::{ServiceRegistration};
 use nestgate_core::types::ServiceInstance;
 use serde::{Deserialize, Serialize};
@@ -28,12 +28,12 @@ pub trait OrchestrationClient: Send + Sync + 'static {
     fn register_service(
         &self,
         service: &ServiceRegistration,
-    ) -> impl Future<Output = IdioResult<()>> + Send;
+    ) -> impl Future<Output = Result<()>> + Send;
     fn discover_services(
         &self,
         service_type: &str,
-    ) -> impl Future<Output = IdioResult<Vec<ServiceInstance>>> + Send;
-    fn health_check(&self) -> impl Future<Output = IdioResult<bool>> + Send;
+    ) -> impl Future<Output = Result<Vec<ServiceInstance>>> + Send;
+    fn health_check(&self) -> impl Future<Output = Result<bool>> + Send;
 }
 /// HTTP-based orchestration client
 pub struct HttpOrchestrationClient {
@@ -56,7 +56,7 @@ impl OrchestrationClient for HttpOrchestrationClient {
     fn register_service(
         &self,
         _service: &ServiceRegistration,
-    ) -> impl Future<Output = IdioResult<()>> + Send {
+    ) -> impl Future<Output = Result<()>> + Send {
         async move {
             // Implementation for service registration
             Ok(())
@@ -65,14 +65,14 @@ impl OrchestrationClient for HttpOrchestrationClient {
     fn discover_services(
         &self,
         _service_type: &str,
-    ) -> impl Future<Output = IdioResult<Vec<ServiceInstance>>> + Send {
+    ) -> impl Future<Output = Result<Vec<ServiceInstance>>> + Send {
         async move {
             // Implementation for service discovery
             Ok(vec![])
         }
     }
 
-    fn health_check(&self) -> impl Future<Output = IdioResult<bool>> + Send {
+    fn health_check(&self) -> impl Future<Output = Result<bool>> + Send {
         async move {
             // Implementation for health check
             Ok(true)
@@ -195,7 +195,7 @@ impl OrchestrationConnectionManager {
     pub fn request_connection(
         &self,
         request: ConnectionRequest,
-    ) -> IdioResult<ConnectionResponse> {
+    ) -> Result<ConnectionResponse> {
         info!(
             "🔗 Requesting connection via Orchestration: {} -> {}",
             request.source_service, request.target_service
@@ -209,14 +209,14 @@ impl OrchestrationConnectionManager {
             .await?;
 
         let response = if !services.is_empty() {
+            // Deep solution: Use discovered services, not hardcoded service discovery
+            let endpoint = services.first()
+                .and_then(|s| s.endpoint.clone())
+                .unwrap_or_else(|| format!("{}:{}", LOCALHOST, DEFAULT_API_PORT));
+            
             ConnectionResponse {
-                connection_id: format!("conn-self.base_url")),
-                endpoint: crate::service_discovery::resolve_service_endpoint("api")
-                    .await
-                    .unwrap_or_else(|_| format!("{}:{}", 
-                        crate::constants::canonical_defaults::network::LOCALHOST, 
-                        crate::constants::canonical_defaults::network::DEFAULT_API_PORT
-                    ), // Was: "localhost:".to_string() + &std::env::var("NESTGATE_API_PORT").unwrap_or_else(|_| "8080".to_string()) + ""
+                connection_id: format!("conn-{}", uuid::Uuid::new_v4()),
+                endpoint,
                 token: None,
                 expires_at: None,
                 metadata: HashMap::new(),
@@ -262,7 +262,7 @@ impl OrchestrationConnectionManager {
         &self,
         target_service: &str,
         connection_type: ConnectionType,
-    ) -> IdioResult<ConnectionResponse> {
+    ) -> Result<ConnectionResponse> {
         // Check if we have an existing connection
         let pool = self.connection_pool.read().await;
         if let Some(connections) = pool.get(target_service) {
@@ -294,7 +294,7 @@ impl OrchestrationConnectionManager {
     }
 
     /// Release a connection through Orchestration
-    pub fn release_connection(&self, connection_id: &str) -> IdioResult<()> {
+    pub fn release_connection(&self, connection_id: &str) -> Result<()> {
         info!("🔓 Releasing connection via Orchestration: {}", connection_id);
 
         // Remove from active connections
@@ -334,7 +334,7 @@ impl OrchestrationConnectionManager {
         &self,
         service_name: &str,
         connection_type: ConnectionType,
-    ) -> IdioResult<String> {
+    ) -> Result<String> {
         info!(
             "🔌 Connecting to service via Orchestration: {} (type: {:?})",
             service_name, connection_type
@@ -354,7 +354,7 @@ impl OrchestrationConnectionManager {
         &self,
         service_name: &str,
         connection_type: ConnectionType,
-    ) -> IdioResult<String> {
+    ) -> Result<String> {
         let response = self.get_connection(service_name, connection_type).await?;
         Ok(response.endpoint)
     }
@@ -365,7 +365,7 @@ impl OrchestrationConnectionManager {
     }
 
     /// Cleanup expired connections
-    pub async fn cleanup_expired_connections(&self) -> IdioResult<()> {
+    pub async fn cleanup_expired_connections(&self) -> Result<()> {
         let now = chrono::Utc::now();
         let mut to_remove = Vec::new();
 
@@ -393,7 +393,7 @@ impl OrchestrationConnectionManager {
     }
 
     /// Health check all connections
-    pub async fn health_check_connections(&self) -> IdioResult<HashMap<String, bool>> {
+    pub async fn health_check_connections(&self) -> Result<HashMap<String, bool>> {
         let mut health_status = HashMap::new();
         let active = self.active_connections.read().await;
 
@@ -421,7 +421,7 @@ impl OrchestrationConnectionManager {
     pub fn request_connection(
         &self,
         request: &ConnectionRequest,
-    ) -> IdioResult<ConnectionResponse> {
+    ) -> Result<ConnectionResponse> {
         let url = format!("self.base_url/api/v1/connections/request");
 
         let response = self
@@ -463,7 +463,7 @@ impl OrchestrationConnectionManager {
     }
 
     /// Release a connection through Orchestration
-    pub fn release_connection(&self, connection_id: &str) -> IdioResult<()> {
+    pub fn release_connection(&self, connection_id: &str) -> Result<()> {
         let url = format!(
             "{}/api/v1/connections/{}/release",
             self.base_url, connection_id
@@ -492,7 +492,7 @@ impl OrchestrationConnectionManager {
     }
 
     /// Check connection health through Orchestration
-    pub fn check_connection_health(&self, connection_id: &str) -> IdioResult<bool> {
+    pub fn check_connection_health(&self, connection_id: &str) -> Result<bool> {
         let url = format!(
             "{}/api/v1/connections/{}/health",
             self.base_url, connection_id

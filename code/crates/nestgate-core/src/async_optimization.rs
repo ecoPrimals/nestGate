@@ -286,11 +286,12 @@ impl OptimizedAsyncSemaphore {
     }
 
     /// Acquire permit with optimized waiting
+    #[allow(clippy::expect_used)] // Semaphore never closed
     pub async fn acquire(&self) -> tokio::sync::SemaphorePermit<'_> {
         self.semaphore
             .acquire()
             .await
-            .expect("Semaphore should not be closed")
+            .expect("BUG: Semaphore is never closed")
     }
 
     /// Try to acquire permit without waiting

@@ -6,8 +6,7 @@ use super::config::{
     RpcSecurityConfig, StreamConfig,
 };
 use super::types::{
-    DynRpcService, ResponseMetrics, RpcError, RpcStreamEvent, UnifiedRpcRequest,
-    UnifiedRpcResponse, UnifiedRpcService,
+    DynRpcService, ResponseMetrics, RpcError, RpcStreamEvent, UnifiedRpcRequest, UnifiedRpcResponse,
 };
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -514,7 +513,7 @@ impl MetricsCollector {
     /// * New metrics collector instance
     #[must_use]
     pub const fn new(
-        _config: &nestgate_core::config::canonical_master::domains::performance::MetricsConfig,
+        _config: &nestgate_core::config::canonical_primary::domains::performance::MetricsConfig,
     ) -> Self {
         Self
     }

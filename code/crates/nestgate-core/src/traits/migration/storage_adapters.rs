@@ -31,6 +31,7 @@ pub struct NativeAsyncStorageAdapter<T> {
     inner: T,
     name: String,
     version: String,
+    config: serde_json::Value,
 }
 
 impl<T> NativeAsyncStorageAdapter<T> {
@@ -40,6 +41,7 @@ impl<T> NativeAsyncStorageAdapter<T> {
             inner,
             name: "native-async-storage-adapter".to_string(),
             version: env!("CARGO_PKG_VERSION").to_string(),
+            config: serde_json::json!({}),
         }
     }
 
@@ -49,6 +51,7 @@ impl<T> NativeAsyncStorageAdapter<T> {
             inner,
             name,
             version,
+            config: serde_json::json!({}),
         }
     }
 }
@@ -81,7 +84,7 @@ where
     }
 
     fn config(&self) -> &Self::Config {
-        &serde_json::json!({})
+        &self.config
     }
 
     fn metrics(&self) -> impl Future<Output = Result<Self::Metrics>> + Send {
@@ -110,7 +113,7 @@ where
         + 'static,
     ObjectId: Clone + Send + Sync + 'static,
     ObjectData: Clone + Send + Sync + 'static,
-    ObjectMetadata: Clone + Send + Sync + 'static,
+    ObjectMetadata: Clone + Send + Sync + Default + 'static,
 {
     type Key = ObjectId;
     type Value = ObjectData;
@@ -125,7 +128,7 @@ where
                 .retrieve_object(key)
                 .await
                 .map(Some)
-                .map_err(|e| NestGateError::storage_error(format!("Read failed: {}", e)))
+                .map_err(|e| NestGateError::storage_error(&format!("Read failed: {}", e)))
         }
     }
 
@@ -134,15 +137,17 @@ where
         _key: Self::Key,
         value: Self::Value,
     ) -> impl Future<Output = Result<()>> + Send {
+        let inner = &self.inner;
         async move {
             // NativeAsyncStorageProvider doesn't take key in store_object,
-            // it returns the ID. We'll store and ignore the returned ID for now.
-            let metadata = Default::default(); // Would need proper metadata
-            self.inner
+            // it returns the ID. We need to get metadata first or use empty metadata
+            // For this adapter, we'll use Default::default() for metadata
+            let metadata = ObjectMetadata::default();
+            inner
                 .store_object(value, metadata)
                 .await
                 .map(|_id| ())
-                .map_err(|e| NestGateError::storage_error(format!("Write failed: {}", e)))
+                .map_err(|e| NestGateError::storage_error(&format!("Write failed: {}", e)))
         }
     }
 
@@ -151,7 +156,7 @@ where
             self.inner
                 .delete_object(key)
                 .await
-                .map_err(|e| NestGateError::storage_error(format!("Delete failed: {}", e)))
+                .map_err(|e| NestGateError::storage_error(&format!("Delete failed: {}", e)))
         }
     }
 
@@ -168,25 +173,24 @@ where
     fn metadata(
         &self,
         key: &Self::Key,
-    ) -> impl Future<Output = Result<Option<Self::Metadata>>> + Send {
+    ) -> impl Future<Output = Result<Self::Metadata>> + Send {
         async move {
             self.inner
                 .get_metadata(key)
                 .await
-                .map(Some)
-                .map_err(|e| NestGateError::storage_error(format!("Metadata read failed: {}", e)))
+                .map_err(|e| NestGateError::storage_error(&format!("Metadata read failed: {}", e)))
         }
     }
 
     fn list(
         &self,
-        _prefix: Option<&Self::Key>,
+        _prefix: Option<&str>,
     ) -> impl Future<Output = Result<Vec<Self::Key>>> + Send {
         async move {
             self.inner
                 .list_objects()
                 .await
-                .map_err(|e| NestGateError::storage_error(format!("List failed: {}", e)))
+                .map_err(|e| NestGateError::storage_error(&format!("List failed: {}", e)))
         }
     }
 }
@@ -238,6 +242,7 @@ pub trait NativeAsyncStorageProvider {
 pub struct StoragePrimalAdapter<T> {
     inner: T,
     name: String,
+    config: serde_json::Value,
 }
 
 impl<T> StoragePrimalAdapter<T> {
@@ -245,6 +250,7 @@ impl<T> StoragePrimalAdapter<T> {
         Self {
             inner,
             name: "storage-primal-adapter".to_string(),
+            config: serde_json::json!({}),
         }
     }
 }
@@ -276,7 +282,7 @@ where
     }
 
     fn config(&self) -> &Self::Config {
-        &serde_json::json!({})
+        &self.config
     }
 
     fn metrics(&self) -> impl Future<Output = Result<Self::Metrics>> + Send {
@@ -342,13 +348,13 @@ where
     fn metadata(
         &self,
         _key: &Self::Key,
-    ) -> impl Future<Output = Result<Option<Self::Metadata>>> + Send {
-        async move { Ok(None) }
+    ) -> impl Future<Output = Result<Self::Metadata>> + Send {
+        async move { Ok(serde_json::json!({})) }
     }
 
     fn list(
         &self,
-        _prefix: Option<&Self::Key>,
+        _prefix: Option<&str>,
     ) -> impl Future<Output = Result<Vec<Self::Key>>> + Send {
         async move { Ok(vec![]) }
     }
@@ -386,6 +392,7 @@ pub use crate::traits::canonical_hierarchy::CanonicalStorage as StoragePrimalPro
 pub struct ZeroCostStorageAdapter<T, K, V> {
     inner: T,
     name: String,
+    config: serde_json::Value,
     _phantom: PhantomData<(K, V)>,
 }
 
@@ -394,6 +401,7 @@ impl<T, K, V> ZeroCostStorageAdapter<T, K, V> {
         Self {
             inner,
             name: "zero-cost-storage-adapter".to_string(),
+            config: serde_json::json!({}),
             _phantom: PhantomData,
         }
     }
@@ -428,7 +436,7 @@ where
     }
 
     fn config(&self) -> &Self::Config {
-        &serde_json::json!({})
+        &self.config
     }
 
     fn metrics(&self) -> impl Future<Output = Result<Self::Metrics>> + Send {
@@ -477,7 +485,7 @@ where
             self.inner
                 .store(key, value)
                 .await
-                .map_err(|e| NestGateError::storage_error(format!("Write failed: {}", e)))
+                .map_err(|e| NestGateError::storage_error(&format!("Write failed: {}", e)))
         }
     }
 
@@ -502,16 +510,16 @@ where
     fn metadata(
         &self,
         _key: &Self::Key,
-    ) -> impl Future<Output = Result<Option<Self::Metadata>>> + Send {
+    ) -> impl Future<Output = Result<Self::Metadata>> + Send {
         async move {
             // ZeroCostStorageProvider doesn't have metadata
-            Ok(None)
+            Ok(serde_json::json!({}))
         }
     }
 
     fn list(
         &self,
-        _prefix: Option<&Self::Key>,
+        _prefix: Option<&str>,
     ) -> impl Future<Output = Result<Vec<Self::Key>>> + Send {
         async move {
             // ZeroCostStorageProvider doesn't have list operation

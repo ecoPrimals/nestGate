@@ -10,7 +10,7 @@ fn test_mcp_connection_error() {
     let error = mcp_connection_error("Failed to connect");
     let debug_str = format!("{:?}", error);
 
-    assert!(debug_str.len() > 0);
+    assert!(!debug_str.is_empty());
     assert!(debug_str.contains("Failed to connect") || debug_str.contains("MCP Connection Error"));
 }
 
@@ -19,7 +19,7 @@ fn test_protocol_error_with_method() {
     let error = protocol_error("Invalid protocol", Some("initialize"));
     let debug_str = format!("{:?}", error);
 
-    assert!(debug_str.len() > 0);
+    assert!(!debug_str.is_empty());
 }
 
 #[test]
@@ -27,7 +27,7 @@ fn test_protocol_error_without_method() {
     let error = protocol_error("Invalid protocol", None);
     let debug_str = format!("{:?}", error);
 
-    assert!(debug_str.len() > 0);
+    assert!(!debug_str.is_empty());
 }
 
 #[test]
@@ -35,7 +35,7 @@ fn test_method_error() {
     let error = method_error("Method not found", "tools/list");
     let debug_str = format!("{:?}", error);
 
-    assert!(debug_str.len() > 0);
+    assert!(!debug_str.is_empty());
 }
 
 #[test]
@@ -43,7 +43,7 @@ fn test_session_error() {
     let error = session_error("Session expired", "session-123");
     let debug_str = format!("{:?}", error);
 
-    assert!(debug_str.len() > 0);
+    assert!(!debug_str.is_empty());
 }
 
 #[test]
@@ -51,7 +51,7 @@ fn test_serialization_error() {
     let error = serialization_error("Invalid JSON");
     let debug_str = format!("{:?}", error);
 
-    assert!(debug_str.len() > 0);
+    assert!(!debug_str.is_empty());
 }
 
 #[test]
@@ -59,7 +59,7 @@ fn test_transport_error() {
     let error = transport_error("Connection refused");
     let debug_str = format!("{:?}", error);
 
-    assert!(debug_str.len() > 0);
+    assert!(!debug_str.is_empty());
 }
 
 // ==================== ERROR WITH EMPTY MESSAGES ====================
@@ -68,28 +68,28 @@ fn test_transport_error() {
 fn test_connection_error_empty_message() {
     let error = mcp_connection_error("");
     let debug_str = format!("{:?}", error);
-    assert!(debug_str.len() > 0);
+    assert!(!debug_str.is_empty());
 }
 
 #[test]
 fn test_protocol_error_empty_message() {
     let error = protocol_error("", Some("method"));
     let debug_str = format!("{:?}", error);
-    assert!(debug_str.len() > 0);
+    assert!(!debug_str.is_empty());
 }
 
 #[test]
 fn test_method_error_empty_message() {
     let error = method_error("", "method");
     let debug_str = format!("{:?}", error);
-    assert!(debug_str.len() > 0);
+    assert!(!debug_str.is_empty());
 }
 
 #[test]
 fn test_session_error_empty_message() {
     let error = session_error("", "session-id");
     let debug_str = format!("{:?}", error);
-    assert!(debug_str.len() > 0);
+    assert!(!debug_str.is_empty());
 }
 
 // ==================== ERROR WITH LONG MESSAGES ====================
@@ -99,7 +99,7 @@ fn test_long_error_messages() {
     let long_message = "a".repeat(1000);
     let error = mcp_connection_error(&long_message);
     let debug_str = format!("{:?}", error);
-    assert!(debug_str.len() > 0);
+    assert!(!debug_str.is_empty());
 }
 
 #[test]
@@ -107,7 +107,7 @@ fn test_special_characters_in_error() {
     let message = "Error: \n\t\"quotes\" 'apostrophes' <tags>";
     let error = mcp_connection_error(message);
     let debug_str = format!("{:?}", error);
-    assert!(debug_str.len() > 0);
+    assert!(!debug_str.is_empty());
 }
 
 // ==================== MCP ERROR EXTENSION TRAIT TESTS ====================
@@ -164,17 +164,17 @@ fn test_multiple_error_types() {
     assert_eq!(errors.len(), 6);
 
     for error in &errors {
-        assert!(format!("{:?}", error).len() > 0);
+        assert!(!format!("{:?}", error).is_empty());
     }
 }
 
 #[test]
 fn test_error_accumulation() {
-    let mut errors = Vec::new();
-
-    errors.push(mcp_connection_error("Error 1"));
-    errors.push(protocol_error("Error 2", Some("method")));
-    errors.push(method_error("Error 3", "tools/list"));
+    let errors = [
+        mcp_connection_error("Error 1"),
+        protocol_error("Error 2", Some("method")),
+        method_error("Error 3", "tools/list"),
+    ];
 
     assert_eq!(errors.len(), 3);
 }
@@ -193,7 +193,7 @@ fn test_protocol_error_various_methods() {
 
     for method in methods {
         let error = protocol_error("Test error", method);
-        assert!(format!("{:?}", error).len() > 0);
+        assert!(!format!("{:?}", error).is_empty());
     }
 }
 
@@ -211,7 +211,7 @@ fn test_method_error_various_methods() {
 
     for method in methods {
         let error = method_error("Test error", method);
-        assert!(format!("{:?}", error).len() > 0);
+        assert!(!format!("{:?}", error).is_empty());
     }
 }
 
@@ -229,7 +229,7 @@ fn test_various_session_ids() {
 
     for session_id in session_ids {
         let error = session_error("Test", session_id);
-        assert!(format!("{:?}", error).len() > 0);
+        assert!(!format!("{:?}", error).is_empty());
     }
 }
 
@@ -239,7 +239,7 @@ fn test_various_session_ids() {
 fn test_unicode_in_errors() {
     let error = mcp_connection_error("连接失败 🔌");
     let debug_str = format!("{:?}", error);
-    assert!(debug_str.len() > 0);
+    assert!(!debug_str.is_empty());
 }
 
 #[test]
@@ -247,7 +247,7 @@ fn test_multiline_error_messages() {
     let message = "Line 1\nLine 2\nLine 3";
     let error = mcp_connection_error(message);
     let debug_str = format!("{:?}", error);
-    assert!(debug_str.len() > 0);
+    assert!(!debug_str.is_empty());
 }
 
 #[test]
@@ -255,7 +255,7 @@ fn test_error_with_json_like_message() {
     let message = r#"{"error": "connection failed", "code": 500}"#;
     let error = serialization_error(message);
     let debug_str = format!("{:?}", error);
-    assert!(debug_str.len() > 0);
+    assert!(!debug_str.is_empty());
 }
 
 // ==================== PATTERN MATCHING TESTS ====================
@@ -309,8 +309,7 @@ fn test_error_context_extraction() {
     let _session = error.extract_session_id();
     let _method = error.extract_method();
 
-    // All should complete without panicking
-    assert!(true);
+    // All should complete without panicking - no assertion needed
 }
 
 // ==================== REAL-WORLD SCENARIOS ====================
@@ -319,28 +318,28 @@ fn test_error_context_extraction() {
 fn test_connection_timeout_error() {
     let error = transport_error("Connection timeout after 30s");
     let debug_str = format!("{:?}", error);
-    assert!(debug_str.len() > 0);
+    assert!(!debug_str.is_empty());
 }
 
 #[test]
 fn test_authentication_failure_error() {
     let error = session_error("Authentication failed: invalid token", "session-auth-001");
     let debug_str = format!("{:?}", error);
-    assert!(debug_str.len() > 0);
+    assert!(!debug_str.is_empty());
 }
 
 #[test]
 fn test_method_not_implemented_error() {
     let error = method_error("Method not implemented", "experimental/feature");
     let debug_str = format!("{:?}", error);
-    assert!(debug_str.len() > 0);
+    assert!(!debug_str.is_empty());
 }
 
 #[test]
 fn test_serialization_failure_error() {
     let error = serialization_error("Failed to serialize response: invalid UTF-8");
     let debug_str = format!("{:?}", error);
-    assert!(debug_str.len() > 0);
+    assert!(!debug_str.is_empty());
 }
 
 // ==================== ERROR COMPARISON TESTS ====================
@@ -359,8 +358,8 @@ fn test_multiple_errors_collection() {
     assert_eq!(error_log.len(), 3);
 
     for (error_type, error_msg) in &error_log {
-        assert!(error_type.len() > 0);
-        assert!(error_msg.len() > 0);
+        assert!(!error_type.is_empty());
+        assert!(!error_msg.is_empty());
     }
 }
 

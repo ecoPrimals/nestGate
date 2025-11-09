@@ -9,13 +9,13 @@ use std::time::{Duration, SystemTime};
 #[test]
 fn test_create_metrics() {
     let metrics = ZfsMetrics::new();
-    assert!(format!("{:?}", metrics).len() > 0);
+    assert!(!format!("{:?}", metrics).is_empty());
 }
 
 #[test]
 fn test_create_metrics_for_testing() {
     let metrics = ZfsMetrics::new_for_testing();
-    assert!(format!("{:?}", metrics).len() > 0);
+    assert!(!format!("{:?}", metrics).is_empty());
 }
 
 // ==================== OPERATION RECORDING TESTS ====================
@@ -382,7 +382,7 @@ fn test_metrics_debug_format() {
     let metrics = ZfsMetrics::new();
     let debug_str = format!("{:?}", metrics);
 
-    assert!(debug_str.len() > 0);
+    assert!(!debug_str.is_empty());
     assert!(debug_str.contains("ZfsMetrics"));
 }
 
@@ -394,7 +394,7 @@ fn test_snapshot_debug_format() {
     let snapshot = metrics.get_current_metrics();
     let debug_str = format!("{:?}", snapshot);
 
-    assert!(debug_str.len() > 0);
+    assert!(!debug_str.is_empty());
     assert!(debug_str.contains("MetricsSnapshot"));
 }
 

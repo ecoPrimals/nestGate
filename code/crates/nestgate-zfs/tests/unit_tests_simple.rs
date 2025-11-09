@@ -18,7 +18,7 @@ fn test_zfs_config_creation() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn test_zfs_pool_manager_creation() -> Result<(), Box<dyn std::error::Error>> {
     let config = ZfsConfig::default();
-    let manager = ZfsPoolManager::new_production(config);
+    let _manager = ZfsPoolManager::new_production(config);
 
     // Just test that the manager can be created
     println!("ZFS pool manager created successfully");

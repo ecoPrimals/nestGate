@@ -7,7 +7,7 @@
 ## 📊 CURRENT STATE
 
 ### Canonical NetworkConfig (THE Target)
-**Location**: `code/crates/nestgate-core/src/config/canonical_master/domains/network/mod.rs`
+**Location**: `code/crates/nestgate-core/src/config/canonical_primary/domains/network/mod.rs`
 **Name**: `CanonicalNetworkConfig`
 **Status**: ✅ This is THE canonical config to use
 
@@ -38,12 +38,12 @@
 ## 🎯 CONSOLIDATION STRATEGY
 
 ### Phase 1: Verify Canonical (✅ Done)
-- Canonical exists in `canonical_master/domains/network`
+- Canonical exists in `canonical_primary/domains/network`
 - Well-structured and comprehensive
 - Ready to be THE single source
 
 ### Phase 2: Update Exports (Next)
-1. Ensure canonical_master exports CanonicalNetworkConfig
+1. Ensure canonical_primary exports CanonicalNetworkConfig
 2. Add type alias: `NetworkConfig = CanonicalNetworkConfig`
 3. Update config/mod.rs to re-export
 
@@ -77,7 +77,7 @@
 
 ## ✅ SUCCESS CRITERIA
 
-- All production code uses `canonical_master::domains::network::CanonicalNetworkConfig`
+- All production code uses `canonical_primary::domains::network::CanonicalNetworkConfig`
 - Zero local NetworkConfig definitions (except deprecated)
 - All tests pass
 - Clean compilation

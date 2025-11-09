@@ -12,7 +12,7 @@
 ### **Major Changes Completed** ✅
 1. **Archived Outdated Documents** - Moved resolved issue documents to archive
 2. **Created Current Status Documents** - New specs reflecting infrastructure restoration
-3. **Updated Master Documentation** - Revised README and index to current status
+3. **Updated Primary Documentation** - Revised README and index to current status
 4. **Established Production Roadmap** - Clear 6-week path to full production
 
 ---
@@ -133,7 +133,7 @@ With documentation aligned to reality, NestGate is ready for the **production re
 ### **Current Active Documents**
 - **[Infrastructure Restoration Status](INFRASTRUCTURE_RESTORATION_STATUS.md)** - Current completion status
 - **[Production Readiness Roadmap](PRODUCTION_READINESS_ROADMAP.md)** - Next 6-week detailed plan
-- **[Specs Master Index](SPECS_MASTER_INDEX.md)** - Updated navigation and status
+- **[Specs Primary Index](SPECS_MASTER_INDEX.md)** - Updated navigation and status
 
 ### **Historical Reference**
 - **[Archive Notice](archive/INFRASTRUCTURE_RESTORATION_ARCHIVE_NOTICE.md)** - Explanation of archived documents

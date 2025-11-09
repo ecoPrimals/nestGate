@@ -160,10 +160,14 @@ pub fn create_routes() -> Router {
 }
 /// Get storage information - demonstrates automatic AI-First conversion
 ///
+/// # Errors
+///
+/// Returns `StatusCode` error if storage information cannot be retrieved.
+///
 /// This endpoint returns standard JSON that gets automatically wrapped
 /// by the AI-First middleware into the ecosystem-standard format.
 pub async fn get_storage_info(
-    Query(_params): Query<StorageQuery>,
+    Query(params): Query<StorageQuery>,
 ) -> Result<Json<Vec<StorageInfo>>, StatusCode> {
     // Simulate storage data retrieval
     let storage_pools = vec![
@@ -185,7 +189,7 @@ pub async fn get_storage_info(
         },
     ];
     // Filter by pool if specified
-    let filtered_pools = if let Some(pool_filter) = _params.pool {
+    let filtered_pools = if let Some(pool_filter) = params.pool {
         storage_pools
             .into_iter()
             .filter(|p| p.pool_name.contains(&pool_filter))
@@ -323,13 +327,17 @@ pub async fn get_pool_info(
 }
 
 /// Execute storage operation - demonstrates error handling with AI-First format
+///
+/// # Errors
+///
+/// Returns `StatusCode` error if the storage operation cannot be executed.
 pub async fn execute_storage_operation(
     Json(request): Json<PoolOperationRequest>,
 ) -> Result<Json<AIFirstResponse<String>>, StatusCode> {
     // Simulate operation execution
     let result = match request.b_operation.as_str() {
         "scrub" => {
-            let _message = "Scrub operation started for pool".to_string();
+            let message = "Scrub operation started for pool".to_string();
 
             let suggestions = vec![SuggestedAction {
                 action_id: "poll_scrub_status".to_string(),
@@ -337,29 +345,29 @@ pub async fn execute_storage_operation(
                 description: "Poll scrub status every 5 minutes".to_string(),
                 confidence: 0.9,
                 parameters: {
-                    let mut _params = HashMap::new();
-                    _params.insert(
+                    let mut params = HashMap::new();
+                    params.insert(
                         "poll_interval_ms".to_string(),
-                        serde_json::Value::Number(serde_json::Number::from(300000)),
+                        serde_json::Value::Number(serde_json::Number::from(300_000)),
                     );
-                    _params.insert(
+                    params.insert(
                         "pool_name".to_string(),
                         serde_json::Value::String(request.pool_name.clone()),
                     );
-                    _params
+                    params
                 },
                 priority: 1, // High priority
                 dependencies: Vec::new(),
-                estimated_duration_ms: Some(3600000),
+                estimated_duration_ms: Some(3_600_000),
             }];
-            ai_response_with_actions(_message, suggestions)
+            ai_response_with_actions(message, suggestions)
         }
         "snapshot" => {
-            let _message = "Snapshot created for pool: self.base_url".to_string();
-            ai_success_with_confidence(_message, 0.95)
+            let message = "Snapshot created for pool: self.base_url".to_string();
+            ai_success_with_confidence(message, 0.95)
         }
         "export" => {
-            let _message = "Export initiated for pool: self.base_url".to_string();
+            let message = "Export initiated for pool: self.base_url".to_string();
 
             let suggestions = vec![SuggestedAction {
                 action_id: "verify_export".to_string(),
@@ -369,16 +377,16 @@ pub async fn execute_storage_operation(
                 parameters: HashMap::new(),
                 priority: 2, // Medium priority
                 dependencies: Vec::new(),
-                estimated_duration_ms: Some(600000), // 10 minutes
+                estimated_duration_ms: Some(600_000), // 10 minutes
             }];
 
-            ai_response_with_actions(_message, suggestions)
+            ai_response_with_actions(message, suggestions)
         }
         _ => {
             // Unsupported operation - this would normally return an error
             // but for demo purposes, we'll return a low-confidence response
-            let _message = "Operation 'self.base_url' not supported".to_string();
-            ai_success_with_confidence(_message, 0.1)
+            let message = "Operation 'self.base_url' not supported".to_string();
+            ai_success_with_confidence(message, 0.1)
         }
     };
 
@@ -417,7 +425,7 @@ pub async fn demo_confidence_levels() -> Json<AIFirstResponse<Vec<OptimizationSc
         parameters: HashMap::new(),
         priority: 3, // Low priority
         dependencies: Vec::new(),
-        estimated_duration_ms: Some(86400000), // 1 day
+        estimated_duration_ms: Some(86_400_000), // 1 day
     }];
 
     Json(ai_response_with_actions(demos, suggestions))

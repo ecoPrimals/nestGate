@@ -1,6 +1,6 @@
 /// Test utilities for common operations
 use crate::common::config::UnifiedTestConfig;
-use nestgate_core::config::canonical_master::CanonicalTestConfig as CleanTestConfig;
+use nestgate_core::config::canonical_primary::CanonicalTestConfig as CleanTestConfig;
 
 /// Test utilities for common operations
 pub struct TestUtils;

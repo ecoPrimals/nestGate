@@ -12,6 +12,10 @@ use tracing::{error, info, warn};
 // Removed unused tracing import
 
 /// Get all workspaces with real ZFS integration
+///
+/// # Errors
+///
+/// Returns `StatusCode::INTERNAL_SERVER_ERROR` if ZFS command fails or output cannot be parsed.
 #[must_use]
 pub async fn get_workspaces() -> Result<Json<Value>, StatusCode> {
     info!("📁 Getting all workspaces from ZFS datasets");
@@ -112,6 +116,11 @@ pub async fn get_workspaces() -> Result<Json<Value>, StatusCode> {
 }
 
 /// Create a new workspace with real ZFS dataset creation
+///
+/// # Errors
+///
+/// Returns `StatusCode::BAD_REQUEST` if workspace name is missing or invalid,
+/// or `StatusCode::INTERNAL_SERVER_ERROR` if ZFS dataset creation fails.
 pub async fn create_workspace(Json(request): Json<Value>) -> Result<Json<Value>, StatusCode> {
     info!("🆕 Creating new workspace: {:?}", request);
     let workspace_name = request
@@ -206,6 +215,11 @@ pub async fn create_workspace(Json(request): Json<Value>) -> Result<Json<Value>,
 }
 
 /// Get workspace details with real ZFS properties
+///
+/// # Errors
+///
+/// Returns `StatusCode::BAD_REQUEST` if workspace ID format is invalid,
+/// or `StatusCode::INTERNAL_SERVER_ERROR` if ZFS command fails or dataset not found.
 pub async fn get_workspace(Path(workspace_id): Path<String>) -> Result<Json<Value>, StatusCode> {
     info!("📋 Getting workspace details: {}", workspace_id);
     // Validate workspace ID
@@ -429,6 +443,11 @@ pub async fn update_workspace_config(
 /// **DELETE WORKSPACE**
 ///
 /// Delete an existing workspace by ID.
+///
+/// # Errors
+///
+/// Returns `StatusCode::BAD_REQUEST` if workspace ID format is invalid,
+/// or `StatusCode::INTERNAL_SERVER_ERROR` if ZFS deletion fails.
 pub async fn delete_workspace(Path(workspace_id): Path<String>) -> Result<StatusCode, StatusCode> {
     tracing::info!("Deleting workspace: {}", workspace_id);
 

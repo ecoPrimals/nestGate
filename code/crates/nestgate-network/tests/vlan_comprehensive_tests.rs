@@ -244,9 +244,10 @@ fn test_enabled_false() {
 
 #[test]
 fn test_create_modify_serialize() {
-    let mut settings = NetworkVlanSettings::default();
-    settings.enabled = true;
-    settings.default_vlan_id = 42;
+    let settings = NetworkVlanSettings {
+        enabled: true,
+        default_vlan_id: 42,
+    };
 
     let json = serde_json::to_string(&settings).expect("Serialization failed");
     let recovered: NetworkVlanSettings =

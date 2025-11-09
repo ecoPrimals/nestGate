@@ -14,6 +14,7 @@ use tracing::{debug, info};
 use uuid::Uuid;
 
 /// JSON RPC request format for orchestration
+#[allow(dead_code)] // Reserved for future JSON RPC implementation
 #[derive(Debug, serde::Serialize)]
 struct JsonRpcRequest {
     jsonrpc: String,

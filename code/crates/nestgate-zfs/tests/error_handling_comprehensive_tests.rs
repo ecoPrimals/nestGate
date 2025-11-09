@@ -84,7 +84,8 @@ fn test_zfs_error_io_conversion() {
 #[test]
 fn test_zfs_error_builder_new() {
     let error = ZfsErrorBuilder::new("Generic error");
-    assert!(format!("{:?}", error).len() > 0);
+    let debug_str = format!("{:?}", error);
+    assert!(!debug_str.is_empty());
 }
 
 #[test]
@@ -98,35 +99,35 @@ fn test_zfs_error_builder_pool_error() {
 fn test_zfs_error_builder_dataset_error() {
     let error = ZfsErrorBuilder::dataset_error("Dataset error", "testdataset");
     let debug_str = format!("{:?}", error);
-    assert!(debug_str.len() > 0);
+    assert!(!debug_str.is_empty());
 }
 
 #[test]
 fn test_zfs_error_builder_snapshot_error() {
     let error = ZfsErrorBuilder::snapshot_error("Snapshot error", "testsnapshot");
     let debug_str = format!("{:?}", error);
-    assert!(debug_str.len() > 0);
+    assert!(!debug_str.is_empty());
 }
 
 #[test]
 fn test_zfs_error_builder_command_error() {
     let error = ZfsErrorBuilder::command_error("zfs list", "timeout");
     let debug_str = format!("{:?}", error);
-    assert!(debug_str.len() > 0);
+    assert!(!debug_str.is_empty());
 }
 
 #[test]
 fn test_zfs_error_builder_zfs_error() {
     let error = ZfsErrorBuilder::zfs_error("Generic ZFS error");
     let debug_str = format!("{:?}", error);
-    assert!(debug_str.len() > 0);
+    assert!(!debug_str.is_empty());
 }
 
 #[test]
 fn test_zfs_error_builder_zfs_operation_error() {
     let error = ZfsErrorBuilder::zfs_operation_error("Operation failed");
     let debug_str = format!("{:?}", error);
-    assert!(debug_str.len() > 0);
+    assert!(!debug_str.is_empty());
 }
 
 // ==================== ZFS OPERATION ENUM TESTS ====================
@@ -157,7 +158,7 @@ fn test_zfs_operation_debug() {
     let op = ZfsOperation::PoolCreate;
     let debug_str = format!("{:?}", op);
 
-    assert!(debug_str.len() > 0);
+    assert!(!debug_str.is_empty());
 }
 
 #[test]
@@ -173,7 +174,8 @@ fn test_zfs_operation_clone() {
 #[test]
 fn test_create_zfs_error_pool_create() {
     let error = create_zfs_error("Pool creation failed".to_string(), ZfsOperation::PoolCreate);
-    assert!(format!("{:?}", error).len() > 0);
+    let debug_str = format!("{:?}", error);
+    assert!(!debug_str.is_empty());
 }
 
 #[test]
@@ -182,7 +184,8 @@ fn test_create_zfs_error_dataset_create() {
         "Dataset creation failed".to_string(),
         ZfsOperation::DatasetCreate,
     );
-    assert!(format!("{:?}", error).len() > 0);
+    let debug_str = format!("{:?}", error);
+    assert!(!debug_str.is_empty());
 }
 
 #[test]
@@ -191,13 +194,15 @@ fn test_create_zfs_error_snapshot_create() {
         "Snapshot creation failed".to_string(),
         ZfsOperation::SnapshotCreate,
     );
-    assert!(format!("{:?}", error).len() > 0);
+    let debug_str = format!("{:?}", error);
+    assert!(!debug_str.is_empty());
 }
 
 #[test]
 fn test_create_zfs_error_command() {
     let error = create_zfs_error("Command failed".to_string(), ZfsOperation::Command);
-    assert!(format!("{:?}", error).len() > 0);
+    let debug_str = format!("{:?}", error);
+    assert!(!debug_str.is_empty());
 }
 
 // ==================== COMMAND ERROR TESTS ====================
@@ -205,13 +210,15 @@ fn test_create_zfs_error_command() {
 #[test]
 fn test_zfs_command_error() {
     let error = zfs_command_error("zfs list", "command not found");
-    assert!(format!("{:?}", error).len() > 0);
+    let debug_str = format!("{:?}", error);
+    assert!(!debug_str.is_empty());
 }
 
 #[test]
 fn test_zfs_command_error_with_empty_output() {
     let error = zfs_command_error("zfs create", "");
-    assert!(format!("{:?}", error).len() > 0);
+    let debug_str = format!("{:?}", error);
+    assert!(!debug_str.is_empty());
 }
 
 // ==================== OPERATION ERROR TESTS ====================
@@ -219,13 +226,15 @@ fn test_zfs_command_error_with_empty_output() {
 #[test]
 fn test_zfs_operation_error() {
     let error = zfs_operation_error("pool_create", "insufficient permissions");
-    assert!(format!("{:?}", error).len() > 0);
+    let debug_str = format!("{:?}", error);
+    assert!(!debug_str.is_empty());
 }
 
 #[test]
 fn test_zfs_operation_error_with_details() {
     let error = zfs_operation_error("dataset_mount", "mount point does not exist");
-    assert!(format!("{:?}", error).len() > 0);
+    let debug_str = format!("{:?}", error);
+    assert!(!debug_str.is_empty());
 }
 
 // ==================== ERROR DEBUG TESTS ====================
@@ -237,7 +246,7 @@ fn test_error_debug_output() {
     };
 
     let debug_output = format!("{:?}", error);
-    assert!(debug_output.len() > 0);
+    assert!(!debug_output.is_empty());
     assert!(debug_output.contains("PoolError") || debug_output.contains("Debug test"));
 }
 
@@ -258,7 +267,8 @@ fn test_multiple_error_types() {
     assert_eq!(errors.len(), 3);
 
     for error in &errors {
-        assert!(format!("{}", error).len() > 0);
+        let debug_str = format!("{}", error);
+        assert!(!debug_str.is_empty());
     }
 }
 
@@ -444,7 +454,7 @@ fn test_empty_error_message() {
     };
 
     let error_msg = format!("{}", error);
-    assert!(error_msg.len() > 0); // Should still have base message
+    assert!(!error_msg.is_empty()); // Should still have base message
 }
 
 #[test]
@@ -466,7 +476,7 @@ fn test_special_characters_in_error() {
     };
 
     let error_msg = format!("{}", error);
-    assert!(error_msg.len() > 0);
+    assert!(!error_msg.is_empty());
 }
 
 // ==================== IO ERROR CONVERSION TESTS ====================
@@ -476,7 +486,8 @@ fn test_io_error_not_found() {
     let io_err = io::Error::new(io::ErrorKind::NotFound, "Not found");
     let zfs_err: ZfsError = io_err.into();
 
-    assert!(format!("{}", zfs_err).len() > 0);
+    let debug_str = format!("{}", zfs_err);
+    assert!(!debug_str.is_empty());
 }
 
 #[test]
@@ -484,7 +495,8 @@ fn test_io_error_permission_denied() {
     let io_err = io::Error::new(io::ErrorKind::PermissionDenied, "Permission denied");
     let zfs_err: ZfsError = io_err.into();
 
-    assert!(format!("{}", zfs_err).len() > 0);
+    let debug_str = format!("{}", zfs_err);
+    assert!(!debug_str.is_empty());
 }
 
 #[test]
@@ -492,7 +504,8 @@ fn test_io_error_connection_refused() {
     let io_err = io::Error::new(io::ErrorKind::ConnectionRefused, "Connection refused");
     let zfs_err: ZfsError = io_err.into();
 
-    assert!(format!("{}", zfs_err).len() > 0);
+    let debug_str = format!("{}", zfs_err);
+    assert!(!debug_str.is_empty());
 }
 
 // ==================== INTEGRATION TESTS ====================
@@ -528,7 +541,8 @@ fn test_multiple_operations_with_errors() {
 
     for (op, msg) in operations {
         let error = create_zfs_error(msg.to_string(), op);
-        assert!(format!("{:?}", error).len() > 0);
+        let debug_str = format!("{:?}", error);
+        assert!(!debug_str.is_empty());
     }
 }
 
@@ -549,7 +563,8 @@ fn test_error_accumulation() {
     assert_eq!(errors.len(), 3);
 
     for error in &errors {
-        assert!(format!("{}", error).len() > 0);
+        let debug_str = format!("{}", error);
+        assert!(!debug_str.is_empty());
     }
 }
 
@@ -558,13 +573,15 @@ fn test_error_accumulation() {
 #[test]
 fn test_builder_with_empty_strings() {
     let error = ZfsErrorBuilder::pool_error("", "");
-    assert!(format!("{:?}", error).len() > 0);
+    let debug_str = format!("{:?}", error);
+    assert!(!debug_str.is_empty());
 }
 
 #[test]
 fn test_builder_with_special_characters() {
     let error = ZfsErrorBuilder::pool_error("Error\nwith\nnewlines", "test\tpool");
-    assert!(format!("{:?}", error).len() > 0);
+    let debug_str = format!("{:?}", error);
+    assert!(!debug_str.is_empty());
 }
 
 #[test]
@@ -587,6 +604,7 @@ fn test_all_operations_create_errors() {
 
     for op in ops {
         let error = create_zfs_error("Test".to_string(), op);
-        assert!(format!("{:?}", error).len() > 0);
+        let debug_str = format!("{:?}", error);
+        assert!(!debug_str.is_empty());
     }
 }

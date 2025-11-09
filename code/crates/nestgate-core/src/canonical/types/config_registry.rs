@@ -50,18 +50,18 @@ pub struct CanonicalStorageConfig {
 }
 /// **THE CANONICAL NETWORK CONFIGURATION**
 ///
-/// **⚠️ DEPRECATED**: This is a duplicate. Use `CanonicalNetworkConfig` from `canonical_master::domains::network`
+/// **⚠️ DEPRECATED**: This is a duplicate. Use `CanonicalNetworkConfig` from `canonical_primary::domains::network`
 /// Consolidates ALL network configuration patterns:
 /// - `NetworkConfig` from `canonical_modernization/core_config.rs`
 /// - `CanonicalNetworkConfig` from `canonical_modernization/NestGateCanonicalConfig.rs`
 /// - Network settings from `unified_network_extensions.rs`
 /// - Network configs from various service modules
 ///
-/// **⚠️ DEPRECATED**: Duplicate. Use the one from `canonical_master::domains::network`
+/// **⚠️ DEPRECATED**: Duplicate. Use the one from `canonical_primary::domains::network`
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[deprecated(
     since = "0.10.0",
-    note = "Use canonical_master::domains::network::CanonicalNetworkConfig instead"
+    note = "Use canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
 pub struct CanonicalNetworkConfig {
     /// Interface bindings

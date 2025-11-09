@@ -3,20 +3,24 @@
 
 use nestgate_core::{
     canonical_modernization::unified_enums::{UnifiedHealthStatus, UnifiedServiceType},
+    config::canonical_primary::NestGateCanonicalConfig,
     error::{NestGateError, Result},
-    traits::CanonicalConfig,
-    traits::{UniversalResponseStatus, UniversalServiceRequest, UniversalServiceResponse},
+    service_discovery::types::{
+        CommunicationProtocol, ServiceCapability, ServiceCategory, ServiceEndpoint, ServiceInfo,
+        ServiceMetadata, StorageType,
+    },
 };
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
 use tokio::time::sleep;
+use uuid::Uuid;
 
 #[tokio::test]
 async fn test_canonical_config_creation() -> Result<()> {
     println!("🧪 Testing canonical configuration creation");
 
-    // Test default configuration
-    let config = NestGateCanonicalConfig::default();
+    // Test default configuration with explicit type
+    let _config: NestGateCanonicalConfig = NestGateCanonicalConfig::default();
     println!("✅ Created default canonical config");
 
     Ok(())
@@ -27,15 +31,15 @@ async fn test_unified_enums() -> Result<()> {
     println!("🧪 Testing unified enum system");
 
     // Test service types
-    let storage_service = UnifiedServiceType::Storage;
-    let network_service = UnifiedServiceType::Network;
-    let security_service = UnifiedServiceType::Security;
+    let _storage_service = UnifiedServiceType::Storage;
+    let _network_service = UnifiedServiceType::Network;
+    let _security_service = UnifiedServiceType::Security;
 
     println!("✅ Service types created successfully");
 
     // Test health status
-    let healthy = UnifiedHealthStatus::Healthy;
-    let unhealthy = UnifiedHealthStatus::Unhealthy;
+    let _healthy = UnifiedHealthStatus::Healthy;
+    let _unhealthy = UnifiedHealthStatus::Unhealthy;
 
     println!("✅ Health status enums created successfully");
 
@@ -60,50 +64,50 @@ async fn test_error_system() -> Result<()> {
         Ok(_) => unreachable!(),
         Err(_) => {
             println!("✅ Error handling works correctly");
-    Ok(())
         }
-    Ok(())
     }
 
     Ok(())
 }
 
 #[tokio::test]
-async fn test_service_request_response() -> Result<()> {
-    println!("🧪 Testing service request/response system");
+async fn test_service_discovery_types() -> Result<()> {
+    println!("🧪 Testing service discovery type system");
 
-    // Test creating service request
-    let mut parameters = HashMap::new();
-    parameters.insert(
-        "operation".to_string(),
-        serde_json::Value::String("test".to_string()),
-    );
-
-    let mut metadata = HashMap::new();
-    metadata.insert("source".to_string(), "test_client".to_string());
-
-    let request = UniversalServiceRequest {
-        request_id: "test_request_123".to_string(),
-        operation: "test_operation".to_string(),
-        parameters,
-        metadata: metadata.clone(),
+    // Test creating service metadata
+    let metadata = ServiceMetadata {
+        name: "test-service".to_string(),
+        category: ServiceCategory::Storage,
+        version: "1.0.0".to_string(),
+        description: "Test service".to_string(),
+        health_endpoint: Some("http://localhost:8080/health".to_string()),
+        metrics_endpoint: None,
     };
 
-    println!("✅ Created service request: {}", request.request_id);
+    // Test creating service endpoint
+    let endpoint = ServiceEndpoint {
+        url: "http://localhost:8080".to_string(),
+        protocol: CommunicationProtocol::Http,
+        health_check: Some("/health".to_string()),
+    };
 
-    // Test creating service response
-    let response = UniversalServiceResponse {
-        request_id: request.request_id.clone(),
-        status: UniversalResponseStatus::Success,
-        data: Some(serde_json::Value::String("test_result".to_string())),
-        error: None,
+    // Test creating service info
+    let service_info = ServiceInfo {
+        service_id: Uuid::new_v4(),
         metadata,
+        capabilities: vec![ServiceCapability::Storage(StorageType::FileSystem)],
+        endpoints: vec![endpoint],
+        last_seen: SystemTime::now(),
     };
 
     println!(
-        "✅ Created service response with status: {:?}",
-        response.status
+        "✅ Created service info with ID: {}",
+        service_info.service_id
     );
+
+    // Test service capabilities
+    let storage_cap = ServiceCapability::Storage(StorageType::FileSystem);
+    println!("✅ Created storage capability: {:?}", storage_cap);
 
     Ok(())
 }
@@ -115,7 +119,9 @@ async fn test_async_operations() -> Result<()> {
     // Test async sleep
     let start = SystemTime::now();
     sleep(Duration::from_millis(50)).await;
-    let elapsed = start.elapsed()?;
+    let elapsed = start
+        .elapsed()
+        .map_err(|e| NestGateError::internal_error(e.to_string(), "test_async_operations"))?;
 
     assert!(
         elapsed >= Duration::from_millis(40),
@@ -154,7 +160,6 @@ async fn test_concurrent_operations() -> Result<()> {
             format!("Task {i} completed")
         });
         handles.push(handle);
-        Ok(())
     }
 
     // Wait for all tasks to complete
@@ -167,7 +172,6 @@ async fn test_concurrent_operations() -> Result<()> {
             )
         })?;
         results.push(result);
-        Ok(())
     }
 
     assert_eq!(results.len(), 5, "All tasks should complete");
@@ -183,45 +187,38 @@ async fn test_concurrent_operations() -> Result<()> {
 async fn test_json_serialization() -> Result<()> {
     println!("🧪 Testing JSON serialization");
 
-    // Test service request serialization
-    let mut parameters = HashMap::new();
-    parameters.insert(
-        "test_param".to_string(),
-        serde_json::Value::String("test_value".to_string()),
-    );
-
-    let mut metadata = HashMap::new();
-    metadata.insert("client".to_string(), "test_client".to_string());
-
-    let request = UniversalServiceRequest {
-        request_id: "test_123".to_string(),
-        operation: "test_op".to_string(),
-        parameters,
-        metadata,
+    // Test service metadata serialization
+    let metadata = ServiceMetadata {
+        name: "test-service".to_string(),
+        category: ServiceCategory::Storage,
+        version: "1.0.0".to_string(),
+        description: "Test service for JSON".to_string(),
+        health_endpoint: Some("http://localhost:8080/health".to_string()),
+        metrics_endpoint: Some("http://localhost:8080/metrics".to_string()),
     };
 
     // Serialize to JSON
-    let json_str = serde_json::to_string(&request).map_err(|e| {
+    let json_str = serde_json::to_string(&metadata).map_err(|e| {
         NestGateError::internal_error(
             format!("JSON serialization failed: {e}"),
             "test_json_serialization".to_string(),
         )
     })?;
 
-    println!("✅ Request serialized to JSON: {} bytes", json_str.len());
+    println!("✅ Metadata serialized to JSON: {} bytes", json_str.len());
 
     // Deserialize from JSON
-    let deserialized: UniversalServiceRequest = serde_json::from_str(&json_str).map_err(|e| {
+    let deserialized: ServiceMetadata = serde_json::from_str(&json_str).map_err(|e| {
         NestGateError::internal_error(
             format!("JSON deserialization failed: {e}"),
             "test_json_serialization".to_string(),
         )
     })?;
 
-    assert_eq!(deserialized.request_id, "test_123");
-    assert_eq!(deserialized.operation, "test_op");
+    assert_eq!(deserialized.name, "test-service");
+    assert_eq!(deserialized.version, "1.0.0");
 
-    println!("✅ Request deserialized successfully");
+    println!("✅ Metadata deserialized successfully");
 
     Ok(())
 }
@@ -241,7 +238,6 @@ async fn test_memory_operations() -> Result<()> {
             format!("value_{}_c", i),
         ];
         data_map.insert(key, values);
-        Ok(())
     }
 
     assert_eq!(data_map.len(), 100);
@@ -256,7 +252,6 @@ async fn test_memory_operations() -> Result<()> {
             "Expected key not found".to_string(),
             "test_memory_operations".to_string(),
         ));
-        Ok(())
     }
 
     println!("✅ Memory operations completed successfully");

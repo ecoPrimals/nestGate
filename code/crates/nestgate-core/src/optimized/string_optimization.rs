@@ -74,9 +74,10 @@ impl StringOptimizer {
     }
     
     /// Efficient string formatting with pre-allocation
+    #[allow(clippy::expect_used)] // std::fmt::write to String is infallible
     pub fn format_with_capacity(capacity: usize, args: std::fmt::Arguments) -> String {
         let mut result = String::with_capacity(capacity);
-        std::fmt::write(&mut result, args).expect("String formatting should not fail");
+        std::fmt::write(&mut result, args).expect("BUG: std::fmt::write to String never fails");
         result
     }
 }
@@ -112,8 +113,9 @@ impl OptimizedStringBuilder {
     }
     
     /// Add a formatted string to the builder
+    #[allow(clippy::expect_used)] // std::fmt::write to String is infallible
     pub fn push_fmt(&mut self, args: std::fmt::Arguments) -> &mut Self {
-        std::fmt::write(&mut self.buffer, args).expect("String formatting should not fail");
+        std::fmt::write(&mut self.buffer, args).expect("BUG: std::fmt::write to String never fails");
         self
     }
     

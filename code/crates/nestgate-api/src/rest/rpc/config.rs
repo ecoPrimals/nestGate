@@ -2,9 +2,9 @@
 // **MIGRATION COMPLETE**: This module now uses canonical modernization patterns.
 // Legacy fragmented config structs have been replaced with canonical equivalents.
 
-use nestgate_core::config::canonical_master::domains::network::CanonicalNetworkConfig;
-use nestgate_core::config::canonical_master::domains::performance::MetricsConfig;
-use nestgate_core::config::canonical_master::domains::security_canonical::TlsSecurityConfig;
+use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+use nestgate_core::config::canonical_primary::domains::performance::MetricsConfig;
+use nestgate_core::config::canonical_primary::domains::security_canonical::TlsSecurityConfig;
 use nestgate_core::config::SecurityConfig;
 
 use std::time::Duration;
@@ -123,6 +123,7 @@ pub struct HealthMonitoringConfig {
     /// Healthy threshold (consecutive successes)
     pub healthy_threshold: u32,
 }
+
 /// **CANONICAL MODERNIZATION** - Use canonical metrics configuration
 // Note: CanonicalMetricsConfig moved or renamed
 // pub use nestgate_core::CanonicalMetricsConfig as MetricsConfig;
@@ -178,8 +179,8 @@ impl Default for NestGateRpcConfig {
             metrics: MetricsConfig {
                 collection_interval: Duration::from_secs(60),
                 metrics: vec![
-                    nestgate_core::config::canonical_master::domains::performance::monitoring::PerformanceMetric::CpuUsage,
-                    nestgate_core::config::canonical_master::domains::performance::monitoring::PerformanceMetric::MemoryUsage,
+                    nestgate_core::config::canonical_primary::domains::performance::monitoring::PerformanceMetric::CpuUsage,
+                    nestgate_core::config::canonical_primary::domains::performance::monitoring::PerformanceMetric::MemoryUsage,
                 ],
                 retention: Duration::from_secs(86400), // 24 hours
             },
@@ -201,7 +202,7 @@ impl CanonicalRpcConfig {
         let mut canonical = Self::default();
 
         // Migrate security settings to canonical base
-        // Note: SecurityConfig uses TlsSecurityConfig from canonical_master
+        // Note: SecurityConfig uses TlsSecurityConfig from canonical_primary
         if legacy.security.enable_tls {
             canonical.base.security.security_settings.insert(
                 "tls_enabled".to_string(),

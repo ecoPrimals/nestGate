@@ -228,30 +228,33 @@ where
     ///
     /// # Panics
     /// Panics if the buffer has already been taken with `take()`. This indicates a logic error.
+    #[allow(clippy::expect_used)] // Documented panic for logic errors
     pub fn get(&self) -> &T {
         self.buffer
             .as_ref()
-            .expect("Buffer has been taken - this indicates a logic error in buffer usage")
+            .expect("BUG: Buffer was already taken - logic error in PooledBuffer usage")
     }
 
     /// Get a mutable reference to the buffer
     ///
     /// # Panics
     /// Panics if the buffer has already been taken with `take()`. This indicates a logic error.
+    #[allow(clippy::expect_used)] // Documented panic for logic errors
     pub fn get_mut(&mut self) -> &mut T {
         self.buffer
             .as_mut()
-            .expect("Buffer has been taken - this indicates a logic error in buffer usage")
+            .expect("BUG: Buffer was already taken - logic error in PooledBuffer usage")
     }
 
     /// Take ownership of the buffer (prevents return to pool)
     ///
     /// # Panics
     /// Panics if the buffer has already been taken. This indicates a logic error.
+    #[allow(clippy::expect_used)] // Documented panic for logic errors
     pub fn take(mut self) -> Box<T> {
         self.buffer
             .take()
-            .expect("Buffer has already been taken - this indicates a logic error in buffer usage")
+            .expect("BUG: Buffer was already taken - logic error in PooledBuffer usage")
     }
 
     /// Check if the buffer is still available (not taken)

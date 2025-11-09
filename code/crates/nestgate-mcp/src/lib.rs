@@ -92,8 +92,8 @@ pub mod constants {
 /// Create a canonical MCP client configuration
 /// **MODERNIZED**: Uses canonical configuration system
 #[must_use]
-pub fn create_default_config() -> nestgate_core::config::canonical_master::McpConfig {
-    nestgate_core::config::canonical_master::McpConfig::default()
+pub fn create_default_config() -> nestgate_core::config::canonical_primary::McpConfig {
+    nestgate_core::config::canonical_primary::McpConfig::default()
 }
 /// Validate MCP protocol version compatibility
 #[must_use]

@@ -706,9 +706,11 @@ mod installer_comprehensive_tests {
 
     #[test]
     fn test_config_modification() {
-        let mut config = InstallerConfig::default();
-        config.installation_path = "/custom/path".to_string();
-        config.environment = "testing".to_string();
+        let config = InstallerConfig {
+            installation_path: "/custom/path".to_string(),
+            environment: "testing".to_string(),
+            ..InstallerConfig::default()
+        };
 
         assert_eq!(config.installation_path, "/custom/path");
         assert_eq!(config.environment, "testing");
@@ -845,9 +847,11 @@ mod installer_comprehensive_tests {
 
     #[test]
     fn test_installer_extensions_modification() {
-        let mut ext = crate::config::InstallerExtensions::default();
-        ext.force_install = true;
-        ext.verbose = true;
+        let mut ext = crate::config::InstallerExtensions {
+            force_install: true,
+            verbose: true,
+            ..crate::config::InstallerExtensions::default()
+        };
         ext.components.push("zfs".to_string());
 
         assert!(ext.force_install);

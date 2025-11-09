@@ -377,7 +377,10 @@ impl CircuitBreaker {
     
     /// Get current circuit breaker state
     pub fn state(&self) -> CircuitState {
-        *self.state.lock().expect("Failed to acquire lock")
+        *self.state.lock().unwrap_or_else(|poisoned| {
+            // Mutex was poisoned, but we can recover by accessing the underlying data
+            poisoned.into_inner()
+        })
     }
     
     /// Get current failure count
@@ -560,14 +563,22 @@ impl ErrorAggregator {
         }
         
         {
-            let mut component_stats = self.stats.errors_by_component.lock().expect("Failed to acquire lock");
+            let mut component_stats = self.stats.errors_by_component.lock().unwrap_or_else(|poisoned| {
+                // Mutex was poisoned, but we can recover by accessing the underlying data
+                tracing::warn!("Error aggregator component_stats mutex poisoned");
+                poisoned.into_inner()
+            });
             component_stats.entry(error.context.component.clone())
                 .or_insert_with(|| AtomicU64::new(0))
                 .fetch_add(1, Ordering::Relaxed);
         }
         
         // Store error
-        let mut errors = self.errors.lock().expect("Failed to acquire lock");
+        let mut errors = self.errors.lock().unwrap_or_else(|poisoned| {
+            // Mutex was poisoned, but we can recover by accessing the underlying data
+            tracing::warn!("Error aggregator errors mutex poisoned");
+            poisoned.into_inner()
+        });
         errors.push(error);
         
         // Trim if over max capacity
@@ -578,12 +589,20 @@ impl ErrorAggregator {
     
     /// Get all errors
     pub fn get_errors(&self) -> Vec<EnhancedError> {
-        self.errors.lock().expect("Failed to acquire lock").clone()
+        self.errors.lock().unwrap_or_else(|poisoned| {
+            // Mutex was poisoned, but we can recover by accessing the underlying data
+            tracing::warn!("Error aggregator errors mutex poisoned");
+            poisoned.into_inner()
+        }).clone()
     }
     
     /// Get errors by severity
     pub fn get_errors_by_severity(&self, severity: ErrorSeverity) -> Vec<EnhancedError> {
-        self.errors.lock().expect("Failed to acquire lock")
+        self.errors.lock().unwrap_or_else(|poisoned| {
+            // Mutex was poisoned, but we can recover by accessing the underlying data
+            tracing::warn!("Error aggregator errors mutex poisoned");
+            poisoned.into_inner()
+        })
             .iter()
             .filter(|e| e.context.severity == severity)
             .cloned()
@@ -597,7 +616,11 @@ impl ErrorAggregator {
     
     /// Clear all errors
     pub fn clear(&self) {
-        self.errors.lock().expect("Failed to acquire lock").clear();
+        self.errors.lock().unwrap_or_else(|poisoned| {
+            // Mutex was poisoned, but we can recover by accessing the underlying data
+            tracing::warn!("Error aggregator errors mutex poisoned");
+            poisoned.into_inner()
+        }).clear();
     }
 }
 

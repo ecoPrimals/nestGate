@@ -14,7 +14,7 @@ use std::future::Future;
 /// - Monomorphized code generation for optimal performance
 ///
 /// **EXPECTED IMPROVEMENTS**: 70% performance gain (highest of all critical targets)
-/// **REPLACES**: `crate::traits_root::load_balancer::LoadBalancer`
+/// **REPLACES**: `crate::traits::load_balancing::LoadBalancer`
 use crate::Result;
 use serde::{Deserialize, Serialize};
 use std::time::SystemTime;

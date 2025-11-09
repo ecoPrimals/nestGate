@@ -1,6 +1,6 @@
 // Simplified, unified middleware configuration using canonical patterns
 
-use nestgate_core::config::canonical_master::NestGateCanonicalConfig;
+use nestgate_core::config::canonical_primary::NestGateCanonicalConfig;
 
 /// Middleware configuration type alias
 pub type MiddlewareConfig = NestGateCanonicalConfig;

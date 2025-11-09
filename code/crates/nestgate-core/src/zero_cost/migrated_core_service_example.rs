@@ -246,9 +246,10 @@ impl<const MAX_CACHE_SIZE: usize> ZeroCostUniversalService
             .unwrap_or("zero-cost-config-service")
     }
 
+    #[allow(clippy::expect_used)] // Documented programming error
     fn current_config(&self) -> &Self::Config {
         self.config.as_ref().expect(
-            "Service not initialized - call initialize() first. This is a programming error.",
+            "BUG: Service not initialized - call initialize() first",
         )
     }
 

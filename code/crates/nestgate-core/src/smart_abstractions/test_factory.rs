@@ -24,7 +24,7 @@ use crate::{Result, NestGateError};
 use crate::traits::{UniversalService, UniversalServiceRequest, UniversalServiceResponse};
 use crate::unified_enums::{UnifiedServiceType, UnifiedServiceState};
 // **MIGRATED**: Using canonical config system instead of deprecated unified_types
-use crate::config::canonical_master::NestGateCanonicalConfig as NestGateCanonicalConfig;
+use crate::config::canonical_primary::NestGateCanonicalConfig as NestGateCanonicalConfig;
 // **MIGRATED**: Using local UnifiedServiceConfig definition
 use crate::service_discovery::config::UnifiedServiceConfig;
 

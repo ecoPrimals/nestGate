@@ -125,12 +125,13 @@ impl NestGateInstaller {
                 if remove_data { " (including data)" } else { "" }
             );
 
+            #[allow(clippy::expect_used)] // install_dir must be set by builder
             if !Confirm::new()
                 .with_prompt(format!(
                     "Directory {} already exists. Overwrite?",
                     self.install_dir
                         .as_ref()
-                        .expect("Operation failed")
+                        .expect("BUG: install_dir must be set before uninstall")
                         .display()
                 ))
                 .interact()?

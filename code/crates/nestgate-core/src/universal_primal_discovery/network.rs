@@ -6,7 +6,7 @@
 /// - Service endpoint resolution
 use crate::{NestGateError, Result};
 // **MIGRATED**: Using canonical config system instead of deprecated unified_types
-use crate::config::canonical_master::NestGateCanonicalConfig;
+use crate::config::canonical_primary::NestGateCanonicalConfig;
 use std::collections::HashMap;
 use std::net::IpAddr;
 use std::time::Duration;

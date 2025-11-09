@@ -1,6 +1,5 @@
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use std::sync::Arc;
-use std::time::Duration;
 
 // Core performance benchmarks that don't depend on problematic crates
 // Focus on the core improvements we've implemented
@@ -25,6 +24,7 @@ fn benchmark_error_context(c: &mut Criterion) {
 
 /// Benchmark configuration unification patterns
 fn benchmark_config_patterns(c: &mut Criterion) {
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     struct UnifiedConfig {
         system: SystemConfig,
@@ -33,24 +33,28 @@ fn benchmark_config_patterns(c: &mut Criterion) {
         security: SecurityConfig,
     }
 
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     struct SystemConfig {
         service_name: String,
         environment: String,
     }
 
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     struct NetworkConfig {
         host: String,
         port: u16,
     }
 
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     struct StorageConfig {
         base_path: String,
         cache_size_mb: u64,
     }
 
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     struct SecurityConfig {
         enabled: bool,
@@ -117,12 +121,10 @@ fn benchmark_trait_overhead(c: &mut Criterion) {
     struct ModernImpl;
 
     impl ModernAsyncTrait for ModernImpl {
-        fn process(&self, data: Vec<u8>) -> impl Future<Output = Vec<u8>> + Send {
-            async move {
-                let mut result = data;
-                result.reverse();
-                result
-            }
+        async fn process(&self, data: Vec<u8>) -> Vec<u8> {
+            let mut result = data;
+            result.reverse();
+            result
         }
     }
 

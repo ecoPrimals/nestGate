@@ -37,7 +37,7 @@ grep -r "pub struct.*PerformanceConfig" --include="*.rs"
 
 **File to Edit**:
 ```rust
-// code/crates/nestgate-core/src/config/canonical_master/performance_config.rs
+// code/crates/nestgate-core/src/config/canonical_primary/performance_config.rs
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceConfig {
@@ -70,7 +70,7 @@ grep -r "pub struct.*ApiConfig" code/crates --include="*.rs"
 
 **File to Edit**:
 ```rust
-// code/crates/nestgate-core/src/config/canonical_master/api_config.rs
+// code/crates/nestgate-core/src/config/canonical_primary/api_config.rs
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ApiConfig {
@@ -93,7 +93,7 @@ grep -r "pub struct.*MonitoringConfig" code/crates --include="*.rs"
 
 **File to Edit**:
 ```rust
-// code/crates/nestgate-core/src/config/canonical_master/monitoring_config.rs
+// code/crates/nestgate-core/src/config/canonical_primary/monitoring_config.rs
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MonitoringConfig {
@@ -115,7 +115,7 @@ grep -r "use.*ApiConfig" code/crates --include="*.rs"
 grep -r "use.*MonitoringConfig" code/crates --include="*.rs"
 
 # Replace with:
-use nestgate_core::config::canonical_master::{
+use nestgate_core::config::canonical_primary::{
     PerformanceConfig,
     ApiConfig,
     MonitoringConfig,
@@ -126,7 +126,7 @@ use nestgate_core::config::canonical_master::{
 
 ```rust
 // In old config files, add:
-#[deprecated(since = "0.9.0", note = "Use nestgate_core::config::canonical_master::PerformanceConfig")]
+#[deprecated(since = "0.9.0", note = "Use nestgate_core::config::canonical_primary::PerformanceConfig")]
 pub struct OldPerformanceConfig { ... }
 ```
 
@@ -475,7 +475,7 @@ echo "Overall progress: 75%"
 **Key Files**:
 ```
 code/crates/nestgate-core/src/
-├── config/canonical_master/         # Config consolidation target
+├── config/canonical_primary/         # Config consolidation target
 │   ├── performance_config.rs        # EDIT for Task 1.1
 │   ├── api_config.rs                # EDIT for Task 1.2
 │   └── monitoring_config.rs         # EDIT for Task 1.3

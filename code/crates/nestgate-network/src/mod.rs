@@ -17,7 +17,6 @@ pub mod handlers;
 //! Legacy modules for backward compatibility
 pub mod api;
 pub mod connection_manager;
-pub mod orchestration_adapter;
 pub mod universal_orchestration;
 // ==================== SECTION ====================
 
@@ -31,12 +30,6 @@ pub use types::{
 pub use handlers::{
     NetworkService, NetworkServiceManager, HttpProtocolHandler, TcpProtocolHandler,
     LoadBalancer, LoadBalancingStrategy, HttpRequest, HttpResponse
-};
-//! Legacy exports for backward compatibility
-pub use orchestration_adapter::{
-    OrchestrationAdapter, OrchestrationServiceRegistration,
-    ServiceDiscoveryRequest, ServiceDiscoveryResponse,
-    DiscoveredService,
 };
 //! Use canonical Result type from nestgate-core::error
 pub use nestgate_core::error::Result; 

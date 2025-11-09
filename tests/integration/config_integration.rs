@@ -4,7 +4,7 @@
 
 #![allow(clippy::const_is_empty)]
 
-use nestgate_core::config::canonical_master::Environment;
+use nestgate_core::config::canonical_primary::Environment;
 use nestgate_core::Result;
 
 /// Test environment enum functionality

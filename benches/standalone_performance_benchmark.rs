@@ -5,11 +5,11 @@ use std::sync::Arc;
 /// Standalone performance benchmarks demonstrating NestGate modernization patterns
 /// These benchmarks validate the performance improvements without depending on
 /// potentially problematic crates, focusing on the core architectural patterns.
-
 /// Benchmark: Configuration Unification vs Fragmentation
 /// Tests: Memory layout, cache locality, allocation efficiency
 fn benchmark_configuration_patterns(c: &mut Criterion) {
     // Unified configuration pattern (NestGate modern approach)
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     struct UnifiedConfig {
         system_service_name: String,
@@ -46,6 +46,7 @@ fn benchmark_configuration_patterns(c: &mut Criterion) {
     }
 
     // Fragmented configuration pattern (legacy approach)
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     struct FragmentedConfigs {
         system: Arc<HashMap<String, String>>,
@@ -126,6 +127,7 @@ fn benchmark_configuration_patterns(c: &mut Criterion) {
 /// Tests: Context addition, error creation, memory efficiency
 fn benchmark_error_patterns(c: &mut Criterion) {
     // Modern unified error pattern
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     struct UnifiedError {
         message: String,
@@ -153,6 +155,7 @@ fn benchmark_error_patterns(c: &mut Criterion) {
     }
 
     // Legacy fragmented error pattern
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     enum FragmentedError {
         Validation {
@@ -218,14 +221,12 @@ fn benchmark_async_patterns(c: &mut Criterion) {
     struct ModernService;
 
     impl ModernAsyncService for ModernService {
-        fn process_data(&self, data: Vec<u8>) -> impl Future<Output = Vec<u8>> + Send {
-            async move {
-                // Simulate processing
-                let mut result = data;
-                result.reverse();
-                result.extend_from_slice(b"_processed");
-                result
-            }
+        async fn process_data(&self, data: Vec<u8>) -> Vec<u8> {
+            // Simulate processing
+            let mut result = data;
+            result.reverse();
+            result.extend_from_slice(b"_processed");
+            result
         }
     }
 
@@ -308,6 +309,7 @@ fn benchmark_memory_patterns(c: &mut Criterion) {
     }
 
     // Fragmented data structure with poor cache locality
+    #[allow(dead_code)]
     #[derive(Debug)]
     struct FragmentedDataStore {
         // Data scattered across multiple allocations

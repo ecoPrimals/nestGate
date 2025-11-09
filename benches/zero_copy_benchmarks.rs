@@ -10,7 +10,7 @@ use std::sync::Arc;
 // Use the unified benchmark configuration system
 
 // Zero-copy string operations using Cow
-fn process_string_zerocopy(input: &str) -> Cow<str> {
+fn process_string_zerocopy(input: &str) -> Cow<'_, str> {
     if let Some(stripped) = input.strip_prefix("prefix_") {
         Cow::Borrowed(stripped) // Zero-copy slice
     } else {

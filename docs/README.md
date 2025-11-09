@@ -26,7 +26,7 @@
 
 ### **📊 CURRENT STATUS**
 - **[Implementation Status Final](../specs/IMPLEMENTATION_STATUS_FINAL_SEP2025.md)** - Complete achievement report
-- **[Specs Master Index](../specs/SPECS_MASTER_INDEX.md)** - All specifications implemented
+- **[Specs Primary Index](../specs/SPECS_MASTER_INDEX.md)** - All specifications implemented
 - **[Main README](../README.md)** - Project overview and quick start
 - **[Architecture Overview](../ARCHITECTURE_OVERVIEW.md)** - System design and achievements
 
@@ -118,7 +118,7 @@ cargo test --lib -p nestgate-core
 
 ### **🎯 Implementation Documentation**
 - **[Implementation Status Final](../specs/IMPLEMENTATION_STATUS_FINAL_SEP2025.md)** - **Complete final report**
-- **[Specs Master Index](../specs/SPECS_MASTER_INDEX.md)** - **All specifications implemented**
+- **[Specs Primary Index](../specs/SPECS_MASTER_INDEX.md)** - **All specifications implemented**
 - **[Final Modernization Status](./FINAL_MODERNIZATION_STATUS.md)** - **Updated to reflect achievements**
 
 ### **🍼 Core Architecture Documentation**
@@ -197,7 +197,7 @@ let dignity_rules = vec![
 ## 🎯 **FOR DEVELOPERS**
 
 ### **🔧 DEVELOPMENT WORKFLOW**
-1. **Start** with [Specs Master Index](../specs/SPECS_MASTER_INDEX.md) for complete overview
+1. **Start** with [Specs Primary Index](../specs/SPECS_MASTER_INDEX.md) for complete overview
 2. **Review** [Implementation Status](../specs/IMPLEMENTATION_STATUS_FINAL_SEP2025.md) for achievements
 3. **Explore** implementation in `code/crates/nestgate-core/src/`
 4. **Run** benchmarks: `cargo bench --bench zero_cost_performance`

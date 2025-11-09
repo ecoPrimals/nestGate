@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 
 use nestgate_core::error::Result;
 use nestgate_core::constants::zfs;
-use nestgate_core::config::canonical_master::ZfsOperationsConfig;
+use nestgate_core::config::canonical_primary::ZfsOperationsConfig;
 
 // ==================== COMMAND EXECUTION ====================
 

@@ -17,6 +17,10 @@ use super::manager::ComplianceState;
 use super::types::{AuditEvent, ComplianceViolation, ResolutionStatus, RetentionPolicy};
 
 /// Get compliance dashboard
+///
+/// # Errors
+///
+/// Returns `StatusCode` error if the compliance state cannot be accessed.
 pub async fn get_compliance_dashboard(
     State(state): State<ComplianceState>,
 ) -> Result<Json<serde_json::Value>, StatusCode> {
@@ -33,6 +37,10 @@ pub async fn get_compliance_dashboard(
 }
 
 /// Get retention policies
+///
+/// # Errors
+///
+/// Returns `StatusCode` error if the retention policies cannot be retrieved.
 pub async fn get_retention_policies(
     State(state): State<ComplianceState>,
 ) -> Result<Json<serde_json::Value>, StatusCode> {
@@ -48,6 +56,10 @@ pub async fn get_retention_policies(
 }
 
 /// Create retention policy
+///
+/// # Errors
+///
+/// Returns `StatusCode` error if the policy cannot be created or state cannot be accessed.
 pub async fn create_retention_policy(
     State(state): State<ComplianceState>,
     Json(mut policy): Json<RetentionPolicy>,
@@ -68,12 +80,16 @@ pub async fn create_retention_policy(
 }
 
 /// Get audit logs
+///
+/// # Errors
+///
+/// Returns `StatusCode` error if audit logs cannot be retrieved or state cannot be accessed.
 pub async fn get_audit_logs(
     State(state): State<ComplianceState>,
-    Query(_params): Query<HashMap<String, String>>,
+    Query(params): Query<HashMap<String, String>>,
 ) -> Result<Json<serde_json::Value>, StatusCode> {
     let compliance = state.read().await;
-    let limit = _params
+    let limit = params
         .get("limit")
         .and_then(|l| l.parse::<usize>().ok())
         .unwrap_or(100);
@@ -90,12 +106,16 @@ pub async fn get_audit_logs(
 }
 
 /// Get compliance violations
+///
+/// # Errors
+///
+/// Returns `StatusCode` error if violations cannot be retrieved or state cannot be accessed.
 pub async fn get_violations(
     State(state): State<ComplianceState>,
-    Query(_params): Query<HashMap<String, String>>,
+    Query(params): Query<HashMap<String, String>>,
 ) -> Result<Json<serde_json::Value>, StatusCode> {
     let compliance = state.read().await;
-    let status_filter = _params.get("status");
+    let status_filter = params.get("status");
     let violations: Vec<&ComplianceViolation> = compliance
         .violations
         .iter()

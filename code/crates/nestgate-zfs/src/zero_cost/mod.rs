@@ -1,24 +1,11 @@
 //! **ZERO-COST ZFS OPERATIONS MODULE**
-//! This module provides zero-cost abstractions for ZFS operations
-//! Replaces Arc<dyn> patterns with compile-time dispatch for maximum performance
+//!
+//! **CONSOLIDATED**: This module re-exports from `zero_cost_zfs_operations`
+//! to eliminate duplication and provide a clean migration path.
+//!
+//! **Migration**: Use `zero_cost_zfs_operations` directly for new code.
+//! This re-export maintains backward compatibility.
 
-mod manager;
-mod traits;
-mod types;
-mod utilities;
-
-// Re-export main types and traits
-pub use manager::ZeroCostZfsManager;
-pub use traits::ZeroCostZfsOperations;
-pub use types::{
-    DatasetInfoMap, PoolInfoMap, SnapshotInfoMap, ZeroCostDatasetInfo, ZeroCostPoolInfo,
-    ZeroCostSnapshotInfo,
-};
-pub use utilities::{ZfsBenchmark, ZfsMigrationGuide};
-
-// Re-export type aliases for different deployment sizes
-pub use manager::{
-    DevelopmentZfsManager, EnterpriseZfsManager, HighPerformanceZfsManager, ProductionZfsManager,
-    TestingZfsManager,
-};
+// Re-export everything from the canonical location
+pub use crate::zero_cost_zfs_operations::*;
 

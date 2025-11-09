@@ -22,7 +22,7 @@ NestGate has achieved **world-class modular excellence** through systematic cano
 ## 🏛️ **MODULAR STRUCTURE**
 
 ### **Performance Configuration Modules** (10 Modules)
-**Location**: `code/crates/nestgate-core/src/config/canonical_master/domains/performance/`
+**Location**: `code/crates/nestgate-core/src/config/canonical_primary/domains/performance/`
 
 #### **Module Organization**
 ```
@@ -48,7 +48,7 @@ performance/
 
 #### **Usage Example**
 ```rust
-use nestgate_core::config::canonical_master::domains::performance::{
+use nestgate_core::config::canonical_primary::domains::performance::{
     CanonicalPerformanceConfig,
     CpuPerformanceConfig,
     MemoryPerformanceConfig,
@@ -70,7 +70,7 @@ let merged = perf_config.merge(cpu_config)?;
 ---
 
 ### **Network Configuration Modules** (10 Modules)
-**Location**: `code/crates/nestgate-core/src/config/canonical_master/domains/network/`
+**Location**: `code/crates/nestgate-core/src/config/canonical_primary/domains/network/`
 
 #### **Module Organization**
 ```
@@ -96,7 +96,7 @@ network/
 
 #### **Usage Example**
 ```rust
-use nestgate_core::config::canonical_master::domains::network::{
+use nestgate_core::config::canonical_primary::domains::network::{
     CanonicalNetworkConfig,
     NetworkApiConfig,
     NetworkSecurityConfig,
@@ -235,7 +235,7 @@ pub trait ConfigurationModule {
 
 ### **Configuration Composition**
 ```rust
-use nestgate_core::config::canonical_master::domains::{
+use nestgate_core::config::canonical_primary::domains::{
     performance::CanonicalPerformanceConfig,
     network::CanonicalNetworkConfig,
 };
@@ -312,7 +312,7 @@ To add a new module to the architecture:
 
 1. **Create Module Directory**
    ```bash
-   mkdir -p code/crates/nestgate-core/src/config/canonical_master/domains/new_domain
+   mkdir -p code/crates/nestgate-core/src/config/canonical_primary/domains/new_domain
    ```
 
 2. **Implement Core Module Structure**
@@ -417,7 +417,7 @@ Each module must include:
 //! ## Usage
 //!
 //! ```rust
-//! use nestgate_core::config::canonical_master::domains::performance::CanonicalPerformanceConfig;
+//! use nestgate_core::config::canonical_primary::domains::performance::CanonicalPerformanceConfig;
 //!
 //! // Production-hardened configuration
 //! let config = CanonicalPerformanceConfig::production_hardened();

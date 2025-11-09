@@ -87,7 +87,7 @@ impl ZfsManager {
             Arc::new(crate::manager::dataset_operations::DatasetAnalyzer::new());
 
         // Initialize migration engine with RwLock using shared config
-        // let migration_config = nestgate_core::config::canonical_master::domains::test_canonical::unit::MigrationConfig::default();
+        // let migration_config = nestgate_core::config::canonical_primary::domains::test_canonical::unit::MigrationConfig::default();
         // let migration_engine = Arc::new(RwLock::new(MigrationEngine::with_shared_config(
         //     migration_config,
         //     Arc::clone(&shared_config),

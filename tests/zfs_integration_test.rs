@@ -3,8 +3,8 @@
 /// Real integration tests for ZFS functionality
 use nestgate_core::{NestGateError, Result};
 use nestgate_zfs::config::ZfsConfig;
-use nestgate_zfs::ZfsManager;
-
+use nestgate_zfs::manager::ZfsManager;
+use std::sync::Arc;
 use tokio::time::Duration;
 
 use nestgate_core::canonical_types::StorageTier;
@@ -74,17 +74,12 @@ async fn test_zfs_dataset_operations() -> Result<()> {
     let dataset_name = "nestpool/test_dataset";
     let result = manager
         .dataset_manager
-        .create_dataset(
-            dataset_name,
-            "zfspool",
-            nestgate_core::types::StorageTier::Warm,
-        )
+        .create_dataset(dataset_name, "zfspool", StorageTier::Warm)
         .await;
 
     match result {
         Ok(_) => println!("✅ Dataset created successfully"),
         Err(e) => println!("⚠️ Dataset creation failed (expected in test): {e}"),
-    Ok(())
     }
 
     Ok(())
@@ -135,7 +130,6 @@ async fn test_zfs_concurrent_operations() -> Result<()> {
             Ok::<(), NestGateError>(())
         });
         handles.push(handle);
-        Ok(())
     }
 
     // Wait for all operations
@@ -143,7 +137,6 @@ async fn test_zfs_concurrent_operations() -> Result<()> {
         handle
             .await
             .map_err(|e| NestGateError::internal_error(e.to_string(), "test_component"))??;
-        Ok(())
     }
 
     println!("✅ All concurrent operations completed");
@@ -203,13 +196,10 @@ async fn test_zfs_timeout_handling() -> Result<()> {
                 "✅ Operation completed within timeout: {:?}",
                 status.is_ok()
             );
-    Ok(())
         }
         Err(_) => {
             println!("⚠️ Operation timed out (expected in some environments)");
-    Ok(())
         }
-    Ok(())
     }
 
     Ok(())

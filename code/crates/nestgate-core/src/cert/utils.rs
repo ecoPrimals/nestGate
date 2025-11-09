@@ -274,7 +274,7 @@ pub mod modern {
         //     bind_endpoint: _endpoint.ip(),
         //     port: _endpoint.port(),
         //     ..Default::default()
-        // }; // UnifiedNetworkConfig module removed - use canonical_master if needed
+        // }; // UnifiedNetworkConfig module removed - use canonical_primary if needed
 
         // Create and return the certificate using actual Certificate struct fields
         Ok(Certificate {

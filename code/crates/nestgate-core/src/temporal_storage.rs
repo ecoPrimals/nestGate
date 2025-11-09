@@ -338,14 +338,11 @@ pub enum DataCapabilityType {
     ImageData { format_filter: Option<String> },
     Custom { capability_name: String },
 }
-/// Cloud providers
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum CloudProvider {
-    Aws { region: String },
-    Azure { subscription_id: String },
-    Gcp { project_id: String },
-    Custom { endpoint: String },
-}
+
+// ==================== CONSOLIDATED TYPE RE-EXPORT ====================
+// CloudProvider is now defined in consolidated_types.rs as the canonical source
+// This eliminates duplication and ensures consistency across the codebase
+pub use crate::universal_storage::consolidated_types::CloudProvider;
 /// Legacy media types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum LegacyMediaType {

@@ -22,6 +22,7 @@ pub struct RealTimeMetricsCollector {
     /// Metrics cache for performance
     metrics_cache: Arc<tokio::sync::RwLock<HashMap<String, RealTimeMetrics>>>,
     /// Background collection task handle
+    #[allow(dead_code)] // Reserved for future task management
     collection_task: Arc<tokio::sync::Mutex<Option<tokio::task::JoinHandle<()>>>>,
 }
 impl RealTimeMetricsCollector {
@@ -216,7 +217,7 @@ impl RealTimeMetricsCollector {
         let mut write_ops = 0.0;
         let mut read_throughput_mbs = 0.0;
         let mut write_throughput_mbs = 0.0;
-        let mut avg_latency_ms = 2.5; // Default fallback
+        let mut _avg_latency_ms = 2.5; // Default fallback (reserved for future metrics)
 
         if let Ok(output) = iostat_output {
             if output.status.success() {
@@ -237,10 +238,10 @@ impl RealTimeMetricsCollector {
                             read_throughput_mbs = read_bw_bytes / (1024.0 * 1024.0);
                             write_throughput_mbs = write_bw_bytes / (1024.0 * 1024.0);
 
-                            // Calculate latency from operations and throughput
+                            // Calculate latency from operations and throughput (reserved for future metrics)
                             let total_ops = read_ops + write_ops;
                             if total_ops > 0.0 {
-                                avg_latency_ms = (1000.0_f64 / total_ops).min(100.0);
+                                _avg_latency_ms = (1000.0_f64 / total_ops).min(100.0);
                                 // Cap at 100ms
                             }
                         }

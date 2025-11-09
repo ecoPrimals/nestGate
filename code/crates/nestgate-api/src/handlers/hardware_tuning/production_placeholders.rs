@@ -35,8 +35,11 @@ fn hardware_tuning_disabled() -> (StatusCode, Json<serde_json::Value>) {
 /// Placeholder hardware tuning handler for production builds
 #[derive(Debug, Clone)]
 pub struct RealHardwareTuningHandler {
+    #[allow(dead_code)] // Reserved for future hardware tuning implementation
     config: HardwareTuningConfig,
+    #[allow(dead_code)] // Reserved for future metrics collection
     metrics_collector: SystemMetricsCollector,
+    #[allow(dead_code)] // Reserved for future hardware monitoring
     monitors: HardwareMonitors,
 }
 
@@ -67,42 +70,99 @@ impl RealHardwareTuningHandler {
 }
 
 // Export placeholder handler functions
+
+/// Get hardware information
+///
+/// # Errors
+///
+/// Returns `StatusCode::NOT_IMPLEMENTED` as hardware tuning is disabled in production builds.
+///
+/// **Note**: This endpoint is disabled in production builds.
+/// Returns `NOT_IMPLEMENTED` to indicate hardware tuning features are not available.
 pub fn get_hardware_info() -> std::result::Result<Json<serde_json::Value>, StatusCode> {
-    let (status, response) = hardware_tuning_disabled();
+    let (status, _response) = hardware_tuning_disabled();
     Err(status)
 }
 
+/// Optimize hardware performance
+///
+/// # Errors
+///
+/// Returns `StatusCode::NOT_IMPLEMENTED` as hardware tuning is disabled in production builds.
+///
+/// **Note**: This endpoint is disabled in production builds.
+/// Returns `NOT_IMPLEMENTED` to indicate hardware tuning features are not available.
 pub fn optimize_hardware_performance() -> std::result::Result<Json<serde_json::Value>, StatusCode> {
-    let (status, response) = hardware_tuning_disabled();
+    let (status, _response) = hardware_tuning_disabled();
     Err(status)
 }
 
+/// Get system capabilities
+///
+/// # Errors
+///
+/// Returns `StatusCode::NOT_IMPLEMENTED` as hardware tuning is disabled in production builds.
+///
+/// **Note**: This endpoint is disabled in production builds.
+/// Returns `NOT_IMPLEMENTED` to indicate hardware tuning features are not available.
 pub const fn get_system_capabilities() -> std::result::Result<Json<SystemCapabilities>, StatusCode>
 {
     Err(StatusCode::NOT_IMPLEMENTED)
 }
 
+/// Get compute resources
+///
+/// # Errors
+///
+/// Returns `StatusCode::NOT_IMPLEMENTED` as hardware tuning is disabled in production builds.
+///
+/// **Note**: This endpoint is disabled in production builds.
+/// Returns `NOT_IMPLEMENTED` to indicate hardware tuning features are not available.
 pub const fn get_compute_resources() -> std::result::Result<Json<ComputeResources>, StatusCode> {
     Err(StatusCode::NOT_IMPLEMENTED)
 }
 
+/// Register tuning service
+///
+/// # Errors
+///
+/// Returns `StatusCode::NOT_IMPLEMENTED` as hardware tuning is disabled in production builds.
+///
+/// **Note**: This endpoint is disabled in production builds.
+/// Returns `NOT_IMPLEMENTED` to indicate hardware tuning features are not available.
 pub fn register_tuning_service(
-    _Json: Json<serde_json::Value>,
+    _json: Json<serde_json::Value>,
 ) -> std::result::Result<Json<serde_json::Value>, StatusCode> {
     Err(StatusCode::NOT_IMPLEMENTED)
 }
 
+/// Run hardware benchmark
+///
+/// # Errors
+///
+/// Returns `StatusCode::NOT_IMPLEMENTED` as hardware tuning is disabled in production builds.
+///
+/// **Note**: This endpoint is disabled in production builds.
+/// Returns `NOT_IMPLEMENTED` to indicate hardware tuning features are not available.
 pub const fn run_hardware_benchmark() -> std::result::Result<Json<BenchmarkResult>, StatusCode> {
     Err(StatusCode::NOT_IMPLEMENTED)
 }
 
+/// Start hardware tuning session
+///
+/// **Note**: This endpoint is disabled in production builds.
+/// Returns `NOT_IMPLEMENTED` to indicate hardware tuning features are not available.
 pub const fn start_hardware_tuning_session(
 ) -> std::result::Result<Json<LiveHardwareTuningSession>, StatusCode> {
     Err(StatusCode::NOT_IMPLEMENTED)
 }
 
+/// Get allocation details
+///
+/// **Note**: This endpoint is disabled in production builds.
+/// Returns `NOT_IMPLEMENTED` to indicate hardware tuning features are not available.
 pub fn get_allocation_details(
-    _Path: axum::extract::Path<String>,
+    _path: axum::extract::Path<String>,
 ) -> std::result::Result<Json<ComputeAllocation>, StatusCode> {
     Err(StatusCode::NOT_IMPLEMENTED)
 }

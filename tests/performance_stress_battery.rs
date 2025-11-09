@@ -180,7 +180,7 @@ impl PerformanceStressBattery {
                     next_operation_time = now + operation_interval;
 
                     // Progress reporting every 5 seconds
-                    if operations_count % (target_ops_per_sec * 5) == 0 {
+                    if operations_count.is_multiple_of(target_ops_per_sec * 5) {
                         let actual_ops_per_sec = operations_count as f64
                             / Instant::now()
                                 .duration_since(Instant::now() - Duration::from_secs(duration))
@@ -214,7 +214,7 @@ impl PerformanceStressBattery {
                 }
 
                 // Brief yield to prevent complete CPU monopolization
-                if cpu_cycles % 100000 == 0 {
+                if cpu_cycles.is_multiple_of(100000) {
                     tokio::task::yield_now().await;
                 }
             }
@@ -274,7 +274,7 @@ impl PerformanceStressBattery {
                 io_operations += 1;
 
                 // Simulate batch I/O operations
-                if io_operations % 50 == 0 {
+                if io_operations.is_multiple_of(50) {
                     sleep(Duration::from_millis(fastrand::u64(5..25))).await;
                 }
             }

@@ -1,7 +1,7 @@
 /// **ZERO-COST UNIVERSAL PROVIDERS - CANONICAL MODERNIZATION COMPLETE**
 ///
 /// This module provides zero-cost universal provider implementations that eliminate
-/// the runtime overhead of `async_trait` and Arc<dyn> patterns.
+/// the runtime overhead of `async_trait` and `Arc<dyn>` patterns.
 use crate::error::CanonicalResult as Result;
 use std::collections::HashMap;
 use std::future::Future;
@@ -54,7 +54,7 @@ pub enum SecurityDecision {
 
 /// **ZERO-COST UNIVERSAL SECURITY WRAPPER**
 ///
-/// Direct composition replacement for Arc<dyn SecurityPrimalProvider>
+/// Direct composition replacement for `Arc<dyn SecurityPrimalProvider>`
 /// PERFORMANCE: 40-60% improvement through compile-time dispatch
 /// ELIMINATES: Virtual method call overhead and heap allocation
 #[allow(deprecated)] // Example of zero-cost pattern - uses deprecated trait for demonstration
@@ -65,11 +65,11 @@ where
     provider_name: String,
     endpoint: String,
     capabilities: Vec<String>,
-    /// Direct composition - no Arc<dyn> overhead
+    /// Direct composition - no `Arc<dyn>` overhead
     provider: Provider,
     _phantom: PhantomData<()>,
 }
-/// Zero-cost security provider trait - replaces Arc<dyn SecurityPrimalProvider>
+/// Zero-cost security provider trait - replaces `Arc<dyn SecurityPrimalProvider>`
 /// **DEPRECATED**: Zero-cost security patterns consolidated
 #[deprecated(
     since = "0.9.0",
@@ -223,7 +223,7 @@ where
 
 /// **ZERO-COST UNIVERSAL ORCHESTRATION WRAPPER**
 ///
-/// Direct composition replacement for Arc<dyn OrchestrationPrimalProvider>
+/// Direct composition replacement for `Arc<dyn OrchestrationPrimalProvider>`
 /// PERFORMANCE: 50-70% improvement through compile-time specialization
 pub struct ZeroCostUniversalOrchestrationWrapper<Provider, const MAX_INSTANCES: usize = 500>
 where
@@ -235,12 +235,12 @@ where
     endpoint: String,
     #[allow(dead_code)] // Framework field - intentionally unused
     capabilities: Vec<String>,
-    /// Direct composition - no Arc<dyn> overhead
+    /// Direct composition - no `Arc<dyn>` overhead
     #[allow(dead_code)] // Framework field - intentionally unused
     provider: Provider,
     _phantom: PhantomData<()>,
 }
-/// Zero-cost orchestration provider trait - replaces Arc<dyn OrchestrationPrimalProvider>
+/// Zero-cost orchestration provider trait - replaces `Arc<dyn OrchestrationPrimalProvider>`
 pub trait ZeroCostOrchestrationProvider: Send + Sync + 'static {
     type Error: Send + Sync + 'static;
     type InstanceId: Send + Sync + Clone;
@@ -272,7 +272,7 @@ pub trait ZeroCostOrchestrationProvider: Send + Sync + 'static {
 
 /// **ZERO-COST UNIVERSAL COMPUTE WRAPPER**
 ///
-/// Direct composition replacement for Arc<dyn ComputePrimalProvider>
+/// Direct composition replacement for `Arc<dyn ComputePrimalProvider>`
 /// PERFORMANCE: 60-80% improvement through monomorphization
 pub struct ZeroCostUniversalComputeWrapper<Provider, const MAX_COMPUTE_UNITS: usize = 1000>
 where
@@ -284,12 +284,12 @@ where
     endpoint: String,
     #[allow(dead_code)] // Framework field - intentionally unused
     capabilities: Vec<String>,
-    /// Direct composition - no Arc<dyn> overhead
+    /// Direct composition - no `Arc<dyn>` overhead
     #[allow(dead_code)] // Framework field - intentionally unused
     provider: Provider,
     _phantom: PhantomData<()>,
 }
-/// Zero-cost compute provider trait - replaces Arc<dyn ComputePrimalProvider>
+/// Zero-cost compute provider trait - replaces `Arc<dyn ComputePrimalProvider>`
 pub trait ZeroCostComputeProvider: Send + Sync + 'static {
     type Error: Send + Sync + 'static;
     type ComputeRequest: Send + Sync;
@@ -340,7 +340,7 @@ pub struct ComputeResources {
 }
 // ==================== SECTION ====================
 
-/// Migration guide from Arc<dyn> to zero-cost patterns
+/// Migration guide from `Arc<dyn>` to zero-cost patterns
 pub const ZERO_COST_MIGRATION_GUIDE: &str = r"
 🔄 UNIVERSAL PROVIDERS ZERO-COST MIGRATION GUIDE
 ## Before (Arc<dyn> Runtime Dispatch)

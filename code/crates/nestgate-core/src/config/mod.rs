@@ -4,55 +4,55 @@ use serde::{Deserialize, Serialize};
 ///
 /// This module provides the unified configuration system for NestGate.
 /// All configuration is capability-based and vendor-agnostic.
-// **CANONICAL MASTER**: The definitive configuration system
-pub mod canonical_master;
+// **CANONICAL PRIMARY**: The definitive configuration system
+pub mod canonical_primary;
 
 // ==================== SECTION ====================
-// All deprecated configuration modules have been removed. Use canonical_master directly:
-// - core → canonical_master::NestGateCanonicalConfig
-// - domains → canonical_master::NestGateCanonicalConfig
-// - builders → canonical_master builders
-// - unified_types → canonical_master detailed_configs
-// - canonical → canonical_master::NestGateCanonicalConfig
-// - network → canonical_master::NestGateCanonicalConfig
-// - federation → canonical_master::NestGateCanonicalConfig
-// - monitoring → canonical_master::NestGateCanonicalConfig
-// - canonical_config → canonical_master::NestGateCanonicalConfig
-// - canonical_unified → canonical_master::NestGateCanonicalConfig
+// All deprecated configuration modules have been removed. Use canonical_primary directly:
+// - core → canonical_primary::NestGateCanonicalConfig
+// - domains → canonical_primary::NestGateCanonicalConfig
+// - builders → canonical_primary builders
+// - unified_types → canonical_primary detailed_configs
+// - canonical → canonical_primary::NestGateCanonicalConfig
+// - network → canonical_primary::NestGateCanonicalConfig
+// - federation → canonical_primary::NestGateCanonicalConfig
+// - monitoring → canonical_primary::NestGateCanonicalConfig
+// - canonical_config → canonical_primary::NestGateCanonicalConfig
+// - canonical_unified → canonical_primary::NestGateCanonicalConfig
 
 // ==================== SECTION ====================
 
 /// **THE** canonical configuration for all `NestGate` systems
 #[allow(deprecated)]
-pub use canonical_master::{
+pub use canonical_primary::{
     ApiConfig, CanonicalNetworkConfig as NetworkConfig, ConfigMetadata, DeploymentEnvironment,
     FeatureFlags, LogLevel, NestGateCanonicalConfig, PerformanceConfig, SecurityConfig,
-    StorageConfig, SystemConfig,
+    ServiceConfig, StorageConfig, SystemConfig,
 };
 
-// Note: Detailed configuration types are defined inline in canonical_master
-// and will be accessible through the canonical_master module directly
+// Note: Detailed configuration types are defined inline in canonical_primary
+// and will be accessible through the canonical_primary module directly
 
 // ==================== SECTION ====================
 
 // ==================== SECTION ====================
-// All deprecated configuration type aliases have been removed. Use canonical_master directly:
-// - UnifiedConfig → canonical_master::NestGateCanonicalConfig
-// - StandardConfig → canonical_master::NestGateCanonicalConfig
-// - MasterConfig → canonical_master::NestGateCanonicalConfig
-// - NestGateCanonicalConfig → canonical_master::NestGateCanonicalConfig
+// All deprecated configuration type aliases have been removed. Use canonical_primary directly:
+// - UnifiedConfig → canonical_primary::NestGateCanonicalConfig
+// - StandardConfig → canonical_primary::NestGateCanonicalConfig
+// - PrimaryConfig → canonical_primary::NestGateCanonicalConfig
+// - NestGateCanonicalConfig → canonical_primary::NestGateCanonicalConfig
 
 // ==================== SECTION ====================
 
 // Create a canonical configuration with default settings
 #[must_use]
-pub fn create_default_config() -> canonical_master::NestGateCanonicalConfig {
-    canonical_master::NestGateCanonicalConfig::default()
+pub fn create_default_config() -> canonical_primary::NestGateCanonicalConfig {
+    canonical_primary::NestGateCanonicalConfig::default()
 }
 // Create a production-ready canonical configuration
 #[must_use]
-pub fn create_production_config() -> canonical_master::NestGateCanonicalConfig {
-    let mut config = canonical_master::NestGateCanonicalConfig::default();
+pub fn create_production_config() -> canonical_primary::NestGateCanonicalConfig {
+    let mut config = canonical_primary::NestGateCanonicalConfig::default();
     config.system.environment = DeploymentEnvironment::Production;
     config.system.log_level = LogLevel::Warn;
     config.system.debug_mode = false;
@@ -68,8 +68,8 @@ pub fn create_production_config() -> canonical_master::NestGateCanonicalConfig {
 }
 // Create a development configuration
 #[must_use]
-pub fn create_development_config() -> canonical_master::NestGateCanonicalConfig {
-    let mut config = canonical_master::NestGateCanonicalConfig::default();
+pub fn create_development_config() -> canonical_primary::NestGateCanonicalConfig {
+    let mut config = canonical_primary::NestGateCanonicalConfig::default();
     config.system.environment = DeploymentEnvironment::Development;
     config.system.log_level = LogLevel::Debug;
     config.system.debug_mode = true;
@@ -77,8 +77,8 @@ pub fn create_development_config() -> canonical_master::NestGateCanonicalConfig 
 }
 // Create a testing configuration
 #[must_use]
-pub fn create_testing_config() -> canonical_master::NestGateCanonicalConfig {
-    let mut config = canonical_master::NestGateCanonicalConfig::default();
+pub fn create_testing_config() -> canonical_primary::NestGateCanonicalConfig {
+    let mut config = canonical_primary::NestGateCanonicalConfig::default();
     config.system.environment = DeploymentEnvironment::Testing;
     config.system.log_level = LogLevel::Debug;
     config
@@ -92,8 +92,8 @@ pub fn create_testing_config() -> canonical_master::NestGateCanonicalConfig {
     config
 }
 // ==================== SECTION ====================
-// All configurations now use canonical_master::NestGateCanonicalConfig directly.
-// Default implementations are in the canonical_master module.
+// All configurations now use canonical_primary::NestGateCanonicalConfig directly.
+// Default implementations are in the canonical_primary module.
 
 #[cfg(test)]
 mod tests {
@@ -140,6 +140,12 @@ mod tests {
         assert!(!config.system.instance_name.is_empty());
     }
 }
+
+#[cfg(test)]
+mod defaults_tests;
+
+#[cfg(test)]
+mod defaults_additional_tests; // NEW: Test expansion phase (Nov 6, 2025) // Include comprehensive defaults tests
 
 /// Infant discovery configuration - no hardcoded assumptions
 #[derive(Debug, Clone, Serialize, Deserialize)]

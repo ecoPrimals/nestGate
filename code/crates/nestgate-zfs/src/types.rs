@@ -895,3 +895,45 @@ mod tests {
         assert_eq!(schedule.tasks.len(), cloned.tasks.len());
     }
 }
+
+// ==================== SECTION: CANONICAL ZFS CONFIGURATION ====================
+
+/// **CANONICAL ZFS CONFIGURATION RE-EXPORTS**
+///
+/// Re-export canonical ZFS configuration types from nestgate-core for convenience.
+/// These replace the old fragmented configuration types.
+///
+/// **Migration Date**: November 7, 2025
+/// **Pattern**: Following proven NetworkConfig migration success
+
+// Re-export canonical ZFS configuration types
+pub use nestgate_core::config::canonical_primary::domains::storage_canonical::{
+    // Main ZFS configuration
+    ZfsStorageConfig,
+    
+    // Core configuration structs
+    ZfsPoolConfig,
+    ZfsDatasetConfig,
+    ZfsSnapshotConfig,
+    ZfsMaintenanceConfig,
+    ZfsPerformanceConfig,
+    ZfsSecurityConfig,
+    ZfsMonitoringConfig,
+    ZfsMigrationConfig,
+    
+    // Supporting configuration types  
+    // Note: RetentionPolicy is already defined in this file (line 57)
+    ArcCacheConfig,
+    L2ArcConfig,
+    ZilConfig,
+    PrefetchConfig,
+    AlertThresholds,
+    ZfsPoolSettings,
+    
+    // Configuration enums
+    ZfsCompression,
+    ZfsRedundancy,
+};
+
+// Type alias for backward compatibility with code expecting "ZfsConfig"
+pub use ZfsStorageConfig as CanonicalZfsConfig;

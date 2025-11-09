@@ -15,6 +15,7 @@ use uuid::Uuid;
 
 /// Live testing environment manager
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct LiveTestingEnvironment {
     /// Test environment configuration
@@ -174,7 +175,7 @@ impl LiveTestingEnvironment {
     async fn allocate_test_resources(
         &self,
         test_id: &str,
-        test_name: &str,
+        _test_name: &str,
     ) -> Result<Vec<TestResource>> {
         let mut resources = Vec::new();
 
@@ -208,21 +209,21 @@ impl LiveTestingEnvironment {
 
         // Create real ZFS dataset for testing
         let output = tokio::process::Command::new("zfs")
-            .args(&["create", &dataset_name])
+            .args(["create", &dataset_name])
             .output()
             .await
             .map_err(|e| {
-                NestGateError::system_error(
+                NestGateError::system(
+                    format!("Failed to create test dataset: {}", e),
                     "zfs_test_allocation",
-                    &format!("Failed to create test dataset: {}", e),
                 )
             })?;
 
         if !output.status.success() {
             let error = String::from_utf8_lossy(&output.stderr);
-            return Err(NestGateError::system_error(
+            return Err(NestGateError::system(
+                format!("ZFS dataset creation failed: {}", error),
                 "zfs_test_allocation",
-                &format!("ZFS dataset creation failed: {}", error),
             ));
         }
 
@@ -242,21 +243,21 @@ impl LiveTestingEnvironment {
 
         // Create real network namespace for testing
         let output = tokio::process::Command::new("ip")
-            .args(&["netns", "add", &namespace_name])
+            .args(["netns", "add", &namespace_name])
             .output()
             .await
             .map_err(|e| {
-                NestGateError::system_error(
+                NestGateError::system(
+                    format!("Failed to create test namespace: {}", e),
                     "network_test_allocation",
-                    &format!("Failed to create test namespace: {}", e),
                 )
             })?;
 
         if !output.status.success() {
             let error = String::from_utf8_lossy(&output.stderr);
-            return Err(NestGateError::system_error(
+            return Err(NestGateError::system(
+                format!("Network namespace creation failed: {}", error),
                 "network_test_allocation",
-                &format!("Network namespace creation failed: {}", error),
             ));
         }
 
@@ -275,9 +276,9 @@ impl LiveTestingEnvironment {
         let test_dir = format!("/tmp/nestgate_test_{}", test_id);
 
         tokio::fs::create_dir_all(&test_dir).await.map_err(|e| {
-            NestGateError::system_error(
+            NestGateError::system(
+                format!("Failed to create test directory: {}", e),
                 "fs_test_allocation",
-                &format!("Failed to create test directory: {}", e),
             )
         })?;
 
@@ -358,7 +359,7 @@ impl LiveTestingEnvironment {
             TestResourceType::ZfsDataset(dataset) => {
                 info!("Destroying ZFS test dataset: {}", dataset);
                 let output = tokio::process::Command::new("zfs")
-                    .args(&["destroy", "-r", dataset])
+                    .args(["destroy", "-r", dataset])
                     .output()
                     .await;
 
@@ -369,7 +370,7 @@ impl LiveTestingEnvironment {
             TestResourceType::NetworkNamespace(namespace) => {
                 info!("Deleting network test namespace: {}", namespace);
                 let output = tokio::process::Command::new("ip")
-                    .args(&["netns", "del", namespace])
+                    .args(["netns", "del", namespace])
                     .output()
                     .await;
 
@@ -395,6 +396,7 @@ impl LiveTestingEnvironment {
 
 // === SUPPORTING MANAGERS ===
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct TestResourceManager {
     config: LiveTestConfig,
@@ -422,7 +424,7 @@ impl TestCleanupManager {
 /// Macro for creating live integration tests
 #[macro_export]
 macro_rules! live_integration_test {
-    ($test_name:ident, $test_fn:expr) => {
+    ($test_name:ident, $test_body:block) => {
         #[tokio::test]
         async fn $test_name() -> Result<()> {
             let config = LiveTestConfig {
@@ -443,7 +445,7 @@ macro_rules! live_integration_test {
             }
 
             // Run the actual test
-            let result = $test_fn().await;
+            let result: Result<()> = async $test_body.await;
 
             // Cleanup
             env.complete_test(&test_instance.test_id).await?;
@@ -474,9 +476,10 @@ mod tests {
         Ok(())
     }
 
-    live_integration_test!(test_live_filesystem_operations, async || {
+    live_integration_test!(test_live_filesystem_operations, {
         // This test runs with real filesystem resources
-        let test_root = std::env::var("NESTGATE_TEST_ROOT")?;
+        let test_root = std::env::var("NESTGATE_TEST_ROOT")
+            .map_err(|e| NestGateError::internal(format!("NESTGATE_TEST_ROOT not set: {}", e)))?;
 
         // Test real file operations
         let test_file = format!("{}/test_file.txt", test_root);

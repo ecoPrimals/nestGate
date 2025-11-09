@@ -509,7 +509,7 @@ mod tests {
             CommandResult {
                 success: false,
                 stdout: String::new(),
-                stderr: format!("Operation failed: error details"),
+                stderr: "Operation failed: error details".to_string(),
                 exit_code: 1,
             }
         });

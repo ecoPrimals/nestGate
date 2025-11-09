@@ -27,6 +27,8 @@ pub mod compliance;
 ///
 /// Type definitions and structures for dashboard functionality.
 pub mod dashboard_types;
+#[cfg(test)]
+mod dashboard_types_tests;
 
 /// **HARDWARE TUNING MODULE**
 ///
@@ -47,6 +49,8 @@ pub mod load_testing;
 ///
 /// Real-time metrics collection and aggregation system.
 pub mod metrics_collector;
+#[cfg(test)]
+mod metrics_collector_unit_tests;
 
 /// **PERFORMANCE ANALYTICS MODULE**
 ///
@@ -72,6 +76,8 @@ pub mod status;
 ///
 /// Core storage management and operations.
 pub mod storage;
+#[cfg(test)]
+mod storage_unit_tests;
 
 /// **WORKSPACE MANAGEMENT MODULE**
 ///

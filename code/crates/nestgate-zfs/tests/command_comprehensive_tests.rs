@@ -56,7 +56,7 @@ fn test_command_debug_format() {
     let cmd = ZfsCommand::new();
     let debug_str = format!("{:?}", cmd);
 
-    assert!(debug_str.len() > 0);
+    assert!(!debug_str.is_empty());
     assert!(debug_str.contains("ZfsCommand"));
 }
 
@@ -123,7 +123,7 @@ fn test_result_debug_format() {
     };
 
     let debug_str = format!("{:?}", result);
-    assert!(debug_str.len() > 0);
+    assert!(!debug_str.is_empty());
     assert!(debug_str.contains("CommandResult"));
 }
 

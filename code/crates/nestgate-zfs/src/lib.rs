@@ -17,7 +17,9 @@ pub mod zero_cost_zfs_handler;
 pub mod zero_cost_zfs_operations;
 
 // Configuration and management
-pub mod canonical_zfs_config;
+// ⚠️ REMOVED: canonical_zfs_config was deprecated and removed in v0.11.0 (November 2025)
+// Use types::ZfsStorageConfig or types::CanonicalZfsConfig instead
+// pub mod canonical_zfs_config; // REMOVED - use types::ZfsStorageConfig
 pub mod health;
 #[cfg(test)]
 mod health_tests;
@@ -57,6 +59,8 @@ pub mod performance_engine;
 
 // Native implementations
 pub mod native;
+#[cfg(test)]
+mod native_command_executor_tests;
 
 // Constants
 pub mod constants;
@@ -74,9 +78,21 @@ pub use error::ZfsError;
 pub use pool::ZfsPoolManager;
 pub use types::*;
 pub use zero_cost_zfs_operations::ProductionZfsManager;
-// pub use canonical_zfs_config::{ZfsConfig, ZfsExtensions}; // Module not yet implemented
-// #[allow(deprecated)]
-// pub use canonical_zfs_config::CanonicalZfsConfig; // Module not yet implemented
-pub use canonical_zfs_config::ZfsConfig;
+// **CANONICAL ZFS CONFIGURATION EXPORTS**
+// Re-export canonical types for easy access
+pub use types::{
+    CanonicalZfsConfig,
+    ZfsStorageConfig,
+    ZfsPoolConfig,
+    ZfsDatasetConfig,
+    ZfsSnapshotConfig,
+    ZfsPerformanceConfig,
+    ZfsMonitoringConfig,
+    ZfsMigrationConfig,
+};
+
+// Backward compatibility: export as ZfsConfig
+pub use types::CanonicalZfsConfig as ZfsConfig;
+
 pub use pool_setup::ZfsPoolSetup;
 pub use production_readiness::ProductionReadinessValidator;

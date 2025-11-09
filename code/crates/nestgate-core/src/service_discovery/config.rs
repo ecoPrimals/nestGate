@@ -5,26 +5,14 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 /// **ECOSYSTEM UNIFICATION**: Import unified types from canonical locations
-use crate::config::canonical_master::NestGateCanonicalConfig as UnifiedConfig;
-use crate::config::canonical_master::{
+use crate::config::canonical_primary::NestGateCanonicalConfig as UnifiedConfig;
+use crate::config::canonical_primary::{
     NetworkConfig as UnifiedNetworkConfig, 
     MonitoringConfig as UnifiedMonitoringConfig,
 };
-// **FALLBACK**: Define missing config types locally until they are added to unified_types
-use serde::{Deserialize, Serialize};
-
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct UnifiedSecurityConfig {
-    pub enable_tls: bool,
-    pub verify_certificates: bool,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct UnifiedServiceConfig {
-    pub name: String,
-    pub version: String,
-    pub enabled: bool,
-}
+// **MIGRATED**: Use canonical configs instead of local duplicates
+use crate::config::canonical_primary::domains::security_canonical::UnifiedSecurityConfig;
+use crate::config::canonical_primary::service::UnifiedServiceConfig;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceDiscoveryConfig {

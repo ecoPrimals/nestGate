@@ -71,7 +71,7 @@ impl PerformanceDashboard {
         // Create basic time range
         let now = SystemTime::now();
         let one_hour_ago = now - Duration::from_secs(3600);
-        let time_range = TimeRange {
+        let _time_range = TimeRange {
             start: one_hour_ago,
             end: now,
             granularity: Duration::from_secs(60),
@@ -95,7 +95,7 @@ impl PerformanceDashboard {
                 cpu_usage_percent: current_metrics.cpu_usage,
                 memory_usage_percent: current_metrics.memory_usage,
                 disk_usage_percent: 45.0,
-                network_throughput_bps: 1000000,
+                network_throughput_bps: 1_000_000,
                 active_connections: 25,
                 response_time_ms: 150.0,
                 error_rate_percent: 0.1,
@@ -196,7 +196,7 @@ pub fn stream_dashboard_metrics(
 
 /// Get specific performance analysis
 pub fn get_performance_analysis(
-    dashboard: Arc<PerformanceDashboard>,
+    _dashboard: Arc<PerformanceDashboard>,
     Path(_analysis_type): Path<String>,
 ) -> Result<Json<ApiResponse<String>>> {
     // Basic analysis endpoint

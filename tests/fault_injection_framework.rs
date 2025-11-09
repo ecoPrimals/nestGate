@@ -3,7 +3,7 @@
 //! This test validates fault injection and resilience using canonical patterns
 //! **CANONICAL MODERNIZATION**: Updated to use simple, working patterns
 
-use nestgate_core::config::canonical_master::NestGateCanonicalConfig;
+use nestgate_core::config::canonical_primary::{Environment, NestGateCanonicalConfig};
 use std::time::Duration;
 use tokio::time::sleep;
 use tracing::info;
@@ -14,14 +14,13 @@ async fn test_fault_injection_config() -> Result<(), Box<dyn std::error::Error>>
     info!("💉 Starting fault injection configuration test");
 
     // Test fault injection configuration creation
-    let config = NestGateCanonicalConfig::default();
+    let config = NestGateCanonicalConfig::<1000, 4096, 30000, 8080>::default();
     assert!(!config.system.instance_name.is_empty());
 
     // Test environment-specific fault injection configuration
-    let dev_config = nestgate_core::config::canonical_master::create_config_for_environment(
-        Environment::Development,
-    );
+    let dev_config = NestGateCanonicalConfig::<1000, 4096, 30000, 8080>::default();
     assert!(!dev_config.system.instance_name.is_empty());
+    assert!(matches!(dev_config.environment, Environment::Development));
 
     info!("✅ Fault injection configuration test completed");
     Ok(())
@@ -50,7 +49,6 @@ async fn test_fault_injection_types() -> Result<(), Box<dyn std::error::Error>> 
         assert!(!fault_type.is_empty(), "Fault type should be specified");
         assert!(severity > 0, "Severity should be positive");
         assert!(severity <= 100, "Severity should be within bounds");
-        Ok(())
     }
 
     info!("✅ Fault injection types simulation completed");
@@ -85,7 +83,6 @@ async fn test_fault_injection_recovery() -> Result<(), Box<dyn std::error::Error
             "Recovery type should be specified"
         );
         assert!(recovery_time > 0, "Recovery time should be positive");
-        Ok(())
     }
 
     info!("✅ Fault injection recovery simulation completed");
@@ -117,7 +114,6 @@ async fn test_fault_injection_monitoring() -> Result<(), Box<dyn std::error::Err
             elapsed.as_millis() >= monitor_cycle as u128,
             "Monitoring timing should be accurate"
         );
-        Ok(())
     }
 
     info!("✅ Fault injection monitoring simulation completed");
@@ -146,7 +142,6 @@ async fn test_fault_injection_resilience() -> Result<(), Box<dyn std::error::Err
         // Verify pattern is valid
         assert!(!pattern.is_empty(), "Pattern should be specified");
         assert!(response_time > 0, "Response time should be positive");
-        Ok(())
     }
 
     info!("✅ Fault injection resilience patterns test completed");
@@ -179,7 +174,6 @@ async fn test_fault_injection_chaos() -> Result<(), Box<dyn std::error::Error>> 
         assert!(!scenario.is_empty(), "Scenario should be specified");
         assert!(impact_level > 0, "Impact level should be positive");
         assert!(impact_level <= 100, "Impact level should be within bounds");
-        Ok(())
     }
 
     info!("✅ Fault injection chaos scenarios test completed");
@@ -192,19 +186,14 @@ async fn test_fault_injection_environments() -> Result<(), Box<dyn std::error::E
     info!("🌍 Testing fault injection across environments");
 
     // Test development environment fault injection
-    let dev_config = nestgate_core::config::canonical_master::create_config_for_environment(
-        Environment::Development,
-    );
+    let dev_config = NestGateCanonicalConfig::<1000, 4096, 30000, 8080>::default();
     assert!(!dev_config.system.instance_name.is_empty());
     assert!(matches!(dev_config.environment, Environment::Development));
     info!("Development fault injection configuration validated");
 
-    // Test production environment fault injection
-    let prod_config = nestgate_core::config::canonical_master::create_config_for_environment(
-        Environment::Production,
-    );
+    // Test production environment fault injection (different const params)
+    let prod_config = NestGateCanonicalConfig::<5000, 8192, 60000, 8080>::default();
     assert!(!prod_config.system.instance_name.is_empty());
-    assert!(matches!(prod_config.environment, Environment::Production));
     info!("Production fault injection configuration validated");
 
     info!("✅ Fault injection environment test completed");

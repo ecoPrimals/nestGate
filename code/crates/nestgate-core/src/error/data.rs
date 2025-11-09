@@ -158,7 +158,7 @@ mod tests {
     fn test_handler_type_variants() {
         let api = HandlerType::Api;
         let middleware = HandlerType::Middleware;
-        let event = HandlerType::Event;
+        let _event = HandlerType::Event;
 
         // Test Debug formatting
         assert!(format!("{api:?}").contains("Api"));

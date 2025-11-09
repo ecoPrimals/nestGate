@@ -20,7 +20,7 @@ pub use remote::RemoteZfsService;
 // Note: native_real uses NativeZfsService internally - no separate export needed
 
 use crate::handlers::zfs::universal_zfs::traits::UniversalZfsService;
-use nestgate_core::config::canonical_master::NestGateCanonicalConfig;
+use nestgate_core::config::canonical_primary::NestGateCanonicalConfig;
 use std::sync::Arc;
 
 /// ZFS service factory - creates appropriate backend based on configuration

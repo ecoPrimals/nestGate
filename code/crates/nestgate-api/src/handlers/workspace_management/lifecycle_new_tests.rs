@@ -89,7 +89,7 @@ mod workspace_lifecycle_additional_tests {
         };
 
         assert!(!workspace.name.is_empty());
-        assert!(workspace.name.len() > 0);
+        assert!(workspace.name!debug_str.is_empty());
         assert!(workspace.name.len() < 256); // Reasonable length
     }
 

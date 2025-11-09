@@ -6,7 +6,7 @@ use std::time::{Duration, Instant};
 use tokio::sync::{Mutex, RwLock, Semaphore};
 use tracing::{debug, info, warn};
 use super::{ConnectionFactory, ConnectionGuard, HealthCheckFn, PoolStats};
-use crate::config::canonical_master::NestGateCanonicalConfig;
+use crate::config::canonical_primary::NestGateCanonicalConfig;
 use crate::{NestGateError, Result};
 
 /// Wrapper for pooled connections with metadata
@@ -105,8 +105,16 @@ where
         )
         .await
         .map_err(|_| NestGateError::internal_error(
+            "Connection pool timeout",
+            "connection_pool",
+            None,
+        ))?;
 
         let _permit = permit.map_err(|_| NestGateError::internal_error(
+            "Failed to acquire semaphore permit",
+            "connection_pool",
+            None,
+        ))?;
 
         // Try to get existing connection from pool
         let connection = {
@@ -120,7 +128,7 @@ where
                     pool.pop_front();
                     if let Ok(mut stats) = self.stats.try_write() {
                         stats.idle_connections = stats.idle_connections.saturating_sub(1);
-                    )
+                    }
                 } else {
                     break;
                 }

@@ -36,6 +36,9 @@ use std::path::Path;
 use thiserror::Error;
 use tokio::io::AsyncReadExt;
 
+// Use canonical Result type from error module
+use crate::error::Result;
+
 /// Checksum-related errors
 #[derive(Debug, Error)]
 pub enum ChecksumError {
@@ -52,8 +55,8 @@ pub enum ChecksumError {
     FileNotFound(String),
 }
 
-/// Result type for checksum operations
-pub type Result<T> = std::result::Result<T, ChecksumError>;
+// Note: Now using crate::error::Result<T> instead of local Result type
+// ChecksumError is converted to NestGateError via From trait when needed
 
 /// Checksum algorithms supported by NestGate
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]

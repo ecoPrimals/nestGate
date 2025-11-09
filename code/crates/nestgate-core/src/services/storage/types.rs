@@ -7,7 +7,7 @@ use uuid::Uuid;
 
 // **MIGRATED**: Using canonical types instead of deprecated unified_types
 use crate::canonical_types::storage::StorageTier;
-pub use crate::config::canonical_master::StorageConfig as CacheConfig;
+pub use crate::config::canonical_primary::StorageConfig as CacheConfig;
 // CLEANED: Removed unused StorageOperation import as part of canonical modernization
 
 // **CANONICAL CACHE TYPES** - Consolidated from unified_types
@@ -293,6 +293,7 @@ mod tests {
     #[test]
     fn test_cache_config_usage() {
         // Simple test using local struct instead of complex import
+        #[allow(dead_code)]
         struct TestCacheConfig {
             cache_directory: String,
             cache_size_bytes: u64,

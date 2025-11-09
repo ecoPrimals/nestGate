@@ -1,3 +1,10 @@
+//! **⚠️ DEPRECATED - USE CANONICAL INSTEAD**
+//!
+//! This module is deprecated. Use the canonical automation configuration types instead.
+//!
+//! **Migration**: Use `nestgate_core::config::canonical_primary::domains::automation::AutomationConfig` or
+//! `crate::types::CanonicalAutomationConfig`
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::env;
@@ -5,7 +12,13 @@ use std::time::Duration;
 
 /// **AUTOMATION CONFIG TYPES**
 /// Configuration type definitions for the automation system
-/// Main automation configuration
+/// Main automation configuration (DEPRECATED)
+///
+/// **Migration Path**: Use `crate::types::CanonicalAutomationConfig` instead.
+#[deprecated(
+    since = "0.2.0",
+    note = "Use nestgate_core::config::canonical_primary::domains::automation::AutomationConfig"
+)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AutomationConfig {
     /// Analysis configuration

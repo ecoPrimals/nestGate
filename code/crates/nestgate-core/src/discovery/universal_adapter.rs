@@ -4,11 +4,11 @@
 
 use super::capability_scanner::CapabilityInfo;
 use crate::error::NestGateError;
-use async_trait::async_trait;
 use bytes::Bytes;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use std::collections::HashMap;
+use std::future::Future;
 use std::sync::Arc;
 use tokio::sync::{Mutex, RwLock};
 use tracing::{debug, info, warn};
@@ -76,16 +76,18 @@ pub struct ConnectionMetadata {
 }
 
 /// Trait for connections to capabilities
-#[async_trait]
+///
+/// **NATIVE ASYNC**: Uses `impl Future` for zero-cost abstractions.
+/// Uses enum dispatch pattern for polymorphism without trait objects.
 pub trait Connection: Send + Sync {
-    /// Send a request to the capability
-    async fn send_request(&self, request: Request) -> Result<Response, NestGateError>;
+    /// Send a request to the capability - native async, no boxing
+    fn send_request(&self, request: Request) -> impl Future<Output = Result<Response, NestGateError>> + Send;
 
-    /// Check health of the connection
-    async fn health_check(&self) -> Result<HealthStatus, NestGateError>;
+    /// Check health of the connection - native async
+    fn health_check(&self) -> impl Future<Output = Result<HealthStatus, NestGateError>> + Send;
 
-    /// Get connection metadata
-    async fn get_metadata(&self) -> Result<ConnectionMetadata, NestGateError>;
+    /// Get connection metadata - native async
+    fn get_metadata(&self) -> impl Future<Output = Result<ConnectionMetadata, NestGateError>> + Send;
 
     /// Get connection type
     fn connection_type(&self) -> &str;
@@ -94,7 +96,56 @@ pub trait Connection: Send + Sync {
     fn endpoint(&self) -> &str;
 }
 
+/// Enum wrapper for Connection implementations (enum dispatch pattern)
+///
+/// This enables use of Connection trait without trait objects while maintaining
+/// zero-cost abstractions. Add new variants here as new connection types are implemented.
+#[derive(Clone)]
+pub enum ConnectionImpl {
+    /// HTTP-based connection
+    Http(HttpConnection),
+}
+
+impl Connection for ConnectionImpl {
+    fn send_request(&self, request: Request) -> impl Future<Output = Result<Response, NestGateError>> + Send {
+        async move {
+            match self {
+                Self::Http(conn) => conn.send_request(request).await,
+            }
+        }
+    }
+
+    fn health_check(&self) -> impl Future<Output = Result<HealthStatus, NestGateError>> + Send {
+        async move {
+            match self {
+                Self::Http(conn) => conn.health_check().await,
+            }
+        }
+    }
+
+    fn get_metadata(&self) -> impl Future<Output = Result<ConnectionMetadata, NestGateError>> + Send {
+        async move {
+            match self {
+                Self::Http(conn) => conn.get_metadata().await,
+            }
+        }
+    }
+
+    fn connection_type(&self) -> &str {
+        match self {
+            Self::Http(conn) => conn.connection_type(),
+        }
+    }
+
+    fn endpoint(&self) -> &str {
+        match self {
+            Self::Http(conn) => conn.endpoint(),
+        }
+    }
+}
+
 /// HTTP-based connection implementation
+#[derive(Clone)]
 pub struct HttpConnection {
     /// Capability information
     capability_info: CapabilityInfo,
@@ -145,9 +196,9 @@ impl HttpConnection {
     }
 }
 
-#[async_trait]
 impl Connection for HttpConnection {
-    async fn send_request(&self, request: Request) -> Result<Response, NestGateError> {
+    fn send_request(&self, request: Request) -> impl Future<Output = Result<Response, NestGateError>> + Send {
+        async move {
         debug!(
             "Sending request {} to {}",
             request.id, self.capability_info.endpoint
@@ -196,9 +247,11 @@ impl Connection for HttpConnection {
                 },
             )))
         }
+        }
     }
 
-    async fn health_check(&self) -> Result<HealthStatus, NestGateError> {
+    fn health_check(&self) -> impl Future<Output = Result<HealthStatus, NestGateError>> + Send {
+        async move {
         debug!("Health checking {}", self.capability_info.endpoint);
 
         let health_url = format!("{}/health", self.capability_info.endpoint);
@@ -213,10 +266,13 @@ impl Connection for HttpConnection {
             }
             Err(_) => Ok(HealthStatus::Unhealthy),
         }
+        }
     }
 
-    async fn get_metadata(&self) -> Result<ConnectionMetadata, NestGateError> {
-        Ok(self.metadata.clone())
+    fn get_metadata(&self) -> impl Future<Output = Result<ConnectionMetadata, NestGateError>> + Send {
+        async move {
+            Ok(self.metadata.clone())
+        }
     }
 
     fn connection_type(&self) -> &str {
@@ -232,8 +288,8 @@ impl Connection for HttpConnection {
 pub struct UniversalAdapter {
     /// Registry of discovered capabilities
     capability_registry: Arc<RwLock<HashMap<String, CapabilityInfo>>>,
-    /// Pool of active connections
-    connection_pool: Arc<Mutex<HashMap<String, Arc<dyn Connection>>>>,
+    /// Pool of active connections (using enum dispatch, not trait objects)
+    connection_pool: Arc<Mutex<HashMap<String, Arc<ConnectionImpl>>>>,
     /// Adapter metrics
     metrics: Arc<Mutex<AdapterMetrics>>,
 }
@@ -285,7 +341,7 @@ impl UniversalAdapter {
     pub async fn get_capability(
         &self,
         capability_type: &str,
-    ) -> Result<Arc<dyn Connection>, NestGateError> {
+    ) -> Result<Arc<ConnectionImpl>, NestGateError> {
         // Check connection pool first (O(1))
         {
             let pool = self.connection_pool.lock().await;
@@ -334,7 +390,7 @@ impl UniversalAdapter {
     async fn create_connection(
         &self,
         capability: CapabilityInfo,
-    ) -> Result<Arc<dyn Connection>, NestGateError> {
+    ) -> Result<Arc<ConnectionImpl>, NestGateError> {
         debug!(
             "Creating connection for capability: {}",
             capability.capability_type
@@ -343,7 +399,7 @@ impl UniversalAdapter {
         // For now, default to HTTP connections
         // In the future, this could be extended to support other protocols
         let connection = HttpConnection::new(capability)?;
-        Ok(Arc::new(connection))
+        Ok(Arc::new(ConnectionImpl::Http(connection)))
     }
 
     /// Get adapter metrics

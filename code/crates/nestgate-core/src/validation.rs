@@ -1,7 +1,7 @@
 
 /// Validation result type
 // Use canonical ValidationResult from error::idiomatic
-pub use crate::error::idiomatic::ValidationResult;
+pub use crate::error::ValidationResult; // Now from unified_result_system
 /// Validation error types
 #[derive(Debug, Clone)]
 pub enum ValidationError {

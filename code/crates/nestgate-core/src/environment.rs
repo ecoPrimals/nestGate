@@ -23,7 +23,7 @@ pub enum OperationMode {
 /// Environment detection and configuration
 ///
 /// **MODERNIZED**: Simplified structure - removed deprecated NetworkConfig
-/// For comprehensive network configuration, use `config::canonical_master::domains::network::CanonicalNetworkConfig`
+/// For comprehensive network configuration, use `config::canonical_primary::domains::network::CanonicalNetworkConfig`
 #[derive(Debug, Clone)]
 pub struct Environment {
     /// Current operation mode

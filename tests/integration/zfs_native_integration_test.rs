@@ -11,7 +11,7 @@ use tests::config::ConsolidatedCanonicalConfig;
     traits::UniversalZfsService,
     types::{DatasetConfig, PoolConfig, SnapshotConfig},
 };
-use nestgate_core::config::canonical_master::NestGateCanonicalConfig;
+use nestgate_core::config::canonical_primary::NestGateCanonicalConfig;
 use tests::config::ConsolidatedCanonicalConfig;
 use std::sync::Arc;
 use tests::config::ConsolidatedCanonicalConfig;

@@ -3,9 +3,9 @@
 //! Environment capability detection implementation for the Infant Discovery Architecture.
 
 use crate::error::NestGateError;
-use async_trait::async_trait;
 use std::collections::HashMap;
 use std::env;
+use std::future::Future;
 use tracing::{debug, info, warn};
 
 /// Information about a discovered capability
@@ -22,16 +22,18 @@ pub struct CapabilityInfo {
 }
 
 /// Trait for capability discovery methods
-#[async_trait]
+///
+/// **NATIVE ASYNC**: Uses `impl Future` for zero-cost abstractions (no boxing overhead)
 pub trait DiscoveryMethod: Send + Sync {
-    /// Discover capabilities using this method
-    async fn discover(&self) -> Result<Vec<CapabilityInfo>, NestGateError>;
+    /// Discover capabilities using this method - native async, no boxing
+    fn discover(&self) -> impl Future<Output = Result<Vec<CapabilityInfo>, NestGateError>> + Send;
 
     /// Get the name of this discovery method
     fn method_name(&self) -> &str;
 }
 
 /// Environment variable discovery method
+#[derive(Debug)]
 pub struct EnvironmentDiscovery {
     /// Known capability patterns to scan for
     capability_patterns: Vec<String>,
@@ -66,9 +68,9 @@ impl Default for EnvironmentDiscovery {
     }
 }
 
-#[async_trait]
 impl DiscoveryMethod for EnvironmentDiscovery {
-    async fn discover(&self) -> Result<Vec<CapabilityInfo>, NestGateError> {
+    fn discover(&self) -> impl Future<Output = Result<Vec<CapabilityInfo>, NestGateError>> + Send {
+        async move {
         let mut capabilities = Vec::new();
 
         debug!("Scanning environment variables for capabilities");
@@ -111,11 +113,12 @@ impl DiscoveryMethod for EnvironmentDiscovery {
         } else {
             info!(
                 "Found {} capabilities via environment discovery",
-                capabilities.len()
-            );
-        }
+            capabilities.len()
+        );
+    }
 
-        Ok(capabilities)
+    Ok(capabilities)
+        }
     }
 
     fn method_name(&self) -> &str {
@@ -123,10 +126,51 @@ impl DiscoveryMethod for EnvironmentDiscovery {
     }
 }
 
+/// **DISCOVERY METHOD ENUM**
+///
+/// Enum dispatch for discovery methods - zero-cost alternative to `Box<dyn DiscoveryMethod>`.
+/// This enables native async while maintaining runtime polymorphism through enum dispatch.
+#[derive(Debug)]
+pub enum DiscoveryMethodImpl {
+    /// Environment variable discovery
+    Environment(EnvironmentDiscovery),
+    /// DNS-SRV discovery (requires network_discovery module)
+    #[allow(dead_code)]
+    Dns(super::network_discovery::DnsServiceDiscovery),
+    /// Multicast discovery (requires network_discovery module)
+    #[allow(dead_code)]
+    Multicast(super::network_discovery::MulticastDiscovery),
+    /// Port scan discovery (requires network_discovery module)
+    #[allow(dead_code)]
+    PortScan(super::network_discovery::PortScanDiscovery),
+}
+
+impl DiscoveryMethod for DiscoveryMethodImpl {
+    fn discover(&self) -> impl Future<Output = Result<Vec<CapabilityInfo>, NestGateError>> + Send {
+        async move {
+            match self {
+                Self::Environment(method) => method.discover().await,
+                Self::Dns(method) => method.discover().await,
+                Self::Multicast(method) => method.discover().await,
+                Self::PortScan(method) => method.discover().await,
+            }
+        }
+    }
+
+    fn method_name(&self) -> &str {
+        match self {
+            Self::Environment(method) => method.method_name(),
+            Self::Dns(method) => method.method_name(),
+            Self::Multicast(method) => method.method_name(),
+            Self::PortScan(method) => method.method_name(),
+        }
+    }
+}
+
 /// Capability scanner that orchestrates multiple discovery methods
 pub struct CapabilityScanner {
-    /// Discovery methods to use
-    discovery_methods: Vec<Box<dyn DiscoveryMethod>>,
+    /// Discovery methods to use (enum dispatch for zero-cost async)
+    discovery_methods: Vec<DiscoveryMethodImpl>,
     /// Cache of discovered capabilities
     capability_cache: HashMap<String, CapabilityInfo>,
 }
@@ -140,14 +184,14 @@ impl CapabilityScanner {
             capability_cache: HashMap::new(),
         };
 
-        // Add default discovery methods
-        scanner.add_discovery_method(Box::new(EnvironmentDiscovery::new()));
+        // Add default discovery methods (using enum dispatch for zero-cost async)
+        scanner.add_discovery_method(DiscoveryMethodImpl::Environment(EnvironmentDiscovery::new()));
 
         scanner
     }
 
-    /// Add a discovery method
-    pub fn add_discovery_method(&mut self, method: Box<dyn DiscoveryMethod>) {
+    /// Add a discovery method (using enum dispatch)
+    pub fn add_discovery_method(&mut self, method: DiscoveryMethodImpl) {
         self.discovery_methods.push(method);
     }
 

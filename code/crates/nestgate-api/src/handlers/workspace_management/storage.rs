@@ -12,6 +12,11 @@ use tracing::warn;
 // Removed unused tracing import
 
 /// Delete workspace storage (CORE STORAGE FUNCTION)
+///
+/// # Errors
+///
+/// Returns `StatusCode::BAD_REQUEST` if workspace ID format is invalid,
+/// or `StatusCode::INTERNAL_SERVER_ERROR` if storage deletion fails.
 pub async fn delete_workspace(Path(workspace_id): Path<String>) -> Result<Json<Value>, StatusCode> {
     info!("🗑️ Deleting workspace storage: {}", workspace_id);
     // Validate workspace ID format
@@ -273,6 +278,10 @@ pub async fn cleanup_workspace(
 }
 
 /// Scale workspace storage
+///
+/// # Errors
+///
+/// Returns `StatusCode::INTERNAL_SERVER_ERROR` if storage scaling fails.
 pub async fn scale_workspace(Path(workspace_id): Path<String>) -> Result<Json<Value>, StatusCode> {
     info!("📈 Scaling workspace storage: {}", workspace_id);
     // Basic workspace scaling implementation

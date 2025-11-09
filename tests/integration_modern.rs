@@ -3,7 +3,7 @@
 //! This test validates core system integration using canonical patterns
 //! **CANONICAL MODERNIZATION**: Updated to use simple, working patterns
 
-use nestgate_core::config::canonical_master::{Environment, NestGateCanonicalConfig};
+use nestgate_core::config::canonical_primary::{Environment, NestGateCanonicalConfig};
 use std::time::Duration;
 use tokio::time::sleep;
 use tracing::info;
@@ -13,12 +13,12 @@ use tracing::info;
 async fn test_basic_integration() -> Result<(), Box<dyn std::error::Error>> {
     info!("🚀 Starting basic integration test");
 
-    // Test configuration creation
-    let config = NestGateCanonicalConfig::default();
+    // Test configuration creation with explicit type (required for const generics)
+    let config: NestGateCanonicalConfig = NestGateCanonicalConfig::default();
     assert!(!config.system.instance_name.is_empty());
 
-    // Test environment configuration
-    let dev_config = NestGateCanonicalConfig::default();
+    // Test environment configuration with explicit type
+    let dev_config: NestGateCanonicalConfig = NestGateCanonicalConfig::default();
     assert!(matches!(dev_config.environment, Environment::Development));
 
     info!("✅ Basic integration test completed");
@@ -53,16 +53,16 @@ async fn test_configuration_validation() -> Result<(), Box<dyn std::error::Error
     info!("⚙️  Testing configuration validation");
 
     // Test development environment
-    let dev_config = NestGateCanonicalConfig::default();
+    let dev_config: NestGateCanonicalConfig = NestGateCanonicalConfig::default();
     assert!(!dev_config.system.instance_name.is_empty());
-    assert!(!dev_config.system.log_level.is_empty());
+    // LogLevel is an enum, so we just verify it exists (no is_empty check needed)
     assert!(matches!(dev_config.environment, Environment::Development));
     info!("Development environment configuration validated");
 
     // Test production environment
-    let prod_config = NestGateCanonicalConfig::default();
+    let prod_config: NestGateCanonicalConfig = NestGateCanonicalConfig::default();
     assert!(!prod_config.system.instance_name.is_empty());
-    assert!(!prod_config.system.log_level.is_empty());
+    // LogLevel is validated through its enum type
     info!("Production environment configuration validated");
 
     info!("✅ Configuration validation completed");

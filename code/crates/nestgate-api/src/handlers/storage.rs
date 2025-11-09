@@ -99,6 +99,10 @@ pub struct StorageMetrics {
 /// **GET STORAGE POOLS HANDLER**
 ///
 /// Retrieve information about all storage pools.
+///
+/// # Errors
+///
+/// This function currently always returns `Ok`, but returns `Result` for future error handling.
 #[must_use]
 pub async fn get_storage_pools() -> Result<Json<Vec<StoragePoolInfo>>, StatusCode> {
     let pools = vec![
@@ -124,6 +128,10 @@ pub async fn get_storage_pools() -> Result<Json<Vec<StoragePoolInfo>>, StatusCod
 /// **GET STORAGE DATASETS HANDLER**
 ///
 /// Retrieve information about all storage datasets.
+///
+/// # Errors
+///
+/// This function currently always returns `Ok`, but returns `Result` for future error handling.
 #[must_use]
 pub async fn get_storage_datasets() -> Result<Json<Vec<StorageDatasetInfo>>, StatusCode> {
     let datasets = vec![
@@ -149,6 +157,10 @@ pub async fn get_storage_datasets() -> Result<Json<Vec<StorageDatasetInfo>>, Sta
 /// **GET STORAGE SNAPSHOTS HANDLER**
 ///
 /// Retrieve information about all storage snapshots.
+///
+/// # Errors
+///
+/// This function currently always returns `Ok`, but returns `Result` for future error handling.
 #[must_use]
 pub async fn get_storage_snapshots() -> Result<Json<Vec<StorageSnapshotInfo>>, StatusCode> {
     let snapshots = vec![
@@ -172,6 +184,10 @@ pub async fn get_storage_snapshots() -> Result<Json<Vec<StorageSnapshotInfo>>, S
 /// **GET STORAGE METRICS HANDLER**
 ///
 /// Retrieve current storage performance metrics.
+///
+/// # Errors
+///
+/// This function currently always returns `Ok`, but returns `Result` for future error handling.
 #[must_use]
 pub async fn get_storage_metrics() -> Result<Json<StorageMetrics>, StatusCode> {
     let metrics = StorageMetrics {
@@ -241,7 +257,7 @@ pub struct StorageSnapshotInfo {
 /// **STORAGE UTILITY FUNCTIONS**
 ///
 /// These functions are kept for future storage integration and testing purposes.
-
+///
 /// Collect real storage pools from system
 #[allow(dead_code)] // Reserved for future real storage integration
 async fn collect_real_storage_pools(

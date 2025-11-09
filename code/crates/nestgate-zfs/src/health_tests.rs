@@ -180,8 +180,7 @@ mod tests {
             drop(monitor);
         }
 
-        // Should not panic
-        assert!(true);
+        // Test passed without panic - no assertion needed
     }
 
     #[test]

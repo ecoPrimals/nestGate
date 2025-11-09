@@ -12,7 +12,7 @@
 /// - Single source of truth for all primal configuration
 /// - Consistent configuration patterns with base unified configs
 /// - Extensible architecture for primal-specific settings
-use nestgate_core::unified_final_config::supporting_types::StandardDomainConfig;
+use nestgate_core::config::canonical_primary::domains::ConsolidatedDomainConfigs;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;

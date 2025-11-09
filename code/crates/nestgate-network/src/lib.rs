@@ -14,14 +14,10 @@ pub use nestgate_core::Result;
 pub mod api;
 /// Protocol handlers and management
 pub mod handlers;
-/// Orchestration adapter
-pub mod orchestration_adapter;
 /// Protocol definitions
 pub mod protocol;
 /// Main network service implementation
 pub mod service;
-/// Service discovery client (sovereignty compliant)
-pub mod service_discovery_client;
 /// Network types and configuration
 pub mod types;
 /// Unified network configuration
@@ -29,15 +25,12 @@ pub mod unified_network_config;
 /// Unified network extensions
 pub mod unified_network_extensions;
 // Removed: Zero-cost orchestration types (delegated to orchestration primal)
-/// Orchestration functionality
-pub use orchestration_adapter::{OrchestrationAdapter, OrchestrationConfig};
+// Removed: OrchestrationAdapter (delegated to orchestration primal via capability discovery)
 /// Configuration migration utilities
 /// These utilities help migrate from legacy configurations
 /// to the new modular network system.
 /// Main network service
 pub use service::RealNetworkService as NetworkService;
-/// Service discovery client (sovereignty compliant)
-pub use service_discovery_client::{LocalServiceRegistry, ServiceDiscoveryClient};
 /// Network configuration
 pub use types::{NetworkConfig, NetworkConfigBuilder};
 // Removed: Universal orchestration modules (delegated to orchestration primal via capability discovery)
@@ -70,37 +63,28 @@ pub fn default_network_config() -> NetworkConfig {
 #[must_use]
 pub fn production_network_config() -> NetworkConfig {
     let mut config = NetworkConfig::default();
-    config.network.api.max_connections = 2000;
-    config.network.api.connection_timeout = Duration::from_secs(10);
+    config.api.max_connections = 2000;
+    config.api.connection_timeout = Duration::from_secs(10);
     config
 }
 /// Create development network configuration  
 #[must_use]
 pub fn development_network_config() -> NetworkConfig {
     let mut config = NetworkConfig::default();
-    config.network.api.max_connections = 100;
-    config.network.api.connection_timeout = Duration::from_secs(30);
+    config.api.max_connections = 100;
+    config.api.connection_timeout = Duration::from_secs(30);
     config
 }
 // ==================== SECTION ====================
 
+/// Error handling module
+pub mod error;
+
 /// Network-specific result type
 // Use canonical NetworkResult from nestgate_core::error
 pub use nestgate_core::error::NetworkResult;
-/// Network error types
-#[derive(Debug, thiserror::Error)]
-pub enum NetworkError {
-    #[error("Connection failed: {message}")]
-    ConnectionFailed { message: String },
-    #[error("Timeout occurred: {b_operation:?}")]
-    Timeout { b_operation: Option<String> },
-    #[error("Configuration error: {field} - {message}")]
-    Configuration { field: String, message: String },
-    #[error("Protocol error: {protocol} - {message}")]
-    Protocol { protocol: String, message: String },
-    #[error("Service unavailable: {service}")]
-    ServiceUnavailable { service: String },
-}
+/// Network error types - re-exported from error module
+pub use error::NetworkError;
 // ==================== SECTION ====================
 
 /// Network constants - use canonical constants system
@@ -122,23 +106,19 @@ mod tests {
     fn test_default_config_creation() {
         let config = default_network_config();
         // Test that config is created successfully
-        assert!(
-            !config.extensions.port_range_start == 0 || config.extensions.port_range_start >= 1024
-        );
+        assert!(config.api.port_range_start == 0 || config.api.port_range_start >= 1024);
     }
     #[test]
     fn test_production_config() {
         let config = production_network_config();
-        assert_eq!(config.extensions.load_balancing.max_failures, 3);
         // Test production settings - config creation successful
-        assert!(config.extensions.keep_alive_timeout_seconds > 0);
+        assert!(config.performance.keep_alive_timeout_seconds > 0);
     }
 
     #[test]
     fn test_development_config() {
         let config = development_network_config();
-        assert_eq!(config.extensions.load_balancing.max_failures, 3);
         // Test development settings - config creation successful
-        assert!(config.extensions.keep_alive_timeout_seconds > 0);
+        assert!(config.performance.keep_alive_timeout_seconds > 0);
     }
 }

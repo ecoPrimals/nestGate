@@ -285,4 +285,333 @@ mod tests {
         assert_eq!(all_handles.len(), 100);
         assert_eq!(pool.active_count(), 100);
     }
+
+    #[test]
+    fn test_safe_pool_peak_usage_tracking() {
+        let pool: SafeMemoryPool<u64, 16> = SafeMemoryPool::new();
+
+        // Allocate 5 items
+        let h1 = pool.allocate(1u64).unwrap();
+        let h2 = pool.allocate(2u64).unwrap();
+        let h3 = pool.allocate(3u64).unwrap();
+        let h4 = pool.allocate(4u64).unwrap();
+        let h5 = pool.allocate(5u64).unwrap();
+
+        // Peak should be 5
+        assert_eq!(pool.stats().peak_usage.load(Ordering::Relaxed), 5);
+        assert_eq!(pool.active_count(), 5);
+
+        // Deallocate 2 items
+        pool.deallocate(h3);
+        pool.deallocate(h5);
+
+        // Peak should still be 5, active should be 3
+        assert_eq!(pool.stats().peak_usage.load(Ordering::Relaxed), 5);
+        assert_eq!(pool.active_count(), 3);
+
+        // Allocate 2 more (peak stays at 5)
+        let h6 = pool.allocate(6u64).unwrap();
+        let h7 = pool.allocate(7u64).unwrap();
+
+        assert_eq!(pool.stats().peak_usage.load(Ordering::Relaxed), 5);
+        assert_eq!(pool.active_count(), 5);
+
+        // Allocate one more to reach new peak of 6
+        let h8 = pool.allocate(8u64).unwrap();
+
+        assert_eq!(pool.stats().peak_usage.load(Ordering::Relaxed), 6);
+        assert_eq!(pool.active_count(), 6);
+
+        // Clean up
+        pool.deallocate(h1);
+        pool.deallocate(h2);
+        pool.deallocate(h4);
+        pool.deallocate(h6);
+        pool.deallocate(h7);
+        pool.deallocate(h8);
+    }
+
+    #[test]
+    fn test_safe_pool_utilization_edge_cases() {
+        let pool: SafeMemoryPool<u64, 4> = SafeMemoryPool::new();
+
+        // Empty pool: 0.0 utilization
+        assert_eq!(pool.utilization(), 0.0);
+
+        // 25% utilization
+        let h1 = pool.allocate(1u64).unwrap();
+        assert_eq!(pool.utilization(), 0.25);
+
+        // 50% utilization
+        let h2 = pool.allocate(2u64).unwrap();
+        assert_eq!(pool.utilization(), 0.5);
+
+        // 75% utilization
+        let h3 = pool.allocate(3u64).unwrap();
+        assert_eq!(pool.utilization(), 0.75);
+
+        // 100% utilization (full)
+        let h4 = pool.allocate(4u64).unwrap();
+        assert_eq!(pool.utilization(), 1.0);
+
+        // Deallocate one: back to 75%
+        pool.deallocate(h2);
+        assert_eq!(pool.utilization(), 0.75);
+
+        // Clean up
+        pool.deallocate(h1);
+        pool.deallocate(h3);
+        pool.deallocate(h4);
+    }
+
+    #[test]
+    fn test_safe_pool_multiple_allocations_deallocations() {
+        let pool: SafeMemoryPool<String, 8> = SafeMemoryPool::new();
+
+        // Allocate multiple strings
+        let handles: Vec<_> = (0..5)
+            .map(|i| pool.allocate(format!("String {}", i)).unwrap())
+            .collect();
+
+        assert_eq!(pool.active_count(), 5);
+        assert_eq!(pool.stats().allocated.load(Ordering::Relaxed), 5);
+
+        // Deallocate all
+        for handle in handles {
+            let value = pool.deallocate(handle);
+            assert!(value.is_some());
+        }
+
+        assert_eq!(pool.active_count(), 0);
+        assert_eq!(pool.stats().deallocated.load(Ordering::Relaxed), 5);
+    }
+
+    #[test]
+    fn test_safe_pool_reuse_after_exhaustion() {
+        let pool: SafeMemoryPool<u32, 3> = SafeMemoryPool::new();
+
+        // Exhaust the pool
+        let h1 = pool.allocate(10u32).unwrap();
+        let h2 = pool.allocate(20u32).unwrap();
+        let h3 = pool.allocate(30u32).unwrap();
+
+        // Cannot allocate more
+        assert!(pool.allocate(40u32).is_none());
+        assert_eq!(pool.active_count(), 3);
+
+        // Deallocate one
+        let val = pool.deallocate(h2);
+        assert_eq!(val, Some(20u32));
+
+        // Still cannot allocate (slots are not reused - index keeps incrementing)
+        assert!(pool.allocate(50u32).is_none());
+        assert_eq!(pool.active_count(), 2);
+
+        // Clean up
+        pool.deallocate(h1);
+        pool.deallocate(h3);
+    }
+
+    #[test]
+    fn test_safe_pool_default_implementation() {
+        let pool: SafeMemoryPool<i32, 10> = SafeMemoryPool::default();
+
+        assert_eq!(pool.utilization(), 0.0);
+        assert_eq!(pool.active_count(), 0);
+
+        let handle = pool.allocate(42i32);
+        assert!(handle.is_some());
+        assert_eq!(pool.active_count(), 1);
+    }
+
+    #[test]
+    fn test_safe_pool_different_data_types() {
+        // Test with String
+        let string_pool: SafeMemoryPool<String, 4> = SafeMemoryPool::new();
+        let h1 = string_pool.allocate("Hello".to_string()).unwrap();
+        assert_eq!(string_pool.deallocate(h1), Some("Hello".to_string()));
+
+        // Test with Vec
+        let vec_pool: SafeMemoryPool<Vec<i32>, 4> = SafeMemoryPool::new();
+        let h2 = vec_pool.allocate(vec![1, 2, 3]).unwrap();
+        assert_eq!(vec_pool.deallocate(h2), Some(vec![1, 2, 3]));
+
+        // Test with custom struct
+        #[derive(Debug, PartialEq)]
+        struct CustomStruct {
+            id: u32,
+            name: String,
+        }
+
+        let struct_pool: SafeMemoryPool<CustomStruct, 4> = SafeMemoryPool::new();
+        let custom = CustomStruct {
+            id: 1,
+            name: "Test".to_string(),
+        };
+        let h3 = struct_pool.allocate(custom).unwrap();
+        let retrieved = struct_pool.deallocate(h3).unwrap();
+        assert_eq!(retrieved.id, 1);
+        assert_eq!(retrieved.name, "Test");
+    }
+
+    #[test]
+    fn test_safe_pool_statistics_accuracy() {
+        let pool: SafeMemoryPool<u64, 20> = SafeMemoryPool::new();
+
+        // Allocate 10 items
+        let handles: Vec<_> = (0..10).map(|i| pool.allocate(i).unwrap()).collect();
+
+        let stats = pool.stats();
+        assert_eq!(stats.allocated.load(Ordering::Relaxed), 10);
+        assert_eq!(stats.deallocated.load(Ordering::Relaxed), 0);
+        assert_eq!(stats.peak_usage.load(Ordering::Relaxed), 10);
+
+        // Deallocate 5 items
+        for handle in handles.into_iter().take(5) {
+            pool.deallocate(handle);
+        }
+
+        assert_eq!(stats.allocated.load(Ordering::Relaxed), 10);
+        assert_eq!(stats.deallocated.load(Ordering::Relaxed), 5);
+        assert_eq!(pool.active_count(), 5);
+
+        // Allocate 3 more
+        let _h1 = pool.allocate(100u64).unwrap();
+        let _h2 = pool.allocate(200u64).unwrap();
+        let _h3 = pool.allocate(300u64).unwrap();
+
+        assert_eq!(stats.allocated.load(Ordering::Relaxed), 13);
+        assert_eq!(pool.active_count(), 8);
+    }
+
+    #[test]
+    fn test_safe_pool_large_pool_behavior() {
+        let pool: SafeMemoryPool<u64, 1024> = SafeMemoryPool::new();
+
+        // Allocate many items
+        let handles: Vec<_> = (0..500).map(|i| pool.allocate(i).unwrap()).collect();
+
+        assert_eq!(pool.active_count(), 500);
+        assert!(pool.utilization() < 0.5);
+
+        // Deallocate half
+        for handle in handles.into_iter().take(250) {
+            pool.deallocate(handle);
+        }
+
+        assert_eq!(pool.active_count(), 250);
+        assert!(pool.utilization() < 0.25);
+    }
+
+    #[test]
+    fn test_safe_pool_zero_active_after_full_cycle() {
+        let pool: SafeMemoryPool<u64, 10> = SafeMemoryPool::new();
+
+        // Full allocation cycle
+        let handles: Vec<_> = (0..10).map(|i| pool.allocate(i).unwrap()).collect();
+        assert_eq!(pool.active_count(), 10);
+
+        // Full deallocation cycle
+        for handle in handles {
+            pool.deallocate(handle);
+        }
+
+        assert_eq!(pool.active_count(), 0);
+        assert_eq!(pool.utilization(), 0.0);
+        assert_eq!(pool.stats().allocated.load(Ordering::Relaxed), 10);
+        assert_eq!(pool.stats().deallocated.load(Ordering::Relaxed), 10);
+    }
+
+    #[test]
+    fn test_safe_pool_concurrent_deallocation() {
+        use std::sync::Arc;
+        use std::thread;
+
+        let pool = Arc::new(SafeMemoryPool::<u64, 50>::new());
+
+        // Allocate in main thread and split handles
+        let mut handles: Vec<_> = (0..50).map(|i| pool.allocate(i).unwrap()).collect();
+        assert_eq!(pool.active_count(), 50);
+
+        // Split handles into chunks for concurrent deallocation
+        let chunk_size = 10;
+        let mut thread_handles = vec![];
+
+        while !handles.is_empty() {
+            let chunk: Vec<_> = handles.drain(..chunk_size.min(handles.len())).collect();
+            let pool_clone = Arc::clone(&pool);
+            let handle = thread::spawn(move || {
+                for pool_handle in chunk {
+                    pool_clone.deallocate(pool_handle);
+                }
+            });
+            thread_handles.push(handle);
+        }
+
+        // Wait for all threads
+        for handle in thread_handles {
+            handle.join().expect("Thread panicked");
+        }
+
+        assert_eq!(pool.active_count(), 0);
+        assert_eq!(pool.stats().deallocated.load(Ordering::Relaxed), 50);
+    }
+
+    #[test]
+    fn test_safe_pool_mixed_concurrent_operations() {
+        use std::sync::Arc;
+        use std::thread;
+
+        let pool = Arc::new(SafeMemoryPool::<u64, 100>::new());
+
+        // Spawn allocators and deallocators concurrently
+        let mut thread_handles = vec![];
+
+        // Allocator threads
+        for i in 0..5 {
+            let pool_clone = Arc::clone(&pool);
+            let handle = thread::spawn(move || {
+                let mut local_handles = vec![];
+                for j in 0..10 {
+                    if let Some(h) = pool_clone.allocate((i * 10 + j) as u64) {
+                        local_handles.push(h);
+                    }
+                }
+                local_handles
+            });
+            thread_handles.push(handle);
+        }
+
+        // Collect all allocated handles
+        let mut all_handles = vec![];
+        for handle in thread_handles {
+            all_handles.extend(handle.join().expect("Thread panicked"));
+        }
+
+        let initial_count = pool.active_count();
+        assert!(initial_count > 0);
+
+        // Deallocator threads - split handles without cloning
+        let mut dealloc_handles = vec![];
+        let chunk_size = 10;
+
+        while !all_handles.is_empty() {
+            let chunk: Vec<_> = all_handles
+                .drain(..chunk_size.min(all_handles.len()))
+                .collect();
+            let pool_clone = Arc::clone(&pool);
+            let handle = thread::spawn(move || {
+                for pool_handle in chunk {
+                    pool_clone.deallocate(pool_handle);
+                }
+            });
+            dealloc_handles.push(handle);
+        }
+
+        for handle in dealloc_handles {
+            handle.join().expect("Thread panicked");
+        }
+
+        assert_eq!(pool.active_count(), 0);
+    }
 }

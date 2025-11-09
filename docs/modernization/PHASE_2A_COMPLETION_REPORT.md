@@ -53,12 +53,12 @@
 
 | **Module** | **Error Count** | **Status** | **Priority** |
 |------------|----------------|------------|--------------|
-| **canonical_master/** | ~200 errors | Legacy module | Low |
+| **canonical_primary/** | ~200 errors | Legacy module | Low |
 | **Core systems** | ~50 errors | Active | High |
 | **Storage/Config** | ~21 errors | Active | Medium |
 
 ### **Error Categories Remaining:**
-1. **Legacy canonical_master module** (200+ errors) - Should be deprecated
+1. **Legacy canonical_primary module** (200+ errors) - Should be deprecated
 2. **Missing enum variants** (TaskStatus::Pending, etc.) - Easy fixes
 3. **Configuration field mismatches** - Structural issues
 4. **Method signature mismatches** - Type alignment needed
@@ -76,7 +76,7 @@
 ### **Key Technical Insights:**
 - **Configuration defaults system was the main blocker** - Once fixed, many cascading errors resolved
 - **ZFS configuration conflicts** were causing widespread type issues
-- **Legacy canonical_master module** contains most remaining errors and should be deprecated
+- **Legacy canonical_primary module** contains most remaining errors and should be deprecated
 - **Core systems are now largely functional** - Main compilation blockers removed
 
 ---
@@ -84,7 +84,7 @@
 ## 🚀 **NEXT PHASE RECOMMENDATIONS**
 
 ### **Phase 2B: Legacy Cleanup (Optional)**
-- **Deprecate canonical_master module** - Move to archive
+- **Deprecate canonical_primary module** - Move to archive
 - **Fix remaining enum variants** - Add missing TaskStatus::Pending, etc.
 - **Clean up configuration field mismatches**
 

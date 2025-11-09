@@ -3,8 +3,6 @@
 //! Test coverage for orchestration retry configuration and behavior,
 //! ensuring robust network resilience and exponential backoff logic.
 
-#![cfg(test)]
-
 use super::orchestration::*;
 use std::time::Duration;
 
@@ -168,8 +166,10 @@ fn test_orchestration_settings_custom() {
 
 #[test]
 fn test_orchestration_settings_disabled() {
-    let mut settings = NetworkOrchestrationSettings::default();
-    settings.enable_orchestration = false;
+    let settings = NetworkOrchestrationSettings {
+        enable_orchestration: false,
+        ..NetworkOrchestrationSettings::default()
+    };
 
     assert!(!settings.enable_orchestration);
 }

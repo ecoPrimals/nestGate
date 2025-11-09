@@ -17,6 +17,10 @@ pub mod zero_cost_storage_backend;
 pub mod zero_cost_storage_traits;
 // Consolidated type definitions
 pub mod consolidated_types;
+
+// Test expansion for consolidated types (Nov 6, 2025)
+#[cfg(test)]
+mod consolidated_types_tests;
 // Auto-configuration for storage backends
 pub mod auto_configurator;
 // Storage detection and discovery

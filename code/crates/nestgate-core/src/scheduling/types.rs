@@ -32,14 +32,14 @@ pub mod defaults {
 
 /// Configuration for this module
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Config {
+pub struct SchedulingTypesConfig {
     pub enabled: bool,
     pub timeout: Duration,
     pub max_connections: usize,
     pub buffer_size: usize,
 }
 
-impl Default for Config {
+impl Default for SchedulingTypesConfig {
     fn default() -> Self {
         Self {
             enabled: true,
@@ -51,8 +51,8 @@ impl Default for Config {
 }
 
 /// Service interface re-exported from canonical source
-/// See: `crate::traits_root::service::Service` for the unified implementation
-pub use crate::traits_root::service::Service;
+/// See: `crate::traits::Service` for the unified implementation
+pub use crate::traits::Service;
 
 /// Health status enumeration
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -91,13 +91,13 @@ impl Default for Metrics {
 /// Default implementation of the service
 #[derive(Debug)]
 pub struct DefaultService {
-    config: Config,
+    config: SchedulingTypesConfig,
     metrics: Arc<tokio::sync::RwLock<Metrics>>,
 }
 
 impl DefaultService {
     /// Create a new service instance
-    pub fn new(config: Config) -> Self {
+    pub fn new(config: SchedulingTypesConfig) -> Self {
         Self {
             config,
             metrics: Arc::new(tokio::sync::RwLock::new(Metrics::default())),
@@ -134,11 +134,11 @@ impl Service for DefaultService {
 
 /// Create a default service instance
 pub fn create_service() -> DefaultService {
-    DefaultService::new(Config::default())
+    DefaultService::new(SchedulingTypesConfig::default())
 }
 
 /// Validate configuration
-pub async fn validate_config(config: &Config) -> crate::Result<()> {
+pub async fn validate_config(config: &SchedulingTypesConfig) -> crate::Result<()> {
     if config.max_connections == 0 {
         return Err(NestGateUnifiedError::configuration_error(
             "max_connections must be greater than 0"
@@ -162,7 +162,7 @@ mod tests {
 
     #[test]
     fn test_config_default() {
-        let config = Config::default();
+        let config = SchedulingTypesConfig::default();
         assert!(config.enabled);
         assert_eq!(config.max_connections, DEFAULT_MAX_CONNECTIONS);
     }
@@ -179,7 +179,7 @@ mod tests {
     #[tokio::test]
     async fn test_service_creation() {
         let service = create_service();
-        let config = Config::default();
+        let config = SchedulingTypesConfig::default();
         
         assert!(service.initialize(&config).await.is_ok());
         assert_eq!(service.health_check().await.expect("Operation failed"), HealthStatus::Healthy);

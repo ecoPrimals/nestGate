@@ -62,11 +62,12 @@ pub async fn start_load_test(
     let execution = LoadTestExecution {
         config,
         started_at: Some(std::time::SystemTime::now()),
+        #[allow(clippy::expect_used)] // System time should be after UNIX epoch
         test_id: format!(
             "test_{}",
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
-                .expect("Test setup failed")
+                .expect("BUG: System time is before UNIX epoch")
                 .as_secs()
         ),
     };
@@ -77,6 +78,10 @@ pub async fn start_load_test(
 /// **GET LOAD TEST RESULTS HANDLER**
 ///
 /// Retrieve results from completed load tests.
+///
+/// # Errors
+///
+/// This function currently always returns `Ok`, but returns `Result` for future error handling.
 #[must_use]
 pub async fn get_load_test_results() -> Result<Json<Vec<TestResult>>, StatusCode> {
     let results = vec![
@@ -104,6 +109,10 @@ pub async fn get_load_test_results() -> Result<Json<Vec<TestResult>>, StatusCode
 /// **GET LOAD TEST HISTORY HANDLER**
 ///
 /// Retrieve historical load test execution records.
+///
+/// # Errors
+///
+/// This function currently always returns `Ok`, but returns `Result` for future error handling.
 #[must_use]
 pub async fn get_load_test_history() -> Result<Json<Vec<LoadTestHistoryEntry>>, StatusCode> {
     let history = vec![LoadTestHistoryEntry {
@@ -127,6 +136,10 @@ pub async fn get_load_test_history() -> Result<Json<Vec<LoadTestHistoryEntry>>, 
 /// **GET PERFORMANCE BASELINES HANDLER**
 ///
 /// Retrieve performance baselines for load test comparison.
+///
+/// # Errors
+///
+/// This function currently always returns `Ok`, but returns `Result` for future error handling.
 #[must_use]
 pub async fn get_performance_baselines() -> Result<Json<Vec<PerformanceBaseline>>, StatusCode> {
     let baselines = vec![

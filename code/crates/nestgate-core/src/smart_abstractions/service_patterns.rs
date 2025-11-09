@@ -84,18 +84,21 @@ impl SmartServiceFactory {
 
     /// Create a mock service for testing
     ///
+    /// **TEST ONLY**: This function should only be used in test code
+    ///
     /// # Errors
     ///
     /// This function will return an error if:
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn create_mock_service(
+    #[cfg(any(test, feature = "dev-stubs"))]
+    pub fn create_mock_service(
         &self,
         service_type: UnifiedServiceType,
         behavior: MockServiceBehavior,
     ) -> Result<Box<dyn SmartService>>  {
-        let service_id = format!("mock-{Uuid::new_v4(}"));
+        let service_id = format!("mock-{}", Uuid::new_v4());
         let metadata = ServiceMetadata {
             service_id: service_id.clone(),
             service_type,

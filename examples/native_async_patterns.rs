@@ -1,4 +1,4 @@
-use crate::constants::magic_numbers_replacement;
+// Example demonstrating native async patterns for zero-cost abstractions
 // Native Async Patterns Examples
 // Demonstrates the performance benefits of native async over async_trait
 
@@ -32,13 +32,9 @@ impl NativeAsyncService for MyService {
         }
     }
 
-    fn health_check(
-        &self,
-    ) -> impl Future<Output = Result<bool, Box<dyn std::error::Error>>> + Send {
-        async move {
-            // Perform health check
-            Ok(true)
-        }
+    async fn health_check(&self) -> Result<bool, Box<dyn std::error::Error>> {
+        // Perform health check
+        Ok(true)
     }
 }
 

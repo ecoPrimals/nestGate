@@ -53,7 +53,7 @@ impl FailSafeZfsService {
     /// * New fail-safe service instance
     pub fn new(
         primary: Arc<UniversalZfsServiceEnum>,
-        config: nestgate_core::config::canonical_master::handler_config::ZfsFailSafeConfig,
+        config: nestgate_core::config::canonical_primary::handler_config::ZfsFailSafeConfig,
     ) -> Self {
         Self {
             primary,

@@ -63,8 +63,8 @@ code/crates/
 
 **Canonical System Established**:
 ```rust
-Location: code/crates/nestgate-core/src/config/canonical_master/
-├── mod.rs                          # Master config entry point
+Location: code/crates/nestgate-core/src/config/canonical_primary/
+├── mod.rs                          # Primary config entry point
 ├── domains/
 │   └── consolidated_domains.rs    # All domain configs unified
 ├── detailed_configs/
@@ -73,7 +73,7 @@ Location: code/crates/nestgate-core/src/config/canonical_master/
 ```
 
 **Achievements**:
-- ✅ **CanonicalMasterConfig** established as single source of truth
+- ✅ **CanonicalPrimaryConfig** established as single source of truth
 - ✅ **All major configs migrated**: Network, Storage, Security, Performance, API
 - ✅ **MonitoringConfig consolidated** (October 1) - canonical in detailed_configs
 - ✅ **NetworkConfig unified** - All references use canonical version
@@ -432,7 +432,7 @@ All source files properly sized:
 Good examples:
 code/crates/nestgate-core/src/
 ├── config/                    # Config split across modules
-│   ├── canonical_master/      # ~800 lines total, 5 submodules
+│   ├── canonical_primary/      # ~800 lines total, 5 submodules
 │   ├── domains/               # Domain configs organized
 │   └── migration_helpers/     # Temporary helpers
 ├── traits/                    # Traits organized by type
@@ -539,14 +539,14 @@ Phase 4: Remove deprecated traits (Week 10-12)
 
 **Canonical Version**:
 ```rust
-code/crates/nestgate-core/src/config/canonical_master/detailed_configs/monitoring.rs
+code/crates/nestgate-core/src/config/canonical_primary/detailed_configs/monitoring.rs
 ```
 
 **Deprecated Versions**:
 ```
 Found in 5+ locations (all deprecated):
 ├── config/monitoring.rs (deprecated ✅, line 91)
-├── config/canonical_master/supporting_types.rs (deprecated ✅, line 23)
+├── config/canonical_primary/supporting_types.rs (deprecated ✅, line 23)
 ├── config_root/mod.rs (deprecated ✅, line 106)
 └── 3+ more scattered definitions
 ```
@@ -570,7 +570,7 @@ Found in 5+ locations (all deprecated):
    - Excellent decomposition patterns
 
 2. **Canonical Systems Established** ✅
-   - Configuration: CanonicalMasterConfig is single source of truth
+   - Configuration: CanonicalPrimaryConfig is single source of truth
    - Traits: Canonical hierarchy defined and first impl complete
    - Errors: NestGateUnifiedError in use throughout
    - Constants: Organization framework in place
@@ -730,7 +730,7 @@ Technical Debt Cleanup:   100%  ████████████████
 ### **Weekly Progress Tracking**:
 ```
 Week 1-2 (Complete):
-- CanonicalMasterConfig established ✅
+- CanonicalPrimaryConfig established ✅
 - NetworkConfig consolidated ✅
 - Trait hierarchy defined ✅
 - Progress: 65% → 74% (+9%)

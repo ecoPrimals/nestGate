@@ -38,6 +38,9 @@ use std::path::{Path, PathBuf};
 use thiserror::Error;
 use tokio::fs;
 
+// Use canonical Result type from error module
+use crate::error::Result;
+
 /// Snapshot-related errors
 #[derive(Debug, Error)]
 pub enum SnapshotError {
@@ -70,8 +73,8 @@ pub enum SnapshotError {
     RollbackFailed(String),
 }
 
-/// Result type for snapshot operations
-pub type Result<T> = std::result::Result<T, SnapshotError>;
+// Note: Now using crate::error::Result<T> instead of local Result type
+// SnapshotError is converted to NestGateError via From trait when needed
 
 /// Snapshot strategies for different platforms and filesystems
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]

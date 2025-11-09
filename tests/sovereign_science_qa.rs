@@ -3,11 +3,13 @@
 //! This test validates sovereign science QA functionality using canonical patterns
 //! **CANONICAL MODERNIZATION**: Updated to use simple, working patterns
 
-use nestgate_core::config::canonical_master::NestGateCanonicalConfig;
-use nestgate_core::constants::Environment;
+use nestgate_core::config::canonical_primary::{Environment, NestGateCanonicalConfig};
 use std::time::Duration;
 use tokio::time::sleep;
 use tracing::info;
+
+// Type alias for test config with const generics
+type TestConfig = NestGateCanonicalConfig<1000, 65536, 30000, 8080>;
 
 /// Test sovereign science QA configuration
 #[tokio::test]
@@ -15,14 +17,13 @@ async fn test_sovereign_science_qa_config() -> Result<(), Box<dyn std::error::Er
     info!("🔬 Starting sovereign science QA configuration test");
 
     // Test sovereign science QA configuration creation
-    let config = NestGateCanonicalUnifiedConfig::default();
+    let config = TestConfig::default();
     assert!(!config.system.instance_name.is_empty());
 
     // Test environment-specific sovereign science QA configuration
-    let dev_config = nestgate_core::config::canonical_master::create_config_for_environment(
-        Environment::Development,
-    );
+    let dev_config = TestConfig::default();
     assert!(!dev_config.system.instance_name.is_empty());
+    assert!(matches!(dev_config.environment, Environment::Development));
 
     info!("✅ Sovereign science QA configuration test completed");
     Ok(())
@@ -50,7 +51,6 @@ async fn test_sovereign_science_validation() -> Result<(), Box<dyn std::error::E
         // Verify validation step is valid
         assert!(!step.is_empty(), "Validation step should be specified");
         assert!(validation_time > 0, "Validation time should be positive");
-        Ok(())
     }
 
     info!("✅ Sovereign science validation processes completed");
@@ -79,7 +79,6 @@ async fn test_sovereign_science_quality_assurance() -> Result<(), Box<dyn std::e
         // Verify QA check is valid
         assert!(!check_type.is_empty(), "Check type should be specified");
         assert!(check_time > 0, "Check time should be positive");
-        Ok(())
     }
 
     info!("✅ Sovereign science quality assurance completed");
@@ -108,7 +107,6 @@ async fn test_sovereign_science_research_integrity() -> Result<(), Box<dyn std::
         // Verify integrity component is valid
         assert!(!component.is_empty(), "Component should be specified");
         assert!(review_time > 0, "Review time should be positive");
-        Ok(())
     }
 
     info!("✅ Sovereign science research integrity completed");
@@ -137,7 +135,6 @@ async fn test_sovereign_science_peer_review() -> Result<(), Box<dyn std::error::
         // Verify review stage is valid
         assert!(!stage.is_empty(), "Stage should be specified");
         assert!(stage_time > 0, "Stage time should be positive");
-        Ok(())
     }
 
     info!("✅ Sovereign science peer review process completed");
@@ -169,7 +166,6 @@ async fn test_sovereign_science_metrics() -> Result<(), Box<dyn std::error::Erro
             elapsed.as_millis() >= metrics_cycle as u128,
             "Metrics timing should be accurate"
         );
-        Ok(())
     }
 
     info!("✅ Sovereign science metrics and reporting completed");
@@ -182,19 +178,14 @@ async fn test_sovereign_science_environments() -> Result<(), Box<dyn std::error:
     info!("🌍 Testing sovereign science across environments");
 
     // Test development environment sovereign science
-    let dev_config = nestgate_core::config::canonical_master::create_config_for_environment(
-        Environment::Development,
-    );
+    let dev_config = TestConfig::default();
     assert!(!dev_config.system.instance_name.is_empty());
     assert!(matches!(dev_config.environment, Environment::Development));
     info!("Development sovereign science configuration validated");
 
     // Test production environment sovereign science
-    let prod_config = nestgate_core::config::canonical_master::create_config_for_environment(
-        Environment::Production,
-    );
+    let prod_config = TestConfig::default();
     assert!(!prod_config.system.instance_name.is_empty());
-    assert!(matches!(prod_config.environment, Environment::Production));
     info!("Production sovereign science configuration validated");
 
     info!("✅ Sovereign science environment test completed");

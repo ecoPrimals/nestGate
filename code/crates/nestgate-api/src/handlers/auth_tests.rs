@@ -390,7 +390,7 @@ mod auth_handler_tests {
             password: "password123".to_string(),
         };
         assert!(!creds.username.is_empty());
-        assert!(creds.username.len() > 0);
+        assert!(creds.username!debug_str.is_empty());
     }
 
     #[test]

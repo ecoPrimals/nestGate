@@ -29,7 +29,7 @@ async fn chaos_test_network_partition() {
 /// Verify one service failure doesn't cascade
 #[tokio::test]
 async fn chaos_test_cascade_failure_prevention() {
-    let services = vec!["service_a", "service_b", "service_c"];
+    let services = ["service_a", "service_b", "service_c"];
 
     // Simulate one service failing
     let _failed_service = services[0];
@@ -140,7 +140,7 @@ async fn chaos_test_memory_pressure() {
 #[tokio::test]
 async fn chaos_test_disk_io_failure() {
     // Simulate I/O operations
-    let operations = vec![true, false, true, true]; // false = failure
+    let operations = [true, false, true, true]; // false = failure
 
     let successful = operations.iter().filter(|&&op| op).count();
     let failed = operations.iter().filter(|&&op| !op).count();
@@ -331,6 +331,7 @@ mod chaos_helpers {
     use super::*;
 
     /// Helper to verify resilience metrics
+    #[allow(dead_code)]
     pub fn assert_resilience(recovery_time_ms: u64) {
         assert!(
             recovery_time_ms < 5000,
@@ -339,12 +340,14 @@ mod chaos_helpers {
     }
 
     /// Helper to simulate service degradation
+    #[allow(dead_code)]
     pub async fn simulate_degradation(percentage: u32) {
         let delay = Duration::from_millis(percentage as u64);
         sleep(delay).await;
     }
 
     /// Helper to verify system health after chaos
+    #[allow(dead_code)]
     pub fn verify_system_healthy(error_rate: f64) {
         assert!(error_rate < 0.01, "Error rate should be under 1%");
     }

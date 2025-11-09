@@ -3,6 +3,11 @@
 //! Comprehensive API library for `NestGate` storage and system management platform.
 //! Provides REST endpoints, handlers, models, and routing for all `NestGate` functionality.
 
+/// **TYPES MODULE**
+///
+/// Canonical API configuration types and backward-compatible aliases.
+pub mod types;
+
 /// **ERROR MODULE**
 ///
 /// Error types and handling for the `NestGate` Data API.

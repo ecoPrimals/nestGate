@@ -3,7 +3,7 @@
 // CANONICAL MODERNIZATION: Consolidate installer error types
 // REMOVED DUPLICATES:
 // - pub type InstallerResult<T> = Result<T>;
-// - pub type InstallResult<T> = IdioResult<T, NestGateError>;
+// OLD: pub type InstallResult<T> = IdioResult<T, NestGateError>; (deprecated)
 
 // USE CANONICAL TYPES:
 pub use nestgate_core::error::{NestGateError, Result};

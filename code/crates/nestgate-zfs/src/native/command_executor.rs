@@ -85,10 +85,12 @@ impl NativeZfsCommandExecutor {
             }
         };
 
+        // PERFORMANCE OPTIMIZATION: Reduce allocations by using to_string() instead of into_owned()
+        // This avoids double allocation when the data is already valid UTF-8
         let result = ZfsCommandResult {
             success: output.status.success(),
-            stdout: String::from_utf8_lossy(&output.stdout).into_owned(),
-            stderr: String::from_utf8_lossy(&output.stderr).into_owned(),
+            stdout: String::from_utf8_lossy(&output.stdout).to_string(),
+            stderr: String::from_utf8_lossy(&output.stderr).to_string(),
             exit_code: output.status.code().unwrap_or(-1),
         };
 
@@ -154,7 +156,9 @@ impl NativeZfsCommandExecutor {
             .execute_command_expect_success(&["get", "-H", "-p", "all", dataset])
             .await?;
 
-        let mut properties = HashMap::new();
+        // PERFORMANCE OPTIMIZATION: Pre-allocate HashMap with typical property count
+        // ZFS datasets typically have 30-50 properties, pre-allocating reduces rehashing
+        let mut properties = HashMap::with_capacity(40);
 
         for line in output.lines() {
             let parts: Vec<&str> = line.split('\t').collect();
@@ -183,12 +187,16 @@ impl NativeZfsCommandExecutor {
     ) -> Result<()> {
         let mut args = vec!["create"];
 
-        // Collect property strings to avoid borrowing issues
-        let mut property_strings = Vec::new();
+        // PERFORMANCE OPTIMIZATION: Pre-allocate Vec with known capacity
+        // Each property needs 2 args (-o and key=value), plus final dataset arg
+        let mut property_strings = Vec::with_capacity(properties.len());
         for (key, value) in properties {
             property_strings.push(format!("{key}={value}"));
         }
 
+        // Pre-allocate args vector with exact size needed
+        args.reserve(properties.len() * 2 + 1);
+        
         // Add properties
         for prop_str in &property_strings {
             args.push("-o");
@@ -222,10 +230,13 @@ impl NativeZfsCommandExecutor {
 
     /// Validate command arguments for security
     fn validate_command_args(&self, args: &[&str]) -> Result<()> {
-        // Security: prevent command injection
+        // PERFORMANCE OPTIMIZATION: Single-pass validation using chars()
+        // Instead of 4 separate contains() calls, scan each character once
         for arg in args {
-            if arg.contains(';') || arg.contains('&') || arg.contains('|') || arg.contains('`') {
-                return Err(NestGateError::security("Invalid command argument detected"));
+            for ch in arg.chars() {
+                if matches!(ch, ';' | '&' | '|' | '`') {
+                    return Err(NestGateError::security("Invalid command argument detected"));
+                }
             }
         }
 
