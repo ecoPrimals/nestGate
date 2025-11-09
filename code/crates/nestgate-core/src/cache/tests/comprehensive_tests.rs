@@ -12,7 +12,7 @@ mod cache_functional_tests {
 
     #[tokio::test]
     async fn test_cache_system_enum_single_tier_operations() {
-        let cache_config = crate::config::canonical_master::CacheConfig {
+        let cache_config = crate::config::canonical_primary::CacheConfig {
             enabled: true,
             size_bytes: 1024 * 1024, // 1MB
             cache_type: "lru".to_string(),
@@ -170,7 +170,7 @@ mod cache_functional_tests {
 
     #[tokio::test]
     async fn test_cache_system_type_checking() {
-        let cache_config = crate::config::canonical_master::CacheConfig {
+        let cache_config = crate::config::canonical_primary::CacheConfig {
             enabled: true,
             size_bytes: 1024 * 1024, // 1MB
             cache_type: "lru".to_string(),
@@ -198,7 +198,7 @@ mod cache_functional_tests {
 
     #[tokio::test]
     async fn test_cache_lifecycle_complete() {
-        let cache_config = crate::config::canonical_master::CacheConfig {
+        let cache_config = crate::config::canonical_primary::CacheConfig {
             enabled: true,
             size_bytes: 1024 * 1024, // 1MB
             cache_type: "lru".to_string(),
