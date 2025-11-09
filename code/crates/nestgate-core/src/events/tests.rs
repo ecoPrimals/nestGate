@@ -252,7 +252,7 @@ mod service_stub_tests {
     use super::super::config;
     use super::super::pubsub;
     use super::super::routing;
-    use crate::traits_root::service::Service;
+    use crate::traits::Service;
 
     // ==================== BUS SERVICE TESTS ====================
 

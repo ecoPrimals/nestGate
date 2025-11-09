@@ -23,14 +23,14 @@ pub use crate::constants::network::{
 
 /// Configuration for this module
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Config {
+pub struct EventsTypesConfig {
     pub enabled: bool,
     pub timeout: Duration,
     pub max_connections: usize,
     pub buffer_size: usize,
 }
 
-impl Default for Config {
+impl Default for EventsTypesConfig {
     fn default() -> Self {
         Self {
             enabled: true,
@@ -42,8 +42,8 @@ impl Default for Config {
 }
 
 /// Service interface re-exported from canonical source
-/// See: `crate::traits_root::service::Service` for the unified implementation
-pub use crate::traits_root::service::Service;
+/// See: `crate::traits::Service` for the unified implementation
+pub use crate::traits::Service;
 
 /// Health status enumeration
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -73,19 +73,19 @@ impl Default for Metrics {
     }
 }
 
-// ==================== IMPLEMENTATION STUB ====================
+// ==================== IMPLEMENTATION ====================
 
 /// Default implementation of the service
 #[derive(Debug)]
 pub struct DefaultService {
     #[allow(dead_code)] // Stored for future use
-    config: Config,
+    config: EventsTypesConfig,
     metrics: Arc<tokio::sync::RwLock<Metrics>>,
 }
 
 impl DefaultService {
     /// Create a new service instance
-    pub fn new(config: Config) -> Self {
+    pub fn new(config: EventsTypesConfig) -> Self {
         Self {
             config,
             metrics: Arc::new(tokio::sync::RwLock::new(Metrics::default())),
@@ -132,11 +132,11 @@ impl Service for DefaultService {
 
 /// Create a default service instance
 pub fn create_service() -> DefaultService {
-    DefaultService::new(Config::default())
+    DefaultService::new(EventsTypesConfig::default())
 }
 
 /// Validate configuration
-pub async fn validate_config(config: &Config) -> crate::Result<()> {
+pub async fn validate_config(config: &EventsTypesConfig) -> crate::Result<()> {
     if config.max_connections == 0 {
         return Err(NestGateError::configuration_error(
             "events_types",
@@ -163,7 +163,7 @@ mod tests {
 
     #[test]
     fn test_config_default() {
-        let config = Config::default();
+        let config = EventsTypesConfig::default();
         assert!(config.enabled);
         assert_eq!(config.max_connections, DEFAULT_MAX_CONNECTIONS);
     }
