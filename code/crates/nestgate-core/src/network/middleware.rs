@@ -20,12 +20,12 @@ pub use crate::constants::network::{
 // ==================== CORE TYPES ====================
 /// Configuration for this module
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Config {
+pub struct NetworkMiddlewareConfig {
     pub enabled: bool,
     pub timeout: Duration,
     pub max_connections: usize,
     pub buffer_size: usize,
-impl Default for Config {
+impl Default for NetworkMiddlewareConfig {
     fn default() -> Self {
         Self {
             enabled: true,
@@ -34,20 +34,10 @@ impl Default for Config {
             buffer_size: DEFAULT_BUFFER_SIZE,
         }
     }
-/// Service interface for this module
-pub trait Service: Send + Sync {
-    /// Initialize the service
-    fn initialize(&self) -> impl std::future::Future<Output = Result<()>> + Send;
-    /// Check service health
-    fn health_check(&self) -> impl std::future::Future<Output = Result<HealthStatus>> + Send;
-    /// Shutdown the service gracefully
-    fn shutdown(&self) -> impl std::future::Future<Output = Result<()>> + Send;
-/// Health status enumeration
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-pub enum HealthStatus {
-    Healthy,
-    Degraded,
-    Unhealthy,
+// ==================== USE CANONICAL TRAIT ====================
+// Use canonical Service trait from traits module instead of duplicating
+pub use super::traits::{Service, HealthStatus};
+
 /// Performance metrics for monitoring
 pub struct Metrics {
     pub requests_processed: u64,
@@ -63,11 +53,11 @@ impl Default for Metrics {
 /// Default implementation of the service
 #[derive(Debug)]
 pub struct DefaultService {
-    config: Config,
+    config: NetworkMiddlewareConfig,
     metrics: Arc<tokio::sync::RwLock<Metrics>>,
 impl DefaultService {
     /// Create a new service instance
-    pub fn new(config: Config) -> Self {
+    pub fn new(config: NetworkMiddlewareConfig) -> Self {
             config,
             metrics: Arc::new(tokio::sync::RwLock::new(Metrics::default())),
     /// Get current metrics
@@ -88,9 +78,9 @@ impl Service for DefaultService {
 // ==================== UTILITY FUNCTIONS ====================
 /// Create a default service instance
 pub fn create_service() -> DefaultService {
-    DefaultService::new(Config::default())
+    DefaultService::new(NetworkMiddlewareConfig::default())
 /// Validate configuration
-pub async fn validate_config(config: &Config) -> crate::Result<()> {
+pub async fn validate_config(config: &NetworkMiddlewareConfig) -> crate::Result<()> {
     if config.max_connections == 0 {
         return Err(NestGateError::configuration_error(
             "middleware",
@@ -109,7 +99,7 @@ pub async fn validate_config(config: &Config) -> crate::Result<()> {
 mod tests {
     #[test]
     fn test_config_default() {
-        let config = Config::default();
+        let config = NetworkMiddlewareConfig::default();
         assert!(config.enabled);
         assert_eq!(config.max_connections, DEFAULT_MAX_CONNECTIONS);
     fn test_config_validation() {
