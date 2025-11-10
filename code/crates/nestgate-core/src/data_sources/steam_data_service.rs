@@ -4,9 +4,9 @@
 //! Handles game library storage, save data federation, and asset caching.
 
 use crate::error::NestGateError;
-use std::future::Future;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::future::Future;
 use std::path::PathBuf;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -480,10 +480,16 @@ impl Default for SteamDataService {
 /// Data source provider trait implementation for Steam - native async for zero-cost abstractions
 pub trait SteamDataProvider: Send + Sync {
     /// Fetch game data from Steam API - native async, no boxing
-    fn fetch_game_data(&self, app_id: SteamAppId) -> impl Future<Output = Result<GameMetadata, NestGateError>> + Send;
+    fn fetch_game_data(
+        &self,
+        app_id: SteamAppId,
+    ) -> impl Future<Output = Result<GameMetadata, NestGateError>> + Send;
 
     /// Fetch user's game library - native async, no boxing
-    fn fetch_user_library(&self, steam_id: u64) -> impl Future<Output = Result<Vec<GameMetadata>, NestGateError>> + Send;
+    fn fetch_user_library(
+        &self,
+        steam_id: u64,
+    ) -> impl Future<Output = Result<Vec<GameMetadata>, NestGateError>> + Send;
 
     /// Fetch achievement data for a game - native async, no boxing
     fn fetch_achievements(

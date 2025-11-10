@@ -15,15 +15,9 @@ pub use prediction::*;
 
 /// Re-export canonical automation configuration types from nestgate-core
 pub use nestgate_core::config::canonical_primary::domains::automation::{
-    AutomationConfig as CanonicalAutomationConfig,
-    AnalysisConfig,
-    MlPredictionConfig,
-    AiAutomationConfig,
-    LifecycleConfig,
-    WorkflowsConfig,
-    SchedulingConfig,
-    TriggersConfig,
-    ActionsConfig,
+    ActionsConfig, AiAutomationConfig, AnalysisConfig,
+    AutomationConfig as CanonicalAutomationConfig, LifecycleConfig, MlPredictionConfig,
+    SchedulingConfig, TriggersConfig, WorkflowsConfig,
 };
 
 // Note: PredictionConfig and OptimizationConfig not re-exported here to avoid conflicts

@@ -107,4 +107,15 @@ impl NestGateUnifiedError {
             },
         ))
     }
+
+    /// Create a not implemented error
+    pub fn not_implemented(message: impl Into<String>) -> Self {
+        Self::NotImplemented(Box::new(
+            crate::error::variants::core_errors::NotImplementedErrorDetails {
+                feature: message.into(),
+                message: None,
+                planned_version: None,
+            },
+        ))
+    }
 }

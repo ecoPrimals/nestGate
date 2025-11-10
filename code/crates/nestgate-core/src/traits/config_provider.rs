@@ -21,11 +21,11 @@ use serde::{Deserialize, Serialize};
 ///
 /// ```rust,ignore
 /// use nestgate_core::traits::ConfigProvider;
-/// 
+///
 /// struct FileConfigProvider {
 ///     path: PathBuf,
 /// }
-/// 
+///
 /// impl ConfigProvider<MyConfig> for FileConfigProvider {
 ///     async fn load_config(&self) -> nestgate_core::Result<MyConfig> {
 ///         // Load from file
@@ -88,4 +88,3 @@ pub struct FederationConfig {
     // Reserved for future federation implementation
     _reserved: (),
 }
-

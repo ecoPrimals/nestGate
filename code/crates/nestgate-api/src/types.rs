@@ -7,13 +7,8 @@
 
 /// Re-export canonical API configuration types from nestgate-core
 pub use nestgate_core::config::canonical_primary::domains::network::{
-    ApiConfig as CanonicalApiConfig,
-    ApiSecurityConfig,
-    ApiPerformanceConfig,
-    ApiMonitoringConfig,
-    ApiAlertConfig,
-    TlsConfig,
-    RateLimitingConfig,
+    ApiAlertConfig, ApiConfig as CanonicalApiConfig, ApiMonitoringConfig, ApiPerformanceConfig,
+    ApiSecurityConfig, RateLimitingConfig, TlsConfig,
 };
 
 // ==================== BACKWARD COMPATIBILITY ALIASES ====================
@@ -28,4 +23,3 @@ pub use CanonicalApiConfig as ApiConfig;
 
 /// Backward compatibility alias for NetworkApiConfig
 pub use CanonicalApiConfig as NetworkApiConfig;
-

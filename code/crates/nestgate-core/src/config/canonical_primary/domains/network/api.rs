@@ -12,7 +12,7 @@ use std::time::Duration;
 /// **CANONICAL API CONFIGURATION**
 ///
 /// Consolidates all API configuration patterns into a single comprehensive struct.
-/// 
+///
 /// **Replaces**:
 /// - `NetworkApiConfig` (domains/network/api.rs)
 /// - `UnifiedApiConfig` (nestgate-api/config/unified_api_config.rs)
@@ -21,7 +21,6 @@ use std::time::Duration;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ApiConfig {
     // ==================== CORE NETWORK SETTINGS ====================
-    
     /// API server bind address
     pub bind_address: IpAddr,
 
@@ -44,43 +43,34 @@ pub struct ApiConfig {
     pub port_range_end: u16,
 
     // ==================== API METADATA ====================
-    
     /// Enable API server
     pub enabled: bool,
-    
+
     /// API version string
     pub version: String,
-    
+
     /// Custom API settings (extensibility)
     pub api_settings: HashMap<String, serde_json::Value>,
 
     // ==================== SECURITY CONFIGURATION ====================
-    
     /// TLS/SSL configuration
     pub tls: TlsConfig,
-    
+
     /// Security settings
     pub security: ApiSecurityConfig,
 
     // ==================== PERFORMANCE CONFIGURATION ====================
-    
     /// Performance optimization settings
     pub performance: ApiPerformanceConfig,
 
     // ==================== RATE LIMITING ====================
-    
     /// Rate limiting configuration
     pub rate_limiting: RateLimitingConfig,
 
     // ==================== MONITORING & HEALTH ====================
-    
     /// Monitoring and observability settings
     pub monitoring: ApiMonitoringConfig,
 }
-
-/// Backward compatibility alias
-#[deprecated(since = "0.2.0", note = "Use ApiConfig instead")]
-pub type NetworkApiConfig = ApiConfig;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TlsConfig {
@@ -98,26 +88,26 @@ pub struct RateLimitingConfig {
 }
 
 /// **API SECURITY CONFIGURATION**
-/// 
+///
 /// Authentication, authorization, and security settings for the API.
 /// Consolidates security patterns from UnifiedApiConfig.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ApiSecurityConfig {
     /// Enable authentication for API endpoints
     pub auth_enabled: bool,
-    
+
     /// JWT secret for token signing (None = load from environment)
     pub jwt_secret: Option<String>,
-    
+
     /// API key authentication enabled
     pub api_key_enabled: bool,
-    
+
     /// Allowed CORS origins
     pub cors_origins: Vec<String>,
-    
+
     /// Enable request signing
     pub request_signing_enabled: bool,
-    
+
     /// Enable audit logging for security events
     pub audit_logging_enabled: bool,
 }
@@ -130,22 +120,22 @@ pub struct ApiSecurityConfig {
 pub struct ApiPerformanceConfig {
     /// Request buffer size in bytes
     pub buffer_size: usize,
-    
+
     /// Thread pool size for request handling
     pub thread_pool_size: usize,
-    
+
     /// Response cache size in bytes
     pub cache_size: u64,
-    
+
     /// Enable response compression (gzip/brotli)
     pub compression_enabled: bool,
-    
+
     /// Enable HTTP/2 support
     pub http2_enabled: bool,
-    
+
     /// Enable connection pooling
     pub connection_pooling_enabled: bool,
-    
+
     /// Maximum request body size in bytes
     pub max_request_body_size: usize,
 }
@@ -158,25 +148,25 @@ pub struct ApiPerformanceConfig {
 pub struct ApiMonitoringConfig {
     /// Enable Prometheus metrics collection
     pub metrics_enabled: bool,
-    
+
     /// Metrics endpoint path
     pub metrics_path: String,
-    
+
     /// Enable health check endpoint
     pub health_checks_enabled: bool,
-    
+
     /// Health check endpoint path
     pub health_path: String,
-    
+
     /// Enable distributed tracing (OpenTelemetry)
     pub tracing_enabled: bool,
-    
+
     /// Enable request/response logging
     pub request_logging_enabled: bool,
-    
+
     /// Enable performance profiling
     pub profiling_enabled: bool,
-    
+
     /// Alert thresholds configuration
     pub alerts: ApiAlertConfig,
 }
@@ -188,13 +178,13 @@ pub struct ApiMonitoringConfig {
 pub struct ApiAlertConfig {
     /// Alert when error rate exceeds this percentage
     pub error_rate_threshold: f64,
-    
+
     /// Alert when response time exceeds this duration (ms)
     pub response_time_threshold_ms: u64,
-    
+
     /// Alert when CPU usage exceeds this percentage
     pub cpu_threshold: f64,
-    
+
     /// Alert when memory usage exceeds this percentage
     pub memory_threshold: f64,
 }
@@ -206,31 +196,31 @@ impl ApiConfig {
         use crate::constants::hardcoding::{addresses, ports};
         Self {
             // Network settings
-            bind_address: addresses::LOCALHOST_IPV4.parse().unwrap_or_else(|_| {
-                std::net::IpAddr::V4(std::net::Ipv4Addr::new(127, 0, 0, 1))
-            }),
+            bind_address: addresses::LOCALHOST_IPV4
+                .parse()
+                .unwrap_or_else(|_| std::net::IpAddr::V4(std::net::Ipv4Addr::new(127, 0, 0, 1))),
             port: ports::HTTP_DEFAULT,
             max_connections: 100,
             request_timeout: Duration::from_secs(30),
             connection_timeout: Duration::from_secs(10),
             port_range_start: 9000,
             port_range_end: 9999,
-            
+
             // Metadata
             enabled: true,
             version: "v1".to_string(),
             api_settings: HashMap::new(),
-            
+
             // Security (relaxed for development)
             tls: TlsConfig::default(),
             security: ApiSecurityConfig::development(),
-            
+
             // Performance (balanced)
             performance: ApiPerformanceConfig::development(),
-            
+
             // Rate limiting (permissive)
             rate_limiting: RateLimitingConfig::development(),
-            
+
             // Monitoring (verbose)
             monitoring: ApiMonitoringConfig::development(),
         }
@@ -242,31 +232,31 @@ impl ApiConfig {
         use crate::constants::hardcoding::{addresses, ports};
         Self {
             // Network settings
-            bind_address: addresses::BIND_ALL_IPV4.parse().unwrap_or_else(|_| {
-                std::net::IpAddr::V4(std::net::Ipv4Addr::new(0, 0, 0, 0))
-            }),
+            bind_address: addresses::BIND_ALL_IPV4
+                .parse()
+                .unwrap_or_else(|_| std::net::IpAddr::V4(std::net::Ipv4Addr::new(0, 0, 0, 0))),
             port: ports::HTTPS_DEFAULT,
             max_connections: 1000,
             request_timeout: Duration::from_secs(60),
             connection_timeout: Duration::from_secs(30),
             port_range_start: 10000,
             port_range_end: 19999,
-            
+
             // Metadata
             enabled: true,
             version: "v1".to_string(),
             api_settings: HashMap::new(),
-            
+
             // Security (strict)
             tls: TlsConfig::production(),
             security: ApiSecurityConfig::production(),
-            
+
             // Performance (optimized)
             performance: ApiPerformanceConfig::production(),
-            
+
             // Rate limiting (strict)
             rate_limiting: RateLimitingConfig::production(),
-            
+
             // Monitoring (production-grade)
             monitoring: ApiMonitoringConfig::production(),
         }
@@ -469,7 +459,7 @@ impl ApiMonitoringConfig {
             health_path: "/health".to_string(),
             tracing_enabled: true,
             request_logging_enabled: false, // Reduce overhead in production
-            profiling_enabled: false, // Disable unless debugging
+            profiling_enabled: false,       // Disable unless debugging
             alerts: ApiAlertConfig::production(),
         }
     }
@@ -478,10 +468,10 @@ impl ApiMonitoringConfig {
 impl Default for ApiAlertConfig {
     fn default() -> Self {
         Self {
-            error_rate_threshold: 5.0, // 5%
+            error_rate_threshold: 5.0,        // 5%
             response_time_threshold_ms: 1000, // 1 second
-            cpu_threshold: 80.0, // 80%
-            memory_threshold: 85.0, // 85%
+            cpu_threshold: 80.0,              // 80%
+            memory_threshold: 85.0,           // 85%
         }
     }
 }
@@ -490,10 +480,10 @@ impl ApiAlertConfig {
     #[must_use]
     pub fn production() -> Self {
         Self {
-            error_rate_threshold: 1.0, // 1% (stricter)
+            error_rate_threshold: 1.0,       // 1% (stricter)
             response_time_threshold_ms: 500, // 500ms (stricter)
-            cpu_threshold: 70.0, // 70% (stricter)
-            memory_threshold: 75.0, // 75% (stricter)
+            cpu_threshold: 70.0,             // 70% (stricter)
+            memory_threshold: 75.0,          // 75% (stricter)
         }
     }
 }

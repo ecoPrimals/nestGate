@@ -1,7 +1,7 @@
 /// **NETWORK ERROR TYPES**
 ///
 /// Unified error handling for network operations and configurations.
-use nestgate_core::error::{Result, NestGateError};
+use nestgate_core::error::NestGateError;
 use thiserror::Error;
 
 // ==================== SECTION ====================
