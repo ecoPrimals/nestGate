@@ -71,53 +71,53 @@ impl Default for EnvironmentDiscovery {
 impl DiscoveryMethod for EnvironmentDiscovery {
     fn discover(&self) -> impl Future<Output = Result<Vec<CapabilityInfo>, NestGateError>> + Send {
         async move {
-        let mut capabilities = Vec::new();
+            let mut capabilities = Vec::new();
 
-        debug!("Scanning environment variables for capabilities");
+            debug!("Scanning environment variables for capabilities");
 
-        for pattern in &self.capability_patterns {
-            if let Ok(endpoint) = env::var(pattern) {
-                let capability_type = pattern
-                    .strip_suffix("_DISCOVERY_ENDPOINT")
-                    .unwrap_or(pattern)
-                    .to_lowercase();
+            for pattern in &self.capability_patterns {
+                if let Ok(endpoint) = env::var(pattern) {
+                    let capability_type = pattern
+                        .strip_suffix("_DISCOVERY_ENDPOINT")
+                        .unwrap_or(pattern)
+                        .to_lowercase();
 
-                info!("Found {} capability at: {}", capability_type, endpoint);
+                    info!("Found {} capability at: {}", capability_type, endpoint);
 
-                let mut metadata = HashMap::new();
-                metadata.insert("source".to_string(), "environment".to_string());
-                metadata.insert("pattern".to_string(), pattern.clone());
+                    let mut metadata = HashMap::new();
+                    metadata.insert("source".to_string(), "environment".to_string());
+                    metadata.insert("pattern".to_string(), pattern.clone());
 
-                // Check for additional metadata environment variables
-                let auth_key = format!("{}_AUTH_KEY", capability_type.to_uppercase());
-                if let Ok(auth) = env::var(&auth_key) {
-                    metadata.insert("auth_key".to_string(), auth);
+                    // Check for additional metadata environment variables
+                    let auth_key = format!("{}_AUTH_KEY", capability_type.to_uppercase());
+                    if let Ok(auth) = env::var(&auth_key) {
+                        metadata.insert("auth_key".to_string(), auth);
+                    }
+
+                    let timeout_key = format!("{}_TIMEOUT_MS", capability_type.to_uppercase());
+                    if let Ok(timeout) = env::var(&timeout_key) {
+                        metadata.insert("timeout_ms".to_string(), timeout);
+                    }
+
+                    capabilities.push(CapabilityInfo {
+                        capability_type,
+                        endpoint,
+                        confidence: 0.95, // High confidence for explicit env vars
+                        metadata,
+                    });
                 }
-
-                let timeout_key = format!("{}_TIMEOUT_MS", capability_type.to_uppercase());
-                if let Ok(timeout) = env::var(&timeout_key) {
-                    metadata.insert("timeout_ms".to_string(), timeout);
-                }
-
-                capabilities.push(CapabilityInfo {
-                    capability_type,
-                    endpoint,
-                    confidence: 0.95, // High confidence for explicit env vars
-                    metadata,
-                });
             }
-        }
 
-        if capabilities.is_empty() {
-            warn!("No capabilities found in environment variables");
-        } else {
-            info!(
-                "Found {} capabilities via environment discovery",
-            capabilities.len()
-        );
-    }
+            if capabilities.is_empty() {
+                warn!("No capabilities found in environment variables");
+            } else {
+                info!(
+                    "Found {} capabilities via environment discovery",
+                    capabilities.len()
+                );
+            }
 
-    Ok(capabilities)
+            Ok(capabilities)
         }
     }
 

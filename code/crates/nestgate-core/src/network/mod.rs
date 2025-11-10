@@ -10,7 +10,7 @@ pub use client::{
 };
 
 // Re-export canonical Service trait for module-wide use
-pub use traits::{Service, HealthStatus, Metrics, NetworkTraitsConfig as TraitsConfig};
+pub use traits::{HealthStatus, Metrics, NetworkTraitsConfig as TraitsConfig, Service};
 
 #[cfg(test)]
 mod client_tests;

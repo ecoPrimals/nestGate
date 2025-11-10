@@ -242,7 +242,7 @@ impl From<crate::routes::AppState> for AppStateWithAuth {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use nestgate_core::ecosystem_integration::create_default_adapter_config;
+    use nestgate_core::universal_adapter::config::UniversalAdapterConfig;
     use std::sync::Arc;
 
     #[tokio::test]
@@ -254,8 +254,8 @@ mod tests {
     }
     #[tokio::test]
     async fn test_auth_service_with_adapter() {
-        let config = create_default_adapter_config();
-        let adapter = Arc::new(nestgate_core::ecosystem_integration::UniversalAdapter::new(
+        let config = UniversalAdapterConfig::default();
+        let adapter = Arc::new(nestgate_core::universal_adapter::UniversalAdapter::new(
             config,
         ));
         let service = AuthService::with_primal_adapter(adapter);
@@ -268,8 +268,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_auth_service_hybrid() {
-        let config = create_default_adapter_config();
-        let adapter = Arc::new(nestgate_core::ecosystem_integration::UniversalAdapter::new(
+        let config = UniversalAdapterConfig::default();
+        let adapter = Arc::new(nestgate_core::universal_adapter::UniversalAdapter::new(
             config,
         ));
         let service = AuthService::hybrid(adapter);

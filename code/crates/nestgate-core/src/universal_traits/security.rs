@@ -8,10 +8,25 @@ use serde::{Deserialize, Serialize};
 
 /// Universal security primal provider trait
 /// **CANONICAL MODERNIZATION**: Native async trait without `async_trait` overhead
-/// **DEPRECATED**: Primal provider pattern consolidated
+/// **DEPRECATED**: Consolidated into canonical SecurityProvider
+///
+/// # Migration Path
+///
+/// **Old code**:
+/// ```rust,ignore
+/// impl SecurityPrimalProvider for MyProvider { ... }
+/// ```
+///
+/// **New code**:
+/// ```rust,ignore
+/// impl SecurityProvider for MyProvider { ... }
+/// ```
+///
+/// See: `crate::traits::canonical_provider_unification::SecurityProvider`
+/// Timeline: Deprecated v0.11.3 (Nov 2025), Remove v0.12.0 (May 2026)
 #[deprecated(
-    since = "0.9.0",
-    note = "Use crate::traits::canonical_unified_traits::CanonicalSecurity with primal adapter"
+    since = "0.11.3",
+    note = "Use crate::traits::canonical_provider_unification::SecurityProvider - enhanced with 14 comprehensive security methods. Migration guide: docs/guides/SECURITY_PROVIDER_MIGRATION.md"
 )]
 pub trait SecurityPrimalProvider: Send + Sync {
     /// Authenticate with provided credentials

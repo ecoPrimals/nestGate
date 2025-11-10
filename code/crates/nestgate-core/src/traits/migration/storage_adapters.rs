@@ -3,6 +3,8 @@
 //! Adapters that wrap old storage provider traits and implement `CanonicalStorage`.
 //! These enable gradual migration from old traits to the canonical hierarchy.
 
+#![allow(deprecated)]
+
 use std::future::Future;
 use std::marker::PhantomData;
 
@@ -23,7 +25,7 @@ use crate::{NestGateError, Result};
 ///
 /// let old_storage = MyNativeAsyncStorage::new();
 /// let canonical = NativeAsyncStorageAdapter::new(old_storage);
-/// 
+///
 /// // Now use it as CanonicalStorage
 /// canonical.write(key, value).await?;
 /// ```
@@ -107,8 +109,11 @@ where
 // Implement CanonicalStorage by delegating to old trait methods
 impl<T, ObjectId, ObjectData, ObjectMetadata> CanonicalStorage for NativeAsyncStorageAdapter<T>
 where
-    T: NativeAsyncStorageProvider<ObjectId = ObjectId, ObjectData = ObjectData, ObjectMetadata = ObjectMetadata>
-        + Send
+    T: NativeAsyncStorageProvider<
+            ObjectId = ObjectId,
+            ObjectData = ObjectData,
+            ObjectMetadata = ObjectMetadata,
+        > + Send
         + Sync
         + 'static,
     ObjectId: Clone + Send + Sync + 'static,
@@ -119,10 +124,7 @@ where
     type Value = ObjectData;
     type Metadata = ObjectMetadata;
 
-    fn read(
-        &self,
-        key: &Self::Key,
-    ) -> impl Future<Output = Result<Option<Self::Value>>> + Send {
+    fn read(&self, key: &Self::Key) -> impl Future<Output = Result<Option<Self::Value>>> + Send {
         async move {
             self.inner
                 .retrieve_object(key)
@@ -170,10 +172,7 @@ where
         }
     }
 
-    fn metadata(
-        &self,
-        key: &Self::Key,
-    ) -> impl Future<Output = Result<Self::Metadata>> + Send {
+    fn metadata(&self, key: &Self::Key) -> impl Future<Output = Result<Self::Metadata>> + Send {
         async move {
             self.inner
                 .get_metadata(key)
@@ -182,10 +181,7 @@ where
         }
     }
 
-    fn list(
-        &self,
-        _prefix: Option<&str>,
-    ) -> impl Future<Output = Result<Vec<Self::Key>>> + Send {
+    fn list(&self, _prefix: Option<&str>) -> impl Future<Output = Result<Vec<Self::Key>>> + Send {
         async move {
             self.inner
                 .list_objects()
@@ -198,7 +194,10 @@ where
 /// Trait bound helper for NativeAsyncStorageProvider
 /// This allows the adapter to work with any implementation of the old trait
 /// **DEPRECATED**: Migration complete - use canonical storage
-#[deprecated(since = "0.9.0", note = "Migration to native async complete - use crate::traits::canonical_unified_traits::CanonicalStorage")]
+#[deprecated(
+    since = "0.9.0",
+    note = "Migration to native async complete - use crate::traits::canonical_unified_traits::CanonicalStorage"
+)]
 pub trait NativeAsyncStorageProvider {
     type ObjectId: Clone + Send + Sync + 'static;
     type ObjectData: Clone + Send + Sync + 'static;
@@ -312,10 +311,7 @@ where
     type Value = Vec<u8>;
     type Metadata = serde_json::Value;
 
-    fn read(
-        &self,
-        key: &Self::Key,
-    ) -> impl Future<Output = Result<Option<Self::Value>>> + Send {
+    fn read(&self, key: &Self::Key) -> impl Future<Output = Result<Option<Self::Value>>> + Send {
         async move {
             // StoragePrimalProvider uses UniversalRequest, so we'd need to construct one
             // This is a simplified implementation - real implementation would use the handle_request method
@@ -345,37 +341,30 @@ where
         async move { Ok(false) }
     }
 
-    fn metadata(
-        &self,
-        _key: &Self::Key,
-    ) -> impl Future<Output = Result<Self::Metadata>> + Send {
+    fn metadata(&self, _key: &Self::Key) -> impl Future<Output = Result<Self::Metadata>> + Send {
         async move { Ok(serde_json::json!({})) }
     }
 
-    fn list(
-        &self,
-        _prefix: Option<&str>,
-    ) -> impl Future<Output = Result<Vec<Self::Key>>> + Send {
+    fn list(&self, _prefix: Option<&str>) -> impl Future<Output = Result<Vec<Self::Key>>> + Send {
         async move { Ok(vec![]) }
     }
 }
 
 /// Trait bound helper for StoragePrimalProvider
 /// Storage trait re-exported from canonical source
-/// 
+///
 /// **CONSOLIDATED**: This trait definition was replaced with a re-export to eliminate duplication.
 /// See: `crate::traits::canonical_hierarchy::CanonicalStorage` for the unified implementation.
-/// 
+///
 /// **Migration**: Update implementations to use `CanonicalStorage` directly.
 /// ```rust
 /// use nestgate_core::traits::{CanonicalStorage};
-/// 
+///
 /// impl CanonicalStorage for MyStorage {
 ///     // ... implementation
 /// }
 /// ```
 pub use crate::traits::canonical_hierarchy::CanonicalStorage as StoragePrimalProvider;
-
 
 // ==================== ZERO COST STORAGE ADAPTER ====================
 
@@ -466,21 +455,14 @@ where
     type Value = V;
     type Metadata = serde_json::Value;
 
-    fn read(
-        &self,
-        key: &Self::Key,
-    ) -> impl Future<Output = Result<Option<Self::Value>>> + Send {
+    fn read(&self, key: &Self::Key) -> impl Future<Output = Result<Option<Self::Value>>> + Send {
         async move {
             // retrieve returns Option<V> directly
             Ok(self.inner.retrieve(key))
         }
     }
 
-    fn write(
-        &self,
-        key: Self::Key,
-        value: Self::Value,
-    ) -> impl Future<Output = Result<()>> + Send {
+    fn write(&self, key: Self::Key, value: Self::Value) -> impl Future<Output = Result<()>> + Send {
         async move {
             self.inner
                 .store(key, value)
@@ -502,25 +484,17 @@ where
     }
 
     fn exists(&self, key: &Self::Key) -> impl Future<Output = Result<bool>> + Send {
-        async move {
-            Ok(self.inner.retrieve(key).is_some())
-        }
+        async move { Ok(self.inner.retrieve(key).is_some()) }
     }
 
-    fn metadata(
-        &self,
-        _key: &Self::Key,
-    ) -> impl Future<Output = Result<Self::Metadata>> + Send {
+    fn metadata(&self, _key: &Self::Key) -> impl Future<Output = Result<Self::Metadata>> + Send {
         async move {
             // ZeroCostStorageProvider doesn't have metadata
             Ok(serde_json::json!({}))
         }
     }
 
-    fn list(
-        &self,
-        _prefix: Option<&str>,
-    ) -> impl Future<Output = Result<Vec<Self::Key>>> + Send {
+    fn list(&self, _prefix: Option<&str>) -> impl Future<Output = Result<Vec<Self::Key>>> + Send {
         async move {
             // ZeroCostStorageProvider doesn't have list operation
             Ok(vec![])
@@ -531,7 +505,10 @@ where
 /// Trait bound helper for simple ZeroCostStorageProvider
 /// This matches the actual trait in zero_cost/traits.rs
 /// **DEPRECATED**: Zero-cost patterns consolidated into canonical storage
-#[deprecated(since = "0.9.0", note = "Use crate::traits::unified_storage::UnifiedStorage - includes zero-cost optimizations")]
+#[deprecated(
+    since = "0.9.0",
+    note = "Use crate::traits::unified_storage::UnifiedStorage - includes zero-cost optimizations"
+)]
 pub trait ZeroCostStorageProvider<K, V> {
     fn store(&self, key: K, value: V) -> impl Future<Output = Result<()>> + Send;
     fn retrieve(&self, key: &K) -> Option<V>;
@@ -587,4 +564,4 @@ mod tests {
         let result = adapter.delete(&key).await;
         assert!(result.is_ok());
     }
-} 
+}

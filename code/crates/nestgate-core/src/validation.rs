@@ -1,7 +1,4 @@
 
-/// Validation result type
-// Use canonical ValidationResult from error::idiomatic
-pub use crate::error::ValidationResult; // Now from unified_result_system
 /// Validation error types
 #[derive(Debug, Clone)]
 pub enum ValidationError {
@@ -36,6 +33,12 @@ impl std::fmt::Display for ValidationError {
 }
 
 impl std::error::Error for ValidationError {}
+
+/// Validation result type - specialized for ValidationError
+/// 
+/// **Note**: This is a domain-specific Result type, not the deprecated ValidationResult
+/// from the old unified_result_system. This uses the local ValidationError.
+type ValidationResult<T> = Result<T, ValidationError>;
 
 /// Basic validation utilities
 pub mod utils {

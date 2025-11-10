@@ -16,7 +16,8 @@
 //! **SEE**: `universal_adapter/capability_system.rs` for new routing patterns
 
 use super::{RpcConnectionType, RpcError, UnifiedRpcRequest, UnifiedRpcResponse};
-use crate::ecosystem_integration::universal_adapter::{UniversalAdapter, CapabilityQuery, CapabilityCategory};
+use nestgate_core::universal_adapter::{UniversalAdapter, types::CapabilityQuery};
+use nestgate_core::universal_adapter::capability_discovery::CapabilityType as CapabilityCategory;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tracing::{debug, info, warn};

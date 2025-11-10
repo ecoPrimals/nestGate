@@ -12,7 +12,7 @@ use nestgate_zfs::ProductionZfsManager;
 
 // Development: Use stub manager
 #[cfg(feature = "dev-stubs")]
-use crate::handlers::zfs_stub::ProductionZfsManager;
+use crate::dev_stubs::zfs::ProductionZfsManager;
 
 use nestgate_core::canonical_types::StorageTier;
 

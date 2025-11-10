@@ -279,4 +279,3 @@ impl Default for LoadBalancerHealthCheck {
 
 /// Backward compatibility alias
 pub type UnifiedConnectionPoolConfig = ConnectionPoolConfig;
-

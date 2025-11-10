@@ -5,6 +5,8 @@
 //! **Migration**: Use `nestgate_core::config::canonical_primary::domains::automation::AutomationConfig` or
 //! `crate::types::CanonicalAutomationConfig`
 
+#![allow(deprecated)]
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::env;

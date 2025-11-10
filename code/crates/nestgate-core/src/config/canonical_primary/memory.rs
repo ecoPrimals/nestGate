@@ -59,8 +59,8 @@ impl Default for MemoryPoolConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            initial_size: 64 * 1024 * 1024,  // 64MB
-            max_size: 512 * 1024 * 1024,     // 512MB
+            initial_size: 64 * 1024 * 1024, // 64MB
+            max_size: 512 * 1024 * 1024,    // 512MB
             growth_factor: 1.5,
             shrink_threshold: 0.25,
         }
@@ -100,9 +100,9 @@ pub struct MemoryLimits {
 impl Default for MemoryLimits {
     fn default() -> Self {
         Self {
-            max_memory: 2 * 1024 * 1024 * 1024,  // 2GB
-            max_heap: 1024 * 1024 * 1024,         // 1GB
-            max_stack: 8 * 1024 * 1024,           // 8MB
+            max_memory: 2 * 1024 * 1024 * 1024, // 2GB
+            max_heap: 1024 * 1024 * 1024,       // 1GB
+            max_stack: 8 * 1024 * 1024,         // 8MB
             warning_threshold: 0.8,
             critical_threshold: 0.95,
         }
@@ -165,4 +165,3 @@ impl Default for MemoryMonitoringConfig {
 
 /// Backward compatibility alias for UnifiedMemoryConfig
 pub type UnifiedMemoryConfig = MemoryConfig;
-

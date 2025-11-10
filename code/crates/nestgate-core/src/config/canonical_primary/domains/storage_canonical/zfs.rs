@@ -1,7 +1,7 @@
 // **ZFS STORAGE CONFIGURATION**
 //!
 //! **CANONICAL ZFS CONFIGURATION** - Single source of truth for all ZFS settings
-//! 
+//!
 //! This module consolidates all ZFS configuration from:
 //! - `nestgate-zfs/src/canonical_zfs_config.rs` (old StandardDomainConfig pattern)
 //! - `nestgate-zfs/src/config/unified_zfs_config.rs` (wrapper/re-export)

@@ -70,10 +70,17 @@ where
     _phantom: PhantomData<()>,
 }
 /// Zero-cost security provider trait - replaces `Arc<dyn SecurityPrimalProvider>`
-/// **DEPRECATED**: Zero-cost security patterns consolidated
+/// **DEPRECATED**: Zero-cost security patterns consolidated into canonical SecurityProvider
+///
+/// # Migration
+///
+/// Use `crate::traits::canonical_provider_unification::SecurityProvider` which includes
+/// all zero-cost optimizations through native async (RPITIT).
+///
+/// **Timeline**: Deprecated v0.11.3 (Nov 2025), Remove v0.12.0 (May 2026)
 #[deprecated(
-    since = "0.9.0",
-    note = "Use crate::traits::canonical_unified_traits::CanonicalSecurity - zero-cost patterns integrated"
+    since = "0.11.3",
+    note = "Use crate::traits::canonical_provider_unification::SecurityProvider - zero-cost patterns integrated via native async. Migration guide: docs/guides/SECURITY_PROVIDER_MIGRATION.md"
 )]
 pub trait ZeroCostSecurityProvider: Send + Sync + 'static {
     type Error: Send + Sync + 'static;

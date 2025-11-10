@@ -22,7 +22,7 @@ use nestgate_zfs::{
 
 // Development: Use stub types
 #[cfg(feature = "dev-stubs")]
-use crate::handlers::zfs_stub::{PoolInfo, ZfsConfidenceCalculator, ZfsManager};
+use crate::dev_stubs::zfs::{PoolInfo, ZfsConfidenceCalculator, ZfsManager};
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -467,7 +467,7 @@ fn generate_pool_recommendations(pool_info: &PoolInfo, operation: &str) -> Vec<S
 #[cfg(all(test, feature = "dev-stubs"))]
 mod tests {
     use super::*;
-    use crate::handlers::zfs_stub::{PoolCapacity, PoolHealth};
+    use crate::dev_stubs::zfs::{PoolCapacity, PoolHealth};
     
     #[test]
     fn test_pool_response_creation() {

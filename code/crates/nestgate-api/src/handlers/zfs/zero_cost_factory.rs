@@ -8,7 +8,7 @@
 //! This module is only available with `dev-stubs` feature.
 
 #[cfg(feature = "dev-stubs")]
-use crate::handlers::zfs_stub::ZeroCostZfsOperations;
+use crate::dev_stubs::zfs::ZeroCostZfsOperations;
 
 #[cfg(feature = "dev-stubs")]
 /// **ZERO-COST NATIVE ZFS SERVICE** (Development Only)

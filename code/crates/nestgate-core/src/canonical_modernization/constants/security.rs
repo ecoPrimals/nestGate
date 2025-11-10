@@ -1,12 +1,9 @@
 // **SECURITY CONSTANTS**
 //! Security functionality and utilities.
 // Security-related constants (delegated to Security primal).
+// NOTE: Timeout constants have been consolidated to canonical::timeouts module
 
-/// Default security timeout (local fallback only)
-#[deprecated(since = "0.2.0", note = "Use nestgate_core::constants::canonical::timeouts::DEFAULT_TIMEOUT_SECS")]
-pub const SECURITY_TIMEOUT_SECS: u64 = 30;
-
-/// Maximum authentication attempts (domain-specific, keep)
+/// Maximum authentication attempts (domain-specific)
 pub const MAX_AUTH_ATTEMPTS: u32 = 3;
 
 /// Default token expiry in seconds

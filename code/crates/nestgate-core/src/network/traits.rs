@@ -1,14 +1,14 @@
 //! **CANONICAL NETWORK SERVICE TRAITS**
-//! 
+//!
 //! This module provides THE canonical networking trait definitions.
 //! All other network modules should use these traits.
 //!
 //! **DO NOT DUPLICATE** - Import from here instead.
 
-use std::time::Duration;
 use crate::error::{NestGateError, Result};
-use std::sync::Arc;
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
+use std::time::Duration;
 
 // ==================== MODULE CONSTANTS ====================
 
@@ -17,7 +17,7 @@ pub use crate::constants::shared::MODULE_VERSION;
 
 /// Default configuration values from canonical constants
 pub use crate::constants::network::{
-    DEFAULT_TIMEOUT_MS, DEFAULT_BUFFER_SIZE, DEFAULT_MAX_CONNECTIONS
+    DEFAULT_BUFFER_SIZE, DEFAULT_MAX_CONNECTIONS, DEFAULT_TIMEOUT_MS,
 };
 
 // ==================== CORE TYPES ====================
@@ -41,6 +41,9 @@ impl Default for NetworkTraitsConfig {
         }
     }
 }
+
+/// Type alias for convenience in tests
+pub type Config = NetworkTraitsConfig;
 
 /// **CANONICAL NETWORK SERVICE TRAIT**
 ///
@@ -68,10 +71,10 @@ impl Default for NetworkTraitsConfig {
 pub trait Service: Send + Sync {
     /// Initialize the service
     fn initialize(&self) -> impl std::future::Future<Output = Result<()>> + Send;
-    
+
     /// Check service health
     fn health_check(&self) -> impl std::future::Future<Output = Result<HealthStatus>> + Send;
-    
+
     /// Shutdown the service gracefully
     fn shutdown(&self) -> impl std::future::Future<Output = Result<()>> + Send;
 }
@@ -121,7 +124,7 @@ impl DefaultService {
             metrics: Arc::new(tokio::sync::RwLock::new(Metrics::default())),
         }
     }
-    
+
     /// Get current metrics
     pub async fn get_metrics(&self) -> Metrics {
         self.metrics.read().await.clone()
@@ -135,13 +138,11 @@ impl Service for DefaultService {
             Ok(())
         }
     }
-    
+
     fn health_check(&self) -> impl std::future::Future<Output = Result<HealthStatus>> + Send {
-        async move {
-            Ok(HealthStatus::Healthy)
-        }
+        async move { Ok(HealthStatus::Healthy) }
     }
-    
+
     fn shutdown(&self) -> impl std::future::Future<Output = Result<()>> + Send {
         async move {
             tracing::info!("Shutting down network service");
@@ -162,17 +163,17 @@ pub fn validate_config(config: &NetworkTraitsConfig) -> Result<()> {
     if config.max_connections == 0 {
         return Err(NestGateError::configuration_error(
             "network_traits",
-            "max_connections must be greater than 0"
+            "max_connections must be greater than 0",
         ));
     }
-    
+
     if config.buffer_size == 0 {
         return Err(NestGateError::configuration_error(
             "network_traits",
-            "buffer_size must be greater than 0"
+            "buffer_size must be greater than 0",
         ));
     }
-    
+
     Ok(())
 }
 
@@ -181,24 +182,24 @@ pub fn validate_config(config: &NetworkTraitsConfig) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_config_default() {
         let config = NetworkTraitsConfig::default();
         assert!(config.enabled);
         assert_eq!(config.max_connections, DEFAULT_MAX_CONNECTIONS);
     }
-    
+
     #[test]
     fn test_config_validation() {
         let config = NetworkTraitsConfig::default();
         assert!(validate_config(&config).is_ok());
-        
+
         let mut bad_config = Config::default();
         bad_config.max_connections = 0;
         assert!(validate_config(&bad_config).is_err());
     }
-    
+
     #[tokio::test]
     async fn test_service_creation() {
         let service = create_service();
@@ -206,7 +207,7 @@ mod tests {
         assert_eq!(service.health_check().await.unwrap(), HealthStatus::Healthy);
         assert!(service.shutdown().await.is_ok());
     }
-    
+
     #[tokio::test]
     async fn test_metrics() {
         let service = create_service();

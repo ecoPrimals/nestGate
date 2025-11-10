@@ -1,7 +1,10 @@
+#![allow(deprecated)]
+
 /// **SUPPORTING TYPES**
 ///
 /// Common types and enums used across all configuration modules.
 /// This module contains shared types that don't belong to a specific domain.
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
@@ -59,36 +62,6 @@ impl Default for McpConfig {
             max_connections: 100,
             request_timeout: Duration::from_secs(30),
             protocol_settings: HashMap::new(),
-        }
-    }
-}
-
-/// Automation configuration (DEPRECATED)
-///
-/// **Migration Path**: Use `crate::config::canonical_primary::domains::automation::AutomationConfig` instead.
-#[deprecated(
-    since = "0.2.0",
-    note = "Use nestgate_core::config::canonical_primary::domains::automation::AutomationConfig"
-)]
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct AutomationConfig {
-    /// Enable automation
-    pub enabled: bool,
-    /// Automation scripts directory
-    /// Maximum concurrent tasks
-    pub max_concurrent_tasks: usize,
-    /// Task timeout
-    pub task_timeout: Duration,
-    /// Automation-specific settings
-    pub automation_settings: HashMap<String, serde_json::Value>,
-}
-impl Default for AutomationConfig {
-    fn default() -> Self {
-        Self {
-            enabled: false,
-            max_concurrent_tasks: 10,
-            task_timeout: Duration::from_secs(300),
-            automation_settings: HashMap::new(),
         }
     }
 }

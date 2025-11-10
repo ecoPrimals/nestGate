@@ -11,36 +11,38 @@
 pub mod canonical_modernization;
 /// **PRIMARY**: Canonical types system
 pub mod canonical_types;
-/// **PRIMARY**: Unified configuration system - single source of truth
-pub mod config;
-/// **PRIMARY**: Unified constants system
-pub mod constants;
-/// **PRIMARY**: Default values and environment helpers
-pub mod defaults;
-/// **PRIMARY**: Unified error handling system
-pub mod error;
-/// **PRIMARY**: Canonical trait system with native async
-pub mod traits;
 /// ⚠️ REMOVED: traits_root was deprecated and removed in v0.11.0 (November 2025)
 /// Use traits::canonical_unified_traits instead
 // pub mod traits_root; // REMOVED - use traits::canonical_unified_traits
 // ==================== DOMAIN-SPECIFIC MODULES ====================
 /// Capability-based service discovery
 pub mod capabilities;
+/// **PRIMARY**: Unified configuration system - single source of truth
+pub mod config;
+/// **PRIMARY**: Unified constants system
+pub mod constants;
 /// Data source integrations (Steam, NCBI, etc.)
 pub mod data_sources;
+/// **PRIMARY**: Default values and environment helpers
+pub mod defaults;
 /// Runtime capability discovery system (Infant Discovery Architecture)
 pub mod discovery;
 /// Ecosystem integration patterns
 pub mod ecosystem_integration;
 /// Environment configuration utilities
 pub mod environment;
+/// **PRIMARY**: Unified error handling system
+pub mod error;
 /// Infant Discovery Architecture implementation
 pub mod infant_discovery;
 /// Error recovery and resilience patterns
 pub mod recovery;
+/// **PRIMARY**: Canonical Result type aliases (Nov 10, 2025 consolidation)
+pub mod result_types;
 /// Service discovery and registry
 pub mod service_discovery;
+/// **PRIMARY**: Canonical trait system with native async
+pub mod traits;
 /// Universal adapter for primal integration
 pub mod universal_adapter;
 /// Universal primal discovery system
@@ -72,6 +74,18 @@ pub mod response;
 pub mod return_builders;
 /// Safe operations utilities
 pub mod safe_operations;
+
+/// **DEV STUBS MODULE** (Feature-gated: `dev-stubs`)
+///
+/// Development stub implementations for testing and local development.
+/// ⚠️ **NOT FOR PRODUCTION** - Only available with `dev-stubs` feature flag.
+///
+/// **Consolidated**: November 10, 2025
+/// - Replaces: `universal_primal_discovery/stubs.rs`
+/// - Replaces: `return_builders/mock_builders.rs`
+/// - Replaces: `config/canonical_primary/domains/test_canonical/mocking.rs`
+#[cfg(feature = "dev-stubs")]
+pub mod dev_stubs;
 // ⚠️ Security module temporarily disabled
 // ✅ Syntax errors fixed (20+): auth_types.rs, intrusion_detection.rs, manager.rs,
 //    rate_limiting.rs, validation.rs, universal_auth_adapter.rs
@@ -80,6 +94,16 @@ pub mod safe_operations;
 // Re-enable after integration fixes are complete
 // pub mod security;
 /// Security provider system
+/// **CANONICAL SECURITY PROVIDER** (November 10, 2025)
+/// Primary security provider using canonical SecurityProvider trait
+pub mod security_provider_canonical;
+
+/// **DEPRECATED**: Old security provider implementation
+/// Use `security_provider_canonical` instead
+#[deprecated(
+    since = "0.11.3",
+    note = "Use security_provider_canonical - migrated to canonical SecurityProvider trait"
+)]
 pub mod security_provider;
 /// Sovereignty configuration helpers
 pub mod sovereignty_config;
@@ -136,15 +160,14 @@ pub mod services;
 pub use config::canonical_primary::NestGateCanonicalConfig;
 /// **CANONICAL CONSTANTS** - Single source for all constants
 pub use constants::*;
-/// **DOMAIN-SPECIFIC RESULT TYPES** - Rich error context
-/// Note: Error type aliases removed to avoid conflicts with legacy `domain_errors.rs`
-/// Use `NestGateUnifiedError::network_connection_failed()` and similar helper constructors
-pub use error::{
-    ApiResult, ConfigResult, McpResult, NetworkResult, SecurityResult, StorageResult,
-    ValidationResult, ZfsResult,
-};
 /// **THE CANONICAL ERROR SYSTEM** - Single error type for all operations
 pub use error::{NestGateError, Result};
+/// **CANONICAL RESULT TYPES** - Consolidated Nov 10, 2025 (was 54 → 6 types)
+/// All domain-specific aliases have been removed. Use Result<T> or CanonicalResult<T> instead.
+pub use result_types::{
+    CanonicalResult, ConnectionFactory, HealthCheckFn, TestResult, ValidatorFn, VoidResult,
+};
+// Note: ZfsResult remains in error::unified_result_system for backwards compatibility
 /// **THE CANONICAL TRAITS** - Single source for all service interfaces
 pub use traits::{
     CanonicalAutomation, CanonicalMcp, CanonicalNetwork, CanonicalProvider, CanonicalSecurity,

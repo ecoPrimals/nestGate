@@ -396,5 +396,5 @@ pub struct ServiceMetrics {
     pub uptime: std::time::Duration,
 }
 
-// Include monitoring config type
-use crate::config::canonical_primary::monitoring::MonitoringConfig;
+// Include monitoring config type - using canonical from supporting_types
+use crate::config::canonical_primary::MonitoringConfig;

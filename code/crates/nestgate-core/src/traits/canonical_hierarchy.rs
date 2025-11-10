@@ -190,6 +190,16 @@ pub trait CanonicalService: Send + Sync + 'static {
 ///     }
 /// }
 /// ```
+#[deprecated(
+    since = "0.11.2",
+    note = "Use crate::traits::canonical_unified_traits::CanonicalProvider instead. \
+            This alternative definition extends CanonicalService and is less flexible. \
+            The canonical version is standalone with customizable Config/Error types. \
+            Migration: Replace canonical_hierarchy::CanonicalProvider with \
+            canonical_unified_traits::CanonicalProvider and add explicit Config/Error types. \
+            Target removal: v0.12.0 (May 2026). \
+            See: CANONICAL_PROVIDER_COMPARISON.md for detailed migration guide."
+)]
 pub trait CanonicalProvider<T>: CanonicalService {
     /// Provider-specific metadata
     type Metadata: Clone + Send + Sync + 'static;
@@ -290,7 +300,10 @@ pub trait CanonicalProvider<T>: CanonicalService {
 ///
 /// **DEPRECATED**: Use `crate::traits::canonical_unified_traits::CanonicalStorage` instead.
 /// This is a duplicate definition maintained for backward compatibility only.
-#[deprecated(since = "0.9.0", note = "Use crate::traits::canonical_unified_traits::CanonicalStorage instead - unified in canonical_unified_traits module")]
+#[deprecated(
+    since = "0.9.0",
+    note = "Use crate::traits::canonical_unified_traits::CanonicalStorage instead - unified in canonical_unified_traits module"
+)]
 pub trait CanonicalStorage: CanonicalService {
     /// Storage key type
     type Key: Clone + Send + Sync + 'static;
@@ -331,7 +344,7 @@ pub trait CanonicalStorage: CanonicalService {
         &self,
         keys: &[Self::Key],
     ) -> impl Future<Output = Result<Vec<Option<Self::Value>>, Self::Error>> + Send {
-        let keys = keys.to_vec();  // Clone to avoid borrowing issues
+        let keys = keys.to_vec(); // Clone to avoid borrowing issues
         async move {
             let mut results = Vec::with_capacity(keys.len());
             for key in &keys {
@@ -489,7 +502,10 @@ pub trait CanonicalStorage: CanonicalService {
 /// }
 /// ```
 /// **DEPRECATED**: Use canonical_unified_traits::CanonicalSecurity instead
-#[deprecated(since = "0.9.0", note = "Use crate::traits::canonical_unified_traits::CanonicalSecurity instead - unified in canonical_unified_traits module")]
+#[deprecated(
+    since = "0.9.0",
+    note = "Use crate::traits::canonical_unified_traits::CanonicalSecurity instead - unified in canonical_unified_traits module"
+)]
 pub trait CanonicalSecurity: CanonicalService {
     /// Token type (JWT, session, etc.)
     type Token: Clone + Send + Sync + 'static;
@@ -571,7 +587,7 @@ pub trait CanonicalSecurity: CanonicalService {
     // delegate to the simpler methods or return "not supported" errors.
 
     /// Sign data and return structured signature (optional, delegates to sign by default)
-    /// 
+    ///
     /// Default implementation delegates to `sign()` and wraps in a generic signature structure.
     /// Override for more sophisticated signature formats (e.g., with key IDs, algorithms).
     fn sign_data(&self, data: &[u8]) -> impl Future<Output = Result<Vec<u8>, Self::Error>> + Send {
@@ -579,7 +595,7 @@ pub trait CanonicalSecurity: CanonicalService {
     }
 
     /// Verify structured signature (optional, delegates to verify by default)
-    /// 
+    ///
     /// Default implementation delegates to `verify()`.
     /// Override for more sophisticated signature verification.
     fn verify_signature(
@@ -591,7 +607,7 @@ pub trait CanonicalSecurity: CanonicalService {
     }
 
     /// Get the key ID used for signing (optional)
-    /// 
+    ///
     /// Default implementation returns None to indicate no key ID tracking.
     /// Override if your implementation tracks key IDs.
     fn get_key_id(&self) -> impl Future<Output = Result<Option<String>, Self::Error>> + Send {
@@ -599,7 +615,7 @@ pub trait CanonicalSecurity: CanonicalService {
     }
 
     /// Hash data with specific algorithm (optional)
-    /// 
+    ///
     /// Default implementation returns "not supported" error.
     /// Override to provide hashing capabilities.
     fn hash_data(
@@ -617,10 +633,13 @@ pub trait CanonicalSecurity: CanonicalService {
     }
 
     /// Generate random bytes (optional)
-    /// 
+    ///
     /// Default implementation returns "not supported" error.
     /// Override to provide random generation capabilities.
-    fn generate_random(&self, _length: usize) -> impl Future<Output = Result<Vec<u8>, Self::Error>> + Send
+    fn generate_random(
+        &self,
+        _length: usize,
+    ) -> impl Future<Output = Result<Vec<u8>, Self::Error>> + Send
     where
         Self: Sized,
     {
@@ -631,7 +650,7 @@ pub trait CanonicalSecurity: CanonicalService {
     }
 
     /// Derive key from primary key (optional)
-    /// 
+    ///
     /// Default implementation returns "not supported" error.
     /// Override to provide key derivation capabilities.
     fn derive_key(
@@ -650,7 +669,7 @@ pub trait CanonicalSecurity: CanonicalService {
     }
 
     /// Evaluate boundary access control (optional)
-    /// 
+    ///
     /// Default implementation delegates to `authorize()`.
     /// Override for more sophisticated boundary access control.
     fn evaluate_boundary_access(
@@ -663,7 +682,7 @@ pub trait CanonicalSecurity: CanonicalService {
     }
 
     /// Create session for principal (optional)
-    /// 
+    ///
     /// Default implementation creates a token via `authenticate`.
     /// Override for session-based authentication systems.
     fn create_session(
@@ -674,7 +693,7 @@ pub trait CanonicalSecurity: CanonicalService {
     }
 
     /// Validate session token (optional)
-    /// 
+    ///
     /// Default implementation delegates to `validate_token`.
     /// Override for session-specific validation logic.
     fn validate_session(
@@ -740,4 +759,4 @@ macro_rules! assert_zero_cost {
 // They will be exported after migration is complete (Week 8).
 //
 // For now, use them explicitly:
-// use nestgate_core::traits::canonical_hierarchy::{CanonicalService, ...}; 
+// use nestgate_core::traits::canonical_hierarchy::{CanonicalService, ...};

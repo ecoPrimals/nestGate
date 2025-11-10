@@ -1,8 +1,43 @@
-/// Universal Primal Discovery Stub Implementations
+/// **DEPRECATED**: Universal Primal Discovery Stub Implementations
+///
+/// **This module has been moved to `crate::dev_stubs::primal_discovery`.**
+///
+/// # Migration
+///
+/// **BEFORE** (deprecated):
+/// ```rust,ignore
+/// use nestgate_core::universal_primal_discovery::stubs::*;
+/// ```
+///
+/// **AFTER** (new location):
+/// ```rust,ignore
+/// use nestgate_core::dev_stubs::primal_discovery::*;
+/// // or
+/// use nestgate_core::dev_stubs::*;
+/// ```
+///
+/// # Deprecation Timeline
+///
+/// - **Moved**: November 10, 2025 (v0.11.2)
+/// - **Removal**: May 2026 (v0.12.0)
+///
 /// Provides fallback implementations for discovery operations when full discovery is unavailable.
 /// These stubs ensure system stability and provide sensible defaults.
 ///
 /// **⚠️ DEVELOPMENT ONLY**: This module is only available with `dev-stubs` feature
+
+#[deprecated(
+    since = "0.11.2",
+    note = "Moved to crate::dev_stubs::primal_discovery. \
+            Update imports: use nestgate_core::dev_stubs::primal_discovery::*; \
+            This location will be removed in v0.12.0 (May 2026)."
+)]
+pub use crate::dev_stubs::primal_discovery::*;
+
+// Keep the original implementation as re-exports for backward compatibility
+// The actual implementation is now in dev_stubs/primal_discovery.rs
+
+#[allow(unused_imports)]
 use crate::Result;
 // **MIGRATED**: Using canonical config system instead of deprecated unified_types
 use crate::capabilities::discovery::DiscoveryManager;
@@ -70,21 +105,27 @@ pub fn discover_timeout(operation: &str) -> crate::Result<Duration> {
     }
 }
 /// Get fallback port for a service
+/// 
+/// **DEPRECATED**: This module is deprecated. Use `crate::dev_stubs::primal_discovery` instead.
 #[must_use]
 pub fn get_fallback_port(service_name: &str) -> u16 {
+    use crate::constants::port_defaults::{
+        DEFAULT_API_PORT, DEFAULT_METRICS_PORT, DEFAULT_HEALTH_PORT, DEFAULT_ADMIN_PORT,
+    };
+    
     match service_name {
-        "api" => 8080,
-        "web" => 8080,
-        "metrics" => 9090,
-        "health" => 8081,
-        "admin" => 8082,
-        "websocket" => 8083,
-        "network" => 8084,
-        "storage" => 8085,
-        "zfs" => 8086,
-        "mcp" => 8087,
-        "automation" => 8088,
-        _ => 8080,
+        "api" => DEFAULT_API_PORT, // 8080
+        "web" => DEFAULT_API_PORT, // 8080
+        "metrics" => DEFAULT_METRICS_PORT, // 9090
+        "health" => DEFAULT_HEALTH_PORT, // 8081
+        "admin" => DEFAULT_ADMIN_PORT, // 8082
+        "websocket" => 8083, // WebSocket default
+        "network" => 8084, // Network service default
+        "storage" => 8085, // Storage service default
+        "zfs" => 8086, // ZFS service default
+        "mcp" => 8087, // MCP service default
+        "automation" => 8088, // Automation service default
+        _ => DEFAULT_API_PORT,
     }
 }
 /// Network configuration adapter for universal discovery
