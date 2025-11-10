@@ -41,6 +41,9 @@ impl Default for EventsDlqConfig {
     }
 }
 
+/// Type alias for convenience in tests
+pub type Config = EventsDlqConfig;
+
 /// Service interface re-exported from canonical source
 /// See: `crate::traits::Service` for the unified implementation
 pub use crate::traits::Service;

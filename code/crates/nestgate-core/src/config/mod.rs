@@ -23,12 +23,13 @@ pub mod canonical_primary;
 // ==================== SECTION ====================
 
 /// **THE** canonical configuration for all `NestGate` systems
-#[allow(deprecated)]
 pub use canonical_primary::{
-    ApiConfig, CanonicalNetworkConfig as NetworkConfig, ConfigMetadata, DeploymentEnvironment,
+    CanonicalNetworkConfig as NetworkConfig, ConfigMetadata, DeploymentEnvironment,
     FeatureFlags, LogLevel, NestGateCanonicalConfig, PerformanceConfig, SecurityConfig,
     ServiceConfig, StorageConfig, SystemConfig,
 };
+// API and automation configs from domains (canonical types)
+pub use canonical_primary::domains::{ApiConfig, AutomationConfig};
 
 // Note: Detailed configuration types are defined inline in canonical_primary
 // and will be accessible through the canonical_primary module directly

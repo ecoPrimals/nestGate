@@ -418,7 +418,7 @@ impl<const MAX_CONNECTIONS: usize, const BUFFER_SIZE: usize> Default
         Self {
             instance_id,
             instance_name: "nestgate-default".to_string(),
-            version: env!("CARGO_PKG_VERSION").to_string(),
+            version: "3.0.0".to_string(),
             environment: DeploymentEnvironment::default(),
             log_level: LogLevel::Info,
             debug_mode: false,

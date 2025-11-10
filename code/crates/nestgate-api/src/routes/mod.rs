@@ -26,7 +26,7 @@ use nestgate_zfs::ProductionZfsManager;
 
 // Development: Use stub manager and config
 #[cfg(feature = "dev-stubs")]
-use crate::handlers::zfs_stub::{ProductionZfsManager, ZfsConfig};
+use crate::dev_stubs::zfs::{ProductionZfsManager, ZfsConfig};
 
 /// Production ZFS manager type alias
 ///

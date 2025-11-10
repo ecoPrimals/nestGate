@@ -3,9 +3,9 @@
 //! Consolidated error handling helpers and utilities.
 //! This module combines safe operation wrappers and error constructor patterns.
 //!
-//! **Replaces**:
-//! - `error/helpers.rs` (safe operation wrappers)
-//! - `error/modernized_error_helpers.rs` (error constructors)
+//! **Replaces** (REMOVED November 10, 2025):
+//! - `error/helpers.rs` (safe operation wrappers) ✅
+//! - `error/modernized_error_helpers.rs` (error constructors) ✅
 
 use super::{NestGateError, NestGateUnifiedError};
 
@@ -242,4 +242,3 @@ mod tests {
         assert!(format!("{:?}", err).contains("Internal"));
     }
 }
-

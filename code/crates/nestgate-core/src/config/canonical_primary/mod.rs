@@ -35,10 +35,6 @@ pub mod connection_pool;
 pub mod storage_config;
 // Security and authentication configuration types
 pub mod security_config;
-// API and handler configuration types
-pub mod api_config;
-// Monitoring and metrics configuration types
-pub mod monitoring;
 // Performance and optimization configuration types
 pub mod performance_config;
 // Handler-specific configuration types (NEW - consolidates scattered handler configs)
@@ -58,7 +54,6 @@ pub mod migration_framework;
 pub mod phase2c_types;
 // ==================== SECTION ====================
 
-pub use api_config::*;
 pub use builders::*;
 pub use handler_config::*;
 // REMOVED: network_config::* → Use domains::CanonicalNetworkConfig instead
@@ -123,8 +118,8 @@ pub struct NestGateCanonicalConfig<
     /// Security and authentication configuration
     pub security: SecurityConfig,
 
-    /// API and handler configuration
-    pub api: ApiConfig,
+    /// API and handler configuration (canonical from domains::network)
+    pub api: domains::network::ApiConfig,
 
     /// Handler-specific configurations (NEW - consolidates 50+ scattered handler configs)
     pub handlers: CanonicalHandlerConfigs,
@@ -143,8 +138,8 @@ pub struct NestGateCanonicalConfig<
     /// MCP (Model Context Protocol) configuration
     pub mcp: McpConfig,
 
-    /// Automation configuration
-    pub automation: AutomationConfig,
+    /// Automation configuration (canonical from domains::automation)
+    pub automation: domains::automation::AutomationConfig,
 
     /// File system monitor configuration
     pub fsmonitor: FsMonitorConfig,
@@ -300,14 +295,14 @@ impl<
             network: CanonicalNetworkConfig::default(),
             storage: StorageConfig::default(),
             security: SecurityConfig::default(),
-            api: ApiConfig::default(),
+            api: domains::network::ApiConfig::default(),
             handlers: CanonicalHandlerConfigs::default(),
             #[cfg(feature = "dev-stubs")]
             testing: CanonicalTestConfigs::default(),
             monitoring: MonitoringConfig::default(),
             performance: PerformanceConfig::default(),
             mcp: McpConfig::default(),
-            automation: AutomationConfig::default(),
+            automation: domains::automation::AutomationConfig::default(),
             fsmonitor: FsMonitorConfig::default(),
             nas: NasConfig::default(),
             middleware: MiddlewareConfig::default(),

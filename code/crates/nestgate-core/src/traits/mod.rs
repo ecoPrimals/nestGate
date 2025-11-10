@@ -36,6 +36,9 @@ pub mod canonical_unified_traits;
 pub mod domain_extensions;
 pub mod migration;
 pub mod native_async;
+/// Security provider migration adapters (backwards compatibility)
+/// **NEW**: November 10, 2025 - Phase 2A Provider Trait Consolidation
+pub mod security_migration;
 pub mod unified_storage;
 pub mod universal;
 pub mod universal_service_zero_cost;

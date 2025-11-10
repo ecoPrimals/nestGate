@@ -37,15 +37,27 @@ pub mod zfs;
 
 // Re-export all ZFS types for easier access
 pub use zfs::{
-    // Main configurations
-    ZfsStorageConfig, ZfsPoolConfig, ZfsDatasetConfig, ZfsSnapshotConfig,
-    ZfsMaintenanceConfig, ZfsPerformanceConfig, ZfsSecurityConfig,
-    ZfsMonitoringConfig, ZfsMigrationConfig,
+    AlertThresholds,
+    ArcCacheConfig,
+    L2ArcConfig,
+    PrefetchConfig,
     // Sub-configurations
-    RetentionPolicy, ArcCacheConfig, L2ArcConfig, ZilConfig, PrefetchConfig,
-    AlertThresholds, ZfsPoolSettings,
+    RetentionPolicy,
     // Enums
-    ZfsCompression, ZfsRedundancy,
+    ZfsCompression,
+    ZfsDatasetConfig,
+    ZfsMaintenanceConfig,
+    ZfsMigrationConfig,
+    ZfsMonitoringConfig,
+    ZfsPerformanceConfig,
+    ZfsPoolConfig,
+    ZfsPoolSettings,
+    ZfsRedundancy,
+    ZfsSecurityConfig,
+    ZfsSnapshotConfig,
+    // Main configurations
+    ZfsStorageConfig,
+    ZilConfig,
 };
 
 // Re-export all configuration types

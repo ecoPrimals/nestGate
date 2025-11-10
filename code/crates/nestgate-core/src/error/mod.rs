@@ -8,15 +8,12 @@
 pub mod context;
 pub mod conversions;
 pub mod data;
-pub mod unified_result_system;
 pub mod utilities; // Consolidated error helpers
 pub mod variants;
 
-// Deprecated modules - will be removed in v0.12.0
-#[deprecated(since = "0.11.1", note = "Use error::utilities instead")]
-pub mod helpers;
-#[deprecated(since = "0.11.1", note = "Use error::utilities instead")]
-pub mod modernized_error_helpers;
+// Deprecated modules removed (November 10, 2025)
+// - helpers.rs → migrated to utilities.rs
+// - modernized_error_helpers.rs → migrated to utilities.rs
 
 // ==================== EXPORTS ====================
 
@@ -32,13 +29,10 @@ pub use data::*;
 pub type NestGateError = NestGateUnifiedError;
 pub type Result<T> = std::result::Result<T, NestGateError>;
 
-// Re-export result types from unified_result_system
-// Note: Error type aliases removed to avoid conflicts with domain_errors.rs
-// Use NestGateUnifiedError helper constructors instead
-pub use self::unified_result_system::{
-    ApiResult, CanonicalResult, ConfigResult, McpResult, NetworkResult, SecurityResult,
-    StorageResult, ValidationResult, ZfsResult,
-};
+// Re-export core result types from result_types module (root-level canonical location)
+// Note: unified_result_system was merged into result_types for single source of truth
+// All domain-specific aliases have been removed (November 10, 2025) - use Result<T> instead
+pub use crate::result_types::{CanonicalResult, ResultExt, TestResult};
 
 // Re-export error detail structs from variants
 pub use self::variants::core_errors::{

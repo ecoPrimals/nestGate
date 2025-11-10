@@ -145,4 +145,3 @@ impl RetryConfig {
 
 /// Backward compatibility alias for UnifiedRetryConfig
 pub type UnifiedRetryConfig = RetryConfig;
-

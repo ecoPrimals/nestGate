@@ -80,4 +80,3 @@ impl TimeoutConfig {
 
 /// Backward compatibility alias for UnifiedTimeoutConfig
 pub type UnifiedTimeoutConfig = TimeoutConfig;
-

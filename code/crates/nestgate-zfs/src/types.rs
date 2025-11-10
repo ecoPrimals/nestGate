@@ -71,7 +71,7 @@ pub struct RetentionPolicy {
 // ZfsResult<T> → nestgate_core::error::ZfsResult<T>
 // This provides unified error handling across the entire ecosystem
 
-pub use nestgate_core::error::{Result, ZfsResult};
+pub use nestgate_core::error::Result;
 
 // ==================== SECTION ====================
 
@@ -385,7 +385,7 @@ impl Default for SnapshotInfo {
 // ==================== SECTION ====================
 
 /// Create a pool info from raw ZFS output
-pub fn pool_info_from_zfs_output(name: &str, output: &str) -> ZfsResult<PoolInfo> {
+pub fn pool_info_from_zfs_output(name: &str, output: &str) -> Result<PoolInfo> {
     let mut properties = HashMap::new();
     for line in output.lines() {
         if let Some((key, value)) = line.split_once('\t') {
@@ -440,7 +440,7 @@ pub fn pool_info_from_zfs_output(name: &str, output: &str) -> ZfsResult<PoolInfo
 }
 
 /// Create dataset info from ZFS output
-pub fn dataset_info_from_zfs_output(output: &str) -> ZfsResult<DatasetInfo> {
+pub fn dataset_info_from_zfs_output(output: &str) -> Result<DatasetInfo> {
     let mut properties = HashMap::new();
     for line in output.lines() {
         if let Some((key, value)) = line.split_once('\t') {
@@ -905,34 +905,33 @@ mod tests {
 ///
 /// **Migration Date**: November 7, 2025
 /// **Pattern**: Following proven NetworkConfig migration success
-
 // Re-export canonical ZFS configuration types
 pub use nestgate_core::config::canonical_primary::domains::storage_canonical::{
-    // Main ZFS configuration
-    ZfsStorageConfig,
-    
-    // Core configuration structs
-    ZfsPoolConfig,
-    ZfsDatasetConfig,
-    ZfsSnapshotConfig,
-    ZfsMaintenanceConfig,
-    ZfsPerformanceConfig,
-    ZfsSecurityConfig,
-    ZfsMonitoringConfig,
-    ZfsMigrationConfig,
-    
-    // Supporting configuration types  
+    AlertThresholds,
+    // Supporting configuration types
     // Note: RetentionPolicy is already defined in this file (line 57)
     ArcCacheConfig,
     L2ArcConfig,
-    ZilConfig,
     PrefetchConfig,
-    AlertThresholds,
-    ZfsPoolSettings,
-    
     // Configuration enums
     ZfsCompression,
+    ZfsDatasetConfig,
+    ZfsMaintenanceConfig,
+    ZfsMigrationConfig,
+
+    ZfsMonitoringConfig,
+    ZfsPerformanceConfig,
+    // Core configuration structs
+    ZfsPoolConfig,
+    ZfsPoolSettings,
+
     ZfsRedundancy,
+    ZfsSecurityConfig,
+    ZfsSnapshotConfig,
+    // Main ZFS configuration
+    ZfsStorageConfig,
+
+    ZilConfig,
 };
 
 // Type alias for backward compatibility with code expecting "ZfsConfig"

@@ -10,7 +10,7 @@ use std::time::Duration;
 /// **CANONICAL AUTOMATION CONFIGURATION**
 ///
 /// Consolidates all automation configuration patterns into a single comprehensive struct.
-/// 
+///
 /// **Replaces**:
 /// - `AutomationConfig` (nestgate-automation/src/types/config.rs)
 /// - `AutomationConfig` (canonical_primary/supporting_types.rs)
@@ -21,76 +21,69 @@ use std::time::Duration;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AutomationConfig {
     // ==================== CORE SETTINGS ====================
-    
     /// Enable automation system
     pub enabled: bool,
-    
+
     /// Maximum concurrent automation tasks
     pub max_concurrent_tasks: usize,
-    
+
     /// Task execution timeout
     pub task_timeout: Duration,
-    
+
     // ==================== ANALYSIS & MONITORING ====================
-    
     /// Analysis configuration
     pub analysis: AnalysisConfig,
-    
+
     // ==================== PREDICTION & ML ====================
-    
     /// Prediction configuration
     pub prediction: PredictionConfig,
-    
+
     /// ML prediction settings
     pub ml_prediction: MlPredictionConfig,
-    
+
     /// AI automation settings
     pub ai_settings: AiAutomationConfig,
-    
+
     // ==================== LIFECYCLE & OPTIMIZATION ====================
-    
     /// Lifecycle management configuration
     pub lifecycle: LifecycleConfig,
-    
+
     /// Optimization settings
     pub optimization: OptimizationConfig,
-    
+
     // ==================== WORKFLOWS & SCHEDULING ====================
-    
     /// Workflow engine settings
     pub workflows: WorkflowsConfig,
-    
+
     /// Scheduling configuration
     pub scheduling: SchedulingConfig,
-    
+
     // ==================== TRIGGERS & ACTIONS ====================
-    
     /// Event triggers configuration
     pub triggers: TriggersConfig,
-    
+
     /// Automated actions configuration
     pub actions: ActionsConfig,
-    
+
     // ==================== ADVANCED SETTINGS ====================
-    
     /// Optimization interval in hours
     pub optimization_interval_hours: u32,
-    
+
     /// Prediction cache TTL in hours
     pub prediction_cache_ttl_hours: u32,
-    
+
     /// Enable intelligent tier assignment
     pub enable_intelligent_tier_assignment: bool,
-    
+
     /// Enable automatic optimization
     pub enable_automatic_optimization: bool,
-    
+
     /// Minimum confidence threshold for predictions
     pub min_confidence_threshold: f64,
-    
+
     /// Orchestration endpoint
     pub orchestration_endpoint: Option<String>,
-    
+
     /// Custom automation settings (extensibility)
     pub automation_settings: HashMap<String, serde_json::Value>,
 }
@@ -102,22 +95,22 @@ pub struct AutomationConfig {
 pub struct AnalysisConfig {
     /// Enable analysis
     pub enabled: bool,
-    
+
     /// Scan interval
     pub scan_interval: Duration,
-    
+
     /// Maximum file size to analyze (bytes)
     pub max_file_size: u64,
-    
+
     /// File extensions to include in analysis
     pub include_extensions: Vec<String>,
-    
+
     /// File extensions to exclude from analysis
     pub exclude_extensions: Vec<String>,
-    
+
     /// Enable deep content analysis
     pub deep_analysis_enabled: bool,
-    
+
     /// Parallel analysis workers
     pub parallel_workers: usize,
 }
@@ -129,19 +122,19 @@ pub struct AnalysisConfig {
 pub struct PredictionConfig {
     /// Enable prediction
     pub enabled: bool,
-    
+
     /// Prediction window in days
     pub prediction_window_days: u32,
-    
+
     /// Minimum confidence threshold (0.0-1.0)
     pub min_confidence: f64,
-    
+
     /// Model parameters (key-value pairs)
     pub model_params: HashMap<String, f64>,
-    
+
     /// Historical data retention in days
     pub history_retention_days: u32,
-    
+
     /// Enable real-time predictions
     pub realtime_enabled: bool,
 }
@@ -153,19 +146,19 @@ pub struct PredictionConfig {
 pub struct MlPredictionConfig {
     /// Enable ML predictions
     pub enabled: bool,
-    
+
     /// ML model path
     pub model_path: String,
-    
+
     /// Model update interval in hours
     pub model_update_interval_hours: u32,
-    
+
     /// Training data size
     pub training_data_size: usize,
-    
+
     /// Enable model auto-retraining
     pub auto_retrain: bool,
-    
+
     /// Prediction confidence threshold
     pub confidence_threshold: f64,
 }
@@ -177,22 +170,22 @@ pub struct MlPredictionConfig {
 pub struct AiAutomationConfig {
     /// Enable AI automation
     pub enabled: bool,
-    
+
     /// Enable predictive scaling
     pub predictive_scaling: bool,
-    
+
     /// Enable auto-optimization
     pub auto_optimization: bool,
-    
+
     /// Enable learning mode
     pub learning_mode: bool,
-    
+
     /// AI model configuration string
     pub model_config: String,
-    
+
     /// Monitoring interval
     pub monitoring_interval: Duration,
-    
+
     /// Confidence threshold for AI decisions
     pub confidence_threshold: f64,
 }
@@ -204,22 +197,22 @@ pub struct AiAutomationConfig {
 pub struct LifecycleConfig {
     /// Enable lifecycle management
     pub enabled: bool,
-    
+
     /// Hot tier retention in days
     pub hot_retention_days: u32,
-    
+
     /// Warm tier retention in days
     pub warm_retention_days: u32,
-    
+
     /// Cold tier retention in days
     pub cold_retention_days: u32,
-    
+
     /// Archive retention in days
     pub archive_retention_days: u32,
-    
+
     /// Enable automatic tiering
     pub auto_tiering: bool,
-    
+
     /// Tier transition rules
     pub transition_rules: Vec<String>,
 }
@@ -231,22 +224,22 @@ pub struct LifecycleConfig {
 pub struct OptimizationConfig {
     /// Enable optimization
     pub enabled: bool,
-    
+
     /// Optimization frequency in hours
     pub frequency_hours: u32,
-    
+
     /// Enable storage optimization
     pub storage_optimization: bool,
-    
+
     /// Enable performance optimization
     pub performance_optimization: bool,
-    
+
     /// Enable resource balancing
     pub resource_balancing: bool,
-    
+
     /// Optimization target (e.g., "performance", "efficiency", "balance")
     pub target: String,
-    
+
     /// Optimization aggressiveness (0-100)
     pub aggressiveness: u8,
 }
@@ -258,19 +251,19 @@ pub struct OptimizationConfig {
 pub struct WorkflowsConfig {
     /// Enable workflows
     pub enabled: bool,
-    
+
     /// Maximum concurrent workflows
     pub max_concurrent_workflows: usize,
-    
+
     /// Workflow timeout
     pub workflow_timeout: Duration,
-    
+
     /// Enable workflow scheduling
     pub scheduling_enabled: bool,
-    
+
     /// Workflow definitions directory
     pub definitions_dir: String,
-    
+
     /// Enable workflow versioning
     pub versioning_enabled: bool,
 }
@@ -282,19 +275,19 @@ pub struct WorkflowsConfig {
 pub struct SchedulingConfig {
     /// Enable scheduling
     pub enabled: bool,
-    
+
     /// Schedule check interval
     pub check_interval: Duration,
-    
+
     /// Enable cron-style scheduling
     pub cron_enabled: bool,
-    
+
     /// Maintenance windows (cron format)
     pub maintenance_windows: Vec<String>,
-    
+
     /// Enable distributed scheduling
     pub distributed: bool,
-    
+
     /// Maximum scheduled tasks
     pub max_scheduled_tasks: usize,
 }
@@ -306,19 +299,19 @@ pub struct SchedulingConfig {
 pub struct TriggersConfig {
     /// Enable triggers
     pub enabled: bool,
-    
+
     /// File system triggers enabled
     pub filesystem_triggers: bool,
-    
+
     /// Performance triggers enabled
     pub performance_triggers: bool,
-    
+
     /// Time-based triggers enabled
     pub time_triggers: bool,
-    
+
     /// Custom trigger definitions
     pub custom_triggers: HashMap<String, serde_json::Value>,
-    
+
     /// Trigger evaluation interval
     pub evaluation_interval: Duration,
 }
@@ -330,22 +323,22 @@ pub struct TriggersConfig {
 pub struct ActionsConfig {
     /// Enable actions
     pub enabled: bool,
-    
+
     /// Enable storage actions (move, copy, delete)
     pub storage_actions: bool,
-    
+
     /// Enable notification actions
     pub notification_actions: bool,
-    
+
     /// Enable script execution
     pub script_execution: bool,
-    
+
     /// Maximum action retries
     pub max_retries: u32,
-    
+
     /// Action timeout
     pub action_timeout: Duration,
-    
+
     /// Allowed action types
     pub allowed_actions: Vec<String>,
 }
@@ -359,33 +352,33 @@ impl AutomationConfig {
             enabled: true,
             max_concurrent_tasks: 10,
             task_timeout: Duration::from_secs(300),
-            
+
             // Analysis & Monitoring
             analysis: AnalysisConfig::development(),
-            
+
             // Prediction & ML
             prediction: PredictionConfig::development(),
             ml_prediction: MlPredictionConfig::development(),
             ai_settings: AiAutomationConfig::development(),
-            
+
             // Lifecycle & Optimization
             lifecycle: LifecycleConfig::development(),
             optimization: OptimizationConfig::development(),
-            
+
             // Workflows & Scheduling
             workflows: WorkflowsConfig::development(),
             scheduling: SchedulingConfig::development(),
-            
+
             // Triggers & Actions
             triggers: TriggersConfig::development(),
             actions: ActionsConfig::development(),
-            
+
             // Advanced settings
             optimization_interval_hours: 1, // Frequent for dev
             prediction_cache_ttl_hours: 2,
             enable_intelligent_tier_assignment: true,
             enable_automatic_optimization: false, // Disable in dev
-            min_confidence_threshold: 0.5, // Lower for dev
+            min_confidence_threshold: 0.5,        // Lower for dev
             orchestration_endpoint: None,
             automation_settings: HashMap::new(),
         }
@@ -399,34 +392,34 @@ impl AutomationConfig {
             enabled: true,
             max_concurrent_tasks: 50,
             task_timeout: Duration::from_secs(600),
-            
+
             // Analysis & Monitoring
             analysis: AnalysisConfig::production(),
-            
+
             // Prediction & ML
             prediction: PredictionConfig::production(),
             ml_prediction: MlPredictionConfig::production(),
             ai_settings: AiAutomationConfig::production(),
-            
+
             // Lifecycle & Optimization
             lifecycle: LifecycleConfig::production(),
             optimization: OptimizationConfig::production(),
-            
+
             // Workflows & Scheduling
             workflows: WorkflowsConfig::production(),
             scheduling: SchedulingConfig::production(),
-            
+
             // Triggers & Actions
             triggers: TriggersConfig::production(),
             actions: ActionsConfig::production(),
-            
+
             // Advanced settings
             optimization_interval_hours: 6, // Every 6 hours
             prediction_cache_ttl_hours: 24,
             enable_intelligent_tier_assignment: true,
             enable_automatic_optimization: true,
             min_confidence_threshold: 0.8, // Higher for production
-            orchestration_endpoint: None, // Set via environment
+            orchestration_endpoint: None,  // Set via environment
             automation_settings: HashMap::new(),
         }
     }
@@ -452,7 +445,7 @@ impl AnalysisConfig {
         Self {
             enabled: true,
             scan_interval: Duration::from_secs(3600), // 1 hour
-            max_file_size: 1024 * 1024 * 1024, // 1GB
+            max_file_size: 1024 * 1024 * 1024,        // 1GB
             include_extensions: vec!["*".to_string()],
             exclude_extensions: vec![".tmp".to_string(), ".log".to_string()],
             deep_analysis_enabled: false,
@@ -465,7 +458,7 @@ impl AnalysisConfig {
         Self {
             enabled: true,
             scan_interval: Duration::from_secs(1800), // 30 minutes
-            max_file_size: 10 * 1024 * 1024 * 1024, // 10GB
+            max_file_size: 10 * 1024 * 1024 * 1024,   // 10GB
             include_extensions: vec!["*".to_string()],
             exclude_extensions: vec![".tmp".to_string(), ".log".to_string(), ".cache".to_string()],
             deep_analysis_enabled: true,
@@ -716,7 +709,7 @@ impl SchedulingConfig {
             check_interval: Duration::from_secs(30),
             cron_enabled: true,
             maintenance_windows: vec![
-                "0 2 * * *".to_string(), // 2 AM daily
+                "0 2 * * *".to_string(),  // 2 AM daily
                 "0 14 * * 0".to_string(), // 2 PM Sundays
             ],
             distributed: true,
@@ -801,4 +794,3 @@ impl ActionsConfig {
         }
     }
 }
-

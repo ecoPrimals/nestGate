@@ -41,6 +41,9 @@ impl Default for EventsModuleConfig {
     }
 }
 
+/// Type alias for convenience in tests
+pub type Config = EventsModuleConfig;
+
 /// Service interface re-exported from canonical source
 /// See: `crate::traits::Service` for the unified implementation
 pub use crate::traits::Service;
@@ -169,7 +172,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_config_validation() {
-        let mut config = Config::default();
+        let mut config = EventsModuleConfig::default();
         assert!(validate_config(&config).await.is_ok());
 
         config.max_connections = 0;

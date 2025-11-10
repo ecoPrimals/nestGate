@@ -34,18 +34,11 @@ pub mod environment;
 
 // **CANONICAL API CONFIGURATION EXPORTS**
 pub use api::{
-    ApiConfig,
-    ApiSecurityConfig,
-    ApiPerformanceConfig,
-    ApiMonitoringConfig,
-    ApiAlertConfig,
-    TlsConfig,
-    RateLimitingConfig,
+    ApiAlertConfig, ApiConfig, ApiMonitoringConfig, ApiPerformanceConfig, ApiSecurityConfig,
+    RateLimitingConfig, TlsConfig,
 };
 
-// Backward compatibility for NetworkApiConfig
-#[deprecated(since = "0.2.0", note = "Use ApiConfig instead")]
-pub use api::NetworkApiConfig;
+// Note: NetworkApiConfig deprecated and removed - use ApiConfig directly
 
 // Other network domain exports
 pub use discovery::NetworkDiscoveryConfig;

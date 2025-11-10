@@ -8,7 +8,7 @@ use std::time::SystemTime;
 
 use super::types::{AutomationPolicy, DatasetMetadata};
 use crate::types::StorageTier;
-use crate::types::ZfsResult as Result;
+use crate::error::Result;
 use tracing::debug;
 use tracing::info;
 

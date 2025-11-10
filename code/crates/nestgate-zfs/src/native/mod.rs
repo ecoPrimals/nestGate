@@ -11,7 +11,7 @@ pub mod snapshot_manager;
 // Re-export main types from the canonical types module
 pub use crate::types::{
     CommandResult, DatasetInfo, PoolCapacity, PoolHealth, PoolInfo, PoolState, PoolStatus,
-    SnapshotInfo, ZfsCommand, ZfsError, ZfsResult,
+    SnapshotInfo, ZfsCommand, ZfsError,
 };
 
 // use crate::canonical_zfs_config::CanonicalZfsConfig; // Module not yet implemented

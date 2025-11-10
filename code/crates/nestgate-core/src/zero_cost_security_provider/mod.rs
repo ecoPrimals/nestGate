@@ -2,6 +2,7 @@
 // This module consolidates the 921-line zero_cost_security_provider.rs into focused,
 // maintainable modules following security domain separation principles.
 
+pub mod traits;
 /// Zero-cost security provider with modular architecture.
 ///
 /// This module provides a modular security architecture that replaces the monolithic

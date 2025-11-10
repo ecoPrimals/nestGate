@@ -81,14 +81,8 @@ pub use zero_cost_zfs_operations::ProductionZfsManager;
 // **CANONICAL ZFS CONFIGURATION EXPORTS**
 // Re-export canonical types for easy access
 pub use types::{
-    CanonicalZfsConfig,
-    ZfsStorageConfig,
-    ZfsPoolConfig,
-    ZfsDatasetConfig,
-    ZfsSnapshotConfig,
-    ZfsPerformanceConfig,
-    ZfsMonitoringConfig,
-    ZfsMigrationConfig,
+    CanonicalZfsConfig, ZfsDatasetConfig, ZfsMigrationConfig, ZfsMonitoringConfig,
+    ZfsPerformanceConfig, ZfsPoolConfig, ZfsSnapshotConfig, ZfsStorageConfig,
 };
 
 // Backward compatibility: export as ZfsConfig

@@ -35,6 +35,17 @@ pub mod rest;
 /// URL routing configuration and endpoint definitions for the API server.
 pub mod routes;
 
+/// **DEV STUBS MODULE** (Feature-gated: `dev-stubs`)
+///
+/// Development stub implementations for testing and local development.
+/// ⚠️ **NOT FOR PRODUCTION** - Only available with `dev-stubs` feature flag.
+///
+/// **Consolidated**: November 10, 2025
+/// - Replaces: `handlers/zfs_stub.rs`
+/// - Replaces: `handlers/hardware_tuning/stub_helpers.rs`
+#[cfg(feature = "dev-stubs")]
+pub mod dev_stubs;
+
 // Re-export commonly used types
 // Specific handler re-exports to avoid namespace pollution
 pub use handlers::{

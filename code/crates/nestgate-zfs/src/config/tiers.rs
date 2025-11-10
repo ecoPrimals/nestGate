@@ -19,28 +19,37 @@ pub struct CapacityLimits {
 impl CapacityLimits {
     #[must_use]
     pub fn hot_tier_defaults() -> Self {
+        use crate::constants::{
+            HOT_TIER_MAX_SIZE_GB, HOT_TIER_MIN_FREE_GB, HOT_TIER_WARNING_THRESHOLD,
+        };
         Self {
-            max_size_gb: 1000,
-            min_free_space_gb: 100,
-            warning_threshold_percent: 80.0,
+            max_size_gb: HOT_TIER_MAX_SIZE_GB,
+            min_free_space_gb: HOT_TIER_MIN_FREE_GB,
+            warning_threshold_percent: HOT_TIER_WARNING_THRESHOLD,
         }
     }
 
     #[must_use]
     pub fn warm_tier_defaults() -> Self {
+        use crate::constants::{
+            WARM_TIER_MAX_SIZE_GB, WARM_TIER_MIN_FREE_GB, WARM_TIER_WARNING_THRESHOLD,
+        };
         Self {
-            max_size_gb: 10000,
-            min_free_space_gb: 1000,
-            warning_threshold_percent: 85.0,
+            max_size_gb: WARM_TIER_MAX_SIZE_GB,
+            min_free_space_gb: WARM_TIER_MIN_FREE_GB,
+            warning_threshold_percent: WARM_TIER_WARNING_THRESHOLD,
         }
     }
 
     #[must_use]
     pub fn cold_tier_defaults() -> Self {
+        use crate::constants::{
+            COLD_TIER_MAX_SIZE_GB, COLD_TIER_MIN_FREE_GB, COLD_TIER_WARNING_THRESHOLD,
+        };
         Self {
-            max_size_gb: 100000,
-            min_free_space_gb: 10000,
-            warning_threshold_percent: 90.0,
+            max_size_gb: COLD_TIER_MAX_SIZE_GB,
+            min_free_space_gb: COLD_TIER_MIN_FREE_GB,
+            warning_threshold_percent: COLD_TIER_WARNING_THRESHOLD,
         }
     }
 }

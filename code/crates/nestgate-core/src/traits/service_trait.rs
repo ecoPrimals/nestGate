@@ -13,11 +13,11 @@
 ///
 /// ```rust
 /// use nestgate_core::traits::Service;
-/// 
+///
 /// struct MyService {
 ///     name: String,
 /// }
-/// 
+///
 /// impl Service for MyService {
 ///     fn name(&self) -> &str {
 ///         &self.name
@@ -84,4 +84,3 @@ pub trait Service: Send + Sync {
     /// Returns `true` if the service is healthy and operational.
     fn health_check(&self) -> impl std::future::Future<Output = crate::Result<bool>> + Send;
 }
-

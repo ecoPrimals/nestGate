@@ -120,10 +120,7 @@ impl MetricsRegistry {
     /// - Network or I/O errors occur
     pub async fn record_custom_metric(&self, name: &str, value: f64) -> Result<()> {
         let mut custom = self.custom_metrics.write().await;
-        custom.insert(
-            name.to_string(),
-            MetricValue::Gauge(value),
-        );
+        custom.insert(name.to_string(), MetricValue::Gauge(value));
 
         tracing::debug!("Recorded custom metric: {} = {}", name, value);
         Ok(())
@@ -163,15 +160,23 @@ impl MetricsRegistry {
             memory_available: 1024 * 1024 * 1024 * 2, // Mock 2GB available
             disk_iops: 100.0,
             network_bytes_per_sec: 1024.0 * 1024.0, // Mock 1MB/s
-            custom_metrics: custom.iter().map(|(k, v)| {
-                (k.clone(), match v {
-                    MetricValue::Gauge(val) => *val,
-                    MetricValue::Counter(val) => *val as f64,
-                    MetricValue::Histogram(val) => val.iter().sum::<f64>() / (val.len() as f64),
-                    MetricValue::Summary { sum, count: _ } => *sum,
-                    MetricValue::String(_) => 0.0,
+            custom_metrics: custom
+                .iter()
+                .map(|(k, v)| {
+                    (
+                        k.clone(),
+                        match v {
+                            MetricValue::Gauge(val) => *val,
+                            MetricValue::Counter(val) => *val as f64,
+                            MetricValue::Histogram(val) => {
+                                val.iter().sum::<f64>() / (val.len() as f64)
+                            }
+                            MetricValue::Summary { sum, count: _ } => *sum,
+                            MetricValue::String(_) => 0.0,
+                        },
+                    )
                 })
-            }).collect(),
+                .collect(),
         })
     }
 }

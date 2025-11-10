@@ -17,9 +17,7 @@ impl Default for AutomationConfig {
 }
 
 /// Initialize automation integration with canonical configuration
-pub fn initialize_automation(
-    config: NestGateCanonicalConfig,
-) -> Result<IntelligentDatasetManager> {
+pub fn initialize_automation(config: NestGateCanonicalConfig) -> Result<IntelligentDatasetManager> {
     let _automation_config = AutomationConfig;
     let _config = config; // Use config parameter to avoid warnings
                           // Placeholder implementation until automation crate is fully integrated

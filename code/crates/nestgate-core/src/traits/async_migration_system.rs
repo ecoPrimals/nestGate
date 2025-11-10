@@ -1,12 +1,12 @@
 //! Modern async_migration_system Module
-//! 
+//!
 //! This module provides core functionality using modern Rust patterns
 //! and zero-cost abstractions.
 
+use crate::error::{NestGateError, Result};
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use std::time::Duration;
-use serde::{Deserialize, Serialize};
-use crate::error::{NestGateError, Result};
 
 // ==================== MODULE CONSTANTS ====================
 
@@ -92,7 +92,7 @@ impl DefaultService {
             metrics: Arc::new(tokio::sync::RwLock::new(Metrics::default())),
         }
     }
-    
+
     /// Get current metrics
     pub async fn get_metrics(&self) -> Metrics {
         self.metrics.read().await.clone()
@@ -103,34 +103,32 @@ impl Service for DefaultService {
     fn name(&self) -> &str {
         "async_migration_system"
     }
-    
+
     fn start(&self) -> impl std::future::Future<Output = Result<()>> + Send {
         async move {
             tracing::info!("Starting {} service", self.name());
             Ok(())
         }
     }
-    
+
     fn stop(&self) -> impl std::future::Future<Output = Result<()>> + Send {
         async move {
             tracing::info!("Stopping {} service", self.name());
             Ok(())
         }
     }
-    
+
     fn initialize(&self) -> impl std::future::Future<Output = Result<()>> + Send {
         async move {
             tracing::info!("Initializing {} service", self.name());
             Ok(())
         }
     }
-    
+
     fn health_check(&self) -> impl std::future::Future<Output = Result<bool>> + Send {
-        async move {
-            Ok(true)
-        }
+        async move { Ok(true) }
     }
-    
+
     fn shutdown(&self) -> impl std::future::Future<Output = Result<()>> + Send {
         async move {
             tracing::info!("Shutting down {} service", self.name());
@@ -151,17 +149,17 @@ pub async fn validate_config(config: &TraitsAsyncMigrationSystemConfig) -> crate
     if config.max_connections == 0 {
         return Err(NestGateError::configuration_error(
             "traits_async_migration",
-            "max_connections must be greater than 0"
+            "max_connections must be greater than 0",
         ));
     }
-    
+
     if config.buffer_size == 0 {
         return Err(NestGateError::configuration_error(
             "traits_async_migration",
-            "buffer_size must be greater than 0"
+            "buffer_size must be greater than 0",
         ));
     }
-    
+
     Ok(())
 }
 
@@ -180,9 +178,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_config_validation() {
-        let mut config = Config::default();
+        let mut config = TraitsAsyncMigrationSystemConfig::default();
         assert!(validate_config(&config).await.is_ok());
-        
+
         config.max_connections = 0;
         assert!(validate_config(&config).await.is_err());
     }
@@ -191,9 +189,12 @@ mod tests {
     async fn test_service_creation() {
         let config = TraitsAsyncMigrationSystemConfig::default();
         let service = DefaultService::new(config);
-        
+
         assert!(service.initialize().await.is_ok());
-        assert_eq!(service.health_check().await.expect("Operation failed"), true);
+        assert_eq!(
+            service.health_check().await.expect("Operation failed"),
+            true
+        );
         assert!(service.shutdown().await.is_ok());
     }
 
@@ -202,7 +203,7 @@ mod tests {
         let config = TraitsAsyncMigrationSystemConfig::default();
         let service = DefaultService::new(config);
         let metrics = service.get_metrics().await;
-        
+
         assert_eq!(metrics.requests_processed, 0);
         assert_eq!(metrics.errors_encountered, 0);
     }

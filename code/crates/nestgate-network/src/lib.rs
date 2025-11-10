@@ -81,8 +81,8 @@ pub fn development_network_config() -> NetworkConfig {
 pub mod error;
 
 /// Network-specific result type
-// Use canonical NetworkResult from nestgate_core::error
-pub use nestgate_core::error::NetworkResult;
+// Re-export from local error module
+pub use crate::error::NetworkResult;
 /// Network error types - re-exported from error module
 pub use error::NetworkError;
 // ==================== SECTION ====================

@@ -19,7 +19,7 @@ use std::collections::HashMap;
 ///
 /// ```rust,ignore
 /// use nestgate_core::traits::{CommunicationLayer, ServiceAddress, ServiceMessage};
-/// 
+///
 /// async fn send_example(comm: &impl CommunicationLayer) -> nestgate_core::Result<()> {
 ///     let target = ServiceAddress {
 ///         service_id: "my-service".to_string(),
@@ -134,4 +134,3 @@ pub struct CommunicationStats {
     pub failed_connections: u64,
     pub last_activity: Option<DateTime<Utc>>,
 }
-

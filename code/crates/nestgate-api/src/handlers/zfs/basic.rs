@@ -11,7 +11,7 @@ use nestgate_zfs::{
 
 // Development: Use stubs for local development without ZFS
 #[cfg(feature = "dev-stubs")]
-use crate::handlers::zfs_stub::{
+use crate::dev_stubs::zfs::{
     ProductionZfsManager, ZeroCostDatasetInfo, ZeroCostPoolInfo, ZeroCostSnapshotInfo,
 };
 

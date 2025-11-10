@@ -1,3 +1,5 @@
+//! **OUTDATED EXAMPLE - NEEDS UPDATE**
+//!
 //! Modern NestGate Demo
 //!
 //! Demonstrates the modern Rust implementations including:
@@ -5,6 +7,33 @@
 //! - Configuration validation with detailed reporting
 //! - Performance monitoring with real-time metrics
 //! - Error handling with rich context
+//!
+//! **Status**: ⚠️ OUTDATED - APIs have changed since this was written  
+//! **Last Updated**: Before November 2025  
+//! **Issues**: 22 compilation errors due to API changes  
+//! **Needs**: Complete rewrite using current nestgate-core and nestgate-api APIs  
+//!
+//! This example is excluded from compilation until updated.
+
+// TODO: Rewrite this example using current APIs
+// Current modules to reference:
+//   - nestgate_core::traits
+//   - nestgate_core::config::canonical_primary
+//   - nestgate_api::handlers
+
+fn main() {
+    eprintln!("⚠️  This example is outdated and needs to be updated.");
+    eprintln!("The APIs demonstrated here have undergone significant refactoring.");
+    eprintln!("");
+    eprintln!("For current usage examples, see:");
+    eprintln!("  - code/crates/nestgate-core/src/traits/");
+    eprintln!("  - code/crates/nestgate-api/src/handlers/");
+    eprintln!("  - tests/ directory for working examples");
+    std::process::exit(1);
+}
+
+/*
+// === OUTDATED CODE BELOW - KEPT FOR REFERENCE ===
 
 use std::time::Duration;
 use tokio::time::sleep;
@@ -18,7 +47,7 @@ use nestgate_core::performance::{
 };
 
 #[tokio::main]
-fn main() -> impl std::future::Future<Output = Result<()>> + Send {
+fn main_old() -> impl std::future::Future<Output = Result<()>> + Send {
     println!("🚀 **MODERN NESTGATE DEMONSTRATION**");
     println!("====================================\n");
 
@@ -216,3 +245,4 @@ fn demonstrate_error_handling() -> impl std::future::Future<Output = Result<()>>
 
     Ok(())
 }
+*/

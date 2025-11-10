@@ -36,37 +36,45 @@ pub use consolidated_domains::{
 
 // **CANONICAL AUTOMATION CONFIGURATION** (NEW: November 7, 2025)
 pub use automation::{
-    AutomationConfig,
-    AnalysisConfig,
-    PredictionConfig,
-    MlPredictionConfig,
-    AiAutomationConfig,
-    LifecycleConfig,
-    OptimizationConfig,
+    ActionsConfig, AiAutomationConfig, AnalysisConfig, AutomationConfig, LifecycleConfig,
+    MlPredictionConfig, OptimizationConfig, PredictionConfig, SchedulingConfig, TriggersConfig,
     WorkflowsConfig,
-    SchedulingConfig,
-    TriggersConfig,
-    ActionsConfig,
 };
 
 // **LEGACY**: Network configurations (will be migrated to consolidated system)
 pub use network::{
-    CanonicalNetworkConfig, NetworkApiConfig, NetworkDiscoveryConfig, NetworkEnvironmentConfig,
+    ApiConfig, CanonicalNetworkConfig, NetworkDiscoveryConfig, NetworkEnvironmentConfig,
     NetworkMonitoringConfig, NetworkOrchestrationConfig, NetworkPerformanceConfig,
     NetworkProtocolConfig, NetworkSecurityConfig, NetworkVlanConfig,
 };
+// Note: NetworkApiConfig removed - ApiConfig is now the canonical type
 pub use storage_canonical::{
+    AlertThresholds,
+    ArcCacheConfig,
     // Storage configurations
-    CanonicalStorageConfig, StorageConfig,
-    // ZFS configurations (extended November 7, 2025)
-    ZfsStorageConfig, ZfsPoolConfig, ZfsDatasetConfig, ZfsSnapshotConfig,
-    ZfsMaintenanceConfig, ZfsPerformanceConfig, ZfsSecurityConfig,
-    ZfsMonitoringConfig, ZfsMigrationConfig,
+    CanonicalStorageConfig,
+    L2ArcConfig,
+    PrefetchConfig,
     // ZFS sub-configurations
-    RetentionPolicy, ArcCacheConfig, L2ArcConfig, ZilConfig, PrefetchConfig,
-    AlertThresholds, ZfsPoolSettings,
+    RetentionPolicy,
+    StorageConfig,
+    UnifiedStorageConfig,
     // ZFS enums
-    ZfsCompression, ZfsRedundancy, UnifiedStorageConfig};
+    ZfsCompression,
+    ZfsDatasetConfig,
+    ZfsMaintenanceConfig,
+    ZfsMigrationConfig,
+    ZfsMonitoringConfig,
+    ZfsPerformanceConfig,
+    ZfsPoolConfig,
+    ZfsPoolSettings,
+    ZfsRedundancy,
+    ZfsSecurityConfig,
+    ZfsSnapshotConfig,
+    // ZFS configurations (extended November 7, 2025)
+    ZfsStorageConfig,
+    ZilConfig,
+};
 
 pub use security_canonical::{CanonicalSecurityConfig, SecurityConfig, UnifiedSecurityConfig};
 

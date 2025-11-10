@@ -17,7 +17,7 @@ pub struct ServiceConfig {
     pub version: String,
     pub service_name: String,
     pub enabled: bool,
-    
+
     // Configuration sub-components
     pub service_type: ServiceType,
     pub endpoint_config: ServiceEndpointConfig,
@@ -180,4 +180,3 @@ impl Default for ServiceSecurityConfig {
 
 /// Backward compatibility alias for UnifiedServiceConfig
 pub type UnifiedServiceConfig = ServiceConfig;
-

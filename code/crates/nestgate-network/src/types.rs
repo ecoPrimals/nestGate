@@ -284,8 +284,8 @@ impl Default for ServiceStatus {
 // ==================== SECTION ====================
 
 /// Network operation result
-// Use canonical NetworkResult from nestgate_core::error
-pub use nestgate_core::error::NetworkResult;
+// Re-export from local error module
+pub use crate::error::NetworkResult;
 // ==================== SECTION ====================
 
 /// Network configuration builder

@@ -1,12 +1,28 @@
 #![allow(deprecated)]
 
-//! Security Provider Module
+//! **DEPRECATED Security Provider Module**
 //!
-//! Provides security provider functionality for `NestGate` core services.
-//! This module handles security provider creation and management.
+//! **DEPRECATED**: This module uses the deprecated `SecurityPrimalProvider` trait.
 //!
-//! Note: Uses deprecated SecurityPrimalProvider for backward compatibility.
-//! Migration to CanonicalSecurity is tracked but not yet scheduled.
+//! # Migration
+//!
+//! **Use instead**: `crate::security_provider_canonical`
+//!
+//! ```rust,ignore
+//! // OLD (deprecated)
+//! use nestgate_core::security_provider::{SecurityProvider, create_default};
+//!
+//! // NEW (canonical)
+//! use nestgate_core::security_provider_canonical::{
+//!     CanonicalSecurityProvider, create_default
+//! };
+//! ```
+//!
+//! **Timeline**:
+//! - Deprecated: v0.11.3 (November 2025)
+//! - Remove: v0.12.0 (May 2026)
+//!
+//! **See**: `docs/guides/SECURITY_PROVIDER_MIGRATION.md` for complete migration guide
 
 // Removed unused error imports
 use crate::{NestGateError, Result};

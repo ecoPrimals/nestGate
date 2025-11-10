@@ -107,7 +107,7 @@ pub mod network {
     // Port constants are now in port_defaults module (single source of truth)
     // Use: constants::port_defaults::DEFAULT_API_PORT
     // Or via re-export: constants::DEFAULT_API_PORT
-    
+
     /// Network addresses
     pub const DEFAULT_BIND_ADDRESS: &str = "0.0.0.0";
     pub const LOCALHOST: &str = "127.0.0.1";
@@ -426,8 +426,7 @@ pub mod validation {
     #[must_use]
     pub fn validate_network_constants() -> bool {
         // Port validation moved to port_defaults module tests
-        network::MAX_SERVICES > 0
-            && network::MAX_CONCURRENT_REQUESTS > 0
+        network::MAX_SERVICES > 0 && network::MAX_CONCURRENT_REQUESTS > 0
     }
 
     // NOTE: Compile-time assertions removed - const fn limitations
@@ -437,7 +436,7 @@ pub mod validation {
 
 // Re-export key constants for easy access
 pub use api::{CONTENT_TYPE_JSON, CURRENT_API_VERSION, STATUS_OK};
-pub use network::{DEFAULT_BIND_ADDRESS};
+pub use network::DEFAULT_BIND_ADDRESS;
 pub use performance::*;
 pub use security::{ROLE_ADMIN, ROLE_USER};
 pub use storage::{GB, KB, MB, TB, TIER_COLD, TIER_HOT, TIER_WARM};
@@ -447,8 +446,8 @@ pub use timeouts::{DEFAULT_RETRY_ATTEMPTS, DEFAULT_TIMEOUT_SECS};
 // Re-export port constants from port_defaults (single source of truth)
 // Use these instead of defining ports in multiple places
 pub use super::port_defaults::{
-    DEFAULT_API_PORT, DEFAULT_ADMIN_PORT, DEFAULT_METRICS_PORT, DEFAULT_HEALTH_PORT,
-    DEFAULT_GRAFANA_PORT, DEFAULT_POSTGRES_PORT, DEFAULT_REDIS_PORT,
+    DEFAULT_ADMIN_PORT, DEFAULT_API_PORT, DEFAULT_GRAFANA_PORT, DEFAULT_HEALTH_PORT,
+    DEFAULT_METRICS_PORT, DEFAULT_POSTGRES_PORT, DEFAULT_REDIS_PORT,
 };
 
 /// Constants consolidation complete marker

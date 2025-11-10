@@ -1,10 +1,22 @@
+/// **⚠️ DEPRECATED MODULE**: This entire module is a facade wrapper around `crate::universal_adapter`
+/// 
+/// **Migration**: Use `nestgate_core::universal_adapter` directly instead
+/// - `ecosystem_integration::UniversalAdapter` → `universal_adapter::UniversalAdapter`
+/// - `ecosystem_integration::universal_adapter::config` → `universal_adapter::config`
+/// - `ecosystem_integration::create_default_adapter_config()` → `universal_adapter::config::UniversalAdapterConfig::default()`
+/// 
+/// **Removed**: November 10, 2025 - No remaining imports found
+#[deprecated(since = "0.11.2", note = "Use crate::universal_adapter directly. This facade module will be removed in v0.12.0 (May 2026)")]
 use crate::config::canonical_primary::NestGateCanonicalConfig;
 // **REMOVED**: InterfaceResult import - using unified Result<T> instead
 
 // Remove deprecated imports - use unified types instead
 // Note: These modules are being refactored as part of the universal adapter
+#[deprecated(since = "0.11.2", note = "Use crate::universal_adapter instead")]
 pub mod adapter;
+#[deprecated(since = "0.11.2", note = "Use crate::universal_adapter::config instead")]
 pub mod config;
+#[deprecated(since = "0.11.2", note = "Use crate::universal_adapter::types instead")]
 pub mod types;
 
 // Remove non-existent modules for now

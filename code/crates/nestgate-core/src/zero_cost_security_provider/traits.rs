@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use super::types::{ZeroCostAuthToken, ZeroCostCredentials, ZeroCostSignature};
 /// **ZERO-COST SECURITY PROVIDER TRAITS**
 ///
@@ -15,8 +14,35 @@ use crate::Result;
 /// - Compile-time specialization through const generics
 /// - Direct method dispatch (no vtable overhead)
 /// - Memory-efficient security operations
-/// **DEPRECATED**: Zero-cost patterns integrated into canonical security
-#[deprecated(since = "0.9.0", note = "Use crate::traits::canonical_unified_traits::CanonicalSecurity - zero-cost patterns integrated")]
+///
+/// # Deprecation & Migration
+///
+/// **DEPRECATED**: Zero-cost patterns now integrated into canonical SecurityProvider
+///
+/// **Old code**:
+/// ```rust,ignore
+/// impl ZeroCostSecurityProvider for MyProvider {
+///     type Config = MyConfig;
+///     // ...
+/// }
+/// ```
+///
+/// **New code**:
+/// ```rust,ignore
+/// impl SecurityProvider for MyProvider {
+///     // No Config type needed - passed to methods directly
+///     // Native async (RPITIT) provides zero-cost abstraction
+/// }
+/// ```
+///
+/// The canonical `SecurityProvider` includes all zero-cost optimizations through
+/// native async (`impl Future`) without the complexity of associated types.
+///
+/// **Timeline**: Deprecated v0.11.3 (Nov 2025), Remove v0.12.0 (May 2026)
+#[deprecated(
+    since = "0.11.3",
+    note = "Use crate::traits::canonical_provider_unification::SecurityProvider - zero-cost patterns integrated via native async (RPITIT). Migration guide: docs/guides/SECURITY_PROVIDER_MIGRATION.md"
+)]
 pub trait ZeroCostSecurityProvider: Send + Sync + 'static {
     /// Security provider configuration type
     type Config: Clone + Send + Sync + 'static;
@@ -191,7 +217,10 @@ pub trait SigningProvider: Send + Sync {
 /// **Security health provider trait**
 /// Specialized trait for security health monitoring
 /// **DEPRECATED**: Health monitoring integrated into canonical security
-#[deprecated(since = "0.9.0", note = "Use crate::traits::canonical_unified_traits::CanonicalSecurity health_check method")]
+#[deprecated(
+    since = "0.9.0",
+    note = "Use crate::traits::canonical_unified_traits::CanonicalSecurity health_check method"
+)]
 pub trait SecurityHealthProvider: Send + Sync {
     /// Health information type
     type Health: Clone + Send + Sync + 'static;
@@ -205,7 +234,10 @@ pub trait SecurityHealthProvider: Send + Sync {
 /// **Security metrics provider trait**
 /// Specialized trait for security metrics collection
 /// **DEPRECATED**: Metrics integrated into canonical security
-#[deprecated(since = "0.9.0", note = "Use crate::traits::canonical_unified_traits::CanonicalSecurity metrics methods")]
+#[deprecated(
+    since = "0.9.0",
+    note = "Use crate::traits::canonical_unified_traits::CanonicalSecurity metrics methods"
+)]
 pub trait SecurityMetricsProvider: Send + Sync {
     /// Metrics type
     type Metrics: Clone + Send + Sync + 'static;

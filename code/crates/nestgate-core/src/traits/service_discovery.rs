@@ -138,4 +138,3 @@ pub enum ServiceEvent {
     /// Discovery system restored connection
     ConnectionRestored,
 }
-

@@ -26,9 +26,7 @@ pub mod network {
     // Port constants moved to port_defaults.rs (single source of truth)
     // Re-exported here for backward compatibility
     pub use super::super::port_defaults::{
-        DEFAULT_API_PORT,
-        DEFAULT_ADMIN_PORT as DEFAULT_INTERNAL_PORT,
-        DEFAULT_METRICS_PORT,
+        DEFAULT_ADMIN_PORT as DEFAULT_INTERNAL_PORT, DEFAULT_API_PORT, DEFAULT_METRICS_PORT,
     };
 
     /// Build API URL from environment or default

@@ -11,6 +11,12 @@ use std::process::Stdio;
 use tokio::process::Command;
 use tracing::{debug, error, info, warn};
 
+/// Default timeout for ZFS commands (5 minutes)
+const DEFAULT_ZFS_COMMAND_TIMEOUT_SECS: u64 = 300;
+
+/// Typical number of properties in a ZFS dataset (used for HashMap pre-allocation)
+const ZFS_TYPICAL_PROPERTY_COUNT: usize = 40;
+
 /// Native ZFS command executor
 pub struct NativeZfsCommandExecutor {
     /// Command timeout in seconds
@@ -31,7 +37,7 @@ impl NativeZfsCommandExecutor {
     #[must_use]
     pub fn new() -> Self {
         Self {
-            timeout_seconds: 300, // 5 minutes default timeout
+            timeout_seconds: DEFAULT_ZFS_COMMAND_TIMEOUT_SECS,
             verbose_logging: std::env::var("ZFS_VERBOSE_LOGGING").is_ok(),
         }
     }
@@ -158,7 +164,7 @@ impl NativeZfsCommandExecutor {
 
         // PERFORMANCE OPTIMIZATION: Pre-allocate HashMap with typical property count
         // ZFS datasets typically have 30-50 properties, pre-allocating reduces rehashing
-        let mut properties = HashMap::with_capacity(40);
+        let mut properties = HashMap::with_capacity(ZFS_TYPICAL_PROPERTY_COUNT);
 
         for line in output.lines() {
             let parts: Vec<&str> = line.split('\t').collect();
@@ -196,7 +202,7 @@ impl NativeZfsCommandExecutor {
 
         // Pre-allocate args vector with exact size needed
         args.reserve(properties.len() * 2 + 1);
-        
+
         // Add properties
         for prop_str in &property_strings {
             args.push("-o");

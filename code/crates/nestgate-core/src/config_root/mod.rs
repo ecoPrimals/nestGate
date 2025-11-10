@@ -112,6 +112,8 @@ impl Default for NetworkConfig {
 }
 
 // Security configuration
+/// **⚠️ DEPRECATED**: Use `CanonicalSecurityConfig` from `canonical_primary::domains::security_canonical`
+#[deprecated(since = "0.11.2", note = "Use canonical_primary::domains::security_canonical::CanonicalSecurityConfig instead")]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityConfig {
     pub enable_tls: bool,
@@ -131,6 +133,8 @@ impl Default for SecurityConfig {
 }
 
 // Monitoring configuration
+/// **⚠️ DEPRECATED**: Use `MonitoringConfig` from `canonical_primary::supporting_types`
+#[deprecated(since = "0.11.2", note = "Use canonical_primary::supporting_types::MonitoringConfig instead")]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MonitoringConfig {
     pub enable_metrics: bool,
@@ -152,6 +156,8 @@ impl Default for MonitoringConfig {
 }
 
 // Service discovery configuration
+/// **⚠️ DEPRECATED**: Use Infant Discovery / capability-based discovery instead
+#[deprecated(since = "0.11.2", note = "Use Infant Discovery system for dynamic service discovery instead")]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DiscoveryConfig {
     pub provider: String,
@@ -179,6 +185,8 @@ impl Default for DiscoveryConfig {
 }
 
 // Load balancing configuration
+/// **⚠️ DEPRECATED**: Load balancing should be handled by Songbird (network layer)
+#[deprecated(since = "0.11.2", note = "NestGate is a storage system. Use Songbird for load balancing")]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LoadBalancingConfig {
     pub algorithm: String,
@@ -198,6 +206,8 @@ impl Default for LoadBalancingConfig {
 }
 
 // Health monitoring configuration
+/// **⚠️ DEPRECATED**: Use canonical health monitoring from `canonical_primary::supporting_types`
+#[deprecated(since = "0.11.2", note = "Use canonical health monitoring configuration instead")]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HealthConfig {
     pub enabled: bool,

@@ -10,7 +10,7 @@ use std::time::SystemTime;
 pub use nestgate_core::canonical_types::StorageTier;
 
 // Re-export canonical error types
-pub use nestgate_core::error::{Result, ZfsResult};
+pub use nestgate_core::error::Result;
 
 // ==================== CANONICAL ERROR TYPES ====================
 
