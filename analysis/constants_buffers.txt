@@ -1,0 +1,103 @@
+code/crates/nestgate-performance/src/zero_copy_networking.rs:pub struct ZeroCopyBufferPool<const BUFFER_SIZE: usize = 65_536, const POOL_SIZE: usize = 1024> {
+code/crates/nestgate-performance/src/zero_copy_networking.rs:pub struct ZeroCopyBuffer<const SIZE: usize> {
+code/crates/nestgate-performance/src/zero_copy_networking.rs:impl<const BUFFER_SIZE: usize, const POOL_SIZE: usize> Default
+code/crates/nestgate-performance/src/zero_copy_networking.rs:impl<const BUFFER_SIZE: usize, const POOL_SIZE: usize> ZeroCopyBufferPool<BUFFER_SIZE, POOL_SIZE> {
+code/crates/nestgate-performance/src/zero_copy_networking.rs:impl<const SIZE: usize> Default for ZeroCopyBuffer<SIZE> {
+code/crates/nestgate-performance/src/zero_copy_networking.rs:impl<const SIZE: usize> ZeroCopyBuffer<SIZE> {
+code/crates/nestgate-performance/src/zero_copy_networking.rs:pub struct ZeroCopyNetworkInterface<const BUFFER_SIZE: usize = 65_536> {
+code/crates/nestgate-performance/src/zero_copy_networking.rs:pub struct ZeroCopyConnection<const BUFFER_SIZE: usize = 65_536> {
+code/crates/nestgate-performance/src/zero_copy_networking.rs:impl<const BUFFER_SIZE: usize> Default for ZeroCopyNetworkInterface<BUFFER_SIZE> {
+code/crates/nestgate-performance/src/zero_copy_networking.rs:impl<const BUFFER_SIZE: usize> ZeroCopyNetworkInterface<BUFFER_SIZE> {
+code/crates/nestgate-performance/src/zero_copy_networking.rs:pub struct KernelBypassAdapter<const RING_SIZE: usize = 4096> {
+code/crates/nestgate-performance/src/simd_optimizations_advanced.rs:pub struct SimdBulkProcessor<const BUFFER_SIZE: usize = 8192> {
+code/crates/nestgate-performance/src/simd_optimizations_advanced.rs:impl<const BUFFER_SIZE: usize> SimdBulkProcessor<BUFFER_SIZE> {
+code/crates/nestgate-performance/src/simd_optimizations_advanced.rs:pub struct SimdStorageBackend<const BUFFER_SIZE: usize = 8192> {
+code/crates/nestgate-performance/src/simd_optimizations_advanced.rs:impl<const BUFFER_SIZE: usize> SimdStorageBackend<BUFFER_SIZE> {
+code/crates/nestgate-performance/src/simd_optimizations_advanced.rs:impl<const BUFFER_SIZE: usize> CanonicalStorageBackend for SimdStorageBackend<BUFFER_SIZE> {
+code/crates/nestgate-core/src/network/native_async/traits.rs:    const WATCH_BUFFER_SIZE: usize = 1000,
+code/crates/nestgate-core/src/network/native_async/traits.rs:    const BUFFER_SIZE: usize = 8192,
+code/crates/nestgate-core/src/network/native_async/traits.rs:    const METRICS_BUFFER_SIZE: usize = 10000,
+code/crates/nestgate-core/src/data_sources/native_async_capabilities.rs:pub struct ZeroCostCapabilityWrapper<T, const METRICS_BUFFER_SIZE: usize = 1000> {
+code/crates/nestgate-core/src/data_sources/native_async_capabilities.rs:impl<T, const METRICS_BUFFER_SIZE: usize> ZeroCostCapabilityWrapper<T, METRICS_BUFFER_SIZE>
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_BUFFER_SIZE_BYTES: usize = 8192; // 8KB
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_BUFFER_SIZE_BYTES: usize = 1024 * 1024; // 1MB
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_BLOCK_SIZE: usize = 4096;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_MEMORY_MB: u64 = 4096;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_BUFFER_SIZE: usize = 65536;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_DEV_BUFFER_SIZE: usize = 8192;
+code/crates/nestgate-core/src/canonical_modernization/constants/network.rs:pub const DEFAULT_BUFFER_SIZE: usize = 65_536;
+code/crates/nestgate-core/src/safe_operations/pedantic.rs:pub const PEDANTIC_BUFFER_SIZE: usize = 4096;
+code/crates/nestgate-core/src/smart_abstractions/smart_default.rs:    pub const DEFAULT_BUFFER_SIZE: usize = 8192;
+code/crates/nestgate-core/src/performance/safe_optimizations.rs:pub struct SafeRingBuffer<T, const SIZE: usize> {
+code/crates/nestgate-core/src/performance/safe_optimizations.rs:impl<T, const SIZE: usize> SafeRingBuffer<T, SIZE> {
+code/crates/nestgate-core/src/performance/safe_optimizations.rs:impl<T, const SIZE: usize> Default for SafeRingBuffer<T, SIZE> {
+code/crates/nestgate-core/src/performance/safe_optimizations.rs:    pub const OPTIMAL_BUFFER_SIZE: usize = 64 * 1024; // 64KB
+code/crates/nestgate-core/src/performance/safe_optimizations.rs:    pub const PAGE_SIZE: usize = 4096;
+code/crates/nestgate-core/src/performance/advanced_optimizations.rs:pub struct LockFreeRingBuffer<T, const SIZE: usize> {
+code/crates/nestgate-core/src/performance/advanced_optimizations.rs:impl<T, const SIZE: usize> Default for LockFreeRingBuffer<T, SIZE> {
+code/crates/nestgate-core/src/performance/advanced_optimizations.rs:impl<T, const SIZE: usize> LockFreeRingBuffer<T, SIZE> {
+code/crates/nestgate-core/src/performance/advanced_optimizations.rs:    pub const OPTIMAL_BUFFER_SIZE: usize = 64 * 1024; // 64KB
+code/crates/nestgate-core/src/performance/advanced_optimizations.rs:    pub const PAGE_SIZE: usize = 4096;
+code/crates/nestgate-core/src/config/core.rs:    const BUFFER_SIZE: usize = 65536,
+code/crates/nestgate-core/src/config/canonical_primary/mod.rs:    const BUFFER_SIZE: usize = 65536,
+code/crates/nestgate-core/src/config/canonical_primary/mod.rs:        const BUFFER_SIZE: usize,
+code/crates/nestgate-core/src/config/canonical_primary/mod.rs:        const BUFFER_SIZE: usize,
+code/crates/nestgate-core/src/config/canonical_primary/performance_config.rs:pub struct PerformanceConfig<const MAX_CONNECTIONS: usize = 1000, const BUFFER_SIZE: usize = 65536>
+code/crates/nestgate-core/src/config/canonical_primary/performance_config.rs:impl<const MAX_CONNECTIONS: usize, const BUFFER_SIZE: usize> Default
+code/crates/nestgate-core/src/config/canonical_primary/system_config.rs:pub struct SystemConfig<const MAX_CONNECTIONS: usize = 1000, const BUFFER_SIZE: usize = 65536> {
+code/crates/nestgate-core/src/config/canonical_primary/system_config.rs:impl<const MAX_CONNECTIONS: usize, const BUFFER_SIZE: usize>
+code/crates/nestgate-core/src/config/canonical_primary/system_config.rs:impl<const MAX_CONNECTIONS: usize, const BUFFER_SIZE: usize> Default
+code/crates/nestgate-core/src/config/canonical_primary/builders.rs:    const BUFFER_SIZE: usize = 65536,
+code/crates/nestgate-core/src/config/canonical_primary/builders.rs:        const BUFFER_SIZE: usize,
+code/crates/nestgate-core/src/config/canonical_primary/builders.rs:        const BUFFER_SIZE: usize,
+code/crates/nestgate-core/src/zero_cost/memory_pool.rs:pub trait ZeroCostPoolInterface<T, const POOL_SIZE: usize = 1000, const BUFFER_SIZE: usize = 8192>
+code/crates/nestgate-core/src/zero_cost/memory_pool.rs:pub struct ZeroCostMemoryPoolManager<BufferPool, ObjectPool, const MAX_POOLS: usize = 100>
+code/crates/nestgate-core/src/zero_cost/memory_pool.rs:impl<BufferPool, ObjectPool, const MAX_POOLS: usize>
+code/crates/nestgate-core/src/zero_cost/async_trait_migration.rs:    const BUFFER_SIZE: usize = 8192,
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:    const BUFFER_SIZE: usize = 8192,
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:    const BUFFER_SIZE: usize = 4096,
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:    pub fn with_buffer_size<const NEW_BUFFER: usize>(
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:pub struct SimdOptimizedBuffer<const SIZE: usize = 1024> {
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:impl<const SIZE: usize> Default for SimdOptimizedBuffer<SIZE> {
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:impl<const SIZE: usize> SimdOptimizedBuffer<SIZE> {
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:pub struct BufferSizeValidator<const SIZE: usize>;
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:impl<const SIZE: usize> ZeroCostValidation<SIZE> for BufferSizeValidator<SIZE> {
+code/crates/nestgate-core/src/zero_cost/native_async_traits.rs:    const BUFFER_SIZE: usize = 8192,
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:    const BUFFER_SIZE: usize = 65536,
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:impl<const MAX_CONNECTIONS: usize, const BUFFER_SIZE: usize, const TIMEOUT_MS: u64, const WORKER_THREADS: usize, const LOG_LEVEL: u8>
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:pub trait ZeroCostService<const BUFFER_SIZE: usize = 8192, const MAX_CONNECTIONS: usize = 1000> {
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:    const BLOCK_SIZE: usize = 4096,
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:    const BUFFER_SIZE: usize = 8192;
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:    const BUFFER_SIZE: usize = 8192,
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:        const BUFFER_SIZE: usize,
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:        const BUFFER_SIZE: usize,
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:pub trait MemoryOptimizedTrait<const POOL_SIZE: usize = 1024, const BLOCK_SIZE: usize = 4096> {
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:    const SEND_BUFFER_SIZE: usize = 65536,
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:    const RECV_BUFFER_SIZE: usize = 65536,
+code/crates/nestgate-core/src/zero_cost_evolution.rs:    const BUFFER_SIZE: usize;
+code/crates/nestgate-core/src/zero_cost_evolution.rs:    const BUFFER_SIZE: usize =
+code/crates/nestgate-core/src/zero_cost_evolution.rs:    const BUFFER_SIZE: usize =
+code/crates/nestgate-core/src/advanced_optimizations.rs:pub struct ZeroAllocStringProcessor<const BUFFER_SIZE: usize = 4096> {
+code/crates/nestgate-core/src/advanced_optimizations.rs:impl<const BUFFER_SIZE: usize> Default for ZeroAllocStringProcessor<BUFFER_SIZE> {
+code/crates/nestgate-core/src/advanced_optimizations.rs:impl<const BUFFER_SIZE: usize> ZeroAllocStringProcessor<BUFFER_SIZE> {
+code/crates/nestgate-core/src/constants/domains/storage.rs:    pub const DEFAULT_BUFFER_SIZE: usize = 65536;
+code/crates/nestgate-core/src/constants/network.rs:pub const DEFAULT_BUFFER_SIZE: usize = super::canonical_defaults::performance::NETWORK_BUFFER_SIZE;
+code/crates/nestgate-core/src/constants/system.rs:pub const BUFFER_SIZE: usize = 8192;
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:    pub const NETWORK_BUFFER_SIZE: usize = 8192;
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:    pub const DEFAULT_BUFFER_SIZE: usize = 4096;
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:    pub const DEFAULT_BUFFER_SIZE: usize = 4096;
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:    pub const DEFAULT_PAGE_SIZE: usize = 4096;
+code/crates/nestgate-core/src/constants/hardcoding.rs:    pub const BUFFER_SIZE_DEFAULT: usize = 65536;
+code/crates/nestgate-core/src/constants/hardcoding.rs:    pub const BUFFER_SIZE_MAX: usize = 1_048_576;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const PAGE_SIZE: usize = 4096;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const DEFAULT_BUFFER_SIZE: usize = 4096;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const NETWORK_BUFFER_SIZE: usize = 65536;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const BLOCK_SIZE: usize = 4096;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const SEND_BUFFER_SIZE: usize = 65536;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const RECV_BUFFER_SIZE: usize = 65536;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const BUFFER_SIZE: usize = performance::DEFAULT_BUFFER_SIZE;
+code/crates/nestgate-core/src/constants/canonical.rs:    const BUFFER_SIZE: usize = ConstGenericDefaults::BUFFER_SIZE;
+code/crates/nestgate-core/src/optimized/enhanced_zero_copy.rs:pub struct ZeroCopyBufferPool<const CAPACITY: usize> {
+code/crates/nestgate-core/src/optimized/completely_safe_zero_copy.rs:pub struct CompletlySafeBuffer<const N: usize> {
+code/crates/nestgate-core/src/optimized/completely_safe_zero_copy.rs:pub struct SafeCircularBuffer<const N: usize> {
+code/crates/nestgate-core/src/optimized/completely_safe_zero_copy.rs:    pub fn benchmark_buffer_write<const N: usize>(iterations: usize) -> std::time::Duration {
