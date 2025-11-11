@@ -4,7 +4,7 @@ use std::time::Duration;
 use serde::{Deserialize, Serialize};
 use crate::error::{NestGateError, NestGateUnifiedError, Result};
 
-//! Modern caching Module
+//! Modern perf_monitor Module
 //! 
 //! This module provides core functionality using modern Rust patterns
 //! and zero-cost abstractions.
@@ -31,29 +31,14 @@ pub use crate::constants::network::{
 
 /// Configuration for this module
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
-/// 
-/// **Migration Path**:
-/// ```rust
-/// // OLD (deprecated):
-/// use crate::config::CachingModuleConfig;
-/// 
-/// // NEW (canonical):
-/// use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-/// // Or use type alias for compatibility:
-/// use crate::config::CachingModuleConfig; // Now aliases to CanonicalNetworkConfig
-/// ```
-/// 
-/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
-pub struct CachingModuleConfig {
+pub struct PerfMonitorConfig {
     pub enabled: bool,
     pub timeout: Duration,
     pub max_connections: usize,
     pub buffer_size: usize,
 }
 
-impl Default for CachingModuleConfig {
+impl Default for PerfMonitorConfig {
     fn default() -> Self {
         Self {
             enabled: true,
@@ -105,13 +90,13 @@ impl Default for Metrics {
 /// Default implementation of the service
 #[derive(Debug)]
 pub struct DefaultService {
-    config: CachingModuleConfig,
+    config: PerfMonitorConfig,
     metrics: Arc<tokio::sync::RwLock<Metrics>>,
 }
 
 impl DefaultService {
     /// Create a new service instance
-    pub fn new(config: CachingModuleConfig) -> Self {
+    pub fn new(config: PerfMonitorConfig) -> Self {
         Self {
             config,
             metrics: Arc::new(tokio::sync::RwLock::new(Metrics::default())),
@@ -128,7 +113,7 @@ impl Service for DefaultService {
     fn initialize(&self) -> impl std::future::Future<Output = Result<()>> + Send {
         // Initialization implementation
         tracing::info!("Initializing {} service with config: {:?}", 
-                      stringify!(caching), config);
+                      stringify!(perf_monitor), config);
         Ok(())
     }
     
@@ -139,7 +124,7 @@ impl Service for DefaultService {
     
     fn shutdown(&self) -> impl std::future::Future<Output = Result<()>> + Send {
         // Shutdown implementation
-        tracing::info!("Shutting down {} service", stringify!(caching));
+        tracing::info!("Shutting down {} service", stringify!(perf_monitor));
         Ok(())
     }
 }
@@ -148,11 +133,11 @@ impl Service for DefaultService {
 
 /// Create a default service instance
 pub fn create_service() -> DefaultService {
-    DefaultService::new(CachingModuleConfig::default())
+    DefaultService::new(PerfMonitorConfig::default())
 }
 
 /// Validate configuration
-pub async fn validate_config(config: &CachingModuleConfig) -> crate::Result<()> {
+pub async fn validate_config(config: &PerfMonitorConfig) -> crate::Result<()> {
     if config.max_connections == 0 {
         return Err(NestGateUnifiedError::configuration_error(
             "max_connections must be greater than 0"
@@ -170,29 +155,13 @@ pub async fn validate_config(config: &CachingModuleConfig) -> crate::Result<()> 
 
 // ==================== TESTS ====================
 
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-/// 
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-pub type CachingModuleConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using CachingModuleConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
 #[cfg(test)]
 mod tests {
     
 
     #[test]
     fn test_config_default() {
-        let config = CachingModuleConfig::default();
+        let config = PerfMonitorConfig::default();
         assert!(config.enabled);
         assert_eq!(config.max_connections, DEFAULT_MAX_CONNECTIONS);
     }
@@ -209,7 +178,7 @@ mod tests {
     #[tokio::test]
     async fn test_service_creation() {
         let service = create_service();
-        let config = CachingModuleConfig::default();
+        let config = PerfMonitorConfig::default();
         
         assert!(service.initialize(&config).await.is_ok());
         assert_eq!(service.health_check().await.expect("Operation failed"), HealthStatus::Healthy);
