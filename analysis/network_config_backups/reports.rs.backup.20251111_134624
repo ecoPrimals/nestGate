@@ -1,0 +1,250 @@
+//! **PERFORMANCE REPORT GENERATION**
+//!
+//! Generate comprehensive performance reports from analysis results.
+
+use super::analyzer::{AnalysisResult, PerformanceStatus};
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+
+/// Performance report generator
+#[derive(Debug)]
+pub struct ReportGenerator {
+    /// Report configuration
+    pub config: ReportConfig,
+}
+
+impl ReportGenerator {
+    /// Create new report generator
+    #[must_use]
+    pub const fn new(config: ReportConfig) -> Self {
+        Self { config }
+    }
+
+    /// Generate comprehensive performance report
+    #[must_use]
+    pub fn generate_report(&self, analysis: &AnalysisResult) -> PerformanceReport {
+        PerformanceReport {
+            overall_score: analysis.overall_score,
+            status: self.determine_overall_status(analysis),
+            summary: self.generate_summary(analysis),
+            component_reports: self.generate_component_reports(analysis),
+            recommendations: analysis.recommendations.clone(),
+            generated_at: std::time::SystemTime::now(),
+            report_id: uuid::Uuid::new_v4().to_string(),
+        }
+    }
+
+    /// Generate report in multiple formats
+    #[must_use]
+    pub fn generate_multi_format(&self, analysis: &AnalysisResult) -> MultiFormatReport {
+        let base_report = self.generate_report(analysis);
+
+        MultiFormatReport {
+            json: serde_json::to_string_pretty(&base_report).unwrap_or_default(),
+            markdown: self.generate_markdown_report(&base_report),
+            html: self.generate_html_report(&base_report),
+            csv: self.generate_csv_report(&base_report),
+        }
+    }
+
+    fn determine_overall_status(&self, analysis: &AnalysisResult) -> OverallStatus {
+        let components = [
+            &analysis.cpu_analysis.status,
+            &analysis.memory_analysis.status,
+            &analysis.disk_analysis.status,
+            &analysis.network_analysis.status,
+        ];
+
+        if components
+            .iter()
+            .any(|s| matches!(s, PerformanceStatus::Critical))
+        {
+            OverallStatus::Critical
+        } else if components
+            .iter()
+            .any(|s| matches!(s, PerformanceStatus::Warning))
+        {
+            OverallStatus::Warning
+        } else {
+            OverallStatus::Healthy
+        }
+    }
+
+    fn generate_summary(&self, analysis: &AnalysisResult) -> String {
+        format!(
+            "System performance score: {:.1}/100. {} components analyzed with {} recommendations.",
+            analysis.overall_score,
+            4, // CPU, Memory, Disk, Network
+            analysis.recommendations.len()
+        )
+    }
+
+    fn generate_component_reports(
+        &self,
+        analysis: &AnalysisResult,
+    ) -> HashMap<String, ComponentReport> {
+        let mut reports = HashMap::new();
+
+        reports.insert(
+            "cpu".to_string(),
+            ComponentReport {
+                score: analysis.cpu_analysis.score,
+                status: analysis.cpu_analysis.status.clone(),
+                details: analysis.cpu_analysis.details.clone(),
+            },
+        );
+
+        reports.insert(
+            "memory".to_string(),
+            ComponentReport {
+                score: analysis.memory_analysis.score,
+                status: analysis.memory_analysis.status.clone(),
+                details: analysis.memory_analysis.details.clone(),
+            },
+        );
+
+        reports.insert(
+            "disk".to_string(),
+            ComponentReport {
+                score: analysis.disk_analysis.score,
+                status: analysis.disk_analysis.status.clone(),
+                details: analysis.disk_analysis.details.clone(),
+            },
+        );
+
+        reports.insert(
+            "network".to_string(),
+            ComponentReport {
+                score: analysis.network_analysis.score,
+                status: analysis.network_analysis.status.clone(),
+                details: analysis.network_analysis.details.clone(),
+            },
+        );
+
+        reports
+    }
+
+    fn generate_markdown_report(&self, report: &PerformanceReport) -> String {
+        format!(
+            "# Performance Report\n\n**Report ID**: {}\n**Generated**: {:?}\n**Overall Score**: {:.1}/100\n**Status**: {:?}\n\n## Summary\n{}\n\n## Recommendations\n{}\n",
+            report.report_id,
+            report.generated_at,
+            report.overall_score,
+            report.status,
+            report.summary,
+            report.recommendations.iter().map(|r| format!("- {r}")).collect::<Vec<_>>().join("\n")
+        )
+    }
+
+    fn generate_html_report(&self, report: &PerformanceReport) -> String {
+        format!(
+            "<html><head><title>Performance Report</title></head><body><h1>Performance Report</h1><p><strong>Score:</strong> {:.1}/100</p><p><strong>Status:</strong> {:?}</p><p>{}</p></body></html>",
+            report.overall_score,
+            report.status,
+            report.summary
+        )
+    }
+
+    fn generate_csv_report(&self, report: &PerformanceReport) -> String {
+        format!(
+            "Component,Score,Status,Details\n{}",
+            report
+                .component_reports
+                .iter()
+                .map(|(name, comp)| format!(
+                    "{},{:.1},{:?},{}",
+                    name, comp.score, comp.status, comp.details
+                ))
+                .collect::<Vec<_>>()
+                .join("\n")
+        )
+    }
+}
+
+/// Report generation configuration
+#[derive(Debug, Clone)]
+pub struct ReportConfig {
+    /// Include detailed component analysis
+    pub include_detailed_analysis: bool,
+    /// Include historical trends
+    pub include_trends: bool,
+    /// Report format preferences
+    pub default_format: ReportFormat,
+}
+
+impl Default for ReportConfig {
+    fn default() -> Self {
+        Self {
+            include_detailed_analysis: true,
+            include_trends: false,
+            default_format: ReportFormat::Json,
+        }
+    }
+}
+
+/// Report format options
+#[derive(Debug, Clone)]
+pub enum ReportFormat {
+    /// JSON format for API consumption
+    Json,
+    /// Markdown format for documentation
+    Markdown,
+    /// HTML format for web display
+    Html,
+    /// CSV format for data analysis
+    Csv,
+}
+
+/// Complete performance report
+#[derive(Debug, Serialize, Deserialize)]
+pub struct PerformanceReport {
+    /// Overall system performance score (0.0-100.0)
+    pub overall_score: f64,
+    /// Overall system health status
+    pub status: OverallStatus,
+    /// Executive summary of performance analysis
+    pub summary: String,
+    /// Detailed reports for each system component
+    pub component_reports: HashMap<String, ComponentReport>,
+    /// Performance improvement recommendations
+    pub recommendations: Vec<String>,
+    /// When this report was generated
+    pub generated_at: std::time::SystemTime,
+    /// Unique identifier for this report
+    pub report_id: String,
+}
+
+/// Component-specific report
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ComponentReport {
+    /// Component performance score (0.0-100.0)
+    pub score: f64,
+    /// Current performance status level
+    pub status: PerformanceStatus,
+    /// Detailed analysis and recommendations for this component
+    pub details: String,
+}
+
+/// Overall system status
+#[derive(Debug, Serialize, Deserialize)]
+pub enum OverallStatus {
+    /// System is performing optimally
+    Healthy,
+    /// System has performance issues but is functional
+    Warning,
+    /// System has critical performance problems requiring immediate attention
+    Critical,
+}
+
+/// Multi-format report output
+#[derive(Debug)]
+pub struct MultiFormatReport {
+    /// Report in JSON format for API consumption
+    pub json: String,
+    /// Report in Markdown format for documentation
+    pub markdown: String,
+    /// Report in HTML format for web display
+    pub html: String,
+    /// Report in CSV format for data analysis
+    pub csv: String,
+}

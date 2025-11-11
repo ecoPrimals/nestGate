@@ -1,0 +1,727 @@
+/// 
+/// Specific configuration structures for different handler types.
+/// Each handler type has its own specialized configuration.
+use super::handler_common::{HandlerConfig, HandlerExtensions};
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::time::Duration;
+
+// ==================== SECTION ====================
+
+/// ZFS handler specific configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// 
+/// **Migration Path**:
+/// ```rust
+/// // OLD (deprecated):
+/// use crate::network::config::ZfsHandlerSpecificConfig;
+/// 
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::ZfsHandlerSpecificConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+/// 
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+pub struct ZfsHandlerSpecificConfig {
+    /// ZFS command timeout
+    pub command_timeout: Duration,
+    /// Enable ZFS monitoring
+    pub monitoring_enabled: bool,
+    /// Pool discovery interval
+    pub pool_discovery_interval: Duration,
+    /// Dataset refresh interval
+    pub dataset_refresh_interval: Duration,
+    /// Snapshot retention policy
+    pub snapshot_retention: SnapshotRetentionPolicy,
+    /// ZFS service configuration
+    pub service: ZfsServiceConfig,
+    /// Pool-specific configurations
+    pub pools: HashMap<String, ZfsPoolConfig>,
+}
+/// Performance handler specific configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// 
+/// **Migration Path**:
+/// ```rust
+/// // OLD (deprecated):
+/// use crate::network::config::PerformanceHandlerSpecificConfig;
+/// 
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::PerformanceHandlerSpecificConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+/// 
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+pub struct PerformanceHandlerSpecificConfig {
+    /// Enable performance monitoring
+    pub monitoring_enabled: bool,
+    /// Metrics collection interval
+    pub metrics_interval: Duration,
+    /// Performance thresholds
+    pub thresholds: PerformanceThresholds,
+    /// Benchmark configuration
+    pub benchmark: BenchmarkConfig,
+}
+/// Dashboard handler specific configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// 
+/// **Migration Path**:
+/// ```rust
+/// // OLD (deprecated):
+/// use crate::network::config::DashboardHandlerSpecificConfig;
+/// 
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::DashboardHandlerSpecificConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+/// 
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+pub struct DashboardHandlerSpecificConfig {
+    /// Dashboard refresh interval
+    pub refresh_interval: Duration,
+    /// Enable real-time updates
+    pub realtime_enabled: bool,
+    /// Widget configurations
+    pub widgets: Vec<WidgetConfig>,
+    /// Theme configuration
+    pub theme: DashboardTheme,
+}
+/// Load testing handler specific configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// 
+/// **Migration Path**:
+/// ```rust
+/// // OLD (deprecated):
+/// use crate::network::config::LoadTestingHandlerSpecificConfig;
+/// 
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::LoadTestingHandlerSpecificConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+/// 
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+pub struct LoadTestingHandlerSpecificConfig {
+    /// Maximum concurrent virtual users
+    pub max_virtual_users: usize,
+    /// Test duration limits
+    pub max_test_duration: Duration,
+    /// Ramp-up configuration
+    pub ramp_up: RampUpConfig,
+    /// Result retention period
+    pub result_retention: Duration,
+}
+/// Workspace handler specific configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// 
+/// **Migration Path**:
+/// ```rust
+/// // OLD (deprecated):
+/// use crate::network::config::WorkspaceHandlerSpecificConfig;
+/// 
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::WorkspaceHandlerSpecificConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+/// 
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+pub struct WorkspaceHandlerSpecificConfig {
+    /// Default workspace size limit
+    pub default_size_limit: u64,
+    /// Workspace cleanup interval
+    pub cleanup_interval: Duration,
+    /// Backup configuration
+    pub backup: WorkspaceBackupConfig,
+    /// Access control settings
+    pub access_control: WorkspaceAccessConfig,
+}
+/// Authentication handler specific configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// 
+/// **Migration Path**:
+/// ```rust
+/// // OLD (deprecated):
+/// use crate::network::config::AuthHandlerSpecificConfig;
+/// 
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::AuthHandlerSpecificConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+/// 
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+pub struct AuthHandlerSpecificConfig {
+    /// JWT configuration
+    pub jwt: JwtConfig,
+    /// OAuth providers
+    pub oauth_providers: Vec<OAuthProviderConfig>,
+    /// Session configuration
+    pub session: SessionConfig,
+    /// Password policy
+    pub password_policy: PasswordPolicy,
+}
+// ==================== SECTION ====================
+
+/// ZFS handler configuration type alias
+pub type ZfsHandlerConfig = HandlerConfig<ZfsHandlerSpecificConfig>;
+/// Performance handler configuration type alias
+pub type PerformanceHandlerConfig = HandlerConfig<PerformanceHandlerSpecificConfig>;
+/// Dashboard handler configuration type alias
+pub type DashboardHandlerConfig = HandlerConfig<DashboardHandlerSpecificConfig>;
+/// Load testing handler configuration type alias
+pub type LoadTestingHandlerConfig = HandlerConfig<LoadTestingHandlerSpecificConfig>;
+/// Workspace handler configuration type alias
+pub type WorkspaceHandlerConfig = HandlerConfig<WorkspaceHandlerSpecificConfig>;
+/// Authentication handler configuration type alias
+pub type AuthHandlerConfig = HandlerConfig<AuthHandlerSpecificConfig>;
+// ==================== SECTION ====================
+
+/// ZFS pool configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ZfsPoolConfig {
+    /// Pool name
+    pub name: String,
+    /// Enable pool monitoring
+    pub monitoring_enabled: bool,
+    /// Health check interval
+    pub health_check_interval: Duration,
+    /// Scrub schedule
+    pub scrub_schedule: Option<String>,
+    /// Compression settings
+    pub compression: Option<String>,
+    /// Deduplication settings
+    pub deduplication: bool,
+    /// Custom properties
+    pub custom_properties: HashMap<String, String>,
+}
+/// ZFS dataset configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ZfsDatasetConfig {
+    /// Dataset name
+    pub name: String,
+    /// Quota settings
+    pub quota: Option<u64>,
+    /// Reservation settings
+    pub reservation: Option<u64>,
+    /// Record size
+    pub record_size: Option<String>,
+    /// Compression settings
+    pub compression: Option<String>,
+    /// Mount point
+    pub mount_point: Option<String>,
+}
+/// ZFS snapshot configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ZfsSnapshotConfig {
+    /// Snapshot name pattern
+    pub name_pattern: String,
+    /// Automatic snapshot interval
+    pub auto_snapshot_interval: Option<Duration>,
+    /// Retention policy
+    pub retention: SnapshotRetentionPolicy,
+    /// Include properties in snapshot
+    pub include_properties: bool,
+}
+/// Snapshot retention policy
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SnapshotRetentionPolicy {
+    /// Keep snapshots for this duration
+    pub keep_duration: Duration,
+    /// Maximum number of snapshots to keep
+    pub max_snapshots: Option<usize>,
+    /// Cleanup schedule
+    pub cleanup_schedule: Option<String>,
+    /// Archive old snapshots instead of deleting
+    pub archive_old: bool,
+}
+/// ZFS service configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// 
+/// **Migration Path**:
+/// ```rust
+/// // OLD (deprecated):
+/// use crate::network::config::ZfsServiceConfig;
+/// 
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::ZfsServiceConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+/// 
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+pub struct ZfsServiceConfig {
+    /// ZFS binary path
+    pub zfs_binary: String,
+    /// ZPool binary path
+    pub zpool_binary: String,
+    /// Command execution timeout
+    pub command_timeout: Duration,
+    /// Enable sudo for ZFS commands
+    pub use_sudo: bool,
+    /// Environment variables for commands
+    pub environment: HashMap<String, String>,
+}
+// ==================== SECTION ====================
+
+/// Performance thresholds configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PerformanceThresholds {
+    /// CPU usage warning threshold (percentage)
+    pub cpu_warning: f64,
+    /// CPU usage critical threshold (percentage)
+    pub cpu_critical: f64,
+    /// Memory usage warning threshold (percentage)
+    pub memory_warning: f64,
+    /// Memory usage critical threshold (percentage)
+    pub memory_critical: f64,
+    /// Disk usage warning threshold (percentage)
+    pub disk_warning: f64,
+    /// Disk usage critical threshold (percentage)
+    pub disk_critical: f64,
+    /// Response time warning threshold (milliseconds)
+    pub response_time_warning: u64,
+    /// Response time critical threshold (milliseconds)
+    pub response_time_critical: u64,
+}
+/// Benchmark configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BenchmarkConfig {
+    /// Enable automatic benchmarking
+    pub auto_benchmark: bool,
+    /// Benchmark schedule
+    pub schedule: Option<String>,
+    /// Benchmark duration
+    pub duration: Duration,
+    /// Number of concurrent operations
+    pub concurrency: usize,
+    /// Benchmark scenarios
+    pub scenarios: Vec<BenchmarkScenario>,
+}
+/// Individual benchmark scenario
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BenchmarkScenario {
+    /// Scenario name
+    pub name: String,
+    /// Scenario description
+    pub description: String,
+    /// Operations to perform
+    pub operations: Vec<String>,
+    /// Expected performance metrics
+    pub expected_metrics: HashMap<String, f64>,
+}
+// ==================== SECTION ====================
+
+/// Widget configuration for dashboard
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WidgetConfig {
+    /// Widget identifier
+    pub id: String,
+    /// Widget type
+    pub widget_type: String,
+    /// Widget title
+    pub title: String,
+    /// Widget position
+    pub position: WidgetPosition,
+    /// Widget size
+    pub size: WidgetSize,
+    /// Widget-specific configuration
+    pub config: HashMap<String, serde_json::Value>,
+}
+/// Widget position on dashboard
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WidgetPosition {
+    pub x: u32,
+    pub y: u32,
+}
+/// Widget size configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WidgetSize {
+    pub width: u32,
+    pub height: u32,
+}
+/// Dashboard theme configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DashboardTheme {
+    /// Theme name
+    pub name: String,
+    /// Primary color
+    pub primary_color: String,
+    /// Secondary color
+    pub secondary_color: String,
+    /// Background color
+    pub background_color: String,
+    /// Text color
+    pub text_color: String,
+    /// Custom CSS overrides
+    pub custom_css: Option<String>,
+}
+// ==================== SECTION ====================
+
+/// Ramp-up configuration for load testing
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RampUpConfig {
+    /// Ramp-up duration
+    pub duration: Duration,
+    /// Ramp-up strategy
+    pub strategy: RampUpStrategy,
+    /// Initial user count
+    pub initial_users: usize,
+    /// Target user count
+    pub target_users: usize,
+}
+/// Ramp-up strategy options
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum RampUpStrategy {
+    Linear,
+    Exponential,
+    Step,
+    Custom(Vec<RampUpStep>),
+}
+/// Individual ramp-up step
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RampUpStep {
+    /// Duration of this step
+    pub duration: Duration,
+    /// Target user count for this step
+    pub target_users: usize,
+}
+// ==================== SECTION ====================
+
+/// Workspace backup configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WorkspaceBackupConfig {
+    /// Enable automatic backups
+    pub enabled: bool,
+    /// Backup interval
+    pub interval: Duration,
+    /// Backup retention period
+    pub retention: Duration,
+    /// Backup storage location
+    pub storage_location: String,
+    /// Compression for backups
+    pub compression: bool,
+}
+/// Workspace access control configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WorkspaceAccessConfig {
+    /// Default access level
+    pub default_access: AccessLevel,
+    /// Access control rules
+    pub rules: Vec<AccessRule>,
+    /// Enable audit logging
+    pub audit_logging: bool,
+}
+/// Access level enumeration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum AccessLevel {
+    None,
+    Read,
+    Write,
+    Admin,
+}
+/// Access control rule
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AccessRule {
+    /// User or group pattern
+    pub principal: String,
+    /// Access level to grant
+    pub access_level: AccessLevel,
+    /// Rule conditions
+    pub conditions: HashMap<String, String>,
+}
+// ==================== SECTION ====================
+
+/// JWT configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// 
+/// **Migration Path**:
+/// ```rust
+/// // OLD (deprecated):
+/// use crate::network::config::JwtConfig;
+/// 
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::JwtConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+/// 
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+pub struct JwtConfig {
+    /// JWT secret key
+    pub secret: String,
+    /// Token expiration time
+    pub expiration: Duration,
+    /// Refresh token expiration
+    pub refresh_expiration: Duration,
+    /// JWT algorithm
+    pub algorithm: String,
+    /// JWT issuer
+    pub issuer: String,
+    /// JWT audience
+    pub audience: Vec<String>,
+}
+/// OAuth provider configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// 
+/// **Migration Path**:
+/// ```rust
+/// // OLD (deprecated):
+/// use crate::network::config::OAuthProviderConfig;
+/// 
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::OAuthProviderConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+/// 
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+pub struct OAuthProviderConfig {
+    /// Provider name
+    pub name: String,
+    /// Client ID
+    pub client_id: String,
+    /// Client secret
+    pub client_secret: String,
+    /// Authorization URL
+    pub auth_url: String,
+    /// Token URL
+    pub token_url: String,
+    /// User info URL
+    pub user_info_url: String,
+    /// Scopes to request
+    pub scopes: Vec<String>,
+}
+/// Session configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SessionConfig {
+    /// Session timeout
+    pub timeout: Duration,
+    /// Session storage type
+    pub storage: SessionStorage,
+    /// Secure cookie settings
+    pub secure_cookies: bool,
+    /// Same-site cookie policy
+    pub same_site: String,
+}
+/// Session storage options
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum SessionStorage {
+    Memory,
+    Redis { url: String }
+    Database { table: String }
+}
+/// Password policy configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PasswordPolicy {
+    /// Minimum password length
+    pub min_length: usize,
+    /// Require uppercase letters
+    pub require_uppercase: bool,
+    /// Require lowercase letters
+    pub require_lowercase: bool,
+    /// Require numbers
+    pub require_numbers: bool,
+    /// Require special characters
+    pub require_special: bool,
+    /// Password history to check
+    pub history_count: usize,
+    /// Password expiration period
+    pub expiration: Option<Duration>,
+}
+// ==================== SECTION ====================
+
+impl Default for ZfsHandlerSpecificConfig {
+    fn default() -> Self { Self {
+            command_timeout: Duration::from_secs(30),
+            monitoring_enabled: true,
+            pool_discovery_interval: Duration::from_secs(60),
+            dataset_refresh_interval: Duration::from_secs(30),
+            snapshot_retention: SnapshotRetentionPolicy::default(),
+            service: ZfsServiceConfig::default(),
+            pools: HashMap::new(),
+         }
+}
+
+impl Default for SnapshotRetentionPolicy {
+    fn default() -> Self { Self {
+            keep_duration: Duration::from_secs(7 * 24 * 3600), // 7 days
+            max_snapshots: Some(50),
+            cleanup_schedule: Some("0 2 * * *".to_string()), // Daily at 2 AM
+            archive_old: false,
+         }
+}
+
+impl Default for ZfsServiceConfig {
+    fn default() -> Self { Self {
+            zfs_binary: "/usr/sbin/zfs".to_string(),
+            zpool_binary: "/usr/sbin/zpool".to_string(),
+            command_timeout: Duration::from_secs(30),
+            use_sudo: true,
+            environment: HashMap::new(),
+         }
+} 
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+/// 
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+pub type AuthHandlerSpecificConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using AuthHandlerSpecificConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+/// 
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+pub type OAuthProviderConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using OAuthProviderConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+/// 
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+pub type JwtConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using JwtConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+/// 
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+pub type ZfsHandlerSpecificConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using ZfsHandlerSpecificConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+/// 
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+pub type PerformanceHandlerSpecificConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using PerformanceHandlerSpecificConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+/// 
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+pub type DashboardHandlerSpecificConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using DashboardHandlerSpecificConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+/// 
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+pub type LoadTestingHandlerSpecificConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using LoadTestingHandlerSpecificConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+/// 
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+pub type WorkspaceHandlerSpecificConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using WorkspaceHandlerSpecificConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+/// 
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+pub type ZfsServiceConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using ZfsServiceConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+
