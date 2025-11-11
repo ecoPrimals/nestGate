@@ -1,0 +1,270 @@
+code/crates/nestgate-core/src/infant_discovery/mod.rs:pub struct InfantDiscoverySystem<const MAX_CAPABILITIES: usize = 256> {
+code/crates/nestgate-core/src/infant_discovery/mod.rs:impl<const MAX_CAPABILITIES: usize> InfantDiscoverySystem<MAX_CAPABILITIES> {
+code/crates/nestgate-core/src/infant_discovery/mod.rs:impl<const MAX_CAPABILITIES: usize> Default for InfantDiscoverySystem<MAX_CAPABILITIES> {
+code/crates/nestgate-core/src/defaults.rs:    pub const DEFAULT_MAX_LOGIN_ATTEMPTS: u32 = 5;
+code/crates/nestgate-core/src/network/native_async/traits.rs:    const MAX_SERVICES: usize = 10000,
+code/crates/nestgate-core/src/network/native_async/traits.rs:    const MAX_CONNECTIONS: usize = 1000,
+code/crates/nestgate-core/src/network/native_async/traits.rs:    const MAX_RETRIES: u32 = 3,
+code/crates/nestgate-core/src/network/native_async/traits.rs:    const MAX_REQUESTS_PER_SEC: usize = 1000,
+code/crates/nestgate-core/src/network/native_async/traits.rs:    const MAX_BACKENDS: usize = 100,
+code/crates/nestgate-core/src/network/native_async/traits.rs:    const MAX_REQUESTS_PER_BACKEND: usize = 1000,
+code/crates/nestgate-core/src/data_sources/native_async_capabilities.rs:    const MAX_CONCURRENT_REQUESTS: usize = { performance::MAX_CONCURRENT_OPS },
+code/crates/nestgate-core/src/data_sources/native_async_capabilities.rs:    const MAX_RESPONSE_SIZE_MB: usize = 100,
+code/crates/nestgate-core/src/data_sources/native_async_capabilities.rs:    const MAX_GENOME_RESULTS: usize = 1000,
+code/crates/nestgate-core/src/data_sources/native_async_capabilities.rs:    const MAX_SEQUENCE_SIZE_MB: usize = 500,
+code/crates/nestgate-core/src/data_sources/native_async_capabilities.rs:    const MAX_MODEL_RESULTS: usize = 500,
+code/crates/nestgate-core/src/data_sources/native_async_capabilities.rs:    const MAX_RESEARCH_RESULTS: usize = 200,
+code/crates/nestgate-core/src/data_sources/native_async_capabilities.rs:        const MAX_CONCURRENT: usize,
+code/crates/nestgate-core/src/data_sources/native_async_capabilities.rs:        const MAX_SIZE_MB: usize,
+code/crates/nestgate-core/src/data_sources/native_async_capabilities.rs:        const MAX_RESULTS: usize,
+code/crates/nestgate-core/src/data_sources/native_async_capabilities.rs:        const MAX_SIZE_MB: usize,
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_BUFFER_SIZE_BYTES: usize = 1024 * 1024; // 1MB
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_CONCURRENT_OPERATIONS: usize = 1000;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_RETRY_ATTEMPTS: u32 = 3;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_CONCURRENT_REQUESTS: usize = 10000;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_CONCURRENT_CONNECTIONS: usize = 1000;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_FILE_SIZE_MB: usize = 1024;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_CONNECTIONS: usize = 1000;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_FILENAME_LENGTH: usize = 255;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_MAX_FILE_SIZE: u64 = 100 * MB;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MIN_PASSWORD_LENGTH: usize = 8;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_LOGIN_ATTEMPTS: u32 = 3;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_MEMORY_MB: u64 = 4096;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_CPU_CORES: u32 = 8;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const ZFS_DISCOVERY_MAX_DEPTH: usize = 10;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_FILE_DEPTH: usize = 100;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_RECURSION_DEPTH: usize = 50;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_POOLS: usize = 64;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_DATASETS: usize = 1000;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_CONCURRENT_OPERATIONS: usize = 100;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_OPTIMIZATIONS: usize = 50;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_REQUEST_SIZE: usize = 10 * 1024 * 1024; // 10MB
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_RESPONSE_SIZE: usize = 50 * 1024 * 1024; // 50MB
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_CONCURRENT_REQUESTS: usize = 100;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_RATE_LIMIT_RPM: u32 = 60;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_RATE_LIMIT_BURST: u32 = 10;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_TIMEOUT_SECS: u64 = 300; // 5 minutes
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MIN_TIMEOUT_SECS: u64 = 1;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MIN_SIMD_SIZE: usize = 64;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_MAX_CONCURRENT: usize = 1000;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_MAX_FILE_SIZE_MB: usize = 1024;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_MAX_BACKENDS: usize = 100;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_SERVICES: usize = 1000;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_CONCURRENT_REQUESTS: usize = 10000;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_CONNECTIONS: usize = 1000;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_MESSAGE_SIZE: usize = 1024;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_SESSIONS: usize = 1000;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_WORKFLOWS: usize = 1000;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_CONCURRENT_EXECUTIONS: usize = 100;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_WORKFLOW_STEPS: usize = 100;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_POOLS: usize = 256;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_DATASETS: usize = 10000;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_SNAPSHOTS: usize = 100_000;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_RAID_BACKENDS: usize = 8;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_COW_OPERATIONS: usize = 1000;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const ZFS_DISCOVERY_MAX_DEPTH: usize = 10;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_CACHE_FILES: usize = 10000;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_DEV_MAX_CONNECTIONS: usize = 1000;
+code/crates/nestgate-core/src/canonical_modernization/constants/network.rs:pub const MAX_CONNECTIONS: u32 = 1000;
+code/crates/nestgate-core/src/canonical_modernization/constants/network.rs:pub const MAX_REQUEST_SIZE: u64 = 10 * 1024 * 1024; // 10MB
+code/crates/nestgate-core/src/canonical_modernization/constants/storage.rs:pub const MAX_FILE_SIZE: u64 = 100 * 1024 * 1024 * 1024; // 100GB
+code/crates/nestgate-core/src/canonical_modernization/constants/storage.rs:pub const MAX_SNAPSHOTS_PER_DATASET: u32 = 1000;
+code/crates/nestgate-core/src/canonical_modernization/constants/security.rs:pub const MAX_AUTH_ATTEMPTS: u32 = 3;
+code/crates/nestgate-core/src/canonical_modernization/constants/monitoring.rs:pub const MAX_LOG_FILE_SIZE: u64 = 100 * 1024 * 1024; // 100MB
+code/crates/nestgate-core/src/safe_operations/pedantic.rs:pub const PEDANTIC_MAX_RETRIES: usize = 3;
+code/crates/nestgate-core/src/smart_abstractions/smart_default.rs:    pub const DEFAULT_MAX_CONNECTIONS: usize = 1000;
+code/crates/nestgate-core/src/performance/safe_optimizations.rs:    pub const MAX_SIMD_WIDTH: usize = 32; // AVX2
+code/crates/nestgate-core/src/performance/safe_optimizations.rs:    pub const VECTORIZED_BATCH_SIZE: usize = Self::MAX_SIMD_WIDTH / 4; // 8 elements for u32
+code/crates/nestgate-core/src/performance/advanced_optimizations.rs:    pub const MAX_SIMD_WIDTH: usize = 32; // AVX2
+code/crates/nestgate-core/src/performance/advanced_optimizations.rs:    pub const VECTORIZED_BATCH_SIZE: usize = Self::MAX_SIMD_WIDTH / 4; // 8 elements for u32
+code/crates/nestgate-core/src/config/core.rs:    const MAX_CONNECTIONS: usize = 1000,
+code/crates/nestgate-core/src/config/canonical_primary/mod.rs:    const MAX_CONNECTIONS: usize = 1000,
+code/crates/nestgate-core/src/config/canonical_primary/mod.rs:        const MAX_CONNECTIONS: usize,
+code/crates/nestgate-core/src/config/canonical_primary/mod.rs:        const MAX_CONNECTIONS: usize,
+code/crates/nestgate-core/src/config/canonical_primary/performance_config.rs:pub struct PerformanceConfig<const MAX_CONNECTIONS: usize = 1000, const BUFFER_SIZE: usize = 65536>
+code/crates/nestgate-core/src/config/canonical_primary/performance_config.rs:impl<const MAX_CONNECTIONS: usize, const BUFFER_SIZE: usize> Default
+code/crates/nestgate-core/src/config/canonical_primary/system_config.rs:pub struct SystemConfig<const MAX_CONNECTIONS: usize = 1000, const BUFFER_SIZE: usize = 65536> {
+code/crates/nestgate-core/src/config/canonical_primary/system_config.rs:impl<const MAX_CONNECTIONS: usize, const BUFFER_SIZE: usize>
+code/crates/nestgate-core/src/config/canonical_primary/system_config.rs:impl<const MAX_CONNECTIONS: usize, const BUFFER_SIZE: usize> Default
+code/crates/nestgate-core/src/config/canonical_primary/builders.rs:    const MAX_CONNECTIONS: usize = 1000,
+code/crates/nestgate-core/src/config/canonical_primary/builders.rs:        const MAX_CONNECTIONS: usize,
+code/crates/nestgate-core/src/config/canonical_primary/builders.rs:        const MAX_CONNECTIONS: usize,
+code/crates/nestgate-core/src/connection_pool/zero_cost_patterns.rs:    const MAX_CONNECTIONS: usize = 100,
+code/crates/nestgate-core/src/connection_pool/zero_cost_patterns.rs:    const MIN_CONNECTIONS: usize = 5,
+code/crates/nestgate-core/src/connection_pool/zero_cost_patterns.rs:impl<T, Factory, HealthChecker, const MAX_CONNECTIONS: usize, const MIN_CONNECTIONS: usize, const HEALTH_CHECK_INTERVAL_MS: u64>
+code/crates/nestgate-core/src/simd_optimizations.rs:pub const SIMD_MAX_BATCH_SIZE: usize = MAX_BATCH_SIZE; 
+code/crates/nestgate-core/src/zero_cost/universal_coordination.rs:pub struct ZeroCostCoordinationService<const MAX_CONCURRENT: usize = 1000> {
+code/crates/nestgate-core/src/zero_cost/universal_coordination.rs:impl<const MAX_CONCURRENT: usize> ZeroCostCoordinationService<MAX_CONCURRENT> {
+code/crates/nestgate-core/src/zero_cost/universal_coordination.rs:impl<const MAX_CONCURRENT: usize> ZeroCostUniversalCoordination
+code/crates/nestgate-core/src/zero_cost/memory_pool.rs:pub struct ZeroCostMemoryPoolManager<BufferPool, ObjectPool, const MAX_POOLS: usize = 100>
+code/crates/nestgate-core/src/zero_cost/memory_pool.rs:impl<BufferPool, ObjectPool, const MAX_POOLS: usize>
+code/crates/nestgate-core/src/zero_cost/async_trait_migration.rs:    const MAX_SERVICES: usize = 1000,
+code/crates/nestgate-core/src/zero_cost/async_trait_migration.rs:    const MAX_RETRIES: u32 = 3,
+code/crates/nestgate-core/src/zero_cost/async_trait_migration.rs:    const MAX_CONNECTIONS: usize = 1000,
+code/crates/nestgate-core/src/zero_cost/async_trait_migration.rs:    const MAX_RETRIES: u32 = 3,
+code/crates/nestgate-core/src/zero_cost/system.rs:pub struct ZeroCostSystem<Cache, Security, Storage, const MAX_SIZE: usize, const TIMEOUT_MS: u64> {
+code/crates/nestgate-core/src/zero_cost/system.rs:impl<Cache, Security, Storage, const MAX_SIZE: usize, const TIMEOUT_MS: u64>
+code/crates/nestgate-core/src/zero_cost/system.rs:pub struct ZeroCostSystemBuilder<const MAX_SIZE: usize, const TIMEOUT_MS: u64> {
+code/crates/nestgate-core/src/zero_cost/system.rs:impl<const MAX_SIZE: usize, const TIMEOUT_MS: u64> Default
+code/crates/nestgate-core/src/zero_cost/system.rs:impl<const MAX_SIZE: usize, const TIMEOUT_MS: u64> ZeroCostSystemBuilder<MAX_SIZE, TIMEOUT_MS> {
+code/crates/nestgate-core/src/zero_cost/zfs_service/traits.rs:    const MAX_POOLS: usize = 256,
+code/crates/nestgate-core/src/zero_cost/zfs_service/traits.rs:    const MAX_DATASETS: usize = 10000,
+code/crates/nestgate-core/src/zero_cost/zfs_service/traits.rs:    const MAX_SNAPSHOTS: usize = 100_000,
+code/crates/nestgate-core/src/zero_cost/composition.rs:pub struct ZeroCostNestGate<Adapter, Cache, const MAX_CONNECTIONS: usize = 1000> {
+code/crates/nestgate-core/src/zero_cost/composition.rs:impl<Adapter, Cache, const MAX_CONNECTIONS: usize> ZeroCostNestGate<Adapter, Cache, MAX_CONNECTIONS>
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:    const MAX_CONNECTIONS: usize = 1000,
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:    const MAX_CONNECTIONS: usize = 500,
+code/crates/nestgate-core/src/zero_cost/native_async_traits.rs:    const MAX_SERVICES: usize = 1000,
+code/crates/nestgate-core/src/zero_cost/native_async_traits.rs:    const MAX_TOKENS: usize = 10000,
+code/crates/nestgate-core/src/zero_cost/native_async_traits.rs:    const MAX_OBJECTS: usize = 100_000,
+code/crates/nestgate-core/src/zero_cost/native_async_traits.rs:    const MAX_OBJECT_SIZE: usize = { 1024 * 1024 * 10 },
+code/crates/nestgate-core/src/zero_cost/native_async_traits.rs:    const MAX_WORKLOADS: usize = 1000,
+code/crates/nestgate-core/src/zero_cost/native_async_traits.rs:    const MAX_CPU_CORES: usize = 64,
+code/crates/nestgate-core/src/zero_cost/native_async_traits.rs:    const MAX_CONNECTIONS: usize = 10000,
+code/crates/nestgate-core/src/zero_cost/native_async_traits.rs:    const MAX_ENDPOINTS: usize = 1000,
+code/crates/nestgate-core/src/zero_cost/native_async_traits.rs:    const MAX_POOLS: usize = 1000,
+code/crates/nestgate-core/src/zero_cost/native_async_traits.rs:    const MAX_DATASETS: usize = 10000,
+code/crates/nestgate-core/src/zero_cost/native_async_traits.rs:    const MAX_SERVICES: usize = 1000,
+code/crates/nestgate-core/src/zero_cost/native_async_traits.rs:impl<UniversalProvider, SecurityProvider, StorageProvider, const MAX_SERVICES: usize>
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:    const MAX_CONNECTIONS: usize = 10000,
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:impl<const MAX_CONNECTIONS: usize, const BUFFER_SIZE: usize, const TIMEOUT_MS: u64, const WORKER_THREADS: usize, const LOG_LEVEL: u8>
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:    const MAX_POOLS: usize = 100,
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:    const MAX_DATASETS: usize = 10000,
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:    const MAX_SNAPSHOTS: usize = 100_000,
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:impl<const MAX_POOLS: usize, const MAX_DATASETS: usize, const MAX_SNAPSHOTS: usize, 
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:    const MAX_REQUEST_SIZE_MB: u32 = 100,
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:    const RATE_LIMIT_REQUESTS_PER_MINUTE: u32 = 1000,
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:impl<const API_PORT: u16, const INTERNAL_PORT: u16, const MAX_REQUEST_SIZE_MB: u32,
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:     const KEEPALIVE_TIMEOUT_MS: u64, const RATE_LIMIT_REQUESTS_PER_MINUTE: u32,
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:    const MAX_ENTRIES: usize = 100_000,
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:    const MAX_MEMORY_MB: u32 = 1024,
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:impl<const MAX_ENTRIES: usize, const MAX_MEMORY_MB: u32, const TTL_SECONDS: u64,
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:pub trait ZeroCostService<const BUFFER_SIZE: usize = 8192, const MAX_CONNECTIONS: usize = 1000> {
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:    const MAX_CONCURRENT_OPS: usize = 100,
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:    const MAX_CONNECTIONS: usize = 1000;
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:    const MAX_CONNECTIONS: usize = 1000,
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:        const MAX_CONNECTIONS: usize,
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:        const MAX_CONNECTIONS: usize,
+code/crates/nestgate-core/src/zero_cost/migrated_core_service_example.rs:pub struct ZeroCostConfigService<const MAX_CACHE_SIZE: usize = 1000> {
+code/crates/nestgate-core/src/zero_cost/migrated_core_service_example.rs:impl<const MAX_CACHE_SIZE: usize> Default for ZeroCostConfigService<MAX_CACHE_SIZE> {
+code/crates/nestgate-core/src/zero_cost/migrated_core_service_example.rs:impl<const MAX_CACHE_SIZE: usize> ZeroCostConfigService<MAX_CACHE_SIZE> {
+code/crates/nestgate-core/src/zero_cost/migrated_core_service_example.rs:impl<const MAX_CACHE_SIZE: usize> ZeroCostUniversalService
+code/crates/nestgate-core/src/zero_cost/migrated_load_balancer.rs:pub trait ZeroCostLoadBalancer<const MAX_SERVICES: usize = 1000, const MAX_HISTORY: usize = 10000>:
+code/crates/nestgate-core/src/zero_cost_evolution.rs:    const MAX_CONNECTIONS: usize;
+code/crates/nestgate-core/src/zero_cost_evolution.rs:    const MAX_CONNECTIONS: usize =
+code/crates/nestgate-core/src/zero_cost_evolution.rs:    const MAX_CONNECTIONS: usize =
+code/crates/nestgate-core/src/simd/mod.rs:pub const MAX_BATCH_SIZE: usize = 1024;
+code/crates/nestgate-core/src/simd/mod.rs:pub const MIN_BATCH_SIZE: usize = 4;
+code/crates/nestgate-core/src/simd/mod.rs:        const _: () = assert!(MIN_BATCH_SIZE < DEFAULT_BATCH_SIZE);
+code/crates/nestgate-core/src/simd/mod.rs:        const _: () = assert!(DEFAULT_BATCH_SIZE < MAX_BATCH_SIZE);
+code/crates/nestgate-core/src/cache/zero_cost_cache.rs:    const MAX_SIZE: usize = 10000,
+code/crates/nestgate-core/src/cache/zero_cost_cache.rs:impl<K, V, const MAX_SIZE: usize, const TTL_SECONDS: u64> 
+code/crates/nestgate-core/src/cache/zero_cost_cache.rs:impl<K, V, const MAX_SIZE: usize, const TTL_SECONDS: u64> 
+code/crates/nestgate-core/src/cache/zero_cost_cache.rs:    const MAX_FILES: usize = 10000,
+code/crates/nestgate-core/src/cache/zero_cost_cache.rs:impl<K, V, const MAX_FILES: usize, const TTL_SECONDS: u64>
+code/crates/nestgate-core/src/cache/zero_cost_cache.rs:impl<K, V, const MAX_FILES: usize, const TTL_SECONDS: u64>
+code/crates/nestgate-core/src/universal_providers_zero_cost.rs:pub struct ZeroCostUniversalSecurityWrapper<Provider, const MAX_CONCURRENT: usize = 1000>
+code/crates/nestgate-core/src/universal_providers_zero_cost.rs:impl<Provider, const MAX_CONCURRENT: usize>
+code/crates/nestgate-core/src/universal_providers_zero_cost.rs:pub struct ZeroCostUniversalOrchestrationWrapper<Provider, const MAX_INSTANCES: usize = 500>
+code/crates/nestgate-core/src/universal_providers_zero_cost.rs:pub struct ZeroCostUniversalComputeWrapper<Provider, const MAX_COMPUTE_UNITS: usize = 1000>
+code/crates/nestgate-core/src/services/native_async/traits.rs:    const MAX_SERVICES: usize = 1000,
+code/crates/nestgate-core/src/services/native_async/traits.rs:    const MAX_CONCURRENT_REQUESTS: usize = 10000,
+code/crates/nestgate-core/src/services/native_async/traits.rs:    const MAX_CONNECTIONS: usize = 1000,
+code/crates/nestgate-core/src/services/native_async/traits.rs:    const MAX_MESSAGE_SIZE: usize = 1024,
+code/crates/nestgate-core/src/services/native_async/traits.rs:    const MAX_SESSIONS: usize = 1000,
+code/crates/nestgate-core/src/services/native_async/traits.rs:    const MAX_MESSAGE_SIZE: usize = 1024,
+code/crates/nestgate-core/src/services/native_async/traits.rs:    const MAX_WORKFLOWS: usize = 1000,
+code/crates/nestgate-core/src/services/native_async/traits.rs:    const MAX_CONCURRENT_EXECUTIONS: usize = 100,
+code/crates/nestgate-core/src/services/native_async/traits.rs:    const MAX_WORKFLOW_STEPS: usize = 100,
+code/crates/nestgate-core/src/services/native_async/traits.rs:    const MAX_SERVICES: usize = 1000,
+code/crates/nestgate-core/src/services/native_async/traits.rs:    const MAX_SESSIONS: usize = 1000,
+code/crates/nestgate-core/src/services/native_async/traits.rs:    const MAX_CONNECTIONS: usize = 1000,
+code/crates/nestgate-core/src/services/native_async/traits.rs:    const MAX_WORKFLOWS: usize = 1000,
+code/crates/nestgate-core/src/constants/port_defaults.rs:pub const DEFAULT_ADMIN_PORT: u16 = 8081;
+code/crates/nestgate-core/src/constants/system.rs:pub const MAX_CONNECTIONS: usize = 1000;
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:        pub const MAX_CONCURRENT_REQUESTS: usize = 1000;
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:        pub const MAX_REQUEST_SIZE: usize = 1024 * 1024; // 1MB
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:    pub const MAX_CONNECTIONS: usize = 1000;
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:    pub const DEFAULT_MAX_CONNECTIONS: usize = 1000;
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:    pub const DEFAULT_MAX_PARALLEL_TESTS: usize = 4;
+code/crates/nestgate-core/src/constants/network_hardcoded.rs:    pub const ADMIN_DEFAULT: u16 = 8082;
+code/crates/nestgate-core/src/constants/shared.rs:pub const DEFAULT_MAX_CONNECTIONS: usize = 1000;
+code/crates/nestgate-core/src/constants/hardcoding.rs:    pub const ADMIN_DEFAULT: u16 = 9000;
+code/crates/nestgate-core/src/constants/hardcoding.rs:    pub const MAX_CONNECTIONS: usize = 1000;
+code/crates/nestgate-core/src/constants/hardcoding.rs:    pub const MAX_RETRIES: u32 = 3;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const MIN_SIMD_SIZE: usize = 64;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const DEFAULT_MAX_CONCURRENT: usize = 1000;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const MAX_CONNECTIONS: usize = 1000;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const MAX_BACKENDS: usize = 100;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const MAX_CONCURRENT_OPS: usize = 1000;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const DEFAULT_RATE_LIMIT_RPM: u32 = 1000;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const DEFAULT_RATE_LIMIT_BURST: u32 = 100;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const MAX_SERVICES: usize = 1000;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const MAX_CONCURRENT_REQUESTS: usize = 10000;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const MAX_SESSIONS: usize = 1000;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const MAX_MESSAGE_SIZE: usize = 1024;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const MAX_FILE_SIZE_MB: usize = 1024;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const MAX_IN_MEMORY_FILE_SIZE: u64 = 1024 * 1024 * 1024;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const MAX_CONCURRENT_SECURITY: usize = 1000;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const MIN_SUPPORTED_VERSION: &str = "2.0.0";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const MAX_CONFIG_DEPTH: usize = 10;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const MAX_CONFIG_STRING_LENGTH: usize = 1024;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const MAX_CONFIG_ARRAY_LENGTH: usize = 100;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const MAX_FEATURE_FLAGS: usize = 1000;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const ZFS_DISCOVERY_MAX_DEPTH: usize = 10;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const MAX_FILE_DEPTH: usize = 100;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const MAX_RECURSION_DEPTH: usize = 50;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const MAX_COMPUTE_UNITS: usize = 1000;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const MAX_INSTANCES: usize = 500;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const MAX_CONNECTIONS: usize = performance::MAX_CONNECTIONS;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const MAX_CONCURRENT_OPS: usize = performance::MAX_CONCURRENT_OPS;
+code/crates/nestgate-core/src/constants/canonical.rs:    const MAX_CONNECTIONS: usize = ConstGenericDefaults::MAX_CONNECTIONS;
+code/crates/nestgate-core/src/constants/canonical.rs:    const MAX_CONCURRENT_OPS: usize = ConstGenericDefaults::MAX_CONCURRENT_OPS;
+code/crates/nestgate-core/src/universal_storage/zero_cost_storage_backend.rs:    const MAX_CONCURRENT_OPS: usize = 1000,
+code/crates/nestgate-core/src/universal_storage/zero_cost_storage_backend.rs:    const MAX_FILE_SIZE_MB: usize = 1024,
+code/crates/nestgate-core/src/universal_storage/zero_cost_storage_backend.rs:    const MAX_OPS: usize = 1000,
+code/crates/nestgate-core/src/universal_storage/zero_cost_storage_backend.rs:    const MAX_SIZE_MB: usize = 1024,
+code/crates/nestgate-core/src/universal_storage/zero_cost_storage_backend.rs:impl<const MAX_OPS: usize, const MAX_SIZE_MB: usize, const TIMEOUT_SECS: u64>
+code/crates/nestgate-core/src/universal_storage/zero_cost_storage_backend.rs:impl<const MAX_OPS: usize, const MAX_SIZE_MB: usize, const TIMEOUT_SECS: u64>
+code/crates/nestgate-core/src/universal_storage/zfs_features/cow_manager_zero_cost.rs:pub struct ZeroCostCowManager<Backend, const MAX_OPERATIONS: usize = 1000>
+code/crates/nestgate-core/src/universal_storage/zfs_features/cow_manager_zero_cost.rs:impl<Backend, const MAX_OPERATIONS: usize> ZeroCostCowManager<Backend, MAX_OPERATIONS>
+code/crates/nestgate-core/src/universal_storage/zfs_features/cow_manager_zero_cost.rs:pub struct ZeroCostCowManagerBuilder<Backend, const MAX_OPERATIONS: usize = 1000>
+code/crates/nestgate-core/src/universal_storage/zfs_features/cow_manager_zero_cost.rs:impl<Backend, const MAX_OPERATIONS: usize> ZeroCostCowManagerBuilder<Backend, MAX_OPERATIONS>
+code/crates/nestgate-core/src/universal_storage/zfs_features/raid_z_manager.rs:pub struct RaidZManager<Backend = DefaultStorageBackend, const MAX_BACKENDS: usize = 8>
+code/crates/nestgate-core/src/universal_storage/zfs_features/raid_z_manager.rs:impl<Backend, const MAX_BACKENDS: usize> RaidZManager<Backend, MAX_BACKENDS>
+code/crates/nestgate-core/src/universal_storage/zero_cost_storage_traits.rs:    const MAX_CONCURRENT_OPS: usize = 100,
+code/crates/nestgate-core/src/universal_storage/zero_cost_storage_traits.rs:pub trait ZeroCostStorageProvider<Backend, const MAX_BACKENDS: usize = 10>: Send + Sync
+code/crates/nestgate-zfs/src/constants.rs:pub const HOT_TIER_MAX_SIZE_GB: u64 = 1000;
+code/crates/nestgate-zfs/src/constants.rs:pub const HOT_TIER_MIN_FREE_GB: u64 = 100;
+code/crates/nestgate-zfs/src/constants.rs:pub const WARM_TIER_MAX_SIZE_GB: u64 = 10000;
+code/crates/nestgate-zfs/src/constants.rs:pub const WARM_TIER_MIN_FREE_GB: u64 = 1000;
+code/crates/nestgate-zfs/src/constants.rs:pub const COLD_TIER_MAX_SIZE_GB: u64 = 100000;
+code/crates/nestgate-zfs/src/constants.rs:pub const COLD_TIER_MIN_FREE_GB: u64 = 10000;
+code/crates/nestgate-zfs/src/zero_cost_zfs_operations/traits.rs:    const MAX_POOLS: usize = 100,
+code/crates/nestgate-zfs/src/zero_cost_zfs_operations/traits.rs:    const MAX_DATASETS: usize = 10_000,
+code/crates/nestgate-zfs/src/zero_cost_zfs_operations/traits.rs:    const MAX_SNAPSHOTS: usize = 100_000,
+code/crates/nestgate-zfs/src/zero_cost_zfs_operations/manager.rs:    const MAX_POOLS: usize,
+code/crates/nestgate-zfs/src/zero_cost_zfs_operations/manager.rs:    const MAX_DATASETS: usize,
+code/crates/nestgate-zfs/src/zero_cost_zfs_operations/manager.rs:    const MAX_SNAPSHOTS: usize,
+code/crates/nestgate-zfs/src/zero_cost_zfs_operations/manager.rs:        const MAX_POOLS: usize,
+code/crates/nestgate-zfs/src/zero_cost_zfs_operations/manager.rs:        const MAX_DATASETS: usize,
+code/crates/nestgate-zfs/src/zero_cost_zfs_operations/manager.rs:        const MAX_SNAPSHOTS: usize,
+code/crates/nestgate-zfs/src/zero_cost_zfs_operations/manager.rs:        const MAX_POOLS: usize,
+code/crates/nestgate-zfs/src/zero_cost_zfs_operations/manager.rs:        const MAX_DATASETS: usize,
+code/crates/nestgate-zfs/src/zero_cost_zfs_operations/manager.rs:        const MAX_SNAPSHOTS: usize,
+code/crates/nestgate-zfs/src/zero_cost_zfs_operations/manager.rs:        const MAX_POOLS: usize,
+code/crates/nestgate-zfs/src/zero_cost_zfs_operations/manager.rs:        const MAX_DATASETS: usize,
+code/crates/nestgate-zfs/src/zero_cost_zfs_operations/manager.rs:        const MAX_SNAPSHOTS: usize,
+code/crates/nestgate-api/src/handlers/zfs/zero_cost_factory.rs:pub struct ZeroCostNativeZfsService<const MAX_POOLS: usize> {
+code/crates/nestgate-api/src/handlers/zfs/zero_cost_factory.rs:impl<const MAX_POOLS: usize> Default for ZeroCostNativeZfsService<MAX_POOLS> {
+code/crates/nestgate-api/src/handlers/zfs/zero_cost_factory.rs:impl<const MAX_POOLS: usize> ZeroCostNativeZfsService<MAX_POOLS> {
+code/crates/nestgate-api/src/handlers/zfs/zero_cost_factory.rs:pub struct ZeroCostNativeZfsService<const MAX_POOLS: usize>;
+code/crates/nestgate-api/src/handlers/zfs/zero_cost_factory.rs:impl<const MAX_POOLS: usize> Default for ZeroCostNativeZfsService<MAX_POOLS> {
+code/crates/nestgate-api/src/handlers/zfs/zero_cost_factory.rs:impl<const MAX_POOLS: usize> ZeroCostNativeZfsService<MAX_POOLS> {
+code/crates/nestgate-api/src/handlers/zero_cost_api_handlers.rs:pub struct ZeroCostPoolHandler<const MAX_REQUESTS: usize, const TIMEOUT_MS: u64> {
+code/crates/nestgate-api/src/handlers/zero_cost_api_handlers.rs:impl<const MAX_REQUESTS: usize, const TIMEOUT_MS: u64> Default
+code/crates/nestgate-api/src/handlers/zero_cost_api_handlers.rs:impl<const MAX_REQUESTS: usize, const TIMEOUT_MS: u64>
+code/crates/nestgate-api/src/handlers/zero_cost_api_handlers.rs:impl<const MAX_REQUESTS: usize, const TIMEOUT_MS: u64> ZeroCostApiHandler<serde_json::Value>
+code/crates/nestgate-api/src/handlers/zero_cost_api_handlers.rs:pub struct ZeroCostRouterBuilder<const MAX_ROUTES: usize = 100, const MAX_MIDDLEWARE: usize = 10> {
+code/crates/nestgate-api/src/handlers/zero_cost_api_handlers.rs:impl<const MAX_ROUTES: usize, const MAX_MIDDLEWARE: usize> Default
+code/crates/nestgate-api/src/handlers/zero_cost_api_handlers.rs:impl<const MAX_ROUTES: usize, const MAX_MIDDLEWARE: usize>
