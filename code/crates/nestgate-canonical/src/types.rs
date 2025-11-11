@@ -179,6 +179,19 @@ pub struct CanonicalConfig {
 }
 /// Canonical Network Configuration,
 /// **⚠️ DEPRECATED**: Use `CanonicalNetworkConfig` from `nestgate_core::config::canonical_primary::domains::network`
+/// 
+/// **Migration Path**:
+/// ```rust
+/// // OLD (deprecated):
+/// use crate::network::config::NetworkConfig;
+/// 
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::NetworkConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+/// 
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(
     since = "0.9.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
@@ -373,6 +386,12 @@ impl Default for AuthConfig {
         }
     }
 }
+
+
+// Note: NetworkConfigCanonical type alias removed because nestgate-canonical
+// cannot depend on nestgate-core. Users should migrate directly to
+// nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig
+// in their code.
 
 #[cfg(test)]
 mod tests {
