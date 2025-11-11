@@ -1,3 +1,0 @@
-code/crates/nestgate-core/src/error/mod.rs:pub type Result<T> = std::result::Result<T, NestGateError>;
-code/crates/nestgate-core/src/error/phase4_ecosystem_adoption.rs:            "pub type Result<T> = std::result::Result<T, NestGateError>".to_string(),
-code/crates/nestgate-core/src/error/phase4_ecosystem_adoption.rs:            "pub type Result<T> = IdioResult<T>  // or IdioResult<T, E> for domain-specific errors".to_string(),
