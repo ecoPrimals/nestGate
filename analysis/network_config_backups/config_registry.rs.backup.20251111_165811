@@ -85,21 +85,6 @@ pub struct CanonicalNetworkConfig {
 ///
 /// Consolidates ALL security configuration patterns across the ecosystem
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
-/// 
-/// **Migration Path**:
-/// ```rust
-/// // OLD (deprecated):
-/// use crate::config::CanonicalSecurityConfig;
-/// 
-/// // NEW (canonical):
-/// use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-/// // Or use type alias for compatibility:
-/// use crate::config::CanonicalSecurityConfig; // Now aliases to CanonicalNetworkConfig
-/// ```
-/// 
-/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
 pub struct CanonicalSecurityConfig {
     /// Authentication settings
     pub authentication: SecurityAuthenticationConfig,
@@ -701,21 +686,6 @@ pub struct NetworkMonitoringConfig {
 // ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
-/// 
-/// **Migration Path**:
-/// ```rust
-/// // OLD (deprecated):
-/// use crate::config::SecurityAuthenticationConfig;
-/// 
-/// // NEW (canonical):
-/// use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-/// // Or use type alias for compatibility:
-/// use crate::config::SecurityAuthenticationConfig; // Now aliases to CanonicalNetworkConfig
-/// ```
-/// 
-/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
 pub struct SecurityAuthenticationConfig {
     pub enabled: bool,
     pub methods: Vec<AuthenticationMethod>,
@@ -735,21 +705,6 @@ pub enum AuthenticationMethod {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
-/// 
-/// **Migration Path**:
-/// ```rust
-/// // OLD (deprecated):
-/// use crate::config::SecurityAuthorizationConfig;
-/// 
-/// // NEW (canonical):
-/// use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-/// // Or use type alias for compatibility:
-/// use crate::config::SecurityAuthorizationConfig; // Now aliases to CanonicalNetworkConfig
-/// ```
-/// 
-/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
 pub struct SecurityAuthorizationConfig {
     pub enabled: bool,
     pub rbac_enabled: bool,
@@ -759,21 +714,6 @@ pub struct SecurityAuthorizationConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
-/// 
-/// **Migration Path**:
-/// ```rust
-/// // OLD (deprecated):
-/// use crate::config::SecurityEncryptionConfig;
-/// 
-/// // NEW (canonical):
-/// use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-/// // Or use type alias for compatibility:
-/// use crate::config::SecurityEncryptionConfig; // Now aliases to CanonicalNetworkConfig
-/// ```
-/// 
-/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
 pub struct SecurityEncryptionConfig {
     pub enabled: bool,
     pub algorithm: String,
@@ -790,21 +730,6 @@ pub struct KeyDerivationConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
-/// 
-/// **Migration Path**:
-/// ```rust
-/// // OLD (deprecated):
-/// use crate::config::SecurityTlsConfig;
-/// 
-/// // NEW (canonical):
-/// use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-/// // Or use type alias for compatibility:
-/// use crate::config::SecurityTlsConfig; // Now aliases to CanonicalNetworkConfig
-/// ```
-/// 
-/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
 pub struct SecurityTlsConfig {
     pub enabled: bool,
     pub version: String,
@@ -813,21 +738,6 @@ pub struct SecurityTlsConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
-/// 
-/// **Migration Path**:
-/// ```rust
-/// // OLD (deprecated):
-/// use crate::config::SecurityAuditConfig;
-/// 
-/// // NEW (canonical):
-/// use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-/// // Or use type alias for compatibility:
-/// use crate::config::SecurityAuditConfig; // Now aliases to CanonicalNetworkConfig
-/// ```
-/// 
-/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
 pub struct SecurityAuditConfig {
     pub enabled: bool,
     pub log_level: String,
@@ -837,21 +747,6 @@ pub struct SecurityAuditConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
-/// 
-/// **Migration Path**:
-/// ```rust
-/// // OLD (deprecated):
-/// use crate::config::SecurityThreatDetectionConfig;
-/// 
-/// // NEW (canonical):
-/// use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-/// // Or use type alias for compatibility:
-/// use crate::config::SecurityThreatDetectionConfig; // Now aliases to CanonicalNetworkConfig
-/// ```
-/// 
-/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
 pub struct SecurityThreatDetectionConfig {
     pub enabled: bool,
     pub ml_enabled: bool,
@@ -861,21 +756,6 @@ pub struct SecurityThreatDetectionConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
-/// 
-/// **Migration Path**:
-/// ```rust
-/// // OLD (deprecated):
-/// use crate::config::SecurityComplianceConfig;
-/// 
-/// // NEW (canonical):
-/// use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-/// // Or use type alias for compatibility:
-/// use crate::config::SecurityComplianceConfig; // Now aliases to CanonicalNetworkConfig
-/// ```
-/// 
-/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
 pub struct SecurityComplianceConfig {
     pub frameworks: Vec<String>,
     pub reporting_enabled: bool,
@@ -1300,134 +1180,6 @@ pub type StorageProtocolsConfigCanonical = crate::config::canonical_primary::dom
 pub type StorageMonitoringConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using StorageMonitoringConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-/// 
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-pub type CanonicalSecurityConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using CanonicalSecurityConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-/// 
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-pub type SecurityAuthenticationConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using SecurityAuthenticationConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-/// 
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-pub type SecurityAuthorizationConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using SecurityAuthorizationConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-/// 
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-pub type SecurityEncryptionConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using SecurityEncryptionConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-/// 
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-pub type SecurityTlsConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using SecurityTlsConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-/// 
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-pub type SecurityAuditConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using SecurityAuditConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-/// 
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-pub type SecurityThreatDetectionConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using SecurityThreatDetectionConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-/// 
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-pub type SecurityComplianceConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using SecurityComplianceConfig (the deprecated struct) for now.
 // We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
 // This alias is here for reference and future migration.
 
