@@ -1,0 +1,875 @@
+use std::collections::HashMap;
+//
+// This module provides the single source of truth for all configuration types
+// across the NestGate ecosystem, eliminating fragmentation and duplication.
+//
+// **CONSOLIDATES AND REPLACES**:
+// - `StorageConfig` (7+ different definitions across crates)
+// - `NetworkConfig` (4+ different definitions)
+// - `SecurityConfig` (3+ different definitions)
+// - `MonitoringConfig` (5+ different definitions)
+// - All other fragmented config structures
+
+use serde::{Deserialize, Serialize};
+use std::time::Duration;
+
+// ==================== SECTION ====================
+
+/// **THE CANONICAL STORAGE CONFIGURATION**
+///
+/// Consolidates ALL storage configuration patterns:
+/// - `StorageConfig` from `canonical_storage.rs`
+/// - `StorageResourceConfig` from `unified_types/storage/config.rs`
+/// - `StorageConfig` from config/storage.rs
+/// - `CanonicalStorageConfig` from `config/canonical/NestGateCanonicalConfig/storage_configs.rs`
+/// - `StorageConfig` from `unified_final_config/NestGateCanonicalConfig/storage.rs`
+/// - `FsMonitorStorageSettings` from fsmonitor storage config
+/// - `McpStorageConfig` from mcp storage config
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct CanonicalStorageConfig {
+    /// Storage backend type
+    pub backend_type: StorageBackendType,
+    /// Connection settings
+    pub connection: StorageConnectionConfig,
+    /// Performance settings
+    pub performance: StoragePerformanceConfig,
+    /// Security settings
+    pub security: StorageSecurityConfig,
+    /// Replication settings
+    pub replication: StorageReplicationConfig,
+    /// Tier management
+    pub tiers: StorageTierConfig,
+    /// Protocol support
+    pub protocols: StorageProtocolsConfig,
+    /// Monitoring settings
+    pub monitoring: StorageMonitoringConfig,
+    /// Resource limits
+    pub resources: StorageResourceConfig,
+    /// Environment-specific overrides
+    pub environment_overrides: HashMap<String, serde_json::Value>,
+}
+/// **THE CANONICAL NETWORK CONFIGURATION**
+///
+/// **⚠️ DEPRECATED**: This is a duplicate. Use `CanonicalNetworkConfig` from `canonical_primary::domains::network`
+/// Consolidates ALL network configuration patterns:
+/// - `NetworkConfig` from `canonical_modernization/core_config.rs`
+/// - `CanonicalNetworkConfig` from `canonical_modernization/NestGateCanonicalConfig.rs`
+/// - Network settings from `unified_network_extensions.rs`
+/// - Network configs from various service modules
+///
+/// **⚠️ DEPRECATED**: Duplicate. Use the one from `canonical_primary::domains::network`
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[deprecated(
+    since = "0.10.0",
+    note = "Use canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
+pub struct CanonicalNetworkConfig {
+    /// Interface bindings
+    pub interfaces: NetworkInterfaceConfig,
+    /// Protocol settings
+    pub protocols: NetworkProtocolsConfig,
+    /// Connection management
+    pub connections: NetworkConnectionConfig,
+    /// Security settings
+    pub security: NetworkSecurityConfig,
+    /// Performance tuning
+    pub performance: NetworkPerformanceConfig,
+    /// Load balancing
+    pub load_balancing: NetworkLoadBalancingConfig,
+    /// Service discovery
+    pub service_discovery: NetworkServiceDiscoveryConfig,
+    /// Monitoring settings
+    pub monitoring: NetworkMonitoringConfig,
+}
+/// **THE CANONICAL SECURITY CONFIGURATION**
+///
+/// Consolidates ALL security configuration patterns across the ecosystem
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct CanonicalSecurityConfig {
+    /// Authentication settings
+    pub authentication: SecurityAuthenticationConfig,
+    /// Authorization settings
+    pub authorization: SecurityAuthorizationConfig,
+    /// Encryption settings
+    pub encryption: SecurityEncryptionConfig,
+    /// TLS/SSL settings
+    pub tls: SecurityTlsConfig,
+    /// Audit settings
+    pub audit: SecurityAuditConfig,
+    /// Threat detection
+    pub threat_detection: SecurityThreatDetectionConfig,
+    /// Compliance settings
+    pub compliance: SecurityComplianceConfig,
+}
+/// **THE CANONICAL MONITORING CONFIGURATION**
+///
+/// Consolidates ALL monitoring configuration patterns
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct CanonicalMonitoringConfig {
+    /// Metrics collection
+    pub metrics: MonitoringMetricsConfig,
+    /// Logging settings
+    pub logging: MonitoringLoggingConfig,
+    /// Tracing settings
+    pub tracing: MonitoringTracingConfig,
+    /// Health checks
+    pub health_checks: MonitoringHealthCheckConfig,
+    /// Alerting settings
+    pub alerting: MonitoringAlertingConfig,
+    /// Dashboards
+    pub dashboards: MonitoringDashboardConfig,
+    /// Performance monitoring
+    pub performance: MonitoringPerformanceConfig,
+}
+// ==================== SECTION ====================
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum StorageBackendType {
+    Filesystem,
+    Memory,
+    Zfs,
+    Remote,
+    Hybrid,
+    Cloud,
+    Distributed,
+}
+
+impl Default for StorageBackendType {
+    fn default() -> Self {
+        Self::Filesystem
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct StorageConnectionConfig {
+    pub connection_string: Option<String>,
+    pub pool_size: usize,
+    pub timeout: Duration,
+    pub retry_attempts: usize,
+    pub retry_delay: Duration,
+    pub keep_alive: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct StoragePerformanceConfig {
+    pub cache_size_mb: usize,
+    pub io_threads: usize,
+    pub batch_size: usize,
+    pub prefetch_enabled: bool,
+    pub compression_enabled: bool,
+    pub max_iops: Option<u64>,
+    pub max_throughput_mbps: Option<u64>,
+    pub latency_target_ms: Option<f64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct StorageSecurityConfig {
+    pub encryption_enabled: bool,
+    pub encryption_algorithm: String,
+    pub key_rotation_interval: Duration,
+    pub access_logging: bool,
+    pub permission_checks: bool,
+    pub secure_deletion: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct StorageReplicationConfig {
+    pub enabled: bool,
+    pub replica_count: usize,
+    pub sync_mode: ReplicationSyncMode,
+    pub conflict_resolution: ConflictResolutionStrategy,
+    pub health_check_interval: Duration,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ReplicationSyncMode {
+    Synchronous,
+    Asynchronous,
+    SemiSynchronous,
+}
+
+impl Default for ReplicationSyncMode {
+    fn default() -> Self {
+        Self::Asynchronous
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ConflictResolutionStrategy {
+    LastWriteWins,
+    FirstWriteWins,
+    Manual,
+    Versioned,
+}
+
+impl Default for ConflictResolutionStrategy {
+    fn default() -> Self {
+        Self::LastWriteWins
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct StorageTierConfig {
+    pub hot_tier: TierSettings,
+    pub warm_tier: TierSettings,
+    pub cold_tier: TierSettings,
+    pub archive_tier: TierSettings,
+    pub auto_tiering: bool,
+    pub migration_policies: Vec<TierMigrationPolicy>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct TierSettings {
+    pub storage_type: String,
+    pub capacity_gb: Option<u64>,
+    pub performance_class: String,
+    pub migration_threshold: Option<f64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TierMigrationPolicy {
+    pub from_tier: String,
+    pub to_tier: String,
+    pub conditions: Vec<MigrationCondition>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MigrationCondition {
+    pub metric: String,
+    pub operator: String,
+    pub threshold: f64,
+    pub duration: Duration,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct StorageProtocolsConfig {
+    pub nfs: Option<NfsProtocolConfig>,
+    pub smb: Option<SmbProtocolConfig>,
+    pub iscsi: Option<IscsiProtocolConfig>,
+    pub s3: Option<S3ProtocolConfig>,
+    pub ftp: Option<FtpProtocolConfig>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NfsProtocolConfig {
+    pub version: String,
+    pub allowed_clients: Vec<String>,
+    pub mount_options: HashMap<String, String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SmbProtocolConfig {
+    pub version: String,
+    pub share_name: String,
+    pub workgroup: String,
+    pub authentication: SmbAuthConfig,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SmbAuthConfig {
+    pub method: String,
+    pub domain: Option<String>,
+    pub guest_access: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct IscsiProtocolConfig {
+    pub target_name: String,
+    pub portal_endpoint: String,
+    pub portal_port: u16,
+    pub authentication: IscsiAuthConfig,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct IscsiAuthConfig {
+    pub chap_enabled: bool,
+    pub username: Option<String>,
+    pub mutual_chap: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct S3ProtocolConfig {
+    pub endpoint: String,
+    pub region: String,
+    pub bucket: String,
+    pub access_key_id: String,
+    pub secret_access_key: String,
+    pub use_ssl: bool,
+    pub path_style: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FtpProtocolConfig {
+    pub host: String,
+    pub port: u16,
+    pub username: String,
+    pub password: String,
+    pub passive_mode: bool,
+    pub ssl_enabled: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct StorageMonitoringConfig {
+    pub metrics_enabled: bool,
+    pub metrics_interval: Duration,
+    pub alert_thresholds: HashMap<String, f64>,
+    pub performance_tracking: bool,
+    pub usage_reporting: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct StorageResourceConfig {
+    pub max_memory_mb: Option<u64>,
+    pub max_disk_gb: Option<u64>,
+    pub max_connections: usize,
+    pub max_concurrent_operations: usize,
+    pub resource_limits: HashMap<String, u64>,
+}
+
+// ==================== SECTION ====================
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// 
+/// **Migration Path**:
+/// ```rust
+/// // OLD (deprecated):
+/// use crate::network::config::NetworkInterfaceConfig;
+/// 
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::NetworkInterfaceConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+/// 
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+pub struct NetworkInterfaceConfig {
+    pub bind_addresses: Vec<String>,
+    pub primary_port: u16,
+    pub additional_ports: Vec<u16>,
+    pub interface_preferences: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// 
+/// **Migration Path**:
+/// ```rust
+/// // OLD (deprecated):
+/// use crate::network::config::NetworkProtocolsConfig;
+/// 
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::NetworkProtocolsConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+/// 
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+pub struct NetworkProtocolsConfig {
+    pub http_enabled: bool,
+    pub https_enabled: bool,
+    pub websocket_enabled: bool,
+    pub grpc_enabled: bool,
+    pub tcp_enabled: bool,
+    pub udp_enabled: bool,
+    pub protocol_versions: HashMap<String, String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// 
+/// **Migration Path**:
+/// ```rust
+/// // OLD (deprecated):
+/// use crate::network::config::NetworkConnectionConfig;
+/// 
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::NetworkConnectionConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+/// 
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+pub struct NetworkConnectionConfig {
+    pub max_connections: usize,
+    pub connection_timeout: Duration,
+    pub read_timeout: Duration,
+    pub write_timeout: Duration,
+    pub keep_alive: bool,
+    pub keep_alive_timeout: Duration,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// 
+/// **Migration Path**:
+/// ```rust
+/// // OLD (deprecated):
+/// use crate::network::config::NetworkSecurityConfig;
+/// 
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::NetworkSecurityConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+/// 
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+pub struct NetworkSecurityConfig {
+    pub tls_enabled: bool,
+    pub client_auth_required: bool,
+    pub cipher_suites: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// 
+/// **Migration Path**:
+/// ```rust
+/// // OLD (deprecated):
+/// use crate::network::config::NetworkPerformanceConfig;
+/// 
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::NetworkPerformanceConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+/// 
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+pub struct NetworkPerformanceConfig {
+    pub tcp_nodelay: bool,
+    pub tcp_keepalive: bool,
+    pub buffer_sizes: NetworkBufferConfig,
+    pub congestion_control: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// 
+/// **Migration Path**:
+/// ```rust
+/// // OLD (deprecated):
+/// use crate::network::config::NetworkBufferConfig;
+/// 
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::NetworkBufferConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+/// 
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+pub struct NetworkBufferConfig {
+    pub send_buffer_size: Option<usize>,
+    pub recv_buffer_size: Option<usize>,
+    pub socket_buffer_size: Option<usize>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct NetworkLoadBalancingConfig {
+    pub enabled: bool,
+    pub strategy: LoadBalancingStrategy,
+    pub health_check_enabled: bool,
+    pub backends: Vec<BackendConfig>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum LoadBalancingStrategy {
+    RoundRobin,
+    LeastConnections,
+    WeightedRoundRobin,
+    IpHash,
+    Random,
+}
+
+impl Default for LoadBalancingStrategy {
+    fn default() -> Self {
+        Self::RoundRobin
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BackendConfig {
+    pub endpoint: String,
+    pub port: u16,
+    pub weight: u32,
+    pub max_connections: Option<usize>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct NetworkServiceDiscoveryConfig {
+    pub enabled: bool,
+    pub discovery_method: ServiceDiscoveryMethod,
+    pub service_registry: Option<String>,
+    pub discovery_interval: Duration,
+    pub registration_ttl: Duration,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ServiceDiscoveryMethod {
+    Dns,
+    Consul,
+    Etcd,
+    Kubernetes,
+    Static,
+}
+
+impl Default for ServiceDiscoveryMethod {
+    fn default() -> Self {
+        Self::Dns
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct NetworkMonitoringConfig {
+    pub connection_tracking: bool,
+    pub bandwidth_monitoring: bool,
+    pub latency_monitoring: bool,
+    pub error_rate_monitoring: bool,
+    pub metrics_export: bool,
+}
+
+// ==================== SECTION ====================
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct SecurityAuthenticationConfig {
+    pub enabled: bool,
+    pub methods: Vec<AuthenticationMethod>,
+    pub session_timeout: Duration,
+    pub max_login_attempts: usize,
+    pub lockout_duration: Duration,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum AuthenticationMethod {
+    Password,
+    Token,
+    Certificate,
+    OAuth,
+    Saml,
+    Ldap,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct SecurityAuthorizationConfig {
+    pub enabled: bool,
+    pub rbac_enabled: bool,
+    pub default_permissions: Vec<String>,
+    pub permission_cache_ttl: Duration,
+    pub audit_authorization: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct SecurityEncryptionConfig {
+    pub enabled: bool,
+    pub algorithm: String,
+    pub key_size: usize,
+    pub key_rotation_interval: Duration,
+    pub key_derivation: KeyDerivationConfig,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct KeyDerivationConfig {
+    pub algorithm: String,
+    pub iterations: usize,
+    pub salt_size: usize,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct SecurityTlsConfig {
+    pub enabled: bool,
+    pub version: String,
+    pub cipher_suites: Vec<String>,
+    pub client_auth_required: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct SecurityAuditConfig {
+    pub enabled: bool,
+    pub log_level: String,
+    pub log_format: String,
+    pub retention_days: usize,
+    pub events_to_audit: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct SecurityThreatDetectionConfig {
+    pub enabled: bool,
+    pub ml_enabled: bool,
+    pub rules_enabled: bool,
+    pub alert_threshold: f64,
+    pub response_actions: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct SecurityComplianceConfig {
+    pub frameworks: Vec<String>,
+    pub reporting_enabled: bool,
+    pub automated_checks: bool,
+    pub compliance_level: String,
+}
+
+// ==================== SECTION ====================
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct MonitoringMetricsConfig {
+    pub enabled: bool,
+    pub collection_interval: Duration,
+    pub retention_days: usize,
+    pub export_enabled: bool,
+    pub export_endpoints: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct MonitoringLoggingConfig {
+    pub enabled: bool,
+    pub level: String,
+    pub format: String,
+    pub output_destinations: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct LogRotationPolicy {
+    pub max_size_mb: usize,
+    pub max_files: usize,
+    pub compress: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct MonitoringTracingConfig {
+    pub enabled: bool,
+    pub sampling_rate: f64,
+    pub trace_endpoint: Option<String>,
+    pub service_name: String,
+    pub tags: HashMap<String, String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct MonitoringHealthCheckConfig {
+    pub enabled: bool,
+    pub endpoint: String,
+    pub interval: Duration,
+    pub timeout: Duration,
+    pub failure_threshold: usize,
+    pub success_threshold: usize,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct MonitoringAlertingConfig {
+    pub enabled: bool,
+    pub alert_channels: Vec<AlertChannel>,
+    pub alert_rules: Vec<AlertRule>,
+    pub escalation_policies: Vec<EscalationPolicy>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AlertChannel {
+    pub name: String,
+    pub channel_type: String,
+    pub configuration: HashMap<String, String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AlertRule {
+    pub name: String,
+    pub condition: String,
+    pub threshold: f64,
+    pub duration: Duration,
+    pub severity: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EscalationPolicy {
+    pub name: String,
+    pub levels: Vec<EscalationLevel>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EscalationLevel {
+    pub delay: Duration,
+    pub channels: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct MonitoringDashboardConfig {
+    pub enabled: bool,
+    pub dashboard_endpoint: Option<String>,
+    pub custom_dashboards: Vec<DashboardConfig>,
+    pub auto_refresh_interval: Duration,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DashboardConfig {
+    pub name: String,
+    pub panels: Vec<PanelConfig>,
+    pub refresh_interval: Duration,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PanelConfig {
+    pub title: String,
+    pub panel_type: String,
+    pub query: String,
+    pub visualization: HashMap<String, serde_json::Value>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct MonitoringPerformanceConfig {
+    pub enabled: bool,
+    pub profiling_enabled: bool,
+    pub benchmark_enabled: bool,
+    pub performance_targets: HashMap<String, f64>,
+}
+
+/// **CANONICAL CONFIGURATION TYPE REGISTRY**
+///
+/// This struct provides access to all canonical configuration types
+/// and includes utilities for migration from legacy configurations.
+pub struct CanonicalConfigTypeRegistry;
+impl CanonicalConfigTypeRegistry {
+    /// Get the canonical storage configuration type
+    #[must_use]
+    pub fn storage_config() -> &'static str {
+        "CanonicalStorageConfig"
+    }
+
+    /// Get the canonical network configuration type
+    #[must_use]
+    pub fn network_config() -> &'static str {
+        "CanonicalNetworkConfig"
+    }
+
+    /// Get the canonical security configuration type
+    #[must_use]
+    pub fn security_config() -> &'static str {
+        "CanonicalSecurityConfig"
+    }
+
+    /// Get the canonical monitoring configuration type
+    #[must_use]
+    pub fn monitoring_config() -> &'static str {
+        "CanonicalMonitoringConfig"
+    }
+
+    /// List all legacy configuration types that should be migrated
+    #[must_use]
+    pub fn legacy_types() -> Vec<&'static str> {
+        vec![
+            "StorageConfig", // From various modules
+            "StorageResourceConfig",
+            "StorageTierConfig",
+            "NetworkConfig",
+            "SecurityConfig",
+            "MonitoringConfig",
+            "FsMonitorStorageSettings",
+            "McpStorageConfig",
+            // Add more as we find them
+        ]
+    }
+
+    /// Check if a type name is a legacy configuration type
+    #[must_use]
+    pub fn is_legacy_type(type_name: &str) -> bool {
+        Self::legacy_types().contains(&type_name)
+    }
+}
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+/// 
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+pub type NetworkInterfaceConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using NetworkInterfaceConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+/// 
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+pub type NetworkProtocolsConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using NetworkProtocolsConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+/// 
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+pub type NetworkConnectionConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using NetworkConnectionConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+/// 
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+pub type NetworkSecurityConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using NetworkSecurityConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+/// 
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+pub type NetworkPerformanceConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using NetworkPerformanceConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+/// 
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+pub type NetworkBufferConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using NetworkBufferConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+
