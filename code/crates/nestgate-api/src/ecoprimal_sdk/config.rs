@@ -6,6 +6,21 @@ use std::collections::HashMap;
 
 /// Primal configuration structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// 
+/// **Migration Path**:
+/// ```rust
+/// // OLD (deprecated):
+/// use crate::config::PrimalConfig;
+/// 
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::config::PrimalConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+/// 
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
 pub struct PrimalConfig {
     /// Unique instance identifier
     pub instance_id: String,
@@ -44,6 +59,21 @@ pub struct NetworkConfig {
 }
 /// Certificate configuration  
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// 
+/// **Migration Path**:
+/// ```rust
+/// // OLD (deprecated):
+/// use crate::config::CertificateConfig;
+/// 
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::config::CertificateConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+/// 
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
 pub struct CertificateConfig {
     /// Certificate file path
     pub cert_file: String,
@@ -228,3 +258,35 @@ pub enum AuditDestination {
     /// External service
     External(String),
 }
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+/// 
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+pub type PrimalConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using PrimalConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+/// 
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+pub type CertificateConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using CertificateConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+
