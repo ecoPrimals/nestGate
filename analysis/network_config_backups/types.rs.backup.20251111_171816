@@ -249,21 +249,6 @@ pub struct NetworkSpec {
 }
 /// DNS configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
-/// 
-/// **Migration Path**:
-/// ```rust
-/// // OLD (deprecated):
-/// use crate::config::DnsConfig;
-/// 
-/// // NEW (canonical):
-/// use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-/// // Or use type alias for compatibility:
-/// use crate::config::DnsConfig; // Now aliases to CanonicalNetworkConfig
-/// ```
-/// 
-/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
 pub struct DnsConfig {
     /// DNS servers
     pub servers: Vec<String>,
@@ -272,21 +257,6 @@ pub struct DnsConfig {
 }
 /// Load balancing configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
-/// 
-/// **Migration Path**:
-/// ```rust
-/// // OLD (deprecated):
-/// use crate::config::LoadBalancingConfig;
-/// 
-/// // NEW (canonical):
-/// use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-/// // Or use type alias for compatibility:
-/// use crate::config::LoadBalancingConfig; // Now aliases to CanonicalNetworkConfig
-/// ```
-/// 
-/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
 pub struct LoadBalancingConfig {
     /// Load balancing strategy
     pub strategy: String,
@@ -295,21 +265,6 @@ pub struct LoadBalancingConfig {
 }
 /// Health check configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
-/// 
-/// **Migration Path**:
-/// ```rust
-/// // OLD (deprecated):
-/// use crate::config::HealthCheckConfig;
-/// 
-/// // NEW (canonical):
-/// use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-/// // Or use type alias for compatibility:
-/// use crate::config::HealthCheckConfig; // Now aliases to CanonicalNetworkConfig
-/// ```
-/// 
-/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
 pub struct HealthCheckConfig {
     /// Health check path
     /// Health check interval
@@ -440,21 +395,6 @@ pub struct TemplateSpec {
 }
 /// Coordination configuration for cross-capability patterns
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
-/// 
-/// **Migration Path**:
-/// ```rust
-/// // OLD (deprecated):
-/// use crate::config::CoordinationConfig;
-/// 
-/// // NEW (canonical):
-/// use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-/// // Or use type alias for compatibility:
-/// use crate::config::CoordinationConfig; // Now aliases to CanonicalNetworkConfig
-/// ```
-/// 
-/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
 pub struct CoordinationConfig {
     /// Coordination patterns
     pub patterns: Vec<CoordinationPattern>,
@@ -560,70 +500,6 @@ pub struct ResourceConstraints {
 pub type CapabilityConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using CapabilityConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-/// 
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-pub type DnsConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using DnsConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-/// 
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-pub type LoadBalancingConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using LoadBalancingConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-/// 
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-pub type HealthCheckConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using HealthCheckConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-/// 
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-pub type CoordinationConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using CoordinationConfig (the deprecated struct) for now.
 // We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
 // This alias is here for reference and future migration.
 
