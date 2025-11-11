@@ -1,0 +1,22 @@
+=== Network Results ===
+code/crates/nestgate-network/src/error.rs:pub type NetworkResult<T> = std::result::Result<T, NetworkError>;
+code/crates/nestgate-core/src/zero_cost/network.rs:    type Result = crate::Result<String>;
+code/crates/nestgate-core/src/zero_cost/network.rs:    type Result = crate::Result<String>;
+
+=== Storage Results ===
+code/crates/nestgate-core/src/zero_cost/storage.rs:    type Result = crate::Result<String>;
+code/crates/nestgate-core/src/zero_cost/storage.rs:    type Result = crate::Result<String>;
+code/crates/nestgate-core/src/universal_storage/enterprise/backend/ops/mod.rs:pub type DuplicationResult = crate::error::CanonicalResult<(Vec<crate::universal_storage::enterprise::DuplicateGroup>, u64)>;
+code/crates/nestgate-core/src/universal_storage/unified_storage_types.rs:pub type ReplicationResult = UniversalReplicationResult;
+code/crates/nestgate-zfs/src/zero_cost_zfs_operations/types.rs:    type SerializeResult<S> = Result<<S as Serializer>::Ok, <S as Serializer>::Error>;
+code/crates/nestgate-zfs/src/types.rs:// DEPRECATED: pub type ZfsResult<T> = Result<T, ZfsError>;
+code/crates/nestgate-zfs/src/command.rs:type AnyhowResult<T> = anyhow::Result<T>;
+code/crates/nestgate-zfs/src/command.rs:type ZfsCommandResult<T> = AnyhowResult<T>;
+code/crates/nestgate-zfs/src/command.rs:type ParsedTableResult = AnyhowResult<Vec<HashMap<String, String>>>;
+code/crates/nestgate-zfs/src/error.rs:// - pub type ZfsResult<T> = std::result::Result<T, crate::types::ZfsError>;
+code/crates/nestgate-zfs/src/error.rs:// - pub type Result<T> = nestgate_core::error::Result<T, ZfsError>;
+code/crates/nestgate-zfs/src/error.rs:pub type ZfsResult<T> = Result<T>;
+code/crates/nestgate-api/src/handlers/zfs/universal_zfs/types.rs:pub type UniversalZfsResult<T> = Result<T, UniversalZfsError>;
+
+=== API/Handler Results ===
+code/crates/nestgate-api/src/handlers/zfs/universal_zfs/types.rs:pub type UniversalZfsResult<T> = Result<T, UniversalZfsError>;

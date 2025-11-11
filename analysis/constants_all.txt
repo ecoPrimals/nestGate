@@ -1,0 +1,1208 @@
+code/crates/nestgate-bin/target/debug/build/mime_guess-a5b4232797a4bc5d/out/mime_types_generated.rs:const EXTS: &'static [&'static str] = &["dwg", "ez", "anx", "aw", "atom", "atomcat", "atomsvc", "bdoc", "ccxml", "cdmia", "cdmic", "cdmid", "cdmio", "cdmiq", "cu", "mpd", "davmount", "x", "dbk", "dssc", "xdssc", "emma", "evy", "epub", "etl", "exi", "otf", "ttf", "pfr", "woff", "fif", "fsscript", "fsx", "spl", "geojson", "gml", "gpx", "gxf", "gz", "hjson", "hta", "stk", "ink", "inkml", "acx", "ipfix", "ear", "jar", "war", "ser", "mjs", "json", "json5", "jsonml", "jsonld", "jck", "jcz", "lostxml", "hqx", "cpt", "mads", "webmanifest", "mrc", "mrcx", "ma", "mb", "nb", "mathml", "mbox", "mscml", "metalink", "meta4", "mets", "mods", "m21", "mp21", "mp4s", "amc", "vsi", "accdb", "accde", "accdt", "ade", "adp", "mda", "mde", "accda", "accdc", "accft", "accdr", "accdw", "doc", "dot", "wbk", "wiz", "mxf", "nq", "nt", "aaf", "aca", "afm", "asd", "asi", "bin", "bpk", "buffer", "cab", "cur", "dat", "deb", "deploy", "dist", "distz", "dmg", "dms", "dsp", "dump", "dwp", "elc", "emz", "exe", "fla", "hhk", "hhp", "hxd", "hxh", "hxi", "hxq", "hxr", "hxs", "hxw", "img", "inf", "iso", "java", "jpb", "lpk", "lrf", "lzh", "mar", "mdp", "mix", "msi", "msm", "mso", "msp", "ocx", "pcx", "pcz", "pfb", "pfm", "pkg", "prm", "prx", "psd", "psm", "psp", "qxd", "rvt", "sea", "smi", "snp", "so", "thn", "toc", "u32", "xmp", "xsn", "xtp", "oda", "opf", "ogx", "axs", "omdoc", "one", "onea", "onepkg", "onetmp", "onetoc", "onetoc2", "osdx", "oxps", "xer", "pdf", "pgp", "asc", "sig", "prf", "p10", "p7c", "p7m", "p7s", "p8", "ac", "crl", "pkipath", "pki", "ai", "eps", "ps", "psc1", "cww", "pskcxml", "raml", "rat", "rdf", "rif", "rnc", "rl", "rld", "gbr", "mft", "roa", "rsd", "rss", "rtf", "sbml", "scq", "scs", "spq", "spp", "sdp", "setpay", "setreg", "shf", "smil", "rq", "srx", "gram", "grxml", "sru", "ssdl", "ssml", "step", "stp", "ssm", "tei", "teicorpus", "tfi", "tsd", "trig", "plb", "psb", "pvb", "tcap", "pwn", "aso", "imp", "acu", "acutc", "atc", "air", "fcdt", "fxp", "fxpl", "xdp", "xfdf", "ahead", "azf", "azs", "azw", "acc", "ami", "apk", "cii", "fti", "atx", "parquet", "mpkg", "pkpass", "swi", "iota", "aep", "mpm", "bmi", "rep", "cdxml", "mmd", "cdy", "csl", "cla", "rp9", "c4d", "c4f", "c4g", "c4p", "c4u", "c11amc", "c11amz", "csp", "cdbcmsg", "cmc", "clkx", "clkk", "clkp", "clkt", "clkw", "wbs", "ppd", "car", "pcurl", "dart", "rdz", "uvd", "uvf", "uvvd", "uvvf", "uvt", "uvvt", "uvvx", "uvx", "uvvz", "uvz", "fe_launch", "dna", "mlp", "dpg", "dfac", "kpxx", "ait", "geo", "mag", "nml", "esf", "msf", "qam", "slt", "ssf", "es3", "et3", "ez2", "ez3", "fdf", "mseed", "dataless", "seed", "gph", "ftc", "book", "fm", "frame", "maker", "fnc", "ltf", "fsc", "oas", "oa2", "oa3", "fg5", "bh2", "ddd", "xdw", "xbd", "fzs", "txd", "ggb", "ggt", "gex", "gre", "gxt", "g2w", "g3w", "gmx", "gdoc", "gslides", "gsheet", "kml", "kmz", "gqf", "gqs", "gac", "ghf", "gim", "grv", "gtm", "tpl", "vcg", "hal", "zmm", "hbci", "les", "hpgl", "hpid", "hps", "jlt", "pcl", "pclxl", "sfd-hdstx", "mpy", "afp", "list3820", "listafp", "irm", "sc", "icc", "icm", "igl", "ivp", "ivu", "igm", "xpw", "xpx", "i2g", "qbo", "qfx", "rcprofile", "irp", "xpr", "fcs", "jam", "rms", "jisp", "joda", "ktr", "ktz", "karbon", "chrt", "kfo", "flw", "kon", "kpr", "kpt", "ksp", "kwd", "kwt", "htke", "kia", "kne", "knp", "skd", "skm", "skt", "sse", "lasxml", "lbd", "lbe", "123", "apr", "pre", "nsf", "org", "scm", "lwp", "portpkg", "mcd", "mc1", "cdkey", "mwf", "mfm", "flo", "igx", "mif", "daf", "dis", "mbk", "mqy", "msl", "plc", "txf", "mpn", "mpc", "xul", "cil", "slk", "xla", "xlc", "xld", "xlk", "xll", "xlm", "xls", "xlt", "xlw", "xlam", "xlsb", "xlsm", "xltm", "eot", "chm", "ims", "lrm", "mpf", "calx", "thmx", "msg", "pst", "sst", "pko", "cat", "stl", "pot", "ppa", "pps", "ppt", "pwz", "ppam", "pptm", "sldm", "ppsm", "potm", "mpp", "mpt", "vdx", "docm", "dotm", "wcm", "wdb", "wks", "wps", "wpl", "xps", "mseq", "mus", "msty", "taglet", "nlu", "nitf", "ntf", "nnd", "nns", "nnw", "ngdat", "n-gage", "rpst", "rpss", "edm", "edx", "ext", "odc", "otc", "odb", "odf", "odft", "odg", "otg", "odi", "oti", "odp", "otp", "ods", "ots", "odt", "odm", "ott", "oth", "xo", "dd2", "oxt", "pptx", "sldx", "ppsx", "potx", "xlsx", "xltx", "docx", "dotx", "mgp", "dp", "esa", "oprc", "pdb", "pqa", "paw", "str", "ei6", "efif", "wg", "plf", "pbd", "box", "mgz", "qps", "ptid", "qwd", "qwt", "qxb", "qxl", "qxt", "bed", "mxl", "musicxml", "cryptonote", "rm", "rmvb", "rmp", "link66", "st", "see", "sema", "semd", "semf", "ifm", "itp", "iif", "ipk", "twd", "twds", "teacher", "sdkd", "sdkm", "dxp", "sfs", "sdc", "sda", "sdd", "smf", "sdw", "vor", "sgl", "smzip", "sm", "wadl", "sxc", "stc", "sxd", "std", "sxi", "sti", "sxm", "sxw", "sxg", "stw", "sus", "susp", "svd", "sis", "sisx", "xsm", "bdm", "xdm", "tao", "cap", "dmp", "pcap", "tmo", "tpt", "mxs", "tra", "ufd", "ufdl", "utz", "umj", "unityweb", "uoml", "vcx", "vsd", "vss", "vst", "vsw", "vsx", "vtx", "vis", "vsf", "wbxml", "wmlc", "wmlsc", "wtb", "nbp", "wpd", "wqd", "stf", "xar", "xfdl", "hvd", "hvs", "hvp", "osf", "osfpvg", "saf", "spf", "cmp", "zir", "zirz", "zaz", "vxml", "vsix", "wasm", "wgt", "library-ms", "searchconnector-ms", "hlp", "wlmp", "wspolicy", "7z", "abw", "ace", "arj", "aab", "vox", "x32", "aam", "aas", "bcpio", "torrent", "blb", "blorb", "adobebridge", "bz", "boz", "bz2", "cb7", "cba", "cbr", "cbt", "cbz", "cdf", "vcd", "cfs", "chat", "pgn", "crx", "cco", "z", "tgz", "cpio", "csh", "udeb", "dgc", "cct", "cst", "cxt", "dcr", "dir", "dxr", "fgd", "swa", "w3d", "wad", "ncx", "dtb", "res", "dvi", "dxf", "erf", "eva", "bdf", "gsf", "psf", "pcf", "snf", "ttf", "pfa", "arc", "gca", "ulx", "gnumeric", "gramps", "gtar", "gz", "hdf", "php", "install", "ins", "isp", "iii", "ipa", "ipg", "ipsw", "ite", "itlp", "itms", "itpc", "class", "jardiff", "jnlp", "skp", "latex", "luac", "lha", "run", "mie", "mvc", "mxp", "mobi", "prc", "application", "slupkg-ms", "manifest", "lit", "lnk", "vsto", "wmd", "wmz", "xbap", "mdb", "obd", "crd", "clp", "bat", "com", "dll", "m13", "m14", "mvb", "emf", "wmf", "mny", "pub", "scd", "trm", "wri", "nc", "pac", "nzb", "hhc", "parquet", "pma", "pmc", "pml", "pmr", "pmw", "pl", "pm", "p12", "pfx", "p7b", "spc", "p7r", "pcast", "qtl", "rar", "ris", "safariextz", "webarchive", "sgimb", "sh", "shar", "mfp", "swf", "xap", "mmf", "sql", "sit", "sitx", "srt", "sv4cpio", "sv4crc", "t3", "gam", "tar", "tcl", "tk", "tex", "tfm", "texi", "texinfo", "obj", "roff", "t", "tr", "man", "me", "ms", "ustar", "hdd", "ova", "ovf", "vbox", "vbox-extpack", "vdi", "vhd", "vmdk", "src", "webapp", "wlpginstall", "wlpginstall3", "cer", "crt", "der", "pem", "fig", "xlf", "xpi", "xz", "z1", "z2", "z3", "z4", "z5", "z6", "z7", "z8", "xaml", "xdf", "xenc", "xht", "xhtml", "asa", "asax", "ascx", "ashx", "asmx", "aspx", "config", "coverage", "datasource", "dgml", "filters", "generictest", "hxa", "hxc", "hxe", "hxf", "hxk", "hxv", "loadtest", "primary", "mtx", "orderedtest", "psess", "rdlc", "resx", "rng", "ruleset", "settings", "sitemap", "skin", "snippet", "svc", "testrunconfig", "testsettings", "trx", "vcproj", "vcxproj", "vscontent", "vsmdi", "webtest", "wiq", "xmta", "xsc", "xss", "xop", "xpl", "xspf", "mxml", "xhvml", "xvm", "xvml", "yang", "yin", "zip", "aac", "adts", "ac3", "aif", "aifc", "aiff", "cdda", "axa", "aa", "au", "snd", "flac", "m4a", "m4b", "m4p", "mid", "midi", "rmi", "kar", "mp4a", "m2a", "m3a", "mp2", "mp2a", "mp3", "mpga", "oga", "ogg", "opus", "spx", "s3m", "pls", "sil", "aax", "uva", "uvva", "eol", "adt", "dra", "dts", "dtshd", "lvp", "pya", "ecelp4800", "ecelp7470", "ecelp9600", "rip", "wav", "wave", "weba", "caf", "gsm", "m4r", "mka", "m3u", "m3u8", "wax", "wma", "ra", "ram", "rpm", "sd2", "smd", "smx", "smz", "xm", "cdx", "cif", "cmdf", "cml", "csml", "xyz", "dwf", "ttc", "ttf", "woff2", "apng", "avif", "avifs", "bmp", "dib", "cgm", "cod", "g3", "gif", "heic", "heics", "heif", "heifs", "ief", "jp2", "jpg2", "jfif", "jpe", "jpeg", "jpg", "jpm", "jpf", "jpx", "jxl", "ktx", "pct", "pic", "pict", "png", "pnz", "btif", "sgi", "svg", "svgz", "tif", "tiff", "uvg", "uvi", "uvvg", "uvvi", "djv", "djvu", "fbs", "fpx", "fst", "mmr", "rlc", "mdi", "wdp", "npx", "hdr", "rf", "wbmp", "xif", "webp", "3ds", "dng", "cr2", "cr3", "crw", "ras", "cmx", "erf", "fh", "fh4", "fh5", "fh7", "fhc", "raf", "ico", "art", "jng", "dcr", "k25", "kdc", "mac", "pnt", "pntg", "mrw", "sid", "nef", "nrw", "orf", "raw", "rw2", "rwl", "pef", "pnm", "pbm", "pgm", "ppm", "qti", "qtif", "rgb", "x3f", "arw", "sr2", "srf", "tga", "xbm", "xpm", "xwd", "disposition-notification", "u8msg", "u8dsn", "u8mdn", "u8hdr", "eml", "mht", "mhtml", "mime", "nws", "gltf", "glb", "iges", "igs", "mesh", "msh", "silo", "dae", "gdl", "gtw", "vtu", "vrml", "x3db", "x3dbz", "x3dv", "x3dvz", "x3d", "x3dz", "appcache", "ics", "ifb", "coffee", "litcoffee", "css", "csv", "dlm", "gemini", "gmi", "323", "htm", "html", "hxt", "shtml", "uls", "jade", "ecma", "es", "js", "jsm", "jsx", "less", "markdown", "md", "mml", "n3", "asm", "bas", "c", "cc", "cd", "cfg", "cmd", "cnf", "conf", "cpp", "cs", "csdproj", "csproj", "cxx", "dbproj", "def", "dsw", "h", "hh", "hpp", "hxx", "i", "idl", "in", "inc", "ini", "inl", "ipproj", "jsxbin", "list", "log", "lst", "mak", "map", "mk", "odh", "odl", "pkgdef", "pkgundef", "py", "rc", "rc2", "rct", "reg", "rgs", "s", "scr", "sln", "sol", "sor", "srf", "text", "tlh", "tli", "txt", "user", "vb", "vbdproj", "vbproj", "vcs", "vddproj", "vdp", "vdproj", "vspscc", "vsscc", "vssscc", "xdr", "xoml", "dsc", "rtx", "sct", "wsc", "sgm", "sgml", "shex", "slim", "slm", "styl", "stylus", "tsv", "ttl", "uri", "uris", "urls", "vbs", "vcard", "curl", "dcurl", "mcurl", "scurl", "sub", "fly", "flx", "gv", "3dml", "spot", "jad", "wml", "wmls", "vtt", "htt", "dic", "htc", "f", "f77", "f90", "for", "feature", "hbs", "hdml", "qht", "qhtm", "lua", "md", "mkd", "contact", "group", "iqy", "rqy", "nfo", "opml", "p", "pas", "pde", "rs", "sass", "scss", "etx", "sfv", "ymp", "toml", "uu", "vcf", "yaml", "yml", "addin", "disco", "dll.config", "dtd", "dtsconfig", "exe.config", "mno", "ssisdeploymentmanifest", "vml", "vsct", "vsixlangpack", "vsixmanifest", "vssettings", "vstemplate", "wsdl", "xml", "xrm-ms", "xsd", "xsf", "xsl", "xslt", "3gp", "3gpp", "3g2", "3gp2", "axv", "divx", "h261", "h263", "h264", "jpgv", "jpgm", "mj2", "mjp2", "mp4", "mp4v", "mpg4", "m1v", "m2v", "mod", "mp2", "mp2v", "mpa", "mpe", "mpeg", "mpg", "mpv2", "vbk", "ogv", "mov", "mqv", "qt", "uvh", "uvvh", "uvm", "uvvm", "uvp", "uvvp", "uvs", "uvvs", "uvv", "uvvv", "m2t", "m2ts", "mts", "ts", "tts", "dvb", "fvt", "m4u", "mxu", "pyv", "uvu", "uvvu", "viv", "webm", "dif", "dv", "f4v", "fli", "flv", "ivf", "lsf", "lsx", "m4v", "mk3d", "mks", "mkv", "mng", "asf", "asr", "asx", "nsc", "vob", "wm", "wmp", "wmv", "wmx", "wvx", "avi", "movie", "smv", "ice", "flr", "wrl", "wrz", "xaf", "xof"];
+code/crates/nestgate-network/src/lib.rs:    pub const DEFAULT_CONNECTION_TIMEOUT_SECONDS: u64 = 30;
+code/crates/nestgate-performance/src/zero_copy_networking.rs:pub struct ZeroCopyBufferPool<const BUFFER_SIZE: usize = 65_536, const POOL_SIZE: usize = 1024> {
+code/crates/nestgate-performance/src/zero_copy_networking.rs:pub struct ZeroCopyBuffer<const SIZE: usize> {
+code/crates/nestgate-performance/src/zero_copy_networking.rs:impl<const BUFFER_SIZE: usize, const POOL_SIZE: usize> Default
+code/crates/nestgate-performance/src/zero_copy_networking.rs:impl<const BUFFER_SIZE: usize, const POOL_SIZE: usize> ZeroCopyBufferPool<BUFFER_SIZE, POOL_SIZE> {
+code/crates/nestgate-performance/src/zero_copy_networking.rs:impl<const SIZE: usize> Default for ZeroCopyBuffer<SIZE> {
+code/crates/nestgate-performance/src/zero_copy_networking.rs:impl<const SIZE: usize> ZeroCopyBuffer<SIZE> {
+code/crates/nestgate-performance/src/zero_copy_networking.rs:pub struct ZeroCopyNetworkInterface<const BUFFER_SIZE: usize = 65_536> {
+code/crates/nestgate-performance/src/zero_copy_networking.rs:pub struct ZeroCopyConnection<const BUFFER_SIZE: usize = 65_536> {
+code/crates/nestgate-performance/src/zero_copy_networking.rs:impl<const BUFFER_SIZE: usize> Default for ZeroCopyNetworkInterface<BUFFER_SIZE> {
+code/crates/nestgate-performance/src/zero_copy_networking.rs:impl<const BUFFER_SIZE: usize> ZeroCopyNetworkInterface<BUFFER_SIZE> {
+code/crates/nestgate-performance/src/zero_copy_networking.rs:pub struct KernelBypassAdapter<const RING_SIZE: usize = 4096> {
+code/crates/nestgate-performance/src/zero_copy_networking.rs:pub struct ZeroCopyRing<const SIZE: usize> {
+code/crates/nestgate-performance/src/zero_copy_networking.rs:impl<const RING_SIZE: usize> Default for KernelBypassAdapter<RING_SIZE> {
+code/crates/nestgate-performance/src/zero_copy_networking.rs:impl<const RING_SIZE: usize> KernelBypassAdapter<RING_SIZE> {
+code/crates/nestgate-performance/src/zero_copy_networking.rs:impl<const SIZE: usize> Default for ZeroCopyRing<SIZE> {
+code/crates/nestgate-performance/src/zero_copy_networking.rs:impl<const SIZE: usize> ZeroCopyRing<SIZE> {
+code/crates/nestgate-performance/src/zero_copy_networking.rs:        const ITERATIONS: u32 = 1000;
+code/crates/nestgate-performance/src/zero_copy_networking.rs:        const OPERATIONS: u32 = 1_000_000;
+code/crates/nestgate-performance/src/simd/mod.rs:const SIMD_BATCH_MULTIPLIER: usize = 4;
+code/crates/nestgate-performance/src/simd/safe_simd.rs:        const CHUNK_SIZE: usize = 8; // Optimal for AVX2
+code/crates/nestgate-performance/src/simd/safe_simd.rs:        const CHUNK_SIZE: usize = 8;
+code/crates/nestgate-performance/src/simd/safe_simd.rs:pub struct SafeSimdBatchProcessor<const BATCH_SIZE: usize = 32> {
+code/crates/nestgate-performance/src/simd/safe_simd.rs:impl<const BATCH_SIZE: usize> SafeSimdBatchProcessor<BATCH_SIZE> {
+code/crates/nestgate-performance/src/simd/safe_simd.rs:impl<const BATCH_SIZE: usize> Default for SafeSimdBatchProcessor<BATCH_SIZE> {
+code/crates/nestgate-performance/src/simd_optimizations_advanced.rs:pub struct SimdBulkProcessor<const BUFFER_SIZE: usize = 8192> {
+code/crates/nestgate-performance/src/simd_optimizations_advanced.rs:impl<const BUFFER_SIZE: usize> SimdBulkProcessor<BUFFER_SIZE> {
+code/crates/nestgate-performance/src/simd_optimizations_advanced.rs:pub struct SimdStorageBackend<const BUFFER_SIZE: usize = 8192> {
+code/crates/nestgate-performance/src/simd_optimizations_advanced.rs:impl<const BUFFER_SIZE: usize> SimdStorageBackend<BUFFER_SIZE> {
+code/crates/nestgate-performance/src/simd_optimizations_advanced.rs:impl<const BUFFER_SIZE: usize> CanonicalStorageBackend for SimdStorageBackend<BUFFER_SIZE> {
+code/crates/nestgate-performance/src/simd_optimizations_advanced.rs:pub struct SimdBatchProcessor<const BATCH_SIZE: usize = 1024> {
+code/crates/nestgate-performance/src/simd_optimizations_advanced.rs:impl<const BATCH_SIZE: usize> SimdBatchProcessor<BATCH_SIZE> {
+code/crates/nestgate-canonical/src/lib.rs:pub const CANONICAL_VERSION: &str = "2.0.0";
+code/crates/nestgate-automation/src/analysis.rs:            const SMALL_FILE_BYTES: u64 = 1024 * 1024; // 1MB
+code/crates/nestgate-mcp/src/lib.rs:    pub const DEFAULT_CONNECT_TIMEOUT: Duration = Duration::from_secs(CONNECTION_TIMEOUT_SECS);
+code/crates/nestgate-mcp/src/lib.rs:    pub const DEFAULT_REQUEST_TIMEOUT: Duration = Duration::from_secs(REQUEST_TIMEOUT_SECS);
+code/crates/nestgate-mcp/src/lib.rs:    pub const DEFAULT_RETRY_ATTEMPTS: u32 = 3; // Reasonable default for MCP operations
+code/crates/nestgate-mcp/src/lib.rs:    pub const DEFAULT_RETRY_DELAY: Duration = Duration::from_millis(1000); // 1 second initial delay
+code/crates/nestgate-mcp/src/lib.rs:    pub const DEFAULT_PROTOCOL_VERSION: &str = "2024-11-05";
+code/crates/nestgate-mcp/src/lib.rs:    pub const DEFAULT_USER_AGENT: &str = "nestgate-mcp/0.1.0";
+code/crates/nestgate-core/src/infant_discovery/mod.rs:pub struct InfantDiscoverySystem<const MAX_CAPABILITIES: usize = 256> {
+code/crates/nestgate-core/src/infant_discovery/mod.rs:impl<const MAX_CAPABILITIES: usize> InfantDiscoverySystem<MAX_CAPABILITIES> {
+code/crates/nestgate-core/src/infant_discovery/mod.rs:impl<const MAX_CAPABILITIES: usize> Default for InfantDiscoverySystem<MAX_CAPABILITIES> {
+code/crates/nestgate-core/src/modernization/async_trait_modernizer.rs:    pub const SERVICE_TRAIT_PATTERN: &str = r#"
+code/crates/nestgate-core/src/modernization/async_trait_modernizer.rs:    pub const PROVIDER_TRAIT_PATTERN: &str = r#"
+code/crates/nestgate-core/src/modernization/async_trait_modernizer.rs:    pub const BACKEND_TRAIT_PATTERN: &str = r#"
+code/crates/nestgate-core/src/defaults.rs:    pub const DEFAULT_API_PORT: u16 = ports::HTTP_DEFAULT;
+code/crates/nestgate-core/src/defaults.rs:    pub const DEFAULT_BIND_ADDRESS: &str = addresses::BIND_ALL_IPV4;
+code/crates/nestgate-core/src/defaults.rs:    pub const DEFAULT_HOSTNAME: &str = addresses::LOCALHOST_NAME;
+code/crates/nestgate-core/src/defaults.rs:    pub const DEFAULT_WS_PORT: u16 = ports::WEBSOCKET_DEFAULT;
+code/crates/nestgate-core/src/defaults.rs:    pub const DEFAULT_HEALTH_PORT: u16 = ports::HEALTH_CHECK;
+code/crates/nestgate-core/src/defaults.rs:    pub const DEFAULT_POSTGRES_PORT: u16 = 5432;
+code/crates/nestgate-core/src/defaults.rs:    pub const DEFAULT_REDIS_PORT: u16 = 6379;
+code/crates/nestgate-core/src/defaults.rs:    pub const DEFAULT_DB_HOST: &str = addresses::LOCALHOST_NAME;
+code/crates/nestgate-core/src/defaults.rs:    pub const DEFAULT_METRICS_PORT: u16 = 9090;
+code/crates/nestgate-core/src/defaults.rs:    pub const DEFAULT_GRAFANA_PORT: u16 = 3000;
+code/crates/nestgate-core/src/defaults.rs:    pub const DEFAULT_API_TIMEOUT: Duration = Duration::from_secs(30);
+code/crates/nestgate-core/src/defaults.rs:    pub const DEFAULT_DB_TIMEOUT: Duration = Duration::from_secs(10);
+code/crates/nestgate-core/src/defaults.rs:    pub const DEFAULT_HEALTH_TIMEOUT: Duration = Duration::from_secs(5);
+code/crates/nestgate-core/src/defaults.rs:    pub const DEFAULT_WS_TIMEOUT: Duration = Duration::from_secs(60);
+code/crates/nestgate-core/src/defaults.rs:    pub const DEFAULT_POOL_NAME: &str = "nestgate-pool";
+code/crates/nestgate-core/src/defaults.rs:    pub const DEFAULT_CACHE_SIZE_MB: u64 = 1024;
+code/crates/nestgate-core/src/defaults.rs:    pub const DEFAULT_COMPRESSION: &str = "lz4";
+code/crates/nestgate-core/src/defaults.rs:    pub const DEFAULT_SESSION_TIMEOUT: Duration = Duration::from_secs(3600);
+code/crates/nestgate-core/src/defaults.rs:    pub const DEFAULT_TOKEN_EXPIRY: Duration = Duration::from_secs(1800);
+code/crates/nestgate-core/src/defaults.rs:    pub const DEFAULT_MAX_LOGIN_ATTEMPTS: u32 = 5;
+code/crates/nestgate-core/src/network/client.rs:    pub const OK: Self = Self(200);
+code/crates/nestgate-core/src/network/client.rs:    pub const CREATED: Self = Self(201);
+code/crates/nestgate-core/src/network/client.rs:    pub const BAD_REQUEST: Self = Self(400);
+code/crates/nestgate-core/src/network/client.rs:    pub const NOT_FOUND: Self = Self(404);
+code/crates/nestgate-core/src/network/client.rs:    pub const INTERNAL_SERVER_ERROR: Self = Self(500);
+code/crates/nestgate-core/src/network/client.rs:pub struct ClientConfig<const DEFAULT_TIMEOUT_MS: u64 = 30000> {
+code/crates/nestgate-core/src/network/client.rs:impl<const DEFAULT_TIMEOUT_MS: u64> Default for ClientConfig<DEFAULT_TIMEOUT_MS> {
+code/crates/nestgate-core/src/network/native_async/traits.rs:    const MAX_SERVICES: usize = 10000,
+code/crates/nestgate-core/src/network/native_async/traits.rs:    const DISCOVERY_TIMEOUT_SECS: u64 = 30,
+code/crates/nestgate-core/src/network/native_async/traits.rs:    const WATCH_BUFFER_SIZE: usize = 1000,
+code/crates/nestgate-core/src/network/native_async/traits.rs:    const HEALTH_UPDATE_INTERVAL_SECS: u64 = 60,
+code/crates/nestgate-core/src/network/native_async/traits.rs:    const MAX_CONNECTIONS: usize = 1000,
+code/crates/nestgate-core/src/network/native_async/traits.rs:    const CONNECTION_TIMEOUT_SECS: u64 = 30,
+code/crates/nestgate-core/src/network/native_async/traits.rs:    const MAX_RETRIES: u32 = 3,
+code/crates/nestgate-core/src/network/native_async/traits.rs:    const BUFFER_SIZE: usize = 8192,
+code/crates/nestgate-core/src/network/native_async/traits.rs:    const MAX_REQUESTS_PER_SEC: usize = 1000,
+code/crates/nestgate-core/src/network/native_async/traits.rs:    const HEALTH_CHECK_INTERVAL_SECS: u64 = 30,
+code/crates/nestgate-core/src/network/native_async/traits.rs:    const METRICS_BUFFER_SIZE: usize = 10000,
+code/crates/nestgate-core/src/network/native_async/traits.rs:    const SERVICE_TIMEOUT_SECS: u64 = 60,
+code/crates/nestgate-core/src/network/native_async/traits.rs:    const MAX_BACKENDS: usize = 100,
+code/crates/nestgate-core/src/network/native_async/traits.rs:    const HEALTH_CHECK_INTERVAL_SECS: u64 = 30,
+code/crates/nestgate-core/src/network/native_async/traits.rs:    const MAX_REQUESTS_PER_BACKEND: usize = 1000,
+code/crates/nestgate-core/src/data_sources/zero_cost_data_sources.rs:    const CAPABILITY_NAME: &'static str;
+code/crates/nestgate-core/src/data_sources/zero_cost_data_sources.rs:    const CAPABILITY_NAME: &'static str = "http";
+code/crates/nestgate-core/src/data_sources/zero_cost_data_sources.rs:    const CAPABILITY_NAME: &'static str = "file";
+code/crates/nestgate-core/src/data_sources/native_async_capabilities.rs:    const MAX_CONCURRENT_REQUESTS: usize = { performance::MAX_CONCURRENT_OPS },
+code/crates/nestgate-core/src/data_sources/native_async_capabilities.rs:    const REQUEST_TIMEOUT_MS: u64 = { timeouts::REQUEST_TIMEOUT_MS },
+code/crates/nestgate-core/src/data_sources/native_async_capabilities.rs:    const MAX_RESPONSE_SIZE_MB: usize = 100,
+code/crates/nestgate-core/src/data_sources/native_async_capabilities.rs:    const MAX_GENOME_RESULTS: usize = 1000,
+code/crates/nestgate-core/src/data_sources/native_async_capabilities.rs:    const MAX_SEQUENCE_SIZE_MB: usize = 500,
+code/crates/nestgate-core/src/data_sources/native_async_capabilities.rs:    const SEARCH_TIMEOUT_MS: u64 = { timeouts::DEFAULT_TIMEOUT_MS },
+code/crates/nestgate-core/src/data_sources/native_async_capabilities.rs:    const MAX_MODEL_RESULTS: usize = 500,
+code/crates/nestgate-core/src/data_sources/native_async_capabilities.rs:    const MODEL_INFO_CACHE_SIZE: usize = 1000,
+code/crates/nestgate-core/src/data_sources/native_async_capabilities.rs:    const MODEL_SEARCH_TIMEOUT_MS: u64 = { timeouts::DEFAULT_TIMEOUT_MS },
+code/crates/nestgate-core/src/data_sources/native_async_capabilities.rs:    const MAX_RESEARCH_RESULTS: usize = 200,
+code/crates/nestgate-core/src/data_sources/native_async_capabilities.rs:    const RESEARCH_CACHE_SIZE: usize = 500,
+code/crates/nestgate-core/src/data_sources/native_async_capabilities.rs:    const RESEARCH_TIMEOUT_MS: u64 = { timeouts::DEFAULT_TIMEOUT_MS },
+code/crates/nestgate-core/src/data_sources/native_async_capabilities.rs:pub struct ZeroCostCapabilityWrapper<T, const METRICS_BUFFER_SIZE: usize = 1000> {
+code/crates/nestgate-core/src/data_sources/native_async_capabilities.rs:impl<T, const METRICS_BUFFER_SIZE: usize> ZeroCostCapabilityWrapper<T, METRICS_BUFFER_SIZE>
+code/crates/nestgate-core/src/data_sources/native_async_capabilities.rs:        const MAX_CONCURRENT: usize,
+code/crates/nestgate-core/src/data_sources/native_async_capabilities.rs:        const TIMEOUT_MS: u64,
+code/crates/nestgate-core/src/data_sources/native_async_capabilities.rs:        const MAX_SIZE_MB: usize,
+code/crates/nestgate-core/src/data_sources/native_async_capabilities.rs:        const MAX_RESULTS: usize,
+code/crates/nestgate-core/src/data_sources/native_async_capabilities.rs:        const MAX_SIZE_MB: usize,
+code/crates/nestgate-core/src/data_sources/native_async_capabilities.rs:    const _: () = assert!(validate_capability_config::<1000, 30000, 100>());
+code/crates/nestgate-core/src/data_sources/native_async_capabilities.rs:    const _: () = assert!(validate_genome_config::<1000, 500>());
+code/crates/nestgate-core/src/data_sources/native_async_capabilities.rs:pub const ZERO_COST_DATA_CAPABILITIES_READY: bool = true; 
+code/crates/nestgate-core/src/data_sources/zero_cost_universal_data_adapter.rs:    const CAPABILITY_TYPE: &'static str;
+code/crates/nestgate-core/src/data_sources/zero_cost_universal_data_adapter.rs:pub const DATA_ADAPTER_MIGRATION_GUIDE: &str = r"
+code/crates/nestgate-core/src/data_sources/zero_cost_universal_data_adapter.rs:    const CAPABILITY_TYPE: &'static str = "genome_data";
+code/crates/nestgate-core/src/data_sources/zero_cost_universal_data_adapter.rs:    const CAPABILITY_TYPE: &'static str = "model_data";
+code/crates/nestgate-core/src/universal_primal_discovery/tests.rs:    let _ptr = &discovery as *const UniversalPrimalDiscovery;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_BUFFER_SIZE_BYTES: usize = 8192; // 8KB
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_BUFFER_SIZE_BYTES: usize = 1024 * 1024; // 1MB
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_CONCURRENT_OPERATIONS: usize = 1000;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_BATCH_SIZE: usize = 1000;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_RETRY_ATTEMPTS: u32 = 3;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const PERFORMANCE_MONITOR_INTERVAL_SECS: u64 = 30;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_THREAD_POOL_SIZE: usize = 4;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const BATCH_SIZE: usize = 100;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_CONCURRENT_REQUESTS: usize = 10000;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_CONCURRENT_CONNECTIONS: usize = 1000;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const REQUEST_TIMEOUT_MS: u64 = 30000;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const CACHE_LINE_SIZE: usize = 64;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_POOL_SIZE: usize = 1024;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_FILE_SIZE_MB: usize = 1024;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_TIMEOUT_SECS: u64 = 30;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_API_PORT: u16 = 8080;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_BIND_ADDRESS: &str = "127.0.0.1";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const LOCALHOST: &str = "127.0.0.1";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const REQUEST_TIMEOUT_SECS: u64 = 30;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const CONNECTION_TIMEOUT_SECS: u64 = 10;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_CONNECTIONS: usize = 1000;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const KEEP_ALIVE_TIMEOUT_SECS: u64 = 75;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const SMALL_FILE_BYTES: u64 = 1024 * 1024;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const LARGE_FILE_BYTES: u64 = 100 * 1024 * 1024;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const VERY_LARGE_FILE_BYTES: u64 = 1024 * 1024 * 1024;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_BLOCK_SIZE: usize = 4096;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_FILENAME_LENGTH: usize = 255;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const TIER_HOT: &str = "hot";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const TIER_WARM: &str = "warm";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const TIER_COLD: &str = "cold";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const COMPRESSION_LZ4: &str = "lz4";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const COMPRESSION_GZIP: &str = "gzip";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const COMPRESSION_GZIP_6: &str = "gzip-6";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const COMPRESSION_GZIP_9: &str = "gzip-9";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const COMPRESSION_ZSTD: &str = "zstd";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const KB: u64 = 1024;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MB: u64 = 1024 * KB;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const GB: u64 = 1024 * MB;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const TB: u64 = 1024 * GB;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_MAX_FILE_SIZE: u64 = 100 * MB;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_POOL_SIZE: u64 = 10 * GB;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const TOKEN_EXPIRATION_S: u64 = 3600; // 1 hour
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const AES_256_GCM: &str = "aes-256-gcm";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const CHACHA20_POLY1305: &str = "chacha20-poly1305";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const ROLE_ADMIN: &str = "admin";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const ROLE_USER: &str = "user";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const ROLE_GUEST: &str = "guest";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MIN_PASSWORD_LENGTH: usize = 8;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_LOGIN_ATTEMPTS: u32 = 3;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const LOCKOUT_DURATION_SECS: u64 = 300; // 5 minutes
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_SERVICE_NAME: &str = "nestgate";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_TIMEOUT_SECS: u64 = 30;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_LOG_LEVEL: &str = "info";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const ENV_DEVELOPMENT: &str = "development";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const ENV_STAGING: &str = "staging";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const ENV_PRODUCTION: &str = "production";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const ENV_TESTING: &str = "testing";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_MEMORY_MB: u64 = 4096;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_CPU_CORES: u32 = 8;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const ZFS_DISCOVERY_MAX_DEPTH: usize = 10;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_FILE_DEPTH: usize = 100;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_RECURSION_DEPTH: usize = 50;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_POOLS: usize = 64;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_DATASETS: usize = 1000;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_CONCURRENT_OPERATIONS: usize = 100;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_OPTIMIZATIONS: usize = 50;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const CURRENT_API_VERSION: &str = "v1";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const STATUS_OK: &str = "OK";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const STATUS_NOT_FOUND: &str = "Not Found";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const STATUS_INTERNAL_ERROR: &str = "Internal Server Error";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const STATUS_UNAUTHORIZED: &str = "Unauthorized";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const STATUS_BAD_REQUEST: &str = "Bad Request";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const CONTENT_TYPE_JSON: &str = "application/json";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const CONTENT_TYPE_HTML: &str = "text/html";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const CONTENT_TYPE_PLAIN: &str = "text/plain";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const IMPACT_HIGH: &str = "High";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const IMPACT_MEDIUM: &str = "Medium";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const IMPACT_LOW: &str = "Low";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const TITLE_EXPAND_STORAGE: &str = "Expand Storage Capacity";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const TITLE_SCHEDULE_DEFRAG: &str = "Schedule Pool Defragmentation";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const TITLE_OPTIMIZE_CACHE: &str = "Optimize Cache Configuration";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const TITLE_UPGRADE_HARDWARE: &str = "Consider Hardware Upgrade";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_RATE_LIMIT: u32 = 1000; // requests per minute
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const BURST_LIMIT: u32 = 100;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_REQUEST_SIZE: usize = 10 * 1024 * 1024; // 10MB
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_RESPONSE_SIZE: usize = 50 * 1024 * 1024; // 50MB
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const METRICS_INTERVAL_SECS: u64 = 60;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const HEALTH_CHECK_INTERVAL_SECS: u64 = 30;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const CPU_ALERT_THRESHOLD: f64 = 80.0; // 80%
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MEMORY_ALERT_THRESHOLD: f64 = 85.0; // 85%
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DISK_ALERT_THRESHOLD: f64 = 90.0; // 90%
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const METRICS_RETENTION_DAYS: u32 = 30;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const LOGS_RETENTION_DAYS: u32 = 7;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const ALERTS_RETENTION_DAYS: u32 = 90;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const TEST_TIMEOUT_SECS: u64 = 10;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const INTEGRATION_TEST_TIMEOUT_SECS: u64 = 60;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const TEST_DATA_SIZE_KB: usize = 1024;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const LARGE_TEST_DATA_SIZE_MB: usize = 10;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const PERFORMANCE_TEST_ITERATIONS: usize = 1000;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const LOAD_TEST_CONCURRENT_USERS: usize = 100;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const TEST_SERVICE_NAME: &str = "nestgate-test";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const TEST_API_PORT: u16 = 18080;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const ZFS: &str = "zfs";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const ZPOOL: &str = "zpool";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const LIST: &str = "list";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const CREATE: &str = "create";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DESTROY: &str = "destroy";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const SET: &str = "set";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const GET: &str = "get";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const SNAPSHOT: &str = "snapshot";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const STATUS: &str = "status";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const ONLINE: &str = "ONLINE";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEGRADED: &str = "DEGRADED";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const FAULTED: &str = "FAULTED";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const OFFLINE: &str = "OFFLINE";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const UNAVAIL: &str = "UNAVAIL";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const REMOVED: &str = "REMOVED";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const PROPERTY_ALL: &str = "all";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const PROPERTY_METADATA: &str = "metadata";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const PROPERTY_ON: &str = "on";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const PROPERTY_OFF: &str = "off";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const PROPERTY_STANDARD: &str = "standard";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const PROPERTY_DISABLED: &str = "disabled";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const RECORDSIZE_64K: &str = "64K";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const RECORDSIZE_128K: &str = "128K";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const RECORDSIZE_1M: &str = "1M";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const FSTYPE_ZFS: &str = "zfs";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const FSTYPE_EXT4: &str = "ext4";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const FSTYPE_TMPFS: &str = "tmpfs";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const FSTYPE_DEVTMPFS: &str = "devtmpfs";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MOUNTPOINT_ROOT: &str = "/";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MOUNTPOINT_BOOT: &str = "/boot";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_HANDLER_TIMEOUT_SECS: u64 = 30;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_CONCURRENT_REQUESTS: usize = 100;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_RATE_LIMIT_RPM: u32 = 60;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_RATE_LIMIT_BURST: u32 = 10;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_RETRY_ATTEMPTS: u32 = 3;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_RETRY_DELAY_MS: u64 = 1000;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const METRICS_COLLECTION_INTERVAL_SECS: u64 = 30;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const HEALTH_CHECK_INTERVAL_SECS: u64 = 60;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DASHBOARD_REFRESH_INTERVAL_SECS: u64 = 5;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const PERFORMANCE_MONITOR_INTERVAL_SECS: u64 = 10;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_WORKSPACE_SIZE_LIMIT: u64 = 10 * 1024 * 1024 * 1024; // 10GB
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_JWT_EXPIRATION_SECS: u64 = 24 * 60 * 60; // 24 hours
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const REQUEST_TIMEOUT_SECS: u64 = 30;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const CONNECTION_TIMEOUT_SECS: u64 = 10;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const HEALTH_CHECK_TIMEOUT_SECS: u64 = 5;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const OPERATION_TIMEOUT_SECS: u64 = 60;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const SESSION_TIMEOUT_SECS: u64 = 3600; // 1 hour
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const EXTENDED_TIMEOUT_SECS: u64 = 300; // 5 minutes
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const VERY_LONG_TIMEOUT_SECS: u64 = 3600; // 1 hour
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DISCOVERY_TIMEOUT_SECS: u64 = 30;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const SERVICE_TIMEOUT_SECS: u64 = 60;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const POOL_CREATION_TIMEOUT_SECS: u64 = 300; // 5 minutes
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const SNAPSHOT_TIMEOUT_SECS: u64 = 60; // 1 minute
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const BACKUP_TIMEOUT_SECS: u64 = 3600; // 1 hour
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const SCRUB_TIMEOUT_SECS: u64 = 86400; // 24 hours
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const METRICS_TIMEOUT_SECS: u64 = 10;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const ALERT_TIMEOUT_SECS: u64 = 30;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const TEST_TIMEOUT_SECS: u64 = 10;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const INTEGRATION_TEST_TIMEOUT_SECS: u64 = 60;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_TIMEOUT_SECS: u64 = 300; // 5 minutes
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MIN_TIMEOUT_SECS: u64 = 1;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const REQUEST_TIMEOUT: Duration = Duration::from_secs(REQUEST_TIMEOUT_SECS);
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const CONNECTION_TIMEOUT: Duration = Duration::from_secs(CONNECTION_TIMEOUT_SECS);
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const HEALTH_CHECK_TIMEOUT: Duration = Duration::from_secs(HEALTH_CHECK_TIMEOUT_SECS);
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const OPERATION_TIMEOUT: Duration = Duration::from_secs(OPERATION_TIMEOUT_SECS);
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const EXTENDED_TIMEOUT: Duration = Duration::from_secs(EXTENDED_TIMEOUT_SECS);
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const VERY_LONG_TIMEOUT: Duration = Duration::from_secs(VERY_LONG_TIMEOUT_SECS);
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const POOL_CREATION_TIMEOUT: Duration = Duration::from_secs(POOL_CREATION_TIMEOUT_SECS);
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const SNAPSHOT_TIMEOUT: Duration = Duration::from_secs(SNAPSHOT_TIMEOUT_SECS);
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const BACKUP_TIMEOUT: Duration = Duration::from_secs(BACKUP_TIMEOUT_SECS);
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const SCRUB_TIMEOUT: Duration = Duration::from_secs(SCRUB_TIMEOUT_SECS);
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const METRICS_TIMEOUT: Duration = Duration::from_secs(METRICS_TIMEOUT_SECS);
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const ALERT_TIMEOUT: Duration = Duration::from_secs(ALERT_TIMEOUT_SECS);
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const AVX2_WIDTH: usize = 32;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const SSE2_WIDTH: usize = 16;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const SIMD_ALIGNMENT: usize = 32;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MIN_SIMD_SIZE: usize = 64;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const SIMD_BATCH_SIZE: usize = 32;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const CACHE_LINE_SIZE: usize = 64;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const CRC_TABLE_SIZE: usize = 256;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const COMPRESSION_HEADER_SIZE: usize = 12;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_MAX_CONCURRENT: usize = 1000;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_BUFFER_SIZE: usize = 65536;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_MAX_FILE_SIZE_MB: usize = 1024;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_OPERATION_TIMEOUT_SECS: u64 = 30;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_POOL_SIZE: usize = 1024;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_MAX_BACKENDS: usize = 100;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_DISCOVERY_TIMEOUT_MS: u64 = 5000;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_HEALTH_CHECK_INTERVAL_MS: u64 = 30000;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_SERVICES: usize = 1000;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_CONCURRENT_REQUESTS: usize = 10000;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const STATS_RETENTION_SECS: u64 = 86400;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const HEALTH_CHECK_INTERVAL_SECS: u64 = 30;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_CONNECTIONS: usize = 1000;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_MESSAGE_SIZE: usize = 1024;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MESSAGE_RETRY_ATTEMPTS: u32 = 3;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_SESSIONS: usize = 1000;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const SESSION_TIMEOUT_SECS: u64 = 300;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const SESSION_DURATION_SECS: u64 = 300;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const PROTOCOL_VERSION: u32 = 1;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_WORKFLOWS: usize = 1000;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_CONCURRENT_EXECUTIONS: usize = 100;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const EXECUTION_TIMEOUT_SECS: u64 = 300;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_WORKFLOW_STEPS: usize = 100;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const SERVICE_TIMEOUT_SECS: u64 = 300;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_POOLS: usize = 256;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_DATASETS: usize = 10000;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_SNAPSHOTS: usize = 100_000;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_RAID_BACKENDS: usize = 8;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_COW_OPERATIONS: usize = 1000;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const ZFS_DISCOVERY_MAX_DEPTH: usize = 10;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_CACHE_SIZE: usize = 10000;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_TTL_SECONDS: u64 = 3600;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const FILE_CACHE_TTL_SECONDS: u64 = 86400;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const MAX_CACHE_FILES: usize = 10000;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_DEV_HOST: &str = "127.0.0.1";
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_DEV_PORT: u16 = 8080;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_DEV_TIMEOUT_SECS: u64 = 30;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_DEV_RETRY_ATTEMPTS: u32 = 3;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_DEV_BUFFER_SIZE: usize = 8192;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const DEFAULT_DEV_MAX_CONNECTIONS: usize = 1000;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:        pub const DEFAULT_ITERATIONS: usize = 1000;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:        pub const PERFORMANCE_ITERATIONS: usize = 10000;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:        pub const SIMD_ITERATIONS: u32 = 100;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:        pub const TEST_COMPUTE_SERVICE_URL: &str = ""; // TRIPLE PEDANTIC: Use std::env::var("NESTGATE_API_ENDPOINT") or build_api_url() instead
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:        pub const UNWRAP_MIGRATOR_BATCH_SIZE: usize = 10;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:        pub const TARGET_IMPROVEMENT_PERCENT: f64 = 20.0;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const NETWORK: NetworkConstants = NetworkConstants;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const STORAGE: StorageConstants = StorageConstants;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const SECURITY: SecurityConstants = SecurityConstants;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const PERFORMANCE: PerformanceConstants = PerformanceConstants;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const SYSTEM: SystemConstants = SystemConstants;
+code/crates/nestgate-core/src/canonical_modernization/canonical_constants.rs:    pub const API: ApiConstants = ApiConstants;
+code/crates/nestgate-core/src/canonical_modernization/constants/network.rs:pub const LOCALHOST_IPV4: &str = "127.0.0.1";
+code/crates/nestgate-core/src/canonical_modernization/constants/network.rs:pub const LOCALHOST_NAME: &str = "localhost";
+code/crates/nestgate-core/src/canonical_modernization/constants/network.rs:pub const BIND_ALL_IPV4: &str = "0.0.0.0";
+code/crates/nestgate-core/src/canonical_modernization/constants/network.rs:pub const BIND_ALL_IPV6: &str = "::";
+code/crates/nestgate-core/src/canonical_modernization/constants/network.rs:pub const DEFAULT_BIND_ADDRESS: &str = LOCALHOST_IPV4;
+code/crates/nestgate-core/src/canonical_modernization/constants/network.rs:pub const DEFAULT_STORAGE_PORT: u16 = 5000;
+code/crates/nestgate-core/src/canonical_modernization/constants/network.rs:pub const DEFAULT_HTTPS_PORT: u16 = 8443;
+code/crates/nestgate-core/src/canonical_modernization/constants/network.rs:pub const KEEP_ALIVE_TIMEOUT_SECS: u64 = 75;
+code/crates/nestgate-core/src/canonical_modernization/constants/network.rs:pub const MAX_CONNECTIONS: u32 = 1000;
+code/crates/nestgate-core/src/canonical_modernization/constants/network.rs:pub const DEFAULT_RETRY_ATTEMPTS: u32 = 3;
+code/crates/nestgate-core/src/canonical_modernization/constants/network.rs:pub const DEFAULT_BUFFER_SIZE: usize = 65_536;
+code/crates/nestgate-core/src/canonical_modernization/constants/network.rs:pub const MAX_REQUEST_SIZE: u64 = 10 * 1024 * 1024; // 10MB
+code/crates/nestgate-core/src/canonical_modernization/constants/storage.rs:pub const DEFAULT_ZFS_CACHE_SIZE: u64 = 1024 * 1024 * 1024; // 1GB
+code/crates/nestgate-core/src/canonical_modernization/constants/storage.rs:pub const STORAGE_TIMEOUT_SECS: u64 = 60;
+code/crates/nestgate-core/src/canonical_modernization/constants/storage.rs:pub const MAX_FILE_SIZE: u64 = 100 * 1024 * 1024 * 1024; // 100GB
+code/crates/nestgate-core/src/canonical_modernization/constants/storage.rs:pub const DEFAULT_BLOCK_SIZE: usize = 131_072; // 128KB
+code/crates/nestgate-core/src/canonical_modernization/constants/storage.rs:pub const DEFAULT_COMPRESSION_LEVEL: u8 = 6;
+code/crates/nestgate-core/src/canonical_modernization/constants/storage.rs:pub const MAX_SNAPSHOTS_PER_DATASET: u32 = 1000;
+code/crates/nestgate-core/src/canonical_modernization/constants/storage.rs:pub const DEFAULT_REPLICATION_BATCH_SIZE: usize = 1000;
+code/crates/nestgate-core/src/canonical_modernization/constants/storage.rs:pub const STORAGE_HEALTH_CHECK_INTERVAL_SECS: u64 = 300; // 5 minutes
+code/crates/nestgate-core/src/canonical_modernization/constants/storage.rs:pub const TIER_MIGRATION_THRESHOLD: u64 = 10 * 1024 * 1024 * 1024; // 10GB
+code/crates/nestgate-core/src/canonical_modernization/constants/performance.rs:pub const METRICS_COLLECTION_INTERVAL_SECS: u64 = 60;
+code/crates/nestgate-core/src/canonical_modernization/constants/performance.rs:pub const PERFORMANCE_ALERT_THRESHOLD: f64 = 80.0;
+code/crates/nestgate-core/src/canonical_modernization/constants/performance.rs:pub const PERFORMANCE_CACHE_SIZE: usize = 10_000;
+code/crates/nestgate-core/src/canonical_modernization/constants/security.rs:pub const MAX_AUTH_ATTEMPTS: u32 = 3;
+code/crates/nestgate-core/src/canonical_modernization/constants/security.rs:pub const DEFAULT_TOKEN_EXPIRY_SECS: u64 = 3600; // 1 hour
+code/crates/nestgate-core/src/canonical_modernization/constants/monitoring.rs:pub const DEFAULT_LOG_LEVEL: &str = "info";
+code/crates/nestgate-core/src/canonical_modernization/constants/monitoring.rs:pub const MONITORING_HEALTH_CHECK_INTERVAL_SECS: u64 = 30;
+code/crates/nestgate-core/src/canonical_modernization/constants/monitoring.rs:pub const MAX_LOG_FILE_SIZE: u64 = 100 * 1024 * 1024; // 100MB
+code/crates/nestgate-core/src/safe_operations/pedantic.rs:pub const PEDANTIC_MAX_RETRIES: usize = 3;
+code/crates/nestgate-core/src/safe_operations/pedantic.rs:pub const PEDANTIC_TIMEOUT_MS: u64 = 5000;
+code/crates/nestgate-core/src/safe_operations/pedantic.rs:pub const PEDANTIC_BUFFER_SIZE: usize = 4096;
+code/crates/nestgate-core/src/lib.rs:pub const MODERNIZATION_COMPLETE: bool = true;
+code/crates/nestgate-core/src/lib.rs:pub const PERFORMANCE_IMPROVEMENT_PERCENT: u8 = 45; // Average 40-60% range
+code/crates/nestgate-core/src/lib.rs:pub const DEBT_ELIMINATION_PERCENT: u8 = 95;
+code/crates/nestgate-core/src/smart_abstractions/smart_default.rs:    pub const DEFAULT_TIMEOUT_SECS: u64 = 30;
+code/crates/nestgate-core/src/smart_abstractions/smart_default.rs:    pub const DEFAULT_RETRY_ATTEMPTS: u32 = 3;
+code/crates/nestgate-core/src/smart_abstractions/smart_default.rs:    pub const DEFAULT_BUFFER_SIZE: usize = 8192;
+code/crates/nestgate-core/src/smart_abstractions/smart_default.rs:    pub const DEFAULT_MAX_CONNECTIONS: usize = 1000;
+code/crates/nestgate-core/src/performance/safe_optimizations.rs:pub struct SafeRingBuffer<T, const SIZE: usize> {
+code/crates/nestgate-core/src/performance/safe_optimizations.rs:impl<T, const SIZE: usize> SafeRingBuffer<T, SIZE> {
+code/crates/nestgate-core/src/performance/safe_optimizations.rs:impl<T, const SIZE: usize> Default for SafeRingBuffer<T, SIZE> {
+code/crates/nestgate-core/src/performance/safe_optimizations.rs:pub struct SafeMemoryPool<const BLOCK_SIZE: usize, const POOL_SIZE: usize> {
+code/crates/nestgate-core/src/performance/safe_optimizations.rs:impl<const BLOCK_SIZE: usize, const POOL_SIZE: usize> SafeMemoryPool<BLOCK_SIZE, POOL_SIZE> {
+code/crates/nestgate-core/src/performance/safe_optimizations.rs:impl<const BLOCK_SIZE: usize, const POOL_SIZE: usize> Default
+code/crates/nestgate-core/src/performance/safe_optimizations.rs:    pub const OPTIMAL_BUFFER_SIZE: usize = 64 * 1024; // 64KB
+code/crates/nestgate-core/src/performance/safe_optimizations.rs:    pub const CACHE_LINE_SIZE: usize = 64;
+code/crates/nestgate-core/src/performance/safe_optimizations.rs:    pub const PAGE_SIZE: usize = 4096;
+code/crates/nestgate-core/src/performance/safe_optimizations.rs:    pub const MAX_SIMD_WIDTH: usize = 32; // AVX2
+code/crates/nestgate-core/src/performance/safe_optimizations.rs:    pub const VECTORIZED_BATCH_SIZE: usize = Self::MAX_SIMD_WIDTH / 4; // 8 elements for u32
+code/crates/nestgate-core/src/performance/safe_optimizations.rs:    pub const PREFETCH_DISTANCE: usize = 64;
+code/crates/nestgate-core/src/performance/safe_optimizations.rs:    pub const BRANCH_PREDICTION_THRESHOLD: f64 = 0.9;
+code/crates/nestgate-core/src/performance/advanced_optimizations.rs:pub struct LockFreeRingBuffer<T, const SIZE: usize> {
+code/crates/nestgate-core/src/performance/advanced_optimizations.rs:impl<T, const SIZE: usize> Default for LockFreeRingBuffer<T, SIZE> {
+code/crates/nestgate-core/src/performance/advanced_optimizations.rs:impl<T, const SIZE: usize> LockFreeRingBuffer<T, SIZE> {
+code/crates/nestgate-core/src/performance/advanced_optimizations.rs:pub struct MemoryPool<const BLOCK_SIZE: usize, const POOL_SIZE: usize> {
+code/crates/nestgate-core/src/performance/advanced_optimizations.rs:impl<const BLOCK_SIZE: usize, const POOL_SIZE: usize> Default
+code/crates/nestgate-core/src/performance/advanced_optimizations.rs:impl<const BLOCK_SIZE: usize, const POOL_SIZE: usize> MemoryPool<BLOCK_SIZE, POOL_SIZE> {
+code/crates/nestgate-core/src/performance/advanced_optimizations.rs:    pub const OPTIMAL_BUFFER_SIZE: usize = 64 * 1024; // 64KB
+code/crates/nestgate-core/src/performance/advanced_optimizations.rs:    pub const CACHE_LINE_SIZE: usize = 64;
+code/crates/nestgate-core/src/performance/advanced_optimizations.rs:    pub const PAGE_SIZE: usize = 4096;
+code/crates/nestgate-core/src/performance/advanced_optimizations.rs:    pub const MAX_SIMD_WIDTH: usize = 32; // AVX2
+code/crates/nestgate-core/src/performance/advanced_optimizations.rs:    pub const VECTORIZED_BATCH_SIZE: usize = Self::MAX_SIMD_WIDTH / 4; // 8 elements for u32
+code/crates/nestgate-core/src/performance/advanced_optimizations.rs:    pub const PREFETCH_DISTANCE: usize = 64;
+code/crates/nestgate-core/src/performance/advanced_optimizations.rs:    pub const BRANCH_PREDICTION_THRESHOLD: f64 = 0.9;
+code/crates/nestgate-core/src/performance/validation.rs:        const TARGET_IMPROVEMENT: f64 = 20.0; // 20% minimum improvement
+code/crates/nestgate-core/src/config/api_paths.rs:const API_VERSION_V1: &str = "v1";
+code/crates/nestgate-core/src/config/api_paths.rs:const PATH_HEALTH: &str = "/health";
+code/crates/nestgate-core/src/config/api_paths.rs:const PATH_HEALTH_DETAILED: &str = "/health/detailed";
+code/crates/nestgate-core/src/config/api_paths.rs:const PATH_HEALTH_ZFS: &str = "/health/zfs";
+code/crates/nestgate-core/src/config/api_paths.rs:const PATH_HEALTH_STORAGE: &str = "/health/storage";
+code/crates/nestgate-core/src/config/api_paths.rs:const PATH_METRICS: &str = "/metrics";
+code/crates/nestgate-core/src/config/api_paths.rs:const PATH_METRICS_PROMETHEUS: &str = "/metrics/prometheus";
+code/crates/nestgate-core/src/config/api_paths.rs:const PATH_METRICS_JSON: &str = "/metrics/json";
+code/crates/nestgate-core/src/config/api_paths.rs:const PATH_LOGS: &str = "/logs";
+code/crates/nestgate-core/src/config/api_paths.rs:const PATH_DIAGNOSTICS: &str = "/diagnostics";
+code/crates/nestgate-core/src/config/core.rs:    const MAX_CONNECTIONS: usize = 1000,
+code/crates/nestgate-core/src/config/core.rs:    const BUFFER_SIZE: usize = 65536,
+code/crates/nestgate-core/src/config/core.rs:    const TIMEOUT_MS: u64 = 30000,
+code/crates/nestgate-core/src/config/core.rs:    const API_PORT: u16 = 8080,
+code/crates/nestgate-core/src/config/monitoring.rs:const LOG_FILE_DEFAULT: &str = "./logs/nestgate.log";
+code/crates/nestgate-core/src/config/monitoring.rs:const PROMETHEUS_METRICS_PATH: &str = "/metrics";
+code/crates/nestgate-core/src/config/monitoring.rs:const SLACK_CHANNEL_DEFAULT: &str = "general";
+code/crates/nestgate-core/src/config/monitoring.rs:const SLACK_USERNAME_DEFAULT: &str = "NestGate";
+code/crates/nestgate-core/src/config/monitoring.rs:const SLACK_EMOJI_ROBOT: &str = ":robot_face:";
+code/crates/nestgate-core/src/config/monitoring.rs:const HTTP_METHOD_POST: &str = "POST";
+code/crates/nestgate-core/src/config/monitoring.rs:const EMPTY_STRING: &str = "";
+code/crates/nestgate-core/src/config/monitoring.rs:const ERROR_METRICS_INTERVAL_ZERO: &str = "Metrics interval must be greater than 0";
+code/crates/nestgate-core/src/config/monitoring.rs:const ERROR_LOG_FILE_EMPTY: &str = "Log file path cannot be empty";
+code/crates/nestgate-core/src/config/monitoring.rs:const ERROR_LOG_ROTATION_SIZE_ZERO: &str = "Log rotation size must be greater than 0";
+code/crates/nestgate-core/src/config/monitoring.rs:const ERROR_LOG_RETENTION_ZERO: &str = "Log retention days must be greater than 0";
+code/crates/nestgate-core/src/config/monitoring.rs:const ERROR_PROMETHEUS_PATH_EMPTY: &str = "Prometheus metrics path cannot be empty";
+code/crates/nestgate-core/src/config/monitoring.rs:const ERROR_NOTIFICATION_REQUIRED: &str =
+code/crates/nestgate-core/src/config/monitoring.rs:const ERROR_THRESHOLD_NEGATIVE: &str = "Threshold value cannot be negative";
+code/crates/nestgate-core/src/config/monitoring.rs:const ERROR_CPU_THRESHOLD_RANGE: &str = "CPU threshold must be between 0 and 100";
+code/crates/nestgate-core/src/config/monitoring.rs:const ERROR_CPU_THRESHOLD_EXCEED: &str = "CPU threshold cannot exceed 100%";
+code/crates/nestgate-core/src/config/monitoring.rs:const ERROR_MEMORY_THRESHOLD_RANGE: &str = "Memory threshold must be between 0 and 100";
+code/crates/nestgate-core/src/config/monitoring.rs:const ERROR_MEMORY_THRESHOLD_EXCEED: &str = "Memory threshold cannot exceed 100%";
+code/crates/nestgate-core/src/config/monitoring.rs:const ERROR_DISK_THRESHOLD_RANGE: &str = "Disk threshold must be between 0 and 100";
+code/crates/nestgate-core/src/config/monitoring.rs:const ERROR_DISK_THRESHOLD_EXCEED: &str = "Disk threshold cannot exceed 100%";
+code/crates/nestgate-core/src/config/monitoring.rs:const ERROR_LATENCY_THRESHOLD_POSITIVE: &str = "Latency threshold must be positive";
+code/crates/nestgate-core/src/config/monitoring.rs:const ERROR_ERROR_RATE_RANGE: &str = "Error rate threshold must be between 0 and 100";
+code/crates/nestgate-core/src/config/monitoring.rs:const ERROR_ERROR_RATE_EXCEED: &str = "Error rate threshold cannot exceed 100%";
+code/crates/nestgate-core/src/config/monitoring.rs:const ERROR_SMTP_SERVER_EMPTY: &str = "SMTP server cannot be empty";
+code/crates/nestgate-core/src/config/monitoring.rs:const ERROR_SMTP_PORT_ZERO: &str = "SMTP port must be greater than 0";
+code/crates/nestgate-core/src/config/monitoring.rs:const ERROR_FROM_ADDRESS_EMPTY: &str = "From address cannot be empty";
+code/crates/nestgate-core/src/config/monitoring.rs:const ERROR_RECIPIENT_REQUIRED: &str = "At least one recipient address must be specified";
+code/crates/nestgate-core/src/config/monitoring.rs:const ERROR_SLACK_WEBHOOK_EMPTY: &str = "Slack webhook URL cannot be empty";
+code/crates/nestgate-core/src/config/monitoring.rs:const ERROR_SLACK_CHANNEL_EMPTY: &str = "Slack channel cannot be empty";
+code/crates/nestgate-core/src/config/monitoring.rs:const ERROR_SLACK_USERNAME_EMPTY: &str = "Slack username cannot be empty";
+code/crates/nestgate-core/src/config/monitoring.rs:const ERROR_WEBHOOK_URL_EMPTY: &str = "Webhook URL cannot be empty";
+code/crates/nestgate-core/src/config/monitoring.rs:const ERROR_HTTP_METHOD_EMPTY: &str = "HTTP method cannot be empty";
+code/crates/nestgate-core/src/config/monitoring.rs:const ERROR_TIMEOUT_ZERO: &str = "Timeout must be greater than 0";
+code/crates/nestgate-core/src/config/canonical_primary/mod.rs:    const MAX_CONNECTIONS: usize = 1000,
+code/crates/nestgate-core/src/config/canonical_primary/mod.rs:    const BUFFER_SIZE: usize = 65536,
+code/crates/nestgate-core/src/config/canonical_primary/mod.rs:    const TIMEOUT_MS: u64 = 30000,
+code/crates/nestgate-core/src/config/canonical_primary/mod.rs:    const API_PORT: u16 = 8080,
+code/crates/nestgate-core/src/config/canonical_primary/mod.rs:        const MAX_CONNECTIONS: usize,
+code/crates/nestgate-core/src/config/canonical_primary/mod.rs:        const BUFFER_SIZE: usize,
+code/crates/nestgate-core/src/config/canonical_primary/mod.rs:        const TIMEOUT_MS: u64,
+code/crates/nestgate-core/src/config/canonical_primary/mod.rs:        const API_PORT: u16,
+code/crates/nestgate-core/src/config/canonical_primary/mod.rs:        const MAX_CONNECTIONS: usize,
+code/crates/nestgate-core/src/config/canonical_primary/mod.rs:        const BUFFER_SIZE: usize,
+code/crates/nestgate-core/src/config/canonical_primary/mod.rs:        const TIMEOUT_MS: u64,
+code/crates/nestgate-core/src/config/canonical_primary/mod.rs:        const API_PORT: u16,
+code/crates/nestgate-core/src/config/canonical_primary/performance_config.rs:pub struct PerformanceConfig<const MAX_CONNECTIONS: usize = 1000, const BUFFER_SIZE: usize = 65536>
+code/crates/nestgate-core/src/config/canonical_primary/performance_config.rs:impl<const MAX_CONNECTIONS: usize, const BUFFER_SIZE: usize> Default
+code/crates/nestgate-core/src/config/canonical_primary/system_config.rs:pub struct SystemConfig<const MAX_CONNECTIONS: usize = 1000, const BUFFER_SIZE: usize = 65536> {
+code/crates/nestgate-core/src/config/canonical_primary/system_config.rs:impl<const MAX_CONNECTIONS: usize, const BUFFER_SIZE: usize>
+code/crates/nestgate-core/src/config/canonical_primary/system_config.rs:impl<const MAX_CONNECTIONS: usize, const BUFFER_SIZE: usize> Default
+code/crates/nestgate-core/src/config/canonical_primary/builders.rs:    const MAX_CONNECTIONS: usize = 1000,
+code/crates/nestgate-core/src/config/canonical_primary/builders.rs:    const BUFFER_SIZE: usize = 65536,
+code/crates/nestgate-core/src/config/canonical_primary/builders.rs:    const TIMEOUT_MS: u64 = 30000,
+code/crates/nestgate-core/src/config/canonical_primary/builders.rs:    const API_PORT: u16 = 8080,
+code/crates/nestgate-core/src/config/canonical_primary/builders.rs:        const MAX_CONNECTIONS: usize,
+code/crates/nestgate-core/src/config/canonical_primary/builders.rs:        const BUFFER_SIZE: usize,
+code/crates/nestgate-core/src/config/canonical_primary/builders.rs:        const TIMEOUT_MS: u64,
+code/crates/nestgate-core/src/config/canonical_primary/builders.rs:        const API_PORT: u16,
+code/crates/nestgate-core/src/config/canonical_primary/builders.rs:        const MAX_CONNECTIONS: usize,
+code/crates/nestgate-core/src/config/canonical_primary/builders.rs:        const BUFFER_SIZE: usize,
+code/crates/nestgate-core/src/config/canonical_primary/builders.rs:        const TIMEOUT_MS: u64,
+code/crates/nestgate-core/src/config/canonical_primary/builders.rs:        const API_PORT: u16,
+code/crates/nestgate-core/src/connection_pool/zero_cost_patterns.rs:    const MAX_CONNECTIONS: usize = 100,
+code/crates/nestgate-core/src/connection_pool/zero_cost_patterns.rs:    const MIN_CONNECTIONS: usize = 5,
+code/crates/nestgate-core/src/connection_pool/zero_cost_patterns.rs:    const HEALTH_CHECK_INTERVAL_MS: u64 = 30000,
+code/crates/nestgate-core/src/connection_pool/zero_cost_patterns.rs:impl<T, Factory, HealthChecker, const MAX_CONNECTIONS: usize, const MIN_CONNECTIONS: usize, const HEALTH_CHECK_INTERVAL_MS: u64>
+code/crates/nestgate-core/src/connection_pool/zero_cost_patterns.rs:pub const ARC_DYN_MIGRATION_GUIDE: &str = r"
+code/crates/nestgate-core/src/connection_pool/zero_cost_connection_pool.rs:pub struct ZeroCostConnectionPool<Factory, Connection, const POOL_SIZE: usize = 10>
+code/crates/nestgate-core/src/connection_pool/zero_cost_connection_pool.rs:impl<Factory, Connection, const POOL_SIZE: usize> ZeroCostConnectionPool<Factory, Connection, POOL_SIZE>
+code/crates/nestgate-core/src/connection_pool/zero_cost_connection_pool.rs:pub struct ZeroCostConnectionPoolBuilder<Factory, Connection, const POOL_SIZE: usize = 10>
+code/crates/nestgate-core/src/connection_pool/zero_cost_connection_pool.rs:impl<Factory, Connection, const POOL_SIZE: usize> ZeroCostConnectionPoolBuilder<Factory, Connection, POOL_SIZE>
+code/crates/nestgate-core/src/connection_pool/zero_cost_connection_pool.rs:pub const CONNECTION_POOL_MIGRATION_GUIDE: &str = r"
+code/crates/nestgate-core/src/connection_pool/zero_cost_connection_pool.rs:pub struct ZeroCostConnectionPool<Factory, Connection, const POOL_SIZE: usize>
+code/crates/nestgate-core/src/connection_pool/zero_cost_connection_pool.rs:impl<Factory, Connection, const POOL_SIZE: usize> 
+code/crates/nestgate-core/src/simd_optimizations.rs:pub const SIMD_BATCH_SIZE: usize = DEFAULT_BATCH_SIZE;
+code/crates/nestgate-core/src/simd_optimizations.rs:pub const SIMD_MAX_BATCH_SIZE: usize = MAX_BATCH_SIZE; 
+code/crates/nestgate-core/src/zero_cost/universal_coordination.rs:    fn health_check<const TIMEOUT_MS: u64>(
+code/crates/nestgate-core/src/zero_cost/universal_coordination.rs:pub struct ZeroCostCoordinationService<const MAX_CONCURRENT: usize = 1000> {
+code/crates/nestgate-core/src/zero_cost/universal_coordination.rs:impl<const MAX_CONCURRENT: usize> ZeroCostCoordinationService<MAX_CONCURRENT> {
+code/crates/nestgate-core/src/zero_cost/universal_coordination.rs:impl<const MAX_CONCURRENT: usize> ZeroCostUniversalCoordination
+code/crates/nestgate-core/src/zero_cost/universal_coordination.rs:    async fn health_check<const TIMEOUT_MS: u64>(&self) -> Result<CoordinationHealth> {
+code/crates/nestgate-core/src/zero_cost/memory_pool.rs:pub trait ZeroCostPoolInterface<T, const POOL_SIZE: usize = 1000, const BUFFER_SIZE: usize = 8192>
+code/crates/nestgate-core/src/zero_cost/memory_pool.rs:pub struct ZeroCostMemoryPoolManager<BufferPool, ObjectPool, const MAX_POOLS: usize = 100>
+code/crates/nestgate-core/src/zero_cost/memory_pool.rs:impl<BufferPool, ObjectPool, const MAX_POOLS: usize>
+code/crates/nestgate-core/src/zero_cost/async_trait_migration.rs:    const MAX_SERVICES: usize = 1000,
+code/crates/nestgate-core/src/zero_cost/async_trait_migration.rs:    const HEALTH_CHECK_INTERVAL_SECS: u64 = 60,
+code/crates/nestgate-core/src/zero_cost/async_trait_migration.rs:    const MAX_RETRIES: u32 = 3,
+code/crates/nestgate-core/src/zero_cost/async_trait_migration.rs:    const LOAD_BALANCE_ALGORITHM: &'static str = "round_robin",
+code/crates/nestgate-core/src/zero_cost/async_trait_migration.rs:    const MAX_CONNECTIONS: usize = 1000,
+code/crates/nestgate-core/src/zero_cost/async_trait_migration.rs:    const CONNECTION_TIMEOUT_SECS: u64 = 30,
+code/crates/nestgate-core/src/zero_cost/async_trait_migration.rs:    const MAX_RETRIES: u32 = 3,
+code/crates/nestgate-core/src/zero_cost/async_trait_migration.rs:    const BUFFER_SIZE: usize = 8192,
+code/crates/nestgate-core/src/zero_cost/system.rs:pub struct ZeroCostSystem<Cache, Security, Storage, const MAX_SIZE: usize, const TIMEOUT_MS: u64> {
+code/crates/nestgate-core/src/zero_cost/system.rs:impl<Cache, Security, Storage, const MAX_SIZE: usize, const TIMEOUT_MS: u64>
+code/crates/nestgate-core/src/zero_cost/system.rs:pub struct ZeroCostSystemBuilder<const MAX_SIZE: usize, const TIMEOUT_MS: u64> {
+code/crates/nestgate-core/src/zero_cost/system.rs:impl<const MAX_SIZE: usize, const TIMEOUT_MS: u64> Default
+code/crates/nestgate-core/src/zero_cost/system.rs:impl<const MAX_SIZE: usize, const TIMEOUT_MS: u64> ZeroCostSystemBuilder<MAX_SIZE, TIMEOUT_MS> {
+code/crates/nestgate-core/src/zero_cost/zfs_service/traits.rs:    const MAX_POOLS: usize = 256,
+code/crates/nestgate-core/src/zero_cost/zfs_service/traits.rs:    const MAX_DATASETS: usize = 10000,
+code/crates/nestgate-core/src/zero_cost/zfs_service/traits.rs:    const MAX_SNAPSHOTS: usize = 100_000,
+code/crates/nestgate-core/src/zero_cost/composition.rs:pub struct ZeroCostNestGate<Adapter, Cache, const MAX_CONNECTIONS: usize = 1000> {
+code/crates/nestgate-core/src/zero_cost/composition.rs:impl<Adapter, Cache, const MAX_CONNECTIONS: usize> ZeroCostNestGate<Adapter, Cache, MAX_CONNECTIONS>
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:    const BUFFER_SIZE: usize = 8192,
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:    const MAX_CONNECTIONS: usize = 1000,
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:    const TIMEOUT_MS: u64 = 30000,
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:    const ENABLE_METRICS: bool = true,
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:    const THREAD_COUNT: usize = 8,
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:    const BUFFER_SIZE: usize = 4096,
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:    const MAX_CONNECTIONS: usize = 500,
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:    const TIMEOUT_MS: u64 = 15_000,
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:    const ENABLE_METRICS: bool = false,
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:    const THREAD_COUNT: usize = 4,
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:impl<const B: usize, const C: usize, const T: u64, const M: bool, const TC: usize> Default
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:impl<const B: usize, const C: usize, const T: u64, const M: bool, const TC: usize>
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:    pub fn with_buffer_size<const NEW_BUFFER: usize>(
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:    pub fn with_max_connections<const NEW_CONNECTIONS: usize>(
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:    pub fn with_timeout<const NEW_TIMEOUT: u64>(
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:    pub fn with_metrics<const ENABLE: bool>(
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:    pub fn with_threads<const NEW_THREADS: usize>(
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:    const POOL_SIZE: usize = 1024,
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:    const BLOCK_SIZE: usize = 64,
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:    const ALIGNMENT: usize = 8,
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:impl<const POOL_SIZE: usize, const BLOCK_SIZE: usize, const ALIGNMENT: usize> Default
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:impl<const POOL_SIZE: usize, const BLOCK_SIZE: usize, const ALIGNMENT: usize>
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:    const OPERATIONS_PER_SEC: u64 = 10000,
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:    const LATENCY_MICROSEC: u64 = 100,
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:    const MEMORY_USAGE_KB: u64 = 1024,
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:impl<const OPS: u64, const LAT: u64, const MEM: u64> PerformanceCalculator<OPS, LAT, MEM> {
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:pub struct SimdOptimizedBuffer<const SIZE: usize = 1024> {
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:impl<const SIZE: usize> Default for SimdOptimizedBuffer<SIZE> {
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:impl<const SIZE: usize> SimdOptimizedBuffer<SIZE> {
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:pub struct TypeLevelMath<const A: usize, const B: usize>;
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:impl<const A: usize, const B: usize> TypeLevelMath<A, B> {
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:pub trait ZeroCostValidation<const VALUE: usize> {
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:pub struct PortValidator<const PORT: usize>;
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:impl<const PORT: usize> ZeroCostValidation<PORT> for PortValidator<PORT> {
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:pub struct BufferSizeValidator<const SIZE: usize>;
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:impl<const SIZE: usize> ZeroCostValidation<SIZE> for BufferSizeValidator<SIZE> {
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:        const THROUGHPUT: u64 = PerformanceCalculator::<50000, 50, 512>::throughput();
+code/crates/nestgate-core/src/zero_cost/enhanced_abstractions.rs:        const MEETS_SLA: bool =
+code/crates/nestgate-core/src/zero_cost/native_async_traits.rs:    const MAX_SERVICES: usize = 1000,
+code/crates/nestgate-core/src/zero_cost/native_async_traits.rs:    const TIMEOUT_SECS: u64 = 300,
+code/crates/nestgate-core/src/zero_cost/native_async_traits.rs:    const MAX_TOKENS: usize = 10000,
+code/crates/nestgate-core/src/zero_cost/native_async_traits.rs:    const TOKEN_EXPIRY_SECS: u64 = 3600,
+code/crates/nestgate-core/src/zero_cost/native_async_traits.rs:    const MAX_OBJECTS: usize = 100_000,
+code/crates/nestgate-core/src/zero_cost/native_async_traits.rs:    const MAX_OBJECT_SIZE: usize = { 1024 * 1024 * 10 },
+code/crates/nestgate-core/src/zero_cost/native_async_traits.rs:    const MAX_WORKLOADS: usize = 1000,
+code/crates/nestgate-core/src/zero_cost/native_async_traits.rs:    const MAX_CPU_CORES: usize = 64,
+code/crates/nestgate-core/src/zero_cost/native_async_traits.rs:    const MAX_CONNECTIONS: usize = 10000,
+code/crates/nestgate-core/src/zero_cost/native_async_traits.rs:    const BUFFER_SIZE: usize = 8192,
+code/crates/nestgate-core/src/zero_cost/native_async_traits.rs:    const MAX_ENDPOINTS: usize = 1000,
+code/crates/nestgate-core/src/zero_cost/native_async_traits.rs:    const DISCOVERY_TIMEOUT_SECS: u64 = 30,
+code/crates/nestgate-core/src/zero_cost/native_async_traits.rs:    const MAX_POOLS: usize = 1000,
+code/crates/nestgate-core/src/zero_cost/native_async_traits.rs:    const MAX_DATASETS: usize = 10000,
+code/crates/nestgate-core/src/zero_cost/native_async_traits.rs:    const MAX_SERVICES: usize = 1000,
+code/crates/nestgate-core/src/zero_cost/native_async_traits.rs:impl<UniversalProvider, SecurityProvider, StorageProvider, const MAX_SERVICES: usize>
+code/crates/nestgate-core/src/zero_cost/connection_pool.rs:pub trait ZeroCostConnectionFactory<T, const POOL_SIZE: usize = 100>
+code/crates/nestgate-core/src/zero_cost/connection_pool.rs:pub struct ZeroCostConnectionPool<Connection, Factory, HealthCheck, const POOL_SIZE: usize = 100>
+code/crates/nestgate-core/src/zero_cost/connection_pool.rs:impl<Connection, Factory, HealthCheck, const POOL_SIZE: usize>
+code/crates/nestgate-core/src/zero_cost/providers.rs:pub struct ZeroCostMemoryCache<const CAPACITY: usize> {
+code/crates/nestgate-core/src/zero_cost/providers.rs:impl<const CAPACITY: usize> Default for ZeroCostMemoryCache<CAPACITY> {
+code/crates/nestgate-core/src/zero_cost/providers.rs:impl<const CAPACITY: usize> ZeroCostMemoryCache<CAPACITY> {
+code/crates/nestgate-core/src/zero_cost/providers.rs:impl<const CAPACITY: usize> ZeroCostCacheProvider<String, Vec<u8>>
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:    const MAX_CONNECTIONS: usize = 10000,
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:    const BUFFER_SIZE: usize = 65536,
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:    const TIMEOUT_MS: u64 = 30000,
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:    const WORKER_THREADS: usize = 8,
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:    const LOG_LEVEL: u8 = 2, // 0=Error, 1=Warn, 2=Info, 3=Debug, 4=Trace
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:impl<const MAX_CONNECTIONS: usize, const BUFFER_SIZE: usize, const TIMEOUT_MS: u64, const WORKER_THREADS: usize, const LOG_LEVEL: u8>
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:    const MAX_POOLS: usize = 100,
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:    const MAX_DATASETS: usize = 10000,
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:    const MAX_SNAPSHOTS: usize = 100_000,
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:    const POOL_TIMEOUT_MS: u64 = 60_000,
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:    const SNAPSHOT_RETENTION_DAYS: u32 = 30,
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:    const COMPRESSION_LEVEL: u8 = 6, // 1-9 for gzip
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:    const ENABLE_DEDUPLICATION: bool = false,
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:    const ENABLE_ENCRYPTION: bool = true,
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:impl<const MAX_POOLS: usize, const MAX_DATASETS: usize, const MAX_SNAPSHOTS: usize, 
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:     const POOL_TIMEOUT_MS: u64, const SNAPSHOT_RETENTION_DAYS: u32, const COMPRESSION_LEVEL: u8,
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:     const ENABLE_DEDUPLICATION: bool, const ENABLE_ENCRYPTION: bool>
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:    const API_PORT: u16 = 8080,
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:    const INTERNAL_PORT: u16 = 9090,
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:    const MAX_REQUEST_SIZE_MB: u32 = 100,
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:    const KEEPALIVE_TIMEOUT_MS: u64 = 60_000,
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:    const RATE_LIMIT_REQUESTS_PER_MINUTE: u32 = 1000,
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:    const ENABLE_TLS: bool = true,
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:    const ENABLE_HTTP2: bool = true,
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:    const ENABLE_COMPRESSION: bool = true,
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:impl<const API_PORT: u16, const INTERNAL_PORT: u16, const MAX_REQUEST_SIZE_MB: u32,
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:     const KEEPALIVE_TIMEOUT_MS: u64, const RATE_LIMIT_REQUESTS_PER_MINUTE: u32,
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:     const ENABLE_TLS: bool, const ENABLE_HTTP2: bool, const ENABLE_COMPRESSION: bool>
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:    const MAX_ENTRIES: usize = 100_000,
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:    const MAX_MEMORY_MB: u32 = 1024,
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:    const TTL_SECONDS: u64 = 3600,
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:    const CLEANUP_INTERVAL_SECONDS: u64 = 300,
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:    const ENABLE_LRU: bool = true,
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:    const ENABLE_PERSISTENCE: bool = false,
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:impl<const MAX_ENTRIES: usize, const MAX_MEMORY_MB: u32, const TTL_SECONDS: u64,
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:     const CLEANUP_INTERVAL_SECONDS: u64, const ENABLE_LRU: bool, const ENABLE_PERSISTENCE: bool>
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:pub trait ZeroCostService<const BUFFER_SIZE: usize = 8192, const MAX_CONNECTIONS: usize = 1000> {
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:    const BLOCK_SIZE: usize = 4096,
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:    const CACHE_SIZE: usize = 1024,
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:    const MAX_CONCURRENT_OPS: usize = 100,
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:    const SERVICE_TYPE: &'static str;
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:    const DEFAULT_TIMEOUT_MS: u64 = 30000;
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:    const DEFAULT_RETRY_ATTEMPTS: u32 = 3;
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:    const BUFFER_SIZE: usize = 8192;
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:    const MAX_CONNECTIONS: usize = 1000;
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:    const DEBUG_MODE: bool = false;
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:    const TIMEOUT_MS: u64 = 30000,
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:    const RETRY_ATTEMPTS: u32 = 3,
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:    const BUFFER_SIZE: usize = 8192,
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:    const MAX_CONNECTIONS: usize = 1000,
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:    const DEBUG_MODE: bool = false,
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:        const TIMEOUT_MS: u64,
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:        const RETRY_ATTEMPTS: u32,
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:        const BUFFER_SIZE: usize,
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:        const MAX_CONNECTIONS: usize,
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:        const DEBUG_MODE: bool,
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:        const TIMEOUT_MS: u64,
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:        const RETRY_ATTEMPTS: u32,
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:        const BUFFER_SIZE: usize,
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:        const MAX_CONNECTIONS: usize,
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:        const DEBUG_MODE: bool,
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:pub trait HighPerformanceTrait<const BATCH_SIZE: usize = 1000> {
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:pub trait MemoryOptimizedTrait<const POOL_SIZE: usize = 1024, const BLOCK_SIZE: usize = 4096> {
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:// const _: () = assert!(ConfigValidator::validate_high_performance());
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:// const _: () = assert!(ConfigValidator::validate_development());
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:// const _: () = assert!(ConfigValidator::validate_memory_constrained());
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:    const RECORD_SIZE: usize = 131_072,
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:    const ARC_SIZE: usize = 1_073_741_824,
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:    const MTU_SIZE: usize = 1500,
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:    const SEND_BUFFER_SIZE: usize = 65536,
+code/crates/nestgate-core/src/zero_cost/optimized_traits.rs:    const RECV_BUFFER_SIZE: usize = 65536,
+code/crates/nestgate-core/src/zero_cost/migrated_core_service_example.rs:pub struct ZeroCostConfigService<const MAX_CACHE_SIZE: usize = 1000> {
+code/crates/nestgate-core/src/zero_cost/migrated_core_service_example.rs:impl<const MAX_CACHE_SIZE: usize> Default for ZeroCostConfigService<MAX_CACHE_SIZE> {
+code/crates/nestgate-core/src/zero_cost/migrated_core_service_example.rs:impl<const MAX_CACHE_SIZE: usize> ZeroCostConfigService<MAX_CACHE_SIZE> {
+code/crates/nestgate-core/src/zero_cost/migrated_core_service_example.rs:impl<const MAX_CACHE_SIZE: usize> ZeroCostUniversalService
+code/crates/nestgate-core/src/zero_cost/migrated_core_service_example.rs:pub type CompatibleConfigService<const SIZE: usize> =
+code/crates/nestgate-core/src/zero_cost/migrated_core_service_example.rs:impl<const SIZE: usize> CompatibleConfigService<SIZE> {
+code/crates/nestgate-core/src/zero_cost/migrated_load_balancer.rs:pub trait ZeroCostLoadBalancer<const MAX_SERVICES: usize = 1000, const MAX_HISTORY: usize = 10000>:
+code/crates/nestgate-core/src/zero_cost_evolution.rs:pub trait ZeroCostString<const N: usize> {
+code/crates/nestgate-core/src/zero_cost_evolution.rs:    const STR: &'static str;
+code/crates/nestgate-core/src/zero_cost_evolution.rs:    const LEN: usize = N;
+code/crates/nestgate-core/src/zero_cost_evolution.rs:    const BUFFER_SIZE: usize;
+code/crates/nestgate-core/src/zero_cost_evolution.rs:    const MAX_CONNECTIONS: usize;
+code/crates/nestgate-core/src/zero_cost_evolution.rs:    const TIMEOUT_MS: u64;
+code/crates/nestgate-core/src/zero_cost_evolution.rs:    const DEBUG: bool;
+code/crates/nestgate-core/src/zero_cost_evolution.rs:    const BUFFER_SIZE: usize =
+code/crates/nestgate-core/src/zero_cost_evolution.rs:    const MAX_CONNECTIONS: usize =
+code/crates/nestgate-core/src/zero_cost_evolution.rs:    const TIMEOUT_MS: u64 = crate::constants::canonical::timeouts::DEFAULT_TIMEOUT_MS;
+code/crates/nestgate-core/src/zero_cost_evolution.rs:    const DEBUG: bool = false;
+code/crates/nestgate-core/src/zero_cost_evolution.rs:    const BUFFER_SIZE: usize =
+code/crates/nestgate-core/src/zero_cost_evolution.rs:    const MAX_CONNECTIONS: usize =
+code/crates/nestgate-core/src/zero_cost_evolution.rs:    const TIMEOUT_MS: u64 = crate::constants::canonical::timeouts::DEFAULT_TIMEOUT_MS;
+code/crates/nestgate-core/src/zero_cost_evolution.rs:    const DEBUG: bool = true;
+code/crates/nestgate-core/src/zero_cost_evolution.rs:pub struct ZeroCostArray<T, const N: usize> {
+code/crates/nestgate-core/src/zero_cost_evolution.rs:impl<T, const N: usize> Default for ZeroCostArray<T, N> {
+code/crates/nestgate-core/src/zero_cost_evolution.rs:impl<T, const N: usize> ZeroCostArray<T, N> {
+code/crates/nestgate-core/src/zero_cost_evolution.rs:pub struct ZeroCostPool<T, const POOL_SIZE: usize, const BLOCK_SIZE: usize> {
+code/crates/nestgate-core/src/zero_cost_evolution.rs:impl<T, const POOL_SIZE: usize, const BLOCK_SIZE: usize> Default
+code/crates/nestgate-core/src/zero_cost_evolution.rs:impl<T, const POOL_SIZE: usize, const BLOCK_SIZE: usize> ZeroCostPool<T, POOL_SIZE, BLOCK_SIZE> {
+code/crates/nestgate-core/src/simd/mod.rs:pub const DEFAULT_BATCH_SIZE: usize = 32;
+code/crates/nestgate-core/src/simd/mod.rs:pub const MAX_BATCH_SIZE: usize = 1024;
+code/crates/nestgate-core/src/simd/mod.rs:pub const MIN_BATCH_SIZE: usize = 4;
+code/crates/nestgate-core/src/simd/mod.rs:        const _: () = assert!(MIN_BATCH_SIZE < DEFAULT_BATCH_SIZE);
+code/crates/nestgate-core/src/simd/mod.rs:        const _: () = assert!(DEFAULT_BATCH_SIZE < MAX_BATCH_SIZE);
+code/crates/nestgate-core/src/simd/safe_batch_processor.rs:pub struct SafeSimdBatchProcessor<const BATCH_SIZE: usize = 32> {
+code/crates/nestgate-core/src/simd/safe_batch_processor.rs:impl<const BATCH_SIZE: usize> SafeSimdBatchProcessor<BATCH_SIZE> {
+code/crates/nestgate-core/src/simd/safe_batch_processor.rs:impl<const BATCH_SIZE: usize> Default for SafeSimdBatchProcessor<BATCH_SIZE> {
+code/crates/nestgate-core/src/simd/safe_batch_processor.rs:pub type SimdBatchProcessor<const BATCH_SIZE: usize> = SafeSimdBatchProcessor<BATCH_SIZE>;
+code/crates/nestgate-core/src/advanced_optimizations.rs:pub struct ZeroAllocStringProcessor<const BUFFER_SIZE: usize = 4096> {
+code/crates/nestgate-core/src/advanced_optimizations.rs:impl<const BUFFER_SIZE: usize> Default for ZeroAllocStringProcessor<BUFFER_SIZE> {
+code/crates/nestgate-core/src/advanced_optimizations.rs:impl<const BUFFER_SIZE: usize> ZeroAllocStringProcessor<BUFFER_SIZE> {
+code/crates/nestgate-core/src/memory_layout/memory_pool.rs:pub struct CacheOptimizedMemoryPool<T, const POOL_SIZE: usize = 1024> {
+code/crates/nestgate-core/src/memory_layout/memory_pool.rs:impl<T, const POOL_SIZE: usize> Default for CacheOptimizedMemoryPool<T, POOL_SIZE> {
+code/crates/nestgate-core/src/memory_layout/memory_pool.rs:impl<T, const POOL_SIZE: usize> CacheOptimizedMemoryPool<T, POOL_SIZE> {
+code/crates/nestgate-core/src/memory_layout/cache_alignment.rs:        let ptr = aligned.get() as *const _ as usize;
+code/crates/nestgate-core/src/memory_layout/memory_pool_safe.rs:pub struct SafeMemoryPool<T, const POOL_SIZE: usize = 1024> {
+code/crates/nestgate-core/src/memory_layout/memory_pool_safe.rs:impl<T, const POOL_SIZE: usize> Default for SafeMemoryPool<T, POOL_SIZE> {
+code/crates/nestgate-core/src/memory_layout/memory_pool_safe.rs:impl<T, const POOL_SIZE: usize> SafeMemoryPool<T, POOL_SIZE> {
+code/crates/nestgate-core/src/cache/zero_cost_cache.rs:    const MAX_SIZE: usize = 10000,
+code/crates/nestgate-core/src/cache/zero_cost_cache.rs:    const TTL_SECONDS: u64 = 3600,
+code/crates/nestgate-core/src/cache/zero_cost_cache.rs:impl<K, V, const MAX_SIZE: usize, const TTL_SECONDS: u64> 
+code/crates/nestgate-core/src/cache/zero_cost_cache.rs:impl<K, V, const MAX_SIZE: usize, const TTL_SECONDS: u64> 
+code/crates/nestgate-core/src/cache/zero_cost_cache.rs:    const MAX_FILES: usize = 10000,
+code/crates/nestgate-core/src/cache/zero_cost_cache.rs:    const TTL_SECONDS: u64 = 86400, // 24 hours
+code/crates/nestgate-core/src/cache/zero_cost_cache.rs:impl<K, V, const MAX_FILES: usize, const TTL_SECONDS: u64>
+code/crates/nestgate-core/src/cache/zero_cost_cache.rs:impl<K, V, const MAX_FILES: usize, const TTL_SECONDS: u64>
+code/crates/nestgate-core/src/universal_providers_zero_cost.rs:pub struct ZeroCostUniversalSecurityWrapper<Provider, const MAX_CONCURRENT: usize = 1000>
+code/crates/nestgate-core/src/universal_providers_zero_cost.rs:impl<Provider, const MAX_CONCURRENT: usize>
+code/crates/nestgate-core/src/universal_providers_zero_cost.rs:pub struct ZeroCostUniversalOrchestrationWrapper<Provider, const MAX_INSTANCES: usize = 500>
+code/crates/nestgate-core/src/universal_providers_zero_cost.rs:pub struct ZeroCostUniversalComputeWrapper<Provider, const MAX_COMPUTE_UNITS: usize = 1000>
+code/crates/nestgate-core/src/universal_providers_zero_cost.rs:pub const ZERO_COST_MIGRATION_GUIDE: &str = r"
+code/crates/nestgate-core/src/services/native_async/traits.rs:    const MAX_SERVICES: usize = 1000,
+code/crates/nestgate-core/src/services/native_async/traits.rs:    const MAX_CONCURRENT_REQUESTS: usize = 10000,
+code/crates/nestgate-core/src/services/native_async/traits.rs:    const STATS_RETENTION_SECS: u64 = 86400, // 24 hours
+code/crates/nestgate-core/src/services/native_async/traits.rs:    const HEALTH_CHECK_INTERVAL_SECS: u64 = 30,
+code/crates/nestgate-core/src/services/native_async/traits.rs:    const MAX_CONNECTIONS: usize = 1000,
+code/crates/nestgate-core/src/services/native_async/traits.rs:    const MAX_MESSAGE_SIZE: usize = 1024,
+code/crates/nestgate-core/src/services/native_async/traits.rs:    const CONNECTION_TIMEOUT_SECS: u64 = 30,
+code/crates/nestgate-core/src/services/native_async/traits.rs:    const MESSAGE_RETRY_ATTEMPTS: u32 = 3,
+code/crates/nestgate-core/src/services/native_async/traits.rs:    const MAX_SESSIONS: usize = 1000,
+code/crates/nestgate-core/src/services/native_async/traits.rs:    const SESSION_TIMEOUT_SECS: u64 = 300,
+code/crates/nestgate-core/src/services/native_async/traits.rs:    const MAX_MESSAGE_SIZE: usize = 1024,
+code/crates/nestgate-core/src/services/native_async/traits.rs:    const PROTOCOL_VERSION: u32 = 1,
+code/crates/nestgate-core/src/services/native_async/traits.rs:    const MAX_WORKFLOWS: usize = 1000,
+code/crates/nestgate-core/src/services/native_async/traits.rs:    const MAX_CONCURRENT_EXECUTIONS: usize = 100,
+code/crates/nestgate-core/src/services/native_async/traits.rs:    const EXECUTION_TIMEOUT_SECS: u64 = 300,
+code/crates/nestgate-core/src/services/native_async/traits.rs:    const MAX_WORKFLOW_STEPS: usize = 100,
+code/crates/nestgate-core/src/services/native_async/traits.rs:    const MAX_SERVICES: usize = 1000,
+code/crates/nestgate-core/src/services/native_async/traits.rs:    const SERVICE_TIMEOUT_SECS: u64 = 300,
+code/crates/nestgate-core/src/services/native_async/traits.rs:    const MAX_SESSIONS: usize = 1000,
+code/crates/nestgate-core/src/services/native_async/traits.rs:    const SESSION_DURATION_SECS: u64 = 300,
+code/crates/nestgate-core/src/services/native_async/traits.rs:    const MAX_CONNECTIONS: usize = 1000,
+code/crates/nestgate-core/src/services/native_async/traits.rs:    const REQUEST_TIMEOUT_SECS: u64 = 300,
+code/crates/nestgate-core/src/services/native_async/traits.rs:    const MAX_WORKFLOWS: usize = 1000,
+code/crates/nestgate-core/src/services/native_async/traits.rs:    const EXECUTION_TIMEOUT_SECS: u64 = 300,
+code/crates/nestgate-core/src/constants/domains/network.rs:    pub const DEFAULT_API_PORT: u16 = 8080;
+code/crates/nestgate-core/src/constants/domains/network.rs:    pub const DEFAULT_BIND_ADDRESS: &str = "127.0.0.1";
+code/crates/nestgate-core/src/constants/domains/network.rs:    pub const LOCALHOST: &str = "127.0.0.1";
+code/crates/nestgate-core/src/constants/domains/storage.rs:    pub const DEFAULT_POOL: &str = "tank";
+code/crates/nestgate-core/src/constants/domains/storage.rs:    pub const DEFAULT_BUFFER_SIZE: usize = 65536;
+code/crates/nestgate-core/src/constants/domains/storage.rs:    pub const DEFAULT_CACHE_SIZE: usize = 128 * 1024 * 1024; // 128MB
+code/crates/nestgate-core/src/constants/domains/api.rs:    pub const VERSION: &str = "v1";
+code/crates/nestgate-core/src/constants/domains/api.rs:    pub const BASE_PATH: &str = "/api/v1";
+code/crates/nestgate-core/src/constants/domains/api.rs:    pub const DEFAULT_CONTENT_TYPE: &str = "application/json";
+code/crates/nestgate-core/src/constants/testing.rs:pub const TEST_API_BASE: &str = "http://localhost:8080";
+code/crates/nestgate-core/src/constants/testing.rs:pub const TEST_API_ALT: &str = "http://localhost:9999";
+code/crates/nestgate-core/src/constants/testing.rs:pub const TEST_HOSTNAME: &str = "localhost";
+code/crates/nestgate-core/src/constants/testing.rs:pub const TEST_DB_HOST: &str = "localhost";
+code/crates/nestgate-core/src/constants/port_defaults.rs:pub const DEFAULT_API_PORT: u16 = 8080;
+code/crates/nestgate-core/src/constants/port_defaults.rs:pub const DEFAULT_ADMIN_PORT: u16 = 8081;
+code/crates/nestgate-core/src/constants/port_defaults.rs:pub const DEFAULT_METRICS_PORT: u16 = 9090;
+code/crates/nestgate-core/src/constants/port_defaults.rs:pub const DEFAULT_HEALTH_PORT: u16 = 8082;
+code/crates/nestgate-core/src/constants/port_defaults.rs:pub const DEFAULT_DEV_PORT: u16 = 3000;
+code/crates/nestgate-core/src/constants/port_defaults.rs:pub const DEFAULT_DEV_ALT_PORT: u16 = 5000;
+code/crates/nestgate-core/src/constants/port_defaults.rs:pub const DEFAULT_POSTGRES_PORT: u16 = 5432;
+code/crates/nestgate-core/src/constants/port_defaults.rs:pub const DEFAULT_MYSQL_PORT: u16 = 3306;
+code/crates/nestgate-core/src/constants/port_defaults.rs:pub const DEFAULT_MONGODB_PORT: u16 = 27017;
+code/crates/nestgate-core/src/constants/port_defaults.rs:pub const DEFAULT_REDIS_PORT: u16 = 6379;
+code/crates/nestgate-core/src/constants/port_defaults.rs:pub const DEFAULT_PROMETHEUS_PORT: u16 = 9090;
+code/crates/nestgate-core/src/constants/port_defaults.rs:pub const DEFAULT_GRAFANA_PORT: u16 = 3001;
+code/crates/nestgate-core/src/constants/port_defaults.rs:pub const DEFAULT_JAEGER_PORT: u16 = 14268;
+code/crates/nestgate-core/src/constants/port_defaults.rs:pub const DEFAULT_RABBITMQ_PORT: u16 = 5672;
+code/crates/nestgate-core/src/constants/port_defaults.rs:pub const DEFAULT_KAFKA_PORT: u16 = 9092;
+code/crates/nestgate-core/src/constants/network.rs:pub const DEFAULT_BUFFER_SIZE: usize = super::canonical_defaults::performance::NETWORK_BUFFER_SIZE;
+code/crates/nestgate-core/src/constants/network.rs:pub const LOCALHOST: &str = "127.0.0.1";
+code/crates/nestgate-core/src/constants/network.rs:pub const DEFAULT_BIND_ADDRESS: &str = "0.0.0.0";
+code/crates/nestgate-core/src/constants/system.rs:pub const DEFAULT_INSTANCE_NAME: &str = "nestgate-default";
+code/crates/nestgate-core/src/constants/system.rs:pub const DEFAULT_SERVICE_NAME: &str = "nestgate";
+code/crates/nestgate-core/src/constants/system.rs:pub const DEFAULT_TIMEOUT_MS: u64 = 5000;
+code/crates/nestgate-core/src/constants/system.rs:pub const MAX_CONNECTIONS: usize = 1000;
+code/crates/nestgate-core/src/constants/system.rs:pub const BUFFER_SIZE: usize = 8192;
+code/crates/nestgate-core/src/constants/system.rs:pub const DEFAULT_RETRY_ATTEMPTS: u32 = 3;
+code/crates/nestgate-core/src/constants/system.rs:pub const DEFAULT_HEALTH_CHECK_INTERVAL: u64 = 30;
+code/crates/nestgate-core/src/constants/system.rs:pub const DEFAULT_BIND_HOST: &str = "127.0.0.1";
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:    pub const DEFAULT_API_BASE_URL: &str = "http://localhost:8080";
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:    pub const DEFAULT_WEBSOCKET_URL: &str = "ws://localhost:8080/ws";
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:    pub const DEFAULT_METRICS_URL: &str = "http://localhost:9090";
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:    pub const DEFAULT_WEB_UI_URL: &str = "http://localhost:3000";
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:    pub const LOCALHOST: &str = "127.0.0.1";
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:    pub const DEFAULT_BIND_ADDRESS: &str = "0.0.0.0";
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:        pub const MAX_CONCURRENT_REQUESTS: usize = 1000;
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:        pub const MAX_REQUEST_SIZE: usize = 1024 * 1024; // 1MB
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:        pub const CONNECTION_TIMEOUT_MS: u64 = 5000;
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:    pub const NETWORK_BUFFER_SIZE: usize = 8192;
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:    pub const DEFAULT_BUFFER_SIZE: usize = 4096;
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:    pub const MAX_CONNECTIONS: usize = 1000;
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:    pub const DEFAULT_THREAD_POOL_SIZE: usize = 8;
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:    pub const DEFAULT_MAX_CONNECTIONS: usize = 1000;
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:    pub const DEFAULT_WORKER_COUNT: usize = 4;
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:    pub const DEFAULT_QUEUE_SIZE: usize = 10000;
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:    pub const DEFAULT_MAX_PARALLEL_TESTS: usize = 4;
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:    pub const DEFAULT_BUFFER_SIZE: usize = 4096;
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:    pub const DEFAULT_CACHE_SIZE: u64 = 128 * 1024 * 1024;
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:    pub const DEFAULT_PAGE_SIZE: usize = 4096;
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:    pub const DEFAULT_RECORD_SIZE: usize = 256;
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:    pub const DEFAULT_FILE_SIZE_LIMIT: u64 = 100 * 1024 * 1024;
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:    pub const DEFAULT_MEMORY_LIMIT: u64 = 1024 * 1024 * 1024;
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:    pub const DEFAULT_TIMEOUT_MS: u64 = 5000;
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:    pub const CONNECTION_TIMEOUT_MS: u64 = 3000;
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:    pub const REQUEST_TIMEOUT_MS: u64 = 10000;
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:    pub const DEFAULT_CONNECTION_TIMEOUT: Duration = Duration::from_secs(30);
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:    pub const DEFAULT_REQUEST_TIMEOUT: Duration = Duration::from_secs(60);
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:    pub const DEFAULT_HEALTH_TIMEOUT: Duration = Duration::from_secs(10);
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:    pub const DEFAULT_ZFS_TIMEOUT: Duration = Duration::from_secs(300);
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:    pub const DEFAULT_TEST_TIMEOUT: Duration = Duration::from_secs(30);
+code/crates/nestgate-core/src/constants/network_hardcoded.rs:    pub const LOCALHOST_IPV4: &str = "127.0.0.1";
+code/crates/nestgate-core/src/constants/network_hardcoded.rs:    pub const LOCALHOST_NAME: &str = "localhost";
+code/crates/nestgate-core/src/constants/network_hardcoded.rs:    pub const BIND_ALL_IPV4: &str = "0.0.0.0";
+code/crates/nestgate-core/src/constants/network_hardcoded.rs:    pub const BIND_ALL_IPV6: &str = "::";
+code/crates/nestgate-core/src/constants/network_hardcoded.rs:    pub const LOCALHOST_IPV6: &str = "::1";
+code/crates/nestgate-core/src/constants/network_hardcoded.rs:    pub const HTTP_DEFAULT: u16 = 8080;
+code/crates/nestgate-core/src/constants/network_hardcoded.rs:    pub const HTTPS_DEFAULT: u16 = 8443;
+code/crates/nestgate-core/src/constants/network_hardcoded.rs:    pub const API_DEFAULT: u16 = 3000;
+code/crates/nestgate-core/src/constants/network_hardcoded.rs:    pub const API_ALT: u16 = 3001;
+code/crates/nestgate-core/src/constants/network_hardcoded.rs:    pub const METRICS_DEFAULT: u16 = 9090;
+code/crates/nestgate-core/src/constants/network_hardcoded.rs:    pub const HEALTH_CHECK_DEFAULT: u16 = 8081;
+code/crates/nestgate-core/src/constants/network_hardcoded.rs:    pub const HEALTH_CHECK: u16 = 8082;
+code/crates/nestgate-core/src/constants/network_hardcoded.rs:    pub const DEV_SERVER: u16 = 5000;
+code/crates/nestgate-core/src/constants/network_hardcoded.rs:    pub const STORAGE_DEFAULT: u16 = 5000;
+code/crates/nestgate-core/src/constants/network_hardcoded.rs:    pub const WEBSOCKET_DEFAULT: u16 = 8081;
+code/crates/nestgate-core/src/constants/network_hardcoded.rs:    pub const ADMIN_DEFAULT: u16 = 8082;
+code/crates/nestgate-core/src/constants/network_hardcoded.rs:    pub const CONNECT_MS: u64 = 5_000;
+code/crates/nestgate-core/src/constants/network_hardcoded.rs:    pub const REQUEST_MS: u64 = 30_000;
+code/crates/nestgate-core/src/constants/network_hardcoded.rs:    pub const LONG_OPERATION_MS: u64 = 300_000;
+code/crates/nestgate-core/src/constants/network_hardcoded.rs:    pub const BIND_ADDRESS: &str = "NESTGATE_BIND_ADDRESS";
+code/crates/nestgate-core/src/constants/network_hardcoded.rs:    pub const API_PORT: &str = "NESTGATE_API_PORT";
+code/crates/nestgate-core/src/constants/network_hardcoded.rs:    pub const METRICS_PORT: &str = "NESTGATE_METRICS_PORT";
+code/crates/nestgate-core/src/constants/network_hardcoded.rs:    pub const HEALTH_PORT: &str = "NESTGATE_HEALTH_PORT";
+code/crates/nestgate-core/src/constants/network_hardcoded.rs:    pub const WEBSOCKET_PORT: &str = "NESTGATE_WEBSOCKET_PORT";
+code/crates/nestgate-core/src/constants/shared.rs:pub const MODULE_VERSION: &str = "0.6.0";
+code/crates/nestgate-core/src/constants/shared.rs:pub const DEFAULT_MAX_CONNECTIONS: usize = 1000;
+code/crates/nestgate-core/src/constants/shared.rs:pub const DEFAULT_HEALTH_CHECK_INTERVAL_SECS: u64 = 30;
+code/crates/nestgate-core/src/constants/shared.rs:pub const DEFAULT_LOG_ROTATION_MB: usize = 100;
+code/crates/nestgate-core/src/constants/shared.rs:pub const DEFAULT_CACHE_TTL_SECS: u64 = 3600;
+code/crates/nestgate-core/src/constants/hardcoding.rs:    pub const LOCALHOST_IPV4: &str = "127.0.0.1";
+code/crates/nestgate-core/src/constants/hardcoding.rs:    pub const LOCALHOST_IPV6: &str = "::1";
+code/crates/nestgate-core/src/constants/hardcoding.rs:    pub const LOCALHOST_NAME: &str = "localhost";
+code/crates/nestgate-core/src/constants/hardcoding.rs:    pub const BIND_ALL_IPV4: &str = "0.0.0.0";
+code/crates/nestgate-core/src/constants/hardcoding.rs:    pub const BIND_ALL_IPV6: &str = "::";
+code/crates/nestgate-core/src/constants/hardcoding.rs:    pub const HTTP_DEFAULT: u16 = 8080;
+code/crates/nestgate-core/src/constants/hardcoding.rs:    pub const HTTPS_DEFAULT: u16 = 8443;
+code/crates/nestgate-core/src/constants/hardcoding.rs:    pub const API_DEFAULT: u16 = 3000;
+code/crates/nestgate-core/src/constants/hardcoding.rs:    pub const API_ALT: u16 = 3001;
+code/crates/nestgate-core/src/constants/hardcoding.rs:    pub const METRICS_DEFAULT: u16 = 9090;
+code/crates/nestgate-core/src/constants/hardcoding.rs:    pub const PROMETHEUS: u16 = 9090;
+code/crates/nestgate-core/src/constants/hardcoding.rs:    pub const HEALTH_CHECK: u16 = 8081;
+code/crates/nestgate-core/src/constants/hardcoding.rs:    pub const GRPC_DEFAULT: u16 = 50051;
+code/crates/nestgate-core/src/constants/hardcoding.rs:    pub const WEBSOCKET_DEFAULT: u16 = 8082;
+code/crates/nestgate-core/src/constants/hardcoding.rs:    pub const ADMIN_DEFAULT: u16 = 9000;
+code/crates/nestgate-core/src/constants/hardcoding.rs:    pub const STORAGE_DEFAULT: u16 = 5000;
+code/crates/nestgate-core/src/constants/hardcoding.rs:    pub const ORCHESTRATION_DEFAULT: u16 = 8083;
+code/crates/nestgate-core/src/constants/hardcoding.rs:    pub const STORAGE_DISCOVERY_DEFAULT: u16 = 8084;
+code/crates/nestgate-core/src/constants/hardcoding.rs:    pub const COMPUTE_DEFAULT: u16 = 8085;
+code/crates/nestgate-core/src/constants/hardcoding.rs:    pub const EXTENDED_SERVICES: u16 = 3002;
+code/crates/nestgate-core/src/constants/hardcoding.rs:    pub const DISCOVERY_SERVICE: u16 = 3010;
+code/crates/nestgate-core/src/constants/hardcoding.rs:    pub const METRICS_ALT: u16 = 9001;
+code/crates/nestgate-core/src/constants/hardcoding.rs:    pub const METRICS_PROMETHEUS: u16 = 9090;
+code/crates/nestgate-core/src/constants/hardcoding.rs:    pub const HEALTH_DEFAULT: u16 = 8081;
+code/crates/nestgate-core/src/constants/hardcoding.rs:    pub const ORCHESTRATOR_DEFAULT: u16 = 8090;
+code/crates/nestgate-core/src/constants/hardcoding.rs:    pub const CONNECT_MS: u64 = 5_000;
+code/crates/nestgate-core/src/constants/hardcoding.rs:    pub const REQUEST_MS: u64 = 30_000;
+code/crates/nestgate-core/src/constants/hardcoding.rs:    pub const LONG_OPERATION_MS: u64 = 300_000;
+code/crates/nestgate-core/src/constants/hardcoding.rs:    pub const TIMEOUT_MS: u64 = 5000;
+code/crates/nestgate-core/src/constants/hardcoding.rs:    pub const RETRY_ATTEMPTS: u32 = 3;
+code/crates/nestgate-core/src/constants/hardcoding.rs:    pub const SCAN_PORT_START: u16 = 3000;
+code/crates/nestgate-core/src/constants/hardcoding.rs:    pub const SCAN_PORT_END: u16 = 3999;
+code/crates/nestgate-core/src/constants/hardcoding.rs:    pub const BUFFER_SIZE_DEFAULT: usize = 65536;
+code/crates/nestgate-core/src/constants/hardcoding.rs:    pub const BUFFER_SIZE_MAX: usize = 1_048_576;
+code/crates/nestgate-core/src/constants/hardcoding.rs:    pub const CONNECTION_POOL_SIZE: usize = 10;
+code/crates/nestgate-core/src/constants/hardcoding.rs:    pub const MAX_CONNECTIONS: usize = 1000;
+code/crates/nestgate-core/src/constants/hardcoding.rs:    pub const TIMEOUT_SECS: u64 = 30;
+code/crates/nestgate-core/src/constants/hardcoding.rs:    pub const MAX_RETRIES: u32 = 3;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const TARGET_IMPROVEMENT_PERCENT: f64 = 20.0;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const AVX2_WIDTH: usize = 32;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const SSE2_WIDTH: usize = 16;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const SIMD_ALIGNMENT: usize = 32;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const MIN_SIMD_SIZE: usize = 64;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const CACHE_LINE_SIZE: usize = 64;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const PAGE_SIZE: usize = 4096;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const OPTIMAL_BATCH_SIZE: usize = 1000;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const DEFAULT_MAX_CONCURRENT: usize = 1000;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const MAX_CONNECTIONS: usize = 1000;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const MAX_BACKENDS: usize = 100;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const MAX_CONCURRENT_OPS: usize = 1000;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const DEFAULT_BUFFER_SIZE: usize = 4096;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const NETWORK_BUFFER_SIZE: usize = 65536;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const SIMD_BATCH_SIZE: usize = 32;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const POOL_SIZE: usize = 1024;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const BLOCK_SIZE: usize = 4096;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const DEFAULT_TIMEOUT_SECS: u64 = 30;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const DEFAULT_TIMEOUT_MS: u64 = 30000;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const REQUEST_TIMEOUT_MS: u64 = 30000;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const DISCOVERY_TIMEOUT_MS: u64 = 5000;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const HEALTH_CHECK_INTERVAL_MS: u64 = 30000;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const HEALTH_CHECK_INTERVAL_SECS: u64 = 30;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const STATS_RETENTION_SECS: u64 = 86400; // 24 hours
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const CONNECTION_TIMEOUT_SECS: u64 = 30;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const SESSION_TIMEOUT_SECS: u64 = 300;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const OPERATION_TIMEOUT_SECS: u64 = 30;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const DEFAULT_RETRY_ATTEMPTS: u32 = 3;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const MESSAGE_RETRY_ATTEMPTS: u32 = 3;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const DEFAULT_RETRY_DELAY_MS: u64 = 1000;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const DEFAULT_RATE_LIMIT_RPM: u32 = 1000;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const DEFAULT_RATE_LIMIT_BURST: u32 = 100;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const METRICS_COLLECTION_INTERVAL_SECS: u64 = 60;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const DEFAULT_HANDLER_TIMEOUT_SECS: u64 = 30;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const DEFAULT_BIND_ADDRESS: &str = "0.0.0.0";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const LOCALHOST: &str = "127.0.0.1";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const MAX_SERVICES: usize = 1000;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const MAX_CONCURRENT_REQUESTS: usize = 10000;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const MAX_SESSIONS: usize = 1000;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const MAX_MESSAGE_SIZE: usize = 1024;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const PROTOCOL_VERSION: u32 = 1;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const MTU_SIZE: usize = 1500;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const SEND_BUFFER_SIZE: usize = 65536;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const RECV_BUFFER_SIZE: usize = 65536;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const TIER_HOT: &str = "hot";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const TIER_WARM: &str = "warm";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const TIER_COLD: &str = "cold";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const COMPRESSION_LZ4: &str = "lz4";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const COMPRESSION_GZIP_6: &str = "gzip-6";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const COMPRESSION_GZIP_9: &str = "gzip-9";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const KB: u64 = 1024;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const MB: u64 = 1024 * 1024;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const GB: u64 = 1024 * 1024 * 1024;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const TB: u64 = 1024 * 1024 * 1024 * 1024;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const MAX_FILE_SIZE_MB: usize = 1024;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const MAX_IN_MEMORY_FILE_SIZE: u64 = 1024 * 1024 * 1024;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const RECORDSIZE_64K: &str = "64K";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const RECORDSIZE_128K: &str = "128K";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const RECORDSIZE_1M: &str = "1M";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const RECORD_SIZE: usize = 131_072; // 128KB
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const ARC_SIZE: usize = 1_073_741_824; // 1GB
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const ZFS: &str = "zfs";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const ZPOOL: &str = "zpool";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const LIST: &str = "list";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const CREATE: &str = "create";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const DESTROY: &str = "destroy";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const SET: &str = "set";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const GET: &str = "get";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const SNAPSHOT: &str = "snapshot";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const STATUS: &str = "status";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const ONLINE: &str = "ONLINE";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const DEGRADED: &str = "DEGRADED";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const FAULTED: &str = "FAULTED";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const OFFLINE: &str = "OFFLINE";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const UNAVAIL: &str = "UNAVAIL";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const REMOVED: &str = "REMOVED";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const PROPERTY_ALL: &str = "all";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const PROPERTY_METADATA: &str = "metadata";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const PROPERTY_ON: &str = "on";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const PROPERTY_OFF: &str = "off";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const FSTYPE_ZFS: &str = "zfs";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const COMPRESSION_HEADER_SIZE: usize = 12;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const TOKEN_EXPIRATION_S: u64 = 3600; // 1 hour
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const AES_256_GCM: &str = "AES-256-GCM";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const ROLE_ADMIN: &str = "admin";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const ROLE_USER: &str = "user";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const MAX_CONCURRENT_SECURITY: usize = 1000;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const CURRENT_API_VERSION: &str = "v1";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const CURRENT_CONFIG_VERSION: &str = "3.0.0";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const MIN_SUPPORTED_VERSION: &str = "2.0.0";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const SCHEMA_VERSION: &str = "1.0.0";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const STATUS_OK: u16 = 200;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const STATUS_NOT_FOUND: u16 = 404;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const STATUS_INTERNAL_ERROR: u16 = 500;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const CONTENT_TYPE_JSON: &str = "application/json";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const CONFIG_API: &str = "api";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const CONFIG_ZFS: &str = "zfs";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const CONFIG_NETWORK: &str = "network";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const CONFIG_SECURITY: &str = "security";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const CONFIG_MONITORING: &str = "monitoring";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const DEFAULT_SERVICE_NAME: &str = "nestgate";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const DEFAULT_LOG_LEVEL: &str = "info";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const ENV_DEVELOPMENT: &str = "development";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const ENV_PRODUCTION: &str = "production";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const ENV_TESTING: &str = "testing";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const ENV_STAGING: &str = "staging";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const MAX_CONFIG_DEPTH: usize = 10;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const MAX_CONFIG_STRING_LENGTH: usize = 1024;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const MAX_CONFIG_ARRAY_LENGTH: usize = 100;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const MAX_FEATURE_FLAGS: usize = 1000;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const ZFS_DISCOVERY_MAX_DEPTH: usize = 10;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const MAX_FILE_DEPTH: usize = 100;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const MAX_RECURSION_DEPTH: usize = 50;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const OP_READ: &str = "read";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const OP_WRITE: &str = "write";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const OP_DELETE: &str = "delete";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const OP_CREATE: &str = "create";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const OP_UPDATE: &str = "update";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const STATUS_SUCCESS: &str = "success";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const STATUS_FAILED: &str = "failed";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const STATUS_PENDING: &str = "pending";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const STATUS_RUNNING: &str = "running";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const STATUS_STOPPED: &str = "stopped";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const ERROR_NETWORK: &str = "network_error";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const ERROR_STORAGE: &str = "storage_error";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const ERROR_CONFIG: &str = "config_error";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const ERROR_VALIDATION: &str = "validation_error";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const CAPABILITY_HTTP: &str = "http";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const CAPABILITY_FILE: &str = "file";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const CAPABILITY_GENOME_DATA: &str = "genome_data";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const MAX_COMPUTE_UNITS: usize = 1000;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const MAX_INSTANCES: usize = 500;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const CRC_TABLE: [u32; 256] = [0; 256];
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const UNITS: &[&str] = &["B", "KB", "MB", "GB", "TB", "PB"];
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const MAX_CONNECTIONS: usize = performance::MAX_CONNECTIONS;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const BUFFER_SIZE: usize = performance::DEFAULT_BUFFER_SIZE;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const TIMEOUT_MS: u64 = timeouts::DEFAULT_TIMEOUT_MS;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const MAX_CONCURRENT_OPS: usize = performance::MAX_CONCURRENT_OPS;
+code/crates/nestgate-core/src/constants/canonical.rs:    pub const BATCH_SIZE: usize = performance::OPTIMAL_BATCH_SIZE;
+code/crates/nestgate-core/src/constants/canonical.rs:    const MAX_CONNECTIONS: usize = ConstGenericDefaults::MAX_CONNECTIONS;
+code/crates/nestgate-core/src/constants/canonical.rs:    const BUFFER_SIZE: usize = ConstGenericDefaults::BUFFER_SIZE;
+code/crates/nestgate-core/src/constants/canonical.rs:    const TIMEOUT_MS: u64 = ConstGenericDefaults::TIMEOUT_MS;
+code/crates/nestgate-core/src/constants/canonical.rs:    const MAX_CONCURRENT_OPS: usize = ConstGenericDefaults::MAX_CONCURRENT_OPS;
+code/crates/nestgate-core/src/constants/canonical.rs:    const BATCH_SIZE: usize = ConstGenericDefaults::BATCH_SIZE;
+code/crates/nestgate-core/src/constants/canonical.rs:pub const CONSTANTS_CONSOLIDATION_COMPLETE: bool = true;
+code/crates/nestgate-core/src/constants/network_defaults.rs:pub const DEFAULT_LOCALHOST_IPV4: &str = "127.0.0.1";
+code/crates/nestgate-core/src/constants/network_defaults.rs:pub const DEFAULT_BIND_ALL_IPV4: &str = "0.0.0.0";
+code/crates/nestgate-core/src/constants/network_defaults.rs:pub const PRIVATE_NETWORK_10_START: &str = "10.0.0.0";
+code/crates/nestgate-core/src/constants/network_defaults.rs:pub const PRIVATE_NETWORK_172_START: &str = "172.16.0.0";
+code/crates/nestgate-core/src/constants/network_defaults.rs:pub const PRIVATE_NETWORK_192_START: &str = "192.168.0.0";
+code/crates/nestgate-core/src/constants/network_defaults.rs:pub const DEFAULT_LOCALHOST_IPV6: &str = "::1";
+code/crates/nestgate-core/src/constants/network_defaults.rs:pub const DEFAULT_BIND_ALL_IPV6: &str = "::";
+code/crates/nestgate-core/src/constants/network_defaults.rs:pub const DEFAULT_HOSTNAME: &str = "localhost";
+code/crates/nestgate-core/src/constants/timeouts.rs:pub const DEFAULT_CONNECTION_TIMEOUT_SECS: u64 = 30;
+code/crates/nestgate-core/src/constants/timeouts.rs:pub const DEFAULT_REQUEST_TIMEOUT_SECS: u64 = 60;
+code/crates/nestgate-core/src/constants/timeouts.rs:pub const DEFAULT_IDLE_TIMEOUT_SECS: u64 = 300;
+code/crates/nestgate-core/src/constants/timeouts.rs:pub const DEFAULT_KEEPALIVE_SECS: u64 = 60;
+code/crates/nestgate-core/src/constants/timeouts.rs:pub const DEFAULT_RETRY_DELAY_MS: u64 = 1000;
+code/crates/nestgate-core/src/constants/timeouts.rs:pub const DEFAULT_HEALTH_CHECK_INTERVAL_SECS: u64 = 30;
+code/crates/nestgate-core/src/utils/string.rs:    const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+code/crates/nestgate-core/src/utils/memory_optimization.rs:    pub const GET_METADATA: &str = "get_metadata";
+code/crates/nestgate-core/src/utils/memory_optimization.rs:    pub const CREATE_FILE: &str = "create_file";
+code/crates/nestgate-core/src/utils/memory_optimization.rs:    pub const READ_FILE: &str = "read_file";
+code/crates/nestgate-core/src/utils/memory_optimization.rs:    pub const WRITE_FILE: &str = "write_file";
+code/crates/nestgate-core/src/utils/memory_optimization.rs:    pub const DELETE_FILE: &str = "delete_file";
+code/crates/nestgate-core/src/utils/memory_optimization.rs:    pub const CREATE_DIRECTORY: &str = "create_directory";
+code/crates/nestgate-core/src/utils/memory_optimization.rs:    pub const DELETE_DIRECTORY: &str = "delete_directory";
+code/crates/nestgate-core/src/utils/memory_optimization.rs:    pub const READ_DIRECTORY: &str = "read_directory";
+code/crates/nestgate-core/src/utils/memory_optimization.rs:    pub const ATOMIC_WRITE: &str = "atomic_write";
+code/crates/nestgate-core/src/utils/memory_optimization.rs:    pub const SYNC_FILE: &str = "sync_file";
+code/crates/nestgate-core/src/utils/memory_optimization.rs:    pub const INITIALIZED: &str = "initialized";
+code/crates/nestgate-core/src/utils/memory_optimization.rs:    pub const RUNNING: &str = "running";
+code/crates/nestgate-core/src/utils/memory_optimization.rs:    pub const STOPPED: &str = "stopped";
+code/crates/nestgate-core/src/utils/memory_optimization.rs:    pub const FAILED: &str = "failed";
+code/crates/nestgate-core/src/utils/memory_optimization.rs:    pub const FILE_NOT_FOUND: &str = "File not found";
+code/crates/nestgate-core/src/utils/memory_optimization.rs:    pub const PERMISSION_DENIED: &str = "Permission denied";
+code/crates/nestgate-core/src/utils/memory_optimization.rs:    pub const DISK_FULL: &str = "Disk full";
+code/crates/nestgate-core/src/utils/memory_optimization.rs:    pub const INVALID_PATH: &str = "Invalid path";
+code/crates/nestgate-core/src/optimized/mod.rs:const _: () = {
+code/crates/nestgate-core/src/optimized/simd_ops.rs:        const CRC_TABLE: [u32; 256] = [0; 256]; // Simplified for compilation
+code/crates/nestgate-core/src/optimized/vectorized/checksum.rs:        const CRC_TABLE: [u32; 256] = [0; 256]; // Simplified for compilation
+code/crates/nestgate-core/src/optimized/enhanced_zero_copy.rs:pub struct ZeroCopyBufferPool<const CAPACITY: usize> {
+code/crates/nestgate-core/src/optimized/enhanced_zero_copy.rs:impl<const CAPACITY: usize> ZeroCopyBufferPool<CAPACITY> {
+code/crates/nestgate-core/src/optimized/completely_safe_zero_copy.rs:pub struct CompletlySafeBuffer<const N: usize> {
+code/crates/nestgate-core/src/optimized/completely_safe_zero_copy.rs:impl<const N: usize> Default for CompletlySafeBuffer<N> {
+code/crates/nestgate-core/src/optimized/completely_safe_zero_copy.rs:impl<const N: usize> CompletlySafeBuffer<N> {
+code/crates/nestgate-core/src/optimized/completely_safe_zero_copy.rs:pub struct CompletlySafeStringBuilder<const N: usize> {
+code/crates/nestgate-core/src/optimized/completely_safe_zero_copy.rs:impl<const N: usize> Default for CompletlySafeStringBuilder<N> {
+code/crates/nestgate-core/src/optimized/completely_safe_zero_copy.rs:impl<const N: usize> CompletlySafeStringBuilder<N> {
+code/crates/nestgate-core/src/optimized/completely_safe_zero_copy.rs:pub struct SafeCircularBuffer<const N: usize> {
+code/crates/nestgate-core/src/optimized/completely_safe_zero_copy.rs:impl<const N: usize> Default for SafeCircularBuffer<N> {
+code/crates/nestgate-core/src/optimized/completely_safe_zero_copy.rs:impl<const N: usize> SafeCircularBuffer<N> {
+code/crates/nestgate-core/src/optimized/completely_safe_zero_copy.rs:    pub fn benchmark_buffer_write<const N: usize>(iterations: usize) -> std::time::Duration {
+code/crates/nestgate-core/src/optimized/completely_safe_zero_copy.rs:    pub fn benchmark_string_build<const N: usize>(iterations: usize) -> std::time::Duration {
+code/crates/nestgate-core/src/optimized/completely_safe_zero_copy.rs:const _: () = {
+code/crates/nestgate-core/src/optimized/completely_safe_zero_copy.rs:    const fn validate_safety<const N: usize>() {
+code/crates/nestgate-core/src/traits/canonical_hierarchy_tests.rs:struct MockZeroCostService<const N: usize> {
+code/crates/nestgate-core/src/traits/canonical_hierarchy_tests.rs:impl<const N: usize> MockZeroCostService<N> {
+code/crates/nestgate-core/src/traits/canonical_hierarchy_tests.rs:impl<const N: usize, T> ZeroCostService<T> for MockZeroCostService<N>
+code/crates/nestgate-core/src/traits/canonical_hierarchy.rs:/// pub struct FastCache<const SIZE: usize> {
+code/crates/nestgate-core/src/traits/canonical_hierarchy.rs:/// impl<const SIZE: usize> ZeroCostService<Self> for FastCache<SIZE> {}
+code/crates/nestgate-core/src/traits/canonical_hierarchy.rs:        const _: () = {
+code/crates/nestgate-core/src/universal_storage/zero_cost_storage_backend.rs:    const MAX_CONCURRENT_OPS: usize = 1000,
+code/crates/nestgate-core/src/universal_storage/zero_cost_storage_backend.rs:    const MAX_FILE_SIZE_MB: usize = 1024,
+code/crates/nestgate-core/src/universal_storage/zero_cost_storage_backend.rs:    const OPERATION_TIMEOUT_SECS: u64 = 30,
+code/crates/nestgate-core/src/universal_storage/zero_cost_storage_backend.rs:    const MAX_OPS: usize = 1000,
+code/crates/nestgate-core/src/universal_storage/zero_cost_storage_backend.rs:    const MAX_SIZE_MB: usize = 1024,
+code/crates/nestgate-core/src/universal_storage/zero_cost_storage_backend.rs:    const TIMEOUT_SECS: u64 = 30,
+code/crates/nestgate-core/src/universal_storage/zero_cost_storage_backend.rs:impl<const MAX_OPS: usize, const MAX_SIZE_MB: usize, const TIMEOUT_SECS: u64>
+code/crates/nestgate-core/src/universal_storage/zero_cost_storage_backend.rs:impl<const MAX_OPS: usize, const MAX_SIZE_MB: usize, const TIMEOUT_SECS: u64>
+code/crates/nestgate-core/src/universal_storage/zfs_features/cow_manager_zero_cost.rs:pub struct ZeroCostCowManager<Backend, const MAX_OPERATIONS: usize = 1000>
+code/crates/nestgate-core/src/universal_storage/zfs_features/cow_manager_zero_cost.rs:impl<Backend, const MAX_OPERATIONS: usize> ZeroCostCowManager<Backend, MAX_OPERATIONS>
+code/crates/nestgate-core/src/universal_storage/zfs_features/cow_manager_zero_cost.rs:pub struct ZeroCostCowManagerBuilder<Backend, const MAX_OPERATIONS: usize = 1000>
+code/crates/nestgate-core/src/universal_storage/zfs_features/cow_manager_zero_cost.rs:impl<Backend, const MAX_OPERATIONS: usize> ZeroCostCowManagerBuilder<Backend, MAX_OPERATIONS>
+code/crates/nestgate-core/src/universal_storage/zfs_features/cow_manager_zero_cost.rs:pub const MIGRATION_GUIDE: &str = r"
+code/crates/nestgate-core/src/universal_storage/zfs_features/raid_z_manager.rs:pub struct RaidZManager<Backend = DefaultStorageBackend, const MAX_BACKENDS: usize = 8>
+code/crates/nestgate-core/src/universal_storage/zfs_features/raid_z_manager.rs:impl<Backend, const MAX_BACKENDS: usize> RaidZManager<Backend, MAX_BACKENDS>
+code/crates/nestgate-core/src/universal_storage/zfs_features/compression_engine.rs:const COMPRESSION_HEADER_SIZE: usize = 12;
+code/crates/nestgate-core/src/universal_storage/zero_cost_storage_traits.rs:    const MAX_CONCURRENT_OPS: usize = 100,
+code/crates/nestgate-core/src/universal_storage/zero_cost_storage_traits.rs:    const TIMEOUT_MS: u64 = 30000,
+code/crates/nestgate-core/src/universal_storage/zero_cost_storage_traits.rs:pub trait ZeroCostStorageProvider<Backend, const MAX_BACKENDS: usize = 10>: Send + Sync
+code/crates/nestgate-core/src/universal_storage/unified_storage_types.rs:    const UNITS: &[&str] = &["B", "KB", "MB", "GB", "TB", "PB"];
+code/crates/nestgate-zfs/src/constants.rs:pub const BYTES_PER_KB: u64 = 1024;
+code/crates/nestgate-zfs/src/constants.rs:pub const BYTES_PER_MB: u64 = 1024 * 1024;
+code/crates/nestgate-zfs/src/constants.rs:pub const BYTES_PER_GB: u64 = 1024 * 1024 * 1024;
+code/crates/nestgate-zfs/src/constants.rs:pub const BYTES_PER_TB: u64 = 1024 * 1024 * 1024 * 1024;
+code/crates/nestgate-zfs/src/constants.rs:pub const BYTES_PER_PB: u64 = 1024 * 1024 * 1024 * 1024 * 1024;
+code/crates/nestgate-zfs/src/constants.rs:pub const KB_PER_MB: f64 = 1024.0;
+code/crates/nestgate-zfs/src/constants.rs:pub const MB_PER_GB: f64 = 1024.0;
+code/crates/nestgate-zfs/src/constants.rs:pub const COMPRESSION_OFF: &str = "off";
+code/crates/nestgate-zfs/src/constants.rs:pub const RECORDSIZE_64K: &str = "64K";
+code/crates/nestgate-zfs/src/constants.rs:pub const RECORDSIZE_128K: &str = "128K";
+code/crates/nestgate-zfs/src/constants.rs:pub const RECORDSIZE_1M: &str = "1M";
+code/crates/nestgate-zfs/src/constants.rs:pub const HOT_TIER_MAX_SIZE_GB: u64 = 1000;
+code/crates/nestgate-zfs/src/constants.rs:pub const HOT_TIER_MIN_FREE_GB: u64 = 100;
+code/crates/nestgate-zfs/src/constants.rs:pub const HOT_TIER_WARNING_THRESHOLD: f64 = 80.0;
+code/crates/nestgate-zfs/src/constants.rs:pub const WARM_TIER_MAX_SIZE_GB: u64 = 10000;
+code/crates/nestgate-zfs/src/constants.rs:pub const WARM_TIER_MIN_FREE_GB: u64 = 1000;
+code/crates/nestgate-zfs/src/constants.rs:pub const WARM_TIER_WARNING_THRESHOLD: f64 = 85.0;
+code/crates/nestgate-zfs/src/constants.rs:pub const COLD_TIER_MAX_SIZE_GB: u64 = 100000;
+code/crates/nestgate-zfs/src/constants.rs:pub const COLD_TIER_MIN_FREE_GB: u64 = 10000;
+code/crates/nestgate-zfs/src/constants.rs:pub const COLD_TIER_WARNING_THRESHOLD: f64 = 90.0;
+code/crates/nestgate-zfs/src/constants.rs:pub const NODE_FAILURE_TIMEOUT_SECS: u64 = 180;
+code/crates/nestgate-zfs/src/constants.rs:pub const AI_CONFIDENCE_CACHE_TIMEOUT_MINS: u64 = 120;
+code/crates/nestgate-zfs/src/constants.rs:pub const AI_TIER_EVALUATION_TIMEOUT_MINS: u64 = 180;
+code/crates/nestgate-zfs/src/constants.rs:pub const TEST_DATASET_100MB: u64 = 100 * BYTES_PER_MB;
+code/crates/nestgate-zfs/src/constants.rs:pub const TEST_DATASET_1GB: u64 = BYTES_PER_GB;
+code/crates/nestgate-zfs/src/constants.rs:pub const TEST_TRANSFER_RATE_1MB_S: f64 = BYTES_PER_MB as f64;
+code/crates/nestgate-zfs/src/constants.rs:pub const TEST_TRANSFER_RATE_10MB_S: f64 = 10.0 * BYTES_PER_MB as f64;
+code/crates/nestgate-zfs/src/native/command_executor.rs:const DEFAULT_ZFS_COMMAND_TIMEOUT_SECS: u64 = 300;
+code/crates/nestgate-zfs/src/native/command_executor.rs:const ZFS_TYPICAL_PROPERTY_COUNT: usize = 40;
+code/crates/nestgate-zfs/src/config/tiers.rs:const POOL_DEFAULT: &str = "default";
+code/crates/nestgate-zfs/src/config/tiers.rs:const POOL_PRODUCTION: &str = "production";
+code/crates/nestgate-zfs/src/config/tiers.rs:const COMPRESSION_OFF: &str = "off";
+code/crates/nestgate-zfs/src/config/tiers.rs:const RECORDSIZE_PROPERTY: &str = "recordsize";
+code/crates/nestgate-zfs/src/config/tiers.rs:const ATIME_PROPERTY: &str = "atime";
+code/crates/nestgate-zfs/src/config/tiers.rs:const PRIMARYCACHE_PROPERTY: &str = "primarycache";
+code/crates/nestgate-zfs/src/config/tiers.rs:const CACHE_METADATA: &str = "metadata";
+code/crates/nestgate-zfs/src/config/tiers.rs:const CACHE_ALL: &str = "all";
+code/crates/nestgate-zfs/src/config/tiers.rs:const CACHE_NONE: &str = "none";
+code/crates/nestgate-zfs/src/config/tiers.rs:const SECONDARYCACHE_PROPERTY: &str = "secondarycache";
+code/crates/nestgate-zfs/src/config/tiers.rs:const SYNC_PROPERTY: &str = "sync";
+code/crates/nestgate-zfs/src/config/tiers.rs:const COMPRESSION_PROPERTY: &str = "compression";
+code/crates/nestgate-zfs/src/config/tiers.rs:const COMPRESSION_ZSTD: &str = "zstd";
+code/crates/nestgate-zfs/src/config/tiers.rs:const COMPRESSION_GZIP_9: &str = "gzip-9";
+code/crates/nestgate-zfs/src/config/tiers.rs:const LOGBIAS_PROPERTY: &str = "logbias";
+code/crates/nestgate-zfs/src/config/tiers.rs:const BIAS_LATENCY: &str = "latency";
+code/crates/nestgate-zfs/src/config/tiers.rs:const BIAS_THROUGHPUT: &str = "throughput";
+code/crates/nestgate-zfs/src/config/tiers.rs:const DEDUP_PROPERTY: &str = "dedup";
+code/crates/nestgate-zfs/src/config/tiers.rs:const VALUE_ALWAYS: &str = "always";
+code/crates/nestgate-zfs/src/config/tiers.rs:const VALUE_ON: &str = "on";
+code/crates/nestgate-zfs/src/config/tiers.rs:const VALUE_OFF: &str = "off";
+code/crates/nestgate-zfs/src/config/tiers.rs:const VALUE_STANDARD: &str = "standard";
+code/crates/nestgate-zfs/src/config/tiers.rs:const ERROR_TIER_NAME_EMPTY: &str = "Tier name cannot be empty";
+code/crates/nestgate-zfs/src/config/tiers.rs:const ERROR_POOL_NAME_EMPTY: &str = "Pool name cannot be empty";
+code/crates/nestgate-zfs/src/config/tiers.rs:const ERROR_DATASET_PREFIX_EMPTY: &str = "Dataset prefix cannot be empty";
+code/crates/nestgate-zfs/src/zero_cost_zfs_operations/traits.rs:    const MAX_POOLS: usize = 100,
+code/crates/nestgate-zfs/src/zero_cost_zfs_operations/traits.rs:    const MAX_DATASETS: usize = 10_000,
+code/crates/nestgate-zfs/src/zero_cost_zfs_operations/traits.rs:    const MAX_SNAPSHOTS: usize = 100_000,
+code/crates/nestgate-zfs/src/zero_cost_zfs_operations/manager.rs:    const MAX_POOLS: usize,
+code/crates/nestgate-zfs/src/zero_cost_zfs_operations/manager.rs:    const MAX_DATASETS: usize,
+code/crates/nestgate-zfs/src/zero_cost_zfs_operations/manager.rs:    const MAX_SNAPSHOTS: usize,
+code/crates/nestgate-zfs/src/zero_cost_zfs_operations/manager.rs:    const COMMAND_TIMEOUT_MS: u64,
+code/crates/nestgate-zfs/src/zero_cost_zfs_operations/manager.rs:        const MAX_POOLS: usize,
+code/crates/nestgate-zfs/src/zero_cost_zfs_operations/manager.rs:        const MAX_DATASETS: usize,
+code/crates/nestgate-zfs/src/zero_cost_zfs_operations/manager.rs:        const MAX_SNAPSHOTS: usize,
+code/crates/nestgate-zfs/src/zero_cost_zfs_operations/manager.rs:        const COMMAND_TIMEOUT_MS: u64,
+code/crates/nestgate-zfs/src/zero_cost_zfs_operations/manager.rs:        const MAX_POOLS: usize,
+code/crates/nestgate-zfs/src/zero_cost_zfs_operations/manager.rs:        const MAX_DATASETS: usize,
+code/crates/nestgate-zfs/src/zero_cost_zfs_operations/manager.rs:        const MAX_SNAPSHOTS: usize,
+code/crates/nestgate-zfs/src/zero_cost_zfs_operations/manager.rs:        const COMMAND_TIMEOUT_MS: u64,
+code/crates/nestgate-zfs/src/zero_cost_zfs_operations/manager.rs:        const MAX_POOLS: usize,
+code/crates/nestgate-zfs/src/zero_cost_zfs_operations/manager.rs:        const MAX_DATASETS: usize,
+code/crates/nestgate-zfs/src/zero_cost_zfs_operations/manager.rs:        const MAX_SNAPSHOTS: usize,
+code/crates/nestgate-zfs/src/zero_cost_zfs_operations/manager.rs:        const COMMAND_TIMEOUT_MS: u64,
+code/crates/nestgate-api/src/handlers/workspace_management/tests.rs:        const _MANAGER: WorkspaceManager = WorkspaceManager::new();
+code/crates/nestgate-api/src/handlers/workspace_management/tests.rs:        const MANAGER1: WorkspaceManager = WorkspaceManager::new();
+code/crates/nestgate-api/src/handlers/workspace_management/tests.rs:        const MANAGER2: WorkspaceManager = WorkspaceManager::new();
+code/crates/nestgate-api/src/handlers/performance_dashboard/analyzer/mod.rs:    pub const HIGH: &'static str = IMPACT_HIGH;
+code/crates/nestgate-api/src/handlers/performance_dashboard/analyzer/mod.rs:    pub const MEDIUM: &'static str = IMPACT_MEDIUM;
+code/crates/nestgate-api/src/handlers/performance_dashboard/analyzer/mod.rs:    pub const LOW: &'static str = IMPACT_LOW;
+code/crates/nestgate-api/src/handlers/performance_dashboard/analyzer/mod.rs:    pub const EXPAND_STORAGE: &'static str = TITLE_EXPAND_STORAGE;
+code/crates/nestgate-api/src/handlers/performance_dashboard/analyzer/mod.rs:    pub const SCHEDULE_DEFRAG: &'static str = TITLE_SCHEDULE_DEFRAG;
+code/crates/nestgate-api/src/handlers/zfs/zero_cost_factory.rs:pub struct ZeroCostNativeZfsService<const MAX_POOLS: usize> {
+code/crates/nestgate-api/src/handlers/zfs/zero_cost_factory.rs:impl<const MAX_POOLS: usize> Default for ZeroCostNativeZfsService<MAX_POOLS> {
+code/crates/nestgate-api/src/handlers/zfs/zero_cost_factory.rs:impl<const MAX_POOLS: usize> ZeroCostNativeZfsService<MAX_POOLS> {
+code/crates/nestgate-api/src/handlers/zfs/zero_cost_factory.rs:pub struct ZeroCostNativeZfsService<const MAX_POOLS: usize>;
+code/crates/nestgate-api/src/handlers/zfs/zero_cost_factory.rs:impl<const MAX_POOLS: usize> Default for ZeroCostNativeZfsService<MAX_POOLS> {
+code/crates/nestgate-api/src/handlers/zfs/zero_cost_factory.rs:impl<const MAX_POOLS: usize> ZeroCostNativeZfsService<MAX_POOLS> {
+code/crates/nestgate-api/src/handlers/zero_cost_api_handlers.rs:pub struct ZeroCostPoolHandler<const MAX_REQUESTS: usize, const TIMEOUT_MS: u64> {
+code/crates/nestgate-api/src/handlers/zero_cost_api_handlers.rs:impl<const MAX_REQUESTS: usize, const TIMEOUT_MS: u64> Default
+code/crates/nestgate-api/src/handlers/zero_cost_api_handlers.rs:impl<const MAX_REQUESTS: usize, const TIMEOUT_MS: u64>
+code/crates/nestgate-api/src/handlers/zero_cost_api_handlers.rs:    const CACHE_SIZE: usize,
+code/crates/nestgate-api/src/handlers/zero_cost_api_handlers.rs:    const TIMEOUT_MS: u64,
+code/crates/nestgate-api/src/handlers/zero_cost_api_handlers.rs:impl<const MAX_REQUESTS: usize, const TIMEOUT_MS: u64> ZeroCostApiHandler<serde_json::Value>
+code/crates/nestgate-api/src/handlers/zero_cost_api_handlers.rs:pub struct ZeroCostRouterBuilder<const MAX_ROUTES: usize = 100, const MAX_MIDDLEWARE: usize = 10> {
+code/crates/nestgate-api/src/handlers/zero_cost_api_handlers.rs:impl<const MAX_ROUTES: usize, const MAX_MIDDLEWARE: usize> Default
+code/crates/nestgate-api/src/handlers/zero_cost_api_handlers.rs:impl<const MAX_ROUTES: usize, const MAX_MIDDLEWARE: usize>
