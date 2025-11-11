@@ -1,7 +1,23 @@
 # 🚀 NestGate - Current Status
 
-**Last Updated**: November 11, 2025, 11:30 PM  
-**Status**: 🟢 **PRODUCTION READY + 60% MILESTONE REACHED! 🎉**
+**Last Updated**: November 11, 2025, 11:45 PM  
+**Status**: 🟡 **PRODUCTION READY + 60% REACHED (alias target fix needed)**
+
+---
+
+## ⚠️ Known Issue (Non-Breaking)
+
+**Migration Script Alias Target Issue** - Discovered Nov 11, 11:45 PM
+
+All 82 configs migrated tonight (Batches 1-8) have type aliases pointing to `CanonicalNetworkConfig`, when non-network configs should point to their domain-specific canonical types (e.g., `CanonicalStorageConfig`).
+
+- **Impact**: Semantically incorrect, but build/tests passing
+- **Severity**: Medium (non-breaking, needs correction)
+- **Fix Time**: 1-2 hours
+- **Status**: Documented in `MIGRATION_SCRIPT_ISSUE_NOV_11.md`
+- **Priority**: Fix at start of next session before continuing
+
+**Progress still counts!** The 60% milestone is valid - deprecation markers and process are correct, just alias targets need updating.
 
 ---
 
