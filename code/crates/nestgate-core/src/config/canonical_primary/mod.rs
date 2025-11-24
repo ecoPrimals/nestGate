@@ -240,8 +240,9 @@ impl<
                 // Stricter validation for production
                 #[allow(deprecated)] // Accessing deprecated NetworkConfig fields during migration
                 {
-                    if self.network.api.port == 8080 {
-                        warnings.push("Port 8080 not recommended for production".to_string());
+                    use crate::constants::hardcoding::ports;
+                    if self.network.api.port == ports::HTTP_DEFAULT {
+                        warnings.push(format!("Port {} not recommended for production", ports::HTTP_DEFAULT));
                     }
 
                     // TLS validation moved to API config
