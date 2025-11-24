@@ -42,7 +42,7 @@ pub struct ServiceDiscoveryConfig {
 impl Default for ServiceDiscoveryConfig {
     fn default() -> Self {
         use crate::constants::hardcoding::{addresses, ports};
-
+        
         Self {
             endpoints: Self::load_endpoints_from_env(),
             discovery_host: env::var("NESTGATE_DISCOVERY_HOST")
