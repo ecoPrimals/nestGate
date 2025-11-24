@@ -154,10 +154,14 @@ pub struct ZfsMonitoringConfig {
     pub alert_thresholds: AlertThresholds,
 }
 
+/// Alert thresholds for ZFS monitoring
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AlertThresholds {
+    /// Pool usage percentage that triggers a warning alert
     pub pool_usage_warning: f64,
+    /// Pool usage percentage that triggers a critical alert
     pub pool_usage_critical: f64,
+    /// Number of days since last scrub before warning
     pub scrub_age_warning_days: u32,
 }
 

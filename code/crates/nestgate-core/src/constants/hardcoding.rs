@@ -108,6 +108,9 @@ pub mod ports {
 
     /// Redis cache default port
     pub const REDIS_DEFAULT: u16 = 6379;
+
+    /// Streaming RPC default port
+    pub const STREAMING_RPC_DEFAULT: u16 = 8001;
 }
 
 // ============================================================================

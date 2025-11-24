@@ -37,14 +37,18 @@ pub struct StreamingRpcConfig {
 }
 impl Default for StreamingRpcConfig {
     fn default() -> Self { 
-        use nestgate_core::constants::hardcoding::addresses;
+        use nestgate_core::constants::hardcoding::{addresses, ports};
         
         Self {
             bind_endpoint: std::env::var("NESTGATE_STREAMING_RPC_ADDRESS")
                 .unwrap_or_else(|_| {
                     let bind_addr = std::env::var("NESTGATE_BIND_ADDRESS")
                         .unwrap_or_else(|_| addresses::BIND_ALL_IPV4.to_string());
-                    format!("{}:8001", bind_addr)
+                    let port = std::env::var("NESTGATE_STREAMING_RPC_PORT")
+                        .ok()
+                        .and_then(|p| p.parse().ok())
+                        .unwrap_or(ports::STREAMING_RPC_DEFAULT);
+                    format!("{}:{}", bind_addr, port)
                 }),
             max_concurrent_streams: std::env::var("NESTGATE_MAX_CONCURRENT_STREAMS")
                 .ok()
