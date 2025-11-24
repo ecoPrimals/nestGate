@@ -166,3 +166,102 @@ pub fn get_allocation_details(
 ) -> std::result::Result<Json<ComputeAllocation>, StatusCode> {
     Err(StatusCode::NOT_IMPLEMENTED)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_hardware_tuning_disabled_response() {
+        let (status, response) = hardware_tuning_disabled();
+        assert_eq!(status, StatusCode::NOT_IMPLEMENTED);
+
+        let value = response.0;
+        assert!(value.get("error").is_some());
+        assert!(value.get("message").is_some());
+        assert!(value.get("recommendation").is_some());
+    }
+
+    #[test]
+    fn test_real_hardware_tuning_handler_new() {
+        let handler = RealHardwareTuningHandler::new();
+        assert_eq!(handler.config.cpu_cores, 8);
+        assert_eq!(handler.config.memory_gb, 16);
+    }
+
+    #[test]
+    fn test_real_hardware_tuning_handler_default() {
+        let handler = RealHardwareTuningHandler::default();
+        assert_eq!(handler.config.cpu_cores, 8);
+    }
+
+    #[test]
+    fn test_get_hardware_info_returns_not_implemented() {
+        let result = get_hardware_info();
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), StatusCode::NOT_IMPLEMENTED);
+    }
+
+    #[test]
+    fn test_optimize_hardware_performance_returns_not_implemented() {
+        let result = optimize_hardware_performance();
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), StatusCode::NOT_IMPLEMENTED);
+    }
+
+    #[test]
+    fn test_get_system_capabilities_returns_not_implemented() {
+        let result = get_system_capabilities();
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), StatusCode::NOT_IMPLEMENTED);
+    }
+
+    #[test]
+    fn test_get_compute_resources_returns_not_implemented() {
+        let result = get_compute_resources();
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), StatusCode::NOT_IMPLEMENTED);
+    }
+
+    #[test]
+    fn test_register_tuning_service_returns_not_implemented() {
+        let json_data = Json(serde_json::json!({"test": "data"}));
+        let result = register_tuning_service(json_data);
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), StatusCode::NOT_IMPLEMENTED);
+    }
+
+    #[test]
+    fn test_run_hardware_benchmark_returns_not_implemented() {
+        let result = run_hardware_benchmark();
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), StatusCode::NOT_IMPLEMENTED);
+    }
+
+    #[test]
+    fn test_start_hardware_tuning_session_returns_not_implemented() {
+        let result = start_hardware_tuning_session();
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), StatusCode::NOT_IMPLEMENTED);
+    }
+
+    #[test]
+    fn test_get_allocation_details_returns_not_implemented() {
+        let path = axum::extract::Path("test-allocation".to_string());
+        let result = get_allocation_details(path);
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), StatusCode::NOT_IMPLEMENTED);
+    }
+
+    #[test]
+    fn test_handler_has_correct_monitors() {
+        let handler = RealHardwareTuningHandler::new();
+        assert!(handler.monitors.gpu.is_some());
+    }
+
+    #[test]
+    fn test_handler_has_metrics_collector() {
+        let handler = RealHardwareTuningHandler::new();
+        assert!(handler.metrics_collector.gpu_monitor.is_some());
+    }
+}

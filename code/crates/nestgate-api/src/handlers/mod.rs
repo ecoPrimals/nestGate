@@ -17,6 +17,8 @@ use axum::Router;
 ///
 /// AI-powered example handlers and demonstrations.
 pub mod ai_first_example;
+#[cfg(test)]
+mod ai_first_example_tests;
 
 /// **COMPLIANCE MODULE**
 ///
@@ -50,12 +52,22 @@ pub mod load_testing;
 /// Real-time metrics collection and aggregation system.
 pub mod metrics_collector;
 #[cfg(test)]
+mod metrics_collector_comprehensive_tests;
+#[cfg(test)]
+mod metrics_collector_critical_tests;
+#[cfg(test)]
+mod metrics_collector_expanded_tests;
+#[cfg(test)]
 mod metrics_collector_unit_tests;
 
 /// **PERFORMANCE ANALYTICS MODULE**
 ///
 /// Advanced performance analysis and optimization recommendations.
 pub mod performance_analytics;
+#[cfg(test)]
+mod performance_analytics_comprehensive_tests;
+#[cfg(test)]
+mod performance_analytics_expanded_tests;
 
 /// **PERFORMANCE ANALYZER MODULE**
 ///
@@ -71,11 +83,17 @@ pub mod performance_dashboard;
 ///
 /// System status reporting and uptime tracking.
 pub mod status;
+#[cfg(test)]
+mod status_additional_comprehensive_tests;
 
 /// **STORAGE MODULE**
 ///
 /// Core storage management and operations.
 pub mod storage;
+#[cfg(test)]
+mod storage_comprehensive_tests;
+#[cfg(test)]
+mod storage_critical_tests;
 #[cfg(test)]
 mod storage_unit_tests;
 
@@ -84,10 +102,15 @@ mod storage_unit_tests;
 /// Workspace creation, management, and collaboration features.
 pub mod workspace_management;
 
+#[cfg(test)]
+mod mod_tests;
+
 /// **ZERO-COST API HANDLERS MODULE**
 ///
 /// High-performance zero-cost abstraction API handlers.
 pub mod zero_cost_api_handlers;
+#[cfg(test)]
+mod zero_cost_api_handlers_tests;
 
 /// **ZFS HANDLERS MODULE**
 ///
@@ -262,6 +285,23 @@ pub fn initialize_handlers() -> HandlerCollection {
     HandlerCollection::new()
 }
 /// Create a specific handler by name
+///
+/// # Arguments
+///
+/// * `name` - The name of the handler to create ("`ai_first`", "compliance", "`hardware_tuning`", etc.)
+///
+/// # Returns
+///
+/// Returns `Some(Box<dyn Any>)` containing the handler if the name is valid, `None` otherwise.
+///
+/// # Examples
+///
+/// ```
+/// use nestgate_api::handlers::create_handler_by_name;
+///
+/// let handler = create_handler_by_name("storage");
+/// assert!(handler.is_some());
+/// ```
 #[must_use]
 pub fn create_handler_by_name(name: &str) -> Option<Box<dyn std::any::Any>> {
     match name {
@@ -279,6 +319,32 @@ pub fn create_handler_by_name(name: &str) -> Option<Box<dyn std::any::Any>> {
     }
 }
 /// Get list of all available handler names
+///
+/// Returns a vector containing the names of all registered handlers.
+///
+/// # Returns
+///
+/// A vector of static string slices containing handler names:
+/// - "`ai_first`" - AI-powered operations
+/// - "compliance" - Regulatory compliance
+/// - "`hardware_tuning`" - Hardware performance tuning
+/// - "health" - System health monitoring
+/// - "`load_testing`" - Load testing framework
+/// - "metrics" - Metrics collection
+/// - "performance" - Performance analysis
+/// - "storage" - Storage management
+/// - "workspace" - Workspace management
+/// - "zfs" - ZFS storage operations
+///
+/// # Examples
+///
+/// ```
+/// use nestgate_api::handlers::available_handlers;
+///
+/// let handlers = available_handlers();
+/// assert!(handlers.contains(&"storage"));
+/// assert_eq!(handlers.len(), 10);
+/// ```
 #[must_use]
 pub fn available_handlers() -> Vec<&'static str> {
     vec![

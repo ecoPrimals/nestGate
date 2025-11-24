@@ -12,14 +12,26 @@ pub use nestgate_core::Result;
 
 /// API module for network services
 pub mod api;
+#[cfg(test)]
+mod comprehensive_coverage_tests;
 /// Protocol handlers and management
 pub mod handlers;
+#[cfg(test)]
+mod network_coverage_expansion;
+/// Port allocation and management
+pub mod ports;
+#[cfg(test)]
+mod ports_tests;
 /// Protocol definitions
 pub mod protocol;
+#[cfg(test)]
+mod protocol_comprehensive_tests;
 /// Main network service implementation
 pub mod service;
 /// Network types and configuration
 pub mod types;
+#[cfg(test)]
+mod types_comprehensive_tests;
 /// Unified network configuration
 pub mod unified_network_config;
 /// Unified network extensions

@@ -15,13 +15,20 @@ use crate::universal_adapter::PrimalAgnosticAdapter;
 use crate::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::sync::Arc;
 use tracing::{debug, info}; // Removed unused 'warn' for pedantic perfection
+
+/// Ecosystem discovery configuration
+pub mod ecosystem_config;
 
 /// Capability-based routing patterns
 pub mod capability_router;
 
 /// Real adapter router for production use
 pub mod real_adapter_router;
+
+// Export config types for external use
+pub use ecosystem_config::{EcosystemDiscoveryConfig, SharedEcosystemConfig};
 
 // ✅ FALLBACK PROVIDERS - Graceful degradation when capabilities unavailable
 pub mod fallback_providers {
@@ -384,6 +391,8 @@ pub struct CapabilityBasedEcosystem {
     pub capabilities: HashMap<String, CapabilityInfo>,
     /// Discovery methods enabled
     pub discovery_methods: Vec<DiscoveryMethod>,
+    /// Discovery configuration (immutable, thread-safe)
+    pub discovery_config: SharedEcosystemConfig,
 }
 
 impl Default for CapabilityBasedEcosystem {
@@ -394,6 +403,9 @@ impl Default for CapabilityBasedEcosystem {
 
 impl CapabilityBasedEcosystem {
     /// Create new capability-based ecosystem (infant discovery pattern)
+    ///
+    /// This constructor loads discovery configuration from environment variables.
+    /// For testing or custom configurations, use `with_config()`.
     #[must_use]
     pub fn new() -> Self {
         Self {
@@ -405,6 +417,26 @@ impl CapabilityBasedEcosystem {
                 DiscoveryMethod::UniversalAdapter,
                 DiscoveryMethod::ServiceAnnouncements,
             ],
+            discovery_config: Arc::new(EcosystemDiscoveryConfig::from_env()),
+        }
+    }
+
+    /// Create a new ecosystem with a specific discovery configuration
+    ///
+    /// This is the recommended constructor for testing and when you need
+    /// explicit control over discovery endpoints.
+    #[must_use]
+    pub fn with_config(discovery_config: SharedEcosystemConfig) -> Self {
+        Self {
+            adapter_endpoint: None,
+            capabilities: HashMap::new(),
+            discovery_methods: vec![
+                DiscoveryMethod::EnvironmentVariables,
+                DiscoveryMethod::NetworkScanning,
+                DiscoveryMethod::UniversalAdapter,
+                DiscoveryMethod::ServiceAnnouncements,
+            ],
+            discovery_config,
         }
     }
 
@@ -446,22 +478,22 @@ impl CapabilityBasedEcosystem {
     /// Discover capabilities via environment variables
     /// Replaces hardcoded service endpoint configuration
     async fn discover_via_environment(&mut self) -> Result<()> {
-        // Look for *_DISCOVERY_ENDPOINT patterns instead of hardcoded vendor URLs
-        let capability_patterns = [
-            ("ORCHESTRATION_DISCOVERY_ENDPOINT", "orchestration"),
-            ("STORAGE_DISCOVERY_ENDPOINT", "storage"),
-            ("SECURITY_DISCOVERY_ENDPOINT", "security"),
-            ("MONITORING_DISCOVERY_ENDPOINT", "monitoring"),
-            ("AI_DISCOVERY_ENDPOINT", "artificial_intelligence"),
-            ("COMPUTE_DISCOVERY_ENDPOINT", "compute"),
+        // Use immutable config instead of runtime env::var() calls
+        let capability_categories = [
+            "orchestration",
+            "storage",
+            "security",
+            "monitoring",
+            "artificial_intelligence",
+            "compute",
         ];
 
-        for (env_var, category) in capability_patterns {
-            if let Ok(endpoint) = std::env::var(env_var) {
+        for category in capability_categories {
+            if let Some(endpoint) = self.discovery_config.get_discovery_endpoint(category) {
                 let capability = CapabilityInfo {
                     category: category.to_string(),
                     provider: format!("dynamic-{category}"),
-                    endpoint,
+                    endpoint: endpoint.to_string(),
                     metadata: HashMap::new(),
                 };
                 self.capabilities.insert(category.to_string(), capability);
@@ -529,20 +561,23 @@ pub enum DiscoveryMethod {
 /// Ecosystem integration configuration
 #[derive(Debug, Clone)]
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
-/// 
+///
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::config::EcosystemConfig;
-/// 
+///
 /// // NEW (canonical):
 /// use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 /// // Or use type alias for compatibility:
 /// use crate::config::EcosystemConfig; // Now aliases to CanonicalNetworkConfig
 /// ```
-/// 
+///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+#[deprecated(
+    since = "0.11.0",
+    note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
 pub struct EcosystemConfig {
     /// Discovery methods to use
     pub discovery_methods: Vec<String>,
@@ -552,6 +587,7 @@ pub struct EcosystemConfig {
     pub fallback_enabled: bool,
 }
 
+#[allow(deprecated)]
 impl Default for EcosystemConfig {
     fn default() -> Self {
         Self {
@@ -566,11 +602,13 @@ impl Default for EcosystemConfig {
 pub struct EcosystemIntegrationService {
     adapter: PrimalAgnosticAdapter,
     #[allow(dead_code)] // Framework field - intentionally unused
+    #[allow(deprecated)]
     config: EcosystemConfig,
 }
 
 impl EcosystemIntegrationService {
     /// Create new ecosystem integration service
+    #[allow(deprecated)]
     pub fn new(config: EcosystemConfig) -> crate::Result<Self> {
         Ok(Self {
             adapter: PrimalAgnosticAdapter::new(
@@ -608,6 +646,7 @@ impl EcosystemIntegrationService {
 
 impl Default for EcosystemIntegrationService {
     fn default() -> Self {
+        #[allow(deprecated)]
         match Self::new(EcosystemConfig::default()) {
             Ok(service) => service,
             Err(e) => {
@@ -633,13 +672,13 @@ impl Default for EcosystemIntegrationService {
 // Original struct definition kept above for reference and backward compatibility
 
 /// Type alias to canonical network configuration
-/// 
+///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
-pub type EcosystemConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+pub type EcosystemConfigCanonical =
+    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using EcosystemConfig (the deprecated struct) for now.
 // We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
 // This alias is here for reference and future migration.
-

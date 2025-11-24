@@ -5,7 +5,7 @@
 use std::collections::HashMap;
 use std::time::SystemTime;
 
-use crate::handlers::zfs::universal_zfs::types::{
+use crate::handlers::zfs::universal_zfs_types::{
     DatasetInfo, DatasetType, PoolCapacity, PoolHealth, PoolInfo, PoolState, ScrubStatus,
     SnapshotInfo, UniversalZfsError, UniversalZfsResult,
 };
@@ -14,7 +14,7 @@ use crate::handlers::zfs::universal_zfs::types::{
 // Note: zero_copy lines function moved to utilities
 // use nestgate_core::zero_copy::lines_zero_copy; // Module doesn't exist
 
-/// Parse zpool list output into PoolInfo structures
+/// Parse zpool list output into `PoolInfo` structures
 pub fn parse_zpool_list(output: &str) -> UniversalZfsResult<Vec<PoolInfo>> {
     let mut pools = Vec::new();
     for line in output.lines() {
@@ -31,14 +31,14 @@ pub fn parse_zpool_list(output: &str) -> UniversalZfsResult<Vec<PoolInfo>> {
                 "DEGRADED" => PoolHealth::Degraded,
                 "FAULTED" => PoolHealth::Faulted,
                 "OFFLINE" => PoolHealth::Offline,
-                "UNAVAIL" => PoolHealth::Unavailable,
-                "REMOVED" => PoolHealth::Removed,
+                "UNAVAIL" => PoolHealth::Offline,
+                "REMOVED" => PoolHealth::Offline,
                 _ => PoolHealth::Unknown,
             };
 
             let state = match health {
                 PoolHealth::Online => PoolState::Active,
-                PoolHealth::Degraded => PoolState::Unavailable,
+                PoolHealth::Degraded => PoolState::Active,
                 _ => PoolState::Unknown,
             };
 
@@ -47,21 +47,12 @@ pub fn parse_zpool_list(output: &str) -> UniversalZfsResult<Vec<PoolInfo>> {
                 health,
                 state,
                 capacity: PoolCapacity {
-                    total_bytes: total_size,
-                    used_bytes: used_size,
-                    available_bytes: available_size,
-                    utilization_percent: if total_size > 0 {
-                        (used_size as f64 / total_size as f64) * 100.0
-                    } else {
-                        0.0
-                    },
+                    total: total_size,
+                    used: used_size,
+                    available: available_size,
                 },
-                _devices: Vec::new(), // Would need zpool status for this
+                scrub: Some(ScrubStatus::None),
                 properties: HashMap::new(),
-                created_at: SystemTime::now(),
-                last_scrub: None,
-                scrub_status: ScrubStatus::None,
-                errors: Vec::new(),
             });
         }
     }
@@ -86,8 +77,7 @@ pub fn parse_size_string(size_str: &str) -> UniversalZfsResult<u64> {
     let basevalue = numeric_part
         .parse::<f64>()
         .map_err(|_| UniversalZfsError::InvalidInput {
-            field: "field".to_string(),
-            message: format!("Invalid numeric value: self.base_url"),
+            message: "Invalid numeric value: self.base_url".to_string(),
         })?;
 
     // Universal scale multipliers - from quantum to cosmic
@@ -123,10 +113,8 @@ pub fn parse_size_string(size_str: &str) -> UniversalZfsResult<u64> {
 
         _ => {
             return Err(UniversalZfsError::InvalidInput {
-                field: "field".to_string(),
-                message: format!("Unknown size unit: self.base_url"),
-            }
-            .into());
+                message: "Unknown size unit: self.base_url".to_string(),
+            });
         }
     };
 
@@ -143,13 +131,8 @@ fn split_size_string(size_str: &str) -> UniversalZfsResult<(&str, &str)> {
 
     if split_pos == 0 {
         return Err(UniversalZfsError::InvalidInput {
-            field: "field".to_string(),
-            message: format!(
-                "Size string has no numeric part: {}",
-                e
-            ),
-        }
-        .into());
+            message: format!("Size string has no numeric part: {size_str}"),
+        });
     }
 
     let numeric_part = &size_str[..split_pos];
@@ -183,13 +166,11 @@ pub fn parse_dataset_list(output: &str) -> UniversalZfsResult<Vec<DatasetInfo>> 
             datasets.push(DatasetInfo {
                 name,
                 dataset_type,
-                used_space: used_size,
-                available_space: available_size,
-                mount_point: None, // Would need additional command for this
+                used: used_size,
+                available: available_size,
+                referenced: used_size, // Approximation
+                mountpoint: None,      // Would need additional command for this
                 properties: HashMap::new(),
-                created_at: SystemTime::now(), // Would need additional command for this
-                parent: None,
-                children: Vec::new(),
             });
         }
     }
@@ -212,22 +193,110 @@ pub fn parse_snapshot_list(output: &str) -> UniversalZfsResult<Vec<SnapshotInfo>
 
             // Extract dataset name and snapshot name from full_name (dataset@snapshot)
             if let Some(at_pos) = full_name.find('@') {
-                let dataset_name = full_name[..at_pos].to_string();
+                let _dataset_name = full_name[..at_pos].to_string();
                 let snapshot_name = full_name[at_pos + 1..].to_string();
 
                 snapshots.push(SnapshotInfo {
                     name: snapshot_name,
-                    dataset: dataset_name,
-                    created_at: SystemTime::now(), // Would need additional parsing
-                    size_bytes: used_size,
+                    creation_time: SystemTime::now()
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .unwrap_or_default()
+                        .as_secs(),
+                    used: used_size,
+                    referenced: used_size,
                     properties: HashMap::new(),
-                    description: None,
                 });
             }
         }
     }
 
     Ok(snapshots)
+}
+
+/// Device information from zpool status
+///
+/// Represents a storage device (vdev) in a ZFS pool with its health metrics.
+#[derive(Debug, Clone)]
+pub struct DeviceInfo {
+    /// Device name (e.g., "sda", "mirror-0", "tank")
+    pub name: String,
+    /// Device state (e.g., "ONLINE", "DEGRADED", "FAULTED")
+    pub state: String,
+    /// Number of read errors encountered
+    pub read_errors: u64,
+    /// Number of write errors encountered
+    pub write_errors: u64,
+    /// Number of checksum errors encountered
+    pub checksum_errors: u64,
+}
+
+/// Parse zpool status output to extract device information
+///
+/// Parses the vdev tree structure from `zpool status` output.
+///
+/// # Example Input
+/// ```text
+///   pool: tank
+///  state: ONLINE
+/// config:
+///
+///         NAME        STATE     READ WRITE CKSUM
+///         tank        ONLINE       0     0     0
+///           sda       ONLINE       0     0     0
+///           sdb       ONLINE       0     0     0
+/// ```
+pub fn parse_zpool_status(output: &str) -> UniversalZfsResult<Vec<DeviceInfo>> {
+    let mut devices = Vec::new();
+    let mut in_config_section = false;
+    let mut found_header = false;
+
+    for line in output.lines() {
+        let trimmed = line.trim_start();
+
+        // Look for config section
+        if trimmed.starts_with("config:") {
+            in_config_section = true;
+            continue;
+        }
+
+        // Look for device table header
+        if in_config_section && trimmed.starts_with("NAME") {
+            found_header = true;
+            continue;
+        }
+
+        // Parse device lines (indented, after header, before errors section)
+        if found_header && !trimmed.is_empty() && !trimmed.starts_with("errors:") {
+            // Device lines are indented with tabs/spaces
+            // Format: NAME STATE READ WRITE CKSUM
+            let fields: Vec<&str> = trimmed.split_whitespace().collect();
+
+            if fields.len() >= 5 {
+                let name = fields[0].to_string();
+                let state = fields[1].to_string();
+
+                // Parse error counters (they might be "-" for unknown)
+                let read_errors = fields[2].parse::<u64>().unwrap_or(0);
+                let write_errors = fields[3].parse::<u64>().unwrap_or(0);
+                let checksum_errors = fields[4].parse::<u64>().unwrap_or(0);
+
+                devices.push(DeviceInfo {
+                    name,
+                    state,
+                    read_errors,
+                    write_errors,
+                    checksum_errors,
+                });
+            }
+        }
+
+        // Stop parsing at errors section
+        if trimmed.starts_with("errors:") {
+            break;
+        }
+    }
+
+    Ok(devices)
 }
 
 #[cfg(test)]
@@ -237,110 +306,86 @@ mod tests {
     #[test]
     fn test_parse_size_string() -> std::result::Result<(), Box<dyn std::error::Error>> {
         assert_eq!(
-            parse_size_string("1024").map_err(|_e| {
+            parse_size_string("1024").map_err(|e| {
                 tracing::error!(
                     "Expected operation failed: {} - Error: {:?}",
                     "Test assertion failed",
                     e
                 );
-                std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    format!("Error: self.base_url"),
-                )
+                std::io::Error::other("Error: self.base_url".to_string())
             })?,
             1024
         );
         assert_eq!(
-            parse_size_string("1K").map_err(|_e| {
+            parse_size_string("1K").map_err(|e| {
                 tracing::error!(
                     "Expected operation failed: {} - Error: {:?}",
                     "Test assertion failed",
                     e
                 );
-                std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    format!("Error: self.base_url"),
-                )
+                std::io::Error::other("Error: self.base_url".to_string())
             })?,
             1024
         );
         assert_eq!(
-            parse_size_string("1M").map_err(|_e| {
+            parse_size_string("1M").map_err(|e| {
                 tracing::error!(
                     "Expected operation failed: {} - Error: {:?}",
                     "Test assertion failed",
                     e
                 );
-                std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    format!("Error: self.base_url"),
-                )
+                std::io::Error::other("Error: self.base_url".to_string())
             })?,
             1024 * 1024
         );
         assert_eq!(
-            parse_size_string("1G").map_err(|_e| {
+            parse_size_string("1G").map_err(|e| {
                 tracing::error!(
                     "Expected operation failed: {} - Error: {:?}",
                     "Test assertion failed",
                     e
                 );
-                std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    format!("Error: self.base_url"),
-                )
+                std::io::Error::other("Error: self.base_url".to_string())
             })?,
             1024 * 1024 * 1024
         );
         assert_eq!(
-            parse_size_string("1T").map_err(|_e| {
+            parse_size_string("1T").map_err(|e| {
                 tracing::error!(
                     "Expected operation failed: {} - Error: {:?}",
                     "Test assertion failed",
                     e
                 );
-                std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    format!("Error: self.base_url"),
-                )
+                std::io::Error::other("Error: self.base_url".to_string())
             })?,
             1024_u64.pow(4)
         );
         assert_eq!(
-            parse_size_string("1.5G").map_err(|_e| {
+            parse_size_string("1.5G").map_err(|e| {
                 tracing::error!("Operation failed: {:?}", e);
-                std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    format!("Operation failed: self.base_url"),
-                )
+                std::io::Error::other("Operation failed: self.base_url".to_string())
             })?,
             (1.5 * 1024.0 * 1024.0 * 1024.0) as u64
         );
         assert_eq!(
-            parse_size_string("-").map_err(|_e| {
+            parse_size_string("-").map_err(|e| {
                 tracing::error!(
                     "Expected operation failed: {} - Error: {:?}",
                     "Test assertion failed",
                     e
                 );
-                std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    format!("Error: self.base_url"),
-                )
+                std::io::Error::other("Error: self.base_url".to_string())
             })?,
             0
         );
         assert_eq!(
-            parse_size_string("").map_err(|_e| {
+            parse_size_string("").map_err(|e| {
                 tracing::error!(
                     "Expected operation failed: {} - Error: {:?}",
                     "Test assertion failed",
                     e
                 );
-                std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    format!("Error: self.base_url"),
-                )
+                std::io::Error::other("Error: self.base_url".to_string())
             })?,
             0
         );
@@ -349,22 +394,16 @@ mod tests {
 
     #[test]
     fn test_split_size_string() -> std::result::Result<(), Box<dyn std::error::Error>> {
-        let (num, unit) = split_size_string("1024B").map_err(|_e| {
+        let (num, unit) = split_size_string("1024B").map_err(|e| {
             tracing::error!("Operation failed: {:?}", e);
-            std::io::Error::new(
-                std::io::ErrorKind::Other,
-                format!("Operation failed: self.base_url"),
-            )
+            std::io::Error::other("Operation failed: self.base_url".to_string())
         })?;
         assert_eq!(num, "1024");
         assert_eq!(unit, "B");
 
-        let (num, unit) = split_size_string("1.5GB").map_err(|_e| {
+        let (num, unit) = split_size_string("1.5GB").map_err(|e| {
             tracing::error!("Operation failed: {:?}", e);
-            std::io::Error::new(
-                std::io::ErrorKind::Other,
-                format!("Operation failed: self.base_url"),
-            )
+            std::io::Error::other("Operation failed: self.base_url".to_string())
         })?;
         assert_eq!(num, "1.5");
         assert_eq!(unit, "GB");

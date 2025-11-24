@@ -111,21 +111,24 @@ impl PerformanceAnalyzer {
 
 /// Analysis configuration
 #[derive(Debug, Clone)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
-/// 
+/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
+///
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::network::config::AnalyzerConfig;
-/// 
+///
 /// // NEW (canonical):
 /// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 /// // Or use type alias for compatibility:
 /// use crate::network::config::AnalyzerConfig; // Now aliases to CanonicalNetworkConfig
 /// ```
-/// 
+///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+#[deprecated(
+    since = "0.11.0",
+    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
 pub struct AnalyzerConfig {
     /// CPU warning threshold (percentage)
     pub cpu_warning_threshold: f64,
@@ -191,13 +194,240 @@ pub enum PerformanceStatus {
 // Original struct definition kept above for reference and backward compatibility
 
 /// Type alias to canonical network configuration
-/// 
+///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
-pub type AnalyzerConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+pub type AnalyzerConfigCanonical =
+    nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using AnalyzerConfig (the deprecated struct) for now.
 // We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
 // This alias is here for reference and future migration.
 
+#[cfg(test)]
+mod tests {
+    use super::super::metrics::{DiskIOMetrics, NetworkMetrics};
+    use super::*;
+
+    fn create_test_metrics() -> SystemMetrics {
+        SystemMetrics {
+            cpu_usage_percent: 45.0,
+            memory_usage_bytes: 4 * 1024 * 1024 * 1024,
+            disk_io_metrics: DiskIOMetrics {
+                read_bytes_per_sec: 10 * 1024 * 1024,
+                write_bytes_per_sec: 5 * 1024 * 1024,
+                read_ops_per_sec: 500,
+                write_ops_per_sec: 250,
+            },
+            network_metrics: NetworkMetrics {
+                rx_bytes_per_sec: 2 * 1024 * 1024,
+                tx_bytes_per_sec: 1024 * 1024,
+                rx_packets_per_sec: 2000,
+                tx_packets_per_sec: 1000,
+            },
+            timestamp: std::time::SystemTime::now(),
+        }
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn test_analyzer_config_default() {
+        let config = AnalyzerConfig::default();
+        assert_eq!(config.cpu_warning_threshold, 70.0);
+        assert_eq!(config.cpu_critical_threshold, 90.0);
+        assert_eq!(config.memory_warning_threshold, 8 * 1024 * 1024 * 1024);
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn test_performance_analyzer_new() {
+        let config = AnalyzerConfig::default();
+        let analyzer = PerformanceAnalyzer::new(config);
+        assert_eq!(analyzer.config.cpu_warning_threshold, 70.0);
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn test_analyze_metrics() {
+        let config = AnalyzerConfig::default();
+        let analyzer = PerformanceAnalyzer::new(config);
+        let metrics = create_test_metrics();
+
+        let result = analyzer.analyze_metrics(&metrics).expect("Should analyze");
+        assert!(result.overall_score > 0.0);
+        assert!(result.overall_score <= 100.0);
+        assert!(!result.recommendations.is_empty());
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn test_calculate_overall_score() {
+        let config = AnalyzerConfig::default();
+        let analyzer = PerformanceAnalyzer::new(config);
+        let metrics = create_test_metrics();
+
+        let score = analyzer.calculate_overall_score(&metrics);
+        assert!(score > 0.0);
+        assert!(score <= 100.0);
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn test_analyze_cpu_good() {
+        let config = AnalyzerConfig::default();
+        let analyzer = PerformanceAnalyzer::new(config);
+
+        let analysis = analyzer.analyze_cpu(45.0);
+        assert!(matches!(analysis.status, PerformanceStatus::Good));
+        assert_eq!(analysis.score, 55.0);
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn test_analyze_cpu_warning() {
+        let config = AnalyzerConfig::default();
+        let analyzer = PerformanceAnalyzer::new(config);
+
+        let analysis = analyzer.analyze_cpu(75.0);
+        assert!(matches!(analysis.status, PerformanceStatus::Warning));
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn test_analyze_cpu_critical() {
+        let config = AnalyzerConfig::default();
+        let analyzer = PerformanceAnalyzer::new(config);
+
+        let analysis = analyzer.analyze_cpu(95.0);
+        assert!(matches!(analysis.status, PerformanceStatus::Critical));
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn test_analyze_memory() {
+        let config = AnalyzerConfig::default();
+        let analyzer = PerformanceAnalyzer::new(config);
+
+        let analysis = analyzer.analyze_memory(4 * 1024 * 1024 * 1024);
+        assert!(matches!(analysis.status, PerformanceStatus::Good));
+        assert_eq!(analysis.score, 75.0);
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn test_analyze_disk() {
+        let config = AnalyzerConfig::default();
+        let analyzer = PerformanceAnalyzer::new(config);
+
+        let disk_metrics = DiskIOMetrics {
+            read_bytes_per_sec: 10 * 1024 * 1024,
+            write_bytes_per_sec: 5 * 1024 * 1024,
+            read_ops_per_sec: 500,
+            write_ops_per_sec: 250,
+        };
+
+        let analysis = analyzer.analyze_disk(&disk_metrics);
+        assert!(matches!(analysis.status, PerformanceStatus::Good));
+        assert_eq!(analysis.score, 80.0);
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn test_analyze_network() {
+        let config = AnalyzerConfig::default();
+        let analyzer = PerformanceAnalyzer::new(config);
+
+        let network_metrics = NetworkMetrics {
+            rx_bytes_per_sec: 2 * 1024 * 1024,
+            tx_bytes_per_sec: 1024 * 1024,
+            rx_packets_per_sec: 2000,
+            tx_packets_per_sec: 1000,
+        };
+
+        let analysis = analyzer.analyze_network(&network_metrics);
+        assert!(matches!(analysis.status, PerformanceStatus::Good));
+        assert_eq!(analysis.score, 85.0);
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn test_generate_recommendations() {
+        let config = AnalyzerConfig::default();
+        let analyzer = PerformanceAnalyzer::new(config);
+        let metrics = create_test_metrics();
+
+        let recommendations = analyzer.generate_recommendations(&metrics);
+        assert!(!recommendations.is_empty());
+        assert!(recommendations.len() >= 2);
+    }
+
+    #[test]
+    fn test_analysis_result_serialization() {
+        let result = AnalysisResult {
+            overall_score: 85.5,
+            cpu_analysis: ComponentAnalysis {
+                status: PerformanceStatus::Good,
+                score: 90.0,
+                details: "CPU usage: 10%".to_string(),
+            },
+            memory_analysis: ComponentAnalysis {
+                status: PerformanceStatus::Good,
+                score: 85.0,
+                details: "Memory usage: 4GB".to_string(),
+            },
+            disk_analysis: ComponentAnalysis {
+                status: PerformanceStatus::Good,
+                score: 80.0,
+                details: "Disk I/O: Good".to_string(),
+            },
+            network_analysis: ComponentAnalysis {
+                status: PerformanceStatus::Good,
+                score: 88.0,
+                details: "Network: Good".to_string(),
+            },
+            recommendations: vec!["All good".to_string()],
+            timestamp: std::time::SystemTime::now(),
+        };
+
+        let json = serde_json::to_string(&result).expect("Should serialize");
+        let deserialized: AnalysisResult = serde_json::from_str(&json).expect("Should deserialize");
+
+        assert_eq!(result.overall_score, deserialized.overall_score);
+        assert_eq!(
+            result.recommendations.len(),
+            deserialized.recommendations.len()
+        );
+    }
+
+    #[test]
+    fn test_performance_status_variants() {
+        let good = PerformanceStatus::Good;
+        let warning = PerformanceStatus::Warning;
+        let critical = PerformanceStatus::Critical;
+
+        let good_json = serde_json::to_string(&good).expect("Should serialize");
+        let warning_json = serde_json::to_string(&warning).expect("Should serialize");
+        let critical_json = serde_json::to_string(&critical).expect("Should serialize");
+
+        assert!(good_json.contains("Good"));
+        assert!(warning_json.contains("Warning"));
+        assert!(critical_json.contains("Critical"));
+    }
+
+    #[test]
+    fn test_component_analysis_serialization() {
+        let analysis = ComponentAnalysis {
+            status: PerformanceStatus::Warning,
+            score: 65.5,
+            details: "Test details".to_string(),
+        };
+
+        let json = serde_json::to_string(&analysis).expect("Should serialize");
+        let deserialized: ComponentAnalysis =
+            serde_json::from_str(&json).expect("Should deserialize");
+
+        assert_eq!(analysis.score, deserialized.score);
+        assert_eq!(analysis.details, deserialized.details);
+    }
+}

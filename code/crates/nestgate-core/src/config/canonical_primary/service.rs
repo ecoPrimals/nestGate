@@ -13,18 +13,29 @@ use std::time::Duration;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceConfig {
     // Core identification
+    /// Service name identifier
     pub name: String,
+    /// Service version
     pub version: String,
+    /// Service name for registration
     pub service_name: String,
+    /// Whether the service is enabled
     pub enabled: bool,
 
     // Configuration sub-components
+    /// Type of service (API, Storage, Network, etc.)
     pub service_type: ServiceType,
+    /// Endpoint configuration
     pub endpoint_config: ServiceEndpointConfig,
+    /// Health check configuration
     pub health_config: ServiceHealthConfig,
+    /// Metrics collection configuration
     pub metrics_config: ServiceMetricsConfig,
+    /// Scaling configuration
     pub scaling_config: ServiceScalingConfig,
+    /// Security configuration
     pub security_config: ServiceSecurityConfig,
+    /// Additional metadata key-value pairs
     pub metadata: HashMap<String, String>,
 }
 
@@ -51,12 +62,19 @@ impl Default for ServiceConfig {
 /// Service types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ServiceType {
+    /// API service
     Api,
+    /// Storage service
     Storage,
+    /// Network service
     Network,
+    /// Security service
     Security,
+    /// Monitoring service
     Monitoring,
+    /// Automation service
     Automation,
+    /// Testing service
     Testing,
 }
 
@@ -65,10 +83,15 @@ pub enum ServiceType {
 /// Service endpoint configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceEndpointConfig {
+    /// Bind endpoint address
     pub bind_endpoint: String,
+    /// Service port number
     pub port: u16,
+    /// Whether TLS is enabled
     pub tls_enabled: bool,
+    /// Maximum concurrent connections
     pub max_connections: usize,
+    /// Keep-alive timeout duration
     pub keep_alive_timeout: Duration,
 }
 
@@ -89,9 +112,13 @@ impl Default for ServiceEndpointConfig {
 /// Service health configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceHealthConfig {
+    /// Whether health checks are enabled
     pub enabled: bool,
+    /// Interval between health checks
     pub check_interval: Duration,
+    /// Health check timeout
     pub timeout: Duration,
+    /// Number of failures before marking unhealthy
     pub failure_threshold: u32,
 }
 
@@ -111,9 +138,13 @@ impl Default for ServiceHealthConfig {
 /// Service metrics configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceMetricsConfig {
+    /// Whether metrics collection is enabled
     pub enabled: bool,
+    /// Interval between metric collections
     pub collection_interval: Duration,
+    /// How long to retain metrics
     pub retention_period: Duration,
+    /// Whether metric export is enabled
     pub export_enabled: bool,
 }
 
@@ -133,11 +164,17 @@ impl Default for ServiceMetricsConfig {
 /// Service scaling configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceScalingConfig {
+    /// Whether auto-scaling is enabled
     pub auto_scaling: bool,
+    /// Minimum number of instances
     pub min_instances: usize,
+    /// Maximum number of instances
     pub max_instances: usize,
+    /// Target CPU utilization percentage
     pub target_cpu_percent: f64,
+    /// CPU threshold to trigger scale-up
     pub scale_up_threshold: f64,
+    /// CPU threshold to trigger scale-down
     pub scale_down_threshold: f64,
 }
 
@@ -159,9 +196,13 @@ impl Default for ServiceScalingConfig {
 /// Service security configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceSecurityConfig {
+    /// Whether authentication is required
     pub authentication_required: bool,
+    /// Whether authorization checks are enabled
     pub authorization_enabled: bool,
+    /// Whether rate limiting is enabled
     pub rate_limiting: bool,
+    /// List of allowed CORS origins
     pub allowed_origins: Vec<String>,
 }
 

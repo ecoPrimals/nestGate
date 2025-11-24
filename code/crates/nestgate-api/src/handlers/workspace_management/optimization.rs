@@ -216,16 +216,15 @@ fn optimize_deduplication(dataset_name: &str) -> Option<String> {
 }
 
 async fn request_ai_optimization(dataset_name: &str, pattern: &StoragePattern) -> Option<String> {
+    // ✅ MIGRATED: Now uses centralized runtime configuration
     // Try to use any available AI primal provider via universal adapter
-    // Create universal adapter for ecosystem integration
-    use nestgate_core::constants::hardcoding::{addresses, ports};
-    let endpoint = std::env::var("NESTGATE_ECOSYSTEM_ENDPOINT").unwrap_or_else(|_| {
-        format!(
-            "http://{}:{}",
-            addresses::LOCALHOST_NAME,
-            ports::HTTP_DEFAULT
-        )
-    });
+    use nestgate_core::config::runtime::{get_config, service_url};
+
+    // Get endpoint from config or service discovery
+    let endpoint = service_url("squirrel") // AI service
+        .or_else(|| service_url("songbird")) // Fallback to orchestration
+        .unwrap_or_else(|| get_config().network.api_base_url());
+
     let mut _adapter = nestgate_core::universal_adapter::UniversalAdapter::new(endpoint);
 
     // Discover available AI capabilities

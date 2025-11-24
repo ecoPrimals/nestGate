@@ -7,6 +7,7 @@ use nestgate_core::config::{
     defaults::{Environment, ConfigDefaults},
     network::NetworkConfig,
 };
+use crate::common::env_isolation::IsolatedEnvironment;
 use std::env;
 use std::collections::HashMap;
 
@@ -71,17 +72,16 @@ mod network_config_tests {
 
     #[test]
     fn test_network_config_environment_override() -> Result<(), Box<dyn std::error::Error>> {
-        // Set test environment variables
-        env::set_var("NESTGATE_NETWORK_HOST", "test.example.com");
-        env::set_var("NESTGATE_NETWORK_PORT", "9090");
+        // Set test environment variables with isolation
+        let mut env_iso = IsolatedEnvironment::new("test_network_config_environment_override");
+        env_iso.set("NESTGATE_NETWORK_HOST", "test.example.com");
+        env_iso.set("NESTGATE_NETWORK_PORT", "9090");
         
         let config = NetworkConfig::default();
         assert_eq!(config.host, "test.example.com");
         assert_eq!(config.port, 9090);
         
-        // Cleanup
-        env::remove_var("NESTGATE_NETWORK_HOST");
-        env::remove_var("NESTGATE_NETWORK_PORT");
+        // Automatic cleanup via Drop
     Ok(())
     }
 
@@ -132,18 +132,18 @@ mod environment_config_tests {
 
     #[test]
     fn test_environment_detection() -> Result<(), Box<dyn std::error::Error>> {
-        // Test development environment
-        env::set_var("NESTGATE_ENV", "development");
+        // Test development environment with isolation
+        let mut env_iso = IsolatedEnvironment::new("test_environment_detection");
+        env_iso.set("NESTGATE_ENV", "development");
         let env_type = Environment::from_env();
         assert_eq!(env_type, Environment::Development);
         
         // Test production environment
-        env::set_var("NESTGATE_ENV", "production");
+        env_iso.set("NESTGATE_ENV", "production");
         let env_type = Environment::from_env();
         assert_eq!(env_type, Environment::Production);
         
-        // Cleanup
-        env::remove_var("NESTGATE_ENV");
+        // Automatic cleanup via Drop
     Ok(())
     }
 
@@ -160,18 +160,16 @@ mod environment_config_tests {
 
     #[test]
     fn test_environment_config_loading() -> Result<(), Box<dyn std::error::Error>> {
-        // Test loading config for specific environment
-        env::set_var("NESTGATE_ENV", "development");
-        env::set_var("NESTGATE_DEBUG", "true");
-        env::set_var("NESTGATE_LOG_LEVEL", "debug");
+        // Test loading config for specific environment with isolation
+        let mut env_iso = IsolatedEnvironment::new("test_environment_config_loading");
+        env_iso.set("NESTGATE_ENV", "development");
+        env_iso.set("NESTGATE_DEBUG", "true");
+        env_iso.set("NESTGATE_LOG_LEVEL", "debug");
         
         let config = NestGateCanonicalConfig::from_environment();
         assert!(config.system.debug_enabled);
         
-        // Cleanup
-        env::remove_var("NESTGATE_ENV");
-        env::remove_var("NESTGATE_DEBUG");
-        env::remove_var("NESTGATE_LOG_LEVEL");
+        // Automatic cleanup via Drop
     Ok(())
 }
 }
@@ -199,13 +197,14 @@ mod config_merge_tests {
 
     #[test]
     fn test_config_override_precedence() -> Result<(), Box<dyn std::error::Error>> {
-        // Test that environment variables override config file values
-        env::set_var("NESTGATE_INSTANCE_NAME", "env-override");
+        // Test that environment variables override config file values with isolation
+        let mut env_iso = IsolatedEnvironment::new("test_config_override_precedence");
+        env_iso.set("NESTGATE_INSTANCE_NAME", "env-override");
         
         let config = NestGateCanonicalConfig::from_environment();
         assert_eq!(config.system.instance_name, "env-override");
         
-        env::remove_var("NESTGATE_INSTANCE_NAME");
+        // Automatic cleanup via Drop
     Ok(())
     }
 

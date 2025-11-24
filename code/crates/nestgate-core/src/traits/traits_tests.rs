@@ -2,7 +2,7 @@
 //!
 //! These tests validate the current trait system with its evolved API.
 
-use super::canonical_unified_traits::{ProviderCapabilities, ProviderHealth, ServiceCapabilities};
+use super::canonical::types::{ProviderCapabilities, ProviderHealth, ServiceCapabilities};
 use super::*;
 use std::collections::HashMap;
 use std::time::SystemTime;

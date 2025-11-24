@@ -180,11 +180,12 @@ impl ZfsPerformanceMonitor {
             let fields: Vec<&str> = line.split_whitespace().collect();
             if fields.len() >= 7 && !line.starts_with('-') && !line.contains("pool") {
                 // Format: pool alloc free read write read write
+                // Fields: [0]  [1]   [2]  [3]  [4]   [5]  [6]
                 if let (Ok(r_ops), Ok(w_ops), Ok(r_bw), Ok(w_bw)) = (
-                    fields[2].parse::<u64>(),
                     fields[3].parse::<u64>(),
                     fields[4].parse::<u64>(),
                     fields[5].parse::<u64>(),
+                    fields[6].parse::<u64>(),
                 ) {
                     read_ops += r_ops;
                     write_ops += w_ops;

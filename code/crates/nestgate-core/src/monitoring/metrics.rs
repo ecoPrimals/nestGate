@@ -41,11 +41,15 @@ pub struct MetricsConfig {
 }
 impl Default for MetricsConfig {
     fn default() -> Self {
+        // Use ServiceDiscoveryConfig for consistent endpoint configuration
+        let config = crate::config::discovery_config::ServiceDiscoveryConfig::default();
+        let metrics_endpoint = format!("{}/metrics", config.build_endpoint(9090));
+        
         Self {
             collection_interval: Duration::from_secs(30),
             retention_period: Duration::from_secs(3600), // 1 hour
             export_enabled: true,
-            export_endpoints: vec!["http://localhost:9090/metrics".to_string()],
+            export_endpoints: vec![metrics_endpoint],
             labels: HashMap::new(),
         }
     }

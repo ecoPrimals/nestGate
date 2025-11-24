@@ -421,9 +421,10 @@ mod tests {
     /// Helper to create test connection info
     fn create_test_connection(id: &str, _active: bool) -> ConnectionInfo {
         // Note: active state is set automatically by ConnectionInfo::new
+        use nestgate_core::constants::hardcoding::ports;
         ConnectionInfo::new(
             id.to_string(),
-            SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 8080),
+            SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), ports::HTTP_DEFAULT),
         )
     }
 
@@ -554,7 +555,7 @@ mod tests {
         let details = manager.get_connection_details("conn1").await;
         assert!(details.is_some());
 
-        let details = details.unwrap();
+        let details = details.expect("Connection details should be present");
         assert_eq!(details.id, "conn1");
         assert!(details.is_active);
     }
@@ -579,7 +580,7 @@ mod tests {
         let details = manager.get_service_details("svc1").await;
         assert!(details.is_some());
 
-        let details = details.unwrap();
+        let details = details.expect("Service details should be present");
         assert_eq!(details.id, "svc1");
         assert_eq!(details.name, "test-service");
     }
@@ -600,7 +601,7 @@ mod tests {
         let health_results = manager.health_check_services().await;
         assert!(health_results.is_ok());
 
-        let results = health_results.unwrap();
+        let results = health_results.expect("Health check should succeed");
         assert_eq!(results.len(), 2);
         assert_eq!(results.get("svc1"), Some(&true));
         assert_eq!(results.get("svc2"), Some(&true));
@@ -624,7 +625,7 @@ mod tests {
         let stats = manager.get_statistics().await;
         assert!(stats.is_ok());
 
-        let stats = stats.unwrap();
+        let stats = stats.expect("Statistics should be available");
         assert_eq!(stats.active_connections, 2);
         assert_eq!(stats.registered_services, 1);
     }
@@ -646,7 +647,7 @@ mod tests {
         let response = handler.handle_request(request).await;
         assert!(response.is_ok());
 
-        let response = response.unwrap();
+        let response = response.expect("GET request should succeed");
         assert_eq!(response.status_code, 200);
     }
 
@@ -665,7 +666,7 @@ mod tests {
         let response = handler.handle_request(request).await;
         assert!(response.is_ok());
 
-        let response = response.unwrap();
+        let response = response.expect("POST request should succeed");
         assert_eq!(response.status_code, 201);
     }
 
@@ -684,7 +685,7 @@ mod tests {
         let response = handler.handle_request(request).await;
         assert!(response.is_ok());
 
-        let response = response.unwrap();
+        let response = response.expect("PUT request should succeed");
         assert_eq!(response.status_code, 200);
     }
 
@@ -703,7 +704,7 @@ mod tests {
         let response = handler.handle_request(request).await;
         assert!(response.is_ok());
 
-        let response = response.unwrap();
+        let response = response.expect("DELETE request should succeed");
         assert_eq!(response.status_code, 204);
         assert!(response.body.is_empty());
     }
@@ -723,7 +724,7 @@ mod tests {
         let response = handler.handle_request(request).await;
         assert!(response.is_ok());
 
-        let response = response.unwrap();
+        let response = response.expect("PATCH request should return response");
         assert_eq!(response.status_code, 405);
     }
 
@@ -754,7 +755,7 @@ mod tests {
         let data = b"test data";
         let result = handler.send_data("conn1", data);
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), data.len());
+        assert_eq!(result.expect("Send data should succeed"), data.len());
     }
 
     #[test]
@@ -781,10 +782,22 @@ mod tests {
             .await;
 
         // Get next service 3 times - should cycle through all
-        let svc1 = lb.get_next_service().await.unwrap();
-        let svc2 = lb.get_next_service().await.unwrap();
-        let svc3 = lb.get_next_service().await.unwrap();
-        let svc4 = lb.get_next_service().await.unwrap(); // Should wrap to first
+        let svc1 = lb
+            .get_next_service()
+            .await
+            .expect("Should get first service");
+        let svc2 = lb
+            .get_next_service()
+            .await
+            .expect("Should get second service");
+        let svc3 = lb
+            .get_next_service()
+            .await
+            .expect("Should get third service");
+        let svc4 = lb
+            .get_next_service()
+            .await
+            .expect("Should wrap to first service");
 
         assert_eq!(svc1.name(), "service1");
         assert_eq!(svc2.name(), "service2");
@@ -843,7 +856,10 @@ mod tests {
         // After removal, should still work with remaining service
         let svc = lb.get_next_service().await;
         assert!(svc.is_some());
-        assert_eq!(svc.unwrap().name(), "service2");
+        assert_eq!(
+            svc.expect("Should get remaining service").name(),
+            "service2"
+        );
     }
 
     #[tokio::test]

@@ -10,7 +10,7 @@ mod infant_discovery_system_tests {
     fn test_infant_discovery_is_compile_time_feature() {
         // This test verifies that infant discovery compiles
         // The actual behavior is tested in integration tests
-        assert!(true);
+        // Test passes if this compiles and runs without panic
     }
 
     #[test]

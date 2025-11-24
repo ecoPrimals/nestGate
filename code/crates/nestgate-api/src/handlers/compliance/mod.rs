@@ -170,8 +170,8 @@ mod tests {
 
         for i in 1..=5 {
             let policy = RetentionPolicy {
-                id: format!("policy-{}", i),
-                name: format!("Policy {}", i),
+                id: format!("policy-{i}"),
+                name: format!("Policy {i}"),
                 data_classification: DataClassification::Internal,
                 retention_days: i * 365,
                 archive_after_days: Some(i * 180),
@@ -226,12 +226,12 @@ mod tests {
 
         for (i, event_type) in event_types.into_iter().enumerate() {
             let event = AuditEvent {
-                id: format!("event-{}", i),
+                id: format!("event-{i}"),
                 timestamp: Utc::now(),
                 event_type,
-                user_id: Some(format!("user-{}", i)),
-                path: format!("/path/{}", i),
-                action: format!("action-{}", i),
+                user_id: Some(format!("user-{i}")),
+                path: format!("/path/{i}"),
+                action: format!("action-{i}"),
                 result: AuditResult::Success,
                 details: HashMap::new(),
                 source_ip: Some("192.168.1.1".to_string()),
@@ -245,7 +245,7 @@ mod tests {
 
     #[test]
     fn test_regulatory_framework_types() {
-        let frameworks = vec![
+        let frameworks = [
             RegulatoryType::GDPR,
             RegulatoryType::HIPAA,
             RegulatoryType::SOX,
@@ -342,7 +342,7 @@ mod tests {
 
     #[test]
     fn test_data_classification_levels() {
-        let classifications = vec![
+        let classifications = [
             DataClassification::Public,
             DataClassification::Internal,
             DataClassification::Confidential,

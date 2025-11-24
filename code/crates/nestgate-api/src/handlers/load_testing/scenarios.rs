@@ -56,3 +56,61 @@ pub struct TestResult {
     /// Average response time in milliseconds
     pub avg_response_time_ms: f64,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    #[allow(deprecated)]
+    fn test_scenario_runner_new() {
+        use super::super::config::LoadTestConfig;
+        let config = LoadTestConfig::default();
+        let runner = ScenarioRunner::new(config);
+        assert_eq!(runner.config.duration_seconds, 60);
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn test_scenario_runner_run() {
+        use super::super::config::LoadTestConfig;
+        let config = LoadTestConfig::default();
+        let runner = ScenarioRunner::new(config);
+        let result = runner.run();
+
+        assert!(result.is_ok());
+        let test_result = result.expect("Test: scenario runner should return Ok");
+        assert!(test_result.success);
+        assert_eq!(test_result.duration_seconds, 60);
+    }
+
+    #[test]
+    fn test_test_result_serialization() {
+        let result = TestResult {
+            success: true,
+            duration_seconds: 120,
+            total_requests: 5000,
+            successful_requests: 4950,
+            failed_requests: 50,
+            avg_response_time_ms: 150.5,
+        };
+
+        let json = serde_json::to_string(&result);
+        assert!(json.is_ok());
+    }
+
+    #[test]
+    fn test_test_result_failed_test() {
+        let result = TestResult {
+            success: false,
+            duration_seconds: 60,
+            total_requests: 1000,
+            successful_requests: 800,
+            failed_requests: 200,
+            avg_response_time_ms: 500.0,
+        };
+
+        assert!(!result.success);
+        assert_eq!(result.failed_requests, 200);
+    }
+}

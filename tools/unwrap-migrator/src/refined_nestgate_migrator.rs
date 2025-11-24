@@ -326,7 +326,7 @@ impl RefinedNestGateMigrator {
         // High-priority NestGate-specific patterns
         patterns.push(NestGateMigrationPattern {
             name: "config_unwrap".to_string(),
-            pattern: Regex::new(r"\.unwrap\(\)\s*(?://.*config|/\*.*config)")?,
+            pattern: Regex::new(r"\.unwrap\(\)\s*;?\s*(?://.*config|/\*.*config)")?,
             replacement: "?".to_string(),
             error_category: NestGateErrorCategory::Configuration,
             context_requirements: vec![

@@ -83,3 +83,6 @@ pub struct BackendServer {
 
 // NOTE: No implementations here - use capability discovery to find Songbird
 // See module documentation for examples
+
+#[cfg(test)]
+mod tests;

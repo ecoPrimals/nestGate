@@ -3,14 +3,23 @@
 use crate::Result;
 use serde::{Deserialize, Serialize};
 
+/// Network security configuration for firewall and IP filtering.
+///
+/// Controls network-level security including firewall rules and IP allowlists/blocklists.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct NetworkSecurityConfig {
+    /// Whether firewall is enabled.
     pub firewall_enabled: bool,
+    /// List of allowed IP addresses or CIDR ranges.
     pub allowed_ips: Vec<String>,
+    /// List of blocked IP addresses or CIDR ranges.
     pub blocked_ips: Vec<String>,
 }
 
 impl NetworkSecurityConfig {
+    /// Create development-optimized configuration with firewall disabled.
+    ///
+    /// Allows all traffic for local development convenience.
     #[must_use]
     pub fn development_optimized() -> Self {
         Self {
@@ -20,6 +29,9 @@ impl NetworkSecurityConfig {
         }
     }
 
+    /// Create production-hardened configuration with strict firewall rules.
+    ///
+    /// Enables firewall and restricts access to private networks only.
     #[must_use]
     pub fn production_hardened() -> Self {
         Self {
@@ -29,15 +41,20 @@ impl NetworkSecurityConfig {
         }
     }
 
-    /// Function description
+    /// Validate the security configuration.
+    ///
+    /// Ensures IP addresses and CIDR ranges are valid.
     ///
     /// # Errors
     ///
-    /// This function will return an error if the operation fails.
+    /// Returns an error if validation fails.
     pub fn validate(&self) -> Result<()> {
         Ok(())
     }
 
+    /// Merge this configuration with another, preferring values from `other`.
+    ///
+    /// All fields from `other` will replace the current values.
     #[must_use]
     pub fn merge(mut self, other: Self) -> Self {
         self.firewall_enabled = other.firewall_enabled;

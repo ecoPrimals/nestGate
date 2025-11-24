@@ -3,16 +3,25 @@
 use crate::Result;
 use serde::{Deserialize, Serialize};
 
+/// Network performance configuration for optimizing throughput and latency.
+///
+/// Controls TCP/IP tuning parameters to optimize network performance.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct NetworkPerformanceConfig {
+    /// Network buffer size in bytes.
     pub buffer_size: u32,
+    /// Whether to disable Nagle's algorithm (TCP_NODELAY).
     pub tcp_nodelay: bool,
+    /// Whether TCP keep-alive is enabled.
     pub keep_alive: bool,
-    /// Keep-alive timeout in seconds (0 = use system default)
+    /// Keep-alive timeout in seconds (0 = use system default).
     pub keep_alive_timeout_seconds: u64,
 }
 
 impl NetworkPerformanceConfig {
+    /// Create development-optimized configuration with small buffers.
+    ///
+    /// Uses conservative settings suitable for local testing.
     #[must_use]
     pub fn development_optimized() -> Self {
         Self {
@@ -23,6 +32,9 @@ impl NetworkPerformanceConfig {
         }
     }
 
+    /// Create production-hardened configuration with large buffers and TCP_NODELAY.
+    ///
+    /// Optimizes for low latency and high throughput in production.
     #[must_use]
     pub fn production_hardened() -> Self {
         Self {
@@ -33,15 +45,20 @@ impl NetworkPerformanceConfig {
         }
     }
 
-    /// Function description
+    /// Validate the performance configuration.
+    ///
+    /// Ensures buffer sizes and timeouts are reasonable.
     ///
     /// # Errors
     ///
-    /// This function will return an error if the operation fails.
+    /// Returns an error if validation fails.
     pub fn validate(&self) -> Result<()> {
         Ok(())
     }
 
+    /// Merge this configuration with another, preferring values from `other`.
+    ///
+    /// All fields from `other` will replace the current values.
     #[must_use]
     pub fn merge(mut self, other: Self) -> Self {
         self.buffer_size = other.buffer_size;

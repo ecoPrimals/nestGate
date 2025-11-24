@@ -48,3 +48,177 @@ impl Default for CapabilityProvider {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_ecosystem_config_creation() {
+        let config = EcosystemConfig {
+            ecosystem_id: "eco-001".to_string(),
+            name: "Test Ecosystem".to_string(),
+            version: "1.0.0".to_string(),
+            services: vec![],
+            metadata: HashMap::new(),
+        };
+
+        assert_eq!(config.ecosystem_id, "eco-001");
+        assert_eq!(config.name, "Test Ecosystem");
+        assert_eq!(config.version, "1.0.0");
+        assert!(config.services.is_empty());
+    }
+
+    #[test]
+    fn test_ecosystem_config_serialization() {
+        let config = EcosystemConfig {
+            ecosystem_id: "eco-001".to_string(),
+            name: "Test".to_string(),
+            version: "1.0.0".to_string(),
+            services: vec![],
+            metadata: HashMap::new(),
+        };
+
+        let json = serde_json::to_string(&config).expect("Failed to serialize");
+        let deserialized: EcosystemConfig =
+            serde_json::from_str(&json).expect("Failed to deserialize");
+
+        assert_eq!(config.ecosystem_id, deserialized.ecosystem_id);
+        assert_eq!(config.name, deserialized.name);
+    }
+
+    #[test]
+    fn test_capability_provider_default() {
+        let provider = CapabilityProvider::default();
+
+        assert_eq!(provider.id, "default");
+        assert_eq!(provider.name, "Default Provider");
+        assert_eq!(provider.capabilities.len(), 1);
+        assert_eq!(provider.capabilities[0], "storage");
+    }
+
+    #[test]
+    fn test_capability_provider_custom() {
+        let mut metadata = HashMap::new();
+        metadata.insert("region".to_string(), "us-west".to_string());
+
+        let provider = CapabilityProvider {
+            id: "provider-001".to_string(),
+            name: "ZFS Provider".to_string(),
+            capabilities: vec!["storage".to_string(), "zfs".to_string()],
+            endpoint: "http://localhost:9000".to_string(),
+            status: ProviderStatus::Active,
+            metadata,
+        };
+
+        assert_eq!(provider.id, "provider-001");
+        assert_eq!(provider.name, "ZFS Provider");
+        assert_eq!(provider.capabilities.len(), 2);
+        assert_eq!(
+            provider
+                .metadata
+                .get("region")
+                .expect("Test: metadata should contain 'region'"),
+            "us-west"
+        );
+    }
+
+    #[test]
+    fn test_provider_status_active() {
+        let provider = CapabilityProvider {
+            status: ProviderStatus::Active,
+            ..Default::default()
+        };
+
+        match provider.status {
+            ProviderStatus::Active => {}
+            _ => panic!("Expected Active status"),
+        }
+    }
+
+    #[test]
+    fn test_provider_status_inactive() {
+        let provider = CapabilityProvider {
+            status: ProviderStatus::Inactive,
+            ..Default::default()
+        };
+
+        match provider.status {
+            ProviderStatus::Inactive => {}
+            _ => panic!("Expected Inactive status"),
+        }
+    }
+
+    #[test]
+    fn test_provider_status_error() {
+        let provider = CapabilityProvider {
+            status: ProviderStatus::Error,
+            ..Default::default()
+        };
+
+        match provider.status {
+            ProviderStatus::Error => {}
+            _ => panic!("Expected Error status"),
+        }
+    }
+
+    #[test]
+    fn test_provider_serialization() {
+        let provider = CapabilityProvider::default();
+        let json = serde_json::to_string(&provider).expect("Failed to serialize");
+        let deserialized: CapabilityProvider =
+            serde_json::from_str(&json).expect("Failed to deserialize");
+
+        assert_eq!(provider.id, deserialized.id);
+        assert_eq!(provider.name, deserialized.name);
+        assert_eq!(provider.capabilities, deserialized.capabilities);
+    }
+
+    #[test]
+    fn test_provider_status_serialization() {
+        let statuses = vec![
+            ProviderStatus::Active,
+            ProviderStatus::Inactive,
+            ProviderStatus::Error,
+            ProviderStatus::Unknown,
+        ];
+
+        for status in statuses {
+            let json = serde_json::to_string(&status).expect("Failed to serialize");
+            let _deserialized: ProviderStatus =
+                serde_json::from_str(&json).expect("Failed to deserialize");
+        }
+    }
+
+    #[test]
+    fn test_ecosystem_with_services() {
+        let service = ServiceInfo {
+            service_id: "svc-001".to_string(),
+            service_name: "storage-service".to_string(),
+            name: "Storage Service".to_string(),
+            version: "1.0.0".to_string(),
+            status: nestgate_core::canonical_types::service::ServiceState::Running,
+            health_status: "healthy".to_string(),
+            health: Some("healthy".to_string()),
+            uptime_seconds: Some(3600),
+            pid: Some(12345),
+            start_time: Some(std::time::SystemTime::now()),
+            cpu_percent: Some(15.5),
+            memory_bytes: Some(1024 * 1024 * 512),
+            capabilities: vec!["storage".to_string()],
+            metadata: HashMap::new(),
+            description: Some("Storage service".to_string()),
+        };
+
+        let config = EcosystemConfig {
+            ecosystem_id: "eco-001".to_string(),
+            name: "Production".to_string(),
+            version: "1.0.0".to_string(),
+            services: vec![service],
+            metadata: HashMap::new(),
+        };
+
+        assert_eq!(config.services.len(), 1);
+        assert_eq!(config.services[0].service_id, "svc-001");
+    }
+}

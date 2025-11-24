@@ -98,8 +98,11 @@ impl UniversalAuthAdapter {
                     let capabilities = capabilities_result.as_array().unwrap_or(&empty_vec);
                     if let Some(security_capability) = capabilities.first() {
                         info!("✅ Found security capability: {}", security_capability);
+                        // Use ServiceDiscoveryConfig for endpoint construction
+                        let config = crate::config::discovery_config::ServiceDiscoveryConfig::default();
+                        let base_endpoint = config.build_endpoint(config.discovery_base_port);
                         return Ok(format!(
-                            "http://localhost:8080/security/{security_capability}"
+                            "{}/security/{}", base_endpoint, security_capability
                         ));
                     }
                 }

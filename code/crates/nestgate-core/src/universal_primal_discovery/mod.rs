@@ -13,9 +13,14 @@ pub mod cache;
 pub mod core;
 pub mod fallbacks;
 pub mod introspection;
+pub mod introspection_config;
 pub mod network;
+pub mod network_discovery_config;
 pub mod performance;
+pub mod production_discovery;
+pub mod production_discovery_config;
 pub mod registry;
+pub mod registry_config;
 #[cfg(feature = "dev-stubs")]
 pub mod stubs;
 #[cfg(test)]
@@ -26,9 +31,15 @@ pub use core::UniversalPrimalDiscovery;
 pub use cache::{CacheEntry, DiscoveryCache};
 pub use fallbacks::get_fallback_port;
 pub use introspection::{HardwareProfile, SystemCapabilities};
+pub use introspection_config::{IntrospectionConfig, SharedIntrospectionConfig};
+#[allow(deprecated)]
 pub use network::{InterfaceInfo, NetworkDiscoveryConfig};
+pub use network_discovery_config::{NetworkRuntimeConfig, SharedNetworkRuntimeConfig};
 pub use performance::{OptimalTimeout, PerformanceTestConfig};
+pub use production_discovery::{ProductionServiceDiscovery, ServiceDiscoveryConfig};
+pub use production_discovery_config::{ProductionDiscoveryConfig, SharedProductionDiscoveryConfig};
 pub use registry::{DiscoveryQuery, ServiceRegistryClient};
+pub use registry_config::{RegistryConfig, SharedRegistryConfig};
 #[cfg(feature = "dev-stubs")]
 #[allow(deprecated)]
 pub use stubs::{

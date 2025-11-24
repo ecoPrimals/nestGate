@@ -5,13 +5,12 @@
 
 use nestgate_core::{NestGateError, Result};
 use std::time::Duration;
-use tokio::time::sleep;
 
 /// Test basic async operations
 #[tokio::test]
 async fn test_async_operations_work() -> Result<()> {
-    // Test simple async sleep
-    sleep(Duration::from_millis(10)).await;
+    // Test simple async coordination
+    tokio::task::yield_now().await;
 
     // Test async result handling
     let result: Result<String> = Ok("Success".to_string());
@@ -43,7 +42,7 @@ async fn test_concurrent_operations() -> Result<()> {
     let handles: Vec<_> = (0..5)
         .map(|i| {
             tokio::spawn(async move {
-                sleep(Duration::from_millis(10)).await;
+                tokio::task::yield_now().await;
                 i * 2
             })
         })

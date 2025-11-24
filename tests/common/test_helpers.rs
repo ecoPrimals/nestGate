@@ -368,7 +368,7 @@ pub mod timing {
                 return Ok(());
             }
             
-            tokio::time::sleep(check_interval).await;
+            tokio::task::yield_now().await;
         }
         
         Err(NestGateError::TimeoutError(format!(
@@ -448,8 +448,8 @@ pub async fn setup_test_environment(config: &crate::common::test_config::Unified
     info!("  Storage configuration enabled: {}", config.storage.enable_storage_management);
     info!("  Performance testing enabled: {}", config.extensions.performance.enable_performance_validation);
     
-    // Simulate environment setup delay
-    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+    // Coordination after setup
+    tokio::task::yield_now().await;
     
     Ok(())
 }
@@ -504,8 +504,8 @@ pub async fn inject_chaos_events(
     let chaos_events = 3; // Simulate some chaos events
     results.chaos_events_injected = chaos_events;
     
-    // Simulate chaos injection delay
-    tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+    // Coordination after chaos injection
+    tokio::task::yield_now().await;
     
     warn!("⚡ Injected {} chaos events", chaos_events);
     Ok(())

@@ -125,6 +125,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(deprecated)] // Testing deprecated SecurityConfig fields
     fn test_nestgate_config_default_values() {
         let config = NestGateConfig::default();
         assert_eq!(config.service_name, "nestgate");
@@ -156,6 +157,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(deprecated)] // Testing deprecated SecurityConfig fields
     fn test_nestgate_config_default_security() {
         let config = NestGateConfig::default();
         assert!(config.security.authentication_enabled);

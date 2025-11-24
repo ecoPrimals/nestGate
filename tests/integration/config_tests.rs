@@ -3,6 +3,7 @@
 //! Tests for the configuration management system
 
 use crate::common::*;
+use crate::common::env_isolation::IsolatedEnvironment;
 use nestgate_core::config::*;
 use nestgate_core::constants::canonical::network::DEFAULT_API_PORT;
 use std::collections::HashMap;
@@ -80,8 +81,9 @@ async fn test_config_validation() -> Result<(), Box<dyn std::error::Error>> {
 /// Test configuration environment variable support
 #[test]
 async fn test_config_environment_variables() -> Result<(), Box<dyn std::error::Error>> {
-    // Set test environment variable
-    std::env::set_var("NESTGATE_TEST_VALUE", "test123");
+    // Set test environment variable with isolation
+    let mut env_iso = IsolatedEnvironment::new("test_config_environment_variables");
+    env_iso.set("NESTGATE_TEST_VALUE", "test123");
     
     let config = Config::from_env()?;
     
@@ -91,8 +93,7 @@ async fn test_config_environment_variables() -> Result<(), Box<dyn std::error::E
     Ok(())
     }
     
-    // Clean up
-    std::env::remove_var("NESTGATE_TEST_VALUE");
+    // Automatic cleanup via Drop
     Ok(())
 }
 

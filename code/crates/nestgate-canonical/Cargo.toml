@@ -39,6 +39,9 @@ chrono = { version = "0.4", features = ["serde"] }
 tokio = { version = "1.0", features = ["full"] }
 futures = "0.3"
 
+# Core NestGate types (for canonical type aliases)
+nestgate-core = { path = "../nestgate-core", default-features = false }
+
 [features]
 default = ["unified-config", "zero-cost-patterns"]
 unified-config = []           # Enable unified configuration system

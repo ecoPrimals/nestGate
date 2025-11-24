@@ -3,6 +3,8 @@
 //! Test coverage for orchestration retry configuration and behavior,
 //! ensuring robust network resilience and exponential backoff logic.
 
+#![allow(deprecated)] // Testing deprecated config during migration period
+
 use super::orchestration::*;
 use std::time::Duration;
 

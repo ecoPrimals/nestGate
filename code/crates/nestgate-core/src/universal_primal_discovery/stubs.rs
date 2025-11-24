@@ -25,13 +25,13 @@
 /// These stubs ensure system stability and provide sensible defaults.
 ///
 /// **⚠️ DEVELOPMENT ONLY**: This module is only available with `dev-stubs` feature
-
 #[deprecated(
     since = "0.11.2",
     note = "Moved to crate::dev_stubs::primal_discovery. \
             Update imports: use nestgate_core::dev_stubs::primal_discovery::*; \
             This location will be removed in v0.12.0 (May 2026)."
 )]
+#[allow(unused_imports)]
 pub use crate::dev_stubs::primal_discovery::*;
 
 // Keep the original implementation as re-exports for backward compatibility
@@ -105,26 +105,26 @@ pub fn discover_timeout(operation: &str) -> crate::Result<Duration> {
     }
 }
 /// Get fallback port for a service
-/// 
+///
 /// **DEPRECATED**: This module is deprecated. Use `crate::dev_stubs::primal_discovery` instead.
 #[must_use]
 pub fn get_fallback_port(service_name: &str) -> u16 {
     use crate::constants::port_defaults::{
-        DEFAULT_API_PORT, DEFAULT_METRICS_PORT, DEFAULT_HEALTH_PORT, DEFAULT_ADMIN_PORT,
+        DEFAULT_ADMIN_PORT, DEFAULT_API_PORT, DEFAULT_HEALTH_PORT, DEFAULT_METRICS_PORT,
     };
-    
+
     match service_name {
-        "api" => DEFAULT_API_PORT, // 8080
-        "web" => DEFAULT_API_PORT, // 8080
+        "api" => DEFAULT_API_PORT,         // 8080
+        "web" => DEFAULT_API_PORT,         // 8080
         "metrics" => DEFAULT_METRICS_PORT, // 9090
-        "health" => DEFAULT_HEALTH_PORT, // 8081
-        "admin" => DEFAULT_ADMIN_PORT, // 8082
-        "websocket" => 8083, // WebSocket default
-        "network" => 8084, // Network service default
-        "storage" => 8085, // Storage service default
-        "zfs" => 8086, // ZFS service default
-        "mcp" => 8087, // MCP service default
-        "automation" => 8088, // Automation service default
+        "health" => DEFAULT_HEALTH_PORT,   // 8081
+        "admin" => DEFAULT_ADMIN_PORT,     // 8082
+        "websocket" => 8083,               // WebSocket default
+        "network" => 8084,                 // Network service default
+        "storage" => 8085,                 // Storage service default
+        "zfs" => 8086,                     // ZFS service default
+        "mcp" => 8087,                     // MCP service default
+        "automation" => 8088,              // Automation service default
         _ => DEFAULT_API_PORT,
     }
 }
@@ -224,13 +224,6 @@ impl StandaloneNetworkAdapter {
     }
 }
 
-/// **DEPRECATED**: Use `UnifiedNetworkConfig` from `crate::config::canonical_primary` instead
-/// `UnifiedNetworkConfig` helper methods
-#[allow(deprecated)] // Helper methods for deprecated type during migration
-impl UnifiedNetworkConfig {
-    /// Convert to unified config (identity function now)
-    #[must_use]
-    pub fn to_unified(&self) -> Self {
-        self.clone()
-    }
-}
+// **DEPRECATED**: Use `UnifiedNetworkConfig` from `crate::config::canonical_primary` instead
+// `UnifiedNetworkConfig` helper methods moved to `dev_stubs/primal_discovery.rs`
+// to avoid duplication when `dev-stubs` feature is enabled.

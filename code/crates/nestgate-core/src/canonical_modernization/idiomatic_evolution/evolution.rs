@@ -13,20 +13,46 @@ pub struct EvolutionTracker {
 }
 
 impl EvolutionTracker {
+    /// Creates a new evolution tracker for monitoring modernization progress
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nestgate_core::canonical_modernization::idiomatic_evolution::evolution::EvolutionTracker;
+    ///
+    /// let tracker = EvolutionTracker::new();
+    /// ```
     #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// Tracks a component in the evolution process
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the component to track
+    /// * `version` - The version of the component
     pub fn track_component(&mut self, name: &str, version: &str) {
         self.tracked_components
             .insert(name.to_string(), version.to_string());
     }
 
+    /// Sets the evolution score for a specific component
+    ///
+    /// # Arguments
+    ///
+    /// * `component` - The component name
+    /// * `score` - The evolution score (typically 0.0 to 1.0)
     pub fn set_evolution_score(&mut self, component: &str, score: f64) {
         self.evolution_scores.insert(component.to_string(), score);
     }
 
+    /// Gets the overall evolution score across all tracked components
+    ///
+    /// # Returns
+    ///
+    /// The average evolution score, or 0.0 if no components are tracked
     #[must_use]
     #[allow(clippy::cast_precision_loss)]
     pub fn get_overall_score(&self) -> f64 {
@@ -52,16 +78,43 @@ pub struct MigrationManager {
 }
 
 impl MigrationManager {
+    /// Creates a new migration manager
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nestgate_core::canonical_modernization::idiomatic_evolution::evolution::MigrationManager;
+    ///
+    /// let manager = MigrationManager::new();
+    /// ```
     #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// Creates a production-optimized migration manager
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nestgate_core::canonical_modernization::idiomatic_evolution::evolution::MigrationManager;
+    ///
+    /// let manager = MigrationManager::production_optimized();
+    /// ```
     #[must_use]
     pub fn production_optimized() -> Self {
         Self::default()
     }
 
+    /// Creates a development-optimized migration manager
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nestgate_core::canonical_modernization::idiomatic_evolution::evolution::MigrationManager;
+    ///
+    /// let manager = MigrationManager::development_optimized();
+    /// ```
     #[must_use]
     pub fn development_optimized() -> Self {
         Self::default()
@@ -78,6 +131,11 @@ impl MigrationManager {
         Ok(())
     }
 
+    /// Gets the count of completed migrations
+    ///
+    /// # Returns
+    ///
+    /// The number of completed migrations, or `u32::MAX` if count exceeds u32
     #[must_use]
     pub fn get_completed_count(&self) -> u32 {
         u32::try_from(self.completed_migrations.len()).unwrap_or(u32::MAX)
@@ -111,26 +169,39 @@ impl Default for CompatibilityChecker {
 }
 
 impl CompatibilityChecker {
+    /// Creates a new compatibility checker
     #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// Creates a production-optimized compatibility checker
     #[must_use]
     pub fn production_optimized() -> Self {
         Self::default()
     }
 
+    /// Creates a development-optimized compatibility checker
     #[must_use]
     pub fn development_optimized() -> Self {
         Self::default()
     }
 
+    /// Validates an item against compatibility rules
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if validation fails
     pub fn validate<T>(&self, _item: &T) -> crate::Result<()> {
         // Placeholder validation logic
         Ok(())
     }
 
+    /// Gets the overall compatibility score
+    ///
+    /// # Returns
+    ///
+    /// Returns 1.0 if no validation errors, 0.8 otherwise
     #[must_use]
     pub fn get_overall_score(&self) -> f64 {
         if self.validation_errors.is_empty() {
@@ -160,26 +231,39 @@ impl Default for ModernizationEngine {
 }
 
 impl ModernizationEngine {
+    /// Creates a new modernization engine
     #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// Creates a production-optimized modernization engine
     #[must_use]
     pub fn production_optimized() -> Self {
         Self::default()
     }
 
+    /// Creates a development-optimized modernization engine
     #[must_use]
     pub fn development_optimized() -> Self {
         Self::default()
     }
 
+    /// Applies modernization patterns to an item
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if pattern application fails
     pub fn apply_patterns<T>(&self, item: T) -> crate::Result<T> {
         // Placeholder pattern application
         Ok(item)
     }
 
+    /// Validates the modernization engine state
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if validation fails
     pub fn validate(&self) -> crate::Result<()> {
         Ok(())
     }
@@ -203,21 +287,29 @@ impl Default for CanonicalEvolutionSystem {
 }
 
 impl CanonicalEvolutionSystem {
+    /// Creates a new canonical evolution system
     #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// Creates a production-optimized canonical evolution system
     #[must_use]
     pub fn production_optimized() -> Self {
         Self::default()
     }
 
+    /// Creates a development-optimized canonical evolution system
     #[must_use]
     pub fn development_optimized() -> Self {
         Self::default()
     }
 
+    /// Validates the canonical evolution system state
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if validation fails
     pub fn validate(&self) -> crate::Result<()> {
         if self.system_version.is_empty() {
             return Err(crate::NestGateError::validation_error(

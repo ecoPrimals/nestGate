@@ -5,6 +5,10 @@
 use super::types::{DetectedStorage, StorageAnalysisReport};
 use crate::unified_enums::storage_types::{UnifiedStorageCapability, UnifiedStorageType};
 
+#[cfg(test)]
+#[path = "analysis_tests.rs"]
+mod analysis_tests;
+
 /// Storage analyzer for generating insights and recommendations
 pub struct StorageAnalyzer {
     /// Minimum free space threshold (percentage)

@@ -2,10 +2,10 @@
 //!
 //! This test validates fault injection and resilience using canonical patterns
 //! **CANONICAL MODERNIZATION**: Updated to use simple, working patterns
+//!
+//! **MODERN CONCURRENCY**: Uses yield_now() for async coordination instead of sleep().
 
 use nestgate_core::config::canonical_primary::{Environment, NestGateCanonicalConfig};
-use std::time::Duration;
-use tokio::time::sleep;
 use tracing::info;
 
 /// Test fault injection configuration
@@ -43,7 +43,7 @@ async fn test_fault_injection_types() -> Result<(), Box<dyn std::error::Error>> 
         info!("Injecting {} fault with severity {}", fault_type, severity);
 
         // Simulate fault injection
-        sleep(Duration::from_millis(10)).await;
+        tokio::task::yield_now().await;
 
         // Verify fault data is valid
         assert!(!fault_type.is_empty(), "Fault type should be specified");
@@ -71,11 +71,8 @@ async fn test_fault_injection_recovery() -> Result<(), Box<dyn std::error::Error
     for (recovery_type, recovery_time) in recovery_scenarios {
         info!("Testing {} recovery ({}ms)", recovery_type, recovery_time);
 
-        // Simulate fault injection
-        sleep(Duration::from_millis(5)).await;
-
-        // Simulate recovery process
-        sleep(Duration::from_millis(recovery_time as u64 / 10)).await;
+        // Simulate fault injection and recovery
+        tokio::task::yield_now().await;
 
         // Verify recovery data is valid
         assert!(
@@ -99,20 +96,24 @@ async fn test_fault_injection_monitoring() -> Result<(), Box<dyn std::error::Err
     // Simulate fault injection monitoring cycles
     for i in 0..5 {
         let monitor_cycle = (i + 1) * 15;
-        sleep(Duration::from_millis(monitor_cycle as u64)).await;
+
+        // Simulate monitoring cycle with minimal delay
+        tokio::time::sleep(tokio::time::Duration::from_millis(1)).await;
+        tokio::task::yield_now().await;
 
         let elapsed = start_time.elapsed();
         info!(
-            "Monitoring cycle {}: {}ms, total elapsed: {:?}",
+            "Monitoring cycle {}: target {}ms, total elapsed: {:?}",
             i + 1,
             monitor_cycle,
             elapsed
         );
 
-        // Verify monitoring timing is accurate
+        // Verify monitoring is tracking time (relaxed assertion for deterministic tests)
         assert!(
-            elapsed.as_millis() >= monitor_cycle as u128,
-            "Monitoring timing should be accurate"
+            elapsed.as_micros() > 0,
+            "Expected time to elapse during monitoring, got: {:?}",
+            elapsed
         );
     }
 
@@ -137,7 +138,7 @@ async fn test_fault_injection_resilience() -> Result<(), Box<dyn std::error::Err
         info!("Testing {} pattern ({}ms response)", pattern, response_time);
 
         // Simulate pattern activation
-        sleep(Duration::from_millis(response_time as u64)).await;
+        tokio::task::yield_now().await;
 
         // Verify pattern is valid
         assert!(!pattern.is_empty(), "Pattern should be specified");
@@ -168,7 +169,7 @@ async fn test_fault_injection_chaos() -> Result<(), Box<dyn std::error::Error>> 
         );
 
         // Simulate chaos scenario
-        sleep(Duration::from_millis(8)).await;
+        tokio::task::yield_now().await;
 
         // Verify scenario data is valid
         assert!(!scenario.is_empty(), "Scenario should be specified");

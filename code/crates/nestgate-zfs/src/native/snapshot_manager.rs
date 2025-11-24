@@ -68,3 +68,95 @@ impl NativeZfsSnapshotManager {
         Ok(snapshots)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn create_test_executor() -> Arc<NativeZfsCommandExecutor> {
+        Arc::new(NativeZfsCommandExecutor::new())
+    }
+
+    #[test]
+    fn test_snapshot_manager_creation() {
+        let executor = create_test_executor();
+        let manager = NativeZfsSnapshotManager::new(executor);
+        // Just verify it doesn't panic
+        drop(manager);
+    }
+
+    #[test]
+    fn test_snapshot_manager_has_executor() {
+        let executor = create_test_executor();
+        let _manager = NativeZfsSnapshotManager::new(Arc::clone(&executor));
+        // Verify the Arc reference count increased
+        assert!(Arc::strong_count(&executor) > 1);
+    }
+
+    #[test]
+    fn test_multiple_manager_instances() {
+        let executor = create_test_executor();
+        let _manager1 = NativeZfsSnapshotManager::new(Arc::clone(&executor));
+        let _manager2 = NativeZfsSnapshotManager::new(Arc::clone(&executor));
+        assert!(Arc::strong_count(&executor) > 2);
+    }
+
+    #[test]
+    fn test_snapshot_info_parsing_logic() {
+        // Test the parsing logic that would be used in list_snapshots
+        let sample_line = "tank/data@snap1\t1024\t1234567890";
+        let parts: Vec<&str> = sample_line.split('\t').collect();
+
+        assert_eq!(parts.len(), 3);
+        assert_eq!(parts[0], "tank/data@snap1");
+        assert_eq!(parts[1], "1024");
+    }
+
+    #[test]
+    fn test_snapshot_name_extraction() {
+        // Test the @ splitting logic
+        let full_name = "tank/data@snapshot1";
+        let name = full_name.split('@').next_back().unwrap_or(full_name);
+        assert_eq!(name, "snapshot1");
+    }
+
+    #[test]
+    fn test_snapshot_name_no_at_sign() {
+        // Test when there's no @ sign
+        let full_name = "tank/data";
+        let name = full_name.split('@').next_back().unwrap_or(full_name);
+        assert_eq!(name, "tank/data");
+    }
+
+    #[test]
+    fn test_size_parsing() {
+        // Test size parsing logic
+        let size_str = "1024";
+        let size: u64 = size_str.parse().unwrap_or(0);
+        assert_eq!(size, 1024);
+    }
+
+    #[test]
+    fn test_size_parsing_invalid() {
+        // Test size parsing with invalid input
+        let size_str = "invalid";
+        let size: u64 = size_str.parse().unwrap_or(0);
+        assert_eq!(size, 0);
+    }
+
+    #[test]
+    fn test_snapshot_parts_insufficient() {
+        // Test handling of lines with insufficient parts
+        let sample_line = "tank/data@snap1";
+        let parts: Vec<&str> = sample_line.split('\t').collect();
+        assert!(parts.len() < 3);
+    }
+
+    #[test]
+    fn test_empty_line_handling() {
+        let sample_line = "";
+        let parts: Vec<&str> = sample_line.split('\t').collect();
+        assert_eq!(parts.len(), 1);
+        assert!(parts.len() < 3); // Would be skipped
+    }
+}

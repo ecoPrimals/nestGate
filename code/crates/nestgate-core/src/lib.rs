@@ -5,6 +5,12 @@
 //! Lib functionality and utilities.
 // Core library providing unified types, configurations, constants, and interfaces.
 
+// Enable documentation warnings for better API documentation
+#![warn(missing_docs)]
+#![warn(rustdoc::broken_intra_doc_links)]
+// Temporary allow deprecated during canonical config migration
+#![allow(deprecated)]
+
 // ==================== CORE CANONICAL MODULES ====================
 
 /// **PRIMARY**: Canonical modernization infrastructure
@@ -25,16 +31,24 @@ pub mod constants;
 pub mod data_sources;
 /// **PRIMARY**: Default values and environment helpers
 pub mod defaults;
+/// Defaults configuration - thread-safe config for defaults module
+pub mod defaults_v2_config;
 /// Runtime capability discovery system (Infant Discovery Architecture)
 pub mod discovery;
 /// Ecosystem integration patterns
 pub mod ecosystem_integration;
 /// Environment configuration utilities
 pub mod environment;
+/// Environment configuration - thread-safe config for environment detection
+pub mod environment_config;
 /// **PRIMARY**: Unified error handling system
 pub mod error;
+#[cfg(test)]
+mod error_path_coverage_tests;
 /// Infant Discovery Architecture implementation
 pub mod infant_discovery;
+#[cfg(test)]
+mod orchestration_tests; // Nov 23, 2025 - P1 test expansion
 /// Error recovery and resilience patterns
 pub mod recovery;
 /// **PRIMARY**: Canonical Result type aliases (Nov 10, 2025 consolidation)
@@ -86,13 +100,15 @@ pub mod safe_operations;
 /// - Replaces: `config/canonical_primary/domains/test_canonical/mocking.rs`
 #[cfg(feature = "dev-stubs")]
 pub mod dev_stubs;
-// ⚠️ Security module temporarily disabled
-// ✅ Syntax errors fixed (20+): auth_types.rs, intrusion_detection.rs, manager.rs,
-//    rate_limiting.rs, validation.rs, universal_auth_adapter.rs
-// ⚠️ Integration issues remain (32 errors): async/await mismatches, function signatures,
-//    attribute usage. Needs refactoring work (estimated 2-3 hours).
+// ⚠️ Security module temporarily disabled - has integration errors
+// ✅ JWT validation extracted to standalone module below
 // Re-enable after integration fixes are complete
 // pub mod security;
+
+/// **JWT VALIDATION MODULE** (Added November 13, 2025)
+/// Standalone JWT secret validation for production security compliance
+/// Does not depend on broken security module components
+pub mod jwt_validation;
 /// Security provider system
 /// **CANONICAL SECURITY PROVIDER** (November 10, 2025)
 /// Primary security provider using canonical SecurityProvider trait
@@ -114,6 +130,7 @@ pub mod temporal_storage;
 /// Advanced optimization techniques and cutting-edge performance patterns
 pub mod advanced_optimizations;
 /// Zero-cost optimization patterns
+#[doc = "Zero-cost optimization patterns"]
 pub mod zero_cost;
 /// Zero-cost architecture implementation
 pub mod zero_cost_architecture;
@@ -163,7 +180,7 @@ pub use constants::*;
 /// **THE CANONICAL ERROR SYSTEM** - Single error type for all operations
 pub use error::{NestGateError, Result};
 /// **CANONICAL RESULT TYPES** - Consolidated Nov 10, 2025 (was 54 → 6 types)
-/// All domain-specific aliases have been removed. Use Result<T> or CanonicalResult<T> instead.
+/// All domain-specific aliases have been removed. Use `Result<T>` or `CanonicalResult<T>` instead.
 pub use result_types::{
     CanonicalResult, ConnectionFactory, HealthCheckFn, TestResult, ValidatorFn, VoidResult,
 };
@@ -215,3 +232,9 @@ pub const DEBT_ELIMINATION_PERCENT: u8 = 95;
 
 #[cfg(test)]
 mod edge_case_tests;
+
+#[cfg(test)]
+mod result_types_comprehensive_tests;
+
+#[cfg(test)]
+mod core_coverage_boost;

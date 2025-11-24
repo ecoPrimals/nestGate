@@ -21,3 +21,13 @@ pub use manager::{
     DevelopmentZfsManager, EnterpriseZfsManager, HighPerformanceZfsManager, ProductionZfsManager,
     TestingZfsManager,
 };
+
+// Test modules
+#[cfg(test)]
+mod manager_tests;
+
+#[cfg(test)]
+mod manager_tests_expanded;
+
+#[cfg(test)]
+mod manager_tests_additional;

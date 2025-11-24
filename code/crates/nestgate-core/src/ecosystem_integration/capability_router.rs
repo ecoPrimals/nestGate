@@ -18,20 +18,23 @@ type ConnectionCacheMap = Arc<RwLock<HashMap<String, serde_json::Value>>>;
 /// Configuration for capability routing behavior
 #[derive(Debug, Clone)]
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
-/// 
+///
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::config::CapabilityRoutingConfig;
-/// 
+///
 /// // NEW (canonical):
 /// use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 /// // Or use type alias for compatibility:
 /// use crate::config::CapabilityRoutingConfig; // Now aliases to CanonicalNetworkConfig
 /// ```
-/// 
+///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+#[deprecated(
+    since = "0.11.0",
+    note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
 pub struct CapabilityRoutingConfig {
     /// Timeout for universal adapter attempts
     pub adapter_timeout: Duration,
@@ -42,6 +45,7 @@ pub struct CapabilityRoutingConfig {
     /// Whether to cache successful adapter connections
     pub cache_connections: bool,
 }
+#[allow(deprecated)]
 impl Default for CapabilityRoutingConfig {
     fn default() -> Self {
         Self {
@@ -141,6 +145,7 @@ pub struct UniversalCapabilityRouter {
     /// Local fallback implementations
     fallback_providers: FallbackProvidersMap,
     /// Configuration for routing behavior
+    #[allow(deprecated)]
     config: CapabilityRoutingConfig,
     /// Cache for successful adapter connections
     connection_cache: ConnectionCacheMap,
@@ -160,12 +165,14 @@ pub struct RoutingMetrics {
 impl UniversalCapabilityRouter {
     /// Create a new universal capability router
     #[must_use]
+    #[allow(deprecated)]
     pub fn new(adapter: Arc<PrimalAgnosticAdapter>) -> Self {
         Self::with_config(adapter, CapabilityRoutingConfig::default())
     }
 
     /// Create a new universal capability router with custom configuration
     #[must_use]
+    #[allow(deprecated)]
     pub fn with_config(
         adapter: Arc<PrimalAgnosticAdapter>,
         config: CapabilityRoutingConfig,
@@ -423,13 +430,13 @@ pub struct RouterHealthStatus {
 // Original struct definition kept above for reference and backward compatibility
 
 /// Type alias to canonical network configuration
-/// 
+///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
-pub type CapabilityRoutingConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+pub type CapabilityRoutingConfigCanonical =
+    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using CapabilityRoutingConfig (the deprecated struct) for now.
 // We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
 // This alias is here for reference and future migration.
-

@@ -10,7 +10,7 @@ use tokio::sync::RwLock;
 use crate::handlers::zfs::universal_zfs::config::TimeoutConfig;
 use crate::handlers::zfs::universal_zfs::traits::{UniversalZfsService, UniversalZfsServiceEnum};
 
-use crate::handlers::zfs::universal_zfs::types::{
+use crate::handlers::zfs::universal_zfs_types::{
     DatasetConfig, DatasetInfo, HealthStatus, PoolConfig, PoolInfo, ServiceMetrics, SnapshotConfig,
     SnapshotInfo, UniversalZfsError, UniversalZfsResult,
 };
@@ -51,6 +51,7 @@ impl FailSafeZfsService {
     ///
     /// # Returns
     /// * New fail-safe service instance
+    #[must_use]
     pub fn new(
         primary: Arc<UniversalZfsServiceEnum>,
         config: nestgate_core::config::canonical_primary::handler_config::ZfsFailSafeConfig,
@@ -104,9 +105,8 @@ impl FailSafeZfsService {
         metrics.requests_total += 1;
         metrics.timestamp = SystemTime::now();
 
-        if success {
-            metrics.requests_successful += 1;
-        } else {
+        metrics.requests_total += 1;
+        if !success {
             metrics.requests_failed += 1;
         }
     }
@@ -138,12 +138,7 @@ impl UniversalZfsService for FailSafeZfsService {
     }
 
     async fn get_metrics(&self) -> UniversalZfsResult<ServiceMetrics> {
-        let mut metrics = self.metrics.read().await.clone();
-        metrics.service_name = self.service_name.clone();
-        metrics.timestamp = SystemTime::now();
-        metrics.uptime = SystemTime::now()
-            .duration_since(self.start_time)
-            .unwrap_or_default();
+        let metrics = self.metrics.read().await.clone();
         Ok(metrics)
     }
 
@@ -248,7 +243,9 @@ impl UniversalZfsService for FailSafeZfsService {
     }
 }
 
-// Health check implementation
+/// Health check implementation for fail-safe ZFS service
+///
+/// Checks the circuit breaker state and falls back to the fallback service if available.
 pub async fn health_check(service: &FailSafeZfsService) -> UniversalZfsResult<HealthStatus> {
     // Check circuit breaker
     if !service.circuit_breaker.can_execute().await {
@@ -256,7 +253,7 @@ pub async fn health_check(service: &FailSafeZfsService) -> UniversalZfsResult<He
             return fallback.health_check().await;
         }
         return Err(UniversalZfsError::CircuitBreakerOpen {
-            service: service.service_name.clone(),
+            backend: service.service_name.clone(),
         });
     }
 

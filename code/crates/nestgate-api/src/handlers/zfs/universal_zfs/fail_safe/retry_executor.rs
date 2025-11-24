@@ -5,8 +5,12 @@ use std::time::Duration;
 // Removed unused tracing import
 
 use crate::handlers::zfs::universal_zfs::config::RetryPolicy;
-use crate::handlers::zfs::universal_zfs::types::UniversalZfsResult;
+use crate::handlers::zfs::universal_zfs_types::UniversalZfsResult;
 use tracing::debug;
+
+#[cfg(test)]
+#[path = "retry_executor_tests.rs"]
+mod retry_executor_tests;
 
 /// Retry executor for operations
 #[derive(Debug, Clone)]
@@ -21,7 +25,8 @@ impl RetryExecutor {
     ///
     /// # Returns
     /// * New retry executor instance
-    pub fn new(config: RetryPolicy) -> Self {
+    #[must_use]
+    pub const fn new(config: RetryPolicy) -> Self {
         Self { config }
     }
 
@@ -37,13 +42,13 @@ impl RetryExecutor {
     /// * Result of the operation after all retry attempts
     ///
     /// # Type Parameters
-    /// * `F` - Function type that returns a Future
+    /// * `Fut` - Future type that the operation returns
+    /// * `F` - Function type that returns the future
     /// * `T` - Return type of the operation
-    pub async fn execute<F, T>(&self, operation: F) -> UniversalZfsResult<T>
+    pub async fn execute<Fut, F, T>(&self, mut operation: F) -> UniversalZfsResult<T>
     where
-        F: Fn() -> std::pin::Pin<
-            Box<dyn std::future::Future<Output = UniversalZfsResult<T>> + Send + 'static>,
-        >,
+        Fut: std::future::Future<Output = UniversalZfsResult<T>> + Send,
+        F: FnMut() -> Fut,
     {
         let mut attempts = 0;
         let mut delay = self.config.initial_delay;

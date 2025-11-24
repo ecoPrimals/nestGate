@@ -48,6 +48,8 @@ test-log = "0.2.18"
 default = []
 # Development stubs - include mock/stub implementations for testing
 dev-stubs = ["nestgate-core/dev-stubs"]
+# Streaming RPC - enable enhanced streaming capabilities
+streaming-rpc = []
 
 [workspace]
 resolver = "2"

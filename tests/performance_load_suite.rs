@@ -2,8 +2,10 @@
 ///
 /// This suite tests system performance under various load conditions
 /// and ensures performance targets are met.
+///
+/// **MODERN CONCURRENCY**: Uses tokio::time::sleep with microsecond precision
+/// for realistic async operation simulation in performance tests.
 use std::time::{Duration, Instant};
-use tokio::time::sleep;
 
 /// Performance Test: Throughput Under Load
 #[tokio::test]
@@ -17,8 +19,8 @@ async fn test_throughput_under_load() -> std::result::Result<(), Box<dyn std::er
     let mut handles = Vec::new();
     for i in 0..1000 {
         let handle = tokio::spawn(async move {
-            // Simulate an operation
-            sleep(Duration::from_millis(1)).await;
+            // Simulate an operation with realistic async delay
+            tokio::time::sleep(Duration::from_micros(100)).await;
             i
         });
         handles.push(handle);
@@ -60,7 +62,7 @@ async fn test_latency_under_various_loads() -> Result<(), Box<dyn std::error::Er
         for _ in 0..load {
             let handle = tokio::spawn(async {
                 let op_start = Instant::now();
-                sleep(Duration::from_millis(5)).await;
+                tokio::time::sleep(Duration::from_micros(500)).await;
                 op_start.elapsed()
             });
             handles.push(handle);
@@ -104,7 +106,7 @@ async fn test_memory_usage_under_load() -> Result<(), Box<dyn std::error::Error>
         data_sets.push(data);
 
         if i % 20 == 0 {
-            sleep(Duration::from_millis(10)).await;
+            tokio::task::yield_now().await;
         }
     }
 

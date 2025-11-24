@@ -133,7 +133,7 @@ impl Default for NetworkConfig {
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
 /// 
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::network::config::SecurityConfig;
 /// 
@@ -263,7 +263,7 @@ impl Default for HealthConfig {
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
 /// 
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::network::config::StaticServiceConfig;
 /// 
@@ -287,7 +287,7 @@ pub struct StaticServiceConfig {
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
 /// 
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::network::config::DefaultServiceConfig;
 /// 

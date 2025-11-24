@@ -20,9 +20,9 @@
 //! ```
 //!
 //! Configure via environment variables:
-//! - `NESTGATE_API_PORT`: API server port (default: 8080)
-//! - `NESTGATE_BIND_ADDRESS`: Bind address (default: 0.0.0.0)
-//! - `NESTGATE_METRICS_PORT`: Metrics endpoint port (default: 9090)
+//! - `NESTGATE_API_PORT`: API server port (default: from environment or 8080)
+//! - `NESTGATE_BIND_ADDRESS`: Bind address (default: from environment or 0.0.0.0)
+//! - `NESTGATE_METRICS_PORT`: Metrics endpoint port (default: from environment or 9090)
 //!
 //! # Architecture
 //!
@@ -35,7 +35,8 @@
 //! - Real-time bidirectional communication
 
 use nestgate_api::routes::{create_router, AppState};
-use nestgate_core::constants::hardcoding::{addresses, ports};
+use nestgate_core::constants::network_defaults as addresses;
+use nestgate_core::defaults::env_helpers;
 use std::net::SocketAddr;
 use tokio::signal;
 use tower_http::trace::TraceLayer;
@@ -44,25 +45,15 @@ use tracing::{debug, info, warn};
 // use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 /// Server configuration with RPC capabilities
+///
+/// ✅ MIGRATED: Now uses canonical configuration pattern with separate bind_address and api_port
+/// instead of deprecated bind_endpoint SocketAddr.
 #[derive(Debug, Clone)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
-/// 
-/// **Migration Path**:
-/// ```rust
-/// // OLD (deprecated):
-/// use crate::config::ServerConfig;
-/// 
-/// // NEW (canonical):
-/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-/// // Or use type alias for compatibility:
-/// use crate::config::ServerConfig; // Now aliases to CanonicalNetworkConfig
-/// ```
-/// 
-/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
 pub struct ServerConfig {
-    /// Server bind address
-    pub bind_endpoint: SocketAddr,
+    /// Server bind address (IP address)
+    pub bind_address: String,
+    /// API server port
+    pub api_port: u16,
     /// Enable CORS
     pub enable_cors: bool,
     /// Enable request tracing
@@ -76,15 +67,20 @@ pub struct ServerConfig {
     /// Enable RPC connections
     pub enable_rpc: bool,
 }
+
+impl ServerConfig {
+    /// Get bind endpoint as SocketAddr
+    pub fn bind_endpoint(&self) -> SocketAddr {
+        format!("{}:{}", self.bind_address, self.api_port)
+            .parse()
+            .unwrap_or_else(|_| SocketAddr::from(([0, 0, 0, 0], self.api_port)))
+    }
+}
 impl Default for ServerConfig {
     fn default() -> Self {
-        // Construct default bind address from constants
-        let default_bind = format!("{}:{}", addresses::BIND_ALL_IPV4, ports::HTTP_DEFAULT);
         Self {
-            bind_endpoint: default_bind.parse().unwrap_or_else(|_| {
-                // Fallback to IPv4 representation if parsing fails
-                SocketAddr::from(([0, 0, 0, 0], ports::HTTP_DEFAULT))
-            }),
+            bind_address: env_helpers::bind_address(),
+            api_port: env_helpers::api_port(),
             enable_cors: true,
             enable_tracing: true,
             log_level: "info".to_string(),
@@ -94,7 +90,7 @@ impl Default for ServerConfig {
         }
     }
 }
-
+/// Start the nestgate API server
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Initialize configuration
@@ -104,7 +100,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     init_logging(&config.log_level);
 
     info!("🚀 Starting NestGate Data API Server with Real-time Bidirectional RPC");
-    info!("📡 Bind endpoint: {}", config.bind_endpoint);
+    info!(
+        "📡 Bind endpoint: {}:{}",
+        config.bind_address, config.api_port
+    );
     info!("🔧 Configuration: {:?}", config);
 
     // Print enhanced banner
@@ -138,10 +137,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_enhanced_api_endpoints(&config);
 
     // Start server
-    info!("🌐 Starting server on {}", config.bind_endpoint);
+    let bind_endpoint = config.bind_endpoint();
+    info!("🌐 Starting server on {}", bind_endpoint);
     info!("📊 Ready to serve ZFS data with real-time bidirectional RPC!");
 
-    let listener = tokio::net::TcpListener::bind(config.bind_endpoint).await?;
+    let listener = tokio::net::TcpListener::bind(bind_endpoint).await?;
 
     // Start server with graceful shutdown
     axum::serve(listener, app)
@@ -157,13 +157,25 @@ fn load_config() -> ServerConfig {
     let mut config = ServerConfig::default();
     // Override with environment variables
     if let Ok(bind_addr) = std::env::var("NESTGATE_API_BIND") {
-        if let Ok(addr) = bind_addr.parse() {
-            config.bind_endpoint = addr;
+        // Parse full address (e.g., "0.0.0.0:8080")
+        if let Ok(addr) = bind_addr.parse::<SocketAddr>() {
+            config.bind_address = addr.ip().to_string();
+            config.api_port = addr.port();
         } else {
             warn!(
                 "Invalid NESTGATE_API_BIND endpoint: {}, using default",
                 bind_addr
             );
+        }
+    }
+
+    // Also support separate BIND_ADDRESS and API_PORT env vars
+    if let Ok(addr) = std::env::var("NESTGATE_BIND_ADDRESS") {
+        config.bind_address = addr;
+    }
+    if let Ok(port) = std::env::var("NESTGATE_API_PORT") {
+        if let Ok(parsed_port) = port.parse() {
+            config.api_port = parsed_port;
         }
     }
 
@@ -336,7 +348,7 @@ fn print_enhanced_api_endpoints(config: &ServerConfig) {
     println!(
         "  📡 API Server: http://{}:{}",
         addresses::LOCALHOST_NAME,
-        config.bind_endpoint.port()
+        config.api_port
     );
     if let Some(security_addr) = &config.security_capability {
         println!("  🔐 Security (tarpc): {security_addr}");
@@ -349,24 +361,24 @@ fn print_enhanced_api_endpoints(config: &ServerConfig) {
     println!(
         "  📊 Health: curl http://{}:{}/health",
         addresses::LOCALHOST_NAME,
-        config.bind_endpoint.port()
+        config.api_port
     );
     println!(
         "  📈 Metrics: curl http://{}:{}/api/v1/monitoring/metrics",
         addresses::LOCALHOST_NAME,
-        config.bind_endpoint.port()
+        config.api_port
     );
     println!(
         "  🗄️ Datasets: curl http://{}:{}/api/v1/zfs/datasets",
         addresses::LOCALHOST_NAME,
-        config.bind_endpoint.port()
+        config.api_port
     );
 
     if config.enable_rpc {
         println!(
             "  🔐 Security RPC: curl -X POST http://{}:{}/api/v1/rpc/call \\",
             addresses::LOCALHOST_NAME,
-            config.bind_endpoint.port()
+            config.api_port
         );
         println!("    -H 'Content-Type: application/json' \\");
         println!(
@@ -375,7 +387,7 @@ fn print_enhanced_api_endpoints(config: &ServerConfig) {
         println!(
             "  🎼 Orchestration RPC: curl -X POST http://{}:{}/api/v1/rpc/call \\",
             addresses::LOCALHOST_NAME,
-            config.bind_endpoint.port()
+            config.api_port
         );
         println!("    -H 'Content-Type: application/json' \\");
         println!(
@@ -386,7 +398,7 @@ fn print_enhanced_api_endpoints(config: &ServerConfig) {
     println!(
         "  🔌 WebSocket: ws://{}:{}/ws/metrics",
         addresses::LOCALHOST_NAME,
-        config.bind_endpoint.port()
+        config.api_port
     );
     println!();
 }
@@ -428,13 +440,13 @@ async fn shutdown_signal() {
 // Original struct definition kept above for reference and backward compatibility
 
 /// Type alias to canonical network configuration
-/// 
+///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
-pub type ServerConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+pub type ServerConfigCanonical =
+    nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using ServerConfig (the deprecated struct) for now.
 // We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
 // This alias is here for reference and future migration.
-

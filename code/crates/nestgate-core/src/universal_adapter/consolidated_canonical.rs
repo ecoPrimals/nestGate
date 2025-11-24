@@ -72,7 +72,7 @@ pub struct ConsolidatedCanonicalAdapter {
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
 /// 
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::network::config::CanonicalAdapterConfig;
 /// 
@@ -157,7 +157,7 @@ pub struct DiscoveryConfig {
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
 /// 
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::network::config::RequestConfig;
 /// 
@@ -306,7 +306,7 @@ pub struct AlertThresholds {
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
 /// 
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::network::config::RateLimitConfig;
 /// 

@@ -3,7 +3,7 @@
 // Health monitoring and system resource checking for production services
 
 use crate::canonical_types::UnifiedHealthStatus;
-use crate::canonical_unified_traits::HealthStatus;
+use crate::canonical::HealthStatus;
 use crate::{NestGateError, Result};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -112,7 +112,9 @@ impl HealthMonitor {
     async fn check_connectivity(&self) -> Result<bool> {
         // Real connectivity checks using basic network testing
         // Try to resolve DNS and check if we can bind to our configured ports
-        match std::net::TcpListener::bind("127.0.0.1:0") {
+        use crate::constants::network_defaults::LOCALHOST_IPV4;
+        let bind_addr = format!("{}:0", LOCALHOST_IPV4);
+        match std::net::TcpListener::bind(&bind_addr) {
             Ok(_) => Ok(true), // Basic network stack is working
             Err(_) => Ok(false), // Network issues detected
         }

@@ -2,8 +2,7 @@
 /// 
 /// Focused performance monitoring integration tests
 
-use std::time::{ Instant};
-use tokio::time::sleep;
+use std::time::Instant;
 // Removed unused tracing import
 
 
@@ -39,9 +38,9 @@ pub async fn test_performance_monitoring_real_metrics() -> CoreResult<()> {
         info!("📈 Metrics collection {}: CPU: {:.2}%, Memory: {:.2}%, I/O: {} ops/sec", 
               i + 1, metrics.cpu_usage, metrics.memory_usage, metrics.io_operations_per_second);
         
-        sleep(Duration::from_millis(500)).await;
-    Ok(())
+        tokio::time::sleep(Duration::from_millis(500)).await;
     }
+    Ok(())
     let collection_time = start_time.elapsed();
     
     info!("✅ Performance metrics collected in {:?}", collection_time);
@@ -105,9 +104,9 @@ pub async fn test_performance_under_load() -> CoreResult<()> {
         }
         
         // Small delay to prevent overwhelming the system
-        sleep(Duration::from_millis(100)).await;
-    Ok(())
+        tokio::time::sleep(Duration::from_millis(100)).await;
     }
+    Ok(())
     
     let total_time = start_time.elapsed();
     let success_rate = successful_collections as f64 / (successful_collections + failed_collections) as f64;

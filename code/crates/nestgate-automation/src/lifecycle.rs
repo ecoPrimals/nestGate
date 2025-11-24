@@ -737,3 +737,65 @@ impl DatasetLifecycleManager {
         );
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_lifecycle_stage_variants() {
+        assert_eq!(LifecycleStage::Created, LifecycleStage::Created);
+        assert_ne!(LifecycleStage::Active, LifecycleStage::Aging);
+    }
+
+    #[test]
+    fn test_lifecycle_config_default() {
+        let config = LifecycleConfig::default();
+        assert_eq!(config.max_concurrent_actions, 5);
+        assert!(config.require_approval_for_destructive);
+        assert_eq!(config.default_policies[0], "standard");
+    }
+
+    #[test]
+    fn test_lifecycle_stats_default() {
+        let stats = LifecycleStats::default();
+        assert_eq!(stats.total_datasets, 0);
+        assert!(stats.last_evaluation_time.is_none());
+    }
+
+    #[test]
+    fn test_comparison_operator_variants() {
+        let gt = ComparisonOperator::GreaterThan;
+        let lt = ComparisonOperator::LessThan;
+        assert!(matches!(gt, ComparisonOperator::GreaterThan));
+        assert!(matches!(lt, ComparisonOperator::LessThan));
+    }
+
+    #[test]
+    fn test_lifecycle_action_variants() {
+        let action1 = LifecycleAction::ChangeTier(StorageTier::Cold);
+        let action2 = LifecycleAction::EnableCompression;
+        assert!(matches!(action1, LifecycleAction::ChangeTier(_)));
+        assert!(matches!(action2, LifecycleAction::EnableCompression));
+    }
+
+    #[tokio::test]
+    async fn test_lifecycle_manager_new() {
+        let _manager = DatasetLifecycleManager::new();
+        // Manager spawns async tasks, just verify creation doesn't panic
+    }
+
+    #[tokio::test]
+    async fn test_lifecycle_manager_default() {
+        let _manager = DatasetLifecycleManager::default();
+        // Manager spawns async tasks, just verify creation doesn't panic
+    }
+
+    #[test]
+    fn test_scheduled_task_variants() {
+        let task1 = ScheduledTask::PolicyUpdate;
+        let task2 = ScheduledTask::StatsCollection;
+        assert!(matches!(task1, ScheduledTask::PolicyUpdate));
+        assert!(matches!(task2, ScheduledTask::StatsCollection));
+    }
+}

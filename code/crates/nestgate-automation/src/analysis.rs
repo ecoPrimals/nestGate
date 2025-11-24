@@ -658,3 +658,200 @@ pub async fn analyze_datasets_with_patterns(
     // In a real implementation, we would apply machine learning patterns
     Ok(results)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_file_characteristics_creation() {
+        let characteristics = FileCharacteristics {
+            size_category: SizeCategory::Medium,
+            access_frequency: 50,
+            is_frequently_accessed: true,
+            is_sequential_access: false,
+            data_pattern: DataPattern::Random,
+        };
+        assert_eq!(characteristics.access_frequency, 50);
+        assert!(characteristics.is_frequently_accessed);
+    }
+
+    #[test]
+    fn test_dataset_analysis_creation() {
+        let analysis = DatasetAnalysis {
+            path: "/tank/data".to_string(),
+            total_files: 1000,
+            total_size_bytes: 1024 * 1024 * 1024,
+            file_types: HashMap::new(),
+            characteristics: FileCharacteristics {
+                size_category: SizeCategory::Large,
+                access_frequency: 100,
+                is_frequently_accessed: true,
+                is_sequential_access: true,
+                data_pattern: DataPattern::Sequential,
+            },
+        };
+        assert_eq!(analysis.path, "/tank/data");
+        assert_eq!(analysis.total_files, 1000);
+    }
+
+    #[test]
+    fn test_file_analyzer_new() {
+        let analyzer = FileAnalyzer::new();
+        // Just verify creation doesn't panic
+        drop(analyzer);
+    }
+
+    #[test]
+    fn test_dataset_analyzer_new() {
+        let analyzer = DatasetAnalyzer::new();
+        drop(analyzer);
+    }
+
+    #[test]
+    fn test_file_characteristics_serialization() {
+        let characteristics = FileCharacteristics {
+            size_category: SizeCategory::Small,
+            access_frequency: 10,
+            is_frequently_accessed: false,
+            is_sequential_access: true,
+            data_pattern: DataPattern::Sequential,
+        };
+        let serialized = serde_json::to_string(&characteristics)
+            .expect("Test: characteristics serialization should succeed");
+        assert!(serialized.contains("access_frequency"));
+    }
+
+    #[test]
+    fn test_dataset_analysis_with_file_types() {
+        let mut file_types = HashMap::new();
+        file_types.insert("txt".to_string(), 500);
+        file_types.insert("pdf".to_string(), 300);
+
+        let analysis = DatasetAnalysis {
+            path: "/data".to_string(),
+            total_files: 800,
+            total_size_bytes: 500 * 1024 * 1024,
+            file_types,
+            characteristics: FileCharacteristics {
+                size_category: SizeCategory::Medium,
+                access_frequency: 25,
+                is_frequently_accessed: false,
+                is_sequential_access: false,
+                data_pattern: DataPattern::Mixed,
+            },
+        };
+        assert_eq!(analysis.file_types.len(), 2);
+        assert_eq!(
+            *analysis
+                .file_types
+                .get("txt")
+                .expect("Test: file_types should contain 'txt'"),
+            500
+        );
+    }
+
+    #[test]
+    fn test_file_characteristics_various_patterns() {
+        let sequential = FileCharacteristics {
+            size_category: SizeCategory::Large,
+            access_frequency: 200,
+            is_frequently_accessed: true,
+            is_sequential_access: true,
+            data_pattern: DataPattern::Sequential,
+        };
+        assert!(sequential.is_sequential_access);
+
+        let random = FileCharacteristics {
+            size_category: SizeCategory::Small,
+            access_frequency: 5,
+            is_frequently_accessed: false,
+            is_sequential_access: false,
+            data_pattern: DataPattern::Random,
+        };
+        assert!(!random.is_sequential_access);
+    }
+
+    #[test]
+    fn test_dataset_analysis_clone() {
+        let analysis1 = DatasetAnalysis {
+            path: "/test".to_string(),
+            total_files: 100,
+            total_size_bytes: 1024,
+            file_types: HashMap::new(),
+            characteristics: FileCharacteristics {
+                size_category: SizeCategory::Small,
+                access_frequency: 10,
+                is_frequently_accessed: false,
+                is_sequential_access: false,
+                data_pattern: DataPattern::Mixed,
+            },
+        };
+        let analysis2 = analysis1.clone();
+        assert_eq!(analysis1.path, analysis2.path);
+    }
+
+    #[test]
+    fn test_file_characteristics_clone() {
+        let char1 = FileCharacteristics {
+            size_category: SizeCategory::Medium,
+            access_frequency: 50,
+            is_frequently_accessed: true,
+            is_sequential_access: true,
+            data_pattern: DataPattern::Sequential,
+        };
+        let char2 = char1.clone();
+        assert_eq!(char1.access_frequency, char2.access_frequency);
+    }
+
+    #[test]
+    fn test_dataset_analysis_empty_file_types() {
+        let analysis = DatasetAnalysis {
+            path: "/empty".to_string(),
+            total_files: 0,
+            total_size_bytes: 0,
+            file_types: HashMap::new(),
+            characteristics: FileCharacteristics {
+                size_category: SizeCategory::Small,
+                access_frequency: 0,
+                is_frequently_accessed: false,
+                is_sequential_access: false,
+                data_pattern: DataPattern::Mixed,
+            },
+        };
+        assert!(analysis.file_types.is_empty());
+        assert_eq!(analysis.total_files, 0);
+    }
+
+    #[test]
+    fn test_file_characteristics_high_frequency() {
+        let characteristics = FileCharacteristics {
+            size_category: SizeCategory::Large,
+            access_frequency: 1000,
+            is_frequently_accessed: true,
+            is_sequential_access: true,
+            data_pattern: DataPattern::Sequential,
+        };
+        assert_eq!(characteristics.access_frequency, 1000);
+        assert!(characteristics.is_frequently_accessed);
+    }
+
+    #[test]
+    fn test_dataset_analysis_large_dataset() {
+        let analysis = DatasetAnalysis {
+            path: "/large".to_string(),
+            total_files: 1_000_000,
+            total_size_bytes: 1024 * 1024 * 1024 * 100, // 100GB
+            file_types: HashMap::new(),
+            characteristics: FileCharacteristics {
+                size_category: SizeCategory::Large,
+                access_frequency: 500,
+                is_frequently_accessed: true,
+                is_sequential_access: true,
+                data_pattern: DataPattern::Sequential,
+            },
+        };
+        assert!(analysis.total_files >= 1_000_000);
+        assert!(analysis.total_size_bytes > 1024 * 1024 * 1024);
+    }
+}

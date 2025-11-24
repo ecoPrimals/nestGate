@@ -2,11 +2,11 @@
 //! 
 //! This test validates file management E2E workflow functionality using canonical patterns
 //! **CANONICAL MODERNIZATION**: Updated to use simple, working patterns
+//!
+//! **MODERN CONCURRENCY**: Uses yield_now() for async coordination instead of sleep().
 
 use nestgate_core::config::canonical_primary::NestGateCanonicalConfig as NestGateUnifiedConfig;
 use nestgate_core::constants::Environment;
-use std::time::Duration;
-use tokio::time::sleep;
 use tracing::info;
 
 /// Test file management E2E workflow configuration
@@ -43,7 +43,7 @@ async fn test_file_operations_workflow() -> Result<(), Box<dyn std::error::Error
         info!("Executing {} operation ({}ms)", operation, duration);
         
         // Simulate file operation
-        sleep(Duration::from_millis(duration as u64)).await;
+        tokio::task::yield_now().await;
         
         // Verify file operation is valid
         assert!(!operation.is_empty(), "Operation should be specified");
@@ -72,7 +72,7 @@ async fn test_directory_management_workflow() -> Result<(), Box<dyn std::error::
         info!("Processing {} operation ({}ms)", operation, duration);
         
         // Simulate directory operation
-        sleep(Duration::from_millis(duration as u64)).await;
+        tokio::task::yield_now().await;
         
         // Verify directory operation is valid
         assert!(!operation.is_empty(), "Operation should be specified");
@@ -94,7 +94,7 @@ async fn test_file_management_workflow_monitoring() -> Result<(), Box<dyn std::e
     // Test file management workflow monitoring cycles
     for i in 0..5 {
         let cycle_time = (i + 1) * 20;
-        sleep(Duration::from_millis(cycle_time as u64)).await;
+        tokio::task::yield_now().await;
         
         let elapsed = start_time.elapsed();
         info!("File management monitoring cycle {}: {}ms, total elapsed: {:?}", i + 1, cycle_time, elapsed);
@@ -125,7 +125,7 @@ async fn test_file_management_security_permissions() -> Result<(), Box<dyn std::
         info!("Testing {} scenario ({}ms)", scenario, processing_time);
         
         // Simulate security scenario
-        sleep(Duration::from_millis(processing_time as u64)).await;
+        tokio::task::yield_now().await;
         
         // Verify security scenario is valid
         assert!(!scenario.is_empty(), "Scenario should be specified");
@@ -154,7 +154,7 @@ async fn test_file_management_workflow_performance() -> Result<(), Box<dyn std::
         info!("Testing {} feature ({}ms)", feature, processing_time);
         
         // Simulate performance feature
-        sleep(Duration::from_millis(processing_time as u64)).await;
+        tokio::task::yield_now().await;
         
         // Verify performance feature is valid
         assert!(!feature.is_empty(), "Feature should be specified");

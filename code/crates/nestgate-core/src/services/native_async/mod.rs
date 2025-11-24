@@ -1,13 +1,16 @@
 // CLEANED: Removed unused imports as part of canonical modernization
 // use std::collections::HashMap;
 // use std::future::Future;
+/// Development-mode service implementations with mock support
 pub mod development;
+/// Production-ready service implementations
 pub mod production;
 // Native Async Services Module - Split for File Size Compliance
 // This module was split from native_async_final_services.rs to maintain the 2000-line limit
 /// while preserving all functionality and maintaining backward compatibility
 // Sub-module declarations
 pub mod traits;
+/// Type definitions for native async services
 pub mod types;
 // Re-export all public types and traits for backward compatibility
 #[allow(deprecated)] // Re-export for backwards compatibility

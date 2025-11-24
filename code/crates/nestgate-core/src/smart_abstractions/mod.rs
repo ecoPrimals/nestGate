@@ -37,9 +37,13 @@ pub use config_builders::{
     SmartConfigMerger, SmartConfigPresets, SmartEnvLoader, SmartValidator,
 };
 pub use service_patterns::{
-    create_mock_service, create_service_discovery, create_service_factory, MockServiceBehavior,
+    create_service_discovery, create_service_factory,
     ServiceMetadata, ServiceMetrics, SmartService, SmartServiceDiscovery, SmartServiceFactory,
 };
+
+// Mock-related exports (dev-stubs only)
+#[cfg(any(test, feature = "dev-stubs"))]
+pub use service_patterns::{create_mock_service, MockServiceBehavior};
 
 // Smart abstraction prelude - import common patterns
 pub mod prelude {

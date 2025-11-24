@@ -5,6 +5,8 @@
 //! - Zero-cost async testing
 //! - Comprehensive error handling
 //! - Modern test organization
+//!
+//! **MODERN CONCURRENCY**: Uses yield_now() for async coordination instead of sleep().
 
 use nestgate_core::{
     canonical_modernization::unified_enums::{UnifiedServiceState, UnifiedServiceType},
@@ -12,8 +14,6 @@ use nestgate_core::{
     error::{NestGateError, Result},
     response::ApiResponse,
 };
-use std::time::Duration;
-use tokio::time::sleep;
 
 // Test utilities removed - using simplified inline types
 
@@ -43,7 +43,7 @@ async fn test_canonical_framework_initialization() -> Result<()> {
     );
 
     // Test async operations with zero-cost patterns
-    sleep(Duration::from_millis(1)).await;
+    tokio::task::yield_now().await;
     println!("✅ Zero-cost async operations working");
 
     println!("🎉 Canonical test framework initialization complete!");
@@ -96,11 +96,9 @@ async fn test_canonical_service_lifecycle() -> Result<()> {
     println!("🔄 Testing canonical service lifecycle patterns");
 
     // Simplified service lifecycle test using UnifiedServiceState
-    let mut service_state = UnifiedServiceState::Starting;
+    // Start directly in Running state for testing
+    let mut service_state = UnifiedServiceState::Running;
     println!("✅ Service initialized successfully");
-
-    // Test service transition to running
-    service_state = UnifiedServiceState::Running;
     assert_eq!(service_state, UnifiedServiceState::Running);
     println!("✅ Service status check passed");
 
@@ -131,7 +129,7 @@ async fn test_canonical_performance_patterns() -> Result<()> {
 
     // Simulate multiple async operations
     let tasks = (0..10).map(|i| async move {
-        sleep(Duration::from_millis(1)).await;
+        tokio::task::yield_now().await;
         format!("task_{}", i)
     });
 
@@ -139,7 +137,7 @@ async fn test_canonical_performance_patterns() -> Result<()> {
     let elapsed = start.elapsed();
 
     assert_eq!(results.len(), 10);
-    assert!(elapsed < Duration::from_millis(100)); // Should be very fast
+    assert!(elapsed < std::time::Duration::from_millis(100)); // Should be very fast
     println!("✅ Zero-cost async performance validated: {:?}", elapsed);
 
     println!("🎉 Canonical performance pattern tests complete!");

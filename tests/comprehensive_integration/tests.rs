@@ -40,7 +40,7 @@ async fn run_comprehensive_tests_with_config(config: UnifiedTestConfig) {
     );
     
     // Mock comprehensive test execution
-    sleep(Duration::from_millis(100)).await;
+    tokio::task::yield_now().await;
     
     tracing::info!("Comprehensive integration tests completed successfully");
 }

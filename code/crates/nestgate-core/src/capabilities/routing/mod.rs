@@ -6,7 +6,11 @@ use std::collections::HashMap;
 use crate::universal_adapter::{types::CapabilityQuery, PrimalAgnosticAdapter};
 use crate::Result;
 use std::sync::Arc;
-// Universal router for all service communication
+
+/// Universal router for all service communication
+///
+/// Routes requests to appropriate services through the Universal Adapter,
+/// replacing hardcoded network constants with dynamic discovery.
 pub struct UniversalRouter {
     adapter: Arc<PrimalAgnosticAdapter>,
     /// Cached endpoint mappings

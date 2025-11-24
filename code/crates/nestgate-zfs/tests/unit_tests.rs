@@ -22,7 +22,7 @@ mod config_unit_tests {
             !config.zpool_binary.is_empty(),
             "ZPool binary path should be set"
         );
-        assert_eq!(config.use_sudo, true, "Default should use sudo");
+        assert!(config.use_sudo, "Default should use sudo");
         assert!(
             config.command_timeout.as_secs() > 0,
             "Timeout should be positive"
@@ -43,7 +43,7 @@ mod config_unit_tests {
 
         assert_eq!(config.zfs_binary, "/custom/path/zfs");
         assert_eq!(config.zpool_binary, "/custom/path/zpool");
-        assert_eq!(config.use_sudo, false);
+        assert!(!config.use_sudo);
         assert_eq!(config.command_timeout.as_secs(), 60);
         Ok(())
     }

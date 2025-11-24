@@ -193,3 +193,265 @@ impl From<StorageTier> for TierClassification {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_tier_type_to_storage_tier() {
+        let hot: StorageTier = TierType::Hot.into();
+        let warm: StorageTier = TierType::Warm.into();
+        let cold: StorageTier = TierType::Cold.into();
+
+        match hot {
+            StorageTier::Hot => {}
+            _ => panic!("Expected Hot tier"),
+        }
+        match warm {
+            StorageTier::Warm => {}
+            _ => panic!("Expected Warm tier"),
+        }
+        match cold {
+            StorageTier::Cold => {}
+            _ => panic!("Expected Cold tier"),
+        }
+    }
+
+    #[test]
+    fn test_storage_tier_to_tier_type() {
+        let hot: TierType = StorageTier::Hot.into();
+        let warm: TierType = StorageTier::Warm.into();
+        let cold: TierType = StorageTier::Cold.into();
+
+        match hot {
+            TierType::Hot => {}
+            _ => panic!("Expected Hot tier"),
+        }
+        match warm {
+            TierType::Warm => {}
+            _ => panic!("Expected Warm tier"),
+        }
+        match cold {
+            TierType::Cold => {}
+            _ => panic!("Expected Cold tier"),
+        }
+    }
+
+    #[test]
+    fn test_tier_classification_from_storage_tier() {
+        let performance: TierClassification = StorageTier::Hot.into();
+        let balanced: TierClassification = StorageTier::Warm.into();
+        let archive: TierClassification = StorageTier::Cold.into();
+
+        match performance {
+            TierClassification::Performance => {}
+            _ => panic!("Expected Performance"),
+        }
+        match balanced {
+            TierClassification::Balanced => {}
+            _ => panic!("Expected Balanced"),
+        }
+        match archive {
+            TierClassification::Archive => {}
+            _ => panic!("Expected Archive"),
+        }
+    }
+
+    #[test]
+    fn test_file_characteristics_default() {
+        let chars = FileCharacteristics::default();
+        assert_eq!(chars.estimated_compression_ratio, 1.0);
+        assert_eq!(chars.dedup_potential, 0.0);
+        assert_eq!(chars.access_frequency, 0.0);
+    }
+
+    #[test]
+    fn test_file_characteristics_custom() {
+        let chars = FileCharacteristics {
+            estimated_compression_ratio: 2.5,
+            dedup_potential: 0.8,
+            access_frequency: 15.0,
+            size_category: SizeCategory::Large,
+        };
+
+        assert_eq!(chars.estimated_compression_ratio, 2.5);
+        assert_eq!(chars.dedup_potential, 0.8);
+        assert_eq!(chars.access_frequency, 15.0);
+    }
+
+    #[test]
+    fn test_access_pattern_default() {
+        let pattern = AccessPattern::default();
+        assert_eq!(pattern.accesses_last_24h, 0);
+        assert_eq!(pattern.accesses_last_week, 0);
+        assert_eq!(pattern.accesses_last_month, 0);
+        assert_eq!(pattern.read_write_ratio, 3.0);
+    }
+
+    #[test]
+    fn test_access_pattern_custom() {
+        let pattern = AccessPattern {
+            accesses_last_24h: 50,
+            accesses_last_week: 200,
+            accesses_last_month: 800,
+            total_accesses: 5000,
+            last_access: std::time::SystemTime::now(),
+            peak_access_times: vec![9, 10, 14, 15],
+            read_write_ratio: 5.0,
+        };
+
+        assert_eq!(pattern.accesses_last_24h, 50);
+        assert_eq!(pattern.accesses_last_week, 200);
+        assert_eq!(pattern.read_write_ratio, 5.0);
+    }
+
+    #[test]
+    fn test_legacy_tier_prediction_is_valid() {
+        let now = std::time::SystemTime::now();
+        let future = now + std::time::Duration::from_secs(3600);
+
+        let prediction = LegacyTierPrediction {
+            recommended_tier: StorageTier::Hot,
+            confidence: 0.95,
+            reasoning: "High access frequency".to_string(),
+            alternative_tiers: vec![],
+            created_at: now,
+            valid_until: future,
+        };
+
+        assert!(prediction.is_valid());
+    }
+
+    #[test]
+    fn test_legacy_tier_prediction_is_expired() {
+        let now = std::time::SystemTime::now();
+        let past = now - std::time::Duration::from_secs(3600);
+
+        let prediction = LegacyTierPrediction {
+            recommended_tier: StorageTier::Hot,
+            confidence: 0.95,
+            reasoning: "High access frequency".to_string(),
+            alternative_tiers: vec![],
+            created_at: past - std::time::Duration::from_secs(3600),
+            valid_until: past,
+        };
+
+        assert!(!prediction.is_valid());
+    }
+
+    #[test]
+    fn test_access_event_creation() {
+        let event = AccessEvent {
+            file_path: "/data/file.txt".to_string(),
+            access_type: AccessType::Read,
+            timestamp: std::time::SystemTime::now(),
+            size_bytes: 1024,
+        };
+
+        assert_eq!(event.file_path, "/data/file.txt");
+        assert_eq!(event.size_bytes, 1024);
+    }
+
+    #[test]
+    fn test_tier_prediction_creation() {
+        let prediction = TierPrediction {
+            predicted_tier: StorageTier::Hot,
+            confidence_score: 0.85,
+            accesses_last_24h: 100,
+            accesses_last_week: 500,
+            accesses_last_month: 2000,
+            size_bytes: 1024 * 1024,
+            file_type: "document".to_string(),
+            recommendation_reason: "High frequency access".to_string(),
+        };
+
+        assert_eq!(prediction.accesses_last_24h, 100);
+        assert_eq!(prediction.confidence_score, 0.85);
+    }
+
+    #[test]
+    fn test_data_migration_creation() {
+        let now = std::time::SystemTime::now();
+
+        let prediction = TierPrediction {
+            predicted_tier: StorageTier::Warm,
+            confidence_score: 0.9,
+            accesses_last_24h: 5,
+            accesses_last_week: 20,
+            accesses_last_month: 50,
+            size_bytes: 1024 * 1024,
+            file_type: "document".to_string(),
+            recommendation_reason: "Decreased access".to_string(),
+        };
+
+        let migration = DataMigration {
+            file_path: "/data/file.txt".to_string(),
+            size_bytes: 1024 * 1024,
+            current_tier: StorageTier::Hot,
+            target_tier: StorageTier::Warm,
+            migration_time: now,
+            accessed_at: now,
+            tier_prediction: prediction,
+        };
+
+        assert_eq!(migration.current_tier, StorageTier::Hot);
+        assert_eq!(migration.target_tier, StorageTier::Warm);
+    }
+
+    #[test]
+    fn test_file_analysis_creation() {
+        let now = std::time::SystemTime::now();
+
+        let analysis = FileAnalysis {
+            file_path: "/data/file.txt".to_string(),
+            size_bytes: 2048,
+            created_at: now,
+            modified_at: now,
+            accessed_at: now,
+            file_type: "text".to_string(),
+        };
+
+        assert_eq!(analysis.file_path, "/data/file.txt");
+        assert_eq!(analysis.size_bytes, 2048);
+        assert_eq!(analysis.file_type, "text");
+    }
+
+    #[test]
+    fn test_size_category_variants() {
+        let _small = SizeCategory::Small;
+        let _medium = SizeCategory::Medium;
+        let _large = SizeCategory::Large;
+        let _xlarge = SizeCategory::XLarge;
+        let _unknown = SizeCategory::Unknown;
+    }
+
+    #[test]
+    fn test_data_pattern_variants() {
+        let _sequential = DataPattern::Sequential;
+        let _random = DataPattern::Random;
+        let _mixed = DataPattern::Mixed;
+        let _unknown = DataPattern::Unknown;
+    }
+
+    #[test]
+    fn test_file_type_variants() {
+        let _doc = FileType::Document;
+        let _image = FileType::Image;
+        let _video = FileType::Video;
+        let _archive = FileType::Archive;
+        let _log = FileType::Log;
+        let _backup = FileType::Backup;
+        let _db = FileType::Database;
+        let _other = FileType::Other("custom".to_string());
+        let _unknown = FileType::Unknown;
+    }
+
+    #[test]
+    fn test_access_type_variants() {
+        let _read = AccessType::Read;
+        let _write = AccessType::Write;
+        let _delete = AccessType::Delete;
+        let _modify = AccessType::Modify;
+    }
+}

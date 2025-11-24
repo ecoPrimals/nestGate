@@ -8,7 +8,6 @@ use std::collections::HashMap;
 
 use std::time::{Duration, Instant};
 use tokio::sync::RwLock;
-use tokio::time::sleep;
 
 /// Test results for comprehensive E2E workflows
 #[derive(Debug, Clone)]
@@ -85,7 +84,7 @@ async fn execute_initialization_phase(
     println!("📋 Phase 1: Initialization");
     
     // Simulate initialization work
-    sleep(Duration::from_millis(100)).await;
+    tokio::task::yield_now().await;
     
     results.performance_metrics.insert("initialization_time".to_string(), 0.1);
     println!("✅ Initialization phase completed");
@@ -99,7 +98,7 @@ async fn execute_core_functionality_phase(
     println!("⚙️ Phase 2: Core Functionality");
     
     // Simulate core functionality testing
-    sleep(Duration::from_millis(200)).await;
+    tokio::task::yield_now().await;
     
     results.performance_metrics.insert("core_functionality_time".to_string(), 0.2);
     println!("✅ Core functionality phase completed");
@@ -116,7 +115,7 @@ async fn execute_performance_phase(
             let perf_settings = &config.performance;
     
     // Simulate performance testing
-    sleep(Duration::from_millis(150)).await;
+    tokio::task::yield_now().await;
     
     results.performance_metrics.insert("performance_test_time".to_string(), 0.15);
     results.performance_metrics.insert("throughput_ops_per_sec".to_string(), 1000.0);
@@ -135,7 +134,7 @@ async fn execute_chaos_phase(
             let chaos_settings = &config.monitoring; // Chaos testing under monitoring domain
     
     // Simulate chaos testing
-    sleep(Duration::from_millis(300)).await;
+    tokio::task::yield_now().await;
     
     results.chaos_events_handled = 5;
     results.performance_metrics.insert("chaos_recovery_time".to_string(), 0.3);
@@ -151,7 +150,7 @@ async fn execute_cleanup_phase(
     println!("🧹 Phase 5: Cleanup");
     
     // Simulate cleanup work
-    sleep(Duration::from_millis(50)).await;
+    tokio::task::yield_now().await;
     
     results.performance_metrics.insert("cleanup_time".to_string(), 0.05);
     println!("✅ Cleanup phase completed");

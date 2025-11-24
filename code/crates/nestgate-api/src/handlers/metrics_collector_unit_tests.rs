@@ -253,9 +253,9 @@ mod tests {
     fn test_system_snapshot_memory_utilization() {
         let snapshot = create_test_system_snapshot();
         let utilization =
-            (snapshot.memory_used_gb as f64 / snapshot.memory_total_gb as f64) * 100.0;
+            (f64::from(snapshot.memory_used_gb) / f64::from(snapshot.memory_total_gb)) * 100.0;
 
-        assert!(utilization >= 0.0 && utilization <= 100.0);
+        assert!((0.0..=100.0).contains(&utilization));
     }
 
     #[test]
@@ -263,7 +263,7 @@ mod tests {
         let snapshot = create_test_system_snapshot();
         let utilization = (snapshot.disk_used_gb as f64 / snapshot.disk_total_gb as f64) * 100.0;
 
-        assert!(utilization >= 0.0 && utilization <= 100.0);
+        assert!((0.0..=100.0).contains(&utilization));
     }
 
     // ==================== Edge Cases ====================
@@ -415,7 +415,7 @@ mod tests {
     #[test]
     fn test_pool_metrics_debug_format() {
         let pool = create_test_pool_metrics();
-        let debug_str = format!("{:?}", pool);
+        let debug_str = format!("{pool:?}");
 
         assert!(debug_str.contains("testpool"));
         assert!(debug_str.contains("ONLINE"));
@@ -424,7 +424,7 @@ mod tests {
     #[test]
     fn test_system_metrics_debug_format() {
         let metrics = create_test_system_metrics();
-        let debug_str = format!("{:?}", metrics);
+        let debug_str = format!("{metrics:?}");
 
         assert!(debug_str.contains("memory_usage"));
     }
@@ -432,7 +432,7 @@ mod tests {
     #[test]
     fn test_network_io_debug_format() {
         let net_io = create_test_network_io();
-        let debug_str = format!("{:?}", net_io);
+        let debug_str = format!("{net_io:?}");
 
         assert!(debug_str.contains("bytes_sent"));
     }

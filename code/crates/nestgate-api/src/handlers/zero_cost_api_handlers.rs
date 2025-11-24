@@ -11,12 +11,51 @@ use axum::{
     Router,
 };
 use nestgate_core::error::NestGateError;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::HashMap;
 use std::marker::PhantomData;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::RwLock;
+
+/// **SERDE HELPERS FOR ARC TYPES**
+/// Zero-copy serialization for Arc-wrapped types
+mod arc_string_serde {
+    use super::{Arc, Deserialize, Deserializer, Serialize, Serializer};
+    pub fn serialize<S>(value: &Arc<String>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        value.as_str().serialize(serializer)
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Arc<String>, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        String::deserialize(deserializer).map(Arc::new)
+    }
+}
+
+mod arc_hashmap_serde {
+    use super::{Arc, Deserialize, Deserializer, HashMap, Serialize, Serializer};
+    pub fn serialize<S>(
+        value: &Arc<HashMap<String, String>>,
+        serializer: S,
+    ) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        value.as_ref().serialize(serializer)
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Arc<HashMap<String, String>>, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        HashMap::deserialize(deserializer).map(Arc::new)
+    }
+}
 
 /// **ZERO-COST API HANDLER TRAIT**
 ///
@@ -39,12 +78,14 @@ pub trait ZeroCostApiHandler<T> {
 pub struct ZeroCostApiRequest<T> {
     /// Request payload data
     pub data: T,
-    /// Unique request identifier for tracing
-    pub request_id: String,
+    /// Unique request identifier for tracing (Arc for zero-copy sharing)
+    #[serde(with = "arc_string_serde")]
+    pub request_id: Arc<String>,
     /// Request timestamp
     pub timestamp: std::time::SystemTime,
-    /// Request metadata for extensibility
-    pub _metadata: HashMap<String, String>,
+    /// Request metadata for extensibility (Arc for zero-copy sharing)
+    #[serde(with = "arc_hashmap_serde")]
+    pub _metadata: Arc<HashMap<String, String>>,
 }
 
 /// **ZERO-COST API RESPONSE**
@@ -54,8 +95,9 @@ pub struct ZeroCostApiRequest<T> {
 pub struct ZeroCostApiResponse<T> {
     /// Response payload data
     pub data: T,
-    /// Request identifier for correlation
-    pub request_id: String,
+    /// Request identifier for correlation (Arc for zero-copy sharing)
+    #[serde(with = "arc_string_serde")]
+    pub request_id: Arc<String>,
     /// Response status information
     pub status: ApiStatus,
     /// Processing time in milliseconds
@@ -88,8 +130,8 @@ pub enum ApiStatus {
 /// **ZERO-COST POOL HANDLER WITH COMPILE-TIME CONFIGURATION**
 /// **PERFORMANCE**: Const generics eliminate runtime configuration overhead
 pub struct ZeroCostPoolHandler<const MAX_REQUESTS: usize, const TIMEOUT_MS: u64> {
-    /// Request cache with compile-time capacity
-    request_cache: Arc<RwLock<HashMap<String, CachedRequest>>>,
+    /// Request cache with compile-time capacity (Arc<String> keys for zero-copy)
+    request_cache: Arc<RwLock<HashMap<Arc<String>, CachedRequest>>>,
     /// Configuration phantom
     _config: PhantomData<()>,
 }
@@ -275,16 +317,16 @@ impl<const MAX_REQUESTS: usize, const TIMEOUT_MS: u64>
                 if cache.len() >= MAX_REQUESTS {
                     // Remove oldest entry
                     if let Some((oldest_key, _)) = cache.iter().min_by_key(|(_, v)| v.timestamp) {
-                        let oldest_key = oldest_key.clone(); // Clone needed for HashMap::remove
+                        let oldest_key = Arc::clone(oldest_key); // Arc clone is cheap (just ref count)
                         cache.remove(&oldest_key);
                     }
                 }
 
                 cache.insert(
-                    request.request_id.clone(),
+                    Arc::clone(&request.request_id), // Arc clone is cheap
                     CachedRequest {
                         timestamp: request.timestamp,
-                        _metadata: request._metadata.clone(),
+                        _metadata: Arc::clone(&request._metadata), // Arc clone is cheap
                     },
                 );
             }
@@ -299,7 +341,7 @@ impl<const MAX_REQUESTS: usize, const TIMEOUT_MS: u64>
         match result {
             Ok(Ok(data)) => Ok(ZeroCostApiResponse {
                 data,
-                request_id: request.request_id,
+                request_id: request.request_id, // Move Arc (no clone needed)
                 status: ApiStatus::Success,
                 processing_time_ms: processing_time,
                 _metadata: HashMap::new(),
@@ -311,10 +353,11 @@ impl<const MAX_REQUESTS: usize, const TIMEOUT_MS: u64>
 }
 
 /// **CACHED REQUEST STRUCTURE**
+/// Uses Arc for zero-copy metadata sharing
 #[derive(Debug, Clone)]
 struct CachedRequest {
     timestamp: std::time::SystemTime,
-    _metadata: HashMap<String, String>,
+    _metadata: Arc<HashMap<String, String>>,
 }
 /// **ZERO-COST DATASET HANDLER**
 ///

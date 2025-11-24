@@ -71,11 +71,11 @@ pub struct CanonicalFailoverConfig {
 impl Default for CanonicalFailoverConfig {
     fn default() -> Self {
         use crate::constants::NODE_FAILURE_TIMEOUT_SECS;
-        
+
         Self {
             auto_takeover_enabled: true,
             health_check_interval_secs: 30,
-            takeover_timeout_secs: 300,     // 5 minutes
+            takeover_timeout_secs: 300, // 5 minutes
             node_failure_timeout_secs: NODE_FAILURE_TIMEOUT_SECS,
             max_takeover_attempts: 3,
             failback_enabled: true,
@@ -88,20 +88,23 @@ impl Default for CanonicalFailoverConfig {
 /// Notification configuration for failover events
 #[derive(Debug, Clone, Serialize, Deserialize)]
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
-/// 
+///
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::network::config::FailoverNotificationConfig;
-/// 
+///
 /// // NEW (canonical):
 /// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 /// // Or use type alias for compatibility:
 /// use crate::network::config::FailoverNotificationConfig; // Now aliases to CanonicalNetworkConfig
 /// ```
-/// 
+///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+#[deprecated(
+    since = "0.11.0",
+    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
 pub struct FailoverNotificationConfig {
     pub email_enabled: bool,
     pub email_recipients: Vec<String>,
@@ -459,17 +462,17 @@ impl NodeHealthMonitor {
     }
 }
 
-
 // ==================== CANONICAL TYPE ALIAS ====================
 // This type now aliases to the canonical network configuration
 // Original struct definition kept above for reference and backward compatibility
 
 /// Type alias to canonical network configuration
-/// 
+///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
-pub type FailoverNotificationConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+pub type FailoverNotificationConfigCanonical =
+    nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using FailoverNotificationConfig (the deprecated struct) for now.
 // We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.

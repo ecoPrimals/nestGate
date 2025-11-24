@@ -290,6 +290,9 @@ pub enum ReplicationStrategy {
     Quantum,
 }
 /// Data stream trait
+///
+/// NOTE: Uses `Pin<Box<dyn Future>>` for object safety (dyn compatibility).
+/// Cannot use `impl Future` as this trait needs to be dyn-compatible for trait objects.
 pub trait DataStream: Send + Sync {
     fn read_chunk(
         &mut self,
@@ -431,6 +434,9 @@ impl TemporalDevice {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::HashMap;
+
+    // ==================== TEMPORAL DEVICE TESTS ====================
 
     #[tokio::test]
     async fn test_temporal_device_detection() {
@@ -447,6 +453,28 @@ mod tests {
     }
 
     #[test]
+    fn test_temporal_device_creation() {
+        let device = TemporalDevice {
+            era: StorageEra::Modern,
+            technology: StorageTechnology::NVMe,
+            capacity_mb: 1024 * 1024, // 1TB
+            performance_tier: PerformanceTier::Ultra,
+            physical_dimensions: PhysicalDimensions {
+                width_mm: 100.0,
+                height_mm: 70.0,
+                depth_mm: 7.0,
+            },
+            supported_formats: vec!["ext4".to_string(), "xfs".to_string()],
+            metadata: HashMap::new(),
+        };
+
+        assert_eq!(device.capacity_mb, 1024 * 1024);
+        assert_eq!(device.supported_formats.len(), 2);
+    }
+
+    // ==================== STORAGE ERA TESTS ====================
+
+    #[test]
     fn test_storage_era_classification() {
         let punch_card = StorageEra::Prehistoric;
         let nvme = StorageEra::Modern;
@@ -455,5 +483,341 @@ mod tests {
         assert_eq!(punch_card, StorageEra::Prehistoric);
         assert_eq!(nvme, StorageEra::Modern);
         assert_eq!(dna, StorageEra::Biological);
+    }
+
+    #[test]
+    fn test_storage_era_all_variants() {
+        let eras = vec![
+            StorageEra::Prehistoric,
+            StorageEra::Magnetic,
+            StorageEra::Digital,
+            StorageEra::Modern,
+            StorageEra::Biological,
+            StorageEra::Quantum,
+        ];
+        assert_eq!(eras.len(), 6);
+    }
+
+    #[test]
+    fn test_storage_era_equality() {
+        assert_eq!(StorageEra::Modern, StorageEra::Modern);
+        assert_ne!(StorageEra::Modern, StorageEra::Prehistoric);
+    }
+
+    // ==================== STORAGE TECHNOLOGY TESTS ====================
+
+    #[test]
+    fn test_storage_technology_variants() {
+        let techs = vec![
+            StorageTechnology::PunchCard,
+            StorageTechnology::Floppy,
+            StorageTechnology::MagneticTape,
+            StorageTechnology::HardDisk,
+            StorageTechnology::SolidState,
+            StorageTechnology::NVMe,
+            StorageTechnology::Dna,
+            StorageTechnology::Quantum,
+        ];
+        assert_eq!(techs.len(), 8);
+    }
+
+    // ==================== PERFORMANCE TIER TESTS ====================
+
+    #[test]
+    fn test_performance_tier_variants() {
+        let tiers = vec![
+            PerformanceTier::Low,
+            PerformanceTier::Medium,
+            PerformanceTier::High,
+            PerformanceTier::Ultra,
+        ];
+        assert_eq!(tiers.len(), 4);
+    }
+
+    // ==================== PHYSICAL DIMENSIONS TESTS ====================
+
+    #[test]
+    fn test_physical_dimensions_creation() {
+        let dims = PhysicalDimensions {
+            width_mm: 250.0,
+            height_mm: 150.0,
+            depth_mm: 10.0,
+        };
+        assert_eq!(dims.width_mm, 250.0);
+        assert_eq!(dims.height_mm, 150.0);
+        assert_eq!(dims.depth_mm, 10.0);
+    }
+
+    #[test]
+    fn test_physical_dimensions_volume_calculation() {
+        let dims = PhysicalDimensions {
+            width_mm: 100.0,
+            height_mm: 50.0,
+            depth_mm: 20.0,
+        };
+        let volume = dims.width_mm * dims.height_mm * dims.depth_mm;
+        assert_eq!(volume, 100_000.0); // 100 * 50 * 20
+    }
+
+    // ==================== CONNECTION HANDLE TESTS ====================
+
+    #[test]
+    fn test_connection_handle_creation() {
+        let handle = ConnectionHandle {
+            connection_id: "conn-123".to_string(),
+            source_type: DataSourceType::LocalDevice {},
+            status: ConnectionStatus::Connected,
+            capabilities: vec!["read".to_string(), "write".to_string()],
+        };
+        assert_eq!(handle.connection_id, "conn-123");
+        assert_eq!(handle.capabilities.len(), 2);
+    }
+
+    // ==================== CONNECTION STATUS TESTS ====================
+
+    #[test]
+    fn test_connection_status_variants() {
+        let statuses = vec![
+            ConnectionStatus::Connected,
+            ConnectionStatus::Disconnected,
+            ConnectionStatus::Error("timeout".to_string()),
+            ConnectionStatus::Connecting,
+        ];
+        assert_eq!(statuses.len(), 4);
+    }
+
+    // ==================== DATA DESCRIPTOR TESTS ====================
+
+    #[test]
+    fn test_data_descriptor_creation() {
+        let mut metadata = HashMap::new();
+        metadata.insert("author".to_string(), "test-user".to_string());
+
+        let descriptor = DataDescriptor {
+            id: "data-001".to_string(),
+            data_type: DataType::Genome,
+            size_bytes: 1024 * 1024 * 100, // 100MB
+            source_location: "s3://bucket/path".to_string(),
+            metadata,
+            access_requirements: AccessRequirements {
+                authentication: None,
+                rate_limits: None,
+                geographic_restrictions: vec![],
+                legal_requirements: vec![],
+            },
+        };
+
+        assert_eq!(descriptor.id, "data-001");
+        assert_eq!(descriptor.size_bytes, 1024 * 1024 * 100);
+    }
+
+    // ==================== DATA TYPE TESTS ====================
+
+    #[test]
+    fn test_data_type_genomic_variants() {
+        let types = vec![
+            DataType::Genome,
+            DataType::Sequence,
+            DataType::Variants,
+            DataType::Annotations,
+        ];
+        assert_eq!(types.len(), 4);
+    }
+
+    #[test]
+    fn test_data_type_ai_ml_variants() {
+        let types = vec![
+            DataType::Model(ModelType::Language),
+            DataType::Dataset(DatasetType::Training),
+            DataType::Weights,
+            DataType::Configuration,
+        ];
+        assert_eq!(types.len(), 4);
+    }
+
+    // ==================== MODEL TYPE TESTS ====================
+
+    #[test]
+    fn test_model_type_variants() {
+        let models = vec![
+            ModelType::Language,
+            ModelType::Vision,
+            ModelType::Audio,
+            ModelType::Multimodal,
+            ModelType::Reinforcement,
+            ModelType::Custom("custom-model".to_string()),
+        ];
+        assert_eq!(models.len(), 6);
+    }
+
+    // ==================== DATASET TYPE TESTS ====================
+
+    #[test]
+    fn test_dataset_type_variants() {
+        let datasets = vec![
+            DatasetType::Training,
+            DatasetType::Validation,
+            DatasetType::Test,
+            DatasetType::Benchmark,
+            DatasetType::Synthetic,
+            DatasetType::RealWorld,
+        ];
+        assert_eq!(datasets.len(), 6);
+    }
+
+    // ==================== ACCESS REQUIREMENTS TESTS ====================
+
+    #[test]
+    fn test_access_requirements_no_restrictions() {
+        let access = AccessRequirements {
+            authentication: None,
+            rate_limits: None,
+            geographic_restrictions: vec![],
+            legal_requirements: vec![],
+        };
+        assert!(access.authentication.is_none());
+        assert!(access.rate_limits.is_none());
+        assert!(access.geographic_restrictions.is_empty());
+    }
+
+    #[test]
+    fn test_access_requirements_with_auth() {
+        let access = AccessRequirements {
+            authentication: Some(AuthenticationMethod::APIKey("key-123".to_string())),
+            rate_limits: Some(RateLimits {
+                requests_per_second: 100,
+                bandwidth_limit_mbs: Some(50),
+                daily_quota: Some(1_000_000),
+            }),
+            geographic_restrictions: vec!["US".to_string(), "EU".to_string()],
+            legal_requirements: vec!["GDPR".to_string()],
+        };
+        assert!(access.authentication.is_some());
+        assert!(access.rate_limits.is_some());
+        assert_eq!(access.geographic_restrictions.len(), 2);
+    }
+
+    // ==================== AUTHENTICATION METHOD TESTS ====================
+
+    #[test]
+    fn test_authentication_method_variants() {
+        let auth_methods = vec![
+            AuthenticationMethod::APIKey("key".to_string()),
+            AuthenticationMethod::OAuth2 {
+                client_id: "client".to_string(),
+                scope: vec!["read".to_string()],
+            },
+            AuthenticationMethod::BasicAuth {
+                username: "user".to_string(),
+                password: "pass".to_string(),
+            },
+            AuthenticationMethod::Certificate {},
+            AuthenticationMethod::None,
+        ];
+        assert_eq!(auth_methods.len(), 5);
+    }
+
+    // ==================== RATE LIMITS TESTS ====================
+
+    #[test]
+    fn test_rate_limits_creation() {
+        let limits = RateLimits {
+            requests_per_second: 1000,
+            bandwidth_limit_mbs: Some(100),
+            daily_quota: Some(10_000_000),
+        };
+        assert_eq!(limits.requests_per_second, 1000);
+        assert_eq!(limits.bandwidth_limit_mbs, Some(100));
+        assert_eq!(limits.daily_quota, Some(10_000_000));
+    }
+
+    // ==================== VALIDATION STATUS TESTS ====================
+
+    #[test]
+    fn test_validation_status_variants() {
+        let statuses = vec![
+            ValidationStatus::Valid,
+            ValidationStatus::Invalid("bad checksum".to_string()),
+            ValidationStatus::Unvalidated,
+            ValidationStatus::PartiallyValid(vec!["warning1".to_string()]),
+        ];
+        assert_eq!(statuses.len(), 4);
+    }
+
+    // ==================== SERIALIZATION TESTS ====================
+
+    #[test]
+    fn test_storage_era_serialization() {
+        use serde_json;
+        let era = StorageEra::Modern;
+        let serialized = serde_json::to_string(&era);
+        assert!(serialized.is_ok());
+        let deserialized: std::result::Result<StorageEra, _> =
+            serde_json::from_str(&serialized.unwrap());
+        assert!(deserialized.is_ok());
+    }
+
+    #[test]
+    fn test_connection_status_serialization() {
+        use serde_json;
+        let status = ConnectionStatus::Connected;
+        let serialized = serde_json::to_string(&status);
+        assert!(serialized.is_ok());
+    }
+
+    #[test]
+    fn test_data_type_serialization() {
+        use serde_json;
+        let data_type = DataType::Genome;
+        let serialized = serde_json::to_string(&data_type);
+        assert!(serialized.is_ok());
+    }
+
+    // ==================== EDGE CASES ====================
+
+    #[test]
+    fn test_temporal_device_zero_capacity() {
+        let device = TemporalDevice {
+            era: StorageEra::Prehistoric,
+            technology: StorageTechnology::PunchCard,
+            capacity_mb: 0, // Zero capacity
+            performance_tier: PerformanceTier::Low,
+            physical_dimensions: PhysicalDimensions {
+                width_mm: 180.0,
+                height_mm: 83.0,
+                depth_mm: 0.18,
+            },
+            supported_formats: vec![],
+            metadata: HashMap::new(),
+        };
+        assert_eq!(device.capacity_mb, 0);
+    }
+
+    #[test]
+    fn test_temporal_device_huge_capacity() {
+        let device = TemporalDevice {
+            era: StorageEra::Quantum,
+            technology: StorageTechnology::Quantum,
+            capacity_mb: u64::MAX, // Maximum capacity
+            performance_tier: PerformanceTier::Ultra,
+            physical_dimensions: PhysicalDimensions {
+                width_mm: 1.0,
+                height_mm: 1.0,
+                depth_mm: 1.0,
+            },
+            supported_formats: vec!["quantum".to_string()],
+            metadata: HashMap::new(),
+        };
+        assert_eq!(device.capacity_mb, u64::MAX);
+    }
+
+    #[test]
+    fn test_rate_limits_extreme_values() {
+        let limits = RateLimits {
+            requests_per_second: u32::MAX,
+            bandwidth_limit_mbs: Some(u32::MAX),
+            daily_quota: Some(u64::MAX),
+        };
+        assert_eq!(limits.requests_per_second, u32::MAX);
     }
 }

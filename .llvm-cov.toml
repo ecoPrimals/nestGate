@@ -1,0 +1,62 @@
+# llvm-cov Configuration for NestGate
+# This ensures consistent coverage measurement across all runs
+
+[llvm-cov]
+# Measure all workspace members
+workspace = true
+
+# Include all features to get complete coverage
+all-features = true
+
+# Generate HTML report by default
+html = true
+
+# Output directory for HTML reports
+output-dir = "coverage"
+
+# Also show summary in terminal
+summary-only = false
+
+# Show percentages with 2 decimal places
+precision = 2
+
+# Fail if coverage is below threshold (disabled for now, enable when ready)
+# fail-under-lines = 90
+# fail-under-functions = 85
+# fail-under-regions = 80
+
+# Include doc tests in coverage
+doctests = false  # Enable when we add doc tests
+
+# Show branch coverage (more detailed)
+branch = true
+
+# Exclude files/directories from coverage
+# Note: Test code in tests/ is automatically excluded
+exclude = [
+    # Test utilities and mocks
+    "*/tests/*",
+    "*/test_*",
+    "*_test.rs",
+    "*_tests.rs",
+    
+    # Benchmarks and examples
+    "*/benches/*",
+    "*/examples/*",
+    
+    # Build scripts
+    "build.rs",
+    "*/build.rs",
+    
+    # Generated code
+    "*/target/*",
+    
+    # Archive and fossil record
+    "*/archive/*",
+    "*/fossil/*",
+]
+
+# Show these file types in report
+include-ffi = false
+include-build-script = false
+

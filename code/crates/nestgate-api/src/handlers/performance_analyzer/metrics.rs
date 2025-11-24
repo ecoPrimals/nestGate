@@ -119,3 +119,127 @@ pub enum MetricsError {
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_system_metrics_collector_new() {
+        let collector = SystemMetricsCollector::new(60);
+        assert_eq!(collector.interval_seconds, 60);
+    }
+
+    #[tokio::test]
+    async fn test_collect_metrics() {
+        let collector = SystemMetricsCollector::new(5);
+        let metrics = collector
+            .collect_metrics()
+            .await
+            .expect("Should collect metrics");
+
+        assert!(metrics.cpu_usage_percent >= 0.0);
+        assert!(metrics.memory_usage_bytes > 0);
+    }
+
+    #[test]
+    fn test_system_metrics_serialization() {
+        let metrics = SystemMetrics {
+            cpu_usage_percent: 45.5,
+            memory_usage_bytes: 2 * 1024 * 1024 * 1024,
+            disk_io_metrics: DiskIOMetrics {
+                read_bytes_per_sec: 1024 * 1024,
+                write_bytes_per_sec: 512 * 1024,
+                read_ops_per_sec: 100,
+                write_ops_per_sec: 50,
+            },
+            network_metrics: NetworkMetrics {
+                rx_bytes_per_sec: 1024 * 1024,
+                tx_bytes_per_sec: 512 * 1024,
+                rx_packets_per_sec: 1000,
+                tx_packets_per_sec: 800,
+            },
+            timestamp: std::time::SystemTime::now(),
+        };
+
+        let json = serde_json::to_string(&metrics).expect("Should serialize");
+        let deserialized: SystemMetrics = serde_json::from_str(&json).expect("Should deserialize");
+
+        assert_eq!(metrics.cpu_usage_percent, deserialized.cpu_usage_percent);
+        assert_eq!(metrics.memory_usage_bytes, deserialized.memory_usage_bytes);
+    }
+
+    #[test]
+    fn test_disk_io_metrics_creation() {
+        let metrics = DiskIOMetrics {
+            read_bytes_per_sec: 2 * 1024 * 1024,
+            write_bytes_per_sec: 1024 * 1024,
+            read_ops_per_sec: 200,
+            write_ops_per_sec: 150,
+        };
+
+        assert_eq!(metrics.read_bytes_per_sec, 2 * 1024 * 1024);
+        assert_eq!(metrics.write_bytes_per_sec, 1024 * 1024);
+        assert_eq!(metrics.read_ops_per_sec, 200);
+        assert_eq!(metrics.write_ops_per_sec, 150);
+    }
+
+    #[test]
+    fn test_network_metrics_creation() {
+        let metrics = NetworkMetrics {
+            rx_bytes_per_sec: 10 * 1024 * 1024,
+            tx_bytes_per_sec: 5 * 1024 * 1024,
+            rx_packets_per_sec: 5000,
+            tx_packets_per_sec: 3000,
+        };
+
+        assert_eq!(metrics.rx_bytes_per_sec, 10 * 1024 * 1024);
+        assert_eq!(metrics.tx_bytes_per_sec, 5 * 1024 * 1024);
+    }
+
+    #[test]
+    fn test_metrics_error_system_read() {
+        let error = MetricsError::SystemRead("Test error".to_string());
+        let error_str = error.to_string();
+        assert!(error_str.contains("Failed to read system metrics"));
+    }
+
+    #[test]
+    fn test_metrics_error_parse() {
+        let error = MetricsError::Parse("Invalid value".to_string());
+        let error_str = error.to_string();
+        assert!(error_str.contains("Parse error"));
+    }
+
+    #[test]
+    fn test_disk_io_metrics_serialization() {
+        let metrics = DiskIOMetrics {
+            read_bytes_per_sec: 1024,
+            write_bytes_per_sec: 512,
+            read_ops_per_sec: 10,
+            write_ops_per_sec: 5,
+        };
+
+        let json = serde_json::to_string(&metrics).expect("Should serialize");
+        let deserialized: DiskIOMetrics = serde_json::from_str(&json).expect("Should deserialize");
+
+        assert_eq!(metrics.read_bytes_per_sec, deserialized.read_bytes_per_sec);
+        assert_eq!(metrics.write_ops_per_sec, deserialized.write_ops_per_sec);
+    }
+
+    #[test]
+    fn test_network_metrics_serialization() {
+        let metrics = NetworkMetrics {
+            rx_bytes_per_sec: 2048,
+            tx_bytes_per_sec: 1024,
+            rx_packets_per_sec: 100,
+            tx_packets_per_sec: 50,
+        };
+
+        let json = serde_json::to_string(&metrics).expect("Should serialize");
+        let deserialized: NetworkMetrics = serde_json::from_str(&json).expect("Should deserialize");
+
+        assert_eq!(metrics.rx_bytes_per_sec, deserialized.rx_bytes_per_sec);
+        assert_eq!(metrics.tx_packets_per_sec, deserialized.tx_packets_per_sec);
+    }
+}

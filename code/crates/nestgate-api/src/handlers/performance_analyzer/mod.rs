@@ -32,3 +32,6 @@ pub use types::*;
 
 // TEMP_DISABLED: #[cfg(test)]
 // TEMP_DISABLED: mod metrics_tests;
+
+#[cfg(test)]
+mod reports_tests;

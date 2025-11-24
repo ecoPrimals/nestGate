@@ -5,6 +5,8 @@
 pub mod defaults;
 pub mod monitor;
 pub mod types;
+#[cfg(test)]
+mod types_tests;
 
 // Re-export all public types and functions
 

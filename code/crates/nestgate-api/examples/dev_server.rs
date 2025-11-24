@@ -1,6 +1,6 @@
 //! **OUTDATED EXAMPLE - NEEDS UPDATE**
 //!
-//! This example demonstrates how to set up and run the NestGate API server
+//! This example demonstrates how to set up and run the `NestGate` API server
 //! with full ZFS integration for development and testing purposes.
 //!
 //! **Status**: ⚠️ OUTDATED - APIs have changed since this was written
@@ -10,15 +10,16 @@
 //! **Current API Usage**:
 //! See `nestgate-api/src/routes/mod.rs` for `create_router()` and `AppState`
 //!
-//! This example is excluded from compilation until updated.
-
-// TODO: Update this example to use current APIs
-// See: nestgate-api::routes::create_router and nestgate-api::routes::AppState
+//! **Update Status**: Deferred to examples refresh phase
+//! **Priority**: Low (documentation/examples)
+//!
+//! This example is excluded from compilation pending API stabilization.
+//! Current working examples can be found in integration tests.
 
 fn main() {
     eprintln!("⚠️  This example is outdated and needs to be updated.");
     eprintln!("See the comment at the top of this file for details.");
-    eprintln!("");
+    eprintln!();
     eprintln!("For current API usage, see:");
     eprintln!("  - code/crates/nestgate-api/src/routes/mod.rs");
     eprintln!("  - code/crates/nestgate-api/src/handlers/");

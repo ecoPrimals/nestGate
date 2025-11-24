@@ -6,11 +6,13 @@
 /// - Performance optimization during transitions
 /// - Data integrity validation across tiers
 /// - Concurrent access during tier changes
+///
+/// **MODERN CONCURRENCY**: Uses yield_now() for async coordination instead of sleep().
 
 use std::collections::HashMap;
 
-use std::time::{Duration, SystemTime};
-use tokio::time::{sleep, timeout};
+use std::time::SystemTime;
+use tokio::time::timeout;
 
 use nestgate_core::{
 
@@ -209,7 +211,7 @@ mod tier_prediction_tests {
         
         let migration_task = tokio::spawn(async move {
             // Simulate slow migration
-            sleep(Duration::from_millis(100)).await;
+            tokio::task::yield_now().await;
             let content = source_clone.read_file(&file_name_clone).await?;
             dest_clone.write_file(&file_name_clone, &content).await?;
         });
@@ -218,7 +220,7 @@ mod tier_prediction_tests {
             let source_clone = source_backend.clone();
             let file_name_clone = file_name.to_string();
             tokio::spawn(async move {
-                sleep(Duration::from_millis(i * 20)).await;
+                tokio::task::yield_now().await;
                 source_clone.read_file(&file_name_clone).await
             })
         }).collect();

@@ -378,7 +378,12 @@ impl Default for NetworkDiscoverySettings {
             mdns_enabled: true,
             mdns_service_name: "_nestgate._tcp".to_string(),
             broadcast_enabled: false,
-            discovery_port_range: (ports::HTTP_DEFAULT, ports::ADMIN_DEFAULT),
+            // ✅ MIGRATED: Use centralized config for port ranges
+            discovery_port_range: {
+                use nestgate_core::config::runtime::get_config;
+                let config = get_config();
+                (config.network.api_port, config.network.api_port + 100)
+            },
             discovery_timeout: Duration::from_secs(5),
         }
     }
@@ -469,14 +474,12 @@ impl Default for CircuitBreakerSettings {
 
 impl Default for PrimalEndpointSettings {
     fn default() -> Self { 
-        use nestgate_core::constants::hardcoding::{addresses, ports};
-        use std::env;
+        // ✅ MIGRATED: Now uses centralized runtime configuration
+        use nestgate_core::config::runtime::get_config;
         
-        let host = env::var("NESTGATE_API_HOST")
-            .unwrap_or_else(|_| addresses::LOCALHOST_NAME.to_string());
-        let port = env::var("NESTGATE_API_PORT")
-            .ok()
-            .and_then(|s| s.parse().ok())
+        let config = get_config();
+        let host = config.network.api_host.to_string();
+        let port = config.network.api_port
             .unwrap_or(ports::HTTP_DEFAULT);
         
         Self {

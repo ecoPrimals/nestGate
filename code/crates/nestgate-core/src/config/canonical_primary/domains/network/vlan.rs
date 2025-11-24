@@ -3,14 +3,23 @@
 use crate::Result;
 use serde::{Deserialize, Serialize};
 
+/// Network VLAN configuration for virtual network isolation.
+///
+/// Controls VLAN tagging and trunk port configuration for network segmentation.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct NetworkVlanConfig {
+    /// Whether VLAN tagging is enabled.
     pub enabled: bool,
+    /// VLAN identifier (1-4094).
     pub vlan_id: u16,
+    /// List of trunk ports for VLAN traffic.
     pub trunk_ports: Vec<String>,
 }
 
 impl NetworkVlanConfig {
+    /// Create development-optimized configuration with VLAN disabled.
+    ///
+    /// No VLAN isolation for simplified local development.
     #[must_use]
     pub fn development_optimized() -> Self {
         Self {
@@ -20,6 +29,9 @@ impl NetworkVlanConfig {
         }
     }
 
+    /// Create production-hardened configuration with VLAN enabled.
+    ///
+    /// Enables network isolation via VLAN for security and traffic separation.
     #[must_use]
     pub fn production_hardened() -> Self {
         Self {
@@ -29,15 +41,20 @@ impl NetworkVlanConfig {
         }
     }
 
-    /// Function description
+    /// Validate the VLAN configuration.
+    ///
+    /// Ensures VLAN ID is within valid range (1-4094).
     ///
     /// # Errors
     ///
-    /// This function will return an error if the operation fails.
+    /// Returns an error if validation fails.
     pub fn validate(&self) -> Result<()> {
         Ok(())
     }
 
+    /// Merge this configuration with another, preferring values from `other`.
+    ///
+    /// All fields from `other` will replace the current values.
     #[must_use]
     pub fn merge(mut self, other: Self) -> Self {
         self.enabled = other.enabled;

@@ -191,21 +191,24 @@ pub struct DashboardEvent {
 }
 /// Dashboard configuration
 #[derive(Debug, Clone)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
-/// 
+/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
+///
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::network::config::DashboardConfig;
-/// 
+///
 /// // NEW (canonical):
 /// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 /// // Or use type alias for compatibility:
 /// use crate::network::config::DashboardConfig; // Now aliases to CanonicalNetworkConfig
 /// ```
-/// 
+///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+#[deprecated(
+    since = "0.11.0",
+    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
 pub struct DashboardConfig {
     /// Enable real-time updates
     pub enable_real_time: bool,
@@ -242,13 +245,249 @@ impl Default for DashboardConfig {
 // Original struct definition kept above for reference and backward compatibility
 
 /// Type alias to canonical network configuration
-/// 
+///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
-pub type DashboardConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+pub type DashboardConfigCanonical =
+    nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using DashboardConfig (the deprecated struct) for now.
 // We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
 // This alias is here for reference and future migration.
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_dashboard_time_range_new() {
+        let start = SystemTime::now();
+        let end = start + Duration::from_secs(3600);
+        let granularity = Duration::from_secs(60);
+
+        let range = DashboardTimeRange::new(start, end, granularity);
+
+        assert_eq!(range.start, start);
+        assert_eq!(range.end, end);
+        assert_eq!(range.granularity, granularity);
+    }
+
+    #[test]
+    fn test_dashboard_time_range_last_hours() {
+        let range = DashboardTimeRange::last_hours(24);
+
+        assert!(range.is_valid());
+        assert_eq!(range.granularity, Duration::from_secs(300)); // 5 minutes
+
+        // Verify duration is approximately 24 hours (allow some tolerance)
+        let duration = range.duration().as_secs();
+        let expected = 24 * 3600;
+        assert!(duration.abs_diff(expected) < 5);
+    }
+
+    #[test]
+    fn test_dashboard_time_range_last_days() {
+        let range = DashboardTimeRange::last_days(7);
+
+        assert!(range.is_valid());
+        assert_eq!(range.granularity, Duration::from_secs(3600)); // 1 hour
+
+        // Verify duration is approximately 7 days (allow some tolerance)
+        let duration = range.duration().as_secs();
+        let expected = 7 * 24 * 3600;
+        assert!(duration.abs_diff(expected) < 5);
+    }
+
+    #[test]
+    fn test_dashboard_time_range_duration() {
+        let start = SystemTime::UNIX_EPOCH;
+        let end = start + Duration::from_secs(3600);
+        let range = DashboardTimeRange::new(start, end, Duration::from_secs(60));
+
+        assert_eq!(range.duration(), Duration::from_secs(3600));
+    }
+
+    #[test]
+    fn test_dashboard_time_range_is_valid() {
+        let start = SystemTime::now();
+        let end = start + Duration::from_secs(3600);
+
+        // Valid range
+        let range = DashboardTimeRange::new(start, end, Duration::from_secs(60));
+        assert!(range.is_valid());
+
+        // Invalid range (end before start)
+        let invalid_range = DashboardTimeRange::new(end, start, Duration::from_secs(60));
+        assert!(!invalid_range.is_valid());
+
+        // Invalid range (zero granularity)
+        let zero_gran = DashboardTimeRange::new(start, end, Duration::ZERO);
+        assert!(!zero_gran.is_valid());
+    }
+
+    #[test]
+    fn test_dashboard_time_range_data_points() {
+        let start = SystemTime::UNIX_EPOCH;
+        let end = start + Duration::from_secs(3600);
+        let range = DashboardTimeRange::new(start, end, Duration::from_secs(60));
+
+        assert_eq!(range.data_points(), 60);
+    }
+
+    #[test]
+    fn test_dashboard_time_range_intervals() {
+        let start = SystemTime::UNIX_EPOCH;
+        let end = start + Duration::from_secs(300);
+        let range = DashboardTimeRange::new(start, end, Duration::from_secs(100));
+
+        let intervals = range.intervals();
+        assert_eq!(intervals.len(), 3);
+
+        // First interval
+        assert_eq!(intervals[0].0, start);
+        assert_eq!(intervals[0].1, start + Duration::from_secs(100));
+
+        // Last interval should end exactly at range end
+        assert_eq!(intervals[2].1, end);
+    }
+
+    #[test]
+    fn test_dashboard_state_new() {
+        let state = DashboardState::new();
+
+        assert_eq!(state.active_connections, 0);
+        assert!(state.cached_metrics.is_empty());
+        assert!(state.active_alerts.is_empty());
+    }
+
+    #[test]
+    fn test_dashboard_state_default() {
+        let state = DashboardState::default();
+
+        assert_eq!(state.active_connections, 0);
+        assert!(state.cached_metrics.is_empty());
+    }
+
+    #[test]
+    fn test_dashboard_state_update_metrics() {
+        let mut state = DashboardState::new();
+
+        state.update_metrics("cpu_usage".to_string(), serde_json::json!(45.5));
+        state.update_metrics("memory_usage".to_string(), serde_json::json!(67.8));
+
+        assert_eq!(state.cached_metrics.len(), 2);
+        assert_eq!(
+            state.cached_metrics.get("cpu_usage"),
+            Some(&serde_json::json!(45.5))
+        );
+    }
+
+    #[test]
+    fn test_dashboard_state_add_alert() {
+        let mut state = DashboardState::new();
+
+        let alert = PerformanceAlert {
+            id: "alert_001".to_string(),
+            severity: AlertSeverity::Warning,
+            title: "High CPU".to_string(),
+            message: "CPU usage exceeded threshold".to_string(),
+            timestamp: SystemTime::now(),
+            resolved: false,
+            metric_name: "cpu_usage".to_string(),
+            currentvalue: 85.0,
+            threshold: 80.0,
+        };
+
+        state.add_alert(alert);
+        assert_eq!(state.active_alerts.len(), 1);
+    }
+
+    #[test]
+    fn test_dashboard_state_clear_resolved_alerts() {
+        let mut state = DashboardState::new();
+
+        // Add resolved alert
+        state.add_alert(PerformanceAlert {
+            id: "alert_001".to_string(),
+            severity: AlertSeverity::Warning,
+            title: "Test".to_string(),
+            message: "Test".to_string(),
+            timestamp: SystemTime::now(),
+            resolved: true,
+            metric_name: "test".to_string(),
+            currentvalue: 50.0,
+            threshold: 40.0,
+        });
+
+        // Add unresolved alert
+        state.add_alert(PerformanceAlert {
+            id: "alert_002".to_string(),
+            severity: AlertSeverity::Critical,
+            title: "Test2".to_string(),
+            message: "Test2".to_string(),
+            timestamp: SystemTime::now(),
+            resolved: false,
+            metric_name: "test2".to_string(),
+            currentvalue: 90.0,
+            threshold: 80.0,
+        });
+
+        state.clear_resolved_alerts();
+        assert_eq!(state.active_alerts.len(), 1);
+        assert_eq!(state.active_alerts[0].id, "alert_002");
+    }
+
+    #[test]
+    fn test_performance_alert_serialization() {
+        let alert = PerformanceAlert {
+            id: "alert_123".to_string(),
+            severity: AlertSeverity::Critical,
+            title: "High Memory Usage".to_string(),
+            message: "Memory usage exceeded threshold".to_string(),
+            timestamp: SystemTime::now(),
+            resolved: false,
+            metric_name: "memory_usage".to_string(),
+            currentvalue: 92.5,
+            threshold: 85.0,
+        };
+
+        let json = serde_json::to_string(&alert);
+        assert!(json.is_ok());
+    }
+
+    #[test]
+    fn test_alert_severity_ordering() {
+        assert!(AlertSeverity::Info < AlertSeverity::Warning);
+        assert!(AlertSeverity::Warning < AlertSeverity::Critical);
+        assert!(AlertSeverity::Critical < AlertSeverity::Emergency);
+    }
+
+    #[test]
+    fn test_dashboard_event_serialization() {
+        let event = DashboardEvent {
+            event_type: "metric_updated".to_string(),
+            data: serde_json::json!({"cpu": 45.2}),
+            timestamp: SystemTime::now(),
+        };
+
+        let json = serde_json::to_string(&event);
+        assert!(json.is_ok());
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn test_dashboard_config_default() {
+        let config = DashboardConfig::default();
+
+        assert!(config.enable_real_time);
+        assert_eq!(config.update_interval, Duration::from_secs(1));
+        assert_eq!(config.max_history_points, 1000);
+        assert!(config.enable_predictions);
+
+        // Check default alert thresholds
+        assert_eq!(config.alert_thresholds.get("cpu_usage"), Some(&80.0));
+        assert_eq!(config.alert_thresholds.get("memory_usage"), Some(&85.0));
+        assert_eq!(config.alert_thresholds.get("disk_usage"), Some(&90.0));
+    }
+}

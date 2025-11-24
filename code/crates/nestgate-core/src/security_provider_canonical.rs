@@ -20,20 +20,23 @@
 //!
 //! # Usage
 //!
-//! ```rust
+//! ```rust,no_run
 //! use nestgate_core::security_provider_canonical::{
 //!     CanonicalSecurityProvider, SecurityProviderConfig
 //! };
-//! use nestgate_core::traits::canonical_unified_traits::CanonicalSecurity;
+//! use nestgate_core::traits::canonical_provider_unification::SecurityProvider;
 //!
+//! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 //! let provider = CanonicalSecurityProvider::new(
 //!     "my-provider".to_string(),
 //!     SecurityProviderConfig::default()
 //! );
 //!
-//! // Use with CanonicalSecurity trait
+//! // Use with SecurityProvider trait
 //! let credentials = b"username:password";
 //! let token = provider.authenticate(credentials).await?;
+//! # Ok(())
+//! # }
 //! ```
 
 #![allow(deprecated)]
@@ -51,20 +54,23 @@ use std::time::{Duration, SystemTime};
 /// Security provider configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
-/// 
+///
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::config::SecurityProviderConfig;
-/// 
+///
 /// // NEW (canonical):
 /// use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 /// // Or use type alias for compatibility:
 /// use crate::config::SecurityProviderConfig; // Now aliases to CanonicalNetworkConfig
 /// ```
-/// 
+///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+#[deprecated(
+    since = "0.11.0",
+    note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
 pub struct SecurityProviderConfig {
     /// Provider type identifier
     pub provider_type: String,
@@ -132,7 +138,7 @@ impl SecurityProvider for CanonicalSecurityProvider {
         &self,
         credentials: &[u8],
     ) -> impl std::future::Future<Output = Result<AuthToken>> + Send {
-        let id = self.id.clone();
+        let _id = self.id.clone();
         async move {
             // Parse credentials
             let (username, _password) = self.parse_credentials(credentials)?;
@@ -153,40 +159,29 @@ impl SecurityProvider for CanonicalSecurityProvider {
         }
     }
 
-    fn authorize(
-        &self,
-        token: &AuthToken,
-        data: &[u8],
-    ) -> impl std::future::Future<Output = Result<Vec<u8>>> + Send {
-        async move {
-            // Validate token is not expired
-            if SystemTime::now() > token.expires_at {
-                return Err(NestGateError::security_error("Token expired"));
-            }
-
-            // Basic authorization - return data if token is valid
-            Ok(data.to_vec())
+    async fn authorize(&self, token: &AuthToken, data: &[u8]) -> Result<Vec<u8>> {
+        // Validate token is not expired
+        if SystemTime::now() > token.expires_at {
+            return Err(NestGateError::security_error("Token expired"));
         }
+
+        // Basic authorization - return data if token is valid
+        Ok(data.to_vec())
     }
 
     // ===== TOKEN MANAGEMENT =====
 
-    fn validate_token(
-        &self,
-        token: &AuthToken,
-    ) -> impl std::future::Future<Output = Result<bool>> + Send {
-        async move {
-            // Check if token is expired
-            let is_valid = SystemTime::now() <= token.expires_at && !token.token.is_empty();
-            Ok(is_valid)
-        }
+    async fn validate_token(&self, token: &AuthToken) -> Result<bool> {
+        // Check if token is expired
+        let is_valid = SystemTime::now() <= token.expires_at && !token.token.is_empty();
+        Ok(is_valid)
     }
 
     fn refresh_token(
         &self,
         token: &AuthToken,
     ) -> impl std::future::Future<Output = Result<AuthToken>> + Send {
-        let id = self.id.clone();
+        let _id = self.id.clone();
         async move {
             // Validate current token
             if !self.validate_token(token).await? {
@@ -207,62 +202,44 @@ impl SecurityProvider for CanonicalSecurityProvider {
         }
     }
 
-    fn revoke_token(
-        &self,
-        _token: &AuthToken,
-    ) -> impl std::future::Future<Output = Result<()>> + Send {
-        async move {
-            // In production, this would add token to revocation list
-            // For now, just return success
-            Ok(())
-        }
+    async fn revoke_token(&self, _token: &AuthToken) -> Result<()> {
+        // In production, this would add token to revocation list
+        // For now, just return success
+        Ok(())
     }
 
     // ===== ENCRYPTION =====
 
-    fn encrypt(
-        &self,
-        data: &[u8],
-        algorithm: &str,
-    ) -> impl std::future::Future<Output = Result<Vec<u8>>> + Send {
-        async move {
-            // Basic implementation - in production would use real encryption
-            match algorithm {
-                "AES-256-GCM" | "ChaCha20-Poly1305" => {
-                    // Simple XOR for testing (not secure!)
-                    let encrypted: Vec<u8> = data.iter().map(|b| b ^ 0xAA).collect();
-                    Ok(encrypted)
-                }
-                _ => Err(NestGateError::security_error(&format!(
-                    "Unsupported encryption algorithm: {}",
-                    algorithm
-                ))),
+    async fn encrypt(&self, data: &[u8], algorithm: &str) -> Result<Vec<u8>> {
+        // Basic implementation - in production would use real encryption
+        match algorithm {
+            "AES-256-GCM" | "ChaCha20-Poly1305" => {
+                // Simple XOR for testing (not secure!)
+                let encrypted: Vec<u8> = data.iter().map(|b| b ^ 0xAA).collect();
+                Ok(encrypted)
             }
+            _ => Err(NestGateError::security_error(&format!(
+                "Unsupported encryption algorithm: {}",
+                algorithm
+            ))),
         }
     }
 
-    fn decrypt(
-        &self,
-        data: &[u8],
-    ) -> impl std::future::Future<Output = Result<Option<Vec<u8>>>> + Send {
-        async move {
-            // Simple XOR decryption (matches encrypt implementation)
-            let decrypted: Vec<u8> = data.iter().map(|b| b ^ 0xAA).collect();
-            Ok(Some(decrypted))
-        }
+    async fn decrypt(&self, data: &[u8]) -> Result<Option<Vec<u8>>> {
+        // Simple XOR decryption (matches encrypt implementation)
+        let decrypted: Vec<u8> = data.iter().map(|b| b ^ 0xAA).collect();
+        Ok(Some(decrypted))
     }
 
     // ===== SIGNING =====
 
-    fn sign(&self, data: &[u8]) -> impl std::future::Future<Output = Result<()>> + Send {
-        async move {
-            // In production, would generate and store signature
-            // For now, just validate data is not empty
-            if data.is_empty() {
-                return Err(NestGateError::security_error("Cannot sign empty data"));
-            }
-            Ok(())
+    async fn sign(&self, data: &[u8]) -> Result<()> {
+        // In production, would generate and store signature
+        // For now, just validate data is not empty
+        if data.is_empty() {
+            return Err(NestGateError::security_error("Cannot sign empty data"));
         }
+        Ok(())
     }
 
     fn verify(
@@ -289,54 +266,39 @@ impl SecurityProvider for CanonicalSecurityProvider {
         async move { Ok(format!("key-{}", id)) }
     }
 
-    fn supported_algorithms(
-        &self,
-    ) -> impl std::future::Future<Output = Result<Vec<String>>> + Send {
-        async move {
-            Ok(vec![
-                "AES-256-GCM".to_string(),
-                "ChaCha20-Poly1305".to_string(),
-                "RS256".to_string(),
-                "ES256".to_string(),
-                "SHA-256".to_string(),
-            ])
-        }
+    async fn supported_algorithms(&self) -> Result<Vec<String>> {
+        Ok(vec![
+            "AES-256-GCM".to_string(),
+            "ChaCha20-Poly1305".to_string(),
+            "RS256".to_string(),
+            "ES256".to_string(),
+            "SHA-256".to_string(),
+        ])
     }
 
     // ===== UTILITIES =====
 
-    fn hash_data(
-        &self,
-        data: &[u8],
-        algorithm: &str,
-    ) -> impl std::future::Future<Output = Result<Vec<u8>>> + Send {
-        async move {
-            use std::collections::hash_map::DefaultHasher;
-            use std::hash::{Hash, Hasher};
+    async fn hash_data(&self, data: &[u8], algorithm: &str) -> Result<Vec<u8>> {
+        use std::collections::hash_map::DefaultHasher;
+        use std::hash::{Hash, Hasher};
 
-            match algorithm {
-                "SHA-256" | "SHA-512" | "BLAKE3" => {
-                    let mut hasher = DefaultHasher::new();
-                    data.hash(&mut hasher);
-                    algorithm.hash(&mut hasher);
-                    Ok(hasher.finish().to_be_bytes().to_vec())
-                }
-                _ => Err(NestGateError::security_error(&format!(
-                    "Unsupported hash algorithm: {}",
-                    algorithm
-                ))),
+        match algorithm {
+            "SHA-256" | "SHA-512" | "BLAKE3" => {
+                let mut hasher = DefaultHasher::new();
+                data.hash(&mut hasher);
+                algorithm.hash(&mut hasher);
+                Ok(hasher.finish().to_be_bytes().to_vec())
             }
+            _ => Err(NestGateError::security_error(&format!(
+                "Unsupported hash algorithm: {}",
+                algorithm
+            ))),
         }
     }
 
-    fn generate_random(
-        &self,
-        length: usize,
-    ) -> impl std::future::Future<Output = Result<Vec<u8>>> + Send {
-        async move {
-            // Use rand crate for random generation
-            Ok((0..length).map(|_| rand::random::<u8>()).collect())
-        }
+    async fn generate_random(&self, length: usize) -> Result<Vec<u8>> {
+        // Use rand crate for random generation
+        Ok((0..length).map(|_| rand::random::<u8>()).collect())
     }
 }
 
@@ -347,33 +309,22 @@ impl CanonicalUniversalProvider<Box<dyn SecurityService>> for CanonicalSecurityP
     type Error = NestGateError;
     type Metadata = HashMap<String, String>;
 
-    fn initialize(
-        &self,
-        _config: Self::Config,
-    ) -> impl std::future::Future<Output = Result<()>> + Send {
-        async move {
-            // Initialization logic
-            Ok(())
-        }
+    async fn initialize(&self, _config: Self::Config) -> Result<()> {
+        // Initialization logic
+        Ok(())
     }
 
-    fn provide(
-        &self,
-    ) -> impl std::future::Future<Output = Result<Box<dyn SecurityService>>> + Send {
-        async move {
-            // Would return actual service implementation in production
-            Err(NestGateError::internal_error(
-                "not_implemented",
-                "SecurityService provision not yet implemented",
-            ))
-        }
+    async fn provide(&self) -> Result<Box<dyn SecurityService>> {
+        // Would return actual service implementation in production
+        Err(NestGateError::internal_error(
+            "not_implemented",
+            "SecurityService provision not yet implemented",
+        ))
     }
 
-    fn stop(&self) -> impl std::future::Future<Output = Result<()>> + Send {
-        async move {
-            // Cleanup logic
-            Ok(())
-        }
+    async fn stop(&self) -> Result<()> {
+        // Cleanup logic
+        Ok(())
     }
 
     fn get_metadata(&self) -> impl std::future::Future<Output = Result<Self::Metadata>> + Send {
@@ -388,75 +339,59 @@ impl CanonicalUniversalProvider<Box<dyn SecurityService>> for CanonicalSecurityP
         }
     }
 
-    fn health_check(&self) -> impl std::future::Future<Output = Result<ProviderHealth>> + Send {
-        async move {
-            Ok(ProviderHealth {
-                status: HealthStatus::Healthy,
-                checked_at: SystemTime::now(),
-                details: HashMap::new(),
-                metrics: ProviderMetrics {
-                    requests_total: 0,
-                    requests_successful: 0,
-                    requests_failed: 0,
-                    avg_response_time_ms: 0.0,
-                    active_connections: 0,
-                },
-            })
+    async fn health_check(&self) -> Result<ProviderHealth> {
+        Ok(ProviderHealth {
+            status: HealthStatus::Healthy,
+            checked_at: SystemTime::now(),
+            details: HashMap::new(),
+            metrics: ProviderMetrics {
+                requests_total: 0,
+                requests_successful: 0,
+                requests_failed: 0,
+                avg_response_time_ms: 0.0,
+                active_connections: 0,
+            },
+        })
+    }
+
+    async fn supported_types(&self) -> Result<Vec<UnifiedServiceType>> {
+        Ok(vec![UnifiedServiceType::Security])
+    }
+
+    async fn supports_type(&self, service_type: &UnifiedServiceType) -> Result<bool> {
+        Ok(matches!(service_type, UnifiedServiceType::Security))
+    }
+
+    async fn get_capabilities(&self) -> Result<ProviderCapabilities> {
+        Ok(ProviderCapabilities {
+            operations: vec![
+                "authenticate".to_string(),
+                "authorize".to_string(),
+                "encrypt".to_string(),
+                "decrypt".to_string(),
+                "sign".to_string(),
+                "verify".to_string(),
+                "token_management".to_string(),
+            ],
+            max_concurrent: Some(1000),
+            protocols: vec!["JWT".to_string(), "OAuth2".to_string()],
+            features: {
+                let mut features = HashMap::new();
+                features.insert("zero_cost".to_string(), true);
+                features.insert("native_async".to_string(), true);
+                features
+            },
+        })
+    }
+
+    async fn validate_config(&self, config: &Self::Config) -> Result<Vec<String>> {
+        let mut issues = Vec::new();
+
+        if config.provider_type.is_empty() {
+            issues.push("provider_type cannot be empty".to_string());
         }
-    }
 
-    fn supported_types(
-        &self,
-    ) -> impl std::future::Future<Output = Result<Vec<UnifiedServiceType>>> + Send {
-        async move { Ok(vec![UnifiedServiceType::Security]) }
-    }
-
-    fn supports_type(
-        &self,
-        service_type: &UnifiedServiceType,
-    ) -> impl std::future::Future<Output = Result<bool>> + Send {
-        async move { Ok(matches!(service_type, UnifiedServiceType::Security)) }
-    }
-
-    fn get_capabilities(
-        &self,
-    ) -> impl std::future::Future<Output = Result<ProviderCapabilities>> + Send {
-        async move {
-            Ok(ProviderCapabilities {
-                operations: vec![
-                    "authenticate".to_string(),
-                    "authorize".to_string(),
-                    "encrypt".to_string(),
-                    "decrypt".to_string(),
-                    "sign".to_string(),
-                    "verify".to_string(),
-                    "token_management".to_string(),
-                ],
-                max_concurrent: Some(1000),
-                protocols: vec!["JWT".to_string(), "OAuth2".to_string()],
-                features: {
-                    let mut features = HashMap::new();
-                    features.insert("zero_cost".to_string(), true);
-                    features.insert("native_async".to_string(), true);
-                    features
-                },
-            })
-        }
-    }
-
-    fn validate_config(
-        &self,
-        config: &Self::Config,
-    ) -> impl std::future::Future<Output = Result<Vec<String>>> + Send {
-        async move {
-            let mut issues = Vec::new();
-
-            if config.provider_type.is_empty() {
-                issues.push("provider_type cannot be empty".to_string());
-            }
-
-            Ok(issues)
-        }
+        Ok(issues)
     }
 }
 
@@ -486,17 +421,17 @@ pub fn create_custom(
 
 // ==================== TESTS ====================
 
-
 // ==================== CANONICAL TYPE ALIAS ====================
 // This type now aliases to the canonical network configuration
 // Original struct definition kept above for reference and backward compatibility
 
 /// Type alias to canonical network configuration
-/// 
+///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
-pub type SecurityProviderConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+pub type SecurityProviderConfigCanonical =
+    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using SecurityProviderConfig (the deprecated struct) for now.
 // We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.

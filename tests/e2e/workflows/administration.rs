@@ -2,13 +2,13 @@
 ///
 /// This module contains workflow tests for system administration operations.
 /// Extracted from the original e2e_comprehensive_workflows.rs for better maintainability.
+///
+/// **MODERN CONCURRENCY**: Uses yield_now() for async coordination instead of sleep().
 use super::WorkflowResults;
 use crate::common::config::UnifiedTestConfig;
 use nestgate_core::Result;
 use std::collections::HashMap;
-use std::time::Duration;
 use std::time::Instant;
-use tokio::time::sleep;
 
 /// Test system administration workflow
 pub async fn test_system_administration_workflow(
@@ -102,21 +102,21 @@ pub async fn test_system_administration_workflow(
 
 /// Simulate health monitoring
 async fn simulate_health_monitoring() -> Result<()> {
-    sleep(Duration::from_millis(150)).await;
+    tokio::task::yield_now().await;
     println!("    ❤️ System health: All services operational");
     Ok(())
 }
 
 /// Simulate metrics collection
 async fn simulate_metrics_collection() -> Result<()> {
-    sleep(Duration::from_millis(200)).await;
+    tokio::task::yield_now().await;
     println!("    📊 Collected performance metrics");
     Ok(())
 }
 
 /// Simulate configuration update
 async fn simulate_configuration_update() -> Result<()> {
-    sleep(Duration::from_millis(100)).await;
+    tokio::task::yield_now().await;
     println!("    🔧 Configuration updated successfully");
     Ok(())
 }

@@ -6,6 +6,7 @@
 //! discover and connect to external services at runtime without hardcoded dependencies.
 
 pub mod capability_scanner;
+pub mod capability_scanner_config;
 pub mod network_discovery;
 pub mod universal_adapter;
 
@@ -13,6 +14,7 @@ pub mod universal_adapter;
 pub use capability_scanner::{
     CapabilityInfo, CapabilityScanner, DiscoveryMethod, EnvironmentDiscovery,
 };
+pub use capability_scanner_config::{EnvironmentDiscoveryConfig, SharedDiscoveryConfig};
 pub use network_discovery::{DnsServiceDiscovery, IpRange, MulticastDiscovery, PortScanDiscovery};
 pub use universal_adapter::{
     Connection, ConnectionMetadata, HealthStatus, Request, Response, UniversalAdapter,

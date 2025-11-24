@@ -5,7 +5,6 @@ use std::collections::HashMap;
 
 use std::time::{Duration, Instant};
 use tokio::sync::RwLock;
-use tokio::time::sleep;
 
 /// E2E Chaos Testing Integration
 /// 
@@ -78,7 +77,7 @@ async fn execute_comprehensive_chaos_test(
         inject_chaos_with_monitoring(chaos_type, &mut results).await?;
         
         // Wait for recovery
-        sleep(chaos.recovery_time).await;
+        tokio::task::yield_now().await;
         
         // Stop background load and measure impact
         load_handle.abort();
@@ -122,7 +121,7 @@ async fn simulate_background_load(config: UnifiedTestConfig) -> Result<()> {
     
     // Simulate load for the duration
     for i in 0..operations {
-        sleep(Duration::from_millis(10)).await;  // Simulate work
+        tokio::task::yield_now().await;  // Simulate work
         
         if i % 10 == 0 {
             println!("   Load operation {}/{} completed", i + 1, operations);
@@ -141,7 +140,7 @@ async fn inject_chaos_with_monitoring(
     match chaos_type {
         ChaosType::NetworkLatency(delay) => {
             println!("🌐 E2E: Injecting network latency with monitoring: {:?}", delay);
-            sleep(*delay).await;
+            tokio::time::sleep(*delay).await;
         },
         ChaosType::ServiceFailure(service_type) => {
             println!("💥 E2E: Injecting monitored service failure: {:?}", service_type);
@@ -151,15 +150,15 @@ async fn inject_chaos_with_monitoring(
                 recovery_time: Duration::from_secs(1),
                 data_loss: false,
             });
-            sleep(Duration::from_secs(2)).await;
+            tokio::time::sleep(Duration::from_secs(2)).await;
         },
         ChaosType::ResourceExhaustion(resource) => {
             println!("📈 E2E: Injecting monitored resource exhaustion: {}", resource);
-            sleep(Duration::from_secs(1)).await;
+            tokio::time::sleep(Duration::from_secs(1)).await;
         },
         ChaosType::DataCorruption => {
             println!("🗂️ E2E: Injecting monitored data corruption scenario");
-            sleep(Duration::from_millis(500)).await;
+            tokio::time::sleep(Duration::from_millis(500)).await;
         },
     }
     

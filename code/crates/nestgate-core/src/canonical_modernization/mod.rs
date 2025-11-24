@@ -41,9 +41,13 @@ pub mod service_metadata {
     /// Service dependency definition
     #[derive(Debug, Clone, Serialize, Deserialize)]
     pub struct ServiceDependency {
+        /// Name of the service this dependency references
         pub service_name: String,
+        /// Version requirement specification (semver format)
         pub version_requirement: String,
+        /// Whether this dependency is optional
         pub optional: bool,
+        /// Additional metadata for the dependency
         pub metadata: HashMap<String, String>,
     }
 
@@ -61,18 +65,31 @@ pub mod service_metadata {
     /// Universal service metadata
     #[derive(Debug, Clone, Serialize, Deserialize)]
     pub struct UniversalServiceMetadata {
+        /// Unique identifier for the service
         pub service_id: String,
+        /// Human-readable name of the service
         pub service_name: String,
+        /// Version string for the service (semver format)
         pub service_version: String,
+        /// Human-readable description of the service
         pub description: String,
+        /// List of capabilities provided by the service
         pub capabilities: Vec<String>,
+        /// Network endpoints where the service is available
         pub endpoints: Vec<ServiceEndpoint>,
+        /// Services this service depends on
         pub dependencies: Vec<ServiceDependency>,
+        /// Additional service metadata
         pub metadata: HashMap<String, String>,
+        /// Timestamp when the service was created
         pub created_at: SystemTime,
+        /// Timestamp when the service was last updated
         pub updated_at: SystemTime,
+        /// Runtime configuration key-value pairs
         pub configuration: HashMap<String, String>,
+        /// Classification tags for the service
         pub tags: Vec<String>,
+        /// Current operational status of the service
         pub status: ServiceStatus,
     }
     impl Default for UniversalServiceMetadata {

@@ -4,12 +4,16 @@
 use std::collections::HashMap;
 // Removed unused tracing import
 
-use crate::handlers::zfs::universal_zfs::types::{
+use crate::handlers::zfs::universal_zfs_types::{
     DatasetConfig, DatasetInfo, DatasetType, UniversalZfsError, UniversalZfsResult,
 };
 use tracing::info;
 
 use super::core::NativeZfsService;
+
+#[cfg(test)]
+#[path = "dataset_operations_tests.rs"]
+mod dataset_operations_tests;
 
 /// List all ZFS datasets (zero-copy optimized)
 pub async fn list_datasets(service: &NativeZfsService) -> UniversalZfsResult<Vec<DatasetInfo>> {
@@ -41,24 +45,22 @@ fn parse_dataset_line(line: &str) -> Option<DatasetInfo> {
         Some(DatasetInfo {
             name: parts[0].into(),
             dataset_type: parse_dataset_type(parts[5]),
-            used_space: parse_size(parts[1]).unwrap_or(0),
-            available_space: parse_size(parts[2]).unwrap_or(0),
-            mount_point: if parts[4] == "-" {
+            used: parse_size(parts[1]).unwrap_or(0),
+            available: parse_size(parts[2]).unwrap_or(0),
+            referenced: parse_size(parts[3]).unwrap_or(0),
+            mountpoint: if parts[4] == "-" {
                 None
             } else {
                 Some(parts[4].into())
             },
             properties: HashMap::new(),
-            created_at: std::time::SystemTime::now(),
-            parent: None,
-            children: Vec::new(),
         })
     } else {
         None
     }
 }
 /// Get information about a specific dataset (zero-copy optimized)
-pub fn get_dataset(
+pub async fn get_dataset(
     service: &NativeZfsService,
     name: &str,
 ) -> UniversalZfsResult<Option<DatasetInfo>> {
@@ -87,7 +89,7 @@ pub fn get_dataset(
 }
 
 /// Create a new ZFS dataset (zero-copy optimized)
-pub fn create_dataset(
+pub async fn create_dataset(
     service: &NativeZfsService,
     config: &DatasetConfig,
 ) -> UniversalZfsResult<DatasetInfo> {
@@ -99,7 +101,7 @@ pub fn create_dataset(
     let property_strings: Vec<String> = config
         .properties
         .iter()
-        .map(|(key, value)| format!("{}={}", key, value)
+        .map(|(key, value)| format!("{key}={value}"))
         .collect();
 
     for (i, (_, _)) in config.properties.iter().enumerate() {
@@ -119,7 +121,7 @@ pub fn create_dataset(
 }
 
 /// Destroy a ZFS dataset
-pub fn destroy_dataset(service: &NativeZfsService, name: &str) -> UniversalZfsResult<()> {
+pub async fn destroy_dataset(service: &NativeZfsService, name: &str) -> UniversalZfsResult<()> {
     info!("Destroying dataset: {}", name);
     // Execute `zfs destroy dataset_name`
     service.execute_zfs_command(&["destroy", name]).await?;
@@ -128,7 +130,7 @@ pub fn destroy_dataset(service: &NativeZfsService, name: &str) -> UniversalZfsRe
 }
 
 /// Get dataset properties (zero-copy optimized)
-pub fn get_dataset_properties(
+pub async fn get_dataset_properties(
     service: &NativeZfsService,
     name: &str,
 ) -> UniversalZfsResult<HashMap<String, String>> {
@@ -150,14 +152,14 @@ pub fn get_dataset_properties(
 }
 
 /// Set dataset properties (zero-copy optimized)
-pub fn set_dataset_properties(
+pub async fn set_dataset_properties(
     service: &NativeZfsService,
     name: &str,
     properties: &HashMap<String, String>,
 ) -> UniversalZfsResult<()> {
     info!("Setting properties for dataset: {}", name);
     // Set each property individually
-    for (key, _value) in properties {
+    for key in properties.keys() {
         let property_arg = format!("{key}=self.base_url");
         service
             .execute_zfs_command(&["set", &property_arg, name])
@@ -168,7 +170,7 @@ pub fn set_dataset_properties(
 }
 
 /// Helper function to parse ZFS size strings (zero-copy optimized)
-fn parse_size(size_str: &str) -> Option<u64> {
+pub(super) fn parse_size(size_str: &str) -> Option<u64> {
     if size_str == "-" {
         return Some(0);
     }
@@ -203,12 +205,12 @@ fn parse_size(size_str: &str) -> Option<u64> {
 }
 
 /// Helper function to parse dataset type from string (zero-copy optimized)
-fn parse_dataset_type(type_str: &str) -> DatasetType {
+pub(super) fn parse_dataset_type(type_str: &str) -> DatasetType {
     match type_str {
         "filesystem" => DatasetType::Filesystem,
         "volume" => DatasetType::Volume,
         "snapshot" => DatasetType::Snapshot,
-        "bookmark" => DatasetType::Bookmark,
-        _ => DatasetType::Filesystem, // Default to filesystem
+        "bookmark" => DatasetType::Snapshot, // Treat bookmarks as snapshots
+        _ => DatasetType::Filesystem,        // Default to filesystem
     }
 }

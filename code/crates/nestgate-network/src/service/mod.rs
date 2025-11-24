@@ -79,17 +79,17 @@ impl RealNetworkService {
             self.config.api.bind_address, self.config.api.port
         );
 
-        let addr = format!(
-            "{}:{}",
-            std::env::var("NESTGATE_BIND_ADDRESS").unwrap_or_else(|_| {
-                use nestgate_core::constants::hardcoding::addresses;
-                addresses::LOCALHOST_NAME.to_string()
-            }),
-            std::env::var("NESTGATE_API_PORT").unwrap_or_else(|_| {
-                use nestgate_core::constants::hardcoding::ports;
-                ports::HTTP_DEFAULT.to_string()
-            })
-        );
+        // ✅ MIGRATED: Now uses centralized runtime configuration
+        let addr = {
+            use nestgate_core::config::runtime::get_config;
+            let config = get_config();
+            let host = if config.network.bind_all {
+                "0.0.0.0"
+            } else {
+                &config.network.api_host.to_string()
+            };
+            format!("{}:{}", host, config.network.api_port)
+        };
         let listener = TcpListener::bind(&addr).await.map_err(|_| {
             NestGateError::network_error(&format!("Failed to bind to endpoint: {addr}"))
         })?;

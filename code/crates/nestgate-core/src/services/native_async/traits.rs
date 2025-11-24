@@ -1,9 +1,4 @@
 use crate::Result;
-use std::pin::Pin;
-
-// Type alias for health check results
-pub type HealthCheckFuture =
-    Pin<Box<dyn std::future::Future<Output = Result<Vec<(String, bool)>>> + Send>>;
 
 /// Native async load balancer trait - replaces #[`async_trait`] `LoadBalancer`
 pub trait NativeAsyncLoadBalancer<
@@ -36,7 +31,7 @@ pub trait NativeAsyncLoadBalancer<
     fn get_service_stats(&self, service_id: &str) -> impl std::future::Future<Output = Result<Self::ServiceStats>> + Send;
 
     /// Health check all services - native async
-    fn health_check_all(&self) -> HealthCheckFuture;
+    fn health_check_all(&self) -> impl std::future::Future<Output = Result<Vec<(String, bool)>>> + Send;
 
     /// Update service weight - no Future boxing
     fn update_service_weight(&self, service_id: &str, weight: f64) -> impl std::future::Future<Output = Result<()>> + Send;
@@ -318,7 +313,7 @@ pub trait NativeAsyncUniversalServiceProvider<
 /// **DEPRECATED**: Service pattern consolidated into canonical security
 #[deprecated(
     since = "0.9.0",
-    note = "Use crate::traits::canonical_unified_traits::CanonicalSecurity for security services"
+    note = "Use crate::traits::canonical::CanonicalSecurity for security services"
 )]
 pub trait NativeAsyncSecurityService<
     const MAX_SESSIONS: usize = 1000,

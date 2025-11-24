@@ -4,6 +4,7 @@
 
 use super::*;
 
+use std::sync::Arc;
 // Pool Handler Tests
 
 #[test]
@@ -308,9 +309,9 @@ fn test_expected_improvements() {
 fn test_request_clone() {
     let request = ZeroCostApiRequest {
         data: serde_json::json!({"test": "data"}),
-        request_id: "clone-test".to_string(),
+        request_id: Arc::new("clone-test".to_string()),
         timestamp: std::time::SystemTime::now(),
-        _metadata: HashMap::new(),
+        _metadata: Arc::new(HashMap::new()),
     };
 
     let cloned = request.clone();
@@ -321,10 +322,10 @@ fn test_request_clone() {
 fn test_response_clone() {
     let response = ZeroCostApiResponse {
         data: serde_json::json!({"result": "ok"}),
-        request_id: "resp-clone".to_string(),
+        request_id: Arc::new("resp-clone".to_string()),
         status: ApiStatus::Success,
         processing_time_ms: 10,
-        _metadata: HashMap::new(),
+        _metadata: Arc::new(HashMap::new()),
     };
 
     let cloned = response.clone();

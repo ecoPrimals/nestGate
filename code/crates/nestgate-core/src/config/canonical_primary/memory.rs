@@ -72,11 +72,16 @@ impl Default for MemoryPoolConfig {
 /// Memory allocation strategy
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub enum AllocationStrategy {
+    /// First-fit allocation strategy
     #[default]
     FirstFit,
+    /// Best-fit allocation strategy
     BestFit,
+    /// Worst-fit allocation strategy
     WorstFit,
+    /// Buddy system allocation
     BuddySystem,
+    /// Slab allocator
     SlabAllocator,
 }
 

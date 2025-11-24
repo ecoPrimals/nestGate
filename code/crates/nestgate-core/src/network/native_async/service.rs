@@ -25,20 +25,23 @@ pub struct NativeAsyncNetworkService {
 /// Defines host, port, and operational parameters
 #[derive(Debug, Clone, Serialize, Deserialize)]
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
-/// 
+///
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::network::config::NetworkServiceConfig;
-/// 
+///
 /// // NEW (canonical):
 /// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 /// // Or use type alias for compatibility:
 /// use crate::network::config::NetworkServiceConfig; // Now aliases to CanonicalNetworkConfig
 /// ```
-/// 
+///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+#[deprecated(
+    since = "0.11.0",
+    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
 pub struct NetworkServiceConfig {
     pub host: String,
     pub port: u16,
@@ -80,10 +83,10 @@ impl NativeAsyncNetworkService {
 ///
 /// **PERFORMANCE**: Zero-cost native async implementation
 /// **MEMORY**: No runtime overhead, compile-time dispatch
-impl crate::traits::canonical_unified_traits::CanonicalService for NativeAsyncNetworkService {
+impl crate::traits::canonical::CanonicalService for NativeAsyncNetworkService {
     type Config = NetworkServiceConfig;
-    type Health = crate::traits::canonical_unified_traits::ProviderHealth; // PEDANTIC: Use existing ProviderHealth
-    type Metrics = crate::traits::canonical_unified_traits::ServiceCapabilities;
+    type Health = crate::traits::canonical::ProviderHealth; // PEDANTIC: Use existing ProviderHealth
+    type Metrics = crate::traits::canonical::ServiceCapabilities;
     type Error = crate::error::NestGateError;
     fn service_id(&self) -> &str {
         &self.service_id
@@ -99,7 +102,7 @@ impl crate::traits::canonical_unified_traits::CanonicalService for NativeAsyncNe
     }
 
     async fn health_check(&self) -> crate::Result<Self::Health> {
-        Ok(crate::traits::canonical_unified_traits::ProviderHealth {
+        Ok(crate::traits::canonical::ProviderHealth {
             is_healthy: true,
             last_check: SystemTime::now(),
             health: "Network service operational".to_string(),
@@ -107,18 +110,16 @@ impl crate::traits::canonical_unified_traits::CanonicalService for NativeAsyncNe
     }
 
     async fn get_metrics(&self) -> std::result::Result<Self::Metrics, Self::Error> {
-        Ok(
-            crate::traits::canonical_unified_traits::ServiceCapabilities {
-                can_scale: true,
-                can_migrate: true,
-                can_backup: false,
-                supported_protocols: vec![
-                    "tcp".to_string(),
-                    "http".to_string(),
-                    "websocket".to_string(),
-                ],
-            },
-        )
+        Ok(crate::traits::canonical::ServiceCapabilities {
+            can_scale: true,
+            can_migrate: true,
+            can_backup: false,
+            supported_protocols: vec![
+                "tcp".to_string(),
+                "http".to_string(),
+                "websocket".to_string(),
+            ],
+        })
     }
 
     async fn shutdown(&self) -> crate::Result<()> {
@@ -141,21 +142,17 @@ impl crate::traits::canonical_unified_traits::CanonicalService for NativeAsyncNe
         Ok(())
     }
 
-    async fn capabilities(
-        &self,
-    ) -> crate::Result<crate::traits::canonical_unified_traits::ServiceCapabilities> {
-        Ok(
-            crate::traits::canonical_unified_traits::ServiceCapabilities {
-                can_scale: true,
-                can_migrate: true,
-                can_backup: false,
-                supported_protocols: vec![
-                    "tcp".to_string(),
-                    "http".to_string(),
-                    "websocket".to_string(),
-                ],
-            },
-        )
+    async fn capabilities(&self) -> crate::Result<crate::traits::canonical::ServiceCapabilities> {
+        Ok(crate::traits::canonical::ServiceCapabilities {
+            can_scale: true,
+            can_migrate: true,
+            can_backup: false,
+            supported_protocols: vec![
+                "tcp".to_string(),
+                "http".to_string(),
+                "websocket".to_string(),
+            ],
+        })
     }
 
     async fn validate_config(&self, _config: &Self::Config) -> crate::Result<Vec<String>> {
@@ -163,7 +160,7 @@ impl crate::traits::canonical_unified_traits::CanonicalService for NativeAsyncNe
     }
 
     async fn is_healthy(&self) -> crate::Result<Self::Health> {
-        Ok(crate::traits::canonical_unified_traits::ProviderHealth {
+        Ok(crate::traits::canonical::ProviderHealth {
             is_healthy: true,
             last_check: std::time::SystemTime::now(),
             health: "Network service operational".to_string(),
@@ -188,8 +185,8 @@ impl NativeAsyncNetworkService {
         let service_id = self.service_id.clone();
         // Note: self.config is NetworkServiceConfig, not CanonicalNetworkConfig
         // Use default values for now
-        let _host = "127.0.0.1".to_string();
-        let _port = 8080u16;
+        let _host = crate::constants::hardcoding::addresses::LOCALHOST_IPV4.to_string();
+        let _port = crate::constants::hardcoding::ports::HTTP_DEFAULT;
 
         async move {
             // CANONICAL MODERNIZATION: Use canonical service registration structure
@@ -226,13 +223,13 @@ impl NativeAsyncNetworkService {
 // Original struct definition kept above for reference and backward compatibility
 
 /// Type alias to canonical network configuration
-/// 
+///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
-pub type NetworkServiceConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+pub type NetworkServiceConfigCanonical =
+    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using NetworkServiceConfig (the deprecated struct) for now.
 // We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
 // This alias is here for reference and future migration.
-

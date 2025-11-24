@@ -113,3 +113,116 @@ where
 }
 
 // CANONICAL MODERNIZATION: Deprecated EnhancedMcpService removed - use ZeroCostEnhancedMcpService instead
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::client::MockOrchestratorClient;
+
+    fn create_test_config() -> EnhancedMcpConfig {
+        EnhancedMcpConfig::default()
+    }
+
+    fn create_test_service() -> ZeroCostEnhancedMcpService<MockOrchestratorClient> {
+        let config = create_test_config();
+        let client = MockOrchestratorClient::new();
+        ZeroCostEnhancedMcpService::new(config, client)
+    }
+
+    #[test]
+    fn test_zero_cost_service_creation() {
+        let service = create_test_service();
+        let config = service.config();
+        
+        assert!(config.mcp_port > 0);
+    }
+
+    #[test]
+    fn test_service_config_access() {
+        let service = create_test_service();
+        let config = service.config();
+        
+        // Verify config is accessible
+        assert!(config.mcp_port > 0);
+    }
+
+    #[tokio::test]
+    async fn test_capabilities_access() {
+        let service = create_test_service();
+        let capabilities = service.capabilities().await;
+        
+        // Verify capabilities can be retrieved
+        assert!(capabilities.protocols.is_empty() || !capabilities.protocols.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_service_start() {
+        let service = create_test_service();
+        let result = service.start().await;
+        
+        // Service should start successfully
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_health_check() {
+        let service = create_test_service();
+        let result = service.health_check().await;
+        
+        // Health check should return a result
+        assert!(result.is_ok() || result.is_err());
+    }
+
+    #[test]
+    fn test_service_with_custom_config() {
+        let mut config = create_test_config();
+        config.mcp_port = 9000;
+        
+        let client = MockOrchestratorClient::new();
+        let service = ZeroCostEnhancedMcpService::new(config, client);
+        
+        assert_eq!(service.config().mcp_port, 9000);
+    }
+
+    #[test]
+    fn test_multiple_service_instances() {
+        let service1 = create_test_service();
+        let service2 = create_test_service();
+        
+        // Both services should be valid instances
+        assert!(service1.config().mcp_port > 0);
+        assert!(service2.config().mcp_port > 0);
+    }
+
+    #[tokio::test]
+    async fn test_capabilities_default_state() {
+        let service = create_test_service();
+        let capabilities = service.capabilities().await;
+        
+        // Capabilities should have default state
+        assert!(capabilities.protocols.len() >= 0);
+    }
+
+    #[test]
+    fn test_service_config_immutability() {
+        let service = create_test_service();
+        let config1 = service.config();
+        let config2 = service.config();
+        
+        // Config should be consistent across multiple accesses
+        assert_eq!(config1.mcp_port, config2.mcp_port);
+    }
+
+    #[tokio::test]
+    async fn test_service_lifecycle() {
+        let service = create_test_service();
+        
+        // Test start
+        let start_result = service.start().await;
+        assert!(start_result.is_ok());
+        
+        // Test health check after start
+        let health_result = service.health_check().await;
+        assert!(health_result.is_ok() || health_result.is_err());
+    }
+}

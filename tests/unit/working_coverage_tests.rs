@@ -196,7 +196,7 @@ mod async_tests {
     #[tokio::test]
     async fn test_async_timing() -> Result<(), Box<dyn std::error::Error>> {
         let start = SystemTime::now();
-        sleep(Duration::from_millis(10)).await;
+        tokio::task::yield_now().await;
         let elapsed = start.elapsed()?;
         
         assert!(elapsed >= Duration::from_millis(10));
@@ -246,13 +246,15 @@ mod async_tests {
 /// **CONFIGURATION PATTERN TESTS**
 #[cfg(test)]
 mod config_pattern_tests {
+    use crate::common::env_isolation::IsolatedEnvironment;
     use std::env;
     use std::collections::HashMap;
 
     #[test]
     fn test_environment_variable_patterns() -> Result<(), Box<dyn std::error::Error>> {
-        // Test environment variable reading pattern
-        env::set_var("NESTGATE_TEST_VALUE", "test123");
+        // Test environment variable reading pattern with isolation
+        let mut env_iso = IsolatedEnvironment::new("test_environment_variable_patterns");
+        env_iso.set("NESTGATE_TEST_VALUE", "test123");
         
         let value = env::var("NESTGATE_TEST_VALUE").unwrap_or_else(|_| "default".to_string());
         assert_eq!(value, "test123");
@@ -261,8 +263,7 @@ mod config_pattern_tests {
         let missing = env::var("NESTGATE_MISSING_VALUE").unwrap_or_else(|_| "fallback".to_string());
         assert_eq!(missing, "fallback");
         
-        // Cleanup
-        env::remove_var("NESTGATE_TEST_VALUE");
+        // Automatic cleanup via Drop
     Ok(())
     }
 

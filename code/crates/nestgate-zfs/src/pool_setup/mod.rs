@@ -19,6 +19,23 @@ pub use device_detection::{
 };
 pub use validation::{PoolSetupValidator, ValidationResult};
 
+// Tests
+#[cfg(test)]
+mod config_tests;
+// #[cfg(test)]
+// mod creation_tests;  // Disabled: Tests non-existent types (PoolName, VdevType)
+#[cfg(test)]
+mod device_detection_tests;
+#[cfg(test)]
+mod tests;
+
+#[cfg(test)]
+mod pool_setup_tests;
+#[cfg(test)]
+mod types_tests;
+#[cfg(test)]
+mod validation_tests;
+
 use std::collections::HashMap;
 // Removed unused tracing import
 use nestgate_core::{NestGateError, Result as CoreResult};

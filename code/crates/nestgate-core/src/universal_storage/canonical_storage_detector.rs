@@ -18,8 +18,12 @@ use std::collections::HashMap;
 use crate::error::CanonicalResult as Result;
 use crate::canonical_modernization::CanonicalModernizedConfig;
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 use tokio::fs;
+
+// Import storage detector config
+use super::storage_detector_config::{StorageDetectorConfig, SharedStorageDetectorConfig};
 
 // ==================== SECTION ====================
 
@@ -34,6 +38,8 @@ pub struct CanonicalStorageDetector {
     cache: HashMap<String, CanonicalDetectedStorage>,
     /// Detection statistics
     stats: CanonicalDetectionStats,
+    /// Runtime configuration (immutable, thread-safe)
+    runtime_config: SharedStorageDetectorConfig,
 }
 impl Default for CanonicalStorageDetector {
     fn default() -> Self {
@@ -43,12 +49,16 @@ impl Default for CanonicalStorageDetector {
 
 impl CanonicalStorageDetector {
     /// Create new canonical storage detector with default configuration
+    ///
+    /// Loads runtime configuration (AWS credentials) from environment variables.
+    /// For testing, use `with_runtime_config()`.
     #[must_use]
     pub fn new() -> Self {
         Self {
             config: CanonicalDetectionConfig::default(),
             cache: HashMap::new(),
             stats: CanonicalDetectionStats::default(),
+            runtime_config: Arc::new(StorageDetectorConfig::from_env()),
         }
     }
 
@@ -59,6 +69,20 @@ impl CanonicalStorageDetector {
             config,
             cache: HashMap::new(),
             stats: CanonicalDetectionStats::default(),
+            runtime_config: Arc::new(StorageDetectorConfig::from_env()),
+        }
+    }
+
+    /// Create detector with custom runtime configuration
+    ///
+    /// Recommended for testing to inject specific AWS credentials.
+    #[must_use]
+    pub fn with_runtime_config(runtime_config: SharedStorageDetectorConfig) -> Self {
+        Self {
+            config: CanonicalDetectionConfig::default(),
+            cache: HashMap::new(),
+            stats: CanonicalDetectionStats::default(),
+            runtime_config,
         }
     }
 
@@ -279,8 +303,8 @@ impl CanonicalStorageDetector {
     }
 
     async fn has_aws_credentials(&self) -> bool {
-        // Check for AWS credentials
-        std::env::var("AWS_ACCESS_KEY_ID").is_ok() && std::env::var("AWS_SECRET_ACCESS_KEY").is_ok()
+        // Check runtime config (immutable, thread-safe)
+        self.runtime_config.has_aws_credentials()
     }
 
     async fn scan_canonical_nfs_shares(&self) -> Result<Vec<CanonicalDetectedStorage>> {

@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use std::future::Future;
 
 // Use canonical trait system
-use crate::traits::canonical_unified_traits::CanonicalService;
+use crate::traits::canonical::CanonicalService;
 
 use crate::Result;
 

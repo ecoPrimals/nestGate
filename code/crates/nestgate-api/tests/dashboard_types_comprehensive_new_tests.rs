@@ -1,12 +1,12 @@
-//! Comprehensive tests for dashboard_types module
+//! Comprehensive tests for `dashboard_types` module
 //!
 //! Tests cover:
-//! - DashboardTimeRange creation, validation, and methods
-//! - DashboardState lifecycle and operations
-//! - PerformanceAlert structure and behavior
-//! - AlertSeverity enum and ordering
-//! - DashboardEvent handling
-//! - DashboardConfig defaults and customization
+//! - `DashboardTimeRange` creation, validation, and methods
+//! - `DashboardState` lifecycle and operations
+//! - `PerformanceAlert` structure and behavior
+//! - `AlertSeverity` enum and ordering
+//! - `DashboardEvent` handling
+//! - `DashboardConfig` defaults and customization
 
 use nestgate_api::handlers::dashboard_types::*;
 use std::time::{Duration, SystemTime};
@@ -256,7 +256,7 @@ fn test_dashboard_state_add_multiple_alerts() {
 
     for i in 0..5 {
         let alert = PerformanceAlert {
-            id: format!("alert-{}", i),
+            id: format!("alert-{i}"),
             severity: AlertSeverity::Info,
             title: "Test".to_string(),
             message: "Test".to_string(),
@@ -277,7 +277,7 @@ fn test_dashboard_state_clear_resolved_alerts() {
     let mut state = DashboardState::new();
 
     // Add resolved alert
-    let mut alert1 = PerformanceAlert {
+    let alert1 = PerformanceAlert {
         id: "alert-1".to_string(),
         severity: AlertSeverity::Info,
         title: "Resolved".to_string(),
@@ -556,7 +556,7 @@ fn test_time_range_with_state() {
 
 #[test]
 fn test_alert_severity_comparison() {
-    let mut severities = vec![
+    let mut severities = [
         AlertSeverity::Emergency,
         AlertSeverity::Info,
         AlertSeverity::Critical,

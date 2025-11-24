@@ -441,3 +441,202 @@ fn perform_nfs_mount(
     );
 
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::PathBuf;
+
+    fn create_test_export_options() -> NfsExportOptions {
+        NfsExportOptions {
+            read_only: true,
+            sync: true,
+            no_subtree_check: true,
+            no_root_squash: false,
+        }
+    }
+
+    fn create_test_export() -> NfsExport {
+        NfsExport {
+            path: PathBuf::from("/data/test"),
+            client_access: vec!["192.168.1.0/24".to_string()],
+            options: create_test_export_options(),
+        }
+    }
+
+    #[test]
+    fn test_nfs_export_options_default() {
+        let options = NfsExportOptions::default();
+        assert!(!options.read_only);
+        assert!(options.sync);
+        assert!(options.no_subtree_check);
+        assert!(!options.no_root_squash);
+    }
+
+    #[test]
+    fn test_nfs_export_options_custom() {
+        let options = NfsExportOptions {
+            read_only: true,
+            sync: false,
+            no_subtree_check: false,
+            no_root_squash: true,
+        };
+        assert!(options.read_only);
+        assert!(!options.sync);
+        assert!(!options.no_subtree_check);
+        assert!(options.no_root_squash);
+    }
+
+    #[test]
+    fn test_nfs_export_options_clone() {
+        let options = create_test_export_options();
+        let cloned = options.clone();
+        assert_eq!(options.read_only, cloned.read_only);
+        assert_eq!(options.sync, cloned.sync);
+    }
+
+    #[test]
+    fn test_nfs_export_creation() {
+        let export = create_test_export();
+        assert_eq!(export.path, PathBuf::from("/data/test"));
+        assert_eq!(export.client_access.len(), 1);
+        assert_eq!(export.client_access[0], "192.168.1.0/24");
+    }
+
+    #[test]
+    fn test_nfs_export_clone() {
+        let export = create_test_export();
+        let cloned = export.clone();
+        assert_eq!(export.path, cloned.path);
+        assert_eq!(export.client_access, cloned.client_access);
+    }
+
+    #[test]
+    fn test_nfs_export_multiple_clients() {
+        let export = NfsExport {
+            path: PathBuf::from("/data/shared"),
+            client_access: vec![
+                "192.168.1.0/24".to_string(),
+                "10.0.0.0/8".to_string(),
+                "172.16.0.0/12".to_string(),
+            ],
+            options: NfsExportOptions::default(),
+        };
+        assert_eq!(export.client_access.len(), 3);
+    }
+
+    #[test]
+    fn test_nfs_server_new() {
+        let server = NfsServer::new();
+        assert!(format!("{:?}", server).contains("NfsServer"));
+    }
+
+    #[test]
+    fn test_nfs_server_default() {
+        let server = NfsServer::default();
+        assert!(format!("{:?}", server).contains("NfsServer"));
+    }
+
+    #[tokio::test]
+    async fn test_nfs_server_is_running_initially_false() {
+        let server = NfsServer::new();
+        assert!(!server.is_running().await);
+    }
+
+    #[tokio::test]
+    async fn test_nfs_server_list_exports_empty() {
+        let server = NfsServer::new();
+        let exports = server.list_exports().await
+            .expect("Test: list_exports should succeed");
+        assert!(exports.is_empty());
+    }
+
+    #[test]
+    fn test_nfs_export_serialization() {
+        let export = create_test_export();
+        let serialized = serde_json::to_string(&export)
+            .expect("Test: export serialization should succeed");
+        assert!(serialized.contains("/data/test"));
+    }
+
+    #[test]
+    fn test_nfs_export_deserialization() {
+        let json = r#"{
+            "path": "/data/test",
+            "client_access": ["192.168.1.0/24"],
+            "options": {
+                "read_only": true,
+                "sync": true,
+                "no_subtree_check": true,
+                "no_root_squash": false
+            }
+        }"#;
+        let export: NfsExport = serde_json::from_str(json)
+            .expect("Test: export deserialization should succeed");
+        assert_eq!(export.path, PathBuf::from("/data/test"));
+    }
+
+    #[test]
+    fn test_nfs_export_options_serialization() {
+        let options = create_test_export_options();
+        let serialized = serde_json::to_string(&options)
+            .expect("Test: options serialization should succeed");
+        let deserialized: NfsExportOptions = serde_json::from_str(&serialized)
+            .expect("Test: options deserialization should succeed");
+        assert_eq!(options.read_only, deserialized.read_only);
+    }
+
+    #[test]
+    fn test_nfs_export_empty_clients() {
+        let export = NfsExport {
+            path: PathBuf::from("/data/public"),
+            client_access: vec![],
+            options: NfsExportOptions::default(),
+        };
+        assert!(export.client_access.is_empty());
+    }
+
+    #[test]
+    fn test_nfs_export_options_debug() {
+        let options = NfsExportOptions::default();
+        let debug_str = format!("{:?}", options);
+        assert!(debug_str.contains("NfsExportOptions"));
+    }
+
+    #[test]
+    fn test_nfs_export_path_variations() {
+        let paths = vec![
+            "/",
+            "/data",
+            "/mnt/storage/nfs",
+            "/var/nfs/exports",
+        ];
+        
+        for path in paths {
+            let export = NfsExport {
+                path: PathBuf::from(path),
+                client_access: vec!["*".to_string()],
+                options: NfsExportOptions::default(),
+            };
+            assert_eq!(export.path, PathBuf::from(path));
+        }
+    }
+
+    #[test]
+    fn test_nfs_export_options_secure_defaults() {
+        let options = NfsExportOptions::default();
+        // Secure defaults: read-only false (needs explicit config), 
+        // sync true (data integrity), no_root_squash false (security)
+        assert!(!options.read_only, "Should default to writable for flexibility");
+        assert!(options.sync, "Should default to sync for data integrity");
+        assert!(!options.no_root_squash, "Should squash root for security");
+    }
+
+    #[test]
+    fn test_nfs_server_multiple_instances() {
+        let server1 = NfsServer::new();
+        let server2 = NfsServer::new();
+        assert!(format!("{:?}", server1).contains("NfsServer"));
+        assert!(format!("{:?}", server2).contains("NfsServer"));
+    }
+}

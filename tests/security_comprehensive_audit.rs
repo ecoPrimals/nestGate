@@ -13,6 +13,7 @@ use tokio::sync::RwLock;
 
 // **DEEP DEBT SOLUTION**: Define simplified security provider trait for testing
 // This replaces the deprecated/fragmented ZeroCostSecurityProvider traits
+#[allow(dead_code)]
 trait SecurityProvider: Send + Sync {
     fn authenticate(
         &self,
@@ -31,6 +32,7 @@ trait SecurityProvider: Send + Sync {
 }
 
 /// Comprehensive security audit framework
+#[allow(dead_code)]
 pub struct SecurityAuditFramework {
     config: NestGateCanonicalConfig,
     security_provider: Arc<MockSecurityProvider>,
@@ -558,6 +560,7 @@ impl SecurityAuditFramework {
 
 /// Mock security provider for testing
 /// **DEEP DEBT SOLUTION**: Modernized to use current ZeroCostSecurityProvider trait
+#[allow(dead_code)]
 struct MockSecurityProvider {
     config: String,
 }

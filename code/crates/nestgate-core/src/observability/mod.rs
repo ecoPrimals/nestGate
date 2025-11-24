@@ -8,6 +8,11 @@ pub mod health_checks;
 pub mod metrics;
 pub mod tracing_config;
 
+#[cfg(test)]
+mod health_checks_tests;
+#[cfg(test)]
+mod observability_comprehensive_tests;
+
 // Re-export key observability components
 pub use health_checks::{HealthChecker, HealthStatus, SystemHealth};
 pub use metrics::{MetricsCollector, MetricsRegistry, PerformanceMetrics};

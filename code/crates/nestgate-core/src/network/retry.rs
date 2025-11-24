@@ -23,7 +23,7 @@ pub use crate::constants::network::{
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
 /// 
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::network::config::NetworkRetryConfig;
 /// 
@@ -128,24 +128,270 @@ pub type NetworkRetryConfigCanonical = crate::config::canonical_primary::domains
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+
+    // ==================== CONFIG TESTS ====================
+
     #[test]
     fn test_config_default() {
         let config = NetworkRetryConfig::default();
         assert!(config.enabled);
         assert_eq!(config.max_connections, DEFAULT_MAX_CONNECTIONS);
-    fn test_config_validation() {
-        let mut config = Config::default();
-        assert!(validate_config(&config).is_ok());
-        
-        config.max_connections = 0;
-        assert!(validate_config(&config).is_err());
+        assert_eq!(config.buffer_size, DEFAULT_BUFFER_SIZE);
+        assert_eq!(config.timeout, Duration::from_millis(DEFAULT_TIMEOUT_MS));
+    }
+
+    #[test]
+    fn test_config_custom() {
+        let config = NetworkRetryConfig {
+            enabled: false,
+            timeout: Duration::from_secs(10),
+            max_connections: 50,
+            buffer_size: 2048,
+        };
+        assert!(!config.enabled);
+        assert_eq!(config.timeout, Duration::from_secs(10));
+        assert_eq!(config.max_connections, 50);
+        assert_eq!(config.buffer_size, 2048);
+    }
+
+    #[test]
+    fn test_config_serialization() {
+        let config = NetworkRetryConfig::default();
+        let serialized = serde_json::to_string(&config);
+        assert!(serialized.is_ok());
+    }
+
+    // ==================== CONFIG VALIDATION TESTS ====================
+
+    #[tokio::test]
+    async fn test_config_validation_valid() {
+        let config = NetworkRetryConfig::default();
+        assert!(validate_config(&config).await.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_config_validation_zero_connections() {
+        let config = NetworkRetryConfig {
+            max_connections: 0,
+            ..Default::default()
+        };
+        let result = validate_config(&config).await;
+        assert!(result.is_err());
+        assert!(format!("{:?}", result.unwrap_err()).contains("max_connections"));
+    }
+
+    #[tokio::test]
+    async fn test_config_validation_zero_buffer() {
+        let config = NetworkRetryConfig {
+            buffer_size: 0,
+            ..Default::default()
+        };
+        let result = validate_config(&config).await;
+        assert!(result.is_err());
+        assert!(format!("{:?}", result.unwrap_err()).contains("buffer_size"));
+    }
+
+    #[tokio::test]
+    async fn test_config_validation_edge_case() {
+        let config = NetworkRetryConfig {
+            max_connections: 1,
+            buffer_size: 1,
+            ..Default::default()
+        };
+        assert!(validate_config(&config).await.is_ok());
+    }
+
+    // ==================== SERVICE TESTS ====================
+
     #[tokio::test]
     async fn test_service_creation() {
         let service = create_service();
-        assert!(service.initialize(&config).await.is_ok());
-        assert_eq!(service.health_check().await.expect("Network operation failed"), HealthStatus::Healthy);
+        // Service created successfully
+        assert!(format!("{:?}", service).contains("DefaultService"));
+    }
+
+    #[tokio::test]
+    async fn test_service_with_custom_config() {
+        let config = NetworkRetryConfig {
+            enabled: true,
+            timeout: Duration::from_secs(5),
+            max_connections: 100,
+            buffer_size: 4096,
+        };
+        let service = DefaultService::new(config);
+        assert!(format!("{:?}", service).contains("DefaultService"));
+    }
+
+    #[tokio::test]
+    async fn test_service_health_check() {
+        let service = create_service();
+        let health = service.health_check().await;
+        assert!(health.is_ok());
+        assert_eq!(
+            health.expect("Test: health_check should return Ok"),
+            HealthStatus::Healthy
+        );
+    }
+
+    #[tokio::test]
+    async fn test_service_initialize() {
+        let service = create_service();
+        let result = service.initialize().await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_service_shutdown() {
+        let service = create_service();
+        let result = service.shutdown().await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_service_lifecycle() {
+        let service = create_service();
+        
+        // Initialize
+        assert!(service.initialize().await.is_ok());
+        
+        // Health check
+        let health = service.health_check().await;
+        assert!(health.is_ok());
+        assert_eq!(
+            health.expect("Test: health_check should return Ok"),
+            HealthStatus::Healthy
+        );
+        
+        // Shutdown
         assert!(service.shutdown().await.is_ok());
-    async fn test_metrics() {
+    }
+
+    // ==================== METRICS TESTS ====================
+
+    #[tokio::test]
+    async fn test_metrics_default() {
+        let service = create_service();
         let metrics = service.get_metrics().await;
         assert_eq!(metrics.requests_processed, 0);
         assert_eq!(metrics.errors_encountered, 0);
+        assert_eq!(metrics.average_response_time, Duration::from_millis(0));
+        assert_eq!(metrics.memory_usage_bytes, 0);
+    }
+
+    #[tokio::test]
+    async fn test_metrics_structure() {
+        let metrics = Metrics::default();
+        assert_eq!(metrics.requests_processed, 0);
+        assert_eq!(metrics.errors_encountered, 0);
+    }
+
+    #[tokio::test]
+    async fn test_metrics_read_multiple_times() {
+        let service = create_service();
+        let metrics1 = service.get_metrics().await;
+        let metrics2 = service.get_metrics().await;
+        
+        // Both reads should succeed
+        assert_eq!(metrics1.requests_processed, metrics2.requests_processed);
+    }
+
+    // ==================== EDGE CASES ====================
+
+    #[test]
+    fn test_config_extreme_timeout() {
+        let config = NetworkRetryConfig {
+            timeout: Duration::from_secs(3600), // 1 hour
+            ..Default::default()
+        };
+        assert_eq!(config.timeout, Duration::from_secs(3600));
+    }
+
+    #[test]
+    fn test_config_zero_timeout() {
+        let config = NetworkRetryConfig {
+            timeout: Duration::from_millis(0),
+            ..Default::default()
+        };
+        assert_eq!(config.timeout, Duration::from_millis(0));
+    }
+
+    #[test]
+    fn test_config_max_values() {
+        let config = NetworkRetryConfig {
+            enabled: true,
+            timeout: Duration::from_secs(u64::MAX / 1000), // Near max but avoids overflow
+            max_connections: usize::MAX,
+            buffer_size: usize::MAX,
+        };
+        assert_eq!(config.max_connections, usize::MAX);
+        assert_eq!(config.buffer_size, usize::MAX);
+    }
+
+    // ==================== CONCURRENT TESTS ====================
+
+    #[tokio::test]
+    async fn test_concurrent_health_checks() {
+        let service = Arc::new(create_service());
+        
+        let handles: Vec<_> = (0..10)
+            .map(|_| {
+                let service = Arc::clone(&service);
+                tokio::spawn(async move {
+                    service.health_check().await
+                })
+            })
+            .collect();
+        
+        for handle in handles {
+            let result = handle.await.expect("Task should complete");
+            assert!(result.is_ok());
+            assert_eq!(
+                result.expect("Test: health check result should be Ok"),
+                HealthStatus::Healthy
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn test_concurrent_metrics_reads() {
+        let service = Arc::new(create_service());
+        
+        let handles: Vec<_> = (0..10)
+            .map(|_| {
+                let service = Arc::clone(&service);
+                tokio::spawn(async move {
+                    service.get_metrics().await
+                })
+            })
+            .collect();
+        
+        for handle in handles {
+            let metrics = handle.await.expect("Task should complete");
+            assert_eq!(metrics.requests_processed, 0);
+        }
+    }
+
+    #[tokio::test]
+    async fn test_concurrent_service_operations() {
+        let service = Arc::new(create_service());
+        
+        let handles: Vec<_> = (0..5)
+            .map(|i| {
+                let service = Arc::clone(&service);
+                tokio::spawn(async move {
+                    if i % 2 == 0 {
+                        service.health_check().await.map(|_| ())
+                    } else {
+                        service.get_metrics().await;
+                        Ok(())
+                    }
+                })
+            })
+            .collect();
+        
+        for handle in handles {
+            assert!(handle.await.is_ok());
+        }
+    }
+}

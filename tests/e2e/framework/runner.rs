@@ -145,8 +145,8 @@ impl E2ETestingFramework {
                     break;
                 }
 
-                // Brief pause between tests
-                tokio::time::sleep(Duration::from_millis(500)).await;
+                // Coordination between tests
+                tokio::task::yield_now().await;
             }
             Ok(results)
         }

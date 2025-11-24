@@ -198,7 +198,7 @@ mod tests {
     #[test]
     fn test_dashboard_state_debug_format() {
         let state = DashboardState::new();
-        let debug_str = format!("{:?}", state);
+        let debug_str = format!("{state:?}");
 
         assert!(debug_str.contains("DashboardState"));
         assert!(debug_str.contains("active_connections"));
@@ -360,8 +360,8 @@ mod tests {
         PerformanceAlert {
             id: id.to_string(),
             severity: AlertSeverity::Warning,
-            title: format!("Test Alert: {}", id),
-            message: format!("Test alert: {}", id),
+            title: format!("Test Alert: {id}"),
+            message: format!("Test alert: {id}"),
             timestamp: SystemTime::now(),
             resolved,
             metric_name: "test_metric".to_string(),

@@ -46,7 +46,7 @@ pub struct BackupConfig {
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
 /// 
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::network::config::RestoreConfig;
 /// 
@@ -126,8 +126,8 @@ pub fn backup_workspace(
 
     let dataset_name = format!("nestpool/workspaces/{workspace_id}");
     let snapshot_name = format!("{}@backup_{}", dataset_name, config.backup_name);
-    let backup_dir = std::env::var("NESTGATE_BACKUP_DIR")
-        .unwrap_or_else(|_| "/var/backups/nestgate".to_string());
+    use nestgate_core::error::utilities::safe_env_var_or_default;
+    let backup_dir = safe_env_var_or_default("NESTGATE_BACKUP_DIR", "/var/backups/nestgate");
     let backup_file = format!(
         "{}/workspace_{}_{}.zfs",
         backup_dir, workspace_id, config.backup_name
@@ -270,8 +270,8 @@ pub fn restore_workspace(
 
     let target_workspace = config.target_workspace_id.as_ref().unwrap_or(&workspace_id);
     let dataset_name = format!("nestpool/workspaces/{target_workspace}");
-    let backup_dir = std::env::var("NESTGATE_BACKUP_DIR")
-        .unwrap_or_else(|_| "/var/backups/nestgate".to_string());
+    use nestgate_core::error::utilities::safe_env_var_or_default;
+    let backup_dir = safe_env_var_or_default("NESTGATE_BACKUP_DIR", "/var/backups/nestgate");
     let backup_file = format!(
         "{}/workspace_{}_{}.zfs",
         backup_dir, workspace_id, config.backup_name
@@ -436,7 +436,7 @@ pub fn migrate_workspace(
     let timestamp = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map(|d| d.as_secs())
-        .unwrap_or_else(|_| 0); // Fallback to 0 if system time is before UNIX_EPOCH
+        .unwrap_or(0); // Fallback to 0 if system time is before UNIX_EPOCH
     
     let migration_snapshot = format!(
         "{}@migrate_{}",
@@ -501,8 +501,8 @@ pub fn list_workspace_backups(
 ) -> Result<Json<Value>, StatusCode> {
     info!("📋 Listing backups for workspace: {}", workspace_id);
 
-    let backup_dir = std::env::var("NESTGATE_BACKUP_DIR")
-        .unwrap_or_else(|_| "/var/backups/nestgate".to_string());
+    use nestgate_core::error::utilities::safe_env_var_or_default;
+    let backup_dir = safe_env_var_or_default("NESTGATE_BACKUP_DIR", "/var/backups/nestgate");
 
     let backup_pattern = format!("workspace_{workspace_id}_");
     let mut backups = Vec::new();

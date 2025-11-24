@@ -19,7 +19,7 @@ fn test_pool_state_online() {
 
 #[test]
 fn test_pool_state_all_variants() {
-    let states = vec![
+    let states = [
         PoolState::Online,
         PoolState::Offline,
         PoolState::Degraded,
@@ -45,7 +45,7 @@ fn test_pool_state_serialization() {
 
 #[test]
 fn test_pool_health_variants() {
-    let health_states = vec![
+    let health_states = [
         PoolHealth::Healthy,
         PoolHealth::Warning,
         PoolHealth::Critical,
@@ -293,7 +293,7 @@ fn test_pool_manager_creation() {
     let _manager = ZfsPoolManager::new_production(config);
 
     // Manager created successfully - type checked at compile time
-    assert!(true);
+    // Test passes if creation succeeds without panic
 }
 
 // ==================== CAPACITY MONITORING TYPES TESTS ====================

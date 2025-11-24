@@ -1,0 +1,103 @@
+# NestGate Coverage Makefile
+# Usage: make -f Makefile.coverage <target>
+
+.PHONY: help
+help:
+	@echo "NestGate Coverage Targets:"
+	@echo "  make -f Makefile.coverage coverage         - Full HTML coverage report"
+	@echo "  make -f Makefile.coverage coverage-summary - Text summary only"
+	@echo "  make -f Makefile.coverage coverage-open    - Generate and open report"
+	@echo "  make -f Makefile.coverage coverage-check   - Check coverage threshold"
+	@echo "  make -f Makefile.coverage coverage-json    - JSON format for CI"
+	@echo "  make -f Makefile.coverage coverage-clean   - Clean coverage artifacts"
+
+.PHONY: coverage
+coverage:
+	@echo "🧪 Generating coverage report..."
+	cargo llvm-cov --workspace --all-features --html --output-dir coverage
+	@echo "✅ Coverage report generated: coverage/html/index.html"
+	@echo "📊 Run 'make -f Makefile.coverage coverage-summary' for quick stats"
+
+.PHONY: coverage-summary
+coverage-summary:
+	@echo "📊 Coverage Summary:"
+	@cargo llvm-cov --workspace --all-features --summary-only
+
+.PHONY: coverage-open
+coverage-open: coverage
+	@echo "🌐 Opening coverage report in browser..."
+	@if command -v xdg-open >/dev/null 2>&1; then \
+		xdg-open coverage/html/index.html; \
+	elif command -v open >/dev/null 2>&1; then \
+		open coverage/html/index.html; \
+	else \
+		echo "Please open coverage/html/index.html manually"; \
+	fi
+
+.PHONY: coverage-check
+coverage-check:
+	@echo "🔍 Checking coverage thresholds..."
+	@echo "Note: Threshold checking requires manual verification for now"
+	@echo "Current target: 90% line coverage"
+	@make -f Makefile.coverage coverage-summary
+
+.PHONY: coverage-json
+coverage-json:
+	@echo "📦 Generating JSON coverage report for CI..."
+	cargo llvm-cov --workspace --all-features --json --output-path coverage.json
+	@echo "✅ JSON report: coverage.json"
+
+.PHONY: coverage-lcov
+coverage-lcov:
+	@echo "📦 Generating LCOV coverage report..."
+	cargo llvm-cov --workspace --all-features --lcov --output-path lcov.info
+	@echo "✅ LCOV report: lcov.info"
+	@echo "This can be uploaded to Codecov, Coveralls, etc."
+
+.PHONY: coverage-clean
+coverage-clean:
+	@echo "🧹 Cleaning coverage artifacts..."
+	@rm -rf coverage/ coverage.json lcov.info target/llvm-cov-target/
+	@echo "✅ Coverage artifacts cleaned"
+
+.PHONY: coverage-weekly
+coverage-weekly: coverage-summary
+	@echo "📅 Weekly coverage check complete"
+	@date >> coverage-history.log
+	@cargo llvm-cov --workspace --all-features --summary-only >> coverage-history.log
+	@echo "---" >> coverage-history.log
+	@echo "✅ Coverage logged to coverage-history.log"
+
+.PHONY: coverage-crate
+coverage-crate:
+	@echo "📦 Coverage for specific crate"
+	@echo "Usage: make -f Makefile.coverage coverage-crate CRATE=nestgate-core"
+	@if [ -z "$(CRATE)" ]; then \
+		echo "❌ Error: CRATE variable not set"; \
+		echo "Example: make -f Makefile.coverage coverage-crate CRATE=nestgate-core"; \
+		exit 1; \
+	fi
+	cargo llvm-cov --package $(CRATE) --html --output-dir coverage-$(CRATE)
+	@echo "✅ Coverage for $(CRATE): coverage-$(CRATE)/html/index.html"
+
+.PHONY: coverage-diff
+coverage-diff:
+	@echo "📊 Coverage diff (requires two runs)"
+	@echo "Run 'make coverage' before and after changes"
+	@echo "Compare coverage/html/index.html to see differences"
+
+# CI/CD targets
+.PHONY: ci-coverage
+ci-coverage:
+	@echo "🤖 CI Coverage Check"
+	cargo llvm-cov --workspace --all-features --lcov --output-path lcov.info
+	cargo llvm-cov --workspace --all-features --json --output-path coverage.json
+	@echo "✅ CI coverage reports generated"
+
+.PHONY: coverage-threshold
+coverage-threshold:
+	@echo "⚠️  Coverage threshold check (not yet enforced)"
+	@echo "Current: 4.44% | Target: 90%"
+	@echo "Gap: 85.56 percentage points"
+	@echo "TODO: Enable fail-under-lines=90 in .llvm-cov.toml when ready"
+

@@ -2,8 +2,8 @@
 
 use super::core::NativeZfsService;
 use super::parsing;
-use crate::handlers::zfs::universal_zfs::types::{DatasetConfig, DatasetInfo, SnapshotInfo};
 use crate::handlers::zfs::universal_zfs::UniversalZfsResult;
+use crate::handlers::zfs::universal_zfs_types::{DatasetConfig, DatasetInfo, SnapshotInfo};
 use std::collections::HashMap;
 
 /// List all ZFS datasets in the system
@@ -40,11 +40,9 @@ pub async fn create_dataset(
         .execute_zfs_command("zfs", &["create", &config.name])
         .await?;
     get_dataset(service, &config.name).await?.ok_or_else(|| {
-        crate::handlers::zfs::universal_zfs::types::UniversalZfsError::NotFound {
-            resource_type: "dataset".to_string(),
-            name: config.name.clone(),
+        crate::handlers::zfs::universal_zfs_types::UniversalZfsError::NotFound {
+            path: format!("dataset:{}", config.name),
         }
-        .into()
     })
 }
 /// Destroy a ZFS dataset
@@ -59,7 +57,7 @@ pub async fn create_dataset(
 ///
 /// # Returns
 /// * `UniversalZfsResult<()>` - Success or error result
-pub fn destroy_dataset(
+pub async fn destroy_dataset(
     service: &NativeZfsService,
     dataset_name: &str,
     recursive: bool,

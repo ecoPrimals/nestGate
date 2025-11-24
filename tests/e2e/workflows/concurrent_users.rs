@@ -97,7 +97,7 @@ pub async fn test_concurrent_user_workflow(config: &UnifiedTestConfig) -> Result
 async fn simulate_user_operation(user_id: usize, op_id: usize) -> Result<()> {
     // Add some variance to simulate realistic load
     let delay = 50 + (user_id * 10 + op_id * 5) % 100;
-    sleep(Duration::from_millis(delay as u64)).await;
+    tokio::task::yield_now().await;
 
     // Simulate occasional failures (5% failure rate)
     if (user_id + op_id) % 20 == 0 {

@@ -70,11 +70,11 @@ pub struct CanonicalStorageMetrics {
 /// This trait has been superseded by the canonical storage system.
 /// **MIGRATION PATH**:
 /// - Old: `CanonicalStorageBackend` 
-/// - New: `crate::traits::canonical_unified_traits::CanonicalStorage`
+/// - New: `crate::traits::canonical::CanonicalStorage`
 /// 
 /// The new CanonicalStorage trait provides all the functionality of this trait
 /// plus enhanced features like batch operations, metadata support, and streaming.
-#[deprecated(since = "2.1.0", note = "Use crate::traits::canonical_unified_traits::CanonicalStorage instead")]
+#[deprecated(since = "2.1.0", note = "Use crate::traits::canonical::CanonicalStorage instead")]
 pub trait CanonicalStorageBackend: Send + Sync {
     /// Read data from storage - native async, no Future boxing
     fn read(&self, path: &str) -> impl std::future::Future<Output = Result<Vec<u8>>> + Send;

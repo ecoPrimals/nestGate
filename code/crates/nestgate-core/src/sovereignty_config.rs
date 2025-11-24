@@ -4,20 +4,24 @@
 
 use std::env;
 
+use crate::error::utilities::safe_env_var_or_default;
+
 pub struct SovereigntyConfig;
 
 impl SovereigntyConfig {
     /// Get API endpoint respecting user sovereignty
     pub fn api_endpoint() -> String {
-        env::var("NESTGATE_API_ENDPOINT")
-            .unwrap_or_else(|_| crate::constants::canonical_defaults::network::build_api_url())
+        let default_url = crate::constants::canonical_defaults::network::build_api_url();
+        safe_env_var_or_default("NESTGATE_API_ENDPOINT", &default_url).to_string()
     }
 
     /// Get bind address respecting user sovereignty
     pub fn bind_address() -> String {
-        env::var("NESTGATE_BIND_ADDRESS").unwrap_or_else(|_| {
-            crate::constants::canonical_defaults::network::DEFAULT_BIND_ADDRESS.to_string()
-        })
+        safe_env_var_or_default(
+            "NESTGATE_BIND_ADDRESS",
+            crate::constants::canonical_defaults::network::DEFAULT_BIND_ADDRESS,
+        )
+        .to_string()
     }
 
     /// Get API port respecting user sovereignty
@@ -32,30 +36,28 @@ impl SovereigntyConfig {
 
     /// Get WebSocket endpoint respecting user sovereignty
     pub fn websocket_endpoint() -> String {
-        env::var("NESTGATE_WS_ENDPOINT").unwrap_or_else(|_| {
-            crate::constants::canonical_defaults::network::build_websocket_url()
-        })
+        let default_url = crate::constants::canonical_defaults::network::build_websocket_url();
+        safe_env_var_or_default("NESTGATE_WS_ENDPOINT", &default_url).to_string()
     }
 
     /// Get database URL respecting user sovereignty
     pub fn database_url() -> String {
-        env::var("NESTGATE_DATABASE_URL").unwrap_or_else(|_| {
-            // Use capability-based discovery for database connection
-            let host = env::var("NESTGATE_DB_HOST").unwrap_or_else(|_| "localhost".to_string());
-            let port = env::var("NESTGATE_DB_PORT").unwrap_or_else(|_| "5432".to_string());
-            format!("postgresql://{}:{}/nestgate", host, port)
-        })
+        let default_url = format!(
+            "postgresql://{}:{}/nestgate",
+            safe_env_var_or_default("NESTGATE_DB_HOST", "localhost"),
+            safe_env_var_or_default("NESTGATE_DB_PORT", "5432")
+        );
+        safe_env_var_or_default("NESTGATE_DATABASE_URL", &default_url).to_string()
     }
 
     /// Get service discovery endpoint respecting user sovereignty
     pub fn discovery_endpoint() -> String {
-        env::var("NESTGATE_DISCOVERY_ENDPOINT").unwrap_or_else(|_| {
-            format!(
-                "http://{}:{}/discovery",
-                Self::bind_address(),
-                Self::api_port() + 3 // Discovery typically on api_port + 3
-            )
-        })
+        let default_endpoint = format!(
+            "http://{}:{}/discovery",
+            Self::bind_address(),
+            Self::api_port() + 3 // Discovery typically on api_port + 3
+        );
+        safe_env_var_or_default("NESTGATE_DISCOVERY_ENDPOINT", &default_endpoint).to_string()
     }
 
     /// Validate that all sovereignty requirements are met

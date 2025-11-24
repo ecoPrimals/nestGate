@@ -2,11 +2,11 @@
 //! 
 //! This test validates ZFS integration functionality using canonical patterns
 //! **CANONICAL MODERNIZATION**: Updated to use simple, working patterns
+//!
+//! **MODERN CONCURRENCY**: Uses yield_now() for async coordination instead of sleep().
 
 use nestgate_core::config::canonical_primary::NestGateCanonicalConfig as NestGateUnifiedConfig;
 use nestgate_core::constants::Environment;
-use std::time::Duration;
-use tokio::time::sleep;
 use tracing::info;
 
 /// Test ZFS integration configuration
@@ -43,7 +43,7 @@ async fn test_zfs_pool_operations() -> Result<(), Box<dyn std::error::Error>> {
         info!("Executing {} operation ({}ms)", operation, duration);
         
         // Simulate pool operation
-        sleep(Duration::from_millis(duration as u64)).await;
+        tokio::task::yield_now().await;
         
         // Verify pool operation is valid
         assert!(!operation.is_empty(), "Operation should be specified");
@@ -72,7 +72,7 @@ async fn test_zfs_dataset_management() -> Result<(), Box<dyn std::error::Error>>
         info!("Processing {} operation ({}ms)", operation, duration);
         
         // Simulate dataset operation
-        sleep(Duration::from_millis(duration as u64)).await;
+        tokio::task::yield_now().await;
         
         // Verify dataset operation is valid
         assert!(!operation.is_empty(), "Operation should be specified");
@@ -94,7 +94,7 @@ async fn test_zfs_performance_monitoring() -> Result<(), Box<dyn std::error::Err
     // Test ZFS performance monitoring cycles
     for i in 0..6 {
         let cycle_time = (i + 1) * 25;
-        sleep(Duration::from_millis(cycle_time as u64)).await;
+        tokio::task::yield_now().await;
         
         let elapsed = start_time.elapsed();
         info!("ZFS monitoring cycle {}: {}ms, total elapsed: {:?}", i + 1, cycle_time, elapsed);
@@ -125,7 +125,7 @@ async fn test_zfs_backup_recovery() -> Result<(), Box<dyn std::error::Error>> {
         info!("Testing {} scenario ({}ms)", scenario, backup_time);
         
         // Simulate backup scenario
-        sleep(Duration::from_millis(backup_time as u64 / 2)).await;
+        tokio::task::yield_now().await;
         
         // Verify backup scenario is valid
         assert!(!scenario.is_empty(), "Scenario should be specified");
@@ -154,7 +154,7 @@ async fn test_zfs_security_encryption() -> Result<(), Box<dyn std::error::Error>
         info!("Testing {} feature ({}ms)", feature, processing_time);
         
         // Simulate security feature
-        sleep(Duration::from_millis(processing_time as u64)).await;
+        tokio::task::yield_now().await;
         
         // Verify security feature is valid
         assert!(!feature.is_empty(), "Feature should be specified");

@@ -67,12 +67,19 @@ impl Default for ConnectionPoolConfig {
 /// Connection retry configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConnectionRetryConfig {
+    /// Maximum number of retry attempts
     pub max_attempts: u32,
+    /// Initial retry interval
     pub initial_interval: Duration,
+    /// Maximum retry interval
     pub max_interval: Duration,
+    /// Backoff multiplier
     pub multiplier: f64,
+    /// Whether to add jitter to retry intervals
     pub jitter: bool,
+    /// Whether to retry on connection errors
     pub retry_on_connection_error: bool,
+    /// Whether to retry on timeout
     pub retry_on_timeout: bool,
 }
 
@@ -93,9 +100,13 @@ impl Default for ConnectionRetryConfig {
 /// Pool monitoring configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PoolMonitoringConfig {
+    /// Whether monitoring is enabled
     pub enabled: bool,
+    /// Monitoring interval duration
     pub interval: Duration,
+    /// List of metrics to collect
     pub metrics: Vec<PoolMetric>,
+    /// Performance thresholds for alerting
     pub thresholds: PoolThresholds,
 }
 
@@ -117,21 +128,32 @@ impl Default for PoolMonitoringConfig {
 /// Pool metrics to collect
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum PoolMetric {
+    /// Number of currently active connections
     ActiveConnections,
+    /// Number of idle connections in the pool
     IdleConnections,
+    /// Total number of connections (active + idle)
     TotalConnections,
+    /// Time taken to acquire a connection from the pool
     ConnectionAcquisitionTime,
+    /// Percentage of pool capacity currently in use
     ConnectionUtilization,
+    /// Rate at which new connections are being created
     ConnectionCreationRate,
+    /// Rate at which connection attempts are failing
     ConnectionFailureRate,
 }
 
 /// Pool performance thresholds
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PoolThresholds {
+    /// Maximum acceptable time to acquire a connection
     pub max_acquisition_time: Duration,
+    /// Maximum acceptable pool utilization (0.0 to 1.0)
     pub max_utilization: f64,
+    /// Maximum acceptable failure rate (0.0 to 1.0)
     pub max_failure_rate: f64,
+    /// Minimum number of healthy connections required
     pub min_healthy_connections: u32,
 }
 
@@ -149,12 +171,19 @@ impl Default for PoolThresholds {
 /// Connection validation configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConnectionValidationConfig {
+    /// Whether connection validation is enabled
     pub enabled: bool,
+    /// Strategy to use for validating connections
     pub strategy: ValidationStrategy,
+    /// Timeout duration for validation operations
     pub validation_timeout: Duration,
+    /// Validate connection when borrowing from pool
     pub validate_on_borrow: bool,
+    /// Validate connection when returning to pool
     pub validate_on_return: bool,
+    /// Validate connections while they are idle in the pool
     pub validate_while_idle: bool,
+    /// Interval between idle connection validations
     pub validation_interval: Duration,
 }
 
@@ -175,15 +204,20 @@ impl Default for ConnectionValidationConfig {
 /// Connection validation strategies
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ValidationStrategy {
+    /// Execute a validation query to check connection health
     Query,
+    /// Use driver's isValid() method for validation
     IsValid,
+    /// Send a simple ping to validate connection
     Ping,
 }
 
 /// Connection lifecycle configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConnectionLifecycleConfig {
+    /// Configuration for tracking connection state
     pub state_tracking: ConnectionStateTracking,
+    /// Strategy for managing connection pooling (FIFO, LIFO, etc.)
     pub pooling_strategy: PoolingStrategy,
 }
 
@@ -199,9 +233,13 @@ impl Default for ConnectionLifecycleConfig {
 /// Connection state tracking configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConnectionStateTracking {
+    /// Whether state tracking is enabled
     pub enabled: bool,
+    /// Track connection usage statistics
     pub track_usage_stats: bool,
+    /// Track connection performance metrics
     pub track_performance: bool,
+    /// Duration to retain historical state data
     pub history_retention: Duration,
 }
 

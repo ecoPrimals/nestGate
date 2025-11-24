@@ -5,6 +5,7 @@
 
 #[cfg(test)]
 mod configuration_tests {
+    use crate::common::env_isolation::IsolatedEnvironment;
     use std::collections::HashMap;
     use std::env;
     use std::fs;
@@ -294,12 +295,13 @@ pub struct LegacySecurityConfig {
     
     #[test]
     fn test_environment_variable_loading() {
-        // Set test environment variables
-        env::set_var("NESTGATE_API_PORT", "9090");
-        env::set_var("NESTGATE_DB_HOST", "testhost");
-        env::set_var("NESTGATE_TLS_ENABLED", "true");
-        env::set_var("NESTGATE_ENVIRONMENT", "production");
-        env::set_var("NESTGATE_LOG_LEVEL", "debug");
+        // Set test environment variables with isolation
+        let mut env_iso = IsolatedEnvironment::new("test_environment_variable_loading");
+        env_iso.set("NESTGATE_API_PORT", "9090");
+        env_iso.set("NESTGATE_DB_HOST", "testhost");
+        env_iso.set("NESTGATE_TLS_ENABLED", "true");
+        env_iso.set("NESTGATE_ENVIRONMENT", "production");
+        env_iso.set("NESTGATE_LOG_LEVEL", "debug");
         
         let builder = ConfigBuilder::from_env();
         
@@ -309,19 +311,15 @@ pub struct LegacySecurityConfig {
         assert_eq!(builder.config.environment, "production");
         assert_eq!(builder.config.log_level, "debug");
         
-        // Clean up
-        env::remove_var("NESTGATE_API_PORT");
-        env::remove_var("NESTGATE_DB_HOST");
-        env::remove_var("NESTGATE_TLS_ENABLED");
-        env::remove_var("NESTGATE_ENVIRONMENT");
-        env::remove_var("NESTGATE_LOG_LEVEL");
+        // Automatic cleanup via Drop
     }
     
     #[test]
     fn test_invalid_environment_variables() {
-        env::set_var("NESTGATE_API_PORT", "invalid");
-        env::set_var("NESTGATE_ENVIRONMENT", "invalid_env");
-        env::set_var("NESTGATE_LOG_LEVEL", "invalid_level");
+        let mut env_iso = IsolatedEnvironment::new("test_invalid_environment_variables");
+        env_iso.set("NESTGATE_API_PORT", "invalid");
+        env_iso.set("NESTGATE_ENVIRONMENT", "invalid_env");
+        env_iso.set("NESTGATE_LOG_LEVEL", "invalid_level");
         
         let builder = ConfigBuilder::from_env();
         
@@ -330,10 +328,7 @@ pub struct LegacySecurityConfig {
         assert!(builder.validation_errors.iter().any(|e| e.contains("Invalid environment")));
         assert!(builder.validation_errors.iter().any(|e| e.contains("Invalid log level")));
         
-        // Clean up
-        env::remove_var("NESTGATE_API_PORT");
-        env::remove_var("NESTGATE_ENVIRONMENT");
-        env::remove_var("NESTGATE_LOG_LEVEL");
+        // Automatic cleanup via Drop
     }
     
     #[test]
@@ -438,23 +433,24 @@ api_port = 8888
     
     #[test]
     fn test_jwt_secret_validation() {
-        env::set_var("NESTGATE_JWT_SECRET", "short");
+        let mut env_iso = IsolatedEnvironment::new("test_jwt_secret_validation");
+        env_iso.set("NESTGATE_JWT_SECRET", "short");
         
         let builder = ConfigBuilder::from_env();
         assert!(builder.validation_errors.iter().any(|e| e.contains("JWT secret must be at least 32 characters")));
         
-        env::set_var("NESTGATE_JWT_SECRET", "a".repeat(32));
+        env_iso.set("NESTGATE_JWT_SECRET", &"a".repeat(32));
         let builder = ConfigBuilder::from_env();
         assert!(!builder.validation_errors.iter().any(|e| e.contains("JWT secret")));
         
-        // Clean up
-        env::remove_var("NESTGATE_JWT_SECRET");
+        // Automatic cleanup via Drop
     }
     
     #[test]
     fn test_configuration_precedence() {
         // Test that environment variables override defaults
-        env::set_var("NESTGATE_API_PORT", "7777");
+        let mut env_iso = IsolatedEnvironment::new("test_configuration_precedence");
+        env_iso.set("NESTGATE_API_PORT", "7777");
         
         let mut builder = ConfigBuilder::from_env();
         
@@ -469,8 +465,7 @@ api_port = 8888
         // Custom config should override environment
         assert_eq!(builder.config.network.api_port, 6666);
         
-        // Clean up
-        env::remove_var("NESTGATE_API_PORT");
+        // Automatic cleanup via Drop
     }
     
     #[test]

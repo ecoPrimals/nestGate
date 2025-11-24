@@ -206,3 +206,242 @@ impl Default for PermissionManager {
         Self::new()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_permission_manager_new() {
+        let manager = PermissionManager::new();
+        assert!(!manager.role_permissions.is_empty());
+        assert!(!manager.permissions.is_empty());
+        assert!(manager.user_permissions.is_empty());
+    }
+
+    #[test]
+    fn test_permission_manager_default() {
+        let manager = PermissionManager::default();
+        assert!(!manager.role_permissions.is_empty());
+    }
+
+    #[test]
+    fn test_admin_has_all_permissions() {
+        let manager = PermissionManager::new();
+        assert!(manager.role_has_permission(Role::Admin, "system.read"));
+        assert!(manager.role_has_permission(Role::Admin, "system.write"));
+        assert!(manager.role_has_permission(Role::Admin, "system.admin"));
+        assert!(manager.role_has_permission(Role::Admin, "nonexistent.permission"));
+    }
+
+    #[test]
+    fn test_operator_has_read_write_permissions() {
+        let manager = PermissionManager::new();
+        assert!(manager.role_has_permission(Role::Operator, "system.read"));
+        assert!(manager.role_has_permission(Role::Operator, "system.write"));
+        assert!(manager.role_has_permission(Role::Operator, "zfs.read"));
+        assert!(manager.role_has_permission(Role::Operator, "zfs.write"));
+    }
+
+    #[test]
+    fn test_operator_lacks_admin_permissions() {
+        let manager = PermissionManager::new();
+        assert!(!manager.role_has_permission(Role::Operator, "system.admin"));
+        assert!(!manager.role_has_permission(Role::Operator, "user.admin"));
+    }
+
+    #[test]
+    fn test_user_has_read_permissions() {
+        let manager = PermissionManager::new();
+        assert!(manager.role_has_permission(Role::User, "system.read"));
+        assert!(manager.role_has_permission(Role::User, "nfs.read"));
+        assert!(manager.role_has_permission(Role::User, "zfs.read"));
+    }
+
+    #[test]
+    fn test_user_lacks_write_permissions() {
+        let manager = PermissionManager::new();
+        assert!(!manager.role_has_permission(Role::User, "system.write"));
+        assert!(!manager.role_has_permission(Role::User, "nfs.write"));
+        assert!(!manager.role_has_permission(Role::User, "zfs.write"));
+    }
+
+    #[test]
+    fn test_readonly_only_has_read_permissions() {
+        let manager = PermissionManager::new();
+        assert!(manager.role_has_permission(Role::ReadOnly, "system.read"));
+        assert!(manager.role_has_permission(Role::ReadOnly, "nfs.read"));
+        assert!(!manager.role_has_permission(Role::ReadOnly, "system.write"));
+        assert!(!manager.role_has_permission(Role::ReadOnly, "nfs.write"));
+    }
+
+    #[test]
+    fn test_guest_minimal_permissions() {
+        let manager = PermissionManager::new();
+        assert!(manager.role_has_permission(Role::Guest, "system.info"));
+        assert!(!manager.role_has_permission(Role::Guest, "system.read"));
+        assert!(!manager.role_has_permission(Role::Guest, "system.write"));
+    }
+
+    #[test]
+    fn test_grant_permission_to_user() {
+        let mut manager = PermissionManager::new();
+        let user_id = "user123";
+        
+        assert!(!manager.user_has_permission(user_id, Role::User, "special.permission"));
+        
+        manager.grant_permission(user_id, "special.permission");
+        
+        assert!(manager.user_has_permission(user_id, Role::User, "special.permission"));
+    }
+
+    #[test]
+    fn test_revoke_permission_from_user() {
+        let mut manager = PermissionManager::new();
+        let user_id = "user123";
+        
+        manager.grant_permission(user_id, "special.permission");
+        assert!(manager.user_has_permission(user_id, Role::User, "special.permission"));
+        
+        manager.revoke_permission(user_id, "special.permission");
+        assert!(!manager.user_has_permission(user_id, Role::User, "special.permission"));
+    }
+
+    #[test]
+    fn test_revoke_nonexistent_permission() {
+        let mut manager = PermissionManager::new();
+        let user_id = "user123";
+        
+        // Should not panic when revoking a permission the user doesn't have
+        manager.revoke_permission(user_id, "nonexistent.permission");
+    }
+
+    #[test]
+    fn test_user_inherits_role_permissions() {
+        let manager = PermissionManager::new();
+        let user_id = "user123";
+        
+        // User role has system.read permission
+        assert!(manager.user_has_permission(user_id, Role::User, "system.read"));
+    }
+
+    #[test]
+    fn test_user_specific_permissions_supplement_role() {
+        let mut manager = PermissionManager::new();
+        let user_id = "user123";
+        
+        // User role doesn't have system.write, but we grant it specifically
+        assert!(!manager.role_has_permission(Role::User, "system.write"));
+        
+        manager.grant_permission(user_id, "system.write");
+        
+        assert!(manager.user_has_permission(user_id, Role::User, "system.write"));
+    }
+
+    #[test]
+    fn test_get_role_permissions_admin() {
+        let manager = PermissionManager::new();
+        let perms = manager.get_role_permissions(Role::Admin);
+        
+        // Admin should have all registered permissions
+        assert!(perms.len() > 10);
+    }
+
+    #[test]
+    fn test_get_role_permissions_operator() {
+        let manager = PermissionManager::new();
+        let perms = manager.get_role_permissions(Role::Operator);
+        
+        assert!(!perms.is_empty());
+        assert!(perms.iter().any(|p| p.name == "system.read"));
+        assert!(perms.iter().any(|p| p.name == "system.write"));
+    }
+
+    #[test]
+    fn test_get_role_permissions_readonly() {
+        let manager = PermissionManager::new();
+        let perms = manager.get_role_permissions(Role::ReadOnly);
+        
+        // ReadOnly should only have read permissions
+        assert!(perms.iter().all(|p| p.name.ends_with(".read")));
+    }
+
+    #[test]
+    fn test_get_user_permissions() {
+        let mut manager = PermissionManager::new();
+        let user_id = "user123";
+        
+        manager.grant_permission(user_id, "custom.permission");
+        
+        let perms = manager.get_user_permissions(user_id, Role::User);
+        
+        // Should include both role and user-specific permissions
+        assert!(perms.iter().any(|p| p.name == "system.read")); // From role
+    }
+
+    #[test]
+    fn test_get_user_permissions_no_duplicates() {
+        let mut manager = PermissionManager::new();
+        let user_id = "user123";
+        
+        // Grant a permission that the role already has
+        manager.grant_permission(user_id, "system.read");
+        
+        let perms = manager.get_user_permissions(user_id, Role::User);
+        
+        // Should not have duplicates
+        let system_read_count = perms.iter().filter(|p| p.name == "system.read").count();
+        assert_eq!(system_read_count, 1);
+    }
+
+    #[test]
+    fn test_register_custom_permission() {
+        let mut manager = PermissionManager::new();
+        let custom_perm = Permission::new("custom.action");
+        
+        manager.register_permission(custom_perm);
+        
+        assert!(manager.permissions.contains_key("custom.action"));
+    }
+
+    #[test]
+    fn test_multiple_users_independent_permissions() {
+        let mut manager = PermissionManager::new();
+        
+        manager.grant_permission("user1", "perm1");
+        manager.grant_permission("user2", "perm2");
+        
+        assert!(manager.user_has_permission("user1", Role::User, "perm1"));
+        assert!(!manager.user_has_permission("user1", Role::User, "perm2"));
+        assert!(manager.user_has_permission("user2", Role::User, "perm2"));
+        assert!(!manager.user_has_permission("user2", Role::User, "perm1"));
+    }
+
+    #[test]
+    fn test_permission_manager_clone() {
+        let mut manager = PermissionManager::new();
+        manager.grant_permission("user1", "special.perm");
+        
+        let cloned = manager.clone();
+        
+        assert!(cloned.user_has_permission("user1", Role::User, "special.perm"));
+    }
+
+    #[test]
+    fn test_all_default_permissions_registered() {
+        let manager = PermissionManager::new();
+        
+        let expected_permissions = vec![
+            "system.read", "system.write", "system.admin", "system.info",
+            "nfs.read", "nfs.write", "nfs.admin",
+            "smb.read", "smb.write", "smb.admin",
+            "zfs.read", "zfs.write", "zfs.admin",
+            "network.read", "network.write", "network.admin",
+            "user.read", "user.write", "user.admin",
+        ];
+        
+        for perm in expected_permissions {
+            assert!(manager.permissions.contains_key(perm), "Missing permission: {}", perm);
+        }
+    }
+}

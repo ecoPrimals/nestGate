@@ -12,3 +12,6 @@ pub use circuit_breaker::{CircuitBreaker, CircuitBreakerConfig, CircuitState};
 pub use graceful_degradation::{DegradationLevel, FallbackStrategy, GracefulDegradation};
 pub use health_monitoring::{ComponentHealth, HealthCheck, HealthMonitor};
 pub use retry_strategy::{ExponentialBackoff, RetryConfig, RetryStrategy};
+
+#[cfg(test)]
+mod recovery_edge_cases; // Nov 23, 2025 - P1-5 edge case tests

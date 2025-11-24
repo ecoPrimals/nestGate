@@ -11,6 +11,14 @@ pub mod data;
 pub mod utilities; // Consolidated error helpers
 pub mod variants;
 
+#[cfg(test)]
+mod utilities_comprehensive_tests;
+
+#[cfg(test)]
+mod error_edge_cases;
+#[cfg(test)]
+mod error_path_expansion_tests; // Nov 23, 2025 - P1 test expansion // Nov 23, 2025 - P1-5 edge case tests
+
 // Deprecated modules removed (November 10, 2025)
 // - helpers.rs → migrated to utilities.rs
 // - modernized_error_helpers.rs → migrated to utilities.rs

@@ -93,9 +93,9 @@ fn test_network_discovery_initialization() {
 /// Test performance discovery subsystem initialization
 #[test]
 fn test_performance_discovery_initialization() {
-    let perf_discovery = performance::PerformanceDiscovery::new();
+    let _perf_discovery = performance::PerformanceDiscovery::new();
     // Performance discovery should be created successfully
-    drop(perf_discovery);
+    // Automatically dropped at end of scope
 }
 
 /// Test service registry client initialization

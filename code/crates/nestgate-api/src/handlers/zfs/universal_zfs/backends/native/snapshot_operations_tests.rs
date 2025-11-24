@@ -6,7 +6,7 @@
 #[cfg(test)]
 mod tests {
     use super::super::snapshot_operations::*;
-    use crate::handlers::zfs::universal_zfs::types::{SnapshotConfig, SnapshotInfo};
+    use crate::handlers::zfs::universal_zfs_types::{SnapshotConfig, SnapshotInfo};
 
     // ==================== parse_size Tests ====================
 

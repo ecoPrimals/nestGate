@@ -151,6 +151,7 @@ impl SmartServiceFactory {
         service_type: &UnifiedServiceType,
     ) -> HashMap<String, String> {
         let mut endpoints = HashMap::new();
+        let discovery_config = crate::config::discovery_config::ServiceDiscoveryConfig::default();
 
         let base_port = match service_type {
             UnifiedServiceType::Storage => unified_constants::network::ports::API_PORT,
@@ -159,17 +160,20 @@ impl SmartServiceFactory {
             _ => unified_constants::network::ports::API_PORT,
         };
 
+        let base_endpoint = discovery_config.build_endpoint(base_port);
+        let metrics_endpoint = discovery_config.build_endpoint(base_port + 1);
+
         endpoints.insert(
             "health".to_string(),
-            format!("http://localhost:{base_port}/health"),
+            format!("{}/health", base_endpoint),
         );
         endpoints.insert(
             "metrics".to_string(),
-            format!("http://localhost:{base_port + 1}/metrics"),
+            format!("{}/metrics", metrics_endpoint),
         );
         endpoints.insert(
             "api".to_string(),
-            format!("http://localhost:{base_port}/api/v1"),
+            format!("{}/api/v1", base_endpoint),
         );
 
         endpoints
@@ -262,7 +266,7 @@ pub struct ServiceMetadata {
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
 /// 
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::network::config::ServiceFactoryConfig;
 /// 
@@ -477,23 +481,7 @@ impl SmartServiceWrapper {
 // ==================== SECTION ====================
 
 /// Mock service behavior configuration
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-/// 
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-pub type ServiceFactoryConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using ServiceFactoryConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-#[cfg(test)]
+#[cfg(any(test, feature = "dev-stubs"))]
 #[derive(Debug, Clone)]
 pub struct MockServiceBehavior {
     pub response_delay: Duration,
@@ -502,22 +490,7 @@ pub struct MockServiceBehavior {
     pub health_status: UnifiedHealthStatus,
 }
 
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-/// 
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-pub type ServiceFactoryConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using ServiceFactoryConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-#[cfg(test)]
+#[cfg(any(test, feature = "dev-stubs"))]
 impl Default for MockServiceBehavior {
     fn default() -> Self {
         Self {
@@ -530,23 +503,7 @@ impl Default for MockServiceBehavior {
 }
 
 /// Mock smart service for testing
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-/// 
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-pub type ServiceFactoryConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using ServiceFactoryConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-#[cfg(test)]
+#[cfg(any(test, feature = "dev-stubs"))]
 pub struct MockSmartService {
     metadata: ServiceMetadata,
     behavior: MockServiceBehavior,
@@ -555,22 +512,7 @@ pub struct MockSmartService {
     start_time: Option<SystemTime>,
 }
 
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-/// 
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-pub type ServiceFactoryConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using ServiceFactoryConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-#[cfg(test)]
+#[cfg(any(test, feature = "dev-stubs"))]
 impl MockSmartService {
     pub fn new(metadata: ServiceMetadata, behavior: MockServiceBehavior) -> Self {
         Self {
@@ -583,23 +525,7 @@ impl MockSmartService {
     }
 }
 
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-/// 
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-pub type ServiceFactoryConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using ServiceFactoryConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-#[cfg(test)]
+#[cfg(any(test, feature = "dev-stubs"))]
 impl SmartService for MockSmartService {
     fn metadata(&self) -> &ServiceMetadata {
         &self.metadata
@@ -846,6 +772,8 @@ pub fn create_service_factory() -> SmartServiceFactory {
     SmartServiceFactory::new()
 }
 /// Create a mock service with default behavior
+/// **TEST ONLY**: This function should only be used in test code
+#[cfg(any(test, feature = "dev-stubs"))]
 pub async fn create_mock_service(
     service_type: UnifiedServiceType,
 ) -> Result<Box<dyn SmartService>> {

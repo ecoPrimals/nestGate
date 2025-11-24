@@ -6,11 +6,18 @@
 
 // Sub-module declarations
 pub mod dynamic_endpoints;
+pub mod dynamic_endpoints_config; // ✅ NEW: Concurrent-safe configuration
 pub mod registry;
-pub mod types; // ✅ NEW: Dynamic endpoint resolution system
+pub mod types;
+
+#[cfg(test)]
+mod discovery_error_tests; // Nov 23, 2025 - P1 test expansion
+#[cfg(test)]
+mod service_discovery_edge_cases; // Nov 23, 2025 - P1-5 edge case tests // ✅ NEW: Dynamic endpoint resolution system
 
 // Re-export all public types for backward compatibility
 pub use dynamic_endpoints::{resolve_service_endpoint, DynamicEndpointResolver};
+pub use dynamic_endpoints_config::{DynamicEndpointsConfig, SharedEndpointsConfig}; // ✅ NEW: Export config
 pub use types::*; // ✅ NEW: Export dynamic endpoint functionality
 
 // Convenience re-exports for common usage patterns

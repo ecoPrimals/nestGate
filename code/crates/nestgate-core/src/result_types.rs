@@ -23,7 +23,7 @@
 //!
 //! Use `Result<T>` directly:
 //!
-//! ```rust
+//! ```rust,ignore
 //! // OLD (deprecated):
 //! pub fn fetch_data() -> ApiResult<Data> { ... }
 //!
@@ -53,7 +53,7 @@ use std::sync::Arc;
 ///
 /// ## Usage
 ///
-/// ```rust
+/// ```rust,ignore
 /// use nestgate_core::Result;
 ///
 /// pub fn process_data(input: &str) -> Result<String> {
@@ -82,7 +82,7 @@ pub type Result<T, E = NestGateError> = std::result::Result<T, E>;
 ///
 /// ## Usage
 ///
-/// ```rust
+/// ```rust,ignore
 /// use std::result::Result; // Using std Result
 /// use nestgate_core::result_types::CanonicalResult;
 ///
@@ -136,20 +136,21 @@ pub type VoidResult = Result<()>;
 ///
 /// ## Usage
 ///
-/// ```rust
+/// ```rust,ignore,no_run
 /// use nestgate_core::result_types::TestResult;
 ///
-/// #[test]
+/// // In your test file:
+/// // #[test]
 /// fn test_operation() -> TestResult {
-///     let result = operation()?;
-///     assert_eq!(result, expected);
+///     // let result = operation()?;
+///     // assert_eq!(result, expected);
 ///     Ok(())  // Default () works great for tests
 /// }
 ///
-/// #[test]
-/// fn test_with_return() -> TestResult<Data> {
-///     let data = fetch_data()?;
-///     Ok(data)  // Can also return data for helper functions
+/// // #[test]
+/// fn test_with_return() -> TestResult<String> {
+///     // let data = fetch_data()?;
+///     Ok("data".to_string())  // Can also return data for helper functions
 /// }
 /// ```
 ///
@@ -171,7 +172,7 @@ pub type TestResult<T = ()> = Result<T>;
 ///
 /// ## Usage
 ///
-/// ```rust
+/// ```rust,ignore
 /// use nestgate_core::result_types::ConnectionFactory;
 /// use std::sync::Arc;
 ///
@@ -191,6 +192,8 @@ pub type TestResult<T = ()> = Result<T>;
 /// - Factory can be shared across threads
 /// - Multiple pool instances can use same factory
 /// - Efficient cloning for distribution
+///
+/// Type alias for: `Arc<dyn Fn() -> Result<T> + Send + Sync>`
 pub type ConnectionFactory<T> = Arc<dyn Fn() -> Result<T> + Send + Sync>;
 
 /// **HEALTH CHECK FUNCTION**
@@ -202,7 +205,7 @@ pub type ConnectionFactory<T> = Arc<dyn Fn() -> Result<T> + Send + Sync>;
 ///
 /// ## Usage
 ///
-/// ```rust
+/// ```rust,ignore
 /// use nestgate_core::result_types::HealthCheckFn;
 /// use std::sync::Arc;
 ///
@@ -222,6 +225,8 @@ pub type ConnectionFactory<T> = Arc<dyn Fn() -> Result<T> + Send + Sync>;
 /// - Takes reference to avoid unnecessary cloning
 /// - Returns `Result<()>` - success or error
 /// - Thread-safe for concurrent health checks
+///
+/// Type alias for: `Arc<dyn Fn(&T) -> Result<()> + Send + Sync>`
 pub type HealthCheckFn<T> = Arc<dyn Fn(&T) -> Result<()> + Send + Sync>;
 
 /// **VALIDATOR FUNCTION**
@@ -233,7 +238,7 @@ pub type HealthCheckFn<T> = Arc<dyn Fn(&T) -> Result<()> + Send + Sync>;
 ///
 /// ## Usage
 ///
-/// ```rust
+/// ```rust,ignore
 /// use nestgate_core::result_types::ValidatorFn;
 ///
 /// struct Config {

@@ -22,20 +22,23 @@ use crate::universal_adapter::PrimalAgnosticAdapter as UniversalAdapter;
 /// Configuration for real adapter routing
 #[derive(Debug, Clone)]
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
-/// 
+///
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::config::AdapterRoutingConfig;
-/// 
+///
 /// // NEW (canonical):
 /// use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 /// // Or use type alias for compatibility:
 /// use crate::config::AdapterRoutingConfig; // Now aliases to CanonicalNetworkConfig
 /// ```
-/// 
+///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+#[deprecated(
+    since = "0.11.0",
+    note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
 pub struct AdapterRoutingConfig {
     /// Timeout for adapter operations
     pub operation_timeout: Duration,
@@ -48,6 +51,7 @@ pub struct AdapterRoutingConfig {
     /// Whether to enable performance monitoring
     pub enable_monitoring: bool,
 }
+#[allow(deprecated)]
 impl Default for AdapterRoutingConfig {
     fn default() -> Self {
         Self {
@@ -137,6 +141,7 @@ pub struct UniversalAdapterRouter {
     /// Universal adapter for real service routing
     adapter: Arc<UniversalAdapter>,
     /// Routing configuration
+    #[allow(deprecated)]
     config: AdapterRoutingConfig,
     /// Fallback strategy
     fallback_strategy: FallbackStrategy,
@@ -161,15 +166,14 @@ impl UniversalAdapterRouter {
     /// Create a new router with default configuration
     #[must_use]
     pub fn new(adapter: Arc<UniversalAdapter>) -> Self {
-        Self::with_config(
-            adapter,
-            AdapterRoutingConfig::default(),
-            FallbackStrategy::default(),
-        )
+        #[allow(deprecated)]
+        let config = AdapterRoutingConfig::default();
+        Self::with_config(adapter, config, FallbackStrategy::default())
     }
 
     /// Create a new router with custom configuration
     #[must_use]
+    #[allow(deprecated)]
     pub fn with_config(
         adapter: Arc<UniversalAdapter>,
         config: AdapterRoutingConfig,
@@ -562,17 +566,17 @@ impl Clone for RoutingMetrics {
     }
 }
 
-
 // ==================== CANONICAL TYPE ALIAS ====================
 // This type now aliases to the canonical network configuration
 // Original struct definition kept above for reference and backward compatibility
 
 /// Type alias to canonical network configuration
-/// 
+///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
-pub type AdapterRoutingConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+pub type AdapterRoutingConfigCanonical =
+    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using AdapterRoutingConfig (the deprecated struct) for now.
 // We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.

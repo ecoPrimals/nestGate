@@ -95,6 +95,7 @@ mod zfs_pool_tests {
     #[test]
     fn test_pool_vdev_configuration() {
         // Test vdev (virtual device) configuration validation
+        #[allow(dead_code)]
         struct VdevConfig {
             device_type: String,
             device_count: usize,
@@ -275,6 +276,7 @@ mod zfs_scrub_tests {
     fn test_scrub_status() {
         // Test scrub status states
         #[derive(Debug, PartialEq)]
+        #[allow(dead_code)]
         enum ScrubStatus {
             None,
             InProgress,

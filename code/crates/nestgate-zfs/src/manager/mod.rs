@@ -29,6 +29,12 @@ pub mod pool_operations;
 pub mod types;
 pub mod utilities;
 
+// Test modules
+#[cfg(test)]
+mod tests;
+#[cfg(test)]
+mod tests_comprehensive;
+
 // Re-export types for convenience
 pub use types::*;
 

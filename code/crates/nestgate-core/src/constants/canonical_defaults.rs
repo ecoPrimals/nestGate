@@ -2,8 +2,12 @@
 //!
 //! Default values for canonical configuration and network settings.
 
+use crate::error::utilities::safe_env_var_or_default;
+
 pub mod network {
     //! Network-related canonical defaults
+
+    use super::safe_env_var_or_default;
 
     /// Default API base URL
     pub const DEFAULT_API_BASE_URL: &str = "http://localhost:8080";
@@ -32,19 +36,19 @@ pub mod network {
     /// Build API URL from environment or default
     #[must_use]
     pub fn build_api_url() -> String {
-        std::env::var("NESTGATE_API_URL").unwrap_or_else(|_| DEFAULT_API_BASE_URL.to_string())
+        safe_env_var_or_default("NESTGATE_API_URL", DEFAULT_API_BASE_URL).to_string()
     }
 
     /// Build WebSocket URL from environment or default
     #[must_use]
     pub fn build_websocket_url() -> String {
-        std::env::var("NESTGATE_WS_URL").unwrap_or_else(|_| DEFAULT_WEBSOCKET_URL.to_string())
+        safe_env_var_or_default("NESTGATE_WS_URL", DEFAULT_WEBSOCKET_URL).to_string()
     }
 
     /// Build metrics URL from environment or default
     #[must_use]
     pub fn build_metrics_url() -> String {
-        std::env::var("NESTGATE_METRICS_URL").unwrap_or_else(|_| DEFAULT_METRICS_URL.to_string())
+        safe_env_var_or_default("NESTGATE_METRICS_URL", DEFAULT_METRICS_URL).to_string()
     }
 
     /// Build generic endpoint from environment

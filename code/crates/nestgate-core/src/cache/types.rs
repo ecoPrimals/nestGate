@@ -350,3 +350,351 @@ impl CacheEntry {
         chrono::Utc::now() - self.created_at
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ==================== StorageTier Tests ====================
+
+    #[test]
+    fn test_storage_tier_priority() {
+        assert_eq!(StorageTier::Cache.priority(), 0);
+        assert_eq!(StorageTier::Hot.priority(), 1);
+        assert_eq!(StorageTier::Warm.priority(), 2);
+        assert_eq!(StorageTier::Cold.priority(), 3);
+        assert_eq!(StorageTier::Archive.priority(), 4);
+    }
+
+    #[test]
+    fn test_storage_tier_priority_ordering() {
+        assert!(StorageTier::Cache.priority() < StorageTier::Hot.priority());
+        assert!(StorageTier::Hot.priority() < StorageTier::Warm.priority());
+        assert!(StorageTier::Warm.priority() < StorageTier::Cold.priority());
+        assert!(StorageTier::Cold.priority() < StorageTier::Archive.priority());
+    }
+
+    #[test]
+    fn test_storage_tier_typical_access_time() {
+        assert_eq!(
+            StorageTier::Cache.typical_access_time(),
+            Duration::from_micros(100)
+        );
+        assert_eq!(
+            StorageTier::Hot.typical_access_time(),
+            Duration::from_millis(1)
+        );
+        assert_eq!(
+            StorageTier::Warm.typical_access_time(),
+            Duration::from_millis(10)
+        );
+        assert_eq!(
+            StorageTier::Cold.typical_access_time(),
+            Duration::from_millis(100)
+        );
+        assert_eq!(
+            StorageTier::Archive.typical_access_time(),
+            Duration::from_secs(10)
+        );
+    }
+
+    #[test]
+    fn test_storage_tier_access_time_ordering() {
+        assert!(StorageTier::Cache.typical_access_time() < StorageTier::Hot.typical_access_time());
+        assert!(StorageTier::Hot.typical_access_time() < StorageTier::Warm.typical_access_time());
+        assert!(StorageTier::Warm.typical_access_time() < StorageTier::Cold.typical_access_time());
+        assert!(
+            StorageTier::Cold.typical_access_time() < StorageTier::Archive.typical_access_time()
+        );
+    }
+
+    // ==================== CachePolicy Tests ====================
+
+    #[test]
+    fn test_cache_policy_display() {
+        assert_eq!(CachePolicy::None.to_string(), "none");
+        assert_eq!(CachePolicy::ReadOnly.to_string(), "read-only");
+        assert_eq!(CachePolicy::WriteThrough.to_string(), "write-through");
+        assert_eq!(CachePolicy::WriteBack.to_string(), "write-back");
+    }
+
+    #[test]
+    fn test_cache_policy_default() {
+        assert_eq!(CachePolicy::default(), CachePolicy::WriteThrough);
+    }
+
+    #[test]
+    fn test_cache_policy_equality() {
+        assert_eq!(CachePolicy::None, CachePolicy::None);
+        assert_ne!(CachePolicy::None, CachePolicy::ReadOnly);
+    }
+
+    // ==================== CacheStats Tests ====================
+
+    #[test]
+    fn test_cache_stats_default() {
+        let stats = CacheStats::default();
+        assert_eq!(stats.hits, 0);
+        assert_eq!(stats.misses, 0);
+        assert_eq!(stats.hot_tier_items, 0);
+        assert_eq!(stats.total_items(), 0);
+        assert_eq!(stats.total_size_bytes(), 0);
+        assert_eq!(stats.total_evictions(), 0);
+    }
+
+    #[test]
+    fn test_cache_stats_hit_ratio_zero_operations() {
+        let stats = CacheStats::default();
+        assert_eq!(stats.hit_ratio(), 0.0);
+    }
+
+    #[test]
+    fn test_cache_stats_hit_ratio_all_hits() {
+        let stats = CacheStats {
+            hits: 10,
+            misses: 0,
+            ..Default::default()
+        };
+        assert_eq!(stats.hit_ratio(), 1.0);
+    }
+
+    #[test]
+    fn test_cache_stats_hit_ratio_all_misses() {
+        let stats = CacheStats {
+            hits: 0,
+            misses: 10,
+            ..Default::default()
+        };
+        assert_eq!(stats.hit_ratio(), 0.0);
+    }
+
+    #[test]
+    fn test_cache_stats_hit_ratio_mixed() {
+        let stats = CacheStats {
+            hits: 7,
+            misses: 3,
+            ..Default::default()
+        };
+        assert!((stats.hit_ratio() - 0.7).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_cache_stats_total_items() {
+        let stats = CacheStats {
+            hot_tier_items: 10,
+            warm_tier_items: 20,
+            cold_tier_items: 30,
+            ..Default::default()
+        };
+        assert_eq!(stats.total_items(), 60);
+    }
+
+    #[test]
+    fn test_cache_stats_total_size_bytes() {
+        let stats = CacheStats {
+            hot_tier_size_bytes: 1000,
+            warm_tier_size_bytes: 2000,
+            cold_tier_size_bytes: 3000,
+            ..Default::default()
+        };
+        assert_eq!(stats.total_size_bytes(), 6000);
+    }
+
+    #[test]
+    fn test_cache_stats_total_evictions() {
+        let stats = CacheStats {
+            hot_tier_evictions: 5,
+            warm_tier_evictions: 10,
+            cold_tier_evictions: 15,
+            ..Default::default()
+        };
+        assert_eq!(stats.total_evictions(), 30);
+    }
+
+    #[test]
+    fn test_cache_stats_record_hit() {
+        let mut stats = CacheStats::default();
+        assert_eq!(stats.hits, 0);
+        stats.record_hit();
+        assert_eq!(stats.hits, 1);
+        stats.record_hit();
+        assert_eq!(stats.hits, 2);
+    }
+
+    #[test]
+    fn test_cache_stats_record_miss() {
+        let mut stats = CacheStats::default();
+        assert_eq!(stats.misses, 0);
+        stats.record_miss();
+        assert_eq!(stats.misses, 1);
+        stats.record_miss();
+        assert_eq!(stats.misses, 2);
+    }
+
+    #[test]
+    fn test_cache_stats_record_access_time() {
+        let mut stats = CacheStats::default();
+        let access_time = Duration::from_millis(5);
+        stats.record_access_time(StorageTier::Hot, access_time);
+
+        let recorded_time = stats.tier_access_times.get(&StorageTier::Hot);
+        assert!(recorded_time.is_some());
+    }
+
+    #[test]
+    fn test_cache_stats_record_access_time_average() {
+        let mut stats = CacheStats::default();
+        // Default has Hot tier at 1ms
+        // First record: (1ms + 10ms) / 2 = 5.5ms
+        stats.record_access_time(StorageTier::Hot, Duration::from_millis(10));
+        // Second record: (5.5ms + 20ms) / 2 = 12.75ms
+        stats.record_access_time(StorageTier::Hot, Duration::from_millis(20));
+
+        let avg = stats
+            .tier_access_times
+            .get(&StorageTier::Hot)
+            .expect("Should have access time");
+        // Average should be 12.75ms due to running average calculation
+        assert_eq!(*avg, Duration::from_micros(12750));
+    }
+
+    // ==================== EfficiencyMetrics Tests ====================
+
+    #[test]
+    fn test_efficiency_metrics_default() {
+        let metrics = EfficiencyMetrics::default();
+        assert_eq!(metrics.moving_hit_ratio, 0.0);
+        assert_eq!(metrics.peak_hit_ratio, 0.0);
+        assert_eq!(metrics.effectiveness_score, 0.0);
+    }
+
+    #[test]
+    fn test_efficiency_metrics_update_hit() {
+        let mut metrics = EfficiencyMetrics::default();
+        metrics.update_hit();
+        assert_eq!(metrics.moving_hit_ratio, 1.0);
+        assert_eq!(metrics.peak_hit_ratio, 1.0);
+    }
+
+    #[test]
+    fn test_efficiency_metrics_update_miss() {
+        let mut metrics = EfficiencyMetrics::default();
+        metrics.update_miss();
+        assert_eq!(metrics.moving_hit_ratio, 0.0);
+    }
+
+    #[test]
+    fn test_efficiency_metrics_mixed_operations() {
+        let mut metrics = EfficiencyMetrics::default();
+        metrics.update_hit();
+        metrics.update_hit();
+        metrics.update_miss();
+        // 2 hits out of 3 operations = 0.666...
+        assert!((metrics.moving_hit_ratio - 0.666).abs() < 0.01);
+    }
+
+    #[test]
+    fn test_efficiency_metrics_peak_hit_ratio() {
+        let mut metrics = EfficiencyMetrics::default();
+        metrics.update_hit();
+        metrics.update_hit();
+        assert_eq!(metrics.peak_hit_ratio, 1.0);
+
+        metrics.update_miss();
+        metrics.update_miss();
+        // Peak should remain at 1.0 even though current ratio dropped
+        assert_eq!(metrics.peak_hit_ratio, 1.0);
+    }
+
+    #[test]
+    fn test_efficiency_metrics_max_operations_tracking() {
+        let mut metrics = EfficiencyMetrics::default();
+        // Add more than max_operations_tracked (1000)
+        for _ in 0..1100 {
+            metrics.update_hit();
+        }
+        assert_eq!(metrics.last_operations.len(), 1000);
+    }
+
+    // ==================== CacheEntry Tests ====================
+
+    #[test]
+    fn test_cache_entry_new() {
+        let key = "test-key".to_string();
+        let data = vec![1, 2, 3, 4, 5];
+        let entry = CacheEntry::new(key.clone(), data.clone(), StorageTier::Hot);
+
+        assert_eq!(entry.key, key);
+        assert_eq!(entry.data, data);
+        assert_eq!(entry.size, 5);
+        assert_eq!(entry.access_count, 0);
+        assert_eq!(entry.tier, StorageTier::Hot);
+        assert!(entry.ttl.is_none());
+    }
+
+    #[test]
+    fn test_cache_entry_is_expired_no_ttl() {
+        let entry = CacheEntry::new("key".to_string(), vec![1, 2, 3], StorageTier::Hot);
+        assert!(!entry.is_expired());
+    }
+
+    #[test]
+    fn test_cache_entry_is_expired_with_future_ttl() {
+        let mut entry = CacheEntry::new("key".to_string(), vec![1, 2, 3], StorageTier::Hot);
+        entry.ttl = Some(Duration::from_secs(3600)); // 1 hour
+        assert!(!entry.is_expired());
+    }
+
+    #[test]
+    fn test_cache_entry_touch() {
+        let mut entry = CacheEntry::new("key".to_string(), vec![1, 2, 3], StorageTier::Hot);
+        let initial_access_count = entry.access_count;
+        let initial_accessed_at = entry.accessed_at;
+
+        // Sleep a tiny bit to ensure time difference
+        std::thread::sleep(Duration::from_millis(10));
+
+        entry.touch();
+
+        assert_eq!(entry.access_count, initial_access_count + 1);
+        assert!(entry.accessed_at > initial_accessed_at);
+    }
+
+    #[test]
+    fn test_cache_entry_touch_multiple_times() {
+        let mut entry = CacheEntry::new("key".to_string(), vec![1, 2, 3], StorageTier::Hot);
+
+        entry.touch();
+        entry.touch();
+        entry.touch();
+
+        assert_eq!(entry.access_count, 3);
+    }
+
+    #[test]
+    fn test_cache_entry_age() {
+        let entry = CacheEntry::new("key".to_string(), vec![1, 2, 3], StorageTier::Hot);
+        let age = entry.age();
+
+        // Age should be very small (just created)
+        assert!(age.num_milliseconds() < 1000);
+    }
+
+    #[test]
+    fn test_cache_entry_size_calculation() {
+        let data = vec![0u8; 1024]; // 1 KB
+        let entry = CacheEntry::new("key".to_string(), data, StorageTier::Hot);
+        assert_eq!(entry.size, 1024);
+    }
+
+    #[test]
+    fn test_cache_entry_different_tiers() {
+        let entry_hot = CacheEntry::new("key".to_string(), vec![1], StorageTier::Hot);
+        let entry_warm = CacheEntry::new("key".to_string(), vec![1], StorageTier::Warm);
+        let entry_cold = CacheEntry::new("key".to_string(), vec![1], StorageTier::Cold);
+
+        assert_eq!(entry_hot.tier, StorageTier::Hot);
+        assert_eq!(entry_warm.tier, StorageTier::Warm);
+        assert_eq!(entry_cold.tier, StorageTier::Cold);
+    }
+}

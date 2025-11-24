@@ -781,3 +781,37 @@ impl Default for MetricsCollectorState {
         }
     }
 }
+
+// ==================== TEST-ONLY STUBS ====================
+
+#[cfg(test)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct MetricsCollector;
+
+#[cfg(test)]
+impl MetricsCollector {
+    #[must_use]
+    pub fn new() -> Self {
+        Self
+    }
+}
+
+#[cfg(test)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ApplicationMetrics {
+    pub total_requests: u64,
+    pub successful_requests: u64,
+    pub failed_requests: u64,
+    pub average_response_time_ms: f64,
+    pub requests_per_second: f64,
+    pub active_connections: u32,
+    pub error_rate: f64,
+}
+
+#[cfg(test)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MetricsSnapshot {
+    pub timestamp: SystemTime,
+    pub system: SystemMetrics,
+    pub application: ApplicationMetrics,
+}

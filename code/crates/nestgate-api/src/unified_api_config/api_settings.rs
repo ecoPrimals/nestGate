@@ -77,7 +77,6 @@ mod tests {
         let _discovery = ApiServiceDiscoverySettings::default();
         let _rpc = ApiRpcTimeoutSettings::default();
         
-        // If we get here, all settings types are properly defined
-        assert!(true);
+        // Test passes if all settings types are properly defined and accessible
     }
 }

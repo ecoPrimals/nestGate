@@ -2,11 +2,11 @@
 //! 
 //! This test validates chaos engineering integration functionality using canonical patterns
 //! **CANONICAL MODERNIZATION**: Updated to use simple, working patterns
+//!
+//! **MODERN CONCURRENCY**: Uses yield_now() for async coordination instead of sleep().
 
 use nestgate_core::config::canonical_primary::NestGateCanonicalConfig as NestGateUnifiedConfig;
 use nestgate_core::constants::Environment;
-use std::time::Duration;
-use tokio::time::sleep;
 use tracing::info;
 
 /// Test chaos engineering integration configuration
@@ -43,7 +43,7 @@ async fn test_chaos_system_disruption() -> Result<(), Box<dyn std::error::Error>
         info!("Executing {} disruption ({}ms)", operation, duration);
         
         // Simulate disruption operation
-        sleep(Duration::from_millis(duration as u64)).await;
+        tokio::task::yield_now().await;
         
         // Verify disruption operation is valid
         assert!(!operation.is_empty(), "Operation should be specified");
@@ -72,7 +72,7 @@ async fn test_chaos_resilience_validation() -> Result<(), Box<dyn std::error::Er
         info!("Processing {} resilience ({}ms)", step, duration);
         
         // Simulate resilience step
-        sleep(Duration::from_millis(duration as u64)).await;
+        tokio::task::yield_now().await;
         
         // Verify resilience step is valid
         assert!(!step.is_empty(), "Step should be specified");
@@ -94,7 +94,7 @@ async fn test_chaos_monitoring_metrics() -> Result<(), Box<dyn std::error::Error
     // Test chaos engineering monitoring cycles
     for i in 0..6 {
         let cycle_time = (i + 1) * 20;
-        sleep(Duration::from_millis(cycle_time as u64)).await;
+        tokio::task::yield_now().await;
         
         let elapsed = start_time.elapsed();
         info!("Chaos monitoring cycle {}: {}ms, total elapsed: {:?}", i + 1, cycle_time, elapsed);
@@ -125,7 +125,7 @@ async fn test_chaos_recovery_scenarios() -> Result<(), Box<dyn std::error::Error
         info!("Testing {} scenario ({}ms)", scenario, recovery_time);
         
         // Simulate recovery scenario
-        sleep(Duration::from_millis(recovery_time as u64 / 2)).await;
+        tokio::task::yield_now().await;
         
         // Verify recovery scenario is valid
         assert!(!scenario.is_empty(), "Scenario should be specified");
@@ -154,7 +154,7 @@ async fn test_chaos_fault_injection() -> Result<(), Box<dyn std::error::Error>> 
         info!("Injecting {} fault ({}ms)", fault_type, injection_time);
         
         // Simulate fault injection
-        sleep(Duration::from_millis(injection_time as u64)).await;
+        tokio::task::yield_now().await;
         
         // Verify fault injection is valid
         assert!(!fault_type.is_empty(), "Fault type should be specified");

@@ -1,7 +1,11 @@
 // Removed unused import for pedantic perfection
 // Commented out until available: CapabilityCategory, CapabilityRequest
+
+/// AI capability discovery for ecosystem services
 pub mod ai;
+/// Orchestration capability discovery for coordination services
 pub mod orchestration;
+/// Security capability discovery for authentication and authorization
 pub mod security;
 // **CAPABILITIES DISCOVERY MODULE**
 // Dynamic service discovery and configuration management
@@ -9,9 +13,13 @@ pub mod security;
 // **UNIFIED ARCHITECTURE**: All discovery types now consolidated into
 // `UnifiedDynamicDiscoveryManager` for consistent patterns and reduced duplication.
 // **CORE CAPABILITY DISCOVERY MODULES**
+
+/// Storage capability discovery for data persistence services
 pub mod storage;
 // **UNIFIED DYNAMIC DISCOVERY SYSTEM** - PRIMARY ARCHITECTURE
 // **MODULARIZED CONFIGURATION** - Split from 909-line monolithic file
+
+/// Discovery configuration types and builders
 pub mod config;
 // NOTE: unified_dynamic_config has been consolidated into the canonical configuration system
 
@@ -31,30 +39,38 @@ pub use config::*;
 
 // **UNIFIED DISCOVERY CONFIGURATION** - THE CANONICAL TYPE
 // Single entry point for all discovery configuration patterns
+
+/// Unified discovery configuration type alias for consistent API
 pub type DiscoveryConfig = UnifiedDynamicDiscoveryExtensions;
+
 // **UNIFIED DISCOVERY MANAGER** - THE CANONICAL TYPE
 // Single entry point for all discovery management operations
+
+/// Unified discovery manager type alias for discovery operations
 pub type DiscoveryManager = UnifiedDynamicDiscoveryExtensions;
+
 // ==================== SECTION ====================
 
-// Discover storage capabilities from available primals
+/// Discovers storage capabilities from available primals in the ecosystem
 pub async fn discover_storage_capabilities() -> crate::Result<Vec<storage::StorageCapabilityInfo>> {
     let discovery = storage::StorageCapabilityDiscovery::new();
     discovery.discover_capabilities().await
 }
-// Discover orchestration capabilities from available primals
+
+/// Discovers orchestration capabilities from available primals
 pub async fn discover_orchestration_capabilities(
 ) -> crate::Result<Vec<orchestration::OrchestrationCapabilityInfo>> {
     let discovery = orchestration::OrchestrationCapabilityDiscovery::new();
     discovery.discover_capabilities().await
 }
-// Discover security capabilities from available primals
+
+/// Discovers security capabilities from available primals
 pub async fn discover_security_capabilities() -> crate::Result<Vec<security::SecurityCapabilityInfo>>
 {
     let discovery = security::SecurityCapabilityDiscovery::new();
     discovery.discover_capabilities().await
 }
-// Discover AI capabilities from available primals
+/// Discovers AI capabilities from available primals
 pub async fn discover_ai_capabilities() -> crate::Result<Vec<ai::AiCapabilityInfo>> {
     let discovery = ai::AiCapabilityDiscovery::new();
     discovery.discover_capabilities().await

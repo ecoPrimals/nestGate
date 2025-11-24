@@ -2,8 +2,12 @@
 //! Service functionality and utilities.
 // Real production implementation of the SmartService trait
 
+#[cfg(test)]
+#[path = "service_tests.rs"]
+mod service_tests;
+
 use crate::canonical_types::{ServiceHealth, ServiceMetrics, UnifiedHealthStatus};
-use crate::canonical_unified_traits::HealthStatus;
+use crate::canonical::HealthStatus;
 use crate::error::{NestGateError, Result};
 use crate::smart_abstractions::{
     ServiceMetadata, SmartService, UniversalServiceRequest, UniversalServiceResponse,

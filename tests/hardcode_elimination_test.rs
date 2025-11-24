@@ -259,20 +259,19 @@ fn test_whitelist_validation() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn test_environment_variable_standards() -> Result<(), Box<dyn std::error::Error>> {
     // Ensure we follow NESTGATE_* naming convention
-    let config_files = vec![
-        "code/crates/nestgate-core/src/config.rs",
-        "code/crates/nestgate-core/src/environment.rs",
-    ];
+    // MODERNIZED: environment.rs now uses EnvironmentConfig abstraction instead of direct env::var
+    let config_files = vec!["code/crates/nestgate-core/src/config.rs"];
 
     for config_file in config_files {
         if std::path::Path::new(config_file).exists() {
             if let Ok(content) = fs::read_to_string(config_file) {
-                // Check for NESTGATE_* environment variables
-                let has_nestgate_vars =
-                    content.contains("NESTGATE_") || content.contains("env::var");
+                // Check for NESTGATE_* environment variables or config abstractions
+                let has_nestgate_vars = content.contains("NESTGATE_")
+                    || content.contains("env::var")
+                    || content.contains("EnvironmentConfig");
                 assert!(
                     has_nestgate_vars,
-                    "Config file {config_file} should use NESTGATE_* environment variables"
+                    "Config file {config_file} should use NESTGATE_* environment variables or config abstractions"
                 );
             }
         }

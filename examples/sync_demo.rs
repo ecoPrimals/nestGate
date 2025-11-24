@@ -318,6 +318,7 @@ struct PerformanceStats {
 // ==================== CONFIGURATION VALIDATION ====================
 
 /// Network configuration with validation
+#[allow(dead_code)]
 struct NetworkConfig {
     port: Port,
     bind_address: String,

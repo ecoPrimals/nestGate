@@ -77,11 +77,17 @@ impl<const MAX_CONNECTIONS: usize, const BUFFER_SIZE: usize>
 /// Deployment environment types
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum DeploymentEnvironment {
+    /// Development environment for local development
     Development,
+    /// Testing environment for automated tests
     Testing,
+    /// Staging environment for pre-production testing
     Staging,
+    /// Production environment for live deployment
     Production,
+    /// Performance testing environment
     Performance,
+    /// Security testing environment
     Security,
 }
 impl Default for DeploymentEnvironment {
@@ -93,10 +99,15 @@ impl Default for DeploymentEnvironment {
 /// Log level configuration
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum LogLevel {
+    /// Error log level (only errors)
     Error,
+    /// Warning log level (warnings and errors)
     Warn,
+    /// Info log level (informational messages)
     Info,
+    /// Debug log level (detailed debugging information)
     Debug,
+    /// Trace log level (very detailed tracing)
     Trace,
 }
 impl Default for LogLevel {
@@ -160,11 +171,11 @@ mod tests {
             shutdown_timeout: Duration::from_secs(10),
             health_check_interval: Duration::from_secs(5),
             max_connections_override: Some(2000),
-            buffer_size_override: Some(131072),
+            buffer_size_override: Some(131_072),
         };
 
         assert_eq!(config.effective_max_connections(), 2000);
-        assert_eq!(config.effective_buffer_size(), 131072);
+        assert_eq!(config.effective_buffer_size(), 131_072);
     }
 
     #[test]
@@ -204,7 +215,7 @@ mod tests {
 
     #[test]
     fn test_system_config_production_settings() {
-        let config = SystemConfig::<5000, 262144> {
+        let config = SystemConfig::<5000, 262_144> {
             instance_id: "prod-001".to_string(),
             instance_name: "Production Instance 1".to_string(),
             version: "2.0.0".to_string(),
@@ -257,11 +268,11 @@ mod tests {
     #[test]
     fn test_const_generics_compile_time_optimization() {
         // Test that const generics provide compile-time type differentiation
-        let max_conn = SystemConfig::<2000, 128000>::max_connections();
-        let buffer = SystemConfig::<2000, 128000>::buffer_size();
+        let max_conn = SystemConfig::<2000, 128_000>::max_connections();
+        let buffer = SystemConfig::<2000, 128_000>::buffer_size();
 
         assert_eq!(max_conn, 2000);
-        assert_eq!(buffer, 128000);
+        assert_eq!(buffer, 128_000);
     }
 
     #[test]

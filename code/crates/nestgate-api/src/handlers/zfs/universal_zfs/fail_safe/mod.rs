@@ -9,6 +9,7 @@
 // - optimization: Optimization and configuration operations
 
 mod circuit_breaker;
+/// Core fail-safe service implementation
 pub mod core;
 mod dataset_operations;
 mod optimization;

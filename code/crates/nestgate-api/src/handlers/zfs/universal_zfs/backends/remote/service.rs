@@ -57,12 +57,12 @@ impl RemoteZfsService {
     }
 
     /// Get configuration
-    pub fn config(&self) -> &RemoteConfig {
+    pub const fn config(&self) -> &RemoteConfig {
         &self.config
     }
 
     /// Get HTTP client
-    pub fn client(&self) -> &HttpClient {
+    pub const fn client(&self) -> &HttpClient {
         &self.client
     }
 

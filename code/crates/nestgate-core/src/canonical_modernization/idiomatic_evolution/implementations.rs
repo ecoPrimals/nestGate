@@ -65,6 +65,7 @@ impl SmartDefault for f64 {
 /// String evolution utilities
 pub struct StringEvolution;
 impl StringEvolution {
+    /// Modernize a string by trimming whitespace and converting to owned String
     #[must_use]
     pub fn modernize_string(s: &str) -> String {
         s.trim().to_string()
@@ -74,6 +75,7 @@ impl StringEvolution {
 /// Numeric evolution utilities
 pub struct NumericEvolution;
 impl NumericEvolution {
+    /// Modernize a port number, defaulting to 8080 if zero
     #[must_use]
     pub fn modernize_port(port: u16) -> u16 {
         if port == 0 {
@@ -87,6 +89,7 @@ impl NumericEvolution {
 /// Boolean evolution utilities
 pub struct BooleanEvolution;
 impl BooleanEvolution {
+    /// Modernize a boolean flag (no transformation needed)
     #[must_use]
     pub fn modernize_flag(flag: bool) -> bool {
         flag // No change needed for booleans
@@ -96,6 +99,7 @@ impl BooleanEvolution {
 /// Collection evolution utilities
 pub struct CollectionEvolution;
 impl CollectionEvolution {
+    /// Modernize a vector collection (no transformation needed)
     #[must_use]
     pub fn modernize_vec<T>(vec: Vec<T>) -> Vec<T> {
         vec // No change needed for basic collections
@@ -105,6 +109,7 @@ impl CollectionEvolution {
 /// Configuration evolution utilities
 pub struct ConfigEvolution;
 impl ConfigEvolution {
+    /// Apply modern configuration patterns to a config object
     pub fn apply_config_patterns<T>(config: T) -> T {
         config // Placeholder for config-specific patterns
     }
@@ -113,6 +118,7 @@ impl ConfigEvolution {
 /// Service evolution utilities
 pub struct ServiceEvolution;
 impl ServiceEvolution {
+    /// Modernize service configuration with modern patterns
     pub fn modernize_service_config<T>(config: T) -> T {
         config // Placeholder for service-specific patterns
     }

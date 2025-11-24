@@ -112,32 +112,21 @@ pub enum ConnectionImpl {
 }
 
 impl Connection for ConnectionImpl {
-    fn send_request(
-        &self,
-        request: Request,
-    ) -> impl Future<Output = Result<Response, NestGateError>> + Send {
-        async move {
-            match self {
-                Self::Http(conn) => conn.send_request(request).await,
-            }
+    async fn send_request(&self, request: Request) -> Result<Response, NestGateError> {
+        match self {
+            Self::Http(conn) => conn.send_request(request).await,
         }
     }
 
-    fn health_check(&self) -> impl Future<Output = Result<HealthStatus, NestGateError>> + Send {
-        async move {
-            match self {
-                Self::Http(conn) => conn.health_check().await,
-            }
+    async fn health_check(&self) -> Result<HealthStatus, NestGateError> {
+        match self {
+            Self::Http(conn) => conn.health_check().await,
         }
     }
 
-    fn get_metadata(
-        &self,
-    ) -> impl Future<Output = Result<ConnectionMetadata, NestGateError>> + Send {
-        async move {
-            match self {
-                Self::Http(conn) => conn.get_metadata().await,
-            }
+    async fn get_metadata(&self) -> Result<ConnectionMetadata, NestGateError> {
+        match self {
+            Self::Http(conn) => conn.get_metadata().await,
         }
     }
 
@@ -207,85 +196,76 @@ impl HttpConnection {
 }
 
 impl Connection for HttpConnection {
-    fn send_request(
-        &self,
-        request: Request,
-    ) -> impl Future<Output = Result<Response, NestGateError>> + Send {
-        async move {
-            debug!(
-                "Sending request {} to {}",
-                request.id, self.capability_info.endpoint
-            );
+    async fn send_request(&self, request: Request) -> Result<Response, NestGateError> {
+        debug!(
+            "Sending request {} to {}",
+            request.id, self.capability_info.endpoint
+        );
 
-            let response = self
-                .client
-                .post(&self.capability_info.endpoint)
-                .json(&request)
-                .send()
-                .await
-                .map_err(|e| {
-                    NestGateError::Internal(Box::new(
-                        crate::error::variants::core_errors::InternalErrorDetails {
-                            message: format!("HTTP request failed: {e}"),
-                            component: "universal_adapter".to_string(),
-                            location: Some(format!("{}:{}", file!(), line!())),
-                            is_bug: false,
-                            context: None,
-                        },
-                    ))
-                })?;
-
-            if response.status().is_success() {
-                let response_data: Response = response.json().await.map_err(|e| {
-                    NestGateError::Internal(Box::new(
-                        crate::error::variants::core_errors::InternalErrorDetails {
-                            message: format!("Failed to parse response: {e}"),
-                            component: "universal_adapter".to_string(),
-                            location: Some(format!("{}:{}", file!(), line!())),
-                            is_bug: false,
-                            context: None,
-                        },
-                    ))
-                })?;
-
-                Ok(response_data)
-            } else {
-                Err(NestGateError::Internal(Box::new(
+        let response = self
+            .client
+            .post(&self.capability_info.endpoint)
+            .json(&request)
+            .send()
+            .await
+            .map_err(|e| {
+                NestGateError::Internal(Box::new(
                     crate::error::variants::core_errors::InternalErrorDetails {
-                        message: format!("HTTP request failed with status: {}", response.status()),
+                        message: format!("HTTP request failed: {e}"),
                         component: "universal_adapter".to_string(),
                         location: Some(format!("{}:{}", file!(), line!())),
                         is_bug: false,
                         context: None,
                     },
-                )))
-            }
+                ))
+            })?;
+
+        if response.status().is_success() {
+            let response_data: Response = response.json().await.map_err(|e| {
+                NestGateError::Internal(Box::new(
+                    crate::error::variants::core_errors::InternalErrorDetails {
+                        message: format!("Failed to parse response: {e}"),
+                        component: "universal_adapter".to_string(),
+                        location: Some(format!("{}:{}", file!(), line!())),
+                        is_bug: false,
+                        context: None,
+                    },
+                ))
+            })?;
+
+            Ok(response_data)
+        } else {
+            Err(NestGateError::Internal(Box::new(
+                crate::error::variants::core_errors::InternalErrorDetails {
+                    message: format!("HTTP request failed with status: {}", response.status()),
+                    component: "universal_adapter".to_string(),
+                    location: Some(format!("{}:{}", file!(), line!())),
+                    is_bug: false,
+                    context: None,
+                },
+            )))
         }
     }
 
-    fn health_check(&self) -> impl Future<Output = Result<HealthStatus, NestGateError>> + Send {
-        async move {
-            debug!("Health checking {}", self.capability_info.endpoint);
+    async fn health_check(&self) -> Result<HealthStatus, NestGateError> {
+        debug!("Health checking {}", self.capability_info.endpoint);
 
-            let health_url = format!("{}/health", self.capability_info.endpoint);
+        let health_url = format!("{}/health", self.capability_info.endpoint);
 
-            match self.client.get(&health_url).send().await {
-                Ok(response) => {
-                    if response.status().is_success() {
-                        Ok(HealthStatus::Healthy)
-                    } else {
-                        Ok(HealthStatus::Degraded)
-                    }
+        match self.client.get(&health_url).send().await {
+            Ok(response) => {
+                if response.status().is_success() {
+                    Ok(HealthStatus::Healthy)
+                } else {
+                    Ok(HealthStatus::Degraded)
                 }
-                Err(_) => Ok(HealthStatus::Unhealthy),
             }
+            Err(_) => Ok(HealthStatus::Unhealthy),
         }
     }
 
-    fn get_metadata(
-        &self,
-    ) -> impl Future<Output = Result<ConnectionMetadata, NestGateError>> + Send {
-        async move { Ok(self.metadata.clone()) }
+    async fn get_metadata(&self) -> Result<ConnectionMetadata, NestGateError> {
+        Ok(self.metadata.clone())
     }
 
     fn connection_type(&self) -> &str {
@@ -473,9 +453,11 @@ mod tests {
         let mut metadata = HashMap::new();
         metadata.insert("test".to_string(), "true".to_string());
 
+        use crate::constants::{network_defaults::LOCALHOST_NAME, port_defaults::get_admin_port};
+        let endpoint = format!("http://{}:{}", LOCALHOST_NAME, get_admin_port());
         let capability = CapabilityInfo {
             capability_type: "test".to_string(),
-            endpoint: "http://localhost:8080".to_string(),
+            endpoint,
             confidence: 1.0,
             metadata,
         };

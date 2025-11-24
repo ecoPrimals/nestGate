@@ -5,7 +5,7 @@
 
 #![cfg(test)]
 
-use super::canonical_unified_traits::*;
+use super::canonical::*;
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
 

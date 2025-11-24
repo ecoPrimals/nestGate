@@ -183,7 +183,7 @@ mod tests {
     fn test_get_api_port_default() {
         // Assuming env var is not set
         let port = get_api_port();
-        assert!(port > 0 && port <= 65535);
+        assert!(port > 0); // u16 is always <= 65535
     }
 
     #[test]

@@ -193,13 +193,14 @@ impl ApiConfig {
     /// Create a development-optimized configuration
     #[must_use]
     pub fn development_optimized() -> Self {
-        use crate::constants::hardcoding::{addresses, ports};
+        let discovery_config = crate::config::discovery_config::ServiceDiscoveryConfig::default();
         Self {
             // Network settings
-            bind_address: addresses::LOCALHOST_IPV4
+            bind_address: discovery_config
+                .discovery_host
                 .parse()
                 .unwrap_or_else(|_| std::net::IpAddr::V4(std::net::Ipv4Addr::new(127, 0, 0, 1))),
-            port: ports::HTTP_DEFAULT,
+            port: discovery_config.discovery_base_port,
             max_connections: 100,
             request_timeout: Duration::from_secs(30),
             connection_timeout: Duration::from_secs(10),

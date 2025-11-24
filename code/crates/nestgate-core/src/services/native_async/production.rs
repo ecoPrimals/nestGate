@@ -21,19 +21,29 @@ use crate::universal_traits::ServiceRequest;
 use crate::service_discovery::types::ServiceInfo;
 
 // Define missing types locally
+/// Information about an active network connection
 #[derive(Debug, Clone)]
 pub struct ConnectionInfo {
+    /// Unique identifier for this connection
     pub connection_id: String,
+    /// Network address of the remote endpoint
     pub endpoint: NetworkAddress,
+    /// Timestamp when the connection was established
     pub established_at: std::time::SystemTime,
+    /// Current status of the connection
     pub status: ConnectionStatus,
+    /// Total bytes sent over this connection
     pub bytes_sent: u64,
+    /// Total bytes received over this connection
     pub bytes_received: u64,
 }
 
+/// Network address consisting of host and port
 #[derive(Debug, Clone)]
 pub struct NetworkAddress {
+    /// Hostname or IP address
     pub host: String,
+    /// Port number
     pub port: u16,
 }
 
@@ -198,9 +208,11 @@ impl NativeAsyncLoadBalancer<1000, 10000, 86400, 30> for ProductionLoadBalancer 
         })
     }
 
-    fn health_check_all(&self) -> crate::services::native_async::traits::HealthCheckFuture {
+    fn health_check_all(
+        &self,
+    ) -> impl std::future::Future<Output = Result<Vec<(String, bool)>>> + Send {
         let services = self.services.clone();
-        Box::pin(async move {
+        async move {
             // Real health checking implementation
             let services = services.read().await;
             let mut health_results = Vec::new();
@@ -218,7 +230,7 @@ impl NativeAsyncLoadBalancer<1000, 10000, 86400, 30> for ProductionLoadBalancer 
             }
 
             Ok(health_results)
-        })
+        }
     }
 
     async fn update_service_weight(&self, service_id: &str, weight: f64) -> Result<()> {
@@ -465,8 +477,10 @@ impl ProductionLoadBalancer {
 
 impl ProductionCommunicationProvider {
     #[allow(dead_code)] // Framework method - intentionally unused
-    fn list_active_connections(&self) -> crate::services::native_async::traits::HealthCheckFuture {
-        Box::pin(async move {
+    fn list_active_connections(
+        &self,
+    ) -> impl std::future::Future<Output = Result<Vec<(String, bool)>>> + Send {
+        async move {
             // Production connection listing
             let connections = vec![
                 ("connection_1".to_string(), true),
@@ -474,6 +488,6 @@ impl ProductionCommunicationProvider {
                 ("connection_3".to_string(), true),
             ];
             Ok(connections)
-        })
+        }
     }
 }

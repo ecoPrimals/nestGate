@@ -54,7 +54,7 @@ pub trait NativeAsyncService: Send + Sync + 'static {
 /// **DEPRECATED**: Native async now integrated into canonical storage traits
 #[deprecated(
     since = "0.9.0",
-    note = "Use crate::traits::canonical_unified_traits::CanonicalStorage - all methods are native async"
+    note = "Use crate::traits::canonical::CanonicalStorage - all methods are native async"
 )]
 pub trait NativeAsyncStorage: Send + Sync + 'static {
     /// Read data from storage
@@ -130,7 +130,7 @@ pub struct NetworkStatistics {
 /// **DEPRECATED**: Native async now integrated into canonical security
 #[deprecated(
     since = "0.9.0",
-    note = "Use crate::traits::canonical_unified_traits::CanonicalSecurity - all methods are native async"
+    note = "Use crate::traits::canonical::CanonicalSecurity - all methods are native async"
 )]
 pub trait NativeAsyncSecurityProvider: Send + Sync + 'static {
     /// Credentials type

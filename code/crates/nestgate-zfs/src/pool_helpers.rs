@@ -41,7 +41,7 @@ pub fn parse_size_with_units(size_str: &str) -> Option<u64> {
     let number: f64 = number_part.parse().ok()?;
 
     use crate::constants::{BYTES_PER_GB, BYTES_PER_KB, BYTES_PER_MB, BYTES_PER_PB, BYTES_PER_TB};
-    
+
     let multiplier = match unit.to_uppercase().as_str() {
         "" | "B" => 1,
         "K" => BYTES_PER_KB,

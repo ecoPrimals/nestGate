@@ -17,6 +17,8 @@ pub mod handlers;
 //! Legacy modules for backward compatibility
 pub mod api;
 pub mod connection_manager;
+#[cfg(test)]
+mod connection_manager_tests;
 pub mod universal_orchestration;
 // ==================== SECTION ====================
 
@@ -35,3 +37,9 @@ pub use handlers::{
 pub use nestgate_core::error::Result; 
 #[cfg(test)]
 mod error_handling_tests;
+#[cfg(test)]
+mod api_tests;
+#[cfg(test)]
+mod service_tests;
+#[cfg(test)]
+mod handlers_tests;

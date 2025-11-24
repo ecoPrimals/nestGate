@@ -5,7 +5,6 @@ use crate::error::CanonicalResult as Result;
 // Import missing ServiceRequest type
 use crate::universal_traits::ServiceRequest;
 use std::collections::HashMap;
-use std::env;
 use std::time::{Duration, SystemTime};
 
 use super::traits::NativeAsyncLoadBalancer;
@@ -96,14 +95,12 @@ impl NativeAsyncLoadBalancer<100, 1000, 3600, 60> for DevelopmentLoadBalancer {
         })
     }
 
-    fn health_check_all(&self) -> crate::services::native_async::traits::HealthCheckFuture {
-        Box::pin(async move {
-            // Mock health check - all services healthy in development
-            Ok(vec![
-                ("dev-service-1".to_string(), true),
-                ("dev-service-2".to_string(), true),
-            ])
-        })
+    async fn health_check_all(&self) -> Result<Vec<(String, bool)>> {
+        // Mock health check - all services healthy in development
+        Ok(vec![
+            ("dev-service-1".to_string(), true),
+            ("dev-service-2".to_string(), true),
+        ])
     }
 
     async fn update_service_weight(&self, service_id: &str, weight: f64) -> Result<()> {
@@ -135,16 +132,10 @@ impl NativeAsyncLoadBalancer<100, 1000, 3600, 60> for DevelopmentLoadBalancer {
                 }],
                 endpoints: vec![crate::service_discovery::types::ServiceEndpoint {
                     url: {
-                        use crate::constants::hardcoding::{addresses, ports};
-                        format!(
-                            "http://{}:{}",
-                            env::var("NESTGATE_API_HOST")
-                                .unwrap_or_else(|_| addresses::LOCALHOST_NAME.to_string()),
-                            env::var("NESTGATE_API_PORT")
-                                .ok()
-                                .and_then(|s| s.parse().ok())
-                                .unwrap_or(ports::HTTP_DEFAULT)
-                        )
+                        // ✅ MIGRATED: Now uses centralized runtime configuration
+                        use crate::config::runtime::get_config;
+                        let config = get_config();
+                        config.network.api_base_url()
                     },
                     protocol: crate::service_discovery::types::CommunicationProtocol::Http,
                     health_check: Some("/health".to_string()),

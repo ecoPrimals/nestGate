@@ -19,6 +19,9 @@ pub mod tests;
 pub mod tier_evaluation;
 pub mod types;
 
+#[cfg(test)]
+mod engine_tests;
+
 // Import canonical automation types from modernized package
 /// **CANONICAL**: Use ZFS-specific Result type for automation
 pub use crate::error::ZfsResult as Result;

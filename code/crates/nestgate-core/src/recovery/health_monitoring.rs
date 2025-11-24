@@ -110,7 +110,7 @@ pub trait HealthCheckZeroCost: Send + Sync + std::fmt::Debug {
 ///
 /// ## Note
 /// This is the **only** remaining legitimate `async_trait` usage in NestGate.
-/// It's required because trait objects (`dyn Trait`) cannot use native async yet.
+/// It's required because trait objects (with `dyn` keyword) cannot use native async yet.
 ///
 /// ## Performance
 /// Approximately 20-50% slower than `HealthCheckZeroCost` due to heap allocation

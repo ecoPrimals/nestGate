@@ -6,7 +6,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use super::types::{
+use crate::handlers::zfs::universal_zfs_types::{
     DatasetConfig, DatasetInfo, HealthStatus, PoolConfig, PoolInfo, ServiceMetrics, SnapshotConfig,
     SnapshotInfo, UniversalZfsResult,
 };
@@ -17,7 +17,7 @@ use crate::handlers::zfs::universal_zfs::fail_safe::core::FailSafeZfsService;
 /// **CANONICAL UNIVERSAL ZFS SERVICE TRAIT**
 ///
 /// This trait defines the complete interface that all ZFS backend implementations must provide.
-/// It includes all methods from native_real, remote, and fail_safe implementations.
+/// It includes all methods from `native_real`, remote, and `fail_safe` implementations.
 /// **CANONICAL MODERNIZATION**: Zero-cost native async patterns
 #[async_trait::async_trait]
 pub trait UniversalZfsService: Send + Sync {
@@ -126,11 +126,14 @@ pub trait UniversalZfsService: Send + Sync {
 /// Wrapper enum for dynamic dispatch of ZFS services
 #[derive(Debug)]
 pub enum DynZfsService {
+    /// Native ZFS service implementation
     Native(NativeZfsService),
+    /// Fail-safe ZFS service with circuit breaker
     FailSafe(FailSafeZfsService),
 }
 impl DynZfsService {
     /// Service name
+    #[must_use]
     pub fn service_name(&self) -> &str {
         match self {
             Self::Native(service) => service.service_name(),
@@ -139,66 +142,67 @@ impl DynZfsService {
     }
 
     /// Service version
+    #[must_use]
     pub fn service_version(&self) -> &str {
         match self {
-            DynZfsService::Native(service) => service.service_version(),
-            DynZfsService::FailSafe(service) => service.service_version(),
+            Self::Native(service) => service.service_version(),
+            Self::FailSafe(service) => service.service_version(),
         }
     }
 
     /// Health check
     pub async fn health_check(&self) -> UniversalZfsResult<HealthStatus> {
         match self {
-            DynZfsService::Native(service) => service.health_check().await,
-            DynZfsService::FailSafe(service) => service.health_check().await,
+            Self::Native(service) => service.health_check().await,
+            Self::FailSafe(service) => service.health_check().await,
         }
     }
 
     /// Get metrics
     pub async fn get_metrics(&self) -> UniversalZfsResult<ServiceMetrics> {
         match self {
-            DynZfsService::Native(service) => service.get_metrics().await,
-            DynZfsService::FailSafe(service) => service.get_metrics().await,
+            Self::Native(service) => service.get_metrics().await,
+            Self::FailSafe(service) => service.get_metrics().await,
         }
     }
 
     /// Check if available
     pub async fn is_available(&self) -> bool {
         match self {
-            DynZfsService::Native(service) => service.is_available().await,
-            DynZfsService::FailSafe(service) => service.is_available().await,
+            Self::Native(service) => service.is_available().await,
+            Self::FailSafe(service) => service.is_available().await,
         }
     }
 
     /// Shutdown
     pub async fn shutdown(&self) -> UniversalZfsResult<()> {
         match self {
-            DynZfsService::Native(service) => service.shutdown().await,
-            DynZfsService::FailSafe(service) => service.shutdown().await,
+            Self::Native(service) => service.shutdown().await,
+            Self::FailSafe(service) => service.shutdown().await,
         }
     }
 
     /// Create pool
     pub async fn create_pool(&self, config: &PoolConfig) -> UniversalZfsResult<PoolInfo> {
         match self {
-            DynZfsService::Native(service) => service.create_pool(config).await,
-            DynZfsService::FailSafe(service) => service.create_pool(config).await,
+            Self::Native(service) => service.create_pool(config).await,
+            Self::FailSafe(service) => service.create_pool(config).await,
         }
     }
 
     /// Get pool
     pub async fn get_pool(&self, name: &str) -> UniversalZfsResult<Option<PoolInfo>> {
         match self {
-            DynZfsService::Native(service) => service.get_pool(name).await,
-            DynZfsService::FailSafe(service) => service.get_pool(name).await,
+            Self::Native(service) => service.get_pool(name).await,
+            Self::FailSafe(service) => service.get_pool(name).await,
         }
     }
 
     /// Destroy pool
     pub async fn destroy_pool(&self, name: &str) -> UniversalZfsResult<()> {
         match self {
-            DynZfsService::Native(service) => service.destroy_pool(name).await,
-            DynZfsService::FailSafe(service) => service.destroy_pool(name).await,
+            Self::Native(service) => service.destroy_pool(name).await,
+            Self::FailSafe(service) => service.destroy_pool(name).await,
         }
     }
 
@@ -208,64 +212,64 @@ impl DynZfsService {
         config: &SnapshotConfig,
     ) -> UniversalZfsResult<SnapshotInfo> {
         match self {
-            DynZfsService::Native(service) => service.create_snapshot(config).await,
-            DynZfsService::FailSafe(service) => service.create_snapshot(config).await,
+            Self::Native(service) => service.create_snapshot(config).await,
+            Self::FailSafe(service) => service.create_snapshot(config).await,
         }
     }
 
     /// Destroy snapshot
     pub async fn destroy_snapshot(&self, name: &str) -> UniversalZfsResult<()> {
         match self {
-            DynZfsService::Native(service) => service.destroy_snapshot(name).await,
-            DynZfsService::FailSafe(service) => service.destroy_snapshot(name).await,
+            Self::Native(service) => service.destroy_snapshot(name).await,
+            Self::FailSafe(service) => service.destroy_snapshot(name).await,
         }
     }
 
     /// List datasets
     pub async fn list_datasets(&self) -> UniversalZfsResult<Vec<DatasetInfo>> {
         match self {
-            DynZfsService::Native(service) => service.list_datasets().await,
-            DynZfsService::FailSafe(service) => service.list_datasets().await,
+            Self::Native(service) => service.list_datasets().await,
+            Self::FailSafe(service) => service.list_datasets().await,
         }
     }
 
     /// Scrub pool
     pub async fn scrub_pool(&self, name: &str) -> UniversalZfsResult<()> {
         match self {
-            DynZfsService::Native(service) => service.scrub_pool(name).await,
-            DynZfsService::FailSafe(service) => service.scrub_pool(name).await,
+            Self::Native(service) => service.scrub_pool(name).await,
+            Self::FailSafe(service) => service.scrub_pool(name).await,
         }
     }
 
     /// Get pool status
     pub async fn get_pool_status(&self, name: &str) -> UniversalZfsResult<String> {
         match self {
-            DynZfsService::Native(service) => service.get_pool_status(name).await,
-            DynZfsService::FailSafe(service) => service.get_pool_status(name).await,
+            Self::Native(service) => service.get_pool_status(name).await,
+            Self::FailSafe(service) => service.get_pool_status(name).await,
         }
     }
 
     /// Create dataset
     pub async fn create_dataset(&self, config: &DatasetConfig) -> UniversalZfsResult<DatasetInfo> {
         match self {
-            DynZfsService::Native(service) => service.create_dataset(config).await,
-            DynZfsService::FailSafe(service) => service.create_dataset(config).await,
+            Self::Native(service) => service.create_dataset(config).await,
+            Self::FailSafe(service) => service.create_dataset(config).await,
         }
     }
 
     /// Get dataset
     pub async fn get_dataset(&self, name: &str) -> UniversalZfsResult<Option<DatasetInfo>> {
         match self {
-            DynZfsService::Native(service) => service.get_dataset(name).await,
-            DynZfsService::FailSafe(service) => service.get_dataset(name).await,
+            Self::Native(service) => service.get_dataset(name).await,
+            Self::FailSafe(service) => service.get_dataset(name).await,
         }
     }
 
     /// Destroy dataset
     pub async fn destroy_dataset(&self, name: &str) -> UniversalZfsResult<()> {
         match self {
-            DynZfsService::Native(service) => service.destroy_dataset(name).await,
-            DynZfsService::FailSafe(service) => service.destroy_dataset(name).await,
+            Self::Native(service) => service.destroy_dataset(name).await,
+            Self::FailSafe(service) => service.destroy_dataset(name).await,
         }
     }
 
@@ -276,12 +280,12 @@ impl DynZfsService {
         properties: &HashMap<String, String>,
     ) -> UniversalZfsResult<()> {
         match self {
-            DynZfsService::Native(service) => {
+            Self::Native(service) => {
                 service
                     .set_dataset_properties(dataset_name, properties)
                     .await
             }
-            DynZfsService::FailSafe(service) => {
+            Self::FailSafe(service) => {
                 service
                     .set_dataset_properties(dataset_name, properties)
                     .await
@@ -295,16 +299,16 @@ impl DynZfsService {
         dataset_name: &str,
     ) -> UniversalZfsResult<HashMap<String, String>> {
         match self {
-            DynZfsService::Native(service) => service.get_dataset_properties(dataset_name).await,
-            DynZfsService::FailSafe(service) => service.get_dataset_properties(dataset_name).await,
+            Self::Native(service) => service.get_dataset_properties(dataset_name).await,
+            Self::FailSafe(service) => service.get_dataset_properties(dataset_name).await,
         }
     }
 
     /// List snapshots
     pub async fn list_snapshots(&self) -> UniversalZfsResult<Vec<SnapshotInfo>> {
         match self {
-            DynZfsService::Native(service) => service.list_snapshots().await,
-            DynZfsService::FailSafe(service) => service.list_snapshots().await,
+            Self::Native(service) => service.list_snapshots().await,
+            Self::FailSafe(service) => service.list_snapshots().await,
         }
     }
 
@@ -314,48 +318,48 @@ impl DynZfsService {
         dataset_name: &str,
     ) -> UniversalZfsResult<Vec<SnapshotInfo>> {
         match self {
-            DynZfsService::Native(service) => service.list_dataset_snapshots(dataset_name).await,
-            DynZfsService::FailSafe(service) => service.list_dataset_snapshots(dataset_name).await,
+            Self::Native(service) => service.list_dataset_snapshots(dataset_name).await,
+            Self::FailSafe(service) => service.list_dataset_snapshots(dataset_name).await,
         }
     }
 
     /// Optimize
     pub async fn optimize(&self) -> UniversalZfsResult<String> {
         match self {
-            DynZfsService::Native(service) => service.optimize().await,
-            DynZfsService::FailSafe(service) => service.optimize().await,
+            Self::Native(service) => service.optimize().await,
+            Self::FailSafe(service) => service.optimize().await,
         }
     }
 
     /// Get optimization analytics
     pub async fn get_optimization_analytics(&self) -> UniversalZfsResult<serde_json::Value> {
         match self {
-            DynZfsService::Native(service) => service.get_optimization_analytics().await,
-            DynZfsService::FailSafe(service) => service.get_optimization_analytics().await,
+            Self::Native(service) => service.get_optimization_analytics().await,
+            Self::FailSafe(service) => service.get_optimization_analytics().await,
         }
     }
 
     /// Predict tier
     pub async fn predict_tier(&self, file_path: &str) -> UniversalZfsResult<String> {
         match self {
-            DynZfsService::Native(service) => service.predict_tier(file_path).await,
-            DynZfsService::FailSafe(service) => service.predict_tier(file_path).await,
+            Self::Native(service) => service.predict_tier(file_path).await,
+            Self::FailSafe(service) => service.predict_tier(file_path).await,
         }
     }
 
     /// Get configuration
     pub async fn get_configuration(&self) -> UniversalZfsResult<serde_json::Value> {
         match self {
-            DynZfsService::Native(service) => service.get_configuration().await,
-            DynZfsService::FailSafe(service) => service.get_configuration().await,
+            Self::Native(service) => service.get_configuration().await,
+            Self::FailSafe(service) => service.get_configuration().await,
         }
     }
 
     /// Update configuration
     pub async fn update_configuration(&self, config: serde_json::Value) -> UniversalZfsResult<()> {
         match self {
-            DynZfsService::Native(service) => service.update_configuration(config).await,
-            DynZfsService::FailSafe(service) => service.update_configuration(config).await,
+            Self::Native(service) => service.update_configuration(config).await,
+            Self::FailSafe(service) => service.update_configuration(config).await,
         }
     }
 }
@@ -363,19 +367,23 @@ impl DynZfsService {
 /// Enum wrapper for ZFS service implementations to enable dyn compatibility
 #[derive(Debug)]
 pub enum UniversalZfsServiceEnum {
+    /// Native ZFS service implementation
     Native(NativeZfsService),
+    /// Fail-safe ZFS service with circuit breaker
     FailSafe(FailSafeZfsService),
 }
 
 impl UniversalZfsServiceEnum {
     /// Create a new native ZFS service
+    #[must_use]
     pub fn new_native() -> Self {
         Self::Native(NativeZfsService::new())
     }
 
     /// Create a new fail-safe ZFS service
+    #[must_use]
     pub fn new_fail_safe(
-        primary: Arc<UniversalZfsServiceEnum>,
+        primary: Arc<Self>,
         config: crate::handlers::zfs::universal_zfs::config::FailSafeConfig,
     ) -> Self {
         Self::FailSafe(FailSafeZfsService::new(primary, config))
