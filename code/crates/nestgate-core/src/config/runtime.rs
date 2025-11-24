@@ -390,9 +390,11 @@ pub struct DatabaseConfig {
 
 impl DatabaseConfig {
     fn from_environment() -> Self {
+        use crate::constants::hardcoding::addresses;
+
         Self {
             postgres_host: env::var("NESTGATE_POSTGRES_HOST")
-                .unwrap_or_else(|_| "localhost".to_string()),
+                .unwrap_or_else(|_| addresses::LOCALHOST_NAME.to_string()),
 
             postgres_port: env::var("NESTGATE_POSTGRES_PORT")
                 .ok()
@@ -511,9 +513,11 @@ impl CacheConfig {
 
 impl Default for CacheConfig {
     fn default() -> Self {
+        use crate::constants::hardcoding::{addresses, ports};
+
         Self {
-            redis_host: "localhost".to_string(),
-            redis_port: 6379,
+            redis_host: addresses::LOCALHOST_NAME.to_string(),
+            redis_port: ports::REDIS_DEFAULT,
             redis_password: None,
             redis_database: 0,
             enabled: true,
