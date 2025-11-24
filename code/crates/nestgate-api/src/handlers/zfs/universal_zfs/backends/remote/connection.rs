@@ -19,12 +19,13 @@ pub struct ConnectionStats {
 }
 impl ConnectionStats {
     /// Create new connection stats
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
     /// Record a successful request
-    pub fn record_success(&mut self, response_time: Duration) {
+    pub const fn record_success(&mut self, response_time: Duration) {
         self.total_requests += 1;
         self.successful_requests += 1;
         self.consecutive_failures = 0;
@@ -45,6 +46,7 @@ impl ConnectionStats {
     }
 
     /// Get success rate as percentage
+    #[must_use]
     pub fn success_rate(&self) -> f64 {
         if self.total_requests == 0 {
             return 100.0;
@@ -53,6 +55,7 @@ impl ConnectionStats {
     }
 
     /// Check if connection is healthy
+    #[must_use]
     pub fn is_healthy(&self) -> bool {
         self.consecutive_failures < 3 && self.success_rate() > 80.0
     }

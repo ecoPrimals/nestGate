@@ -68,33 +68,29 @@ where
     type Metrics = serde_json::Value;
     type Error = NestGateError;
 
-    fn start(&mut self) -> impl Future<Output = Result<()>> + Send {
-        async { Ok(()) }
+    async fn start(&mut self) -> Result<()> {
+        Ok(())
     }
 
-    fn stop(&mut self) -> impl Future<Output = Result<()>> + Send {
-        async { Ok(()) }
+    async fn stop(&mut self) -> Result<()> {
+        Ok(())
     }
 
-    fn health(&self) -> impl Future<Output = Result<Self::Health>> + Send {
-        async {
-            Ok(serde_json::json!({
-                "status": "healthy",
-                "adapter": "native-async-storage"
-            }))
-        }
+    async fn health(&self) -> Result<Self::Health> {
+        Ok(serde_json::json!({
+            "status": "healthy",
+            "adapter": "native-async-storage"
+        }))
     }
 
     fn config(&self) -> &Self::Config {
         &self.config
     }
 
-    fn metrics(&self) -> impl Future<Output = Result<Self::Metrics>> + Send {
-        async {
-            Ok(serde_json::json!({
-                "adapter_type": "native-async-storage"
-            }))
-        }
+    async fn metrics(&self) -> Result<Self::Metrics> {
+        Ok(serde_json::json!({
+            "adapter_type": "native-async-storage"
+        }))
     }
 
     fn name(&self) -> &str {
@@ -124,14 +120,12 @@ where
     type Value = ObjectData;
     type Metadata = ObjectMetadata;
 
-    fn read(&self, key: &Self::Key) -> impl Future<Output = Result<Option<Self::Value>>> + Send {
-        async move {
-            self.inner
-                .retrieve_object(key)
-                .await
-                .map(Some)
-                .map_err(|e| NestGateError::storage_error(&format!("Read failed: {}", e)))
-        }
+    async fn read(&self, key: &Self::Key) -> Result<Option<Self::Value>> {
+        self.inner
+            .retrieve_object(key)
+            .await
+            .map(Some)
+            .map_err(|e| NestGateError::storage_error(&format!("Read failed: {}", e)))
     }
 
     fn write(
@@ -153,41 +147,33 @@ where
         }
     }
 
-    fn delete(&self, key: &Self::Key) -> impl Future<Output = Result<()>> + Send {
-        async move {
-            self.inner
-                .delete_object(key)
-                .await
-                .map_err(|e| NestGateError::storage_error(&format!("Delete failed: {}", e)))
+    async fn delete(&self, key: &Self::Key) -> Result<()> {
+        self.inner
+            .delete_object(key)
+            .await
+            .map_err(|e| NestGateError::storage_error(&format!("Delete failed: {}", e)))
+    }
+
+    async fn exists(&self, key: &Self::Key) -> Result<bool> {
+        // Check if we can retrieve metadata (if exists, metadata call should succeed)
+        match self.inner.get_metadata(key).await {
+            Ok(_) => Ok(true),
+            Err(_) => Ok(false),
         }
     }
 
-    fn exists(&self, key: &Self::Key) -> impl Future<Output = Result<bool>> + Send {
-        async move {
-            // Check if we can retrieve metadata (if exists, metadata call should succeed)
-            match self.inner.get_metadata(key).await {
-                Ok(_) => Ok(true),
-                Err(_) => Ok(false),
-            }
-        }
+    async fn metadata(&self, key: &Self::Key) -> Result<Self::Metadata> {
+        self.inner
+            .get_metadata(key)
+            .await
+            .map_err(|e| NestGateError::storage_error(&format!("Metadata read failed: {}", e)))
     }
 
-    fn metadata(&self, key: &Self::Key) -> impl Future<Output = Result<Self::Metadata>> + Send {
-        async move {
-            self.inner
-                .get_metadata(key)
-                .await
-                .map_err(|e| NestGateError::storage_error(&format!("Metadata read failed: {}", e)))
-        }
-    }
-
-    fn list(&self, _prefix: Option<&str>) -> impl Future<Output = Result<Vec<Self::Key>>> + Send {
-        async move {
-            self.inner
-                .list_objects()
-                .await
-                .map_err(|e| NestGateError::storage_error(&format!("List failed: {}", e)))
-        }
+    async fn list(&self, _prefix: Option<&str>) -> Result<Vec<Self::Key>> {
+        self.inner
+            .list_objects()
+            .await
+            .map_err(|e| NestGateError::storage_error(&format!("List failed: {}", e)))
     }
 }
 
@@ -196,7 +182,7 @@ where
 /// **DEPRECATED**: Migration complete - use canonical storage
 #[deprecated(
     since = "0.9.0",
-    note = "Migration to native async complete - use crate::traits::canonical_unified_traits::CanonicalStorage"
+    note = "Migration to native async complete - use crate::traits::canonical::CanonicalStorage"
 )]
 pub trait NativeAsyncStorageProvider {
     type ObjectId: Clone + Send + Sync + 'static;
@@ -239,7 +225,7 @@ pub trait NativeAsyncStorageProvider {
 /// let canonical = StoragePrimalAdapter::new(primal_storage);
 /// ```
 pub struct StoragePrimalAdapter<T> {
-    inner: T,
+    _inner: T,
     name: String,
     config: serde_json::Value,
 }
@@ -247,7 +233,7 @@ pub struct StoragePrimalAdapter<T> {
 impl<T> StoragePrimalAdapter<T> {
     pub fn new(inner: T) -> Self {
         Self {
-            inner,
+            _inner: inner,
             name: "storage-primal-adapter".to_string(),
             config: serde_json::json!({}),
         }
@@ -263,33 +249,29 @@ where
     type Metrics = serde_json::Value;
     type Error = NestGateError;
 
-    fn start(&mut self) -> impl Future<Output = Result<()>> + Send {
-        async { Ok(()) }
+    async fn start(&mut self) -> Result<()> {
+        Ok(())
     }
 
-    fn stop(&mut self) -> impl Future<Output = Result<()>> + Send {
-        async { Ok(()) }
+    async fn stop(&mut self) -> Result<()> {
+        Ok(())
     }
 
-    fn health(&self) -> impl Future<Output = Result<Self::Health>> + Send {
-        async {
-            Ok(serde_json::json!({
-                "status": "healthy",
-                "adapter": "storage-primal"
-            }))
-        }
+    async fn health(&self) -> Result<Self::Health> {
+        Ok(serde_json::json!({
+            "status": "healthy",
+            "adapter": "storage-primal"
+        }))
     }
 
     fn config(&self) -> &Self::Config {
         &self.config
     }
 
-    fn metrics(&self) -> impl Future<Output = Result<Self::Metrics>> + Send {
-        async {
-            Ok(serde_json::json!({
-                "adapter_type": "storage-primal"
-            }))
-        }
+    async fn metrics(&self) -> Result<Self::Metrics> {
+        Ok(serde_json::json!({
+            "adapter_type": "storage-primal"
+        }))
     }
 
     fn name(&self) -> &str {
@@ -311,42 +293,32 @@ where
     type Value = Vec<u8>;
     type Metadata = serde_json::Value;
 
-    fn read(&self, key: &Self::Key) -> impl Future<Output = Result<Option<Self::Value>>> + Send {
-        async move {
-            // StoragePrimalProvider uses UniversalRequest, so we'd need to construct one
-            // This is a simplified implementation - real implementation would use the handle_request method
-            Ok(None) // FUTURE: Implement proper request handling for migration adapter
-        }
+    async fn read(&self, _key: &Self::Key) -> Result<Option<Self::Value>> {
+        // StoragePrimalProvider uses UniversalRequest, so we'd need to construct one
+        // This is a simplified implementation - real implementation would use the handle_request method
+        Ok(None) // FUTURE: Implement proper request handling for migration adapter
     }
 
-    fn write(
-        &self,
-        _key: Self::Key,
-        _value: Self::Value,
-    ) -> impl Future<Output = Result<()>> + Send {
-        async move {
-            // FUTURE: Implement using handle_request for migration adapter
-            Ok(())
-        }
+    async fn write(&self, _key: Self::Key, _value: Self::Value) -> Result<()> {
+        // FUTURE: Implement using handle_request for migration adapter
+        Ok(())
     }
 
-    fn delete(&self, _key: &Self::Key) -> impl Future<Output = Result<()>> + Send {
-        async move {
-            // FUTURE: Implement using handle_request for migration adapter
-            Ok(())
-        }
+    async fn delete(&self, _key: &Self::Key) -> Result<()> {
+        // FUTURE: Implement using handle_request for migration adapter
+        Ok(())
     }
 
-    fn exists(&self, _key: &Self::Key) -> impl Future<Output = Result<bool>> + Send {
-        async move { Ok(false) }
+    async fn exists(&self, _key: &Self::Key) -> Result<bool> {
+        Ok(false)
     }
 
-    fn metadata(&self, _key: &Self::Key) -> impl Future<Output = Result<Self::Metadata>> + Send {
-        async move { Ok(serde_json::json!({})) }
+    async fn metadata(&self, _key: &Self::Key) -> Result<Self::Metadata> {
+        Ok(serde_json::json!({}))
     }
 
-    fn list(&self, _prefix: Option<&str>) -> impl Future<Output = Result<Vec<Self::Key>>> + Send {
-        async move { Ok(vec![]) }
+    async fn list(&self, _prefix: Option<&str>) -> Result<Vec<Self::Key>> {
+        Ok(vec![])
     }
 }
 
@@ -357,7 +329,7 @@ where
 /// See: `crate::traits::canonical_hierarchy::CanonicalStorage` for the unified implementation.
 ///
 /// **Migration**: Update implementations to use `CanonicalStorage` directly.
-/// ```rust
+/// ```rust,ignore
 /// use nestgate_core::traits::{CanonicalStorage};
 ///
 /// impl CanonicalStorage for MyStorage {
@@ -407,33 +379,29 @@ where
     type Metrics = serde_json::Value;
     type Error = NestGateError;
 
-    fn start(&mut self) -> impl Future<Output = Result<()>> + Send {
-        async { Ok(()) }
+    async fn start(&mut self) -> Result<()> {
+        Ok(())
     }
 
-    fn stop(&mut self) -> impl Future<Output = Result<()>> + Send {
-        async { Ok(()) }
+    async fn stop(&mut self) -> Result<()> {
+        Ok(())
     }
 
-    fn health(&self) -> impl Future<Output = Result<Self::Health>> + Send {
-        async {
-            Ok(serde_json::json!({
-                "status": "healthy",
-                "adapter": "zero-cost-storage"
-            }))
-        }
+    async fn health(&self) -> Result<Self::Health> {
+        Ok(serde_json::json!({
+            "status": "healthy",
+            "adapter": "zero-cost-storage"
+        }))
     }
 
     fn config(&self) -> &Self::Config {
         &self.config
     }
 
-    fn metrics(&self) -> impl Future<Output = Result<Self::Metrics>> + Send {
-        async {
-            Ok(serde_json::json!({
-                "adapter_type": "zero-cost-storage"
-            }))
-        }
+    async fn metrics(&self) -> Result<Self::Metrics> {
+        Ok(serde_json::json!({
+            "adapter_type": "zero-cost-storage"
+        }))
     }
 
     fn name(&self) -> &str {
@@ -455,50 +423,40 @@ where
     type Value = V;
     type Metadata = serde_json::Value;
 
-    fn read(&self, key: &Self::Key) -> impl Future<Output = Result<Option<Self::Value>>> + Send {
-        async move {
-            // retrieve returns Option<V> directly
-            Ok(self.inner.retrieve(key))
+    async fn read(&self, key: &Self::Key) -> Result<Option<Self::Value>> {
+        // retrieve returns Option<V> directly
+        Ok(self.inner.retrieve(key))
+    }
+
+    async fn write(&self, key: Self::Key, value: Self::Value) -> Result<()> {
+        self.inner
+            .store(key, value)
+            .await
+            .map_err(|e| NestGateError::storage_error(&format!("Write failed: {}", e)))
+    }
+
+    async fn delete(&self, key: &Self::Key) -> Result<()> {
+        // delete returns bool
+        let deleted = self.inner.delete(key);
+        if deleted {
+            Ok(())
+        } else {
+            Err(NestGateError::storage_error("Delete failed: key not found"))
         }
     }
 
-    fn write(&self, key: Self::Key, value: Self::Value) -> impl Future<Output = Result<()>> + Send {
-        async move {
-            self.inner
-                .store(key, value)
-                .await
-                .map_err(|e| NestGateError::storage_error(&format!("Write failed: {}", e)))
-        }
+    async fn exists(&self, key: &Self::Key) -> Result<bool> {
+        Ok(self.inner.retrieve(key).is_some())
     }
 
-    fn delete(&self, key: &Self::Key) -> impl Future<Output = Result<()>> + Send {
-        async move {
-            // delete returns bool
-            let deleted = self.inner.delete(key);
-            if deleted {
-                Ok(())
-            } else {
-                Err(NestGateError::storage_error("Delete failed: key not found"))
-            }
-        }
+    async fn metadata(&self, _key: &Self::Key) -> Result<Self::Metadata> {
+        // ZeroCostStorageProvider doesn't have metadata
+        Ok(serde_json::json!({}))
     }
 
-    fn exists(&self, key: &Self::Key) -> impl Future<Output = Result<bool>> + Send {
-        async move { Ok(self.inner.retrieve(key).is_some()) }
-    }
-
-    fn metadata(&self, _key: &Self::Key) -> impl Future<Output = Result<Self::Metadata>> + Send {
-        async move {
-            // ZeroCostStorageProvider doesn't have metadata
-            Ok(serde_json::json!({}))
-        }
-    }
-
-    fn list(&self, _prefix: Option<&str>) -> impl Future<Output = Result<Vec<Self::Key>>> + Send {
-        async move {
-            // ZeroCostStorageProvider doesn't have list operation
-            Ok(vec![])
-        }
+    async fn list(&self, _prefix: Option<&str>) -> Result<Vec<Self::Key>> {
+        // ZeroCostStorageProvider doesn't have list operation
+        Ok(vec![])
     }
 }
 

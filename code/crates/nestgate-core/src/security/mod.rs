@@ -18,6 +18,8 @@ pub mod auth;
 // Removed auth_errors module - using unified NestGateError
 pub mod auth_token;
 pub mod auth_types;
+pub mod jwt_validation;
+pub mod permissions;
 // REMOVED: production_hardening - delegated to security primal
 // REMOVED: rate_limiter - delegated to security primal
 // REMOVED: input_validation - delegated to security primal
@@ -33,6 +35,8 @@ pub mod tests;
 pub use auth_types::{AccessLevel, AuthContext, Permission, Role};
 // Legacy AuthError removed - use canonical SecurityError from crate::error
 pub use auth_token::AuthToken;
+pub use jwt_validation::{validate_jwt_secret, validate_jwt_secret_or_exit, JwtSecretError};
+pub use permissions::PermissionManager;
 pub use universal_auth_adapter::{
     StorageAccessRequest, StorageAccessResponse, UniversalAuthAdapter,
 };

@@ -1,238 +1,172 @@
-# 📚 Archive Location Guide
+# 📦 Archive Location
 
-**Last Updated**: November 8, 2025  
-**Status**: ✅ Organized & Clean
+**Last Updated**: November 17, 2025  
+**Status**: ✅ Organized
 
 ---
 
-## 📍 CURRENT ARCHIVE STRUCTURE
+## 🎯 Archive Policy
 
-### Local Archives (Active Reference)
+NestGate maintains historical documentation and code as a **fossil record** in the parent directory for reference.
+
+---
+
+## 📁 Archive Locations
+
+### Parent Directory Archives
+
+**Location**: `/home/eastgate/Development/ecoPrimals/`
+
+**Archives**:
+- `nestgate-docs-archive-nov-17-2025/` - Historical documentation archive
+  - Contains older session documents (Nov 12, Nov 13, interim docs)
+  - Size: ~672KB
+  - Moved from `docs/archive/` on Nov 17, 2025
+  
+- `nestgate-archive-nov-3-2025/` - Earlier project archive
+- `nestgate-fossil-archive-oct-15-2025/` - Historical fossil record
+
+### Current Project Archives
 
 **Location**: `/home/eastgate/Development/ecoPrimals/nestgate/archive/`
 
 **Contents**:
-- `session_nov_8_2025_evening_final/` - Latest comprehensive review (13 files)
-  - Executive summaries
-  - Technical assessments  
-  - Action plans
-  - ZFS audit (100/100)
-
-**Purpose**: Current session documentation for active reference
-
-**Size**: ~13 files, 2,700+ lines
+- `sessions/2025-11-17/` - Nov 17, 2025 session interim documents
+  - Contains superseded versions of audit reports
+  - Size: ~392KB
+  - Kept as fossil record
 
 ---
 
-### Parent Fossil Archives (Historical Record)
+## 🗂️ What's Archived
 
-**Location**: `/home/eastgate/Development/ecoPrimals/archive/`
+### Documentation Archives (Parent)
+- Older session documents (Nov 12, Nov 13)
+- Interim audit reports
+- Historical planning documents
+- Superseded guides
 
-**Key NestGate Archives**:
-- `nestgate-sessions-nov-2025-fossil/` - November 2025 sessions
-  - docs_nov_8_2025/
-  - session_notes_nov_7_2025/ (49 files)
-  - session_nov_8_2025/ (25 files)
-  - session_nov_8_2025_final/ (35 files)
-  - nov_7_2025_sessions/ (from docs/archive)
-
-**Purpose**: Historical fossil record of development progression
-
-**Also Available**:
-- `nestgate-docs-archive` - Historical documentation
-- `nestgate-sessions-2025` - 2025 session archives
-- `nestgate-docs-fossil-*` - Various fossil records
-- `nestgate-archive-*` - Major milestone archives
+### Session Archives (Current)
+- Interim session documents
+- Earlier versions of reports
+- Work-in-progress documents
+- Historical snapshots
 
 ---
 
-## 📊 ORGANIZATION PHILOSOPHY
+## 🔄 Archive Maintenance
 
-### What Goes Where
+### When to Archive
 
-**Local `archive/`** (nestgate project):
-- ✅ Current session reports (last 1-2 sessions)
-- ✅ Active reference documentation
-- ✅ Reports being frequently accessed
-- ✅ Migration plans in progress
+**Immediately**:
+- Superseded session documents
+- Interim versions of finalized reports
+- Old backup files
 
-**Parent `../archive/`** (ecoPrimals):
-- ✅ Historical sessions (> 1 week old)
-- ✅ Completed milestones
-- ✅ Fossil records
-- ✅ Multiple projects (beardog, nestgate, songbird, squirrel, toadstool)
-- ✅ Long-term preservation
+**Monthly** (17th of month):
+- Review active root documents
+- Move older session docs to archive
+- Clean up redundant files
 
-**`docs/archive/`** (project docs):
-- ✅ Migration plans (still relevant)
-- ✅ Unification analysis (reference material)
-- ⚠️ Old sessions → moved to parent archive
+**Quarterly**:
+- Review archive organization
+- Consolidate similar archives
+- Update this document
 
----
+### What NOT to Archive
 
-## 🗂️ DOCS ARCHIVE STATUS
-
-### Current Structure
-
-**Location**: `/home/eastgate/Development/ecoPrimals/nestgate/docs/archive/`
-
-**Contents**:
-```
-archive/
-├── migration_plans/           # Active migration references
-│   ├── API_CONFIG_MIGRATION_PLAN.md
-│   ├── AUTOMATION_CONFIG_MIGRATION_PLAN.md
-│   ├── NETWORK_CONFIG_MIGRATION_GUIDE.md
-│   ├── ZFS_CONFIG_MIGRATION_PLAN.md
-│   └── ZFS_MIGRATION_STATUS_FINAL.md
-│
-└── unification_analysis/      # Unification reference docs
-    └── (2 analysis files)
-```
-
-**Moved to Parent**:
-- ✅ `nov_7_2025_sessions/` → `../../../archive/nestgate-sessions-nov-2025-fossil/`
+**Keep Active**:
+- Current session documents (until superseded)
+- Core entry points (README, START_HERE, etc.)
+- Active planning documents
+- Current guides and references
 
 ---
 
-## 🎯 ACCESSING ARCHIVES
+## 📊 Archive Statistics
 
-### For Current Work
-```bash
-cd /home/eastgate/Development/ecoPrimals/nestgate/archive/
-ls -la session_nov_8_2025_evening_final/
+**Current State** (Nov 17, 2025):
 ```
-
-### For Historical Reference
-```bash
-cd /home/eastgate/Development/ecoPrimals/archive/
-ls -la nestgate-sessions-nov-2025-fossil/
-```
-
-### For Migration Plans
-```bash
-cd /home/eastgate/Development/ecoPrimals/nestgate/docs/archive/
-ls -la migration_plans/
+Parent Archives:       3 directories (~2GB total)
+Current Archives:      1 directory (392KB)
+Backup Files:          0 (.bak files cleaned)
+Total Archived Docs:   ~180 files
+Organization:          ✅ Clean
 ```
 
 ---
 
-## 📏 RETENTION POLICY
+## 🎯 Finding Archived Content
 
-### Local Archive (`archive/`)
-- **Keep**: Last 1-2 sessions
-- **Move to parent**: Sessions > 1 week old
-- **Review**: Monthly cleanup
+### By Date
+- Oct 15, 2025: `../nestgate-fossil-archive-oct-15-2025/`
+- Nov 3, 2025: `../nestgate-archive-nov-3-2025/`
+- Nov 12-13, 2025: `../nestgate-docs-archive-nov-17-2025/nov-12-2025-evening-session/`
+- Nov 17, 2025 (interim): `archive/sessions/2025-11-17/`
 
-### Docs Archive (`docs/archive/`)
-- **Keep**: Active migration plans
-- **Keep**: Reference documentation
-- **Move to parent**: Completed session notes
-
-### Parent Archive (`../archive/`)
-- **Keep**: All historical records
-- **Retention**: Indefinite (fossil record)
-- **Organize**: By project and date
+### By Type
+- **Session documents**: Check `archive/sessions/` or parent archives
+- **Audit reports**: Check parent `nestgate-docs-archive-nov-17-2025/audits/`
+- **Planning docs**: Check `../nestgate-docs-archive-nov-17-2025/planning/`
 
 ---
 
-## 🧹 RECENT CLEANUP (Nov 8, 2025)
+## ✅ Archive Cleanup (Nov 17, 2025)
 
-### Actions Taken
+**Actions Taken**:
+- ✅ Moved `docs/archive/*` to `../nestgate-docs-archive-nov-17-2025/`
+- ✅ Removed `docs/archive/` directory from workspace
+- ✅ Cleaned 2 `.bak` backup files from code
+- ✅ Organized parent archive structure
+- ✅ Updated this document
 
-**1. Moved to Parent Archive**:
-- `archive/docs_nov_8_2025/` → parent
-- `archive/session_notes_nov_7_2025/` → parent
-- `archive/session_nov_8_2025/` → parent
-- `archive/session_nov_8_2025_final/` → parent
-- `docs/archive/nov_7_2025_sessions/` → parent
-
-**2. Kept Local**:
-- `archive/session_nov_8_2025_evening_final/` (current)
-
-**3. Preserved in Docs**:
-- `docs/archive/migration_plans/` (active reference)
-- `docs/archive/unification_analysis/` (reference docs)
-
-### Results
-- ✅ Local archive: 1 folder (current session only)
-- ✅ Clean workspace (16 root .md files)
-- ✅ 0 backup files in code tree
-- ✅ Historical records preserved in parent
+**Result**:
+- Clean workspace
+- Organized archives
+- Clear fossil record maintained
+- Reduced false positives in searches
 
 ---
 
-## ✅ BENEFITS
+## 📝 Notes
 
-### Clean Workspace
-- ✅ Only current session in local archive
-- ✅ Fast directory listings
-- ✅ Clear focus on current work
-- ✅ Reduced false positives in searches
+### Why Keep Archives?
 
-### Preserved History
-- ✅ All historical sessions in parent archive
-- ✅ Easy to reference when needed
-- ✅ Organized by project and date
-- ✅ Fossil record intact
+**Fossil Record**:
+- Historical context for decisions
+- Reference for evolution of thinking
+- Audit trail for compliance
+- Learning from past approaches
 
-### Easy Navigation
-- ✅ Clear separation of current vs historical
-- ✅ Consistent organization
-- ✅ Well-documented locations
-- ✅ Simple access paths
+**Not for Active Use**:
+- Archives are reference only
+- Always use current documentation
+- Check `START_HERE.md` for current docs
 
----
+### Performance Impact
 
-## 📞 QUICK REFERENCE
+**Before Cleanup**:
+- Search results cluttered with old docs
+- Duplicate information confusing
+- False positives in code searches
 
-### Current Session Reports
-```bash
-cd ~/Development/ecoPrimals/nestgate/archive/session_nov_8_2025_evening_final
-cat SESSION_INDEX.md
-```
-
-### November 2025 History
-```bash
-cd ~/Development/ecoPrimals/archive/nestgate-sessions-nov-2025-fossil
-cat README.md
-```
-
-### Migration Plans
-```bash
-cd ~/Development/ecoPrimals/nestgate/docs/archive/migration_plans
-ls -la
-```
-
-### All Archives
-```bash
-cd ~/Development/ecoPrimals/archive
-ls -la | grep nestgate
-```
+**After Cleanup**:
+- Clean workspace
+- Clear current documentation
+- Fast searches
+- No false positives
 
 ---
 
-## 🔄 MAINTENANCE
+## 🚀 Quick Reference
 
-### Monthly Tasks
-1. Review local `archive/` - move old sessions to parent
-2. Check `docs/archive/` - move completed sessions
-3. Verify parent archive organization
-4. Update this document
-
-### Before Major Releases
-1. Archive release documentation
-2. Move milestone sessions to parent
-3. Create release fossil record
-4. Document in parent archive README
+**Current Docs**: Use files in root and `docs/current/`  
+**Historical Docs**: Check parent `../nestgate-docs-archive-nov-17-2025/`  
+**Session History**: Check `archive/sessions/`  
+**This Policy**: Updated monthly
 
 ---
 
-**Archive Structure**: ✅ Clean & Organized  
-**Last Cleanup**: November 8, 2025  
-**Next Review**: December 2025  
-**Status**: Optimal
-
----
-
-*Archives are organized, history is preserved, workspace is clean!* 📚✨
+**Last Cleanup**: November 17, 2025  
+**Next Review**: December 17, 2025  
+**Status**: ✅ Organized & Clean

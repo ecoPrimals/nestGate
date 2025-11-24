@@ -21,7 +21,7 @@ pub struct UniversalSecurityWrapper {
 }
 /// Trait for any security client (Security, Vault, etc.)
 /// **DEPRECATED**: Client pattern consolidated into canonical security
-#[deprecated(since = "0.9.0", note = "Use crate::traits::canonical_unified_traits::CanonicalSecurity with client adapter")]
+#[deprecated(since = "0.9.0", note = "Use crate::traits::canonical::CanonicalSecurity with client adapter")]
 pub trait SecurityClient: Send + Sync {
     fn authenticate(&self, credentials: &Credentials) -> impl std::future::Future<Output = Result<AuthToken>> + Send;
     fn encrypt(&self, data: &[u8], algorithm: &str) -> impl std::future::Future<Output = Result<Vec<u8>> + Send;

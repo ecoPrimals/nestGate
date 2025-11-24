@@ -1,7 +1,7 @@
 // Single responsibility: ZFS configuration and optimization
 
 use super::core::NativeZfsService;
-use crate::handlers::zfs::universal_zfs::types::UniversalZfsResult;
+use crate::handlers::zfs::universal_zfs_types::UniversalZfsResult;
 use std::collections::HashMap;
 
 /// Optimize ZFS configuration for better performance
@@ -26,7 +26,7 @@ pub fn predict_tier(
 }
 /// Get the current configuration of the native ZFS service
 ///
-/// Returns a HashMap containing the current configuration settings
+/// Returns a `HashMap` containing the current configuration settings
 /// for the native ZFS backend service.
 ///
 /// # Arguments

@@ -219,7 +219,7 @@ pub trait SigningProvider: Send + Sync {
 /// **DEPRECATED**: Health monitoring integrated into canonical security
 #[deprecated(
     since = "0.9.0",
-    note = "Use crate::traits::canonical_unified_traits::CanonicalSecurity health_check method"
+    note = "Use crate::traits::canonical::CanonicalSecurity health_check method"
 )]
 pub trait SecurityHealthProvider: Send + Sync {
     /// Health information type
@@ -236,7 +236,7 @@ pub trait SecurityHealthProvider: Send + Sync {
 /// **DEPRECATED**: Metrics integrated into canonical security
 #[deprecated(
     since = "0.9.0",
-    note = "Use crate::traits::canonical_unified_traits::CanonicalSecurity metrics methods"
+    note = "Use crate::traits::canonical::CanonicalSecurity metrics methods"
 )]
 pub trait SecurityMetricsProvider: Send + Sync {
     /// Metrics type

@@ -80,7 +80,7 @@ impl Default for Metrics {
 /// Default implementation of the service
 #[derive(Debug)]
 pub struct DefaultService {
-    config: TraitsAsyncMigrationSystemConfig,
+    _config: TraitsAsyncMigrationSystemConfig,
     metrics: Arc<tokio::sync::RwLock<Metrics>>,
 }
 
@@ -88,7 +88,7 @@ impl DefaultService {
     /// Create a new service instance
     pub fn new(config: TraitsAsyncMigrationSystemConfig) -> Self {
         Self {
-            config,
+            _config: config,
             metrics: Arc::new(tokio::sync::RwLock::new(Metrics::default())),
         }
     }
@@ -104,36 +104,28 @@ impl Service for DefaultService {
         "async_migration_system"
     }
 
-    fn start(&self) -> impl std::future::Future<Output = Result<()>> + Send {
-        async move {
-            tracing::info!("Starting {} service", self.name());
-            Ok(())
-        }
+    async fn start(&self) -> Result<()> {
+        tracing::info!("Starting {} service", self.name());
+        Ok(())
     }
 
-    fn stop(&self) -> impl std::future::Future<Output = Result<()>> + Send {
-        async move {
-            tracing::info!("Stopping {} service", self.name());
-            Ok(())
-        }
+    async fn stop(&self) -> Result<()> {
+        tracing::info!("Stopping {} service", self.name());
+        Ok(())
     }
 
-    fn initialize(&self) -> impl std::future::Future<Output = Result<()>> + Send {
-        async move {
-            tracing::info!("Initializing {} service", self.name());
-            Ok(())
-        }
+    async fn initialize(&self) -> Result<()> {
+        tracing::info!("Initializing {} service", self.name());
+        Ok(())
     }
 
-    fn health_check(&self) -> impl std::future::Future<Output = Result<bool>> + Send {
-        async move { Ok(true) }
+    async fn health_check(&self) -> Result<bool> {
+        Ok(true)
     }
 
-    fn shutdown(&self) -> impl std::future::Future<Output = Result<()>> + Send {
-        async move {
-            tracing::info!("Shutting down {} service", self.name());
-            Ok(())
-        }
+    async fn shutdown(&self) -> Result<()> {
+        tracing::info!("Shutting down {} service", self.name());
+        Ok(())
     }
 }
 
@@ -191,10 +183,7 @@ mod tests {
         let service = DefaultService::new(config);
 
         assert!(service.initialize().await.is_ok());
-        assert_eq!(
-            service.health_check().await.expect("Operation failed"),
-            true
-        );
+        assert!(service.health_check().await.expect("Operation failed"));
         assert!(service.shutdown().await.is_ok());
     }
 

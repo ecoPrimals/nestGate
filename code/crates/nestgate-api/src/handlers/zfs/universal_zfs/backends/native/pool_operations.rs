@@ -3,16 +3,19 @@
 
 use std::collections::HashMap;
 use std::process::Command;
-use std::time::SystemTime;
 // Removed unused tracing import
 
-use crate::handlers::zfs::universal_zfs::types::{
+use crate::handlers::zfs::universal_zfs_types::{
     PoolCapacity, PoolConfig, PoolHealth, PoolInfo, PoolState, ScrubStatus, UniversalZfsError,
     UniversalZfsResult,
 };
 use tracing::info;
 
 use super::core::NativeZfsService;
+
+#[cfg(test)]
+#[path = "pool_operations_tests.rs"]
+mod pool_operations_tests;
 
 /// Get pool information by querying pool status
 async fn get_pool_status_info(
@@ -26,12 +29,7 @@ async fn get_pool_status_info(
         .arg(pool_name)
         .output()
         .await
-        .map_err(|_e| {
-            UniversalZfsError::internal(format!(
-                "Failed to execute zpool status: {}",
-                e
-            ))
-        })?;
+        .map_err(|e| UniversalZfsError::internal(format!("Failed to execute zpool status: {e}")))?;
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
@@ -45,7 +43,7 @@ async fn get_pool_status_info(
 }
 
 /// Parse pool status from zpool status output
-fn parse_pool_status(output: &str) -> UniversalZfsResult<PoolInfo> {
+pub(super) fn parse_pool_status(output: &str) -> UniversalZfsResult<PoolInfo> {
     let lines: Vec<&str> = output.lines().collect();
     if lines.is_empty() {
         return Err(UniversalZfsError::internal("Empty zpool status output"));
@@ -70,7 +68,7 @@ fn parse_pool_status(output: &str) -> UniversalZfsResult<PoolInfo> {
                 "ONLINE" => PoolState::Active,
                 "DEGRADED" => PoolState::Active,
                 "FAULTED" => PoolState::Active,
-                "OFFLINE" => PoolState::Unavailable,
+                "OFFLINE" => PoolState::Suspended,
                 "EXPORTED" => PoolState::Exported,
                 _ => PoolState::Unknown,
             };
@@ -86,24 +84,19 @@ fn parse_pool_status(output: &str) -> UniversalZfsResult<PoolInfo> {
     }
 
     // Simple device parsing (would need more sophisticated parsing for real use)
-    _devices.push(format!("device-self.base_url"));
+    _devices.push("device-self.base_url".to_string());
 
     Ok(PoolInfo {
         name: pool_name,
         health,
         state,
         capacity: PoolCapacity {
-            total_bytes: 0, // Would need to parse from zpool list
-            used_bytes: 0,
-            available_bytes: 0,
-            utilization_percent: 0.0,
+            total: 0, // Would need to parse from zpool list
+            used: 0,
+            available: 0,
         },
-        _devices,
+        scrub: Some(ScrubStatus::None),
         properties,
-        created_at: SystemTime::now(),
-        last_scrub: None,
-        scrub_status: ScrubStatus::None,
-        errors: Vec::new(),
     })
 }
 
@@ -129,14 +122,9 @@ fn parse_pool_list(output: &str) -> UniversalZfsResult<Vec<PoolInfo>> {
         let health_str = parts[4];
 
         // Parse sizes (basic implementation - would need better parsing)
-        let total_bytes = NativeZfsService::parse_size_string(size_str).unwrap_or(0);
-        let used_bytes = NativeZfsService::parse_size_string(alloc_str).unwrap_or(0);
-        let available_bytes = NativeZfsService::parse_size_string(free_str).unwrap_or(0);
-        let utilization_percent = if total_bytes > 0 {
-            (used_bytes as f64 / total_bytes as f64) * 100.0
-        } else {
-            0.0
-        };
+        let total = NativeZfsService::parse_size_string(size_str).unwrap_or(0);
+        let used = NativeZfsService::parse_size_string(alloc_str).unwrap_or(0);
+        let available = NativeZfsService::parse_size_string(free_str).unwrap_or(0);
 
         let health = match health_str {
             "ONLINE" => PoolHealth::Online,
@@ -151,17 +139,12 @@ fn parse_pool_list(output: &str) -> UniversalZfsResult<Vec<PoolInfo>> {
             health,
             state: PoolState::Active,
             capacity: PoolCapacity {
-                total_bytes,
-                used_bytes,
-                available_bytes,
-                utilization_percent,
+                total,
+                used,
+                available,
             },
-            _devices: vec![format!("device-self.base_url")],
+            scrub: Some(ScrubStatus::None),
             properties: HashMap::new(),
-            created_at: SystemTime::now(),
-            last_scrub: None,
-            scrub_status: ScrubStatus::None,
-            errors: Vec::new(),
         });
     }
 
@@ -175,7 +158,7 @@ pub async fn list_pools(service: &NativeZfsService) -> UniversalZfsResult<Vec<Po
     parse_pool_list(&output)
 }
 /// Get information about a specific pool
-pub fn get_pool(
+pub async fn get_pool(
     service: &NativeZfsService,
     name: &str,
 ) -> UniversalZfsResult<Option<PoolInfo>> {
@@ -193,7 +176,7 @@ pub fn get_pool(
 }
 
 /// Create a new ZFS pool
-pub fn create_pool(
+pub async fn create_pool(
     service: &NativeZfsService,
     config: &PoolConfig,
 ) -> UniversalZfsResult<PoolInfo> {
@@ -204,9 +187,8 @@ pub fn create_pool(
     cmd.arg("create");
 
     // Add pool-specific options
-    for (key, _value) in &config.properties {
-        cmd.arg("-o")
-            .arg(format!("{key}=self.base_url"));
+    for key in config.properties.keys() {
+        cmd.arg("-o").arg(format!("{key}=self.base_url"));
     }
 
     cmd.arg(pool_name);
@@ -217,12 +199,9 @@ pub fn create_pool(
     }
 
     // Execute the command
-    let output = cmd.output().map_err(|_e| {
-        UniversalZfsError::internal(format!(
-            "Failed to execute zpool create: {}",
-            e
-        ))
-    })?;
+    let output = cmd
+        .output()
+        .map_err(|e| UniversalZfsError::internal(format!("Failed to execute zpool create: {e}")))?;
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
@@ -246,7 +225,7 @@ pub fn destroy_pool(_service: &NativeZfsService, name: &str) -> UniversalZfsResu
     // Execute the command
     let output = cmd
         .output()
-        .map_err(|_e| UniversalZfsError::internal(format!("Failed to execute zpool command")))?;
+        .map_err(|_e| UniversalZfsError::internal("Failed to execute zpool command".to_string()))?;
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
@@ -259,13 +238,13 @@ pub fn destroy_pool(_service: &NativeZfsService, name: &str) -> UniversalZfsResu
 }
 
 /// Start a pool scrub
-pub fn scrub_pool(service: &NativeZfsService, name: &str) -> UniversalZfsResult<()> {
+pub async fn scrub_pool(service: &NativeZfsService, name: &str) -> UniversalZfsResult<()> {
     info!("Starting scrub for pool: {}", name);
     service.execute_zpool_command(&["scrub", name]).await?;
     Ok(())
 }
 /// Get pool status
-pub fn get_pool_status(service: &NativeZfsService, name: &str) -> UniversalZfsResult<String> {
+pub async fn get_pool_status(service: &NativeZfsService, name: &str) -> UniversalZfsResult<String> {
     info!("Getting pool status for: {}", name);
     let output = service.execute_zpool_command(&["status", name]).await?;
     Ok(output)

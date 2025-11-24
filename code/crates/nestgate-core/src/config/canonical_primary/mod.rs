@@ -18,7 +18,7 @@
 use serde::{Deserialize, Serialize};
 // ==================== SECTION ====================
 
-// System-level configuration types
+/// System-level configuration types (environment, logging, debug settings)
 pub mod system_config;
 // REMOVED: network_config → Use domains/network instead
 // Service configuration types (NEW - consolidates 5 duplicate UnifiedServiceConfig structs)
@@ -31,20 +31,25 @@ pub mod retry;
 pub mod timeout;
 // Connection Pool configuration types (NEW - consolidates connection pooling settings)
 pub mod connection_pool;
-// Storage and ZFS configuration types
+
+/// Storage and ZFS configuration types
 pub mod storage_config;
-// Security and authentication configuration types
+
+/// Security and authentication configuration types
 pub mod security_config;
-// Performance and optimization configuration types
+
+/// Performance and optimization configuration types
 pub mod performance_config;
 // Handler-specific configuration types (NEW - consolidates scattered handler configs)
 pub mod handler_config;
 // Test and validation configuration types (NEW - consolidates scattered test configs) (dev-stubs only)
 #[cfg(feature = "dev-stubs")]
 pub mod test_config;
-// Supporting types and enums
+
+/// Supporting types and enums (common configuration types)
 pub mod supporting_types;
-// Configuration builders and factories
+
+/// Configuration builders and factories for constructing configs
 pub mod builders;
 // **NEW**: Domain-specific canonical configurations
 pub mod domains;
@@ -97,7 +102,10 @@ pub use phase2c_types::{
 // ==================== SECTION ====================
 
 // **THE** canonical configuration for the entire NestGate ecosystem
-// This replaces ALL other configuration structures
+/// The canonical configuration structure for all NestGate systems
+///
+/// This replaces ALL other configuration structures with a single,
+/// unified configuration that uses const generics for compile-time optimization.
 #[allow(deprecated)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NestGateCanonicalConfig<
@@ -317,11 +325,14 @@ impl<
 
 // ==================== SECTION ====================
 
-// Standard configuration with default const generics
+/// Standard configuration with default const generics
 pub type StandardConfig = NestGateCanonicalConfig;
-// High-performance configuration with optimized const generics
+
+/// High-performance configuration with optimized const generics
 pub type HighPerformanceConfig = NestGateCanonicalConfig<2000, 131_072, 15_000, 8080>;
-// Development configuration with relaxed limits
+
+/// Development configuration with relaxed limits for easier debugging
 pub type DevelopmentConfig = NestGateCanonicalConfig<100, 8192, 60_000, 3000>;
-// Production configuration with production-optimized settings
+
+/// Production configuration with production-optimized settings
 pub type ProductionConfig = NestGateCanonicalConfig<5000, 262_144, 10000, 443>;

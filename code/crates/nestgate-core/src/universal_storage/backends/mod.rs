@@ -16,11 +16,11 @@ pub use crate::Result;
 // This trait has been superseded by the canonical storage system.
 // **MIGRATION PATH**:
 // - Old: `StorageBackend`
-// - New: `crate::traits::canonical_unified_traits::CanonicalStorage`
+// - New: `crate::traits::canonical::CanonicalStorage`
 //
 // The new CanonicalStorage trait is a comprehensive, unified interface that
 // replaces all fragmented storage trait definitions.
-#[deprecated(since = "2.1.0", note = "Use crate::traits::canonical_unified_traits::CanonicalStorage instead")]
+#[deprecated(since = "2.1.0", note = "Use crate::traits::canonical::CanonicalStorage instead")]
 pub trait StorageBackend {
     /// Get backend name
     fn name(&self) -> &str;

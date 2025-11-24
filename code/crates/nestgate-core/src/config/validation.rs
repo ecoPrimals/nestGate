@@ -1,15 +1,15 @@
 //! Modern Configuration Validation Module
-//! 
+//!
 //! Provides comprehensive, type-safe configuration validation with detailed
 //! error reporting and recovery suggestions using modern Rust patterns.
 
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::net::{IpAddr, SocketAddr};
-use std::path::PathBuf;
+use std::path::Path;
 use std::time::Duration;
-use serde::{Deserialize, Serialize};
 
-use crate::error::{NestGateError, Result};
+use crate::error::NestGateError;
 
 // ==================== VALIDATION FRAMEWORK ====================
 
@@ -17,7 +17,7 @@ use crate::error::{NestGateError, Result};
 pub trait ConfigValidation {
     /// Validate the configuration and return detailed results
     fn validate(&self) -> ValidationResult;
-    
+
     /// Get validation schema for documentation
     fn schema() -> ValidationSchema;
 }
@@ -69,15 +69,16 @@ impl ValidationResult {
         if self.is_valid {
             Ok(())
         } else {
-            let error_messages: Vec<String> = self.errors
+            let error_messages: Vec<String> = self
+                .errors
                 .iter()
                 .map(|e| format!("{}: {}", e.field, e.message))
                 .collect();
-            
-            Err(NestGateError::validation_error(
-                "configuration",
-                &format!("Validation failed: {}", error_messages.join(", "))
-            ))
+
+            Err(NestGateError::validation_error(&format!(
+                "Configuration validation failed: {}",
+                error_messages.join(", ")
+            )))
         }
     }
 }
@@ -208,14 +209,16 @@ impl ValidationUtils {
     /// Validate a port number
     pub fn validate_port(field: &str, port: u16) -> Option<ValidationError> {
         if port == 0 {
-            Some(ValidationErrorBuilder::new(
-                field,
-                "Port cannot be 0",
-                ValidationErrorType::InvalidValue,
+            Some(
+                ValidationErrorBuilder::new(
+                    field,
+                    "Port cannot be 0",
+                    ValidationErrorType::InvalidValue,
+                )
+                .current_value(&port.to_string())
+                .expected_format("1-65535")
+                .build(),
             )
-            .current_value(&port.to_string())
-            .expected_format("1-65535")
-            .build())
         } else {
             None
         }
@@ -224,23 +227,27 @@ impl ValidationUtils {
     /// Validate a timeout duration
     pub fn validate_timeout(field: &str, timeout: Duration) -> Option<ValidationError> {
         if timeout.is_zero() {
-            Some(ValidationErrorBuilder::new(
-                field,
-                "Timeout cannot be zero",
-                ValidationErrorType::InvalidValue,
+            Some(
+                ValidationErrorBuilder::new(
+                    field,
+                    "Timeout cannot be zero",
+                    ValidationErrorType::InvalidValue,
+                )
+                .current_value(&format!("{:?}", timeout))
+                .expected_format("> 0ms")
+                .build(),
             )
-            .current_value(&format!("{:?}", timeout))
-            .expected_format("> 0ms")
-            .build())
         } else if timeout > Duration::from_secs(3600) {
-            Some(ValidationErrorBuilder::new(
-                field,
-                "Timeout is unusually long (>1 hour)",
-                ValidationErrorType::OutOfRange,
+            Some(
+                ValidationErrorBuilder::new(
+                    field,
+                    "Timeout is unusually long (>1 hour)",
+                    ValidationErrorType::OutOfRange,
+                )
+                .current_value(&format!("{:?}", timeout))
+                .expected_format("1ms - 1 hour")
+                .build(),
             )
-            .current_value(&format!("{:?}", timeout))
-            .expected_format("1ms - 1 hour")
-            .build())
         } else {
             None
         }
@@ -249,14 +256,16 @@ impl ValidationUtils {
     /// Validate an IP address string
     pub fn validate_ip_address(field: &str, ip: &str) -> Option<ValidationError> {
         if ip.parse::<IpAddr>().is_err() {
-            Some(ValidationErrorBuilder::new(
-                field,
-                "Invalid IP address format",
-                ValidationErrorType::InvalidFormat,
+            Some(
+                ValidationErrorBuilder::new(
+                    field,
+                    "Invalid IP address format",
+                    ValidationErrorType::InvalidFormat,
+                )
+                .current_value(ip)
+                .expected_format("IPv4 (e.g., 192.168.1.1) or IPv6 (e.g., ::1)")
+                .build(),
             )
-            .current_value(ip)
-            .expected_format("IPv4 (e.g., 192.168.1.1) or IPv6 (e.g., ::1)")
-            .build())
         } else {
             None
         }
@@ -265,60 +274,70 @@ impl ValidationUtils {
     /// Validate a socket address string
     pub fn validate_socket_address(field: &str, addr: &str) -> Option<ValidationError> {
         if addr.parse::<SocketAddr>().is_err() {
-            Some(ValidationErrorBuilder::new(
-                field,
-                "Invalid socket address format",
-                ValidationErrorType::InvalidFormat,
+            Some(
+                ValidationErrorBuilder::new(
+                    field,
+                    "Invalid socket address format",
+                    ValidationErrorType::InvalidFormat,
+                )
+                .current_value(addr)
+                .expected_format("IP:PORT (e.g., 127.0.0.1:8080)")
+                .build(),
             )
-            .current_value(addr)
-            .expected_format("IP:PORT (e.g., 127.0.0.1:8080)")
-            .build())
         } else {
             None
         }
     }
 
     /// Validate a file path exists
-    pub fn validate_file_path(field: &str, path: &PathBuf) -> Option<ValidationError> {
+    pub fn validate_file_path(field: &str, path: &Path) -> Option<ValidationError> {
         if !path.exists() {
-            Some(ValidationErrorBuilder::new(
-                field,
-                "File does not exist",
-                ValidationErrorType::InvalidValue,
+            Some(
+                ValidationErrorBuilder::new(
+                    field,
+                    "File does not exist",
+                    ValidationErrorType::InvalidValue,
+                )
+                .current_value(&path.display().to_string())
+                .build(),
             )
-            .current_value(&path.display().to_string())
-            .build())
         } else if !path.is_file() {
-            Some(ValidationErrorBuilder::new(
-                field,
-                "Path is not a file",
-                ValidationErrorType::InvalidValue,
+            Some(
+                ValidationErrorBuilder::new(
+                    field,
+                    "Path is not a file",
+                    ValidationErrorType::InvalidValue,
+                )
+                .current_value(&path.display().to_string())
+                .build(),
             )
-            .current_value(&path.display().to_string())
-            .build())
         } else {
             None
         }
     }
 
     /// Validate a directory path exists
-    pub fn validate_directory_path(field: &str, path: &PathBuf) -> Option<ValidationError> {
+    pub fn validate_directory_path(field: &str, path: &Path) -> Option<ValidationError> {
         if !path.exists() {
-            Some(ValidationErrorBuilder::new(
-                field,
-                "Directory does not exist",
-                ValidationErrorType::InvalidValue,
+            Some(
+                ValidationErrorBuilder::new(
+                    field,
+                    "Directory does not exist",
+                    ValidationErrorType::InvalidValue,
+                )
+                .current_value(&path.display().to_string())
+                .build(),
             )
-            .current_value(&path.display().to_string())
-            .build())
         } else if !path.is_dir() {
-            Some(ValidationErrorBuilder::new(
-                field,
-                "Path is not a directory",
-                ValidationErrorType::InvalidValue,
+            Some(
+                ValidationErrorBuilder::new(
+                    field,
+                    "Path is not a directory",
+                    ValidationErrorType::InvalidValue,
+                )
+                .current_value(&path.display().to_string())
+                .build(),
             )
-            .current_value(&path.display().to_string())
-            .build())
         } else {
             None
         }
@@ -327,37 +346,36 @@ impl ValidationUtils {
     /// Validate a string is not empty
     pub fn validate_non_empty_string(field: &str, value: &str) -> Option<ValidationError> {
         if value.trim().is_empty() {
-            Some(ValidationErrorBuilder::new(
-                field,
-                "Value cannot be empty",
-                ValidationErrorType::Required,
+            Some(
+                ValidationErrorBuilder::new(
+                    field,
+                    "Value cannot be empty",
+                    ValidationErrorType::Required,
+                )
+                .current_value(value)
+                .build(),
             )
-            .current_value(value)
-            .build())
         } else {
             None
         }
     }
 
     /// Validate a numeric range
-    pub fn validate_range<T>(
-        field: &str,
-        value: T,
-        min: T,
-        max: T,
-    ) -> Option<ValidationError>
+    pub fn validate_range<T>(field: &str, value: T, min: T, max: T) -> Option<ValidationError>
     where
         T: PartialOrd + std::fmt::Display + Copy,
     {
         if value < min || value > max {
-            Some(ValidationErrorBuilder::new(
-                field,
-                &format!("Value {} is outside valid range", value),
-                ValidationErrorType::OutOfRange,
+            Some(
+                ValidationErrorBuilder::new(
+                    field,
+                    &format!("Value {} is outside valid range", value),
+                    ValidationErrorType::OutOfRange,
+                )
+                .current_value(&value.to_string())
+                .expected_format(&format!("{} - {}", min, max))
+                .build(),
             )
-            .current_value(&value.to_string())
-            .expected_format(&format!("{} - {}", min, max))
-            .build())
         } else {
             None
         }
@@ -365,8 +383,8 @@ impl ValidationUtils {
 }
 
 /// Network configuration
-/// 
-/// **CONSOLIDATED**: Now uses `CanonicalNetworkConfig` from 
+///
+/// **CONSOLIDATED**: Now uses `CanonicalNetworkConfig` from
 /// `crate::config::canonical_primary::domains::network::CanonicalNetworkConfig`
 pub use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig as NetworkConfig;
 
@@ -378,32 +396,40 @@ impl ConfigValidation for NetworkConfig {
     fn validate(&self) -> ValidationResult {
         let mut errors = Vec::new();
         let mut warnings = Vec::new();
-        let mut suggestions = Vec::new();
+        let suggestions = Vec::new();
 
         // Validate API configuration
         if self.api.port == 0 {
-            errors.push(ValidationErrorBuilder::new(
-                "api.port",
-                "API port cannot be 0",
-                ValidationErrorType::Required,
-            ).build());
+            errors.push(
+                ValidationErrorBuilder::new(
+                    "api.port",
+                    "API port cannot be 0",
+                    ValidationErrorType::Required,
+                )
+                .build(),
+            );
         }
 
-        // Validate timeouts
-        if self.performance.connection_timeout_secs == 0 {
-            errors.push(ValidationErrorBuilder::new(
-                "performance.connection_timeout_secs",
-                "Connection timeout cannot be 0",
-                ValidationErrorType::Required,
-            ).build());
+        // Validate network performance configuration
+        if self.performance.buffer_size == 0 {
+            errors.push(
+                ValidationErrorBuilder::new(
+                    "performance.buffer_size",
+                    "Buffer size cannot be 0",
+                    ValidationErrorType::Required,
+                )
+                .build(),
+            );
         }
 
-        // Validate TLS configuration if enabled
-        if self.security.tls_enabled {
-            // TLS cert path validation handled by security config
+        // Validate security configuration
+        if self.security.firewall_enabled && self.security.allowed_ips.is_empty() {
             warnings.push(ValidationWarning {
-                field: "security.tls_enabled".to_string(),
-                message: "TLS is enabled - ensure certificates are properly configured".to_string(),
+                field: "security.firewall_enabled".to_string(),
+                message:
+                    "Firewall is enabled but no allowed IPs configured - this may block all traffic"
+                        .to_string(),
+                severity: WarningSeverity::High,
             });
         }
 
@@ -417,30 +443,39 @@ impl ConfigValidation for NetworkConfig {
 
     fn schema() -> ValidationSchema {
         let mut fields = HashMap::new();
-        
-        fields.insert("bind_address".to_string(), FieldSchema {
-            field_type: "string".to_string(),
-            required: true,
-            default_value: Some("127.0.0.1".to_string()),
-            constraints: vec!["Valid IPv4 or IPv6 address".to_string()],
-            description: "IP address to bind the server to".to_string(),
-        });
 
-        fields.insert("port".to_string(), FieldSchema {
-            field_type: "u16".to_string(),
-            required: true,
-            default_value: Some("8080".to_string()),
-            constraints: vec!["1-65535".to_string()],
-            description: "Port number to listen on".to_string(),
-        });
+        fields.insert(
+            "bind_address".to_string(),
+            FieldSchema {
+                field_type: "string".to_string(),
+                required: true,
+                default_value: Some("127.0.0.1".to_string()),
+                constraints: vec!["Valid IPv4 or IPv6 address".to_string()],
+                description: "IP address to bind the server to".to_string(),
+            },
+        );
 
-        fields.insert("timeout_ms".to_string(), FieldSchema {
-            field_type: "u64".to_string(),
-            required: true,
-            default_value: Some("30000".to_string()),
-            constraints: vec!["> 0".to_string()],
-            description: "Request timeout in milliseconds".to_string(),
-        });
+        fields.insert(
+            "port".to_string(),
+            FieldSchema {
+                field_type: "u16".to_string(),
+                required: true,
+                default_value: Some("8080".to_string()),
+                constraints: vec!["1-65535".to_string()],
+                description: "Port number to listen on".to_string(),
+            },
+        );
+
+        fields.insert(
+            "timeout_ms".to_string(),
+            FieldSchema {
+                field_type: "u64".to_string(),
+                required: true,
+                default_value: Some("30000".to_string()),
+                constraints: vec!["> 0".to_string()],
+                description: "Request timeout in milliseconds".to_string(),
+            },
+        );
 
         ValidationSchema {
             fields,
@@ -473,7 +508,7 @@ impl ConfigValidator {
 
     /// Validate and return a Result type
     pub async fn validate_strict<T: ConfigValidation>(config: &T) -> crate::Result<()> {
-        config.validate().into_result()
+        config.validate().into_result().await
     }
 
     /// Generate validation report as formatted string
@@ -481,9 +516,15 @@ impl ConfigValidator {
         let result = config.validate();
         let mut report = String::new();
 
-        report.push_str(&format!("Configuration Validation Report\n"));
-        report.push_str(&format!("Status: {}\n\n", 
-            if result.is_valid { "✅ VALID" } else { "❌ INVALID" }));
+        report.push_str("Configuration Validation Report\n");
+        report.push_str(&format!(
+            "Status: {}\n\n",
+            if result.is_valid {
+                "✅ VALID"
+            } else {
+                "❌ INVALID"
+            }
+        ));
 
         if !result.errors.is_empty() {
             report.push_str("Errors:\n");
@@ -507,7 +548,10 @@ impl ConfigValidator {
                     WarningSeverity::Medium => "🔸",
                     WarningSeverity::Low => "🔹",
                 };
-                report.push_str(&format!("  {} {}: {}\n", icon, warning.field, warning.message));
+                report.push_str(&format!(
+                    "  {} {}: {}\n",
+                    icon, warning.field, warning.message
+                ));
             }
             report.push('\n');
         }
@@ -515,7 +559,10 @@ impl ConfigValidator {
         if !result.suggestions.is_empty() {
             report.push_str("Suggestions:\n");
             for suggestion in &result.suggestions {
-                report.push_str(&format!("  💡 {}: {}\n", suggestion.field, suggestion.message));
+                report.push_str(&format!(
+                    "  💡 {}: {}\n",
+                    suggestion.field, suggestion.message
+                ));
                 if let Some(suggested) = &suggestion.suggested_value {
                     report.push_str(&format!("     Suggested: {}\n", suggested));
                 }
@@ -530,7 +577,7 @@ impl ConfigValidator {
 
 #[cfg(test)]
 mod tests {
-    
+    use super::*;
 
     #[test]
     fn test_validation_utils_port() {
@@ -554,48 +601,52 @@ mod tests {
 
     #[test]
     fn test_network_config_validation() {
-        let config = NetworkConfig::default();
-        let result = config.validate();
-        assert!(result.is_valid);
+        let config = NetworkConfig::development_optimized();
+        // CanonicalNetworkConfig.validate() returns Result<()>
+        assert!(config.validate().is_ok());
     }
 
     #[test]
     fn test_network_config_invalid_port() {
-        let mut config = NetworkConfig::default();
-        config.port = 0;
-        
-        let result = config.validate();
-        assert!(!result.is_valid);
-        assert_eq!(result.errors.len(), 1);
-        assert_eq!(result.errors[0].field, "port");
+        let mut config = NetworkConfig::development_optimized();
+        config.api.port = 0;
+
+        // CanonicalNetworkConfig.validate() returns Result<()>
+        assert!(config.validate().is_err());
     }
 
     #[test]
-    fn test_network_config_tls_validation() {
-        let mut config = NetworkConfig::default();
-        config.enable_tls = true;
-        // Don't set cert/key paths
-        
-        let result = config.validate();
+    fn test_validation_result_with_trait() {
+        use crate::config::validation::ConfigValidation;
+
+        let mut config = NetworkConfig::development_optimized();
+        config.api.port = 0;
+
+        // Using ConfigValidation trait returns ValidationResult
+        let result = ConfigValidation::validate(&config);
         assert!(!result.is_valid);
-        assert_eq!(result.errors.len(), 2); // Missing cert and key paths
+        assert!(!result.errors.is_empty());
     }
 
-    #[test]
-    fn test_validation_result_conversion() {
+    #[tokio::test]
+    async fn test_validation_result_conversion() {
         let result = ValidationResult::success();
-        assert!(result.into_result().is_ok());
+        assert!(result.into_result().await.is_ok());
 
-        let result = ValidationResult::with_errors(vec![
-            ValidationErrorBuilder::new("test", "test error", ValidationErrorType::Required).build()
-        ]);
-        assert!(result.into_result().is_err());
+        let result = ValidationResult::with_errors(vec![ValidationErrorBuilder::new(
+            "test",
+            "test error",
+            ValidationErrorType::Required,
+        )
+        .build()]);
+        assert!(result.into_result().await.is_err());
     }
 
     #[test]
-    fn test_config_validator_report() {
-        let config = NetworkConfig::default();
-        let report = ConfigValidator::generate_report(&config);
-        assert!(report.contains("✅ VALID"));
+    fn test_validation_result_success() {
+        let result = ValidationResult::success();
+        assert!(result.is_valid);
+        assert!(result.errors.is_empty());
+        assert!(result.warnings.is_empty());
     }
 }

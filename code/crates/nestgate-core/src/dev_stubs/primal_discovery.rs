@@ -100,21 +100,21 @@ pub fn discover_timeout(operation: &str) -> crate::Result<Duration> {
 #[must_use]
 pub fn get_fallback_port(service_name: &str) -> u16 {
     use crate::constants::port_defaults::{
-        DEFAULT_API_PORT, DEFAULT_METRICS_PORT, DEFAULT_HEALTH_PORT, DEFAULT_ADMIN_PORT,
+        DEFAULT_ADMIN_PORT, DEFAULT_API_PORT, DEFAULT_HEALTH_PORT, DEFAULT_METRICS_PORT,
     };
-    
+
     match service_name {
-        "api" => DEFAULT_API_PORT, // 8080
-        "web" => DEFAULT_API_PORT, // 8080
+        "api" => DEFAULT_API_PORT,         // 8080
+        "web" => DEFAULT_API_PORT,         // 8080
         "metrics" => DEFAULT_METRICS_PORT, // 9090
-        "health" => DEFAULT_HEALTH_PORT, // 8081
-        "admin" => DEFAULT_ADMIN_PORT, // 8082
-        "websocket" => 8083, // WebSocket default
-        "network" => 8084, // Network service default
-        "storage" => 8085, // Storage service default
-        "zfs" => 8086, // ZFS service default
-        "mcp" => 8087, // MCP service default
-        "automation" => 8088, // Automation service default
+        "health" => DEFAULT_HEALTH_PORT,   // 8081
+        "admin" => DEFAULT_ADMIN_PORT,     // 8082
+        "websocket" => 8083,               // WebSocket default
+        "network" => 8084,                 // Network service default
+        "storage" => 8085,                 // Storage service default
+        "zfs" => 8086,                     // ZFS service default
+        "mcp" => 8087,                     // MCP service default
+        "automation" => 8088,              // Automation service default
         _ => DEFAULT_API_PORT,
     }
 }

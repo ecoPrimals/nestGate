@@ -9,30 +9,38 @@ use crate::{NestGateError, Result};
 use crate::config::canonical_primary::NestGateCanonicalConfig;
 use std::collections::HashMap;
 use std::net::IpAddr;
+use std::sync::Arc;
 use std::time::Duration;
+
+// Import runtime config
+use super::network_discovery_config::{NetworkRuntimeConfig, SharedNetworkRuntimeConfig};
 /// Network discovery configuration
 #[derive(Debug, Clone)]
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
-/// 
+///
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::network::config::NetworkDiscoveryConfig;
-/// 
+///
 /// // NEW (canonical):
 /// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 /// // Or use type alias for compatibility:
 /// use crate::network::config::NetworkDiscoveryConfig; // Now aliases to CanonicalNetworkConfig
 /// ```
-/// 
+///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+#[deprecated(
+    since = "0.11.0",
+    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
 pub struct NetworkDiscoveryConfig {
     pub scan_timeout: Duration,
     pub preferred_interfaces: Vec<String>,
     pub port_scan_range: (u16, u16),
     pub interface_priority: Vec<String>,
 }
+#[allow(deprecated)]
 impl Default for NetworkDiscoveryConfig {
     fn default() -> Self {
         Self {
@@ -59,7 +67,10 @@ pub struct InterfaceInfo {
 pub struct NetworkDiscovery {
     #[allow(dead_code)] // Framework field - intentionally unused
     config: NestGateCanonicalConfig,
+    #[allow(deprecated)]
     discovery_config: NetworkDiscoveryConfig,
+    /// Runtime configuration (immutable, thread-safe)
+    runtime_config: SharedNetworkRuntimeConfig,
 }
 impl Default for NetworkDiscovery {
     fn default() -> Self {
@@ -69,20 +80,41 @@ impl Default for NetworkDiscovery {
 
 impl NetworkDiscovery {
     /// Create new network discovery subsystem
+    ///
+    /// This constructor loads runtime configuration from environment variables.
+    /// For testing or custom configurations, use `with_runtime_config()`.
     #[must_use]
+    #[allow(deprecated)]
     pub fn new() -> Self {
         Self {
             config: NestGateCanonicalConfig::default(),
             discovery_config: NetworkDiscoveryConfig::default(),
+            runtime_config: Arc::new(NetworkRuntimeConfig::from_env()),
         }
     }
 
     /// Create with custom configuration
     #[must_use]
+    #[allow(deprecated)]
     pub fn with_config(config: NestGateCanonicalConfig) -> Self {
         Self {
             config,
             discovery_config: NetworkDiscoveryConfig::default(),
+            runtime_config: Arc::new(NetworkRuntimeConfig::from_env()),
+        }
+    }
+
+    /// Create with custom runtime configuration
+    ///
+    /// This is the recommended constructor for testing and when you need
+    /// explicit control over runtime values (bind addresses, ports, endpoints).
+    #[must_use]
+    #[allow(deprecated)]
+    pub fn with_runtime_config(runtime_config: SharedNetworkRuntimeConfig) -> Self {
+        Self {
+            config: NestGateCanonicalConfig::default(),
+            discovery_config: NetworkDiscoveryConfig::default(),
+            runtime_config,
         }
     }
 
@@ -95,14 +127,9 @@ impl NetworkDiscovery {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     pub async fn discover_bind_address(&self, service_name: &str) -> Result<IpAddr> {
-        // Try environment first (external configuration)
-        if let Ok(addr) = std::env::var(format!(
-            "NESTGATE_{}_BIND_ADDRESS",
-            service_name.to_uppercase()
-        )) {
-            if let Ok(ip) = addr.parse::<IpAddr>() {
-                return Ok(ip);
-            }
+        // Try runtime config first (immutable, thread-safe)
+        if let Some(addr) = self.runtime_config.get_bind_address(service_name) {
+            return Ok(addr);
         }
 
         // Network introspection - detect best interface
@@ -122,14 +149,10 @@ impl NetworkDiscovery {
         service_name: &str,
         start_range: u16,
     ) -> Result<u16> {
-        // Check environment configuration
-        if let Ok(port_str) =
-            std::env::var(format!("NESTGATE_{}_PORT", service_name.to_uppercase()))
-        {
-            if let Ok(port) = port_str.parse::<u16>() {
-                if self.port_is_available(port).await? {
-                    return Ok(port);
-                }
+        // Check runtime configuration (immutable, thread-safe)
+        if let Some(port) = self.runtime_config.get_bind_port(service_name) {
+            if self.port_is_available(port).await? {
+                return Ok(port);
             }
         }
 
@@ -252,11 +275,9 @@ impl NetworkDiscovery {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     pub async fn discover_service_endpoint(&self, service_name: &str) -> Result<String> {
-        // Environment override
-        if let Ok(endpoint) =
-            std::env::var(["NESTGATE_", &service_name.to_uppercase(), "_ENDPOINT"].concat())
-        {
-            return Ok(endpoint);
+        // Runtime config override (immutable, thread-safe)
+        if let Some(endpoint) = self.runtime_config.get_service_endpoint(service_name) {
+            return Ok(endpoint.to_string());
         }
 
         // Network discovery fallback
@@ -293,11 +314,9 @@ impl NetworkDiscovery {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     pub async fn discover_capability_endpoint(&self, capability: &str) -> Result<String> {
-        // Environment-based discovery
-        if let Ok(endpoint) =
-            std::env::var(["NESTGATE_", &capability.to_uppercase(), "_ENDPOINT"].concat())
-        {
-            return Ok(endpoint);
+        // Runtime config-based discovery (immutable, thread-safe)
+        if let Some(endpoint) = self.runtime_config.get_capability_endpoint(capability) {
+            return Ok(endpoint.to_string());
         }
 
         // Default capability endpoint generation
@@ -341,13 +360,13 @@ impl NetworkDiscovery {
 // Original struct definition kept above for reference and backward compatibility
 
 /// Type alias to canonical network configuration
-/// 
+///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
-pub type NetworkDiscoveryConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+pub type NetworkDiscoveryConfigCanonical =
+    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using NetworkDiscoveryConfig (the deprecated struct) for now.
 // We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
 // This alias is here for reference and future migration.
-

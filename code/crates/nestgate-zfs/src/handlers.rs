@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
 
+use nestgate_core::error::utilities::safe_env_var_or_default;
 use nestgate_core::error::Result;
 
 use crate::config::ZfsConfig;
@@ -137,7 +138,7 @@ impl ZfsRequestHandler {
     #[must_use]
     pub fn get_default_pool_name(&self) -> String {
         // Use environment variable or fallback to default
-        std::env::var("NESTGATE_DEFAULT_POOL").unwrap_or_else(|_| "tank".to_string())
+        safe_env_var_or_default("NESTGATE_DEFAULT_POOL", "tank").to_string()
     }
 
     /// Check if performance monitoring is enabled
@@ -263,3 +264,7 @@ impl ZfsRequestHandler {
 
 // REMOVED: UniversalService trait implementation - trait no longer exists
 // All service functionality has been migrated to the canonical trait system
+
+#[cfg(test)]
+#[path = "handlers_tests.rs"]
+mod handlers_tests;

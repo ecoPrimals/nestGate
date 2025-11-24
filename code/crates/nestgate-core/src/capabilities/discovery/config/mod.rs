@@ -16,20 +16,20 @@
 
 // ==================== SECTION ====================
 
-// Core unified structures and coordination
-pub mod core;
-// Timeout discovery settings and logic
-pub mod timeout;
-// Network discovery configuration
-pub mod network;
-// Security discovery settings
-pub mod security;
-// Environment discovery configuration
-pub mod environment;
-// Storage discovery settings
-pub mod storage;
-// Cache discovery configuration
+/// Cache discovery configuration
 pub mod cache;
+/// Core unified structures and coordination
+pub mod core;
+/// Environment discovery configuration
+pub mod environment;
+/// Network discovery configuration
+pub mod network;
+/// Security discovery settings
+pub mod security;
+/// Storage discovery settings
+pub mod storage;
+/// Timeout discovery settings and logic
+pub mod timeout;
 // ==================== SECTION ====================
 
 // Re-export all functionality for backward compatibility

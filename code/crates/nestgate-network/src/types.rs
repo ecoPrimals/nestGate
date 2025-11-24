@@ -305,9 +305,14 @@ impl NetworkConfigBuilder {
     #[must_use]
     pub fn host(mut self, host: impl Into<String>) -> Self {
         use nestgate_core::constants::hardcoding::addresses;
+        use std::net::IpAddr;
+
+        // Safe: 127.0.0.1 is always a valid IP address (IPv4 localhost)
+        const DEFAULT_LOCALHOST: IpAddr = IpAddr::V4(std::net::Ipv4Addr::new(127, 0, 0, 1));
+
         let localhost_addr = addresses::LOCALHOST_NAME
             .parse()
-            .unwrap_or_else(|_| "127.0.0.1".parse().unwrap());
+            .unwrap_or(DEFAULT_LOCALHOST);
 
         self.config.api.bind_address = host.into().parse().unwrap_or_else(|_| {
             std::env::var("NESTGATE_BIND_ADDRESS")
@@ -387,7 +392,8 @@ mod tests {
 
     #[test]
     fn test_connection_info_creation() {
-        let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 8080);
+        use nestgate_core::constants::hardcoding::ports;
+        let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), ports::HTTP_DEFAULT);
         let conn = ConnectionInfo::new("conn-123".to_string(), addr);
 
         assert_eq!(conn.id(), "conn-123");
@@ -399,7 +405,8 @@ mod tests {
 
     #[test]
     fn test_connection_info_byte_tracking() {
-        let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 8080);
+        use nestgate_core::constants::hardcoding::ports;
+        let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), ports::HTTP_DEFAULT);
         let mut conn = ConnectionInfo::new("conn-123".to_string(), addr);
 
         conn.add_bytes_sent(1024);
@@ -418,7 +425,8 @@ mod tests {
 
     #[test]
     fn test_connection_status_transitions() {
-        let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 8080);
+        use nestgate_core::constants::hardcoding::ports;
+        let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), ports::HTTP_DEFAULT);
         let mut conn = ConnectionInfo::new("conn-123".to_string(), addr);
 
         assert!(conn.is_active());

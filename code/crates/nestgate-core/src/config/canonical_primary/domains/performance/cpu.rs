@@ -8,116 +8,161 @@ use crate::{NestGateError, Result};
 
 // ==================== CPU PERFORMANCE CONFIGURATION ====================
 
+/// CPU performance configuration for optimizing CPU usage and parallelism.
+///
+/// Controls CPU affinity, thread pooling, scheduling, SIMD optimizations,
+/// and CPU monitoring for maximum performance.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct CpuPerformanceConfig {
-    /// CPU affinity settings
+    /// CPU affinity settings for core pinning.
     pub affinity: CpuAffinityConfig,
 
-    /// Thread pool configuration
+    /// Thread pool configuration for parallel execution.
     pub thread_pools: ThreadPoolConfig,
 
-    /// CPU scheduling
+    /// CPU scheduling policy and priority.
     pub scheduling: CpuSchedulingConfig,
 
-    /// SIMD optimization
+    /// SIMD optimization settings for vectorization.
     pub simd: SimdConfig,
 
-    /// CPU monitoring
+    /// CPU monitoring for usage tracking.
     pub monitoring: CpuMonitoringConfig,
 }
 
+/// CPU affinity configuration for binding threads to specific cores.
+///
+/// Enables CPU core pinning to reduce context switching and improve cache locality.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CpuAffinityConfig {
-    /// Enable CPU affinity
+    /// Whether CPU affinity is enabled.
     pub enabled: bool,
 
-    /// Preferred CPU cores
+    /// List of preferred CPU core indices.
     pub preferred_cores: Vec<usize>,
 
-    /// Isolation strategy
+    /// Isolation strategy for core assignment.
     pub isolation: IsolationStrategy,
 }
 
+/// CPU core isolation strategy.
+///
+/// Determines how threads are distributed across CPU cores.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum IsolationStrategy {
+    /// No isolation - OS decides scheduling.
     None,
+    /// Soft isolation - prefer specific cores but allow migration.
     Soft,
+    /// Hard isolation - strictly bind threads to cores.
     Hard,
+    /// Adaptive isolation - adjust based on load.
     Adaptive,
 }
 
+/// Thread pool configuration for managing worker threads.
+///
+/// Controls thread pool sizing, keep-alive time, queue size, and thread naming.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ThreadPoolConfig {
-    /// Core thread pool size
+    /// Core thread pool size (default: CPU count).
     pub core_size: usize,
 
-    /// Maximum thread pool size
+    /// Maximum thread pool size (default: CPU count * 2).
     pub max_size: usize,
 
-    /// Thread keep-alive time
+    /// Thread keep-alive duration before termination.
     pub keep_alive: Duration,
 
-    /// Queue size
+    /// Work queue size for pending tasks.
     pub queue_size: usize,
 
-    /// Thread naming pattern
+    /// Thread naming pattern (e.g., "nestgate-worker-{}").
     pub thread_name_pattern: String,
 }
 
+/// CPU scheduling configuration for process priority and scheduling policy.
+///
+/// Controls how the OS schedules CPU time for the application.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CpuSchedulingConfig {
-    /// Scheduling policy
+    /// Scheduling policy to use.
     pub policy: SchedulingPolicy,
 
-    /// Process priority
+    /// Process priority (-20 to 19, lower = higher priority).
     pub priority: i32,
 
-    /// Nice value
+    /// Nice value for priority adjustment (Unix).
     pub nice: Option<i32>,
 }
 
+/// CPU scheduling policy.
+///
+/// Determines how the OS scheduler allocates CPU time.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SchedulingPolicy {
+    /// Normal time-sharing scheduling.
     Normal,
+    /// First-in-first-out real-time scheduling.
     Fifo,
+    /// Round-robin real-time scheduling.
     RoundRobin,
+    /// Batch scheduling for non-interactive processes.
     Batch,
+    /// Idle scheduling - only runs when system is idle.
     Idle,
 }
 
+/// SIMD (Single Instruction Multiple Data) configuration for vectorization.
+///
+/// Enables CPU vector instructions for parallel data processing.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SimdConfig {
-    /// Enable SIMD optimizations
+    /// Whether SIMD optimizations are enabled.
     pub enabled: bool,
 
-    /// SIMD instruction sets
+    /// List of supported SIMD instruction sets to use.
     pub instruction_sets: Vec<SimdInstructionSet>,
 
-    /// Auto-vectorization
+    /// Whether to enable compiler auto-vectorization.
     pub auto_vectorization: bool,
 }
 
+/// SIMD instruction set extensions.
+///
+/// CPU-specific vector instruction sets for parallel operations.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SimdInstructionSet {
+    /// Streaming SIMD Extensions.
     Sse,
+    /// SSE2 (Pentium 4+).
     Sse2,
+    /// SSE3 (Prescott+).
     Sse3,
+    /// SSE4.1 (Penryn+).
     Sse4_1,
+    /// SSE4.2 (Nehalem+).
     Sse4_2,
+    /// Advanced Vector Extensions (Sandy Bridge+).
     Avx,
+    /// AVX2 (Haswell+).
     Avx2,
+    /// AVX-512 (Skylake-X+).
     Avx512,
 }
 
+/// CPU monitoring configuration for tracking CPU usage.
+///
+/// Enables alerts and metrics for CPU consumption.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CpuMonitoringConfig {
-    /// Enable CPU monitoring
+    /// Whether CPU monitoring is enabled.
     pub enabled: bool,
 
-    /// Monitoring interval
+    /// Monitoring interval between samples.
     pub interval: Duration,
 
-    /// CPU usage threshold for alerts
+    /// CPU usage threshold for alerts (0.0-1.0, e.g., 0.8 = 80%).
     pub usage_threshold: f64,
 }
 

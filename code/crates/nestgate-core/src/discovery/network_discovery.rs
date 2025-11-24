@@ -5,7 +5,7 @@
 use super::capability_scanner::{CapabilityInfo, DiscoveryMethod};
 use crate::error::NestGateError;
 use std::collections::HashMap;
-use std::future::Future;
+// Removed unused import: use std::future::Future;
 use std::net::{IpAddr, SocketAddr};
 use std::time::Duration;
 use tokio::net::UdpSocket;
@@ -52,51 +52,49 @@ impl DnsServiceDiscovery {
 }
 
 impl DiscoveryMethod for DnsServiceDiscovery {
-    fn discover(&self) -> impl Future<Output = Result<Vec<CapabilityInfo>, NestGateError>> + Send {
-        async move {
-            let mut capabilities = Vec::new();
+    async fn discover(&self) -> Result<Vec<CapabilityInfo>, NestGateError> {
+        let mut capabilities = Vec::new();
 
-            debug!("Starting DNS-SRV discovery for domain: {}", self.domain);
+        debug!("Starting DNS-SRV discovery for domain: {}", self.domain);
 
-            for service_type in &self.service_types {
-                let query = format!("{}.{}", service_type, self.domain);
-                debug!("Querying DNS SRV record: {}", query);
+        for service_type in &self.service_types {
+            let query = format!("{}.{}", service_type, self.domain);
+            debug!("Querying DNS SRV record: {}", query);
 
-                // In a real implementation, this would use a DNS library like trust-dns
-                // For now, we'll simulate the discovery
-                match self.query_srv_record(&query).await {
-                    Ok(records) => {
-                        for record in records {
-                            let capability_type = self.extract_capability_type(service_type);
-                            let mut metadata = HashMap::new();
-                            metadata.insert("source".to_string(), "dns-srv".to_string());
-                            metadata.insert("service_type".to_string(), service_type.clone());
-                            metadata.insert("priority".to_string(), record.priority.to_string());
-                            metadata.insert("weight".to_string(), record.weight.to_string());
+            // In a real implementation, this would use a DNS library like trust-dns
+            // For now, we'll simulate the discovery
+            match self.query_srv_record(&query).await {
+                Ok(records) => {
+                    for record in records {
+                        let capability_type = self.extract_capability_type(service_type);
+                        let mut metadata = HashMap::new();
+                        metadata.insert("source".to_string(), "dns-srv".to_string());
+                        metadata.insert("service_type".to_string(), service_type.clone());
+                        metadata.insert("priority".to_string(), record.priority.to_string());
+                        metadata.insert("weight".to_string(), record.weight.to_string());
 
-                            capabilities.push(CapabilityInfo {
-                                capability_type,
-                                endpoint: format!("http://{}:{}", record.target, record.port),
-                                confidence: 0.85, // High confidence for DNS records
-                                metadata,
-                            });
-                        }
-                    }
-                    Err(e) => {
-                        warn!("Failed to query SRV record {}: {}", query, e);
+                        capabilities.push(CapabilityInfo {
+                            capability_type,
+                            endpoint: format!("http://{}:{}", record.target, record.port),
+                            confidence: 0.85, // High confidence for DNS records
+                            metadata,
+                        });
                     }
                 }
+                Err(e) => {
+                    warn!("Failed to query SRV record {}: {}", query, e);
+                }
             }
-
-            if !capabilities.is_empty() {
-                info!(
-                    "DNS-SRV discovery found {} capabilities",
-                    capabilities.len()
-                );
-            }
-
-            Ok(capabilities)
         }
+
+        if !capabilities.is_empty() {
+            info!(
+                "DNS-SRV discovery found {} capabilities",
+                capabilities.len()
+            );
+        }
+
+        Ok(capabilities)
     }
 
     fn method_name(&self) -> &str {
@@ -186,41 +184,39 @@ impl Default for MulticastDiscovery {
 }
 
 impl DiscoveryMethod for MulticastDiscovery {
-    fn discover(&self) -> impl Future<Output = Result<Vec<CapabilityInfo>, NestGateError>> + Send {
-        async move {
-            let mut capabilities = Vec::new();
+    async fn discover(&self) -> Result<Vec<CapabilityInfo>, NestGateError> {
+        let mut capabilities = Vec::new();
 
-            debug!(
-                "Starting multicast discovery on {} groups",
-                self.multicast_groups.len()
-            );
+        debug!(
+            "Starting multicast discovery on {} groups",
+            self.multicast_groups.len()
+        );
 
-            for group in &self.multicast_groups {
-                debug!("Listening for announcements on {}", group);
+        for group in &self.multicast_groups {
+            debug!("Listening for announcements on {}", group);
 
-                match self.listen_for_announcements(group).await {
-                    Ok(announcements) => {
-                        for announcement in announcements {
-                            if let Ok(capability) = self.parse_announcement(&announcement) {
-                                capabilities.push(capability);
-                            }
+            match self.listen_for_announcements(group).await {
+                Ok(announcements) => {
+                    for announcement in announcements {
+                        if let Ok(capability) = self.parse_announcement(&announcement) {
+                            capabilities.push(capability);
                         }
                     }
-                    Err(e) => {
-                        warn!("Failed to listen on multicast group {}: {}", group, e);
-                    }
+                }
+                Err(e) => {
+                    warn!("Failed to listen on multicast group {}: {}", group, e);
                 }
             }
-
-            if !capabilities.is_empty() {
-                info!(
-                    "Multicast discovery found {} capabilities",
-                    capabilities.len()
-                );
-            }
-
-            Ok(capabilities)
         }
+
+        if !capabilities.is_empty() {
+            info!(
+                "Multicast discovery found {} capabilities",
+                capabilities.len()
+            );
+        }
+
+        Ok(capabilities)
     }
 
     fn method_name(&self) -> &str {
@@ -234,7 +230,11 @@ impl MulticastDiscovery {
         &self,
         group: &SocketAddr,
     ) -> Result<Vec<String>, NestGateError> {
-        let socket = UdpSocket::bind("0.0.0.0:0").await.map_err(|e| {
+        let bind_addr = format!(
+            "{}:0",
+            crate::constants::network_defaults::get_bind_address()
+        );
+        let socket = UdpSocket::bind(&bind_addr).await.map_err(|e| {
             NestGateError::Internal(Box::new(
                 crate::error::variants::core_errors::InternalErrorDetails {
                     message: format!("Failed to bind UDP socket: {e}"),
@@ -418,42 +418,40 @@ impl Default for PortScanDiscovery {
 }
 
 impl DiscoveryMethod for PortScanDiscovery {
-    fn discover(&self) -> impl Future<Output = Result<Vec<CapabilityInfo>, NestGateError>> + Send {
-        async move {
-            let mut capabilities = Vec::new();
+    async fn discover(&self) -> Result<Vec<CapabilityInfo>, NestGateError> {
+        let mut capabilities = Vec::new();
 
-            info!(
-                "Starting port scan discovery across {} IP ranges",
-                self.ip_ranges.len()
+        info!(
+            "Starting port scan discovery across {} IP ranges",
+            self.ip_ranges.len()
+        );
+
+        for ip_range in &self.ip_ranges {
+            debug!(
+                "Scanning IP range: {:?} - {:?}",
+                ip_range.start, ip_range.end
             );
 
-            for ip_range in &self.ip_ranges {
-                debug!(
-                    "Scanning IP range: {:?} - {:?}",
-                    ip_range.start, ip_range.end
-                );
-
-                for (capability_type, ports) in &self.capability_ports {
-                    for &port in ports {
-                        // Scan a subset of IPs in the range (for demonstration)
-                        if let Some(found_capabilities) =
-                            self.scan_port(ip_range, capability_type, port).await
-                        {
-                            capabilities.extend(found_capabilities);
-                        }
+            for (capability_type, ports) in &self.capability_ports {
+                for &port in ports {
+                    // Scan a subset of IPs in the range (for demonstration)
+                    if let Some(found_capabilities) =
+                        self.scan_port(ip_range, capability_type, port).await
+                    {
+                        capabilities.extend(found_capabilities);
                     }
                 }
             }
-
-            if !capabilities.is_empty() {
-                info!(
-                    "Port scan discovery found {} capabilities",
-                    capabilities.len()
-                );
-            }
-
-            Ok(capabilities)
         }
+
+        if !capabilities.is_empty() {
+            info!(
+                "Port scan discovery found {} capabilities",
+                capabilities.len()
+            );
+        }
+
+        Ok(capabilities)
     }
 
     fn method_name(&self) -> &str {

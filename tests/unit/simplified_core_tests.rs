@@ -192,7 +192,7 @@ mod async_basic_tests {
     #[tokio::test]
     async fn test_async_basic_operations() -> Result<(), Box<dyn std::error::Error>> {
         let start = SystemTime::now();
-        sleep(Duration::from_millis(10)).await;
+        tokio::task::yield_now().await;
         let elapsed = start.elapsed()?;
         
         assert!(elapsed >= Duration::from_millis(10));

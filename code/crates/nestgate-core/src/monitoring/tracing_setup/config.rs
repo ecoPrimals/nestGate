@@ -206,8 +206,9 @@ pub struct ElkConfig {
 }
 impl Default for ElkConfig {
     fn default() -> Self {
+        let discovery_config = crate::config::discovery_config::ServiceDiscoveryConfig::default();
         Self {
-            elasticsearch_url: "http://localhost:9200".to_string(),
+            elasticsearch_url: discovery_config.build_endpoint(9200),
             index_name: "nestgate-logs".to_string(),
             auth: None,
             timeout_secs: 30,
@@ -247,8 +248,9 @@ pub struct LokiConfig {
 }
 impl Default for LokiConfig {
     fn default() -> Self {
+        let discovery_config = crate::config::discovery_config::ServiceDiscoveryConfig::default();
         Self {
-            endpoint: "http://localhost:3100".to_string(),
+            endpoint: discovery_config.build_endpoint(3100),
             auth: None,
             labels: HashMap::new(),
             timeout_secs: 30,
@@ -288,8 +290,9 @@ pub struct JaegerConfig {
 }
 impl Default for JaegerConfig {
     fn default() -> Self {
+        let discovery_config = crate::config::discovery_config::ServiceDiscoveryConfig::default();
         Self {
-            agent_endpoint: "http://localhost:14268".to_string(),
+            agent_endpoint: discovery_config.build_endpoint(14268),
             service_name: "nestgate".to_string(),
             sampling_rate: 0.1,
             max_spans_per_trace: 1000,

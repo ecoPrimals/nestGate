@@ -6,48 +6,61 @@ use std::time::Duration;
 
 use crate::{NestGateError, Result};
 
+/// Memory performance configuration for optimizing memory usage and allocation.
+///
+/// Controls memory pooling, garbage collection, and monitoring to optimize
+/// application memory footprint and performance.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct MemoryPerformanceConfig {
-    /// Memory pool configuration
+    /// Memory pool configuration for object pooling.
     pub pool: MemoryPoolConfig,
 
-    /// Garbage collection settings
+    /// Garbage collection settings for memory reclamation.
     pub gc: GarbageCollectionConfig,
 
-    /// Memory monitoring
+    /// Memory monitoring for usage tracking and alerts.
     pub monitoring: MemoryMonitoringConfig,
 }
 
+/// Memory pool configuration for efficient object allocation and reuse.
+///
+/// Implements object pooling to reduce allocation overhead and improve performance.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MemoryPoolConfig {
-    /// Initial pool size
+    /// Initial pool size in bytes (default: 1MB).
     pub initial_size: usize,
 
-    /// Maximum pool size
+    /// Maximum pool size in bytes (default: 1GB).
     pub max_size: usize,
 
-    /// Pool growth factor
+    /// Growth factor for pool expansion (default: 2.0 = double on growth).
     pub growth_factor: f64,
 }
 
+/// Garbage collection configuration for automatic memory reclamation.
+///
+/// Controls when and how memory is reclaimed from unused objects.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GarbageCollectionConfig {
-    /// Enable garbage collection
+    /// Whether garbage collection is enabled (default: true).
     pub enabled: bool,
 
-    /// GC interval
+    /// Interval between GC runs (default: 60 seconds).
     pub interval: Duration,
 
-    /// GC threshold
+    /// Memory usage threshold to trigger GC (0.0-1.0, default: 0.8 = 80%).
     pub threshold: f64,
 }
 
+/// Memory monitoring configuration for tracking memory usage.
+///
+/// Enables alerts and metrics for memory consumption.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MemoryMonitoringConfig {
-    /// Enable memory monitoring
+    /// Whether memory monitoring is enabled (default: true).
     pub enabled: bool,
 
-    /// Memory usage threshold
+    /// Memory usage threshold for alerts (0.0-1.0, default: 0.8 = 80%).
     pub usage_threshold: f64,
 }
 
@@ -81,11 +94,13 @@ impl Default for MemoryMonitoringConfig {
 }
 
 impl MemoryPerformanceConfig {
-    /// Function description
+    /// Validate memory performance configuration.
+    ///
+    /// Ensures pool sizes, thresholds, and intervals are properly configured.
     ///
     /// # Errors
     ///
-    /// This function will return an error if the operation fails.
+    /// Returns an error if max pool size is less than initial size.
     pub fn validate(&self) -> Result<()> {
         if self.pool.max_size < self.pool.initial_size {
             return Err(NestGateError::configuration_error(

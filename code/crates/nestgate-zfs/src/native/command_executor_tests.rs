@@ -1,11 +1,11 @@
 //! Unit tests for native ZFS command executor
-//! 
+//!
 //! These tests cover command execution structures and validation
 //! without requiring actual ZFS installation.
 
 #[cfg(test)]
 mod tests {
-    use super::super::command_executor::*;
+    use crate::native::command_executor::*;
 
     // ==================== ZfsCommandResult Tests ====================
 
@@ -74,9 +74,8 @@ mod tests {
             "exit_code": 0
         }"#;
 
-        let result: ZfsCommandResult = serde_json::from_str(json)
-            .expect("Failed to deserialize");
-        
+        let result: ZfsCommandResult = serde_json::from_str(json).expect("Failed to deserialize");
+
         assert!(result.success);
         assert_eq!(result.stdout, "test output");
     }
@@ -116,7 +115,7 @@ mod tests {
         let executor1 = NativeZfsCommandExecutor::with_timeout(300);
         let executor2 = NativeZfsCommandExecutor::with_timeout(600);
         let executor3 = NativeZfsCommandExecutor::with_timeout(900);
-        
+
         // All executors should be valid
         assert!(std::mem::size_of_val(&executor1) > 0);
         assert!(std::mem::size_of_val(&executor2) > 0);
@@ -200,9 +199,9 @@ mod tests {
         };
 
         let json = serde_json::to_string(&result).expect("Failed to serialize");
-        let deserialized: ZfsCommandResult = serde_json::from_str(&json)
-            .expect("Failed to deserialize");
-        
+        let deserialized: ZfsCommandResult =
+            serde_json::from_str(&json).expect("Failed to deserialize");
+
         assert_eq!(result.stdout, deserialized.stdout);
     }
 
@@ -216,9 +215,9 @@ mod tests {
         };
 
         let json = serde_json::to_string(&result).expect("Failed to serialize");
-        let deserialized: ZfsCommandResult = serde_json::from_str(&json)
-            .expect("Failed to deserialize");
-        
+        let deserialized: ZfsCommandResult =
+            serde_json::from_str(&json).expect("Failed to deserialize");
+
         assert_eq!(result.stdout, deserialized.stdout);
     }
 
@@ -317,11 +316,8 @@ mod tests {
 
     #[test]
     fn test_executor_multiple_instances() {
-        let executors: Vec<_> = (0..10)
-            .map(|_| NativeZfsCommandExecutor::new())
-            .collect();
-        
+        let executors: Vec<_> = (0..10).map(|_| NativeZfsCommandExecutor::new()).collect();
+
         assert_eq!(executors.len(), 10);
     }
 }
-

@@ -2,6 +2,8 @@
 // This module consolidates all ZFS-related types into a single, canonical location,
 // replacing fragmented type definitions across multiple modules.
 
+#![allow(clippy::items_after_test_module)]
+
 use crate::error::{create_zfs_error, ZfsOperation};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -107,7 +109,7 @@ pub struct PoolInfo {
     pub created_at: SystemTime,
 }
 /// ZFS pool health status
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum PoolHealth {
     Healthy,
     Warning,

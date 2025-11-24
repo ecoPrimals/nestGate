@@ -165,7 +165,7 @@ async fn simulate_operation(batch_id: u32, op_id: u32) -> Result<()> {
         10 + (batch_id + op_id) % 50
     );
     
-    sleep(operation_time).await;
+    tokio::task::yield_now().await;
     
     // Simulate 95% success rate
     if (batch_id + op_id) % 20 == 0 {

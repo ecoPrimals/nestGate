@@ -9,6 +9,8 @@
 //! - MountStatus types
 //! - ProtocolManager lifecycle and operations
 
+#![allow(deprecated)]
+
 use nestgate_network::protocol::*;
 use std::collections::HashMap;
 use std::path::PathBuf;

@@ -36,18 +36,9 @@ mod tests {
         let pending = AllocationStatus::Pending;
         let failed = AllocationStatus::Failed;
 
-        // Basic enum variant tests
-        match active {
-            AllocationStatus::Active => assert!(true),
-            _ => assert!(false, "Expected Active variant"),
-    Ok(())
-        }
-
-        match inactive {
-            AllocationStatus::Inactive => assert!(true),
-            _ => assert!(false, "Expected Inactive variant"),
-    Ok(())
-        }
+        // Test enum variants can be constructed
+        assert!(matches!(active, AllocationStatus::Active));
+        assert!(matches!(inactive, AllocationStatus::Inactive));
     Ok(())
     }
 
@@ -59,17 +50,8 @@ mod tests {
         let unknown = UnifiedHealthStatus::Unknown;
 
         // Test enum variants exist
-        match healthy {
-            UnifiedHealthStatus::Healthy => assert!(true),
-            _ => assert!(false, "Expected Healthy variant"),
-    Ok(())
-        }
-
-        match degraded {
-            UnifiedHealthStatus::Degraded => assert!(true),
-            _ => assert!(false, "Expected Degraded variant"),
-    Ok(())
-        }
+        assert!(matches!(healthy, UnifiedHealthStatus::Healthy));
+        assert!(matches!(degraded, UnifiedHealthStatus::Degraded));
     Ok(())
     }
 
@@ -81,17 +63,8 @@ mod tests {
         let stopped = UnifiedServiceState::Stopped;
 
         // Test enum variants
-        match starting {
-            UnifiedServiceState::Starting => assert!(true),
-            _ => assert!(false, "Expected Starting variant"),
-    Ok(())
-        }
-
-        match running {
-            UnifiedServiceState::Running => assert!(true),
-            _ => assert!(false, "Expected Running variant"),
-    Ok(())
-        }
+        assert!(matches!(starting, UnifiedServiceState::Starting));
+        assert!(matches!(running, UnifiedServiceState::Running));
     Ok(())
     }
 

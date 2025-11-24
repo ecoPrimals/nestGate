@@ -545,7 +545,7 @@ mod tests {
             updated_at: Utc::now(),
         };
 
-        manager.add_retention_policy(policy.clone());
+        manager.add_retention_policy(policy);
         assert_eq!(manager.retention_policies.len(), 1);
         assert_eq!(
             manager
@@ -572,7 +572,7 @@ mod tests {
             created_at: Utc::now(),
         };
 
-        manager.add_access_policy(policy.clone());
+        manager.add_access_policy(policy);
         assert_eq!(manager.access_policies.len(), 1);
     }
 

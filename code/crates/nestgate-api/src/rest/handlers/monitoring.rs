@@ -486,7 +486,7 @@ mod tests {
         let result = get_metrics(State(state)).await;
 
         assert!(result.is_ok());
-        let response = result.unwrap();
+        let response = result.expect("Test: get_metrics should return Ok");
         let metrics = &response.0.data;
 
         // Verify basic metrics are present
@@ -503,7 +503,7 @@ mod tests {
         let result = get_metrics(State(state)).await;
 
         assert!(result.is_ok());
-        let metrics = &result.unwrap().0.data;
+        let metrics = &result.expect("Test: get_metrics should return Ok").0.data;
 
         // Verify ZFS metrics
         assert!(metrics.zfs_metrics.arc_hit_ratio >= 0.0);
@@ -525,7 +525,7 @@ mod tests {
         let result = get_metrics(State(state)).await;
         assert!(result.is_ok());
 
-        let metrics = &result.unwrap().0.data;
+        let metrics = &result.expect("Test: get_metrics should return Ok").0.data;
         assert!(metrics.zfs_metrics.total_datasets >= 1);
         // Just verify the metrics structure is returned correctly
     }
@@ -536,7 +536,7 @@ mod tests {
         let result = get_metrics(State(state)).await;
 
         assert!(result.is_ok());
-        let metrics = &result.unwrap().0.data;
+        let metrics = &result.expect("Test: get_metrics should return Ok").0.data;
 
         // Verify disk I/O metrics
         assert!(metrics.disk_io.read_bytes_per_sec >= 0.0);
@@ -552,7 +552,7 @@ mod tests {
         let result = get_metrics(State(state)).await;
 
         assert!(result.is_ok());
-        let metrics = &result.unwrap().0.data;
+        let metrics = &result.expect("Test: get_metrics should return Ok").0.data;
 
         // Verify network I/O metrics
         assert!(metrics.network_io.bytes_sent > 0);
@@ -574,7 +574,10 @@ mod tests {
         let result = get_metrics_history(State(state), Query(query)).await;
         assert!(result.is_ok());
 
-        let history = &result.unwrap().0.data;
+        let history = &result
+            .expect("Test: get_metrics_history should return Ok")
+            .0
+            .data;
         assert!(!history.is_empty(), "Should return at least one data point");
     }
 
@@ -587,14 +590,17 @@ mod tests {
             let query = MetricsHistoryQuery {
                 start: None,
                 end: None,
-                interval: Some(interval.to_string()),
+                interval: Some((*interval).to_string()),
                 metrics: None,
             };
 
             let result = get_metrics_history(State(state.clone()), Query(query)).await;
             assert!(result.is_ok());
 
-            let history = &result.unwrap().0.data;
+            let history = &result
+                .expect("Test: get_metrics_history should return Ok")
+                .0
+                .data;
             assert!(!history.is_empty());
         }
     }
@@ -616,7 +622,10 @@ mod tests {
         let result = get_metrics_history(State(state), Query(query)).await;
         assert!(result.is_ok());
 
-        let history = &result.unwrap().0.data;
+        let history = &result
+            .expect("Test: get_metrics_history should return Ok")
+            .0
+            .data;
         assert!(!history.is_empty());
 
         // Verify timestamps are within range
@@ -632,7 +641,7 @@ mod tests {
         let result = get_alerts(State(state)).await;
 
         assert!(result.is_ok());
-        let alerts = &result.unwrap().0.data;
+        let alerts = &result.expect("Test: get_alerts should return Ok").0.data;
 
         // Verify alert structure is valid (alerts may be empty if no alerts active)
         // Note: Length is always >= 0 by definition, but we're verifying the structure exists
@@ -646,21 +655,21 @@ mod tests {
         {
             let mut engines = state.zfs_engines.write().await;
             for i in 0..15 {
-                engines.insert(format!("dataset{}", i), format!("data{}", i));
+                engines.insert(format!("dataset{i}"), format!("data{i}"));
             }
         }
 
         let result = get_alerts(State(state)).await;
         assert!(result.is_ok());
 
-        let alerts = &result.unwrap().0.data;
+        let alerts = &result.expect("Test: get_alerts should return Ok").0.data;
         assert!(!alerts.is_empty(), "Should have high dataset count alert");
 
         // Find the high dataset count alert
         let dataset_alert = alerts.iter().find(|a| a.name == "High Dataset Count");
         assert!(dataset_alert.is_some());
 
-        let alert = dataset_alert.unwrap();
+        let alert = dataset_alert.expect("Test: dataset_alert should be Some");
         assert_eq!(alert.severity, AlertSeverity::Warning);
         assert_eq!(alert.status, AlertStatus::Active);
         assert!(!alert.suggested_actions.is_empty());
@@ -674,14 +683,14 @@ mod tests {
         {
             let mut engines = state.zfs_engines.write().await;
             for i in 0..15 {
-                engines.insert(format!("dataset{}", i), format!("data{}", i));
+                engines.insert(format!("dataset{i}"), format!("data{i}"));
             }
         }
 
         let result = get_alerts(State(state)).await;
         assert!(result.is_ok());
 
-        let alerts = &result.unwrap().0.data;
+        let alerts = &result.expect("Test: get_alerts should return Ok").0.data;
 
         for alert in alerts {
             // Verify alert has all required fields
@@ -709,14 +718,14 @@ mod tests {
         {
             let mut engines = state.zfs_engines.write().await;
             for i in 0..15 {
-                engines.insert(format!("dataset{}", i), format!("data{}", i));
+                engines.insert(format!("dataset{i}"), format!("data{i}"));
             }
         }
 
         let result = get_alerts(State(state)).await;
         assert!(result.is_ok());
 
-        let alerts = &result.unwrap().0.data;
+        let alerts = &result.expect("Test: get_alerts should return Ok").0.data;
 
         // Verify we have various severity levels
         let has_warning = alerts
@@ -731,7 +740,7 @@ mod tests {
 
         // Should always return a valid ratio (default or actual)
         assert!(result.is_ok());
-        let ratio = result.unwrap();
+        let ratio = result.expect("Test: calculate_arc_hit_ratio should return Ok");
         assert!(ratio >= 0.0);
         assert!(ratio <= 100.0);
     }
@@ -744,7 +753,7 @@ mod tests {
         let query: Result<MetricsHistoryQuery, _> = serde_json::from_str(json);
         assert!(query.is_ok());
 
-        let q = query.unwrap();
+        let q = query.expect("Test: query deserialization should succeed");
         assert!(q.start.is_some());
         assert!(q.end.is_some());
         assert_eq!(q.interval, Some("5m".to_string()));

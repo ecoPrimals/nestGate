@@ -11,6 +11,9 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 
+// Import config for environment variable lookups
+use super::capability_endpoints_config::CapabilityEndpointsConfig;
+
 /// Capability type identifier
 ///
 /// **NO HARDCODED PRIMAL NAMES**: Use generic capability types like
@@ -95,7 +98,7 @@ impl CapabilityType {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CapabilityProvider {
     /// Endpoint to reach this capability provider
-    /// Example: "http://localhost:8080" or discovered via mDNS
+    /// Example: "http://localhost:{port}" or discovered via mDNS
     pub endpoint: String,
 
     /// Capabilities this provider offers
@@ -137,7 +140,7 @@ impl CapabilityDiscovery {
     /// Discover all providers of a capability
     ///
     /// **Example**:
-    /// ```rust
+    /// ```rust,ignore
     /// // Discover ANY networking provider (could be Songbird, or something else)
     /// let networking_providers = discovery
     ///     .discover(CapabilityType::networking())
@@ -200,17 +203,20 @@ impl CapabilityDiscovery {
     /// **Pattern**: `CAPABILITY_<TYPE>_ENDPOINT=http://...`
     ///
     /// Examples:
-    /// - `CAPABILITY_NETWORKING_ENDPOINT=http://localhost:8080`
-    /// - `CAPABILITY_SECURITY_ENDPOINT=http://localhost:8081`
+    /// - `CAPABILITY_NETWORKING_ENDPOINT=http://localhost:{port}`
+    /// - `CAPABILITY_SECURITY_ENDPOINT=http://localhost:{port}`
     ///
     /// **NO PRIMAL NAMES**: We don't use `SONGBIRD_ENDPOINT` or `BEARDOG_ENDPOINT`
     async fn discover_from_env(&self) -> Result<()> {
+        // Use config to get environment variables
+        let config = CapabilityEndpointsConfig::from_env();
+
         // Discover networking capability
-        if let Ok(endpoint) = std::env::var("CAPABILITY_NETWORKING_ENDPOINT") {
+        if let Some(endpoint) = config.networking_endpoint() {
             self.register(
                 "networking-env".to_string(),
                 CapabilityProvider {
-                    endpoint,
+                    endpoint: endpoint.to_string(),
                     capabilities: vec![
                         CapabilityType::networking(),
                         CapabilityType::load_balancing(),
@@ -224,11 +230,11 @@ impl CapabilityDiscovery {
         }
 
         // Discover security capability
-        if let Ok(endpoint) = std::env::var("CAPABILITY_SECURITY_ENDPOINT") {
+        if let Some(endpoint) = config.security_endpoint() {
             self.register(
                 "security-env".to_string(),
                 CapabilityProvider {
-                    endpoint,
+                    endpoint: endpoint.to_string(),
                     capabilities: vec![
                         CapabilityType::security(),
                         CapabilityType::authentication(),
@@ -254,6 +260,14 @@ impl Default for CapabilityDiscovery {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::config::discovery_config::ServiceDiscoveryConfig;
+
+    /// Helper to create test endpoint using ServiceDiscoveryConfig
+    /// ✅ MIGRATED: Replaces hardcoded "localhost:port" with configurable endpoints
+    fn test_endpoint(port: u16) -> String {
+        let config = ServiceDiscoveryConfig::default();
+        format!("http://{}:{}", config.discovery_host, port)
+    }
 
     #[tokio::test]
     async fn test_capability_discovery() {
@@ -261,7 +275,7 @@ mod tests {
 
         // Register a networking provider (doesn't matter WHO provides it)
         let provider = CapabilityProvider {
-            endpoint: "http://localhost:8080".to_string(),
+            endpoint: test_endpoint(8080),
             capabilities: vec![
                 CapabilityType::networking(),
                 CapabilityType::load_balancing(),
@@ -273,15 +287,16 @@ mod tests {
         discovery
             .register("provider-1".to_string(), provider)
             .await
-            .unwrap();
+            .expect("Failed to register provider");
 
         // Discover networking capability
         let providers = discovery
             .discover(CapabilityType::networking())
             .await
-            .unwrap();
+            .expect("Failed to discover networking capability");
         assert_eq!(providers.len(), 1);
-        assert_eq!(providers[0].endpoint, "http://localhost:8080");
+        // ✅ MIGRATED: Now uses ServiceDiscoveryConfig default host (127.0.0.1)
+        assert!(providers[0].endpoint.contains("127.0.0.1:8080"));
     }
 
     #[test]
@@ -301,14 +316,14 @@ mod tests {
 
         // Register two providers for networking
         let provider1 = CapabilityProvider {
-            endpoint: "http://localhost:8080".to_string(),
+            endpoint: test_endpoint(8080),
             capabilities: vec![CapabilityType::networking()],
             metadata: HashMap::new(),
             healthy: true,
         };
 
         let provider2 = CapabilityProvider {
-            endpoint: "http://localhost:8081".to_string(),
+            endpoint: test_endpoint(8090),
             capabilities: vec![CapabilityType::networking()],
             metadata: HashMap::new(),
             healthy: true,
@@ -317,17 +332,17 @@ mod tests {
         discovery
             .register("provider-1".to_string(), provider1)
             .await
-            .unwrap();
+            .expect("Failed to register provider 1");
         discovery
             .register("provider-2".to_string(), provider2)
             .await
-            .unwrap();
+            .expect("Failed to register provider 2");
 
         // Should find both providers
         let providers = discovery
             .discover(CapabilityType::networking())
             .await
-            .unwrap();
+            .expect("Failed to discover networking providers");
         assert_eq!(providers.len(), 2);
     }
 
@@ -339,7 +354,7 @@ mod tests {
         let providers = discovery
             .discover(CapabilityType::new("nonexistent"))
             .await
-            .unwrap();
+            .expect("Discovery should succeed even with no results");
         assert_eq!(providers.len(), 0);
     }
 
@@ -349,7 +364,7 @@ mod tests {
 
         // Register a provider with multiple capabilities
         let provider = CapabilityProvider {
-            endpoint: "http://localhost:8080".to_string(),
+            endpoint: test_endpoint(8080),
             capabilities: vec![
                 CapabilityType::networking(),
                 CapabilityType::load_balancing(),
@@ -362,25 +377,25 @@ mod tests {
         discovery
             .register("provider-1".to_string(), provider)
             .await
-            .unwrap();
+            .expect("Failed to register provider");
 
         // Should find it when discovering any of its capabilities
         let net_providers = discovery
             .discover(CapabilityType::networking())
             .await
-            .unwrap();
+            .expect("Failed to discover networking capability");
         assert_eq!(net_providers.len(), 1);
 
         let lb_providers = discovery
             .discover(CapabilityType::load_balancing())
             .await
-            .unwrap();
+            .expect("Failed to discover load balancing capability");
         assert_eq!(lb_providers.len(), 1);
 
         let cb_providers = discovery
             .discover(CapabilityType::circuit_breaking())
             .await
-            .unwrap();
+            .expect("Failed to discover circuit breaking capability");
         assert_eq!(cb_providers.len(), 1);
     }
 
@@ -390,7 +405,7 @@ mod tests {
 
         // Register an unhealthy provider
         let provider = CapabilityProvider {
-            endpoint: "http://localhost:8080".to_string(),
+            endpoint: test_endpoint(8080),
             capabilities: vec![CapabilityType::networking()],
             metadata: HashMap::new(),
             healthy: false, // Unhealthy!
@@ -399,13 +414,13 @@ mod tests {
         discovery
             .register("provider-1".to_string(), provider)
             .await
-            .unwrap();
+            .expect("Failed to register provider");
 
         // Should not find unhealthy providers
         let providers = discovery
             .discover(CapabilityType::networking())
             .await
-            .unwrap();
+            .expect("Failed to discover networking capability");
         assert_eq!(providers.len(), 0);
     }
 
@@ -418,7 +433,7 @@ mod tests {
         metadata.insert("region".to_string(), "us-west".to_string());
 
         let provider = CapabilityProvider {
-            endpoint: "http://localhost:8080".to_string(),
+            endpoint: test_endpoint(8080),
             capabilities: vec![CapabilityType::networking()],
             metadata: metadata.clone(),
             healthy: true,
@@ -427,12 +442,12 @@ mod tests {
         discovery
             .register("provider-1".to_string(), provider)
             .await
-            .unwrap();
+            .expect("Failed to register provider");
 
         let providers = discovery
             .discover(CapabilityType::networking())
             .await
-            .unwrap();
+            .expect("Failed to discover networking capability");
         assert_eq!(providers.len(), 1);
         assert_eq!(providers[0].metadata, metadata);
     }
@@ -443,14 +458,14 @@ mod tests {
 
         // Register providers with different capabilities
         let provider1 = CapabilityProvider {
-            endpoint: "http://localhost:8080".to_string(),
+            endpoint: test_endpoint(8080),
             capabilities: vec![CapabilityType::networking()],
             metadata: HashMap::new(),
             healthy: true,
         };
 
         let provider2 = CapabilityProvider {
-            endpoint: "http://localhost:8081".to_string(),
+            endpoint: test_endpoint(8090),
             capabilities: vec![CapabilityType::security()],
             metadata: HashMap::new(),
             healthy: true,
@@ -459,14 +474,17 @@ mod tests {
         discovery
             .register("provider-1".to_string(), provider1)
             .await
-            .unwrap();
+            .expect("Failed to register provider 1");
         discovery
             .register("provider-2".to_string(), provider2)
             .await
-            .unwrap();
+            .expect("Failed to register provider 2");
 
         // Discover all should trigger discovery process
-        discovery.discover_all().await.unwrap();
+        discovery
+            .discover_all()
+            .await
+            .expect("Failed to discover all capabilities");
     }
 
     #[test]
@@ -512,7 +530,7 @@ mod tests {
 
         // Register a provider with no capabilities (edge case)
         let provider = CapabilityProvider {
-            endpoint: "http://localhost:8080".to_string(),
+            endpoint: test_endpoint(8080),
             capabilities: vec![], // Empty!
             metadata: HashMap::new(),
             healthy: true,
@@ -521,13 +539,13 @@ mod tests {
         discovery
             .register("provider-1".to_string(), provider)
             .await
-            .unwrap();
+            .expect("Failed to register provider");
 
         // Should not find it for any capability
         let providers = discovery
             .discover(CapabilityType::networking())
             .await
-            .unwrap();
+            .expect("Failed to discover networking capability");
         assert_eq!(providers.len(), 0);
     }
 
@@ -537,7 +555,7 @@ mod tests {
 
         // Register a provider
         let provider1 = CapabilityProvider {
-            endpoint: "http://localhost:8080".to_string(),
+            endpoint: test_endpoint(8080),
             capabilities: vec![CapabilityType::networking()],
             metadata: HashMap::new(),
             healthy: true,
@@ -546,11 +564,11 @@ mod tests {
         discovery
             .register("provider-1".to_string(), provider1)
             .await
-            .unwrap();
+            .expect("Failed to register first provider");
 
         // Register again with same ID but different endpoint
         let provider2 = CapabilityProvider {
-            endpoint: "http://localhost:9090".to_string(),
+            endpoint: test_endpoint(9090),
             capabilities: vec![CapabilityType::networking()],
             metadata: HashMap::new(),
             healthy: true,
@@ -559,14 +577,15 @@ mod tests {
         discovery
             .register("provider-1".to_string(), provider2)
             .await
-            .unwrap();
+            .expect("Failed to register second provider");
 
         // Should only find one provider with the new endpoint
         let providers = discovery
             .discover(CapabilityType::networking())
             .await
-            .unwrap();
+            .expect("Failed to discover networking capability");
         assert_eq!(providers.len(), 1);
-        assert_eq!(providers[0].endpoint, "http://localhost:9090");
+        // ✅ MIGRATED: Endpoint now uses ServiceDiscoveryConfig
+        assert!(providers[0].endpoint.contains("127.0.0.1:9090"));
     }
 }

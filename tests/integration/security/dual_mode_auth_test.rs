@@ -2,11 +2,11 @@
 //! 
 //! This test validates dual mode authentication security functionality using canonical patterns
 //! **CANONICAL MODERNIZATION**: Updated to use simple, working patterns
+//!
+//! **MODERN CONCURRENCY**: Uses yield_now() for async coordination instead of sleep().
 
 use nestgate_core::config::canonical_primary::NestGateCanonicalConfig as NestGateUnifiedConfig;
 use nestgate_core::constants::Environment;
-use std::time::Duration;
-use tokio::time::sleep;
 use tracing::info;
 
 /// Test dual mode authentication security configuration
@@ -43,7 +43,7 @@ async fn test_dual_mode_authentication_mechanisms() -> Result<(), Box<dyn std::e
         info!("Executing {} mechanism ({}ms)", mechanism, duration);
         
         // Simulate authentication mechanism
-        sleep(Duration::from_millis(duration as u64)).await;
+        tokio::task::yield_now().await;
         
         // Verify authentication mechanism is valid
         assert!(!mechanism.is_empty(), "Mechanism should be specified");
@@ -72,7 +72,7 @@ async fn test_security_validation_protocols() -> Result<(), Box<dyn std::error::
         info!("Processing {} protocol ({}ms)", protocol, duration);
         
         // Simulate validation protocol
-        sleep(Duration::from_millis(duration as u64)).await;
+        tokio::task::yield_now().await;
         
         // Verify validation protocol is valid
         assert!(!protocol.is_empty(), "Protocol should be specified");
@@ -94,7 +94,7 @@ async fn test_authentication_security_monitoring() -> Result<(), Box<dyn std::er
     // Test authentication security monitoring cycles
     for i in 0..6 {
         let cycle_time = (i + 1) * 22;
-        sleep(Duration::from_millis(cycle_time as u64)).await;
+        tokio::task::yield_now().await;
         
         let elapsed = start_time.elapsed();
         info!("Auth security monitoring cycle {}: {}ms, total elapsed: {:?}", i + 1, cycle_time, elapsed);
@@ -125,7 +125,7 @@ async fn test_dual_mode_security_threat_detection() -> Result<(), Box<dyn std::e
         info!("Testing {} scenario ({}ms detection)", scenario, detection_time);
         
         // Simulate threat detection scenario
-        sleep(Duration::from_millis(detection_time as u64 / 2)).await;
+        tokio::task::yield_now().await;
         
         // Verify threat detection scenario is valid
         assert!(!scenario.is_empty(), "Scenario should be specified");
@@ -154,7 +154,7 @@ async fn test_authentication_security_resilience() -> Result<(), Box<dyn std::er
         info!("Testing {} feature ({}ms)", feature, processing_time);
         
         // Simulate resilience feature
-        sleep(Duration::from_millis(processing_time as u64)).await;
+        tokio::task::yield_now().await;
         
         // Verify resilience feature is valid
         assert!(!feature.is_empty(), "Feature should be specified");

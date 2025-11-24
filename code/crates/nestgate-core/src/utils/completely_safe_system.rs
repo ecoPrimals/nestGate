@@ -4,9 +4,12 @@
 //! without using any unsafe code blocks.
 
 use crate::{NestGateError, Result};
-use std::env;
 use std::fs;
 use std::process::Command;
+use std::path::Path;
+
+// Import config for environment variable hints
+use super::safe_system_config::SafeSystemConfig;
 
 /// File permissions information
 #[derive(Debug, Clone)]
@@ -84,16 +87,15 @@ impl SafeSystemOps {
             _ => {}
         }
 
-        // Method 2: Check environment variables
-        if let Ok(uid_str) = env::var("UID") {
-            if let Ok(uid) = uid_str.parse::<u32>() {
-                return Ok(uid);
-            }
+        // Method 2: Check environment variables (via config)
+        let config = SafeSystemConfig::from_env();
+        if let Some(uid) = config.uid_hint() {
+            return Ok(uid);
         }
 
-        // Method 3: Infer from username
-        if let Ok(user) = env::var("USER") {
-            match user.as_str() {
+        // Method 3: Infer from username (via config)
+        if let Some(user) = config.user_hint() {
+            match user {
                 "root" => return Ok(0),
                 _ => {
                     // Try to get UID from /etc/passwd (safe file reading)
@@ -150,18 +152,15 @@ impl SafeSystemOps {
             _ => {}
         }
 
-        // Method 2: Check environment variables
-        if let Ok(gid_str) = env::var("GID") {
-            if let Ok(gid) = gid_str.parse::<u32>() {
-                return Ok(gid);
-            }
+        // Method 2: Check environment variables (via config)
+        let config = SafeSystemConfig::from_env();
+        if let Some(gid) = config.gid_hint() {
+            return Ok(gid);
         }
 
-        // Fallback: check for common user names
-        if let Ok(user) = env::var("USER") {
-            if user.as_str() == "root" {
-                return Ok(0);
-            }
+        // Fallback: check for common user names (via config)
+        if config.is_root_user_hint() {
+            return Ok(0);
         }
 
         Err(NestGateError::System {
@@ -306,10 +305,11 @@ impl SafeSystemOps {
             _ => {}
         }
 
-        // Method 3: Check environment variables
-        if let Ok(hostname) = env::var("HOSTNAME") {
+        // Method 3: Check environment variables (via config)
+        let config = SafeSystemConfig::from_env();
+        if let Some(hostname) = config.hostname_hint() {
             if !hostname.is_empty() {
-                return Ok(hostname);
+                return Ok(hostname.to_string());
             }
         }
 
@@ -335,8 +335,9 @@ impl SafeSystemOps {
             }
         }
 
-        // Method 3: Check environment variables
-        if env::var("container").is_ok() || env::var("DOCKER_CONTAINER").is_ok() {
+        // Method 3: Check environment variables (via config)
+        let config = SafeSystemConfig::from_env();
+        if config.has_container_hint() {
             return true;
         }
 

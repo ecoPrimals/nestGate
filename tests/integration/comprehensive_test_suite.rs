@@ -2,11 +2,11 @@
 //! 
 //! This test validates comprehensive system functionality using canonical patterns
 //! **CANONICAL MODERNIZATION**: Updated to use simple, working patterns
+//!
+//! **MODERN CONCURRENCY**: Uses yield_now() for async coordination instead of sleep().
 
 use nestgate_core::config::canonical_primary::NestGateCanonicalConfig as NestGateUnifiedConfig;
 use nestgate_core::constants::Environment;
-use std::time::Duration;
-use tokio::time::sleep;
 use tracing::info;
 
 /// Test comprehensive suite configuration
@@ -43,7 +43,7 @@ async fn test_comprehensive_system_validation() -> Result<(), Box<dyn std::error
         info!("Executing {} operation ({}ms)", operation, duration);
         
         // Simulate validation operation
-        sleep(Duration::from_millis(duration as u64)).await;
+        tokio::task::yield_now().await;
         
         // Verify validation operation is valid
         assert!(!operation.is_empty(), "Operation should be specified");
@@ -72,7 +72,7 @@ async fn test_comprehensive_test_execution() -> Result<(), Box<dyn std::error::E
         info!("Processing {} phase ({}ms)", phase, duration);
         
         // Simulate execution phase
-        sleep(Duration::from_millis(duration as u64)).await;
+        tokio::task::yield_now().await;
         
         // Verify execution phase is valid
         assert!(!phase.is_empty(), "Phase should be specified");
@@ -94,7 +94,7 @@ async fn test_comprehensive_monitoring() -> Result<(), Box<dyn std::error::Error
     // Test comprehensive monitoring cycles
     for i in 0..6 {
         let cycle_time = (i + 1) * 18;
-        sleep(Duration::from_millis(cycle_time as u64)).await;
+        tokio::task::yield_now().await;
         
         let elapsed = start_time.elapsed();
         info!("Comprehensive cycle {}: {}ms, total elapsed: {:?}", i + 1, cycle_time, elapsed);
@@ -124,11 +124,8 @@ async fn test_comprehensive_error_handling() -> Result<(), Box<dyn std::error::E
     for (error_type, recovery_time) in error_scenarios {
         info!("Testing {} error ({}ms recovery)", error_type, recovery_time);
         
-        // Simulate error occurrence
-        sleep(Duration::from_millis(5)).await;
-        
         // Simulate error handling and recovery
-        sleep(Duration::from_millis(recovery_time as u64 / 2)).await;
+        tokio::task::yield_now().await;
         
         // Verify error handling is valid
         assert!(!error_type.is_empty(), "Error type should be specified");
@@ -157,7 +154,7 @@ async fn test_comprehensive_performance() -> Result<(), Box<dyn std::error::Erro
         info!("Benchmarking {} scenario ({}ms)", scenario, benchmark_time);
         
         // Simulate performance scenario
-        sleep(Duration::from_millis(benchmark_time as u64 / 3)).await;
+        tokio::task::yield_now().await;
         
         // Verify performance scenario is valid
         assert!(!scenario.is_empty(), "Scenario should be specified");

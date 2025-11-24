@@ -165,28 +165,28 @@ mod tests {
     #[test]
     fn test_api_error_display_invalid_request() {
         let error = ApiError::InvalidRequest("Missing field".to_string());
-        let display = format!("{}", error);
+        let display = format!("{error}");
         assert_eq!(display, "Invalid request: Missing field");
     }
 
     #[test]
     fn test_api_error_display_not_found() {
         let error = ApiError::NotFound("Resource not found".to_string());
-        let display = format!("{}", error);
+        let display = format!("{error}");
         assert_eq!(display, "Not found: Resource not found");
     }
 
     #[test]
     fn test_api_error_display_internal() {
         let error = ApiError::Internal("Internal error occurred".to_string());
-        let display = format!("{}", error);
+        let display = format!("{error}");
         assert_eq!(display, "Internal error: Internal error occurred");
     }
 
     #[test]
     fn test_api_error_display_service_unavailable() {
         let error = ApiError::ServiceUnavailable("Service is down".to_string());
-        let display = format!("{}", error);
+        let display = format!("{error}");
         assert_eq!(display, "Service unavailable: Service is down");
     }
 
@@ -216,3 +216,7 @@ mod tests {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "error_comprehensive_tests.rs"]
+mod comprehensive_tests;

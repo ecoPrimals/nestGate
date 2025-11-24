@@ -17,7 +17,7 @@ pub trait ZeroCostCacheProvider<K, V> {
 /// **DEPRECATED**: Zero-cost security consolidated into unified traits
 #[deprecated(
     since = "0.9.0",
-    note = "Use crate::traits::canonical_unified_traits::CanonicalSecurity with const generics"
+    note = "Use crate::traits::canonical::CanonicalSecurity with const generics"
 )]
 pub trait ZeroCostSecurityProvider<Token, Credentials> {
     /// Authenticate - compile-time specialization

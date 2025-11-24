@@ -8,7 +8,7 @@ use std::time::SystemTime;
 
 #[test]
 fn test_health_status_variants() {
-    let statuses = vec![
+    let statuses = [
         HealthStatus::Healthy,
         HealthStatus::Warning,
         HealthStatus::Critical,
@@ -139,7 +139,7 @@ fn test_health_report_clone() {
 
 #[test]
 fn test_alert_level_variants() {
-    let levels = vec![AlertLevel::Info, AlertLevel::Warning, AlertLevel::Critical];
+    let levels = [AlertLevel::Info, AlertLevel::Warning, AlertLevel::Critical];
 
     assert_eq!(levels.len(), 3);
 }
@@ -364,31 +364,30 @@ fn test_multiple_alerts() {
 
 #[test]
 fn test_health_report_collection() {
-    let mut reports = Vec::new();
-
-    reports.push(HealthReport {
-        component_type: "pool".to_string(),
-        component_name: "pool1".to_string(),
-        status: HealthStatus::Healthy,
-        last_check: SystemTime::now(),
-        details: "OK".to_string(),
-    });
-
-    reports.push(HealthReport {
-        component_type: "pool".to_string(),
-        component_name: "pool2".to_string(),
-        status: HealthStatus::Warning,
-        last_check: SystemTime::now(),
-        details: "High usage".to_string(),
-    });
-
-    reports.push(HealthReport {
-        component_type: "pool".to_string(),
-        component_name: "pool3".to_string(),
-        status: HealthStatus::Critical,
-        last_check: SystemTime::now(),
-        details: "Failure".to_string(),
-    });
+    let now = SystemTime::now();
+    let reports = vec![
+        HealthReport {
+            component_type: "pool".to_string(),
+            component_name: "pool1".to_string(),
+            status: HealthStatus::Healthy,
+            last_check: now,
+            details: "OK".to_string(),
+        },
+        HealthReport {
+            component_type: "pool".to_string(),
+            component_name: "pool2".to_string(),
+            status: HealthStatus::Warning,
+            last_check: now,
+            details: "High usage".to_string(),
+        },
+        HealthReport {
+            component_type: "pool".to_string(),
+            component_name: "pool3".to_string(),
+            status: HealthStatus::Critical,
+            last_check: now,
+            details: "Failure".to_string(),
+        },
+    ];
 
     assert_eq!(reports.len(), 3);
 

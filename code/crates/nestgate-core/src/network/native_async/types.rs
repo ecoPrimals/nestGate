@@ -101,7 +101,7 @@ mod tests {
 
     #[test]
     fn test_service_event_types() {
-        let events = vec![
+        let events = [
             ServiceEventType::Registered,
             ServiceEventType::Deregistered,
             ServiceEventType::HealthChanged,

@@ -12,6 +12,8 @@ use std::collections::HashMap;
 use std::env;
 use std::time::Duration;
 
+use nestgate_core::error::utilities::safe_env_var_or_default;
+
 /// **AUTOMATION CONFIG TYPES**
 /// Configuration type definitions for the automation system
 /// Main automation configuration (DEPRECATED)
@@ -72,15 +74,9 @@ impl AutomationConfig {
             enable_automatic_optimization: true,
             min_confidence_threshold: 0.8, // Higher confidence for production
             _orchestration_endpoint: Some({
-                use nestgate_core::constants::hardcoding::{addresses, ports};
-                format!(
-                    "http://{}:{}",
-                    addresses::LOCALHOST_NAME,
-                    env::var("NESTGATE_API_PORT")
-                        .ok()
-                        .and_then(|s| s.parse().ok())
-                        .unwrap_or(ports::HTTP_DEFAULT)
-                )
+                // ✅ MIGRATED: Now uses centralized runtime configuration
+                use nestgate_core::config::runtime::get_config;
+                get_config().network.api_base_url()
             }),
         }
     }
@@ -98,15 +94,9 @@ impl AutomationConfig {
             enable_automatic_optimization: false, // Disable auto-optimization in dev
             min_confidence_threshold: 0.5,        // Lower confidence for development
             _orchestration_endpoint: Some({
-                use nestgate_core::constants::hardcoding::{addresses, ports};
-                format!(
-                    "http://{}:{}",
-                    addresses::LOCALHOST_NAME,
-                    env::var("NESTGATE_API_PORT")
-                        .ok()
-                        .and_then(|s| s.parse().ok())
-                        .unwrap_or(ports::HTTP_DEFAULT)
-                )
+                // ✅ MIGRATED: Now uses centralized runtime configuration
+                use nestgate_core::config::runtime::get_config;
+                get_config().network.api_base_url()
             }),
         }
     }
@@ -182,20 +172,23 @@ impl Default for LifecycleConfig {
 #[cfg(feature = "network-integration")]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
-/// 
+///
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::network::config::DiscoveryConfig;
-/// 
+///
 /// // NEW (canonical):
 /// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 /// // Or use type alias for compatibility:
 /// use crate::network::config::DiscoveryConfig; // Now aliases to CanonicalNetworkConfig
 /// ```
-/// 
+///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+#[deprecated(
+    since = "0.11.0",
+    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
 pub struct DiscoveryConfig {
     pub known_orchestration_endpoints: Vec<String>,
     pub discovery_timeout_ms: u64,
@@ -209,35 +202,29 @@ impl DiscoveryConfig {
     pub fn from_automation_config(config: &AutomationConfig) -> Self {
         Self {
             known_orchestration_endpoints: vec![
-                config
-                    ._orchestration_endpoint
-                    .clone()
-                    .unwrap_or_else(|| {
-                        use nestgate_core::constants::hardcoding::{addresses, ports};
-                        format!(
-                            "http://{}:{}",
-                            addresses::LOCALHOST_NAME,
-                            env::var("NESTGATE_API_PORT")
-                                .ok()
-                                .and_then(|s| s.parse().ok())
-                                .unwrap_or(ports::HTTP_DEFAULT)
-                        )
-                    }),
+                // ✅ MIGRATED: Now uses centralized runtime configuration
+                config._orchestration_endpoint.clone().unwrap_or_else(|| {
+                    use nestgate_core::config::runtime::{get_config, service_url};
+                    service_url("songbird")
+                        .or_else(|| service_url("orchestration"))
+                        .unwrap_or_else(|| get_config().network.api_base_url())
+                }),
                 std::env::var("NESTGATE_ORCHESTRATION_BACKUP_ENDPOINT_1").unwrap_or_else(|_| {
+                    use nestgate_core::config::runtime::get_config;
+                    let cfg = get_config();
                     format!(
                         "http://{}:{}",
-                        std::env::var("NESTGATE_ORCHESTRATION_IP")
-                            .unwrap_or_else(|_| "127.0.0.1".to_string()),
-                        std::env::var("NESTGATE_ORCHESTRATION_PORT")
-                            .unwrap_or_else(|_| nestgate_core::constants::canonical_defaults::network::DEFAULT_API_PORT.to_string())
+                        cfg.network.api_host,
+                        cfg.network.api_port + 1
                     )
                 }),
                 std::env::var("NESTGATE_ORCHESTRATION_BACKUP_ENDPOINT_2").unwrap_or_else(|_| {
+                    use nestgate_core::config::runtime::get_config;
+                    let cfg = get_config();
                     format!(
                         "http://{}:{}",
-                        std::env::var("NESTGATE_MCP_IP")
-                            .unwrap_or_else(|_| "127.0.0.1".to_string()),
-                        std::env::var("NESTGATE_MCP_PORT").unwrap_or_else(|_| nestgate_core::constants::canonical_defaults::network::DEFAULT_INTERNAL_PORT.to_string())
+                        cfg.network.api_host,
+                        cfg.network.api_port + 2
                     )
                 }),
             ],
@@ -257,13 +244,144 @@ impl DiscoveryConfig {
 // Original struct definition kept above for reference and backward compatibility
 
 /// Type alias to canonical network configuration
-/// 
+///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
-pub type DiscoveryConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+pub type DiscoveryConfigCanonical =
+    nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using DiscoveryConfig (the deprecated struct) for now.
 // We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
 // This alias is here for reference and future migration.
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    #[allow(deprecated)]
+    fn test_automation_config_default() {
+        let config = AutomationConfig::default();
+        assert_eq!(config.optimization_interval_hours, 24);
+        assert_eq!(config.prediction_cache_ttl_hours, 12);
+        assert!(config.enable_intelligent_tier_assignment);
+        assert!(config.enable_automatic_optimization);
+        assert_eq!(config.min_confidence_threshold, 0.7);
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn test_automation_config_production() {
+        let config = AutomationConfig::production();
+        assert_eq!(config.optimization_interval_hours, 6);
+        assert_eq!(config.prediction_cache_ttl_hours, 24);
+        assert_eq!(config.min_confidence_threshold, 0.8);
+        assert!(config._orchestration_endpoint.is_some());
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn test_automation_config_development() {
+        let config = AutomationConfig::development();
+        assert_eq!(config.optimization_interval_hours, 1);
+        assert_eq!(config.prediction_cache_ttl_hours, 2);
+        assert!(!config.enable_automatic_optimization);
+        assert_eq!(config.min_confidence_threshold, 0.5);
+    }
+
+    #[test]
+    fn test_analysis_config_default() {
+        let config = AnalysisConfig::default();
+        assert_eq!(config.max_file_size, 1024 * 1024 * 1024);
+        assert_eq!(config.include_extensions, vec!["*"]);
+        assert!(config.exclude_extensions.contains(&".tmp".to_string()));
+    }
+
+    #[test]
+    fn test_prediction_config_default() {
+        let config = PredictionConfig::default();
+        assert_eq!(config.prediction_window_days, 30);
+        assert_eq!(config.min_confidence, 0.7);
+        assert!(config.model_params.is_empty());
+    }
+
+    #[test]
+    fn test_lifecycle_config_default() {
+        let config = LifecycleConfig::default();
+        assert_eq!(config.hot_retention_days, 30);
+        assert_eq!(config.warm_retention_days, 90);
+        assert_eq!(config.cold_retention_days, 365);
+        assert!(config.auto_migration);
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn test_automation_config_clone() {
+        let config1 = AutomationConfig::default();
+        let config2 = config1.clone();
+        assert_eq!(
+            config1.optimization_interval_hours,
+            config2.optimization_interval_hours
+        );
+    }
+
+    #[test]
+    fn test_analysis_config_custom() {
+        let config = AnalysisConfig {
+            scan_interval: Duration::from_secs(1800),
+            max_file_size: 500 * 1024 * 1024,
+            include_extensions: vec!["*.txt".to_string(), "*.md".to_string()],
+            exclude_extensions: vec![],
+        };
+        assert_eq!(config.max_file_size, 524288000);
+        assert_eq!(config.include_extensions.len(), 2);
+    }
+
+    #[test]
+    fn test_prediction_config_with_params() {
+        let mut model_params = HashMap::new();
+        model_params.insert("learning_rate".to_string(), 0.01);
+        model_params.insert("epochs".to_string(), 100.0);
+
+        let config = PredictionConfig {
+            prediction_window_days: 60,
+            min_confidence: 0.9,
+            model_params,
+        };
+        assert_eq!(config.prediction_window_days, 60);
+        assert_eq!(config.model_params.len(), 2);
+    }
+
+    #[test]
+    fn test_lifecycle_config_custom() {
+        let config = LifecycleConfig {
+            hot_retention_days: 7,
+            warm_retention_days: 30,
+            cold_retention_days: 180,
+            auto_migration: false,
+        };
+        assert_eq!(config.hot_retention_days, 7);
+        assert!(!config.auto_migration);
+    }
+
+    #[test]
+    #[cfg(feature = "network-integration")]
+    #[allow(deprecated)]
+    fn test_discovery_config_from_automation() {
+        let automation_config = AutomationConfig::default();
+        let discovery = DiscoveryConfig::from_automation_config(&automation_config);
+        assert_eq!(discovery.discovery_timeout_ms, 5000);
+        assert!(discovery.multicast_enabled);
+        assert!(discovery.mdns_enabled);
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn test_automation_config_serialization() {
+        let config = AutomationConfig::default();
+        let serialized =
+            serde_json::to_string(&config).expect("Test: config serialization should succeed");
+        assert!(serialized.contains("optimization_interval_hours"));
+    }
+}

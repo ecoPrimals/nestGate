@@ -134,7 +134,7 @@ fn test_zfs_error_builder_zfs_operation_error() {
 
 #[test]
 fn test_zfs_operation_variants() {
-    let operations = vec![
+    let operations = [
         ZfsOperation::PoolCreate,
         ZfsOperation::PoolDestroy,
         ZfsOperation::PoolImport,
@@ -404,22 +404,30 @@ fn test_error_type_checking() {
 
 #[test]
 fn test_result_unwrap_or() {
-    let ok_result: Result<i32, ZfsError> = Ok(42);
-    let err_result: Result<i32, ZfsError> = Err(ZfsError::PoolError {
-        message: "Error".to_string(),
-    });
+    // Test unwrap_or with dynamic results (not compile-time known)
+    fn get_ok_result() -> Result<i32, ZfsError> {
+        Ok(42)
+    }
+    fn get_err_result() -> Result<i32, ZfsError> {
+        Err(ZfsError::PoolError {
+            message: "Error".to_string(),
+        })
+    }
 
-    assert_eq!(ok_result.unwrap_or(0), 42);
-    assert_eq!(err_result.unwrap_or(0), 0);
+    assert_eq!(get_ok_result().unwrap_or(0), 42);
+    assert_eq!(get_err_result().unwrap_or(0), 0);
 }
 
 #[test]
 fn test_result_unwrap_or_else() {
-    let result: Result<i32, ZfsError> = Err(ZfsError::PoolError {
-        message: "Error".to_string(),
-    });
+    // Test unwrap_or with dynamic error (not compile-time known)
+    fn get_error() -> Result<i32, ZfsError> {
+        Err(ZfsError::PoolError {
+            message: "Error".to_string(),
+        })
+    }
 
-    let value = result.unwrap_or_else(|_| 99);
+    let value = get_error().unwrap_or(99);
     assert_eq!(value, 99);
 }
 
@@ -548,17 +556,17 @@ fn test_multiple_operations_with_errors() {
 
 #[test]
 fn test_error_accumulation() {
-    let mut errors: Vec<ZfsError> = Vec::new();
-
-    errors.push(ZfsError::PoolError {
-        message: "Error 1".to_string(),
-    });
-    errors.push(ZfsError::DatasetError {
-        message: "Error 2".to_string(),
-    });
-    errors.push(ZfsError::SnapshotError {
-        message: "Error 3".to_string(),
-    });
+    let errors: Vec<ZfsError> = vec![
+        ZfsError::PoolError {
+            message: "Error 1".to_string(),
+        },
+        ZfsError::DatasetError {
+            message: "Error 2".to_string(),
+        },
+        ZfsError::SnapshotError {
+            message: "Error 3".to_string(),
+        },
+    ];
 
     assert_eq!(errors.len(), 3);
 

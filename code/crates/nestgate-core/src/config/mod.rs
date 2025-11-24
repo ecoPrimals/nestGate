@@ -7,6 +7,59 @@ use serde::{Deserialize, Serialize};
 // **CANONICAL PRIMARY**: The definitive configuration system
 pub mod canonical_primary;
 
+/// External services configuration (environment-driven, replaces hardcoded values)
+///
+/// This module eliminates 815 hardcoded values:
+/// - 303 URLs (http://, https://)
+/// - 121 ports (:8080, :3000, :5432, :6379, :9090)
+/// - 391 localhost/IP addresses (127.0.0.1, 0.0.0.0, localhost)
+pub mod external;
+
+/// Default configuration values and environment variable support
+pub mod defaults;
+
+/// Thread-safe configuration for defaults (eliminates runtime env::var calls)
+pub mod defaults_config;
+
+/// Network defaults configuration (replaces direct env::var calls)
+pub mod network_defaults;
+
+/// Thread-safe configuration for network defaults module (eliminates runtime env::var calls)
+pub mod network_defaults_v2_config;
+
+/// Federation configuration
+pub mod federation;
+
+/// Monitoring configuration
+pub mod monitoring;
+
+/// Monitoring environment configuration (runtime settings)
+pub mod monitoring_env_config;
+
+/// API paths configuration
+pub mod api_paths;
+
+/// Sovereignty configuration (environment-driven, eliminates infrastructure assumptions)
+pub mod sovereignty;
+
+/// Thread-safe configuration for sovereignty module (eliminates runtime env::var calls)
+pub mod sovereignty_config;
+
+/// **NEW**: Centralized runtime configuration system (eliminates 805+ hardcoded values)
+/// Replaces all hardcoded ports, IPs, endpoints with environment-driven config
+pub mod runtime;
+
+/// Configuration validation module
+pub mod validation;
+
+#[cfg(test)]
+mod config_validation_tests; // Nov 23, 2025 - P1 test expansion
+#[cfg(test)]
+mod edge_case_tests; // Nov 23, 2025 - P1-5 edge case tests
+
+/// Service discovery configuration (Week 2 migration)
+pub mod discovery_config;
+
 // ==================== SECTION ====================
 // All deprecated configuration modules have been removed. Use canonical_primary directly:
 // - core → canonical_primary::NestGateCanonicalConfig
@@ -24,12 +77,21 @@ pub mod canonical_primary;
 
 /// **THE** canonical configuration for all `NestGate` systems
 pub use canonical_primary::{
-    CanonicalNetworkConfig as NetworkConfig, ConfigMetadata, DeploymentEnvironment,
-    FeatureFlags, LogLevel, NestGateCanonicalConfig, PerformanceConfig, SecurityConfig,
-    ServiceConfig, StorageConfig, SystemConfig,
+    CanonicalNetworkConfig as NetworkConfig, ConfigMetadata, DeploymentEnvironment, FeatureFlags,
+    LogLevel, NestGateCanonicalConfig, PerformanceConfig, SecurityConfig, ServiceConfig,
+    StorageConfig, SystemConfig,
 };
 // API and automation configs from domains (canonical types)
 pub use canonical_primary::domains::{ApiConfig, AutomationConfig};
+
+// Default configuration types
+pub use defaults_config::{NetworkDefaultsConfig, SharedNetworkDefaultsConfig};
+
+// Network defaults configuration types
+pub use network_defaults_v2_config::{NetworkDefaultsV2Config, SharedNetworkDefaultsV2Config};
+
+// Sovereignty configuration types
+pub use sovereignty_config::{SharedSovereigntyRuntimeConfig, SovereigntyRuntimeConfig};
 
 // Note: Detailed configuration types are defined inline in canonical_primary
 // and will be accessible through the canonical_primary module directly
@@ -45,12 +107,18 @@ pub use canonical_primary::domains::{ApiConfig, AutomationConfig};
 
 // ==================== SECTION ====================
 
-// Create a canonical configuration with default settings
+/// Create a canonical configuration with default settings
+///
+/// Returns a `NestGateCanonicalConfig` with sensible defaults for all settings.
 #[must_use]
 pub fn create_default_config() -> canonical_primary::NestGateCanonicalConfig {
     canonical_primary::NestGateCanonicalConfig::default()
 }
-// Create a production-ready canonical configuration
+
+/// Create a production-ready canonical configuration
+///
+/// Returns a `NestGateCanonicalConfig` optimized for production environments
+/// with auto-scaling and load balancing enabled.
 #[must_use]
 pub fn create_production_config() -> canonical_primary::NestGateCanonicalConfig {
     let mut config = canonical_primary::NestGateCanonicalConfig::default();
@@ -67,7 +135,11 @@ pub fn create_production_config() -> canonical_primary::NestGateCanonicalConfig 
         .insert("enable_load_balancing".to_string(), true);
     config
 }
-// Create a development configuration
+
+/// Create a development configuration
+///
+/// Returns a `NestGateCanonicalConfig` optimized for development with
+/// debug logging and debug mode enabled.
 #[must_use]
 pub fn create_development_config() -> canonical_primary::NestGateCanonicalConfig {
     let mut config = canonical_primary::NestGateCanonicalConfig::default();
@@ -76,7 +148,11 @@ pub fn create_development_config() -> canonical_primary::NestGateCanonicalConfig
     config.system.debug_mode = true;
     config
 }
-// Create a testing configuration
+
+/// Create a testing configuration
+///
+/// Returns a `NestGateCanonicalConfig` optimized for testing with
+/// metrics and tracing disabled for faster test execution.
 #[must_use]
 pub fn create_testing_config() -> canonical_primary::NestGateCanonicalConfig {
     let mut config = canonical_primary::NestGateCanonicalConfig::default();
@@ -96,17 +172,17 @@ pub fn create_testing_config() -> canonical_primary::NestGateCanonicalConfig {
 // All configurations now use canonical_primary::NestGateCanonicalConfig directly.
 // Default implementations are in the canonical_primary module.
 
-
 // ==================== CANONICAL TYPE ALIAS ====================
 // This type now aliases to the canonical network configuration
 // Original struct definition kept above for reference and backward compatibility
 
 /// Type alias to canonical network configuration
-/// 
+///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
-pub type InfantDiscoveryConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+pub type InfantDiscoveryConfigCanonical =
+    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using InfantDiscoveryConfig (the deprecated struct) for now.
 // We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
@@ -158,7 +234,6 @@ mod tests {
     }
 }
 
-
 #[cfg(test)]
 mod defaults_tests;
 
@@ -168,27 +243,35 @@ mod defaults_additional_tests; // NEW: Test expansion phase (Nov 6, 2025) // Inc
 /// Infant discovery configuration - no hardcoded assumptions
 #[derive(Debug, Clone, Serialize, Deserialize)]
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
-/// 
+///
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::network::config::InfantDiscoveryConfig;
-/// 
+///
 /// // NEW (canonical):
 /// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 /// // Or use type alias for compatibility:
 /// use crate::network::config::InfantDiscoveryConfig; // Now aliases to CanonicalNetworkConfig
 /// ```
-/// 
+///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+#[deprecated(
+    since = "0.11.0",
+    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
 pub struct InfantDiscoveryConfig {
+    /// Whether infant discovery is enabled
     pub enabled: bool,
+    /// Timeout for discovery operations in seconds
     pub discovery_timeout_seconds: u64,
+    /// Time-to-live for capability cache in seconds
     pub capability_cache_ttl_seconds: u64,
+    /// Whether to fallback to environment variables if discovery fails
     pub fallback_to_environment: bool,
 }
 
+#[allow(deprecated)]
 impl Default for InfantDiscoveryConfig {
     fn default() -> Self {
         Self {

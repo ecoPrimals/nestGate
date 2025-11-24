@@ -19,7 +19,7 @@ type ProcessorFunction<T, R> = Arc<dyn Fn(Vec<T>) -> Result<Vec<R>> + Send + Syn
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
 /// 
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::network::config::BatchProcessingConfig;
 /// 

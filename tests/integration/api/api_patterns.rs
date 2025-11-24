@@ -149,7 +149,7 @@ async fn test_rate_limiting_pattern() -> Result<()> {
     // Simulate requests
     for _ in 0..3 {
         request_count += 1;
-        sleep(Duration::from_millis(50)).await;
+        tokio::task::yield_now().await;
     }
 
     // Check if within rate limit

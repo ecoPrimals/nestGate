@@ -247,4 +247,147 @@ mod tests {
         let stats = pool.stats();
         assert_eq!(stats.current_pool_size, 2); // Max pool size respected
     }
+
+    #[test]
+    fn test_pooled_buffer_deref() {
+        let pool = EnhancedMemoryPool::new(256, 5);
+        let buffer = pool.get_managed_buffer();
+
+        // Test Deref
+        assert_eq!(buffer.len(), 256);
+        assert!(!buffer.is_empty());
+    }
+
+    #[test]
+    fn test_pooled_buffer_deref_mut() {
+        let pool = EnhancedMemoryPool::new(256, 5);
+        let mut buffer = pool.get_managed_buffer();
+
+        // Test DerefMut
+        buffer.push(100);
+        assert_eq!(buffer.len(), 257);
+        assert_eq!(buffer[256], 100);
+    }
+
+    #[test]
+    fn test_pool_stats_empty() {
+        let pool = SimpleMemoryPool::new(512, 10);
+        let stats = pool.stats();
+
+        assert_eq!(stats.buffer_size, 512);
+        assert_eq!(stats.max_pool_size, 10);
+        assert_eq!(stats.current_pool_size, 0);
+    }
+
+    #[test]
+    fn test_buffer_reuse() {
+        let pool = SimpleMemoryPool::new(128, 5);
+
+        // Get and return a buffer
+        let mut buffer1 = pool.get_buffer();
+        buffer1[0] = 99;
+        pool.return_buffer(buffer1);
+
+        // Get another buffer - should be reused and cleared
+        let buffer2 = pool.get_buffer();
+        assert_eq!(buffer2.len(), 128);
+        assert_eq!(buffer2[0], 0); // Should be cleared
+    }
+
+    #[test]
+    fn test_small_buffer_rejection() {
+        let pool = SimpleMemoryPool::new(1024, 5);
+
+        // Return a buffer that's too small
+        let small_buffer = vec![0; 512];
+        pool.return_buffer(small_buffer);
+
+        let stats = pool.stats();
+        assert_eq!(stats.current_pool_size, 0); // Should not be added to pool
+    }
+
+    #[test]
+    fn test_multiple_buffers() {
+        let pool = EnhancedMemoryPool::new(256, 3);
+
+        let buffer1 = pool.get_managed_buffer();
+        let buffer2 = pool.get_managed_buffer();
+        let buffer3 = pool.get_managed_buffer();
+
+        assert_eq!(buffer1.len(), 256);
+        assert_eq!(buffer2.len(), 256);
+        assert_eq!(buffer3.len(), 256);
+
+        drop(buffer1);
+        drop(buffer2);
+        drop(buffer3);
+
+        let stats = pool.stats();
+        assert_eq!(stats.current_pool_size, 3);
+    }
+
+    #[test]
+    fn test_pooled_buffer_length_tracking() {
+        let pool = EnhancedMemoryPool::new(100, 5);
+        let mut buffer = pool.get_managed_buffer();
+
+        assert_eq!(buffer.len(), 100);
+        assert!(!buffer.is_empty());
+
+        buffer.push(42);
+        assert_eq!(buffer.len(), 101);
+
+        buffer.clear();
+        assert!(buffer.is_empty());
+        assert_eq!(buffer.len(), 0);
+    }
+
+    #[test]
+    fn test_pool_stats_clone() {
+        let pool = SimpleMemoryPool::new(512, 10);
+        let stats1 = pool.stats();
+        let stats2 = stats1.clone();
+
+        assert_eq!(stats1.buffer_size, stats2.buffer_size);
+        assert_eq!(stats1.max_pool_size, stats2.max_pool_size);
+        assert_eq!(stats1.current_pool_size, stats2.current_pool_size);
+    }
+
+    #[test]
+    fn test_concurrent_access() {
+        use std::thread;
+
+        let pool = Arc::new(SimpleMemoryPool::new(256, 10));
+        let mut handles = vec![];
+
+        for _ in 0..3 {
+            let pool_clone = Arc::clone(&pool);
+            let handle = thread::spawn(move || {
+                let buffer = pool_clone.get_buffer();
+                assert_eq!(buffer.len(), 256);
+                pool_clone.return_buffer(buffer);
+            });
+            handles.push(handle);
+        }
+
+        for handle in handles {
+            handle.join().unwrap();
+        }
+
+        let stats = pool.stats();
+        assert!(stats.current_pool_size <= 3);
+    }
+
+    #[test]
+    fn test_enhanced_pool_multiple_gets() {
+        let pool = EnhancedMemoryPool::new(512, 5);
+
+        for _ in 0..10 {
+            let buffer = pool.get_managed_buffer();
+            assert_eq!(buffer.len(), 512);
+        }
+
+        let stats = pool.stats();
+        assert_eq!(stats.buffer_size, 512);
+    }
 }

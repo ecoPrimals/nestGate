@@ -2,11 +2,11 @@
 //! 
 //! This test validates debt elimination functionality using canonical patterns
 //! **CANONICAL MODERNIZATION**: Updated to use simple, working patterns
+//!
+//! **MODERN CONCURRENCY**: Uses yield_now() for async coordination instead of sleep().
 
 use nestgate_core::config::canonical_primary::NestGateCanonicalConfig as NestGateUnifiedConfig;
 use nestgate_core::constants::Environment;
-use std::time::Duration;
-use tokio::time::sleep;
 use tracing::info;
 
 /// Test debt elimination configuration
@@ -43,7 +43,7 @@ async fn test_debt_elimination_processes() -> Result<(), Box<dyn std::error::Err
         info!("Executing {} process ({}ms)", process, duration);
         
         // Simulate elimination process
-        sleep(Duration::from_millis(duration as u64)).await;
+        tokio::task::yield_now().await;
         
         // Verify elimination process is valid
         assert!(!process.is_empty(), "Process should be specified");
@@ -72,7 +72,7 @@ async fn test_debt_elimination_validation() -> Result<(), Box<dyn std::error::Er
         info!("Processing {} validation ({}ms)", step, duration);
         
         // Simulate validation step
-        sleep(Duration::from_millis(duration as u64)).await;
+        tokio::task::yield_now().await;
         
         // Verify validation step is valid
         assert!(!step.is_empty(), "Step should be specified");
@@ -94,7 +94,7 @@ async fn test_debt_elimination_monitoring() -> Result<(), Box<dyn std::error::Er
     // Test debt elimination monitoring cycles
     for i in 0..5 {
         let cycle_time = (i + 1) * 20;
-        sleep(Duration::from_millis(cycle_time as u64)).await;
+        tokio::task::yield_now().await;
         
         let elapsed = start_time.elapsed();
         info!("Debt monitoring cycle {}: {}ms, total elapsed: {:?}", i + 1, cycle_time, elapsed);
@@ -124,11 +124,8 @@ async fn test_debt_elimination_error_handling() -> Result<(), Box<dyn std::error
     for (error_type, recovery_time) in error_scenarios {
         info!("Testing {} error ({}ms recovery)", error_type, recovery_time);
         
-        // Simulate error occurrence
-        sleep(Duration::from_millis(5)).await;
-        
-        // Simulate error handling and recovery
-        sleep(Duration::from_millis(recovery_time as u64 / 2)).await;
+        // Simulate error occurrence and recovery
+        tokio::task::yield_now().await;
         
         // Verify error handling is valid
         assert!(!error_type.is_empty(), "Error type should be specified");
@@ -157,7 +154,7 @@ async fn test_debt_elimination_performance() -> Result<(), Box<dyn std::error::E
         info!("Benchmarking {} scenario ({}ms)", scenario, benchmark_time);
         
         // Simulate performance scenario
-        sleep(Duration::from_millis(benchmark_time as u64 / 3)).await;
+        tokio::task::yield_now().await;
         
         // Verify performance scenario is valid
         assert!(!scenario.is_empty(), "Scenario should be specified");

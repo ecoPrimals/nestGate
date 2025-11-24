@@ -16,6 +16,10 @@ use uuid::Uuid;
 use super::manager::ComplianceState;
 use super::types::{AuditEvent, ComplianceViolation, ResolutionStatus, RetentionPolicy};
 
+#[cfg(test)]
+#[path = "handlers_tests.rs"]
+mod handlers_tests;
+
 /// Get compliance dashboard
 ///
 /// # Errors

@@ -254,7 +254,7 @@ fn test_canonical_security_with_send_sync() {
 #[test]
 fn test_canonical_unified_traits_module_accessible() {
     use super::canonical_unified_traits;
-    let _ = std::marker::PhantomData::<canonical_unified_traits::CanonicalService>;
+    let _ = std::marker::PhantomData::<canonical::CanonicalService>;
     // Module is accessible
 }
 

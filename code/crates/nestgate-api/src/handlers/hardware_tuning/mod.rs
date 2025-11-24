@@ -22,6 +22,3 @@ pub mod types;
 // Re-export the main types and functions
 pub use handlers::*;
 pub use types::*;
-
-// TEMP_DISABLED: #[cfg(test)]
-// TEMP_DISABLED: mod types_tests;

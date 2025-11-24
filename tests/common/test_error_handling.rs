@@ -239,7 +239,7 @@ impl TestUtils {
                 return Ok(());
             }
 
-            tokio::time::sleep(Duration::from_millis(100)).await;
+            tokio::task::yield_now().await;
         }
     }
 }

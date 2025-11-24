@@ -119,11 +119,11 @@ impl SecurityAdapter {
                     let auth_response: AuthenticationResponse =
                         serde_json::from_slice(&response.payload).map_err(|e| {
                             NestGateError::internal_error(
-                                    "Failed to deserialize authentication response: {e)"
-                                ),
-                                location: Some(format!("{})
-                                context: None}
-                        )?;
+                                format!("Failed to deserialize authentication response: {}", e),
+                                Some(file!()),
+                                None,
+                            )
+                        })?;
 
                     if auth_response.authenticated {
                         let token = AuthToken {

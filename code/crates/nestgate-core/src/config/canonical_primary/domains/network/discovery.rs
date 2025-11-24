@@ -3,14 +3,24 @@
 use crate::Result;
 use serde::{Deserialize, Serialize};
 
+/// Network discovery configuration for automatic service detection.
+///
+/// This configuration enables multicast-based service discovery, allowing
+/// services to automatically locate and communicate with each other on the network.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct NetworkDiscoveryConfig {
+    /// Whether network discovery is enabled.
     pub enabled: bool,
+    /// Multicast address for service discovery broadcasts.
     pub multicast_address: String,
+    /// Interval in seconds between discovery broadcasts.
     pub discovery_interval_secs: u64,
 }
 
 impl NetworkDiscoveryConfig {
+    /// Create development-optimized configuration with discovery disabled.
+    ///
+    /// Uses conservative settings suitable for local development.
     #[must_use]
     pub fn development_optimized() -> Self {
         Self {
@@ -20,6 +30,9 @@ impl NetworkDiscoveryConfig {
         }
     }
 
+    /// Create production-hardened configuration with discovery enabled.
+    ///
+    /// Uses optimized settings for production service discovery.
     #[must_use]
     pub fn production_hardened() -> Self {
         Self {
@@ -29,15 +42,20 @@ impl NetworkDiscoveryConfig {
         }
     }
 
-    /// Function description
+    /// Validate the discovery configuration.
+    ///
+    /// Ensures multicast address and intervals are properly configured.
     ///
     /// # Errors
     ///
-    /// This function will return an error if the operation fails.
+    /// Returns an error if validation fails.
     pub fn validate(&self) -> Result<()> {
         Ok(())
     }
 
+    /// Merge this configuration with another, preferring values from `other`.
+    ///
+    /// All fields from `other` will replace the current values.
     #[must_use]
     pub fn merge(mut self, other: Self) -> Self {
         self.enabled = other.enabled;

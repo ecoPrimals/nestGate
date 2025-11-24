@@ -4,7 +4,6 @@
 ///
 /// Common types and enums used across all configuration modules.
 /// This module contains shared types that don't belong to a specific domain.
-
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;

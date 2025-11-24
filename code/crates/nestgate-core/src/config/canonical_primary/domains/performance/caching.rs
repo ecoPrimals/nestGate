@@ -3,38 +3,59 @@
 use crate::Result;
 use serde::{Deserialize, Serialize};
 
+/// Cache performance configuration for optimizing data caching.
+///
+/// Controls cache optimization and warming strategies for improved performance.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct CachePerformanceConfig {
+    /// Cache optimization settings.
     pub optimization: CacheOptimizationConfig,
+    /// Cache warming configuration.
     pub warming: CacheWarmingConfig,
 }
 
+/// Cache optimization configuration.
+///
+/// Enables cache-specific performance optimizations.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct CacheOptimizationConfig {
+    /// Whether cache optimization is enabled.
     pub enabled: bool,
 }
 
+/// Cache warming configuration for preloading cache data.
+///
+/// Controls how and when cache data is preloaded to reduce cold-start latency.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct CacheWarmingConfig {
+    /// Whether cache warming is enabled.
     pub enabled: bool,
+    /// Cache warming strategy to use.
     pub strategy: WarmingStrategy,
+    /// Batch size for warming operations.
     pub batch_size: usize,
 }
 
+/// Cache warming strategy.
+///
+/// Determines when and how cache data is preloaded.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub enum WarmingStrategy {
+    /// Eager - preload all cache data at startup.
     #[default]
     Eager,
+    /// Lazy - load cache data on first access.
     Lazy,
+    /// Predictive - preload based on usage patterns.
     Predictive,
 }
 
 impl CachePerformanceConfig {
-    /// Function description
+    /// Validate cache performance configuration.
     ///
     /// # Errors
     ///
-    /// This function will return an error if the operation fails.
+    /// Returns an error if validation fails.
     pub fn validate(&self) -> Result<()> {
         Ok(())
     }

@@ -12,7 +12,7 @@ use std::collections::HashMap;
 /// - Direct method dispatch (no vtable overhead)
 /// - Monomorphized code generation for optimal performance
 ///
-/// **REPLACES**: `crate::traits::canonical_unified_traits::CanonicalService`
+/// **REPLACES**: `crate::traits::canonical::CanonicalService`
 use crate::Result;
 use serde::{Deserialize, Serialize};
 use std::time::SystemTime;

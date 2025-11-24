@@ -2,10 +2,10 @@
 //!
 //! This test validates comprehensive system functionality using canonical patterns
 //! **CANONICAL MODERNIZATION**: Updated to use simple, working patterns
+//!
+//! **MODERN CONCURRENCY**: Uses yield_now() for async coordination instead of sleep().
 
 use nestgate_core::config::canonical_primary::{NestGateCanonicalConfig, Environment};
-use std::time::Duration;
-use tokio::time::sleep;
 use tracing::info;
 
 /// Test comprehensive suite configuration
@@ -43,7 +43,7 @@ async fn test_comprehensive_system_validation() -> Result<(), Box<dyn std::error
         info!("Validating {} component ({}ms)", component, validation_time);
 
         // Simulate component validation
-        sleep(Duration::from_millis(validation_time as u64)).await;
+        tokio::task::yield_now().await;
 
         // Verify component is valid
         assert!(!component.is_empty(), "Component should be specified");
@@ -64,7 +64,7 @@ async fn test_comprehensive_performance() -> Result<(), Box<dyn std::error::Erro
     // Test comprehensive performance scenarios
     for i in 0..6 {
         let operation_time = (i + 1) * 18;
-        sleep(Duration::from_millis(operation_time as u64)).await;
+        tokio::task::yield_now().await;
 
         let elapsed = start_time.elapsed();
         info!(
@@ -102,7 +102,7 @@ async fn test_comprehensive_integration() -> Result<(), Box<dyn std::error::Erro
         info!("Testing {} workflow ({}ms)", workflow, execution_time);
 
         // Simulate workflow execution
-        sleep(Duration::from_millis(execution_time as u64 / 2)).await;
+        tokio::task::yield_now().await;
 
         // Verify workflow is valid
         assert!(!workflow.is_empty(), "Workflow should be specified");
@@ -133,7 +133,7 @@ async fn test_comprehensive_security() -> Result<(), Box<dyn std::error::Error>>
         );
 
         // Simulate security check
-        sleep(Duration::from_millis(check_time as u64)).await;
+        tokio::task::yield_now().await;
 
         // Verify security check is valid
         assert!(!check_type.is_empty(), "Check type should be specified");
@@ -164,7 +164,7 @@ async fn test_comprehensive_resilience() -> Result<(), Box<dyn std::error::Error
         );
 
         // Simulate resilience scenario
-        sleep(Duration::from_millis(response_time as u64 / 3)).await;
+        tokio::task::yield_now().await;
 
         // Verify scenario is valid
         assert!(!scenario.is_empty(), "Scenario should be specified");

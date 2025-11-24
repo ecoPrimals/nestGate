@@ -92,6 +92,9 @@ impl Default for TestEnvironment {
 
 impl TestEnvironment {
     /// Create test environment from environment variables with sensible defaults
+    ///
+    /// **Note**: This reads environment variables without locking. For tests that
+    /// modify environment variables, use `from_environment_isolated()` instead.
     pub fn from_environment() -> Self {
         let host = env::var("NESTGATE_TEST_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
         let port = env::var("NESTGATE_TEST_PORT")
@@ -115,6 +118,33 @@ impl TestEnvironment {
             database: TestDatabaseConfig::from_environment(),
             storage: TestStorageConfig::from_environment(),
         }
+    }
+    
+    /// Create test environment from environment variables with lock protection
+    ///
+    /// Returns both the environment and the guard that holds the lock.
+    /// The lock is released when the guard is dropped, ensuring proper cleanup.
+    ///
+    /// **Use this** when your test modifies environment variables or needs
+    /// to ensure consistent env state across the test.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use tests::common::test_environment::TestEnvironment;
+    ///
+    /// #[test]
+    /// fn test_with_env() {
+    ///     let (mut env, _lock) = TestEnvironment::from_environment_isolated("my_test");
+    ///     // Lock held until _lock is dropped
+    /// }
+    /// ```
+    pub fn from_environment_isolated(
+        test_name: &str,
+    ) -> (Self, crate::common::env_isolation::IsolatedEnvironment) {
+        let isolated_env = crate::common::env_isolation::IsolatedEnvironment::new(test_name);
+        let env = Self::from_environment();
+        (env, isolated_env)
     }
 
     /// Create test environment for unit tests
@@ -392,17 +422,18 @@ mod tests {
 
     #[test]
     fn test_environment_from_env_vars() -> Result<(), Box<dyn std::error::Error>> {
-        // Test environment variable configuration
-        env::set_var("NESTGATE_TEST_HOST", "testhost.example.com");
-        env::set_var("NESTGATE_TEST_PORT", "9090");
+        // Test environment variable configuration with isolation
+        let mut isolated_env = crate::common::env_isolation::IsolatedEnvironment::new(
+            "test_environment_from_env_vars"
+        );
+        isolated_env.set("NESTGATE_TEST_HOST", "testhost.example.com");
+        isolated_env.set("NESTGATE_TEST_PORT", "9090");
 
         let env = TestEnvironment::from_environment();
         assert_eq!(env.host, "testhost.example.com");
         assert_eq!(env.port, 9090);
 
-        // Cleanup
-        env::remove_var("NESTGATE_TEST_HOST");
-        env::remove_var("NESTGATE_TEST_PORT");
+        // Automatic cleanup via Drop
         Ok(())
     }
 

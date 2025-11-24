@@ -13,7 +13,7 @@ use std::time::Duration;
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
 /// 
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::network::config::ZfsHandlerSpecificConfig;
 /// 
@@ -46,7 +46,7 @@ pub struct ZfsHandlerSpecificConfig {
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
 /// 
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::network::config::PerformanceHandlerSpecificConfig;
 /// 
@@ -73,7 +73,7 @@ pub struct PerformanceHandlerSpecificConfig {
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
 /// 
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::network::config::DashboardHandlerSpecificConfig;
 /// 
@@ -100,7 +100,7 @@ pub struct DashboardHandlerSpecificConfig {
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
 /// 
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::network::config::LoadTestingHandlerSpecificConfig;
 /// 
@@ -127,7 +127,7 @@ pub struct LoadTestingHandlerSpecificConfig {
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
 /// 
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::network::config::WorkspaceHandlerSpecificConfig;
 /// 
@@ -154,7 +154,7 @@ pub struct WorkspaceHandlerSpecificConfig {
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
 /// 
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::network::config::AuthHandlerSpecificConfig;
 /// 
@@ -255,7 +255,7 @@ pub struct SnapshotRetentionPolicy {
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
 /// 
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::network::config::ZfsServiceConfig;
 /// 
@@ -454,7 +454,7 @@ pub struct AccessRule {
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
 /// 
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::network::config::JwtConfig;
 /// 
@@ -485,7 +485,7 @@ pub struct JwtConfig {
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
 /// 
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::network::config::OAuthProviderConfig;
 /// 
@@ -518,7 +518,7 @@ pub struct OAuthProviderConfig {
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
 /// 
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::network::config::SessionConfig;
 /// 

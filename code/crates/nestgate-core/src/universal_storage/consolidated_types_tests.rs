@@ -247,7 +247,7 @@ mod enum_variants_coverage_tests {
 
     #[test]
     fn test_nfs_version_all_variants() {
-        let versions = vec![
+        let versions = [
             NfsVersion::V3,
             NfsVersion::V4,
             NfsVersion::V41,
@@ -258,7 +258,7 @@ mod enum_variants_coverage_tests {
 
     #[test]
     fn test_smb_version_all_variants() {
-        let versions = vec![SmbVersion::V2, SmbVersion::V3, SmbVersion::V31];
+        let versions = [SmbVersion::V2, SmbVersion::V3, SmbVersion::V31];
         assert_eq!(versions.len(), 3);
     }
 
@@ -279,7 +279,7 @@ mod enum_variants_coverage_tests {
 
     #[test]
     fn test_cloud_provider_all_variants() {
-        let providers = vec![
+        let providers = [
             CloudProvider::AWS {
                 region: "us-east-1".to_string(),
             },
@@ -298,7 +298,7 @@ mod enum_variants_coverage_tests {
 
     #[test]
     fn test_storage_resource_type_variants() {
-        let types = vec![
+        let types = [
             StorageResourceType::Pool,
             StorageResourceType::Dataset,
             StorageResourceType::Volume,

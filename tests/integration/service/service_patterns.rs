@@ -1,12 +1,12 @@
 //! Service Pattern Integration Tests
 //!
 //! Tests common service patterns, lifecycle management, and orchestration
+//!
+//! **MODERN CONCURRENCY**: Uses yield_now() for async coordination instead of sleep().
 
 #![allow(unused_assignments, dead_code)]
 
 use nestgate_core::Result;
-use std::time::Duration;
-use tokio::time::sleep;
 
 /// Test service lifecycle pattern
 #[tokio::test]
@@ -23,13 +23,13 @@ async fn test_service_lifecycle() -> Result<()> {
 
     // Start service
     state = ServiceState::Starting;
-    sleep(Duration::from_millis(10)).await;
+    tokio::task::yield_now().await;
     state = ServiceState::Running;
     assert_eq!(state, ServiceState::Running);
 
     // Stop service
     state = ServiceState::Stopping;
-    sleep(Duration::from_millis(10)).await;
+    tokio::task::yield_now().await;
     state = ServiceState::Stopped;
     assert_eq!(state, ServiceState::Stopped);
 
@@ -170,7 +170,7 @@ async fn test_graceful_shutdown() -> Result<()> {
 
     // Wait for connections to complete
     while active_connections > 0 && start.elapsed() < shutdown_timeout {
-        sleep(Duration::from_millis(10)).await;
+        tokio::task::yield_now().await;
         active_connections -= 1;
     }
 
@@ -188,7 +188,7 @@ async fn test_retry_logic() -> Result<()> {
 
     while attempt < max_retries && !success {
         attempt += 1;
-        sleep(Duration::from_millis(5)).await;
+        tokio::task::yield_now().await;
 
         // Simulate success on 3rd attempt
         if attempt == 3 {

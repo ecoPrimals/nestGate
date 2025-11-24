@@ -2,17 +2,13 @@
 // Contains the main service structure and core utilities for the native ZFS backend.
 
 use std::collections::HashMap;
-use std::time::Duration;
 use std::time::SystemTime;
 use tokio::process::Command;
 // Removed unused tracing import
 
-use crate::handlers::zfs::universal_zfs::{
-    traits::UniversalZfsService,
-    types::{
-        HealthCheck, HealthStatus, ServiceMetrics, ServiceStatus, UniversalZfsError,
-        UniversalZfsResult,
-    },
+use crate::handlers::zfs::universal_zfs::traits::UniversalZfsService;
+use crate::handlers::zfs::universal_zfs_types::{
+    HealthCheck, HealthStatus, ServiceMetrics, ServiceStatus, UniversalZfsError, UniversalZfsResult,
 };
 use tracing::debug;
 
@@ -21,10 +17,12 @@ use tracing::debug;
 pub struct NativeZfsService {
     pub(crate) service_name: &'static str,
     pub(crate) service_version: &'static str,
+    #[allow(dead_code)]
     pub(crate) start_time: SystemTime,
 }
 impl NativeZfsService {
     /// Create a new native ZFS service
+    #[must_use]
     pub fn new() -> Self {
         Self {
             service_name: "native-zfs",
@@ -49,13 +47,15 @@ impl NativeZfsService {
             .args(args)
             .output()
             .await
-            .map_err(|_e| UniversalZfsError::internal(format!("Failed to execute ZFS command")))?;
+            .map_err(|_e| {
+                UniversalZfsError::internal("Failed to execute ZFS command".to_string())
+            })?;
 
         if !output.status.success() {
             let _stderr = String::from_utf8_lossy(&output.stderr);
             return Err(UniversalZfsError::backend(
                 "native-zfs",
-                format!("ZFS command failed: self.base_url"),
+                "ZFS command failed: self.base_url".to_string(),
             ));
         }
 
@@ -71,14 +71,14 @@ impl NativeZfsService {
             .output()
             .await
             .map_err(|_e| {
-                UniversalZfsError::internal(format!("Failed to execute zpool command"))
+                UniversalZfsError::internal("Failed to execute zpool command".to_string())
             })?;
 
         if !output.status.success() {
             let _stderr = String::from_utf8_lossy(&output.stderr);
             return Err(UniversalZfsError::backend(
                 "native-zfs",
-                format!("zpool command failed: self.base_url"),
+                "zpool command failed: self.base_url".to_string(),
             ));
         }
 
@@ -145,31 +145,21 @@ impl UniversalZfsService for NativeZfsService {
         let checks = vec![
             HealthCheck {
                 name: "zfs_available".into(),
-                status: if zfs_available {
-                    ServiceStatus::Healthy
-                } else {
-                    ServiceStatus::Unhealthy
-                },
-                duration: Duration::from_millis(10),
-                message: if zfs_available {
+                passed: zfs_available,
+                message: Some(if zfs_available {
                     "ZFS is available".into()
                 } else {
                     "ZFS is not available".into()
-                },
+                }),
             },
             HealthCheck {
                 name: "pools_accessible".into(),
-                status: if pools_healthy {
-                    ServiceStatus::Healthy
-                } else {
-                    ServiceStatus::Unhealthy
-                },
-                duration: Duration::from_millis(15),
-                message: if pools_healthy {
+                passed: pools_healthy,
+                message: Some(if pools_healthy {
                     "ZFS pools are accessible".into()
                 } else {
                     "Cannot access ZFS pools".into()
-                },
+                }),
             },
         ];
 
@@ -184,13 +174,9 @@ impl UniversalZfsService for NativeZfsService {
         Ok(HealthStatus {
             service_name: self.service_name.into(),
             status: overall_status,
-            last_check: SystemTime::now(),
-            zfs_available,
-            pools_healthy,
-            datasets_healthy: pools_healthy,
-            system_healthy: pools_healthy,
             checks,
-            metrics: None,
+            last_check: SystemTime::now(),
+            metadata: HashMap::new(),
         })
     }
 
@@ -203,16 +189,12 @@ impl UniversalZfsService for NativeZfsService {
         Ok(ServiceMetrics {
             service_name: self.service_name.into(),
             timestamp: SystemTime::now(),
-            uptime: SystemTime::now()
-                .duration_since(self.start_time)
-                .unwrap_or_default(),
             requests_total: 0,
-            requests_successful: 0,
             requests_failed: 0,
-            average_response_time: Duration::from_millis(0),
             error_rate: 0.0,
-            circuit_breaker_state: "CLOSED".into(),
-            active_connections: 0,
+            latency_avg: 0.0,
+            latency_p95: 0.0,
+            latency_p99: 0.0,
             custom_metrics,
         })
     }
@@ -220,26 +202,26 @@ impl UniversalZfsService for NativeZfsService {
     // Forward declarations for methods implemented in other modules
     async fn list_pools(
         &self,
-    ) -> UniversalZfsResult<Vec<crate::handlers::zfs::universal_zfs::types::PoolInfo>> {
+    ) -> UniversalZfsResult<Vec<crate::handlers::zfs::universal_zfs_types::PoolInfo>> {
         super::pool_operations::list_pools(self).await
     }
 
     async fn get_pool(
         &self,
         name: &str,
-    ) -> UniversalZfsResult<Option<crate::handlers::zfs::universal_zfs::types::PoolInfo>> {
+    ) -> UniversalZfsResult<Option<crate::handlers::zfs::universal_zfs_types::PoolInfo>> {
         super::pool_operations::get_pool(self, name).await
     }
 
     async fn create_pool(
         &self,
-        config: &crate::handlers::zfs::universal_zfs::types::PoolConfig,
-    ) -> UniversalZfsResult<crate::handlers::zfs::universal_zfs::types::PoolInfo> {
+        config: &crate::handlers::zfs::universal_zfs_types::PoolConfig,
+    ) -> UniversalZfsResult<crate::handlers::zfs::universal_zfs_types::PoolInfo> {
         super::pool_operations::create_pool(self, config).await
     }
 
     async fn destroy_pool(&self, name: &str) -> UniversalZfsResult<()> {
-        super::pool_operations::destroy_pool(self, name).await
+        super::pool_operations::destroy_pool(self, name)
     }
 
     async fn scrub_pool(&self, name: &str) -> UniversalZfsResult<()> {
@@ -252,21 +234,21 @@ impl UniversalZfsService for NativeZfsService {
 
     async fn list_datasets(
         &self,
-    ) -> UniversalZfsResult<Vec<crate::handlers::zfs::universal_zfs::types::DatasetInfo>> {
+    ) -> UniversalZfsResult<Vec<crate::handlers::zfs::universal_zfs_types::DatasetInfo>> {
         super::dataset_operations::list_datasets(self).await
     }
 
     async fn get_dataset(
         &self,
         name: &str,
-    ) -> UniversalZfsResult<Option<crate::handlers::zfs::universal_zfs::types::DatasetInfo>> {
+    ) -> UniversalZfsResult<Option<crate::handlers::zfs::universal_zfs_types::DatasetInfo>> {
         super::dataset_operations::get_dataset(self, name).await
     }
 
     async fn create_dataset(
         &self,
-        config: &crate::handlers::zfs::universal_zfs::types::DatasetConfig,
-    ) -> UniversalZfsResult<crate::handlers::zfs::universal_zfs::types::DatasetInfo> {
+        config: &crate::handlers::zfs::universal_zfs_types::DatasetConfig,
+    ) -> UniversalZfsResult<crate::handlers::zfs::universal_zfs_types::DatasetInfo> {
         super::dataset_operations::create_dataset(self, config).await
     }
 
@@ -291,21 +273,21 @@ impl UniversalZfsService for NativeZfsService {
 
     async fn list_snapshots(
         &self,
-    ) -> UniversalZfsResult<Vec<crate::handlers::zfs::universal_zfs::types::SnapshotInfo>> {
+    ) -> UniversalZfsResult<Vec<crate::handlers::zfs::universal_zfs_types::SnapshotInfo>> {
         super::snapshot_operations::list_snapshots(self).await
     }
 
     async fn list_dataset_snapshots(
         &self,
         dataset: &str,
-    ) -> UniversalZfsResult<Vec<crate::handlers::zfs::universal_zfs::types::SnapshotInfo>> {
+    ) -> UniversalZfsResult<Vec<crate::handlers::zfs::universal_zfs_types::SnapshotInfo>> {
         super::snapshot_operations::list_dataset_snapshots(self, dataset).await
     }
 
     async fn create_snapshot(
         &self,
-        config: &crate::handlers::zfs::universal_zfs::types::SnapshotConfig,
-    ) -> UniversalZfsResult<crate::handlers::zfs::universal_zfs::types::SnapshotInfo> {
+        config: &crate::handlers::zfs::universal_zfs_types::SnapshotConfig,
+    ) -> UniversalZfsResult<crate::handlers::zfs::universal_zfs_types::SnapshotInfo> {
         super::snapshot_operations::create_snapshot(self, config).await
     }
 
