@@ -82,9 +82,10 @@ impl RealNetworkService {
         // ✅ MIGRATED: Now uses centralized runtime configuration
         let addr = {
             use nestgate_core::config::runtime::get_config;
+            use nestgate_core::constants::hardcoding::addresses;
             let config = get_config();
             let host = if config.network.bind_all {
-                "0.0.0.0"
+                addresses::BIND_ALL_IPV4
             } else {
                 &config.network.api_host.to_string()
             };
