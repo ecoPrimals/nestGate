@@ -449,7 +449,7 @@ impl ConfigValidation for NetworkConfig {
             FieldSchema {
                 field_type: "string".to_string(),
                 required: true,
-                default_value: Some("127.0.0.1".to_string()),
+                default_value: Some(crate::constants::hardcoding::addresses::LOCALHOST_IPV4.to_string()),
                 constraints: vec!["Valid IPv4 or IPv6 address".to_string()],
                 description: "IP address to bind the server to".to_string(),
             },

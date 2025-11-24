@@ -65,10 +65,10 @@ pub mod network {
     pub const DEFAULT_API_PORT: u16 = 8080;
 
     /// Default bind address
-    pub const DEFAULT_BIND_ADDRESS: &str = "127.0.0.1";
+    pub const DEFAULT_BIND_ADDRESS: &str = crate::constants::hardcoding::addresses::LOCALHOST_IPV4;
 
     /// Localhost address
-    pub const LOCALHOST: &str = "127.0.0.1";
+    pub const LOCALHOST: &str = crate::constants::hardcoding::addresses::LOCALHOST_IPV4;
 
     /// Request timeout in seconds
     pub const REQUEST_TIMEOUT_SECS: u64 = 30;
@@ -706,7 +706,7 @@ pub mod cache {
 /// Constants for development and smart defaults
 pub mod development {
     /// Default development host
-    pub const DEFAULT_DEV_HOST: &str = "127.0.0.1";
+    pub const DEFAULT_DEV_HOST: &str = crate::constants::hardcoding::addresses::LOCALHOST_IPV4;
 
     /// Default development port
     pub const DEFAULT_DEV_PORT: u16 = 8080;

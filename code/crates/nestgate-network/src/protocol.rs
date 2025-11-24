@@ -271,12 +271,13 @@ impl ProtocolManager {
         }
 
         // Simplified status implementation
+        use nestgate_core::constants::hardcoding::addresses;
         Ok(MountStatus {
             mount_id: _mount_id.to_string(),
             mounted: true,
             mount_point: std::path::PathBuf::from("/tmp/mount"),
             protocol,
-            server: safe_env_var_or_default("NESTGATE_DEFAULT_SERVER", "localhost").to_string(),
+            server: safe_env_var_or_default("NESTGATE_DEFAULT_SERVER", addresses::LOCALHOST_NAME).to_string(),
             remote_path: "/remote".to_string(),
             last_access: Some(chrono::Utc::now()),
             error: None,
