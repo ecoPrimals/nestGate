@@ -41,14 +41,16 @@ pub struct ServiceDiscoveryConfig {
 
 impl Default for ServiceDiscoveryConfig {
     fn default() -> Self {
+        use crate::constants::hardcoding::{addresses, ports};
+
         Self {
             endpoints: Self::load_endpoints_from_env(),
             discovery_host: env::var("NESTGATE_DISCOVERY_HOST")
-                .unwrap_or_else(|_| "127.0.0.1".to_string()),
+                .unwrap_or_else(|_| addresses::LOCALHOST_IPV4.to_string()),
             discovery_base_port: env::var("NESTGATE_DISCOVERY_BASE_PORT")
                 .ok()
                 .and_then(|s| s.parse().ok())
-                .unwrap_or(8080),
+                .unwrap_or(ports::HTTP_DEFAULT),
             discovery_port_range: env::var("NESTGATE_DISCOVERY_PORT_RANGE")
                 .ok()
                 .and_then(|s| s.parse().ok())
