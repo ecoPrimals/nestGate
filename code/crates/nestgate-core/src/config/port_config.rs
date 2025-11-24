@@ -21,24 +21,27 @@ mod ports {
     ///
     /// Environment variable: `NESTGATE_API_PORT`
     pub fn api_port() -> u16 {
+        use crate::constants::hardcoding::ports;
         static PORT: OnceLock<u16> = OnceLock::new();
-        *PORT.get_or_init(|| parse_env_port("NESTGATE_API_PORT").unwrap_or(8080))
+        *PORT.get_or_init(|| parse_env_port("NESTGATE_API_PORT").unwrap_or(ports::HTTP_DEFAULT))
     }
 
     /// Get admin interface port (default: 8081)
     ///
     /// Environment variable: `NESTGATE_ADMIN_PORT`
     pub fn admin_port() -> u16 {
+        use crate::constants::hardcoding::ports;
         static PORT: OnceLock<u16> = OnceLock::new();
-        *PORT.get_or_init(|| parse_env_port("NESTGATE_ADMIN_PORT").unwrap_or(8081))
+        *PORT.get_or_init(|| parse_env_port("NESTGATE_ADMIN_PORT").unwrap_or(ports::HEALTH_CHECK))
     }
 
     /// Get metrics port (default: 9090)
     ///
     /// Environment variable: `NESTGATE_METRICS_PORT`
     pub fn metrics_port() -> u16 {
+        use crate::constants::hardcoding::ports;
         static PORT: OnceLock<u16> = OnceLock::new();
-        *PORT.get_or_init(|| parse_env_port("NESTGATE_METRICS_PORT").unwrap_or(9090))
+        *PORT.get_or_init(|| parse_env_port("NESTGATE_METRICS_PORT").unwrap_or(ports::METRICS_DEFAULT))
     }
 
     /// Get health check port (default: 8082)
