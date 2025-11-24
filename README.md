@@ -31,8 +31,8 @@ cargo doc --open
 ```
 
 **New here?** → Start with [`00_READ_THIS_FIRST_NOV_24.md`](00_READ_THIS_FIRST_NOV_24.md) ⭐  
-**Current status?** → See [`STATUS.md`](STATUS.md) (Updated Nov 24, 2025)  
-**Latest work?** → See [`FINAL_SESSION_REPORT_NOV_24_2025.md`](FINAL_SESSION_REPORT_NOV_24_2025.md)
+**Current status?** → See [`STATUS.md`](STATUS.md) (Updated Nov 24, 2025 - Week 1, Day 3)  
+**Latest work?** → See [`WEEK1_DAY3_FINAL_REPORT.md`](WEEK1_DAY3_FINAL_REPORT.md) (Week 1 Progress)
 
 ## ✨ Features
 
