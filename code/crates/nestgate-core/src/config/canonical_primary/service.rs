@@ -97,9 +97,10 @@ pub struct ServiceEndpointConfig {
 
 impl Default for ServiceEndpointConfig {
     fn default() -> Self {
+        use crate::constants::hardcoding::{addresses, ports};
         Self {
-            bind_endpoint: "127.0.0.1".to_string(),
-            port: 8080,
+            bind_endpoint: addresses::LOCALHOST_IPV4.to_string(),
+            port: ports::HTTP_DEFAULT,
             tls_enabled: false,
             max_connections: 10000,
             keep_alive_timeout: Duration::from_secs(30),

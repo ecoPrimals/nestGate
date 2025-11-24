@@ -257,18 +257,26 @@ impl Default for ConnectionStateTracking {
 /// Connection pooling strategies
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum PoolingStrategy {
+    /// First In, First Out - connections are served in order they were added
     Fifo,
+    /// Last In, First Out - most recently added connections are served first
     Lifo,
+    /// Least Recently Used - least recently used connections are served first
     Lru,
+    /// Most Recently Used - most recently used connections are served first
     Mru,
+    /// Random selection of connections from the pool
     Random,
 }
 
 /// Connection load balancing configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConnectionLoadBalancingConfig {
+    /// Whether load balancing is enabled
     pub enabled: bool,
+    /// Strategy used for load balancing connections
     pub strategy: LoadBalancingStrategy,
+    /// Health check configuration for the load balancer
     pub health_check: LoadBalancerHealthCheck,
 }
 
@@ -285,19 +293,28 @@ impl Default for ConnectionLoadBalancingConfig {
 /// Load balancing strategies
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum LoadBalancingStrategy {
+    /// Round-robin distribution across connections
     RoundRobin,
+    /// Weighted round-robin based on connection capacity or performance
     WeightedRoundRobin,
+    /// Route to connection with fewest active requests
     LeastConnections,
+    /// Random selection of connections
     Random,
 }
 
 /// Load balancer health check configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LoadBalancerHealthCheck {
+    /// Whether health checks are enabled
     pub enabled: bool,
+    /// Interval between health checks
     pub interval: Duration,
+    /// Timeout for each health check
     pub timeout: Duration,
+    /// Number of consecutive successful checks to mark as healthy
     pub healthy_threshold: u32,
+    /// Number of consecutive failed checks to mark as unhealthy
     pub unhealthy_threshold: u32,
 }
 

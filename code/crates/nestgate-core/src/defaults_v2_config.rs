@@ -34,9 +34,9 @@ impl DefaultsV2Config {
     /// Default API port
     pub const DEFAULT_API_PORT: u16 = crate::constants::hardcoding::ports::HTTP_DEFAULT;
     /// Default bind address
-    pub const DEFAULT_BIND_ADDRESS: &'static str = "0.0.0.0";
+    pub const DEFAULT_BIND_ADDRESS: &'static str = crate::constants::hardcoding::addresses::BIND_ALL_IPV4;
     /// Default hostname
-    pub const DEFAULT_HOSTNAME: &'static str = "localhost";
+    pub const DEFAULT_HOSTNAME: &'static str = crate::constants::hardcoding::addresses::LOCALHOST_NAME;
     /// Default WebSocket port
     pub const DEFAULT_WS_PORT: u16 = crate::constants::hardcoding::ports::WEBSOCKET_DEFAULT;
     /// Default health port
