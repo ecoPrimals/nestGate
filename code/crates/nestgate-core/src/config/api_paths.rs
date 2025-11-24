@@ -21,20 +21,23 @@ const PATH_DIAGNOSTICS: &str = "/diagnostics";
 /// API paths configuration structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
-/// 
+///
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::network::config::ApiPathsConfig;
-/// 
+///
 /// // NEW (canonical):
 /// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 /// // Or use type alias for compatibility:
 /// use crate::network::config::ApiPathsConfig; // Now aliases to CanonicalNetworkConfig
 /// ```
-/// 
+///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+#[deprecated(
+    since = "0.11.0",
+    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
 pub struct ApiPathsConfig {
     /// Base API version prefix
     pub api_version: String,
@@ -136,6 +139,7 @@ pub struct HealthApiPaths {
     pub diagnostics: String,
 }
 
+#[allow(deprecated)]
 impl Default for ApiPathsConfig {
     fn default() -> Self {
         let api_version = API_VERSION_V1;
@@ -164,19 +168,19 @@ impl ZfsApiPaths {
         Self {
             base: base.clone(),
             pools: format!("{base}/pools"),
-            pools_detail: format!("{base}/pools/{{name}"),
+            pools_detail: format!("{base}/pools/{{{{name}}}}"),
             pools_create: format!("{base}/pools"),
-            pools_destroy: format!("{base}/pools/{{name}"),
-            pools_scrub: format!("{base}/pools/{{name}/scrub"),
-            pools_export: format!("{base}/pools/{{name}/export"),
-            pools_import: format!("{base}/pools/{{name}/import"),
+            pools_destroy: format!("{base}/pools/{{{{name}}}}"),
+            pools_scrub: format!("{base}/pools/{{{{name}}}}/scrub"),
+            pools_export: format!("{base}/pools/{{{{name}}}}/export"),
+            pools_import: format!("{base}/pools/{{{{name}}}}/import"),
             datasets: format!("{base}/datasets"),
             datasets_create: format!("{base}/datasets"),
-            datasets_destroy: format!("{base}/datasets/{{name}"),
+            datasets_destroy: format!("{base}/datasets/{{{{name}}}}"),
             snapshots: format!("{base}/snapshots"),
             snapshots_create: format!("{base}/snapshots"),
-            snapshots_destroy: format!("{base}/snapshots/{{name}"),
-            snapshots_rollback: format!("{base}/snapshots/{{name}/rollback"),
+            snapshots_destroy: format!("{base}/snapshots/{{{{name}}}}"),
+            snapshots_rollback: format!("{base}/snapshots/{{{{name}}}}/rollback"),
         }
     }
 }
@@ -210,9 +214,9 @@ impl SystemApiPaths {
             config: format!("{base}/config"),
             config_reload: format!("{base}/config/reload"),
             services: format!("{base}/services"),
-            service_start: format!("{base}/services/{{name}/start"),
-            service_stop: format!("{base}/services/{{name}/stop"),
-            service_restart: format!("{base}/services/{{name}/restart"),
+            service_start: format!("{base}/services/{{{{name}}}}/start"),
+            service_stop: format!("{base}/services/{{{{name}}}}/stop"),
+            service_restart: format!("{base}/services/{{{{name}}}}/restart"),
         }
     }
 }
@@ -245,6 +249,7 @@ impl ApiPathsConfig {
     }
 
     /// Add or update a custom endpoint
+    pub fn set_custom_endpoint(&mut self, key: String, path: String) {
         self.custom_endpoints.insert(key, path);
     }
 
@@ -279,7 +284,7 @@ impl ApiPathsConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn validate(&self) -> Result<(), String>  {
+    pub fn validate(&self) -> Result<(), String> {
         // Check that all paths start with /
         let endpoints = vec![
             ("health", &self.health.health),
@@ -328,17 +333,17 @@ impl ApiPathsConfig {
     }
 }
 
-
 // ==================== CANONICAL TYPE ALIAS ====================
 // This type now aliases to the canonical network configuration
 // Original struct definition kept above for reference and backward compatibility
 
 /// Type alias to canonical network configuration
-/// 
+///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
-pub type ApiPathsConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+pub type ApiPathsConfigCanonical =
+    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using ApiPathsConfig (the deprecated struct) for now.
 // We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.

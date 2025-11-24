@@ -281,7 +281,7 @@ impl Default for CanonicalOptimizationConfig {
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
 /// 
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::network::config::UnifiedServiceConfig;
 /// 
@@ -329,7 +329,7 @@ impl Default for UnifiedServiceConfig {
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
 /// 
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::network::config::UnifiedNetworkConfig;
 /// 

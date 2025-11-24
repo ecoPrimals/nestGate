@@ -47,7 +47,7 @@ impl Default for UnifiedApiExtensions {
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
 /// 
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::network::config::UnifiedApiConfig;
 /// 

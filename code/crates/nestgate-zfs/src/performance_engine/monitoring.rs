@@ -44,6 +44,9 @@ pub struct RealTimePerformanceMonitor {
     alert_thresholds: AlertThresholdsArc,
     metrics_cache: MetricsCacheMap,
 }
+
+/// Type alias for backwards compatibility with test code
+pub type PerformanceMonitor = RealTimePerformanceMonitor;
 impl Default for RealTimePerformanceMonitor {
     fn default() -> Self {
         Self::new()

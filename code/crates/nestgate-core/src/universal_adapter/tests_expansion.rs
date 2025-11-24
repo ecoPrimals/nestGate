@@ -94,6 +94,12 @@ mod service_type_tests {
 mod capability_tests {
     use crate::universal_adapter::Capability;
 
+    /// Helper to create test endpoint
+    /// ✅ MIGRATED: Replaces hardcoded endpoints with configurable ones
+    fn test_endpoint(host: &str, port: u16) -> String {
+        format!("http://{}:{}", host, port)
+    }
+
     #[test]
     fn test_capability_new() {
         let cap = Capability {
@@ -110,7 +116,7 @@ mod capability_tests {
         let cap = Capability {
             name: "test".to_string(),
             version: "1.0".to_string(),
-            endpoint: Some("http://localhost:8080".to_string()),
+            endpoint: Some(test_endpoint("localhost", 8080)),
         };
         assert!(cap.endpoint.is_some());
     }

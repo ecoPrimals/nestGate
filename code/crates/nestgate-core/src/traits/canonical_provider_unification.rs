@@ -14,11 +14,11 @@ use crate::Result;
 
 /// **DEPRECATED**: Extended provider trait with lifecycle management
 ///
-/// **Use `crate::traits::canonical_unified_traits::CanonicalProvider` instead.**
+/// **Use `crate::traits::canonical::CanonicalProvider` instead.**
 ///
 /// This trait provided additional lifecycle methods (initialize, stop, validate_config)
 /// beyond the core CanonicalProvider interface. The core methods have been consolidated
-/// into `canonical_unified_traits::CanonicalProvider`.
+/// into `canonical::CanonicalProvider`.
 ///
 /// # Migration Guide
 ///
@@ -63,7 +63,7 @@ use crate::Result;
 /// This replaces ALL scattered provider interfaces
 #[deprecated(
     since = "0.11.2",
-    note = "Use crate::traits::canonical_unified_traits::CanonicalProvider instead. \
+    note = "Use crate::traits::canonical::CanonicalProvider instead. \
             CanonicalUniversalProvider had extended lifecycle methods (initialize, stop) \
             that can be handled in constructors and Drop implementations. \
             Core provider functionality is in the canonical CanonicalProvider trait. \
@@ -537,20 +537,20 @@ pub trait NetworkProvider: CanonicalUniversalProvider<Box<dyn NetworkService>> {
 /// **DEPRECATED**: Use canonical security trait instead
 #[deprecated(
     since = "0.9.0",
-    note = "Use crate::traits::canonical_unified_traits::CanonicalSecurity instead"
+    note = "Use crate::traits::canonical::CanonicalSecurity instead"
 )]
 pub trait SecurityService: Send + Sync {}
 /// **DEPRECATED**: Duplicate trait - use canonical storage system
 #[deprecated(
     since = "0.9.0",
-    note = "Use crate::traits::canonical_unified_traits::CanonicalStorage instead"
+    note = "Use crate::traits::canonical::CanonicalStorage instead"
 )]
 pub trait StorageService: Send + Sync {}
 
 /// **DEPRECATED**: Use canonical network trait instead
 #[deprecated(
     since = "0.11.2",
-    note = "Use crate::traits::canonical_unified_traits::CanonicalNetwork instead. \
+    note = "Use crate::traits::canonical::CanonicalNetwork instead. \
             NetworkService is a marker trait - migrate to CanonicalNetwork for full functionality. \
             Target removal: v0.12.0 (May 2026)."
 )]
@@ -559,7 +559,7 @@ pub trait NetworkService: Send + Sync {}
 /// **DEPRECATED**: Use canonical service traits instead
 #[deprecated(
     since = "0.11.2",
-    note = "Use crate::traits::canonical_unified_traits::CanonicalService instead. \
+    note = "Use crate::traits::canonical::CanonicalService instead. \
             CacheService is a marker trait - migrate to CanonicalService with cache-specific types. \
             Target removal: v0.12.0 (May 2026)."
 )]

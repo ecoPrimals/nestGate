@@ -100,7 +100,7 @@ mod tests {
 
         let response = LoginResponse {
             token: "test_token_123".to_string(),
-            user: user.clone(),
+            user,
         };
 
         assert_eq!(response.token, "test_token_123");

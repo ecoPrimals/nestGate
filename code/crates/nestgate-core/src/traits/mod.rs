@@ -32,7 +32,11 @@ pub mod service_trait;
 pub mod async_migration_system;
 pub mod canonical_hierarchy;
 pub mod canonical_provider_unification;
-pub mod canonical_unified_traits;
+
+// **NEW** (Nov 19, 2025): Refactored canonical traits into focused modules
+// **MIGRATION COMPLETE** (Nov 19, 2025): All code migrated to modular structure
+pub mod canonical;
+
 pub mod domain_extensions;
 pub mod migration;
 pub mod native_async;
@@ -60,8 +64,8 @@ pub use load_balancing::{
 pub use service_discovery::{ServiceDiscovery, ServiceEvent, ServiceQuery};
 pub use service_trait::Service;
 
-// Re-export the canonical traits for easy access
-pub use canonical_unified_traits::{
+// Re-export the canonical traits for easy access (NEW MODULE STRUCTURE - Nov 19, 2025)
+pub use canonical::{
     CanonicalAutomation, CanonicalMcp, CanonicalNetwork, CanonicalProvider,
     CanonicalProviderFactory, CanonicalSecurity, CanonicalService, CanonicalServiceFactory,
     CanonicalStorage, ZeroCostService,
@@ -109,7 +113,7 @@ pub use domain_extensions::{StorageServiceExtension, ZfsServiceExtension};
 // use crate::universal_storage::canonical_storage::CanonicalStorageBackend;
 //
 // // New unified approach
-// use crate::traits::canonical_unified_traits::CanonicalStorage;
+// use crate::traits::canonical::CanonicalStorage;
 // ```
 
 // **MIGRATION STATUS**: All deprecated traits have been successfully migrated

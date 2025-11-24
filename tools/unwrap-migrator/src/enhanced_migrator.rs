@@ -732,8 +732,8 @@ mod tests {
         let temp_dir = tempfile::tempdir()?;
         let temp_path = temp_dir.path();
 
-        // Create test files
-        tokio::fs::write(temp_path.join("test.rs"), "fn main() { }").await?;
+        // Create test files (use main.rs instead of test.rs to avoid filtering)
+        tokio::fs::write(temp_path.join("main.rs"), "fn main() { }").await?;
         tokio::fs::write(temp_path.join("lib.rs"), "pub fn test() { }").await?;
         tokio::fs::write(temp_path.join("readme.txt"), "Not rust").await?;
 
@@ -743,7 +743,7 @@ mod tests {
         assert_eq!(rust_files.len(), 2);
         assert!(rust_files
             .iter()
-            .any(|f| f.file_name().and_then(|n| n.to_str()) == Some("test.rs")));
+            .any(|f| f.file_name().and_then(|n| n.to_str()) == Some("main.rs")));
         assert!(rust_files
             .iter()
             .any(|f| f.file_name().and_then(|n| n.to_str()) == Some("lib.rs")));

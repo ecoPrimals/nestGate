@@ -399,8 +399,7 @@ async fn test_dry_run_no_side_effects() {
     let _r1 = cmd.zpool(&["destroy", "nonexistent"]).await;
     let _r2 = cmd.zfs(&["destroy", "nonexistent/dataset"]).await;
 
-    // If we get here without errors, dry run is working
-    assert!(true);
+    // Test passes if dry run executes without errors
 }
 
 // ==================== BUILDER PATTERN TESTS ====================
@@ -427,21 +426,20 @@ fn test_builder_pattern_order_independence() {
 
 #[test]
 fn test_collect_multiple_results() {
-    let mut results = Vec::new();
-
-    results.push(CommandResult {
-        success: true,
-        stdout: "result1".to_string(),
-        stderr: String::new(),
-        exit_code: 0,
-    });
-
-    results.push(CommandResult {
-        success: false,
-        stdout: String::new(),
-        stderr: "error1".to_string(),
-        exit_code: 1,
-    });
+    let results = [
+        CommandResult {
+            success: true,
+            stdout: "result1".to_string(),
+            stderr: String::new(),
+            exit_code: 0,
+        },
+        CommandResult {
+            success: false,
+            stdout: String::new(),
+            stderr: "error1".to_string(),
+            exit_code: 1,
+        },
+    ];
 
     assert_eq!(results.len(), 2);
 

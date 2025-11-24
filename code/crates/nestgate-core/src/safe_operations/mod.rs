@@ -62,3 +62,7 @@ pub fn safe_connection_pool_return<T>(result: Result<T>, operation: &str) -> Res
         }
     }
 }
+
+#[cfg(test)]
+#[path = "mod_tests.rs"]
+mod mod_tests;

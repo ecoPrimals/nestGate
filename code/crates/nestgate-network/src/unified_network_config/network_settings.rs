@@ -7,10 +7,12 @@ use std::time::Duration;
 // ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(deprecated)] // Using NetworkVlanConfig during transition period
 pub struct NetworkVlanSettings {
     /// Enable VLAN support
     pub enabled: bool,
     /// VLAN configurations by VLAN ID
+    /// Migration in progress to CanonicalNetworkConfig (transition period until v0.12.0)
     pub vlans: HashMap<u16, NetworkVlanConfig>,
     /// Default VLAN ID for untagged traffic
     pub default_vlan_id: u16,
@@ -19,20 +21,23 @@ pub struct NetworkVlanSettings {
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
-/// 
+///
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::network::config::NetworkVlanConfig;
-/// 
+///
 /// // NEW (canonical):
 /// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 /// // Or use type alias for compatibility:
 /// use crate::network::config::NetworkVlanConfig; // Now aliases to CanonicalNetworkConfig
 /// ```
-/// 
+///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+#[deprecated(
+    since = "0.11.0",
+    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
 pub struct NetworkVlanConfig {
     pub vlan_id: u16,
     pub name: String,
@@ -279,13 +284,13 @@ impl Default for NetworkQosSettings {
 // Original struct definition kept above for reference and backward compatibility
 
 /// Type alias to canonical network configuration
-/// 
+///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
-pub type NetworkVlanConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+pub type NetworkVlanConfigCanonical =
+    nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using NetworkVlanConfig (the deprecated struct) for now.
 // We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
 // This alias is here for reference and future migration.
-

@@ -468,7 +468,8 @@ fn get_directory_usage(
 /// Create fallback dataset for user home directory
 #[allow(dead_code)] // Reserved for fallback storage implementation
 async fn create_fallback_home_dataset() -> StorageDataset {
-    let home_dir = std::env::var("HOME").unwrap_or_else(|_| "/home".to_string());
+    use nestgate_core::error::utilities::safe_env_var_or_default;
+    let home_dir = safe_env_var_or_default("HOME", "/home");
     let (size, used, available) = get_directory_usage(&home_dir).unwrap_or((0, 0, 0));
     StorageDataset {
         name: "user_home".to_string(),

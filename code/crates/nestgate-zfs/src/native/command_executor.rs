@@ -271,3 +271,8 @@ impl Default for NativeZfsCommandExecutor {
         Self::new()
     }
 }
+
+// Test modules
+#[cfg(test)]
+#[path = "command_executor_tests.rs"]
+mod command_executor_tests;

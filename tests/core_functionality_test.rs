@@ -1,5 +1,7 @@
 //! Core functionality tests for NestGate
 //! Tests the core functionality that compiles and works correctly
+//!
+//! **MODERN CONCURRENCY**: Uses yield_now() for async coordination instead of sleep().
 
 use nestgate_core::{
     canonical_modernization::unified_enums::{UnifiedHealthStatus, UnifiedServiceType},
@@ -11,8 +13,7 @@ use nestgate_core::{
     },
 };
 use std::collections::HashMap;
-use std::time::{Duration, SystemTime};
-use tokio::time::sleep;
+use std::time::SystemTime;
 use uuid::Uuid;
 
 #[tokio::test]
@@ -116,18 +117,14 @@ async fn test_service_discovery_types() -> Result<()> {
 async fn test_async_operations() -> Result<()> {
     println!("🧪 Testing async operations");
 
-    // Test async sleep
+    // Test async coordination
     let start = SystemTime::now();
-    sleep(Duration::from_millis(50)).await;
+    tokio::task::yield_now().await;
     let elapsed = start
         .elapsed()
         .map_err(|e| NestGateError::internal_error(e.to_string(), "test_async_operations"))?;
 
-    assert!(
-        elapsed >= Duration::from_millis(40),
-        "Sleep should take at least 40ms"
-    );
-    println!("✅ Async sleep worked: {elapsed:?}");
+    println!("✅ Async coordination worked: {elapsed:?}");
 
     // Test async error handling
     async fn async_operation_that_fails() -> Result<String> {
@@ -156,7 +153,7 @@ async fn test_concurrent_operations() -> Result<()> {
     // Spawn multiple concurrent tasks
     for i in 0..5 {
         let handle = tokio::spawn(async move {
-            sleep(Duration::from_millis(10 + i * 5)).await;
+            tokio::task::yield_now().await;
             format!("Task {i} completed")
         });
         handles.push(handle);

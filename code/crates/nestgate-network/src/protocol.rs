@@ -8,6 +8,7 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 
 // Use nestgate_core for error handling
+use nestgate_core::error::utilities::safe_env_var_or_default;
 use nestgate_core::{NestGateError, Result};
 
 /// Supported network protocols
@@ -55,20 +56,23 @@ pub enum PerformancePreference {
 /// Protocol configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
-/// 
+///
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::network::config::ProtocolConfig;
-/// 
+///
 /// // NEW (canonical):
 /// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 /// // Or use type alias for compatibility:
 /// use crate::network::config::ProtocolConfig; // Now aliases to CanonicalNetworkConfig
 /// ```
-/// 
+///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+#[deprecated(
+    since = "0.11.0",
+    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
 pub struct ProtocolConfig {
     /// Protocol type
     pub protocol: Protocol,
@@ -83,6 +87,7 @@ pub struct ProtocolConfig {
     /// Maximum retry attempts
     pub max_retries: u32,
 }
+#[allow(deprecated)] // Deprecated struct with migration path documented
 impl Default for ProtocolConfig {
     fn default() -> Self {
         Self {
@@ -271,8 +276,7 @@ impl ProtocolManager {
             mounted: true,
             mount_point: std::path::PathBuf::from("/tmp/mount"),
             protocol,
-            server: std::env::var("NESTGATE_DEFAULT_SERVER")
-                .unwrap_or_else(|_| "localhost".to_string()),
+            server: safe_env_var_or_default("NESTGATE_DEFAULT_SERVER", "localhost").to_string(),
             remote_path: "/remote".to_string(),
             last_access: Some(chrono::Utc::now()),
             error: None,
@@ -297,13 +301,13 @@ impl Default for ProtocolManager {
 // Original struct definition kept above for reference and backward compatibility
 
 /// Type alias to canonical network configuration
-/// 
+///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
-pub type ProtocolConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+pub type ProtocolConfigCanonical =
+    nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using ProtocolConfig (the deprecated struct) for now.
 // We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
 // This alias is here for reference and future migration.
-

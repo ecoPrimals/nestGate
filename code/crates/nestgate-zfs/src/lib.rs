@@ -3,7 +3,13 @@
 //! This crate provides ZFS storage management functionality for `NestGate`,
 //! with canonical configuration integration and zero-cost abstractions.
 
+// Temporary allow deprecated during canonical config migration
+#![warn(missing_docs)]
+#![warn(rustdoc::broken_intra_doc_links)]
+#![allow(deprecated)]
+
 // Core modules
+pub mod adaptive_backend; // ✅ Adaptive ZFS: system or internal
 pub mod command;
 pub mod dataset;
 pub mod error;
@@ -25,6 +31,8 @@ pub mod health;
 mod health_tests;
 pub mod metrics;
 pub mod production_readiness;
+#[cfg(test)]
+mod production_readiness_tests;
 
 // Real operations module (re-export for compatibility)
 pub mod real_zfs_operations {
@@ -46,6 +54,8 @@ pub mod failover;
 pub mod handlers;
 pub mod manager;
 pub mod tier;
+#[cfg(test)]
+mod tier_tests;
 
 // Configuration
 pub mod config;
@@ -69,7 +79,11 @@ pub mod constants;
 #[cfg(test)]
 mod command_tests;
 #[cfg(test)]
+mod comprehensive_coverage_boost;
+#[cfg(test)]
 mod pool_types_tests;
+#[cfg(test)]
+mod zfs_final_coverage_boost;
 
 // Re-exports for common usage
 pub use command::ZfsCommand;

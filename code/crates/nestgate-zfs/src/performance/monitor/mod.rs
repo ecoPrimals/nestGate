@@ -22,6 +22,11 @@ pub mod metrics;
 pub mod real_metrics;
 pub mod reporting;
 
+#[cfg(test)]
+mod analysis_tests;
+#[cfg(test)]
+mod metrics_tests;
+
 impl ZfsPerformanceMonitor {
     /// Create performance monitor for testing
     #[must_use]

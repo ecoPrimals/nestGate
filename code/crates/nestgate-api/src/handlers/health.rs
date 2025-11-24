@@ -29,8 +29,11 @@ mod tests {
         // Should complete in less than 1ms
         assert!(
             duration.as_millis() < 1,
-            "Health check took too long: {:?}",
-            duration
+            "Health check took too long: {duration:?}"
         );
     }
 }
+
+#[cfg(test)]
+#[path = "health_extended_tests.rs"]
+mod health_extended_tests;

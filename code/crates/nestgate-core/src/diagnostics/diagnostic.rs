@@ -111,3 +111,7 @@ impl Diagnostic {
             .as_secs()
     }
 }
+
+#[cfg(test)]
+#[path = "diagnostic_tests.rs"]
+mod tests;

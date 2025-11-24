@@ -13,26 +13,30 @@ use tracing::debug;
 /// Cache configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
-/// 
+///
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::network::config::UnifiedCacheConfig;
-/// 
+///
 /// // NEW (canonical):
 /// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 /// // Or use type alias for compatibility:
 /// use crate::network::config::UnifiedCacheConfig; // Now aliases to CanonicalNetworkConfig
 /// ```
-/// 
+///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+#[deprecated(
+    since = "0.11.0",
+    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
 pub struct UnifiedCacheConfig {
     pub max_size: usize,
     pub ttl_seconds: Option<u64>,
     pub cache_dir: Option<std::path::PathBuf>,
     pub eviction_policy: String,
 }
+#[allow(deprecated)]
 impl Default for UnifiedCacheConfig {
     fn default() -> Self {
         Self {
@@ -99,12 +103,14 @@ pub struct CacheManager {
     hot_tier: HashMap<String, CacheEntry>,
     warm_tier: HashMap<String, CacheEntry>,
     cold_tier: HashMap<String, CacheEntry>,
+    #[allow(deprecated)]
     config: UnifiedCacheConfig,
     stats: CacheStats,
 }
 impl CacheManager {
     /// Create new cache manager with configuration
     #[must_use]
+    #[allow(deprecated)]
     pub fn new(config: UnifiedCacheConfig) -> Self {
         Self {
             hot_tier: HashMap::new(),
@@ -405,17 +411,17 @@ impl Default for CacheManager {
     }
 }
 
-
 // ==================== CANONICAL TYPE ALIAS ====================
 // This type now aliases to the canonical network configuration
 // Original struct definition kept above for reference and backward compatibility
 
 /// Type alias to canonical network configuration
-/// 
+///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
-pub type UnifiedCacheConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+pub type UnifiedCacheConfigCanonical =
+    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using UnifiedCacheConfig (the deprecated struct) for now.
 // We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.

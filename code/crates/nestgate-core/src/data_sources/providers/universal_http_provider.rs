@@ -16,7 +16,7 @@ use tracing::{debug, info, warn};
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
 /// 
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::network::config::HttpProviderConfig;
 /// 

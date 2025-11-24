@@ -9,6 +9,11 @@
 pub mod config;
 pub mod service;
 pub mod types;
+
+#[cfg(test)]
+mod mock_tests;
+#[cfg(test)]
+mod service_tests;
 // Storage management domains - NestGate's core expertise (local smart capabilities)
 // pub mod pools;
 // pub mod quotas;

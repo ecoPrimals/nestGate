@@ -8,29 +8,34 @@ use crate::capabilities::discovery::DiscoveryManager;
 use crate::config::canonical_primary::NestGateCanonicalConfig;
 use crate::Result;
 use std::collections::HashMap;
-use std::env;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::str::FromStr;
 use std::time::Duration;
 use tracing::{debug, warn};
 
+// Import config for environment variable lookups
+use super::production_discovery_config::ProductionDiscoveryConfig;
+
 /// Production service discovery configuration
 #[derive(Debug, Clone)]
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
-/// 
+///
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::network::config::ServiceDiscoveryConfig;
-/// 
+///
 /// // NEW (canonical):
 /// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 /// // Or use type alias for compatibility:
 /// use crate::network::config::ServiceDiscoveryConfig; // Now aliases to CanonicalNetworkConfig
 /// ```
-/// 
+///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+#[deprecated(
+    since = "0.11.0",
+    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
 pub struct ServiceDiscoveryConfig {
     /// Service endpoints discovered from environment/config
     pub services: HashMap<String, ServiceEndpoint>,
@@ -65,7 +70,7 @@ impl Default for DiscoveryDefaults {
     fn default() -> Self {
         use crate::constants::canonical_defaults::network;
         use std::net::Ipv4Addr;
-        
+
         Self {
             default_host: network::LOCALHOST.to_string(),
             default_bind: network::LOCALHOST
@@ -127,24 +132,29 @@ impl ServiceDiscoveryConfig {
             "AUTOMATION",
         ];
 
+        // Use config to get environment variables
+        let config = ProductionDiscoveryConfig::from_env();
+
         for service_name in &service_names {
             let name_lower = service_name.to_lowercase();
 
-            // Discover host
-            let host = env::var(format!("{}_HOST", service_name)).unwrap_or_else(|_| {
-                crate::constants::canonical_defaults::network::LOCALHOST.to_string()
-            });
+            // Discover host (via config)
+            let host = config
+                .get_service_host(service_name)
+                .map(|s| s.to_string())
+                .unwrap_or_else(|| {
+                    crate::constants::canonical_defaults::network::LOCALHOST.to_string()
+                });
 
-            // Discover port
-            let port = env::var(format!("{}_PORT", service_name))
-                .ok()
-                .and_then(|p| p.parse::<u16>().ok())
+            // Discover port (via config)
+            let port = config
+                .get_service_port(service_name)
                 .unwrap_or_else(|| Self::default_port_for_service(&name_lower));
 
-            // Discover bind address
-            let bind_address = env::var(format!("{}_BIND", service_name))
-                .ok()
-                .and_then(|addr| IpAddr::from_str(&addr).ok())
+            // Discover bind address (via config)
+            let bind_address = config
+                .get_service_bind(service_name)
+                .and_then(|addr| IpAddr::from_str(addr).ok())
                 .unwrap_or_else(|| Self::default_bind_for_service(&name_lower));
 
             services.insert(
@@ -182,19 +192,12 @@ impl ServiceDiscoveryConfig {
 
     /// Discover resource limits from environment
     fn discover_limits_from_env(limits: &mut HashMap<String, usize>) -> Result<()> {
-        let limit_types = [
-            ("CONNECTIONS", "connections"),
-            ("REQUESTS_PER_SECOND", "requests_per_second"),
-            ("MEMORY_MB", "memory_mb"),
-            ("DISK_MB", "disk_mb"),
-        ];
+        // Use config to get environment variables
+        let config = ProductionDiscoveryConfig::from_env();
 
-        for (env_suffix, limit_name) in &limit_types {
-            if let Ok(value_str) = env::var(format!("NESTGATE_{}", env_suffix)) {
-                if let Ok(value) = value_str.parse::<usize>() {
-                    limits.insert(limit_name.to_string(), value);
-                }
-            }
+        // Copy all discovered limits from config
+        for (key, value) in config.get_all_resource_limits() {
+            limits.insert(key.clone(), *value);
         }
 
         debug!(
@@ -206,19 +209,12 @@ impl ServiceDiscoveryConfig {
 
     /// Discover operation timeouts from environment
     fn discover_timeouts_from_env(timeouts: &mut HashMap<String, Duration>) -> Result<()> {
-        let timeout_types = [
-            ("CONNECT", "connect"),
-            ("REQUEST", "request"),
-            ("HEALTH_CHECK", "health_check"),
-            ("DISCOVERY", "discovery"),
-        ];
+        // Use config to get environment variables
+        let config = ProductionDiscoveryConfig::from_env();
 
-        for (env_suffix, timeout_name) in &timeout_types {
-            if let Ok(value_str) = env::var(format!("NESTGATE_{}_TIMEOUT", env_suffix)) {
-                if let Ok(value_secs) = value_str.parse::<u64>() {
-                    timeouts.insert(timeout_name.to_string(), Duration::from_secs(value_secs));
-                }
-            }
+        // Copy all discovered timeouts from config (convert seconds to Duration)
+        for (key, value_secs) in config.get_all_operation_timeouts() {
+            timeouts.insert(key.clone(), Duration::from_secs(*value_secs));
         }
 
         debug!(
@@ -470,17 +466,17 @@ pub fn discover_timeout_standalone(
     discovery.discover_timeout(operation)
 }
 
-
 // ==================== CANONICAL TYPE ALIAS ====================
 // This type now aliases to the canonical network configuration
 // Original struct definition kept above for reference and backward compatibility
 
 /// Type alias to canonical network configuration
-/// 
+///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
-pub type ServiceDiscoveryConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+pub type ServiceDiscoveryConfigCanonical =
+    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using ServiceDiscoveryConfig (the deprecated struct) for now.
 // We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
@@ -494,7 +490,7 @@ mod tests {
     fn test_service_discovery_defaults() {
         let config = NestGateCanonicalConfig::default();
         let discovery =
-            .map_err(|e| NestGateError::Configuration {{ message: "Failed to create discovery".to_string(), source: Some(Box::new(e)) }})?
+            ProductionServiceDiscovery::new(&config).expect("Failed to create discovery");
 
         // Should have at least the API service from config
         assert!(!discovery.all_services().is_empty());
@@ -504,12 +500,12 @@ mod tests {
     fn test_port_discovery() {
         let config = NestGateCanonicalConfig::default();
         let discovery =
-            .map_err(|e| NestGateError::Configuration {{ message: "Failed to create discovery".to_string(), source: Some(Box::new(e)) }})?
+            ProductionServiceDiscovery::new(&config).expect("Failed to create discovery");
 
         // API port should come from config
         let api_port = discovery
             .discover_port("api")
-            .map_err(|e| NestGateError::Configuration {{ message: "Failed to discover API port".to_string(), source: Some(Box::new(e)) }})?
+            .expect("Failed to discover API port");
         assert_eq!(api_port, config.network.api.port);
     }
 
@@ -517,11 +513,11 @@ mod tests {
     fn test_limit_discovery_defaults() {
         let config = NestGateCanonicalConfig::default();
         let discovery =
-            .map_err(|e| NestGateError::Configuration {{ message: "Failed to create discovery".to_string(), source: Some(Box::new(e)) }})?
+            ProductionServiceDiscovery::new(&config).expect("Failed to create discovery");
 
         let connections_limit = discovery
             .discover_limit("connections")
-            .map_err(|e| NestGateError::Configuration {{ message: "Failed to discover limit".to_string(), source: Some(Box::new(e)) }})?
+            .expect("Failed to discover limit");
         assert!(connections_limit > 0);
     }
 
@@ -529,11 +525,11 @@ mod tests {
     fn test_timeout_discovery_defaults() {
         let config = NestGateCanonicalConfig::default();
         let discovery =
-            .map_err(|e| NestGateError::Configuration {{ message: "Failed to create discovery".to_string(), source: Some(Box::new(e)) }})?
+            ProductionServiceDiscovery::new(&config).expect("Failed to create discovery");
 
         let timeout = discovery
             .discover_timeout("connect")
-            .map_err(|e| NestGateError::Configuration {{ message: "Failed to discover timeout".to_string(), source: Some(Box::new(e)) }})?
+            .expect("Failed to discover timeout");
         assert!(timeout.as_secs() > 0);
     }
 }

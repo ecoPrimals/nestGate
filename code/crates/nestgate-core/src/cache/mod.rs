@@ -42,6 +42,7 @@ pub mod manager;
 pub mod multi_tier;
 pub mod types;
 pub use manager::CacheManager;
+#[allow(deprecated)]
 pub use multi_tier::{MultiTierCache, MultiTierCacheConfig, MultiTierCacheStats};
 pub use types::{CacheEntry, CachePolicy, CacheStats, EfficiencyMetrics, StorageTier};
 
@@ -62,6 +63,7 @@ impl CacheSystem {
         cache_config: crate::config::canonical_primary::CacheConfig,
     ) -> crate::Result<Self> {
         // Convert to UnifiedCacheConfig
+        #[allow(deprecated)]
         let unified_config = crate::cache::manager::UnifiedCacheConfig {
             max_size: cache_config.hot_tier_size.unwrap_or(1000) as usize,
             ttl_seconds: cache_config.ttl_seconds,
@@ -74,6 +76,7 @@ impl CacheSystem {
     }
 
     /// Create a multi-tier cache system
+    #[allow(deprecated)]
     pub fn multi_tier(cache_config: MultiTierCacheConfig) -> crate::Result<Self> {
         let cache = MultiTierCache::new(cache_config)?;
         Ok(CacheSystem::MultiTier(cache))
@@ -218,6 +221,7 @@ impl CacheSystemStats {
 pub struct CacheBuilder {
     config: crate::config::canonical_primary::CacheConfig,
     multi_tier: bool,
+    #[allow(deprecated)]
     multi_tier_config: Option<MultiTierCacheConfig>,
 }
 impl CacheBuilder {

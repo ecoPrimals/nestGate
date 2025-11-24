@@ -71,26 +71,41 @@ impl Default for StorageEnvironmentConfig {
 }
 
 impl StorageEnvironmentConfig {
+    /// Create production-optimized environment configuration.
     #[must_use]
     pub fn production_optimized() -> Self {
         Self::default()
     }
+
+    /// Create development-optimized environment configuration.
     #[must_use]
     pub fn development_optimized() -> Self {
         Self::default()
     }
+
+    /// Create high-performance environment configuration.
     #[must_use]
     pub fn high_performance() -> Self {
         Self::default()
     }
+
+    /// Create cloud-native environment configuration.
     #[must_use]
     pub fn cloud_native() -> Self {
         Self::default()
     }
+
+    /// Merge this configuration with another.
     #[must_use]
     pub fn merge(self, _other: Self) -> Self {
         self
     }
+
+    /// Validate environment configuration.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if validation fails.
     pub fn validate(&self) -> crate::Result<()> {
         Ok(())
     }

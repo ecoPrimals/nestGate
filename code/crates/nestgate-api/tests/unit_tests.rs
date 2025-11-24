@@ -1,4 +1,4 @@
-//! Unit Tests for NestGate API
+//! Unit Tests for `NestGate` API
 //!
 //! This test suite validates individual API components, handlers, and utilities
 //! in isolation using proper mocks and test doubles.
@@ -127,7 +127,7 @@ fn test_zfs_api_state_structure() -> Result<(), Box<dyn std::error::Error>> {
 fn test_request_validation_edge_cases() -> Result<(), Box<dyn std::error::Error>> {
     // Test empty pool name
     let empty_name_request = CreatePoolRequest {
-        name: "".to_string(),
+        name: String::new(),
         _devices: vec!["/dev/sda".to_string()],
         config: None,
     };

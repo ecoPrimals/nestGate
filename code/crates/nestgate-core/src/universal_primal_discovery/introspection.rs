@@ -1,3 +1,4 @@
+use super::introspection_config::{IntrospectionConfig, SharedIntrospectionConfig};
 /// System Introspection Module
 /// Handles system introspection and auto-detection including:
 /// - System capability detection
@@ -6,6 +7,11 @@
 /// - Optimal configuration recommendations
 use crate::{NestGateError, Result};
 use std::collections::HashMap;
+use std::sync::Arc;
+
+#[cfg(test)]
+#[path = "introspection_tests.rs"]
+mod introspection_tests;
 /// System capabilities profile
 #[derive(Debug, Clone)]
 pub struct SystemCapabilities {
@@ -33,6 +39,7 @@ pub struct HardwareProfile {
 pub struct SystemIntrospection {
     capabilities: Option<SystemCapabilities>,
     hardware_profile: Option<HardwareProfile>,
+    config: SharedIntrospectionConfig,
 }
 impl Default for SystemIntrospection {
     fn default() -> Self {
@@ -41,13 +48,21 @@ impl Default for SystemIntrospection {
 }
 
 impl SystemIntrospection {
-    /// Create new system introspection subsystem
+    /// Create new system introspection subsystem with runtime config
     #[must_use]
-    pub fn new() -> Self {
+    pub fn with_config(config: SharedIntrospectionConfig) -> Self {
         Self {
             capabilities: None,
             hardware_profile: None,
+            config,
         }
+    }
+
+    /// Create new system introspection subsystem (backward compatibility)
+    /// NOTE: Creates config from env each time. For tests, use with_config() directly.
+    #[must_use]
+    pub fn new() -> Self {
+        Self::with_config(Arc::new(IntrospectionConfig::from_env()))
     }
 
     /// **SYSTEM ANALYSIS**: Discover resource limits through system analysis
@@ -194,11 +209,7 @@ impl SystemIntrospection {
         }
 
         // Fallback estimation based on environment
-        if std::env::var("KUBERNETES_NAMESPACE").is_ok() {
-            Ok(2.0) // Assume 2GB in containerized environment
-        } else {
-            Ok(8.0) // Assume 8GB for desktop/server environment
-        }
+        Ok(self.config.estimate_memory_gb())
     }
 
     /// **NETWORK INTERFACE DETECTION**: Detect available network interfaces
@@ -227,40 +238,30 @@ impl SystemIntrospection {
 
     /// **CONTAINER RUNTIME DETECTION**: Detect container runtime using capability-based approach
     async fn detect_container_runtime(&self) -> Option<String> {
-        // Modern capability-based detection (preferred)
-        if let Ok(compute_type) = std::env::var("COMPUTE_CAPABILITY_TYPE") {
-            tracing::info!(
-                "Using modern capability-based compute detection: {}",
-                compute_type
-            );
-            return Some(format!("capability-based-{compute_type}"));
+        // Use config-based detection
+        let runtime = self.config.detect_container_runtime();
+
+        // Log based on detection type
+        if let Some(ref rt) = runtime {
+            if rt.starts_with("capability-based-") {
+                tracing::info!("Using modern capability-based compute detection: {}", rt);
+            } else if rt.starts_with("legacy-orchestrated") {
+                tracing::warn!(
+                    "DEPRECATED: KUBERNETES_NAMESPACE detected for container runtime detection. \
+                    Please migrate to COMPUTE_CAPABILITY_TYPE=orchestrated. \
+                    This Kubernetes-specific detection will be removed in version 4.0.0."
+                );
+            } else if rt.starts_with("legacy-containerized") {
+                tracing::warn!(
+                    "DEPRECATED: DOCKER_COMPOSE_PROJECT detected for container runtime detection. \
+                    Please migrate to COMPUTE_CAPABILITY_TYPE=containerized. \
+                    This Docker-specific detection will be removed in version 4.0.0."
+                );
+            }
         }
 
-        // DEPRECATED: Legacy vendor-specific detection patterns
-        // These will be removed in version 4.0.0
-
-        // DEPRECATED: Kubernetes namespace detection
-        if std::env::var("KUBERNETES_NAMESPACE").is_ok() {
-            tracing::warn!(
-                "DEPRECATED: KUBERNETES_NAMESPACE detected for container runtime detection. \
-                Please migrate to COMPUTE_CAPABILITY_TYPE=orchestrated. \
-                This Kubernetes-specific detection will be removed in version 4.0.0."
-            );
-            return Some("legacy-orchestrated".to_string());
-        }
-
-        // DEPRECATED: Docker Compose detection
-        if std::env::var("DOCKER_COMPOSE_PROJECT").is_ok() {
-            tracing::warn!(
-                "DEPRECATED: DOCKER_COMPOSE_PROJECT detected for container runtime detection. \
-                Please migrate to COMPUTE_CAPABILITY_TYPE=containerized. \
-                This Docker-specific detection will be removed in version 4.0.0."
-            );
-            return Some("legacy-containerized".to_string());
-        }
-
-        // DEPRECATED: Docker environment file detection
-        if std::path::Path::new("/.dockerenv").exists() {
+        // Also check for Docker environment file (file-system based, not env var)
+        if runtime.is_none() && std::path::Path::new("/.dockerenv").exists() {
             tracing::warn!(
                 "DEPRECATED: /.dockerenv file detected for container runtime detection. \
                 Please migrate to COMPUTE_CAPABILITY_TYPE=containerized. \
@@ -269,8 +270,7 @@ impl SystemIntrospection {
             return Some("legacy-containerized".to_string());
         }
 
-        // No containerization detected
-        None
+        runtime
     }
 
     /// **OS TYPE DETECTION**: Detect operating system type
@@ -280,11 +280,9 @@ impl SystemIntrospection {
 
     /// **FILE LIMIT DETECTION**: Get system file descriptor limit
     async fn get_system_file_limit(&self) -> Result<usize> {
-        // Try to read from system files or environment
-        if let Ok(limit_str) = std::env::var("NESTGATE_MAX_FILE_HANDLES") {
-            if let Ok(limit) = limit_str.parse::<usize>() {
-                return Ok(limit);
-            }
+        // Try to read from config
+        if let Some(limit) = self.config.get_max_file_handles() {
+            return Ok(limit);
         }
 
         // Default reasonable limit

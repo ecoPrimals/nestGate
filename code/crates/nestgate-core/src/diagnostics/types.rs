@@ -93,3 +93,7 @@ impl Default for ServiceInfo {
 
 // Use UnifiedHealthStatus and UnifiedServiceState from crate::unified_enums instead
 // This cleanup eliminates fragmented status type definitions in favor of the unified system.
+
+#[cfg(test)]
+#[path = "types_tests.rs"]
+mod tests;

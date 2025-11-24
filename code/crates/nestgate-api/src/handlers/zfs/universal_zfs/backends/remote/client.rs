@@ -2,10 +2,8 @@ use serde_json::Value;
 use std::time::Duration;
 use tracing::{debug, error, warn};
 
-use crate::handlers::zfs::universal_zfs::{
-    config::RemoteConfig,
-    types::{UniversalZfsError, UniversalZfsResult},
-};
+use crate::handlers::zfs::universal_zfs::config::RemoteConfig;
+use crate::handlers::zfs::universal_zfs_types::{UniversalZfsError, UniversalZfsResult};
 
 /// HTTP client for remote ZFS operations
 #[derive(Debug, Clone)]
@@ -16,6 +14,7 @@ pub struct HttpClient {
 }
 impl HttpClient {
     /// Create a new HTTP client
+    #[must_use]
     pub fn new(config: &RemoteConfig) -> Self {
         // Build HTTP client with optimized settings
         let client = reqwest::Client::builder()
@@ -42,8 +41,8 @@ impl HttpClient {
     }
 
     /// Perform health check
-    pub fn health_check(&self) -> UniversalZfsResult<()> {
-        let health_url = format!("{self.endpoint}/health");
+    pub async fn health_check(&self) -> UniversalZfsResult<()> {
+        let health_url = format!("{}/health", self.endpoint);
 
         // Try with exponential backoff
         for attempt in 0..3 {
@@ -72,13 +71,13 @@ impl HttpClient {
             }
         }
 
-        Err(UniversalZfsError::Network {
+        Err(UniversalZfsError::ServiceUnavailable {
             message: "Remote service health check failed after retries".to_string(),
         })
     }
 
     /// Make HTTP request with enhanced error handling
-    pub fn make_request(
+    pub async fn make_request(
         &self,
         path: &str,
         method: &str,
@@ -138,21 +137,21 @@ impl HttpClient {
                     let error_text = response.text().await.unwrap_or_default();
                     error!("HTTP request failed with status {}: {}", status, error_text);
 
-                    Err(UniversalZfsError::Network {
-                        message: format!("HTTP {} error: {}", status, error_text),
+                    Err(UniversalZfsError::ServiceUnavailable {
+                        message: format!("HTTP {status} error: {error_text}"),
                     })
                 }
             }
             Ok(Err(e)) => {
                 error!("HTTP request failed: {}", e);
-                Err(UniversalZfsError::Network {
+                Err(UniversalZfsError::ServiceUnavailable {
                     message: format!("Request failed: {e}"),
                 })
             }
             Err(_) => {
                 error!("HTTP request timed out after {:?}", self.timeout);
-                Err(UniversalZfsError::Network {
-                    message: format!("Request timed out after {self.timeout:?}"),
+                Err(UniversalZfsError::ServiceUnavailable {
+                    message: format!("Request timed out after {:?}", self.timeout),
                 })
             }
         }

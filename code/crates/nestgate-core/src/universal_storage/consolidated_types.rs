@@ -227,6 +227,7 @@ pub enum UniversalStorageRequest {
         filter: Option<String>,
     },
     CreateResource {
+        #[allow(deprecated)]
         config: Box<StorageResourceConfig>,
     },
     GetMetadata {},
@@ -289,20 +290,23 @@ pub enum UniversalStorageResponse {
 /// Storage resource configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
-/// 
+///
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::config::StorageResourceConfig;
-/// 
+///
 /// // NEW (canonical):
 /// use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 /// // Or use type alias for compatibility:
 /// use crate::config::StorageResourceConfig; // Now aliases to CanonicalNetworkConfig
 /// ```
-/// 
+///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+#[deprecated(
+    since = "0.11.0",
+    note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
 pub struct StorageResourceConfig {
     /// Resource name
     pub name: String,
@@ -428,7 +432,7 @@ pub struct StorageMetadata {
 /// **DEPRECATED**: Use canonical storage traits instead
 #[deprecated(
     since = "0.9.0",
-    note = "Use crate::traits::canonical_unified_traits::CanonicalStorage or crate::traits::unified_storage::UnifiedStorage"
+    note = "Use crate::traits::canonical::CanonicalStorage or crate::traits::unified_storage::UnifiedStorage"
 )]
 pub trait UniversalStorageBackend: Send + Sync {
     /// Handle a storage request
@@ -455,6 +459,7 @@ pub trait UniversalStorageBackend: Send + Sync {
     ) -> impl std::future::Future<Output = Result<StoragePerformanceMetrics>> + Send;
 
     /// Initialize backend with configuration
+    #[allow(deprecated)]
     fn initialize(
         &mut self,
         config: StorageResourceConfig,
@@ -550,6 +555,7 @@ impl UniversalStorageType {
     }
 }
 
+#[allow(deprecated)]
 impl StorageResourceConfig {
     /// Create a new storage resource configuration
     #[must_use]
@@ -613,13 +619,13 @@ pub struct StorageResponse {
 // Original struct definition kept above for reference and backward compatibility
 
 /// Type alias to canonical network configuration
-/// 
+///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
-pub type StorageResourceConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+pub type StorageResourceConfigCanonical =
+    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using StorageResourceConfig (the deprecated struct) for now.
 // We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
 // This alias is here for reference and future migration.
-

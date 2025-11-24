@@ -7,7 +7,7 @@ use nestgate_zfs::config::{CompressionType, PoolType};
 
 #[test]
 fn test_pool_type_variants() {
-    let types = vec![
+    let types = [
         PoolType::Standard,
         PoolType::Mirror,
         PoolType::RaidZ1,
@@ -80,7 +80,7 @@ fn test_all_pool_types_serialize() {
 
 #[test]
 fn test_compression_type_variants() {
-    let types = vec![
+    let types = [
         CompressionType::None,
         CompressionType::Lz4,
         CompressionType::Gzip,
@@ -182,21 +182,19 @@ fn test_match_compression_type() {
 
 #[test]
 fn test_pool_type_collection() {
-    let mut types = Vec::new();
-    types.push(PoolType::Standard);
-    types.push(PoolType::Mirror);
-    types.push(PoolType::RaidZ1);
+    let types = [PoolType::Standard, PoolType::Mirror, PoolType::RaidZ1];
 
     assert_eq!(types.len(), 3);
 }
 
 #[test]
 fn test_compression_type_collection() {
-    let mut compressions = Vec::new();
-    compressions.push(CompressionType::None);
-    compressions.push(CompressionType::Lz4);
-    compressions.push(CompressionType::Gzip);
-    compressions.push(CompressionType::Zstd);
+    let compressions = [
+        CompressionType::None,
+        CompressionType::Lz4,
+        CompressionType::Gzip,
+        CompressionType::Zstd,
+    ];
 
     assert_eq!(compressions.len(), 4);
 }
@@ -221,13 +219,14 @@ fn test_pool_and_compression_combination() {
 
 #[test]
 fn test_multiple_configurations() {
+    #[allow(dead_code)]
     struct PoolConfig {
         name: String,
         pool_type: PoolType,
         compression: CompressionType,
     }
 
-    let configs = vec![
+    let configs = [
         PoolConfig {
             name: "pool1".to_string(),
             pool_type: PoolType::Standard,

@@ -1,7 +1,7 @@
 /// Zero-cost Storage Provider Implementation
 /// Provides high-performance storage services with compile-time optimization.
 // CLEANED: Removed unused CanonicalService import as part of canonical modernization
-// use crate::traits::canonical_unified_traits::CanonicalService;
+// use crate::traits::canonical::CanonicalService;
 /// Simple signature struct for crypto operations
 #[derive(Debug, Clone)]
 pub struct Signature {

@@ -80,7 +80,7 @@ impl StorageTestDouble {
 
         // Simulate response delay
         if self.config.response_delay_ms > 0 {
-            sleep(Duration::from_millis(self.config.response_delay_ms)).await;
+            tokio::task::yield_now().await;
         }
 
         // Log if verbose

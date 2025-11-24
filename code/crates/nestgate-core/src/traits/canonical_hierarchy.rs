@@ -192,11 +192,11 @@ pub trait CanonicalService: Send + Sync + 'static {
 /// ```
 #[deprecated(
     since = "0.11.2",
-    note = "Use crate::traits::canonical_unified_traits::CanonicalProvider instead. \
+    note = "Use crate::traits::canonical::CanonicalProvider instead. \
             This alternative definition extends CanonicalService and is less flexible. \
             The canonical version is standalone with customizable Config/Error types. \
             Migration: Replace canonical_hierarchy::CanonicalProvider with \
-            canonical_unified_traits::CanonicalProvider and add explicit Config/Error types. \
+            canonical::CanonicalProvider and add explicit Config/Error types. \
             Target removal: v0.12.0 (May 2026). \
             See: CANONICAL_PROVIDER_COMPARISON.md for detailed migration guide."
 )]
@@ -298,11 +298,11 @@ pub trait CanonicalProvider<T>: CanonicalService {
 /// }
 /// ```
 ///
-/// **DEPRECATED**: Use `crate::traits::canonical_unified_traits::CanonicalStorage` instead.
+/// **DEPRECATED**: Use `crate::traits::canonical::CanonicalStorage` instead.
 /// This is a duplicate definition maintained for backward compatibility only.
 #[deprecated(
     since = "0.9.0",
-    note = "Use crate::traits::canonical_unified_traits::CanonicalStorage instead - unified in canonical_unified_traits module"
+    note = "Use crate::traits::canonical::CanonicalStorage instead - unified in canonical_unified_traits module"
 )]
 pub trait CanonicalStorage: CanonicalService {
     /// Storage key type
@@ -501,10 +501,10 @@ pub trait CanonicalStorage: CanonicalService {
 ///     }
 /// }
 /// ```
-/// **DEPRECATED**: Use canonical_unified_traits::CanonicalSecurity instead
+/// **DEPRECATED**: Use canonical::CanonicalSecurity instead
 #[deprecated(
     since = "0.9.0",
-    note = "Use crate::traits::canonical_unified_traits::CanonicalSecurity instead - unified in canonical_unified_traits module"
+    note = "Use crate::traits::canonical::CanonicalSecurity instead - unified in canonical_unified_traits module"
 )]
 pub trait CanonicalSecurity: CanonicalService {
     /// Token type (JWT, session, etc.)

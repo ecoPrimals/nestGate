@@ -6,6 +6,10 @@
 // **AUTO-CONVERSION**: Middleware automatically wraps responses
 // **MANUAL CONTROL**: Direct AIFirstResponse construction when needed
 
+#[cfg(test)]
+#[path = "ai_first_example_coverage_boost.rs"]
+mod ai_first_example_coverage_boost;
+
 use axum::{
     extract::{Path, Query},
     http::StatusCode,
@@ -302,12 +306,12 @@ pub async fn get_pool_info(
                     description: "Consider running pool scrub to check integrity".to_string(),
                     confidence: 0.8,
                     parameters: {
-                        let mut _params = HashMap::new();
-                        _params.insert(
+                        let mut params = HashMap::new();
+                        params.insert(
                             "pool_name".to_string(),
                             serde_json::Value::String(pool_name),
                         );
-                        _params
+                        params
                     },
                     priority: 1, // High priority for degraded pools
                     dependencies: Vec::new(),
@@ -568,3 +572,8 @@ pub fn ai_pool_status(Path(pool_name): Path<String>) -> Json<AIFirstResponse<Poo
 
     Json(ai_success_with_confidence(pool_info, 0.95))
 }
+
+// Tests moved to ai_first_example_tests.rs for file size compliance
+
+// Tests moved to ai_first_example_tests.rs for file size compliance
+// (703 lines of tests separated from 571 lines of implementation)

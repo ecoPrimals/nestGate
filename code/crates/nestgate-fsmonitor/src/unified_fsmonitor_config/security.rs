@@ -150,12 +150,12 @@ impl Default for AccessControlSettings {
             enabled: false,
             default_policy: "allow".to_string(),
             rules: Vec::new(),
-            ip_whitelist: Vec::new(),
-            ip_blacklist: Vec::new(),
-            user_whitelist: Vec::new(),
-            user_blacklist: Vec::new(),
-            process_whitelist: Vec::new(),
-            process_blacklist: Vec::new(),
+            ip_allowlist: Vec::new(),
+            ip_denylist: Vec::new(),
+            user_allowlist: Vec::new(),
+            user_denylist: Vec::new(),
+            process_allowlist: Vec::new(),
+            process_denylist: Vec::new(),
         }
     }
 }

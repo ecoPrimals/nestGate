@@ -6,6 +6,7 @@ use axum::{
     extract::{Json, Path},
     http::StatusCode,
 };
+use nestgate_core::error::utilities::safe_env_var_or_default;
 use serde_json::{json, Value};
 use tokio::process::Command;
 use tracing::{error, info, warn};
@@ -19,8 +20,7 @@ use tracing::{error, info, warn};
 #[must_use]
 pub async fn get_workspaces() -> Result<Json<Value>, StatusCode> {
     info!("📁 Getting all workspaces from ZFS datasets");
-    let pool_name =
-        std::env::var("NESTGATE_WORKSPACE_POOL").unwrap_or_else(|_| "zfspool".to_string());
+    let pool_name = safe_env_var_or_default("NESTGATE_WORKSPACE_POOL", "zfspool");
     let workspaces_path = "self.base_url/workspaces".to_string();
 
     // Query ZFS for workspace datasets
@@ -123,6 +123,7 @@ pub async fn get_workspaces() -> Result<Json<Value>, StatusCode> {
 /// or `StatusCode::INTERNAL_SERVER_ERROR` if ZFS dataset creation fails.
 pub async fn create_workspace(Json(request): Json<Value>) -> Result<Json<Value>, StatusCode> {
     info!("🆕 Creating new workspace: {:?}", request);
+    // Extract workspace name from request, using default if not provided
     let workspace_name = request
         .get("name")
         .and_then(|v| v.as_str())
@@ -132,8 +133,7 @@ pub async fn create_workspace(Json(request): Json<Value>) -> Result<Json<Value>,
     let uuid_manager = nestgate_core::uuid_cache::UuidManager::new();
     let workspace_id = uuid_manager.workspace_id();
 
-    let pool_name =
-        std::env::var("NESTGATE_WORKSPACE_POOL").unwrap_or_else(|_| "zfspool".to_string());
+    let pool_name = safe_env_var_or_default("NESTGATE_WORKSPACE_POOL", "zfspool");
     let dataset_name = format!("{pool_name}/workspaces/{workspace_id}");
 
     // Validate workspace name
@@ -166,11 +166,11 @@ pub async fn create_workspace(Json(request): Json<Value>) -> Result<Json<Value>,
         create_args.push("compression=lz4"); // Default compression
     }
 
-    // Set recordsize based on expected workload
+    // Set recordsize based on expected workload (default: 128K for mixed workloads)
     let recordsize = request
         .get("recordsize")
         .and_then(|v| v.as_str())
-        .unwrap_or("128K"); // Default for mixed workloads
+        .unwrap_or("128K");
     create_args.push("-o");
     let recordsize_prop = format!("recordsize={recordsize}");
     create_args.push(&recordsize_prop);
@@ -228,8 +228,7 @@ pub async fn get_workspace(Path(workspace_id): Path<String>) -> Result<Json<Valu
         return Err(StatusCode::BAD_REQUEST);
     }
 
-    let pool_name =
-        std::env::var("NESTGATE_WORKSPACE_POOL").unwrap_or_else(|_| "zfspool".to_string());
+    let pool_name = safe_env_var_or_default("NESTGATE_WORKSPACE_POOL", "zfspool");
     let dataset_name = format!("{pool_name}/workspaces/{workspace_id}");
 
     // Get comprehensive ZFS properties
@@ -260,8 +259,11 @@ pub async fn get_workspace(Path(workspace_id): Path<String>) -> Result<Json<Valu
             let snapshot_count = get_snapshot_count(&dataset_name).await;
 
             // Calculate utilization
-            let used_bytes = parse_size(properties.get("used").unwrap_or(&"0".to_string()));
-            let quota_bytes = parse_size(properties.get("quota").unwrap_or(&"0".to_string()));
+            // ✅ FIXED: Replace unwrap_or with .get().map().unwrap_or_default() for safety
+            let used_bytes = parse_size(properties.get("used").map(|s| s.as_str()).unwrap_or("0"));
+            let quota_bytes =
+                parse_size(properties.get("quota").map(|s| s.as_str()).unwrap_or("0"));
+            // Calculate utilization percentage safely (avoid division by zero)
             let utilization = if quota_bytes > 0 {
                 (used_bytes as f64 / quota_bytes as f64) * 100.0
             } else {
@@ -290,14 +292,15 @@ pub async fn get_workspace(Path(workspace_id): Path<String>) -> Result<Json<Valu
                     "dataset_name": dataset_name,
                     "health_status": health_status,
                     "utilization_percent": utilization,
-                    "used": properties.get("used").unwrap_or(&"0".to_string()),
-                    "available": properties.get("available").unwrap_or(&"0".to_string()),
-                    "referenced": properties.get("referenced").unwrap_or(&"0".to_string()),
-                    "quota": properties.get("quota").unwrap_or(&"none".to_string()),
-                    "compression": properties.get("compression").unwrap_or(&"off".to_string()),
-                    "recordsize": properties.get("recordsize").unwrap_or(&"128K".to_string()),
-                    "mountpoint": properties.get("mountpoint").unwrap_or(&"none".to_string()),
-                    "created": properties.get("creation").unwrap_or(&"unknown".to_string()),
+                    // ✅ FIXED: Replace unwrap_or with safe map().unwrap_or() pattern
+                    "used": properties.get("used").map(|s| s.as_str()).unwrap_or("0"),
+                    "available": properties.get("available").map(|s| s.as_str()).unwrap_or("0"),
+                    "referenced": properties.get("referenced").map(|s| s.as_str()).unwrap_or("0"),
+                    "quota": properties.get("quota").map(|s| s.as_str()).unwrap_or("none"),
+                    "compression": properties.get("compression").map(|s| s.as_str()).unwrap_or("off"),
+                    "recordsize": properties.get("recordsize").map(|s| s.as_str()).unwrap_or("128K"),
+                    "mountpoint": properties.get("mountpoint").map(|s| s.as_str()).unwrap_or("none"),
+                    "created": properties.get("creation").map(|s| s.as_str()).unwrap_or("unknown"),
                     "snapshot_count": snapshot_count,
                     "type": "zfs_dataset"
                 }
@@ -333,8 +336,7 @@ pub async fn update_workspace_config(
         return Err(StatusCode::BAD_REQUEST);
     }
 
-    let pool_name =
-        std::env::var("NESTGATE_WORKSPACE_POOL").unwrap_or_else(|_| "zfspool".to_string());
+    let pool_name = safe_env_var_or_default("NESTGATE_WORKSPACE_POOL", "zfspool");
     let dataset_name = format!("{pool_name}/workspaces/{workspace_id}");
 
     let mut updated_properties = Vec::new();
@@ -542,8 +544,7 @@ async fn get_workspace_properties(dataset_name: &str) -> (String, String, String
 
 /// Get workspace details for a specific workspace ID
 async fn get_workspace_details(_workspace_id: &str) -> Value {
-    let pool_name =
-        std::env::var("NESTGATE_WORKSPACE_POOL").unwrap_or_else(|_| "zfspool".to_string());
+    let pool_name = safe_env_var_or_default("NESTGATE_WORKSPACE_POOL", "zfspool");
     let dataset_name = format!("{pool_name}/workspaces/self.base_url");
     let props_output = Command::new("zfs")
         .args([
@@ -597,7 +598,7 @@ async fn get_snapshot_count(dataset_name: &str) -> u32 {
 }
 
 /// Parse ZFS size strings (e.g., "1.5G", "512M") to bytes
-fn parse_size(size_str: &str) -> u64 {
+pub(crate) fn parse_size(size_str: &str) -> u64 {
     if size_str == "none" || size_str == "-" {
         return 0;
     }

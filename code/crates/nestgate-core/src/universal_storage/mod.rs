@@ -21,10 +21,17 @@ pub mod consolidated_types;
 // Test expansion for consolidated types (Nov 6, 2025)
 #[cfg(test)]
 mod consolidated_types_tests;
-// Auto-configuration for storage backends
+
+#[cfg(test)]
+mod storage_edge_cases;
+#[cfg(test)]
+mod storage_error_tests; // Nov 23, 2025 - P1 test expansion // Nov 23, 2025 - P1-5 edge case tests
+                         // Auto-configuration for storage backends
 pub mod auto_configurator;
 // Storage detection and discovery
 pub mod storage_detector;
+// Storage detector runtime configuration
+pub mod storage_detector_config;
 // Zero-copy optimizations for storage operations
 // TEMPORARILY DISABLED: Compilation issues being resolved
 // pub mod zero_copy;
@@ -40,6 +47,8 @@ pub use zero_cost_storage_backend::ZeroCostStorageBackend;
 pub use zero_cost_storage_traits::{
     ZeroCostStorageBackend as ZeroCostStorageBackendTrait, ZeroCostStorageProvider,
 };
+// Re-export storage detector config
+pub use storage_detector_config::{SharedStorageDetectorConfig, StorageDetectorConfig};
 
 // Enterprise storage capabilities
 // TEMPORARILY DISABLED: Module compilation issues being resolved
@@ -67,7 +76,7 @@ pub use storage_detector::{DetectedStorage, StorageDetector};
 
 // **MIGRATION COMPLETE**:
 // All storage interfaces have been successfully migrated to the canonical system.
-// Use crate::traits::canonical_unified_traits::CanonicalStorage for all new storage implementations.
+// Use crate::traits::canonical::CanonicalStorage for all new storage implementations.
 // Use crate::traits::unified_storage::UnifiedStorage for comprehensive storage operations.
 
 #[cfg(test)]

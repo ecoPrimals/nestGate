@@ -5,12 +5,13 @@
 
 use chrono::Utc;
 
-use super::types::{
-    BenchmarkResult, ComputeAllocation, ComputeResources, CpuInfo, GpuInfo, LiveHardwareMetrics,
-    MemoryInfo, SystemProfile, TuningResult,
+use crate::handlers::hardware_tuning::types::{
+    BenchmarkResult, ComputeAllocation, ComputeResources, CpuInfo, LiveHardwareMetrics,
+    SystemProfile, TuningResult,
 };
 
 /// Create zero-initialized hardware metrics (used in stub implementations)
+#[must_use]
 pub fn create_zero_hardware_metrics() -> LiveHardwareMetrics {
     LiveHardwareMetrics {
         timestamp: Utc::now(),
@@ -27,25 +28,18 @@ pub fn create_zero_hardware_metrics() -> LiveHardwareMetrics {
 }
 
 /// Create stub compute resources (hardcoded system resources)
-pub fn create_stub_compute_resources() -> ComputeResources {
+#[must_use]
+pub const fn create_stub_compute_resources() -> ComputeResources {
     ComputeResources {
         available_cpu: 16,       // HARDCODED - Future: Use sysinfo crate
         available_memory_gb: 64, // HARDCODED - Future: Use sysinfo crate
         available_gpu: 2,        // HARDCODED - Future: Implement GPU detection
-        total_compute_units: 16,
-        memory: MemoryInfo {
-            total_gb: 64,
-            total_bytes: 64 * 1024 * 1024 * 1024,
-        },
-        gpus: vec![GpuInfo {
-            name: "NVIDIA RTX 4090".to_string(),
-            memory_mb: 24576,
-        }],
     }
 }
 
 /// Create stub compute allocation
-pub fn create_stub_compute_allocation() -> ComputeAllocation {
+#[must_use]
+pub const fn create_stub_compute_allocation() -> ComputeAllocation {
     ComputeAllocation {
         cpu_cores: 8,
         memory_gb: 16,
@@ -54,18 +48,18 @@ pub fn create_stub_compute_allocation() -> ComputeAllocation {
 }
 
 /// Create stub system profile
+#[must_use]
 pub fn create_stub_system_profile() -> SystemProfile {
     SystemProfile {
         cpu_profile: "high_performance".to_string(),
         memory_profile: "balanced".to_string(),
         storage_profile: "fast_ssd".to_string(),
         network_profile: "gigabit".to_string(),
-        system_tier: "professional".to_string(),
-        total_cores: 16,
     }
 }
 
 /// Create stub tuning result
+#[must_use]
 pub fn create_stub_tuning_result() -> TuningResult {
     TuningResult {
         profile_name: "test_profile".to_string(), // HARDCODED
@@ -78,30 +72,22 @@ pub fn create_stub_tuning_result() -> TuningResult {
 }
 
 /// Create stub benchmark result
-#[allow(clippy::too_many_arguments)] // Stub function needs all parameters for flexibility
+#[must_use]
 pub fn create_stub_benchmark_result(
     benchmark_type: &str,
     score: f64,
     duration_ms: u64,
-    cpu_score: u32,
-    memory_score: u32,
-    gpu_score: u32,
-    overall_score: u32,
 ) -> BenchmarkResult {
     BenchmarkResult {
         benchmark_type: benchmark_type.to_string(),
         score,
         duration_ms,
         metrics: create_zero_hardware_metrics(),
-        cpu_score,
-        memory_score,
-        gpu_score,
-        overall_score,
-        tested_at: Utc::now(),
     }
 }
 
 /// Create stub CPU info
+#[must_use]
 pub fn create_stub_cpu_info(cores: usize, model: &str) -> CpuInfo {
     CpuInfo {
         cores,
@@ -140,8 +126,8 @@ mod tests {
     #[test]
     fn test_create_stub_system_profile() {
         let profile = create_stub_system_profile();
-        assert_eq!(profile.total_cores, 16);
-        assert_eq!(profile.system_tier, "professional");
+        assert_eq!(profile.cpu_profile, "high_performance");
+        assert_eq!(profile.memory_profile, "balanced");
     }
 
     #[test]
@@ -153,10 +139,10 @@ mod tests {
 
     #[test]
     fn test_create_stub_benchmark_result() {
-        let result = create_stub_benchmark_result("cpu_test", 85.0, 5000, 85, 70, 0, 78);
+        let result = create_stub_benchmark_result("cpu_test", 85.0, 5000);
         assert_eq!(result.benchmark_type, "cpu_test");
         assert_eq!(result.score, 85.0);
-        assert_eq!(result.cpu_score, 85);
+        assert_eq!(result.duration_ms, 5000);
     }
 
     #[test]
@@ -191,25 +177,24 @@ mod tests {
     }
 
     #[test]
-    fn test_stub_resources_memory_bytes_calculation() {
+    fn test_stub_resources_memory_calculation() {
         let resources = create_stub_compute_resources();
-        assert_eq!(resources.memory.total_bytes, 64 * 1024 * 1024 * 1024);
-        assert_eq!(resources.memory.total_gb, 64);
-    }
-
-    #[test]
-    fn test_stub_resources_has_gpus() {
-        let resources = create_stub_compute_resources();
-        assert_eq!(resources.gpus.len(), 1);
-        assert_eq!(resources.gpus[0].name, "NVIDIA RTX 4090");
-        assert_eq!(resources.gpus[0].memory_mb, 24576);
-    }
-
-    #[test]
-    fn test_stub_resources_compute_units() {
-        let resources = create_stub_compute_resources();
-        assert_eq!(resources.total_compute_units, 16);
+        assert_eq!(resources.available_memory_gb, 64);
         assert_eq!(resources.available_cpu, 16);
+    }
+
+    #[test]
+    fn test_stub_resources_has_gpu_count() {
+        let resources = create_stub_compute_resources();
+        assert_eq!(resources.available_gpu, 2);
+        assert_eq!(resources.available_cpu, 16);
+    }
+
+    #[test]
+    fn test_stub_resources_compute_availability() {
+        let resources = create_stub_compute_resources();
+        assert_eq!(resources.available_cpu, 16);
+        assert_eq!(resources.available_memory_gb, 64);
     }
 
     #[test]
@@ -227,8 +212,6 @@ mod tests {
         assert_eq!(profile.memory_profile, "balanced");
         assert_eq!(profile.storage_profile, "fast_ssd");
         assert_eq!(profile.network_profile, "gigabit");
-        assert_eq!(profile.system_tier, "professional");
-        assert_eq!(profile.total_cores, 16);
     }
 
     #[test]
@@ -254,47 +237,37 @@ mod tests {
 
     #[test]
     fn test_stub_benchmark_custom_values() {
-        let result = create_stub_benchmark_result("memory_test", 92.5, 3000, 75, 92, 80, 82);
+        let result = create_stub_benchmark_result("memory_test", 92.5, 3000);
         assert_eq!(result.benchmark_type, "memory_test");
         assert_eq!(result.score, 92.5);
         assert_eq!(result.duration_ms, 3000);
-        assert_eq!(result.cpu_score, 75);
-        assert_eq!(result.memory_score, 92);
-        assert_eq!(result.gpu_score, 80);
-        assert_eq!(result.overall_score, 82);
     }
 
     #[test]
     fn test_stub_benchmark_zero_scores() {
-        let result = create_stub_benchmark_result("test", 0.0, 0, 0, 0, 0, 0);
+        let result = create_stub_benchmark_result("test", 0.0, 0);
         assert_eq!(result.score, 0.0);
-        assert_eq!(result.cpu_score, 0);
-        assert_eq!(result.overall_score, 0);
+        assert_eq!(result.duration_ms, 0);
     }
 
     #[test]
     fn test_stub_benchmark_max_scores() {
-        let result = create_stub_benchmark_result("max_test", 100.0, 1000, 100, 100, 100, 100);
+        let result = create_stub_benchmark_result("max_test", 100.0, 1000);
         assert_eq!(result.score, 100.0);
-        assert_eq!(result.cpu_score, 100);
-        assert_eq!(result.memory_score, 100);
-        assert_eq!(result.gpu_score, 100);
-        assert_eq!(result.overall_score, 100);
+        assert_eq!(result.duration_ms, 1000);
     }
 
     #[test]
     fn test_stub_benchmark_has_metrics() {
-        let result = create_stub_benchmark_result("test", 50.0, 5000, 50, 50, 50, 50);
+        let result = create_stub_benchmark_result("test", 50.0, 5000);
         assert_eq!(result.metrics.cpu_usage, 0.0);
     }
 
     #[test]
-    fn test_stub_benchmark_timestamp() {
-        let before = Utc::now();
-        let result = create_stub_benchmark_result("test", 75.0, 2000, 75, 75, 75, 75);
-        let after = Utc::now();
-        assert!(result.tested_at >= before);
-        assert!(result.tested_at <= after);
+    fn test_stub_benchmark_duration() {
+        let result = create_stub_benchmark_result("test", 75.0, 2000);
+        assert_eq!(result.duration_ms, 2000);
+        assert_eq!(result.score, 75.0);
     }
 
     #[test]
@@ -333,9 +306,9 @@ mod tests {
 
     #[test]
     fn test_benchmark_different_types() {
-        let cpu_bench = create_stub_benchmark_result("cpu", 85.0, 5000, 85, 70, 0, 78);
-        let mem_bench = create_stub_benchmark_result("memory", 90.0, 3000, 75, 90, 0, 82);
-        let gpu_bench = create_stub_benchmark_result("gpu", 95.0, 4000, 60, 70, 95, 75);
+        let cpu_bench = create_stub_benchmark_result("cpu", 85.0, 5000);
+        let mem_bench = create_stub_benchmark_result("memory", 90.0, 3000);
+        let gpu_bench = create_stub_benchmark_result("gpu", 95.0, 4000);
 
         assert_eq!(cpu_bench.benchmark_type, "cpu");
         assert_eq!(mem_bench.benchmark_type, "memory");
@@ -350,9 +323,9 @@ mod tests {
     }
 
     #[test]
-    fn test_resources_gpu_memory_in_mb() {
+    fn test_resources_gpu_count() {
         let resources = create_stub_compute_resources();
-        assert_eq!(resources.gpus[0].memory_mb, 24576); // 24 GB
+        assert_eq!(resources.available_gpu, 2);
     }
 
     #[test]
@@ -385,13 +358,13 @@ mod tests {
         let _allocation = create_stub_compute_allocation();
         let _profile = create_stub_system_profile();
         let _tuning = create_stub_tuning_result();
-        let _benchmark = create_stub_benchmark_result("test", 0.0, 0, 0, 0, 0, 0);
+        let _benchmark = create_stub_benchmark_result("test", 0.0, 0);
         let _cpu = create_stub_cpu_info(0, "");
     }
 
     #[test]
     fn test_benchmark_type_preserves_case() {
-        let result = create_stub_benchmark_result("CpuTest", 85.0, 5000, 85, 70, 0, 78);
+        let result = create_stub_benchmark_result("CpuTest", 85.0, 5000);
         assert_eq!(result.benchmark_type, "CpuTest");
     }
 

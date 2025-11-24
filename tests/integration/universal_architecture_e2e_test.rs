@@ -2,11 +2,11 @@
 //! 
 //! This test validates universal architecture E2E functionality using canonical patterns
 //! **CANONICAL MODERNIZATION**: Updated to use simple, working patterns
+//!
+//! **MODERN CONCURRENCY**: Uses yield_now() for async coordination instead of sleep().
 
 use nestgate_core::config::canonical_primary::NestGateCanonicalConfig as NestGateUnifiedConfig;
 use nestgate_core::constants::Environment;
-use std::time::Duration;
-use tokio::time::sleep;
 use tracing::info;
 
 /// Test universal architecture E2E configuration
@@ -43,7 +43,7 @@ async fn test_universal_architecture_system_integration() -> Result<(), Box<dyn 
         info!("Executing {} integration ({}ms)", operation, duration);
         
         // Simulate integration operation
-        sleep(Duration::from_millis(duration as u64)).await;
+        tokio::task::yield_now().await;
         
         // Verify integration operation is valid
         assert!(!operation.is_empty(), "Operation should be specified");
@@ -72,7 +72,7 @@ async fn test_universal_architecture_workflow() -> Result<(), Box<dyn std::error
         info!("Processing {} workflow ({}ms)", step, duration);
         
         // Simulate workflow step
-        sleep(Duration::from_millis(duration as u64)).await;
+        tokio::task::yield_now().await;
         
         // Verify workflow step is valid
         assert!(!step.is_empty(), "Step should be specified");
@@ -94,7 +94,7 @@ async fn test_universal_architecture_performance() -> Result<(), Box<dyn std::er
     // Test universal architecture performance cycles
     for i in 0..7 {
         let cycle_time = (i + 1) * 18;
-        sleep(Duration::from_millis(cycle_time as u64)).await;
+        tokio::task::yield_now().await;
         
         let elapsed = start_time.elapsed();
         info!("Architecture performance cycle {}: {}ms, total elapsed: {:?}", i + 1, cycle_time, elapsed);
@@ -125,7 +125,7 @@ async fn test_universal_architecture_scalability() -> Result<(), Box<dyn std::er
         info!("Testing {} scenario ({}ms)", scenario, scaling_time);
         
         // Simulate scalability scenario
-        sleep(Duration::from_millis(scaling_time as u64 / 2)).await;
+        tokio::task::yield_now().await;
         
         // Verify scalability scenario is valid
         assert!(!scenario.is_empty(), "Scenario should be specified");
@@ -154,7 +154,7 @@ async fn test_universal_architecture_resilience() -> Result<(), Box<dyn std::err
         info!("Testing {} mechanism ({}ms)", mechanism, resilience_time);
         
         // Simulate resilience mechanism
-        sleep(Duration::from_millis(resilience_time as u64)).await;
+        tokio::task::yield_now().await;
         
         // Verify resilience mechanism is valid
         assert!(!mechanism.is_empty(), "Mechanism should be specified");

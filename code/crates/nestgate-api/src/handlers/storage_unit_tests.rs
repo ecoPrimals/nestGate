@@ -11,25 +11,21 @@ mod tests {
 
     #[test]
     fn test_storage_handler_new() {
-        let handler = StorageHandler::new();
-        // Handler creation should succeed
-        assert!(std::mem::size_of_val(&handler) >= 0);
+        let _handler = StorageHandler::new();
+        // Handler creation should succeed (smoke test)
     }
 
     #[test]
     fn test_storage_handler_default() {
-        let handler = StorageHandler::default();
-        // Default should create valid handler
-        assert!(std::mem::size_of_val(&handler) >= 0);
+        let _handler = StorageHandler;
+        // Default should create valid handler (smoke test)
     }
 
     #[test]
     fn test_storage_handler_clone() {
         let handler1 = StorageHandler::new();
-        let handler2 = handler1.clone();
-        // Both handlers should be valid
-        assert!(std::mem::size_of_val(&handler1) >= 0);
-        assert!(std::mem::size_of_val(&handler2) >= 0);
+        let _handler2 = handler1.clone();
+        // Both handlers should be valid (smoke test)
     }
 
     // ==================== StoragePool Tests ====================
@@ -436,7 +432,7 @@ mod tests {
             pool_type: "raidz".to_string(),
         };
 
-        let debug_str = format!("{:?}", pool);
+        let debug_str = format!("{pool:?}");
         assert!(debug_str.contains("testpool"));
         assert!(debug_str.contains("ONLINE"));
     }
@@ -453,7 +449,7 @@ mod tests {
             compression: "lz4".to_string(),
         };
 
-        let debug_str = format!("{:?}", dataset);
+        let debug_str = format!("{dataset:?}");
         assert!(debug_str.contains("testpool/dataset1"));
         assert!(debug_str.contains("lz4"));
     }

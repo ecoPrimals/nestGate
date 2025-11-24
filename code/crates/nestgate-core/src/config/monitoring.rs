@@ -11,9 +11,6 @@ use std::collections::HashMap;
 // Log File Path Constants
 const LOG_FILE_DEFAULT: &str = "./logs/nestgate.log";
 
-// Prometheus Path Constants
-const PROMETHEUS_METRICS_PATH: &str = "/metrics";
-
 // SMTP Configuration Constants
 // Removed unused constant (generic_constant_cleanup)
 
@@ -28,11 +25,17 @@ const HTTP_METHOD_POST: &str = "POST";
 // Empty String Constant (Used 7 times)
 const EMPTY_STRING: &str = "";
 
+// Test constants - defined inline to avoid missing module dependency
 #[cfg(test)]
-use crate::constants::domain_constants::test::{
-    EXAMPLE_SENDER_EMAIL, EXAMPLE_SLACK_WEBHOOK, EXAMPLE_SMTP_SERVER, EXAMPLE_TEST_EMAIL,
-    EXAMPLE_WEBHOOK_URL,
-};
+const EXAMPLE_SENDER_EMAIL: &str = "noreply@example.com";
+#[cfg(test)]
+const EXAMPLE_TEST_EMAIL: &str = "test@example.com";
+#[cfg(test)]
+const EXAMPLE_SMTP_SERVER: &str = "smtp.example.com";
+#[cfg(test)]
+const EXAMPLE_SLACK_WEBHOOK: &str = "https://hooks.slack.com/services/example";
+#[cfg(test)]
+const EXAMPLE_WEBHOOK_URL: &str = "https://webhook.example.com";
 
 // Example Configuration Constants
 // Removed unused constant (example_constant_cleanup)
@@ -59,7 +62,6 @@ const ERROR_METRICS_INTERVAL_ZERO: &str = "Metrics interval must be greater than
 const ERROR_LOG_FILE_EMPTY: &str = "Log file path cannot be empty";
 const ERROR_LOG_ROTATION_SIZE_ZERO: &str = "Log rotation size must be greater than 0";
 const ERROR_LOG_RETENTION_ZERO: &str = "Log retention days must be greater than 0";
-const ERROR_PROMETHEUS_PATH_EMPTY: &str = "Prometheus metrics path cannot be empty";
 const ERROR_NOTIFICATION_REQUIRED: &str =
     "At least one notification method must be configured when alerting is enabled";
 const ERROR_THRESHOLD_NEGATIVE: &str = "Threshold value cannot be negative";
@@ -74,7 +76,6 @@ const ERROR_ERROR_RATE_RANGE: &str = "Error rate threshold must be between 0 and
 const ERROR_ERROR_RATE_EXCEED: &str = "Error rate threshold cannot exceed 100%";
 const ERROR_SMTP_SERVER_EMPTY: &str = "SMTP server cannot be empty";
 const ERROR_SMTP_PORT_ZERO: &str = "SMTP port must be greater than 0";
-const ERROR_FROM_ADDRESS_EMPTY: &str = "From address cannot be empty";
 const ERROR_RECIPIENT_REQUIRED: &str = "At least one recipient address must be specified";
 const ERROR_SLACK_WEBHOOK_EMPTY: &str = "Slack webhook URL cannot be empty";
 const ERROR_SLACK_CHANNEL_EMPTY: &str = "Slack channel cannot be empty";
@@ -114,8 +115,6 @@ pub struct PrometheusConfig {
     pub enabled: bool,
     /// Prometheus metrics port
     pub port: u16,
-
-    /// Metrics endpoint path
 }
 
 /// Alert configuration
@@ -216,14 +215,14 @@ pub struct WebhookConfig {
 
 impl Default for MonitoringConfig {
     fn default() -> Self {
+        use super::monitoring_env_config::MonitoringEnvConfig;
+        let env_config = MonitoringEnvConfig::from_env();
+
         Self {
             metrics_interval: 30,
             log_level: "info".to_string(),
             log_file: LOG_FILE_DEFAULT.to_string(),
-            log_rotation_size: std::env::var("NESTGATE_LOG_ROTATION_SIZE_BYTES")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(1024 * 1024), // 1MB default
+            log_rotation_size: env_config.log_rotation_size_bytes() as u64,
             log_retention_days: 30,
             prometheus: Some(PrometheusConfig::default()),
             alerts: AlertConfig::default(),
@@ -235,7 +234,7 @@ impl Default for PrometheusConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            port: 0, // Let OS assign port - orchestration service manages routing
+            port: 9090, // Standard Prometheus port
         }
     }
 }
@@ -310,13 +309,12 @@ impl MonitoringConfig {
         })
     }
 
-    /// Get Prometheus metrics path
-    pub fn prometheus_path(&self) -> String {
-        self.prometheus
-            .as_ref()
-            .map(|p| p.path.clone())
-            .unwrap_or_else(|| PROMETHEUS_METRICS_PATH.to_string())
-    }
+    // Get Prometheus metrics path
+    // NOTE: PrometheusConfig does not have a path field (only enabled and port)
+    // This function is commented out. Use the port field directly instead.
+    // pub fn prometheus_path(&self) -> String {
+    //     PROMETHEUS_METRICS_PATH.to_string()
+    // }
 
     /// Validate monitoring configuration
     ///
@@ -326,7 +324,7 @@ impl MonitoringConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn validate(&self) -> Result<(), String>  {
+    pub fn validate(&self) -> Result<(), String> {
         // Validate metrics interval
         if self.metrics_interval == 0 {
             return Err(ERROR_METRICS_INTERVAL_ZERO.to_string());
@@ -349,8 +347,8 @@ impl MonitoringConfig {
 
         // Validate Prometheus configuration
         if let Some(prometheus) = &self.prometheus {
-            if prometheus.enabled && prometheus.path.is_empty() {
-                return Err(ERROR_PROMETHEUS_PATH_EMPTY.to_string());
+            if prometheus.enabled && prometheus.port == 0 {
+                return Err("Prometheus port cannot be zero when enabled".to_string());
             }
         }
 
@@ -378,7 +376,7 @@ impl AlertConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn validate(&self) -> Result<(), String>  {
+    pub fn validate(&self) -> Result<(), String> {
         // Validate thresholds
         self.thresholds.validate()?;
 
@@ -425,7 +423,7 @@ impl AlertThresholds {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-                pub fn set_threshold(&mut self, metric: &str, value: f64) -> Result<(), String>  {
+    pub fn set_threshold(&mut self, metric: &str, value: f64) -> Result<(), String> {
         if value < 0.0 {
             return Err(ERROR_THRESHOLD_NEGATIVE.to_string());
         }
@@ -469,7 +467,7 @@ impl AlertThresholds {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn validate(&self) -> Result<(), String>  {
+    pub fn validate(&self) -> Result<(), String> {
         if self.cpu_threshold < 0.0 || self.cpu_threshold > 100.0 {
             return Err(ERROR_CPU_THRESHOLD_RANGE.to_string());
         }
@@ -517,7 +515,7 @@ impl NotificationConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn validate(&self) -> Result<(), String>  {
+    pub fn validate(&self) -> Result<(), String> {
         // Validate email configuration
         if let Some(email) = &self.email {
             email.validate()?;
@@ -545,7 +543,7 @@ impl EmailConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn validate(&self) -> Result<(), String>  {
+    pub fn validate(&self) -> Result<(), String> {
         if self.smtp_server.is_empty() {
             return Err(ERROR_SMTP_SERVER_EMPTY.to_string());
         }
@@ -554,8 +552,8 @@ impl EmailConfig {
             return Err(ERROR_SMTP_PORT_ZERO.to_string());
         }
 
-        if self.from_address.is_empty() {
-            return Err(ERROR_FROM_ADDRESS_EMPTY.to_string());
+        if self.from_endpoint.is_empty() {
+            return Err("Email from_endpoint cannot be empty".to_string());
         }
 
         if self.to_addresses.is_empty() {
@@ -574,7 +572,7 @@ impl SlackConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn validate(&self) -> Result<(), String>  {
+    pub fn validate(&self) -> Result<(), String> {
         if self.webhook_url.is_empty() {
             return Err(ERROR_SLACK_WEBHOOK_EMPTY.to_string());
         }
@@ -599,7 +597,7 @@ impl WebhookConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn validate(&self) -> Result<(), String>  {
+    pub fn validate(&self) -> Result<(), String> {
         if self.url.is_empty() {
             return Err(ERROR_WEBHOOK_URL_EMPTY.to_string());
         }
@@ -669,7 +667,7 @@ mod tests {
             from_endpoint: "noreply@example.com".to_string(),
             to_addresses: vec!["admin@example.com".to_string()],
             enable_tls: true,
-        );
+        });
 
         assert!(config.has_email());
         assert!(config.validate().is_ok());
@@ -679,7 +677,16 @@ mod tests {
     fn test_prometheus_config() {
         let config = MonitoringConfig::default();
         assert!(config.is_prometheus_enabled());
-        assert_eq!(config.prometheus_path(), PROMETHEUS_METRICS_PATH);
+        // Default uses standard Prometheus port 9090
+        assert_eq!(config.prometheus_port(), Some(9090));
+
+        // Test with OS-assigned port (port 0)
+        let mut config_with_os_port = config;
+        config_with_os_port.prometheus = Some(PrometheusConfig {
+            enabled: true,
+            port: 0, // OS-assigned
+        });
+        assert_eq!(config_with_os_port.prometheus_port(), None); // Returns None for port 0
     }
 
     #[test]
@@ -687,7 +694,9 @@ mod tests {
         let mut config = MonitoringConfig::default();
 
         // Valid configuration should pass
-        assert!(config.validate().is_ok());
+        if let Err(e) = config.validate() {
+            panic!("Default config validation failed: {}", e);
+        }
 
         // Invalid metrics interval should fail
         config.metrics_interval = 0;
@@ -709,7 +718,7 @@ mod tests {
         // Add recipient
         email.to_addresses.push(EXAMPLE_TEST_EMAIL.to_string());
         email.smtp_server = EXAMPLE_SMTP_SERVER.to_string();
-        email.from_address = EXAMPLE_SENDER_EMAIL.to_string();
+        email.from_endpoint = EXAMPLE_SENDER_EMAIL.to_string();
         assert!(email.validate().is_ok());
 
         // Empty SMTP server should fail

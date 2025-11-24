@@ -24,7 +24,7 @@ use crate::universal_storage::zero_copy::AdvancedZeroCopyBuffer;
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
 /// 
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::network::config::StreamingConfig;
 /// 

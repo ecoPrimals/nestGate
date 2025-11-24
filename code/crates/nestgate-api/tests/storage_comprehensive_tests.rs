@@ -506,7 +506,7 @@ fn test_storage_handler_creation() {
 
 #[test]
 fn test_storage_handler_default() {
-    let handler = StorageHandler::default();
+    let handler = StorageHandler;
     assert!(
         std::mem::size_of_val(&handler) >= 0,
         "StorageHandler default should work"
@@ -516,7 +516,7 @@ fn test_storage_handler_default() {
 #[test]
 fn test_storage_handler_clone() {
     let handler = StorageHandler::new();
-    let cloned = handler.clone();
+    let cloned = handler;
     assert!(
         std::mem::size_of_val(&cloned) >= 0,
         "StorageHandler should be cloneable"
@@ -548,7 +548,7 @@ fn test_storage_manager_default() {
 #[test]
 fn test_storage_manager_clone() {
     let manager = StorageManager::new();
-    let cloned = manager.clone();
+    let cloned = manager;
     assert!(
         std::mem::size_of_val(&cloned) >= 0,
         "StorageManager should be cloneable"
@@ -587,7 +587,7 @@ async fn test_get_storage_snapshots_returns_data() {
 
     let snapshots = result.expect("Failed to get snapshots").0;
     assert!(!snapshots.is_empty(), "Should return at least one snapshot");
-    assert!(snapshots[0].name.contains("@"));
+    assert!(snapshots[0].name.contains('@'));
 }
 
 #[tokio::test]
@@ -632,7 +632,7 @@ fn test_storage_dataset_empty_compression() {
         used: 500_000_000,
         available: 500_000_000,
         mount_point: "/mnt/test".to_string(),
-        compression: "".to_string(), // Empty compression
+        compression: String::new(), // Empty compression
     };
 
     assert!(dataset.compression.is_empty());

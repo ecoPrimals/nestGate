@@ -277,8 +277,7 @@ fn test_dashboard_time_range_intervals_performance() {
     // Should compute 86,400 intervals quickly (< 100ms)
     assert!(
         elapsed.as_millis() < 100,
-        "Interval computation took too long: {:?}",
-        elapsed
+        "Interval computation took too long: {elapsed:?}"
     );
     assert_eq!(intervals.len(), 86400);
 }
@@ -298,8 +297,7 @@ fn test_dashboard_time_range_data_points_performance() {
     // Should compute quickly even for large ranges
     assert!(
         elapsed.as_micros() < 1000,
-        "Data points computation took too long: {:?}",
-        elapsed
+        "Data points computation took too long: {elapsed:?}"
     );
     assert_eq!(points, 31536000);
 }

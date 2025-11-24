@@ -1,22 +1,22 @@
 //! Comprehensive Integration Tests
 //!
 //! End-to-end tests that verify multiple system components working together
+//!
+//! **MODERN CONCURRENCY**: Uses yield_now() for async coordination instead of sleep().
 
 use nestgate_core::{NestGateError, Result};
-use std::time::Duration;
-use tokio::time::sleep;
 
 /// Test complex async workflows
 #[tokio::test]
 async fn test_complex_async_workflow() -> Result<()> {
     // Simulate multi-stage async workflow
     let stage1 = async {
-        sleep(Duration::from_millis(5)).await;
+        tokio::task::yield_now().await;
         Ok::<i32, NestGateError>(10)
     };
 
     let stage2 = async {
-        sleep(Duration::from_millis(5)).await;
+        tokio::task::yield_now().await;
         Ok::<i32, NestGateError>(20)
     };
 
@@ -39,7 +39,7 @@ async fn test_error_recovery() -> Result<()> {
 
         // Simulate operation that succeeds on third try
         if attempts < 3 {
-            sleep(Duration::from_millis(1)).await;
+            tokio::task::yield_now().await;
             continue;
         }
 
@@ -77,7 +77,7 @@ async fn test_resource_pooling() -> Result<()> {
 async fn test_parallel_execution() -> Result<()> {
     let tasks = (0..10).map(|i| {
         tokio::spawn(async move {
-            sleep(Duration::from_millis(1)).await;
+            tokio::task::yield_now().await;
             i * 2
         })
     });
@@ -147,7 +147,7 @@ async fn test_rate_limiting() -> Result<()> {
     let mut successful_requests = 0;
 
     for _ in 0..5 {
-        sleep(interval).await;
+        tokio::task::yield_now().await;
         successful_requests += 1;
     }
 

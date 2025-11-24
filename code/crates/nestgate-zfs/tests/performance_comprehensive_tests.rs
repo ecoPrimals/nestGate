@@ -22,10 +22,15 @@ mod test_utils {
     use super::*;
 
     pub fn create_test_configuration_context() -> ZfsConfigurationContext {
+        let mut current_configuration = HashMap::new();
+        current_configuration.insert("compression".to_string(), "lz4".to_string());
+        current_configuration.insert("recordsize".to_string(), "128K".to_string());
+        current_configuration.insert("atime".to_string(), "off".to_string());
+
         ZfsConfigurationContext {
             pool_name: "testpool".to_string(),
             dataset_name: Some("testpool/data".to_string()),
-            current_configuration: HashMap::new(),
+            current_configuration,
             workload_pattern: WorkloadPattern {
                 access_pattern: AccessPattern::Random,
                 io_size_distribution: HashMap::new(),
@@ -34,7 +39,7 @@ mod test_utils {
             },
             system_capabilities: SystemCapabilities {
                 cpu_cores: 8,
-                memory_gb: 16,
+                memory_gb: 32,
                 storage_type: "SSD".to_string(),
                 network_bandwidth_gbps: 10.0,
             },
@@ -120,7 +125,6 @@ mod test_utils {
 #[cfg(test)]
 mod performance_metrics_tests {
     use super::test_utils::*;
-    use super::*;
 
     #[test]
     fn test_performance_metrics_creation() -> Result<(), Box<dyn std::error::Error>> {
@@ -299,7 +303,7 @@ mod optimization_tests {
 
 #[cfg(test)]
 mod alert_handling_tests {
-    use super::test_utils::*;
+
     use super::*;
 
     #[test]
@@ -375,7 +379,7 @@ mod alert_handling_tests {
 
 #[cfg(test)]
 mod tuning_tests {
-    use super::test_utils::*;
+
     use super::*;
 
     #[test]

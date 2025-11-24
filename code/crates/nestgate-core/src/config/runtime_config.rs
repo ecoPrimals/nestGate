@@ -8,6 +8,7 @@ use std::env;
 use std::net::SocketAddr;
 use std::str::FromStr;
 use crate::constants::hardcoding::{addresses, ports};
+use crate::error::utilities::safe_env_var_or_default;
 
 /// Runtime configuration manager that eliminates hardcoded values
 #[derive(Debug, Clone)]
@@ -41,7 +42,7 @@ pub struct RuntimeConfig {
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
 /// 
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::network::config::NetworkRuntimeConfig;
 /// 
@@ -74,7 +75,7 @@ pub struct NetworkRuntimeConfig {
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
 /// 
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::network::config::ServiceRuntimeConfig;
 /// 
@@ -126,7 +127,7 @@ pub struct StorageRuntimeConfig {
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
 /// 
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::network::config::SecurityRuntimeConfig;
 /// 
@@ -164,16 +165,17 @@ impl RuntimeConfig {
 
     /// Get the primary API socket address
     pub fn api_socket_addr(&self) -> SocketAddr {
+        let discovery_config = crate::config::discovery_config::ServiceDiscoveryConfig::default();
         let addr = if self.security.localhost_only {
-            format!("{}:{}", addresses::LOCALHOST_IPV4, self.network.api_port)
+            format!("{}:{}", discovery_config.discovery_host, self.network.api_port)
         } else {
             format!("{}:{}", self.network.bind_address, self.network.api_port)
         };
 
         SocketAddr::from_str(&addr).unwrap_or_else(|_| {
-            format!("{}:{}", addresses::LOCALHOST_IPV4, ports::HTTP_DEFAULT)
+            format!("{}:{}", discovery_config.discovery_host, discovery_config.discovery_base_port)
                 .parse()
-                .unwrap_or_else(|_| SocketAddr::from(([127, 0, 0, 1], ports::HTTP_DEFAULT)))
+                .unwrap_or_else(|_| SocketAddr::from(([127, 0, 0, 1], discovery_config.discovery_base_port)))
         })
     }
 
@@ -231,9 +233,9 @@ impl NetworkRuntimeConfig {
             .and_then(|s| s.parse().ok())
             .or_else(|| env::var("PORT").ok().and_then(|s| s.parse().ok()))
             .unwrap_or_else(|| {
-                // Intelligent default: use 8000 for production, 8080 for development
-                let env_type =
-                    env::var("NESTGATE_ENV").unwrap_or_else(|_| "development".to_string());
+                use crate::constants::hardcoding::ports;
+                // Intelligent default: use 8000 for production, HTTP_DEFAULT for development
+                let env_type = safe_env_var_or_default("NESTGATE_ENV", "development");
                 if env_type == "production" {
                     8000
                 } else {
@@ -256,16 +258,14 @@ impl NetworkRuntimeConfig {
             .and_then(|s| s.parse().ok())
             .unwrap_or(api_port + 3);
 
-        let bind_address = env::var("NESTGATE_BIND_ADDRESS").unwrap_or_else(|_| {
-            // Secure default: localhost only unless explicitly configured
-            if env::var("NESTGATE_ALLOW_EXTERNAL").is_ok() {
-                addresses::BIND_ALL_IPV4.to_string()
-            } else {
-                addresses::LOCALHOST_IPV4.to_string()
-            }
-        );
+        let bind_address_default = if env::var("NESTGATE_ALLOW_EXTERNAL").is_ok() {
+            addresses::BIND_ALL_IPV4
+        } else {
+            addresses::LOCALHOST_IPV4
+        };
+        let bind_address = safe_env_var_or_default("NESTGATE_BIND_ADDRESS", bind_address_default).to_string();
 
-        let hostname = env::var("NESTGATE_HOSTNAME").unwrap_or_else(|| addresses::LOCALHOST_NAME.to_string());
+        let hostname = safe_env_var_or_default("NESTGATE_HOSTNAME", addresses::LOCALHOST_NAME).to_string();
 
         // Load custom service endpoints from environment
         let mut service_endpoints = HashMap::new();
@@ -294,8 +294,7 @@ impl ServiceRuntimeConfig {
         let service_id = env::var("NESTGATE_SERVICE_ID")
             .unwrap_or_else(|_| format!("nestgate-{}", uuid::Uuid::new_v4().simple()));
 
-        let service_name =
-            env::var("NESTGATE_SERVICE_NAME").unwrap_or_else(|_| "nestgate".to_string());
+        let service_name = safe_env_var_or_default("NESTGATE_SERVICE_NAME", "nestgate").to_string();
 
         let environment = env::var("NESTGATE_ENV")
             .or_else(|_| env::var("NODE_ENV"))

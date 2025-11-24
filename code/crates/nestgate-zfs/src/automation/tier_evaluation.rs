@@ -7,8 +7,8 @@ use std::time::SystemTime;
 // Removed unused tracing import
 
 use super::types::{AutomationPolicy, DatasetMetadata};
-use crate::types::StorageTier;
 use crate::error::Result;
+use crate::types::StorageTier;
 use tracing::debug;
 use tracing::info;
 

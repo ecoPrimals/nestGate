@@ -16,7 +16,7 @@ use std::time::Duration;
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
 /// 
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::network::config::CanonicalServiceConfigs;
 /// 
@@ -50,7 +50,7 @@ pub struct CanonicalServiceConfigs {
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
 /// 
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::network::config::CanonicalDiscoveryConfig;
 /// 
@@ -111,7 +111,7 @@ pub struct BackendConfig {
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
 /// 
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::network::config::CanonicalRoutingConfig;
 /// 
@@ -207,7 +207,7 @@ pub struct ServiceCircuitBreakerConfig {
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
 /// 
 /// **Migration Path**:
-/// ```rust
+/// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::network::config::CanonicalRateLimitingConfig;
 /// 
@@ -263,8 +263,8 @@ pub struct CanonicalRetryConfig {
 impl Default for BackendConfig {
     fn default() -> Self {
         Self {
-            endpoint: "localhost".to_string(),
-            port: 8080,
+            endpoint: crate::constants::hardcoding::addresses::LOCALHOST_NAME.to_string(),
+            port: crate::constants::hardcoding::ports::HTTP_DEFAULT,
             weight: 1,
             max_connections: None,
         }

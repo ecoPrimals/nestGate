@@ -68,7 +68,7 @@ use crate::zero_cost_security_provider::{ZeroCostCredentials, ZeroCostSignature}
 // Import the trait from the dedicated traits module
 use crate::zero_cost_security_provider::traits::ZeroCostSecurityProvider;
 use crate::Result;
-use std::future::Future;
+// Removed unused import: use std::future::Future;
 
 // ==================== SECURITY PRIMAL ADAPTER ====================
 
@@ -103,137 +103,103 @@ pub struct SecurityPrimalAdapter<T>(pub T);
 impl<T: SecurityPrimalProvider + 'static> SecurityProvider for SecurityPrimalAdapter<T> {
     // ===== AUTHENTICATION =====
 
-    fn authenticate(&self, credentials: &[u8]) -> impl Future<Output = Result<AuthToken>> + Send {
-        async move {
-            // Convert raw bytes to Credentials structure
-            let creds = Credentials {
-                username: String::from_utf8_lossy(credentials).to_string(),
-                password: String::new(), // Simplified for adapter
-                mfa_token: None,
-                client_info: None,
-            };
-            // Convert universal_traits::AuthToken to canonical AuthToken
-            let token = self.0.authenticate(&creds).await?;
-            Ok(AuthToken {
-                token: token.token,
-                expires_at: token.expires_at,
-                permissions: token.permissions,
-            })
-        }
+    async fn authenticate(&self, credentials: &[u8]) -> Result<AuthToken> {
+        // Convert raw bytes to Credentials structure
+        let creds = Credentials {
+            username: String::from_utf8_lossy(credentials).to_string(),
+            password: String::new(), // Simplified for adapter
+            mfa_token: None,
+            client_info: None,
+        };
+        // Convert universal_traits::AuthToken to canonical AuthToken
+        let token = self.0.authenticate(&creds).await?;
+        Ok(AuthToken {
+            token: token.token,
+            expires_at: token.expires_at,
+            permissions: token.permissions,
+        })
     }
 
-    fn authorize(
-        &self,
-        token: &AuthToken,
-        data: &[u8],
-    ) -> impl Future<Output = Result<Vec<u8>>> + Send {
-        async move {
-            // SecurityPrimalProvider doesn't have authorize, decrypt as proxy
-            self.0.decrypt(data, "default").await
-        }
+    async fn authorize(&self, _token: &AuthToken, data: &[u8]) -> Result<Vec<u8>> {
+        // SecurityPrimalProvider doesn't have authorize, decrypt as proxy
+        self.0.decrypt(data, "default").await
     }
 
     // ===== TOKEN MANAGEMENT =====
 
-    fn validate_token(&self, _token: &AuthToken) -> impl Future<Output = Result<bool>> + Send {
-        async move {
-            // SecurityPrimalProvider doesn't have token validation
-            // Default to true for compatibility
-            Ok(true)
-        }
+    async fn validate_token(&self, _token: &AuthToken) -> Result<bool> {
+        // SecurityPrimalProvider doesn't have token validation
+        // Default to true for compatibility
+        Ok(true)
     }
 
-    fn refresh_token(&self, token: &AuthToken) -> impl Future<Output = Result<AuthToken>> + Send {
-        async move {
-            // Return same token (no refresh in SecurityPrimalProvider)
-            Ok(token.clone())
-        }
+    async fn refresh_token(&self, token: &AuthToken) -> Result<AuthToken> {
+        // Return same token (no refresh in SecurityPrimalProvider)
+        Ok(token.clone())
     }
 
-    fn revoke_token(&self, _token: &AuthToken) -> impl Future<Output = Result<()>> + Send {
-        async move {
-            // No-op for SecurityPrimalProvider
-            Ok(())
-        }
+    async fn revoke_token(&self, _token: &AuthToken) -> Result<()> {
+        // No-op for SecurityPrimalProvider
+        Ok(())
     }
 
     // ===== ENCRYPTION =====
 
-    fn encrypt(
-        &self,
-        data: &[u8],
-        algorithm: &str,
-    ) -> impl Future<Output = Result<Vec<u8>>> + Send {
-        async move { self.0.encrypt(data, algorithm).await }
+    async fn encrypt(&self, data: &[u8], algorithm: &str) -> Result<Vec<u8>> {
+        self.0.encrypt(data, algorithm).await
     }
 
-    fn decrypt(&self, data: &[u8]) -> impl Future<Output = Result<Option<Vec<u8>>>> + Send {
-        async move {
-            match self.0.decrypt(data, "default").await {
-                Ok(decrypted) => Ok(Some(decrypted)),
-                Err(_) => Ok(None),
-            }
+    async fn decrypt(&self, data: &[u8]) -> Result<Option<Vec<u8>>> {
+        match self.0.decrypt(data, "default").await {
+            Ok(decrypted) => Ok(Some(decrypted)),
+            Err(_) => Ok(None),
         }
     }
 
     // ===== SIGNING =====
 
-    fn sign(&self, data: &[u8]) -> impl Future<Output = Result<()>> + Send {
-        async move {
-            self.0.sign_data(data).await?;
-            Ok(())
-        }
+    async fn sign(&self, data: &[u8]) -> Result<()> {
+        self.0.sign_data(data).await?;
+        Ok(())
     }
 
-    fn verify(
-        &self,
-        data: &[u8],
-        signature: &[u8],
-    ) -> impl Future<Output = Result<Option<(String, Vec<u8>)>>> + Send {
-        async move {
-            let sig = Signature {
-                algorithm: "default".to_string(),
-                signature: signature.to_vec(),
-                key_id: None,
-            };
+    async fn verify(&self, data: &[u8], signature: &[u8]) -> Result<Option<(String, Vec<u8>)>> {
+        let sig = Signature {
+            algorithm: "default".to_string(),
+            signature: signature.to_vec(),
+            key_id: None,
+        };
 
-            match self.0.verify_signature(data, &sig).await {
-                Ok(true) => Ok(Some(("default".to_string(), vec![]))),
-                Ok(false) => Ok(None),
-                Err(e) => Err(e),
-            }
+        match self.0.verify_signature(data, &sig).await {
+            Ok(true) => Ok(Some(("default".to_string(), vec![]))),
+            Ok(false) => Ok(None),
+            Err(e) => Err(e),
         }
     }
 
     // ===== KEY MANAGEMENT =====
 
-    fn get_key_id(&self) -> impl Future<Output = Result<String>> + Send {
-        async move { self.0.get_key_id().await }
+    async fn get_key_id(&self) -> Result<String> {
+        self.0.get_key_id().await
     }
 
-    fn supported_algorithms(&self) -> impl Future<Output = Result<Vec<String>>> + Send {
-        async move {
-            // Return common algorithms
-            Ok(vec![
-                "AES-256-GCM".to_string(),
-                "ChaCha20-Poly1305".to_string(),
-                "SHA-256".to_string(),
-            ])
-        }
+    async fn supported_algorithms(&self) -> Result<Vec<String>> {
+        // Return common algorithms
+        Ok(vec![
+            "AES-256-GCM".to_string(),
+            "ChaCha20-Poly1305".to_string(),
+            "SHA-256".to_string(),
+        ])
     }
 
     // ===== UTILITIES =====
 
-    fn hash_data(
-        &self,
-        data: &[u8],
-        algorithm: &str,
-    ) -> impl Future<Output = Result<Vec<u8>>> + Send {
-        async move { self.0.hash_data(data, algorithm).await }
+    async fn hash_data(&self, data: &[u8], algorithm: &str) -> Result<Vec<u8>> {
+        self.0.hash_data(data, algorithm).await
     }
 
-    fn generate_random(&self, length: usize) -> impl Future<Output = Result<Vec<u8>>> + Send {
-        async move { self.0.generate_random(length).await }
+    async fn generate_random(&self, length: usize) -> Result<Vec<u8>> {
+        self.0.generate_random(length).await
     }
 }
 
@@ -245,71 +211,59 @@ impl<T: SecurityPrimalProvider + 'static> CanonicalUniversalProvider<Box<dyn Sec
     type Error = crate::NestGateError;
     type Metadata = ();
 
-    fn initialize(&self, _config: Self::Config) -> impl Future<Output = Result<()>> + Send {
-        async move { Ok(()) }
+    async fn initialize(&self, _config: Self::Config) -> Result<()> {
+        Ok(())
     }
 
-    fn provide(&self) -> impl Future<Output = Result<Box<dyn SecurityService>>> + Send {
-        async move {
-            Err(crate::NestGateError::internal_error(
-                "adapter_not_service_provider",
-                "SecurityPrimalAdapter is for trait adaptation, not service provision",
-            ))
-        }
+    async fn provide(&self) -> Result<Box<dyn SecurityService>> {
+        Err(crate::NestGateError::internal_error(
+            "adapter_not_service_provider",
+            "SecurityPrimalAdapter is for trait adaptation, not service provision",
+        ))
     }
 
-    fn stop(&self) -> impl Future<Output = Result<()>> + Send {
-        async move { Ok(()) }
+    async fn stop(&self) -> Result<()> {
+        Ok(())
     }
 
-    fn get_metadata(&self) -> impl Future<Output = Result<Self::Metadata>> + Send {
-        async move { Ok(()) }
+    async fn get_metadata(&self) -> Result<Self::Metadata> {
+        Ok(())
     }
 
-    fn health_check(&self) -> impl Future<Output = Result<ProviderHealth>> + Send {
-        async move {
-            Ok(ProviderHealth {
-                status: crate::traits::canonical_provider_unification::HealthStatus::Healthy,
-                checked_at: std::time::SystemTime::now(),
-                details: Default::default(),
-                metrics: crate::traits::canonical_provider_unification::ProviderMetrics {
-                    requests_total: 0,
-                    requests_successful: 0,
-                    requests_failed: 0,
-                    avg_response_time_ms: 0.0,
-                    active_connections: 0,
-                },
-            })
-        }
+    async fn health_check(&self) -> Result<ProviderHealth> {
+        Ok(ProviderHealth {
+            status: crate::traits::canonical_provider_unification::HealthStatus::Healthy,
+            checked_at: std::time::SystemTime::now(),
+            details: Default::default(),
+            metrics: crate::traits::canonical_provider_unification::ProviderMetrics {
+                requests_total: 0,
+                requests_successful: 0,
+                requests_failed: 0,
+                avg_response_time_ms: 0.0,
+                active_connections: 0,
+            },
+        })
     }
 
-    fn supported_types(&self) -> impl Future<Output = Result<Vec<UnifiedServiceType>>> + Send {
-        async move { Ok(vec![]) }
+    async fn supported_types(&self) -> Result<Vec<UnifiedServiceType>> {
+        Ok(vec![])
     }
 
-    fn supports_type(
-        &self,
-        _service_type: &UnifiedServiceType,
-    ) -> impl Future<Output = Result<bool>> + Send {
-        async move { Ok(false) }
+    async fn supports_type(&self, _service_type: &UnifiedServiceType) -> Result<bool> {
+        Ok(false)
     }
 
-    fn get_capabilities(&self) -> impl Future<Output = Result<ProviderCapabilities>> + Send {
-        async move {
-            Ok(ProviderCapabilities {
-                operations: vec!["authenticate".to_string(), "encrypt".to_string()],
-                max_concurrent: None,
-                protocols: vec![],
-                features: Default::default(),
-            })
-        }
+    async fn get_capabilities(&self) -> Result<ProviderCapabilities> {
+        Ok(ProviderCapabilities {
+            operations: vec!["authenticate".to_string(), "encrypt".to_string()],
+            max_concurrent: None,
+            protocols: vec![],
+            features: Default::default(),
+        })
     }
 
-    fn validate_config(
-        &self,
-        _config: &Self::Config,
-    ) -> impl Future<Output = Result<Vec<String>>> + Send {
-        async move { Ok(vec![]) }
+    async fn validate_config(&self, _config: &Self::Config) -> Result<Vec<String>> {
+        Ok(vec![])
     }
 }
 
@@ -349,158 +303,126 @@ impl<T: ZeroCostSecurityProvider + Send + Sync + 'static> SecurityProvider
 {
     // ===== AUTHENTICATION =====
 
-    fn authenticate(&self, credentials: &[u8]) -> impl Future<Output = Result<AuthToken>> + Send {
-        async move {
-            // Parse credentials as "username:password"
-            let cred_str = String::from_utf8_lossy(credentials);
-            let parts: Vec<&str> = cred_str.split(':').collect();
-            let (username, password) = if parts.len() >= 2 {
-                (parts[0].to_string(), parts[1].to_string())
-            } else {
-                (cred_str.to_string(), String::new())
-            };
+    async fn authenticate(&self, credentials: &[u8]) -> Result<AuthToken> {
+        // Parse credentials as "username:password"
+        let cred_str = String::from_utf8_lossy(credentials);
+        let parts: Vec<&str> = cred_str.split(':').collect();
+        let (username, password) = if parts.len() >= 2 {
+            (parts[0].to_string(), parts[1].to_string())
+        } else {
+            (cred_str.to_string(), String::new())
+        };
 
-            let creds = ZeroCostCredentials {
-                username,
-                password,
-                auth_method: crate::zero_cost_security_provider::types::AuthMethod::Password,
-                metadata: std::collections::HashMap::new(),
-            };
+        let creds = ZeroCostCredentials {
+            username,
+            password,
+            auth_method: crate::zero_cost_security_provider::types::AuthMethod::Password,
+            metadata: std::collections::HashMap::new(),
+        };
 
-            let token = self.0.authenticate(&creds).await?;
+        let token = self.0.authenticate(&creds).await?;
 
-            Ok(AuthToken {
-                token: token.token,
-                expires_at: token.expires_at,
-                permissions: token.permissions,
-            })
-        }
+        Ok(AuthToken {
+            token: token.token,
+            expires_at: token.expires_at,
+            permissions: token.permissions,
+        })
     }
 
-    fn authorize(
-        &self,
-        _token: &AuthToken,
-        data: &[u8],
-    ) -> impl Future<Output = Result<Vec<u8>>> + Send {
-        async move {
-            // Proxy through decrypt
-            self.0.decrypt(data, "default").await
-        }
+    async fn authorize(&self, _token: &AuthToken, data: &[u8]) -> Result<Vec<u8>> {
+        // Proxy through decrypt
+        self.0.decrypt(data, "default").await
     }
 
     // ===== TOKEN MANAGEMENT =====
 
-    fn validate_token(&self, token: &AuthToken) -> impl Future<Output = Result<bool>> + Send {
-        async move { self.0.validate_token(&token.token).await }
+    async fn validate_token(&self, token: &AuthToken) -> Result<bool> {
+        self.0.validate_token(&token.token).await
     }
 
-    fn refresh_token(&self, token: &AuthToken) -> impl Future<Output = Result<AuthToken>> + Send {
-        async move {
-            let refreshed = self.0.refresh_token(&token.token).await?;
+    async fn refresh_token(&self, token: &AuthToken) -> Result<AuthToken> {
+        let refreshed = self.0.refresh_token(&token.token).await?;
 
-            Ok(AuthToken {
-                token: refreshed.token,
-                expires_at: refreshed.expires_at,
-                permissions: refreshed.permissions,
-            })
-        }
+        Ok(AuthToken {
+            token: refreshed.token,
+            expires_at: refreshed.expires_at,
+            permissions: refreshed.permissions,
+        })
     }
 
-    fn revoke_token(&self, token: &AuthToken) -> impl Future<Output = Result<()>> + Send {
-        async move { self.0.revoke_token(&token.token).await }
+    async fn revoke_token(&self, token: &AuthToken) -> Result<()> {
+        self.0.revoke_token(&token.token).await
     }
 
     // ===== ENCRYPTION =====
 
-    fn encrypt(
-        &self,
-        data: &[u8],
-        algorithm: &str,
-    ) -> impl Future<Output = Result<Vec<u8>>> + Send {
-        async move { self.0.encrypt(data, algorithm).await }
+    async fn encrypt(&self, data: &[u8], algorithm: &str) -> Result<Vec<u8>> {
+        self.0.encrypt(data, algorithm).await
     }
 
-    fn decrypt(&self, data: &[u8]) -> impl Future<Output = Result<Option<Vec<u8>>>> + Send {
-        async move {
-            match self.0.decrypt(data, "default").await {
-                Ok(decrypted) => Ok(Some(decrypted)),
-                Err(_) => Ok(None),
-            }
+    async fn decrypt(&self, data: &[u8]) -> Result<Option<Vec<u8>>> {
+        match self.0.decrypt(data, "default").await {
+            Ok(decrypted) => Ok(Some(decrypted)),
+            Err(_) => Ok(None),
         }
     }
 
     // ===== SIGNING =====
 
-    fn sign(&self, data: &[u8]) -> impl Future<Output = Result<()>> + Send {
-        async move {
-            self.0.sign_data(data).await?;
-            Ok(())
-        }
+    async fn sign(&self, data: &[u8]) -> Result<()> {
+        self.0.sign_data(data).await?;
+        Ok(())
     }
 
-    fn verify(
-        &self,
-        data: &[u8],
-        signature: &[u8],
-    ) -> impl Future<Output = Result<Option<(String, Vec<u8>)>>> + Send {
-        async move {
-            // Convert signature bytes to base64 string
-            let sig_str = String::from_utf8_lossy(signature).to_string();
+    async fn verify(&self, data: &[u8], signature: &[u8]) -> Result<Option<(String, Vec<u8>)>> {
+        // Convert signature bytes to base64 string
+        let sig_str = String::from_utf8_lossy(signature).to_string();
 
-            let sig = ZeroCostSignature {
-                algorithm: "default".to_string(),
-                signature: sig_str,
-                key_id: String::new(),
-                timestamp: std::time::SystemTime::now(),
-                metadata: std::collections::HashMap::new(),
-            };
+        let sig = ZeroCostSignature {
+            algorithm: "default".to_string(),
+            signature: sig_str,
+            key_id: String::new(),
+            timestamp: std::time::SystemTime::now(),
+            metadata: std::collections::HashMap::new(),
+        };
 
-            match self.0.verify_signature(data, &sig).await {
-                Ok(true) => Ok(Some(("default".to_string(), vec![]))),
-                Ok(false) => Ok(None),
-                Err(e) => Err(e),
-            }
+        match self.0.verify_signature(data, &sig).await {
+            Ok(true) => Ok(Some(("default".to_string(), vec![]))),
+            Ok(false) => Ok(None),
+            Err(e) => Err(e),
         }
     }
 
     // ===== KEY MANAGEMENT =====
 
-    fn get_key_id(&self) -> impl Future<Output = Result<String>> + Send {
-        async move { Ok(self.0.get_key_id()) }
+    async fn get_key_id(&self) -> Result<String> {
+        Ok(self.0.get_key_id())
     }
 
-    fn supported_algorithms(&self) -> impl Future<Output = Result<Vec<String>>> + Send {
-        async move { Ok(self.0.supported_algorithms()) }
+    async fn supported_algorithms(&self) -> Result<Vec<String>> {
+        Ok(self.0.supported_algorithms())
     }
 
     // ===== UTILITIES =====
 
-    fn hash_data(
-        &self,
-        data: &[u8],
-        algorithm: &str,
-    ) -> impl Future<Output = Result<Vec<u8>>> + Send {
-        async move {
-            // ZeroCostSecurityProvider doesn't have hash_data
-            // Use a simple hash as fallback
-            use std::collections::hash_map::DefaultHasher;
-            use std::hash::{Hash, Hasher};
+    async fn hash_data(&self, data: &[u8], algorithm: &str) -> Result<Vec<u8>> {
+        // ZeroCostSecurityProvider doesn't have hash_data
+        // Use a simple hash as fallback
+        use std::collections::hash_map::DefaultHasher;
+        use std::hash::{Hash, Hasher};
 
-            let mut hasher = DefaultHasher::new();
-            data.hash(&mut hasher);
-            algorithm.hash(&mut hasher);
-            let hash = hasher.finish();
+        let mut hasher = DefaultHasher::new();
+        data.hash(&mut hasher);
+        algorithm.hash(&mut hasher);
+        let hash = hasher.finish();
 
-            Ok(hash.to_le_bytes().to_vec())
-        }
+        Ok(hash.to_le_bytes().to_vec())
     }
 
-    fn generate_random(&self, length: usize) -> impl Future<Output = Result<Vec<u8>>> + Send {
-        async move {
-            // ZeroCostSecurityProvider doesn't have generate_random
-            // Use a simple random generation as fallback
-            Ok(vec![0u8; length]) // Placeholder - real implementation would use rand crate
-        }
+    async fn generate_random(&self, length: usize) -> Result<Vec<u8>> {
+        // ZeroCostSecurityProvider doesn't have generate_random
+        // Use a simple random generation as fallback
+        Ok(vec![0u8; length]) // Placeholder - real implementation would use rand crate
     }
 }
 
@@ -512,83 +434,70 @@ impl<T: ZeroCostSecurityProvider + Send + Sync + 'static>
     type Error = crate::NestGateError;
     type Metadata = ();
 
-    fn initialize(&self, _config: Self::Config) -> impl Future<Output = Result<()>> + Send {
-        async move { Ok(()) }
+    async fn initialize(&self, _config: Self::Config) -> Result<()> {
+        Ok(())
     }
 
-    fn provide(&self) -> impl Future<Output = Result<Box<dyn SecurityService>>> + Send {
-        async move {
-            Err(crate::NestGateError::internal_error(
-                "adapter_not_service_provider",
-                "ZeroCostSecurityAdapter is for trait adaptation, not service provision",
-            ))
-        }
+    async fn provide(&self) -> Result<Box<dyn SecurityService>> {
+        Err(crate::NestGateError::internal_error(
+            "adapter_not_service_provider",
+            "ZeroCostSecurityAdapter is for trait adaptation, not service provision",
+        ))
     }
 
-    fn stop(&self) -> impl Future<Output = Result<()>> + Send {
-        async move { Ok(()) }
+    async fn stop(&self) -> Result<()> {
+        Ok(())
     }
 
-    fn get_metadata(&self) -> impl Future<Output = Result<Self::Metadata>> + Send {
-        async move { Ok(()) }
+    async fn get_metadata(&self) -> Result<Self::Metadata> {
+        Ok(())
     }
 
-    fn health_check(&self) -> impl Future<Output = Result<ProviderHealth>> + Send {
-        async move {
-            let health = self.0.health_check().await;
+    async fn health_check(&self) -> Result<ProviderHealth> {
+        let _health = self.0.health_check().await;
 
-            Ok(ProviderHealth {
-                status: crate::traits::canonical_provider_unification::HealthStatus::Healthy,
-                checked_at: std::time::SystemTime::now(),
-                details: Default::default(),
-                metrics: crate::traits::canonical_provider_unification::ProviderMetrics {
-                    requests_total: 0,
-                    requests_successful: 0,
-                    requests_failed: 0,
-                    avg_response_time_ms: 0.0,
-                    active_connections: 0,
-                },
-            })
-        }
+        Ok(ProviderHealth {
+            status: crate::traits::canonical_provider_unification::HealthStatus::Healthy,
+            checked_at: std::time::SystemTime::now(),
+            details: Default::default(),
+            metrics: crate::traits::canonical_provider_unification::ProviderMetrics {
+                requests_total: 0,
+                requests_successful: 0,
+                requests_failed: 0,
+                avg_response_time_ms: 0.0,
+                active_connections: 0,
+            },
+        })
     }
 
-    fn supported_types(&self) -> impl Future<Output = Result<Vec<UnifiedServiceType>>> + Send {
-        async move { Ok(vec![]) }
+    async fn supported_types(&self) -> Result<Vec<UnifiedServiceType>> {
+        Ok(vec![])
     }
 
-    fn supports_type(
-        &self,
-        _service_type: &UnifiedServiceType,
-    ) -> impl Future<Output = Result<bool>> + Send {
-        async move { Ok(false) }
+    async fn supports_type(&self, _service_type: &UnifiedServiceType) -> Result<bool> {
+        Ok(false)
     }
 
-    fn get_capabilities(&self) -> impl Future<Output = Result<ProviderCapabilities>> + Send {
-        async move {
-            Ok(ProviderCapabilities {
-                operations: vec![
-                    "authenticate".to_string(),
-                    "encrypt".to_string(),
-                    "sign".to_string(),
-                ],
-                max_concurrent: None,
-                protocols: vec![],
-                features: Default::default(),
-            })
-        }
+    async fn get_capabilities(&self) -> Result<ProviderCapabilities> {
+        Ok(ProviderCapabilities {
+            operations: vec![
+                "authenticate".to_string(),
+                "encrypt".to_string(),
+                "sign".to_string(),
+            ],
+            max_concurrent: None,
+            protocols: vec![],
+            features: Default::default(),
+        })
     }
 
-    fn validate_config(
-        &self,
-        _config: &Self::Config,
-    ) -> impl Future<Output = Result<Vec<String>>> + Send {
-        async move { Ok(vec![]) }
+    async fn validate_config(&self, _config: &Self::Config) -> Result<Vec<String>> {
+        Ok(vec![])
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_adapters_compile() {

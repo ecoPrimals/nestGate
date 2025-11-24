@@ -2,7 +2,7 @@
 // Optimization operations with circuit breaker and retry logic.
 
 use crate::handlers::zfs::universal_zfs::traits::UniversalZfsService;
-use crate::handlers::zfs::universal_zfs::types::{UniversalZfsError, UniversalZfsResult};
+use crate::handlers::zfs::universal_zfs_types::{UniversalZfsError, UniversalZfsResult};
 
 use super::core::FailSafeZfsService;
 
@@ -11,11 +11,10 @@ pub async fn optimize(service: &FailSafeZfsService) -> UniversalZfsResult<String
     if !service.circuit_breaker.can_execute().await {
         if let Some(fallback) = &service.fallback {
             return fallback.optimize().await;
-        } else {
-            return Err(UniversalZfsError::CircuitBreakerOpen {
-                service: "zfs_optimization".to_string(),
-            });
         }
+        return Err(UniversalZfsError::CircuitBreakerOpen {
+            backend: "zfs_optimization".to_string(),
+        });
     }
 
     // Execute primary service with circuit breaker tracking
@@ -42,11 +41,10 @@ pub async fn get_optimization_analytics(
     if !service.circuit_breaker.can_execute().await {
         if let Some(fallback) = &service.fallback {
             return fallback.get_optimization_analytics().await;
-        } else {
-            return Err(UniversalZfsError::CircuitBreakerOpen {
-                service: "zfs_optimization".to_string(),
-            });
         }
+        return Err(UniversalZfsError::CircuitBreakerOpen {
+            backend: "zfs_optimization".to_string(),
+        });
     }
 
     // Execute primary service with circuit breaker tracking
@@ -74,11 +72,10 @@ pub async fn predict_tier(
     if !service.circuit_breaker.can_execute().await {
         if let Some(fallback) = &service.fallback {
             return fallback.predict_tier(file_path).await;
-        } else {
-            return Err(UniversalZfsError::CircuitBreakerOpen {
-                service: "zfs_optimization".to_string(),
-            });
         }
+        return Err(UniversalZfsError::CircuitBreakerOpen {
+            backend: "zfs_optimization".to_string(),
+        });
     }
 
     // Execute primary service with circuit breaker tracking
@@ -105,11 +102,10 @@ pub async fn get_configuration(
     if !service.circuit_breaker.can_execute().await {
         if let Some(fallback) = &service.fallback {
             return fallback.get_configuration().await;
-        } else {
-            return Err(UniversalZfsError::CircuitBreakerOpen {
-                service: "zfs_optimization".to_string(),
-            });
         }
+        return Err(UniversalZfsError::CircuitBreakerOpen {
+            backend: "zfs_optimization".to_string(),
+        });
     }
 
     // Execute primary service with circuit breaker tracking
@@ -137,11 +133,10 @@ pub async fn update_configuration(
     if !service.circuit_breaker.can_execute().await {
         if let Some(fallback) = &service.fallback {
             return fallback.update_configuration(config).await;
-        } else {
-            return Err(UniversalZfsError::CircuitBreakerOpen {
-                service: "zfs_optimization".to_string(),
-            });
         }
+        return Err(UniversalZfsError::CircuitBreakerOpen {
+            backend: "zfs_optimization".to_string(),
+        });
     }
 
     // Execute primary service with circuit breaker tracking
@@ -166,11 +161,10 @@ pub async fn shutdown(service: &FailSafeZfsService) -> UniversalZfsResult<()> {
     if !service.circuit_breaker.can_execute().await {
         if let Some(fallback) = &service.fallback {
             return fallback.shutdown().await;
-        } else {
-            return Err(UniversalZfsError::CircuitBreakerOpen {
-                service: "zfs_optimization".to_string(),
-            });
         }
+        return Err(UniversalZfsError::CircuitBreakerOpen {
+            backend: "zfs_optimization".to_string(),
+        });
     }
 
     // Execute primary service with circuit breaker tracking

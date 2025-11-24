@@ -18,6 +18,7 @@ use tracing::{error, info};
 use uuid::Uuid;
 
 use crate::routes::AppState;
+use nestgate_core::error::utilities::safe_env_var_or_default;
 use nestgate_zfs::types::SnapshotInfo;
 pub mod handlers;
 pub mod types;
@@ -438,8 +439,8 @@ impl ZfsStorageProvider {
     /// Get pool information
     async fn get_pool_info(&self) -> Result<serde_json::Value, String> {
         let mut cmd = tokio::process::Command::new("zpool");
-        let pool_name = std::env::var("NESTGATE_POOL_NAME").unwrap_or_else(|_| "zfspool".to_string());
-        cmd.args(["list", "-H", "-o", "size,alloc,free,health", &pool_name]);
+        let pool_name = safe_env_var_or_default("NESTGATE_POOL_NAME", "zfspool");
+        cmd.args(["list", "-H", "-o", "size,alloc,free,health", pool_name]);
 
         let output = cmd
             .output()

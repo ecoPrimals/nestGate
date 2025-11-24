@@ -153,3 +153,140 @@ impl MigrationRules {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_migration_rules_hot_tier_defaults() {
+        let rules = MigrationRules::hot_tier_defaults();
+        assert!(rules.enable_auto_migration);
+        assert_eq!(rules.age_threshold_days, 7);
+        assert_eq!(rules.access_frequency_threshold, 100.0);
+        assert!(rules.auto_migration_enabled);
+    }
+
+    #[test]
+    fn test_migration_rules_warm_tier_defaults() {
+        let rules = MigrationRules::warm_tier_defaults();
+        assert!(rules.enable_auto_migration);
+        assert_eq!(rules.age_threshold_days, 30);
+        assert_eq!(rules.access_frequency_threshold, 20.0);
+    }
+
+    #[test]
+    fn test_migration_rules_cold_tier_defaults() {
+        let rules = MigrationRules::cold_tier_defaults();
+        assert!(rules.enable_auto_migration);
+        assert_eq!(rules.age_threshold_days, 90);
+        assert_eq!(rules.access_frequency_threshold, 1.0);
+    }
+
+    #[test]
+    fn test_migration_schedule_default() {
+        let schedule = MigrationSchedule::default();
+        assert_eq!(schedule.allowed_hours.len(), 0);
+        assert_eq!(schedule.max_concurrent, 0);
+        assert!(!schedule.off_peak_priority_boost);
+    }
+
+    #[test]
+    fn test_migration_performance_limits_default() {
+        let limits = MigrationPerformanceLimits::default();
+        assert_eq!(limits.max_cpu_usage, 0.0);
+        assert_eq!(limits.max_memory_usage, 0.0);
+        assert_eq!(limits.max_io_impact, 0.0);
+    }
+
+    #[test]
+    fn test_tier_size_thresholds_creation() {
+        let thresholds = TierSizeThresholds {
+            hot_max_size: 1024 * 1024 * 100,   // 100MB
+            warm_max_size: 1024 * 1024 * 1024, // 1GB
+        };
+        assert_eq!(thresholds.hot_max_size, 104857600);
+        assert_eq!(thresholds.warm_max_size, 1073741824);
+    }
+
+    #[test]
+    fn test_access_pattern_rules_creation() {
+        let rules = AccessPatternRules {
+            hot_access_threshold: 100,
+            warm_access_threshold: 20,
+            cold_age_threshold: 90,
+        };
+        assert_eq!(rules.hot_access_threshold, 100);
+        assert_eq!(rules.warm_access_threshold, 20);
+        assert_eq!(rules.cold_age_threshold, 90);
+    }
+
+    #[test]
+    fn test_performance_requirement_creation() {
+        let req = PerformanceRequirement {
+            max_latency_ms: 10.0,
+            min_throughput_mbps: 100.0,
+            min_iops: 1000,
+        };
+        assert_eq!(req.max_latency_ms, 10.0);
+        assert_eq!(req.min_throughput_mbps, 100.0);
+        assert_eq!(req.min_iops, 1000);
+    }
+
+    #[test]
+    fn test_lifecycle_rules_creation() {
+        let rules = LifecycleRules {
+            enable_cleanup: true,
+            cleanup_age_days: 365,
+            enable_auto_compression: true,
+            compression_age_days: 30,
+            enable_auto_archival: true,
+            archival_age_days: 90,
+        };
+        assert!(rules.enable_cleanup);
+        assert_eq!(rules.cleanup_age_days, 365);
+        assert!(rules.enable_auto_compression);
+    }
+
+    #[test]
+    fn test_performance_thresholds_creation() {
+        let thresholds = PerformanceThresholds {
+            max_latency_ms: 100.0,
+            min_throughput_mbps: 50.0,
+            max_error_rate: 0.01,
+            max_utilization: 80.0,
+        };
+        assert_eq!(thresholds.max_latency_ms, 100.0);
+        assert_eq!(thresholds.max_error_rate, 0.01);
+    }
+
+    #[test]
+    fn test_migration_schedule_clone() {
+        let schedule1 = MigrationSchedule {
+            allowed_hours: vec![1, 2, 3],
+            max_concurrent: 5,
+            off_peak_priority_boost: true,
+        };
+        let schedule2 = schedule1.clone();
+        assert_eq!(schedule1.allowed_hours, schedule2.allowed_hours);
+    }
+
+    #[test]
+    fn test_tier_assignment_rules_serialization() {
+        let rules = TierAssignmentRules {
+            auto_assign_new: true,
+            size_thresholds: TierSizeThresholds {
+                hot_max_size: 100,
+                warm_max_size: 1000,
+            },
+            access_pattern_rules: AccessPatternRules {
+                hot_access_threshold: 50,
+                warm_access_threshold: 10,
+                cold_age_threshold: 90,
+            },
+            performance_requirements: HashMap::new(),
+        };
+        let serialized = serde_json::to_string(&rules).unwrap();
+        assert!(serialized.contains("auto_assign_new"));
+    }
+}

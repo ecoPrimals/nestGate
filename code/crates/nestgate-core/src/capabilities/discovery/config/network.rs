@@ -31,6 +31,11 @@ impl Default for NetworkDiscoverySettings {
 }
 
 impl NetworkDiscoverySettings {
+    /// Validates the network discovery settings
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the settings are invalid
     pub fn validate(&self) -> crate::Result<()> {
         Ok(())
     }

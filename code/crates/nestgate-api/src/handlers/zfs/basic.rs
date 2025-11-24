@@ -12,7 +12,8 @@ use nestgate_zfs::{
 // Development: Use stubs for local development without ZFS
 #[cfg(feature = "dev-stubs")]
 use crate::dev_stubs::zfs::{
-    ProductionZfsManager, ZeroCostDatasetInfo, ZeroCostPoolInfo, ZeroCostSnapshotInfo,
+    DatasetOperations, PoolOperations, ProductionZfsManager, SnapshotOperations,
+    ZeroCostDatasetInfo, ZeroCostPoolInfo, ZeroCostSnapshotInfo,
 };
 
 use crate::routes::AppState;
@@ -158,10 +159,17 @@ pub async fn create_pool(
     );
 
     match get_zfs_service(&state).await {
-        Ok(service) => match service.create_pool(&request.name, &request._devices.clone()) {
-            Ok(pool) => {
+        Ok(service) => match service.create_pool(&request.name, request._devices.clone(), None) {
+            Ok(_) => {
                 info!("✅ Pool created successfully: {}", request.name);
-                Ok(Json(pool))
+                // Return a basic response since create_pool doesn't return pool info
+                Ok(Json(ZeroCostPoolInfo {
+                    name: request.name.clone(),
+                    health: "ONLINE".to_string(),
+                    size: 0,
+                    allocated: 0,
+                    free: 0,
+                }))
             }
             Err(e) => {
                 error!("❌ Failed to create pool: {}", e);
@@ -432,12 +440,18 @@ pub async fn create_snapshot(
                                 datasets.into_iter().find(|d| d.name == dataset_name)
                             {
                                 match service.create_snapshot(&dataset.name, &request.name) {
-                                    Ok(snapshot) => {
+                                    Ok(_) => {
                                         info!(
                                             "✅ Snapshot created successfully: {}/{}@{}",
                                             pool_name, dataset_name, request.name
                                         );
-                                        Ok(Json(snapshot))
+                                        // Return a basic response since create_snapshot doesn't return snapshot info
+                                        Ok(Json(ZeroCostSnapshotInfo {
+                                            name: format!("{}@{}", dataset.name, request.name),
+                                            creation_time: chrono::Utc::now().to_rfc3339(),
+                                            used: 0,
+                                            referenced: 0,
+                                        }))
                                     }
                                     Err(e) => {
                                         error!("❌ Failed to create snapshot: {}", e);
