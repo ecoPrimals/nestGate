@@ -93,8 +93,9 @@ pub struct ConfigMetadata {
 /// - Consensus algorithms
 /// - Network topology preferences
 /// - Replication strategies
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+///
 /// Configuration for Federation
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct FederationConfig {
     // Reserved for future federation implementation
     _reserved: (),

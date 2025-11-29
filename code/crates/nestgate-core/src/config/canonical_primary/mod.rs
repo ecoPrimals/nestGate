@@ -113,7 +113,7 @@ pub struct NestGateCanonicalConfig<
     const MAX_CONNECTIONS: usize = 1000,
     const BUFFER_SIZE: usize = 65536,
     const TIMEOUT_MS: u64 = 30000,
-    /// Api Port
+    // Api Port (const generic parameter)
     const API_PORT: u16 = 8080,
 > {
     /// System-level configuration
@@ -184,7 +184,7 @@ impl<
         const MAX_CONNECTIONS: usize,
         const BUFFER_SIZE: usize,
         const TIMEOUT_MS: u64,
-        /// Api Port
+        // Api Port (const generic parameter)
         const API_PORT: u16,
     > NestGateCanonicalConfig<MAX_CONNECTIONS, BUFFER_SIZE, TIMEOUT_MS, API_PORT>
 {
@@ -301,7 +301,7 @@ impl<
         const MAX_CONNECTIONS: usize,
         const BUFFER_SIZE: usize,
         const TIMEOUT_MS: u64,
-        /// Api Port
+        // Api Port (const generic parameter)
         const API_PORT: u16,
     > Default for NestGateCanonicalConfig<MAX_CONNECTIONS, BUFFER_SIZE, TIMEOUT_MS, API_PORT>
 {

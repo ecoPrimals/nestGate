@@ -7,6 +7,13 @@ mod network_service_manager_tests {
     use super::super::handlers::NetworkServiceManager;
     use super::super::types::{ConnectionInfo, NetworkConfig, ServiceInfo};
 
+    // Test constants
+    const TEST_PORT: u16 = 18080;
+    
+    fn test_endpoint() -> String {
+        format!("localhost:{}", TEST_PORT)
+    }
+
     // ==================== CREATION TESTS ====================
 
     #[test]
@@ -34,7 +41,7 @@ mod network_service_manager_tests {
         let config = NetworkConfig::default();
         let manager = NetworkServiceManager::new(config);
 
-        let connection = ConnectionInfo::new("conn-1".to_string(), "localhost:8080".to_string());
+        let connection = ConnectionInfo::new("conn-1".to_string(), test_endpoint());
 
         manager.add_connection(connection).await;
     }
@@ -58,7 +65,7 @@ mod network_service_manager_tests {
         let config = NetworkConfig::default();
         let manager = NetworkServiceManager::new(config);
 
-        let connection = ConnectionInfo::new("conn-1".to_string(), "localhost:8080".to_string());
+        let connection = ConnectionInfo::new("conn-1".to_string(), test_endpoint());
         let conn_id = connection.id().to_string();
 
         manager.add_connection(connection).await;
@@ -92,7 +99,7 @@ mod network_service_manager_tests {
         let config = NetworkConfig::default();
         let manager = NetworkServiceManager::new(config);
 
-        let service = ServiceInfo::new("service-1".to_string(), "localhost:8080".to_string());
+        let service = ServiceInfo::new("service-1".to_string(), test_endpoint());
 
         manager.add_service(service).await;
     }
@@ -116,7 +123,7 @@ mod network_service_manager_tests {
         let config = NetworkConfig::default();
         let manager = NetworkServiceManager::new(config);
 
-        let service = ServiceInfo::new("service-1".to_string(), "localhost:8080".to_string());
+        let service = ServiceInfo::new("service-1".to_string(), test_endpoint());
         let service_id = service.id().to_string();
 
         manager.add_service(service).await;

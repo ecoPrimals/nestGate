@@ -9,16 +9,49 @@ pub mod network {
 
     use super::safe_env_var_or_default;
 
-    /// Default API base URL
+    /// Default API base URL (environment-driven)
+    ///
+    /// Uses `NESTGATE_API_PORT` environment variable if set, otherwise defaults to 8080
+    pub fn default_api_base_url() -> String {
+        let port = safe_env_var_or_default("NESTGATE_API_PORT", "8080");
+        format!("http://localhost:{}", port)
+    }
+
+    /// Default API base URL constant (for backwards compatibility)
+    #[deprecated(since = "0.9.0", note = "Use default_api_base_url() function instead")]
     pub const DEFAULT_API_BASE_URL: &str = "http://localhost:8080";
 
-    /// Default WebSocket URL  
+    /// Default WebSocket URL (environment-driven)
+    ///
+    /// Uses `NESTGATE_WEBSOCKET_PORT` environment variable if set, otherwise defaults to 8080
+    pub fn default_websocket_url() -> String {
+        let port = safe_env_var_or_default("NESTGATE_WEBSOCKET_PORT", "8080");
+        format!("ws://localhost:{}/ws", port)
+    }
+
+    /// Default WebSocket URL constant (for backwards compatibility)
+    #[deprecated(since = "0.9.0", note = "Use default_websocket_url() function instead")]
     pub const DEFAULT_WEBSOCKET_URL: &str = "ws://localhost:8080/ws";
 
-    /// Default metrics URL
+    /// Default metrics URL (environment-driven)
+    ///
+    /// Uses `NESTGATE_METRICS_PORT` environment variable if set, otherwise defaults to 9090
+    pub fn default_metrics_url() -> String {
+        let port = safe_env_var_or_default("NESTGATE_METRICS_PORT", "9090");
+        format!("http://localhost:{}", port)
+    }
+
+    /// Default metrics URL constant (for backwards compatibility)
+    #[deprecated(since = "0.9.0", note = "Use default_metrics_url() function instead")]
     pub const DEFAULT_METRICS_URL: &str = "http://localhost:9090";
 
-    /// Default web UI URL
+    /// Default web UI URL (environment-driven)
+    pub fn default_web_ui_url() -> String {
+        let port = safe_env_var_or_default("NESTGATE_WEB_UI_PORT", "3000");
+        format!("http://localhost:{}", port)
+    }
+
+    /// Default web UI URL constant (for backwards compatibility)
     pub const DEFAULT_WEB_UI_URL: &str = "http://localhost:3000";
 
     /// Localhost constant
