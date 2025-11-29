@@ -11,17 +11,26 @@ use std::pin::Pin;
 use std::time::SystemTime;
 /// Core temporal device abstraction
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Temporaldevice
 pub struct TemporalDevice {
+    /// Era
     pub era: StorageEra,
+    /// Technology
     pub technology: StorageTechnology,
+    /// Capacity in megabytes
     pub capacity_mb: u64,
+    /// Performance Tier
     pub performance_tier: PerformanceTier,
+    /// Physical Dimensions
     pub physical_dimensions: PhysicalDimensions,
+    /// Supported Formats
     pub supported_formats: Vec<String>,
+    /// Additional metadata key-value pairs
     pub metadata: HashMap<String, String>,
 }
 /// Storage technology eras
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Storageera
 pub enum StorageEra {
     /// 1890s-1960s: Punch card era
     Prehistoric,
@@ -38,6 +47,7 @@ pub enum StorageEra {
 }
 /// Storage technology types
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagetechnology
 pub enum StorageTechnology {
     /// Punch card technology
     PunchCard,
@@ -58,32 +68,46 @@ pub enum StorageTechnology {
 }
 /// Performance tiers
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performancetier
 pub enum PerformanceTier {
+    /// Low
     Low,
+    /// Medium
     Medium,
+    /// High
     High,
+    /// Ultra
     Ultra,
 }
 /// Physical dimensions
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Physicaldimensions
 pub struct PhysicalDimensions {
+    /// Width Mm
     pub width_mm: f64,
+    /// Height Mm
     pub height_mm: f64,
+    /// Depth Mm
     pub depth_mm: f64,
 }
 /// Universal data source trait
 /// **CANONICAL MODERNIZATION**: Native async trait without `async_trait` overhead
 pub trait UniversalDataSource: Send + Sync {
+    /// Connect
     fn connect(&self) -> impl Future<Output = Result<ConnectionHandle>> + Send;
+    /// Discover Data
     fn discover_data(&self) -> impl Future<Output = Result<Vec<DataDescriptor>>> + Send;
+    /// Ingest Data
     fn ingest_data(
         &self,
         descriptor: &DataDescriptor,
     ) -> impl Future<Output = Result<IngestedData>> + Send;
+    /// Gets Metadata
     fn get_metadata(
         &self,
         descriptor: &DataDescriptor,
     ) -> impl Future<Output = Result<Metadata>> + Send;
+    /// Stream Data
     fn stream_data(
         &self,
         descriptor: &DataDescriptor,
@@ -91,42 +115,64 @@ pub trait UniversalDataSource: Send + Sync {
 }
 /// Connection handle for data sources
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Connectionhandle
 pub struct ConnectionHandle {
+    /// Connection identifier
     pub connection_id: String,
+    /// Source Type
     pub source_type: DataSourceType,
+    /// Status
     pub status: ConnectionStatus,
+    /// Capabilities
     pub capabilities: Vec<String>,
 }
 /// Connection status
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Status values for Connection
 pub enum ConnectionStatus {
+    /// Connected
     Connected,
+    /// Disconnected
     Disconnected,
     Error(String),
+    /// Connecting
     Connecting,
 }
 /// Data descriptor
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Datadescriptor
 pub struct DataDescriptor {
+    /// Unique identifier
     pub id: String,
+    /// Data Type
     pub data_type: DataType,
+    /// Size Bytes
     pub size_bytes: u64,
+    /// Source Location
     pub source_location: String,
+    /// Additional metadata key-value pairs
     pub metadata: HashMap<String, String>,
+    /// Access Requirements
     pub access_requirements: AccessRequirements,
 }
 /// Data types
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of Data
 pub enum DataType {
     // Genomic data
     Genome,
+    /// Sequence
     Sequence,
+    /// Variants
     Variants,
+    /// Annotations
     Annotations,
     // AI/ML data
     Model(ModelType),
     Dataset(DatasetType),
+    /// Weights
     Weights,
+    /// Configuration
     Configuration,
 
     // Legacy data
@@ -148,145 +194,231 @@ pub enum DataType {
 
 /// Model types
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of Model
 pub enum ModelType {
+    /// Language
     Language,
+    /// Vision
     Vision,
+    /// Audio
     Audio,
+    /// Multimodal
     Multimodal,
+    /// Reinforcement
     Reinforcement,
     Custom(String),
 }
 /// Dataset types
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of Dataset
 pub enum DatasetType {
+    /// Training
     Training,
+    /// Validation
     Validation,
+    /// Test
     Test,
+    /// Benchmark
     Benchmark,
+    /// Synthetic
     Synthetic,
+    /// Realworld
     RealWorld,
 }
 /// Access requirements
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Accessrequirements
 pub struct AccessRequirements {
+    /// Authentication
     pub authentication: Option<AuthenticationMethod>,
+    /// Rate Limits
     pub rate_limits: Option<RateLimits>,
+    /// Geographic Restrictions
     pub geographic_restrictions: Vec<String>,
+    /// Legal Requirements
     pub legal_requirements: Vec<String>,
 }
 /// Authentication methods
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Authenticationmethod
 pub enum AuthenticationMethod {
     APIKey(String),
+    /// Oauth2
     OAuth2 {
         client_id: String,
         scope: Vec<String>,
     },
+    /// Basicauth
     BasicAuth {
         username: String,
         password: String,
     },
+    /// Certificate
     Certificate {},
     None,
 }
 /// Rate limits
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Ratelimits
 pub struct RateLimits {
+    /// Requests Per Second
     pub requests_per_second: u32,
+    /// Bandwidth Limit Mbs
     pub bandwidth_limit_mbs: Option<u32>,
+    /// Daily Quota
     pub daily_quota: Option<u64>,
 }
 /// Ingested data
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Ingesteddata
 pub struct IngestedData {
+    /// Data identifier
     pub data_id: String,
+    /// Original Descriptor
     pub original_descriptor: DataDescriptor,
+    /// Content
     pub content: Vec<u8>,
+    /// Ingestion Metadata
     pub ingestion_metadata: IngestionMetadata,
+    /// Classification
     pub classification: Option<DataClassification>,
 }
 /// Ingestion metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Ingestionmetadata
 pub struct IngestionMetadata {
+    /// Ingestion Time
     pub ingestion_time: chrono::DateTime<chrono::Utc>,
+    /// Source Checksum
     pub source_checksum: String,
+    /// Compression Applied
     pub compression_applied: Option<String>,
+    /// Validation Status
     pub validation_status: ValidationStatus,
 }
 /// Validation status
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Status values for Validation
 pub enum ValidationStatus {
+    /// Valid
     Valid,
     Invalid(String),
+    /// Unvalidated
     Unvalidated,
     PartiallyValid(Vec<String>),
 }
 /// Data classification
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Dataclassification
 pub struct DataClassification {
+    /// Content Type
     pub content_type: ContentType,
+    /// Data Category
     pub data_category: DataCategory,
+    /// Access Pattern
     pub access_pattern: PredictedAccessPattern,
+    /// Storage Tier
     pub storage_tier: RecommendedTier,
+    /// Compression Strategy
     pub compression_strategy: CompressionStrategy,
+    /// Replication Strategy
     pub replication_strategy: ReplicationStrategy,
 }
 /// Content types
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of Content
 pub enum ContentType {
+    /// Text
     Text,
+    /// Binary
     Binary,
+    /// Structured
     Structured,
+    /// Multimedia
     Multimedia,
+    /// Scientific
     Scientific,
+    /// Code
     Code,
+    /// Unknown
     Unknown,
 }
 /// Data categories
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Datacategory
 pub enum DataCategory {
+    /// Critical
     Critical,
+    /// Important
     Important,
+    /// Standard
     Standard,
+    /// Archive
     Archive,
+    /// Temporary
     Temporary,
 }
 /// Predicted access patterns
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Predictedaccesspattern
 pub enum PredictedAccessPattern {
+    /// Frequent
     Frequent,
+    /// Moderate
     Moderate,
+    /// Infrequent
     Infrequent,
+    /// Writeonce
     WriteOnce,
+    /// Streaming
     Streaming,
+    /// Batch
     Batch,
 }
 /// Recommended storage tiers
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Recommendedtier
 pub enum RecommendedTier {
+    /// Hot
     Hot,
+    /// Warm
     Warm,
+    /// Cold
     Cold,
+    /// Archive
     Archive,
+    /// Dna
     Dna,
+    /// Quantum
     Quantum,
 }
 /// Compression strategies
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Compressionstrategy
 pub enum CompressionStrategy {
+    /// None
     None,
+    /// Fast
     Fast,
+    /// Balanced
     Balanced,
+    /// Maximum
     Maximum,
     Specialized(String),
 }
 /// Replication strategies
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Replicationstrategy
 pub enum ReplicationStrategy {
+    /// None
     None,
+    /// Local
     Local,
+    /// Geographic
     Geographic,
+    /// Crosstechnology
     CrossTechnology,
+    /// Quantum
     Quantum,
 }
 /// Data stream trait
@@ -294,24 +426,31 @@ pub enum ReplicationStrategy {
 /// NOTE: Uses `Pin<Box<dyn Future>>` for object safety (dyn compatibility).
 /// Cannot use `impl Future` as this trait needs to be dyn-compatible for trait objects.
 pub trait DataStream: Send + Sync {
+    /// Read Chunk
     fn read_chunk(
         &mut self,
         size: usize,
     ) -> Pin<Box<dyn Future<Output = Result<Vec<u8>>> + Send + '_>>;
+    /// Seek
     fn seek(&mut self, position: u64) -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>>;
 }
 /// Data source types (capability-based, not provider-specific)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of DataSource
 pub enum DataSourceType {
+    /// Localdevice
     LocalDevice {},
+    /// Remoteapi
     RemoteAPI {
         api_type: APIType,
         endpoint: String,
     },
+    /// Datacapability
     DataCapability {
         capability_type: String,
         provider_metadata: HashMap<String, String>,
     },
+    /// Cloudstorage
     CloudStorage {
         provider: CloudProvider,
     },
@@ -324,21 +463,33 @@ pub enum DataSourceType {
 }
 /// API types
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of API
 pub enum APIType {
+    /// Rest
     Rest,
+    /// Graphql
     GraphQL,
+    /// Grpc
     GRpc,
+    /// Websocket
     WebSocket,
     Custom(String),
 }
 /// Universal data capability types (what we can do, not who provides it)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of DataCapability
 pub enum DataCapabilityType {
+    /// Genomedata
     GenomeData { organism_filter: Option<String> },
+    /// Modeldata
     ModelData { model_type_filter: Option<String> },
+    /// Researchdata
     ResearchData { domain_filter: Option<String> },
+    /// Timeseriesdata
     TimeSeriesData { frequency: Option<String> },
+    /// Imagedata
     ImageData { format_filter: Option<String> },
+    /// Custom
     Custom { capability_name: String },
 }
 
@@ -348,17 +499,26 @@ pub enum DataCapabilityType {
 pub use crate::universal_storage::consolidated_types::CloudProvider;
 /// Legacy media types
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of LegacyMedia
 pub enum LegacyMediaType {
+    /// Floppy
     Floppy,
+    /// Tape
     Tape,
+    /// Optical
     Optical,
+    /// Punchcard
     PunchCard,
+    /// Papertape
     PaperTape,
+    /// Magneticdrum
     MagneticDrum,
+    /// Corememory
     CoreMemory,
 }
 /// Future technologies
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Futuretechnology
 pub enum FutureTechnology {
     Dna(String),
     Quantum(String),
@@ -371,6 +531,7 @@ pub enum FutureTechnology {
 pub type Metadata = HashMap<String, serde_json::Value>;
 /// Temporal storage system
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Temporalstoragesystem
 pub struct TemporalStorageSystem {
     /// Devices organized by era
     pub devices: HashMap<StorageEra, Vec<TemporalDevice>>,
@@ -381,6 +542,7 @@ pub struct TemporalStorageSystem {
 }
 /// Era mapping
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Eramapping
 pub struct EraMapping {
     /// Source era
     pub source_era: StorageEra,
@@ -415,16 +577,19 @@ impl TemporalDevice {
         Ok(devices)
     }
 
+    /// Detect Legacy Devices
     fn detect_legacy_devices() -> Result<Vec<TemporalDevice>> {
         // Placeholder for legacy device detection
         Ok(vec![])
     }
 
+    /// Detect Modern Devices
     fn detect_modern_devices() -> Result<Vec<TemporalDevice>> {
         // Placeholder for modern device detection
         Ok(vec![])
     }
 
+    /// Detect Future Devices
     fn detect_future_devices() -> Result<Vec<TemporalDevice>> {
         // Placeholder for future device detection
         Ok(vec![])
@@ -525,13 +690,13 @@ mod tests {
 
     #[test]
     fn test_performance_tier_variants() {
-        let tiers = vec![
+        const TIERS: [PerformanceTier; 4] = [
             PerformanceTier::Low,
             PerformanceTier::Medium,
             PerformanceTier::High,
             PerformanceTier::Ultra,
         ];
-        assert_eq!(tiers.len(), 4);
+        assert_eq!(TIERS.len(), 4);
     }
 
     // ==================== PHYSICAL DIMENSIONS TESTS ====================
@@ -577,7 +742,7 @@ mod tests {
 
     #[test]
     fn test_connection_status_variants() {
-        let statuses = vec![
+        let statuses = [
             ConnectionStatus::Connected,
             ConnectionStatus::Disconnected,
             ConnectionStatus::Error("timeout".to_string()),
@@ -615,13 +780,13 @@ mod tests {
 
     #[test]
     fn test_data_type_genomic_variants() {
-        let types = vec![
+        const TYPES: [DataType; 4] = [
             DataType::Genome,
             DataType::Sequence,
             DataType::Variants,
             DataType::Annotations,
         ];
-        assert_eq!(types.len(), 4);
+        assert_eq!(TYPES.len(), 4);
     }
 
     #[test]

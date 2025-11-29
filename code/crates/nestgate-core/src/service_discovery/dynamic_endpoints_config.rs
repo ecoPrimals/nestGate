@@ -31,6 +31,7 @@ use std::sync::Arc;
 /// config.set_endpoint("api", "http://api:8080");
 /// ```
 #[derive(Debug, Clone)]
+/// Configuration for DynamicEndpoints
 pub struct DynamicEndpointsConfig {
     /// Service-specific endpoint overrides
     /// Key: service type (e.g., "api", "storage")
@@ -151,6 +152,7 @@ impl DynamicEndpointsConfig {
 }
 
 impl Default for DynamicEndpointsConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

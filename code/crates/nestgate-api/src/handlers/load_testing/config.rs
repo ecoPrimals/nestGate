@@ -23,6 +23,7 @@ use std::collections::HashMap;
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for LoadTest
 pub struct LoadTestConfig {
     /// Test duration in seconds
     pub duration_seconds: u64,
@@ -42,6 +43,7 @@ pub struct LoadTestConfig {
 
 /// Test scenario types
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Testscenario
 pub enum TestScenario {
     /// **CONSTANT LOAD**
     ///
@@ -84,6 +86,7 @@ pub enum TestScenario {
 
 /// Load test parameters
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Loadtestparameters
 pub struct LoadTestParameters {
     /// Load test configuration settings
     pub config: LoadTestConfig,
@@ -113,6 +116,7 @@ pub struct LoadTestParameters {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for TestData
 pub struct TestDataConfig {
     /// Request payload size in bytes
     pub payload_size_bytes: usize,
@@ -126,6 +130,7 @@ pub struct TestDataConfig {
 
 /// Performance thresholds for pass/fail criteria
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performancethresholds
 pub struct PerformanceThresholds {
     /// Maximum acceptable average response time (ms)
     pub max_avg_response_time_ms: f64,
@@ -141,6 +146,7 @@ pub struct PerformanceThresholds {
 ///
 /// Represents an active load test execution with configuration and timing.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Loadtestexecution
 pub struct LoadTestExecution {
     /// Load test configuration parameters
     pub config: LoadTestConfig,
@@ -151,6 +157,7 @@ pub struct LoadTestExecution {
 }
 
 impl Default for LoadTestConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             duration_seconds: 60,
@@ -165,6 +172,7 @@ impl Default for LoadTestConfig {
 }
 
 impl Default for TestDataConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             payload_size_bytes: 1024,
@@ -176,6 +184,7 @@ impl Default for TestDataConfig {
 }
 
 impl Default for PerformanceThresholds {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             max_avg_response_time_ms: 1000.0,
@@ -195,6 +204,7 @@ impl Default for PerformanceThresholds {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Loadtestconfigcanonical
 pub type LoadTestConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
@@ -211,6 +221,7 @@ pub type LoadTestConfigCanonical =
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Testdataconfigcanonical
 pub type TestDataConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 

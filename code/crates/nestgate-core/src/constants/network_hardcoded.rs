@@ -50,10 +50,8 @@ pub mod ports {
     /// Alternative API port
     pub const API_ALT: u16 = 3001;
 
-    /// Metrics/Prometheus default port
     pub const METRICS_DEFAULT: u16 = 9090;
 
-    /// Health check endpoint port
     pub const HEALTH_CHECK_DEFAULT: u16 = 8081;
 
     /// Alternate health check port (used by network_defaults)
@@ -74,10 +72,8 @@ pub mod ports {
 
 /// Default timeout values in milliseconds
 pub mod timeouts {
-    /// Connection timeout (5 seconds)
     pub const CONNECT_MS: u64 = 5_000;
 
-    /// Request timeout (30 seconds)
     pub const REQUEST_MS: u64 = 30_000;
 
     /// Long operation timeout (5 minutes)
@@ -88,10 +84,13 @@ pub mod timeouts {
 
 /// Environment variable key names
 pub mod env_keys {
+    /// Bind Address
     pub const BIND_ADDRESS: &str = "NESTGATE_BIND_ADDRESS";
+    /// Api Port
     pub const API_PORT: &str = "NESTGATE_API_PORT";
     pub const METRICS_PORT: &str = "NESTGATE_METRICS_PORT";
     pub const HEALTH_PORT: &str = "NESTGATE_HEALTH_PORT";
+    /// Websocket Port
     pub const WEBSOCKET_PORT: &str = "NESTGATE_WEBSOCKET_PORT";
 }
 

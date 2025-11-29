@@ -2,6 +2,7 @@ use crate::universal_adapter::{PrimalAgnosticAdapter, CapabilityCategory, Capabi
 /// **UNIVERSAL SECURITY CLIENT IMPLEMENTATION**
 /// Universal Security Error types
 #[derive(Debug, Clone)]
+/// Errors that can occur during UniversalSecurity operations
 pub enum UniversalSecurityError {
     Network(String),
     Configuration(String),
@@ -9,6 +10,7 @@ pub enum UniversalSecurityError {
     Authentication(String),
 }
 impl std::fmt::Display for UniversalSecurityError {
+    /// Fmt
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
             UniversalSecurityError::Network(msg) => write!(f, "Network error: {msg}"),
@@ -35,9 +37,13 @@ use std::time::Duration;
 
 /// Universal Security Capability definition
 #[derive(Debug, Clone)]
+/// Universalsecuritycapability
 pub struct UniversalSecurityCapability {
+    /// Capability Type
     pub capability_type: String,
+    /// Version
     pub version: String,
+    /// Required
     pub required: bool,
 }
 /// Universal Security Client for interacting with security services
@@ -52,6 +58,7 @@ pub struct UniversalSecurityClient {
     pub(crate) http_client: reqwest::Client,
 }
 impl std::fmt::Debug for UniversalSecurityClient {
+    /// Fmt
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("UniversalSecurityClient")
             .field("config", &self.config)

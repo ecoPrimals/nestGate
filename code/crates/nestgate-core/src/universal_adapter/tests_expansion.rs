@@ -30,12 +30,14 @@ mod universal_adapter_basic_tests {
 
     #[test]
     fn test_adapter_config_is_send() {
+        /// Assert Send
         fn assert_send<T: Send>() {}
         assert_send::<UniversalAdapterConfig>();
     }
 
     #[test]
     fn test_adapter_config_is_sync() {
+        /// Assert Sync
         fn assert_sync<T: Sync>() {}
         assert_sync::<UniversalAdapterConfig>();
     }

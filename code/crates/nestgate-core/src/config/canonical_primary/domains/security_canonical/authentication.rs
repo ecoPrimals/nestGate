@@ -11,6 +11,7 @@ use std::time::Duration;
 
 /// Comprehensive authentication configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Authentication
 pub struct AuthenticationConfig {
     /// Primary authentication method
     pub primary_method: AuthenticationMethod,
@@ -37,6 +38,7 @@ pub struct AuthenticationConfig {
     pub external_providers: Vec<ExternalAuthProvider>,
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Authenticationmethod
 pub enum AuthenticationMethod {
     /// Username/password authentication
     UsernamePassword,
@@ -61,6 +63,7 @@ pub enum AuthenticationMethod {
 // ==================== MULTI-FACTOR AUTHENTICATION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Mfa
 pub struct MfaConfig {
     /// Enable multi-factor authentication
     pub enabled: bool,
@@ -82,6 +85,7 @@ pub struct MfaConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Mfamethod
 pub enum MfaMethod {
     /// SMS-based OTP
     Sms,
@@ -104,6 +108,7 @@ pub enum MfaMethod {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for BackupCodes
 pub struct BackupCodesConfig {
     /// Enable backup codes
     pub enabled: bool,
@@ -119,6 +124,7 @@ pub struct BackupCodesConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for RememberDevice
 pub struct RememberDeviceConfig {
     /// Enable remember device functionality
     pub enabled: bool,
@@ -133,6 +139,7 @@ pub struct RememberDeviceConfig {
 // ==================== SESSION MANAGEMENT ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Session
 pub struct SessionConfig {
     /// Session timeout duration
     pub timeout: Duration,
@@ -154,6 +161,7 @@ pub struct SessionConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for SessionStorage
 pub struct SessionStorageConfig {
     /// Session storage type
     pub storage_type: SessionStorageType,
@@ -166,6 +174,7 @@ pub struct SessionStorageConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of SessionStorage
 pub enum SessionStorageType {
     /// In-memory storage
     Memory,
@@ -180,6 +189,7 @@ pub enum SessionStorageType {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for SessionEncryption
 pub struct SessionEncryptionConfig {
     /// Enable session encryption
     pub enabled: bool,
@@ -192,6 +202,7 @@ pub struct SessionEncryptionConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for KeyRotation
 pub struct KeyRotationConfig {
     /// Enable automatic key rotation
     pub enabled: bool,
@@ -204,6 +215,7 @@ pub struct KeyRotationConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for SessionSecurity
 pub struct SessionSecurityConfig {
     /// Secure cookie settings
     pub secure_cookies: bool,
@@ -225,13 +237,18 @@ pub struct SessionSecurityConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Samesitepolicy
 pub enum SameSitePolicy {
+    /// Strict
     Strict,
+    /// Lax
     Lax,
+    /// None
     None,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for SessionRefresh
 pub struct SessionRefreshConfig {
     /// Enable automatic session refresh
     pub enabled: bool,
@@ -246,6 +263,7 @@ pub struct SessionRefreshConfig {
 // ==================== TOKEN CONFIGURATION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for Token
 pub struct TokenConfig {
     /// JWT configuration
     pub jwt: JwtConfig,
@@ -261,6 +279,7 @@ pub struct TokenConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Jwt
 pub struct JwtConfig {
     /// JWT signing algorithm
     pub algorithm: JwtAlgorithm,
@@ -282,22 +301,34 @@ pub struct JwtConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Jwtalgorithm
 pub enum JwtAlgorithm {
+    /// Hs256
     HS256,
+    /// Hs384
     HS384,
+    /// Hs512
     HS512,
+    /// Rs256
     RS256,
+    /// Rs384
     RS384,
+    /// Rs512
     RS512,
+    /// Es256
     ES256,
+    /// Es384
     ES384,
+    /// Es512
     ES512,
+    /// Ps256
     PS256,
     PS384,
     PS512,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ApiKey
 pub struct ApiKeyConfig {
     /// Enable API key authentication
     pub enabled: bool,
@@ -316,6 +347,7 @@ pub struct ApiKeyConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for RateLimit
 pub struct RateLimitConfig {
     /// Requests per window
     pub requests: u32,
@@ -328,6 +360,7 @@ pub struct RateLimitConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for RefreshToken
 pub struct RefreshTokenConfig {
     /// Enable refresh tokens
     pub enabled: bool,
@@ -343,6 +376,7 @@ pub struct RefreshTokenConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for AccessToken
 pub struct AccessTokenConfig {
     /// Access token lifetime
     pub lifetime: Duration,
@@ -357,6 +391,7 @@ pub struct AccessTokenConfig {
 // ==================== PASSWORD POLICIES ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for PasswordPolicy
 pub struct PasswordPolicyConfig {
     /// Minimum password length
     pub min_length: u32,
@@ -395,6 +430,7 @@ pub struct PasswordPolicyConfig {
 // ==================== ACCOUNT LOCKOUT ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for AccountLockout
 pub struct AccountLockoutConfig {
     /// Enable account lockout
     pub enabled: bool,
@@ -418,6 +454,7 @@ pub struct AccountLockoutConfig {
 // ==================== EXTERNAL PROVIDERS ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Externalauthprovider
 pub struct ExternalAuthProvider {
     /// Provider name
     pub name: String,
@@ -436,15 +473,25 @@ pub struct ExternalAuthProvider {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of ExternalProvider
 pub enum ExternalProviderType {
+    /// Oauth2
     OAuth2,
+    /// Saml
     Saml,
+    /// Ldap
     Ldap,
+    /// Activedirectory
     ActiveDirectory,
+    /// Google
     Google,
+    /// Microsoft
     Microsoft,
+    /// Github
     GitHub,
+    /// Okta
     Okta,
+    /// Auth0
     Auth0,
     Custom(String),
 }
@@ -452,6 +499,7 @@ pub enum ExternalProviderType {
 // ==================== DEFAULT IMPLEMENTATIONS ====================
 
 impl Default for AuthenticationConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             primary_method: AuthenticationMethod::UsernamePassword,
@@ -467,6 +515,7 @@ impl Default for AuthenticationConfig {
 }
 
 impl Default for MfaConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: false,
@@ -480,6 +529,7 @@ impl Default for MfaConfig {
 }
 
 impl Default for BackupCodesConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -491,6 +541,7 @@ impl Default for BackupCodesConfig {
 }
 
 impl Default for RememberDeviceConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: false,
@@ -501,6 +552,7 @@ impl Default for RememberDeviceConfig {
 }
 
 impl Default for SessionConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             timeout: Duration::from_secs(24 * 60 * 60),     // 24 hours
@@ -514,6 +566,7 @@ impl Default for SessionConfig {
 }
 
 impl Default for SessionStorageConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             storage_type: SessionStorageType::Memory,
@@ -524,6 +577,7 @@ impl Default for SessionStorageConfig {
 }
 
 impl Default for SessionEncryptionConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -534,6 +588,7 @@ impl Default for SessionEncryptionConfig {
 }
 
 impl Default for KeyRotationConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -544,6 +599,7 @@ impl Default for KeyRotationConfig {
 }
 
 impl Default for SessionSecurityConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             secure_cookies: true,
@@ -557,6 +613,7 @@ impl Default for SessionSecurityConfig {
 }
 
 impl Default for SessionRefreshConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -567,6 +624,7 @@ impl Default for SessionRefreshConfig {
 }
 
 impl Default for JwtConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             algorithm: JwtAlgorithm::HS256,
@@ -580,6 +638,7 @@ impl Default for JwtConfig {
 }
 
 impl Default for ApiKeyConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -592,6 +651,7 @@ impl Default for ApiKeyConfig {
 }
 
 impl Default for RateLimitConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             requests: 1000,
@@ -602,6 +662,7 @@ impl Default for RateLimitConfig {
 }
 
 impl Default for RefreshTokenConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -613,6 +674,7 @@ impl Default for RefreshTokenConfig {
 }
 
 impl Default for AccessTokenConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             lifetime: Duration::from_secs(15 * 60), // 15 minutes
@@ -623,6 +685,7 @@ impl Default for AccessTokenConfig {
 }
 
 impl Default for PasswordPolicyConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             min_length: 8,
@@ -641,6 +704,7 @@ impl Default for PasswordPolicyConfig {
 }
 
 impl Default for AccountLockoutConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,

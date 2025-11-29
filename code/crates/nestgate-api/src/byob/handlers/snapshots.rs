@@ -1,1 +1,3 @@
+//! Snapshots module
+
 //

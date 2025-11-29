@@ -8,6 +8,7 @@ use crate::error::Result;
 
 /// Canonical configuration builder
 #[derive(Debug, Clone)]
+/// Builder pattern for constructing CanonicalConfig instances
 pub struct CanonicalConfigBuilder {
     config: NestGateCanonicalConfig,
 }
@@ -65,6 +66,7 @@ impl CanonicalConfigBuilder {
 }
 
 impl Default for CanonicalConfigBuilder {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

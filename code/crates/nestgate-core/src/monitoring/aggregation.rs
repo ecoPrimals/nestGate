@@ -13,15 +13,25 @@ pub use super::config::{}, LogDestination, LogAggregationConfig;
 
 /// Log entry structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Logentry
 pub struct LogEntry {
+    /// Timestamp
     pub timestamp: SystemTime,
+    /// Level
     pub level: String,
+    /// Target
     pub target: String,
+    /// Message
     pub message: String,
+    /// File
     pub file: Option<String>,
+    /// Line
     pub line: Option<u32>,
+    /// Fields
     pub fields: HashMap<String, serde_json::Value>,
+    /// Span identifier
     pub span_id: Option<String>,
+    /// Trace identifier
     pub trace_id: Option<String>,
 }
 /// Log aggregator for batching and shipping logs
@@ -65,6 +75,7 @@ impl LogAggregator {
         })
     }
 
+    /// Log Processor
     async fn log_processor(
         config: LogAggregationConfig,
         mut receiver: mpsc::UnboundedReceiver<LogEntry>,
@@ -99,6 +110,7 @@ impl LogAggregator {
         }
     }
 
+    /// Flush Batch
     async fn flush_batch(config: &LogAggregationConfig, batch: &mut Vec<LogEntry>) {
         // Ship logs to configured destinations
         for destination in &config.destinations {
@@ -109,6 +121,7 @@ impl LogAggregator {
         batch.clear();
     }
 
+    /// Ship To Destination
     fn ship_to_destination(
         destination: &LogDestination,
         batch: &[LogEntry],

@@ -1,3 +1,5 @@
+//! Types module
+
 pub mod config;
 pub mod ecosystem;
 pub mod optimization;

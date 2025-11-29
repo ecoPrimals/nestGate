@@ -19,6 +19,7 @@ use super::capability_endpoints_config::CapabilityEndpointsConfig;
 
 /// Universal capability categories that any primal can provide
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Capabilitycategory
 pub enum CapabilityCategory {
     /// Storage capabilities (NestGate's primary domain)
     Storage,
@@ -40,6 +41,7 @@ pub enum CapabilityCategory {
 
 /// Specific capability that a service provides
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Servicecapability
 pub struct ServiceCapability {
     /// Unique capability identifier
     pub id: Uuid,
@@ -85,6 +87,7 @@ impl ServiceCapability {
 
 /// Request for a specific capability
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for Capability operation
 pub struct CapabilityRequest {
     /// Request ID for tracking
     pub request_id: Uuid,
@@ -140,6 +143,7 @@ impl CapabilityRequest {
 
 /// Response from a capability provider
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for Capability operation
 pub struct CapabilityResponse {
     /// Request ID this responds to
     pub request_id: Uuid,
@@ -187,6 +191,7 @@ impl CapabilityResponse {
 
 /// Information about a discovered service
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Service implementation for Discovered
 pub struct DiscoveredService {
     /// Service identifier
     pub service_id: Uuid,
@@ -241,6 +246,7 @@ impl DiscoveredService {
 
 /// Registry of all discovered capabilities in the ecosystem
 #[derive(Debug, Default)]
+/// Capabilityregistry
 pub struct CapabilityRegistry {
     /// All discovered services
     services: HashMap<Uuid, DiscoveredService>,
@@ -349,6 +355,7 @@ impl CapabilityRegistry {
 /// Universal capability router that eliminates all primal hardcoding
 /// Each primal only knows itself and discovers others through capability advertisement
 #[derive(Debug, Clone)]
+/// Capabilityrouter
 pub struct CapabilityRouter {
     /// Registry of discovered capabilities
     registry: Arc<RwLock<CapabilityRegistry>>,
@@ -537,6 +544,7 @@ impl CapabilityRouter {
 }
 
 impl Default for CapabilityRouter {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -546,6 +554,7 @@ impl Default for CapabilityRouter {
 
 /// NestGate's knowledge about itself (the only primal it knows)
 #[derive(Debug, Clone)]
+/// Nestgateselfknowledge
 pub struct NestGateSelfKnowledge {
     /// Our service identity
     pub service_id: Uuid,
@@ -599,6 +608,7 @@ impl NestGateSelfKnowledge {
 }
 
 impl Default for NestGateSelfKnowledge {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

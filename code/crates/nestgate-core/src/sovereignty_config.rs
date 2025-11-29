@@ -6,6 +6,7 @@ use std::env;
 
 use crate::error::utilities::safe_env_var_or_default;
 
+/// Configuration for Sovereignty
 pub struct SovereigntyConfig;
 
 impl SovereigntyConfig {

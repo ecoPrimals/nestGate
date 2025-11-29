@@ -305,47 +305,74 @@ impl UnifiedConfigBenchmarks {
 
 /// Individual benchmark result
 #[derive(Debug, Clone)]
+/// Benchmarkresult
 pub struct BenchmarkResult {
+    /// Duration
     pub duration: Duration,
     }
 /// Individual discovery benchmarks
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Individualdiscoverybenchmarks
 pub struct IndividualDiscoveryBenchmarks {
+    /// Storage Discovery
     pub storage_discovery: Duration,
+    /// Auth Discovery
     pub auth_discovery: Duration,
+    /// Network Discovery
     pub network_discovery: Duration,
+    /// Timeout Discovery
     pub timeout_discovery: Duration,
+    /// Security Discovery
     pub security_discovery: Duration,
+    /// Environment Discovery
     pub environment_discovery: Duration,
+    /// Total Individual Time
     pub total_individual_time: Duration,
     }
 /// Comprehensive discovery benchmarks
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Comprehensivediscoverybenchmarks
 pub struct ComprehensiveDiscoveryBenchmarks {
+    /// Comprehensive Discovery Time
     pub comprehensive_discovery_time: Duration,
+    /// Parallel Efficiency
     pub parallel_efficiency: f64,
     }
 /// Cache performance benchmarks
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Cacheperformancebenchmarks
 pub struct CachePerformanceBenchmarks {
+    /// Cache Miss Time
     pub cache_miss_time: Duration,
+    /// Cache Hit Time
     pub cache_hit_time: Duration,
+    /// Cache Improvement Factor
     pub cache_improvement_factor: f64,
     }
 /// Parallel discovery benchmarks
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Paralleldiscoverybenchmarks
 pub struct ParallelDiscoveryBenchmarks {
+    /// Sequential Time
     pub sequential_time: Duration,
+    /// Parallel Time
     pub parallel_time: Duration,
+    /// Parallel Improvement Factor
     pub parallel_improvement_factor: f64,
     }
 /// Comprehensive benchmark report
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Comprehensivebenchmarkreport
 pub struct ComprehensiveBenchmarkReport {
+    /// Individual Discovery
     pub individual_discovery: IndividualDiscoveryBenchmarks,
+    /// Comprehensive Discovery
     pub comprehensive_discovery: ComprehensiveDiscoveryBenchmarks,
+    /// Cache Performance
     pub cache_performance: CachePerformanceBenchmarks,
+    /// Parallel Performance
     pub parallel_performance: ParallelDiscoveryBenchmarks,
+    /// Overall Performance Improvement
     pub overall_performance_improvement: f64,
     }
 /// **BENCHMARK RUNNER UTILITY**

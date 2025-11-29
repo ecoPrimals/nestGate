@@ -4,40 +4,60 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for StorageEnvironment
 pub struct StorageEnvironmentConfig {
+    /// Development
     pub development: EnvironmentStorageSettings,
+    /// Staging
     pub staging: EnvironmentStorageSettings,
+    /// Production
     pub production: EnvironmentStorageSettings,
+    /// Deployment
     pub deployment: DeploymentStorageConfig,
+    /// Runtime
     pub runtime: RuntimeStorageConfig,
+    /// Features
     pub features: StorageFeatureConfig,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Environmentstoragesettings
 pub struct EnvironmentStorageSettings {
+    /// Backend Type
     pub backend_type: String,
+    /// Performance Mode
     pub performance_mode: String,
+    /// Security Level
     pub security_level: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for DeploymentStorage
 pub struct DeploymentStorageConfig {
+    /// Auto Provision
     pub auto_provision: bool,
+    /// Resource Limits
     pub resource_limits: HashMap<String, String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for RuntimeStorage
 pub struct RuntimeStorageConfig {
+    /// Hot Reload
     pub hot_reload: bool,
+    /// Dynamic Scaling
     pub dynamic_scaling: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for StorageFeature
 pub struct StorageFeatureConfig {
+    /// Feature Flags
     pub feature_flags: HashMap<String, bool>,
 }
 
 impl Default for StorageEnvironmentConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             development: EnvironmentStorageSettings {

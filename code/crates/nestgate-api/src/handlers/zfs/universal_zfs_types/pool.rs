@@ -7,6 +7,7 @@ use std::collections::HashMap;
 
 /// Information about a ZFS pool
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Poolinfo
 pub struct PoolInfo {
     /// Pool name
     pub name: String,
@@ -24,6 +25,7 @@ pub struct PoolInfo {
 
 /// Pool health status
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Poolhealth
 pub enum PoolHealth {
     /// Pool is healthy
     Online,
@@ -39,6 +41,7 @@ pub enum PoolHealth {
 
 /// Pool state
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Poolstate
 pub enum PoolState {
     /// Pool is active
     Active,
@@ -54,6 +57,7 @@ pub enum PoolState {
 
 /// Pool capacity information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Poolcapacity
 pub struct PoolCapacity {
     /// Total capacity in bytes
     pub total: u64,
@@ -65,6 +69,7 @@ pub struct PoolCapacity {
 
 /// Scrub status
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Status values for Scrub
 pub enum ScrubStatus {
     /// No scrub in progress
     None,
@@ -78,11 +83,13 @@ pub enum ScrubStatus {
 
 /// Pool configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Pool
 pub struct PoolConfig {
     /// Pool name
     pub name: String,
     /// Devices for the pool (disk paths)
     #[serde(default)]
+    ///  Devices
     pub _devices: Vec<String>,
     /// Mount point
     pub mountpoint: Option<String>,

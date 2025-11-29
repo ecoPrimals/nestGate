@@ -3,6 +3,8 @@
 // These handlers provide clean data access for storage management
 // without any authentication or user management overhead.
 
+//! Storage module
+
 use axum::{
     extract::{Query, State},
     response::Json,

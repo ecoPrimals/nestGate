@@ -12,8 +12,11 @@ use crate::{NestGateError, Result};
 
 // Local type definitions for missing components
 pub struct ReplicationManager;
+/// Storageeventbroadcaster
 pub struct StorageEventBroadcaster;
+/// Syncengine
 pub struct SyncEngine;
+/// Metadatastore
 pub struct MetadataStore;
 
 impl ReplicationManager {
@@ -28,6 +31,7 @@ impl ReplicationManager {
 }
 
 impl StorageEventBroadcaster {
+    /// Creates a new instance
     pub fn new() -> Self {
         Self
     }
@@ -83,6 +87,7 @@ pub struct UniversalStorageManager {
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for UniversalStorage
 pub struct UniversalStorageConfig {
     /// Maximum concurrent operations per protocol
     pub max_concurrent_operations: usize,
@@ -96,6 +101,7 @@ pub struct UniversalStorageConfig {
     pub replication_lag_tolerance: u32,
 }
 impl Default for UniversalStorageConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             max_concurrent_operations: 100,
@@ -305,6 +311,7 @@ impl UniversalStorageManager {
         Ok(())
     }
 
+    /// Register Default Handlers
     async fn register_default_handlers(&self) -> Result<()> {
         info!("📝 Registering default protocol handlers");
 
@@ -340,6 +347,7 @@ impl UniversalStorageManager {
         Ok(())
     }
 
+    /// Broadcast Storage Event
     async fn broadcast_storage_event(&self, response: &StorageResponse) -> Result<()> {
         debug!("📡 Broadcasting storage event");
 
@@ -382,6 +390,7 @@ impl UniversalStorageManager {
         Ok(())
     }
 
+    /// Check Backend Health
     async fn check_backend_health(&self, backend: &StorageBackend) -> Result<bool> {
         debug!("🏥 Checking health of backend: {}", backend.name);
 
@@ -423,6 +432,7 @@ impl UniversalStorageManager {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Universalstorageconfigcanonical
 pub type UniversalStorageConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using UniversalStorageConfig (the deprecated struct) for now.

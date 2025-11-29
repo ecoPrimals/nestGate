@@ -9,6 +9,7 @@ use std::time::Duration;
 // ==================== UNIT TEST CONFIGURATION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for UnitTest
 pub struct UnitTestConfig {
     /// Test execution settings
     pub execution: TestExecutionConfig,
@@ -27,6 +28,7 @@ pub struct UnitTestConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for TestExecution
 pub struct TestExecutionConfig {
     /// Test timeout
     pub timeout: Duration,
@@ -45,14 +47,20 @@ pub struct TestExecutionConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Testisolation
 pub enum TestIsolation {
+    /// None
     None,
+    /// Process
     Process,
+    /// Container
     Container,
+    /// Vm
     Vm,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Coverage
 pub struct CoverageConfig {
     /// Enable coverage collection
     pub enabled: bool,
@@ -71,22 +79,33 @@ pub struct CoverageConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of Coverage
 pub enum CoverageType {
+    /// Line
     Line,
+    /// Branch
     Branch,
+    /// Function
     Function,
+    /// Statement
     Statement,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Coverageformat
 pub enum CoverageFormat {
+    /// Html
     Html,
+    /// Xml
     Xml,
+    /// Json
     Json,
+    /// Lcov
     Lcov,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Assertion
 pub struct AssertionConfig {
     /// Assertion style
     pub style: AssertionStyle,
@@ -102,14 +121,19 @@ pub struct AssertionConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Assertionstyle
 pub enum AssertionStyle {
+    /// Traditional
     Traditional,
+    /// Fluent
     Fluent,
+    /// Bdd
     Bdd,
     Custom(String),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Customassertion
 pub struct CustomAssertion {
     /// Assertion name
     pub name: String,
@@ -122,6 +146,7 @@ pub struct CustomAssertion {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for TestData
 pub struct TestDataConfig {
     /// Test data directory
     pub data_dir: PathBuf,
@@ -137,6 +162,7 @@ pub struct TestDataConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Testfixture
 pub struct TestFixture {
     /// Fixture name
     pub name: String,
@@ -149,16 +175,23 @@ pub struct TestFixture {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of Fixture
 pub enum FixtureType {
+    /// Json
     Json,
+    /// Yaml
     Yaml,
+    /// Toml
     Toml,
+    /// Sql
     Sql,
+    /// Binary
     Binary,
     Custom(String),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for DataGeneration
 pub struct DataGenerationConfig {
     /// Enable data generation
     pub enabled: bool,
@@ -171,6 +204,7 @@ pub struct DataGenerationConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Generationstrategy
 pub struct GenerationStrategy {
     /// Strategy name
     pub name: String,
@@ -183,15 +217,21 @@ pub struct GenerationStrategy {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of Strategy
 pub enum StrategyType {
+    /// Random
     Random,
+    /// Sequential
     Sequential,
+    /// Pattern
     Pattern,
+    /// Template
     Template,
     Custom(String),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for TestDatabase
 pub struct TestDatabaseConfig {
     /// Database URL
     pub url: String,
@@ -204,6 +244,7 @@ pub struct TestDatabaseConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Migration
 pub struct MigrationConfig {
     /// Enable migrations
     pub enabled: bool,
@@ -216,6 +257,7 @@ pub struct MigrationConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Cleanup
 pub struct CleanupConfig {
     /// Cleanup strategy
     pub strategy: CleanupStrategy,
@@ -228,15 +270,21 @@ pub struct CleanupConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Cleanupstrategy
 pub enum CleanupStrategy {
+    /// Truncate
     Truncate,
+    /// Delete
     Delete,
+    /// Rollback
     Rollback,
+    /// Recreate
     Recreate,
     Custom(String),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ParallelTest
 pub struct ParallelTestConfig {
     /// Enable parallel execution
     pub enabled: bool,
@@ -252,6 +300,7 @@ pub struct ParallelTestConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ThreadPool
 pub struct ThreadPoolConfig {
     /// Core pool size
     pub core_size: usize,
@@ -267,6 +316,7 @@ pub struct ThreadPoolConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for ResourceSharing
 pub struct ResourceSharingConfig {
     /// Shared resources
     pub shared_resources: Vec<SharedResource>,
@@ -276,6 +326,7 @@ pub struct ResourceSharingConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Sharedresource
 pub struct SharedResource {
     /// Resource name
     pub name: String,
@@ -288,23 +339,34 @@ pub struct SharedResource {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of Resource
 pub enum ResourceType {
+    /// Database
     Database,
+    /// File
     File,
+    /// Network
     Network,
+    /// Memory
     Memory,
     Custom(String),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Accessmode
 pub enum AccessMode {
+    /// Readonly
     ReadOnly,
+    /// Writeonly
     WriteOnly,
+    /// Readwrite
     ReadWrite,
+    /// Exclusive
     Exclusive,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Resourcelock
 pub struct ResourceLock {
     /// Lock name
     pub name: String,
@@ -317,8 +379,11 @@ pub struct ResourceLock {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of Lock
 pub enum LockType {
+    /// Mutex
     Mutex,
+    /// Rwlock
     RwLock,
     Semaphore(usize),
     Custom(String),
@@ -327,6 +392,7 @@ pub enum LockType {
 // ==================== DEFAULT IMPLEMENTATIONS ====================
 
 impl Default for TestExecutionConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             timeout: Duration::from_secs(30),
@@ -339,6 +405,7 @@ impl Default for TestExecutionConfig {
 }
 
 impl Default for CoverageConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -351,6 +418,7 @@ impl Default for CoverageConfig {
 }
 
 impl Default for AssertionConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             style: AssertionStyle::Traditional,
@@ -362,6 +430,7 @@ impl Default for AssertionConfig {
 }
 
 impl Default for TestDataConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             data_dir: PathBuf::from("tests/data"),
@@ -373,6 +442,7 @@ impl Default for TestDataConfig {
 }
 
 impl Default for TestDatabaseConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             url: "sqlite://memory:".to_string(),
@@ -383,6 +453,7 @@ impl Default for TestDatabaseConfig {
 }
 
 impl Default for MigrationConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -393,6 +464,7 @@ impl Default for MigrationConfig {
 }
 
 impl Default for CleanupConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             strategy: CleanupStrategy::Rollback,
@@ -403,6 +475,7 @@ impl Default for CleanupConfig {
 }
 
 impl Default for ParallelTestConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -414,6 +487,7 @@ impl Default for ParallelTestConfig {
 }
 
 impl Default for ThreadPoolConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             core_size: num_cpus::get(),

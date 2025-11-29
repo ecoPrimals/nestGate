@@ -24,6 +24,7 @@ pub struct SafeMemoryPool<T, const POOL_SIZE: usize = 1024> {
 }
 
 impl<T, const POOL_SIZE: usize> Default for SafeMemoryPool<T, POOL_SIZE> {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

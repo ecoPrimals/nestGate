@@ -10,6 +10,7 @@ use std::collections::HashMap;
 ///
 /// Complete result of performance analysis including trends and resource metrics.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performanceanalysisresult
 pub struct PerformanceAnalysisResult {
     /// Pool performance trends
     pub pool_trends: Vec<PoolTrend>,
@@ -27,6 +28,7 @@ pub struct PerformanceAnalysisResult {
 ///
 /// Latency measurements at different percentiles.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Latencypercentiles
 pub struct LatencyPercentiles {
     /// 50th percentile (median) latency in milliseconds
     pub p50_ms: f64,
@@ -52,6 +54,7 @@ pub struct LatencyPercentiles {
 ///
 /// Analysis of system throughput characteristics.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Throughputanalysis
 pub struct ThroughputAnalysis {
     /// Average throughput in operations per second
     pub avg_ops_per_sec: f64,
@@ -79,6 +82,7 @@ pub struct ThroughputAnalysis {
 ///
 /// System-level resource utilization metrics.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Systemresourcemetrics
 pub struct SystemResourceMetrics {
     /// CPU usage history over time
     pub cpu_usage_history: Vec<f64>,
@@ -98,6 +102,7 @@ pub struct SystemResourceMetrics {
 ///
 /// Performance trend data for a storage pool.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Pooltrend
 pub struct PoolTrend {
     /// Pool name
     pub pool_name: String,
@@ -111,6 +116,7 @@ pub struct PoolTrend {
 ///
 /// Individual performance metric for a pool at a specific time.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Poolmetric
 pub struct PoolMetric {
     /// Timestamp
     pub timestamp: std::time::SystemTime,
@@ -128,6 +134,7 @@ pub struct PoolMetric {
 ///
 /// Network interface information and statistics.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Networkinterface
 pub struct NetworkInterface {
     /// Interface name
     pub name: String,
@@ -145,6 +152,7 @@ pub struct NetworkInterface {
 ///
 /// Analysis of performance trends over time.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performancetrendanalysis
 pub struct PerformanceTrendAnalysis {
     /// CPU usage trend over time
     pub cpu_trend: TrendData,
@@ -162,6 +170,7 @@ pub struct PerformanceTrendAnalysis {
 ///
 /// Detailed analysis of I/O performance metrics.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Ioperformanceanalysis
 pub struct IOPerformanceAnalysis {
     /// Read operations per second
     pub read_ops_per_sec: f64,
@@ -205,6 +214,7 @@ pub struct IOPerformanceAnalysis {
 ///
 /// Analysis of cache performance and hit rates.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Cacheperformanceanalysis
 pub struct CachePerformanceAnalysis {
     /// Cache hit rate (0.0 to 1.0)
     pub hit_rate: f64,
@@ -226,6 +236,7 @@ pub struct CachePerformanceAnalysis {
 ///
 /// Time series data for trend analysis.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Trenddata
 pub struct TrendData {
     /// Data points over time
     pub data_points: Vec<f64>,
@@ -239,6 +250,7 @@ pub struct TrendData {
 ///
 /// Direction of performance trends.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Trenddirection
 pub enum TrendDirection {
     /// Performance is improving
     Improving,

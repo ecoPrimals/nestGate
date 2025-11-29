@@ -1,3 +1,5 @@
+//! Core module
+
 use crate::error::NestGateError;
 use std::collections::HashMap;
 
@@ -13,10 +15,12 @@ use super::super::{
 
 // Type aliases for cleaner code
 type SnapshotRegistry = Arc<RwLock<HashMap<String, SnapshotInfo>>>;
+/// Type alias for ReplicationJobRegistry
 type ReplicationJobRegistry = Arc<RwLock<HashMap<String, ReplicationJob>>>;
 
 /// Enterprise storage backend with advanced features
 #[derive(Debug)]
+/// Enterprisestoragebackend
 pub struct EnterpriseStorageBackend {
     /// Backend identifier
     pub id: String,

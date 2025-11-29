@@ -97,6 +97,7 @@ mod tests {
         static_manager();
     }
 
+    /// Static Manager
     fn static_manager() {
         let _manager = WorkspaceManager::new();
         // Should not cause any issues
@@ -109,6 +110,7 @@ mod tests {
 
         // WorkspaceManager should be Send + Sync
         fn assert_send<T: Send>() {}
+        /// Assert Sync
         fn assert_sync<T: Sync>() {}
 
         assert_send::<WorkspaceManager>();
@@ -160,6 +162,7 @@ mod tests {
     fn test_workspace_manager_const_correctness() {
         // Test that const fn new() is truly const
         const MANAGER1: WorkspaceManager = WorkspaceManager::new();
+        /// Manager2
         const MANAGER2: WorkspaceManager = WorkspaceManager::new();
 
         let debug1 = format!("{:?}", MANAGER1);
@@ -341,6 +344,7 @@ mod tests {
     fn test_workspace_manager_enum_variant() {
         enum ManagerState {
             Active(WorkspaceManager),
+            /// Inactive
             Inactive,
         }
 

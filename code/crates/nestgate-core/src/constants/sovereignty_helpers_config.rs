@@ -12,6 +12,7 @@ use crate::error::utilities::safe_env_var_or_default;
 /// This struct captures all environment variables at initialization time,
 /// eliminating the need for runtime `env::var()` calls.
 #[derive(Debug, Clone)]
+/// Configuration for SovereigntyHelpers
 pub struct SovereigntyHelpersConfig {
     // API configuration
     api_host: String,
@@ -305,6 +306,7 @@ impl SovereigntyHelpersConfig {
 }
 
 impl Default for SovereigntyHelpersConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

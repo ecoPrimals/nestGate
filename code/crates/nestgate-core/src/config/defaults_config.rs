@@ -3,6 +3,7 @@ use std::sync::Arc;
 /// Thread-safe configuration for network port defaults
 /// Captures environment variables at initialization to prevent race conditions
 #[derive(Debug, Clone)]
+/// Configuration for NetworkDefaults
 pub struct NetworkDefaultsConfig {
     // Port configurations
     api_port: Option<u16>,
@@ -100,41 +101,49 @@ impl NetworkDefaultsConfig {
 
     // Port getters with fallback to hardcoded defaults
 
+    /// Gets Api Port
     pub fn get_api_port(&self) -> u16 {
         use crate::constants::hardcoding::ports;
         self.api_port.unwrap_or(ports::API_DEFAULT)
     }
 
+    /// Gets Websocket Port
     pub fn get_websocket_port(&self) -> u16 {
         use crate::constants::hardcoding::ports;
         self.websocket_port.unwrap_or(ports::WEBSOCKET_DEFAULT)
     }
 
+    /// Gets Http Port
     pub fn get_http_port(&self) -> u16 {
         use crate::constants::hardcoding::ports;
         self.http_port.unwrap_or(ports::HTTP_DEFAULT)
     }
 
+    /// Gets Nas Http Port
     pub fn get_nas_http_port(&self) -> u16 {
         use crate::constants::hardcoding::ports;
         self.nas_http_port.unwrap_or(ports::HTTP_DEFAULT)
     }
 
+    /// Gets Dev Server Port
     pub fn get_dev_server_port(&self) -> u16 {
         use crate::constants::hardcoding::ports;
         self.dev_server_port.unwrap_or(ports::API_DEFAULT)
     }
 
+    /// Gets Metrics Port
     pub fn get_metrics_port(&self) -> u16 {
         use crate::constants::hardcoding::ports;
         self.metrics_port.unwrap_or(ports::METRICS_PROMETHEUS)
     }
 
+    /// Gets Health Port
     pub fn get_health_port(&self) -> u16 {
         use crate::constants::hardcoding::ports;
         self.health_port.unwrap_or(ports::HEALTH_DEFAULT)
     }
 
+    /// Gets Orchestrator Port
     pub fn get_orchestrator_port(&self) -> u16 {
         use crate::constants::hardcoding::ports;
         self.orchestrator_port
@@ -143,24 +152,28 @@ impl NetworkDefaultsConfig {
 
     // Address getters with fallback to defaults
 
+    /// Gets Bind Address
     pub fn get_bind_address(&self) -> String {
         self.bind_address
             .clone()
             .unwrap_or_else(|| crate::constants::network_defaults::LOCALHOST_IPV4.to_string())
     }
 
+    /// Gets Development Bind Address
     pub fn get_development_bind_address(&self) -> String {
         self.dev_bind_address
             .clone()
             .unwrap_or_else(|| crate::constants::network_defaults::BIND_ALL_IPV4.to_string())
     }
 
+    /// Gets Hostname
     pub fn get_hostname(&self) -> String {
         self.hostname
             .clone()
             .unwrap_or_else(|| crate::constants::network_defaults::LOCALHOST_NAME.to_string())
     }
 
+    /// Gets External Hostname
     pub fn get_external_hostname(&self) -> String {
         self.external_hostname
             .clone()
@@ -169,6 +182,7 @@ impl NetworkDefaultsConfig {
 
     // URL getters with dynamic construction if not provided
 
+    /// Gets Websocket Base Url
     pub fn get_websocket_base_url(&self) -> String {
         self.websocket_base_url.clone().unwrap_or_else(|| {
             let discovery_config =
@@ -181,6 +195,7 @@ impl NetworkDefaultsConfig {
         })
     }
 
+    /// Gets Api Base Url
     pub fn get_api_base_url(&self) -> String {
         self.api_base_url.clone().unwrap_or_else(|| {
             let discovery_config =
@@ -191,41 +206,49 @@ impl NetworkDefaultsConfig {
 
     // Timeout getters
 
+    /// Gets Connection Timeout Ms
     pub fn get_connection_timeout_ms(&self) -> u64 {
         self.connection_timeout_ms.unwrap_or(3000)
     }
 
+    /// Gets Request Timeout Ms
     pub fn get_request_timeout_ms(&self) -> u64 {
         self.request_timeout_ms.unwrap_or(30000)
     }
 
     // Builder methods for tests
 
+    /// Builder method to set Api Port
     pub fn with_api_port(mut self, port: u16) -> Self {
         self.api_port = Some(port);
         self
     }
 
+    /// Builder method to set Websocket Port
     pub fn with_websocket_port(mut self, port: u16) -> Self {
         self.websocket_port = Some(port);
         self
     }
 
+    /// Builder method to set Http Port
     pub fn with_http_port(mut self, port: u16) -> Self {
         self.http_port = Some(port);
         self
     }
 
+    /// Builder method to set Bind Address
     pub fn with_bind_address(mut self, address: String) -> Self {
         self.bind_address = Some(address);
         self
     }
 
+    /// Builder method to set Hostname
     pub fn with_hostname(mut self, hostname: String) -> Self {
         self.hostname = Some(hostname);
         self
     }
 
+    /// Builder method to set Connection Timeout Ms
     pub fn with_connection_timeout_ms(mut self, timeout: u64) -> Self {
         self.connection_timeout_ms = Some(timeout);
         self
@@ -233,6 +256,7 @@ impl NetworkDefaultsConfig {
 }
 
 impl Default for NetworkDefaultsConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

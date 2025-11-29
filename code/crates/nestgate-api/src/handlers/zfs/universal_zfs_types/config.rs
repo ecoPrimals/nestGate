@@ -19,6 +19,7 @@ use std::collections::HashMap;
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Dataset
 pub struct DatasetConfig {
     /// Dataset name
     pub name: String,
@@ -43,11 +44,13 @@ pub struct DatasetConfig {
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Snapshot
 pub struct SnapshotConfig {
     /// Snapshot name (e.g., "pool/dataset@snapshot-name")
     pub name: String,
     /// Dataset name (e.g., "pool/dataset")
     #[serde(default)]
+    /// Dataset
     pub dataset: String,
     /// Properties to set
     pub properties: HashMap<String, String>,
@@ -60,6 +63,7 @@ pub struct SnapshotConfig {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Datasetconfigcanonical
 pub type DatasetConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
@@ -68,5 +72,6 @@ pub type DatasetConfigCanonical =
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Snapshotconfigcanonical
 pub type SnapshotConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;

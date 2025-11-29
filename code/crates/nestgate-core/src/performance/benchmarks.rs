@@ -1,3 +1,5 @@
+//! Benchmarks module
+
 use crate::error::NestGateError;
 //
 // Specific benchmark implementations for different performance patterns.

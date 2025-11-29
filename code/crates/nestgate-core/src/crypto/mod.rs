@@ -55,6 +55,7 @@ pub struct SecureCrypto {
 
 /// Encryption algorithm selection.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+/// Encryptionalgorithm
 pub enum EncryptionAlgorithm {
     /// AES-256-GCM (recommended for most use cases)
     Aes256Gcm,
@@ -64,6 +65,7 @@ pub enum EncryptionAlgorithm {
 
 /// Encryption parameters.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Encryptionparams
 pub struct EncryptionParams {
     /// Algorithm to use
     pub algorithm: EncryptionAlgorithm,
@@ -73,6 +75,7 @@ pub struct EncryptionParams {
 
 /// Encrypted data container.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Encrypteddata
 pub struct EncryptedData {
     /// The ciphertext
     pub ciphertext: Vec<u8>,
@@ -85,6 +88,7 @@ pub struct EncryptedData {
 }
 
 impl Default for EncryptionParams {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             algorithm: EncryptionAlgorithm::Aes256Gcm,
@@ -176,6 +180,7 @@ impl SecureCrypto {
 }
 
 impl Default for SecureCrypto {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             algorithm: EncryptionAlgorithm::Aes256Gcm,

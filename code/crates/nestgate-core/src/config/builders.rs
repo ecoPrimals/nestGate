@@ -112,6 +112,7 @@ impl ConfigBuilder {
 }
 
 impl Default for ConfigBuilder {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

@@ -7,6 +7,7 @@ use super::metadata::EvolutionMetadata;
 
 /// Idiomatic configuration builder
 #[allow(dead_code)] // Framework infrastructure
+/// Builder pattern for constructing IdiomaticConfig instances
 pub struct IdiomaticConfigBuilder<T> {
     #[allow(dead_code)] // Framework field - intentionally unused
     inner: Option<T>,
@@ -53,6 +54,7 @@ impl<T> IdiomaticConfigBuilder<T> {
 }
 
 impl<T> Default for IdiomaticConfigBuilder<T> {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -60,6 +62,7 @@ impl<T> Default for IdiomaticConfigBuilder<T> {
 
 /// Smart configuration builder with evolution tracking
 #[allow(dead_code)] // Framework infrastructure
+/// Builder pattern for constructing SmartConfig instances
 pub struct SmartConfigBuilder<T> {
     #[allow(dead_code)] // Framework field - intentionally unused
     config: Option<T>,
@@ -114,6 +117,7 @@ impl<T> SmartConfigBuilder<T> {
 }
 
 impl<T> Default for SmartConfigBuilder<T> {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -121,6 +125,7 @@ impl<T> Default for SmartConfigBuilder<T> {
 
 /// Evolution-aware builder
 #[allow(dead_code)] // Framework infrastructure
+/// Builder pattern for constructing EvolutionAware instances
 pub struct EvolutionAwareBuilder<T> {
     #[allow(dead_code)] // Framework field - intentionally unused
     target: Option<T>,
@@ -184,6 +189,7 @@ impl<T> EvolutionAwareBuilder<T> {
 }
 
 impl<T> Default for EvolutionAwareBuilder<T> {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -191,6 +197,7 @@ impl<T> Default for EvolutionAwareBuilder<T> {
 
 /// Canonical builder for standardized construction
 #[allow(dead_code)] // Framework infrastructure
+/// Builder pattern for constructing Canonical instances
 pub struct CanonicalBuilder<T> {
     #[allow(dead_code)] // Framework field - intentionally unused
     item: Option<T>,
@@ -232,6 +239,7 @@ impl<T> CanonicalBuilder<T> {
 }
 
 impl<T> Default for CanonicalBuilder<T> {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -239,6 +247,7 @@ impl<T> Default for CanonicalBuilder<T> {
 
 /// Modernization builder for legacy type evolution
 #[allow(dead_code)] // Framework infrastructure
+/// Builder pattern for constructing Modernization instances
 pub struct ModernizationBuilder<T> {
     #[allow(dead_code)] // Framework field - intentionally unused
     legacy_item: Option<T>,
@@ -306,6 +315,7 @@ impl<T> ModernizationBuilder<T> {
 }
 
 impl<T> Default for ModernizationBuilder<T> {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

@@ -1,3 +1,5 @@
+//! String Pool module
+
 use crate::error::NestGateError;
 use std::collections::HashMap;
 //
@@ -21,10 +23,12 @@ use crate::canonical_modernization::canonical_constants::{
 
 // Type aliases to reduce complexity
 type StringPoolReadGuard<'a> = RwLockReadGuard<'a, HashMap<String, Arc<str>>>;
+/// Type alias for StringPoolWriteGuard
 type StringPoolWriteGuard<'a> = RwLockWriteGuard<'a, HashMap<String, Arc<str>>>;
 
 /// High-performance string pool with Arc-based sharing
 #[derive(Debug)]
+/// Stringpool
 pub struct StringPool {
     /// Thread-safe string cache storage
     pool: crate::canonical::types::StringPoolMap,
@@ -151,6 +155,7 @@ impl StringPool {
 }
 
 impl Clone for StringPool {
+    /// Clone
     fn clone(&self) -> Self {
         Self {
             pool: Arc::clone(&self.pool),
@@ -161,6 +166,7 @@ impl Clone for StringPool {
 }
 
 impl Default for StringPool {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -177,6 +183,7 @@ impl StringPool {
                 Some("safe_read_lock".to_string())
             ))
     }
+    /// Safe Write Lock
     fn safe_write_lock(&self) -> crate::Result<StringPoolWriteGuard> {
         self.pool
             .write()
@@ -189,6 +196,7 @@ impl StringPool {
 
 /// String pool performance statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Stringpoolstatistics
 pub struct StringPoolStatistics {
     /// Number of pooled strings
     pub pool_size: usize,

@@ -2,6 +2,8 @@
 // ZFS-focused storage operations including status monitoring,
 // cleanup, scaling, and low-level storage management.
 
+//! Storage module
+
 use axum::{extract::Json, extract::Path, http::StatusCode};
 use serde_json::{json, Value};
 use tokio::process::Command;

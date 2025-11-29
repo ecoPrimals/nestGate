@@ -40,6 +40,7 @@ use std::sync::Arc;
 /// handled cache/timeout settings. This config specifically manages discovery
 /// endpoints for eliminating runtime `env::var()` calls.
 #[derive(Debug, Clone)]
+/// Configuration for AdapterDiscovery
 pub struct AdapterDiscoveryConfig {
     /// Discovery endpoints for various capability categories
     discovery_endpoints: HashMap<String, String>,
@@ -214,6 +215,7 @@ impl AdapterDiscoveryConfig {
 }
 
 impl Default for AdapterDiscoveryConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

@@ -7,6 +7,7 @@ use crate::handlers::zfs::universal_zfs_types::{UniversalZfsError, UniversalZfsR
 
 /// HTTP client for remote ZFS operations
 #[derive(Debug, Clone)]
+/// Httpclient
 pub struct HttpClient {
     client: reqwest::Client,
     endpoint: String,

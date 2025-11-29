@@ -1,3 +1,5 @@
+//! Resilience module
+
 use crate::error::NestGateError;
 use std::collections::HashMap;
 //
@@ -18,6 +20,7 @@ use tokio::sync::RwLock;
 // Type aliases for complex types
 type CircuitBreakerMap =
     Arc<RwLock<std::collections::HashMap<String, circuit_breaker::CircuitBreaker>>>;
+/// Type alias for BulkheadMap
 type BulkheadMap = Arc<RwLock<std::collections::HashMap<String, bulkhead::Bulkhead>>>;
 // Central resilience coordinator
 pub struct ResilienceManager {
@@ -31,6 +34,7 @@ pub struct ResilienceManager {
 }
 // Configuration for resilience patterns
 #[derive(Debug, Clone)]
+/// Configuration for Resilience
 pub struct ResilienceConfig {
     /// Default circuit breaker configuration
     pub default_circuit_breaker: circuit_breaker::CircuitBreakerConfig,
@@ -43,6 +47,7 @@ pub struct ResilienceConfig {
     pub enable_failure_detection: bool,
 }
 impl Default for ResilienceConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             default_circuit_breaker: circuit_breaker::CircuitBreakerConfig::default(),
@@ -170,19 +175,30 @@ impl ResilienceManager {
 
 // System resilience status
 #[derive(Debug, Clone)]
+/// Resiliencestatus
 pub struct ResilienceStatus {
+    /// Circuit Breakers
     pub circuit_breakers: std::collections::HashMap<String, circuit_breaker::CircuitBreakerState>,
+    /// Bulkheads
     pub bulkheads: std::collections::HashMap<String, bulkhead::BulkheadStatus>,
+    /// Failure Detection Enabled
     pub failure_detection_enabled: bool,
 }
 // Resilience metrics for monitoring
 #[derive(Debug, Clone)]
+/// Resiliencemetrics
 pub struct ResilienceMetrics {
+    /// Circuit Breaker Trips
     pub circuit_breaker_trips: u64,
+    /// Bulkhead Rejections
     pub bulkhead_rejections: u64,
+    /// Timeout Failures
     pub timeout_failures: u64,
+    /// Retry Attempts
     pub retry_attempts: u64,
+    /// Total Operations
     pub total_operations: u64,
+    /// Success Rate
     pub success_rate: f64,
 }
 impl ResilienceManager {

@@ -357,6 +357,7 @@ fn test_result_type_alias() {
 
 #[test]
 fn test_result_with_api_error() {
+    /// Returns Error
     fn returns_error() -> Result<String> {
         Err(nestgate_core::error::NestGateError::Validation(Box::new(
             nestgate_core::error::ValidationErrorDetails {

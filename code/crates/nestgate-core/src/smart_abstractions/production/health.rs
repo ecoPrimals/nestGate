@@ -229,10 +229,15 @@ impl HealthMonitor {
 
 /// System resource health information
 #[derive(Debug)]
+/// Systemresourcehealth
 pub struct SystemResourceHealth {
+    /// Whether healthy
     pub is_healthy: bool,
+    /// Cpu Usage
     pub cpu_usage: f64,
+    /// Memory Usage
     pub memory_usage: f64,
+    /// Disk Usage
     pub disk_usage: f64,
 }
 impl SystemResourceHealth {

@@ -6,6 +6,7 @@ use std::time::SystemTime;
 
 /// Individual diagnostic entry
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Diagnostic
 pub struct Diagnostic {
     /// Diagnostic ID
     pub id: String,

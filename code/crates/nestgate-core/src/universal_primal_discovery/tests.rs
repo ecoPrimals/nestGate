@@ -420,6 +420,7 @@ fn test_cache_thread_safety() {
 /// Test discovery system Send
 #[test]
 fn test_discovery_send() {
+    /// Assert Send
     fn assert_send<T: Send>() {}
 
     // Verify types can be sent between threads

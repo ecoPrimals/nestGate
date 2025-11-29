@@ -7,17 +7,23 @@ use std::collections::HashMap;
 use nestgate_core::error::Result;
 use super::super::super::MetricsReport;
 
+/// Zfsmetrics
 pub struct ZfsMetrics {
+    /// Count of operations
     pub operations_count: u64,
+    /// Total Latency
     pub total_latency: std::time::Duration,
+    /// Count of error
     pub error_count: u64,
 }
 
+/// Metricscollector
 pub struct MetricsCollector {
     metrics: Arc<tokio::sync::RwLock<ZfsMetrics>>,
 }
 
 impl MetricsCollector {
+    /// Creates a new instance
     pub fn new() -> impl std::future::Future<Output = Result<Self, NestGateUnifiedError>> + Send {
         Ok(Self {
             metrics: Arc::new(tokio::sync::RwLock::new(ZfsMetrics {
@@ -28,16 +34,19 @@ impl MetricsCollector {
         })
     }
 
+    /// Start Collection
     pub fn start_collection(&self) -> impl std::future::Future<Output = Result<(), NestGateUnifiedError>> + Send {
         // Start background metrics collection
         Ok(())
     }
 
+    /// Stop Collection
     pub fn stop_collection(&self) -> impl std::future::Future<Output = Result<(), NestGateUnifiedError>> + Send {
         // Stop background metrics collection
         Ok(())
     }
 
+    /// Generate Report
     pub fn generate_report(&self) -> impl std::future::Future<Output = Result<MetricsReport, NestGateUnifiedError>> + Send {
             let metrics = self.metrics.read().await;
         Ok(MetricsReport {

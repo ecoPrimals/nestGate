@@ -12,6 +12,7 @@ use std::collections::HashMap;
 use tracing::info;
 
 #[derive(Debug)]
+/// Errors that can occur during Zfs operations
 pub enum ZfsError {
     /// ZFS operation failed with error message
     OperationFailed(String),
@@ -22,6 +23,7 @@ pub enum ZfsError {
 }
 
 impl std::fmt::Display for ZfsError {
+    /// Fmt
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::OperationFailed(msg) => write!(f, "ZFS operation failed: {}", msg),
@@ -40,6 +42,7 @@ pub type ZfsResult<T> = Result<T, ZfsError>;
 ///
 /// Information about a ZFS snapshot.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Snapshotinfo
 pub struct SnapshotInfo {
     /// Snapshot name
     pub name: String,
@@ -53,9 +56,11 @@ pub struct SnapshotInfo {
 ///
 /// Zero-cost abstraction for ZFS operations with compile-time dispatch.
 #[derive(Debug, Clone)]
+/// Zerocostzfsoperations
 pub struct ZeroCostZfsOperations;
 
 impl Default for ZeroCostZfsOperations {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -64,6 +69,7 @@ impl Default for ZeroCostZfsOperations {
 impl ZeroCostZfsOperations {
     /// Create a new zero-cost ZFS operations instance
     #[must_use]
+    /// Fn
     pub const fn new() -> Self {
         Self
     }
@@ -251,9 +257,11 @@ impl ZeroCostZfsOperations {
 ///
 /// ZFS performance optimization service.
 #[derive(Debug, Clone)]
+/// Performanceoptimizer
 pub struct PerformanceOptimizer;
 
 impl Default for PerformanceOptimizer {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -262,6 +270,7 @@ impl Default for PerformanceOptimizer {
 impl PerformanceOptimizer {
     /// Create a new performance optimizer instance
     #[must_use]
+    /// Fn
     pub const fn new() -> Self {
         Self
     }
@@ -284,9 +293,11 @@ impl PerformanceOptimizer {
 ///
 /// Calculates confidence scores for ZFS operations and predictions.
 #[derive(Debug, Clone)]
+/// Confidencecalculator
 pub struct ConfidenceCalculator;
 
 impl Default for ConfidenceCalculator {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -295,12 +306,14 @@ impl Default for ConfidenceCalculator {
 impl ConfidenceCalculator {
     /// Create a new confidence calculator instance
     #[must_use]
+    /// Fn
     pub const fn new() -> Self {
         Self
     }
 
     /// Calculate confidence score based on provided metrics
     #[must_use]
+    /// Fn
     pub const fn calculate_confidence(&self, _metrics: &HashMap<String, f64>) -> f64 {
         0.85 // Placeholder confidence score
     }
@@ -310,6 +323,7 @@ impl ConfidenceCalculator {
 ///
 /// Dataset information using zero-cost abstractions.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Zerocostdatasetinfo
 pub struct ZeroCostDatasetInfo {
     /// Dataset name
     pub name: String,
@@ -329,6 +343,7 @@ pub struct ZeroCostDatasetInfo {
 ///
 /// Pool information using zero-cost abstractions.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Zerocostpoolinfo
 pub struct ZeroCostPoolInfo {
     /// Pool name
     pub name: String,
@@ -346,6 +361,7 @@ pub struct ZeroCostPoolInfo {
 ///
 /// Snapshot information using zero-cost abstractions.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Zerocostsnapshotinfo
 pub struct ZeroCostSnapshotInfo {
     /// Snapshot name
     pub name: String,
@@ -361,6 +377,7 @@ pub struct ZeroCostSnapshotInfo {
 ///
 /// Extended dataset information with additional metadata.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Zerocostdatasetinfoextended
 pub struct ZeroCostDatasetInfoExtended {
     /// Dataset name
     pub name: String,

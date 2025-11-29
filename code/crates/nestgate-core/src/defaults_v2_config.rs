@@ -12,6 +12,7 @@ use crate::error::utilities::safe_env_var_or_default;
 /// This struct captures all environment variables at initialization time,
 /// eliminating the need for runtime `env::var()` calls.
 #[derive(Debug, Clone)]
+/// Configuration for DefaultsV2
 pub struct DefaultsV2Config {
     // Network settings
     api_port: u16,
@@ -34,17 +35,19 @@ impl DefaultsV2Config {
     /// Default API port
     pub const DEFAULT_API_PORT: u16 = crate::constants::hardcoding::ports::HTTP_DEFAULT;
     /// Default bind address
-    pub const DEFAULT_BIND_ADDRESS: &'static str = crate::constants::hardcoding::addresses::BIND_ALL_IPV4;
+    pub const DEFAULT_BIND_ADDRESS: &'static str =
+        crate::constants::hardcoding::addresses::BIND_ALL_IPV4;
     /// Default hostname
-    pub const DEFAULT_HOSTNAME: &'static str = crate::constants::hardcoding::addresses::LOCALHOST_NAME;
+    pub const DEFAULT_HOSTNAME: &'static str =
+        crate::constants::hardcoding::addresses::LOCALHOST_NAME;
     /// Default WebSocket port
     pub const DEFAULT_WS_PORT: u16 = crate::constants::hardcoding::ports::WEBSOCKET_DEFAULT;
     /// Default health port
     pub const DEFAULT_HEALTH_PORT: u16 = crate::constants::hardcoding::ports::HEALTH_CHECK;
     /// Default database port
-    pub const DEFAULT_DB_PORT: u16 = 5432;
+    pub const DEFAULT_DB_PORT: u16 = crate::constants::hardcoding::ports::POSTGRES_DEFAULT;
     /// Default metrics port
-    pub const DEFAULT_METRICS_PORT: u16 = 9090;
+    pub const DEFAULT_METRICS_PORT: u16 = crate::constants::hardcoding::ports::METRICS_DEFAULT;
 
     /// Create a new configuration with default values (no env vars)
     #[must_use]
@@ -221,6 +224,7 @@ impl DefaultsV2Config {
 }
 
 impl Default for DefaultsV2Config {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -239,8 +243,8 @@ mod tests {
         assert_eq!(config.hostname(), "localhost");
         assert_eq!(config.ws_port(), ports::WEBSOCKET_DEFAULT);
         assert_eq!(config.health_port(), ports::HEALTH_CHECK);
-        assert_eq!(config.db_port(), 5432);
-        assert_eq!(config.metrics_port(), 9090);
+        assert_eq!(config.db_port(), ports::POSTGRES_DEFAULT);
+        assert_eq!(config.metrics_port(), ports::METRICS_DEFAULT);
     }
 
     #[test]

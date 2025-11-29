@@ -26,6 +26,8 @@
 // # }
 // ```
 
+//! Installer module
+
 use anyhow::{Context, Result};
 use console::Style;
 use dialoguer::Confirm;
@@ -42,12 +44,19 @@ use crate::wizard::InstallationWizard;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InstallationInfo {
+    /// Version
     pub version: String,
+    /// Install Date
     pub install_date: chrono::DateTime<chrono::Utc>,
+    /// Install Path
     pub install_path: PathBuf,
+    /// Configuration for path
     pub config_path: PathBuf,
+    /// Data Path
     pub data_path: PathBuf,
+    /// Service Installed
     pub service_installed: bool,
+    /// Features
     pub features: Vec<String>,
 }
 
@@ -401,6 +410,7 @@ impl NestGateInstaller {
         self.get_installation_info().is_ok()
     }
 
+    /// Check System Requirements
     async fn check_system_requirements(&self) -> Result<()> {
         // Check disk space (at least 100MB)
         // Check memory (at least 512MB)
@@ -410,10 +420,12 @@ impl NestGateInstaller {
         Ok(())
     }
 
+    /// Check System Requirements Silent
     async fn check_system_requirements_silent(&self) -> bool {
         self.check_system_requirements().await.is_ok()
     }
 
+    /// Check Zfs Availability
     async fn check_zfs_availability(&self) -> bool {
         // Check if ZFS is available on the system
         std::process::Command::new("zfs")
@@ -438,6 +450,7 @@ impl NestGateInstaller {
         Ok(())
     }
 
+    /// Save Installation Info
     fn save_installation_info(&self, info: &InstallationInfo) -> Result<()> {
         let info_path = self.get_installation_info_path();
         let info_json = serde_json::to_string_pretty(info)?;
@@ -445,6 +458,7 @@ impl NestGateInstaller {
         Ok(())
     }
 
+    /// Gets Installation Info
     fn get_installation_info(&self) -> Result<InstallationInfo> {
         let info_path = self.get_installation_info_path();
         let info_json = fs::read_to_string(&info_path).context("Installation info not found")?;
@@ -453,6 +467,7 @@ impl NestGateInstaller {
         Ok(info)
     }
 
+    /// Gets Installation Info Path
     fn get_installation_info_path(&self) -> PathBuf {
         if let Some(data_dir) = dirs::data_dir() {
             data_dir.join("nestgate").join("install-info.json")
@@ -468,6 +483,7 @@ mod tests {
     use chrono::Utc;
     use std::path::PathBuf;
 
+    /// Creates  Test Installation Info
     fn create_test_installation_info() -> InstallationInfo {
         InstallationInfo {
             version: "1.0.0".to_string(),

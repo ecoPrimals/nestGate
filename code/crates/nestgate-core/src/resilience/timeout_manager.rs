@@ -17,13 +17,19 @@ where
 }
 /// Timeout configuration
 #[derive(Debug, Clone)]
+/// Configuration for Timeout
 pub struct TimeoutConfig {
+    /// Default Timeout
     pub default_timeout: Duration,
+    /// Connection Timeout
     pub connection_timeout: Duration,
+    /// Request Timeout
     pub request_timeout: Duration,
+    /// Long Operation Timeout
     pub long_operation_timeout: Duration,
 }
 impl Default for TimeoutConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             default_timeout: Duration::from_secs(30),
@@ -39,6 +45,7 @@ pub struct TimeoutManager {
     config: TimeoutConfig,
 }
 impl TimeoutManager {
+    /// Creates a new instance
     pub fn new(config: TimeoutConfig) -> Self {
         Self { config }
     }

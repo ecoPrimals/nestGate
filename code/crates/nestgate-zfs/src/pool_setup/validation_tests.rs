@@ -133,6 +133,7 @@ mod validation_tests {
 
     // ==================== PoolSetupValidator Tests ====================
 
+    /// Creates  Test Config
     fn create_test_config() -> PoolSetupConfig {
         PoolSetupConfig {
             pool_name: "testpool".to_string(),
@@ -155,6 +156,7 @@ mod validation_tests {
         }
     }
 
+    /// Creates  Test Device
     fn create_test_device(path: &str, size_bytes: u64, in_use: bool) -> StorageDevice {
         StorageDevice {
             device_path: path.to_string(),

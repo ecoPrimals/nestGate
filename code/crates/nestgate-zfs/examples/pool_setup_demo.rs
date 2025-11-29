@@ -2,6 +2,8 @@
 // Demonstrates the pure Rust ZFS pool setup functionality with hardware detection
 // and intelligent configuration recommendations.
 
+//! Pool Setup Demo module
+
 use nestgate_zfs::pool_setup::ZfsPoolSetup;
 use tracing::error;
 use tracing::info;

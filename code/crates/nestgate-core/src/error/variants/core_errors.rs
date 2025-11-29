@@ -12,10 +12,15 @@ use super::super::data::{
 };
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+/// Errorseverity
 pub enum ErrorSeverity {
+    /// Low
     Low,
+    /// Medium
     Medium,
+    /// High
     High,
+    /// Critical
     Critical,
 }
 
@@ -24,6 +29,7 @@ pub enum ErrorSeverity {
 /// This enum is designed to be small in memory by boxing all the large variants.
 /// This eliminates the `clippy::result_large_err` warnings while maintaining full functionality.
 #[derive(Debug, Clone, Error, Serialize, Deserialize)]
+/// Errors that can occur during NestGateUnified operations
 pub enum NestGateUnifiedError {
     /// Configuration-related errors (boxed for size efficiency)
     #[error("Configuration error: {0}")]
@@ -103,6 +109,7 @@ pub enum NestGateUnifiedError {
 /// Configuration error details
 #[derive(Debug, Clone, Error, Serialize, Deserialize)]
 #[error("Configuration error in {field}: {message}")]
+/// Configurationerrordetails
 pub struct ConfigurationErrorDetails {
     /// The configuration field that caused the error
     pub field: String,
@@ -119,6 +126,7 @@ pub struct ConfigurationErrorDetails {
 /// API error details
 #[derive(Debug, Clone, Error, Serialize, Deserialize)]
 #[error("API error: {message}")]
+/// Apierrordetails
 pub struct ApiErrorDetails {
     /// Error message
     pub message: String,
@@ -135,6 +143,7 @@ pub struct ApiErrorDetails {
 /// Storage error details
 #[derive(Debug, Clone, Error, Serialize, Deserialize)]
 #[error("Storage error: {message}")]
+/// Storageerrordetails
 pub struct StorageErrorDetails {
     /// Error message
     pub message: String,
@@ -151,6 +160,7 @@ pub struct StorageErrorDetails {
 /// Network error details
 #[derive(Debug, Clone, Error, Serialize, Deserialize)]
 #[error("Network error: {message}")]
+/// Networkerrordetails
 pub struct NetworkErrorDetails {
     /// Error message
     pub message: String,
@@ -167,6 +177,7 @@ pub struct NetworkErrorDetails {
 /// Security error details
 #[derive(Debug, Clone, Error, Serialize, Deserialize)]
 #[error("Security error: {message}")]
+/// Securityerrordetails
 pub struct SecurityErrorDetails {
     /// Error message
     pub message: String,
@@ -183,6 +194,7 @@ pub struct SecurityErrorDetails {
 /// Automation error details
 #[derive(Debug, Clone, Error, Serialize, Deserialize)]
 #[error("Automation error: {message}")]
+/// Automationerrordetails
 pub struct AutomationErrorDetails {
     /// Error message
     pub message: String,
@@ -199,6 +211,7 @@ pub struct AutomationErrorDetails {
 /// System error details
 #[derive(Debug, Clone, Error, Serialize, Deserialize)]
 #[error("System error: {message}")]
+/// Systemerrordetails
 pub struct SystemErrorDetails {
     /// Error message
     pub message: String,
@@ -213,6 +226,7 @@ pub struct SystemErrorDetails {
 /// Internal error details
 #[derive(Debug, Clone, Error, Serialize, Deserialize)]
 #[error("Internal error: {message}")]
+/// Internalerrordetails
 pub struct InternalErrorDetails {
     /// Error message
     pub message: String,
@@ -229,6 +243,7 @@ pub struct InternalErrorDetails {
 /// External error details
 #[derive(Debug, Clone, Error, Serialize, Deserialize)]
 #[error("External error: {message}")]
+/// Externalerrordetails
 pub struct ExternalErrorDetails {
     /// Error message
     pub message: String,
@@ -243,6 +258,7 @@ pub struct ExternalErrorDetails {
 /// Validation error details
 #[derive(Debug, Clone, Error, Serialize, Deserialize)]
 #[error("Validation error: {message}")]
+/// Validationerrordetails
 pub struct ValidationErrorDetails {
     /// Error message
     pub message: String,
@@ -259,6 +275,7 @@ pub struct ValidationErrorDetails {
 /// Timeout error details
 #[derive(Debug, Clone, Error, Serialize, Deserialize)]
 #[error("Timeout error: {message}")]
+/// Timeouterrordetails
 pub struct TimeoutErrorDetails {
     /// Error message
     pub message: String,
@@ -275,6 +292,7 @@ pub struct TimeoutErrorDetails {
 /// I/O error details
 #[derive(Debug, Clone, Error, Serialize, Deserialize)]
 #[error("I/O error: {message}")]
+/// Ioerrordetails
 pub struct IoErrorDetails {
     /// Error message
     pub message: String,
@@ -289,6 +307,7 @@ pub struct IoErrorDetails {
 /// Resource exhausted error details
 #[derive(Debug, Clone, Error, Serialize, Deserialize)]
 #[error("Resource exhausted: {message}")]
+/// Resourceexhaustederrordetails
 pub struct ResourceExhaustedErrorDetails {
     /// Error message
     pub message: String,
@@ -305,6 +324,7 @@ pub struct ResourceExhaustedErrorDetails {
 /// Testing error details
 #[derive(Debug, Clone, Error, Serialize, Deserialize)]
 #[error("Testing error: {message}")]
+/// Testingerrordetails
 pub struct TestingErrorDetails {
     /// Error message
     pub message: String,
@@ -327,6 +347,7 @@ pub struct TestingErrorDetails {
 /// Performance error details
 #[derive(Debug, Clone, Error, Serialize, Deserialize)]
 #[error("Performance error: {message}")]
+/// Performanceerrordetails
 pub struct PerformanceErrorDetails {
     /// Error message
     pub message: String,
@@ -349,6 +370,7 @@ pub struct PerformanceErrorDetails {
 /// Handler error details
 #[derive(Debug, Clone, Error, Serialize, Deserialize)]
 #[error("Handler error in {handler_name}: {message}")]
+/// Handlererrordetails
 pub struct HandlerErrorDetails {
     /// Error message
     pub message: String,
@@ -365,6 +387,7 @@ pub struct HandlerErrorDetails {
 /// Load balancer error details
 #[derive(Debug, Clone, Error, Serialize, Deserialize)]
 #[error("Load balancer error: {message}")]
+/// Loadbalancererrordetails
 pub struct LoadBalancerErrorDetails {
     /// Error message
     pub message: String,
@@ -377,6 +400,7 @@ pub struct LoadBalancerErrorDetails {
 /// Not implemented error details
 #[derive(Debug, Clone, Error, Serialize, Deserialize)]
 #[error("Not implemented: {feature}")]
+/// Notimplementederrordetails
 pub struct NotImplementedErrorDetails {
     /// Feature that is not implemented
     pub feature: String,
@@ -390,12 +414,19 @@ pub struct NotImplementedErrorDetails {
 
 /// Test type enumeration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of Test
 pub enum TestType {
+    /// Unit
     Unit,
+    /// Integration
     Integration,
+    /// E2E
     E2E,
+    /// Performance
     Performance,
+    /// Security
     Security,
+    /// Chaos
     Chaos,
 }
 

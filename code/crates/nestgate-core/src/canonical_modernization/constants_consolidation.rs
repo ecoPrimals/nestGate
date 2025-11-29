@@ -1,3 +1,5 @@
+//! Constants Consolidation module
+
 use crate::error::NestGateError;
 use std::collections::HashMap;
 //
@@ -23,6 +25,7 @@ use crate::{Result};
 /// **CONSTANTS CONSOLIDATION MANAGER**
 /// Handles systematic migration of scattered constants to canonical system
 #[derive(Debug)]
+/// Manager for ConstantsConsolidation operations
 pub struct ConstantsConsolidationManager {
     /// Consolidation statistics
     pub stats: ConsolidationStats,
@@ -35,6 +38,7 @@ pub struct ConstantsConsolidationManager {
 }
 /// Consolidation statistics
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Consolidationstats
 pub struct ConsolidationStats {
     /// Total constants found
     pub total_constants: u32,
@@ -53,6 +57,7 @@ pub struct ConsolidationStats {
 }
 /// Size reduction metrics
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Sizereductionmetrics
 pub struct SizeReductionMetrics {
     /// Lines of code eliminated
     pub lines_eliminated: u32,
@@ -65,6 +70,7 @@ pub struct SizeReductionMetrics {
 }
 /// Consolidation warning
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Consolidationwarning
 pub struct ConsolidationWarning {
     /// Warning category
     pub category: ConsolidationWarningCategory,
@@ -77,6 +83,7 @@ pub struct ConsolidationWarning {
 }
 /// Consolidation warning categories
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Consolidationwarningcategory
 pub enum ConsolidationWarningCategory {
     /// Duplicate constant with different values
     DuplicateWithDifferentValues,
@@ -90,6 +97,7 @@ pub enum ConsolidationWarningCategory {
     BreakingChange,
 }
 impl std::fmt::Display for ConsolidationWarningCategory {
+    /// Fmt
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             ConsolidationWarningCategory::DuplicateWithDifferentValues => write!(f, "DuplicateWithDifferentValues"),
@@ -103,6 +111,7 @@ impl std::fmt::Display for ConsolidationWarningCategory {
 
 /// Constant definition
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Constantdefinition
 pub struct ConstantDefinition {
     /// Constant name
     pub name: String,
@@ -123,6 +132,7 @@ pub struct ConstantDefinition {
 }
 /// Constant value types
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Constantvalue
 pub enum ConstantValue {
     /// String constant
     String(String),
@@ -569,40 +579,64 @@ impl ConstantsConsolidationManager {
 
 /// Scattered constant information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Scatteredconstant
 pub struct ScatteredConstant {
+    /// Name
     pub name: String,
+    /// Value
     pub value: ConstantValue,
+    /// Const Type
     pub const_type: String,
+    /// Location
     pub location: String,
+    /// Replaces Hardcoded
     pub replaces_hardcoded: bool,
 }
 /// Hardcoded value detection
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Hardcodedvalue
 pub struct HardcodedValue {
+    /// Value
     pub value: String,
+    /// Location
     pub location: String,
+    /// Context
     pub context: String,
+    /// Suggested Constant
     pub suggested_constant: String,
+    /// Human-readable description
     pub description: String,
 }
 /// Consolidation result
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Consolidationresult
 pub struct ConsolidationResult {
+    /// Consolidated Constants
     pub consolidated_constants: Vec<ScatteredConstant>,
+    /// Duplicates Found
     pub duplicates_found: Vec<ScatteredConstant>,
+    /// Hardcoded Replacements
     pub hardcoded_replacements: Vec<ScatteredConstant>,
+    /// Warnings
     pub warnings: Vec<ConsolidationWarning>,
 }
 /// Consolidation summary
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Consolidationsummary
 pub struct ConsolidationSummary {
+    /// Stats
     pub stats: ConsolidationStats,
+    /// Count of warnings
     pub warnings_count: usize,
+    /// Total Domains
     pub total_domains: usize,
+    /// Count of canonical constants
     pub canonical_constants_count: usize,
+    /// Estimated Maintenance Reduction
     pub estimated_maintenance_reduction: f64,
 }
 impl Default for ConstantsConsolidationManager {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

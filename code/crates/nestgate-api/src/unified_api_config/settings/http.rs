@@ -6,6 +6,7 @@ use std::time::Duration;
 
 /// HTTP server configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Apihttpserversettings
 pub struct ApiHttpServerSettings {
     /// Enable CORS
     pub enable_cors: bool,
@@ -35,6 +36,7 @@ pub struct ApiHttpServerSettings {
     pub graceful_shutdown_timeout: Duration,
 }
 impl Default for ApiHttpServerSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             enable_cors: true,
             cors_origins: vec!["*".to_string()],

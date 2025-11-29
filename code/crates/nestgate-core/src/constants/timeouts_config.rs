@@ -6,6 +6,7 @@ use std::time::Duration;
 /// This struct centralizes all `env::var` calls for the `timeouts` module
 /// to eliminate direct `env::var` calls from production code.
 #[derive(Debug, Clone)]
+/// Configuration for Timeouts
 pub struct TimeoutsConfig {
     connection_timeout_secs: u64,
     request_timeout_secs: u64,
@@ -14,6 +15,7 @@ pub struct TimeoutsConfig {
     retry_delay_ms: u64,
 }
 
+/// Type alias for Sharedtimeoutsconfig
 pub type SharedTimeoutsConfig = Arc<TimeoutsConfig>;
 
 impl TimeoutsConfig {
@@ -57,48 +59,58 @@ impl TimeoutsConfig {
 
     // Getter methods
 
+    /// Connection Timeout
     pub fn connection_timeout(&self) -> Duration {
         Duration::from_secs(self.connection_timeout_secs)
     }
 
+    /// Request Timeout
     pub fn request_timeout(&self) -> Duration {
         Duration::from_secs(self.request_timeout_secs)
     }
 
+    /// Idle Timeout
     pub fn idle_timeout(&self) -> Duration {
         Duration::from_secs(self.idle_timeout_secs)
     }
 
+    /// Keepalive Interval
     pub fn keepalive_interval(&self) -> Duration {
         Duration::from_secs(self.keepalive_interval_secs)
     }
 
+    /// Retry Delay
     pub fn retry_delay(&self) -> Duration {
         Duration::from_millis(self.retry_delay_ms)
     }
 
     // Builder methods for testing
 
+    /// Builder method to set Connection Timeout Secs
     pub fn with_connection_timeout_secs(mut self, secs: u64) -> Self {
         self.connection_timeout_secs = secs;
         self
     }
 
+    /// Builder method to set Request Timeout Secs
     pub fn with_request_timeout_secs(mut self, secs: u64) -> Self {
         self.request_timeout_secs = secs;
         self
     }
 
+    /// Builder method to set Idle Timeout Secs
     pub fn with_idle_timeout_secs(mut self, secs: u64) -> Self {
         self.idle_timeout_secs = secs;
         self
     }
 
+    /// Builder method to set Keepalive Interval Secs
     pub fn with_keepalive_interval_secs(mut self, secs: u64) -> Self {
         self.keepalive_interval_secs = secs;
         self
     }
 
+    /// Builder method to set Retry Delay Ms
     pub fn with_retry_delay_ms(mut self, ms: u64) -> Self {
         self.retry_delay_ms = ms;
         self
@@ -106,6 +118,7 @@ impl TimeoutsConfig {
 }
 
 impl Default for TimeoutsConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self::from_env()
     }

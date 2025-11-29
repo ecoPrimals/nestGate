@@ -143,16 +143,27 @@ pub fn create_zfs_error(message: String, operation: ZfsOperation) -> NestGateErr
 
 /// ZFS operation types for error context
 #[derive(Debug, Clone)]
+/// Zfsoperation
 pub enum ZfsOperation {
+    /// Poolcreate
     PoolCreate,
+    /// Pooldestroy
     PoolDestroy,
+    /// Poolimport
     PoolImport,
+    /// Poolexport
     PoolExport,
+    /// Datasetcreate
     DatasetCreate,
+    /// Datasetdestroy
     DatasetDestroy,
+    /// Datasetmount
     DatasetMount,
+    /// Datasetunmount
     DatasetUnmount,
+    /// Snapshotcreate
     SnapshotCreate,
+    /// Snapshotdestroy
     SnapshotDestroy,
     Command,
     SystemCheck,

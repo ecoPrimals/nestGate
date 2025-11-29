@@ -7,6 +7,8 @@
 // - Alert handling and response
 // - ZFS parameter tuning
 
+//! Performance Comprehensive Tests module
+
 use nestgate_zfs::performance_engine::{
     AccessPattern, AlertResponse, AlertSeverity, AlertType, AppliedOptimization, ArcStatistics,
     BottleneckSeverity, OptimizationType, PerformanceAlert, PerformanceOptimizationResult,
@@ -21,6 +23,7 @@ use std::time::SystemTime;
 mod test_utils {
     use super::*;
 
+    /// Creates  Test Configuration Context
     pub fn create_test_configuration_context() -> ZfsConfigurationContext {
         let mut current_configuration = HashMap::new();
         current_configuration.insert("compression".to_string(), "lz4".to_string());
@@ -46,6 +49,7 @@ mod test_utils {
         }
     }
 
+    /// Creates  Test Workload Pattern
     pub fn create_test_workload_pattern() -> WorkloadPattern {
         let mut io_size_distribution = HashMap::new();
         io_size_distribution.insert("4K".to_string(), 0.4);
@@ -60,6 +64,7 @@ mod test_utils {
         }
     }
 
+    /// Creates  Test Pool Metrics
     pub fn create_test_pool_metrics(pool_name: &str) -> ZfsPoolMetrics {
         ZfsPoolMetrics {
             pool_name: pool_name.to_string(),
@@ -73,6 +78,7 @@ mod test_utils {
         }
     }
 
+    /// Creates  Test Dataset Metrics
     pub fn create_test_dataset_metrics(dataset_name: &str) -> ZfsDatasetMetrics {
         ZfsDatasetMetrics {
             dataset_name: dataset_name.to_string(),
@@ -82,6 +88,7 @@ mod test_utils {
         }
     }
 
+    /// Creates  Test Performance Metrics
     pub fn create_test_performance_metrics() -> ZfsPerformanceMetrics {
         let mut pool_metrics = HashMap::new();
         pool_metrics.insert("testpool".to_string(), create_test_pool_metrics("testpool"));
@@ -110,6 +117,7 @@ mod test_utils {
         }
     }
 
+    /// Creates  Test Bottleneck
     pub fn create_test_bottleneck(severity: BottleneckSeverity) -> ZfsBottleneck {
         ZfsBottleneck {
             bottleneck_type: ZfsBottleneckType::HighLatency,

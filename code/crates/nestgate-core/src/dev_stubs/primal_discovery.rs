@@ -125,6 +125,7 @@ pub fn get_fallback_port(service_name: &str) -> u16 {
     note = "Use canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
 #[allow(deprecated)]
+/// Networkconfigadapter
 pub struct NetworkConfigAdapter {
     #[allow(dead_code)]
     service_name: String,

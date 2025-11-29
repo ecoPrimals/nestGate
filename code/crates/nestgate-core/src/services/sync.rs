@@ -3,10 +3,15 @@ use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Conflictresolution
 pub enum ConflictResolution {
+    /// Overwrite
     Overwrite,
+    /// Merge
     Merge,
+    /// Skip
     Skip,
+    /// Prefernewest
     PreferNewest,
 } // Stub for compilation
 use crate::unified_enums::{UnifiedFileType, UnifiedTierType};
@@ -65,54 +70,87 @@ impl SyncErrors {
 
 /// File metadata for synchronization
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Syncfileinfo
 pub struct SyncFileInfo {
+    /// Size
     pub size: u64,
+    /// Modified
     pub modified: SystemTime,
+    /// Checksum
     pub checksum: String,
+    /// File Type
     pub file_type: UnifiedFileType,
+    /// Permissions
     pub permissions: u32,
+    /// Tier
     pub tier: UnifiedTierType,
 }
 /// Sync operation types
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Syncoperation
 pub enum SyncOperation {
     Create(SyncFileInfo),
     Update(SyncFileInfo),
     Delete(PathBuf),
-    Move { from: PathBuf, to: PathBuf },
+    /// Move
+    Move {
+        from: PathBuf,
+        to: PathBuf,
+    },
 }
 /// Conflict resolution strategies
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Conflictresolutionstrategy
 pub enum ConflictResolutionStrategy {
+    /// Usenewer
     UseNewer,
+    /// Useolder
     UseOlder,
+    /// Uselocal
     UseLocal,
+    /// Useremote
     UseRemote,
+    /// Manual
     Manual,
+    /// Backupboth
     BackupBoth,
 }
 /// Sync conflict information
 #[derive(Debug, Clone)]
+/// Syncconflict
 pub struct SyncConflict {
+    /// Local Info
     pub local_info: SyncFileInfo,
+    /// Remote Info
     pub remote_info: SyncFileInfo,
+    /// Strategy
     pub strategy: ConflictResolutionStrategy,
+    /// Resolved
     pub resolved: bool,
+    /// Timestamp when this was created
     pub created_at: SystemTime,
 }
 /// File change type for change detection
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of FileChange
 pub enum FileChangeType {
+    /// Created
     Created,
+    /// Modified
     Modified,
+    /// Deleted
     Deleted,
     Moved(PathBuf),
 }
 /// Change detection event
 #[derive(Debug, Clone)]
+/// Filechangeevent
 pub struct FileChangeEvent {
+    /// Change Type
     pub change_type: FileChangeType,
+    /// Timestamp
     pub timestamp: SystemTime,
+    /// Whether this feature is enabled
     pub enabled: bool,
 }
 /// **UNIFIED** Sync Configuration using canonical config pattern
@@ -121,6 +159,7 @@ pub type UnifiedSyncConfig = crate::config::canonical_primary::NestGateCanonical
 /// Sync-specific configuration extensions
 /// Domain-specific fields that don't belong in unified base configs
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Syncextensions
 pub struct SyncExtensions {
     /// Delta compression settings
     pub delta: DeltaSyncSettings,
@@ -130,29 +169,44 @@ pub struct SyncExtensions {
     pub service: SyncServiceSettings,
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Deltasyncsettings
 pub struct DeltaSyncSettings {
+    /// Enable Compression
     pub enable_compression: bool,
+    /// Compression Level
     pub compression_level: u8,
+    /// Size of chunk
     pub chunk_size: usize,
+    /// Size of max delta
     pub max_delta_size: usize,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Syncsessionsettings
 pub struct SyncSessionSettings {
+    /// Max Concurrent Sessions
     pub max_concurrent_sessions: usize,
+    /// Session Timeout
     pub session_timeout: Duration,
+    /// Enable Session Resumption
     pub enable_session_resumption: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Syncservicesettings
 pub struct SyncServiceSettings {
+    /// Enable Deduplication
     pub enable_deduplication: bool,
+    /// Conflict Resolution
     pub conflict_resolution: ConflictResolution,
+    /// Max File Size in megabytes
     pub max_file_size_mb: u64,
+    /// Sync Interval
     pub sync_interval: Duration,
 }
 
 impl Default for SyncExtensions {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             delta: DeltaSyncSettings {
@@ -187,24 +241,40 @@ impl UnifiedSyncConfig {
 
 /// Checksum algorithms
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+/// Checksumalgorithm
 pub enum ChecksumAlgorithm {
+    /// Md5
     Md5,
+    /// Sha1
     Sha1,
+    /// Sha256
     Sha256,
     #[default]
+    /// Blake3
     Blake3,
 }
 /// Sync service statistics
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
+/// Syncservicestats
 pub struct SyncServiceStats {
+    /// Total Sessions
     pub total_sessions: u64,
+    /// Active Sessions
     pub active_sessions: u64,
+    /// Completed Sessions
     pub completed_sessions: u64,
+    /// Failed Sessions
     pub failed_sessions: u64,
+    /// Total Bytes Synced
     pub total_bytes_synced: u64,
+    /// Total Files Synced
     pub total_files_synced: u64,
+    /// Conflicts Resolved
     pub conflicts_resolved: u64,
+    /// Conflicts Pending
     pub conflicts_pending: u64,
+    /// Average Sync Time Ms
     pub average_sync_time_ms: f64,
+    /// Uptime Seconds
     pub uptime_seconds: u64,
 }

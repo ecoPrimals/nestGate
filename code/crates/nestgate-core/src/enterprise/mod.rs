@@ -1,3 +1,5 @@
+//! Enterprise module
+
 use crate::error::NestGateError;
 use std::collections::HashMap;
 //
@@ -30,244 +32,405 @@ use tokio::sync::RwLock;
 
 // Enterprise deployment configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Enterprise
 pub struct EnterpriseConfig {
+    /// Cluster
     pub cluster: ClusterConfig,
+    /// High Availability
     pub high_availability: HAConfig,
+    /// Monitoring
     pub monitoring: EnterpriseMonitoringConfig,
+    /// Scalability
     pub scalability: ScalingConfig,
+    /// Disaster Recovery
     pub disaster_recovery: DisasterRecoveryConfig,
+    /// Compliance
     pub compliance: ComplianceConfig,
+    /// Analytics
     pub analytics: AnalyticsConfig,
 }
 // Enterprise monitoring configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for EnterpriseMonitoring
 pub struct EnterpriseMonitoringConfig {
+    /// Metrics Retention Days
     pub metrics_retention_days: u32,
+    /// Alert Channels
     pub alert_channels: Vec<AlertChannel>,
+    /// Configuration for dashboard
     pub dashboard_config: DashboardConfig,
+    /// Custom Metrics
     pub custom_metrics: Vec<CustomMetric>,
+    /// Sla Targets
     pub sla_targets: SLATargets,
 }
 // Alert channel configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Alertchannel
 pub struct AlertChannel {
+    /// Name
     pub name: String,
+    /// Channel Type
     pub channel_type: AlertChannelType,
+    /// Configuration for 
     pub config: HashMap<String, String>,
+    /// Severity Filter
     pub severity_filter: Vec<AlertSeverity>,
 }
 // Alert channel types
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of AlertChannel
 pub enum AlertChannelType {
+    /// Email
     Email,
+    /// Slack
     Slack,
+    /// Pagerduty
     PagerDuty,
+    /// Webhook
     Webhook,
+    /// Sms
     SMS,
+    /// Teams
     Teams,
 }
 // Alert severity levels
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+/// Alertseverity
 pub enum AlertSeverity {
+    /// Critical
     Critical,
+    /// High
     High,
+    /// Medium
     Medium,
+    /// Low
     Low,
+    /// Info
     Info,
 }
 // Dashboard configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Dashboard
 pub struct DashboardConfig {
+    /// Refresh Interval Seconds
     pub refresh_interval_seconds: u32,
+    /// Panels
     pub panels: Vec<DashboardPanel>,
+    /// Custom Queries
     pub custom_queries: Vec<CustomQuery>,
 }
 // Dashboard panel configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Dashboardpanel
 pub struct DashboardPanel {
+    /// Title
     pub title: String,
+    /// Panel Type
     pub panel_type: PanelType,
+    /// Metrics
     pub metrics: Vec<String>,
+    /// Time Range
     pub time_range: TimeRange,
 }
 // Panel types for dashboards
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of Panel
 pub enum PanelType {
+    /// Graph
     Graph,
+    /// Singlestat
     SingleStat,
+    /// Table
     Table,
+    /// Heatmap
     Heatmap,
+    /// Gauge
     Gauge,
+    /// Alert
     Alert,
 }
 // Time range for metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Timerange
 pub struct TimeRange {
+    /// From
     pub from: String,
+    /// To
     pub to: String,
 }
 // Custom metric definition
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Custommetric
 pub struct CustomMetric {
+    /// Name
     pub name: String,
+    /// Human-readable description
     pub description: String,
+    /// Query
     pub query: String,
+    /// Unit
     pub unit: String,
+    /// Thresholds
     pub thresholds: Vec<MetricThreshold>,
 }
 // Metric threshold for alerting
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Metricthreshold
 pub struct MetricThreshold {
+    /// Value
     pub value: f64,
+    /// Operator
     pub operator: ThresholdOperator,
+    /// Severity
     pub severity: AlertSeverity,
+    /// Duration Seconds
     pub duration_seconds: u32,
 }
 // Threshold operators
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Thresholdoperator
 pub enum ThresholdOperator {
+    /// Greaterthan
     GreaterThan,
+    /// Lessthan
     LessThan,
+    /// Equal
     Equal,
+    /// Notequal
     NotEqual,
+    /// Greaterthanorequal
     GreaterThanOrEqual,
+    /// Lessthanorequal
     LessThanOrEqual,
 }
 // Custom query for dashboards
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Customquery
 pub struct CustomQuery {
+    /// Name
     pub name: String,
+    /// Query
     pub query: String,
+    /// Human-readable description
     pub description: String,
 }
 // SLA targets configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Slatargets
 pub struct SLATargets {
+    /// Availability Percent
     pub availability_percent: f64,
+    /// Response Time Ms
     pub response_time_ms: u64,
+    /// Error Rate Percent
     pub error_rate_percent: f64,
+    /// Throughput Requests Per Second
     pub throughput_requests_per_second: f64,
 }
 // Scaling configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Scaling
 pub struct ScalingConfig {
+    /// Auto Scaling Enabled
     pub auto_scaling_enabled: bool,
+    /// Min Instances
     pub min_instances: u32,
+    /// Max Instances
     pub max_instances: u32,
+    /// Target Cpu Percent
     pub target_cpu_percent: f64,
+    /// Target Memory Percent
     pub target_memory_percent: f64,
+    /// Scale Up Cooldown Seconds
     pub scale_up_cooldown_seconds: u32,
+    /// Scale Down Cooldown Seconds
     pub scale_down_cooldown_seconds: u32,
 }
 // Disaster recovery configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for DisasterRecovery
 pub struct DisasterRecoveryConfig {
+    /// Backup Enabled
     pub backup_enabled: bool,
+    /// Backup Interval Hours
     pub backup_interval_hours: u32,
+    /// Backup Retention Days
     pub backup_retention_days: u32,
+    /// Replication Enabled
     pub replication_enabled: bool,
+    /// Replication Targets
     pub replication_targets: Vec<ReplicationTarget>,
+    /// Recovery Time Objective Minutes
     pub recovery_time_objective_minutes: u32,
+    /// Recovery Point Objective Minutes
     pub recovery_point_objective_minutes: u32,
 }
 // Replication target
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Replicationtarget
 pub struct ReplicationTarget {
+    /// Name
     pub name: String,
+    /// Endpoint
     pub endpoint: String,
+    /// Region
     pub region: String,
+    /// Priority
     pub priority: u32,
 }
 // Compliance configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Compliance
 pub struct ComplianceConfig {
+    /// Audit Enabled
     pub audit_enabled: bool,
+    /// Audit Retention Days
     pub audit_retention_days: u32,
+    /// Compliance Standards
     pub compliance_standards: Vec<ComplianceStandard>,
+    /// Data Classification
     pub data_classification: DataClassificationConfig,
+    /// Access Control
     pub access_control: AccessControlConfig,
 }
 // Compliance standards
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Compliancestandard
 pub enum ComplianceStandard {
+    /// Soc2
     SOC2,
+    /// Gdpr
     GDPR,
+    /// Hipaa
     HIPAA,
+    /// Pci Dss
     PCI_DSS,
+    /// Iso27001
     ISO27001,
+    /// Nist
     NIST,
 }
 // Data classification configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for DataClassification
 pub struct DataClassificationConfig {
+    /// Whether this feature is enabled
     pub enabled: bool,
+    /// Classification Levels
     pub classification_levels: Vec<DataClassificationLevel>,
+    /// Auto Classification
     pub auto_classification: bool,
 }
 // Data classification level
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Dataclassificationlevel
 pub struct DataClassificationLevel {
+    /// Name
     pub name: String,
+    /// Human-readable description
     pub description: String,
+    /// Retention Days
     pub retention_days: Option<u32>,
+    /// Encryption Required
     pub encryption_required: bool,
+    /// Access Restrictions
     pub access_restrictions: Vec<String>,
 }
 // Access control configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for AccessControl
 pub struct AccessControlConfig {
+    /// Rbac Enabled
     pub rbac_enabled: bool,
+    /// Mfa Required
     pub mfa_required: bool,
+    /// Session Timeout Minutes
     pub session_timeout_minutes: u32,
+    /// Audit All Access
     pub audit_all_access: bool,
 }
 // Password policy
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Passwordpolicy
 pub struct PasswordPolicy {
+    /// Min Length
     pub min_length: u32,
+    /// Require Uppercase
     pub require_uppercase: bool,
+    /// Require Lowercase
     pub require_lowercase: bool,
+    /// Require Numbers
     pub require_numbers: bool,
+    /// Require Special Chars
     pub require_special_chars: bool,
+    /// Max Age Days
     pub max_age_days: u32,
+    /// Count of history
     pub history_count: u32,
 }
 // Analytics configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Analytics
 pub struct AnalyticsConfig {
+    /// Whether this feature is enabled
     pub enabled: bool,
+    /// Data Retention Days
     pub data_retention_days: u32,
+    /// Real Time Analytics
     pub real_time_analytics: bool,
+    /// Machine Learning Enabled
     pub machine_learning_enabled: bool,
+    /// Predictive Analytics
     pub predictive_analytics: bool,
+    /// Custom Dashboards
     pub custom_dashboards: Vec<CustomDashboard>,
 }
 // Custom dashboard configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Customdashboard
 pub struct CustomDashboard {
+    /// Name
     pub name: String,
+    /// Human-readable description
     pub description: String,
+    /// Widgets
     pub widgets: Vec<DashboardWidget>,
+    /// Refresh Interval Seconds
     pub refresh_interval_seconds: u32,
 }
 // Dashboard widget
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Dashboardwidget
 pub struct DashboardWidget {
+    /// Title
     pub title: String,
+    /// Widget Type
     pub widget_type: WidgetType,
+    /// Data Source
     pub data_source: String,
+    /// Configuration for 
     pub config: HashMap<String, serde_json::Value>,
 }
 // Widget types
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of Widget
 pub enum WidgetType {
+    /// Linechart
     LineChart,
+    /// Barchart
     BarChart,
+    /// Piechart
     PieChart,
+    /// Gauge
     Gauge,
+    /// Counter
     Counter,
+    /// Table
     Table,
+    /// Heatmap
     Heatmap,
+    /// Map
     Map,
 }
 // Enterprise manager - coordinates all enterprise features
@@ -420,25 +583,40 @@ impl EnterpriseManager {
 
 // Enterprise status aggregation
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Enterprisestatus
 pub struct EnterpriseStatus {
+    /// Cluster
     pub cluster: ClusterStatus,
+    /// High Availability
     pub high_availability: String, // Placeholder for HAStatus
+    /// Monitoring
     pub monitoring: String, // Placeholder for MonitoringStatus
+    /// Scaling
     pub scaling: String, // Placeholder for ScalingStatus
+    /// Disaster Recovery
     pub disaster_recovery: String, // Placeholder for DRStatus
+    /// Compliance
     pub compliance: String, // Placeholder for ComplianceStatus
+    /// Analytics
     pub analytics: String, // Placeholder for AnalyticsStatus
+    /// Overall Health
     pub overall_health: HealthStatus,
 }
 // Overall health status
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Status values for Health
 pub enum HealthStatus {
+    /// Healthy
     Healthy,
+    /// Degraded
     Degraded,
+    /// Unhealthy
     Unhealthy,
+    /// Critical
     Critical,
 }
 impl Default for EnterpriseConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             cluster: ClusterConfig::default(),
@@ -453,6 +631,7 @@ impl Default for EnterpriseConfig {
 }
 
 impl Default for EnterpriseMonitoringConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             metrics_retention_days: 90,
@@ -465,6 +644,7 @@ impl Default for EnterpriseMonitoringConfig {
 }
 
 impl Default for DashboardConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             refresh_interval_seconds: 30,
@@ -475,6 +655,7 @@ impl Default for DashboardConfig {
 }
 
 impl Default for SLATargets {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             availability_percent: 99.9,
@@ -486,6 +667,7 @@ impl Default for SLATargets {
 }
 
 impl Default for ScalingConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             auto_scaling_enabled: true,
@@ -500,6 +682,7 @@ impl Default for ScalingConfig {
 }
 
 impl Default for DisasterRecoveryConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             backup_enabled: true,
@@ -514,6 +697,7 @@ impl Default for DisasterRecoveryConfig {
 }
 
 impl Default for ComplianceConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             audit_enabled: true,
@@ -526,6 +710,7 @@ impl Default for ComplianceConfig {
 }
 
 impl Default for DataClassificationConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -536,6 +721,7 @@ impl Default for DataClassificationConfig {
 }
 
 impl Default for AccessControlConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             rbac_enabled: true,
@@ -547,6 +733,7 @@ impl Default for AccessControlConfig {
 }
 
 impl Default for PasswordPolicy {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             min_length: 12,
@@ -561,6 +748,7 @@ impl Default for PasswordPolicy {
 }
 
 impl Default for AnalyticsConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,

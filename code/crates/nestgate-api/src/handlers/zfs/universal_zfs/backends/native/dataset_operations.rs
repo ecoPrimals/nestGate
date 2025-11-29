@@ -1,6 +1,8 @@
 //
 // Contains all dataset-related operations for the native ZFS backend.
 
+//! Dataset Operations module
+
 use std::collections::HashMap;
 // Removed unused tracing import
 

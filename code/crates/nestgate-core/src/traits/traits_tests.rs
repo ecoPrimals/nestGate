@@ -18,6 +18,7 @@ struct TestConfig {
 }
 
 impl Default for TestConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             name: "test-service".to_string(),
@@ -49,6 +50,7 @@ struct TestError {
 }
 
 impl std::fmt::Display for TestError {
+    /// Fmt
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "TestError: {}", self.message)
     }
@@ -68,6 +70,7 @@ struct MockService {
 }
 
 impl MockService {
+    /// Creates a new instance
     fn new() -> Self {
         Self {
             config: TestConfig::default(),
@@ -86,27 +89,36 @@ impl MockService {
 }
 
 impl CanonicalService for MockService {
+    /// Type alias for Config
     type Config = TestConfig;
+    /// Type alias for Health
     type Health = TestHealth;
+    /// Type alias for Metrics
     type Metrics = TestMetrics;
+    /// Type alias for Error
     type Error = TestError;
 
+    /// Start
     async fn start(&self) -> Result<(), Self::Error> {
         Ok(())
     }
 
+    /// Stop
     async fn stop(&self) -> Result<(), Self::Error> {
         Ok(())
     }
 
+    /// Checks if Healthy
     async fn is_healthy(&self) -> Result<Self::Health, Self::Error> {
         Ok(self.health.clone())
     }
 
+    /// Gets Metrics
     async fn get_metrics(&self) -> Result<Self::Metrics, Self::Error> {
         Ok(self.metrics.clone())
     }
 
+    /// Capabilities
     async fn capabilities(&self) -> Result<ServiceCapabilities, Self::Error> {
         Ok(ServiceCapabilities {
             can_scale: true,
@@ -116,10 +128,12 @@ impl CanonicalService for MockService {
         })
     }
 
+    /// Validates  Config
     async fn validate_config(&self, _config: &Self::Config) -> Result<Vec<String>, Self::Error> {
         Ok(vec![])
     }
 
+    /// Service Id
     fn service_id(&self) -> &str {
         "mock-service"
     }
@@ -210,6 +224,7 @@ struct MockProvider {
 }
 
 impl MockProvider {
+    /// Creates a new instance
     fn new() -> Self {
         Self {
             config: TestConfig::default(),
@@ -218,25 +233,32 @@ impl MockProvider {
 }
 
 impl CanonicalProvider<String> for MockProvider {
+    /// Type alias for Config
     type Config = TestConfig;
+    /// Type alias for Error
     type Error = TestError;
+    /// Type alias for Metadata
     type Metadata = HashMap<String, String>;
 
+    /// Provide
     async fn provide(&self, _config: Self::Config) -> Result<String, Self::Error> {
         Ok("provided-value".to_string())
     }
 
+    /// Configure
     async fn configure(&mut self, config: Self::Config) -> Result<(), Self::Error> {
         self.config = config;
         Ok(())
     }
 
+    /// Metadata
     async fn metadata(&self) -> Result<Self::Metadata, Self::Error> {
         let mut meta = HashMap::new();
         meta.insert("name".to_string(), self.config.name.clone());
         Ok(meta)
     }
 
+    /// Health Check
     async fn health_check(&self) -> Result<ProviderHealth, Self::Error> {
         Ok(ProviderHealth {
             is_healthy: true,
@@ -245,6 +267,7 @@ impl CanonicalProvider<String> for MockProvider {
         })
     }
 
+    /// Capabilities
     async fn capabilities(&self) -> Result<ProviderCapabilities, Self::Error> {
         use crate::unified_enums::service_types::UnifiedServiceType;
         Ok(ProviderCapabilities {
@@ -311,36 +334,42 @@ async fn test_provider_capabilities() {
 
 #[test]
 fn test_canonical_service_trait_available() {
+    ///  Test
     fn _test<T: CanonicalService>() {}
     // Trait is accessible
 }
 
 #[test]
 fn test_canonical_storage_trait_available() {
+    ///  Test
     fn _test<T: CanonicalStorage>() {}
     // Trait is accessible
 }
 
 #[test]
 fn test_canonical_network_trait_available() {
+    ///  Test
     fn _test<T: CanonicalNetwork>() {}
     // Trait is accessible
 }
 
 #[test]
 fn test_canonical_security_trait_available() {
+    ///  Test
     fn _test<T: CanonicalSecurity>() {}
     // Trait is accessible
 }
 
 #[test]
 fn test_canonical_provider_trait_available() {
+    ///  Test
     fn _test<T, P: CanonicalProvider<T>>() {}
     // Trait with generic parameter is accessible
 }
 
 #[test]
 fn test_unified_storage_trait_available() {
+    ///  Test
     fn _test<T: UnifiedStorage>() {}
     // Trait is accessible
 }
@@ -350,6 +379,7 @@ fn test_unified_storage_trait_available() {
 #[test]
 fn test_canonical_service_reexported() {
     use super::CanonicalService;
+    ///  Test
     fn _test<T: CanonicalService>() {}
     // Re-export works
 }
@@ -357,6 +387,7 @@ fn test_canonical_service_reexported() {
 #[test]
 fn test_canonical_provider_reexported() {
     use super::CanonicalProvider;
+    ///  Test
     fn _test<T, P: CanonicalProvider<T>>() {}
     // Re-export works
 }
@@ -364,6 +395,7 @@ fn test_canonical_provider_reexported() {
 #[test]
 fn test_unified_storage_reexported() {
     use super::UnifiedStorage;
+    ///  Test
     fn _test<T: UnifiedStorage>() {}
     // Re-export works
 }

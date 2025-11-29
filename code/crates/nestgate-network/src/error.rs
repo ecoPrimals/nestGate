@@ -8,6 +8,7 @@ use thiserror::Error;
 
 /// Network-specific error types
 #[derive(Debug, Error)]
+/// Errors that can occur during Network operations
 pub enum NetworkError {
     #[error("Connection failed: {message}")]
     ConnectionFailed { message: String },

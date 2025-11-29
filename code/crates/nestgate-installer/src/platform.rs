@@ -8,17 +8,25 @@
 // - System requirements validation
 // - Platform-specific installation paths
 
+//! Platform module
+
 use anyhow::Result;
 use std::path::Path;
 
 #[derive(Debug, Clone)]
 pub struct PlatformInfo {
+    /// Os
     pub os: String,
+    /// Arch
     pub arch: String,
+    /// Supports Systemd
     pub supports_systemd: bool,
+    /// Supports Launchd
     pub supports_launchd: bool,
+    /// Supports Windows Service
     pub supports_windows_service: bool,
     #[allow(dead_code)] // Reserved for future binary extension support
+    /// Binary Extension
     pub binary_extension: String,
 }
 

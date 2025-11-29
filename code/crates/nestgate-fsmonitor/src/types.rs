@@ -5,6 +5,8 @@
 // use nestgate_core::smart_abstractions::smart_default::SmartDefault;
 // SmartDefault temporarily disabled for compilation
 // use nestgate_core::error::idiomatic_evolution::SmartDefault;
+//! Types module
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -31,6 +33,7 @@ pub enum FsEventType {
     MetadataChanged,
 }
 impl Default for FsEventType {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Modified
     }
@@ -55,6 +58,7 @@ pub struct FsEvent {
     pub metadata: HashMap<String, serde_json::Value>,
 }
 impl Default for FsEvent {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             event_type: FsEventType::default(),
@@ -91,6 +95,7 @@ pub struct FsMonitorStats {
     pub performance_metrics: HashMap<String, f64>,
 }
 impl Default for FsMonitorStats {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             total_events: 0,
@@ -123,6 +128,7 @@ pub struct EventFilter {
     pub max_file_size: Option<u64>,
 }
 impl Default for EventFilter {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             include_types: vec![
@@ -159,6 +165,7 @@ pub struct PerformanceSettings {
     pub high_performance_mode: bool,
 }
 impl Default for PerformanceSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             debounce_duration: Duration::from_millis(100),
@@ -183,6 +190,7 @@ pub struct NotificationChannel {
     pub enabled: bool,
 }
 impl Default for NotificationChannel {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             name: "default".to_string(),
@@ -223,6 +231,7 @@ pub struct WatchConfig {
     pub enabled: bool,
 }
 impl Default for WatchConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             path: PathBuf::from("/mnt/storage"),

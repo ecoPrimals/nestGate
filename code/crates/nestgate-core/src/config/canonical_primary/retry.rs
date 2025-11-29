@@ -10,6 +10,7 @@ use std::time::Duration;
 
 /// **THE** canonical retry configuration - consolidates all retry patterns
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Retry
 pub struct RetryConfig {
     /// Maximum number of retry attempts
     pub max_attempts: u32,
@@ -28,6 +29,7 @@ pub struct RetryConfig {
 }
 
 impl Default for RetryConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             max_attempts: 3,

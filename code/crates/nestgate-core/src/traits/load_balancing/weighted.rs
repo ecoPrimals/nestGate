@@ -32,12 +32,14 @@ impl WeightedRoundRobinLoadBalancer {
 }
 
 impl Default for WeightedRoundRobinLoadBalancer {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
 }
 
 impl LoadBalancer for WeightedRoundRobinLoadBalancer {
+    /// Select Service
     async fn select_service(
         &self,
         services: &[ServiceInfo],
@@ -115,6 +117,7 @@ impl LoadBalancer for WeightedRoundRobinLoadBalancer {
         })
     }
 
+    /// Record Response
     async fn record_response(
         &self,
         service: &ServiceInfo,
@@ -129,15 +132,18 @@ impl LoadBalancer for WeightedRoundRobinLoadBalancer {
         Ok(())
     }
 
+    /// Updates  Weights
     async fn update_weights(&self, weights: HashMap<String, f64>) -> Result<()> {
         *self.weights.write() = weights;
         Ok(())
     }
 
+    /// Gets Stats
     async fn get_stats(&self) -> Result<LoadBalancerStats> {
         Ok(self.stats.read().clone())
     }
 
+    /// Algorithm
     fn algorithm(&self) -> &'static str {
         "weighted_round_robin"
     }
@@ -164,12 +170,14 @@ impl WeightedRandomLoadBalancer {
 }
 
 impl Default for WeightedRandomLoadBalancer {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
 }
 
 impl LoadBalancer for WeightedRandomLoadBalancer {
+    /// Select Service
     async fn select_service(
         &self,
         services: &[ServiceInfo],
@@ -245,6 +253,7 @@ impl LoadBalancer for WeightedRandomLoadBalancer {
         Ok(services[services.len() - 1].clone())
     }
 
+    /// Record Response
     async fn record_response(
         &self,
         service: &ServiceInfo,
@@ -259,15 +268,18 @@ impl LoadBalancer for WeightedRandomLoadBalancer {
         Ok(())
     }
 
+    /// Updates  Weights
     async fn update_weights(&self, weights: HashMap<String, f64>) -> Result<()> {
         *self.weights.write() = weights;
         Ok(())
     }
 
+    /// Gets Stats
     async fn get_stats(&self) -> Result<LoadBalancerStats> {
         Ok(self.stats.read().clone())
     }
 
+    /// Algorithm
     fn algorithm(&self) -> &'static str {
         "weighted_random"
     }

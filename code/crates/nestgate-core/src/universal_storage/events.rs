@@ -21,6 +21,7 @@ pub struct StorageEventBroadcaster {
     event_history: Arc<EventHistory>,
 }
 impl Default for StorageEventBroadcaster {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -87,16 +88,21 @@ impl StorageEventBroadcaster {
 
 /// Storage Events for real-time coordination
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storageevent
 pub enum StorageEvent {
+    /// Filecreated
     FileCreated {
         size: u64,
         metadata: Box<FileMetadata>,
     },
+    /// Filemodified
     FileModified {
         changes: Vec<Change>,
     },
+    /// Filedeleted
     FileDeleted {
     },
+    /// Directorycreated
     DirectoryCreated {
     },
     DirectoryDeleted {

@@ -1,3 +1,5 @@
+//! Native Async module
+
 pub mod config;
 pub mod development;
 pub mod production;
@@ -35,6 +37,7 @@ pub use service::NativeAsyncNetworkService;
 
 // Type aliases for compatibility
 pub type ProductionNetworkServiceDiscovery = production::ProductionServiceDiscovery;
+/// Type alias for Productionnetworkprotocolhandler
 pub type ProductionNetworkProtocolHandler = production::ProductionProtocolHandler;
 
 // Tests module
@@ -98,6 +101,7 @@ mod tests {
         }
 
         impl Default for MockProtocolConfig {
+            /// Returns the default instance
             fn default() -> Self {
                 Self {
                     protocol: "http".to_string(),
@@ -117,8 +121,11 @@ mod tests {
         #[derive(Debug, Clone)]
         #[allow(dead_code)]
         pub(super) enum MockServiceEventType {
+            /// Serviceup
             ServiceUp,
+            /// Servicedown
             ServiceDown,
+            /// Configchanged
             ConfigChanged,
             Registered, // Added missing variant
         }
@@ -135,6 +142,7 @@ mod tests {
         }
 
         impl Default for MockServiceInfo {
+            /// Returns the default instance
             fn default() -> Self {
                 Self {
                     // SOVEREIGNTY FIX: Use capability-based naming

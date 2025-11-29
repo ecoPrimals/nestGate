@@ -46,6 +46,7 @@ mod workspace_manager_final_tests {
 
     #[test]
     fn test_workspace_manager_const_new() {
+        ///  Manager
         const _MANAGER: WorkspaceManager = WorkspaceManager::new();
         // This tests that new() is const
     }

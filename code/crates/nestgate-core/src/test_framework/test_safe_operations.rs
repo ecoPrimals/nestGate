@@ -7,6 +7,7 @@ use std::future::Future;
 use std::time::{Duration, Instant};
 /// Test result type using unified error system
 use crate::error::NestGateError;
+/// Type alias for Testresult
 pub type TestResult<T = ()> = Result<T>;
 /// Safe JSON serialization for tests with rich error context
 pub fn safe_test_to_json<T: Serialize>(
@@ -206,6 +207,7 @@ where
             .await
             .map_err(|e| crate::NestGateError::internal_error(
                     "Batch operation failed: {) item {} of {} in {test_context}",
+                    /// Operation Name
                     operation_name,
                     index + 1,
                     items.len()

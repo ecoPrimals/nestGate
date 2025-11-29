@@ -1,6 +1,8 @@
 //
 // HTTP endpoints for real-time metrics and monitoring.
 
+//! Metrics module
+
 use axum::{http::StatusCode, Json};
 use tracing::{debug, error};
 

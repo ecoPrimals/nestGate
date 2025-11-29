@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// Request structure for creating a new team.
 #[derive(Debug, Deserialize)]
+/// Request parameters for CreateTeam operation
 pub struct CreateTeamRequest {
     /// Team name
     pub name: String,
@@ -21,6 +22,7 @@ pub struct CreateTeamRequest {
 ///
 /// Information about a team.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Teaminfo
 pub struct TeamInfo {
     /// Team identifier
     pub id: String,

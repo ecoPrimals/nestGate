@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 // use std::time::Duration; // Unused - removed for cleaner builds
 /// **Tracing configuration**
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Tracing
 pub struct TracingConfig {
     /// Log level (trace, debug, info, warn, error)
     pub level: String,
@@ -30,6 +31,7 @@ pub struct TracingConfig {
     pub security: SecurityConfig,
 }
 impl Default for TracingConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             level: "info".to_string(),
@@ -48,6 +50,7 @@ impl Default for TracingConfig {
 
 /// **Log aggregation configuration**
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for LogAggregation
 pub struct LogAggregationConfig {
     /// Enable log aggregation
     pub enabled: bool,
@@ -65,6 +68,7 @@ pub struct LogAggregationConfig {
     pub external_systems: ExternalSystemsConfig,
 }
 impl Default for LogAggregationConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -80,6 +84,7 @@ impl Default for LogAggregationConfig {
 
 /// **Log retention configuration**
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for LogRetention
 pub struct LogRetentionConfig {
     /// Enable automatic log retention
     pub enabled: bool,
@@ -95,6 +100,7 @@ pub struct LogRetentionConfig {
     /// Archive directory path
 }
 impl Default for LogRetentionConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -123,6 +129,7 @@ impl Default for LogRetentionConfig {
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for Retry
 pub struct RetryConfig {
     /// Maximum number of retries
     pub max_retries: u32,
@@ -136,6 +143,7 @@ pub struct RetryConfig {
     pub enable_jitter: bool,
 }
 impl Default for RetryConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             max_retries: 3,
@@ -164,6 +172,7 @@ impl Default for RetryConfig {
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for ExternalSystems
 pub struct ExternalSystemsConfig {
     /// Elasticsearch/ELK configuration
     pub elk: Option<ElkConfig>,
@@ -191,6 +200,7 @@ pub struct ExternalSystemsConfig {
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for Elk
 pub struct ElkConfig {
     /// Elasticsearch endpoint
     pub elasticsearch_url: String,
@@ -205,6 +215,7 @@ pub struct ElkConfig {
     /// TLS certificate path
 }
 impl Default for ElkConfig {
+    /// Returns the default instance
     fn default() -> Self {
         let discovery_config = crate::config::discovery_config::ServiceDiscoveryConfig::default();
         Self {
@@ -234,6 +245,7 @@ impl Default for ElkConfig {
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for Loki
 pub struct LokiConfig {
     /// Loki endpoint
     pub endpoint: String,
@@ -247,6 +259,7 @@ pub struct LokiConfig {
     pub tls_enabled: bool,
 }
 impl Default for LokiConfig {
+    /// Returns the default instance
     fn default() -> Self {
         let discovery_config = crate::config::discovery_config::ServiceDiscoveryConfig::default();
         Self {
@@ -276,6 +289,7 @@ impl Default for LokiConfig {
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for Jaeger
 pub struct JaegerConfig {
     /// Jaeger agent endpoint
     pub agent_endpoint: String,
@@ -289,6 +303,7 @@ pub struct JaegerConfig {
     pub enable_baggage: bool,
 }
 impl Default for JaegerConfig {
+    /// Returns the default instance
     fn default() -> Self {
         let discovery_config = crate::config::discovery_config::ServiceDiscoveryConfig::default();
         Self {
@@ -318,6 +333,7 @@ impl Default for JaegerConfig {
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for Webhook
 pub struct WebhookConfig {
     /// Webhook name
     pub name: String,
@@ -351,6 +367,7 @@ pub struct WebhookConfig {
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for Auth
 pub struct AuthConfig {
     /// Authentication type (basic, bearer, api_key)
     pub auth_type: String,
@@ -382,6 +399,7 @@ pub struct AuthConfig {
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for Performance
 pub struct PerformanceConfig {
     /// Enable async logging
     pub async_logging: bool,
@@ -399,6 +417,7 @@ pub struct PerformanceConfig {
     pub deduplication_window_secs: u64,
 }
 impl Default for PerformanceConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             async_logging: true,
@@ -429,6 +448,7 @@ impl Default for PerformanceConfig {
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for Security
 pub struct SecurityConfig {
     /// Enable log encryption
     pub encryption_enabled: bool,
@@ -446,6 +466,7 @@ pub struct SecurityConfig {
     pub pii_patterns: Vec<String>,
 }
 impl Default for SecurityConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             encryption_enabled: false,
@@ -570,6 +591,7 @@ impl TracingConfig {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Securityconfigcanonical
 pub type SecurityConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using SecurityConfig (the deprecated struct) for now.
@@ -586,6 +608,7 @@ pub type SecurityConfigCanonical = crate::config::canonical_primary::domains::ne
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Retryconfigcanonical
 pub type RetryConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using RetryConfig (the deprecated struct) for now.
@@ -602,6 +625,7 @@ pub type RetryConfigCanonical = crate::config::canonical_primary::domains::netwo
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Externalsystemsconfigcanonical
 pub type ExternalSystemsConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using ExternalSystemsConfig (the deprecated struct) for now.
@@ -618,6 +642,7 @@ pub type ExternalSystemsConfigCanonical = crate::config::canonical_primary::doma
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Elkconfigcanonical
 pub type ElkConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using ElkConfig (the deprecated struct) for now.
@@ -634,6 +659,7 @@ pub type ElkConfigCanonical = crate::config::canonical_primary::domains::network
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Lokiconfigcanonical
 pub type LokiConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using LokiConfig (the deprecated struct) for now.
@@ -650,6 +676,7 @@ pub type LokiConfigCanonical = crate::config::canonical_primary::domains::networ
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Jaegerconfigcanonical
 pub type JaegerConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using JaegerConfig (the deprecated struct) for now.
@@ -666,6 +693,7 @@ pub type JaegerConfigCanonical = crate::config::canonical_primary::domains::netw
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Webhookconfigcanonical
 pub type WebhookConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using WebhookConfig (the deprecated struct) for now.
@@ -682,6 +710,7 @@ pub type WebhookConfigCanonical = crate::config::canonical_primary::domains::net
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Authconfigcanonical
 pub type AuthConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using AuthConfig (the deprecated struct) for now.
@@ -698,6 +727,7 @@ pub type AuthConfigCanonical = crate::config::canonical_primary::domains::networ
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Performanceconfigcanonical
 pub type PerformanceConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using PerformanceConfig (the deprecated struct) for now.

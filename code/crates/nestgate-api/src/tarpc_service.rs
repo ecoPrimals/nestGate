@@ -6,6 +6,8 @@
 // - Load balancing
 // - Circuit breaker patterns
 
+//! Tarpc Service module
+
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Instant;
@@ -28,21 +30,26 @@ use tracing::warn;
 
 /// RPC client for connecting to remote NestGate services
 #[derive(Clone)]
+/// Rpcclient
 pub struct RpcClient;
 /// RPC server for hosting NestGate services
 #[derive(Clone)]
+/// Rpcserver
 pub struct RpcServer;
 impl RpcClient {
+    /// Connect
     fn connect(_addr: &str) -> Result<Self, String> {
         Ok(RpcClient)
     }
 
+    /// Health Check
     fn health_check(&self) -> Result<bool, String> {
         Ok(true)
     }
 }
 
 impl RpcServer {
+    /// Creates a new instance
     fn new() -> Self { RpcServer
     , fn start(&self, _addr: &str) -> Result<(), String> {
         Ok(())
@@ -81,6 +88,7 @@ pub struct TarpcServiceManager {
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for ServiceMesh
 pub struct ServiceMeshConfig {
     /// Enable load balancing across service instances
     pub enable_load_balancing: bool,
@@ -100,6 +108,7 @@ pub struct ServiceMeshConfig {
     pub request_timeout: Duration,
 }
 impl Default for ServiceMeshConfig {
+    /// Returns the default instance
     fn default() -> Self { Self {
             enable_load_balancing: true,
             enable_circuit_breaker: true,
@@ -122,25 +131,40 @@ struct HealthMonitor {
 #[derive(Debug, Clone)]
 struct ServiceHealthInfo {
     #[allow(dead_code)]
+    /// Service name
     pub service_name: String,
+    /// Last Check
     pub last_check: Instant,
+    /// Health Status
     pub health_status: HealthStatus,
+    /// Response Time
     pub response_time: Duration,
+    /// Success Rate
     pub success_rate: f64,
+    /// Total Requests
     pub total_requests: u64,
+    /// Successful Requests
     pub successful_requests: u64,
+    /// Failed Requests
     pub failed_requests: u64,
 }
 /// Circuit breaker implementation
 #[derive(Debug, Clone)]
 struct CircuitBreaker {
     #[allow(dead_code)]
+    /// Service name
     pub service_name: String,
+    /// State
     pub state: CircuitBreakerState,
+    /// Count of failure
     pub failure_count: u32,
+    /// Count of success
     pub success_count: u32,
+    /// Last Failure Time
     pub last_failure_time: Option<Instant>,
+    /// Threshold
     pub threshold: f64,
+    /// Timeout
     pub timeout: Duration,
 }
 /// Circuit breaker states
@@ -153,13 +177,20 @@ enum CircuitBreakerState {
 /// Service performance metrics
 #[derive(Debug, Default)]
 struct ServiceMetrics {
+    /// Total Requests
     pub total_requests: u64,
+    /// Successful Requests
     pub successful_requests: u64,
+    /// Failed Requests
     pub failed_requests: u64,
     #[allow(dead_code)]
+    /// Average Response Time
     pub average_response_time: Duration,
+    /// Active Connections
     pub active_connections: usize,
+    /// Peak Connections
     pub peak_connections: usize,
+    /// Bytes Transferred
     pub bytes_transferred: u64,
 }
 impl TarpcServiceManager {
@@ -708,6 +739,7 @@ pub fn create_production_service_manager() -> TarpcServiceManager {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Servicemeshconfigcanonical
 pub type ServiceMeshConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using ServiceMeshConfig (the deprecated struct) for now.

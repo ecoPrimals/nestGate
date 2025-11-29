@@ -19,6 +19,7 @@ pub trait ZeroCostCacheProvider<K, V> {
     since = "0.9.0",
     note = "Use crate::traits::canonical::CanonicalSecurity with const generics"
 )]
+/// ZeroCostSecurityProvider trait
 pub trait ZeroCostSecurityProvider<Token, Credentials> {
     /// Authenticate - compile-time specialization
     fn authenticate(&self, credentials: &Credentials)
@@ -35,6 +36,7 @@ pub trait ZeroCostSecurityProvider<Token, Credentials> {
     since = "0.9.0",
     note = "Use crate::traits::unified_storage::UnifiedStorage with const generics for zero-cost patterns"
 )]
+/// ZeroCostStorageProvider trait
 pub trait ZeroCostStorageProvider<Key, Value> {
     /// Store value - no runtime overhead
     fn store(&self, key: Key, value: Value) -> Result<(), super::types::ZeroCostError>;

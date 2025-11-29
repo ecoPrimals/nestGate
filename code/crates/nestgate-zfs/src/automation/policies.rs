@@ -9,6 +9,7 @@ use std::collections::HashMap;
 
 /// Tier assignment rules for automatic dataset placement
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Tierassignmentrules
 pub struct TierAssignmentRules {
     /// Auto-assign new datasets based on predicted usage
     pub auto_assign_new: bool,
@@ -21,6 +22,7 @@ pub struct TierAssignmentRules {
 }
 /// Size-based tier thresholds for automatic assignment
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Tiersizethresholds
 pub struct TierSizeThresholds {
     /// Files smaller than this go to hot tier (bytes)
     pub hot_max_size: u64,
@@ -29,6 +31,7 @@ pub struct TierSizeThresholds {
 }
 /// Access pattern rules for tier assignment
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Accesspatternrules
 pub struct AccessPatternRules {
     /// Daily access count threshold for hot tier
     pub hot_access_threshold: u32,
@@ -39,13 +42,18 @@ pub struct AccessPatternRules {
 }
 /// Performance requirements per tier
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performancerequirement
 pub struct PerformanceRequirement {
+    /// Max Latency Ms
     pub max_latency_ms: f64,
+    /// Min Throughput Mbps
     pub min_throughput_mbps: f64,
+    /// Min Iops
     pub min_iops: u32,
 }
 /// Lifecycle management rules with comprehensive automation policies
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Lifecyclerules
 pub struct LifecycleRules {
     /// Automatic cleanup of old files
     pub enable_cleanup: bool,
@@ -62,6 +70,7 @@ pub struct LifecycleRules {
 }
 /// Migration automation rules with scheduling and performance controls
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Migrationrules
 pub struct MigrationRules {
     /// Enable automatic migration based on access patterns
     pub enable_auto_migration: bool,
@@ -80,6 +89,7 @@ pub struct MigrationRules {
 }
 /// Migration scheduling configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Migrationschedule
 pub struct MigrationSchedule {
     /// Hours during which migration is allowed
     pub allowed_hours: Vec<u8>,
@@ -90,6 +100,7 @@ pub struct MigrationSchedule {
 }
 /// Performance impact limits for migrations
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Migrationperformancelimits
 pub struct MigrationPerformanceLimits {
     /// Maximum CPU usage during migration (%)
     pub max_cpu_usage: f64,
@@ -100,6 +111,7 @@ pub struct MigrationPerformanceLimits {
 }
 /// Performance thresholds for optimization triggers
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performancethresholds
 pub struct PerformanceThresholds {
     /// Latency threshold that triggers optimization (ms)
     pub max_latency_ms: f64,

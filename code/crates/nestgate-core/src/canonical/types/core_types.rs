@@ -80,82 +80,125 @@ pub type HealthCheckFunction = Arc<dyn Fn() -> bool + Send + Sync>;
 ///
 /// Canonical structure for storing service metadata in registries.
 #[derive(Debug, Clone)]
+/// Serviceinfo
 pub struct ServiceInfo {
+    /// Service identifier
     pub service_id: String,
+    /// Service Type
     pub service_type: String,
+    /// Capabilities
     pub capabilities: Vec<String>,
+    /// Endpoint
     pub endpoint: String,
+    /// Health Status
     pub health_status: String,
+    /// Additional metadata key-value pairs
     pub metadata: HashMap<String, String>,
 }
 /// **Event Handler Structure**
 ///
 /// Canonical structure for event handling in the system.
 #[derive(Debug, Clone)]
+/// Handler for Event requests
 pub struct EventHandler {
+    /// Handler identifier
     pub handler_id: String,
+    /// Event Type
     pub event_type: String,
+    /// Handler Function
     pub handler_function: String, // Function name or identifier
 }
 /// **Alert Rule Structure**
 ///
 /// Canonical structure for defining alert rules.
 #[derive(Debug, Clone)]
+/// Alertrule
 pub struct AlertRule {
+    /// Rule identifier
     pub rule_id: String,
+    /// Name
     pub name: String,
+    /// Condition
     pub condition: String,
+    /// Severity
     pub severity: String,
+    /// Whether this feature is enabled
     pub enabled: bool,
 }
 /// **Alert Structure**
 ///
 /// Canonical structure for active alerts.
 #[derive(Debug, Clone)]
+/// Alert
 pub struct Alert {
+    /// Alert identifier
     pub alert_id: String,
+    /// Rule identifier
     pub rule_id: String,
+    /// Message
     pub message: String,
+    /// Severity
     pub severity: String,
+    /// Timestamp
     pub timestamp: std::time::SystemTime,
+    /// Resolved
     pub resolved: bool,
 }
 /// **Alert Channel Structure**
 ///
 /// Canonical structure for alert notification channels.
 #[derive(Debug, Clone)]
+/// Alertchannel
 pub struct AlertChannel {
+    /// Channel identifier
     pub channel_id: String,
+    /// Channel Type
     pub channel_type: String,
+    /// Endpoint
     pub endpoint: String,
+    /// Whether this feature is enabled
     pub enabled: bool,
 }
 /// **Suppression Rule Structure**
 ///
 /// Canonical structure for alert suppression rules.
 #[derive(Debug, Clone)]
+/// Suppressionrule
 pub struct SuppressionRule {
+    /// Rule identifier
     pub rule_id: String,
+    /// Name
     pub name: String,
+    /// Pattern
     pub pattern: String,
+    /// Duration Seconds
     pub duration_seconds: u64,
+    /// Whether this feature is enabled
     pub enabled: bool,
 }
 /// **Health Check Structure**
 ///
 /// Canonical structure for health check configurations.
 #[derive(Debug, Clone)]
+/// Healthcheck
 pub struct HealthCheck {
+    /// Check identifier
     pub check_id: String,
+    /// Name
     pub name: String,
+    /// Component
     pub component: String,
+    /// Interval Seconds
     pub interval_seconds: u64,
+    /// Timeout Seconds
     pub timeout_seconds: u64,
+    /// Whether this feature is enabled
     pub enabled: bool,
 }
 // ==================== SECTION ====================
 
 impl Default for ServiceInfo {
+    /// Returns the default instance
     fn default() -> Self {
         // Use centralized port configuration instead of direct env::var
         let discovery_config = crate::config::discovery_config::ServiceDiscoveryConfig::default();
@@ -172,6 +215,7 @@ impl Default for ServiceInfo {
 }
 
 impl Default for EventHandler {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             handler_id: "default".to_string(),
@@ -182,6 +226,7 @@ impl Default for EventHandler {
 }
 
 impl Default for AlertRule {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             rule_id: "default".to_string(),
@@ -194,6 +239,7 @@ impl Default for AlertRule {
 }
 
 impl Default for Alert {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             alert_id: "default".to_string(),
@@ -207,6 +253,7 @@ impl Default for Alert {
 }
 
 impl Default for AlertChannel {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             channel_id: "default".to_string(),
@@ -218,6 +265,7 @@ impl Default for AlertChannel {
 }
 
 impl Default for SuppressionRule {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             rule_id: "default".to_string(),
@@ -230,6 +278,7 @@ impl Default for SuppressionRule {
 }
 
 impl Default for HealthCheck {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             check_id: "default".to_string(),

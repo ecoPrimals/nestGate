@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 /// Storage resource representation
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storageresource
 pub struct StorageResource {
     /// Unique resource identifier
     pub resource_id: String,
@@ -44,6 +45,7 @@ pub struct StorageResource {
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for StorageResource
 pub struct StorageResourceConfig {
     /// Resource name
     pub name: String,
@@ -58,6 +60,7 @@ pub struct StorageResourceConfig {
 }
 /// Storage metrics and usage statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagemetrics
 pub struct StorageMetrics {
     /// Total storage capacity in bytes
     pub total_capacity_bytes: u64,
@@ -81,6 +84,7 @@ pub struct StorageMetrics {
     pub custom_metrics: HashMap<String, serde_json::Value>,
 }
 impl Default for StorageResource {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             resource_id: uuid::Uuid::new_v4().to_string(),
@@ -97,6 +101,7 @@ impl Default for StorageResource {
 }
 
 impl Default for StorageResourceConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             name: "New Resource".to_string(),
@@ -109,6 +114,7 @@ impl Default for StorageResourceConfig {
 }
 
 impl Default for StorageMetrics {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             total_capacity_bytes: 0,
@@ -203,6 +209,7 @@ impl StorageResource {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Storageresourceconfigcanonical
 pub type StorageResourceConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using StorageResourceConfig (the deprecated struct) for now.

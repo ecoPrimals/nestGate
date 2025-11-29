@@ -8,6 +8,7 @@ use crate::handlers::zfs::universal_zfs::config::RemoteConfig;
 
 /// Remote ZFS service implementation
 #[derive(Debug)]
+/// Service implementation for RemoteZfs
 pub struct RemoteZfsService {
     service_name: String,
     service_version: String,
@@ -17,6 +18,7 @@ pub struct RemoteZfsService {
     connection_stats: RwLock<ConnectionStats>,
 }
 impl Clone for RemoteZfsService {
+    /// Clone
     fn clone(&self) -> Self {
         Self {
             service_name: self.service_name.clone(),

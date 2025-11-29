@@ -4,6 +4,7 @@ use std::sync::Arc;
 /// Thread-safe configuration for service registry
 /// Captures environment variables at initialization to prevent race conditions
 #[derive(Debug, Clone)]
+/// Configuration for Registry
 pub struct RegistryConfig {
     // Core registry settings
     registry_url: Option<String>,
@@ -88,26 +89,32 @@ impl RegistryConfig {
 
     // Accessor methods
 
+    /// Gets Registry Url
     pub fn get_registry_url(&self) -> Option<&str> {
         self.registry_url.as_deref()
     }
 
+    /// Gets Service Mesh Endpoint
     pub fn get_service_mesh_endpoint(&self) -> Option<&str> {
         self.service_mesh_endpoint.as_deref()
     }
 
+    /// Gets Kubernetes Namespace
     pub fn get_kubernetes_namespace(&self) -> Option<&str> {
         self.kubernetes_namespace.as_deref()
     }
 
+    /// Checks if has Docker Compose Project
     pub fn has_docker_compose_project(&self) -> bool {
         self.docker_compose_project.is_some()
     }
 
+    /// Gets Capability Discovery Endpoint
     pub fn get_capability_discovery_endpoint(&self) -> Option<&str> {
         self.capability_discovery_endpoint.as_deref()
     }
 
+    /// Gets Api Endpoint
     pub fn get_api_endpoint(&self) -> Option<&str> {
         self.api_endpoint.as_deref()
     }
@@ -148,26 +155,31 @@ impl RegistryConfig {
 
     // Builder methods for tests
 
+    /// Builder method to set Registry Url
     pub fn with_registry_url(mut self, url: String) -> Self {
         self.registry_url = Some(url);
         self
     }
 
+    /// Builder method to set Service Mesh Endpoint
     pub fn with_service_mesh_endpoint(mut self, endpoint: String) -> Self {
         self.service_mesh_endpoint = Some(endpoint);
         self
     }
 
+    /// Builder method to set Kubernetes Namespace
     pub fn with_kubernetes_namespace(mut self, namespace: String) -> Self {
         self.kubernetes_namespace = Some(namespace);
         self
     }
 
+    /// Builder method to set Capability Discovery Endpoint
     pub fn with_capability_discovery_endpoint(mut self, endpoint: String) -> Self {
         self.capability_discovery_endpoint = Some(endpoint);
         self
     }
 
+    /// Builder method to set Registry Entry
     pub fn with_registry_entry(mut self, service: &str, query_type: &str, value: String) -> Self {
         let key = format!(
             "NESTGATE_REGISTRY_{}_{}",
@@ -178,6 +190,7 @@ impl RegistryConfig {
         self
     }
 
+    /// Builder method to set Adapter Port
     pub fn with_adapter_port(mut self, adapter_name: &str, port: u16) -> Self {
         let key = format!("NESTGATE_ADAPTER_{}_PORT", adapter_name.to_uppercase());
         self.adapter_ports.insert(key, port);
@@ -186,6 +199,7 @@ impl RegistryConfig {
 }
 
 impl Default for RegistryConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

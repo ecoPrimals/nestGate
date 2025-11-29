@@ -401,6 +401,7 @@ mod expanded_metrics_tests {
 
     // ==================== HELPER FUNCTIONS ====================
 
+    /// Creates  Test Pool Metrics
     fn create_test_pool_metrics(name: &str) -> PoolMetrics {
         PoolMetrics {
             name: name.to_string(),
@@ -418,6 +419,7 @@ mod expanded_metrics_tests {
         }
     }
 
+    /// Creates  Test System Metrics
     fn create_test_system_metrics() -> SystemMetrics {
         SystemMetrics {
             _cpu_usage: 50.0,
@@ -429,6 +431,7 @@ mod expanded_metrics_tests {
         }
     }
 
+    /// Creates  Test Network Io
     fn create_test_network_io() -> NetworkIOMetrics {
         NetworkIOMetrics {
             bytes_sent: 1_000_000,
@@ -438,6 +441,7 @@ mod expanded_metrics_tests {
         }
     }
 
+    /// Creates  Test Disk Io
     fn create_test_disk_io() -> DiskIOMetrics {
         DiskIOMetrics {
             read_bytes: 5_000_000,

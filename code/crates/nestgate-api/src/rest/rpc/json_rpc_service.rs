@@ -3,6 +3,8 @@
 // Standard JSON RPC service for HTTP-based communication with orchestration.
 // Provides orchestration and service coordination capabilities.
 
+//! Json Rpc Service module
+
 use super::{
     RpcConnectionType, RpcError, RpcStreamEvent, UnifiedRpcRequest, UnifiedRpcResponse,
     UnifiedRpcService,
@@ -51,6 +53,7 @@ struct StreamHandle {
 /// JSON-RPC service implementation for remote procedure calls.
 #[derive(Debug, Clone)]
 #[allow(dead_code)] // Base URL field used for service configuration
+/// Service implementation for JsonRpc
 pub struct JsonRpcService {
     /// Service base URL for RPC endpoints
     base_url: String,
@@ -58,6 +61,7 @@ pub struct JsonRpcService {
 impl JsonRpcService {
     /// Create a new JSON RPC service
     #[must_use]
+    /// Fn
     pub const fn new(base_url: String) -> Self {
         Self { base_url }
     }
@@ -78,6 +82,7 @@ impl JsonRpcService {
 
     /// Check connection status
     #[must_use]
+    /// Fn
     pub const fn check_connection_status(&self) -> bool {
         // Simplified - assume always connected
         true
@@ -105,6 +110,7 @@ impl JsonRpcService {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     #[must_use]
+    /// Fn
     pub const fn subscribe(&self, _event_type: &str) -> Result<(), RpcError> {
         // Simplified stub implementation
         Ok(())
@@ -112,6 +118,7 @@ impl JsonRpcService {
 }
 
 impl UnifiedRpcService for JsonRpcService {
+    /// Call
     async fn call(&self, request: UnifiedRpcRequest) -> Result<UnifiedRpcResponse, RpcError> {
         // Simplified - no explicit connection check here, as the service itself is always connected
         // The UnifiedRpcService trait expects a connected state, which is handled by the trait's
@@ -142,6 +149,7 @@ impl UnifiedRpcService for JsonRpcService {
         }
     }
 
+    /// Start Stream
     async fn start_stream(
         &self,
         request: UnifiedRpcRequest,
@@ -164,10 +172,12 @@ impl UnifiedRpcService for JsonRpcService {
         ))
     }
 
+    /// Connection Type
     fn connection_type(&self) -> RpcConnectionType {
         RpcConnectionType::JsonRpc
     }
 
+    /// Health Check
     async fn health_check(&self) -> Result<bool, RpcError> {
         // Simplified - no explicit connection check here, as the service itself is always connected
         // The UnifiedRpcService trait expects a connected state, which is handled by the trait's

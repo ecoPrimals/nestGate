@@ -14,6 +14,8 @@
 // ==================== SECTION ====================
 
 //! Dashboard overview and summary endpoints
+//! Endpoints module
+
 pub mod overview;
 //! Real-time metrics and monitoring endpoints
 pub mod metrics;

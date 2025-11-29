@@ -51,6 +51,7 @@ impl ZfsServiceFactory {
     /// This is a quick check suitable for const contexts.
     /// For full detection, use `detect_zfs_capabilities()` instead.
     #[must_use]
+    /// Fn
     pub const fn check_zfs_availability() -> bool {
         // Quick platform check - actual availability determined at runtime
         cfg!(target_os = "linux") || cfg!(target_os = "freebsd") || cfg!(target_os = "macos")

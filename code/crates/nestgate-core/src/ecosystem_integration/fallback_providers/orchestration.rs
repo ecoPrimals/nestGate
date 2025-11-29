@@ -22,12 +22,16 @@ use crate::ecosystem_integration::capability_router::{FallbackProvider, Capabili
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for OrchestrationFallback
 pub struct OrchestrationFallbackConfig {
+    /// Whether this feature is enabled
     pub enabled: bool,
+    /// Timeout Seconds
     pub timeout_seconds: u64,
 }
 
 impl Default for OrchestrationFallbackConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -37,21 +41,25 @@ impl Default for OrchestrationFallbackConfig {
 }
 
 impl Default for OrchestrationFallbackProvider {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
 }
 
 #[derive(Debug)]
+/// Orchestrationfallbackprovider
 pub struct OrchestrationFallbackProvider {
     _config: OrchestrationFallbackConfig, // Mark as intentionally unused with underscore prefix
 }
 
 impl OrchestrationFallbackProvider {
+    /// Creates a new instance
     pub fn new() -> Self {
         Self::with_config(OrchestrationFallbackConfig::default())
     }
 
+    /// Builder method to set Config
     pub fn with_config(config: OrchestrationFallbackConfig) -> Self {
         Self { _config: config }
     }
@@ -143,6 +151,7 @@ impl OrchestrationFallbackProvider {
 }
 
 impl FallbackProvider for OrchestrationFallbackProvider {
+    /// Execute
     async fn execute(
         &self,
         operation: &str,
@@ -158,6 +167,7 @@ impl FallbackProvider for OrchestrationFallbackProvider {
         }
     }
 
+    /// Supported Operations
     fn supported_operations(&self) -> Vec<String> {
         vec![
             "register_service".to_string(),
@@ -168,6 +178,7 @@ impl FallbackProvider for OrchestrationFallbackProvider {
         ]
     }
 
+    /// Metadata
     fn metadata(&self) -> HashMap<String, String> {
         let mut metadata = HashMap::new();
         metadata.insert(
@@ -192,6 +203,7 @@ impl FallbackProvider for OrchestrationFallbackProvider {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Orchestrationfallbackconfigcanonical
 pub type OrchestrationFallbackConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using OrchestrationFallbackConfig (the deprecated struct) for now.

@@ -273,14 +273,21 @@ impl RealMetricsCollector {
 
 /// IOPS metrics structure
 #[derive(Debug, Clone)]
+/// Iopsmetrics
 pub struct IOPSMetrics {
+    /// Read Iops
     pub read_iops: f64,
+    /// Write Iops
     pub write_iops: f64,
+    /// Total Iops
     pub total_iops: f64,
+    /// Count of device
     pub device_count: i32,
+    /// Timestamp
     pub timestamp: SystemTime,
 }
 impl Default for IOPSMetrics {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             read_iops: 0.0,
@@ -294,14 +301,21 @@ impl Default for IOPSMetrics {
 
 /// Network metrics structure
 #[derive(Debug, Clone)]
+/// Networkmetrics
 pub struct NetworkMetrics {
+    /// Rx Bytes Per Sec
     pub rx_bytes_per_sec: f64,
+    /// Tx Bytes Per Sec
     pub tx_bytes_per_sec: f64,
+    /// Total Bytes Per Sec
     pub total_bytes_per_sec: f64,
+    /// Count of interface
     pub interface_count: i32,
+    /// Timestamp
     pub timestamp: SystemTime,
 }
 impl Default for NetworkMetrics {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             rx_bytes_per_sec: 0.0,
@@ -315,21 +329,32 @@ impl Default for NetworkMetrics {
 
 /// ZFS-specific metrics
 #[derive(Debug, Clone)]
+/// Zfsmetrics
 pub struct ZFSMetrics {
+    /// Arc Stats
     pub arc_stats: ZFSArcStats,
+    /// Pool Stats
     pub pool_stats: Vec<PoolIOStats>,
+    /// Timestamp
     pub timestamp: SystemTime,
 }
 /// ZFS ARC statistics
 #[derive(Debug, Clone)]
+/// Zfsarcstats
 pub struct ZFSArcStats {
+    /// Size Bytes
     pub size_bytes: u64,
+    /// Target Size Bytes
     pub target_size_bytes: u64,
+    /// Hits
     pub hits: u64,
+    /// Misses
     pub misses: u64,
+    /// Hit Ratio
     pub hit_ratio: f64,
 }
 impl Default for ZFSArcStats {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             size_bytes: 0,
@@ -343,10 +368,16 @@ impl Default for ZFSArcStats {
 
 /// Pool I/O statistics
 #[derive(Debug, Clone)]
+/// Pooliostats
 pub struct PoolIOStats {
+    /// Pool name
     pub pool_name: String,
+    /// Read Ops
     pub read_ops: f64,
+    /// Write Ops
     pub write_ops: f64,
+    /// Read Bandwidth
     pub read_bandwidth: f64,
+    /// Write Bandwidth
     pub write_bandwidth: f64,
 } 

@@ -18,11 +18,15 @@ pub trait EnhancedZeroCostService<
     const BUFFER_SIZE: usize = 8192,
     const MAX_CONNECTIONS: usize = 1000,
     const TIMEOUT_MS: u64 = 30000,
+    /// Enable Metrics
     const ENABLE_METRICS: bool = true,
+    /// Thread Count
     const THREAD_COUNT: usize = 8,
 >
 {
+    /// Type alias for Config
     type Config: Clone + Send + Sync + 'static;
+    /// Type alias for Metrics
     type Metrics: Clone + Send + Sync + 'static;
 
     /// Get compile-time optimized buffer size
@@ -73,7 +77,9 @@ pub struct ZeroCostConfigBuilder<
     const BUFFER_SIZE: usize = 4096,
     const MAX_CONNECTIONS: usize = 500,
     const TIMEOUT_MS: u64 = 15_000,
+    /// Enable Metrics
     const ENABLE_METRICS: bool = false,
+    /// Thread Count
     const THREAD_COUNT: usize = 4,
 > {
     _phantom: PhantomData<()>,
@@ -81,6 +87,7 @@ pub struct ZeroCostConfigBuilder<
 impl<const B: usize, const C: usize, const T: u64, const M: bool, const TC: usize> Default
     for ZeroCostConfigBuilder<B, C, T, M, TC>
 {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -151,8 +158,11 @@ impl<const B: usize, const C: usize, const T: u64, const M: bool, const TC: usiz
 /// **ZERO-COST MEMORY POOL**
 /// Compile-time optimized memory pool with fixed-size allocations
 pub struct ZeroCostMemoryPool<
+    /// Pool Size
     const POOL_SIZE: usize = 1024,
+    /// Block Size
     const BLOCK_SIZE: usize = 64,
+    /// Alignment
     const ALIGNMENT: usize = 8,
 > {
     _phantom: PhantomData<[u8; POOL_SIZE]>,
@@ -160,6 +170,7 @@ pub struct ZeroCostMemoryPool<
 impl<const POOL_SIZE: usize, const BLOCK_SIZE: usize, const ALIGNMENT: usize> Default
     for ZeroCostMemoryPool<POOL_SIZE, BLOCK_SIZE, ALIGNMENT>
 {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -211,7 +222,9 @@ impl<const POOL_SIZE: usize, const BLOCK_SIZE: usize, const ALIGNMENT: usize>
 /// Calculate performance characteristics at compile-time
 pub struct PerformanceCalculator<
     const OPERATIONS_PER_SEC: u64 = 10000,
+    /// Latency Microsec
     const LATENCY_MICROSEC: u64 = 100,
+    /// Memory Usage Kb
     const MEMORY_USAGE_KB: u64 = 1024,
 > {
     _phantom: PhantomData<()>,
@@ -255,10 +268,12 @@ impl<const OPS: u64, const LAT: u64, const MEM: u64> PerformanceCalculator<OPS, 
 /// **SIMD-OPTIMIZED BUFFER**
 /// Compile-time aligned buffer for SIMD operations
 #[repr(align(64))] // Align to cache line for optimal performance
+/// Simdoptimizedbuffer
 pub struct SimdOptimizedBuffer<const SIZE: usize = 1024> {
     data: [u8; SIZE],
 }
 impl<const SIZE: usize> Default for SimdOptimizedBuffer<SIZE> {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -334,6 +349,7 @@ impl<const A: usize, const B: usize> TypeLevelMath<A, B> {
     /// Calculate greatest common divisor at compile-time
     #[must_use]
     pub fn gcd() -> usize {
+        /// Fn
         const fn gcd_impl(a: usize, b: usize) -> usize {
             if b == 0 {
                 a
@@ -360,12 +376,14 @@ pub trait ZeroCostValidation<const VALUE: usize> {
 /// Example validation implementations
 pub struct PortValidator<const PORT: usize>;
 impl<const PORT: usize> ZeroCostValidation<PORT> for PortValidator<PORT> {
+    /// Validates data
     fn validate() -> bool {
         PORT > 0 && PORT <= 65535
     }
 }
 pub struct BufferSizeValidator<const SIZE: usize>;
 impl<const SIZE: usize> ZeroCostValidation<SIZE> for BufferSizeValidator<SIZE> {
+    /// Validates data
     fn validate() -> bool {
         SIZE > 0 && SIZE <= 1_048_576 && (SIZE & (SIZE - 1)) == 0 // Power of 2
     }
@@ -398,6 +416,7 @@ mod tests {
     fn test_performance_calculator() {
         // Performance calculations at compile-time
         const THROUGHPUT: u64 = PerformanceCalculator::<50000, 50, 512>::throughput();
+        /// Meets Sla
         const MEETS_SLA: bool =
             PerformanceCalculator::<50000, 50, 512>::meets_sla(40000, 100, 1024);
 

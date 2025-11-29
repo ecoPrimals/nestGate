@@ -33,13 +33,18 @@ use uuid::Uuid;
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for ZeroCostConfigService
 pub struct ZeroCostConfigServiceConfig {
     pub service_name: String,
+    /// Refresh Interval Secs
     pub refresh_interval_secs: u64,
+    /// Size of max cache
     pub max_cache_size: usize,
+    /// Enable Hot Reload
     pub enable_hot_reload: bool,
 }
 impl Default for ZeroCostConfigServiceConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             service_name: "zero-cost-config-service".to_string(),
@@ -52,23 +57,35 @@ impl Default for ZeroCostConfigServiceConfig {
 
 /// **Health status for the zero-cost configuration service**
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Zerocostconfigservicehealth
 pub struct ZeroCostConfigServiceHealth {
+    /// Status
     pub status: String,
+    /// Configuration for cached s
     pub cached_configs: usize,
+    /// Last Refresh
     pub last_refresh: SystemTime,
+    /// Refresh Interval
     pub refresh_interval: Duration,
+    /// Hot Reload Enabled
     pub hot_reload_enabled: bool,
+    /// Uptime Seconds
     pub uptime_seconds: u64,
 }
 /// **Metadata for the zero-cost configuration service**
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Zerocostconfigservicemetadata
 pub struct ZeroCostConfigServiceMetadata {
     pub service_type: String,
+    /// Version
     pub version: String,
+    /// Capabilities
     pub capabilities: Vec<String>,
+    /// Performance Profile
     pub performance_profile: String,
 }
 impl Default for ZeroCostConfigServiceMetadata {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             service_type: "configuration-management".to_string(),
@@ -101,6 +118,7 @@ pub struct ZeroCostConfigService<const MAX_CACHE_SIZE: usize = 1000> {
     last_refresh: Option<SystemTime>,
 }
 impl<const MAX_CACHE_SIZE: usize> Default for ZeroCostConfigService<MAX_CACHE_SIZE> {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -185,12 +203,16 @@ impl<const MAX_CACHE_SIZE: usize> ZeroCostConfigService<MAX_CACHE_SIZE> {
 impl<const MAX_CACHE_SIZE: usize> ZeroCostUniversalService
     for ZeroCostConfigService<MAX_CACHE_SIZE>
 {
+    /// Type alias for Config
     type Config = ZeroCostConfigServiceConfig;
+    /// Type alias for Health
     type Health = ZeroCostConfigServiceHealth;
+    /// Type alias for Metadata
     type Metadata = ZeroCostConfigServiceMetadata;
 
     // Native async methods - NO BOXING overhead!
 
+    /// Start
     async fn start(&mut self, config: Self::Config) -> Result<()> {
         self.config = Some(config);
         self.start_time = Some(SystemTime::now());
@@ -201,6 +223,7 @@ impl<const MAX_CACHE_SIZE: usize> ZeroCostUniversalService
         Ok(())
     }
 
+    /// Stop
     async fn stop(&mut self) -> Result<()> {
         // Clear cache and reset state
         let mut cache = self.config_cache.write().await;
@@ -242,6 +265,7 @@ impl<const MAX_CACHE_SIZE: usize> ZeroCostUniversalService
         }
     }
 
+    /// Metadata
     fn metadata(&self) -> Self::Metadata {
         let mut metadata = ZeroCostConfigServiceMetadata::default();
         metadata
@@ -268,6 +292,7 @@ impl<const MAX_CACHE_SIZE: usize> ZeroCostUniversalService
         )
     }
 
+    /// Updates  Config
     async fn update_config(&mut self, config: Self::Config) -> Result<()> {
         let old_refresh_interval = self.config.as_ref().map(|c| c.refresh_interval_secs);
         let new_refresh_interval = config.refresh_interval_secs;
@@ -282,6 +307,7 @@ impl<const MAX_CACHE_SIZE: usize> ZeroCostUniversalService
         Ok(())
     }
 
+    /// Validates  Config
     async fn validate_config(&self, config: &Self::Config) -> Result<()> {
         // Validate configuration parameters
         if config.refresh_interval_secs == 0 {
@@ -509,6 +535,7 @@ pub mod migration_example {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Zerocostconfigserviceconfigcanonical
 pub type ZeroCostConfigServiceConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using ZeroCostConfigServiceConfig (the deprecated struct) for now.

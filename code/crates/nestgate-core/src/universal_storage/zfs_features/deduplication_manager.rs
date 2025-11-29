@@ -11,6 +11,7 @@ use std::sync::Arc;
 /// MIGRATION: Arc<dyn CanonicalStorageBackend> → Zero-Cost Generic Backend
 /// PERFORMANCE: 40% throughput improvement through direct dispatch
 #[derive(Debug)]
+/// Manager for Deduplication operations
 pub struct DeduplicationManager<Backend = DefaultStorageBackend>
 where
     Backend: CanonicalStorageBackend + Send + Sync + 'static,
@@ -79,25 +80,32 @@ where
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Dedup
 pub struct DedupConfig;
 
 impl Default for DedupConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self
     }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Contenthash
 pub struct ContentHash(pub String);
 
 impl std::fmt::Display for ContentHash {
+    /// Fmt
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)
     }
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
+/// Dedupstats
 pub struct DedupStats {
+    /// Blocks Deduplicated
     pub blocks_deduplicated: u64,
+    /// Space Saved
     pub space_saved: u64,
 }

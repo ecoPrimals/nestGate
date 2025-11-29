@@ -45,9 +45,11 @@ mod basic_error_coverage {
 
     #[test]
     fn test_error_chain() {
+        /// Inner
         fn inner() -> Result<i32> {
             Err(NestGateError::validation_error("bad"))
         }
+        /// Outer
         fn outer() -> Result<String> {
             let _ = inner()?;
             Ok("ok".to_string())
@@ -57,9 +59,11 @@ mod basic_error_coverage {
 
     #[test]
     fn test_error_recovery() {
+        /// Fail
         fn fail() -> Result<String> {
             Err(NestGateError::network_error("Failed"))
         }
+        /// Backup
         fn backup() -> Result<String> {
             Ok("backup".to_string())
         }
@@ -152,16 +156,19 @@ mod basic_error_coverage {
 
     #[test]
     fn test_nested_operations() {
+        /// Level1
         fn level1() -> Result<i32> {
             level2()?;
             Ok(1)
         }
 
+        /// Level2
         fn level2() -> Result<i32> {
             level3()?;
             Ok(2)
         }
 
+        /// Level3
         fn level3() -> Result<i32> {
             Err(NestGateError::internal_error("deep error", "level3"))
         }

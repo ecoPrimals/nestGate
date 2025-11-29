@@ -1,3 +1,5 @@
+//! Unified Types module
+
 use std::collections::HashMap;
 //
 // **CANONICAL MODERNIZATION**: Essential types that were previously in the
@@ -16,55 +18,89 @@ use std::time::{Duration, SystemTime};
 
 /// Canonical storage change record - consolidates all storage change tracking
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Canonicalstoragechange
 pub struct CanonicalStorageChange {
+    /// Unique identifier
     pub id: String,
+    /// Timestamp
     pub timestamp: SystemTime,
+    /// Data
     pub data: serde_json::Value,
+    /// Additional metadata key-value pairs
     pub metadata: HashMap<String, String>,
+    /// Source
     pub source: String,
+    /// Destination
     pub destination: Option<String>,
 }
 /// Canonical storage directory entry - unified file system representation
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Canonicalstoragedirectoryentry
 pub struct CanonicalStorageDirectoryEntry {
+    /// Name
     pub name: String,
+    /// Whether directory
     pub is_directory: bool,
+    /// Size
     pub size: u64,
+    /// Modified
     pub modified: SystemTime,
+    /// Permissions
     pub permissions: Option<String>,
+    /// Owner
     pub owner: Option<String>,
+    /// Group
     pub group: Option<String>,
+    /// Checksum
     pub checksum: Option<String>,
 }
 /// Canonical storage range specification - unified range operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Canonicalstoragerange
 pub struct CanonicalStorageRange {
+    /// Start
     pub start: u64,
+    /// End
     pub end: u64,
+    /// Inclusive
     pub inclusive: bool,
+    /// Size of chunk
     pub chunk_size: Option<u64>,
 }
 /// Canonical replication status - unified across all replication systems
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Status values for CanonicalReplication
 pub enum CanonicalReplicationStatus {
+    /// Active
     Active,
+    /// Paused
     Paused,
+    /// Failed
     Failed,
+    /// Disabled
     Disabled,
+    /// Initializing
     Initializing,
+    /// Syncing
     Syncing,
+    /// Completed
     Completed,
+    /// Queued
     Queued,
+    /// Inprogress
     InProgress,
+    /// Cancelled
     Cancelled,
 }
 impl Default for CanonicalReplicationStatus {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Disabled
     }
 }
 
 impl std::fmt::Display for CanonicalReplicationStatus {
+    /// Fmt
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Active => write!(f, "active"),
@@ -83,103 +119,167 @@ impl std::fmt::Display for CanonicalReplicationStatus {
 
 /// Canonical storage replication result - unified replication tracking
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Canonicalstoragereplicationresult
 pub struct CanonicalStorageReplicationResult {
+    /// Success
     pub success: bool,
+    /// Replicated Bytes
     pub replicated_bytes: u64,
+    /// Duration Ms
     pub duration_ms: u64,
+    /// Error Message
     pub error_message: Option<String>,
+    /// Source
     pub source: String,
+    /// Destination
     pub destination: String,
+    /// Checksum
     pub checksum: Option<String>,
+    /// Status
     pub status: CanonicalReplicationStatus,
+    /// Started At
     pub started_at: SystemTime,
+    /// Completed At
     pub completed_at: Option<SystemTime>,
 }
 /// Canonical storage target - unified replication targets
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Canonicalstoragetarget
 pub struct CanonicalStorageTarget {
+    /// Unique identifier
     pub id: String,
+    /// Name
     pub name: String,
+    /// Target Type
     pub target_type: CanonicalTargetType,
+    /// Endpoint
     pub endpoint: String,
+    /// Credentials
     pub credentials: Option<HashMap<String, String>>,
+    /// Compression
     pub compression: bool,
+    /// Encryption
     pub encryption: bool,
+    /// Priority
     pub priority: u8,
 }
 /// Canonical target types - unified storage target classification
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of CanonicalTarget
 pub enum CanonicalTargetType {
+    /// Filesystem
     Filesystem,
+    /// S3Compatible
     S3Compatible,
+    /// Remotenestgate
     RemoteNestGate,
+    /// Networkshare
     NetworkShare,
+    /// Zfspool
     ZfsPool,
+    /// Cloudstorage
     CloudStorage,
 }
 /// Canonical backup types - unified backup classification
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of CanonicalBackup
 pub enum CanonicalBackupType {
+    /// Full
     Full,
+    /// Incremental
     Incremental,
+    /// Differential
     Differential,
+    /// Snapshot
     Snapshot,
 }
 /// Canonical optimization categories - unified optimization tracking
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Canonicaloptimizationcategory
 pub enum CanonicalOptimizationCategory {
+    /// Compression
     Compression,
+    /// Caching
     Caching,
+    /// Tiering
     Tiering,
+    /// Deduplication
     Deduplication,
+    /// Networkoptimization
     NetworkOptimization,
+    /// Indexoptimization
     IndexOptimization,
+    /// Memorymanagement
     MemoryManagement,
+    /// Iooptimization
     IOOptimization,
+    /// Replication
     Replication,
+    /// Backup
     Backup,
 }
 /// Canonical priority levels - unified priority system
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Canonicalpriority
 pub enum CanonicalPriority {
+    /// Critical
     Critical,
+    /// High
     High,
+    /// Medium
     Medium,
+    /// Low
     Low,
+    /// Minimal
     Minimal,
 }
 /// Canonical access patterns - unified access pattern tracking
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Canonicalaccesspatterns
 pub struct CanonicalAccessPatterns {
     // Core frequency metrics
     pub read_frequency: u64,
+    /// Write Frequency
     pub write_frequency: u64,
+    /// Count of daily access
     pub daily_access_count: u64,
     // Temporal tracking
     pub last_access: Option<SystemTime>,
+    /// Temporal Patterns
     pub temporal_patterns: Vec<CanonicalAccessTimePattern>,
+    /// Peak Access Hours
     pub peak_access_hours: Vec<u8>,
 
     // Access method tracking
     pub access_methods: Vec<String>,
+    /// Access Types
     pub access_types: Vec<String>,
 
     // User and performance metrics
     pub user_access_count: HashMap<String, u64>,
+    /// Read Write Ratio
     pub read_write_ratio: f64,
+    /// Sequential Access Ratio
     pub sequential_access_ratio: f64,
+    /// Size of average file
     pub average_file_size: u64,
 }
 
 /// Canonical access time pattern - unified temporal access tracking
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Canonicalaccesstimepattern
 pub struct CanonicalAccessTimePattern {
+    /// Hour
     pub hour: u8,
+    /// Day Of Week
     pub day_of_week: u8,
+    /// Count of access
     pub access_count: u64,
+    /// Average Duration
     pub average_duration: Duration,
 }
 impl Default for CanonicalAccessPatterns {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             read_frequency: 0,
@@ -209,14 +309,21 @@ impl Default for CanonicalAccessPatterns {
 
 /// Canonical storage configuration - unified storage settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for CanonicalStorage
 pub struct CanonicalStorageConfig {
+    /// Default Backend
     pub default_backend: String,
+    /// Replication Targets
     pub replication_targets: Vec<CanonicalStorageTarget>,
+    /// Configuration for backup
     pub backup_config: CanonicalBackupConfig,
+    /// Configuration for optimization
     pub optimization_config: CanonicalOptimizationConfig,
+    /// Access Patterns
     pub access_patterns: CanonicalAccessPatterns,
 }
 impl Default for CanonicalStorageConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             default_backend: "filesystem".to_string(),
@@ -230,15 +337,23 @@ impl Default for CanonicalStorageConfig {
 
 /// Canonical backup configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for CanonicalBackup
 pub struct CanonicalBackupConfig {
+    /// Whether this feature is enabled
     pub enabled: bool,
+    /// Backup Type
     pub backup_type: CanonicalBackupType,
+    /// Schedule
     pub schedule: String,
+    /// Retention Days
     pub retention_days: u32,
+    /// Compression
     pub compression: bool,
+    /// Encryption
     pub encryption: bool,
 }
 impl Default for CanonicalBackupConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -253,13 +368,19 @@ impl Default for CanonicalBackupConfig {
 
 /// Canonical optimization configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for CanonicalOptimization
 pub struct CanonicalOptimizationConfig {
+    /// Enabled Categories
     pub enabled_categories: Vec<CanonicalOptimizationCategory>,
+    /// Auto Optimization
     pub auto_optimization: bool,
+    /// Optimization Schedule
     pub optimization_schedule: String,
+    /// Performance Threshold
     pub performance_threshold: f64,
 }
 impl Default for CanonicalOptimizationConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled_categories: vec![
@@ -293,6 +414,7 @@ impl Default for CanonicalOptimizationConfig {
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for UnifiedService
 pub struct UnifiedServiceConfig {
     /// Service name
     pub name: String,
@@ -306,6 +428,7 @@ pub struct UnifiedServiceConfig {
     pub metadata: HashMap<String, String>,
 }
 impl Default for UnifiedServiceConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             name: "nestgate".to_string(),
@@ -341,6 +464,7 @@ impl Default for UnifiedServiceConfig {
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for UnifiedNetwork
 pub struct UnifiedNetworkConfig {
     /// Maximum connections
     pub max_connections: usize,
@@ -353,6 +477,7 @@ pub struct UnifiedNetworkConfig {
 }
 #[allow(deprecated)]
 impl Default for UnifiedNetworkConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             max_connections: 1000,
@@ -367,6 +492,7 @@ impl Default for UnifiedNetworkConfig {
 ///
 /// Performance-related configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for UnifiedPerformance
 pub struct UnifiedPerformanceConfig {
     /// Enable performance monitoring
     pub enable_monitoring: bool,
@@ -376,6 +502,7 @@ pub struct UnifiedPerformanceConfig {
     pub thresholds: PerformanceThresholds,
 }
 impl Default for UnifiedPerformanceConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enable_monitoring: true,
@@ -389,6 +516,7 @@ impl Default for UnifiedPerformanceConfig {
 ///
 /// Configuration for performance testing
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for UnifiedPerformanceTest
 pub struct UnifiedPerformanceTestConfig {
     /// Test duration
     pub duration: Duration,
@@ -400,6 +528,7 @@ pub struct UnifiedPerformanceTestConfig {
     pub detailed_metrics: bool,
 }
 impl Default for UnifiedPerformanceTestConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             duration: Duration::from_secs(60),
@@ -414,6 +543,7 @@ impl Default for UnifiedPerformanceTestConfig {
 ///
 /// Performance monitoring thresholds
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performancethresholds
 pub struct PerformanceThresholds {
     /// Maximum latency in milliseconds
     pub max_latency_ms: u64,
@@ -423,6 +553,7 @@ pub struct PerformanceThresholds {
     pub max_memory_bytes: u64,
 }
 impl Default for PerformanceThresholds {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             max_latency_ms: 1000,
@@ -436,6 +567,7 @@ impl Default for PerformanceThresholds {
 ///
 /// Metadata about configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configmetadata
 pub struct ConfigMetadata {
     /// Configuration version
     pub version: String,
@@ -447,6 +579,7 @@ pub struct ConfigMetadata {
     pub source: String,
 }
 impl Default for ConfigMetadata {
+    /// Returns the default instance
     fn default() -> Self {
         let now = SystemTime::now();
         Self {
@@ -477,6 +610,7 @@ impl Default for ConfigMetadata {
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for UnifiedCache
 pub struct UnifiedCacheConfig {
     /// Cache size in bytes
     pub cache_size_bytes: u64,
@@ -494,6 +628,7 @@ pub struct UnifiedCacheConfig {
     pub cache_directory: String,
 }
 impl Default for UnifiedCacheConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             cache_size_bytes: 1024 * 1024 * 100, // 100MB
@@ -541,10 +676,12 @@ pub type CustomMetricsMap = HashMap<String, MetricValue>;
 ///
 /// Represents different types of metric values
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Metricvalue
 pub enum MetricValue {
     Counter(u64),
     Gauge(f64),
     Histogram(Vec<f64>),
+    /// Summary
     Summary { sum: f64, count: u64 },
     String(String),
 }
@@ -600,6 +737,7 @@ pub mod migration {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Unifiednetworkconfigcanonical
 pub type UnifiedNetworkConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using UnifiedNetworkConfig (the deprecated struct) for now.
@@ -616,6 +754,7 @@ pub type UnifiedNetworkConfigCanonical = crate::config::canonical_primary::domai
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Unifiedserviceconfigcanonical
 pub type UnifiedServiceConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using UnifiedServiceConfig (the deprecated struct) for now.
@@ -632,6 +771,7 @@ pub type UnifiedServiceConfigCanonical = crate::config::canonical_primary::domai
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Unifiedcacheconfigcanonical
 pub type UnifiedCacheConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using UnifiedCacheConfig (the deprecated struct) for now.

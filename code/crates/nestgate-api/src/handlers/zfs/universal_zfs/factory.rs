@@ -2,6 +2,8 @@
 // Creates the appropriate ZFS service implementation based on configuration
 // with automatic backend detection and fail-safe wrapping.
 
+//! Factory module
+
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -90,11 +92,13 @@ impl ZfsServiceFactory {
                     ));
                 fail_safe_service.with_fallback(fallback_enum)
             } else {
+                /// Fail Safe Service
                 fail_safe_service
             };
 
             Arc::new(fail_safe_service) as Arc<dyn UniversalZfsService>
         } else {
+            /// Primary Service
             primary_service
         };
 
@@ -330,27 +334,32 @@ pub trait ServiceConfigBuilder {
     fn with_retry_policy(self, enabled: bool) -> Self;
 }
 impl ServiceConfigBuilder for ZfsServiceConfig {
+    /// Builder method to set Backend
     fn with_backend(mut self, backend: ZfsBackend) -> Self {
         self.backend = backend;
         self
     }
 
+    /// Builder method to set Fail Safe
     fn with_fail_safe(mut self, enabled: bool) -> Self {
         self.fail_safe.circuit_breaker.enabled = enabled;
         self.fail_safe.retry_policy.enabled = enabled;
         self
     }
 
+    /// Builder method to set Graceful Degradation
     fn with_graceful_degradation(mut self, enabled: bool) -> Self {
         self.fail_safe.enable_graceful_degradation = enabled;
         self
     }
 
+    /// Builder method to set Circuit Breaker
     fn with_circuit_breaker(mut self, enabled: bool) -> Self {
         self.fail_safe.circuit_breaker.enabled = enabled;
         self
     }
 
+    /// Builder method to set Retry Policy
     fn with_retry_policy(mut self, enabled: bool) -> Self {
         self.fail_safe.retry_policy.enabled = enabled;
         self

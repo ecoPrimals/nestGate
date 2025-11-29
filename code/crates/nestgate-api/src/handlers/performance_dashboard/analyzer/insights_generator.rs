@@ -1,6 +1,8 @@
 //
 // Handles generation of comprehensive system insights and actionable recommendations.
 
+//! Insights Generator module
+
 use crate::handlers::performance_dashboard::types::*;
 use nestgate_core::Result;
 use crate::error::SystemResource;
@@ -9,6 +11,7 @@ use tracing::debug;
 // Removed unused tracing import
 
 #[derive(Debug, Clone)]
+/// Insightsgenerator
 pub struct InsightsGenerator;
 
 impl InsightsGenerator {

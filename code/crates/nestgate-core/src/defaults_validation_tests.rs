@@ -55,6 +55,7 @@ fn test_default_ports_are_unique() {
 fn test_default_ports_are_in_valid_range() {
     // These are compile-time constants, use const assertions
     const _: () = assert!(network::DEFAULT_API_PORT >= 1024);
+    ///  
     const _: () = assert!(network::DEFAULT_WS_PORT >= 1024);
     // DEFAULT_API_PORT is u16, always <= 65535
     // DEFAULT_WS_PORT is u16, always <= 65535
@@ -177,11 +178,17 @@ fn test_all_ports_positive() {
     // These are compile-time constants (u16), always > 0
     // Use const assertions for compile-time verification
     const _: () = assert!(network::DEFAULT_API_PORT > 0);
+    ///  
     const _: () = assert!(network::DEFAULT_WS_PORT > 0);
+    ///  
     const _: () = assert!(network::DEFAULT_HEALTH_PORT > 0);
+    ///  
     const _: () = assert!(database::DEFAULT_POSTGRES_PORT > 0);
+    ///  
     const _: () = assert!(database::DEFAULT_REDIS_PORT > 0);
+    ///  
     const _: () = assert!(monitoring::DEFAULT_METRICS_PORT > 0);
+    ///  
     const _: () = assert!(monitoring::DEFAULT_GRAFANA_PORT > 0);
 }
 

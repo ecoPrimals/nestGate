@@ -3,6 +3,8 @@
 // Direct ZFS commands have been replaced with API-based operations for better
 // consistency and capability.
 
+//! Zfs module
+
 use clap::Subcommand;
 use nestgate_core::error::CanonicalResult as Result;
 use std::path::PathBuf;
@@ -70,6 +72,7 @@ pub struct ZfsHandler {
     api_endpoint: String,
 }
 impl Default for ZfsHandler {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -195,6 +198,7 @@ impl ZfsHandler {
         }
     }
 
+    /// Show Api Usage
     fn show_api_usage(&self, operation: &str, endpoint: &str, body: &str) -> Result<()> {
         println!("📋 Operation: {operation}");
         println!("🔗 API Call:");

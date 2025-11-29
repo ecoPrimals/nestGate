@@ -3,6 +3,8 @@
 // This module provides conversion utilities to transform traditional API responses
 // into AI-First format that complies with the ecoPrimals ecosystem standards.
 
+//! Ai First Wrapper module
+
 use nestgate_core::ai_first::*;
 use nestgate_core::NestGateError;
 use std::collections::HashMap;
@@ -349,6 +351,7 @@ fn generate_optimization_opportunities(operation_type: &str) -> Vec<String> {
 }
 // Helper functions for creating action parameters
 
+/// Creates  Dataset Parameters
 fn create_dataset_parameters() -> HashMap<String, serde_json::Value> {
     HashMap::from([
         ("compression".to_string(), serde_json::Value::String("lz4".to_string()),
@@ -356,6 +359,7 @@ fn create_dataset_parameters() -> HashMap<String, serde_json::Value> {
     ])
 }
 
+/// Creates  Compression Parameters
 fn create_compression_parameters() -> HashMap<String, serde_json::Value> {
     HashMap::from([
         ("algorithm".to_string(), serde_json::Value::String("lz4".to_string()),
@@ -363,6 +367,7 @@ fn create_compression_parameters() -> HashMap<String, serde_json::Value> {
     ])
 }
 
+/// Creates  Quota Parameters
 fn create_quota_parameters() -> HashMap<String, serde_json::Value> {
     HashMap::from([
         ("default_quota".to_string(), serde_json::Value::String("10G".to_string()),
@@ -370,6 +375,7 @@ fn create_quota_parameters() -> HashMap<String, serde_json::Value> {
     ])
 }
 
+/// Creates  Cleanup Parameters
 fn create_cleanup_parameters() -> HashMap<String, serde_json::Value> {
     HashMap::from([
         ("retention_days".to_string(), serde_json::Value::Number(serde_json::Number::from(30)),
@@ -377,6 +383,7 @@ fn create_cleanup_parameters() -> HashMap<String, serde_json::Value> {
     ])
 }
 
+/// Creates  Scrub Parameters
 fn create_scrub_parameters() -> HashMap<String, serde_json::Value> {
     HashMap::from([
         ("frequency".to_string(), serde_json::Value::String("monthly".to_string()),

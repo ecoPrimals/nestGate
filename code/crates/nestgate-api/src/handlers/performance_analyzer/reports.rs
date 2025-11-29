@@ -8,6 +8,7 @@ use std::collections::HashMap;
 
 /// Performance report generator
 #[derive(Debug)]
+/// Reportgenerator
 pub struct ReportGenerator {
     /// Report configuration
     pub config: ReportConfig,
@@ -16,6 +17,7 @@ pub struct ReportGenerator {
 impl ReportGenerator {
     /// Create new report generator
     #[must_use]
+    /// Fn
     pub const fn new(config: ReportConfig) -> Self {
         Self { config }
     }
@@ -47,6 +49,7 @@ impl ReportGenerator {
         }
     }
 
+    /// Determine Overall Status
     fn determine_overall_status(&self, analysis: &AnalysisResult) -> OverallStatus {
         let components = [
             &analysis.cpu_analysis.status,
@@ -70,6 +73,7 @@ impl ReportGenerator {
         }
     }
 
+    /// Generate Summary
     fn generate_summary(&self, analysis: &AnalysisResult) -> String {
         format!(
             "System performance score: {:.1}/100. {} components analyzed with {} recommendations.",
@@ -79,6 +83,7 @@ impl ReportGenerator {
         )
     }
 
+    /// Generate Component Reports
     fn generate_component_reports(
         &self,
         analysis: &AnalysisResult,
@@ -124,6 +129,7 @@ impl ReportGenerator {
         reports
     }
 
+    /// Generate Markdown Report
     fn generate_markdown_report(&self, report: &PerformanceReport) -> String {
         format!(
             "# Performance Report\n\n**Report ID**: {}\n**Generated**: {:?}\n**Overall Score**: {:.1}/100\n**Status**: {:?}\n\n## Summary\n{}\n\n## Recommendations\n{}\n",
@@ -136,6 +142,7 @@ impl ReportGenerator {
         )
     }
 
+    /// Generate Html Report
     fn generate_html_report(&self, report: &PerformanceReport) -> String {
         format!(
             "<html><head><title>Performance Report</title></head><body><h1>Performance Report</h1><p><strong>Score:</strong> {:.1}/100</p><p><strong>Status:</strong> {:?}</p><p>{}</p></body></html>",
@@ -145,6 +152,7 @@ impl ReportGenerator {
         )
     }
 
+    /// Generate Csv Report
     fn generate_csv_report(&self, report: &PerformanceReport) -> String {
         format!(
             "Component,Score,Status,Details\n{}",
@@ -181,6 +189,7 @@ impl ReportGenerator {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for Report
 pub struct ReportConfig {
     /// Include detailed component analysis
     pub include_detailed_analysis: bool,
@@ -191,6 +200,7 @@ pub struct ReportConfig {
 }
 
 impl Default for ReportConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             include_detailed_analysis: true,
@@ -202,6 +212,7 @@ impl Default for ReportConfig {
 
 /// Report format options
 #[derive(Debug, Clone)]
+/// Reportformat
 pub enum ReportFormat {
     /// JSON format for API consumption
     Json,
@@ -215,6 +226,7 @@ pub enum ReportFormat {
 
 /// Complete performance report
 #[derive(Debug, Serialize, Deserialize)]
+/// Performancereport
 pub struct PerformanceReport {
     /// Overall system performance score (0.0-100.0)
     pub overall_score: f64,
@@ -234,6 +246,7 @@ pub struct PerformanceReport {
 
 /// Component-specific report
 #[derive(Debug, Serialize, Deserialize)]
+/// Componentreport
 pub struct ComponentReport {
     /// Component performance score (0.0-100.0)
     pub score: f64,
@@ -245,6 +258,7 @@ pub struct ComponentReport {
 
 /// Overall system status
 #[derive(Debug, Serialize, Deserialize)]
+/// Status values for Overall
 pub enum OverallStatus {
     /// System is performing optimally
     Healthy,
@@ -256,6 +270,7 @@ pub enum OverallStatus {
 
 /// Multi-format report output
 #[derive(Debug)]
+/// Multiformatreport
 pub struct MultiFormatReport {
     /// Report in JSON format for API consumption
     pub json: String,
@@ -276,6 +291,7 @@ pub struct MultiFormatReport {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Reportconfigcanonical
 pub type ReportConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 

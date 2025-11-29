@@ -24,6 +24,7 @@ use crate::error::Result;
 /// This structure brings together all domain-specific configurations
 /// under a single, well-organized hierarchy.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Consolidateddomainconfigs
 pub struct ConsolidatedDomainConfigs {
     /// ZFS storage management configuration
     pub zfs: ZfsDomainConfig,
@@ -62,6 +63,7 @@ pub struct ConsolidatedDomainConfigs {
 /// - `ZfsServiceConfig`, `ZfsHandlerConfig`
 /// - Performance and monitoring configurations
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for ZfsDomain
 pub struct ZfsDomainConfig {
     /// Pool management configuration
     pub pools: ZfsPoolsConfig,
@@ -84,7 +86,10 @@ pub struct ZfsDomainConfig {
     /// Failover and redundancy configuration
     pub failover: ZfsFailoverConfig,
 }
+
+/// ZFS pools configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ZfsPools
 pub struct ZfsPoolsConfig {
     /// Default pool settings
     pub default_pool: String,
@@ -99,7 +104,9 @@ pub struct ZfsPoolsConfig {
     pub scrub_schedule: Option<String>,
 }
 
+/// Individual ZFS pool configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ZfsPool
 pub struct ZfsPoolConfig {
     /// Pool name
     pub name: String,
@@ -117,7 +124,9 @@ pub struct ZfsPoolConfig {
     pub properties: HashMap<String, String>,
 }
 
+/// ZFS datasets configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for ZfsDatasets
 pub struct ZfsDatasetsConfig {
     /// Default dataset settings
     pub defaults: ZfsDatasetDefaults,
@@ -129,7 +138,9 @@ pub struct ZfsDatasetsConfig {
     pub auto_snapshot: ZfsAutoSnapshotConfig,
 }
 
+/// ZFS snapshots configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ZfsSnapshots
 pub struct ZfsSnapshotsConfig {
     /// Retention policies
     pub retention: ZfsRetentionConfig,
@@ -153,6 +164,7 @@ pub struct ZfsSnapshotsConfig {
 /// - Handler-specific configurations
 /// - Performance and security settings
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for ApiDomain
 pub struct ApiDomainConfig {
     /// HTTP server configuration
     pub server: ApiServerConfig,
@@ -175,7 +187,10 @@ pub struct ApiDomainConfig {
     /// CORS configuration
     pub cors: ApiCorsConfig,
 }
+
+/// API server configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ApiServer
 pub struct ApiServerConfig {
     /// Server bind address
     pub bind_address: String,
@@ -196,7 +211,9 @@ pub struct ApiServerConfig {
     pub keep_alive: Duration,
 }
 
+/// Consolidated API handlers configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for ConsolidatedApiHandlers
 pub struct ConsolidatedApiHandlersConfig {
     /// ZFS handler configuration
     pub zfs: ZfsHandlerConfig,
@@ -225,6 +242,7 @@ pub struct ConsolidatedApiHandlersConfig {
 /// - Protocol settings, streaming configuration
 /// - Connection management, security settings
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for McpDomain
 pub struct McpDomainConfig {
     /// Protocol configuration
     pub protocol: McpProtocolConfig,
@@ -242,6 +260,7 @@ pub struct McpDomainConfig {
     pub performance: McpPerformanceConfig,
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Model Context Protocol (MCP) integration
 pub struct McpProtocolConfig {
     /// Protocol version
     pub version: String,
@@ -265,6 +284,7 @@ pub struct McpProtocolConfig {
 ///
 /// Consolidates all external service and protocol integrations
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Consolidatedintegrationconfigs
 pub struct ConsolidatedIntegrationConfigs {
     /// External service integrations
     pub external_services: HashMap<String, ExternalServiceConfig>,
@@ -279,6 +299,7 @@ pub struct ConsolidatedIntegrationConfigs {
     pub development: DevelopmentIntegrationConfig,
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for external service integrations
 pub struct ExternalServiceConfig {
     /// Service endpoint URL
     pub endpoint: String,
@@ -297,6 +318,7 @@ pub struct ExternalServiceConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Container for all protocol-specific configurations
 pub struct ProtocolConfigs {
     /// HTTP/HTTPS configuration
     pub http: HttpProtocolConfig,
@@ -312,6 +334,7 @@ pub struct ProtocolConfigs {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for ecosystem-wide settings and integrations
 pub struct EcosystemConfig {
     /// Management integration settings
     pub management: BiomeOsIntegrationConfig,
@@ -329,6 +352,7 @@ pub struct EcosystemConfig {
 // ==================== DEFAULT IMPLEMENTATIONS ====================
 
 impl Default for ApiServerConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             bind_address: LOCALHOST.to_string(),
@@ -358,6 +382,7 @@ pub trait DomainConfigValidation {
     fn optional_fields() -> Vec<&'static str>;
 }
 impl DomainConfigValidation for ConsolidatedDomainConfigs {
+    /// Validates data
     fn validate(&self) -> Result<Vec<String>> {
         let mut warnings = Vec::new();
 
@@ -375,6 +400,7 @@ impl DomainConfigValidation for ConsolidatedDomainConfigs {
         Ok(warnings)
     }
 
+    /// Validates  For Environment
     fn validate_for_environment(&self, env: &str) -> Result<()> {
         // Environment-specific validation logic
         match env {
@@ -401,6 +427,7 @@ impl DomainConfigValidation for ConsolidatedDomainConfigs {
         Ok(())
     }
 
+    /// Required Fields
     fn required_fields() -> Vec<&'static str> {
         vec![
             "zfs.pools.default_pool",
@@ -409,6 +436,7 @@ impl DomainConfigValidation for ConsolidatedDomainConfigs {
         ]
     }
 
+    /// Optional Fields
     fn optional_fields() -> Vec<&'static str> {
         vec![
             "zfs.performance.optimization_level",
@@ -452,11 +480,13 @@ pub mod migration {
         Ok(domains)
     }
 
+    /// Migrate Zfs Config
     fn migrate_zfs_config(_legacy: &serde_json::Value) -> Result<ZfsDomainConfig> {
         // Implementation for ZFS config migration
         Ok(ZfsDomainConfig::default())
     }
 
+    /// Migrate Api Config
     fn migrate_api_config(_legacy: &serde_json::Value) -> Result<ApiDomainConfig> {
         // Implementation for API config migration
         Ok(ApiDomainConfig::default())
@@ -466,141 +496,287 @@ pub mod migration {
 // These will be properly implemented as we migrate each domain
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Size limits for ZFS operations
 pub struct ZfsSizeLimits {
+    /// Minimum size in bytes
     pub min_size: u64,
+    /// Maximum size in bytes
     pub max_size: u64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for ZFS compression settings
 pub struct ZfsCompressionConfig {
+    /// Compression algorithm (e.g., "lz4", "zstd")
     pub algorithm: String,
+    /// Compression level (0-9)
     pub level: u8,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Default settings for ZFS datasets
 pub struct ZfsDatasetDefaults {
+    /// Default quota in bytes
     pub quota: Option<u64>,
+    /// Default reservation in bytes
     pub reservation: Option<u64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for a specific ZFS dataset
 pub struct ZfsDatasetConfig {
+    /// Dataset name
     pub name: String,
+    /// Quota in bytes
     pub quota: Option<u64>,
 }
 
+/// Configuration for ZFS automatic snapshot scheduling
+///
+/// Controls whether automatic snapshots are taken and at what interval.
+/// Snapshots provide point-in-time recovery capabilities for ZFS datasets.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for ZfsAutoSnapshot
 pub struct ZfsAutoSnapshotConfig {
+    /// Enable or disable automatic snapshots
     pub enabled: bool,
+    /// Interval between automatic snapshots
     pub interval: Duration,
 }
 
+/// Configuration for ZFS snapshot retention policies
+///
+/// Defines how many snapshots to retain at each time interval.
+/// Older snapshots beyond these limits are automatically cleaned up.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for ZfsRetention
 pub struct ZfsRetentionConfig {
+    /// Number of daily snapshots to retain
     pub daily: u32,
+    /// Number of weekly snapshots to retain
     pub weekly: u32,
+    /// Number of monthly snapshots to retain
     pub monthly: u32,
 }
 
+/// Configuration for ZFS snapshot interval scheduling
+///
+/// Controls which snapshot intervals are enabled. Multiple intervals
+/// can be active simultaneously for comprehensive backup coverage.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Zfssnapshotintervals
 pub struct ZfsSnapshotIntervals {
+    /// Enable hourly snapshots
     pub hourly: bool,
+    /// Enable daily snapshots
     pub daily: bool,
+    /// Enable weekly snapshots
     pub weekly: bool,
 }
 
+/// Configuration for ZFS automatic cleanup behavior
+///
+/// Controls when and how ZFS performs automatic cleanup of old snapshots
+/// and other temporary data to prevent disk space exhaustion.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for ZfsCleanup
 pub struct ZfsCleanupConfig {
+    /// Enable automatic cleanup of old snapshots
     pub auto_cleanup: bool,
+    /// Disk usage threshold (0.0-1.0) that triggers cleanup
     pub cleanup_threshold: f64,
 }
 
 // Additional type stubs - these will be expanded as we implement each domain
+
+/// Configuration for ZFS service-level settings
+///
+/// Placeholder for future ZFS service configuration options such as
+/// service discovery, health checks, and service-specific parameters.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for ZfsService
 pub struct ZfsServiceConfig {}
 
+/// Configuration for ZFS performance tuning
+///
+/// Placeholder for future ZFS performance configuration options such as
+/// cache sizes, I/O scheduling, and prefetch behavior.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for ZfsPerformance
 pub struct ZfsPerformanceConfig {}
 
+/// Configuration for ZFS monitoring and metrics
+///
+/// Placeholder for future ZFS monitoring configuration options such as
+/// metrics collection intervals, alert thresholds, and logging levels.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for ZfsMonitoring
 pub struct ZfsMonitoringConfig {}
 
+/// Configuration for ZFS high-availability and failover
+///
+/// Placeholder for future ZFS failover configuration options such as
+/// replication targets, failover policies, and health check intervals.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for ZfsFailover
 pub struct ZfsFailoverConfig {}
 
 // ApiHandlersConfig is already defined above - removing duplicate
 
+/// Configuration for API security settings
+///
+/// Placeholder for future API security configuration such as authentication,
+/// authorization, API keys, and security headers.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for ApiSecurity
 pub struct ApiSecurityConfig {}
 
+/// Configuration for API performance tuning
+///
+/// Placeholder for future API performance configuration such as connection
+/// pooling, request timeouts, and caching strategies.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for ApiPerformance
 pub struct ApiPerformanceConfig {}
 
+/// Configuration for API monitoring and observability
+///
+/// Placeholder for future API monitoring configuration such as request logging,
+/// metrics collection, and distributed tracing.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for ApiMonitoring
 pub struct ApiMonitoringConfig {}
 
+/// Configuration for API rate limiting
+///
+/// Placeholder for future API rate limiting configuration such as request
+/// limits per IP, token bucket parameters, and burst allowances.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for ApiRateLimiting
 pub struct ApiRateLimitingConfig {}
 
+/// Configuration for Cross-Origin Resource Sharing (CORS)
+///
+/// Placeholder for future CORS configuration such as allowed origins,
+/// methods, headers, and credentials handling.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for ApiCors
 pub struct ApiCorsConfig {}
 
+/// Configuration for Model Context Protocol streaming behavior
+///
+/// Placeholder for future MCP streaming configuration such as buffer sizes,
+/// flow control, and backpressure handling.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for McpStreaming
 pub struct McpStreamingConfig {}
 
+/// Configuration for Model Context Protocol connections
+///
+/// Placeholder for future MCP connection configuration such as timeouts,
+/// keep-alive settings, and reconnection policies.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for McpConnection
 pub struct McpConnectionConfig {}
 
+/// Configuration for Model Context Protocol security
+///
+/// Placeholder for future MCP security configuration such as encryption,
+/// authentication, and authorization for MCP connections.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for McpSecurity
 pub struct McpSecurityConfig {}
 
+/// Configuration for Model Context Protocol performance
+///
+/// Placeholder for future MCP performance configuration such as parallelism,
+/// batching, and resource limits.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for McpPerformance
 pub struct McpPerformanceConfig {}
 
+/// Configuration for network services domain
+///
+/// Placeholder for future network services configuration such as service
+/// discovery, load balancing, and network topology.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for NetworkServicesDomain
 pub struct NetworkServicesDomainConfig {}
 
+/// Configuration for automation domain
+///
+/// Placeholder for future automation configuration such as scheduled tasks,
+/// workflow automation, and event-driven automation.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for AutomationDomain
 pub struct AutomationDomainConfig {}
 
+/// Configuration for filesystem monitoring domain
+///
+/// Placeholder for future filesystem monitoring configuration such as watch
+/// paths, polling intervals, and change detection settings.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for FsMonitorDomain
 pub struct FsMonitorDomainConfig {}
 
+/// Configuration for installer domain
+///
+/// Placeholder for future installer configuration such as installation paths,
+/// dependency management, and post-install hooks.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for InstallerDomain
 pub struct InstallerDomainConfig {}
 
+/// Configuration for performance domain
+///
+/// Placeholder for future performance domain configuration such as profiling,
+/// benchmarking, and performance optimization settings.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for PerformanceDomain
 pub struct PerformanceDomainConfig {}
 
+/// Configuration for binary execution domain
+///
+/// Placeholder for future binary domain configuration such as executable paths,
+/// environment variables, and execution policies.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for BinaryDomain
 pub struct BinaryDomainConfig {}
 
 // Additional implementation stubs
 impl DomainConfigValidation for ZfsDomainConfig {
+    /// Validates data
     fn validate(&self) -> Result<Vec<String>> {
         Ok(vec![])
     }
+    /// Validates  For Environment
     fn validate_for_environment(&self, _env: &str) -> Result<()> {
         Ok(())
     }
+    /// Required Fields
     fn required_fields() -> Vec<&'static str> {
         vec![]
     }
+    /// Optional Fields
     fn optional_fields() -> Vec<&'static str> {
         vec![]
     }
 }
 
 impl DomainConfigValidation for ApiDomainConfig {
+    /// Validates data
     fn validate(&self) -> Result<Vec<String>> {
         Ok(vec![])
     }
+    /// Validates  For Environment
     fn validate_for_environment(&self, _env: &str) -> Result<()> {
         Ok(())
     }
+    /// Required Fields
     fn required_fields() -> Vec<&'static str> {
         vec![]
     }
+    /// Optional Fields
     fn optional_fields() -> Vec<&'static str> {
         vec![]
     }
@@ -610,15 +786,19 @@ impl DomainConfigValidation for ApiDomainConfig {
 macro_rules! impl_domain_validation {
     ($type:ty) => {
         impl DomainConfigValidation for $type {
+            /// Validates data
             fn validate(&self) -> Result<Vec<String>> {
                 Ok(vec![])
             }
+            /// Validates  For Environment
             fn validate_for_environment(&self, _env: &str) -> Result<()> {
                 Ok(())
             }
+            /// Required Fields
             fn required_fields() -> Vec<&'static str> {
                 vec![]
             }
+            /// Optional Fields
             fn optional_fields() -> Vec<&'static str> {
                 vec![]
             }
@@ -637,6 +817,7 @@ impl_domain_validation!(BinaryDomainConfig);
 // ==================== MISSING DEFAULT IMPLEMENTATIONS ====================
 
 impl Default for ZfsPoolsConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             default_pool: "tank".to_string(),
@@ -648,6 +829,7 @@ impl Default for ZfsPoolsConfig {
 }
 
 impl Default for ZfsSnapshotsConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             retention: ZfsRetentionConfig::default(),
@@ -659,6 +841,7 @@ impl Default for ZfsSnapshotsConfig {
 }
 
 impl Default for McpProtocolConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             version: "1.0".to_string(),
@@ -672,26 +855,36 @@ impl Default for McpProtocolConfig {
 
 // More type stubs for compilation
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Mcpmessageformat
 pub enum McpMessageFormat {
+    /// Json
     Json,
+    /// Messagepack
     MessagePack,
+    /// Protobuf
     Protobuf,
 }
 
 impl Default for McpMessageFormat {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Json
     }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for McpTimeout
 pub struct McpTimeoutConfig {
+    /// Connect
     pub connect: Duration,
+    /// Read
     pub read: Duration,
+    /// Write
     pub write: Duration,
 }
 
 impl Default for McpTimeoutConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             connect: Duration::from_secs(5),
@@ -705,40 +898,59 @@ impl Default for McpTimeoutConfig {
 
 // More implementation stubs...
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for ExternalAuth
 pub struct ExternalAuthConfig {}
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for ExternalConnection
 pub struct ExternalConnectionConfig {}
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for ExternalRetry
 pub struct ExternalRetryConfig {}
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for ExternalHealthCheck
 pub struct ExternalHealthCheckConfig {}
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for HttpProtocol
 pub struct HttpProtocolConfig {}
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for GrpcProtocol
 pub struct GrpcProtocolConfig {}
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for WebSocketProtocol
 pub struct WebSocketProtocolConfig {}
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for CustomProtocol
 pub struct CustomProtocolConfig {}
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for BiomeOsIntegration
 pub struct BiomeOsIntegrationConfig {}
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for PrimalEcosystem
 pub struct PrimalEcosystemConfig {}
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for ServiceDiscovery
 pub struct ServiceDiscoveryConfig {}
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for CapabilityRouting
 pub struct CapabilityRoutingConfig {}
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for DevelopmentIntegration
 pub struct DevelopmentIntegrationConfig {}
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for ZfsHandler
 pub struct ZfsHandlerConfig {}
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for PerformanceHandler
 pub struct PerformanceHandlerConfig {}
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for DashboardHandler
 pub struct DashboardHandlerConfig {}
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for LoadTestingHandler
 pub struct LoadTestingHandlerConfig {}
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for AuthHandler
 pub struct AuthHandlerConfig {}
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for WorkspaceHandler
 pub struct WorkspaceHandlerConfig {}

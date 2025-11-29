@@ -1,3 +1,5 @@
+//! Unified Enums module
+
 pub mod data_types;
 pub mod message_event_types;
 pub mod network_types;

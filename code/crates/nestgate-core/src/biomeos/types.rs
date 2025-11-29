@@ -10,9 +10,11 @@ use std::collections::HashMap;
 
 /// Management manifest structure for universal capability routing
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Biomemanifest
 pub struct BiomeManifest {
     /// API version for management compatibility
     #[serde(rename = "apiVersion")]
+    /// Api Version
     pub api_version: String,
     /// Resource kind
     pub kind: String,
@@ -41,6 +43,7 @@ pub struct BiomeManifest {
 }
 /// Biome metadata information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Biomemetadata
 pub struct BiomeMetadata {
     /// Biome name
     pub name: String,
@@ -74,6 +77,7 @@ pub struct BiomeMetadata {
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for Capability
 pub struct CapabilityConfig {
     /// Capability type (ai-runtime, agent-processing, security-provider, etc.)
     pub capability_type: String,
@@ -86,6 +90,7 @@ pub struct CapabilityConfig {
 }
 /// Resource requirements for capabilities
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Resourcerequirements
 pub struct ResourceRequirements {
     /// CPU requirements
     pub cpu: Option<String>,
@@ -98,6 +103,7 @@ pub struct ResourceRequirements {
 }
 /// Discovery preferences for capability routing
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Discoverypreferences
 pub struct DiscoveryPreferences {
     /// Preferred provider types
     pub preferred_providers: Option<Vec<String>>,
@@ -108,16 +114,23 @@ pub struct DiscoveryPreferences {
 }
 /// Service category enumeration (extensible)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Servicecategory
 pub enum ServiceCategory {
+    /// Storage
     Storage,
+    /// Orchestration
     Orchestration,
+    /// Security
     Security,
+    /// Artificialintelligence
     ArtificialIntelligence,
+    /// Compute
     Compute,
     Custom(String),
 }
 /// Agent specification for AI/compute integration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Agentspec
 pub struct AgentSpec {
     /// Agent name
     pub name: String,
@@ -130,6 +143,7 @@ pub struct AgentSpec {
 }
 /// Service configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Service
 pub struct ServiceConfig {
     /// Service name
     pub name: String,
@@ -147,6 +161,7 @@ pub struct ServiceConfig {
 }
 /// Port specification
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Portspec
 pub struct PortSpec {
     /// Port number
     pub port: u16,
@@ -157,6 +172,7 @@ pub struct PortSpec {
 }
 /// Biome resource requirements
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Biomeresources
 pub struct BiomeResources {
     /// CPU requirements
     pub cpu: Option<String>,
@@ -171,6 +187,7 @@ pub struct BiomeResources {
 }
 /// Biome security configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Biomesecurity
 pub struct BiomeSecurity {
     /// Security level
     pub security_level: SecurityLevel,
@@ -183,6 +200,7 @@ pub struct BiomeSecurity {
 }
 /// Security levels
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Securitylevel
 pub enum SecurityLevel {
     /// Basic security
     Basic,
@@ -195,6 +213,7 @@ pub enum SecurityLevel {
 }
 /// Encryption policies for security provider integration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Encryptionpolicies
 pub struct EncryptionPolicies {
     /// Encryption at rest required
     pub at_rest: bool,
@@ -207,6 +226,7 @@ pub struct EncryptionPolicies {
 }
 /// Access control policies
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Accesscontrols
 pub struct AccessControls {
     /// Default access mode
     pub default_access: String,
@@ -217,6 +237,7 @@ pub struct AccessControls {
 }
 /// Audit requirements
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Auditrequirements
 pub struct AuditRequirements {
     /// Audit level
     pub level: String,
@@ -227,6 +248,7 @@ pub struct AuditRequirements {
 }
 /// Biome networking configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Biomenetworking
 pub struct BiomeNetworking {
     /// Network mode (host, bridge, custom)
     pub mode: String,
@@ -239,6 +261,7 @@ pub struct BiomeNetworking {
 }
 /// Network specification
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Networkspec
 pub struct NetworkSpec {
     /// Network name
     pub name: String,
@@ -264,6 +287,7 @@ pub struct NetworkSpec {
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for Dns
 pub struct DnsConfig {
     /// DNS servers
     pub servers: Vec<String>,
@@ -287,6 +311,7 @@ pub struct DnsConfig {
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for LoadBalancing
 pub struct LoadBalancingConfig {
     /// Load balancing strategy
     pub strategy: String,
@@ -310,6 +335,7 @@ pub struct LoadBalancingConfig {
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for HealthCheck
 pub struct HealthCheckConfig {
     /// Health check path
     /// Health check interval
@@ -323,6 +349,7 @@ pub struct HealthCheckConfig {
 }
 /// Biome storage configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Biomestorage
 pub struct BiomeStorage {
     /// Storage driver
     pub driver: String,
@@ -333,6 +360,7 @@ pub struct BiomeStorage {
 }
 /// Volume specification
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Volumespec
 pub struct VolumeSpec {
     /// Volume name
     pub name: String,
@@ -354,6 +382,7 @@ pub struct VolumeSpec {
 }
 /// Storage policies
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagepolicies
 pub struct StoragePolicies {
     /// Backup policies
     pub backup: Option<BackupPolicy>,
@@ -364,6 +393,7 @@ pub struct StoragePolicies {
 }
 /// Backup policy
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Backuppolicy
 pub struct BackupPolicy {
     /// Backup schedule
     pub schedule: String,
@@ -374,6 +404,7 @@ pub struct BackupPolicy {
 }
 /// Retention policy
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Retentionpolicy
 pub struct RetentionPolicy {
     /// Retention period in days
     pub days: u32,
@@ -382,6 +413,7 @@ pub struct RetentionPolicy {
 }
 /// Replication policy
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Replicationpolicy
 pub struct ReplicationPolicy {
     /// Replication factor
     pub factor: u32,
@@ -390,6 +422,7 @@ pub struct ReplicationPolicy {
 }
 /// Volume status
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Status values for Volume
 pub enum VolumeStatus {
     /// Volume is being created
     Creating,
@@ -408,6 +441,7 @@ pub enum VolumeStatus {
 }
 /// Biome specialization settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Biomespecialization
 pub struct BiomeSpecialization {
     /// Specialization type
     pub specialization_type: String,
@@ -416,6 +450,7 @@ pub struct BiomeSpecialization {
 }
 /// Biome templates for capability-based configurations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Biometemplates
 pub struct BiomeTemplates {
     /// AI runtime capability templates
     pub ai_runtime: Option<Vec<TemplateSpec>>,
@@ -430,6 +465,7 @@ pub struct BiomeTemplates {
 }
 /// Template specification
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Templatespec
 pub struct TemplateSpec {
     /// Template name
     pub name: String,
@@ -455,6 +491,7 @@ pub struct TemplateSpec {
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for Coordination
 pub struct CoordinationConfig {
     /// Coordination patterns
     pub patterns: Vec<CoordinationPattern>,
@@ -463,6 +500,7 @@ pub struct CoordinationConfig {
 }
 /// Coordination pattern
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Coordinationpattern
 pub struct CoordinationPattern {
     /// Pattern name
     pub name: String,
@@ -475,6 +513,7 @@ pub struct CoordinationPattern {
 }
 /// Coordination policies
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Coordinationpolicies
 pub struct CoordinationPolicies {
     /// Timeout policies
     pub timeout: Option<TimeoutPolicy>,
@@ -485,6 +524,7 @@ pub struct CoordinationPolicies {
 }
 /// Timeout policy
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Timeoutpolicy
 pub struct TimeoutPolicy {
     /// Default timeout in seconds
     pub default_seconds: u32,
@@ -493,6 +533,7 @@ pub struct TimeoutPolicy {
 }
 /// Retry policy
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Retrypolicy
 pub struct RetryPolicy {
     /// Maximum retry attempts
     pub max_attempts: u32,
@@ -503,6 +544,7 @@ pub struct RetryPolicy {
 }
 /// Failure policy
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Failurepolicy
 pub struct FailurePolicy {
     /// Failure handling strategy
     pub strategy: String,
@@ -511,6 +553,7 @@ pub struct FailurePolicy {
 }
 /// Biome context for provisioning operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Biomecontext
 pub struct BiomeContext {
     /// Biome ID
     pub biome_id: String,
@@ -526,6 +569,7 @@ pub struct BiomeContext {
 }
 /// Security context for operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Securitycontext
 pub struct SecurityContext {
     /// User ID
     pub user_id: String,
@@ -538,6 +582,7 @@ pub struct SecurityContext {
 }
 /// Resource constraints for operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Resourceconstraints
 pub struct ResourceConstraints {
     /// CPU limit
     pub cpu_limit: Option<String>,
@@ -557,6 +602,7 @@ pub struct ResourceConstraints {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Capabilityconfigcanonical
 pub type CapabilityConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using CapabilityConfig (the deprecated struct) for now.
@@ -573,6 +619,7 @@ pub type CapabilityConfigCanonical = crate::config::canonical_primary::domains::
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Dnsconfigcanonical
 pub type DnsConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using DnsConfig (the deprecated struct) for now.
@@ -589,6 +636,7 @@ pub type DnsConfigCanonical = crate::config::canonical_primary::domains::network
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Loadbalancingconfigcanonical
 pub type LoadBalancingConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using LoadBalancingConfig (the deprecated struct) for now.
@@ -605,6 +653,7 @@ pub type LoadBalancingConfigCanonical = crate::config::canonical_primary::domain
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Healthcheckconfigcanonical
 pub type HealthCheckConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using HealthCheckConfig (the deprecated struct) for now.
@@ -621,6 +670,7 @@ pub type HealthCheckConfigCanonical = crate::config::canonical_primary::domains:
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Coordinationconfigcanonical
 pub type CoordinationConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using CoordinationConfig (the deprecated struct) for now.

@@ -35,6 +35,7 @@ pub struct UniversalRpcRouter {
 
 /// Route information for a capability
 #[derive(Debug, Clone)]
+/// Capabilityroute
 pub struct CapabilityRoute {
     /// Capability category
     pub category: CapabilityCategory,
@@ -50,6 +51,7 @@ pub struct CapabilityRoute {
 
 /// Provider service information
 #[derive(Debug, Clone)]
+/// Providerinfo
 pub struct ProviderInfo {
     /// Service identifier (not primal name)
     pub service_id: String,
@@ -63,15 +65,21 @@ pub struct ProviderInfo {
 
 /// Service health status
 #[derive(Debug, Clone, PartialEq)]
+/// Status values for ServiceHealth
 pub enum ServiceHealthStatus {
+    /// Healthy
     Healthy,
+    /// Degraded
     Degraded,
+    /// Unhealthy
     Unhealthy,
+    /// Unknown
     Unknown,
 }
 
 /// Connection type preferences for different capability categories
 #[derive(Debug, Clone)]
+/// Connectionpreferences
 pub struct ConnectionPreferences {
     /// Preferred connection types by capability category
     pub category_preferences: HashMap<CapabilityCategory, RpcConnectionType>,
@@ -83,6 +91,7 @@ pub struct ConnectionPreferences {
 
 /// Performance requirements for a capability category
 #[derive(Debug, Clone)]
+/// Performancerequirement
 pub struct PerformanceRequirement {
     /// Maximum acceptable latency in milliseconds
     pub max_latency_ms: u64,

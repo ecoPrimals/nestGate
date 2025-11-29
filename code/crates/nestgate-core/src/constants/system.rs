@@ -63,8 +63,11 @@ pub fn api_url() -> String {
 pub const DEFAULT_TIMEOUT_MS: u64 = 5000;
 pub const MAX_CONNECTIONS: usize = 1000;
 pub const BUFFER_SIZE: usize = 8192;
+/// Default value for retry attempts
 pub const DEFAULT_RETRY_ATTEMPTS: u32 = 3;
+/// Default value for health check interval
 pub const DEFAULT_HEALTH_CHECK_INTERVAL: u64 = 30;
+/// Default value for bind host
 pub const DEFAULT_BIND_HOST: &str = "127.0.0.1";
 
 #[cfg(test)]
@@ -83,6 +86,7 @@ mod tests {
     }
 
     impl EnvGuard {
+        /// Creates a new instance
         fn new(key: &str, value: &str) -> Self {
             let original = env::var(key).ok();
             env::set_var(key, value);
@@ -94,6 +98,7 @@ mod tests {
     }
 
     impl Drop for EnvGuard {
+        /// Drop
         fn drop(&mut self) {
             match &self.original {
                 Some(value) => env::set_var(&self.key, value),

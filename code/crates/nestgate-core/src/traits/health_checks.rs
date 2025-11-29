@@ -14,24 +14,36 @@ use std::time::SystemTime;
 
 /// Health status levels
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Status values for Health
 pub enum HealthStatus {
+    /// Healthy
     Healthy,
+    /// Degraded
     Degraded,
+    /// Unhealthy
     Unhealthy,
+    /// Unknown
     Unknown,
 }
 
 /// Detailed health state information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Healthstate
 pub struct HealthState {
+    /// Status
     pub status: HealthStatus,
+    /// Message
     pub message: Option<String>,
+    /// Timestamp
     pub timestamp: SystemTime,
+    /// Details
     pub details: HashMap<String, String>,
+    /// Metrics
     pub metrics: HashMap<String, f64>,
 }
 
 impl Default for HealthState {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             status: HealthStatus::Unknown,
@@ -101,6 +113,7 @@ pub struct HealthStateBuilder {
 }
 
 impl HealthStateBuilder {
+    /// Creates a new instance
     pub fn new(status: HealthStatus) -> Self {
         Self {
             state: HealthState {
@@ -111,21 +124,25 @@ impl HealthStateBuilder {
         }
     }
 
+    /// Message
     pub fn message<S: Into<String>>(mut self, message: S) -> Self {
         self.state.message = Some(message.into());
         self
     }
 
+    /// Detail
     pub fn detail<K: Into<String>, V: Into<String>>(mut self, key: K, value: V) -> Self {
         self.state.details.insert(key.into(), value.into());
         self
     }
 
+    /// Metric
     pub fn metric<K: Into<String>>(mut self, key: K, value: f64) -> Self {
         self.state.metrics.insert(key.into(), value);
         self
     }
 
+    /// Builds the final instance
     pub fn build(self) -> HealthState {
         self.state
     }

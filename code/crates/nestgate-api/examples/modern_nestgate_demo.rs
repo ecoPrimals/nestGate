@@ -23,6 +23,7 @@
 //! This example is excluded from compilation pending API stabilization.
 //! Current working examples can be found in integration tests and handler modules.
 
+/// Main
 fn main() {
     eprintln!("⚠️  This example is outdated and needs to be updated.");
     eprintln!("The APIs demonstrated here have undergone significant refactoring.");

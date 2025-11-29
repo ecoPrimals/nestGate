@@ -49,6 +49,7 @@ impl PerformanceAnalyzer {
 
 /// Analysis report structure
 #[derive(Default)]
+/// Analysisreport
 pub struct AnalysisReport {
     // ... existing fields
 }

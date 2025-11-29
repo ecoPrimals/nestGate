@@ -23,6 +23,7 @@ use serde::{Deserialize, Serialize};
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for PoolDiscovery
 pub struct PoolDiscoveryConfig {
     /// Enable automatic pool discovery
     pub auto_discovery: bool,
@@ -38,6 +39,7 @@ pub struct PoolDiscoveryConfig {
     pub validate_health: bool,
 }
 impl Default for PoolDiscoveryConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             auto_discovery: true,
@@ -74,6 +76,7 @@ impl PoolDiscoveryConfig {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Pooldiscoveryconfigcanonical
 pub type PoolDiscoveryConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 

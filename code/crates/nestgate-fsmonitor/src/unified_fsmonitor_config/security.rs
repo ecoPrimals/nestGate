@@ -125,6 +125,7 @@ pub struct AuthorizationSettings {
     pub roles: HashMap<String, Vec<String>>,
 }
 impl Default for FsMonitorSecuritySettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -145,6 +146,7 @@ impl Default for FsMonitorSecuritySettings {
 }
 
 impl Default for AccessControlSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: false,
@@ -161,6 +163,7 @@ impl Default for AccessControlSettings {
 }
 
 impl Default for EncryptionSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: false,
@@ -173,6 +176,7 @@ impl Default for EncryptionSettings {
 }
 
 impl Default for KeyManagementSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             provider: "local".to_string(),
@@ -185,6 +189,7 @@ impl Default for KeyManagementSettings {
 }
 
 impl Default for AuditLoggingSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: false,
@@ -198,6 +203,7 @@ impl Default for AuditLoggingSettings {
 }
 
 impl Default for LogRotationSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -209,6 +215,7 @@ impl Default for LogRotationSettings {
 }
 
 impl Default for AuthenticationSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: false,
@@ -222,6 +229,7 @@ impl Default for AuthenticationSettings {
 }
 
 impl Default for AuthorizationSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: false,

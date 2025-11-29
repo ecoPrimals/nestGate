@@ -66,6 +66,7 @@ pub struct HealthCheckSettings {
 }
 
 impl Default for PreInstallCheckSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             check_system_requirements: true,
@@ -83,6 +84,7 @@ impl Default for PreInstallCheckSettings {
 }
 
 impl Default for PostInstallValidationSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             validate_service: true,
@@ -94,6 +96,7 @@ impl Default for PostInstallValidationSettings {
 }
 
 impl Default for HealthCheckSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,

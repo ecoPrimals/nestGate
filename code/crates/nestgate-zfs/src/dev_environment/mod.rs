@@ -84,9 +84,14 @@ pub fn feature_info() -> FeatureInfo {
 }
 /// Information about enabled features
 #[derive(Debug, Clone)]
+/// Featureinfo
 pub struct FeatureInfo {
+    /// Dev Environment Fallbacks
     pub dev_environment_fallbacks: bool,
+    /// Hardware Detection
     pub hardware_detection: bool,
+    /// Container Support
     pub container_support: bool,
+    /// Dev Verbose Logging
     pub dev_verbose_logging: bool,
 }

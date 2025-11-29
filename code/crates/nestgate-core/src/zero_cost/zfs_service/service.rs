@@ -47,6 +47,8 @@
 //
 // ==============================================================================
 
+//! Service module
+
 use super::traits::ZeroCostUniversalZfsService;
 
 // Re-export the trait for users to implement or use with real implementations

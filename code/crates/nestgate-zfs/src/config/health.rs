@@ -23,6 +23,7 @@ use serde::{Deserialize, Serialize};
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for HealthMonitoring
 pub struct HealthMonitoringConfig {
     /// Enable health monitoring
     pub enabled: bool,
@@ -38,6 +39,7 @@ pub struct HealthMonitoringConfig {
     pub alert_endpoints: Vec<String>,
 }
 impl Default for HealthMonitoringConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -84,6 +86,7 @@ impl HealthMonitoringConfig {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Healthmonitoringconfigcanonical
 pub type HealthMonitoringConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 

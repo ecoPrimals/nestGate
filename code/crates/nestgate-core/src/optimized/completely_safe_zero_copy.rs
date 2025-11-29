@@ -22,11 +22,13 @@ use crate::{NestGateError, Result};
 
 /// **100% SAFE ZERO-COPY BUFFER** - No unsafe code anywhere
 #[derive(Debug)]
+/// Completlysafebuffer
 pub struct CompletlySafeBuffer<const N: usize> {
     /// Safe storage using Vec for guaranteed memory safety
     data: Vec<u8>,
 }
 impl<const N: usize> Default for CompletlySafeBuffer<N> {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -152,10 +154,12 @@ impl<const N: usize> CompletlySafeBuffer<N> {
 
 /// **100% SAFE STRING BUILDER** - No unsafe code
 #[derive(Debug)]
+/// Builder pattern for constructing CompletlySafeString instances
 pub struct CompletlySafeStringBuilder<const N: usize> {
     buffer: CompletlySafeBuffer<N>,
 }
 impl<const N: usize> Default for CompletlySafeStringBuilder<N> {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -306,6 +310,7 @@ impl SafeMemoryUtils {
 
 /// **100% SAFE CIRCULAR BUFFER** - No unsafe code
 #[derive(Debug)]
+/// Safecircularbuffer
 pub struct SafeCircularBuffer<const N: usize> {
     data: [Option<u8>; N],
     head: usize,
@@ -313,6 +318,7 @@ pub struct SafeCircularBuffer<const N: usize> {
     size: usize,
 }
 impl<const N: usize> Default for SafeCircularBuffer<N> {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

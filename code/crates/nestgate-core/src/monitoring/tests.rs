@@ -2,6 +2,8 @@
 //
 // Comprehensive tests for monitoring, metrics, health checks, and alerts
 
+//! Tests module
+
 use super::*;
 use std::collections::HashMap;
 use std::time::{Duration, Instant, SystemTime};

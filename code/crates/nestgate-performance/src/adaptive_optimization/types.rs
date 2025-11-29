@@ -13,14 +13,23 @@ pub struct PerformanceHistory {
 
 /// Performance snapshot at a specific point in time
 pub struct PerformanceSnapshot {
+    /// Timestamp
     pub timestamp: Instant,
+    /// Cpu Utilization
     pub cpu_utilization: f64,
+    /// Memory Utilization
     pub memory_utilization: f64,
+    /// Network Throughput
     pub network_throughput: u64,
+    /// Disk Iops
     pub disk_iops: u64,
+    /// Cache Hit Ratio
     pub cache_hit_ratio: f64,
+    /// Lock Contention Ratio
     pub lock_contention_ratio: f64,
+    /// Simd Utilization
     pub simd_utilization: f64,
+    /// Allocation Efficiency
     pub allocation_efficiency: f64,
 }
 
@@ -33,6 +42,7 @@ pub struct OptimizationStrategy {
 }
 
 impl Clone for OptimizationStrategy {
+    /// Clone
     fn clone(&self) -> Self {
         Self {
             target_cpu_utilization: self.target_cpu_utilization,
@@ -45,9 +55,13 @@ impl Clone for OptimizationStrategy {
 
 /// Optimization decision made by the engine
 pub struct OptimizationDecision {
+    /// Parameter Adjustments
     pub parameter_adjustments: Vec<TunableParameter>,
+    /// Confidence Score
     pub confidence_score: f64,
+    /// Expected Improvement
     pub expected_improvement: f64,
+    /// Risk Assessment
     pub risk_assessment: f64,
 }
 
@@ -60,6 +74,7 @@ pub struct TunableParameter {
 }
 
 impl Clone for TunableParameter {
+    /// Clone
     fn clone(&self) -> Self {
         Self {
             name: self.name.clone(),
@@ -72,6 +87,7 @@ impl Clone for TunableParameter {
 
 /// Tuning action to be performed
 #[allow(dead_code)]
+/// Tuningaction
 pub struct TuningAction {
     parameter_name: String,
     old_value: f64,
@@ -81,30 +97,43 @@ pub struct TuningAction {
 
 /// Current system metrics
 pub struct CurrentMetrics {
+    /// Cpu Usage
     pub cpu_usage: f64,
+    /// Memory Usage
     pub memory_usage: f64,
+    /// Network Throughput
     pub network_throughput: u64,
+    /// Disk Iops
     pub disk_iops: u64,
+    /// Cache Hit Ratio
     pub cache_hit_ratio: f64,
+    /// Lock Contention
     pub lock_contention: f64,
+    /// Simd Utilization
     pub simd_utilization: f64,
+    /// Allocation Efficiency
     pub allocation_efficiency: f64,
 }
 
 /// Optimization prediction result
 pub struct OptimizationPrediction {
+    /// Predicted Improvement
     pub predicted_improvement: f64,
+    /// Confidence
     pub confidence: f64,
 }
 
 /// Result of optimization attempt
 pub struct OptimizationResult {
+    /// Success
     pub success: bool,
+    /// Improvement Achieved
     pub improvement_achieved: f64,
 }
 
 /// Statistics for adaptive performance monitoring
 #[allow(dead_code)]
+/// Adaptiveperformancestats
 pub struct AdaptivePerformanceStats {
     total_optimizations: AtomicU64,
     successful_optimizations: AtomicU64,
@@ -114,6 +143,7 @@ pub struct AdaptivePerformanceStats {
 
 /// Statistics for optimization engine
 #[allow(dead_code)]
+/// Optimizationenginestats
 pub struct OptimizationEngineStats {
     decisions_made: AtomicU64,
     average_confidence: AtomicU64, // Percentage * 100
@@ -122,6 +152,7 @@ pub struct OptimizationEngineStats {
 
 /// Statistics for auto tuner
 #[allow(dead_code)]
+/// Autotunerstats
 pub struct AutoTunerStats {
     parameters_tuned: AtomicU64,
     tuning_actions: AtomicU64,
@@ -130,10 +161,15 @@ pub struct AutoTunerStats {
 
 /// Trend analysis results
 pub struct TrendAnalysis {
+    /// Cpu Trend
     pub cpu_trend: f64,
+    /// Memory Trend
     pub memory_trend: f64,
+    /// Throughput Trend
     pub throughput_trend: f64,
+    /// Efficiency Trend
     pub efficiency_trend: f64,
+    /// Prediction Window
     pub prediction_window: Duration,
 }
 
@@ -147,6 +183,7 @@ impl PerformanceHistory {
         }
     }
 
+    /// Add Snapshot
     pub fn add_snapshot(&mut self, snapshot: PerformanceSnapshot) {
         if self.snapshots.len() >= self.max_history_size {
             self.snapshots.pop_front();

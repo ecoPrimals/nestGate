@@ -9,6 +9,7 @@ use tracing::{info, warn};
 
 /// Infant discovery system - starts with zero knowledge
 #[derive(Debug, Clone)]
+/// Infantdiscoverysystem
 pub struct InfantDiscoverySystem {
     discovered_capabilities: HashMap<String, CapabilityInfo>,
     discovery_methods: Vec<DiscoveryMethod>,
@@ -16,19 +17,29 @@ pub struct InfantDiscoverySystem {
 
 /// Capability information discovered at runtime
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Capabilityinfo
 pub struct CapabilityInfo {
+    /// Capability Type
     pub capability_type: String,
+    /// Endpoint
     pub endpoint: String,
+    /// Additional metadata key-value pairs
     pub metadata: HashMap<String, String>,
+    /// Confidence
     pub confidence: f32,
 }
 
 /// Discovery method - no vendor assumptions
 #[derive(Debug, Clone)]
+/// Discoverymethod
 pub enum DiscoveryMethod {
+    /// Environmentvariables
     EnvironmentVariables,
+    /// Networkscan
     NetworkScan,
+    /// Serviceannouncement
     ServiceAnnouncement,
+    /// Capabilityquery
     CapabilityQuery,
 }
 
@@ -157,6 +168,7 @@ impl InfantDiscoverySystem {
 }
 
 impl Default for InfantDiscoverySystem {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

@@ -13,6 +13,8 @@
 // and compatibility shims. It allows the full NestGate system to run in
 // environments where dedicated ZFS hardware isn't available.
 
+//! Zfs Compatibility module
+
 use std::collections::HashMap;
 use std::sync::Arc;
 use tracing::{info, warn};
@@ -55,6 +57,7 @@ pub struct DevEnvironmentZfsService {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for DevEnvironment
 pub struct DevEnvironmentConfig {
     /// Base directory for simulated ZFS operations
     pub base_directory: std::path::PathBuf,
@@ -64,6 +67,7 @@ pub struct DevEnvironmentConfig {
     pub default_pool_size: u64,
 }
 impl Default for DevEnvironmentConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             base_directory: std::env::temp_dir().join("nestgate-dev-zfs"),
@@ -288,6 +292,7 @@ impl DevEnvironmentZfsService {
 }
 
 impl Default for DevEnvironmentZfsService {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -306,6 +311,7 @@ impl Default for DevEnvironmentZfsService {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Devenvironmentconfigcanonical
 pub type DevEnvironmentConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 

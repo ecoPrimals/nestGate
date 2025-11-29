@@ -1,6 +1,8 @@
 // Response builder utilities
 // Provides convenient methods for building HTTP responses
 
+//! Response Builder module
+
 use super::error_response::ErrorResponseFactory;
 use axum::{
     http::StatusCode,
@@ -196,16 +198,24 @@ impl ResponseBuilder {
 
 /// Paginated response structure
 #[derive(Debug, Serialize, Deserialize)]
+/// Response data for Paginated operation
 pub struct PaginatedResponse<T> {
+    /// Data
     pub data: Vec<T>,
+    /// Pagination
     pub pagination: PaginationMetadata,
 }
 /// Pagination metadata
 #[derive(Debug, Serialize, Deserialize)]
+/// Paginationmetadata
 pub struct PaginationMetadata {
+    /// Page
     pub page: u32,
+    /// Per Page
     pub per_page: u32,
+    /// Total
     pub total: u64,
+    /// Total Pages
     pub total_pages: u32,
 }
 /// Simple error message structure

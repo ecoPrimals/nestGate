@@ -2,6 +2,8 @@
 // Canonical modernized handlers for BYOB operations integrated with
 // the unified storage system for workspace functionality.
 
+//! Handlers module
+
 pub mod datasets;
 pub mod projects;
 pub mod snapshots;

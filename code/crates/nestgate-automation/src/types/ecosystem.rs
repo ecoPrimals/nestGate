@@ -9,34 +9,53 @@ pub use nestgate_core::canonical_types::service::ServiceInfo;
 
 /// Ecosystem configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Ecosystem
 pub struct EcosystemConfig {
+    /// Ecosystem identifier
     pub ecosystem_id: String,
+    /// Name
     pub name: String,
+    /// Version
     pub version: String,
+    /// Services
     pub services: Vec<ServiceInfo>,
+    /// Additional metadata key-value pairs
     pub metadata: HashMap<String, String>,
 }
 // ServiceInfo definition removed - use canonical_types::service::ServiceInfo
 
 /// Capability provider for ecosystem integration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Capabilityprovider
 pub struct CapabilityProvider {
+    /// Unique identifier
     pub id: String,
+    /// Name
     pub name: String,
+    /// Capabilities
     pub capabilities: Vec<String>,
+    /// Endpoint
     pub endpoint: String,
+    /// Status
     pub status: ProviderStatus,
+    /// Additional metadata key-value pairs
     pub metadata: HashMap<String, String>,
 }
 /// Provider status enumeration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Status values for Provider
 pub enum ProviderStatus {
+    /// Active
     Active,
+    /// Inactive
     Inactive,
+    /// Error
     Error,
+    /// Unknown
     Unknown,
 }
 impl Default for CapabilityProvider {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             id: "default".to_string(),

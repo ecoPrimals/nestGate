@@ -1,3 +1,5 @@
+//! Types module
+
 use std::collections::HashMap;
 // CLEANED: Removed unused Duration import as part of canonical modernization
 // use std::time::Duration;
@@ -12,18 +14,28 @@ pub use crate::config::canonical_primary::StorageConfig as CacheConfig;
 
 // **CANONICAL CACHE TYPES** - Consolidated from unified_types
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of Cache
 pub enum CacheType {
+    /// Memory
     Memory,
+    /// Redis
     Redis,
+    /// Disk
     Disk,
+    /// Hybrid
     Hybrid,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Evictionpolicy
 pub enum EvictionPolicy {
+    /// Lru
     Lru,
+    /// Lfu
     Lfu,
+    /// Fifo
     Fifo,
+    /// Random
     Random,
 }
 
@@ -47,83 +59,141 @@ pub enum EvictionPolicy {
     since = "0.11.0",
     note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for StorageService
 pub struct StorageServiceConfig {
+    /// Service identifier
     pub service_id: String,
+    /// Backend Type
     pub backend_type: String,
+    /// Size of connection pool
     pub connection_pool_size: usize,
+    /// Timeout Seconds
     pub timeout_seconds: u64,
+    /// Retry Attempts
     pub retry_attempts: u32,
+    /// Enable Compression
     pub enable_compression: bool,
+    /// Enable Encryption
     pub enable_encryption: bool,
+    /// Configuration for cache
     pub cache_config: Option<CacheConfig>,
+    /// Tier
     pub tier: StorageTier,
+    /// Additional metadata key-value pairs
     pub metadata: HashMap<String, String>,
 }
 /// Storage pool information with real ZFS data
 #[derive(Debug, Clone)]
+/// Storagepool
 pub struct StoragePool {
+    /// Unique identifier
     pub id: String,
+    /// Name
     pub name: String,
+    /// Pool Type
     pub pool_type: StoragePoolType,
+    /// Size of total
     pub total_size: u64,
+    /// Size of used
     pub used_size: u64,
+    /// Size of available
     pub available_size: u64,
+    /// Health
     pub health: PoolHealth,
+    /// Tier
     pub tier: StorageTier,
+    /// Properties
     pub properties: HashMap<String, String>,
+    /// Datasets
     pub datasets: Vec<String>,
+    /// Last Updated
     pub last_updated: SystemTime,
 }
 #[derive(Debug, Clone, PartialEq)]
+/// Types of StoragePool
 pub enum StoragePoolType {
+    /// Zfs
     Zfs,
+    /// Filesystem
     Filesystem,
+    /// Block
     Block,
+    /// Object
     Object,
 }
 
 #[derive(Debug, Clone, PartialEq)]
+/// Poolhealth
 pub enum PoolHealth {
+    /// Online
     Online,
+    /// Degraded
     Degraded,
+    /// Faulted
     Faulted,
+    /// Offline
     Offline,
+    /// Unavailable
     Unavailable,
+    /// Removed
     Removed,
 }
 
 /// Storage quota configuration and tracking
 #[derive(Debug, Clone)]
+/// Storagequota
 pub struct StorageQuota {
+    /// Unique identifier
     pub id: String,
+    /// Soft Limit
     pub soft_limit: Option<u64>,
+    /// Hard Limit
     pub hard_limit: Option<u64>,
+    /// Current Usage
     pub current_usage: u64,
+    /// Last Checked
     pub last_checked: SystemTime,
+    /// Enforcement
     pub enforcement: QuotaEnforcement,
 }
 #[derive(Debug, Clone, PartialEq)]
+/// Quotaenforcement
 pub enum QuotaEnforcement {
+    /// None
     None,
+    /// Warn
     Warn,
+    /// Block
     Block,
 }
 
 /// Storage service statistics
 #[derive(Debug, Clone)]
+/// Storageservicestats
 pub struct StorageServiceStats {
+    /// Total Operations
     pub total_operations: u64,
+    /// Read Operations
     pub read_operations: u64,
+    /// Write Operations
     pub write_operations: u64,
+    /// Delete Operations
     pub delete_operations: u64,
+    /// Bytes Read
     pub bytes_read: u64,
+    /// Bytes Written
     pub bytes_written: u64,
+    /// Cache Hits
     pub cache_hits: u64,
+    /// Cache Misses
     pub cache_misses: u64,
+    /// Errors
     pub errors: u64,
+    /// Last Reset
     pub last_reset: SystemTime,
 }
 impl Default for StorageServiceStats {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             total_operations: 0,
@@ -142,24 +212,41 @@ impl Default for StorageServiceStats {
 
 /// Storage operation result
 #[derive(Debug, Clone)]
+/// Storageoperationresult
 pub struct StorageOperationResult {
+    /// Operation identifier
     pub operation_id: Uuid,
+    /// Operation Type
     pub operation_type: StorageOperationType,
+    /// Success
     pub success: bool,
+    /// Error Message
     pub error_message: Option<String>,
+    /// Bytes Processed
     pub bytes_processed: Option<u64>,
+    /// Timestamp
     pub timestamp: SystemTime,
 }
 #[derive(Debug, Clone, PartialEq)]
+/// Types of StorageOperation
 pub enum StorageOperationType {
+    /// Read
     Read,
+    /// Write
     Write,
+    /// Delete
     Delete,
+    /// List
     List,
+    /// Createpool
     CreatePool,
+    /// Createdataset
     CreateDataset,
+    /// Createsnapshot
     CreateSnapshot,
+    /// Setquota
     SetQuota,
+    /// Cacheoperation
     CacheOperation,
 }
 
@@ -293,6 +380,7 @@ impl StorageOperationResult {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Storageserviceconfigcanonical
 pub type StorageServiceConfigCanonical =
     crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 

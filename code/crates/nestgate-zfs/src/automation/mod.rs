@@ -10,6 +10,8 @@
 // - Integration with the NestGate ecosystem
 // - Performance optimization and migration coordination
 
+//! Automation module
+
 pub mod actions;
 pub mod engine;
 pub mod integration;

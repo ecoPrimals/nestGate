@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 
 /// Security discovery settings for capability detection
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Securitydiscoverysettings
 pub struct SecurityDiscoverySettings {
     /// Whether security discovery is enabled
     pub enabled: bool,

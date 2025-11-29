@@ -7,6 +7,7 @@ use std::collections::HashMap;
 use uuid::Uuid;
 /// Unified event structure for system-wide event handling
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Unifiedevent
 pub struct UnifiedEvent {
     /// Unique event identifier
     pub event_id: String,
@@ -27,6 +28,7 @@ pub struct UnifiedEvent {
 }
 /// Event priority levels
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Eventpriority
 pub enum EventPriority {
     /// Low priority event
     Low,
@@ -39,6 +41,7 @@ pub enum EventPriority {
 }
 /// Event subscription configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Eventsubscription
 pub struct EventSubscription {
     /// Unique subscription identifier
     pub subscription_id: String,
@@ -57,6 +60,7 @@ pub struct EventSubscription {
 }
 /// Event handler configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Handler for Event requests
 pub struct EventHandler {
     /// Handler identifier
     pub handler_id: String,
@@ -72,6 +76,7 @@ pub struct EventHandler {
     pub enabled: bool,
 }
 impl Default for UnifiedEvent {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             event_id: Uuid::new_v4().to_string(),
@@ -87,6 +92,7 @@ impl Default for UnifiedEvent {
 }
 
 impl Default for EventSubscription {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             subscription_id: Uuid::new_v4().to_string(),
@@ -101,6 +107,7 @@ impl Default for EventSubscription {
 }
 
 impl Default for EventHandler {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             handler_id: Uuid::new_v4().to_string(),

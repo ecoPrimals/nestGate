@@ -1,6 +1,8 @@
 // Cache management system
 // Provides multi-tier caching with TTL and eviction policies
 
+//! Manager module
+
 use std::collections::HashMap;
 // CLEANED: Removed unused imports as part of canonical modernization
 // use std::sync::Arc;
@@ -30,14 +32,20 @@ use tracing::debug;
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for UnifiedCache
 pub struct UnifiedCacheConfig {
+    /// Size of max
     pub max_size: usize,
+    /// Ttl Seconds
     pub ttl_seconds: Option<u64>,
+    /// Cache Dir
     pub cache_dir: Option<std::path::PathBuf>,
+    /// Eviction Policy
     pub eviction_policy: String,
 }
 #[allow(deprecated)]
 impl Default for UnifiedCacheConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             max_size: 1000,
@@ -50,10 +58,15 @@ impl Default for UnifiedCacheConfig {
 
 /// Cache entry with metadata
 #[derive(Debug, Clone)]
+/// Cacheentry
 pub struct CacheEntry {
+    /// Data
     pub data: Vec<u8>,
+    /// Timestamp when this was created
     pub created_at: SystemTime,
+    /// Last Accessed
     pub last_accessed: SystemTime,
+    /// Count of access
     pub access_count: u64,
 }
 impl CacheEntry {
@@ -73,6 +86,7 @@ impl CacheEntry {
         self.created_at.elapsed().unwrap_or(Duration::ZERO) > ttl
     }
 
+    /// Access
     pub fn access(&mut self) {
         self.last_accessed = SystemTime::now();
         self.access_count += 1;
@@ -81,10 +95,15 @@ impl CacheEntry {
 
 /// Cache statistics
 #[derive(Debug, Default, Clone)]
+/// Cachestats
 pub struct CacheStats {
+    /// Hits
     pub hits: u64,
+    /// Misses
     pub misses: u64,
+    /// Evictions
     pub evictions: u64,
+    /// Size
     pub size: usize,
 }
 impl CacheStats {
@@ -399,6 +418,7 @@ impl CacheManager {
 }
 
 impl Default for CacheManager {
+    /// Returns the default instance
     fn default() -> Self {
         let config = UnifiedCacheConfig::default();
         Self {
@@ -420,6 +440,7 @@ impl Default for CacheManager {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Unifiedcacheconfigcanonical
 pub type UnifiedCacheConfigCanonical =
     crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 

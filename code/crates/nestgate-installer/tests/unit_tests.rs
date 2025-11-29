@@ -53,6 +53,7 @@
 #[cfg(test)]
 // Basic installer tests
 #[test]
+#[test]
 fn test_installer_basic() -> Result<(), Box<dyn std::error::Error>> {
     // Test that installer module exists and can be accessed
     use nestgate_installer::platform::PlatformInfo;

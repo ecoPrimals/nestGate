@@ -19,6 +19,7 @@ use super::capability_endpoints_config::CapabilityEndpointsConfig;
 /// **NO HARDCODED PRIMAL NAMES**: Use generic capability types like
 /// "networking", "security", "storage", not primal names like "songbird".
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Capabilitytype
 pub struct CapabilityType(String);
 
 impl CapabilityType {
@@ -33,6 +34,7 @@ impl CapabilityType {
         Self(capability.into())
     }
 
+    /// Returns as Str
     pub fn as_str(&self) -> &str {
         &self.0
     }
@@ -96,6 +98,7 @@ impl CapabilityType {
 /// **IMPORTANT**: This describes what a service CAN DO, not who/what it is.
 /// We never store primal names like "songbird" or "beardog" here.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Capabilityprovider
 pub struct CapabilityProvider {
     /// Endpoint to reach this capability provider
     /// Example: "http://localhost:{port}" or discovered via mDNS
@@ -252,6 +255,7 @@ impl CapabilityDiscovery {
 }
 
 impl Default for CapabilityDiscovery {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

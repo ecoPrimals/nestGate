@@ -1,3 +1,5 @@
+//! Compression Engine module
+
 use crate::error::NestGateError;
 use std::collections::HashMap;
 //
@@ -13,6 +15,7 @@ use serde::{Deserialize, Serialize};
 
 // Type aliases for complex compression types
 type CompressionAlgorithmBox = Box<dyn CompressionAlgorithm + Send + Sync>;
+/// Type alias for CompressionAlgorithmMap
 type CompressionAlgorithmMap = HashMap<CompressionType, CompressionAlgorithmBox>;
 
 /// Advanced compression engine with multiple algorithm support
@@ -22,6 +25,7 @@ pub struct CompressionEngine {
     min_compression_size: usize,
 }
 impl Default for CompressionEngine {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -236,6 +240,7 @@ impl CompressionLevelManager {
 }
 
 impl Default for CompressionLevelManager {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -245,18 +250,22 @@ impl Default for CompressionLevelManager {
 
 /// Trait for compression algorithms
 trait CompressionAlgorithm {
+    /// Compress
     fn compress(&self, data: &[u8]) -> Result<Vec<u8>>;
+    /// Decompress
     fn decompress(&self, data: &[u8]) -> Result<Vec<u8>>;
 }
 /// LZ4 compression algorithm implementation
 struct Lz4Algorithm;
 impl Lz4Algorithm {
+    /// Creates a new instance
     fn new() -> Self {
         Self
     }
 }
 
 impl CompressionAlgorithm for Lz4Algorithm {
+    /// Compress
     fn compress(&self, data: &[u8]) -> Result<Vec<u8>> {
         // In a real implementation, this would use the lz4 crate
         // For now, we'll simulate compression with a simple placeholder
@@ -267,6 +276,7 @@ impl CompressionAlgorithm for Lz4Algorithm {
         Ok(compressed)
     }
 
+    /// Decompress
     fn decompress(&self, data: &[u8]) -> Result<Vec<u8>> {
         // In a real implementation, this would use the lz4 crate
         // For now, return the data as-is (simulation)
@@ -279,18 +289,21 @@ struct ZstdAlgorithm {
     level: i32,
 }
 impl ZstdAlgorithm {
+    /// Creates a new instance
     fn new(level: i32) -> Self {
         Self {
             level: level.clamp(-5, 22),
         } // ZSTD valid range
     }
 
+    /// Gets Level
     fn get_level(&self) -> i32 {
         self.level
     }
 }
 
 impl CompressionAlgorithm for ZstdAlgorithm {
+    /// Compress
     fn compress(&self, data: &[u8]) -> Result<Vec<u8>> {
         // In a real implementation, this would use the zstd crate
         // Simulate better compression ratio than LZ4
@@ -301,6 +314,7 @@ impl CompressionAlgorithm for ZstdAlgorithm {
         Ok(compressed)
     }
 
+    /// Decompress
     fn decompress(&self, data: &[u8]) -> Result<Vec<u8>> {
         // In a real implementation, this would use the zstd crate
         Ok(data.to_vec())
@@ -312,18 +326,21 @@ struct GzipAlgorithm {
     level: u32,
 }
 impl GzipAlgorithm {
+    /// Creates a new instance
     fn new(level: u32) -> Self {
         Self {
             level: level.clamp(1, 9),
         } // GZIP valid range
     }
 
+    /// Gets Level
     fn get_level(&self) -> u32 {
         self.level
     }
 }
 
 impl CompressionAlgorithm for GzipAlgorithm {
+    /// Compress
     fn compress(&self, data: &[u8]) -> Result<Vec<u8>> {
         // In a real implementation, this would use the flate2 crate
         // Simulate standard compression ratio
@@ -334,6 +351,7 @@ impl CompressionAlgorithm for GzipAlgorithm {
         Ok(compressed)
     }
 
+    /// Decompress
     fn decompress(&self, data: &[u8]) -> Result<Vec<u8>> {
         // In a real implementation, this would use the flate2 crate
         Ok(data.to_vec())
@@ -348,6 +366,7 @@ const COMPRESSION_HEADER_SIZE: usize = 12;
 /// Compression algorithm types
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[repr(u8)]
+/// Types of Compression
 pub enum CompressionType {
     None = 0,
     Lz4 = 1,
@@ -356,6 +375,7 @@ pub enum CompressionType {
 }
 /// Configuration for compression engine
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Compression
 pub struct CompressionConfig {
     /// Default compression algorithm
     pub default_algorithm: CompressionType,
@@ -371,6 +391,7 @@ pub struct CompressionConfig {
     pub gzip_level: u32,
 }
 impl Default for CompressionConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             default_algorithm: CompressionType::Lz4,
@@ -385,6 +406,7 @@ impl Default for CompressionConfig {
 
 /// Statistics for compression operations
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
+/// Compressionstats
 pub struct CompressionStats {
     /// Total bytes before compression
     pub total_original_bytes: u64,
@@ -444,6 +466,7 @@ struct CompressionHeader {
     original_size: usize,
 }
 impl std::fmt::Debug for CompressionEngine {
+    /// Fmt
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("CompressionEngine")
             .field("default_type", &self.default_type)

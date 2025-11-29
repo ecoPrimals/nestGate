@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 /// Provides comprehensive replication settings including real-time replication,
 /// backup strategies, and disaster recovery planning.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for StorageReplication
 pub struct StorageReplicationConfig {
     /// Real-time data replication configuration.
     pub replication: ReplicationConfig,
@@ -20,6 +21,7 @@ pub struct StorageReplicationConfig {
 ///
 /// Controls synchronous or asynchronous data replication to secondary storage.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Replication
 pub struct ReplicationConfig {
     /// Whether replication is enabled (default: false due to overhead).
     pub enabled: bool,
@@ -31,6 +33,7 @@ pub struct ReplicationConfig {
 ///
 /// Defines backup frequency, retention, and backup type.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Backup
 pub struct BackupConfig {
     /// Whether backups are enabled (default: true).
     pub enabled: bool,
@@ -42,6 +45,7 @@ pub struct BackupConfig {
 ///
 /// Defines recovery time objectives (RTO) and recovery point objectives (RPO).
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for DisasterRecovery
 pub struct DisasterRecoveryConfig {
     /// Whether disaster recovery is enabled (default: false).
     pub enabled: bool,
@@ -53,6 +57,7 @@ pub struct DisasterRecoveryConfig {
 ///
 /// Determines how data is replicated to secondary storage.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Replicationstrategy
 pub enum ReplicationStrategy {
     /// Synchronous - write completes after replication (highest consistency, higher latency).
     Synchronous,
@@ -66,6 +71,7 @@ pub enum ReplicationStrategy {
 ///
 /// Determines backup type and storage efficiency.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Backupstrategy
 pub enum BackupStrategy {
     /// Full backup - complete data copy (highest storage, simplest restore).
     Full,
@@ -79,6 +85,7 @@ pub enum BackupStrategy {
 ///
 /// Determines recovery time and infrastructure readiness.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Recoverystrategy
 pub enum RecoveryStrategy {
     /// Hot standby - active/active with instant failover (highest cost, lowest RTO).
     Hot,
@@ -89,6 +96,7 @@ pub enum RecoveryStrategy {
 }
 
 impl Default for StorageReplicationConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             replication: ReplicationConfig {

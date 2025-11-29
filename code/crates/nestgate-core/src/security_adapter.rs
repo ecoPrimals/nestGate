@@ -17,28 +17,42 @@ use tracing::{debug, error, info, warn};
 
 /// Credentials for authentication
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Credentials
 pub struct Credentials {
+    /// Username
     pub username: String,
+    /// Password
     pub password: String,
+    /// Additional Fields
     pub additional_fields: HashMap<String, serde_json::Value>,
 }
 /// Authentication token
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Authtoken
 pub struct AuthToken {
+    /// Token
     pub token: String,
+    /// Expires At
     pub expires_at: Option<String>,
+    /// Permissions
     pub permissions: Vec<String>,
+    /// Additional metadata key-value pairs
     pub metadata: HashMap<String, String>,
 }
 /// Digital signature
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Signature
 pub struct Signature {
+    /// Algorithm
     pub algorithm: String,
+    /// Signature Data
     pub signature_data: Vec<u8>,
+    /// Key identifier
     pub key_id: Option<String>,
 }
 /// Security adapter using universal adapter pattern
 #[derive(Debug, Clone)]
+/// Securityadapter
 pub struct SecurityAdapter {
     /// Universal adapter for external primal communication
     adapter: Arc<UniversalAdapter>,

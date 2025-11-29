@@ -6,6 +6,7 @@ use std::time::Duration;
 
 /// Streaming and real-time configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Apistreamingsettings
 pub struct ApiStreamingSettings {
     /// Enable MCP streaming
     pub enable_mcp_streaming: bool,
@@ -26,6 +27,7 @@ pub struct ApiStreamingSettings {
 }
 /// Server-Sent Events (SSE) configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Apissesettings
 pub struct ApiSseSettings {
     /// Enable SSE
     pub enable_sse: bool,
@@ -41,6 +43,7 @@ pub struct ApiSseSettings {
     pub enable_sse_compression: bool,
 }
 impl Default for ApiStreamingSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             enable_mcp_streaming: true,
             stream_buffer_size: 64 * 1024, // 64KB
@@ -54,6 +57,7 @@ impl Default for ApiStreamingSettings {
 }
 
 impl Default for ApiSseSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             enable_sse: true,
             sse_timeout: Duration::from_secs(300), // 5 minutes

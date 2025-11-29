@@ -188,24 +188,28 @@ mod type_traits_tests {
 
     #[test]
     fn test_universal_storage_type_is_send() {
+        /// Assert Send
         fn assert_send<T: Send>() {}
         assert_send::<UniversalStorageType>();
     }
 
     #[test]
     fn test_universal_storage_type_is_sync() {
+        /// Assert Sync
         fn assert_sync<T: Sync>() {}
         assert_sync::<UniversalStorageType>();
     }
 
     #[test]
     fn test_nfs_version_is_copy() {
+        /// Assert Copy
         fn assert_copy<T: Copy>() {}
         assert_copy::<NfsVersion>();
     }
 
     #[test]
     fn test_smb_version_is_copy() {
+        /// Assert Copy
         fn assert_copy<T: Copy>() {}
         assert_copy::<SmbVersion>();
     }
@@ -236,6 +240,7 @@ mod type_traits_tests {
 
     #[test]
     fn test_storage_resource_type_is_send_sync() {
+        /// Assert Send Sync
         fn assert_send_sync<T: Send + Sync>() {}
         assert_send_sync::<StorageResourceType>();
     }

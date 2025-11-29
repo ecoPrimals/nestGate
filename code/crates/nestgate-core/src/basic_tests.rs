@@ -1,3 +1,5 @@
+//! Basic Tests module
+
 use crate::error::NestGateError;
 use std::collections::HashMap;
 //

@@ -5,6 +5,8 @@
 // - ZFS features (snapshots, compression, deduplication) on any backend
 // - Hybrid architectures (local + cloud, multi-tier)
 
+//! Universal Zfs Demo module
+
 use crate::error::CanonicalResult as Result;
 use crate::universal_storage::{
     AutoConfigurator, ConfiguratorSettings, DetectionConfig, RedundancyLevel, StorageDetector,
@@ -386,6 +388,7 @@ impl UniversalZfsDemo {
 }
 
 impl Default for UniversalZfsDemo {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

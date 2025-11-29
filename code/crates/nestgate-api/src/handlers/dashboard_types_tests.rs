@@ -356,6 +356,7 @@ mod tests {
 
     // ==================== Helper Functions ====================
 
+    /// Creates  Test Alert
     fn create_test_alert(id: &str, resolved: bool) -> PerformanceAlert {
         PerformanceAlert {
             id: id.to_string(),

@@ -8,10 +8,15 @@ use serde::{Deserialize, Serialize};
 
 /// Storage tier enumeration for Management
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Storagetier
 pub enum StorageTier {
+    /// Hot
     Hot,
+    /// Warm
     Warm,
+    /// Cold
     Cold,
+    /// Archive
     Archive,
 }
 

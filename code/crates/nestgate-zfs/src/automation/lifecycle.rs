@@ -2,6 +2,8 @@
 // This module handles the complete lifecycle of datasets including stage
 // transitions, condition evaluation, and automated lifecycle rule application.
 
+//! Lifecycle module
+
 use std::time::Duration;
 use std::time::SystemTime;
 use tracing::debug;

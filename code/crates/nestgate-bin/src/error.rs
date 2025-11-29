@@ -9,6 +9,8 @@
 // - Consistent error formatting and serialization
 // - Idiomatic Result types with proper error propagation
 
+//! Error module
+
 use nestgate_core::error::{CanonicalResult, NestGateError};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -153,6 +155,7 @@ impl BinErrorHelper {
 ///
 /// Implements the canonical `IntoNestGateError` trait for seamless integration
 impl From<NestGateBinError> for NestGateError {
+    /// From
     fn from(err: NestGateBinError) -> NestGateError {
         match err {
             NestGateBinError::ArgumentParsingError { argument, message } => {
@@ -270,12 +273,14 @@ pub trait BinResultExt<T> {
 }
 
 impl<T> BinResultExt<T> for BinResult<T> {
+    /// Builder method to set Context
     fn with_context(self, context: &str) -> CanonicalResult<T> {
         self.map_err(|_e| {
             NestGateError::internal_error(format!("Context: {context}"), "nestgate-bin")
         })
     }
 
+    /// Into Canonical
     fn into_canonical(self) -> CanonicalResult<T> {
         self.map_err(|_e| NestGateError::internal_error("Conversion error", "nestgate-bin"))
     }

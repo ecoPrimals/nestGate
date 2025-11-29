@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 /// Provides comprehensive monitoring including metrics collection, alerting,
 /// logging, health checks, and diagnostics for storage operations.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for StorageMonitoring
 pub struct StorageMonitoringConfig {
     /// Metrics collection configuration.
     pub metrics: MetricsStorageConfig,
@@ -24,6 +25,7 @@ pub struct StorageMonitoringConfig {
 ///
 /// Controls whether storage metrics are collected and exposed.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for MetricsStorage
 pub struct MetricsStorageConfig {
     /// Whether metrics collection is enabled (default: true).
     pub enabled: bool,
@@ -33,6 +35,7 @@ pub struct MetricsStorageConfig {
 ///
 /// Controls whether alerts are generated for storage issues.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for AlertingStorage
 pub struct AlertingStorageConfig {
     /// Whether alerting is enabled (default: false for development).
     pub enabled: bool,
@@ -42,6 +45,7 @@ pub struct AlertingStorageConfig {
 ///
 /// Controls logging of storage access and operations.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for LoggingStorage
 pub struct LoggingStorageConfig {
     /// Whether storage logging is enabled (default: true).
     pub enabled: bool,
@@ -51,6 +55,7 @@ pub struct LoggingStorageConfig {
 ///
 /// Controls periodic health checks of storage systems.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for HealthCheckStorage
 pub struct HealthCheckStorageConfig {
     /// Whether health checks are enabled (default: true).
     pub enabled: bool,
@@ -60,12 +65,14 @@ pub struct HealthCheckStorageConfig {
 ///
 /// Enables detailed diagnostics for storage issue investigation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Diagnostics
 pub struct DiagnosticsConfig {
     /// Whether diagnostics are enabled (default: false).
     pub enabled: bool,
 }
 
 impl Default for StorageMonitoringConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             metrics: MetricsStorageConfig { enabled: true },

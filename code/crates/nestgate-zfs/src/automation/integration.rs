@@ -3,14 +3,18 @@
 // with the NestGate ecosystem and external services.
 
 // Removed unresolved automation imports - use local implementations
+//! Integration module
+
 use nestgate_core::config::canonical_primary::NestGateCanonicalConfig;
 use nestgate_core::Result;
 
 // Placeholder types until automation crate is fully integrated
 pub struct IntelligentDatasetManager;
+/// Configuration for Automation
 pub struct AutomationConfig;
 
 impl Default for AutomationConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self
     }

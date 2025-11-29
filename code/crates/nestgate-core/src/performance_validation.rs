@@ -1,3 +1,5 @@
+//! Performance Validation module
+
 use std::future::Future;
 // **ZERO-COST PERFORMANCE VALIDATION - MODULAR SYSTEM**
 //

@@ -71,6 +71,7 @@ use crate::Result;
             Target removal: v0.12.0 (May 2026). \
             See: CANONICAL_PROVIDER_COMPARISON.md for detailed migration guide."
 )]
+/// CanonicalUniversalProvider trait
 pub trait CanonicalUniversalProvider<T>: Send + Sync + 'static {
     /// Provider configuration type
     type Config: Clone + Send + Sync + 'static;
@@ -114,6 +115,7 @@ pub trait CanonicalUniversalProvider<T>: Send + Sync + 'static {
 
 /// Provider health status
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Providerhealth
 pub struct ProviderHealth {
     /// Overall health status
     pub status: HealthStatus,
@@ -126,14 +128,20 @@ pub struct ProviderHealth {
 }
 /// Health status enumeration
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+/// Status values for Health
 pub enum HealthStatus {
+    /// Healthy
     Healthy,
+    /// Degraded
     Degraded,
+    /// Unhealthy
     Unhealthy,
+    /// Unknown
     Unknown,
 }
 /// Provider capabilities
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Providercapabilities
 pub struct ProviderCapabilities {
     /// Supported operations
     pub operations: Vec<String>,
@@ -146,6 +154,7 @@ pub struct ProviderCapabilities {
 }
 /// Provider performance metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Providermetrics
 pub struct ProviderMetrics {
     /// Request count
     pub requests_total: u64,
@@ -190,6 +199,7 @@ pub struct ProviderMetrics {
             SecurityProvider is now a duplicate. Migration: Replace impl SecurityProvider \
             with impl CanonicalSecurity. Target removal: v0.12.0 (May 2026)."
 )]
+/// SecurityProvider trait
 pub trait SecurityProvider: CanonicalUniversalProvider<Box<dyn SecurityService>> {
     // ==================== AUTHENTICATION OPERATIONS ====================
 
@@ -427,6 +437,7 @@ pub trait SecurityProvider: CanonicalUniversalProvider<Box<dyn SecurityService>>
             Migration: Replace impl StorageProvider with impl CanonicalStorage. \
             Target removal: v0.12.0 (May 2026)."
 )]
+/// StorageProvider trait
 pub trait StorageProvider: CanonicalUniversalProvider<Box<dyn StorageService>> {
     /// Store data
     ///
@@ -511,6 +522,7 @@ pub trait StorageProvider: CanonicalUniversalProvider<Box<dyn StorageService>> {
             Migration: Replace impl NetworkProvider with impl CanonicalNetwork. \
             Target removal: v0.12.0 (May 2026)."
 )]
+/// NetworkProvider trait
 pub trait NetworkProvider: CanonicalUniversalProvider<Box<dyn NetworkService>> {
     /// Send data
     ///
@@ -539,12 +551,14 @@ pub trait NetworkProvider: CanonicalUniversalProvider<Box<dyn NetworkService>> {
     since = "0.9.0",
     note = "Use crate::traits::canonical::CanonicalSecurity instead"
 )]
+/// SecurityService trait
 pub trait SecurityService: Send + Sync {}
 /// **DEPRECATED**: Duplicate trait - use canonical storage system
 #[deprecated(
     since = "0.9.0",
     note = "Use crate::traits::canonical::CanonicalStorage instead"
 )]
+/// StorageService trait
 pub trait StorageService: Send + Sync {}
 
 /// **DEPRECATED**: Use canonical network trait instead
@@ -554,6 +568,7 @@ pub trait StorageService: Send + Sync {}
             NetworkService is a marker trait - migrate to CanonicalNetwork for full functionality. \
             Target removal: v0.12.0 (May 2026)."
 )]
+/// NetworkService trait
 pub trait NetworkService: Send + Sync {}
 
 /// **DEPRECATED**: Use canonical service traits instead
@@ -563,31 +578,45 @@ pub trait NetworkService: Send + Sync {}
             CacheService is a marker trait - migrate to CanonicalService with cache-specific types. \
             Target removal: v0.12.0 (May 2026)."
 )]
+/// CacheService trait
 pub trait CacheService: Send + Sync {}
 /// Authentication token
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Authtoken
 pub struct AuthToken {
+    /// Token
     pub token: String,
+    /// Expires At
     pub expires_at: SystemTime,
+    /// Permissions
     pub permissions: Vec<String>,
 }
 /// Connection handle
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Connectionhandle
 pub struct ConnectionHandle {
+    /// Unique identifier
     pub id: String,
+    /// Endpoint
     pub endpoint: String,
+    /// Status
     pub status: ConnectionStatus,
 }
 /// Connection status
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Status values for Connection
 pub enum ConnectionStatus {
+    /// Connected
     Connected,
+    /// Connecting
     Connecting,
+    /// Disconnected
     Disconnected,
     Error(String),
 }
 // Default implementations
 impl Default for ProviderHealth {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             status: HealthStatus::Unknown,
@@ -599,6 +628,7 @@ impl Default for ProviderHealth {
 }
 
 impl Default for ProviderCapabilities {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             operations: Vec::new(),
@@ -610,6 +640,7 @@ impl Default for ProviderCapabilities {
 }
 
 impl Default for ProviderMetrics {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             requests_total: 0,

@@ -17,28 +17,38 @@ use uuid::Uuid;
 /// This container provides common metadata fields while allowing type-safe
 /// extensions for domain-specific data.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Metadatacontainer
 pub struct MetadataContainer<T> {
     /// Service identification
     pub service_type: String,
+    /// Service Version
     pub service_version: String,
+    /// Instance identifier
     pub instance_id: Option<String>,
     /// Capability information
     pub capabilities: Vec<String>,
+    /// Supported Operations
     pub supported_operations: Vec<String>,
 
     /// Performance metadata
     pub response_time_ms: u64,
+    /// Resource Usage
     pub resource_usage: ResourceUsage,
+    /// Performance Tier
     pub performance_tier: PerformanceTier,
 
     /// Context information
     pub request_id: Option<Uuid>,
+    /// Correlation identifier
     pub correlation_id: Option<String>,
+    /// Timestamp
     pub timestamp: SystemTime,
 
     /// Configuration and state
     pub configuration_hash: Option<String>,
+    /// Health Status
     pub health_status: HealthStatus,
+    /// Availability Zone
     pub availability_zone: Option<String>,
 
     /// Type-safe extensions for domain-specific data
@@ -50,20 +60,28 @@ pub struct MetadataContainer<T> {
 
 /// Resource usage information shared across all metadata containers
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Resourceusage
 pub struct ResourceUsage {
+    /// Cpu Time Ms
     pub cpu_time_ms: u64,
+    /// Memory Bytes
     pub memory_bytes: u64,
+    /// Disk Io Bytes
     pub disk_io_bytes: u64,
+    /// Network Io Bytes
     pub network_io_bytes: u64,
+    /// Active Connections
     pub active_connections: u32,
 }
 /// Performance tier classification
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Performancetier
 pub enum PerformanceTier {
     /// High-performance, low-latency operations
     RealTime,
     /// Standard performance for most operations
     #[default]
+    /// Standard
     Standard,
     /// Background processing, batch operations
     Batch,
@@ -72,15 +90,20 @@ pub enum PerformanceTier {
 }
 /// Health status shared across services
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Status values for Health
 pub enum HealthStatus {
     #[default]
+    /// Healthy
     Healthy,
+    /// Degraded
     Degraded {
         reason: String,
     },
+    /// Unhealthy
     Unhealthy {
         reason: String,
     },
+    /// Unknown
     Unknown,
 }
 /// Trait for metadata extensions - ensures type safety
@@ -152,6 +175,7 @@ where
         self
     }
 
+    /// Builds the final instance
     pub fn build(self) -> MetadataContainer<T> {
         MetadataContainer {
             service_type: self.service_type,
@@ -178,56 +202,81 @@ where
 
 /// Service capability extensions
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Servicecapabilityextensions
 pub struct ServiceCapabilityExtensions {
+    /// Max Concurrent Requests
     pub max_concurrent_requests: u32,
+    /// Supported Protocols
     pub supported_protocols: Vec<String>,
+    /// Authentication Methods
     pub authentication_methods: Vec<String>,
+    /// Data Formats
     pub data_formats: Vec<String>,
 }
 impl MetadataExtensions for ServiceCapabilityExtensions {}
 
 /// Ecosystem integration extensions
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Ecosystemextensions
 pub struct EcosystemExtensions {
+    /// Ecosystem Version
     pub ecosystem_version: String,
+    /// Compatibility Level
     pub compatibility_level: String,
+    /// Integration Points
     pub integration_points: Vec<String>,
+    /// Federation Capabilities
     pub federation_capabilities: Vec<String>,
 }
 impl MetadataExtensions for EcosystemExtensions {}
 
 /// Performance optimization extensions
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Performanceextensions
 pub struct PerformanceExtensions {
+    /// Optimization Hints
     pub optimization_hints: Vec<String>,
+    /// Cache Strategies
     pub cache_strategies: Vec<String>,
+    /// Scaling Recommendations
     pub scaling_recommendations: Vec<String>,
+    /// Bottleneck Analysis
     pub bottleneck_analysis: Vec<String>,
 }
 impl MetadataExtensions for PerformanceExtensions {}
 
 /// Security context extensions
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Securityextensions
 pub struct SecurityExtensions {
+    /// Security Level
     pub security_level: String,
+    /// Encryption Methods
     pub encryption_methods: Vec<String>,
+    /// Access Controls
     pub access_controls: Vec<String>,
+    /// Audit Capabilities
     pub audit_capabilities: Vec<String>,
 }
 impl MetadataExtensions for SecurityExtensions {}
 
 // Type aliases that replace the original complex types
 pub type ServiceCapabilityInfo = MetadataContainer<ServiceCapabilityExtensions>;
+/// Type alias for Ecosystemcontext
 pub type EcosystemContext = MetadataContainer<EcosystemExtensions>;
+/// Type alias for Performancemetadata
 pub type PerformanceMetadata = MetadataContainer<PerformanceExtensions>;
+/// Type alias for Securitycontext
 pub type SecurityContext = MetadataContainer<SecurityExtensions>;
 
 // Implementation shortcuts for common patterns
 impl<T: MetadataExtensions + Default> MetadataContainer<T> {
+    /// For Service
     pub fn for_service(service_type: impl Into<String>) -> MetadataContainerBuilder<T> {
         MetadataContainerBuilder::new(service_type, T::default())
     }
 
+    /// Quick Build
     pub fn quick_build(service_type: impl Into<String>, extensions: T) -> Self {
         MetadataContainerBuilder::new(service_type, extensions).build()
     }

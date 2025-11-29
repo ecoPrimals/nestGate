@@ -8,14 +8,23 @@ use std::collections::HashMap;
 
 // API path constants to eliminate string allocations
 const API_VERSION_V1: &str = "v1";
+/// Path Health
 const PATH_HEALTH: &str = "/health";
+/// Path Health Detailed
 const PATH_HEALTH_DETAILED: &str = "/health/detailed";
+/// Path Health Zfs
 const PATH_HEALTH_ZFS: &str = "/health/zfs";
+/// Path Health Storage
 const PATH_HEALTH_STORAGE: &str = "/health/storage";
+/// Path Metrics
 const PATH_METRICS: &str = "/metrics";
+/// Path Metrics Prometheus
 const PATH_METRICS_PROMETHEUS: &str = "/metrics/prometheus";
+/// Path Metrics Json
 const PATH_METRICS_JSON: &str = "/metrics/json";
+/// Path Logs
 const PATH_LOGS: &str = "/logs";
+/// Path Diagnostics
 const PATH_DIAGNOSTICS: &str = "/diagnostics";
 
 /// API paths configuration structure
@@ -38,6 +47,7 @@ const PATH_DIAGNOSTICS: &str = "/diagnostics";
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for ApiPaths
 pub struct ApiPathsConfig {
     /// Base API version prefix
     pub api_version: String,
@@ -59,88 +69,121 @@ pub struct ApiPathsConfig {
 
 /// ZFS-related API paths
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Zfsapipaths
 pub struct ZfsApiPaths {
     /// Base ZFS path
     pub base: String,
     /// Pool operations
     pub pools: String,
+    /// Pools Detail
     pub pools_detail: String,
+    /// Pools Create
     pub pools_create: String,
+    /// Pools Destroy
     pub pools_destroy: String,
+    /// Pools Scrub
     pub pools_scrub: String,
+    /// Pools Export
     pub pools_export: String,
+    /// Pools Import
     pub pools_import: String,
 
     /// Dataset operations  
     pub datasets: String,
+    /// Datasets Create
     pub datasets_create: String,
+    /// Datasets Destroy
     pub datasets_destroy: String,
 
     /// Snapshot operations
     pub snapshots: String,
+    /// Snapshots Create
     pub snapshots_create: String,
+    /// Snapshots Destroy
     pub snapshots_destroy: String,
+    /// Snapshots Rollback
     pub snapshots_rollback: String,
 }
 
 /// Storage-related API paths
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storageapipaths
 pub struct StorageApiPaths {
     /// Base storage path
     pub base: String,
     /// Storage information
     pub info: String,
+    /// Capacity
     pub capacity: String,
+    /// Usage
     pub usage: String,
 
     /// Tier management
     pub tiers: String,
+    /// Tier Migration
     pub tier_migration: String,
 
     /// Protocol endpoints
     pub nfs: String,
+    /// Smb
     pub smb: String,
+    /// Iscsi
     pub iscsi: String,
 }
 
 /// System-related API paths
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Systemapipaths
 pub struct SystemApiPaths {
     /// System information
     pub info: String,
+    /// Status
     pub status: String,
+    /// Version
     pub version: String,
     /// Configuration
     pub config: String,
+    /// Configuration for reload
     pub config_reload: String,
 
     /// Service management
     pub services: String,
+    /// Service Start
     pub service_start: String,
+    /// Service Stop
     pub service_stop: String,
+    /// Service Restart
     pub service_restart: String,
 }
 
 /// Health and monitoring API paths
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Healthapipaths
 pub struct HealthApiPaths {
     /// Health check endpoints
     pub health: String,
+    /// Health Detailed
     pub health_detailed: String,
+    /// Health Zfs
     pub health_zfs: String,
+    /// Health Storage
     pub health_storage: String,
     /// Metrics endpoints
     pub metrics: String,
+    /// Metrics Prometheus
     pub metrics_prometheus: String,
+    /// Metrics Json
     pub metrics_json: String,
 
     /// Logs and diagnostics
     pub logs: String,
+    /// Diagnostics
     pub diagnostics: String,
 }
 
 #[allow(deprecated)]
 impl Default for ApiPathsConfig {
+    /// Returns the default instance
     fn default() -> Self {
         let api_version = API_VERSION_V1;
         Self::default_with_version(api_version)
@@ -162,6 +205,7 @@ impl ApiPathsConfig {
 }
 
 impl ZfsApiPaths {
+    /// Default With Version
     pub fn default_with_version(api_version: &str) -> Self {
         let base = format!("/api/{api_version}/zfs");
 
@@ -186,6 +230,7 @@ impl ZfsApiPaths {
 }
 
 impl StorageApiPaths {
+    /// Default With Version
     pub fn default_with_version(api_version: &str) -> Self {
         let base = format!("/api/{api_version}/storage");
 
@@ -204,6 +249,7 @@ impl StorageApiPaths {
 }
 
 impl SystemApiPaths {
+    /// Default With Version
     pub fn default_with_version(api_version: &str) -> Self {
         let base = format!("/api/{api_version}/system");
 
@@ -222,6 +268,7 @@ impl SystemApiPaths {
 }
 
 impl Default for HealthApiPaths {
+    /// Returns the default instance
     fn default() -> Self {
         HealthApiPaths {
             health: PATH_HEALTH.to_string(),
@@ -342,6 +389,7 @@ impl ApiPathsConfig {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Apipathsconfigcanonical
 pub type ApiPathsConfigCanonical =
     crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 

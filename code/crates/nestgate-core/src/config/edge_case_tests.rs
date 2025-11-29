@@ -158,7 +158,7 @@ mod config_concurrency_edge_cases {
         let mut handles = vec![];
 
         for _ in 0..10 {
-            let config_clone = Arc::clone(&config);
+            let config_clone: Arc<StandardConfig> = Arc::clone(&config);
             let handle = thread::spawn(move || {
                 assert!(config_clone.validate().is_ok());
             });

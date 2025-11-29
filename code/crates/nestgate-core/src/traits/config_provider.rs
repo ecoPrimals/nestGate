@@ -59,19 +59,29 @@ where
 
 /// Information about a configuration provider
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configproviderinfo
 pub struct ConfigProviderInfo {
+    /// Name
     pub name: String,
+    /// Version
     pub version: String,
+    /// Supports Reload
     pub supports_reload: bool,
+    /// Supports Watch
     pub supports_watch: bool,
 }
 
 /// Configuration metadata for tracking config changes
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configmetadata
 pub struct ConfigMetadata {
+    /// Source
     pub source: String,
+    /// Last Modified
     pub last_modified: chrono::DateTime<chrono::Utc>,
+    /// Checksum
     pub checksum: String,
+    /// Version
     pub version: u64,
 }
 
@@ -84,6 +94,7 @@ pub struct ConfigMetadata {
 /// - Network topology preferences
 /// - Replication strategies
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for Federation
 pub struct FederationConfig {
     // Reserved for future federation implementation
     _reserved: (),

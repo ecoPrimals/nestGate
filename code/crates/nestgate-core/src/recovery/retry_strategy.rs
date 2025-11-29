@@ -9,6 +9,7 @@ use tracing::{debug, warn};
 
 /// Retry configuration
 #[derive(Debug, Clone)]
+/// Configuration for Retry
 pub struct RetryConfig {
     /// Maximum number of retry attempts
     pub max_attempts: u32,
@@ -23,6 +24,7 @@ pub struct RetryConfig {
 }
 
 impl Default for RetryConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             max_attempts: 3,
@@ -45,6 +47,7 @@ pub trait RetryStrategy: Send + Sync {
 
 /// Exponential backoff retry strategy
 #[derive(Debug, Clone)]
+/// Exponentialbackoff
 pub struct ExponentialBackoff {
     config: RetryConfig,
 }
@@ -64,6 +67,7 @@ impl ExponentialBackoff {
 }
 
 impl RetryStrategy for ExponentialBackoff {
+    /// Delay
     fn delay(&self, attempt: u32) -> Duration {
         let base_delay = self.config.initial_delay.as_millis() as f64;
         let multiplier = self.config.backoff_multiplier.powi(attempt as i32);
@@ -82,6 +86,7 @@ impl RetryStrategy for ExponentialBackoff {
         }
     }
 
+    /// Should Retry
     fn should_retry(&self, attempt: u32, error: &NestGateError) -> bool {
         if attempt + 1 >= self.config.max_attempts {
             return false;
@@ -102,6 +107,7 @@ impl RetryStrategy for ExponentialBackoff {
 
 /// Linear backoff retry strategy
 #[derive(Debug, Clone)]
+/// Linearbackoff
 pub struct LinearBackoff {
     config: RetryConfig,
 }
@@ -115,6 +121,7 @@ impl LinearBackoff {
 }
 
 impl RetryStrategy for LinearBackoff {
+    /// Delay
     fn delay(&self, attempt: u32) -> Duration {
         let delay_ms = self.config.initial_delay.as_millis() as u64 * u64::from(attempt + 1);
         let delay = Duration::from_millis(delay_ms.min(self.config.max_delay.as_millis() as u64));
@@ -129,6 +136,7 @@ impl RetryStrategy for LinearBackoff {
         }
     }
 
+    /// Should Retry
     fn should_retry(&self, attempt: u32, error: &NestGateError) -> bool {
         if attempt + 1 >= self.config.max_attempts {
             return false;

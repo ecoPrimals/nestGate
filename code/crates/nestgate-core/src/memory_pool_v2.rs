@@ -161,6 +161,7 @@ pub struct SafeMemoryPool<T: Send + 'static> {
     max_size: usize,
     }
 impl<T: Send + 'static> SafeMemoryPool<T> {
+    /// Creates a new instance
     pub fn new<F>(factory: F, max_size: usize) -> Self
     where
         F: Fn() -> T + Send + Sync + 'static,
@@ -238,6 +239,7 @@ impl<T: Send + 'static> SafeMemoryPool<T> {
     }
 
 impl<T: Send + 'static> Drop for PoolRefMut<T> {
+    /// Drop
     fn drop(&mut self) {
         // Take ownership of the buffer safely using Option
         if let Some(buffer) = self.buffer.take() {
@@ -297,6 +299,7 @@ impl PoolBuffer {
     }
 
 impl Drop for PoolBuffer {
+    /// Drop
     fn drop(&mut self) {
         // Clear the buffer and return to pool for reuse
         self.data.clear();

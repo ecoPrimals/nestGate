@@ -6,6 +6,7 @@ use std::time::Duration;
 
 /// Alert rule definition
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Alertrule
 pub struct AlertRule {
     /// Unique rule identifier
     pub id: String,
@@ -28,6 +29,7 @@ pub struct AlertRule {
 }
 /// Alert suppression rule
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Suppressionrule
 pub struct SuppressionRule {
     /// Unique suppression rule identifier
     pub id: String,
@@ -38,6 +40,7 @@ pub struct SuppressionRule {
 }
 /// Time window specification
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Timewindow
 pub struct TimeWindow {
     /// Start time (24-hour format, e.g., "09:00")
     pub start: String,

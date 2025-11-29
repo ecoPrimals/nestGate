@@ -15,6 +15,7 @@ where
     K: Clone + Send + Sync + 'static,
     V: Clone + Send + Sync + 'static,
 {
+    /// Type alias for Error
     type Error: Send + Sync + 'static;
     /// Store a value - native async, no boxing
     fn set(&self, key: K, value: V) -> impl std::future::Future<Output = Result<(), Self::Error>> + Send;
@@ -38,6 +39,7 @@ pub struct ZeroCostInMemoryCache<
     K, 
     V, 
     const MAX_SIZE: usize = 10000,
+    /// Ttl Seconds
     const TTL_SECONDS: u64 = 3600,
 > 
 where
@@ -56,6 +58,7 @@ struct CacheEntry<V> {
     access_count: u64,
 }
 impl<V> CacheEntry<V> {
+    /// Creates a new instance
     fn new(value: V) -> Self {
         let now = Instant::now();
         Self {
@@ -66,10 +69,12 @@ impl<V> CacheEntry<V> {
         }
     }
 
+    /// Checks if Expired
     fn is_expired(&self, ttl: Duration) -> bool {
         self.created_at.elapsed() > ttl
     }
 
+    /// Touch
     fn touch(&mut self) {
         self.accessed_at = Instant::now();
         self.access_count += 1;
@@ -139,8 +144,10 @@ where
     K: Clone + std::hash::Hash + Eq + Send + Sync + 'static,
     V: Clone + Send + Sync + 'static,
 {
+    /// Type alias for Error
     type Error = std::io::Error;
 
+    /// Set
     async fn set(&self, key: K, value: V) -> Result<(), Self::Error> {
         // Evict expired entries first
         self.evict_expired().await?;
@@ -158,6 +165,7 @@ where
         Ok(())
     }
 
+    /// Get
     async fn get(&self, key: &K) -> Result<Option<V>, Self::Error> {
         let mut data = self.data.write().await;
         
@@ -175,17 +183,20 @@ where
         }
     }
 
+    /// Remove
     async fn remove(&self, key: &K) -> Result<bool, Self::Error> {
         let mut data = self.data.write().await;
         Ok(data.remove(key).is_some())
     }
 
+    /// Clear
     async fn clear(&self) -> Result<(), Self::Error> {
         let mut data = self.data.write().await;
         data.clear();
         Ok(())
     }
 
+    /// Size
     async fn size(&self) -> Result<usize, Self::Error> {
         let data = self.data.read().await;
         Ok(data.len())
@@ -198,6 +209,7 @@ pub struct ZeroCostDiskCache<
     K,
     V,
     const MAX_FILES: usize = 10000,
+    /// Ttl Seconds
     const TTL_SECONDS: u64 = 86400, // 24 hours
 >
 where
@@ -243,8 +255,10 @@ where
     K: Clone + Send + Sync + 'static + std::fmt::Display,
     V: Clone + Send + Sync + 'static + serde::Serialize + for<'de> serde::Deserialize<'de>,
 {
+    /// Type alias for Error
     type Error = std::io::Error;
 
+    /// Set
     async fn set(&self, key: K, value: V) -> Result<(), Self::Error> {
         let path = self.get_cache_path(&key);
         let serialized = bincode::serialize(&value)
@@ -253,6 +267,7 @@ where
         tokio::fs::write(path, serialized).await
     }
 
+    /// Get
     async fn get(&self, key: &K) -> Result<Option<V>, Self::Error> {
         let path = self.get_cache_path(key);
         
@@ -277,6 +292,7 @@ where
         Ok(Some(value))
     }
 
+    /// Remove
     async fn remove(&self, key: &K) -> Result<bool, Self::Error> {
         let path = self.get_cache_path(key);
         
@@ -288,6 +304,7 @@ where
         }
     }
 
+    /// Clear
     async fn clear(&self) -> Result<(), Self::Error> {
         let mut entries = tokio::fs::read_dir(&self.cache_dir).await?;
         
@@ -300,6 +317,7 @@ where
         Ok(())
     }
 
+    /// Size
     async fn size(&self) -> Result<usize, Self::Error> {
         let mut count = 0;
         let mut entries = tokio::fs::read_dir(&self.cache_dir).await?;

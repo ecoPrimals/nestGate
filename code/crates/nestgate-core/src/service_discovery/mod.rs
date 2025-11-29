@@ -25,6 +25,7 @@ pub use crate::service_discovery::registry::{InMemoryServiceRegistry, UniversalS
 
 // Backward compatibility aliases for legacy code
 pub type ServiceDiscovery = dyn UniversalServiceRegistry;
+/// Type alias for Serviceregistry
 pub type ServiceRegistry = InMemoryServiceRegistry;
 
 // Convenience function to create a new service registry

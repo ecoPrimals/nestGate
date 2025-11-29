@@ -14,22 +14,25 @@ pub mod performance {
 
     /// SIMD processing widths
     pub const AVX2_WIDTH: usize = 32;
+    /// Sse2 Width
     pub const SSE2_WIDTH: usize = 16;
+    /// Simd Alignment
     pub const SIMD_ALIGNMENT: usize = 32;
+    /// Minimum simd size
     pub const MIN_SIMD_SIZE: usize = 64;
 
     /// Memory optimization
     pub const CACHE_LINE_SIZE: usize = 64;
+    /// Page Size
     pub const PAGE_SIZE: usize = 4096;
+    /// Optimal Batch Size
     pub const OPTIMAL_BATCH_SIZE: usize = 1000;
 
-    /// Connection and concurrency limits
     pub const DEFAULT_MAX_CONCURRENT: usize = 1000;
     pub const MAX_CONNECTIONS: usize = 1000;
     pub const MAX_BACKENDS: usize = 100;
     pub const MAX_CONCURRENT_OPS: usize = 1000;
 
-    /// Buffer sizes (domain-specific, DO NOT consolidate)
     ///
     /// # Why Different Buffer Sizes?
     ///
@@ -62,29 +65,31 @@ pub mod performance {
     ///
     /// **Important**: These values are performance-tuned. Do not consolidate!
     pub const DEFAULT_BUFFER_SIZE: usize = 4096;
+    /// Network Buffer Size
     pub const NETWORK_BUFFER_SIZE: usize = 65536;
+    /// Simd Batch Size
     pub const SIMD_BATCH_SIZE: usize = 32;
+    /// Pool Size
     pub const POOL_SIZE: usize = 1024;
+    /// Block Size
     pub const BLOCK_SIZE: usize = 4096;
 }
 // ==================== SECTION ====================
 
-/// Timeout and timing constants
 pub mod timeouts {
     // Removed unused Duration import
 
     /// Default timeout seconds (consolidated)
     pub const DEFAULT_TIMEOUT_SECS: u64 = 30;
+    /// Default value for timeout ms
     pub const DEFAULT_TIMEOUT_MS: u64 = 30000;
     pub const REQUEST_TIMEOUT_MS: u64 = 30000;
 
-    /// Discovery and health check intervals
     pub const DISCOVERY_TIMEOUT_MS: u64 = 5000;
     pub const HEALTH_CHECK_INTERVAL_MS: u64 = 30000;
     pub const HEALTH_CHECK_INTERVAL_SECS: u64 = 30;
     pub const STATS_RETENTION_SECS: u64 = 86400; // 24 hours
 
-    /// Connection timeouts
     pub const CONNECTION_TIMEOUT_SECS: u64 = 30;
     pub const SESSION_TIMEOUT_SECS: u64 = 300;
     pub const OPERATION_TIMEOUT_SECS: u64 = 30;
@@ -92,12 +97,16 @@ pub mod timeouts {
     /// Retry and rate limiting
     pub const DEFAULT_RETRY_ATTEMPTS: u32 = 3;
     pub const MESSAGE_RETRY_ATTEMPTS: u32 = 3;
+    /// Default value for retry delay ms
     pub const DEFAULT_RETRY_DELAY_MS: u64 = 1000;
+    /// Default value for rate limit rpm
     pub const DEFAULT_RATE_LIMIT_RPM: u32 = 1000;
+    /// Default value for rate limit burst
     pub const DEFAULT_RATE_LIMIT_BURST: u32 = 100;
 
     /// Monitoring intervals
     pub const METRICS_COLLECTION_INTERVAL_SECS: u64 = 60;
+    /// Default value for handler timeout secs
     pub const DEFAULT_HANDLER_TIMEOUT_SECS: u64 = 30;
 }
 // ==================== SECTION ====================
@@ -110,9 +119,9 @@ pub mod network {
 
     /// Network addresses
     pub const DEFAULT_BIND_ADDRESS: &str = "0.0.0.0";
+    /// Localhost
     pub const LOCALHOST: &str = "127.0.0.1";
 
-    /// Protocol limits
     pub const MAX_SERVICES: usize = 1000;
     pub const MAX_CONCURRENT_REQUESTS: usize = 10000;
     pub const MAX_SESSIONS: usize = 1000;
@@ -121,7 +130,9 @@ pub mod network {
 
     /// MTU and buffer sizes
     pub const MTU_SIZE: usize = 1500;
+    /// Send Buffer Size
     pub const SEND_BUFFER_SIZE: usize = 65536;
+    /// Recv Buffer Size
     pub const RECV_BUFFER_SIZE: usize = 65536;
 }
 // ==================== SECTION ====================
@@ -130,18 +141,25 @@ pub mod network {
 pub mod storage {
     /// Storage tiers (consolidated)
     pub const TIER_HOT: &str = "hot";
+    /// Tier Warm
     pub const TIER_WARM: &str = "warm";
+    /// Tier Cold
     pub const TIER_COLD: &str = "cold";
 
     /// Compression algorithms
     pub const COMPRESSION_LZ4: &str = "lz4";
+    /// Compression Gzip 6
     pub const COMPRESSION_GZIP_6: &str = "gzip-6";
+    /// Compression Gzip 9
     pub const COMPRESSION_GZIP_9: &str = "gzip-9";
 
     /// Size units
     pub const KB: u64 = 1024;
+    /// Mb
     pub const MB: u64 = 1024 * 1024;
+    /// Gb
     pub const GB: u64 = 1024 * 1024 * 1024;
+    /// Tb
     pub const TB: u64 = 1024 * 1024 * 1024 * 1024;
 
     /// File size limits
@@ -150,35 +168,56 @@ pub mod storage {
 
     /// ZFS constants (consolidated)
     pub const RECORDSIZE_64K: &str = "64K";
+    /// Recordsize 128K
     pub const RECORDSIZE_128K: &str = "128K";
+    /// Recordsize 1M
     pub const RECORDSIZE_1M: &str = "1M";
+    /// Record Size
     pub const RECORD_SIZE: usize = 131_072; // 128KB
+    /// Arc Size
     pub const ARC_SIZE: usize = 1_073_741_824; // 1GB
 
     /// ZFS commands
     pub const ZFS: &str = "zfs";
+    /// Zpool
     pub const ZPOOL: &str = "zpool";
+    /// List
     pub const LIST: &str = "list";
+    /// Create
     pub const CREATE: &str = "create";
+    /// Destroy
     pub const DESTROY: &str = "destroy";
+    /// Set
     pub const SET: &str = "set";
+    /// Get
     pub const GET: &str = "get";
+    /// Snapshot
     pub const SNAPSHOT: &str = "snapshot";
+    /// Status
     pub const STATUS: &str = "status";
 
     /// ZFS states
     pub const ONLINE: &str = "ONLINE";
+    /// Degraded
     pub const DEGRADED: &str = "DEGRADED";
+    /// Faulted
     pub const FAULTED: &str = "FAULTED";
+    /// Offline
     pub const OFFLINE: &str = "OFFLINE";
+    /// Unavail
     pub const UNAVAIL: &str = "UNAVAIL";
+    /// Removed
     pub const REMOVED: &str = "REMOVED";
 
     /// ZFS properties
     pub const PROPERTY_ALL: &str = "all";
+    /// Property Metadata
     pub const PROPERTY_METADATA: &str = "metadata";
+    /// Property On
     pub const PROPERTY_ON: &str = "on";
+    /// Property Off
     pub const PROPERTY_OFF: &str = "off";
+    /// Fstype Zfs
     pub const FSTYPE_ZFS: &str = "zfs";
 
     /// Compression constants
@@ -190,10 +229,12 @@ pub mod storage {
 pub mod security {
     /// Token and session management
     pub const TOKEN_EXPIRATION_S: u64 = 3600; // 1 hour
+    /// Aes 256 Gcm
     pub const AES_256_GCM: &str = "AES-256-GCM";
 
     /// User roles (consolidated)
     pub const ROLE_ADMIN: &str = "admin";
+    /// Role User
     pub const ROLE_USER: &str = "user";
 
     /// Security limits
@@ -205,13 +246,18 @@ pub mod security {
 pub mod api {
     /// API versioning
     pub const CURRENT_API_VERSION: &str = "v1";
+    /// Current Config Version
     pub const CURRENT_CONFIG_VERSION: &str = "3.0.0";
+    /// Minimum supported version
     pub const MIN_SUPPORTED_VERSION: &str = "2.0.0";
+    /// Schema Version
     pub const SCHEMA_VERSION: &str = "1.0.0";
 
     /// HTTP status codes
     pub const STATUS_OK: u16 = 200;
+    /// Status Not Found
     pub const STATUS_NOT_FOUND: u16 = 404;
+    /// Status Internal Error
     pub const STATUS_INTERNAL_ERROR: u16 = 500;
 
     /// Content types
@@ -219,23 +265,30 @@ pub mod api {
 
     /// Configuration domains
     pub const CONFIG_API: &str = "api";
+    /// Config Zfs
     pub const CONFIG_ZFS: &str = "zfs";
+    /// Config Network
     pub const CONFIG_NETWORK: &str = "network";
+    /// Config Security
     pub const CONFIG_SECURITY: &str = "security";
+    /// Config Monitoring
     pub const CONFIG_MONITORING: &str = "monitoring";
 }
 // ==================== SECTION ====================
 
 /// System and environment constants
 pub mod system {
-    /// Service identification
     pub const DEFAULT_SERVICE_NAME: &str = "nestgate";
+    /// Default value for log level
     pub const DEFAULT_LOG_LEVEL: &str = "info";
 
     /// Environment types
     pub const ENV_DEVELOPMENT: &str = "development";
+    /// Env Production
     pub const ENV_PRODUCTION: &str = "production";
+    /// Env Testing
     pub const ENV_TESTING: &str = "testing";
+    /// Env Staging
     pub const ENV_STAGING: &str = "staging";
 
     /// System limits
@@ -249,26 +302,35 @@ pub mod system {
 }
 // ==================== SECTION ====================
 
-/// Operation and status constants
 pub mod operations {
-    /// Operation types
     pub const OP_READ: &str = "read";
+    /// Op Write
     pub const OP_WRITE: &str = "write";
+    /// Op Delete
     pub const OP_DELETE: &str = "delete";
+    /// Op Create
     pub const OP_CREATE: &str = "create";
+    /// Op Update
     pub const OP_UPDATE: &str = "update";
 
     /// Status values
     pub const STATUS_SUCCESS: &str = "success";
+    /// Status Failed
     pub const STATUS_FAILED: &str = "failed";
+    /// Status Pending
     pub const STATUS_PENDING: &str = "pending";
+    /// Status Running
     pub const STATUS_RUNNING: &str = "running";
+    /// Status Stopped
     pub const STATUS_STOPPED: &str = "stopped";
 
     /// Error categories
     pub const ERROR_NETWORK: &str = "network_error";
+    /// Error Storage
     pub const ERROR_STORAGE: &str = "storage_error";
+    /// Error Config
     pub const ERROR_CONFIG: &str = "config_error";
+    /// Error Validation
     pub const ERROR_VALIDATION: &str = "validation_error";
 }
 // ==================== SECTION ====================
@@ -277,7 +339,9 @@ pub mod operations {
 pub mod capabilities {
     /// Capability names (consolidated)
     pub const CAPABILITY_HTTP: &str = "http";
+    /// Capability File
     pub const CAPABILITY_FILE: &str = "file";
+    /// Capability Genome Data
     pub const CAPABILITY_GENOME_DATA: &str = "genome_data";
 
     /// Compute and orchestration
@@ -298,13 +362,13 @@ pub mod crypto {
 
 /// Size unit constants
 pub mod units {
+    /// Units
     pub const UNITS: &[&str] = &["B", "KB", "MB", "GB", "TB", "PB"];
 }
 // ==================== SECTION ====================
 
 /// Performance constants accessor
 pub struct PerformanceConstants;
-/// Timeout constants accessor  
 pub struct TimeoutConstants;
 /// Network constants accessor
 pub struct NetworkConstants;
@@ -321,42 +385,49 @@ pub struct CanonicalConstants;
 impl CanonicalConstants {
     /// Get performance constants module
     #[must_use]
+    /// Fn
     pub const fn performance() -> PerformanceConstants {
         PerformanceConstants
     }
 
     /// Get timeout constants module  
     #[must_use]
+    /// Fn
     pub const fn timeouts() -> TimeoutConstants {
         TimeoutConstants
     }
 
     /// Get network constants module
     #[must_use]
+    /// Fn
     pub const fn network() -> NetworkConstants {
         NetworkConstants
     }
 
     /// Get storage constants module
     #[must_use]
+    /// Fn
     pub const fn storage() -> StorageConstants {
         StorageConstants
     }
 
     /// Get security constants module
     #[must_use]
+    /// Fn
     pub const fn security() -> SecurityConstants {
         SecurityConstants
     }
 
     /// Get API constants module
     #[must_use]
+    /// Fn
     pub const fn api() -> ApiConstants {
         ApiConstants
     }
 
     /// Get system constants module
     #[must_use]
+    /// Fn
     pub const fn system() -> SystemConstants {
         SystemConstants
     }
@@ -385,16 +456,12 @@ impl ConstGenericDefaults {
 
 /// Zero-cost const generic configuration
 pub trait ConstGenericConfig {
-    /// Maximum concurrent connections
     const MAX_CONNECTIONS: usize = ConstGenericDefaults::MAX_CONNECTIONS;
 
-    /// Buffer size for operations
     const BUFFER_SIZE: usize = ConstGenericDefaults::BUFFER_SIZE;
 
-    /// Operation timeout in milliseconds
     const TIMEOUT_MS: u64 = ConstGenericDefaults::TIMEOUT_MS;
 
-    /// Maximum concurrent operations
     const MAX_CONCURRENT_OPS: usize = ConstGenericDefaults::MAX_CONCURRENT_OPS;
 
     /// Batch processing size

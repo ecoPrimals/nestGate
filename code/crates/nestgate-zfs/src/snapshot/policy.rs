@@ -8,6 +8,7 @@ use std::time::Duration;
 
 /// Snapshot retention policy
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Retentionpolicy
 pub enum RetentionPolicy {
     /// Keep snapshots for a specific duration
     Duration(Duration),
@@ -28,6 +29,7 @@ pub enum RetentionPolicy {
     },
 }
 impl Default for RetentionPolicy {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Custom {
             hourly_hours: 24,   // 24 hours
@@ -41,6 +43,7 @@ impl Default for RetentionPolicy {
 
 /// Snapshot schedule frequency
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Schedulefrequency
 pub enum ScheduleFrequency {
     /// Take snapshots every N minutes
     Minutes(u32),
@@ -57,6 +60,7 @@ pub enum ScheduleFrequency {
 }
 /// Snapshot policy configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Snapshotpolicy
 pub struct SnapshotPolicy {
     /// Policy name
     pub name: String,
@@ -84,6 +88,7 @@ pub struct SnapshotPolicy {
     pub priority: u32,
 }
 impl Default for SnapshotPolicy {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             name: "default".to_string(),

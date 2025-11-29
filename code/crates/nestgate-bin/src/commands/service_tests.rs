@@ -185,6 +185,7 @@ async fn test_start_service_environment_variables() {
 
 #[test]
 fn test_service_manager_is_send() {
+    /// Assert Send
     fn assert_send<T: Send>() {}
     assert_send::<ServiceManager>();
 }
