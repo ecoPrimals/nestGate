@@ -211,7 +211,7 @@ impl CapabilityScanner {
         // Add default discovery methods (using enum dispatch for zero-cost async)
         scanner.add_discovery_method(DiscoveryMethodImpl::Environment(EnvironmentDiscovery::new()));
 
-        /// Scanner
+        // Return the configured scanner
         scanner
     }
 

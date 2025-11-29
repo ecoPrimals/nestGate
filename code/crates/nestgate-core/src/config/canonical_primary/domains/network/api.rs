@@ -18,8 +18,9 @@ use std::time::Duration;
 /// - `UnifiedApiConfig` (nestgate-api/config/unified_api_config.rs)
 /// - `ApiConfig` (canonical_primary/api_config.rs)
 /// - Handler-specific configs (unified_api_config/handlers.rs)
-#[derive(Debug, Clone, Serialize, Deserialize)]
+///
 /// Configuration for Api
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ApiConfig {
     // ==================== CORE NETWORK SETTINGS ====================
     /// API server bind address

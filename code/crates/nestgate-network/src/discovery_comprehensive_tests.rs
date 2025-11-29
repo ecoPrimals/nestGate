@@ -8,6 +8,13 @@ mod network_discovery_tests {
     use std::time::Duration;
     use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
+    // Test port constant
+    const TEST_PORT: u16 = 18080;
+    
+    fn test_service_addr() -> String {
+        format!("localhost:{}", TEST_PORT)
+    }
+
     // ==================== Service Discovery Tests ====================
 
     #[tokio::test]
@@ -137,14 +144,14 @@ mod network_discovery_tests {
 
     #[tokio::test]
     async fn test_check_service_health() {
-        let service_addr = "localhost:8080";
-        let result = check_service_health(service_addr).await;
+        let service_addr = test_service_addr();
+        let result = check_service_health(&service_addr).await;
         assert!(result.is_ok() || result.is_err(), "Should check service health");
     }
 
     #[tokio::test]
     async fn test_periodic_health_check() {
-        let service_addr = "localhost:8080";
+        let service_addr = test_service_addr();
         let interval = Duration::from_secs(1);
         
         let result = start_periodic_health_check(service_addr, interval).await;

@@ -18,8 +18,9 @@ use std::time::Duration;
 /// - `AutomationDomainConfig` (unified_final_config/domain_configs/automation.rs)
 /// - `UnifiedAutomationExtensions` (unified_automation_config/mod.rs)
 /// - `DatasetAutomationConfig` (nestgate-zfs/src/config/automation.rs - kept separate in storage domain)
-#[derive(Debug, Clone, Serialize, Deserialize)]
+///
 /// Configuration for Automation
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AutomationConfig {
     // ==================== CORE SETTINGS ====================
     /// Enable automation system
@@ -453,6 +454,7 @@ impl Default for AnalysisConfig {
 }
 
 impl AnalysisConfig {
+    /// Create development configuration with sensible defaults
     #[must_use]
     pub fn development() -> Self {
         Self {

@@ -5,6 +5,9 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use uuid::Uuid;
+
+// Test port for event endpoints
+const TEST_EVENT_PORT: u16 = 18080;
 /// Unified event structure for system-wide event handling
 #[derive(Debug, Clone, Serialize, Deserialize)]
 /// Unifiedevent
@@ -113,7 +116,7 @@ impl Default for EventHandler {
             handler_id: Uuid::new_v4().to_string(),
             name: "Default Handler".to_string(),
             handled_events: Vec::new(),
-            endpoint: "http://localhost:8080/events".to_string(),
+            endpoint: format!("http://localhost:{}/events", TEST_EVENT_PORT),
             config: HashMap::new(),
             enabled: true,
         }

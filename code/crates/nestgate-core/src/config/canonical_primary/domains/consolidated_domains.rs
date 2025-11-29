@@ -62,8 +62,9 @@ pub struct ConsolidatedDomainConfigs {
 /// - `PoolConfig`, `DatasetConfig`, `SnapshotConfig`
 /// - `ZfsServiceConfig`, `ZfsHandlerConfig`
 /// - Performance and monitoring configurations
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+///
 /// Configuration for ZfsDomain
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ZfsDomainConfig {
     /// Pool management configuration
     pub pools: ZfsPoolsConfig,
@@ -163,8 +164,9 @@ pub struct ZfsSnapshotsConfig {
 /// - `UnifiedApiConfig`, `ApiServerConfig`
 /// - Handler-specific configurations
 /// - Performance and security settings
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+///
 /// Configuration for ApiDomain
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ApiDomainConfig {
     /// HTTP server configuration
     pub server: ApiServerConfig,
@@ -241,8 +243,9 @@ pub struct ConsolidatedApiHandlersConfig {
 /// Consolidates all MCP protocol configurations:
 /// - Protocol settings, streaming configuration
 /// - Connection management, security settings
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+///
 /// Configuration for McpDomain
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct McpDomainConfig {
     /// Protocol configuration
     pub protocol: McpProtocolConfig,

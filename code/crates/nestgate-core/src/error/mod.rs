@@ -106,7 +106,7 @@ pub enum ErrorSeverity {
 
 /// Convert legacy `Result<T>` to canonical `Result<T>`
 pub fn migrate_result<T>(legacy_result: std::result::Result<T, NestGateError>) -> Result<T> {
-    /// Legacy Result
+    // Pass through the legacy result as-is
     legacy_result
 }
 

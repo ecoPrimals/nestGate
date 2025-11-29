@@ -788,12 +788,16 @@ impl ClusterManager {
 }
 
 impl Default for ClusterConfig {
-    #[allow(clippy::expect_used)] // Hardcoded bind address
     fn default() -> Self {
+        // Use environment variable or default
+        let bind_addr = std::env::var("NESTGATE_CLUSTER_BIND")
+            .unwrap_or_else(|_| "0.0.0.0:8080".to_string());
+        let bind_endpoint = bind_addr.parse().expect("Invalid NESTGATE_CLUSTER_BIND address");
+        
         Self {
             cluster_name: "nestgate-cluster".to_string(),
             node_id: Uuid::new_v4().to_string(),
-            bind_endpoint: "0.0.0.0:8080".parse().expect("BUG: hardcoded bind address must parse"),
+            bind_endpoint,
             nodes: vec![],
             election_timeout_ms: 5000,
             heartbeat_interval_ms: 1000,

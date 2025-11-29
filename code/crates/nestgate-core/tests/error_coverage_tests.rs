@@ -34,7 +34,7 @@ fn test_error_configuration() {
 
 #[test]
 fn test_error_network() {
-    let error = NestGateError::network_error("connect to localhost:8080 failed");
+    let error = NestGateError::network_error("connect to localhost:18080 failed");
 
     assert!(matches!(error, NestGateError::Network(_)));
 }

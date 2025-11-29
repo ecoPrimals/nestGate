@@ -16,6 +16,7 @@ pub struct SystemConfig<const MAX_CONNECTIONS: usize = 1000, const BUFFER_SIZE: 
     pub instance_id: String,
     /// Human-readable instance name
     pub instance_name: String,
+    /// System version identifier
     pub version: String,
     /// Deployment environment
     pub environment: DeploymentEnvironment,
@@ -29,12 +30,15 @@ pub struct SystemConfig<const MAX_CONNECTIONS: usize = 1000, const BUFFER_SIZE: 
     pub config_dir: PathBuf,
     /// Process ID file location
     pub pid_file: Option<PathBuf>,
+    /// Maximum memory limit in megabytes
     pub max_memory_mb: Option<u64>,
+    /// Maximum CPU cores to utilize
     pub max_cpu_cores: Option<usize>,
     /// Startup timeout
     pub startup_timeout: Duration,
     /// Graceful shutdown timeout
     pub shutdown_timeout: Duration,
+    /// Interval between health checks
     pub health_check_interval: Duration,
     /// Runtime override for `MAX_CONNECTIONS`
     pub max_connections_override: Option<usize>,
@@ -322,12 +326,16 @@ impl Default for EnvironmentConfig {
 
 /// Resource limits configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// Resourcelimits
 pub struct ResourceLimits {
+    /// Maximum memory allocation in bytes
     pub max_memory_bytes: Option<u64>,
+    /// Maximum CPU usage as percentage
     pub max_cpu_percent: Option<f64>,
+    /// Maximum disk space in bytes
     pub max_disk_bytes: Option<u64>,
+    /// Maximum network bandwidth in bits per second
     pub max_network_bps: Option<u64>,
+    /// Maximum number of file descriptors
     pub max_file_descriptors: Option<u32>,
 }
 

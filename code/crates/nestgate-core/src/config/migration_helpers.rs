@@ -86,8 +86,8 @@ mod tests {
 
     #[test]
     fn test_build_address() {
-        let addr = build_address("localhost", 8080).unwrap();
-        assert_eq!(addr, "localhost:8080");
+        let addr = build_address("localhost", 18080).unwrap();
+        assert_eq!(addr, "localhost:18080");
     }
 
     #[test]

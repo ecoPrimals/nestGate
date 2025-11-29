@@ -7,11 +7,18 @@ mod network_api_tests {
     use super::super::api::{NetworkApi, OrchestrationCapability, ServiceInstance, ServiceStatus};
     use chrono::Utc;
 
+    // Test port constant
+    const TEST_PORT: u16 = 18080;
+    
+    fn test_base_url() -> String {
+        format!("http://localhost:{}", TEST_PORT)
+    }
+
     // ==================== ORCHESTRATION CAPABILITY TESTS ====================
 
     #[test]
     fn test_orchestration_capability_creation() {
-        let base_url = "http://localhost:8080".to_string();
+        let base_url = test_base_url();
         let client = OrchestrationCapability::new(base_url.clone());
 
         assert_eq!(client.base_url, base_url);

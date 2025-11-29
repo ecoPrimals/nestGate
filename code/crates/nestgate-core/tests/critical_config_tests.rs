@@ -146,7 +146,7 @@ mod config_validation_edge_cases {
 
     #[test]
     fn test_bind_address_with_port_is_valid() {
-        let result = validate_bind_address("127.0.0.1:8080");
+        let result = validate_bind_address("127.0.0.1:18080");
         assert!(result.is_ok(), "Valid bind address should be accepted");
     }
 
@@ -158,7 +158,7 @@ mod config_validation_edge_cases {
 
     #[test]
     fn test_http_url_is_valid() {
-        let result = validate_url("http://localhost:8080");
+        let result = validate_url("http://localhost:18080");
         assert!(result.is_ok(), "HTTP URL should be valid");
     }
 

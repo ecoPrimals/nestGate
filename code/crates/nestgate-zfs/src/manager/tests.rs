@@ -8,6 +8,20 @@ mod manager_tests {
     use super::super::*;
     use std::collections::HashMap;
 
+    // Helper to get test endpoint URL
+    /// Helper function to get test endpoint (environment-driven)
+    ///
+    /// Uses NESTGATE_TEST_PORT environment variable, defaults to 18080
+    fn test_endpoint() -> String {
+        let port = std::env::var("NESTGATE_TEST_PORT").unwrap_or_else(|_| "18080".to_string());
+        format!("http://localhost:{}", port)
+    }
+
+    /// Helper function to get test health endpoint
+    fn test_health_endpoint() -> String {
+        format!("{}/health", test_endpoint())
+    }
+
     // ==================== SERVICE INFO TESTS ====================
 
     #[test]
@@ -17,8 +31,8 @@ mod manager_tests {
 
         let service_info = ServiceInfo {
             name: "test-zfs-service".to_string(),
-            endpoint: "http://localhost:8080".to_string(),
-            health_endpoint: "http://localhost:8080/health".to_string(),
+            endpoint: test_endpoint(),
+            health_endpoint: test_health_endpoint(),
             capabilities: vec!["pool-management".to_string(), "snapshots".to_string()],
             metadata,
             ai_capabilities: vec!["tier-optimization".to_string()],
@@ -35,8 +49,8 @@ mod manager_tests {
     fn test_service_info_empty_capabilities() {
         let service_info = ServiceInfo {
             name: "minimal-service".to_string(),
-            endpoint: "http://localhost:8080".to_string(),
-            health_endpoint: "http://localhost:8080/health".to_string(),
+            endpoint: test_endpoint(),
+            health_endpoint: test_health_endpoint(),
             capabilities: vec![],
             metadata: HashMap::new(),
             ai_capabilities: vec![],
@@ -393,8 +407,8 @@ mod manager_tests {
 
         let service_info = ServiceInfo {
             name: "test-service".to_string(),
-            endpoint: "http://localhost:8080".to_string(),
-            health_endpoint: "http://localhost:8080/health".to_string(),
+            endpoint: test_endpoint(),
+            health_endpoint: test_health_endpoint(),
             capabilities: vec!["test".to_string()],
             metadata: HashMap::new(),
             ai_capabilities: vec![],

@@ -532,7 +532,7 @@ mod tests {
             service_id: "svc-001".to_string(),
             service_type: "api".to_string(),
             capabilities: vec!["rest".to_string()],
-            endpoint: "http://localhost:8080".to_string(),
+            endpoint: "http://localhost:18080".to_string(),
             health_status: "healthy".to_string(),
             metadata: HashMap::new(),
         };

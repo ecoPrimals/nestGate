@@ -340,8 +340,8 @@ mod tests {
         let mut config = NetworkRuntimeConfig::new();
 
         config.set_bind_address("MyService", IpAddr::V4(Ipv4Addr::LOCALHOST));
-        config.set_bind_port("MyService", 8080);
-        config.set_service_endpoint("MyService", "http://localhost:8080");
+        config.set_bind_port("MyService", 18080);
+        config.set_service_endpoint("MyService", "http://localhost:18080");
 
         // All access methods should be case-insensitive
         assert!(config.get_bind_address("myservice").is_some());

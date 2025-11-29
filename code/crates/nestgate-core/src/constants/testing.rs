@@ -2,8 +2,8 @@
 //!
 //! Constants used in tests to avoid hardcoding.
 
-/// Test API endpoint base URL
-pub const TEST_API_BASE: &str = "http://localhost:8080";
+/// Test API endpoint base URL (uses test port to avoid conflicts)
+pub const TEST_API_BASE: &str = "http://localhost:18080";
 
 /// Alternative test endpoint
 pub const TEST_API_ALT: &str = "http://localhost:9999";

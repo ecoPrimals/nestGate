@@ -9,6 +9,13 @@ mod real_network_service_tests {
         NetworkConfig, NetworkConfigBuilder, ServiceInfo, ServiceStatus,
     };
 
+    // Test constants
+    const TEST_PORT: u16 = 18080;
+    
+    fn test_endpoint() -> String {
+        format!("localhost:{}", TEST_PORT)
+    }
+
     // ==================== SERVICE CREATION TESTS ====================
 
     #[test]
@@ -64,7 +71,7 @@ mod real_network_service_tests {
         // Register a service
         let service_info = ServiceInfo::new(
             "test-service".to_string(),
-            "localhost:8080".to_string(),
+            test_endpoint(),
         );
 
         service.register_service(service_info).await.unwrap();
@@ -170,7 +177,7 @@ mod real_network_service_tests {
 
         let service_info = ServiceInfo::new(
             "test-service".to_string(),
-            "localhost:8080".to_string(),
+            test_endpoint(),
         );
 
         let result = service.register_service(service_info).await;
@@ -202,7 +209,7 @@ mod real_network_service_tests {
 
         let service_info = ServiceInfo::new(
             "test-service".to_string(),
-            "localhost:8080".to_string(),
+            test_endpoint(),
         );
 
         let service_id = service_info.id().to_string();
@@ -228,7 +235,7 @@ mod real_network_service_tests {
 
         let service_info = ServiceInfo::new(
             "test-service".to_string(),
-            "localhost:8080".to_string(),
+            test_endpoint(),
         );
 
         let service_id = service_info.id().to_string();
@@ -354,7 +361,7 @@ mod real_network_service_tests {
 
         let service_info = ServiceInfo::new(
             "test-service".to_string(),
-            "localhost:8080".to_string(),
+            test_endpoint(),
         );
 
         let service_id = service_info.id().to_string();
@@ -499,7 +506,7 @@ mod real_network_service_tests {
 
         let service_info = ServiceInfo::new(
             "test-service-@#$%".to_string(),
-            "localhost:8080".to_string(),
+            test_endpoint(),
         );
 
         let result = service.register_service(service_info).await;

@@ -14,13 +14,16 @@ pub mod performance {
     /// Default buffer size for I/O operations (bytes)
     pub const DEFAULT_BUFFER_SIZE_BYTES: usize = 8192; // 8KB
 
+    /// Maximum buffer size in bytes (1MB)
     pub const MAX_BUFFER_SIZE_BYTES: usize = 1024 * 1024; // 1MB
 
+    /// Maximum number of concurrent operations
     pub const MAX_CONCURRENT_OPERATIONS: usize = 1000;
 
     /// Default batch size for bulk operations
     pub const DEFAULT_BATCH_SIZE: usize = 1000;
 
+    /// Maximum number of retry attempts
     pub const MAX_RETRY_ATTEMPTS: u32 = 3;
 
     /// Default performance monitoring interval (seconds)
@@ -32,9 +35,10 @@ pub mod performance {
     /// Default batch size
     pub const BATCH_SIZE: usize = 100;
 
-    /// **ZERO-COST ARCHITECTURE CONSTANTS**
+    /// Maximum number of concurrent requests (zero-cost architecture)
     pub const MAX_CONCURRENT_REQUESTS: usize = 10000;
 
+    /// Maximum number of concurrent connections (zero-cost architecture)
     pub const MAX_CONCURRENT_CONNECTIONS: usize = 1000;
 
     /// Default request timeout (milliseconds)
@@ -46,6 +50,7 @@ pub mod performance {
     /// Default memory pool size
     pub const DEFAULT_POOL_SIZE: usize = 1024;
 
+    /// Maximum file size in megabytes
     pub const MAX_FILE_SIZE_MB: usize = 1024;
 }
 /// **NETWORK CONSTANTS**
@@ -64,10 +69,13 @@ pub mod network {
     /// Localhost address
     pub const LOCALHOST: &str = crate::constants::hardcoding::addresses::LOCALHOST_IPV4;
 
+    /// Request timeout in seconds
     pub const REQUEST_TIMEOUT_SECS: u64 = 30;
 
+    /// Connection timeout in seconds
     pub const CONNECTION_TIMEOUT_SECS: u64 = 10;
 
+    /// Maximum number of connections in the pool
     pub const MAX_CONNECTIONS: usize = 1000;
 
     /// Keep-alive timeout
@@ -89,6 +97,7 @@ pub mod storage {
     /// Default block size for storage operations
     pub const DEFAULT_BLOCK_SIZE: usize = 4096;
 
+    /// Maximum filename length in characters
     pub const MAX_FILENAME_LENGTH: usize = 255;
 
     /// Storage tiers
@@ -159,6 +168,7 @@ pub mod security {
     ///
     /// Minimum password length (8 characters)
     pub const MIN_PASSWORD_LENGTH: usize = 8;
+    /// Maximum login attempts before lockout
     pub const MAX_LOGIN_ATTEMPTS: u32 = 3;
     /// Account lockout duration in seconds (5 minutes)
     pub const LOCKOUT_DURATION_SECS: u64 = 300;
@@ -187,25 +197,34 @@ pub mod system {
 
     /// System limits
     ///
+    /// Maximum memory usage in megabytes
     pub const MAX_MEMORY_MB: u64 = 4096;
+    /// Maximum number of CPU cores to use
     pub const MAX_CPU_CORES: u32 = 8;
 }
 /// **LIMITS CONSTANTS**
 ///
 /// System limits and boundaries
 pub mod limits {
+    /// Maximum recursion depth for ZFS discovery operations
     pub const ZFS_DISCOVERY_MAX_DEPTH: usize = 10;
 
+    /// Maximum file depth for nested directories
     pub const MAX_FILE_DEPTH: usize = 100;
 
+    /// Maximum recursion depth for general operations
     pub const MAX_RECURSION_DEPTH: usize = 50;
 
+    /// Maximum number of ZFS pools
     pub const MAX_POOLS: usize = 64;
 
+    /// Maximum number of datasets per pool
     pub const MAX_DATASETS: usize = 1000;
 
+    /// Maximum number of concurrent operations
     pub const MAX_CONCURRENT_OPERATIONS: usize = 100;
 
+    /// Maximum number of optimization operations
     pub const MAX_OPTIMIZATIONS: usize = 50;
 }
 /// **API CONSTANTS**
@@ -264,8 +283,9 @@ pub mod api {
     /// Burst limit for rate limiting (100 requests)
     pub const BURST_LIMIT: u32 = 100;
 
-    ///
+    /// Maximum request size in bytes (10MB)
     pub const MAX_REQUEST_SIZE: usize = 10 * 1024 * 1024;
+    /// Maximum response size in bytes (50MB)
     pub const MAX_RESPONSE_SIZE: usize = 50 * 1024 * 1024;
 }
 /// **MONITORING CONSTANTS**
@@ -275,6 +295,7 @@ pub mod monitoring {
     /// Default metrics collection interval in seconds (60 seconds / 1 minute)
     pub const METRICS_INTERVAL_SECS: u64 = 60;
 
+    /// Health check interval in seconds
     pub const HEALTH_CHECK_INTERVAL_SECS: u64 = 30;
 
     /// Alert thresholds
@@ -288,6 +309,7 @@ pub mod monitoring {
 
     /// Retention periods (days)
     ///
+    /// Metrics retention period (30 days)
     pub const METRICS_RETENTION_DAYS: u32 = 30;
     /// Logs retention period (7 days)
     pub const LOGS_RETENTION_DAYS: u32 = 7;
@@ -415,6 +437,7 @@ pub mod handlers {
     /// Default handler timeout in seconds (30 seconds)
     pub const DEFAULT_HANDLER_TIMEOUT_SECS: u64 = 30;
 
+    /// Maximum number of concurrent requests per handler
     pub const MAX_CONCURRENT_REQUESTS: usize = 100;
 
     /// Default rate limit in requests per minute (60 requests/min)
@@ -423,28 +446,28 @@ pub mod handlers {
     /// Default rate limit burst size (10 requests)
     pub const DEFAULT_RATE_LIMIT_BURST: u32 = 10;
 
-    /// Default retry attempts
+    /// Default retry attempts for failed operations
     pub const DEFAULT_RETRY_ATTEMPTS: u32 = 3;
 
-    /// Default retry delay (milliseconds)
+    /// Default retry delay in milliseconds
     pub const DEFAULT_RETRY_DELAY_MS: u64 = 1000;
 
-    /// Default metrics collection interval (seconds)
+    /// Default metrics collection interval in seconds
     pub const METRICS_COLLECTION_INTERVAL_SECS: u64 = 30;
 
-    /// Default health check interval (seconds)
+    /// Default health check interval in seconds
     pub const HEALTH_CHECK_INTERVAL_SECS: u64 = 60;
 
-    /// Dashboard refresh interval (seconds)
+    /// Dashboard refresh interval in seconds
     pub const DASHBOARD_REFRESH_INTERVAL_SECS: u64 = 5;
 
-    /// Performance monitoring interval (seconds)
+    /// Performance monitoring interval in seconds
     pub const PERFORMANCE_MONITOR_INTERVAL_SECS: u64 = 10;
 
-    /// Default workspace size limit (bytes)
+    /// Default workspace size limit in bytes (10GB)
     pub const DEFAULT_WORKSPACE_SIZE_LIMIT: u64 = 10 * 1024 * 1024 * 1024; // 10GB
 
-    /// Default JWT token expiration (seconds)
+    /// Default JWT token expiration in seconds (24 hours)
     pub const DEFAULT_JWT_EXPIRATION_SECS: u64 = 24 * 60 * 60; // 24 hours
 }
 /// **TIMEOUT CONSTANTS**
@@ -469,7 +492,9 @@ pub mod timeouts {
     pub const EXTENDED_TIMEOUT_SECS: u64 = 300; // 5 minutes
     /// Very long operation timeout in seconds (1 hour)
     pub const VERY_LONG_TIMEOUT_SECS: u64 = 3600; // 1 hour
+    /// Service discovery timeout in seconds
     pub const DISCOVERY_TIMEOUT_SECS: u64 = 30;
+    /// Service operation timeout in seconds
     pub const SERVICE_TIMEOUT_SECS: u64 = 60;
 
     // Storage operation timeouts (seconds)
@@ -483,6 +508,7 @@ pub mod timeouts {
     pub const SCRUB_TIMEOUT_SECS: u64 = 86400; // 24 hours
 
     // Monitoring timeouts (seconds)
+    /// Metrics collection timeout in seconds
     pub const METRICS_TIMEOUT_SECS: u64 = 10;
     /// Alert processing timeout in seconds
     pub const ALERT_TIMEOUT_SECS: u64 = 30;
@@ -494,14 +520,19 @@ pub mod timeouts {
     pub const INTEGRATION_TEST_TIMEOUT_SECS: u64 = 60;
 
     // Timeout limits
+    /// Maximum allowed timeout in seconds (5 minutes)
     pub const MAX_TIMEOUT_SECS: u64 = 300; // 5 minutes
     /// Minimum timeout in seconds
     pub const MIN_TIMEOUT_SECS: u64 = 1;
 
     // Duration constants for convenience
+    /// Request timeout as Duration constant
     pub const REQUEST_TIMEOUT: Duration = Duration::from_secs(REQUEST_TIMEOUT_SECS);
+    /// Connection timeout as Duration constant
     pub const CONNECTION_TIMEOUT: Duration = Duration::from_secs(CONNECTION_TIMEOUT_SECS);
+    /// Health check timeout as Duration constant
     pub const HEALTH_CHECK_TIMEOUT: Duration = Duration::from_secs(HEALTH_CHECK_TIMEOUT_SECS);
+    /// Operation timeout as Duration constant
     pub const OPERATION_TIMEOUT: Duration = Duration::from_secs(OPERATION_TIMEOUT_SECS);
     /// Extended timeout as Duration
     pub const EXTENDED_TIMEOUT: Duration = Duration::from_secs(EXTENDED_TIMEOUT_SECS);
@@ -515,6 +546,7 @@ pub mod timeouts {
     pub const BACKUP_TIMEOUT: Duration = Duration::from_secs(BACKUP_TIMEOUT_SECS);
     /// Scrub timeout as Duration
     pub const SCRUB_TIMEOUT: Duration = Duration::from_secs(SCRUB_TIMEOUT_SECS);
+    /// Metrics timeout as Duration
     pub const METRICS_TIMEOUT: Duration = Duration::from_secs(METRICS_TIMEOUT_SECS);
     /// Alert timeout as Duration
     pub const ALERT_TIMEOUT: Duration = Duration::from_secs(ALERT_TIMEOUT_SECS);
@@ -580,69 +612,90 @@ pub mod zero_cost {
 ///
 /// Constants for service limits and capacity planning
 pub mod service_limits {
+    /// Maximum number of registered services
     pub const MAX_SERVICES: usize = 1000;
 
+    /// Maximum number of concurrent requests across all services
     pub const MAX_CONCURRENT_REQUESTS: usize = 10000;
 
     /// Statistics retention period in seconds (24 hours)
     pub const STATS_RETENTION_SECS: u64 = 86400;
 
+    /// Health check interval in seconds
     pub const HEALTH_CHECK_INTERVAL_SECS: u64 = 30;
 
+    /// Maximum number of connections per service
     pub const MAX_CONNECTIONS: usize = 1000;
 
+    /// Maximum message size in bytes
     pub const MAX_MESSAGE_SIZE: usize = 1024;
 
+    /// Number of retry attempts for failed messages
     pub const MESSAGE_RETRY_ATTEMPTS: u32 = 3;
 
+    /// Maximum number of active sessions
     pub const MAX_SESSIONS: usize = 1000;
 
+    /// Session timeout in seconds
     pub const SESSION_TIMEOUT_SECS: u64 = 300;
 
+    /// Session duration in seconds
     pub const SESSION_DURATION_SECS: u64 = 300;
 
+    /// Protocol version number
     pub const PROTOCOL_VERSION: u32 = 1;
 
+    /// Maximum number of workflows
     pub const MAX_WORKFLOWS: usize = 1000;
 
+    /// Maximum number of concurrent workflow executions
     pub const MAX_CONCURRENT_EXECUTIONS: usize = 100;
 
+    /// Workflow execution timeout in seconds
     pub const EXECUTION_TIMEOUT_SECS: u64 = 300;
 
+    /// Maximum number of steps per workflow
     pub const MAX_WORKFLOW_STEPS: usize = 100;
 
+    /// Service operation timeout in seconds
     pub const SERVICE_TIMEOUT_SECS: u64 = 300;
 }
 /// **ZFS OPERATION CONSTANTS**
 ///
 /// Constants specific to ZFS operations and limits
 pub mod zfs_operations {
+    /// Maximum number of ZFS pools
     pub const MAX_POOLS: usize = 256;
 
+    /// Maximum number of datasets across all pools
     pub const MAX_DATASETS: usize = 10000;
 
+    /// Maximum number of snapshots
     pub const MAX_SNAPSHOTS: usize = 100_000;
 
+    /// Maximum number of RAID backends
     pub const MAX_RAID_BACKENDS: usize = 8;
 
+    /// Maximum number of copy-on-write operations
     pub const MAX_COW_OPERATIONS: usize = 1000;
 
-    /// ZFS discovery maximum depth
+    /// ZFS discovery maximum recursion depth
     pub const ZFS_DISCOVERY_MAX_DEPTH: usize = 10;
 }
 /// **CACHE CONSTANTS**
 ///
 /// Constants for caching systems and TTL values
 pub mod cache {
-    /// Default cache size (entries)
+    /// Default cache size in number of entries
     pub const DEFAULT_CACHE_SIZE: usize = 10000;
 
-    /// Default TTL in seconds (1 hour)
+    /// Default time-to-live in seconds (1 hour)
     pub const DEFAULT_TTL_SECONDS: u64 = 3600;
 
     /// File cache TTL in seconds (24 hours)
     pub const FILE_CACHE_TTL_SECONDS: u64 = 86400;
 
+    /// Maximum number of cached files
     pub const MAX_CACHE_FILES: usize = 10000;
 }
 /// **DEVELOPMENT ENVIRONMENT CONSTANTS**

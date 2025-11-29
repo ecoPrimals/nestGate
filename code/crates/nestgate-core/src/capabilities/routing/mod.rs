@@ -163,13 +163,13 @@ mod tests {
 
     /// Creates  Test Router
     fn create_test_router() -> UniversalRouter {
-        let adapter = PrimalAgnosticAdapter::new("http://localhost:8080".to_string());
+        let adapter = PrimalAgnosticAdapter::new(format!("http://localhost:18080"));
         UniversalRouter::new(Arc::new(adapter))
     }
 
     #[tokio::test]
     async fn test_universal_router_new() {
-        let adapter = PrimalAgnosticAdapter::new("http://localhost:8080".to_string());
+        let adapter = PrimalAgnosticAdapter::new(format!("http://localhost:18080"));
         let router = UniversalRouter::new(Arc::new(adapter));
 
         // Test that router is created successfully

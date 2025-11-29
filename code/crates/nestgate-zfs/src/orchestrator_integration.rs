@@ -34,7 +34,11 @@
 //! let mut service = ZfsService::new(config);
 //!
 //! // Register with orchestrator
-//! service.register_with_orchestrator("http://songbird:9090").await?;
+//! // Port is now configurable via environment variable NESTGATE_ORCHESTRATION_PORT (default: 9091)
+//! // use nestgate_core::config::port_config::get_port_config;
+//! // service.register_with_orchestrator(
+//! //     &format!("http://songbird:{}", get_port_config().orchestration_port)
+//! // ).await?;
 //!
 //! // Perform health check
 //! let health = service.health_check().await?;

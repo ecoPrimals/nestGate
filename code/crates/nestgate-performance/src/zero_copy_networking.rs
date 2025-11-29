@@ -283,13 +283,20 @@ impl<const BUFFER_SIZE: usize> ZeroCopyNetworkInterface<BUFFER_SIZE> {
     pub fn connect(&self, remote_addr: SocketAddr) -> Result<u64> {
         let connection_id = self.generate_connection_id(&remote_addr);
 
-        // Create zero-copy connection
+        // Create zero-copy connection with configurable local endpoint
+        let local_addr_str =
+            std::env::var("NESTGATE_LOCAL_BIND").unwrap_or_else(|_| "0.0.0.0:0".to_string());
+        let local_addr = local_addr_str.parse().map_err(|e| {
+            NestGateError::network_error(&format!(
+                "Failed to parse local endpoint {}: {}",
+                local_addr_str, e
+            ))
+        })?;
+
         let connection = Arc::new(ZeroCopyConnection {
             connection_id,
             remote_addr,
-            local_addr: "0.0.0.0:0".parse().map_err(|e| {
-                NestGateError::network_error(&format!("Failed to parse local endpoint: {e}"))
-            })?,
+            local_addr,
             tx_queue: SafeConcurrentQueue::new(),
             rx_queue: SafeConcurrentQueue::new(),
             connection_stats: ConnectionStats::default(),
