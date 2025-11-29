@@ -194,8 +194,8 @@ impl Default for NetworkDomainConstants {
                 localhost: "127.0.0.1",
                 any: "0.0.0.0",
                 loopback: "127.0.0.1",
-                api_base: "http://localhost:8080/api/v1",
-                discovery: "http://localhost:8083/discovery",
+                api_base: "http://localhost:18080/api/v1", // Test port
+                discovery: "http://localhost:18083/discovery", // Test port
             },
             timeouts: NetworkTimeouts {
                 connection: Duration::from_secs(30),

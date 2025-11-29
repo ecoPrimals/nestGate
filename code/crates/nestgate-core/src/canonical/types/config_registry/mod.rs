@@ -74,8 +74,9 @@ pub use storage::*;
 /// - `StorageConfig` from `unified_final_config/NestGateCanonicalConfig/storage.rs`
 /// - `FsMonitorStorageSettings` from fsmonitor storage config
 /// - `McpStorageConfig` from mcp storage config
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+///
 /// Configuration for CanonicalStorage
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct CanonicalStorageConfig {
     /// Storage backend type
     pub backend_type: storage::StorageBackendType,

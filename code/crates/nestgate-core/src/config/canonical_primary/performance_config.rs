@@ -11,7 +11,9 @@ pub struct PerformanceConfig<const MAX_CONNECTIONS: usize = 1000, const BUFFER_S
 {
     /// Enable performance optimizations
     pub enabled: bool,
+    /// Maximum number of concurrent connections
     pub max_connections: usize,
+    /// Buffer size for I/O operations
     pub buffer_size: usize,
     /// Performance settings
     pub performance_settings: HashMap<String, serde_json::Value>,

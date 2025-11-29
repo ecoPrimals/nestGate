@@ -245,7 +245,7 @@ where
                     to_remove.push(i);
                 }
             }
-            /// To Remove
+            // Return list of connections to remove
             to_remove
         };
 

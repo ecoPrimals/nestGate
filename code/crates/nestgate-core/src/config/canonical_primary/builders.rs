@@ -9,7 +9,7 @@ pub struct CanonicalConfigBuilder<
     const MAX_CONNECTIONS: usize = 1000,
     const BUFFER_SIZE: usize = 65536,
     const TIMEOUT_MS: u64 = 30000,
-    /// Api Port
+    // Api Port (const generic parameter)
     const API_PORT: u16 = 8080,
 > {
     config: NestGateCanonicalConfig<MAX_CONNECTIONS, BUFFER_SIZE, TIMEOUT_MS, API_PORT>,
@@ -18,7 +18,7 @@ impl<
         const MAX_CONNECTIONS: usize,
         const BUFFER_SIZE: usize,
         const TIMEOUT_MS: u64,
-        /// Api Port
+        // Api Port (const generic parameter)
         const API_PORT: u16,
     > CanonicalConfigBuilder<MAX_CONNECTIONS, BUFFER_SIZE, TIMEOUT_MS, API_PORT>
 {
@@ -71,7 +71,7 @@ impl<
         const MAX_CONNECTIONS: usize,
         const BUFFER_SIZE: usize,
         const TIMEOUT_MS: u64,
-        /// Api Port
+        // Api Port (const generic parameter)
         const API_PORT: u16,
     > Default for CanonicalConfigBuilder<MAX_CONNECTIONS, BUFFER_SIZE, TIMEOUT_MS, API_PORT>
 {

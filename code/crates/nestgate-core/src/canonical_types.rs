@@ -106,8 +106,9 @@ pub mod service {
     /// - automation/src/types/ecosystem.rs  
     /// - diagnostics/metrics.rs
     /// - And other scattered definitions
+    ///
+    /// Service Information structure
     #[derive(Debug, Clone, Serialize, Deserialize)]
-    /// Serviceinfo
     pub struct ServiceInfo {
         // Core identification
         /// Unique service identifier

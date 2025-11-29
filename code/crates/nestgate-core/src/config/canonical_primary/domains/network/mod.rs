@@ -12,24 +12,24 @@
 
 // ==================== NETWORK CONFIGURATION MODULES ====================
 
-// Core API server configuration
+/// Core API server configuration
 pub mod api;
-// Network orchestration configuration
-pub mod orchestration;
-// Protocol-specific configurations
-pub mod protocols;
-// VLAN and network segmentation
-pub mod vlan;
-// Service discovery configuration
+/// Service discovery configuration
 pub mod discovery;
-// Performance and optimization settings
-pub mod performance;
-// Security and authentication settings
-pub mod security;
-// Monitoring and observability
-pub mod monitoring;
-// Environment-specific overrides
+/// Environment-specific overrides
 pub mod environment;
+/// Monitoring and observability
+pub mod monitoring;
+/// Network orchestration configuration
+pub mod orchestration;
+/// Performance and optimization settings
+pub mod performance;
+/// Protocol-specific configurations
+pub mod protocols;
+/// Security and authentication settings
+pub mod security;
+/// VLAN and network segmentation
+pub mod vlan;
 // ==================== RE-EXPORTS ====================
 
 // **CANONICAL API CONFIGURATION EXPORTS**

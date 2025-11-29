@@ -8,6 +8,13 @@ use super::registry::ServiceRegistryClient;
 use super::*;
 use std::time::Duration;
 
+// Test port constant
+const TEST_PORT: u16 = 18080;
+
+fn test_endpoint() -> String {
+    format!("http://localhost:{}", TEST_PORT)
+}
+
 /// Test basic instantiation of discovery system
 #[test]
 fn test_universal_primal_discovery_new() {
@@ -238,12 +245,12 @@ fn test_cache_endpoint_operations() {
     assert!(cache.get_endpoint_discovery("test-service").is_none());
 
     // Store endpoint
-    cache.store_endpoint_discovery("test-service", "http://localhost:8080");
+    cache.store_endpoint_discovery("test-service", &test_endpoint());
 
     // Retrieve endpoint
     assert_eq!(
         cache.get_endpoint_discovery("test-service"),
-        Some("http://localhost:8080".to_string())
+        Some(test_endpoint())
     );
 }
 

@@ -8,6 +8,13 @@
 mod load_balancing_tests {
     use crate::load_balancing::*;
     
+    // Test port to avoid conflicts
+    const TEST_PORT: u16 = 18080;
+    
+    fn test_address() -> String {
+        format!("localhost:{}", TEST_PORT)
+    }
+    
     // ==================== LOAD BALANCING STRATEGY TESTS ====================
     
     #[test]
@@ -175,7 +182,7 @@ mod load_balancing_tests {
     fn test_backend_server_clone() {
         let server1 = BackendServer {
             id: "clone-test".to_string(),
-            address: "localhost:8080".to_string(),
+            address: test_address(),
             weight: 100,
             healthy: true,
         };
@@ -312,7 +319,7 @@ mod load_balancing_tests {
         
         let server = BackendServer {
             id: "test-server".to_string(),
-            address: "localhost:8080".to_string(),
+            address: test_address(),
             weight: 100,
             healthy: true,
         };

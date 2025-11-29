@@ -323,7 +323,7 @@ mod tests {
     fn test_url_validation() {
         // Valid URLs
         assert!(is_valid_url("https://example.com"));
-        assert!(is_valid_url("http://localhost:8080"));
+        assert!(is_valid_url("http://localhost:18080"));
         assert!(is_valid_http_url("https://example.com"));
 
         // Invalid URLs
@@ -537,8 +537,8 @@ mod tests {
         assert_eq!(url1.host_str(), Some("example.com"));
         
         // Valid URL with port
-        let url2 = parse_url("http://localhost:8080").expect("Should parse URL with port");
-        assert_eq!(url2.port(), Some(8080));
+        let url2 = parse_url("http://localhost:18080").expect("Should parse URL with port");
+        assert_eq!(url2.port(), Some(18080));
         
         // Valid URL with path
         let url3 = parse_url("https://example.com/path/to/resource").expect("Should parse URL with path");

@@ -8,6 +8,13 @@
 
 use std::collections::HashMap;
 
+// Test port constant
+const TEST_PORT: u16 = 18080;
+
+fn test_endpoint() -> String {
+    format!("http://localhost:{}", TEST_PORT)
+}
+
 // ==================== SERVICE DISCOVERY CONFIGURATION TESTS ====================
 
 #[test]
@@ -52,7 +59,7 @@ fn test_service_info_creation() {
         service_id: "test-service-123".to_string(),
         service_name: "test-service".to_string(),
         service_type: "storage".to_string(),
-        endpoint: "http://localhost:8080".to_string(),
+        endpoint: test_endpoint(),
         capabilities: vec!["read".to_string(), "write".to_string()],
         metadata: HashMap::new(),
     };
