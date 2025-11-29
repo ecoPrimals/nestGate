@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// Controls cache optimization and warming strategies for improved performance.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for CachePerformance
 pub struct CachePerformanceConfig {
     /// Cache optimization settings.
     pub optimization: CacheOptimizationConfig,
@@ -18,6 +19,7 @@ pub struct CachePerformanceConfig {
 ///
 /// Enables cache-specific performance optimizations.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for CacheOptimization
 pub struct CacheOptimizationConfig {
     /// Whether cache optimization is enabled.
     pub enabled: bool,
@@ -27,6 +29,7 @@ pub struct CacheOptimizationConfig {
 ///
 /// Controls how and when cache data is preloaded to reduce cold-start latency.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for CacheWarming
 pub struct CacheWarmingConfig {
     /// Whether cache warming is enabled.
     pub enabled: bool,
@@ -40,9 +43,11 @@ pub struct CacheWarmingConfig {
 ///
 /// Determines when and how cache data is preloaded.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Warmingstrategy
 pub enum WarmingStrategy {
     /// Eager - preload all cache data at startup.
     #[default]
+    /// Eager
     Eager,
     /// Lazy - load cache data on first access.
     Lazy,

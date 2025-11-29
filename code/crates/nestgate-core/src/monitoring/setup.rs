@@ -19,6 +19,7 @@ use super::exporters::{LogDestination, LogRetentionConfig};
 
 /// Tracing configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Tracing
 pub struct TracingConfig {
     /// Log level (trace, debug, info, warn, error)
     pub level: String,
@@ -39,6 +40,7 @@ pub struct TracingConfig {
     pub custom_fields: HashMap<String, String>,
 }
 impl Default for TracingConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             level: "info".to_string(),
@@ -55,6 +57,7 @@ impl Default for TracingConfig {
 
 /// Log aggregation configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for LogAggregation
 pub struct LogAggregationConfig {
     /// Enable log aggregation
     pub enabled: bool,
@@ -68,6 +71,7 @@ pub struct LogAggregationConfig {
     pub retention: LogRetentionConfig,
 }
 impl Default for LogAggregationConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -81,6 +85,7 @@ impl Default for LogAggregationConfig {
 
 /// Distributed tracing configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for DistributedTracing
 pub struct DistributedTracingConfig {
     /// Enable distributed tracing
     pub enabled: bool,
@@ -94,6 +99,7 @@ pub struct DistributedTracingConfig {
     pub custom_tags: HashMap<String, String>,
 }
 impl Default for DistributedTracingConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: false,
@@ -107,6 +113,7 @@ impl Default for DistributedTracingConfig {
 
 /// Tracing context for distributed tracing
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Tracingcontext
 pub struct TracingContext {
     /// Trace ID for correlation across services
     pub trace_id: String,
@@ -159,6 +166,7 @@ impl TracingContext {
 
 /// Main tracing manager for coordinating all logging and tracing operations
 #[derive(Debug)]
+/// Manager for Tracing operations
 pub struct TracingManager {
     /// Configuration
     pub config: TracingConfig,
@@ -400,12 +408,19 @@ impl TracingManager {
 
 /// Tracing system statistics
 #[derive(Debug, Clone, Default)]
+/// Tracingstatistics
 pub struct TracingStatistics {
+    /// Logs Processed
     pub logs_processed: u64,
+    /// Logs Pending
     pub logs_pending: u64,
+    /// Distributed Tracing Enabled
     pub distributed_tracing_enabled: bool,
+    /// Log Aggregation Enabled
     pub log_aggregation_enabled: bool,
+    /// Active Spans
     pub active_spans: u32,
+    /// Completed Traces
     pub completed_traces: u64,
 }
 // ==================== SECTION ====================
@@ -483,6 +498,7 @@ impl TracingConfigBuilder {
 }
 
 impl Default for TracingConfigBuilder {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

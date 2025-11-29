@@ -314,6 +314,7 @@ mod network_discovery_tests {
         service_type: String,
     }
 
+    /// Creates  Test Service
     fn create_test_service(name: &str, port: u16) -> ServiceInfo {
         ServiceInfo {
             name: name.to_string(),
@@ -328,90 +329,112 @@ mod network_discovery_tests {
         Err("Test environment".to_string())
     }
 
+    /// Discover Services With Timeout
     async fn discover_services_with_timeout(_network: &str, _timeout: Duration) -> Result<Vec<ServiceInfo>, String> {
         Err("Test environment".to_string())
     }
 
+    /// Discover Service Type
     async fn discover_service_type(_service_type: &str) -> Result<Vec<ServiceInfo>, String> {
         Err("Test environment".to_string())
     }
 
+    /// Discover Multiple Services
     async fn discover_multiple_services(_service_types: &[&str]) -> Result<Vec<ServiceInfo>, String> {
         Err("Test environment".to_string())
     }
 
+    /// Dns Sd Discover
     async fn dns_sd_discover(_domain: &str) -> Result<Vec<ServiceInfo>, String> {
         Err("Test environment".to_string())
     }
 
+    /// Mdns Discover
     async fn mdns_discover() -> Result<Vec<ServiceInfo>, String> {
         Err("Test environment".to_string())
     }
 
+    /// Mdns Discover On Interface
     async fn mdns_discover_on_interface(_interface: &str) -> Result<Vec<ServiceInfo>, String> {
         Err("Test environment".to_string())
     }
 
+    /// Broadcast Discover
     async fn broadcast_discover(_addr: &str) -> Result<Vec<ServiceInfo>, String> {
         Err("Test environment".to_string())
     }
 
+    /// Multicast Discover
     async fn multicast_discover(_addr: &str) -> Result<Vec<ServiceInfo>, String> {
         Err("Test environment".to_string())
     }
 
+    /// Register Service
     async fn register_service(_info: &ServiceInfo) -> Result<(), String> {
         Err("Test environment".to_string())
     }
 
+    /// Unregister Service
     async fn unregister_service(_name: &str) -> Result<(), String> {
         Err("Test environment".to_string())
     }
 
+    /// Updates  Service Port
     async fn update_service_port(_name: &str, _port: u16) -> Result<(), String> {
         Err("Test environment".to_string())
     }
 
+    /// Check Service Health
     async fn check_service_health(_addr: &str) -> Result<bool, String> {
         Err("Test environment".to_string())
     }
 
+    /// Start Periodic Health Check
     async fn start_periodic_health_check(_addr: &str, _interval: Duration) -> Result<(), String> {
         Err("Test environment".to_string())
     }
 
+    /// Scan Ip Range
     async fn scan_ip_range(_start: IpAddr, _end: IpAddr, _port: u16) -> Result<Vec<IpAddr>, String> {
         Err("Test environment".to_string())
     }
 
+    /// Scan Ports
     async fn scan_ports(_ip: IpAddr, _ports: &[u16]) -> Result<Vec<u16>, String> {
         Err("Test environment".to_string())
     }
 
+    /// Fast Port Scan
     async fn fast_port_scan(_ip: IpAddr, _start: u16, _end: u16, _timeout: Duration) -> Result<Vec<u16>, String> {
         Err("Test environment".to_string())
     }
 
+    /// Discover Ipv6 Services
     async fn discover_ipv6_services() -> Result<Vec<ServiceInfo>, String> {
         Err("Test environment".to_string())
     }
 
+    /// Scan Ipv6 Link Local
     async fn scan_ipv6_link_local() -> Result<Vec<Ipv6Addr>, String> {
         Err("Test environment".to_string())
     }
 
+    /// Cache Services
     async fn cache_services(_services: &[ServiceInfo]) -> Result<(), String> {
         Ok(())
     }
 
+    /// Gets Cached Services
     async fn get_cached_services() -> Result<Vec<ServiceInfo>, String> {
         Ok(vec![])
     }
 
+    /// Invalidate Discovery Cache
     async fn invalidate_discovery_cache() -> Result<(), String> {
         Ok(())
     }
 
+    /// Sets Cache Ttl
     async fn set_cache_ttl(_ttl: Duration) -> Result<(), String> {
         Ok(())
     }

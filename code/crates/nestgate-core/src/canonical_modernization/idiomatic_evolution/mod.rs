@@ -52,6 +52,7 @@ pub use traits::{
 /// This system provides comprehensive evolution tracking, smart defaults,
 /// and modernization patterns for the entire ecosystem.
 #[derive(Debug, Clone, Default)]
+/// Idiomaticevolutionsystem
 pub struct IdiomaticEvolutionSystem {
     /// Evolution metadata tracking
     pub metadata: EvolutionMetadata,
@@ -186,6 +187,7 @@ impl IdiomaticEvolutionSystem {
 /// assert_eq!(stats.evolution_progress, 75.0);
 /// ```
 #[derive(Debug, Clone)]
+/// Evolutionstats
 pub struct EvolutionStats {
     /// Total number of components being evolved
     pub total_components: u32,

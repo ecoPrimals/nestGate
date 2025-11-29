@@ -59,6 +59,7 @@ mod error_comprehensive_tests {
 
     #[test]
     fn test_error_propagation() {
+        /// Inner Fn
         fn inner_fn() -> Result<()> {
             Err(NestGateError::internal_error(
                 "inner".to_string(),
@@ -66,6 +67,7 @@ mod error_comprehensive_tests {
             ))
         }
 
+        /// Outer Fn
         fn outer_fn() -> Result<()> {
             inner_fn()?;
             Ok(())

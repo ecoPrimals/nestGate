@@ -9,6 +9,7 @@ use tracing::{debug, info, warn};
 
 /// Information about a discovered capability
 #[derive(Debug, Clone)]
+/// Capabilityinfo
 pub struct CapabilityInfo {
     /// Type of capability (orchestration, security, ai, etc.)
     pub capability_type: String,
@@ -53,6 +54,7 @@ pub trait DiscoveryMethod: Send + Sync {
 /// let discovery = EnvironmentDiscovery::with_config(Arc::new(config));
 /// ```
 #[derive(Debug, Clone)]
+/// Environmentdiscovery
 pub struct EnvironmentDiscovery {
     /// Immutable configuration (thread-safe via Arc)
     config: std::sync::Arc<super::capability_scanner_config::EnvironmentDiscoveryConfig>,
@@ -95,12 +97,14 @@ impl EnvironmentDiscovery {
 }
 
 impl Default for EnvironmentDiscovery {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
 }
 
 impl DiscoveryMethod for EnvironmentDiscovery {
+    /// Discover
     async fn discover(&self) -> Result<Vec<CapabilityInfo>, NestGateError> {
         let mut capabilities = Vec::new();
 
@@ -139,6 +143,7 @@ impl DiscoveryMethod for EnvironmentDiscovery {
         Ok(capabilities)
     }
 
+    /// Method Name
     fn method_name(&self) -> &str {
         "environment"
     }
@@ -149,6 +154,7 @@ impl DiscoveryMethod for EnvironmentDiscovery {
 /// Enum dispatch for discovery methods - zero-cost alternative to `Box<dyn DiscoveryMethod>`.
 /// This enables native async while maintaining runtime polymorphism through enum dispatch.
 #[derive(Debug)]
+/// Discoverymethodimpl
 pub enum DiscoveryMethodImpl {
     /// Environment variable discovery
     Environment(EnvironmentDiscovery),
@@ -164,6 +170,7 @@ pub enum DiscoveryMethodImpl {
 }
 
 impl DiscoveryMethod for DiscoveryMethodImpl {
+    /// Discover
     async fn discover(&self) -> Result<Vec<CapabilityInfo>, NestGateError> {
         match self {
             Self::Environment(method) => method.discover().await,
@@ -173,6 +180,7 @@ impl DiscoveryMethod for DiscoveryMethodImpl {
         }
     }
 
+    /// Method Name
     fn method_name(&self) -> &str {
         match self {
             Self::Environment(method) => method.method_name(),
@@ -203,6 +211,7 @@ impl CapabilityScanner {
         // Add default discovery methods (using enum dispatch for zero-cost async)
         scanner.add_discovery_method(DiscoveryMethodImpl::Environment(EnvironmentDiscovery::new()));
 
+        /// Scanner
         scanner
     }
 
@@ -279,6 +288,7 @@ impl CapabilityScanner {
 }
 
 impl Default for CapabilityScanner {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

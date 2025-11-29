@@ -51,6 +51,7 @@ use std::sync::Arc;
 /// - ✅ No data races possible
 /// - ✅ No use-after-free possible
 #[derive(Debug, Clone)]
+/// Safeconcurrentqueue
 pub struct SafeConcurrentQueue<T> {
     sender: Sender<T>,
     receiver: Arc<Receiver<T>>,
@@ -145,6 +146,7 @@ impl<T> SafeConcurrentQueue<T> {
 }
 
 impl<T> Default for SafeConcurrentQueue<T> {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -187,6 +189,7 @@ where
     K: Eq + Hash + std::fmt::Debug,
     V: std::fmt::Debug,
 {
+    /// Fmt
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("SafeConcurrentHashMap")
             .field("len", &self.len())
@@ -319,6 +322,7 @@ impl<K, V> Clone for SafeConcurrentHashMap<K, V>
 where
     K: Eq + Hash,
 {
+    /// Clone
     fn clone(&self) -> Self {
         Self {
             inner: Arc::clone(&self.inner),
@@ -330,6 +334,7 @@ impl<K, V> Default for SafeConcurrentHashMap<K, V>
 where
     K: Eq + Hash,
 {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

@@ -467,6 +467,7 @@ impl DashboardManager {
 }
 
 impl Default for DashboardManager {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

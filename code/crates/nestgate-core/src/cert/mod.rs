@@ -1,3 +1,5 @@
+//! Cert module
+
 use serde::{Deserialize, Serialize};
 
 // Certificate management and validation for NestGate
@@ -27,6 +29,7 @@ use serde::{Deserialize, Serialize};
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for Certificate
 pub struct CertificateConfig {
     /// Certificate file path
     /// Private key file path  
@@ -36,6 +39,7 @@ pub struct CertificateConfig {
 }
 
 impl Default for CertificateConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self { validity_days: 365 }
     }
@@ -55,6 +59,7 @@ pub mod validator;
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Certificateconfigcanonical
 pub type CertificateConfigCanonical =
     crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 

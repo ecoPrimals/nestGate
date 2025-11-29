@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 /// **Zero-cost security provider configuration**
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ZeroCostSecurity
 pub struct ZeroCostSecurityConfig {
     /// Provider identifier
     pub provider_id: String,
@@ -33,6 +34,7 @@ pub struct ZeroCostSecurityConfig {
     pub lockout_duration_seconds: u64,
 }
 impl Default for ZeroCostSecurityConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             provider_id: "zero-cost-security-provider".to_string(),
@@ -162,6 +164,7 @@ impl ZeroCostSecurityConfig {
 
 /// **Authentication configuration**
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Authentication
 pub struct AuthenticationConfig {
     /// Enable password authentication
     pub enable_password_auth: bool,
@@ -181,6 +184,7 @@ pub struct AuthenticationConfig {
     pub password_history_size: usize,
 }
 impl Default for AuthenticationConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enable_password_auth: true,
@@ -197,6 +201,7 @@ impl Default for AuthenticationConfig {
 
 /// **Encryption configuration**
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Encryption
 pub struct EncryptionConfig {
     /// Default encryption algorithm
     pub default_algorithm: String,
@@ -212,6 +217,7 @@ pub struct EncryptionConfig {
     pub key_rotation_interval_days: u32,
 }
 impl Default for EncryptionConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             default_algorithm: "AES-256-GCM".to_string(),
@@ -230,6 +236,7 @@ impl Default for EncryptionConfig {
 
 /// **Signing configuration**
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Signing
 pub struct SigningConfig {
     /// Default signing algorithm
     pub default_algorithm: String,
@@ -243,6 +250,7 @@ pub struct SigningConfig {
     pub signature_validity_seconds: u64,
 }
 impl Default for SigningConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             default_algorithm: "ECDSA-P256".to_string(),

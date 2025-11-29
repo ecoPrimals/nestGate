@@ -3,6 +3,8 @@
 // This trait provides the complete canonical interface for all ZFS backend implementations.
 // It unifies all methods from native, remote, and fail-safe backends into a single consistent API.
 
+//! Traits module
+
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -125,6 +127,7 @@ pub trait UniversalZfsService: Send + Sync {
 /// **DYN-COMPATIBLE ZFS SERVICE WRAPPER**
 /// Wrapper enum for dynamic dispatch of ZFS services
 #[derive(Debug)]
+/// Dynzfsservice
 pub enum DynZfsService {
     /// Native ZFS service implementation
     Native(NativeZfsService),
@@ -366,6 +369,7 @@ impl DynZfsService {
 
 /// Enum wrapper for ZFS service implementations to enable dyn compatibility
 #[derive(Debug)]
+/// Universalzfsserviceenum
 pub enum UniversalZfsServiceEnum {
     /// Native ZFS service implementation
     Native(NativeZfsService),
@@ -392,6 +396,7 @@ impl UniversalZfsServiceEnum {
 
 #[async_trait::async_trait]
 impl UniversalZfsService for UniversalZfsServiceEnum {
+    /// Service Name
     fn service_name(&self) -> &str {
         match self {
             Self::Native(service) => service.service_name(),
@@ -399,6 +404,7 @@ impl UniversalZfsService for UniversalZfsServiceEnum {
         }
     }
 
+    /// Service Version
     fn service_version(&self) -> &str {
         match self {
             Self::Native(service) => service.service_version(),
@@ -406,6 +412,7 @@ impl UniversalZfsService for UniversalZfsServiceEnum {
         }
     }
 
+    /// Health Check
     async fn health_check(&self) -> UniversalZfsResult<HealthStatus> {
         match self {
             Self::Native(service) => service.health_check().await,
@@ -413,6 +420,7 @@ impl UniversalZfsService for UniversalZfsServiceEnum {
         }
     }
 
+    /// Gets Metrics
     async fn get_metrics(&self) -> UniversalZfsResult<ServiceMetrics> {
         match self {
             Self::Native(service) => service.get_metrics().await,
@@ -420,6 +428,7 @@ impl UniversalZfsService for UniversalZfsServiceEnum {
         }
     }
 
+    /// Creates  Pool
     async fn create_pool(&self, config: &PoolConfig) -> UniversalZfsResult<PoolInfo> {
         match self {
             Self::Native(service) => service.create_pool(config).await,
@@ -427,6 +436,7 @@ impl UniversalZfsService for UniversalZfsServiceEnum {
         }
     }
 
+    /// Gets Pool
     async fn get_pool(&self, name: &str) -> UniversalZfsResult<Option<PoolInfo>> {
         match self {
             Self::Native(service) => service.get_pool(name).await,
@@ -434,6 +444,7 @@ impl UniversalZfsService for UniversalZfsServiceEnum {
         }
     }
 
+    /// Destroy Pool
     async fn destroy_pool(&self, name: &str) -> UniversalZfsResult<()> {
         match self {
             Self::Native(service) => service.destroy_pool(name).await,
@@ -441,6 +452,7 @@ impl UniversalZfsService for UniversalZfsServiceEnum {
         }
     }
 
+    /// Scrub Pool
     async fn scrub_pool(&self, name: &str) -> UniversalZfsResult<()> {
         match self {
             Self::Native(service) => service.scrub_pool(name).await,
@@ -448,6 +460,7 @@ impl UniversalZfsService for UniversalZfsServiceEnum {
         }
     }
 
+    /// Gets Pool Status
     async fn get_pool_status(&self, name: &str) -> UniversalZfsResult<String> {
         match self {
             Self::Native(service) => service.get_pool_status(name).await,
@@ -455,6 +468,7 @@ impl UniversalZfsService for UniversalZfsServiceEnum {
         }
     }
 
+    /// List Datasets
     async fn list_datasets(&self) -> UniversalZfsResult<Vec<DatasetInfo>> {
         match self {
             Self::Native(service) => service.list_datasets().await,
@@ -462,6 +476,7 @@ impl UniversalZfsService for UniversalZfsServiceEnum {
         }
     }
 
+    /// Creates  Dataset
     async fn create_dataset(&self, config: &DatasetConfig) -> UniversalZfsResult<DatasetInfo> {
         match self {
             Self::Native(service) => service.create_dataset(config).await,
@@ -469,6 +484,7 @@ impl UniversalZfsService for UniversalZfsServiceEnum {
         }
     }
 
+    /// Gets Dataset
     async fn get_dataset(&self, name: &str) -> UniversalZfsResult<Option<DatasetInfo>> {
         match self {
             Self::Native(service) => service.get_dataset(name).await,
@@ -476,6 +492,7 @@ impl UniversalZfsService for UniversalZfsServiceEnum {
         }
     }
 
+    /// Destroy Dataset
     async fn destroy_dataset(&self, name: &str) -> UniversalZfsResult<()> {
         match self {
             Self::Native(service) => service.destroy_dataset(name).await,
@@ -483,6 +500,7 @@ impl UniversalZfsService for UniversalZfsServiceEnum {
         }
     }
 
+    /// Sets Dataset Properties
     async fn set_dataset_properties(
         &self,
         dataset_name: &str,
@@ -502,6 +520,7 @@ impl UniversalZfsService for UniversalZfsServiceEnum {
         }
     }
 
+    /// Gets Dataset Properties
     async fn get_dataset_properties(
         &self,
         name: &str,
@@ -512,6 +531,7 @@ impl UniversalZfsService for UniversalZfsServiceEnum {
         }
     }
 
+    /// List Snapshots
     async fn list_snapshots(&self) -> UniversalZfsResult<Vec<SnapshotInfo>> {
         match self {
             Self::Native(service) => service.list_snapshots().await,
@@ -519,6 +539,7 @@ impl UniversalZfsService for UniversalZfsServiceEnum {
         }
     }
 
+    /// Creates  Snapshot
     async fn create_snapshot(&self, config: &SnapshotConfig) -> UniversalZfsResult<SnapshotInfo> {
         match self {
             Self::Native(service) => service.create_snapshot(config).await,
@@ -526,6 +547,7 @@ impl UniversalZfsService for UniversalZfsServiceEnum {
         }
     }
 
+    /// List Dataset Snapshots
     async fn list_dataset_snapshots(
         &self,
         dataset_name: &str,
@@ -536,6 +558,7 @@ impl UniversalZfsService for UniversalZfsServiceEnum {
         }
     }
 
+    /// Destroy Snapshot
     async fn destroy_snapshot(&self, name: &str) -> UniversalZfsResult<()> {
         match self {
             Self::Native(service) => service.destroy_snapshot(name).await,
@@ -543,6 +566,7 @@ impl UniversalZfsService for UniversalZfsServiceEnum {
         }
     }
 
+    /// Optimize
     async fn optimize(&self) -> UniversalZfsResult<String> {
         match self {
             Self::Native(service) => service.optimize().await,
@@ -550,6 +574,7 @@ impl UniversalZfsService for UniversalZfsServiceEnum {
         }
     }
 
+    /// Gets Optimization Analytics
     async fn get_optimization_analytics(&self) -> UniversalZfsResult<serde_json::Value> {
         match self {
             Self::Native(service) => service.get_optimization_analytics().await,
@@ -557,6 +582,7 @@ impl UniversalZfsService for UniversalZfsServiceEnum {
         }
     }
 
+    /// Predict Tier
     async fn predict_tier(&self, file_path: &str) -> UniversalZfsResult<String> {
         match self {
             Self::Native(service) => service.predict_tier(file_path).await,
@@ -564,6 +590,7 @@ impl UniversalZfsService for UniversalZfsServiceEnum {
         }
     }
 
+    /// Gets Configuration
     async fn get_configuration(&self) -> UniversalZfsResult<serde_json::Value> {
         match self {
             Self::Native(service) => service.get_configuration().await,
@@ -571,6 +598,7 @@ impl UniversalZfsService for UniversalZfsServiceEnum {
         }
     }
 
+    /// Updates  Configuration
     async fn update_configuration(&self, config: serde_json::Value) -> UniversalZfsResult<()> {
         match self {
             Self::Native(service) => service.update_configuration(config).await,
@@ -578,6 +606,7 @@ impl UniversalZfsService for UniversalZfsServiceEnum {
         }
     }
 
+    /// Checks if Available
     async fn is_available(&self) -> bool {
         match self {
             Self::Native(service) => service.is_available().await,
@@ -585,6 +614,7 @@ impl UniversalZfsService for UniversalZfsServiceEnum {
         }
     }
 
+    /// Shutdown
     async fn shutdown(&self) -> UniversalZfsResult<()> {
         match self {
             Self::Native(service) => service.shutdown().await,
@@ -592,6 +622,7 @@ impl UniversalZfsService for UniversalZfsServiceEnum {
         }
     }
 
+    /// List Pools
     async fn list_pools(&self) -> UniversalZfsResult<Vec<PoolInfo>> {
         match self {
             Self::Native(service) => service.list_pools().await,

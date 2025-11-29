@@ -2,6 +2,8 @@
 // This module provides canonical type aliases for complex types used throughout
 // the NestGate ecosystem. This enables zero-copy operations and consistent typing.
 
+//! Types module
+
 pub mod config_registry;
 pub mod core_types;
 

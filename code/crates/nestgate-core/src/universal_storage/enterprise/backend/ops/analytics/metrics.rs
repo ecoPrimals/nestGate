@@ -5,6 +5,7 @@ use std::time::SystemTime;
 
 /// Storage analytics data point
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storageanalyticspoint
 pub struct StorageAnalyticsPoint {
     /// Timestamp of the data point
     pub timestamp: SystemTime,
@@ -22,6 +23,7 @@ pub struct StorageAnalyticsPoint {
 
 /// Performance metrics for storage
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performancemetrics
 pub struct PerformanceMetrics {
     /// CPU usage percentage
     pub cpu_usage_percent: f64,
@@ -43,6 +45,7 @@ pub struct PerformanceMetrics {
 
 /// Usage metrics for storage
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Usagemetrics
 pub struct UsageMetrics {
     /// Total capacity in bytes
     pub total_capacity_bytes: u64,
@@ -64,6 +67,7 @@ pub struct UsageMetrics {
 
 /// I/O metrics for storage operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Iometrics
 pub struct IoMetrics {
     /// Read operations per second
     pub reads_per_sec: u32,
@@ -85,6 +89,7 @@ pub struct IoMetrics {
 
 /// Health metrics for storage
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Healthmetrics
 pub struct HealthMetrics {
     /// Overall health score (0.0 to 1.0)
     pub health_score: f64,
@@ -102,6 +107,7 @@ pub struct HealthMetrics {
 
 /// ZFS scrub status
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Status values for Scrub
 pub enum ScrubStatus {
     /// No scrub has been performed
     None,
@@ -117,6 +123,7 @@ pub enum ScrubStatus {
 
 /// Individual drive health information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Drivehealth
 pub struct DriveHealth {
     /// Drive identifier
     pub drive_id: String,
@@ -128,6 +135,7 @@ pub struct DriveHealth {
 
 /// Drive health status
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Status values for Drive
 pub enum DriveStatus {
     /// Drive is healthy
     Healthy,
@@ -141,6 +149,7 @@ pub enum DriveStatus {
 
 /// SMART attributes for drive health monitoring
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Smartattributes
 pub struct SmartAttributes {
     /// Power-on hours
     pub power_on_hours: u64,

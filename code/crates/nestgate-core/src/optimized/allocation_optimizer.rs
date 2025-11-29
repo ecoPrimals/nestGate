@@ -69,20 +69,24 @@ pub struct PooledObject<'a, T> {
     pool: &'a SmartPool<T>,
 }
 impl<'a, T> std::ops::Deref for PooledObject<'a, T> {
+    /// Type alias for Target
     type Target = T;
 
+    /// Deref
     fn deref(&self) -> &Self::Target {
         self.object.as_ref()?
     }
 }
 
 impl<'a, T> std::ops::DerefMut for PooledObject<'a, T> {
+    /// Deref Mut
     fn deref_mut(&mut self) -> &mut Self::Target {
         self.object.as_mut()?
     }
 }
 
 impl<'a, T> Drop for PooledObject<'a, T> {
+    /// Drop
     fn drop(&mut self) {
         if let Some(obj) = self.object.take() {
             self.pool.return_object(obj);
@@ -92,6 +96,7 @@ impl<'a, T> Drop for PooledObject<'a, T> {
 
 /// Trait for objects that can be reset to clean state
 pub trait Resettable {
+    /// Reset
     fn reset(&mut self);
 }
 // ==================== GLOBAL POOLS ====================
@@ -99,11 +104,15 @@ pub trait Resettable {
 /// **GLOBAL ALLOCATION POOLS**
 /// Pre-configured pools for common allocations
 pub struct GlobalPools {
+    /// String Pool
     pub string_pool: SmartPool<String>,
+    /// Vec U8 Pool
     pub vec_u8_pool: SmartPool<Vec<u8>>,
+    /// Hashmap Pool
     pub hashmap_pool: SmartPool<HashMap<String, String>>,
 }
 impl GlobalPools {
+    /// Creates a new instance
     fn new() -> Self { Self {
             string_pool: SmartPool::new(String::new, 1000),
             vec_u8_pool: SmartPool::new(|| Vec::with_capacity(4096), 500),
@@ -136,6 +145,7 @@ impl ZeroAllocStringBuilder {
     pub fn add_static(&mut self, s: &'static str) -> &mut Self { self.segments.push(s);
         self
     , /// Add dynamic string segment (requires allocation)
+    /// Add Dynamic
     pub fn add_dynamic(&mut self, s: &str) -> &mut Self {
         self.buffer.push_str(s);
         self
@@ -205,18 +215,21 @@ impl<T> Either<T, Arc<T>> {
 // ==================== IMPLEMENTATIONS FOR COMMON TYPES ====================
 
 impl Resettable for String {
+    /// Reset
     fn reset(&mut self) {
         self.clear();
     }
 }
 
 impl Resettable for Vec<u8> {
+    /// Reset
     fn reset(&mut self) {
         self.clear();
     }
 }
 
 impl Resettable for HashMap<String, String> {
+    /// Reset
     fn reset(&mut self) {
         self.clear();
     }
@@ -227,6 +240,7 @@ impl Resettable for HashMap<String, String> {
 /// **ALLOCATION TRACKER**
 /// Development tool for tracking allocation patterns
 #[cfg(debug_assertions)]
+/// Allocationtracker
 pub struct AllocationTracker {
     allocations: Mutex<HashMap<&'static str, u64>>,
 }
@@ -236,11 +250,13 @@ impl AllocationTracker {
     pub fn new() -> Self { Self {
             allocations: Mutex::new(HashMap::new()),
          }
+    /// Track Allocation
     pub fn track_allocation(&self, location: &'static str) {
         let mut allocs = self.allocations.lock()?;
         *allocs.entry(location).or_insert(0) += 1;
     }
 
+    /// Report
     pub fn report(&self) -> Vec<(&'static str, u64)> {
         let allocs = self.allocations.lock()?;
         let mut sorted: Vec<_> = allocs.iter().map(|(&k, &v)| (k, v)).collect();

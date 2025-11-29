@@ -488,6 +488,7 @@ impl MiddlewareSecuritySettings {
 // Additional default implementations for nested structures
 
 impl Default for JwtSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             secret: "change-me-in-production".to_string(),
             algorithm: JwtAlgorithm::HS256,
@@ -498,6 +499,7 @@ impl Default for JwtSettings {
 }
 
 impl Default for SessionSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             storage: SessionStorage::Memory,
             timeout: Duration::from_secs(3600),
@@ -506,6 +508,7 @@ impl Default for SessionSettings {
 }
 
 impl Default for CookieSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             name: "nestgate_session".to_string(),
             domain: None,
@@ -517,6 +520,7 @@ impl Default for CookieSettings {
 }
 
 impl Default for AuthorizationMiddlewareSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             enabled: false,
             model: AuthorizationModel::Rbac,
@@ -526,6 +530,7 @@ impl Default for AuthorizationMiddlewareSettings {
 }
 
 impl Default for CorsSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             enabled: false,
             allowed_origins: Vec::new(),
@@ -538,6 +543,7 @@ impl Default for CorsSettings {
 }
 
 impl Default for RateLimitingSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             enabled: false,
             rules: Vec::new(),
@@ -550,6 +556,7 @@ impl Default for RateLimitingSettings {
 }
 
 impl Default for SecurityHeadersSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             enabled: false,
             csp: None,
@@ -561,6 +568,7 @@ impl Default for SecurityHeadersSettings {
 }
 
 impl Default for HtmlSanitizationSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             enabled: false,
             allowed_tags: vec!["p".to_string(), "br".to_string(), "strong".to_string()],
@@ -569,6 +577,7 @@ impl Default for HtmlSanitizationSettings {
 }
 
 impl Default for SqlInjectionSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             enabled: true,
             parameterized_only: true,
@@ -576,6 +585,7 @@ impl Default for SqlInjectionSettings {
 }
 
 impl Default for XssSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             enabled: true,
             input_encoding: true,

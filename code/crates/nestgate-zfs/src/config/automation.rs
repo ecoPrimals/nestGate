@@ -20,6 +20,7 @@ use serde::{Deserialize, Serialize};
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for DatasetAutomation
 pub struct DatasetAutomationConfig {
     /// Enable dataset automation
     pub enabled: bool,
@@ -34,6 +35,7 @@ pub struct DatasetAutomationConfig {
 }
 /// AI-powered automation settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Aiautomationsettings
 pub struct AiAutomationSettings {
     /// Enable AI-powered optimizations
     pub ai_enabled: bool,
@@ -45,6 +47,7 @@ pub struct AiAutomationSettings {
     pub confidence_threshold: f64,
 }
 impl Default for DatasetAutomationConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -62,6 +65,7 @@ impl Default for DatasetAutomationConfig {
 }
 
 impl Default for AiAutomationSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             ai_enabled: false,
@@ -94,6 +98,7 @@ impl AiAutomationSettings {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Datasetautomationconfigcanonical
 pub type DatasetAutomationConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 

@@ -6,6 +6,7 @@ use std::collections::HashMap;
 
 /// Security configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Security
 pub struct SecurityConfig {
     /// Enable security
     pub enabled: bool,
@@ -16,6 +17,7 @@ pub struct SecurityConfig {
 }
 /// Authentication configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Auth
 pub struct AuthConfig {
     /// Enable authentication
     pub enabled: bool,
@@ -25,6 +27,7 @@ pub struct AuthConfig {
     pub auth_settings: HashMap<String, serde_json::Value>,
 }
 impl Default for SecurityConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -35,6 +38,7 @@ impl Default for SecurityConfig {
 }
 
 impl Default for AuthConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: false,

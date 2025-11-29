@@ -5,6 +5,8 @@
 // This eliminates constant duplication and provides a single source of truth.
 
 // **CANONICAL MODERNIZATION**: Use unified constants from core
+//! Constants module
+
 pub use nestgate_core::canonical_modernization::canonical_constants::{
     api::*, 
     network::*,

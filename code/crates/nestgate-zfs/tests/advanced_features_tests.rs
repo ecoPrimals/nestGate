@@ -1,6 +1,8 @@
 //
 // Simplified tests for basic functionality without ecosystem integration
 
+//! Advanced Features Tests module
+
 use nestgate_zfs::performance_engine::BottleneckSeverity;
 use std::collections::HashMap;
 use std::time::SystemTime;
@@ -48,6 +50,7 @@ pub struct RetentionAnalyzer {
 }
 
 impl RetentionAnalyzer {
+    /// Creates a new instance
     pub fn new() -> Self {
         Self {
             config: HashMap::new(),
@@ -56,6 +59,7 @@ impl RetentionAnalyzer {
 }
 
 impl Default for RetentionAnalyzer {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

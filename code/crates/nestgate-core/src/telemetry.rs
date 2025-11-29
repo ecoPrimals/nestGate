@@ -38,6 +38,7 @@ use serde::{Serialize, Deserialize};
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for Telemetry
 pub struct TelemetryConfig {
     /// Collection interval for system metrics
     pub collection_interval: Duration,
@@ -51,6 +52,7 @@ pub struct TelemetryConfig {
     pub export_endpoints: Vec<ExportEndpoint>,
 }
 impl Default for TelemetryConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             collection_interval: Duration::from_secs(10),
@@ -64,23 +66,32 @@ impl Default for TelemetryConfig {
 
 /// Export endpoint configuration
 #[derive(Debug, Clone)]
+/// Exportendpoint
 pub struct ExportEndpoint {
+    /// Name
     pub name: String,
+    /// Url
     pub url: String,
+    /// Format
     pub format: ExportFormat,
+    /// Interval
     pub interval: Duration,
 }
 /// Export format for telemetry data
 /// MODERNIZED: Uses capability-based discovery instead of vendor hardcoding
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Exportformat
 pub enum ExportFormat {
+    /// Json
     Json,
     // DEPRECATED: Prometheus hardcoding - migrate to capability-based monitoring
     #[deprecated(since = "3.0.0", note = "Use capability-based monitoring discovery")]
+    /// Prometheus
     Prometheus,
     Custom(String),
     // DEPRECATED: InfluxDB hardcoding - migrate to capability-based monitoring  
     #[deprecated(since = "3.0.0", note = "Use capability-based monitoring discovery")]
+    /// Influxdb
     InfluxDb,
     /// NEW: Capability-based monitoring export
     MonitoringCapability {
@@ -96,6 +107,7 @@ pub struct TelemetryCollector {
 }
 /// Centralized metrics registry
 #[derive(Debug, Default)]
+/// Metricsregistry
 pub struct MetricsRegistry {
     /// Counter metrics (monotonically increasing values)
     counters: HashMap<String, CounterMetric>,
@@ -108,45 +120,73 @@ pub struct MetricsRegistry {
 }
 /// Counter metric (monotonically increasing)
 #[derive(Debug, Clone)]
+/// Countermetric
 pub struct CounterMetric {
+    /// Name
     pub name: String,
+    /// Help
     pub help: String,
+    /// Value
     pub value: f64,
+    /// Labels
     pub labels: HashMap<String, String>,
+    /// Last Updated
     pub last_updated: SystemTime,
 }
 /// Gauge metric (current value)
 #[derive(Debug, Clone)]
+/// Gaugemetric
 pub struct GaugeMetric {
+    /// Name
     pub name: String,
+    /// Help
     pub help: String,
+    /// Value
     pub value: f64,
+    /// Labels
     pub labels: HashMap<String, String>,
+    /// Last Updated
     pub last_updated: SystemTime,
 }
 /// Histogram metric (distribution of values)
 #[derive(Debug, Clone)]
+/// Histogrammetric
 pub struct HistogramMetric {
+    /// Name
     pub name: String,
+    /// Help
     pub help: String,
+    /// Buckets
     pub buckets: Vec<f64>,
+    /// Counts
     pub counts: Vec<u64>,
+    /// Sum
     pub sum: f64,
+    /// Count
     pub count: u64,
+    /// Labels
     pub labels: HashMap<String, String>,
+    /// Last Updated
     pub last_updated: SystemTime,
 }
 /// Time series data point
 #[derive(Debug, Clone)]
+/// Datapoint
 pub struct DataPoint {
+    /// Timestamp
     pub timestamp: SystemTime,
+    /// Value
     pub value: f64,
 }
 /// Time series data collection
 #[derive(Debug)]
+/// Timeseries
 pub struct TimeSeries {
+    /// Name
     pub name: String,
+    /// Data Points
     pub data_points: Vec<DataPoint>,
+    /// Max Points
     pub max_points: usize,
 }
 impl TelemetryCollector {
@@ -705,6 +745,7 @@ impl TimeSeries {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Telemetryconfigcanonical
 pub type TelemetryConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using TelemetryConfig (the deprecated struct) for now.

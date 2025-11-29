@@ -24,16 +24,19 @@ mod error_conversion_tests {
 
     #[test]
     fn test_error_chain_depth() {
+        /// Level3
         fn level3() -> Result<()> {
             Err(NestGateError::internal_error("level3", "deep"))
         }
 
+        /// Level2
         fn level2() -> Result<()> {
             level3()
                 .map_err(|e| NestGateError::internal_error(format!("level2: {}", e), "middle"))?;
             Ok(())
         }
 
+        /// Level1
         fn level1() -> Result<()> {
             level2().map_err(|e| NestGateError::internal_error(format!("level1: {}", e), "top"))?;
             Ok(())
@@ -53,6 +56,7 @@ mod error_conversion_tests {
 
     #[test]
     fn test_error_recovery_patterns() {
+        /// Might Fail
         fn might_fail(should_fail: bool) -> Result<String> {
             if should_fail {
                 Err(NestGateError::network_error("connection failed"))
@@ -168,10 +172,12 @@ mod error_propagation_tests {
 
     #[test]
     fn test_question_mark_operator() {
+        /// Inner
         fn inner() -> Result<i32> {
             Err(NestGateError::validation_error("inner error"))
         }
 
+        /// Outer
         fn outer() -> Result<String> {
             let value = inner()?;
             Ok(format!("value: {}", value))
@@ -182,6 +188,7 @@ mod error_propagation_tests {
 
     #[test]
     fn test_map_err_propagation() {
+        /// Operation
         fn operation() -> Result<i32> {
             Err(NestGateError::internal_error("original", "context"))
         }
@@ -195,10 +202,12 @@ mod error_propagation_tests {
 
     #[test]
     fn test_and_then_propagation() {
+        /// Step1
         fn step1() -> Result<i32> {
             Ok(42)
         }
 
+        /// Step2
         fn step2(value: i32) -> Result<String> {
             if value > 40 {
                 Ok(format!("value: {}", value))
@@ -261,6 +270,7 @@ mod error_edge_cases {
 
     #[test]
     fn test_option_with_error() {
+        /// Might Return None
         fn might_return_none() -> Option<Result<i32>> {
             Some(Err(NestGateError::internal_error(
                 "error in option",
@@ -351,6 +361,7 @@ mod error_integration_tests {
 
     #[test]
     fn test_batch_error_handling() {
+        /// Processes  Item
         fn process_item(item: i32) -> Result<i32> {
             if item % 2 == 0 {
                 Ok(item * 2)

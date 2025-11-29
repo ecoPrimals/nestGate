@@ -228,6 +228,7 @@ mod tests {
             let event = AuditEvent {
                 id: format!("event-{i}"),
                 timestamp: Utc::now(),
+                /// Event Type
                 event_type,
                 user_id: Some(format!("user-{i}")),
                 path: format!("/path/{i}"),

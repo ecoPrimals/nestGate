@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 /// memory consumption, throughput, and latency measurements for real-time
 /// monitoring and historical analysis.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performancemetrics
 pub struct PerformanceMetrics {
     /// CPU usage percentage (0.0 to 100.0)
     pub cpu_usage: f64,

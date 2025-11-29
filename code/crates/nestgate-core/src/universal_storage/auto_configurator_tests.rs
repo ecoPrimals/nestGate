@@ -419,6 +419,7 @@ fn create_test_storage(name: &str, capacity_gb: u64) -> DetectedStorage {
     use crate::universal_storage::storage_detector::{CostProfile, PerformanceProfile};
     use std::collections::HashMap;
 
+    /// Detectedstorage
     DetectedStorage {
         identifier: name.to_string(),
         storage_type: UnifiedStorageType::Zfs,

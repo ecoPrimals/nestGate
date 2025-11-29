@@ -5,6 +5,7 @@ use std::time::SystemTime;
 
 /// Alert notification channel types
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Alertchannel
 pub enum AlertChannel {
     /// Email notification
     Email {
@@ -40,6 +41,7 @@ pub enum AlertChannel {
 }
 /// SMTP server configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Smtp
 pub struct SmtpConfig {
     /// SMTP server hostname
     pub host: String,
@@ -54,6 +56,7 @@ pub struct SmtpConfig {
 }
 /// Record of a notification sent
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Notificationrecord
 pub struct NotificationRecord {
     /// Alert ID that triggered the notification
     pub alert_id: String,

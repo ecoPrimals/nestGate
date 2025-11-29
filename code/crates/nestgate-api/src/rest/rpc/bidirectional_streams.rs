@@ -2,6 +2,8 @@
 // Manages bidirectional WebSocket streams for real-time communication.
 // Provides stream lifecycle management and event routing.
 
+//! Bidirectional Streams module
+
 use super::{RpcError, RpcStreamEvent, UnifiedRpcRequest};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -24,6 +26,7 @@ struct ActiveStream {
     created_at: chrono::DateTime<chrono::Utc>,
 }
 impl Default for BidirectionalStreamManager {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

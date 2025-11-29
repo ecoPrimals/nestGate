@@ -1,6 +1,7 @@
 
 /// Validation error types
 #[derive(Debug, Clone)]
+/// Errors that can occur during Validation operations
 pub enum ValidationError {
     /// Invalid format
     InvalidFormat { field: String, reason: String },
@@ -14,6 +15,7 @@ pub enum ValidationError {
     },
 }
 impl std::fmt::Display for ValidationError {
+    /// Fmt
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             ValidationError::InvalidFormat { field, reason } => {

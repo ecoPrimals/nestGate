@@ -9,6 +9,7 @@ use std::collections::HashMap;
 
 /// Unified error response structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for UnifiedError operation
 pub struct UnifiedErrorResponse {
     /// Error message for display
     pub message: String,
@@ -101,6 +102,7 @@ impl UnifiedErrorResponse {
 }
 
 impl IntoResponse for UnifiedErrorResponse {
+    /// Into Response
     fn into_response(self) -> Response {
         let status_code = self.to_status_code();
         (status_code, Json(self)).into_response()
@@ -226,12 +228,17 @@ impl ErrorResponseFactory {
 
 /// Legacy error response for backward compatibility
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for LegacyError operation
 pub struct LegacyErrorResponse {
+    /// Error
     pub error: String,
+    /// Code
     pub code: Option<String>,
+    /// Timestamp
     pub timestamp: String,
 }
 impl From<UnifiedErrorResponse> for LegacyErrorResponse {
+    /// From
     fn from(unified: UnifiedErrorResponse) -> Self {
         Self {
             error: unified.message,
@@ -242,6 +249,7 @@ impl From<UnifiedErrorResponse> for LegacyErrorResponse {
 }
 
 impl IntoResponse for LegacyErrorResponse {
+    /// Into Response
     fn into_response(self) -> Response {
         (StatusCode::INTERNAL_SERVER_ERROR, Json(self)).into_response()
     }

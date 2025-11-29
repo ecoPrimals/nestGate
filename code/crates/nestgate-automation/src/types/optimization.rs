@@ -3,22 +3,33 @@ use std::collections::HashMap;
 
 /// Result of optimization operations
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
+/// Optimizationresult
 pub struct OptimizationResult {
+    /// Successful Optimizations
     pub successful_optimizations: u32,
+    /// Failed Optimizations
     pub failed_optimizations: u32,
+    /// Optimized Datasets
     pub optimized_datasets: Vec<String>,
+    /// Errors
     pub errors: Vec<String>,
 }
 /// Property change recommendation
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Propertychange
 pub struct PropertyChange {
+    /// Property name
     pub property_name: String,
+    /// Currentvalue
     pub currentvalue: String,
+    /// Recommendedvalue
     pub recommendedvalue: String,
+    /// Reason
     pub reason: String,
 }
 /// Optimization plan for distributed processing
 #[derive(Debug, Clone)]
+/// Optimizationplan
 pub enum OptimizationPlan {
     /// Distribute optimization across multiple services
     Distributed {
@@ -31,6 +42,7 @@ pub enum OptimizationPlan {
 }
 /// Tier threshold configuration for automated storage management
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Tierthresholds
 pub struct TierThresholds {
     /// Hot tier threshold (access frequency per day)
     pub hot_threshold: f64,
@@ -45,6 +57,7 @@ pub struct TierThresholds {
 }
 /// Size-based thresholds for tier assignment
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Sizethresholds
 pub struct SizeThresholds {
     /// Small file threshold (bytes)
     pub small_file: u64,
@@ -53,6 +66,7 @@ pub struct SizeThresholds {
 }
 /// Age-based thresholds for tier assignment
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Agethresholds
 pub struct AgeThresholds {
     /// Recent file threshold (days)
     pub recent: u32,
@@ -60,6 +74,7 @@ pub struct AgeThresholds {
     pub old: u32,
 }
 impl Default for TierThresholds {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             hot_threshold: 10.0, // 10+ accesses per day
@@ -72,6 +87,7 @@ impl Default for TierThresholds {
 }
 
 impl Default for SizeThresholds {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             small_file: {
@@ -87,6 +103,7 @@ impl Default for SizeThresholds {
 }
 
 impl Default for AgeThresholds {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             recent: 7, // 7 days
@@ -97,6 +114,7 @@ impl Default for AgeThresholds {
 
 /// Performance expectation for storage operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performanceexpectation
 pub struct PerformanceExpectation {
     /// Expected IOPS (Input/Output Operations Per Second)
     pub expected_iops: u32,
@@ -110,6 +128,7 @@ pub struct PerformanceExpectation {
     pub expected_durability_nines: u32,
 }
 impl Default for PerformanceExpectation {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             expected_iops: 1000,

@@ -2,6 +2,8 @@
 // This module provides session handling for the MCP service, including
 // client authentication, session tracking, and session cleanup.
 
+//! Session module
+
 use chrono::{DateTime, Utc};
 use std::collections::HashMap;
 use std::time::Duration;
@@ -13,6 +15,7 @@ use tracing::debug;
 
 /// Session state
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// Sessionstate
 pub enum SessionState {
     /// Session is active
     Active,
@@ -27,6 +30,7 @@ pub enum SessionState {
 }
 /// Client authentication level
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+/// Authlevel
 pub enum AuthLevel {
     /// No authentication
     None,
@@ -39,6 +43,7 @@ pub enum AuthLevel {
 }
 /// Session information
 #[derive(Debug, Clone)]
+/// Session
 pub struct Session {
     /// Session ID
     pub id: String,
@@ -100,6 +105,7 @@ impl Session {
 
 /// Session manager
 #[derive(Debug)]
+/// Manager for Session operations
 pub struct SessionManager {
     /// Active sessions
     sessions: HashMap<String, Session>,
@@ -238,6 +244,7 @@ impl SessionManager {
 }
 
 impl Default for SessionManager {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

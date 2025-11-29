@@ -1,4 +1,6 @@
 // Removed unused import: NestGateError
+//! Storage Detector module
+
 use std::collections::HashMap;
 //
 // **MODULARIZATION COMPLETE** - Successfully refactored storage_detector.rs from 950 lines
@@ -41,6 +43,7 @@ pub struct StorageDetector {
     cache: HashMap<String, DetectedStorage>,
 }
 impl Default for StorageDetector {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

@@ -13,6 +13,7 @@ use tracing::{debug, info, warn};
 
 // Type aliases to reduce complexity
 type FallbackProvidersMap = Arc<RwLock<HashMap<String, FallbackProviderWrapper>>>;
+/// Type alias for ConnectionCacheMap
 type ConnectionCacheMap = Arc<RwLock<HashMap<String, serde_json::Value>>>;
 
 /// Configuration for capability routing behavior
@@ -35,6 +36,7 @@ type ConnectionCacheMap = Arc<RwLock<HashMap<String, serde_json::Value>>>;
     since = "0.11.0",
     note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for CapabilityRouting
 pub struct CapabilityRoutingConfig {
     /// Timeout for universal adapter attempts
     pub adapter_timeout: Duration,
@@ -47,6 +49,7 @@ pub struct CapabilityRoutingConfig {
 }
 #[allow(deprecated)]
 impl Default for CapabilityRoutingConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             adapter_timeout: Duration::from_secs(5),
@@ -59,6 +62,7 @@ impl Default for CapabilityRoutingConfig {
 
 /// Errors that can occur during capability routing
 #[derive(Debug, thiserror::Error)]
+/// Errors that can occur during CapabilityRouting operations
 pub enum CapabilityRoutingError {
     #[error("No fallback available for capability: {0}")]
     NoFallbackAvailable(String),
@@ -69,6 +73,7 @@ pub enum CapabilityRoutingError {
     #[error("Serialization error: {0}")]
     SerializationError(String),
     #[error("Timeout waiting for adapter response")]
+    /// Timeout
     Timeout,
 }
 /// Trait for fallback providers
@@ -92,6 +97,7 @@ pub trait FallbackProvider: Send + Sync {
 
 /// Enum wrapper for fallback providers to avoid trait object issues
 #[derive(Debug)]
+/// Fallbackproviderwrapper
 pub enum FallbackProviderWrapper {
     Security(crate::ecosystem_integration::fallback_providers::security::SecurityFallbackProvider),
     Ai(crate::ecosystem_integration::fallback_providers::ai::AiFallbackProvider),
@@ -99,6 +105,7 @@ pub enum FallbackProviderWrapper {
     Zfs(crate::ecosystem_integration::fallback_providers::zfs::ZfsFallbackProvider),
 }
 impl FallbackProviderWrapper {
+    /// Execute
     pub async fn execute(
         &self,
         operation: &str,
@@ -154,12 +161,19 @@ pub struct UniversalCapabilityRouter {
 }
 /// Metrics for monitoring routing performance
 #[derive(Debug, Default)]
+/// Routingmetrics
 pub struct RoutingMetrics {
+    /// Total Requests
     pub total_requests: u64,
+    /// Adapter Successes
     pub adapter_successes: u64,
+    /// Adapter Failures
     pub adapter_failures: u64,
+    /// Fallback Uses
     pub fallback_uses: u64,
+    /// Cache Hits
     pub cache_hits: u64,
+    /// Average Response Time Ms
     pub average_response_time_ms: f64,
 }
 impl UniversalCapabilityRouter {
@@ -413,12 +427,19 @@ impl UniversalCapabilityRouter {
 
 /// Health status of the router
 #[derive(Debug, Serialize, Deserialize)]
+/// Routerhealthstatus
 pub struct RouterHealthStatus {
+    /// Healthy
     pub healthy: bool,
+    /// Adapter Available
     pub adapter_available: bool,
+    /// Registered Capabilities
     pub registered_capabilities: usize,
+    /// Total Requests
     pub total_requests: u64,
+    /// Success Rate
     pub success_rate: f64,
+    /// Average Response Time Ms
     pub average_response_time_ms: f64,
 }
 // Tests temporarily commented out due to string encoding issues
@@ -434,6 +455,7 @@ pub struct RouterHealthStatus {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Capabilityroutingconfigcanonical
 pub type CapabilityRoutingConfigCanonical =
     crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 

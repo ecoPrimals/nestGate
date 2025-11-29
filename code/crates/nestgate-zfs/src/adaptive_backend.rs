@@ -13,6 +13,7 @@ use tracing::{debug, info, warn};
 
 /// ZFS availability status
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// Zfsavailability
 pub enum ZfsAvailability {
     /// System ZFS is available and functional
     SystemZfs,
@@ -24,6 +25,7 @@ pub enum ZfsAvailability {
 
 /// ZFS backend capability detection result
 #[derive(Debug, Clone)]
+/// Zfscapabilities
 pub struct ZfsCapabilities {
     /// What ZFS implementation is available
     pub availability: ZfsAvailability,

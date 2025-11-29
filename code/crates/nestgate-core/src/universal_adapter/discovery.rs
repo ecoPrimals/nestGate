@@ -32,6 +32,7 @@ use tracing::{debug, warn}; // Removed unused 'info' for pedantic perfection
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for Discovery
 pub struct DiscoveryConfig {
     /// Discovery endpoint
     pub endpoint: String,
@@ -46,6 +47,7 @@ pub struct DiscoveryConfig {
 }
 #[allow(deprecated)]
 impl Default for DiscoveryConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             endpoint: crate::constants::canonical_defaults::network::build_endpoint(),
@@ -62,6 +64,7 @@ impl Default for DiscoveryConfig {
 
 /// Discovery methods
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Discoverymethod
 pub enum DiscoveryMethod {
     /// Environment variable discovery
     Environment,
@@ -76,6 +79,7 @@ pub enum DiscoveryMethod {
 }
 /// Discovered service information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Service implementation for Discovered
 pub struct DiscoveredService {
     /// Service identifier
     pub id: String,
@@ -98,6 +102,7 @@ pub struct DiscoveredService {
 }
 /// Discovery result
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Discoveryresult
 pub struct DiscoveryResult {
     /// Discovered services
     pub services: Vec<DiscoveredService>,
@@ -163,6 +168,7 @@ pub fn health_check_service(service: &DiscoveredService) -> Result<bool> {
 
 /// Capability discovery service for universal adapter
 #[derive(Debug, Clone)]
+/// Capabilitydiscovery
 pub struct CapabilityDiscovery {
     registry: HashMap<String, Vec<String>>,
     discovery_endpoints: Vec<String>,
@@ -294,6 +300,7 @@ impl CapabilityDiscovery {
 }
 
 impl Default for CapabilityDiscovery {
+    /// Returns the default instance
     fn default() -> Self {
         // CapabilityDiscovery::new() cannot actually fail - it just initializes data structures
         // If it ever returns an error, we use empty defaults as fallback
@@ -314,6 +321,7 @@ impl Default for CapabilityDiscovery {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Discoveryconfigcanonical
 pub type DiscoveryConfigCanonical =
     crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 

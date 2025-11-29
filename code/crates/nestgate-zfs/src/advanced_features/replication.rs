@@ -8,6 +8,7 @@ use tracing::debug;
 
 /// Replication analytics without AI recommendations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Replicationanalytics
 pub struct ReplicationAnalytics {
     /// Current replication strategy
     pub strategy: String,
@@ -58,6 +59,7 @@ impl ReplicationAnalytics {
 mod tests {
     use super::*;
 
+    /// Creates  Test Performance
     fn create_test_performance(
         transfer_rate: f64,
         compression_ratio: f64,

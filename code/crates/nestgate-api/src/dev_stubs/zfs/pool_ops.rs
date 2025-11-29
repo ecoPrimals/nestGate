@@ -10,9 +10,13 @@
 use super::config::ProductionZfsManager;
 use super::types::{ZeroCostPoolInfo, ZfsError};
 
+/// PoolOperations trait
 pub trait PoolOperations {
+    /// List Pools
     fn list_pools(&self) -> Result<Vec<ZeroCostPoolInfo>, ZfsError>;
+    /// Gets Pool Status
     fn get_pool_status(&self, pool: &str) -> Result<String, ZfsError>;
+    /// Creates  Pool
     fn create_pool(
         &self,
         name: &str,
@@ -22,6 +26,7 @@ pub trait PoolOperations {
 }
 
 impl PoolOperations for ProductionZfsManager {
+    /// List Pools
     fn list_pools(&self) -> Result<Vec<ZeroCostPoolInfo>, ZfsError> {
         Ok(vec![
             ZeroCostPoolInfo {
@@ -41,10 +46,12 @@ impl PoolOperations for ProductionZfsManager {
         ])
     }
 
+    /// Gets Pool Status
     fn get_pool_status(&self, pool: &str) -> Result<String, ZfsError> {
         Ok(format!("Pool {} is ONLINE (STUB)", pool))
     }
 
+    /// Creates  Pool
     fn create_pool(
         &self,
         name: &str,

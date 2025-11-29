@@ -55,6 +55,7 @@ impl PerformanceComparison {
             }
         }
 
+        /// Trendanalysis
         TrendAnalysis {
             trends: trend_data,
             total_snapshots: historical_results.len(),
@@ -64,9 +65,13 @@ impl PerformanceComparison {
 
 /// Report comparing two sets of benchmark results
 #[derive(Debug, Clone)]
+/// Comparisonreport
 pub struct ComparisonReport {
+    /// Improvements
     pub improvements: HashMap<String, f64>,
+    /// Regressions
     pub regressions: HashMap<String, f64>,
+    /// Total Patterns Compared
     pub total_patterns_compared: usize,
 }
 impl ComparisonReport {
@@ -88,8 +93,11 @@ impl ComparisonReport {
 
 /// Analysis of performance trends over time
 #[derive(Debug, Clone)]
+/// Trendanalysis
 pub struct TrendAnalysis {
+    /// Trends
     pub trends: HashMap<String, Vec<(usize, f64)>>,
+    /// Total Snapshots
     pub total_snapshots: usize,
 }
 impl TrendAnalysis {
@@ -119,6 +127,7 @@ impl TrendAnalysis {
 }
 
 impl Default for TrendAnalysis {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             trends: HashMap::new(),
@@ -129,9 +138,14 @@ impl Default for TrendAnalysis {
 
 /// Direction of performance trend
 #[derive(Debug, Clone, PartialEq)]
+/// Trenddirection
 pub enum TrendDirection {
+    /// Improving
     Improving,
+    /// Declining
     Declining,
+    /// Stable
     Stable,
+    /// Unknown
     Unknown,
 }

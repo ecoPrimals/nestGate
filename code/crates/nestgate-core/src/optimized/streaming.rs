@@ -1,3 +1,5 @@
+//! Streaming module
+
 use crate::error::NestGateError;
 //
 // **PHASE 2 ENHANCEMENT** - High-performance streaming with:
@@ -36,6 +38,7 @@ use crate::universal_storage::zero_copy::AdvancedZeroCopyBuffer;
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for Streaming
 pub struct StreamingConfig {
     /// Default chunk size for streaming operations
     pub default_chunk_size: usize,
@@ -55,6 +58,7 @@ pub struct StreamingConfig {
     pub adaptive_buffering: bool,
 }
 impl Default for StreamingConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             default_chunk_size: 64 * 1024,        // 64KB
@@ -101,6 +105,7 @@ pub struct AdvancedStreamWriter {
 }
 /// Streaming performance metrics
 #[derive(Debug, Default)]
+/// Streamingmetrics
 pub struct StreamingMetrics {
     /// Total bytes read
     pub bytes_read: u64,
@@ -366,8 +371,10 @@ impl ChunkedStream {
 }
 
 impl Stream for ChunkedStream {
+    /// Type alias for Item
     type Item = Result<AdvancedZeroCopyBuffer<'static>>;
     
+    /// Poll Next
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         // Simplified implementation - would need proper async polling in production
         match futures::executor::block_on(self.reader.read_chunk()) {
@@ -496,6 +503,7 @@ impl StreamingUtils {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Streamingconfigcanonical
 pub type StreamingConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using StreamingConfig (the deprecated struct) for now.

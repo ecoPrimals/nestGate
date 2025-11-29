@@ -33,6 +33,7 @@ pub use nestgate_core::config::canonical_primary::{
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for Remote
 pub struct RemoteConfig {
     /// Remote ZFS service endpoint URL
     pub endpoint: String,
@@ -96,6 +97,7 @@ pub type SecurityConfig = ZfsSecurityConfig;
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for CircuitBreaker
 pub struct CircuitBreakerConfig {
     /// Whether circuit breaker is enabled
     pub enabled: bool,
@@ -108,6 +110,7 @@ pub struct CircuitBreakerConfig {
 }
 
 impl Default for CircuitBreakerConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -138,6 +141,7 @@ impl Default for CircuitBreakerConfig {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for Timeout
 pub struct TimeoutConfig {
     /// Timeout for ZFS operations
     pub operation_timeout: Duration,
@@ -148,6 +152,7 @@ pub struct TimeoutConfig {
 }
 
 impl Default for TimeoutConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             operation_timeout: Duration::from_secs(60),
@@ -159,6 +164,7 @@ impl Default for TimeoutConfig {
 
 /// Retry policy configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Retrypolicy
 pub struct RetryPolicy {
     /// Maximum number of retry attempts
     pub max_attempts: u32,
@@ -171,6 +177,7 @@ pub struct RetryPolicy {
 }
 
 impl Default for RetryPolicy {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             max_attempts: 3,
@@ -183,6 +190,7 @@ impl Default for RetryPolicy {
 
 /// ZFS backend type for configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of ZfsBackend
 pub enum ZfsBackendType {
     /// Native ZFS backend (local system commands)
     Native,
@@ -201,6 +209,7 @@ pub enum ZfsBackendType {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Remoteconfigcanonical
 pub type RemoteConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
@@ -217,6 +226,7 @@ pub type RemoteConfigCanonical =
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Circuitbreakerconfigcanonical
 pub type CircuitBreakerConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
@@ -233,6 +243,7 @@ pub type CircuitBreakerConfigCanonical =
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Timeoutconfigcanonical
 pub type TimeoutConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 

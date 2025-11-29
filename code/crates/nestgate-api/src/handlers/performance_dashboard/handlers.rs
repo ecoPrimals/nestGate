@@ -165,6 +165,7 @@ impl PerformanceDashboard {
 
 /// Query parameters for dashboard endpoints
 #[derive(Debug, Deserialize)]
+/// Dashboardquery
 pub struct DashboardQuery {
     /// Time range for data (optional)
     pub range: Option<String>,

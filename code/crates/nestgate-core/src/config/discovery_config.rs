@@ -19,6 +19,7 @@ use std::env;
 ///
 /// Replaces hardcoded URLs like "http://localhost:8080" with configurable endpoints.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ServiceDiscovery
 pub struct ServiceDiscoveryConfig {
     /// List of discovery endpoints
     pub endpoints: Vec<String>,
@@ -40,9 +41,10 @@ pub struct ServiceDiscoveryConfig {
 }
 
 impl Default for ServiceDiscoveryConfig {
+    /// Returns the default instance
     fn default() -> Self {
         use crate::constants::hardcoding::{addresses, ports};
-        
+
         Self {
             endpoints: Self::load_endpoints_from_env(),
             discovery_host: env::var("NESTGATE_DISCOVERY_HOST")

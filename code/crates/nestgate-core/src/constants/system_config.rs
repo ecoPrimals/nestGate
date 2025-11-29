@@ -10,6 +10,7 @@ use std::sync::Arc;
 /// This struct captures all environment variables at initialization time,
 /// eliminating the need for runtime `env::var()` calls.
 #[derive(Debug, Clone)]
+/// Configuration for System
 pub struct SystemConfig {
     // System settings
     timeout_ms: u64,
@@ -220,6 +221,7 @@ impl SystemConfig {
 }
 
 impl Default for SystemConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

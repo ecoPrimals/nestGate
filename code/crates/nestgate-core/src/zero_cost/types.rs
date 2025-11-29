@@ -5,77 +5,113 @@
 
 /// Zero-cost request structure
 #[derive(Debug, Clone)]
+/// Request parameters for ZeroCost operation
 pub struct ZeroCostRequest {
+    /// Unique identifier
     pub id: u64,
+    /// Data
     pub data: Vec<u8>,
+    /// Additional metadata key-value pairs
     pub metadata: ZeroCostMetadata,
 }
 
 /// Zero-cost response structure  
 #[derive(Debug, Clone)]
+/// Response data for ZeroCost operation
 pub struct ZeroCostResponse {
+    /// Unique identifier
     pub id: u64,
+    /// Data
     pub data: Vec<u8>,
+    /// Success
     pub success: bool,
 }
 
 /// Zero-cost metadata - no heap allocations
 #[derive(Debug, Clone)]
+/// Zerocostmetadata
 pub struct ZeroCostMetadata {
+    /// Timestamp
     pub timestamp: u64,
+    /// Priority
     pub priority: RequestPriority,
+    /// Source
     pub source: [u8; 32], // Fixed-size array to avoid allocations
 }
 
 /// Zero-cost performance metrics
 #[derive(Debug, Clone)]
+/// Zerocostmetrics
 pub struct ZeroCostMetrics {
+    /// Requests Processed
     pub requests_processed: u64,
+    /// Average Latency Ns
     pub average_latency_ns: u64,
 }
 
 /// Zero-cost error enumeration
 #[derive(Debug, Clone, PartialEq)]
+/// Errors that can occur during ZeroCost operations
 pub enum ZeroCostError {
+    /// Cacheerror
     CacheError,
+    /// Securityerror
     SecurityError,
+    /// Storageerror
     StorageError,
+    /// Invalidrequest
     InvalidRequest,
+    /// Systemoverload
     SystemOverload,
 }
 
 /// Zero-cost performance metrics
 #[derive(Debug, Clone, Default)]
+/// Zerocostperformancemetrics
 pub struct ZeroCostPerformanceMetrics {
+    /// Throughput Ops Per Sec
     pub throughput_ops_per_sec: u64,
+    /// Latency P95 Ns
     pub latency_p95_ns: u64,
+    /// Memory Usage Bytes
     pub memory_usage_bytes: u64,
 }
 
 /// Zero-cost benchmark results
 #[derive(Debug, Clone)]
+/// Zerocostbenchmarkresults
 pub struct ZeroCostBenchmarkResults {
+    /// Traditional Latency Ns
     pub traditional_latency_ns: u64,
+    /// Zero Cost Latency Ns
     pub zero_cost_latency_ns: u64,
+    /// Improvement Percent
     pub improvement_percent: f64,
 }
 
 /// Request priority for metadata
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// Requestpriority
 pub enum RequestPriority {
+    /// Low
     Low,
+    /// Normal
     Normal,
+    /// High
     High,
+    /// Critical
     Critical,
 }
 
 impl Default for RequestPriority {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Normal
     }
 }
 
 impl std::fmt::Display for ZeroCostError {
+    /// Fmt
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::CacheError => write!(f, "Cache operation failed"),

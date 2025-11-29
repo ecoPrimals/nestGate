@@ -18,144 +18,220 @@ use std::time::Duration;
 // ==================== PRIMARY ZFS CONFIGURATION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for ZfsStorage
 pub struct ZfsStorageConfig {
+    /// Whether this feature is enabled
     pub enabled: bool,
+    /// Pools
     pub pools: Vec<ZfsPoolConfig>,
+    /// Datasets
     pub datasets: ZfsDatasetConfig,
+    /// Snapshots
     pub snapshots: ZfsSnapshotConfig,
+    /// Maintenance
     pub maintenance: ZfsMaintenanceConfig,
+    /// Performance
     pub performance: ZfsPerformanceConfig,
+    /// Security
     pub security: ZfsSecurityConfig,
+    /// Monitoring
     pub monitoring: ZfsMonitoringConfig,
+    /// Migration
     pub migration: ZfsMigrationConfig,
 }
 
 // ==================== POOL CONFIGURATION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ZfsPool
 pub struct ZfsPoolConfig {
+    /// Name
     pub name: String,
+    /// Devices
     pub devices: Vec<String>,
+    /// Redundancy
     pub redundancy: ZfsRedundancy,
     // Extended fields from canonical_zfs_config
     pub properties: HashMap<String, String>,
+    /// Auto Discovery
     pub auto_discovery: bool,
+    /// Health Check Interval
     pub health_check_interval: Duration,
+    /// Auto Pool Creation
     pub auto_pool_creation: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Zfspoolsettings
 pub struct ZfsPoolSettings {
+    /// Default Pool name
     pub default_pool_name: String,
+    /// Max Pools
     pub max_pools: u32,
+    /// Auto Discovery
     pub auto_discovery: bool,
+    /// Health Check Interval
     pub health_check_interval: Duration,
+    /// Default Properties
     pub default_properties: HashMap<String, String>,
+    /// Auto Pool Creation
     pub auto_pool_creation: bool,
 }
 
 // ==================== DATASET CONFIGURATION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ZfsDataset
 pub struct ZfsDatasetConfig {
+    /// Auto Create
     pub auto_create: bool,
+    /// Compression
     pub compression: ZfsCompression,
+    /// Deduplication
     pub deduplication: bool,
     // Extended fields from canonical_zfs_config
     pub max_datasets_per_pool: u32,
+    /// Quota Enforcement
     pub quota_enforcement: bool,
+    /// Auto Snapshot
     pub auto_snapshot: bool,
 }
 
 // ==================== SNAPSHOT CONFIGURATION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ZfsSnapshot
 pub struct ZfsSnapshotConfig {
+    /// Whether this feature is enabled
     pub enabled: bool,
+    /// Interval
     pub interval: Duration,
+    /// Retention
     pub retention: u32,
     // Extended fields from canonical_zfs_config
     pub auto_snapshot: bool,
+    /// Retention Policy
     pub retention_policy: RetentionPolicy,
+    /// Naming Convention
     pub naming_convention: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Retentionpolicy
 pub struct RetentionPolicy {
+    /// Keep Hourly
     pub keep_hourly: u32,
+    /// Keep Daily
     pub keep_daily: u32,
+    /// Keep Weekly
     pub keep_weekly: u32,
+    /// Keep Monthly
     pub keep_monthly: u32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ZfsMaintenance
 pub struct ZfsMaintenanceConfig {
+    /// Scrub Interval
     pub scrub_interval: Duration,
+    /// Auto Scrub
     pub auto_scrub: bool,
 }
 
 // ==================== PERFORMANCE CONFIGURATION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ZfsPerformance
 pub struct ZfsPerformanceConfig {
+    /// Size of arc
     pub arc_size: Option<u64>,
+    /// Prefetch
     pub prefetch: bool,
     // Extended fields from canonical_zfs_config
     pub arc_cache: ArcCacheConfig,
+    /// L2Arc
     pub l2arc: L2ArcConfig,
+    /// Zil
     pub zil: ZilConfig,
+    /// Configuration for prefetch
     pub prefetch_config: PrefetchConfig,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ArcCache
 pub struct ArcCacheConfig {
+    /// Min Size in megabytes
     pub min_size_mb: u64,
+    /// Max Size in megabytes
     pub max_size_mb: u64,
+    /// Target Size in megabytes
     pub target_size_mb: Option<u64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for L2Arc
 pub struct L2ArcConfig {
+    /// Whether this feature is enabled
     pub enabled: bool,
+    /// Device Path
     pub device_path: Option<PathBuf>,
+    /// Write Boost
     pub write_boost: u64,
+    /// Headroom
     pub headroom: u64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for Zil
 pub struct ZilConfig {
+    /// Whether this feature is enabled
     pub enabled: bool,
+    /// Device Path
     pub device_path: Option<PathBuf>,
+    /// Sync Policy
     pub sync_policy: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for Prefetch
 pub struct PrefetchConfig {
+    /// Whether this feature is enabled
     pub enabled: bool,
+    /// Streams
     pub streams: u32,
+    /// Max Distance
     pub max_distance: u64,
 }
 
 // ==================== SECURITY CONFIGURATION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for ZfsSecurity
 pub struct ZfsSecurityConfig {
+    /// Encryption
     pub encryption: bool,
+    /// Key Location
     pub key_location: Option<String>,
 }
 
 // ==================== MONITORING CONFIGURATION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for ZfsMonitoring
 pub struct ZfsMonitoringConfig {
+    /// Health Check Enabled
     pub health_check_enabled: bool,
+    /// Health Check Interval
     pub health_check_interval: Duration,
+    /// Metrics Collection
     pub metrics_collection: bool,
+    /// Alert Thresholds
     pub alert_thresholds: AlertThresholds,
 }
 
 /// Alert thresholds for ZFS monitoring
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Alertthresholds
 pub struct AlertThresholds {
     /// Pool usage percentage that triggers a warning alert
     pub pool_usage_warning: f64,
@@ -168,35 +244,54 @@ pub struct AlertThresholds {
 // ==================== MIGRATION CONFIGURATION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for ZfsMigration
 pub struct ZfsMigrationConfig {
+    /// Migration Enabled
     pub migration_enabled: bool,
+    /// Bandwidth Limit Mbps
     pub bandwidth_limit_mbps: Option<u64>,
+    /// Compression During Migration
     pub compression_during_migration: bool,
+    /// Verification Enabled
     pub verification_enabled: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Zfscompression
 pub enum ZfsCompression {
+    /// Off
     Off,
+    /// Lzjb
     Lzjb,
+    /// Gzip
     Gzip,
+    /// Zle
     Zle,
+    /// Lz4
     Lz4,
+    /// Zstd
     Zstd,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Zfsredundancy
 pub enum ZfsRedundancy {
+    /// None
     None,
+    /// Mirror
     Mirror,
+    /// Raidz1
     RaidZ1,
+    /// Raidz2
     RaidZ2,
+    /// Raidz3
     RaidZ3,
 }
 
 // ==================== DEFAULT IMPLEMENTATIONS ====================
 
 impl Default for ZfsPoolConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             name: "default-pool".to_string(),
@@ -211,6 +306,7 @@ impl Default for ZfsPoolConfig {
 }
 
 impl Default for ZfsDatasetConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             auto_create: true,
@@ -224,6 +320,7 @@ impl Default for ZfsDatasetConfig {
 }
 
 impl Default for RetentionPolicy {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             keep_hourly: 24,
@@ -235,6 +332,7 @@ impl Default for RetentionPolicy {
 }
 
 impl Default for ZfsSnapshotConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -248,6 +346,7 @@ impl Default for ZfsSnapshotConfig {
 }
 
 impl Default for ZfsMaintenanceConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             scrub_interval: Duration::from_secs(7 * 24 * 3600), // 1 week
@@ -257,6 +356,7 @@ impl Default for ZfsMaintenanceConfig {
 }
 
 impl Default for ArcCacheConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             min_size_mb: 64,
@@ -267,6 +367,7 @@ impl Default for ArcCacheConfig {
 }
 
 impl Default for AlertThresholds {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             pool_usage_warning: 80.0,
@@ -277,6 +378,7 @@ impl Default for AlertThresholds {
 }
 
 impl Default for ZfsPerformanceConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             arc_size: None,
@@ -310,6 +412,7 @@ impl ZfsStorageConfig {
     pub fn merge(self, _other: Self) -> Self {
         self
     }
+    /// Validates data
     pub fn validate(&self) -> crate::Result<()> {
         Ok(())
     }

@@ -19,7 +19,6 @@ pub const DEFAULT_ZFS_CACHE_SIZE: u64 = 1024 * 1024 * 1024; // 1GB
 /// Storage operations need longer timeouts than network operations
 pub const STORAGE_TIMEOUT_SECS: u64 = 60;
 
-/// Maximum file size for operations in bytes (domain-specific)
 pub const MAX_FILE_SIZE: u64 = 100 * 1024 * 1024 * 1024; // 100GB
 
 /// Default block size for ZFS operations (domain-specific)
@@ -29,7 +28,6 @@ pub const DEFAULT_BLOCK_SIZE: usize = 131_072; // 128KB
 /// Default compression level (domain-specific)
 /// Level 6 balances compression ratio vs speed
 pub const DEFAULT_COMPRESSION_LEVEL: u8 = 6;
-/// Maximum snapshot count per dataset
 pub const MAX_SNAPSHOTS_PER_DATASET: u32 = 1000;
 /// Default replication batch size
 pub const DEFAULT_REPLICATION_BATCH_SIZE: usize = 1000;

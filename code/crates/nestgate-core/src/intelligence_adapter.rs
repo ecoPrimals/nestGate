@@ -16,50 +16,80 @@ use tracing::{error, info, warn};
 
 /// Model metadata for AI operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Modelmetadata
 pub struct ModelMetadata {
+    /// Model identifier
     pub model_id: String,
+    /// Model name
     pub model_name: String,
+    /// Model Type
     pub model_type: String,
+    /// Version
     pub version: String,
+    /// Capabilities
     pub capabilities: Vec<String>,
+    /// Parameters
     pub parameters: HashMap<String, serde_json::Value>,
 }
 /// AI inference request
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for AIInference operation
 pub struct AIInferenceRequest {
+    /// Model identifier
     pub model_id: String,
+    /// Input Data
     pub input_data: serde_json::Value,
+    /// Parameters
     pub parameters: HashMap<String, serde_json::Value>,
+    /// Timeout Seconds
     pub timeout_seconds: Option<u64>,
 }
 /// AI inference response
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for AIInference operation
 pub struct AIInferenceResponse {
+    /// Prediction
     pub prediction: serde_json::Value,
+    /// Confidence
     pub confidence: Option<f64>,
+    /// Model Version
     pub model_version: String,
+    /// Processing Time Ms
     pub processing_time_ms: u64,
+    /// Additional metadata key-value pairs
     pub metadata: HashMap<String, serde_json::Value>,
 }
 /// Data analysis task
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Analysistask
 pub struct AnalysisTask {
+    /// Task identifier
     pub task_id: String,
+    /// Analysis Type
     pub analysis_type: String,
+    /// Dataset
     pub dataset: serde_json::Value,
+    /// Parameters
     pub parameters: HashMap<String, serde_json::Value>,
 }
 /// Analysis results
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Analysisresults
 pub struct AnalysisResults {
+    /// Task identifier
     pub task_id: String,
+    /// Results
     pub results: serde_json::Value,
+    /// Insights
     pub insights: Vec<String>,
+    /// Statistics
     pub statistics: HashMap<String, f64>,
+    /// Visualizations
     pub visualizations: Vec<String>,
 }
 /// Intelligence adapter using universal adapter pattern
 #[derive(Debug, Clone)]
+/// Intelligenceadapter
 pub struct IntelligenceAdapter {
     /// Universal adapter for external primal communication
     adapter: Arc<UniversalAdapter>,

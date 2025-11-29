@@ -36,6 +36,7 @@ use super::production_discovery_config::ProductionDiscoveryConfig;
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for ServiceDiscovery
 pub struct ServiceDiscoveryConfig {
     /// Service endpoints discovered from environment/config
     pub services: HashMap<String, ServiceEndpoint>,
@@ -49,24 +50,36 @@ pub struct ServiceDiscoveryConfig {
 
 /// Individual service endpoint information
 #[derive(Debug, Clone)]
+/// Serviceendpoint
 pub struct ServiceEndpoint {
+    /// Name
     pub name: String,
+    /// Host
     pub host: String,
+    /// Port
     pub port: u16,
+    /// Bind Address
     pub bind_address: IpAddr,
 }
 
 /// Default values for fallback when discovery fails
 #[derive(Debug, Clone)]
+/// Discoverydefaults
 pub struct DiscoveryDefaults {
+    /// Default Host
     pub default_host: String,
+    /// Default Bind
     pub default_bind: IpAddr,
+    /// Default Port
     pub default_port: u16,
+    /// Default Timeout
     pub default_timeout: Duration,
+    /// Default Limit
     pub default_limit: usize,
 }
 
 impl Default for DiscoveryDefaults {
+    /// Returns the default instance
     fn default() -> Self {
         use crate::constants::canonical_defaults::network;
         use std::net::Ipv4Addr;
@@ -475,6 +488,7 @@ pub fn discover_timeout_standalone(
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Servicediscoveryconfigcanonical
 pub type ServiceDiscoveryConfigCanonical =
     crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 

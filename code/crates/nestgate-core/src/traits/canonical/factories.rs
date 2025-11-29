@@ -19,6 +19,7 @@ pub trait CanonicalAutomation: CanonicalService {}
 pub trait ZeroCostService: CanonicalService {}
 /// Service factory
 pub trait CanonicalServiceFactory<T: CanonicalService> {
+    /// Creates  Service
     fn create_service(
         &self,
         config: T::Config,
@@ -26,6 +27,7 @@ pub trait CanonicalServiceFactory<T: CanonicalService> {
 }
 /// Provider factory
 pub trait CanonicalProviderFactory<T, P: CanonicalProvider<T>> {
+    /// Creates  Provider
     fn create_provider(
         &self,
         config: P::Config,

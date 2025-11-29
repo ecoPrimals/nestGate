@@ -2,6 +2,8 @@
 // This module handles real-time metrics collection for the performance dashboard
 // using actual system and ZFS metrics instead of mock data.
 
+//! Metrics module
+
 use crate::handlers::metrics_collector::{DiskIOMetrics, NetworkIOMetrics, PoolMetrics};
 use crate::handlers::performance_dashboard::types::{RealTimeMetrics, SystemMetrics};
 use nestgate_core::Result;
@@ -18,6 +20,7 @@ use tracing::warn;
 
 /// Real-time metrics collector with ZFS and system integration
 #[derive(Debug)]
+/// Realtimemetricscollector
 pub struct RealTimeMetricsCollector {
     /// Metrics cache for performance
     metrics_cache: Arc<tokio::sync::RwLock<HashMap<String, RealTimeMetrics>>>,
@@ -577,6 +580,7 @@ impl RealTimeMetricsCollector {
 }
 
 impl Default for RealTimeMetricsCollector {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

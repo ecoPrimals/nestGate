@@ -8,6 +8,7 @@ use std::time::Duration;
 /// Provides comprehensive lifecycle settings including data retention, archival,
 /// purging, and compliance policies for managing data from creation to deletion.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for StorageLifecycle
 pub struct StorageLifecycleConfig {
     /// General data lifecycle management settings.
     pub data_lifecycle: DataLifecycleConfig,
@@ -25,6 +26,7 @@ pub struct StorageLifecycleConfig {
 ///
 /// Controls whether lifecycle management features are enabled.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for DataLifecycle
 pub struct DataLifecycleConfig {
     /// Whether data lifecycle management is enabled (default: true).
     pub enabled: bool,
@@ -34,6 +36,7 @@ pub struct DataLifecycleConfig {
 ///
 /// Defines how long data must be retained before it can be archived or deleted.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Retention
 pub struct RetentionConfig {
     /// Whether retention policies are enforced (default: true).
     pub enabled: bool,
@@ -45,6 +48,7 @@ pub struct RetentionConfig {
 ///
 /// Defines when data should be moved to archival storage for cost savings.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Archival
 pub struct ArchivalConfig {
     /// Whether automatic archival is enabled (default: false).
     pub enabled: bool,
@@ -56,6 +60,7 @@ pub struct ArchivalConfig {
 ///
 /// Defines when data can be permanently deleted after retention period.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Purging
 pub struct PurgingConfig {
     /// Whether automatic purging is enabled (default: false).
     pub enabled: bool,
@@ -67,12 +72,14 @@ pub struct PurgingConfig {
 ///
 /// Enables compliance features for meeting regulatory data management requirements.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ComplianceStorage
 pub struct ComplianceStorageConfig {
     /// Whether compliance features are enabled (default: false).
     pub enabled: bool,
 }
 
 impl Default for StorageLifecycleConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             data_lifecycle: DataLifecycleConfig { enabled: true },

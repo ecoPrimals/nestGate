@@ -88,6 +88,7 @@ pub use zfs::{
 // **THE** canonical handler configuration for the entire NestGate ecosystem
 // This replaces ALL other handler configuration variants
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Canonicalhandlerconfigs
 pub struct CanonicalHandlerConfigs {
     /// API request/response handlers
     pub api_handlers: ApiHandlerConfig,

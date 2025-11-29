@@ -2,6 +2,8 @@
 // Eliminates 805+ hardcoded values throughout the codebase
 // Environment-driven, flexible, production-ready
 
+//! Runtime module
+
 use crate::error::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use std::env;
@@ -68,6 +70,7 @@ use std::sync::OnceLock;
 /// This struct is [`Clone`] and all configuration is immutable after initialization.
 /// The global instance is stored in a [`OnceLock`] for safe concurrent access.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for NestGateRuntime
 pub struct NestGateRuntimeConfig {
     /// Network configuration (ports, IPs, endpoints, timeouts)
     pub network: NetworkConfig,
@@ -118,6 +121,7 @@ impl NestGateRuntimeConfig {
 
 /// Network configuration - eliminates hardcoded ports and IPs
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Network
 pub struct NetworkConfig {
     /// API host (default: 127.0.0.1)
     pub api_host: IpAddr,
@@ -142,6 +146,7 @@ pub struct NetworkConfig {
 }
 
 impl NetworkConfig {
+    /// Creates from Environment
     fn from_environment() -> Self {
         Self {
             api_host: env::var("NESTGATE_API_HOST")
@@ -181,6 +186,7 @@ impl NetworkConfig {
         }
     }
 
+    /// Validates data
     fn validate(&self) -> Result<()> {
         if self.api_port == 0 {
             return Err(NestGateError::configuration_error(
@@ -203,6 +209,7 @@ impl NetworkConfig {
 }
 
 impl Default for NetworkConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             api_host: IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
@@ -220,6 +227,7 @@ impl Default for NetworkConfig {
 
 /// Service configuration - primal ecosystem endpoints
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Services
 pub struct ServicesConfig {
     /// BearDog security service URL
     pub beardog_url: Option<String>,
@@ -244,6 +252,7 @@ pub struct ServicesConfig {
 }
 
 impl ServicesConfig {
+    /// Creates from Environment
     fn from_environment() -> Self {
         Self {
             beardog_url: env::var("NESTGATE_BEARDOG_URL").ok(),
@@ -262,6 +271,7 @@ impl ServicesConfig {
         }
     }
 
+    /// Validates data
     fn validate(&self) -> Result<()> {
         // Service URLs are optional - infant discovery can find them
         Ok(())
@@ -293,6 +303,7 @@ impl ServicesConfig {
 }
 
 impl Default for ServicesConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             beardog_url: None,
@@ -310,6 +321,7 @@ impl Default for ServicesConfig {
 
 /// Storage configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Storage
 pub struct StorageConfig {
     /// Storage data directory
     pub data_dir: PathBuf,
@@ -325,6 +337,7 @@ pub struct StorageConfig {
 }
 
 impl StorageConfig {
+    /// Creates from Environment
     fn from_environment() -> Self {
         Self {
             data_dir: env::var("NESTGATE_DATA_DIR")
@@ -342,6 +355,7 @@ impl StorageConfig {
         }
     }
 
+    /// Validates data
     fn validate(&self) -> Result<()> {
         if self.zfs_pool_name.is_empty() {
             return Err(NestGateError::configuration_error(
@@ -354,6 +368,7 @@ impl StorageConfig {
 }
 
 impl Default for StorageConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             data_dir: PathBuf::from("/var/lib/nestgate"),
@@ -368,6 +383,7 @@ impl Default for StorageConfig {
 
 /// Database configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Database
 pub struct DatabaseConfig {
     /// PostgreSQL host (default: localhost)
     pub postgres_host: String,
@@ -389,6 +405,7 @@ pub struct DatabaseConfig {
 }
 
 impl DatabaseConfig {
+    /// Creates from Environment
     fn from_environment() -> Self {
         use crate::constants::hardcoding::addresses;
 
@@ -437,6 +454,7 @@ impl DatabaseConfig {
 }
 
 impl Default for DatabaseConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             postgres_host: crate::constants::hardcoding::addresses::LOCALHOST_NAME.to_string(),
@@ -453,6 +471,7 @@ impl Default for DatabaseConfig {
 
 /// Cache configuration (Redis, etc.)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Cache
 pub struct CacheConfig {
     /// Redis host (default: localhost)
     pub redis_host: String,
@@ -471,6 +490,7 @@ pub struct CacheConfig {
 }
 
 impl CacheConfig {
+    /// Creates from Environment
     fn from_environment() -> Self {
         Self {
             redis_host: env::var("NESTGATE_REDIS_HOST").unwrap_or_else(|_| {
@@ -512,6 +532,7 @@ impl CacheConfig {
 }
 
 impl Default for CacheConfig {
+    /// Returns the default instance
     fn default() -> Self {
         use crate::constants::hardcoding::{addresses, ports};
 
@@ -529,6 +550,7 @@ impl Default for CacheConfig {
 
 /// Monitoring configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Monitoring
 pub struct MonitoringConfig {
     /// Prometheus metrics port (default: 9090)
     pub metrics_port: u16,
@@ -544,6 +566,7 @@ pub struct MonitoringConfig {
 }
 
 impl MonitoringConfig {
+    /// Creates from Environment
     fn from_environment() -> Self {
         Self {
             metrics_port: env::var("NESTGATE_METRICS_PORT")
@@ -568,6 +591,7 @@ impl MonitoringConfig {
 }
 
 impl Default for MonitoringConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             metrics_port: 9090,
@@ -582,6 +606,7 @@ impl Default for MonitoringConfig {
 
 /// Security configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Security
 pub struct SecurityConfig {
     /// TLS enabled (default: false for localhost, true for production)
     pub tls_enabled: bool,
@@ -600,6 +625,7 @@ pub struct SecurityConfig {
 }
 
 impl SecurityConfig {
+    /// Creates from Environment
     fn from_environment() -> Self {
         Self {
             tls_enabled: env::var("NESTGATE_TLS_ENABLED")
@@ -622,6 +648,7 @@ impl SecurityConfig {
 }
 
 impl Default for SecurityConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             tls_enabled: false,

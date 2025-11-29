@@ -90,8 +90,13 @@ pub use command::ZfsCommand;
 pub use dataset::ZfsDatasetManager;
 pub use error::ZfsError;
 pub use pool::ZfsPoolManager;
-pub use types::*;
+// Re-export types module items individually
+pub use types::{DatasetInfo, PoolInfo, PoolStatus, SnapshotInfo};
+
 pub use zero_cost_zfs_operations::ProductionZfsManager;
+// Re-export zero-cost types for test modules
+pub use zero_cost_zfs_operations::{ZeroCostDatasetInfo, ZeroCostPoolInfo, ZeroCostSnapshotInfo};
+
 // **CANONICAL ZFS CONFIGURATION EXPORTS**
 // Re-export canonical types for easy access
 pub use types::{

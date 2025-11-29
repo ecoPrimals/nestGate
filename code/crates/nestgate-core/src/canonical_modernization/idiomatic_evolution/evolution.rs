@@ -7,6 +7,7 @@ use std::collections::HashMap;
 
 /// Evolution tracker for monitoring progress
 #[derive(Debug, Clone, Default)]
+/// Evolutiontracker
 pub struct EvolutionTracker {
     tracked_components: HashMap<String, String>,
     evolution_scores: HashMap<String, f64>,
@@ -69,6 +70,7 @@ impl EvolutionTracker {
 #[derive(Debug, Clone, Default)]
 #[allow(dead_code)] // Framework infrastructure
 #[allow(clippy::struct_field_names)]
+/// Manager for Migration operations
 pub struct MigrationManager {
     completed_migrations: HashMap<String, String>,
     #[allow(dead_code)] // Framework field - intentionally unused
@@ -154,12 +156,14 @@ impl MigrationManager {
 /// Compatibility checker for validation
 #[derive(Debug, Clone)]
 #[allow(dead_code)] // Framework infrastructure
+/// Compatibilitychecker
 pub struct CompatibilityChecker {
     #[allow(dead_code)] // Framework field - intentionally unused
     compatibility_rules: Vec<String>,
     validation_errors: Vec<String>,
 }
 impl Default for CompatibilityChecker {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             compatibility_rules: vec!["Standard compatibility rules".to_string()],
@@ -215,6 +219,7 @@ impl CompatibilityChecker {
 /// Modernization engine for applying patterns
 #[derive(Debug, Clone)]
 #[allow(dead_code)] // Framework infrastructure
+/// Modernizationengine
 pub struct ModernizationEngine {
     #[allow(dead_code)] // Framework field - intentionally unused
     available_patterns: Vec<String>,
@@ -222,6 +227,7 @@ pub struct ModernizationEngine {
     applied_patterns: HashMap<String, Vec<String>>,
 }
 impl Default for ModernizationEngine {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             available_patterns: vec!["Canonical patterns".to_string()],
@@ -272,12 +278,14 @@ impl ModernizationEngine {
 /// Canonical evolution system
 #[derive(Debug, Clone)]
 #[allow(dead_code)] // Framework infrastructure
+/// Canonicalevolutionsystem
 pub struct CanonicalEvolutionSystem {
     system_version: String,
     #[allow(dead_code)] // Framework field - intentionally unused
     active_evolutions: HashMap<String, EvolutionMetadata>,
 }
 impl Default for CanonicalEvolutionSystem {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             system_version: "1.0.0".to_string(),

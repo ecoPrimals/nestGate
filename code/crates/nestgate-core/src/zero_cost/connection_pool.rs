@@ -109,20 +109,28 @@ where
 
 /// Pool statistics
 #[derive(Debug, Clone)]
+/// Poolstats
 pub struct PoolStats {
+    /// Active Connections
     pub active_connections: usize,
+    /// Max Connections
     pub max_connections: usize,
+    /// Utilization
     pub utilization: f64,
 }
 /// Example connection type
 #[derive(Debug, Clone)]
+/// Databaseconnection
 pub struct DatabaseConnection {
+    /// Unique identifier
     pub id: String,
+    /// Connected
     pub connected: bool,
 }
 /// Production database connection factory
 pub struct ProductionDbFactory;
 impl ZeroCostConnectionFactory<DatabaseConnection, 1000> for ProductionDbFactory {
+    /// Creates instance
     fn create(&self) -> Result<DatabaseConnection> {
         Ok(DatabaseConnection {
             id: format!("prod_conn_{std::process::id(}")),
@@ -134,6 +142,7 @@ impl ZeroCostConnectionFactory<DatabaseConnection, 1000> for ProductionDbFactory
 /// Development database connection factory
 pub struct DevelopmentDbFactory;
 impl ZeroCostConnectionFactory<DatabaseConnection, 100> for DevelopmentDbFactory {
+    /// Creates instance
     fn create(&self) -> Result<DatabaseConnection> {
         Ok(DatabaseConnection {
             id: format!("dev_conn_{std::process::id(}")),
@@ -145,6 +154,7 @@ impl ZeroCostConnectionFactory<DatabaseConnection, 100> for DevelopmentDbFactory
 /// Production health check
 pub struct ProductionHealthCheck;
 impl ZeroCostHealthCheck<DatabaseConnection> for ProductionHealthCheck {
+    /// Check
     fn check(&self, connection: &DatabaseConnection) -> Result<()> {
         if connection.connected {
             Ok(())
@@ -160,6 +170,7 @@ impl ZeroCostHealthCheck<DatabaseConnection> for ProductionHealthCheck {
 /// Development health check - always passes
 pub struct DevelopmentHealthCheck;
 impl ZeroCostHealthCheck<DatabaseConnection> for DevelopmentHealthCheck {
+    /// Check
     fn check(&self, _connection: &DatabaseConnection) -> Result<()> {
         Ok(()) // Development always passes
     }

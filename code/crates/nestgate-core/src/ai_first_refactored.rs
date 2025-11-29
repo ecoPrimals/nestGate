@@ -35,6 +35,7 @@ use crate::error::NestGateError;
 /// ecoPrimals ecosystem while providing rich context for human operators.
 /// **ENHANCED**: Full ecosystem compliance with 85%+ feature coverage
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for AIFirst operation
 pub struct AIFirstResponse<T> {
     /// Operation success status (machine-readable)
     pub success: bool,
@@ -68,6 +69,7 @@ pub struct AIFirstResponse<T> {
 
 /// AI-optimized error structure with automation hints
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Error type for AIFirst operations
 pub struct AIFirstError {
     /// Machine-readable error code (`UPPER_SNAKE_CASE`)
     pub code: String,
@@ -98,6 +100,7 @@ pub struct AIFirstError {
 
 /// AI-specific response metadata for decision making
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Airesponsemetadata
 pub struct AIResponseMetadata {
     /// Model or system version that generated this response
     pub generator_version: String,
@@ -116,6 +119,7 @@ pub struct AIResponseMetadata {
 
 /// Human interaction context for hybrid workflows
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Humaninteractioncontext
 pub struct HumanInteractionContext {
     /// Whether human review is recommended
     pub review_recommended: bool,
@@ -131,6 +135,7 @@ pub struct HumanInteractionContext {
 
 /// Suggested action for AI automation workflows
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Suggestedaction
 pub struct SuggestedAction {
     /// Action identifier
     pub action_id: String,
@@ -155,6 +160,7 @@ pub struct SuggestedAction {
 
 /// Ecosystem integration metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Ecosystemmetadata
 pub struct EcosystemMetadata {
     /// Source primal (nestgate, security, orchestration, etc.)
     pub source_primal: String,
@@ -174,84 +180,138 @@ pub struct EcosystemMetadata {
 // ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Aierrorcategory
 pub enum AIErrorCategory {
+    /// Configuration
     Configuration,
+    /// Network
     Network,
+    /// Storage
     Storage,
+    /// Security
     Security,
+    /// System
     System,
+    /// Internal
     Internal,
+    /// External
     External,
+    /// Userinput
     UserInput,
+    /// Temporary
     Temporary,
+    /// Permanent
     Permanent,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Retrystrategy
 pub enum RetryStrategy {
+    /// Noretry
     NoRetry,
+    /// Linearbackoff
     LinearBackoff { interval_ms: u64, max_attempts: u32 },
+    /// Exponentialbackoff
     ExponentialBackoff { base_ms: u64, max_attempts: u32 },
+    /// Custombackoff
     CustomBackoff { intervals_ms: Vec<u64> },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Errorseverity
 pub enum ErrorSeverity {
+    /// Low
     Low,
+    /// Medium
     Medium,
+    /// High
     High,
+    /// Critical
     Critical,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of Action
 pub enum ActionType {
+    /// Retry
     Retry,
+    /// Escalate
     Escalate,
+    /// Fallback
     Fallback,
+    /// Optimize
     Optimize,
+    /// Monitor
     Monitor,
+    /// Scale
     Scale,
+    /// Restart
     Restart,
+    /// Continue
     Continue,
     Custom(String),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Recoverysuggestion
 pub struct RecoverySuggestion {
+    /// Suggestion identifier
     pub suggestion_id: String,
+    /// Human-readable description
     pub description: String,
+    /// Automated
     pub automated: bool,
+    /// Confidence
     pub confidence: f64,
+    /// Steps
     pub steps: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Resourceusage
 pub struct ResourceUsage {
+    /// Cpu Percent
     pub cpu_percent: f64,
+    /// Memory Bytes
     pub memory_bytes: u64,
+    /// Network Bytes
     pub network_bytes: u64,
+    /// Storage Bytes
     pub storage_bytes: u64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Qualityindicators
 pub struct QualityIndicators {
+    /// Completeness Score
     pub completeness_score: f64,
+    /// Accuracy Score
     pub accuracy_score: f64,
+    /// Performance Score
     pub performance_score: f64,
+    /// Reliability Score
     pub reliability_score: f64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Ecosystemcompatibility
 pub struct EcosystemCompatibility {
+    /// Ai First Compliance
     pub ai_first_compliance: f64,
+    /// Universal Primal Compliance
     pub universal_primal_compliance: f64,
+    /// Cross Primal Features
     pub cross_primal_features: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Uihint
 pub struct UIHint {
+    /// Hint Type
     pub hint_type: String,
+    /// Message
     pub message: String,
+    /// Severity
     pub severity: String,
 }
 
@@ -304,6 +364,7 @@ impl<T> AIFirstResponseBuilder<T> {
         self
     }
 
+    /// Builds the final instance
     pub fn build(self) -> AIFirstResponse<T> {
         AIFirstResponse {
             success: self.success,
@@ -322,17 +383,22 @@ impl<T> AIFirstResponseBuilder<T> {
 
 /// Trait for types that can be converted to AI-First responses
 pub trait IntoAIFirstResponse<T> {
+    /// Into Ai First Response
     fn into_ai_first_response(self) -> AIFirstResponse<T>;
+    /// Into Ai First Response With Confidence
     fn into_ai_first_response_with_confidence(self, confidence: f64) -> AIFirstResponse<T>;
 }
 /// Trait for AI-optimized error conversion
 pub trait IntoAIFirstError {
+    /// Into Ai First Error
     fn into_ai_first_error(self) -> AIFirstError;
+    /// Into Ai First Error With Hints
     fn into_ai_first_error_with_hints(self, hints: Vec<String>) -> AIFirstError;
 }
 // ==================== SECTION ====================
 
 impl Default for AIResponseMetadata {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             generator_version: env!("CARGO_PKG_VERSION").to_string(),
@@ -345,6 +411,7 @@ impl Default for AIResponseMetadata {
 }
 
 impl Default for ResourceUsage {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             cpu_percent: 0.0,
@@ -356,6 +423,7 @@ impl Default for ResourceUsage {
 }
 
 impl Default for QualityIndicators {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             completeness_score: 1.0,
@@ -367,6 +435,7 @@ impl Default for QualityIndicators {
 }
 
 impl Default for EcosystemCompatibility {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             ai_first_compliance: 0.85, // Target compliance level
@@ -381,6 +450,7 @@ impl Default for EcosystemCompatibility {
 }
 
 impl Default for EcosystemMetadata {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             source_primal: "nestgate".to_string(),
@@ -400,6 +470,7 @@ impl Default for EcosystemMetadata {
 // ==================== SECTION ====================
 
 impl IntoAIFirstError for NestGateError {
+    /// Into Ai First Error
     fn into_ai_first_error(self) -> AIFirstError {
         AIFirstError {
             code: self.error_code(),
@@ -417,6 +488,7 @@ impl IntoAIFirstError for NestGateError {
         }
     }
 
+    /// Into Ai First Error With Hints
     fn into_ai_first_error_with_hints(self, hints: Vec<String>) -> AIFirstError {
         let mut error = self.into_ai_first_error();
         error.automation_hints.extend(hints);
@@ -426,17 +498,24 @@ impl IntoAIFirstError for NestGateError {
 
 // Extension trait for NestGateError to provide AI-First specific methods
 trait NestGateErrorExt {
+    /// Error Code
     fn error_code(&self) -> String;
+    /// Ai Error Category
     fn ai_error_category(&self) -> AIErrorCategory;
+    /// Retry Strategy
     fn retry_strategy(&self) -> RetryStrategy;
+    /// Automation Hints
     fn automation_hints(&self) -> Vec<String>;
+    /// Severity
     fn severity(&self) -> ErrorSeverity;
+    /// Requires Human Intervention
     fn requires_human_intervention(&self) -> bool;
     #[allow(dead_code)] // Framework method - intentionally unused
     fn recovery_suggestions(&self) -> Vec<RecoverySuggestion>;
 }
 
 impl NestGateErrorExt for NestGateError {
+    /// Error Code
     fn error_code(&self) -> String {
         match self {
             NestGateError::Network { .. } => "NETWORK_ERROR".to_string(),
@@ -449,6 +528,7 @@ impl NestGateErrorExt for NestGateError {
         }
     }
 
+    /// Ai Error Category
     fn ai_error_category(&self) -> AIErrorCategory {
         match self {
             NestGateError::Network { .. } => AIErrorCategory::Network,
@@ -460,6 +540,7 @@ impl NestGateErrorExt for NestGateError {
         }
     }
 
+    /// Retry Strategy
     fn retry_strategy(&self) -> RetryStrategy {
         match self {
             NestGateError::Network { .. } => RetryStrategy::ExponentialBackoff {
@@ -475,6 +556,7 @@ impl NestGateErrorExt for NestGateError {
         }
     }
 
+    /// Automation Hints
     fn automation_hints(&self) -> Vec<String> {
         match self {
             NestGateError::Network { .. } => vec![
@@ -491,6 +573,7 @@ impl NestGateErrorExt for NestGateError {
         }
     }
 
+    /// Severity
     fn severity(&self) -> ErrorSeverity {
         match self {
             NestGateError::Security { .. } => ErrorSeverity::Critical,
@@ -500,6 +583,7 @@ impl NestGateErrorExt for NestGateError {
         }
     }
 
+    /// Requires Human Intervention
     fn requires_human_intervention(&self) -> bool {
         matches!(
             self,
@@ -507,6 +591,7 @@ impl NestGateErrorExt for NestGateError {
         )
     }
 
+    /// Recovery Suggestions
     fn recovery_suggestions(&self) -> Vec<RecoverySuggestion> {
         match self {
             NestGateError::Network { .. } => vec![RecoverySuggestion {
@@ -525,8 +610,11 @@ impl NestGateErrorExt for NestGateError {
 
 /// Common AI-First response types for `NestGate` operations
 pub type AIStorageResponse<T> = AIFirstResponse<T>;
+/// Type alias for Ainetworkresponse
 pub type AINetworkResponse<T> = AIFirstResponse<T>;
+/// Type alias for Aisecurityresponse
 pub type AISecurityResponse<T> = AIFirstResponse<T>;
+/// Type alias for Aiconfigresponse
 pub type AIConfigResponse<T> = AIFirstResponse<T>;
 /// Result type that automatically converts to AI-First format
 pub type AIResult<T> = Result<AIFirstResponse<T>, AIFirstError>;

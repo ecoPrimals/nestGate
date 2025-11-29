@@ -92,6 +92,7 @@ use serde::{Deserialize, Serialize};
 // **UNIFIED NETWORK EXTENSIONS**
 /// Consolidates all network-specific configuration patterns
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Unifiednetworkextensions
 pub struct UnifiedNetworkExtensions {
     /// Orchestration and service discovery settings
     pub orchestration: NetworkOrchestrationSettings,

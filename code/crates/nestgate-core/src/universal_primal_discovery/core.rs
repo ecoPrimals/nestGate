@@ -14,6 +14,7 @@ use tokio::sync::RwLock;
 
 /// **UNIVERSAL PRIMAL PRINCIPLE**: No hardcoded values, everything discovered
 #[allow(dead_code)]
+/// Universalprimaldiscovery
 pub struct UniversalPrimalDiscovery {
     /// Network discovery subsystem
     network_discovery: NetworkDiscovery,
@@ -31,6 +32,7 @@ pub struct UniversalPrimalDiscovery {
     discovered_limits: Arc<RwLock<HashMap<String, usize>>>,
 }
 impl Default for UniversalPrimalDiscovery {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -142,6 +144,7 @@ impl UniversalPrimalDiscovery {
             .await
     }
 
+    /// Cache Discovered Port
     pub async fn cache_discovered_port(&mut self, service_name: &str, port: u16) {
         let mut ports = self.discovered_ports.write().await;
         ports.insert(service_name.to_string(), port);
@@ -150,6 +153,7 @@ impl UniversalPrimalDiscovery {
         self.cache.store_port_discovery(service_name, port);
     }
 
+    /// Cache Discovered Endpoint
     pub async fn cache_discovered_endpoint(&mut self, service_name: &str, endpoint: &str) {
         let mut endpoints = self.discovered_endpoints.write().await;
         endpoints.insert(service_name.to_string(), endpoint.to_string());
@@ -158,6 +162,7 @@ impl UniversalPrimalDiscovery {
         self.cache.store_endpoint_discovery(service_name, endpoint);
     }
 
+    /// Cache Discovered Timeout
     pub async fn cache_discovered_timeout(&mut self, service_name: &str, timeout: Duration) {
         let mut timeouts = self.discovered_timeouts.write().await;
         timeouts.insert(service_name.to_string(), timeout);

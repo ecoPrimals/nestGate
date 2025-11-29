@@ -7,77 +7,127 @@ use std::collections::HashMap;
 use std::time::Duration;
 /// Service event for discovery watching
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Serviceevent
 pub struct ServiceEvent {
+    /// Event Type
     pub event_type: ServiceEventType,
+    /// Service identifier
     pub service_id: String,
+    /// Service Info
     pub service_info: Option<crate::diagnostics::types::ServiceInfo>,
+    /// Timestamp
     pub timestamp: DateTime<Utc>,
+    /// Additional metadata key-value pairs
     pub metadata: HashMap<String, String>,
 }
 /// Service event types
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of ServiceEvent
 pub enum ServiceEventType {
+    /// Registered
     Registered,
+    /// Deregistered
     Deregistered,
+    /// Healthchanged
     HealthChanged,
+    /// Metadataupdated
     MetadataUpdated,
+    /// Configurationchanged
     ConfigurationChanged,
 }
 /// Service query for filtering
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Servicequery
 pub struct ServiceQuery {
+    /// Service name
     pub service_name: Option<String>,
+    /// Tags
     pub tags: Vec<String>,
+    /// Namespace
     pub namespace: Option<String>,
+    /// Healthy Only
     pub healthy_only: bool,
+    /// Metadata Filters
     pub metadata_filters: HashMap<String, String>,
 }
 /// Network connection information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Networkconnection
 pub struct NetworkConnection {
+    /// Connection identifier
     pub connection_id: String,
+    /// Protocol
     pub protocol: String,
+    /// Local Endpoint
     pub local_endpoint: String,
+    /// Established At
     pub established_at: DateTime<Utc>,
+    /// Status
     pub status: ConnectionStatus,
+    /// Additional metadata key-value pairs
     pub metadata: HashMap<String, String>,
 }
 /// Connection status
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Status values for Connection
 pub enum ConnectionStatus {
+    /// Connecting
     Connecting,
+    /// Connected
     Connected,
+    /// Disconnected
     Disconnected,
     Error(String),
 }
 /// Network request
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for Network operation
 pub struct NetworkRequest {
+    /// Request identifier
     pub request_id: String,
+    /// Method
     pub method: String,
+    /// Headers
     pub headers: HashMap<String, String>,
+    /// Body
     pub body: Vec<u8>,
+    /// Timeout
     pub timeout: Option<Duration>,
 }
 /// Network response
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for Network operation
 pub struct NetworkResponse {
+    /// Request identifier
     pub request_id: String,
+    /// Status Code
     pub status_code: u16,
+    /// Headers
     pub headers: HashMap<String, String>,
+    /// Body
     pub body: Vec<u8>,
+    /// Processing Time
     pub processing_time: Duration,
 }
 /// Load balancer backend
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Loadbalancerbackend
 pub struct LoadBalancerBackend {
+    /// Backend identifier
     pub backend_id: String,
+    /// Endpoint
     pub endpoint: String,
+    /// Port
     pub port: u16,
+    /// Weight
     pub weight: u32,
+    /// Healthy
     pub healthy: bool,
+    /// Response Time Ms
     pub response_time_ms: f64,
+    /// Active Connections
     pub active_connections: u32,
+    /// Additional metadata key-value pairs
     pub metadata: HashMap<String, String>,
 }
 

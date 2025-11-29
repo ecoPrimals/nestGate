@@ -10,6 +10,7 @@ use uuid::Uuid;
 
 /// Universal Service Registration - ALL PARTICIPANTS MUST IMPLEMENT
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Universalserviceregistration
 pub struct UniversalServiceRegistration {
     /// Unique service identifier (generated)
     pub service_id: Uuid,
@@ -46,6 +47,7 @@ pub struct UniversalServiceRegistration {
 
 /// Service _metadata with open categorization
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Servicemetadata
 pub struct ServiceMetadata {
     /// Human-readable service name
     pub name: String,
@@ -67,6 +69,7 @@ pub struct ServiceMetadata {
 
 /// Open, extensible service categories
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+/// Servicecategory
 pub enum ServiceCategory {
     /// Computational services
     Compute {
@@ -108,6 +111,7 @@ pub enum ServiceCategory {
 }
 /// Universal capability system (extensible)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Servicecapability
 pub enum ServiceCapability {
     /// Data processing capabilities
     DataProcessing {
@@ -138,6 +142,7 @@ pub enum ServiceCapability {
 }
 /// Contact information for service maintainers
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Contactinfo
 pub struct ContactInfo {
     /// Contact name or organization
     pub name: String,
@@ -150,6 +155,7 @@ pub struct ContactInfo {
 }
 /// Resource specification for services
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Resourcespec
 pub struct ResourceSpec {
     /// CPU requirements
     pub cpu: Option<CpuSpec>,
@@ -164,6 +170,7 @@ pub struct ResourceSpec {
 }
 /// CPU specification
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Cpuspec
 pub struct CpuSpec {
     /// Minimum CPU cores required
     pub min_cores: Option<f64>,
@@ -176,6 +183,7 @@ pub struct CpuSpec {
 }
 /// Memory specification
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Memoryspec
 pub struct MemorySpec {
     /// Minimum memory in bytes
     pub min_bytes: Option<u64>,
@@ -186,6 +194,7 @@ pub struct MemorySpec {
 }
 /// Storage specification
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagespec
 pub struct StorageSpec {
     /// Minimum storage in bytes
     pub min_bytes: Option<u64>,
@@ -198,6 +207,7 @@ pub struct StorageSpec {
 }
 /// Network specification
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Networkspec
 pub struct NetworkSpec {
     /// Bandwidth requirements in bytes per second
     pub bandwidth: Option<u64>,
@@ -208,6 +218,7 @@ pub struct NetworkSpec {
 }
 /// Service endpoint specification
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Serviceendpoint
 pub struct ServiceEndpoint {
     /// Endpoint name/identifier
     pub name: String,
@@ -222,6 +233,7 @@ pub struct ServiceEndpoint {
 }
 /// Integration preferences
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Integrationpreferences
 pub struct IntegrationPreferences {
     /// Preferred communication protocols
     pub protocols: Vec<String>,
@@ -236,6 +248,7 @@ pub struct IntegrationPreferences {
 }
 /// Rate limiting specification
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Ratelimitspec
 pub struct RateLimitSpec {
     /// Requests per second
     pub rps: Option<u64>,
@@ -246,6 +259,7 @@ pub struct RateLimitSpec {
 }
 /// Circuit breaker specification
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Circuitbreakerspec
 pub struct CircuitBreakerSpec {
     /// Failure threshold
     pub failure_threshold: Option<u32>,

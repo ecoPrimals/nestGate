@@ -3,6 +3,8 @@
 // Comprehensive tests for load balancing configuration, strategies, and backend management
 
 #[cfg(test)]
+//! Tests module
+
 mod load_balancing_tests {
     use crate::load_balancing::*;
     

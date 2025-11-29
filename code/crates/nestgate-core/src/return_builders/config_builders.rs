@@ -7,13 +7,21 @@ use std::collections::HashMap;
 use uuid::Uuid;
 /// Access grant structure for config builders
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Accessgrant
 pub struct AccessGrant {
+    /// Permissions
     pub permissions: Vec<String>,
+    /// Valid Until
     pub valid_until: DateTime<Utc>,
+    /// Consensus Nodes
     pub consensus_nodes: Vec<String>,
+    /// Consensus Percentage
     pub consensus_percentage: f64,
+    /// Grant identifier
     pub grant_id: String,
+    /// Granted At
     pub granted_at: DateTime<Utc>,
+    /// Additional metadata key-value pairs
     pub metadata: HashMap<String, String>,
 }
 /// Build `AccessGrant` response with all required fields

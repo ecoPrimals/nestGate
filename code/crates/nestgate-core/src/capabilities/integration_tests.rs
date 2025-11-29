@@ -8,6 +8,7 @@ mod capability_lifecycle_tests {
 
     #[test]
     fn test_capability_registration() {
+        /// Register Capability
         fn register_capability(name: &str) -> Result<()> {
             if !name.is_empty() {
                 Ok(())
@@ -23,9 +24,13 @@ mod capability_lifecycle_tests {
     #[test]
     fn test_capability_lifecycle() {
         enum CapabilityState {
+            /// Registered
             Registered,
+            /// Active
             Active,
+            /// Suspended
             Suspended,
+            /// Terminated
             Terminated,
         }
 
@@ -49,14 +54,17 @@ mod capability_composition_tests {
 
     #[test]
     fn test_compose_capabilities() {
+        /// Storage Cap
         fn storage_cap() -> Result<String> {
             Ok("storage".to_string())
         }
 
+        /// Network Cap
         fn network_cap() -> Result<String> {
             Ok("network".to_string())
         }
 
+        /// Compose
         fn compose(c1: String, c2: String) -> Result<String> {
             Ok(format!("{}+{}", c1, c2))
         }
@@ -77,6 +85,7 @@ mod capability_dependency_tests {
 
     #[test]
     fn test_dependency_resolution() {
+        /// Resolve Deps
         fn resolve_deps(cap: &str) -> Result<Vec<String>> {
             match cap {
                 "api" => Ok(vec!["auth".to_string(), "storage".to_string()]),
@@ -93,6 +102,7 @@ mod capability_dependency_tests {
 
     #[test]
     fn test_circular_dependency_detection() {
+        /// Checks if has Circular Dep
         fn has_circular_dep(cap: &str, visited: &mut HashSet<String>) -> bool {
             if visited.contains(cap) {
                 return true;
@@ -113,6 +123,7 @@ mod capability_authorization_tests {
 
     #[test]
     fn test_authorized_access() {
+        /// Check Auth
         fn check_auth(user: &str, cap: &str) -> Result<()> {
             if user == "admin" || cap == "public" {
                 Ok(())
@@ -133,6 +144,7 @@ mod capability_versioning_tests {
 
     #[test]
     fn test_version_compatibility() {
+        /// Check Version
         fn check_version(requested: &str, available: &str) -> Result<()> {
             if requested == available {
                 Ok(())
@@ -254,10 +266,12 @@ mod capability_integration_full_tests {
 
     #[test]
     fn test_end_to_end_capability_flow() {
+        /// Discover
         fn discover() -> Result<Vec<String>> {
             Ok(vec!["storage".to_string(), "compute".to_string()])
         }
 
+        /// Resolve
         fn resolve(caps: Vec<String>) -> Result<HashMap<String, String>> {
             let mut map = HashMap::new();
             for cap in caps {
@@ -266,6 +280,7 @@ mod capability_integration_full_tests {
             Ok(map)
         }
 
+        /// Validates data
         fn validate(map: HashMap<String, String>) -> Result<usize> {
             Ok(map.len())
         }

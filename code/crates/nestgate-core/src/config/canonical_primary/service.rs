@@ -11,6 +11,7 @@ use std::time::Duration;
 
 /// Canonical service configuration - THE single source of truth
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Service
 pub struct ServiceConfig {
     // Core identification
     /// Service name identifier
@@ -40,6 +41,7 @@ pub struct ServiceConfig {
 }
 
 impl Default for ServiceConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             name: "nestgate-service".to_string(),
@@ -61,6 +63,7 @@ impl Default for ServiceConfig {
 
 /// Service types
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of Service
 pub enum ServiceType {
     /// API service
     Api,
@@ -82,6 +85,7 @@ pub enum ServiceType {
 
 /// Service endpoint configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ServiceEndpoint
 pub struct ServiceEndpointConfig {
     /// Bind endpoint address
     pub bind_endpoint: String,
@@ -96,6 +100,7 @@ pub struct ServiceEndpointConfig {
 }
 
 impl Default for ServiceEndpointConfig {
+    /// Returns the default instance
     fn default() -> Self {
         use crate::constants::hardcoding::{addresses, ports};
         Self {
@@ -112,6 +117,7 @@ impl Default for ServiceEndpointConfig {
 
 /// Service health configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ServiceHealth
 pub struct ServiceHealthConfig {
     /// Whether health checks are enabled
     pub enabled: bool,
@@ -124,6 +130,7 @@ pub struct ServiceHealthConfig {
 }
 
 impl Default for ServiceHealthConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -138,6 +145,7 @@ impl Default for ServiceHealthConfig {
 
 /// Service metrics configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ServiceMetrics
 pub struct ServiceMetricsConfig {
     /// Whether metrics collection is enabled
     pub enabled: bool,
@@ -150,6 +158,7 @@ pub struct ServiceMetricsConfig {
 }
 
 impl Default for ServiceMetricsConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -164,6 +173,7 @@ impl Default for ServiceMetricsConfig {
 
 /// Service scaling configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ServiceScaling
 pub struct ServiceScalingConfig {
     /// Whether auto-scaling is enabled
     pub auto_scaling: bool,
@@ -180,6 +190,7 @@ pub struct ServiceScalingConfig {
 }
 
 impl Default for ServiceScalingConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             auto_scaling: false,
@@ -196,6 +207,7 @@ impl Default for ServiceScalingConfig {
 
 /// Service security configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ServiceSecurity
 pub struct ServiceSecurityConfig {
     /// Whether authentication is required
     pub authentication_required: bool,
@@ -208,6 +220,7 @@ pub struct ServiceSecurityConfig {
 }
 
 impl Default for ServiceSecurityConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             authentication_required: true,

@@ -1,5 +1,7 @@
 // Clean implementation of intelligent dataset management
 
+//! Manager module
+
 use crate::analysis::DatasetAnalyzer;
 use crate::types::prediction::TierPrediction;
 use nestgate_core::config::canonical_primary::domains::automation::AutomationConfig;
@@ -15,16 +17,24 @@ type PerformanceCache = Arc<RwLock<HashMap<String, DatasetPerformance>>>;
 
 /// Performance metrics for a dataset
 #[derive(Debug, Clone)]
+/// Datasetperformance
 pub struct DatasetPerformance {
+    /// Dataset name
     pub dataset_name: String,
+    /// Total Files
     pub total_files: usize,
+    /// Total Size Bytes
     pub total_size_bytes: u64,
+    /// Access Frequency
     pub access_frequency: f64,
+    /// Compression Ratio
     pub compression_ratio: f64,
+    /// Last Optimized
     pub last_optimized: std::time::SystemTime,
 }
 /// Intelligent dataset manager with canonical implementation
 #[derive(Debug)]
+/// Manager for IntelligentDataset operations
 pub struct IntelligentDatasetManager {
     #[allow(dead_code)]
     config: AutomationConfig,
@@ -79,6 +89,7 @@ impl IntelligentDatasetManager {
 mod tests {
     use super::*;
 
+    /// Creates  Test Config
     fn create_test_config() -> AutomationConfig {
         AutomationConfig::default()
     }

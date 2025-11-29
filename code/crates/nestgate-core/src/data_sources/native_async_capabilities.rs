@@ -58,6 +58,7 @@ pub trait NativeAsyncDataCapability<
 pub trait NativeAsyncGenomeDataCapability<
     const MAX_GENOME_RESULTS: usize = 1000,
     const MAX_SEQUENCE_SIZE_MB: usize = 500,
+    /// Search Timeout Ms
     const SEARCH_TIMEOUT_MS: u64 = { timeouts::DEFAULT_TIMEOUT_MS },
 >: NativeAsyncDataCapability + Send + Sync {
     /// Search for genome sequences - native async, no boxing
@@ -97,7 +98,9 @@ pub trait NativeAsyncGenomeDataCapability<
 /// High-performance model data operations with compile-time optimization.
 pub trait NativeAsyncModelDataCapability<
     const MAX_MODEL_RESULTS: usize = 500,
+    /// Model Info Cache Size
     const MODEL_INFO_CACHE_SIZE: usize = 1000,
+    /// Model Search Timeout Ms
     const MODEL_SEARCH_TIMEOUT_MS: u64 = { timeouts::DEFAULT_TIMEOUT_MS },
 >: NativeAsyncDataCapability + Send + Sync {
     /// Search for models - native async, no Future boxing
@@ -137,7 +140,9 @@ pub trait NativeAsyncModelDataCapability<
 /// High-performance research data operations with const generic optimization.
 pub trait NativeAsyncResearchDataCapability<
     const MAX_RESEARCH_RESULTS: usize = 200,
+    /// Research Cache Size
     const RESEARCH_CACHE_SIZE: usize = 500,
+    /// Research Timeout Ms
     const RESEARCH_TIMEOUT_MS: u64 = { timeouts::DEFAULT_TIMEOUT_MS },
 >: NativeAsyncDataCapability + Send + Sync {
     /// Search research papers/data - native async, no boxing
@@ -181,10 +186,14 @@ pub struct ZeroCostCapabilityWrapper<T, const METRICS_BUFFER_SIZE: usize = 1000>
 }
 /// Performance metrics for capabilities
 #[derive(Debug, Default)]
+/// Capabilitymetrics
 pub struct CapabilityMetrics {
     pub requests_handled: u64,
+    /// Total Response Time Ms
     pub total_response_time_ms: u64,
+    /// Cache Hits
     pub cache_hits: u64,
+    /// Cache Misses
     pub cache_misses: u64,
 }
 impl<T, const METRICS_BUFFER_SIZE: usize> ZeroCostCapabilityWrapper<T, METRICS_BUFFER_SIZE>
@@ -253,9 +262,13 @@ impl AsyncTraitMigrationHelper {
 
 /// Migration guide structure
 pub struct MigrationGuide {
+    /// From Pattern
     pub from_pattern: &'static str,
+    /// To Pattern
     pub to_pattern: &'static str,
+    /// Performance Improvement
     pub performance_improvement: &'static str,
+    /// Migration Steps
     pub migration_steps: Vec<&'static str>,
 }
 // ==================== SECTION ====================
@@ -291,6 +304,7 @@ pub mod validation {
     
     // Compile-time assertions for default configurations
     const _: () = assert!(validate_capability_config::<1000, 30000, 100>());
+    ///  
     const _: () = assert!(validate_genome_config::<1000, 500>());
 }
 // ==================== SECTION ====================
@@ -331,11 +345,17 @@ pub mod benchmarking {
     
     /// Benchmark result
     #[derive(Debug)]
+    /// Benchmarkresult
     pub struct BenchmarkResult {
+        /// Iterations
         pub iterations: usize,
+        /// Successful Requests
         pub successful_requests: usize,
+        /// Total Duration Ms
         pub total_duration_ms: u64,
+        /// Average Request Time Ms
         pub average_request_time_ms: u64,
+        /// Success Rate
         pub success_rate: f64,
     }
     

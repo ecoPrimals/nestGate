@@ -13,6 +13,7 @@ use crate::error::utilities::safe_env_var_or_default;
 /// This struct captures all environment variables at initialization time,
 /// eliminating the need for runtime `env::var()` calls.
 #[derive(Debug, Clone)]
+/// Configuration for Environment
 pub struct EnvironmentConfig {
     // Operation mode detection
     orchestration_url_present: bool,
@@ -322,6 +323,7 @@ impl EnvironmentConfig {
 }
 
 impl Default for EnvironmentConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

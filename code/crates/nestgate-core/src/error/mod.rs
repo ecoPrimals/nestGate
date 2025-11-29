@@ -35,6 +35,7 @@ pub use data::*;
 
 // Type alias for convenience
 pub type NestGateError = NestGateUnifiedError;
+/// Type alias for Result
 pub type Result<T> = std::result::Result<T, NestGateError>;
 
 // Re-export core result types from result_types module (root-level canonical location)
@@ -91,15 +92,21 @@ use std::collections::HashMap;
 
 /// Error severity levels
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// Errorseverity
 pub enum ErrorSeverity {
+    /// Info
     Info,
+    /// Warning
     Warning,
+    /// Error
     Error,
+    /// Critical
     Critical,
 }
 
 /// Convert legacy `Result<T>` to canonical `Result<T>`
 pub fn migrate_result<T>(legacy_result: std::result::Result<T, NestGateError>) -> Result<T> {
+    /// Legacy Result
     legacy_result
 }
 

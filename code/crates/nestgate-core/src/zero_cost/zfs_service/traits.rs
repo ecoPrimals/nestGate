@@ -1,3 +1,5 @@
+//! Traits module
+
 use std::collections::HashMap;
 use std::future::Future;
 //
@@ -29,10 +31,8 @@ pub trait ZeroCostUniversalZfsService<
     /// Snapshot information type
     type SnapshotInfo: Clone + Send + Sync + Serialize + for<'de> Deserialize<'de>;
 
-    /// Health status type
     type HealthStatus: Clone + Send + Sync + Serialize + for<'de> Deserialize<'de>;
 
-    /// Service metrics type
     type ServiceMetrics: Clone + Send + Sync + Serialize + for<'de> Deserialize<'de>;
 
     /// Pool configuration type
@@ -56,7 +56,6 @@ pub trait ZeroCostUniversalZfsService<
 
     // ========== HEALTH AND STATUS OPERATIONS ==========
 
-    /// Health check - native async, zero-cost
     fn health_check(&self) -> impl Future<Output = Result<Self::HealthStatus>> + Send;
 
     /// Get service metrics - direct async method
@@ -163,17 +162,14 @@ pub trait ZeroCostUniversalZfsService<
 
     // ========== COMPILE-TIME CONFIGURATION ==========
 
-    /// Maximum number of pools - compile-time constant
     fn max_pools() -> usize {
         MAX_POOLS
     }
 
-    /// Maximum number of datasets - compile-time constant
     fn max_datasets() -> usize {
         MAX_DATASETS
     }
 
-    /// Maximum number of snapshots - compile-time constant
     fn max_snapshots() -> usize {
         MAX_SNAPSHOTS
     }

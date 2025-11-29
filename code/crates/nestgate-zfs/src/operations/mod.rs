@@ -4,6 +4,8 @@
 // real command execution, caching, metrics, and health monitoring.
 
 // Production ZFS operations (PHASE 2 MOCK REPLACEMENT)
+//! Operations module
+
 pub mod production;
 
 // Re-export the main types for convenience

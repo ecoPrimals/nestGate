@@ -200,6 +200,7 @@ pub trait CanonicalService: Send + Sync + 'static {
             Target removal: v0.12.0 (May 2026). \
             See: CANONICAL_PROVIDER_COMPARISON.md for detailed migration guide."
 )]
+/// CanonicalProvider trait
 pub trait CanonicalProvider<T>: CanonicalService {
     /// Provider-specific metadata
     type Metadata: Clone + Send + Sync + 'static;
@@ -304,6 +305,7 @@ pub trait CanonicalProvider<T>: CanonicalService {
     since = "0.9.0",
     note = "Use crate::traits::canonical::CanonicalStorage instead - unified in canonical_unified_traits module"
 )]
+/// CanonicalStorage trait
 pub trait CanonicalStorage: CanonicalService {
     /// Storage key type
     type Key: Clone + Send + Sync + 'static;
@@ -506,6 +508,7 @@ pub trait CanonicalStorage: CanonicalService {
     since = "0.9.0",
     note = "Use crate::traits::canonical::CanonicalSecurity instead - unified in canonical_unified_traits module"
 )]
+/// CanonicalSecurity trait
 pub trait CanonicalSecurity: CanonicalService {
     /// Token type (JWT, session, etc.)
     type Token: Clone + Send + Sync + 'static;
@@ -742,8 +745,11 @@ pub trait ZeroCostService<T>: Send + Sync + 'static {
 #[macro_export]
 macro_rules! assert_zero_cost {
     ($t:ty) => {
+        ///
         const _: () = {
+            /// Assert Send Sync
             fn assert_send_sync<T: Send + Sync>() {}
+            /// Assert Zero Sized
             fn assert_zero_sized<T>() {
                 assert_send_sync::<T>();
             }

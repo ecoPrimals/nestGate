@@ -15,6 +15,8 @@
 // - Support for any ecosystem (Management, k8s, Docker, etc.)
 // - Graceful fallbacks and sovereignty compliance
 
+//! Universal Ecosystem Integration module
+
 use nestgate_core::{
     universal_adapter::{PrimalAgnosticAdapter, CanonicalCapabilityRequest},
     canonical_modernization::{CanonicalEcosystemConfig},
@@ -246,12 +248,17 @@ impl UniversalEcosystemIntegration {
 
 /// Universal capability ID for ecosystem operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Capabilityid
 pub struct CapabilityId {
+    /// Domain
     pub domain: String,
+    /// Capability
     pub capability: String,
+    /// Version
     pub version: String,
 }
 impl CapabilityId {
+    /// Creates a new instance
     pub fn new(domain: &str, capability: &str, version: &str) -> Self { Self {
             domain: domain.to_string(),
             capability: capability.to_string(),
@@ -263,97 +270,155 @@ impl CapabilityId {
 
 /// Discovered ecosystem information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Ecosysteminfo
 pub struct EcosystemInfo {
+    /// Ecosystem identifier
     pub ecosystem_id: String,
+    /// Ecosystem Type
     pub ecosystem_type: EcosystemType,
+    /// Version
     pub version: String,
+    /// Capabilities
     pub capabilities: Vec<String>,
+    /// Endpoints
     pub endpoints: Vec<String>,
+    /// Health Status
     pub health_status: EcosystemHealthStatus,
+    /// Discovery Method
     pub discovery_method: String,
+    /// Discovered At
     pub discovered_at: SystemTime,
 }
 /// Ecosystem type discovered via capability-based detection
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of Ecosystem
 pub enum EcosystemType {
+    /// Management
     Management,
     // DEPRECATED: Kubernetes (k8s) - migrate to capability-based orchestration
     // Use CapabilityCategory::Orchestration instead
     #[deprecated(since = "3.0.0", note = "Use capability-based orchestration discovery")]
+    /// Kubernetes
     Kubernetes,
     // DEPRECATED: Docker containerization - migrate to capability-based container runtime
     // Use CapabilityCategory::ContainerRuntime instead
     #[deprecated(since = "3.0.0", note = "Use capability-based container runtime discovery")]
+    /// Docker
     Docker,
+    /// Nomad
     Nomad,
     Standalone,
     Unknown(String),
 }
 /// Ecosystem health status
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Status values for EcosystemHealth
 pub enum EcosystemHealthStatus {
+    /// Healthy
     Healthy,
+    /// Degraded
     Degraded,
+    /// Unhealthy
     Unhealthy,
+    /// Unknown
     Unknown,
 }
 /// Service registration information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Serviceregistrationinfo
 pub struct ServiceRegistrationInfo {
+    /// Service name
     pub service_name: String,
+    /// Service Version
     pub service_version: String,
+    /// Capabilities
     pub capabilities: Vec<String>,
+    /// Endpoints
     pub endpoints: Vec<ServiceEndpoint>,
+    /// Health Check Endpoint
     pub health_check_endpoint: String,
+    ///  Metadata
     pub _metadata: HashMap<String, String>,
 }
 /// Service endpoint information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Serviceendpoint
 pub struct ServiceEndpoint {
+    /// Name
     pub name: String,
+    /// Url
     pub url: String,
+    /// Protocol
     pub protocol: String,
+    /// Health Check
     pub health_check: Option<String>,
 }
 /// Registration result
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Registrationresult
 pub struct RegistrationResult {
+    /// Registration identifier
     pub registration_id: String,
+    /// Status
     pub status: RegistrationStatus,
+    /// Assigned Endpoints
     pub assigned_endpoints: Vec<String>,
+    /// Ttl
     pub ttl: Duration,
+    /// Renewal Token
     pub renewal_token: Option<String>,
 }
 /// Registration status
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Status values for Registration
 pub enum RegistrationStatus {
+    /// Success
     Success,
+    /// Partial
     Partial,
+    /// Failed
     Failed,
+    /// Pending
     Pending,
 }
 /// Universal ecosystem event
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Universalecosystemevent
 pub struct UniversalEcosystemEvent {
+    /// Event identifier
     pub event_id: String,
+    /// Event Type
     pub event_type: String,
+    /// Source Ecosystem
     pub source_ecosystem: String,
+    /// Timestamp
     pub timestamp: SystemTime,
+    /// Data
     pub data: serde_json::Value,
 }
 /// Event handling response
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for Event operation
 pub struct EventResponse {
+    /// Handled
     pub handled: bool,
+    /// Response Data
     pub response_data: Option<serde_json::Value>,
+    /// Next Actions
     pub next_actions: Vec<String>,
 }
 /// Ecosystem compatibility status
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Compatibilitystatus
 pub struct CompatibilityStatus {
+    /// Compatible
     pub compatible: bool,
+    /// Supported Features
     pub supported_features: Vec<String>,
+    /// Unsupported Features
     pub unsupported_features: Vec<String>,
+    /// Recommendations
     pub recommendations: Vec<String>,
+    /// Version Compatibility
     pub version_compatibility: HashMap<String, String>,
 } 

@@ -4,15 +4,20 @@
 // use crate::traits::canonical::CanonicalService;
 /// Simple signature struct for crypto operations
 #[derive(Debug, Clone)]
+/// Signature
 pub struct Signature {
+    /// Algorithm
     pub algorithm: String,
+    /// Signature
     pub signature: Vec<u8>,
 }
 // Define missing types temporarily
 pub trait UnifiedHandler {
+    /// Handles request
     fn handle(&self) -> std::result::Result<(), String>;
 }
 
+/// UnifiedProvider trait
 pub trait UnifiedProvider {
     /// Associated configuration type
     type Config;
@@ -23,6 +28,7 @@ pub trait UnifiedProvider {
     /// Associated response type
     type Response;
 
+    /// Provide
     fn provide(&self) -> std::result::Result<Vec<u8>, String>;
 }
 use crate::zero_cost::traits::ZeroCostStorageProvider;
@@ -32,11 +38,16 @@ use crate::zero_cost::traits::ZeroCostStorageProvider;
 /// Production-optimized storage provider
 pub struct ProductionStorageProvider;
 impl ZeroCostStorageProvider for ProductionStorageProvider {
+    /// Type alias for PoolInfo
     type PoolInfo = String;
+    /// Type alias for DatasetInfo
     type DatasetInfo = String;
+    /// Type alias for Error
     type Error = String;
+    /// Type alias for Result
     type Result = crate::Result<String>;
 
+    /// Gets Pool Info
     fn get_pool_info(
         &self,
         pool_name: &str,
@@ -45,6 +56,7 @@ impl ZeroCostStorageProvider for ProductionStorageProvider {
         async move { Ok(format!("Production pool info: {pool_name}")) }
     }
 
+    /// Gets Dataset Stats
     fn get_dataset_stats(
         &self,
         dataset_name: &str,
@@ -57,11 +69,16 @@ impl ZeroCostStorageProvider for ProductionStorageProvider {
 /// Development-optimized storage provider
 pub struct DevelopmentStorageProvider;
 impl ZeroCostStorageProvider for DevelopmentStorageProvider {
+    /// Type alias for PoolInfo
     type PoolInfo = String;
+    /// Type alias for DatasetInfo
     type DatasetInfo = String;
+    /// Type alias for Error
     type Error = String;
+    /// Type alias for Result
     type Result = crate::Result<String>;
 
+    /// Gets Pool Info
     fn get_pool_info(
         &self,
         pool_name: &str,
@@ -70,6 +87,7 @@ impl ZeroCostStorageProvider for DevelopmentStorageProvider {
         async move { Ok(format!("Development pool info: {pool_name}")) }
     }
 
+    /// Gets Dataset Stats
     fn get_dataset_stats(
         &self,
         dataset_name: &str,

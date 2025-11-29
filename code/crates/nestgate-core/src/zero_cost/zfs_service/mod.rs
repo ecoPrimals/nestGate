@@ -1,3 +1,5 @@
+//! Zfs Service module
+
 //
 // High-performance ZFS service implementation using zero-cost abstractions.
 // Eliminates async_trait overhead for maximum performance.

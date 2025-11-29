@@ -85,6 +85,7 @@ where
         MAX_SIZE
     }
 
+    /// Timeout Ms
     pub fn timeout_ms(&self) -> u64 {
         TIMEOUT_MS
     }
@@ -113,6 +114,7 @@ pub struct ZeroCostSystemBuilder<const MAX_SIZE: usize, const TIMEOUT_MS: u64> {
 impl<const MAX_SIZE: usize, const TIMEOUT_MS: u64> Default
     for ZeroCostSystemBuilder<MAX_SIZE, TIMEOUT_MS>
 {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

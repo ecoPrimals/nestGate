@@ -1,3 +1,5 @@
+//! Zero Cost Data Sources module
+
 use crate::error::NestGateError;
 use std::collections::HashMap;
 //
@@ -14,8 +16,11 @@ use tokio::io::{AsyncReadExt, AsyncSeekExt};
 /// Zero-cost data capability trait using compile-time generics
 #[allow(async_fn_in_trait)]
 pub trait ZeroCostDataCapability {
+    /// Type alias for Config
     type Config: Clone + Send + Sync;
+    /// Type alias for Stream
     type Stream: ZeroCostDataStream;
+    /// Type alias for Error
     type Error: Into<NestGateError>;
     /// Get the capability name at compile time
     const CAPABILITY_NAME: &'static str;
@@ -36,7 +41,9 @@ pub trait ZeroCostDataCapability {
 /// Zero-cost data stream trait
 #[allow(async_fn_in_trait)]
 pub trait ZeroCostDataStream {
+    /// Type alias for Item
     type Item: Send + Sync;
+    /// Type alias for Error
     type Error: Into<NestGateError>;
     /// Read data from the stream
     async fn read(&mut self, buffer: &mut [u8]) -> std::result::Result<usize, Self::Error>;
@@ -67,14 +74,21 @@ pub trait ZeroCostDataStream {
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for Data
 pub struct DataConfig {
+    /// Source Type
     pub source_type: String,
+    /// Endpoint
     pub endpoint: String,
+    /// Timeout Seconds
     pub timeout_seconds: u64,
+    /// Retry Attempts
     pub retry_attempts: u32,
+    /// Headers
     pub headers: std::collections::HashMap<String, String>,
 }
 impl Default for DataConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             source_type: "generic".to_string(),
@@ -88,10 +102,15 @@ impl Default for DataConfig {
 
 /// Stream metadata
 #[derive(Debug, Clone)]
+/// Streammetadata
 pub struct StreamMetadata {
+    /// Size
     pub size: Option<u64>,
+    /// Content Type
     pub content_type: String,
+    /// Encoding
     pub encoding: Option<String>,
+    /// Last Modified
     pub last_modified: Option<std::time::SystemTime>,
 }
 // ==================== SECTION ====================
@@ -109,6 +128,7 @@ pub struct HttpDataStream {
 }
 /// HTTP data errors
 #[derive(Debug, thiserror::Error)]
+/// Errors that can occur during HttpData operations
 pub enum HttpDataError {
     #[error("HTTP request failed: {0}")]
     RequestFailed(#[from] reqwest::Error),
@@ -118,12 +138,14 @@ pub enum HttpDataError {
     StreamError(String),
 }
 impl From<HttpDataError> for NestGateError {
+    /// From
     fn from(error: HttpDataError) -> Self {
         NestGateError::internal_error(
     }
 }
 
 impl HttpDataProvider {
+    /// Creates a new instance
     pub fn new(base_url: String) -> Self {
         Self {
             client: reqwest::Client::new(),
@@ -133,12 +155,17 @@ impl HttpDataProvider {
 }
 
 impl ZeroCostDataCapability for HttpDataProvider {
+    /// Type alias for Config
     type Config = DataConfig;
+    /// Type alias for Stream
     type Stream = HttpDataStream;
+    /// Type alias for Error
     type Error = HttpDataError;
 
+    /// Capability Name
     const CAPABILITY_NAME: &'static str = "http";
 
+    /// Creates  Stream
     async fn create_stream(
         &self,
         config: Self::Config,
@@ -174,6 +201,7 @@ impl ZeroCostDataCapability for HttpDataProvider {
         })
     }
 
+    /// Validates  Config
     fn validate_config(config: &Self::Config) -> std::result::Result<(), Self::Error> {
         if config.endpoint.is_empty() {
             return Err(HttpDataError::InvalidConfig(
@@ -188,15 +216,19 @@ impl ZeroCostDataCapability for HttpDataProvider {
         Ok(())
     }
 
+    /// Supported Formats
     fn supported_formats() -> &'static [&'static str] {
         &["json", "xml", "text", "binary"]
     }
 }
 
 impl ZeroCostDataStream for HttpDataStream {
+    /// Type alias for Item
     type Item = Vec<u8>;
+    /// Type alias for Error
     type Error = HttpDataError;
 
+    /// Read
     async fn read(&mut self, buffer: &mut [u8]) -> std::result::Result<usize, Self::Error> {
         if let Some(response) = &mut self.response {
             let chunk = response
@@ -217,12 +249,14 @@ impl ZeroCostDataStream for HttpDataStream {
         }
     }
 
+    /// Seek
     async fn seek(&mut self, _position: u64) -> std::result::Result<(), Self::Error> {
         Err(HttpDataError::StreamError(
             "HTTP streams do not support seeking".to_string(),
         ))
     }
 
+    /// Metadata
     fn metadata(&self) -> StreamMetadata {
         self.metadata.clone()
     }
@@ -241,6 +275,7 @@ pub struct FileDataStream {
 }
 /// File data errors
 #[derive(Debug, thiserror::Error)]
+/// Errors that can occur during FileData operations
 pub enum FileDataError {
     #[error("IO error: {0}")]
     IoError(#[from] std::io::Error),
@@ -252,6 +287,7 @@ pub enum FileDataError {
     PermissionDenied(String),
 }
 impl From<FileDataError> for NestGateError {
+    /// From
     fn from(error: FileDataError) -> Self {
         NestGateError::internal_error(
     }
@@ -264,12 +300,17 @@ impl FileDataProvider {
 }
 
 impl ZeroCostDataCapability for FileDataProvider {
+    /// Type alias for Config
     type Config = DataConfig;
+    /// Type alias for Stream
     type Stream = FileDataStream;
+    /// Type alias for Error
     type Error = FileDataError;
 
+    /// Capability Name
     const CAPABILITY_NAME: &'static str = "file";
 
+    /// Creates  Stream
     async fn create_stream(
         &self,
         config: Self::Config,
@@ -324,6 +365,7 @@ impl ZeroCostDataCapability for FileDataProvider {
         })
     }
 
+    /// Validates  Config
     fn validate_config(config: &Self::Config) -> std::result::Result<(), Self::Error> {
         if config.endpoint.is_empty() {
             return Err(FileDataError::InvalidConfig(
@@ -341,15 +383,19 @@ impl ZeroCostDataCapability for FileDataProvider {
         Ok(())
     }
 
+    /// Supported Formats
     fn supported_formats() -> &'static [&'static str] {
         &["json", "xml", "txt", "csv", "yaml", "binary"]
     }
 }
 
 impl ZeroCostDataStream for FileDataStream {
+    /// Type alias for Item
     type Item = Vec<u8>;
+    /// Type alias for Error
     type Error = FileDataError;
 
+    /// Read
     async fn read(&mut self, buffer: &mut [u8]) -> std::result::Result<usize, Self::Error> {
         if let Some(file) = &mut self.file {
             let bytes_read = file.read(buffer).await?;
@@ -360,6 +406,7 @@ impl ZeroCostDataStream for FileDataStream {
         }
     }
 
+    /// Seek
     async fn seek(&mut self, position: u64) -> std::result::Result<(), Self::Error> {
         if let Some(file) = &mut self.file {
             file.seek(std::io::SeekFrom::Start(position)).await?;
@@ -372,6 +419,7 @@ impl ZeroCostDataStream for FileDataStream {
         }
     }
 
+    /// Metadata
     fn metadata(&self) -> StreamMetadata {
         self.metadata.clone()
     }
@@ -407,10 +455,12 @@ impl<T: ZeroCostDataCapability> ZeroCostDataManager<T> {
             .map_err(|e| e.into())
     }
 
+    /// Capability Name
     pub fn capability_name() -> &'static str {
         T::CAPABILITY_NAME
     }
 
+    /// Supported Formats
     pub fn supported_formats() -> &'static [&'static str] {
         T::supported_formats()
     }
@@ -465,6 +515,7 @@ impl ZeroCostDataFactory {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Dataconfigcanonical
 pub type DataConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using DataConfig (the deprecated struct) for now.

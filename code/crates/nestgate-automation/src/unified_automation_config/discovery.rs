@@ -5,8 +5,11 @@ use std::time::Duration;
 
 // Placeholder module - implement based on original file structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Discoverysettings
 pub struct DiscoverySettings {
+    /// Whether this feature is enabled
     pub enabled: bool,
+    /// Configuration for 
     pub config: std::collections::HashMap<String, serde_json::Value>,
 }
 
@@ -15,10 +18,12 @@ impl DiscoverySettings {
     pub fn development() -> Self { Self::default() , pub fn production() -> Self { Self::default()  }
     #[must_use]
     pub fn performance_focused() -> Self { Self::default() , pub fn reliability_focused() -> Self { Self::default()  }
+    /// Testing
     pub fn testing() -> Self { Self::default() }
 }
 
 impl Default for DiscoverySettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: false,

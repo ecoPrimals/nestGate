@@ -70,13 +70,18 @@ pub async fn list_universal_pools(
 
 /// Create a new ZFS pool
 #[derive(Debug, Deserialize)]
+/// Request parameters for CreatePool operation
 pub struct CreatePoolRequest {
+    /// Name
     pub name: String,
+    /// Devices
     pub devices: Vec<String>,
     #[serde(default)]
+    /// Raid Type
     pub raid_type: String,
 }
 
+/// Creates  Pool
 pub async fn create_pool(
     State(manager): State<ZfsManagerState>,
     Json(request): Json<CreatePoolRequest>,
@@ -211,13 +216,18 @@ pub async fn list_datasets(
 
 /// Create a new dataset
 #[derive(Debug, Deserialize)]
+/// Request parameters for CreateDataset operation
 pub struct CreateDatasetRequest {
+    /// Pool
     pub pool: String,
+    /// Name
     pub name: String,
     #[serde(default)]
+    /// Tier
     pub tier: nestgate_core::canonical_types::StorageTier,
 }
 
+/// Creates  Dataset
 pub async fn create_dataset(
     State(manager): State<ZfsManagerState>,
     Json(request): Json<CreateDatasetRequest>,
@@ -337,11 +347,15 @@ pub async fn list_snapshots(
 
 /// Create a snapshot
 #[derive(Debug, Deserialize)]
+/// Request parameters for CreateSnapshot operation
 pub struct CreateSnapshotRequest {
+    /// Dataset
     pub dataset: String,
+    /// Name
     pub name: String,
 }
 
+/// Creates  Snapshot
 pub async fn create_snapshot(
     State(manager): State<ZfsManagerState>,
     Json(request): Json<CreateSnapshotRequest>,
@@ -425,6 +439,7 @@ pub async fn get_zfs_health(
 
 // Placeholder implementations for advanced features
 
+/// Gets Universal Storage Health
 pub async fn get_universal_storage_health() -> (StatusCode, Json<serde_json::Value>) {
     (
         StatusCode::NOT_IMPLEMENTED,
@@ -435,6 +450,7 @@ pub async fn get_universal_storage_health() -> (StatusCode, Json<serde_json::Val
     )
 }
 
+/// Gets Pool Status
 pub async fn get_pool_status(_path: Path<String>) -> (StatusCode, Json<serde_json::Value>) {
     (
         StatusCode::NOT_IMPLEMENTED,
@@ -445,6 +461,7 @@ pub async fn get_pool_status(_path: Path<String>) -> (StatusCode, Json<serde_jso
     )
 }
 
+/// Gets Performance Analytics
 pub async fn get_performance_analytics() -> (StatusCode, Json<serde_json::Value>) {
     (
         StatusCode::NOT_IMPLEMENTED,
@@ -455,6 +472,7 @@ pub async fn get_performance_analytics() -> (StatusCode, Json<serde_json::Value>
     )
 }
 
+/// Predict Tier
 pub async fn predict_tier(
     _body: Json<HashMap<String, serde_json::Value>>,
 ) -> (StatusCode, Json<serde_json::Value>) {
@@ -467,6 +485,7 @@ pub async fn predict_tier(
     )
 }
 
+/// Trigger Optimization
 pub async fn trigger_optimization(_path: Path<String>) -> (StatusCode, Json<serde_json::Value>) {
     (
         StatusCode::NOT_IMPLEMENTED,
@@ -477,6 +496,7 @@ pub async fn trigger_optimization(_path: Path<String>) -> (StatusCode, Json<serd
     )
 }
 
+/// Gets Dataset Properties
 pub async fn get_dataset_properties(_path: Path<String>) -> (StatusCode, Json<serde_json::Value>) {
     (
         StatusCode::NOT_IMPLEMENTED,
@@ -487,6 +507,7 @@ pub async fn get_dataset_properties(_path: Path<String>) -> (StatusCode, Json<se
     )
 }
 
+/// Sets Dataset Properties
 pub async fn set_dataset_properties(
     _path: Path<String>,
     _body: Json<HashMap<String, serde_json::Value>>,

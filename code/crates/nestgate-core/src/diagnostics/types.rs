@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::fmt;
 /// System diagnostic level
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+/// Diagnosticlevel
 pub enum DiagnosticLevel {
     /// Informational diagnostic
     Info,
@@ -15,6 +16,7 @@ pub enum DiagnosticLevel {
     Critical,
 }
 impl fmt::Display for DiagnosticLevel {
+    /// Fmt
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             DiagnosticLevel::Info => write!(f, "INFO"),
@@ -27,6 +29,7 @@ impl fmt::Display for DiagnosticLevel {
 
 /// System component type
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Types of Component
 pub enum ComponentType {
     /// CPU
     Cpu,
@@ -46,6 +49,7 @@ pub enum ComponentType {
     Cache,
 }
 impl fmt::Display for ComponentType {
+    /// Fmt
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             ComponentType::Cpu => write!(f, "CPU"),
@@ -62,19 +66,31 @@ impl fmt::Display for ComponentType {
 
 /// Service information for diagnostics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Serviceinfo
 pub struct ServiceInfo {
+    /// Name
     pub name: String,
+    /// Version
     pub version: String,
+    /// Status
     pub status: String,
+    /// Start Time
     pub start_time: Option<std::time::SystemTime>,
+    /// Pid
     pub pid: Option<u32>,
+    /// Memory Bytes
     pub memory_bytes: Option<u64>,
+    /// Human-readable description
     pub description: Option<String>,
+    /// Dependencies
     pub dependencies: Option<Vec<String>>,
+    /// Cpu Percent
     pub cpu_percent: Option<f64>,
+    /// Command Line
     pub command_line: Option<String>,
 }
 impl Default for ServiceInfo {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             name: "unknown".to_string(),

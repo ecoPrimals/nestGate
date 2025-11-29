@@ -41,14 +41,20 @@ pub use crate::constants::network::{
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for EventsStreaming
 pub struct EventsStreamingConfig {
+    /// Whether this feature is enabled
     pub enabled: bool,
+    /// Timeout
     pub timeout: Duration,
+    /// Max Connections
     pub max_connections: usize,
+    /// Size of buffer
     pub buffer_size: usize,
 }
 
 impl Default for EventsStreamingConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -68,22 +74,32 @@ pub use crate::traits::Service;
 
 /// Health status enumeration
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+/// Status values for Health
 pub enum HealthStatus {
+    /// Healthy
     Healthy,
+    /// Degraded
     Degraded,
+    /// Unhealthy
     Unhealthy,
 }
 
 /// Performance metrics for monitoring
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Metrics
 pub struct Metrics {
+    /// Requests Processed
     pub requests_processed: u64,
+    /// Errors Encountered
     pub errors_encountered: u64,
+    /// Average Response Time
     pub average_response_time: Duration,
+    /// Memory Usage Bytes
     pub memory_usage_bytes: u64,
 }
 
 impl Default for Metrics {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             requests_processed: 0,
@@ -98,6 +114,7 @@ impl Default for Metrics {
 
 /// Default implementation of the service
 #[derive(Debug)]
+/// Service implementation for Default
 pub struct DefaultService {
     #[allow(dead_code)] // Stored for future use
     config: EventsStreamingConfig,
@@ -120,29 +137,35 @@ impl DefaultService {
 }
 
 impl Service for DefaultService {
+    /// Name
     fn name(&self) -> &str {
         "streaming"
     }
 
+    /// Initialize
     async fn initialize(&self) -> Result<()> {
         tracing::info!("Initializing streaming service");
         Ok(())
     }
 
+    /// Health Check
     async fn health_check(&self) -> Result<bool> {
         Ok(true)
     }
 
+    /// Start
     async fn start(&self) -> Result<()> {
         tracing::info!("Starting streaming service");
         Ok(())
     }
 
+    /// Stop
     async fn stop(&self) -> Result<()> {
         tracing::info!("Stopping streaming service");
         Ok(())
     }
 
+    /// Shutdown
     async fn shutdown(&self) -> Result<()> {
         tracing::info!("Shutting down streaming service");
         Ok(())
@@ -186,6 +209,7 @@ pub async fn validate_config(config: &EventsStreamingConfig) -> crate::Result<()
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Eventsstreamingconfigcanonical
 pub type EventsStreamingConfigCanonical =
     crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 

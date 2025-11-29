@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// Controls coordination between distributed services via heartbeats and a central coordinator.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for NetworkOrchestration
 pub struct NetworkOrchestrationConfig {
     /// Whether orchestration is enabled.
     pub enabled: bool,

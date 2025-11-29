@@ -1,6 +1,8 @@
 //
 // Tests for snapshot policy and retention
 
+//! Snapshot Tests module
+
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::time::SystemTime;

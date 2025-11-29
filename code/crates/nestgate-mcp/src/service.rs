@@ -2,6 +2,8 @@
 // This module contains the main MCP service that orchestrates MCP operations.
 // **ZERO-COST ARCHITECTURE**: Generic dispatch eliminates Arc<dyn> overhead
 
+//! Service module
+
 use crate::session::SessionManager;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -119,10 +121,12 @@ mod tests {
     use super::*;
     use crate::client::MockOrchestratorClient;
 
+    /// Creates  Test Config
     fn create_test_config() -> EnhancedMcpConfig {
         EnhancedMcpConfig::default()
     }
 
+    /// Creates  Test Service
     fn create_test_service() -> ZeroCostEnhancedMcpService<MockOrchestratorClient> {
         let config = create_test_config();
         let client = MockOrchestratorClient::new();

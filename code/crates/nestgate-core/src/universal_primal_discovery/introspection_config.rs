@@ -3,6 +3,7 @@ use std::sync::Arc;
 /// Thread-safe configuration for system introspection
 /// Captures environment variables at initialization to prevent race conditions
 #[derive(Debug, Clone)]
+/// Configuration for Introspection
 pub struct IntrospectionConfig {
     // Container/orchestration detection
     kubernetes_namespace: Option<String>,
@@ -97,21 +98,25 @@ impl IntrospectionConfig {
 
     // Builder methods for tests
 
+    /// Builder method to set Kubernetes Namespace
     pub fn with_kubernetes_namespace(mut self, namespace: String) -> Self {
         self.kubernetes_namespace = Some(namespace);
         self
     }
 
+    /// Builder method to set Docker Compose Project
     pub fn with_docker_compose_project(mut self, project: String) -> Self {
         self.docker_compose_project = Some(project);
         self
     }
 
+    /// Builder method to set Compute Capability Type
     pub fn with_compute_capability_type(mut self, compute_type: String) -> Self {
         self.compute_capability_type = Some(compute_type);
         self
     }
 
+    /// Builder method to set Max File Handles
     pub fn with_max_file_handles(mut self, limit: usize) -> Self {
         self.max_file_handles = Some(limit);
         self
@@ -119,6 +124,7 @@ impl IntrospectionConfig {
 }
 
 impl Default for IntrospectionConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

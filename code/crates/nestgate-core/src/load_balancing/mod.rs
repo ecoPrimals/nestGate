@@ -47,22 +47,32 @@ use serde::{Deserialize, Serialize};
 
 /// Load balancing strategy hint (for capability discovery)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+/// Loadbalancingstrategy
 pub enum LoadBalancingStrategy {
+    /// Roundrobin
     RoundRobin,
+    /// Leastconnections
     LeastConnections,
+    /// Weightedrandom
     WeightedRandom,
+    /// Iphash
     IpHash,
 }
 
 /// Load balancing configuration (for capability requests)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for LoadBalancing
 pub struct LoadBalancingConfig {
+    /// Strategy
     pub strategy: LoadBalancingStrategy,
+    /// Health Check Interval Secs
     pub health_check_interval_secs: u64,
+    /// Max Retries
     pub max_retries: u32,
 }
 
 impl Default for LoadBalancingConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             strategy: LoadBalancingStrategy::RoundRobin,
@@ -74,10 +84,15 @@ impl Default for LoadBalancingConfig {
 
 /// Backend server information (for capability requests)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Backendserver
 pub struct BackendServer {
+    /// Unique identifier
     pub id: String,
+    /// Address
     pub address: String,
+    /// Weight
     pub weight: u32,
+    /// Healthy
     pub healthy: bool,
 }
 

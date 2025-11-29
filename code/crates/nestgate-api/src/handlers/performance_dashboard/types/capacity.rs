@@ -10,6 +10,7 @@ use std::time::SystemTime;
 ///
 /// Analysis of system capacity and resource utilization.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Capacityanalysis
 pub struct CapacityAnalysis {
     /// Total system capacity in bytes
     pub total_capacity: u64,
@@ -55,6 +56,7 @@ pub struct CapacityAnalysis {
 ///
 /// Detailed capacity information for storage pools.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Poolcapacitydetail
 pub struct PoolCapacityDetail {
     /// Pool name
     pub pool_name: String,
@@ -74,6 +76,7 @@ pub struct PoolCapacityDetail {
 ///
 /// Capacity information for a specific resource type.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Resourcecapacity
 pub struct ResourceCapacity {
     /// Resource type (CPU, Memory, Disk, etc.)
     pub resource_type: String,
@@ -93,6 +96,7 @@ pub struct ResourceCapacity {
 ///
 /// Recommendation for capacity planning and optimization.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Capacityrecommendation
 pub struct CapacityRecommendation {
     /// Recommendation type
     pub recommendation_type: RecommendationType,
@@ -110,6 +114,7 @@ pub struct CapacityRecommendation {
 ///
 /// Health status of storage pools.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Status values for PoolHealth
 pub enum PoolHealthStatus {
     /// Pool is healthy
     Healthy,
@@ -125,6 +130,7 @@ pub enum PoolHealthStatus {
 ///
 /// Type of capacity recommendation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of Recommendation
 pub enum RecommendationType {
     /// Scale up resources
     ScaleUp,
@@ -142,6 +148,7 @@ pub enum RecommendationType {
 ///
 /// Priority level for recommendations.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Recommendationpriority
 pub enum RecommendationPriority {
     /// Low priority
     Low,

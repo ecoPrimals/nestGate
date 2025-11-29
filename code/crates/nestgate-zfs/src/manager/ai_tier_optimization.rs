@@ -1,10 +1,11 @@
-use crate::Result;
+use nestgate_core::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use tracing::{debug, info};
 
 /// AI-driven tier optimization for ZFS storage
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Aitieroptimizer
 pub struct AiTierOptimizer {
     /// Configuration for AI optimization
     config: AiOptimizationConfig,
@@ -31,6 +32,7 @@ pub struct AiTierOptimizer {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for AiOptimization
 pub struct AiOptimizationConfig {
     /// Enable AI optimization
     pub enabled: bool,
@@ -43,6 +45,7 @@ pub struct AiOptimizationConfig {
 }
 /// Performance metrics for AI optimization
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performancemetric
 pub struct PerformanceMetric {
     /// Timestamp of the metric
     pub timestamp: u64,
@@ -57,6 +60,7 @@ pub struct PerformanceMetric {
 }
 /// Data access patterns for optimization
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Accesspattern
 pub enum AccessPattern {
     /// Sequential access pattern
     Sequential,
@@ -66,6 +70,7 @@ pub enum AccessPattern {
     Mixed,
 }
 impl Default for AiOptimizationConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: false,
@@ -253,6 +258,7 @@ impl AiTierOptimizer {
 
 /// Storage tier types
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+/// Types of Tier
 pub enum TierType {
     /// Hot tier - fast access, expensive storage
     Hot,
@@ -263,6 +269,7 @@ pub enum TierType {
 }
 /// Tier optimization recommendation
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Tieroptimizationrecommendation
 pub struct TierOptimizationRecommendation {
     /// Dataset name
     pub dataset: String,
@@ -285,6 +292,7 @@ pub struct TierOptimizationRecommendation {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Aioptimizationconfigcanonical
 pub type AiOptimizationConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
@@ -296,6 +304,7 @@ pub type AiOptimizationConfigCanonical =
 mod tests {
     use super::*;
 
+    /// Creates  Test Config
     fn create_test_config() -> AiOptimizationConfig {
         AiOptimizationConfig {
             enabled: true,
@@ -305,6 +314,7 @@ mod tests {
         }
     }
 
+    /// Creates  Test Metric
     fn create_test_metric(
         read_ops: u64,
         write_ops: u64,

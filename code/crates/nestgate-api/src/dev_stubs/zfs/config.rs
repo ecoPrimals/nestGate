@@ -38,6 +38,7 @@ use tracing::{debug, info};
 /// Configuration structure for ZFS stub operations during development.
 /// This is NOT production configuration - see `nestgate-zfs` for real implementations.
 #[derive(Debug, Clone)]
+/// Configuration for Zfs
 pub struct ZfsConfig {
     /// List of available ZFS pools (hardcoded for development)
     pub pools: Vec<String>,
@@ -46,6 +47,7 @@ pub struct ZfsConfig {
 }
 
 impl Default for ZfsConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             pools: vec!["tank".to_string(), "backup".to_string()],
@@ -86,6 +88,7 @@ impl Default for ZfsConfig {
     since = "0.1.0",
     note = "Development stub only. Use nestgate_zfs::operations::production::ProductionZfsOperations for production."
 )]
+/// Manager for ProductionZfs operations
 pub struct ProductionZfsManager {
     config: ZfsConfig,
 }
@@ -93,12 +96,14 @@ pub struct ProductionZfsManager {
 impl ProductionZfsManager {
     /// Create a new production ZFS manager with the given configuration
     #[must_use]
+    /// Fn
     pub const fn new(config: ZfsConfig) -> Self {
         Self { config }
     }
 
     /// Get reference to the ZFS configuration
     #[must_use]
+    /// Fn
     pub const fn config(&self) -> &ZfsConfig {
         &self.config
     }

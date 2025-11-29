@@ -6,6 +6,7 @@ use crate::handlers::zfs::universal_zfs_types::{UniversalZfsError, UniversalZfsR
 
 use super::core::FailSafeZfsService;
 
+/// Optimize
 pub async fn optimize(service: &FailSafeZfsService) -> UniversalZfsResult<String> {
     // Check if circuit breaker allows execution
     if !service.circuit_breaker.can_execute().await {
@@ -34,6 +35,7 @@ pub async fn optimize(service: &FailSafeZfsService) -> UniversalZfsResult<String
     }
 }
 
+/// Gets Optimization Analytics
 pub async fn get_optimization_analytics(
     service: &FailSafeZfsService,
 ) -> UniversalZfsResult<serde_json::Value> {
@@ -64,6 +66,7 @@ pub async fn get_optimization_analytics(
     }
 }
 
+/// Predict Tier
 pub async fn predict_tier(
     service: &FailSafeZfsService,
     file_path: &str,
@@ -95,6 +98,7 @@ pub async fn predict_tier(
     }
 }
 
+/// Gets Configuration
 pub async fn get_configuration(
     service: &FailSafeZfsService,
 ) -> UniversalZfsResult<serde_json::Value> {
@@ -125,6 +129,7 @@ pub async fn get_configuration(
     }
 }
 
+/// Updates  Configuration
 pub async fn update_configuration(
     service: &FailSafeZfsService,
     config: serde_json::Value,
@@ -156,6 +161,7 @@ pub async fn update_configuration(
     }
 }
 
+/// Shutdown
 pub async fn shutdown(service: &FailSafeZfsService) -> UniversalZfsResult<()> {
     // Check if circuit breaker allows execution
     if !service.circuit_breaker.can_execute().await {

@@ -8,6 +8,7 @@ use std::time::SystemTime;
 
 /// Health status of a service
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Healthstatus
 pub struct HealthStatus {
     /// Service name
     pub service_name: String,
@@ -23,6 +24,7 @@ pub struct HealthStatus {
 
 /// Service status
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Status values for Service
 pub enum ServiceStatus {
     /// Service is healthy
     Healthy,
@@ -36,6 +38,7 @@ pub enum ServiceStatus {
 
 /// Individual health check result
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Healthcheck
 pub struct HealthCheck {
     /// Check name
     pub name: String,
@@ -47,6 +50,7 @@ pub struct HealthCheck {
 
 /// Service metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Servicemetrics
 pub struct ServiceMetrics {
     /// Service name
     pub service_name: String,
@@ -69,6 +73,7 @@ pub struct ServiceMetrics {
 }
 
 impl Default for ServiceMetrics {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             service_name: String::new(),

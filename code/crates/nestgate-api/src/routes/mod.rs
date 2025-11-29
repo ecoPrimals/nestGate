@@ -1,3 +1,5 @@
+//! Routes module
+
 use axum::{
     routing::{delete, get, patch, post, put},
     Router,
@@ -41,6 +43,7 @@ pub type ZfsManager = ProductionZfsManager;
 /// Contains shared resources and services that route handlers need
 /// to access, including ZFS management and configuration.
 #[derive(Clone)]
+/// Appstate
 pub struct AppState {
     /// ZFS manager instance for storage operations
     pub zfs_manager: Arc<ZfsManager>,
@@ -50,6 +53,7 @@ pub struct AppState {
 }
 
 impl Default for AppState {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -103,6 +107,7 @@ impl AppState {
 
     /// Initialize storage systems - ZFS manager and Universal Storage Bridge
     #[must_use]
+    /// Fn
     pub const fn with_zfs_manager(self) -> Self {
         // ZFS manager already initialized in constructor
         self
@@ -305,6 +310,7 @@ pub fn create_router_with_state() -> Router {
     create_router_with_initialized_state(app_state)
 }
 
+/// Creates  Router With Initialized State
 fn create_router_with_initialized_state(app_state: AppState) -> Router {
     let router = Router::new()
         .route("/health", get(health_check))
@@ -468,6 +474,7 @@ fn create_router_with_initialized_state(app_state: AppState) -> Router {
     router.with_state(app_state)
 }
 
+/// Health Check
 async fn health_check() -> axum::response::Json<serde_json::Value> {
     axum::response::Json(serde_json::json!({
         "status": "ok",

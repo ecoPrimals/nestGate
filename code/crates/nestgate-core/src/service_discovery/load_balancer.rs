@@ -52,6 +52,7 @@ impl LoadBalancer {
     }
     }
 
+    /// Round Robin Select
     async fn round_robin_select(
         &self,
         service_name: &str,
@@ -68,6 +69,7 @@ impl LoadBalancer {
         Some(selected.clone())
     }
 
+    /// Random Select
     fn random_select(&self, endpoints: &[&ServiceEndpoint]) -> Option<ServiceEndpoint> {
         if endpoints.is_empty() {
             return None;
@@ -79,12 +81,14 @@ impl LoadBalancer {
         Some(endpoints[index].clone())
     }
 
+    /// Least Connections Select
     fn least_connections_select(&self, endpoints: &[&ServiceEndpoint]) -> Option<ServiceEndpoint> {
         // For now, just select the first healthy endpoint
         // In a real implementation, we'd track active connections per endpoint
         endpoints.first().map(|e| (*e).clone())
     }
 
+    /// Weighted Round Robin Select
     fn weighted_round_robin_select(
         &self,
         endpoints: &[&ServiceEndpoint],

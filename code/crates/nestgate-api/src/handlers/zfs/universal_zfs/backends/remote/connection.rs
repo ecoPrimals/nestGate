@@ -3,6 +3,7 @@ use std::time::Duration;
 
 /// Connection statistics for monitoring
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
+/// Connectionstats
 pub struct ConnectionStats {
     /// Total number of requests made through this connection
     pub total_requests: u64,
@@ -63,6 +64,7 @@ impl ConnectionStats {
 
 /// Connection-related errors
 #[derive(Debug, thiserror::Error)]
+/// Errors that can occur during Connection operations
 pub enum ConnectionError {
     /// Connection timeout occurred
     #[error("Connection timeout: {0}")]

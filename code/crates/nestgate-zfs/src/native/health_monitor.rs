@@ -3,11 +3,41 @@ use super::command_executor::NativeZfsCommandExecutor;
 use nestgate_core::Result;
 use std::sync::Arc;
 
+/// Native ZFS health monitoring system
+///
+/// Provides real-time health monitoring and status checks for ZFS pools
+/// and datasets, including scrub status, error detection, and system health.
+///
+/// # Examples
+///
+/// ```no_run
+/// use nestgate_zfs::native::health_monitor::NativeZfsHealthMonitor;
+/// use nestgate_zfs::native::command_executor::NativeZfsCommandExecutor;
+/// use std::sync::Arc;
+///
+/// # async fn example() -> nestgate_core::Result<()> {
+/// let executor = Arc::new(NativeZfsCommandExecutor::new());
+/// let monitor = NativeZfsHealthMonitor::new(executor);
+///
+/// // Check system health
+/// let healthy = monitor.check_system_health().await?;
+/// # Ok(())
+/// # }
+/// ```
 pub struct NativeZfsHealthMonitor {
     command_executor: Arc<NativeZfsCommandExecutor>,
 }
 
 impl NativeZfsHealthMonitor {
+    /// Creates a new health monitor instance
+    ///
+    /// # Arguments
+    ///
+    /// * `command_executor` - Shared reference to the ZFS command executor
+    ///
+    /// # Returns
+    ///
+    /// A new `NativeZfsHealthMonitor` instance
     #[must_use]
     pub fn new(command_executor: Arc<NativeZfsCommandExecutor>) -> Self {
         Self { command_executor }
@@ -30,6 +60,7 @@ impl NativeZfsHealthMonitor {
 mod tests {
     use super::*;
 
+    /// Creates  Test Executor
     fn create_test_executor() -> Arc<NativeZfsCommandExecutor> {
         Arc::new(NativeZfsCommandExecutor::new())
     }

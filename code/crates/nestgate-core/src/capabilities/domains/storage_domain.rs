@@ -19,6 +19,7 @@ impl StorageDomain {
     }
 
 impl Default for StorageDomain {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

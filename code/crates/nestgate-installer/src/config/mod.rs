@@ -1,6 +1,8 @@
 // Simplified, unified installer configuration using canonical patterns
 
 // Migration utilities no longer needed - using canonical configurations
+//! Config module
+
 use nestgate_core::config::canonical_primary::NestGateCanonicalConfig;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -28,11 +30,15 @@ pub mod validation;
 /// Installer configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InstallerConfig {
+    /// Configuration for base
     pub base_config: NestGateCanonicalConfig,
+    /// Installation Path
     pub installation_path: String,
+    /// Environment
     pub environment: String,
 }
 impl Default for InstallerConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             base_config: NestGateCanonicalConfig::default(),
@@ -105,6 +111,7 @@ pub mod installer_config_factory {
     /// Development configuration
     #[must_use]
     pub fn development() -> InstallerConfig {
+        /// Installerconfig
         InstallerConfig {
             base_config: NestGateCanonicalConfig::default(),
             installation_path: "/opt/nestgate".to_string(),

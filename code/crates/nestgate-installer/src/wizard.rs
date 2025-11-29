@@ -36,6 +36,7 @@ impl InstallationWizard {
         Ok(self.config.clone())
     }
 
+    /// Configure Installation Path
     fn configure_installation_path(&mut self) -> Result<()> {
         println!("📁 Installation Directory");
 
@@ -61,6 +62,7 @@ impl InstallationWizard {
         Ok(())
     }
 
+    /// Configure System Integration
     fn configure_system_integration(&mut self) -> Result<()> {
         println!("🔧 System Integration");
 
@@ -88,6 +90,7 @@ impl InstallationWizard {
         Ok(())
     }
 
+    /// Configure Components
     fn configure_components(&mut self) -> Result<()> {
         println!("🔧 Component Selection");
 
@@ -105,6 +108,7 @@ impl InstallationWizard {
         Ok(())
     }
 
+    /// Configure Advanced Features
     fn configure_advanced_features(&mut self) -> Result<()> {
         println!("⚙️  Advanced Features");
 
@@ -129,6 +133,7 @@ impl InstallationWizard {
         Ok(())
     }
 
+    /// Show Summary
     fn show_summary(&self) -> Result<()> {
         println!("📋 Installation Summary");
         println!("======================");

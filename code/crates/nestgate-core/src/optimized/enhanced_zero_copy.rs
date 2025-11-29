@@ -102,6 +102,7 @@ struct BufferPoolStats {
     _cache_hits: u64, // Prefixed to indicate intentional unused
 }
 impl BufferPoolStats {
+    /// Fn
     const fn new() -> Self {
         Self {
             allocations: 0,
@@ -152,6 +153,7 @@ impl ZeroCopyStringOps {
             result.push_str(part);
         }
 
+        /// Result
         result
     }
 }

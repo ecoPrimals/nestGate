@@ -1,3 +1,5 @@
+//! Hybrid Capabilities module
+
 use crate::error::NestGateError;
 use std::collections::HashMap;
 //
@@ -18,6 +20,7 @@ use crate::universal_adapter::PrimalAgnosticAdapter;
 
 /// Capability execution modes
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Capabilitymode
 pub enum CapabilityMode {
     /// Fast, lightweight, storage-specific intelligence
     LocalSmart,
@@ -28,6 +31,7 @@ pub enum CapabilityMode {
 }
 /// Fallback strategy when external capabilities fail
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Fallbackstrategy
 pub enum FallbackStrategy {
     /// Fall back to local smart implementation
     LocalSmart,
@@ -38,10 +42,15 @@ pub enum FallbackStrategy {
 }
 /// Configuration for a specific capability
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Capability
 pub struct CapabilityConfig {
+    /// Mode
     pub mode: CapabilityMode,
+    /// Fallback
     pub fallback: Option<FallbackStrategy>,
+    /// Timeout Ms
     pub timeout_ms: Option<u64>,
+    /// Retry Attempts
     pub retry_attempts: Option<u32>,
 }
 /// Hybrid capability resolver that maintains primal sovereignty
@@ -56,6 +65,7 @@ pub struct HybridCapabilityResolver {
     capability_configs: Arc<RwLock<HashMap<String, CapabilityConfig>>>,
 }
 impl HybridCapabilityResolver {
+    /// Creates a new instance
     pub fn new(
         universal_adapter: Arc<UniversalAdapter>,
         config: HashMap<String, CapabilityConfig>,
@@ -169,6 +179,7 @@ impl HybridCapabilityResolver {
         }
     }
 
+    /// Gets Capability Config
     async fn get_capability_config(
         &self,
         capability: &str,
@@ -188,12 +199,14 @@ pub struct LocalStorageCapabilities {
     // Storage-specific intelligence that doesn't require external compute
 }
 impl Default for LocalStorageCapabilities {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
 }
 
 impl LocalStorageCapabilities {
+    /// Creates a new instance
     pub fn new() -> Self {
         Self {}
     }
@@ -263,12 +276,14 @@ pub struct FailsafeDefaults {
     default_compression: CompressionType,
 }
 impl Default for FailsafeDefaults {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
 }
 
 impl FailsafeDefaults {
+    /// Creates a new instance
     pub fn new() -> Self {
         Self {
             default_tier: StorageTier::Warm,           // Safe middle ground
@@ -294,23 +309,35 @@ impl FailsafeDefaults {
 
 // Supporting types
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Filemetrics
 pub struct FileMetrics {
+    /// Size Bytes
     pub size_bytes: u64,
+    /// Access Frequency
     pub access_frequency: f64, // accesses per day
+    /// Age Days
     pub age_days: u32,
+    /// File Type
     pub file_type: String,
+    /// Last Modified
     pub last_modified: chrono::DateTime<chrono::Utc>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Tierrecommendation
 pub struct TierRecommendation {
+    /// Tier
     pub tier: StorageTier,
+    /// Confidence
     pub confidence: f64, // 0.0 to 1.0
+    /// Reasoning
     pub reasoning: String,
+    /// Method
     pub method: String, // "local_smart", "external_ai", "failsafe"
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagetier
 pub enum StorageTier {
     Hot,  // NVMe, fastest access
     Warm, // SSD, balanced performance
@@ -318,7 +345,9 @@ pub enum StorageTier {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of Compression
 pub enum CompressionType {
+    /// None
     None,
     LZ4,  // Fast compression
     ZSTD, // Balanced compression
@@ -326,16 +355,24 @@ pub enum CompressionType {
 }
 
 #[derive(Debug, Clone)]
+/// Request parameters for Capability operation
 pub struct CapabilityRequest {
+    /// Capability Type
     pub capability_type: String,
+    /// Data
     pub data: serde_json::Value,
+    /// Timeout Ms
     pub timeout_ms: Option<u64>,
 }
 
 #[derive(Debug, Clone)]
+/// Response data for Capability operation
 pub struct CapabilityResponse {
+    /// Data
     pub data: serde_json::Value,
+    /// Provider
     pub provider: String, // Which primal provided the response (set by universal adapter)
+    /// Execution Time Ms
     pub execution_time_ms: u64,
 }
 
@@ -402,24 +439,35 @@ impl StoragePattern {
 
 #[derive(Debug, Clone)]
 enum AccessPattern {
+    /// Hot
     Hot,
+    /// Warm
     Warm,
+    /// Cold
     Cold,
 }
 
 #[derive(Debug, Clone)]
 enum SizeCategory {
+    /// Tiny
     Tiny,
+    /// Small
     Small,
+    /// Medium
     Medium,
+    /// Large
     Large,
 }
 
 #[derive(Debug, Clone)]
 enum AgeCategory {
+    /// New
     New,
+    /// Recent
     Recent,
+    /// Moderate
     Moderate,
+    /// Old
     Old,
 }
 

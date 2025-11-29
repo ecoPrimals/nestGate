@@ -7,6 +7,7 @@ use crate::{Result};
 /// Create a temporary directory for testing
 use crate::error::NestGateError;
 use std::path::PathBuf;
+/// Creates  Temp Dir
 pub fn create_temp_dir(prefix: &str) -> Result<PathBuf> {
     let temp_dir = std::env::temp_dir().join("nestgate-tests").join(format!(
         "{}_{}",

@@ -2,6 +2,8 @@
 // This module implements lifecycle actions and automatic stage rules
 // for dataset management and tier optimization.
 
+//! Actions module
+
 use super::types::{DatasetLifecycle, LifecycleStage};
 use crate::types::StorageTier;
 use nestgate_core::error::CanonicalResult as Result;
@@ -10,10 +12,15 @@ use tracing::{debug, info, warn};
 
 /// Result of executing a lifecycle action
 #[derive(Debug, Clone)]
+/// Actionresult
 pub struct ActionResult {
+    /// Action
     pub action: String,
+    /// Success
     pub success: bool,
+    /// Message
     pub message: String,
+    /// Timestamp
     pub timestamp: SystemTime,
 }
 /// Execute a lifecycle action on a dataset
@@ -102,6 +109,7 @@ fn execute_compression_action(dataset_name: &str) -> Result<ActionResult> {
     })
 }
 
+/// Execute Migration Action
 fn execute_migration_action(dataset_name: &str, target_tier: StorageTier) -> Result<ActionResult> {
     info!(
         "Migrating dataset '{}' to {:?} tier",
@@ -121,6 +129,7 @@ fn execute_migration_action(dataset_name: &str, target_tier: StorageTier) -> Res
     })
 }
 
+/// Execute Snapshot Action
 fn execute_snapshot_action(dataset_name: &str) -> Result<ActionResult> {
     info!("Creating snapshot for dataset: {}", dataset_name);
 
@@ -136,6 +145,7 @@ fn execute_snapshot_action(dataset_name: &str) -> Result<ActionResult> {
     })
 }
 
+/// Execute Optimization Action
 fn execute_optimization_action(
     dataset_name: &str,
     lifecycle: &DatasetLifecycle,
@@ -160,6 +170,7 @@ fn execute_optimization_action(
     })
 }
 
+/// Execute Access Time Update
 fn execute_access_time_update(dataset_name: &str) -> Result<ActionResult> {
     debug!("Updating access time for dataset: {}", dataset_name);
 
@@ -175,6 +186,7 @@ fn execute_access_time_update(dataset_name: &str) -> Result<ActionResult> {
     })
 }
 
+/// Execute Archive Action
 fn execute_archive_action(dataset_name: &str) -> Result<ActionResult> {
     info!("Archiving dataset: {}", dataset_name);
 
@@ -190,6 +202,7 @@ fn execute_archive_action(dataset_name: &str) -> Result<ActionResult> {
     })
 }
 
+/// Execute Cleanup Action
 fn execute_cleanup_action(dataset_name: &str) -> Result<ActionResult> {
     info!("Cleaning up temporary files for dataset: {}", dataset_name);
 
@@ -229,6 +242,7 @@ fn apply_new_dataset_rules(dataset_name: &str) -> Result<()> {
     Ok(())
 }
 
+/// Apply Active Dataset Rules
 fn apply_active_dataset_rules(dataset_name: &str, lifecycle: &DatasetLifecycle) -> Result<()> {
     debug!("Applying rules for active dataset: {}", dataset_name);
 
@@ -243,6 +257,7 @@ fn apply_active_dataset_rules(dataset_name: &str, lifecycle: &DatasetLifecycle) 
     Ok(())
 }
 
+/// Apply Aging Dataset Rules
 async fn apply_aging_dataset_rules(dataset_name: &str, lifecycle: &DatasetLifecycle) -> Result<()> {
     debug!("Applying rules for aging dataset: {}", dataset_name);
 
@@ -257,6 +272,7 @@ async fn apply_aging_dataset_rules(dataset_name: &str, lifecycle: &DatasetLifecy
     Ok(())
 }
 
+/// Apply Archived Dataset Rules
 async fn apply_archived_dataset_rules(dataset_name: &str) -> Result<()> {
     debug!("Applying rules for archived dataset: {}", dataset_name);
 
@@ -267,6 +283,7 @@ async fn apply_archived_dataset_rules(dataset_name: &str) -> Result<()> {
     Ok(())
 }
 
+/// Apply Obsolete Dataset Rules
 async fn apply_obsolete_dataset_rules(dataset_name: &str) -> Result<()> {
     debug!("Applying rules for obsolete dataset: {}", dataset_name);
 

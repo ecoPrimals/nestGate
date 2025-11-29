@@ -3,37 +3,54 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for EncryptionSecurity
 pub struct EncryptionSecurityConfig {
+    /// Whether this feature is enabled
     pub enabled: bool,
+    /// Algorithms
     pub algorithms: Vec<String>,
+    /// Key Management
     pub key_management: KeyManagementConfig,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Cryptographic
 pub struct CryptographicConfig {
+    /// Algorithm
     pub algorithm: String,
+    /// Size of key
     pub key_size: u32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for KeyManagement
 pub struct KeyManagementConfig {
+    /// Auto Rotation
     pub auto_rotation: bool,
+    /// Key Store
     pub key_store: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for EncryptionAlgorithm
 pub struct EncryptionAlgorithmConfig {
+    /// Symmetric
     pub symmetric: Vec<String>,
+    /// Asymmetric
     pub asymmetric: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Hashing
 pub struct HashingConfig {
+    /// Algorithm
     pub algorithm: String,
+    /// Salt Length
     pub salt_length: u32,
 }
 
 impl Default for EncryptionSecurityConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -44,6 +61,7 @@ impl Default for EncryptionSecurityConfig {
 }
 
 impl Default for KeyManagementConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             auto_rotation: true,
@@ -69,6 +87,7 @@ impl EncryptionSecurityConfig {
     pub fn merge(self, _other: Self) -> Self {
         self
     }
+    /// Validates data
     pub fn validate(&self) -> crate::Result<()> {
         Ok(())
     }

@@ -24,10 +24,12 @@ use super::canonical_primary::SystemConfig;
 /// **PERFORMANCE**: Zero-cost configuration access through const generics
 /// **FLEXIBILITY**: Runtime configuration override capability maintained
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for NestGateCanonical
 pub struct NestGateCanonicalConfig<
     const MAX_CONNECTIONS: usize = 1000,
     const BUFFER_SIZE: usize = 65536,
     const TIMEOUT_MS: u64 = 30000,
+    /// Api Port
     const API_PORT: u16 = 8080,
 > {
     /// System configuration
@@ -56,14 +58,21 @@ pub struct NestGateCanonicalConfig<
 
 /// Log level enumeration
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Loglevel
 pub enum LogLevel {
+    /// Error
     Error,
+    /// Warn
     Warn,
+    /// Info
     Info,
+    /// Debug
     Debug,
+    /// Trace
     Trace,
 }
 impl Default for LogLevel {
+    /// Returns the default instance
     fn default() -> Self {
         LogLevel::Info
     }
@@ -140,6 +149,7 @@ impl NestGateCanonicalConfig {
 }
 
 impl Default for NestGateCanonicalConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             system: SystemConfig::default(),

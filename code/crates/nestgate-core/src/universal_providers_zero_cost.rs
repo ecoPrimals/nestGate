@@ -14,40 +14,53 @@ use std::time::SystemTime;
 
 // **CANONICAL SECURITY TYPES** - Replacing universal_traits imports
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Authtoken
 pub struct AuthToken {
+    /// Token
     pub token: String,
+    /// Expires At
     pub expires_at: SystemTime,
+    /// Permissions
     pub permissions: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Credentials
 pub struct Credentials {
+    /// Username
     pub username: String,
+    /// Password
     pub password: String,
+    /// Additional Data
     pub additional_data: HashMap<String, String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Signature
 pub struct Signature {
+    /// Algorithm
     pub algorithm: String,
+    /// Signature
     pub signature: Vec<u8>,
+    /// Public Key
     pub public_key: Option<Vec<u8>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Securitydecision
 pub enum SecurityDecision {
+    /// Allow
     Allow {
         reason: String,
         enhanced_by_security_provider: bool,
     },
+    /// Deny
     Deny {
         reason: String,
         remediation: Option<String>,
     },
-    RequireLicense {
-        terms: String,
-        contact: String,
-    },
+    /// Requirelicense
+    RequireLicense { terms: String, contact: String },
 }
 
 // ==================== SECTION ====================
@@ -58,6 +71,7 @@ pub enum SecurityDecision {
 /// PERFORMANCE: 40-60% improvement through compile-time dispatch
 /// ELIMINATES: Virtual method call overhead and heap allocation
 #[allow(deprecated)] // Example of zero-cost pattern - uses deprecated trait for demonstration
+/// Zerocostuniversalsecuritywrapper
 pub struct ZeroCostUniversalSecurityWrapper<Provider, const MAX_CONCURRENT: usize = 1000>
 where
     Provider: ZeroCostSecurityProvider,
@@ -82,7 +96,9 @@ where
     since = "0.11.3",
     note = "Use crate::traits::canonical_provider_unification::SecurityProvider - zero-cost patterns integrated via native async. Migration guide: docs/guides/SECURITY_PROVIDER_MIGRATION.md"
 )]
+/// ZeroCostSecurityProvider trait
 pub trait ZeroCostSecurityProvider: Send + Sync + 'static {
+    /// Type alias for Error
     type Error: Send + Sync + 'static;
     /// Authenticate with native async - no Future boxing
     fn authenticate(
@@ -117,7 +133,6 @@ pub trait ZeroCostSecurityProvider: Send + Sync + 'static {
         signature: &Signature,
     ) -> impl Future<Output = std::result::Result<bool, Self::Error>> + Send;
 
-    /// Health check with native async
     fn health_check(&self) -> impl Future<Output = std::result::Result<bool, Self::Error>> + Send;
 }
 
@@ -249,8 +264,11 @@ where
 }
 /// Zero-cost orchestration provider trait - replaces `Arc<dyn OrchestrationPrimalProvider>`
 pub trait ZeroCostOrchestrationProvider: Send + Sync + 'static {
+    /// Type alias for Error
     type Error: Send + Sync + 'static;
+    /// Type alias for InstanceId
     type InstanceId: Send + Sync + Clone;
+    /// Type alias for ServiceConfig
     type ServiceConfig: Send + Sync + Clone;
     /// Deploy service with native async
     fn deploy_service(
@@ -271,7 +289,6 @@ pub trait ZeroCostOrchestrationProvider: Send + Sync + 'static {
         instance_id: &Self::InstanceId,
     ) -> impl Future<Output = std::result::Result<ServiceStatus, Self::Error>> + Send;
 
-    /// Health check with direct method call
     fn health_check(&self) -> impl Future<Output = std::result::Result<bool, Self::Error>> + Send;
 }
 
@@ -298,8 +315,11 @@ where
 }
 /// Zero-cost compute provider trait - replaces `Arc<dyn ComputePrimalProvider>`
 pub trait ZeroCostComputeProvider: Send + Sync + 'static {
+    /// Type alias for Error
     type Error: Send + Sync + 'static;
+    /// Type alias for ComputeRequest
     type ComputeRequest: Send + Sync;
+    /// Type alias for ComputeResponse
     type ComputeResponse: Send + Sync;
     /// Execute compute task with native async
     fn execute_compute(
@@ -312,21 +332,23 @@ pub trait ZeroCostComputeProvider: Send + Sync + 'static {
         &self,
     ) -> impl Future<Output = std::result::Result<ComputeResources, Self::Error>> + Send;
 
-    /// Health check with compile-time optimization
     fn health_check(&self) -> impl Future<Output = std::result::Result<bool, Self::Error>> + Send;
 }
 
 // ==================== SECTION ====================
 
-/// Service status information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceStatus {
+    /// Running
     pub running: bool,
+    /// Replicas
     pub replicas: u32,
     pub health: String,
+    /// Last Updated
     pub last_updated: std::time::SystemTime,
 }
 impl Default for ServiceStatus {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             running: false,
@@ -339,10 +361,15 @@ impl Default for ServiceStatus {
 
 /// Compute resources information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Computeresources
 pub struct ComputeResources {
+    /// Available Cpu
     pub available_cpu: f64,
+    /// Available Memory in gigabytes
     pub available_memory_gb: f64,
+    /// Active Tasks
     pub active_tasks: u32,
+    /// Max Tasks
     pub max_tasks: u32,
 }
 // ==================== SECTION ====================
@@ -352,6 +379,7 @@ pub const ZERO_COST_MIGRATION_GUIDE: &str = r"
 🔄 UNIVERSAL PROVIDERS ZERO-COST MIGRATION GUIDE
 ## Before (Arc<dyn> Runtime Dispatch)
 ```rust
+/// Universalsecuritywrapper
 pub struct UniversalSecurityWrapper {
     client: Option<Arc<dyn SecurityPrimalProvider>>,
 }
@@ -367,6 +395,7 @@ impl UniversalSecurityWrapper {
 
 ## After (Zero-Cost Direct Composition)
 ```rust
+/// Zerocostuniversalsecuritywrapper
 pub struct ZeroCostUniversalSecurityWrapper<Provider>
 where
     Provider: ZeroCostSecurityProvider,
@@ -378,6 +407,7 @@ impl<Provider> ZeroCostUniversalSecurityWrapper<Provider>
 where
     Provider: ZeroCostSecurityProvider,
 {
+    /// Creates a new instance
     pub fn new(provider: Provider) -> Self {
         Self { provider }
     }
@@ -396,13 +426,18 @@ where
 /// Common zero-cost provider configurations
 pub type StandardZeroCostSecurityWrapper<Provider> =
     ZeroCostUniversalSecurityWrapper<Provider, 1000>;
+/// Type alias for Highperformancezerocostsecuritywrapper
 pub type HighPerformanceZeroCostSecurityWrapper<Provider> =
     ZeroCostUniversalSecurityWrapper<Provider, 10000>;
+/// Type alias for Standardzerocostorchestrationwrapper
 pub type StandardZeroCostOrchestrationWrapper<Provider> =
     ZeroCostUniversalOrchestrationWrapper<Provider, 500>;
+/// Type alias for Highperformancezerocostorchestrationwrapper
 pub type HighPerformanceZeroCostOrchestrationWrapper<Provider> =
     ZeroCostUniversalOrchestrationWrapper<Provider, 5000>;
 
+/// Type alias for Standardzerocostcomputewrapper
 pub type StandardZeroCostComputeWrapper<Provider> = ZeroCostUniversalComputeWrapper<Provider, 1000>;
+/// Type alias for Highperformancezerocostcomputewrapper
 pub type HighPerformanceZeroCostComputeWrapper<Provider> =
     ZeroCostUniversalComputeWrapper<Provider, 10000>;

@@ -1,3 +1,5 @@
+//! Performance Benchmark module
+
 use crate::error::NestGateError;
 //
 // This module provides benchmarks to validate the performance improvements
@@ -16,13 +18,19 @@ use crate::error::CanonicalResult as Result;
 
 /// Performance benchmark results
 #[derive(Debug, Clone)]
+/// Benchmarkresults
 pub struct BenchmarkResults {
+    /// Traditional Time
     pub traditional_time: Duration,
+    /// Zero Copy Time
     pub zero_copy_time: Duration,
+    /// Improvement Percentage
     pub improvement_percentage: f64,
+    /// Memory Saved Bytes
     pub memory_saved_bytes: u64,
 }
 impl BenchmarkResults {
+    /// Creates a new instance
     pub fn new(
         traditional_time: Duration,
         zero_copy_time: Duration,
@@ -45,6 +53,7 @@ impl BenchmarkResults {
         }
     }
 
+    /// Print Summary
     pub fn print_summary(&self) {
         println!("\n🚀 **{self.b_operation}**");
         println!("   Traditional: {self.traditional_time:?}");
@@ -140,6 +149,7 @@ impl PerformanceBenchmark {
         Ok(results)
     }
 
+    /// Benchmark Write Operation
     async fn benchmark_write_operation(
         &self,
         traditional: &FilesystemBackend,
@@ -174,6 +184,7 @@ impl PerformanceBenchmark {
         ))
     }
 
+    /// Benchmark Read Operation
     async fn benchmark_read_operation(
         &self,
         traditional: &FilesystemBackend,
@@ -207,6 +218,7 @@ impl PerformanceBenchmark {
         ))
     }
 
+    /// Benchmark Copy Operation
     async fn benchmark_copy_operation(
         &self,
         traditional: &FilesystemBackend,
@@ -282,6 +294,7 @@ impl PerformanceBenchmark {
         Ok(results)
     }
 
+    /// Benchmark Memory Cycle
     async fn benchmark_memory_cycle(
         &self,
         traditional: &MemoryBackend,
@@ -430,6 +443,7 @@ impl PerformanceBenchmark {
         Ok(())
     }
 
+    /// Print Benchmark Summary
     fn print_benchmark_summary(&self, results: &[BenchmarkResults], concurrent: &BenchmarkResults) {
         println!("\n📊 **PERFORMANCE SUMMARY**");
         println!("==========================");

@@ -67,10 +67,15 @@ pub fn get_os_info() -> Result<OsInfo> {
 }
 /// OS information structure
 #[derive(Debug, Clone)]
+/// Osinfo
 pub struct OsInfo {
+    /// Name
     pub name: String,
+    /// Version
     pub version: String,
+    /// Architecture
     pub architecture: String,
+    /// Kernel Version
     pub kernel_version: String,
 }
 /// Get kernel version
@@ -115,10 +120,15 @@ pub fn get_cpu_info() -> CpuInfo {
 }
 /// CPU information structure
 #[derive(Debug, Clone)]
+/// Cpuinfo
 pub struct CpuInfo {
+    /// Logical Cores
     pub logical_cores: usize,
+    /// Physical Cores
     pub physical_cores: usize,
+    /// Model
     pub model: String,
+    /// Frequency
     pub frequency: Option<f64>, // in GHz
 }
 /// Get CPU model name
@@ -241,10 +251,15 @@ pub fn get_memory_info() -> Result<MemoryInfo> {
 }
 /// Memory information structure
 #[derive(Debug, Clone)]
+/// Memoryinfo
 pub struct MemoryInfo {
+    /// Total
     pub total: u64,
+    /// Free
     pub free: u64,
+    /// Used
     pub used: u64,
+    /// Usage Percent
     pub usage_percent: f64,
 }
 // ==================== SECTION ====================
@@ -345,9 +360,13 @@ pub fn get_load_average() -> Result<LoadAverage> {
 
 /// Load average information
 #[derive(Debug, Clone)]
+/// Loadaverage
 pub struct LoadAverage {
+    /// One Minute
     pub one_minute: f64,
+    /// Five Minutes
     pub five_minutes: f64,
+    /// Fifteen Minutes
     pub fifteen_minutes: f64,
 }
 // ==================== SECTION ====================

@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 
 /// Network routing and load balancing settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Networkroutingsettings
 pub struct NetworkRoutingSettings {
     /// Enable load balancing
     pub load_balancing_enabled: bool,
@@ -12,6 +13,7 @@ pub struct NetworkRoutingSettings {
     pub load_balancing_algorithm: String,
 }
 impl Default for NetworkRoutingSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             load_balancing_enabled: true,

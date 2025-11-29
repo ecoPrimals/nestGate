@@ -7,9 +7,13 @@ use std::env;
 
 /// Default JWT secret that must NOT be used in production
 const INSECURE_DEFAULT_SECRET: &str = "CHANGE_ME_IN_PRODUCTION";
+/// Insecure Alternate 1
 const INSECURE_ALTERNATE_1: &str = "change-me-in-production";
+/// Insecure Alternate 2
 const INSECURE_ALTERNATE_2: &str = "default";
+/// Insecure Alternate 3
 const INSECURE_ALTERNATE_3: &str = "secret";
+/// Insecure Alternate 4
 const INSECURE_ALTERNATE_4: &str = "test";
 
 /// Minimum secure JWT secret length (in bytes)
@@ -17,12 +21,15 @@ const MINIMUM_SECRET_LENGTH: usize = 32;
 
 /// JWT secret validation error
 #[derive(Debug, Clone)]
+/// Error type for JwtSecret operations
 pub struct JwtSecretError {
     pub message: String,
+    /// Help
     pub help: String,
 }
 
 impl std::fmt::Display for JwtSecretError {
+    /// Fmt
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "JWT Security Error: {}\n\nHelp: {}", self.message, self.help)
     }

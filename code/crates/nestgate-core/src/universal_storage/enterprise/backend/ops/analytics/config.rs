@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 
 /// Analytics configuration for enterprise operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Analytics
 pub struct AnalyticsConfig {
     /// Data retention period in days
     pub retention_days: u32,
@@ -21,6 +22,7 @@ pub struct AnalyticsConfig {
 
 /// Performance threshold configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performancethresholds
 pub struct PerformanceThresholds {
     /// CPU usage threshold (percentage)
     pub cpu_threshold_percent: f64,
@@ -35,6 +37,7 @@ pub struct PerformanceThresholds {
 }
 
 impl Default for AnalyticsConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             retention_days: 30,
@@ -48,6 +51,7 @@ impl Default for AnalyticsConfig {
 }
 
 impl Default for PerformanceThresholds {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             cpu_threshold_percent: 80.0,

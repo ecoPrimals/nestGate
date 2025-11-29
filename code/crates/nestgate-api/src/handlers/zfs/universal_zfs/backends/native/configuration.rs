@@ -3,6 +3,8 @@
 
 // Removed unused tracing import
 
+//! Configuration module
+
 use crate::handlers::zfs::universal_zfs_types::{UniversalZfsError, UniversalZfsResult};
 
 use super::core::NativeZfsService;

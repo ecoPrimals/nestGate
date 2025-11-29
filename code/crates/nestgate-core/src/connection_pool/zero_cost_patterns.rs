@@ -1,3 +1,5 @@
+//! Zero Cost Patterns module
+
 use crate::error::NestGateError;
 use std::future::Future;
 // **ZERO-COST CONNECTION POOL PATTERNS**
@@ -26,6 +28,7 @@ use std::marker::PhantomData;
 /// PERFORMANCE: 100% elimination of dynamic dispatch overhead
 /// ELIMINATES: Arc allocation and virtual function call costs
 pub trait ZeroCostConnectionFactory<T> {
+    /// Type alias for Error
     type Error: Send + Sync + 'static;
     /// Create connection with zero-cost dispatch
     fn create_connection(&self) -> impl Future<Output = std::result::Result<T, Self::Error>> + Send;
@@ -47,6 +50,7 @@ pub trait ZeroCostConnectionFactory<T> {
 /// PERFORMANCE: 100% elimination of dynamic dispatch overhead
 /// ELIMINATES: Arc allocation and virtual function call costs
 pub trait ZeroCostHealthChecker<T> {
+    /// Type alias for Error
     type Error: Send + Sync + 'static;
     /// Check connection health with zero-cost dispatch
     fn check_health(&self, connection: &T) -> impl Future<Output = std::result::Result<(), Self::Error>> + Send;
@@ -74,6 +78,7 @@ pub struct ZeroCostConnectionPoolManager<
     Factory,
     HealthChecker,
     const MAX_CONNECTIONS: usize = 100,
+    /// Minimum connections
     const MIN_CONNECTIONS: usize = 5,
     const HEALTH_CHECK_INTERVAL_MS: u64 = 30000,
 >
@@ -87,7 +92,6 @@ where
     health_checker: HealthChecker,
     /// Active connections (direct storage)
     connections: Vec<T>,
-    /// Connection metadata
     connection_metadata: Vec<ConnectionMetadata>,
     _phantom: PhantomData<()>,
 }
@@ -235,16 +239,21 @@ where
 
 // ==================== SECTION ====================
 
-/// Connection metadata for tracking connection state
 #[derive(Debug, Clone)]
 pub struct ConnectionMetadata {
+    /// Timestamp when this was created
     pub created_at: std::time::SystemTime,
+    /// Last Used
     pub last_used: std::time::SystemTime,
+    /// Last Health Check
     pub last_health_check: std::time::SystemTime,
+    /// Whether healthy
     pub is_healthy: bool,
+    /// Count of use
     pub use_count: u64,
 }
 impl ConnectionMetadata {
+    /// Creates a new instance
     pub fn new() -> Self {
         let now = std::time::SystemTime::now();
         Self {
@@ -256,34 +265,40 @@ impl ConnectionMetadata {
         }
     }
 
+    /// Mark Healthy
     pub fn mark_healthy(&mut self) {
         self.is_healthy = true;
         self.last_health_check = std::time::SystemTime::now();
     }
 
+    /// Mark Unhealthy
     pub fn mark_unhealthy(&mut self) {
         self.is_healthy = false;
         self.last_health_check = std::time::SystemTime::now();
     }
 
+    /// Checks if Healthy
     pub fn is_healthy(&self) -> bool {
         self.is_healthy
     }
 
+    /// Mark Used
     pub fn mark_used(&mut self) {
         self.last_used = std::time::SystemTime::now();
         self.use_count += 1;
     }
 }
 
-/// Health check results
 #[derive(Debug, Clone)]
 pub struct HealthCheckResults {
     pub healthy_connections: usize,
+    /// Unhealthy Connections
     pub unhealthy_connections: usize,
+    /// Total Checked
     pub total_checked: usize,
 }
 impl HealthCheckResults {
+    /// Creates a new instance
     pub fn new() -> Self {
         Self {
             healthy_connections: 0,
@@ -302,14 +317,20 @@ impl HealthCheckResults {
 
 /// Pool statistics
 #[derive(Debug, Clone)]
+/// Poolstatistics
 pub struct PoolStatistics {
+    /// Total Connections
     pub total_connections: usize,
+    /// Max Connections
     pub max_connections: usize,
+    /// Min Connections
     pub min_connections: usize,
     pub healthy_connections: usize,
+    /// Unhealthy Connections
     pub unhealthy_connections: usize,
 }
 impl PoolStatistics {
+    /// Utilization Percentage
     pub fn utilization_percentage(&self) -> f64 {
         if self.max_connections == 0 {
             return 0.0;
@@ -329,12 +350,16 @@ impl PoolStatistics {
 
 /// Example TCP connection factory implementation
 pub struct TcpConnectionFactory {
+    /// Host
     pub host: String,
+    /// Port
     pub port: u16,
 }
 impl ZeroCostConnectionFactory<std::net::TcpStream> for TcpConnectionFactory {
+    /// Type alias for Error
     type Error = std::io::Error;
 
+    /// Creates  Connection
     fn create_connection(&self) -> impl Future<Output = std::result::Result<std::net::TcpStream, Self::Error>> + Send {
         let address = format!("{}:{}", self.host, self.port);
         async move {
@@ -342,6 +367,7 @@ impl ZeroCostConnectionFactory<std::net::TcpStream> for TcpConnectionFactory {
         }
     }
 
+    /// Gets Capabilities
     fn get_capabilities(&self) -> Vec<String> {
         vec!["tcp".to_string(), "network".to_string()]
     }
@@ -350,8 +376,10 @@ impl ZeroCostConnectionFactory<std::net::TcpStream> for TcpConnectionFactory {
 /// Example TCP health checker implementation
 pub struct TcpHealthChecker;
 impl ZeroCostHealthChecker<std::net::TcpStream> for TcpHealthChecker {
+    /// Type alias for Error
     type Error = std::io::Error;
 
+    /// Check Health
     fn check_health(&self, connection: &std::net::TcpStream) -> impl Future<Output = std::result::Result<(), Self::Error>> + Send {
         // Simple health check - verify connection is still active
         async move {
@@ -392,7 +420,9 @@ pub const ARC_DYN_MIGRATION_GUIDE: &str = r"
 🔄 ARC<DYN> TO ZERO-COST MIGRATION GUIDE
 ## Before (Arc<dyn> Runtime Dispatch)
 ```rust
+/// Type alias for Connectionfactory
 pub type ConnectionFactory<T> = Arc<dyn Fn() -> Result<T> + Send + Sync>;
+/// Type alias for Healthcheckfn
 pub type HealthCheckFn<T> = Arc<dyn Fn(&T) -> Result<()> + Send + Sync>;
 
 pub struct ConnectionPool<T> {
@@ -403,6 +433,7 @@ pub struct ConnectionPool<T> {
 
 ## After (Zero-Cost Direct Composition)
 ```rust
+/// Manager for ZeroCostConnectionPool operations
 pub struct ZeroCostConnectionPoolManager<T, Factory, HealthChecker>
 where
     Factory: ZeroCostConnectionFactory<T>,

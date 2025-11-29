@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 
 /// Request structure for creating a new snapshot
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for CreateSnapshot operation
 pub struct CreateSnapshotRequest {
     /// Name of the snapshot to create
     pub name: String,
@@ -27,6 +28,7 @@ pub struct CreateSnapshotRequest {
 
 /// Complete snapshot information and _metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Snapshot
 pub struct Snapshot {
     /// Unique identifier for the snapshot
     pub id: String,
@@ -54,6 +56,7 @@ pub struct Snapshot {
 
 /// Request structure for cloning a snapshot into a new dataset
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for CloneSnapshot operation
 pub struct CloneSnapshotRequest {
     /// Name of the target dataset to create from the clone
     pub target_dataset_name: String,
@@ -67,6 +70,7 @@ pub struct CloneSnapshotRequest {
 
 /// Metadata about a snapshot for listing operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Snapshotmetadata
 pub struct SnapshotMetadata {
     /// Name of the snapshot
     pub name: String,

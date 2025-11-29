@@ -34,6 +34,7 @@ pub fn admin_permission() -> Permission {
 
 /// Authentication method
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// Authmethod
 pub enum AuthMethod {
     /// Password authentication
     Password,
@@ -55,6 +56,7 @@ pub enum AuthMethod {
 
 /// Authentication manager
 #[derive(Debug)]
+/// Manager for Auth operations
 pub struct AuthManager {
     /// Users
     users: Arc<RwLock<HashMap<String, AuthContext>>>,
@@ -64,6 +66,7 @@ pub struct AuthManager {
 
 // Custom Clone implementation
 impl Clone for AuthManager {
+    /// Clone
     fn clone(&self) -> Self {
         Self {
             users: self.users.clone(),
@@ -163,6 +166,7 @@ impl AuthManager {
 }
 
 impl Default for AuthManager {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -170,6 +174,7 @@ impl Default for AuthManager {
 
 /// API key configuration
 #[derive(Debug, Clone)]
+/// Configuration for ApiKey
 pub struct ApiKeyConfig {
     /// Default expiration time in seconds
     pub default_expiration: u64,
@@ -181,6 +186,7 @@ pub struct ApiKeyConfig {
 }
 
 impl Default for ApiKeyConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             default_expiration: (24 * 60 * 60 * 30), // 30 days in seconds
@@ -301,6 +307,7 @@ pub fn require_read_only() -> AuthMiddleware {
 }
 /// Authentication token
 #[derive(Debug, Clone)]
+/// Authtoken
 pub struct AuthToken {
     /// Token type
     pub token_type: TokenType,
@@ -313,6 +320,7 @@ pub struct AuthToken {
 
 /// Token type
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// Types of Token
 pub enum TokenType {
     /// API key
     ApiKey,
@@ -324,6 +332,7 @@ pub enum TokenType {
 }
 
 impl fmt::Display for TokenType {
+    /// Fmt
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             TokenType::ApiKey => write!(f, "ApiKey"),

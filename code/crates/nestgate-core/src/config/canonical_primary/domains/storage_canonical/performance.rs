@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 /// Provides comprehensive performance settings including general optimization,
 /// I/O tuning, compression, deduplication, and auto-tuning capabilities.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for StoragePerformance
 pub struct StoragePerformanceConfig {
     /// General performance optimization settings.
     pub optimization: PerformanceOptimizationConfig,
@@ -24,6 +25,7 @@ pub struct StoragePerformanceConfig {
 ///
 /// Controls whether performance optimizations are enabled globally.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for PerformanceOptimization
 pub struct PerformanceOptimizationConfig {
     /// Whether performance optimizations are enabled (default: true).
     pub enabled: bool,
@@ -33,6 +35,7 @@ pub struct PerformanceOptimizationConfig {
 ///
 /// Controls I/O-specific performance optimizations like buffering and prefetching.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for IOOptimization
 pub struct IOOptimizationConfig {
     /// Whether I/O optimizations are enabled (default: true).
     pub enabled: bool,
@@ -42,6 +45,7 @@ pub struct IOOptimizationConfig {
 ///
 /// Controls data compression including algorithm selection.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Compression
 pub struct CompressionConfig {
     /// Whether compression is enabled (default: true).
     pub enabled: bool,
@@ -53,6 +57,7 @@ pub struct CompressionConfig {
 ///
 /// Controls data deduplication to save storage space.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Deduplication
 pub struct DeduplicationConfig {
     /// Whether deduplication is enabled (default: false due to overhead).
     pub enabled: bool,
@@ -62,12 +67,14 @@ pub struct DeduplicationConfig {
 ///
 /// Enables automatic performance tuning based on workload patterns.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Tuning
 pub struct TuningConfig {
     /// Whether auto-tuning is enabled (default: true).
     pub auto_tune: bool,
 }
 
 impl Default for StoragePerformanceConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             optimization: PerformanceOptimizationConfig { enabled: true },

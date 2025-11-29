@@ -1,6 +1,8 @@
 //
 // Provides circuit breaker functionality for fail-safe operations.
 
+//! Circuit Breaker module
+
 use std::sync::Arc;
 use std::time::SystemTime;
 use tokio::sync::RwLock;
@@ -16,6 +18,7 @@ mod circuit_breaker_tests;
 
 /// Circuit breaker states
 #[derive(Debug, Clone, PartialEq, Eq)]
+/// Circuitbreakerstate
 pub enum CircuitBreakerState {
     /// Circuit is closed, requests flow through normally
     Closed,
@@ -26,6 +29,7 @@ pub enum CircuitBreakerState {
 }
 /// Circuit breaker implementation
 #[derive(Debug)]
+/// Circuitbreaker
 pub struct CircuitBreaker {
     config: CircuitBreakerConfig,
     state: Arc<RwLock<CircuitBreakerState>>,
@@ -166,6 +170,7 @@ impl CircuitBreaker {
         self.state.read().await.clone()
     }
 
+    /// Transition To Closed
     async fn transition_to_closed(&self) {
         info!("Circuit breaker transitioning to CLOSED");
         *self.state.write().await = CircuitBreakerState::Closed;
@@ -173,12 +178,14 @@ impl CircuitBreaker {
         *self.half_open_calls.write().await = 0;
     }
 
+    /// Transition To Open
     async fn transition_to_open(&self) {
         warn!("Circuit breaker transitioning to OPEN");
         *self.state.write().await = CircuitBreakerState::Open;
         *self.last_failure_time.write().await = Some(SystemTime::now());
     }
 
+    /// Transition To Half Open
     async fn transition_to_half_open(&self) {
         info!("Circuit breaker transitioning to HALF-OPEN");
         *self.state.write().await = CircuitBreakerState::HalfOpen;

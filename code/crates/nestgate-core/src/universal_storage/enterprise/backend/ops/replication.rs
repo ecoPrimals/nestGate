@@ -12,6 +12,7 @@ use tracing::{info, warn, error, debug};
 
 /// Replication configuration for enterprise operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Replication
 pub struct ReplicationConfig {
     /// Source dataset path
     pub source_dataset: String,
@@ -33,6 +34,7 @@ pub struct ReplicationConfig {
 
 /// Replication target site configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Replicationsite
 pub struct ReplicationSite {
     /// Site identifier
     pub site_id: String,
@@ -52,6 +54,7 @@ pub struct ReplicationSite {
 
 /// Authentication credentials for replication
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Replicationcredentials
 pub struct ReplicationCredentials {
     /// Username for SSH/remote access
     pub username: String,
@@ -61,6 +64,7 @@ pub struct ReplicationCredentials {
 
 /// Authentication method for replication
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Authmethod
 pub enum AuthMethod {
     /// SSH key authentication
     SshKey { key_path: String },
@@ -72,6 +76,7 @@ pub enum AuthMethod {
 
 /// Replication operation result
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Replicationresult
 pub struct ReplicationResult {
     /// Operation ID
     pub operation_id: String,
@@ -97,6 +102,7 @@ pub struct ReplicationResult {
 
 /// Type of replication operation
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Types of Replication
 pub enum ReplicationType {
     /// Initial full replication
     Initial,
@@ -110,6 +116,7 @@ pub enum ReplicationType {
 
 /// Replication status for monitoring
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Replicationstatus
 pub struct ReplicationStatus {
     /// Site ID
     pub site_id: String,
@@ -133,6 +140,7 @@ pub struct ReplicationStatus {
 
 /// Status of a replication site
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Status values for Site
 pub enum SiteStatus {
     /// Site is healthy and up-to-date
     Healthy,
@@ -621,6 +629,7 @@ impl EnterpriseReplicationManager {
 }
 
 impl Default for ReplicationConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             source_dataset: "tank/data".to_string(),
@@ -643,6 +652,7 @@ mod rand {
         static RNG_STATE: Cell<u64> = Cell::new(1);
     }
     
+    /// Random
     pub fn random<T>() -> T 
     where 
         T: From<u64>,

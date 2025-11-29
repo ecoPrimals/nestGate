@@ -16,6 +16,7 @@ pub trait IntoApiResponse<T> {
 }
 
 impl<T, E: Display> IntoApiResponse<T> for std::result::Result<T, E> {
+    /// Into Api Response
     fn into_api_response(self) -> ApiResponse<T> {
         match self {
             Ok(data) => ApiResponse::success(data),
@@ -23,6 +24,7 @@ impl<T, E: Display> IntoApiResponse<T> for std::result::Result<T, E> {
         }
     }
 
+    /// Into Api Response With Message
     fn into_api_response_with_message(self, error_msg: &str) -> ApiResponse<T> {
         match self {
             Ok(data) => ApiResponse::success(data),
@@ -37,6 +39,7 @@ pub trait IntoSuccessResponse {
     fn into_success_response(self, message: &str) -> SuccessResponse;
 }
 impl<T: serde::Serialize> IntoSuccessResponse for T {
+    /// Into Success Response
     fn into_success_response(self, message: &str) -> SuccessResponse {
         SuccessResponse::new(message)
             .add_data("payload", serde_json::to_value(self).unwrap_or_default())
@@ -49,6 +52,7 @@ pub trait IntoUnifiedErrorResponse {
     fn to_unified_error_response(&self, service: &str) -> UnifiedErrorResponse;
 }
 impl<E: Display> IntoUnifiedErrorResponse for E {
+    /// Converts to Unified Error Response
     fn to_unified_error_response(&self, service: &str) -> UnifiedErrorResponse {
         UnifiedErrorResponse::simple(&self.to_string(), "UNKNOWN", service)
     }
@@ -60,6 +64,7 @@ pub trait ResponseConversion<T> {
     fn convert(self) -> T;
 }
 impl ResponseConversion<UnifiedErrorResponse> for LegacyErrorResponse {
+    /// Converts value
     fn convert(self) -> UnifiedErrorResponse {
         UnifiedErrorResponse {
             message: self.error,
@@ -74,6 +79,7 @@ impl ResponseConversion<UnifiedErrorResponse> for LegacyErrorResponse {
 }
 
 impl<T> ResponseConversion<ApiResponse<T>> for SuccessResponse {
+    /// Converts value
     fn convert(self) -> ApiResponse<T> {
         ApiResponse {
             request_id: uuid::Uuid::new_v4().to_string(),
@@ -110,6 +116,7 @@ pub trait ResponseMetadata {
 }
 
 impl<T> ResponseMetadata for ApiResponse<T> {
+    /// Extract Metadata
     fn extract_metadata(&self) -> std::collections::HashMap<String, serde_json::Value> {
         let mut metadata = std::collections::HashMap::new();
         metadata.insert("success".to_string(), serde_json::json!(self.success));
@@ -132,16 +139,19 @@ impl<T> ResponseMetadata for ApiResponse<T> {
         metadata
     }
 
+    /// Checks if Successful
     fn is_successful(&self) -> bool {
         self.success
     }
 
+    /// Gets Timestamp
     fn get_timestamp(&self) -> chrono::DateTime<chrono::Utc> {
         self.timestamp
     }
 }
 
 impl ResponseMetadata for SuccessResponse {
+    /// Extract Metadata
     fn extract_metadata(&self) -> std::collections::HashMap<String, serde_json::Value> {
         let mut metadata = std::collections::HashMap::new();
         metadata.insert("success".to_string(), serde_json::json!(true));
@@ -161,10 +171,12 @@ impl ResponseMetadata for SuccessResponse {
         metadata
     }
 
+    /// Checks if Successful
     fn is_successful(&self) -> bool {
         true
     }
 
+    /// Gets Timestamp
     fn get_timestamp(&self) -> chrono::DateTime<chrono::Utc> {
         chrono::DateTime::parse_from_rfc3339(&self.timestamp)
             .unwrap_or_else(|_| chrono::Utc::now().into())
@@ -173,6 +185,7 @@ impl ResponseMetadata for SuccessResponse {
 }
 
 impl ResponseMetadata for UnifiedErrorResponse {
+    /// Extract Metadata
     fn extract_metadata(&self) -> std::collections::HashMap<String, serde_json::Value> {
         let mut metadata = std::collections::HashMap::new();
         metadata.insert("success".to_string(), serde_json::json!(false));
@@ -203,10 +216,12 @@ impl ResponseMetadata for UnifiedErrorResponse {
         metadata
     }
 
+    /// Checks if Successful
     fn is_successful(&self) -> bool {
         false
     }
 
+    /// Gets Timestamp
     fn get_timestamp(&self) -> chrono::DateTime<chrono::Utc> {
         use chrono::{DateTime, Utc};
         // Parse timestamp string to DateTime
@@ -228,16 +243,19 @@ pub trait ResponseChaining {
 }
 
 impl ResponseChaining for UnifiedErrorResponse {
+    /// Builder method to set Context Chain
     fn with_context_chain(self, _key: &str, _value: serde_json::Value) -> Self {
         // UnifiedErrorResponse doesn't have a with_context method, so we'll just return self
         self
     }
 
+    /// Builder method to set Metadata Chain
     fn with_metadata_chain(self, _key: &str, _value: &str) -> Self {
         // UnifiedErrorResponse doesn't have a context field, so we'll just return self
         self
     }
 
+    /// Builder method to set Timestamp Chain
     fn with_timestamp_chain(mut self, timestamp: chrono::DateTime<chrono::Utc>) -> Self {
         self.timestamp = timestamp.to_rfc3339();
         self
@@ -245,14 +263,17 @@ impl ResponseChaining for UnifiedErrorResponse {
 }
 
 impl<T> ResponseChaining for ApiResponse<T> {
+    /// Builder method to set Context Chain
     fn with_context_chain(self, key: &str, value: serde_json::Value) -> Self {
         self.with_meta(key, value)
     }
 
+    /// Builder method to set Metadata Chain
     fn with_metadata_chain(self, key: &str, value: &str) -> Self {
         self.with_meta(key, serde_json::json!(value))
     }
 
+    /// Builder method to set Timestamp Chain
     fn with_timestamp_chain(mut self, timestamp: chrono::DateTime<chrono::Utc>) -> Self {
         self.timestamp = timestamp;
         self
@@ -260,14 +281,17 @@ impl<T> ResponseChaining for ApiResponse<T> {
 }
 
 impl ResponseChaining for SuccessResponse {
+    /// Builder method to set Context Chain
     fn with_context_chain(self, key: &str, value: serde_json::Value) -> Self {
         self.add_data(key, value)
     }
 
+    /// Builder method to set Metadata Chain
     fn with_metadata_chain(self, key: &str, value: &str) -> Self {
         self.add_metadata(key, value.into())
     }
 
+    /// Builder method to set Timestamp Chain
     fn with_timestamp_chain(mut self, timestamp: chrono::DateTime<chrono::Utc>) -> Self {
         self.timestamp = timestamp.to_rfc3339();
         self

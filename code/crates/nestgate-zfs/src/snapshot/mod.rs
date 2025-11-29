@@ -2,6 +2,8 @@
 // Comprehensive snapshot lifecycle management with automated policies,
 // retention rules, and backup integration for production-ready ZFS systems.
 
+//! Snapshot module
+
 mod events;
 mod manager;
 mod operations;

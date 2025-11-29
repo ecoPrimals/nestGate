@@ -1,6 +1,8 @@
 //
 // Validation logic and safety checks for ZFS pool setup operations
 
+//! Validation module
+
 use serde::{Deserialize, Serialize};
 
 use super::{
@@ -11,9 +13,13 @@ use super::{
 
 /// Result of validation operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Validationresult
 pub struct ValidationResult {
+    /// Whether valid
     pub is_valid: bool,
+    /// Issues
     pub issues: Vec<String>,
+    /// Warnings
     pub warnings: Vec<String>,
 }
 impl ValidationResult {
@@ -26,15 +32,18 @@ impl ValidationResult {
         }
     }
 
+    /// Add Error
     pub fn add_error(&mut self, error: String) {
         self.is_valid = false;
         self.issues.push(error);
     }
 
+    /// Add Warning
     pub fn add_warning(&mut self, warning: String) {
         self.warnings.push(warning);
     }
 
+    /// Merge
     pub fn merge(&mut self, other: ValidationResult) {
         if !other.is_valid {
             self.is_valid = false;
@@ -134,6 +143,7 @@ impl PoolSetupValidator {
 }
 
 impl Default for ValidationResult {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

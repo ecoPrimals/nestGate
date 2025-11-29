@@ -155,6 +155,7 @@ pub fn find_files<P: AsRef<Path>>(dir: P, pattern: &str) -> io::Result<Vec<PathB
     find_files_recursive(dir.as_ref(), pattern, &mut results)?;
     Ok(results)
 }
+/// Find Files Recursive
 fn find_files_recursive(dir: &Path, pattern: &str, results: &mut Vec<PathBuf>) -> io::Result<()> {
     if dir.is_dir() {
         for entry in stdfs::read_dir(dir)? {

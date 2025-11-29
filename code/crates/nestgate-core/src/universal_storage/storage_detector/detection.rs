@@ -2,6 +2,8 @@
 //
 // Core detection logic for different storage types.
 
+//! Detection module
+
 use super::config::DetectionConfig;
 use super::types::{DetectedStorage, FilesystemStats};
 use crate::unified_enums::storage_types::{UnifiedStorageCapability, UnifiedStorageType};
@@ -263,47 +265,56 @@ impl<'a> DetectionEngine<'a> {
         Ok(Some(storage))
     }
 
+    /// Detect Aws S3
     async fn detect_aws_s3(&self) -> Result<Vec<DetectedStorage>> {
         // Placeholder for AWS S3 detection
         // In a real implementation, this would use AWS SDK
         Ok(Vec::new())
     }
 
+    /// Detect Azure Blob
     async fn detect_azure_blob(&self) -> Result<Vec<DetectedStorage>> {
         // Placeholder for Azure Blob detection
         Ok(Vec::new())
     }
 
+    /// Detect Gcs
     async fn detect_gcs(&self) -> Result<Vec<DetectedStorage>> {
         // Placeholder for Google Cloud Storage detection
         Ok(Vec::new())
     }
 
+    /// Detect Smb Shares
     async fn detect_smb_shares(&self) -> Result<Vec<DetectedStorage>> {
         // Placeholder for SMB share detection
         Ok(Vec::new())
     }
 
+    /// Detect Nfs Mounts
     async fn detect_nfs_mounts(&self) -> Result<Vec<DetectedStorage>> {
         // Placeholder for NFS mount detection
         Ok(Vec::new())
     }
 
+    /// Detect Iscsi Targets
     async fn detect_iscsi_targets(&self) -> Result<Vec<DetectedStorage>> {
         // Placeholder for iSCSI target detection
         Ok(Vec::new())
     }
 
+    /// Analyze Block Device
     async fn analyze_block_device(&self, _device: &str) -> Result<Option<DetectedStorage>> {
         // Placeholder for block device analysis
         Ok(None)
     }
 
+    /// Detect Tmpfs
     async fn detect_tmpfs(&self) -> Result<Vec<DetectedStorage>> {
         // Placeholder for tmpfs detection
         Ok(Vec::new())
     }
 
+    /// Detect Ramdisk
     async fn detect_ramdisk(&self) -> Result<Vec<DetectedStorage>> {
         // Placeholder for ramdisk detection
         Ok(Vec::new())

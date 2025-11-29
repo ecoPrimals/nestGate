@@ -70,9 +70,13 @@ impl SimpleMemoryPool {
 
 /// Statistics about the memory pool
 #[derive(Debug, Clone)]
+/// Poolstats
 pub struct PoolStats {
+    /// Size of buffer
     pub buffer_size: usize,
+    /// Size of max pool
     pub max_pool_size: usize,
+    /// Size of current pool
     pub current_pool_size: usize,
 }
 
@@ -136,6 +140,7 @@ impl PooledBuffer {
 }
 
 impl Drop for PooledBuffer {
+    /// Drop
     fn drop(&mut self) {
         if let Some(buffer) = self.buffer.take() {
             // Return buffer to pool if there's space
@@ -149,14 +154,17 @@ impl Drop for PooledBuffer {
 }
 
 impl std::ops::Deref for PooledBuffer {
+    /// Type alias for Target
     type Target = Vec<u8>;
 
+    /// Deref
     fn deref(&self) -> &Self::Target {
         self.buffer_ref()
     }
 }
 
 impl std::ops::DerefMut for PooledBuffer {
+    /// Deref Mut
     fn deref_mut(&mut self) -> &mut Self::Target {
         self.buffer_mut()
     }

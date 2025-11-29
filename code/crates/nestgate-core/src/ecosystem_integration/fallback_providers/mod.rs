@@ -6,6 +6,8 @@
 // It was using base64 encoding instead of real encryption.
 // Production systems MUST use a real security provider (BearDog or equivalent).
 
+//! Fallback Providers module
+
 pub mod ai;
 pub mod orchestration;
 // pub mod security; // REMOVED: Insecure implementation (base64 "encryption")

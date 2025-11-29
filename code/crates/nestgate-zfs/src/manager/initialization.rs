@@ -2,6 +2,8 @@
 // Handles the complex initialization process for the ZFS manager and all its components,
 // including lifecycle management (start/stop) and orchestrator registration.
 
+//! Initialization module
+
 use crate::error::{create_zfs_error, ZfsOperation};
 use std::sync::Arc;
 use tokio::sync::RwLock;

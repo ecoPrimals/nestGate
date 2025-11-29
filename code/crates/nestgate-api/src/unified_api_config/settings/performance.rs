@@ -6,6 +6,7 @@ use std::time::Duration;
 
 /// Performance configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Apiperformancesettings
 pub struct ApiPerformanceSettings {
     /// Enable request caching
     pub enable_request_caching: bool,
@@ -26,6 +27,7 @@ pub struct ApiPerformanceSettings {
 }
 /// Circuit breaker configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Apicircuitbreakersettings
 pub struct ApiCircuitBreakerSettings {
     /// Enable circuit breaker
     pub enable_circuit_breaker: bool,
@@ -46,6 +48,7 @@ pub struct ApiCircuitBreakerSettings {
 }
 /// Retry policy configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Apiretrypolicysettings
 pub struct ApiRetryPolicySettings {
     /// Enable retries
     pub enable_retries: bool,
@@ -64,6 +67,7 @@ pub struct ApiRetryPolicySettings {
 }
 /// Connection pool configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Apiconnectionpoolsettings
 pub struct ApiConnectionPoolSettings {
     /// Minimum pool size
     pub min_pool_size: usize,
@@ -81,6 +85,7 @@ pub struct ApiConnectionPoolSettings {
     pub enable_connection_validation: bool,
 }
 impl Default for ApiPerformanceSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             enable_request_caching: true,
             cache_ttl: Duration::from_secs(300), // 5 minutes
@@ -94,6 +99,7 @@ impl Default for ApiPerformanceSettings {
 }
 
 impl Default for ApiCircuitBreakerSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             enable_circuit_breaker: true,
             failure_threshold: 5,
@@ -107,6 +113,7 @@ impl Default for ApiCircuitBreakerSettings {
 }
 
 impl Default for ApiRetryPolicySettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             enable_retries: true,
             max_retry_attempts: 3,
@@ -119,6 +126,7 @@ impl Default for ApiRetryPolicySettings {
 }
 
 impl Default for ApiConnectionPoolSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             min_pool_size: 5,
             max_pool_size: 100,

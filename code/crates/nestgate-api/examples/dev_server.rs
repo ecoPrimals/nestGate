@@ -16,6 +16,7 @@
 //! This example is excluded from compilation pending API stabilization.
 //! Current working examples can be found in integration tests.
 
+/// Main
 fn main() {
     eprintln!("⚠️  This example is outdated and needs to be updated.");
     eprintln!("See the comment at the top of this file for details.");
@@ -107,6 +108,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     }
 }
 
+/// Print Available Endpoints
 fn print_available_endpoints() {
     let port = NetworkPortDefaults::get_dev_server_port().to_string();
 

@@ -30,6 +30,7 @@ impl ZeroCopyFilesystemBackend {
 }
 
 impl CanonicalStorageBackend for ZeroCopyFilesystemBackend {
+    /// Write
     fn write(&self, _key: &str, _data: &[u8]) -> Pin<Box<dyn Future<Output = StorageResult<()>> + Send + '_>> {
         Box::pin(async move {
             // Implementation would go here
@@ -37,6 +38,7 @@ impl CanonicalStorageBackend for ZeroCopyFilesystemBackend {
         })
     }
 
+    /// Read
     fn read(&self, _key: &str) -> Pin<Box<dyn Future<Output = StorageResult<Vec<u8>>> + Send + '_>> {
         Box::pin(async move {
             // Implementation would go here
@@ -44,6 +46,7 @@ impl CanonicalStorageBackend for ZeroCopyFilesystemBackend {
         })
     }
 
+    /// Deletes resource
     fn delete(&self, _key: &str) -> Pin<Box<dyn Future<Output = StorageResult<()>> + Send + '_>> {
         Box::pin(async move {
             // Implementation would go here
@@ -51,6 +54,7 @@ impl CanonicalStorageBackend for ZeroCopyFilesystemBackend {
         })
     }
 
+    /// Exists
     fn exists(&self, _key: &str) -> Pin<Box<dyn Future<Output = StorageResult<bool>> + Send + '_>> {
         Box::pin(async move {
             // Implementation would go here
@@ -58,6 +62,7 @@ impl CanonicalStorageBackend for ZeroCopyFilesystemBackend {
         })
     }
 
+    /// List
     fn list(&self, _prefix: Option<&str>) -> Pin<Box<dyn Future<Output = StorageResult<Vec<String>>> + Send + '_>> {
         Box::pin(async move {
             // Implementation would go here
@@ -65,6 +70,7 @@ impl CanonicalStorageBackend for ZeroCopyFilesystemBackend {
         })
     }
 
+    /// Gets Metadata
     fn get_metadata(&self, _key: &str) -> Pin<Box<dyn Future<Output = StorageResult<CanonicalStorageMetadata>> + Send + '_>> {
         Box::pin(async move {
             // Implementation would go here
@@ -80,6 +86,7 @@ impl CanonicalStorageBackend for ZeroCopyFilesystemBackend {
 }
 
 impl ZeroCopyStorage for ZeroCopyFilesystemBackend {
+    /// Write Zero Copy Data
     fn write_zero_copy_data(&self, _key: &str, _data: &[u8]) -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>> {
         Box::pin(async move {
             // Implementation would go here
@@ -87,6 +94,7 @@ impl ZeroCopyStorage for ZeroCopyFilesystemBackend {
         })
     }
 
+    /// Read Zero Copy Data
     fn read_zero_copy_data(&self, _key: &str) -> Pin<Box<dyn Future<Output = Result<Bytes>> + Send + '_>> {
         Box::pin(async move {
             // Implementation would go here
@@ -94,6 +102,7 @@ impl ZeroCopyStorage for ZeroCopyFilesystemBackend {
         })
     }
 
+    /// Stream Zero Copy Data
     fn stream_zero_copy_data(&self, _key: &str, _chunk_size: usize) -> Pin<Box<dyn Future<Output = Result<Vec<Bytes>>> + Send + '_>> {
         Box::pin(async move {
             // Implementation would go here
@@ -108,6 +117,7 @@ pub struct ZeroCopyMemoryBackend {
 }
 
 impl Default for ZeroCopyMemoryBackend {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -124,6 +134,7 @@ impl ZeroCopyMemoryBackend {
 }
 
 impl CanonicalStorageBackend for ZeroCopyMemoryBackend {
+    /// Write
     fn write(&self, key: &str, data: &[u8]) -> Pin<Box<dyn Future<Output = StorageResult<()>> + Send + '_>> {
         let data = Bytes::copy_from_slice(data);
         let key = key.to_string();
@@ -136,6 +147,7 @@ impl CanonicalStorageBackend for ZeroCopyMemoryBackend {
         })
     }
 
+    /// Read
     fn read(&self, key: &str) -> Pin<Box<dyn Future<Output = StorageResult<Vec<u8>>> + Send + '_>> {
         let key = key.to_string();
         let storage = Arc::clone(&self.data);
@@ -149,6 +161,7 @@ impl CanonicalStorageBackend for ZeroCopyMemoryBackend {
         })
     }
 
+    /// Deletes resource
     fn delete(&self, key: &str) -> Pin<Box<dyn Future<Output = StorageResult<()>> + Send + '_>> {
         let key = key.to_string();
         let storage = Arc::clone(&self.data);
@@ -160,6 +173,7 @@ impl CanonicalStorageBackend for ZeroCopyMemoryBackend {
         })
     }
 
+    /// Exists
     fn exists(&self, key: &str) -> Pin<Box<dyn Future<Output = StorageResult<bool>> + Send + '_>> {
         let key = key.to_string();
         let storage = Arc::clone(&self.data);
@@ -170,6 +184,7 @@ impl CanonicalStorageBackend for ZeroCopyMemoryBackend {
         })
     }
 
+    /// List
     fn list(&self, _prefix: Option<&str>) -> Pin<Box<dyn Future<Output = StorageResult<Vec<String>>> + Send + '_>> {
         let storage = Arc::clone(&self.data);
         
@@ -179,6 +194,7 @@ impl CanonicalStorageBackend for ZeroCopyMemoryBackend {
         })
     }
 
+    /// Gets Metadata
     fn get_metadata(&self, key: &str) -> Pin<Box<dyn Future<Output = StorageResult<CanonicalStorageMetadata>> + Send + '_>> {
         let key = key.to_string();
         let storage = Arc::clone(&self.data);

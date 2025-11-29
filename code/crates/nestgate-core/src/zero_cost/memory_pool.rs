@@ -23,7 +23,6 @@ where
         POOL_SIZE
     }
 
-    /// Buffer size at compile-time
     #[must_use]
     fn buffer_size() -> usize {
         8192
@@ -32,10 +31,15 @@ where
 
 /// Pool interface statistics
 #[derive(Debug, Clone, Default)]
+/// Poolinterfacestats
 pub struct PoolInterfaceStats {
+    /// Available Items
     pub available_items: usize,
+    /// Total Capacity
     pub total_capacity: usize,
+    /// Utilization
     pub utilization: f64,
+    /// Size of buffer
     pub buffer_size: usize,
 }
 /// Zero-cost memory pool manager - replaces Vec<Arc<dyn PoolInterface>>
@@ -141,21 +145,28 @@ where
 
 /// Memory pool manager statistics
 #[derive(Debug, Clone)]
+/// Memorypoolmanagerstats
 pub struct MemoryPoolManagerStats {
     pub buffer_pool_stats: PoolInterfaceStats,
+    /// Object Pool Stats
     pub object_pool_stats: PoolInterfaceStats,
+    /// Active Pools
     pub active_pools: usize,
+    /// Max Pools
     pub max_pools: usize,
+    /// Total Utilization
     pub total_utilization: f64,
 }
 /// Production buffer pool implementation with real pooling
 #[allow(dead_code)]
+/// Productionbufferpool
 pub struct ProductionBufferPool {
     buffers: std::sync::Arc<tokio::sync::RwLock<Vec<Vec<u8>>>>,
     stats: std::sync::Arc<tokio::sync::RwLock<PoolInterfaceStats>>,
     max_capacity: usize,
 }
 impl Default for ProductionBufferPool {
+    /// Returns the default instance
     fn default() -> Self {
         let max_capacity = 1000; // From the trait const
         Self {
@@ -206,6 +217,7 @@ impl ProductionBufferPool {
 }
 
 impl ZeroCostPoolInterface<Vec<u8>, 1000, 8192> for ProductionBufferPool {
+    /// Gets Item
     fn get_item(&self) -> Result<Vec<u8>> {
         // Use tokio's blocking task for async pool access in sync context
         let buffers_arc = Arc::clone(&self.buffers);
@@ -234,6 +246,7 @@ impl ZeroCostPoolInterface<Vec<u8>, 1000, 8192> for ProductionBufferPool {
         })
     }
 
+    /// Return Item
     fn return_item(&self, mut item: Vec<u8>) -> Result<()> {
         // Clear the buffer for security
         item.fill(0);
@@ -261,6 +274,7 @@ impl ZeroCostPoolInterface<Vec<u8>, 1000, 8192> for ProductionBufferPool {
         })
     }
 
+    /// Gets Stats
     fn get_stats(&self) -> PoolInterfaceStats {
         // Use tokio's blocking task for async stats access in sync context
         let stats_arc = Arc::clone(&self.stats);
@@ -274,6 +288,7 @@ impl ZeroCostPoolInterface<Vec<u8>, 1000, 8192> for ProductionBufferPool {
 /// Development buffer pool implementation with simpler pooling
 #[derive(Default)]
 #[allow(dead_code)]
+/// Developmentbufferpool
 pub struct DevelopmentBufferPool {
     buffers: std::sync::Mutex<Vec<Vec<u8>>>,
     stats: std::sync::Mutex<PoolInterfaceStats>,
@@ -294,14 +309,17 @@ impl DevelopmentBufferPool {
 }
 
 impl ZeroCostPoolInterface<Vec<u8>, 1000, 8192> for DevelopmentBufferPool {
+    /// Gets Item
     fn get_item(&self) -> Result<Vec<u8>> {
         Ok(vec![0u8; Self::buffer_size()])
     }
 
+    /// Return Item
     fn return_item(&self, _item: Vec<u8>) -> Result<()> {
         Ok(())
     }
 
+    /// Gets Stats
     fn get_stats(&self) -> PoolInterfaceStats {
         PoolInterfaceStats {
             available_items: 95,
@@ -315,14 +333,17 @@ impl ZeroCostPoolInterface<Vec<u8>, 1000, 8192> for DevelopmentBufferPool {
 /// Production object pool implementation
 pub struct ProductionObjectPool;
 impl ZeroCostPoolInterface<String, 1000, 8192> for ProductionObjectPool {
+    /// Gets Item
     fn get_item(&self) -> Result<String> {
         Ok(String::with_capacity(Self::buffer_size()))
     }
 
+    /// Return Item
     fn return_item(&self, _item: String) -> Result<()> {
         Ok(())
     }
 
+    /// Gets Stats
     fn get_stats(&self) -> PoolInterfaceStats {
         PoolInterfaceStats {
             available_items: 900,
@@ -336,14 +357,17 @@ impl ZeroCostPoolInterface<String, 1000, 8192> for ProductionObjectPool {
 /// Development object pool implementation
 pub struct DevelopmentObjectPool;
 impl ZeroCostPoolInterface<String, 1000, 8192> for DevelopmentObjectPool {
+    /// Gets Item
     fn get_item(&self) -> Result<String> {
         Ok(String::with_capacity(Self::buffer_size()))
     }
 
+    /// Return Item
     fn return_item(&self, _item: String) -> Result<()> {
         Ok(())
     }
 
+    /// Gets Stats
     fn get_stats(&self) -> PoolInterfaceStats {
         PoolInterfaceStats {
             available_items: 90,
@@ -360,6 +384,7 @@ pub type ProductionMemoryPoolManager = ZeroCostMemoryPoolManager<
     ProductionObjectPool,
     1000, // Max pools
 >;
+/// Type alias for Developmentmemorypoolmanager
 pub type DevelopmentMemoryPoolManager = ZeroCostMemoryPoolManager<
     DevelopmentBufferPool,
     DevelopmentObjectPool,
@@ -373,17 +398,21 @@ mod tests {
     // Mock implementations for testing
     struct MockBufferPool;
     impl MockBufferPool {
+        /// Creates a new instance
         fn new() -> Self {
             Self
         }
     }
     impl ZeroCostPoolInterface<Vec<u8>> for MockBufferPool {
+        /// Gets Item
         fn get_item(&self) -> Result<Vec<u8>> {
             Ok(Vec::new())
         }
+        /// Return Item
         fn return_item(&self, _item: Vec<u8>) -> Result<()> {
             Ok(())
         }
+        /// Gets Stats
         fn get_stats(&self) -> PoolInterfaceStats {
             PoolInterfaceStats {
                 available_items: 100,
@@ -396,17 +425,21 @@ mod tests {
 
     struct MockObjectPool;
     impl MockObjectPool {
+        /// Creates a new instance
         fn new() -> Self {
             Self
         }
     }
     impl ZeroCostPoolInterface<String> for MockObjectPool {
+        /// Gets Item
         fn get_item(&self) -> Result<String> {
             Ok(String::new())
         }
+        /// Return Item
         fn return_item(&self, _item: String) -> Result<()> {
             Ok(())
         }
+        /// Gets Stats
         fn get_stats(&self) -> PoolInterfaceStats {
             PoolInterfaceStats {
                 available_items: 50,

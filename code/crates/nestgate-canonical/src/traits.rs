@@ -13,9 +13,13 @@ pub type NestGateResult<T> = Result<T>;
 
 /// Service health information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Servicehealth
 pub struct ServiceHealth {
+    /// Healthy
     pub healthy: bool,
+    /// Message
     pub message: String,
+    /// Details
     pub details: HashMap<String, String>,
 }
 /// **CANONICAL SERVICE TRAIT** - Native async implementation
@@ -128,8 +132,11 @@ pub trait CanonicalMcp: Send + Sync + 'static {
 /// Provides a default implementation that can be used across all service types
 /// MODERNIZED: Zero-cost abstractions with compile-time dispatch
 pub struct UniversalServiceImpl {
+    /// Service Type
     pub service_type: crate::types::UnifiedServiceType,
+    /// Capabilities
     pub capabilities: Vec<crate::types::CapabilityId>,
+    /// Health Status
     pub health_status: ServiceHealth,
 }
 impl UniversalServiceImpl {
@@ -152,9 +159,12 @@ impl UniversalServiceImpl {
 }
 
 impl CanonicalService for UniversalServiceImpl {
+    /// Type alias for Health
     type Health = ServiceHealth;
+    /// Type alias for Config
     type Config = HashMap<String, String>;
 
+    /// Health Check
     async fn health_check(&self) -> NestGateResult<ServiceHealth> {
         Ok(ServiceHealth {
             healthy: true,
@@ -163,11 +173,13 @@ impl CanonicalService for UniversalServiceImpl {
         })
     }
 
+    /// Start
     async fn start(&mut self, _config: Self::Config) -> NestGateResult<()> {
         // Implementation for starting the service
         Ok(())
     }
 
+    /// Stop
     async fn stop(&mut self) -> NestGateResult<()> {
         // Implementation for stopping the service
         self.health_status = ServiceHealth {

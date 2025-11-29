@@ -3,34 +3,48 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ZfsHandler
 pub struct ZfsHandlerConfig {
+    /// Pool
     pub pool: PoolHandlerConfig,
+    /// Dataset
     pub dataset: DatasetHandlerConfig,
+    /// Snapshot
     pub snapshot: SnapshotHandlerConfig,
+    /// Backup
     pub backup: BackupHandlerConfig,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for PoolHandler
 pub struct PoolHandlerConfig {
+    /// Whether this feature is enabled
     pub enabled: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for DatasetHandler
 pub struct DatasetHandlerConfig {
+    /// Whether this feature is enabled
     pub enabled: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for SnapshotHandler
 pub struct SnapshotHandlerConfig {
+    /// Whether this feature is enabled
     pub enabled: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for BackupHandler
 pub struct BackupHandlerConfig {
+    /// Whether this feature is enabled
     pub enabled: bool,
 }
 
 impl Default for ZfsHandlerConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             pool: PoolHandlerConfig { enabled: true },
@@ -58,6 +72,7 @@ impl ZfsHandlerConfig {
     pub fn merge(self, _other: Self) -> Self {
         self
     }
+    /// Validates data
     pub fn validate(&self) -> crate::Result<()> {
         Ok(())
     }

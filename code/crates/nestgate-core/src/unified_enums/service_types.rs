@@ -8,6 +8,7 @@ use std::fmt;
 /// **THE** `ServiceType` - unified across all modules
 /// Replaces 2+ fragmented `ServiceType` definitions
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Types of UnifiedService
 pub enum UnifiedServiceType {
     /// AI and machine learning services
     AI,
@@ -37,12 +38,14 @@ pub enum UnifiedServiceType {
     Custom(String),
 }
 impl Default for UnifiedServiceType {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Unknown
     }
 }
 
 impl fmt::Display for UnifiedServiceType {
+    /// Fmt
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::AI => write!(f, "ai"),
@@ -67,6 +70,7 @@ impl fmt::Display for UnifiedServiceType {
 /// **THE** `HealthStatus` - unified across all modules
 /// Replaces 4+ fragmented `HealthStatus` definitions across health checks, monitoring, etc.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Status values for UnifiedHealth
 pub enum UnifiedHealthStatus {
     /// Service is healthy and operational
     Healthy,
@@ -94,12 +98,14 @@ pub enum UnifiedHealthStatus {
     Custom(String),
 }
 impl Default for UnifiedHealthStatus {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Unknown
     }
 }
 
 impl fmt::Display for UnifiedHealthStatus {
+    /// Fmt
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Healthy => write!(f, "healthy"),
@@ -124,6 +130,7 @@ impl fmt::Display for UnifiedHealthStatus {
 /// Replaces 6+ fragmented `ServiceStatus` enum definitions across diagnostics, network, etc.
 /// Note: This is different from `UnifiedServiceStatus` struct which contains metadata
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Unifiedservicestate
 pub enum UnifiedServiceState {
     /// Service is running and operational
     Running,
@@ -145,12 +152,14 @@ pub enum UnifiedServiceState {
     Custom(String),
 }
 impl Default for UnifiedServiceState {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Unknown
     }
 }
 
 impl fmt::Display for UnifiedServiceState {
+    /// Fmt
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Running => write!(f, "running"),
@@ -171,6 +180,7 @@ impl fmt::Display for UnifiedServiceState {
 /// **THE** `ConnectionStatus` - unified across all modules
 /// Replaces `ConnectionStatus` definitions across network and service modules
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Status values for UnifiedConnection
 pub enum UnifiedConnectionStatus {
     /// Connection is active and operational
     Connected,
@@ -192,12 +202,14 @@ pub enum UnifiedConnectionStatus {
     Custom(String),
 }
 impl Default for UnifiedConnectionStatus {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Unknown
     }
 }
 
 impl fmt::Display for UnifiedConnectionStatus {
+    /// Fmt
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Connected => write!(f, "connected"),
@@ -215,6 +227,7 @@ impl fmt::Display for UnifiedConnectionStatus {
 
 // Implement UnifiedEnum trait for UnifiedServiceType
 impl super::UnifiedEnum for UnifiedServiceType {
+    /// Returns as Str
     fn as_str(&self) -> &str {
         match self {
             Self::AI => "ai",
@@ -233,6 +246,7 @@ impl super::UnifiedEnum for UnifiedServiceType {
         }
     }
 
+    /// Creates from Str
     fn from_str(s: &str) -> Self {
         match s.to_lowercase().as_str() {
             "ai" => Self::AI,
@@ -251,6 +265,7 @@ impl super::UnifiedEnum for UnifiedServiceType {
         }
     }
 
+    /// Checks if Custom
     fn is_custom(&self) -> bool {
         matches!(self, Self::Custom(_))
     }

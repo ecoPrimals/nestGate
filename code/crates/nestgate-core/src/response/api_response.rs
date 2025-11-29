@@ -9,6 +9,7 @@ use uuid::Uuid;
 /// Universal API response wrapper
 /// This type provides consistent response formatting across all `NestGate` APIs
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for Api operation
 pub struct ApiResponse<T> {
     /// Request ID for tracing
     pub request_id: String,
@@ -187,6 +188,7 @@ impl<T> ApiResponse<T> {
 }
 
 impl<T: Serialize> IntoResponse for ApiResponse<T> {
+    /// Into Response
     fn into_response(self) -> axum::response::Response {
         let status = if self.success {
             axum::http::StatusCode::OK
@@ -199,6 +201,7 @@ impl<T: Serialize> IntoResponse for ApiResponse<T> {
 }
 
 impl<T> Default for ApiResponse<T> {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             request_id: Uuid::new_v4().to_string(),
@@ -216,6 +219,7 @@ impl<T> Default for ApiResponse<T> {
 
 /// Empty response for operations that don't return data
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for Empty operation
 pub struct EmptyResponse {
     /// Success status
     pub success: bool,
@@ -257,6 +261,7 @@ impl EmptyResponse {
 }
 
 impl IntoResponse for EmptyResponse {
+    /// Into Response
     fn into_response(self) -> axum::response::Response {
         let status = if self.success {
             axum::http::StatusCode::OK
@@ -269,6 +274,7 @@ impl IntoResponse for EmptyResponse {
 }
 
 impl Default for EmptyResponse {
+    /// Returns the default instance
     fn default() -> Self {
         Self::success_empty()
     }

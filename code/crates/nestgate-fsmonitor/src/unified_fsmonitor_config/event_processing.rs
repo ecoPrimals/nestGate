@@ -131,6 +131,7 @@ pub struct ErrorNotificationSettings {
     pub frequency_limit: Duration,
 }
 impl Default for EventProcessingSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -143,6 +144,7 @@ impl Default for EventProcessingSettings {
 }
 
 impl Default for EventBatchingSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -153,6 +155,7 @@ impl Default for EventBatchingSettings {
 }
 
 impl Default for EventQueueSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             max_queue_size: 10_000,
@@ -163,6 +166,7 @@ impl Default for EventQueueSettings {
 }
 
 impl Default for QueuePersistenceSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: false,
@@ -173,6 +177,7 @@ impl Default for QueuePersistenceSettings {
 }
 
 impl Default for EventPipelineSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -184,6 +189,7 @@ impl Default for EventPipelineSettings {
 }
 
 impl Default for EventErrorHandlingSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -196,6 +202,7 @@ impl Default for EventErrorHandlingSettings {
 }
 
 impl Default for RetryPolicy {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -208,6 +215,7 @@ impl Default for RetryPolicy {
 }
 
 impl Default for DeadLetterQueueSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -218,6 +226,7 @@ impl Default for DeadLetterQueueSettings {
 }
 
 impl Default for ErrorLoggingSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -228,6 +237,7 @@ impl Default for ErrorLoggingSettings {
 }
 
 impl Default for ErrorNotificationSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: false,

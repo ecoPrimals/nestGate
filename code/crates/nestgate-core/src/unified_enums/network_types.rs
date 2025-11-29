@@ -8,6 +8,7 @@ use std::fmt;
 /// **THE** `ProtocolType` - unified across all modules
 /// Replaces `ProtocolType` definitions in network and API modules
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Types of UnifiedProtocol
 pub enum UnifiedProtocolType {
     /// HTTP protocol
     Http,
@@ -31,12 +32,14 @@ pub enum UnifiedProtocolType {
     Custom(String),
 }
 impl Default for UnifiedProtocolType {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Http
     }
 }
 
 impl fmt::Display for UnifiedProtocolType {
+    /// Fmt
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Http => write!(f, "http"),
@@ -58,6 +61,7 @@ impl fmt::Display for UnifiedProtocolType {
 /// **THE** `IntegrationType` - unified across all modules
 /// Replaces `IntegrationType` definitions in ecosystem integration modules
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Types of UnifiedIntegration
 pub enum UnifiedIntegrationType {
     /// Direct API integration
     DirectApi,
@@ -79,12 +83,14 @@ pub enum UnifiedIntegrationType {
     Custom(String),
 }
 impl Default for UnifiedIntegrationType {
+    /// Returns the default instance
     fn default() -> Self {
         Self::DirectApi
     }
 }
 
 impl fmt::Display for UnifiedIntegrationType {
+    /// Fmt
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::DirectApi => write!(f, "direct_api"),
@@ -105,6 +111,7 @@ impl fmt::Display for UnifiedIntegrationType {
 /// **THE** `ProxyType` - unified across all modules
 /// Replaces `ProxyType` definitions in ecosystem integration and network modules
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Types of UnifiedProxy
 pub enum UnifiedProxyType {
     /// HTTP proxy
     Http,
@@ -126,12 +133,14 @@ pub enum UnifiedProxyType {
     Custom(String),
 }
 impl Default for UnifiedProxyType {
+    /// Returns the default instance
     fn default() -> Self {
         Self::None
     }
 }
 
 impl fmt::Display for UnifiedProxyType {
+    /// Fmt
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Http => write!(f, "http"),

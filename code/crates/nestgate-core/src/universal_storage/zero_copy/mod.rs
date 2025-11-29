@@ -30,4 +30,5 @@ pub use backends::{ZeroCopyFilesystemBackend, ZeroCopyMemoryBackend};
 
 // Type aliases for complex types
 pub type MmapCacheStorage = std::sync::Arc<tokio::sync::RwLock<lru::LruCache<String, bytes::Bytes>>>;
+/// Type alias for Zerocopydatastorage
 pub type ZeroCopyDataStorage = std::sync::Arc<tokio::sync::RwLock<std::collections::HashMap<String, bytes::Bytes>>>; 

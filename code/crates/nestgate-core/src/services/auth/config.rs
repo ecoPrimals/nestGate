@@ -7,6 +7,7 @@ use std::time::Duration;
 
 /// Authentication configuration
 #[derive(Debug, Clone)]
+/// Configuration for Auth
 pub struct AuthConfig {
     /// JWT secret key
     pub jwt_secret: String,
@@ -26,6 +27,7 @@ pub struct AuthConfig {
     pub oauth_config: OAuthConfig,
 }
 impl Default for AuthConfig {
+    /// Returns the default instance
     fn default() -> Self {
         let config_manager = DynamicConfigManager::new("NESTGATE_AUTH");
 
@@ -50,16 +52,25 @@ impl Default for AuthConfig {
 
 /// Password policy configuration
 #[derive(Debug, Clone)]
+/// Passwordpolicy
 pub struct PasswordPolicy {
+    /// Min Length
     pub min_length: usize,
+    /// Require Uppercase
     pub require_uppercase: bool,
+    /// Require Lowercase
     pub require_lowercase: bool,
+    /// Require Numbers
     pub require_numbers: bool,
+    /// Require Special Chars
     pub require_special_chars: bool,
+    /// Max Age Days
     pub max_age_days: Option<u32>,
+    /// Count of history
     pub history_count: usize,
 }
 impl Default for PasswordPolicy {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             min_length: 8,
@@ -75,14 +86,21 @@ impl Default for PasswordPolicy {
 
 /// Multi-Factor Authentication configuration
 #[derive(Debug, Clone)]
+/// Configuration for Mfa
 pub struct MfaConfig {
+    /// Whether this feature is enabled
     pub enabled: bool,
+    /// Totp Issuer
     pub totp_issuer: String,
+    /// Count of backup codes
     pub backup_codes_count: usize,
+    /// Sms Enabled
     pub sms_enabled: bool,
+    /// Email Enabled
     pub email_enabled: bool,
 }
 impl Default for MfaConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -96,12 +114,17 @@ impl Default for MfaConfig {
 
 /// OAuth configuration
 #[derive(Debug, Clone)]
+/// Configuration for OAuth
 pub struct OAuthConfig {
+    /// Whether this feature is enabled
     pub enabled: bool,
+    /// Providers
     pub providers: Vec<String>,
+    /// Callback Url
     pub callback_url: String,
 }
 impl Default for OAuthConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: false, // Disabled by default for security

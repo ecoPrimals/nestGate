@@ -1,4 +1,6 @@
 // Removed unused error imports
+//! Monitoring module
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -16,7 +18,9 @@ const LOG_FILE_DEFAULT: &str = "./logs/nestgate.log";
 
 // Slack Configuration Constants
 const SLACK_CHANNEL_DEFAULT: &str = "general";
+/// Default value for slack username default
 const SLACK_USERNAME_DEFAULT: &str = "NestGate";
+/// Slack Emoji Robot
 const SLACK_EMOJI_ROBOT: &str = ":robot_face:";
 
 // HTTP Method Constants
@@ -59,33 +63,57 @@ const EXAMPLE_WEBHOOK_URL: &str = "https://webhook.example.com";
 
 // Validation Error Message Constants
 const ERROR_METRICS_INTERVAL_ZERO: &str = "Metrics interval must be greater than 0";
+/// Error Log File Empty
 const ERROR_LOG_FILE_EMPTY: &str = "Log file path cannot be empty";
+/// Error Log Rotation Size Zero
 const ERROR_LOG_ROTATION_SIZE_ZERO: &str = "Log rotation size must be greater than 0";
+/// Error Log Retention Zero
 const ERROR_LOG_RETENTION_ZERO: &str = "Log retention days must be greater than 0";
+/// Error Notification Required
 const ERROR_NOTIFICATION_REQUIRED: &str =
     "At least one notification method must be configured when alerting is enabled";
+/// Error Threshold Negative
 const ERROR_THRESHOLD_NEGATIVE: &str = "Threshold value cannot be negative";
+/// Error Cpu Threshold Range
 const ERROR_CPU_THRESHOLD_RANGE: &str = "CPU threshold must be between 0 and 100";
+/// Error Cpu Threshold Exceed
 const ERROR_CPU_THRESHOLD_EXCEED: &str = "CPU threshold cannot exceed 100%";
+/// Error Memory Threshold Range
 const ERROR_MEMORY_THRESHOLD_RANGE: &str = "Memory threshold must be between 0 and 100";
+/// Error Memory Threshold Exceed
 const ERROR_MEMORY_THRESHOLD_EXCEED: &str = "Memory threshold cannot exceed 100%";
+/// Error Disk Threshold Range
 const ERROR_DISK_THRESHOLD_RANGE: &str = "Disk threshold must be between 0 and 100";
+/// Error Disk Threshold Exceed
 const ERROR_DISK_THRESHOLD_EXCEED: &str = "Disk threshold cannot exceed 100%";
+/// Error Latency Threshold Positive
 const ERROR_LATENCY_THRESHOLD_POSITIVE: &str = "Latency threshold must be positive";
+/// Error Error Rate Range
 const ERROR_ERROR_RATE_RANGE: &str = "Error rate threshold must be between 0 and 100";
+/// Error Error Rate Exceed
 const ERROR_ERROR_RATE_EXCEED: &str = "Error rate threshold cannot exceed 100%";
+/// Error Smtp Server Empty
 const ERROR_SMTP_SERVER_EMPTY: &str = "SMTP server cannot be empty";
+/// Error Smtp Port Zero
 const ERROR_SMTP_PORT_ZERO: &str = "SMTP port must be greater than 0";
+/// Error Recipient Required
 const ERROR_RECIPIENT_REQUIRED: &str = "At least one recipient address must be specified";
+/// Error Slack Webhook Empty
 const ERROR_SLACK_WEBHOOK_EMPTY: &str = "Slack webhook URL cannot be empty";
+/// Error Slack Channel Empty
 const ERROR_SLACK_CHANNEL_EMPTY: &str = "Slack channel cannot be empty";
+/// Error Slack Username Empty
 const ERROR_SLACK_USERNAME_EMPTY: &str = "Slack username cannot be empty";
+/// Error Webhook Url Empty
 const ERROR_WEBHOOK_URL_EMPTY: &str = "Webhook URL cannot be empty";
+/// Error Http Method Empty
 const ERROR_HTTP_METHOD_EMPTY: &str = "HTTP method cannot be empty";
+/// Error Timeout Zero
 const ERROR_TIMEOUT_ZERO: &str = "Timeout must be greater than 0";
 
 /// Monitoring configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Monitoring
 pub struct MonitoringConfig {
     /// Metrics collection interval in seconds
     pub metrics_interval: u64,
@@ -110,6 +138,7 @@ pub struct MonitoringConfig {
 
 /// Prometheus configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Prometheus
 pub struct PrometheusConfig {
     /// Enable Prometheus metrics
     pub enabled: bool,
@@ -119,6 +148,7 @@ pub struct PrometheusConfig {
 
 /// Alert configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for Alert
 pub struct AlertConfig {
     /// Enable alerting
     pub enabled: bool,
@@ -131,6 +161,7 @@ pub struct AlertConfig {
 
 /// Alert thresholds
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Alertthresholds
 pub struct AlertThresholds {
     /// CPU usage threshold (percentage)
     pub cpu_threshold: f64,
@@ -149,6 +180,7 @@ pub struct AlertThresholds {
 
 /// Notification configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for Notification
 pub struct NotificationConfig {
     /// Email configuration
     pub email: Option<EmailConfig>,
@@ -161,6 +193,7 @@ pub struct NotificationConfig {
 
 /// Email configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Email
 pub struct EmailConfig {
     /// SMTP server
     pub smtp_server: String,
@@ -185,6 +218,7 @@ pub struct EmailConfig {
 
 /// Slack configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Slack
 pub struct SlackConfig {
     /// Slack webhook URL
     pub webhook_url: String,
@@ -200,6 +234,7 @@ pub struct SlackConfig {
 
 /// Webhook configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Webhook
 pub struct WebhookConfig {
     /// Webhook URL
     pub url: String,
@@ -214,6 +249,7 @@ pub struct WebhookConfig {
 }
 
 impl Default for MonitoringConfig {
+    /// Returns the default instance
     fn default() -> Self {
         use super::monitoring_env_config::MonitoringEnvConfig;
         let env_config = MonitoringEnvConfig::from_env();
@@ -231,6 +267,7 @@ impl Default for MonitoringConfig {
 }
 
 impl Default for PrometheusConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -240,6 +277,7 @@ impl Default for PrometheusConfig {
 }
 
 impl Default for AlertThresholds {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             cpu_threshold: 80.0,
@@ -252,6 +290,7 @@ impl Default for AlertThresholds {
 }
 
 impl Default for EmailConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             smtp_server: "smtp.example.com".to_string(),
@@ -266,6 +305,7 @@ impl Default for EmailConfig {
 }
 
 impl Default for SlackConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             webhook_url: EMPTY_STRING.to_string(),
@@ -277,6 +317,7 @@ impl Default for SlackConfig {
 }
 
 impl Default for WebhookConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             url: EMPTY_STRING.to_string(),

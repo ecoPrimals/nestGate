@@ -4,38 +4,56 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for SecurityPolicies
 pub struct SecurityPoliciesConfig {
+    /// Compliance
     pub compliance: ComplianceConfig,
+    /// Data Protection
     pub data_protection: DataProtectionConfig,
+    /// Retention
     pub retention: RetentionPolicyConfig,
+    /// Privacy
     pub privacy: PrivacyConfig,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Compliance
 pub struct ComplianceConfig {
+    /// Whether this feature is enabled
     pub enabled: bool,
+    /// Frameworks
     pub frameworks: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for DataProtection
 pub struct DataProtectionConfig {
+    /// Encryption At Rest
     pub encryption_at_rest: bool,
+    /// Encryption In Transit
     pub encryption_in_transit: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for RetentionPolicy
 pub struct RetentionPolicyConfig {
+    /// Whether this feature is enabled
     pub enabled: bool,
+    /// Default Retention
     pub default_retention: Duration,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Privacy
 pub struct PrivacyConfig {
+    /// Anonymization
     pub anonymization: bool,
+    /// Data Minimization
     pub data_minimization: bool,
 }
 
 impl Default for ComplianceConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -45,6 +63,7 @@ impl Default for ComplianceConfig {
 }
 
 impl Default for DataProtectionConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             encryption_at_rest: true,
@@ -54,6 +73,7 @@ impl Default for DataProtectionConfig {
 }
 
 impl Default for RetentionPolicyConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -63,6 +83,7 @@ impl Default for RetentionPolicyConfig {
 }
 
 impl Default for PrivacyConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             anonymization: true,
@@ -88,6 +109,7 @@ impl SecurityPoliciesConfig {
     pub fn merge(self, _other: Self) -> Self {
         self
     }
+    /// Validates data
     pub fn validate(&self) -> crate::Result<()> {
         Ok(())
     }

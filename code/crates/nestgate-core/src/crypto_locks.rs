@@ -2,6 +2,8 @@
 // **MODERNIZED**: Updated to use current error handling and patterns
 
 // use crate::error::SecurityError; // Removed - using unified error system
+//! Crypto Locks module
+
 use crate::universal_spore::{
     AuthorizationDecision, OperationRequest, UniversalCryptographicSpore, UserContext,
 };
@@ -14,6 +16,7 @@ use std::time::{Duration, SystemTime};
 
 /// Cryptographic proof - managed by any security primal provider
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Cryptoproof
 pub struct CryptoProof {
     /// Proof identifier
     pub proof_id: String,
@@ -175,6 +178,7 @@ impl CryptoProof {
 
 /// Access request for crypto lock evaluation
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for Access operation
 pub struct AccessRequest {
     /// Source identifier
     pub source: String,
@@ -188,6 +192,7 @@ pub struct AccessRequest {
 }
 /// Access decision result
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Accessdecision
 pub enum AccessDecision {
     /// Access allowed
     Allow { reason: String },
@@ -200,17 +205,26 @@ pub enum AccessDecision {
 }
 /// Statistics for lock operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Lockstats
 pub struct LockStats {
+    /// Locks Created
     pub locks_created: usize,
+    /// Locks Expired
     pub locks_expired: usize,
+    /// Violations Detected
     pub violations_detected: usize,
+    /// Corporate Accesses
     pub corporate_accesses: usize,
+    /// Individual Accesses
     pub individual_accesses: usize,
+    /// Expired Locks
     pub expired_locks: usize,
+    /// Lock Expiration
     pub lock_expiration: Duration,
 }
 /// Corporate detection pattern for identifying business usage
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Corporatedetectionpattern
 pub struct CorporateDetectionPattern {
     /// Pattern name
     pub name: String,
@@ -456,13 +470,21 @@ impl ExternalBoundaryGuardian {
 
 /// Spore status information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Sporestatus
 pub struct SporeStatus {
+    /// Spore identifier
     pub spore_id: String,
+    /// Generation
     pub generation: u32,
+    /// Security Provider Integrated
     pub security_provider_integrated: bool,
+    /// Count of operations
     pub operations_count: u64,
+    /// Total Locks
     pub total_locks: usize,
+    /// Valid Locks
     pub valid_locks: usize,
+    /// Last Evolution
     pub last_evolution: SystemTime,
 }
 /// Create a spore-enhanced boundary guardian

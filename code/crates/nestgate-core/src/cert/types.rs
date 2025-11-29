@@ -7,6 +7,7 @@ use std::collections::HashMap;
 // unused PathBuf import removed
 /// Certificate types supported by `NestGate`
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Types of Certificate
 pub enum CertificateType {
     /// Server TLS certificate
     Server,
@@ -21,6 +22,7 @@ pub enum CertificateType {
 }
 /// Certificate integration types
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+/// Integration
 pub enum Integration {
     /// Standalone certificate management
     Standalone,
@@ -35,6 +37,7 @@ pub enum Integration {
 }
 /// Certificate mode for validation
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+/// Certmode
 pub enum CertMode {
     /// Strict validation (all checks must pass)
     Strict,
@@ -47,6 +50,7 @@ pub enum CertMode {
 }
 /// Certificate structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Certificate
 pub struct Certificate {
     /// Certificate ID
     pub id: String,
@@ -71,6 +75,7 @@ pub struct Certificate {
 }
 /// Certificate information for querying and display
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Certificateinfo
 pub struct CertificateInfo {
     /// Certificate ID
     pub id: String,
@@ -80,6 +85,7 @@ pub struct CertificateInfo {
     pub issuer: String,
     /// Validity period
     pub valid_from: String,
+    /// Valid Until
     pub valid_until: String,
     /// Is certificate currently valid
     pub is_valid: bool,
@@ -88,6 +94,7 @@ pub struct CertificateInfo {
 }
 /// Integration status tracking
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Integrationstatus
 pub struct IntegrationStatus {
     /// Integration name
     pub integration: String,
@@ -104,37 +111,57 @@ pub struct IntegrationStatus {
 }
 /// Certificate information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Certinfo
 pub struct CertInfo {
+    /// Principal
     pub principal: String,
+    /// Issuer
     pub issuer: String,
+    /// Serial Number
     pub serial_number: String,
+    /// Not Before
     pub not_before: String,
+    /// Not After
     pub not_after: String,
+    /// Fingerprint
     pub fingerprint: String,
 }
 /// Certificate validation result
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Validationresult
 pub struct ValidationResult {
+    /// Valid
     pub valid: bool,
+    /// Errors
     pub errors: Vec<String>,
+    /// Warnings
     pub warnings: Vec<String>,
 }
 /// Certificate chain
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Certchain
 pub struct CertChain {
+    /// Certificates
     pub certificates: Vec<Vec<u8>>,
+    /// Root Ca
     pub root_ca: Option<Vec<u8>>,
 }
 /// Certificate request
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for Cert operation
 pub struct CertRequest {
+    /// Common name
     pub common_name: String,
+    /// Subject Alt Names
     pub subject_alt_names: Vec<String>,
+    /// Key Usage
     pub key_usage: Vec<String>,
+    /// Validity Days
     pub validity_days: u32,
 }
 /// Default implementations
 impl Default for ValidationResult {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             valid: false,
@@ -188,6 +215,7 @@ impl Certificate {
 mod tests {
     use super::*;
 
+    /// Creates  Test Certificate
     fn create_test_certificate() -> Certificate {
         Certificate {
             id: "cert-001".to_string(),

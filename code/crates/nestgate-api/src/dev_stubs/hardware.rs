@@ -29,6 +29,7 @@ pub fn create_zero_hardware_metrics() -> LiveHardwareMetrics {
 
 /// Create stub compute resources (hardcoded system resources)
 #[must_use]
+/// Fn
 pub const fn create_stub_compute_resources() -> ComputeResources {
     ComputeResources {
         available_cpu: 16,       // HARDCODED - Future: Use sysinfo crate
@@ -39,6 +40,7 @@ pub const fn create_stub_compute_resources() -> ComputeResources {
 
 /// Create stub compute allocation
 #[must_use]
+/// Fn
 pub const fn create_stub_compute_allocation() -> ComputeAllocation {
     ComputeAllocation {
         cpu_cores: 8,

@@ -24,6 +24,7 @@ use nestgate_core::error::utilities::safe_env_var_or_default;
     note = "Use nestgate_core::config::canonical_primary::domains::automation::AutomationConfig"
 )]
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Automation
 pub struct AutomationConfig {
     /// Analysis configuration
     pub analysis: AnalysisConfig,
@@ -45,6 +46,7 @@ pub struct AutomationConfig {
     pub _orchestration_endpoint: Option<String>,
 }
 impl Default for AutomationConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             analysis: AnalysisConfig::default(),
@@ -104,6 +106,7 @@ impl AutomationConfig {
 
 /// Analysis configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Analysis
 pub struct AnalysisConfig {
     /// Scan interval
     pub scan_interval: Duration,
@@ -115,6 +118,7 @@ pub struct AnalysisConfig {
     pub exclude_extensions: Vec<String>,
 }
 impl Default for AnalysisConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             scan_interval: Duration::from_secs(3600), // 1 hour
@@ -127,6 +131,7 @@ impl Default for AnalysisConfig {
 
 /// Prediction configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Prediction
 pub struct PredictionConfig {
     /// Prediction window in days
     pub prediction_window_days: u32,
@@ -136,6 +141,7 @@ pub struct PredictionConfig {
     pub model_params: HashMap<String, f64>,
 }
 impl Default for PredictionConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             prediction_window_days: 30,
@@ -147,6 +153,7 @@ impl Default for PredictionConfig {
 
 /// Lifecycle configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Lifecycle
 pub struct LifecycleConfig {
     /// Hot tier retention in days
     pub hot_retention_days: u32,
@@ -158,6 +165,7 @@ pub struct LifecycleConfig {
     pub auto_migration: bool,
 }
 impl Default for LifecycleConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             hot_retention_days: 30,
@@ -189,11 +197,17 @@ impl Default for LifecycleConfig {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for Discovery
 pub struct DiscoveryConfig {
+    /// Known Orchestration Endpoints
     pub known_orchestration_endpoints: Vec<String>,
+    /// Discovery Timeout Ms
     pub discovery_timeout_ms: u64,
+    /// Health Check Interval Ms
     pub health_check_interval_ms: u64,
+    /// Multicast Enabled
     pub multicast_enabled: bool,
+    /// Mdns Enabled
     pub mdns_enabled: bool,
 }
 #[cfg(feature = "network-integration")]
@@ -248,6 +262,7 @@ impl DiscoveryConfig {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Discoveryconfigcanonical
 pub type DiscoveryConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 

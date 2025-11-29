@@ -418,6 +418,7 @@ impl CapabilityBasedRpcRouter {
 }
 
 impl Default for CapabilityBasedRpcRouter {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -425,9 +426,13 @@ impl Default for CapabilityBasedRpcRouter {
 
 /// Routing statistics for monitoring
 #[derive(Debug, Clone)]
+/// Routingstats
 pub struct RoutingStats {
+    /// Total Methods
     pub total_methods: usize,
+    /// Capability Mappings
     pub capability_mappings: usize,
+    /// Capability Distribution
     pub capability_distribution: HashMap<CapabilityCategory, usize>,
 }
 

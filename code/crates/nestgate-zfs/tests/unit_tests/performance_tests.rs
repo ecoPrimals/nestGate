@@ -1,6 +1,8 @@
 //
 // Tests for performance metrics and tier functionality
 
+//! Performance Tests module
+
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::time::SystemTime;

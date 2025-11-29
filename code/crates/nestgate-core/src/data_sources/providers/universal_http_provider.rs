@@ -28,6 +28,7 @@ use tracing::{debug, info, warn};
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for HttpProvider
 pub struct HttpProviderConfig {
     /// Base URL for the API
     pub base_url: String,
@@ -118,6 +119,7 @@ impl UniversalHttpProvider {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Httpproviderconfigcanonical
 pub type HttpProviderConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using HttpProviderConfig (the deprecated struct) for now.

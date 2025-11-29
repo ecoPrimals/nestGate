@@ -1,6 +1,8 @@
 //
 // Main manager for coordinating snapshot operations, policies, and automation.
 
+//! Manager module
+
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
@@ -24,10 +26,12 @@ use tracing::info;
 
 // Type aliases for complex types
 type SnapshotPolicyMap = Arc<RwLock<HashMap<String, SnapshotPolicy>>>;
+/// Type alias for SnapshotInfoCache
 type SnapshotInfoCache = Arc<RwLock<HashMap<String, SnapshotInfo>>>;
 
 /// ZFS Snapshot Manager
 #[derive(Debug)]
+/// Manager for ZfsSnapshot operations
 pub struct ZfsSnapshotManager {
     #[allow(dead_code)]
     config: ZfsConfig,

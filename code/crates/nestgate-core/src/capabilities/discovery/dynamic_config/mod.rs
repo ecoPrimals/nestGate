@@ -15,6 +15,8 @@
 // ==================== SECTION ====================
 
 // Configuration settings and structures
+//! Dynamic Config module
+
 pub mod settings;
 // Main discovery manager implementation
 pub mod manager;

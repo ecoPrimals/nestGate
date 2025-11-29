@@ -277,6 +277,7 @@ mod config_integration_tests {
 
     #[test]
     fn test_config_in_result() {
+        /// Gets Config
         fn get_config() -> Result<crate::config::canonical_primary::NestGateCanonicalConfig, String>
         {
             Ok(create_default_config())
@@ -288,6 +289,7 @@ mod config_integration_tests {
 
     #[test]
     fn test_config_in_option() {
+        /// Maybe Config
         fn maybe_config(
             should_return: bool,
         ) -> Option<crate::config::canonical_primary::NestGateCanonicalConfig> {

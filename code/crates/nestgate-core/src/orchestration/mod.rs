@@ -49,38 +49,59 @@ use std::collections::HashMap;
 
 /// Workflow execution request (for capability requests)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for Workflow operation
 pub struct WorkflowRequest {
+    /// Workflow identifier
     pub workflow_id: String,
+    /// Steps
     pub steps: Vec<WorkflowStep>,
+    /// Inputs
     pub inputs: HashMap<String, serde_json::Value>,
+    /// Timeout Secs
     pub timeout_secs: Option<u64>,
 }
 
 /// Individual workflow step
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Workflowstep
 pub struct WorkflowStep {
+    /// Step identifier
     pub step_id: String,
+    /// Action
     pub action: String,
+    /// Parameters
     pub parameters: HashMap<String, serde_json::Value>,
+    /// Dependencies
     pub dependencies: Vec<String>,
 }
 
 /// Workflow execution status
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+/// Status values for Workflow
 pub enum WorkflowStatus {
+    /// Pending
     Pending,
+    /// Running
     Running,
+    /// Completed
     Completed,
+    /// Failed
     Failed,
+    /// Cancelled
     Cancelled,
 }
 
 /// Workflow execution result (returned by capability provider)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Workflowresult
 pub struct WorkflowResult {
+    /// Workflow identifier
     pub workflow_id: String,
+    /// Status
     pub status: WorkflowStatus,
+    /// Outputs
     pub outputs: HashMap<String, serde_json::Value>,
+    /// Error
     pub error: Option<String>,
 }
 

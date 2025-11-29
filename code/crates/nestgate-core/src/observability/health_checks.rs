@@ -1,3 +1,5 @@
+//! Health Checks module
+
 use std::collections::HashMap;
 //
 // Comprehensive health monitoring for all system components.
@@ -12,6 +14,7 @@ type HealthProviderMap = Arc<RwLock<HashMap<String, Box<dyn HealthCheckProvider 
 
 /// Health status for individual components
 #[derive(Debug, Clone, PartialEq)]
+/// Status values for Health
 pub enum HealthStatus {
     /// Component is healthy and operational
     Healthy,
@@ -24,6 +27,7 @@ pub enum HealthStatus {
 }
 /// System-wide health information
 #[derive(Debug, Clone)]
+/// Systemhealth
 pub struct SystemHealth {
     /// Overall system status
     pub overall_status: HealthStatus,
@@ -36,6 +40,7 @@ pub struct SystemHealth {
 }
 /// Health information for a specific component
 #[derive(Debug, Clone)]
+/// Componenthealth
 pub struct ComponentHealth {
     /// Component health status
     pub status: HealthStatus,
@@ -154,6 +159,7 @@ impl HealthChecker {
 }
 
 impl Default for HealthChecker {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -162,6 +168,7 @@ impl Default for HealthChecker {
 /// Basic system health check provider
 pub struct SystemHealthProvider;
 impl HealthCheckProvider for SystemHealthProvider {
+    /// Check Health
     fn check_health(&self) -> Result<ComponentHealth> {
         // Basic system checks
         let uptime_check = std::fs::read_to_string("/proc/uptime").is_ok();
@@ -182,6 +189,7 @@ impl HealthCheckProvider for SystemHealthProvider {
         })
     }
 
+    /// Component Name
     fn component_name(&self) -> &str {
         "system"
     }
@@ -197,6 +205,7 @@ mod tests {
     }
 
     impl HealthCheckProvider for MockHealthProvider {
+        /// Check Health
         fn check_health(&self) -> Result<ComponentHealth> {
             Ok(ComponentHealth {
                 status: self.status.clone(),
@@ -207,6 +216,7 @@ mod tests {
             })
         }
 
+        /// Component Name
         fn component_name(&self) -> &str {
             &self.name
         }

@@ -1,3 +1,5 @@
+//! Src module
+
 pub mod trait_unification;
 #[cfg(test)]
 mod comprehensive_unit_tests_new;

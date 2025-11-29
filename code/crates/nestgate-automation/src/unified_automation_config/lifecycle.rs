@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use std::time::Duration;
 /// Lifecycle management settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Lifecyclesettings
 pub struct LifecycleSettings {
     /// Enable lifecycle management
     pub enabled: bool,
@@ -21,6 +22,7 @@ pub struct LifecycleSettings {
     pub dependencies: DependencySettings,
 }
     #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Startupsettings
 pub struct StartupSettings {
     /// Enable automatic startup
     pub auto_start: bool,
@@ -34,6 +36,7 @@ pub struct StartupSettings {
     pub parallel: bool,
 }
     #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Shutdownsettings
 pub struct ShutdownSettings {
     /// Enable graceful shutdown
     pub graceful: bool,
@@ -45,6 +48,7 @@ pub struct ShutdownSettings {
     pub cleanup: bool,
 }
     #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Healthchecksettings
 pub struct HealthCheckSettings {
     /// Enable health checks
     pub enabled: bool,
@@ -58,6 +62,7 @@ pub struct HealthCheckSettings {
     pub recovery_threshold: u32,
 }
     #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Recoverysettings
 pub struct RecoverySettings {
     /// Enable automatic recovery
     pub enabled: bool,
@@ -71,6 +76,7 @@ pub struct RecoverySettings {
     pub delay: Duration,
 }
     #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Dependencysettings
 pub struct DependencySettings {
     /// Service dependencies
     pub services: HashMap<String, ServiceDependency>,
@@ -80,6 +86,7 @@ pub struct DependencySettings {
     pub wait_on_startup: bool,
 }
     #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Servicedependency
 pub struct ServiceDependency {
     /// Dependency name
     pub name: String,
@@ -91,6 +98,7 @@ pub struct ServiceDependency {
     pub health_endpoint: Option<String>,
 }
 impl SmartDefault for LifecycleSettings {
+    /// Smart Default
     fn smart_default() -> Self {
         Self {
             enabled: true,
@@ -104,12 +112,14 @@ impl SmartDefault for LifecycleSettings {
 }
 
 impl Default for LifecycleSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self::smart_default()
     }
 }
 
 impl SmartDefault for StartupSettings {
+    /// Smart Default
     fn smart_default() -> Self {
         Self {
             auto_start: true,
@@ -122,12 +132,14 @@ impl SmartDefault for StartupSettings {
 }
 
 impl Default for StartupSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self::smart_default()
     }
 }
 
 impl SmartDefault for ShutdownSettings {
+    /// Smart Default
     fn smart_default() -> Self {
         Self {
             graceful: true,
@@ -139,12 +151,14 @@ impl SmartDefault for ShutdownSettings {
 }
 
 impl Default for ShutdownSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self::smart_default()
     }
 }
 
 impl SmartDefault for HealthCheckSettings {
+    /// Smart Default
     fn smart_default() -> Self {
         Self {
             enabled: true,
@@ -157,12 +171,14 @@ impl SmartDefault for HealthCheckSettings {
 }
 
 impl Default for HealthCheckSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self::smart_default()
     }
 }
 
 impl SmartDefault for RecoverySettings {
+    /// Smart Default
     fn smart_default() -> Self {
         Self {
             enabled: true,
@@ -175,12 +191,14 @@ impl SmartDefault for RecoverySettings {
 }
 
 impl Default for RecoverySettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self::smart_default()
     }
 }
 
 impl SmartDefault for DependencySettings {
+    /// Smart Default
     fn smart_default() -> Self {
         Self {
             services: HashMap::default(),
@@ -191,6 +209,7 @@ impl SmartDefault for DependencySettings {
 }
 
 impl Default for DependencySettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self::smart_default()
     }

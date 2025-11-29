@@ -13,6 +13,7 @@ use std::time::SystemTime;
 pub type NotificationResult<T> = std::result::Result<T, NotificationError>;
 /// Notification errors with smart defaults
 #[derive(Debug, Clone, Serialize, Deserialize, thiserror::Error)]
+/// Errors that can occur during Notification operations
 pub enum NotificationError {
     #[error("Channel configuration error: {message}")]
     Configuration { message: String },
@@ -30,6 +31,7 @@ pub enum NotificationError {
 }
 
 impl SmartDefault for NotificationError {
+    /// Smart Default
     fn smart_default() -> Self {
         Self::Configuration {
             message: "Default notification error".to_string(),
@@ -39,6 +41,7 @@ impl SmartDefault for NotificationError {
 
 /// Notification delivery status
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Status values for Delivery
 pub enum DeliveryStatus {
     /// Notification was sent successfully
     Delivered,
@@ -52,6 +55,7 @@ pub enum DeliveryStatus {
     Suppressed,
 }
 impl SmartDefault for DeliveryStatus {
+    /// Smart Default
     fn smart_default() -> Self {
         Self::Pending
     }
@@ -59,6 +63,7 @@ impl SmartDefault for DeliveryStatus {
 
 /// Notification delivery record
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Deliveryrecord
 pub struct DeliveryRecord {
     /// Channel that handled the notification
     pub channel_id: String,
@@ -72,6 +77,7 @@ pub struct DeliveryRecord {
     pub metadata: HashMap<String, serde_json::Value>,
 }
 impl SmartDefault for DeliveryRecord {
+    /// Smart Default
     fn smart_default() -> Self {
         Self {
             channel_id: "default".to_string(),
@@ -85,6 +91,7 @@ impl SmartDefault for DeliveryRecord {
 
 /// Notification content with rich formatting support
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Notificationcontent
 pub struct NotificationContent {
     /// Notification title/subject
     pub title: String,
@@ -98,6 +105,7 @@ pub struct NotificationContent {
     pub formatting: NotificationFormatting,
 }
 impl SmartDefault for NotificationContent {
+    /// Smart Default
     fn smart_default() -> Self {
         Self {
             title: "Alert Notification".to_string(),
@@ -111,6 +119,7 @@ impl SmartDefault for NotificationContent {
 
 /// Formatting options for notifications
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Notificationformatting
 pub struct NotificationFormatting {
     /// Whether to use rich formatting (HTML, Markdown, etc.)
     pub rich_formatting: bool,
@@ -122,6 +131,7 @@ pub struct NotificationFormatting {
     pub include_timestamp: bool,
 }
 impl SmartDefault for NotificationFormatting {
+    /// Smart Default
     fn smart_default() -> Self {
         Self {
             rich_formatting: true,
@@ -134,13 +144,19 @@ impl SmartDefault for NotificationFormatting {
 
 /// Notification priority levels
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+/// Notificationpriority
 pub enum NotificationPriority {
+    /// Low
     Low,
+    /// Normal
     Normal,
+    /// High
     High,
+    /// Critical
     Critical,
 }
 impl SmartDefault for NotificationPriority {
+    /// Smart Default
     fn smart_default() -> Self {
         Self::Normal
     }
@@ -201,6 +217,7 @@ pub trait NotificationChannel: Send + Sync + std::fmt::Debug {
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for RateLimit
 pub struct RateLimitConfig {
     /// Maximum notifications per time window
     pub max_notifications: u32,
@@ -212,6 +229,7 @@ pub struct RateLimitConfig {
     pub window_start: SystemTime,
 }
 impl SmartDefault for RateLimitConfig {
+    /// Smart Default
     fn smart_default() -> Self {
         Self {
             max_notifications: 10,
@@ -224,19 +242,31 @@ impl SmartDefault for RateLimitConfig {
 
 /// Email notification channel implementation
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Emailnotificationchannel
 pub struct EmailNotificationChannel {
+    /// Unique identifier
     pub id: String,
+    /// Name
     pub name: String,
+    /// Whether this feature is enabled
     pub enabled: bool,
+    /// Recipients
     pub recipients: Vec<String>,
+    /// Smtp Server
     pub smtp_server: String,
+    /// Smtp Port
     pub smtp_port: u16,
+    /// Username
     pub username: String,
+    /// Password
     pub password: String,
+    /// Use Tls
     pub use_tls: bool,
+    /// Rate Limits
     pub rate_limits: Option<RateLimitConfig>,
 }
 impl SmartDefault for EmailNotificationChannel {
+    /// Smart Default
     fn smart_default() -> Self {
         Self {
             id: "email_default".to_string(),
@@ -254,22 +284,27 @@ impl SmartDefault for EmailNotificationChannel {
 }
 
 impl NotificationChannel for EmailNotificationChannel {
+    /// Channel Id
     fn channel_id(&self) -> &str {
         &self.id
     }
 
+    /// Channel Name
     fn channel_name(&self) -> &str {
         &self.name
     }
 
+    /// Channel Type
     fn channel_type(&self) -> &str {
         "email"
     }
 
+    /// Checks if Enabled
     fn is_enabled(&self) -> bool {
         self.enabled
     }
 
+    /// Send Notification
     fn send_notification(
         &self,
         content: &NotificationContent,
@@ -309,6 +344,7 @@ impl NotificationChannel for EmailNotificationChannel {
         }
     }
 
+    /// Validates  Configuration
     fn validate_configuration(&self) -> impl std::future::Future<Output = Result<()>> + Send;
         if self.recipients.is_empty() {
             return Err(NotificationError::Configuration {
@@ -325,6 +361,7 @@ impl NotificationChannel for EmailNotificationChannel {
         Ok(())
     }
 
+    /// Gets Configuration
     fn get_configuration(&self) -> serde_json::Value {
         serde_json::json!({
             "id": self.id,
@@ -363,6 +400,7 @@ impl NotificationChannel for EmailNotificationChannel {
         }
     }
 
+    /// Gets Rate Limits
     fn get_rate_limits(&self) -> Option<RateLimitConfig> {
         self.rate_limits.clone()
     }
@@ -370,17 +408,27 @@ impl NotificationChannel for EmailNotificationChannel {
 
 /// Slack notification channel implementation
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Slacknotificationchannel
 pub struct SlackNotificationChannel {
+    /// Unique identifier
     pub id: String,
+    /// Name
     pub name: String,
+    /// Whether this feature is enabled
     pub enabled: bool,
+    /// Webhook Url
     pub webhook_url: String,
+    /// Channel
     pub channel: String,
+    /// Username
     pub username: Option<String>,
+    /// Icon Emoji
     pub icon_emoji: Option<String>,
+    /// Rate Limits
     pub rate_limits: Option<RateLimitConfig>,
 }
 impl SmartDefault for SlackNotificationChannel {
+    /// Smart Default
     fn smart_default() -> Self {
         Self {
             id: "slack_default".to_string(),
@@ -396,22 +444,27 @@ impl SmartDefault for SlackNotificationChannel {
 }
 
 impl NotificationChannel for SlackNotificationChannel {
+    /// Channel Id
     fn channel_id(&self) -> &str {
         &self.id
     }
 
+    /// Channel Name
     fn channel_name(&self) -> &str {
         &self.name
     }
 
+    /// Channel Type
     fn channel_type(&self) -> &str {
         "slack"
     }
 
+    /// Checks if Enabled
     fn is_enabled(&self) -> bool {
         self.enabled
     }
 
+    /// Send Notification
     async fn send_notification(
         &self,
         _content: &NotificationContent,
@@ -437,6 +490,7 @@ impl NotificationChannel for SlackNotificationChannel {
         })
     }
 
+    /// Validates  Configuration
     async fn validate_configuration(&self) -> NotificationResult<()> {
         if self.webhook_url.is_empty() || !self.webhook_url.starts_with("https://") {
             return Err(NotificationError::Configuration {
@@ -453,6 +507,7 @@ impl NotificationChannel for SlackNotificationChannel {
         Ok(())
     }
 
+    /// Gets Configuration
     fn get_configuration(&self) -> serde_json::Value {
         serde_json::json!({
             "id": self.id,
@@ -485,6 +540,7 @@ impl NotificationChannel for SlackNotificationChannel {
         }
     }
 
+    /// Gets Rate Limits
     fn get_rate_limits(&self) -> Option<RateLimitConfig> {
         self.rate_limits.clone()
     }
@@ -492,13 +548,19 @@ impl NotificationChannel for SlackNotificationChannel {
 
 /// Log notification channel (for development/testing)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Lognotificationchannel
 pub struct LogNotificationChannel {
+    /// Unique identifier
     pub id: String,
+    /// Name
     pub name: String,
+    /// Whether this feature is enabled
     pub enabled: bool,
+    /// Log Level
     pub log_level: String,
 }
 impl SmartDefault for LogNotificationChannel {
+    /// Smart Default
     fn smart_default() -> Self {
         Self {
             id: "log_default".to_string(),
@@ -510,22 +572,27 @@ impl SmartDefault for LogNotificationChannel {
 }
 
 impl NotificationChannel for LogNotificationChannel {
+    /// Channel Id
     fn channel_id(&self) -> &str {
         &self.id
     }
 
+    /// Channel Name
     fn channel_name(&self) -> &str {
         &self.name
     }
 
+    /// Channel Type
     fn channel_type(&self) -> &str {
         "log"
     }
 
+    /// Checks if Enabled
     fn is_enabled(&self) -> bool {
         self.enabled
     }
 
+    /// Send Notification
     async fn send_notification(
         &self,
         content: &NotificationContent,
@@ -557,6 +624,7 @@ impl NotificationChannel for LogNotificationChannel {
         })
     }
 
+    /// Validates  Configuration
     async fn validate_configuration(&self) -> NotificationResult<()> {
         let valid_levels = ["error", "warn", "info", "debug", "trace"];
         if !valid_levels.contains(&self.log_level.as_str()) {
@@ -567,6 +635,7 @@ impl NotificationChannel for LogNotificationChannel {
         Ok(())
     }
 
+    /// Gets Configuration
     fn get_configuration(&self) -> serde_json::Value {
         serde_json::json!({
             "id": self.id,
@@ -580,6 +649,7 @@ impl NotificationChannel for LogNotificationChannel {
         Ok(true) // Log channel is always available
     }
 
+    /// Gets Rate Limits
     fn get_rate_limits(&self) -> Option<RateLimitConfig> {
         None // No rate limits for log channel
     }
@@ -587,10 +657,12 @@ impl NotificationChannel for LogNotificationChannel {
 
 /// Channel manager for handling multiple notification channels
 #[derive(Debug)]
+/// Manager for NotificationChannel operations
 pub struct NotificationChannelManager {
     channels: HashMap<String, Box<dyn NotificationChannel>>,
 }
 impl Default for NotificationChannelManager {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -668,6 +740,7 @@ impl NotificationChannelManager {
 }
 
 impl SmartDefault for NotificationChannelManager {
+    /// Smart Default
     fn smart_default() -> Self {
         let mut manager = Self::new();
 
@@ -688,6 +761,7 @@ impl SmartDefault for NotificationChannelManager {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Ratelimitconfigcanonical
 pub type RateLimitConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using RateLimitConfig (the deprecated struct) for now.

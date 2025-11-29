@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 /// and vendor names (k8s, redis, etc.)
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+/// Types of Capability
 pub enum CapabilityType {
     // ═══════════════════════════════════════════════════════════════
     // PRIMAL CAPABILITIES (No Primal Names!)
@@ -267,8 +268,10 @@ impl CapabilityType {
 }
 
 impl std::str::FromStr for CapabilityType {
+    /// Type alias for Err
     type Err = std::convert::Infallible;
 
+    /// Creates from Str
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Ok(match s {
             // Primal capabilities
@@ -316,6 +319,7 @@ impl std::str::FromStr for CapabilityType {
 /// Capability category for organizational purposes
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+/// Capabilitycategory
 pub enum CapabilityCategory {
     /// Primal-level capabilities (orchestration, compute, AI, security, etc.)
     Primal,

@@ -25,6 +25,7 @@ use std::time::Duration;
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for ZfsHandlerSpecific
 pub struct ZfsHandlerSpecificConfig {
     /// ZFS command timeout
     pub command_timeout: Duration,
@@ -58,6 +59,7 @@ pub struct ZfsHandlerSpecificConfig {
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for PerformanceHandlerSpecific
 pub struct PerformanceHandlerSpecificConfig {
     /// Enable performance monitoring
     pub monitoring_enabled: bool,
@@ -85,6 +87,7 @@ pub struct PerformanceHandlerSpecificConfig {
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for DashboardHandlerSpecific
 pub struct DashboardHandlerSpecificConfig {
     /// Dashboard refresh interval
     pub refresh_interval: Duration,
@@ -112,6 +115,7 @@ pub struct DashboardHandlerSpecificConfig {
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for LoadTestingHandlerSpecific
 pub struct LoadTestingHandlerSpecificConfig {
     /// Maximum concurrent virtual users
     pub max_virtual_users: usize,
@@ -139,6 +143,7 @@ pub struct LoadTestingHandlerSpecificConfig {
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for WorkspaceHandlerSpecific
 pub struct WorkspaceHandlerSpecificConfig {
     /// Default workspace size limit
     pub default_size_limit: u64,
@@ -166,6 +171,7 @@ pub struct WorkspaceHandlerSpecificConfig {
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for AuthHandlerSpecific
 pub struct AuthHandlerSpecificConfig {
     /// JWT configuration
     pub jwt: JwtConfig,
@@ -194,6 +200,7 @@ pub type AuthHandlerConfig = HandlerConfig<AuthHandlerSpecificConfig>;
 
 /// ZFS pool configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ZfsPool
 pub struct ZfsPoolConfig {
     /// Pool name
     pub name: String,
@@ -212,6 +219,7 @@ pub struct ZfsPoolConfig {
 }
 /// ZFS dataset configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ZfsDataset
 pub struct ZfsDatasetConfig {
     /// Dataset name
     pub name: String,
@@ -228,6 +236,7 @@ pub struct ZfsDatasetConfig {
 }
 /// ZFS snapshot configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ZfsSnapshot
 pub struct ZfsSnapshotConfig {
     /// Snapshot name pattern
     pub name_pattern: String,
@@ -240,6 +249,7 @@ pub struct ZfsSnapshotConfig {
 }
 /// Snapshot retention policy
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Snapshotretentionpolicy
 pub struct SnapshotRetentionPolicy {
     /// Keep snapshots for this duration
     pub keep_duration: Duration,
@@ -267,6 +277,7 @@ pub struct SnapshotRetentionPolicy {
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for ZfsService
 pub struct ZfsServiceConfig {
     /// ZFS binary path
     pub zfs_binary: String,
@@ -283,6 +294,7 @@ pub struct ZfsServiceConfig {
 
 /// Performance thresholds configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performancethresholds
 pub struct PerformanceThresholds {
     /// CPU usage warning threshold (percentage)
     pub cpu_warning: f64,
@@ -303,6 +315,7 @@ pub struct PerformanceThresholds {
 }
 /// Benchmark configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Benchmark
 pub struct BenchmarkConfig {
     /// Enable automatic benchmarking
     pub auto_benchmark: bool,
@@ -317,6 +330,7 @@ pub struct BenchmarkConfig {
 }
 /// Individual benchmark scenario
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Benchmarkscenario
 pub struct BenchmarkScenario {
     /// Scenario name
     pub name: String,
@@ -331,6 +345,7 @@ pub struct BenchmarkScenario {
 
 /// Widget configuration for dashboard
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Widget
 pub struct WidgetConfig {
     /// Widget identifier
     pub id: String,
@@ -347,18 +362,25 @@ pub struct WidgetConfig {
 }
 /// Widget position on dashboard
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Widgetposition
 pub struct WidgetPosition {
+    /// X
     pub x: u32,
+    /// Y
     pub y: u32,
 }
 /// Widget size configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Widgetsize
 pub struct WidgetSize {
+    /// Width
     pub width: u32,
+    /// Height
     pub height: u32,
 }
 /// Dashboard theme configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Dashboardtheme
 pub struct DashboardTheme {
     /// Theme name
     pub name: String,
@@ -377,6 +399,7 @@ pub struct DashboardTheme {
 
 /// Ramp-up configuration for load testing
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for RampUp
 pub struct RampUpConfig {
     /// Ramp-up duration
     pub duration: Duration,
@@ -389,14 +412,19 @@ pub struct RampUpConfig {
 }
 /// Ramp-up strategy options
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Rampupstrategy
 pub enum RampUpStrategy {
+    /// Linear
     Linear,
+    /// Exponential
     Exponential,
+    /// Step
     Step,
     Custom(Vec<RampUpStep>),
 }
 /// Individual ramp-up step
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Rampupstep
 pub struct RampUpStep {
     /// Duration of this step
     pub duration: Duration,
@@ -407,6 +435,7 @@ pub struct RampUpStep {
 
 /// Workspace backup configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for WorkspaceBackup
 pub struct WorkspaceBackupConfig {
     /// Enable automatic backups
     pub enabled: bool,
@@ -421,6 +450,7 @@ pub struct WorkspaceBackupConfig {
 }
 /// Workspace access control configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for WorkspaceAccess
 pub struct WorkspaceAccessConfig {
     /// Default access level
     pub default_access: AccessLevel,
@@ -431,14 +461,20 @@ pub struct WorkspaceAccessConfig {
 }
 /// Access level enumeration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Accesslevel
 pub enum AccessLevel {
+    /// None
     None,
+    /// Read
     Read,
+    /// Write
     Write,
+    /// Admin
     Admin,
 }
 /// Access control rule
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Accessrule
 pub struct AccessRule {
     /// User or group pattern
     pub principal: String,
@@ -466,6 +502,7 @@ pub struct AccessRule {
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for Jwt
 pub struct JwtConfig {
     /// JWT secret key
     pub secret: String,
@@ -497,6 +534,7 @@ pub struct JwtConfig {
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for OAuthProvider
 pub struct OAuthProviderConfig {
     /// Provider name
     pub name: String,
@@ -530,6 +568,7 @@ pub struct OAuthProviderConfig {
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for Session
 pub struct SessionConfig {
     /// Session timeout
     pub timeout: Duration,
@@ -542,13 +581,18 @@ pub struct SessionConfig {
 }
 /// Session storage options
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Sessionstorage
 pub enum SessionStorage {
+    /// Memory
     Memory,
+    /// Redis
     Redis { url: String }
+    /// Database
     Database { table: String }
 }
 /// Password policy configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Passwordpolicy
 pub struct PasswordPolicy {
     /// Minimum password length
     pub min_length: usize,
@@ -568,6 +612,7 @@ pub struct PasswordPolicy {
 // ==================== SECTION ====================
 
 impl Default for ZfsHandlerSpecificConfig {
+    /// Returns the default instance
     fn default() -> Self { Self {
             command_timeout: Duration::from_secs(30),
             monitoring_enabled: true,
@@ -580,6 +625,7 @@ impl Default for ZfsHandlerSpecificConfig {
 }
 
 impl Default for SnapshotRetentionPolicy {
+    /// Returns the default instance
     fn default() -> Self { Self {
             keep_duration: Duration::from_secs(7 * 24 * 3600), // 7 days
             max_snapshots: Some(50),
@@ -589,6 +635,7 @@ impl Default for SnapshotRetentionPolicy {
 }
 
 impl Default for ZfsServiceConfig {
+    /// Returns the default instance
     fn default() -> Self { Self {
             zfs_binary: "/usr/sbin/zfs".to_string(),
             zpool_binary: "/usr/sbin/zpool".to_string(),
@@ -606,6 +653,7 @@ impl Default for ZfsServiceConfig {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Authhandlerspecificconfigcanonical
 pub type AuthHandlerSpecificConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using AuthHandlerSpecificConfig (the deprecated struct) for now.
@@ -622,6 +670,7 @@ pub type AuthHandlerSpecificConfigCanonical = nestgate_core::config::canonical_p
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Oauthproviderconfigcanonical
 pub type OAuthProviderConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using OAuthProviderConfig (the deprecated struct) for now.
@@ -638,6 +687,7 @@ pub type OAuthProviderConfigCanonical = nestgate_core::config::canonical_primary
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Jwtconfigcanonical
 pub type JwtConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using JwtConfig (the deprecated struct) for now.
@@ -654,6 +704,7 @@ pub type JwtConfigCanonical = nestgate_core::config::canonical_primary::domains:
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Zfshandlerspecificconfigcanonical
 pub type ZfsHandlerSpecificConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using ZfsHandlerSpecificConfig (the deprecated struct) for now.
@@ -670,6 +721,7 @@ pub type ZfsHandlerSpecificConfigCanonical = nestgate_core::config::canonical_pr
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Performancehandlerspecificconfigcanonical
 pub type PerformanceHandlerSpecificConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using PerformanceHandlerSpecificConfig (the deprecated struct) for now.
@@ -686,6 +738,7 @@ pub type PerformanceHandlerSpecificConfigCanonical = nestgate_core::config::cano
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Dashboardhandlerspecificconfigcanonical
 pub type DashboardHandlerSpecificConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using DashboardHandlerSpecificConfig (the deprecated struct) for now.
@@ -702,6 +755,7 @@ pub type DashboardHandlerSpecificConfigCanonical = nestgate_core::config::canoni
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Loadtestinghandlerspecificconfigcanonical
 pub type LoadTestingHandlerSpecificConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using LoadTestingHandlerSpecificConfig (the deprecated struct) for now.
@@ -718,6 +772,7 @@ pub type LoadTestingHandlerSpecificConfigCanonical = nestgate_core::config::cano
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Workspacehandlerspecificconfigcanonical
 pub type WorkspaceHandlerSpecificConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using WorkspaceHandlerSpecificConfig (the deprecated struct) for now.
@@ -734,6 +789,7 @@ pub type WorkspaceHandlerSpecificConfigCanonical = nestgate_core::config::canoni
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Zfsserviceconfigcanonical
 pub type ZfsServiceConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using ZfsServiceConfig (the deprecated struct) for now.
@@ -750,6 +806,7 @@ pub type ZfsServiceConfigCanonical = nestgate_core::config::canonical_primary::d
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Sessionconfigcanonical
 pub type SessionConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using SessionConfig (the deprecated struct) for now.

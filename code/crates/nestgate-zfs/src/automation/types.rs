@@ -3,6 +3,8 @@
 // the automation system including policies, lifecycle management, events,
 // and status tracking.
 
+//! Types module
+
 use crate::types::StorageTier;
 use serde::{Deserialize, Serialize};
 
@@ -10,57 +12,91 @@ use std::time::SystemTime;
 
 /// Policy priority levels for automation policies
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Policypriority
 pub enum PolicyPriority {
+    /// Low
     Low,
+    /// Normal
     Normal,
+    /// High
     High,
+    /// Critical
     Critical,
 }
 /// Policy conditions container that defines when and how automation rules apply
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Policyconditions
 pub struct PolicyConditions {
+    /// Tier Rules
     pub tier_rules: Vec<TierRule>,
+    /// Migration Rules
     pub migration_rules: Vec<MigrationRule>,
+    /// Lifecycle Rules
     pub lifecycle_rules: Vec<LifecycleRule>,
 }
 /// Simple tier rule for basic automation - defines target tier based on conditions
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Tierrule
 pub struct TierRule {
+    /// Condition
     pub condition: String,
+    /// Target Tier
     pub target_tier: StorageTier,
+    /// Priority
     pub priority: u32,
 }
 /// Simple migration rule for automated dataset movement between tiers
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Migrationrule
 pub struct MigrationRule {
+    /// Source Tier
     pub source_tier: StorageTier,
+    /// Target Tier
     pub target_tier: StorageTier,
+    /// Condition
     pub condition: String,
+    /// Bandwidth Limits
     pub bandwidth_limits: BandwidthLimits,
+    /// Schedule
     pub schedule: String,
 }
 /// Simple lifecycle rule for dataset lifecycle management
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Lifecyclerule
 pub struct LifecycleRule {
+    /// Stage
     pub stage: LifecycleStage,
+    /// Next Stage
     pub next_stage: Option<LifecycleStage>,
+    /// Conditions
     pub conditions: Vec<String>,
+    /// Actions
     pub actions: Vec<String>,
 }
 /// Dataset lifecycle management policy with complete configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Automationpolicy
 pub struct AutomationPolicy {
+    /// Policy identifier
     pub policy_id: String,
+    /// Name
     pub name: String,
+    /// Human-readable description
     pub description: String,
+    /// Priority
     pub priority: PolicyPriority,
+    /// Whether this feature is enabled
     pub enabled: bool,
+    /// Conditions
     pub conditions: PolicyConditions,
+    /// Created
     pub created: SystemTime,
+    /// Last Modified
     pub last_modified: SystemTime,
 }
 /// Dataset lifecycle stages with automation rules
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Lifecyclestage
 pub enum LifecycleStage {
     /// Newly created, high activity expected
     New,
@@ -74,6 +110,7 @@ pub enum LifecycleStage {
     Obsolete,
 }
 impl std::fmt::Display for LifecycleStage {
+    /// Fmt
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             LifecycleStage::New => write!(f, "New"),
@@ -87,39 +124,64 @@ impl std::fmt::Display for LifecycleStage {
 
 /// Dataset lifecycle tracking with comprehensive state management
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Datasetlifecycle
 pub struct DatasetLifecycle {
+    /// Dataset name
     pub dataset_name: String,
+    /// Current Tier
     pub current_tier: StorageTier,
+    /// Created
     pub created: SystemTime,
+    /// Last Accessed
     pub last_accessed: Option<SystemTime>,
+    /// Count of access
     pub access_count: u64,
+    /// Total Migrations
     pub total_migrations: u32,
+    /// Last Optimization
     pub last_optimization: Option<SystemTime>,
+    /// Lifecycle Stage
     pub lifecycle_stage: LifecycleStage,
+    /// Automation History
     pub automation_history: Vec<AutomationEvent>,
 }
 /// Automation event tracking for audit and debugging
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Automationevent
 pub struct AutomationEvent {
+    /// Event identifier
     pub event_id: String,
+    /// Event Type
     pub event_type: AutomationEventType,
+    /// Timestamp
     pub timestamp: SystemTime,
+    /// Details
     pub details: String,
+    /// Success
     pub success: bool,
 }
 /// Types of automation events for categorization and filtering
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of AutomationEvent
 pub enum AutomationEventType {
+    /// Tierassignment
     TierAssignment,
+    /// Migration
     Migration,
+    /// Optimization
     Optimization,
+    /// Cleanup
     Cleanup,
+    /// Compression
     Compression,
+    /// Archival
     Archival,
+    /// Policyupdate
     PolicyUpdate,
 }
 /// Bandwidth limits for migrations and operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Bandwidthlimits
 pub struct BandwidthLimits {
     /// Maximum migration bandwidth during peak hours (MB/s)
     pub peak_max_mbps: u64,
@@ -127,6 +189,7 @@ pub struct BandwidthLimits {
     pub off_peak_max_mbps: u64,
 }
 impl Default for BandwidthLimits {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             peak_max_mbps: 1000,
@@ -137,19 +200,30 @@ impl Default for BandwidthLimits {
 
 /// Automation status information for monitoring and reporting
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Automationstatus
 pub struct AutomationStatus {
+    /// Whether this feature is enabled
     pub enabled: bool,
+    /// Active Policies
     pub active_policies: u32,
+    /// Tracked Datasets
     pub tracked_datasets: u32,
+    /// Total Migrations Performed
     pub total_migrations_performed: u32,
+    /// Last Automation Cycle
     pub last_automation_cycle: SystemTime,
 }
 /// Dataset metadata for tier evaluation and decision making
 #[derive(Debug, Default)]
+/// Datasetmetadata
 pub struct DatasetMetadata {
+    /// Size Bytes
     pub size_bytes: u64,
+    /// Last Accessed
     pub last_accessed: Option<SystemTime>,
+    /// Access Frequency
     pub access_frequency: f64,
+    /// File Types
     pub file_types: Vec<String>,
 }
 

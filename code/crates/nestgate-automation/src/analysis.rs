@@ -1,5 +1,7 @@
 // Clean implementation of file characteristic analysis and access pattern tracking
 
+//! Analysis module
+
 use std::collections::HashMap;
 use std::time::SystemTime;
 
@@ -15,28 +17,42 @@ use crate::types::prediction::{
 
 // Type aliases to reduce complexity
 type AnalysisCache = tokio::sync::RwLock<HashMap<String, (FileAnalysis, SystemTime)>>;
+/// Type alias for PatternHistory
 type PatternHistory = tokio::sync::RwLock<HashMap<String, Vec<AccessEvent>>>;
 
 /// File characteristics structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Filecharacteristics
 pub struct FileCharacteristics {
+    /// Size Category
     pub size_category: SizeCategory,
+    /// Access Frequency
     pub access_frequency: u32,
+    /// Whether frequently accessed
     pub is_frequently_accessed: bool,
+    /// Whether sequential access
     pub is_sequential_access: bool,
+    /// Data Pattern
     pub data_pattern: DataPattern,
 }
 /// Dataset analysis structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Datasetanalysis
 pub struct DatasetAnalysis {
+    /// Path
     pub path: String,
+    /// Total Files
     pub total_files: u64,
+    /// Total Size Bytes
     pub total_size_bytes: u64,
+    /// File Types
     pub file_types: HashMap<String, u64>,
+    /// Characteristics
     pub characteristics: FileCharacteristics,
 }
 /// File analyzer for extracting metadata and characteristics
 #[derive(Debug)]
+/// Fileanalyzer
 pub struct FileAnalyzer {
     analysis_cache: AnalysisCache,
 }
@@ -350,6 +366,7 @@ impl FileAnalyzer {
 }
 
 impl Default for FileAnalyzer {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -357,6 +374,7 @@ impl Default for FileAnalyzer {
 
 /// Pattern analyzer for tracking access patterns
 #[derive(Debug)]
+/// Patternanalyzer
 pub struct PatternAnalyzer {
     pattern_history: PatternHistory,
 }
@@ -408,6 +426,7 @@ impl PatternAnalyzer {
 }
 
 impl Default for PatternAnalyzer {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -415,6 +434,7 @@ impl Default for PatternAnalyzer {
 
 /// Dataset analyzer for analyzing entire datasets
 #[derive(Debug)]
+/// Datasetanalyzer
 pub struct DatasetAnalyzer {
     file_analyzer: FileAnalyzer,
     #[allow(dead_code)]
@@ -618,6 +638,7 @@ impl DatasetAnalyzer {
 }
 
 impl Default for DatasetAnalyzer {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -625,14 +646,23 @@ impl Default for DatasetAnalyzer {
 
 /// Dataset summary with access patterns
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Datasetsummary
 pub struct DatasetSummary {
+    /// Dataset name
     pub dataset_name: String,
+    /// Total Files
     pub total_files: usize,
+    /// Total Size Bytes
     pub total_size_bytes: u64,
+    /// Size of average file
     pub average_file_size: u64,
+    /// File Types
     pub file_types: HashMap<String, usize>,
+    /// Access Pattern
     pub access_pattern: AccessPattern, // Use singular AccessPattern
+    /// Compressible Files
     pub compressible_files: usize,
+    /// Dedupable Files
     pub dedupable_files: usize,
 }
 /// Utility function to analyze multiple datasets with machine learning patterns

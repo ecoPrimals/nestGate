@@ -10,6 +10,7 @@ use std::time::Duration;
 ///
 /// Consolidates all connection pooling settings from across the system.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ConnectionPool
 pub struct ConnectionPoolConfig {
     /// Enable connection pooling
     pub enabled: bool,
@@ -42,6 +43,7 @@ pub struct ConnectionPoolConfig {
 }
 
 impl Default for ConnectionPoolConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -66,6 +68,7 @@ impl Default for ConnectionPoolConfig {
 
 /// Connection retry configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ConnectionRetry
 pub struct ConnectionRetryConfig {
     /// Maximum number of retry attempts
     pub max_attempts: u32,
@@ -84,6 +87,7 @@ pub struct ConnectionRetryConfig {
 }
 
 impl Default for ConnectionRetryConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             max_attempts: 3,
@@ -99,6 +103,7 @@ impl Default for ConnectionRetryConfig {
 
 /// Pool monitoring configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for PoolMonitoring
 pub struct PoolMonitoringConfig {
     /// Whether monitoring is enabled
     pub enabled: bool,
@@ -111,6 +116,7 @@ pub struct PoolMonitoringConfig {
 }
 
 impl Default for PoolMonitoringConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -127,6 +133,7 @@ impl Default for PoolMonitoringConfig {
 
 /// Pool metrics to collect
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Poolmetric
 pub enum PoolMetric {
     /// Number of currently active connections
     ActiveConnections,
@@ -146,6 +153,7 @@ pub enum PoolMetric {
 
 /// Pool performance thresholds
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Poolthresholds
 pub struct PoolThresholds {
     /// Maximum acceptable time to acquire a connection
     pub max_acquisition_time: Duration,
@@ -158,6 +166,7 @@ pub struct PoolThresholds {
 }
 
 impl Default for PoolThresholds {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             max_acquisition_time: Duration::from_millis(500),
@@ -170,6 +179,7 @@ impl Default for PoolThresholds {
 
 /// Connection validation configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ConnectionValidation
 pub struct ConnectionValidationConfig {
     /// Whether connection validation is enabled
     pub enabled: bool,
@@ -188,6 +198,7 @@ pub struct ConnectionValidationConfig {
 }
 
 impl Default for ConnectionValidationConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -203,6 +214,7 @@ impl Default for ConnectionValidationConfig {
 
 /// Connection validation strategies
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Validationstrategy
 pub enum ValidationStrategy {
     /// Execute a validation query to check connection health
     Query,
@@ -214,6 +226,7 @@ pub enum ValidationStrategy {
 
 /// Connection lifecycle configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ConnectionLifecycle
 pub struct ConnectionLifecycleConfig {
     /// Configuration for tracking connection state
     pub state_tracking: ConnectionStateTracking,
@@ -222,6 +235,7 @@ pub struct ConnectionLifecycleConfig {
 }
 
 impl Default for ConnectionLifecycleConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             state_tracking: ConnectionStateTracking::default(),
@@ -232,6 +246,7 @@ impl Default for ConnectionLifecycleConfig {
 
 /// Connection state tracking configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Connectionstatetracking
 pub struct ConnectionStateTracking {
     /// Whether state tracking is enabled
     pub enabled: bool,
@@ -244,6 +259,7 @@ pub struct ConnectionStateTracking {
 }
 
 impl Default for ConnectionStateTracking {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -256,6 +272,7 @@ impl Default for ConnectionStateTracking {
 
 /// Connection pooling strategies
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Poolingstrategy
 pub enum PoolingStrategy {
     /// First In, First Out - connections are served in order they were added
     Fifo,
@@ -271,6 +288,7 @@ pub enum PoolingStrategy {
 
 /// Connection load balancing configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ConnectionLoadBalancing
 pub struct ConnectionLoadBalancingConfig {
     /// Whether load balancing is enabled
     pub enabled: bool,
@@ -281,6 +299,7 @@ pub struct ConnectionLoadBalancingConfig {
 }
 
 impl Default for ConnectionLoadBalancingConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: false,
@@ -292,6 +311,7 @@ impl Default for ConnectionLoadBalancingConfig {
 
 /// Load balancing strategies
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Loadbalancingstrategy
 pub enum LoadBalancingStrategy {
     /// Round-robin distribution across connections
     RoundRobin,
@@ -305,6 +325,7 @@ pub enum LoadBalancingStrategy {
 
 /// Load balancer health check configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Loadbalancerhealthcheck
 pub struct LoadBalancerHealthCheck {
     /// Whether health checks are enabled
     pub enabled: bool,
@@ -319,6 +340,7 @@ pub struct LoadBalancerHealthCheck {
 }
 
 impl Default for LoadBalancerHealthCheck {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,

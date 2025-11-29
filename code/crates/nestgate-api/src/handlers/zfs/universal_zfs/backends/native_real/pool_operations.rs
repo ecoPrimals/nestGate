@@ -1,6 +1,8 @@
 //
 // Single responsibility: ZFS pool management operations
 
+//! Pool Operations module
+
 use super::core::NativeZfsService;
 use super::parsing;
 use crate::handlers::zfs::universal_zfs_types::{

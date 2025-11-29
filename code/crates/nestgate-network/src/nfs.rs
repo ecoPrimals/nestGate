@@ -1,6 +1,8 @@
 //
 // This module provides NFS server functionality for the NestGate system
 
+//! Nfs module
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -15,20 +17,30 @@ use tracing::error;
 
 /// NFS export configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Nfsexport
 pub struct NfsExport {
+    /// Path
     pub path: PathBuf,
+    /// Client Access
     pub client_access: Vec<String>,
+    /// Options
     pub options: NfsExportOptions,
 }
 /// NFS export options
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Nfsexportoptions
 pub struct NfsExportOptions {
+    /// Read Only
     pub read_only: bool,
+    /// Sync
     pub sync: bool,
+    /// No Subtree Check
     pub no_subtree_check: bool,
+    /// No Root Squash
     pub no_root_squash: bool,
 }
 impl Default for NfsExportOptions {
+    /// Returns the default instance
     fn default() -> Self { Self {
             read_only: false,
             sync: true,
@@ -39,11 +51,13 @@ impl Default for NfsExportOptions {
 
 /// NFS server state
 #[derive(Debug)]
+/// Nfsserver
 pub struct NfsServer {
     exports: Arc<RwLock<HashMap<String, NfsExport>>>,
     running: Arc<RwLock<bool>>,
 }
 impl Default for NfsServer {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -342,16 +356,24 @@ impl NfsServer {
 
 /// Mount request
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for Mount operation
 pub struct MountRequest {
+    /// Export name
     pub export_name: String,
+    /// Mount Point
     pub mount_point: PathBuf,
+    /// Client Host
     pub client_host: String,
 }
 /// Mount response
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for Mount operation
 pub struct MountResponse {
+    /// Mount identifier
     pub mount_id: String,
+    /// Success
     pub success: bool,
+    /// Message
     pub message: String,
 }
 /// Handle NFS mount request
@@ -447,6 +469,7 @@ mod tests {
     use super::*;
     use std::path::PathBuf;
 
+    /// Creates  Test Export Options
     fn create_test_export_options() -> NfsExportOptions {
         NfsExportOptions {
             read_only: true,
@@ -456,6 +479,7 @@ mod tests {
         }
     }
 
+    /// Creates  Test Export
     fn create_test_export() -> NfsExport {
         NfsExport {
             path: PathBuf::from("/data/test"),

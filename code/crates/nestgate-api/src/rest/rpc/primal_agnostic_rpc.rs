@@ -16,6 +16,7 @@ use uuid::Uuid;
 
 /// Universal RPC request that can route to any capability provider
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for UniversalRpc operation
 pub struct UniversalRpcRequest {
     /// Request ID for tracking
     pub id: Uuid,
@@ -31,6 +32,7 @@ pub struct UniversalRpcRequest {
 
 /// Universal RPC response from any capability provider
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for UniversalRpc operation
 pub struct UniversalRpcResponse {
     /// Request ID this responds to
     pub id: Uuid,
@@ -48,6 +50,7 @@ pub struct UniversalRpcResponse {
 
 /// RPC error information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Error type for Rpc operations
 pub struct RpcError {
     /// Error code
     pub code: i32,
@@ -143,6 +146,7 @@ impl PrimalAgnosticRpcService {
 }
 
 impl Default for PrimalAgnosticRpcService {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -312,6 +316,7 @@ impl RpcCompatibilityLayer {
 }
 
 impl Default for RpcCompatibilityLayer {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

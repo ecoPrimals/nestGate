@@ -112,6 +112,7 @@ impl UniversalDataAdapter {
 }
 
 impl Default for UniversalDataAdapter {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -122,6 +123,7 @@ pub struct UniversalDataAdapterBuilder {
     adapter: UniversalDataAdapter,
 }
 impl UniversalDataAdapterBuilder {
+    /// Creates a new instance
     pub fn new() -> Self {
         Self {
             adapter: UniversalDataAdapter::new(),
@@ -149,6 +151,7 @@ impl UniversalDataAdapterBuilder {
 }
 
 impl Default for UniversalDataAdapterBuilder {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

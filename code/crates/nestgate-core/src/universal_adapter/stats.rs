@@ -40,6 +40,7 @@ mod instant_serde {
 
 /// Comprehensive adapter statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Adapterstats
 pub struct AdapterStats {
     /// Number of active providers
     pub active_providers: usize,
@@ -57,9 +58,11 @@ pub struct AdapterStats {
     pub uptime: Duration,
     /// Last reset timestamp
     #[serde(with = "instant_serde")]
+    /// Last Reset
     pub last_reset: Instant,
 }
 impl Default for AdapterStats {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             active_providers: 0,
@@ -192,12 +195,19 @@ impl AdapterStats {
 
 /// Summary of adapter statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Statssummary
 pub struct StatsSummary {
+    /// Requests Total
     pub requests_total: u64,
+    /// Requests Successful
     pub requests_successful: u64,
+    /// Requests Failed
     pub requests_failed: u64,
+    /// Capability Cache Hits
     pub capability_cache_hits: u64,
+    /// Capability Cache Misses
     pub capability_cache_misses: u64,
+    /// Fallback Activations
     pub fallback_activations: u64,
 }
 

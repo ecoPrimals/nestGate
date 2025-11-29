@@ -9,6 +9,7 @@ use crate::security::{Role, Permission, AccessLevel};
 
 /// Permission manager for handling access control
 #[derive(Debug, Clone)]
+/// Manager for Permission operations
 pub struct PermissionManager {
     /// Permissions by role
     role_permissions: HashMap<Role, HashSet<String>>,
@@ -202,6 +203,7 @@ impl PermissionManager {
 }
 
 impl Default for PermissionManager {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

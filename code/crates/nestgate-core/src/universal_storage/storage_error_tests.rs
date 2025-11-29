@@ -42,6 +42,7 @@ mod storage_error_creation_tests {
 mod filesystem_operation_tests {
     use crate::error::{NestGateError, Result};
 
+    /// Simulate Read Operation
     fn simulate_read_operation(should_fail: bool) -> Result<Vec<u8>> {
         if should_fail {
             Err(NestGateError::storage_error("Read failed"))
@@ -50,6 +51,7 @@ mod filesystem_operation_tests {
         }
     }
 
+    /// Simulate Write Operation
     fn simulate_write_operation(should_fail: bool) -> Result<usize> {
         if should_fail {
             Err(NestGateError::storage_error("Write failed"))
@@ -111,6 +113,7 @@ mod storage_capacity_tests {
 
     #[test]
     fn test_disk_space_check() {
+        /// Check Space
         fn check_space(available_mb: u64, required_mb: u64) -> Result<()> {
             if available_mb < required_mb {
                 Err(NestGateError::storage_error("Insufficient disk space"))
@@ -171,10 +174,12 @@ mod storage_resilience_tests {
 
     #[test]
     fn test_fallback_to_backup() {
+        /// Read Primary
         fn read_primary() -> Result<String> {
             Err(NestGateError::storage_error("Primary unavailable"))
         }
 
+        /// Read Backup
         fn read_backup() -> Result<String> {
             Ok("backup data".to_string())
         }
@@ -186,10 +191,12 @@ mod storage_resilience_tests {
 
     #[test]
     fn test_degraded_mode() {
+        /// Full Storage Read
         fn full_storage_read() -> Result<Vec<String>> {
             Err(NestGateError::storage_error("Storage unavailable"))
         }
 
+        /// Cache Only Read
         fn cache_only_read() -> Result<Vec<String>> {
             Ok(vec!["cached1".to_string(), "cached2".to_string()])
         }
@@ -264,6 +271,7 @@ mod storage_transaction_tests {
 
     #[test]
     fn test_transaction_commit_success() {
+        /// Commit Transaction
         fn commit_transaction(should_succeed: bool) -> Result<()> {
             if should_succeed {
                 Ok(())
@@ -278,6 +286,7 @@ mod storage_transaction_tests {
 
     #[test]
     fn test_transaction_rollback() {
+        /// Operation With Rollback
         fn operation_with_rollback(fail_at_step: Option<usize>) -> Result<Vec<String>> {
             let mut results = vec![];
 
@@ -391,10 +400,12 @@ mod storage_integration_tests {
 
     #[test]
     fn test_storage_operation_chain() {
+        /// Step1
         fn step1() -> Result<i32> {
             Ok(10)
         }
 
+        /// Step2
         fn step2(value: i32) -> Result<i32> {
             if value > 5 {
                 Ok(value * 2)
@@ -403,6 +414,7 @@ mod storage_integration_tests {
             }
         }
 
+        /// Step3
         fn step3(value: i32) -> Result<String> {
             Ok(format!("Result: {}", value))
         }
@@ -415,6 +427,7 @@ mod storage_integration_tests {
 
     #[test]
     fn test_batch_storage_operations() {
+        /// Processes  File
         fn process_file(id: i32) -> Result<String> {
             if id % 2 == 0 {
                 Ok(format!("file_{}", id))

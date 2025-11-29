@@ -6,6 +6,7 @@ use std::sync::Arc;
 /// This struct centralizes all `env::var` calls for capability discovery
 /// to eliminate direct `env::var` calls from production code.
 #[derive(Debug, Clone)]
+/// Configuration for CapabilityEndpoints
 pub struct CapabilityEndpointsConfig {
     // Capability-specific endpoints
     orchestration_endpoint: Option<String>,
@@ -22,6 +23,7 @@ pub struct CapabilityEndpointsConfig {
     service_endpoint: Option<String>,
 }
 
+/// Type alias for Sharedcapabilityendpointsconfig
 pub type SharedCapabilityEndpointsConfig = Arc<CapabilityEndpointsConfig>;
 
 impl CapabilityEndpointsConfig {
@@ -41,75 +43,91 @@ impl CapabilityEndpointsConfig {
 
     // Getter methods
 
+    /// Orchestration Endpoint
     pub fn orchestration_endpoint(&self) -> Option<&str> {
         self.orchestration_endpoint.as_deref()
     }
 
+    /// Security Endpoint
     pub fn security_endpoint(&self) -> Option<&str> {
         self.security_endpoint.as_deref()
     }
 
+    /// Ai Endpoint
     pub fn ai_endpoint(&self) -> Option<&str> {
         self.ai_endpoint.as_deref()
     }
 
+    /// Compute Endpoint
     pub fn compute_endpoint(&self) -> Option<&str> {
         self.compute_endpoint.as_deref()
     }
 
+    /// Management Endpoint
     pub fn management_endpoint(&self) -> Option<&str> {
         self.management_endpoint.as_deref()
     }
 
+    /// Storage Endpoint
     pub fn storage_endpoint(&self) -> Option<&str> {
         self.storage_endpoint.as_deref()
     }
 
+    /// Networking Endpoint
     pub fn networking_endpoint(&self) -> Option<&str> {
         self.networking_endpoint.as_deref()
     }
 
+    /// Service Endpoint
     pub fn service_endpoint(&self) -> Option<&str> {
         self.service_endpoint.as_deref()
     }
 
     // Builder methods for testing
 
+    /// Builder method to set Orchestration Endpoint
     pub fn with_orchestration_endpoint(mut self, endpoint: String) -> Self {
         self.orchestration_endpoint = Some(endpoint);
         self
     }
 
+    /// Builder method to set Security Endpoint
     pub fn with_security_endpoint(mut self, endpoint: String) -> Self {
         self.security_endpoint = Some(endpoint);
         self
     }
 
+    /// Builder method to set Ai Endpoint
     pub fn with_ai_endpoint(mut self, endpoint: String) -> Self {
         self.ai_endpoint = Some(endpoint);
         self
     }
 
+    /// Builder method to set Compute Endpoint
     pub fn with_compute_endpoint(mut self, endpoint: String) -> Self {
         self.compute_endpoint = Some(endpoint);
         self
     }
 
+    /// Builder method to set Management Endpoint
     pub fn with_management_endpoint(mut self, endpoint: String) -> Self {
         self.management_endpoint = Some(endpoint);
         self
     }
 
+    /// Builder method to set Storage Endpoint
     pub fn with_storage_endpoint(mut self, endpoint: String) -> Self {
         self.storage_endpoint = Some(endpoint);
         self
     }
 
+    /// Builder method to set Networking Endpoint
     pub fn with_networking_endpoint(mut self, endpoint: String) -> Self {
         self.networking_endpoint = Some(endpoint);
         self
     }
 
+    /// Builder method to set Service Endpoint
     pub fn with_service_endpoint(mut self, endpoint: String) -> Self {
         self.service_endpoint = Some(endpoint);
         self
@@ -117,6 +135,7 @@ impl CapabilityEndpointsConfig {
 }
 
 impl Default for CapabilityEndpointsConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self::from_env()
     }

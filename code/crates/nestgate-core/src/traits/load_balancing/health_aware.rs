@@ -42,6 +42,7 @@ impl<L: LoadBalancer> HealthAwareLoadBalancer<L> {
 }
 
 impl<L: LoadBalancer> LoadBalancer for HealthAwareLoadBalancer<L> {
+    /// Select Service
     async fn select_service(
         &self,
         services: &[ServiceInfo],
@@ -84,6 +85,7 @@ impl<L: LoadBalancer> LoadBalancer for HealthAwareLoadBalancer<L> {
         Ok(selected)
     }
 
+    /// Record Response
     async fn record_response(
         &self,
         service: &ServiceInfo,
@@ -104,14 +106,17 @@ impl<L: LoadBalancer> LoadBalancer for HealthAwareLoadBalancer<L> {
         self.inner.record_response(service, response).await
     }
 
+    /// Updates  Weights
     async fn update_weights(&self, weights: HashMap<String, f64>) -> Result<()> {
         self.inner.update_weights(weights).await
     }
 
+    /// Gets Stats
     async fn get_stats(&self) -> Result<LoadBalancerStats> {
         Ok(self.stats.read().clone())
     }
 
+    /// Algorithm
     fn algorithm(&self) -> &'static str {
         // Return the inner algorithm name since we're a wrapper
         self.inner.algorithm()

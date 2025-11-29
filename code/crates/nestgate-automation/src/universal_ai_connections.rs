@@ -3,6 +3,8 @@
 // Provides connections to AI primals (Intelligence, etc.) with compile-time dispatch
 // for maximum performance in AI inference operations.
 
+//! Universal Ai Connections module
+
 use serde::{Deserialize, Serialize};
 use std::marker::PhantomData;
 use std::sync::Arc;
@@ -13,6 +15,7 @@ use nestgate_core::universal_traits::ComputePrimalProvider;
 
 /// Connection state for AI providers
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Connectionstate
 pub enum ConnectionState {
     /// Connection is establishing
     Connecting,
@@ -25,6 +28,7 @@ pub enum ConnectionState {
 }
 /// AI request structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for AI operation
 pub struct AIRequest {
     /// Request ID for tracking
     pub id: String,
@@ -37,6 +41,7 @@ pub struct AIRequest {
 }
 /// AI response structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for AI operation
 pub struct AIResponse {
     /// Request ID this response corresponds to
     pub request_id: String,
@@ -51,9 +56,11 @@ pub struct AIResponse {
 }
 /// AI operation errors
 #[derive(Debug, thiserror::Error)]
+/// Errors that can occur during AI operations
 pub enum AIError {
     /// No provider configured
     #[error("No AI provider configured")]
+    /// Noprovider
     NoProvider,
     /// Provider communication error
     #[error("Provider error: {0}")]
@@ -151,6 +158,7 @@ impl<P> Default for UniversalAIConnections<P>
 where
     P: ComputePrimalProvider + Send + Sync + 'static,
 {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -184,6 +192,7 @@ where
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for Pool
 pub struct PoolConfig {
     /// Maximum number of connections
     pub max_connections: usize,
@@ -193,6 +202,7 @@ pub struct PoolConfig {
     pub connection_timeout: u64,
 }
 impl Default for PoolConfig {
+    /// Returns the default instance
     fn default() -> Self { Self {
             max_connections: 10,
             health_check_interval: 30,
@@ -246,6 +256,7 @@ impl<P> Default for UniversalAIConnectionPool<P>
 where
     P: ComputePrimalProvider + Send + Sync + 'static,
 {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new(PoolConfig::default())
     }
@@ -260,6 +271,7 @@ where
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Poolconfigcanonical
 pub type PoolConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using PoolConfig (the deprecated struct) for now.

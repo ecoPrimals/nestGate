@@ -13,6 +13,7 @@ use std::collections::HashMap;
 /// Represents a specific storage backend implementation with its
 /// configuration, performance metrics, and operational parameters.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagebackend
 pub struct StorageBackend {
     /// Type of storage backend (ZFS, Memory, Local, etc.)
     pub backend_type: crate::rest::models::types::StorageBackendType,
@@ -47,6 +48,7 @@ pub struct StorageBackend {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Storageconfiguration
 pub struct StorageConfiguration {
     /// Descriptive name for this storage configuration
     pub name: String,
@@ -63,6 +65,7 @@ pub struct StorageConfiguration {
 /// Defines different storage tiers based on access patterns,
 /// performance requirements, and cost considerations.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagetier
 pub enum StorageTier {
     /// Hot tier: Frequently accessed data requiring high performance
     Hot,
@@ -79,6 +82,7 @@ pub enum StorageTier {
 /// Defines minimum performance thresholds that a storage
 /// configuration must meet for acceptable operation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performancerequirements
 pub struct PerformanceRequirements {
     /// Minimum IOPS (Input/Output Operations Per Second) required
     pub min_iops: u64,
@@ -95,6 +99,7 @@ pub struct PerformanceRequirements {
 /// Specifies durability, availability, backup, and replication
 /// requirements for data protection and business continuity.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Reliabilityrequirements
 pub struct ReliabilityRequirements {
     /// Required durability in "nines" (e.g., 11 = 99.999999999% durability)
     pub durability_nines: u8,
@@ -111,6 +116,7 @@ pub struct ReliabilityRequirements {
 /// Predicts expected performance characteristics based on
 /// configuration, workload patterns, and historical data.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performanceprojection
 pub struct PerformanceProjection {
     /// Projected IOPS under typical workload conditions
     pub expected_iops: u64,
@@ -127,6 +133,7 @@ pub struct PerformanceProjection {
 /// Analyzes current capacity, growth projections, and
 /// scaling options for future capacity planning.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Scalabilityanalysis
 pub struct ScalabilityAnalysis {
     /// Current storage capacity in gigabytes
     pub current_capacity_gb: u64,
@@ -161,6 +168,7 @@ pub struct ScalabilityAnalysis {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for Benchmark
 pub struct BenchmarkConfig {
     /// Type of benchmark scenario to execute
     pub scenario: BenchmarkScenario,
@@ -177,6 +185,7 @@ pub struct BenchmarkConfig {
 /// Defines different I/O patterns and access methods for
 /// comprehensive storage performance evaluation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Benchmarkscenario
 pub enum BenchmarkScenario {
     /// Random read operations test
     RandomRead,
@@ -195,6 +204,7 @@ pub enum BenchmarkScenario {
 /// Contains the results of a completed storage benchmark
 /// including performance metrics and test configuration.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Benchmarkresults
 pub struct BenchmarkResults {
     /// Benchmark scenario that was executed
     pub scenario: BenchmarkScenario,
@@ -229,6 +239,7 @@ pub struct BenchmarkResults {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Request parameters for AutoConfig operation
 pub struct AutoConfigRequest {
     /// Recommended storage configuration
     pub storage_config: StorageConfiguration,
@@ -247,6 +258,7 @@ pub struct AutoConfigRequest {
 /// Specifies parameters for executing storage performance
 /// benchmarks against specific backend configurations.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for BenchmarkStorage operation
 pub struct BenchmarkStorageRequest {
     /// Storage configuration to benchmark
     pub storage_config: StorageConfiguration,
@@ -265,6 +277,7 @@ pub struct BenchmarkStorageRequest {
 /// Comprehensive performance profile including IOPS, throughput,
 /// and latency measurements for storage evaluation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storageperformance
 pub struct StoragePerformance {
     /// Read operations per second capability
     pub read_iops: u64,
@@ -283,6 +296,7 @@ pub struct StoragePerformance {
 /// Defines minimum hardware requirements for storage
 /// configuration including CPU, memory, and network resources.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Hardwarespec
 pub struct HardwareSpec {
     /// Minimum CPU cores required
     pub cpu_cores: u32,
@@ -299,6 +313,7 @@ pub struct HardwareSpec {
 /// Defines financial limits and cost optimization preferences
 /// for storage configuration recommendations.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Budgetconstraints
 pub struct BudgetConstraints {
     /// Maximum acceptable setup/initial cost
     pub max_setup_cost: f64,
@@ -313,6 +328,7 @@ pub struct BudgetConstraints {
 /// Describes expected data access patterns, usage timing,
 /// and growth projections for optimal storage configuration.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Workloadpattern
 pub struct WorkloadPattern {
     /// Read to write ratio (0.0 = all writes, 1.0 = all reads)
     pub read_write_ratio: f32, // 0.0 = all writes, 1.0 = all reads
@@ -329,6 +345,7 @@ pub struct WorkloadPattern {
 /// Defines expected load characteristics for capacity planning
 /// and performance validation under realistic conditions.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Loadtestingparams
 pub struct LoadTestingParams {
     /// Number of concurrent users expected
     pub concurrent_users: u32,
@@ -361,6 +378,7 @@ pub struct LoadTestingParams {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Autoconfiginput
 pub struct AutoConfigInput {
     /// Hardware specifications and constraints
     pub hardware: HardwareSpec,
@@ -401,6 +419,7 @@ pub struct AutoConfigInput {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Autoconfigresult
 pub struct AutoConfigResult {
     /// Primary recommended storage configuration
     pub recommended_config: StorageConfiguration,
@@ -435,6 +454,7 @@ pub struct AutoConfigResult {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Alternativeconfiguration
 pub struct AlternativeConfiguration {
     /// Alternative storage configuration
     pub config: StorageConfiguration,
@@ -451,6 +471,7 @@ pub struct AlternativeConfiguration {
 /// Provides granular cost analysis broken down by different
 /// cost categories for detailed financial planning.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Costbreakdown
 pub struct CostBreakdown {
     /// Hardware acquisition and setup costs
     pub hardware_cost: f64,
@@ -467,6 +488,7 @@ pub struct CostBreakdown {
 /// Configuration for automated discovery and analysis of
 /// existing storage systems and available resources.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for ScanStorage operation
 pub struct ScanStorageRequest {
     /// Scanning depth level (1 = shallow, 5 = deep analysis)
     pub scan_depth: u8, // 1 = shallow, 5 = deep
@@ -491,6 +513,7 @@ pub struct ScanStorageRequest {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Alternativeconfigurationcanonical
 pub type AlternativeConfigurationCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
@@ -507,6 +530,7 @@ pub type AlternativeConfigurationCanonical =
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Autoconfiginputcanonical
 pub type AutoConfigInputCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
@@ -523,6 +547,7 @@ pub type AutoConfigInputCanonical =
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Autoconfigrequestcanonical
 pub type AutoConfigRequestCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
@@ -539,6 +564,7 @@ pub type AutoConfigRequestCanonical =
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Autoconfigresultcanonical
 pub type AutoConfigResultCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
@@ -555,6 +581,7 @@ pub type AutoConfigResultCanonical =
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Benchmarkconfigcanonical
 pub type BenchmarkConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
@@ -571,6 +598,7 @@ pub type BenchmarkConfigCanonical =
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Storageconfigurationcanonical
 pub type StorageConfigurationCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 

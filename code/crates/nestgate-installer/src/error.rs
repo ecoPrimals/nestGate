@@ -6,6 +6,8 @@
 // OLD: pub type InstallResult<T> = IdioResult<T, NestGateError>; (deprecated)
 
 // USE CANONICAL TYPES:
+//! Error module
+
 pub use nestgate_core::error::{NestGateError, Result};
 
 // Convenience aliases for installer operations

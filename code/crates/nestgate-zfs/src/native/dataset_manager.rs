@@ -1,6 +1,38 @@
-//
-// This module provides production-ready ZFS dataset management
-// with real dataset operations and monitoring.
+//! ZFS Dataset Manager
+//!
+//! This module provides production-ready ZFS dataset management operations
+//! including creation, deletion, property management, and monitoring.
+//!
+//! # Overview
+//!
+//! The dataset manager handles all dataset-level operations:
+//! - Creating datasets with custom properties
+//! - Listing and querying dataset information
+//! - Setting and getting dataset properties
+//! - Deleting datasets safely
+//! - Managing storage tiers (Hot, Warm, Cold, Archive)
+//!
+//! # Examples
+//!
+//! ```rust,ignore
+//! use nestgate_zfs::native::dataset_manager::{NativeZfsDatasetManager, DatasetCreateOptions};
+//! use std::sync::Arc;
+//!
+//! let executor = Arc::new(NativeZfsCommandExecutor::new());
+//! let manager = NativeZfsDatasetManager::new(executor);
+//!
+//! // Create dataset with compression
+//! let options = DatasetCreateOptions {
+//!     compression: Some("lz4".to_string()),
+//!     ..Default::default()
+//! };
+//! manager.create_dataset("mypool/dataset", options).await?;
+//! ```
+//!
+//! # Safety
+//!
+//! All operations use safe subprocess execution through `NativeZfsCommandExecutor`.
+//! No unsafe code is used.
 
 use super::command_executor::NativeZfsCommandExecutor;
 use crate::types::DatasetInfo;
@@ -13,22 +45,67 @@ use std::sync::Arc;
 use tracing::info;
 
 /// Native ZFS dataset manager
+///
+/// Provides high-level dataset management operations built on top of
+/// the native ZFS command executor.
+///
+/// # Examples
+///
+/// ```rust,ignore
+/// let executor = Arc::new(NativeZfsCommandExecutor::new());
+/// let manager = NativeZfsDatasetManager::new(executor);
+///
+/// // List all datasets
+/// let datasets = manager.list_datasets().await?;
+/// ```
 pub struct NativeZfsDatasetManager {
+    /// Command executor for ZFS operations
     command_executor: Arc<NativeZfsCommandExecutor>,
 }
 /// Dataset creation options
+///
+/// Configuration options for creating a new ZFS dataset with specific
+/// properties including compression, encryption, and storage quotas.
+///
+/// # Examples
+///
+/// ```no_run
+/// use nestgate_zfs::native::dataset_manager::DatasetCreateOptions;
+/// use nestgate_core::canonical_types::StorageTier;
+///
+/// let options = DatasetCreateOptions {
+///     compression: Some("lz4".to_string()),
+///     deduplication: Some(false),
+///     encryption: Some("aes-256-gcm".to_string()),
+///     mount_point: Some("/mnt/data".to_string()),
+///     quota: Some(1_000_000_000),
+///     reservation: Some(500_000_000),
+///     record_size: Some("128K".to_string()),
+///     storage_tier: Some(StorageTier::Hot),
+/// };
+/// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Datasetcreateoptions
 pub struct DatasetCreateOptions {
+    /// Compression algorithm (e.g., "lz4", "gzip", "zstd")
     pub compression: Option<String>,
+    /// Enable or disable deduplication
     pub deduplication: Option<bool>,
+    /// Encryption algorithm and key (e.g., "aes-256-gcm")
     pub encryption: Option<String>,
+    /// Custom mount point for the dataset
     pub mount_point: Option<String>,
+    /// Maximum space quota in bytes
     pub quota: Option<u64>,
+    /// Minimum space reservation in bytes
     pub reservation: Option<u64>,
+    /// ZFS record size (e.g., "128K", "1M")
     pub record_size: Option<String>,
+    /// Storage tier classification (Hot, Warm, Cold, Archive)
     pub storage_tier: Option<StorageTier>,
 }
 impl Default for DatasetCreateOptions {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             compression: Some(storage::COMPRESSION_LZ4.into()),
@@ -45,6 +122,23 @@ impl Default for DatasetCreateOptions {
 
 impl NativeZfsDatasetManager {
     /// Create a new dataset manager
+    ///
+    /// # Arguments
+    ///
+    /// * `command_executor` - Shared command executor for ZFS operations
+    ///
+    /// # Returns
+    ///
+    /// New dataset manager instance
+    ///
+    /// # Examples
+    ///
+    /// ```rust,ignore
+    /// use std::sync::Arc;
+    ///
+    /// let executor = Arc::new(NativeZfsCommandExecutor::new());
+    /// let manager = NativeZfsDatasetManager::new(executor);
+    /// ```
     #[must_use]
     pub fn new(command_executor: Arc<NativeZfsCommandExecutor>) -> Self {
         Self { command_executor }

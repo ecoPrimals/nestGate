@@ -24,6 +24,7 @@ use std::collections::HashMap;
 
 /// Service endpoint configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Serviceendpoints
 pub struct ServiceEndpoints {
     /// Core NestGate services
     pub core: CoreServices,
@@ -35,6 +36,7 @@ pub struct ServiceEndpoints {
 
 /// Core NestGate service endpoints
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Coreservices
 pub struct CoreServices {
     /// Service discovery endpoint
     pub discovery: String,
@@ -50,6 +52,7 @@ pub struct CoreServices {
 
 /// EcoPrimals primal service endpoints
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Primalservices
 pub struct PrimalServices {
     /// Songbird orchestration
     pub songbird: Option<String>,

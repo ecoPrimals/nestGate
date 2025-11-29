@@ -1,3 +1,5 @@
+//! Bulkhead module
+
 use crate::error::NestGateError;
 //
 // Implements the Bulkhead pattern to isolate resources and prevent cascading
@@ -10,6 +12,7 @@ use tokio::sync::{RwLock, Semaphore, SemaphorePermit};
 
 /// Bulkhead configuration
 #[derive(Debug, Clone)]
+/// Configuration for Bulkhead
 pub struct BulkheadConfig {
     /// Maximum number of concurrent operations
     pub max_concurrent: usize,
@@ -21,6 +24,7 @@ pub struct BulkheadConfig {
     pub reject_on_queue_full: bool,
 }
 impl Default for BulkheadConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             max_concurrent: 10,
@@ -33,6 +37,7 @@ impl Default for BulkheadConfig {
 
 /// Bulkhead implementation for resource isolation
 #[derive(Clone)]
+/// Bulkhead
 pub struct Bulkhead {
     name: String,
     config: BulkheadConfig,
@@ -41,25 +46,42 @@ pub struct Bulkhead {
 }
 /// Bulkhead metrics for monitoring
 #[derive(Debug, Clone)]
+/// Bulkheadmetrics
 pub struct BulkheadMetrics {
+    /// Total Requests
     pub total_requests: u64,
+    /// Successful Acquisitions
     pub successful_acquisitions: u64,
+    /// Rejections
     pub rejections: u64,
+    /// Timeouts
     pub timeouts: u64,
+    /// Current Concurrent
     pub current_concurrent: usize,
+    /// Max Concurrent Reached
     pub max_concurrent_reached: usize,
+    /// Average Wait Time
     pub average_wait_time: Duration,
+    /// Total Wait Time
     pub total_wait_time: Duration,
 }
 /// Bulkhead status information
 #[derive(Debug, Clone)]
+/// Bulkheadstatus
 pub struct BulkheadStatus {
+    /// Name
     pub name: String,
+    /// Available Permits
     pub available_permits: usize,
+    /// Max Permits
     pub max_permits: usize,
+    /// Current Utilization
     pub current_utilization: f64,
+    /// Size of queue
     pub queue_size: usize,
+    /// Size of max queue
     pub max_queue_size: usize,
+    /// Is At Capacity
     pub is_at_capacity: bool,
 }
 /// Permit holder that automatically releases on drop
@@ -70,6 +92,7 @@ pub struct BulkheadPermit<'a> {
     metrics: Arc<RwLock<BulkheadMetrics>>,
 }
 impl Drop for BulkheadPermit<'_> {
+    /// Drop
     fn drop(&mut self) {
         // Record the operation duration when permit is dropped
         let duration = self.acquired_at.elapsed();

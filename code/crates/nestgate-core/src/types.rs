@@ -8,15 +8,31 @@ use std::fmt::{self, Display};
 mod types_tests;
 
 /// Allocation status for resources
+///
+/// Represents the current state of a resource allocation in the system.
+/// Used to track whether resources are actively in use, waiting, or have failed.
+///
+/// # Variants
+///
+/// * `Active` - Resource is currently allocated and in use
+/// * `Inactive` - Resource is allocated but not currently in use
+/// * `Pending` - Resource allocation is pending/in progress
+/// * `Failed` - Resource allocation has failed
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Status values for Allocation
 pub enum AllocationStatus {
+    /// Resource is currently allocated and in use
     Active,
+    /// Resource is allocated but not currently in use
     Inactive,
+    /// Resource allocation is pending/in progress
     Pending,
+    /// Resource allocation has failed
     Failed,
 }
 /// Storage tier enum for tiered storage management
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Storagetier
 pub enum StorageTier {
     /// High-performance storage for frequently accessed data
     Hot,
@@ -30,6 +46,7 @@ pub enum StorageTier {
     Archive,
 }
 impl Display for StorageTier {
+    /// Fmt
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             StorageTier::Hot => write!(f, "Hot"),
@@ -77,6 +94,7 @@ impl StorageTier {
 }
 
 impl Default for StorageTier {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Hot
     }
@@ -84,19 +102,26 @@ impl Default for StorageTier {
 
 /// Health status for system components
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Status values for Health
 pub enum HealthStatus {
+    /// Healthy
     Healthy,
+    /// Degraded
     Degraded,
+    /// Unhealthy
     Unhealthy,
+    /// Unknown
     Unknown,
 }
 impl Default for HealthStatus {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Unknown
     }
 }
 
 impl Display for HealthStatus {
+    /// Fmt
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             HealthStatus::Healthy => write!(f, "Healthy"),
@@ -109,21 +134,30 @@ impl Display for HealthStatus {
 
 /// Service state for tracking service status
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Servicestate
 pub enum ServiceState {
+    /// Running
     Running,
+    /// Stopped
     Stopped,
+    /// Starting
     Starting,
+    /// Stopping
     Stopping,
+    /// Error
     Error,
+    /// Unknown
     Unknown,
 }
 impl Default for ServiceState {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Unknown
     }
 }
 
 impl Display for ServiceState {
+    /// Fmt
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             ServiceState::Running => write!(f, "Running"),
@@ -138,19 +172,26 @@ impl Display for ServiceState {
 
 /// Performance tier for storage and compute resources
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Performancetier
 pub enum PerformanceTier {
+    /// Ultra
     Ultra,
+    /// High
     High,
+    /// Standard
     Standard,
+    /// Economy
     Economy,
 }
 impl Default for PerformanceTier {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Standard
     }
 }
 
 impl Display for PerformanceTier {
+    /// Fmt
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             PerformanceTier::Ultra => write!(f, "Ultra"),

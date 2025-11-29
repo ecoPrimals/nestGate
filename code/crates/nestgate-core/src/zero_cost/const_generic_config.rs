@@ -20,6 +20,7 @@ pub trait ZeroCostConfig {
 /// **CONFIGURATION VALUE TYPES**
 /// Marker traits for different configuration value types
 pub trait ConfigValue {
+    /// Type alias for Output
     type Output;
 }
 /// **SYSTEM CONFIGURATION**
@@ -28,7 +29,9 @@ pub struct ZeroCostSystemConfig<
     const MAX_CONNECTIONS: usize = 10000,
     const BUFFER_SIZE: usize = 65536,
     const TIMEOUT_MS: u64 = 30000,
+    /// Worker Threads
     const WORKER_THREADS: usize = 8,
+    /// Log Level
     const LOG_LEVEL: u8 = 2, // 0=Error, 1=Warn, 2=Info, 3=Debug, 4=Trace
 > {
     _phantom: PhantomData<()>,
@@ -102,11 +105,17 @@ impl<const MAX_CONNECTIONS: usize, const BUFFER_SIZE: usize, const TIMEOUT_MS: u
 
 /// Log levels for compile-time configuration
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// Loglevel
 pub enum LogLevel {
+    /// Error
     Error,
+    /// Warn
     Warn,
+    /// Info
     Info,
+    /// Debug
     Debug,
+    /// Trace
     Trace,
 }
 /// **STORAGE CONFIGURATION**
@@ -115,16 +124,23 @@ pub struct ZeroCostStorageConfig<
     const MAX_POOLS: usize = 100,
     const MAX_DATASETS: usize = 10000,
     const MAX_SNAPSHOTS: usize = 100_000,
+    /// Pool Timeout Ms
     const POOL_TIMEOUT_MS: u64 = 60_000,
+    /// Snapshot Retention Days
     const SNAPSHOT_RETENTION_DAYS: u32 = 30,
+    /// Compression Level
     const COMPRESSION_LEVEL: u8 = 6, // 1-9 for gzip
+    /// Enable Deduplication
     const ENABLE_DEDUPLICATION: bool = false,
+    /// Enable Encryption
     const ENABLE_ENCRYPTION: bool = true,
 > {
     _phantom: PhantomData<()>,
 }
 impl<const MAX_POOLS: usize, const MAX_DATASETS: usize, const MAX_SNAPSHOTS: usize, 
+     /// Pool Timeout Ms
      const POOL_TIMEOUT_MS: u64, const SNAPSHOT_RETENTION_DAYS: u32, const COMPRESSION_LEVEL: u8,
+     /// Enable Deduplication
      const ENABLE_DEDUPLICATION: bool, const ENABLE_ENCRYPTION: bool>
     ZeroCostStorageConfig<MAX_POOLS, MAX_DATASETS, MAX_SNAPSHOTS, POOL_TIMEOUT_MS, 
                           SNAPSHOT_RETENTION_DAYS, COMPRESSION_LEVEL, ENABLE_DEDUPLICATION, ENABLE_ENCRYPTION>
@@ -215,27 +231,40 @@ impl<const MAX_POOLS: usize, const MAX_DATASETS: usize, const MAX_SNAPSHOTS: usi
 
 /// Compression algorithms for compile-time selection
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// Compressionalgorithm
 pub enum CompressionAlgorithm {
+    /// Lz4
     Lz4,
+    /// Gzip
     Gzip,
+    /// Gzip9
     Gzip9,
 }
 /// **NETWORK CONFIGURATION**
 /// Compile-time network configuration with const generics
 pub struct ZeroCostNetworkConfig<
+    /// Api Port
     const API_PORT: u16 = 8080,
+    /// Internal Port
     const INTERNAL_PORT: u16 = 9090,
     const MAX_REQUEST_SIZE_MB: u32 = 100,
+    /// Keepalive Timeout Ms
     const KEEPALIVE_TIMEOUT_MS: u64 = 60_000,
+    /// Minimum rate limit requests per minute
     const RATE_LIMIT_REQUESTS_PER_MINUTE: u32 = 1000,
+    /// Enable Tls
     const ENABLE_TLS: bool = true,
+    /// Enable Http2
     const ENABLE_HTTP2: bool = true,
+    /// Enable Compression
     const ENABLE_COMPRESSION: bool = true,
 > {
     _phantom: PhantomData<()>,
 }
 impl<const API_PORT: u16, const INTERNAL_PORT: u16, const MAX_REQUEST_SIZE_MB: u32,
+     /// Keepalive Timeout Ms
      const KEEPALIVE_TIMEOUT_MS: u64, const RATE_LIMIT_REQUESTS_PER_MINUTE: u32,
+     /// Enable Tls
      const ENABLE_TLS: bool, const ENABLE_HTTP2: bool, const ENABLE_COMPRESSION: bool>
     ZeroCostNetworkConfig<API_PORT, INTERNAL_PORT, MAX_REQUEST_SIZE_MB, KEEPALIVE_TIMEOUT_MS,
                           RATE_LIMIT_REQUESTS_PER_MINUTE, ENABLE_TLS, ENABLE_HTTP2, ENABLE_COMPRESSION>
@@ -318,14 +347,19 @@ impl<const API_PORT: u16, const INTERNAL_PORT: u16, const MAX_REQUEST_SIZE_MB: u
 pub struct ZeroCostCacheConfig<
     const MAX_ENTRIES: usize = 100_000,
     const MAX_MEMORY_MB: u32 = 1024,
+    /// Ttl Seconds
     const TTL_SECONDS: u64 = 3600,
+    /// Cleanup Interval Seconds
     const CLEANUP_INTERVAL_SECONDS: u64 = 300,
+    /// Enable Lru
     const ENABLE_LRU: bool = true,
+    /// Enable Persistence
     const ENABLE_PERSISTENCE: bool = false,
 > {
     _phantom: PhantomData<()>,
 }
 impl<const MAX_ENTRIES: usize, const MAX_MEMORY_MB: u32, const TTL_SECONDS: u64,
+     /// Cleanup Interval Seconds
      const CLEANUP_INTERVAL_SECONDS: u64, const ENABLE_LRU: bool, const ENABLE_PERSISTENCE: bool>
     ZeroCostCacheConfig<MAX_ENTRIES, MAX_MEMORY_MB, TTL_SECONDS, CLEANUP_INTERVAL_SECONDS,
                         ENABLE_LRU, ENABLE_PERSISTENCE>

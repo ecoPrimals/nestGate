@@ -161,6 +161,7 @@ mod tests {
     use super::*;
     use crate::universal_adapter::PrimalAgnosticAdapter;
 
+    /// Creates  Test Router
     fn create_test_router() -> UniversalRouter {
         let adapter = PrimalAgnosticAdapter::new("http://localhost:8080".to_string());
         UniversalRouter::new(Arc::new(adapter))

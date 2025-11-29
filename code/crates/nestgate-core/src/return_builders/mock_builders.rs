@@ -6,30 +6,49 @@ use uuid::Uuid;
 
 /// Simple performance metrics for mock builders
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performancemetrics
 pub struct PerformanceMetrics {
+    /// Cpu Usage
     pub cpu_usage: f64,
+    /// Memory Usage
     pub memory_usage: f64,
+    /// Disk Io
     pub disk_io: f64,
+    /// Network Io
     pub network_io: f64,
 }
 /// Resource allocation structure for mock builders
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Resourceallocation
 pub struct ResourceAllocation {
+    /// Unique identifier
     pub id: String,
+    /// Resource Type
     pub resource_type: String,
+    /// Status
     pub status: String,
+    /// Allocated At
     pub allocated_at: String,
+    /// Expires At
     pub expires_at: String,
+    /// Additional metadata key-value pairs
     pub metadata: serde_json::Value,
 }
 /// Workload result structure for mock builders
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Workloadresult
 pub struct WorkloadResult {
+    /// Performance Metrics
     pub performance_metrics: PerformanceMetrics,
+    /// Workload identifier
     pub workload_id: String,
+    /// Success
     pub success: bool,
+    /// Execution Time Ms
     pub execution_time_ms: u64,
+    /// Resources Used
     pub resources_used: ResourceAllocation,
+    /// Result Data
     pub result_data: serde_json::Value,
 }
 /// Build mock resource allocation response
@@ -103,11 +122,17 @@ pub fn build_mock_performance_metrics() -> crate::Result<PerformanceMetrics> {
 
 /// Access grant structure for testing
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Accessgrant
 pub struct AccessGrant {
+    /// Permissions
     pub permissions: Vec<String>,
+    /// Valid Until
     pub valid_until: u64,
+    /// Proof Data
     pub proof_data: String,
+    /// Consensus Nodes
     pub consensus_nodes: Vec<String>,
+    /// Confidence Score
     pub confidence_score: f64,
 }
 

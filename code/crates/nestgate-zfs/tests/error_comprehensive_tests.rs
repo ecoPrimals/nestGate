@@ -381,10 +381,12 @@ fn test_zfs_result_type_err() {
 
 #[test]
 fn test_result_propagation() {
+    /// Helper Function
     fn helper_function() -> Result<i32> {
         Err(ZfsErrorBuilder::zfs_error("helper failed"))
     }
 
+    /// Outer Function
     fn outer_function() -> Result<i32> {
         let value = helper_function()?;
         Ok(value + 1)

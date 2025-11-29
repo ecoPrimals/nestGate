@@ -14,6 +14,7 @@ use tracing::{debug, info, warn};
 
 /// DNS-SRV record discovery method
 #[derive(Debug)]
+/// Dnsservicediscovery
 pub struct DnsServiceDiscovery {
     /// Domain to search for SRV records
     domain: String,
@@ -52,6 +53,7 @@ impl DnsServiceDiscovery {
 }
 
 impl DiscoveryMethod for DnsServiceDiscovery {
+    /// Discover
     async fn discover(&self) -> Result<Vec<CapabilityInfo>, NestGateError> {
         let mut capabilities = Vec::new();
 
@@ -97,6 +99,7 @@ impl DiscoveryMethod for DnsServiceDiscovery {
         Ok(capabilities)
     }
 
+    /// Method Name
     fn method_name(&self) -> &str {
         "dns-srv"
     }
@@ -125,15 +128,21 @@ impl DnsServiceDiscovery {
 
 /// SRV record structure
 #[derive(Debug, Clone)]
+/// Srvrecord
 pub struct SrvRecord {
+    /// Priority
     pub priority: u16,
+    /// Weight
     pub weight: u16,
+    /// Port
     pub port: u16,
+    /// Target
     pub target: String,
 }
 
 /// Multicast discovery method
 #[derive(Debug)]
+/// Multicastdiscovery
 pub struct MulticastDiscovery {
     /// Multicast groups to listen on
     multicast_groups: Vec<SocketAddr>,
@@ -178,12 +187,14 @@ impl MulticastDiscovery {
 }
 
 impl Default for MulticastDiscovery {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
 }
 
 impl DiscoveryMethod for MulticastDiscovery {
+    /// Discover
     async fn discover(&self) -> Result<Vec<CapabilityInfo>, NestGateError> {
         let mut capabilities = Vec::new();
 
@@ -219,6 +230,7 @@ impl DiscoveryMethod for MulticastDiscovery {
         Ok(capabilities)
     }
 
+    /// Method Name
     fn method_name(&self) -> &str {
         "multicast"
     }
@@ -336,6 +348,7 @@ impl MulticastDiscovery {
 
 /// Network port scanning discovery
 #[derive(Debug)]
+/// Portscandiscovery
 pub struct PortScanDiscovery {
     /// IP ranges to scan
     ip_ranges: Vec<IpRange>,
@@ -348,8 +361,11 @@ pub struct PortScanDiscovery {
 
 /// IP range for scanning
 #[derive(Debug, Clone)]
+/// Iprange
 pub struct IpRange {
+    /// Start
     pub start: IpAddr,
+    /// End
     pub end: IpAddr,
 }
 
@@ -410,6 +426,7 @@ impl PortScanDiscovery {
 }
 
 impl Default for PortScanDiscovery {
+    /// Returns the default instance
     fn default() -> Self {
         let mut discovery = Self::new();
         discovery.add_local_networks();
@@ -418,6 +435,7 @@ impl Default for PortScanDiscovery {
 }
 
 impl DiscoveryMethod for PortScanDiscovery {
+    /// Discover
     async fn discover(&self) -> Result<Vec<CapabilityInfo>, NestGateError> {
         let mut capabilities = Vec::new();
 
@@ -454,6 +472,7 @@ impl DiscoveryMethod for PortScanDiscovery {
         Ok(capabilities)
     }
 
+    /// Method Name
     fn method_name(&self) -> &str {
         "port-scan"
     }

@@ -70,6 +70,7 @@ pub use tls::{
 // **THE** canonical security configuration for the entire NestGate ecosystem
 // This replaces ALL other SecurityConfig variants
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for CanonicalSecurity
 pub struct CanonicalSecurityConfig {
     /// Authentication configuration
     pub authentication: AuthenticationConfig,

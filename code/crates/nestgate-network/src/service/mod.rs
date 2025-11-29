@@ -18,11 +18,14 @@ use nestgate_core::NestGateError;
 
 // Type aliases for complex types to improve readability and reduce warnings
 type ConnectionMap = Arc<RwLock<HashMap<String, ConnectionInfo>>>;
+/// Type alias for PortMap
 type PortMap = Arc<RwLock<HashMap<u16, String>>>;
+/// Type alias for ServiceMap
 type ServiceMap = Arc<RwLock<HashMap<String, ServiceInfo>>>;
 
 /// Real network service implementation
 #[derive(Debug)]
+/// Service implementation for RealNetwork
 pub struct RealNetworkService {
     /// Configuration
     config: NetworkConfig,

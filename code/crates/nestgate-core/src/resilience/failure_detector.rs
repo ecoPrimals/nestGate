@@ -1,3 +1,5 @@
+//! Failure Detector module
+
 use std::collections::HashMap;
 //
 // Monitors service health and detects failures to enable proactive
@@ -16,12 +18,14 @@ pub struct FailureDetector {
     services: ServiceHealthMap,
 }
 impl Default for FailureDetector {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
 }
 
 #[derive(Debug, Clone)]
+/// Configuration for FailureDetector
 pub struct FailureDetectorConfig {
     /// Health check interval
     pub check_interval: Duration,
@@ -34,6 +38,7 @@ pub struct FailureDetectorConfig {
 }
 
 impl Default for FailureDetectorConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             check_interval: Duration::from_secs(30),
@@ -46,6 +51,7 @@ impl Default for FailureDetectorConfig {
 
 /// Service health information
 #[derive(Debug, Clone)]
+/// Servicehealth
 pub struct ServiceHealth {
     #[allow(dead_code)]
     name: String,
@@ -55,6 +61,7 @@ pub struct ServiceHealth {
     last_check: Instant,
 }
 impl FailureDetector {
+    /// Creates a new instance
     pub fn new() -> Self {
         Self::with_config(FailureDetectorConfig::default())
     }

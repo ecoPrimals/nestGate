@@ -99,6 +99,7 @@ impl<T: Send + 'static> ConnectionGuard<T> {
 }
 
 impl<T: Send + 'static> Drop for ConnectionGuard<T> {
+    /// Drop
     fn drop(&mut self) {
         if let (Some(connection), Some(pool)) = (self.connection.take(), self.pool.clone()) {
             // Return connection to pool asynchronously

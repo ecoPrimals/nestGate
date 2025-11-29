@@ -1,6 +1,8 @@
 //
 // Dataset operations with circuit breaker and retry logic.
 
+//! Dataset Operations module
+
 use std::collections::HashMap;
 
 use crate::handlers::zfs::universal_zfs::traits::UniversalZfsService;
@@ -10,6 +12,7 @@ use crate::handlers::zfs::universal_zfs_types::{
 
 use super::core::FailSafeZfsService;
 
+/// List Datasets
 pub async fn list_datasets(service: &FailSafeZfsService) -> UniversalZfsResult<Vec<DatasetInfo>> {
     // Check circuit breaker
     if !service.circuit_breaker.can_execute().await {
@@ -56,6 +59,7 @@ pub async fn list_datasets(service: &FailSafeZfsService) -> UniversalZfsResult<V
     result
 }
 
+/// Gets Dataset
 pub async fn get_dataset(
     service: &FailSafeZfsService,
     name: &str,
@@ -87,6 +91,7 @@ pub async fn get_dataset(
     }
 }
 
+/// Creates  Dataset
 pub async fn create_dataset(
     service: &FailSafeZfsService,
     config: &DatasetConfig,
@@ -118,6 +123,7 @@ pub async fn create_dataset(
     }
 }
 
+/// Destroy Dataset
 pub async fn destroy_dataset(service: &FailSafeZfsService, name: &str) -> UniversalZfsResult<()> {
     // Check if circuit breaker allows execution
     if !service.circuit_breaker.can_execute().await {
@@ -146,6 +152,7 @@ pub async fn destroy_dataset(service: &FailSafeZfsService, name: &str) -> Univer
     }
 }
 
+/// Gets Dataset Properties
 pub async fn get_dataset_properties(
     service: &FailSafeZfsService,
     name: &str,
@@ -177,6 +184,7 @@ pub async fn get_dataset_properties(
     }
 }
 
+/// Sets Dataset Properties
 pub async fn set_dataset_properties(
     service: &FailSafeZfsService,
     name: &str,

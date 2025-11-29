@@ -7,9 +7,13 @@ mod return_builder_tests {
     // Simple replacement for removed UniversalResponseStatus
     #[derive(Debug, PartialEq)]
     #[allow(dead_code)]
+    /// Status values for Response
     pub enum ResponseStatus {
+        /// Success
         Success,
+        /// Error
         Error,
+        /// Pending
         Pending,
     }
 

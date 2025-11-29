@@ -2,6 +2,8 @@
 // This module contains all the HTTP handlers for project-related operations
 // including creating, reading, updating, and deleting projects.
 
+//! Projects module
+
 use axum::{
     extract::{Path, State},
     response::{IntoResponse, Json},

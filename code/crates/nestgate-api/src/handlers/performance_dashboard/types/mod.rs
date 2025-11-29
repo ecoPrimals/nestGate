@@ -34,6 +34,7 @@ use std::time::SystemTime;
 ///
 /// Classification of alert types.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of Alert
 pub enum AlertType {
     /// System-level alert
     System,
@@ -53,6 +54,7 @@ pub enum AlertType {
 ///
 /// System health score with breakdown by component.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Healthscore
 pub struct HealthScore {
     /// Overall health score (0.0 to 100.0)
     pub overall: f64,
@@ -70,6 +72,7 @@ pub struct HealthScore {
 ///
 /// Information about a system alert.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Alertinfo
 pub struct AlertInfo {
     /// Alert identifier
     pub id: String,
@@ -89,6 +92,7 @@ pub struct AlertInfo {
 ///
 /// Complete dashboard overview containing all performance data and insights.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Dashboardoverview
 pub struct DashboardOverview {
     /// Timestamp when this overview was generated
     pub timestamp: SystemTime,
@@ -114,6 +118,7 @@ pub struct DashboardOverview {
 ///
 /// Time range specification for dashboard queries.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Timerange
 pub struct TimeRange {
     /// Start time of the range
     pub start: SystemTime,
@@ -127,6 +132,7 @@ pub struct TimeRange {
 ///
 /// Summary of system alerts by severity level.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Alertsummary
 pub struct AlertSummary {
     /// Critical alerts count
     pub critical_alerts: u32,
@@ -142,6 +148,7 @@ pub struct AlertSummary {
 ///
 /// Individual alert for dashboard display.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Dashboardalert
 pub struct DashboardAlert {
     /// Alert identifier
     pub id: String,
@@ -159,6 +166,7 @@ pub struct DashboardAlert {
 ///
 /// Main dashboard structure containing all performance analytics and insights.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Comprehensiveperformancedashboard
 pub struct ComprehensivePerformanceDashboard {
     /// Timestamp when this dashboard was generated
     pub generated_at: SystemTime,
@@ -188,6 +196,7 @@ pub struct ComprehensivePerformanceDashboard {
 ///
 /// Assessment of performance-related risks and their potential impact.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Riskassessment
 pub struct RiskAssessment {
     /// Overall risk level (0.0 to 1.0)
     pub overall_risk_level: f64,
@@ -201,6 +210,7 @@ pub struct RiskAssessment {
 ///
 /// Individual performance risk with severity and impact assessment.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performancerisk
 pub struct PerformanceRisk {
     /// Risk identifier
     pub id: String,

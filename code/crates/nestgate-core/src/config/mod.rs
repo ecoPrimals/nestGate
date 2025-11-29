@@ -181,6 +181,7 @@ pub fn create_testing_config() -> canonical_primary::NestGateCanonicalConfig {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Infantdiscoveryconfigcanonical
 pub type InfantDiscoveryConfigCanonical =
     crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
@@ -260,6 +261,7 @@ mod defaults_additional_tests; // NEW: Test expansion phase (Nov 6, 2025) // Inc
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for InfantDiscovery
 pub struct InfantDiscoveryConfig {
     /// Whether infant discovery is enabled
     pub enabled: bool,
@@ -273,6 +275,7 @@ pub struct InfantDiscoveryConfig {
 
 #[allow(deprecated)]
 impl Default for InfantDiscoveryConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,

@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// Defines how tasks are executed concurrently and how work is distributed.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Concurrency
 pub struct ConcurrencyConfig {
     /// Maximum number of concurrent operations allowed.
     pub max_concurrent: usize,
@@ -22,9 +23,11 @@ pub struct ConcurrencyConfig {
 ///
 /// Determines how concurrent operations are executed and managed.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Concurrencymodel
 pub enum ConcurrencyModel {
     /// Traditional thread pool model (default).
     #[default]
+    /// Threadpool
     ThreadPool,
     /// Actor-based message passing model.
     ActorModel,
@@ -38,9 +41,11 @@ pub enum ConcurrencyModel {
 ///
 /// Determines how tasks are assigned to workers.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Loadbalancingstrategy
 pub enum LoadBalancingStrategy {
     /// Round-robin distribution (default).
     #[default]
+    /// Roundrobin
     RoundRobin,
     /// Assign to least loaded worker.
     LeastLoaded,
@@ -51,6 +56,7 @@ pub enum LoadBalancingStrategy {
 }
 
 impl Default for ConcurrencyConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             max_concurrent: 100,

@@ -13,6 +13,7 @@ use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 /// Prevents false sharing between CPU cores for optimal performance.
 /// 100% safe, identical performance to unsafe version.
 #[repr(align(64))] // Align to cache line size
+/// Safecachealignedcounter
 pub struct SafeCacheAlignedCounter {
     value: AtomicU64,
     _padding: [u8; 64 - size_of::<AtomicU64>()],
@@ -136,6 +137,7 @@ impl<T, const SIZE: usize> SafeRingBuffer<T, SIZE> {
 }
 
 impl<T, const SIZE: usize> Default for SafeRingBuffer<T, SIZE> {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -237,6 +239,7 @@ impl<const BLOCK_SIZE: usize, const POOL_SIZE: usize> SafeMemoryPool<BLOCK_SIZE,
 impl<const BLOCK_SIZE: usize, const POOL_SIZE: usize> Default
     for SafeMemoryPool<BLOCK_SIZE, POOL_SIZE>
 {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -244,11 +247,17 @@ impl<const BLOCK_SIZE: usize, const POOL_SIZE: usize> Default
 
 /// Pool statistics
 #[derive(Debug, Clone)]
+/// Poolstats
 pub struct PoolStats {
+    /// Total Blocks
     pub total_blocks: usize,
+    /// Allocated Blocks
     pub allocated_blocks: usize,
+    /// Free Blocks
     pub free_blocks: usize,
+    /// Utilization Percent
     pub utilization_percent: f64,
+    /// Size of block
     pub block_size: usize,
 }
 
@@ -416,7 +425,6 @@ impl PerformanceConstants {
     /// Page size for memory alignment
     pub const PAGE_SIZE: usize = 4096;
 
-    /// Maximum SIMD vector width in bytes
     pub const MAX_SIMD_WIDTH: usize = 32; // AVX2
 
     /// Recommended batch size for vectorized operations

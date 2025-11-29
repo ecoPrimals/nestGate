@@ -4,6 +4,8 @@
 // **CANONICAL MODERNIZATION**: Migrated from async_trait to native async patterns
 
 // CANONICAL MODERNIZATION: Removed async_trait for native async patterns
+//! Byob module
+
 use axum::{
     routing::{delete, get, post, put},
     Router,
@@ -63,6 +65,7 @@ struct DeploymentState {
 }
 // CANONICAL MODERNIZATION: Native async implementation without async_trait overhead
 impl ByobStorageProvider for ZfsStorageProvider {
+    /// Provision Storage
     fn provision_storage(
         &self,
         request: &ByobStorageRequest,
@@ -114,6 +117,7 @@ impl ByobStorageProvider for ZfsStorageProvider {
         } // Close async move block
     }
 
+    /// Creates  Workspace
     fn create_workspace(
         &self,
         request: &CreateWorkspaceRequest,
@@ -149,6 +153,7 @@ impl ByobStorageProvider for ZfsStorageProvider {
         } // Close async move block
     }
 
+    /// List Workspaces
     fn list_workspaces(&self, _query: &ListQuery) -> impl std::future::Future<Output = Result<Vec<WorkspaceState>, String>> + Send {
         async move {
         let state = self.state.read().await;
@@ -156,6 +161,7 @@ impl ByobStorageProvider for ZfsStorageProvider {
         } // Close async move block
     }
 
+    /// Updates  Workspace Config
     fn update_workspace_config(
         &self,
         id: &Uuid,
@@ -172,6 +178,7 @@ impl ByobStorageProvider for ZfsStorageProvider {
         } // Close async move block
     }
 
+    /// Deletes  Workspace
     fn delete_workspace(&self, id: &Uuid) -> impl std::future::Future<Output = Result<(), String>> + Send {
         async move {
         let mut state = self.state.write().await;
@@ -183,6 +190,7 @@ impl ByobStorageProvider for ZfsStorageProvider {
         } // Close async move block
     }
 
+    /// Gets Workspace Usage
     fn get_workspace_usage(
         &self,
         _id: &Uuid,
@@ -196,6 +204,7 @@ impl ByobStorageProvider for ZfsStorageProvider {
         }))
     }
 
+    /// Creates  Team
     fn create_team(&self, request: &CreateTeamRequest) -> Result<TeamState, String> {
         info!("👥 Creating team: {}", request.name);
 
@@ -227,11 +236,13 @@ impl ByobStorageProvider for ZfsStorageProvider {
     Ok(team)
     }
 
+    /// List Teams
     async fn list_teams(&self) -> Result<Vec<TeamState>, String> {
         let state = self.state.read().await;
         Ok(state.teams.values().cloned().collect())
     }
 
+    /// Creates  Snapshot
     fn create_snapshot(
         &self,
         deployment_id: &Uuid,
@@ -250,6 +261,7 @@ impl ByobStorageProvider for ZfsStorageProvider {
         Ok(_snapshot_id)
     }
 
+    /// Gets Health
     async fn get_health(&self) -> Result<serde_json::Value, String> {
         Ok(json!({
             "status": "healthy",
@@ -471,6 +483,7 @@ impl ZfsStorageProvider {
 }
 
 impl Default for ZfsStorageProvider {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

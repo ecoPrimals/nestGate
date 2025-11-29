@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 /// Unified health status enumeration for all services
 /// Provides consistent health reporting across the ecosystem
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Status values for UnifiedHealth
 pub enum UnifiedHealthStatus {
     /// Service is healthy and operating normally
     Healthy,
@@ -33,6 +34,7 @@ pub enum UnifiedHealthStatus {
     Custom(String),
 }
 impl Default for UnifiedHealthStatus {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Unknown
     }
@@ -88,6 +90,7 @@ impl UnifiedHealthStatus {
 
 /// Comprehensive health report for a component
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Healthreport
 pub struct HealthReport {
     /// Overall health status
     pub status: UnifiedHealthStatus,
@@ -105,6 +108,7 @@ pub struct HealthReport {
     pub errors: Vec<String>,
 }
 impl Default for HealthReport {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             status: UnifiedHealthStatus::Unknown,

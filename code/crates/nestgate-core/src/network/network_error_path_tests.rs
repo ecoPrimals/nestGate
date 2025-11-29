@@ -37,6 +37,7 @@ mod network_error_creation_tests {
 mod network_retry_tests {
     use crate::error::{NestGateError, Result};
 
+    /// Simulated Network Call
     fn simulated_network_call(attempt: u32) -> Result<String> {
         if attempt < 3 {
             Err(NestGateError::network_error("Temporary failure"))
@@ -113,6 +114,7 @@ mod network_timeout_tests {
 
     #[test]
     fn test_timeout_with_result() {
+        /// Might Timeout
         fn might_timeout(should_timeout: bool) -> Result<String> {
             if should_timeout {
                 Err(NestGateError::network_error("timeout"))
@@ -164,8 +166,11 @@ mod network_circuit_breaker_tests {
 
     #[derive(Debug, Clone, PartialEq)]
     enum CircuitState {
+        /// Closed
         Closed,
+        /// Open
         Open,
+        /// Halfopen
         HalfOpen,
     }
 
@@ -212,10 +217,12 @@ mod network_error_recovery_tests {
 
     #[test]
     fn test_fallback_on_network_error() {
+        /// Primary Service
         fn primary_service() -> Result<String> {
             Err(NestGateError::network_error("primary failed"))
         }
 
+        /// Fallback Service
         fn fallback_service() -> Result<String> {
             Ok("fallback success".to_string())
         }
@@ -227,10 +234,12 @@ mod network_error_recovery_tests {
 
     #[test]
     fn test_cache_on_network_failure() {
+        /// Fetch From Network
         fn fetch_from_network(_use_cache: bool) -> Result<String> {
             Err(NestGateError::network_error("network down"))
         }
 
+        /// Fetch From Cache
         fn fetch_from_cache() -> Result<String> {
             Ok("cached data".to_string())
         }
@@ -241,10 +250,12 @@ mod network_error_recovery_tests {
 
     #[test]
     fn test_graceful_degradation() {
+        /// Full Feature Mode
         fn full_feature_mode() -> Result<Vec<String>> {
             Err(NestGateError::network_error("service unavailable"))
         }
 
+        /// Degraded Mode
         fn degraded_mode() -> Result<Vec<String>> {
             Ok(vec!["basic".to_string(), "features".to_string()])
         }

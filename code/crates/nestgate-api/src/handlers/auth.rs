@@ -4,6 +4,8 @@
 
 #[cfg(test)]
 #[path = "auth_comprehensive_tests.rs"]
+//! Auth module
+
 mod auth_comprehensive_tests;
 
 use axum::{
@@ -19,6 +21,7 @@ use std::collections::HashMap;
 
 // Simple auth service stub for canonical modernization
 #[derive(Debug, Clone)]
+/// Service implementation for Auth
 pub struct AuthService {
     authenticated_users: HashMap<String, bool>,
 }
@@ -31,6 +34,7 @@ impl AuthService {
         }
     }
 
+    /// Authenticate
     pub fn authenticate(
         &self,
         _credentials: &nestgate_core::universal_traits::Credentials,
@@ -39,6 +43,7 @@ impl AuthService {
         true
     }
 
+    /// Gets Auth Status
     pub fn get_auth_status(&self) -> AuthStatus {
         AuthStatus {
             authenticated: true,
@@ -47,11 +52,13 @@ impl AuthService {
         }
     }
 
+    /// Security Primal Available
     pub fn security_primal_available(&self) -> bool {
         // Stub - assume available
         true
     }
 
+    /// Gets Mode
     pub fn get_mode(&self) -> AuthMode {
         AuthMode::Development
     }
@@ -59,33 +66,49 @@ impl AuthService {
 
 /// Authentication credentials
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Authcredentials
 pub struct AuthCredentials {
+    /// Username
     pub username: String,
+    /// Password
     pub password: String,
 }
 /// Authentication status response
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Authstatus
 pub struct AuthStatus {
+    /// Authenticated
     pub authenticated: bool,
+    /// User identifier
     pub user_id: Option<String>,
+    /// Permissions
     pub permissions: Vec<String>,
 }
 /// Authentication mode
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Authmode
 pub enum AuthMode {
+    /// Development
     Development,
+    /// Production
     Production,
+    /// Testing
     Testing,
 }
 /// Authentication challenge
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Authchallenge
 pub struct AuthChallenge {
+    /// Challenge
     pub challenge: String,
+    /// Timestamp
     pub timestamp: u64,
+    /// Expires At
     pub expires_at: u64,
 }
 /// Authentication request
 #[derive(Debug, Deserialize)]
+/// Request parameters for Auth operation
 pub struct AuthRequest {
     /// Username for authentication
     pub username: String,
@@ -96,6 +119,7 @@ pub struct AuthRequest {
 }
 /// Authentication response
 #[derive(Debug, Serialize)]
+/// Response data for Auth operation
 pub struct AuthResponse {
     /// Whether the authentication operation was successful
     pub success: bool,
@@ -211,12 +235,14 @@ async fn set_mode(
 }
 /// Set mode request
 #[derive(Debug, Deserialize)]
+/// Request parameters for SetMode operation
 pub struct SetModeRequest {
     /// Authentication mode to set ("standalone", "security_primal", etc.)
     pub mode: String,
 }
 /// Set mode response
 #[derive(Debug, Serialize)]
+/// Response data for SetMode operation
 pub struct SetModeResponse {
     /// Whether the mode change was successful
     pub success: bool,
@@ -227,10 +253,13 @@ pub struct SetModeResponse {
 }
 /// AppState with auth service
 pub struct AppStateWithAuth {
+    /// Auth Service
     pub auth_service: AuthService,
+    /// Zfs Manager
     pub zfs_manager: std::sync::Arc<crate::routes::ZfsManager>,
 }
 impl From<crate::routes::AppState> for AppStateWithAuth {
+    /// From
     fn from(state: crate::routes::AppState) -> Self {
         Self {
             auth_service: AuthService::new(),

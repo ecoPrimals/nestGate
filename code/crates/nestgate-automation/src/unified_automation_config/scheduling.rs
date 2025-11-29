@@ -5,6 +5,7 @@ use std::collections::HashMap;
 use std::time::Duration;
 /// Scheduling settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Schedulingsettings
 pub struct SchedulingSettings {
     /// Enable scheduling
     pub enabled: bool,
@@ -16,6 +17,7 @@ pub struct SchedulingSettings {
     pub max_concurrent: u32,
 }
     #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Scheduledtask
 pub struct ScheduledTask {
     /// Task name
     pub name: String,
@@ -27,6 +29,7 @@ pub struct ScheduledTask {
     pub timeout: Duration,
 }
 impl SmartDefault for SchedulingSettings {
+    /// Smart Default
     fn smart_default() -> Self {
         Self {
             enabled: true,
@@ -38,6 +41,7 @@ impl SmartDefault for SchedulingSettings {
 }
 
 impl Default for SchedulingSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self::smart_default()
     }

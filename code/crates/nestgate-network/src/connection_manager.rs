@@ -1,3 +1,5 @@
+//! Connection Manager module
+
 use std::env;
 use crate::universal_adapter::{PrimalAgnosticAdapter, CapabilityCategory, CapabilityRequest};
 // Connection management for network operations.
@@ -18,6 +20,7 @@ use nestgate_core::constants::canonical_defaults::network::{LOCALHOST, DEFAULT_A
 
 // Type aliases to reduce complexity
 type ActiveConnectionMap = Arc<RwLock<HashMap<String, ActiveConnection>>>;
+/// Type alias for ConnectionPoolMap
 type ConnectionPoolMap = Arc<RwLock<HashMap<String, Vec<ActiveConnection>>>>;
 
 /// **ZERO-COST TRAIT**: Orchestration client trait using native async patterns
@@ -25,14 +28,17 @@ type ConnectionPoolMap = Arc<RwLock<HashMap<String, Vec<ActiveConnection>>>>;
 /// **PERFORMANCE**: 40-60% improvement over async_trait macro
 /// **MEMORY**: Zero runtime overhead, compile-time dispatch
 pub trait OrchestrationClient: Send + Sync + 'static {
+    /// Register Service
     fn register_service(
         &self,
         service: &ServiceRegistration,
     ) -> impl Future<Output = Result<()>> + Send;
+    /// Discover Services
     fn discover_services(
         &self,
         service_type: &str,
     ) -> impl Future<Output = Result<Vec<ServiceInstance>>> + Send;
+    /// Health Check
     fn health_check(&self) -> impl Future<Output = Result<bool>> + Send;
 }
 /// HTTP-based orchestration client
@@ -43,6 +49,7 @@ pub struct HttpOrchestrationClient {
     timeout: std::time::Duration,
 }
 impl std::fmt::Debug for HttpOrchestrationClient {
+    /// Fmt
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("HttpOrchestrationClient")
             .field("base_url", &self.base_url)
@@ -53,6 +60,7 @@ impl std::fmt::Debug for HttpOrchestrationClient {
 
 /// **ZERO-COST IMPLEMENTATION**: Native async implementation without macro overhead
 impl OrchestrationClient for HttpOrchestrationClient {
+    /// Register Service
     fn register_service(
         &self,
         _service: &ServiceRegistration,
@@ -62,6 +70,7 @@ impl OrchestrationClient for HttpOrchestrationClient {
             Ok(())
         }
     }
+    /// Discover Services
     fn discover_services(
         &self,
         _service_type: &str,
@@ -72,6 +81,7 @@ impl OrchestrationClient for HttpOrchestrationClient {
         }
     }
 
+    /// Health Check
     fn health_check(&self) -> impl Future<Output = Result<bool>> + Send {
         async move {
             // Implementation for health check
@@ -87,12 +97,14 @@ use tracing::warn;
 /// Universal connection manager for network services
 pub struct ConnectionManager;
 impl ConnectionManager {
+    /// Creates a new instance
     pub fn new() -> Self {
         Self
     }
 }
 
 impl Default for ConnectionManager {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -100,6 +112,7 @@ impl Default for ConnectionManager {
 
 /// Connection types that can be managed universally
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Types of Connection
 pub enum ConnectionType {
     /// API service connection
     Api,
@@ -120,6 +133,7 @@ pub enum ConnectionType {
 }
 /// Connection request to Orchestration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for Connection operation
 pub struct ConnectionRequest {
     /// Source service name
     pub source_service: String,
@@ -134,6 +148,7 @@ pub struct ConnectionRequest {
 }
 /// Connection response from Orchestration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for Connection operation
 pub struct ConnectionResponse {
     /// Connection ID
     pub connection_id: String,
@@ -148,6 +163,7 @@ pub struct ConnectionResponse {
 }
 /// Active connection tracking
 #[derive(Debug, Clone)]
+/// Activeconnection
 pub struct ActiveConnection {
     /// Connection ID
     pub connection_id: String,
@@ -162,6 +178,7 @@ pub struct ActiveConnection {
 }
 /// Orchestration Connection Manager - NO DIRECT CONNECTIONS ALLOWED
 #[derive(Debug)]
+/// Manager for OrchestrationConnection operations
 pub struct OrchestrationConnectionManager {
     /// Orchestration client (MANDATORY)
     orchestration_client: HttpOrchestrationClient,

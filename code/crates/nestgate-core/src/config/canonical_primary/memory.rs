@@ -10,6 +10,7 @@ use std::time::Duration;
 
 /// Canonical memory configuration - THE single source of truth
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Memory
 pub struct MemoryConfig {
     /// Enable memory management
     pub enabled: bool,
@@ -26,6 +27,7 @@ pub struct MemoryConfig {
 }
 
 impl Default for MemoryConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -42,6 +44,7 @@ impl Default for MemoryConfig {
 
 /// Memory pool configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for MemoryPool
 pub struct MemoryPoolConfig {
     /// Enable memory pooling
     pub enabled: bool,
@@ -56,6 +59,7 @@ pub struct MemoryPoolConfig {
 }
 
 impl Default for MemoryPoolConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -71,9 +75,11 @@ impl Default for MemoryPoolConfig {
 
 /// Memory allocation strategy
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Allocationstrategy
 pub enum AllocationStrategy {
     /// First-fit allocation strategy
     #[default]
+    /// Firstfit
     FirstFit,
     /// Best-fit allocation strategy
     BestFit,
@@ -89,6 +95,7 @@ pub enum AllocationStrategy {
 
 /// Memory limits configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Memorylimits
 pub struct MemoryLimits {
     /// Maximum memory usage in bytes
     pub max_memory: u64,
@@ -103,6 +110,7 @@ pub struct MemoryLimits {
 }
 
 impl Default for MemoryLimits {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             max_memory: 2 * 1024 * 1024 * 1024, // 2GB
@@ -118,6 +126,7 @@ impl Default for MemoryLimits {
 
 /// Garbage collection configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for GarbageCollection
 pub struct GarbageCollectionConfig {
     /// Enable automatic garbage collection
     pub enabled: bool,
@@ -130,6 +139,7 @@ pub struct GarbageCollectionConfig {
 }
 
 impl Default for GarbageCollectionConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -144,6 +154,7 @@ impl Default for GarbageCollectionConfig {
 
 /// Memory monitoring configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for MemoryMonitoring
 pub struct MemoryMonitoringConfig {
     /// Enable memory monitoring
     pub enabled: bool,
@@ -156,6 +167,7 @@ pub struct MemoryMonitoringConfig {
 }
 
 impl Default for MemoryMonitoringConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,

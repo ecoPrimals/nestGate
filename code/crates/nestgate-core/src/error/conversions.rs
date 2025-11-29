@@ -7,6 +7,7 @@ use super::variants::core_errors::NestGateUnifiedError;
 
 /// Convert standard I/O errors to `NestGate` errors
 impl From<std::io::Error> for NestGateUnifiedError {
+    /// From
     fn from(error: std::io::Error) -> Self {
         Self::internal_error(format!("I/O error: {error}"), "io_operation")
     }
@@ -14,6 +15,7 @@ impl From<std::io::Error> for NestGateUnifiedError {
 
 /// Convert serde JSON errors to `NestGate` errors
 impl From<serde_json::Error> for NestGateUnifiedError {
+    /// From
     fn from(error: serde_json::Error) -> Self {
         Self::validation_error(&format!("JSON error: {error}"))
     }
@@ -21,6 +23,7 @@ impl From<serde_json::Error> for NestGateUnifiedError {
 
 /// Convert string errors to `NestGate` errors
 impl From<String> for NestGateUnifiedError {
+    /// From
     fn from(error: String) -> Self {
         Self::internal_error(error, "string_conversion")
     }
@@ -28,6 +31,7 @@ impl From<String> for NestGateUnifiedError {
 
 /// Convert &str errors to `NestGate` errors
 impl From<&str> for NestGateUnifiedError {
+    /// From
     fn from(error: &str) -> Self {
         Self::internal_error(error, "str_conversion")
     }
@@ -36,6 +40,7 @@ impl From<&str> for NestGateUnifiedError {
 /// Convert anyhow errors to `NestGate` errors
 /// This enables use of `?` operator with anyhow::Result in test code
 impl From<anyhow::Error> for NestGateUnifiedError {
+    /// From
     fn from(error: anyhow::Error) -> Self {
         Self::external_service_unavailable("anyhow", format!("External error: {error}"))
     }

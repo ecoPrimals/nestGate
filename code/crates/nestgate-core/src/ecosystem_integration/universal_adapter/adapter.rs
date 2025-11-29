@@ -16,6 +16,7 @@ use uuid::Uuid;
 #[derive(Debug)]
 #[allow(dead_code)]
 #[derive(Clone)]
+/// Universaladapter
 pub struct UniversalAdapter {
     /// Our registered service ID
     service_id: Uuid,
@@ -34,6 +35,7 @@ pub struct UniversalAdapter {
 }
 /// Health status of the adapter
 #[derive(Debug, Clone)]
+/// Adapterhealthstatus
 pub struct AdapterHealthStatus {
     /// Whether the adapter is healthy
     pub healthy: bool,
@@ -534,6 +536,7 @@ impl UniversalAdapter {
 }
 
 impl Default for AdapterHealthStatus {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             healthy: false,

@@ -8,6 +8,7 @@ use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
 /// Authentication token with metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Authtoken
 pub struct AuthToken {
     /// The actual token string
     pub token: String,

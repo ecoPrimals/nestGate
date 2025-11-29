@@ -3,6 +3,7 @@
 use super::analyzer::*;
 use super::reports::*;
 
+/// Creates  Test Analysis
 fn create_test_analysis() -> AnalysisResult {
     AnalysisResult {
         overall_score: 85.5,

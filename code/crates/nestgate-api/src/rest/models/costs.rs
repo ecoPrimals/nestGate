@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 /// Provides detailed cost breakdown including setup, recurring monthly costs,
 /// and per-GB pricing analysis for comprehensive financial planning.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Costestimate
 pub struct CostEstimate {
     /// Total estimated cost including setup and first year operation
     pub total_cost: f64,

@@ -11,6 +11,7 @@ use tracing::{info, warn, error};
 
 /// Backup configuration for enterprise operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Backup
 pub struct BackupConfig {
     /// Backup destination path
     pub destination: PathBuf,
@@ -28,6 +29,7 @@ pub struct BackupConfig {
 
 /// Type of backup operation
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Types of Backup
 pub enum BackupType {
     /// Full backup of all data
     Full,
@@ -39,6 +41,7 @@ pub enum BackupType {
 
 /// Backup operation result
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Backupresult
 pub struct BackupResult {
     /// Backup ID for tracking
     pub backup_id: String,
@@ -58,6 +61,7 @@ pub struct BackupResult {
 
 /// Backup verification result
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Verificationresult
 pub struct VerificationResult {
     /// Verification passed
     pub passed: bool,
@@ -485,6 +489,7 @@ impl EnterpriseBackupManager {
 }
 
 impl Default for BackupConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             destination: PathBuf::from("/var/backups/nestgate"),

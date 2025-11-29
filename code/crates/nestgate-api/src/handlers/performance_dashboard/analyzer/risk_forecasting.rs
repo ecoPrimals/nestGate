@@ -1,6 +1,8 @@
 //
 // Handles risk assessment and performance forecasting based on ZFS analytics and system trends.
 
+//! Risk Forecasting module
+
 use crate::handlers::performance_dashboard::types::*;
 use nestgate_core::Result;
 use nestgate_zfs::ZfsManager;
@@ -12,11 +14,13 @@ use tracing::debug;
 // Removed unused tracing import
 
 #[derive(Debug, Clone)]
+/// Riskforecaster
 pub struct RiskForecaster {
     zfs_manager: Arc<ZfsManager>,
 }
 
 impl RiskForecaster {
+    /// Creates a new instance
     pub fn new(zfs_manager: Arc<ZfsManager>) -> Self { Self { zfs_manager  }
 
     /// Create with default configuration - PRODUCTION READY

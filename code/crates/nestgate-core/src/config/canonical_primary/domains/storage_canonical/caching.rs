@@ -8,6 +8,7 @@ use std::time::Duration;
 /// Provides comprehensive caching settings including cache sizing, eviction policies,
 /// consistency guarantees, performance tuning, and monitoring.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for StorageCaching
 pub struct StorageCachingConfig {
     /// Whether caching is enabled (default: true).
     pub enabled: bool,
@@ -27,6 +28,7 @@ pub struct StorageCachingConfig {
 ///
 /// Controls the maximum cache size and time-to-live for cached entries.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Cache
 pub struct CacheConfig {
     /// Maximum cache size in bytes (default: 1GB).
     pub size: u64,
@@ -38,6 +40,7 @@ pub struct CacheConfig {
 ///
 /// Determines which entries are removed when cache is full.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Cacheevictionpolicy
 pub enum CacheEvictionPolicy {
     /// Least Recently Used - evict least recently accessed entries (default).
     Lru,
@@ -53,6 +56,7 @@ pub enum CacheEvictionPolicy {
 ///
 /// Controls cache coherency and consistency guarantees.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for CacheConsistency
 pub struct CacheConsistencyConfig {
     /// Whether cache consistency checks are enabled (default: true).
     pub enabled: bool,
@@ -62,6 +66,7 @@ pub struct CacheConsistencyConfig {
 ///
 /// Controls performance optimizations for cache operations.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for CachePerformance
 pub struct CachePerformanceConfig {
     /// Whether performance optimizations are enabled (default: true).
     pub enabled: bool,
@@ -71,12 +76,14 @@ pub struct CachePerformanceConfig {
 ///
 /// Controls monitoring and metrics for cache operations.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for CacheMonitoring
 pub struct CacheMonitoringConfig {
     /// Whether cache monitoring is enabled (default: false).
     pub enabled: bool,
 }
 
 impl Default for StorageCachingConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,

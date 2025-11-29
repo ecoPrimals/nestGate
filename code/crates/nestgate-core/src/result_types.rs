@@ -282,6 +282,7 @@ pub trait ResultExt<T, E> {
 }
 
 impl<T, E> ResultExt<T, E> for std::result::Result<T, E> {
+    /// Converts to Canonical
     fn to_canonical(self) -> Result<T>
     where
         E: Into<NestGateError>,
@@ -289,6 +290,7 @@ impl<T, E> ResultExt<T, E> for std::result::Result<T, E> {
         self.map_err(std::convert::Into::into)
     }
 
+    /// Builder method to set Context
     fn with_context<F>(self, _f: F) -> Result<T>
     where
         E: Into<NestGateError>,

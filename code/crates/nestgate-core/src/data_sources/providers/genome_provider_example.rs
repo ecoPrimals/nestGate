@@ -192,18 +192,22 @@ impl UniversalGenomeProvider {
 }
 
 impl DataCapability for UniversalGenomeProvider {
+    /// Capability Type
     fn capability_type(&self) -> &str {
         "genome_data"
     }
 
+    /// Can Handle
     async fn can_handle(&self, request: &DataRequest) -> Result<bool> {
         self.http_provider.can_handle(request).await
     }
 
+    /// Execute Request
     async fn execute_request(&self, request: &DataRequest) -> Result<DataResponse> {
         self.http_provider.execute_request(request).await
     }
 
+    /// Gets Metadata
     fn get_metadata(&self) -> HashMap<String, String> {
         let mut metadata = self.http_provider.get_metadata();
         metadata.insert("provider_name".to_string(), self.provider_name.clone());
@@ -213,6 +217,7 @@ impl DataCapability for UniversalGenomeProvider {
 }
 
 impl GenomeDataCapability for UniversalGenomeProvider {
+    /// Search Genomes
     async fn search_genomes(&self, query: &str) -> Result<Vec<GenomeResult>> {
         debug!("🔍 Searching genomes with query: {}", query);
 
@@ -230,6 +235,7 @@ impl GenomeDataCapability for UniversalGenomeProvider {
         self.parse_genome_results(&response.data)
     }
 
+    /// Gets Genome Sequence
     async fn get_genome_sequence(&self, genome_id: &str) -> Result<GenomeSequence> {
         debug!("🧬 Fetching genome sequence for ID: {}", genome_id);
 

@@ -1,3 +1,5 @@
+//! Observability module
+
 use crate::error::NestGateError;
 use std::collections::HashMap;
 //
@@ -30,6 +32,7 @@ pub struct ObservabilityManager {
 }
 // Configuration for observability features
 #[derive(Debug, Clone)]
+/// Configuration for Observability
 pub struct ObservabilityConfig {
     /// Enable metrics collection
     pub metrics_enabled: bool,
@@ -45,6 +48,7 @@ pub struct ObservabilityConfig {
     pub max_metrics_history: usize,
 }
 impl Default for ObservabilityConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             metrics_enabled: true,

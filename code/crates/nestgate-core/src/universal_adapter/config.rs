@@ -4,6 +4,7 @@ use std::time::Duration;
 
 /// Universal adapter configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for UniversalAdapter
 pub struct UniversalAdapterConfig {
     /// Enable auto-discovery of primal providers
     pub auto_discovery: bool,
@@ -20,6 +21,7 @@ pub struct UniversalAdapterConfig {
 }
 #[allow(deprecated)]
 impl Default for UniversalAdapterConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             auto_discovery: true,
@@ -38,6 +40,7 @@ impl Default for UniversalAdapterConfig {
 
 /// Fallback behavior when no primal is available
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Fallbackbehavior
 pub enum FallbackBehavior {
     /// Return an error
     Error,
@@ -48,6 +51,7 @@ pub enum FallbackBehavior {
 }
 /// Discovery methods for finding primal providers
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+/// Discoverymethod
 pub enum DiscoveryMethod {
     /// Environment variables
     Environment,
@@ -79,11 +83,17 @@ pub enum DiscoveryMethod {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for Adapter
 pub struct AdapterConfig {
+    /// Discovery Timeout
     pub discovery_timeout: Duration,
+    /// Retry Attempts
     pub retry_attempts: u32,
+    /// Cache Ttl
     pub cache_ttl: Duration,
+    /// Endpoints
     pub endpoints: Vec<String>,
+    /// Fallback Enabled
     pub fallback_enabled: bool,
 }
 
@@ -141,6 +151,7 @@ impl AdapterConfig {
 
 #[allow(deprecated)]
 impl Default for AdapterConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -155,6 +166,7 @@ impl Default for AdapterConfig {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Adapterconfigcanonical
 pub type AdapterConfigCanonical =
     crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 

@@ -21,6 +21,7 @@ use std::time::Duration;
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for ProductionService
 pub struct ProductionServiceConfig {
     /// Maximum concurrent requests
     pub max_concurrent_requests: usize,
@@ -34,6 +35,7 @@ pub struct ProductionServiceConfig {
     pub enable_monitoring: bool,
 }
 impl Default for ProductionServiceConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             max_concurrent_requests: 100,
@@ -53,6 +55,7 @@ impl Default for ProductionServiceConfig {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Productionserviceconfigcanonical
 pub type ProductionServiceConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using ProductionServiceConfig (the deprecated struct) for now.

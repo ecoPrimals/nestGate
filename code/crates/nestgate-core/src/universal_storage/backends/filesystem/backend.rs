@@ -9,6 +9,7 @@ use tokio::fs;
 
 /// Filesystem storage backend implementation
 #[allow(dead_code)] // Backend implementation - fields used internally
+/// Filesystembackend
 pub struct FilesystemBackend {
     config: FilesystemConfig,
     root_dir: PathBuf,

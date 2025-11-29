@@ -2,6 +2,8 @@
 // Modular implementation of capability-based decentralized authentication client.
 // Split from a single 1660+ line file for better maintainability.
 // Core client implementation
+//! Universal Security Client module
+
 pub mod client;
 // Removed discovery module - using unified NestGateError
 // Re-export public API

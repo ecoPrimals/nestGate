@@ -1,6 +1,8 @@
 //
 // Configuration for hot/warm/cold storage tiers, performance profiles, and migration rules.
 
+//! Tiers module
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -10,9 +12,13 @@ use crate::automation::policies::MigrationRules;
 
 // Temporary local definition until migration module is implemented
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Capacitylimits
 pub struct CapacityLimits {
+    /// Max Size in gigabytes
     pub max_size_gb: u64,
+    /// Min Free Space in gigabytes
     pub min_free_space_gb: u64,
+    /// Warning Threshold Percent
     pub warning_threshold_percent: f64,
 }
 
@@ -60,7 +66,9 @@ use nestgate_core::canonical_modernization::canonical_constants::storage::{
 };
 // Define missing constants locally
 const POOL_DEFAULT: &str = "default";
+/// Pool Production
 const POOL_PRODUCTION: &str = "production";
+/// Compression Off
 const COMPRESSION_OFF: &str = "off";
 
 // Define missing ZFS constants locally until they're added to canonical constants
@@ -68,39 +76,64 @@ const RECORDSIZE_PROPERTY: &str = "recordsize";
 use nestgate_core::canonical_modernization::canonical_constants::zfs::{
     RECORDSIZE_128K, RECORDSIZE_1M, RECORDSIZE_64K,
 };
+/// Atime Property
 const ATIME_PROPERTY: &str = "atime";
+/// Primarycache Property
 const PRIMARYCACHE_PROPERTY: &str = "primarycache";
+/// Cache Metadata
 const CACHE_METADATA: &str = "metadata";
+/// Cache All
 const CACHE_ALL: &str = "all";
+/// Cache None
 const CACHE_NONE: &str = "none";
+/// Secondarycache Property
 const SECONDARYCACHE_PROPERTY: &str = "secondarycache";
+/// Sync Property
 const SYNC_PROPERTY: &str = "sync";
+/// Compression Property
 const COMPRESSION_PROPERTY: &str = "compression";
+/// Compression Zstd
 const COMPRESSION_ZSTD: &str = "zstd";
+/// Compression Gzip 9
 const COMPRESSION_GZIP_9: &str = "gzip-9";
+/// Logbias Property
 const LOGBIAS_PROPERTY: &str = "logbias";
+/// Bias Latency
 const BIAS_LATENCY: &str = "latency";
+/// Bias Throughput
 const BIAS_THROUGHPUT: &str = "throughput";
+/// Dedup Property
 const DEDUP_PROPERTY: &str = "dedup";
+/// Value Always
 const VALUE_ALWAYS: &str = "always";
+/// Value On
 const VALUE_ON: &str = "on";
+/// Value Off
 const VALUE_OFF: &str = "off";
+/// Value Standard
 const VALUE_STANDARD: &str = "standard";
 
 // Local ZFS-specific constants not in centralized system
 const ERROR_TIER_NAME_EMPTY: &str = "Tier name cannot be empty";
+/// Error Pool Name Empty
 const ERROR_POOL_NAME_EMPTY: &str = "Pool name cannot be empty";
+/// Error Dataset Prefix Empty
 const ERROR_DATASET_PREFIX_EMPTY: &str = "Dataset prefix cannot be empty";
 
 /// Tier-specific configurations for hot/warm/cold storage
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Tierconfigurations
 pub struct TierConfigurations {
+    /// Hot
     pub hot: TierConfig,
+    /// Warm
     pub warm: TierConfig,
+    /// Cold
     pub cold: TierConfig,
 }
 /// Individual tier configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Tier
 pub struct TierConfig {
     /// Tier name
     pub name: String,
@@ -119,12 +152,14 @@ pub struct TierConfig {
 }
 /// Performance profile for tiers
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performanceprofile
 pub enum PerformanceProfile {
     HighPerformance, // Hot tier - optimized for speed
     Balanced,        // Warm tier - balance of speed and compression
     HighCompression, // Cold tier - optimized for space efficiency
 }
 impl Default for TierConfigurations {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             hot: TierConfig::hot_tier_default(),

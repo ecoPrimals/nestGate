@@ -47,6 +47,7 @@ impl PortManager {
 }
 
 impl Default for PortManager {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -54,10 +55,15 @@ impl Default for PortManager {
 
 /// Port allocation information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Portallocation
 pub struct PortAllocation {
+    /// Port
     pub port: u16,
+    /// Service name
     pub service_name: String,
+    /// Port Type
     pub port_type: String,
+    /// Allocated At
     pub allocated_at: std::time::SystemTime,
 }
 

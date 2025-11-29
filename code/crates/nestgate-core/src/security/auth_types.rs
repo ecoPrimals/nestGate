@@ -8,6 +8,7 @@ use std::time::SystemTime;
 /// User roles - local definition for NestGate-specific needs
 /// Real auth decisions delegate to security primals via universal adapter
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+/// Role
 pub enum Role {
     /// System administrator with full privileges
     Admin,
@@ -21,6 +22,7 @@ pub enum Role {
     ReadOnly,
 }
 impl std::fmt::Display for Role {
+    /// Fmt
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Role::Admin => write!(f, "admin"),
@@ -35,6 +37,7 @@ impl std::fmt::Display for Role {
 /// Permission structure - local definition for NestGate operations
 /// Complex permissions delegate to security primals via universal adapter
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+/// Permission
 pub struct Permission {
     /// Permission name/identifier
     pub name: String,
@@ -42,6 +45,7 @@ pub struct Permission {
     pub scope: Option<String>,
 }
 impl Permission {
+    /// Creates a new instance
     pub fn new(name: &str) -> Self {
         Self {
             name: name.to_string(),
@@ -49,6 +53,7 @@ impl Permission {
         }
     }
 
+    /// Builder method to set Scope
     pub fn with_scope(name: &str, scope: &str) -> Self {
         Self {
             name: name.to_string(),
@@ -59,6 +64,7 @@ impl Permission {
 
 /// Access levels for different operations
 #[derive(Debug, Clone, PartialEq, Eq)]
+/// Accesslevel
 pub enum AccessLevel {
     /// No access
     None,
@@ -71,6 +77,7 @@ pub enum AccessLevel {
 }
 /// Authentication context for requests
 #[derive(Debug, Clone)]
+/// Authcontext
 pub struct AuthContext {
     /// User ID making the request
     pub user_id: Option<String>,
@@ -169,6 +176,7 @@ impl AuthContext {
 }
 
 impl Default for AuthContext {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -178,16 +186,19 @@ impl Default for AuthContext {
 pub fn read_permission() -> Permission {
     Permission::new("read")
 }
+/// Write Permission
 pub fn write_permission() -> Permission {
     Permission::new("write")
 }
 
+/// Admin Permission
 pub fn admin_permission() -> Permission {
     Permission::new("admin")
 }
 
 /// Authentication methods
 #[derive(Debug, Clone, PartialEq)]
+/// Authmethod
 pub enum AuthMethod {
     /// No authentication
     None,
@@ -208,16 +219,19 @@ pub fn read_permission_for(resource: &str) -> Permission {
     Permission::with_scope("read", resource)
 }
 
+/// Write Permission For
 pub fn write_permission_for(resource: &str) -> Permission {
     Permission::with_scope("write", resource)
 }
 
+/// Admin Permission For
 pub fn admin_permission_for(resource: &str) -> Permission {
     Permission::with_scope("admin", resource)
 }
 
 /// Token types for different authentication mechanisms
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+/// Types of Token
 pub enum TokenType {
     /// Access token for API requests
     Access,
@@ -227,6 +241,7 @@ pub enum TokenType {
     ApiKey,
 }
 impl fmt::Display for TokenType {
+    /// Fmt
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             TokenType::Access => write!(f, "access"),

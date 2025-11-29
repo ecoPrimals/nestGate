@@ -9,10 +9,12 @@ pub use super::config::LogRetentionConfig;
 
 /// Log retention manager for cleanup operations
 #[derive(Debug)]
+/// Manager for LogRetention operations
 pub struct LogRetentionManager {
     config: LogRetentionConfig,
 }
 impl LogRetentionManager {
+    /// Creates a new instance
     pub fn new(config: LogRetentionConfig) -> Self { Self { config  }
 
     /// Start background cleanup task
@@ -59,6 +61,7 @@ impl LogRetentionManager {
         Ok(())
     }
 
+    /// Cleanup By Age
     fn cleanup_by_age(config: &LogRetentionConfig) -> Result<()> {
         let max_age = Duration::from_secs(config.max_age_days as u64 * 24 * 3600);
         let cutoff_time = SystemTime::now() - max_age;
@@ -71,6 +74,7 @@ impl LogRetentionManager {
         Ok(())
     }
 
+    /// Cleanup By Size
     fn cleanup_by_size(config: &LogRetentionConfig) -> Result<()> {
         let max_size_bytes = config.max_size_mb * 1024 * 1024;
 
@@ -114,6 +118,7 @@ impl LogRetentionManager {
 }
 
 impl Clone for LogRetentionManager {
+    /// Clone
     fn clone(&self) -> Self { Self {
             config: self.config.clone(),
          }

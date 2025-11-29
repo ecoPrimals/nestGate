@@ -3,34 +3,48 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for MiddlewareHandler
 pub struct MiddlewareHandlerConfig {
+    /// Cors
     pub cors: CorsHandlerConfig,
+    /// Compression
     pub compression: CompressionHandlerConfig,
+    /// Security
     pub security: SecurityMiddlewareConfig,
+    /// Logging
     pub logging: LoggingMiddlewareConfig,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for CorsHandler
 pub struct CorsHandlerConfig {
+    /// Whether this feature is enabled
     pub enabled: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for CompressionHandler
 pub struct CompressionHandlerConfig {
+    /// Whether this feature is enabled
     pub enabled: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for SecurityMiddleware
 pub struct SecurityMiddlewareConfig {
+    /// Whether this feature is enabled
     pub enabled: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for LoggingMiddleware
 pub struct LoggingMiddlewareConfig {
+    /// Whether this feature is enabled
     pub enabled: bool,
 }
 
 impl Default for MiddlewareHandlerConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             cors: CorsHandlerConfig { enabled: true },
@@ -58,6 +72,7 @@ impl MiddlewareHandlerConfig {
     pub fn merge(self, _other: Self) -> Self {
         self
     }
+    /// Validates data
     pub fn validate(&self) -> crate::Result<()> {
         Ok(())
     }

@@ -1,4 +1,6 @@
 // **MIGRATED**: Using config module's unified_types instead of deprecated root unified_types
+//! Config module
+
 use crate::config::canonical_primary::{
     MonitoringConfig as UnifiedMonitoringConfig, 
     NetworkConfig as UnifiedNetworkConfig,
@@ -41,6 +43,7 @@ use serde::{Deserialize, Serialize};
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for UnifiedAdapter
 pub struct UnifiedAdapterConfig {
     /// Base service configuration (standardized)
     pub service: UnifiedServiceConfig,
@@ -56,6 +59,7 @@ pub struct UnifiedAdapterConfig {
 /// Adapter-specific configuration extensions
 /// Domain-specific fields that don't belong in unified base configs
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Adapterextensions
 pub struct AdapterExtensions {
     /// Service discovery endpoint
     pub discovery_endpoint: String,
@@ -67,6 +71,7 @@ pub struct AdapterExtensions {
     pub proxy_settings: Option<ProxyConfig>,
 }
 impl Default for UnifiedAdapterConfig {
+    /// Returns the default instance
     fn default() -> Self {
         let service = UnifiedServiceConfig {
             name: "universal-adapter".to_string(),
@@ -105,6 +110,7 @@ impl Default for UnifiedAdapterConfig {
 
 /// Service registration information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Serviceregistration
 pub struct ServiceRegistration {
     /// Service name
     pub name: String,
@@ -126,6 +132,7 @@ pub struct ServiceRegistration {
     pub capabilities_summary: String,
 }
 impl Default for ServiceRegistration {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             // SOVEREIGNTY FIX: Use environment-based service identification
@@ -163,6 +170,7 @@ impl Default for ServiceRegistration {
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for Proxy
 pub struct ProxyConfig {
     /// Proxy server address
     pub proxy_endpoint: String,
@@ -173,6 +181,7 @@ pub struct ProxyConfig {
 }
 /// Proxy authentication methods
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Proxyauth
 pub enum ProxyAuth {
     /// Basic username/password auth
     Basic { username: String, password: String },
@@ -181,6 +190,7 @@ pub enum ProxyAuth {
 }
 /// Certificate validation modes
 #[derive(Debug, Clone, PartialEq, Eq)]
+/// Certificatevalidation
 pub enum CertificateValidation {
     /// No certificate validation
     None,
@@ -233,6 +243,7 @@ impl UnifiedAdapterConfig {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Unifiedadapterconfigcanonical
 pub type UnifiedAdapterConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using UnifiedAdapterConfig (the deprecated struct) for now.
@@ -249,6 +260,7 @@ pub type UnifiedAdapterConfigCanonical = crate::config::canonical_primary::domai
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Proxyconfigcanonical
 pub type ProxyConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using ProxyConfig (the deprecated struct) for now.

@@ -3,6 +3,8 @@
 // system, enabling real-time coordination between WebSocket clients, internal
 // services, and MCP streams.
 
+//! Event Coordination module
+
 use nestgate_core::uuid_cache::get_or_create_uuid;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, sync::Arc};
@@ -25,6 +27,7 @@ pub struct EventCoordinator {
 }
 /// Event coordination metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Eventstats
 pub struct EventStats {
     /// Total number of events processed
     pub total_events: u64,
@@ -37,6 +40,7 @@ pub struct EventStats {
 }
 /// Event handler configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Handler for Event requests
 pub struct EventHandler {
     /// Handler identifier
     pub id: Uuid,
@@ -53,6 +57,7 @@ pub struct EventHandler {
 }
 /// Handler priority levels
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+/// Priority
 pub enum Priority {
     /// Lowest priority
     Low = 1,
@@ -65,6 +70,7 @@ pub enum Priority {
 }
 /// Coordinated event structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Coordinatedevent
 pub struct CoordinatedEvent {
     /// Event identifier
     pub event_id: Uuid,
@@ -79,6 +85,7 @@ pub struct CoordinatedEvent {
 }
 /// Types of coordinated events
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of CoordinatedEvent
 pub enum CoordinatedEventType {
     /// WebSocket event
     WebSocket,
@@ -95,6 +102,7 @@ pub enum CoordinatedEventType {
 }
 /// Event processing result with detailed information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Eventprocessingresult
 pub struct EventProcessingResult {
     /// Unique identifier for the event
     pub event_id: Uuid,
@@ -108,6 +116,7 @@ pub struct EventProcessingResult {
     pub error_message: Option<String>,
 }
 impl Default for EventCoordinator {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -535,6 +544,7 @@ impl EventCoordinator {
 }
 
 impl Clone for EventCoordinator {
+    /// Clone
     fn clone(&self) -> Self { Self {
             handlers: self.handlers.clone(),
             event_broadcaster: self.event_broadcaster.clone(),

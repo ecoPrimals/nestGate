@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 /// This configuration enables multicast-based service discovery, allowing
 /// services to automatically locate and communicate with each other on the network.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for NetworkDiscovery
 pub struct NetworkDiscoveryConfig {
     /// Whether network discovery is enabled.
     pub enabled: bool,

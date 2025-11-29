@@ -13,19 +13,30 @@ use super::safe_system_config::SafeSystemConfig;
 
 /// File permissions information
 #[derive(Debug, Clone)]
+/// Filepermissions
 pub struct FilePermissions {
+    /// Mode
     pub mode: u32,
+    /// Uid
     pub uid: u32,
+    /// Gid
     pub gid: u32,
 }
 /// Privilege information
 #[derive(Debug, Clone)]
+/// Privilegeinfo
 pub struct PrivilegeInfo {
+    /// Whether root
     pub is_root: bool,
+    /// User identifier
     pub user_id: u32,
+    /// Group identifier
     pub group_id: u32,
+    /// Can Write System
     pub can_write_system: bool,
+    /// Can Read Proc
     pub can_read_proc: bool,
+    /// In Container
     pub in_container: bool,
 }
 /// **COMPLETELY SAFE SYSTEM OPERATIONS** - Zero unsafe code

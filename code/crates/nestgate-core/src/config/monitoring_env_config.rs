@@ -3,10 +3,12 @@ use std::sync::Arc;
 
 /// Configuration for monitoring module, loaded from environment variables.
 #[derive(Debug, Clone)]
+/// Configuration for MonitoringEnv
 pub struct MonitoringEnvConfig {
     log_rotation_size_bytes: usize,
 }
 
+/// Type alias for Sharedmonitoringenvconfig
 pub type SharedMonitoringEnvConfig = Arc<MonitoringEnvConfig>;
 
 impl MonitoringEnvConfig {
@@ -22,6 +24,7 @@ impl MonitoringEnvConfig {
         }
     }
 
+    /// Log Rotation Size Bytes
     pub fn log_rotation_size_bytes(&self) -> usize {
         self.log_rotation_size_bytes
     }
@@ -34,6 +37,7 @@ impl MonitoringEnvConfig {
 }
 
 impl Default for MonitoringEnvConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self::from_env()
     }

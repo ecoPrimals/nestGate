@@ -25,6 +25,7 @@ impl VectorizedStringOps {
             }
         }
 
+        /// None
         None
     }
 
@@ -38,6 +39,7 @@ impl VectorizedStringOps {
                 return Some(i);
             }
         }
+        /// None
         None
     }
 

@@ -10,6 +10,7 @@ use std::collections::HashMap;
 
 /// Storage configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Storage
 pub struct StorageConfig {
     /// Enable storage
     pub enabled: bool,
@@ -26,6 +27,7 @@ pub struct StorageConfig {
 }
 /// Storage backend configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagebackend
 pub struct StorageBackend {
     /// Backend type
     pub backend_type: String,
@@ -34,6 +36,7 @@ pub struct StorageBackend {
 }
 /// ZFS configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for Zfs
 pub struct ZfsConfig {
     /// Enable ZFS
     pub enabled: bool,
@@ -44,6 +47,7 @@ pub struct ZfsConfig {
 }
 /// ZFS pool configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Zfspool
 pub struct ZfsPool {
     /// Pool name
     pub name: String,
@@ -54,6 +58,7 @@ pub struct ZfsPool {
 }
 /// Cache configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Cache
 pub struct CacheConfig {
     /// Enable caching
     pub enabled: bool,
@@ -79,6 +84,7 @@ pub struct CacheConfig {
 // ==================== SECTION ====================
 
 impl Default for StorageConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -92,6 +98,7 @@ impl Default for StorageConfig {
 }
 
 impl Default for CacheConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,

@@ -3,28 +3,37 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for TestEnvironment
 pub struct TestEnvironmentConfig {
+    /// Infrastructure
     pub infrastructure: TestInfrastructureConfig,
+    /// Resources
     pub resources: TestResourceConfig,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for TestInfrastructure
 pub struct TestInfrastructureConfig {
+    /// Whether this feature is enabled
     pub enabled: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for TestResource
 pub struct TestResourceConfig {
+    /// Whether this feature is enabled
     pub enabled: bool,
 }
 
 impl Default for TestInfrastructureConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self { enabled: true }
     }
 }
 
 impl Default for TestResourceConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self { enabled: true }
     }

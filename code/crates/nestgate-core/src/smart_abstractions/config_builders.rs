@@ -190,6 +190,7 @@ pub struct SmartValidator<T> {
     validators: Vec<ValidatorFn<T>>,
 }
 impl<T: std::fmt::Debug> std::fmt::Debug for SmartValidator<T> ", 
+    /// Fmt
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("SmartValidator")
             .field("value", &self.value)
@@ -424,6 +425,7 @@ pub struct SmartConfigMerger<T> {
 }
 /// Configuration merge strategies
 #[derive(Debug, Clone)]
+/// Mergestrategy
 pub enum MergeStrategy {
     /// Override base values with new values
     Override,

@@ -23,6 +23,7 @@ pub enum FsMonitorError {
 // For now, use standard Default trait
 
 impl From<FsMonitorError> for nestgate_core::NestGateError {
+    /// From
     fn from(err: FsMonitorError) -> Self {
         match err {
             FsMonitorError::WatcherInit { message ) => nestgate_core::NestGateError::internal_error(
@@ -64,6 +65,7 @@ pub use nestgate_core::error::Result;
 
 // From trait implementations for error conversion
 impl From<notify::Error> for FsMonitorError {
+    /// From
     fn from(err: notify::Error) -> Self {
         FsMonitorError::WatcherInit {
             message: format!("Notify error: {e}"),
@@ -72,6 +74,7 @@ impl From<notify::Error> for FsMonitorError {
 }
 
 impl From<std::io::Error> for FsMonitorError {
+    /// From
     fn from(err: std::io::Error) -> Self {
         FsMonitorError::EventProcessing {
             message: format!("IO error: {e}"),
@@ -80,6 +83,7 @@ impl From<std::io::Error> for FsMonitorError {
 }
 
 impl From<nestgate_core::error::NestGateError> for FsMonitorError {
+    /// From
     fn from(err: nestgate_core::error::NestGateError) -> Self {
         FsMonitorError::EventProcessing {
             message: format!("NestGate error: {e}"),

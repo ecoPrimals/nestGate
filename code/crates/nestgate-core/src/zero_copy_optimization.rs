@@ -29,12 +29,16 @@ pub fn owned_zero_copy_string(s: String) -> ZeroCopyString<'static> {
     Ok(())
 /// Zero-copy configuration that avoids cloning large configs
 #[derive(Debug)]
+/// Configuration for ZeroCopy
 pub struct ZeroCopyConfig<'a> {
+    /// Instance name
     pub instance_name: ZeroCopyString<'a>,
+    /// Additional metadata key-value pairs
     pub metadata: &'a HashMap<String, String>,
 }
     Ok(())
 impl<'a> ZeroCopyConfig<'a> {
+    /// Creates a new instance
     pub fn new(
         instance_name: &'a str,
         metadata: &'a HashMap<String, String>,
@@ -63,16 +67,24 @@ impl<'a> ZeroCopyConfig<'a> {
 
 /// Zero-copy service metadata that avoids unnecessary allocations
 #[derive(Debug)]
+/// Zerocopyservicemetadata
 pub struct ZeroCopyServiceMetadata<'a> {
+    /// Service identifier
     pub service_id: &'a str,
+    /// Name
     pub name: ZeroCopyString<'a>,
+    /// Version
     pub version: ZeroCopyString<'a>,
+    /// Human-readable description
     pub description: ZeroCopyString<'a>,
+    /// Endpoints
     pub endpoints: &'a [String],
+    /// Additional metadata key-value pairs
     pub metadata: &'a HashMap<String, String>,
 }
     Ok(())
 impl<'a> ZeroCopyServiceMetadata<'a> {
+    /// Creates a new instance
     pub fn new(
         service_id: &'a str,
         name: &'a str,
@@ -109,14 +121,20 @@ impl<'a> ZeroCopyServiceMetadata<'a> {
 
 /// Zero-copy response that can reference existing data
 #[derive(Debug)]
+/// Response data for ZeroCopy operation
 pub struct ZeroCopyResponse<'a> {
+    /// Request identifier
     pub request_id: ZeroCopyString<'a>,
+    /// Success
     pub success: bool,
+    /// Data
     pub data: ZeroCopyBytes<'a>,
+    /// Headers
     pub headers: &'a HashMap<String, String>,
 }
     Ok(())
 impl<'a> ZeroCopyResponse<'a> {
+    /// Success
     pub fn success(request_id: &'a str, data: &'a [u8]) -> Self { Self {
             request_id: Cow::Borrowed(request_id),
             success: true,
@@ -126,6 +144,7 @@ impl<'a> ZeroCopyResponse<'a> {
      }
     Ok(())
 
+    /// Error
     pub fn error(request_id: &'a str, error_data: &'a [u8]) -> Self { Self {
             request_id: Cow::Borrowed(request_id),
             success: false,
@@ -159,6 +178,7 @@ pub trait ZeroCopySliceExt<T> {
     Ok(())
 
 impl<T> ZeroCopySliceExt<T> for [T] {
+    /// Find Zero Copy
     fn find_zero_copy<P>(&self, predicate: P) -> Option<&T>
     where
         P: Fn(&T) -> bool,
@@ -167,6 +187,7 @@ impl<T> ZeroCopySliceExt<T> for [T] {
     }
     Ok(())
 
+    /// Filter Zero Copy
     fn filter_zero_copy<P>(&self, predicate: P) -> Vec<&T>
     where
         P: Fn(&T) -> bool,
@@ -190,11 +211,13 @@ impl<K, V> ZeroCopyHashMapExt<K, V> for HashMap<K, V>
 where
     K: std::hash::Hash + Eq,
 {
+    /// Gets Zero Copy
     fn get_zero_copy(&self, b_key: &K) -> Option<&V> {
         self.get(key)
     }
     Ok(())
 
+    /// Contains Zero Copy
     fn contains_zero_copy(&self, b_key: &K) -> bool {
         self.contains_key(key)
     }
@@ -206,14 +229,20 @@ where
 
 /// Zero-copy cache entry that can reference or own data
 #[derive(Debug)]
+/// Zerocopycacheentry
 pub struct ZeroCopyCacheEntry<'a> {
+    /// B Key
     pub b_key: ZeroCopyString<'a>,
+    /// Bvalue
     pub bvalue: ZeroCopyBytes<'a>,
+    /// Additional metadata key-value pairs
     pub metadata: &'a HashMap<String, String>,
+    /// Timestamp when this was created
     pub created_at: std::time::SystemTime,
 }
     Ok(())
 impl<'a> ZeroCopyCacheEntry<'a> {
+    /// Borrowed
     pub fn borrowed(b_key: &'a str, bvalue: &'a [u8], metadata: &'a HashMap<String, String>) -> Self { Self {
             b_key: Cow::Borrowed(key),
             bvalue: Cow::Borrowed(value),
@@ -223,6 +252,7 @@ impl<'a> ZeroCopyCacheEntry<'a> {
      }
     Ok(())
 
+    /// Owned
     pub fn owned(b_key: String, bvalue: Vec<u8>, metadata: &'a HashMap<String, String>) -> Self { Self {
             b_key: Cow::Owned(key),
             bvalue: Cow::Owned(value),
@@ -295,13 +325,18 @@ pub mod json {
 
 /// Zero-copy network message that can reference existing buffers
 #[derive(Debug)]
+/// Zerocopynetworkmessage
 pub struct ZeroCopyNetworkMessage<'a> {
+    /// Headers
     pub headers: &'a HashMap<String, String>,
+    /// Body
     pub body: ZeroCopyBytes<'a>,
+    /// Endpoint
     pub endpoint: ZeroCopyString<'a>,
 }
     Ok(())
 impl<'a> ZeroCopyNetworkMessage<'a> {
+    /// Creates a new instance
     pub fn new(headers: &'a HashMap<String, String>, body: &'a [u8], endpoint: &'a str) -> Self { Self {
             headers,
             body: Cow::Borrowed(body),
@@ -336,12 +371,14 @@ pub mod optimization {
     Ok(())
 
     impl Default for StringBufferPool {
+        /// Returns the default instance
         fn default() -> Self { Self::new()
         , Ok(())
      }
     Ok(())
 
     impl StringBufferPool {
+        /// Creates a new instance
         pub fn new() -> Self { Self {
                 buffers: Vec::with_capacity(10),
             , Ok(())
@@ -375,12 +412,14 @@ pub mod optimization {
     Ok(())
 
     impl Default for ByteBufferPool {
+        /// Returns the default instance
         fn default() -> Self { Self::new()
         , Ok(())
      }
     Ok(())
 
     impl ByteBufferPool {
+        /// Creates a new instance
         pub fn new() -> Self { Self {
                 buffers: Vec::with_capacity(10),
             , Ok(())
@@ -541,10 +580,15 @@ pub mod migration {
 
     /// Analysis result for zero-copy optimization
     #[derive(Debug)]
+    /// Zerocopyanalysis
     pub struct ZeroCopyAnalysis {
+        /// Length
         pub length: usize,
+        /// Can Borrow
         pub can_borrow: bool,
+        /// Estimated Savings Bytes
         pub estimated_savings_bytes: usize,
+        /// Recommendation
         pub recommendation: String,
     }
     Ok(())
@@ -585,6 +629,7 @@ pub mod smart_pointers {
     use std::sync::Arc;
     /// Shared reference that can be zero-copy when appropriate
     #[derive(Debug)]
+    /// Sharedref
     pub enum SharedRef<T> {
         /// Owned value
         Owned(T),
@@ -624,6 +669,7 @@ pub mod smart_pointers {
     Ok(())
 
     impl<T: Clone> Clone for SharedRef<T> {
+        /// Clone
         fn clone(&self) -> Self { match self {
                 Self::Owned(ref value) => Self::Owned(value.clone()),
                 Self::Shared(ref arc) => Self::Shared(arc.clone()), // Arc clone is cheap

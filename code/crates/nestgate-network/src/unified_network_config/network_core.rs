@@ -14,6 +14,7 @@ use std::time::Duration;
 /// Network-specific configuration extensions
 /// Domain-specific fields that don't belong in unified base configs
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Networkextensions
 pub struct NetworkExtensions {
     /// VLAN configuration
     pub vlan: NetworkVlanSettings,
@@ -37,10 +38,15 @@ pub struct NetworkExtensions {
 /// CANONICAL MODERNIZATION: Simplified type alias without type parameters
 pub type UnifiedNetworkConfig = crate::types::NetworkConfig;
 
+/// NetworkConfigExt trait
 pub trait NetworkConfigExt {
+    /// Development
     fn development() -> Self;
+    /// Production
     fn production() -> Self;
+    /// High Performance
     fn high_performance() -> Self;
+    /// Testing
     fn testing() -> Self;
 }
 

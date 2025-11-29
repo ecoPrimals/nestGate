@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 
 /// Types of snapshot operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of SnapshotOperation
 pub enum SnapshotOperationType {
     /// Create a new snapshot
     Create,

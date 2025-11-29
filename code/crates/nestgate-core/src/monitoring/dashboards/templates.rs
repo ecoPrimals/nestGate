@@ -78,6 +78,7 @@ impl DashboardTemplates {
 }
 
 impl Default for DashboardTemplates {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

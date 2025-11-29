@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 /// Provides comprehensive hardware details for system analysis,
 /// performance planning, and compatibility assessment.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Hardwareinfo
 pub struct HardwareInfo {
     /// Number of CPU cores available to the system
     pub cpu_cores: u32,

@@ -10,6 +10,7 @@ use std::ops::Deref;
 /// - Owned data (when copying is necessary)
 /// - Shared data (reference-counted for multiple readers)
 #[derive(Debug, Clone)]
+/// Zerocopybuffer
 pub enum ZeroCopyBuffer<'a> {
     /// Borrowed data - no allocation, points to caller's memory
     Borrowed(&'a [u8]),
@@ -69,14 +70,17 @@ impl<'a> ZeroCopyBuffer<'a> {
 }
 
 impl<'a> Deref for ZeroCopyBuffer<'a> {
+    /// Type alias for Target
     type Target = [u8];
 
+    /// Deref
     fn deref(&self) -> &Self::Target {
         self.as_slice()
     }
 }
 
 impl<'a> AsRef<[u8]> for ZeroCopyBuffer<'a> {
+    /// Returns as Ref
     fn as_ref(&self) -> &[u8] {
         self.as_slice()
     }
@@ -84,6 +88,7 @@ impl<'a> AsRef<[u8]> for ZeroCopyBuffer<'a> {
 
 /// Advanced zero-copy buffer with memory pool integration
 #[derive(Debug)]
+/// Advancedzerocopybuffer
 pub enum AdvancedZeroCopyBuffer<'a> {
     /// Standard zero-copy buffer
     Standard(ZeroCopyBuffer<'a>),
@@ -95,6 +100,7 @@ pub enum AdvancedZeroCopyBuffer<'a> {
 
 /// Pooled buffer for efficient memory reuse
 #[derive(Debug)]
+/// Pooledbuffer
 pub struct PooledBuffer {
     data: Vec<u8>,
     capacity: usize,
@@ -148,8 +154,10 @@ impl PooledBuffer {
 }
 
 impl Deref for PooledBuffer {
+    /// Type alias for Target
     type Target = [u8];
 
+    /// Deref
     fn deref(&self) -> &Self::Target {
         &self.data
     }
@@ -157,9 +165,14 @@ impl Deref for PooledBuffer {
 
 /// Access pattern hint for optimization
 #[derive(Debug, Clone, Copy)]
+/// Accesspattern
 pub enum AccessPattern {
+    /// Sequential
     Sequential,
+    /// Random
     Random,
+    /// Writeonce
     WriteOnce,
+    /// Readmany
     ReadMany,
 } 

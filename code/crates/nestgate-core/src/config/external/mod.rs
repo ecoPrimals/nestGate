@@ -48,6 +48,7 @@ pub use services_config::{ServicesConfig, SharedServicesConfig};
 
 /// Complete external configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for External
 pub struct ExternalConfig {
     /// Network configuration (ports, IPs)
     pub network: NetworkConfig,
@@ -91,6 +92,7 @@ impl ExternalConfig {
 }
 
 impl Default for ExternalConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self::default_dev()
     }

@@ -6,6 +6,7 @@ use crate::Result;
 
 /// Tracing configuration
 #[derive(Debug, Clone)]
+/// Configuration for Tracing
 pub struct TracingConfig {
     /// Log level filter
     pub level: String,
@@ -19,6 +20,7 @@ pub struct TracingConfig {
     pub environment: String,
 }
 impl Default for TracingConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             level: "info".to_string(),

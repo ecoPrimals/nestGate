@@ -35,6 +35,7 @@ mod adapter_error_creation_tests {
 mod capability_query_tests {
     use crate::error::{NestGateError, Result};
 
+    /// Query Capability
     fn query_capability(name: &str, available: bool) -> Result<String> {
         if available && !name.is_empty() {
             Ok(format!("capability-{}", name))
@@ -69,6 +70,7 @@ mod adapter_routing_tests {
 
     #[test]
     fn test_route_to_primal() {
+        /// Route
         fn route(primal: &str, available: bool) -> Result<String> {
             if available {
                 Ok(format!("routed-to-{}", primal))
@@ -83,6 +85,7 @@ mod adapter_routing_tests {
 
     #[test]
     fn test_fallback_routing() {
+        /// Primary Route
         fn primary_route() -> Result<String> {
             Err(NestGateError::internal_error(
                 "Primary unavailable",
@@ -90,6 +93,7 @@ mod adapter_routing_tests {
             ))
         }
 
+        /// Secondary Route
         fn secondary_route() -> Result<String> {
             Ok("secondary-endpoint".to_string())
         }
@@ -139,6 +143,7 @@ mod adapter_discovery_tests {
 
     #[test]
     fn test_discover_capabilities() {
+        /// Discover
         fn discover() -> Result<Vec<String>> {
             Ok(vec![
                 "storage".to_string(),
@@ -154,6 +159,7 @@ mod adapter_discovery_tests {
 
     #[test]
     fn test_discovery_failure() {
+        /// Discover With Failure
         fn discover_with_failure() -> Result<Vec<String>> {
             Err(NestGateError::internal_error("Discovery failed", "adapter"))
         }
@@ -163,6 +169,7 @@ mod adapter_discovery_tests {
 
     #[test]
     fn test_partial_discovery() {
+        /// Discover Partial
         fn discover_partial(fail_at: Option<usize>) -> Result<Vec<String>> {
             let mut results = vec![];
             for i in 0..3 {
@@ -295,10 +302,12 @@ mod adapter_integration_tests {
 
     #[test]
     fn test_end_to_end_query() {
+        /// Discover Capability
         fn discover_capability() -> Result<String> {
             Ok("raw-capability".to_string())
         }
 
+        /// Validates  Capability
         fn validate_capability(cap: String) -> Result<String> {
             if cap.contains("capability") {
                 Ok(cap)
@@ -307,6 +316,7 @@ mod adapter_integration_tests {
             }
         }
 
+        /// Route Capability
         fn route_capability(cap: String) -> Result<String> {
             Ok(format!("routed-{}", cap))
         }
@@ -321,6 +331,7 @@ mod adapter_integration_tests {
 
     #[test]
     fn test_batch_capability_query() {
+        /// Query Batch
         fn query_batch(capabilities: Vec<String>) -> Result<HashMap<String, String>> {
             let mut results = HashMap::new();
             for cap in capabilities {
@@ -340,9 +351,13 @@ mod adapter_integration_tests {
     fn test_adapter_lifecycle() {
         #[allow(dead_code)]
         enum AdapterState {
+            /// Uninitialized
             Uninitialized,
+            /// Initializing
             Initializing,
+            /// Ready
             Ready,
+            /// Error
             Error,
         }
 

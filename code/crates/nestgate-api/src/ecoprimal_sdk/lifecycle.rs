@@ -10,6 +10,7 @@ pub type LifecycleCallbacks = std::collections::HashMap<
 >;
 /// Advanced primal lifecycle states for 100% completion
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Primallifecyclestate
 pub enum PrimalLifecycleState {
     /// Primal is initializing
     Initializing,

@@ -11,6 +11,7 @@ pub mod network_defaults_config;
 pub mod network_hardcoded; // NEW: Centralized network constants (Nov 6, 2025)
 pub mod port_defaults;
 pub mod port_defaults_config;
+pub mod ports; // ✅ NEW (Nov 28, 2025): Centralized port configuration with env var support
 pub mod shared;
 pub mod sovereignty_helpers;
 pub mod sovereignty_helpers_config;

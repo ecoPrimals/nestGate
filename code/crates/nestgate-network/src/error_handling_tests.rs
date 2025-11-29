@@ -201,8 +201,11 @@ mod network_error_tests {
     fn test_circuit_breaker_state_transitions() {
         #[derive(Debug, PartialEq)]
         enum CircuitState {
+            /// Closed
             Closed,
+            /// Open
             Open,
+            /// Halfopen
             HalfOpen,
         }
 

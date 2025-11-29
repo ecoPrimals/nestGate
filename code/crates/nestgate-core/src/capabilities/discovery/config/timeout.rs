@@ -10,6 +10,8 @@
 //
 // **EXTRACTED FROM**: unified_dynamic_config.rs timeout-related sections
 
+//! Timeout module
+
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
@@ -17,6 +19,7 @@ use std::time::Duration;
 
 /// Timeout discovery configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Timeoutdiscoverysettings
 pub struct TimeoutDiscoverySettings {
     /// Enable dynamic timeout discovery
     pub enable_dynamic_timeouts: bool,
@@ -32,6 +35,7 @@ pub struct TimeoutDiscoverySettings {
     pub adjustment_factor: f64,
 }
 impl Default for TimeoutDiscoverySettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enable_dynamic_timeouts: true,

@@ -3,15 +3,22 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for Authorization
 pub struct AuthorizationConfig {
+    /// Access Control
     pub access_control: AccessControlConfig,
+    /// Roles
     pub roles: Vec<RoleConfig>,
+    /// Permissions
     pub permissions: Vec<PermissionConfig>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for AccessControl
 pub struct AccessControlConfig {
+    /// Whether this feature is enabled
     pub enabled: bool,
+    /// Default Policy
     pub default_policy: String,
 }
 
@@ -49,30 +56,43 @@ impl AccessControlConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Role
 pub struct RoleConfig {
+    /// Name
     pub name: String,
+    /// Permissions
     pub permissions: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Permission
 pub struct PermissionConfig {
+    /// Name
     pub name: String,
+    /// Human-readable description
     pub description: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Resource
 pub struct ResourceConfig {
+    /// Name
     pub name: String,
+    /// Type name
     pub type_name: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Policy
 pub struct PolicyConfig {
+    /// Name
     pub name: String,
+    /// Rules
     pub rules: Vec<String>,
 }
 
 impl Default for AccessControlConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -98,6 +118,7 @@ impl AuthorizationConfig {
     pub fn merge(self, _other: Self) -> Self {
         self
     }
+    /// Validates data
     pub fn validate(&self) -> crate::Result<()> {
         Ok(())
     }

@@ -11,6 +11,7 @@ pub use crate::canonical_modernization::canonical_constants::performance::CACHE_
 /// Ensures data structure is aligned to cache line boundaries
 /// PERFORMANCE: 20-40% improvement for frequently accessed data
 #[repr(align(64))] // Align to 64-byte cache line
+/// Cachealigned
 pub struct CacheAligned<T> {
     data: T,
 }
@@ -42,6 +43,7 @@ impl<T> CacheAligned<T> {
 /// Prevents false sharing by padding to cache line size
 /// PERFORMANCE: Eliminates cache line bouncing in multi-threaded scenarios
 #[repr(C)]
+/// Cachepadded
 pub struct CachePadded<T> {
     data: T,
     // Use fixed padding for now - const generics with size_of is unstable

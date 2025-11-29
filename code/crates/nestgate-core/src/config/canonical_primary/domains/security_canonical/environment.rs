@@ -3,32 +3,47 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for SecurityEnvironment
 pub struct SecurityEnvironmentConfig {
+    /// Development
     pub development: EnvironmentSecuritySettings,
+    /// Staging
     pub staging: EnvironmentSecuritySettings,
+    /// Production
     pub production: EnvironmentSecuritySettings,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Environmentsecuritysettings
 pub struct EnvironmentSecuritySettings {
+    /// Security Level
     pub security_level: String,
+    /// Deployment
     pub deployment: DeploymentSecurityConfig,
+    /// Runtime
     pub runtime: RuntimeSecurityConfig,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for DeploymentSecurity
 pub struct DeploymentSecurityConfig {
+    /// Secure Deployment
     pub secure_deployment: bool,
+    /// Image Scanning
     pub image_scanning: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for RuntimeSecurity
 pub struct RuntimeSecurityConfig {
+    /// Sandboxing
     pub sandboxing: bool,
+    /// Privilege Escalation
     pub privilege_escalation: bool,
 }
 
 impl Default for SecurityEnvironmentConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             development: EnvironmentSecuritySettings::development(),
@@ -102,6 +117,7 @@ impl SecurityEnvironmentConfig {
     pub fn merge(self, _other: Self) -> Self {
         self
     }
+    /// Validates data
     pub fn validate(&self) -> crate::Result<()> {
         Ok(())
     }

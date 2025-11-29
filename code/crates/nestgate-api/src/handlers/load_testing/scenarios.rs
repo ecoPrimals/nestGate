@@ -12,6 +12,7 @@ pub struct ScenarioRunner {
 impl ScenarioRunner {
     /// Create a new load test scenario with the given configuration
     #[must_use]
+    /// Fn
     pub const fn new(config: LoadTestConfig) -> Self {
         Self { config }
     }
@@ -25,6 +26,7 @@ impl ScenarioRunner {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     #[must_use]
+    /// Fn
     pub const fn run(&self) -> Result<TestResult> {
         // Implementation would go here
         Ok(TestResult {
@@ -42,6 +44,7 @@ impl ScenarioRunner {
 ///
 /// Results and metrics from a completed load test execution.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Testresult
 pub struct TestResult {
     /// Whether the test completed successfully
     pub success: bool,

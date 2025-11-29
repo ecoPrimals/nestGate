@@ -12,6 +12,7 @@ use uuid::Uuid;
 
 // Type aliases to reduce complexity
 type ServiceMap = Arc<RwLock<HashMap<Uuid, UniversalServiceRegistration>>>;
+/// Type alias for CapabilityIndexMap
 type CapabilityIndexMap = Arc<RwLock<HashMap<ServiceCapability, Vec<Uuid>>>>;
 
 /// Universal service registry trait - capability-based service discovery
@@ -57,6 +58,7 @@ pub trait UniversalServiceRegistry: Send + Sync {
 
 /// In-memory implementation of the Universal Service Registry
 #[derive(Debug)]
+/// Inmemoryserviceregistry
 pub struct InMemoryServiceRegistry {
     services: ServiceMap,
     capability_index: CapabilityIndexMap,
@@ -73,12 +75,14 @@ impl InMemoryServiceRegistry {
 }
 
 impl Default for InMemoryServiceRegistry {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
 }
 
 impl UniversalServiceRegistry for InMemoryServiceRegistry {
+    /// Register Service
     async fn register_service(
         &self,
         registration: UniversalServiceRegistration,
@@ -110,6 +114,7 @@ impl UniversalServiceRegistry for InMemoryServiceRegistry {
         Ok(handle)
     }
 
+    /// Discover By Capabilities
     async fn discover_by_capabilities(
         &self,
         capabilities: Vec<ServiceCapability>,
@@ -149,11 +154,13 @@ impl UniversalServiceRegistry for InMemoryServiceRegistry {
         Ok(matching_services)
     }
 
+    /// Discover By Role
     async fn discover_by_role(&self, role: ServiceRole) -> Result<Vec<ServiceInfo>> {
         self.discover_by_capabilities(role.required_capabilities)
             .await
     }
 
+    /// Find Optimal Service
     async fn find_optimal_service(
         &self,
         requirements: ServiceRequirements,
@@ -242,6 +249,7 @@ impl UniversalServiceRegistry for InMemoryServiceRegistry {
             })
     }
 
+    /// Updates  Capabilities
     async fn update_capabilities(
         &self,
         service_id: Uuid,
@@ -259,6 +267,7 @@ impl UniversalServiceRegistry for InMemoryServiceRegistry {
         }
     }
 
+    /// Deregister Service
     async fn deregister_service(&self, service_id: Uuid) -> Result<()> {
         let mut services = self.services.write().await;
         services.remove(&service_id);

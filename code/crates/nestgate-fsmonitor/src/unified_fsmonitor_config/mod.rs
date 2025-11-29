@@ -1,3 +1,5 @@
+//! Unified Fsmonitor Config module
+
 use nestgate_core::config::canonical_primary::NestGateCanonicalConfig as StandardDomainConfig;
 use serde::{Deserialize, Serialize};
 

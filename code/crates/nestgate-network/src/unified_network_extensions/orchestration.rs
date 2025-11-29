@@ -8,6 +8,7 @@ use std::time::Duration;
 /// Network orchestration and service discovery settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[allow(deprecated)] // Using OrchestrationRetryConfig during transition period
+/// Networkorchestrationsettings
 pub struct NetworkOrchestrationSettings {
     /// Enable universal orchestration discovery
     pub enable_orchestration: bool,
@@ -46,6 +47,7 @@ pub struct NetworkOrchestrationSettings {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for OrchestrationRetry
 pub struct OrchestrationRetryConfig {
     /// Maximum retry attempts
     pub max_attempts: u32,
@@ -60,6 +62,7 @@ pub struct OrchestrationRetryConfig {
 }
 /// Service registration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Serviceregistrationsettings
 pub struct ServiceRegistrationSettings {
     /// Auto-register services
     pub auto_register: bool,
@@ -71,6 +74,7 @@ pub struct ServiceRegistrationSettings {
     pub service_metadata: HashMap<String, String>,
 }
 impl Default for NetworkOrchestrationSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enable_orchestration: true,
@@ -87,6 +91,7 @@ impl Default for NetworkOrchestrationSettings {
 
 #[allow(deprecated)] // Deprecated struct with migration path documented
 impl Default for OrchestrationRetryConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             max_attempts: 3,
@@ -99,6 +104,7 @@ impl Default for OrchestrationRetryConfig {
 }
 
 impl Default for ServiceRegistrationSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             auto_register: true,
@@ -118,6 +124,7 @@ impl Default for ServiceRegistrationSettings {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Orchestrationretryconfigcanonical
 pub type OrchestrationRetryConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 

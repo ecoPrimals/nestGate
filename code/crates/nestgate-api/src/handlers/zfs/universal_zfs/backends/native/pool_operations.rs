@@ -1,6 +1,8 @@
 //
 // Contains all pool-related operations for the native ZFS backend.
 
+//! Pool Operations module
+
 use std::collections::HashMap;
 use std::process::Command;
 // Removed unused tracing import

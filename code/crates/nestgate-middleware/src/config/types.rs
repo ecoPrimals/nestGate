@@ -94,6 +94,7 @@ pub enum HttpResponseFormat {
 }
 // Default implementations
 impl Default for MiddlewareConfiguration {
+    /// Returns the default instance
     fn default() -> Self { Self {
             settings: HashMap::new(),
             enabled: true,

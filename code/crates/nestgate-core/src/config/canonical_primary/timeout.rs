@@ -10,6 +10,7 @@ use std::time::Duration;
 
 /// **THE** canonical timeout configuration - eliminates 150+ duplicate timeout fields
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Timeout
 pub struct TimeoutConfig {
     /// Default timeout for general operations
     pub default_timeout: Duration,
@@ -30,6 +31,7 @@ pub struct TimeoutConfig {
 }
 
 impl Default for TimeoutConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             default_timeout: Duration::from_secs(30),

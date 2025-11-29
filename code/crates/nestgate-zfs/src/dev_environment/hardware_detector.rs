@@ -7,6 +7,7 @@ use tracing::{debug, info, warn};
 
 /// Hardware capabilities detected in the current environment
 #[derive(Debug, Clone, PartialEq, Eq)]
+/// Hardwarecapabilities
 pub enum HardwareCapabilities {
     /// Native ZFS is available with pools
     NativeZfs,

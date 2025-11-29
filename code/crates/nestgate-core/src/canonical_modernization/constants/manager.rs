@@ -12,6 +12,7 @@ use super::{network, storage};
 /// **CONSTANTS CONSOLIDATION MANAGER**
 /// Handles systematic migration of scattered constants to canonical system
 #[derive(Debug)]
+/// Manager for ConstantsConsolidation operations
 pub struct ConstantsConsolidationManager {
     /// Consolidation statistics
     pub stats: ConsolidationStats,
@@ -236,6 +237,7 @@ impl ConstantsConsolidationManager {
 }
 
 impl Default for ConstantsConsolidationManager {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

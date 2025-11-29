@@ -318,6 +318,7 @@ mod error_utilities_tests {
 
     #[test]
     fn test_error_chain_with_constructors() {
+        /// Operation
         fn operation() -> Result<String> {
             Err(storage_error("Initial error"))
         }

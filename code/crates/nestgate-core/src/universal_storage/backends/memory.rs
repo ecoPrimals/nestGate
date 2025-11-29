@@ -11,6 +11,7 @@ use tracing::{debug, error, info};
 
 /// **ZERO-COST**: Memory storage backend with native async
 #[derive(Debug, Clone)]
+/// Memorystoragebackend
 pub struct MemoryStorageBackend {
     name: String,
     data: Arc<RwLock<HashMap<String, Vec<u8>>>>,
@@ -55,6 +56,7 @@ impl MemoryStorageBackend {
 }
 
 impl Default for MemoryStorageBackend {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new("default-memory")
     }
@@ -62,6 +64,7 @@ impl Default for MemoryStorageBackend {
 
 /// **CANONICAL MODERNIZATION**: Native async implementation without async_trait
 impl StorageBackend for MemoryStorageBackend {
+    /// Name
     fn name(&self) -> &str {
         &self.name
     }
@@ -200,6 +203,7 @@ impl StorageBackend for MemoryStorageBackend {
         }
     }
 
+    /// List
     fn list(&self, prefix: &str) -> impl std::future::Future<Output = Result<Vec<String>>> + Send {
         let prefix = prefix.to_string();
         let data = Arc::clone(&self.data);

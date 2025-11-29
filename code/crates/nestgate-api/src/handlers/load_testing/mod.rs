@@ -23,6 +23,7 @@ pub mod scenarios;
 ///
 /// Historical record of a load test execution.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Loadtesthistoryentry
 pub struct LoadTestHistoryEntry {
     /// Unique test identifier
     pub test_id: String,
@@ -40,6 +41,7 @@ pub struct LoadTestHistoryEntry {
 ///
 /// Performance baseline for comparison with load test results.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performancebaseline
 pub struct PerformanceBaseline {
     /// Baseline identifier
     pub baseline_id: String,

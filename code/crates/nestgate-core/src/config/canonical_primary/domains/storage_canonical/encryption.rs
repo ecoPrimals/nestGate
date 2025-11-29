@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 /// Provides comprehensive encryption settings including key management,
 /// data encryption, transit encryption, and algorithm selection.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for StorageEncryption
 pub struct StorageEncryptionConfig {
     /// General encryption settings.
     pub encryption: EncryptionConfig,
@@ -24,6 +25,7 @@ pub struct StorageEncryptionConfig {
 ///
 /// Controls whether encryption features are enabled globally.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Encryption
 pub struct EncryptionConfig {
     /// Whether encryption is enabled (default: false for development).
     pub enabled: bool,
@@ -33,6 +35,7 @@ pub struct EncryptionConfig {
 ///
 /// Defines where and how encryption keys are stored and managed.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for KeyManagementStorage
 pub struct KeyManagementStorageConfig {
     /// Key management provider (e.g., "local", "vault", "kms").
     pub provider: String,
@@ -42,6 +45,7 @@ pub struct KeyManagementStorageConfig {
 ///
 /// Controls encryption of stored data on disk.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for DataEncryption
 pub struct DataEncryptionConfig {
     /// Whether data-at-rest encryption is enabled.
     pub enabled: bool,
@@ -51,6 +55,7 @@ pub struct DataEncryptionConfig {
 ///
 /// Controls encryption of data during network transmission.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for TransitEncryption
 pub struct TransitEncryptionConfig {
     /// Whether transit encryption (TLS/SSL) is enabled (default: true).
     pub enabled: bool,
@@ -60,12 +65,14 @@ pub struct TransitEncryptionConfig {
 ///
 /// Specifies the cryptographic algorithm used for encryption.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for EncryptionAlgorithmStorage
 pub struct EncryptionAlgorithmStorageConfig {
     /// Encryption algorithm name (default: "AES-256-GCM").
     pub algorithm: String,
 }
 
 impl Default for StorageEncryptionConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             encryption: EncryptionConfig { enabled: false },

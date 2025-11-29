@@ -1,3 +1,5 @@
+//! Cow Manager Zero Cost module
+
 use crate::error::NestGateError;
 use std::collections::HashMap;
 //
@@ -17,9 +19,12 @@ use tracing::info;
 
 /// Zero-cost COW operation tracking
 #[derive(Debug, Clone)]
+/// Zerocostcowoperation
 pub struct ZeroCostCowOperation {
     pub operation_id: String,
+    /// Snapshot identifier
     pub snapshot_id: String,
+    /// Timestamp
     pub timestamp: u64,
 }
 /// Zero-cost COW manager with compile-time backend specialization
@@ -33,7 +38,6 @@ where
     pool_handle: String,
     /// Compile-time operation tracking
     active_operations: [Option<ZeroCostCowOperation>; MAX_OPERATIONS],
-    /// Operation counter for array indexing
     operation_counter: usize,
     /// Zero-cost configuration
     config: ZeroCostCowConfig,
@@ -157,8 +161,11 @@ where
 
 /// Zero-cost COW statistics
 pub struct ZeroCostCowStatistics {
+    /// Max Operations
     pub max_operations: usize,
+    /// Current Operations
     pub current_operations: usize,
+    /// Pool Handle
     pub pool_handle: &'static str,
 }
 // ==================== SECTION ====================
@@ -280,6 +287,7 @@ pub const MIGRATION_GUIDE: &str = r"
 ```rust
 use std::sync::Arc;
 
+/// Manager for Cow operations
 pub struct CowManager {
     _backend: Arc<dyn CanonicalStorageBackend>,
     // ... other fields
@@ -302,6 +310,7 @@ impl CowManager {
 ```rust
 use crate::zero_cost_migrations::ZeroCostStorageBackend;
 
+/// Manager for ZeroCostCow operations
 pub struct ZeroCostCowManager<Backend>
 where
     Backend: ZeroCostStorageBackend,
@@ -314,6 +323,7 @@ impl<Backend> ZeroCostCowManager<Backend>
 where
     Backend: ZeroCostStorageBackend,
 {
+    /// Creates a new instance
     pub fn new(backend: Backend) -> Self {
         Self { backend }
     }
@@ -343,5 +353,7 @@ where
 
 /// Common zero-cost COW manager configurations
 pub type StandardZeroCostCowManager<Backend> = ZeroCostCowManager<Backend, 1000>;
+/// Type alias for Highperformancezerocostcowmanager
 pub type HighPerformanceZeroCostCowManager<Backend> = ZeroCostCowManager<Backend, 10000>;
+/// Type alias for Developmentzerocostcowmanager
 pub type DevelopmentZeroCostCowManager<Backend> = ZeroCostCowManager<Backend, 100>; 

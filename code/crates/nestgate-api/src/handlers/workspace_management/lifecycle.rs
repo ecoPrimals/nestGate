@@ -28,6 +28,7 @@ use tracing::{debug, error, info, warn};
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for Backup
 pub struct BackupConfig {
     /// Backup name/identifier
     pub backup_name: String,
@@ -58,6 +59,7 @@ pub struct BackupConfig {
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for Restore
 pub struct RestoreConfig {
     /// Backup to restore from
     pub backup_name: String,
@@ -86,6 +88,7 @@ pub struct RestoreConfig {
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for Migration
 pub struct MigrationConfig {
     /// Target pool for migration
     pub target_pool: String,
@@ -99,6 +102,7 @@ pub struct MigrationConfig {
 
 /// Migration strategy options
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Migrationstrategy
 pub enum MigrationStrategy {
     /// Copy data to new location, keep original
     Copy,
@@ -549,6 +553,7 @@ pub fn list_workspace_backups(
 
 // Private helper functions
 
+/// Gets Workspace Info
 async fn get_workspace_info(dataset_name: &str) -> Result<Value, ()> {
     let info_result = Command::new("zfs")
         .args([
@@ -582,6 +587,7 @@ async fn get_workspace_info(dataset_name: &str) -> Result<Value, ()> {
     }
 }
 
+/// Perform Copy Migration
 async fn perform_copy_migration(
     snapshot: &str,
     target_dataset: &str,
@@ -674,6 +680,7 @@ async fn perform_copy_migration(
     }
 }
 
+/// Perform Move Migration
 async fn perform_move_migration(
     snapshot: &str,
     target_dataset: &str,
@@ -737,6 +744,7 @@ async fn perform_move_migration(
     }
 }
 
+/// Perform Replicate Migration
 async fn perform_replicate_migration(
     snapshot: &str,
     target_dataset: &str,
@@ -771,6 +779,7 @@ async fn perform_replicate_migration(
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Restoreconfigcanonical
 pub type RestoreConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using RestoreConfig (the deprecated struct) for now.
@@ -787,6 +796,7 @@ pub type RestoreConfigCanonical = nestgate_core::config::canonical_primary::doma
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Backupconfigcanonical
 pub type BackupConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using BackupConfig (the deprecated struct) for now.
@@ -803,6 +813,7 @@ pub type BackupConfigCanonical = nestgate_core::config::canonical_primary::domai
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Migrationconfigcanonical
 pub type MigrationConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using MigrationConfig (the deprecated struct) for now.

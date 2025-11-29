@@ -76,6 +76,7 @@ use crate::error::Result;
 
 /// Filesystem backend errors
 #[derive(Debug, Error)]
+/// Errors that can occur during Filesystem operations
 pub enum FilesystemError {
     /// I/O error
     #[error("I/O error: {0}")]
@@ -115,6 +116,7 @@ pub enum FilesystemError {
 
 /// File metadata tracked by the backend
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Filemetadata
 pub struct FileMetadata {
     /// Logical file path (relative to backend root)
     pub path: String,
@@ -189,6 +191,7 @@ impl FileMetadata {
 
 /// Metadata index for tracking all files
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Metadataindex
 pub struct MetadataIndex {
     /// Map of logical path to metadata
     pub files: HashMap<String, FileMetadata>,
@@ -256,6 +259,7 @@ impl MetadataIndex {
 }
 
 impl Default for MetadataIndex {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -263,6 +267,7 @@ impl Default for MetadataIndex {
 
 /// Configuration for filesystem backend
 #[derive(Debug, Clone)]
+/// Configuration for Filesystem
 pub struct FilesystemConfig {
     /// Root directory for storage
     pub root_path: PathBuf,
@@ -284,6 +289,7 @@ pub struct FilesystemConfig {
 }
 
 impl Default for FilesystemConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             root_path: PathBuf::from("./storage"),
@@ -631,6 +637,7 @@ impl FilesystemBackend {
 
 /// Storage statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagestats
 pub struct StorageStats {
     /// Number of files
     pub file_count: usize,

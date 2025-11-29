@@ -24,6 +24,7 @@ use tokio::sync::RwLock;
 
 // ==================== HELPER FUNCTIONS ====================
 
+/// Creates  Test Pool Info
 fn create_test_pool_info(name: &str) -> ZeroCostPoolInfo {
     let mut properties = HashMap::new();
     properties.insert("health".to_string(), "ONLINE".to_string());
@@ -40,6 +41,7 @@ fn create_test_pool_info(name: &str) -> ZeroCostPoolInfo {
     }
 }
 
+/// Creates  Test Dataset Info
 fn create_test_dataset_info(name: &str, pool: &str, tier: StorageTier) -> ZeroCostDatasetInfo {
     ZeroCostDatasetInfo {
         name: name.to_string(),
@@ -53,6 +55,7 @@ fn create_test_dataset_info(name: &str, pool: &str, tier: StorageTier) -> ZeroCo
     }
 }
 
+/// Creates  Test Snapshot Info
 fn create_test_snapshot_info(name: &str, dataset: &str) -> ZeroCostSnapshotInfo {
     ZeroCostSnapshotInfo {
         name: name.to_string(),

@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 /// Orchestration capability types that can be discovered
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+/// Types of OrchestrationCapability
 pub enum OrchestrationCapabilityType {
     /// Service mesh for microservices communication
     ServiceMesh,
@@ -28,6 +29,7 @@ pub enum OrchestrationCapabilityType {
 }
 /// Orchestration capability metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Orchestrationcapabilityinfo
 pub struct OrchestrationCapabilityInfo {
     /// Type of orchestration capability provided
     pub capability_type: OrchestrationCapabilityType,
@@ -42,6 +44,7 @@ pub struct OrchestrationCapabilityInfo {
 }
 /// Orchestration capability discovery manager
 #[derive(Debug)]
+/// Orchestrationcapabilitydiscovery
 pub struct OrchestrationCapabilityDiscovery {
     discovered_capabilities:
         tokio::sync::RwLock<HashMap<OrchestrationCapabilityType, OrchestrationCapabilityInfo>>,
@@ -160,6 +163,7 @@ impl OrchestrationCapabilityDiscovery {
 }
 
 impl Default for OrchestrationCapabilityDiscovery {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

@@ -2,6 +2,8 @@
 // Zero-copy parsing utilities for ZFS command output.
 // Single responsibility: Parse ZFS command output into structured data.
 
+//! Parsing module
+
 use std::collections::HashMap;
 use std::time::SystemTime;
 
@@ -217,6 +219,7 @@ pub fn parse_snapshot_list(output: &str) -> UniversalZfsResult<Vec<SnapshotInfo>
 ///
 /// Represents a storage device (vdev) in a ZFS pool with its health metrics.
 #[derive(Debug, Clone)]
+/// Deviceinfo
 pub struct DeviceInfo {
     /// Device name (e.g., "sda", "mirror-0", "tank")
     pub name: String,

@@ -14,15 +14,18 @@ use std::collections::HashMap;
 
 /// Placeholder ZFS config for production builds
 #[derive(Debug, Clone, Default)]
+/// Configuration for Zfs
 pub struct ZfsConfig;
 
 /// Placeholder `ProductionZfsManager` for production builds
 #[derive(Debug, Clone)]
+/// Manager for ProductionZfs operations
 pub struct ProductionZfsManager;
 
 impl ProductionZfsManager {
     /// Create a new placeholder manager (matches stub API)
     #[must_use]
+    /// Fn
     pub const fn new(_config: ZfsConfig) -> Self {
         Self
     }
@@ -33,11 +36,13 @@ pub type ZfsManager = ProductionZfsManager;
 
 /// Placeholder Zero-cost ZFS operations for production builds
 #[derive(Debug, Clone, Default)]
+/// Zerocostzfsoperations
 pub struct ZeroCostZfsOperations;
 
 impl ZeroCostZfsOperations {
     /// Create a new placeholder zero-cost operations
     #[must_use]
+    /// Fn
     pub const fn new() -> Self {
         Self
     }
@@ -47,17 +52,20 @@ impl ZeroCostZfsOperations {
 ///
 /// This exists solely to allow compilation. All methods return "not implemented".
 #[derive(Debug, Clone)]
+/// Zfshandlerimpl
 pub struct ZfsHandlerImpl;
 
 impl ZfsHandlerImpl {
     /// Create a new placeholder handler
     #[must_use]
+    /// Fn
     pub const fn new() -> Self {
         Self
     }
 }
 
 impl Default for ZfsHandlerImpl {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

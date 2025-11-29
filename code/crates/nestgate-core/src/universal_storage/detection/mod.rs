@@ -24,6 +24,7 @@ use tokio::process::Command;
 
 /// Available storage backend types
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+/// Types of StorageBackend
 pub enum StorageBackendType {
     /// ZFS backend (requires system ZFS installation)
     Zfs,
@@ -57,6 +58,7 @@ impl StorageBackendType {
 
 /// Storage backend capabilities
 #[derive(Debug, Clone)]
+/// Backendcapabilities
 pub struct BackendCapabilities {
     /// Backend type
     pub backend_type: StorageBackendType,

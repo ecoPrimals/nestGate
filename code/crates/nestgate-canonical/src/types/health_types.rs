@@ -7,22 +7,32 @@ use std::time::Duration;
 
 /// Canonical Service Health Status
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Servicehealth
 pub struct ServiceHealth {
+    /// Status
     pub status: HealthStatus,
+    /// Uptime
     pub uptime: Duration,
+    /// Last Check
     pub last_check: std::time::SystemTime,
 }
 
 /// Health status enumeration
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+/// Status values for Health
 pub enum HealthStatus {
+    /// Healthy
     Healthy,
+    /// Degraded
     Degraded,
+    /// Unhealthy
     Unhealthy,
+    /// Unknown
     Unknown,
 }
 
 impl Default for ServiceHealth {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             status: HealthStatus::Unknown,
@@ -58,15 +68,22 @@ impl ServiceHealth {
 
 /// Canonical Service Metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Servicemetrics
 pub struct ServiceMetrics {
+    /// Requests Per Second
     pub requests_per_second: f64,
+    /// Average Latency Ms
     pub average_latency_ms: f64,
+    /// Error Rate
     pub error_rate: f64,
+    /// Cpu Usage
     pub cpu_usage: f64,
+    /// Memory Usage in megabytes
     pub memory_usage_mb: u64,
 }
 
 impl Default for ServiceMetrics {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             requests_per_second: 0.0,

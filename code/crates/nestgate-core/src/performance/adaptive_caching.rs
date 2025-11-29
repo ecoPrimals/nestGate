@@ -1,3 +1,5 @@
+//! Adaptive Caching module
+
 use std::collections::HashMap;
 //
 // Intelligent caching with adaptive algorithms and workload-aware optimization.
@@ -29,15 +31,23 @@ type CacheStorage<K, V> = Arc<RwLock<HashMap<K, CacheEntry<V>>>>;
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for AdaptiveCache
 pub struct AdaptiveCacheConfig {
+    /// Max Entries
     pub max_entries: usize,
+    /// Default Ttl
     pub default_ttl: Duration,
+    /// Enable Lru Eviction
     pub enable_lru_eviction: bool,
+    /// Enable Predictive Caching
     pub enable_predictive_caching: bool,
+    /// Cache Hit Ratio Target
     pub cache_hit_ratio_target: f64,
+    /// Memory Usage Limit
     pub memory_usage_limit: usize,
 }
 impl Default for AdaptiveCacheConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             max_entries: 10000,
@@ -52,15 +62,23 @@ impl Default for AdaptiveCacheConfig {
 
 /// Cache entry with metadata
 #[derive(Debug, Clone)]
+/// Cacheentry
 pub struct CacheEntry<V> {
+    /// Value
     pub value: V,
+    /// Timestamp when this was created
     pub created_at: SystemTime,
+    /// Last Accessed
     pub last_accessed: SystemTime,
+    /// Count of access
     pub access_count: u64,
+    /// Ttl
     pub ttl: Duration,
+    /// Size Bytes
     pub size_bytes: usize,
 }
 impl<V> CacheEntry<V> {
+    /// Creates a new instance
     pub fn new(value: V, ttl: Duration, size_bytes: usize) -> Self {
         let now = SystemTime::now();
         Self {
@@ -73,10 +91,12 @@ impl<V> CacheEntry<V> {
         }
     }
 
+    /// Checks if Expired
     pub fn is_expired(&self) -> bool {
         self.created_at.elapsed().unwrap_or(Duration::MAX) > self.ttl
     }
 
+    /// Mark Accessed
     pub fn mark_accessed(&mut self) {
         self.last_accessed = SystemTime::now();
         self.access_count += 1;
@@ -85,14 +105,21 @@ impl<V> CacheEntry<V> {
 
 /// Cache metrics for monitoring
 #[derive(Debug, Default)]
+/// Cachemetrics
 pub struct CacheMetrics {
+    /// Cache Hits
     pub cache_hits: std::sync::atomic::AtomicU64,
+    /// Cache Misses
     pub cache_misses: std::sync::atomic::AtomicU64,
+    /// Evictions
     pub evictions: std::sync::atomic::AtomicU64,
+    /// Memory Usage
     pub memory_usage: std::sync::atomic::AtomicUsize,
+    /// Count of entry
     pub entry_count: std::sync::atomic::AtomicUsize,
 }
 impl CacheMetrics {
+    /// Hit Ratio
     pub fn hit_ratio(&self) -> f64 {
         let hits = self.cache_hits.load(std::sync::atomic::Ordering::Relaxed);
         let misses = self.cache_misses.load(std::sync::atomic::Ordering::Relaxed);
@@ -129,6 +156,7 @@ where
         }
     }
 
+    /// Get
     pub async fn get(&self, key: &K) -> Option<V> {
         let mut storage = self.storage.write().await;
 
@@ -180,6 +208,7 @@ where
         Ok(())
     }
 
+    /// Evict Entries
     async fn evict_entries(&self, storage: &mut HashMap<K, CacheEntry<V>>) -> Result<()> {
         if self.config.enable_lru_eviction {
             // Find least recently used entry
@@ -198,6 +227,7 @@ where
         Ok(())
     }
 
+    /// Gets Metrics
     pub fn get_metrics(&self) -> CacheMetrics {
         CacheMetrics {
             cache_hits: std::sync::atomic::AtomicU64::new(
@@ -239,6 +269,7 @@ where
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Adaptivecacheconfigcanonical
 pub type AdaptiveCacheConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using AdaptiveCacheConfig (the deprecated struct) for now.

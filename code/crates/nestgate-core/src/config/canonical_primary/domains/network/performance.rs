@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// Controls TCP/IP tuning parameters to optimize network performance.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for NetworkPerformance
 pub struct NetworkPerformanceConfig {
     /// Network buffer size in bytes.
     pub buffer_size: u32,

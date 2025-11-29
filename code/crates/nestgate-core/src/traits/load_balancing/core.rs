@@ -58,38 +58,60 @@ pub trait LoadBalancer: Send + Sync {
 
 /// Load balancing algorithms enumeration
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+/// Loadbalancingalgorithm
 pub enum LoadBalancingAlgorithm {
+    /// Roundrobin
     RoundRobin,
+    /// Weightedroundrobin
     WeightedRoundRobin,
+    /// Leastconnections
     LeastConnections,
+    /// Random
     Random,
+    /// Weightedrandom
     WeightedRandom,
+    /// Healthaware
     HealthAware,
 }
 
 /// Load balancer statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Loadbalancerstats
 pub struct LoadBalancerStats {
+    /// Total Requests
     pub total_requests: u64,
+    /// Successful Requests
     pub successful_requests: u64,
+    /// Failed Requests
     pub failed_requests: u64,
+    /// Average Response Time
     pub average_response_time: f64,
+    /// Service Stats
     pub service_stats: HashMap<String, ServiceStats>,
+    /// Algorithm
     pub algorithm: String,
+    /// Health Aware
     pub health_aware: bool,
 }
 
 /// Statistics for individual services
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+/// Servicestats
 pub struct ServiceStats {
+    /// Requests
     pub requests: u64,
+    /// Successful Requests
     pub successful_requests: u64,
+    /// Failed Requests
     pub failed_requests: u64,
+    /// Average Response Time
     pub average_response_time: f64,
+    /// Current Load
     pub current_load: f64,
 }
 
 impl Default for ServiceStats {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             requests: 0,
@@ -102,6 +124,7 @@ impl Default for ServiceStats {
 }
 
 impl Default for LoadBalancerStats {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             total_requests: 0,

@@ -1,3 +1,5 @@
+//! Main module
+
 use clap::{Parser, Subcommand};
 use tracing::info;
 // Removed unused tracing import
@@ -81,6 +83,7 @@ enum Commands {
     // GUI installer removed - using API endpoints for UI primals instead
 }
 
+/// Setup Logging
 fn setup_logging(verbose: bool) -> nestgate_core::Result<()> {
     let log_level = if verbose { "debug" } else { "info" };
 

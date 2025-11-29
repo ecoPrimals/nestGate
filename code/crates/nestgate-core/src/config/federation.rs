@@ -22,6 +22,7 @@ use uuid;
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for Mcp
 pub struct McpConfig {
     /// Enable MCP integration
     pub enabled: bool,
@@ -58,6 +59,7 @@ pub struct McpConfig {
     since = "0.11.0",
     note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for McpCapabilities
 pub struct McpCapabilitiesConfig {
     /// Supported storage protocols
     pub storage_protocols: Vec<String>,
@@ -91,6 +93,7 @@ pub struct McpCapabilitiesConfig {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for Federation
 pub struct FederationConfig {
     /// Enable federation
     pub enabled: bool,
@@ -109,6 +112,7 @@ pub struct FederationConfig {
 
 #[allow(deprecated)]
 impl Default for McpConfig {
+    /// Returns the default instance
     fn default() -> Self {
         // Generate dynamic node ID instead of hardcoding
         let node_id = format!(
@@ -133,6 +137,7 @@ impl Default for McpConfig {
 
 #[allow(deprecated)]
 impl Default for McpCapabilitiesConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             storage_protocols: vec!["nfs".to_string(), "smb".to_string(), "s3".to_string()],
@@ -145,6 +150,7 @@ impl Default for McpCapabilitiesConfig {
 
 #[allow(deprecated)]
 impl Default for FederationConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: false, // Disabled by default - orchestration service manages federation
@@ -355,6 +361,7 @@ impl FederationConfig {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Mcpconfigcanonical
 pub type McpConfigCanonical =
     crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
@@ -371,6 +378,7 @@ pub type McpConfigCanonical =
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Federationconfigcanonical
 pub type FederationConfigCanonical =
     crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
@@ -387,6 +395,7 @@ pub type FederationConfigCanonical =
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Mcpcapabilitiesconfigcanonical
 pub type McpCapabilitiesConfigCanonical =
     crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 

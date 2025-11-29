@@ -2,6 +2,8 @@
 // Error types and handling for the NestGate Data API.
 // Provides clean error responses for management and other consumers.
 
+//! Error module
+
 use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
@@ -16,6 +18,7 @@ pub use nestgate_core::error::Result;
 
 /// Main API error type
 #[derive(Debug)]
+/// Errors that can occur during Api operations
 pub enum ApiError {
     /// Core `NestGate` errors
     Core(nestgate_core::error::NestGateError),
@@ -34,6 +37,7 @@ pub enum ApiError {
 }
 /// API error response format
 #[derive(Debug, Serialize, Deserialize)]
+/// Response data for Error operation
 pub struct ErrorResponse {
     /// Error message
     pub error: String,
@@ -45,6 +49,7 @@ pub struct ErrorResponse {
     pub timestamp: chrono::DateTime<chrono::Utc>,
 }
 impl fmt::Display for ApiError {
+    /// Fmt
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Core(e) => write!(f, "Core error: {e}"),
@@ -59,6 +64,7 @@ impl fmt::Display for ApiError {
 }
 
 impl std::error::Error for ApiError {
+    /// Source
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             Self::Core(e) => Some(e),
@@ -70,6 +76,7 @@ impl std::error::Error for ApiError {
 }
 
 impl IntoResponse for ApiError {
+    /// Into Response
     fn into_response(self) -> Response {
         let (status, error_code, message) = match &self {
             Self::Core(e) => (
@@ -110,18 +117,21 @@ impl IntoResponse for ApiError {
 
 // Conversion implementations
 impl From<nestgate_core::error::NestGateError> for ApiError {
+    /// From
     fn from(err: nestgate_core::error::NestGateError) -> Self {
         Self::Core(err)
     }
 }
 
 impl From<std::io::Error> for ApiError {
+    /// From
     fn from(err: std::io::Error) -> Self {
         Self::Io(err)
     }
 }
 
 impl From<serde_json::Error> for ApiError {
+    /// From
     fn from(err: serde_json::Error) -> Self {
         Self::Json(err)
     }

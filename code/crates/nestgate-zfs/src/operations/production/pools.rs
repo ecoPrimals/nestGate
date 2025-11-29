@@ -2,6 +2,8 @@
 ///
 // Pool management operations for ZFS
 
+//! Pools module
+
 use std::sync::Arc;
 use nestgate_core::error::Result;
 use super::{commands::CommandExecutor, metrics::MetricsCollector};
@@ -53,15 +55,18 @@ impl PoolManager {
 }
 
 impl PoolOperations for PoolManager {
+    /// List Pools
     fn list_pools(&self) -> impl std::future::Future<Output = Result<Vec<String>> + Send> {
             let output = self.commands.execute("zpool", &["list", "-H", "-o", "name"])?;
         Ok(output.lines().map(|s| s.to_string()).collect())
     }
 
+    /// Pool Status
     fn pool_status(&self, pool_name: &str) -> impl std::future::Future<Output = Result<String, NestGateUnifiedError>> + Send {
             self.commands.execute("zpool", &["status", pool_name])
     }
 
+    /// Creates  Pool
     fn create_pool(&self, pool_name: &str, devices: &[&str]) -> impl std::future::Future<Output = Result<(), NestGateUnifiedError>> + Send {
         let mut args = vec!["create", pool_name];
         args.extend(devices);
@@ -69,6 +74,7 @@ impl PoolOperations for PoolManager {
         Ok(())
     }
 
+    /// Destroy Pool
     fn destroy_pool(&self, pool_name: &str) -> impl std::future::Future<Output = Result<(), NestGateUnifiedError>> + Send {
             self.commands.execute("zpool", &["destroy", pool_name])?;
         Ok(())

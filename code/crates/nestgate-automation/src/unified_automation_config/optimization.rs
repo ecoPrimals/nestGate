@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 /// Optimization settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Optimizationsettings
 pub struct OptimizationSettings {
     /// Enable optimization
     pub enabled: bool,
@@ -17,6 +18,7 @@ pub struct OptimizationSettings {
     pub optimization_interval: Duration,
 }
 impl SmartDefault for OptimizationSettings {
+    /// Smart Default
     fn smart_default() -> Self {
         Self {
             enabled: true,
@@ -29,6 +31,7 @@ impl SmartDefault for OptimizationSettings {
 }
 
 impl Default for OptimizationSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self::smart_default()
     }

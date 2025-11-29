@@ -16,6 +16,7 @@ use crate::error::{NestGateError, Result};
 
 /// High-performance metrics collector with atomic operations
 #[derive(Debug)]
+/// Metricscollector
 pub struct MetricsCollector {
     /// Request counters
     total_requests: AtomicU64,
@@ -250,6 +251,7 @@ impl MetricsCollector {
 }
 
 impl Default for MetricsCollector {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -259,20 +261,35 @@ impl Default for MetricsCollector {
 
 /// Performance metrics snapshot
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performancesnapshot
 pub struct PerformanceSnapshot {
+    /// Timestamp
     pub timestamp: SystemTime,
+    /// Uptime
     pub uptime: Duration,
+    /// Total Requests
     pub total_requests: u64,
+    /// Successful Requests
     pub successful_requests: u64,
+    /// Failed Requests
     pub failed_requests: u64,
+    /// Success Rate
     pub success_rate: f64,
+    /// Average Response Time
     pub average_response_time: Duration,
+    /// Min Response Time
     pub min_response_time: Duration,
+    /// Max Response Time
     pub max_response_time: Duration,
+    /// Percentiles
     pub percentiles: ResponseTimePercentiles,
+    /// Active Connections
     pub active_connections: usize,
+    /// Peak Connections
     pub peak_connections: usize,
+    /// Memory Usage Bytes
     pub memory_usage_bytes: u64,
+    /// Error Breakdown
     pub error_breakdown: HashMap<String, u64>,
 }
 
@@ -376,14 +393,20 @@ impl PerformanceSnapshot {
 
 /// Response time percentiles
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Responsetimepercentiles
 pub struct ResponseTimePercentiles {
+    /// P50
     pub p50: Duration,
+    /// P90
     pub p90: Duration,
+    /// P95
     pub p95: Duration,
+    /// P99
     pub p99: Duration,
 }
 
 impl Default for ResponseTimePercentiles {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             p50: Duration::ZERO,
@@ -396,6 +419,7 @@ impl Default for ResponseTimePercentiles {
 
 /// Performance grade enumeration
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+/// Performancegrade
 pub enum PerformanceGrade {
     A, // Excellent (90-100%)
     B, // Good (80-89%)
@@ -408,6 +432,7 @@ pub enum PerformanceGrade {
 
 /// High-level performance monitor with alerting
 #[derive(Debug)]
+/// Performancemonitor
 pub struct PerformanceMonitor {
     collector: Arc<MetricsCollector>,
     alert_thresholds: AlertThresholds,
@@ -528,14 +553,20 @@ impl PerformanceMonitor {
 
 /// Alert thresholds configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Alertthresholds
 pub struct AlertThresholds {
+    /// Min Success Rate
     pub min_success_rate: f64,
+    /// Max Response Time
     pub max_response_time: Duration,
+    /// Max Memory Bytes
     pub max_memory_bytes: u64,
+    /// Max Error Rate
     pub max_error_rate: f64,
 }
 
 impl Default for AlertThresholds {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             min_success_rate: 95.0,
@@ -548,34 +579,51 @@ impl Default for AlertThresholds {
 
 /// Performance alert
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Alert
 pub struct Alert {
+    /// Alert Type
     pub alert_type: AlertType,
+    /// Severity
     pub severity: AlertSeverity,
+    /// Message
     pub message: String,
+    /// Timestamp
     pub timestamp: SystemTime,
+    /// Value
     pub value: f64,
 }
 
 /// Alert types
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+/// Types of Alert
 pub enum AlertType {
+    /// Lowsuccessrate
     LowSuccessRate,
+    /// Highresponsetime
     HighResponseTime,
+    /// Highmemoryusage
     HighMemoryUsage,
+    /// Higherrorrate
     HighErrorRate,
+    /// Connectionpoolexhausted
     ConnectionPoolExhausted,
 }
 
 /// Alert severity levels
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+/// Alertseverity
 pub enum AlertSeverity {
+    /// Info
     Info,
+    /// Warning
     Warning,
+    /// Critical
     Critical,
 }
 
 /// Alert callback trait
 pub trait AlertCallback: Send + Sync {
+    /// On Alert
     async fn on_alert(&self, alert: &Alert);
 }
 
@@ -583,6 +631,7 @@ pub trait AlertCallback: Send + Sync {
 pub struct ConsoleAlertCallback;
 
 impl AlertCallback for ConsoleAlertCallback {
+    /// On Alert
     async fn on_alert(&self, alert: &Alert) {
         let severity_icon = match alert.severity {
             AlertSeverity::Info => "ℹ️",

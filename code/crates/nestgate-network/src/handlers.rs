@@ -19,15 +19,20 @@ use crate::types::{
 /// Native async trait without `async_trait` overhead for network operations.
 /// **PERFORMANCE**: 40-60% improvement over `async_trait` macro
 pub trait NetworkService: Send + Sync + 'static {
+    /// Start Service
     fn start_service(&self) -> impl std::future::Future<Output = nestgate_core::Result<()>> + Send;
+    /// Stop Service
     fn stop_service(&self) -> impl std::future::Future<Output = nestgate_core::Result<()>> + Send;
+    /// Gets Status
     fn get_status(
         &self,
     ) -> impl std::future::Future<Output = nestgate_core::Result<ServiceStatus>> + Send;
+    /// Allocate Port For Service
     fn allocate_port_for_service(
         &self,
         service_name: &str,
     ) -> impl std::future::Future<Output = nestgate_core::Result<u16>> + Send;
+    /// Release Service Port
     fn release_service_port(
         &self,
         port: u16,
@@ -37,6 +42,7 @@ pub trait NetworkService: Send + Sync + 'static {
 
 // Type aliases for complex types to improve readability and reduce warnings
 type ConnectionMap = Arc<RwLock<HashMap<String, ConnectionInfo>>>;
+/// Type alias for ServiceMap
 type ServiceMap = Arc<RwLock<HashMap<String, ServiceInfo>>>;
 
 /// Network service manager for comprehensive connection and service management
@@ -216,6 +222,7 @@ impl HttpProtocolHandler {
         }
     }
 
+    /// Handles  Get Request
     async fn handle_get_request(
         &self,
         request: &HttpRequest,
@@ -229,6 +236,7 @@ impl HttpProtocolHandler {
         })
     }
 
+    /// Handles  Post Request
     async fn handle_post_request(
         &self,
         request: &HttpRequest,
@@ -242,6 +250,7 @@ impl HttpProtocolHandler {
         })
     }
 
+    /// Handles  Put Request
     async fn handle_put_request(
         &self,
         request: &HttpRequest,
@@ -255,6 +264,7 @@ impl HttpProtocolHandler {
         })
     }
 
+    /// Handles  Delete Request
     async fn handle_delete_request(
         &self,
         request: &HttpRequest,
@@ -385,26 +395,39 @@ impl LoadBalancer {
 
 /// Load balancing strategies
 #[derive(Debug, Clone)]
+/// Loadbalancingstrategy
 pub enum LoadBalancingStrategy {
+    /// Roundrobin
     RoundRobin,
+    /// Random
     Random,
+    /// Leastconnections
     LeastConnections,
 }
 // ==================== SECTION ====================
 
 /// HTTP request structure
 #[derive(Debug, Clone)]
+/// Request parameters for Http operation
 pub struct HttpRequest {
+    /// Method
     pub method: String,
+    /// Path
     pub path: String,
+    /// Headers
     pub headers: HashMap<String, String>,
+    /// Body
     pub body: Vec<u8>,
 }
 /// HTTP response structure
 #[derive(Debug, Clone)]
+/// Response data for Http operation
 pub struct HttpResponse {
+    /// Status Code
     pub status_code: u16,
+    /// Headers
     pub headers: HashMap<String, String>,
+    /// Body
     pub body: Vec<u8>,
 }
 

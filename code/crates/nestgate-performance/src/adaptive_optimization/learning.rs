@@ -64,12 +64,14 @@ impl TrendAnalyzer {
 }
 
 impl Default for SimpleLearningModel {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
 }
 
 impl Default for TrendAnalyzer {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

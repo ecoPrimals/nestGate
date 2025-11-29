@@ -30,7 +30,9 @@ pub trait ZeroCostStorageBackend<
     const TIMEOUT_MS: u64 = 30000,
 >: Send + Sync
 {
+    /// Type alias for Error
     type Error: Send + Sync + 'static;
+    /// Type alias for Config
     type Config: Send + Sync + 'static;
     // ===== BASIC OPERATIONS - NATIVE ASYNC =====
 
@@ -75,13 +77,11 @@ pub trait ZeroCostStorageBackend<
 
     // ===== CONFIGURATION - COMPILE-TIME =====
 
-    /// Maximum concurrent operations at compile-time
     #[must_use]
     fn max_concurrent_operations() -> usize {
         MAX_CONCURRENT_OPS
     }
 
-    /// Timeout configuration at compile-time  
     #[must_use]
     fn timeout_milliseconds() -> u64 {
         TIMEOUT_MS
@@ -93,7 +93,6 @@ pub trait ZeroCostStorageBackend<
         config: Self::Config,
     ) -> impl Future<Output = std::result::Result<(), Self::Error>> + Send;
 
-    /// Health check - native async
     fn health_check(
         &self,
     ) -> impl Future<Output = std::result::Result<ZeroCostStorageHealth, Self::Error>> + Send;
@@ -103,12 +102,16 @@ pub trait ZeroCostStorageBackend<
 
 /// Zero-cost storage operation for batch processing
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Zerocoststorageoperation
 pub enum ZeroCostStorageOperation {}
 /// Zero-cost storage operation result
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Zerocoststorageresult
 pub enum ZeroCostStorageResult {
     ReadResult(Vec<u8>),
+    /// Writeresult
     WriteResult,
+    /// Deleteresult
     DeleteResult,
     ListResult(Vec<String>),
     MetadataResult(Box<StorageMetadata>),
@@ -116,12 +119,18 @@ pub enum ZeroCostStorageResult {
 }
 /// Zero-cost storage health information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Zerocoststoragehealth
 pub struct ZeroCostStorageHealth {
     pub healthy: bool,
+    /// Total Operations
     pub total_operations: u64,
+    /// Successful Operations
     pub successful_operations: u64,
+    /// Failed Operations
     pub failed_operations: u64,
+    /// Average Latency Ms
     pub average_latency_ms: f64,
+    /// Current Concurrent Ops
     pub current_concurrent_ops: usize,
 }
 // ==================== SECTION ====================
@@ -133,7 +142,9 @@ pub trait ZeroCostStorageProvider<Backend, const MAX_BACKENDS: usize = 10>: Send
 where
     Backend: ZeroCostStorageBackend,
 {
+    /// Type alias for Error
     type Error: Send + Sync + 'static;
+    /// Type alias for Config
     type Config: Send + Sync + 'static;
     /// Create new storage backend - native async
     fn create_backend(
@@ -155,7 +166,6 @@ where
         name: &str,
     ) -> impl Future<Output = std::result::Result<(), Self::Error>> + Send;
 
-    /// Maximum backends at compile-time
     #[must_use]
     fn max_backends() -> usize {
         MAX_BACKENDS

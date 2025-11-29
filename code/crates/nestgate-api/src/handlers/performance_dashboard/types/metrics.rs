@@ -10,6 +10,7 @@ use std::time::SystemTime;
 ///
 /// Real-time performance metrics collection.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Realtimemetrics
 pub struct RealTimeMetrics {
     /// Timestamp when metrics were collected
     pub timestamp: SystemTime,
@@ -31,6 +32,7 @@ pub struct RealTimeMetrics {
 ///
 /// Performance trends for storage pools.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Poolperformancetrends
 pub struct PoolPerformanceTrends {
     /// Pool identifier
     pub pool_id: String,
@@ -48,6 +50,7 @@ pub struct PoolPerformanceTrends {
 ///
 /// Individual data point in pool performance trend.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Pooltrendpoint
 pub struct PoolTrendPoint {
     /// Timestamp
     pub timestamp: SystemTime,
@@ -67,6 +70,7 @@ pub struct PoolTrendPoint {
 ///
 /// System-level performance metrics.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Systemmetrics
 pub struct SystemMetrics {
     /// CPU utilization percentage
     pub cpu_utilization: f64,
@@ -88,6 +92,7 @@ pub struct SystemMetrics {
 ///
 /// Snapshot of system performance at a specific point in time.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Systemperformancesnapshot
 pub struct SystemPerformanceSnapshot {
     /// Timestamp when snapshot was taken
     pub timestamp: SystemTime,
@@ -111,6 +116,7 @@ pub struct SystemPerformanceSnapshot {
 ///
 /// Comprehensive metrics data point for time series analysis.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Comprehensivemetricspoint
 pub struct ComprehensiveMetricsPoint {
     /// Timestamp
     pub timestamp: SystemTime,

@@ -69,7 +69,9 @@ macro_rules! pedantic_expect {
 
 /// **PEDANTIC CONSTANTS**
 pub const PEDANTIC_MAX_RETRIES: usize = 3;
+/// Pedantic Timeout Ms
 pub const PEDANTIC_TIMEOUT_MS: u64 = 5000;
+/// Pedantic Buffer Size
 pub const PEDANTIC_BUFFER_SIZE: usize = 4096;
 
 /// **PEDANTIC VALIDATION FUNCTIONS**
@@ -83,6 +85,7 @@ pub fn validate_non_empty_string(s: &str, field_name: &str) -> Result<(), NestGa
     }
 }
 
+/// Validates  Positive Number
 pub fn validate_positive_number(n: i64, field_name: &str) -> Result<(), NestGateError> {
     if n <= 0 {
         Err(NestGateError::configuration(format!(
@@ -114,6 +117,7 @@ impl PedanticErrorContext {
         self
     }
 
+    /// Builds the final instance
     pub fn build_error(self, message: &str) -> NestGateError {
         NestGateError::internal_error_with_debug(
             format!("{} in {}: {:?}", message, self.context, self.details)

@@ -6,15 +6,22 @@ use super::auth::AuthConfig;
 
 /// Provider configuration (Enhanced with proven patterns)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Provider
 pub struct ProviderConfig {
+    /// Provider Type
     pub provider_type: String,
+    /// Endpoint
     pub endpoint: String,
+    /// Region
     pub region: Option<String>,
+    /// Credentials
     pub credentials: Option<AuthConfig>,
+    /// Configuration for custom
     pub custom_config: HashMap<String, serde_json::Value>,
 }
 /// Capabilities supported by a storage provider.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Providercapabilities
 pub struct ProviderCapabilities {
     /// Supported storage protocols
     pub protocols: Vec<String>,
@@ -28,6 +35,7 @@ pub struct ProviderCapabilities {
     pub availability_zones: Vec<String>,
 }
 impl Default for ProviderCapabilities {
+    /// Returns the default instance
     fn default() -> Self { Self {
             protocols: vec!["nfs".to_string(), "smb".to_string()],
             max_capacity: 1_000_000_000_000, // 1TB default
@@ -39,6 +47,7 @@ impl Default for ProviderCapabilities {
 
 /// IOPS capabilities of a storage provider.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Iopscapabilities
 pub struct IopsCapabilities {
     /// Minimum guaranteed IOPS.
     pub min_iops: u32,
@@ -48,6 +57,7 @@ pub struct IopsCapabilities {
     pub burst_iops: Option<u32>,
 }
 impl Default for IopsCapabilities {
+    /// Returns the default instance
     fn default() -> Self { Self {
             min_iops: 1000,
             max_iops: 50000,
@@ -57,6 +67,7 @@ impl Default for IopsCapabilities {
 
 /// Throughput capabilities of a storage provider.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Throughputcapabilities
 pub struct ThroughputCapabilities {
     /// Minimum guaranteed throughput in MB/s.
     pub min_throughput_mbs: u32,
@@ -66,6 +77,7 @@ pub struct ThroughputCapabilities {
     pub burst_throughput_mbs: Option<u32>,
 }
 impl Default for ThroughputCapabilities {
+    /// Returns the default instance
     fn default() -> Self { Self {
             min_throughput_mbs: 100,          // 100MB/s
             max_throughput_mbs: 1000,         // 1GB/s
@@ -75,6 +87,7 @@ impl Default for ThroughputCapabilities {
 
 /// Status of a storage provider.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+/// Status values for Provider
 pub enum ProviderStatus {
     /// Provider is online and ready.
     Online,
@@ -87,6 +100,7 @@ pub enum ProviderStatus {
 }
 /// Information about a storage provider.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Providerinfo
 pub struct ProviderInfo {
     /// Unique identifier for the provider.
     pub id: String,
@@ -101,6 +115,7 @@ pub struct ProviderInfo {
 }
 /// Filter criteria for listing providers.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Providerfilter
 pub struct ProviderFilter {
     /// Filter by provider status.
     pub status: Option<ProviderStatus>,

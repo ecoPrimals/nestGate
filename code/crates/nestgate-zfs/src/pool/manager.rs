@@ -15,6 +15,7 @@ use super::types::{PoolCapacity, PoolHealth, PoolInfo, PoolState};
 
 /// ZFS Pool Manager - handles pool operations and management
 #[derive(Debug, Clone)]
+/// Manager for ZfsPool operations
 pub struct ZfsPoolManager {
     #[allow(dead_code)]
     config: ZfsConfig,

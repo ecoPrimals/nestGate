@@ -1,3 +1,5 @@
+//! Canonical Storage Detector module
+
 use std::collections::HashMap;
 //
 // Automatically detects and profiles all available storage systems using
@@ -42,6 +44,7 @@ pub struct CanonicalStorageDetector {
     runtime_config: SharedStorageDetectorConfig,
 }
 impl Default for CanonicalStorageDetector {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -190,6 +193,7 @@ impl CanonicalStorageDetector {
 
     // ==================== PRIVATE DETECTION METHODS ====================
 
+    /// Detect Canonical Local Filesystems
     async fn detect_canonical_local_filesystems(&self) -> Result<Vec<CanonicalDetectedStorage>> {
         let mut filesystems = Vec::new();
 
@@ -220,6 +224,7 @@ impl CanonicalStorageDetector {
         Ok(filesystems)
     }
 
+    /// Detect Canonical Cloud Storage
     async fn detect_canonical_cloud_storage(&self) -> Result<Vec<CanonicalDetectedStorage>> {
         let mut cloud_storage = Vec::new();
 
@@ -251,6 +256,7 @@ impl CanonicalStorageDetector {
         Ok(cloud_storage)
     }
 
+    /// Detect Canonical Network Shares
     async fn detect_canonical_network_shares(&self) -> Result<Vec<CanonicalDetectedStorage>> {
         let mut network_shares = Vec::new();
 
@@ -267,6 +273,7 @@ impl CanonicalStorageDetector {
         Ok(network_shares)
     }
 
+    /// Detect Canonical Block Devices
     async fn detect_canonical_block_devices(&self) -> Result<Vec<CanonicalDetectedStorage>> {
         let mut block_devices = Vec::new();
 
@@ -302,16 +309,19 @@ impl CanonicalStorageDetector {
         Some("ext4".to_string()) // Placeholder
     }
 
+    /// Checks if has Aws Credentials
     async fn has_aws_credentials(&self) -> bool {
         // Check runtime config (immutable, thread-safe)
         self.runtime_config.has_aws_credentials()
     }
 
+    /// Scan Canonical Nfs Shares
     async fn scan_canonical_nfs_shares(&self) -> Result<Vec<CanonicalDetectedStorage>> {
         // Implementation would scan for NFS shares
         Ok(vec![]) // Placeholder
     }
 
+    /// Scan Canonical Smb Shares
     async fn scan_canonical_smb_shares(&self) -> Result<Vec<CanonicalDetectedStorage>> {
         // Implementation would scan for SMB shares
         Ok(vec![]) // Placeholder
@@ -339,6 +349,7 @@ impl CanonicalStorageDetector {
 
     // ==================== PRIVATE PROFILING METHODS ====================
 
+    /// Benchmark Canonical Performance
     async fn benchmark_canonical_performance(
         &self,
         storage: &CanonicalDetectedStorage,
@@ -347,6 +358,7 @@ impl CanonicalStorageDetector {
         Ok(CanonicalPerformanceMetrics::default())
     }
 
+    /// Assess Canonical Capabilities
     async fn assess_canonical_capabilities(
         &self,
         storage: &CanonicalDetectedStorage,
@@ -355,6 +367,7 @@ impl CanonicalStorageDetector {
         Ok(CanonicalStorageCapabilities::default())
     }
 
+    /// Analyze Canonical Costs
     async fn analyze_canonical_costs(
         &self,
         storage: &CanonicalDetectedStorage,
@@ -363,6 +376,7 @@ impl CanonicalStorageDetector {
         Ok(CanonicalCostAnalysis::default())
     }
 
+    /// Score Canonical Reliability
     async fn score_canonical_reliability(
         &self,
         storage: &CanonicalDetectedStorage,
@@ -375,6 +389,7 @@ impl CanonicalStorageDetector {
 // ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for CanonicalDetection
 pub struct CanonicalDetectionConfig {
     /// Base canonical configuration
     pub canonical_config: CanonicalModernizedConfig,
@@ -405,6 +420,7 @@ pub struct CanonicalDetectionConfig {
 }
 
 impl Default for CanonicalDetectionConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             canonical_config: CanonicalModernizedConfig::default(),
@@ -427,6 +443,7 @@ impl Default for CanonicalDetectionConfig {
 // ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Canonicaldetectedstorage
 pub struct CanonicalDetectedStorage {
     /// Unique identifier for this storage system
     pub id: String,
@@ -457,6 +474,7 @@ pub struct CanonicalDetectedStorage {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of CanonicalStorage
 pub enum CanonicalStorageType {
     /// Local filesystem (ext4, NTFS, APFS, ZFS, etc.)
     LocalFilesystem,
@@ -479,6 +497,7 @@ pub enum CanonicalStorageType {
 // ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Canonicalstorageprofile
 pub struct CanonicalStorageProfile {
     /// Storage system identifier
     pub storage_id: String,
@@ -495,6 +514,7 @@ pub struct CanonicalStorageProfile {
 }
 
 impl Default for CanonicalStorageProfile {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             storage_id: String::new(),
@@ -508,6 +528,7 @@ impl Default for CanonicalStorageProfile {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Canonicalperformancemetrics
 pub struct CanonicalPerformanceMetrics {
     /// Sequential read throughput (MB/s)
     pub sequential_read_mbps: f64,
@@ -524,6 +545,7 @@ pub struct CanonicalPerformanceMetrics {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Canonicalstoragecapabilities
 pub struct CanonicalStorageCapabilities {
     /// Supports compression
     pub supports_compression: bool,
@@ -542,6 +564,7 @@ pub struct CanonicalStorageCapabilities {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Canonicalcostanalysis
 pub struct CanonicalCostAnalysis {
     /// Cost per GB per month
     pub cost_per_gb_monthly: Option<f64>,
@@ -554,6 +577,7 @@ pub struct CanonicalCostAnalysis {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Canonicalreliabilityscore
 pub struct CanonicalReliabilityScore {
     /// Overall reliability score (0.0 to 1.0)
     pub overall_score: f64,
@@ -570,6 +594,7 @@ pub struct CanonicalReliabilityScore {
 // ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Canonicaldetectionstats
 pub struct CanonicalDetectionStats {
     /// Total number of detections performed
     pub total_detections: u64,
@@ -586,6 +611,7 @@ pub struct CanonicalDetectionStats {
 }
 
 impl Default for CanonicalDetectionStats {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             total_detections: 0,
@@ -607,6 +633,7 @@ pub struct CanonicalStorageDetectorBuilder {
     config: CanonicalDetectionConfig,
 }
 impl CanonicalStorageDetectorBuilder {
+    /// Creates a new instance
     pub fn new() -> Self {
         Self {
             config: CanonicalDetectionConfig::default(),
@@ -643,12 +670,14 @@ impl CanonicalStorageDetectorBuilder {
         self
     }
 
+    /// Builds the final instance
     pub fn build(self) -> CanonicalStorageDetector {
         CanonicalStorageDetector::with_canonical_config(self.config)
     }
 }
 
 impl Default for CanonicalStorageDetectorBuilder {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

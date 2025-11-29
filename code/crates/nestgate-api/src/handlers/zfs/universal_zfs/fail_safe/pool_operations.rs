@@ -1,6 +1,8 @@
 //
 // Pool operations with circuit breaker and retry logic.
 
+//! Pool Operations module
+
 use crate::handlers::zfs::universal_zfs::traits::UniversalZfsService;
 use crate::handlers::zfs::universal_zfs_types::{
     PoolConfig, PoolInfo, UniversalZfsError, UniversalZfsResult,
@@ -8,6 +10,7 @@ use crate::handlers::zfs::universal_zfs_types::{
 
 use super::core::FailSafeZfsService;
 
+/// List Pools
 pub async fn list_pools(service: &FailSafeZfsService) -> UniversalZfsResult<Vec<PoolInfo>> {
     // Check if circuit breaker allows execution
     if !service.circuit_breaker.can_execute().await {
@@ -38,6 +41,7 @@ pub async fn list_pools(service: &FailSafeZfsService) -> UniversalZfsResult<Vec<
     }
 }
 
+/// Gets Pool
 pub async fn get_pool(
     service: &FailSafeZfsService,
     name: &str,
@@ -69,6 +73,7 @@ pub async fn get_pool(
     }
 }
 
+/// Creates  Pool
 pub async fn create_pool(
     service: &FailSafeZfsService,
     config: &PoolConfig,
@@ -100,6 +105,7 @@ pub async fn create_pool(
     }
 }
 
+/// Destroy Pool
 pub async fn destroy_pool(service: &FailSafeZfsService, name: &str) -> UniversalZfsResult<()> {
     // Check if circuit breaker allows execution
     if !service.circuit_breaker.can_execute().await {
@@ -128,6 +134,7 @@ pub async fn destroy_pool(service: &FailSafeZfsService, name: &str) -> Universal
     }
 }
 
+/// Scrub Pool
 pub async fn scrub_pool(service: &FailSafeZfsService, name: &str) -> UniversalZfsResult<()> {
     // Check if circuit breaker allows execution
     if !service.circuit_breaker.can_execute().await {
@@ -156,6 +163,7 @@ pub async fn scrub_pool(service: &FailSafeZfsService, name: &str) -> UniversalZf
     }
 }
 
+/// Gets Pool Status
 pub async fn get_pool_status(
     service: &FailSafeZfsService,
     name: &str,

@@ -1,6 +1,8 @@
 //
 // Provides retry logic for fail-safe operations.
 
+//! Retry Executor module
+
 use std::time::Duration;
 // Removed unused tracing import
 
@@ -14,6 +16,7 @@ mod retry_executor_tests;
 
 /// Retry executor for operations
 #[derive(Debug, Clone)]
+/// Retryexecutor
 pub struct RetryExecutor {
     config: RetryPolicy,
 }
@@ -26,6 +29,7 @@ impl RetryExecutor {
     /// # Returns
     /// * New retry executor instance
     #[must_use]
+    /// Fn
     pub const fn new(config: RetryPolicy) -> Self {
         Self { config }
     }

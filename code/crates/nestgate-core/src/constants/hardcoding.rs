@@ -82,16 +82,13 @@ pub mod ports {
     /// Extended services port
     pub const EXTENDED_SERVICES: u16 = 3002;
 
-    /// Discovery service port
     pub const DISCOVERY_SERVICE: u16 = 3010;
 
     /// Alternative metrics port
     pub const METRICS_ALT: u16 = 9001;
 
-    /// Metrics default port (Prometheus standard)
     pub const METRICS_PROMETHEUS: u16 = 9090;
 
-    /// Health check port
     pub const HEALTH_DEFAULT: u16 = 8081;
 
     /// Orchestrator port
@@ -117,7 +114,6 @@ pub mod ports {
 // Timeout Constants (milliseconds)
 // ============================================================================
 
-/// Timeout constants in milliseconds
 pub mod timeouts {
     /// Default connection timeout (5 seconds)
     pub const CONNECT_MS: u64 = 5_000;
@@ -225,19 +221,16 @@ pub mod limits {
     /// Default buffer size for I/O operations (64KB)
     pub const BUFFER_SIZE_DEFAULT: usize = 65536;
 
-    /// Maximum buffer size (1MB)
     pub const BUFFER_SIZE_MAX: usize = 1_048_576;
 
     /// Default connection pool size
     pub const CONNECTION_POOL_SIZE: usize = 10;
 
-    /// Maximum concurrent connections
     pub const MAX_CONNECTIONS: usize = 1000;
 
     /// Default timeout in seconds
     pub const TIMEOUT_SECS: u64 = 30;
 
-    /// Maximum retry attempts
     pub const MAX_RETRIES: u32 = 3;
 }
 
@@ -294,6 +287,7 @@ mod tests {
         // These are compile-time constants, so we verify their relationships
         // rather than testing values that are always true.
         const _: () = assert!(limits::BUFFER_SIZE_MAX >= limits::BUFFER_SIZE_DEFAULT);
+        ///  
         const _: () = assert!(limits::MAX_CONNECTIONS >= limits::CONNECTION_POOL_SIZE);
 
         // Runtime verification that constants are accessible

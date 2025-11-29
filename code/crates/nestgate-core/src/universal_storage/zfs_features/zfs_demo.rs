@@ -9,6 +9,8 @@
 
 #![allow(dead_code)] // Demo code for illustration purposes
 
+//! Zfs Demo module
+
 use crate::error::CanonicalResult as Result;
 use crate::universal_storage::{
     zfs_features::{ZfsEngine, ZfsEngineConfig},
@@ -343,6 +345,7 @@ impl ZfsFeaturesDemo {
 }
 
 impl Default for ZfsFeaturesDemo {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

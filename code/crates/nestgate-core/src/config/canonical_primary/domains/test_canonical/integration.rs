@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for IntegrationTest
 pub struct IntegrationTestConfig {
     /// Database test configuration
     pub database: DatabaseTestConfig,
@@ -17,6 +18,7 @@ pub struct IntegrationTestConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for DatabaseTest
 pub struct DatabaseTestConfig {
     /// Enable database tests
     pub enabled: bool,
@@ -26,6 +28,7 @@ pub struct DatabaseTestConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ServiceTest
 pub struct ServiceTestConfig {
     /// Enable service tests
     pub enabled: bool,
@@ -35,6 +38,7 @@ pub struct ServiceTestConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ApiTest
 pub struct ApiTestConfig {
     /// Enable API tests
     pub enabled: bool,
@@ -44,6 +48,7 @@ pub struct ApiTestConfig {
 }
 
 impl Default for DatabaseTestConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -53,6 +58,7 @@ impl Default for DatabaseTestConfig {
 }
 
 impl Default for ServiceTestConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -62,6 +68,7 @@ impl Default for ServiceTestConfig {
 }
 
 impl Default for ApiTestConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,

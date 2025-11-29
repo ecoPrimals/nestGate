@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use super::types::{ResourceSpec, CpuSpec, MemorySpec, StorageSpec, NetworkSpec};
 
 impl Default for ResourceSpec {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             cpu: None,
@@ -18,6 +19,7 @@ impl Default for ResourceSpec {
 }
 
 impl Default for CpuSpec {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             min_cores: Some(1.0),
@@ -29,6 +31,7 @@ impl Default for CpuSpec {
 }
 
 impl Default for MemorySpec {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             min_bytes: Some(512 * 1024 * 1024), // 512MB
@@ -39,6 +42,7 @@ impl Default for MemorySpec {
 }
 
 impl Default for StorageSpec {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             min_bytes: Some(1024 * 1024 * 1024), // 1GB
@@ -50,6 +54,7 @@ impl Default for StorageSpec {
 }
 
 impl Default for NetworkSpec {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             bandwidth: None,

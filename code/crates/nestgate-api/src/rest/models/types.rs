@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 
 /// Represents different types of datasets in the storage system
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Types of Dataset
 pub enum DatasetType {
     /// Standard filesystem dataset
     Filesystem,
@@ -22,6 +23,7 @@ pub enum DatasetType {
 
 /// Checksum algorithms supported by the storage system
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Types of Checksum
 pub enum ChecksumType {
     /// Fletcher checksum algorithm
     Fletcher2,
@@ -39,6 +41,7 @@ pub enum ChecksumType {
 
 /// Status of a dataset in the storage system
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Status values for Dataset
 pub enum DatasetStatus {
     /// Dataset is online and accessible
     Online,
@@ -54,6 +57,7 @@ pub enum DatasetStatus {
 
 /// Alert severity levels for system monitoring
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Alertseverity
 pub enum AlertSeverity {
     /// Informational message
     Info,
@@ -67,6 +71,7 @@ pub enum AlertSeverity {
 
 /// Status of an alert in the monitoring system
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Status values for Alert
 pub enum AlertStatus {
     /// Alert is active and firing
     Active,
@@ -80,6 +85,7 @@ pub enum AlertStatus {
 
 /// Comparison operators for alert conditions
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Comparisonoperator
 pub enum ComparisonOperator {
     /// Greater than comparison
     GreaterThan,
@@ -97,6 +103,7 @@ pub enum ComparisonOperator {
 
 /// Storage backend types supported by the system
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Types of StorageBackend
 pub enum StorageBackendType {
     /// In-memory storage backend
     Memory,
@@ -118,6 +125,7 @@ pub enum StorageBackendType {
 
 /// Compression algorithms supported by the storage system
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Types of Compression
 pub enum CompressionType {
     /// LZ4 compression algorithm (fast)
     Lz4,
@@ -131,6 +139,7 @@ pub enum CompressionType {
 
 /// Status of snapshots in the system
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Status values for Snapshot
 pub enum SnapshotStatus {
     /// Snapshot is active and available
     Active,
@@ -144,6 +153,7 @@ pub enum SnapshotStatus {
 
 /// Storage performance and capacity metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagemetrics
 pub struct StorageMetrics {
     /// Total storage capacity in bytes
     pub total_bytes: u64,
@@ -159,6 +169,7 @@ pub struct StorageMetrics {
 
 /// Network I/O performance metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Networkiometrics
 pub struct NetworkIoMetrics {
     /// Total bytes sent over network
     pub bytes_sent: u64,
@@ -180,6 +191,7 @@ pub struct NetworkIoMetrics {
 
 /// Disk I/O performance metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Diskiometrics
 pub struct DiskIoMetrics {
     /// Read throughput in bytes per second
     pub read_bytes_per_sec: f64,
@@ -203,6 +215,7 @@ pub struct DiskIoMetrics {
 
 /// System alert with monitoring information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Alert
 pub struct Alert {
     /// Unique identifier for the alert
     pub id: String,
@@ -228,6 +241,7 @@ pub struct Alert {
 
 /// Dashboard-specific alert representation
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Dashboardalert
 pub struct DashboardAlert {
     /// Unique identifier for the dashboard alert
     pub id: String,
@@ -245,6 +259,7 @@ pub struct DashboardAlert {
 
 /// Condition that triggers an alert
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Alertcondition
 pub struct AlertCondition {
     /// Name of the metric being monitored
     pub metric_name: String,
@@ -260,6 +275,7 @@ pub struct AlertCondition {
 
 /// Categories of alerts in the monitoring system
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Types of Alert
 pub enum AlertType {
     /// System-level alerts (CPU, memory, etc.)
     System,
@@ -273,6 +289,7 @@ pub enum AlertType {
 
 /// Circuit breaker configuration for fault tolerance
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for CircuitBreaker
 pub struct CircuitBreakerConfig {
     /// Number of failures before opening the circuit
     pub failure_threshold: u32,
@@ -284,6 +301,7 @@ pub struct CircuitBreakerConfig {
 
 /// Timeout configuration for network operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Timeout
 pub struct TimeoutConfig {
     /// Connection timeout in milliseconds
     pub connect_timeout_ms: u32,
@@ -295,6 +313,7 @@ pub struct TimeoutConfig {
 
 /// Retry policy configuration for failed operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Retrypolicy
 pub struct RetryPolicy {
     /// Maximum number of retry attempts
     pub max_retries: u32,
@@ -308,6 +327,7 @@ pub struct RetryPolicy {
 
 /// Context for validation operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Validationcontext
 pub struct ValidationContext {
     /// Whether to enforce strict validation rules
     pub strict_mode: bool,
@@ -317,6 +337,7 @@ pub struct ValidationContext {
 
 /// System performance and resource utilization metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Systemmetrics
 pub struct SystemMetrics {
     /// CPU usage as a percentage (0.0 to 100.0)
     pub cpu_usage_percent: f64,
@@ -338,6 +359,7 @@ pub struct SystemMetrics {
 
 /// ZFS-specific performance and status metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Zfsmetrics
 pub struct ZfsMetrics {
     /// ARC hit ratio as a percentage
     pub arc_hit_ratio: f64,

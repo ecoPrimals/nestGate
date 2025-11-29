@@ -2,6 +2,8 @@
 // Real-time performance monitoring, metrics collection, and alerting
 // for ZFS storage tiers with integration to orchestrator and AI systems.
 
+//! Performance module
+
 pub mod defaults;
 pub mod monitor;
 pub mod types;

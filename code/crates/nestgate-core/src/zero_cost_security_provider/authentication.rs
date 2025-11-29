@@ -1,3 +1,5 @@
+//! Authentication module
+
 use crate::error::NestGateError;
 use std::collections::HashMap;
 //
@@ -12,6 +14,7 @@ use tracing::{debug, info, warn};
 
 /// Authentication configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Authentication
 pub struct AuthenticationConfig {
     /// Enable external Security authentication
     pub use_external_auth: bool,
@@ -25,6 +28,7 @@ pub struct AuthenticationConfig {
     pub max_auth_attempts: u32,
 }
 impl Default for AuthenticationConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             use_external_auth: std::env::var("BEARDOG_AUTH_ENDPOINT").is_ok(),
@@ -38,6 +42,7 @@ impl Default for AuthenticationConfig {
 
 /// Local token validation configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for LocalToken
 pub struct LocalTokenConfig {
     /// Token signing key
     pub signing_key: String,
@@ -47,6 +52,7 @@ pub struct LocalTokenConfig {
     pub enable_refresh: bool,
 }
 impl Default for LocalTokenConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             signing_key: std::env::var("NESTGATE_TOKEN_KEY")
@@ -59,6 +65,7 @@ impl Default for LocalTokenConfig {
 
 /// Hybrid authentication manager
 #[derive(Debug)]
+/// Manager for HybridAuthentication operations
 pub struct HybridAuthenticationManager {
     config: AuthenticationConfig,
     token_cache: tokio::sync::RwLock<HashMap<String, CachedToken>>,
@@ -411,6 +418,7 @@ impl HybridAuthenticationManager {
 
 /// Token manager for local operations
 #[allow(dead_code)]
+/// Manager for AuthToken operations
 pub struct AuthTokenManager {
     signing_key: String,
 }
@@ -442,6 +450,7 @@ impl AuthTokenManager {
         true
     }
 
+    /// Creates  Workspace Secret
     pub fn create_workspace_secret(
         &self,
         workspace_id: &str,

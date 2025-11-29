@@ -30,6 +30,7 @@ use tracing::{debug, warn};
 
 /// Health status
 #[derive(Debug, Clone, PartialEq)]
+/// Status values for Health
 pub enum HealthStatus {
     /// Component is healthy
     Healthy,
@@ -43,6 +44,7 @@ pub enum HealthStatus {
 
 /// Component health information
 #[derive(Debug, Clone)]
+/// Componenthealth
 pub struct ComponentHealth {
     /// Component name
     pub name: String,
@@ -143,6 +145,7 @@ pub use HealthCheckDyn as HealthCheck;
 /// This version uses `Box<dyn HealthCheckDyn>` for runtime extensibility.
 /// For zero-cost monitoring, use `HealthMonitorZeroCost<T>` instead.
 #[derive(Debug)]
+/// Healthmonitor
 pub struct HealthMonitor {
     /// Registered health checks
     #[allow(deprecated)]
@@ -245,6 +248,7 @@ impl HealthMonitor {
 }
 
 impl Default for HealthMonitor {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new(Duration::from_secs(30))
     }

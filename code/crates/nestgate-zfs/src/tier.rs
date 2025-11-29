@@ -1,6 +1,8 @@
 //
 // This module will be fully implemented in Week 2
 
+//! Tier module
+
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -16,6 +18,7 @@ use tracing::warn;
 
 /// Manages tiered storage operations
 #[derive(Debug)]
+/// Manager for Tier operations
 pub struct TierManager {
     #[allow(dead_code)]
     config: ZfsConfig,
@@ -25,17 +28,27 @@ pub struct TierManager {
     tier_stats: TierStatsMap,
 }
 #[derive(Debug, Clone, Default)]
+/// Tierstats
 pub struct TierStats {
+    /// Total Capacity
     pub total_capacity: u64,
+    /// Used Capacity
     pub used_capacity: u64,
+    /// Count of file
     pub file_count: u64,
+    /// Active Operations
     pub active_operations: u32,
 }
 #[derive(Debug, Clone)]
+/// Tierstatus
 pub struct TierStatus {
+    /// Tier
     pub tier: StorageTier,
+    /// Health
     pub health: String,
+    /// Utilization
     pub utilization: f64,
+    /// Stats
     pub stats: TierStats,
 }
 impl TierManager {
@@ -115,6 +128,7 @@ impl TierManager {
         Ok(())
     }
 
+    /// Configure Tier Properties
     fn configure_tier_properties(&self, tier: &StorageTier) -> Result<()> {
         info!("Configuring properties for {:?} tier", tier);
         // Real tier configuration would set ZFS properties based on tier type

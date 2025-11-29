@@ -55,14 +55,20 @@ use std::time::Duration;
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for SecurityProvider
 pub struct SecurityProviderConfig {
+    /// Provider Type
     pub provider_type: String,
+    /// Configuration for
     pub config: HashMap<String, String>,
 }
 /// Security provider interface
 #[derive(Debug, Clone)]
+/// Securityprovider
 pub struct SecurityProvider {
+    /// Unique identifier
     pub id: String,
+    /// Configuration for
     pub config: SecurityProviderConfig,
 }
 impl SecurityProvider {
@@ -89,6 +95,7 @@ impl SecurityProvider {
 
 /// **CANONICAL MODERNIZATION**: Native async implementation without `async_trait` overhead
 impl SecurityPrimalProvider for SecurityProvider {
+    /// Authenticate
     async fn authenticate(&self, credentials: &Credentials) -> Result<AuthToken> {
         // Basic implementation for testing
         use std::time::SystemTime;
@@ -103,16 +110,19 @@ impl SecurityPrimalProvider for SecurityProvider {
         })
     }
 
+    /// Encrypt
     async fn encrypt(&self, data: &[u8], _algorithm: &str) -> Result<Vec<u8>> {
         // Simple test implementation
         Ok(data.to_vec())
     }
 
+    /// Decrypt
     async fn decrypt(&self, encrypted: &[u8], _algorithm: &str) -> Result<Vec<u8>> {
         // Simple test implementation
         Ok(encrypted.to_vec())
     }
 
+    /// Sign Data
     fn sign_data(
         &self,
         data: &[u8],
@@ -133,16 +143,19 @@ impl SecurityPrimalProvider for SecurityProvider {
         }
     }
 
+    /// Verify Signature
     async fn verify_signature(&self, _data: &[u8], _signature: &Signature) -> Result<bool> {
         // Simple test implementation
         Ok(true)
     }
 
+    /// Gets Key Id
     fn get_key_id(&self) -> impl std::future::Future<Output = Result<String>> + Send {
         let id = self.id.clone();
         async move { Ok(id) }
     }
 
+    /// Evaluate Boundary Access
     async fn evaluate_boundary_access(
         &self,
         _source: &str,
@@ -152,6 +165,7 @@ impl SecurityPrimalProvider for SecurityProvider {
         Ok(SecurityDecision::Allow)
     }
 
+    /// Hash Data
     async fn hash_data(&self, data: &[u8], algorithm: &str) -> Result<Vec<u8>> {
         // Basic hash implementation
         use std::collections::hash_map::DefaultHasher;
@@ -162,11 +176,13 @@ impl SecurityPrimalProvider for SecurityProvider {
         Ok(hasher.finish().to_be_bytes().to_vec())
     }
 
+    /// Generate Random
     async fn generate_random(&self, length: usize) -> Result<Vec<u8>> {
         // Basic random generation
         Ok((0..length).map(|_| rand::random::<u8>()).collect())
     }
 
+    /// Derive Key
     async fn derive_key(&self, password: &str, salt: &[u8], iterations: u32) -> Result<Vec<u8>> {
         // Basic key derivation
         use std::collections::hash_map::DefaultHasher;
@@ -178,11 +194,13 @@ impl SecurityPrimalProvider for SecurityProvider {
         Ok(hasher.finish().to_be_bytes().to_vec())
     }
 
+    /// Creates  Session
     async fn create_session(&self, user_id: &str, permissions: Vec<String>) -> Result<String> {
         // Basic session creation
         Ok(format!("session-{}-{}", user_id, permissions.len()))
     }
 
+    /// Validates  Session
     async fn validate_session(
         &self,
         session_token: &str,
@@ -227,6 +245,7 @@ pub fn create_custom(
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Securityproviderconfigcanonical
 pub type SecurityProviderConfigCanonical =
     crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 

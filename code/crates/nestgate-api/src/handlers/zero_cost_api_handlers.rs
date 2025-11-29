@@ -22,6 +22,7 @@ use tokio::sync::RwLock;
 /// Zero-copy serialization for Arc-wrapped types
 mod arc_string_serde {
     use super::{Arc, Deserialize, Deserializer, Serialize, Serializer};
+    /// Serialize
     pub fn serialize<S>(value: &Arc<String>, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -29,6 +30,7 @@ mod arc_string_serde {
         value.as_str().serialize(serializer)
     }
 
+    /// Deserialize
     pub fn deserialize<'de, D>(deserializer: D) -> Result<Arc<String>, D::Error>
     where
         D: Deserializer<'de>,
@@ -39,6 +41,7 @@ mod arc_string_serde {
 
 mod arc_hashmap_serde {
     use super::{Arc, Deserialize, Deserializer, HashMap, Serialize, Serializer};
+    /// Serialize
     pub fn serialize<S>(
         value: &Arc<HashMap<String, String>>,
         serializer: S,
@@ -49,6 +52,7 @@ mod arc_hashmap_serde {
         value.as_ref().serialize(serializer)
     }
 
+    /// Deserialize
     pub fn deserialize<'de, D>(deserializer: D) -> Result<Arc<HashMap<String, String>>, D::Error>
     where
         D: Deserializer<'de>,
@@ -75,16 +79,19 @@ pub trait ZeroCostApiHandler<T> {
 /// **ZERO-COST REQUEST/RESPONSE TYPES**
 /// High-performance data structures for API operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for ZeroCostApi operation
 pub struct ZeroCostApiRequest<T> {
     /// Request payload data
     pub data: T,
     /// Unique request identifier for tracing (Arc for zero-copy sharing)
     #[serde(with = "arc_string_serde")]
+    /// Request identifier
     pub request_id: Arc<String>,
     /// Request timestamp
     pub timestamp: std::time::SystemTime,
     /// Request metadata for extensibility (Arc for zero-copy sharing)
     #[serde(with = "arc_hashmap_serde")]
+    ///  Metadata
     pub _metadata: Arc<HashMap<String, String>>,
 }
 
@@ -92,11 +99,13 @@ pub struct ZeroCostApiRequest<T> {
 ///
 /// Response structure for zero-cost API operations with metadata.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for ZeroCostApi operation
 pub struct ZeroCostApiResponse<T> {
     /// Response payload data
     pub data: T,
     /// Request identifier for correlation (Arc for zero-copy sharing)
     #[serde(with = "arc_string_serde")]
+    /// Request identifier
     pub request_id: Arc<String>,
     /// Response status information
     pub status: ApiStatus,
@@ -110,6 +119,7 @@ pub struct ZeroCostApiResponse<T> {
 ///
 /// Status enumeration for API response outcomes.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Status values for Api
 pub enum ApiStatus {
     /// Request processed successfully
     Success,
@@ -138,6 +148,7 @@ pub struct ZeroCostPoolHandler<const MAX_REQUESTS: usize, const TIMEOUT_MS: u64>
 impl<const MAX_REQUESTS: usize, const TIMEOUT_MS: u64> Default
     for ZeroCostPoolHandler<MAX_REQUESTS, TIMEOUT_MS>
 {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -157,12 +168,14 @@ impl<const MAX_REQUESTS: usize, const TIMEOUT_MS: u64>
 
     /// Get maximum requests (compile-time constant)
     #[must_use]
+    /// Fn
     pub const fn max_requests() -> usize {
         MAX_REQUESTS
     }
 
     /// Get timeout (compile-time constant)
     #[must_use]
+    /// Fn
     pub const fn timeout_ms() -> u64 {
         TIMEOUT_MS
     }
@@ -364,9 +377,12 @@ struct CachedRequest {
 /// High-performance dataset handler with zero-cost abstractions.
 #[derive(Debug, Clone)]
 #[allow(dead_code)] // Manager and cache fields used for dataset operations
+/// Handler for ZeroCostDataset requests
 pub struct ZeroCostDatasetHandler<
     T: Send + Sync + Clone + 'static,
+    /// Cache Size
     const CACHE_SIZE: usize,
+    /// Timeout Ms
     const TIMEOUT_MS: u64,
 > {
     /// Dataset management interface
@@ -405,6 +421,7 @@ pub trait ZeroCostDatasetManager {
 ///
 /// Configuration structure for creating and managing ZFS datasets.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Dataset
 pub struct DatasetConfig {
     /// Dataset name identifier
     pub name: String,
@@ -419,6 +436,7 @@ pub struct DatasetConfig {
 ///
 /// Enumeration of supported ZFS dataset types.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of Dataset
 pub enum DatasetType {
     /// Standard filesystem dataset for file storage
     Filesystem,
@@ -433,6 +451,7 @@ pub enum DatasetType {
 ///
 /// Comprehensive information about a ZFS dataset.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Datasetinfo
 pub struct DatasetInfo {
     /// Dataset name
     pub name: String,
@@ -454,12 +473,15 @@ pub struct DatasetInfo {
 
 /// **API ERROR TYPES**
 #[derive(Debug, thiserror::Error)]
+/// Errors that can occur during Api operations
 pub enum ApiError {
     /// Request processing failed due to internal error
     #[error("Request processing failed")]
+    /// Processingfailed
     ProcessingFailed,
     /// Request exceeded maximum processing time
     #[error("Request timeout")]
+    /// Timeout
     Timeout,
     /// Request validation failed with details
     #[error("Validation error: {0}")]
@@ -472,12 +494,15 @@ pub enum ApiError {
 ///
 /// Comprehensive error types for zero-cost API operations.
 #[derive(Debug, thiserror::Error)]
+/// Errors that can occur during ZeroCostApi operations
 pub enum ZeroCostApiError {
     /// Processing operation failed due to internal error
     #[error("Processing operation failed")]
+    /// Processingfailed
     ProcessingFailed,
     /// Operation exceeded the allowed timeout duration
     #[error("Timeout occurred")]
+    /// Timeout
     Timeout,
     /// Input validation failed with detailed message
     #[error("Validation error: {0}")]
@@ -501,7 +526,9 @@ pub type HighThroughputPoolHandler = ZeroCostPoolHandler<50000, 60000>; // 50k r
 impl<const MAX_REQUESTS: usize, const TIMEOUT_MS: u64> ZeroCostApiHandler<serde_json::Value>
     for ZeroCostPoolHandler<MAX_REQUESTS, TIMEOUT_MS>
 {
+    /// Type alias for Error
     type Error = ApiError;
+    /// Handles  Request
     async fn handle_request(
         &self,
         request: ZeroCostApiRequest<serde_json::Value>,
@@ -520,6 +547,7 @@ pub struct ZeroCostRouterBuilder<const MAX_ROUTES: usize = 100, const MAX_MIDDLE
 impl<const MAX_ROUTES: usize, const MAX_MIDDLEWARE: usize> Default
     for ZeroCostRouterBuilder<MAX_ROUTES, MAX_MIDDLEWARE>
 {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -540,24 +568,28 @@ impl<const MAX_ROUTES: usize, const MAX_MIDDLEWARE: usize>
 
     /// Check if we can add more routes
     #[must_use]
+    /// Fn
     pub const fn can_add_route(&self) -> bool {
         self.routes.len() < MAX_ROUTES
     }
 
     /// Check if we can add more middleware
     #[must_use]
+    /// Fn
     pub const fn can_add_middleware(&self) -> bool {
         self.middleware_count < MAX_MIDDLEWARE
     }
 
     /// Get max routes at compile-time
     #[must_use]
+    /// Fn
     pub const fn max_routes() -> usize {
         MAX_ROUTES
     }
 
     /// Get max middleware at compile-time
     #[must_use]
+    /// Fn
     pub const fn max_middleware() -> usize {
         MAX_MIDDLEWARE
     }
@@ -627,6 +659,7 @@ impl ApiHandlerMigrationGuide {
 
     /// Expected performance improvements
     #[must_use]
+    /// Fn
     pub const fn expected_improvements() -> (f64, f64, f64) {
         (
             35.0, // Performance gain % (moderate due to async_trait elimination)

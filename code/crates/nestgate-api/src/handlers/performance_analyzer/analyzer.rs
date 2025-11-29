@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 
 /// Performance analyzer engine
 #[derive(Debug)]
+/// Performanceanalyzer
 pub struct PerformanceAnalyzer {
     /// Analysis configuration
     pub config: AnalyzerConfig,
@@ -15,6 +16,7 @@ pub struct PerformanceAnalyzer {
 impl PerformanceAnalyzer {
     /// Create new performance analyzer
     #[must_use]
+    /// Fn
     pub const fn new(config: AnalyzerConfig) -> Self {
         Self { config }
     }
@@ -39,6 +41,7 @@ impl PerformanceAnalyzer {
         })
     }
 
+    /// Calculate Overall Score
     fn calculate_overall_score(&self, metrics: &SystemMetrics) -> f64 {
         // Weighted performance score calculation
         let cpu_score = (100.0 - metrics.cpu_usage_percent).max(0.0);
@@ -49,6 +52,7 @@ impl PerformanceAnalyzer {
         cpu_score * 0.3 + memory_score * 0.3 + disk_score * 0.2 + network_score * 0.2
     }
 
+    /// Analyze Cpu
     fn analyze_cpu(&self, cpu_usage: f64) -> ComponentAnalysis {
         let status = if cpu_usage > 90.0 {
             PerformanceStatus::Critical
@@ -65,6 +69,7 @@ impl PerformanceAnalyzer {
         }
     }
 
+    /// Analyze Memory
     fn analyze_memory(&self, memory_usage: u64) -> ComponentAnalysis {
         // Simplified memory analysis
         ComponentAnalysis {
@@ -74,6 +79,7 @@ impl PerformanceAnalyzer {
         }
     }
 
+    /// Analyze Disk
     fn analyze_disk(&self, disk_metrics: &super::metrics::DiskIOMetrics) -> ComponentAnalysis {
         ComponentAnalysis {
             status: PerformanceStatus::Good,
@@ -86,6 +92,7 @@ impl PerformanceAnalyzer {
         }
     }
 
+    /// Analyze Network
     fn analyze_network(
         &self,
         network_metrics: &super::metrics::NetworkMetrics,
@@ -101,6 +108,7 @@ impl PerformanceAnalyzer {
         }
     }
 
+    /// Generate Recommendations
     fn generate_recommendations(&self, _metrics: &SystemMetrics) -> Vec<String> {
         vec![
             "System performance is within normal parameters".to_string(),
@@ -129,6 +137,7 @@ impl PerformanceAnalyzer {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for Analyzer
 pub struct AnalyzerConfig {
     /// CPU warning threshold (percentage)
     pub cpu_warning_threshold: f64,
@@ -139,6 +148,7 @@ pub struct AnalyzerConfig {
 }
 
 impl Default for AnalyzerConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             cpu_warning_threshold: 70.0,
@@ -150,6 +160,7 @@ impl Default for AnalyzerConfig {
 
 /// Complete analysis result
 #[derive(Debug, Serialize, Deserialize)]
+/// Analysisresult
 pub struct AnalysisResult {
     /// Overall system performance score (0.0-100.0)
     pub overall_score: f64,
@@ -169,6 +180,7 @@ pub struct AnalysisResult {
 
 /// Analysis result for individual component
 #[derive(Debug, Serialize, Deserialize)]
+/// Componentanalysis
 pub struct ComponentAnalysis {
     /// Performance status level for this component
     pub status: PerformanceStatus,
@@ -180,6 +192,7 @@ pub struct ComponentAnalysis {
 
 /// Performance status levels
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Status values for Performance
 pub enum PerformanceStatus {
     /// Performance is within acceptable parameters
     Good,
@@ -198,6 +211,7 @@ pub enum PerformanceStatus {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Analyzerconfigcanonical
 pub type AnalyzerConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
@@ -210,6 +224,7 @@ mod tests {
     use super::super::metrics::{DiskIOMetrics, NetworkMetrics};
     use super::*;
 
+    /// Creates  Test Metrics
     fn create_test_metrics() -> SystemMetrics {
         SystemMetrics {
             cpu_usage_percent: 45.0,

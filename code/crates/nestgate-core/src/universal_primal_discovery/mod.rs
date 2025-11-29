@@ -1,3 +1,5 @@
+//! Universal Primal Discovery module
+
 pub mod cache;
 // Universal Primal Discovery - Modular Architecture
 // This module implements the Universal Primal Principle: eliminating ALL hardcoded

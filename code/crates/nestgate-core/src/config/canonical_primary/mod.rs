@@ -108,10 +108,12 @@ pub use phase2c_types::{
 /// unified configuration that uses const generics for compile-time optimization.
 #[allow(deprecated)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for NestGateCanonical
 pub struct NestGateCanonicalConfig<
     const MAX_CONNECTIONS: usize = 1000,
     const BUFFER_SIZE: usize = 65536,
     const TIMEOUT_MS: u64 = 30000,
+    /// Api Port
     const API_PORT: u16 = 8080,
 > {
     /// System-level configuration
@@ -135,6 +137,7 @@ pub struct NestGateCanonicalConfig<
     /// Test and validation configurations (NEW - consolidates 40+ scattered test configs)
     /// **⚠️ DEV/TEST ONLY**: Only available with `dev-stubs` feature
     #[cfg(feature = "dev-stubs")]
+    /// Testing
     pub testing: CanonicalTestConfigs,
 
     /// Monitoring and observability configuration
@@ -181,6 +184,7 @@ impl<
         const MAX_CONNECTIONS: usize,
         const BUFFER_SIZE: usize,
         const TIMEOUT_MS: u64,
+        /// Api Port
         const API_PORT: u16,
     > NestGateCanonicalConfig<MAX_CONNECTIONS, BUFFER_SIZE, TIMEOUT_MS, API_PORT>
 {
@@ -242,7 +246,10 @@ impl<
                 {
                     use crate::constants::hardcoding::ports;
                     if self.network.api.port == ports::HTTP_DEFAULT {
-                        warnings.push(format!("Port {} not recommended for production", ports::HTTP_DEFAULT));
+                        warnings.push(format!(
+                            "Port {} not recommended for production",
+                            ports::HTTP_DEFAULT
+                        ));
                     }
 
                     // TLS validation moved to API config
@@ -294,6 +301,7 @@ impl<
         const MAX_CONNECTIONS: usize,
         const BUFFER_SIZE: usize,
         const TIMEOUT_MS: u64,
+        /// Api Port
         const API_PORT: u16,
     > Default for NestGateCanonicalConfig<MAX_CONNECTIONS, BUFFER_SIZE, TIMEOUT_MS, API_PORT>
 {

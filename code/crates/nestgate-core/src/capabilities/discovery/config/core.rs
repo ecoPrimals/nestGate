@@ -10,6 +10,8 @@
 //
 // **EXTRACTED FROM**: unified_dynamic_config.rs lines 26-42 (core structure)
 
+//! Core module
+
 use super::{
     cache::CacheDiscoverySettings, environment::EnvironmentDiscoverySettings,
     network::NetworkDiscoverySettings, security::SecurityDiscoverySettings,
@@ -24,6 +26,7 @@ use serde::{Deserialize, Serialize};
 /// Consolidates all dynamic discovery configuration patterns into a single,
 /// comprehensive structure that coordinates discovery across all domains.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Unifieddynamicdiscoveryextensions
 pub struct UnifiedDynamicDiscoveryExtensions {
     /// Timeout discovery settings
     pub timeout: TimeoutDiscoverySettings,
@@ -149,6 +152,7 @@ impl UnifiedDynamicDiscoveryExtensionsBuilder {
 }
 
 impl Default for UnifiedDynamicDiscoveryExtensionsBuilder {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

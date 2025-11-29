@@ -1,6 +1,8 @@
 //
 // Enhanced dataset management with automation support
 
+//! Dataset module
+
 use crate::error::{create_zfs_error, ZfsOperation};
 use crate::{
     config::ZfsConfig,
@@ -19,6 +21,7 @@ use tracing::warn;
 
 /// Dataset information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Datasetinfo
 pub struct DatasetInfo {
     /// Dataset name
     pub name: String,
@@ -40,6 +43,7 @@ pub struct DatasetInfo {
 /// ZFS Dataset Manager - handles dataset operations
 #[derive(Debug)]
 #[allow(dead_code)] // Some fields are planned features not yet fully implemented
+/// Manager for ZfsDataset operations
 pub struct ZfsDatasetManager {
     config: Arc<ZfsConfig>,
     pool_manager: Arc<ZfsPoolManager>,
@@ -217,6 +221,7 @@ impl ZfsDatasetManager {
         self.get_dataset_info_with_fallback(name).await
     }
 
+    /// Gets Dataset Info With Fallback
     async fn get_dataset_info_with_fallback(&self, name: &str) -> Result<DatasetInfo> {
         let mut cmd = Command::new("zfs");
         cmd.args(["list", "-H", "-o", "name,used,avail,mountpoint"]);

@@ -1,6 +1,8 @@
 //
 // Comprehensive ZFS pool setup with device detection, validation, and creation
 
+//! Pool Setup module
+
 use tracing::info;
 use tracing::warn;
 pub mod config;
@@ -54,6 +56,7 @@ fn convert_device_type(detection_type: &DetectionDeviceType) -> ConfigDeviceType
 
 /// Pool setup specific errors
 #[derive(Debug, thiserror::Error)]
+/// Errors that can occur during PoolSetup operations
 pub enum PoolSetupError {
     #[error("Device validation failed: {0}")]
     DeviceValidation(String),
@@ -78,6 +81,7 @@ pub enum PoolSetupError {
 
 /// Result of pool setup operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Poolsetupresult
 pub struct PoolSetupResult {
     /// Pool name that was created
     pub pool_name: String,
@@ -383,6 +387,7 @@ impl ZfsPoolSetup {
         }
     }
 
+    /// Gets Device Type Summary
     fn get_device_type_summary(&self) -> HashMap<DetectionDeviceType, usize> {
         let mut summary = HashMap::new();
         for device in &self.devices {
@@ -391,6 +396,7 @@ impl ZfsPoolSetup {
         summary
     }
 
+    /// Gets Speed Class Summary
     fn get_speed_class_summary(&self) -> HashMap<SpeedClass, usize> {
         let mut summary = HashMap::new();
         for device in &self.devices {
@@ -399,6 +405,7 @@ impl ZfsPoolSetup {
         summary
     }
 
+    /// Gets Recommendations
     fn get_recommendations(&self) -> Vec<String> {
         let mut recommendations = Vec::new();
         let available = self.get_available_devices();
@@ -431,12 +438,19 @@ impl ZfsPoolSetup {
 
 /// System report structure
 #[derive(Debug, Clone)]
+/// Systemreport
 pub struct SystemReport {
+    /// Total Devices
     pub total_devices: usize,
+    /// Available Devices
     pub available_devices: usize,
+    /// Devices By Type
     pub devices_by_type: HashMap<DetectionDeviceType, usize>,
+    /// Devices By Speed
     pub devices_by_speed: HashMap<SpeedClass, usize>,
+    /// Existing Pools
     pub existing_pools: Vec<String>,
+    /// Recommendations
     pub recommendations: Vec<String>,
 }
 /// Production ZFS setup function

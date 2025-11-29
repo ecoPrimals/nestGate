@@ -10,25 +10,40 @@ use std::collections::HashMap;
 pub mod constants {
     /// Common operation names as static strings to avoid allocations
     pub const GET_METADATA: &str = "get_metadata";
+    /// Create File
     pub const CREATE_FILE: &str = "create_file";
+    /// Read File
     pub const READ_FILE: &str = "read_file";
+    /// Write File
     pub const WRITE_FILE: &str = "write_file";
+    /// Delete File
     pub const DELETE_FILE: &str = "delete_file";
+    /// Create Directory
     pub const CREATE_DIRECTORY: &str = "create_directory";
+    /// Delete Directory
     pub const DELETE_DIRECTORY: &str = "delete_directory";
+    /// Read Directory
     pub const READ_DIRECTORY: &str = "read_directory";
+    /// Atomic Write
     pub const ATOMIC_WRITE: &str = "atomic_write";
+    /// Sync File
     pub const SYNC_FILE: &str = "sync_file";
     /// Common status strings
     pub const INITIALIZED: &str = "initialized";
+    /// Running
     pub const RUNNING: &str = "running";
+    /// Stopped
     pub const STOPPED: &str = "stopped";
+    /// Failed
     pub const FAILED: &str = "failed";
 
     /// Common error messages
     pub const FILE_NOT_FOUND: &str = "File not found";
+    /// Permission Denied
     pub const PERMISSION_DENIED: &str = "Permission denied";
+    /// Disk Full
     pub const DISK_FULL: &str = "Disk full";
+    /// Invalid Path
     pub const INVALID_PATH: &str = "Invalid path";
 }
 
@@ -96,6 +111,7 @@ impl StringMapBuilder {
 }
 
 impl Default for StringMapBuilder {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

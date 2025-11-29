@@ -2,6 +2,8 @@
 // Handles scheduling and execution of snapshot policies including
 // retention management and automated snapshot creation.
 
+//! Scheduler module
+
 use chrono::{Datelike, Timelike};
 // Removed unused HashMap import
 use std::sync::Arc;
@@ -25,6 +27,7 @@ use tracing::warn;
 
 /// Policy scheduler for managing automated snapshot creation
 #[derive(Debug)]
+/// Policyscheduler
 pub struct PolicyScheduler {
     dataset_manager: Arc<ZfsDatasetManager>,
     policies: SnapshotPolicyMap,

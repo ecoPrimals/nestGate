@@ -7,6 +7,7 @@ use std::collections::HashMap;
 ///
 /// Provides environment-based overrides and feature flags for performance tuning.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for PerformanceEnvironment
 pub struct PerformanceEnvironmentConfig {
     /// Name of the deployment environment (e.g., "development", "production").
     pub environment: String,
@@ -22,6 +23,7 @@ pub struct PerformanceEnvironmentConfig {
 ///
 /// Controls debug logging and diagnostics for performance analysis.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for PerformanceDebug
 pub struct PerformanceDebugConfig {
     /// Whether performance debugging is enabled.
     pub enabled: bool,

@@ -19,6 +19,7 @@ use std::time::Duration;
 /// - `ApiConfig` (canonical_primary/api_config.rs)
 /// - Handler-specific configs (unified_api_config/handlers.rs)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Api
 pub struct ApiConfig {
     // ==================== CORE NETWORK SETTINGS ====================
     /// API server bind address
@@ -73,17 +74,26 @@ pub struct ApiConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Tls
 pub struct TlsConfig {
+    /// Cert Path
     pub cert_path: String,
+    /// Key Path
     pub key_path: String,
+    /// Ca Path
     pub ca_path: Option<String>,
+    /// Verify Client
     pub verify_client: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for RateLimiting
 pub struct RateLimitingConfig {
+    /// Whether this feature is enabled
     pub enabled: bool,
+    /// Requests Per Second
     pub requests_per_second: u32,
+    /// Size of burst
     pub burst_size: u32,
 }
 
@@ -92,6 +102,7 @@ pub struct RateLimitingConfig {
 /// Authentication, authorization, and security settings for the API.
 /// Consolidates security patterns from UnifiedApiConfig.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ApiSecurity
 pub struct ApiSecurityConfig {
     /// Enable authentication for API endpoints
     pub auth_enabled: bool,
@@ -117,6 +128,7 @@ pub struct ApiSecurityConfig {
 /// Performance optimization and resource management settings.
 /// Consolidates performance patterns from UnifiedApiConfig.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ApiPerformance
 pub struct ApiPerformanceConfig {
     /// Request buffer size in bytes
     pub buffer_size: usize,
@@ -145,6 +157,7 @@ pub struct ApiPerformanceConfig {
 /// Observability, metrics, and health check settings.
 /// Consolidates monitoring patterns from UnifiedApiConfig.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ApiMonitoring
 pub struct ApiMonitoringConfig {
     /// Enable Prometheus metrics collection
     pub metrics_enabled: bool,
@@ -175,6 +188,7 @@ pub struct ApiMonitoringConfig {
 ///
 /// Threshold-based alerting for API health and performance.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ApiAlert
 pub struct ApiAlertConfig {
     /// Alert when error rate exceeds this percentage
     pub error_rate_threshold: f64,
@@ -308,6 +322,7 @@ impl ApiConfig {
 }
 
 impl Default for TlsConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             cert_path: "/etc/ssl/certs/nestgate.pem".to_string(),
@@ -331,6 +346,7 @@ impl TlsConfig {
 }
 
 impl Default for RateLimitingConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self::development()
     }
@@ -357,6 +373,7 @@ impl RateLimitingConfig {
 }
 
 impl Default for ApiSecurityConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self::development()
     }
@@ -389,6 +406,7 @@ impl ApiSecurityConfig {
 }
 
 impl Default for ApiPerformanceConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self::development()
     }
@@ -431,6 +449,7 @@ impl ApiPerformanceConfig {
 }
 
 impl Default for ApiMonitoringConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self::development()
     }
@@ -467,6 +486,7 @@ impl ApiMonitoringConfig {
 }
 
 impl Default for ApiAlertConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             error_rate_threshold: 5.0,        // 5%
@@ -490,6 +510,7 @@ impl ApiAlertConfig {
 }
 
 impl Default for ApiConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self::development_optimized()
     }

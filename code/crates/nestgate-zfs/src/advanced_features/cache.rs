@@ -7,6 +7,7 @@ use tracing::debug;
 
 /// Advanced cache analytics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Cacheanalytics
 pub struct CacheAnalytics {
     /// ARC statistics
     pub arc_stats: ArcStats,
@@ -46,6 +47,7 @@ impl CacheAnalytics {
 
 /// ARC (Adaptive Replacement Cache) statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Arcstats
 pub struct ArcStats {
     /// ARC size
     pub size: u64,
@@ -75,6 +77,7 @@ impl ArcStats {
 
 /// L2ARC (Level 2 Adaptive Replacement Cache) statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// L2Arcstats
 pub struct L2arcStats {
     /// L2ARC size
     pub size: u64,
@@ -104,6 +107,7 @@ impl L2arcStats {
 
 /// Cache efficiency metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Cacheefficiency
 pub struct CacheEfficiency {
     /// Overall cache efficiency
     pub overall_efficiency: f64,
@@ -113,6 +117,7 @@ pub struct CacheEfficiency {
     pub l2arc_efficiency: f64,
 }
 impl Default for CacheEfficiency {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

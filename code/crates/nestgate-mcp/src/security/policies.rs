@@ -7,6 +7,7 @@ use std::collections::HashMap;
 use std::time::Duration;
 /// Security policy for MCP operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Securitypolicy
 pub struct SecurityPolicy {
     /// Policy name
     pub name: String,
@@ -23,6 +24,7 @@ pub struct SecurityPolicy {
 }
 /// Access control configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Accesscontrol
 pub struct AccessControl {
     /// Allowed IP addresses/ranges
     pub allowed_ips: Vec<String>,
@@ -39,6 +41,7 @@ pub struct AccessControl {
 }
 /// Rate limiting configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Ratelimits
 pub struct RateLimits {
     /// Requests per minute per client
     pub requests_per_minute: u32,
@@ -51,6 +54,7 @@ pub struct RateLimits {
 }
 /// Session policy configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Sessionpolicy
 pub struct SessionPolicy {
     /// Maximum session duration
     pub max_session_duration: Duration,
@@ -63,6 +67,7 @@ pub struct SessionPolicy {
 }
 /// Audit requirements
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Auditrequirements
 pub struct AuditRequirements {
     /// Log all access attempts
     pub log_access_attempts: bool,
@@ -75,6 +80,7 @@ pub struct AuditRequirements {
 }
 /// Policy manager for MCP security
 #[derive(Debug)]
+/// Manager for Policy operations
 pub struct PolicyManager {
     /// Active security policies
     policies: HashMap<String, SecurityPolicy>,
@@ -310,6 +316,7 @@ impl PolicyManager {
 }
 
 impl Default for PolicyManager {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

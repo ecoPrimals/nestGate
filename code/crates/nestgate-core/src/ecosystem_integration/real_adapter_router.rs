@@ -13,7 +13,9 @@ use tracing::{debug, error, info, warn};
 
 // Type aliases to reduce complexity
 type CircuitStatesMap = Arc<RwLock<HashMap<String, CircuitState>>>;
+/// Type alias for FailureCountsMap
 type FailureCountsMap = Arc<RwLock<HashMap<String, u32>>>;
+/// Type alias for RoutingMetricsArc
 type RoutingMetricsArc = Arc<RwLock<RoutingMetrics>>;
 
 use crate::error::{NestGateError, Result};
@@ -39,6 +41,7 @@ use crate::universal_adapter::PrimalAgnosticAdapter as UniversalAdapter;
     since = "0.11.0",
     note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for AdapterRouting
 pub struct AdapterRoutingConfig {
     /// Timeout for adapter operations
     pub operation_timeout: Duration,
@@ -53,6 +56,7 @@ pub struct AdapterRoutingConfig {
 }
 #[allow(deprecated)]
 impl Default for AdapterRoutingConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             operation_timeout: Duration::from_secs(30),
@@ -66,6 +70,7 @@ impl Default for AdapterRoutingConfig {
 
 /// Fallback strategy for when adapter routing fails
 #[derive(Debug, Clone)]
+/// Fallbackstrategy
 pub enum FallbackStrategy {
     /// Fail immediately with error
     FailFast,
@@ -84,6 +89,7 @@ pub enum FallbackStrategy {
     },
 }
 impl Default for FallbackStrategy {
+    /// Returns the default instance
     fn default() -> Self {
         Self::RetryWithBackoff {
             initial_delay: Duration::from_millis(100),
@@ -95,45 +101,72 @@ impl Default for FallbackStrategy {
 
 /// Service request for routing
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for Service operation
 pub struct ServiceRequest {
+    /// Request identifier
     pub request_id: String,
+    /// Capability
     pub capability: String,
+    /// Payload
     pub payload: serde_json::Value,
+    /// Priority
     pub priority: RequestPriority,
+    /// Timeout
     pub timeout: Option<Duration>,
 }
 /// Request priority levels
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Requestpriority
 pub enum RequestPriority {
+    /// Low
     Low,
+    /// Normal
     Normal,
+    /// High
     High,
+    /// Critical
     Critical,
 }
 /// Service response from routing
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for Service operation
 pub struct ServiceResponse {
+    /// Request identifier
     pub request_id: String,
+    /// Status
     pub status: ResponseStatus,
+    /// Data
     pub data: Option<serde_json::Value>,
+    /// Error
     pub error: Option<String>,
+    /// Additional metadata key-value pairs
     pub metadata: HashMap<String, String>,
+    /// Processing Time
     pub processing_time: Duration,
 }
 /// Response status codes
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Status values for Response
 pub enum ResponseStatus {
+    /// Success
     Success,
+    /// Partialsuccess
     PartialSuccess,
+    /// Failed
     Failed,
+    /// Timeout
     Timeout,
+    /// Serviceunavailable
     ServiceUnavailable,
 }
 /// Circuit breaker state for service health tracking
 #[derive(Debug, Clone)]
 enum CircuitState {
+    /// Closed
     Closed,
+    /// Open
     Open { opened_at: std::time::Instant },
+    /// Halfopen
     HalfOpen,
 }
 /// Real Universal Adapter Router - Production Implementation
@@ -154,6 +187,7 @@ pub struct UniversalAdapterRouter {
 }
 /// Routing performance metrics
 #[derive(Debug, Default)]
+/// Routingmetrics
 pub struct RoutingMetrics {
     total_requests: u64,
     successful_requests: u64,
@@ -545,15 +579,23 @@ impl UniversalAdapterRouter {
 
 /// Router health status
 #[derive(Debug, Clone)]
+/// Routerhealthstatus
 pub struct RouterHealthStatus {
+    /// Whether healthy
     pub is_healthy: bool,
+    /// Success Rate
     pub success_rate: f64,
+    /// Total Requests
     pub total_requests: u64,
+    /// Avg Processing Time
     pub avg_processing_time: Duration,
+    /// Circuit Breaker Trips
     pub circuit_breaker_trips: u64,
+    /// Fallback Activations
     pub fallback_activations: u64,
 }
 impl Clone for RoutingMetrics {
+    /// Clone
     fn clone(&self) -> Self {
         Self {
             total_requests: self.total_requests,
@@ -575,6 +617,7 @@ impl Clone for RoutingMetrics {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Adapterroutingconfigcanonical
 pub type AdapterRoutingConfigCanonical =
     crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 

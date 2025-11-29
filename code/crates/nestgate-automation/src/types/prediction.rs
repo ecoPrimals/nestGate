@@ -6,57 +6,91 @@ use nestgate_core::unified_enums::StorageTier;
 /// Clean type definitions for prediction and analysis functionality
 /// Tier type enumeration for backward compatibility
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of Tier
 pub enum TierType {
+    /// Hot
     Hot,
+    /// Warm
     Warm,
+    /// Cold
     Cold,
 }
 /// Data pattern enumeration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Datapattern
 pub enum DataPattern {
+    /// Sequential
     Sequential,
+    /// Random
     Random,
+    /// Mixed
     Mixed,
+    /// Unknown
     Unknown,
 }
 /// File type enumeration  
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of File
 pub enum FileType {
+    /// Document
     Document,
+    /// Image
     Image,
+    /// Video
     Video,
+    /// Archive
     Archive,
+    /// Log
     Log,
+    /// Backup
     Backup,
+    /// Database
     Database,
     Other(String),
+    /// Unknown
     Unknown,
 }
 /// Access type enumeration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of Access
 pub enum AccessType {
+    /// Read
     Read,
+    /// Write
     Write,
+    /// Delete
     Delete,
+    /// Modify
     Modify,
 }
 /// Access event structure with canonical fields
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Accessevent
 pub struct AccessEvent {
+    /// File Path
     pub file_path: String,
+    /// Access Type
     pub access_type: AccessType,
+    /// Timestamp
     pub timestamp: SystemTime,
+    /// Size Bytes
     pub size_bytes: u64,
 }
 /// File characteristics structure with canonical fields
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Filecharacteristics
 pub struct FileCharacteristics {
+    /// Estimated Compression Ratio
     pub estimated_compression_ratio: f64,
+    /// Dedup Potential
     pub dedup_potential: f64,
+    /// Access Frequency
     pub access_frequency: f64, // Accesses per day
+    /// Size Category
     pub size_category: SizeCategory,
 }
 impl Default for FileCharacteristics {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             estimated_compression_ratio: 1.0,
@@ -69,25 +103,36 @@ impl Default for FileCharacteristics {
 
 /// Size category enumeration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Sizecategory
 pub enum SizeCategory {
     Small,  // < 1MB
     Medium, // 1MB - 100MB
     Large,  // 100MB - 1GB
     XLarge, // > 1GB
+    /// Unknown
     Unknown,
 }
 /// Access pattern structure with canonical fields
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Accesspattern
 pub struct AccessPattern {
+    /// Accesses Last 24H
     pub accesses_last_24h: u32,
+    /// Accesses Last Week
     pub accesses_last_week: u32,
+    /// Accesses Last Month
     pub accesses_last_month: u32,
+    /// Total Accesses
     pub total_accesses: u32,
+    /// Last Access
     pub last_access: SystemTime,
+    /// Peak Access Times
     pub peak_access_times: Vec<u8>, // Hours of day (0-23)
-    pub read_write_ratio: f64,      // Read operations / Write operations
+    /// Read Write Ratio
+    pub read_write_ratio: f64, // Read operations / Write operations
 }
 impl Default for AccessPattern {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             accesses_last_24h: 0,
@@ -103,45 +148,76 @@ impl Default for AccessPattern {
 
 /// File analysis structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Fileanalysis
 pub struct FileAnalysis {
+    /// File Path
     pub file_path: String,
+    /// Size Bytes
     pub size_bytes: u64,
+    /// Timestamp when this was created
     pub created_at: SystemTime,
+    /// Modified At
     pub modified_at: SystemTime,
+    /// Accessed At
     pub accessed_at: SystemTime,
+    /// File Type
     pub file_type: String,
 }
 /// Tier prediction structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Tierprediction
 pub struct TierPrediction {
+    /// Predicted Tier
     pub predicted_tier: StorageTier,
+    /// Confidence Score
     pub confidence_score: f64,
+    /// Accesses Last 24H
     pub accesses_last_24h: u32,
+    /// Accesses Last Week
     pub accesses_last_week: u32,
+    /// Accesses Last Month
     pub accesses_last_month: u32,
+    /// Size Bytes
     pub size_bytes: u64,
+    /// File Type
     pub file_type: String,
+    /// Recommendation Reason
     pub recommendation_reason: String,
 }
 /// Data migration instruction
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Datamigration
 pub struct DataMigration {
+    /// File Path
     pub file_path: String,
+    /// Size Bytes
     pub size_bytes: u64,
+    /// Current Tier
     pub current_tier: StorageTier,
+    /// Target Tier
     pub target_tier: StorageTier,
+    /// Migration Time
     pub migration_time: SystemTime,
+    /// Accessed At
     pub accessed_at: SystemTime,
+    /// Tier Prediction
     pub tier_prediction: TierPrediction,
 }
 /// Legacy tier prediction for compatibility
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Legacytierprediction
 pub struct LegacyTierPrediction {
+    /// Recommended Tier
     pub recommended_tier: StorageTier,
+    /// Confidence
     pub confidence: f64,
+    /// Reasoning
     pub reasoning: String,
+    /// Alternative Tiers
     pub alternative_tiers: Vec<(StorageTier, f64)>,
+    /// Timestamp when this was created
     pub created_at: SystemTime,
+    /// Valid Until
     pub valid_until: SystemTime,
 }
 impl LegacyTierPrediction {
@@ -153,6 +229,7 @@ impl LegacyTierPrediction {
 
 /// Convert `TierType` to legacy `StorageTier`
 impl From<TierType> for StorageTier {
+    /// From
     fn from(tier_type: TierType) -> Self {
         match tier_type {
             TierType::Hot => StorageTier::Hot,
@@ -163,6 +240,7 @@ impl From<TierType> for StorageTier {
 }
 /// Convert legacy `StorageTier` to `TierType`
 impl From<StorageTier> for TierType {
+    /// From
     fn from(tier: StorageTier) -> Self {
         match tier {
             StorageTier::Hot => TierType::Hot,
@@ -175,13 +253,18 @@ impl From<StorageTier> for TierType {
     }
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Tierclassification
 pub enum TierClassification {
+    /// Performance
     Performance,
+    /// Balanced
     Balanced,
+    /// Archive
     Archive,
 }
 
 impl From<StorageTier> for TierClassification {
+    /// From
     fn from(tier: StorageTier) -> Self {
         match tier {
             StorageTier::Hot => TierClassification::Performance,

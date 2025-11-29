@@ -6,16 +6,24 @@ use serde::{Deserialize, Serialize};
 
 /// Canonical Service Type Classification
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Types of UnifiedService
 pub enum UnifiedServiceType {
+    /// Storage
     Storage,
+    /// Network
     Network,
+    /// Compute
     Compute,
+    /// Security
     Security,
+    /// Intelligence
     Intelligence,
+    /// Orchestration
     Orchestration,
 }
 
 impl std::fmt::Display for UnifiedServiceType {
+    /// Fmt
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Storage => write!(f, "Storage"),
@@ -30,9 +38,13 @@ impl std::fmt::Display for UnifiedServiceType {
 
 /// Canonical Capability Identifier
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Capabilityid
 pub struct CapabilityId {
+    /// Domain
     pub domain: String,
+    /// Capability
     pub capability: String,
+    /// Version
     pub version: String,
 }
 

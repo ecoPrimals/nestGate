@@ -15,10 +15,12 @@ mod analysis_tests {
 
     // ==================== HELPER FUNCTIONS ====================
 
+    /// Creates  Test Metrics History
     fn create_test_metrics_history() -> Arc<RwLock<VecDeque<PerformanceSnapshot>>> {
         Arc::new(RwLock::new(VecDeque::new()))
     }
 
+    /// Creates  Test Snapshot
     fn create_test_snapshot(score: f64, age_secs: u64) -> PerformanceSnapshot {
         PerformanceSnapshot {
             timestamp: SystemTime::now() - Duration::from_secs(age_secs),
@@ -27,6 +29,7 @@ mod analysis_tests {
         }
     }
 
+    /// Populate History With Samples
     async fn populate_history_with_samples(
         history: &Arc<RwLock<VecDeque<PerformanceSnapshot>>>,
         count: usize,

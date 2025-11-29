@@ -1,9 +1,10 @@
-use crate::Result;
+use nestgate_core::Result;
 use serde::{Deserialize, Serialize};
 use tracing::info;
 
 /// Production readiness assessment report
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Productionreadinessreport
 pub struct ProductionReadinessReport {
     /// Whether the system is ready for production
     pub ready_for_production: bool,
@@ -26,6 +27,7 @@ pub struct ProductionReadinessReport {
 }
 /// Individual readiness finding
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Readinessfinding
 pub struct ReadinessFinding {
     /// Category of the finding
     pub category: String,
@@ -38,10 +40,15 @@ pub struct ReadinessFinding {
 }
 /// Severity levels for findings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Findingseverity
 pub enum FindingSeverity {
+    /// Info
     Info,
+    /// Warning
     Warning,
+    /// Error
     Error,
+    /// Critical
     Critical,
 }
 /// Production Readiness Validator
@@ -52,9 +59,11 @@ pub struct ProductionReadinessValidator {
 }
 /// Real ZFS operations (placeholder for actual implementation)
 #[derive(Debug, Default)]
+/// Realzfsoperations
 pub struct RealZfsOperations {}
 
 impl RealZfsOperations {
+    /// Checks if Available
     pub async fn is_available() -> bool {
         // Check if ZFS is available on the system
         tokio::process::Command::new("zfs")
@@ -304,11 +313,13 @@ impl ProductionReadinessValidator {
         Ok(report)
     }
 
+    /// Check Zfs Availability
     fn check_zfs_availability(&self) -> Result<bool> {
         // Check if ZFS is available on the system
         Ok(std::path::Path::new("/proc/spl/kstat/zfs").exists())
     }
 
+    /// Detect Real Hardware
     fn detect_real_hardware(&self) -> Result<bool> {
         // Detect if we're running on real hardware vs virtualized environment
         Ok(!std::env::var("NESTGATE_MOCK_MODE")
@@ -316,6 +327,7 @@ impl ProductionReadinessValidator {
             .eq("true"))
     }
 
+    /// Identify Mock Dependencies
     fn identify_mock_dependencies(&self) -> Result<Vec<String>> {
         let mut mocks = Vec::new();
 
@@ -329,6 +341,7 @@ impl ProductionReadinessValidator {
         Ok(mocks)
     }
 
+    /// Validates  Performance
     fn validate_performance(&self) -> Result<bool> {
         // Validate performance characteristics
         // Check system resources and ZFS performance metrics
@@ -341,6 +354,7 @@ impl ProductionReadinessValidator {
         Ok(available_memory >= 512) // Require at least 512MB for ZFS operations
     }
 
+    /// Validates  Security
     fn validate_security(&self) -> Result<bool> {
         // Validate security configurations
         // Check for secure ZFS configuration
@@ -353,6 +367,7 @@ impl ProductionReadinessValidator {
         Ok(!secure_mode || self.check_encryption_support())
     }
 
+    /// Validates  Configuration
     fn validate_configuration(&self) -> Result<bool> {
         // Validate system configuration
         // Check for required environment variables and configuration
@@ -366,6 +381,7 @@ impl ProductionReadinessValidator {
         Ok(result)
     }
 
+    /// Generate Findings And Recommendations
     fn generate_findings_and_recommendations(
         &self,
         report: &mut ProductionReadinessReport,
@@ -423,6 +439,7 @@ impl ProductionReadinessValidator {
 }
 
 impl Default for ProductionReadinessValidator {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

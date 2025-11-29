@@ -2,6 +2,7 @@
 use serde::{Deserialize, Serialize};
 /// Certificate validation mode
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+/// Certmode
 pub enum CertMode {
     /// Strict certificate validation
     Strict,
@@ -9,6 +10,7 @@ pub enum CertMode {
     Lenient,
     /// Development mode (minimal validation)
     #[default]
+    /// Development
     Development,
     /// Custom validation mode
     Custom(String),
@@ -22,15 +24,18 @@ pub mod validator {
     use super::*;
     /// Simple certificate validator
     #[derive(Debug, Clone)]
+    /// Certificatevalidator
     pub struct CertificateValidator {
         mode: CertMode,
     }
 
     impl CertificateValidator {
+        /// Creates a new instance
         pub fn new(mode: CertMode) -> Self {
             Self { mode }
         }
 
+        /// Mode
         pub fn mode(&self) -> &CertMode {
             &self.mode
         }

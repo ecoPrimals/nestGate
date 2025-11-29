@@ -2,6 +2,8 @@
 //
 // This module defines the capability interfaces for integrating with external primals
 // through the Universal Adapter pattern, eliminating hardcoded dependencies.
+//! Capabilities module
+
 pub mod compute; // Compute compute capabilities
 pub mod intelligence;
 pub mod orchestration; // Orchestration orchestration capabilities
@@ -17,9 +19,13 @@ use std::collections::HashMap;
 
 // Base capability request structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for Capability operation
 pub struct CapabilityRequest {
+    /// Capability identifier
     pub capability_id: String,
+    /// Parameters
     pub parameters: serde_json::Value,
+    /// Additional metadata key-value pairs
     pub metadata: HashMap<String, String>,
 }
 impl CapabilityRequest {
@@ -41,10 +47,15 @@ impl CapabilityRequest {
 
 // Base capability response structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for Capability operation
 pub struct CapabilityResponse {
+    /// Success
     pub success: bool,
+    /// Data
     pub data: serde_json::Value,
+    /// Additional metadata key-value pairs
     pub metadata: HashMap<String, String>,
+    /// Error Message
     pub error_message: Option<String>,
 }
 impl CapabilityResponse {

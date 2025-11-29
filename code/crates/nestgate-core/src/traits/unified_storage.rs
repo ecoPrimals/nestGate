@@ -158,32 +158,50 @@ pub trait UnifiedStorage: Send + Sync + std::fmt::Debug + 'static {
 
 /// Storage metadata information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagemetadata
 pub struct StorageMetadata {
+    /// Size
     pub size: u64,
+    /// Timestamp when this was created
     pub created_at: SystemTime,
+    /// Modified At
     pub modified_at: SystemTime,
+    /// Content Type
     pub content_type: Option<String>,
+    /// Etag
     pub etag: Option<String>,
+    /// Version
     pub version: Option<String>,
+    /// Custom Metadata
     pub custom_metadata: HashMap<String, String>,
 }
 /// Storage stream for large data operations
 #[derive(Debug)]
+/// Storagestream
 pub struct StorageStream {
+    /// Stream identifier
     pub stream_id: String,
+    /// Size of total
     pub total_size: Option<u64>,
+    /// Size of chunk
     pub chunk_size: usize,
+    /// Additional metadata key-value pairs
     pub metadata: Option<StorageMetadata>,
 }
 /// Storage transaction for atomic operations
 #[derive(Debug)]
+/// Storagetransaction
 pub struct StorageTransaction {
+    /// Transaction identifier
     pub transaction_id: String,
+    /// Timestamp when this was created
     pub created_at: SystemTime,
+    /// Timeout
     pub timeout: Duration,
 }
 /// Storage capabilities enumeration
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+/// Storagecapability
 pub enum StorageCapability {
     /// Basic read/write operations
     BasicOperations,
@@ -217,6 +235,7 @@ pub enum StorageCapability {
 // ==================== CONVENIENCE IMPLEMENTATIONS ====================
 
 impl Default for StorageMetadata {
+    /// Returns the default instance
     fn default() -> Self {
         let now = SystemTime::now();
         Self {

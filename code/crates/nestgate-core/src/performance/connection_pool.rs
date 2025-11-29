@@ -31,6 +31,7 @@ use tracing::{debug, info};
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for ConnectionPool
 pub struct ConnectionPoolConfig {
     /// Maximum number of connections per pool
     pub max_connections: usize,
@@ -44,6 +45,7 @@ pub struct ConnectionPoolConfig {
     pub cleanup_interval: Duration,
 }
 impl Default for ConnectionPoolConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             max_connections: 10,
@@ -57,6 +59,7 @@ impl Default for ConnectionPoolConfig {
 
 /// A pooled connection wrapper
 #[derive(Debug)]
+/// Pooledconnection
 pub struct PooledConnection<T> {
     /// The actual connection
     pub connection: T,
@@ -68,6 +71,7 @@ pub struct PooledConnection<T> {
     pub created_at: Instant,
 }
 impl<T> PooledConnection<T> {
+    /// Creates a new instance
     pub fn new(connection: T) -> Self {
         let now = Instant::now();
         Self {
@@ -78,15 +82,18 @@ impl<T> PooledConnection<T> {
         }
     }
 
+    /// Mark Used
     pub fn mark_used(&mut self) {
         self.last_used = Instant::now();
         self.in_use = true;
     }
 
+    /// Mark Idle
     pub fn mark_idle(&mut self) {
         self.in_use = false;
     }
 
+    /// Checks if Idle Too Long
     pub fn is_idle_too_long(&self, max_idle_time: Duration) -> bool {
         !self.in_use && self.last_used.elapsed() > max_idle_time
     }
@@ -107,13 +114,21 @@ pub struct UniversalConnectionPool<T> {
 }
 /// Connection pool statistics
 #[derive(Debug, Default)]
+/// Poolstats
 pub struct PoolStats {
+    /// Total Connections
     pub total_connections: usize,
+    /// Active Connections
     pub active_connections: usize,
+    /// Idle Connections
     pub idle_connections: usize,
+    /// Connections Created
     pub connections_created: u64,
+    /// Connections Destroyed
     pub connections_destroyed: u64,
+    /// Connection Requests
     pub connection_requests: u64,
+    /// Connection Timeouts
     pub connection_timeouts: u64,
 }
 impl<T> UniversalConnectionPool<T>
@@ -230,6 +245,7 @@ where
                     to_remove.push(i);
                 }
             }
+            /// To Remove
             to_remove
         };
 
@@ -315,6 +331,7 @@ pub struct PooledConnectionGuard<T> {
     _permit: tokio::sync::OwnedSemaphorePermit,
 }
 impl<T> PooledConnectionGuard<T> {
+    /// Creates a new instance
     fn new(
         connection: T,
         pool: Arc<UniversalConnectionPool<T>>,
@@ -339,6 +356,7 @@ impl<T> PooledConnectionGuard<T> {
 }
 
 impl<T> Drop for PooledConnectionGuard<T> {
+    /// Drop
     fn drop(&mut self) {
         debug!("🔄 Connection returned to pool");
         // Connection will be returned to pool when this is dropped
@@ -383,6 +401,7 @@ impl ConnectionPoolManager {
 }
 
 impl Default for ConnectionPoolManager {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -419,6 +438,7 @@ impl HttpConnectionPool {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Connectionpoolconfigcanonical
 pub type ConnectionPoolConfigCanonical =
     crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 

@@ -5,6 +5,7 @@
 use super::types::{IntegrationPreferences, RateLimitSpec, CircuitBreakerSpec};
 
 impl Default for RateLimitSpec {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             rps: Some(100),
@@ -15,6 +16,7 @@ impl Default for RateLimitSpec {
 }
 
 impl Default for CircuitBreakerSpec {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             failure_threshold: Some(5),

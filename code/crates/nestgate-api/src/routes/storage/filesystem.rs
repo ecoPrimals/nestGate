@@ -40,6 +40,7 @@ use tokio::sync::RwLock;
 
 /// Shared state for filesystem backend
 #[derive(Clone)]
+/// Filesystemstate
 pub struct FilesystemState {
     /// The filesystem backend instance
     pub backend: Arc<RwLock<FilesystemBackend>>,
@@ -111,9 +112,12 @@ pub fn create_filesystem_router() -> Router<FilesystemState> {
 // ==================== Request/Response Types ====================
 
 #[derive(Debug, Deserialize)]
+/// Request parameters for UploadFile operation
 pub struct UploadFileRequest {
+    /// Path
     pub path: String,
     #[serde(with = "base64_serde")]
+    /// Data
     pub data: Vec<u8>,
 }
 
@@ -121,6 +125,7 @@ mod base64_serde {
     use base64::{Engine as _, engine::general_purpose};
     use serde::{Deserialize, Deserializer, Serializer};
 
+    /// Serialize
     pub fn serialize<S>(bytes: &[u8], serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -128,6 +133,7 @@ mod base64_serde {
         serializer.serialize_str(&general_purpose::STANDARD.encode(bytes))
     }
 
+    /// Deserialize
     pub fn deserialize<'de, D>(deserializer: D) -> Result<Vec<u8>, D::Error>
     where
         D: Deserializer<'de>,
@@ -138,85 +144,137 @@ mod base64_serde {
 }
 
 #[derive(Debug, Serialize)]
+/// Response data for UploadFile operation
 pub struct UploadFileResponse {
+    /// Success
     pub success: bool,
+    /// Path
     pub path: String,
+    /// Size
     pub size: u64,
+    /// Size of compressed
     pub compressed_size: u64,
+    /// Compression Ratio
     pub compression_ratio: f64,
 }
 
 #[derive(Debug, Deserialize)]
+/// Request parameters for CreateSnapshot operation
 pub struct CreateSnapshotRequest {
+    /// Name
     pub name: String,
+    /// Human-readable description
     pub description: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
+/// Response data for CreateSnapshot operation
 pub struct CreateSnapshotResponse {
+    /// Success
     pub success: bool,
+    /// Snapshot identifier
     pub snapshot_id: String,
+    /// Name
     pub name: String,
 }
 
 #[derive(Debug, Serialize)]
+/// Fileinfo
 pub struct FileInfo {
+    /// Path
     pub path: String,
+    /// Size of original
     pub original_size: u64,
+    /// Size of compressed
     pub compressed_size: u64,
+    /// Compression Ratio
     pub compression_ratio: f64,
+    /// Space Saved
     pub space_saved: u64,
+    /// Checksum
     pub checksum: String,
+    /// Timestamp when this was created
     pub created_at: String,
+    /// Modified At
     pub modified_at: String,
 }
 
 #[derive(Debug, Serialize)]
+/// Response data for ListFiles operation
 pub struct ListFilesResponse {
+    /// Files
     pub files: Vec<FileInfo>,
+    /// Count of total
     pub total_count: usize,
+    /// Size of total original
     pub total_original_size: u64,
+    /// Size of total compressed
     pub total_compressed_size: u64,
+    /// Overall Compression Ratio
     pub overall_compression_ratio: f64,
 }
 
 #[derive(Debug, Serialize)]
+/// Snapshotinfo
 pub struct SnapshotInfo {
+    /// Unique identifier
     pub id: String,
+    /// Name
     pub name: String,
+    /// Timestamp when this was created
     pub created_at: String,
+    /// Count of file
     pub file_count: u64,
+    /// Strategy
     pub strategy: String,
+    /// Size Bytes
     pub size_bytes: Option<u64>,
 }
 
 #[derive(Debug, Serialize)]
+/// Response data for ListSnapshots operation
 pub struct ListSnapshotsResponse {
+    /// Snapshots
     pub snapshots: Vec<SnapshotInfo>,
+    /// Count of total
     pub total_count: usize,
 }
 
 #[derive(Debug, Serialize)]
+/// Response data for Stats operation
 pub struct StatsResponse {
+    /// Count of file
     pub file_count: usize,
+    /// Size of total original
     pub total_original_size: u64,
+    /// Size of total compressed
     pub total_compressed_size: u64,
+    /// Compression Ratio
     pub compression_ratio: f64,
+    /// Space Saved
     pub space_saved: u64,
+    /// Space Saved Percent
     pub space_saved_percent: f64,
 }
 
 #[derive(Debug, Serialize)]
+/// Response data for Health operation
 pub struct HealthResponse {
+    /// Status
     pub status: String,
+    /// Backend Type
     pub backend_type: String,
+    /// Root Path
     pub root_path: String,
+    /// Writable
     pub writable: bool,
+    /// Readable
     pub readable: bool,
 }
 
 /// Response from file verification operation
 #[derive(Debug, Serialize)]
+/// Response data for Verify operation
 pub struct VerifyResponse {
     /// Total number of files checked
     pub total_files: usize,
@@ -230,6 +288,7 @@ pub struct VerifyResponse {
 
 /// API error response
 #[derive(Debug, Serialize)]
+/// Error type for Api operations
 pub struct ApiError {
     /// Error message
     pub error: String,
@@ -238,6 +297,7 @@ pub struct ApiError {
 }
 
 impl IntoResponse for ApiError {
+    /// Into Response
     fn into_response(self) -> Response {
         let status = match self.code.as_str() {
             "NOT_FOUND" => StatusCode::NOT_FOUND,

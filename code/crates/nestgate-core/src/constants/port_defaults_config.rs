@@ -4,6 +4,7 @@ use std::sync::Arc;
 /// Thread-safe configuration for port defaults
 /// Captures environment variables at initialization to prevent race conditions
 #[derive(Debug, Clone)]
+/// Configuration for Port
 pub struct PortConfig {
     // NestGate service ports
     api_port: Option<u16>,
@@ -78,84 +79,102 @@ impl PortConfig {
 
     // Port getters with fallback to hardcoded defaults
 
+    /// Gets Api Port
     pub fn get_api_port(&self) -> u16 {
         self.api_port.unwrap_or(DEFAULT_API_PORT)
     }
 
+    /// Gets Admin Port
     pub fn get_admin_port(&self) -> u16 {
         self.admin_port.unwrap_or(DEFAULT_ADMIN_PORT)
     }
 
+    /// Gets Metrics Port
     pub fn get_metrics_port(&self) -> u16 {
         self.metrics_port.unwrap_or(DEFAULT_METRICS_PORT)
     }
 
+    /// Gets Health Port
     pub fn get_health_port(&self) -> u16 {
         self.health_port.unwrap_or(DEFAULT_HEALTH_PORT)
     }
 
+    /// Gets Dev Port
     pub fn get_dev_port(&self) -> u16 {
         self.dev_port.unwrap_or(DEFAULT_DEV_PORT)
     }
 
+    /// Gets Postgres Port
     pub fn get_postgres_port(&self) -> u16 {
         self.postgres_port.unwrap_or(DEFAULT_POSTGRES_PORT)
     }
 
+    /// Gets Redis Port
     pub fn get_redis_port(&self) -> u16 {
         self.redis_port.unwrap_or(DEFAULT_REDIS_PORT)
     }
 
+    /// Gets Prometheus Port
     pub fn get_prometheus_port(&self) -> u16 {
         self.prometheus_port.unwrap_or(DEFAULT_PROMETHEUS_PORT)
     }
 
+    /// Gets Grafana Port
     pub fn get_grafana_port(&self) -> u16 {
         self.grafana_port.unwrap_or(DEFAULT_GRAFANA_PORT)
     }
 
     // Builder methods for tests
 
+    /// Builder method to set Api Port
     pub fn with_api_port(mut self, port: u16) -> Self {
         self.api_port = Some(port);
         self
     }
 
+    /// Builder method to set Admin Port
     pub fn with_admin_port(mut self, port: u16) -> Self {
         self.admin_port = Some(port);
         self
     }
 
+    /// Builder method to set Metrics Port
     pub fn with_metrics_port(mut self, port: u16) -> Self {
         self.metrics_port = Some(port);
         self
     }
 
+    /// Builder method to set Health Port
     pub fn with_health_port(mut self, port: u16) -> Self {
         self.health_port = Some(port);
         self
     }
 
+    /// Builder method to set Dev Port
     pub fn with_dev_port(mut self, port: u16) -> Self {
         self.dev_port = Some(port);
         self
     }
 
+    /// Builder method to set Postgres Port
     pub fn with_postgres_port(mut self, port: u16) -> Self {
         self.postgres_port = Some(port);
         self
     }
 
+    /// Builder method to set Redis Port
     pub fn with_redis_port(mut self, port: u16) -> Self {
         self.redis_port = Some(port);
         self
     }
 
+    /// Builder method to set Prometheus Port
     pub fn with_prometheus_port(mut self, port: u16) -> Self {
         self.prometheus_port = Some(port);
         self
     }
 
+    /// Builder method to set Grafana Port
     pub fn with_grafana_port(mut self, port: u16) -> Self {
         self.grafana_port = Some(port);
         self
@@ -163,6 +182,7 @@ impl PortConfig {
 }
 
 impl Default for PortConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

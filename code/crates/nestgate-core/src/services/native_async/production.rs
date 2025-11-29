@@ -23,6 +23,7 @@ use crate::service_discovery::types::ServiceInfo;
 // Define missing types locally
 /// Information about an active network connection
 #[derive(Debug, Clone)]
+/// Connectioninfo
 pub struct ConnectionInfo {
     /// Unique identifier for this connection
     pub connection_id: String,
@@ -40,6 +41,7 @@ pub struct ConnectionInfo {
 
 /// Network address consisting of host and port
 #[derive(Debug, Clone)]
+/// Networkaddress
 pub struct NetworkAddress {
     /// Hostname or IP address
     pub host: String,
@@ -48,14 +50,18 @@ pub struct NetworkAddress {
 }
 
 #[derive(Debug, Clone)]
+/// Status values for Connection
 pub enum ConnectionStatus {
+    /// Connected
     Connected,
+    /// Disconnected
     Disconnected,
     Error(String),
 }
 
 // Type aliases to reduce complexity
 type ServiceInfoMap = Arc<RwLock<HashMap<String, ServiceInfo>>>;
+/// Type alias for ConnectionMap
 type ConnectionMap = Arc<RwLock<HashMap<String, ConnectionInfo>>>;
 
 /// Production load balancer implementation
@@ -64,6 +70,7 @@ pub struct ProductionLoadBalancer {
     stats: Arc<RwLock<LoadBalancerStats>>,
 }
 impl Default for ProductionLoadBalancer {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             services: Arc::new(RwLock::new(HashMap::new())),
@@ -82,12 +89,18 @@ impl Default for ProductionLoadBalancer {
 }
 
 impl NativeAsyncLoadBalancer<1000, 10000, 86400, 30> for ProductionLoadBalancer {
+    /// Type alias for ServiceInfo
     type ServiceInfo = ServiceInfo;
+    /// Type alias for ServiceRequest
     type ServiceRequest = ServiceRequest;
+    /// Type alias for ServiceResponse
     type ServiceResponse = ServiceResponse;
+    /// Type alias for LoadBalancerStats
     type LoadBalancerStats = LoadBalancerStats;
+    /// Type alias for ServiceStats
     type ServiceStats = ServiceStats;
 
+    /// Add Service
     async fn add_service(&self, service: Self::ServiceInfo) -> Result<()> {
         // Native async service addition - no Future boxing overhead
         let service_name = service.metadata.name.clone();
@@ -102,6 +115,7 @@ impl NativeAsyncLoadBalancer<1000, 10000, 86400, 30> for ProductionLoadBalancer 
         Ok(())
     }
 
+    /// Remove Service
     async fn remove_service(&self, service_id: &str) -> Result<()> {
         // Direct async method - no Future boxing
         let mut services = self.services.write().await;
@@ -113,6 +127,7 @@ impl NativeAsyncLoadBalancer<1000, 10000, 86400, 30> for ProductionLoadBalancer 
         Ok(())
     }
 
+    /// Route Request
     async fn route_request(&self, request: Self::ServiceRequest) -> Result<Self::ServiceResponse> {
         let start_time = std::time::Instant::now();
         let services = self.services.read().await;
@@ -194,12 +209,14 @@ impl NativeAsyncLoadBalancer<1000, 10000, 86400, 30> for ProductionLoadBalancer 
         }
     }
 
+    /// Gets Stats
     async fn get_stats(&self) -> Result<Self::LoadBalancerStats> {
         // Compile-time optimization for statistics
         let stats = self.stats.read().await;
         Ok(stats.clone())
     }
 
+    /// Gets Service Stats
     async fn get_service_stats(&self, service_id: &str) -> Result<Self::ServiceStats> {
         // Direct async method for service statistics
         let stats = self.stats.read().await;
@@ -208,6 +225,7 @@ impl NativeAsyncLoadBalancer<1000, 10000, 86400, 30> for ProductionLoadBalancer 
         })
     }
 
+    /// Health Check All
     fn health_check_all(
         &self,
     ) -> impl std::future::Future<Output = Result<Vec<(String, bool)>>> + Send {
@@ -233,24 +251,28 @@ impl NativeAsyncLoadBalancer<1000, 10000, 86400, 30> for ProductionLoadBalancer 
         }
     }
 
+    /// Updates  Service Weight
     async fn update_service_weight(&self, service_id: &str, weight: f64) -> Result<()> {
         // No Future boxing weight update
         println!("Updating service {service_id} weight to {weight}");
         Ok(())
     }
 
+    /// List Services
     async fn list_services(&self) -> Result<Vec<Self::ServiceInfo>> {
         // Compile-time optimization for service listing
         let services = self.services.read().await;
         Ok(services.values().cloned().collect())
     }
 
+    /// Gets Service
     async fn get_service(&self, service_id: &str) -> Result<Option<Self::ServiceInfo>> {
         // Direct async method for service retrieval
         let services = self.services.read().await;
         Ok(services.get(service_id).cloned())
     }
 
+    /// Service Exists
     async fn service_exists(&self, service_id: &str) -> Result<bool> {
         // Native async existence check
         let services = self.services.read().await;
@@ -263,6 +285,7 @@ pub struct ProductionCommunicationProvider {
     connections: ConnectionMap,
 }
 impl Default for ProductionCommunicationProvider {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             connections: Arc::new(RwLock::new(HashMap::new())),
@@ -271,10 +294,14 @@ impl Default for ProductionCommunicationProvider {
 }
 
 impl NativeAsyncCommunicationProvider<1000, 10000, 30, 3> for ProductionCommunicationProvider {
+    /// Type alias for Message
     type Message = CommunicationMessage;
+    /// Type alias for Address
     type Address = NetworkAddress;
+    /// Type alias for ConnectionInfo
     type ConnectionInfo = ConnectionInfo;
 
+    /// Send Message
     async fn send_message(&self, endpoint: Self::Address, message: Self::Message) -> Result<()> {
         // Native async message sending - no Future boxing overhead
         println!(
@@ -284,6 +311,7 @@ impl NativeAsyncCommunicationProvider<1000, 10000, 30, 3> for ProductionCommunic
         Ok(())
     }
 
+    /// Receive Message
     async fn receive_message(&self) -> Result<Self::Message> {
         // Direct async method for message reception
         Ok(CommunicationMessage {
@@ -297,6 +325,7 @@ impl NativeAsyncCommunicationProvider<1000, 10000, 30, 3> for ProductionCommunic
         })
     }
 
+    /// Connect
     async fn connect(&self, endpoint: Self::Address) -> Result<Self::ConnectionInfo> {
         // Native async connection establishment
         let connection = ConnectionInfo {
@@ -315,6 +344,7 @@ impl NativeAsyncCommunicationProvider<1000, 10000, 30, 3> for ProductionCommunic
         Ok(connection)
     }
 
+    /// Disconnect
     async fn disconnect(&self, connection: &Self::ConnectionInfo) -> Result<()> {
         // No Future boxing disconnection
         let mut connections = self.connections.write().await;
@@ -322,11 +352,13 @@ impl NativeAsyncCommunicationProvider<1000, 10000, 30, 3> for ProductionCommunic
         Ok(())
     }
 
+    /// Connection Status
     async fn connection_status(&self, connection: &Self::ConnectionInfo) -> Result<String> {
         // Compile-time optimization for status check
         Ok(format!("{:?}", connection.status))
     }
 
+    /// Broadcast
     async fn broadcast(&self, message: Self::Message) -> Result<u32> {
         // Direct async method for broadcasting
         let connections = self.connections.read().await;
@@ -338,12 +370,14 @@ impl NativeAsyncCommunicationProvider<1000, 10000, 30, 3> for ProductionCommunic
         Ok(connection_count)
     }
 
+    /// List Connections
     async fn list_connections(&self) -> Result<Vec<Self::ConnectionInfo>> {
         // Native async connection listing
         let connections = self.connections.read().await;
         Ok(connections.values().cloned().collect())
     }
 
+    /// Ping
     async fn ping(&self, connection: &Self::ConnectionInfo) -> Result<Duration> {
         // No Future boxing ping
         println!("Pinging connection {}", connection.connection_id);

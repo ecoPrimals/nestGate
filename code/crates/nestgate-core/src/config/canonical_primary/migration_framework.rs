@@ -22,6 +22,7 @@ pub type ValidationFunction = fn(&NestGateCanonicalConfig) -> Result<()>;
 
 /// Configuration validation rule
 #[derive(Debug, Clone)]
+/// Validationrule
 pub struct ValidationRule {
     /// Rule name
     pub name: String,
@@ -40,6 +41,7 @@ pub struct ValidationRule {
 /// Primary interface for migrating from legacy configuration systems
 /// to the unified canonical configuration system.
 #[derive(Debug)]
+/// Configmigrator
 pub struct ConfigMigrator {
     /// Source configuration type identifier
     pub source_type: String,
@@ -60,6 +62,7 @@ pub struct ConfigMigrator {
 ///
 /// Configuration options for the migration process
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Migrationoptions
 pub struct MigrationOptions {
     /// Create backup before migration
     pub create_backup: bool,
@@ -80,6 +83,7 @@ pub struct MigrationOptions {
     pub dry_run: bool,
 }
 impl Default for MigrationOptions {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             create_backup: true,
@@ -96,6 +100,7 @@ impl Default for MigrationOptions {
 ///
 /// Tracks the progress of configuration migration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Migrationprogress
 pub struct MigrationProgress {
     /// Migration start time
     pub started_at: SystemTime,
@@ -119,6 +124,7 @@ pub struct MigrationProgress {
 ///
 /// Different phases of the migration process
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Migrationphase
 pub enum MigrationPhase {
     /// Initial validation of source configuration
     SourceValidation,
@@ -151,6 +157,7 @@ pub enum MigrationPhase {
 ///
 /// Detailed error information for migration failures
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Error type for Migration operations
 pub struct MigrationError {
     /// Error message
     pub message: String,
@@ -172,6 +179,7 @@ pub struct MigrationError {
 }
 /// **ERROR SEVERITY**
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Errorseverity
 pub enum ErrorSeverity {
     /// Critical error - migration cannot continue
     Critical,
@@ -186,6 +194,7 @@ pub enum ErrorSeverity {
 ///
 /// Backup information for rollback capability
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Migrationbackup
 pub struct MigrationBackup {
     /// Backup file path
     pub backup_path: PathBuf,
@@ -201,6 +210,7 @@ pub struct MigrationBackup {
 }
 /// **BACKUP METADATA**
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Backupmetadata
 pub struct BackupMetadata {
     /// Source configuration type
     pub source_type: String,
@@ -374,6 +384,7 @@ impl ConfigMigrator {
 
     // ==================== PRIVATE METHODS ====================
 
+    /// Migrate From Primary Config
     fn migrate_from_primary_config(&mut self, config: serde_json::Value) -> Result<()> {
         // Implementation for migrating from NestGatePrimaryConfig
         self.add_completed_step("Parsed NestGatePrimaryConfig".to_string());
@@ -396,6 +407,7 @@ impl ConfigMigrator {
         Ok(())
     }
 
+    /// Migrate From Unified Config
     fn migrate_from_unified_config(&mut self, config: serde_json::Value) -> Result<()> {
         // Implementation for migrating from UnifiedCanonicalExtensions
         self.add_completed_step("Parsed UnifiedCanonicalExtensions".to_string());
@@ -413,6 +425,7 @@ impl ConfigMigrator {
         Ok(())
     }
 
+    /// Migrate From Final Config
     fn migrate_from_final_config(&mut self, config: serde_json::Value) -> Result<()> {
         // Implementation for migrating from NestGateFinalConfig
         self.add_completed_step("Parsed NestGateFinalConfig".to_string());
@@ -425,36 +438,42 @@ impl ConfigMigrator {
         Ok(())
     }
 
+    /// Migrate System Config
     fn migrate_system_config(&mut self, _system: &serde_json::Value) -> Result<()> {
         // Implementation for system config migration
         self.add_completed_step("Migrated system configuration".to_string());
         Ok(())
     }
 
+    /// Migrate Unified Base Config
     fn migrate_unified_base_config(&mut self, _unified: &serde_json::Value) -> Result<()> {
         // Implementation for unified base config migration
         self.add_completed_step("Migrated unified base configuration".to_string());
         Ok(())
     }
 
+    /// Migrate Domain Configs
     fn migrate_domain_configs(&mut self, _domains: &serde_json::Value) -> Result<()> {
         // Implementation for domain configs migration
         self.add_completed_step("Migrated domain configurations".to_string());
         Ok(())
     }
 
+    /// Migrate Api Config
     fn migrate_api_config(&mut self, _api: &serde_json::Value) -> Result<()> {
         // Implementation for API config migration
         self.add_completed_step("Migrated API configuration".to_string());
         Ok(())
     }
 
+    /// Migrate Automation Config
     fn migrate_automation_config(&mut self, _automation: &serde_json::Value) -> Result<()> {
         // Implementation for automation config migration
         self.add_completed_step("Migrated automation configuration".to_string());
         Ok(())
     }
 
+    /// Updates  Phase
     fn update_phase(&mut self, phase: MigrationPhase) {
         self.progress.current_phase = phase;
         self.progress.progress_percentage = match self.progress.current_phase {
@@ -470,24 +489,29 @@ impl ConfigMigrator {
         };
     }
 
+    /// Add Completed Step
     fn add_completed_step(&mut self, step: String) {
         self.progress.completed_steps.push(step);
     }
 
+    /// Add Warning
     fn add_warning(&mut self, warning: String) {
         self.progress.warnings.push(warning);
     }
 
+    /// Add Error
     fn add_error(&mut self, error: MigrationError) {
         self.progress.failed_steps.push(error);
     }
 
+    /// Validates  Source
     fn validate_source(&mut self) -> Result<()> {
         // Source validation logic
         self.add_completed_step("Source validation completed".to_string());
         Ok(())
     }
 
+    /// Creates  Backup
     fn create_backup(&mut self) -> Result<()> {
         // Backup creation logic
         let backup_path = self.get_backup_path()?;
@@ -509,24 +533,28 @@ impl ConfigMigrator {
         Ok(())
     }
 
+    /// Analyze Source
     fn analyze_source(&mut self) -> Result<()> {
         // Source analysis logic
         self.add_completed_step("Source analysis completed".to_string());
         Ok(())
     }
 
+    /// Map Configurations
     fn map_configurations(&mut self) -> Result<()> {
         // Configuration mapping logic
         self.add_completed_step("Configuration mapping completed".to_string());
         Ok(())
     }
 
+    /// Perform Migration
     fn perform_migration(&mut self) -> Result<()> {
         // Migration logic
         self.add_completed_step("Migration performed successfully".to_string());
         Ok(())
     }
 
+    /// Validates  Target
     fn validate_target(&mut self) -> Result<()> {
         // Target validation logic
         match self.target_config.validate() {
@@ -551,18 +579,21 @@ impl ConfigMigrator {
         }
     }
 
+    /// Finalize Migration
     fn finalize_migration(&mut self) -> Result<()> {
         // Finalization logic
         self.add_completed_step("Migration finalized successfully".to_string());
         Ok(())
     }
 
+    /// Dry Run Migration
     fn dry_run_migration(&mut self) -> Result<NestGateCanonicalConfig> {
         // Dry run logic - simulate migration without making changes
         self.add_completed_step("Dry run completed - no changes made".to_string());
         Ok(self.target_config.clone())
     }
 
+    /// Gets Backup Path
     fn get_backup_path(&self) -> Result<PathBuf> {
         if let Some(backup_dir) = &self.options.backup_directory {
             Ok(backup_dir.join(format!(
@@ -583,6 +614,7 @@ impl ConfigMigrator {
         }
     }
 
+    /// Restore From Backup
     fn restore_from_backup(&self, _backup: &MigrationBackup) -> Result<()> {
         // Backup restoration logic
         Ok(())
@@ -595,6 +627,7 @@ impl ConfigMigrator {
 ///
 /// Comprehensive report of the migration process
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Migrationreport
 pub struct MigrationReport {
     /// Source configuration type
     pub source_type: String,
@@ -771,6 +804,7 @@ impl SafeConfigMigration {
         Ok(())
     }
 
+    /// Validates Value Ranges
     fn validatevalue_ranges(_config: &NestGateCanonicalConfig) -> Result<()> {
         // Validation logic for value ranges
         Ok(())
@@ -778,6 +812,7 @@ impl SafeConfigMigration {
 }
 
 impl Default for SafeConfigMigration {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

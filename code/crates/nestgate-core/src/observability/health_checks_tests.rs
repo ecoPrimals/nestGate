@@ -18,6 +18,7 @@ mod health_checks_tests {
     }
 
     impl HealthCheckProvider for MockHealthProvider {
+        /// Check Health
         fn check_health(&self) -> Result<ComponentHealth> {
             if self.should_fail {
                 return Err(crate::error::NestGateError::system(
@@ -44,6 +45,7 @@ mod health_checks_tests {
             })
         }
 
+        /// Component Name
         fn component_name(&self) -> &str {
             &self.name
         }

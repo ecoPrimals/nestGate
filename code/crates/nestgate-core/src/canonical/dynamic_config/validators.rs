@@ -6,6 +6,7 @@ use crate::error::CanonicalResult as Result;
 /// Storage configuration validator
 pub struct StorageValidator;
 impl ConfigValidator for StorageValidator {
+    /// Validates data
     async fn validate(
         &self,
         _config: &CanonicalConfig,
@@ -61,6 +62,7 @@ impl ConfigValidator for StorageValidator {
 /// Network configuration validator
 pub struct NetworkValidator;
 impl ConfigValidator for NetworkValidator {
+    /// Validates data
     async fn validate(
         &self,
         _config: &CanonicalConfig,
@@ -111,6 +113,7 @@ impl ConfigValidator for NetworkValidator {
 /// Security configuration validator
 pub struct SecurityValidator;
 impl ConfigValidator for SecurityValidator {
+    /// Validates data
     async fn validate(
         &self,
         _config: &CanonicalConfig,

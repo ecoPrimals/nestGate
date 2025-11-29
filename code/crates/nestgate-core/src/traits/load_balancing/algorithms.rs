@@ -30,12 +30,14 @@ impl RoundRobinLoadBalancer {
 }
 
 impl Default for RoundRobinLoadBalancer {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
 }
 
 impl LoadBalancer for RoundRobinLoadBalancer {
+    /// Select Service
     async fn select_service(
         &self,
         services: &[ServiceInfo],
@@ -58,6 +60,7 @@ impl LoadBalancer for RoundRobinLoadBalancer {
         Ok(services[index].clone())
     }
 
+    /// Record Response
     async fn record_response(
         &self,
         service: &ServiceInfo,
@@ -73,6 +76,7 @@ impl LoadBalancer for RoundRobinLoadBalancer {
         Ok(())
     }
 
+    /// Updates  Weights
     async fn update_weights(&self, _weights: HashMap<String, f64>) -> Result<()> {
         Err(NestGateError::NotImplemented(Box::new(
             crate::error::variants::core_errors::NotImplementedErrorDetails {
@@ -83,10 +87,12 @@ impl LoadBalancer for RoundRobinLoadBalancer {
         )))
     }
 
+    /// Gets Stats
     async fn get_stats(&self) -> Result<LoadBalancerStats> {
         Ok(self.stats.read().clone())
     }
 
+    /// Algorithm
     fn algorithm(&self) -> &'static str {
         "round_robin"
     }
@@ -111,12 +117,14 @@ impl LeastConnectionsLoadBalancer {
 }
 
 impl Default for LeastConnectionsLoadBalancer {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
 }
 
 impl LoadBalancer for LeastConnectionsLoadBalancer {
+    /// Select Service
     async fn select_service(
         &self,
         services: &[ServiceInfo],
@@ -159,6 +167,7 @@ impl LoadBalancer for LeastConnectionsLoadBalancer {
         })
     }
 
+    /// Record Response
     async fn record_response(
         &self,
         service: &ServiceInfo,
@@ -179,6 +188,7 @@ impl LoadBalancer for LeastConnectionsLoadBalancer {
         Ok(())
     }
 
+    /// Updates  Weights
     async fn update_weights(&self, _weights: HashMap<String, f64>) -> Result<()> {
         Err(NestGateError::NotImplemented(Box::new(
             crate::error::variants::core_errors::NotImplementedErrorDetails {
@@ -189,10 +199,12 @@ impl LoadBalancer for LeastConnectionsLoadBalancer {
         )))
     }
 
+    /// Gets Stats
     async fn get_stats(&self) -> Result<LoadBalancerStats> {
         Ok(self.stats.read().clone())
     }
 
+    /// Algorithm
     fn algorithm(&self) -> &'static str {
         "least_connections"
     }
@@ -217,12 +229,14 @@ impl RandomLoadBalancer {
 }
 
 impl Default for RandomLoadBalancer {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
 }
 
 impl LoadBalancer for RandomLoadBalancer {
+    /// Select Service
     async fn select_service(
         &self,
         services: &[ServiceInfo],
@@ -262,6 +276,7 @@ impl LoadBalancer for RandomLoadBalancer {
         Ok(selected)
     }
 
+    /// Record Response
     async fn record_response(
         &self,
         service: &ServiceInfo,
@@ -276,6 +291,7 @@ impl LoadBalancer for RandomLoadBalancer {
         Ok(())
     }
 
+    /// Updates  Weights
     async fn update_weights(&self, _weights: HashMap<String, f64>) -> Result<()> {
         Err(NestGateError::NotImplemented(Box::new(
             crate::error::variants::core_errors::NotImplementedErrorDetails {
@@ -286,10 +302,12 @@ impl LoadBalancer for RandomLoadBalancer {
         )))
     }
 
+    /// Gets Stats
     async fn get_stats(&self) -> Result<LoadBalancerStats> {
         Ok(self.stats.read().clone())
     }
 
+    /// Algorithm
     fn algorithm(&self) -> &'static str {
         "random"
     }

@@ -1,3 +1,5 @@
+//! Standards Integration Example module
+
 use crate::universal_adapter::{PrimalAgnosticAdapter, CapabilityCategory, CapabilityRequest};
 //
 // This example demonstrates how all three ecosystem standards work together
@@ -345,6 +347,7 @@ impl StandardsIntegrationDemo {
 }
 
 impl Default for StandardsIntegrationDemo {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

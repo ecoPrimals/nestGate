@@ -13,6 +13,7 @@ use crate::{NestGateError, Result};
 /// Controls CPU affinity, thread pooling, scheduling, SIMD optimizations,
 /// and CPU monitoring for maximum performance.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for CpuPerformance
 pub struct CpuPerformanceConfig {
     /// CPU affinity settings for core pinning.
     pub affinity: CpuAffinityConfig,
@@ -34,6 +35,7 @@ pub struct CpuPerformanceConfig {
 ///
 /// Enables CPU core pinning to reduce context switching and improve cache locality.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for CpuAffinity
 pub struct CpuAffinityConfig {
     /// Whether CPU affinity is enabled.
     pub enabled: bool,
@@ -49,6 +51,7 @@ pub struct CpuAffinityConfig {
 ///
 /// Determines how threads are distributed across CPU cores.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Isolationstrategy
 pub enum IsolationStrategy {
     /// No isolation - OS decides scheduling.
     None,
@@ -64,6 +67,7 @@ pub enum IsolationStrategy {
 ///
 /// Controls thread pool sizing, keep-alive time, queue size, and thread naming.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ThreadPool
 pub struct ThreadPoolConfig {
     /// Core thread pool size (default: CPU count).
     pub core_size: usize,
@@ -85,6 +89,7 @@ pub struct ThreadPoolConfig {
 ///
 /// Controls how the OS schedules CPU time for the application.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for CpuScheduling
 pub struct CpuSchedulingConfig {
     /// Scheduling policy to use.
     pub policy: SchedulingPolicy,
@@ -100,6 +105,7 @@ pub struct CpuSchedulingConfig {
 ///
 /// Determines how the OS scheduler allocates CPU time.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Schedulingpolicy
 pub enum SchedulingPolicy {
     /// Normal time-sharing scheduling.
     Normal,
@@ -117,6 +123,7 @@ pub enum SchedulingPolicy {
 ///
 /// Enables CPU vector instructions for parallel data processing.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Simd
 pub struct SimdConfig {
     /// Whether SIMD optimizations are enabled.
     pub enabled: bool,
@@ -132,6 +139,7 @@ pub struct SimdConfig {
 ///
 /// CPU-specific vector instruction sets for parallel operations.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Simdinstructionset
 pub enum SimdInstructionSet {
     /// Streaming SIMD Extensions.
     Sse,
@@ -155,6 +163,7 @@ pub enum SimdInstructionSet {
 ///
 /// Enables alerts and metrics for CPU consumption.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for CpuMonitoring
 pub struct CpuMonitoringConfig {
     /// Whether CPU monitoring is enabled.
     pub enabled: bool,
@@ -169,6 +178,7 @@ pub struct CpuMonitoringConfig {
 // ==================== DEFAULT IMPLEMENTATIONS ====================
 
 impl Default for CpuAffinityConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: false,
@@ -179,6 +189,7 @@ impl Default for CpuAffinityConfig {
 }
 
 impl Default for ThreadPoolConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             core_size: num_cpus::get(),
@@ -191,6 +202,7 @@ impl Default for ThreadPoolConfig {
 }
 
 impl Default for CpuSchedulingConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             policy: SchedulingPolicy::Normal,
@@ -201,6 +213,7 @@ impl Default for CpuSchedulingConfig {
 }
 
 impl Default for SimdConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -211,6 +224,7 @@ impl Default for SimdConfig {
 }
 
 impl Default for CpuMonitoringConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,

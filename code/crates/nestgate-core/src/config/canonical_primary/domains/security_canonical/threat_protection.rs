@@ -3,39 +3,58 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ThreatProtection
 pub struct ThreatProtectionConfig {
+    /// Whether this feature is enabled
     pub enabled: bool,
+    /// Intrusion Detection
     pub intrusion_detection: IntrusionDetectionConfig,
+    /// Firewall
     pub firewall: FirewallConfig,
+    /// Ddos Protection
     pub ddos_protection: DdosProtectionConfig,
+    /// Malware Protection
     pub malware_protection: MalwareProtectionConfig,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for IntrusionDetection
 pub struct IntrusionDetectionConfig {
+    /// Whether this feature is enabled
     pub enabled: bool,
+    /// Sensitivity
     pub sensitivity: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Firewall
 pub struct FirewallConfig {
+    /// Whether this feature is enabled
     pub enabled: bool,
+    /// Rules
     pub rules: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for DdosProtection
 pub struct DdosProtectionConfig {
+    /// Whether this feature is enabled
     pub enabled: bool,
+    /// Threshold
     pub threshold: u32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for MalwareProtection
 pub struct MalwareProtectionConfig {
+    /// Whether this feature is enabled
     pub enabled: bool,
+    /// Scan Uploads
     pub scan_uploads: bool,
 }
 
 impl Default for ThreatProtectionConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -48,6 +67,7 @@ impl Default for ThreatProtectionConfig {
 }
 
 impl Default for IntrusionDetectionConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -57,6 +77,7 @@ impl Default for IntrusionDetectionConfig {
 }
 
 impl Default for FirewallConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -66,6 +87,7 @@ impl Default for FirewallConfig {
 }
 
 impl Default for DdosProtectionConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -75,6 +97,7 @@ impl Default for DdosProtectionConfig {
 }
 
 impl Default for MalwareProtectionConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -100,6 +123,7 @@ impl ThreatProtectionConfig {
     pub fn merge(self, _other: Self) -> Self {
         self
     }
+    /// Validates data
     pub fn validate(&self) -> crate::Result<()> {
         Ok(())
     }

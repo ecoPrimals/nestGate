@@ -13,20 +13,30 @@ use std::time::SystemTime;
 
 /// Service capabilities
 #[derive(Debug, Clone, Default, Serialize, Deserialize)] // PEDANTIC: Added Default derive
+/// Servicecapabilities
 pub struct ServiceCapabilities {
+    /// Can Scale
     pub can_scale: bool,
+    /// Can Migrate
     pub can_migrate: bool,
+    /// Can Backup
     pub can_backup: bool,
+    /// Supported Protocols
     pub supported_protocols: Vec<String>,
 }
 /// Provider health status
 #[derive(Debug, Clone, Serialize, Deserialize)] // PEDANTIC: Added Default derive
+/// Providerhealth
 pub struct ProviderHealth {
+    /// Whether healthy
     pub is_healthy: bool,
+    /// Last Check
     pub last_check: SystemTime,
+    /// Health
     pub health: String,
 }
 impl Default for ProviderHealth {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             is_healthy: false,
@@ -38,12 +48,16 @@ impl Default for ProviderHealth {
 
 /// Provider capabilities
 #[derive(Debug, Clone, Serialize, Deserialize)] // PEDANTIC: Added Serialize/Deserialize derives
+/// Providercapabilities
 pub struct ProviderCapabilities {
+    /// Supported Types
     pub supported_types: Vec<UnifiedServiceType>,
+    /// Max Instances
     pub max_instances: Option<u32>,
 }
 /// Storage usage statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storageusagestats
 pub struct StorageUsageStats {
     /// Total storage capacity in bytes
     pub total_capacity: u64,
@@ -58,44 +72,65 @@ pub struct StorageUsageStats {
 }
 /// Connection handle
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+/// Connectionhandle
 pub struct ConnectionHandle(pub u64);
 /// Connection status
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Status values for Connection
 pub enum ConnectionStatus {
+    /// Active
     Active,
+    /// Idle
     Idle,
+    /// Closed
     Closed,
     Error(String),
 }
 /// Health status
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Status values for Health
 pub enum HealthStatus {
+    /// Healthy
     Healthy,
+    /// Degraded
     Degraded,
+    /// Unhealthy
     Unhealthy,
+    /// Unknown
     Unknown,
 }
 /// Security credentials
 #[derive(Debug, Clone)]
+/// Securitycredentials
 pub struct SecurityCredentials {
+    /// Username
     pub username: String,
+    /// Password
     pub password: String,
 }
 /// Cron schedule
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Cronschedule
 pub struct CronSchedule {
+    /// Expression
     pub expression: String,
 }
 /// Schedule ID
 #[derive(Debug, Clone, Serialize, Deserialize)] // PEDANTIC: Added Serialize/Deserialize derives
+/// Scheduleid
 pub struct ScheduleId {
+    /// Unique identifier
     pub id: String,
 }
 /// Schedule info
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Scheduleinfo
 pub struct ScheduleInfo {
+    /// Unique identifier
     pub id: ScheduleId,
+    /// Schedule
     pub schedule: CronSchedule,
+    /// Next Run
     pub next_run: Option<SystemTime>,
 }
 
@@ -103,6 +138,7 @@ pub struct ScheduleInfo {
 
 /// Storage backend type enumeration
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Types of StorageBackend
 pub enum StorageBackendType {
     /// Local filesystem storage
     FileSystem,
@@ -124,6 +160,7 @@ pub enum StorageBackendType {
 
 /// Storage capability enumeration
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Storagecapability
 pub enum StorageCapability {
     /// Basic CRUD operations
     BasicOperations,
@@ -151,6 +188,7 @@ pub enum StorageCapability {
 
 /// Snapshot information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Snapshotinfo
 pub struct SnapshotInfo {
     /// Snapshot identifier
     pub id: String,
@@ -177,12 +215,16 @@ pub struct WriteStream {
 // Additional placeholder types for trait method signatures
 /// Message metadata for network operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Messagemetadata
 pub struct MessageMetadata {
+    /// Timestamp
     pub timestamp: SystemTime,
+    /// Priority
     pub priority: u8,
 }
 
 impl Default for MessageMetadata {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             timestamp: SystemTime::now(),
@@ -193,26 +235,37 @@ impl Default for MessageMetadata {
 
 /// Network connection information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Networkconnection
 pub struct NetworkConnection {
+    /// Connection identifier
     pub connection_id: u64,
+    /// Remote Address
     pub remote_address: String,
 }
 
 /// Security policy configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Securitypolicy
 pub struct SecurityPolicy {
+    /// Name
     pub name: String,
+    /// Rules
     pub rules: Vec<String>,
 }
 
 /// Storage metadata information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagemetadata
 pub struct StorageMetadata {
+    /// Size
     pub size: u64,
+    /// Timestamp when this was created
     pub created_at: SystemTime,
+    /// Modified At
     pub modified_at: SystemTime,
 }
 
 /// Stream handle for data streaming
 #[derive(Debug, Clone, Copy)]
+/// Streamhandle
 pub struct StreamHandle(pub u64);

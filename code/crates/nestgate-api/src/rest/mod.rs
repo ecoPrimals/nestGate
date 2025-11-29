@@ -42,6 +42,7 @@ use nestgate_core::universal_storage::{AutoConfigurator, StorageDetector};
 
 /// API state with RPC capabilities
 #[derive(Clone)]
+/// Apistate
 pub struct ApiState {
     /// ZFS engines for different datasets (placeholder)
     pub zfs_engines: Arc<RwLock<HashMap<String, String>>>,
@@ -132,6 +133,7 @@ impl ApiState {
 
 /// Unified API response for both REST and RPC
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
+/// Response data for Data operation
 pub struct DataResponse<T> {
     /// Response data
     pub data: T,
@@ -139,6 +141,7 @@ pub struct DataResponse<T> {
     pub timestamp: chrono::DateTime<chrono::Utc>,
     /// Optional _metadata
     #[serde(skip_serializing_if = "Option::is_none")]
+    /// Meta
     pub meta: Option<ResponseMeta>,
 }
 impl<T> DataResponse<T> {
@@ -168,6 +171,7 @@ impl<T> DataResponse<T> {
 
 /// Response _metadata for pagination
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
+/// Responsemeta
 pub struct ResponseMeta {
     /// Total number of items
     pub total: u64,
@@ -180,6 +184,7 @@ pub struct ResponseMeta {
 }
 /// Unified error response for both REST and RPC
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
+/// Error type for Data operations
 pub struct DataError {
     /// Error message
     pub error: String,
@@ -202,6 +207,7 @@ impl DataError {
 
 /// Query parameters for list operations
 #[derive(Debug, serde::Deserialize)]
+/// Listquery
 pub struct ListQuery {
     /// Page number (1-based)
     pub page: Option<u64>,

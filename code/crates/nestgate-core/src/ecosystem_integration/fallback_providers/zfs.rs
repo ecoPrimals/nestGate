@@ -27,6 +27,7 @@ use crate::{NestGateError, Result};
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for ZfsFallback
 pub struct ZfsFallbackConfig {
     /// Enable fallback operations
     pub enabled: bool,
@@ -36,6 +37,7 @@ pub struct ZfsFallbackConfig {
     pub default_pool: String,
 }
 impl Default for ZfsFallbackConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -62,6 +64,7 @@ impl Default for ZfsFallbackConfig {
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for Pool
 pub struct PoolConfig {
     /// Pool name
     pub name: String,
@@ -71,6 +74,7 @@ pub struct PoolConfig {
     pub pool_type: String,
 }
 impl Default for PoolConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             name: "default".to_string(),
@@ -82,6 +86,7 @@ impl Default for PoolConfig {
 
 /// Pool information for fallback operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Poolinfo
 pub struct PoolInfo {
     /// Pool name
     pub name: String,
@@ -94,6 +99,7 @@ pub struct PoolInfo {
 }
 /// ZFS fallback provider implementation
 #[derive(Debug)]
+/// Zfsfallbackprovider
 pub struct ZfsFallbackProvider {
     /// Simulated pools
     pools: Arc<RwLock<HashMap<String, PoolInfo>>>,
@@ -103,6 +109,7 @@ pub struct ZfsFallbackProvider {
     config: ZfsFallbackConfig,
 }
 impl Default for ZfsFallbackProvider {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -526,6 +533,7 @@ impl ZfsFallbackProvider {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Poolconfigcanonical
 pub type PoolConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using PoolConfig (the deprecated struct) for now.
@@ -542,6 +550,7 @@ pub type PoolConfigCanonical = nestgate_core::config::canonical_primary::domains
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Zfsfallbackconfigcanonical
 pub type ZfsFallbackConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using ZfsFallbackConfig (the deprecated struct) for now.

@@ -2,6 +2,8 @@
 ///
 // Configuration management for production ZFS operations
 
+//! Config module
+
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use nestgate_core::error::Result;
@@ -13,6 +15,7 @@ use nestgate_core::constants::zfs;
 ///
 /// Configuration for production ZFS operations with safe defaults
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ZfsOperations
 pub struct ZfsOperationsConfig {
     /// Whether to use sudo for ZFS commands
     pub use_sudo: bool,
@@ -31,6 +34,7 @@ pub struct ZfsOperationsConfig {
 }
 
 impl Default for ZfsOperationsConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             use_sudo: true,
@@ -48,6 +52,7 @@ impl Default for ZfsOperationsConfig {
 ///
 /// Production-optimized ZFS configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ZfsProduction
 pub struct ZfsProductionConfig {
     /// Base operations config
     pub operations: ZfsOperationsConfig,
@@ -60,6 +65,7 @@ pub struct ZfsProductionConfig {
 }
 
 impl Default for ZfsProductionConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             operations: ZfsOperationsConfig {

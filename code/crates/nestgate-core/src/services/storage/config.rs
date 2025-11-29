@@ -5,13 +5,19 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 /// ZFS configuration for command execution
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Zfs
 pub struct ZfsConfig {
+    /// Zfs Binary
     pub zfs_binary: String,
+    /// Zpool Binary
     pub zpool_binary: String,
+    /// Use Sudo
     pub use_sudo: bool,
+    /// Command Timeout
     pub command_timeout: Duration,
 }
 impl Default for ZfsConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             zfs_binary: "/usr/sbin/zfs".to_string(),
@@ -24,12 +30,17 @@ impl Default for ZfsConfig {
 
 /// Cache configuration policies
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Cachepolicies
 pub struct CachePolicies {
+    /// Eviction Strategy
     pub eviction_strategy: EvictionPolicy,
+    /// Compression
     pub compression: bool,
+    /// Deduplication
     pub deduplication: bool,
 }
 impl Default for CachePolicies {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             eviction_strategy: EvictionPolicy::Lru,
@@ -41,10 +52,12 @@ impl Default for CachePolicies {
 
 /// Cache eviction policies
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+/// Evictionpolicy
 pub enum EvictionPolicy {
     Lru, // Least Recently Used
     Lfu, // Least Frequently Used
     Arc, // ZFS Adaptive Replacement Cache
+    /// Random
     Random,
 }
 /// Storage service configuration
@@ -67,6 +80,7 @@ pub enum EvictionPolicy {
     since = "0.11.0",
     note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for StorageService
 pub struct StorageServiceConfig {
     /// ZFS configuration
     pub zfs: ZfsConfig,
@@ -92,6 +106,7 @@ pub struct StorageServiceConfig {
     pub monitoring_interval: u64,
 }
 impl Default for StorageServiceConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             zfs: ZfsConfig::default(),
@@ -267,6 +282,7 @@ impl StorageServiceConfig {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Storageserviceconfigcanonical
 pub type StorageServiceConfigCanonical =
     crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 

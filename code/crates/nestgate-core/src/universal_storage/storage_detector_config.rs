@@ -7,6 +7,7 @@ use std::sync::Arc;
 
 /// Immutable configuration for storage detector AWS credentials
 #[derive(Debug, Clone)]
+/// Configuration for StorageDetector
 pub struct StorageDetectorConfig {
     /// AWS access key ID (if available)
     aws_access_key: Option<String>,
@@ -65,6 +66,7 @@ impl StorageDetectorConfig {
 }
 
 impl Default for StorageDetectorConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

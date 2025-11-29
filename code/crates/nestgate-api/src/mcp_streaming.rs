@@ -3,6 +3,8 @@
 // for high-throughput, low-latency communication with AI systems and
 // external MCP clusters.
 
+//! Mcp Streaming module
+
 use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
@@ -25,6 +27,7 @@ pub struct McpStreamingManager {
 }
 /// Stream statistics snapshot
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Streamstatssnapshot
 pub struct StreamStatsSnapshot {
     /// Total number of streams created
     pub total_streams: u64,
@@ -41,6 +44,7 @@ pub struct StreamStatsSnapshot {
 }
 /// Stream statistics (real-time)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Streamstats
 pub struct StreamStats {
     /// Bytes transferred through this stream
     pub bytes_transferred: u64,
@@ -57,6 +61,7 @@ pub struct StreamStats {
 }
 /// Information about an active stream
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Streaminfo
 pub struct StreamInfo {
     /// Stream identifier
     pub id: Uuid,
@@ -75,6 +80,7 @@ pub struct StreamInfo {
 }
 /// Types of MCP streams
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of Stream
 pub enum StreamType {
     /// Real-time storage monitoring
     StorageMonitoring,
@@ -102,6 +108,7 @@ pub enum StreamType {
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for Stream
 pub struct StreamConfig {
     /// Type of MCP stream
     pub stream_type: StreamType,
@@ -120,6 +127,7 @@ pub struct StreamConfig {
 }
 /// Stream status
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Status values for Stream
 pub enum StreamStatus {
     /// Stream is actively processing data
     Active,
@@ -132,6 +140,7 @@ pub enum StreamStatus {
 }
 /// Stream events
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Streamevent
 pub struct StreamEvent {
     /// Unique identifier for the stream
     pub stream_id: Uuid,
@@ -144,6 +153,7 @@ pub struct StreamEvent {
 }
 /// Stream event types
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of StreamEvent
 pub enum StreamEventType {
     /// A new stream was created
     StreamCreated,
@@ -157,6 +167,7 @@ pub enum StreamEventType {
     Error,
 }
 impl Default for McpStreamingManager {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -386,6 +397,7 @@ impl McpStreamingManager {
 }
 
 impl Clone for McpStreamingManager {
+    /// Clone
     fn clone(&self) -> Self { Self {
             active_streams: Arc::clone(&self.active_streams),
             stats: Arc::clone(&self.stats),
@@ -402,6 +414,7 @@ impl Clone for McpStreamingManager {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Streamconfigcanonical
 pub type StreamConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using StreamConfig (the deprecated struct) for now.

@@ -15,6 +15,7 @@ pub struct DevelopmentServiceDiscovery {
     service_count: std::sync::Arc<std::sync::atomic::AtomicUsize>,
 }
 impl Default for DevelopmentServiceDiscovery {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             service_count: std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0)),
@@ -23,11 +24,16 @@ impl Default for DevelopmentServiceDiscovery {
 }
 
 impl NativeAsyncServiceDiscovery<1000, 60, 100, 120> for DevelopmentServiceDiscovery {
+    /// Type alias for ServiceInfo
     type ServiceInfo = ServiceInfo;
+    /// Type alias for ServiceEvent
     type ServiceEvent = ServiceEvent;
+    /// Type alias for HealthStatus
     type HealthStatus = crate::unified_enums::UnifiedHealthStatus;
+    /// Type alias for Query
     type Query = ServiceQuery;
 
+    /// Register
     async fn register(&self, service: Self::ServiceInfo) -> Result<()> {
         // Development registration - always succeed
         self.service_count
@@ -36,6 +42,7 @@ impl NativeAsyncServiceDiscovery<1000, 60, 100, 120> for DevelopmentServiceDisco
         Ok(())
     }
 
+    /// Deregister
     async fn deregister(&self, service_id: &str) -> Result<()> {
         self.service_count
             .fetch_sub(1, std::sync::atomic::Ordering::Relaxed);
@@ -43,6 +50,7 @@ impl NativeAsyncServiceDiscovery<1000, 60, 100, 120> for DevelopmentServiceDisco
         Ok(())
     }
 
+    /// Discover
     async fn discover(&self, service_name: &str) -> Result<Vec<Self::ServiceInfo>> {
         // Mock discovery for development
         if service_name == "test_service" {
@@ -63,27 +71,33 @@ impl NativeAsyncServiceDiscovery<1000, 60, 100, 120> for DevelopmentServiceDisco
         }
     }
 
+    /// Watch
     async fn watch(&self) -> Result<Vec<Self::ServiceEvent>> {
         Ok(vec![])
     }
 
+    /// Health Update
     async fn health_update(&self, service_id: &str, _status: Self::HealthStatus) -> Result<()> {
         println!("DEV: Health updated for {service_id}");
         Ok(())
     }
 
+    /// List All
     async fn list_all(&self) -> Result<Vec<Self::ServiceInfo>> {
         Ok(vec![])
     }
 
+    /// Exists
     async fn exists(&self, _service_id: &str) -> Result<bool> {
         Ok(true) // Always exists in development
     }
 
+    /// Query
     async fn query(&self, _query: Self::Query) -> Result<Vec<Self::ServiceInfo>> {
         Ok(vec![])
     }
 
+    /// Gets Service
     async fn get_service(&self, service_id: &str) -> Result<Option<Self::ServiceInfo>> {
         if service_id == "test_service" {
             Ok(Some(ServiceInfo {
@@ -103,6 +117,7 @@ impl NativeAsyncServiceDiscovery<1000, 60, 100, 120> for DevelopmentServiceDisco
         }
     }
 
+    /// Updates  Service
     async fn update_service(
         &self,
         service_id: &str,

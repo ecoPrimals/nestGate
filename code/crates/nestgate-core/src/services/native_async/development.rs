@@ -17,6 +17,7 @@ pub struct DevelopmentLoadBalancer {
     service_count: std::sync::Arc<std::sync::atomic::AtomicUsize>,
 }
 impl Default for DevelopmentLoadBalancer {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             service_count: std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0)),
@@ -25,12 +26,18 @@ impl Default for DevelopmentLoadBalancer {
 }
 
 impl NativeAsyncLoadBalancer<100, 1000, 3600, 60> for DevelopmentLoadBalancer {
+    /// Type alias for ServiceInfo
     type ServiceInfo = ServiceInfo;
+    /// Type alias for ServiceRequest
     type ServiceRequest = ServiceRequest;
+    /// Type alias for ServiceResponse
     type ServiceResponse = ServiceResponse;
+    /// Type alias for LoadBalancerStats
     type LoadBalancerStats = LoadBalancerStats;
+    /// Type alias for ServiceStats
     type ServiceStats = ServiceStats;
 
+    /// Add Service
     async fn add_service(&self, service: Self::ServiceInfo) -> Result<()> {
         // Development service addition - always succeed
         self.service_count
@@ -39,6 +46,7 @@ impl NativeAsyncLoadBalancer<100, 1000, 3600, 60> for DevelopmentLoadBalancer {
         Ok(())
     }
 
+    /// Remove Service
     async fn remove_service(&self, service_id: &str) -> Result<()> {
         self.service_count
             .fetch_sub(1, std::sync::atomic::Ordering::Relaxed);
@@ -46,6 +54,7 @@ impl NativeAsyncLoadBalancer<100, 1000, 3600, 60> for DevelopmentLoadBalancer {
         Ok(())
     }
 
+    /// Route Request
     async fn route_request(&self, _request: Self::ServiceRequest) -> Result<Self::ServiceResponse> {
         // Mock routing for development
         Ok(ServiceResponse {
@@ -68,6 +77,7 @@ impl NativeAsyncLoadBalancer<100, 1000, 3600, 60> for DevelopmentLoadBalancer {
         })
     }
 
+    /// Gets Stats
     async fn get_stats(&self) -> Result<Self::LoadBalancerStats> {
         // Mock stats for development
         Ok(LoadBalancerStats {
@@ -82,6 +92,7 @@ impl NativeAsyncLoadBalancer<100, 1000, 3600, 60> for DevelopmentLoadBalancer {
         })
     }
 
+    /// Gets Service Stats
     async fn get_service_stats(&self, _service_id: &str) -> Result<Self::ServiceStats> {
         // Mock service stats
         Ok(ServiceStats {
@@ -95,6 +106,7 @@ impl NativeAsyncLoadBalancer<100, 1000, 3600, 60> for DevelopmentLoadBalancer {
         })
     }
 
+    /// Health Check All
     async fn health_check_all(&self) -> Result<Vec<(String, bool)>> {
         // Mock health check - all services healthy in development
         Ok(vec![
@@ -103,16 +115,19 @@ impl NativeAsyncLoadBalancer<100, 1000, 3600, 60> for DevelopmentLoadBalancer {
         ])
     }
 
+    /// Updates  Service Weight
     async fn update_service_weight(&self, service_id: &str, weight: f64) -> Result<()> {
         println!("DEV: Updated service {service_id} weight to {weight}");
         Ok(())
     }
 
+    /// List Services
     async fn list_services(&self) -> Result<Vec<Self::ServiceInfo>> {
         // Mock service list
         Ok(vec![])
     }
 
+    /// Gets Service
     async fn get_service(&self, service_id: &str) -> Result<Option<Self::ServiceInfo>> {
         if service_id == "dev-service" {
             Ok(Some(ServiceInfo {
@@ -147,6 +162,7 @@ impl NativeAsyncLoadBalancer<100, 1000, 3600, 60> for DevelopmentLoadBalancer {
         }
     }
 
+    /// Service Exists
     async fn service_exists(&self, _service_id: &str) -> Result<bool> {
         Ok(true) // Always exists in development
     }

@@ -1,6 +1,8 @@
 //
 // This module defines all error types used throughout the EcoPrimal ecosystem.
 
+//! Errors module
+
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
@@ -13,6 +15,7 @@ use std::collections::HashMap;
 
 /// Primal SDK Error
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Errors that can occur during Primal operations
 pub enum PrimalError {
     /// Configuration errors
     Configuration(String),
@@ -48,6 +51,7 @@ pub enum PrimalError {
     Unknown(String),
 }
 impl fmt::Display for PrimalError {
+    /// Fmt
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             PrimalError::Configuration(msg) => write!(f, "Configuration error: {msg}"),
@@ -76,6 +80,7 @@ impl std::error::Error for PrimalError {}
 
 /// Convert PrimalError to unified NestGateError
 impl From<PrimalError> for NestGateError {
+    /// From
     fn from(primal_error: PrimalError) -> Self {
         let (message, operation) = match primal_error {
             PrimalError::Configuration(msg) => (msg, PrimalOperation::Configuration),

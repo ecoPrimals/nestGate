@@ -2,6 +2,8 @@
 // Core workspace lifecycle management including creation, reading,
 // updating, and listing workspace resources with real ZFS integration.
 
+//! Crud module
+
 use axum::{
     extract::{Json, Path},
     http::StatusCode,

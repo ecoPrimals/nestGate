@@ -100,6 +100,7 @@ pub use replication::{
 // **THE** canonical storage configuration for the entire NestGate ecosystem
 // This replaces ALL other StorageConfig variants
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for CanonicalStorage
 pub struct CanonicalStorageConfig {
     /// Storage backend configurations
     pub backends: StorageBackendConfig,

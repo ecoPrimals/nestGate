@@ -24,13 +24,19 @@ use crate::error::{Result, NestGateError};
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for Storage
 pub struct StorageConfig {
+    /// Root Path
     pub root_path: PathBuf,
+    /// Tier
     pub tier: String,
+    /// Compression
     pub compression: bool,
+    /// Capacity in gigabytes
     pub capacity_gb: u64,
 }
 impl Default for StorageConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             root_path: PathBuf::from("/var/nestgate/storage"),
@@ -43,26 +49,41 @@ impl Default for StorageConfig {
 
 /// Storage metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagemetadata
 pub struct StorageMetadata {
+    /// Size
     pub size: u64,
+    /// Created
     pub created: SystemTime,
+    /// Modified
     pub modified: SystemTime,
+    /// Whether directory
     pub is_directory: bool,
 }
 /// Storage health information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Canonicalstoragehealth
 pub struct CanonicalStorageHealth {
+    /// Status
     pub status: String,
+    /// Total Space
     pub total_space: u64,
+    /// Free Space
     pub free_space: u64,
+    /// Last Check
     pub last_check: SystemTime,
 }
 /// Storage metrics
 #[derive(Debug, Default)]
+/// Canonicalstoragemetrics
 pub struct CanonicalStorageMetrics {
+    /// Operations Total
     pub operations_total: std::sync::atomic::AtomicU64,
+    /// Bytes Read
     pub bytes_read: std::sync::atomic::AtomicU64,
+    /// Bytes Written
     pub bytes_written: std::sync::atomic::AtomicU64,
+    /// Errors Total
     pub errors_total: std::sync::atomic::AtomicU64,
 }
 /// **DEPRECATED** - Use CanonicalStorage from canonical_unified_traits instead
@@ -101,6 +122,7 @@ pub struct CanonicalStorageManager<B: CanonicalStorageBackend> {
     metrics: Arc<CanonicalStorageMetrics>,
 }
 impl<B: CanonicalStorageBackend> CanonicalStorageManager<B> {
+    /// Creates a new instance
     pub fn new(config: Arc<StorageConfig>, backend: B) -> Self {
         Self {
             config,
@@ -109,6 +131,7 @@ impl<B: CanonicalStorageBackend> CanonicalStorageManager<B> {
         }
     }
 
+    /// Config
     pub fn config(&self) -> &StorageConfig {
         &self.config
     }
@@ -220,6 +243,7 @@ impl<B: CanonicalStorageBackend> CanonicalStorageManager<B> {
         self.backend.health_check().await
     }
 
+    /// Metrics
     pub fn metrics(&self) -> &CanonicalStorageMetrics {
         &self.metrics
     }
@@ -227,20 +251,24 @@ impl<B: CanonicalStorageBackend> CanonicalStorageManager<B> {
 
 /// Filesystem backend implementation
 #[derive(Debug, Clone)]
+/// Filesystembackend
 pub struct FilesystemBackend {
     root_path: PathBuf,
 }
 impl FilesystemBackend {
+    /// Creates a new instance
     pub fn new(root_path: PathBuf) -> Self {
         Self { root_path }
     }
 
+    /// Resolve Path
     fn resolve_path(&self, path: &str) -> PathBuf {
         self.root_path.join(path.trim_start_matches('/'))
     }
 }
 
 impl CanonicalStorageBackend for FilesystemBackend {
+    /// Read
     async fn read(&self, path: &str) -> Result<Vec<u8>> {
         let full_path = self.resolve_path(path);
         match tokio::fs::read(&full_path).await {
@@ -249,6 +277,7 @@ impl CanonicalStorageBackend for FilesystemBackend {
         }
     }
 
+    /// Write
     async fn write(&self, path: &str, data: &[u8]) -> Result<()> {
         let full_path = self.resolve_path(path);
         if let Some(parent) = full_path.parent() {
@@ -260,6 +289,7 @@ impl CanonicalStorageBackend for FilesystemBackend {
         }
     }
 
+    /// Deletes resource
     async fn delete(&self, path: &str) -> Result<()> {
         let full_path = self.resolve_path(path);
         match tokio::fs::remove_file(&full_path).await {
@@ -268,6 +298,7 @@ impl CanonicalStorageBackend for FilesystemBackend {
         }
     }
 
+    /// List
     async fn list(&self, path: &str) -> Result<Vec<String>> {
         let full_path = self.resolve_path(path);
         match tokio::fs::read_dir(&full_path).await {
@@ -284,6 +315,7 @@ impl CanonicalStorageBackend for FilesystemBackend {
         }
     }
 
+    /// Metadata
     async fn metadata(&self, path: &str) -> Result<StorageMetadata> {
         let full_path = self.resolve_path(path);
         match tokio::fs::metadata(&full_path).await {
@@ -297,6 +329,7 @@ impl CanonicalStorageBackend for FilesystemBackend {
         }
     }
 
+    /// Health Check
     async fn health_check(&self) -> Result<CanonicalStorageHealth> {
         Ok(CanonicalStorageHealth {
             status: "healthy".to_string(),
@@ -324,6 +357,7 @@ pub fn create_canonical_storage_manager() -> Result<CanonicalStorageManager<File
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Storageconfigcanonical
 pub type StorageConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using StorageConfig (the deprecated struct) for now.

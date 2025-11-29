@@ -73,6 +73,7 @@ where
     E: std::erro,
             r::Error + Send + Sync + 'static,
 {
+    /// Builder method to set Context
     fn with_context<F>(self, f: F) -> Result<T>
     where
         ,
@@ -82,6 +83,7 @@ where
         })
     }
 
+    /// Map Nestgate Err
     fn map_nestgate_err<F>(self, f: F) -> Result<T>
     where
         ,
@@ -90,11 +92,13 @@ where
         self.map_err(|_| f())
     }
 
+    /// Builder method to set Operation
     fn with_operation(self, operation: &str) -> Result<T> {
         self.with_context(|| format!("Operation '{operation,
         }' failed"))
     }
 
+    /// Builder method to set Resource
     fn with_resource(self, path: &str) -> Result<T> {
         self.with_context(|| format!("Resource '{path,
         }' error"))

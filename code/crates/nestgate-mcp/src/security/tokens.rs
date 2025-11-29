@@ -8,6 +8,7 @@ use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
 /// Session information for MCP connections
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Session
 pub struct Session {
     /// Session ID
     pub session_id: String,
@@ -43,6 +44,7 @@ impl Session {
 
 /// Token manager for MCP security
 #[derive(Debug)]
+/// Manager for Token operations
 pub struct TokenManager {
     /// Active tokens
     tokens: HashMap<String, AuthToken>,
@@ -190,6 +192,7 @@ impl TokenManager {
 }
 
 impl Default for TokenManager {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -197,6 +200,7 @@ impl Default for TokenManager {
 
 /// Session manager for MCP connections
 #[derive(Debug)]
+/// Manager for Session operations
 pub struct SessionManager {
     /// Active sessions
     sessions: HashMap<String, Session>,
@@ -384,6 +388,7 @@ impl SessionManager {
 }
 
 impl Default for SessionManager {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -396,6 +401,7 @@ pub struct TokenValidator {
 }
 /// Token validation rules
 #[derive(Debug, Clone)]
+/// Tokenvalidationrules
 pub struct TokenValidationRules {
     /// Minimum token length
     pub min_token_length: usize,
@@ -407,6 +413,7 @@ pub struct TokenValidationRules {
     pub allowed_formats: Vec<String>,
 }
 impl Default for TokenValidationRules {
+    /// Returns the default instance
     fn default() -> Self { Self {
             min_token_length: 32,
             max_token_age: Duration::from_secs(3600),
@@ -453,6 +460,7 @@ impl TokenValidator {
 }
 
 impl Default for TokenValidator {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new(TokenValidationRules::default())
     }

@@ -16,6 +16,7 @@ use super::super::consolidated_constants::ConsolidatedDomainConstants;
 /// Primary interface for migrating from scattered constant definitions
 /// to the unified consolidated constant system.
 #[derive(Debug)]
+/// Constantmigrator
 pub struct ConstantMigrator {
     /// Source constant type identifier
     pub source_type: String,
@@ -38,6 +39,7 @@ pub struct ConstantMigrator {
 ///
 /// Configuration options for the constant migration process
 #[derive(Debug, Clone)]
+/// Constantmigrationoptions
 pub struct ConstantMigrationOptions {
     /// Validate constants after migration
     pub validate_after_migration: bool,
@@ -64,6 +66,7 @@ pub struct ConstantMigrationOptions {
     pub verbose: bool,
 }
 impl Default for ConstantMigrationOptions {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             validate_after_migration: true,
@@ -82,6 +85,7 @@ impl Default for ConstantMigrationOptions {
 ///
 /// Tracks the progress of constant migration operations
 #[derive(Debug, Default)]
+/// Constantmigrationprogress
 pub struct ConstantMigrationProgress {
     /// Total constants discovered
     pub total_discovered: usize,
@@ -108,6 +112,7 @@ pub struct ConstantMigrationProgress {
 ///
 /// Represents a constant discovered during the migration process
 #[derive(Debug, Clone)]
+/// Discoveredconstant
 pub struct DiscoveredConstant {
     /// Constant name
     pub name: String,
@@ -137,6 +142,7 @@ pub struct DiscoveredConstant {
 ///
 /// Represents different types of constant values
 #[derive(Debug, Clone)]
+/// Constantvalue
 pub enum ConstantValue {
     String(String),
     Integer(i64),
@@ -150,16 +156,27 @@ pub enum ConstantValue {
 ///
 /// Classification of constants by their usage patterns
 #[derive(Debug, Clone, PartialEq, Eq)]
+/// Types of Constant
 pub enum ConstantType {
+    /// Port
     Port,
+    /// Address
     Address,
+    /// Timeout
     Timeout,
+    /// Size
     Size,
+    /// Limit
     Limit,
+    /// Path
     Path,
+    /// Command
     Command,
+    /// Property
     Property,
+    /// Status
     Status,
+    /// Version
     Version,
     Endpoint,
     Header,
@@ -171,25 +188,40 @@ pub enum ConstantType {
 ///
 /// Classification of constants by their functional domain
 #[derive(Debug, Clone, PartialEq, Eq)]
+/// Constantdomain
 pub enum ConstantDomain {
+    /// Network
     Network,
+    /// Storage
     Storage,
+    /// Api
     Api,
+    /// Security
     Security,
+    /// Performance
     Performance,
+    /// System
     System,
+    /// Testing
     Testing,
+    /// Mcp
     Mcp,
+    /// Automation
     Automation,
+    /// Unknown
     Unknown,
 }
 /// **MIGRATION STATUS**
 ///
 /// Status of individual constant migration
 #[derive(Debug, Clone, PartialEq, Eq)]
+/// Status values for Migration
 pub enum MigrationStatus {
+    /// Discovered
     Discovered,
+    /// Inprogress
     InProgress,
+    /// Completed
     Completed,
     Failed(String),
     Skipped(String),
@@ -198,6 +230,7 @@ pub enum MigrationStatus {
 ///
 /// Comprehensive report of the migration process
 #[derive(Debug)]
+/// Constantmigrationreport
 pub struct ConstantMigrationReport {
     /// Migration summary
     pub summary: MigrationSummary,
@@ -218,6 +251,7 @@ pub struct ConstantMigrationReport {
 ///
 /// High-level summary of migration results
 #[derive(Debug)]
+/// Migrationsummary
 pub struct MigrationSummary {
     /// Total constants processed
     pub total_constants: usize,
@@ -241,6 +275,7 @@ pub struct MigrationSummary {
 ///
 /// Detailed error information for failed migrations
 #[derive(Debug)]
+/// Error type for Migration operations
 pub struct MigrationError {
     /// Constant that failed migration
     pub constant_name: String,
@@ -261,6 +296,7 @@ pub struct MigrationError {
 ///
 /// Warning information for potential issues
 #[derive(Debug)]
+/// Migrationwarning
 pub struct MigrationWarning {
     /// Warning message
     pub message: String,
@@ -278,27 +314,39 @@ pub struct MigrationWarning {
 ///
 /// Classification of error severity levels
 #[derive(Debug, Clone, PartialEq, Eq)]
+/// Errorseverity
 pub enum ErrorSeverity {
+    /// Low
     Low,
+    /// Medium
     Medium,
+    /// High
     High,
+    /// Critical
     Critical,
 }
 /// **WARNING CATEGORY**
 ///
 /// Classification of warning types
 #[derive(Debug, Clone, PartialEq, Eq)]
+/// Warningcategory
 pub enum WarningCategory {
+    /// Deprecation
     Deprecation,
+    /// Duplication
     Duplication,
+    /// Inconsistency
     Inconsistency,
+    /// Performance
     Performance,
+    /// Compatibility
     Compatibility,
 }
 /// **MIGRATION PERFORMANCE**
 ///
 /// Performance metrics for the migration process
 #[derive(Debug)]
+/// Migrationperformance
 pub struct MigrationPerformance {
     /// Total execution time in milliseconds
     pub total_time_ms: u64,

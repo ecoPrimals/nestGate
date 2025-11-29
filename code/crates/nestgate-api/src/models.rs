@@ -3,6 +3,7 @@ use uuid::Uuid;
 
 /// User account information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// User
 pub struct User {
     /// Unique user identifier
     pub id: Uuid,
@@ -17,6 +18,7 @@ pub struct User {
 }
 /// User login request payload
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for Login operation
 pub struct LoginRequest {
     /// Username for authentication
     pub username: String,
@@ -25,6 +27,7 @@ pub struct LoginRequest {
 }
 /// Successful login response
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for Login operation
 pub struct LoginResponse {
     /// Authentication token for subsequent requests
     pub token: String,
@@ -33,6 +36,7 @@ pub struct LoginResponse {
 }
 /// Authentication token with _metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Authtoken
 pub struct AuthToken {
     /// The authentication token string
     pub token: String,

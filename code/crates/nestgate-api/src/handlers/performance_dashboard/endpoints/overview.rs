@@ -1,6 +1,8 @@
 //
 // HTTP endpoints for dashboard overview and summary information.
 
+//! Overview module
+
 use axum::{
     extract::Query,
     http::StatusCode,
@@ -17,6 +19,7 @@ use crate::handlers::performance_dashboard::{
 
 /// Query parameters for dashboard overview
 #[derive(Debug, Deserialize)]
+/// Dashboardoverviewquery
 pub struct DashboardOverviewQuery {
     /// Time range for metrics (optional)
     pub time_range: Option<String>,

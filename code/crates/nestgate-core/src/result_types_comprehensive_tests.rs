@@ -54,6 +54,7 @@ mod result_types_tests {
 
     #[tokio::test]
     async fn test_async_result_ok() {
+        /// Async Operation
         async fn async_operation() -> Result<String> {
             Ok("async success".to_string())
         }
@@ -65,6 +66,7 @@ mod result_types_tests {
 
     #[tokio::test]
     async fn test_async_result_err() {
+        /// Async Operation
         async fn async_operation() -> Result<String> {
             Err(NestGateError::validation("async error"))
         }
@@ -248,14 +250,17 @@ mod result_types_tests {
 
     #[test]
     fn test_result_chain() {
+        /// Step1
         fn step1() -> Result<i32> {
             Ok(10)
         }
 
+        /// Step2
         fn step2(x: i32) -> Result<i32> {
             Ok(x * 2)
         }
 
+        /// Step3
         fn step3(x: i32) -> Result<String> {
             Ok(format!("Result: {}", x))
         }
@@ -268,14 +273,17 @@ mod result_types_tests {
 
     #[test]
     fn test_result_chain_with_early_error() {
+        /// Step1
         fn step1() -> Result<i32> {
             Ok(10)
         }
 
+        /// Step2
         fn step2(_x: i32) -> Result<i32> {
             Err(NestGateError::validation("step2 failed"))
         }
 
+        /// Step3
         fn step3(_x: i32) -> Result<String> {
             Ok("Should not reach".to_string())
         }
@@ -391,10 +399,12 @@ mod result_types_tests {
 
     #[test]
     fn test_nested_error_handling() {
+        /// Inner Operation
         fn inner_operation() -> std::result::Result<i32, io::Error> {
             Err(io::Error::new(io::ErrorKind::Other, "inner error"))
         }
 
+        /// Outer Operation
         fn outer_operation() -> Result<i32> {
             inner_operation().to_canonical()
         }
@@ -428,12 +438,15 @@ mod result_types_tests {
 
     #[test]
     fn test_void_result_multiple_operations() {
+        /// Op1
         fn op1() -> VoidResult {
             Ok(())
         }
+        /// Op2
         fn op2() -> VoidResult {
             Ok(())
         }
+        /// Op3
         fn op3() -> VoidResult {
             Ok(())
         }
@@ -444,12 +457,15 @@ mod result_types_tests {
 
     #[test]
     fn test_void_result_with_early_failure() {
+        /// Op1
         fn op1() -> VoidResult {
             Ok(())
         }
+        /// Op2
         fn op2() -> VoidResult {
             Err(NestGateError::validation("failed"))
         }
+        /// Op3
         fn op3() -> VoidResult {
             Ok(())
         }

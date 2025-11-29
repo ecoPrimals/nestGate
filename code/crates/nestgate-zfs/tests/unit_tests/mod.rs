@@ -9,6 +9,8 @@
 // - lifecycle_tests: Phase 2 lifecycle management tests
 // - comprehensive_tests: Comprehensive unit tests
 
+//! Unit Tests module
+
 mod config_tests;
 mod performance_tests;
 mod heuristic_tests;

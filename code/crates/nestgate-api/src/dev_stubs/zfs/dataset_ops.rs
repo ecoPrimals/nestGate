@@ -11,9 +11,13 @@ use super::config::ProductionZfsManager;
 use super::types::{ZeroCostDatasetInfo, ZfsError};
 use nestgate_core::canonical_types::StorageTier;
 
+/// DatasetOperations trait
 pub trait DatasetOperations {
+    /// Creates  Dataset
     fn create_dataset(&self, name: &str) -> Result<(), ZfsError>;
+    /// List Datasets
     fn list_datasets(&self, pool: &str) -> Result<Vec<ZeroCostDatasetInfo>, ZfsError>;
+    /// Creates  Dataset With Tier
     fn create_dataset_with_tier(
         &self,
         pool: &str,
@@ -23,10 +27,12 @@ pub trait DatasetOperations {
 }
 
 impl DatasetOperations for ProductionZfsManager {
+    /// Creates  Dataset
     fn create_dataset(&self, _name: &str) -> Result<(), ZfsError> {
         Ok(())
     }
 
+    /// List Datasets
     fn list_datasets(&self, pool: &str) -> Result<Vec<ZeroCostDatasetInfo>, ZfsError> {
         Ok(vec![ZeroCostDatasetInfo {
             name: format!("{}/data", pool),
@@ -38,6 +44,7 @@ impl DatasetOperations for ProductionZfsManager {
         }])
     }
 
+    /// Creates  Dataset With Tier
     fn create_dataset_with_tier(
         &self,
         pool: &str,

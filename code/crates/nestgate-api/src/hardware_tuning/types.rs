@@ -9,6 +9,7 @@ use uuid::Uuid;
 
 /// Service registration for Compute
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Tuningserviceregistration
 pub struct TuningServiceRegistration {
     /// Name of the tuning service
     pub name: String,
@@ -23,6 +24,7 @@ pub struct TuningServiceRegistration {
 }
 /// Compute resource request to Compute
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for ComputeResource operation
 pub struct ComputeResourceRequest {
     /// Unique identifier for this tuning session
     pub session_id: Uuid,
@@ -39,6 +41,7 @@ pub struct ComputeResourceRequest {
 }
 /// Compute allocation response from Compute
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Computeallocation
 pub struct ComputeAllocation {
     /// Unique identifier for this allocation
     pub allocation_id: String,
@@ -55,6 +58,7 @@ pub struct ComputeAllocation {
 }
 /// GPU allocation details
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Gpuallocation
 pub struct GpuAllocation {
     /// Number of GPUs allocated
     pub gpu_count: u32,
@@ -65,6 +69,7 @@ pub struct GpuAllocation {
 }
 /// Compute priority levels
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Computepriority
 pub enum ComputePriority {
     /// Low priority - can be preempted by higher priority tasks
     Low,
@@ -77,6 +82,7 @@ pub enum ComputePriority {
 }
 /// Compute request structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for Compute operation
 pub struct ComputeRequest {
     /// Number of CPU cores requested
     pub cpu_cores: u32,
@@ -89,6 +95,7 @@ pub struct ComputeRequest {
 }
 /// Compute resources structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Computeresources
 pub struct ComputeResources {
     /// Number of CPU cores available
     pub cpu_cores: u32,
@@ -101,6 +108,7 @@ pub struct ComputeResources {
 }
 /// Live hardware metrics from Compute
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Livehardwaremetrics
 pub struct LiveHardwareMetrics {
     /// Timestamp when these metrics were collected
     pub timestamp: DateTime<Utc>,
@@ -121,6 +129,7 @@ pub struct LiveHardwareMetrics {
 }
 /// Network I/O metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Networkiometrics
 pub struct NetworkIoMetrics {
     /// Total bytes sent over network
     pub bytes_sent: u64,
@@ -133,6 +142,7 @@ pub struct NetworkIoMetrics {
 }
 /// Disk I/O performance metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Diskiometrics
 pub struct DiskIoMetrics {
     /// Number of bytes read from storage
     pub read_bytes: u64,
@@ -145,6 +155,7 @@ pub struct DiskIoMetrics {
 }
 /// Hardware event with timestamp and _metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Hardwareevent
 pub struct HardwareEvent {
     /// Timestamp when the event occurred
     pub timestamp: DateTime<Utc>,
@@ -155,6 +166,7 @@ pub struct HardwareEvent {
 }
 /// Types of hardware events that can be monitored
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of HardwareEvent
 pub enum HardwareEventType {
     /// System metrics have been updated
     MetricsUpdate,
@@ -169,6 +181,7 @@ pub enum HardwareEventType {
 }
 /// Hardware requirements for a workload or service
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Resourcerequirements
 pub struct ResourceRequirements {
     /// Minimum number of CPU cores required
     pub min_cpu_cores: u32,
@@ -183,6 +196,7 @@ pub struct ResourceRequirements {
 }
 /// Information about a compute node in the cluster
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Platforminfo
 pub struct PlatformInfo {
     /// Operating system running on the node
     pub os: String,
@@ -199,6 +213,7 @@ pub struct PlatformInfo {
 }
 /// Information about a storage device
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagedevice
 pub struct StorageDevice {
     /// Device name or identifier
     pub name: String,
@@ -213,6 +228,7 @@ pub struct StorageDevice {
 }
 /// Storage I/O metrics for performance monitoring
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storageiometrics
 pub struct StorageIoMetrics {
     /// Number of bytes read from storage
     pub read_bytes: u64,
@@ -225,6 +241,7 @@ pub struct StorageIoMetrics {
 }
 /// System load averages over different time periods
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Systemloadmetrics
 pub struct SystemLoadMetrics {
     /// Load average over 1 minute
     pub load_1m: f64,
@@ -235,6 +252,7 @@ pub struct SystemLoadMetrics {
 }
 /// Real-time performance metrics for a compute node
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performancemetrics
 pub struct PerformanceMetrics {
     /// Timestamp when metrics were collected
     pub timestamp: DateTime<Utc>,
@@ -255,6 +273,7 @@ pub struct PerformanceMetrics {
 }
 /// Information about a compute node in the cluster
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Computenode
 pub struct ComputeNode {
     /// Operating system running on the node
     pub os: String,
@@ -271,6 +290,7 @@ pub struct ComputeNode {
 }
 /// Compute discovery information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Computediscovery
 pub struct ComputeDiscovery {
     /// All compute nodes in the cluster
     pub nodes: Vec<ComputeNode>,
@@ -292,6 +312,7 @@ pub struct ComputeDiscovery {
 /// Comprehensive health status for all major system components,
 /// including any active alerts or warnings.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Systemhealth
 pub struct SystemHealth {
     /// Overall system health status
     pub overall_status: UnifiedHealthStatus,
@@ -333,6 +354,7 @@ pub use crate::canonical_modernization::UnifiedHealthStatus as HealthStatus;
 /// Represents an alert or notification about system conditions
 /// that require attention or monitoring.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Systemalert
 pub struct SystemAlert {
     /// Unique identifier for this alert
     pub alert_id: String,
@@ -349,6 +371,7 @@ pub struct SystemAlert {
 ///
 /// Categorizes alerts by their importance and urgency.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Alertseverity
 pub enum AlertSeverity {
     /// Informational message, no action required
     Info,
@@ -364,6 +387,7 @@ pub enum AlertSeverity {
 /// Represents a storage-intensive workload that needs to be
 /// scheduled and managed by the tuning system.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storageworkload
 pub struct StorageWorkload {
     /// Unique identifier for this workload
     pub workload_id: String,
@@ -383,6 +407,7 @@ pub struct StorageWorkload {
 /// Specifies the computational and storage resources
 /// needed to execute a workload.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Workloadresourcerequirements
 pub struct WorkloadResourceRequirements {
     /// Number of CPU cores required
     pub cpu_cores: u32,
@@ -398,6 +423,7 @@ pub struct WorkloadResourceRequirements {
 /// Tracks the execution of a workload including progress,
 /// resource allocation, and timing information.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Workloadexecution
 pub struct WorkloadExecution {
     /// Unique identifier for this execution instance
     pub execution_id: String,
@@ -419,6 +445,7 @@ pub struct WorkloadExecution {
 /// Represents the actual resources allocated to a workload
 /// execution, including which compute nodes are being used.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Allocatedresources
 pub struct AllocatedResources {
     /// Number of CPU cores allocated
     pub cpu_cores: u32,
@@ -435,6 +462,7 @@ pub struct AllocatedResources {
 ///
 /// Represents the current state of a workload in the execution pipeline.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Status values for Workload
 pub enum WorkloadStatus {
     /// Workload is waiting to be scheduled
     Pending,
@@ -451,6 +479,7 @@ pub enum WorkloadStatus {
 ///
 /// Request for specific storage resources to support a workload.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for StorageResource operation
 pub struct StorageResourceRequest {
     /// Unique identifier for this resource request
     pub request_id: String,
@@ -468,6 +497,7 @@ pub struct StorageResourceRequest {
 /// Represents the actual allocation of storage resources
 /// in response to a resource request.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storageresourceallocation
 pub struct StorageResourceAllocation {
     /// Unique identifier for this allocation
     pub allocation_id: String,
@@ -485,6 +515,7 @@ pub struct StorageResourceAllocation {
 /// Request to execute a specific storage-related process
 /// with configurable parameters.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for StorageProcess operation
 pub struct StorageProcessRequest {
     /// Name of the process to execute
     pub process_name: String,
@@ -498,6 +529,7 @@ pub struct StorageProcessRequest {
 /// Information about a running or completed storage process,
 /// including status and resource usage.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Processmanagement
 pub struct ProcessManagement {
     /// Unique identifier for this process instance
     pub process_id: String,
@@ -514,6 +546,7 @@ pub struct ProcessManagement {
 ///
 /// Current resource consumption metrics for a process or workload.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Resourceusage
 pub struct ResourceUsage {
     /// CPU usage as a percentage (0.0 to 100.0)
     pub cpu_percent: f64,
@@ -529,6 +562,7 @@ pub struct ResourceUsage {
 /// Request to perform optimization on storage systems
 /// to improve performance or efficiency.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for StorageOptimization operation
 pub struct StorageOptimizationRequest {
     /// Type of optimization to perform
     pub optimization_type: String,
@@ -543,6 +577,7 @@ pub struct StorageOptimizationRequest {
 ///
 /// Results and metrics from a completed storage optimization.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storageoptimization
 pub struct StorageOptimization {
     /// Unique identifier for this optimization
     pub optimization_id: String,
@@ -559,6 +594,7 @@ pub struct StorageOptimization {
 ///
 /// Quantifies the resource savings achieved by an optimization.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Resourcesavings
 pub struct ResourceSavings {
     /// CPU usage reduction as a percentage
     pub cpu_percent_saved: f64,
@@ -573,6 +609,7 @@ pub struct ResourceSavings {
 ///
 /// Different modes for hardware tuning behavior.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Tuningmode
 pub enum TuningMode {
     /// Automatic tuning based on system analysis
     Auto,
@@ -589,6 +626,7 @@ pub enum TuningMode {
 ///
 /// Current state of a tuning session.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Status values for Session
 pub enum SessionStatus {
     /// Session is currently active
     Active,
@@ -607,6 +645,7 @@ pub enum SessionStatus {
 ///
 /// Information about an active or completed hardware tuning session.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Tuningsession
 pub struct TuningSession {
     /// Unique identifier for this tuning session
     pub session_id: Uuid,
@@ -627,6 +666,7 @@ pub struct TuningSession {
 ///
 /// Request to start or modify a hardware tuning operation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for HardwareTuning operation
 pub struct HardwareTuningRequest {
     /// Session ID for this tuning request
     pub session_id: Uuid,
@@ -639,6 +679,7 @@ pub struct HardwareTuningRequest {
 ///
 /// Response containing the results of a hardware tuning operation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for HardwareTuning operation
 pub struct HardwareTuningResponse {
     /// Session ID for this tuning response
     pub session_id: Uuid,
@@ -663,6 +704,7 @@ pub struct HardwareTuningResponse {
 ///
 /// Parameters for querying tuning session information.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Tuningquery
 pub struct TuningQuery {
     /// Optional session ID to filter results
     pub session_id: Option<Uuid>,
@@ -675,6 +717,7 @@ pub struct TuningQuery {
 ///
 /// Requirements for external access to hardware tuning systems.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Externalaccessrequirements
 pub struct ExternalAccessRequirements {
     /// Type of access being requested
     pub access_type: String,
@@ -691,6 +734,7 @@ pub struct ExternalAccessRequirements {
 ///
 /// Results from running a performance benchmark.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Benchmarkresult
 pub struct BenchmarkResult {
     /// Unique identifier for this benchmark
     pub benchmark_id: String,
@@ -708,6 +752,7 @@ pub struct BenchmarkResult {
 /// Status information about external access permissions
 /// for hardware tuning operations.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Externalaccessstatus
 pub struct ExternalAccessStatus {
     /// Whether external access has been granted
     pub access_granted: bool,
@@ -722,6 +767,7 @@ pub struct ExternalAccessStatus {
 ///
 /// Hardware-specific recommendations for improving system performance.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Tuningrecommendations
 pub struct TuningRecommendations {
     /// CPU-related performance recommendations
     pub cpu_recommendations: Vec<String>,
@@ -736,6 +782,7 @@ pub struct TuningRecommendations {
 ///
 /// Real-time performance metrics collected from the system.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Liveperformancemetrics
 pub struct LivePerformanceMetrics {
     /// Timestamp when these metrics were collected
     pub timestamp: DateTime<Utc>,

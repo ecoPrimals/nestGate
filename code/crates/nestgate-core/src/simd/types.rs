@@ -5,6 +5,7 @@
 
 /// SIMD operation error types
 #[derive(Debug, Clone, PartialEq, Eq)]
+/// Errors that can occur during Simd operations
 pub enum SimdError {
     /// Input and output arrays have mismatched lengths
     LengthMismatch,
@@ -17,6 +18,7 @@ pub enum SimdError {
 }
 
 impl std::fmt::Display for SimdError {
+    /// Fmt
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::LengthMismatch => write!(f, "Input and output arrays have different lengths"),
@@ -31,11 +33,17 @@ impl std::error::Error for SimdError {}
 
 /// SIMD capability flags
 #[derive(Debug, Clone, Default)]
+/// Simdcapabilities
 pub struct SimdCapabilities {
+    /// Whether this has sse2
     pub has_sse2: bool,
+    /// Whether this has avx
     pub has_avx: bool,
+    /// Whether this has avx2
     pub has_avx2: bool,
+    /// Whether this has avx512
     pub has_avx512: bool,
+    /// Whether this has neon
     pub has_neon: bool, // ARM NEON support
 }
 
@@ -87,11 +95,17 @@ impl SimdCapabilities {
 
 /// SIMD processing statistics
 #[derive(Debug, Clone, Default)]
+/// Simdstats
 pub struct SimdStats {
+    /// Operations Processed
     pub operations_processed: u64,
+    /// Total Elements
     pub total_elements: u64,
+    /// Simd Elements
     pub simd_elements: u64,
+    /// Scalar Elements
     pub scalar_elements: u64,
+    /// Processing Time Ns
     pub processing_time_ns: u64,
 }
 

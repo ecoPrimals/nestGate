@@ -214,6 +214,7 @@ pub const DATA_ADAPTER_MIGRATION_GUIDE: &str = r"
 
 ## Before (Arc<dyn> Runtime Dispatch)
 ```rust
+/// Universaldataadapter
 pub struct UniversalDataAdapter {
     providers: HashMap<String, Arc<dyn DataCapability>>,
     fallback_providers: HashMap<String, Vec<Arc<dyn DataCapability>>>,
@@ -222,6 +223,7 @@ pub struct UniversalDataAdapter {
 
 ## After (Zero-Cost Direct Composition)
 ```rust
+/// Zerocostuniversaldataadapter
 pub struct ZeroCostUniversalDataAdapter<Primary, Fallback>
 where
     Primary: ZeroCostDataCapability,
@@ -248,13 +250,16 @@ pub struct ZeroCostGenomeDataCapability {
 }
 
 impl ZeroCostDataCapability for ZeroCostGenomeDataCapability {
+    /// Capability Type
     const CAPABILITY_TYPE: &'static str = "genome_data";
     
+    /// Can Handle
     async fn can_handle(&self, request: &DataRequest) -> Result<bool> {
         // Zero-cost validation
         Ok(request.capability_type == Self::CAPABILITY_TYPE)
     }
     
+    /// Execute Request
     async fn execute_request(&self, request: &DataRequest) -> Result<DataResponse> {
         // Direct implementation - no virtual dispatch
         Ok(DataResponse {
@@ -275,12 +280,15 @@ pub struct ZeroCostModelDataCapability {
 }
 
 impl ZeroCostDataCapability for ZeroCostModelDataCapability {
+    /// Capability Type
     const CAPABILITY_TYPE: &'static str = "model_data";
     
+    /// Can Handle
     async fn can_handle(&self, request: &DataRequest) -> Result<bool> {
         Ok(request.capability_type == Self::CAPABILITY_TYPE)
     }
     
+    /// Execute Request
     async fn execute_request(&self, request: &DataRequest) -> Result<DataResponse> {
         Ok(DataResponse {
             data: serde_json::json!({"model_data": "example"}),

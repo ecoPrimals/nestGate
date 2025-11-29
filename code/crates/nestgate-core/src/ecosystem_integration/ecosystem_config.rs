@@ -36,6 +36,7 @@ use std::sync::Arc;
 /// This struct holds all configuration needed for the CapabilityBasedEcosystem
 /// to discover capabilities without accessing environment variables at runtime.
 #[derive(Debug, Clone)]
+/// Configuration for EcosystemDiscovery
 pub struct EcosystemDiscoveryConfig {
     /// Discovery endpoints for various capability categories
     discovery_endpoints: HashMap<String, String>,
@@ -134,6 +135,7 @@ impl EcosystemDiscoveryConfig {
 }
 
 impl Default for EcosystemDiscoveryConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

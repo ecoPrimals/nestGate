@@ -1,6 +1,8 @@
 //
 // This module contains the main PerformanceDashboard struct and HTTP handler functions.
 
+//! Core module
+
 use super::{PerformanceAnalyzer, RealTimeMetricsCollector, OptimizationEngineInterface};
 use super::zfs_integration::*;
 use crate::handlers::performance_dashboard::types::*;
@@ -21,6 +23,7 @@ use tokio::sync::{broadcast, RwLock};
 
 /// Performance dashboard handler with real-time capabilities
 #[derive(Debug)]
+/// Performancedashboard
 pub struct PerformanceDashboard {
     /// Real-time metrics collector
     metrics_collector: Arc<RealTimeMetricsCollector>,

@@ -505,6 +505,7 @@
 // to the NestGate installation system.
 
 #[cfg(test)]
+
 mod tests {
     use crate::config::InstallerConfig;
     use tempfile::TempDir;
@@ -576,22 +577,27 @@ mod tests {
         true
     }
 
+    /// Can Validate Environment
     fn can_validate_environment() -> bool {
         true
     }
 
+    /// Validates  String
     fn validate_string(s: &str) -> bool {
         !s.is_empty()
     }
 
+    /// Validates  Path
     fn validate_path(path: &str) -> bool {
         !path.is_empty() && path.starts_with('/')
     }
 
+    /// Checks if Valid Install Path
     fn is_valid_install_path(path: &str) -> bool {
         !path.is_empty()
     }
 
+    /// Normalize Path
     fn normalize_path(path: &str) -> String {
         path.replace("//", "/")
     }
@@ -892,6 +898,7 @@ mod installer_comprehensive_tests {
         result
     }
 
+    /// Checks if Valid Install Path
     fn is_valid_install_path(path: &str) -> bool {
         !path.is_empty() && (path.starts_with('/') || (cfg!(windows) && path.len() >= 3))
     }

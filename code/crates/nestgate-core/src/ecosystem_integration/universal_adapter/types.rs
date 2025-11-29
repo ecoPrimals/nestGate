@@ -12,6 +12,7 @@ pub type AdapterError = NestGateError;
 pub type Capability = ServiceCapability;
 /// Service capability description
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Servicecapability
 pub struct ServiceCapability {
     /// Capability identifier
     pub id: String,
@@ -38,6 +39,7 @@ pub struct ServiceCapability {
 }
 /// Categories of capabilities available through the universal adapter
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Capabilitycategory
 pub enum CapabilityCategory {
     /// AI and machine learning capabilities
     ArtificialIntelligence,
@@ -70,6 +72,7 @@ pub use crate::unified_enums::UnifiedContentType as DataType;
 
 /// Performance metrics for capabilities
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performancemetrics
 pub struct PerformanceMetrics {
     /// Average response time in milliseconds
     pub avg_response_time_ms: f64,
@@ -84,6 +87,7 @@ pub struct PerformanceMetrics {
 }
 /// Scalability rating for capabilities
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+/// Scalabilityrating
 pub enum ScalabilityRating {
     /// Limited scalability
     Limited,
@@ -96,6 +100,7 @@ pub enum ScalabilityRating {
 }
 /// Resource requirements for capabilities
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Resourcerequirements
 pub struct ResourceRequirements {
     /// Minimum CPU cores required
     pub min_cpu_cores: u32,
@@ -112,6 +117,7 @@ pub struct ResourceRequirements {
 }
 /// GPU requirements specification
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Gpurequirements
 pub struct GpuRequirements {
     /// Minimum GPU memory in GB
     pub min_gpu_memory_gb: f64,
@@ -124,6 +130,7 @@ pub struct GpuRequirements {
 }
 /// Request for capability information or execution
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for Capability operation
 pub struct CapabilityRequest {
     /// Unique request identifier
     pub request_id: String,
@@ -144,6 +151,7 @@ pub struct CapabilityRequest {
 }
 /// Query for discovering capabilities
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Capabilityquery
 pub enum CapabilityQuery {
     /// List all available capabilities
     ListAll,
@@ -162,6 +170,7 @@ pub enum CapabilityQuery {
 }
 /// Performance requirements for capability selection
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performancerequirements
 pub struct PerformanceRequirements {
     /// Maximum acceptable response time in milliseconds
     pub max_response_time_ms: Option<f64>,
@@ -176,6 +185,7 @@ pub struct PerformanceRequirements {
 }
 /// Response from capability request
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for Capability operation
 pub struct CapabilityResponse {
     /// Original request ID
     pub request_id: String,
@@ -192,6 +202,7 @@ pub struct CapabilityResponse {
 }
 /// Execution metrics for capability responses
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Executionmetrics
 pub struct ExecutionMetrics {
     /// Time taken to execute the request
     pub execution_time: Duration,
@@ -202,6 +213,7 @@ pub struct ExecutionMetrics {
 }
 /// Resource usage during capability execution
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Resourceusage
 pub struct ResourceUsage {
     /// CPU usage percentage
     pub cpu_usage_percent: f64,
@@ -216,6 +228,7 @@ pub struct ResourceUsage {
 }
 /// Quality metrics for capability outputs
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Qualitymetrics
 pub struct QualityMetrics {
     /// Accuracy score (0.0 to 1.0)
     pub accuracy: Option<f64>,
@@ -231,6 +244,7 @@ pub struct QualityMetrics {
     pub custom_metrics: HashMap<String, f64>,
 }
 impl Default for PerformanceMetrics {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             avg_response_time_ms: 0.0,
@@ -243,6 +257,7 @@ impl Default for PerformanceMetrics {
 }
 
 impl Default for ResourceRequirements {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             min_cpu_cores: 1,

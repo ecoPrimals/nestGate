@@ -38,6 +38,7 @@ impl StorageTier {
 
 /// Cache policy
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+/// Cachepolicy
 pub enum CachePolicy {
     /// No caching
     None,
@@ -45,11 +46,13 @@ pub enum CachePolicy {
     ReadOnly,
     /// Write-through caching (writes go to both cache and backing store)
     #[default]
+    /// Writethrough
     WriteThrough,
     /// Write-back caching (writes go to cache, then are flushed to backing store)
     WriteBack,
 }
 impl std::fmt::Display for CachePolicy {
+    /// Fmt
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             CachePolicy::None => write!(f, "none"),
@@ -63,6 +66,7 @@ impl std::fmt::Display for CachePolicy {
 /// Use this instead of the deprecated `CacheConfig`
 // All duplicate UnifiedCacheConfig implementations removed
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Cachestats
 pub struct CacheStats {
     /// Number of cache hits
     pub hits: u64,
@@ -92,6 +96,7 @@ pub struct CacheStats {
     pub efficiency_metrics: EfficiencyMetrics,
 }
 impl Default for CacheStats {
+    /// Returns the default instance
     fn default() -> Self {
         let mut tier_access_times = HashMap::new();
         tier_access_times.insert(StorageTier::Hot, StorageTier::Hot.typical_access_time());
@@ -174,6 +179,7 @@ impl CacheStats {
 
 /// Cache efficiency metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Efficiencymetrics
 pub struct EfficiencyMetrics {
     /// Moving average hit ratio over last N operations
     pub moving_hit_ratio: f64,
@@ -188,6 +194,7 @@ pub struct EfficiencyMetrics {
     max_operations_tracked: usize,
 }
 impl Default for EfficiencyMetrics {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             moving_hit_ratio: 0.0,
@@ -213,6 +220,7 @@ impl EfficiencyMetrics {
         self.recalculate_metrics();
     }
 
+    /// Add Operation
     fn add_operation(&mut self, is_hit: bool) {
         if self.last_operations.len() >= self.max_operations_tracked {
             self.last_operations.remove(0);
@@ -220,6 +228,7 @@ impl EfficiencyMetrics {
         self.last_operations.push(is_hit);
     }
 
+    /// Recalculate Metrics
     fn recalculate_metrics(&mut self) {
         if self.last_operations.is_empty() {
             return;
@@ -238,6 +247,7 @@ impl EfficiencyMetrics {
         self.effectiveness_score = self.calculate_effectiveness_score();
     }
 
+    /// Calculate Effectiveness Score
     fn calculate_effectiveness_score(&self) -> f64 {
         // Simple effectiveness calculation (can be enhanced)
         let base_score = self.moving_hit_ratio * 100.0;
@@ -257,6 +267,7 @@ impl EfficiencyMetrics {
         (base_score + consistency_bonus).min(100.0)
     }
 
+    /// Calculate Variance
     fn calculate_variance(&self) -> f64 {
         if self.last_operations.len() < 10 {
             return 1.0; // High variance for small samples
@@ -291,6 +302,7 @@ impl EfficiencyMetrics {
 
 /// Cache entry with data and metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Cacheentry
 pub struct CacheEntry {
     /// Entry key
     pub key: String,

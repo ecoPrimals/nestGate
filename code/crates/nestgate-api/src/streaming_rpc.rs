@@ -23,6 +23,7 @@ use tokio::sync::{broadcast, RwLock};
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for StreamingRpc
 pub struct StreamingRpcConfig {
     /// Bind address for streaming RPC server
     pub bind_endpoint: String,
@@ -36,6 +37,7 @@ pub struct StreamingRpcConfig {
     pub compression_enabled: bool,
 }
 impl Default for StreamingRpcConfig {
+    /// Returns the default instance
     fn default() -> Self { 
         use nestgate_core::constants::hardcoding::{addresses, ports};
         
@@ -116,6 +118,7 @@ impl StreamingRpcServer {
 }
 
 impl Default for StreamingRpcServer {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new(StreamingRpcConfig::default())
     }
@@ -139,6 +142,7 @@ pub fn create_streaming_rpc_server_with_config(config: StreamingRpcConfig) -> St
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Streamingrpcconfigcanonical
 pub type StreamingRpcConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using StreamingRpcConfig (the deprecated struct) for now.

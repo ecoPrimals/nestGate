@@ -4,6 +4,7 @@ use crate::unified_enums::UnifiedServiceState as ServiceStatus;
 use serde::{Deserialize, Serialize};
 /// System-wide metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Systemmetrics
 pub struct SystemMetrics {
     /// CPU usage percentage (0.0 to 100.0)
     pub _cpu_usage: f64,
@@ -35,6 +36,7 @@ pub struct SystemMetrics {
     pub uptime_seconds: u64,
 }
 impl Default for SystemMetrics {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             _cpu_usage: 0.0,
@@ -57,6 +59,7 @@ impl Default for SystemMetrics {
 
 /// Disk-specific metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Diskmetrics
 pub struct DiskMetrics {
     /// Device name (e.g., "/dev/sda1")
     pub device: String,
@@ -83,6 +86,7 @@ pub struct DiskMetrics {
 }
 /// Network interface metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Networkmetrics
 pub struct NetworkMetrics {
     /// Interface name (e.g., "eth0")
     pub interface: String,
@@ -111,6 +115,7 @@ pub struct NetworkMetrics {
 }
 /// Service information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Serviceinfo
 pub struct ServiceInfo {
     /// Service name
     pub name: String,

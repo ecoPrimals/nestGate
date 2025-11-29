@@ -239,14 +239,17 @@ mod tests {
         struct TestHandler;
 
         impl FsEventHandler for TestHandler {
+            /// Handles  Event
             fn handle_event(&self, _event: &FsEvent) -> Result<(), FsMonitorError> {
                 Ok(())
             }
 
+            /// Name
             fn name(&self) -> &str {
                 "test_handler"
             }
 
+            /// Handles S Event Type
             fn handles_event_type(&self, _event_type: &FsEventType) -> bool {
                 true
             }
@@ -299,14 +302,17 @@ mod tests {
         struct SelectiveHandler;
 
         impl FsEventHandler for SelectiveHandler {
+            /// Handles  Event
             fn handle_event(&self, _event: &FsEvent) -> Result<(), FsMonitorError> {
                 Ok(())
             }
 
+            /// Name
             fn name(&self) -> &str {
                 "selective"
             }
 
+            /// Handles S Event Type
             fn handles_event_type(&self, event_type: &FsEventType) -> bool {
                 matches!(event_type, FsEventType::Create | FsEventType::Delete)
             }
@@ -362,24 +368,30 @@ mod tests {
         struct Handler2;
 
         impl FsEventHandler for Handler1 {
+            /// Handles  Event
             fn handle_event(&self, _event: &FsEvent) -> Result<(), FsMonitorError> {
                 Ok(())
             }
+            /// Name
             fn name(&self) -> &str {
                 "handler1"
             }
+            /// Handles S Event Type
             fn handles_event_type(&self, _: &FsEventType) -> bool {
                 true
             }
         }
 
         impl FsEventHandler for Handler2 {
+            /// Handles  Event
             fn handle_event(&self, _event: &FsEvent) -> Result<(), FsMonitorError> {
                 Ok(())
             }
+            /// Name
             fn name(&self) -> &str {
                 "handler2"
             }
+            /// Handles S Event Type
             fn handles_event_type(&self, _: &FsEventType) -> bool {
                 true
             }

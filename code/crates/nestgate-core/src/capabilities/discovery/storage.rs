@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 /// Storage capability types that can be discovered
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+/// Types of StorageCapability
 pub enum StorageCapabilityType {
     /// ZFS pool management capabilities
     ZfsPool,
@@ -26,6 +27,7 @@ pub enum StorageCapabilityType {
 }
 /// Storage capability metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagecapabilityinfo
 pub struct StorageCapabilityInfo {
     /// Type of storage capability provided
     pub capability_type: StorageCapabilityType,
@@ -40,6 +42,7 @@ pub struct StorageCapabilityInfo {
 }
 /// Storage capability discovery manager
 #[derive(Debug)]
+/// Storagecapabilitydiscovery
 pub struct StorageCapabilityDiscovery {
     discovered_capabilities:
         tokio::sync::RwLock<HashMap<StorageCapabilityType, StorageCapabilityInfo>>,
@@ -136,6 +139,7 @@ impl StorageCapabilityDiscovery {
 }
 
 impl Default for StorageCapabilityDiscovery {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

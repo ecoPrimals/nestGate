@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 
 /// Storage discovery settings for capability detection
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Storagediscoverysettings
 pub struct StorageDiscoverySettings {
     /// Whether storage discovery is enabled
     pub enabled: bool,

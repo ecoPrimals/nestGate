@@ -2,6 +2,8 @@
 // This module provides REST API endpoints for ZFS pool operations with
 // AI-First response formatting that enables seamless integration with AI agents.
 
+//! Pools module
+
 use crate::ai_first_wrapper::to_ai_first_response;
 use axum::{
     extract::{Path, Query, State},
@@ -33,39 +35,59 @@ use nestgate_core::{get_or_create_uuid};
 
 /// ZFS pool creation request
 #[derive(Debug, Deserialize)]
+/// Request parameters for CreatePool operation
 pub struct CreatePoolRequest {
+    /// Name
     pub name: String,
+    ///  Devices
     pub _devices: Vec<String>,
+    /// Pool Type
     pub pool_type: String,
+    /// Options
     pub options: Option<HashMap<String, String>>,
 }
 /// ZFS pool information response
 #[derive(Debug, Serialize, Clone)]
+/// Response data for Pool operation
 pub struct PoolResponse {
+    /// Name
     pub name: String,
+    /// Health
     pub health: String,
+    /// Capacity
     pub capacity: Option<PoolCapacityResponse>,
+    /// Ai Recommendations
     pub ai_recommendations: Vec<String>,
 }
 /// Pool capacity information
 #[derive(Debug, Serialize, Clone)]
+/// Response data for PoolCapacity operation
 pub struct PoolCapacityResponse {
+    /// Total Bytes
     pub total_bytes: u64,
+    /// Free Bytes
     pub free_bytes: u64,
+    /// Utilization Percent
     pub utilization_percent: f64,
 }
 /// Pool operation parameters
 #[derive(Debug, Deserialize)]
+/// Pooloperationparams
 pub struct PoolOperationParams {
+    /// Force
     pub force: Option<bool>,
+    /// Dry Run
     pub dry_run: Option<bool>,
 }
 /// Application state containing ZFS manager
 #[derive(Clone)]
+/// Appstate
 pub struct AppState {
+    /// Zfs Manager
     pub zfs_manager: Arc<ZfsManager>,
 }
 impl Default for PoolResponse {
+    /// Returns the default instance
     fn default() -> Self { Self {
             name: String::new(),
             health: "unknown".to_string(),

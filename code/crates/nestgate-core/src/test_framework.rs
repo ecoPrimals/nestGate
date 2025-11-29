@@ -41,6 +41,7 @@ use crate::{NestGateError, Result};
 /// Test result type using unified error system
 /// All test errors now use NestGateError::Testing variant for consistency
 use crate::error::NestGateError;
+/// Type alias for Testresult
 pub type TestResult<T> = Result<T>;
 // ==================== SECTION ====================
 
@@ -141,11 +142,15 @@ where
 
 /// Test error type for framework
 #[derive(Debug, Clone)]
+/// Error type for Test operations
 pub struct TestError {
+    /// Message
     pub message: String,
+    /// Context
     pub context: Option<String>,
     }
 impl From<NestGateError> for TestError {
+    /// From
     fn from(error: NestGateError) -> Self {
         TestError {
             message: error.to_string()}
@@ -182,6 +187,7 @@ macro_rules! setup_async {
 
 /// Test performance tracking
 #[derive(Debug)]
+/// Testtimer
 pub struct TestTimer {
     start: std::time::Instant,
     }
@@ -191,6 +197,7 @@ impl TestTimer {
     }
     }
 
+    /// Elapsed
     pub fn elapsed(&self) -> Duration {
         self.start.elapsed()
     }

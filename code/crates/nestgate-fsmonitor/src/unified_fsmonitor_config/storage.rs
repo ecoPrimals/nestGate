@@ -104,6 +104,7 @@ pub struct BackupSettings {
     pub compress: bool,
 }
 impl Default for StorageBackendConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             backend_type: "memory".to_string(),
@@ -116,6 +117,7 @@ impl Default for StorageBackendConfig {
 }
 
 impl Default for ConnectionPoolSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             min_connections: 1,
@@ -127,6 +129,7 @@ impl Default for ConnectionPoolSettings {
 }
 
 impl Default for EventRetentionSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -137,6 +140,7 @@ impl Default for EventRetentionSettings {
 }
 
 impl Default for CompressionSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: false,
@@ -148,6 +152,7 @@ impl Default for CompressionSettings {
 }
 
 impl Default for IndexingSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: false,
@@ -163,6 +168,7 @@ impl Default for IndexingSettings {
 }
 
 impl Default for BackupSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: false,

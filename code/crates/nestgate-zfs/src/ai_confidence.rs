@@ -129,6 +129,7 @@ impl ZfsConfidenceCalculator {
 
     // Private helper methods for specific confidence calculations
 
+    /// Pool Creation Confidence
     fn pool_creation_confidence(pool_info: Option<&PoolInfo>) -> f64 {
         // High confidence for pool creation if no conflicts
         match pool_info {
@@ -137,6 +138,7 @@ impl ZfsConfidenceCalculator {
         }
     }
 
+    /// Pool Destruction Confidence
     fn pool_destruction_confidence(pool_info: Option<&PoolInfo>) -> f64 {
         match pool_info {
             Some(_) => {
@@ -148,6 +150,7 @@ impl ZfsConfidenceCalculator {
         }
     }
 
+    /// Pool Scrub Confidence
     fn pool_scrub_confidence(pool_info: Option<&PoolInfo>) -> f64 {
         match pool_info {
             Some(info) => match info.health {
@@ -160,6 +163,7 @@ impl ZfsConfidenceCalculator {
         }
     }
 
+    /// Pool Resilver Confidence
     fn pool_resilver_confidence(pool_info: Option<&PoolInfo>) -> f64 {
         match pool_info {
             Some(info) => match info.health {
@@ -172,6 +176,7 @@ impl ZfsConfidenceCalculator {
         }
     }
 
+    /// Pool Export Confidence
     fn pool_export_confidence(pool_info: Option<&PoolInfo>) -> f64 {
         match pool_info {
             Some(info) => match info.health {
@@ -184,11 +189,13 @@ impl ZfsConfidenceCalculator {
         }
     }
 
+    /// Pool Import Confidence
     fn pool_import_confidence(_pool_info: Option<&PoolInfo>) -> f64 {
         // Import confidence depends on pool availability and conflicts
         0.85 // Generally high confidence for import operations
     }
 
+    /// Dataset Creation Confidence
     fn dataset_creation_confidence(dataset_info: Option<&DatasetInfo>) -> f64 {
         match dataset_info {
             Some(_) => 0.1, // Dataset already exists
@@ -196,6 +203,7 @@ impl ZfsConfidenceCalculator {
         }
     }
 
+    /// Dataset Destruction Confidence
     fn dataset_destruction_confidence(dataset_info: Option<&DatasetInfo>) -> f64 {
         match dataset_info {
             Some(info) => {
@@ -213,6 +221,7 @@ impl ZfsConfidenceCalculator {
         }
     }
 
+    /// Snapshot Confidence
     fn snapshot_confidence(dataset_info: Option<&DatasetInfo>) -> f64 {
         match dataset_info {
             Some(info) => {
@@ -231,6 +240,7 @@ impl ZfsConfidenceCalculator {
         }
     }
 
+    /// Clone Confidence
     fn clone_confidence(dataset_info: Option<&DatasetInfo>) -> f64 {
         match dataset_info {
             Some(info) => {
@@ -242,6 +252,7 @@ impl ZfsConfidenceCalculator {
         }
     }
 
+    /// Promote Confidence
     fn promote_confidence(dataset_info: Option<&DatasetInfo>) -> f64 {
         match dataset_info {
             Some(_) => 0.85, // High confidence if dataset exists
@@ -249,6 +260,7 @@ impl ZfsConfidenceCalculator {
         }
     }
 
+    /// Rollback Confidence
     fn rollback_confidence(dataset_info: Option<&DatasetInfo>) -> f64 {
         match dataset_info {
             Some(_) => 0.9, // High confidence for rollback
@@ -258,6 +270,7 @@ impl ZfsConfidenceCalculator {
 
     // Performance estimation helpers
 
+    /// Estimate Scrub Duration
     fn estimate_scrub_duration(pool_info: Option<&PoolInfo>) -> u64 {
         match pool_info {
             Some(_info) => {
@@ -268,6 +281,7 @@ impl ZfsConfidenceCalculator {
         }
     }
 
+    /// Estimate Resilver Duration
     fn estimate_resilver_duration(pool_info: Option<&PoolInfo>) -> u64 {
         match pool_info {
             Some(_info) => {
@@ -278,6 +292,7 @@ impl ZfsConfidenceCalculator {
         }
     }
 
+    /// Estimate Clone Duration
     fn estimate_clone_duration(dataset_info: Option<&DatasetInfo>) -> u64 {
         match dataset_info {
             Some(info) => {
@@ -291,6 +306,7 @@ impl ZfsConfidenceCalculator {
 
 /// Performance impact assessment for ZFS operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performanceimpact
 pub struct PerformanceImpact {
     /// CPU impact factor (0.0 to 1.0)
     pub cpu_impact: f64,
@@ -303,6 +319,7 @@ pub struct PerformanceImpact {
 }
 /// Scheduling recommendation for operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Schedulingrecommendation
 pub enum SchedulingRecommendation {
     /// Can be performed anytime
     Anytime,
@@ -314,6 +331,7 @@ pub enum SchedulingRecommendation {
     MaintenanceWindow,
 }
 impl Default for PerformanceImpact {
+    /// Returns the default instance
     fn default() -> Self { Self {
             cpu_impact: 0.5,
             io_impact: 0.5,

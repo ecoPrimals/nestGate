@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// Controls metrics collection, health checking, and event logging for network operations.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for NetworkMonitoring
 pub struct NetworkMonitoringConfig {
     /// Whether metrics collection is enabled.
     pub metrics_enabled: bool,

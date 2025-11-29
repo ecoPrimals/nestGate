@@ -59,6 +59,7 @@ mod tests {
 
     #[cfg(test)]
     impl Default for MockServiceInfo {
+        /// Returns the default instance
         fn default() -> Self {
             use crate::constants::hardcoding::{addresses, ports};
 
@@ -220,14 +221,17 @@ mod tests {
 
     #[allow(dead_code)]
     impl NativeAsyncService {
+        /// Creates a new instance
         fn new(name: String) -> Self {
             Self { name }
         }
 
+        /// Gets Config
         fn get_config(&self) -> String {
             format!("config_for_{}", self.name)
         }
 
+        /// Processes data
         fn process(&self, _data: &str) -> String {
             format!("processed_by_{}", self.name)
         }

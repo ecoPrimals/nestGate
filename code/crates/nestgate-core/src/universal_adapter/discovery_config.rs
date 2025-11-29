@@ -7,6 +7,7 @@ use std::sync::Arc;
 /// ✅ MIGRATED: Now uses `ServiceDiscoveryConfig` for discovery endpoints,
 /// removing hardcoded fallbacks in favor of centralized configuration.
 #[derive(Debug, Clone)]
+/// Configuration for DiscoveryRuntime
 pub struct DiscoveryRuntimeConfig {
     /// Central service discovery configuration (Week 2 migration)
     service_discovery: ServiceDiscoveryConfig,
@@ -128,26 +129,31 @@ impl DiscoveryRuntimeConfig {
         self
     }
 
+    /// Builder method to set Security Endpoint
     pub fn with_security_endpoint(mut self, endpoint: String) -> Self {
         self.security_endpoint = Some(endpoint);
         self
     }
 
+    /// Builder method to set Ai Endpoint
     pub fn with_ai_endpoint(mut self, endpoint: String) -> Self {
         self.ai_endpoint = Some(endpoint);
         self
     }
 
+    /// Builder method to set Orchestration Endpoint
     pub fn with_orchestration_endpoint(mut self, endpoint: String) -> Self {
         self.orchestration_endpoint = Some(endpoint);
         self
     }
 
+    /// Builder method to set Storage Endpoint
     pub fn with_storage_endpoint(mut self, endpoint: String) -> Self {
         self.storage_endpoint = Some(endpoint);
         self
     }
 
+    /// Builder method to set Compute Endpoint
     pub fn with_compute_endpoint(mut self, endpoint: String) -> Self {
         self.compute_endpoint = Some(endpoint);
         self
@@ -155,6 +161,7 @@ impl DiscoveryRuntimeConfig {
 }
 
 impl Default for DiscoveryRuntimeConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

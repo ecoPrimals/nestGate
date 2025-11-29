@@ -225,6 +225,7 @@ impl DownloadManager {
 }
 
 impl Default for DownloadManager {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

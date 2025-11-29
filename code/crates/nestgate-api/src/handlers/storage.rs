@@ -8,9 +8,11 @@ use std::process::Command;
 ///
 /// Main handler for storage operations and management.
 #[derive(Debug, Clone)]
+/// Handler for Storage requests
 pub struct StorageHandler;
 
 impl Default for StorageHandler {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -19,6 +21,7 @@ impl Default for StorageHandler {
 impl StorageHandler {
     /// Create a new storage handler instance
     #[must_use]
+    /// Fn
     pub const fn new() -> Self {
         Self
     }
@@ -26,6 +29,7 @@ impl StorageHandler {
 
 /// Storage pool information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagepool
 pub struct StoragePool {
     /// Pool name
     pub name: String,
@@ -44,6 +48,7 @@ pub struct StoragePool {
 }
 /// Storage dataset information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagedataset
 pub struct StorageDataset {
     /// Dataset name
     pub name: String,
@@ -62,6 +67,7 @@ pub struct StorageDataset {
 }
 /// Storage snapshot information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagesnapshot
 pub struct StorageSnapshot {
     /// Name of the storage volume
     pub name: String,
@@ -76,6 +82,7 @@ pub struct StorageSnapshot {
 }
 /// Storage metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagemetrics
 pub struct StorageMetrics {
     /// Total number of storage pools
     pub total_pools: u32,
@@ -209,6 +216,7 @@ pub async fn get_storage_metrics() -> Result<Json<StorageMetrics>, StatusCode> {
 ///
 /// Information about a storage pool.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagepoolinfo
 pub struct StoragePoolInfo {
     /// Pool name
     pub name: String,
@@ -226,6 +234,7 @@ pub struct StoragePoolInfo {
 ///
 /// Information about a storage dataset.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagedatasetinfo
 pub struct StorageDatasetInfo {
     /// Dataset name
     pub name: String,
@@ -243,6 +252,7 @@ pub struct StorageDatasetInfo {
 ///
 /// Information about a storage snapshot.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagesnapshotinfo
 pub struct StorageSnapshotInfo {
     /// Snapshot name
     pub name: String,
@@ -623,11 +633,13 @@ async fn collect_fallback_storage_metrics() -> StorageMetrics {
 
 /// Storage manager for storage operations
 #[derive(Debug, Clone)]
+/// Manager for Storage operations
 pub struct StorageManager {
     // Placeholder fields
 }
 
 impl Default for StorageManager {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -636,6 +648,7 @@ impl Default for StorageManager {
 impl StorageManager {
     /// Create a new storage manager instance
     #[must_use]
+    /// Fn
     pub const fn new() -> Self {
         Self {}
     }

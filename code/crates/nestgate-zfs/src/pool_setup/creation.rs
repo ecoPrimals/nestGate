@@ -303,6 +303,7 @@ impl PoolCreator {
 }
 
 impl Default for PoolCreator {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

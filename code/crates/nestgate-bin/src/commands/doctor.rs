@@ -1,3 +1,5 @@
+//! Doctor module
+
 use tracing::info;
 
 use crate::error::BinResult;
@@ -8,10 +10,12 @@ use crate::error::BinResult;
 pub struct DoctorManager {}
 
 impl DoctorManager {
+    /// Creates a new instance
     pub fn new() -> Self {
         Self {}
     }
 
+    /// Run Diagnostics
     pub async fn run_diagnostics(&mut self, comprehensive: bool, fix: bool) -> BinResult<(), NestGateUnifiedError> {
         info!("🩺 Running system diagnostics");
         
@@ -55,6 +59,7 @@ impl DoctorManager {
 }
 
 impl Default for DoctorManager {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

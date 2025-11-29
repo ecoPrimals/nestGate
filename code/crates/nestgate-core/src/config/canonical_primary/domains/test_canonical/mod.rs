@@ -64,6 +64,7 @@ pub use unit::{
 // **THE** canonical test configuration for the entire NestGate ecosystem
 // This replaces ALL other test configuration variants
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Canonicaltestconfigs
 pub struct CanonicalTestConfigs {
     /// Unit test configuration
     pub unit: UnitTestConfig,

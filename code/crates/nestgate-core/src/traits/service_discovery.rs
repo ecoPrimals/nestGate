@@ -12,10 +12,15 @@ use std::collections::HashMap;
 
 /// Service query for filtering discovered services
 #[derive(Debug, Clone)]
+/// Servicequery
 pub struct ServiceQuery {
+    /// Service name
     pub service_name: Option<String>,
+    /// Tags
     pub tags: Vec<String>,
+    /// Namespace
     pub namespace: Option<String>,
+    /// Healthy Only
     pub healthy_only: bool,
 }
 
@@ -30,16 +35,19 @@ impl ServiceQuery {
         }
     }
 
+    /// Builder method to set Name
     pub fn with_name<S: Into<String>>(mut self, name: S) -> Self {
         self.service_name = Some(name.into());
         self
     }
 
+    /// Builder method to set Tag
     pub fn with_tag<S: Into<String>>(mut self, tag: S) -> Self {
         self.tags.push(tag.into());
         self
     }
 
+    /// In Namespace
     pub fn in_namespace<S: Into<String>>(mut self, namespace: S) -> Self {
         self.namespace = Some(namespace.into());
         self
@@ -53,6 +61,7 @@ impl ServiceQuery {
 }
 
 impl Default for ServiceQuery {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

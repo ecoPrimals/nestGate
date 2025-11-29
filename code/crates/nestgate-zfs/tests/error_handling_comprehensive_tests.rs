@@ -276,6 +276,7 @@ fn test_multiple_error_types() {
 
 #[test]
 fn test_result_ok_propagation() {
+    /// Returns Ok
     fn returns_ok() -> Result<i32, ZfsError> {
         Ok(42)
     }
@@ -287,6 +288,7 @@ fn test_result_ok_propagation() {
 
 #[test]
 fn test_result_err_propagation() {
+    /// Returns Err
     fn returns_err() -> Result<i32, ZfsError> {
         Err(ZfsError::PoolError {
             message: "Test error".to_string(),
@@ -299,10 +301,12 @@ fn test_result_err_propagation() {
 
 #[test]
 fn test_result_chain() {
+    /// Step1
     fn step1() -> Result<i32, ZfsError> {
         Ok(10)
     }
 
+    /// Step2
     fn step2(value: i32) -> Result<i32, ZfsError> {
         Ok(value * 2)
     }
@@ -348,12 +352,14 @@ fn test_error_with_context() {
 
 #[test]
 fn test_nested_error_handling() {
+    /// Inner
     fn inner() -> Result<(), ZfsError> {
         Err(ZfsError::PoolError {
             message: "Inner error".to_string(),
         })
     }
 
+    /// Outer
     fn outer() -> Result<(), ZfsError> {
         inner().map_err(|e| ZfsError::CommandError {
             message: format!("Outer wrapping: {}", e),
@@ -385,6 +391,7 @@ fn test_error_pattern_matching() {
 
 #[test]
 fn test_error_type_checking() {
+    /// Checks if Pool Error
     fn is_pool_error(error: &ZfsError) -> bool {
         matches!(error, ZfsError::PoolError { .. })
     }
@@ -408,6 +415,7 @@ fn test_result_unwrap_or() {
     fn get_ok_result() -> Result<i32, ZfsError> {
         Ok(42)
     }
+    /// Gets Err Result
     fn get_err_result() -> Result<i32, ZfsError> {
         Err(ZfsError::PoolError {
             message: "Error".to_string(),
@@ -520,16 +528,19 @@ fn test_io_error_connection_refused() {
 
 #[test]
 fn test_error_in_function_chain() {
+    /// Step1
     fn step1() -> Result<i32, ZfsError> {
         Ok(10)
     }
 
+    /// Step2
     fn step2(_input: i32) -> Result<i32, ZfsError> {
         Err(ZfsError::PoolError {
             message: "Step 2 failed".to_string(),
         })
     }
 
+    /// Step3
     fn step3(_input: i32) -> Result<i32, ZfsError> {
         Ok(30)
     }

@@ -102,46 +102,67 @@ impl SecurityCapability {
 
 /// Rate limit request
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for RateLimit operation
 pub struct RateLimitRequest {
+    /// User identifier
     pub user_id: String,
+    /// Operation
     pub operation: String,
 }
 
 /// Rate limit response
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for RateLimit operation
 pub struct RateLimitResponse {
+    /// Allowed
     pub allowed: bool,
+    /// Remaining
     pub remaining: u32,
+    /// Provider
     pub provider: String,
 }
 
 /// Intrusion detection request
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for IntrusionDetection operation
 pub struct IntrusionDetectionRequest {
+    /// Source Ip
     pub source_ip: String,
+    /// Request Data
     pub request_data: Vec<u8>,
 }
 
 /// Intrusion detection response
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for IntrusionDetection operation
 pub struct IntrusionDetectionResponse {
+    /// Threat Detected
     pub threat_detected: bool,
+    /// Confidence
     pub confidence: f64,
+    /// Provider
     pub provider: String,
 }
 
 /// Input validation request
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for InputValidation operation
 pub struct InputValidationRequest {
+    /// Input
     pub input: String,
+    /// Validation Rules
     pub validation_rules: Vec<String>,
 }
 
 /// Input validation response
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for InputValidation operation
 pub struct InputValidationResponse {
+    /// Valid
     pub valid: bool,
+    /// Sanitized Input
     pub sanitized_input: String,
+    /// Provider
     pub provider: String,
 }
 

@@ -1,6 +1,8 @@
 //
 // Unit tests for snapshot policies, operations, and management functionality.
 
+//! Tests module
+
 use super::operations::SnapshotOperationType;
 use super::policy::{RetentionPolicy, ScheduleFrequency, SnapshotPolicy};
 use super::types::{SnapshotOperation, SnapshotOperationStatus};

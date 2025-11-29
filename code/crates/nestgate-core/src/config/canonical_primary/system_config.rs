@@ -10,12 +10,12 @@ use std::time::Duration;
 
 /// System-level configuration with const generics for performance
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for System
 pub struct SystemConfig<const MAX_CONNECTIONS: usize = 1000, const BUFFER_SIZE: usize = 65536> {
     /// System instance identifier
     pub instance_id: String,
     /// Human-readable instance name
     pub instance_name: String,
-    /// Service version
     pub version: String,
     /// Deployment environment
     pub environment: DeploymentEnvironment,
@@ -29,15 +29,12 @@ pub struct SystemConfig<const MAX_CONNECTIONS: usize = 1000, const BUFFER_SIZE: 
     pub config_dir: PathBuf,
     /// Process ID file location
     pub pid_file: Option<PathBuf>,
-    /// Maximum memory usage (MB)
     pub max_memory_mb: Option<u64>,
-    /// Maximum CPU cores to use
     pub max_cpu_cores: Option<usize>,
     /// Startup timeout
     pub startup_timeout: Duration,
     /// Graceful shutdown timeout
     pub shutdown_timeout: Duration,
-    /// Health check interval
     pub health_check_interval: Duration,
     /// Runtime override for `MAX_CONNECTIONS`
     pub max_connections_override: Option<usize>,
@@ -76,6 +73,7 @@ impl<const MAX_CONNECTIONS: usize, const BUFFER_SIZE: usize>
 
 /// Deployment environment types
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Deploymentenvironment
 pub enum DeploymentEnvironment {
     /// Development environment for local development
     Development,
@@ -91,6 +89,7 @@ pub enum DeploymentEnvironment {
     Security,
 }
 impl Default for DeploymentEnvironment {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Development
     }
@@ -98,6 +97,7 @@ impl Default for DeploymentEnvironment {
 
 /// Log level configuration
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Loglevel
 pub enum LogLevel {
     /// Error log level (only errors)
     Error,
@@ -111,6 +111,7 @@ pub enum LogLevel {
     Trace,
 }
 impl Default for LogLevel {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Info
     }
@@ -277,14 +278,17 @@ mod tests {
 
     #[test]
     fn test_different_const_generic_configurations() {
+        /// Type alias for SmallConfig
         type SmallConfig = SystemConfig<100, 4096>;
         assert_eq!(SmallConfig::max_connections(), 100);
         assert_eq!(SmallConfig::buffer_size(), 4096);
 
+        /// Type alias for MediumConfig
         type MediumConfig = SystemConfig<1000, 65536>;
         assert_eq!(MediumConfig::max_connections(), 1000);
         assert_eq!(MediumConfig::buffer_size(), 65536);
 
+        /// Type alias for LargeConfig
         type LargeConfig = SystemConfig<10000, 1048576>;
         assert_eq!(LargeConfig::max_connections(), 10000);
         assert_eq!(LargeConfig::buffer_size(), 1048576);
@@ -293,6 +297,7 @@ mod tests {
 
 /// Environment-specific settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Environment
 pub struct EnvironmentConfig {
     /// Environment name
     pub name: String,
@@ -304,6 +309,7 @@ pub struct EnvironmentConfig {
     pub resource_limits: ResourceLimits,
 }
 impl Default for EnvironmentConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             name: "development".to_string(),
@@ -316,21 +322,18 @@ impl Default for EnvironmentConfig {
 
 /// Resource limits configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Resourcelimits
 pub struct ResourceLimits {
-    /// Maximum memory usage (bytes)
     pub max_memory_bytes: Option<u64>,
-    /// Maximum CPU usage (percentage)
     pub max_cpu_percent: Option<f64>,
-    /// Maximum disk usage (bytes)
     pub max_disk_bytes: Option<u64>,
-    /// Maximum network bandwidth (bytes/sec)
     pub max_network_bps: Option<u64>,
-    /// Maximum file descriptors
     pub max_file_descriptors: Option<u32>,
 }
 
 /// Feature flags configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Featureflags
 pub struct FeatureFlags {
     /// Enable experimental features
     pub experimental_features: bool,
@@ -354,6 +357,7 @@ pub struct FeatureFlags {
     pub features: std::collections::HashMap<String, bool>,
 }
 impl Default for FeatureFlags {
+    /// Returns the default instance
     fn default() -> Self {
         let mut features = std::collections::HashMap::new();
         features.insert("async_trait_migration".to_string(), false);
@@ -377,6 +381,7 @@ impl Default for FeatureFlags {
 
 /// Configuration metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configmetadata
 pub struct ConfigMetadata {
     /// Configuration version
     pub version: String,
@@ -392,6 +397,7 @@ pub struct ConfigMetadata {
     pub schema_version: String,
 }
 impl Default for ConfigMetadata {
+    /// Returns the default instance
     fn default() -> Self {
         // Use a simple timestamp format instead of chrono
         let now = std::time::SystemTime::now()
@@ -416,6 +422,7 @@ impl Default for ConfigMetadata {
 impl<const MAX_CONNECTIONS: usize, const BUFFER_SIZE: usize> Default
     for SystemConfig<MAX_CONNECTIONS, BUFFER_SIZE>
 {
+    /// Returns the default instance
     fn default() -> Self {
         // Generate a simple UUID-like string without external dependencies
         let instance_id = format!(

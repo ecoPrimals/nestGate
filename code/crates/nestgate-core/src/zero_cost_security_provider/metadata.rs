@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
 /// **Zero-cost security provider metadata**
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Zerocostsecuritymetadata
 pub struct ZeroCostSecurityMetadata {
     /// Provider type
     pub provider_type: String,
@@ -27,6 +28,7 @@ pub struct ZeroCostSecurityMetadata {
     pub certifications: Vec<String>,
 }
 impl Default for ZeroCostSecurityMetadata {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             provider_type: "zero-cost-security-provider".to_string(),
@@ -62,6 +64,7 @@ impl Default for ZeroCostSecurityMetadata {
 
 /// **Security capabilities**
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Securitycapabilities
 pub struct SecurityCapabilities {
     /// Supports hardware security modules
     pub hardware_security_module: bool,
@@ -81,6 +84,7 @@ pub struct SecurityCapabilities {
     pub zero_knowledge_proofs: bool,
 }
 impl Default for SecurityCapabilities {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             hardware_security_module: false,
@@ -97,6 +101,7 @@ impl Default for SecurityCapabilities {
 
 /// **Performance characteristics**
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performancecharacteristics
 pub struct PerformanceCharacteristics {
     /// Authentication operations per second
     pub auth_ops_per_second: u64,
@@ -116,6 +121,7 @@ pub struct PerformanceCharacteristics {
     pub cpu_usage_percent: f64,
 }
 impl Default for PerformanceCharacteristics {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             auth_ops_per_second: 10000,
@@ -132,6 +138,7 @@ impl Default for PerformanceCharacteristics {
 
 /// **Security provider health information**
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Securityproviderhealth
 pub struct SecurityProviderHealth {
     /// Overall health status
     pub status: String,
@@ -155,6 +162,7 @@ pub struct SecurityProviderHealth {
     pub key_rotation_count: u64,
 }
 impl Default for SecurityProviderHealth {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             timestamp: SystemTime::now(),
@@ -173,6 +181,7 @@ impl Default for SecurityProviderHealth {
 
 /// **Health status enumeration**
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Status values for Health
 pub enum HealthStatus {
     /// Provider is healthy and operational
     Healthy,
@@ -216,6 +225,7 @@ impl HealthStatus {
 
 /// **Key rotation status**
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Status values for KeyRotation
 pub enum KeyRotationStatus {
     /// Keys are current and valid
     Current,
@@ -244,6 +254,7 @@ impl KeyRotationStatus {
 
 /// **Security provider metrics**
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Securityprovidermetrics
 pub struct SecurityProviderMetrics {
     /// Metrics collection timestamp
     pub timestamp: SystemTime,
@@ -259,6 +270,7 @@ pub struct SecurityProviderMetrics {
     pub security: SecurityMetrics,
 }
 impl Default for SecurityProviderMetrics {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             timestamp: SystemTime::now(),
@@ -273,6 +285,7 @@ impl Default for SecurityProviderMetrics {
 
 /// **Authentication metrics**
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Authenticationmetrics
 pub struct AuthenticationMetrics {
     /// Total authentication attempts
     pub total_attempts: u64,
@@ -288,6 +301,7 @@ pub struct AuthenticationMetrics {
     pub peak_auth_rate: f64,
 }
 impl Default for AuthenticationMetrics {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             total_attempts: 0,
@@ -302,6 +316,7 @@ impl Default for AuthenticationMetrics {
 
 /// **Encryption metrics**
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Encryptionmetrics
 pub struct EncryptionMetrics {
     /// Total encryption operations
     pub total_encryptions: u64,
@@ -321,6 +336,7 @@ pub struct EncryptionMetrics {
     pub total_bytes_decrypted: u64,
 }
 impl Default for EncryptionMetrics {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             total_encryptions: 0,
@@ -337,6 +353,7 @@ impl Default for EncryptionMetrics {
 
 /// **Signing metrics**
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Signingmetrics
 pub struct SigningMetrics {
     /// Total signing operations
     pub total_signatures: u64,
@@ -352,6 +369,7 @@ pub struct SigningMetrics {
     pub avg_verification_time_ms: f64,
 }
 impl Default for SigningMetrics {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             total_signatures: 0,
@@ -366,6 +384,7 @@ impl Default for SigningMetrics {
 
 /// **Performance metrics**
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performancemetrics
 pub struct PerformanceMetrics {
     /// CPU usage percentage
     pub cpu_usage: f64,
@@ -381,6 +400,7 @@ pub struct PerformanceMetrics {
     pub avg_response_time_ms: f64,
 }
 impl Default for PerformanceMetrics {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             cpu_usage: 0.0,
@@ -395,6 +415,7 @@ impl Default for PerformanceMetrics {
 
 /// **Security metrics**
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Securitymetrics
 pub struct SecurityMetrics {
     /// Security events detected
     pub security_events: u64,

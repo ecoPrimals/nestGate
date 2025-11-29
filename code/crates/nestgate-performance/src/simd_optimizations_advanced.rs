@@ -13,6 +13,8 @@
 // - Native async SIMD processing
 // - Compile-time SIMD instruction selection
 
+//! Simd Optimizations Advanced module
+
 use std::arch::x86_64::*;
 // **CANONICAL MODERNIZATION**: Use canonical error types and zero-cost patterns
 use nestgate_core::error::{NestGateError, Result};
@@ -24,6 +26,7 @@ use std::marker::PhantomData;
 /// **SIMD BULK DATA PROCESSOR**
 /// High-performance SIMD processor for bulk data operations
 #[derive(Debug, Clone)]
+/// Simdbulkprocessor
 pub struct SimdBulkProcessor<const BUFFER_SIZE: usize = 8192> {
     _phantom: PhantomData<[u8; BUFFER_SIZE]>,
 }
@@ -64,6 +67,7 @@ impl<const BUFFER_SIZE: usize> SimdBulkProcessor<BUFFER_SIZE> {
 /// **SIMD-ACCELERATED STORAGE BACKEND**
 /// Storage backend with SIMD-accelerated operations for maximum throughput
 #[derive(Debug)]
+/// Simdstoragebackend
 pub struct SimdStorageBackend<const BUFFER_SIZE: usize = 8192> {
     base_path: String,
     processor: SimdBulkProcessor<BUFFER_SIZE>,
@@ -97,10 +101,12 @@ impl<const BUFFER_SIZE: usize> SimdStorageBackend<BUFFER_SIZE> {
 
 // **CANONICAL MODERNIZATION**: Updated to use canonical storage provider pattern
 impl<const BUFFER_SIZE: usize> CanonicalStorageBackend for SimdStorageBackend<BUFFER_SIZE> {
+    /// Capabilities
     fn capabilities(&self) -> impl std::future::Future<Output = Result<Vec<nestgate_core::canonical_modernization::UnifiedServiceType>>> + Send {
         async { Ok(vec![nestgate_core::canonical_modernization::UnifiedServiceType::Storage]) }
     }
 
+    /// Read
     fn read(&self, path: &str) -> impl std::future::Future<Output = StorageResult<Vec<u8>>> + Send {
         let full_path = format!("{e}/{e}");
         let path = path.to_string();
@@ -122,6 +128,7 @@ impl<const BUFFER_SIZE: usize> CanonicalStorageBackend for SimdStorageBackend<BU
         }
     }
 
+    /// Write
     fn write(&self, path: &str, data: &[u8]) -> impl std::future::Future<Output = StorageResult<()>> + Send {
         let full_path = format!("{e}/{e}");
         let path = path.to_string();
@@ -140,6 +147,7 @@ impl<const BUFFER_SIZE: usize> CanonicalStorageBackend for SimdStorageBackend<BU
         }
     }
 
+    /// Deletes resource
     fn delete(&self, path: &str) -> impl std::future::Future<Output = StorageResult<()>> + Send {
         let full_path = format!("{e}/{e}");
         async move {
@@ -149,6 +157,7 @@ impl<const BUFFER_SIZE: usize> CanonicalStorageBackend for SimdStorageBackend<BU
         }
     }
 
+    /// List
     fn list(&self, path: &str) -> impl std::future::Future<Output = StorageResult<Vec<String>>> + Send {
         let _path = path.to_string();
         async move {
@@ -157,6 +166,7 @@ impl<const BUFFER_SIZE: usize> CanonicalStorageBackend for SimdStorageBackend<BU
         }
     }
 
+    /// Metadata
     fn metadata(&self, path: &str) -> impl std::future::Future<Output = StorageResult<nestgate_core::universal_storage::canonical_storage::CanonicalStorageMetadata>> + Send {
         let path = path.to_string();
         async move {
@@ -173,6 +183,7 @@ impl<const BUFFER_SIZE: usize> CanonicalStorageBackend for SimdStorageBackend<BU
         }
     }
 
+    /// Health Check
     fn health_check(&self) -> impl std::future::Future<Output = Result<nestgate_core::universal_storage::canonical_storage::CanonicalStorageHealth>> + Send {
         async move {
             use nestgate_core::universal_storage::canonical_storage::CanonicalStorageHealth;

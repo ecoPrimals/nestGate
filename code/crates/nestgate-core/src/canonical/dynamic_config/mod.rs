@@ -6,6 +6,8 @@
 // - Validation of configuration changes before application
 // - Atomic configuration updates with rollback on failure
 
+//! Dynamic Config module
+
 pub mod manager;
 pub mod types;
 pub mod validators;

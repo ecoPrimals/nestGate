@@ -33,37 +33,57 @@ use std::collections::HashMap;
 
 /// AI inference request parameters
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for Inference operation
 pub struct InferenceRequest {
+    /// Model name
     pub model_name: String,
+    /// Input Data
     pub input_data: serde_json::Value,
+    /// Parameters
     pub parameters: HashMap<String, serde_json::Value>,
+    /// Timeout Seconds
     pub timeout_seconds: Option<u64>,
 }
 
 /// AI inference response data
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for Inference operation
 pub struct InferenceResponse {
+    /// Result
     pub result: serde_json::Value,
+    /// Confidence
     pub confidence: Option<f64>,
+    /// Latency Ms
     pub latency_ms: u64,
+    /// Model Version
     pub model_version: String,
 }
 
 /// Model training request parameters
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for Training operation
 pub struct TrainingRequest {
+    /// Model Type
     pub model_type: String,
+    /// Training Data Path
     pub training_data_path: String,
+    /// Hyperparameters
     pub hyperparameters: HashMap<String, serde_json::Value>,
+    /// Validation Split
     pub validation_split: Option<f64>,
 }
 
 /// Model training response data
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for Training operation
 pub struct TrainingResponse {
+    /// Model identifier
     pub model_id: String,
+    /// Accuracy
     pub accuracy: f64,
+    /// Training Time Seconds
     pub training_time_seconds: u64,
+    /// Metrics
     pub metrics: HashMap<String, f64>,
 }
 

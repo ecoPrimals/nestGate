@@ -4,6 +4,7 @@ use std::sync::Arc;
 /// Thread-safe configuration for network defaults
 /// Captures environment variables at initialization to prevent race conditions
 #[derive(Debug, Clone)]
+/// Configuration for NetworkDefaults
 pub struct NetworkDefaultsConfig {
     bind_address: Option<String>,
     api_host: Option<String>,
@@ -41,30 +42,35 @@ impl NetworkDefaultsConfig {
 
     // Accessors with fallback to defaults
 
+    /// Gets Bind Address
     pub fn get_bind_address(&self) -> String {
         self.bind_address
             .clone()
             .unwrap_or_else(|| DEFAULT_BIND_ADDRESS.to_string())
     }
 
+    /// Gets Api Host
     pub fn get_api_host(&self) -> String {
         self.api_host
             .clone()
             .unwrap_or_else(|| LOCALHOST_NAME.to_string())
     }
 
+    /// Gets Db Host
     pub fn get_db_host(&self) -> String {
         self.db_host
             .clone()
             .unwrap_or_else(|| LOCALHOST_NAME.to_string())
     }
 
+    /// Gets Redis Host
     pub fn get_redis_host(&self) -> String {
         self.redis_host
             .clone()
             .unwrap_or_else(|| LOCALHOST_NAME.to_string())
     }
 
+    /// Checks if Production
     pub fn is_production(&self) -> bool {
         self.environment
             .as_ref()
@@ -75,6 +81,7 @@ impl NetworkDefaultsConfig {
             .unwrap_or(false)
     }
 
+    /// Checks if Development
     pub fn is_development(&self) -> bool {
         self.environment
             .as_ref()
@@ -87,26 +94,31 @@ impl NetworkDefaultsConfig {
 
     // Builder methods for tests
 
+    /// Builder method to set Bind Address
     pub fn with_bind_address(mut self, address: String) -> Self {
         self.bind_address = Some(address);
         self
     }
 
+    /// Builder method to set Api Host
     pub fn with_api_host(mut self, host: String) -> Self {
         self.api_host = Some(host);
         self
     }
 
+    /// Builder method to set Db Host
     pub fn with_db_host(mut self, host: String) -> Self {
         self.db_host = Some(host);
         self
     }
 
+    /// Builder method to set Redis Host
     pub fn with_redis_host(mut self, host: String) -> Self {
         self.redis_host = Some(host);
         self
     }
 
+    /// Builder method to set Environment
     pub fn with_environment(mut self, env: String) -> Self {
         self.environment = Some(env);
         self
@@ -114,6 +126,7 @@ impl NetworkDefaultsConfig {
 }
 
 impl Default for NetworkDefaultsConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

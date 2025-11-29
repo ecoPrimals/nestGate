@@ -36,6 +36,7 @@ use crate::error::Result;
 
 /// Compression-related errors
 #[derive(Debug, Error)]
+/// Errors that can occur during Compression operations
 pub enum CompressionError {
     /// Compression operation failed
     #[error("Compression failed: {0}")]
@@ -59,6 +60,7 @@ pub enum CompressionError {
 
 /// Compression algorithms supported by NestGate
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+/// Compressionalgorithm
 pub enum CompressionAlgorithm {
     /// No compression
     None,
@@ -78,6 +80,7 @@ pub enum CompressionAlgorithm {
 }
 
 impl Default for CompressionAlgorithm {
+    /// Returns the default instance
     fn default() -> Self {
         // LZ4 is the default - fastest with good compression
         Self::Lz4
@@ -297,6 +300,7 @@ impl RustCompressor {
 }
 
 impl Default for RustCompressor {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new(CompressionAlgorithm::default())
     }

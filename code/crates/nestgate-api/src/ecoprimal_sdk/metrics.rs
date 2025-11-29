@@ -14,6 +14,7 @@ impl MetricsCollector {
 }
 
 impl Default for MetricsCollector {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

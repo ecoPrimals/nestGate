@@ -10,6 +10,7 @@ use super::types::CapabilityType;
 
 /// Discovered capability information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Capability
 pub struct Capability {
     /// Type of capability
     pub capability_type: CapabilityType,

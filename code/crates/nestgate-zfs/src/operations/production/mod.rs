@@ -9,6 +9,8 @@
 // ==================== OPERATION MODULES ====================
 
 /// ZFS pool management operations
+//! Production module
+
 pub mod pools;
 
 /// ZFS dataset management operations  
@@ -51,6 +53,7 @@ use std::collections::HashMap;
 /// Central coordinator for all production ZFS operations, replacing the
 /// monolithic ProductionZfsOperations struct with focused components.
 #[derive(Debug)]
+/// Productionzfsoperations
 pub struct ProductionZfsOperations {
     /// Configuration for ZFS operations
     config: ZfsOperationsConfig,
@@ -164,6 +167,7 @@ impl ProductionZfsOperations {
 }
 
 impl Default for ProductionZfsOperations {
+    /// Returns the default instance
     fn default() -> Self {
         // This will be implemented with async constructor pattern
         panic!("Use ProductionZfsOperations::new() instead")
@@ -173,48 +177,75 @@ impl Default for ProductionZfsOperations {
 // ==================== OPERATIONS REPORT ====================
 
 #[derive(Debug, Clone)]
+/// Zfsoperationsreport
 pub struct ZfsOperationsReport {
+    /// Pools
     pub pools: PoolReport,
+    /// Datasets
     pub datasets: DatasetReport,
+    /// Snapshots
     pub snapshots: SnapshotReport,
+    /// Metrics
     pub metrics: MetricsReport,
+    /// Health
     pub health: HealthReport,
+    /// Timestamp
     pub timestamp: std::time::SystemTime,
 }
 
 // Placeholder report types - will be implemented in respective modules
 #[derive(Debug, Clone)]
+/// Poolreport
 pub struct PoolReport {
+    /// Total Pools
     pub total_pools: usize,
+    /// Healthy Pools
     pub healthy_pools: usize,
+    /// Degraded Pools
     pub degraded_pools: usize,
 }
 
 #[derive(Debug, Clone)]
+/// Datasetreport
 pub struct DatasetReport {
+    /// Total Datasets
     pub total_datasets: usize,
+    /// Size of total
     pub total_size: u64,
+    /// Compression Ratio
     pub compression_ratio: f64,
 }
 
 #[derive(Debug, Clone)]
+/// Snapshotreport
 pub struct SnapshotReport {
+    /// Total Snapshots
     pub total_snapshots: usize,
+    /// Size of total snapshot
     pub total_snapshot_size: u64,
+    /// Retention Compliance
     pub retention_compliance: f64,
 }
 
 #[derive(Debug, Clone)]
+/// Metricsreport
 pub struct MetricsReport {
+    /// Operations Per Second
     pub operations_per_second: f64,
+    /// Average Latency
     pub average_latency: std::time::Duration,
+    /// Error Rate
     pub error_rate: f64,
 }
 
 #[derive(Debug, Clone)]
+/// Healthreport
 pub struct HealthReport {
+    /// System Health
     pub system_health: String,
+    /// Capability Status
     pub capability_status: HashMap<String, bool>,
+    /// Alerts
     pub alerts: Vec<String>,
 }
 

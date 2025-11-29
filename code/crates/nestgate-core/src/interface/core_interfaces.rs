@@ -16,6 +16,7 @@ pub trait ToUnified<T> {
 }
 /// Universal configuration interface
 pub trait UniversalConfigInterface {
+    /// Type alias for Config
     type Config: Clone + Send + Sync;
     /// Get current configuration
     fn get_config(&self) -> impl std::future::Future<Output = Result<Self::Config>> + Send;
@@ -29,6 +30,7 @@ pub trait UniversalConfigInterface {
 
 /// Universal event interface
 pub trait UniversalEventInterface {
+    /// Type alias for Event
     type Event: Clone + Send + Sync;
     /// Emit an event
     fn emit_event(&self, event: Self::Event) -> impl std::future::Future<Output = Result<()>> + Send;
@@ -41,7 +43,9 @@ pub trait UniversalEventInterface {
 
 /// Universal provider interface
 pub trait UniversalProviderInterface {
+    /// Type alias for Request
     type Request: Send + Sync;
+    /// Type alias for Response
     type Response: Send + Sync;
     /// Process a request
     fn process_request(&self, request: Self::Request) -> impl std::future::Future<Output = Result<Self::Response>> + Send;
@@ -57,21 +61,31 @@ pub trait UniversalProviderInterface {
 
 /// Universal interface metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Interfacemetadata
 pub struct InterfaceMetadata {
+    /// Interface identifier
     pub interface_id: String,
+    /// Version
     pub version: String,
+    /// Capabilities
     pub capabilities: Vec<String>,
+    /// Properties
     pub properties: HashMap<String, String>,
 }
 /// Universal interface status
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Status values for Interface
 pub enum InterfaceStatus {
+    /// Active
     Active,
+    /// Inactive
     Inactive,
     Error(String),
+    /// Maintenance
     Maintenance,
 }
 impl Default for InterfaceStatus {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Active
     }
@@ -158,6 +172,7 @@ impl InterfaceRegistry {
 }
 
 impl Default for InterfaceRegistry {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

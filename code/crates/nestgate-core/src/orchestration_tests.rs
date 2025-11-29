@@ -8,6 +8,7 @@ mod orchestration_coordination_tests {
 
     #[test]
     fn test_service_coordination() {
+        /// Coordinate Services
         fn coordinate_services(count: usize) -> Result<Vec<String>> {
             let mut services = Vec::new();
             for i in 0..count {
@@ -23,6 +24,7 @@ mod orchestration_coordination_tests {
 
     #[test]
     fn test_orchestration_failure() {
+        /// Orchestrate With Failure
         fn orchestrate_with_failure() -> Result<()> {
             Err(NestGateError::internal_error(
                 "Orchestration failed",
@@ -39,9 +41,13 @@ mod orchestration_lifecycle_tests {
     #[test]
     fn test_orchestration_phases() {
         enum Phase {
+            /// Planning
             Planning,
+            /// Execution
             Execution,
+            /// Monitoring
             Monitoring,
+            /// Cleanup
             Cleanup,
         }
 
@@ -65,6 +71,7 @@ mod orchestration_resilience_tests {
 
     #[test]
     fn test_partial_failure_handling() {
+        /// Processes  Services
         fn process_services(fail_at: Option<usize>) -> Result<Vec<String>> {
             let mut results = Vec::new();
             for i in 0..5 {
@@ -109,14 +116,17 @@ mod orchestration_integration_tests {
 
     #[test]
     fn test_end_to_end_orchestration() {
+        /// Plan
         fn plan() -> Result<Vec<String>> {
             Ok(vec!["task1".to_string(), "task2".to_string()])
         }
 
+        /// Execute
         fn execute(tasks: Vec<String>) -> Result<usize> {
             Ok(tasks.len())
         }
 
+        /// Monitor
         fn monitor(count: usize) -> Result<String> {
             Ok(format!("Completed {} tasks", count))
         }

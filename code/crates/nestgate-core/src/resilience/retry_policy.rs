@@ -8,6 +8,7 @@ use std::time::Duration;
 
 /// Retry configuration
 #[derive(Debug, Clone)]
+/// Configuration for Retry
 pub struct RetryConfig {
     /// Maximum number of retry attempts
     pub max_attempts: u32,
@@ -21,6 +22,7 @@ pub struct RetryConfig {
     pub jitter_factor: f64,
 }
 impl Default for RetryConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             max_attempts: 3,

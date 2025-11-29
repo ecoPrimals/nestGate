@@ -10,6 +10,7 @@ use std::time::SystemTime;
 ///
 /// Represents a single performance insight with severity and recommendations.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performanceinsight
 pub struct PerformanceInsight {
     /// Unique identifier for this insight
     pub id: String,
@@ -43,6 +44,7 @@ pub struct PerformanceInsight {
 ///
 /// Severity levels for performance insights and recommendations.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+/// Insightseverity
 pub enum InsightSeverity {
     /// Informational severity level
     Info,
@@ -62,6 +64,7 @@ pub enum InsightSeverity {
 ///
 /// Categories of performance insights that can be generated.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Types of Insight
 pub enum InsightType {
     /// Optimization opportunity
     Optimization,

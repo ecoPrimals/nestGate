@@ -1,5 +1,7 @@
 // Alert Manager Implementation
 
+//! Manager module
+
 use super::channels::{AlertChannel, NotificationRecord};
 use super::rules::{AlertRule, SuppressionRule};
 use super::types::{Alert, AlertStatus};
@@ -12,6 +14,7 @@ use tracing::{debug, error, info};
 
 /// Main alert management system
 #[derive(Debug)]
+/// Manager for Alert operations
 pub struct AlertManager {
     /// Active alert rules
     rules: Arc<RwLock<HashMap<String, AlertRule>>>,
@@ -195,6 +198,7 @@ impl AlertManager {
 }
 
 impl Clone for AlertManager {
+    /// Clone
     fn clone(&self) -> Self {
         Self {
             rules: Arc::clone(&self.rules),
@@ -208,6 +212,7 @@ impl Clone for AlertManager {
 }
 
 impl Default for AlertManager {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

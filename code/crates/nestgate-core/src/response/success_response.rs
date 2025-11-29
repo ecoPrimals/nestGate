@@ -1,6 +1,8 @@
 // Success response types and builders
 // Provides unified success response structures for API endpoints
 
+//! Success Response module
+
 use axum::{
     http::StatusCode,
     response::{IntoResponse, Json},
@@ -10,6 +12,7 @@ use std::collections::HashMap;
 
 /// Unified success response structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for Success operation
 pub struct SuccessResponse {
     /// Success message
     pub message: String,
@@ -81,6 +84,7 @@ impl SuccessResponse {
 }
 
 impl IntoResponse for SuccessResponse {
+    /// Into Response
     fn into_response(self) -> axum::response::Response {
         (StatusCode::OK, Json(self)).into_response()
     }
@@ -173,13 +177,19 @@ impl SuccessResponseFactory {
 
 /// Legacy success response for backward compatibility
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for LegacySuccess operation
 pub struct LegacySuccessResponse {
+    /// Success
     pub success: bool,
+    /// Message
     pub message: String,
+    /// Data
     pub data: Option<serde_json::Value>,
+    /// Timestamp
     pub timestamp: String,
 }
 impl From<SuccessResponse> for LegacySuccessResponse {
+    /// From
     fn from(unified: SuccessResponse) -> Self {
         Self {
             success: true,
@@ -193,6 +203,7 @@ impl From<SuccessResponse> for LegacySuccessResponse {
 }
 
 impl IntoResponse for LegacySuccessResponse {
+    /// Into Response
     fn into_response(self) -> axum::response::Response {
         (StatusCode::OK, Json(self)).into_response()
     }

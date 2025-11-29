@@ -1,3 +1,5 @@
+//! Storage Ops module
+
 use crate::error::NestGateError;
 use std::future::Future;
 
@@ -17,6 +19,7 @@ use crate::universal_storage::{
 use super::core::EnterpriseStorageBackend;
 
 impl CanonicalStorageBackend for EnterpriseStorageBackend {
+    /// Capabilities
     async fn capabilities(
         &self,
     ) -> Result<Vec<crate::unified_enums::UnifiedServiceType>> {
@@ -173,6 +176,7 @@ impl CanonicalStorageBackend for EnterpriseStorageBackend {
         }
     }
 
+    /// Metadata
     fn metadata(
         &self,
     ) -> impl Future<Output = StorageResult<CanonicalStorageMetadata>> + Send {
@@ -199,6 +203,7 @@ impl CanonicalStorageBackend for EnterpriseStorageBackend {
         }
     }
 
+    /// Health Check
     fn health_check(&self) -> impl Future<Output = Result<CanonicalStorageHealth>> + Send {
         let root_path = self.root_path().to_path_buf();
 

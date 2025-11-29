@@ -5,11 +5,13 @@ use std::sync::Arc;
 /// Configuration for external network endpoints, capturing environment variables
 /// for service host/port combinations.
 #[derive(Debug, Clone)]
+/// Configuration for NetworkEnv
 pub struct NetworkEnvConfig {
     // Map of prefix → (host, port)
     endpoints: HashMap<String, (Option<String>, Option<u16>)>,
 }
 
+/// Type alias for Sharednetworkenvconfig
 pub type SharedNetworkEnvConfig = Arc<NetworkEnvConfig>;
 
 impl NetworkEnvConfig {
@@ -83,6 +85,7 @@ impl NetworkEnvConfig {
 
     // Builder methods for testing
 
+    /// Builder method to set Endpoint
     pub fn with_endpoint(
         mut self,
         prefix: String,
@@ -93,12 +96,14 @@ impl NetworkEnvConfig {
         self
     }
 
+    /// Builder method to set Host
     pub fn with_host(mut self, prefix: String, host: String) -> Self {
         let entry = self.endpoints.entry(prefix).or_insert((None, None));
         entry.0 = Some(host);
         self
     }
 
+    /// Builder method to set Port
     pub fn with_port(mut self, prefix: String, port: u16) -> Self {
         let entry = self.endpoints.entry(prefix).or_insert((None, None));
         entry.1 = Some(port);
@@ -107,6 +112,7 @@ impl NetworkEnvConfig {
 }
 
 impl Default for NetworkEnvConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

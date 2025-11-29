@@ -8,7 +8,7 @@ mod pool_creation_tests {
     use crate::pool_setup::config::PoolSetupConfig;
     use crate::pool_setup::creation::*;
     // Note: PoolName and VdevType types don't exist - using Strings directly
-    use crate::Result;
+    use nestgate_core::Result;
 
     // ==================== Pool Creation Tests ====================
 
@@ -378,6 +378,7 @@ mod pool_creation_tests {
 
     // ==================== Helper Functions (Stubs for compilation) ====================
 
+    /// Creates  Pool
     async fn create_pool(
         _pool_name: &PoolName,
         _devices: &[String],
@@ -390,6 +391,7 @@ mod pool_creation_tests {
         }.into())
     }
 
+    /// Sets Pool Properties
     async fn set_pool_properties(
         _pool_name: &PoolName,
         _properties: &[(String, String)],
@@ -399,12 +401,14 @@ mod pool_creation_tests {
         }.into())
     }
 
+    /// Enable Pool Features
     async fn enable_pool_features(_pool_name: &PoolName, _features: &[String]) -> Result<()> {
         Err(crate::error::ZfsError::CommandError {
             message: "Test environment".into(),
         }.into())
     }
 
+    /// Creates  Pool With Cache
     async fn create_pool_with_cache(
         _pool_name: &PoolName,
         _devices: &[String],
@@ -416,6 +420,7 @@ mod pool_creation_tests {
         }.into())
     }
 
+    /// Creates  Pool With Log
     async fn create_pool_with_log(
         _pool_name: &PoolName,
         _devices: &[String],
@@ -427,6 +432,7 @@ mod pool_creation_tests {
         }.into())
     }
 
+    /// Creates  Pool With Spares
     async fn create_pool_with_spares(
         _pool_name: &PoolName,
         _devices: &[String],
@@ -438,30 +444,35 @@ mod pool_creation_tests {
         }.into())
     }
 
+    /// Destroy Pool
     async fn destroy_pool(_pool_name: &PoolName, _force: bool) -> Result<()> {
         Err(crate::error::ZfsError::CommandError {
             message: "Test environment".into(),
         }.into())
     }
 
+    /// Export Pool
     async fn export_pool(_pool_name: &PoolName, _force: bool) -> Result<()> {
         Err(crate::error::ZfsError::CommandError {
             message: "Test environment".into(),
         }.into())
     }
 
+    /// Import Pool
     async fn import_pool(_pool_name: &PoolName, _altroot: Option<String>) -> Result<()> {
         Err(crate::error::ZfsError::CommandError {
             message: "Test environment".into(),
         }.into())
     }
 
+    /// Gets Pool Status
     async fn get_pool_status(_pool_name: &PoolName) -> Result<String> {
         Err(crate::error::ZfsError::CommandError {
             message: "Test environment".into(),
         }.into())
     }
 
+    /// Check Pool Health
     async fn check_pool_health(_pool_name: &PoolName) -> Result<bool> {
         Err(crate::error::ZfsError::CommandError {
             message: "Test environment".into(),

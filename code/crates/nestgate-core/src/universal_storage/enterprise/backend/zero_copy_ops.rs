@@ -1,3 +1,5 @@
+//! Zero Copy Ops module
+
 use crate::error::NestGateError;
 // **ZERO-COST NATIVE ASYNC**: Converted from async_trait for 40-60% performance improvement
 
@@ -74,6 +76,7 @@ impl ZeroCopyStorage for EnterpriseStorageBackend {
         }
     }
 
+    /// Copy Zero Copy
     fn copy_zero_copy(&self, from: &str, to: &str) -> impl std::future::Future<Output = Result<u64>> + Send {
         let from = from.to_string();
         let to = to.to_string();

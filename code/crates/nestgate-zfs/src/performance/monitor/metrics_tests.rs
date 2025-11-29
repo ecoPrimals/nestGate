@@ -21,10 +21,12 @@ mod tests {
         ZfsPerformanceMonitor::new_for_testing()
     }
 
+    /// Creates  Test Pool Manager
     fn create_test_pool_manager() -> Arc<ZfsPoolManager> {
         Arc::new(ZfsPoolManager::new_production(ZfsConfig::default()))
     }
 
+    /// Creates  Test Dataset Manager
     fn create_test_dataset_manager() -> Arc<ZfsDatasetManager> {
         let config = ZfsConfig::default();
         let pool_manager = create_test_pool_manager();

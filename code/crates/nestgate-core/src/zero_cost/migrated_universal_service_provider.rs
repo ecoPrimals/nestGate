@@ -109,16 +109,25 @@ pub trait ZeroCostUniversalServiceProvider: Send + Sync + 'static {
 
 /// Default service registration implementation
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Defaultserviceregistration
 pub struct DefaultServiceRegistration {
+    /// Service identifier
     pub service_id: String,
+    /// Name
     pub name: String,
+    /// Version
     pub version: String,
+    /// Capabilities
     pub capabilities: Vec<String>,
+    /// Endpoints
     pub endpoints: Vec<String>,
+    /// Additional metadata key-value pairs
     pub metadata: std::collections::HashMap<String, serde_json::Value>,
+    /// Timestamp
     pub timestamp: chrono::DateTime<chrono::Utc>,
 }
 impl Default for DefaultServiceRegistration {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             service_id: Uuid::new_v4().to_string(),
@@ -134,9 +143,13 @@ impl Default for DefaultServiceRegistration {
 
 /// Default service capability implementation
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Defaultservicecapability
 pub struct DefaultServiceCapability {
+    /// Name
     pub name: String,
+    /// Version
     pub version: String,
+    /// Parameters
     pub parameters: std::collections::HashMap<String, String>,
 }
 impl DefaultServiceCapability {
@@ -164,24 +177,38 @@ impl DefaultServiceCapability {
 
 /// Default compatible service implementation
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Service implementation for DefaultCompatible
 pub struct DefaultCompatibleService {
+    /// Service identifier
     pub service_id: String,
+    /// Name
     pub name: String,
+    /// Capabilities
     pub capabilities: Vec<DefaultServiceCapability>,
+    /// Endpoints
     pub endpoints: Vec<String>,
+    /// Compatibility Score
     pub compatibility_score: f64,
+    /// Discovered At
     pub discovered_at: chrono::DateTime<chrono::Utc>,
 }
 /// Default health status implementation
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Defaulthealthstatus
 pub struct DefaultHealthStatus {
+    /// Healthy
     pub healthy: bool,
+    /// Status
     pub status: String,
+    /// Uptime Seconds
     pub uptime_seconds: u64,
+    /// Last Check
     pub last_check: chrono::DateTime<chrono::Utc>,
+    /// Details
     pub details: std::collections::HashMap<String, serde_json::Value>,
 }
 impl Default for DefaultHealthStatus {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             healthy: true,
@@ -195,17 +222,27 @@ impl Default for DefaultHealthStatus {
 
 /// Default metrics implementation
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Defaultmetrics
 pub struct DefaultMetrics {
+    /// Requests Total
     pub requests_total: u64,
+    /// Requests Per Second
     pub requests_per_second: f64,
+    /// Average Response Time Ms
     pub average_response_time_ms: f64,
+    /// Count of error
     pub error_count: u64,
+    /// Uptime Seconds
     pub uptime_seconds: u64,
+    /// Memory Usage Bytes
     pub memory_usage_bytes: u64,
+    /// Cpu Usage Percent
     pub cpu_usage_percent: f64,
+    /// Timestamp
     pub timestamp: chrono::DateTime<chrono::Utc>,
 }
 impl Default for DefaultMetrics {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             requests_total: 0,
@@ -270,12 +307,18 @@ impl ExampleZeroCostProvider {
 }
 
 impl ZeroCostUniversalServiceProvider for ExampleZeroCostProvider {
+    /// Type alias for Registration
     type Registration = DefaultServiceRegistration;
+    /// Type alias for Capability
     type Capability = DefaultServiceCapability;
+    /// Type alias for CompatibleService
     type CompatibleService = DefaultCompatibleService;
+    /// Type alias for HealthStatus
     type HealthStatus = DefaultHealthStatus;
+    /// Type alias for Metrics
     type Metrics = DefaultMetrics;
 
+    /// Creates  Registration
     async fn create_registration(&self) -> Result<Self::Registration> {
         Ok(DefaultServiceRegistration {
             service_id: self.service_id.clone(),
@@ -287,11 +330,13 @@ impl ZeroCostUniversalServiceProvider for ExampleZeroCostProvider {
         })
     }
 
+    /// Updates  Capabilities
     async fn update_capabilities(&mut self, capabilities: Vec<Self::Capability>) -> Result<()> {
         self.capabilities = capabilities;
         Ok(())
     }
 
+    /// Handles  Universal Request
     async fn handle_universal_request(
         &self,
         request: serde_json::Value,
@@ -312,30 +357,37 @@ impl ZeroCostUniversalServiceProvider for ExampleZeroCostProvider {
         }
     }
 
+    /// Health Check
     async fn health_check(&self) -> Result<Self::HealthStatus> {
         Ok(self.health_status.clone())
     }
 
+    /// Gets Metrics
     async fn get_metrics(&self) -> Result<Self::Metrics> {
         Ok(self.metrics.clone())
     }
 
+    /// Discover Compatible Services
     async fn discover_compatible_services(&self) -> Result<Vec<Self::CompatibleService>> {
         Ok(self.compatible_services.clone())
     }
 
+    /// Service Id
     fn service_id(&self) -> &str {
         &self.service_id
     }
 
+    /// Service Name
     fn service_name(&self) -> &str {
         &self.name
     }
 
+    /// Capabilities Count
     fn capabilities_count(&self) -> usize {
         self.capabilities.len()
     }
 
+    /// Supports Capability
     fn supports_capability(&self, capability: &Self::Capability) -> bool {
         self.capabilities.contains(capability)
     }

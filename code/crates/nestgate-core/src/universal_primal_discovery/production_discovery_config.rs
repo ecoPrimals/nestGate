@@ -5,6 +5,7 @@ use std::sync::Arc;
 /// Configuration for production service discovery, capturing environment variables
 /// for service endpoints, resource limits, and operation timeouts.
 #[derive(Debug, Clone)]
+/// Configuration for ProductionDiscovery
 pub struct ProductionDiscoveryConfig {
     // Service endpoint environment variables
     service_hosts: HashMap<String, String>,
@@ -18,6 +19,7 @@ pub struct ProductionDiscoveryConfig {
     operation_timeouts: HashMap<String, u64>, // in seconds
 }
 
+/// Type alias for Sharedproductiondiscoveryconfig
 pub type SharedProductionDiscoveryConfig = Arc<ProductionDiscoveryConfig>;
 
 impl ProductionDiscoveryConfig {
@@ -148,26 +150,31 @@ impl ProductionDiscoveryConfig {
 
     // Builder methods for testing
 
+    /// Builder method to set Service Host
     pub fn with_service_host(mut self, service_name: String, host: String) -> Self {
         self.service_hosts.insert(service_name, host);
         self
     }
 
+    /// Builder method to set Service Port
     pub fn with_service_port(mut self, service_name: String, port: u16) -> Self {
         self.service_ports.insert(service_name, port);
         self
     }
 
+    /// Builder method to set Service Bind
     pub fn with_service_bind(mut self, service_name: String, bind: String) -> Self {
         self.service_binds.insert(service_name, bind);
         self
     }
 
+    /// Builder method to set Resource Limit
     pub fn with_resource_limit(mut self, limit_name: String, value: usize) -> Self {
         self.resource_limits.insert(limit_name, value);
         self
     }
 
+    /// Builder method to set Operation Timeout
     pub fn with_operation_timeout(mut self, timeout_name: String, seconds: u64) -> Self {
         self.operation_timeouts.insert(timeout_name, seconds);
         self
@@ -175,6 +182,7 @@ impl ProductionDiscoveryConfig {
 }
 
 impl Default for ProductionDiscoveryConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

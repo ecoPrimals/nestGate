@@ -1,3 +1,5 @@
+//! Service module
+
 use tracing::info;
 
 use crate::cli::ServiceAction;
@@ -131,6 +133,7 @@ impl ServiceManager {
 }
 
 impl Default for ServiceManager {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

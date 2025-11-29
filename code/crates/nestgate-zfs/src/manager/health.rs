@@ -2,6 +2,8 @@
 // Contains all health-related operations including comprehensive service status,
 // ZFS health checking, and system monitoring.
 
+//! Health module
+
 use super::types::{
     AiIntegrationStatus, CurrentMetrics, EnhancedServiceStatus, HealthState, MigrationStatus,
     PoolOverallStatus, SnapshotStatus, TierOverallStatus,

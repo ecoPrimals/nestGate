@@ -63,19 +63,26 @@ impl<T> CanonicalService for NativeAsyncStorageAdapter<T>
 where
     T: Send + Sync + 'static,
 {
+    /// Type alias for Config
     type Config = serde_json::Value;
+    /// Type alias for Health
     type Health = serde_json::Value;
+    /// Type alias for Metrics
     type Metrics = serde_json::Value;
+    /// Type alias for Error
     type Error = NestGateError;
 
+    /// Start
     async fn start(&mut self) -> Result<()> {
         Ok(())
     }
 
+    /// Stop
     async fn stop(&mut self) -> Result<()> {
         Ok(())
     }
 
+    /// Health
     async fn health(&self) -> Result<Self::Health> {
         Ok(serde_json::json!({
             "status": "healthy",
@@ -83,20 +90,24 @@ where
         }))
     }
 
+    /// Config
     fn config(&self) -> &Self::Config {
         &self.config
     }
 
+    /// Metrics
     async fn metrics(&self) -> Result<Self::Metrics> {
         Ok(serde_json::json!({
             "adapter_type": "native-async-storage"
         }))
     }
 
+    /// Name
     fn name(&self) -> &str {
         &self.name
     }
 
+    /// Version
     fn version(&self) -> &str {
         &self.version
     }
@@ -116,10 +127,14 @@ where
     ObjectData: Clone + Send + Sync + 'static,
     ObjectMetadata: Clone + Send + Sync + Default + 'static,
 {
+    /// Type alias for Key
     type Key = ObjectId;
+    /// Type alias for Value
     type Value = ObjectData;
+    /// Type alias for Metadata
     type Metadata = ObjectMetadata;
 
+    /// Read
     async fn read(&self, key: &Self::Key) -> Result<Option<Self::Value>> {
         self.inner
             .retrieve_object(key)
@@ -128,6 +143,7 @@ where
             .map_err(|e| NestGateError::storage_error(&format!("Read failed: {}", e)))
     }
 
+    /// Write
     fn write(
         &self,
         _key: Self::Key,
@@ -147,6 +163,7 @@ where
         }
     }
 
+    /// Deletes resource
     async fn delete(&self, key: &Self::Key) -> Result<()> {
         self.inner
             .delete_object(key)
@@ -154,6 +171,7 @@ where
             .map_err(|e| NestGateError::storage_error(&format!("Delete failed: {}", e)))
     }
 
+    /// Exists
     async fn exists(&self, key: &Self::Key) -> Result<bool> {
         // Check if we can retrieve metadata (if exists, metadata call should succeed)
         match self.inner.get_metadata(key).await {
@@ -162,6 +180,7 @@ where
         }
     }
 
+    /// Metadata
     async fn metadata(&self, key: &Self::Key) -> Result<Self::Metadata> {
         self.inner
             .get_metadata(key)
@@ -169,6 +188,7 @@ where
             .map_err(|e| NestGateError::storage_error(&format!("Metadata read failed: {}", e)))
     }
 
+    /// List
     async fn list(&self, _prefix: Option<&str>) -> Result<Vec<Self::Key>> {
         self.inner
             .list_objects()
@@ -184,26 +204,35 @@ where
     since = "0.9.0",
     note = "Migration to native async complete - use crate::traits::canonical::CanonicalStorage"
 )]
+/// NativeAsyncStorageProvider trait
 pub trait NativeAsyncStorageProvider {
+    /// Type alias for ObjectId
     type ObjectId: Clone + Send + Sync + 'static;
+    /// Type alias for ObjectData
     type ObjectData: Clone + Send + Sync + 'static;
+    /// Type alias for ObjectMetadata
     type ObjectMetadata: Clone + Send + Sync + 'static;
 
+    /// Store Object
     fn store_object(
         &self,
         data: Self::ObjectData,
         metadata: Self::ObjectMetadata,
     ) -> impl Future<Output = Result<Self::ObjectId>> + Send;
 
+    /// Retrieve Object
     fn retrieve_object(
         &self,
         id: &Self::ObjectId,
     ) -> impl Future<Output = Result<Self::ObjectData>> + Send;
 
+    /// Deletes  Object
     fn delete_object(&self, id: &Self::ObjectId) -> impl Future<Output = Result<()>> + Send;
 
+    /// List Objects
     fn list_objects(&self) -> impl Future<Output = Result<Vec<Self::ObjectId>>> + Send;
 
+    /// Gets Metadata
     fn get_metadata(
         &self,
         id: &Self::ObjectId,
@@ -231,6 +260,7 @@ pub struct StoragePrimalAdapter<T> {
 }
 
 impl<T> StoragePrimalAdapter<T> {
+    /// Creates a new instance
     pub fn new(inner: T) -> Self {
         Self {
             _inner: inner,
@@ -244,19 +274,26 @@ impl<T> CanonicalService for StoragePrimalAdapter<T>
 where
     T: Send + Sync + 'static,
 {
+    /// Type alias for Config
     type Config = serde_json::Value;
+    /// Type alias for Health
     type Health = serde_json::Value;
+    /// Type alias for Metrics
     type Metrics = serde_json::Value;
+    /// Type alias for Error
     type Error = NestGateError;
 
+    /// Start
     async fn start(&mut self) -> Result<()> {
         Ok(())
     }
 
+    /// Stop
     async fn stop(&mut self) -> Result<()> {
         Ok(())
     }
 
+    /// Health
     async fn health(&self) -> Result<Self::Health> {
         Ok(serde_json::json!({
             "status": "healthy",
@@ -264,20 +301,24 @@ where
         }))
     }
 
+    /// Config
     fn config(&self) -> &Self::Config {
         &self.config
     }
 
+    /// Metrics
     async fn metrics(&self) -> Result<Self::Metrics> {
         Ok(serde_json::json!({
             "adapter_type": "storage-primal"
         }))
     }
 
+    /// Name
     fn name(&self) -> &str {
         &self.name
     }
 
+    /// Version
     fn version(&self) -> &str {
         env!("CARGO_PKG_VERSION")
     }
@@ -289,34 +330,43 @@ impl<T> CanonicalStorage for StoragePrimalAdapter<T>
 where
     T: StoragePrimalProvider + Send + Sync + 'static,
 {
+    /// Type alias for Key
     type Key = String;
+    /// Type alias for Value
     type Value = Vec<u8>;
+    /// Type alias for Metadata
     type Metadata = serde_json::Value;
 
+    /// Read
     async fn read(&self, _key: &Self::Key) -> Result<Option<Self::Value>> {
         // StoragePrimalProvider uses UniversalRequest, so we'd need to construct one
         // This is a simplified implementation - real implementation would use the handle_request method
         Ok(None) // FUTURE: Implement proper request handling for migration adapter
     }
 
+    /// Write
     async fn write(&self, _key: Self::Key, _value: Self::Value) -> Result<()> {
         // FUTURE: Implement using handle_request for migration adapter
         Ok(())
     }
 
+    /// Deletes resource
     async fn delete(&self, _key: &Self::Key) -> Result<()> {
         // FUTURE: Implement using handle_request for migration adapter
         Ok(())
     }
 
+    /// Exists
     async fn exists(&self, _key: &Self::Key) -> Result<bool> {
         Ok(false)
     }
 
+    /// Metadata
     async fn metadata(&self, _key: &Self::Key) -> Result<Self::Metadata> {
         Ok(serde_json::json!({}))
     }
 
+    /// List
     async fn list(&self, _prefix: Option<&str>) -> Result<Vec<Self::Key>> {
         Ok(vec![])
     }
@@ -358,6 +408,7 @@ pub struct ZeroCostStorageAdapter<T, K, V> {
 }
 
 impl<T, K, V> ZeroCostStorageAdapter<T, K, V> {
+    /// Creates a new instance
     pub fn new(inner: T) -> Self {
         Self {
             inner,
@@ -374,19 +425,26 @@ where
     K: Send + Sync + 'static,
     V: Send + Sync + 'static,
 {
+    /// Type alias for Config
     type Config = serde_json::Value;
+    /// Type alias for Health
     type Health = serde_json::Value;
+    /// Type alias for Metrics
     type Metrics = serde_json::Value;
+    /// Type alias for Error
     type Error = NestGateError;
 
+    /// Start
     async fn start(&mut self) -> Result<()> {
         Ok(())
     }
 
+    /// Stop
     async fn stop(&mut self) -> Result<()> {
         Ok(())
     }
 
+    /// Health
     async fn health(&self) -> Result<Self::Health> {
         Ok(serde_json::json!({
             "status": "healthy",
@@ -394,20 +452,24 @@ where
         }))
     }
 
+    /// Config
     fn config(&self) -> &Self::Config {
         &self.config
     }
 
+    /// Metrics
     async fn metrics(&self) -> Result<Self::Metrics> {
         Ok(serde_json::json!({
             "adapter_type": "zero-cost-storage"
         }))
     }
 
+    /// Name
     fn name(&self) -> &str {
         &self.name
     }
 
+    /// Version
     fn version(&self) -> &str {
         env!("CARGO_PKG_VERSION")
     }
@@ -419,15 +481,20 @@ where
     K: Clone + Send + Sync + 'static,
     V: Clone + Send + Sync + 'static,
 {
+    /// Type alias for Key
     type Key = K;
+    /// Type alias for Value
     type Value = V;
+    /// Type alias for Metadata
     type Metadata = serde_json::Value;
 
+    /// Read
     async fn read(&self, key: &Self::Key) -> Result<Option<Self::Value>> {
         // retrieve returns Option<V> directly
         Ok(self.inner.retrieve(key))
     }
 
+    /// Write
     async fn write(&self, key: Self::Key, value: Self::Value) -> Result<()> {
         self.inner
             .store(key, value)
@@ -435,6 +502,7 @@ where
             .map_err(|e| NestGateError::storage_error(&format!("Write failed: {}", e)))
     }
 
+    /// Deletes resource
     async fn delete(&self, key: &Self::Key) -> Result<()> {
         // delete returns bool
         let deleted = self.inner.delete(key);
@@ -445,15 +513,18 @@ where
         }
     }
 
+    /// Exists
     async fn exists(&self, key: &Self::Key) -> Result<bool> {
         Ok(self.inner.retrieve(key).is_some())
     }
 
+    /// Metadata
     async fn metadata(&self, _key: &Self::Key) -> Result<Self::Metadata> {
         // ZeroCostStorageProvider doesn't have metadata
         Ok(serde_json::json!({}))
     }
 
+    /// List
     async fn list(&self, _prefix: Option<&str>) -> Result<Vec<Self::Key>> {
         // ZeroCostStorageProvider doesn't have list operation
         Ok(vec![])
@@ -467,9 +538,13 @@ where
     since = "0.9.0",
     note = "Use crate::traits::unified_storage::UnifiedStorage - includes zero-cost optimizations"
 )]
+/// ZeroCostStorageProvider trait
 pub trait ZeroCostStorageProvider<K, V> {
+    /// Store
     fn store(&self, key: K, value: V) -> impl Future<Output = Result<()>> + Send;
+    /// Retrieve
     fn retrieve(&self, key: &K) -> Option<V>;
+    /// Deletes resource
     fn delete(&self, key: &K) -> bool;
 }
 
@@ -483,10 +558,14 @@ mod tests {
     struct MockNativeAsyncStorage;
 
     impl NativeAsyncStorageProvider for MockNativeAsyncStorage {
+        /// Type alias for ObjectId
         type ObjectId = String;
+        /// Type alias for ObjectData
         type ObjectData = Vec<u8>;
+        /// Type alias for ObjectMetadata
         type ObjectMetadata = serde_json::Value;
 
+        /// Store Object
         async fn store_object(
             &self,
             _data: Self::ObjectData,
@@ -495,18 +574,22 @@ mod tests {
             Ok("test-id".to_string())
         }
 
+        /// Retrieve Object
         async fn retrieve_object(&self, _id: &Self::ObjectId) -> Result<Self::ObjectData> {
             Ok(vec![1, 2, 3])
         }
 
+        /// Deletes  Object
         async fn delete_object(&self, _id: &Self::ObjectId) -> Result<()> {
             Ok(())
         }
 
+        /// List Objects
         async fn list_objects(&self) -> Result<Vec<Self::ObjectId>> {
             Ok(vec!["id1".to_string(), "id2".to_string()])
         }
 
+        /// Gets Metadata
         async fn get_metadata(&self, _id: &Self::ObjectId) -> Result<Self::ObjectMetadata> {
             Ok(serde_json::json!({"test": "metadata"}))
         }

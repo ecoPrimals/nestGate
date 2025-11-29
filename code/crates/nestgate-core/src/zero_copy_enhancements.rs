@@ -18,9 +18,13 @@ pub struct ZeroCopyStringPool {
 }
 
 #[derive(Debug, Default)]
+/// Stringpoolstats
 pub struct StringPoolStats {
+    /// Cache Hits
     pub cache_hits: AtomicU64,
+    /// Cache Misses
     pub cache_misses: AtomicU64,
+    /// Memory Saved Bytes
     pub memory_saved_bytes: AtomicU64,
 }
 
@@ -66,6 +70,7 @@ impl ZeroCopyStringPool {
         &self.stats
     }
     
+    /// Hash String
     fn hash_string(&self, s: &str) -> u64 {
         use std::collections::hash_map::DefaultHasher;
         use std::hash::{Hash, Hasher};
@@ -141,14 +146,17 @@ pub trait ZeroCopySliceOps<T> {
 }
 
 impl<T> ZeroCopySliceOps<T> for [T] {
+    /// Split Zero Copy
     fn split_zero_copy(&self, at: usize) -> (&[T], &[T]) {
         self.split_at(at)
     }
     
+    /// Chunks Zero Copy
     fn chunks_zero_copy(&self, chunk_size: usize) -> std::slice::Chunks<'_, T> {
         self.chunks(chunk_size)
     }
     
+    /// Find Slice Zero Copy
     fn find_slice_zero_copy<P>(&self, predicate: P) -> Option<&[T]>
     where
         P: Fn(&T) -> bool,
@@ -160,6 +168,7 @@ impl<T> ZeroCopySliceOps<T> for [T] {
         }
     }
     
+    /// Subslice Zero Copy
     fn subslice_zero_copy(&self, range: std::ops::Range<usize>) -> Option<&[T]> {
         if range.end <= self.len() {
             Some(&self[range])
@@ -237,13 +246,18 @@ impl<'a> ZeroCopyResponseBuilder<'a> {
 ///
 /// HTTP response that maintains zero-copy semantics where possible
 #[derive(Debug)]
+/// Response data for ZeroCopy operation
 pub struct ZeroCopyResponse<'a> {
+    /// Status
     pub status: u16,
+    /// Headers
     pub headers: Vec<(&'a str, Cow<'a, str>)>,
+    /// Body
     pub body: Cow<'a, [u8]>,
 }
 
 impl<'a> ZeroCopyResponse<'a> {
+    /// Builds the final instance
     pub fn builder() -> ZeroCopyResponseBuilder<'a> {
         ZeroCopyResponseBuilder::new()
     }
@@ -364,6 +378,7 @@ pub struct ZeroCopyJsonParser<'a> {
 }
 
 impl<'a> ZeroCopyJsonParser<'a> {
+    /// Creates a new instance
     pub fn new(input: &'a str) -> Self {
         Self {
             input,
@@ -420,6 +435,7 @@ impl<'a> ZeroCopyJsonParser<'a> {
         }
     }
     
+    /// Skip Whitespace
     fn skip_whitespace(&mut self) {
         while self.position < self.input.len() {
             match self.input.chars().nth(self.position) {
@@ -431,6 +447,7 @@ impl<'a> ZeroCopyJsonParser<'a> {
         }
     }
     
+    /// Consume Char
     fn consume_char(&mut self, expected: char) -> bool {
         if self.position < self.input.len() && 
            self.input.chars().nth(self.position) == Some(expected) {

@@ -75,6 +75,7 @@ pub use storage::*;
 /// - `FsMonitorStorageSettings` from fsmonitor storage config
 /// - `McpStorageConfig` from mcp storage config
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for CanonicalStorage
 pub struct CanonicalStorageConfig {
     /// Storage backend type
     pub backend_type: storage::StorageBackendType,
@@ -113,6 +114,7 @@ pub struct CanonicalStorageConfig {
     since = "0.10.0",
     note = "Use canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for CanonicalNetwork
 pub struct CanonicalNetworkConfig {
     /// Interface bindings
     pub interfaces: network::NetworkInterfaceConfig,
@@ -154,6 +156,7 @@ pub struct CanonicalNetworkConfig {
     since = "0.11.0",
     note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for CanonicalSecurity
 pub struct CanonicalSecurityConfig {
     /// Authentication settings
     pub authentication: security::SecurityAuthenticationConfig,
@@ -175,6 +178,7 @@ pub struct CanonicalSecurityConfig {
 ///
 /// Consolidates ALL monitoring configuration patterns
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for CanonicalMonitoring
 pub struct CanonicalMonitoringConfig {
     /// Metrics collection
     pub metrics: monitoring::MonitoringMetricsConfig,

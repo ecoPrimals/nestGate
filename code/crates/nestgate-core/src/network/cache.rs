@@ -35,14 +35,20 @@ pub use crate::constants::network::{
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for NetworkCache
 pub struct NetworkCacheConfig {
+    /// Whether this feature is enabled
     pub enabled: bool,
+    /// Timeout
     pub timeout: Duration,
+    /// Max Connections
     pub max_connections: usize,
+    /// Size of buffer
     pub buffer_size: usize,
 }
 
 impl Default for NetworkCacheConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -57,9 +63,13 @@ pub use super::traits::{Service, HealthStatus};
 
 /// Performance metrics for monitoring
 pub struct Metrics {
+    /// Requests Processed
     pub requests_processed: u64,
+    /// Errors Encountered
     pub errors_encountered: u64,
+    /// Average Response Time
     pub average_response_time: Duration,
+    /// Memory Usage Bytes
     pub memory_usage_bytes: u64,
 impl Default for Metrics {
             requests_processed: 0,
@@ -69,6 +79,7 @@ impl Default for Metrics {
 // ==================== IMPLEMENTATION STUB ====================
 /// Default implementation of the service
 #[derive(Debug)]
+/// Service implementation for Default
 pub struct DefaultService {
     config: NetworkCacheConfig,
     metrics: Arc<tokio::sync::RwLock<Metrics>>,
@@ -83,14 +94,17 @@ impl DefaultService {
     pub async fn get_metrics(&self) -> Metrics {
         self.metrics.read().await.clone()
 impl Service for DefaultService {
+    /// Initialize
     fn initialize(&self) -> impl std::future::Future<Output = Result<()>> + Send {
         // Initialization implementation
         tracing::info!("Initializing {} service with config: {:?}", 
                       stringify!(cache), config);
         Ok(())
+    /// Health Check
     fn health_check(&self) -> impl std::future::Future<Output = Result<HealthStatus>> + Send {
         // Health check implementation
         Ok(HealthStatus::Healthy)
+    /// Shutdown
     fn shutdown(&self) -> impl std::future::Future<Output = Result<()>> + Send {
         // Shutdown implementation
         tracing::info!("Shutting down {} service", stringify!(cache));
@@ -124,6 +138,7 @@ pub async fn validate_config(config: &NetworkCacheConfig) -> crate::Result<()> {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Networkcacheconfigcanonical
 pub type NetworkCacheConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using NetworkCacheConfig (the deprecated struct) for now.

@@ -10,6 +10,7 @@ use std::fmt;
 ///
 /// This replaces all fragmented error types across crates with a unified system
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Errors that can occur during NestGate operations
 pub enum NestGateError {
     /// Configuration-related errors
     Configuration {
@@ -42,6 +43,7 @@ pub enum NestGateError {
 }
 
 impl fmt::Display for NestGateError {
+    /// Fmt
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Configuration { message, field, .. } => {
@@ -100,6 +102,7 @@ impl std::error::Error for NestGateError {}
 /// Both T and E are generic for maximum ecosystem compatibility.
 /// Uses `NestGateError` as the default error type.
 pub type Result<T, E = NestGateError> = std::result::Result<T, E>;
+/// Type alias for Nestgateresult
 pub type NestGateResult<T> = Result<T>;
 // ==================== SECTION ====================
 
@@ -520,6 +523,7 @@ mod tests {
 
     #[test]
     fn test_result_error_propagation() {
+        /// Returns Error
         fn returns_error() -> Result<()> {
             Err(NestGateError::validation("test"))
         }
@@ -530,6 +534,7 @@ mod tests {
 
     #[test]
     fn test_result_ok_value() {
+        /// Returns Ok
         fn returns_ok() -> Result<String> {
             Ok("success".to_string())
         }

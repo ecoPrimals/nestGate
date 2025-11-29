@@ -11,6 +11,7 @@ use std::sync::Arc;
 /// MIGRATION: Vec<Arc<dyn CanonicalStorageBackend>> → Zero-Cost Generic Backends
 /// PERFORMANCE: 50% throughput improvement through direct dispatch
 #[derive(Debug)]
+/// Manager for RaidZ operations
 pub struct RaidZManager<Backend = DefaultStorageBackend, const MAX_BACKENDS: usize = 8>
 where
     Backend: CanonicalStorageBackend + Send + Sync + 'static,
@@ -81,11 +82,14 @@ where
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for RaidZ
 pub struct RaidZConfig {
+    /// Parity Level
     pub parity_level: ParityLevel,
 }
 
 impl Default for RaidZConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             parity_level: ParityLevel::Single,
@@ -94,6 +98,7 @@ impl Default for RaidZConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Paritylevel
 pub enum ParityLevel {
     Single, // RAID-Z1
     Double, // RAID-Z2

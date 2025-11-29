@@ -10,47 +10,72 @@ use tokio::sync::RwLock;
 
 // Type aliases for complex types to improve readability
 pub type PoolInfoMap = Arc<RwLock<HashMap<String, ZeroCostPoolInfo>>>;
+/// Type alias for Datasetinfomap
 pub type DatasetInfoMap = Arc<RwLock<HashMap<String, ZeroCostDatasetInfo>>>;
+/// Type alias for Snapshotinfomap
 pub type SnapshotInfoMap = Arc<RwLock<HashMap<String, ZeroCostSnapshotInfo>>>;
 
 /// **ZERO-COST POOL INFORMATION**
 /// High-performance pool data structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Zerocostpoolinfo
 pub struct ZeroCostPoolInfo {
+    /// Name
     pub name: String,
+    /// Size
     pub size: u64,
+    /// Used
     pub used: u64,
+    /// Available
     pub available: u64,
+    /// Health
     pub health: String,
+    /// Properties
     pub properties: HashMap<String, String>,
     #[serde(with = "serde_system_time")]
+    /// Timestamp when this was created
     pub created_at: std::time::SystemTime,
 }
 
 /// **ZERO-COST DATASET INFORMATION**
 /// High-performance dataset data structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Zerocostdatasetinfo
 pub struct ZeroCostDatasetInfo {
+    /// Name
     pub name: String,
+    /// Pool
     pub pool: String,
+    /// Tier
     pub tier: StorageTier,
+    /// Size
     pub size: u64,
+    /// Used
     pub used: u64,
+    /// Properties
     pub properties: HashMap<String, String>,
+    /// Mount Point
     pub mount_point: Option<PathBuf>,
     #[serde(with = "serde_system_time")]
+    /// Timestamp when this was created
     pub created_at: std::time::SystemTime,
 }
 
 /// **ZERO-COST SNAPSHOT INFORMATION**
 /// High-performance snapshot data structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Zerocostsnapshotinfo
 pub struct ZeroCostSnapshotInfo {
+    /// Name
     pub name: String,
+    /// Dataset
     pub dataset: String,
+    /// Size
     pub size: u64,
     #[serde(with = "serde_system_time")]
+    /// Timestamp when this was created
     pub created_at: std::time::SystemTime,
+    /// Properties
     pub properties: HashMap<String, String>,
 }
 
@@ -59,8 +84,10 @@ mod serde_system_time {
     use serde::{Deserialize, Deserializer, Serialize, Serializer};
     use std::time::{SystemTime, UNIX_EPOCH};
 
+    /// Type alias for SerializeResult
     type SerializeResult<S> = Result<<S as Serializer>::Ok, <S as Serializer>::Error>;
 
+    /// Serialize
     pub fn serialize<S>(time: &SystemTime, serializer: S) -> SerializeResult<S>
     where
         S: Serializer,

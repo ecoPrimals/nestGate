@@ -3,6 +3,8 @@
 // enabling ZFS to act as a storage provider for MCP systems with tiered storage
 // capabilities, AI optimization, and performance monitoring.
 
+//! Mcp Integration module
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -19,51 +21,80 @@ use tracing::warn;
 
 /// MCP mount request
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for McpMount operation
 pub struct McpMountRequest {
+    /// Mount identifier
     pub mount_id: String,
+    /// Mount Point
     pub mount_point: String,
+    /// Tier
     pub tier: StorageTier,
+    /// Size in gigabytes
     pub size_gb: u64,
 }
 /// MCP volume request
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for McpVolume operation
 pub struct McpVolumeRequest {
+    /// Volume identifier
     pub volume_id: String,
+    /// Tier
     pub tier: StorageTier,
+    /// Size in gigabytes
     pub size_gb: u64,
 }
 /// Mount status
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Status values for Mount
 pub enum MountStatus {
+    /// Active
     Active,
+    /// Inactive
     Inactive,
     Error(String),
 }
 /// Volume status
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Status values for Volume
 pub enum VolumeStatus {
+    /// Active
     Active,
+    /// Inactive
     Inactive,
     Error(String),
 }
 /// ZFS mount information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Zfsmountinfo
 pub struct ZfsMountInfo {
+    /// Mount identifier
     pub mount_id: String,
+    /// Dataset Path
     pub dataset_path: String,
+    /// Mount Point
     pub mount_point: String,
+    /// Tier
     pub tier: StorageTier,
+    /// Timestamp when this was created
     pub created_at: SystemTime,
+    /// Status
     pub status: MountStatus,
 }
 /// ZFS volume information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Zfsvolumeinfo
 pub struct ZfsVolumeInfo {
+    /// Volume identifier
     pub volume_id: String,
+    /// Dataset Path
     pub dataset_path: String,
+    /// Tier
     pub tier: StorageTier,
+    /// Size Bytes
     pub size_bytes: u64,
+    /// Timestamp when this was created
     pub created_at: SystemTime,
+    /// Status
     pub status: VolumeStatus,
 }
 /// ZFS MCP configuration
@@ -86,6 +117,7 @@ pub struct ZfsVolumeInfo {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for ZfsMcp
 pub struct ZfsMcpConfig {
     /// Enable AI optimization
     pub enable_ai_optimization: bool,
@@ -95,6 +127,7 @@ pub struct ZfsMcpConfig {
     pub default_tier: StorageTier,
 }
 impl Default for ZfsMcpConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enable_ai_optimization: true,
@@ -168,10 +201,15 @@ impl ZfsMcpConfig {
 
 /// Configuration for a storage tier
 #[derive(Debug, Clone)]
+/// Configuration for Tier
 pub struct TierConfig {
+    /// Priority
     pub priority: u8,
+    /// Cache Enabled
     pub cache_enabled: bool,
+    /// Compression
     pub compression: bool,
+    /// Replication
     pub replication: u32,
 }
 /// ZFS MCP Storage Provider
@@ -446,6 +484,7 @@ impl ZfsMcpStorageProvider {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Zfsmcpconfigcanonical
 pub type ZfsMcpConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 

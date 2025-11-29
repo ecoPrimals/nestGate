@@ -6,6 +6,7 @@ use std::collections::HashMap;
 
 /// Community primal information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Communityprimalinfo
 pub struct CommunityPrimalInfo {
     /// Primal _metadata
     pub _metadata: super::types::PrimalMetadata,
@@ -14,6 +15,7 @@ pub struct CommunityPrimalInfo {
 }
 /// Primal statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Primalstats
 pub struct PrimalStats {
     /// Download count
     pub downloads: u64,

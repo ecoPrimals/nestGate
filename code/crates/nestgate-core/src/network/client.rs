@@ -15,6 +15,7 @@ use crate::error::{NestGateError, Result};
 
 /// Type-safe port number with validation
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Port
 pub struct Port(u16);
 
 impl Port {
@@ -52,13 +53,21 @@ impl TimeoutMs {
 
 /// HTTP method enumeration
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Method
 pub enum Method {
+    /// Get
     Get,
+    /// Post
     Post,
+    /// Put
     Put,
+    /// Delete
     Delete,
+    /// Patch
     Patch,
+    /// Head
     Head,
+    /// Options
     Options,
 }
 
@@ -76,13 +85,19 @@ impl Method {
 
 /// HTTP status code with helper methods
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Statuscode
 pub struct StatusCode(u16);
 
 impl StatusCode {
+    /// Ok
     pub const OK: Self = Self(200);
+    /// Created
     pub const CREATED: Self = Self(201);
+    /// Bad Request
     pub const BAD_REQUEST: Self = Self(400);
+    /// Not Found
     pub const NOT_FOUND: Self = Self(404);
+    /// Internal Server Error
     pub const INTERNAL_SERVER_ERROR: Self = Self(500);
 
     /// Create a new status code
@@ -108,9 +123,13 @@ impl StatusCode {
 
 /// Network endpoint
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Endpoint
 pub struct Endpoint {
+    /// Host
     pub host: String,
+    /// Port
     pub port: Port,
+    /// Scheme
     pub scheme: Scheme,
 }
 
@@ -141,12 +160,16 @@ impl Endpoint {
 
 /// URL scheme
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Scheme
 pub enum Scheme {
+    /// Http
     Http,
+    /// Https
     Https,
 }
 
 impl std::fmt::Display for Scheme {
+    /// Fmt
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Http => write!(f, "http"),
@@ -160,9 +183,13 @@ impl std::fmt::Display for Scheme {
 /// HTTP request with zero-copy body support
 #[derive(Debug)]
 pub struct Request<'a> {
+    /// Method
     pub method: Method,
+    /// Path
     pub path: &'a str,
+    /// Headers
     pub headers: HeaderMap,
+    /// Body
     pub body: RequestBody<'a>,
 }
 
@@ -197,9 +224,9 @@ impl<'a> Request<'a> {
     }
 }
 
-/// Request body that can be zero-copy
 #[derive(Debug)]
 pub enum RequestBody<'a> {
+    /// Empty
     Empty,
     Bytes(&'a [u8]),
     String(&'a str),
@@ -207,9 +234,13 @@ pub enum RequestBody<'a> {
 
 /// HTTP response
 #[derive(Debug)]
+/// Response data for  operation
 pub struct Response {
+    /// Status
     pub status: StatusCode,
+    /// Headers
     pub headers: HeaderMap,
+    /// Body
     pub body: Vec<u8>,
 }
 
@@ -258,17 +289,25 @@ pub type HeaderMap = HashMap<String, String>;
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for Client
 pub struct ClientConfig<const DEFAULT_TIMEOUT_MS: u64 = 30000> {
     pub timeout: TimeoutMs,
+    /// Max Connections
     pub max_connections: usize,
+    /// Max Connections Per Host
     pub max_connections_per_host: usize,
+    /// Enable Compression
     pub enable_compression: bool,
+    /// Follow Redirects
     pub follow_redirects: bool,
+    /// Max Redirects
     pub max_redirects: usize,
+    /// User Agent
     pub user_agent: String,
 }
 
 impl<const DEFAULT_TIMEOUT_MS: u64> Default for ClientConfig<DEFAULT_TIMEOUT_MS> {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             timeout: TimeoutMs::new(DEFAULT_TIMEOUT_MS),
@@ -284,7 +323,6 @@ impl<const DEFAULT_TIMEOUT_MS: u64> Default for ClientConfig<DEFAULT_TIMEOUT_MS>
 
 // ==================== CONNECTION POOL ====================
 
-/// Connection pool for HTTP connections
 #[derive(Debug)]
 pub struct ConnectionPool {
     connections: Arc<RwLock<HashMap<String, Vec<Connection>>>>,
@@ -446,12 +484,15 @@ impl Connection {
     }
 }
 
-/// Connection statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConnectionStats {
+    /// Endpoint
     pub endpoint: Endpoint,
+    /// Age
     pub age: Duration,
+    /// Idle Time
     pub idle_time: Duration,
+    /// Count of request
     pub request_count: u64,
 }
 
@@ -459,6 +500,7 @@ pub struct ConnectionStats {
 
 /// Modern HTTP client with connection pooling and retry logic
 #[derive(Debug)]
+/// Httpclient
 pub struct HttpClient {
     pool: ConnectionPool,
     config: ClientConfig,
@@ -540,6 +582,7 @@ impl HttpClient {
 }
 
 impl Default for HttpClient {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new(ClientConfig::default())
     }
@@ -547,10 +590,15 @@ impl Default for HttpClient {
 
 /// Client statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Clientstats
 pub struct ClientStats {
+    /// Total Connections
     pub total_connections: usize,
+    /// Active Requests
     pub active_requests: usize,
+    /// Total Requests
     pub total_requests: u64,
+    /// Failed Requests
     pub failed_requests: u64,
 }
 
@@ -558,6 +606,7 @@ pub struct ClientStats {
 
 /// HTTP client specific errors
 #[derive(Debug, thiserror::Error)]
+/// Errors that can occur during HttpClient operations
 pub enum HttpClientError {
     #[error("Connection failed: {message}")]
     ConnectionFailed { message: String },
@@ -573,6 +622,7 @@ pub enum HttpClientError {
 }
 
 impl From<HttpClientError> for NestGateError {
+    /// From
     fn from(err: HttpClientError) -> Self {
         match err {
             HttpClientError::ConnectionFailed { message } => NestGateError::network_error(&message),
@@ -619,6 +669,7 @@ pub async fn http_endpoint(host: &str, port: u16) -> crate::Result<Endpoint> {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Clientconfigcanonical
 pub type ClientConfigCanonical =
     crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 

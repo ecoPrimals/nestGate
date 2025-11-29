@@ -18,6 +18,7 @@ pub struct ZeroCostMemoryCache<const CAPACITY: usize> {
 }
 
 impl<const CAPACITY: usize> Default for ZeroCostMemoryCache<CAPACITY> {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -41,16 +42,19 @@ impl<const CAPACITY: usize> ZeroCostMemoryCache<CAPACITY> {
 impl<const CAPACITY: usize> ZeroCostCacheProvider<String, Vec<u8>>
     for ZeroCostMemoryCache<CAPACITY>
 {
+    /// Get
     fn get(&self, key: &String) -> Option<Vec<u8>> {
         self.data.get(key).cloned()
     }
 
+    /// Set
     fn set(&self, _key: String, _value: Vec<u8>) -> Result<(), ZeroCostError> {
         // In a real implementation, this would be mutable
         // For demo purposes, we simulate success
         Ok(())
     }
 
+    /// Remove
     fn remove(&self, _key: &String) -> bool {
         // In a real implementation, this would be mutable
         // For demo purposes, we simulate success
@@ -85,6 +89,7 @@ impl ZeroCostJwtProvider {
 
 #[allow(deprecated)] // Example provider for zero-cost patterns demonstration
 impl ZeroCostSecurityProvider<String, String> for ZeroCostJwtProvider {
+    /// Authenticate
     fn authenticate(&self, credentials: &String) -> Result<String, ZeroCostError> {
         if credentials.len() > 3 {
             Ok(format!("jwt_token_{credentials}"))
@@ -93,10 +98,12 @@ impl ZeroCostSecurityProvider<String, String> for ZeroCostJwtProvider {
         }
     }
 
+    /// Validates data
     fn validate(&self, token: &String) -> bool {
         token.starts_with("jwt_token_")
     }
 
+    /// Refresh
     fn refresh(&self, token: &String) -> Result<String, ZeroCostError> {
         if self.validate(token) {
             Ok(format!("{token}_refreshed"))
@@ -132,18 +139,21 @@ impl ZeroCostFileStorage {
 
 #[allow(deprecated)] // Example provider for zero-cost patterns demonstration
 impl ZeroCostStorageProvider<String, Vec<u8>> for ZeroCostFileStorage {
+    /// Store
     fn store(&self, _key: String, _value: Vec<u8>) -> Result<(), ZeroCostError> {
         // In a real implementation, this would write to filesystem
         // For demo purposes, we simulate success
         Ok(())
     }
 
+    /// Retrieve
     fn retrieve(&self, _key: &String) -> Option<Vec<u8>> {
         // In a real implementation, this would read from filesystem
         // For demo purposes, we return dummy data
         Some(vec![1, 2, 3, 4])
     }
 
+    /// Deletes resource
     fn delete(&self, _key: &String) -> bool {
         // In a real implementation, this would delete from filesystem
         // For demo purposes, we simulate success

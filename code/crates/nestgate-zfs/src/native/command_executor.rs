@@ -1,10 +1,39 @@
-//
-// This module provides safe and robust execution of ZFS commands
-// with proper error handling and security measures.
+//! ZFS Command Executor
+//!
+//! This module provides safe and robust execution of native ZFS commands
+//! with proper error handling, timeout management, and security measures.
+//!
+//! # Overview
+//!
+//! The command executor:
+//! - Executes ZFS/zpool commands via `tokio::process::Command`
+//! - Enforces timeouts to prevent hung operations
+//! - Parses command output into structured data
+//! - Provides comprehensive error handling
+//! - Logs all operations for debugging
+//!
+//! # Safety
+//!
+//! - ✅ No unsafe code
+//! - ✅ Timeout enforcement prevents indefinite blocking
+//! - ✅ Proper error propagation
+//! - ✅ Structured logging for audit trails
+//!
+//! # Examples
+//!
+//! ```rust,ignore
+//! use nestgate_zfs::native::command_executor::NativeZfsCommandExecutor;
+//!
+//! let executor = NativeZfsCommandExecutor::new();
+//!
+//! // Execute ZFS command
+//! let result = executor.execute_zfs_command(&["list", "-H"]).await?;
+//! if result.success {
+//!     println!("Output: {}", result.stdout);
+//! }
+//! ```
 
-// Removed unused imports
 use nestgate_core::{NestGateError, Result};
-
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::process::Stdio;
@@ -12,24 +41,85 @@ use tokio::process::Command;
 use tracing::{debug, error, info, warn};
 
 /// Default timeout for ZFS commands (5 minutes)
+///
+/// Most ZFS operations complete within seconds, but pool creation
+/// and scrubs can take several minutes. 5 minutes provides a safe
+/// upper bound for normal operations.
 const DEFAULT_ZFS_COMMAND_TIMEOUT_SECS: u64 = 300;
 
-/// Typical number of properties in a ZFS dataset (used for HashMap pre-allocation)
+/// Typical number of properties in a ZFS dataset
+///
+/// Used for HashMap pre-allocation to reduce reallocations when
+/// parsing ZFS property lists. Most datasets have 30-50 properties.
 const ZFS_TYPICAL_PROPERTY_COUNT: usize = 40;
 
 /// Native ZFS command executor
+///
+/// Executes ZFS and zpool commands safely with timeout enforcement
+/// and comprehensive error handling.
+///
+/// # Configuration
+///
+/// - **Timeout**: Configurable command timeout (default: 5 minutes)
+/// - **Verbose Logging**: Enable via `ZFS_VERBOSE_LOGGING` env var
+///
+/// # Examples
+///
+/// ```rust,ignore
+/// // Default executor
+/// let executor = NativeZfsCommandExecutor::new();
+///
+/// // Custom timeout
+/// let executor = NativeZfsCommandExecutor::with_timeout(600);  // 10 minutes
+/// ```
 pub struct NativeZfsCommandExecutor {
     /// Command timeout in seconds
     timeout_seconds: u64,
-    /// Whether to log all commands (for debugging)
+
+    /// Whether to log all commands for debugging
+    /// (enabled via ZFS_VERBOSE_LOGGING environment variable)
     verbose_logging: bool,
 }
+
 /// Result of a ZFS command execution
+///
+/// Contains the complete output of a ZFS command execution including
+/// success status, stdout/stderr output, and exit code.
+///
+/// # Fields
+///
+/// - **success**: Whether the command completed successfully
+/// - **stdout**: Standard output from the command
+/// - **stderr**: Standard error from the command
+/// - **exit_code**: Process exit code (0 = success)
+///
+/// # Examples
+///
+/// ```rust,ignore
+/// let result = executor.execute_zfs_command(&["list"]).await?;
+///
+/// if result.success {
+///     // Parse stdout
+///     for line in result.stdout.lines() {
+///         println!("Pool: {}", line);
+///     }
+/// } else {
+///     eprintln!("Command failed: {}", result.stderr);
+/// }
+/// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Zfscommandresult
 pub struct ZfsCommandResult {
+    /// Whether the command succeeded (exit code 0)
     pub success: bool,
+
+    /// Standard output from the command
     pub stdout: String,
+
+    /// Standard error from the command
     pub stderr: String,
+
+    /// Process exit code
     pub exit_code: i32,
 }
 impl NativeZfsCommandExecutor {
@@ -267,6 +357,7 @@ impl NativeZfsCommandExecutor {
 }
 
 impl Default for NativeZfsCommandExecutor {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

@@ -1,5 +1,7 @@
 // Metadata handling and utility functions for filesystem operations
 
+//! Metadata module
+
 use super::types::FileMetadata;
 use crate::Result;
 use std::borrow::Cow;

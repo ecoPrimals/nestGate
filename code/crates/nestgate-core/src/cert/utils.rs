@@ -406,6 +406,7 @@ pub mod modern {
     }
 
     impl Default for CertificateConfig {
+        /// Returns the default instance
         fn default() -> Self {
             Self {
                 principal: "nestgate".to_string(),

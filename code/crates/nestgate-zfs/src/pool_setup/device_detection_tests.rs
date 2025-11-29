@@ -206,6 +206,7 @@ mod device_detection_tests {
 
     // ==================== StorageDevice Tests ====================
 
+    /// Creates  Test Storage Device
     fn create_test_storage_device() -> StorageDevice {
         StorageDevice {
             device_path: "/dev/nvme0n1".to_string(),

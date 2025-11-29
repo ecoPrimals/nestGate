@@ -1,3 +1,5 @@
+//! Clustering module
+
 use crate::error::NestGateError;
 use std::collections::HashMap;
 //
@@ -16,28 +18,48 @@ use uuid::Uuid;
 
 /// Cluster configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Cluster
 pub struct ClusterConfig {
+    /// Cluster name
     pub cluster_name: String,
+    /// Node identifier
     pub node_id: String,
+    /// Bind Endpoint
     pub bind_endpoint: SocketAddr,
+    /// Nodes
     pub nodes: Vec<ClusterNodeConfig>,
+    /// Election Timeout Ms
     pub election_timeout_ms: u64,
+    /// Heartbeat Interval Ms
     pub heartbeat_interval_ms: u64,
+    /// Max Missed Heartbeats
     pub max_missed_heartbeats: u32,
+    /// Discovery Enabled
     pub discovery_enabled: bool,
+    /// Discovery Multicast Endpoint
     pub discovery_multicast_endpoint: String,
+    /// Discovery Port
     pub discovery_port: u16,
+    /// Encryption Enabled
     pub encryption_enabled: bool,
+    /// Cluster Secret
     pub cluster_secret: Option<String>,
 }
 /// Individual cluster node configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ClusterNode
 pub struct ClusterNodeConfig {
+    /// Node identifier
     pub node_id: String,
+    /// Endpoint
     pub endpoint: SocketAddr,
+    /// Region
     pub region: Option<String>,
+    /// Zone
     pub zone: Option<String>,
+    /// Weight
     pub weight: u32,
+    /// Tags
     pub tags: HashMap<String, String>,
 }
 /// Cluster manager for coordinating multiple NestGate instances
@@ -54,116 +76,194 @@ pub struct ClusterManager {
 }
 /// Individual cluster node
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Clusternode
 pub struct ClusterNode {
+    /// Node identifier
     pub node_id: String,
+    /// Endpoint
     pub endpoint: SocketAddr,
+    /// Status
     pub status: NodeStatus,
+    /// Role
     pub role: NodeRole,
+    /// Last Heartbeat
     pub last_heartbeat: SystemTime,
+    /// Additional metadata key-value pairs
     pub metadata: NodeMetadata,
+    /// Capabilities
     pub capabilities: Vec<NodeCapability>,
 }
 /// Node status enumeration
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Status values for Node
 pub enum NodeStatus {
+    /// Starting
     Starting,
+    /// Active
     Active,
+    /// Degraded
     Degraded,
+    /// Unhealthy
     Unhealthy,
+    /// Leaving
     Leaving,
+    /// Failed
     Failed,
 }
 /// Node role in cluster
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Noderole
 pub enum NodeRole {
+    /// Leader
     Leader,
+    /// Follower
     Follower,
+    /// Candidate
     Candidate,
+    /// Observer
     Observer,
 }
 /// Node metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Nodemetadata
 pub struct NodeMetadata {
+    /// Version
     pub version: String,
+    /// Started At
     pub started_at: SystemTime,
+    /// Region
     pub region: Option<String>,
+    /// Zone
     pub zone: Option<String>,
+    /// Weight
     pub weight: u32,
+    /// Tags
     pub tags: HashMap<String, String>,
+    /// Resources
     pub resources: NodeResources,
 }
 /// Node resource information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Noderesources
 pub struct NodeResources {
+    /// Cpu Cores
     pub cpu_cores: u32,
+    /// Memory in gigabytes
     pub memory_gb: u32,
+    /// Storage in gigabytes
     pub storage_gb: u64,
+    /// Network Bandwidth Mbps
     pub network_bandwidth_mbps: u32,
+    /// Load Average
     pub load_average: f64,
+    /// Memory Usage Percent
     pub memory_usage_percent: f64,
+    /// Storage Usage Percent
     pub storage_usage_percent: f64,
 }
 /// Node capabilities
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Nodecapability
 pub enum NodeCapability {
+    /// Storage
     Storage,
+    /// Compute
     Compute,
+    /// Gateway
     Gateway,
+    /// Monitoring
     Monitoring,
+    /// Analytics
     Analytics,
+    /// Backup
     Backup,
 }
 /// Overall cluster state
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Clusterstate
 pub struct ClusterState {
+    /// Cluster identifier
     pub cluster_id: String,
+    /// Nodes
     pub nodes: HashMap<String, ClusterNode>,
+    /// Leader identifier
     pub leader_id: Option<String>,
+    /// Election Term
     pub election_term: u64,
+    /// Cluster Health
     pub cluster_health: ClusterHealth,
+    /// Partition Info
     pub partition_info: PartitionInfo,
+    /// Last Updated
     pub last_updated: SystemTime,
 }
 /// Cluster health assessment
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Clusterhealth
 pub struct ClusterHealth {
+    /// Overall Status
     pub overall_status: ClusterHealthStatus,
+    /// Active Nodes
     pub active_nodes: u32,
+    /// Failed Nodes
     pub failed_nodes: u32,
+    /// Degraded Nodes
     pub degraded_nodes: u32,
+    /// Quorum Available
     pub quorum_available: bool,
+    /// Leader Available
     pub leader_available: bool,
+    /// Data Consistency
     pub data_consistency: ConsistencyStatus,
 }
 /// Cluster health status
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Status values for ClusterHealth
 pub enum ClusterHealthStatus {
+    /// Healthy
     Healthy,
+    /// Degraded
     Degraded,
+    /// Critical
     Critical,
+    /// Failed
     Failed,
 }
 /// Data consistency status
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Status values for Consistency
 pub enum ConsistencyStatus {
+    /// Consistent
     Consistent,
+    /// Inconsistent
     Inconsistent,
+    /// Repairing
     Repairing,
+    /// Unknown
     Unknown,
 }
 /// Partition information for network splits
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Partitioninfo
 pub struct PartitionInfo {
+    /// Partitions
     pub partitions: Vec<Partition>,
+    /// Majority Partition
     pub majority_partition: Option<String>,
+    /// Split Brain Detected
     pub split_brain_detected: bool,
 }
 /// Network partition
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Partition
 pub struct Partition {
+    /// Partition identifier
     pub partition_id: String,
+    /// Nodes
     pub nodes: Vec<String>,
+    /// Whether this has leader
     pub has_leader: bool,
+    /// Size of quorum
     pub quorum_size: u32,
 }
 /// Leader election manager
@@ -177,9 +277,13 @@ pub struct LeaderElection {
 }
 /// Election state
 #[derive(Debug, Clone, PartialEq)]
+/// Electionstate
 pub enum ElectionState {
+    /// Follower
     Follower,
+    /// Candidate
     Candidate,
+    /// Leader
     Leader,
 }
 /// Node discovery manager
@@ -192,11 +296,17 @@ pub struct NodeDiscovery {
 }
 /// Discovered node information
 #[derive(Debug, Clone)]
+/// Discoverednode
 pub struct DiscoveredNode {
+    /// Node identifier
     pub node_id: String,
+    /// Endpoint
     pub endpoint: SocketAddr,
+    /// Discovered At
     pub discovered_at: SystemTime,
+    /// Capabilities
     pub capabilities: Vec<NodeCapability>,
+    /// Additional metadata key-value pairs
     pub metadata: HashMap<String, String>,
 }
 /// Heartbeat manager
@@ -208,35 +318,53 @@ pub struct HeartbeatManager {
 }
 /// Heartbeat information
 #[derive(Debug, Clone)]
+/// Heartbeatinfo
 pub struct HeartbeatInfo {
+    /// Last Received
     pub last_received: SystemTime,
+    /// Count of missed
     pub missed_count: u32,
+    /// Rtt Ms
     pub rtt_ms: u64,
 }
 /// Cluster events
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Clusterevent
 pub enum ClusterEvent {
     NodeJoined(String),
     NodeLeft(String),
     NodeFailed(String),
     LeaderElected(String),
+    /// Leaderlost
     LeaderLost,
     PartitionDetected(Vec<String>),
+    /// Partitionhealed
     PartitionHealed,
     ClusterHealthChanged(ClusterHealthStatus),
 }
 /// Cluster status for external reporting
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Clusterstatus
 pub struct ClusterStatus {
+    /// Cluster name
     pub cluster_name: String,
+    /// Cluster identifier
     pub cluster_id: String,
+    /// Total Nodes
     pub total_nodes: u32,
+    /// Active Nodes
     pub active_nodes: u32,
+    /// Leader identifier
     pub leader_id: Option<String>,
+    /// Local Node identifier
     pub local_node_id: String,
+    /// Local Node Role
     pub local_node_role: NodeRole,
+    /// Cluster Health
     pub cluster_health: ClusterHealthStatus,
+    /// Quorum Available
     pub quorum_available: bool,
+    /// Last Updated
     pub last_updated: SystemTime,
 }
 impl ClusterManager {

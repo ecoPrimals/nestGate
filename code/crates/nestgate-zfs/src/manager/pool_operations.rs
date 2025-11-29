@@ -2,6 +2,8 @@
 // Contains all pool-related operations including creation, destruction,
 // status checking, and maintenance operations like scrubbing.
 
+//! Pool Operations module
+
 use crate::error::{create_zfs_error, ZfsOperation};
 use nestgate_core::Result;
 // Removed unused tracing import

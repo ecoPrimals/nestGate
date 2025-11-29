@@ -3,11 +3,41 @@ use crate::types::SnapshotInfo;
 use nestgate_core::Result;
 use std::sync::Arc;
 
+/// Native ZFS snapshot manager
+///
+/// Provides production-ready ZFS snapshot operations including creation,
+/// deletion, listing, and rollback functionality.
+///
+/// # Examples
+///
+/// ```no_run
+/// use nestgate_zfs::native::snapshot_manager::NativeZfsSnapshotManager;
+/// use nestgate_zfs::native::command_executor::NativeZfsCommandExecutor;
+/// use std::sync::Arc;
+///
+/// # async fn example() -> nestgate_core::Result<()> {
+/// let executor = Arc::new(NativeZfsCommandExecutor::new());
+/// let manager = NativeZfsSnapshotManager::new(executor);
+///
+/// // Create a snapshot
+/// manager.create_snapshot("tank/data", "backup-2024").await?;
+/// # Ok(())
+/// # }
+/// ```
 pub struct NativeZfsSnapshotManager {
     command_executor: Arc<NativeZfsCommandExecutor>,
 }
 
 impl NativeZfsSnapshotManager {
+    /// Creates a new snapshot manager instance
+    ///
+    /// # Arguments
+    ///
+    /// * `command_executor` - Shared reference to the ZFS command executor
+    ///
+    /// # Returns
+    ///
+    /// A new `NativeZfsSnapshotManager` instance
     #[must_use]
     pub fn new(command_executor: Arc<NativeZfsCommandExecutor>) -> Self {
         Self { command_executor }
@@ -73,6 +103,7 @@ impl NativeZfsSnapshotManager {
 mod tests {
     use super::*;
 
+    /// Creates  Test Executor
     fn create_test_executor() -> Arc<NativeZfsCommandExecutor> {
         Arc::new(NativeZfsCommandExecutor::new())
     }

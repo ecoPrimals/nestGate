@@ -3,6 +3,8 @@
 // broken down into focused, maintainable components.
 
 // Core type definitions and structures
+//! Ecoprimal Sdk module
+
 pub mod config;
 pub mod errors;
 pub mod types;

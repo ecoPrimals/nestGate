@@ -8,6 +8,7 @@ use tracing::debug;
 
 /// Snapshot analytics without AI recommendations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Snapshotanalytics
 pub struct SnapshotAnalytics {
     /// Current snapshot count
     pub snapshot_count: u64,
@@ -61,6 +62,7 @@ impl SnapshotAnalytics {
 mod tests {
     use super::*;
 
+    /// Creates  Test Retention Policy
     fn create_test_retention_policy(keep_daily: u32) -> RetentionPolicy {
         RetentionPolicy {
             name: "test_policy".to_string(),

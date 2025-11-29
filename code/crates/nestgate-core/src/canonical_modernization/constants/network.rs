@@ -36,7 +36,6 @@ pub const KEEP_ALIVE_TIMEOUT_SECS: u64 = 75;
 
 // ==================== CONNECTION LIMITS ====================
 
-/// Maximum concurrent connections
 pub const MAX_CONNECTIONS: u32 = 1000;
 /// Default retry attempts for network operations
 pub const DEFAULT_RETRY_ATTEMPTS: u32 = 3;
@@ -45,7 +44,6 @@ pub const DEFAULT_RETRY_ATTEMPTS: u32 = 3;
 
 /// Default buffer size for network operations
 pub const DEFAULT_BUFFER_SIZE: usize = 65_536;
-/// Maximum request body size in bytes
 pub const MAX_REQUEST_SIZE: u64 = 10 * 1024 * 1024; // 10MB
 /// Network constants registration helper
 pub fn register_network_constants() -> Vec<(String, ConstantValue, String)> {

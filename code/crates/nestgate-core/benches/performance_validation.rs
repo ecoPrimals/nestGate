@@ -4,6 +4,8 @@
 // - Memory Pooling: 2x performance improvement
 // - Overall system optimization validation
 
+//! Performance Validation module
+
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use std::sync::{
     atomic::{AtomicUsize, Ordering},
@@ -20,20 +22,24 @@ fn get_or_create_uuid(_key: &str) -> Uuid {
     Uuid::new_v4() // Use v4 since v5 might not be available in all uuid versions
 }
 
+/// Gets 4Kb Buffer
 fn get_4kb_buffer() -> Vec<u8> {
     vec![0u8; 4096]
 }
 
+/// Gets 1Mb Buffer
 fn get_1mb_buffer() -> Vec<u8> {
     vec![0u8; 1024 * 1024]
 }
 
 struct UuidCache;
 impl UuidCache {
+    /// Creates a new instance
     fn new() -> Self {
         Self
     }
 
+    /// Gets Or Create
     fn get_or_create(&self, key: &str) -> Uuid {
         get_or_create_uuid(key)
     }

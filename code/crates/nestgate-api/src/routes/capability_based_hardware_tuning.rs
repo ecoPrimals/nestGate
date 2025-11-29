@@ -225,6 +225,7 @@ impl CapabilityBasedHardwareTuningService {
 
     // ==================== HELPER METHODS ====================
 
+    /// Creates  Fallback Tuning Result
     fn create_fallback_tuning_result(&self) -> HardwareTuningResult {
         HardwareTuningResult {
             applied_settings: vec![
@@ -241,6 +242,7 @@ impl CapabilityBasedHardwareTuningService {
         }
     }
 
+    /// Parses  Optimization Response
     fn parse_optimization_response(&self, data: serde_json::Value) -> Result<HardwareTuningResult, HardwareTuningError> {
         // Parse response from capability provider
         let applied_settings = data.get("applied_settings")
@@ -270,6 +272,7 @@ impl CapabilityBasedHardwareTuningService {
         })
     }
 
+    /// Creates  Default Profiles
     fn create_default_profiles(&self) -> Vec<TuningProfile> {
         vec![
             TuningProfile {
@@ -291,6 +294,7 @@ impl CapabilityBasedHardwareTuningService {
         ]
     }
 
+    /// Parses  Tuning Profiles
     fn parse_tuning_profiles(&self, data: serde_json::Value) -> Result<Vec<TuningProfile>, HardwareTuningError> {
         // Parse profiles from capability provider response
         if let Some(profiles_array) = data.get("profiles").and_then(|v| v.as_array()) {
@@ -314,6 +318,7 @@ impl CapabilityBasedHardwareTuningService {
         }
     }
 
+    /// Creates  Fallback Benchmark
     fn create_fallback_benchmark(&self) -> BenchmarkResult {
         BenchmarkResult {
             benchmark_type: "system".to_string(),
@@ -328,6 +333,7 @@ impl CapabilityBasedHardwareTuningService {
         }
     }
 
+    /// Parses  Benchmark Result
     fn parse_benchmark_result(&self, data: serde_json::Value) -> Result<BenchmarkResult, HardwareTuningError> {
         let benchmark_type = data.get("benchmark_type")
             .and_then(|v| v.as_str())
@@ -365,6 +371,7 @@ impl CapabilityBasedHardwareTuningService {
 }
 
 impl Default for CapabilityBasedHardwareTuningService {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -373,30 +380,46 @@ impl Default for CapabilityBasedHardwareTuningService {
 // ==================== TYPES ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Hardwaretuningresult
 pub struct HardwareTuningResult {
+    /// Settings for applied
     pub applied_settings: Vec<String>,
+    /// Performance Improvement
     pub performance_improvement: f64,
+    /// Recommendations
     pub recommendations: Vec<String>,
+    /// Provider Info
     pub provider_info: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Tuningprofile
 pub struct TuningProfile {
+    /// Name
     pub name: String,
+    /// Human-readable description
     pub description: String,
+    /// Settings for 
     pub settings: HashMap<String, String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Benchmarkresult
 pub struct BenchmarkResult {
+    /// Benchmark Type
     pub benchmark_type: String,
+    /// Score
     pub score: f64,
+    /// Metrics
     pub metrics: HashMap<String, f64>,
+    /// Duration Seconds
     pub duration_seconds: u64,
+    /// Provider Info
     pub provider_info: String,
 }
 
 #[derive(Debug, thiserror::Error)]
+/// Errors that can occur during HardwareTuning operations
 pub enum HardwareTuningError {
     #[error("Capability error: {0}")]
     Capability(String),
@@ -493,6 +516,7 @@ pub fn run_capability_based_benchmark(
 // ==================== CONVERSION HELPERS ====================
 
 impl From<HardwareTuningResult> for crate::handlers::hardware_tuning::HardwareTuningResult {
+    /// From
     fn from(result: HardwareTuningResult) -> Self {
         Self {
             applied_settings: result.applied_settings,

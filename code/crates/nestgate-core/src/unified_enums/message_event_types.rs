@@ -8,6 +8,7 @@ use std::fmt;
 /// **THE** `MessageType` - unified across all modules
 /// Replaces 3+ fragmented `MessageType` definitions across MCP, network, and communication modules
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Types of UnifiedMessage
 pub enum UnifiedMessageType {
     /// Request message
     Request,
@@ -33,12 +34,14 @@ pub enum UnifiedMessageType {
     Custom(String),
 }
 impl Default for UnifiedMessageType {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Request
     }
 }
 
 impl fmt::Display for UnifiedMessageType {
+    /// Fmt
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Request => write!(f, "request"),
@@ -61,6 +64,7 @@ impl fmt::Display for UnifiedMessageType {
 /// **THE** `EventType` - unified across all modules
 /// Replaces 5+ fragmented `EventType` definitions across various event systems
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Types of UnifiedEvent
 pub enum UnifiedEventType {
     /// System startup/initialization event
     SystemStart,
@@ -92,12 +96,14 @@ pub enum UnifiedEventType {
     Custom(String),
 }
 impl Default for UnifiedEventType {
+    /// Returns the default instance
     fn default() -> Self {
         Self::SystemStart
     }
 }
 
 impl fmt::Display for UnifiedEventType {
+    /// Fmt
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::SystemStart => write!(f, "system_start"),
@@ -123,6 +129,7 @@ impl fmt::Display for UnifiedEventType {
 /// **THE** `OperationType` - unified across all modules
 /// Replaces `OperationType` definitions across service operations and handlers
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Types of UnifiedOperation
 pub enum UnifiedOperationType {
     /// Create operation
     Create,
@@ -154,12 +161,14 @@ pub enum UnifiedOperationType {
     Custom(String),
 }
 impl Default for UnifiedOperationType {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Read
     }
 }
 
 impl fmt::Display for UnifiedOperationType {
+    /// Fmt
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Create => write!(f, "create"),
@@ -185,6 +194,7 @@ impl fmt::Display for UnifiedOperationType {
 /// **THE** `AlertType` - unified across all modules
 /// Replaces `AlertType` definitions in monitoring and notification systems
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Types of UnifiedAlert
 pub enum UnifiedAlertType {
     /// System performance alert
     Performance,
@@ -206,6 +216,7 @@ pub enum UnifiedAlertType {
     Custom(String),
 }
 impl Default for UnifiedAlertType {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Performance
     }
@@ -214,6 +225,7 @@ impl Default for UnifiedAlertType {
 /// **THE** `AlertSeverity` - unified across all modules
 /// Replaces `AlertSeverity` definitions in monitoring and notification systems
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Unifiedalertseverity
 pub enum UnifiedAlertSeverity {
     /// Critical severity - immediate attention required
     Critical,
@@ -229,6 +241,7 @@ pub enum UnifiedAlertSeverity {
     Custom(String),
 }
 impl Default for UnifiedAlertSeverity {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Info
     }

@@ -2,6 +2,8 @@
 // Modern ZFS engine implementation using canonical storage patterns
 // and zero-cost abstractions for enterprise-grade functionality.
 
+//! Zfs Features module
+
 use crate::error::CanonicalResult as Result;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -58,6 +60,7 @@ where
 }
 // Modern ZFS configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for ModernZfs
 pub struct ModernZfsConfig {
     /// Compression settings
     pub compression: CompressionConfig,
@@ -70,12 +73,17 @@ pub struct ModernZfsConfig {
 }
 // Compression configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Compression
 pub struct CompressionConfig {
+    /// Whether this feature is enabled
     pub enabled: bool,
+    /// Algorithm
     pub algorithm: compression_engine::CompressionType,
+    /// Level
     pub level: u8,
 }
 impl Default for CompressionConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -87,12 +95,17 @@ impl Default for CompressionConfig {
 
 // Integrity configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Integrity
 pub struct IntegrityConfig {
+    /// Whether this feature is enabled
     pub enabled: bool,
+    /// Checksum Type
     pub checksum_type: ChecksumType,
+    /// Verify On Read
     pub verify_on_read: bool,
 }
 impl Default for IntegrityConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -104,12 +117,17 @@ impl Default for IntegrityConfig {
 
 // Snapshot configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Snapshot
 pub struct SnapshotConfig {
+    /// Auto Snapshot
     pub auto_snapshot: bool,
+    /// Retention Days
     pub retention_days: u32,
+    /// Max Snapshots
     pub max_snapshots: u32,
 }
 impl Default for SnapshotConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             auto_snapshot: false,
@@ -121,12 +139,17 @@ impl Default for SnapshotConfig {
 
 // Performance configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Performance
 pub struct PerformanceConfig {
+    /// Cache Size in megabytes
     pub cache_size_mb: u64,
+    /// Async Writes
     pub async_writes: bool,
+    /// Size of batch
     pub batch_size: usize,
 }
 impl Default for PerformanceConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             cache_size_mb: 512,
@@ -377,6 +400,7 @@ where
 
 // Modern ZFS engine statistics
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Modernzfsstats
 pub struct ModernZfsStats {
     /// Total operations performed
     pub total_operations: u64,
@@ -391,11 +415,17 @@ pub struct ModernZfsStats {
 }
 // Engine health status
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Enginehealth
 pub struct EngineHealth {
+    /// Storage Healthy
     pub storage_healthy: bool,
+    /// Compression Healthy
     pub compression_healthy: bool,
+    /// Integrity Healthy
     pub integrity_healthy: bool,
+    /// Snapshots Healthy
     pub snapshots_healthy: bool,
+    /// Overall Health
     pub overall_health: f64,
 }
 // ==================== SECTION ====================

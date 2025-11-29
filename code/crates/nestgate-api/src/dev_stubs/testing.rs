@@ -26,32 +26,51 @@ use uuid::Uuid;
 
 /// Simple performance metrics for mock builders
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performancemetrics
 pub struct PerformanceMetrics {
+    /// Cpu Usage
     pub cpu_usage: f64,
+    /// Memory Usage
     pub memory_usage: f64,
+    /// Disk Io
     pub disk_io: f64,
+    /// Network Io
     pub network_io: f64,
 }
 
 /// Resource allocation structure for mock builders
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Resourceallocation
 pub struct ResourceAllocation {
+    /// Unique identifier
     pub id: String,
+    /// Resource Type
     pub resource_type: String,
+    /// Status
     pub status: String,
+    /// Allocated At
     pub allocated_at: String,
+    /// Expires At
     pub expires_at: String,
+    /// Additional metadata key-value pairs
     pub metadata: serde_json::Value,
 }
 
 /// Workload result structure for mock builders
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Workloadresult
 pub struct WorkloadResult {
+    /// Performance Metrics
     pub performance_metrics: PerformanceMetrics,
+    /// Workload identifier
     pub workload_id: String,
+    /// Success
     pub success: bool,
+    /// Execution Time Ms
     pub execution_time_ms: u64,
+    /// Resources Used
     pub resources_used: ResourceAllocation,
+    /// Result Data
     pub result_data: serde_json::Value,
 }
 
@@ -127,43 +146,56 @@ pub fn build_mock_workload_result(
 
 /// Test mocking configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for Mocking
 pub struct MockingConfig {
+    /// Services
     pub services: MockServiceConfig,
+    /// Doubles
     pub doubles: TestDoubleConfig,
+    /// Stubs
     pub stubs: StubConfig,
 }
 
 /// Mock service configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for MockService
 pub struct MockServiceConfig {
+    /// Whether this feature is enabled
     pub enabled: bool,
 }
 
 /// Test double configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for TestDouble
 pub struct TestDoubleConfig {
+    /// Whether this feature is enabled
     pub enabled: bool,
 }
 
 /// Stub configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Stub
 pub struct StubConfig {
+    /// Whether this feature is enabled
     pub enabled: bool,
 }
 
 impl Default for MockServiceConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self { enabled: true }
     }
 }
 
 impl Default for TestDoubleConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self { enabled: true }
     }
 }
 
 impl Default for StubConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self { enabled: true }
     }
@@ -172,6 +204,7 @@ impl Default for StubConfig {
 impl MockingConfig {
     /// Create a new mocking configuration with all features enabled
     #[must_use]
+    /// Fn
     pub const fn new() -> Self {
         Self {
             services: MockServiceConfig { enabled: true },
@@ -182,6 +215,7 @@ impl MockingConfig {
 
     /// Create a configuration with all mocking disabled
     #[must_use]
+    /// Fn
     pub const fn disabled() -> Self {
         Self {
             services: MockServiceConfig { enabled: false },

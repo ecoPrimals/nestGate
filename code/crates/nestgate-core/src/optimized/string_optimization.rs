@@ -1,3 +1,5 @@
+//! String Optimization module
+
 use std::collections::HashMap;
 //
 // This module provides practical string optimization patterns to reduce memory
@@ -141,6 +143,7 @@ impl OptimizedStringBuilder {
 }
 
 impl Default for OptimizedStringBuilder {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -185,6 +188,7 @@ impl ErrorMessages {
         )
     }
     
+    /// Config Error
     pub fn config_error(field: &str, reason: &str) -> String {
         StringOptimizer::format_with_capacity(
             field.len() + reason.len() + 32,

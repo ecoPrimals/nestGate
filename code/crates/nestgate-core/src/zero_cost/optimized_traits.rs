@@ -18,7 +18,9 @@ use std::marker::PhantomData;
 /// This trait uses const generics to provide compile-time configuration
 /// and eliminate runtime overhead for service management.
 pub trait ZeroCostService<const BUFFER_SIZE: usize = 8192, const MAX_CONNECTIONS: usize = 1000> {
+    /// Type alias for Config
     type Config: Clone + Send + Sync;
+    /// Type alias for Health
     type Health: Send + Sync;
 
     /// Get service configuration (compile-time optimized)
@@ -43,12 +45,16 @@ pub trait ZeroCostService<const BUFFER_SIZE: usize = 8192, const MAX_CONNECTIONS
 }
 /// Zero-cost storage backend trait with compile-time optimization
 pub trait ZeroCostStorageBackend<
+    /// Block Size
     const BLOCK_SIZE: usize = 4096,
+    /// Cache Size
     const CACHE_SIZE: usize = 1024,
     const MAX_CONCURRENT_OPS: usize = 100,
 >
 {
+    /// Type alias for StorageType
     type StorageType;
+    /// Type alias for Error
     type Error: std::error::Error + Send + Sync;
 
     /// Get block size (compile-time constant)
@@ -88,7 +94,6 @@ pub trait ZeroCostStorageBackend<
 
 /// Compile-time configuration trait for zero-cost abstractions
 pub trait CompileTimeConfig {
-    /// Service type identifier (compile-time string)
     const SERVICE_TYPE: &'static str;
 
     /// Default timeout in milliseconds (compile-time constant)
@@ -97,10 +102,8 @@ pub trait CompileTimeConfig {
     /// Default retry attempts (compile-time constant)
     const DEFAULT_RETRY_ATTEMPTS: u32 = 3;
 
-    /// Buffer size for operations (compile-time constant)
     const BUFFER_SIZE: usize = 8192;
 
-    /// Maximum concurrent connections (compile-time constant)
     const MAX_CONNECTIONS: usize = 1000;
 
     /// Enable debug mode (compile-time flag)
@@ -108,24 +111,30 @@ pub trait CompileTimeConfig {
 }
 /// Zero-cost service configuration using const generics
 #[derive(Debug, Clone)]
+/// Configuration for ZeroCostService
 pub struct ZeroCostServiceConfig<
     const TIMEOUT_MS: u64 = 30000,
+    /// Retry Attempts
     const RETRY_ATTEMPTS: u32 = 3,
     const BUFFER_SIZE: usize = 8192,
     const MAX_CONNECTIONS: usize = 1000,
+    /// Debug Mode
     const DEBUG_MODE: bool = false,
 > {
     _phantom: PhantomData<()>,
 }
 impl<
         const TIMEOUT_MS: u64,
+        /// Retry Attempts
         const RETRY_ATTEMPTS: u32,
         const BUFFER_SIZE: usize,
         const MAX_CONNECTIONS: usize,
+        /// Debug Mode
         const DEBUG_MODE: bool,
     > Default
     for ZeroCostServiceConfig<TIMEOUT_MS, RETRY_ATTEMPTS, BUFFER_SIZE, MAX_CONNECTIONS, DEBUG_MODE>
 {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -133,9 +142,11 @@ impl<
 
 impl<
         const TIMEOUT_MS: u64,
+        /// Retry Attempts
         const RETRY_ATTEMPTS: u32,
         const BUFFER_SIZE: usize,
         const MAX_CONNECTIONS: usize,
+        /// Debug Mode
         const DEBUG_MODE: bool,
     > ZeroCostServiceConfig<TIMEOUT_MS, RETRY_ATTEMPTS, BUFFER_SIZE, MAX_CONNECTIONS, DEBUG_MODE>
 {
@@ -188,7 +199,9 @@ impl<
 
 /// Performance-optimized trait for high-throughput operations
 pub trait HighPerformanceTrait<const BATCH_SIZE: usize = 1000> {
+    /// Type alias for Item
     type Item;
+    /// Type alias for BatchResult
     type BatchResult;
 
     /// Process items in batches for optimal performance
@@ -209,6 +222,7 @@ pub trait HighPerformanceTrait<const BATCH_SIZE: usize = 1000> {
 }
 /// Memory-optimized trait using const generics for pool management
 pub trait MemoryOptimizedTrait<const POOL_SIZE: usize = 1024, const BLOCK_SIZE: usize = 4096> {
+    /// Type alias for MemoryBlock
     type MemoryBlock;
 
     /// Get pool size (compile-time constant)
@@ -293,7 +307,9 @@ impl ConfigValidator {
 
 /// Specialized storage trait for ZFS with compile-time optimization
 pub trait ZfsOptimizedTrait<
+    /// Record Size
     const RECORD_SIZE: usize = 131_072,
+    /// Arc Size
     const ARC_SIZE: usize = 1_073_741_824,
 >
 {
@@ -323,8 +339,11 @@ pub trait ZfsOptimizedTrait<
 }
 /// Network-optimized trait with compile-time TCP/UDP settings
 pub trait NetworkOptimizedTrait<
+    /// Mtu Size
     const MTU_SIZE: usize = 1500,
+    /// Send Buffer Size
     const SEND_BUFFER_SIZE: usize = 65536,
+    /// Recv Buffer Size
     const RECV_BUFFER_SIZE: usize = 65536,
 >
 {
@@ -379,9 +398,12 @@ impl HighPerformanceStorageService {
 }
 
 impl ZeroCostService for HighPerformanceStorageService {
+    /// Type alias for Config
     type Config = HighPerformanceStorageConfig;
+    /// Type alias for Health
     type Health = StorageHealth;
 
+    /// Gets Config
     fn get_config(&self) -> &Self::Config {
         &self.config
     }
@@ -393,8 +415,11 @@ impl NetworkOptimizedTrait<1500, 131_072, 131_072> for HighPerformanceStorageSer
 
 /// Storage health information
 #[derive(Debug, Clone)]
+/// Storagehealth
 pub struct StorageHealth {
+    /// Whether healthy
     pub is_healthy: bool,
+    /// Capacity Used
     pub capacity_used: f64,
     pub operations_per_second: u64,
 }

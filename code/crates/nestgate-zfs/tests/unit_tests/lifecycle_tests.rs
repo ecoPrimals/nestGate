@@ -1,6 +1,8 @@
 //
 // Tests for Phase 2 lifecycle management
 
+//! Lifecycle Tests module
+
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::time::{ SystemTime};

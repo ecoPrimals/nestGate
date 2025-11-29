@@ -2,6 +2,8 @@
 // This module contains all middleware components for the NestGate API,
 // including the AI-First compliance middleware for ecosystem integration.
 
+//! Middleware module
+
 pub mod ai_first_middleware;
 
 // Re-export the main middleware function for easy use

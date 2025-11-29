@@ -5,6 +5,8 @@
 // - Real-time monitoring and notifications
 // - Event streaming to clients
 
+//! Websocket module
+
 use serde::{Deserialize, Serialize};
 
 use nestgate_core::uuid_cache::get_or_create_uuid;
@@ -16,6 +18,7 @@ use uuid::Uuid;
 
 /// WebSocket event types
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of WebSocketEvent
 pub enum WebSocketEventType {
     /// A new WebSocket connection was established
     ConnectionEstablished,
@@ -32,6 +35,7 @@ pub enum WebSocketEventType {
 }
 /// WebSocket event structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Websocketevent
 pub struct WebSocketEvent {
     /// Unique identifier for this event
     pub event_id: Uuid,
@@ -46,6 +50,7 @@ pub struct WebSocketEvent {
 }
 /// Connection parameters for WebSocket upgrade
 #[derive(Debug, Deserialize)]
+/// Connectionparams
 pub struct ConnectionParams {
     /// Optional client type specification
     pub client_type: Option<String>,
@@ -54,6 +59,7 @@ pub struct ConnectionParams {
 }
 /// WebSocket connection statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Websocketstats
 pub struct WebSocketStats {
     /// Total number of connections established
     pub total_connections: u64,
@@ -70,6 +76,7 @@ pub struct WebSocketStats {
 }
 /// WebSocket client types
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of Client
 pub enum ClientType {
     /// Web-based user interface client
     WebUI,
@@ -84,6 +91,7 @@ pub enum ClientType {
 }
 /// WebSocket connection information
 #[derive(Debug, Clone, Serialize)]
+/// Connectioninfo
 pub struct ConnectionInfo {
     /// Unique client identifier
     pub client_id: Uuid,
@@ -103,6 +111,7 @@ pub struct WebSocketManager {
     stats: Arc<RwLock<WebSocketStats>>,
 }
 impl Default for WebSocketManager {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -267,6 +276,7 @@ impl WebSocketManager {
 }
 
 impl Clone for WebSocketManager {
+    /// Clone
     fn clone(&self) -> Self { Self {
             connections: Arc::clone(&self.connections),
             event_broadcaster: self.event_broadcaster.clone(),

@@ -4,6 +4,8 @@
 // universal storage operations.
 
 // Removed unused import: crate::handlers::zfs_stub::ZeroCostZfsOperations
+//! Universal Pools module
+
 use axum::{
     extract::{Path, State},
     http::StatusCode,
@@ -24,6 +26,7 @@ use crate::dev_stubs::zfs::{DatasetOperations, PoolOperations, SnapshotOperation
 ///
 /// Request structure for creating a new universal storage pool.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for CreateUniversalPool operation
 pub struct CreateUniversalPoolRequest {
     /// Pool name to create
     pub name: String,

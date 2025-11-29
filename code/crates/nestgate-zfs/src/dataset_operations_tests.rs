@@ -6,7 +6,7 @@
 #[cfg(test)]
 mod dataset_operations_tests {
     use crate::types::{DatasetName, PoolName};
-    use crate::Result;
+    use nestgate_core::Result;
     use std::collections::HashMap;
 
     // ==================== Dataset Creation Tests ====================
@@ -302,6 +302,7 @@ mod dataset_operations_tests {
 
     // ==================== Helper Functions (Stubs) ====================
 
+    /// Creates  Dataset
     async fn create_dataset(_name: &DatasetName) -> Result<()> {
         Err(crate::error::ZfsError::CommandError {
             message: "Test environment".into(),
@@ -309,6 +310,7 @@ mod dataset_operations_tests {
         })
     }
 
+    /// Creates  Dataset With Properties
     async fn create_dataset_with_properties(_name: &DatasetName, _props: HashMap<String, String>) -> Result<()> {
         Err(crate::error::ZfsError::CommandError {
             message: "Test environment".into(),
@@ -316,6 +318,7 @@ mod dataset_operations_tests {
         })
     }
 
+    /// Destroy Dataset
     async fn destroy_dataset(_name: &DatasetName, _recursive: bool) -> Result<()> {
         Err(crate::error::ZfsError::CommandError {
             message: "Test environment".into(),
@@ -323,6 +326,7 @@ mod dataset_operations_tests {
         })
     }
 
+    /// Sets Property
     async fn set_property(_name: &DatasetName, _prop: &str, _value: &str) -> Result<()> {
         Err(crate::error::ZfsError::CommandError {
             message: "Test environment".into(),
@@ -330,6 +334,7 @@ mod dataset_operations_tests {
         })
     }
 
+    /// Gets Property
     async fn get_property(_name: &DatasetName, _prop: &str) -> Result<String> {
         Err(crate::error::ZfsError::CommandError {
             message: "Test environment".into(),
@@ -337,6 +342,7 @@ mod dataset_operations_tests {
         })
     }
 
+    /// Sets Properties
     async fn set_properties(_name: &DatasetName, _props: HashMap<String, String>) -> Result<()> {
         Err(crate::error::ZfsError::CommandError {
             message: "Test environment".into(),
@@ -344,6 +350,7 @@ mod dataset_operations_tests {
         })
     }
 
+    /// Gets All Properties
     async fn get_all_properties(_name: &DatasetName) -> Result<HashMap<String, String>> {
         Err(crate::error::ZfsError::CommandError {
             message: "Test environment".into(),
@@ -351,6 +358,7 @@ mod dataset_operations_tests {
         })
     }
 
+    /// Sets Quota
     async fn set_quota(_name: &DatasetName, _quota: &str) -> Result<()> {
         Err(crate::error::ZfsError::CommandError {
             message: "Test environment".into(),
@@ -358,6 +366,7 @@ mod dataset_operations_tests {
         })
     }
 
+    /// Sets Reservation
     async fn set_reservation(_name: &DatasetName, _reservation: &str) -> Result<()> {
         Err(crate::error::ZfsError::CommandError {
             message: "Test environment".into(),
@@ -365,6 +374,7 @@ mod dataset_operations_tests {
         })
     }
 
+    /// Creates  Snapshot
     async fn create_snapshot(_name: &str) -> Result<()> {
         Err(crate::error::ZfsError::CommandError {
             message: "Test environment".into(),
@@ -372,6 +382,7 @@ mod dataset_operations_tests {
         })
     }
 
+    /// Creates  Snapshot Recursive
     async fn create_snapshot_recursive(_name: &str) -> Result<()> {
         Err(crate::error::ZfsError::CommandError {
             message: "Test environment".into(),
@@ -379,6 +390,7 @@ mod dataset_operations_tests {
         })
     }
 
+    /// Destroy Snapshot
     async fn destroy_snapshot(_name: &str) -> Result<()> {
         Err(crate::error::ZfsError::CommandError {
             message: "Test environment".into(),
@@ -386,6 +398,7 @@ mod dataset_operations_tests {
         })
     }
 
+    /// Rollback Snapshot
     async fn rollback_snapshot(_name: &str) -> Result<()> {
         Err(crate::error::ZfsError::CommandError {
             message: "Test environment".into(),
@@ -393,6 +406,7 @@ mod dataset_operations_tests {
         })
     }
 
+    /// List Snapshots
     async fn list_snapshots(_dataset: &DatasetName) -> Result<Vec<String>> {
         Err(crate::error::ZfsError::CommandError {
             message: "Test environment".into(),
@@ -400,6 +414,7 @@ mod dataset_operations_tests {
         })
     }
 
+    /// Clone Dataset
     async fn clone_dataset(_snapshot: &str, _clone_name: &DatasetName) -> Result<()> {
         Err(crate::error::ZfsError::CommandError {
             message: "Test environment".into(),
@@ -407,6 +422,7 @@ mod dataset_operations_tests {
         })
     }
 
+    /// Promote Clone
     async fn promote_clone(_clone_name: &DatasetName) -> Result<()> {
         Err(crate::error::ZfsError::CommandError {
             message: "Test environment".into(),
@@ -414,6 +430,7 @@ mod dataset_operations_tests {
         })
     }
 
+    /// Rename Dataset
     async fn rename_dataset(_old: &DatasetName, _new: &DatasetName) -> Result<()> {
         Err(crate::error::ZfsError::CommandError {
             message: "Test environment".into(),
@@ -421,6 +438,7 @@ mod dataset_operations_tests {
         })
     }
 
+    /// Mount Dataset
     async fn mount_dataset(_name: &DatasetName) -> Result<()> {
         Err(crate::error::ZfsError::CommandError {
             message: "Test environment".into(),
@@ -428,6 +446,7 @@ mod dataset_operations_tests {
         })
     }
 
+    /// Unmount Dataset
     async fn unmount_dataset(_name: &DatasetName, _force: bool) -> Result<()> {
         Err(crate::error::ZfsError::CommandError {
             message: "Test environment".into(),
@@ -435,6 +454,7 @@ mod dataset_operations_tests {
         })
     }
 
+    /// Gets Mountpoint
     async fn get_mountpoint(_name: &DatasetName) -> Result<String> {
         Err(crate::error::ZfsError::CommandError {
             message: "Test environment".into(),
@@ -442,6 +462,7 @@ mod dataset_operations_tests {
         })
     }
 
+    /// List Datasets
     async fn list_datasets(_pool: &PoolName) -> Result<Vec<String>> {
         Err(crate::error::ZfsError::CommandError {
             message: "Test environment".into(),
@@ -449,6 +470,7 @@ mod dataset_operations_tests {
         })
     }
 
+    /// List Datasets Recursive
     async fn list_datasets_recursive(_pool: &PoolName) -> Result<Vec<String>> {
         Err(crate::error::ZfsError::CommandError {
             message: "Test environment".into(),

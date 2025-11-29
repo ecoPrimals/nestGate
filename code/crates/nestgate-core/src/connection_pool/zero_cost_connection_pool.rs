@@ -1,3 +1,5 @@
+//! Zero Cost Connection Pool module
+
 use crate::error::NestGateError;
 //
 // This module provides a high-performance replacement for the Arc<dyn Fn> based connection
@@ -31,10 +33,15 @@ where
 }
 /// Zero-cost pool statistics
 #[derive(Debug, Clone)]
+/// Zerocostpoolstats
 pub struct ZeroCostPoolStats {
+    /// Total Connections Created
     pub total_connections_created: u64,
+    /// Total Connections Reused
     pub total_connections_reused: u64,
+    /// Size of current pool
     pub current_pool_size: usize,
+    /// Size of max pool
     pub max_pool_size: usize,
     pub connection_failures: u64,
 }
@@ -268,15 +275,21 @@ impl ZeroCostTcpConnectionFactory {
 
 /// TCP connection wrapper
 #[derive(Debug, Clone)]
+/// Tcpconnection
 pub struct TcpConnection {
+    /// Endpoint
     pub endpoint: String,
+    /// Port
     pub port: u16,
+    /// Connected At
     pub connected_at: Instant,
     pub connection_id: u64,
 }
 impl ZeroCostConnectionFactory<TcpConnection> for ZeroCostTcpConnectionFactory {
+    /// Type alias for Error
     type Error = NestGateError;
 
+    /// Creates  Connection
     async fn create_connection(&self) -> Result<TcpConnection, Self::Error> {
         // Direct TCP connection creation - no Arc<dyn Fn> overhead
         info!("Creating zero-cost TCP connection to {}:{}", self.endpoint, self.port);
@@ -292,6 +305,7 @@ impl ZeroCostConnectionFactory<TcpConnection> for ZeroCostTcpConnectionFactory {
         })
     }
 
+    /// Validates  Connection
     async fn validate_connection(&self, connection: &TcpConnection) -> bool {
         // Direct validation - no virtual dispatch
         let age = connection.connected_at.elapsed();
@@ -365,7 +379,9 @@ pub const CONNECTION_POOL_MIGRATION_GUIDE: &str = r"
 ## Before (Arc<dyn Fn> Runtime Overhead)
 ```rust
 
+/// Type alias for Connectionfactory
 pub type ConnectionFactory<T> = Arc<dyn Fn() -> Result<T> + Send + Sync>;
+/// Type alias for Healthcheckfn
 pub type HealthCheckFn<T> = Arc<dyn Fn(&T) -> Result<()> + Send + Sync>;
 
 pub struct ConnectionPool<T> {
@@ -399,6 +415,7 @@ impl<T> ConnectionPool<T> {
 ## After (Zero-Cost Direct Composition)
 ```rust
 
+/// Zerocostconnectionpool
 pub struct ZeroCostConnectionPool<Factory, Connection, const POOL_SIZE: usize>
 where
     Factory: ZeroCostConnectionFactory<Connection>,
@@ -412,6 +429,7 @@ impl<Factory, Connection, const POOL_SIZE: usize>
 where
     Factory: ZeroCostConnectionFactory<Connection>,
 {
+    /// Creates a new instance
     pub fn new(factory: Factory) -> Self {
         Self {
             factory,
@@ -449,5 +467,7 @@ where
 
 /// Common zero-cost connection pool configurations
 pub type StandardTcpConnectionPool = ZeroCostConnectionPool<ZeroCostTcpConnectionFactory, TcpConnection, 50>;
+/// Type alias for Highperformancetcpconnectionpool
 pub type HighPerformanceTcpConnectionPool = ZeroCostConnectionPool<ZeroCostTcpConnectionFactory, TcpConnection, 200>;
+/// Type alias for Developmenttcpconnectionpool
 pub type DevelopmentTcpConnectionPool = ZeroCostConnectionPool<ZeroCostTcpConnectionFactory, TcpConnection, 10>; 

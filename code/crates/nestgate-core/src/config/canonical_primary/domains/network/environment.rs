@@ -8,6 +8,7 @@ use std::collections::HashMap;
 ///
 /// Provides environment-specific overrides and feature flags for network behavior.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for NetworkEnvironment
 pub struct NetworkEnvironmentConfig {
     /// Name of the deployment environment (e.g., "development", "production").
     pub environment_name: String,

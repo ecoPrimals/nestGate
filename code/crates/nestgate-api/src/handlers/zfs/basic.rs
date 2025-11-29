@@ -35,6 +35,7 @@ use tracing::{error, info, warn};
 /// Request structure for creating a new ZFS pool with specified _devices.
 /// Part of the canonical modernized ZFS API.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+/// Request parameters for CreatePool operation
 pub struct CreatePoolRequest {
     /// Name of the ZFS pool to create
     pub name: String,
@@ -47,6 +48,7 @@ pub struct CreatePoolRequest {
 /// Request structure for creating a new ZFS dataset with optional properties.
 /// Part of the canonical modernized ZFS API.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+/// Request parameters for CreateDataset operation
 pub struct CreateDatasetRequest {
     /// Name of the ZFS dataset to create
     pub name: String,
@@ -59,6 +61,7 @@ pub struct CreateDatasetRequest {
 /// Request structure for creating a new ZFS snapshot of a dataset.
 /// Part of the canonical modernized ZFS API.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+/// Request parameters for CreateSnapshot operation
 pub struct CreateSnapshotRequest {
     /// Dataset to snapshot
     pub dataset: String,
@@ -71,6 +74,7 @@ pub struct CreateSnapshotRequest {
 /// Response structure containing ZFS system health information.
 /// Part of the canonical modernized ZFS API.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+/// Response data for ZfsHealth operation
 pub struct ZfsHealthResponse {
     /// Overall ZFS system health status
     pub healthy: bool,
@@ -659,9 +663,11 @@ pub async fn predict_tier(
 
 /// ZFS handler implementation for the API
 #[derive(Debug, Clone)]
+/// Zfshandlerimpl
 pub struct ZfsHandlerImpl;
 
 impl Default for ZfsHandlerImpl {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -670,6 +676,7 @@ impl Default for ZfsHandlerImpl {
 impl ZfsHandlerImpl {
     /// Create a new ZFS handler instance
     #[must_use]
+    /// Fn
     pub const fn new() -> Self {
         Self
     }

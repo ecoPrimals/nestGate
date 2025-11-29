@@ -194,6 +194,7 @@ impl PerformanceOptimizationValidator {
     
     // ==================== BENCHMARK IMPLEMENTATIONS ====================
     
+    /// Benchmark Arc Dyn Pattern
     async fn benchmark_arc_dyn_pattern(&self) -> Result<Duration> {
         let start = Instant::now();
         
@@ -206,6 +207,7 @@ impl PerformanceOptimizationValidator {
         Ok(start.elapsed())
     }
     
+    /// Benchmark Generic Pattern
     async fn benchmark_generic_pattern(&self) -> Result<Duration> {
         let start = Instant::now();
         
@@ -218,6 +220,7 @@ impl PerformanceOptimizationValidator {
         Ok(start.elapsed())
     }
     
+    /// Benchmark Fragmented Config
     async fn benchmark_fragmented_config(&self) -> Result<Duration> {
         let start = Instant::now();
         
@@ -230,6 +233,7 @@ impl PerformanceOptimizationValidator {
         Ok(start.elapsed())
     }
     
+    /// Benchmark Consolidated Config
     async fn benchmark_consolidated_config(&self) -> Result<Duration> {
         let start = Instant::now();
         
@@ -241,6 +245,7 @@ impl PerformanceOptimizationValidator {
         Ok(start.elapsed())
     }
     
+    /// Benchmark Copy Operations
     async fn benchmark_copy_operations(&self) -> Result<Duration> {
         let start = Instant::now();
         
@@ -253,6 +258,7 @@ impl PerformanceOptimizationValidator {
         Ok(start.elapsed())
     }
     
+    /// Benchmark Zero Copy Operations
     async fn benchmark_zero_copy_operations(&self) -> Result<Duration> {
         let start = Instant::now();
         
@@ -265,11 +271,13 @@ impl PerformanceOptimizationValidator {
         Ok(start.elapsed())
     }
     
+    /// Measure Baseline Memory Usage
     async fn measure_baseline_memory_usage(&self) -> Result<usize> {
         // In a real implementation, this would use system memory measurement
         Ok(100 * 1024 * 1024) // 100MB simulated baseline
     }
     
+    /// Measure Optimized Memory Usage
     async fn measure_optimized_memory_usage(&self) -> Result<usize> {
         // In a real implementation, this would measure actual memory usage
         Ok(75 * 1024 * 1024) // 75MB simulated optimized
@@ -277,12 +285,14 @@ impl PerformanceOptimizationValidator {
     
     // ==================== MEMORY ESTIMATION ====================
     
+    /// Estimate Arc Dyn Memory Savings
     fn estimate_arc_dyn_memory_savings(&self) -> usize {
         // Estimate memory saved by eliminating Arc<dyn> patterns
         // Arc overhead + vtable overhead per instance
         177 * (std::mem::size_of::<std::sync::Arc<()>>() + std::mem::size_of::<usize>() * 2)
     }
     
+    /// Estimate Config Memory Savings
     fn estimate_config_memory_savings(&self) -> usize {
         // Estimate memory saved by consolidating config structs
         // Average config struct size * number of eliminated structs
@@ -294,49 +304,77 @@ impl PerformanceOptimizationValidator {
 
 /// Performance metrics for a specific operation
 #[derive(Debug, Clone)]
+/// Performancemetrics
 pub struct PerformanceMetrics {
+    /// Duration
     pub duration: Duration,
+    /// Memory Used
     pub memory_used: usize,
+    /// Allocations
     pub allocations: usize,
+    /// Cpu Cycles
     pub cpu_cycles: u64,
 }
 
 /// Optimization target with expected improvements
 #[derive(Debug, Clone)]
+/// Optimizationtarget
 pub struct OptimizationTarget {
+    /// Name
     pub name: String,
+    /// Expected Improvement Percentage
     pub expected_improvement_percentage: f64,
+    /// Expected Memory Reduction
     pub expected_memory_reduction: usize,
+    /// Critical
     pub critical: bool,
 }
 
 /// Result of a single optimization validation
 #[derive(Debug, Clone)]
+/// Optimizationresult
 pub struct OptimizationResult {
+    /// Name
     pub name: String,
+    /// Baseline Duration
     pub baseline_duration: Duration,
+    /// Optimized Duration
     pub optimized_duration: Duration,
+    /// Improvement Percentage
     pub improvement_percentage: f64,
+    /// Memory Saved Bytes
     pub memory_saved_bytes: usize,
+    /// Target Met
     pub target_met: bool,
+    /// Validation Duration
     pub validation_duration: Duration,
 }
 
 /// Benchmark result for performance comparison
 #[derive(Debug, Clone)]
+/// Benchmarkresult
 pub struct BenchmarkResult {
+    /// Name
     pub name: String,
+    /// Metrics
     pub metrics: PerformanceMetrics,
+    /// Timestamp
     pub timestamp: std::time::SystemTime,
 }
 
 /// Complete validation report
 #[derive(Debug)]
+/// Validationreport
 pub struct ValidationReport {
+    /// Results
     pub results: HashMap<String, OptimizationResult>,
+    /// Overall Success
     pub overall_success: bool,
+    /// Total Improvement
     pub total_improvement: f64,
+    /// Total Memory Saved
     pub total_memory_saved: usize,
+    /// Validation Timestamp
     pub validation_timestamp: std::time::SystemTime,
 }
 
@@ -352,6 +390,7 @@ impl ValidationReport {
         }
     }
     
+    /// Add Result
     pub fn add_result(&mut self, name: &str, result: OptimizationResult) {
         self.total_improvement += result.improvement_percentage;
         self.total_memory_saved += result.memory_saved_bytes;
@@ -361,6 +400,7 @@ impl ValidationReport {
         self.overall_success = self.results.values().all(|r| r.target_met);
     }
     
+    /// Print Summary
     pub fn print_summary(&self) {
         println!("🚀 PERFORMANCE OPTIMIZATION VALIDATION REPORT");
         println!("================================================");

@@ -20,6 +20,7 @@ pub fn mcp_connection_error(message: &str) -> NestGateError {
     }))
 }
 
+/// Protocol Error
 pub fn protocol_error(message: &str, method: Option<&str>) -> NestGateError {
     NestGateError::Internal(Box::new(InternalErrorDetails {
         message: format!("MCP Protocol Error: {message} (method: {method:?})"),
@@ -75,12 +76,16 @@ pub fn transport_error(message: &str) -> NestGateError {
 
 // Extension trait for MCP-specific error handling
 pub trait McpErrorExt {
+    /// Extract Mcp Context
     fn extract_mcp_context(&self) -> Option<String>;
+    /// Extract Session Id
     fn extract_session_id(&self) -> Option<String>;
+    /// Extract Method
     fn extract_method(&self) -> Option<String>;
 }
 
 impl McpErrorExt for NestGateError {
+    /// Extract Mcp Context
     fn extract_mcp_context(&self) -> Option<String> {
         match self {
             NestGateError::Internal(details) if details.component == "nestgate-mcp" => {
@@ -93,6 +98,7 @@ impl McpErrorExt for NestGateError {
         }
     }
 
+    /// Extract Session Id
     fn extract_session_id(&self) -> Option<String> {
         match self {
             NestGateError::Internal(details) => details.location.clone(),
@@ -100,6 +106,7 @@ impl McpErrorExt for NestGateError {
         }
     }
 
+    /// Extract Method
     fn extract_method(&self) -> Option<String> {
         match self {
             NestGateError::Internal(details) => details.location.clone(),
@@ -126,29 +133,47 @@ pub fn extract_method(error: &NestGateError) -> Option<String> {
 
 // Simplified data structures for MCP context (if needed)
 #[derive(Debug, Clone)]
+/// Mcperrordata
 pub struct McpErrorData {
+    /// Message Type
     pub message_type: String,
+    /// Protocol Version
     pub protocol_version: Option<String>,
+    /// Message identifier
     pub message_id: Option<String>,
+    /// Session Info
     pub session_info: Option<McpSessionInfo>,
+    /// Transport Info
     pub transport_info: Option<McpTransportInfo>,
 }
 
 #[derive(Debug, Clone)]
+/// Mcpsessioninfo
 pub struct McpSessionInfo {
+    /// Session identifier
     pub session_id: String,
+    /// Client Info
     pub client_info: Option<HashMap<String, String>>,
+    /// Server Info
     pub server_info: Option<HashMap<String, String>>,
+    /// Established At
     pub established_at: SystemTime,
+    /// Count of message
     pub message_count: u64,
 }
 
 #[derive(Debug, Clone)]
+/// Mcptransportinfo
 pub struct McpTransportInfo {
+    /// Transport Type
     pub transport_type: String,
+    /// Local Endpoint
     pub local_endpoint: Option<String>,
+    /// Remote Endpoint
     pub remote_endpoint: Option<String>,
+    /// Connection identifier
     pub connection_id: Option<String>,
+    /// Established At
     pub established_at: SystemTime,
 }
 

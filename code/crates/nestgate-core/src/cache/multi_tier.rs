@@ -8,6 +8,7 @@ use tokio::sync::RwLock;
 
 // Type aliases for complex cache types
 pub type CacheProviderBox = Box<dyn CacheProvider<String, Vec<u8>>>;
+/// Type alias for Cachedatamap
 pub type CacheDataMap = Arc<RwLock<HashMap<String, Vec<u8>>>>;
 
 /// Cache provider trait for different storage tiers
@@ -32,6 +33,7 @@ pub trait CacheProvider<K, V>: Send + Sync {
 
 /// Simple cache configuration
 #[derive(Debug, Clone)]
+/// Configuration for SimpleCache
 pub struct SimpleCacheConfig {
     /// Maximum cache size in bytes
     pub max_size: usize,
@@ -60,6 +62,7 @@ pub struct SimpleCacheConfig {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for MultiTierCache
 pub struct MultiTierCacheConfig {
     /// Hot tier configuration (fastest access)
     pub hot_tier_config: SimpleCacheConfig,
@@ -281,6 +284,7 @@ impl MultiTierCache {
 
 /// Statistics for multi-tier cache performance
 #[derive(Debug, Clone)]
+/// Multitiercachestats
 pub struct MultiTierCacheStats {
     /// Number of hits in hot tier
     pub hot_tier_hits: u64,
@@ -319,6 +323,7 @@ struct InMemoryCache {
     data: Arc<RwLock<HashMap<String, Vec<u8>>>>,
 }
 impl InMemoryCache {
+    /// Creates a new instance
     fn new() -> Self {
         Self {
             data: Arc::new(RwLock::new(HashMap::new())),
@@ -328,30 +333,36 @@ impl InMemoryCache {
 
 #[async_trait::async_trait]
 impl CacheProvider<String, Vec<u8>> for InMemoryCache {
+    /// Set
     async fn set(&self, key: String, value: Vec<u8>) -> Result<()> {
         self.data.write().await.insert(key, value);
         Ok(())
     }
 
+    /// Get
     async fn get(&self, key: &str) -> Result<Option<Vec<u8>>> {
         Ok(self.data.read().await.get(key).cloned())
     }
 
+    /// Remove
     async fn remove(&self, key: &str) -> Result<bool> {
         Ok(self.data.write().await.remove(key).is_some())
     }
 
+    /// Clear
     async fn clear(&self) -> Result<()> {
         self.data.write().await.clear();
         Ok(())
     }
 
+    /// Size
     async fn size(&self) -> Result<usize> {
         Ok(self.data.read().await.len())
     }
 }
 
 impl Default for MultiTierCacheConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             hot_tier_config: SimpleCacheConfig {
@@ -384,6 +395,7 @@ impl Default for MultiTierCacheConfig {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Multitiercacheconfigcanonical
 pub type MultiTierCacheConfigCanonical =
     crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 

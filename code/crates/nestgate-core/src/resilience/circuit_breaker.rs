@@ -9,6 +9,7 @@ use tokio::sync::RwLock;
 
 /// Circuit breaker states
 #[derive(Debug, Clone, PartialEq)]
+/// Circuitbreakerstate
 pub enum CircuitBreakerState {
     /// Closed: Normal operation, requests pass through
     Closed,
@@ -19,6 +20,7 @@ pub enum CircuitBreakerState {
 }
 /// Circuit breaker configuration
 #[derive(Debug, Clone)]
+/// Configuration for CircuitBreaker
 pub struct CircuitBreakerConfig {
     /// Failure threshold to trip the circuit
     pub failure_threshold: u32,
@@ -34,6 +36,7 @@ pub struct CircuitBreakerConfig {
     pub time_window: Duration,
 }
 impl Default for CircuitBreakerConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             failure_threshold: 5,
@@ -48,6 +51,7 @@ impl Default for CircuitBreakerConfig {
 
 /// Circuit breaker implementation with idiomatic error handling
 #[derive(Debug, Clone)]
+/// Circuitbreaker
 pub struct CircuitBreaker {
     name: String,
     config: CircuitBreakerConfig,
@@ -55,6 +59,7 @@ pub struct CircuitBreaker {
 }
 /// Circuit breaker error types
 #[derive(Debug, thiserror::Error)]
+/// Errors that can occur during CircuitBreaker operations
 pub enum CircuitBreakerError {
     #[error("Circuit breaker '{name}' is open - requests blocked")]
     CircuitOpen { name: String },
@@ -66,6 +71,7 @@ pub enum CircuitBreakerError {
 }
 
 impl From<CircuitBreakerError> for NestGateError {
+    /// From
     fn from(err: CircuitBreakerError) -> Self {
         match err {
             CircuitBreakerError::CircuitOpen { name } => {
@@ -108,12 +114,19 @@ struct RequestRecord {
 
 /// Circuit breaker metrics
 #[derive(Debug, Clone)]
+/// Circuitbreakermetrics
 pub struct CircuitBreakerMetrics {
+    /// Total Requests
     pub total_requests: u64,
+    /// Successful Requests
     pub successful_requests: u64,
+    /// Failed Requests
     pub failed_requests: u64,
+    /// Count of trip
     pub trip_count: u64,
+    /// Current State
     pub current_state: CircuitBreakerState,
+    /// Last Trip Time
     pub last_trip_time: Option<Instant>,
 }
 impl CircuitBreaker {
@@ -426,14 +439,23 @@ impl CircuitBreaker {
 
 /// Detailed circuit breaker status
 #[derive(Debug, Clone)]
+/// Circuitbreakerstatus
 pub struct CircuitBreakerStatus {
+    /// Name
     pub name: String,
+    /// State
     pub state: CircuitBreakerState,
+    /// Count of failure
     pub failure_count: u32,
+    /// Count of success
     pub success_count: u32,
+    /// Recent Failure Rate
     pub recent_failure_rate: f64,
+    /// Total Requests
     pub total_requests: u64,
+    /// Last Failure Time
     pub last_failure_time: Option<Instant>,
+    /// Metrics
     pub metrics: CircuitBreakerMetrics,
 }
 #[cfg(test)]

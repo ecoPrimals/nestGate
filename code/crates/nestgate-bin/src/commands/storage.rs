@@ -1,3 +1,5 @@
+//! Storage module
+
 use nestgate_core::error::{Result as CoreResult, NestGateUnifiedError};
 use tracing::{info, warn, error};
 
@@ -181,18 +183,21 @@ impl StorageManager {
         ])
     }
 
+    /// Creates  Storage Backend
     async fn create_storage_backend(&self, name: &str, size: &str) -> CoreResult<(), NestGateUnifiedError> {
         // Production implementation would create actual storage backend
         info!("Creating storage backend '{}' with size {}", name, size);
         Ok(())
     }
 
+    /// Deletes  Storage Backend
     async fn delete_storage_backend(&self, name: &str) -> CoreResult<(), NestGateUnifiedError> {
         // Production implementation would delete actual storage backend
         info!("Deleting storage backend '{}'", name);
         Ok(())
     }
 
+    /// Gets Storage Status
     async fn get_storage_status(&self, name: &str) -> CoreResult<StorageStatus, NestGateUnifiedError> {
         // Production implementation would query actual storage status
         Ok(StorageStatus {
@@ -206,6 +211,7 @@ impl StorageManager {
 }
 
 impl Default for StorageManager {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

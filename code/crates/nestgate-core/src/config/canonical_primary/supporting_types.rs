@@ -12,6 +12,7 @@ use std::time::Duration;
 
 /// Monitoring and observability configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Monitoring
 pub struct MonitoringConfig {
     /// Enable monitoring
     pub enabled: bool,
@@ -27,6 +28,7 @@ pub struct MonitoringConfig {
     pub custom_settings: HashMap<String, serde_json::Value>,
 }
 impl Default for MonitoringConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -41,6 +43,7 @@ impl Default for MonitoringConfig {
 
 /// MCP (Model Context Protocol) configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Mcp
 pub struct McpConfig {
     /// Enable MCP protocol
     pub enabled: bool,
@@ -54,6 +57,7 @@ pub struct McpConfig {
     pub protocol_settings: HashMap<String, serde_json::Value>,
 }
 impl Default for McpConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: false,
@@ -67,6 +71,7 @@ impl Default for McpConfig {
 
 /// File system monitor configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for FsMonitor
 pub struct FsMonitorConfig {
     /// Enable file system monitoring
     pub enabled: bool,
@@ -77,6 +82,7 @@ pub struct FsMonitorConfig {
     pub event_settings: HashMap<String, serde_json::Value>,
 }
 impl Default for FsMonitorConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: false,
@@ -88,6 +94,7 @@ impl Default for FsMonitorConfig {
 
 /// NAS configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for Nas
 pub struct NasConfig {
     /// Enable NAS functionality
     pub enabled: bool,
@@ -100,6 +107,7 @@ pub struct NasConfig {
 }
 /// NAS share configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Nasshare
 pub struct NasShare {
     /// Share name
     pub name: String,
@@ -112,6 +120,7 @@ pub struct NasShare {
 
 /// Middleware configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Middleware
 pub struct MiddlewareConfig {
     /// Enable middleware
     pub enabled: bool,
@@ -123,6 +132,7 @@ pub struct MiddlewareConfig {
     pub response_settings: HashMap<String, serde_json::Value>,
 }
 impl Default for MiddlewareConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,

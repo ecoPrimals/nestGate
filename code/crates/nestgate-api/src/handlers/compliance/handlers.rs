@@ -2,6 +2,8 @@
 // Compliance API handlers
 //
 
+//! Handlers module
+
 use axum::{
     extract::{Query, State},
     http::StatusCode,

@@ -5,6 +5,8 @@
 // the BYOB (Bring Your Own Biome) system, allowing users to bring their own
 // development environments and data.
 
+//! Byob module
+
 use crate::manager::ZfsManager;
 use anyhow::Result;
 use nestgate_core::canonical_types::StorageTier as CoreStorageTier;
@@ -24,6 +26,7 @@ pub struct ByobManager {
 }
 /// BYOB storage request from orchestration module
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for ByobStorage operation
 pub struct ByobStorageRequest {
     /// Request ID for tracking
     pub request_id: String,
@@ -40,6 +43,7 @@ pub struct ByobStorageRequest {
 }
 /// BYOB storage response
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for ByobStorage operation
 pub struct ByobStorageResponse {
     /// Request ID that this response corresponds to
     pub request_id: String,

@@ -7,6 +7,7 @@ use std::path::PathBuf;
 
 /// Security configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Security
 pub struct SecurityConfig {
     /// Enable encryption metadata tracking (encryption handled by external providers)
     /// Note: `NestGate` tracks encryption state but does not perform encryption itself
@@ -38,6 +39,7 @@ pub struct SecurityConfig {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for KeyManagement
 pub struct KeyManagementConfig {
     /// Key storage location
     pub key_storage_path: PathBuf,
@@ -66,6 +68,7 @@ pub struct KeyManagementConfig {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for AccessControl
 pub struct AccessControlConfig {
     /// Default permissions for new datasets
     pub default_permissions: String,
@@ -75,6 +78,7 @@ pub struct AccessControlConfig {
     pub group_rules: HashMap<String, Vec<String>>,
 }
 impl Default for SecurityConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enable_encryption: false,
@@ -86,6 +90,7 @@ impl Default for SecurityConfig {
 }
 
 impl Default for KeyManagementConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             key_storage_path: PathBuf::from("/etc/nestgate/zfs/keys"),
@@ -111,6 +116,7 @@ impl KeyManagementConfig {
 }
 
 impl Default for AccessControlConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             default_permissions: "755".to_string(),
@@ -170,6 +176,7 @@ impl SecurityConfig {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Accesscontrolconfigcanonical
 pub type AccessControlConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
@@ -186,6 +193,7 @@ pub type AccessControlConfigCanonical =
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Keymanagementconfigcanonical
 pub type KeyManagementConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 

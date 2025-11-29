@@ -8,6 +8,8 @@
 // - `zero_copy_ops`: Zero-copy storage operations
 // - `enterprise_ops`: Advanced enterprise features (snapshots, replication, etc.)
 
+//! Backend module
+
 mod core;
 // **MODULARIZED OPERATIONS** - Split from 934-line monolithic file
 mod ops;

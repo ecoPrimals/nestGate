@@ -4,6 +4,7 @@
 use serde::{Deserialize, Serialize};
 /// Unified access types for consistent permission management
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+/// Types of UnifiedAccess
 pub enum UnifiedAccessType {
     /// Read-only access
     Read,
@@ -19,6 +20,7 @@ pub enum UnifiedAccessType {
     None,
 }
 impl Default for UnifiedAccessType {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Read
     }
@@ -48,6 +50,7 @@ impl UnifiedAccessType {
 
 /// Access permission levels for different resource types
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Accesslevel
 pub enum AccessLevel {
     /// Public access - no authentication required
     Public,
@@ -59,6 +62,7 @@ pub enum AccessLevel {
     Restricted,
 }
 impl Default for AccessLevel {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Authenticated
     }

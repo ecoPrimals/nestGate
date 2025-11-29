@@ -15,6 +15,7 @@ pub use crate::canonical_types::service::ServiceConfig;
 
 /// Operating mode for NestGate
 #[derive(Debug, Clone, PartialEq)]
+/// Operationmode
 pub enum OperationMode {
     /// Standalone mode: Direct networking, self-contained
     Standalone,
@@ -27,6 +28,7 @@ pub enum OperationMode {
 /// **MODERNIZED**: Simplified structure - removed deprecated NetworkConfig
 /// For comprehensive network configuration, use `config::canonical_primary::domains::network::CanonicalNetworkConfig`
 #[derive(Debug, Clone)]
+/// Environment
 pub struct Environment {
     /// Current operation mode
     pub mode: OperationMode,
@@ -44,6 +46,7 @@ pub struct Environment {
     pub external_services: HashMap<String, String>,
 }
 impl Default for Environment {
+    /// Returns the default instance
     fn default() -> Self {
         Self::detect()
     }

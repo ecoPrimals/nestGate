@@ -4,15 +4,23 @@ use std::collections::HashMap;
 
 /// Supported network protocols
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+/// Protocol
 pub enum Protocol {
+    /// Http
     Http,
+    /// Https
     Https,
+    /// Tcp
     Tcp,
+    /// Udp
     Udp,
+    /// Websocket
     Websocket,
+    /// Grpc
     Grpc,
 }
 impl std::fmt::Display for Protocol {
+    /// Fmt
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Protocol::Http => write!(f, "HTTP"),
@@ -42,10 +50,15 @@ impl std::fmt::Display for Protocol {
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for Protocol
 pub struct ProtocolConfig {
+    /// Protocol
     pub protocol: Protocol,
+    /// Port
     pub port: u16,
+    /// Whether this feature is enabled
     pub enabled: bool,
+    /// Options
     pub options: HashMap<String, String>,
 }
 /// Protocol manager
@@ -104,6 +117,7 @@ impl ProtocolManager {
 }
 
 impl Default for ProtocolManager {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -118,6 +132,7 @@ impl Default for ProtocolManager {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Protocolconfigcanonical
 pub type ProtocolConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using ProtocolConfig (the deprecated struct) for now.

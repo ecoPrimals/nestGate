@@ -36,6 +36,7 @@ use std::sync::{Arc, OnceLock};
 
 /// Network configuration constants with environment override support
 #[derive(Debug, Clone)]
+/// Networkconstants
 pub struct NetworkConstants {
     // Hosts
     api_host: String,
@@ -63,6 +64,7 @@ pub struct NetworkConstants {
 }
 
 impl Default for NetworkConstants {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             // Hosts (default to localhost for security)
@@ -103,12 +105,15 @@ impl NetworkConstants {
     pub fn api_host(&self) -> &str {
         &self.api_host
     }
+    /// Metrics Host
     pub fn metrics_host(&self) -> &str {
         &self.metrics_host
     }
+    /// Health Host
     pub fn health_host(&self) -> &str {
         &self.health_host
     }
+    /// Admin Host
     pub fn admin_host(&self) -> &str {
         &self.admin_host
     }
@@ -117,27 +122,35 @@ impl NetworkConstants {
     pub fn api_port(&self) -> u16 {
         self.api_port
     }
+    /// Http Port
     pub fn http_port(&self) -> u16 {
         self.http_port
     }
+    /// Https Port
     pub fn https_port(&self) -> u16 {
         self.https_port
     }
+    /// Websocket Port
     pub fn websocket_port(&self) -> u16 {
         self.websocket_port
     }
+    /// Grpc Port
     pub fn grpc_port(&self) -> u16 {
         self.grpc_port
     }
+    /// Metrics Port
     pub fn metrics_port(&self) -> u16 {
         self.metrics_port
     }
+    /// Prometheus Port
     pub fn prometheus_port(&self) -> u16 {
         self.prometheus_port
     }
+    /// Health Port
     pub fn health_port(&self) -> u16 {
         self.health_port
     }
+    /// Admin Port
     pub fn admin_port(&self) -> u16 {
         self.admin_port
     }
@@ -146,15 +159,19 @@ impl NetworkConstants {
     pub fn bind_address(&self) -> &str {
         &self.bind_address
     }
+    /// Localhost Ipv4
     pub fn localhost_ipv4(&self) -> &str {
         &self.localhost_ipv4
     }
+    /// Localhost Ipv6
     pub fn localhost_ipv6(&self) -> &str {
         &self.localhost_ipv6
     }
+    /// Bind All Ipv4
     pub fn bind_all_ipv4(&self) -> &str {
         &self.bind_all_ipv4
     }
+    /// Bind All Ipv6
     pub fn bind_all_ipv6(&self) -> &str {
         &self.bind_all_ipv6
     }
@@ -164,18 +181,22 @@ impl NetworkConstants {
         format!("http://{}:{}", self.api_host, self.api_port)
     }
 
+    /// Api Bind Address
     pub fn api_bind_address(&self) -> String {
         format!("{}:{}", self.bind_address, self.api_port)
     }
 
+    /// Health Url
     pub fn health_url(&self) -> String {
         format!("http://{}:{}", self.health_host, self.health_port)
     }
 
+    /// Metrics Url
     pub fn metrics_url(&self) -> String {
         format!("http://{}:{}", self.metrics_host, self.metrics_port)
     }
 
+    /// Websocket Url
     pub fn websocket_url(&self) -> String {
         format!("ws://{}:{}/ws", self.api_host, self.websocket_port)
     }
@@ -187,6 +208,7 @@ impl NetworkConstants {
 
 /// Storage and database configuration constants
 #[derive(Debug, Clone)]
+/// Storageconstants
 pub struct StorageConstants {
     // Database
     postgres_host: String,
@@ -212,6 +234,7 @@ pub struct StorageConstants {
 }
 
 impl Default for StorageConstants {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             // PostgreSQL
@@ -250,15 +273,19 @@ impl StorageConstants {
     pub fn postgres_host(&self) -> &str {
         &self.postgres_host
     }
+    /// Postgres Port
     pub fn postgres_port(&self) -> u16 {
         self.postgres_port
     }
+    /// Postgres Database
     pub fn postgres_database(&self) -> &str {
         &self.postgres_database
     }
+    /// Postgres Max Connections
     pub fn postgres_max_connections(&self) -> u32 {
         self.postgres_max_connections
     }
+    /// Postgres Url
     pub fn postgres_url(&self) -> String {
         format!(
             "postgresql://{}:{}/{}",
@@ -270,12 +297,15 @@ impl StorageConstants {
     pub fn redis_host(&self) -> &str {
         &self.redis_host
     }
+    /// Redis Port
     pub fn redis_port(&self) -> u16 {
         self.redis_port
     }
+    /// Redis Max Connections
     pub fn redis_max_connections(&self) -> u32 {
         self.redis_max_connections
     }
+    /// Redis Url
     pub fn redis_url(&self) -> String {
         format!("redis://{}:{}", self.redis_host, self.redis_port)
     }
@@ -284,12 +314,15 @@ impl StorageConstants {
     pub fn zfs_pool_name(&self) -> &str {
         &self.zfs_pool_name
     }
+    /// Zfs Dataset Prefix
     pub fn zfs_dataset_prefix(&self) -> &str {
         &self.zfs_dataset_prefix
     }
+    /// Zfs Compression
     pub fn zfs_compression(&self) -> &str {
         &self.zfs_compression
     }
+    /// Zfs Dedup
     pub fn zfs_dedup(&self) -> bool {
         self.zfs_dedup
     }
@@ -298,9 +331,11 @@ impl StorageConstants {
     pub fn data_dir(&self) -> &str {
         &self.data_dir
     }
+    /// Cache Dir
     pub fn cache_dir(&self) -> &str {
         &self.cache_dir
     }
+    /// Log Dir
     pub fn log_dir(&self) -> &str {
         &self.log_dir
     }
@@ -312,6 +347,7 @@ impl StorageConstants {
 
 /// Performance tuning constants
 #[derive(Debug, Clone)]
+/// Performanceconstants
 pub struct PerformanceConstants {
     // Connections
     max_connections: usize,
@@ -339,6 +375,7 @@ pub struct PerformanceConstants {
 }
 
 impl Default for PerformanceConstants {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             // Connections
@@ -379,6 +416,7 @@ impl PerformanceConstants {
     pub fn max_connections(&self) -> usize {
         self.max_connections
     }
+    /// Connection Pool Size
     pub fn connection_pool_size(&self) -> usize {
         self.connection_pool_size
     }
@@ -387,12 +425,15 @@ impl PerformanceConstants {
     pub fn connection_timeout(&self) -> std::time::Duration {
         std::time::Duration::from_millis(self.connection_timeout_ms)
     }
+    /// Request Timeout
     pub fn request_timeout(&self) -> std::time::Duration {
         std::time::Duration::from_millis(self.request_timeout_ms)
     }
+    /// Idle Timeout
     pub fn idle_timeout(&self) -> std::time::Duration {
         std::time::Duration::from_millis(self.idle_timeout_ms)
     }
+    /// Keepalive Interval
     pub fn keepalive_interval(&self) -> std::time::Duration {
         std::time::Duration::from_millis(self.keepalive_interval_ms)
     }
@@ -401,9 +442,11 @@ impl PerformanceConstants {
     pub fn max_retry_attempts(&self) -> u32 {
         self.max_retry_attempts
     }
+    /// Retry Delay
     pub fn retry_delay(&self) -> std::time::Duration {
         std::time::Duration::from_millis(self.retry_delay_ms)
     }
+    /// Retry Backoff Multiplier
     pub fn retry_backoff_multiplier(&self) -> f32 {
         self.retry_backoff_multiplier
     }
@@ -412,9 +455,11 @@ impl PerformanceConstants {
     pub fn network_buffer_size(&self) -> usize {
         self.network_buffer_size
     }
+    /// Disk Buffer Size
     pub fn disk_buffer_size(&self) -> usize {
         self.disk_buffer_size
     }
+    /// Memory Pool Size
     pub fn memory_pool_size(&self) -> usize {
         self.memory_pool_size
     }
@@ -423,6 +468,7 @@ impl PerformanceConstants {
     pub fn worker_threads(&self) -> usize {
         self.worker_threads
     }
+    /// Async Tasks Limit
     pub fn async_tasks_limit(&self) -> usize {
         self.async_tasks_limit
     }
@@ -434,6 +480,7 @@ impl PerformanceConstants {
 
 /// Security and authentication constants
 #[derive(Debug, Clone)]
+/// Securityconstants
 pub struct SecurityConstants {
     // JWT
     jwt_secret: String,
@@ -456,6 +503,7 @@ pub struct SecurityConstants {
 }
 
 impl Default for SecurityConstants {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             // JWT
@@ -491,9 +539,11 @@ impl SecurityConstants {
     pub fn jwt_secret(&self) -> &str {
         &self.jwt_secret
     }
+    /// Jwt Expiration
     pub fn jwt_expiration(&self) -> std::time::Duration {
         std::time::Duration::from_secs(self.jwt_expiration_secs)
     }
+    /// Jwt Refresh Expiration
     pub fn jwt_refresh_expiration(&self) -> std::time::Duration {
         std::time::Duration::from_secs(self.jwt_refresh_expiration_secs)
     }
@@ -502,6 +552,7 @@ impl SecurityConstants {
     pub fn encryption_algorithm(&self) -> &str {
         &self.encryption_algorithm
     }
+    /// Key Size Bits
     pub fn key_size_bits(&self) -> u32 {
         self.key_size_bits
     }
@@ -510,12 +561,15 @@ impl SecurityConstants {
     pub fn tls_enabled(&self) -> bool {
         self.tls_enabled
     }
+    /// Tls Cert Path
     pub fn tls_cert_path(&self) -> &str {
         &self.tls_cert_path
     }
+    /// Tls Key Path
     pub fn tls_key_path(&self) -> &str {
         &self.tls_key_path
     }
+    /// Tls Ca Path
     pub fn tls_ca_path(&self) -> &str {
         &self.tls_ca_path
     }
@@ -524,6 +578,7 @@ impl SecurityConstants {
     pub fn rate_limit_requests_per_minute(&self) -> u32 {
         self.rate_limit_requests_per_minute
     }
+    /// Rate Limit Burst Size
     pub fn rate_limit_burst_size(&self) -> u32 {
         self.rate_limit_burst_size
     }

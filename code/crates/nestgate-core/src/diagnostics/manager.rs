@@ -181,6 +181,7 @@ impl DiagnosticsManager {
 }
 
 impl Default for DiagnosticsManager {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

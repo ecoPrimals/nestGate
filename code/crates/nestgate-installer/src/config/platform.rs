@@ -219,6 +219,7 @@ pub struct ResourceConstraints {
     pub network_limit: Option<String>,
 }
 impl Default for InstallationSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             mode: InstallMode::Standalone,
@@ -241,6 +242,7 @@ impl Default for InstallationSettings {
 }
 
 impl Default for ComponentSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             selected_components: ComponentSelection::default(),
@@ -253,6 +255,7 @@ impl Default for ComponentSettings {
 }
 
 impl Default for ComponentSelection {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             install_api: true,
@@ -271,6 +274,7 @@ impl Default for ComponentSelection {
 }
 
 impl Default for SystemIntegrationSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             install_as_service: true,
@@ -286,6 +290,7 @@ impl Default for SystemIntegrationSettings {
 }
 
 impl Default for PackageManagementSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             package_manager: PackageManagerType::Manual,
@@ -299,6 +304,7 @@ impl Default for PackageManagementSettings {
 }
 
 impl Default for SystemRequirements {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             supported_platforms: vec![
@@ -331,6 +337,7 @@ pub struct PostInstallSettings {
     pub start_services: bool,
 }
 impl Default for PostInstallSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             run_initial_setup: true,
@@ -352,6 +359,7 @@ pub struct DeploymentSettings {
     pub rollback_on_failure: bool,
 }
 impl Default for DeploymentSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             deployment_mode: DeploymentMode::SingleNode,

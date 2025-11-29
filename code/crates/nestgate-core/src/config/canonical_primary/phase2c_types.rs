@@ -14,6 +14,7 @@ use std::collections::HashMap;
 ///
 /// Defines the deployment environment for configuration validation and behavior
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+/// Environment
 pub enum Environment {
     /// Development environment - relaxed validation and debugging features
     Development,
@@ -28,12 +29,14 @@ pub enum Environment {
     Testing,
 }
 impl Default for Environment {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Development
     }
 }
 
 impl std::fmt::Display for Environment {
+    /// Fmt
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Environment::Development => write!(f, "development"),
@@ -45,8 +48,10 @@ impl std::fmt::Display for Environment {
 }
 
 impl std::str::FromStr for Environment {
+    /// Type alias for Err
     type Err = String;
 
+    /// Creates from Str
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
             "development" | "dev" => Ok(Environment::Development),
@@ -64,6 +69,7 @@ impl std::str::FromStr for Environment {
 ///
 /// Allows runtime overriding of configuration values
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configoverrides
 pub struct ConfigOverrides {
     /// Override the environment
     pub environment: Option<Environment>,
@@ -83,6 +89,7 @@ pub struct ConfigOverrides {
 
 /// **NETWORK CONFIGURATION OVERRIDES**
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Networkoverrides
 pub struct NetworkOverrides {
     /// Override API port
     pub api_port: Option<u16>,
@@ -98,6 +105,7 @@ pub struct NetworkOverrides {
 }
 /// **SECURITY CONFIGURATION OVERRIDES**
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Securityoverrides
 pub struct SecurityOverrides {
     /// Override TLS enabled state
     pub tls_enabled: Option<bool>,
@@ -113,6 +121,7 @@ pub struct SecurityOverrides {
 }
 /// **PERFORMANCE CONFIGURATION OVERRIDES**
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performanceoverrides
 pub struct PerformanceOverrides {
     /// Override maximum connections
     pub max_connections: Option<usize>,
@@ -128,6 +137,7 @@ pub struct PerformanceOverrides {
 }
 /// **OPTIMIZATION LEVEL**
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+/// Optimizationlevel
 pub enum OptimizationLevel {
     /// Minimal optimization - fastest compilation, slower runtime
     Debug,
@@ -142,6 +152,7 @@ pub enum OptimizationLevel {
     Size,
 }
 impl Default for OptimizationLevel {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Balanced
     }
@@ -153,6 +164,7 @@ impl Default for OptimizationLevel {
 ///
 /// Metadata about the configuration instance
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configmetadata
 pub struct ConfigMetadata {
     /// Configuration version
     pub version: String,
@@ -170,6 +182,7 @@ pub struct ConfigMetadata {
     pub additional_metadata: HashMap<String, String>,
 }
 impl Default for ConfigMetadata {
+    /// Returns the default instance
     fn default() -> Self {
         let now = std::time::SystemTime::now();
         Self {
@@ -184,6 +197,7 @@ impl Default for ConfigMetadata {
 
 /// **CONFIGURATION SOURCE**
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+/// Configsource
 pub enum ConfigSource {
     /// Default configuration
     Default,
@@ -209,6 +223,7 @@ pub enum ConfigSource {
 ///
 /// Runtime feature toggles for the configuration system
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Featureflags
 pub struct FeatureFlags {
     /// Enable experimental features
     pub experimental_features: bool,
@@ -229,6 +244,7 @@ pub struct FeatureFlags {
     pub custom_flags: HashMap<String, bool>,
 }
 impl Default for FeatureFlags {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             experimental_features: false,
@@ -290,6 +306,7 @@ impl FeatureFlags {
 ///
 /// Warning message from configuration validation
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Validationwarning
 pub struct ValidationWarning {
     /// Warning message
     pub message: String,
@@ -305,6 +322,7 @@ pub struct ValidationWarning {
 }
 /// **WARNING SEVERITY**
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+/// Warningseverity
 pub enum WarningSeverity {
     /// Low severity - informational
     Info,

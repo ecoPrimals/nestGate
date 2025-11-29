@@ -1,6 +1,8 @@
 //
 // Core data structures for snapshot information, operations, and statistics.
 
+//! Types module
+
 use crate::types::StorageTier;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -10,6 +12,7 @@ use super::operations::SnapshotOperationType;
 
 /// Snapshot metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Snapshotinfo
 pub struct SnapshotInfo {
     /// Snapshot name
     pub name: String,
@@ -40,6 +43,7 @@ pub struct SnapshotInfo {
 }
 /// Snapshot operation status
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Status values for SnapshotOperation
 pub enum SnapshotOperationStatus {
     /// Operation is queued
     Queued,
@@ -54,6 +58,7 @@ pub enum SnapshotOperationStatus {
 }
 /// Snapshot operation
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Snapshotoperation
 pub struct SnapshotOperation {
     /// Operation ID
     pub id: String,
@@ -78,6 +83,7 @@ pub struct SnapshotOperation {
 }
 /// Snapshot statistics
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Snapshotstatistics
 pub struct SnapshotStatistics {
     /// Total snapshots across all datasets
     pub total_snapshots: u64,

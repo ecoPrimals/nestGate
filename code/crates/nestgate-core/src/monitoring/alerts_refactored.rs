@@ -24,13 +24,19 @@ use tracing::{debug, error, info, warn};
 
 /// Alert severity levels with smart defaults
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+/// Alertseverity
 pub enum AlertSeverity {
+    /// Info
     Info,
+    /// Warning
     Warning,
+    /// Error
     Error,
+    /// Critical
     Critical,
 }
 impl SmartDefault for AlertSeverity {
+    /// Smart Default
     fn smart_default() -> Self {
         Self::Warning
     }
@@ -60,15 +66,23 @@ impl AlertSeverity {
 
 /// Threshold comparison operators with smart defaults
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Thresholdoperator
 pub enum ThresholdOperator {
+    /// Greaterthan
     GreaterThan,
+    /// Lessthan
     LessThan,
+    /// Greaterthanorequal
     GreaterThanOrEqual,
+    /// Lessthanorequal
     LessThanOrEqual,
+    /// Equal
     Equal,
+    /// Notequal
     NotEqual,
 }
 impl SmartDefault for ThresholdOperator {
+    /// Smart Default
     fn smart_default() -> Self {
         Self::GreaterThan
     }
@@ -76,6 +90,7 @@ impl SmartDefault for ThresholdOperator {
 
 /// Alert rule condition types with smart defaults
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Alertcondition
 pub enum AlertCondition {
     /// Threshold-based condition
     Threshold {
@@ -100,6 +115,7 @@ pub enum AlertCondition {
     Custom { expression: String },
 }
 impl SmartDefault for AlertCondition {
+    /// Smart Default
     fn smart_default() -> Self {
         Self::Threshold {
             metric: "cpu_usage".to_string(),
@@ -111,12 +127,17 @@ impl SmartDefault for AlertCondition {
 
 /// Time window for alert suppression
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Timewindow
 pub struct TimeWindow {
+    /// Start Hour
     pub start_hour: u8,
+    /// End Hour
     pub end_hour: u8,
+    /// Days Of Week
     pub days_of_week: Vec<u8>, // 0 = Sunday, 1 = Monday, etc.
 }
 impl SmartDefault for TimeWindow {
+    /// Smart Default
     fn smart_default() -> Self {
         Self {
             start_hour: 22,  // 10 PM
@@ -128,6 +149,7 @@ impl SmartDefault for TimeWindow {
 
 /// Alert suppression configuration with smart defaults
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Suppressionrule
 pub struct SuppressionRule {
     /// Don't alert during these time windows
     pub quiet_hours: Option<Vec<TimeWindow>>,
@@ -137,6 +159,7 @@ pub struct SuppressionRule {
     pub max_frequency: Option<Duration>,
 }
 impl SmartDefault for SuppressionRule {
+    /// Smart Default
     fn smart_default() -> Self {
         Self {
             quiet_hours: Some(vec![TimeWindow::smart_default()]),
@@ -148,6 +171,7 @@ impl SmartDefault for SuppressionRule {
 
 /// Alert rule definition with smart defaults and builder pattern support
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Alertrule
 pub struct AlertRule {
     /// Unique rule identifier
     pub id: String,
@@ -171,6 +195,7 @@ pub struct AlertRule {
     pub suppression: Option<SuppressionRule>,
 }
 impl SmartDefault for AlertRule {
+    /// Smart Default
     fn smart_default() -> Self {
         Self {
             id: format!("rule_{uuid::Uuid::new_v4(}").to_string()[..8].to_string()),
@@ -189,6 +214,7 @@ impl SmartDefault for AlertRule {
 
 /// Alert status with smart defaults
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Status values for Alert
 pub enum AlertStatus {
     /// Alert is active and firing
     Firing,
@@ -202,6 +228,7 @@ pub enum AlertStatus {
     Suppressed,
 }
 impl SmartDefault for AlertStatus {
+    /// Smart Default
     fn smart_default() -> Self {
         Self::Pending
     }
@@ -209,6 +236,7 @@ impl SmartDefault for AlertStatus {
 
 /// Active alert instance with smart defaults
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Alert
 pub struct Alert {
     /// Alert ID
     pub id: String,
@@ -232,6 +260,7 @@ pub struct Alert {
     pub notifications: Vec<DeliveryRecord>,
 }
 impl SmartDefault for Alert {
+    /// Smart Default
     fn smart_default() -> Self {
         let now = SystemTime::now();
         Self {
@@ -633,6 +662,7 @@ impl AlertManager {
 }
 
 impl Clone for AlertManager {
+    /// Clone
     fn clone(&self) -> Self {
         Self {
             rules: Arc::clone(&self.rules),
@@ -647,6 +677,7 @@ impl Clone for AlertManager {
 }
 
 impl SmartDefault for AlertManager {
+    /// Smart Default
     fn smart_default() -> Self {
         Self::new()
     }

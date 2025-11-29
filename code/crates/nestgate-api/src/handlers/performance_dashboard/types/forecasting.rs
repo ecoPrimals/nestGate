@@ -9,6 +9,7 @@ use std::time::SystemTime;
 ///
 /// Forecasting of future performance metrics and trends.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performanceforecast
 pub struct PerformanceForecast {
     /// Forecast horizon in days
     pub forecast_horizon_days: u32,
@@ -32,6 +33,7 @@ pub struct PerformanceForecast {
 ///
 /// Individual predicted performance metrics data point.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Predictedmetricspoint
 pub struct PredictedMetricsPoint {
     /// Timestamp for this prediction
     pub timestamp: SystemTime,
@@ -51,6 +53,7 @@ pub struct PredictedMetricsPoint {
 ///
 /// Confidence interval for predictions.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Confidenceinterval
 pub struct ConfidenceInterval {
     /// Metric name
     pub metric: String,
@@ -66,6 +69,7 @@ pub struct ConfidenceInterval {
 ///
 /// Forecast of capacity utilization.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Capacityforecast
 pub struct CapacityForecast {
     /// Current usage percentage
     pub current_usage_percentage: f64,
@@ -83,6 +87,7 @@ pub struct CapacityForecast {
 ///
 /// Data point showing capacity growth over time.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Growthpoint
 pub struct GrowthPoint {
     /// Timestamp
     pub timestamp: SystemTime,
@@ -94,6 +99,7 @@ pub struct GrowthPoint {
 ///
 /// The methodology used for performance forecasting.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Forecastmethodology
 pub enum ForecastMethodology {
     /// Linear regression based forecasting
     LinearRegression,

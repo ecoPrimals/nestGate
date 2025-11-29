@@ -21,6 +21,7 @@ use std::collections::HashMap;
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for Primal
 pub struct PrimalConfig {
     /// Unique instance identifier
     pub instance_id: String,
@@ -43,6 +44,7 @@ pub struct PrimalConfig {
 /// **⚠️ DEPRECATED**: Use `CanonicalNetworkConfig` from `nestgate_core::config::canonical_primary::domains::network`
 #[deprecated(since = "0.9.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Network
 pub struct NetworkConfig {
     /// Bind address
     pub bind_endpoint: String,
@@ -74,6 +76,7 @@ pub struct NetworkConfig {
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for Certificate
 pub struct CertificateConfig {
     /// Certificate file path
     pub cert_file: String,
@@ -86,6 +89,7 @@ pub struct CertificateConfig {
 }
 /// Certificate sources
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Certificatesource
 pub enum CertificateSource {
     /// File-based certificates
     File,
@@ -98,6 +102,7 @@ pub enum CertificateSource {
 }
 /// Network policy
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Networkpolicy
 pub struct NetworkPolicy {
     /// Policy name
     pub name: String,
@@ -110,6 +115,7 @@ pub struct NetworkPolicy {
 }
 /// Policy actions
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Policyaction
 pub enum PolicyAction {
     /// Allow the connection
     Allow,
@@ -122,6 +128,7 @@ pub enum PolicyAction {
 }
 /// Resource allocation configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Resourceallocation
 pub struct ResourceAllocation {
     /// Resource limits
     pub limits: ResourceLimits,
@@ -130,6 +137,7 @@ pub struct ResourceAllocation {
 }
 /// Resource limits
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Resourcelimits
 pub struct ResourceLimits {
     /// CPU limit in cores
     pub cpu_cores: Option<f64>,
@@ -142,6 +150,7 @@ pub struct ResourceLimits {
 }
 /// Resource requests
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Resourcerequests
 pub struct ResourceRequests {
     /// CPU request in cores
     pub cpu_cores: Option<f64>,
@@ -154,6 +163,7 @@ pub struct ResourceRequests {
 }
 /// Security settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Securitysettings
 pub struct SecuritySettings {
     /// Authentication policy
     pub auth_policy: AuthPolicy,
@@ -164,6 +174,7 @@ pub struct SecuritySettings {
 }
 /// Authentication policy
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Authpolicy
 pub struct AuthPolicy {
     /// Authentication methods
     pub methods: Vec<AuthMethod>,
@@ -174,6 +185,7 @@ pub struct AuthPolicy {
 }
 /// Authentication methods
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Authmethod
 pub enum AuthMethod {
     /// No authentication
     None,
@@ -190,6 +202,7 @@ pub enum AuthMethod {
 }
 /// Policy scope
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Policyscope
 pub enum PolicyScope {
     /// Global policy
     Global,
@@ -200,6 +213,7 @@ pub enum PolicyScope {
 }
 /// Encryption settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Encryptionsettings
 pub struct EncryptionSettings {
     /// Enable encryption at rest
     pub at_rest: bool,
@@ -210,6 +224,7 @@ pub struct EncryptionSettings {
 }
 /// Key management settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Keymanagementsettings
 pub struct KeyManagementSettings {
     /// Key management type
     pub key_type: KeyManagementType,
@@ -218,6 +233,7 @@ pub struct KeyManagementSettings {
 }
 /// Key management types
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of KeyManagement
 pub enum KeyManagementType {
     /// Internal key management
     Internal,
@@ -228,6 +244,7 @@ pub enum KeyManagementType {
 }
 /// Audit settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Auditsettings
 pub struct AuditSettings {
     /// Enable audit logging
     pub enabled: bool,
@@ -238,6 +255,7 @@ pub struct AuditSettings {
 }
 /// Audit levels
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Auditlevel
 pub enum AuditLevel {
     /// Minimal auditing
     Minimal,
@@ -250,6 +268,7 @@ pub enum AuditLevel {
 }
 /// Audit destinations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Auditdestination
 pub enum AuditDestination {
     /// Local file
     File(String),
@@ -268,6 +287,7 @@ pub enum AuditDestination {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Primalconfigcanonical
 pub type PrimalConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using PrimalConfig (the deprecated struct) for now.
@@ -284,6 +304,7 @@ pub type PrimalConfigCanonical = nestgate_core::config::canonical_primary::domai
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Certificateconfigcanonical
 pub type CertificateConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using CertificateConfig (the deprecated struct) for now.

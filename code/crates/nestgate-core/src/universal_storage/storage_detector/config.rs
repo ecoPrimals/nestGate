@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 
 /// Configuration for storage detection behavior
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Detection
 pub struct DetectionConfig {
     /// Whether to include virtual/loop devices
     pub include_virtual_devices: bool,
@@ -24,6 +25,7 @@ pub struct DetectionConfig {
     pub enable_deep_analysis: bool,
 }
 impl Default for DetectionConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             include_virtual_devices: false,

@@ -69,11 +69,13 @@ pub use secrets::create_workspace_secret;
 ///
 /// Central manager for all workspace operations and coordination.
 #[derive(Debug, Clone)]
+/// Manager for Workspace operations
 pub struct WorkspaceManager {
     // Implementation details hidden for brevity
 }
 
 impl Default for WorkspaceManager {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -82,6 +84,7 @@ impl Default for WorkspaceManager {
 impl WorkspaceManager {
     /// Create a new workspace manager instance
     #[must_use]
+    /// Fn
     pub const fn new() -> Self {
         Self {
             // Initialize with default configuration

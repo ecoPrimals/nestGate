@@ -11,6 +11,7 @@ use uuid::Uuid;
 /// Universal AI-First response format - ALL ENDPOINTS SHOULD USE THIS
 /// Based on the `EcoPrimals` AI-First Citizen API Standard
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for AIFirst operation
 pub struct AIFirstResponse<T> {
     /// Operation success status (machine-readable)
     pub success: bool,
@@ -41,6 +42,7 @@ pub struct AIFirstResponse<T> {
 
 /// AI-optimized error structure with automation hints
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Error type for AIFirst operations
 pub struct AIFirstError {
     /// Machine-readable error code (`UPPER_SNAKE_CASE`)
     pub code: String,
@@ -68,6 +70,7 @@ pub struct AIFirstError {
 
 /// AI-specific metadata for enhanced decision making
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Airesponsemetadata
 pub struct AIResponseMetadata {
     /// Service capabilities relevant to this response
     pub capabilities: Vec<String>,
@@ -89,6 +92,7 @@ pub struct AIResponseMetadata {
 
 /// Human interaction context for mixed AI-human workflows
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Humaninteractioncontext
 pub struct HumanInteractionContext {
     /// Whether human review is recommended
     pub requires_human_review: bool,
@@ -107,6 +111,7 @@ pub struct HumanInteractionContext {
 
 /// Suggested actions for AI agents
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Suggestedaction
 pub struct SuggestedAction {
     /// Action type identifier
     pub action_type: String,
@@ -129,6 +134,7 @@ pub struct SuggestedAction {
 // ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Aierrorcategory
 pub enum AIErrorCategory {
     /// Input validation errors
     Validation,
@@ -149,6 +155,7 @@ pub enum AIErrorCategory {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Retrystrategy
 pub enum RetryStrategy {
     /// No retry recommended
     None,
@@ -169,6 +176,7 @@ pub enum RetryStrategy {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Errorseverity
 pub enum ErrorSeverity {
     /// Low impact, informational
     Low,
@@ -181,6 +189,7 @@ pub enum ErrorSeverity {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Humanpriority
 pub enum HumanPriority {
     /// No human intervention needed
     None,
@@ -195,6 +204,7 @@ pub enum HumanPriority {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Resourceusage
 pub struct ResourceUsage {
     /// CPU utilization percentage
     pub cpu_percent: f64,
@@ -209,6 +219,7 @@ pub struct ResourceUsage {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performancemetrics
 pub struct PerformanceMetrics {
     /// Response latency percentiles
     pub latency_percentiles: HashMap<String, f64>,
@@ -221,6 +232,7 @@ pub struct PerformanceMetrics {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Dataquality
 pub struct DataQuality {
     /// Completeness score (0.0 - 1.0)
     pub completeness: f64,
@@ -235,6 +247,7 @@ pub struct DataQuality {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Cacheinfo
 pub struct CacheInfo {
     /// Whether response can be cached
     pub cacheable: bool,
@@ -247,6 +260,7 @@ pub struct CacheInfo {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Uihints
 pub struct UIHints {
     /// Suggested UI component type
     pub component_type: String,
@@ -399,6 +413,7 @@ impl AIFirstError {
 }
 
 impl Default for AIResponseMetadata {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             capabilities: vec![],
@@ -434,6 +449,7 @@ impl Default for AIResponseMetadata {
 }
 
 impl<T: Serialize> IntoResponse for AIFirstResponse<T> {
+    /// Into Response
     fn into_response(self) -> axum::response::Response {
         let status = if self.success {
             axum::http::StatusCode::OK
@@ -453,6 +469,7 @@ pub trait IntoAIFirstResponse<T> {
     fn into_ai_first(self, request_id: Uuid, processing_time_ms: u64) -> AIFirstResponse<T>;
 }
 impl<T> IntoAIFirstResponse<T> for Result<T, NestGateError> {
+    /// Into Ai First
     fn into_ai_first(self, request_id: Uuid, processing_time_ms: u64) -> AIFirstResponse<T> {
         match self {
             Ok(data) => AIFirstResponse::success(data, request_id, processing_time_ms),

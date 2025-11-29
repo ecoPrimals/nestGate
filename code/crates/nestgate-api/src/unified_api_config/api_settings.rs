@@ -6,6 +6,8 @@
 // Originally 902 lines, now split into focused modules under `settings/`.
 
 // Re-export all settings from the organized sub-modules
+//! Api Settings module
+
 pub use settings::*;
 
 // Declare the settings sub-module
