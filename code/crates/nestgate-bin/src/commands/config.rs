@@ -1,3 +1,5 @@
+//! Config module
+
 use tracing::info;
 
 use crate::cli::ConfigAction;
@@ -9,10 +11,12 @@ use crate::error::BinResult;
 pub struct ConfigManager {}
 
 impl ConfigManager {
+    /// Creates a new instance
     pub fn new() -> Self {
         Self {}
     }
 
+    /// Execute
     pub async fn execute(&mut self, action: ConfigAction) -> BinResult<(), NestGateUnifiedError> {
         match action {
             ConfigAction::Show => {
@@ -24,6 +28,7 @@ impl ConfigManager {
         }
     }
 
+    /// Show Config
     async fn show_config(&self) -> BinResult<(), NestGateUnifiedError> {
         info!("📄 Showing current configuration");
         
@@ -36,6 +41,7 @@ impl ConfigManager {
         Ok(())
     }
 
+    /// Validates  Config
     async fn validate_config(&self, path: &std::path::PathBuf) -> BinResult<(), NestGateUnifiedError> {
         info!("✅ Validating configuration file: {:?}", path);
         
@@ -47,6 +53,7 @@ impl ConfigManager {
 }
 
 impl Default for ConfigManager {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

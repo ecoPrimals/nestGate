@@ -19,11 +19,15 @@ use tracing::warn;
 // Removed unused tracing import
 /// ZFS command execution framework
 #[derive(Debug, Clone)]
+/// Zfscommand
 pub struct ZfsCommand {
+    /// Dry Run
     pub dry_run: bool,
+    /// Timeout Seconds
     pub timeout_seconds: u64,
 }
 impl Default for ZfsCommand {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             dry_run: false,
@@ -145,10 +149,15 @@ impl ZfsCommand {
 
 /// Result of a command execution
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Commandresult
 pub struct CommandResult {
+    /// Success
     pub success: bool,
+    /// Stdout
     pub stdout: String,
+    /// Stderr
     pub stderr: String,
+    /// Exit Code
     pub exit_code: i32,
 }
 impl CommandResult {
@@ -429,6 +438,7 @@ impl ZfsOperations {
 }
 
 impl Default for ZfsOperations {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -447,36 +457,58 @@ fn extract_scan_status(output: &str) -> String {
 
 /// ZFS Pool information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Zfspool
 pub struct ZfsPool {
+    /// Name
     pub name: String,
+    /// Size
     pub size: String,
+    /// Allocated
     pub allocated: String,
+    /// Free
     pub free: String,
+    /// Health
     pub health: String,
 }
 /// Pool status information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Poolstatus
 pub struct PoolStatus {
+    /// Name
     pub name: String,
+    /// State
     pub state: String,
+    /// Scan
     pub scan: String,
+    /// Errors
     pub errors: String,
+    /// Raw Output
     pub raw_output: String,
 }
 /// ZFS Dataset information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Zfsdataset
 pub struct ZfsDataset {
+    /// Name
     pub name: String,
+    /// Used
     pub used: String,
+    /// Available
     pub available: String,
+    /// Referenced
     pub referenced: String,
+    /// Mountpoint
     pub mountpoint: String,
 }
 /// ZFS Snapshot information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Zfssnapshot
 pub struct ZfsSnapshot {
+    /// Name
     pub name: String,
+    /// Used
     pub used: String,
+    /// Creation
     pub creation: String,
 }
 #[cfg(test)]

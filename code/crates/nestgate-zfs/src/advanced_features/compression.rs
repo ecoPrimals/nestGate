@@ -7,6 +7,7 @@ use tracing::debug;
 
 /// Compression analytics without AI recommendations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Compressionanalytics
 pub struct CompressionAnalytics {
     /// Current compression ratio
     pub compression_ratio: f64,
@@ -38,6 +39,7 @@ impl CompressionAnalytics {
         })
     }
 
+    /// Calculate Compression Ratio
     fn calculate_compression_ratio(data: &[u8]) -> f64 {
         // Simple compression ratio calculation
         let original_size = data.len() as f64;
@@ -45,6 +47,7 @@ impl CompressionAnalytics {
         original_size / compressed_size
     }
 
+    /// Calculate Efficiency
     fn calculate_efficiency(ratio: f64) -> f64 {
         // Efficiency calculation as percentage
         (ratio - 1.0) / ratio * 100.0

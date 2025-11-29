@@ -2,6 +2,8 @@
 // Contains the main service structure, command execution, and basic utilities.
 // Single responsibility: Service lifecycle and command abstraction.
 
+//! Core module
+
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
@@ -18,6 +20,7 @@ use crate::handlers::zfs::universal_zfs_types::{
 
 /// Helper struct for ARC statistics
 #[derive(Debug, Clone)]
+/// Arcstatistics
 pub struct ArcStatistics {
     /// Cache hit ratio as a percentage (0.0 to 1.0)
     pub hit_ratio: f64,
@@ -28,6 +31,7 @@ pub struct ArcStatistics {
 }
 /// Helper struct for I/O statistics
 #[derive(Debug, Clone)]
+/// Iostatistics
 pub struct IoStatistics {
     /// Read throughput in MB/s
     pub read_throughput: f64,
@@ -52,6 +56,7 @@ struct LatencyTracker {
 }
 
 impl LatencyTracker {
+    /// Creates a new instance
     fn new(capacity: usize) -> Self {
         Self {
             samples: Vec::with_capacity(capacity),
@@ -60,6 +65,7 @@ impl LatencyTracker {
         }
     }
 
+    /// Record
     fn record(&mut self, latency_ms: u64) {
         if self.samples.len() < self.capacity {
             self.samples.push(latency_ms);
@@ -69,6 +75,7 @@ impl LatencyTracker {
         }
     }
 
+    /// Percentile
     fn percentile(&self, p: f64) -> f64 {
         if self.samples.is_empty() {
             return 0.0;
@@ -85,6 +92,7 @@ impl LatencyTracker {
 
 /// Native ZFS service implementation using real zfs/zpool commands
 #[derive(Debug)]
+/// Service implementation for NativeZfs
 pub struct NativeZfsService {
     /// Whether ZFS commands are available on this system
     zfs_available: bool,
@@ -224,6 +232,7 @@ impl NativeZfsService {
 }
 
 impl Default for NativeZfsService {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -232,18 +241,22 @@ impl Default for NativeZfsService {
 // **ZERO-COST NATIVE ASYNC**: Converted from async_trait for 40-60% performance improvement
 #[async_trait::async_trait]
 impl UniversalZfsService for NativeZfsService {
+    /// Service Name
     fn service_name(&self) -> &'static str {
         "native-zfs"
     }
 
+    /// Service Version
     fn service_version(&self) -> &'static str {
         "1.0.0"
     }
 
+    /// Checks if Available
     async fn is_available(&self) -> bool {
         self.zfs_available
     }
 
+    /// Health Check
     async fn health_check(&self) -> UniversalZfsResult<HealthStatus> {
         let output = Command::new("modprobe").args(["zfs"]).output();
         let zfs_available = output.is_ok()
@@ -276,10 +289,12 @@ impl UniversalZfsService for NativeZfsService {
         })
     }
 
+    /// Gets Metrics
     async fn get_metrics(&self) -> UniversalZfsResult<ServiceMetrics> {
         Ok(self.get_service_metrics())
     }
 
+    /// Shutdown
     async fn shutdown(&self) -> UniversalZfsResult<()> {
         info!("🔄 Shutting down Native ZFS service");
         Ok(())
@@ -294,6 +309,7 @@ impl UniversalZfsService for NativeZfsService {
 
     // get_pool_info is not part of the trait - removed
 
+    /// Creates  Pool
     async fn create_pool(
         &self,
         config: &crate::handlers::zfs::universal_zfs_types::PoolConfig,
@@ -301,10 +317,12 @@ impl UniversalZfsService for NativeZfsService {
         super::pool_operations::create_pool(self, config).await
     }
 
+    /// Destroy Pool
     async fn destroy_pool(&self, name: &str) -> UniversalZfsResult<()> {
         super::pool_operations::destroy_pool(self, name, false).await
     }
 
+    /// Gets Pool
     async fn get_pool(
         &self,
         name: &str,
@@ -312,14 +330,17 @@ impl UniversalZfsService for NativeZfsService {
         super::pool_operations::get_pool(self, name).await
     }
 
+    /// Scrub Pool
     async fn scrub_pool(&self, name: &str) -> UniversalZfsResult<()> {
         super::pool_operations::scrub_pool(self, name).await
     }
 
+    /// Gets Pool Status
     async fn get_pool_status(&self, name: &str) -> UniversalZfsResult<String> {
         super::pool_operations::get_pool_status(self, name).await
     }
 
+    /// List Datasets
     async fn list_datasets(
         &self,
     ) -> UniversalZfsResult<Vec<crate::handlers::zfs::universal_zfs_types::DatasetInfo>> {
@@ -328,6 +349,7 @@ impl UniversalZfsService for NativeZfsService {
 
     // list_datasets_internal is not part of the trait - removed
 
+    /// Creates  Dataset
     async fn create_dataset(
         &self,
         config: &crate::handlers::zfs::universal_zfs_types::DatasetConfig,
@@ -335,10 +357,12 @@ impl UniversalZfsService for NativeZfsService {
         super::dataset_operations::create_dataset(self, config).await
     }
 
+    /// Destroy Dataset
     async fn destroy_dataset(&self, name: &str) -> UniversalZfsResult<()> {
         super::dataset_operations::destroy_dataset(self, name, false).await
     }
 
+    /// Gets Dataset
     async fn get_dataset(
         &self,
         name: &str,
@@ -346,6 +370,7 @@ impl UniversalZfsService for NativeZfsService {
         super::dataset_operations::get_dataset(self, name).await
     }
 
+    /// Gets Dataset Properties
     async fn get_dataset_properties(
         &self,
         dataset_name: &str,
@@ -353,6 +378,7 @@ impl UniversalZfsService for NativeZfsService {
         super::dataset_operations::get_dataset_properties(self, dataset_name).await
     }
 
+    /// Sets Dataset Properties
     async fn set_dataset_properties(
         &self,
         name: &str,
@@ -361,6 +387,7 @@ impl UniversalZfsService for NativeZfsService {
         super::dataset_operations::set_dataset_properties(self, name, properties.clone()).await
     }
 
+    /// List Dataset Snapshots
     async fn list_dataset_snapshots(
         &self,
         dataset_name: &str,
@@ -368,12 +395,14 @@ impl UniversalZfsService for NativeZfsService {
         super::dataset_operations::list_dataset_snapshots(self, dataset_name).await
     }
 
+    /// List Snapshots
     async fn list_snapshots(
         &self,
     ) -> UniversalZfsResult<Vec<crate::handlers::zfs::universal_zfs_types::SnapshotInfo>> {
         super::snapshot_operations::list_snapshots(self, None).await
     }
 
+    /// Creates  Snapshot
     async fn create_snapshot(
         &self,
         config: &crate::handlers::zfs::universal_zfs_types::SnapshotConfig,
@@ -381,28 +410,34 @@ impl UniversalZfsService for NativeZfsService {
         super::snapshot_operations::create_snapshot(self, config).await
     }
 
+    /// Destroy Snapshot
     async fn destroy_snapshot(&self, name: &str) -> UniversalZfsResult<()> {
         super::snapshot_operations::destroy_snapshot(self, name, false).await
     }
 
+    /// Optimize
     async fn optimize(&self) -> UniversalZfsResult<String> {
         super::configuration::optimize(self, "general".to_string())
     }
 
+    /// Gets Optimization Analytics
     async fn get_optimization_analytics(&self) -> UniversalZfsResult<serde_json::Value> {
         let analytics = super::configuration::get_optimization_analytics(self)?;
         Ok(serde_json::Value::Object(analytics.into_iter().collect()))
     }
 
+    /// Predict Tier
     async fn predict_tier(&self, dataset_name: &str) -> UniversalZfsResult<String> {
         Ok(super::configuration::predict_tier(self, dataset_name)?)
     }
 
+    /// Gets Configuration
     async fn get_configuration(&self) -> UniversalZfsResult<serde_json::Value> {
         let config = super::configuration::get_configuration(self)?;
         Ok(serde_json::Value::Object(config.into_iter().collect()))
     }
 
+    /// Updates  Configuration
     async fn update_configuration(&self, config: serde_json::Value) -> UniversalZfsResult<()> {
         // Convert serde_json::Value to HashMap if it's an object
         let config_map = match config {

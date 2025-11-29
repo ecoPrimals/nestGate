@@ -172,15 +172,18 @@ impl NCBILiveProvider {
 }
 
 impl DataCapability for NCBILiveProvider {
+    /// Capability Type
     fn capability_type(&self) -> &str {
         "genome_data"
     }
 
+    /// Can Handle
     async fn can_handle(&self, request: &DataRequest) -> Result<bool> {
         // Can handle genome data requests
         Ok(request.capability_type == "genome_data")
     }
 
+    /// Execute Request
     async fn execute_request(&self, request: &DataRequest) -> Result<DataResponse> {
         debug!("🚀 Executing NCBI live request for: {}", request.capability_type);
 
@@ -258,6 +261,7 @@ impl DataCapability for NCBILiveProvider {
         })
     }
 
+    /// Gets Metadata
     fn get_metadata(&self) -> HashMap<String, String> {
         let mut metadata = HashMap::new();
         metadata.insert("provider_name".to_string(), "NCBI".to_string());
@@ -272,6 +276,7 @@ impl DataCapability for NCBILiveProvider {
 }
 
 impl GenomeDataCapability for NCBILiveProvider {
+    /// Search Genomes
     async fn search_genomes(&self, query: &str) -> Result<Vec<GenomeResult>> {
         debug!("🔍 Searching NCBI genomes with query: {}", query);
 
@@ -300,6 +305,7 @@ impl GenomeDataCapability for NCBILiveProvider {
         Ok(results)
     }
 
+    /// Gets Genome Sequence
     async fn get_genome_sequence(&self, genome_id: &str) -> Result<GenomeSequence> {
         debug!("🧬 Fetching NCBI genome sequence for ID: {}", genome_id);
 

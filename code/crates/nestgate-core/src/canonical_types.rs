@@ -1,3 +1,5 @@
+//! Canonical Types module
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::SystemTime;
@@ -16,9 +18,11 @@ pub mod service {
 
     /// Service identification
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+    /// Serviceid
     pub struct ServiceId(pub String);
 
     impl Default for ServiceId {
+        /// Returns the default instance
         fn default() -> Self {
             Self(uuid::Uuid::new_v4().to_string())
         }
@@ -26,6 +30,7 @@ pub mod service {
 
     /// Service states
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+    /// Servicestate
     pub enum ServiceState {
         /// Service is in the process of starting up
         Starting,
@@ -45,6 +50,7 @@ pub mod service {
 
     /// Service types
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+    /// Types of Service
     pub enum ServiceType {
         /// API service handling HTTP/REST requests
         Api,
@@ -72,6 +78,7 @@ pub mod service {
 
     /// Service configuration
     #[derive(Debug, Clone, Serialize, Deserialize)]
+    /// Configuration for Service
     pub struct ServiceConfig {
         /// Unique service identifier
         pub id: ServiceId,
@@ -100,6 +107,7 @@ pub mod service {
     /// - diagnostics/metrics.rs
     /// - And other scattered definitions
     #[derive(Debug, Clone, Serialize, Deserialize)]
+    /// Serviceinfo
     pub struct ServiceInfo {
         // Core identification
         /// Unique service identifier
@@ -143,6 +151,7 @@ pub mod service {
     }
 
     impl Default for ServiceInfo {
+        /// Returns the default instance
         fn default() -> Self {
             Self {
                 service_id: ServiceId::default().0,
@@ -166,6 +175,7 @@ pub mod service {
 
     /// Service metrics
     #[derive(Debug, Clone, Serialize, Deserialize)]
+    /// Servicemetrics
     pub struct ServiceMetrics {
         /// CPU usage as a percentage (0-100)
         pub cpu_usage_percent: f64,
@@ -183,6 +193,7 @@ pub mod service {
 
     /// Service metadata
     #[derive(Debug, Clone, Serialize, Deserialize)]
+    /// Servicemetadata
     pub struct ServiceMetadata {
         /// Unique service identifier
         pub service_id: String,
@@ -210,6 +221,7 @@ pub mod network {
 
     /// Connection status
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+    /// Status values for Connection
     pub enum ConnectionStatus {
         /// Connection is established and active
         Connected,
@@ -225,6 +237,7 @@ pub mod network {
 
     /// Network protocol types
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+    /// Protocol
     pub enum Protocol {
         /// HTTP protocol
         Http,
@@ -244,6 +257,7 @@ pub mod network {
 
     /// Network endpoint
     #[derive(Debug, Clone, Serialize, Deserialize)]
+    /// Endpoint
     pub struct Endpoint {
         /// Hostname or IP address
         pub host: String,
@@ -254,6 +268,7 @@ pub mod network {
     }
 
     impl Default for Endpoint {
+        /// Returns the default instance
         fn default() -> Self {
             Self {
                 host: LOCALHOST.to_string(),
@@ -269,6 +284,7 @@ pub mod system {
 
     /// Allocation status for resources
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+    /// Status values for Allocation
     pub enum AllocationStatus {
         /// Resource is actively allocated
         Active,
@@ -281,6 +297,7 @@ pub mod system {
     }
 
     impl Default for AllocationStatus {
+        /// Returns the default instance
         fn default() -> Self {
             Self::Inactive
         }
@@ -294,6 +311,7 @@ pub mod storage {
 
     /// Storage tiers for data classification
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+    /// Storagetier
     pub enum StorageTier {
         /// Frequent access - NVMe/SSD tier
         Hot,
@@ -309,6 +327,7 @@ pub mod storage {
 
     /// Storage operation types
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+    /// Storageoperation
     pub enum StorageOperation {
         /// Read data from storage
         Read,
@@ -332,6 +351,7 @@ pub mod storage {
 
     /// Storage metadata
     #[derive(Debug, Clone, Serialize, Deserialize)]
+    /// Storagemetadata
     pub struct StorageMetadata {
         /// Size of the stored data in bytes
         pub size_bytes: u64,
@@ -355,6 +375,7 @@ pub mod storage {
 
     /// Storage resource
     #[derive(Debug, Clone, Serialize, Deserialize)]
+    /// Storageresource
     pub struct StorageResource {
         /// Unique identifier for the resource
         pub id: String,
@@ -373,6 +394,7 @@ pub mod security {
 
     /// Authentication methods
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+    /// Authmethod
     pub enum AuthMethod {
         /// Token-based authentication
         Token,
@@ -390,6 +412,7 @@ pub mod security {
 
     /// Access levels
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+    /// Accesslevel
     pub enum AccessLevel {
         /// Read-only access
         Read,
@@ -403,6 +426,7 @@ pub mod security {
 
     /// Security context
     #[derive(Debug, Clone, Serialize, Deserialize)]
+    /// Securitycontext
     pub struct SecurityContext {
         /// Optional user identifier
         pub user_id: Option<String>,
@@ -427,6 +451,7 @@ pub mod events {
 
     /// Event severity levels
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+    /// Eventseverity
     pub enum EventSeverity {
         /// Debug-level events for detailed troubleshooting
         Debug,
@@ -442,6 +467,7 @@ pub mod events {
 
     /// Event categories
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+    /// Eventcategory
     pub enum EventCategory {
         /// System-level events
         System,
@@ -463,6 +489,7 @@ pub mod events {
 
     /// Event structure
     #[derive(Debug, Clone, Serialize, Deserialize)]
+    /// Event
     pub struct Event {
         /// Unique event identifier
         pub id: String,
@@ -483,6 +510,7 @@ pub mod events {
     }
 
     impl Default for Event {
+        /// Returns the default instance
         fn default() -> Self {
             Self {
                 id: uuid::Uuid::new_v4().to_string(),
@@ -505,6 +533,7 @@ pub mod api {
 
     /// Request structure
     #[derive(Debug, Clone, Serialize, Deserialize)]
+    /// Request parameters for  operation
     pub struct Request {
         /// Unique request identifier
         pub id: String,
@@ -520,6 +549,7 @@ pub mod api {
 
     /// Response structure
     #[derive(Debug, Clone, Serialize, Deserialize)]
+    /// Response data for  operation
     pub struct Response {
         /// Associated request identifier
         pub request_id: String,
@@ -537,6 +567,7 @@ pub mod api {
 
     /// API error structure
     #[derive(Debug, Clone, Serialize, Deserialize)]
+    /// Error type for Api operations
     pub struct ApiError {
         /// Error code for categorization
         pub code: String,
@@ -556,6 +587,7 @@ pub mod health {
 
     /// Health status
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+    /// Status values for Health
     pub enum HealthStatus {
         /// System is fully operational
         Healthy,
@@ -569,6 +601,7 @@ pub mod health {
 
     /// Health check result
     #[derive(Debug, Clone, Serialize, Deserialize)]
+    /// Healthcheck
     pub struct HealthCheck {
         /// Component being checked
         pub component: String,
@@ -586,6 +619,7 @@ pub mod health {
 
     /// System health summary
     #[derive(Debug, Clone, Serialize, Deserialize)]
+    /// Systemhealth
     pub struct SystemHealth {
         /// Overall system health status
         pub overall_status: HealthStatus,
@@ -605,6 +639,7 @@ pub mod handlers {
     /// Universal handler configuration pattern
     /// Replaces all scattered handler-specific config structs
     #[derive(Debug, Clone, Serialize, Deserialize)]
+    /// Configuration for UniversalHandler
     pub struct UniversalHandlerConfig<T = ()> {
         /// Handler identification
         pub handler_id: String,
@@ -625,6 +660,7 @@ pub mod handlers {
     }
     /// Rate limiting configuration
     #[derive(Debug, Clone, Serialize, Deserialize)]
+    /// Configuration for RateLimit
     pub struct RateLimitConfig {
         /// Enable rate limiting
         pub enabled: bool,
@@ -636,6 +672,7 @@ pub mod handlers {
 
     /// Retry configuration
     #[derive(Debug, Clone, Serialize, Deserialize)]
+    /// Configuration for Retry
     pub struct RetryConfig {
         /// Enable retries
         pub enabled: bool,
@@ -651,6 +688,7 @@ pub mod handlers {
 
     /// Monitoring configuration
     #[derive(Debug, Clone, Serialize, Deserialize)]
+    /// Configuration for Monitoring
     pub struct MonitoringConfig {
         /// Enable monitoring
         pub enabled: bool,
@@ -664,6 +702,7 @@ pub mod handlers {
 
     // Default implementations
     impl<T: Default> Default for UniversalHandlerConfig<T> {
+        /// Returns the default instance
         fn default() -> Self {
             Self {
                 handler_id: String::new(),
@@ -679,6 +718,7 @@ pub mod handlers {
     }
 
     impl Default for RateLimitConfig {
+        /// Returns the default instance
         fn default() -> Self {
             Self {
                 enabled: false,
@@ -689,6 +729,7 @@ pub mod handlers {
     }
 
     impl Default for RetryConfig {
+        /// Returns the default instance
         fn default() -> Self {
             Self {
                 enabled: true,
@@ -701,6 +742,7 @@ pub mod handlers {
     }
 
     impl Default for MonitoringConfig {
+        /// Returns the default instance
         fn default() -> Self {
             Self {
                 enabled: true,
@@ -720,6 +762,7 @@ pub mod handlers {
 
 /// Response status enumeration
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Status values for Response
 pub enum ResponseStatus {
     /// Operation completed successfully
     Success,
@@ -785,6 +828,7 @@ pub use system::AllocationStatus;
 mod tests {
     use super::*;
 
+    /// Parses  Service State
     fn parse_service_state(state: &str) -> ServiceState {
         match state {
             "running" => ServiceState::Running,
@@ -795,6 +839,7 @@ mod tests {
         }
     }
 
+    /// Parses  Service Type
     fn parse_service_type(service_type: &str) -> ServiceType {
         match service_type {
             "storage" => ServiceType::Storage,

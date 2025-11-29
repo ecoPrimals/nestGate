@@ -8,6 +8,7 @@ mod zfs_final_coverage_tests {
     use std::collections::HashMap;
     use std::time::SystemTime;
 
+    /// Type alias for ZfsResult
     type ZfsResult<T> = Result<T, ZfsError>;
 
     // ==================== ZFS ERROR TESTS ====================
@@ -427,6 +428,7 @@ mod zfs_final_coverage_tests {
 
     #[test]
     fn test_error_recovery_with_default() {
+        /// May Fail
         fn may_fail() -> ZfsResult<String> {
             Err(ZfsError::CommandError {
                 message: "failed".to_string(),
@@ -439,12 +441,14 @@ mod zfs_final_coverage_tests {
 
     #[test]
     fn test_error_propagation() {
+        /// Inner
         fn inner() -> ZfsResult<i32> {
             Err(ZfsError::DatasetError {
                 message: "dataset not found".to_string(),
             })
         }
 
+        /// Outer
         fn outer() -> ZfsResult<i32> {
             inner()?;
             Ok(42)

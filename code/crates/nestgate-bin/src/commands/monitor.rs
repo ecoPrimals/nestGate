@@ -1,3 +1,5 @@
+//! Monitor module
+
 use std::path::PathBuf;
 
 use tracing::info;
@@ -10,10 +12,12 @@ use crate::error::BinResult;
 pub struct MonitorManager {}
 
 impl MonitorManager {
+    /// Creates a new instance
     pub fn new() -> Self {
         Self {}
     }
 
+    /// Start Monitoring
     pub async fn start_monitoring(
         &mut self, 
         interval: u64, 
@@ -47,6 +51,7 @@ impl MonitorManager {
 }
 
 impl Default for MonitorManager {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

@@ -15,6 +15,7 @@ use std::sync::{Arc, RwLock};
 use uuid::Uuid;
 /// High-performance UUID cache with Arc-based sharing
 #[derive(Debug)]
+/// Uuidcache
 pub struct UuidCache {
     /// Thread-safe cache storage
     cache: Arc<RwLock<HashMap<String, Arc<Uuid>>>>,
@@ -133,6 +134,7 @@ impl UuidCache {
 }
 
 impl Default for UuidCache {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -140,6 +142,7 @@ impl Default for UuidCache {
 
 // Implement Clone for UuidCache to allow sharing across components using explicit Arc::clone for clarity
 impl Clone for UuidCache {
+    /// Clone
     fn clone(&self) -> Self {
         Self {
             cache: Arc::clone(&self.cache),
@@ -152,6 +155,7 @@ impl Clone for UuidCache {
 
 /// Cache performance statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Cachestatistics
 pub struct CacheStatistics {
     /// Number of cached entries
     pub cache_size: usize,
@@ -256,6 +260,7 @@ impl UuidManager {
 }
 
 impl Default for UuidManager {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

@@ -4,6 +4,7 @@ use std::sync::Arc;
 /// Thread-safe configuration for service endpoints
 /// Captures environment variables at initialization to prevent race conditions
 #[derive(Debug, Clone)]
+/// Configuration for Services
 pub struct ServicesConfig {
     // Core service URLs
     discovery_url: Option<String>,
@@ -75,6 +76,7 @@ impl ServicesConfig {
 
     // Core service accessors with defaults
 
+    /// Gets Discovery Url
     pub fn get_discovery_url(&self) -> String {
         self.discovery_url.clone().unwrap_or_else(|| {
             let config = crate::config::discovery_config::ServiceDiscoveryConfig::default();
@@ -85,6 +87,7 @@ impl ServicesConfig {
         })
     }
 
+    /// Gets Adapter Url
     pub fn get_adapter_url(&self) -> String {
         self.adapter_url.clone().unwrap_or_else(|| {
             let config = crate::config::discovery_config::ServiceDiscoveryConfig::default();
@@ -95,6 +98,7 @@ impl ServicesConfig {
         })
     }
 
+    /// Gets Health Url
     pub fn get_health_url(&self) -> String {
         self.health_url.clone().unwrap_or_else(|| {
             let config = crate::config::discovery_config::ServiceDiscoveryConfig::default();
@@ -105,6 +109,7 @@ impl ServicesConfig {
         })
     }
 
+    /// Gets Metrics Url
     pub fn get_metrics_url(&self) -> String {
         self.metrics_url.clone().unwrap_or_else(|| {
             let config = crate::config::discovery_config::ServiceDiscoveryConfig::default();
@@ -112,6 +117,7 @@ impl ServicesConfig {
         })
     }
 
+    /// Gets Config Url
     pub fn get_config_url(&self) -> String {
         self.config_url.clone().unwrap_or_else(|| {
             let config = crate::config::discovery_config::ServiceDiscoveryConfig::default();
@@ -124,102 +130,123 @@ impl ServicesConfig {
 
     // Production accessors (for required URLs)
 
+    /// Gets Discovery Url Required
     pub fn get_discovery_url_required(&self) -> Option<&str> {
         self.discovery_url.as_deref()
     }
 
+    /// Gets Adapter Url Required
     pub fn get_adapter_url_required(&self) -> Option<&str> {
         self.adapter_url.as_deref()
     }
 
+    /// Gets Health Url Required
     pub fn get_health_url_required(&self) -> Option<&str> {
         self.health_url.as_deref()
     }
 
     // Primal service accessors (all optional)
 
+    /// Gets Songbird Url
     pub fn get_songbird_url(&self) -> Option<&str> {
         self.songbird_url.as_deref()
     }
 
+    /// Gets Toadstool Url
     pub fn get_toadstool_url(&self) -> Option<&str> {
         self.toadstool_url.as_deref()
     }
 
+    /// Gets Beardog Url
     pub fn get_beardog_url(&self) -> Option<&str> {
         self.beardog_url.as_deref()
     }
 
+    /// Gets Squirrel Url
     pub fn get_squirrel_url(&self) -> Option<&str> {
         self.squirrel_url.as_deref()
     }
 
+    /// Gets Biomeos Url
     pub fn get_biomeos_url(&self) -> Option<&str> {
         self.biomeos_url.as_deref()
     }
 
     // External services
 
+    /// Gets External Service
     pub fn get_external_service(&self, name: &str) -> Option<&str> {
         self.external_services.get(name).map(|s| s.as_str())
     }
 
+    /// Gets All External Services
     pub fn get_all_external_services(&self) -> &HashMap<String, String> {
         &self.external_services
     }
 
     // Builder methods for tests
 
+    /// Builder method to set Discovery Url
     pub fn with_discovery_url(mut self, url: String) -> Self {
         self.discovery_url = Some(url);
         self
     }
 
+    /// Builder method to set Adapter Url
     pub fn with_adapter_url(mut self, url: String) -> Self {
         self.adapter_url = Some(url);
         self
     }
 
+    /// Builder method to set Health Url
     pub fn with_health_url(mut self, url: String) -> Self {
         self.health_url = Some(url);
         self
     }
 
+    /// Builder method to set Metrics Url
     pub fn with_metrics_url(mut self, url: String) -> Self {
         self.metrics_url = Some(url);
         self
     }
 
+    /// Builder method to set Config Url
     pub fn with_config_url(mut self, url: String) -> Self {
         self.config_url = Some(url);
         self
     }
 
+    /// Builder method to set Songbird Url
     pub fn with_songbird_url(mut self, url: String) -> Self {
         self.songbird_url = Some(url);
         self
     }
 
+    /// Builder method to set Toadstool Url
     pub fn with_toadstool_url(mut self, url: String) -> Self {
         self.toadstool_url = Some(url);
         self
     }
 
+    /// Builder method to set Beardog Url
     pub fn with_beardog_url(mut self, url: String) -> Self {
         self.beardog_url = Some(url);
         self
     }
 
+    /// Builder method to set Squirrel Url
     pub fn with_squirrel_url(mut self, url: String) -> Self {
         self.squirrel_url = Some(url);
         self
     }
 
+    /// Builder method to set Biomeos Url
     pub fn with_biomeos_url(mut self, url: String) -> Self {
         self.biomeos_url = Some(url);
         self
     }
 
+    /// Builder method to set External Service
     pub fn with_external_service(mut self, name: String, url: String) -> Self {
         self.external_services.insert(name, url);
         self
@@ -227,6 +254,7 @@ impl ServicesConfig {
 }
 
 impl Default for ServicesConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

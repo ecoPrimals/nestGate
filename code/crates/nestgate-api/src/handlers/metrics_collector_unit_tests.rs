@@ -337,6 +337,7 @@ mod tests {
 
     // ==================== Helper Functions ====================
 
+    /// Creates  Test Real Time Metrics
     fn create_test_real_time_metrics() -> RealTimeMetrics {
         RealTimeMetrics {
             timestamp: SystemTime::now(),
@@ -351,6 +352,7 @@ mod tests {
         }
     }
 
+    /// Creates  Test Pool Metrics
     fn create_test_pool_metrics() -> PoolMetrics {
         PoolMetrics {
             name: "testpool".to_string(),
@@ -368,6 +370,7 @@ mod tests {
         }
     }
 
+    /// Creates  Test System Metrics
     fn create_test_system_metrics() -> SystemMetrics {
         SystemMetrics {
             _cpu_usage: 45.5,
@@ -379,6 +382,7 @@ mod tests {
         }
     }
 
+    /// Creates  Test Network Io
     fn create_test_network_io() -> NetworkIOMetrics {
         NetworkIOMetrics {
             bytes_sent: 1_000_000,
@@ -388,6 +392,7 @@ mod tests {
         }
     }
 
+    /// Creates  Test Disk Io
     fn create_test_disk_io() -> DiskIOMetrics {
         DiskIOMetrics {
             read_bytes: 5_000_000,
@@ -397,6 +402,7 @@ mod tests {
         }
     }
 
+    /// Creates  Test System Snapshot
     fn create_test_system_snapshot() -> SystemSnapshot {
         SystemSnapshot {
             timestamp: SystemTime::now(),

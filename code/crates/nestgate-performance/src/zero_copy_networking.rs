@@ -13,6 +13,8 @@
 // - Native async I/O with io_uring support
 // - Kernel bypass networking where available
 
+//! Zero Copy Networking module
+
 use std::io::{IoSlice, IoSliceMut};
 use std::marker::PhantomData;
 use std::net::SocketAddr;
@@ -41,6 +43,7 @@ pub struct ZeroCopyBufferPool<const BUFFER_SIZE: usize = 65_536, const POOL_SIZE
 /// Pre-allocated buffer for zero-copy operations
 /// Aligned for optimal DMA and SIMD performance
 #[repr(align(64))] // Cache line aligned for optimal performance
+/// Zerocopybuffer
 pub struct ZeroCopyBuffer<const SIZE: usize> {
     data: [u8; SIZE],
     length: usize,
@@ -50,6 +53,7 @@ pub struct ZeroCopyBuffer<const SIZE: usize> {
 impl<const BUFFER_SIZE: usize, const POOL_SIZE: usize> Default
     for ZeroCopyBufferPool<BUFFER_SIZE, POOL_SIZE>
 {
+    /// Returns the default instance
     fn default() -> Self {
         let pool = Self {
             available_buffers: SafeConcurrentQueue::new(),
@@ -114,6 +118,7 @@ impl<const BUFFER_SIZE: usize, const POOL_SIZE: usize> ZeroCopyBufferPool<BUFFER
 }
 
 impl<const SIZE: usize> Default for ZeroCopyBuffer<SIZE> {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             data: [0u8; SIZE],
@@ -180,10 +185,15 @@ impl<const SIZE: usize> ZeroCopyBuffer<SIZE> {
 }
 
 #[derive(Debug, Clone)]
+/// Bufferpoolstats
 pub struct BufferPoolStats {
+    /// Total Buffers
     pub total_buffers: usize,
+    /// Available Buffers
     pub available_buffers: usize,
+    /// Buffer Hits
     pub buffer_hits: u64,
+    /// Buffer Misses
     pub buffer_misses: u64,
 }
 
@@ -206,6 +216,7 @@ pub struct ZeroCopyNetworkInterface<const BUFFER_SIZE: usize = 65_536> {
 ///
 /// **✅ 100% SAFE** - Uses safe concurrent queues (zero unsafe code)
 #[allow(dead_code)]
+/// Zerocopyconnection
 pub struct ZeroCopyConnection<const BUFFER_SIZE: usize = 65_536> {
     connection_id: u64,
     remote_addr: SocketAddr,
@@ -215,23 +226,36 @@ pub struct ZeroCopyConnection<const BUFFER_SIZE: usize = 65_536> {
     connection_stats: ConnectionStats,
 }
 #[derive(Debug, Default)]
+/// Networkstats
 pub struct NetworkStats {
+    /// Bytes Sent
     pub bytes_sent: std::sync::atomic::AtomicU64,
+    /// Bytes Received
     pub bytes_received: std::sync::atomic::AtomicU64,
+    /// Packets Sent
     pub packets_sent: std::sync::atomic::AtomicU64,
+    /// Packets Received
     pub packets_received: std::sync::atomic::AtomicU64,
+    /// Zero Copy Operations
     pub zero_copy_operations: std::sync::atomic::AtomicU64,
+    /// Cpu Cycles Saved
     pub cpu_cycles_saved: std::sync::atomic::AtomicU64,
 }
 #[derive(Debug, Default)]
+/// Connectionstats
 pub struct ConnectionStats {
+    /// Bytes Transmitted
     pub bytes_transmitted: std::sync::atomic::AtomicU64,
+    /// Packets Transmitted
     pub packets_transmitted: std::sync::atomic::AtomicU64,
+    /// Zero Copy Transfers
     pub zero_copy_transfers: std::sync::atomic::AtomicU64,
+    /// Last Activity
     pub last_activity: std::sync::atomic::AtomicU64,
 }
 
 impl<const BUFFER_SIZE: usize> Default for ZeroCopyNetworkInterface<BUFFER_SIZE> {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             buffer_pool: Arc::new(ZeroCopyBufferPool::new()),
@@ -455,6 +479,7 @@ impl<const BUFFER_SIZE: usize> ZeroCopyNetworkInterface<BUFFER_SIZE> {
             .ok_or_else(|| NestGateError::network_error("Connection not found"))
     }
 
+    /// Generate Connection Id
     fn generate_connection_id(&self, remote_addr: &SocketAddr) -> u64 {
         // Simple hash-based connection ID generation
         use std::collections::hash_map::DefaultHasher;
@@ -470,14 +495,23 @@ impl<const BUFFER_SIZE: usize> ZeroCopyNetworkInterface<BUFFER_SIZE> {
 }
 
 #[derive(Debug, Clone)]
+/// Networkinterfacestats
 pub struct NetworkInterfaceStats {
+    /// Bytes Sent
     pub bytes_sent: u64,
+    /// Bytes Received
     pub bytes_received: u64,
+    /// Packets Sent
     pub packets_sent: u64,
+    /// Packets Received
     pub packets_received: u64,
+    /// Zero Copy Operations
     pub zero_copy_operations: u64,
+    /// Cpu Cycles Saved
     pub cpu_cycles_saved: u64,
+    /// Active Connections
     pub active_connections: usize,
+    /// Buffer Pool Stats
     pub buffer_pool_stats: BufferPoolStats,
 }
 
@@ -504,14 +538,20 @@ pub struct ZeroCopyRing<const SIZE: usize> {
     _phantom: PhantomData<()>,
 }
 #[derive(Debug)]
+/// Hardwarestats
 pub struct HardwareStats {
+    /// Dma Transfers
     pub dma_transfers: std::sync::atomic::AtomicU64,
+    /// Hardware Interrupts
     pub hardware_interrupts: std::sync::atomic::AtomicU64,
+    /// Kernel Bypassed Packets
     pub kernel_bypassed_packets: std::sync::atomic::AtomicU64,
+    /// Latency Microseconds
     pub latency_microseconds: std::sync::atomic::AtomicU64,
 }
 
 impl Clone for HardwareStats {
+    /// Clone
     fn clone(&self) -> Self {
         use std::sync::atomic::AtomicU64;
         Self {
@@ -536,6 +576,7 @@ impl Clone for HardwareStats {
 }
 
 impl Default for HardwareStats {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             dma_transfers: std::sync::atomic::AtomicU64::new(0),
@@ -547,6 +588,7 @@ impl Default for HardwareStats {
 }
 
 impl<const RING_SIZE: usize> Default for KernelBypassAdapter<RING_SIZE> {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             tx_ring: ZeroCopyRing::new(),
@@ -648,6 +690,7 @@ impl<const RING_SIZE: usize> KernelBypassAdapter<RING_SIZE> {
 }
 
 impl<const SIZE: usize> Default for ZeroCopyRing<SIZE> {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             buffers: [const { None }; SIZE],
@@ -743,6 +786,7 @@ pub mod benchmarks {
     pub async fn benchmark_zero_copy_networking() -> (u64, u64, f64) {
         let interface = ZeroCopyNetworkInterface::<65_536>::new();
         let test_data = vec![0x42u8; 1_048_576]; // 1MB test data
+        /// Iterations
         const ITERATIONS: u32 = 1000;
 
         // Establish connection
@@ -786,6 +830,7 @@ pub mod benchmarks {
     /// Benchmark buffer pool performance
     pub fn benchmark_buffer_pool() -> (u64, u64, f64) {
         let pool = ZeroCopyBufferPool::<65_536, 1024>::new();
+        /// Operations
         const OPERATIONS: u32 = 1_000_000;
 
         let start = Instant::now();

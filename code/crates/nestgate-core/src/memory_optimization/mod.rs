@@ -86,8 +86,11 @@ pub use std::borrow::Cow;
 
 /// Memory statistics (simple wrapper around stdlib)
 #[derive(Debug, Clone, Copy)]
+/// Memorystats
 pub struct MemoryStats {
+    /// Allocated Bytes
     pub allocated_bytes: usize,
+    /// Deallocated Bytes
     pub deallocated_bytes: usize,
 }
 
@@ -122,6 +125,7 @@ mod tests {
     fn test_zero_copy_pattern() {
         use std::borrow::Cow;
         
+        /// Processes data
         fn process(data: Cow<'_, [u8]>) -> usize {
             data.len()
         }

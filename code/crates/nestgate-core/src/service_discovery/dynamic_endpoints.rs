@@ -1,3 +1,5 @@
+//! Dynamic Endpoints module
+
 use crate::error::utilities::safe_env_var_or_default;
 use crate::{universal_adapter::UniversalAdapter, Result};
 use std::{collections::HashMap, sync::Arc};
@@ -214,6 +216,7 @@ impl DynamicEndpointResolver {
 }
 
 impl Default for DynamicEndpointResolver {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

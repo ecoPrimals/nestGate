@@ -2,6 +2,8 @@
 // Handles automatic failover and pool takeover for high availability scenarios.
 // Allows one NestGate instance to take over ZFS pools from a failed instance.
 
+//! Failover module
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -19,16 +21,23 @@ use tracing::info;
 
 /// Metadata about a ZFS pool for failover tracking
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Poolmetadata
 pub struct PoolMetadata {
+    /// Name
     pub name: String,
+    /// Original Owner
     pub original_owner: String,
+    /// Last Seen
     pub last_seen: SystemTime,
+    /// Import Guid
     pub import_guid: Option<String>,
+    /// State
     pub state: PoolFailoverState,
 }
 
 /// State of a pool in the failover system
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Poolfailoverstate
 pub enum PoolFailoverState {
     Active,   // Currently imported and active
     Orphaned, // Available for import (original owner failed)
@@ -38,6 +47,7 @@ pub enum PoolFailoverState {
 
 /// Pool state for failover management
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+/// Poolstate
 pub enum PoolState {
     Online,   // Pool is healthy and accessible
     Degraded, // Pool has issues but is still functional
@@ -57,18 +67,28 @@ pub enum PoolState {
 /// Modern replacement for the deprecated `FailoverConfig`.
 /// Integrated into the canonical ZFS configuration system.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for CanonicalFailover
 pub struct CanonicalFailoverConfig {
+    /// Auto Takeover Enabled
     pub auto_takeover_enabled: bool,
+    /// Health Check Interval Secs
     pub health_check_interval_secs: u64,
+    /// Takeover Timeout Secs
     pub takeover_timeout_secs: u64,
+    /// Node Failure Timeout Secs
     pub node_failure_timeout_secs: u64,
+    /// Max Takeover Attempts
     pub max_takeover_attempts: u32,
+    /// Failback Enabled
     pub failback_enabled: bool,
+    /// Failback Delay Secs
     pub failback_delay_secs: u64,
+    /// Configuration for notification
     pub notification_config: Option<FailoverNotificationConfig>,
 }
 
 impl Default for CanonicalFailoverConfig {
+    /// Returns the default instance
     fn default() -> Self {
         use crate::constants::NODE_FAILURE_TIMEOUT_SECS;
 
@@ -105,17 +125,25 @@ impl Default for CanonicalFailoverConfig {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for FailoverNotification
 pub struct FailoverNotificationConfig {
+    /// Email Enabled
     pub email_enabled: bool,
+    /// Email Recipients
     pub email_recipients: Vec<String>,
+    /// Webhook Enabled
     pub webhook_enabled: bool,
+    /// Webhook Url
     pub webhook_url: Option<String>,
+    /// Slack Enabled
     pub slack_enabled: bool,
+    /// Slack Webhook
     pub slack_webhook: Option<String>,
 }
 
 /// Manages ZFS pool takeover operations
 #[allow(dead_code)] // Configuration fields used in advanced failover scenarios
+/// Manager for PoolTakeover operations
 pub struct PoolTakeoverManager {
     config: ZfsConfig,
     failover_config: CanonicalFailoverConfig,
@@ -398,9 +426,13 @@ pub struct NodeHealthMonitor {
 }
 
 #[derive(Debug, Clone)]
+/// Nodehealth
 pub struct NodeHealth {
+    /// Node identifier
     pub node_id: String,
+    /// Last Heartbeat
     pub last_heartbeat: SystemTime,
+    /// Whether alive
     pub is_alive: bool,
 }
 
@@ -471,6 +503,7 @@ impl NodeHealthMonitor {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Failovernotificationconfigcanonical
 pub type FailoverNotificationConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 

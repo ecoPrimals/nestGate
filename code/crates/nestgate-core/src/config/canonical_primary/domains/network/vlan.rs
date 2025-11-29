@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// Controls VLAN tagging and trunk port configuration for network segmentation.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for NetworkVlan
 pub struct NetworkVlanConfig {
     /// Whether VLAN tagging is enabled.
     pub enabled: bool,

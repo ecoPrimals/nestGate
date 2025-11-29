@@ -14,34 +14,51 @@ use std::sync::Arc;
 mod introspection_tests;
 /// System capabilities profile
 #[derive(Debug, Clone)]
+/// Systemcapabilities
 pub struct SystemCapabilities {
+    /// Cpu Cores
     pub cpu_cores: usize,
+    /// Logical Cores
     pub logical_cores: usize,
+    /// Memory in gigabytes
     pub memory_gb: f64,
+    /// Network Interfaces
     pub network_interfaces: Vec<String>,
+    /// Storage Available
     pub storage_available: bool,
+    /// Container Runtime
     pub container_runtime: Option<String>,
+    /// Os Type
     pub os_type: String,
 }
 /// Hardware performance profile
 #[derive(Debug, Clone)]
+/// Hardwareprofile
 pub struct HardwareProfile {
+    /// Cpu Score
     pub cpu_score: f64,
+    /// Memory Score
     pub memory_score: f64,
+    /// Storage Score
     pub storage_score: f64,
+    /// Network Score
     pub network_score: f64,
+    /// Overall Score
     pub overall_score: f64,
+    /// Recommended Limits
     pub recommended_limits: HashMap<String, usize>,
 }
 /// System introspection subsystem
 #[derive(Debug)]
 #[allow(dead_code)]
+/// Systemintrospection
 pub struct SystemIntrospection {
     capabilities: Option<SystemCapabilities>,
     hardware_profile: Option<HardwareProfile>,
     config: SharedIntrospectionConfig,
 }
 impl Default for SystemIntrospection {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

@@ -2,6 +2,8 @@
 // **MIGRATION COMPLETE**: This module now uses canonical modernization patterns.
 // Legacy fragmented config structs have been replaced with canonical equivalents.
 
+//! Config module
+
 use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 use nestgate_core::config::canonical_primary::domains::performance::MetricsConfig;
 use nestgate_core::config::canonical_primary::domains::security_canonical::TlsSecurityConfig;
@@ -32,6 +34,7 @@ use nestgate_core::canonical_modernization::CanonicalModernizedConfig;
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for CanonicalRpc
 pub struct CanonicalRpcConfig {
     /// Base canonical configuration
     pub base: CanonicalModernizedConfig,
@@ -40,6 +43,7 @@ pub struct CanonicalRpcConfig {
 }
 /// RPC-specific configuration extensions
 #[derive(Debug, Clone, Default)]
+/// Rpcextensions
 pub struct RpcExtensions {
     /// Connection pool settings
     pub connection_pool: ConnectionPoolConfig,
@@ -75,6 +79,7 @@ pub struct RpcExtensions {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for NestGateRpc
 pub struct NestGateRpcConfig {
     /// Connection pool configuration for managing RPC connections
     pub connection_pool: ConnectionPoolConfig,
@@ -109,6 +114,7 @@ pub struct NestGateRpcConfig {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for ConnectionPool
 pub struct ConnectionPoolConfig {
     /// Maximum number of connections per service
     pub max_connections: usize,
@@ -155,6 +161,7 @@ pub struct ConnectionPoolConfig {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for RpcSecurity
 pub struct RpcSecurityConfig {
     /// Enable TLS encryption
     pub enable_tls: bool,
@@ -209,6 +216,7 @@ pub struct RpcSecurityConfig {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for LoadBalancing
 pub struct LoadBalancingConfig {
     /// Load balancing strategy
     pub strategy: String, // "round_robin", "least_connections", "weighted"
@@ -237,6 +245,7 @@ pub struct LoadBalancingConfig {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for CircuitBreaker
 pub struct CircuitBreakerConfig {
     /// Failure threshold before opening circuit
     pub failure_threshold: u32,
@@ -265,6 +274,7 @@ pub struct CircuitBreakerConfig {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for HealthMonitoring
 pub struct HealthMonitoringConfig {
     /// Enable health monitoring
     pub enabled: bool,
@@ -302,6 +312,7 @@ pub struct HealthMonitoringConfig {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for Stream
 pub struct StreamConfig {
     /// Maximum concurrent streams per connection
     pub max_streams_per_connection: usize,
@@ -311,6 +322,7 @@ pub struct StreamConfig {
     pub buffer_size: usize,
 }
 impl Default for NestGateRpcConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             connection_pool: ConnectionPoolConfig {
@@ -394,12 +406,14 @@ impl CanonicalRpcConfig {
 
     /// Get network configuration from canonical base
     #[must_use]
+    /// Fn
     pub const fn network(&self) -> &CanonicalNetworkConfig {
         &self.base.network
     }
 
     /// Get security configuration from canonical base
     #[must_use]
+    /// Fn
     pub const fn security(&self) -> &SecurityConfig {
         &self.base.security
     }
@@ -414,6 +428,7 @@ impl CanonicalRpcConfig {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Connectionpoolconfigcanonical
 pub type ConnectionPoolConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
@@ -430,6 +445,7 @@ pub type ConnectionPoolConfigCanonical =
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Rpcsecurityconfigcanonical
 pub type RpcSecurityConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
@@ -446,6 +462,7 @@ pub type RpcSecurityConfigCanonical =
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Loadbalancingconfigcanonical
 pub type LoadBalancingConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
@@ -462,6 +479,7 @@ pub type LoadBalancingConfigCanonical =
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Circuitbreakerconfigcanonical
 pub type CircuitBreakerConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
@@ -478,6 +496,7 @@ pub type CircuitBreakerConfigCanonical =
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Healthmonitoringconfigcanonical
 pub type HealthMonitoringConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
@@ -494,6 +513,7 @@ pub type HealthMonitoringConfigCanonical =
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Streamconfigcanonical
 pub type StreamConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
@@ -510,6 +530,7 @@ pub type StreamConfigCanonical =
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Canonicalrpcconfigcanonical
 pub type CanonicalRpcConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
@@ -526,6 +547,7 @@ pub type CanonicalRpcConfigCanonical =
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Nestgaterpcconfigcanonical
 pub type NestGateRpcConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 

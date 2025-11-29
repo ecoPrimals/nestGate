@@ -8,6 +8,7 @@ use std::time::Duration;
 ///
 /// Controls metrics collection, profiling, and alerting for performance monitoring.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for PerformanceMonitoring
 pub struct PerformanceMonitoringConfig {
     /// Whether performance monitoring is enabled.
     pub enabled: bool,
@@ -23,6 +24,7 @@ pub struct PerformanceMonitoringConfig {
 ///
 /// Defines which metrics to collect and how frequently.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Metrics
 pub struct MetricsConfig {
     /// Interval between metric collections (default: 30 seconds).
     pub collection_interval: Duration,
@@ -36,6 +38,7 @@ pub struct MetricsConfig {
 ///
 /// Defines the various performance metrics that can be tracked.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performancemetric
 pub enum PerformanceMetric {
     /// CPU usage percentage.
     CpuUsage,
@@ -55,6 +58,7 @@ pub enum PerformanceMetric {
 ///
 /// Controls CPU and memory profiling for identifying performance bottlenecks.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Profiling
 pub struct ProfilingConfig {
     /// Whether profiling is enabled (default: false).
     pub enabled: bool,
@@ -70,9 +74,11 @@ pub struct ProfilingConfig {
 ///
 /// Determines what aspects of performance to profile.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Profilingmode
 pub enum ProfilingMode {
     /// Profile CPU usage only (default).
     #[default]
+    /// Cpu
     Cpu,
     /// Profile memory usage only.
     Memory,
@@ -86,6 +92,7 @@ pub enum ProfilingMode {
 ///
 /// Defines thresholds that trigger alerts when exceeded.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Alerting
 pub struct AlertingConfig {
     /// CPU usage threshold for alerts (0.0-1.0, default: 0.8 = 80%).
     pub cpu_threshold: f64,
@@ -98,6 +105,7 @@ pub struct AlertingConfig {
 }
 
 impl Default for MetricsConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             collection_interval: Duration::from_secs(30),
@@ -108,6 +116,7 @@ impl Default for MetricsConfig {
 }
 
 impl Default for ProfilingConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: false,
@@ -119,6 +128,7 @@ impl Default for ProfilingConfig {
 }
 
 impl Default for AlertingConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             cpu_threshold: 0.8,

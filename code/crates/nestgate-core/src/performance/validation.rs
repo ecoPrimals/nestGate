@@ -6,12 +6,19 @@ use crate::{Result};
 
 /// Performance benchmark results
 #[derive(Debug, Clone)]
+/// Benchmarkresults
 pub struct BenchmarkResults {
+    /// Pattern name
     pub pattern_name: String,
+    /// Zero Cost Time Ns
     pub zero_cost_time_ns: u64,
+    /// Traditional Time Ns
     pub traditional_time_ns: u64,
+    /// Improvement Percentage
     pub improvement_percentage: f64,
+    /// Memory Reduction Percentage
     pub memory_reduction_percentage: f64,
+    /// Iterations
     pub iterations: usize,
 }
 impl BenchmarkResults {
@@ -164,6 +171,7 @@ impl PerformanceValidator {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
                 pub fn validate_performance_targets(&self, results: &[BenchmarkResults]) -> Result<()>  {
+        /// Target Improvement
         const TARGET_IMPROVEMENT: f64 = 20.0; // 20% minimum improvement
 
         let mut failures = Vec::new();
@@ -190,6 +198,7 @@ impl PerformanceValidator {
 }
 
 impl Default for PerformanceValidator {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new(10_000, 1_000)
     }

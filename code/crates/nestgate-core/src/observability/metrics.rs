@@ -9,11 +9,16 @@ use tokio::sync::RwLock;
 
 /// Metric value types for custom metrics
 #[derive(Debug, Clone)]
+/// Metricvalue
 pub enum MetricValue {
     Gauge(f64),
     Counter(u64),
     Histogram(Vec<f64>),
-    Summary { sum: f64, count: u64 },
+    /// Summary
+    Summary {
+        sum: f64,
+        count: u64,
+    },
     String(String),
 }
 
@@ -22,6 +27,7 @@ pub type CustomMetricsMap = HashMap<String, MetricValue>;
 
 /// Performance metrics structure
 #[derive(Debug, Clone)]
+/// Performancemetrics
 pub struct PerformanceMetrics {
     /// Timestamp when metrics were collected
     pub timestamp: SystemTime,
@@ -39,6 +45,7 @@ pub struct PerformanceMetrics {
     pub custom_metrics: HashMap<String, f64>,
 }
 impl Default for PerformanceMetrics {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             timestamp: SystemTime::now(),
@@ -54,12 +61,14 @@ impl Default for PerformanceMetrics {
 
 /// Metrics registry for collecting and storing performance data
 #[derive(Debug)]
+/// Metricsregistry
 pub struct MetricsRegistry {
     metrics_history: Arc<RwLock<Vec<PerformanceMetrics>>>,
     max_history: usize,
     custom_metrics: Arc<RwLock<CustomMetricsMap>>,
 }
 impl Default for MetricsRegistry {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

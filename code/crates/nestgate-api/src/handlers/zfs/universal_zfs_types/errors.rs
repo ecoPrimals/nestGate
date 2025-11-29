@@ -16,6 +16,7 @@ pub type UniversalZfsResult<T> = Result<T, UniversalZfsError>;
 
 /// Error data structure for universal ZFS operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Universalzfserrordata
 pub struct UniversalZfsErrorData {
     /// Human-readable error message describing what went wrong
     pub message: String,
@@ -35,6 +36,7 @@ pub struct UniversalZfsErrorData {
 
 /// Rate limiting information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Ratelimitinfo
 pub struct RateLimitInfo {
     /// Maximum number of requests allowed within the time window
     pub limit: u32,
@@ -48,6 +50,7 @@ pub struct RateLimitInfo {
 
 /// Comprehensive error types for universal ZFS operations
 #[derive(Error, Debug, Clone, Serialize, Deserialize)]
+/// Errors that can occur during UniversalZfs operations
 pub enum UniversalZfsError {
     #[error("Service unavailable: {message}")]
     /// Service is temporarily unavailable
@@ -322,6 +325,7 @@ impl UniversalZfsError {
 // ==================== ERROR CONVERSIONS ====================
 
 impl From<std::io::Error> for UniversalZfsError {
+    /// From
     fn from(_error: std::io::Error) -> Self {
         Self::Backend {
             backend: "system".to_string(),
@@ -331,6 +335,7 @@ impl From<std::io::Error> for UniversalZfsError {
 }
 
 impl From<tokio::time::error::Elapsed> for UniversalZfsError {
+    /// From
     fn from(_error: tokio::time::error::Elapsed) -> Self {
         Self::Timeout {
             b_operation: "operation".to_string(),
@@ -340,6 +345,7 @@ impl From<tokio::time::error::Elapsed> for UniversalZfsError {
 }
 
 impl From<UniversalZfsError> for NestGateError {
+    /// From
     fn from(error: UniversalZfsError) -> Self {
         let error_data = error.to_error_data();
         let _details = HashMap::from([

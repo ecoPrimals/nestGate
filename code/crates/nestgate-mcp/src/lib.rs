@@ -30,9 +30,13 @@ pub trait McpService {
 
 /// MCP health status using canonical patterns
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+/// Mcphealthstatus
 pub struct McpHealthStatus {
+    /// Whether healthy
     pub is_healthy: bool,
+    /// Message
     pub message: String,
+    /// Details
     pub details: Option<std::collections::HashMap<String, String>>,
 }
 impl McpHealthStatus {
@@ -45,6 +49,7 @@ impl McpHealthStatus {
         }
     }
 
+    /// Unhealthy
     pub fn unhealthy(message: impl Into<String>) -> Self {
         Self {
             is_healthy: false,

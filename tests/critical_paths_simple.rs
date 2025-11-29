@@ -29,11 +29,11 @@ async fn test_concurrent_operations_no_panic() {
 /// Test timeout handling works correctly
 #[tokio::test]
 async fn test_timeout_handling() {
-    let timeout = Duration::from_millis(50);
+    let timeout = Duration::from_millis(10);
 
     let result = tokio::time::timeout(timeout, async {
-        // Modern: 100ms sleep is sufficient to test timeout (was 10s - 100x faster!)
-        tokio::time::sleep(Duration::from_millis(100)).await;
+        // Sleep significantly longer than timeout to ensure it triggers
+        tokio::time::sleep(Duration::from_millis(500)).await;
         "completed"
     })
     .await;

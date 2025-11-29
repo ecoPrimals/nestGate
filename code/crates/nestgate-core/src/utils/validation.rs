@@ -1,19 +1,97 @@
-/// Validation Utilities
-/// General purpose validation functions and helper utilities
+//! Validation Utilities
+//!
+//! General purpose validation functions and helper utilities for input validation,
+//! data integrity checks, and constraint enforcement.
+//!
+//! # Overview
+//!
+//! This module provides reusable validation functions that can be composed to
+//! validate complex data structures. All validation functions return `Result<()>`
+//! and provide rich error context when validation fails.
+//!
+//! # Examples
+//!
+//! ```
+//! use nestgate_core::utils::validation::*;
+//!
+//! // Validate non-empty strings
+//! validate_not_empty("myvalue", "username")?;
+//!
+//! // Validate string length
+//! validate_length("myvalue", "username", Some(3), Some(20))?;
+//!
+//! // Validate numeric range
+//! validate_range(42, "age", Some(0), Some(150))?;
+//! ```
+
 use std::collections::HashMap;
 use crate::{NestGateError, Result};
 
 // ==================== SECTION ====================
 
 /// Validate that a string value is not empty
+///
+/// # Arguments
+///
+/// * `value` - The string value to validate
+/// * `field_name` - Name of the field being validated (for error messages)
+///
+/// # Returns
+///
+/// * `Ok(())` if validation passes
+/// * `Err(NestGateError::Validation)` if value is empty or contains only whitespace
+///
+/// # Examples
+///
+/// ```
+/// use nestgate_core::utils::validation::validate_not_empty;
+///
+/// // Valid input
+/// assert!(validate_not_empty("hello", "name").is_ok());
+///
+/// // Invalid inputs
+/// assert!(validate_not_empty("", "name").is_err());
+/// assert!(validate_not_empty("   ", "name").is_err());
+/// ```
 pub fn validate_not_empty(value: &str, field_name: &str) -> Result<()> {
     if value.trim().is_empty() {
-        return Err(NestGateError::validation(
-            actual: Some("empty string"));
+        return Err(NestGateError::validation_error(
+            field_name,
+            "non-empty string",
+            Some("empty string"),
+        ));
     }
     Ok(())
 }
-/// Validate string length is within range
+
+/// Validate string length is within specified range
+///
+/// # Arguments
+///
+/// * `value` - The string value to validate
+/// * `field_name` - Name of the field being validated
+/// * `min_len` - Minimum length (inclusive), or None for no minimum
+/// * `max_len` - Maximum length (inclusive), or None for no maximum
+///
+/// # Returns
+///
+/// * `Ok(())` if length is within bounds
+/// * `Err(NestGateError::Validation)` if length is outside bounds
+///
+/// # Examples
+///
+/// ```
+/// use nestgate_core::utils::validation::validate_length;
+///
+/// // Valid lengths
+/// assert!(validate_length("hello", "name", Some(3), Some(10)).is_ok());
+///
+/// // Too short
+/// assert!(validate_length("hi", "name", Some(3), None).is_err());
+///
+/// // Too long
+/// assert!(validate_length("verylongstring", "name", None, Some(10)).is_err());
+/// ```
 pub fn validate_length(
     value: &str,
     field_name: &str,
@@ -21,33 +99,74 @@ pub fn validate_length(
     max_len: Option<usize>,
 ) -> Result<()> {
     let len = value.len();
+    
     if let Some(min) = min_len {
         if len < min {
-            return Err(NestGateError::validation(
-                actual: Some(len.to_string())} characters"))context: None,
-            );
+            return Err(NestGateError::validation_error(
+                field_name,
+                &format!("minimum {} characters", min),
+                Some(&format!("{} characters", len)),
+            ));
         }
     }
 
     if let Some(max) = max_len {
         if len > max {
-            return Err(NestGateError::validation(
-                actual: Some(len.to_string())} characters"))context: None,
-            );
+            return Err(NestGateError::validation_error(
+                field_name,
+                &format!("maximum {} characters", max),
+                Some(&format!("{} characters", len)),
+            ));
         }
     }
+    
     Ok(())
 }
 
-/// Validate numeric range
+/// Validate that a numeric value is within specified range
+///
+/// # Type Parameters
+///
+/// * `T` - Numeric type that implements `PartialOrd`, `Display`, and `Copy`
+///
+/// # Arguments
+///
+/// * `value` - The numeric value to validate
+/// * `field_name` - Name of the field being validated
+/// * `min` - Minimum value (inclusive), or None for no minimum
+/// * `max` - Maximum value (inclusive), or None for no maximum
+///
+/// # Returns
+///
+/// * `Ok(())` if value is within bounds
+/// * `Err(NestGateError::Validation)` if value is outside bounds
+///
+/// # Examples
+///
+/// ```
+/// use nestgate_core::utils::validation::validate_range;
+///
+/// // Valid ranges
+/// assert!(validate_range(42, "age", Some(0), Some(150)).is_ok());
+/// assert!(validate_range(5.5, "rating", Some(0.0), Some(10.0)).is_ok());
+///
+/// // Outside range
+/// assert!(validate_range(-1, "age", Some(0), None).is_err());
+/// assert!(validate_range(151, "age", None, Some(150)).is_err());
+/// ```
 pub fn validate_range<T>(value: T, field_name: &str, min: Option<T>, max: Option<T>) -> Result<()>
 where
     T: PartialOrd + std::fmt::Display + Copy,
 {
     if let Some(min_val) = min {
         if value < min_val {
-            return Err(NestGateError::validation(
-                actual: Some(value.to_string())}"))context: None,
+            return Err(NestGateError::validation_error(
+                field_name,
+                &format!("minimum value {}", min_val),
+                Some(&value.to_string()),
+            ));
+        }
+    }
             );
         }
     }
@@ -63,6 +182,7 @@ where
 
 /// Validate that value is one of allowed options
 pub fn validate_enum<T>(value: &T, field_name: &str, allowedvalues: &[T]) -> Result<()>
+/// Where
 where
     T: std::fmt::Display + PartialEq,
 {
@@ -130,16 +250,25 @@ pub fn validate_email_domain_format(email: &str) -> Result<()> {
 
 /// Password strength requirements
 #[derive(Debug, Clone)]
+/// Passwordrequirements
 pub struct PasswordRequirements {
+    /// Min Length
     pub min_length: usize,
+    /// Max Length
     pub max_length: Option<usize>,
+    /// Require Uppercase
     pub require_uppercase: bool,
+    /// Require Lowercase
     pub require_lowercase: bool,
+    /// Require Digits
     pub require_digits: bool,
+    /// Require Special Chars
     pub require_special_chars: bool,
+    /// Forbidden Patterns
     pub forbidden_patterns: Vec<String>,
 }
 impl Default for PasswordRequirements {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             min_length: 8,
@@ -362,6 +491,7 @@ pub fn validate_credit_card(card_number: &str) -> Result<()> {
 
 /// Validation rule that can be applied to a value
 pub trait ValidationRule<T> {
+    /// Validates data
     fn validate(&self, value: &T, field_name: &str) -> Result<()>;
 }
 /// Validator that applies multiple rules
@@ -394,6 +524,7 @@ impl<T> MultiValidator<T> {
 }
 
 impl<T> Default for MultiValidator<T> {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

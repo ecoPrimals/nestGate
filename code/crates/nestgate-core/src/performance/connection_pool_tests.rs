@@ -13,6 +13,7 @@ struct MockConnection {
 }
 
 impl MockConnection {
+    /// Creates a new instance
     fn new(id: u32) -> Self {
         Self { id }
     }

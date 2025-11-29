@@ -2,6 +2,8 @@
 // This module contains all API configuration settings organized into logical sub-modules.
 // Originally extracted from a large 902-line file for better maintainability.
 
+//! Settings module
+
 pub mod http;
 pub mod performance;
 pub mod streaming;
@@ -22,6 +24,7 @@ use std::time::Duration;
 
 //! Service mesh configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Apiservicemeshsettings
 pub struct ApiServiceMeshSettings {
     /// Enable service mesh
     pub enable_service_mesh: bool,
@@ -36,6 +39,7 @@ pub struct ApiServiceMeshSettings {
 }
 //! Primal configuration settings for universal architecture
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Apiprimalsettings
 pub struct ApiPrimalSettings {
     /// Enable primal discovery
     pub enable_primal_discovery: bool,
@@ -52,6 +56,7 @@ pub struct ApiPrimalSettings {
 }
 //! Authentication configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Apiauthsettings
 pub struct ApiAuthSettings {
     /// Enable authentication
     pub enable_auth: bool,
@@ -70,6 +75,7 @@ pub struct ApiAuthSettings {
 }
 //! Health monitoring configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Apihealthsettings
 pub struct ApiHealthSettings {
     /// Enable health checks
     pub enable_health_checks: bool,
@@ -86,6 +92,7 @@ pub struct ApiHealthSettings {
 }
 //! Storage configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Apistoragesettings
 pub struct ApiStorageSettings {
     /// Enable storage operations
     pub enable_storage_operations: bool,
@@ -102,6 +109,7 @@ pub struct ApiStorageSettings {
 }
 //! Stream retry configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Apistreamretrysettings
 pub struct ApiStreamRetrySettings {
     /// Enable stream retries
     pub enable_stream_retries: bool,
@@ -114,6 +122,7 @@ pub struct ApiStreamRetrySettings {
 }
 //! Service discovery configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Apiservicediscoverysettings
 pub struct ApiServiceDiscoverySettings {
     /// Enable service discovery
     pub enable_service_discovery: bool,
@@ -126,6 +135,7 @@ pub struct ApiServiceDiscoverySettings {
 }
 //! RPC timeout configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Apirpctimeoutsettings
 pub struct ApiRpcTimeoutSettings {
     /// Default RPC timeout
     pub default_rpc_timeout: Duration,
@@ -136,6 +146,7 @@ pub struct ApiRpcTimeoutSettings {
 }
 // Default implementations for additional settings
 impl Default for ApiServiceMeshSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             enable_service_mesh: false,
             service_mesh_provider: "istio".to_string(),
@@ -146,6 +157,7 @@ impl Default for ApiServiceMeshSettings {
 }
 
 impl Default for ApiPrimalSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             enable_primal_discovery: true,
             primal_discovery_interval: Duration::from_secs(30),
@@ -157,6 +169,7 @@ impl Default for ApiPrimalSettings {
 }
 
 impl Default for ApiAuthSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             enable_auth: true,
             auth_provider: "jwt".to_string(),
@@ -169,6 +182,7 @@ impl Default for ApiAuthSettings {
 }
 
 impl Default for ApiHealthSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             enable_health_checks: true,
             health_check_interval: Duration::from_secs(30),
@@ -180,6 +194,7 @@ impl Default for ApiHealthSettings {
 }
 
 impl Default for ApiStorageSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             enable_storage_operations: true,
             storage_provider: "zfs".to_string(),
@@ -191,6 +206,7 @@ impl Default for ApiStorageSettings {
 }
 
 impl Default for ApiStreamRetrySettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             enable_stream_retries: true,
             max_stream_retry_attempts: 3,
@@ -200,6 +216,7 @@ impl Default for ApiStreamRetrySettings {
 }
 
 impl Default for ApiServiceDiscoverySettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             enable_service_discovery: true,
     #[deprecated(since = "3.0.0", note = "Use capability-based discovery instead of vendor-specific service discovery")]
@@ -210,6 +227,7 @@ impl Default for ApiServiceDiscoverySettings {
 }
 
 impl Default for ApiRpcTimeoutSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             default_rpc_timeout: Duration::from_secs(30),
             rpc_timeouts_per_service: HashMap::new(),

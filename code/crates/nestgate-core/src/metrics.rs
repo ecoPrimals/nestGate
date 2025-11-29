@@ -9,21 +9,31 @@ use std::time::SystemTime;
 // Removed unused tracing import
 /// Type of metric being collected
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+/// Types of Metric
 pub enum MetricType {
+    /// Counter
     Counter,
+    /// Gauge
     Gauge,
+    /// Histogram
     Histogram,
 }
 /// Individual metric entry
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Metric
 pub struct Metric {
+    /// Name
     pub name: String,
+    /// Value
     pub value: f64,
+    /// Metric Type
     pub metric_type: MetricType,
+    /// Timestamp
     pub timestamp: std::time::SystemTime,
 }
 /// Metrics collector for system monitoring
 #[derive(Debug, Clone)]
+/// Metricscollector
 pub struct MetricsCollector {
     metrics: Arc<RwLock<HashMap<String, Metric>>>,
 }
@@ -147,6 +157,7 @@ impl MetricsCollector {
         entry.timestamp = SystemTime::now();
     }
 
+    /// Add Metric
     pub fn add_metric(&self, metric: Metric) {
         let mut metrics = match self.metrics.write() {
             Ok(metrics) => metrics,
@@ -158,6 +169,7 @@ impl MetricsCollector {
         metrics.insert(metric.name, metric);
     }
 
+    /// Updates  Metric
     pub fn update_metric(&self, name: &str, value: f64) {
         let mut metrics = match self.metrics.write() {
             Ok(metrics) => metrics,
@@ -174,6 +186,7 @@ impl MetricsCollector {
 }
 
 impl Default for MetricsCollector {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

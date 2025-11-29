@@ -8,6 +8,7 @@ use std::collections::HashMap;
 ///
 /// Allows switching between different performance profiles (e.g., "high-throughput", "low-latency").
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Optimizationprofiles
 pub struct OptimizationProfiles {
     /// Name of the currently active profile.
     pub active_profile: String,
@@ -19,6 +20,7 @@ pub struct OptimizationProfiles {
 ///
 /// Defines a named set of performance settings that can be activated together.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Optimizationprofile
 pub struct OptimizationProfile {
     /// Name of the optimization profile.
     pub name: String,

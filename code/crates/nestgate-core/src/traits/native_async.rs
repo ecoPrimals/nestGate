@@ -56,6 +56,7 @@ pub trait NativeAsyncService: Send + Sync + 'static {
     since = "0.9.0",
     note = "Use crate::traits::canonical::CanonicalStorage - all methods are native async"
 )]
+/// NativeAsyncStorage trait
 pub trait NativeAsyncStorage: Send + Sync + 'static {
     /// Read data from storage
     /// Write data to storage
@@ -72,12 +73,19 @@ pub trait NativeAsyncStorage: Send + Sync + 'static {
 }
 
 #[derive(Debug, Clone)]
+/// Storagemetadata
 pub struct StorageMetadata {
+    /// Size
     pub size: u64,
+    /// Created
     pub created: std::time::SystemTime,
+    /// Modified
     pub modified: std::time::SystemTime,
+    /// Content Type
     pub content_type: String,
+    /// Checksum
     pub checksum: String,
+    /// Additional metadata key-value pairs
     pub metadata: HashMap<String, String>,
 }
 
@@ -116,11 +124,17 @@ pub trait NativeAsyncNetworkService: Send + Sync + 'static {
 }
 
 #[derive(Debug, Clone)]
+/// Networkstatistics
 pub struct NetworkStatistics {
+    /// Active Connections
     pub active_connections: usize,
+    /// Total Requests
     pub total_requests: u64,
+    /// Bytes Sent
     pub bytes_sent: u64,
+    /// Bytes Received
     pub bytes_received: u64,
+    /// Errors
     pub errors: u64,
 }
 
@@ -132,6 +146,7 @@ pub struct NetworkStatistics {
     since = "0.9.0",
     note = "Use crate::traits::canonical::CanonicalSecurity - all methods are native async"
 )]
+/// NativeAsyncSecurityProvider trait
 pub trait NativeAsyncSecurityProvider: Send + Sync + 'static {
     /// Credentials type
     type Credentials: Send + Sync;
@@ -182,10 +197,15 @@ pub trait NativeAsyncApiHandler: Send + Sync + 'static {
 }
 
 #[derive(Debug, Clone)]
+/// Handlermetrics
 pub struct HandlerMetrics {
+    /// Requests Handled
     pub requests_handled: u64,
+    /// Average Response Time
     pub average_response_time: std::time::Duration,
+    /// Error Rate
     pub error_rate: f64,
+    /// Last Request Time
     pub last_request_time: Option<std::time::SystemTime>,
 }
 
@@ -239,10 +259,15 @@ pub trait NativeAsyncAutomationService: Send + Sync + 'static {
 }
 
 #[derive(Debug, Clone)]
+/// Automationstatus
 pub struct AutomationStatus {
+    /// Active Workflows
     pub active_workflows: usize,
+    /// Scheduled Tasks
     pub scheduled_tasks: usize,
+    /// Completed Workflows
     pub completed_workflows: u64,
+    /// Failed Workflows
     pub failed_workflows: u64,
 }
 
@@ -266,35 +291,56 @@ pub trait NativeAsyncMonitoringService: Send + Sync + 'static {
 }
 
 #[derive(Debug, Clone)]
+/// Alert
 pub struct Alert {
+    /// Severity
     pub severity: AlertSeverity,
+    /// Message
     pub message: String,
+    /// Component
     pub component: String,
+    /// Timestamp
     pub timestamp: std::time::SystemTime,
+    /// Additional metadata key-value pairs
     pub metadata: HashMap<String, String>,
 }
 
 #[derive(Debug, Clone)]
+/// Alertseverity
 pub enum AlertSeverity {
+    /// Info
     Info,
+    /// Warning
     Warning,
+    /// Error
     Error,
+    /// Critical
     Critical,
 }
 
 #[derive(Debug, Clone)]
+/// Dashboarddata
 pub struct DashboardData {
+    /// Metrics
     pub metrics: HashMap<String, f64>,
+    /// Status
     pub status: ServiceStatus,
+    /// Alerts
     pub alerts: Vec<Alert>,
+    /// Last Updated
     pub last_updated: std::time::SystemTime,
 }
 
 #[derive(Debug, Clone)]
+/// Status values for Service
 pub enum ServiceStatus {
+    /// Healthy
     Healthy,
+    /// Degraded
     Degraded,
+    /// Unhealthy
     Unhealthy,
+    /// Unknown
     Unknown,
 }
 
@@ -345,19 +391,26 @@ pub mod migration {
 
 /// Example native async service implementation
 pub struct ExampleNativeService {
+    /// Configuration for
     pub config: NestGateCanonicalConfig,
+    /// Initialized
     pub initialized: bool,
 }
 impl NativeAsyncService for ExampleNativeService {
+    /// Type alias for Config
     type Config = NestGateCanonicalConfig;
+    /// Type alias for Health
     type Health = ServiceHealth;
+    /// Type alias for Metrics
     type Metrics = ServiceMetrics;
 
+    /// Initialize
     async fn initialize(&self, _config: Self::Config) -> Result<()> {
         // Initialize with zero-cost configuration access
         Ok(())
     }
 
+    /// Health Check
     async fn health_check(&self) -> Result<Self::Health> {
         Ok(ServiceHealth {
             status: ServiceStatus::Healthy,
@@ -366,6 +419,7 @@ impl NativeAsyncService for ExampleNativeService {
         })
     }
 
+    /// Gets Metrics
     async fn get_metrics(&self) -> Result<Self::Metrics> {
         Ok(ServiceMetrics {
             requests_handled: 1000,
@@ -375,6 +429,7 @@ impl NativeAsyncService for ExampleNativeService {
         })
     }
 
+    /// Shutdown
     async fn shutdown(&self) -> Result<()> {
         // Graceful shutdown logic
         Ok(())
@@ -382,17 +437,26 @@ impl NativeAsyncService for ExampleNativeService {
 }
 
 #[derive(Debug, Clone)]
+/// Servicehealth
 pub struct ServiceHealth {
+    /// Status
     pub status: ServiceStatus,
+    /// Uptime
     pub uptime: std::time::Duration,
+    /// Last Check
     pub last_check: std::time::SystemTime,
 }
 
 #[derive(Debug, Clone)]
+/// Servicemetrics
 pub struct ServiceMetrics {
+    /// Requests Handled
     pub requests_handled: u64,
+    /// Average Response Time
     pub average_response_time: std::time::Duration,
+    /// Count of error
     pub error_count: u64,
+    /// Uptime
     pub uptime: std::time::Duration,
 }
 

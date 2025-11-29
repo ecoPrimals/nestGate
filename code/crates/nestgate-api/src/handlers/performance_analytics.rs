@@ -6,6 +6,7 @@ use std::collections::HashMap;
 ///
 /// State management for performance analysis operations.
 #[derive(Debug, Clone, Default)]
+/// Performanceanalyzerstate
 pub struct PerformanceAnalyzerState {
     /// Current analysis configuration
     pub config: AnalysisConfig,
@@ -35,6 +36,7 @@ pub struct PerformanceAnalyzerState {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for Analysis
 pub struct AnalysisConfig {
     /// Analysis interval in seconds
     pub interval_seconds: u64,
@@ -46,6 +48,7 @@ pub struct AnalysisConfig {
 ///
 /// Response structure for performance metrics data.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for PerformanceMetrics operation
 pub struct PerformanceMetricsResponse {
     /// Current system metrics
     pub metrics: HashMap<String, f64>,
@@ -57,6 +60,7 @@ pub struct PerformanceMetricsResponse {
 ///
 /// Performance alert information.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performancealert
 pub struct PerformanceAlert {
     /// Alert identifier
     pub id: String,
@@ -72,6 +76,7 @@ pub struct PerformanceAlert {
 ///
 /// Performance optimization recommendation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performancerecommendation
 pub struct PerformanceRecommendation {
     /// Recommendation identifier
     pub id: String,
@@ -169,6 +174,7 @@ pub async fn get_performance_recommendations(
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Analysisconfigcanonical
 pub type AnalysisConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 

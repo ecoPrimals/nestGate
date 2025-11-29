@@ -3,6 +3,8 @@
 // These handlers provide clean access to monitoring data without any
 // authentication or user management overhead.
 
+//! Monitoring module
+
 use axum::{
     extract::{Query, State},
     response::Json,
@@ -24,6 +26,7 @@ use crate::rest::{ApiState, DataError, DataResponse};
 
 /// Query parameters for historical metrics
 #[derive(Debug, Deserialize)]
+/// Metricshistoryquery
 pub struct MetricsHistoryQuery {
     /// Start time (ISO 8601)
     pub start: Option<String>,

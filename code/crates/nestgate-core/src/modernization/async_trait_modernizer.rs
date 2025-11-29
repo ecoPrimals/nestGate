@@ -86,6 +86,7 @@ mod tests {
         let legacy = r#"
         #[async_trait]
         pub trait LegacyService {
+            /// Processes data
             async fn process(&self) -> crate::Result<String, Error>;
         }
         "#;

@@ -2,6 +2,8 @@
 //
 // Advanced features for ecosystem integration through the universal adapter.
 
+//! Advanced module
+
 use super::errors::*;
 use super::implementation::*;
 use super::traits::*;
@@ -9,6 +11,7 @@ use nestgate_core::universal_adapter::UniversalAdapter;
 use tracing::{info, warn};
 
 impl AdvancedEcoPrimal for NestGateEcoPrimal {
+    /// Advanced Operation
     fn advanced_operation(&self) -> impl Future<Output = Result<(), PrimalError>> + Send {
         async move {
             info!("Performing advanced NestGate ecosystem operation");

@@ -38,7 +38,6 @@ pub struct InfantDiscoverySystem<const MAX_CAPABILITIES: usize = 256> {
     >,
     /// Dynamic capability discovery engine
     discovery_engine: Arc<RwLock<DiscoveryEngine>>,
-    /// Connection complexity tracker (must maintain O(1))
     connection_tracker: ConnectionComplexityTracker,
     /// Sovereignty compliance layer
     sovereignty_layer: SovereigntyLayer,
@@ -48,18 +47,17 @@ pub struct InfantDiscoverySystem<const MAX_CAPABILITIES: usize = 256> {
 pub struct DiscoveryEngine {
     /// Discovered capabilities (no hardcoded services)
     discovered_capabilities: HashMap<String, CapabilityDescriptor>,
-    /// Discovery statistics
     discovery_stats: DiscoveryStats,
 }
 
 /// Capability descriptor discovered at runtime
 #[derive(Debug, Clone)]
+/// Capabilitydescriptor
 pub struct CapabilityDescriptor {
     /// Capability identifier (discovered, not hardcoded)
     pub id: String,
     /// Capability type (inferred from behavior)
     pub capability_type: CapabilityType,
-    /// Connection endpoint (discovered dynamically)
     pub endpoint: Option<String>,
     /// Capability metadata (learned at runtime)
     pub metadata: HashMap<String, String>,
@@ -69,6 +67,7 @@ pub struct CapabilityDescriptor {
 
 /// Types of capabilities that can be discovered
 #[derive(Debug, Clone, PartialEq)]
+/// Types of Capability
 pub enum CapabilityType {
     /// Storage capabilities (discovered, not assumed)
     Storage,
@@ -82,24 +81,18 @@ pub enum CapabilityType {
     Unknown,
 }
 
-/// Discovery statistics tracking
 #[derive(Debug, Default, Clone)]
 pub struct DiscoveryStats {
     /// Total capabilities discovered
     pub total_discovered: u64,
-    /// Discovery attempts made
     pub discovery_attempts: u64,
     /// Average discovery time (nanoseconds)
     pub avg_discovery_time_ns: u64,
-    /// Connection complexity (must be O(1))
     pub connection_complexity: f64,
 }
 
-/// Connection complexity tracker ensuring O(1) performance
 pub struct ConnectionComplexityTracker {
-    /// Connection establishment times
     connection_times: Vec<u64>,
-    /// Maximum allowed complexity deviation
     max_complexity_deviation: f64,
 }
 
@@ -113,6 +106,7 @@ pub struct SovereigntyLayer {
 
 /// Human dignity validation rule
 #[derive(Debug, Clone)]
+/// Dignityrule
 pub struct DignityRule {
     /// Rule identifier
     pub id: String,
@@ -252,6 +246,7 @@ impl<const MAX_CAPABILITIES: usize> InfantDiscoverySystem<MAX_CAPABILITIES> {
 
     // Private implementation methods
 
+    /// Perform Runtime Discovery
     async fn perform_runtime_discovery(&self) -> Result<Vec<CapabilityDescriptor>, ZeroCostError> {
         // In a real implementation, this would:
         // 1. Scan the network environment
@@ -287,6 +282,7 @@ impl<const MAX_CAPABILITIES: usize> InfantDiscoverySystem<MAX_CAPABILITIES> {
         ])
     }
 
+    /// Creates  O1 Connection
     async fn create_o1_connection(&self, capability_id: &str) -> Result<Connection, ZeroCostError> {
         // O(1) connection establishment using zero-cost patterns
         let engine = self.discovery_engine.read().await;
@@ -303,6 +299,7 @@ impl<const MAX_CAPABILITIES: usize> InfantDiscoverySystem<MAX_CAPABILITIES> {
         }
     }
 
+    /// Verify Connection Complexity
     fn verify_connection_complexity(&self) -> Result<(), ZeroCostError> {
         if self.connection_tracker.connection_times.len() < 2 {
             return Ok(()); // Need at least 2 samples
@@ -324,6 +321,7 @@ impl<const MAX_CAPABILITIES: usize> InfantDiscoverySystem<MAX_CAPABILITIES> {
         Ok(())
     }
 
+    /// Creates  Default Dignity Rules
     fn create_default_dignity_rules() -> Vec<DignityRule> {
         vec![
             DignityRule {
@@ -345,14 +343,11 @@ impl<const MAX_CAPABILITIES: usize> InfantDiscoverySystem<MAX_CAPABILITIES> {
     }
 }
 
-/// Connection established through Infant Discovery
 #[derive(Debug)]
 pub struct Connection {
-    /// Connection identifier
     pub id: String,
     /// Discovered endpoint
     pub endpoint: Option<String>,
-    /// Connection establishment time
     pub established_at: std::time::SystemTime,
     /// Complexity order (must be 1 for O(1))
     pub complexity_order: u8,
@@ -374,6 +369,7 @@ impl SovereigntyLayer {
 }
 
 impl<const MAX_CAPABILITIES: usize> Default for InfantDiscoverySystem<MAX_CAPABILITIES> {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

@@ -11,6 +11,8 @@
 // - `security` - Security configuration and access control
 // - `automation` - Dataset automation and AI settings
 
+//! Config module
+
 pub mod automation;
 pub mod health;
 pub mod metrics;
@@ -25,21 +27,32 @@ use serde::{Deserialize, Serialize};
 
 /// Pool type configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Types of Pool
 pub enum PoolType {
     #[default]
+    /// Standard
     Standard,
+    /// Mirror
     Mirror,
+    /// Raidz1
     RaidZ1,
+    /// Raidz2
     RaidZ2,
+    /// Raidz3
     RaidZ3,
 }
 /// Compression type configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Types of Compression
 pub enum CompressionType {
     #[default]
+    /// None
     None,
+    /// Lz4
     Lz4,
+    /// Gzip
     Gzip,
+    /// Zstd
     Zstd,
 }
 pub use automation::{AiAutomationSettings, DatasetAutomationConfig};

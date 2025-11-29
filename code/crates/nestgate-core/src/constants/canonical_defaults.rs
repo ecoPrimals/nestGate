@@ -60,13 +60,10 @@ pub mod network {
     pub mod limits {
         //! Network limits and constraints
 
-        /// Maximum concurrent requests
         pub const MAX_CONCURRENT_REQUESTS: usize = 1000;
 
-        /// Maximum request size in bytes
         pub const MAX_REQUEST_SIZE: usize = 1024 * 1024; // 1MB
 
-        /// Connection timeout in milliseconds
         pub const CONNECTION_TIMEOUT_MS: u64 = 5000;
     }
 }
@@ -102,7 +99,6 @@ pub mod performance {
     /// **Performance**: Matches page size, optimal for filesystem operations
     pub const DEFAULT_BUFFER_SIZE: usize = 4096;
 
-    /// Maximum connections
     pub const MAX_CONNECTIONS: usize = 1000;
 }
 
@@ -154,10 +150,8 @@ pub mod timeouts {
     /// Default timeout in milliseconds
     pub const DEFAULT_TIMEOUT_MS: u64 = 5000;
 
-    /// Connection timeout
     pub const CONNECTION_TIMEOUT_MS: u64 = 3000;
 
-    /// Request timeout
     pub const REQUEST_TIMEOUT_MS: u64 = 10000;
 
     /// Default connection timeout as Duration

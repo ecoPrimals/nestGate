@@ -1,3 +1,5 @@
+//! Connection Pooling module
+
 use crate::error::NestGateError;
 //
 // Intelligent connection pooling with adaptive scaling for high-throughput scenarios.
@@ -38,16 +40,25 @@ pub struct IntelligentConnectionPool<T> {
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for ConnectionPool
 pub struct ConnectionPoolConfig {
+    /// Min Connections
     pub min_connections: usize,
+    /// Max Connections
     pub max_connections: usize,
+    /// Connection Timeout
     pub connection_timeout: Duration,
+    /// Idle Timeout
     pub idle_timeout: Duration,
+    /// Health Check Interval
     pub health_check_interval: Duration,
+    /// Scale Up Threshold
     pub scale_up_threshold: f64,
+    /// Scale Down Threshold
     pub scale_down_threshold: f64,
 }
 impl Default for ConnectionPoolConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             min_connections: 5,
@@ -63,23 +74,36 @@ impl Default for ConnectionPoolConfig {
 
 /// Pool metrics for monitoring and optimization
 #[derive(Debug, Default)]
+/// Poolmetrics
 pub struct PoolMetrics {
+    /// Total Connections
     pub total_connections: AtomicUsize,
+    /// Active Connections
     pub active_connections: AtomicUsize,
+    /// Idle Connections
     pub idle_connections: AtomicUsize,
+    /// Connection Requests
     pub connection_requests: AtomicU64,
+    /// Connection Failures
     pub connection_failures: AtomicU64,
+    /// Average Wait Time
     pub average_wait_time: AtomicU64,
 }
 /// Pooled connection wrapper
 pub struct PooledConnection<T> {
+    /// Connection
     pub connection: T,
+    /// Timestamp when this was created
     pub created_at: Instant,
+    /// Last Used
     pub last_used: Instant,
+    /// Count of use
     pub use_count: u64,
+    /// Whether healthy
     pub is_healthy: bool,
 }
 impl<T> PooledConnection<T> {
+    /// Creates a new instance
     pub fn new(connection: T) -> Self {
         let now = Instant::now();
         Self {
@@ -91,17 +115,20 @@ impl<T> PooledConnection<T> {
         }
     }
 
+    /// Mark Used
     pub fn mark_used(&mut self) {
         self.last_used = Instant::now();
         self.use_count += 1;
     }
 
+    /// Checks if Idle
     pub fn is_idle(&self, idle_timeout: Duration) -> bool {
         self.last_used.elapsed() > idle_timeout
     }
 }
 
 impl<T: Send + Sync + 'static> IntelligentConnectionPool<T> {
+    /// Creates a new instance
     pub fn new(config: ConnectionPoolConfig) -> Self {
         Self {
             connections: Arc::new(RwLock::new(VecDeque::new())),
@@ -139,6 +166,7 @@ impl<T: Send + Sync + 'static> IntelligentConnectionPool<T> {
         }
     }
 
+    /// Return Connection
     pub async fn return_connection(&self, connection: PooledConnection<T>) {
         let mut connections = self.connections.write().await;
         connections.push_back(connection);
@@ -147,6 +175,7 @@ impl<T: Send + Sync + 'static> IntelligentConnectionPool<T> {
             .fetch_sub(1, Ordering::Relaxed);
     }
 
+    /// Gets Metrics
     pub fn get_metrics(&self) -> PoolMetrics {
         PoolMetrics {
             total_connections: AtomicUsize::new(
@@ -179,6 +208,7 @@ impl<T: Send + Sync + 'static> IntelligentConnectionPool<T> {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Connectionpoolconfigcanonical
 pub type ConnectionPoolConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using ConnectionPoolConfig (the deprecated struct) for now.

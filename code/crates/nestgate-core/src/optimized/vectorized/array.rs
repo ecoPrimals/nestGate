@@ -93,6 +93,7 @@ impl VectorizedArrayOps {
             }
         }
 
+        /// Result
         result
     }
 } 

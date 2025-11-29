@@ -237,10 +237,12 @@ mod core_coverage_boost_tests {
 
     #[test]
     fn test_error_propagation_chain() {
+        /// Inner
         fn inner() -> Result<i32> {
             Err(NestGateError::validation_error("bad input"))
         }
 
+        /// Outer
         fn outer() -> Result<i32> {
             inner()?;
             Ok(42)
@@ -251,6 +253,7 @@ mod core_coverage_boost_tests {
 
     #[test]
     fn test_error_recovery_with_default() {
+        /// May Fail
         fn may_fail() -> Result<String> {
             Err(NestGateError::internal("failed".to_string()))
         }

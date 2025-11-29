@@ -34,6 +34,7 @@ fn hardware_tuning_disabled() -> (StatusCode, Json<serde_json::Value>) {
 
 /// Placeholder hardware tuning handler for production builds
 #[derive(Debug, Clone)]
+/// Handler for RealHardwareTuning requests
 pub struct RealHardwareTuningHandler {
     #[allow(dead_code)] // Reserved for future hardware tuning implementation
     config: HardwareTuningConfig,
@@ -44,6 +45,7 @@ pub struct RealHardwareTuningHandler {
 }
 
 impl Default for RealHardwareTuningHandler {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

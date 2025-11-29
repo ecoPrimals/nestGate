@@ -8,6 +8,7 @@ use std::fmt;
 /// **THE** `DataType` - unified across all modules
 /// Replaces 4+ fragmented `DataType` definitions across `temporal_storage`, `ecosystem_integration`, etc.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Types of UnifiedData
 pub enum UnifiedDataType {
     // Core data types
     /// Binary data files
@@ -45,12 +46,14 @@ pub enum UnifiedDataType {
 }
 
 impl Default for UnifiedDataType {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Unknown
     }
 }
 
 impl fmt::Display for UnifiedDataType {
+    /// Fmt
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Binary => write!(f, "binary"),
@@ -76,6 +79,7 @@ impl fmt::Display for UnifiedDataType {
 /// **THE** `ContentType` - unified across all modules
 /// Replaces `ContentType` definitions in API handlers and HTTP responses
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Types of UnifiedContent
 pub enum UnifiedContentType {
     /// JSON content
     Json,
@@ -119,12 +123,14 @@ pub enum UnifiedContentType {
     Custom(String),
 }
 impl Default for UnifiedContentType {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Text
     }
 }
 
 impl fmt::Display for UnifiedContentType {
+    /// Fmt
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Json => write!(f, "application/json"),
@@ -156,6 +162,7 @@ impl fmt::Display for UnifiedContentType {
 /// **THE** `FileType` - unified across all modules
 /// Replaces `FileType` definitions in automation and ZFS modules
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Types of UnifiedFile
 pub enum UnifiedFileType {
     /// Regular file
     Regular,
@@ -177,12 +184,14 @@ pub enum UnifiedFileType {
     Custom(String),
 }
 impl Default for UnifiedFileType {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Regular
     }
 }
 
 impl fmt::Display for UnifiedFileType {
+    /// Fmt
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Regular => write!(f, "regular"),

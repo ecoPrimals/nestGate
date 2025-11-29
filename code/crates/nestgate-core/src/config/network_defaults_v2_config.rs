@@ -12,6 +12,7 @@ use crate::error::utilities::safe_env_var_or_default;
 /// This struct captures all environment variables at initialization time,
 /// eliminating the need for runtime `env::var()` calls.
 #[derive(Debug, Clone)]
+/// Configuration for NetworkDefaultsV2
 pub struct NetworkDefaultsV2Config {
     // API Server
     api_host: String,
@@ -331,6 +332,7 @@ impl NetworkDefaultsV2Config {
 }
 
 impl Default for NetworkDefaultsV2Config {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

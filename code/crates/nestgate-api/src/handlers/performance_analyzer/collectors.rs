@@ -8,6 +8,7 @@ use tokio::time::{interval, Duration};
 
 /// Data collection coordinator
 #[derive(Debug)]
+/// Datacollector
 pub struct DataCollector {
     /// System metrics collector
     pub system_collector: Arc<SystemMetricsCollector>,
@@ -84,6 +85,7 @@ impl DataCollector {
 
 /// Metrics snapshot with metadata
 #[derive(Debug, Clone)]
+/// Metricssnapshot
 pub struct MetricsSnapshot {
     /// Collected system performance metrics
     pub system_metrics: SystemMetrics,
@@ -95,6 +97,7 @@ pub struct MetricsSnapshot {
 
 /// Batch metrics collector for high-throughput scenarios
 #[derive(Debug)]
+/// Batchcollector
 pub struct BatchCollector {
     /// Individual collectors
     pub collectors: Vec<Arc<SystemMetricsCollector>>,

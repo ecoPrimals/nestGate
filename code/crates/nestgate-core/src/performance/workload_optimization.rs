@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 
 /// Workload patterns for optimization
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Workloadpattern
 pub enum WorkloadPattern {
     /// High-frequency read operations
     ReadHeavy {
@@ -36,18 +37,28 @@ pub enum WorkloadPattern {
 }
 /// Optimization result with recommendations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Optimizationresult
 pub struct OptimizationResult {
+    /// Applied Optimizations
     pub applied_optimizations: Vec<String>,
+    /// Performance Improvement
     pub performance_improvement: f64,
+    /// Recommendations
     pub recommendations: Vec<String>,
+    /// Estimated Savings
     pub estimated_savings: OptimizationSavings,
 }
 /// Estimated savings from optimizations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Optimizationsavings
 pub struct OptimizationSavings {
+    /// Latency Reduction Percent
     pub latency_reduction_percent: f64,
+    /// Throughput Increase Percent
     pub throughput_increase_percent: f64,
+    /// Memory Savings in megabytes
     pub memory_savings_mb: f64,
+    /// Cpu Savings Percent
     pub cpu_savings_percent: f64,
 }
 /// Workload optimizer with pattern recognition
@@ -164,6 +175,7 @@ impl WorkloadOptimizer {
         Ok(result)
     }
 
+    /// Optimize Read Heavy
     async fn optimize_read_heavy(
         &self,
         read_ratio: f64,
@@ -190,6 +202,7 @@ impl WorkloadOptimizer {
         })
     }
 
+    /// Optimize Write Heavy
     async fn optimize_write_heavy(
         &self,
         write_ratio: f64,
@@ -216,6 +229,7 @@ impl WorkloadOptimizer {
         })
     }
 
+    /// Optimize Balanced
     async fn optimize_balanced(
         &self,
         _read_write_ratio: f64,
@@ -241,6 +255,7 @@ impl WorkloadOptimizer {
         })
     }
 
+    /// Optimize Bulk Transfer
     async fn optimize_bulk_transfer(
         &self,
         average_file_size_mb: f64,
@@ -274,6 +289,7 @@ impl WorkloadOptimizer {
         })
     }
 
+    /// Optimize Streaming
     async fn optimize_streaming(
         &self,
         stream_count: u32,
@@ -407,6 +423,7 @@ impl WorkloadOptimizer {
 }
 
 impl Default for WorkloadOptimizer {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

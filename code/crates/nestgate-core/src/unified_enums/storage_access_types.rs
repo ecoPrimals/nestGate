@@ -8,6 +8,7 @@ use std::fmt;
 /// **THE** `StorageType` - unified across all modules
 /// Replaces `StorageType` definitions in service discovery and storage modules
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Types of UnifiedStorage
 pub enum UnifiedStorageType {
     /// Local file system storage
     Local,
@@ -35,12 +36,14 @@ pub enum UnifiedStorageType {
     Custom(String),
 }
 impl Default for UnifiedStorageType {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Local
     }
 }
 
 impl fmt::Display for UnifiedStorageType {
+    /// Fmt
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Local => write!(f, "local"),
@@ -64,6 +67,7 @@ impl fmt::Display for UnifiedStorageType {
 /// **THE** `AccessType` - unified across all modules
 /// Replaces `AccessType` definitions in automation and other modules
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Types of UnifiedAccess
 pub enum UnifiedAccessType {
     /// Read access only
     Read,
@@ -81,12 +85,14 @@ pub enum UnifiedAccessType {
     Custom(String),
 }
 impl Default for UnifiedAccessType {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Read
     }
 }
 
 impl fmt::Display for UnifiedAccessType {
+    /// Fmt
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Read => write!(f, "read"),
@@ -105,6 +111,7 @@ impl fmt::Display for UnifiedAccessType {
 /// **THE** `TierType` - unified across all modules
 /// Replaces `TierType` definitions in automation and storage modules
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Types of UnifiedTier
 pub enum UnifiedTierType {
     /// Hot tier - frequently accessed data
     Hot,
@@ -120,12 +127,14 @@ pub enum UnifiedTierType {
     Custom(String),
 }
 impl Default for UnifiedTierType {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Hot
     }
 }
 
 impl fmt::Display for UnifiedTierType {
+    /// Fmt
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Hot => write!(f, "hot"),

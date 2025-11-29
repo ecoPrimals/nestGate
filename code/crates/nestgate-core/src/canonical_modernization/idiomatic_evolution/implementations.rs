@@ -7,54 +7,63 @@ use super::traits::{SmartClone, SmartDefault};
 // ==================== SMART DEFAULT IMPLEMENTATIONS ====================
 
 impl SmartDefault for String {
+    /// Smart Default
     fn smart_default() -> Self {
         String::new()
     }
 }
 
 impl SmartDefault for u16 {
+    /// Smart Default
     fn smart_default() -> Self {
         8080 // Smart default for port numbers
     }
 }
 
 impl SmartDefault for u32 {
+    /// Smart Default
     fn smart_default() -> Self {
         0
     }
 }
 
 impl SmartDefault for u64 {
+    /// Smart Default
     fn smart_default() -> Self {
         0
     }
 }
 
 impl SmartDefault for usize {
+    /// Smart Default
     fn smart_default() -> Self {
         0
     }
 }
 
 impl SmartDefault for bool {
+    /// Smart Default
     fn smart_default() -> Self {
         false
     }
 }
 
 impl SmartDefault for i32 {
+    /// Smart Default
     fn smart_default() -> Self {
         0
     }
 }
 
 impl SmartDefault for i64 {
+    /// Smart Default
     fn smart_default() -> Self {
         0
     }
 }
 
 impl SmartDefault for f64 {
+    /// Smart Default
     fn smart_default() -> Self {
         0.0
     }
@@ -127,18 +136,21 @@ impl ServiceEvolution {
 // ==================== SMART CLONE IMPLEMENTATIONS ====================
 
 impl SmartClone for String {
+    /// Smart Clone
     fn smart_clone(&self) -> Self {
         self.clone()
     }
 }
 
 impl SmartClone for u32 {
+    /// Smart Clone
     fn smart_clone(&self) -> Self {
         *self
     }
 }
 
 impl SmartClone for bool {
+    /// Smart Clone
     fn smart_clone(&self) -> Self {
         *self
     }

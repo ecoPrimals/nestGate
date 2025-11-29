@@ -2,6 +2,8 @@
 // This module provides actual system metrics collection instead of mock data.
 // It interfaces with the operating system to gather real performance data.
 
+//! Real Metrics module
+
 use std::collections::HashMap;
 // use std::time::SystemTime; // Unused currently
 use tokio::process::Command;

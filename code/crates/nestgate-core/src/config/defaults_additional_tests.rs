@@ -204,18 +204,21 @@ mod error_handling_tests {
 
     #[test]
     fn test_error_is_send() {
+        /// Assert Send
         fn assert_send<T: Send>() {}
         assert_send::<NestGateError>();
     }
 
     #[test]
     fn test_error_is_sync() {
+        /// Assert Sync
         fn assert_sync<T: Sync>() {}
         assert_sync::<NestGateError>();
     }
 
     #[test]
     fn test_error_is_send_sync() {
+        /// Assert Send Sync
         fn assert_send_sync<T: Send + Sync>() {}
         assert_send_sync::<NestGateError>();
     }

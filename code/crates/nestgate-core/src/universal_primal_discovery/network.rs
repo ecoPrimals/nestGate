@@ -34,14 +34,20 @@ use super::network_discovery_config::{NetworkRuntimeConfig, SharedNetworkRuntime
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for NetworkDiscovery
 pub struct NetworkDiscoveryConfig {
+    /// Scan Timeout
     pub scan_timeout: Duration,
+    /// Preferred Interfaces
     pub preferred_interfaces: Vec<String>,
+    /// Port Scan Range
     pub port_scan_range: (u16, u16),
+    /// Interface Priority
     pub interface_priority: Vec<String>,
 }
 #[allow(deprecated)]
 impl Default for NetworkDiscoveryConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             scan_timeout: Duration::from_secs(5),
@@ -54,16 +60,23 @@ impl Default for NetworkDiscoveryConfig {
 
 /// Network interface information
 #[derive(Debug, Clone)]
+/// Interfaceinfo
 pub struct InterfaceInfo {
+    /// Name
     pub name: String,
+    /// Ip Endpoint
     pub ip_endpoint: IpAddr,
+    /// Whether up
     pub is_up: bool,
+    /// Whether loopback
     pub is_loopback: bool,
+    /// Priority Score
     pub priority_score: i32,
 }
 /// Network discovery subsystem
 #[derive(Debug)]
 #[allow(dead_code)] // Framework infrastructure
+/// Networkdiscovery
 pub struct NetworkDiscovery {
     #[allow(dead_code)] // Framework field - intentionally unused
     config: NestGateCanonicalConfig,
@@ -73,6 +86,7 @@ pub struct NetworkDiscovery {
     runtime_config: SharedNetworkRuntimeConfig,
 }
 impl Default for NetworkDiscovery {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -364,6 +378,7 @@ impl NetworkDiscovery {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Networkdiscoveryconfigcanonical
 pub type NetworkDiscoveryConfigCanonical =
     crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 

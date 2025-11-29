@@ -13,32 +13,51 @@ use super::capability_endpoints_config::CapabilityEndpointsConfig;
 
 /// Capability types that can be discovered through the universal adapter
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+/// Types of Capability
 pub enum CapabilityType {
+    /// Storage
     Storage,
+    /// Orchestration
     Orchestration,
+    /// Security
     Security,
+    /// Artificialintelligence
     ArtificialIntelligence,
+    /// Compute
     Compute,
+    /// Management
     Management,
 }
 
 /// Discovered capability information
 #[derive(Debug, Clone)]
+/// Discoveredcapability
 pub struct DiscoveredCapability {
+    /// Unique identifier
     pub id: String,
+    /// Capability Type
     pub capability_type: CapabilityType,
+    /// Endpoint
     pub endpoint: String,
+    /// Provider Type
     pub provider_type: String, // Generic, not primal-specific
+    /// Operations
     pub operations: Vec<String>,
+    /// Health Status
     pub health_status: HealthStatus,
 }
 
 /// Health status of a discovered capability
 #[derive(Debug, Clone)]
+/// Status values for Health
 pub enum HealthStatus {
+    /// Healthy
     Healthy,
+    /// Degraded
     Degraded,
+    /// Unhealthy
     Unhealthy,
+    /// Unknown
     Unknown,
 }
 
@@ -52,10 +71,15 @@ pub struct UniversalAdapter {
 
 /// Methods for discovering capabilities
 #[derive(Debug, Clone)]
+/// Discoverymethod
 pub enum DiscoveryMethod {
+    /// Environment
     Environment,
+    /// Networkscan
     NetworkScan,
+    /// Serviceregistry
     ServiceRegistry,
+    /// Capabilitybroadcast
     CapabilityBroadcast,
 }
 
@@ -189,6 +213,7 @@ impl UniversalAdapter {
         discovery_result
     }
 
+    /// Discover From Environment
     async fn discover_from_environment(
         &self,
         capability_type: &CapabilityType,
@@ -229,6 +254,7 @@ impl UniversalAdapter {
         })
     }
 
+    /// Discover From Network
     async fn discover_from_network(
         &self,
         _capability_type: &CapabilityType,
@@ -239,6 +265,7 @@ impl UniversalAdapter {
         ))
     }
 
+    /// Discover From Registry
     async fn discover_from_registry(
         &self,
         _capability_type: &CapabilityType,
@@ -249,6 +276,7 @@ impl UniversalAdapter {
         ))
     }
 
+    /// Discover From Broadcast
     async fn discover_from_broadcast(
         &self,
         _capability_type: &CapabilityType,
@@ -259,6 +287,7 @@ impl UniversalAdapter {
         ))
     }
 
+    /// Checks if Capability Healthy
     async fn is_capability_healthy(
         &self,
         _capability: &DiscoveredCapability,
@@ -267,6 +296,7 @@ impl UniversalAdapter {
         Ok(true) // Simplified for now
     }
 
+    /// Execute Capability Request
     async fn execute_capability_request(
         &self,
         _capability: &DiscoveredCapability,
@@ -282,19 +312,27 @@ impl UniversalAdapter {
 
 /// Request to a capability
 #[derive(Debug, Clone)]
+/// Request parameters for Capability operation
 pub struct CapabilityRequest {
+    /// Capability Type
     pub capability_type: CapabilityType,
+    /// Operation
     pub operation: String,
+    /// Payload
     pub payload: serde_json::Value,
 }
 
 /// Response from a capability
 #[derive(Debug, Clone)]
+/// Response data for Capability operation
 pub struct CapabilityResponse {
+    /// Status
     pub status: String,
+    /// Data
     pub data: serde_json::Value,
 }
 
+/// Capability Type Name
 fn capability_type_name(capability_type: &CapabilityType) -> &'static str {
     match capability_type {
         CapabilityType::Storage => "storage",

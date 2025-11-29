@@ -7,15 +7,25 @@ use serde::{Deserialize, Serialize};
 /// Canonical Configuration - Top-level configuration container
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[allow(deprecated)] // MIGRATION: Using deprecated types until v0.12.0 - will migrate to CanonicalNetworkConfig
+/// Configuration for Canonical
 pub struct CanonicalConfig {
+    /// Service name
     pub service_name: String,
+    /// Version
     pub version: String,
+    /// Environment
     pub environment: String,
+    /// Debug Mode
     pub debug_mode: bool,
+    /// Log Level
     pub log_level: String,
+    /// Network
     pub network: NetworkConfig,
+    /// Storage
     pub storage: StorageConfig,
+    /// Security
     pub security: SecurityConfig,
+    /// Performance
     pub performance: PerformanceConfig,
 }
 
@@ -38,23 +48,37 @@ pub struct CanonicalConfig {
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Network
 pub struct NetworkConfig {
+    /// Bind Endpoint
     pub bind_endpoint: String,
+    /// Port
     pub port: u16,
+    /// Timeout Seconds
     pub timeout_seconds: u64,
+    /// Max Connections
     pub max_connections: u32,
+    /// Enable Tls
     pub enable_tls: bool,
+    /// Websocket Port
     pub websocket_port: Option<u16>,
 }
 
 /// Canonical Storage Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Storage
 pub struct StorageConfig {
+    /// Backend Type
     pub backend_type: String,
+    /// Data Directory
     pub data_directory: String,
+    /// Cache Size in megabytes
     pub cache_size_mb: u64,
+    /// Compression Enabled
     pub compression_enabled: bool,
+    /// Encryption Enabled
     pub encryption_enabled: bool,
+    /// Backup Enabled
     pub backup_enabled: bool,
 }
 
@@ -77,42 +101,66 @@ pub struct StorageConfig {
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Security
 pub struct SecurityConfig {
+    /// Authentication Enabled
     pub authentication_enabled: bool,
+    /// Authorization Enabled
     pub authorization_enabled: bool,
+    /// Session Timeout Minutes
     pub session_timeout_minutes: u64,
+    /// Max Login Attempts
     pub max_login_attempts: u32,
+    /// Password Policy
     pub password_policy: PasswordPolicy,
 }
 
 /// Canonical Password Policy
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[allow(clippy::struct_excessive_bools)] // Policy flags are semantically correct here
+/// Passwordpolicy
 pub struct PasswordPolicy {
+    /// Min Length
     pub min_length: u32,
+    /// Require Uppercase
     pub require_uppercase: bool,
+    /// Require Lowercase
     pub require_lowercase: bool,
+    /// Require Numbers
     pub require_numbers: bool,
+    /// Require Special
     pub require_special: bool,
 }
 
 /// Canonical Performance Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Performance
 pub struct PerformanceConfig {
+    /// Size of thread pool
     pub thread_pool_size: u32,
+    /// Buffer Size Kb
     pub buffer_size_kb: u32,
+    /// Size of batch
     pub batch_size: u32,
+    /// Enable Metrics
     pub enable_metrics: bool,
+    /// Metrics Interval Seconds
     pub metrics_interval_seconds: u64,
 }
 
 /// Authentication configuration for canonical modernization
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Auth
 pub struct AuthConfig {
+    /// Jwt Secret
     pub jwt_secret: String,
+    /// Token Expiry Minutes
     pub token_expiry_minutes: u64,
+    /// Refresh Token Expiry Days
     pub refresh_token_expiry_days: u32,
+    /// Require Email Verification
     pub require_email_verification: bool,
+    /// Enable Two Factor
     pub enable_two_factor: bool,
 }
 
@@ -120,6 +168,7 @@ pub struct AuthConfig {
 
 #[allow(deprecated)] // MIGRATION: Use CanonicalNetworkConfig in next major version
 impl Default for CanonicalConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             service_name: "nestgate".to_string(),
@@ -137,6 +186,7 @@ impl Default for CanonicalConfig {
 
 #[allow(deprecated)] // MIGRATION: Use CanonicalNetworkConfig in next major version
 impl Default for NetworkConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             bind_endpoint: std::env::var("NESTGATE_BIND_ADDRESS")
@@ -154,6 +204,7 @@ impl Default for NetworkConfig {
 }
 
 impl Default for StorageConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             backend_type: "local".to_string(),
@@ -169,6 +220,7 @@ impl Default for StorageConfig {
 
 #[allow(deprecated)]
 impl Default for SecurityConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             authentication_enabled: true,
@@ -181,6 +233,7 @@ impl Default for SecurityConfig {
 }
 
 impl Default for PerformanceConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             thread_pool_size: u32::try_from(num_cpus::get()).unwrap_or(4),
@@ -193,6 +246,7 @@ impl Default for PerformanceConfig {
 }
 
 impl Default for PasswordPolicy {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             min_length: 8,
@@ -205,6 +259,7 @@ impl Default for PasswordPolicy {
 }
 
 impl Default for AuthConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             jwt_secret: std::env::var("JWT_SECRET")

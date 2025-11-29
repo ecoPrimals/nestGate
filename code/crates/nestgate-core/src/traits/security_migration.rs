@@ -98,11 +98,13 @@ use crate::Result;
 /// some_function_expecting_security_provider(&adapted).await?;
 /// ```
 #[derive(Debug, Clone)]
+/// Securityprimaladapter
 pub struct SecurityPrimalAdapter<T>(pub T);
 
 impl<T: SecurityPrimalProvider + 'static> SecurityProvider for SecurityPrimalAdapter<T> {
     // ===== AUTHENTICATION =====
 
+    /// Authenticate
     async fn authenticate(&self, credentials: &[u8]) -> Result<AuthToken> {
         // Convert raw bytes to Credentials structure
         let creds = Credentials {
@@ -120,6 +122,7 @@ impl<T: SecurityPrimalProvider + 'static> SecurityProvider for SecurityPrimalAda
         })
     }
 
+    /// Authorize
     async fn authorize(&self, _token: &AuthToken, data: &[u8]) -> Result<Vec<u8>> {
         // SecurityPrimalProvider doesn't have authorize, decrypt as proxy
         self.0.decrypt(data, "default").await
@@ -127,17 +130,20 @@ impl<T: SecurityPrimalProvider + 'static> SecurityProvider for SecurityPrimalAda
 
     // ===== TOKEN MANAGEMENT =====
 
+    /// Validates  Token
     async fn validate_token(&self, _token: &AuthToken) -> Result<bool> {
         // SecurityPrimalProvider doesn't have token validation
         // Default to true for compatibility
         Ok(true)
     }
 
+    /// Refresh Token
     async fn refresh_token(&self, token: &AuthToken) -> Result<AuthToken> {
         // Return same token (no refresh in SecurityPrimalProvider)
         Ok(token.clone())
     }
 
+    /// Revoke Token
     async fn revoke_token(&self, _token: &AuthToken) -> Result<()> {
         // No-op for SecurityPrimalProvider
         Ok(())
@@ -145,10 +151,12 @@ impl<T: SecurityPrimalProvider + 'static> SecurityProvider for SecurityPrimalAda
 
     // ===== ENCRYPTION =====
 
+    /// Encrypt
     async fn encrypt(&self, data: &[u8], algorithm: &str) -> Result<Vec<u8>> {
         self.0.encrypt(data, algorithm).await
     }
 
+    /// Decrypt
     async fn decrypt(&self, data: &[u8]) -> Result<Option<Vec<u8>>> {
         match self.0.decrypt(data, "default").await {
             Ok(decrypted) => Ok(Some(decrypted)),
@@ -158,11 +166,13 @@ impl<T: SecurityPrimalProvider + 'static> SecurityProvider for SecurityPrimalAda
 
     // ===== SIGNING =====
 
+    /// Sign
     async fn sign(&self, data: &[u8]) -> Result<()> {
         self.0.sign_data(data).await?;
         Ok(())
     }
 
+    /// Verify
     async fn verify(&self, data: &[u8], signature: &[u8]) -> Result<Option<(String, Vec<u8>)>> {
         let sig = Signature {
             algorithm: "default".to_string(),
@@ -179,10 +189,12 @@ impl<T: SecurityPrimalProvider + 'static> SecurityProvider for SecurityPrimalAda
 
     // ===== KEY MANAGEMENT =====
 
+    /// Gets Key Id
     async fn get_key_id(&self) -> Result<String> {
         self.0.get_key_id().await
     }
 
+    /// Supported Algorithms
     async fn supported_algorithms(&self) -> Result<Vec<String>> {
         // Return common algorithms
         Ok(vec![
@@ -194,10 +206,12 @@ impl<T: SecurityPrimalProvider + 'static> SecurityProvider for SecurityPrimalAda
 
     // ===== UTILITIES =====
 
+    /// Hash Data
     async fn hash_data(&self, data: &[u8], algorithm: &str) -> Result<Vec<u8>> {
         self.0.hash_data(data, algorithm).await
     }
 
+    /// Generate Random
     async fn generate_random(&self, length: usize) -> Result<Vec<u8>> {
         self.0.generate_random(length).await
     }
@@ -207,14 +221,19 @@ impl<T: SecurityPrimalProvider + 'static> SecurityProvider for SecurityPrimalAda
 impl<T: SecurityPrimalProvider + 'static> CanonicalUniversalProvider<Box<dyn SecurityService>>
     for SecurityPrimalAdapter<T>
 {
+    /// Type alias for Config
     type Config = ();
+    /// Type alias for Error
     type Error = crate::NestGateError;
+    /// Type alias for Metadata
     type Metadata = ();
 
+    /// Initialize
     async fn initialize(&self, _config: Self::Config) -> Result<()> {
         Ok(())
     }
 
+    /// Provide
     async fn provide(&self) -> Result<Box<dyn SecurityService>> {
         Err(crate::NestGateError::internal_error(
             "adapter_not_service_provider",
@@ -222,14 +241,17 @@ impl<T: SecurityPrimalProvider + 'static> CanonicalUniversalProvider<Box<dyn Sec
         ))
     }
 
+    /// Stop
     async fn stop(&self) -> Result<()> {
         Ok(())
     }
 
+    /// Gets Metadata
     async fn get_metadata(&self) -> Result<Self::Metadata> {
         Ok(())
     }
 
+    /// Health Check
     async fn health_check(&self) -> Result<ProviderHealth> {
         Ok(ProviderHealth {
             status: crate::traits::canonical_provider_unification::HealthStatus::Healthy,
@@ -245,14 +267,17 @@ impl<T: SecurityPrimalProvider + 'static> CanonicalUniversalProvider<Box<dyn Sec
         })
     }
 
+    /// Supported Types
     async fn supported_types(&self) -> Result<Vec<UnifiedServiceType>> {
         Ok(vec![])
     }
 
+    /// Supports Type
     async fn supports_type(&self, _service_type: &UnifiedServiceType) -> Result<bool> {
         Ok(false)
     }
 
+    /// Gets Capabilities
     async fn get_capabilities(&self) -> Result<ProviderCapabilities> {
         Ok(ProviderCapabilities {
             operations: vec!["authenticate".to_string(), "encrypt".to_string()],
@@ -262,6 +287,7 @@ impl<T: SecurityPrimalProvider + 'static> CanonicalUniversalProvider<Box<dyn Sec
         })
     }
 
+    /// Validates  Config
     async fn validate_config(&self, _config: &Self::Config) -> Result<Vec<String>> {
         Ok(vec![])
     }
@@ -296,6 +322,7 @@ impl<T: SecurityPrimalProvider + 'static> CanonicalUniversalProvider<Box<dyn Sec
 /// secure_operation(&adapted).await?;
 /// ```
 #[derive(Debug, Clone)]
+/// Zerocostsecurityadapter
 pub struct ZeroCostSecurityAdapter<T>(pub T);
 
 impl<T: ZeroCostSecurityProvider + Send + Sync + 'static> SecurityProvider
@@ -303,6 +330,7 @@ impl<T: ZeroCostSecurityProvider + Send + Sync + 'static> SecurityProvider
 {
     // ===== AUTHENTICATION =====
 
+    /// Authenticate
     async fn authenticate(&self, credentials: &[u8]) -> Result<AuthToken> {
         // Parse credentials as "username:password"
         let cred_str = String::from_utf8_lossy(credentials);
@@ -329,6 +357,7 @@ impl<T: ZeroCostSecurityProvider + Send + Sync + 'static> SecurityProvider
         })
     }
 
+    /// Authorize
     async fn authorize(&self, _token: &AuthToken, data: &[u8]) -> Result<Vec<u8>> {
         // Proxy through decrypt
         self.0.decrypt(data, "default").await
@@ -336,10 +365,12 @@ impl<T: ZeroCostSecurityProvider + Send + Sync + 'static> SecurityProvider
 
     // ===== TOKEN MANAGEMENT =====
 
+    /// Validates  Token
     async fn validate_token(&self, token: &AuthToken) -> Result<bool> {
         self.0.validate_token(&token.token).await
     }
 
+    /// Refresh Token
     async fn refresh_token(&self, token: &AuthToken) -> Result<AuthToken> {
         let refreshed = self.0.refresh_token(&token.token).await?;
 
@@ -350,16 +381,19 @@ impl<T: ZeroCostSecurityProvider + Send + Sync + 'static> SecurityProvider
         })
     }
 
+    /// Revoke Token
     async fn revoke_token(&self, token: &AuthToken) -> Result<()> {
         self.0.revoke_token(&token.token).await
     }
 
     // ===== ENCRYPTION =====
 
+    /// Encrypt
     async fn encrypt(&self, data: &[u8], algorithm: &str) -> Result<Vec<u8>> {
         self.0.encrypt(data, algorithm).await
     }
 
+    /// Decrypt
     async fn decrypt(&self, data: &[u8]) -> Result<Option<Vec<u8>>> {
         match self.0.decrypt(data, "default").await {
             Ok(decrypted) => Ok(Some(decrypted)),
@@ -369,11 +403,13 @@ impl<T: ZeroCostSecurityProvider + Send + Sync + 'static> SecurityProvider
 
     // ===== SIGNING =====
 
+    /// Sign
     async fn sign(&self, data: &[u8]) -> Result<()> {
         self.0.sign_data(data).await?;
         Ok(())
     }
 
+    /// Verify
     async fn verify(&self, data: &[u8], signature: &[u8]) -> Result<Option<(String, Vec<u8>)>> {
         // Convert signature bytes to base64 string
         let sig_str = String::from_utf8_lossy(signature).to_string();
@@ -395,16 +431,19 @@ impl<T: ZeroCostSecurityProvider + Send + Sync + 'static> SecurityProvider
 
     // ===== KEY MANAGEMENT =====
 
+    /// Gets Key Id
     async fn get_key_id(&self) -> Result<String> {
         Ok(self.0.get_key_id())
     }
 
+    /// Supported Algorithms
     async fn supported_algorithms(&self) -> Result<Vec<String>> {
         Ok(self.0.supported_algorithms())
     }
 
     // ===== UTILITIES =====
 
+    /// Hash Data
     async fn hash_data(&self, data: &[u8], algorithm: &str) -> Result<Vec<u8>> {
         // ZeroCostSecurityProvider doesn't have hash_data
         // Use a simple hash as fallback
@@ -419,6 +458,7 @@ impl<T: ZeroCostSecurityProvider + Send + Sync + 'static> SecurityProvider
         Ok(hash.to_le_bytes().to_vec())
     }
 
+    /// Generate Random
     async fn generate_random(&self, length: usize) -> Result<Vec<u8>> {
         // ZeroCostSecurityProvider doesn't have generate_random
         // Use a simple random generation as fallback
@@ -430,14 +470,19 @@ impl<T: ZeroCostSecurityProvider + Send + Sync + 'static> SecurityProvider
 impl<T: ZeroCostSecurityProvider + Send + Sync + 'static>
     CanonicalUniversalProvider<Box<dyn SecurityService>> for ZeroCostSecurityAdapter<T>
 {
+    /// Type alias for Config
     type Config = T::Config;
+    /// Type alias for Error
     type Error = crate::NestGateError;
+    /// Type alias for Metadata
     type Metadata = ();
 
+    /// Initialize
     async fn initialize(&self, _config: Self::Config) -> Result<()> {
         Ok(())
     }
 
+    /// Provide
     async fn provide(&self) -> Result<Box<dyn SecurityService>> {
         Err(crate::NestGateError::internal_error(
             "adapter_not_service_provider",
@@ -445,14 +490,17 @@ impl<T: ZeroCostSecurityProvider + Send + Sync + 'static>
         ))
     }
 
+    /// Stop
     async fn stop(&self) -> Result<()> {
         Ok(())
     }
 
+    /// Gets Metadata
     async fn get_metadata(&self) -> Result<Self::Metadata> {
         Ok(())
     }
 
+    /// Health Check
     async fn health_check(&self) -> Result<ProviderHealth> {
         let _health = self.0.health_check().await;
 
@@ -470,14 +518,17 @@ impl<T: ZeroCostSecurityProvider + Send + Sync + 'static>
         })
     }
 
+    /// Supported Types
     async fn supported_types(&self) -> Result<Vec<UnifiedServiceType>> {
         Ok(vec![])
     }
 
+    /// Supports Type
     async fn supports_type(&self, _service_type: &UnifiedServiceType) -> Result<bool> {
         Ok(false)
     }
 
+    /// Gets Capabilities
     async fn get_capabilities(&self) -> Result<ProviderCapabilities> {
         Ok(ProviderCapabilities {
             operations: vec![
@@ -491,6 +542,7 @@ impl<T: ZeroCostSecurityProvider + Send + Sync + 'static>
         })
     }
 
+    /// Validates  Config
     async fn validate_config(&self, _config: &Self::Config) -> Result<Vec<String>> {
         Ok(vec![])
     }

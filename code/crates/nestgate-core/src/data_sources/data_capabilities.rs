@@ -9,6 +9,7 @@ use std::collections::HashMap;
 
 /// Universal data request
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for Data operation
 pub struct DataRequest {
     /// What type of data is being requested
     pub capability_type: String,
@@ -19,6 +20,7 @@ pub struct DataRequest {
 }
 /// Universal data response
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for Data operation
 pub struct DataResponse {
     /// The requested data
     pub data: serde_json::Value,
@@ -29,6 +31,7 @@ pub struct DataResponse {
 }
 /// Source information (for attribution only)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Sourceinfo
 pub struct SourceInfo {
     /// Provider type (e.g., "genome_database", "model_repository")
     pub provider_type: String,
@@ -77,46 +80,75 @@ pub trait ResearchDataCapability: DataCapability {
 }
 /// Generic result types (provider-agnostic)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Genomeresult
 pub struct GenomeResult {
+    /// Unique identifier
     pub id: String,
+    /// Title
     pub title: String,
+    /// Organism
     pub organism: Option<String>,
+    /// Human-readable description
     pub description: Option<String>,
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Genomesequence
 pub struct GenomeSequence {
+    /// Unique identifier
     pub id: String,
+    /// Sequence
     pub sequence: String,
+    /// Additional metadata key-value pairs
     pub metadata: HashMap<String, String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Modelresult
 pub struct ModelResult {
+    /// Unique identifier
     pub id: String,
+    /// Name
     pub name: String,
+    /// Model Type
     pub model_type: Option<String>,
+    /// Human-readable description
     pub description: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Modelinfo
 pub struct ModelInfo {
+    /// Unique identifier
     pub id: String,
+    /// Name
     pub name: String,
+    /// Parameters
     pub parameters: HashMap<String, serde_json::Value>,
+    /// Additional metadata key-value pairs
     pub metadata: HashMap<String, String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Researchresult
 pub struct ResearchResult {
+    /// Unique identifier
     pub id: String,
+    /// Title
     pub title: String,
+    /// Authors
     pub authors: Vec<String>,
+    /// Abstract Text
     pub abstract_text: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Researchdata
 pub struct ResearchData {
+    /// Unique identifier
     pub id: String,
+    /// Title
     pub title: String,
+    /// Content
     pub content: serde_json::Value,
+    /// Additional metadata key-value pairs
     pub metadata: HashMap<String, String>,

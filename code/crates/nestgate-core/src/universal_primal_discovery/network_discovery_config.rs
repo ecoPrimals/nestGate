@@ -40,6 +40,7 @@ use std::sync::Arc;
 /// handled scan timeouts and preferences. This config manages runtime values
 /// like bind addresses, ports, and endpoints.
 #[derive(Debug, Clone)]
+/// Configuration for NetworkRuntime
 pub struct NetworkRuntimeConfig {
     /// Bind addresses for specific services (`NESTGATE_<SERVICE>_BIND_ADDRESS`)
     bind_addresses: HashMap<String, IpAddr>,
@@ -183,6 +184,7 @@ impl NetworkRuntimeConfig {
 }
 
 impl Default for NetworkRuntimeConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

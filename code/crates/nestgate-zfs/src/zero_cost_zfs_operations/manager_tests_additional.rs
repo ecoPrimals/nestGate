@@ -2,8 +2,7 @@
 //!
 //! Tests focused on publicly accessible methods and type configurations
 
-use super::manager::*;
-use super::types::*;
+use super::{ZeroCostDatasetInfo, ZeroCostPoolInfo, ZeroCostSnapshotInfo, ZeroCostZfsManager};
 use nestgate_core::canonical_types::StorageTier;
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -36,7 +35,9 @@ fn test_command_timeout_duration() {
 
 #[test]
 fn test_different_timeout_configurations() {
+    /// Type alias for FastManager
     type FastManager = ZeroCostZfsManager<16, 128, 512, 1000>;
+    /// Type alias for SlowManager
     type SlowManager = ZeroCostZfsManager<16, 128, 512, 10000>;
 
     let fast_timeout = FastManager::command_timeout();
@@ -49,6 +50,7 @@ fn test_different_timeout_configurations() {
 
 #[test]
 fn test_very_short_timeout() {
+    /// Type alias for VeryFastManager
     type VeryFastManager = ZeroCostZfsManager<16, 128, 512, 100>;
     let timeout = VeryFastManager::command_timeout();
     assert_eq!(timeout.as_millis(), 100);
@@ -56,6 +58,7 @@ fn test_very_short_timeout() {
 
 #[test]
 fn test_very_long_timeout() {
+    /// Type alias for VerySlowManager
     type VerySlowManager = ZeroCostZfsManager<16, 128, 512, 60000>;
     let timeout = VerySlowManager::command_timeout();
     assert_eq!(timeout.as_millis(), 60000);
@@ -65,6 +68,7 @@ fn test_very_long_timeout() {
 
 #[test]
 fn test_small_capacity_manager() {
+    /// Type alias for SmallManager
     type SmallManager = ZeroCostZfsManager<1, 10, 100, 5000>;
     let _manager = SmallManager::new();
     // Should create with small capacities
@@ -72,6 +76,7 @@ fn test_small_capacity_manager() {
 
 #[test]
 fn test_large_capacity_manager() {
+    /// Type alias for LargeManager
     type LargeManager = ZeroCostZfsManager<1000, 100000, 1000000, 5000>;
     let _manager = LargeManager::new();
     // Should create with large capacities
@@ -79,8 +84,11 @@ fn test_large_capacity_manager() {
 
 #[test]
 fn test_different_capacity_configurations() {
+    /// Type alias for Config1
     type Config1 = ZeroCostZfsManager<10, 100, 1000, 5000>;
+    /// Type alias for Config2
     type Config2 = ZeroCostZfsManager<20, 200, 2000, 5000>;
+    /// Type alias for Config3
     type Config3 = ZeroCostZfsManager<30, 300, 3000, 5000>;
 
     let _m1 = Config1::new();

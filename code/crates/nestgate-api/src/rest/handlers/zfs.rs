@@ -3,6 +3,8 @@
 // These handlers focus solely on data operations without authentication,
 // providing clean data access for management and other management systems.
 
+//! Zfs module
+
 use axum::{
     extract::{Path, Query, State},
     response::Json,
@@ -814,6 +816,7 @@ async fn create_storage_backend(
 }
 // Helper trait to convert backend types to strings for filtering
 impl ToString for StorageBackendType {
+    /// Converts to String
     fn to_string(&self) -> String {
         match self {
             Self::Filesystem => "zfs".to_string(),

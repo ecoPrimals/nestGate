@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 
 /// Performance trend analysis
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performancetrend
 pub enum PerformanceTrend {
     /// Performance is improving
     Improving,
@@ -18,6 +19,7 @@ pub enum PerformanceTrend {
 
 /// Component performance analysis
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Componentanalysis
 pub struct ComponentAnalysis {
     /// Component name
     pub component_name: String,
@@ -33,6 +35,7 @@ pub struct ComponentAnalysis {
 
 /// Performance snapshot at a point in time
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performancesnapshot
 pub struct PerformanceSnapshot {
     /// Timestamp of the snapshot
     pub timestamp: DateTime<Utc>,
@@ -50,6 +53,7 @@ pub struct PerformanceSnapshot {
 
 /// CPU performance metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Cpumetrics
 pub struct CpuMetrics {
     /// CPU usage percentage
     pub usage_percent: f64,
@@ -65,6 +69,7 @@ pub struct CpuMetrics {
 
 /// Memory performance metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Memorymetrics
 pub struct MemoryMetrics {
     /// Total memory in bytes
     pub total_bytes: u64,
@@ -80,6 +85,7 @@ pub struct MemoryMetrics {
 
 /// Disk performance metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Diskmetrics
 pub struct DiskMetrics {
     /// Read operations per second
     pub read_ops_per_sec: f64,
@@ -95,6 +101,7 @@ pub struct DiskMetrics {
 
 /// Network performance metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Networkmetrics
 pub struct NetworkMetrics {
     /// Bytes received per second
     pub rx_bytes_per_sec: f64,
@@ -108,6 +115,7 @@ pub struct NetworkMetrics {
 
 /// ZFS performance metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Zfsmetrics
 pub struct ZfsMetrics {
     /// ARC hit ratio
     pub arc_hit_ratio: f64,
@@ -147,6 +155,7 @@ pub struct ZfsMetrics {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for PerformanceAnalysis
 pub struct PerformanceAnalysisConfig {
     /// Enable CPU monitoring
     pub enable_cpu_monitoring: bool,
@@ -165,6 +174,7 @@ pub struct PerformanceAnalysisConfig {
 }
 
 impl Default for PerformanceAnalysisConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enable_cpu_monitoring: true,
@@ -180,6 +190,7 @@ impl Default for PerformanceAnalysisConfig {
 
 /// Performance analysis report
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performanceanalysisreport
 pub struct PerformanceAnalysisReport {
     /// Report generation timestamp
     pub generated_at: DateTime<Utc>,
@@ -205,6 +216,7 @@ pub struct PerformanceAnalysisReport {
 
 /// Performance trends analysis
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performancetrends
 pub struct PerformanceTrends {
     /// CPU usage trend
     pub cpu_trend: PerformanceTrend,
@@ -220,6 +232,7 @@ pub struct PerformanceTrends {
 
 /// CPU analysis details
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Cpuanalysis
 pub struct CpuAnalysis {
     /// Current CPU usage
     pub current_usage: f64,
@@ -233,6 +246,7 @@ pub struct CpuAnalysis {
 
 /// Memory analysis details
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Memoryanalysis
 pub struct MemoryAnalysis {
     /// Current memory usage percentage
     pub current_usage_percent: f64,
@@ -246,6 +260,7 @@ pub struct MemoryAnalysis {
 
 /// Disk analysis details
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Diskanalysis
 pub struct DiskAnalysis {
     /// Current disk I/O utilization
     pub current_io_utilization: f64,
@@ -259,6 +274,7 @@ pub struct DiskAnalysis {
 
 /// Network analysis details
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Networkanalysis
 pub struct NetworkAnalysis {
     /// Current network utilization
     pub current_utilization: f64,
@@ -272,6 +288,7 @@ pub struct NetworkAnalysis {
 
 /// ZFS analysis details
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Zfsanalysis
 pub struct ZfsAnalysis {
     /// Current ARC hit ratio
     pub current_arc_hit_ratio: f64,
@@ -285,6 +302,7 @@ pub struct ZfsAnalysis {
 
 /// Performance recommendation
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performancerecommendation
 pub struct PerformanceRecommendation {
     /// Recommendation category
     pub category: String,
@@ -298,6 +316,7 @@ pub struct PerformanceRecommendation {
 
 /// Performance analyzer state
 #[derive(Debug, Clone, Default)]
+/// Performanceanalyzerstate
 pub struct PerformanceAnalyzerState {
     /// Whether analysis is currently running
     pub is_running: bool,
@@ -318,6 +337,7 @@ pub struct PerformanceAnalyzerState {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Performanceanalysisconfigcanonical
 pub type PerformanceAnalysisConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 

@@ -24,14 +24,20 @@ pub use crate::constants::network::{
 
 /// Configuration for network services
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for NetworkTraits
 pub struct NetworkTraitsConfig {
+    /// Whether this feature is enabled
     pub enabled: bool,
+    /// Timeout
     pub timeout: Duration,
+    /// Max Connections
     pub max_connections: usize,
+    /// Size of buffer
     pub buffer_size: usize,
 }
 
 impl Default for NetworkTraitsConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -81,22 +87,32 @@ pub trait Service: Send + Sync {
 
 /// Health status enumeration
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+/// Status values for Health
 pub enum HealthStatus {
+    /// Healthy
     Healthy,
+    /// Degraded
     Degraded,
+    /// Unhealthy
     Unhealthy,
 }
 
 /// Performance metrics for monitoring
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Metrics
 pub struct Metrics {
+    /// Requests Processed
     pub requests_processed: u64,
+    /// Errors Encountered
     pub errors_encountered: u64,
+    /// Average Response Time
     pub average_response_time: Duration,
+    /// Memory Usage Bytes
     pub memory_usage_bytes: u64,
 }
 
 impl Default for Metrics {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             requests_processed: 0,
@@ -111,6 +127,7 @@ impl Default for Metrics {
 
 /// Default implementation of the service
 #[derive(Debug)]
+/// Service implementation for Default
 pub struct DefaultService {
     _config: NetworkTraitsConfig,
     metrics: Arc<tokio::sync::RwLock<Metrics>>,
@@ -132,15 +149,18 @@ impl DefaultService {
 }
 
 impl Service for DefaultService {
+    /// Initialize
     async fn initialize(&self) -> Result<()> {
         tracing::info!("Initializing network service");
         Ok(())
     }
 
+    /// Health Check
     async fn health_check(&self) -> Result<HealthStatus> {
         Ok(HealthStatus::Healthy)
     }
 
+    /// Shutdown
     async fn shutdown(&self) -> Result<()> {
         tracing::info!("Shutting down network service");
         Ok(())

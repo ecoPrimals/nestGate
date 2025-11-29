@@ -28,6 +28,7 @@ use serde::{Deserialize, Serialize};
     since = "0.11.3",
     note = "Use crate::traits::canonical_provider_unification::SecurityProvider - enhanced with 14 comprehensive security methods. Migration guide: docs/guides/SECURITY_PROVIDER_MIGRATION.md"
 )]
+/// SecurityPrimalProvider trait
 pub trait SecurityPrimalProvider: Send + Sync {
     /// Authenticate with provided credentials
     fn authenticate(
@@ -106,33 +107,52 @@ pub trait SecurityPrimalProvider: Send + Sync {
 
 /// Security decision enumeration
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Securitydecision
 pub enum SecurityDecision {
+    /// Allow
     Allow,
+    /// Deny
     Deny,
+    /// Requireadditionalauth
     RequireAdditionalAuth,
+    /// Requiremfa
     RequireMFA,
+    /// Ratelimit
     RateLimit { retry_after: u64 },
 }
 /// Authentication credentials
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Credentials
 pub struct Credentials {
+    /// Username
     pub username: String,
+    /// Password
     pub password: String,
+    /// Mfa Token
     pub mfa_token: Option<String>,
+    /// Client Info
     pub client_info: Option<String>,
 }
 /// Authentication token
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Authtoken
 pub struct AuthToken {
+    /// Token
     pub token: String,
+    /// Expires At
     pub expires_at: std::time::SystemTime,
+    /// Permissions
     pub permissions: Vec<String>,
 }
 /// Cryptographic signature
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Signature
 pub struct Signature {
+    /// Algorithm
     pub algorithm: String,
+    /// Signature
     pub signature: Vec<u8>,
+    /// Key identifier
     pub key_id: Option<String>,
 }
 #[cfg(test)]
@@ -145,6 +165,7 @@ mod tests {
     }
 
     impl MockSecurityProvider {
+        /// Creates a new instance
         fn new() -> Self {
             Self {
                 key_id: "test-key-123".to_string(),
@@ -154,6 +175,7 @@ mod tests {
 
     #[allow(deprecated)] // Test mock using deprecated trait
     impl SecurityPrimalProvider for MockSecurityProvider {
+        /// Authenticate
         async fn authenticate(&self, credentials: &Credentials) -> Result<AuthToken> {
             if credentials.username == "test_user" && credentials.password == "test_pass" {
                 Ok(AuthToken {
@@ -166,6 +188,7 @@ mod tests {
             }
         }
 
+        /// Encrypt
         async fn encrypt(&self, data: &[u8], algorithm: &str) -> Result<Vec<u8>> {
             if algorithm == "AES256" {
                 let mut encrypted = data.to_vec();
@@ -181,6 +204,7 @@ mod tests {
             }
         }
 
+        /// Decrypt
         async fn decrypt(&self, encrypted: &[u8], algorithm: &str) -> Result<Vec<u8>> {
             if algorithm == "AES256" {
                 let mut decrypted = encrypted.to_vec();
@@ -196,6 +220,7 @@ mod tests {
             }
         }
 
+        /// Sign Data
         async fn sign_data(&self, data: &[u8]) -> Result<Signature> {
             Ok(Signature {
                 algorithm: "RS256".to_string(),
@@ -204,6 +229,7 @@ mod tests {
             })
         }
 
+        /// Verify Signature
         async fn verify_signature(&self, data: &[u8], signature: &Signature) -> Result<bool> {
             if signature.algorithm == "RS256" {
                 let expected: Vec<u8> = data.iter().map(|b| b.wrapping_add(1)).collect();
@@ -213,10 +239,12 @@ mod tests {
             }
         }
 
+        /// Gets Key Id
         async fn get_key_id(&self) -> Result<String> {
             Ok(self.key_id.clone())
         }
 
+        /// Hash Data
         async fn hash_data(&self, data: &[u8], algorithm: &str) -> Result<Vec<u8>> {
             match algorithm {
                 "SHA256" => Ok(data.iter().map(|b| b.wrapping_mul(2)).collect()),
@@ -226,10 +254,12 @@ mod tests {
             }
         }
 
+        /// Generate Random
         async fn generate_random(&self, length: usize) -> Result<Vec<u8>> {
             Ok((0..length).map(|_| fastrand::u8(..)).collect())
         }
 
+        /// Derive Key
         async fn derive_key(
             &self,
             password: &str,
@@ -240,6 +270,7 @@ mod tests {
             Ok(combined.as_bytes().to_vec())
         }
 
+        /// Creates  Session
         async fn create_session(&self, user_id: &str, permissions: Vec<String>) -> Result<String> {
             let permissions_str = permissions.join(",");
             Ok(format!(
@@ -248,6 +279,7 @@ mod tests {
             ))
         }
 
+        /// Validates  Session
         async fn validate_session(&self, session_token: &str) -> Result<SecurityDecision> {
             if session_token.starts_with("session_") {
                 Ok(SecurityDecision::Allow)
@@ -258,6 +290,7 @@ mod tests {
             }
         }
 
+        /// Evaluate Boundary Access
         async fn evaluate_boundary_access(
             &self,
             source: &str,

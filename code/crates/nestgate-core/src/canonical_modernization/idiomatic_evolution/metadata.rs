@@ -8,6 +8,7 @@ use std::collections::HashMap;
 ///
 /// Tracks evolution and modernization metadata for types
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Evolutionmetadata
 pub struct EvolutionMetadata {
     /// Version of the evolution
     pub version: String,
@@ -20,6 +21,7 @@ pub struct EvolutionMetadata {
 }
 /// Migration path information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Migrationpath
 pub struct MigrationPath {
     /// Source version
     pub from_version: String,
@@ -32,6 +34,7 @@ pub struct MigrationPath {
 }
 /// Compatibility information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Compatibilityinfo
 pub struct CompatibilityInfo {
     /// Compatible versions
     pub compatible_versions: Vec<String>,
@@ -42,6 +45,7 @@ pub struct CompatibilityInfo {
 }
 /// Modernization metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Modernizationmetadata
 pub struct ModernizationMetadata {
     /// Modernization status
     pub status: ModernizationStatus,
@@ -52,6 +56,7 @@ pub struct ModernizationMetadata {
 }
 /// Version information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Versioninfo
 pub struct VersionInfo {
     /// Current version
     pub current: String,
@@ -62,6 +67,7 @@ pub struct VersionInfo {
 }
 /// Deprecation information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Deprecationinfo
 pub struct DeprecationInfo {
     /// Deprecated item
     pub item: String,
@@ -74,6 +80,7 @@ pub struct DeprecationInfo {
 }
 /// Modernization status
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Status values for Modernization
 pub enum ModernizationStatus {
     /// Not started
     NotStarted,
@@ -87,6 +94,7 @@ pub enum ModernizationStatus {
     RolledBack,
 }
 impl Default for EvolutionMetadata {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             version: "1.0.0".to_string(),

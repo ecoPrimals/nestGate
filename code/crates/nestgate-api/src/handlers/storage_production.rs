@@ -14,12 +14,14 @@ use tracing::{info, warn};
 ///
 /// Manages real storage operations using the universal storage system.
 #[derive(Debug, Clone)]
+/// Handler for ProductionStorage requests
 pub struct ProductionStorageHandler {
     #[allow(dead_code)] // Used in future storage detection features
     detector: StorageDetector,
 }
 
 impl Default for ProductionStorageHandler {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -44,6 +46,7 @@ impl ProductionStorageHandler {
 
 /// Storage pool information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagepoolinfo
 pub struct StoragePoolInfo {
     /// Pool name identifier
     pub name: String,
@@ -59,6 +62,7 @@ pub struct StoragePoolInfo {
 
 /// Storage dataset information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagedatasetinfo
 pub struct StorageDatasetInfo {
     /// Dataset name
     pub name: String,
@@ -74,6 +78,7 @@ pub struct StorageDatasetInfo {
 
 /// Storage snapshot information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagesnapshotinfo
 pub struct StorageSnapshotInfo {
     /// Snapshot name
     pub name: String,
@@ -87,6 +92,7 @@ pub struct StorageSnapshotInfo {
 
 /// Storage metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagemetrics
 pub struct StorageMetrics {
     /// Total number of storage pools
     pub total_pools: usize,
@@ -195,8 +201,11 @@ pub async fn get_storage_metrics() -> Result<Json<StorageMetrics>> {
         total_pools: detected.len(),
         total_datasets: 0,  // Requires backend-specific enumeration
         total_snapshots: 0, // Requires backend-specific enumeration
+        /// Total Storage
         total_storage,
+        /// Used Storage
         used_storage,
+        /// Available Storage
         available_storage,
         iops: 0.0,           // Requires performance monitoring integration
         bandwidth_mbps: 0.0, // Requires performance monitoring integration

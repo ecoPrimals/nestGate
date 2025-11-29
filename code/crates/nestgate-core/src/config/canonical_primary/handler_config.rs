@@ -20,6 +20,7 @@ use std::time::Duration;
 ///
 /// Single source of truth for ALL handler configurations across `NestGate`
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Canonicalhandlerconfigs
 pub struct CanonicalHandlerConfigs {
     /// Global settings applied to all handlers
     pub global: GlobalHandlerConfig,
@@ -55,6 +56,7 @@ pub struct CanonicalHandlerConfigs {
 ///
 /// Settings applied to all handlers by default
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for GlobalHandler
 pub struct GlobalHandlerConfig {
     /// Default timeout for handler operations
     pub default_timeout: Duration,
@@ -76,6 +78,7 @@ pub struct GlobalHandlerConfig {
     pub security: HandlerSecurityConfig,
 }
 impl Default for GlobalHandlerConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             default_timeout: Duration::from_secs(30),
@@ -97,6 +100,7 @@ impl Default for GlobalHandlerConfig {
 ///
 /// Consolidates `ZfsServiceConfig` and related ZFS handler configurations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ZfsHandler
 pub struct ZfsHandlerConfig {
     /// Service name for ZFS handler
     pub service_name: String,
@@ -114,6 +118,7 @@ pub struct ZfsHandlerConfig {
     pub custom_properties: HashMap<String, String>,
 }
 impl Default for ZfsHandlerConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             service_name: "canonical-zfs-handler".to_string(),
@@ -147,6 +152,7 @@ impl ZfsHandlerConfig {
 
 /// **ZFS BACKEND CONFIGURATION**
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Zfsbackendconfig
 pub enum ZfsBackendConfig {
     /// Automatically detect the best backend
     Auto,
@@ -155,10 +161,16 @@ pub enum ZfsBackendConfig {
     /// Use development environment compatibility layer
     Development,
     /// Use remote ZFS service
-    Remote { endpoint: String, timeout: Duration },
+    Remote {
+        /// Remote service endpoint URL
+        endpoint: String,
+        /// Connection timeout duration
+        timeout: Duration,
+    },
 }
 /// **ZFS FAIL-SAFE CONFIGURATION**
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ZfsFailSafe
 pub struct ZfsFailSafeConfig {
     /// Enable circuit breaker
     pub enable_circuit_breaker: bool,
@@ -176,16 +188,23 @@ pub struct ZfsFailSafeConfig {
     pub fallback_enabled: bool,
 }
 
+/// Circuit breaker configuration for fault tolerance
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for CircuitBreaker
 pub struct CircuitBreakerConfig {
+    /// Whether circuit breaker is enabled
     pub enabled: bool,
 }
 
+/// Retry policy configuration for resilience
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for RetryPolicy
 pub struct RetryPolicyConfig {
+    /// Whether retry policy is enabled
     pub enabled: bool,
 }
 impl Default for ZfsFailSafeConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enable_circuit_breaker: true,
@@ -200,12 +219,14 @@ impl Default for ZfsFailSafeConfig {
 }
 
 impl Default for CircuitBreakerConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self { enabled: true }
     }
 }
 
 impl Default for RetryPolicyConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self { enabled: true }
     }
@@ -213,6 +234,7 @@ impl Default for RetryPolicyConfig {
 
 /// **ZFS OBSERVABILITY CONFIGURATION**
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ZfsObservability
 pub struct ZfsObservabilityConfig {
     /// Enable metrics collection
     pub enable_metrics: bool,
@@ -224,6 +246,7 @@ pub struct ZfsObservabilityConfig {
     pub health_check_interval: Duration,
 }
 impl Default for ZfsObservabilityConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enable_metrics: true,
@@ -236,6 +259,7 @@ impl Default for ZfsObservabilityConfig {
 
 /// **ZFS PERFORMANCE CONFIGURATION**
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ZfsPerformance
 pub struct ZfsPerformanceConfig {
     /// Connection pool size
     pub pool_size: usize,
@@ -249,6 +273,7 @@ pub struct ZfsPerformanceConfig {
     pub enable_zero_copy: bool,
 }
 impl Default for ZfsPerformanceConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             pool_size: 10,
@@ -262,6 +287,7 @@ impl Default for ZfsPerformanceConfig {
 
 /// **ZFS SECURITY CONFIGURATION**
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ZfsSecurity
 pub struct ZfsSecurityConfig {
     /// Require authentication
     pub require_auth: bool,
@@ -273,6 +299,7 @@ pub struct ZfsSecurityConfig {
     pub allowed_operations: Vec<String>,
 }
 impl Default for ZfsSecurityConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             require_auth: true,
@@ -293,6 +320,7 @@ impl Default for ZfsSecurityConfig {
 ///
 /// Consolidates `PerformanceAnalysisConfig` and related performance handler configurations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for PerformanceHandler
 pub struct PerformanceHandlerConfig {
     /// Enable performance monitoring
     pub enable_monitoring: bool,
@@ -306,6 +334,7 @@ pub struct PerformanceHandlerConfig {
     pub analysis: AnalysisConfig,
 }
 impl Default for PerformanceHandlerConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enable_monitoring: true,
@@ -319,6 +348,7 @@ impl Default for PerformanceHandlerConfig {
 
 /// **BENCHMARK CONFIGURATION**
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Benchmark
 pub struct BenchmarkConfig {
     /// Number of benchmark iterations
     pub iterations: u32,
@@ -328,6 +358,7 @@ pub struct BenchmarkConfig {
     pub enable_profiling: bool,
 }
 impl Default for BenchmarkConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             iterations: 100,
@@ -339,6 +370,7 @@ impl Default for BenchmarkConfig {
 
 /// **ANALYSIS CONFIGURATION**
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Analysis
 pub struct AnalysisConfig {
     /// Enable statistical analysis
     pub enable_statistics: bool,
@@ -348,6 +380,7 @@ pub struct AnalysisConfig {
     pub window_size: usize,
 }
 impl Default for AnalysisConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enable_statistics: true,
@@ -363,6 +396,7 @@ impl Default for AnalysisConfig {
 ///
 /// Consolidates `LoadTestConfig` and related load testing configurations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for LoadTestHandler
 pub struct LoadTestHandlerConfig {
     /// Maximum concurrent connections
     pub max_connections: usize,
@@ -376,6 +410,7 @@ pub struct LoadTestHandlerConfig {
     pub enable_real_time_metrics: bool,
 }
 impl Default for LoadTestHandlerConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             max_connections: 100,
@@ -389,6 +424,7 @@ impl Default for LoadTestHandlerConfig {
 
 /// **WORKSPACE HANDLER CONFIGURATION**
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for WorkspaceHandler
 pub struct WorkspaceHandlerConfig {
     /// Default workspace size limit
     pub default_size_limit: u64,
@@ -400,6 +436,7 @@ pub struct WorkspaceHandlerConfig {
     pub cleanup_policy: WorkspaceCleanupPolicy,
 }
 impl Default for WorkspaceHandlerConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             default_size_limit: 10 * 1024 * 1024 * 1024, // 10GB
@@ -412,13 +449,21 @@ impl Default for WorkspaceHandlerConfig {
 
 /// **WORKSPACE CLEANUP POLICY**
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Workspacecleanuppolicy
 pub enum WorkspaceCleanupPolicy {
+    /// Manual cleanup - requires explicit user action
     Manual,
-    Automatic { retention_days: u32 },
+    /// Automatic cleanup based on retention period
+    Automatic {
+        /// Number of days to retain workspace data
+        retention_days: u32,
+    },
+    /// On-demand cleanup - triggered by system events
     OnDemand,
 }
 /// **HARDWARE TUNING HANDLER CONFIGURATION**
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for HardwareTuningHandler
 pub struct HardwareTuningHandlerConfig {
     /// Enable automatic tuning
     pub enable_auto_tuning: bool,
@@ -430,6 +475,7 @@ pub struct HardwareTuningHandlerConfig {
     pub enable_memory_optimization: bool,
 }
 impl Default for HardwareTuningHandlerConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enable_auto_tuning: true,
@@ -442,6 +488,7 @@ impl Default for HardwareTuningHandlerConfig {
 
 /// **COMPLIANCE HANDLER CONFIGURATION**
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ComplianceHandler
 pub struct ComplianceHandlerConfig {
     /// Enable compliance monitoring
     pub enable_monitoring: bool,
@@ -451,6 +498,7 @@ pub struct ComplianceHandlerConfig {
     pub audit_interval: Duration,
 }
 impl Default for ComplianceHandlerConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enable_monitoring: true,
@@ -462,6 +510,7 @@ impl Default for ComplianceHandlerConfig {
 
 /// **DASHBOARD HANDLER CONFIGURATION**
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for DashboardHandler
 pub struct DashboardHandlerConfig {
     /// Enable real-time updates
     pub enable_real_time: bool,
@@ -473,6 +522,7 @@ pub struct DashboardHandlerConfig {
     pub cache_ttl: Duration,
 }
 impl Default for DashboardHandlerConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enable_real_time: true,
@@ -489,6 +539,7 @@ impl Default for DashboardHandlerConfig {
 ///
 /// Generic configuration for custom handlers
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for CustomHandler
 pub struct CustomHandlerConfig {
     /// Handler name
     pub name: String,
@@ -501,6 +552,7 @@ pub struct CustomHandlerConfig {
 }
 /// **RATE LIMIT CONFIGURATION**
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for RateLimit
 pub struct RateLimitConfig {
     /// Requests per minute
     pub requests_per_minute: u32,
@@ -510,6 +562,7 @@ pub struct RateLimitConfig {
     pub enabled: bool,
 }
 impl Default for RateLimitConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             requests_per_minute: 1000,
@@ -521,6 +574,7 @@ impl Default for RateLimitConfig {
 
 /// **HANDLER SECURITY CONFIGURATION**
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for HandlerSecurity
 pub struct HandlerSecurityConfig {
     /// Require authentication
     pub require_auth: bool,
@@ -532,6 +586,7 @@ pub struct HandlerSecurityConfig {
     pub security_headers: HashMap<String, String>,
 }
 impl Default for HandlerSecurityConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             require_auth: true,

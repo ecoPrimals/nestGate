@@ -35,13 +35,19 @@ pub use crate::Result;
 
 // Configuration summary for adapter information
 #[derive(Debug, Clone)]
+/// Adapterconfigurationsummary
 pub struct AdapterConfigurationSummary {
+    /// Discovery Endpoint
     pub discovery_endpoint: String,
+    /// Service name
     pub service_name: String,
+    /// Max Concurrent Requests
     pub max_concurrent_requests: u32,
+    /// Timeout Seconds
     pub timeout_seconds: u64,
 }
 impl Default for AdapterConfigurationSummary {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             discovery_endpoint:
@@ -63,6 +69,7 @@ pub struct UniversalAdapterSystem {
     config: NestGateCanonicalConfig,
 }
 impl UniversalAdapterSystem {
+    /// Creates a new instance
     pub async fn new(config: NestGateCanonicalConfig) -> crate::Result<Self> {
         // Create adapter config from unified config
         let adapter_config = crate::ecosystem_integration::create_default_adapter_config();

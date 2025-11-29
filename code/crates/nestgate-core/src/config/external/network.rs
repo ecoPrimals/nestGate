@@ -28,6 +28,7 @@ use super::network_env_config::NetworkEnvConfig;
 
 /// Network configuration for all services
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Network
 pub struct NetworkConfig {
     /// API server configuration
     pub api: EndpointConfig,
@@ -43,6 +44,7 @@ pub struct NetworkConfig {
 
 /// Configuration for a single network endpoint
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Endpoint
 pub struct EndpointConfig {
     /// Host address
     pub host: String,

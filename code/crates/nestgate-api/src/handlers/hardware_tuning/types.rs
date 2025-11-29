@@ -13,6 +13,7 @@ use nestgate_core::Result;
 ///
 /// Configuration for hardware tuning operations.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for HardwareTuning
 pub struct HardwareTuningConfig {
     /// Number of CPU cores to allocate
     pub cpu_cores: u32,
@@ -29,6 +30,7 @@ pub struct HardwareTuningConfig {
 }
 
 impl Default for HardwareTuningConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             cpu_cores: 8,
@@ -45,6 +47,7 @@ impl Default for HardwareTuningConfig {
 ///
 /// Resource allocation specification for compute workloads.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Computeallocation
 pub struct ComputeAllocation {
     /// Number of CPU cores allocated
     pub cpu_cores: u32,
@@ -58,6 +61,7 @@ pub struct ComputeAllocation {
 ///
 /// Available compute resources in the system.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Computeresources
 pub struct ComputeResources {
     /// Available CPU cores
     pub available_cpu: u32,
@@ -71,6 +75,7 @@ pub struct ComputeResources {
 ///
 /// Request for compute resource allocation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for ComputeResource operation
 pub struct ComputeResourceRequest {
     /// Number of CPU cores requested
     pub cpu_cores: u32,
@@ -84,6 +89,7 @@ pub struct ComputeResourceRequest {
 ///
 /// Currently available system resources for allocation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Availableresources
 pub struct AvailableResources {
     /// Available CPU cores
     pub available_cpu: u32,
@@ -97,6 +103,7 @@ pub struct AvailableResources {
 ///
 /// GPU resource allocation specification.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Gpuallocation
 pub struct GpuAllocation {
     /// GPU device identifier
     pub gpu_id: String,
@@ -108,6 +115,7 @@ pub struct GpuAllocation {
 ///
 /// Registration information for hardware tuning services.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Tuningserviceregistration
 pub struct TuningServiceRegistration {
     /// Name of the tuning service
     pub service_name: String,
@@ -119,6 +127,7 @@ pub struct TuningServiceRegistration {
 ///
 /// Adapter for interfacing with compute services.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Computeadapter
 pub struct ComputeAdapter {
     /// Name of the associated service
     pub service_name: String,
@@ -127,6 +136,7 @@ pub struct ComputeAdapter {
 impl ComputeAdapter {
     /// Create a new compute adapter for the specified service
     #[must_use]
+    /// Fn
     pub const fn new(service_name: String) -> Self {
         Self { service_name }
     }
@@ -136,6 +146,7 @@ impl ComputeAdapter {
 ///
 /// Real-time hardware performance metrics.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Livehardwaremetrics
 pub struct LiveHardwareMetrics {
     /// Current CPU utilization percentage
     pub cpu_usage: f64,
@@ -163,6 +174,7 @@ pub struct LiveHardwareMetrics {
 ///
 /// Results from hardware tuning operations.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Tuningresult
 pub struct TuningResult {
     /// Name of the tuning profile applied
     pub profile_name: String,
@@ -182,6 +194,7 @@ pub struct TuningResult {
 ///
 /// Results from hardware benchmark tests.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Benchmarkresult
 pub struct BenchmarkResult {
     /// Type of benchmark that was run
     pub benchmark_type: String,
@@ -197,6 +210,7 @@ pub struct BenchmarkResult {
 ///
 /// Point-in-time performance snapshot.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performancesnapshot
 pub struct PerformanceSnapshot {
     /// Timestamp when snapshot was taken
     pub timestamp: DateTime<Utc>,
@@ -214,6 +228,7 @@ pub struct PerformanceSnapshot {
 ///
 /// System configuration profile for different workload types.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Systemprofile
 pub struct SystemProfile {
     /// CPU tuning profile name
     pub cpu_profile: String,
@@ -229,6 +244,7 @@ pub struct SystemProfile {
 ///
 /// Represents an active hardware tuning session with real-time metrics collection.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Livehardwaretuningsession
 pub struct LiveHardwareTuningSession {
     /// Unique session identifier for tracking
     pub session_id: String,
@@ -301,6 +317,7 @@ impl LiveHardwareTuningSession {
 ///
 /// Hardware capabilities and specifications of the system.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Systemcapabilities
 pub struct SystemCapabilities {
     /// Number of CPU cores available
     pub cpu_cores: usize,
@@ -318,6 +335,7 @@ pub struct SystemCapabilities {
 ///
 /// Detailed CPU specifications and capabilities.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Cpuinfo
 pub struct CpuInfo {
     /// Number of CPU cores
     pub cores: usize,
@@ -329,6 +347,7 @@ pub struct CpuInfo {
 ///
 /// System memory specifications and availability.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Memoryinfo
 pub struct MemoryInfo {
     /// Total system memory in gigabytes
     pub total_gb: u64,
@@ -338,6 +357,7 @@ pub struct MemoryInfo {
 ///
 /// Graphics processing unit specifications and capabilities.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Gpuinfo
 pub struct GpuInfo {
     /// GPU device name
     pub name: String,
@@ -349,24 +369,28 @@ pub struct GpuInfo {
 ///
 /// Hardware monitor for CPU performance and utilization.
 #[derive(Debug, Clone)]
+/// Cpumonitor
 pub struct CpuMonitor;
 
 /// **MEMORY MONITOR**
 ///
 /// Hardware monitor for memory usage and availability.
 #[derive(Debug, Clone)]
+/// Memorymonitor
 pub struct MemoryMonitor;
 
 /// **GPU MONITOR**
 ///
 /// Hardware monitor for GPU utilization and performance.
 #[derive(Debug, Clone)]
+/// Gpumonitor
 pub struct GpuMonitor;
 
 /// **TUNING SESSION**
 ///
 /// Active tuning session
 #[derive(Debug, Clone)]
+/// Tuningsession
 pub struct TuningSession {
     /// Unique identifier for the tuning session
     pub session_id: String,
@@ -383,6 +407,7 @@ pub struct TuningSession {
 /// Collection of hardware monitoring services.
 #[derive(Debug, Clone)]
 #[allow(dead_code)]
+/// Hardwaremonitors
 pub struct HardwareMonitors {
     /// CPU performance monitor
     pub cpu: CpuMonitor,
@@ -397,6 +422,7 @@ pub struct HardwareMonitors {
 /// Collects and aggregates system performance metrics.
 #[derive(Debug, Clone)]
 #[allow(dead_code)] // Monitor fields used for system integration
+/// Systemmetricscollector
 pub struct SystemMetricsCollector {
     /// CPU monitoring
     pub cpu_monitor: CpuMonitor,
@@ -418,6 +444,7 @@ impl SystemMetricsCollector {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     #[must_use]
+    /// Fn
     pub const fn new() -> Result<Self> {
         Ok(Self {
             cpu_monitor: CpuMonitor,
@@ -456,6 +483,7 @@ impl SystemMetricsCollector {
         })
     }
 
+    /// Gets Cpu Usage
     fn get_cpu_usage(&self) -> Result<f64> {
         // Read CPU usage from /proc/stat
         match std::fs::read_to_string("/proc/stat") {
@@ -483,6 +511,7 @@ impl SystemMetricsCollector {
         }
     }
 
+    /// Gets Memory Usage
     fn get_memory_usage(&self) -> Result<f64> {
         // Read memory usage from /proc/meminfo
         match std::fs::read_to_string("/proc/meminfo") {
@@ -514,6 +543,7 @@ impl SystemMetricsCollector {
         }
     }
 
+    /// Gets Gpu Usage
     fn get_gpu_usage(&self) -> Result<f64> {
         // Try to read GPU usage from nvidia-smi or other GPU tools
         // For now, return 0.0 if no GPU monitoring available
@@ -534,6 +564,7 @@ impl SystemMetricsCollector {
         Ok(0.0) // No GPU or monitoring not available
     }
 
+    /// Gets Disk Usage
     fn get_disk_usage(&self) -> Result<f64> {
         // Get disk usage for root filesystem
         if let Ok(_metadata) = std::fs::metadata("/") {
@@ -558,6 +589,7 @@ impl SystemMetricsCollector {
         Ok(0.0) // Fallback
     }
 
+    /// Gets Network Usage
     async fn get_network_usage(&self) -> Result<f64> {
         // Read network statistics from /proc/net/dev
         match std::fs::read_to_string("/proc/net/dev") {

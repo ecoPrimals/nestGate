@@ -15,6 +15,7 @@ use tracing::{info, warn};
 pub type ComplianceState = Arc<RwLock<ComplianceManager>>;
 /// Compliance manager
 #[derive(Debug, Clone, Default)]
+/// Manager for Compliance operations
 pub struct ComplianceManager {
     /// Data retention policies
     pub retention_policies: HashMap<String, RetentionPolicy>,
@@ -29,6 +30,7 @@ pub struct ComplianceManager {
 }
 /// Data retention policy
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Retentionpolicy
 pub struct RetentionPolicy {
     /// Policy ID
     pub id: String,
@@ -53,6 +55,7 @@ pub struct RetentionPolicy {
 }
 /// Access control policy
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Accesspolicy
 pub struct AccessPolicy {
     /// Policy ID
     pub id: String,
@@ -75,6 +78,7 @@ pub struct AccessPolicy {
 }
 /// Time restriction
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Timerestriction
 pub struct TimeRestriction {
     /// Day of week (0-6, Sunday = 0)
     pub day_of_week: u8,
@@ -87,6 +91,7 @@ pub struct TimeRestriction {
 }
 /// Data classification levels
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Dataclassification
 pub enum DataClassification {
     /// Public data
     Public,
@@ -101,6 +106,7 @@ pub enum DataClassification {
 }
 /// Audit event
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Auditevent
 pub struct AuditEvent {
     /// Event ID
     pub id: String,
@@ -125,6 +131,7 @@ pub struct AuditEvent {
 }
 /// Audit event types
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of AuditEvent
 pub enum AuditEventType {
     /// Data access
     DataAccess,
@@ -145,6 +152,7 @@ pub enum AuditEventType {
 }
 
 impl std::fmt::Display for AuditEventType {
+    /// Fmt
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::DataAccess => write!(f, "Data Access"),
@@ -161,6 +169,7 @@ impl std::fmt::Display for AuditEventType {
 
 /// Audit result
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Auditresult
 pub enum AuditResult {
     /// Success
     Success,
@@ -175,6 +184,7 @@ pub enum AuditResult {
 }
 /// Regulatory framework
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Regulatoryframework
 pub struct RegulatoryFramework {
     /// Framework ID
     pub id: String,
@@ -193,6 +203,7 @@ pub struct RegulatoryFramework {
 }
 /// Regulatory framework types
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of Regulatory
 pub enum RegulatoryType {
     /// GDPR (General Data Protection Regulation)
     GDPR,
@@ -211,6 +222,7 @@ pub enum RegulatoryType {
 }
 /// Compliance control
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Compliancecontrol
 pub struct ComplianceControl {
     /// Control ID
     pub id: String,
@@ -229,6 +241,7 @@ pub struct ComplianceControl {
 }
 /// Control types
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of Control
 pub enum ControlType {
     /// Preventive control
     Preventive,
@@ -241,6 +254,7 @@ pub enum ControlType {
 }
 /// Implementation status
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Status values for Implementation
 pub enum ImplementationStatus {
     /// Not implemented
     NotImplemented,
@@ -255,6 +269,7 @@ pub enum ImplementationStatus {
 }
 /// Compliance status
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Status values for Compliance
 pub enum ComplianceStatus {
     /// Compliant
     Compliant,
@@ -269,6 +284,7 @@ pub enum ComplianceStatus {
 }
 /// Compliance violation
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Complianceviolation
 pub struct ComplianceViolation {
     /// Violation ID
     pub id: String,
@@ -293,6 +309,7 @@ pub struct ComplianceViolation {
 }
 /// Violation types
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of Violation
 pub enum ViolationType {
     /// Data retention violation
     DataRetention,
@@ -311,6 +328,7 @@ pub enum ViolationType {
 }
 
 impl std::fmt::Display for ViolationType {
+    /// Fmt
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::DataRetention => write!(f, "Data Retention"),
@@ -326,6 +344,7 @@ impl std::fmt::Display for ViolationType {
 
 /// Violation severity
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Violationseverity
 pub enum ViolationSeverity {
     /// Low severity
     Low,
@@ -338,6 +357,7 @@ pub enum ViolationSeverity {
 }
 /// Resolution status
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Status values for Resolution
 pub enum ResolutionStatus {
     /// Open
     Open,
@@ -491,6 +511,7 @@ impl ComplianceManager {
 
 /// Compliance report
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Compliancereport
 pub struct ComplianceReport {
     /// Report timestamp
     pub timestamp: DateTime<Utc>,

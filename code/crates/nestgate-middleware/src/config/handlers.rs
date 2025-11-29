@@ -58,11 +58,13 @@ pub struct ValidationRule {
 }
     #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ValidationType {
+    /// String
     String {
         min_length: Option<usize>,
         max_length: Option<usize>,
         pattern: Option<String>,
     }
+    /// Number
     Number {
         min: Option<f64>,
         max: Option<f64>,
@@ -290,6 +292,7 @@ pub struct ParallelGroup {
 // ==================== SECTION ====================
 
 impl Default for RequestParsingSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             max_size: 1024 * 1024 * 10, // 10MB
             timeout: Duration::from_secs(30),
@@ -307,6 +310,7 @@ impl Default for RequestParsingSettings {
 }
 
 impl Default for ResponseFormattingSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             default_format: ResponseFormat::Json,
             content_negotiation: true,
@@ -316,6 +320,7 @@ impl Default for ResponseFormattingSettings {
 }
 
 impl Default for ErrorHandlingSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             include_stack_trace: false,
             format: HttpResponseFormat::Json,
@@ -326,6 +331,7 @@ impl Default for ErrorHandlingSettings {
 }
 
 impl Default for ResponseHeadersSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             default_headers: {
                 let mut headers = HashMap::new();
@@ -341,6 +347,7 @@ impl Default for ResponseHeadersSettings {
 }
 
 impl Default for ChainManagementSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             execution_order: vec![
                 MiddlewareType::Security,
@@ -357,6 +364,7 @@ impl Default for ChainManagementSettings {
 }
 
 impl Default for ChainOptimizationSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             enabled: true,
             skip_disabled: true,
@@ -366,6 +374,7 @@ impl Default for ChainOptimizationSettings {
 }
 
 impl Default for ErrorPropagationSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             stop_on_error: true,
             aggregate_errors: false,

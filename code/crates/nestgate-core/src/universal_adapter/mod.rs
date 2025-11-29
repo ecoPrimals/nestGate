@@ -13,6 +13,8 @@
 //
 // **NO HARDCODED CONNECTIONS:** All inter-primal communication goes through this adapter.
 
+//! Universal Adapter module
+
 pub mod adapter_config;
 pub mod capability_endpoints_config;
 pub mod config;
@@ -59,9 +61,13 @@ pub mod types {
 
     /// Query for discovering capabilities through universal adapter
     #[derive(Debug, Clone, Serialize, Deserialize)]
+    /// Capabilityquery
     pub struct CapabilityQuery {
+        /// Capability
         pub capability: String,
+        /// Operation
         pub operation: Option<String>,
+        /// Filters
         pub filters: Vec<String>,
     }
 
@@ -110,6 +116,7 @@ pub mod consolidated_canonical {
 /// Universal Adapter for O(1) capability-based connections
 /// Replaces hardcoded primal-to-primal connections
 #[derive(Debug, Clone)]
+/// Universaladapter
 pub struct UniversalAdapter {
     /// Adapter endpoint URL
     pub endpoint: String,
@@ -119,6 +126,7 @@ pub struct UniversalAdapter {
     pub discovery_cache: HashMap<String, CachedCapability>,
     /// Adapter configuration (cache/timeout settings)
     #[allow(deprecated)]
+    /// Configuration for
     pub config: UniversalAdapterConfig,
     /// Discovery configuration (immutable, thread-safe)
     pub discovery_config: SharedDiscoveryConfig,
@@ -144,6 +152,7 @@ pub struct UniversalAdapter {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for UniversalAdapter
 pub struct UniversalAdapterConfig {
     /// Discovery timeout in seconds
     pub discovery_timeout: u64,
@@ -157,6 +166,7 @@ pub struct UniversalAdapterConfig {
 
 /// Information about a capability provided by any primal
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Capabilityinfo
 pub struct CapabilityInfo {
     /// Capability category (orchestration, compute, security, ai, storage, etc.)
     pub category: String,
@@ -176,6 +186,7 @@ pub struct CapabilityInfo {
 
 /// Cached capability information
 #[derive(Debug, Clone)]
+/// Cachedcapability
 pub struct CachedCapability {
     /// Capability information
     pub info: CapabilityInfo,
@@ -187,6 +198,7 @@ pub struct CachedCapability {
 
 /// Universal adapter request for capability access
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for Capability operation
 pub struct CapabilityRequest {
     /// Target capability category
     pub capability: String,
@@ -235,6 +247,7 @@ impl CapabilityRequest {
 
 /// Universal adapter response
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for Capability operation
 pub struct CapabilityResponse {
     /// Response status
     pub status: String,
@@ -515,6 +528,7 @@ impl UniversalAdapter {
 
 #[allow(deprecated)]
 impl Default for UniversalAdapterConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             discovery_timeout: 30,
@@ -542,6 +556,7 @@ pub fn validate_primal_sovereignty() -> Result<(), String> {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Universaladapterconfigcanonical
 pub type UniversalAdapterConfigCanonical =
     crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 

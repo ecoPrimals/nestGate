@@ -3,6 +3,7 @@
 // Comprehensive tests for the ZFS manager functionality
 
 #[cfg(test)]
+/// Tests module
 mod manager_tests {
     use super::super::*;
     use std::collections::HashMap;

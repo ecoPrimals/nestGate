@@ -1,6 +1,8 @@
 //
 // Snapshot operations with circuit breaker and retry logic.
 
+//! Snapshot Operations module
+
 use crate::handlers::zfs::universal_zfs::traits::UniversalZfsService;
 use crate::handlers::zfs::universal_zfs_types::{
     SnapshotConfig, SnapshotInfo, UniversalZfsError, UniversalZfsResult,
@@ -8,6 +10,7 @@ use crate::handlers::zfs::universal_zfs_types::{
 
 use super::core::FailSafeZfsService;
 
+/// List Snapshots
 pub async fn list_snapshots(service: &FailSafeZfsService) -> UniversalZfsResult<Vec<SnapshotInfo>> {
     // Check if circuit breaker allows execution
     if !service.circuit_breaker.can_execute().await {
@@ -38,6 +41,7 @@ pub async fn list_snapshots(service: &FailSafeZfsService) -> UniversalZfsResult<
     }
 }
 
+/// List Dataset Snapshots
 pub async fn list_dataset_snapshots(
     service: &FailSafeZfsService,
     dataset: &str,
@@ -69,6 +73,7 @@ pub async fn list_dataset_snapshots(
     }
 }
 
+/// Creates  Snapshot
 pub async fn create_snapshot(
     service: &FailSafeZfsService,
     config: &SnapshotConfig,
@@ -102,6 +107,7 @@ pub async fn create_snapshot(
     }
 }
 
+/// Destroy Snapshot
 pub async fn destroy_snapshot(service: &FailSafeZfsService, name: &str) -> UniversalZfsResult<()> {
     // Check if circuit breaker allows execution
     if !service.circuit_breaker.can_execute().await {

@@ -2,6 +2,7 @@
 /// Provides metrics and statistics for connection pool performance monitoring.
 /// Statistics for connection pool monitoring
 #[derive(Debug, Clone)]
+/// Poolstats
 pub struct PoolStats {
     /// Total number of connections created
     pub total_created: u64,
@@ -15,6 +16,7 @@ pub struct PoolStats {
     pub avg_acquisition_time_ms: f64,
 }
 impl Default for PoolStats {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             total_created: 0,

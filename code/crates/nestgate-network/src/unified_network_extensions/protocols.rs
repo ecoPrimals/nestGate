@@ -8,6 +8,7 @@ use std::time::Duration;
 
 /// Network protocol configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Networkprotocolsettings
 pub struct NetworkProtocolSettings {
     /// TCP protocol settings
     pub tcp: TcpProtocolSettings,
@@ -22,6 +23,7 @@ pub struct NetworkProtocolSettings {
 }
 /// TCP protocol settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Tcpprotocolsettings
 pub struct TcpProtocolSettings {
     /// Enable TCP keep-alive
     pub keep_alive: bool,
@@ -36,6 +38,7 @@ pub struct TcpProtocolSettings {
 }
 /// UDP protocol settings
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Udpprotocolsettings
 pub struct UdpProtocolSettings {
     /// Enable UDP broadcast
     pub enable_broadcast: bool,
@@ -48,6 +51,7 @@ pub struct UdpProtocolSettings {
 }
 /// HTTP protocol settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Httpprotocolsettings
 pub struct HttpProtocolSettings {
     /// HTTP version (1.1, 2.0)
     pub version: String,
@@ -62,6 +66,7 @@ pub struct HttpProtocolSettings {
 }
 /// WebSocket protocol settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Websocketprotocolsettings
 pub struct WebSocketProtocolSettings {
     /// WebSocket ping interval
     pub ping_interval: Duration,
@@ -76,6 +81,7 @@ pub struct WebSocketProtocolSettings {
 }
 /// Custom protocol settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Customprotocolsettings
 pub struct CustomProtocolSettings {
     /// Protocol name
     pub name: String,
@@ -88,6 +94,7 @@ pub struct CustomProtocolSettings {
 }
 /// Socket buffer settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Socketbuffersettings
 pub struct SocketBufferSettings {
     /// Send buffer size
     pub send_buffer_size: usize,
@@ -96,6 +103,7 @@ pub struct SocketBufferSettings {
 }
 /// Connection pool settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Connectionpoolsettings
 pub struct ConnectionPoolSettings {
     /// Minimum connections
     pub min_connections: u32,
@@ -108,6 +116,7 @@ pub struct ConnectionPoolSettings {
 }
 /// Compression settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Compressionsettings
 pub struct CompressionSettings {
     /// Enable compression
     pub enabled: bool,
@@ -120,6 +129,7 @@ pub struct CompressionSettings {
 }
 
 impl Default for TcpProtocolSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             keep_alive: true,
@@ -132,6 +142,7 @@ impl Default for TcpProtocolSettings {
 }
 
 impl Default for HttpProtocolSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             version: "1.1".to_string(),
@@ -144,6 +155,7 @@ impl Default for HttpProtocolSettings {
 }
 
 impl Default for WebSocketProtocolSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             ping_interval: Duration::from_secs(30),
@@ -156,6 +168,7 @@ impl Default for WebSocketProtocolSettings {
 }
 
 impl Default for SocketBufferSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             send_buffer_size: 64 * 1024,    // 64KB
@@ -165,6 +178,7 @@ impl Default for SocketBufferSettings {
 }
 
 impl Default for ConnectionPoolSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             min_connections: 5,
@@ -176,6 +190,7 @@ impl Default for ConnectionPoolSettings {
 }
 
 impl Default for CompressionSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,

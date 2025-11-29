@@ -5,6 +5,8 @@
 // - Service management and deployment
 // - System diagnostics and troubleshooting
 
+//! Cli module
+
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
@@ -42,17 +44,21 @@ For more information: https://github.com/your-org/nestgate
 pub struct Cli {
     /// Enable verbose logging
     #[arg(short, long, global = true)]
+    /// Verbose
     pub verbose: bool,
 
     /// Configuration file path
     #[arg(short, long, global = true)]
+    /// Configuration for
     pub config: Option<PathBuf>,
 
     /// Output format (json, yaml, table)
     #[arg(long, global = true, default_value = "table")]
+    /// Output
     pub output: String,
 
     #[command(subcommand)]
+    /// Command
     pub command: Commands,
 }
 #[derive(Debug, Subcommand)]

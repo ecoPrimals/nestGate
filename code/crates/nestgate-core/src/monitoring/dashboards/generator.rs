@@ -217,6 +217,7 @@ impl DashboardGenerator {
 }
 
 impl Default for DashboardGenerator {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

@@ -23,6 +23,7 @@ pub type NetworkConfig = CanonicalNetworkConfig;
 /// to networking capabilities discovered at runtime. NestGate does NOT hardcode
 /// any specific networking primal - it discovers "networking" capability providers.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Networkextensions
 pub struct NetworkExtensions {
     /// Port range start for service allocation
     pub port_range_start: u16,
@@ -40,6 +41,7 @@ pub struct NetworkExtensions {
 }
 
 impl Default for NetworkExtensions {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             port_range_start: 9000,
@@ -54,12 +56,19 @@ impl Default for NetworkExtensions {
 
 /// Connection information
 #[derive(Debug, Clone)]
+/// Connectioninfo
 pub struct ConnectionInfo {
+    /// Unique identifier
     pub id: String,
+    /// Endpoint
     pub endpoint: SocketAddr,
+    /// Established At
     pub established_at: SystemTime,
+    /// Bytes Sent
     pub bytes_sent: u64,
+    /// Bytes Received
     pub bytes_received: u64,
+    /// Status
     pub status: ConnectionStatus,
 }
 impl ConnectionInfo {
@@ -124,6 +133,7 @@ impl ConnectionInfo {
 
 /// Connection status enumeration
 #[derive(Debug, Clone)]
+/// Status values for Connection
 pub enum ConnectionStatus {
     /// Connection is active
     Active,
@@ -136,23 +146,36 @@ pub enum ConnectionStatus {
 }
 /// Connection details for external reporting
 #[derive(Debug, Clone)]
+/// Connectiondetails
 pub struct ConnectionDetails {
+    /// Unique identifier
     pub id: String,
+    /// Endpoint
     pub endpoint: SocketAddr,
+    /// Age
     pub age: Duration,
+    /// Whether active
     pub is_active: bool,
+    /// Status
     pub status: String,
 }
 // ==================== SECTION ====================
 
 /// Service information
 #[derive(Debug, Clone)]
+/// Serviceinfo
 pub struct ServiceInfo {
+    /// Unique identifier
     pub id: String,
+    /// Name
     pub name: String,
+    /// Endpoint
     pub endpoint: SocketAddr,
+    /// Health Status
     pub health_status: HealthStatus,
+    /// Registered At
     pub registered_at: SystemTime,
+    /// Additional metadata key-value pairs
     pub metadata: HashMap<String, String>,
 }
 impl ServiceInfo {
@@ -230,6 +253,7 @@ impl ServiceInfo {
 
 /// Health status enumeration
 #[derive(Debug, Clone)]
+/// Status values for Health
 pub enum HealthStatus {
     /// Service is healthy
     Healthy,
@@ -242,40 +266,64 @@ pub enum HealthStatus {
 }
 /// Service details for external reporting
 #[derive(Debug, Clone)]
+/// Servicedetails
 pub struct ServiceDetails {
+    /// Unique identifier
     pub id: String,
+    /// Name
     pub name: String,
+    /// Endpoint
     pub endpoint: SocketAddr,
+    /// Health Status
     pub health_status: String,
+    /// Registered At
     pub registered_at: SystemTime,
+    /// Additional metadata key-value pairs
     pub metadata: HashMap<String, String>,
 }
 // ==================== SECTION ====================
 
 /// Network statistics
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Networkstatistics
 pub struct NetworkStatistics {
+    /// Active Connections
     pub active_connections: u32,
+    /// Registered Services
     pub registered_services: u32,
+    /// Allocated Ports
     pub allocated_ports: u32,
+    /// Total Bytes Sent
     pub total_bytes_sent: u64,
+    /// Total Bytes Received
     pub total_bytes_received: u64,
 }
 
 /// Service status enumeration
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Status values for Service
 pub enum ServiceStatus {
+    /// Running
     Running,
+    /// Stopped
     Stopped,
+    /// Error
     Error,
+    /// Unknown
     Unknown,
+    /// Healthy
     Healthy,
+    /// Unhealthy
     Unhealthy,
+    /// Starting
     Starting,
+    /// Stopping
     Stopping,
+    /// Failed
     Failed,
 }
 impl Default for ServiceStatus {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Unknown
     }
@@ -378,6 +426,7 @@ impl NetworkConfigBuilder {
 }
 
 impl Default for NetworkConfigBuilder {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

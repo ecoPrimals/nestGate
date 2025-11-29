@@ -2,6 +2,8 @@
 // Compliance manager implementation
 //
 
+//! Manager module
+
 use chrono::{Duration as ChronoDuration, Utc};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -19,6 +21,7 @@ pub type ComplianceState = Arc<RwLock<ComplianceManager>>;
 
 /// Compliance manager
 #[derive(Debug, Clone, Default)]
+/// Manager for Compliance operations
 pub struct ComplianceManager {
     /// Data retention policies
     pub retention_policies: HashMap<String, RetentionPolicy>,
@@ -232,6 +235,7 @@ mod tests {
     use super::*;
     use chrono::Utc;
 
+    /// Creates  Test Retention Policy
     fn create_test_retention_policy() -> RetentionPolicy {
         RetentionPolicy {
             id: "test-retention".to_string(),
@@ -247,6 +251,7 @@ mod tests {
         }
     }
 
+    /// Creates  Test Access Policy
     fn create_test_access_policy() -> AccessPolicy {
         AccessPolicy {
             id: "test-access".to_string(),
@@ -261,6 +266,7 @@ mod tests {
         }
     }
 
+    /// Creates  Test Audit Event
     fn create_test_audit_event() -> AuditEvent {
         use super::AuditEvent;
         use crate::handlers::compliance::types::{AuditEventType, AuditResult};
@@ -280,6 +286,7 @@ mod tests {
         }
     }
 
+    /// Creates  Test Violation
     fn create_test_violation() -> ComplianceViolation {
         use crate::handlers::compliance::types::{ResolutionStatus, ViolationType};
 

@@ -253,12 +253,14 @@ mod network_comprehensive_coverage {
 
     #[test]
     fn test_network_error_propagation() {
+        /// Inner Function
         fn inner_function() -> NetworkResult<()> {
             Err(NetworkError::Timeout {
                 operation: Some("test".to_string()),
             })
         }
 
+        /// Outer Function
         fn outer_function() -> NetworkResult<()> {
             inner_function()?;
             Ok(())

@@ -19,11 +19,13 @@ use tracing::{info, warn};
 ///
 /// Manages real authentication using the security module.
 #[derive(Debug, Clone)]
+/// Handler for ProductionAuth requests
 pub struct ProductionAuthHandler {
     manager: Arc<RwLock<AuthManager>>,
 }
 
 impl Default for ProductionAuthHandler {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -52,42 +54,63 @@ impl ProductionAuthHandler {
 
 /// Authentication credentials
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Authcredentials
 pub struct AuthCredentials {
+    /// Username
     pub username: String,
+    /// Password
     pub password: String,
 }
 
 /// Authentication response
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for Auth operation
 pub struct AuthResponse {
+    /// Success
     pub success: bool,
+    /// Token
     pub token: Option<String>,
+    /// User identifier
     pub user_id: Option<String>,
+    /// Role
     pub role: String,
+    /// Permissions
     pub permissions: Vec<String>,
 }
 
 /// API key creation request
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for ApiKey operation
 pub struct ApiKeyRequest {
+    /// User identifier
     pub user_id: String,
+    /// Name
     pub name: String,
 }
 
 /// API key response
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for ApiKey operation
 pub struct ApiKeyResponse {
+    /// Api Key
     pub api_key: String,
+    /// User identifier
     pub user_id: String,
+    /// Name
     pub name: String,
 }
 
 /// User creation request
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for CreateUser operation
 pub struct CreateUserRequest {
+    /// User identifier
     pub user_id: String,
+    /// Username
     pub username: String,
+    /// Role
     pub role: String,
+    /// Permissions
     pub permissions: Vec<String>,
 }
 
@@ -291,6 +314,7 @@ mod tests {
         )
     }
     
+    /// Revoke Token
     async fn revoke_token(
         State(_handler): State<ProductionAuthHandler>,
         Json(_request): Json<TokenRevocationRequest>,

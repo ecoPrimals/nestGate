@@ -668,6 +668,7 @@ async fn test_schedule_frequency_variations() {
             name: format!("freq-test-{}", i),
             description: format!("Frequency test {}", i),
             enabled: true,
+            /// Frequency
             frequency,
             retention: RetentionPolicy::default(),
             dataset_patterns: vec!["pool/dataset".to_string()],

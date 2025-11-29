@@ -15,6 +15,7 @@ use tracing::{debug, info, warn};
 
 /// Generic request type for capability communication with zero-copy optimization
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for  operation
 pub struct Request {
     /// Request ID for tracking (zero-copy string)
     pub id: Cow<'static, str>,
@@ -26,11 +27,13 @@ pub struct Request {
     pub headers: HashMap<Cow<'static, str>, Cow<'static, str>>,
     /// Raw body for zero-copy operations
     #[serde(skip)]
+    /// Body
     pub body: Option<Bytes>,
 }
 
 /// Generic response type for capability communication with zero-copy optimization
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for  operation
 pub struct Response {
     /// Response ID matching request (zero-copy string)
     pub id: Cow<'static, str>,
@@ -44,11 +47,13 @@ pub struct Response {
     pub headers: HashMap<Cow<'static, str>, Cow<'static, str>>,
     /// Raw body for zero-copy operations
     #[serde(skip)]
+    /// Body
     pub body: Option<Bytes>,
 }
 
 /// Health status for connections
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Status values for Health
 pub enum HealthStatus {
     /// Connection is healthy and responsive
     Healthy,
@@ -62,6 +67,7 @@ pub enum HealthStatus {
 
 /// Connection metadata
 #[derive(Debug, Clone)]
+/// Connectionmetadata
 pub struct ConnectionMetadata {
     /// Connection type identifier
     pub connection_type: String,
@@ -106,36 +112,42 @@ pub trait Connection: Send + Sync {
 /// This enables use of Connection trait without trait objects while maintaining
 /// zero-cost abstractions. Add new variants here as new connection types are implemented.
 #[derive(Clone)]
+/// Connectionimpl
 pub enum ConnectionImpl {
     /// HTTP-based connection
     Http(HttpConnection),
 }
 
 impl Connection for ConnectionImpl {
+    /// Send Request
     async fn send_request(&self, request: Request) -> Result<Response, NestGateError> {
         match self {
             Self::Http(conn) => conn.send_request(request).await,
         }
     }
 
+    /// Health Check
     async fn health_check(&self) -> Result<HealthStatus, NestGateError> {
         match self {
             Self::Http(conn) => conn.health_check().await,
         }
     }
 
+    /// Gets Metadata
     async fn get_metadata(&self) -> Result<ConnectionMetadata, NestGateError> {
         match self {
             Self::Http(conn) => conn.get_metadata().await,
         }
     }
 
+    /// Connection Type
     fn connection_type(&self) -> &str {
         match self {
             Self::Http(conn) => conn.connection_type(),
         }
     }
 
+    /// Endpoint
     fn endpoint(&self) -> &str {
         match self {
             Self::Http(conn) => conn.endpoint(),
@@ -145,6 +157,7 @@ impl Connection for ConnectionImpl {
 
 /// HTTP-based connection implementation
 #[derive(Clone)]
+/// Httpconnection
 pub struct HttpConnection {
     /// Capability information
     capability_info: CapabilityInfo,
@@ -196,6 +209,7 @@ impl HttpConnection {
 }
 
 impl Connection for HttpConnection {
+    /// Send Request
     async fn send_request(&self, request: Request) -> Result<Response, NestGateError> {
         debug!(
             "Sending request {} to {}",
@@ -247,6 +261,7 @@ impl Connection for HttpConnection {
         }
     }
 
+    /// Health Check
     async fn health_check(&self) -> Result<HealthStatus, NestGateError> {
         debug!("Health checking {}", self.capability_info.endpoint);
 
@@ -264,14 +279,17 @@ impl Connection for HttpConnection {
         }
     }
 
+    /// Gets Metadata
     async fn get_metadata(&self) -> Result<ConnectionMetadata, NestGateError> {
         Ok(self.metadata.clone())
     }
 
+    /// Connection Type
     fn connection_type(&self) -> &str {
         "http"
     }
 
+    /// Endpoint
     fn endpoint(&self) -> &str {
         &self.capability_info.endpoint
     }
@@ -289,6 +307,7 @@ pub struct UniversalAdapter {
 
 /// Metrics for the universal adapter
 #[derive(Debug, Default)]
+/// Adaptermetrics
 pub struct AdapterMetrics {
     /// Total requests processed
     pub total_requests: u64,
@@ -435,6 +454,7 @@ impl UniversalAdapter {
 }
 
 impl Default for UniversalAdapter {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

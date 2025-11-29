@@ -38,6 +38,7 @@ mod discovery_timeout_tests {
 
     #[test]
     fn test_discovery_with_timeout() {
+        /// Discover Service
         fn discover_service(timeout: Duration, should_succeed: bool) -> Result<String> {
             if should_succeed && timeout.as_secs() > 5 {
                 Ok("service-endpoint".to_string())
@@ -63,10 +64,13 @@ mod discovery_timeout_tests {
             assert_eq!(
                 timeout.as_secs(),
                 if i == 0 {
+                    /// 5
                     5
                 } else if i == 1 {
+                    /// 10
                     10
                 } else {
+                    /// 30
                     30
                 }
             );
@@ -78,6 +82,7 @@ mod discovery_timeout_tests {
 mod discovery_retry_tests {
     use crate::error::{NestGateError, Result};
 
+    /// Simulated Discovery
     fn simulated_discovery(attempt: u32) -> Result<String> {
         if attempt < 2 {
             Err(NestGateError::internal_error(
@@ -124,6 +129,7 @@ mod discovery_fallback_tests {
 
     #[test]
     fn test_fallback_to_static_config() {
+        /// Dynamic Discovery
         fn dynamic_discovery() -> Result<String> {
             Err(NestGateError::internal_error(
                 "Discovery unavailable",
@@ -131,6 +137,7 @@ mod discovery_fallback_tests {
             ))
         }
 
+        /// Static Config
         fn static_config() -> Result<String> {
             Ok("static-endpoint".to_string())
         }
@@ -142,6 +149,7 @@ mod discovery_fallback_tests {
 
     #[test]
     fn test_cache_fallback() {
+        /// Fresh Discovery
         fn fresh_discovery() -> Result<String> {
             Err(NestGateError::internal_error(
                 "Discovery failed",
@@ -149,6 +157,7 @@ mod discovery_fallback_tests {
             ))
         }
 
+        /// Cached Endpoint
         fn cached_endpoint() -> Result<String> {
             Ok("cached-endpoint".to_string())
         }
@@ -162,6 +171,7 @@ mod discovery_fallback_tests {
 mod discovery_validation_tests {
     use crate::error::{NestGateError, Result};
 
+    /// Validates  Endpoint
     fn validate_endpoint(endpoint: &str) -> Result<()> {
         if endpoint.is_empty() {
             Err(NestGateError::validation_error("Empty endpoint"))
@@ -353,6 +363,7 @@ mod discovery_integration_tests {
 
     #[test]
     fn test_multi_service_discovery() {
+        /// Discover Services
         fn discover_services() -> Result<HashMap<String, String>> {
             let mut services = HashMap::new();
             services.insert("auth".to_string(), "auth-service:8080".to_string());
@@ -368,10 +379,12 @@ mod discovery_integration_tests {
 
     #[test]
     fn test_discovery_pipeline() {
+        /// Step1 Discover
         fn step1_discover() -> Result<String> {
             Ok("raw-endpoint".to_string())
         }
 
+        /// Step2 Validate
         fn step2_validate(endpoint: String) -> Result<String> {
             if endpoint.contains("endpoint") {
                 Ok(endpoint)
@@ -380,6 +393,7 @@ mod discovery_integration_tests {
             }
         }
 
+        /// Step3 Normalize
         fn step3_normalize(endpoint: String) -> Result<String> {
             Ok(format!("http://{}", endpoint))
         }
@@ -394,6 +408,7 @@ mod discovery_integration_tests {
 
     #[test]
     fn test_batch_discovery() {
+        /// Discover Batch
         fn discover_batch(services: Vec<String>) -> Result<HashMap<String, String>> {
             let mut results = HashMap::new();
             for service in services {

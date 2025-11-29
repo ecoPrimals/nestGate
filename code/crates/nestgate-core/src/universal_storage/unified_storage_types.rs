@@ -9,6 +9,7 @@ use crate::unified_enums::UnifiedTierType;
 /// **THE** Universal Directory Entry structure
 /// Comprehensive file system entry information for all storage protocols
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Universaldirectoryentry
 pub struct UniversalDirectoryEntry {
     /// Entry name (file/directory name)
     pub name: String,
@@ -39,6 +40,7 @@ pub struct UniversalDirectoryEntry {
 }
 /// Universal entry type classification
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Types of UnifiedEntry
 pub enum UnifiedEntryType {
     /// Regular file
     File,
@@ -61,6 +63,7 @@ pub enum UnifiedEntryType {
 }
 /// Universal permissions structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Unifiedpermissions
 pub struct UnifiedPermissions {
     /// POSIX-style permissions string (e.g., "rwxr-xr-x")
     pub posix: String,
@@ -79,6 +82,7 @@ pub struct UnifiedPermissions {
 }
 /// Special file system permissions
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Specialpermissions
 pub struct SpecialPermissions {
     /// Sticky bit
     pub sticky: bool,
@@ -90,6 +94,7 @@ pub struct SpecialPermissions {
 /// **THE** Universal Range structure for file operations
 /// Generic range type for byte ranges, line ranges, etc.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Universalrange
 pub struct UniversalRange<T> {
     /// Start of range (inclusive)
     pub start: T,
@@ -121,6 +126,7 @@ impl<T> UniversalRange<T> {
 /// **THE** Universal Change tracking structure
 /// Comprehensive change tracking for real-time synchronization
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Universalchange
 pub struct UniversalChange {
     /// Path that changed
     /// Type of operation that occurred
@@ -143,6 +149,7 @@ pub struct UniversalChange {
 }
 /// Change operation types
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Changeoperation
 pub enum ChangeOperation {
     /// File or directory created
     Create,
@@ -165,6 +172,7 @@ pub enum ChangeOperation {
 }
 /// Source of changes
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Changesource
 pub enum ChangeSource {
     /// Direct user action
     User(String),
@@ -181,6 +189,7 @@ pub enum ChangeSource {
 }
 /// Metadata changes for detailed tracking
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Metadatachanges
 pub struct MetadataChanges {
     /// Size before and after
     pub size_change: Option<(u64, u64)>,
@@ -196,6 +205,7 @@ pub struct MetadataChanges {
 /// **THE** Universal Replication Status structure
 /// Comprehensive replication status tracking with rich metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Universalreplicationstatus
 pub struct UniversalReplicationStatus {
     /// Current replication state
     pub state: ReplicationState,
@@ -234,6 +244,7 @@ pub struct UniversalReplicationStatus {
 }
 /// Replication state enumeration
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Replicationstate
 pub enum ReplicationState {
     /// Replication is idle/not running
     Idle,
@@ -256,6 +267,7 @@ pub enum ReplicationState {
 }
 /// Replication error information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Error type for Replication operations
 pub struct ReplicationError {
     /// Error message
     pub message: String,
@@ -270,6 +282,7 @@ pub struct ReplicationError {
 }
 /// Replication performance metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Replicationmetrics
 pub struct ReplicationMetrics {
     /// Average transfer rate over session (bytes/sec)
     pub avg_transfer_rate: f64,
@@ -287,6 +300,7 @@ pub struct ReplicationMetrics {
 /// **THE** Universal Replication Result structure
 /// Comprehensive replication completion report
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Universalreplicationresult
 pub struct UniversalReplicationResult {
     /// Whether replication completed successfully
     pub success: bool,
@@ -312,15 +326,18 @@ pub struct UniversalReplicationResult {
     pub performance_summary: ReplicationMetrics,
     /// Start and end timestamps
     pub started_at: DateTime<Utc>,
+    /// Completed At
     pub completed_at: DateTime<Utc>,
     /// Source and target paths
     pub source: String,
+    /// Target
     pub target: String,
     /// Session ID for tracking
     pub session_id: String,
 }
 /// Replication result codes
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Replicationresultcode
 pub enum ReplicationResultCode {
     /// Completed successfully
     Success,
@@ -343,6 +360,7 @@ pub enum ReplicationResultCode {
 }
 /// Verification result for replication integrity
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Verificationresult
 pub struct VerificationResult {
     /// Overall verification status
     pub status: VerificationStatus,
@@ -359,6 +377,7 @@ pub struct VerificationResult {
 }
 /// Verification status
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Status values for Verification
 pub enum VerificationStatus {
     /// All files verified successfully
     Passed,
@@ -371,6 +390,7 @@ pub enum VerificationStatus {
 }
 /// Verification methods
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Verificationmethod
 pub enum VerificationMethod {
     /// Checksum comparison
     Checksum(String),
@@ -385,6 +405,7 @@ pub enum VerificationMethod {
 }
 /// Verification error details
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Error type for Verification operations
 pub struct VerificationError {
     /// File path that failed verification
     /// Error message
@@ -399,6 +420,7 @@ pub struct VerificationError {
 // ==================== SECTION ====================
 
 impl Default for UniversalDirectoryEntry {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             name: String::new(),
@@ -419,6 +441,7 @@ impl Default for UniversalDirectoryEntry {
 }
 
 impl Default for UnifiedPermissions {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             posix: "----------".to_string(),
@@ -433,6 +456,7 @@ impl Default for UnifiedPermissions {
 }
 
 impl Default for UniversalChange {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             timestamp: Utc::now(),
@@ -448,6 +472,7 @@ impl Default for UniversalChange {
 }
 
 impl Default for UniversalReplicationStatus {
+    /// Returns the default instance
     fn default() -> Self {
         let now = Utc::now();
         Self {
@@ -473,6 +498,7 @@ impl Default for UniversalReplicationStatus {
 }
 
 impl Default for ReplicationMetrics {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             avg_transfer_rate: 0.0,
@@ -486,6 +512,7 @@ impl Default for ReplicationMetrics {
 }
 
 impl Default for UniversalReplicationResult {
+    /// Returns the default instance
     fn default() -> Self {
         let now = Utc::now();
         Self {
@@ -601,6 +628,7 @@ impl UniversalReplicationResult {
 
 /// Convert bytes to human-readable format
 fn human_readable_size(bytes: u64) -> String {
+    /// Units
     const UNITS: &[&str] = &["B", "KB", "MB", "GB", "TB", "PB"];
     let mut size = bytes as f64;
     let mut unit_index = 0;

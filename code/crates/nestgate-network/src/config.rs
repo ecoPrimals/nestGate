@@ -33,6 +33,7 @@ pub fn validate_config(config: &UnifiedNetworkConfig) -> Result<(), String> {
 }
 /// Network service status
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Status values for Service
 pub enum ServiceStatus {
     /// Service is healthy and operational
     Healthy,
@@ -50,6 +51,7 @@ pub enum ServiceStatus {
     Unknown,
 }
 impl Default for ServiceStatus {
+    /// Returns the default instance
     fn default() -> Self {
         ServiceStatus::Unknown
     }

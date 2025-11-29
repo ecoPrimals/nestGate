@@ -6,6 +6,8 @@
 // - Works with local, cloud, network, memory storage
 // - Production-ready performance and reliability
 
+//! Main New module
+
 use nestgate_bin::{
     cli::{parse_args, setup_logging, print_banner, Commands, ServiceAction, StorageAction, ConfigAction},
     commands::zfs::ZfsCommandHandler,
@@ -61,6 +63,7 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
+/// Handles  Service Command
 fn handle_service_command(action: ServiceAction) -> Result<()> {
     match action {
         ServiceAction::Start { port, bind, daemon } => {
@@ -111,6 +114,7 @@ fn handle_service_command(action: ServiceAction) -> Result<()> {
     Ok(())
 }
 
+/// Handles  Storage Command
 async fn handle_storage_command(action: StorageAction) -> Result<()> {
     match action {
         StorageAction::List => {
@@ -177,6 +181,7 @@ async fn handle_storage_command(action: StorageAction) -> Result<()> {
     Ok(())
 }
 
+/// Handles  Doctor Command
 fn handle_doctor_command(comprehensive: bool, fix: bool) -> Result<()> {
     println!("🩺 NestGate System Health Check");
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
@@ -235,6 +240,7 @@ fn handle_doctor_command(comprehensive: bool, fix: bool) -> Result<()> {
     Ok(())
 }
 
+/// Handles  Config Command
 fn handle_config_command(action: ConfigAction) -> Result<()> {
     match action {
         ConfigAction::Show => {
@@ -298,6 +304,7 @@ fn handle_config_command(action: ConfigAction) -> Result<()> {
     Ok(())
 }
 
+/// Handles  Monitor Command
 fn handle_monitor_command(interval: u64, output: Option<std::path::PathBuf>, duration: Option<u64>) -> Result<()> {
     println!("📊 NestGate Performance Monitor");
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");

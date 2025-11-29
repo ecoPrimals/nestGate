@@ -8,79 +8,130 @@ use std::time::Duration;
 
 // Define the missing types here since they were removed in the refactor
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of Handler
 pub enum HandlerType {
+    /// Api
     Api,
+    /// Middleware
     Middleware,
+    /// Event
     Event,
+    /// Error
     Error,
+    /// Validation
     Validation,
+    /// Security
     Security,
+    /// Performance
     Performance,
+    /// Lifecycle
     Lifecycle,
+    /// Zfsoperation
     ZfsOperation,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Handlerphase
 pub enum HandlerPhase {
+    /// Initialization
     Initialization,
+    /// Preprocessing
     PreProcessing,
+    /// Processing
     Processing,
+    /// Postprocessing
     PostProcessing,
+    /// Cleanup
     Cleanup,
+    /// Errorhandling
     ErrorHandling,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Workflowstate
 pub enum WorkflowState {
+    /// Pending
     Pending,
+    /// Running
     Running,
+    /// Paused
     Paused,
+    /// Completed
     Completed,
+    /// Failed
     Failed,
+    /// Cancelled
     Cancelled,
+    /// Retrying
     Retrying,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of Monitoring
 pub enum MonitoringType {
+    /// Metrics
     Metrics,
+    /// Logging
     Logging,
+    /// Tracing
     Tracing,
+    /// Alerting
     Alerting,
+    /// Health
     Health,
+    /// Performance
     Performance,
 }
 
 /// Storage-specific error context
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Storageerrordata
 pub struct StorageErrorData {
+    /// Pool name
     pub pool_name: Option<String>,
+    /// Dataset name
     pub dataset_name: Option<String>,
     #[serde(default)]
+    /// Operation Type
     pub operation_type: String,
+    /// Filesystem Path
     pub filesystem_path: Option<String>,
+    /// Available Space
     pub available_space: Option<u64>,
+    /// Required Space
     pub required_space: Option<u64>,
+    /// Error Code
     pub error_code: Option<i32>,
     #[serde(default)]
+    /// Count of retry
     pub retry_count: u32,
     #[serde(default)]
+    /// Context
     pub context: HashMap<String, String>,
 }
 
 /// Network-specific error context
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Networkerrordata
 pub struct NetworkErrorData {
+    /// Endpoint
     pub endpoint: Option<String>,
+    /// Port
     pub port: Option<u16>,
+    /// Protocol
     pub protocol: String,
+    /// Timeout Duration
     pub timeout_duration: Option<Duration>,
+    /// Count of retry
     pub retry_count: u32,
+    /// Response Code
     pub response_code: Option<u16>,
+    /// Context
     pub context: HashMap<String, String>,
 }
 
 impl Default for NetworkErrorData {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             endpoint: None,
@@ -96,30 +147,44 @@ impl Default for NetworkErrorData {
 
 /// Security-specific error context
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Securityerrordata
 pub struct SecurityErrorData {
+    /// Principal
     pub principal: Option<String>,
     #[serde(default)]
+    /// Operation
     pub operation: String,
+    /// Resource
     pub resource: Option<String>,
     #[serde(default)]
+    /// Required Permissions
     pub required_permissions: Vec<String>,
     #[serde(default)]
+    /// Actual Permissions
     pub actual_permissions: Vec<String>,
+    /// Authentication Method
     pub authentication_method: Option<String>,
     #[serde(default)]
+    /// Context
     pub context: HashMap<String, String>,
 }
 
 /// Security severity levels
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+/// Securityseverity
 pub enum SecuritySeverity {
+    /// Info
     Info,
+    /// Warning
     Warning,
+    /// Error
     Error,
+    /// Critical
     Critical,
 }
 
 impl Default for SecuritySeverity {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Warning
     }
@@ -127,16 +192,24 @@ impl Default for SecuritySeverity {
 
 /// Automation-specific error context
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Automationerrordata
 pub struct AutomationErrorData {
+    /// Workflow identifier
     pub workflow_id: Option<String>,
+    /// Step name
     pub step_name: Option<String>,
+    /// Automation Type
     pub automation_type: String,
+    /// Count of retry
     pub retry_count: u32,
+    /// Max Retries
     pub max_retries: u32,
+    /// Context
     pub context: HashMap<String, String>,
 }
 
 impl Default for AutomationErrorData {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             workflow_id: None,

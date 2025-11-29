@@ -11,6 +11,7 @@ use uuid::Uuid;
 /// TarPC-based RPC service implementation for high-performance communication.
 #[derive(Debug, Clone)]
 #[allow(dead_code)] // Endpoint field used for service configuration
+/// Service implementation for TarpcRpc
 pub struct TarpcRpcService {
     /// Connection address
     endpoint: String,
@@ -94,6 +95,7 @@ impl TarpcRpcService {
     /// Get connection type
     #[allow(dead_code)] // Development method
     #[must_use]
+    /// Fn
     pub const fn connection_type(&self) -> super::RpcConnectionType {
         super::RpcConnectionType::Tarpc
     }

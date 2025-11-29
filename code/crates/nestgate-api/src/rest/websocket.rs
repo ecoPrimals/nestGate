@@ -2,6 +2,8 @@
 // Real-time WebSocket communication for streaming updates and bidirectional
 // communication with connected clients.
 
+//! Websocket module
+
 use axum::{
     extract::{
         ws::{Message, WebSocket},
@@ -17,6 +19,7 @@ use tracing::{error, info, warn};
 
 /// WebSocket event types for real-time communication
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Websocketevent
 pub enum WebSocketEvent {
     /// Storage operation updates
     StorageUpdate {
@@ -53,6 +56,7 @@ pub enum WebSocketEvent {
 }
 /// WebSocket connection manager
 #[derive(Debug)]
+/// Manager for WebSocket operations
 pub struct WebSocketManager {
     /// Broadcast channel for sending events to all connected clients
     event_sender: broadcast::Sender<WebSocketEvent>,
@@ -109,6 +113,7 @@ impl WebSocketManager {
 }
 
 impl Default for WebSocketManager {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

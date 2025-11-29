@@ -1,6 +1,8 @@
 //
 // This module provides network services and port management through Orchestration orchestration.
 
+//! Api module
+
 use axum::{extract::State, http::StatusCode, response::Json, routing::get, Router};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -19,22 +21,36 @@ use tracing::warn;
 
 /// Service status enumeration
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Status values for Service
 pub enum ServiceStatus {
+    /// Starting
     Starting,
+    /// Running
     Running,
+    /// Stopping
     Stopping,
+    /// Stopped
     Stopped,
+    /// Failed
     Failed,
 }
 /// Service instance information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Serviceinstance
 pub struct ServiceInstance {
+    /// Unique identifier
     pub id: String,
+    /// Name
     pub name: String,
+    /// Host
     pub host: String,
+    /// Port
     pub port: u16,
+    /// Status
     pub status: ServiceStatus,
+    /// Timestamp when this was created
     pub created_at: chrono::DateTime<chrono::Utc>,
+    /// Timestamp of last update
     pub updated_at: chrono::DateTime<chrono::Utc>,
 }
 /// Network API state
@@ -44,6 +60,7 @@ type ServiceRegistry = Arc<RwLock<HashMap<String, ServiceInstance>>>;
 
 /// Orchestration orchestrator client for network operations
 #[derive(Debug, Clone)]
+/// Orchestrationcapability
 pub struct OrchestrationCapability {
     /// Base URL for Orchestration orchestrator
     pub base_url: String,
@@ -244,6 +261,7 @@ struct HealthStatusRequest {
 }
 /// Network API with Orchestration integration
 #[derive(Debug)]
+/// Networkapi
 pub struct NetworkApi {
     /// Orchestration client for orchestration
     orchestration_client: Option<OrchestrationCapability>,
@@ -355,6 +373,7 @@ impl NetworkApi {
 }
 
 impl Default for NetworkApi {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -364,10 +383,12 @@ impl Default for NetworkApi {
 pub use nestgate_core::response::api_response::ApiResponse;
 // API Handlers
 
+/// Health Check
 async fn health_check() -> (StatusCode, Json<ApiResponse<String>>) {
     (StatusCode::OK, Json(ApiResponse::success("OK".to_string())))
 }
 
+/// List Services Handler
 async fn list_services_handler(
     State(state): State<NetworkApiState>,
 ) -> (StatusCode, Json<ApiResponse<Vec<ServiceInstance>>>) {

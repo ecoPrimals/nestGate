@@ -8,23 +8,36 @@ use uuid::Uuid;
 
 /// Simplified service registration stub
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Simpleserviceregistration
 pub struct SimpleServiceRegistration {
+    /// Unique identifier
     pub id: Uuid,
+    /// Name
     pub name: String,
+    /// Version
     pub version: String,
+    /// Capabilities
     pub capabilities: Vec<String>,
+    ///  Metadata
     pub _metadata: HashMap<String, serde_json::Value>,
 }
 /// Simplified ecosystem service stub
 #[derive(Debug, Clone)]
+/// Service implementation for UniversalEcosystem
 pub struct UniversalEcosystemService {
+    /// Unique identifier
     pub id: Uuid,
+    /// Name
     pub name: String,
+    /// Version
     pub version: String,
+    /// Capabilities
     pub capabilities: Vec<String>,
+    ///  Metadata
     pub _metadata: HashMap<String, serde_json::Value>,
 }
 impl Default for UniversalEcosystemService {
+    /// Returns the default instance
     fn default() -> Self { Self {
             id: Uuid::new_v4(),
             name: "nestgate-api".to_string(),
@@ -39,6 +52,7 @@ impl Default for UniversalEcosystemService {
 }
 
 impl UniversalEcosystemService {
+    /// Creates a new instance
     pub fn new() -> Self { Self::default()
     , pub fn get_health(&self) -> serde_json::Value {
         serde_json::json!({
@@ -51,9 +65,11 @@ impl UniversalEcosystemService {
 
 /// Trait for ecosystem registration (simplified stub)
 pub trait EcosystemRegistration {
+    /// Creates  Registration
     fn create_registration(&self) -> SimpleServiceRegistration;
 }
 impl EcosystemRegistration for UniversalEcosystemService {
+    /// Creates  Registration
     fn create_registration(&self) -> SimpleServiceRegistration {
         SimpleServiceRegistration {
             id: self.id,
@@ -67,10 +83,13 @@ impl EcosystemRegistration for UniversalEcosystemService {
 
 /// Simplified service registry trait stub
 pub trait UniversalServiceRegistry {
+    /// Register Service
     fn register_service(&self, registration: SimpleServiceRegistration) -> Result<(), String>;
+    /// Discover Services
     fn discover_services(
         &self,
         capabilities: Vec<String>,
     ) -> Result<Vec<SimpleServiceRegistration>, String>;
+    /// List Services
     fn list_services(&self) -> Result<Vec<SimpleServiceRegistration>, String>;
 }

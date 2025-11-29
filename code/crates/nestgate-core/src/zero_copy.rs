@@ -7,21 +7,25 @@ use std::borrow::Cow;
 use std::sync::Arc;
 /// Utility for creating Cow&lt;str&gt; from various string types
 pub trait IntoCow<'a> {
+    /// Into Cow
     fn into_cow(self) -> Cow<'a, str>;
 }
 impl<'a> IntoCow<'a> for &'a str {
+    /// Into Cow
     fn into_cow(self) -> Cow<'a, str> {
         Cow::Borrowed(self)
     }
 }
 
 impl<'a> IntoCow<'a> for String {
+    /// Into Cow
     fn into_cow(self) -> Cow<'a, str> {
         Cow::Owned(self)
     }
 }
 
 impl<'a> IntoCow<'a> for Cow<'a, str> {
+    /// Into Cow
     fn into_cow(self) -> Cow<'a, str> {
         self
     }
@@ -99,6 +103,7 @@ pub struct SharedConfig<T> {
     data: Arc<T>,
 }
 impl<T> Clone for SharedConfig<T> {
+    /// Clone
     fn clone(&self) -> Self {
         Self {
             data: Arc::clone(&self.data),

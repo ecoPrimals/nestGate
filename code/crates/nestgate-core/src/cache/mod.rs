@@ -3,6 +3,8 @@
 // Provides caching infrastructure including multi-tier caching,
 // TTL management, and performance optimization.
 
+//! Cache module
+
 use crate::config::canonical_primary::NestGateCanonicalConfig;
 
 #[cfg(test)]
@@ -51,6 +53,7 @@ pub use crate::Result as CacheResult;
 
 // The cache system providing both single-tier and multi-tier caching
 #[allow(clippy::large_enum_variant)]
+/// Cachesystem
 pub enum CacheSystem {
     /// Single-tier cache
     SingleTier(CacheManager),
@@ -164,6 +167,7 @@ impl CacheSystem {
 // Cache system statistics
 #[derive(Debug, Clone)]
 #[allow(clippy::large_enum_variant)]
+/// Cachesystemstats
 pub enum CacheSystemStats {
     /// Single-tier cache statistics
     SingleTier(CacheStats),
@@ -311,6 +315,7 @@ impl CacheBuilder {
 }
 
 impl Default for CacheBuilder {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

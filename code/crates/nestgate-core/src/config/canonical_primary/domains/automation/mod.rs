@@ -19,6 +19,7 @@ use std::time::Duration;
 /// - `UnifiedAutomationExtensions` (unified_automation_config/mod.rs)
 /// - `DatasetAutomationConfig` (nestgate-zfs/src/config/automation.rs - kept separate in storage domain)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Automation
 pub struct AutomationConfig {
     // ==================== CORE SETTINGS ====================
     /// Enable automation system
@@ -92,6 +93,7 @@ pub struct AutomationConfig {
 ///
 /// Configuration for automated file and system analysis.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Analysis
 pub struct AnalysisConfig {
     /// Enable analysis
     pub enabled: bool,
@@ -119,6 +121,7 @@ pub struct AnalysisConfig {
 ///
 /// Configuration for predictive analytics and forecasting.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Prediction
 pub struct PredictionConfig {
     /// Enable prediction
     pub enabled: bool,
@@ -143,6 +146,7 @@ pub struct PredictionConfig {
 ///
 /// Machine learning-specific prediction settings.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for MlPrediction
 pub struct MlPredictionConfig {
     /// Enable ML predictions
     pub enabled: bool,
@@ -167,6 +171,7 @@ pub struct MlPredictionConfig {
 ///
 /// AI-powered automation settings.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for AiAutomation
 pub struct AiAutomationConfig {
     /// Enable AI automation
     pub enabled: bool,
@@ -194,6 +199,7 @@ pub struct AiAutomationConfig {
 ///
 /// Data lifecycle management settings.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Lifecycle
 pub struct LifecycleConfig {
     /// Enable lifecycle management
     pub enabled: bool,
@@ -221,6 +227,7 @@ pub struct LifecycleConfig {
 ///
 /// System and resource optimization settings.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Optimization
 pub struct OptimizationConfig {
     /// Enable optimization
     pub enabled: bool,
@@ -248,6 +255,7 @@ pub struct OptimizationConfig {
 ///
 /// Automated workflow engine settings.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Workflows
 pub struct WorkflowsConfig {
     /// Enable workflows
     pub enabled: bool,
@@ -272,6 +280,7 @@ pub struct WorkflowsConfig {
 ///
 /// Task scheduling and execution settings.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Scheduling
 pub struct SchedulingConfig {
     /// Enable scheduling
     pub enabled: bool,
@@ -296,6 +305,7 @@ pub struct SchedulingConfig {
 ///
 /// Event trigger settings for automation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Triggers
 pub struct TriggersConfig {
     /// Enable triggers
     pub enabled: bool,
@@ -320,6 +330,7 @@ pub struct TriggersConfig {
 ///
 /// Automated action execution settings.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Actions
 pub struct ActionsConfig {
     /// Enable actions
     pub enabled: bool,
@@ -426,6 +437,7 @@ impl AutomationConfig {
 }
 
 impl Default for AutomationConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self::development()
     }
@@ -434,6 +446,7 @@ impl Default for AutomationConfig {
 // ==================== ANALYSIS CONFIG IMPLEMENTATIONS ====================
 
 impl Default for AnalysisConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self::development()
     }
@@ -470,6 +483,7 @@ impl AnalysisConfig {
 // ==================== PREDICTION CONFIG IMPLEMENTATIONS ====================
 
 impl Default for PredictionConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self::development()
     }
@@ -504,6 +518,7 @@ impl PredictionConfig {
 // ==================== ML PREDICTION CONFIG IMPLEMENTATIONS ====================
 
 impl Default for MlPredictionConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self::development()
     }
@@ -538,6 +553,7 @@ impl MlPredictionConfig {
 // ==================== AI AUTOMATION CONFIG IMPLEMENTATIONS ====================
 
 impl Default for AiAutomationConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self::development()
     }
@@ -574,6 +590,7 @@ impl AiAutomationConfig {
 // ==================== LIFECYCLE CONFIG IMPLEMENTATIONS ====================
 
 impl Default for LifecycleConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self::development()
     }
@@ -614,6 +631,7 @@ impl LifecycleConfig {
 // ==================== OPTIMIZATION CONFIG IMPLEMENTATIONS ====================
 
 impl Default for OptimizationConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self::development()
     }
@@ -650,6 +668,7 @@ impl OptimizationConfig {
 // ==================== WORKFLOWS CONFIG IMPLEMENTATIONS ====================
 
 impl Default for WorkflowsConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self::development()
     }
@@ -684,6 +703,7 @@ impl WorkflowsConfig {
 // ==================== SCHEDULING CONFIG IMPLEMENTATIONS ====================
 
 impl Default for SchedulingConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self::development()
     }
@@ -721,6 +741,7 @@ impl SchedulingConfig {
 // ==================== TRIGGERS CONFIG IMPLEMENTATIONS ====================
 
 impl Default for TriggersConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self::development()
     }
@@ -755,6 +776,7 @@ impl TriggersConfig {
 // ==================== ACTIONS CONFIG IMPLEMENTATIONS ====================
 
 impl Default for ActionsConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self::development()
     }

@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 
 /// Cache discovery settings for capability detection
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Cachediscoverysettings
 pub struct CacheDiscoverySettings {
     /// Whether cache discovery is enabled
     pub enabled: bool,

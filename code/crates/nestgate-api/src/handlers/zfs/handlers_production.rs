@@ -15,11 +15,13 @@ use nestgate_zfs::ZfsPoolManager;
 ///
 /// Real implementation using the nestgate-zfs crate for actual ZFS operations.
 #[derive(Debug, Clone)]
+/// Handler for ProductionZfs requests
 pub struct ProductionZfsHandler {
     config: nestgate_core::services::storage::config::ZfsConfig,
 }
 
 impl Default for ProductionZfsHandler {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

@@ -5,29 +5,42 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for NetworkProtocol
 pub struct NetworkProtocolConfig {
+    /// Http
     pub http: HttpConfig,
+    /// Websocket
     pub websocket: WebSocketConfig,
+    /// Grpc
     pub grpc: GrpcConfig,
     /// Protocol-specific settings (key-value pairs for custom protocol configuration)
     pub protocol_settings: HashMap<String, String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for Http
 pub struct HttpConfig {
+    /// Whether this feature is enabled
     pub enabled: bool,
+    /// Version
     pub version: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for WebSocket
 pub struct WebSocketConfig {
+    /// Whether this feature is enabled
     pub enabled: bool,
+    /// Size of max frame
     pub max_frame_size: u32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for Grpc
 pub struct GrpcConfig {
+    /// Whether this feature is enabled
     pub enabled: bool,
+    /// Size of max message
     pub max_message_size: u32,
 }
 

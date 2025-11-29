@@ -2,6 +2,8 @@
 // This module provides production-ready ZFS pool management
 // with real pool operations and monitoring.
 
+//! Pool Manager module
+
 use super::command_executor::NativeZfsCommandExecutor;
 use crate::types::{PoolCapacity, PoolHealth, PoolInfo, PoolState, PoolStatus};
 use nestgate_core::Result;
@@ -16,16 +18,46 @@ pub struct NativeZfsPoolManager {
 }
 // PoolHealth is now imported from crate::types
 
-/// ZFS pool statistics
+/// ZFS pool statistics and health metrics
+///
+/// This structure contains comprehensive pool statistics including
+/// capacity, health status, and efficiency ratios.
+///
+/// # Examples
+///
+/// ```no_run
+/// use nestgate_zfs::native::pool_manager::PoolStats;
+/// use nestgate_zfs::types::PoolHealth;
+///
+/// let stats = PoolStats {
+///     name: "tank".to_string(),
+///     size_bytes: 1_000_000_000,
+///     allocated_bytes: 500_000_000,
+///     free_bytes: 500_000_000,
+///     health: PoolHealth::Online,
+///     capacity_percentage: 50.0,
+///     deduplication_ratio: 1.2,
+///     compression_ratio: 1.5,
+/// };
+/// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Poolstats
 pub struct PoolStats {
+    /// Name of the ZFS pool
     pub name: String,
+    /// Total pool size in bytes
     pub size_bytes: u64,
+    /// Currently allocated space in bytes
     pub allocated_bytes: u64,
+    /// Available free space in bytes
     pub free_bytes: u64,
+    /// Current health status of the pool
     pub health: PoolHealth,
+    /// Percentage of pool capacity used (0.0-100.0)
     pub capacity_percentage: f64,
+    /// Deduplication ratio (1.0 = no dedup, >1.0 = space saved)
     pub deduplication_ratio: f64,
+    /// Compression ratio (1.0 = no compression, >1.0 = space saved)
     pub compression_ratio: f64,
 }
 impl NativeZfsPoolManager {

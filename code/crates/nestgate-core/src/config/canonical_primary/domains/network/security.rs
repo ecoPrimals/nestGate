@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// Controls network-level security including firewall rules and IP allowlists/blocklists.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for NetworkSecurity
 pub struct NetworkSecurityConfig {
     /// Whether firewall is enabled.
     pub firewall_enabled: bool,

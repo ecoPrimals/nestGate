@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use super::types::{ServiceEndpoint, IntegrationPreferences, RateLimitSpec, CircuitBreakerSpec};
 
 impl Default for IntegrationPreferences {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             protocols: vec!["HTTP".to_string(), "HTTPS".to_string()],
@@ -18,6 +19,7 @@ impl Default for IntegrationPreferences {
 }
 
 impl Default for ServiceEndpoint {
+    /// Returns the default instance
     fn default() -> Self {
         // ✅ MIGRATED: Now uses centralized runtime configuration
         use nestgate_core::config::runtime::get_config;

@@ -49,6 +49,7 @@ use tracing::{debug, info, warn};
 /// ✅ MIGRATED: Now uses canonical configuration pattern with separate bind_address and api_port
 /// instead of deprecated bind_endpoint SocketAddr.
 #[derive(Debug, Clone)]
+/// Configuration for Server
 pub struct ServerConfig {
     /// Server bind address (IP address)
     pub bind_address: String,
@@ -77,6 +78,7 @@ impl ServerConfig {
     }
 }
 impl Default for ServerConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             bind_address: env_helpers::bind_address(),
@@ -444,6 +446,7 @@ async fn shutdown_signal() {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Serverconfigcanonical
 pub type ServerConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 

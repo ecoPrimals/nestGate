@@ -13,10 +13,15 @@ pub trait ZeroCostZfsOperations<
     const MAX_SNAPSHOTS: usize = 100_000,
 >
 {
+    /// Type alias for Pool
     type Pool: Clone + Send + Sync + 'static;
+    /// Type alias for Dataset
     type Dataset: Clone + Send + Sync + 'static;
+    /// Type alias for Snapshot
     type Snapshot: Clone + Send + Sync + 'static;
+    /// Type alias for Properties
     type Properties: Clone + Send + Sync + 'static;
+    /// Type alias for Error
     type Error: Send + Sync + 'static;
 
     /// Create ZFS pool - native async, no boxing

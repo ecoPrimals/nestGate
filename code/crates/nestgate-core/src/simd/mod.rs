@@ -36,12 +36,15 @@ pub use types::{SimdCapabilities, SimdError, SimdStats};
 
 // Type aliases for common configurations
 pub type StandardBatchProcessor = SimdBatchProcessor<32>;
+/// Type alias for Highthroughputbatchprocessor
 pub type HighThroughputBatchProcessor = SimdBatchProcessor<128>;
+/// Type alias for Lowlatencybatchprocessor
 pub type LowLatencyBatchProcessor = SimdBatchProcessor<8>;
 
 // SIMD processing constants
 pub const DEFAULT_BATCH_SIZE: usize = 32;
 pub const MAX_BATCH_SIZE: usize = 1024;
+/// Minimum batch size
 pub const MIN_BATCH_SIZE: usize = 4;
 
 #[cfg(test)]
@@ -76,6 +79,7 @@ mod integration_tests {
 
         // Verify constants are sensible - compile-time validation
         const _: () = assert!(MIN_BATCH_SIZE < DEFAULT_BATCH_SIZE);
+        ///  
         const _: () = assert!(DEFAULT_BATCH_SIZE < MAX_BATCH_SIZE);
     }
 

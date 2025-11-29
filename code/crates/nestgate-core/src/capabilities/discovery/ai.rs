@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 /// AI capability types that can be discovered
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+/// Types of AiCapability
 pub enum AiCapabilityType {
     /// Machine learning model inference capabilities
     ModelInference,
@@ -26,6 +27,7 @@ pub enum AiCapabilityType {
 }
 /// AI capability metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Aicapabilityinfo
 pub struct AiCapabilityInfo {
     /// Type of AI capability provided
     pub capability_type: AiCapabilityType,
@@ -40,6 +42,7 @@ pub struct AiCapabilityInfo {
 }
 /// AI capability discovery manager
 #[derive(Debug)]
+/// Aicapabilitydiscovery
 pub struct AiCapabilityDiscovery {
     discovered_capabilities: tokio::sync::RwLock<HashMap<AiCapabilityType, AiCapabilityInfo>>,
 }
@@ -157,6 +160,7 @@ impl AiCapabilityDiscovery {
 }
 
 impl Default for AiCapabilityDiscovery {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

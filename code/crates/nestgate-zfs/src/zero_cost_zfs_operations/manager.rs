@@ -34,6 +34,7 @@ impl<
         const COMMAND_TIMEOUT_MS: u64,
     > Default for ZeroCostZfsManager<MAX_POOLS, MAX_DATASETS, MAX_SNAPSHOTS, COMMAND_TIMEOUT_MS>
 {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -172,11 +173,17 @@ impl<
     > ZeroCostZfsOperations<MAX_POOLS, MAX_DATASETS, MAX_SNAPSHOTS>
     for ZeroCostZfsManager<MAX_POOLS, MAX_DATASETS, MAX_SNAPSHOTS, COMMAND_TIMEOUT_MS>
 {
+    /// Type alias for Error
     type Error = nestgate_core::NestGateError;
+    /// Type alias for Pool
     type Pool = ZeroCostPoolInfo;
+    /// Type alias for Dataset
     type Dataset = ZeroCostDatasetInfo;
+    /// Type alias for Snapshot
     type Snapshot = ZeroCostSnapshotInfo;
+    /// Type alias for Properties
     type Properties = HashMap<String, String>;
+    /// Creates  Pool
     async fn create_pool(&self, name: &str, devices: &[&str]) -> Result<Self::Pool> {
         // Check capacity at runtime
         if !self.can_create_more_pools().await {
@@ -231,6 +238,7 @@ impl<
         Ok(pool_info)
     }
 
+    /// Creates  Dataset
     async fn create_dataset(
         &self,
         pool: &Self::Pool,
@@ -323,6 +331,7 @@ impl<
         Ok(dataset_info)
     }
 
+    /// Creates  Snapshot
     async fn create_snapshot(
         &self,
         _dataset: &Self::Dataset,
@@ -371,6 +380,7 @@ impl<
         Ok(snapshot_info)
     }
 
+    /// Gets Pool Properties
     async fn get_pool_properties(&self, pool: &Self::Pool) -> Result<Self::Properties> {
         // Try cache first
         {
@@ -422,6 +432,7 @@ impl<
         Ok(properties)
     }
 
+    /// List Pools
     async fn list_pools(&self) -> Result<Vec<Self::Pool>> {
         // Get pools from ZFS
         let output = self
@@ -458,6 +469,7 @@ impl<
         Ok(pools)
     }
 
+    /// List Datasets
     async fn list_datasets(&self, pool: &Self::Pool) -> Result<Vec<Self::Dataset>> {
         // Get datasets from ZFS
         let output = self
@@ -510,6 +522,7 @@ impl<
         Ok(datasets)
     }
 
+    /// List Snapshots
     async fn list_snapshots(&self, _dataset: &Self::Dataset) -> Result<Vec<Self::Snapshot>> {
         let dataset_path = "dataset.name().to_string()".to_string();
 

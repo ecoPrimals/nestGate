@@ -1,5 +1,7 @@
 // Types tests moved from src/types.rs to comply with 1000-line limit
 
+//! Types Tests module
+
 use nestgate_zfs::types::*;
 use std::collections::HashMap;
 use std::path::PathBuf;

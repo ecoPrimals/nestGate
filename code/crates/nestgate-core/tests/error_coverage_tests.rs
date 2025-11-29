@@ -82,16 +82,19 @@ fn test_result_err() {
 
 // ==================== ERROR PROPAGATION TESTS ====================
 
+/// Function That Returns Result
 fn function_that_returns_result() -> Result<String> {
     Ok("success".to_string())
 }
 
+/// Function That Returns Error
 fn function_that_returns_error() -> Result<String> {
     Err(NestGateError::api_error("test: intentional error"))
 }
 
 #[test]
 fn test_error_propagation_with_question_mark() {
+    /// Caller
     fn caller() -> Result<String> {
         let value = function_that_returns_result()?;
         Ok(value)
@@ -102,6 +105,7 @@ fn test_error_propagation_with_question_mark() {
 
 #[test]
 fn test_error_propagation_failure() {
+    /// Caller
     fn caller() -> Result<String> {
         let _value = function_that_returns_error()?;
         Ok("should not reach here".to_string())
@@ -211,10 +215,12 @@ fn test_error_recovery_with_default() {
 
 #[test]
 fn test_error_recovery_with_fallback() {
+    /// Primary Source
     fn primary_source() -> Result<i32> {
         Err(NestGateError::network_error("fetch from primary failed"))
     }
 
+    /// Fallback Source
     fn fallback_source() -> Result<i32> {
         Ok(42)
     }

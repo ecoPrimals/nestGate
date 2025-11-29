@@ -18,6 +18,7 @@ use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 /// **CACHE-LINE ALIGNED ATOMIC COUNTER**
 /// Prevents false sharing between CPU cores for optimal performance
 #[repr(align(64))] // Align to cache line size
+/// Cachealignedcounter
 pub struct CacheAlignedCounter {
     value: AtomicU64,
     _padding: [u8; 64 - size_of::<AtomicU64>()], // Pad to full cache line
@@ -73,6 +74,7 @@ pub struct LockFreeRingBuffer<T, const SIZE: usize> {
 }
 
 impl<T, const SIZE: usize> Default for LockFreeRingBuffer<T, SIZE> {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -296,6 +298,7 @@ pub struct MemoryPool<const BLOCK_SIZE: usize, const POOL_SIZE: usize> {
 impl<const BLOCK_SIZE: usize, const POOL_SIZE: usize> Default
     for MemoryPool<BLOCK_SIZE, POOL_SIZE>
 {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -439,11 +442,17 @@ impl<const BLOCK_SIZE: usize, const POOL_SIZE: usize> MemoryPool<BLOCK_SIZE, POO
 
 /// Pool statistics
 #[derive(Debug, Clone)]
+/// Poolstats
 pub struct PoolStats {
+    /// Total Blocks
     pub total_blocks: usize,
+    /// Allocated Blocks
     pub allocated_blocks: usize,
+    /// Free Blocks
     pub free_blocks: usize,
+    /// Utilization Percent
     pub utilization_percent: f64,
+    /// Size of block
     pub block_size: usize,
 }
 /// **PERFORMANCE PROFILER**
@@ -452,6 +461,7 @@ pub struct PerformanceProfiler {
     counters: [CacheAlignedCounter; 16], // Up to 16 different metrics
 }
 impl Default for PerformanceProfiler {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -509,7 +519,6 @@ impl PerformanceConstants {
     /// Page size for memory alignment
     pub const PAGE_SIZE: usize = 4096;
 
-    /// Maximum SIMD vector width in bytes
     pub const MAX_SIMD_WIDTH: usize = 32; // AVX2
 
     /// Recommended batch size for vectorized operations

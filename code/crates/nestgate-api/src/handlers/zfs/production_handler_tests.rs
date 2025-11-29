@@ -10,6 +10,7 @@ mod production_handler_tests {
 
     // Define request types for testing (matching production_handlers.rs structure)
     #[derive(Debug, Deserialize, Serialize)]
+    /// Request parameters for CreatePool operation
     pub struct CreatePoolRequest {
         pub name: String,
         pub devices: Vec<String>,
@@ -18,6 +19,7 @@ mod production_handler_tests {
     }
 
     #[derive(Debug, Deserialize, Serialize)]
+    /// Request parameters for CreateDataset operation
     pub struct CreateDatasetRequest {
         pub pool: String,
         pub name: String,
@@ -25,11 +27,13 @@ mod production_handler_tests {
         pub tier: nestgate_core::canonical_types::StorageTier,
     }
 
+    /// Default Tier
     fn default_tier() -> nestgate_core::canonical_types::StorageTier {
         nestgate_core::canonical_types::StorageTier::Hot
     }
 
     #[derive(Debug, Deserialize, Serialize)]
+    /// Request parameters for CreateSnapshot operation
     pub struct CreateSnapshotRequest {
         pub dataset: String,
         pub name: String,

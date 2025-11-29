@@ -7,7 +7,9 @@ use tracing::info;
 
 /// Compute adapter for hardware tuning operations
 #[derive(Debug, Clone)]
+/// Computeadapter
 pub struct ComputeAdapter {
+    /// Service name
     pub service_name: String,
 }
 

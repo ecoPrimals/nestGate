@@ -15,7 +15,9 @@ use crate::Result;
 
 // Type aliases for complex storage types to satisfy clippy
 type StoragePoolMap = Arc<RwLock<HashMap<String, StoragePool>>>;
+/// Type alias for StorageQuotaMap
 type StorageQuotaMap = Arc<RwLock<HashMap<String, StorageQuota>>>;
+/// Type alias for CacheConfigMap
 type CacheConfigMap = Arc<RwLock<HashMap<String, CacheConfig>>>;
 
 /// Storage Manager Service - Complete implementation with real ZFS integration

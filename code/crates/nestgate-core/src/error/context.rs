@@ -8,6 +8,7 @@ use std::time::{Duration, SystemTime};
 
 /// Error context information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Errorcontext
 pub struct ErrorContext {
     /// When the error occurred
     pub timestamp: SystemTime,
@@ -24,6 +25,7 @@ pub struct ErrorContext {
 }
 
 impl Default for ErrorContext {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             timestamp: SystemTime::now(),
@@ -38,6 +40,7 @@ impl Default for ErrorContext {
 
 /// Retry information for recoverable errors
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Retryinfo
 pub struct RetryInfo {
     /// Current retry attempt
     pub attempt: u32,
@@ -56,6 +59,7 @@ pub struct RetryInfo {
 }
 
 impl Default for RetryInfo {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             attempt: 0,

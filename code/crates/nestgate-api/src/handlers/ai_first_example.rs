@@ -28,6 +28,7 @@ use std::collections::HashMap;
 ///
 /// Response structure that includes AI-powered insights and confidence scoring.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for AIFirst operation
 pub struct AIFirstResponse<T> {
     /// The actual response data
     pub data: T,
@@ -58,6 +59,7 @@ async fn example_handler() -> Json<AIFirstResponse<String>> {
 ///
 /// AI-generated action recommendation with metadata and priority.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Suggestedaction
 pub struct SuggestedAction {
     /// Unique identifier for this action
     pub action_id: String,
@@ -81,6 +83,7 @@ pub struct SuggestedAction {
 ///
 /// Categories of actions that can be suggested by the AI system.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of Action
 pub enum ActionType {
     /// Optimize system performance or resource utilization
     Optimize,
@@ -118,6 +121,7 @@ pub fn ai_response_with_actions<T>(data: T, _actions: Vec<SuggestedAction>) -> A
 
 /// Example data structure for API responses
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storageinfo
 pub struct StorageInfo {
     /// Name of the storage pool
     pub pool_name: String,
@@ -134,6 +138,7 @@ pub struct StorageInfo {
 }
 /// Query parameters for storage operations
 #[derive(Debug, Deserialize)]
+/// Storagequery
 pub struct StorageQuery {
     /// Optional pool name filter
     pub pool: Option<String>,
@@ -142,6 +147,7 @@ pub struct StorageQuery {
 }
 /// Request body for storage operations
 #[derive(Debug, Deserialize)]
+/// Request parameters for Storage operation
 pub struct StorageRequest {
     /// The storage operation to perform
     pub b_operation: String,
@@ -210,6 +216,7 @@ pub async fn get_storage_info(
 ///
 /// Comprehensive information about a storage pool.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Poolinfo
 pub struct PoolInfo {
     /// Name of the storage pool
     pub pool_name: String,
@@ -229,6 +236,7 @@ pub struct PoolInfo {
 ///
 /// Query parameters for pool information requests.
 #[derive(Debug, Deserialize)]
+/// Poolquery
 pub struct PoolQuery {
     /// Optional pool name filter
     pub pool: Option<String>,
@@ -240,6 +248,7 @@ pub struct PoolQuery {
 ///
 /// Request structure for pool operations.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for PoolOperation operation
 pub struct PoolOperationRequest {
     /// Operation to perform on the pool
     pub b_operation: String,
@@ -509,6 +518,7 @@ pub async fn demo_suggested_actions() -> Json<AIFirstResponse<Vec<AutomationCapa
 ///
 /// AI-generated optimization scenario with confidence scoring.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Optimizationscenario
 pub struct OptimizationScenario {
     /// Name of the optimization scenario
     pub scenario: String,
@@ -522,6 +532,7 @@ pub struct OptimizationScenario {
 ///
 /// Describes an automation capability with AI assessment.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Automationcapability
 pub struct AutomationCapability {
     /// Category of automation capability
     pub category: String,
@@ -532,9 +543,11 @@ pub struct AutomationCapability {
 }
 /// Extension trait to add confidence to existing AI-First responses
 trait AIFirstResponseExt<T> {
+    /// Builder method to set Confidence
     fn with_confidence(self, confidence: f64) -> AIFirstResponse<T>;
 }
 impl<T> AIFirstResponseExt<T> for AIFirstResponse<T> {
+    /// Builder method to set Confidence
     fn with_confidence(mut self, confidence: f64) -> Self {
         self.confidence_score = confidence.clamp(0.0, 1.0);
         self

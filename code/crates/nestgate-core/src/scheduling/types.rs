@@ -32,14 +32,20 @@ pub mod defaults {
 
 /// Configuration for this module
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for SchedulingTypes
 pub struct SchedulingTypesConfig {
+    /// Whether this feature is enabled
     pub enabled: bool,
+    /// Timeout
     pub timeout: Duration,
+    /// Max Connections
     pub max_connections: usize,
+    /// Size of buffer
     pub buffer_size: usize,
 }
 
 impl Default for SchedulingTypesConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -56,22 +62,32 @@ pub use crate::traits::Service;
 
 /// Health status enumeration
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+/// Status values for Health
 pub enum HealthStatus {
+    /// Healthy
     Healthy,
+    /// Degraded
     Degraded,
+    /// Unhealthy
     Unhealthy,
 }
 
 /// Performance metrics for monitoring
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Metrics
 pub struct Metrics {
+    /// Requests Processed
     pub requests_processed: u64,
+    /// Errors Encountered
     pub errors_encountered: u64,
+    /// Average Response Time
     pub average_response_time: Duration,
+    /// Memory Usage Bytes
     pub memory_usage_bytes: u64,
 }
 
 impl Default for Metrics {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             requests_processed: 0,
@@ -90,6 +106,7 @@ impl Default for Metrics {
 
 /// Default implementation of the service
 #[derive(Debug)]
+/// Service implementation for Default
 pub struct DefaultService {
     config: SchedulingTypesConfig,
     metrics: Arc<tokio::sync::RwLock<Metrics>>,
@@ -111,6 +128,7 @@ impl DefaultService {
 }
 
 impl Service for DefaultService {
+    /// Initialize
     fn initialize(&self) -> impl std::future::Future<Output = Result<()>> + Send {
         // Initialization implementation
         tracing::info!("Initializing {} service with config: {:?}", 
@@ -118,11 +136,13 @@ impl Service for DefaultService {
         Ok(())
     }
     
+    /// Health Check
     fn health_check(&self) -> impl std::future::Future<Output = Result<HealthStatus>> + Send {
         // Health check implementation
         Ok(HealthStatus::Healthy)
     }
     
+    /// Shutdown
     fn shutdown(&self) -> impl std::future::Future<Output = Result<()>> + Send {
         // Shutdown implementation
         tracing::info!("Shutting down {} service", stringify!(types));

@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 
 /// Network VLAN and segmentation settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Networkvlansettings
 pub struct NetworkVlanSettings {
     /// Enable VLAN support
     pub enabled: bool,
@@ -12,6 +13,7 @@ pub struct NetworkVlanSettings {
     pub default_vlan_id: u16,
 }
 impl Default for NetworkVlanSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: false,

@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 
 /// Network connection management settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Networkconnectionsettings
 pub struct NetworkConnectionSettings {
     /// Maximum concurrent connections
     pub max_connections: u32,
@@ -12,6 +13,7 @@ pub struct NetworkConnectionSettings {
     pub connection_timeout: std::time::Duration,
 }
 impl Default for NetworkConnectionSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             max_connections: 1000,

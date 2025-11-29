@@ -3,6 +3,8 @@
 // not just ZFS. It translates ZFS concepts (pools, datasets, snapshots)
 // to universal storage operations that work on filesystems, object storage, etc.
 
+//! Universal Storage Bridge module
+
 use crate::handlers::zfs::universal_zfs_types::{
     DatasetConfig, DatasetInfo, DatasetType, PoolCapacity, PoolHealth, PoolInfo, PoolState,
     UniversalZfsError, UniversalZfsResult,
@@ -339,6 +341,7 @@ impl UniversalStorageBridge {
 
 // Make it cloneable for the auto-detection logic
 impl Clone for UniversalStorageBridge {
+    /// Clone
     fn clone(&self) -> Self {
         Self {
             preferred_backend: self.preferred_backend.clone(),

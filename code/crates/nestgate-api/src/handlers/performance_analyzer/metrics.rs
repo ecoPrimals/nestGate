@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 
 /// System metrics collector
 #[derive(Debug, Clone)]
+/// Systemmetricscollector
 pub struct SystemMetricsCollector {
     /// Collection interval in seconds
     pub interval_seconds: u64,
@@ -14,6 +15,7 @@ pub struct SystemMetricsCollector {
 impl SystemMetricsCollector {
     /// Create new metrics collector
     #[must_use]
+    /// Fn
     pub const fn new(interval_seconds: u64) -> Self {
         Self { interval_seconds }
     }
@@ -36,16 +38,19 @@ impl SystemMetricsCollector {
         })
     }
 
+    /// Gets Cpu Usage
     async fn get_cpu_usage(&self) -> Result<f64, MetricsError> {
         // Implementation would read from /proc/stat or use sysinfo crate
         Ok(25.5) // Placeholder value
     }
 
+    /// Gets Memory Usage
     async fn get_memory_usage(&self) -> Result<u64, MetricsError> {
         // Implementation would read from /proc/meminfo
         Ok(1024 * 1024 * 1024) // 1GB placeholder
     }
 
+    /// Gets Disk Io Metrics
     async fn get_disk_io_metrics(&self) -> Result<DiskIOMetrics, MetricsError> {
         Ok(DiskIOMetrics {
             read_bytes_per_sec: 1024 * 1024, // 1MB/s
@@ -55,6 +60,7 @@ impl SystemMetricsCollector {
         })
     }
 
+    /// Gets Network Metrics
     async fn get_network_metrics(&self) -> Result<NetworkMetrics, MetricsError> {
         Ok(NetworkMetrics {
             rx_bytes_per_sec: 1024 * 1024, // 1MB/s
@@ -67,6 +73,7 @@ impl SystemMetricsCollector {
 
 /// Complete system metrics snapshot
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Systemmetrics
 pub struct SystemMetrics {
     /// Current CPU utilization as a percentage (0.0-100.0)
     pub cpu_usage_percent: f64,
@@ -82,6 +89,7 @@ pub struct SystemMetrics {
 
 /// Disk I/O performance metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Diskiometrics
 pub struct DiskIOMetrics {
     /// Disk read throughput in bytes per second
     pub read_bytes_per_sec: u64,
@@ -95,6 +103,7 @@ pub struct DiskIOMetrics {
 
 /// Network performance metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Networkmetrics
 pub struct NetworkMetrics {
     /// Network receive throughput in bytes per second
     pub rx_bytes_per_sec: u64,
@@ -108,6 +117,7 @@ pub struct NetworkMetrics {
 
 /// Metrics collection error
 #[derive(Debug, thiserror::Error)]
+/// Errors that can occur during Metrics operations
 pub enum MetricsError {
     /// Error reading system metrics from /proc or system calls
     #[error("Failed to read system metrics: {0}")]

@@ -83,54 +83,88 @@ pub trait CommunicationLayer: Send + Sync {
 
 /// Service address for routing messages
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Serviceaddress
 pub struct ServiceAddress {
+    /// Service identifier
     pub service_id: String,
+    /// Instance identifier
     pub instance_id: Option<String>,
+    /// Endpoint
     pub endpoint: Option<String>,
 }
 
 /// Message between services
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Servicemessage
 pub struct ServiceMessage {
+    /// Unique identifier
     pub id: String,
+    /// Message Type
     pub message_type: MessageType,
+    /// Topic
     pub topic: Option<String>,
+    /// Payload
     pub payload: serde_json::Value,
+    /// Headers
     pub headers: HashMap<String, String>,
+    /// Timestamp
     pub timestamp: DateTime<Utc>,
+    /// Correlation identifier
     pub correlation_id: Option<String>,
+    /// Reply To
     pub reply_to: Option<ServiceAddress>,
+    /// Ttl
     pub ttl: Option<u64>,
 }
 
 /// Communication response
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for Communication operation
 pub struct CommunicationResponse {
+    /// Message identifier
     pub message_id: String,
+    /// Success
     pub success: bool,
+    /// Payload
     pub payload: Option<serde_json::Value>,
+    /// Error
     pub error: Option<String>,
+    /// Timestamp
     pub timestamp: DateTime<Utc>,
 }
 
 /// Type of message
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+/// Types of Message
 pub enum MessageType {
+    /// Request
     Request,
+    /// Response
     Response,
+    /// Event
     Event,
+    /// Command
     Command,
+    /// Notification
     Notification,
 }
 
 /// Communication statistics
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
+/// Communicationstats
 pub struct CommunicationStats {
+    /// Messages Sent
     pub messages_sent: u64,
+    /// Messages Received
     pub messages_received: u64,
+    /// Bytes Sent
     pub bytes_sent: u64,
+    /// Bytes Received
     pub bytes_received: u64,
+    /// Active Connections
     pub active_connections: u64,
+    /// Failed Connections
     pub failed_connections: u64,
+    /// Last Activity
     pub last_activity: Option<DateTime<Utc>>,
 }

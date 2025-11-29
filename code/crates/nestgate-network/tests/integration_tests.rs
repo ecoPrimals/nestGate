@@ -2,6 +2,8 @@
 // These tests verify the behavior of the NetworkApi and related components
 // in integration scenarios.
 
+//! Integration Tests module
+
 use nestgate_network::api::ServiceStatus;
 use nestgate_network::NetworkService;
 

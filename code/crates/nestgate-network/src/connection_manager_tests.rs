@@ -1,6 +1,8 @@
 // Comprehensive tests for connection manager
 // Focus: Error handling, timeouts, retries, connection pooling, concurrency
 
+//! Connection Manager Tests module
+
 use super::*;
 use std::time::Duration;
 use tokio::time::sleep;
@@ -373,6 +375,7 @@ async fn test_connection_metrics() {
 // Helper Functions
 // ============================================================================
 
+/// Creates  Test Connection
 fn create_test_connection(endpoint: &str) -> ActiveConnection {
     ActiveConnection {
         id: uuid::Uuid::new_v4().to_string(),
@@ -391,15 +394,21 @@ fn create_test_connection(endpoint: &str) -> ActiveConnection {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum ConnectionState {
+    /// Active
     Active,
+    /// Degraded
     Degraded,
+    /// Failed
     Failed,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum ProtocolType {
+    /// Http
     Http,
+    /// Https
     Https,
+    /// Websocket
     WebSocket,
 }
 
@@ -425,6 +434,7 @@ struct ConnectionConfig {
 }
 
 impl Default for ConnectionConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             max_connections: 100,
@@ -444,6 +454,7 @@ struct ConnectionManager {
 }
 
 impl ConnectionManager {
+    /// Creates a new instance
     fn new(config: ConnectionConfig) -> Self {
         Self {
             config,
@@ -452,6 +463,7 @@ impl ConnectionManager {
         }
     }
 
+    /// Add To Pool
     async fn add_to_pool(&self, endpoint: &str, conn: ActiveConnection) -> Result<()> {
         let mut pools = self.pools.write().await;
         let pool = pools.entry(endpoint.to_string()).or_insert_with(Vec::new);
@@ -464,16 +476,19 @@ impl ConnectionManager {
         Ok(())
     }
 
+    /// Gets From Pool
     async fn get_from_pool(&self, endpoint: &str) -> Option<ActiveConnection> {
         let mut pools = self.pools.write().await;
         pools.get_mut(endpoint).and_then(|pool| pool.pop())
     }
 
+    /// Gets Pool Size
     async fn get_pool_size(&self, endpoint: &str) -> usize {
         let pools = self.pools.read().await;
         pools.get(endpoint).map(|p| p.len()).unwrap_or(0)
     }
 
+    /// Cleanup Idle Connections
     async fn cleanup_idle_connections(&self) {
         let mut pools = self.pools.write().await;
         let idle_threshold = std::time::SystemTime::now() - self.config.idle_timeout;
@@ -483,6 +498,7 @@ impl ConnectionManager {
         }
     }
 
+    /// Connect With Timeout
     async fn connect_with_timeout(&self, endpoint: &str) -> Result<ActiveConnection> {
         tokio::time::timeout(
             self.config.connection_timeout,
@@ -493,6 +509,7 @@ impl ConnectionManager {
         ).await.map_err(|_| NestGateError::Timeout("Connection timeout".to_string()))?
     }
 
+    /// Connect With Retry
     async fn connect_with_retry(&self, endpoint: &str) -> Result<ActiveConnection> {
         let mut attempts = 0;
         loop {
@@ -509,16 +526,19 @@ impl ConnectionManager {
         }
     }
 
+    /// Recover Connection
     async fn recover_connection(&self, endpoint: &str) -> Result<()> {
         // Simulate recovery attempt
         Ok(())
     }
 
+    /// Checks if Circuit Breaker Open
     async fn is_circuit_breaker_open(&self, endpoint: &str) -> bool {
         // Stub implementation
         false
     }
 
+    /// Gets Metrics
     async fn get_metrics(&self) -> ConnectionMetrics {
         let pools = self.pools.read().await;
         let total = pools.values().map(|p| p.len()).sum();

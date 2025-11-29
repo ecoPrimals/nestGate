@@ -7,19 +7,27 @@ use crate::{error, Result};
 
 /// Provider information
 #[derive(Debug, Clone)]
+/// Providerinfo
 pub struct ProviderInfo {
+    /// Unique identifier
     pub id: String,
+    /// Name
     pub name: String,
+    /// Tier
     pub tier: crate::types::StorageTier,
+    /// Capacity
     pub capacity: u64,
+    /// Available
     pub available: u64,
 }
 /// Provider manager for MCP integration
 #[derive(Debug, Clone)]
+/// Manager for Provider operations
 pub struct ProviderManager {
     // Internal provider state
 }
 impl Default for ProviderManager {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

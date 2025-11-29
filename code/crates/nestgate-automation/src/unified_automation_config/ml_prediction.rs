@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 /// ML prediction settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Mlpredictionsettings
 pub struct MlPredictionSettings {
     /// Enable ML predictions
     pub enabled: bool,
@@ -15,6 +16,7 @@ pub struct MlPredictionSettings {
     pub confidence_threshold: f64,
 }
 impl SmartDefault for MlPredictionSettings {
+    /// Smart Default
     fn smart_default() -> Self {
         Self {
             enabled: false,
@@ -26,6 +28,7 @@ impl SmartDefault for MlPredictionSettings {
 }
 
 impl Default for MlPredictionSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self::smart_default()
     }

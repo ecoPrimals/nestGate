@@ -16,6 +16,7 @@ pub struct UltraPerformanceBatchProcessor {
 }
 
 impl Default for UltraPerformanceBatchProcessor {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -80,6 +81,7 @@ pub struct ZeroAllocStringProcessor<const BUFFER_SIZE: usize = 4096> {
 }
 
 impl<const BUFFER_SIZE: usize> Default for ZeroAllocStringProcessor<BUFFER_SIZE> {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -144,12 +146,14 @@ impl<const BUFFER_SIZE: usize> ZeroAllocStringProcessor<BUFFER_SIZE> {
 /// Ultra-high performance atomic counter with cache-line optimization
 /// and memory ordering guarantees.
 #[repr(align(64))] // Cache line aligned
+/// Lockfreecounter
 pub struct LockFreeCounter {
     value: AtomicU64,
     _padding: [u8; 56], // Prevent false sharing
 }
 
 impl Default for LockFreeCounter {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -269,6 +273,7 @@ impl AdaptivePerformanceMonitor {
 
 /// Performance adaptation recommendation
 #[derive(Debug, Clone, Copy, PartialEq)]
+/// Adaptationrecommendation
 pub enum AdaptationRecommendation {
     /// Maintain current performance level
     Maintain,
@@ -280,11 +285,17 @@ pub enum AdaptationRecommendation {
 
 /// Performance statistics
 #[derive(Debug, Clone, Default)]
+/// Performancestats
 pub struct PerformanceStats {
+    /// Average Latency
     pub average_latency: f64,
+    /// Variance
     pub variance: f64,
+    /// Count of sample
     pub sample_count: usize,
+    /// Min Latency
     pub min_latency: f64,
+    /// Max Latency
     pub max_latency: f64,
 }
 

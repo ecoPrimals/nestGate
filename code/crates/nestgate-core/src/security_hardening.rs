@@ -19,25 +19,42 @@ pub struct SecurityValidator {
 }
 
 #[derive(Debug, Clone)]
+/// Validationrule
 pub struct ValidationRule {
+    /// Name
     pub name: String,
+    /// Validators
     pub validators: Vec<ValidationType>,
+    /// Max Length
     pub max_length: Option<usize>,
+    /// Required
     pub required: bool,
+    /// Sanitize
     pub sanitize: bool,
 }
 
 #[derive(Debug, Clone)]
+/// Types of Validation
 pub enum ValidationType {
+    /// Alphanumeric
     Alphanumeric,
+    /// Email
     Email,
+    /// Url
     Url,
+    /// Ipaddress
     IpAddress,
+    /// Jsonpath
     JsonPath,
+    /// Sqlsafe
     SqlSafe,
+    /// Noscripts
     NoScripts,
+    /// Numeric
     Numeric,
+    /// Uuid
     Uuid,
+    /// Base64
     Base64,
 }
 
@@ -105,6 +122,7 @@ impl SecurityValidator {
         }
     }
     
+    /// Apply Validator
     fn apply_validator(&self, validator: &ValidationType, value: &str) -> bool {
         match validator {
             ValidationType::Alphanumeric => value.chars().all(|c| c.is_alphanumeric() || c == '_' || c == '-'),
@@ -120,29 +138,35 @@ impl SecurityValidator {
         }
     }
     
+    /// Validates  Email
     fn validate_email(&self, value: &str) -> bool {
         value.contains('@') && value.contains('.') && value.len() > 5 && value.len() < 255
     }
     
+    /// Validates  Url
     fn validate_url(&self, value: &str) -> bool {
         value.starts_with("http://") || value.starts_with("https://")
     }
     
+    /// Validates  Json Path
     fn validate_json_path(&self, value: &str) -> bool {
         !value.contains("..") && !value.contains("//")
     }
     
+    /// Validates  Sql Safe
     fn validate_sql_safe(&self, value: &str) -> bool {
         let dangerous_keywords = ["SELECT", "INSERT", "UPDATE", "DELETE", "DROP", "CREATE", "ALTER", "EXEC", "UNION", "OR", "AND", "--", "/*", "*/"];
         let upper_value = value.to_uppercase();
         !dangerous_keywords.iter().any(|&keyword| upper_value.contains(keyword))
     }
     
+    /// Contains Script Tags
     fn contains_script_tags(&self, value: &str) -> bool {
         let lower_value = value.to_lowercase();
         lower_value.contains("<script") || lower_value.contains("javascript:") || lower_value.contains("onclick") || lower_value.contains("onerror")
     }
     
+    /// Validates  Uuid
     fn validate_uuid(&self, value: &str) -> bool {
         value.len() == 36 && value.chars().enumerate().all(|(i, c)| {
             match i {
@@ -152,10 +176,12 @@ impl SecurityValidator {
         })
     }
     
+    /// Validates  Base64
     fn validate_base64(&self, value: &str) -> bool {
         value.chars().all(|c| c.is_alphanumeric() || c == '+' || c == '/' || c == '=')
     }
     
+    /// Sanitize Input
     fn sanitize_input(&self, value: &str) -> String {
         value
             .replace('<', "&lt;")
@@ -178,6 +204,7 @@ impl SecurityValidator {
 }
 
 #[derive(Debug)]
+/// Validationresult
 pub enum ValidationResult {
     Valid(String),
     Invalid(String),
@@ -195,8 +222,11 @@ pub struct RateLimiter {
 }
 
 #[derive(Debug, Clone)]
+/// Ratelimit
 pub struct RateLimit {
+    /// Requests Per Window
     pub requests_per_window: u64,
+    /// Window Duration
     pub window_duration: Duration,
 }
 
@@ -281,6 +311,7 @@ impl RateLimiter {
         RateLimitResult::Allowed
     }
     
+    /// Check Bucket
     fn check_bucket(&self, key: &str, limit: &RateLimit) -> bool {
         // ✅ SAFE: Mutex lock - handle poisoned mutex gracefully
         // If another thread panicked while holding this lock, we recover by creating a new state
@@ -325,7 +356,9 @@ impl RateLimiter {
 }
 
 #[derive(Debug)]
+/// Ratelimitresult
 pub enum RateLimitResult {
+    /// Allowed
     Allowed,
     Blocked(String),
 }
@@ -341,49 +374,81 @@ pub struct SecurityMonitor {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Securityevent
 pub struct SecurityEvent {
+    /// Event Type
     pub event_type: SecurityEventType,
+    /// Timestamp
     pub timestamp: SystemTime,
+    /// Source Ip
     pub source_ip: String,
+    /// User identifier
     pub user_id: Option<String>,
+    /// Human-readable description
     pub description: String,
+    /// Severity
     pub severity: SecuritySeverity,
+    /// Additional metadata key-value pairs
     pub metadata: HashMap<String, String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of SecurityEvent
 pub enum SecurityEventType {
+    /// Authenticationfailure
     AuthenticationFailure,
+    /// Authorizationfailure
     AuthorizationFailure,
+    /// Inputvalidationfailure
     InputValidationFailure,
+    /// Ratelimitexceeded
     RateLimitExceeded,
+    /// Suspiciousactivity
     SuspiciousActivity,
+    /// Dataaccessviolation
     DataAccessViolation,
+    /// Configurationchange
     ConfigurationChange,
+    /// Systemintrusion
     SystemIntrusion,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Securityseverity
 pub enum SecuritySeverity {
+    /// Low
     Low,
+    /// Medium
     Medium,
+    /// High
     High,
+    /// Critical
     Critical,
 }
 
 #[derive(Debug, Clone)]
+/// Threatpattern
 pub struct ThreatPattern {
+    /// Name
     pub name: String,
+    /// Pattern
     pub pattern: String,
+    /// Severity
     pub severity: SecuritySeverity,
+    /// Action
     pub action: ThreatAction,
 }
 
 #[derive(Debug, Clone)]
+/// Threataction
 pub enum ThreatAction {
+    /// Log
     Log,
+    /// Block
     Block,
+    /// Alert
     Alert,
+    /// Quarantine
     Quarantine,
 }
 
@@ -409,6 +474,7 @@ impl SecurityMonitor {
         monitor
     }
     
+    /// Add Default Patterns
     fn add_default_patterns(&mut self) {
         self.threat_patterns.extend(vec![
             ThreatPattern {
@@ -521,7 +587,9 @@ impl SecurityMonitor {
 }
 
 #[derive(Debug)]
+/// Threatanalysisresult
 pub enum ThreatAnalysisResult {
+    /// Safe
     Safe,
     Alert(String),
     Blocked(String),
@@ -654,9 +722,13 @@ impl EncryptionManager {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Encrypteddata
 pub struct EncryptedData {
+    /// Key identifier
     pub key_id: String,
+    /// Data
     pub data: Vec<u8>,
+    /// Timestamp
     pub timestamp: SystemTime,
 }
 

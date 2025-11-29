@@ -320,6 +320,7 @@ impl UnifiedRpcRouter {
 
 /// Routing statistics
 #[derive(Debug, Clone)]
+/// Routingstats
 pub struct RoutingStats {
     /// Number of method-based routing rules
     pub method_rules_count: usize,
@@ -333,6 +334,7 @@ pub struct RoutingStats {
     pub target_rules: HashMap<String, RpcConnectionType>,
 }
 impl Default for UnifiedRpcRouter {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -343,6 +345,7 @@ mod tests {
     use super::*;
     use uuid::Uuid;
 
+    /// Creates  Test Request
     fn create_test_request(method: &str, target: &str) -> UnifiedRpcRequest {
         UnifiedRpcRequest {
             id: Uuid::new_v4(),

@@ -4,6 +4,8 @@
 // ZFS operations including pool management, dataset operations, snapshots, tier management,
 // and automated optimization.
 
+//! Manager module
+
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
@@ -68,6 +70,7 @@ pub struct ZfsManager {
     orchestrator_enabled: bool,
 }
 impl std::fmt::Debug for ZfsManager {
+    /// Fmt
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("ZfsManager")
             .field("pool_manager", &self.pool_manager)

@@ -23,9 +23,13 @@ use std::collections::HashMap;
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for Service
 pub struct ServiceConfig {
+    /// Service name
     pub service_name: String,
+    /// Name
     pub name: String,
+    /// Additional metadata key-value pairs
     pub metadata: HashMap<String, String>,
 }
 //
@@ -39,6 +43,7 @@ pub struct ServiceConfig {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Serviceconfigcanonical
 pub type ServiceConfigCanonical =
     crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 

@@ -2,6 +2,8 @@
 //
 // This module contains the main implementation of the EcoPrimal trait for NestGate.
 
+//! Implementation module
+
 use super::config::*;
 use super::errors::*;
 use super::traits::*;
@@ -12,6 +14,7 @@ use tracing::info;
 
 /// NestGate EcoPrimal implementation
 #[derive(Debug)]
+/// Nestgateecoprimal
 pub struct NestGateEcoPrimal {
     /// Primal _metadata
     pub _metadata: PrimalMetadata,
@@ -25,6 +28,7 @@ pub struct NestGateEcoPrimal {
     pub id: String,
 }
 impl Default for NestGateEcoPrimal {
+    /// Returns the default instance
     fn default() -> Self { Self {
             _metadata: PrimalMetadata {
                 name: "NestGate".to_string(),
@@ -64,14 +68,17 @@ impl Default for NestGateEcoPrimal {
 }
 
 impl EcoPrimal for NestGateEcoPrimal {
+    ///  Metadata
     fn _metadata(&self) -> &PrimalMetadata {
         &self._metadata
     }
 
+    /// Capabilities
     fn capabilities(&self) -> &[PrimalCapability] {
         &self.capabilities
     }
 
+    /// Initialize
     fn initialize(&self, config: &PrimalConfig) -> impl Future<Output = Result<(), PrimalError>> + Send {
         async move {
         // Initialize primal with proper configuration
@@ -94,6 +101,7 @@ impl EcoPrimal for NestGateEcoPrimal {
         }
     }
 
+    /// Handles  Request
     fn handle_request(&self, request: PrimalRequest) -> impl Future<Output = Result<PrimalResponse, PrimalError>> + Send {
         async move {
         // Handle request with proper routing and error handling
@@ -158,18 +166,21 @@ impl EcoPrimal for NestGateEcoPrimal {
         }
     }
 
+    /// Health Check
     fn health_check(&self) -> impl Future<Output = PrimalHealth> + Send {
         async move {
             PrimalHealth::Healthy
         }
     }
 
+    /// Shutdown
     fn shutdown(&self) -> impl Future<Output = Result<(), PrimalError>> + Send {
         async move {
             Ok(())
         }
     }
 
+    /// Gets Metrics
     fn get_metrics(&self) -> impl Future<Output = Result<PrimalMetrics, PrimalError>> + Send {
         let metrics = self.metrics.clone();
         async move {
@@ -177,6 +188,7 @@ impl EcoPrimal for NestGateEcoPrimal {
         }
     }
 
+    /// Updates  Config
     fn update_config(&self, config: &PrimalConfig) -> impl Future<Output = Result<(), PrimalError>> + Send {
         async move {
             let _ = config;
@@ -184,10 +196,12 @@ impl EcoPrimal for NestGateEcoPrimal {
         }
     }
 
+    /// Supported Api Versions
     fn supported_api_versions(&self) -> Vec<String> {
         vec!["1.0".to_string()]
     }
 
+    /// Supports Capability
     fn supports_capability(&self, capability: &PrimalCapability) -> bool {
         self.capabilities.contains(capability)
     }

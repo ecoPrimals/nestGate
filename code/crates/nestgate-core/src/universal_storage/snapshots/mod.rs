@@ -43,6 +43,7 @@ use crate::error::Result;
 
 /// Snapshot-related errors
 #[derive(Debug, Error)]
+/// Errors that can occur during Snapshot operations
 pub enum SnapshotError {
     /// I/O error during snapshot operations
     #[error("I/O error: {0}")]
@@ -78,6 +79,7 @@ pub enum SnapshotError {
 
 /// Snapshot strategies for different platforms and filesystems
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Snapshotstrategy
 pub enum SnapshotStrategy {
     /// Hardlink-based snapshots (Linux/macOS, space-efficient)
     /// - Speed: Very fast
@@ -134,6 +136,7 @@ impl SnapshotStrategy {
 }
 
 impl Default for SnapshotStrategy {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Auto
     }
@@ -141,6 +144,7 @@ impl Default for SnapshotStrategy {
 
 /// Snapshot metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Snapshotmetadata
 pub struct SnapshotMetadata {
     /// Unique snapshot ID
     pub id: String,

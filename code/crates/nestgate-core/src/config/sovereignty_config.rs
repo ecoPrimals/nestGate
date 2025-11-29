@@ -7,6 +7,7 @@ use std::sync::Arc;
 /// This config eliminates hardcoded infrastructure assumptions, ensuring users
 /// maintain full control over their systems.
 #[derive(Debug, Clone)]
+/// Configuration for SovereigntyRuntime
 pub struct SovereigntyRuntimeConfig {
     api_endpoint: Option<String>,
     api_host: Option<String>,
@@ -18,6 +19,7 @@ pub struct SovereigntyRuntimeConfig {
     test_endpoint: Option<String>,
 }
 
+/// Type alias for Sharedsovereigntyruntimeconfig
 pub type SharedSovereigntyRuntimeConfig = Arc<SovereigntyRuntimeConfig>;
 
 impl SovereigntyRuntimeConfig {
@@ -69,36 +71,43 @@ impl SovereigntyRuntimeConfig {
         self
     }
 
+    /// Builder method to set Api Host
     pub fn with_api_host(mut self, host: String) -> Self {
         self.api_host = Some(host);
         self
     }
 
+    /// Builder method to set Api Port
     pub fn with_api_port(mut self, port: u16) -> Self {
         self.api_port = port;
         self
     }
 
+    /// Builder method to set Bind Address
     pub fn with_bind_address(mut self, address: String) -> Self {
         self.bind_address = address;
         self
     }
 
+    /// Builder method to set Ws Endpoint
     pub fn with_ws_endpoint(mut self, endpoint: String) -> Self {
         self.ws_endpoint = Some(endpoint);
         self
     }
 
+    /// Builder method to set Discovery Endpoint
     pub fn with_discovery_endpoint(mut self, endpoint: String) -> Self {
         self.discovery_endpoint = Some(endpoint);
         self
     }
 
+    /// Builder method to set Orchestration Endpoint
     pub fn with_orchestration_endpoint(mut self, endpoint: String) -> Self {
         self.orchestration_endpoint = Some(endpoint);
         self
     }
 
+    /// Builder method to set Test Endpoint
     pub fn with_test_endpoint(mut self, endpoint: String) -> Self {
         self.test_endpoint = Some(endpoint);
         self
@@ -119,10 +128,12 @@ impl SovereigntyRuntimeConfig {
         format!("http://{}:{}", self.bind_address, self.api_port)
     }
 
+    /// Api Port
     pub fn api_port(&self) -> u16 {
         self.api_port
     }
 
+    /// Bind Address
     pub fn bind_address(&self) -> String {
         self.bind_address.clone()
     }
@@ -165,6 +176,7 @@ impl SovereigntyRuntimeConfig {
 }
 
 impl Default for SovereigntyRuntimeConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

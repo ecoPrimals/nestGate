@@ -32,6 +32,7 @@ use std::sync::Arc;
 /// config.set_endpoint("orchestration", "http://test:8080");
 /// ```
 #[derive(Debug, Clone, Default)]
+/// Configuration for EnvironmentDiscovery
 pub struct EnvironmentDiscoveryConfig {
     /// Discovered capability endpoints
     /// Key: capability type (e.g., "orchestration")

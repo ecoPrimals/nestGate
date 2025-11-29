@@ -1,6 +1,8 @@
 //
 // Handles collection of system-level performance metrics including CPU, memory, network, and disk.
 
+//! System Metrics module
+
 use crate::handlers::performance_dashboard::types::*;
 use nestgate_core::Result;
 use std::collections::HashMap;
@@ -10,6 +12,7 @@ use tracing::debug;
 // Removed unused tracing import
 
 #[derive(Debug, Clone)]
+/// Systemmetricscollector
 pub struct SystemMetricsCollector;
 
 impl SystemMetricsCollector {
@@ -318,6 +321,7 @@ impl SystemMetricsCollector {
 }
 
 impl Default for ArcStats {
+    /// Returns the default instance
     fn default() -> Self { Self {
             hit_ratio: 85.0,
             size_bytes: 2 * 1024 * 1024 * 1024,     // 2GB

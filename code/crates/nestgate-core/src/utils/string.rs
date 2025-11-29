@@ -227,6 +227,7 @@ pub fn split_and_trim(input: &str, delimiter: &str) -> Vec<String> {
 
 /// Generate random string of specified length using alphanumeric characters
 pub fn random_string(length: usize) -> String {
+    /// Charset
     const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     let mut rng = rand::thread_rng();
     (0..length)

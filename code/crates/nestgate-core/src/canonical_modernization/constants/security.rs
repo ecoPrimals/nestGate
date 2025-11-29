@@ -3,7 +3,6 @@
 // Security-related constants (delegated to Security primal).
 // NOTE: Timeout constants have been consolidated to canonical::timeouts module
 
-/// Maximum authentication attempts (domain-specific)
 pub const MAX_AUTH_ATTEMPTS: u32 = 3;
 
 /// Default token expiry in seconds

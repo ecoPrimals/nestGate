@@ -33,12 +33,9 @@ pub trait ZeroCostString<const N: usize> {
 ///
 /// Configuration that exists only at compile time
 pub trait ZeroCostConfig {
-    /// Buffer size determined at compile time
     const BUFFER_SIZE: usize;
-    /// Maximum connections at compile time
     const MAX_CONNECTIONS: usize;
 
-    /// Timeout in milliseconds at compile time
     const TIMEOUT_MS: u64;
 
     /// Enable debug mode at compile time
@@ -53,6 +50,7 @@ impl ZeroCostConfig for ProductionConfig {
     const MAX_CONNECTIONS: usize =
         crate::constants::canonical_defaults::performance::MAX_CONNECTIONS;
     const TIMEOUT_MS: u64 = crate::constants::canonical::timeouts::DEFAULT_TIMEOUT_MS;
+    /// Debug
     const DEBUG: bool = false;
 }
 
@@ -64,6 +62,7 @@ impl ZeroCostConfig for DevelopmentConfig {
     const MAX_CONNECTIONS: usize =
         crate::constants::canonical_defaults::performance::MAX_CONNECTIONS;
     const TIMEOUT_MS: u64 = crate::constants::canonical::timeouts::DEFAULT_TIMEOUT_MS;
+    /// Debug
     const DEBUG: bool = true;
 }
 
@@ -71,12 +70,14 @@ impl ZeroCostConfig for DevelopmentConfig {
 ///
 /// ✅ SAFE IMPLEMENTATION - No unsafe code
 #[derive(Debug)]
+/// Zerocostarray
 pub struct ZeroCostArray<T, const N: usize> {
     data: Vec<T>,
     capacity: usize,
 }
 
 impl<T, const N: usize> Default for ZeroCostArray<T, N> {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -165,6 +166,7 @@ pub struct ZeroCostPool<T, const POOL_SIZE: usize, const BLOCK_SIZE: usize> {
 impl<T, const POOL_SIZE: usize, const BLOCK_SIZE: usize> Default
     for ZeroCostPool<T, POOL_SIZE, BLOCK_SIZE>
 {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -248,7 +250,6 @@ impl<T, const POOL_SIZE: usize, const BLOCK_SIZE: usize> ZeroCostPool<T, POOL_SI
 
 /// **ZERO-COST**: Branch-free operations
 ///
-/// Operations that avoid conditional branches for better performance
 pub struct ZeroCostOps;
 impl ZeroCostOps {
     /// Branch-free minimum
@@ -286,6 +287,7 @@ impl ZeroCostOps {
 ///
 /// Data structures optimized for CPU cache efficiency
 #[repr(align(64))] // Align to cache line size
+/// Cachealigned
 pub struct CacheAligned<T> {
     data: T,
 }
@@ -313,11 +315,11 @@ impl<T> CacheAligned<T> {
 
 /// **ZERO-COST**: Service with compile-time configuration
 ///
-/// Service that configures itself at compile time
 pub struct ZeroCostService<C: ZeroCostConfig> {
     _config: PhantomData<C>,
 }
 impl<C: ZeroCostConfig> Default for ZeroCostService<C> {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

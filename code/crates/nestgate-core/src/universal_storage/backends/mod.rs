@@ -40,12 +40,19 @@ pub trait StorageBackend {
 }
 // Storage metadata information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagemetadata
 pub struct StorageMetadata {
+    /// Size
     pub size: u64,
+    /// Timestamp when this was created
     pub created_at: SystemTime,
+    /// Modified At
     pub modified_at: SystemTime,
+    /// Content Type
     pub content_type: Option<String>,
+    /// Etag
     pub etag: Option<String>,
+    /// Custom Metadata
     pub custom_metadata: HashMap<String, String>,
 }
 // Re-export backend implementations

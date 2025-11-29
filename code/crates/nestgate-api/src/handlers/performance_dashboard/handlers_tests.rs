@@ -8,6 +8,7 @@ use crate::handlers::performance_dashboard::optimizer::OptimizationEngineInterfa
 use axum::extract::Path;
 use std::sync::Arc;
 
+/// Creates  Test Dashboard
 fn create_test_dashboard() -> PerformanceDashboard {
     let config = DashboardConfig::default();
     let metrics_collector = Arc::new(RealTimeMetricsCollector::new());

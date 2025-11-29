@@ -35,6 +35,7 @@ use crate::{Result, NestGateError};
 /// **THE** canonical universal adapter - single source of truth for all ecosystem integration
 #[derive(Debug)]
 #[allow(dead_code)] // Framework infrastructure
+/// Consolidatedcanonicaladapter
 pub struct ConsolidatedCanonicalAdapter {
     /// Unique service identifier
     #[allow(dead_code)] // Framework field - intentionally unused
@@ -84,10 +85,13 @@ pub struct ConsolidatedCanonicalAdapter {
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for CanonicalAdapter
 pub struct CanonicalAdapterConfig {
     /// Service identification
     pub service_id: String,
+    /// Service name
     pub service_name: String,
+    /// Service Version
     pub service_version: String,
     
     /// Discovery configuration
@@ -107,49 +111,83 @@ pub struct CanonicalAdapterConfig {
 }
 /// Service capability definition
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Servicecapability
 pub struct ServiceCapability {
+    /// Unique identifier
     pub id: String,
+    /// Name
     pub name: String,
+    /// Human-readable description
     pub description: String,
+    /// Category
     pub category: CapabilityCategory,
+    /// Version
     pub version: String,
+    /// Provider
     pub provider: String,
+    /// Supported Data Types
     pub supported_data_types: Vec<DataType>,
+    /// Resource Requirements
     pub resource_requirements: ResourceRequirements,
+    /// Scalability
     pub scalability: ScalabilityRating,
+    /// Additional metadata key-value pairs
     pub metadata: HashMap<String, String>,
 }
 /// Capability request structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for Capability operation
 pub struct CapabilityRequest {
+    /// Unique identifier
     pub id: String,
+    /// Capability identifier
     pub capability_id: String,
+    /// Method
     pub method: String,
+    /// Parameters
     pub parameters: HashMap<String, serde_json::Value>,
+    /// Timeout
     pub timeout: Duration,
+    /// Priority
     pub priority: RequestPriority,
+    /// Correlation identifier
     pub correlation_id: Option<String>,
+    /// Timestamp when this was created
     pub created_at: SystemTime,
 }
 /// Capability response structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for Capability operation
 pub struct CapabilityResponse {
+    /// Request identifier
     pub request_id: String,
+    /// Status
     pub status: ResponseStatus,
+    /// Data
     pub data: Option<serde_json::Value>,
+    /// Error
     pub error: Option<String>,
+    /// Additional metadata key-value pairs
     pub metadata: HashMap<String, String>,
+    /// Execution Time
     pub execution_time: Duration,
+    /// Provider
     pub provider: String,
 }
 // ==================== CONFIGURATION STRUCTURES ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Discovery
 pub struct DiscoveryConfig {
+    /// Auto Discovery
     pub auto_discovery: bool,
+    /// Discovery Interval
     pub discovery_interval: Duration,
+    /// Discovery Methods
     pub discovery_methods: Vec<DiscoveryMethod>,
+    /// Discovery Timeout
     pub discovery_timeout: Duration,
+    /// Retry Attempts
     pub retry_attempts: u32,
 }
 
@@ -169,20 +207,32 @@ pub struct DiscoveryConfig {
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for Request
 pub struct RequestConfig {
+    /// Timeout
     pub timeout: Duration,
+    /// Max Retries
     pub max_retries: u32,
+    /// Retry Backoff
     pub retry_backoff: RetryBackoff,
+    /// Max Concurrent Requests
     pub max_concurrent_requests: u32,
+    /// Size of request queue
     pub request_queue_size: u32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Monitoring
 pub struct MonitoringConfig {
+    /// Metrics Enabled
     pub metrics_enabled: bool,
+    /// Health Checks Enabled
     pub health_checks_enabled: bool,
+    /// Health Check Interval
     pub health_check_interval: Duration,
+    /// Metrics Interval
     pub metrics_interval: Duration,
+    /// Alert Thresholds
     pub alert_thresholds: AlertThresholds,
 }
 
@@ -202,85 +252,138 @@ pub struct MonitoringConfig {
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for Security
 pub struct SecurityConfig {
+    /// Auth Enabled
     pub auth_enabled: bool,
+    /// Api Key
     pub api_key: Option<String>,
+    /// Tls Enabled
     pub tls_enabled: bool,
+    /// Verify Certificates
     pub verify_certificates: bool,
+    /// Rate Limiting
     pub rate_limiting: RateLimitConfig,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Performance
 pub struct PerformanceConfig {
+    /// Size of connection pool
     pub connection_pool_size: u32,
+    /// Keep Alive Timeout
     pub keep_alive_timeout: Duration,
+    /// Compression Enabled
     pub compression_enabled: bool,
+    /// Caching Enabled
     pub caching_enabled: bool,
+    /// Cache Ttl
     pub cache_ttl: Duration,
 }
 
 // ==================== ENUMS AND TYPES ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Capabilitycategory
 pub enum CapabilityCategory {
+    /// Storage
     Storage,
+    /// Security
     Security,
+    /// Ai
     AI,
+    /// Network
     Network,
+    /// Orchestration
     Orchestration,
+    /// Monitoring
     Monitoring,
     Custom(String),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Types of Data
 pub enum DataType {
+    /// Json
     Json,
+    /// Binary
     Binary,
+    /// Text
     Text,
+    /// Database
     Database,
+    /// Timeseries
     TimeSeries,
+    /// Stream
     Stream,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Scalabilityrating
 pub enum ScalabilityRating {
+    /// Low
     Low,
+    /// Medium
     Medium,
+    /// High
     High,
+    /// Veryhigh
     VeryHigh,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Discoverymethod
 pub enum DiscoveryMethod {
+    /// Environment
     Environment,
+    /// Serviceregistry
     ServiceRegistry,
+    /// Networkscan
     NetworkScan,
+    /// Configuration
     Configuration,
+    /// Dns
     DNS,
+    /// Multicast
     Multicast,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Retrybackoff
 pub enum RetryBackoff {
+    /// Linear
     Linear { increment: Duration },
+    /// Exponential
     Exponential { base: Duration, max: Duration },
+    /// Fixed
     Fixed { delay: Duration },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Requestpriority
 pub enum RequestPriority {
+    /// Low
     Low,
+    /// Normal
     Normal,
+    /// High
     High,
+    /// Critical
     Critical,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Status values for Response
 pub enum ResponseStatus {
+    /// Success
     Success,
+    /// Partialsuccess
     PartialSuccess,
+    /// Failed
     Failed,
+    /// Timeout
     Timeout,
+    /// Notfound
     NotFound,
 }
 
@@ -288,17 +391,26 @@ pub enum ResponseStatus {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[derive(Default)]
+/// Resourcerequirements
 pub struct ResourceRequirements {
+    /// Cpu Cores
     pub cpu_cores: Option<u32>,
+    /// Memory in megabytes
     pub memory_mb: Option<u64>,
+    /// Storage in gigabytes
     pub storage_gb: Option<u64>,
+    /// Network Bandwidth
     pub network_bandwidth: Option<u64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Alertthresholds
 pub struct AlertThresholds {
+    /// Response Time Ms
     pub response_time_ms: u64,
+    /// Error Rate Percent
     pub error_rate_percent: f64,
+    /// Resource Usage Percent
     pub resource_usage_percent: f64,
 }
 
@@ -318,41 +430,68 @@ pub struct AlertThresholds {
 /// 
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for RateLimit
 pub struct RateLimitConfig {
+    /// Requests Per Second
     pub requests_per_second: u32,
+    /// Size of burst
     pub burst_size: u32,
+    /// Size of window
     pub window_size: Duration,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Serviceregistration
 pub struct ServiceRegistration {
+    /// Service identifier
     pub service_id: String,
+    /// Capabilities
     pub capabilities: Vec<ServiceCapability>,
+    /// Endpoints
     pub endpoints: Vec<String>,
+    /// Health Status
     pub health_status: String,
+    /// Last Seen
     pub last_seen: SystemTime,
+    /// Additional metadata key-value pairs
     pub metadata: HashMap<String, String>,
 }
 
 #[derive(Debug, Clone)]
+/// Adapterhealthstatus
 pub struct AdapterHealthStatus {
+    /// Healthy
     pub healthy: bool,
+    /// Last Check
     pub last_check: SystemTime,
+    /// Details
     pub details: HashMap<String, String>,
+    /// Successful Operations
     pub successful_operations: u64,
+    /// Failed Operations
     pub failed_operations: u64,
+    /// Response Time Avg
     pub response_time_avg: Duration,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Adapterstats
 pub struct AdapterStats {
+    /// Service identifier
     pub service_id: String,
+    /// Active Connections
     pub active_connections: u32,
+    /// Total Requests
     pub total_requests: u64,
+    /// Successful Requests
     pub successful_requests: u64,
+    /// Failed Requests
     pub failed_requests: u64,
+    /// Average Response Time
     pub average_response_time: Duration,
+    /// Uptime
     pub uptime: Duration,
+    /// Last Updated
     pub last_updated: SystemTime,
 }
 
@@ -588,6 +727,7 @@ impl ConsolidatedCanonicalAdapter {
 // ==================== DEFAULT IMPLEMENTATIONS ====================
 
 impl Default for CanonicalAdapterConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             service_id: Uuid::new_v4().to_string(),
@@ -603,6 +743,7 @@ impl Default for CanonicalAdapterConfig {
 }
 
 impl Default for DiscoveryConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             auto_discovery: true,
@@ -615,6 +756,7 @@ impl Default for DiscoveryConfig {
 }
 
 impl Default for RequestConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             timeout: Duration::from_secs(30),
@@ -630,6 +772,7 @@ impl Default for RequestConfig {
 }
 
 impl Default for MonitoringConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             metrics_enabled: true,
@@ -642,6 +785,7 @@ impl Default for MonitoringConfig {
 }
 
 impl Default for SecurityConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             auth_enabled: true,
@@ -654,6 +798,7 @@ impl Default for SecurityConfig {
 }
 
 impl Default for PerformanceConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             connection_pool_size: 10,
@@ -667,6 +812,7 @@ impl Default for PerformanceConfig {
 
 
 impl Default for AlertThresholds {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             response_time_ms: 1000,
@@ -677,6 +823,7 @@ impl Default for AlertThresholds {
 }
 
 impl Default for RateLimitConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             requests_per_second: 100,
@@ -687,6 +834,7 @@ impl Default for RateLimitConfig {
 }
 
 impl Default for AdapterHealthStatus {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             healthy: true,
@@ -700,6 +848,7 @@ impl Default for AdapterHealthStatus {
 }
 
 impl Default for AdapterStats {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             service_id: Uuid::new_v4().to_string(),
@@ -722,6 +871,7 @@ impl Default for AdapterStats {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Requestconfigcanonical
 pub type RequestConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using RequestConfig (the deprecated struct) for now.
@@ -738,6 +888,7 @@ pub type RequestConfigCanonical = crate::config::canonical_primary::domains::net
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Canonicaladapterconfigcanonical
 pub type CanonicalAdapterConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using CanonicalAdapterConfig (the deprecated struct) for now.
@@ -754,6 +905,7 @@ pub type CanonicalAdapterConfigCanonical = crate::config::canonical_primary::dom
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Ratelimitconfigcanonical
 pub type RateLimitConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using RateLimitConfig (the deprecated struct) for now.
@@ -770,6 +922,7 @@ pub type RateLimitConfigCanonical = crate::config::canonical_primary::domains::n
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Securityconfigcanonical
 pub type SecurityConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using SecurityConfig (the deprecated struct) for now.

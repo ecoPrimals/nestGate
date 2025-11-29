@@ -41,14 +41,19 @@ pub mod fallback_providers {
 
         /// Security fallback provider when no external security capability is available
         #[derive(Debug, Clone)]
+        /// Securityfallbackprovider
         pub struct SecurityFallbackProvider {
             fallback_mode: SecurityFallbackMode,
         }
 
         #[derive(Debug, Clone)]
+        /// Securityfallbackmode
         pub enum SecurityFallbackMode {
+            /// Basicauth
             BasicAuth,
+            /// Noauth
             NoAuth,
+            /// Localvalidation
             LocalValidation,
         }
 
@@ -75,6 +80,7 @@ pub mod fallback_providers {
         }
 
         impl FallbackProvider for SecurityFallbackProvider {
+            /// Execute
             async fn execute(
                 &self,
                 operation: &str,
@@ -94,10 +100,12 @@ pub mod fallback_providers {
                 }
             }
 
+            /// Supported Operations
             fn supported_operations(&self) -> Vec<String> {
                 vec!["authenticate".to_string(), "authorize".to_string()]
             }
 
+            /// Metadata
             fn metadata(&self) -> std::collections::HashMap<String, String> {
                 let mut metadata = std::collections::HashMap::new();
                 metadata.insert("provider".to_string(), "security_fallback".to_string());
@@ -113,14 +121,19 @@ pub mod fallback_providers {
 
         /// AI fallback provider when no external AI capability is available
         #[derive(Debug, Clone)]
+        /// Aifallbackprovider
         pub struct AiFallbackProvider {
             fallback_mode: AiFallbackMode,
         }
 
         #[derive(Debug, Clone)]
+        /// Aifallbackmode
         pub enum AiFallbackMode {
+            /// Mockresponses
             MockResponses,
+            /// Simplerules
             SimpleRules,
+            /// Noprocessing
             NoProcessing,
         }
 
@@ -147,6 +160,7 @@ pub mod fallback_providers {
         }
 
         impl FallbackProvider for AiFallbackProvider {
+            /// Execute
             fn execute(
                 &self,
                 operation: &str,
@@ -177,10 +191,12 @@ pub mod fallback_providers {
                 }
             }
 
+            /// Supported Operations
             fn supported_operations(&self) -> Vec<String> {
                 vec!["process".to_string(), "analyze".to_string()]
             }
 
+            /// Metadata
             fn metadata(&self) -> std::collections::HashMap<String, String> {
                 let mut metadata = std::collections::HashMap::new();
                 metadata.insert("provider".to_string(), "ai_fallback".to_string());
@@ -196,9 +212,11 @@ pub mod fallback_providers {
 
         /// Orchestration fallback provider for local orchestration
         #[derive(Debug, Clone)]
+        /// Orchestrationfallbackprovider
         pub struct OrchestrationFallbackProvider;
 
         impl Default for OrchestrationFallbackProvider {
+            /// Returns the default instance
             fn default() -> Self {
                 Self::new()
             }
@@ -221,6 +239,7 @@ pub mod fallback_providers {
         }
 
         impl FallbackProvider for OrchestrationFallbackProvider {
+            /// Execute
             fn execute(
                 &self,
                 operation: &str,
@@ -252,6 +271,7 @@ pub mod fallback_providers {
                 }
             }
 
+            /// Supported Operations
             fn supported_operations(&self) -> Vec<String> {
                 vec![
                     "orchestrate".to_string(),
@@ -260,6 +280,7 @@ pub mod fallback_providers {
                 ]
             }
 
+            /// Metadata
             fn metadata(&self) -> std::collections::HashMap<String, String> {
                 let mut metadata = std::collections::HashMap::new();
                 metadata.insert("provider".to_string(), "orchestration_fallback".to_string());
@@ -276,6 +297,7 @@ pub mod fallback_providers {
         pub struct ComputeFallbackProvider;
 
         impl Default for ComputeFallbackProvider {
+            /// Returns the default instance
             fn default() -> Self {
                 Self::new()
             }
@@ -303,9 +325,11 @@ pub mod fallback_providers {
 
         /// ZFS fallback provider for local storage operations
         #[derive(Debug, Clone)]
+        /// Zfsfallbackprovider
         pub struct ZfsFallbackProvider;
 
         impl Default for ZfsFallbackProvider {
+            /// Returns the default instance
             fn default() -> Self {
                 Self::new()
             }
@@ -328,6 +352,7 @@ pub mod fallback_providers {
         }
 
         impl FallbackProvider for ZfsFallbackProvider {
+            /// Execute
             fn execute(
                 &self,
                 operation: &str,
@@ -356,6 +381,7 @@ pub mod fallback_providers {
                 }
             }
 
+            /// Supported Operations
             fn supported_operations(&self) -> Vec<String> {
                 vec![
                     "manage_storage".to_string(),
@@ -364,6 +390,7 @@ pub mod fallback_providers {
                 ]
             }
 
+            /// Metadata
             fn metadata(&self) -> std::collections::HashMap<String, String> {
                 let mut metadata = std::collections::HashMap::new();
                 metadata.insert("provider".to_string(), "zfs_fallback".to_string());
@@ -384,6 +411,7 @@ pub mod fallback_providers {
 /// Capability-based ecosystem discovery system
 /// Replaces hardcoded vendor integrations (k8s, docker, consul, etc.)
 #[derive(Debug, Clone)]
+/// Capabilitybasedecosystem
 pub struct CapabilityBasedEcosystem {
     /// Universal adapter endpoint for capability discovery
     pub adapter_endpoint: Option<String>,
@@ -396,6 +424,7 @@ pub struct CapabilityBasedEcosystem {
 }
 
 impl Default for CapabilityBasedEcosystem {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -534,6 +563,7 @@ impl CapabilityBasedEcosystem {
 
 /// Information about a discovered capability
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Capabilityinfo
 pub struct CapabilityInfo {
     /// Capability category (orchestration, storage, security, etc.)
     pub category: String,
@@ -547,6 +577,7 @@ pub struct CapabilityInfo {
 
 /// Methods for discovering capabilities (replaces vendor-specific discovery)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Discoverymethod
 pub enum DiscoveryMethod {
     /// Environment variable scanning
     EnvironmentVariables,
@@ -578,6 +609,7 @@ pub enum DiscoveryMethod {
     since = "0.11.0",
     note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for Ecosystem
 pub struct EcosystemConfig {
     /// Discovery methods to use
     pub discovery_methods: Vec<String>,
@@ -589,6 +621,7 @@ pub struct EcosystemConfig {
 
 #[allow(deprecated)]
 impl Default for EcosystemConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             discovery_methods: vec!["environment".to_string(), "service_registry".to_string()],
@@ -645,6 +678,7 @@ impl EcosystemIntegrationService {
 }
 
 impl Default for EcosystemIntegrationService {
+    /// Returns the default instance
     fn default() -> Self {
         #[allow(deprecated)]
         match Self::new(EcosystemConfig::default()) {
@@ -676,6 +710,7 @@ impl Default for EcosystemIntegrationService {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Ecosystemconfigcanonical
 pub type EcosystemConfigCanonical =
     crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 

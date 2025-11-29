@@ -11,11 +11,17 @@ use std::time::Duration;
 
 /// Adaptive Performance Monitor - main orchestrator
 pub struct AdaptivePerformanceMonitor {
+    /// Metrics Collector
     pub metrics_collector: Arc<MetricsCollector>,
+    /// Optimization Engine
     pub optimization_engine: Arc<OptimizationEngine>,
+    /// Auto Tuner
     pub auto_tuner: Arc<AutoTuner>,
+    /// Monitoring Active
     pub monitoring_active: Arc<AtomicBool>,
+    /// Optimization Interval
     pub optimization_interval: Duration,
+    /// Performance History
     pub performance_history: Arc<tokio::sync::RwLock<PerformanceHistory>>,
 }
 
@@ -56,6 +62,7 @@ impl AdaptivePerformanceMonitor {
 }
 
 impl Default for AdaptivePerformanceMonitor {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

@@ -6,40 +6,66 @@ use serde::{Deserialize, Serialize};
 
 /// Performance metrics collection
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performancemetrics
 pub struct PerformanceMetrics {
+    /// Timestamp
     pub timestamp: u64,
+    /// Total Benchmarks
     pub total_benchmarks: usize,
+    /// Passed Benchmarks
     pub passed_benchmarks: usize,
+    /// Failed Benchmarks
     pub failed_benchmarks: usize,
+    /// Average Improvement
     pub average_improvement: f64,
+    /// Best Improvement
     pub best_improvement: f64,
+    /// Worst Improvement
     pub worst_improvement: f64,
+    /// Benchmark Details
     pub benchmark_details: Vec<BenchmarkSummary>,
 }
 /// Summary of individual benchmark results
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Benchmarksummary
 pub struct BenchmarkSummary {
+    /// Name
     pub name: String,
+    /// Improvement Percentage
     pub improvement_percentage: f64,
+    /// Zero Cost Time Ms
     pub zero_cost_time_ms: f64,
+    /// Traditional Time Ms
     pub traditional_time_ms: f64,
+    /// Iterations
     pub iterations: usize,
+    /// Status
     pub status: BenchmarkStatus,
 }
 /// Status of benchmark execution
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Status values for Benchmark
 pub enum BenchmarkStatus {
+    /// Passed
     Passed,
+    /// Failed
     Failed,
+    /// Warning
     Warning,
 }
 /// Validation summary for performance results
 #[derive(Debug, Clone)]
+/// Validationsummary
 pub struct ValidationSummary {
+    /// Total Patterns Validated
     pub total_patterns_validated: usize,
+    /// Zero Cost Patterns Successful
     pub zero_cost_patterns_successful: usize,
+    /// Performance Regressions
     pub performance_regressions: usize,
+    /// Average Improvement Percentage
     pub average_improvement_percentage: f64,
+    /// Recommendations
     pub recommendations: Vec<String>,
 }
 impl PerformanceMetrics {

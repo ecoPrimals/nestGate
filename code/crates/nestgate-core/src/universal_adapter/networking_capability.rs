@@ -78,38 +78,55 @@ impl NetworkingCapability {
 
 /// Load balance request
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for LoadBalance operation
 pub struct LoadBalanceRequest {
+    /// Service name
     pub service_name: String,
+    /// Request Data
     pub request_data: Vec<u8>,
 }
 
 /// Load balance response
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for LoadBalance operation
 pub struct LoadBalanceResponse {
+    /// Chosen Endpoint
     pub chosen_endpoint: String,
+    /// Algorithm Used
     pub algorithm_used: String,
 }
 
 /// Circuit breaker request
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for CircuitBreaker operation
 pub struct CircuitBreakerRequest {
+    /// Service name
     pub service_name: String,
+    /// Operation
     pub operation: String,
 }
 
 /// Circuit breaker response
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for CircuitBreaker operation
 pub struct CircuitBreakerResponse {
+    /// Allowed
     pub allowed: bool,
+    /// State
     pub state: CircuitState,
+    /// Provider
     pub provider: String,
 }
 
 /// Circuit breaker state
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Circuitstate
 pub enum CircuitState {
+    /// Closed
     Closed,
+    /// Open
     Open,
+    /// Halfopen
     HalfOpen,
 }
 

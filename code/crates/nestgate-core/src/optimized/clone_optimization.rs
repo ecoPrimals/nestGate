@@ -52,10 +52,12 @@ impl SmartRef {
 ///
 /// Optimized patterns for sharing configuration data without cloning
 #[derive(Debug)]
+/// Sharedconfiguration
 pub struct SharedConfiguration<T> {
     data: Arc<T>,
 }
 impl<T> Clone for SharedConfiguration<T> {
+    /// Clone
     fn clone(&self) -> Self {
         Self {
             data: Arc::clone(&self.data), // Arc clone is cheap (just reference count)
@@ -217,17 +219,22 @@ impl ZeroCopyResults {
 ///
 /// Utilities to measure clone reduction impact
 pub struct CloneMetrics {
+    /// Clones Avoided
     pub clones_avoided: u64,
+    /// Memory Saved Bytes
     pub memory_saved_bytes: u64,
+    /// Performance Improvement Percent
     pub performance_improvement_percent: f64,
 }
 impl Default for CloneMetrics {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
 }
 
 impl CloneMetrics {
+    /// Creates a new instance
     pub fn new() -> Self {
         Self {
             clones_avoided: 0,
@@ -236,11 +243,13 @@ impl CloneMetrics {
         }
     }
 
+    /// Record Avoided Clone
     pub fn record_avoided_clone(&mut self, size_bytes: u64) {
         self.clones_avoided += 1;
         self.memory_saved_bytes += size_bytes;
     }
 
+    /// Calculate Improvement
     pub fn calculate_improvement(&mut self, baseline_ns: u64, optimized_ns: u64) {
         if baseline_ns > 0 {
             self.performance_improvement_percent =
@@ -347,6 +356,7 @@ mod tests {
         format!("processed: {s}")
     }
 
+    /// Processes  Owned String
     fn process_owned_string(s: String) -> String {
         format!("processed: {s}")
     }

@@ -40,6 +40,7 @@ pub mod service_metadata {
 
     /// Service dependency definition
     #[derive(Debug, Clone, Serialize, Deserialize)]
+    /// Servicedependency
     pub struct ServiceDependency {
         /// Name of the service this dependency references
         pub service_name: String,
@@ -52,6 +53,7 @@ pub mod service_metadata {
     }
 
     impl Default for ServiceDependency {
+        /// Returns the default instance
         fn default() -> Self {
             Self {
                 service_name: "unknown".to_string(),
@@ -64,6 +66,7 @@ pub mod service_metadata {
 
     /// Universal service metadata
     #[derive(Debug, Clone, Serialize, Deserialize)]
+    /// Universalservicemetadata
     pub struct UniversalServiceMetadata {
         /// Unique identifier for the service
         pub service_id: String,
@@ -93,6 +96,7 @@ pub mod service_metadata {
         pub status: ServiceStatus,
     }
     impl Default for UniversalServiceMetadata {
+        /// Returns the default instance
         fn default() -> Self {
             let now = SystemTime::now();
             Self {

@@ -12,6 +12,7 @@ use std::time::Duration;
 
 /// Storage backend configuration supporting multiple storage types
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for StorageBackend
 pub struct StorageBackendConfig {
     /// Default storage backend to use
     pub default_backend: StorageBackendType,
@@ -29,18 +30,27 @@ pub struct StorageBackendConfig {
     pub load_balancing: StorageLoadBalancingConfig,
 }
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Types of StorageBackend
 pub enum StorageBackendType {
+    /// Filesystem
     Filesystem,
+    /// Zfs
     Zfs,
+    /// S3Compatible
     S3Compatible,
+    /// Azure
     Azure,
+    /// Gcs
     Gcs,
+    /// Memory
     Memory,
+    /// Distributed
     Distributed,
     Custom(String),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagebackend
 pub struct StorageBackend {
     /// Backend type
     pub backend_type: StorageBackendType,
@@ -59,12 +69,15 @@ pub struct StorageBackend {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagebackendspecificconfig
 pub enum StorageBackendSpecificConfig {
+    /// Filesystem
     Filesystem {
         root_path: PathBuf,
         permissions: u32,
         create_dirs: bool,
     },
+    /// Zfs
     Zfs {
         pool_name: String,
         dataset_prefix: String,
@@ -106,25 +119,39 @@ pub enum StorageBackendSpecificConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Zfscompression
 pub enum ZfsCompression {
+    /// Off
     Off,
+    /// Lzjb
     Lzjb,
+    /// Gzip
     Gzip,
+    /// Zle
     Zle,
+    /// Lz4
     Lz4,
+    /// Zstd
     Zstd,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Memoryevictionpolicy
 pub enum MemoryEvictionPolicy {
+    /// Lru
     Lru,
+    /// Lfu
     Lfu,
+    /// Fifo
     Fifo,
+    /// Random
     Random,
+    /// Ttl
     Ttl,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Distributedstoragenode
 pub struct DistributedStorageNode {
     /// Node identifier
     pub id: String,
@@ -140,16 +167,22 @@ pub struct DistributedStorageNode {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Consistencylevel
 pub enum ConsistencyLevel {
+    /// Eventual
     Eventual,
+    /// Strong
     Strong,
+    /// Session
     Session,
+    /// Boundedstaleness
     BoundedStaleness,
 }
 
 // ==================== CONNECTION CONFIGURATION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for StorageConnection
 pub struct StorageConnectionConfig {
     /// Connection timeout
     pub timeout: Duration,
@@ -168,6 +201,7 @@ pub struct StorageConnectionConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ConnectionRetry
 pub struct ConnectionRetryConfig {
     /// Maximum retry attempts
     pub max_attempts: u32,
@@ -183,14 +217,20 @@ pub struct ConnectionRetryConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Retrystrategy
 pub enum RetryStrategy {
+    /// Fixed
     Fixed,
+    /// Linear
     Linear,
+    /// Exponential
     Exponential,
+    /// Jitter
     Jitter,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ConnectionPool
 pub struct ConnectionPoolConfig {
     /// Minimum pool size
     pub min_size: u32,
@@ -206,6 +246,7 @@ pub struct ConnectionPoolConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ConnectionTls
 pub struct ConnectionTlsConfig {
     /// Enable TLS
     pub enabled: bool,
@@ -226,6 +267,7 @@ pub struct ConnectionTlsConfig {
 // ==================== LIMITS AND HEALTH CHECK CONFIGURATION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for StorageLimits
 pub struct StorageLimitsConfig {
     /// Maximum storage capacity
     pub max_capacity: Option<u64>,
@@ -241,6 +283,7 @@ pub struct StorageLimitsConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for RateLimits
 pub struct RateLimitsConfig {
     /// Reads per second
     pub reads_per_second: Option<u32>,
@@ -253,6 +296,7 @@ pub struct RateLimitsConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for StorageHealthCheck
 pub struct StorageHealthCheckConfig {
     /// Enable health checks
     pub enabled: bool,
@@ -276,6 +320,7 @@ pub struct StorageHealthCheckConfig {
 // ==================== ROUTING AND LOAD BALANCING ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for StorageRouting
 pub struct StorageRoutingConfig {
     /// Routing rules
     pub rules: Vec<RoutingRule>,
@@ -288,6 +333,7 @@ pub struct StorageRoutingConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Routingrule
 pub struct RoutingRule {
     /// Rule name
     pub name: String,
@@ -303,6 +349,7 @@ pub struct RoutingRule {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Routingcondition
 pub enum RoutingCondition {
     PathPrefix(String),
     FileExtension(String),
@@ -312,21 +359,31 @@ pub enum RoutingCondition {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Filesizecondition
 pub struct FileSizeCondition {
+    /// Operator
     pub operator: ComparisonOperator,
+    /// Size
     pub size: u64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Comparisonoperator
 pub enum ComparisonOperator {
+    /// Greaterthan
     GreaterThan,
+    /// Lessthan
     LessThan,
+    /// Equal
     Equal,
+    /// Greaterthanorequal
     GreaterThanOrEqual,
+    /// Lessthanorequal
     LessThanOrEqual,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for StorageFailover
 pub struct StorageFailoverConfig {
     /// Enable automatic failover
     pub enabled: bool,
@@ -342,14 +399,20 @@ pub struct StorageFailoverConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Failoverstrategy
 pub enum FailoverStrategy {
+    /// Roundrobin
     RoundRobin,
+    /// Priority
     Priority,
+    /// Weighted
     Weighted,
+    /// Geolocation
     Geolocation,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for FailoverHealthCheck
 pub struct FailoverHealthCheckConfig {
     /// Health check interval
     pub interval: Duration,
@@ -362,6 +425,7 @@ pub struct FailoverHealthCheckConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for StorageLoadBalancing
 pub struct StorageLoadBalancingConfig {
     /// Load balancing algorithm
     pub algorithm: LoadBalancingAlgorithm,
@@ -377,18 +441,26 @@ pub struct StorageLoadBalancingConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Loadbalancingalgorithm
 pub enum LoadBalancingAlgorithm {
+    /// Roundrobin
     RoundRobin,
+    /// Weightedroundrobin
     WeightedRoundRobin,
+    /// Leastconnections
     LeastConnections,
+    /// Leastresponsetime
     LeastResponseTime,
+    /// Random
     Random,
+    /// Consistent
     Consistent,
 }
 
 // ==================== DEFAULT IMPLEMENTATIONS ====================
 
 impl Default for StorageBackendConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             default_backend: StorageBackendType::Filesystem,
@@ -401,6 +473,7 @@ impl Default for StorageBackendConfig {
 }
 
 impl Default for StorageRoutingConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             rules: Vec::new(),
@@ -411,6 +484,7 @@ impl Default for StorageRoutingConfig {
 }
 
 impl Default for StorageFailoverConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: false,
@@ -422,6 +496,7 @@ impl Default for StorageFailoverConfig {
 }
 
 impl Default for FailoverHealthCheckConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             interval: Duration::from_secs(30),
@@ -432,6 +507,7 @@ impl Default for FailoverHealthCheckConfig {
 }
 
 impl Default for StorageLoadBalancingConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             algorithm: LoadBalancingAlgorithm::RoundRobin,
@@ -443,6 +519,7 @@ impl Default for StorageLoadBalancingConfig {
 }
 
 impl Default for StorageConnectionConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             timeout: Duration::from_secs(30),
@@ -455,6 +532,7 @@ impl Default for StorageConnectionConfig {
 }
 
 impl Default for ConnectionRetryConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             max_attempts: 3,
@@ -466,6 +544,7 @@ impl Default for ConnectionRetryConfig {
 }
 
 impl Default for ConnectionPoolConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             min_size: 1,
@@ -477,6 +556,7 @@ impl Default for ConnectionPoolConfig {
 }
 
 impl Default for StorageLimitsConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             max_capacity: None,
@@ -488,6 +568,7 @@ impl Default for StorageLimitsConfig {
 }
 
 impl Default for StorageHealthCheckConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,

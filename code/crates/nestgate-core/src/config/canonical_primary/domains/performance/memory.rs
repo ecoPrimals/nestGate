@@ -11,6 +11,7 @@ use crate::{NestGateError, Result};
 /// Controls memory pooling, garbage collection, and monitoring to optimize
 /// application memory footprint and performance.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Configuration for MemoryPerformance
 pub struct MemoryPerformanceConfig {
     /// Memory pool configuration for object pooling.
     pub pool: MemoryPoolConfig,
@@ -26,6 +27,7 @@ pub struct MemoryPerformanceConfig {
 ///
 /// Implements object pooling to reduce allocation overhead and improve performance.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for MemoryPool
 pub struct MemoryPoolConfig {
     /// Initial pool size in bytes (default: 1MB).
     pub initial_size: usize,
@@ -41,6 +43,7 @@ pub struct MemoryPoolConfig {
 ///
 /// Controls when and how memory is reclaimed from unused objects.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for GarbageCollection
 pub struct GarbageCollectionConfig {
     /// Whether garbage collection is enabled (default: true).
     pub enabled: bool,
@@ -56,6 +59,7 @@ pub struct GarbageCollectionConfig {
 ///
 /// Enables alerts and metrics for memory consumption.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for MemoryMonitoring
 pub struct MemoryMonitoringConfig {
     /// Whether memory monitoring is enabled (default: true).
     pub enabled: bool,
@@ -65,6 +69,7 @@ pub struct MemoryMonitoringConfig {
 }
 
 impl Default for MemoryPoolConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             initial_size: 1024 * 1024,    // 1MB
@@ -75,6 +80,7 @@ impl Default for MemoryPoolConfig {
 }
 
 impl Default for GarbageCollectionConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -85,6 +91,7 @@ impl Default for GarbageCollectionConfig {
 }
 
 impl Default for MemoryMonitoringConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,

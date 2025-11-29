@@ -3,6 +3,8 @@
 // These handlers provide clean access to system data without any
 // authentication or user management overhead.
 
+//! System module
+
 use axum::{extract::State, response::Json};
 use serde::{Deserialize, Serialize};
 
@@ -18,6 +20,7 @@ use nestgate_core::universal_storage::auto_configurator::AutoConfigurator;
 
 /// System health status
 #[derive(Debug, Serialize, Deserialize)]
+/// Healthstatus
 pub struct HealthStatus {
     /// Overall system status
     pub status: String,
@@ -32,6 +35,7 @@ pub struct HealthStatus {
 }
 /// Service status information
 #[derive(Debug, Serialize, Deserialize)]
+/// Servicestatus
 pub struct ServiceStatus {
     /// ZFS _engine status
     pub zfs_engine: String,
@@ -44,6 +48,7 @@ pub struct ServiceStatus {
 }
 /// Version information
 #[derive(Debug, Serialize, Deserialize)]
+/// Versioninfo
 pub struct VersionInfo {
     /// Application version
     pub version: String,
@@ -60,6 +65,7 @@ pub struct VersionInfo {
 }
 /// System status information
 #[derive(Debug, Serialize, Deserialize)]
+/// Systemstatusinfo
 pub struct SystemStatusInfo {
     /// System health
     pub health: HealthStatus,
@@ -76,6 +82,7 @@ pub struct SystemStatusInfo {
 }
 /// Resource usage information
 #[derive(Debug, Serialize, Deserialize)]
+/// Resourceusage
 pub struct ResourceUsage {
     /// Memory usage in bytes
     pub memory_used_bytes: u64,

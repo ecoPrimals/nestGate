@@ -3,6 +3,8 @@
 // This is outside NestGate's core storage focus and should be handled by
 // dedicated security infrastructure.
 
+//! Secrets module
+
 use axum::{extract::Json, extract::Path, http::StatusCode};
 use nestgate_core::zero_cost_security_provider::AuthTokenManager;
 use serde_json::{json, Value};

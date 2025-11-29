@@ -1,6 +1,8 @@
 //
 // This module provides the HardwareTuningHandler for API routes.
 
+//! Handler module
+
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -13,11 +15,13 @@ use nestgate_core::error::{NestGateError, Result};
 
 /// Hardware tuning handler for API routes
 #[derive(Clone)]
+/// Handler for HardwareTuning requests
 pub struct HardwareTuningHandler {
     session_manager: Arc<RwLock<HashMap<Uuid, TuningSession>>>,
     compute_adapter: Arc<HardwareTuningAdapter>,
 }
 impl Default for HardwareTuningHandler {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

@@ -7,6 +7,7 @@ use std::sync::Arc;
 /// This config is used as a fallback mechanism when direct system calls
 /// (like /proc/self/status or `id` command) are not available.
 #[derive(Debug, Clone)]
+/// Configuration for SafeSystem
 pub struct SafeSystemConfig {
     uid_hint: Option<u32>,
     user_hint: Option<String>,
@@ -16,6 +17,7 @@ pub struct SafeSystemConfig {
     docker_container_hint: bool,
 }
 
+/// Type alias for Sharedsafesystemconfig
 pub type SharedSafeSystemConfig = Arc<SafeSystemConfig>;
 
 impl SafeSystemConfig {
@@ -61,31 +63,37 @@ impl SafeSystemConfig {
 
     // Builder methods for testing
 
+    /// Builder method to set Uid Hint
     pub fn with_uid_hint(mut self, uid: u32) -> Self {
         self.uid_hint = Some(uid);
         self
     }
 
+    /// Builder method to set User Hint
     pub fn with_user_hint(mut self, user: String) -> Self {
         self.user_hint = Some(user);
         self
     }
 
+    /// Builder method to set Gid Hint
     pub fn with_gid_hint(mut self, gid: u32) -> Self {
         self.gid_hint = Some(gid);
         self
     }
 
+    /// Builder method to set Hostname Hint
     pub fn with_hostname_hint(mut self, hostname: String) -> Self {
         self.hostname_hint = Some(hostname);
         self
     }
 
+    /// Builder method to set Container Hint
     pub fn with_container_hint(mut self, is_container: bool) -> Self {
         self.container_hint = is_container;
         self
     }
 
+    /// Builder method to set Docker Container Hint
     pub fn with_docker_container_hint(mut self, is_docker: bool) -> Self {
         self.docker_container_hint = is_docker;
         self
@@ -125,6 +133,7 @@ impl SafeSystemConfig {
 }
 
 impl Default for SafeSystemConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

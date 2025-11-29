@@ -7,6 +7,7 @@ use std::time::Duration;
 
 /// Log aggregation configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for LogAggregation
 pub struct LogAggregationConfig {
     /// Enable log aggregation
     pub enabled: bool,
@@ -21,6 +22,7 @@ pub struct LogAggregationConfig {
 }
 }
 impl Default for LogAggregationConfig {
+    /// Returns the default instance
     fn default() -> Self { Self {
             enabled: false,
             batch_size: 100,
@@ -34,6 +36,7 @@ impl Default for LogAggregationConfig {
 
 /// Log destination configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Logdestination
 pub enum LogDestination {
     /// Local file destination
     ,
@@ -72,20 +75,27 @@ pub enum LogDestination {
 }
 /// Elasticsearch authentication methods
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Elasticsearchauth
 pub enum ElasticsearchAuth {
+    /// Basic
     Basic { username: String, password: String  }
+    /// Apikey
     ApiKey { b_key: String }
 }
 }
 /// Loki authentication methods
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Lokiauth
 pub enum LokiAuth {
+    /// Basic
     Basic { username: String, password: String  }
+    /// Bearertoken
     BearerToken { token: String }
 }
 }
 /// Log retention configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for LogRetention
 pub struct LogRetentionConfig {
     /// Enable log retention management
     pub enabled: bool,
@@ -98,6 +108,7 @@ pub struct LogRetentionConfig {
 }
 }
 impl Default for LogRetentionConfig {
+    /// Returns the default instance
     fn default() -> Self { Self {
             enabled: true,
             max_age_days: 30,

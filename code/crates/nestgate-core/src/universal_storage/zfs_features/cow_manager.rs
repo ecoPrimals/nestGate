@@ -1,3 +1,5 @@
+//! Cow Manager module
+
 use crate::error::NestGateError;
 use std::collections::HashMap;
 //
@@ -15,6 +17,7 @@ use tracing::{debug, info};
 type ZfsPoolHandle = String;
 /// COW manager configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Cow
 pub struct CowConfig {
     /// Enable automatic snapshots before writes
     pub auto_snapshot: bool,
@@ -26,6 +29,7 @@ pub struct CowConfig {
     pub verify_cow_operations: bool,
 }
 impl Default for CowConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             auto_snapshot: true,
@@ -38,6 +42,7 @@ impl Default for CowConfig {
 
 /// COW operation metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Cowoperation
 pub struct CowOperation {
     /// Unique operation ID
     pub operation_id: String,
@@ -56,6 +61,7 @@ type CowOperationMap = HashMap<String, CowOperation>;
 /// PERFORMANCE: 45% throughput improvement through direct dispatch
 /// ELIMINATES: Virtual method call overhead and Arc allocation costs
 #[derive(Debug)]
+/// Manager for Cow operations
 pub struct CowManager<Backend = DefaultStorageBackend>
 where
     Backend: CanonicalStorageBackend + Send + Sync + 'static,

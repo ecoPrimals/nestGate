@@ -10,16 +10,21 @@
 use super::config::ProductionZfsManager;
 use super::types::{ZeroCostSnapshotInfo, ZfsError};
 
+/// SnapshotOperations trait
 pub trait SnapshotOperations {
+    /// Creates  Snapshot
     fn create_snapshot(&self, dataset: &str, snapshot_name: &str) -> Result<(), ZfsError>;
+    /// List Snapshots
     fn list_snapshots(&self, dataset: &str) -> Result<Vec<ZeroCostSnapshotInfo>, ZfsError>;
 }
 
 impl SnapshotOperations for ProductionZfsManager {
+    /// Creates  Snapshot
     fn create_snapshot(&self, _dataset: &str, _snapshot_name: &str) -> Result<(), ZfsError> {
         Ok(())
     }
 
+    /// List Snapshots
     fn list_snapshots(&self, dataset: &str) -> Result<Vec<ZeroCostSnapshotInfo>, ZfsError> {
         Ok(vec![ZeroCostSnapshotInfo {
             name: format!("{}@snap1", dataset),

@@ -60,6 +60,7 @@ use nestgate_core::error::NestGateError as NestGateUnifiedError;
 pub struct SafeSimdArraySum;
 
 impl SimdOperation<f32> for SafeSimdArraySum {
+    /// Execute
     fn execute(&self, _engine: &SimdEngine, input: &[f32]) -> Result<Vec<f32>> {
         // SAFE: Simple iterator sum - compiler auto-vectorizes to SIMD
         // Generates AVX2 on x86, NEON on ARM automatically
@@ -67,11 +68,13 @@ impl SimdOperation<f32> for SafeSimdArraySum {
         Ok(vec![sum])
     }
 
+    /// Performance Factor
     fn performance_factor(&self, _engine: &SimdEngine) -> f64 {
         // Compiler auto-vectorization provides similar speedups
         8.0 // Typical AVX2 speedup for f32
     }
 
+    /// Checks if Supported
     fn is_supported(&self, _engine: &SimdEngine) -> bool {
         // Always supported - compiler chooses best instructions
         true
@@ -109,6 +112,7 @@ impl SafeSimdArraySum {
     #[inline]
     #[allow(dead_code)]
     fn sum_chunked_safe(&self, data: &[f32]) -> f32 {
+        /// Chunk Size
         const CHUNK_SIZE: usize = 8; // Optimal for AVX2
 
         // SAFE: chunks_exact is bounds-checked
@@ -136,6 +140,7 @@ impl SafeSimdArraySum {
 pub struct SafeSimdArrayMultiply;
 
 impl SimdOperation<f32> for SafeSimdArrayMultiply {
+    /// Execute
     fn execute(&self, _engine: &SimdEngine, input: &[f32]) -> Result<Vec<f32>> {
         if !input.len().is_multiple_of(2) {
             return Err(NestGateUnifiedError::system(
@@ -150,10 +155,12 @@ impl SimdOperation<f32> for SafeSimdArrayMultiply {
         Ok(result)
     }
 
+    /// Performance Factor
     fn performance_factor(&self, _engine: &SimdEngine) -> f64 {
         8.0 // Compiler auto-vectorization speedup
     }
 
+    /// Checks if Supported
     fn is_supported(&self, _engine: &SimdEngine) -> bool {
         true // Always supported
     }
@@ -185,6 +192,7 @@ impl SafeSimdArrayMultiply {
     #[inline]
     #[allow(dead_code)]
     fn multiply_chunked_safe(&self, left: &[f32], right: &[f32]) -> Vec<f32> {
+        /// Chunk Size
         const CHUNK_SIZE: usize = 8;
 
         let mut result = Vec::with_capacity(left.len());
@@ -222,6 +230,7 @@ pub struct SafeSimdBatchProcessor<const BATCH_SIZE: usize = 32> {
 impl<const BATCH_SIZE: usize> SafeSimdBatchProcessor<BATCH_SIZE> {
     /// Create new safe SIMD batch processor
     #[must_use]
+    /// Fn
     pub const fn new() -> Self {
         Self {
             _phantom: std::marker::PhantomData,
@@ -300,6 +309,7 @@ impl<const BATCH_SIZE: usize> SafeSimdBatchProcessor<BATCH_SIZE> {
 }
 
 impl<const BATCH_SIZE: usize> Default for SafeSimdBatchProcessor<BATCH_SIZE> {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

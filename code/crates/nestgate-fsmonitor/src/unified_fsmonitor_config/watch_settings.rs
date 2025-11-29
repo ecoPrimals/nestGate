@@ -64,6 +64,7 @@ pub struct DebouncingSettings {
 }
 
 impl Default for WatchSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -78,6 +79,7 @@ impl Default for WatchSettings {
 }
 
 impl Default for RecursiveWatchSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             max_depth: 0, // unlimited
@@ -95,6 +97,7 @@ impl Default for RecursiveWatchSettings {
 }
 
 impl Default for DebouncingSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,

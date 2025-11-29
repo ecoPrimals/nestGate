@@ -345,6 +345,7 @@ pub enum AlertDestination {
 // ==================== SECTION ====================
 
 impl Default for MiddlewarePerformanceSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             thread_pool: ThreadPoolSettings::default(),
             memory: MemorySettings::default(),
@@ -407,6 +408,7 @@ impl MiddlewarePerformanceSettings {
 }
 
 impl Default for ThreadPoolSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             min_threads: 1,
             max_threads: num_cpus::get(),
@@ -417,6 +419,7 @@ impl Default for ThreadPoolSettings {
 }
 
 impl Default for MemorySettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             max_memory: None,
             pool_size: 1024,
@@ -426,6 +429,7 @@ impl Default for MemorySettings {
 }
 
 impl Default for CachingSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             enabled: false,
             backend: CacheBackend::Memory,
@@ -436,6 +440,7 @@ impl Default for CachingSettings {
 }
 
 impl Default for ConnectionPoolingSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             enabled: true,
             min_connections: 5,
@@ -447,6 +452,7 @@ impl Default for ConnectionPoolingSettings {
 }
 
 impl Default for RequestOptimizationSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             compression: CompressionSettings::default(),
             timeout: Duration::from_secs(30),
@@ -456,6 +462,7 @@ impl Default for RequestOptimizationSettings {
 }
 
 impl Default for CompressionSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             enabled: false,
             algorithm: CompressionAlgorithm::Gzip,
@@ -465,6 +472,7 @@ impl Default for CompressionSettings {
 }
 
 impl Default for SizeLimits {
+    /// Returns the default instance
     fn default() -> Self { Self {
             max_body_size: 1024 * 1024 * 10, // 10MB
             max_header_size: 8192,           // 8KB
@@ -473,6 +481,7 @@ impl Default for SizeLimits {
 }
 
 impl Default for BatchingSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             enabled: false,
             batch_size: 10,
@@ -481,6 +490,7 @@ impl Default for BatchingSettings {
 }
 
 impl Default for ResponseCachingSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             enabled: false,
             cache_rules: Vec::new(),
@@ -489,6 +499,7 @@ impl Default for ResponseCachingSettings {
 }
 
 impl Default for StreamingSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             enabled: false,
             buffer_size: SEND_BUFFER_SIZE,
@@ -497,6 +508,7 @@ impl Default for StreamingSettings {
 }
 
 impl Default for LoggingSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             level: LogLevel::Info,
             format: LogFormat::Json,
@@ -506,6 +518,7 @@ impl Default for LoggingSettings {
 }
 
 impl Default for RequestLoggingSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             enabled: true,
             log_headers: false,
@@ -516,6 +529,7 @@ impl Default for RequestLoggingSettings {
 }
 
 impl Default for MetricsSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             enabled: false,
             backend: MetricsBackend::Prometheus,
@@ -525,6 +539,7 @@ impl Default for MetricsSettings {
 }
 
 impl Default for TracingSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             enabled: false,
             backend: TracingBackend::Jaeger,
@@ -533,6 +548,7 @@ impl Default for TracingSettings {
 }
 
 impl Default for HealthMonitoringSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             enabled: false,
             check_interval: Duration::from_secs(30),

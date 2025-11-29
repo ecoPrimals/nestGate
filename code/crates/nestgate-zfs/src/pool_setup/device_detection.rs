@@ -1,6 +1,8 @@
 //
 // Hardware detection, device classification, and storage device management
 
+//! Device Detection module
+
 use serde::{Deserialize, Serialize};
 
 use tokio::process::Command;
@@ -15,6 +17,7 @@ use tracing::warn;
 
 /// Storage device information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagedevice
 pub struct StorageDevice {
     /// Device path (e.g., /dev/nvme0n1)
     pub device_path: String,
@@ -33,15 +36,22 @@ pub struct StorageDevice {
 }
 /// Types of storage devices
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+/// Types of Device
 pub enum DeviceType {
+    /// Nvmessd
     NvmeSsd,
+    /// Satassd
     SataSsd,
+    /// Hdd
     Hdd,
+    /// Optanememory
     OptaneMemory,
+    /// Unknown
     Unknown,
 }
 /// Speed classification for storage devices
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+/// Speedclass
 pub enum SpeedClass {
     UltraFast, // NVMe Gen4, Optane
     Fast,      // NVMe Gen3, High-end SATA SSD
@@ -349,6 +359,7 @@ impl DeviceScanner {
 }
 
 impl Default for DeviceScanner {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new(DeviceDetectionConfig::default())
     }

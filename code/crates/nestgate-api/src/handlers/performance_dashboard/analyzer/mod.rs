@@ -4,6 +4,8 @@
 
 // Note: error module moved to nestgate-core
 // use crate::error::ApiResult; // DEPRECATED: Now using canonical Result<T>
+//! Analyzer module
+
 use nestgate_core::canonical_modernization::canonical_constants;
 use nestgate_core::Result; // Canonical Result type (Nov 10, 2025 consolidation)
 use serde::{Deserialize, Serialize};
@@ -43,6 +45,7 @@ impl OptimizationTitle {
 ///
 /// A performance insight with recommendations for system optimization.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performanceinsight
 pub struct PerformanceInsight {
     /// Impact level of this insight
     pub impact: String,
@@ -55,6 +58,7 @@ pub struct PerformanceInsight {
 }
 /// Performance analyzer
 #[derive(Debug)]
+/// Performanceanalyzer
 pub struct PerformanceAnalyzer;
 impl PerformanceAnalyzer {
     /// Create new analyzer

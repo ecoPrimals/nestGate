@@ -1,6 +1,8 @@
 //
 // Tests for ZFS configuration settings and defaults
 
+//! Config Tests module
+
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::time::SystemTime;

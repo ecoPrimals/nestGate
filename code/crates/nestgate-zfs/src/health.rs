@@ -1,6 +1,8 @@
 //
 // This module will be fully implemented in Week 2
 
+//! Health module
+
 use std::collections::HashMap;
 use std::collections::VecDeque;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -19,35 +21,56 @@ use tracing::info;
 
 /// Health status enumeration
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Status values for Health
 pub enum HealthStatus {
+    /// Healthy
     Healthy,
+    /// Warning
     Warning,
+    /// Critical
     Critical,
+    /// Unknown
     Unknown,
 }
 /// Health report for a component
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Healthreport
 pub struct HealthReport {
+    /// Component Type
     pub component_type: String,
+    /// Component name
     pub component_name: String,
+    /// Status
     pub status: HealthStatus,
+    /// Last Check
     pub last_check: SystemTime,
+    /// Details
     pub details: String,
 }
 /// Alert severity levels
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Alertlevel
 pub enum AlertLevel {
+    /// Info
     Info,
+    /// Warning
     Warning,
+    /// Critical
     Critical,
 }
 /// Alert information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Alert
 pub struct Alert {
+    /// Unique identifier
     pub id: String,
+    /// Level
     pub level: AlertLevel,
+    /// Message
     pub message: String,
+    /// Timestamp
     pub timestamp: SystemTime,
+    /// Component
     pub component: String,
 }
 // ==================== SECTION ====================
@@ -63,6 +86,7 @@ pub type BackgroundTasks = Arc<tokio::sync::RwLock<Vec<tokio::task::JoinHandle<(
 /// ZFS Health Monitor - monitors system health
 #[derive(Debug)]
 #[allow(dead_code)] // Fields used in comprehensive health monitoring system
+/// Zfshealthmonitor
 pub struct ZfsHealthMonitor {
     config: ZfsConfig,
     pool_manager: Arc<ZfsPoolManager>,
@@ -87,6 +111,7 @@ impl HealthStatus {
 }
 
 impl std::fmt::Display for HealthStatus {
+    /// Fmt
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             HealthStatus::Healthy => write!(f, "Healthy"),
@@ -322,6 +347,7 @@ impl ZfsHealthMonitor {
         }
     }
 
+    /// Check Dataset Health
     async fn check_dataset_health(
         _dataset_manager: &Arc<ZfsDatasetManager>,
         pool_name: &str,

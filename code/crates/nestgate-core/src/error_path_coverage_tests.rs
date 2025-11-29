@@ -72,10 +72,12 @@ mod error_path_coverage {
 
     #[test]
     fn test_result_ok_propagation() {
+        /// Inner Ok
         fn inner_ok() -> Result<i32> {
             Ok(42)
         }
 
+        /// Outer
         fn outer() -> Result<i32> {
             let value = inner_ok()?;
             Ok(value * 2)
@@ -86,10 +88,12 @@ mod error_path_coverage {
 
     #[test]
     fn test_result_err_propagation() {
+        /// Inner Err
         fn inner_err() -> Result<i32> {
             Err(NestGateError::validation_error("test"))
         }
 
+        /// Outer
         fn outer() -> Result<i32> {
             let _value = inner_err()?;
             Ok(100)
@@ -130,15 +134,18 @@ mod error_path_coverage {
 
     #[test]
     fn test_nested_error_propagation() {
+        /// Level1
         fn level1() -> Result<()> {
             Err(NestGateError::storage_error("level 1"))
         }
 
+        /// Level2
         fn level2() -> Result<()> {
             level1()?;
             Ok(())
         }
 
+        /// Level3
         fn level3() -> Result<()> {
             level2()?;
             Ok(())
@@ -149,10 +156,12 @@ mod error_path_coverage {
 
     #[test]
     fn test_multiple_error_types_chain() {
+        /// Operation1
         fn operation1() -> Result<i32> {
             Err(NestGateError::network_error("network failed"))
         }
 
+        /// Operation2
         fn operation2() -> Result<i32> {
             operation1().or_else(|_| Err(NestGateError::storage_error("storage failed")))
         }
@@ -272,6 +281,7 @@ mod error_path_coverage {
 
     #[test]
     fn test_multiple_error_type_handling() {
+        /// Handles  Error
         fn handle_error(error: NestGateError) -> &'static str {
             match error {
                 NestGateError::Validation(_) => "validation",
@@ -347,6 +357,7 @@ mod error_path_coverage {
 
     #[test]
     fn test_error_recovery_with_default() {
+        /// Operation That Fails
         fn operation_that_fails() -> Result<String> {
             Err(NestGateError::network_error("failed"))
         }
@@ -359,6 +370,7 @@ mod error_path_coverage {
     fn test_error_recovery_with_retry() {
         let mut attempt = 0;
 
+        /// Operation
         fn operation(attempt: &mut i32) -> Result<i32> {
             *attempt += 1;
             if *attempt < 3 {

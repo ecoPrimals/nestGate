@@ -43,6 +43,7 @@ use crate::Result;
     since = "0.11.3",
     note = "Use crate::traits::canonical_provider_unification::SecurityProvider - zero-cost patterns integrated via native async (RPITIT). Migration guide: docs/guides/SECURITY_PROVIDER_MIGRATION.md"
 )]
+/// ZeroCostSecurityProvider trait
 pub trait ZeroCostSecurityProvider: Send + Sync + 'static {
     /// Security provider configuration type
     type Config: Clone + Send + Sync + 'static;
@@ -221,6 +222,7 @@ pub trait SigningProvider: Send + Sync {
     since = "0.9.0",
     note = "Use crate::traits::canonical::CanonicalSecurity health_check method"
 )]
+/// SecurityHealthProvider trait
 pub trait SecurityHealthProvider: Send + Sync {
     /// Health information type
     type Health: Clone + Send + Sync + 'static;
@@ -238,6 +240,7 @@ pub trait SecurityHealthProvider: Send + Sync {
     since = "0.9.0",
     note = "Use crate::traits::canonical::CanonicalSecurity metrics methods"
 )]
+/// SecurityMetricsProvider trait
 pub trait SecurityMetricsProvider: Send + Sync {
     /// Metrics type
     type Metrics: Clone + Send + Sync + 'static;
@@ -261,10 +264,14 @@ mod tests {
     }
 
     impl ZeroCostSecurityProvider for MockSecurityProvider {
+        /// Type alias for Config
         type Config = String;
+        /// Type alias for Health
         type Health = bool;
+        /// Type alias for Metrics
         type Metrics = u64;
 
+        /// Authenticate
         async fn authenticate(
             &self,
             _credentials: &ZeroCostCredentials,
@@ -277,10 +284,12 @@ mod tests {
             ))
         }
 
+        /// Validates  Token
         async fn validate_token(&self, _token: &str) -> Result<bool> {
             Ok(true)
         }
 
+        /// Refresh Token
         async fn refresh_token(&self, _token: &str) -> Result<ZeroCostAuthToken> {
             Ok(ZeroCostAuthToken::new(
                 "refreshed-token".to_string(),
@@ -290,18 +299,22 @@ mod tests {
             ))
         }
 
+        /// Revoke Token
         async fn revoke_token(&self, _token: &str) -> Result<()> {
             Ok(())
         }
 
+        /// Encrypt
         async fn encrypt(&self, data: &[u8], _algorithm: &str) -> Result<Vec<u8>> {
             Ok(data.to_vec()) // Mock encryption
         }
 
+        /// Decrypt
         async fn decrypt(&self, encrypted: &[u8], _algorithm: &str) -> Result<Vec<u8>> {
             Ok(encrypted.to_vec()) // Mock decryption
         }
 
+        /// Sign Data
         async fn sign_data(&self, _data: &[u8]) -> Result<ZeroCostSignature> {
             Ok(ZeroCostSignature::new(
                 "ECDSA-P256".to_string(),
@@ -310,6 +323,7 @@ mod tests {
             ))
         }
 
+        /// Verify Signature
         async fn verify_signature(
             &self,
             _data: &[u8],
@@ -318,30 +332,37 @@ mod tests {
             Ok(true)
         }
 
+        /// Gets Key Id
         fn get_key_id(&self) -> String {
             "mock-key-123".to_string()
         }
 
+        /// Supported Algorithms
         fn supported_algorithms(&self) -> Vec<String> {
             vec!["AES-256-GCM".to_string(), "ECDSA-P256".to_string()]
         }
 
+        /// Supports Algorithm
         fn supports_algorithm(&self, algorithm: &str) -> bool {
             self.supported_algorithms().contains(&algorithm.to_string())
         }
 
+        /// Health Check
         async fn health_check(&self) -> Self::Health {
             true
         }
 
+        /// Gets Metrics
         async fn get_metrics(&self) -> Self::Metrics {
             42
         }
 
+        /// Current Config
         fn current_config(&self) -> &Self::Config {
             &self.config
         }
 
+        /// Updates  Config
         async fn update_config(&mut self, _config: Self::Config) -> Result<()> {
             Ok(())
         }

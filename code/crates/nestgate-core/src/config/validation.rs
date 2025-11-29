@@ -24,10 +24,15 @@ pub trait ConfigValidation {
 
 /// Validation result with detailed error information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Validationresult
 pub struct ValidationResult {
+    /// Whether valid
     pub is_valid: bool,
+    /// Errors
     pub errors: Vec<ValidationError>,
+    /// Warnings
     pub warnings: Vec<ValidationWarning>,
+    /// Suggestions
     pub suggestions: Vec<ValidationSuggestion>,
 }
 
@@ -85,71 +90,109 @@ impl ValidationResult {
 
 /// Validation error with field context
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Error type for Validation operations
 pub struct ValidationError {
+    /// Field
     pub field: String,
+    /// Message
     pub message: String,
+    /// Error Type
     pub error_type: ValidationErrorType,
+    /// Current Value
     pub current_value: Option<String>,
+    /// Expected Format
     pub expected_format: Option<String>,
 }
 
 /// Types of validation errors
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+/// Types of ValidationError
 pub enum ValidationErrorType {
+    /// Required
     Required,
+    /// Invalidformat
     InvalidFormat,
+    /// Outofrange
     OutOfRange,
+    /// Invalidvalue
     InvalidValue,
+    /// Conflict
     Conflict,
+    /// Security
     Security,
 }
 
 /// Validation warning for non-critical issues
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Validationwarning
 pub struct ValidationWarning {
+    /// Field
     pub field: String,
+    /// Message
     pub message: String,
+    /// Severity
     pub severity: WarningSeverity,
 }
 
 /// Warning severity levels
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+/// Warningseverity
 pub enum WarningSeverity {
+    /// Low
     Low,
+    /// Medium
     Medium,
+    /// High
     High,
 }
 
 /// Validation suggestion for improvements
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Validationsuggestion
 pub struct ValidationSuggestion {
+    /// Field
     pub field: String,
+    /// Message
     pub message: String,
+    /// Suggested Value
     pub suggested_value: Option<String>,
 }
 
 /// Validation schema for documentation
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Validationschema
 pub struct ValidationSchema {
+    /// Fields
     pub fields: HashMap<String, FieldSchema>,
+    /// Dependencies
     pub dependencies: Vec<FieldDependency>,
 }
 
 /// Schema for individual fields
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Fieldschema
 pub struct FieldSchema {
+    /// Field Type
     pub field_type: String,
+    /// Required
     pub required: bool,
+    /// Default Value
     pub default_value: Option<String>,
+    /// Constraints
     pub constraints: Vec<String>,
+    /// Human-readable description
     pub description: String,
 }
 
 /// Field dependency specification
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Fielddependency
 pub struct FieldDependency {
+    /// Field
     pub field: String,
+    /// Depends On
     pub depends_on: String,
+    /// Condition
     pub condition: String,
 }
 
@@ -386,6 +429,7 @@ impl ValidationUtils {
 ///
 /// **CONSOLIDATED**: Now uses `CanonicalNetworkConfig` from
 /// `crate::config::canonical_primary::domains::network::CanonicalNetworkConfig`
+// Network config is in domains/network module
 pub use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig as NetworkConfig;
 
 // Note: Original validation impl has been moved to the CanonicalNetworkConfig's own validation
@@ -393,6 +437,7 @@ pub use crate::config::canonical_primary::domains::network::CanonicalNetworkConf
 // validation on this module's NetworkConfig alias
 
 impl ConfigValidation for NetworkConfig {
+    /// Validates data
     fn validate(&self) -> ValidationResult {
         let mut errors = Vec::new();
         let mut warnings = Vec::new();
@@ -441,6 +486,7 @@ impl ConfigValidation for NetworkConfig {
         }
     }
 
+    /// Schema
     fn schema() -> ValidationSchema {
         let mut fields = HashMap::new();
 
@@ -449,7 +495,9 @@ impl ConfigValidation for NetworkConfig {
             FieldSchema {
                 field_type: "string".to_string(),
                 required: true,
-                default_value: Some(crate::constants::hardcoding::addresses::LOCALHOST_IPV4.to_string()),
+                default_value: Some(
+                    crate::constants::hardcoding::addresses::LOCALHOST_IPV4.to_string(),
+                ),
                 constraints: vec!["Valid IPv4 or IPv6 address".to_string()],
                 description: "IP address to bind the server to".to_string(),
             },

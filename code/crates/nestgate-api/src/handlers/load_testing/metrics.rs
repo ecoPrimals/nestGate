@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// Comprehensive metrics collected during load testing execution.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Loadtestmetrics
 pub struct LoadTestMetrics {
     /// Overall performance statistics for the test
     pub performance_stats: PerformanceStats,
@@ -17,6 +18,7 @@ pub struct LoadTestMetrics {
 ///
 /// Key performance indicators collected during load testing.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performancestats
 pub struct PerformanceStats {
     /// Total number of HTTP requests made during the test
     pub total_requests: u64,
@@ -32,6 +34,7 @@ pub struct PerformanceStats {
 ///
 /// Statistical analysis of response times during load testing.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Responsetimestats
 pub struct ResponseTimeStats {
     /// Minimum response time observed in milliseconds
     pub min_ms: f64,
@@ -48,6 +51,7 @@ pub struct ResponseTimeStats {
 }
 
 impl Default for PerformanceStats {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             total_requests: 0,
@@ -59,6 +63,7 @@ impl Default for PerformanceStats {
 }
 
 impl Default for ResponseTimeStats {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             min_ms: 0.0,

@@ -7,6 +7,7 @@ use std::collections::HashMap;
 
 /// Information about a ZFS dataset
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Datasetinfo
 pub struct DatasetInfo {
     /// Dataset name
     pub name: String,
@@ -26,6 +27,7 @@ pub struct DatasetInfo {
 
 /// Dataset type
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Types of Dataset
 pub enum DatasetType {
     /// Filesystem dataset
     Filesystem,
@@ -37,6 +39,7 @@ pub enum DatasetType {
 
 /// Information about a ZFS snapshot
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Snapshotinfo
 pub struct SnapshotInfo {
     /// Snapshot name (e.g., "pool/dataset@snapshot-name")
     pub name: String,

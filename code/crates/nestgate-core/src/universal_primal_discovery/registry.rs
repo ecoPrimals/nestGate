@@ -12,22 +12,30 @@ use std::time::Duration;
 use super::registry_config::{RegistryConfig, SharedRegistryConfig};
 /// Discovery query configuration
 #[derive(Debug, Clone)]
+/// Discoveryquery
 pub struct DiscoveryQuery {
+    /// Service name
     pub service_name: String,
+    /// Query Type
     pub query_type: String,
+    /// Timeout
     pub timeout: Duration,
+    /// Fallback Enabled
     pub fallback_enabled: bool,
 }
 /// Service registry client
 #[derive(Debug)]
+/// Serviceregistryclient
 pub struct ServiceRegistryClient {
     base_url: Option<String>,
     timeout: Duration,
     registry_cache: HashMap<String, String>,
+    /// Configuration for
     pub config: SharedRegistryConfig,
 }
 
 impl Default for ServiceRegistryClient {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

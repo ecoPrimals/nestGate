@@ -14,37 +14,59 @@ pub use super::security::{AuthToken, Credentials, Signature};
 
 /// Network location information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Networklocation
 pub struct NetworkLocation {
+    /// Host
     pub host: String,
+    /// Port
     pub port: u16,
+    /// Protocol
     pub protocol: String,
+    /// Secure
     pub secure: bool,
 }
 /// Security level enumeration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Securitylevel
 pub enum SecurityLevel {
+    /// Public
     Public,
+    /// Internal
     Internal,
+    /// Confidential
     Confidential,
+    /// Restricted
     Restricted,
+    /// Topsecret
     TopSecret,
 }
 /// Primal capability enumeration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Primalcapability
 pub enum PrimalCapability {
+    /// Storage
     Storage,
+    /// Compute
     Compute,
+    /// Security
     Security,
+    /// Orchestration
     Orchestration,
+    /// Monitoring
     Monitoring,
+    /// Analytics
     Analytics,
+    /// Machinelearning
     MachineLearning,
+    /// Dataprocessing
     DataProcessing,
+    /// Networkmanagement
     NetworkManagement,
     Custom(String),
 }
 /// Primal dependency specification
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Primaldependency
 pub enum PrimalDependency {
     Required(String),
     Optional(String),
@@ -52,39 +74,64 @@ pub enum PrimalDependency {
 }
 /// Primal endpoints configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Primalendpoints
 pub struct PrimalEndpoints {
+    /// Primary
     pub primary: NetworkLocation,
+    /// Backup
     pub backup: Option<NetworkLocation>,
+    /// Health Check
     pub health_check: Option<NetworkLocation>,
+    /// Metrics
     pub metrics: Option<NetworkLocation>,
 }
 /// System metrics collection
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Systemmetrics
 pub struct SystemMetrics {
+    /// Cpu Usage Percent
     pub cpu_usage_percent: f64,
+    /// Memory Usage Percent
     pub memory_usage_percent: f64,
+    /// Disk Usage Percent
     pub disk_usage_percent: f64,
+    /// Network Throughput Mbps
     pub network_throughput_mbps: f64,
+    /// Active Connections
     pub active_connections: u32,
+    /// Timestamp
     pub timestamp: std::time::SystemTime,
 }
 /// Configuration structure for universal traits
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Universal
 pub struct UniversalConfig {
+    /// Primal identifier
     pub primal_id: String,
+    /// Capabilities
     pub capabilities: Vec<PrimalCapability>,
+    /// Endpoints
     pub endpoints: PrimalEndpoints,
+    /// Security Level
     pub security_level: SecurityLevel,
+    /// Dependencies
     pub dependencies: Vec<PrimalDependency>,
+    /// Additional metadata key-value pairs
     pub metadata: HashMap<String, String>,
 }
 /// Ecosystem integration configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for EcosystemIntegration
 pub struct EcosystemIntegrationConfig {
+    /// Discovery Endpoint
     pub discovery_endpoint: String,
+    /// Heartbeat Interval Seconds
     pub heartbeat_interval_seconds: u64,
+    /// Timeout Seconds
     pub timeout_seconds: u64,
+    /// Retry Attempts
     pub retry_attempts: u32,
+    /// Configuration for security
     pub security_config: SecurityConfig,
 }
 /// Security configuration for ecosystem integration
@@ -107,10 +154,15 @@ pub struct EcosystemIntegrationConfig {
     since = "0.11.0",
     note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
+/// Configuration for Security
 pub struct SecurityConfig {
+    /// Authentication Required
     pub authentication_required: bool,
+    /// Encryption Required
     pub encryption_required: bool,
+    /// Allowed Primals
     pub allowed_primals: Option<Vec<String>>,
+    /// Security Level
     pub security_level: SecurityLevel,
 }
 
@@ -123,6 +175,7 @@ pub struct SecurityConfig {
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
 #[allow(deprecated)]
+/// Type alias for Securityconfigcanonical
 pub type SecurityConfigCanonical =
     crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
