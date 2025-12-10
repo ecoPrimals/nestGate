@@ -229,7 +229,6 @@ pub struct RealTimeMetricsCollector {
 impl RealTimeMetricsCollector {
     /// Create a new metrics collector
     #[must_use]
-    /// Fn
     pub const fn new() -> Self {
         Self {}
     }

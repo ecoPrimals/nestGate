@@ -50,8 +50,30 @@ pub mod ports {
     /// Alternative API port
     pub const API_ALT: u16 = 3001;
 
+    /// Default port for metrics endpoint (Prometheus-compatible)
+    ///
+    /// **Standard**: Port 9090 is the de facto standard for Prometheus metrics exporters.
+    /// Using this default enables zero-configuration monitoring integration.
+    ///
+    /// **Override**: `NESTGATE_METRICS_PORT` environment variable.
+    ///
+    /// **Evolution**: Will be discovered via capability announcement, allowing:
+    /// - Multiple exporters on same host
+    /// - Dynamic port allocation
+    /// - Service mesh integration
     pub const METRICS_DEFAULT: u16 = 9090;
 
+    /// Default port for health check endpoint
+    ///
+    /// **Purpose**: Separate port from main API allows:
+    /// - Load balancer health checks without API authentication
+    /// - Monitoring when API is overloaded
+    /// - Independent firewall rules (health checks from monitoring network only)
+    ///
+    /// **Override**: `NESTGATE_HEALTH_PORT` environment variable.
+    ///
+    /// **Evolution**: Will support capability-based discovery for cloud environments
+    /// where health checks use service-specific mechanisms (k8s probes, ALB targets, etc.)
     pub const HEALTH_CHECK_DEFAULT: u16 = 8081;
 
     /// Alternate health check port (used by network_defaults)
@@ -71,9 +93,35 @@ pub mod ports {
 }
 
 /// Default timeout values in milliseconds
+///
+/// **Philosophy**: These defaults balance responsiveness with reliability across typical network conditions.
 pub mod timeouts {
+    /// Connection establishment timeout in milliseconds
+    ///
+    /// **5 seconds** allows for typical network conditions:
+    /// - Local network: <100ms
+    /// - Internet: <3s  
+    /// - DNS resolution + TLS handshake
+    ///
+    /// **Evolution**: Will become adaptive based on connection history,
+    /// network quality detection, and service discovery latency patterns.
     pub const CONNECT_MS: u64 = 5_000;
 
+    /// Request/response cycle timeout in milliseconds
+    ///
+    /// **30 seconds** accommodates:
+    /// - Database queries (typical: <1s, complex: <10s)
+    /// - External API calls (typical: <5s)
+    /// - File I/O operations
+    /// - Buffer for network variability
+    ///
+    /// **Too short**: Kills legitimate slow operations
+    /// **Too long**: Ties up resources, poor user experience
+    ///
+    /// **Evolution**: Will become operation-specific with automatic tuning based on:
+    /// - Historical latency percentiles
+    /// - Operation type (read vs write, local vs remote)
+    /// - System load
     pub const REQUEST_MS: u64 = 30_000;
 
     /// Long operation timeout (5 minutes)
@@ -82,15 +130,29 @@ pub mod timeouts {
 
 // ==================== ENVIRONMENT VARIABLE HELPERS ====================
 
-/// Environment variable key names
+/// Environment variable key names for runtime configuration
+///
+/// **Philosophy**: Environment variables provide sovereignty-compliant configuration:
+/// - No hardcoded vendor assumptions
+/// - 12-factor app methodology
+/// - Container/orchestration friendly
+/// - Secrets management integration
 pub mod env_keys {
-    /// Bind Address
+    /// Bind address for main API server
+    ///
+    /// **Examples**: "0.0.0.0" (all interfaces), "127.0.0.1" (localhost only)
     pub const BIND_ADDRESS: &str = "NESTGATE_BIND_ADDRESS";
-    /// Api Port
+
+    /// Port for main API endpoint
     pub const API_PORT: &str = "NESTGATE_API_PORT";
+
+    /// Port for Prometheus-compatible metrics endpoint
     pub const METRICS_PORT: &str = "NESTGATE_METRICS_PORT";
+
+    /// Port for health check endpoint (load balancer target)
     pub const HEALTH_PORT: &str = "NESTGATE_HEALTH_PORT";
-    /// Websocket Port
+
+    /// Port for WebSocket connections (real-time updates)
     pub const WEBSOCKET_PORT: &str = "NESTGATE_WEBSOCKET_PORT";
 }
 

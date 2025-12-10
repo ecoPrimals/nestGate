@@ -9,10 +9,7 @@
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::env;
 use std::time::Duration;
-
-use nestgate_core::error::utilities::safe_env_var_or_default;
 
 /// **AUTOMATION CONFIG TYPES**
 /// Configuration type definitions for the automation system
@@ -216,11 +213,12 @@ impl DiscoveryConfig {
     pub fn from_automation_config(config: &AutomationConfig) -> Self {
         Self {
             known_orchestration_endpoints: vec![
-                // ✅ MIGRATED: Now uses centralized runtime configuration
+                // ✅ MIGRATED: Now uses capability-based discovery (not primal names!)
                 config._orchestration_endpoint.clone().unwrap_or_else(|| {
-                    use nestgate_core::config::runtime::{get_config, service_url};
-                    service_url("songbird")
-                        .or_else(|| service_url("orchestration"))
+                    use nestgate_core::config::runtime::{capability_url, get_config};
+                    // Use capability-based discovery, not primal names
+                    capability_url("orchestration")
+                        .or_else(|| capability_url("networking"))
                         .unwrap_or_else(|| get_config().network.api_base_url())
                 }),
                 std::env::var("NESTGATE_ORCHESTRATION_BACKUP_ENDPOINT_1").unwrap_or_else(|_| {

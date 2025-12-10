@@ -15,6 +15,10 @@ pub struct HealthAwareLoadBalancer<L: LoadBalancer> {
     stats: Arc<parking_lot::RwLock<LoadBalancerStats>>,
 }
 impl<L: LoadBalancer> HealthAwareLoadBalancer<L> {
+    /// Creates a new health-aware load balancer wrapping an existing balancer.
+    ///
+    /// This decorator adds health checking to any load balancer implementation,
+    /// automatically filtering out unhealthy endpoints.
     #[must_use]
     pub fn new(inner: L) -> Self {
         Self {

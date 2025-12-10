@@ -17,7 +17,7 @@ This module provides workspace management functionality for NestGate's storage s
 - `unshare_workspace()` - **STUB (Intentional)**
 
 **Rationale**: Workspace sharing requires:
-- User authentication and authorization (BearDog security module)
+- User authentication and authorization (security capability module)
 - User interface components (BiomeOS)
 - Permission management system
 
@@ -25,7 +25,7 @@ This module provides workspace management functionality for NestGate's storage s
 
 **Next Steps**: 
 - Implement when user management system is available
-- Delegate to BearDog security module for authentication
+- Delegate to security capability module for authentication
 - Coordinate with BiomeOS for UI components
 
 #### **Template Features** (`templates.rs`)
@@ -50,7 +50,7 @@ This module provides workspace management functionality for NestGate's storage s
 **Status**: Intentionally delegated to external security modules.
 
 **Next Steps**: 
-- Integrate with BearDog or other security modules when available
+- Integrate with security capability modules when available
 - Storage system should only handle encrypted data, not secret management
 
 ### 🎯 **PRIORITY IMPLEMENTATIONS NEEDED**
@@ -84,7 +84,7 @@ These can be implemented with the ZFS manager:
 - Proper error handling for ZFS operations
 
 ### **External Module Dependencies**
-- **Security Features**: Require BearDog integration
+- **Security Features**: Require security capability integration
 - **User Management**: Require authentication system
 - **UI Components**: Require BiomeOS coordination
 

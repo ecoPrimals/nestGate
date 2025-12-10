@@ -23,6 +23,7 @@ pub mod canonical_types;
 // ==================== DOMAIN-SPECIFIC MODULES ====================
 /// Capability-based service discovery
 pub mod capabilities;
+pub mod capability_config;
 /// **PRIMARY**: Unified configuration system - single source of truth
 pub mod config;
 /// **PRIMARY**: Unified constants system
@@ -49,14 +50,26 @@ mod error_path_coverage_tests;
 pub mod infant_discovery;
 #[cfg(test)]
 mod orchestration_tests; // Nov 23, 2025 - P1 test expansion
+/// **NEW**: Primal discovery framework (Dec 6, 2025)
+///
+/// **Core Principle**: Primals have only self-knowledge and discover others at runtime.
+/// Enables zero-configuration, capability-based primal integration.
+pub mod primal_discovery;
 /// Error recovery and resilience patterns
 pub mod recovery;
 /// **PRIMARY**: Canonical Result type aliases (Nov 10, 2025 consolidation)
 pub mod result_types;
+/// **NEW**: Self-knowledge pattern for primal sovereignty (Dec 3, 2025)
+///
+/// **Philosophy**: Each primal knows only itself, discovers others at runtime.
+/// Replaces hardcoded primal dependencies with capability-based discovery.
+pub mod self_knowledge;
 /// Service discovery and registry
 pub mod service_discovery;
 /// **PRIMARY**: Canonical trait system with native async
 pub mod traits;
+/// Core types module - basic data structures
+pub mod types;
 /// Universal adapter for primal integration
 pub mod universal_adapter;
 /// Universal primal discovery system
@@ -142,6 +155,10 @@ pub mod zero_cost_security_provider;
 
 /// Canonical type definitions
 pub mod canonical;
+
+/// Capability-based configuration (evolution from hardcoded values)
+pub mod capability_based_config;
+
 /// Interface definitions
 pub mod interface;
 /// Memory layout optimizations
@@ -150,6 +167,8 @@ pub mod memory_layout;
 pub mod optimized;
 /// Performance optimization system (connection pooling, advanced optimizations)
 pub mod performance;
+/// Primal self-knowledge and discovery system
+pub mod primal_self_knowledge;
 /// SIMD optimizations
 pub mod simd;
 /// Unified enumerations
@@ -184,6 +203,8 @@ pub use error::{NestGateError, Result};
 pub use result_types::{
     CanonicalResult, ConnectionFactory, HealthCheckFn, TestResult, ValidatorFn, VoidResult,
 };
+/// **SERVICE REGISTRY** - Capability-based service discovery (Dec 10, 2025)
+pub use universal_primal_discovery::service_registry::ServiceRegistry;
 // Note: ZfsResult remains in error::unified_result_system for backwards compatibility
 /// **THE CANONICAL TRAITS** - Single source for all service interfaces
 pub use traits::{

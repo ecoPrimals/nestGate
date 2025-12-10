@@ -169,6 +169,7 @@ pub enum ConnectionStatus {
     Disconnecting,
     /// Disconnected
     Disconnected,
+    /// An error occurred during the connection.
     Error(String),
 }
 /// MCP session information
@@ -256,6 +257,7 @@ pub enum ExecutionStatus {
     Running,
     /// Completed
     Completed,
+    /// Failed with error message
     Failed(String),
     /// Cancelled
     Cancelled,

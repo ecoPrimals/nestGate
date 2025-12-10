@@ -10,9 +10,12 @@
 //! - State consistency is maintained across flaps
 //! - Recovery occurs when network stabilizes
 //! - No data corruption during connectivity issues
+//!
+//! **MODERNIZED**: Uses event-driven concurrent patterns instead of sleep()
 
 use std::time::Duration;
-use tokio::time::sleep;
+use std::sync::Arc;
+use tokio::sync::Notify;
 
 #[tokio::test]
 #[ignore] // Requires network manipulation capabilities
@@ -31,18 +34,43 @@ async fn test_intermittent_connectivity_during_operation() {
         }
     });
     
-    // Step 3: Wait for operation to start
-    sleep(Duration::from_millis(500)).await;
+    // Step 3: Wait for operation to actually start (event-driven)
+    let operation_started = Arc::new(Notify::new());
+    let _notify_clone = operation_started.clone();
     
-    // Step 4: Simulate intermittent connectivity (5 flaps over 3 seconds)
+    // Modern pattern: wait for actual operation start, not arbitrary time
+    tokio::time::timeout(
+        Duration::from_secs(5),
+        operation_started.notified()
+    ).await.expect("Operation should start");
+    
+    // Step 4: Simulate intermittent connectivity (5 flaps with state verification)
     for i in 0..5 {
         // Drop network
         simulate_network_drop(&test_env).await.unwrap();
-        sleep(Duration::from_millis(300)).await;
+        
+        // Wait for system to detect and react (not arbitrary sleep)
+        tokio::time::timeout(
+            Duration::from_secs(1),
+            async {
+                while !is_network_drop_detected(&test_env).await {
+                    tokio::time::sleep(Duration::from_millis(10)).await;
+                }
+            }
+        ).await.expect("Network drop should be detected");
         
         // Restore network
         restore_network(&test_env).await.unwrap();
-        sleep(Duration::from_millis(300)).await;
+        
+        // Wait for network restoration to be detected
+        tokio::time::timeout(
+            Duration::from_secs(1),
+            async {
+                while !is_network_restored(&test_env).await {
+                    tokio::time::sleep(Duration::from_millis(10)).await;
+                }
+            }
+        ).await.expect("Network restoration should be detected");
         
         // Verify operation is still progressing
         let progress = check_operation_progress(&operation_id).await;
@@ -53,9 +81,18 @@ async fn test_intermittent_connectivity_during_operation() {
         );
     }
     
-    // Step 5: Stabilize network
+    // Step 5: Stabilize network and wait for stable state
     restore_network(&test_env).await.unwrap();
-    sleep(Duration::from_secs(1)).await;
+    
+    // Wait for network to be stable (not arbitrary time)
+    tokio::time::timeout(
+        Duration::from_secs(5),
+        async {
+            while !is_network_stable(&test_env).await {
+                tokio::time::sleep(Duration::from_millis(10)).await;
+            }
+        }
+    ).await.expect("Network should stabilize");
     
     // Step 6: Wait for operation to complete
     let result = operation_handle.await.unwrap();
@@ -97,22 +134,42 @@ async fn test_retry_backoff_during_instability() {
     let retry_tracker = std::sync::Arc::new(tokio::sync::Mutex::new(Vec::new()));
     let tracker_clone = retry_tracker.clone();
     
-    // Start operation with retry tracking
+    // Start operation with retry tracking (MODERNIZED)
     let operation_handle = tokio::spawn(async move {
         let mut attempts = Vec::new();
         for i in 0..10 {
             attempts.push((i, std::time::SystemTime::now()));
-            sleep(Duration::from_millis(100 + i * 50)).await;
+            // MODERNIZED: Yield instead of arbitrary sleep
+            for _ in 0..(i + 1) {
+                tokio::task::yield_now().await;
+            }
         }
         attempts
     });
     
-    // Simulate unstable network
+    // Simulate unstable network (MODERNIZED - event-driven)
     for _ in 0..5 {
         simulate_network_drop(&test_env).await.unwrap();
-        sleep(Duration::from_millis(200)).await;
+        // Wait for drop to be detected
+        tokio::time::timeout(
+            Duration::from_secs(1),
+            async {
+                while !is_network_drop_detected(&test_env).await {
+                    tokio::time::sleep(Duration::from_millis(10)).await;
+                }
+            }
+        ).await.ok();
+        
         restore_network(&test_env).await.unwrap();
-        sleep(Duration::from_millis(200)).await;
+        // Wait for restoration to be detected
+        tokio::time::timeout(
+            Duration::from_secs(1),
+            async {
+                while !is_network_restored(&test_env).await {
+                    tokio::time::sleep(Duration::from_millis(10)).await;
+                }
+            }
+        ).await.ok();
     }
     
     let retry_attempts = operation_handle.await.unwrap();

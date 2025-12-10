@@ -26,16 +26,27 @@
 use serde::{Deserialize, Serialize};
 
 // Import all handler configuration modules
+/// API handler configuration
 pub mod api;
+/// Environment-specific handler configuration
 pub mod environment;
+/// Error handling configuration
 pub mod error;
+/// Event handling configuration
 pub mod event;
+/// Lifecycle management configuration
 pub mod lifecycle;
+/// Middleware configuration
 pub mod middleware;
+/// Monitoring and observability configuration
 pub mod monitoring;
+/// Performance optimization configuration
 pub mod performance;
+/// Security configuration
 pub mod security;
+/// Validation configuration
 pub mod validation;
+/// ZFS-specific handler configuration
 pub mod zfs;
 
 // Re-export all configuration types
@@ -243,9 +254,10 @@ impl CanonicalHandlerConfigs {
 
 // ==================== BACKWARD COMPATIBILITY ALIASES ====================
 
-// Backward compatibility alias for existing HandlerConfig usage
+/// Backward compatibility alias for existing `HandlerConfig` usage
+/// Backward compatibility alias for `CanonicalHandlerConfigs`
 pub type HandlerConfig = CanonicalHandlerConfigs;
-// Backward compatibility alias for UnifiedHandlerConfig
+/// Backward compatibility alias for `CanonicalHandlerConfigs`
 pub type UnifiedHandlerConfig = CanonicalHandlerConfigs;
-// Backward compatibility alias for HandlerConfigs
+/// Backward compatibility alias for `CanonicalHandlerConfigs`
 pub type HandlerConfigs = CanonicalHandlerConfigs;

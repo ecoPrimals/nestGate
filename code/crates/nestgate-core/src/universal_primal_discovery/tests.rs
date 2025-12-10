@@ -68,9 +68,16 @@ fn test_cache_entry_expiration() {
     // Immediately should not be expired
     assert!(!entry.is_expired());
 
-    // After sleep, should be expired
-    std::thread::sleep(Duration::from_millis(5));
-    assert!(entry.is_expired());
+    // Modern pattern: Test expiration with explicit timestamp manipulation
+    // Rather than sleeping, we test the time-based logic directly
+    let expired_entry = CacheEntry {
+        value: "test".to_string(),
+        created_at: std::time::SystemTime::now() - Duration::from_millis(10), // Already expired
+        ttl: Duration::from_millis(1),
+        access_count: 0,
+        last_accessed: std::time::SystemTime::now(),
+    };
+    assert!(expired_entry.is_expired());
 }
 
 /// Test cache entry access tracking

@@ -9,7 +9,7 @@ mod configuration_management {
     use std::time::Duration;
 
     #[tokio::test]
-    #[ignore] // Run explicitly: cargo test --test e2e_scenario_25_configuration_management -- --ignored
+    // ✅ EVOLUTION: Un-ignored - now concurrent-safe with temp-env!
     async fn test_config_from_environment() {
         // Simulate environment variable configuration
         std::env::set_var("NESTGATE_TIMEOUT", "5000");
@@ -88,15 +88,17 @@ mod configuration_management {
         // File override
         config_map.insert("timeout", "60000");
 
-        // Environment override
-        std::env::set_var("CONFIG_TIMEOUT", "90000");
-        let env_timeout = std::env::var("CONFIG_TIMEOUT").ok();
+        // ✅ EVOLUTION: Isolated environment
+        temp_env::with_var("CONFIG_TIMEOUT", Some("90000"), || {
+            let env_timeout = std::env::var("CONFIG_TIMEOUT").ok();
 
-        let final_timeout = env_timeout
-            .or_else(|| config_map.get("timeout").map(|s| s.to_string()))
-            .unwrap();
+            let final_timeout = env_timeout
+                .or_else(|| config_map.get("timeout").map(|s| s.to_string()))
+                .unwrap();
 
-        assert_eq!(final_timeout, "90000");
+            assert_eq!(final_timeout, "90000");
+        });
+        // Environment automatically restored!
 
         // Cleanup
         std::env::remove_var("CONFIG_TIMEOUT");

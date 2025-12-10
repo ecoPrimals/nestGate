@@ -34,10 +34,10 @@ async fn test_weighted_load_balancing() {
     println!("🔄 E2E Scenario 37B: Weighted Load Balancing");
 
     // Weights: 50%, 30%, 20%
-    let weights = vec![5, 3, 2];
+    let weights = [5, 3, 2];
     let total_weight: u32 = weights.iter().sum();
 
-    let backends = vec![
+    let backends = [
         Arc::new(AtomicU32::new(0)),
         Arc::new(AtomicU32::new(0)),
         Arc::new(AtomicU32::new(0)),

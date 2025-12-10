@@ -792,6 +792,7 @@ pub enum RedundancyStrategy {
     RaidZ2,
     /// Raidz3
     RaidZ3,
+    /// Custom redundancy configuration
     Custom(String),
 }
 

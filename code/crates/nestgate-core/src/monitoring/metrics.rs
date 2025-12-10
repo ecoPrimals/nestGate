@@ -42,10 +42,19 @@ pub struct MetricsConfig {
 }
 impl Default for MetricsConfig {
     /// Returns the default instance
+    ///
+    /// Loads metrics configuration from environment:
+    /// - `NESTGATE_METRICS_PORT`: Metrics port (default: 9090)
+    /// - `NESTGATE_API_HOST`: API host for metrics endpoint
     fn default() -> Self {
-        // Use ServiceDiscoveryConfig for consistent endpoint configuration
+        use crate::config::environment::EnvironmentConfig;
+        
+        let env_config = EnvironmentConfig::from_env()
+            .unwrap_or_else(|_| EnvironmentConfig::default());
+        
+        let metrics_port = env_config.monitoring.metrics_port.get();
         let config = crate::config::discovery_config::ServiceDiscoveryConfig::default();
-        let metrics_endpoint = format!("{}/metrics", config.build_endpoint(9090));
+        let metrics_endpoint = format!("{}/metrics", config.build_endpoint(metrics_port));
         
         Self {
             collection_interval: Duration::from_secs(30),

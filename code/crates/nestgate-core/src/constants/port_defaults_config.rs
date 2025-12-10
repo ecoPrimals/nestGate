@@ -1,10 +1,32 @@
+//! Port configuration module
+//!
+//! Provides thread-safe configuration for all service ports including API, metrics,
+//! database connections, and monitoring services. Ports are loaded from environment
+//! variables with sensible defaults.
+//!
+//! # Example
+//!
+//! ```rust
+//! use nestgate_core::constants::port_defaults_config::PortConfig;
+//!
+//! // Load from environment
+//! let config = PortConfig::from_env();
+//! println!("API port: {}", config.get_api_port());
+//! println!("Metrics port: {}", config.get_metrics_port());
+//!
+//! // Or build for testing
+//! let test_config = PortConfig::new()
+//!     .with_api_port(9999)
+//!     .with_metrics_port(8888);
+//! ```
 use super::port_defaults::*;
 use std::sync::Arc;
 
 /// Thread-safe configuration for port defaults
-/// Captures environment variables at initialization to prevent race conditions
+///
+/// Captures environment variables at initialization to prevent race conditions.
+/// All port values are immutable after construction, making this safe to share across threads.
 #[derive(Debug, Clone)]
-/// Configuration for Port
 pub struct PortConfig {
     // NestGate service ports
     api_port: Option<u16>,

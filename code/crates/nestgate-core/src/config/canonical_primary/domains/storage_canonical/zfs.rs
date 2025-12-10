@@ -52,6 +52,7 @@ pub struct ZfsPoolConfig {
     /// Redundancy
     pub redundancy: ZfsRedundancy,
     // Extended fields from canonical_zfs_config
+    /// ZFS pool properties
     pub properties: HashMap<String, String>,
     /// Auto Discovery
     pub auto_discovery: bool,
@@ -89,12 +90,12 @@ pub struct ZfsDatasetConfig {
     pub compression: ZfsCompression,
     /// Deduplication
     pub deduplication: bool,
-    // Extended fields from canonical_zfs_config
-    pub max_datasets_per_pool: u32,
     /// Quota Enforcement
     pub quota_enforcement: bool,
     /// Auto Snapshot
     pub auto_snapshot: bool,
+    /// Maximum number of datasets allowed per pool
+    pub max_datasets_per_pool: u32,
 }
 
 // ==================== SNAPSHOT CONFIGURATION ====================
@@ -108,7 +109,7 @@ pub struct ZfsSnapshotConfig {
     pub interval: Duration,
     /// Retention
     pub retention: u32,
-    // Extended fields from canonical_zfs_config
+    /// Enable automatic snapshots
     pub auto_snapshot: bool,
     /// Retention Policy
     pub retention_policy: RetentionPolicy,
@@ -147,7 +148,7 @@ pub struct ZfsPerformanceConfig {
     pub arc_size: Option<u64>,
     /// Prefetch
     pub prefetch: bool,
-    // Extended fields from canonical_zfs_config
+    /// ARC cache configuration
     pub arc_cache: ArcCacheConfig,
     /// L2Arc
     pub l2arc: L2ArcConfig,
@@ -392,22 +393,27 @@ impl Default for ZfsPerformanceConfig {
 }
 
 impl ZfsStorageConfig {
+    /// Creates a production-optimized ZFS storage configuration
     #[must_use]
     pub fn production_optimized() -> Self {
         Self::default()
     }
+    /// Creates a development-optimized ZFS storage configuration
     #[must_use]
     pub fn development_optimized() -> Self {
         Self::default()
     }
+    /// Creates a high-performance ZFS storage configuration
     #[must_use]
     pub fn high_performance() -> Self {
         Self::default()
     }
+    /// Creates a cloud-native ZFS storage configuration
     #[must_use]
     pub fn cloud_native() -> Self {
         Self::default()
     }
+    /// Merges two ZFS storage configurations
     #[must_use]
     pub fn merge(self, _other: Self) -> Self {
         self

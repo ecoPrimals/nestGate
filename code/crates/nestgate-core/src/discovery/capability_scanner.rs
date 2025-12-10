@@ -297,52 +297,23 @@ impl Default for CapabilityScanner {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serial_test::serial;
-    use std::env;
+    use std::sync::Arc;
+
+    // **MODERN CONCURRENT-SAFE TESTS**
+    // Uses dependency injection via EnvironmentDiscoveryConfig
+    // No environment variable pollution - tests can run in parallel!
 
     #[tokio::test]
-    #[serial]
     async fn test_environment_discovery() {
-        // Clean up all possible discovery endpoint environment variables first
-        let discovery_patterns = vec![
-            "ORCHESTRATION_DISCOVERY_ENDPOINT",
-            "SECURITY_DISCOVERY_ENDPOINT",
-            "AI_DISCOVERY_ENDPOINT",
-            "STORAGE_DISCOVERY_ENDPOINT",
-            "MONITORING_DISCOVERY_ENDPOINT",
-            "COMPUTE_DISCOVERY_ENDPOINT",
-            "NETWORK_DISCOVERY_ENDPOINT",
-        ];
+        // Create test config with explicit endpoints (no env pollution)
+        let mut config =
+            crate::discovery::capability_scanner_config::EnvironmentDiscoveryConfig::new();
+        // ✅ FIXED: Use generic endpoint names, not primal names
+        config.set_endpoint("orchestration", "http://orchestration-svc:8080");
+        config.set_endpoint("security", "http://security-svc:9000");
 
-        // Clean up any existing environment variables from other tests
-        for pattern in &discovery_patterns {
-            env::remove_var(pattern);
-        }
-
-        // Also clean up any auth/timeout related vars that might interfere
-        for pattern in &discovery_patterns {
-            let capability_type = pattern
-                .strip_suffix("_DISCOVERY_ENDPOINT")
-                .unwrap_or(pattern)
-                .to_uppercase();
-            env::remove_var(format!("{capability_type}_AUTH_KEY"));
-            env::remove_var(format!("{capability_type}_TIMEOUT_MS"));
-        }
-
-        // Set up only the test environment variables we want
-        env::set_var("ORCHESTRATION_DISCOVERY_ENDPOINT", "http://songbird:8080");
-        env::set_var("SECURITY_DISCOVERY_ENDPOINT", "http://beardog:9000");
-
-        let discovery = EnvironmentDiscovery::new();
+        let discovery = EnvironmentDiscovery::with_config(Arc::new(config));
         let capabilities = discovery.discover().await.expect("Operation failed");
-
-        // Debug output to help troubleshoot
-        if capabilities.len() != 2 {
-            eprintln!("Expected 2 capabilities, got {}", capabilities.len());
-            for cap in &capabilities {
-                eprintln!("  - {} at {}", cap.capability_type, cap.endpoint);
-            }
-        }
 
         assert_eq!(
             capabilities.len(),
@@ -359,49 +330,31 @@ mod tests {
             .iter()
             .find(|c| c.capability_type == "orchestration")
             .expect("Operation failed");
-        assert_eq!(orchestration.endpoint, "http://songbird:8080");
+        assert_eq!(orchestration.endpoint, "http://orchestration-svc:8080");
         assert_eq!(orchestration.confidence, 0.95);
-
-        // Clean up all discovery environment variables and related metadata
-        for pattern in &discovery_patterns {
-            env::remove_var(pattern);
-            let capability_type = pattern
-                .strip_suffix("_DISCOVERY_ENDPOINT")
-                .unwrap_or(pattern)
-                .to_uppercase();
-            env::remove_var(format!("{capability_type}_AUTH_KEY"));
-            env::remove_var(format!("{capability_type}_TIMEOUT_MS"));
-        }
     }
 
     #[tokio::test]
-    #[serial]
     async fn test_capability_scanner() {
-        // Clean up all possible environment variables first
-        let discovery_patterns = vec![
-            "ORCHESTRATION_DISCOVERY_ENDPOINT",
-            "SECURITY_DISCOVERY_ENDPOINT",
-            "AI_DISCOVERY_ENDPOINT",
-            "STORAGE_DISCOVERY_ENDPOINT",
-            "MONITORING_DISCOVERY_ENDPOINT",
-            "COMPUTE_DISCOVERY_ENDPOINT",
-            "NETWORK_DISCOVERY_ENDPOINT",
-        ];
+        // Create test config with explicit endpoints (concurrent-safe!)
+        let mut config =
+            crate::discovery::capability_scanner_config::EnvironmentDiscoveryConfig::new();
+        // ✅ FIXED: Use generic endpoint names, not primal names
+        config.set_endpoint("ai", "http://ai-svc:7000");
+        config.set_endpoint("storage", "http://storage:8080");
 
-        for pattern in &discovery_patterns {
-            env::remove_var(pattern);
-        }
-
-        // Set up test environment BEFORE creating scanner
-        env::set_var("AI_DISCOVERY_ENDPOINT", "http://squirrel:7000");
-        env::set_var("STORAGE_DISCOVERY_ENDPOINT", "http://storage:8080");
-
-        let mut scanner = CapabilityScanner::new();
+        // Create scanner with injected config (no env pollution!)
+        let mut scanner = CapabilityScanner {
+            discovery_methods: vec![DiscoveryMethodImpl::Environment(
+                EnvironmentDiscovery::with_config(Arc::new(config)),
+            )],
+            capability_cache: HashMap::new(),
+        };
 
         let capabilities = scanner.scan_capabilities().await.expect("Operation failed");
         assert!(
             !capabilities.is_empty(),
-            "Expected to find capabilities, but found none. Check environment variable discovery."
+            "Expected to find capabilities, but found none"
         );
         assert_eq!(
             capabilities.len(),
@@ -416,7 +369,7 @@ mod tests {
         );
         assert_eq!(
             ai_capability.expect("Operation failed").endpoint,
-            "http://squirrel:7000"
+            "http://ai-svc:7000"
         );
 
         let storage_capability = scanner.get_capability("storage");
@@ -428,11 +381,6 @@ mod tests {
             storage_capability.expect("Operation failed").endpoint,
             "http://storage:8080"
         );
-
-        // Clean up all discovery environment variables
-        for pattern in &discovery_patterns {
-            env::remove_var(pattern);
-        }
     }
 }
 

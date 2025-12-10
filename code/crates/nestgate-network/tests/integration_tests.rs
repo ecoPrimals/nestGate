@@ -8,7 +8,8 @@ use nestgate_network::api::ServiceStatus;
 use nestgate_network::NetworkService;
 
 #[tokio::test]
-async fn test_network_service_basic_functionality() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_network_service_basic_functionality(
+) -> std::result::Result<(), Box<dyn std::error::Error>> {
     // Basic test to verify the module can be instantiated
     let config = nestgate_network::default_network_config();
     let _service = NetworkService::new(config);
@@ -17,7 +18,7 @@ async fn test_network_service_basic_functionality() -> Result<(), Box<dyn std::e
 }
 
 #[test]
-fn test_service_status_enum() -> Result<(), Box<dyn std::error::Error>> {
+fn test_service_status_enum() -> std::result::Result<(), Box<dyn std::error::Error>> {
     // Test ServiceStatus enum variants from api.rs
     let _starting = ServiceStatus::Starting;
     let _running = ServiceStatus::Running;

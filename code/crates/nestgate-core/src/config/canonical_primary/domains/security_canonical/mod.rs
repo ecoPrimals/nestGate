@@ -22,13 +22,21 @@
 use serde::{Deserialize, Serialize};
 
 // Import all security configuration modules
+/// Authentication configuration
 pub mod authentication;
+/// Authorization configuration
 pub mod authorization;
+/// Encryption configuration
 pub mod encryption;
+/// Environment security configuration
 pub mod environment;
+/// Security monitoring configuration
 pub mod monitoring;
+/// Security policies configuration
 pub mod policies;
+/// Threat protection configuration
 pub mod threat_protection;
+/// TLS configuration
 pub mod tls;
 
 // Re-export all configuration types
@@ -210,7 +218,8 @@ impl CanonicalSecurityConfig {
 
 // ==================== BACKWARD COMPATIBILITY ALIASES ====================
 
-// Backward compatibility alias for existing SecurityConfig usage
+/// Backward compatibility alias for existing SecurityConfig usage
 pub type SecurityConfig = CanonicalSecurityConfig;
-// Backward compatibility alias for UnifiedSecurityConfig
+
+/// Backward compatibility alias for UnifiedSecurityConfig
 pub type UnifiedSecurityConfig = CanonicalSecurityConfig;

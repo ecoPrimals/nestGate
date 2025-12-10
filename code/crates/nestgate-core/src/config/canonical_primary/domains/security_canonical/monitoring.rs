@@ -27,6 +27,10 @@ pub struct AuditSecurityConfig {
 }
 
 impl AuditSecurityConfig {
+    /// Creates a development-optimized configuration with minimal audit logging.
+    ///
+    /// This configuration is suitable for development environments where audit overhead
+    /// should be minimized. Auditing is disabled by default.
     #[must_use]
     pub fn development_optimized() -> Self {
         Self {
@@ -36,6 +40,10 @@ impl AuditSecurityConfig {
         }
     }
 
+    /// Creates a compliance-focused configuration with comprehensive audit logging.
+    ///
+    /// This configuration is suitable for environments requiring compliance with
+    /// regulatory standards. Enables full audit logging with 1-year retention.
     #[must_use]
     pub fn compliance_focused() -> Self {
         Self {
@@ -45,6 +53,10 @@ impl AuditSecurityConfig {
         }
     }
 
+    /// Creates a production-hardened configuration with maximum audit coverage.
+    ///
+    /// This configuration is suitable for production environments requiring
+    /// maximum security audit coverage with 7-year retention for legal compliance.
     #[must_use]
     pub fn production_hardened() -> Self {
         Self {
@@ -54,6 +66,15 @@ impl AuditSecurityConfig {
         }
     }
 
+    /// Merges this configuration with another, taking values from the other configuration.
+    ///
+    /// # Arguments
+    ///
+    /// * `other` - The configuration to merge with, whose values will override this one
+    ///
+    /// # Returns
+    ///
+    /// A new configuration with values from `other`
     #[must_use]
     pub fn merge(mut self, other: Self) -> Self {
         self.enabled = other.enabled;
@@ -137,18 +158,36 @@ impl Default for AlertingConfig {
 }
 
 impl SecurityMonitoringConfig {
+    /// Creates a production-hardened security monitoring configuration.
+    ///
+    /// Returns the default configuration optimized for production use.
     #[must_use]
     pub fn production_hardened() -> Self {
         Self::default()
     }
+    /// Creates a development-optimized security monitoring configuration.
+    ///
+    /// Returns the default configuration suitable for development environments.
     #[must_use]
     pub fn development_optimized() -> Self {
         Self::default()
     }
+    /// Creates a compliance-focused security monitoring configuration.
+    ///
+    /// Returns the default configuration tailored for compliance requirements.
     #[must_use]
     pub fn compliance_focused() -> Self {
         Self::default()
     }
+    /// Merges this configuration with another, returning self unchanged.
+    ///
+    /// # Arguments
+    ///
+    /// * `_other` - The other configuration (currently ignored)
+    ///
+    /// # Returns
+    ///
+    /// Returns self without modification
     #[must_use]
     pub fn merge(self, _other: Self) -> Self {
         self

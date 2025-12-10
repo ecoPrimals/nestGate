@@ -23,8 +23,9 @@ const MINIMUM_SECRET_LENGTH: usize = 32;
 #[derive(Debug, Clone)]
 /// Error type for JwtSecret operations
 pub struct JwtSecretError {
+    /// Error message describing the validation failure
     pub message: String,
-    /// Help
+    /// Helpful guidance on how to fix the issue
     pub help: String,
 }
 
@@ -54,16 +55,8 @@ impl std::error::Error for JwtSecretError {}
 ///
 /// This function enforces secure JWT secret configuration to prevent
 /// production deployments with compromised security.
-pub fn validate_jwt_secret() -> Result<(), JwtSecretError> {
-    // Get JWT secret from environment or constants
-    let jwt_secret = env::var("NESTGATE_JWT_SECRET")
-        .or_else(|_| env::var("JWT_SECRET"))
-        .unwrap_or_else(|_| {
-            // Use the same default as SecurityConstants
-            use crate::constants::consolidated::SecurityConstants;
-            SecurityConstants::default().jwt_secret().to_string()
-        });
-
+/// Validates a provided JWT secret (internal helper for testing)
+fn validate_jwt_secret_value(jwt_secret: &str) -> Result<(), JwtSecretError> {
     // Check for known insecure defaults
     if jwt_secret == INSECURE_DEFAULT_SECRET
         || jwt_secret == INSECURE_ALTERNATE_1
@@ -121,6 +114,23 @@ pub fn validate_jwt_secret() -> Result<(), JwtSecretError> {
     Ok(())
 }
 
+/// Validates the JWT secret from environment variables
+///
+/// Reads from `NESTGATE_JWT_SECRET` or `JWT_SECRET` environment variables
+/// and validates security requirements.
+pub fn validate_jwt_secret() -> Result<(), JwtSecretError> {
+    // Get JWT secret from environment or constants
+    let jwt_secret = env::var("NESTGATE_JWT_SECRET")
+        .or_else(|_| env::var("JWT_SECRET"))
+        .unwrap_or_else(|_| {
+            // Use the same default as SecurityConstants
+            use crate::constants::consolidated::SecurityConstants;
+            SecurityConstants::default().jwt_secret().to_string()
+        });
+
+    validate_jwt_secret_value(&jwt_secret)
+}
+
 /// Validate JWT secret with detailed error information
 ///
 /// This is the recommended function to call at startup for user-friendly error messages.
@@ -147,14 +157,12 @@ pub fn validate_jwt_secret_or_exit() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serial_test::serial;
+
+    // **MODERN CONCURRENT-SAFE TESTS**
+    // Uses validate_jwt_secret_value() directly instead of polluting env vars
 
     #[test]
-    #[serial] // Serialize env var tests to avoid conflicts
     fn test_insecure_defaults_rejected() {
-        // Save current env state
-        let original = env::var("NESTGATE_JWT_SECRET").ok();
-
         // These should all fail validation
         let insecure_values = vec![
             "CHANGE_ME_IN_PRODUCTION",
@@ -165,76 +173,40 @@ mod tests {
         ];
 
         for value in insecure_values {
-            env::set_var("NESTGATE_JWT_SECRET", value);
-            let result = validate_jwt_secret();
+            let result = validate_jwt_secret_value(value);
             assert!(result.is_err(), "Should reject insecure value: {}", value);
-            env::remove_var("NESTGATE_JWT_SECRET");
-        }
-
-        // Restore original env state
-        if let Some(val) = original {
-            env::set_var("NESTGATE_JWT_SECRET", val);
         }
     }
 
     #[test]
-    #[serial] // Serialize env var tests to avoid conflicts
     fn test_short_secrets_rejected() {
-        let original = env::var("NESTGATE_JWT_SECRET").ok();
-
-        env::set_var("NESTGATE_JWT_SECRET", "short");
-        let result = validate_jwt_secret();
+        let result = validate_jwt_secret_value("short");
         assert!(result.is_err(), "Should reject short secret");
-        env::remove_var("NESTGATE_JWT_SECRET");
-
-        if let Some(val) = original {
-            env::set_var("NESTGATE_JWT_SECRET", val);
-        }
     }
 
     #[test]
-    #[serial] // Serialize env var tests to avoid conflicts
     fn test_secure_secret_accepted() {
-        let original = env::var("NESTGATE_JWT_SECRET").ok();
-
         // 48-byte base64 encoded secret (recommended)
         let secure_secret = "dGhpcyBpcyBhIHNlY3VyZSBzZWNyZXQgd2l0aCBzdWZmaWNpZW50IGVudHJvcHk=";
-        env::set_var("NESTGATE_JWT_SECRET", secure_secret);
-        let result = validate_jwt_secret();
+        let result = validate_jwt_secret_value(secure_secret);
         assert!(result.is_ok(), "Should accept secure secret");
-        env::remove_var("NESTGATE_JWT_SECRET");
-
-        if let Some(val) = original {
-            env::set_var("NESTGATE_JWT_SECRET", val);
-        }
     }
 
     #[test]
-    #[serial] // Serialize env var tests to avoid conflicts
     fn test_minimum_length_secret_accepted() {
-        let original = env::var("NESTGATE_JWT_SECRET").ok();
-
         // Exactly 32 characters (minimum)
         let min_secret = "a".repeat(MINIMUM_SECRET_LENGTH);
-        env::set_var("NESTGATE_JWT_SECRET", &min_secret);
-        let result = validate_jwt_secret();
+        let result = validate_jwt_secret_value(&min_secret);
         assert!(result.is_ok(), "Should accept minimum length secret");
-        env::remove_var("NESTGATE_JWT_SECRET");
-
-        if let Some(val) = original {
-            env::set_var("NESTGATE_JWT_SECRET", val);
-        }
     }
 
     #[test]
     fn test_error_message_formatting() {
-        env::set_var("NESTGATE_JWT_SECRET", "CHANGE_ME_IN_PRODUCTION");
-        let result = validate_jwt_secret();
+        let result = validate_jwt_secret_value("CHANGE_ME_IN_PRODUCTION");
         assert!(result.is_err());
 
         let err = result.unwrap_err();
         assert!(err.message.contains("CRITICAL SECURITY ERROR"));
         assert!(err.help.contains("openssl rand -base64"));
-        env::remove_var("NESTGATE_JWT_SECRET");
     }
 }

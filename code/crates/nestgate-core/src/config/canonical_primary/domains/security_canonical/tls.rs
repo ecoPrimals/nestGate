@@ -26,6 +26,9 @@ pub struct CertificateManagementConfig {
 }
 
 impl CertificateManagementConfig {
+    /// Creates a development-optimized certificate configuration.
+    ///
+    /// Uses temporary certificate paths suitable for development environments.
     #[must_use]
     pub fn development_optimized() -> Self {
         Self {
@@ -35,6 +38,9 @@ impl CertificateManagementConfig {
         }
     }
 
+    /// Creates a compliance-focused certificate configuration.
+    ///
+    /// Enables auto-renewal and uses standard system certificate paths.
     #[must_use]
     pub fn compliance_focused() -> Self {
         Self {
@@ -44,6 +50,9 @@ impl CertificateManagementConfig {
         }
     }
 
+    /// Creates a production-hardened certificate configuration.
+    ///
+    /// Enables auto-renewal and uses production-specific certificate paths.
     #[must_use]
     pub fn production_hardened() -> Self {
         Self {
@@ -53,6 +62,9 @@ impl CertificateManagementConfig {
         }
     }
 
+    /// Merges another certificate configuration into this one.
+    ///
+    /// All fields from `other` will override the current values.
     #[must_use]
     pub fn merge(mut self, other: Self) -> Self {
         self.auto_renewal = other.auto_renewal;
@@ -131,22 +143,38 @@ impl Default for SslConfig {
 }
 
 impl TlsSecurityConfig {
+    /// Creates a production-hardened TLS security configuration.
+    ///
+    /// Returns the default configuration optimized for production security.
     #[must_use]
     pub fn production_hardened() -> Self {
         Self::default()
     }
+
+    /// Creates a development-optimized TLS security configuration.
+    ///
+    /// Returns the default configuration suitable for development environments.
     #[must_use]
     pub fn development_optimized() -> Self {
         Self::default()
     }
+
+    /// Creates a compliance-focused TLS security configuration.
+    ///
+    /// Returns the default configuration meeting compliance requirements.
     #[must_use]
     pub fn compliance_focused() -> Self {
         Self::default()
     }
+
+    /// Merges another TLS security configuration into this one.
+    ///
+    /// This is a no-op placeholder for configuration merging.
     #[must_use]
     pub fn merge(self, _other: Self) -> Self {
         self
     }
+
     /// Validates data
     pub fn validate(&self) -> crate::Result<()> {
         Ok(())

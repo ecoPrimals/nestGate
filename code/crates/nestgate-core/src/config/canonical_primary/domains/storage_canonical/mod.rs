@@ -1,17 +1,18 @@
-// **CANONICAL STORAGE CONFIGURATION**
-//! Module definitions and exports.
-// This module consolidates ALL storage configuration variants across the NestGate ecosystem
+//! **CANONICAL STORAGE CONFIGURATION MODULE**
+//!
+//! The single source of truth for all storage configuration across NestGate.
+//! Consolidates StorageConfig, UnifiedStorageConfig, and storage domain configs.
+//!
+//! This module consolidates ALL storage configuration variants across the NestGate ecosystem
 //! into a single, authoritative configuration structure.
 //!
-//! Module definitions and exports.
-// **CONSOLIDATES**:
+//! **CONSOLIDATES**:
 //! - nestgate-canonical/src/types.rs → `StorageConfig`
 //! - nestgate-core/src/canonical_modernization/unified_types.rs → `CanonicalStorageConfig`
 //! - nestgate-zfs/src/config.rs → `ZfsConfig`
 //! - 25+ other storage-related configuration structures
 //!
-//! Module definitions and exports.
-// **MODULAR STRUCTURE**:
+//! **MODULAR STRUCTURE**:
 //! - `backends`: Storage backend configurations (FS, ZFS, S3, Azure, GCS)
 //! - `zfs`: ZFS-specific storage configurations
 //! - `caching`: Caching and performance configurations
@@ -26,12 +27,41 @@ use serde::{Deserialize, Serialize};
 
 // Import all storage configuration modules
 pub mod backends;
+
+/// **Caching Configuration Module**
+///
+/// Configures caching behavior, cache sizes, TTLs, and invalidation strategies
+/// for storage operations.
 pub mod caching;
+/// **Encryption Configuration Module**
+///
+/// Configures encryption at rest, key management, and cryptographic algorithms
+/// for storage security.
 pub mod encryption;
+/// **Environment Configuration Module**
+///
+/// Configures environment-specific storage settings, paths, and backend selection
+/// for different deployment environments.
 pub mod environment;
+/// **Lifecycle Management Configuration Module**
+///
+/// Configures data lifecycle policies, retention periods, archival rules,
+/// and automated data management.
 pub mod lifecycle;
+/// **Monitoring Configuration Module**
+///
+/// Configures storage metrics collection, health checks, alerts, and observability
+/// for storage operations.
 pub mod monitoring;
+/// **Performance Configuration Module**
+///
+/// Configures performance tuning, buffer sizes, I/O optimization, and throughput
+/// settings for storage operations.
 pub mod performance;
+/// **Replication Configuration Module**
+///
+/// Configures data replication, redundancy levels, failover strategies,
+/// and distributed storage synchronization.
 pub mod replication;
 pub mod zfs;
 
@@ -270,7 +300,8 @@ impl CanonicalStorageConfig {
 
 // ==================== BACKWARD COMPATIBILITY ALIASES ====================
 
-// Backward compatibility alias for existing StorageConfig usage
+/// Backward compatibility alias for existing StorageConfig usage
 pub type StorageConfig = CanonicalStorageConfig;
-// Backward compatibility alias for UnifiedStorageConfig
+
+/// Backward compatibility alias for UnifiedStorageConfig
 pub type UnifiedStorageConfig = CanonicalStorageConfig;

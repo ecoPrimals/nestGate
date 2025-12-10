@@ -23,12 +23,12 @@ mod types_comprehensive_tests {
         assert!(conn.is_active());
     }
 
-    #[test]
-    fn test_connection_info_age() {
+    #[tokio::test]
+    async fn test_connection_info_age() {
         let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 8080);
         let conn = ConnectionInfo::new("test-conn".to_string(), addr);
 
-        thread::sleep(Duration::from_millis(10));
+        tokio::time::sleep(Duration::from_millis(10)).await;
 
         let age = conn.age();
         assert!(age.as_millis() >= 10);

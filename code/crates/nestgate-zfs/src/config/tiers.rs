@@ -23,6 +23,7 @@ pub struct CapacityLimits {
 }
 
 impl CapacityLimits {
+    /// Returns hot tier default capacity limits.
     #[must_use]
     pub fn hot_tier_defaults() -> Self {
         use crate::constants::{
@@ -35,6 +36,7 @@ impl CapacityLimits {
         }
     }
 
+    /// Returns warm tier default capacity limits.
     #[must_use]
     pub fn warm_tier_defaults() -> Self {
         use crate::constants::{
@@ -47,6 +49,7 @@ impl CapacityLimits {
         }
     }
 
+    /// Returns cold tier default capacity limits.
     #[must_use]
     pub fn cold_tier_defaults() -> Self {
         use crate::constants::{
@@ -154,8 +157,11 @@ pub struct TierConfig {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 /// Performanceprofile
 pub enum PerformanceProfile {
+    /// High-performance tier - optimized for speed
     HighPerformance, // Hot tier - optimized for speed
-    Balanced,        // Warm tier - balance of speed and compression
+    /// Balanced tier - balance of speed and compression
+    Balanced, // Warm tier - balance of speed and compression
+    /// High-compression tier - optimized for space efficiency
     HighCompression, // Cold tier - optimized for space efficiency
 }
 impl Default for TierConfigurations {

@@ -18,6 +18,10 @@ mod tests;
 #[cfg(test)]
 mod manager_tests;
 
+// Tests for policy scheduler
+#[cfg(test)]
+mod scheduler_tests;
+
 // Re-export public API
 pub use events::{PolicyStats, SnapshotAutomationStatus, SnapshotEvent, SnapshotEventType};
 pub use manager::ZfsSnapshotManager;

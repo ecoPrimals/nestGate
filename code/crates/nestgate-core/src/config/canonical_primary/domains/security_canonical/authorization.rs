@@ -23,6 +23,7 @@ pub struct AccessControlConfig {
 }
 
 impl AccessControlConfig {
+    /// Creates a development-optimized access control configuration
     #[must_use]
     pub fn development_optimized() -> Self {
         Self {
@@ -31,6 +32,7 @@ impl AccessControlConfig {
         }
     }
 
+    /// Creates a compliance-focused access control configuration
     #[must_use]
     pub fn compliance_focused() -> Self {
         Self {
@@ -39,6 +41,7 @@ impl AccessControlConfig {
         }
     }
 
+    /// Creates a production-hardened access control configuration
     #[must_use]
     pub fn production_hardened() -> Self {
         Self {
@@ -47,6 +50,7 @@ impl AccessControlConfig {
         }
     }
 
+    /// Merges two access control configurations
     #[must_use]
     pub fn merge(mut self, other: Self) -> Self {
         self.enabled = other.enabled;
@@ -102,18 +106,22 @@ impl Default for AccessControlConfig {
 }
 
 impl AuthorizationConfig {
+    /// Returns a production-hardened authorization configuration
     #[must_use]
     pub fn production_hardened() -> Self {
         Self::default()
     }
+    /// Returns a development-optimized authorization configuration
     #[must_use]
     pub fn development_optimized() -> Self {
         Self::default()
     }
+    /// Returns a compliance-focused authorization configuration
     #[must_use]
     pub fn compliance_focused() -> Self {
         Self::default()
     }
+    /// Merges this configuration with another
     #[must_use]
     pub fn merge(self, _other: Self) -> Self {
         self

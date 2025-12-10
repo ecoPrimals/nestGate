@@ -247,7 +247,12 @@ B05lc3RHYXBLMREWDQYDVQQKDAZOZXN0R2F0ZTERDw0GA1UEAwwITmVzdEdhdGU=
     }
 }
 
-// 🚀 MODERN CERTIFICATE MANAGEMENT: Pure dynamic discovery architecture
+/// Modern certificate management with dynamic discovery
+///
+/// This module provides certificate utilities that use dynamic service discovery
+/// instead of hardcoded endpoints. Only available with the `dev-stubs` feature.
+///
+/// **Note**: This is developmental and should not be used in production yet.
 #[cfg(feature = "dev-stubs")]
 pub mod modern {
     use super::*;

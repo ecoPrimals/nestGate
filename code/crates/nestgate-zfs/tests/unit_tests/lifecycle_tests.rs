@@ -56,7 +56,7 @@ mod phase2_lifecycle_management_tests {
     use super::*;
 
     #[test]
-    fn test_lifecycle_stage_progression() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_lifecycle_stage_progression() -> std::result::Result<(), Box<dyn std::error::Error>> {
         // Test stage progression logic
         let test_cases = vec![
             (0.5, 10.0, 1.0, LifecycleStage::New),        // New dataset
@@ -77,7 +77,7 @@ mod phase2_lifecycle_management_tests {
     }
 
     #[test]
-    fn test_condition_parsing_and_evaluation() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_condition_parsing_and_evaluation() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let test_conditions = vec![
             ("age_days>30", 45.0, 10.0, 100.0, 1024, true),
             ("age_days<30", 45.0, 10.0, 100.0, 1024, false),
@@ -106,7 +106,7 @@ mod phase2_lifecycle_management_tests {
     }
 
     #[test]
-    fn test_automated_lifecycle_transitions() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_automated_lifecycle_transitions() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let mut dataset = DatasetLifecycle {
             dataset_name: "test-dataset".to_string(),
             current_tier: StorageTier::Hot.into(),

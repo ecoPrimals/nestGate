@@ -369,6 +369,25 @@ pub struct ConnectionPoolManager {
     pools: RwLock<HashMap<String, Box<dyn std::any::Any + Send + Sync>>>,
 }
 impl ConnectionPoolManager {
+    /// Create a new connection pool manager
+    ///
+    /// Initializes an empty manager that can register and manage multiple
+    /// connection pools for different providers.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use nestgate_core::performance::connection_pool::ConnectionPoolManager;
+    ///
+    /// let manager = ConnectionPoolManager::new();
+    /// // Register pools for different providers
+    /// ```
+    ///
+    /// # Use Cases
+    ///
+    /// - Managing database connections across multiple databases
+    /// - Pooling HTTP clients for different services
+    /// - Coordinating connections to distributed systems
     #[must_use]
     pub fn new() -> Self {
         Self {

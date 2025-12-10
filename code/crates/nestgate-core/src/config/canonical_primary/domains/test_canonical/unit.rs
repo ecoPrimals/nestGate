@@ -129,6 +129,7 @@ pub enum AssertionStyle {
     Fluent,
     /// Bdd
     Bdd,
+    /// Custom assertion style with arbitrary descriptor
     Custom(String),
 }
 
@@ -187,6 +188,7 @@ pub enum FixtureType {
     Sql,
     /// Binary
     Binary,
+    /// Custom fixture type with arbitrary descriptor
     Custom(String),
 }
 
@@ -227,6 +229,7 @@ pub enum StrategyType {
     Pattern,
     /// Template
     Template,
+    /// Custom mock type with arbitrary descriptor
     Custom(String),
 }
 
@@ -280,6 +283,7 @@ pub enum CleanupStrategy {
     Rollback,
     /// Recreate
     Recreate,
+    /// Custom cleanup strategy with arbitrary descriptor
     Custom(String),
 }
 
@@ -349,6 +353,7 @@ pub enum ResourceType {
     Network,
     /// Memory
     Memory,
+    /// Custom database type with arbitrary descriptor
     Custom(String),
 }
 
@@ -385,7 +390,9 @@ pub enum LockType {
     Mutex,
     /// Rwlock
     RwLock,
+    /// Semaphore with maximum count
     Semaphore(usize),
+    /// Custom isolation type with arbitrary descriptor
     Custom(String),
 }
 

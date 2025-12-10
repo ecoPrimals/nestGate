@@ -7,6 +7,8 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 
 // Type aliases for complex cache types
+/// Type-erased cache provider for dynamic dispatch across multiple cache implementations.
+/// Enables runtime polymorphism for cache backends while maintaining async trait compatibility.
 pub type CacheProviderBox = Box<dyn CacheProvider<String, Vec<u8>>>;
 /// Type alias for Cachedatamap
 pub type CacheDataMap = Arc<RwLock<HashMap<String, Vec<u8>>>>;

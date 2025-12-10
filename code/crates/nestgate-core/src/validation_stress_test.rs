@@ -143,7 +143,7 @@ fn stress_test_consensus_math() -> Vec<String> {
     }
 
 /// **RETURN BUILDERS STRESS TEST**
-fn stress_test_return_builders() -> Vec<String> {
+async fn stress_test_return_builders() -> Vec<String> {
     let mut issues = Vec::new();
     // Test with extreme permission lists
     let huge_permissions = vec!["permission".to_string(); 1_000_000];
@@ -175,9 +175,9 @@ fn stress_test_return_builders() -> Vec<String> {
         issues.push("❌ Negative consensus percentage not validated".to_string());
     }
 
-    // Test timestamp consistency
+    // Test timestamp consistency (non-blocking, concurrent)
     let response1 = build_api_success("test".to_string());
-    std::thread::sleep(std::time::Duration::from_millis(1));
+    tokio::time::sleep(std::time::Duration::from_millis(1)).await;
     let response2 = build_api_success("test".to_string());
 
     if response1.timestamp >= response2.timestamp {

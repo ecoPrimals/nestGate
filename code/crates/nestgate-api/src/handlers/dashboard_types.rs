@@ -22,7 +22,6 @@ pub struct DashboardTimeRange {
 impl DashboardTimeRange {
     /// Create a new time range
     #[must_use]
-    /// Fn
     pub const fn new(start: SystemTime, end: SystemTime, granularity: Duration) -> Self {
         Self {
             start,

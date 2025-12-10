@@ -17,7 +17,6 @@ pub struct ReportGenerator {
 impl ReportGenerator {
     /// Create new report generator
     #[must_use]
-    /// Fn
     pub const fn new(config: ReportConfig) -> Self {
         Self { config }
     }

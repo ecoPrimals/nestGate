@@ -34,6 +34,9 @@ axum-test = { workspace = true }
 serde = { workspace = true }
 regex = { workspace = true }
 futures = { workspace = true }
+# Concurrent test infrastructure
+dashmap = { workspace = true }
+once_cell = { workspace = true }
 # Add workspace crates for integration tests
 nestgate-zfs = { path = "code/crates/nestgate-zfs" }
 nestgate-automation = { path = "code/crates/nestgate-automation" }
@@ -43,6 +46,8 @@ fastrand.workspace = true
 criterion.workspace = true
 rstest.workspace = true
 test-log = "0.2.18"
+temp-env = "0.3.6"
+portpicker = "0.1.1"
 
 [features]
 default = []

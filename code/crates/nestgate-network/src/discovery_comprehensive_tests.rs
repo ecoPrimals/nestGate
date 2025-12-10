@@ -39,7 +39,8 @@ mod network_discovery_tests {
 
     #[tokio::test]
     async fn test_discover_multiple_service_types() {
-        let service_types = vec!["nestgate-zfs", "songbird-ai", "squirrel-metadata"];
+        // ✅ FIXED: Use generic service types, not primal names
+        let service_types = vec!["nestgate-zfs", "ai-service", "metadata-service"];
         let result = discover_multiple_services(&service_types).await;
         assert!(result.is_ok() || result.is_err(), "Should search for multiple services");
     }
@@ -377,27 +378,27 @@ mod network_discovery_tests {
     }
 
     /// Register Service
-    async fn register_service(_info: &ServiceInfo) -> Result<(), String> {
+    async fn register_service(_info: &ServiceInfo) -> std::result::Result<(), String> {
         Err("Test environment".to_string())
     }
 
     /// Unregister Service
-    async fn unregister_service(_name: &str) -> Result<(), String> {
+    async fn unregister_service(_name: &str) -> std::result::Result<(), String> {
         Err("Test environment".to_string())
     }
 
     /// Updates  Service Port
-    async fn update_service_port(_name: &str, _port: u16) -> Result<(), String> {
+    async fn update_service_port(_name: &str, _port: u16) -> std::result::Result<(), String> {
         Err("Test environment".to_string())
     }
 
     /// Check Service Health
-    async fn check_service_health(_addr: &str) -> Result<bool, String> {
+    async fn check_service_health(_addr: &str) -> std::result::Result<bool, String> {
         Err("Test environment".to_string())
     }
 
     /// Start Periodic Health Check
-    async fn start_periodic_health_check(_addr: &str, _interval: Duration) -> Result<(), String> {
+    async fn start_periodic_health_check(_addr: &str, _interval: Duration) -> std::result::Result<(), String> {
         Err("Test environment".to_string())
     }
 
@@ -427,7 +428,7 @@ mod network_discovery_tests {
     }
 
     /// Cache Services
-    async fn cache_services(_services: &[ServiceInfo]) -> Result<(), String> {
+    async fn cache_services(_services: &[ServiceInfo]) -> std::result::Result<(), String> {
         Ok(())
     }
 
@@ -437,12 +438,12 @@ mod network_discovery_tests {
     }
 
     /// Invalidate Discovery Cache
-    async fn invalidate_discovery_cache() -> Result<(), String> {
+    async fn invalidate_discovery_cache() -> std::result::Result<(), String> {
         Ok(())
     }
 
     /// Sets Cache Ttl
-    async fn set_cache_ttl(_ttl: Duration) -> Result<(), String> {
+    async fn set_cache_ttl(_ttl: Duration) -> std::result::Result<(), String> {
         Ok(())
     }
 }

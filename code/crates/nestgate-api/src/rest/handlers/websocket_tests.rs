@@ -193,11 +193,9 @@ fn test_generate_realtime_cpu_usage() {
 #[test]
 fn test_generate_realtime_cpu_usage_multiple() {
     // Generate multiple values to check variation
+    // No sleep needed - RNG is concurrent-safe and each call is independent
     let values: Vec<f64> = (0..10)
-        .map(|_| {
-            std::thread::sleep(std::time::Duration::from_millis(1));
-            generate_realtime_cpu_usage()
-        })
+        .map(|_| generate_realtime_cpu_usage())
         .collect();
 
     // All should be valid percentages
@@ -424,49 +422,50 @@ fn test_log_levels_hierarchy() {
 
 #[test]
 fn test_multiple_log_entries_different() {
-    std::thread::sleep(std::time::Duration::from_millis(2));
+    // Modern concurrent pattern: No sleeps needed
+    // Timestamps are high-precision and will differ even in tight loops
     let entry1 = generate_sample_log_entry("info");
-
-    std::thread::sleep(std::time::Duration::from_millis(2));
     let entry2 = generate_sample_log_entry("info");
 
-    // Entries should have different timestamps
+    // Entries should have different timestamps (nanosecond precision ensures this)
+    // If timestamps are the same, the generator needs fixing, not the test
     assert_ne!(entry1.timestamp, entry2.timestamp);
 }
 
 #[test]
 fn test_cpu_usage_not_exceeds_max() {
     // Generate many values to ensure max cap works
+    // No sleep - testing bounds checking, not timing
     for _ in 0..20 {
         let usage = generate_realtime_cpu_usage();
         assert!(usage <= 95.0, "CPU usage should not exceed 95%");
-        std::thread::sleep(std::time::Duration::from_millis(1));
     }
 }
 
 #[test]
 fn test_memory_usage_not_exceeds_max() {
     // Generate many values to ensure max cap works
+    // No sleep - testing bounds checking, not timing
     for _ in 0..20 {
         let usage = generate_realtime_memory_usage();
         assert!(usage <= 90.0, "Memory usage should not exceed 90%");
-        std::thread::sleep(std::time::Duration::from_millis(1));
     }
 }
 
 #[test]
 fn test_queue_depth_minimum() {
     // Test that queue depth has a minimum value
+    // No sleep - testing bounds checking, not timing
     for _ in 0..20 {
         let depth = generate_realtime_queue_depth();
         assert!(depth >= 0.1, "Queue depth should have minimum of 0.1");
-        std::thread::sleep(std::time::Duration::from_millis(1));
     }
 }
 
 #[test]
 fn test_cache_hit_ratio_bounds() {
     // Test that cache hit ratio stays within bounds
+    // No sleep - testing bounds checking, not timing
     for _ in 0..20 {
         let ratio = generate_realtime_cache_hit_ratio();
         assert!(
@@ -474,6 +473,5 @@ fn test_cache_hit_ratio_bounds() {
             "Cache hit ratio should be between 0.70 and 0.99, got {}",
             ratio
         );
-        std::thread::sleep(std::time::Duration::from_millis(1));
     }
 }

@@ -2,8 +2,13 @@
 //!
 //! This module provides environment-aware defaults for network addresses,
 //! replacing hardcoded IP addresses and hostnames throughout the codebase.
+//!
+//! **MIGRATION NOTE** (Week 2, Dec 2025): This module is being migrated to use
+//! the modern `EnvironmentConfig` system. Helper functions are deprecated.
+//!
+//! **For new code**: Use `EnvironmentConfig::from_env()` directly
+//! **For existing code**: Use these helpers (will show deprecation warnings)
 
-use super::network_defaults_config::NetworkDefaultsConfig;
 use std::net::{Ipv4Addr, Ipv6Addr};
 
 // ==================== IP ADDRESS DEFAULTS ====================
@@ -29,59 +34,85 @@ pub const LOCALHOST_NAME: &str = "localhost";
 pub const DEFAULT_BIND_ADDRESS: &str = "0.0.0.0";
 
 // ==================== HELPER FUNCTIONS ====================
+// **MODERNIZED** (Week 2, Dec 2025): These functions now delegate to
+// migration_bridge and are marked as deprecated.
 
 /// Get API bind address from environment or default
-/// NOTE: Creates config from env each time. For tests, use NetworkDefaultsConfig directly.
 ///
-/// Reads from `NESTGATE_BIND_ADDRESS` environment variable, falls back to 0.0.0.0
+/// **DEPRECATED**: Use `EnvironmentConfig::from_env()?.network.bind_address` instead
+#[deprecated(
+    since = "0.6.0",
+    note = "Use EnvironmentConfig::from_env()?.network.bind_address instead"
+)]
 #[must_use]
 pub fn get_bind_address() -> String {
-    NetworkDefaultsConfig::from_env().get_bind_address()
+    use crate::config::migration_bridge;
+    #[allow(deprecated)]
+    migration_bridge::get_api_host() // bind_address and host are same in new config
 }
 
 /// Get API host from environment or default
-/// NOTE: Creates config from env each time. For tests, use NetworkDefaultsConfig directly.
 ///
-/// Reads from `NESTGATE_API_HOST` environment variable, falls back to localhost
+/// **DEPRECATED**: Use `EnvironmentConfig::from_env()?.network.host` instead
+#[deprecated(
+    since = "0.6.0",
+    note = "Use EnvironmentConfig::from_env()?.network.host instead"
+)]
 #[must_use]
 pub fn get_api_host() -> String {
-    NetworkDefaultsConfig::from_env().get_api_host()
+    use crate::config::migration_bridge;
+    #[allow(deprecated)]
+    migration_bridge::get_api_host()
 }
 
 /// Get database host from environment or default
-/// NOTE: Creates config from env each time. For tests, use NetworkDefaultsConfig directly.
 ///
-/// Reads from `NESTGATE_DB_HOST` environment variable, falls back to localhost
+/// **DEPRECATED**: Database configuration should be external to NestGate
+#[deprecated(
+    since = "0.6.0",
+    note = "Database configuration should be managed externally"
+)]
 #[must_use]
 pub fn get_db_host() -> String {
-    NetworkDefaultsConfig::from_env().get_db_host()
+    std::env::var("NESTGATE_DB_HOST").unwrap_or_else(|_| "localhost".to_string())
 }
 
 /// Get Redis host from environment or default
-/// NOTE: Creates config from env each time. For tests, use NetworkDefaultsConfig directly.
 ///
-/// Reads from `NESTGATE_REDIS_HOST` environment variable, falls back to localhost
+/// **DEPRECATED**: Database configuration should be external to NestGate
+#[deprecated(
+    since = "0.6.0",
+    note = "Database configuration should be managed externally"
+)]
 #[must_use]
 pub fn get_redis_host() -> String {
-    NetworkDefaultsConfig::from_env().get_redis_host()
+    std::env::var("NESTGATE_REDIS_HOST").unwrap_or_else(|_| "localhost".to_string())
 }
 
 /// Check if running in production mode
-/// NOTE: Creates config from env each time. For tests, use NetworkDefaultsConfig directly.
 ///
-/// Reads from `NESTGATE_ENVIRONMENT` environment variable
+/// **DEPRECATED**: Use `EnvironmentConfig::from_env()?.is_production()` instead
+#[deprecated(
+    since = "0.6.0",
+    note = "Use EnvironmentConfig for environment detection"
+)]
 #[must_use]
 pub fn is_production() -> bool {
-    NetworkDefaultsConfig::from_env().is_production()
+    std::env::var("NESTGATE_ENVIRONMENT")
+        .map(|v| v == "production")
+        .unwrap_or(false)
 }
 
 /// Check if running in development mode
-/// NOTE: Creates config from env each time. For tests, use NetworkDefaultsConfig directly.
 ///
-/// Reads from `NESTGATE_ENVIRONMENT` environment variable, defaults to true
+/// **DEPRECATED**: Use environment detection from EnvironmentConfig
+#[deprecated(
+    since = "0.6.0",
+    note = "Use EnvironmentConfig for environment detection"
+)]
 #[must_use]
 pub fn is_development() -> bool {
-    NetworkDefaultsConfig::from_env().is_development()
+    !is_production()
 }
 
 // ==================== TESTS ====================

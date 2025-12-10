@@ -38,15 +38,23 @@ impl ZfsMigrationGuide {
 pub struct ZfsBenchmark;
 impl ZfsBenchmark {
     /// Benchmark ZFS operations
+    ///
+    /// Modern pattern: Simulate work without sleep using CPU-bound task
     pub async fn benchmark_zfs_operations<Z>(_zfs: &Z, operations: u32) -> Duration
     where
         Z: ZeroCostZfsOperations,
     {
         let start = std::time::Instant::now();
 
-        // This would benchmark actual ZFS operations
-        // For safety, we'll just measure the time
-        tokio::time::sleep(Duration::from_millis(u64::from(operations))).await;
+        // Modern pattern: Simulate operations without sleep
+        // In real use, this would call actual ZFS operations
+        // For benchmarking simulation, we can use a non-blocking calculation
+        tokio::task::yield_now().await;
+
+        // Simulate varying work based on operation count
+        let _simulated_work: u64 = (0..operations)
+            .map(|i| u64::from(i).wrapping_mul(7919))
+            .sum();
 
         start.elapsed()
     }

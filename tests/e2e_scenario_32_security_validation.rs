@@ -10,6 +10,7 @@ mod security_validation {
     #[tokio::test]
     #[ignore] // Run explicitly: cargo test --test e2e_scenario_32_security_validation -- --ignored
     async fn test_permission_validation() {
+        #[allow(dead_code)]
         struct User {
             id: String,
             permissions: HashSet<String>,

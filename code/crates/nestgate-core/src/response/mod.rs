@@ -3,11 +3,23 @@
 //! focused modules while maintaining the unified response architecture.
 // **ACHIEVEMENT**: Reduces file sizes to <400 lines while preserving functionality
 // Core response modules
+/// AI-first response types optimized for human-centric interactions and clarity.
 pub mod ai_first_response;
+/// Standard API response wrappers for JSON and HTTP responses.
 pub mod api_response;
+/// Comprehensive tests for API responses
+#[cfg(test)]
+mod api_response_tests;
+/// Comprehensive error response handling with context and suggestions.
 pub mod error_response;
+/// Fluent builder pattern for constructing complex responses.
 pub mod response_builder;
+/// Comprehensive tests for response builders
+#[cfg(test)]
+mod response_builder_tests;
+/// Success response types with metadata and status information.
 pub mod success_response;
+/// Response conversion traits for seamless type transformations.
 pub mod traits;
 // Re-export all types for backward compatibility and ease of use
 pub use ai_first_response::{
@@ -26,7 +38,7 @@ pub use traits::{
 
 // ==================== SECTION ====================
 
-// Response utility functions for common operations
+/// Response utility functions for common operations like pagination and batching.
 pub mod utils {
     use super::{ApiResponse, UnifiedErrorResponse};
     use std::collections::HashMap;
@@ -151,7 +163,7 @@ pub mod utils {
 
 // ==================== SECTION ====================
 
-// Middleware utilities for response processing
+/// Middleware utilities for response processing including headers and transformations.
 pub mod middleware {
     use axum::response::Response;
 
@@ -227,7 +239,7 @@ pub mod middleware {
 
 // ==================== SECTION ====================
 
-// Validation utilities for responses
+/// Validation utilities for responses ensuring data integrity and consistency.
 pub mod validation {
     use super::{ApiResponse, SuccessResponse, UnifiedErrorResponse};
     // CLEANED: Removed unused Result import as part of canonical modernization
@@ -273,6 +285,10 @@ pub mod validation {
 // ==================== SECTION ====================
 
 #[cfg(test)]
+/// Testing utilities for response types.
+///
+/// This module provides test helpers, builders, and mock responses
+/// for comprehensive testing of API response patterns.
 pub mod testing {
     use super::*;
 

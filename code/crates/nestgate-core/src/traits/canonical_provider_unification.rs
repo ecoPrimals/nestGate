@@ -612,6 +612,7 @@ pub enum ConnectionStatus {
     Connecting,
     /// Disconnected
     Disconnected,
+    /// Error variant containing error message
     Error(String),
 }
 // Default implementations

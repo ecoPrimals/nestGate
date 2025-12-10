@@ -54,10 +54,13 @@ impl Default for CachePolicies {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 /// Evictionpolicy
 pub enum EvictionPolicy {
-    Lru, // Least Recently Used
-    Lfu, // Least Frequently Used
-    Arc, // ZFS Adaptive Replacement Cache
-    /// Random
+    /// Least Recently Used eviction policy
+    Lru,
+    /// Least Frequently Used eviction policy
+    Lfu,
+    /// ZFS Adaptive Replacement Cache eviction policy
+    Arc,
+    /// Random eviction policy
     Random,
 }
 /// Storage service configuration

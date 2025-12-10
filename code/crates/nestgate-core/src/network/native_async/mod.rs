@@ -1,14 +1,19 @@
 //! Native Async module
 
+/// Configuration types for native async networking
 pub mod config;
+/// Development-mode implementations for testing
 pub mod development;
+/// Production-ready async network implementations
 pub mod production;
 pub mod service;
 // Native Async Network Module - Split for File Size Compliance
 // This module was split from native_async_network.rs to maintain the 2000-line limit
 // while preserving all functionality and maintaining backward compatibility
 // Sub-module declarations
+/// Trait definitions for native async networking
 pub mod traits;
+/// Type definitions for native async networking
 pub mod types;
 // Re-export all public types and traits for backward compatibility
 pub use traits::{
@@ -36,6 +41,7 @@ pub use development::{DevelopmentNetworkServiceDiscovery, DevelopmentServiceDisc
 pub use service::NativeAsyncNetworkService;
 
 // Type aliases for compatibility
+/// Type alias for production network service discovery implementation
 pub type ProductionNetworkServiceDiscovery = production::ProductionServiceDiscovery;
 /// Type alias for Productionnetworkprotocolhandler
 pub type ProductionNetworkProtocolHandler = production::ProductionProtocolHandler;

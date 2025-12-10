@@ -100,11 +100,37 @@ pub use error::NetworkError;
 // ==================== SECTION ====================
 
 /// Network constants - use canonical constants system
+///
+/// # Primal Sovereignty
+///
+/// These constants are environment-driven. For dynamic discovery,
+/// use `ServiceRegistry` instead.
 pub mod constants {
-    /// Default API port - use canonical constant
-    pub use nestgate_core::constants::canonical_defaults::network::DEFAULT_API_PORT;
-    /// Default internal port
-    pub use nestgate_core::constants::hardcoding::ports::HEALTH_CHECK as DEFAULT_INTERNAL_PORT;
+    use std::env;
+
+    /// Get API port from environment or use safe default
+    ///
+    /// # Environment Variables
+    ///
+    /// - `NESTGATE_API_PORT`: API server port
+    pub fn api_port() -> u16 {
+        env::var("NESTGATE_API_PORT")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(8080) // Safe default
+    }
+
+    /// Get internal health check port from environment or use safe default
+    ///
+    /// # Environment Variables
+    ///
+    /// - `NESTGATE_HEALTH_PORT`: Health check port
+    pub fn internal_port() -> u16 {
+        env::var("NESTGATE_HEALTH_PORT")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(8081) // Safe default
+    }
 
     /// Default connection timeout
     pub const DEFAULT_CONNECTION_TIMEOUT_SECONDS: u64 = 30;

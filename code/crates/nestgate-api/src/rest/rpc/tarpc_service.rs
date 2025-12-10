@@ -95,7 +95,6 @@ impl TarpcRpcService {
     /// Get connection type
     #[allow(dead_code)] // Development method
     #[must_use]
-    /// Fn
     pub const fn connection_type(&self) -> super::RpcConnectionType {
         super::RpcConnectionType::Tarpc
     }

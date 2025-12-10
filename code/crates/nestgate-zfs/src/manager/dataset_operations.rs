@@ -20,6 +20,7 @@ pub struct DatasetAnalyzer {
     pub config: std::collections::HashMap<String, String>,
 }
 impl DatasetAnalyzer {
+    /// Creates a new dataset analyzer with empty configuration.
     #[must_use]
     pub fn new() -> Self {
         Self {

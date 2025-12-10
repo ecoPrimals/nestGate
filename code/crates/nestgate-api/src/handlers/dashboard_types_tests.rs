@@ -142,12 +142,12 @@ mod tests {
         assert_eq!(state.cached_metrics.len(), 0);
     }
 
-    #[test]
-    fn test_dashboard_state_update_metrics() {
+    #[tokio::test]
+    async fn test_dashboard_state_update_metrics() {
         let mut state = DashboardState::new();
         let initial_update = state.last_update;
 
-        std::thread::sleep(Duration::from_millis(10));
+        tokio::time::sleep(Duration::from_millis(10)).await;
 
         state.update_metrics("cpu_usage".to_string(), serde_json::json!(45.5));
 

@@ -18,6 +18,10 @@ mod utilities_comprehensive_tests;
 mod error_edge_cases;
 #[cfg(test)]
 mod error_path_expansion_tests; // Nov 23, 2025 - P1 test expansion // Nov 23, 2025 - P1-5 edge case tests
+#[cfg(test)]
+mod error_path_tests_dec11; // Dec 11, 2025 - Strategic error path tests
+#[cfg(test)]
+mod strategic_error_tests_phase1; // Dec 10, 2025 - Phase 1 strategic tests (50+ tests)
 
 // Deprecated modules removed (November 10, 2025)
 // - helpers.rs → migrated to utilities.rs
@@ -33,9 +37,14 @@ pub use context::{ErrorContext, RetryInfo};
 // Re-export data types from data module
 pub use data::*;
 
-// Type alias for convenience
+/// Type alias for NestGate unified error type
+///
+/// Convenience alias for `NestGateUnifiedError` used throughout the codebase.
 pub type NestGateError = NestGateUnifiedError;
-/// Type alias for Result
+
+/// Type alias for NestGate Result type
+///
+/// Standard Result type using `NestGateError` as the error variant.
 pub type Result<T> = std::result::Result<T, NestGateError>;
 
 // Re-export core result types from result_types module (root-level canonical location)
@@ -220,6 +229,7 @@ pub fn analyze_error_patterns(errors: &[NestGateError]) -> HashMap<String, usize
 // ==================== TEST UTILITIES ====================
 
 #[cfg(test)]
+/// Test utilities for error handling
 pub mod test_utils {
     use super::*;
 

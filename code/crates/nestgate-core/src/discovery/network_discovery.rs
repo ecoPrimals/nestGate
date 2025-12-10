@@ -371,21 +371,34 @@ pub struct IpRange {
 
 impl PortScanDiscovery {
     /// Create a new port scan discovery
+    ///
+    /// Loads port configuration from environment:
+    /// - `NESTGATE_API_PORT`: Default HTTP port (default: 8080)
+    /// - `NESTGATE_METRICS_PORT`: Metrics port (default: 9090)
+    /// - `NESTGATE_HEALTH_PORT`: Health check port (default: 8081)
+    /// - `NESTGATE_WEBSOCKET_PORT`: WebSocket port (default: 9001)
     #[must_use]
     pub fn new() -> Self {
-        use crate::constants::hardcoding::ports;
+        use crate::config::environment::EnvironmentConfig;
+
+        let env_config =
+            EnvironmentConfig::from_env().unwrap_or_else(|_| EnvironmentConfig::default());
+
+        let api_port = env_config.network.port.get();
+        let metrics_port = env_config.monitoring.metrics_port.get();
+
+        // Use default ports for health (8081) and websocket (9001) until env config expands
+        let health_port = 8081;
+        let websocket_port = 9001;
 
         let mut capability_ports = HashMap::new();
         capability_ports.insert(
             "orchestration".to_string(),
-            vec![ports::HTTP_DEFAULT, 8443, ports::METRICS_DEFAULT],
+            vec![api_port, 8443, metrics_port],
         );
         capability_ports.insert("security".to_string(), vec![9000, 9443]);
         capability_ports.insert("ai".to_string(), vec![7000, 7443, 8000]);
-        capability_ports.insert(
-            "storage".to_string(),
-            vec![ports::HEALTH_CHECK, ports::WEBSOCKET_DEFAULT],
-        );
+        capability_ports.insert("storage".to_string(), vec![health_port, websocket_port]);
 
         Self {
             ip_ranges: Vec::new(),
@@ -513,14 +526,15 @@ mod tests {
     async fn test_multicast_discovery() {
         let discovery = MulticastDiscovery::new();
 
-        // Test announcement parsing
-        let announcement = "NESTGATE-DISCOVERY:orchestration:http://songbird:8080:priority=100";
+        // Test announcement parsing (generic orchestration capability)
+        let announcement =
+            "NESTGATE-DISCOVERY:orchestration:http://orchestration-service:8080:priority=100";
         let capability = discovery
             .parse_announcement(announcement)
             .expect("Network operation failed");
 
         assert_eq!(capability.capability_type, "orchestration");
-        assert_eq!(capability.endpoint, "http://songbird:8080");
+        assert_eq!(capability.endpoint, "http://orchestration-service:8080");
         assert_eq!(
             capability.metadata.get("priority"),
             Some(&"100".to_string())

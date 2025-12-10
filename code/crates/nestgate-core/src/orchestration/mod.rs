@@ -1,13 +1,13 @@
 //! Orchestration Module - Capability Discovery Integration
 //!
-//! **ARCHITECTURE NOTE**: Orchestration is Songbird's domain, not NestGate's.
+//! **ARCHITECTURE NOTE**: Orchestration is the networking layer's domain, not NestGate's.
 //! NestGate is a **storage primal** focused on ZFS, datasets, and data management.
 //!
 //! # Migration from Stubs
 //!
 //! **Old Approach (DELETED)**:
 //! ```rust,ignore
-//! // DON'T: Stub implementations that duplicate Songbird
+//! // DON'T: Stub implementations that duplicate orchestration layer
 //! let orchestrator = MockOrchestrator::new();
 //! orchestrator.execute_workflow(workflow).await?;
 //! ```
@@ -16,7 +16,7 @@
 //! ```rust,ignore
 //! use nestgate_core::universal_adapter::capability_discovery::*;
 //!
-//! // Discover orchestration primal (Songbird) dynamically  
+//! // Discover orchestration capability dynamically (any provider)
 //! let discovery = CapabilityDiscovery::new();
 //! let orchestration_providers = discovery
 //!     .discover(CapabilityType::Orchestration)
@@ -34,10 +34,10 @@
 //!
 //! # Why This Architecture?
 //!
-//! 1. **Sovereignty**: No hardcoded "Songbird" references
-//! 2. **Flexibility**: Works with any orchestration primal
+//! 1. **Sovereignty**: No hardcoded service references
+//! 2. **Flexibility**: Works with any orchestration provider
 //! 3. **Production Ready**: Real discovery, no stubs
-//! 4. **Clean Boundaries**: NestGate does storage, Songbird does orchestration
+//! 4. **Clean Boundaries**: NestGate does storage, orchestration layer handles workflows
 //!
 //! # Trait Definitions
 //!
@@ -105,5 +105,5 @@ pub struct WorkflowResult {
     pub error: Option<String>,
 }
 
-// NOTE: No implementations here - use capability discovery to find Songbird
+// NOTE: No implementations here - use capability discovery to find orchestration capability
 // See module documentation for examples

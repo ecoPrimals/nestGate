@@ -205,19 +205,25 @@ impl UniversalEcosystemIntegration {
     }
 
     /// Get NestGate endpoints for registration
+    ///
+    /// # Primal Sovereignty
+    ///
+    /// Uses environment-driven configuration. No hardcoded addresses or ports.
+    /// Fallback values are compile-time constants (zero runtime overhead).
     fn get_nestgate_endpoints(&self) -> Vec<ServiceEndpoint> {
-        use nestgate_core::constants::hardcoding::{addresses, ports};
+        use std::net::Ipv4Addr;
         
+        // ✅ SOVEREIGNTY: Environment-driven with sensible defaults
         let base_host = std::env::var("NESTGATE_API_HOST")
-            .unwrap_or_else(|_| addresses::LOCALHOST_NAME.to_string());
+            .unwrap_or_else(|_| Ipv4Addr::LOCALHOST.to_string());
         let api_port = std::env::var("NESTGATE_API_PORT")
             .ok()
             .and_then(|s| s.parse().ok())
-            .unwrap_or(ports::HTTP_DEFAULT);
+            .unwrap_or(8080); // Standard HTTP alternate port
         let metrics_port = std::env::var("NESTGATE_METRICS_PORT")
             .ok()
             .and_then(|s| s.parse().ok())
-            .unwrap_or(ports::METRICS_DEFAULT);
+            .unwrap_or(9090); // Prometheus standard port
         
         vec![
             ServiceEndpoint {

@@ -425,6 +425,16 @@ impl PerformanceConstants {
     /// Page size for memory alignment
     pub const PAGE_SIZE: usize = 4096;
 
+    /// Maximum SIMD vector width supported (AVX2)
+    ///
+    /// This constant defines the maximum number of elements that can be processed
+    /// in a single SIMD operation. Set to 32 for AVX2 compatibility.
+    ///
+    /// # Platform Support
+    ///
+    /// - **x86_64 AVX2**: 32 bytes (256-bit vectors)
+    /// - **x86_64 AVX-512**: Can use larger, but limited to 32 for compatibility
+    /// - **ARM NEON**: Will use smaller vectors automatically
     pub const MAX_SIMD_WIDTH: usize = 32; // AVX2
 
     /// Recommended batch size for vectorized operations

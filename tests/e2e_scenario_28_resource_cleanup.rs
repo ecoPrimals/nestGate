@@ -9,14 +9,14 @@ mod resource_cleanup {
     use tokio::sync::Mutex;
 
     struct ResourceGuard {
-        name: String,
+        _name: String,
         cleanup_called: Arc<Mutex<bool>>,
     }
 
     impl ResourceGuard {
         fn new(name: String, cleanup_tracker: Arc<Mutex<bool>>) -> Self {
             Self {
-                name,
+                _name: name,
                 cleanup_called: cleanup_tracker,
             }
         }
@@ -56,7 +56,7 @@ mod resource_cleanup {
         fn early_return_function(tracker: Arc<Mutex<bool>>) -> Result<(), String> {
             let _guard = std::sync::Arc::new(tracker);
             // Early return
-            return Err("Early return".to_string());
+            Err("Early return".to_string())
             // Guard should still be dropped
         }
 

@@ -1,10 +1,31 @@
+//! Network defaults configuration module
+//!
+//! Provides thread-safe configuration for network defaults including bind addresses,
+//! hostnames, and environment detection. All values are loaded from environment
+//! variables at initialization time to prevent race conditions.
+//!
+//! # Example
+//!
+//! ```rust
+//! use nestgate_core::constants::network_defaults_config::NetworkDefaultsConfig;
+//!
+//! // Load from environment variables
+//! let config = NetworkDefaultsConfig::from_env();
+//! println!("Bind address: {}", config.get_bind_address());
+//!
+//! // Or build manually for testing
+//! let test_config = NetworkDefaultsConfig::new()
+//!     .with_api_host("test.example.com".to_string())
+//!     .with_environment("production".to_string());
+//! ```
 use super::network_defaults::{DEFAULT_BIND_ADDRESS, LOCALHOST_NAME};
 use std::sync::Arc;
 
 /// Thread-safe configuration for network defaults
-/// Captures environment variables at initialization to prevent race conditions
+///
+/// Captures environment variables at initialization to prevent race conditions.
+/// All values are immutable after construction, making this safe to share across threads.
 #[derive(Debug, Clone)]
-/// Configuration for NetworkDefaults
 pub struct NetworkDefaultsConfig {
     bind_address: Option<String>,
     api_host: Option<String>,

@@ -63,6 +63,7 @@ mod universal_adapter_validation {
     #[ignore]
     async fn test_multi_protocol_support() {
         #[derive(Debug)]
+        #[allow(dead_code)] // Used for demonstration of protocol enumeration
         enum Protocol {
             Http,
             Grpc,
@@ -70,7 +71,7 @@ mod universal_adapter_validation {
             Custom(String),
         }
 
-        let supported_protocols = vec![
+        let supported_protocols = [
             Protocol::Http,
             Protocol::Grpc,
             Protocol::WebSocket,

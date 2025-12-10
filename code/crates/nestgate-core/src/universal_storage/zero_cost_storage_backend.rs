@@ -60,10 +60,12 @@ pub trait ZeroCostStorageBackend<
     fn max_concurrent_operations() -> usize {
         MAX_CONCURRENT_OPS
     }
+    /// Returns the maximum file size in bytes for storage operations
     #[must_use]
     fn max_file_size_bytes() -> usize {
         MAX_FILE_SIZE_MB * 1024 * 1024
     }
+    /// Returns the default timeout duration for storage operations
     #[must_use]
     fn operation_timeout() -> Duration {
         Duration::from_secs(OPERATION_TIMEOUT_SECS)

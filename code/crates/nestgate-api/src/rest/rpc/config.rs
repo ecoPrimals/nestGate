@@ -406,14 +406,12 @@ impl CanonicalRpcConfig {
 
     /// Get network configuration from canonical base
     #[must_use]
-    /// Fn
     pub const fn network(&self) -> &CanonicalNetworkConfig {
         &self.base.network
     }
 
     /// Get security configuration from canonical base
     #[must_use]
-    /// Fn
     pub const fn security(&self) -> &SecurityConfig {
         &self.base.security
     }

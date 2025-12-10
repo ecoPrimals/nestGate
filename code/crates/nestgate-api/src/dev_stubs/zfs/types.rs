@@ -69,7 +69,6 @@ impl Default for ZeroCostZfsOperations {
 impl ZeroCostZfsOperations {
     /// Create a new zero-cost ZFS operations instance
     #[must_use]
-    /// Fn
     pub const fn new() -> Self {
         Self
     }
@@ -270,7 +269,6 @@ impl Default for PerformanceOptimizer {
 impl PerformanceOptimizer {
     /// Create a new performance optimizer instance
     #[must_use]
-    /// Fn
     pub const fn new() -> Self {
         Self
     }
@@ -306,14 +304,12 @@ impl Default for ConfidenceCalculator {
 impl ConfidenceCalculator {
     /// Create a new confidence calculator instance
     #[must_use]
-    /// Fn
     pub const fn new() -> Self {
         Self
     }
 
     /// Calculate confidence score based on provided metrics
     #[must_use]
-    /// Fn
     pub const fn calculate_confidence(&self, _metrics: &HashMap<String, f64>) -> f64 {
         0.85 // Placeholder confidence score
     }

@@ -501,11 +501,14 @@ fn print_performance_results(results: &PerformanceResults) {
 #[tokio::test]
 async fn test_basic_performance() -> Result<()> {
     // CONCURRENCY SAFETY: Acquire lock to prevent concurrent execution
-    let _lock = PERFORMANCE_TEST_LOCK
-        .lock()
-        .expect("Failed to acquire performance test lock");
+    // Drop lock before await to prevent holding across await point
+    {
+        let _lock = PERFORMANCE_TEST_LOCK
+            .lock()
+            .expect("Failed to acquire performance test lock");
 
-    println!("🚀 Basic Performance Test (Serialized for Resource Safety)");
+        println!("🚀 Basic Performance Test (Serialized for Resource Safety)");
+    } // Lock dropped here
 
     // MODERN FAST TESTING: 3 seconds instead of 30 (10x faster)
     // Still tests concurrent patterns, just completes quickly for CI/CD
@@ -568,11 +571,14 @@ async fn test_modular_performance_components() -> Result<()> {
 async fn test_sustained_performance() -> Result<()> {
     // CONCURRENCY SAFETY: Acquire lock to prevent concurrent execution
     // This test is resource-intensive and will fail if run in parallel with others
-    let _lock = PERFORMANCE_TEST_LOCK
-        .lock()
-        .expect("Failed to acquire performance test lock");
+    // Drop lock before await to prevent holding across await point
+    {
+        let _lock = PERFORMANCE_TEST_LOCK
+            .lock()
+            .expect("Failed to acquire performance test lock");
 
-    println!("🔄 Sustained Performance Test (Serialized for Resource Safety)");
+        println!("🔄 Sustained Performance Test (Serialized for Resource Safety)");
+    } // Lock dropped here
 
     // MODERN FAST TESTING: 5 seconds instead of 60 (12x faster)
     // Tests sustained concurrent load but completes quickly
@@ -609,11 +615,14 @@ async fn test_sustained_performance() -> Result<()> {
 #[tokio::test]
 async fn test_comprehensive_performance_suite() -> Result<()> {
     // CONCURRENCY SAFETY: Acquire lock to prevent concurrent execution
-    let _lock = PERFORMANCE_TEST_LOCK
-        .lock()
-        .expect("Failed to acquire performance test lock");
+    // Drop lock before await to prevent holding across await point
+    {
+        let _lock = PERFORMANCE_TEST_LOCK
+            .lock()
+            .expect("Failed to acquire performance test lock");
 
-    println!("🔥 COMPREHENSIVE PERFORMANCE SUITE (Serialized for Resource Safety) 🔥");
+        println!("🔥 COMPREHENSIVE PERFORMANCE SUITE (Serialized for Resource Safety) 🔥");
+    } // Lock dropped here
 
     // MODERN FAST TESTING: Total 6 seconds instead of 90 (15x faster!)
     // All scenarios run concurrently-capable patterns but complete quickly

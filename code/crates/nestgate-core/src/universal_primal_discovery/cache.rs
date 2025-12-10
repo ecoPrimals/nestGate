@@ -23,6 +23,7 @@ pub struct CacheEntry {
 }
 impl CacheEntry {
     #[must_use]
+    /// Creates a new cached entry with the specified value and time-to-live
     pub fn new(value: String, ttl: Duration) -> Self {
         let now = SystemTime::now();
         Self {
@@ -35,6 +36,7 @@ impl CacheEntry {
     }
 
     #[must_use]
+    /// Checks if this cached entry has expired based on its TTL
     pub fn is_expired(&self) -> bool {
         self.created_at.elapsed().unwrap_or(Duration::ZERO) > self.ttl
     }

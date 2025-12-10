@@ -51,6 +51,7 @@ pub enum MountStatus {
     Active,
     /// Inactive
     Inactive,
+    /// Error state with message
     Error(String),
 }
 /// Volume status
@@ -61,6 +62,7 @@ pub enum VolumeStatus {
     Active,
     /// Inactive
     Inactive,
+    /// Error state with message
     Error(String),
 }
 /// ZFS mount information

@@ -235,7 +235,6 @@ mod cache_functional_tests {
 #[cfg(test)]
 mod cache_manager_entry_tests {
     use super::*;
-    use std::thread;
     use std::time::Duration;
 
     #[test]
@@ -271,13 +270,13 @@ mod cache_manager_entry_tests {
         assert!(entry.is_expired(Duration::from_millis(0)));
     }
 
-    #[test]
-    fn test_cache_entry_access_time_updates() {
+    #[tokio::test]
+    async fn test_cache_entry_access_time_updates() {
         let data = b"test_data".to_vec();
         let mut entry = manager::CacheEntry::new(data);
 
         let first_access = entry.last_accessed;
-        thread::sleep(Duration::from_millis(10));
+        tokio::time::sleep(Duration::from_millis(10)).await;
         entry.access();
         let second_access = entry.last_accessed;
 

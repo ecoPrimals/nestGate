@@ -84,6 +84,7 @@ pub enum ConnectionStatus {
     Idle,
     /// Closed
     Closed,
+    /// Error variant containing error message
     Error(String),
 }
 /// Health status

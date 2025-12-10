@@ -17,7 +17,6 @@
 //! - Data accessible and consistent
 //! - Resilver completes successfully
 
-use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -246,8 +245,8 @@ impl ResilientPool {
         Ok(())
     }
 
-    fn replace_disk(&self, old_id: &str, new_disk: Arc<VirtualDisk>) -> Result<(), String> {
-        let index = self
+    fn replace_disk(&self, old_id: &str, _new_disk: Arc<VirtualDisk>) -> Result<(), String> {
+        let _index = self
             .disks
             .iter()
             .position(|d| d.id == old_id)
@@ -266,7 +265,7 @@ async fn e2e_scenario_12_create_mirrored_pool() {
     eprintln!("\n🧪 E2E: Create Mirrored Pool");
 
     let disk1 = Arc::new(VirtualDisk::new("disk1", 100));
-    let disk2 = Arc::new(VirtualDisk::new("disk2", 100));
+    let _disk2 = Arc::new(VirtualDisk::new("disk2", 100));
     let pool = ResilientPool::new_mirror("test-mirror", disk1, disk2);
 
     assert!(pool.is_operational());
@@ -280,7 +279,7 @@ async fn e2e_scenario_12_detect_disk_failure() {
     eprintln!("\n🧪 E2E: Detect Disk Failure Immediately");
 
     let disk1 = Arc::new(VirtualDisk::new("disk1", 100));
-    let disk2 = Arc::new(VirtualDisk::new("disk2", 100));
+    let _disk2 = Arc::new(VirtualDisk::new("disk2", 100));
     let pool = ResilientPool::new_mirror("test-mirror", disk1.clone(), disk2);
 
     // Fail one disk
@@ -297,7 +296,7 @@ async fn e2e_scenario_12_degraded_mode_operational() {
     eprintln!("\n🧪 E2E: Pool Operational in Degraded Mode");
 
     let disk1 = Arc::new(VirtualDisk::new("disk1", 100));
-    let disk2 = Arc::new(VirtualDisk::new("disk2", 100));
+    let _disk2 = Arc::new(VirtualDisk::new("disk2", 100));
     let pool = ResilientPool::new_mirror("test-mirror", disk1.clone(), disk2);
 
     // Fail one disk
@@ -315,7 +314,7 @@ async fn e2e_scenario_12_data_accessible_after_failure() {
     eprintln!("\n🧪 E2E: Data Accessible After Disk Failure");
 
     let disk1 = Arc::new(VirtualDisk::new("disk1", 100));
-    let disk2 = Arc::new(VirtualDisk::new("disk2", 100));
+    let _disk2 = Arc::new(VirtualDisk::new("disk2", 100));
     let pool = ResilientPool::new_mirror("test-mirror", disk1.clone(), disk2);
 
     // Write data before failure
@@ -337,7 +336,7 @@ async fn e2e_scenario_12_writes_during_degraded() {
     eprintln!("\n🧪 E2E: Writes Work During Degraded Mode");
 
     let disk1 = Arc::new(VirtualDisk::new("disk1", 100));
-    let disk2 = Arc::new(VirtualDisk::new("disk2", 100));
+    let _disk2 = Arc::new(VirtualDisk::new("disk2", 100));
     let pool = ResilientPool::new_mirror("test-mirror", disk1.clone(), disk2);
 
     // Fail one disk
@@ -360,7 +359,7 @@ async fn e2e_scenario_12_resilver_process() {
     eprintln!("\n🧪 E2E: Resilver Process Completes");
 
     let disk1 = Arc::new(VirtualDisk::new("disk1", 100));
-    let disk2 = Arc::new(VirtualDisk::new("disk2", 100));
+    let _disk2 = Arc::new(VirtualDisk::new("disk2", 100));
     let pool = ResilientPool::new_mirror("test-mirror", disk1.clone(), disk2);
 
     // Fail and restore disk
@@ -382,7 +381,7 @@ async fn e2e_scenario_12_mirror_survives_single_failure() {
     eprintln!("\n🧪 E2E: Mirror Survives Single Disk Failure");
 
     let disk1 = Arc::new(VirtualDisk::new("disk1", 100));
-    let disk2 = Arc::new(VirtualDisk::new("disk2", 100));
+    let _disk2 = Arc::new(VirtualDisk::new("disk2", 100));
     let pool = ResilientPool::new_mirror("test-mirror", disk1.clone(), disk2);
 
     // Write test data
@@ -432,7 +431,7 @@ async fn e2e_scenario_12_concurrent_ops_during_failure() {
     eprintln!("\n🧪 E2E: Concurrent Operations During Disk Failure");
 
     let disk1 = Arc::new(VirtualDisk::new("disk1", 100));
-    let disk2 = Arc::new(VirtualDisk::new("disk2", 100));
+    let _disk2 = Arc::new(VirtualDisk::new("disk2", 100));
     let pool = Arc::new(ResilientPool::new_mirror(
         "test-mirror",
         disk1.clone(),
@@ -473,7 +472,7 @@ async fn e2e_scenario_12_data_consistency() {
     eprintln!("\n🧪 E2E: Data Consistency After Failure");
 
     let disk1 = Arc::new(VirtualDisk::new("disk1", 100));
-    let disk2 = Arc::new(VirtualDisk::new("disk2", 100));
+    let _disk2 = Arc::new(VirtualDisk::new("disk2", 100));
     let pool = ResilientPool::new_mirror("test-mirror", disk1.clone(), disk2.clone());
 
     // Write multiple blocks
@@ -500,7 +499,7 @@ async fn e2e_scenario_12_failure_counter() {
     eprintln!("\n🧪 E2E: Failure Counter Tracking");
 
     let disk1 = Arc::new(VirtualDisk::new("disk1", 100));
-    let disk2 = Arc::new(VirtualDisk::new("disk2", 100));
+    let _disk2 = Arc::new(VirtualDisk::new("disk2", 100));
 
     // Fail disk before adding to pool
     disk1.set_state(DiskState::Offline);
@@ -521,7 +520,7 @@ async fn e2e_scenario_12_replace_failed_disk() {
     eprintln!("\n🧪 E2E: Replace Failed Disk");
 
     let disk1 = Arc::new(VirtualDisk::new("disk1", 100));
-    let disk2 = Arc::new(VirtualDisk::new("disk2", 100));
+    let _disk2 = Arc::new(VirtualDisk::new("disk2", 100));
     let pool = ResilientPool::new_mirror("test-mirror", disk1.clone(), disk2);
 
     // Fail disk
@@ -529,7 +528,7 @@ async fn e2e_scenario_12_replace_failed_disk() {
     assert!(pool.is_degraded());
 
     // Replace disk (in real scenario, this would be a new physical disk)
-    let new_disk = Arc::new(VirtualDisk::new("disk1-replacement", 100));
+    let _new_disk = Arc::new(VirtualDisk::new("disk1-replacement", 100));
     let result = pool.replace_disk("disk1", new_disk);
     assert!(result.is_ok());
 
@@ -544,7 +543,7 @@ async fn e2e_scenario_12_full_integration() {
     // Step 1: Create mirrored pool
     eprintln!("Step 1: Creating mirrored pool");
     let disk1 = Arc::new(VirtualDisk::new("disk1", 100));
-    let disk2 = Arc::new(VirtualDisk::new("disk2", 100));
+    let _disk2 = Arc::new(VirtualDisk::new("disk2", 100));
     let pool = ResilientPool::new_mirror("integration-pool", disk1.clone(), disk2.clone());
     assert!(pool.is_operational());
     eprintln!("   ✓ Pool created and operational");

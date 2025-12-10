@@ -12,91 +12,84 @@ use std::time::SystemTime;
 
 /// Policy priority levels for automation policies
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-/// Policypriority
 pub enum PolicyPriority {
-    /// Low
+    /// Low priority - can be deferred
     Low,
-    /// Normal
+    /// Normal priority - standard processing
     Normal,
-    /// High
+    /// High priority - prioritized execution
     High,
-    /// Critical
+    /// Critical priority - immediate execution required
     Critical,
 }
 /// Policy conditions container that defines when and how automation rules apply
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Policyconditions
 pub struct PolicyConditions {
-    /// Tier Rules
+    /// Rules for tier assignment based on data characteristics
     pub tier_rules: Vec<TierRule>,
-    /// Migration Rules
+    /// Rules for automated migration between storage tiers
     pub migration_rules: Vec<MigrationRule>,
-    /// Lifecycle Rules
+    /// Rules for dataset lifecycle management
     pub lifecycle_rules: Vec<LifecycleRule>,
 }
 /// Simple tier rule for basic automation - defines target tier based on conditions
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Tierrule
 pub struct TierRule {
-    /// Condition
+    /// Condition expression (e.g., "access_frequency > 100/day")
     pub condition: String,
-    /// Target Tier
+    /// Target storage tier when condition is met
     pub target_tier: StorageTier,
-    /// Priority
+    /// Rule priority (higher values execute first)
     pub priority: u32,
 }
 /// Simple migration rule for automated dataset movement between tiers
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Migrationrule
 pub struct MigrationRule {
-    /// Source Tier
+    /// Storage tier to migrate data from
     pub source_tier: StorageTier,
-    /// Target Tier
+    /// Storage tier to migrate data to
     pub target_tier: StorageTier,
-    /// Condition
+    /// Condition triggering migration (e.g., "age > 30 days")
     pub condition: String,
-    /// Bandwidth Limits
+    /// Bandwidth constraints for migration operations
     pub bandwidth_limits: BandwidthLimits,
-    /// Schedule
+    /// Migration schedule specification (cron format or description)
     pub schedule: String,
 }
 /// Simple lifecycle rule for dataset lifecycle management
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Lifecyclerule
 pub struct LifecycleRule {
-    /// Stage
+    /// Current lifecycle stage this rule applies to
     pub stage: LifecycleStage,
-    /// Next Stage
+    /// Next stage to transition to when conditions are met
     pub next_stage: Option<LifecycleStage>,
-    /// Conditions
+    /// List of conditions that must be met for stage transition
     pub conditions: Vec<String>,
-    /// Actions
+    /// Actions to execute during stage transition
     pub actions: Vec<String>,
 }
 /// Dataset lifecycle management policy with complete configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Automationpolicy
 pub struct AutomationPolicy {
-    /// Policy identifier
+    /// Unique identifier for this policy
     pub policy_id: String,
-    /// Name
+    /// Human-readable policy name
     pub name: String,
-    /// Human-readable description
+    /// Detailed description of what this policy does
     pub description: String,
-    /// Priority
+    /// Execution priority level for this policy
     pub priority: PolicyPriority,
-    /// Whether this feature is enabled
+    /// Whether this policy is currently active
     pub enabled: bool,
-    /// Conditions
+    /// All conditions and rules defined by this policy
     pub conditions: PolicyConditions,
-    /// Created
+    /// Timestamp when this policy was created
     pub created: SystemTime,
-    /// Last Modified
+    /// Timestamp of last modification to this policy
     pub last_modified: SystemTime,
 }
 /// Dataset lifecycle stages with automation rules
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-/// Lifecyclestage
 pub enum LifecycleStage {
     /// Newly created, high activity expected
     New,

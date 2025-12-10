@@ -323,7 +323,9 @@ pub enum JwtAlgorithm {
     ES512,
     /// Ps256
     PS256,
+    /// Ps384  
     PS384,
+    /// Ps512
     PS512,
 }
 
@@ -493,6 +495,7 @@ pub enum ExternalProviderType {
     Okta,
     /// Auth0
     Auth0,
+    /// Custom authentication provider
     Custom(String),
 }
 

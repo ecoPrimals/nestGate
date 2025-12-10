@@ -45,9 +45,13 @@ impl Default for CertificateConfig {
     }
 }
 
+/// Certificate lifecycle management including issuance, renewal, and revocation.
 pub mod manager;
+/// Core certificate types and data structures for X.509 certificates.
 pub mod types;
+/// Certificate utility functions for encoding, decoding, and validation.
 pub mod utils;
+/// Certificate validation logic for trust chains and expiration checking.
 pub mod validator;
 
 // ==================== CANONICAL TYPE ALIAS ====================

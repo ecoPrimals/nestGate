@@ -77,11 +77,13 @@ pub trait ZeroCostStorageBackend<
 
     // ===== CONFIGURATION - COMPILE-TIME =====
 
+    /// Returns the maximum number of concurrent storage operations allowed
     #[must_use]
     fn max_concurrent_operations() -> usize {
         MAX_CONCURRENT_OPS
     }
 
+    /// Returns the operation timeout in milliseconds
     #[must_use]
     fn timeout_milliseconds() -> u64 {
         TIMEOUT_MS
@@ -93,6 +95,7 @@ pub trait ZeroCostStorageBackend<
         config: Self::Config,
     ) -> impl Future<Output = std::result::Result<(), Self::Error>> + Send;
 
+    /// Performs a health check on the storage backend
     fn health_check(
         &self,
     ) -> impl Future<Output = std::result::Result<ZeroCostStorageHealth, Self::Error>> + Send;
@@ -108,19 +111,24 @@ pub enum ZeroCostStorageOperation {}
 #[derive(Debug, Clone, Serialize, Deserialize)]
 /// Zerocoststorageresult
 pub enum ZeroCostStorageResult {
+    /// Read operation result containing data bytes
     ReadResult(Vec<u8>),
     /// Writeresult
     WriteResult,
     /// Deleteresult
     DeleteResult,
+    /// List operation result containing file paths
     ListResult(Vec<String>),
+    /// Metadata result containing storage metadata
     MetadataResult(Box<StorageMetadata>),
+    /// Error variant containing error message
     Error(String),
 }
 /// Zero-cost storage health information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 /// Zerocoststoragehealth
 pub struct ZeroCostStorageHealth {
+    /// Whether the storage backend is healthy
     pub healthy: bool,
     /// Total Operations
     pub total_operations: u64,
@@ -166,6 +174,7 @@ where
         name: &str,
     ) -> impl Future<Output = std::result::Result<(), Self::Error>> + Send;
 
+    /// Returns the maximum number of backends that can be registered
     #[must_use]
     fn max_backends() -> usize {
         MAX_BACKENDS

@@ -189,14 +189,12 @@ impl OrchestrationCapability {
         service_name: &str,
         status: ServiceStatus,
     ) -> NestGateResult<()> {
-        let base_url = std::env::var("NESTGATE_API_BASE_URL").unwrap_or_else(|_| {
-            use nestgate_core::constants::hardcoding::{addresses, ports};
-            format!(
-                "http://{}:{}",
-                addresses::LOCALHOST_NAME,
-                ports::HTTP_DEFAULT
-            )
-        });
+        // ✅ SOVEREIGNTY: Require explicit configuration, no hardcoded fallbacks
+        let base_url = std::env::var("NESTGATE_API_BASE_URL").expect(
+            "NESTGATE_API_BASE_URL must be set explicitly for sovereignty compliance. \
+                     No hardcoded fallbacks. Use ServiceRegistry for dynamic discovery or set \
+                     environment variable.",
+        );
         let url = format!("{base_url}/api/v1/services/{service_name}/health");
 
         let request = HealthStatusRequest {

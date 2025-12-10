@@ -20,7 +20,7 @@ use crate::routes::AppState;
 
 // Import traits for dev-stubs
 #[cfg(feature = "dev-stubs")]
-use crate::dev_stubs::zfs::{DatasetOperations, PoolOperations, SnapshotOperations};
+use crate::dev_stubs::zfs::PoolOperations;
 
 /// **CREATE UNIVERSAL POOL REQUEST**
 ///

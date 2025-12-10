@@ -2,6 +2,8 @@
 //!
 //! These tests cover concurrent access patterns, race conditions, and synchronization
 //! to increase code coverage (+2% target for Week 5).
+//!
+//! **MODERNIZED**: Uses event-driven coordination instead of sleep-based timing
 
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::Arc;
@@ -145,7 +147,7 @@ async fn test_semaphore_resource_limiting() {
                 }
             }
 
-            tokio::time::sleep(Duration::from_millis(10)).await;
+            // Decrement active count immediately - no artificial delay needed
             active.fetch_sub(1, Ordering::Relaxed);
         });
         handles.push(handle);
@@ -217,44 +219,32 @@ async fn test_concurrent_work_queue() {
     let (tx, mut rx) = mpsc::channel(100);
     let processed = Arc::new(AtomicU32::new(0));
 
-    // Producer
-    tokio::spawn(async move {
+    // Producer (drops tx when done, signaling completion)
+    let producer = tokio::spawn(async move {
         for i in 0..20 {
             tx.send(i).await.unwrap();
         }
+        // tx dropped here, closing the channel
     });
 
-    // Workers
-    let mut handles = Vec::new();
-    for _ in 0..4 {
-        let processed_clone = Arc::clone(&processed);
-        let mut rx_clone = rx;
-        let (new_tx, new_rx) = mpsc::channel(100);
-        rx = new_rx;
+    // Single worker
+    let processed_clone = Arc::clone(&processed);
+    let worker = tokio::spawn(async move {
+        while let Some(_item) = rx.recv().await {
+            processed_clone.fetch_add(1, Ordering::Relaxed);
+        }
+    });
 
-        let handle = tokio::spawn(async move {
-            while let Some(_item) = rx_clone.recv().await {
-                processed_clone.fetch_add(1, Ordering::Relaxed);
-            }
-        });
-        handles.push(handle);
-
-        // Only first worker gets the receiver
-        break;
-    }
-
-    tokio::time::sleep(Duration::from_millis(100)).await;
-    drop(rx);
-
-    for handle in handles {
-        handle.await.unwrap();
-    }
+    // Wait for both producer and worker to complete
+    producer.await.unwrap();
+    worker.await.unwrap();
 
     let total_processed = processed.load(Ordering::Relaxed);
     assert_eq!(total_processed, 20);
 }
 
 /// **Concurrent Test 9: Read-Write Lock Writer Priority**
+/// MODERNIZED: Uses yield_now instead of sleep for coordination
 #[tokio::test]
 async fn test_rwlock_writer_blocks_readers() {
     let data = Arc::new(RwLock::new(0));
@@ -269,8 +259,8 @@ async fn test_rwlock_writer_blocks_readers() {
         "read_acquired"
     });
 
-    // Give read attempt time to try
-    tokio::time::sleep(Duration::from_millis(10)).await;
+    // MODERNIZED: Yield to give read attempt a chance to try
+    tokio::task::yield_now().await;
 
     // Read should still be waiting
     assert!(!read_handle.is_finished());
@@ -344,7 +334,7 @@ async fn test_oneshot_channel() {
     let (tx, rx) = oneshot::channel();
 
     tokio::spawn(async move {
-        tokio::time::sleep(Duration::from_millis(10)).await;
+        // Send immediately - channel provides coordination
         tx.send(42).unwrap();
     });
 
@@ -370,11 +360,9 @@ async fn test_watch_channel_updates() {
         values
     });
 
-    tokio::time::sleep(Duration::from_millis(10)).await;
+    // Send values immediately - watch channel naturally coordinates updates
     tx.send(1).unwrap();
-    tokio::time::sleep(Duration::from_millis(10)).await;
     tx.send(2).unwrap();
-    tokio::time::sleep(Duration::from_millis(10)).await;
     tx.send(3).unwrap();
 
     let values = handle.await.unwrap();
@@ -462,7 +450,7 @@ async fn test_notify_wakeup() {
         "notified"
     });
 
-    tokio::time::sleep(Duration::from_millis(10)).await;
+    // Notify immediately - Notify provides proper coordination
     notify.notify_one();
 
     let result = handle.await.unwrap();

@@ -123,10 +123,10 @@ mod success_response_tests {
         assert_eq!(original.timestamp, cloned.timestamp);
     }
 
-    #[test]
-    fn test_multiple_success_responses_have_different_timestamps() {
+    #[tokio::test]
+    async fn test_multiple_success_responses_have_different_timestamps() {
         let response1 = SuccessResponse::new("First");
-        std::thread::sleep(std::time::Duration::from_millis(10));
+        tokio::time::sleep(std::time::Duration::from_millis(10)).await;
         let response2 = SuccessResponse::new("Second");
         
         assert!(response2.timestamp >= response1.timestamp);

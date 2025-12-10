@@ -67,6 +67,7 @@ mod monitoring_observability {
     #[ignore]
     async fn test_structured_logging() {
         #[derive(Debug)]
+        #[allow(dead_code)] // Demonstration struct for logging pattern
         struct LogEntry {
             level: String,
             message: String,

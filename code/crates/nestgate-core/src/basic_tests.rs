@@ -15,7 +15,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_storage_tier_variants() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_storage_tier_variants() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let hot = StorageTier::Hot;
         let warm = StorageTier::Warm;
         let cold = StorageTier::Cold;
@@ -32,7 +32,7 @@ mod tests {
     }
 
     #[test]
-    fn test_allocation_status() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_allocation_status() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let active = AllocationStatus::Active;
         let inactive = AllocationStatus::Inactive;
         let pending = AllocationStatus::Pending;
@@ -45,7 +45,7 @@ mod tests {
     }
 
     #[test]
-    fn test_unified_health_status() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_unified_health_status() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let healthy = UnifiedHealthStatus::Healthy;
         let degraded = UnifiedHealthStatus::Degraded;
         let unhealthy = UnifiedHealthStatus::Unhealthy;
@@ -58,7 +58,7 @@ mod tests {
     }
 
     #[test]
-    fn test_unified_service_state() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_unified_service_state() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let starting = UnifiedServiceState::Starting;
         let running = UnifiedServiceState::Running;
         let stopping = UnifiedServiceState::Stopping;
@@ -71,7 +71,7 @@ mod tests {
     }
 
     #[test]
-    fn test_health_status_default() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_health_status_default() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let health = HealthStatus::default();
 
         assert!(health.overall_healthy);
@@ -84,7 +84,7 @@ mod tests {
     }
 
     #[test]
-    fn test_system_info_construction() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_system_info_construction() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let system_info = SystemInfo {
             hostname: "test-host".to_string(),
             os_type: "Linux".to_string(),
@@ -105,7 +105,7 @@ mod tests {
     }
 
     #[test]
-    fn test_nestgate_error_creation() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_nestgate_error_creation() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let config_error = NestGateError::configuration(
             context: "test_context".to_string(),
             source: None,
@@ -129,7 +129,7 @@ mod tests {
     }
 
     #[test]
-    fn test_nestgate_error_validation() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_nestgate_error_validation() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let validation_error = NestGateError::validation(
             currentvalue: Some("invalid".to_string()));
 
@@ -155,7 +155,7 @@ mod tests {
     }
 
     #[test]
-    fn test_error_display() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_error_display() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let error = NestGateError::internal_error(
 
         let error_string = format!("{error}");
@@ -164,7 +164,7 @@ mod tests {
     }
 
     #[test]
-    fn test_basic_string_operations() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_basic_string_operations() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let test_string = "nestgate".to_string();
         assert_eq!(test_string.len(), 8);
         assert!(test_string.contains("gate"));
@@ -173,7 +173,7 @@ mod tests {
     }
 
     #[test]
-    fn test_basic_collections() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_basic_collections() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let mut map = HashMap::new();
         map.insert("key1".to_string(), "value1".to_string());
         map.insert("key2".to_string(), "value2".to_string());

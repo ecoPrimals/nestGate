@@ -65,6 +65,7 @@ impl Default for RealTimePerformanceMonitor {
 }
 
 impl RealTimePerformanceMonitor {
+    /// Creates a new real-time performance monitor with default configuration.
     #[must_use]
     pub fn new() -> Self {
         Self {

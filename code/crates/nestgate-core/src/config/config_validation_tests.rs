@@ -278,7 +278,8 @@ mod config_integration_tests {
     #[test]
     fn test_config_in_result() {
         /// Gets Config
-        fn get_config() -> Result<crate::config::canonical_primary::NestGateCanonicalConfig, String>
+        fn get_config(
+        ) -> std::result::Result<crate::config::canonical_primary::NestGateCanonicalConfig, String>
         {
             Ok(create_default_config())
         }

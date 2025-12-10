@@ -76,15 +76,20 @@ pub enum FallbackStrategy {
     FailFast,
     /// Retry with exponential backoff
     RetryWithBackoff {
+        /// Initial delay before first retry
         initial_delay: Duration,
+        /// Maximum delay between retries
         max_delay: Duration,
+        /// Multiplier for exponential backoff
         multiplier: f64,
     },
     /// Use local capability if available
     LocalFallback,
     /// Queue request for later processing
     QueueForRetry {
+        /// Maximum size of retry queue
         queue_size: usize,
+        /// Interval between retry attempts
         retry_interval: Duration,
     },
 }

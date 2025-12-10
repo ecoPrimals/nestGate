@@ -68,7 +68,7 @@ impl ZfsService {
 
     /// Create a new ZFS service from an existing Arc-wrapped config
     ///
-    /// This is the most efficient constructor when you already have an Arc<ZfsServiceConfig>
+    /// This is the most efficient constructor when you already have an `Arc<ZfsServiceConfig>`
     /// as it avoids any allocation.
     #[must_use]
     pub fn from_arc(config: Arc<ZfsServiceConfig>) -> Self {
@@ -120,8 +120,6 @@ impl ZfsService {
     /// ```
     #[must_use]
     pub fn create_registration(&self) -> ServiceRegistration {
-        use std::collections::HashMap;
-
         ServiceRegistration {
             service_id: self.node_id.clone(),
             service_type: "zfs-storage".to_string(),

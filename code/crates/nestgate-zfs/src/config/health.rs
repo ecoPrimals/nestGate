@@ -63,14 +63,17 @@ impl HealthMonitoringConfig {
             recovery_threshold: 1,
             alerting_enabled: true,
             alert_endpoints: {
-                use nestgate_core::constants::hardcoding::{addresses, ports};
+                // ✅ SOVEREIGNTY: Environment-driven alert configuration
+                let host = std::env::var("NESTGATE_ALERT_HOST")
+                    .unwrap_or_else(|_| "localhost".to_string());
+                let port = std::env::var("NESTGATE_ALERT_PORT")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(8080);
+
                 vec![
-                    format!("email:admin@{}", addresses::LOCALHOST_NAME),
-                    format!(
-                        "webhook:http://{}:{}/alerts",
-                        addresses::LOCALHOST_NAME,
-                        ports::HTTP_DEFAULT
-                    ),
+                    format!("email:admin@{}", host),
+                    format!("webhook:http://{}:{}/alerts", host, port),
                 ]
             },
         }

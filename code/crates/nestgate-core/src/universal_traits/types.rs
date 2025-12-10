@@ -62,14 +62,18 @@ pub enum PrimalCapability {
     DataProcessing,
     /// Networkmanagement
     NetworkManagement,
+    /// A custom capability type defined by the user
     Custom(String),
 }
 /// Primal dependency specification
 #[derive(Debug, Clone, Serialize, Deserialize)]
 /// Primaldependency
 pub enum PrimalDependency {
+    /// A required dependency that must be present
     Required(String),
+    /// An optional dependency that enhances functionality but isn't required
     Optional(String),
+    /// A preferred dependency that should be used if available
     Preferred(String),
 }
 /// Primal endpoints configuration

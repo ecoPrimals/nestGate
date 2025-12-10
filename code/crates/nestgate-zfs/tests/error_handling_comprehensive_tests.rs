@@ -277,7 +277,7 @@ fn test_multiple_error_types() {
 #[test]
 fn test_result_ok_propagation() {
     /// Returns Ok
-    fn returns_ok() -> Result<i32, ZfsError> {
+    fn returns_ok() -> std::result::Result<i32, ZfsError> {
         Ok(42)
     }
 
@@ -289,7 +289,7 @@ fn test_result_ok_propagation() {
 #[test]
 fn test_result_err_propagation() {
     /// Returns Err
-    fn returns_err() -> Result<i32, ZfsError> {
+    fn returns_err() -> std::result::Result<i32, ZfsError> {
         Err(ZfsError::PoolError {
             message: "Test error".to_string(),
         })
@@ -302,12 +302,12 @@ fn test_result_err_propagation() {
 #[test]
 fn test_result_chain() {
     /// Step1
-    fn step1() -> Result<i32, ZfsError> {
+    fn step1() -> std::result::Result<i32, ZfsError> {
         Ok(10)
     }
 
     /// Step2
-    fn step2(value: i32) -> Result<i32, ZfsError> {
+    fn step2(value: i32) -> std::result::Result<i32, ZfsError> {
         Ok(value * 2)
     }
 
@@ -353,14 +353,14 @@ fn test_error_with_context() {
 #[test]
 fn test_nested_error_handling() {
     /// Inner
-    fn inner() -> Result<(), ZfsError> {
+    fn inner() -> std::result::Result<(), ZfsError> {
         Err(ZfsError::PoolError {
             message: "Inner error".to_string(),
         })
     }
 
     /// Outer
-    fn outer() -> Result<(), ZfsError> {
+    fn outer() -> std::result::Result<(), ZfsError> {
         inner().map_err(|e| ZfsError::CommandError {
             message: format!("Outer wrapping: {}", e),
         })
@@ -412,11 +412,11 @@ fn test_error_type_checking() {
 #[test]
 fn test_result_unwrap_or() {
     // Test unwrap_or with dynamic results (not compile-time known)
-    fn get_ok_result() -> Result<i32, ZfsError> {
+    fn get_ok_result() -> std::result::Result<i32, ZfsError> {
         Ok(42)
     }
     /// Gets Err Result
-    fn get_err_result() -> Result<i32, ZfsError> {
+    fn get_err_result() -> std::result::Result<i32, ZfsError> {
         Err(ZfsError::PoolError {
             message: "Error".to_string(),
         })
@@ -429,7 +429,7 @@ fn test_result_unwrap_or() {
 #[test]
 fn test_result_unwrap_or_else() {
     // Test unwrap_or with dynamic error (not compile-time known)
-    fn get_error() -> Result<i32, ZfsError> {
+    fn get_error() -> std::result::Result<i32, ZfsError> {
         Err(ZfsError::PoolError {
             message: "Error".to_string(),
         })
@@ -529,19 +529,19 @@ fn test_io_error_connection_refused() {
 #[test]
 fn test_error_in_function_chain() {
     /// Step1
-    fn step1() -> Result<i32, ZfsError> {
+    fn step1() -> std::result::Result<i32, ZfsError> {
         Ok(10)
     }
 
     /// Step2
-    fn step2(_input: i32) -> Result<i32, ZfsError> {
+    fn step2(_input: i32) -> std::result::Result<i32, ZfsError> {
         Err(ZfsError::PoolError {
             message: "Step 2 failed".to_string(),
         })
     }
 
     /// Step3
-    fn step3(_input: i32) -> Result<i32, ZfsError> {
+    fn step3(_input: i32) -> std::result::Result<i32, ZfsError> {
         Ok(30)
     }
 

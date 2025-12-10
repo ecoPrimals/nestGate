@@ -514,7 +514,6 @@ mod tests {
             assert!(!capability.endpoint.contains("squirrel"));
             assert!(!capability.endpoint.contains("toadstool"));
             assert!(!capability.endpoint.contains("biomeos"));
-            Ok(())
         }
         Ok(())
     }
@@ -528,7 +527,6 @@ mod tests {
         if let Some(capability) = discovery.get_capability("orchestration") {
             assert!(!capability.endpoint.is_empty());
             assert!(capability.confidence > 0.0);
-            Ok(())
         }
         Ok(())
     }

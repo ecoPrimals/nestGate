@@ -790,9 +790,39 @@ impl ClusterManager {
 impl Default for ClusterConfig {
     fn default() -> Self {
         // Use environment variable or default
-        let bind_addr = std::env::var("NESTGATE_CLUSTER_BIND")
-            .unwrap_or_else(|_| "0.0.0.0:8080".to_string());
-        let bind_endpoint = bind_addr.parse().expect("Invalid NESTGATE_CLUSTER_BIND address");
+        use crate::config::environment::EnvironmentConfig;
+        
+        let env_config = EnvironmentConfig::from_env()
+            .unwrap_or_else(|_| EnvironmentConfig::default());
+        
+        let bind_addr = env_config.network.host.clone();
+        let port = env_config.network.port.get();
+        let default_bind = format!("{}:{}", bind_addr, port);
+        
+        let bind_addr_str = std::env::var("NESTGATE_CLUSTER_BIND")
+            .unwrap_or(default_bind);
+        // Parse with fallback to default if invalid
+        let bind_endpoint = bind_addr_str.parse().unwrap_or_else(|_| {
+            tracing::warn!("Invalid NESTGATE_CLUSTER_BIND address '{}', using default", bind_addr_str);
+            format!("{}:{}", bind_addr, port).parse().unwrap_or_else(|_| {
+                // Final fallback using environment-driven defaults
+                let fallback_host = std::env::var("NESTGATE_FALLBACK_HOST")
+                    .unwrap_or_else(|_| bind_addr.clone());
+                format!("{}:{}", fallback_host, port)
+                    .parse()
+                    .unwrap_or_else(|_| {
+                        // Last resort: use loopback
+                        format!("127.0.0.1:{}", port)
+                            .parse()
+                            .expect("Localhost fallback must be valid")
+                    })
+            })
+        });
+        
+        let discovery_port = std::env::var("NESTGATE_DISCOVERY_PORT")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(ports::DISCOVERY_SERVICE);
         
         Self {
             cluster_name: "nestgate-cluster".to_string(),
@@ -803,8 +833,9 @@ impl Default for ClusterConfig {
             heartbeat_interval_ms: 1000,
             max_missed_heartbeats: 3,
             discovery_enabled: true,
-            discovery_multicast_endpoint: "224.0.0.1".to_string(),
-            discovery_port: 8081,
+            discovery_multicast_endpoint: std::env::var("NESTGATE_MULTICAST_ADDR")
+                .unwrap_or_else(|_| "224.0.0.1".to_string()),
+            discovery_port,
             encryption_enabled: true,
             cluster_secret: None,
         }
@@ -837,10 +868,18 @@ mod tests {
         // Test start
         manager.start().await?;
         
-        // Give some time for leader election
-        sleep(Duration::from_millis(100)).await;
+        // Modern pattern: Poll for leader election completion
+        // Leader election should be deterministic, not timing-based
+        let mut attempts = 0;
+        let status = loop {
+            let status = manager.get_status().await?;
+            if status.local_node_role == NodeRole::Leader || attempts >= 50 {
+                break status;
+            }
+            attempts += 1;
+            tokio::task::yield_now().await; // Allow other tasks to run
+        };
         
-        let status = manager.get_status().await?;
         assert_eq!(status.local_node_role, NodeRole::Leader); // Should become leader
         assert!(status.leader_id.is_some());
         

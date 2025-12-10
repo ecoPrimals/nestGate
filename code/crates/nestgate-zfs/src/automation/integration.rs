@@ -8,7 +8,7 @@
 use nestgate_core::config::canonical_primary::NestGateCanonicalConfig;
 use nestgate_core::Result;
 
-// Placeholder types until automation crate is fully integrated
+/// Intelligent dataset manager for automated operations
 pub struct IntelligentDatasetManager;
 /// Configuration for Automation
 pub struct AutomationConfig;
@@ -45,6 +45,7 @@ pub fn check_zfs_ecosystem_availability() -> bool {
     true
 }
 #[cfg(not(feature = "network-integration"))]
+/// Checks if ZFS ecosystem is available (stub for non-network builds).
 #[must_use]
 pub fn check_zfs_ecosystem_availability() -> bool {
     false

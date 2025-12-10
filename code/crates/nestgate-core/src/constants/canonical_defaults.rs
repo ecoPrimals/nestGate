@@ -67,6 +67,28 @@ pub mod network {
     };
 
     /// Build API URL from environment or default
+    ///
+    /// **DEPRECATED**: This function uses hardcoded localhost fallback which violates
+    /// the principle of capability-based discovery.
+    ///
+    /// # Migration
+    ///
+    /// Use `ServiceRegistry` for dynamic service discovery:
+    /// ```rust,ignore
+    /// let registry = ServiceRegistry::new(capabilities).await?;
+    /// let service = registry.find_by_capability(&capability).await?;
+    /// let url = service.url();
+    /// ```
+    ///
+    /// Or use environment variable directly without hardcoded fallback:
+    /// ```rust,ignore
+    /// let url = std::env::var("NESTGATE_API_URL")
+    ///     .map_err(|_| Error::configuration("NESTGATE_API_URL must be set"))?;
+    /// ```
+    #[deprecated(
+        since = "0.10.0",
+        note = "Use ServiceRegistry for capability-based discovery or require explicit environment configuration. Hardcoded localhost fallback will be removed."
+    )]
     #[must_use]
     pub fn build_api_url() -> String {
         safe_env_var_or_default("NESTGATE_API_URL", DEFAULT_API_BASE_URL).to_string()
@@ -85,18 +107,54 @@ pub mod network {
     }
 
     /// Build generic endpoint from environment
+    ///
+    /// **DEPRECATED**: See `build_api_url()` deprecation notice.
+    #[deprecated(
+        since = "0.10.0",
+        note = "Use ServiceRegistry for capability-based discovery. See build_api_url() for migration guide."
+    )]
     #[must_use]
     pub fn build_endpoint() -> String {
+        #[allow(deprecated)]
         build_api_url()
     }
 
     pub mod limits {
         //! Network limits and constraints
 
+        /// Maximum concurrent requests the system will handle simultaneously
+        ///
+        /// **Philosophy**: Balanced for typical server capacity without overwhelming system resources.
+        /// This prevents resource exhaustion attacks while allowing good throughput.
+        ///
+        /// **Override**: Set `NESTGATE_MAX_CONCURRENT_REQUESTS` environment variable for custom limits.
+        /// Consider your available memory (each request ~1-10MB) and CPU cores.
+        ///
+        /// **Evolution**: This will become capability-based discovery in future versions.
         pub const MAX_CONCURRENT_REQUESTS: usize = 1000;
 
+        /// Maximum size of a single HTTP request body in bytes
+        ///
+        /// **Philosophy**: 1MB strikes a balance between:
+        /// - Accepting reasonable payloads (JSON configs, small uploads)
+        /// - Preventing memory exhaustion from malicious large requests
+        ///
+        /// **Override**: Set `NESTGATE_MAX_REQUEST_SIZE` for your use case.
+        /// For file uploads, consider streaming instead of buffering entire request.
+        ///
+        /// **Evolution**: Will move to capability-based negotiation based on available memory.
         pub const MAX_REQUEST_SIZE: usize = 1024 * 1024; // 1MB
 
+        /// Connection establishment timeout in milliseconds
+        ///
+        /// **Philosophy**: 5 seconds allows for:
+        /// - Typical network conditions (local: <100ms, remote: <3s)
+        /// - DNS resolution time
+        /// - TLS handshake completion
+        ///
+        /// **When to adjust**: Increase for satellite/poor connections, decrease for local networks.
+        ///
+        /// **Evolution**: Will become dynamic based on connection history and network quality detection.
         pub const CONNECTION_TIMEOUT_MS: u64 = 5000;
     }
 }
@@ -132,39 +190,115 @@ pub mod performance {
     /// **Performance**: Matches page size, optimal for filesystem operations
     pub const DEFAULT_BUFFER_SIZE: usize = 4096;
 
+    /// Maximum number of persistent connections to maintain in the connection pool
+    ///
+    /// **Philosophy**: Connection pooling amortizes TCP/TLS handshake costs.
+    /// 1000 connections balances:
+    /// - Memory per connection (~4-8KB)
+    /// - File descriptor limits (typical: ulimit 1024-4096)
+    /// - Concurrent client capacity
+    ///
+    /// **Trade-offs**:
+    /// - More connections = higher memory but lower latency for new requests
+    /// - Fewer connections = lower memory but may need to establish connections
+    ///
+    /// **Evolution**: Will become adaptive based on:
+    /// - Available system resources (memory, file descriptors)
+    /// - Actual traffic patterns
+    /// - Connection reuse rates
     pub const MAX_CONNECTIONS: usize = 1000;
 }
 
 pub mod concurrency {
     //! Concurrency and threading defaults
+    //!
+    //! **Philosophy**: Balance parallelism with resource consumption.
+    //! Too many threads waste memory, too few underutilize CPUs.
 
     /// Default thread pool size
+    ///
+    /// **Rationale**: 8 threads balances:
+    /// - Typical multi-core systems (4-16 cores)
+    /// - Context switching overhead
+    /// - Memory per thread (~2-8MB stack)
+    ///
+    /// **Tuning**: Set to `num_cpus * 2` for I/O-bound work,
+    /// `num_cpus` for CPU-bound work.
+    ///
+    /// **Evolution**: Will become auto-tuned based on:
+    /// - Detected CPU count
+    /// - Workload characteristics (I/O vs CPU-bound)
+    /// - Available memory
     pub const DEFAULT_THREAD_POOL_SIZE: usize = 8;
 
     /// Default maximum connections
+    ///
+    /// **Rationale**: 1000 concurrent connections handles:
+    /// - Small to medium deployments
+    /// - Typical connection duration (100ms-10s)
+    /// - Memory per connection (~10-50KB)
+    ///
+    /// **Trade-offs**:
+    /// - More connections = Higher memory but better throughput
+    /// - Fewer connections = Lower memory but potential queuing
+    ///
+    /// **Evolution**: Will adapt to available memory and connection patterns.
     pub const DEFAULT_MAX_CONNECTIONS: usize = 1000;
 
-    /// Default worker count
+    /// Default worker count for background tasks
+    ///
+    /// **Rationale**: 4 workers provides:
+    /// - Parallel background processing
+    /// - Without overwhelming system
+    /// - Good for periodic tasks (cleanup, monitoring, etc.)
+    ///
+    /// **Use cases**: Maintenance tasks, cache warming, metrics collection
+    ///
+    /// **Evolution**: Will scale with system resources and task queue depth.
     pub const DEFAULT_WORKER_COUNT: usize = 4;
 
-    /// Default queue size
+    /// Default task queue size
+    ///
+    /// **Rationale**: 10,000 tasks allows:
+    /// - Burst traffic absorption
+    /// - Smooth out processing spikes
+    /// - ~10MB memory (1KB per task)
+    ///
+    /// **Back-pressure**: When queue fills, apply back-pressure to producers.
+    ///
+    /// **Evolution**: Will become adaptive based on:
+    /// - Producer rate
+    /// - Consumer rate
+    /// - Available memory
     pub const DEFAULT_QUEUE_SIZE: usize = 10000;
 
     /// Default maximum parallel tests
+    ///
+    /// **Rationale**: 4 parallel tests balances:
+    /// - Test execution speed
+    /// - Resource isolation (ports, files, etc.)
+    /// - Deterministic test results
+    ///
+    /// **Why not more?**: Tests may conflict on shared resources.
+    /// **Why not fewer?**: Underutilizes test infrastructure.
+    ///
+    /// **Override**: `RUST_TEST_THREADS=N` environment variable
     pub const DEFAULT_MAX_PARALLEL_TESTS: usize = 4;
 }
 
 pub mod sizes {
     //! Size and capacity defaults
+    //! **CONSOLIDATED**: Buffer sizes now reference hardcoding::limits
 
-    /// Default buffer size (4KB)
-    pub const DEFAULT_BUFFER_SIZE: usize = 4096;
+    /// Default buffer size - **CONSOLIDATED** to hardcoding::limits
+    pub const DEFAULT_BUFFER_SIZE: usize =
+        crate::constants::hardcoding::limits::BUFFER_SIZE_DEFAULT;
 
     /// Default cache size (128MB in bytes)
     pub const DEFAULT_CACHE_SIZE: u64 = 128 * 1024 * 1024;
 
-    /// Default page size (4KB)
-    pub const DEFAULT_PAGE_SIZE: usize = 4096;
+    /// Default page size (4KB) - **CONSOLIDATED** to hardcoding::limits
+    pub const DEFAULT_PAGE_SIZE: usize = crate::constants::hardcoding::limits::BUFFER_SIZE_DEFAULT;
 
     /// Default record size
     pub const DEFAULT_RECORD_SIZE: usize = 256;
@@ -183,8 +317,10 @@ pub mod timeouts {
     /// Default timeout in milliseconds
     pub const DEFAULT_TIMEOUT_MS: u64 = 5000;
 
+    /// Connection timeout in milliseconds (3 seconds)
     pub const CONNECTION_TIMEOUT_MS: u64 = 3000;
 
+    /// Request timeout in milliseconds (10 seconds)
     pub const REQUEST_TIMEOUT_MS: u64 = 10000;
 
     /// Default connection timeout as Duration

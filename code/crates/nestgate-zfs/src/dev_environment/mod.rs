@@ -15,6 +15,7 @@
 // means (filesystem operations, system calls, etc.).
 
 #[cfg(feature = "dev-environment-fallbacks")]
+/// Hardware detection for development environments
 pub mod hardware_detector;
 #[cfg(feature = "dev-environment-fallbacks")]
 pub mod storage_abstraction;
