@@ -43,7 +43,7 @@
 // ## Example Test Pattern
 //
 // ```rust
-// fn test_dependency_resolution() -> Result<(), Box<dyn std::error::Error>> {
+// fn test_dependency_resolution() -> std::result::Result<(), Box<dyn std::error::Error>> {
 //     let dependencies = resolve_dependencies(&test_config());
 //     assert!(dependencies.contains(&Dependency::ZFS));
 //     assert_eq!(dependencies.len(), expected_count());
@@ -53,8 +53,7 @@
 #[cfg(test)]
 // Basic installer tests
 #[test]
-#[test]
-fn test_installer_basic() -> Result<(), Box<dyn std::error::Error>> {
+fn test_installer_basic() -> std::result::Result<(), Box<dyn std::error::Error>> {
     // Test that installer module exists and can be accessed
     use nestgate_installer::platform::PlatformInfo;
     let platform = PlatformInfo::detect();
@@ -63,14 +62,14 @@ fn test_installer_basic() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
-fn test_system_compatibility() -> Result<(), Box<dyn std::error::Error>> {
+fn test_system_compatibility() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let os = std::env::consts::OS;
     assert_eq!(os, "linux");
     Ok(())
 }
 
 #[test]
-fn test_path_validation() -> Result<(), Box<dyn std::error::Error>> {
+fn test_path_validation() -> std::result::Result<(), Box<dyn std::error::Error>> {
     use std::path::PathBuf;
     let path = PathBuf::from("/opt/nestgate");
     assert!(path.is_absolute());

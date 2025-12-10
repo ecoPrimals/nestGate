@@ -60,14 +60,17 @@ impl Default for StubConfig {
 }
 
 impl MockingConfig {
+    /// Creates a CI-optimized mocking configuration
     #[must_use]
     pub fn ci_optimized() -> Self {
         Self::default()
     }
+    /// Creates a development-optimized mocking configuration
     #[must_use]
     pub fn development_optimized() -> Self {
         Self::default()
     }
+    /// Merges this configuration with another, taking precedence
     #[must_use]
     pub fn merge(self, _other: Self) -> Self {
         self

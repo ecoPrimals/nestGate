@@ -65,6 +65,7 @@ enum ServiceState {
 }
 
 /// Primal service information
+#[allow(dead_code)] // Test infrastructure
 struct PrimalService {
     primal_type: PrimalType,
     state: Arc<AtomicU8>,

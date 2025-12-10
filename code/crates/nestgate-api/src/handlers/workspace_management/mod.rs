@@ -84,7 +84,6 @@ impl Default for WorkspaceManager {
 impl WorkspaceManager {
     /// Create a new workspace manager instance
     #[must_use]
-    /// Fn
     pub const fn new() -> Self {
         Self {
             // Initialize with default configuration

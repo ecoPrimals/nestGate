@@ -93,13 +93,27 @@ impl Default for UnifiedAdapterConfig {
             timeouts: UnifiedTimeoutConfig::default(),
             retry: UnifiedRetryConfig::critical_operations(),
         };
+        
+        use crate::config::environment::EnvironmentConfig;
+        let env_config = EnvironmentConfig::from_env()
+            .unwrap_or_else(|_| EnvironmentConfig::default());
+        
+        let discovery_endpoint = std::env::var("NESTGATE_DISCOVERY_ENDPOINT")
+            .unwrap_or_else(|_| {
+                format!(
+                    "http://{}:{}/discover",
+                    env_config.network.host,
+                    env_config.network.port.get()
+                )
+            });
+        
         Self {
             service,
             network: UnifiedNetworkConfig::default(),
             security: UnifiedSecurityConfig::default(),
             monitoring: UnifiedMonitoringConfig::default(),
             adapter: AdapterExtensions {
-                discovery_endpoint: "http://localhost:8080/discover".to_string(),
+                discovery_endpoint,
                 service_registration: ServiceRegistration::default(),
                 monitoring_enabled: true,
                 proxy_settings: None,

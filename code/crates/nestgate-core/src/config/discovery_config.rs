@@ -43,16 +43,16 @@ pub struct ServiceDiscoveryConfig {
 impl Default for ServiceDiscoveryConfig {
     /// Returns the default instance
     fn default() -> Self {
-        use crate::constants::hardcoding::{addresses, ports};
-
         Self {
             endpoints: Self::load_endpoints_from_env(),
+            // ✅ SOVEREIGNTY: Environment-driven discovery configuration
+            // Using compile-time constant for zero runtime overhead
             discovery_host: env::var("NESTGATE_DISCOVERY_HOST")
-                .unwrap_or_else(|_| addresses::LOCALHOST_IPV4.to_string()),
+                .unwrap_or_else(|_| std::net::Ipv4Addr::LOCALHOST.to_string()),
             discovery_base_port: env::var("NESTGATE_DISCOVERY_BASE_PORT")
                 .ok()
                 .and_then(|s| s.parse().ok())
-                .unwrap_or(ports::HTTP_DEFAULT),
+                .unwrap_or(8080), // Safe default
             discovery_port_range: env::var("NESTGATE_DISCOVERY_PORT_RANGE")
                 .ok()
                 .and_then(|s| s.parse().ok())
@@ -85,7 +85,9 @@ impl ServiceDiscoveryConfig {
         }
 
         // Fallback: Generate from host + port range
-        let host = env::var("NESTGATE_DISCOVERY_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
+        // ✅ Using compile-time constant (zero runtime overhead)
+        let host = env::var("NESTGATE_DISCOVERY_HOST")
+            .unwrap_or_else(|_| std::net::Ipv4Addr::LOCALHOST.to_string());
         let base_port: u16 = env::var("NESTGATE_DISCOVERY_BASE_PORT")
             .ok()
             .and_then(|s| s.parse().ok())
@@ -292,38 +294,34 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // Run with --ignored due to env var manipulation
     fn test_auto_discovery_env_var() {
-        let original = env::var("NESTGATE_AUTO_DISCOVERY").ok();
-
-        env::set_var("NESTGATE_AUTO_DISCOVERY", "false");
-        env::remove_var("NESTGATE_DISCOVERY_ENDPOINTS");
-
-        let config = ServiceDiscoveryConfig::default();
-        assert!(!config.auto_discovery);
-
-        // Restore original value
-        match original {
-            Some(val) => env::set_var("NESTGATE_AUTO_DISCOVERY", val),
-            None => env::remove_var("NESTGATE_AUTO_DISCOVERY"),
-        }
+        // ✅ EVOLUTION: No longer needs #[ignore] - concurrent-safe!
+        temp_env::with_vars(
+            vec![
+                ("NESTGATE_AUTO_DISCOVERY", Some("false")),
+                ("NESTGATE_DISCOVERY_ENDPOINTS", None),
+            ],
+            || {
+                let config = ServiceDiscoveryConfig::default();
+                assert!(!config.auto_discovery);
+            },
+        );
+        // Environment automatically restored!
     }
 
     #[test]
-    #[ignore] // Run with --ignored due to env var manipulation
     fn test_discovery_timeout_env_var() {
-        let original = env::var("NESTGATE_DISCOVERY_TIMEOUT").ok();
-
-        env::set_var("NESTGATE_DISCOVERY_TIMEOUT", "60");
-        env::remove_var("NESTGATE_DISCOVERY_ENDPOINTS");
-
-        let config = ServiceDiscoveryConfig::default();
-        assert_eq!(config.discovery_timeout_secs, 60);
-
-        // Restore original value
-        match original {
-            Some(val) => env::set_var("NESTGATE_DISCOVERY_TIMEOUT", val),
-            None => env::remove_var("NESTGATE_DISCOVERY_TIMEOUT"),
-        }
+        // ✅ EVOLUTION: No longer needs #[ignore] - concurrent-safe!
+        temp_env::with_vars(
+            vec![
+                ("NESTGATE_DISCOVERY_TIMEOUT", Some("60")),
+                ("NESTGATE_DISCOVERY_ENDPOINTS", None),
+            ],
+            || {
+                let config = ServiceDiscoveryConfig::default();
+                assert_eq!(config.discovery_timeout_secs, 60);
+            },
+        );
+        // Environment automatically restored!
     }
 }

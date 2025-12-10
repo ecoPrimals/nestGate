@@ -303,8 +303,8 @@ mod tests {
         // Set a short timeout
         manager.set_timeout(Duration::from_millis(10));
 
-        // Sleep to make sessions expire
-        std::thread::sleep(Duration::from_millis(20));
+        // Sleep to make sessions expire (non-blocking, concurrent)
+        tokio::time::sleep(Duration::from_millis(20)).await;
 
         // Clean up expired sessions
         let cleaned = manager.cleanup_expired();

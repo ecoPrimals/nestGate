@@ -516,7 +516,7 @@ impl Default for PrimalEndpointSettings {
         let config = get_config();
         let host = config.network.api_host.to_string();
         let port = config.network.api_port
-            .unwrap_or(ports::HTTP_DEFAULT);
+            .unwrap_or(8080); // Standard HTTP alternate port
         
         Self {
             base_url: format!("http://{}:{}", host, port),

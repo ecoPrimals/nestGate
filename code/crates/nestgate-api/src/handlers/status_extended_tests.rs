@@ -19,20 +19,22 @@ fn test_system_status_uptime_increases() {
     initialize_uptime();
 
     let status1 = get_status();
-    std::thread::sleep(std::time::Duration::from_millis(100));
+    // Modern pattern: Test monotonicity without artificial delay
+    // Uptime is based on actual elapsed time since initialization
     let status2 = get_status();
 
-    // Second uptime should be >= first uptime
+    // Second uptime should be >= first uptime (monotonic guarantee)
     assert!(status2.0.uptime >= status1.0.uptime);
 }
 
 #[test]
 fn test_system_status_timestamp_increases() {
     let status1 = get_status();
-    std::thread::sleep(std::time::Duration::from_millis(10));
+    // Modern pattern: Test timestamp monotonicity without sleep
+    // System time has nanosecond precision
     let status2 = get_status();
 
-    // Second timestamp should be >= first timestamp
+    // Second timestamp should be >= first timestamp (monotonic guarantee)
     assert!(status2.0.timestamp >= status1.0.timestamp);
 }
 

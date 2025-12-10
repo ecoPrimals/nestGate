@@ -13,11 +13,15 @@
 
 //! Config module
 
+/// Automation configuration settings
 pub mod automation;
+/// Health monitoring configuration
 pub mod health;
 pub mod metrics;
 // Migration module removed as part of cleanup
+/// Pool configuration settings
 pub mod pool;
+/// Security configuration settings
 pub mod security;
 pub mod tiers;
 // unified_zfs_config removed - use canonical types from nestgate_core

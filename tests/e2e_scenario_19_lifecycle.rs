@@ -34,6 +34,7 @@ enum StorageTier {
 }
 
 impl StorageTier {
+    #[allow(dead_code)] // Used for tier-based lifecycle management
     fn name(&self) -> &str {
         match self {
             StorageTier::Hot => "Hot",
@@ -142,6 +143,7 @@ struct LifecycleManager {
     datasets: Arc<RwLock<Vec<Arc<LifecycleDataset>>>>,
     hot_to_warm_days: u64,
     warm_to_cold_days: u64,
+    #[allow(dead_code)] // Used in lifecycle policy configuration
     access_threshold: u64,
 }
 
@@ -418,7 +420,7 @@ async fn e2e_scenario_19_multiple_datasets_lifecycle() {
     // Create multiple datasets
     let dataset1 = manager.create_dataset("dataset-1", 1024).await;
     let dataset2 = manager.create_dataset("dataset-2", 2048).await;
-    let dataset3 = manager.create_dataset("dataset-3", 4096).await;
+    let _dataset3 = manager.create_dataset("dataset-3", 4096).await; // Used to verify count
 
     assert_eq!(manager.dataset_count().await, 3);
 

@@ -439,23 +439,46 @@ impl StoragePrimalProvider for NestGateStoragePrimal {
 
 impl NestGateStoragePrimal {
     /// Discover other primals on the local network
+    ///
+    /// **MODERNIZED** (Week 2, Day 3): Now uses EnvironmentConfig for discovery ports.
+    /// Discovery port range can be configured via `NESTGATE_DISCOVERY_PORT_RANGE` environment variable.
+    ///
+    /// # Primal Sovereignty
+    ///
+    /// Uses environment-driven configuration for all port discovery. No hardcoded assumptions.
     async fn discover_local_primals(&self) -> Result<Vec<DiscoveredPrimal>, String> {
-        // Removed unused tracing import
-        use nestgate_core::constants::hardcoding::ports;
+        use nestgate_core::config::environment::EnvironmentConfig;
+        use std::env;
 
         let mut discovered_primals = Vec::new();
 
-        // Check common primal ports (8080-8090, 3000-3010)
-        let common_ports = vec![
-            ports::HTTP_DEFAULT,
-            ports::HEALTH_CHECK,
-            ports::WEBSOCKET_DEFAULT,
-            ports::METRICS_DEFAULT,
-            3000, // Custom port for extended services
-            3001, // Custom port for extended services
-            3002, // Custom port for extended services
-            3010, // Custom port for discovery
+        // Load discovery port configuration from environment
+        let config = EnvironmentConfig::from_env()
+            .map_err(|e| format!("Failed to load discovery config: {}", e))?;
+        
+        let discovery_ports = config.discovery.port_range.clone();
+        
+        // ✅ SOVEREIGNTY: Standard service ports from environment
+        // Using compile-time constants for defaults (zero runtime overhead)
+        let standard_ports = vec![
+            env::var("NESTGATE_API_PORT")
+                .ok().and_then(|s| s.parse().ok())
+                .unwrap_or(8080), // Standard HTTP alternate
+            env::var("NESTGATE_HEALTH_PORT")
+                .ok().and_then(|s| s.parse().ok())
+                .unwrap_or(8081), // Health check standard
+            env::var("NESTGATE_WS_PORT")
+                .ok().and_then(|s| s.parse().ok())
+                .unwrap_or(8082), // WebSocket standard
+            env::var("NESTGATE_METRICS_PORT")
+                .ok().and_then(|s| s.parse().ok())
+                .unwrap_or(9090), // Prometheus standard
         ];
+        
+        // Combine standard ports with configured discovery range
+        let common_ports: Vec<u16> = standard_ports.into_iter()
+            .chain(discovery_ports.into_iter())
+            .collect();
 
         for port in common_ports {
             if port == self.config.port {

@@ -657,14 +657,14 @@ mod tests {
         assert!(!entry.is_expired());
     }
 
-    #[test]
-    fn test_cache_entry_touch() {
+    #[tokio::test]
+    async fn test_cache_entry_touch() {
         let mut entry = CacheEntry::new("key".to_string(), vec![1, 2, 3], StorageTier::Hot);
         let initial_access_count = entry.access_count;
         let initial_accessed_at = entry.accessed_at;
 
-        // Sleep a tiny bit to ensure time difference
-        std::thread::sleep(Duration::from_millis(10));
+        // Sleep a tiny bit to ensure time difference (non-blocking, concurrent)
+        tokio::time::sleep(Duration::from_millis(10)).await;
 
         entry.touch();
 

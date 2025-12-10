@@ -50,8 +50,9 @@ use std::sync::Arc;
 /// - ✅ Compiler-verified memory safety
 /// - ✅ No data races possible
 /// - ✅ No use-after-free possible
+///
+/// Safe concurrent queue
 #[derive(Debug, Clone)]
-/// Safeconcurrentqueue
 pub struct SafeConcurrentQueue<T> {
     sender: Sender<T>,
     receiver: Arc<Receiver<T>>,

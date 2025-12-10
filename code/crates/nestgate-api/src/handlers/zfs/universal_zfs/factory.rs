@@ -92,13 +92,13 @@ impl ZfsServiceFactory {
                     ));
                 fail_safe_service.with_fallback(fallback_enum)
             } else {
-                /// Fail Safe Service
+                // Fail Safe Service
                 fail_safe_service
             };
 
             Arc::new(fail_safe_service) as Arc<dyn UniversalZfsService>
         } else {
-            /// Primary Service
+            // Primary Service
             primary_service
         };
 

@@ -24,7 +24,7 @@ use tokio::sync::{RwLock, Semaphore};
 
 /// Simulated dataset with thread-safe operations
 struct Dataset {
-    id: String,
+    _id: String,
     size: AtomicU64,
     is_deleted: AtomicBool,
     metadata: Arc<RwLock<HashMap<String, String>>>,
@@ -33,7 +33,7 @@ struct Dataset {
 impl Dataset {
     fn new(id: &str) -> Self {
         Self {
-            id: id.to_string(),
+            _id: id.to_string(),
             size: AtomicU64::new(0),
             is_deleted: AtomicBool::new(false),
             metadata: Arc::new(RwLock::new(HashMap::new())),
@@ -64,6 +64,7 @@ impl Dataset {
         Ok(())
     }
 
+    #[allow(dead_code)]
     async fn get_metadata(&self, key: &str) -> Result<Option<String>, String> {
         if self.is_deleted.load(Ordering::SeqCst) {
             return Err("Dataset is deleted".to_string());
@@ -432,10 +433,11 @@ async fn e2e_scenario_11_resource_cleanup() {
         let handles: Vec<_> = (0..20)
             .map(|i| {
                 let manager = manager.clone();
+                // ✅ EVOLUTION: No sleep - truly concurrent create/delete
                 tokio::spawn(async move {
                     let id = format!("temp-{}-{}", round, i);
                     manager.create_dataset(&id).await.ok();
-                    tokio::time::sleep(tokio::time::Duration::from_millis(5)).await;
+                    // Delete immediately - tests real concurrency
                     manager.delete_dataset(&id).await.ok();
                 })
             })
@@ -512,17 +514,26 @@ async fn e2e_scenario_11_locking_mechanism() {
     let datasets = manager.datasets.clone();
 
     // Try to acquire multiple locks
+    // ✅ EVOLUTION: Event-driven lock testing
+    // Test write lock with explicit coordination
+    use tokio::sync::oneshot;
+
+    let (ready_tx, ready_rx) = oneshot::channel();
+
     let handle1 = {
         let datasets = datasets.clone();
         tokio::spawn(async move {
             let _lock = datasets.write().await;
+            ready_tx.send(()).ok(); // Signal that we have the write lock
             tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
             "write-lock-1"
         })
     };
 
-    tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
+    // Wait for write lock to be acquired
+    ready_rx.await.ok();
 
+    // Now try read lock - should wait for write to complete
     let handle2 = {
         let datasets = datasets.clone();
         tokio::spawn(async move {

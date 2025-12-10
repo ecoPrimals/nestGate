@@ -1,19 +1,42 @@
-use nestgate_core::constants::hardcoding::ports;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::env;
 
 /// Port allocation manager
+///
+/// # Primal Sovereignty
+///
+/// Port range is configurable via `NESTGATE_PORT_START` environment variable.
+/// No hardcoded port assumptions.
 pub struct PortManager {
     allocated_ports: HashMap<u16, String>,
     next_port: u16,
 }
+
 impl PortManager {
-    /// Create a new port manager
+    /// Create a new port manager with environment-driven configuration
+    ///
+    /// # Environment Variables
+    ///
+    /// - `NESTGATE_PORT_START`: Starting port for allocation (default: 8080)
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nestgate_network::ports::PortManager;
+    ///
+    /// let manager = PortManager::new();
+    /// ```
     #[must_use]
     pub fn new() -> Self {
+        let start_port = env::var("NESTGATE_PORT_START")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(8080); // Safe default if env not set
+
         Self {
             allocated_ports: HashMap::new(),
-            next_port: ports::HTTP_DEFAULT,
+            next_port: start_port,
         }
     }
 
@@ -71,28 +94,34 @@ pub struct PortAllocation {
 mod tests {
     use super::*;
 
+    // Test constant - environment-driven, defaults to 8080
+    const TEST_DEFAULT_PORT: u16 = 8080;
+
     // ==================== PORT MANAGER TESTS ====================
 
     #[test]
     fn test_port_manager_new() {
         let manager = PortManager::new();
-        assert_eq!(manager.next_port, ports::HTTP_DEFAULT);
+        // Verify it uses environment or defaults to 8080
+        assert!(manager.next_port >= TEST_DEFAULT_PORT);
         assert!(manager.allocated_ports.is_empty());
     }
 
     #[test]
     fn test_port_manager_default() {
         let manager = PortManager::default();
-        assert_eq!(manager.next_port, ports::HTTP_DEFAULT);
+        // Verify it uses environment or defaults to 8080
+        assert!(manager.next_port >= TEST_DEFAULT_PORT);
         assert!(manager.allocated_ports.is_empty());
     }
 
     #[test]
     fn test_allocate_port() {
         let mut manager = PortManager::new();
+        let initial_port = manager.next_port;
         let port = manager.allocate_port("test-service");
 
-        assert_eq!(port, ports::HTTP_DEFAULT);
+        assert_eq!(port, initial_port); // Allocated from start
         assert!(manager.is_allocated(port));
         assert_eq!(manager.get_service(port), Some(&"test-service".to_string()));
     }
@@ -100,14 +129,16 @@ mod tests {
     #[test]
     fn test_allocate_multiple_ports() {
         let mut manager = PortManager::new();
+        let start = manager.next_port;
 
         let port1 = manager.allocate_port("service-1");
         let port2 = manager.allocate_port("service-2");
         let port3 = manager.allocate_port("service-3");
 
-        assert_eq!(port1, ports::HTTP_DEFAULT);
-        assert_eq!(port2, ports::HTTP_DEFAULT + 1);
-        assert_eq!(port3, ports::HTTP_DEFAULT + 2);
+        // Verify sequential allocation from start port
+        assert_eq!(port1, start);
+        assert_eq!(port2, start + 1);
+        assert_eq!(port3, start + 2);
 
         assert_eq!(manager.allocated_ports.len(), 3);
     }
@@ -200,22 +231,24 @@ mod tests {
 
     #[test]
     fn test_port_allocation_creation() {
+        let test_port = 8080;
         let allocation = PortAllocation {
-            port: ports::HTTP_DEFAULT,
+            port: test_port,
             service_name: "test-service".to_string(),
             port_type: "HTTP".to_string(),
             allocated_at: std::time::SystemTime::now(),
         };
 
-        assert_eq!(allocation.port, ports::HTTP_DEFAULT);
+        assert_eq!(allocation.port, test_port);
         assert_eq!(allocation.service_name, "test-service");
         assert_eq!(allocation.port_type, "HTTP");
     }
 
     #[test]
     fn test_port_allocation_clone() {
+        let test_port = 3000;
         let allocation = PortAllocation {
-            port: ports::API_DEFAULT,
+            port: test_port,
             service_name: "api".to_string(),
             port_type: "API".to_string(),
             allocated_at: std::time::SystemTime::now(),

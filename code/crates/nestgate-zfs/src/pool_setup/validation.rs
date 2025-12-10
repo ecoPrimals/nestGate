@@ -23,6 +23,7 @@ pub struct ValidationResult {
     pub warnings: Vec<String>,
 }
 impl ValidationResult {
+    /// Creates a new validation result with default values.
     #[must_use]
     pub fn new() -> Self {
         Self {
@@ -58,6 +59,7 @@ pub struct PoolSetupValidator {
     config: PoolSetupConfig,
 }
 impl PoolSetupValidator {
+    /// Creates a new pool setup validator with the given configuration.
     #[must_use]
     pub fn new(config: PoolSetupConfig) -> Self {
         Self { config }

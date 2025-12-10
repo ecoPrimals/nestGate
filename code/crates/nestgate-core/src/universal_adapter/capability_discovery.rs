@@ -17,7 +17,7 @@ use super::capability_endpoints_config::CapabilityEndpointsConfig;
 /// Capability type identifier
 ///
 /// **NO HARDCODED PRIMAL NAMES**: Use generic capability types like
-/// "networking", "security", "storage", not primal names like "songbird".
+/// "networking", "security", "storage", never specific implementation names.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 /// Capabilitytype
 pub struct CapabilityType(String);
@@ -96,7 +96,7 @@ impl CapabilityType {
 /// Capability provider information
 ///
 /// **IMPORTANT**: This describes what a service CAN DO, not who/what it is.
-/// We never store primal names like "songbird" or "beardog" here.
+/// Capability-based discovery only - no hardcoded implementation names.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 /// Capabilityprovider
 pub struct CapabilityProvider {
@@ -125,8 +125,8 @@ impl CapabilityProvider {
 /// Capability discovery system
 ///
 /// **NO HARDCODING**: Discovers capabilities at runtime without knowing
-/// which primal provides them. Works with existing primals (Songbird, BearDog)
-/// and future primals that don't exist yet.
+/// which specific implementation provides them. Works with any provider implementing
+/// the capability interface, present or future.
 pub struct CapabilityDiscovery {
     /// Known capability providers (discovered at runtime)
     providers: Arc<tokio::sync::RwLock<HashMap<String, CapabilityProvider>>>,
@@ -144,7 +144,7 @@ impl CapabilityDiscovery {
     ///
     /// **Example**:
     /// ```rust,ignore
-    /// // Discover ANY networking provider (could be Songbird, or something else)
+    /// // Discover ANY networking provider (implementation-agnostic)
     /// let networking_providers = discovery
     ///     .discover(CapabilityType::networking())
     ///     .await?;
@@ -171,7 +171,7 @@ impl CapabilityDiscovery {
     /// Discover providers via multiple mechanisms
     ///
     /// **NO HARDCODING**: Uses environment, mDNS, service registry, etc.
-    /// Never hardcodes "connect to songbird at X" or "beardog at Y"
+    /// Never hardcodes specific service endpoints - all discovered dynamically
     ///
     /// **Current Implementation**:
     /// - ✅ Environment variable discovery (working)
@@ -209,7 +209,7 @@ impl CapabilityDiscovery {
     /// - `CAPABILITY_NETWORKING_ENDPOINT=http://localhost:{port}`
     /// - `CAPABILITY_SECURITY_ENDPOINT=http://localhost:{port}`
     ///
-    /// **NO PRIMAL NAMES**: We don't use `SONGBIRD_ENDPOINT` or `BEARDOG_ENDPOINT`
+    /// **NO HARDCODED NAMES**: Use capability-based env vars like `CAPABILITY_*_ENDPOINT`
     async fn discover_from_env(&self) -> Result<()> {
         // Use config to get environment variables
         let config = CapabilityEndpointsConfig::from_env();
@@ -309,9 +309,9 @@ mod tests {
         let networking = CapabilityType::networking();
         let security = CapabilityType::security();
 
-        // These are capability types, NOT primal names
-        assert_eq!(networking.as_str(), "networking"); // Not "songbird"!
-        assert_eq!(security.as_str(), "security"); // Not "beardog"!
+        // These are capability types, NOT implementation-specific names
+        assert_eq!(networking.as_str(), "networking"); // Generic capability
+        assert_eq!(security.as_str(), "security"); // Generic capability
     }
 
     #[tokio::test]

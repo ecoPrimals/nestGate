@@ -1,11 +1,15 @@
 //! Comprehensive tests for network_defaults module
 //!
-//! Tests verify environment variable handling, constants, and edge cases
+//! **MODERNIZED FOR CONCURRENT TESTING:**
+//! - Uses `NetworkDefaultsConfig` for dependency injection
+//! - No environment variable pollution
+//! - All tests run in parallel safely
+//! - Removed all `#[serial_test::serial]` attributes
 
 #[cfg(test)]
 mod tests {
     use crate::constants::network_defaults::*;
-    use std::env;
+    use crate::constants::network_defaults_config::NetworkDefaultsConfig;
     use std::net::{Ipv4Addr, Ipv6Addr};
 
     #[test]
@@ -45,201 +49,183 @@ mod tests {
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_get_bind_address_default() {
-        env::remove_var("NESTGATE_BIND_ADDRESS");
-        let addr = get_bind_address();
+        // ✅ MODERNIZED: Use config instead of env vars (concurrent-safe!)
+        let config = NetworkDefaultsConfig::new();
+        let addr = config.get_bind_address();
         assert_eq!(addr, "0.0.0.0");
         assert!(!addr.is_empty());
     }
 
     #[test]
-    #[serial_test::serial]
-    fn test_get_bind_address_with_env() {
-        env::set_var("NESTGATE_BIND_ADDRESS", "127.0.0.1");
-        let addr = get_bind_address();
+    fn test_get_bind_address_with_custom() {
+        // ✅ MODERNIZED: Inject config (no env pollution!)
+        let config = NetworkDefaultsConfig::new().with_bind_address("127.0.0.1".to_string());
+        let addr = config.get_bind_address();
         assert_eq!(addr, "127.0.0.1");
-        env::remove_var("NESTGATE_BIND_ADDRESS");
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_get_bind_address_with_custom_ip() {
-        env::set_var("NESTGATE_BIND_ADDRESS", "192.168.1.100");
-        let addr = get_bind_address();
+        // ✅ MODERNIZED: Builder pattern (parallel-safe!)
+        let config = NetworkDefaultsConfig::new().with_bind_address("192.168.1.100".to_string());
+        let addr = config.get_bind_address();
         assert_eq!(addr, "192.168.1.100");
-        env::remove_var("NESTGATE_BIND_ADDRESS");
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_get_api_host_default() {
-        env::remove_var("NESTGATE_API_HOST");
-        let host = get_api_host();
+        // ✅ MODERNIZED: Concurrent-safe config pattern
+        let config = NetworkDefaultsConfig::new();
+        let host = config.get_api_host();
         assert_eq!(host, "localhost");
         assert!(!host.is_empty());
     }
 
     #[test]
-    #[serial_test::serial]
-    fn test_get_api_host_with_env() {
-        env::set_var("NESTGATE_API_HOST", "api.example.com");
-        let host = get_api_host();
+    fn test_get_api_host_with_custom() {
+        // ✅ MODERNIZED: No env vars = no race conditions
+        let config = NetworkDefaultsConfig::new().with_api_host("api.example.com".to_string());
+        let host = config.get_api_host();
         assert_eq!(host, "api.example.com");
-        env::remove_var("NESTGATE_API_HOST");
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_get_api_host_with_ip() {
-        env::set_var("NESTGATE_API_HOST", "10.0.0.5");
-        let host = get_api_host();
+        // ✅ MODERNIZED: Builder pattern for all variations
+        let config = NetworkDefaultsConfig::new().with_api_host("10.0.0.5".to_string());
+        let host = config.get_api_host();
         assert_eq!(host, "10.0.0.5");
-        env::remove_var("NESTGATE_API_HOST");
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_get_db_host_default() {
-        env::remove_var("NESTGATE_DB_HOST");
-        let host = get_db_host();
+        // ✅ MODERNIZED: Config injection pattern
+        let config = NetworkDefaultsConfig::new();
+        let host = config.get_db_host();
         assert_eq!(host, "localhost");
     }
 
     #[test]
-    #[serial_test::serial]
-    fn test_get_db_host_with_env() {
-        env::set_var("NESTGATE_DB_HOST", "db.example.com");
-        let host = get_db_host();
+    fn test_get_db_host_with_custom() {
+        // ✅ MODERNIZED: Concurrent-safe
+        let config = NetworkDefaultsConfig::new().with_db_host("db.example.com".to_string());
+        let host = config.get_db_host();
         assert_eq!(host, "db.example.com");
-        env::remove_var("NESTGATE_DB_HOST");
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_get_db_host_with_ip() {
-        env::set_var("NESTGATE_DB_HOST", "172.16.0.10");
-        let host = get_db_host();
+        // ✅ MODERNIZED: Parallel-safe testing
+        let config = NetworkDefaultsConfig::new().with_db_host("172.16.0.10".to_string());
+        let host = config.get_db_host();
         assert_eq!(host, "172.16.0.10");
-        env::remove_var("NESTGATE_DB_HOST");
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_get_redis_host_default() {
-        env::remove_var("NESTGATE_REDIS_HOST");
-        let host = get_redis_host();
+        // ✅ MODERNIZED: Config-based testing
+        let config = NetworkDefaultsConfig::new();
+        let host = config.get_redis_host();
         assert_eq!(host, "localhost");
     }
 
     #[test]
-    #[serial_test::serial]
-    fn test_get_redis_host_with_env() {
-        env::set_var("NESTGATE_REDIS_HOST", "redis.example.com");
-        let host = get_redis_host();
+    fn test_get_redis_host_with_custom() {
+        // ✅ MODERNIZED: No serial needed
+        let config = NetworkDefaultsConfig::new().with_redis_host("redis.example.com".to_string());
+        let host = config.get_redis_host();
         assert_eq!(host, "redis.example.com");
-        env::remove_var("NESTGATE_REDIS_HOST");
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_get_redis_host_with_ip() {
-        env::set_var("NESTGATE_REDIS_HOST", "10.1.2.3");
-        let host = get_redis_host();
+        // ✅ MODERNIZED: Truly concurrent
+        let config = NetworkDefaultsConfig::new().with_redis_host("10.1.2.3".to_string());
+        let host = config.get_redis_host();
         assert_eq!(host, "10.1.2.3");
-        env::remove_var("NESTGATE_REDIS_HOST");
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_is_production_true() {
-        env::set_var("NESTGATE_ENVIRONMENT", "production");
-        assert!(is_production());
-        env::remove_var("NESTGATE_ENVIRONMENT");
+        // ✅ MODERNIZED: Config-based environment detection
+        let config = NetworkDefaultsConfig::new().with_environment("production".to_string());
+        assert!(config.is_production());
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_is_production_true_uppercase() {
-        env::set_var("NESTGATE_ENVIRONMENT", "PRODUCTION");
-        assert!(is_production());
-        env::remove_var("NESTGATE_ENVIRONMENT");
+        // ✅ MODERNIZED: Case-insensitive check
+        let config = NetworkDefaultsConfig::new().with_environment("PRODUCTION".to_string());
+        assert!(config.is_production());
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_is_production_true_short() {
-        env::set_var("NESTGATE_ENVIRONMENT", "prod");
-        assert!(is_production());
-        env::remove_var("NESTGATE_ENVIRONMENT");
+        // ✅ MODERNIZED: Short form support
+        let config = NetworkDefaultsConfig::new().with_environment("prod".to_string());
+        assert!(config.is_production());
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_is_production_false_development() {
-        env::set_var("NESTGATE_ENVIRONMENT", "development");
-        assert!(!is_production());
-        env::remove_var("NESTGATE_ENVIRONMENT");
+        // ✅ MODERNIZED: Development detection
+        let config = NetworkDefaultsConfig::new().with_environment("development".to_string());
+        assert!(!config.is_production());
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_is_production_false_default() {
-        env::remove_var("NESTGATE_ENVIRONMENT");
-        assert!(!is_production()); // Default is not production
+        // ✅ MODERNIZED: Default environment
+        let config = NetworkDefaultsConfig::new();
+        assert!(!config.is_production()); // Default is not production
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_is_development_true() {
-        env::set_var("NESTGATE_ENVIRONMENT", "development");
-        assert!(is_development());
-        env::remove_var("NESTGATE_ENVIRONMENT");
+        // ✅ MODERNIZED: Explicit development config
+        let config = NetworkDefaultsConfig::new().with_environment("development".to_string());
+        assert!(config.is_development());
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_is_development_true_uppercase() {
-        env::set_var("NESTGATE_ENVIRONMENT", "DEVELOPMENT");
-        assert!(is_development());
-        env::remove_var("NESTGATE_ENVIRONMENT");
+        // ✅ MODERNIZED: Case-insensitive
+        let config = NetworkDefaultsConfig::new().with_environment("DEVELOPMENT".to_string());
+        assert!(config.is_development());
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_is_development_true_short() {
-        env::set_var("NESTGATE_ENVIRONMENT", "dev");
-        assert!(is_development());
-        env::remove_var("NESTGATE_ENVIRONMENT");
+        // ✅ MODERNIZED: Short form
+        let config = NetworkDefaultsConfig::new().with_environment("dev".to_string());
+        assert!(config.is_development());
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_is_development_true_default() {
-        env::remove_var("NESTGATE_ENVIRONMENT");
-        assert!(is_development()); // Default is development for safety
+        // ✅ MODERNIZED: Safe default
+        let config = NetworkDefaultsConfig::new();
+        assert!(config.is_development()); // Default is development for safety
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_is_development_false_production() {
-        env::set_var("NESTGATE_ENVIRONMENT", "production");
-        assert!(!is_development());
-        env::remove_var("NESTGATE_ENVIRONMENT");
+        // ✅ MODERNIZED: Mutual exclusivity
+        let config = NetworkDefaultsConfig::new().with_environment("production".to_string());
+        assert!(!config.is_development());
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_production_and_development_mutually_exclusive() {
-        env::set_var("NESTGATE_ENVIRONMENT", "production");
-        assert!(is_production());
-        assert!(!is_development());
-        env::remove_var("NESTGATE_ENVIRONMENT");
+        // ✅ MODERNIZED: Test both states without env pollution
+        let prod_config = NetworkDefaultsConfig::new().with_environment("production".to_string());
+        assert!(prod_config.is_production());
+        assert!(!prod_config.is_development());
 
-        env::set_var("NESTGATE_ENVIRONMENT", "development");
-        assert!(!is_production());
-        assert!(is_development());
-        env::remove_var("NESTGATE_ENVIRONMENT");
+        let dev_config = NetworkDefaultsConfig::new().with_environment("development".to_string());
+        assert!(!dev_config.is_production());
+        assert!(dev_config.is_development());
     }
 
     #[test]
@@ -267,36 +253,31 @@ mod tests {
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_all_host_getters_return_valid_strings() {
-        env::remove_var("NESTGATE_API_HOST");
-        env::remove_var("NESTGATE_DB_HOST");
-        env::remove_var("NESTGATE_REDIS_HOST");
+        // ✅ MODERNIZED: Default config validation
+        let config = NetworkDefaultsConfig::new();
 
-        assert!(!get_api_host().is_empty());
-        assert!(!get_db_host().is_empty());
-        assert!(!get_redis_host().is_empty());
-        assert!(!get_bind_address().is_empty());
+        assert!(!config.get_api_host().is_empty());
+        assert!(!config.get_db_host().is_empty());
+        assert!(!config.get_redis_host().is_empty());
+        assert!(!config.get_bind_address().is_empty());
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_environment_edge_cases() {
+        // ✅ MODERNIZED: Test edge cases concurrently
         // Test with unusual but valid environment values
-        env::set_var("NESTGATE_ENVIRONMENT", "staging");
-        assert!(!is_production()); // Not production
-        assert!(!is_development()); // Not development
-        env::remove_var("NESTGATE_ENVIRONMENT");
+        let staging_config = NetworkDefaultsConfig::new().with_environment("staging".to_string());
+        assert!(!staging_config.is_production()); // Not production
+        assert!(!staging_config.is_development()); // Not development
 
-        env::set_var("NESTGATE_ENVIRONMENT", "test");
-        assert!(!is_production());
-        assert!(!is_development());
-        env::remove_var("NESTGATE_ENVIRONMENT");
+        let test_config = NetworkDefaultsConfig::new().with_environment("test".to_string());
+        assert!(!test_config.is_production());
+        assert!(!test_config.is_development());
 
         // Empty string is neither production nor development
-        env::set_var("NESTGATE_ENVIRONMENT", "");
-        assert!(!is_production());
-        assert!(!is_development()); // Empty string doesn't match "dev" or "development"
-        env::remove_var("NESTGATE_ENVIRONMENT");
+        let empty_config = NetworkDefaultsConfig::new().with_environment("".to_string());
+        assert!(!empty_config.is_production());
+        assert!(!empty_config.is_development()); // Empty string doesn't match "dev" or "development"
     }
 }

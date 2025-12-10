@@ -204,7 +204,6 @@ impl Default for StubConfig {
 impl MockingConfig {
     /// Create a new mocking configuration with all features enabled
     #[must_use]
-    /// Fn
     pub const fn new() -> Self {
         Self {
             services: MockServiceConfig { enabled: true },
@@ -215,7 +214,6 @@ impl MockingConfig {
 
     /// Create a configuration with all mocking disabled
     #[must_use]
-    /// Fn
     pub const fn disabled() -> Self {
         Self {
             services: MockServiceConfig { enabled: false },

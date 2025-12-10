@@ -21,7 +21,6 @@ impl Default for StorageHandler {
 impl StorageHandler {
     /// Create a new storage handler instance
     #[must_use]
-    /// Fn
     pub const fn new() -> Self {
         Self
     }
@@ -648,7 +647,6 @@ impl Default for StorageManager {
 impl StorageManager {
     /// Create a new storage manager instance
     #[must_use]
-    /// Fn
     pub const fn new() -> Self {
         Self {}
     }

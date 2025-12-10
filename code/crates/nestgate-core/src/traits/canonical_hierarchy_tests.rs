@@ -98,19 +98,19 @@ impl CanonicalService for MockService {
     type Error = TestError;
 
     /// Start
-    async fn start(&mut self) -> Result<(), Self::Error> {
+    async fn start(&mut self) -> std::result::Result<(), Self::Error> {
         self.started = true;
         Ok(())
     }
 
     /// Stop
-    async fn stop(&mut self) -> Result<(), Self::Error> {
+    async fn stop(&mut self) -> std::result::Result<(), Self::Error> {
         self.started = false;
         Ok(())
     }
 
     /// Health
-    async fn health(&self) -> Result<Self::Health, Self::Error> {
+    async fn health(&self) -> std::result::Result<Self::Health, Self::Error> {
         Ok(self.health.clone())
     }
 
@@ -120,7 +120,7 @@ impl CanonicalService for MockService {
     }
 
     /// Metrics
-    async fn metrics(&self) -> Result<Self::Metrics, Self::Error> {
+    async fn metrics(&self) -> std::result::Result<Self::Metrics, Self::Error> {
         Ok(self.metrics.clone())
     }
 
@@ -232,7 +232,7 @@ where
     type Error = TestError;
 
     /// Provide
-    async fn provide(&self, key: Self::Key) -> Result<Self::Value, Self::Error> {
+    async fn provide(&self, key: Self::Key) -> std::result::Result<Self::Value, Self::Error> {
         self.items
             .get(&key)
             .cloned()
@@ -242,13 +242,13 @@ where
     }
 
     /// Provision
-    async fn provision(&mut self, key: Self::Key, value: Self::Value) -> Result<(), Self::Error> {
+    async fn provision(&mut self, key: Self::Key, value: Self::Value) -> std::result::Result<(), Self::Error> {
         self.items.insert(key, value);
         Ok(())
     }
 
     /// Deprovision
-    async fn deprovision(&mut self, key: Self::Key) -> Result<(), Self::Error> {
+    async fn deprovision(&mut self, key: Self::Key) -> std::result::Result<(), Self::Error> {
         self.items.remove(&key);
         Ok(())
     }
@@ -356,7 +356,7 @@ impl CanonicalStorage for MockStorage {
     type Error = TestError;
 
     /// Read
-    async fn read(&self, path: Self::Path) -> Result<Self::Data, Self::Error> {
+    async fn read(&self, path: Self::Path) -> std::result::Result<Self::Data, Self::Error> {
         self.data
             .get(&path)
             .cloned()
@@ -366,24 +366,24 @@ impl CanonicalStorage for MockStorage {
     }
 
     /// Write
-    async fn write(&mut self, path: Self::Path, data: Self::Data) -> Result<(), Self::Error> {
+    async fn write(&mut self, path: Self::Path, data: Self::Data) -> std::result::Result<(), Self::Error> {
         self.data.insert(path, data);
         Ok(())
     }
 
     /// Deletes resource
-    async fn delete(&mut self, path: Self::Path) -> Result<(), Self::Error> {
+    async fn delete(&mut self, path: Self::Path) -> std::result::Result<(), Self::Error> {
         self.data.remove(&path);
         Ok(())
     }
 
     /// Exists
-    async fn exists(&self, path: Self::Path) -> Result<bool, Self::Error> {
+    async fn exists(&self, path: Self::Path) -> std::result::Result<bool, Self::Error> {
         Ok(self.data.contains_key(&path))
     }
 
     /// Metadata
-    async fn metadata(&self, path: Self::Path) -> Result<Self::Metadata, Self::Error> {
+    async fn metadata(&self, path: Self::Path) -> std::result::Result<Self::Metadata, Self::Error> {
         if self.data.contains_key(&path) {
             Ok(StorageMetadata {
                 size_bytes: self.data.get(&path).map(|d| d.len() as u64).unwrap_or(0),
@@ -527,7 +527,7 @@ impl CanonicalSecurity for MockSecurity {
     async fn authenticate(
         &self,
         credentials: Self::Credentials,
-    ) -> Result<Self::Token, Self::Error> {
+    ) -> std::result::Result<Self::Token, Self::Error> {
         if self
             .authenticated_users
             .get(&credentials.username)
@@ -547,7 +547,7 @@ impl CanonicalSecurity for MockSecurity {
         &self,
         token: Self::Token,
         permission: Self::Permission,
-    ) -> Result<bool, Self::Error> {
+    ) -> std::result::Result<bool, Self::Error> {
         let username = token.strip_prefix("token-").unwrap_or("");
         Ok(self
             .authorized_actions
@@ -557,14 +557,14 @@ impl CanonicalSecurity for MockSecurity {
     }
 
     /// Revoke
-    async fn revoke(&mut self, token: Self::Token) -> Result<(), Self::Error> {
+    async fn revoke(&mut self, token: Self::Token) -> std::result::Result<(), Self::Error> {
         let username = token.strip_prefix("token-").unwrap_or("");
         self.authenticated_users.remove(username);
         Ok(())
     }
 
     /// Validates data
-    async fn validate(&self, token: Self::Token) -> Result<bool, Self::Error> {
+    async fn validate(&self, token: Self::Token) -> std::result::Result<bool, Self::Error> {
         let username = token.strip_prefix("token-").unwrap_or("");
         Ok(self
             .authenticated_users
@@ -696,7 +696,7 @@ where
     type Error = TestError;
 
     /// Execute
-    async fn execute(&self, _config: Self::Config) -> Result<T, Self::Error>
+    async fn execute(&self, _config: Self::Config) -> std::result::Result<T, Self::Error>
     where
         T: Default,
     {

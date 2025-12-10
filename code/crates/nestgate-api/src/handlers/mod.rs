@@ -1,3 +1,58 @@
+//! **OPTIMIZED API HANDLERS MODULE**
+//!
+//! Comprehensive collection of HTTP request handlers for the NestGate REST API.
+//!
+//! # Organization
+//!
+//! This module provides organized, explicit imports instead of wildcard imports
+//! for better maintainability and clearer module boundaries.
+//!
+//! Handlers are organized by domain:
+//! - **AI First**: AI-powered examples and demonstrations
+//! - **Compliance**: Regulatory compliance and auditing
+//! - **Dashboard**: Dashboard data and visualizations
+//! - **Hardware Tuning**: Performance tuning and optimization
+//! - **Health**: System health checks and status
+//! - **Load Testing**: Performance testing infrastructure
+//! - **Metrics**: System metrics collection and reporting
+//! - **Performance Analytics**: Performance analysis and recommendations
+//! - **Storage**: ZFS pool, dataset, and snapshot operations
+//! - **Workspace Management**: Multi-tenant workspace isolation
+//! - **ZFS**: Low-level ZFS operations
+//!
+//! # Handler Types
+//!
+//! All handlers follow the Axum handler signature:
+//! ```rust,ignore
+//! async fn handler(
+//!     State(state): State<Arc<AppState>>,
+//!     Json(payload): Json<RequestType>
+//! ) -> Result<Json<ResponseType>, StatusCode>
+//! ```
+//!
+//! # Example Usage
+//!
+//! ```rust,ignore
+//! use nestgate_api::handlers::storage::get_storage_pools;
+//! use axum::{Router, routing::get};
+//!
+//! let app = Router::new()
+//!     .route("/api/v1/storage/pools", get(get_storage_pools));
+//! ```
+//!
+//! # Feature Flags
+//!
+//! - `dev-stubs`: Use stub implementations for testing
+//! - Production builds use real ZFS implementations
+//!
+//! # Architecture Decisions
+//!
+//! - **Explicit Imports**: No wildcard imports for clarity
+//! - **Domain Grouping**: Related handlers grouped in submodules
+//! - **Async First**: All handlers are async for non-blocking I/O
+//! - **Type Safety**: Strong typing with validated request/response types
+//! - **Error Handling**: Consistent error responses with proper HTTP status codes
+
 use crate::handlers::hardware_tuning::HardwareTuningConfig;
 
 // ZfsHandlerImpl: dev-stubs uses real implementation, production uses placeholder
@@ -5,10 +60,6 @@ use crate::handlers::hardware_tuning::HardwareTuningConfig;
 use crate::handlers::zfs::basic::ZfsHandlerImpl;
 #[cfg(not(feature = "dev-stubs"))]
 use crate::handlers::zfs::production_placeholders::ZfsHandlerImpl;
-/// **OPTIMIZED API HANDLERS MODULE**
-///
-/// This module provides organized, explicit imports instead of wildcard imports
-/// for better maintainability and clearer module boundaries.
 use axum::Router;
 
 // ==================== CORE HANDLER MODULES ====================
@@ -101,6 +152,9 @@ mod storage_unit_tests;
 ///
 /// Workspace creation, management, and collaboration features.
 pub mod workspace_management;
+
+#[cfg(test)]
+mod api_error_path_tests; // Dec 10, 2025 - Comprehensive API error path tests
 
 #[cfg(test)]
 mod mod_tests;
@@ -456,7 +510,6 @@ impl Default for HealthHandler {
 impl HealthHandler {
     /// Create a new health check handler
     #[must_use]
-    /// Fn
     pub const fn new() -> Self {
         Self
     }
@@ -555,7 +608,6 @@ impl Default for StorageHandler {
 impl StorageHandler {
     /// Create a new storage handler with default manager
     #[must_use]
-    /// Fn
     pub const fn new() -> Self {
         Self {
             manager: storage::StorageManager::new(),
@@ -581,7 +633,6 @@ impl Default for WorkspaceManager {
 impl WorkspaceManager {
     /// Create a new workspace manager with default configuration
     #[must_use]
-    /// Fn
     pub const fn new() -> Self {
         Self {
             manager: workspace_management::WorkspaceManager::new(),
@@ -607,7 +658,6 @@ impl Default for ZfsHandler {
 impl ZfsHandler {
     /// Create a new ZFS handler with default implementation
     #[must_use]
-    /// Fn
     pub const fn new() -> Self {
         Self {
             handler: ZfsHandlerImpl::new(),
@@ -743,7 +793,6 @@ impl Default for WorkspaceManagerWrapper {
 impl WorkspaceManagerWrapper {
     /// Create a new workspace manager wrapper instance
     #[must_use]
-    /// Fn
     pub const fn new() -> Self {
         Self {
             manager: workspace_management::WorkspaceManager::new(),
@@ -772,7 +821,6 @@ impl Default for ZfsManager {
 impl ZfsManager {
     /// Create a new ZFS manager instance
     #[must_use]
-    /// Fn
     pub const fn new() -> Self {
         Self {
             handler: ZfsHandlerImpl::new(),

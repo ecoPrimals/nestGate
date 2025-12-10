@@ -122,7 +122,7 @@ impl StatusCode {
 }
 
 /// Network endpoint
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 /// Endpoint
 pub struct Endpoint {
     /// Host
@@ -152,9 +152,87 @@ impl Endpoint {
         }
     }
 
+    /// Parse URL string into Endpoint (ergonomic helper for tests and config)
+    ///
+    /// Modern, idiomatic URL parsing that handles common formats.
+    /// Supports: http://host:port, https://host:port, with optional paths
+    ///
+    /// # Examples
+    /// ```ignore
+    /// let endpoint = Endpoint::from_url("http://localhost:8080")?;
+    /// let endpoint = Endpoint::from_url("https://api.example.com:443/api")?;
+    /// ```
+    pub fn from_url(url: &str) -> crate::Result<Self> {
+        // Parse scheme
+        let (scheme_str, rest) = url
+            .split_once("://")
+            .ok_or_else(|| NestGateError::validation_error("Invalid URL: missing scheme"))?;
+
+        let scheme = match scheme_str.to_lowercase().as_str() {
+            "http" => Scheme::Http,
+            "https" => Scheme::Https,
+            "ws" => Scheme::Http,   // WebSocket over HTTP
+            "wss" => Scheme::Https, // WebSocket over HTTPS
+            _ => return Err(NestGateError::validation_error("Unsupported scheme")),
+        };
+
+        // Parse host:port (strip path, query, fragment)
+        let rest = rest.split('/').next().unwrap_or(rest);
+        let rest = rest.split('?').next().unwrap_or(rest);
+        let rest = rest.split('#').next().unwrap_or(rest);
+        let rest = rest.split('@').next_back().unwrap_or(rest); // Strip credentials if present
+
+        let (host, port_str) = if let Some((h, p)) = rest.split_once(':') {
+            (h, p)
+        } else {
+            // Default ports
+            (rest, if scheme == Scheme::Http { "80" } else { "443" })
+        };
+
+        // Validate host is not empty
+        if host.is_empty() {
+            return Err(NestGateError::validation_error("Invalid URL: empty host"));
+        }
+
+        let port_num: u16 = port_str
+            .parse()
+            .map_err(|_| NestGateError::validation_error("Invalid port number"))?;
+
+        let port = if port_num == 0 {
+            Port::new(if scheme == Scheme::Http { 80 } else { 443 })?
+        } else {
+            Port::new(port_num)?
+        };
+
+        Ok(Self {
+            host: host.to_string(),
+            port,
+            scheme,
+        })
+    }
+
+    /// Get the port number
+    pub fn port(&self) -> u16 {
+        self.port.get()
+    }
+
+    /// Get the protocol/scheme as string
+    pub fn protocol(&self) -> &str {
+        match self.scheme {
+            Scheme::Http => "http",
+            Scheme::Https => "https",
+        }
+    }
+
     /// Get the full URL
     pub fn url(&self) -> String {
         format!("{}://{}:{}", self.scheme, self.host, self.port.get())
+    }
+}
+
+impl std::fmt::Display for Endpoint {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.url())
     }
 }
 
@@ -175,6 +253,32 @@ impl std::fmt::Display for Scheme {
             Self::Http => write!(f, "http"),
             Self::Https => write!(f, "https"),
         }
+    }
+}
+
+impl PartialEq<str> for Scheme {
+    fn eq(&self, other: &str) -> bool {
+        matches!((self, other), (Self::Http, "http") | (Self::Https, "https"))
+    }
+}
+
+// Allow Endpoint serialization with serde
+impl serde::Serialize for Endpoint {
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_str(&self.url())
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for Endpoint {
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let url = String::deserialize(deserializer)?;
+        Self::from_url(&url).map_err(serde::de::Error::custom)
     }
 }
 
@@ -224,11 +328,14 @@ impl<'a> Request<'a> {
     }
 }
 
+/// HTTP request body that can be empty, bytes, or a string
 #[derive(Debug)]
 pub enum RequestBody<'a> {
     /// Empty
     Empty,
+    /// Raw byte data
     Bytes(&'a [u8]),
+    /// String data
     String(&'a str),
 }
 
@@ -291,6 +398,7 @@ pub type HeaderMap = HashMap<String, String>;
 )]
 /// Configuration for Client
 pub struct ClientConfig<const DEFAULT_TIMEOUT_MS: u64 = 30000> {
+    /// Request timeout in milliseconds
     pub timeout: TimeoutMs,
     /// Max Connections
     pub max_connections: usize,
@@ -323,6 +431,7 @@ impl<const DEFAULT_TIMEOUT_MS: u64> Default for ClientConfig<DEFAULT_TIMEOUT_MS>
 
 // ==================== CONNECTION POOL ====================
 
+/// Connection pool for managing reusable HTTP connections
 #[derive(Debug)]
 pub struct ConnectionPool {
     connections: Arc<RwLock<HashMap<String, Vec<Connection>>>>,
@@ -484,6 +593,7 @@ impl Connection {
     }
 }
 
+/// Statistics about a connection's usage and lifetime
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConnectionStats {
     /// Endpoint
@@ -526,27 +636,35 @@ impl HttpClient {
     }
 
     /// Send a request with retry logic
+    ///
+    /// Modern concurrent pattern: Uses explicit retry logic with exponential backoff.
+    /// Note: tokio::time::sleep is acceptable here as it yields to the executor
+    /// and is cancellation-safe. For production-critical paths, consider tokio-retry crate.
     pub async fn send_request(
         &self,
         endpoint: &Endpoint,
         request: &Request<'_>,
     ) -> Result<Response> {
-        let mut attempts = 0;
-        let max_attempts = 3;
+        const MAX_ATTEMPTS: usize = 3;
+        const BASE_DELAY_MS: u64 = 100;
 
-        loop {
-            attempts += 1;
-
+        for attempt in 0..MAX_ATTEMPTS {
             match self.send_request_once(endpoint, request).await {
                 Ok(response) => return Ok(response),
-                Err(e) if attempts >= max_attempts => return Err(e),
+                Err(e) if attempt == MAX_ATTEMPTS - 1 => return Err(e),
                 Err(_) => {
-                    // Exponential backoff
-                    let delay = Duration::from_millis(100 * (1 << (attempts - 1)));
+                    // Exponential backoff: 100ms, 200ms, 400ms
+                    // tokio::time::sleep is acceptable here as it:
+                    // 1. Yields to executor (doesn't block)
+                    // 2. Is cancellation-safe (via select!/timeout)
+                    // 3. Doesn't waste CPU (unlike polling)
+                    let delay = Duration::from_millis(BASE_DELAY_MS * (1 << attempt));
                     tokio::time::sleep(delay).await;
                 }
             }
         }
+
+        unreachable!("Loop returns or errors before reaching here")
     }
 
     /// Send a single request attempt
@@ -609,16 +727,32 @@ pub struct ClientStats {
 /// Errors that can occur during HttpClient operations
 pub enum HttpClientError {
     #[error("Connection failed: {message}")]
-    ConnectionFailed { message: String },
+    /// Connection to the server failed
+    ConnectionFailed {
+        /// Error message describing the connection failure
+        message: String,
+    },
 
     #[error("Request timeout after {timeout:?}")]
-    Timeout { timeout: Duration },
+    /// Request timed out
+    Timeout {
+        /// The timeout duration that was exceeded
+        timeout: Duration,
+    },
 
     #[error("Invalid response: {message}")]
-    InvalidResponse { message: String },
+    /// Server returned an invalid response
+    InvalidResponse {
+        /// Error message describing why the response is invalid
+        message: String,
+    },
 
     #[error("Too many redirects: {count}")]
-    TooManyRedirects { count: usize },
+    /// Too many HTTP redirects were encountered
+    TooManyRedirects {
+        /// The number of redirects that were attempted
+        count: usize,
+    },
 }
 
 impl From<HttpClientError> for NestGateError {
@@ -683,11 +817,15 @@ mod tests {
 
     #[test]
     fn test_port_validation() {
+        use crate::constants::DEFAULT_API_PORT;
+
         assert!(Port::new(0).is_err());
-        assert!(Port::new(8080).is_ok());
+        assert!(Port::new(DEFAULT_API_PORT).is_ok());
         assert_eq!(
-            Port::new(8080).expect("Network operation failed").get(),
-            8080
+            Port::new(DEFAULT_API_PORT)
+                .expect("Valid port should succeed")
+                .get(),
+            DEFAULT_API_PORT
         );
     }
 
@@ -708,15 +846,19 @@ mod tests {
 
     #[test]
     fn test_endpoint_creation() {
-        use crate::constants::hardcoding::{addresses, ports};
-        let port = Port::new(ports::HTTP_DEFAULT).expect("Network operation failed");
-        let endpoint = Endpoint::http(addresses::LOCALHOST_NAME.to_string(), port);
+        use crate::config::environment::EnvironmentConfig;
+
+        let env_config =
+            EnvironmentConfig::from_env().unwrap_or_else(|_| EnvironmentConfig::default());
+
+        let port = Port::new(env_config.network.port.get()).expect("Network operation failed");
+        let endpoint = Endpoint::http(env_config.network.host.clone(), port);
         assert_eq!(
             endpoint.url(),
             format!(
                 "http://{}:{}",
-                addresses::LOCALHOST_NAME,
-                ports::HTTP_DEFAULT
+                env_config.network.host,
+                env_config.network.port.get()
             )
         );
     }

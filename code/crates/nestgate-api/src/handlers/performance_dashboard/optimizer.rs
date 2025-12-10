@@ -13,7 +13,6 @@ pub struct OptimizationEngineInterface {
 impl OptimizationEngineInterface {
     /// Create a new optimization _engine interface
     #[must_use]
-    /// Fn
     pub const fn new() -> Self {
         Self {
             // Initialize fields

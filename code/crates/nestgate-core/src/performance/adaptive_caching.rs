@@ -333,8 +333,8 @@ mod tests {
         assert!(entry.last_accessed <= SystemTime::now());
     }
 
-    #[test]
-    fn test_cache_entry_expiration() {
+    #[tokio::test]
+    async fn test_cache_entry_expiration() {
         let value = "test_value".to_string();
         let ttl = Duration::from_millis(1); // Very short TTL
         let entry = CacheEntry::new(value, ttl, 100);
@@ -342,13 +342,13 @@ mod tests {
         // Should not be expired immediately
         assert!(!entry.is_expired());
         
-        // Wait for expiration
-        std::thread::sleep(Duration::from_millis(10));
+        // Wait for expiration using async sleep (non-blocking, concurrent)
+        tokio::time::sleep(Duration::from_millis(10)).await;
         assert!(entry.is_expired());
     }
 
-    #[test]
-    fn test_cache_entry_access_tracking() {
+    #[tokio::test]
+    async fn test_cache_entry_access_tracking() {
         let value = "test_value".to_string();
         let ttl = Duration::from_secs(300);
         let mut entry = CacheEntry::new(value, ttl, 100);
@@ -356,8 +356,8 @@ mod tests {
         let initial_access_count = entry.access_count;
         let initial_last_accessed = entry.last_accessed;
         
-        // Wait a bit to ensure time difference
-        std::thread::sleep(Duration::from_millis(1));
+        // Wait a bit to ensure time difference (non-blocking, concurrent)
+        tokio::time::sleep(Duration::from_millis(1)).await;
         
         entry.mark_accessed();
         

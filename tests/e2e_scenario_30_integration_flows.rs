@@ -47,8 +47,8 @@ mod integration_flows {
         assert!(b.is_ok());
         assert!(c.is_ok());
 
-        // Aggregate results
-        let results = vec![a.unwrap(), b.unwrap(), c.unwrap()];
+        // Aggregate results - use array instead of vec for known-size collection
+        let results = [a.unwrap(), b.unwrap(), c.unwrap()];
 
         assert_eq!(results.len(), 3);
         assert!(results.iter().all(|r| r.contains("OK")));
@@ -59,8 +59,8 @@ mod integration_flows {
     async fn test_data_pipeline_flow() {
         // Simulate data ingestion → transformation → storage flow
 
-        // 1. Ingestion
-        let raw_data = vec![1, 2, 3, 4, 5];
+        // 1. Ingestion - use array for compile-time known data
+        let raw_data = [1, 2, 3, 4, 5];
         assert_eq!(raw_data.len(), 5);
 
         // 2. Transformation

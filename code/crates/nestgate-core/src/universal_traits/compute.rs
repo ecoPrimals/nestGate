@@ -160,13 +160,18 @@ pub struct ScalingTarget {
 pub enum ScalingPolicy {
     /// Manual
     Manual,
-    /// Autoscale
+    /// Autoscale - Automatically scales between minimum and maximum instances
     AutoScale {
+        /// Minimum number of instances to maintain
         min_instances: u32,
+        /// Maximum number of instances allowed
         max_instances: u32,
     },
-    /// Loadbased
-    LoadBased { target_utilization: f64 },
+    /// Load-based scaling strategy with target CPU/memory utilization
+    LoadBased {
+        /// Target utilization percentage (0.0-1.0) to maintain
+        target_utilization: f64,
+    },
 }
 /// Resource utilization metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]

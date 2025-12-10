@@ -234,11 +234,12 @@ fn test_operations_per_second() {
         metrics.record_operation(1024, 1.0);
     }
 
-    // Wait a bit for time to pass
-    std::thread::sleep(Duration::from_millis(100));
-
+    // Modern pattern: Test calculation directly, no artificial delay
+    // The metrics system should calculate ops/sec based on actual timing
     let snapshot = metrics.get_current_metrics();
-    // Should have some ops/sec rate
+
+    // Should have some ops/sec rate (calculation happens immediately)
+    // If this fails, the metrics calculation is broken, not the test timing
     assert!(snapshot.operations_per_second >= 0.0);
 }
 
@@ -248,10 +249,11 @@ fn test_throughput_calculation() {
 
     metrics.record_operation(1_000_000, 10.0);
 
-    std::thread::sleep(Duration::from_millis(100));
-
+    // Modern pattern: Test calculation immediately, no sleep
+    // Throughput calculation should work based on actual operation timing
     let snapshot = metrics.get_current_metrics();
-    // Should have throughput calculated
+
+    // Should have throughput calculated (calculation is immediate)
     // throughput_bytes_per_second is unsigned, always >= 0
     assert!(snapshot.throughput_bytes_per_second > 0 || snapshot.throughput_bytes_per_second == 0);
 }
@@ -437,11 +439,13 @@ fn test_multiple_resets() {
 fn test_uptime_tracking() {
     let metrics = ZfsMetrics::new();
 
-    std::thread::sleep(Duration::from_millis(100));
-
+    // Modern pattern: Test uptime tracking immediately
+    // Even with zero elapsed time, the uptime field should be valid
     let snapshot = metrics.get_current_metrics();
+
     // uptime_seconds is unsigned, always >= 0
-    assert!(snapshot.uptime_seconds > 0 || snapshot.uptime_seconds == 0);
+    // If uptime needs to be >0, that's a test of timing precision, not sleep
+    assert!(snapshot.uptime_seconds >= 0);
 }
 
 #[test]

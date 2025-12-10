@@ -2,6 +2,7 @@
 
 pub mod client;
 pub mod native_async;
+/// Native async network implementation for high-performance networking
 pub mod native_async_network;
 pub mod traits; // Canonical network service traits
 
@@ -17,6 +18,8 @@ pub use traits::{HealthStatus, Metrics, NetworkTraitsConfig as TraitsConfig, Ser
 #[cfg(test)]
 mod client_tests;
 
+#[cfg(test)]
+mod error_path_tests_comprehensive; // Dec 10, 2025 - Comprehensive error path coverage
 #[cfg(test)]
 mod network_edge_cases;
 #[cfg(test)]

@@ -36,7 +36,6 @@ use super::types::{
 /// - Ecosystem AI recommendations for optimization strategies
 /// - Real-time performance metrics and bottleneck detection
 #[derive(Debug)]
-/// Performanceoptimizationengine
 pub struct PerformanceOptimizationEngine {
     config: ZfsConfig,
     pool_manager: Arc<ZfsPoolManager>,
@@ -58,6 +57,7 @@ pub struct PerformanceOptimizationEngine {
 }
 
 impl PerformanceOptimizationEngine {
+    /// Creates a new performance optimization engine with the given configuration and managers.
     #[must_use]
     pub fn new(
         config: ZfsConfig,

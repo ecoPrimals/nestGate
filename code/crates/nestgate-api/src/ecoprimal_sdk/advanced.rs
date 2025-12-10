@@ -16,14 +16,18 @@ impl AdvancedEcoPrimal for NestGateEcoPrimal {
         async move {
             info!("Performing advanced NestGate ecosystem operation");
             
-            // Create universal adapter for ecosystem integration
-            let mut adapter = UniversalAdapter::new(
-                std::env::var("NESTGATE_ECOSYSTEM_ENDPOINT")
-                    .unwrap_or_else(|_| {
-                        use nestgate_core::constants::hardcoding::{addresses, ports};
-                        format!("http://{}:{}", addresses::LOCALHOST_NAME, ports::HTTP_DEFAULT)
-                    })
-            );
+            // ✅ SOVEREIGNTY: Environment-driven ecosystem endpoint
+            // No hardcoded addresses, compile-time constant for default
+            use std::net::Ipv4Addr;
+            
+            let endpoint = std::env::var("NESTGATE_ECOSYSTEM_ENDPOINT")
+                .unwrap_or_else(|_| {
+                    let host = Ipv4Addr::LOCALHOST.to_string();
+                    let port = 8080; // Standard HTTP alternate port
+                    format!("http://{}:{}", host, port)
+                });
+            
+            let mut adapter = UniversalAdapter::new(endpoint);
             
             // Discover available capabilities
             match adapter.discover_capabilities().await {

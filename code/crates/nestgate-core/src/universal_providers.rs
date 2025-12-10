@@ -392,7 +392,7 @@ impl OrchestrationPrimalProvider for UniversalOrchestrationWrapper {
 }
 
 /// Universal Compute Provider Wrapper
-/// Provides a universal interface for any compute provider (ToadStool, Docker, etc.)
+/// Provides a universal interface for any compute provider (Docker, Kubernetes, etc.)
 #[allow(dead_code)]
 /// Universalcomputewrapper
 pub struct UniversalComputeWrapper {
@@ -401,7 +401,7 @@ pub struct UniversalComputeWrapper {
     capabilities: Vec<String>,
     client: Option<Arc<dyn ComputePrimalProvider>>,
 }
-/// Trait for any compute client (ToadStool, Docker, etc.)
+/// Trait for any compute client (Docker, Kubernetes, etc.)
 pub trait ComputeClient: Send + Sync {
     /// Allocate Resources
     fn allocate_resources(&self, spec: &ResourceSpec) -> impl std::future::Future<Output = Result<ResourceAllocation>> + Send;

@@ -136,7 +136,6 @@ pub struct ComputeAdapter {
 impl ComputeAdapter {
     /// Create a new compute adapter for the specified service
     #[must_use]
-    /// Fn
     pub const fn new(service_name: String) -> Self {
         Self { service_name }
     }
@@ -444,7 +443,6 @@ impl SystemMetricsCollector {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     #[must_use]
-    /// Fn
     pub const fn new() -> Result<Self> {
         Ok(Self {
             cpu_monitor: CpuMonitor,

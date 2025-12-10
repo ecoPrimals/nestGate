@@ -72,14 +72,27 @@ impl Default for ScenarioTestConfig {
 }
 
 impl E2eTestConfig {
+    /// Returns a CI-optimized configuration for end-to-end testing
+    ///
+    /// This configuration is tuned for continuous integration environments
+    /// with appropriate timeouts and parallelization settings.
     #[must_use]
     pub fn ci_optimized() -> Self {
         Self::default()
     }
+
+    /// Returns a development-optimized configuration for local E2E testing
+    ///
+    /// This configuration provides more verbose logging and debugging
+    /// capabilities suitable for local development.
     #[must_use]
     pub fn development_optimized() -> Self {
         Self::default()
     }
+
+    /// Merges this configuration with another, returning the combined result
+    ///
+    /// Currently returns self as E2E configs don't support deep merging.
     #[must_use]
     pub fn merge(self, _other: Self) -> Self {
         self

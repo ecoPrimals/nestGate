@@ -5,7 +5,6 @@
 mod diagnostic_tests {
     use crate::diagnostics::diagnostic::*;
     use crate::diagnostics::types::{ComponentType, DiagnosticLevel};
-    use std::thread;
     use std::time::Duration;
 
     #[test]
@@ -127,16 +126,16 @@ mod diagnostic_tests {
         assert!(!diag.is_unresolved());
     }
 
-    #[test]
-    fn test_diagnostic_age_seconds() {
+    #[tokio::test]
+    async fn test_diagnostic_age_seconds() {
         let diag = Diagnostic::info(ComponentType::Application, "App started".to_string());
 
         // Should be very recent
         let age = diag.age_seconds();
         assert!(age < 2, "Diagnostic should be less than 2 seconds old");
 
-        // Wait a bit and check age increases
-        thread::sleep(Duration::from_millis(100));
+        // Wait a bit and check age increases (non-blocking, concurrent)
+        tokio::time::sleep(Duration::from_millis(100)).await;
         let age_after = diag.age_seconds();
         assert!(age_after >= age, "Age should increase with time");
     }
@@ -231,11 +230,11 @@ mod diagnostic_tests {
         assert!(diag.timestamp <= after);
     }
 
-    #[test]
-    fn test_diagnostic_resolve_timestamp() {
+    #[tokio::test]
+    async fn test_diagnostic_resolve_timestamp() {
         let mut diag = Diagnostic::warning(ComponentType::Network, "Test".to_string());
 
-        thread::sleep(Duration::from_millis(10));
+        tokio::time::sleep(Duration::from_millis(10)).await;
         let resolve_time_before = std::time::SystemTime::now();
 
         diag.resolve();

@@ -37,15 +37,32 @@ mod fault_tolerance_tests {
     #[tokio::test]
     #[ignore]
     async fn scenario_22_network_partition_recovery() -> Result<()> {
+        use tokio::sync::Notify;
+        use std::sync::Arc;
+        
         println!("Setting up network partition scenario...");
         
-        // Test: Simulate network partition
+        // Test: Simulate network partition (event-driven)
         println!("Simulating network partition...");
-        sleep(Duration::from_millis(100)).await;
+        let partition_active = Arc::new(Notify::new());
+        let notify_clone = partition_active.clone();
         
-        // Test: Restore network
+        tokio::spawn(async move {
+            // Simulate partition detection
+            notify_clone.notify_one();
+        });
+        partition_active.notified().await;
+        
+        // Test: Restore network (event-driven)
         println!("Restoring network connectivity...");
-        sleep(Duration::from_millis(100)).await;
+        let network_restored = Arc::new(Notify::new());
+        let notify_clone = network_restored.clone();
+        
+        tokio::spawn(async move {
+            // Simulate network restoration
+            notify_clone.notify_one();
+        });
+        network_restored.notified().await;
         
         // Verify: System should automatically reconnect
         println!("✅ Scenario 22: Network partition recovery verified");

@@ -102,6 +102,10 @@ impl IdiomaticEvolutionSystem {
     }
 
     /// Apply evolution patterns to a configuration
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if modernization fails or compatibility validation fails
     pub fn apply_evolution<T>(&self, config: T) -> crate::Result<T>
     where
         T: EvolutionCompatible + ModernizationTrait,
@@ -116,6 +120,10 @@ impl IdiomaticEvolutionSystem {
     }
 
     /// Track evolution progress
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if progress tracking fails or version validation fails
     pub fn track_evolution(&mut self, component: &str, version: &str) -> crate::Result<()> {
         self.metadata
             .track_component_evolution(component, version)?;

@@ -124,8 +124,9 @@ mod config_serialization_edge_cases {
     #[test]
     fn test_serialize_deserialize_default() {
         let config = StandardConfig::default();
-        let serialized = serde_json::to_string(&config).unwrap();
-        let deserialized: StandardConfig = serde_json::from_str(&serialized).unwrap();
+        let serialized = serde_json::to_string(&config).expect("Config should serialize");
+        let deserialized: StandardConfig =
+            serde_json::from_str(&serialized).expect("Config should deserialize");
         assert!(deserialized.validate().is_ok());
     }
 

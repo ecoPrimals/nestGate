@@ -1,6 +1,9 @@
 //! Mock Builders for Return Types
 //!
 //! **⚠️ DEVELOPMENT/TEST ONLY**: This module is only available with `dev-stubs` feature
+
+#![cfg(any(test, feature = "dev-stubs"))]
+
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 

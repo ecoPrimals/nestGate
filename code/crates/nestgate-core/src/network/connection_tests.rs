@@ -17,7 +17,7 @@ mod network_connection_tests {
         let info = ConnectionInfo {
             id: "conn-001".to_string(),
             host: "localhost".to_string(),
-            port: 8080,
+            port: crate::constants::network_hardcoded::get_api_port(),
             established_at: std::time::SystemTime::now(),
             last_activity: std::time::SystemTime::now(),
         };
@@ -478,8 +478,14 @@ mod network_connection_tests {
 
     #[tokio::test]
     async fn test_connection_timestamps_ordering() {
+        // Modern pattern: Use explicit time points instead of sleep
+        // This makes the test deterministic and instant
         let established = std::time::SystemTime::now();
-        std::thread::sleep(Duration::from_millis(10));
+        
+        // Simulate some work or progression (yield to ensure time can advance)
+        tokio::task::yield_now().await;
+        
+        // Create activity timestamp after established
         let activity = std::time::SystemTime::now();
         
         let info = ConnectionInfo {
@@ -490,7 +496,9 @@ mod network_connection_tests {
             last_activity: activity,
         };
         
-        assert!(info.last_activity >= info.established_at);
+        // Test the ordering invariant
+        assert!(info.last_activity >= info.established_at,
+            "Activity timestamp should be >= established timestamp");
     }
 
     // ==================== Memory Safety Tests ====================

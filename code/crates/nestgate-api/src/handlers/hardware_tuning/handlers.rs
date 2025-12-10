@@ -8,8 +8,6 @@
 //!
 //! **For production hardware tuning**: Implement using `sysinfo` crate.
 
-#![cfg(feature = "dev-stubs")]
-
 use axum::{http::StatusCode, response::Json};
 use chrono::Utc;
 use tracing::info;

@@ -88,9 +88,11 @@ impl NativeZfsSnapshotManager {
                 snapshots.push(SnapshotInfo {
                     name,
                     dataset: dataset.to_string(),
-                    size: parts[1].parse().unwrap_or(0),
-                    properties: std::collections::HashMap::new(),
                     created_at: std::time::SystemTime::now(), // Simplified - would parse from creation time
+                    used: 0,                                  // Would parse from ZFS
+                    size: parts[1].parse().unwrap_or(0),
+                    referenced: 0, // Would parse from ZFS
+                    properties: std::collections::HashMap::new(),
                 });
             }
         }

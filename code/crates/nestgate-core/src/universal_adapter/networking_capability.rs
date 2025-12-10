@@ -45,8 +45,9 @@ impl NetworkingCapability {
 
         // Make request to provider endpoint (whoever it is)
         // In real implementation, would make HTTP call to provider.endpoint
+        // Port is provided by the discovered service endpoint
         Ok(LoadBalanceResponse {
-            chosen_endpoint: format!("{}:8080", provider.endpoint),
+            chosen_endpoint: provider.endpoint.clone(),
             algorithm_used: "discovered-provider".to_string(),
         })
     }

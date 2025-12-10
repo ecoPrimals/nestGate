@@ -18,6 +18,11 @@ fn _create_sample_pool(name: &str) -> PoolInfo {
             used_bytes: 1024 * 1024 * 1024 * 512,      // 512GB
             available_bytes: 1024 * 1024 * 1024 * 512, // 512GB
             utilization_percent: 50.0,
+            fragmentation_percent: 0.0,
+            deduplication_ratio: 1.0,
+            total: 1024,
+            used: 1024,
+            available: 1024,
         },
         devices: vec!["/dev/sda1".to_string()],
         properties: HashMap::new(),
@@ -28,7 +33,7 @@ mod pool_manager_tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_pool_manager_creation() -> Result<(), Box<dyn std::error::Error>> {
+    async fn test_pool_manager_creation() -> std::result::Result<(), Box<dyn std::error::Error>> {
         // Test creating pool manager for testing
         let _manager = ZfsPoolManager::new_production(ZfsConfig::default());
         // Should not panic
@@ -36,7 +41,7 @@ mod pool_manager_tests {
         Ok(())
     }
     #[tokio::test]
-    async fn test_pool_discovery() -> Result<(), Box<dyn std::error::Error>> {
+    async fn test_pool_discovery() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let manager = ZfsPoolManager::new_production(ZfsConfig::default());
 
         // Use list_pools which returns Vec<PoolInfo>
@@ -65,7 +70,7 @@ mod pool_manager_tests {
     }
 
     #[tokio::test]
-    async fn test_overall_status() -> Result<(), Box<dyn std::error::Error>> {
+    async fn test_overall_status() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let manager = ZfsPoolManager::new_production(ZfsConfig::default());
 
         let result = manager.get_overall_status().await;
@@ -104,7 +109,8 @@ mod pool_manager_tests {
     }
 
     #[tokio::test]
-    async fn test_pool_operations_error_handling() -> Result<(), Box<dyn std::error::Error>> {
+    async fn test_pool_operations_error_handling(
+    ) -> std::result::Result<(), Box<dyn std::error::Error>> {
         let config = ZfsConfig::default();
         let manager = ZfsPoolManager::new_production(config);
 
@@ -140,7 +146,8 @@ mod pool_manager_tests {
     }
 
     #[tokio::test]
-    async fn test_pool_creation_error_handling() -> Result<(), Box<dyn std::error::Error>> {
+    async fn test_pool_creation_error_handling(
+    ) -> std::result::Result<(), Box<dyn std::error::Error>> {
         let manager = ZfsPoolManager::new_production(ZfsConfig::default());
 
         // Test pool creation with invalid devices
@@ -162,7 +169,8 @@ mod pool_manager_tests {
     }
 
     #[tokio::test]
-    async fn test_pool_destruction_error_handling() -> Result<(), Box<dyn std::error::Error>> {
+    async fn test_pool_destruction_error_handling(
+    ) -> std::result::Result<(), Box<dyn std::error::Error>> {
         let manager = ZfsPoolManager::new_production(ZfsConfig::default());
 
         let result = manager.destroy_pool("nonexistent_pool").await;
@@ -179,7 +187,7 @@ mod pool_info_tests {
     use super::*;
 
     #[test]
-    fn test_pool_info_structure() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_pool_info_structure() -> std::result::Result<(), Box<dyn std::error::Error>> {
         // Test creating pool info structure with correct fields
         let pool_info = PoolInfo {
             name: "test_pool".to_string(),
@@ -190,6 +198,11 @@ mod pool_info_tests {
                 used_bytes: 1024 * 1024 * 1024 * 512,      // 512GB
                 available_bytes: 1024 * 1024 * 1024 * 512, // 512GB
                 utilization_percent: 50.0,
+                fragmentation_percent: 0.0,
+                deduplication_ratio: 1.0,
+                total: 1024,
+                used: 1024,
+                available: 1024,
             },
             devices: vec!["/dev/sda1".to_string(), "/dev/sdb1".to_string()],
             properties: HashMap::new(),
@@ -211,7 +224,7 @@ mod pool_info_tests {
     }
 
     #[test]
-    fn test_pool_states() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_pool_states() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let states = vec![
             PoolState::Online,
             PoolState::Degraded,
@@ -228,7 +241,7 @@ mod pool_info_tests {
     }
 
     #[test]
-    fn test_pool_health() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_pool_health() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let health_states = vec![
             PoolHealth::Healthy,
             PoolHealth::Warning,
@@ -249,7 +262,8 @@ mod concurrent_operations_tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_concurrent_pool_discovery() -> Result<(), Box<dyn std::error::Error>> {
+    async fn test_concurrent_pool_discovery() -> std::result::Result<(), Box<dyn std::error::Error>>
+    {
         // Test concurrent pool operations
         let tasks = vec![
             tokio::spawn(async {
@@ -288,7 +302,8 @@ mod integration_tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_pool_manager_with_config() -> Result<(), Box<dyn std::error::Error>> {
+    async fn test_pool_manager_with_config() -> std::result::Result<(), Box<dyn std::error::Error>>
+    {
         let config = ZfsConfig::default();
 
         // Test creating pool manager with configuration
@@ -312,7 +327,7 @@ mod integration_tests {
     }
 
     #[test]
-    fn test_configuration_integration() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_configuration_integration() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let config = ZfsConfig::default();
 
         // Verify config has required fields

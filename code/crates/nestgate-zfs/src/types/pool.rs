@@ -1,15 +1,12 @@
-//! Pool-related types for ZFS
+//! ZFS pool-related types
 //!
-//! This module contains all types related to ZFS pools, including pool information,
-//! health status, state, and capacity metrics.
+//! Domain: Pool information, health status, capacity, vdev management
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::SystemTime;
 
-use super::common::ZfsError;
-
-/// Complete information about a ZFS storage pool
+/// ZFS pool information and metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PoolInfo {
     /// Pool name
@@ -20,15 +17,15 @@ pub struct PoolInfo {
     pub used: u64,
     /// Available space in bytes
     pub available: u64,
-    /// Current health status
+    /// Pool health status
     pub health: PoolHealth,
-    /// Current operational state
+    /// Current pool state
     pub state: PoolState,
     /// Detailed capacity information
     pub capacity: PoolCapacity,
-    /// Custom ZFS properties
+    /// ZFS properties for this pool
     pub properties: HashMap<String, String>,
-    /// When the pool was created
+    /// Pool creation timestamp
     pub created_at: SystemTime,
 }
 
@@ -48,90 +45,108 @@ impl Default for PoolInfo {
     }
 }
 
-/// ZFS pool health status
+/// ZFS pool health status indicators
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum PoolHealth {
-    /// Pool is healthy and fully operational
+    /// Pool is operating normally
     Healthy,
-    /// Pool has warnings but is still operational
+    /// Pool has warnings but is functional
     Warning,
-    /// Pool is in critical state, data may be at risk
+    /// Pool has critical issues
     Critical,
-    /// Pool health status cannot be determined
+    /// Pool health status unknown
     Unknown,
 }
 
 /// ZFS pool operational state
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum PoolState {
-    /// Pool is online and accessible
+    /// Pool is online and available
     Online,
-    /// Pool is offline and not accessible
+    /// Pool is offline
     Offline,
-    /// Pool is degraded (reduced redundancy)
+    /// Pool is degraded but operational
     Degraded,
-    /// Pool has faulted devices
+    /// Pool has faulted
     Faulted,
-    /// Pool has been removed
+    /// Pool device has been removed
     Removed,
-    /// Pool is temporarily unavailable
+    /// Pool is unavailable
     Unavailable,
 }
 
-/// ZFS pool capacity information
+/// Detailed pool capacity information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PoolCapacity {
     /// Total capacity in bytes
+    pub total: u64,
+    /// Alternative field name for backward compatibility
     pub total_bytes: u64,
     /// Used capacity in bytes
+    pub used: u64,
+    /// Alternative field name for backward compatibility
     pub used_bytes: u64,
     /// Available capacity in bytes
+    pub available: u64,
+    /// Alternative field name for backward compatibility
     pub available_bytes: u64,
+    /// Capacity utilization as percentage (0.0-100.0)
+    pub utilization_percent: f64,
     /// Fragmentation percentage (0.0-100.0)
     pub fragmentation_percent: f64,
-    /// Deduplication ratio (>1.0 = space saved)
+    /// Deduplication ratio (e.g., 1.5 means 50% space savings)
     pub deduplication_ratio: f64,
 }
 
 impl Default for PoolCapacity {
     fn default() -> Self {
         Self {
+            total: 0,
             total_bytes: 0,
+            used: 0,
             used_bytes: 0,
+            available: 0,
             available_bytes: 0,
+            utilization_percent: 0.0,
             fragmentation_percent: 0.0,
             deduplication_ratio: 1.0,
         }
     }
 }
 
-/// Pool status for health checks
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// Pool status for monitoring and health checks
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum PoolStatus {
-    /// Pool is healthy
+    /// Pool is operating normally
     Healthy,
-    /// Pool is degraded
+    /// Pool is online and fully operational
+    Online,
+    /// Pool is degraded but operational
     Degraded,
-    /// Pool has faulted
+    /// Pool has critical issues
+    Critical,
+    /// Pool has faulted and requires intervention
     Faulted,
-    /// Pool is offline
+    /// Pool is offline or unavailable
     Offline,
-    /// Pool is removed
+    /// Pool device has been removed
     Removed,
     /// Pool is unavailable
     Unavailable,
-    /// Status unknown
+    /// Pool status is unknown
     Unknown,
 }
 
-// Conversions
 impl From<PoolStatus> for PoolHealth {
     fn from(status: PoolStatus) -> Self {
         match status {
-            PoolStatus::Healthy => PoolHealth::Healthy,
+            PoolStatus::Healthy | PoolStatus::Online => PoolHealth::Healthy,
             PoolStatus::Degraded => PoolHealth::Warning,
-            PoolStatus::Faulted => PoolHealth::Critical,
-            PoolStatus::Offline | PoolStatus::Removed | PoolStatus::Unavailable | PoolStatus::Unknown => PoolHealth::Unknown,
+            PoolStatus::Critical | PoolStatus::Faulted => PoolHealth::Critical,
+            PoolStatus::Offline
+            | PoolStatus::Removed
+            | PoolStatus::Unavailable
+            | PoolStatus::Unknown => PoolHealth::Unknown,
         }
     }
 }
@@ -139,9 +154,9 @@ impl From<PoolStatus> for PoolHealth {
 impl From<PoolStatus> for PoolState {
     fn from(status: PoolStatus) -> Self {
         match status {
-            PoolStatus::Healthy => PoolState::Online,
+            PoolStatus::Online | PoolStatus::Healthy => PoolState::Online,
             PoolStatus::Degraded => PoolState::Degraded,
-            PoolStatus::Faulted => PoolState::Faulted,
+            PoolStatus::Faulted | PoolStatus::Critical => PoolState::Faulted,
             PoolStatus::Offline => PoolState::Offline,
             PoolStatus::Removed => PoolState::Removed,
             PoolStatus::Unavailable | PoolStatus::Unknown => PoolState::Unavailable,
@@ -149,18 +164,40 @@ impl From<PoolStatus> for PoolState {
     }
 }
 
-/// Zero-cost pool info using references and Arc for sharing
+/// Virtual device (vdev) information
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ZeroCostPoolInfo {
-    /// Pool name
-    pub name: String,
-    /// Total size in bytes
-    pub size: u64,
-    /// Used size in bytes
-    pub used: u64,
-    /// Available size in bytes
-    pub available: u64,
-    /// Health status
-    pub health: String,
+pub struct VdevInfo {
+    /// Vdev type (disk, mirror, raidz, etc.)
+    pub vdev_type: String,
+    /// Device path or identifier
+    pub path: String,
+    /// Vdev state
+    pub state: String,
+    /// Number of read errors
+    pub read_errors: u64,
+    /// Number of write errors
+    pub write_errors: u64,
+    /// Number of checksum errors
+    pub checksum_errors: u64,
 }
 
+/// Pool statistics for monitoring
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PoolStats {
+    /// Pool name
+    pub pool_name: String,
+    /// Total read operations
+    pub read_ops: u64,
+    /// Total write operations
+    pub write_ops: u64,
+    /// Bytes read
+    pub bytes_read: u64,
+    /// Bytes written
+    pub bytes_written: u64,
+    /// Timestamp of statistics collection
+    pub timestamp: SystemTime,
+}
+
+#[cfg(test)]
+#[path = "pool_strategic_tests.rs"]
+mod pool_strategic_tests;

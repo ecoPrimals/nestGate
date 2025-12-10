@@ -195,11 +195,17 @@ fn test_gpu_allocation_serialization() {
 fn test_tuning_service_registration_https() {
     let registration = TuningServiceRegistration {
         service_name: "secure-tuning".to_string(),
-        endpoint: "https://secure.example.com:8443".to_string(),
+        endpoint: format!(
+            "https://secure.example.com:{}",
+            nestgate_core::constants::network_hardcoded::ports::HTTPS_DEFAULT
+        ),
     };
 
     assert!(registration.endpoint.starts_with("https://"));
-    assert!(registration.endpoint.contains(":8443"));
+    assert!(registration.endpoint.contains(&format!(
+        ":{}",
+        nestgate_core::constants::network_hardcoded::ports::HTTPS_DEFAULT
+    )));
 }
 
 #[test]
@@ -297,8 +303,8 @@ fn test_live_hardware_metrics_clone() {
     assert_eq!(metrics1.temperature, metrics2.temperature);
 }
 
-#[test]
-fn test_performance_snapshot_ordering() {
+#[tokio::test]
+async fn test_performance_snapshot_ordering() {
     let snapshot1 = PerformanceSnapshot {
         timestamp: Utc::now(),
         cpu_usage: 50.0,
@@ -307,7 +313,7 @@ fn test_performance_snapshot_ordering() {
         network_io: 40.0,
     };
 
-    std::thread::sleep(std::time::Duration::from_millis(10));
+    tokio::time::sleep(std::time::Duration::from_millis(10)).await;
 
     let snapshot2 = PerformanceSnapshot {
         timestamp: Utc::now(),

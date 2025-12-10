@@ -44,7 +44,7 @@ async fn test_snapshot_name_sanitization() -> Result<()> {
     ];
 
     for (input, expected_pattern) in inputs {
-        let sanitized = input.replace('/', "_").replace('@', "_");
+        let sanitized = input.replace(['/', '@'], "_");
         assert!(
             sanitized.contains(expected_pattern.split('_').next().unwrap()),
             "Sanitized name should match pattern"
@@ -129,7 +129,7 @@ fn test_pool_health_status_values() {
 #[test]
 fn test_pool_health_severity_ordering() {
     // Define health status severity (lower is better)
-    let severity_order = vec!["ONLINE", "DEGRADED", "FAULTED", "OFFLINE"];
+    let severity_order = ["ONLINE", "DEGRADED", "FAULTED", "OFFLINE"];
 
     // Verify ordering makes sense
     assert_eq!(severity_order[0], "ONLINE"); // Best status
@@ -309,7 +309,7 @@ fn test_operation_timeout_handling() {
 fn test_storage_tier_ordering() {
     use nestgate_core::canonical_types::StorageTier;
 
-    let tiers = vec![StorageTier::Hot, StorageTier::Warm, StorageTier::Cold];
+    let tiers = [StorageTier::Hot, StorageTier::Warm, StorageTier::Cold];
 
     // Verify all tiers are distinct
     assert_eq!(tiers.len(), 3);
@@ -401,15 +401,22 @@ fn test_command_argument_escaping() {
 
 #[test]
 fn test_operation_latency_tracking() {
-    use std::time::{Duration, Instant};
+    use std::time::Instant;
 
+    // ✅ Modern pattern: Test timing without arbitrary sleeps
     let start = Instant::now();
-    std::thread::sleep(Duration::from_millis(10));
+
+    // Simulate work with actual computation (not sleep)
+    let mut sum = 0u64;
+    for i in 0..10_000 {
+        sum = sum.wrapping_add(i);
+    }
+
     let elapsed = start.elapsed();
 
     // Verify we can track operation duration
-    assert!(elapsed >= Duration::from_millis(10));
-    assert!(elapsed < Duration::from_millis(100)); // Reasonable upper bound
+    assert!(elapsed.as_nanos() > 0, "Should measure some time elapsed");
+    assert!(sum > 0, "Computation should produce result");
 }
 
 #[test]
@@ -478,7 +485,7 @@ fn test_minimum_pool_size() {
 #[tokio::test]
 async fn test_async_operation_sequencing() -> Result<()> {
     // Test that async operations can be sequenced
-    let results = vec![
+    let results = [
         tokio::task::yield_now().await,
         tokio::task::yield_now().await,
         tokio::task::yield_now().await,

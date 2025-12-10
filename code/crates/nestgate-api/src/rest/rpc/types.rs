@@ -186,7 +186,6 @@ impl DynRpcService {
     /// Returns the type of RPC connection this service uses for
     /// routing and compatibility purposes.
     #[must_use]
-    /// Fn
     pub const fn connection_type(&self) -> RpcConnectionType {
         match self {
             Self::JsonRpc(_) => RpcConnectionType::JsonRpc,

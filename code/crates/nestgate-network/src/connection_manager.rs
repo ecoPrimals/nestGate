@@ -218,7 +218,7 @@ impl OrchestrationConnectionManager {
             request.source_service, request.target_service
         );
 
-        // ✅ ALL CONNECTIONS MUST GO THROUGH SONGBIRD
+        // ✅ ALL CONNECTIONS MUST GO THROUGH ORCHESTRATION SERVICE (capability-based discovery)
         // Use canonical OrchestrationClient methods - simulate connection through service discovery
         let services = self
             .orchestration_client

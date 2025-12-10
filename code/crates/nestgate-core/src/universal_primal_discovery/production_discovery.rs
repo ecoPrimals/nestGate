@@ -1,10 +1,46 @@
-//! **PRODUCTION DISCOVERY IMPLEMENTATION**
+//! **PRODUCTION DISCOVERY IMPLEMENTATION** - Legacy/Compatibility Module
 //!
-//! Environment-driven service discovery replacing hardcoded stubs.
-//! Uses environment variables, configuration files, and runtime detection
-//! to discover services dynamically without hardcoded values.
+//! ⚠️ **DEPRECATED**: This module provides backward compatibility.
+//! New code should use [`production_capability_bridge`] for capability-based discovery.
+//!
+//! ## ✅ EVOLUTION STATUS (Dec 4, 2025)
+//!
+//! **Phase 1 Complete**: Capability-based architecture is now operational!
+//!
+//! ### ❌ OLD WAY (This Module - Still Works)
+//! ```rust,ignore
+//! // Environment-driven with hardcoded fallbacks
+//! let discovery = ProductionServiceDiscovery::new(&config)?;
+//! let port = discovery.discover_port("api")?;  // Falls back to hardcoded 8080
+//! ```
+//!
+//! ### ✅ NEW WAY (Capability-Based - Recommended)
+//! ```rust,ignore
+//! use crate::universal_primal_discovery::production_capability_bridge::*;
+//!
+//! // Pure capability discovery - NO hardcoded fallbacks!
+//! let discovery = CapabilityAwareDiscovery::initialize(&config).await?;
+//! let services = discovery.find_service("api").await?;
+//! let best = services.first().ok_or_else(|| Error::not_found("api"))?;
+//! ```
+//!
+//! ## Migration Guide
+//!
+//! **Quick Migration**:
+//! 1. Replace `ProductionServiceDiscovery` with `CapabilityAwareDiscovery`
+//! 2. Replace `.discover_port("api")` with `.find_service("api").await?`
+//! 3. Handle errors properly (no more hardcoded fallbacks!)
+//!
+//! See [`production_capability_bridge`](crate::universal_primal_discovery::production_capability_bridge)
+//! for complete API and examples.
+//!
+//! ## Deprecation Timeline
+//! - **v0.12.0** (Current): Both APIs work, old API marked deprecated
+//! - **v0.13.0** (Q1 2026): Old API generates warnings  
+//! - **v0.14.0** (Q2 2026): Old API removed
+//!
+//! [`production_capability_bridge`]: crate::universal_primal_discovery::production_capability_bridge
 
-use crate::capabilities::discovery::DiscoveryManager;
 use crate::config::canonical_primary::NestGateCanonicalConfig;
 use crate::Result;
 use std::collections::HashMap;
@@ -17,24 +53,24 @@ use tracing::{debug, warn};
 use super::production_discovery_config::ProductionDiscoveryConfig;
 
 /// Production service discovery configuration
-#[derive(Debug, Clone)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+///
+/// **⚠️ DEPRECATED**: Use [`CapabilityAwareDiscovery`] instead for capability-based discovery without hardcoded fallbacks.
 ///
 /// **Migration Path**:
 /// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::network::config::ServiceDiscoveryConfig;
 ///
-/// // NEW (canonical):
-/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-/// // Or use type alias for compatibility:
-/// use crate::network::config::ServiceDiscoveryConfig; // Now aliases to CanonicalNetworkConfig
+/// // NEW (capability-based):
+/// use nestgate_core::universal_primal_discovery::production_capability_bridge::CapabilityAwareDiscovery;
+/// let discovery = CapabilityAwareDiscovery::initialize(&config).await?;
 /// ```
 ///
-/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+/// [`CapabilityAwareDiscovery`]: crate::universal_primal_discovery::production_capability_bridge::CapabilityAwareDiscovery
+#[derive(Debug, Clone)]
 #[deprecated(
-    since = "0.11.0",
-    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+    since = "0.12.0",
+    note = "Use CapabilityAwareDiscovery from production_capability_bridge instead"
 )]
 /// Configuration for ServiceDiscovery
 pub struct ServiceDiscoveryConfig {
@@ -84,14 +120,54 @@ impl Default for DiscoveryDefaults {
         use crate::constants::canonical_defaults::network;
         use std::net::Ipv4Addr;
 
+        // Parse localhost address with safe fallback
+        // Note: This unwrap_or is safe - we're parsing a known constant
+        // and providing a guaranteed-valid fallback
+        let default_bind = network::LOCALHOST
+            .parse()
+            .unwrap_or(std::net::IpAddr::V4(Ipv4Addr::LOCALHOST));
+
         Self {
             default_host: network::LOCALHOST.to_string(),
-            default_bind: network::LOCALHOST
-                .parse()
-                .unwrap_or(std::net::IpAddr::V4(Ipv4Addr::LOCALHOST)),
+            default_bind,
             default_port: network::DEFAULT_API_PORT,
             default_timeout: Duration::from_secs(30),
             default_limit: 100,
+        }
+    }
+}
+
+impl Default for ServiceDiscoveryConfig {
+    /// Returns a default configuration with standard service endpoints
+    fn default() -> Self {
+        let defaults = DiscoveryDefaults::default();
+        let mut services = HashMap::new();
+        let mut resource_limits = HashMap::new();
+        let mut operation_timeouts = HashMap::new();
+
+        // Add standard service endpoints
+        services.insert(
+            "api".to_string(),
+            ServiceEndpoint {
+                name: "api".to_string(),
+                host: defaults.default_host.clone(),
+                port: defaults.default_port,
+                bind_address: defaults.default_bind,
+            },
+        );
+
+        // Add default resource limits
+        resource_limits.insert("max_connections".to_string(), defaults.default_limit);
+        resource_limits.insert("max_retries".to_string(), 3);
+
+        // Add default timeouts
+        operation_timeouts.insert("default".to_string(), defaults.default_timeout);
+
+        Self {
+            services,
+            resource_limits,
+            operation_timeouts,
+            defaults,
         }
     }
 }
@@ -159,12 +235,12 @@ impl ServiceDiscoveryConfig {
                     crate::constants::canonical_defaults::network::LOCALHOST.to_string()
                 });
 
-            // Discover port (via config)
+            // Discover port (via config, with safe fallback)
             let port = config
                 .get_service_port(service_name)
                 .unwrap_or_else(|| Self::default_port_for_service(&name_lower));
 
-            // Discover bind address (via config)
+            // Discover bind address (via config, with safe fallback)
             let bind_address = config
                 .get_service_bind(service_name)
                 .and_then(|addr| IpAddr::from_str(addr).ok())
@@ -238,7 +314,7 @@ impl ServiceDiscoveryConfig {
     }
 
     /// Get default port for a service (used when env var not set)
-    fn default_port_for_service(service_name: &str) -> u16 {
+    pub fn default_port_for_service(service_name: &str) -> u16 {
         use crate::constants::canonical_defaults::network;
         match service_name {
             "api" | "web" => network::DEFAULT_API_PORT,
@@ -250,12 +326,15 @@ impl ServiceDiscoveryConfig {
     }
 
     /// Get default bind address for a service
-    fn default_bind_for_service(service_name: &str) -> IpAddr {
+    pub fn default_bind_for_service(service_name: &str) -> IpAddr {
         match service_name {
             "api" | "web" => IpAddr::V4(Ipv4Addr::UNSPECIFIED), // 0.0.0.0 for external access
-            _ => crate::constants::canonical_defaults::network::LOCALHOST
-                .parse()
-                .unwrap_or(IpAddr::V4(Ipv4Addr::LOCALHOST)), // 127.0.0.1 for internal services
+            _ => {
+                // Parse localhost with proper error handling
+                crate::constants::canonical_defaults::network::LOCALHOST
+                    .parse()
+                    .unwrap_or(IpAddr::V4(Ipv4Addr::LOCALHOST)) // 127.0.0.1 for internal services
+            }
         }
     }
 }
@@ -264,7 +343,7 @@ impl ServiceDiscoveryConfig {
 pub struct ProductionServiceDiscovery {
     config: ServiceDiscoveryConfig,
     #[allow(dead_code)] // Reserved for future advanced discovery features
-    discovery_manager: DiscoveryManager,
+    discovery_manager: (), // Placeholder for capability registry
 }
 
 impl ProductionServiceDiscovery {
@@ -278,7 +357,7 @@ impl ProductionServiceDiscovery {
 
         Ok(Self {
             config,
-            discovery_manager: DiscoveryManager::default(),
+            discovery_manager: (), // Placeholder
         })
     }
 
@@ -524,6 +603,71 @@ mod tests {
     }
 
     #[test]
+    fn test_port_discovery_unknown_service() {
+        let config = NestGateCanonicalConfig::default();
+        let discovery =
+            ProductionServiceDiscovery::new(&config).expect("Failed to create discovery");
+
+        // Unknown service should fall back to default
+        let port = discovery
+            .discover_port("unknown_service_xyz")
+            .expect("Failed to discover port");
+        assert_eq!(port, discovery.config.defaults.default_port);
+    }
+
+    #[test]
+    fn test_bind_address_discovery() {
+        let config = NestGateCanonicalConfig::default();
+        let discovery =
+            ProductionServiceDiscovery::new(&config).expect("Failed to create discovery");
+
+        // Test bind address discovery for API service
+        let bind_addr = discovery
+            .discover_bind_address("api")
+            .expect("Failed to discover bind address");
+        assert!(matches!(bind_addr, IpAddr::V4(_) | IpAddr::V6(_)));
+    }
+
+    #[test]
+    fn test_bind_address_unknown_service_fallback() {
+        let config = NestGateCanonicalConfig::default();
+        let discovery =
+            ProductionServiceDiscovery::new(&config).expect("Failed to create discovery");
+
+        // Unknown service should use default
+        let bind_addr = discovery
+            .discover_bind_address("nonexistent")
+            .expect("Should fall back to default");
+        assert_eq!(bind_addr, discovery.config.defaults.default_bind);
+    }
+
+    #[test]
+    fn test_endpoint_discovery() {
+        let config = NestGateCanonicalConfig::default();
+        let discovery =
+            ProductionServiceDiscovery::new(&config).expect("Failed to create discovery");
+
+        // Test full endpoint discovery
+        let endpoint = discovery
+            .discover_endpoint("api")
+            .expect("Failed to discover endpoint");
+        assert_eq!(endpoint.port(), config.network.api.port);
+    }
+
+    #[test]
+    fn test_endpoint_discovery_fallback() {
+        let config = NestGateCanonicalConfig::default();
+        let discovery =
+            ProductionServiceDiscovery::new(&config).expect("Failed to create discovery");
+
+        // Non-existent service should provide fallback endpoint
+        let endpoint = discovery
+            .discover_endpoint("missing_service")
+            .expect("Should provide fallback endpoint");
+        assert!(endpoint.port() > 0);
+    }
+
+    #[test]
     fn test_limit_discovery_defaults() {
         let config = NestGateCanonicalConfig::default();
         let discovery =
@@ -536,6 +680,43 @@ mod tests {
     }
 
     #[test]
+    fn test_limit_discovery_various_types() {
+        let config = NestGateCanonicalConfig::default();
+        let discovery =
+            ProductionServiceDiscovery::new(&config).expect("Failed to create discovery");
+
+        // Test different resource types with defaults
+        let conn_limit = discovery
+            .discover_limit("connections")
+            .expect("connections");
+        assert_eq!(conn_limit, 1000);
+
+        let rps_limit = discovery
+            .discover_limit("requests_per_second")
+            .expect("requests_per_second");
+        assert_eq!(rps_limit, 100);
+
+        let mem_limit = discovery.discover_limit("memory_mb").expect("memory_mb");
+        assert_eq!(mem_limit, 512);
+
+        let disk_limit = discovery.discover_limit("disk_mb").expect("disk_mb");
+        assert_eq!(disk_limit, 1024);
+    }
+
+    #[test]
+    fn test_limit_discovery_custom_type_fallback() {
+        let config = NestGateCanonicalConfig::default();
+        let discovery =
+            ProductionServiceDiscovery::new(&config).expect("Failed to create discovery");
+
+        // Unknown resource type should use default limit
+        let limit = discovery
+            .discover_limit("custom_resource_type")
+            .expect("custom type");
+        assert_eq!(limit, discovery.config.defaults.default_limit);
+    }
+
+    #[test]
     fn test_timeout_discovery_defaults() {
         let config = NestGateCanonicalConfig::default();
         let discovery =
@@ -545,5 +726,185 @@ mod tests {
             .discover_timeout("connect")
             .expect("Failed to discover timeout");
         assert!(timeout.as_secs() > 0);
+    }
+
+    #[test]
+    fn test_timeout_discovery_various_operations() {
+        let config = NestGateCanonicalConfig::default();
+        let discovery =
+            ProductionServiceDiscovery::new(&config).expect("Failed to create discovery");
+
+        // Test different operation timeouts
+        let connect_timeout = discovery.discover_timeout("connect").expect("connect");
+        assert_eq!(connect_timeout, Duration::from_secs(10));
+
+        let request_timeout = discovery.discover_timeout("request").expect("request");
+        assert_eq!(request_timeout, Duration::from_secs(30));
+
+        let health_timeout = discovery
+            .discover_timeout("health_check")
+            .expect("health_check");
+        assert_eq!(health_timeout, Duration::from_secs(5));
+
+        let discovery_timeout = discovery.discover_timeout("discovery").expect("discovery");
+        assert_eq!(discovery_timeout, Duration::from_secs(15));
+    }
+
+    #[test]
+    fn test_timeout_discovery_custom_operation_fallback() {
+        let config = NestGateCanonicalConfig::default();
+        let discovery =
+            ProductionServiceDiscovery::new(&config).expect("Failed to create discovery");
+
+        // Unknown operation should use default timeout
+        let timeout = discovery
+            .discover_timeout("custom_operation")
+            .expect("custom operation");
+        assert_eq!(timeout, discovery.config.defaults.default_timeout);
+    }
+
+    #[test]
+    fn test_all_services_accessor() {
+        let config = NestGateCanonicalConfig::default();
+        let discovery =
+            ProductionServiceDiscovery::new(&config).expect("Failed to create discovery");
+
+        let services = discovery.all_services();
+        assert!(!services.is_empty());
+        assert!(services.contains_key("api"));
+    }
+
+    #[test]
+    fn test_config_accessor() {
+        let config = NestGateCanonicalConfig::default();
+        let discovery =
+            ProductionServiceDiscovery::new(&config).expect("Failed to create discovery");
+
+        let disc_config = discovery.config();
+        assert!(!disc_config.services.is_empty());
+    }
+
+    #[test]
+    fn test_standalone_bind_address_discovery() {
+        let config = NestGateCanonicalConfig::default();
+
+        let bind_addr = discover_bind_address_standalone(&config, "api")
+            .expect("Failed to discover bind address");
+        assert!(matches!(bind_addr, IpAddr::V4(_) | IpAddr::V6(_)));
+    }
+
+    #[test]
+    fn test_standalone_endpoint_discovery() {
+        let config = NestGateCanonicalConfig::default();
+
+        let endpoint =
+            discover_endpoint_standalone(&config, "api").expect("Failed to discover endpoint");
+        assert_eq!(endpoint.port(), config.network.api.port);
+    }
+
+    #[test]
+    fn test_standalone_port_discovery() {
+        let config = NestGateCanonicalConfig::default();
+
+        let port = discover_port_standalone(&config, "api").expect("Failed to discover port");
+        assert_eq!(port, config.network.api.port);
+    }
+
+    #[test]
+    fn test_standalone_limit_discovery() {
+        let config = NestGateCanonicalConfig::default();
+
+        let limit =
+            discover_limit_standalone(&config, "connections").expect("Failed to discover limit");
+        assert!(limit > 0);
+    }
+
+    #[test]
+    fn test_standalone_timeout_discovery() {
+        let config = NestGateCanonicalConfig::default();
+
+        let timeout =
+            discover_timeout_standalone(&config, "connect").expect("Failed to discover timeout");
+        assert!(timeout.as_secs() > 0);
+    }
+
+    #[test]
+    fn test_create_production_discovery_function() {
+        let config = NestGateCanonicalConfig::default();
+
+        let discovery = create_production_discovery(&config).expect("Failed to create discovery");
+        assert!(!discovery.all_services().is_empty());
+    }
+
+    #[test]
+    fn test_discovery_defaults_implementation() {
+        let defaults = DiscoveryDefaults::default();
+
+        assert_eq!(
+            defaults.default_host,
+            crate::constants::canonical_defaults::network::LOCALHOST
+        );
+        assert!(matches!(
+            defaults.default_bind,
+            IpAddr::V4(_) | IpAddr::V6(_)
+        ));
+        assert_eq!(
+            defaults.default_port,
+            crate::constants::canonical_defaults::network::DEFAULT_API_PORT
+        );
+        assert_eq!(defaults.default_timeout, Duration::from_secs(30));
+        assert_eq!(defaults.default_limit, 100);
+    }
+
+    #[test]
+    fn test_service_endpoint_structure() {
+        let endpoint = ServiceEndpoint {
+            name: "test_service".to_string(),
+            host: "localhost".to_string(),
+            port: crate::constants::network_hardcoded::get_api_port(),
+            bind_address: IpAddr::V4(Ipv4Addr::LOCALHOST),
+        };
+
+        assert_eq!(endpoint.name, "test_service");
+        assert_eq!(endpoint.host, "localhost");
+        assert_eq!(endpoint.port, 8080);
+        assert!(matches!(endpoint.bind_address, IpAddr::V4(_)));
+    }
+
+    #[test]
+    fn test_default_port_for_various_services() {
+        let api_port = ServiceDiscoveryConfig::default_port_for_service("api");
+        assert_eq!(
+            api_port,
+            crate::constants::canonical_defaults::network::DEFAULT_API_PORT
+        );
+
+        let metrics_port = ServiceDiscoveryConfig::default_port_for_service("metrics");
+        assert_eq!(
+            metrics_port,
+            crate::constants::canonical_defaults::network::DEFAULT_METRICS_PORT
+        );
+
+        let health_port = ServiceDiscoveryConfig::default_port_for_service("health");
+        assert_eq!(
+            health_port,
+            crate::constants::canonical_defaults::network::DEFAULT_INTERNAL_PORT
+        );
+
+        let unknown_port = ServiceDiscoveryConfig::default_port_for_service("unknown");
+        assert_eq!(
+            unknown_port,
+            crate::constants::canonical_defaults::network::DEFAULT_API_PORT
+        );
+    }
+
+    #[test]
+    fn test_default_bind_for_various_services() {
+        let api_bind = ServiceDiscoveryConfig::default_bind_for_service("api");
+        assert_eq!(api_bind, IpAddr::V4(Ipv4Addr::UNSPECIFIED)); // 0.0.0.0 for external access
+
+        let internal_bind = ServiceDiscoveryConfig::default_bind_for_service("health");
+        // Should be localhost for internal services
+        assert!(matches!(internal_bind, IpAddr::V4(_)));
     }
 }

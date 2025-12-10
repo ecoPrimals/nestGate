@@ -19,11 +19,17 @@ use crate::Result;
 // Removed unused imports: UnifiedStorageCapability, UnifiedStorageType, Deserialize, Serialize
 
 // Core detector modules
+/// Storage analysis and profiling
 pub mod analysis;
+/// Detector configuration
 pub mod config;
+/// Core detector implementation
 pub mod core;
+/// Detection algorithms and strategies
 pub mod detection;
+/// Storage profiling capabilities
 pub mod profiling;
+/// Type definitions for storage detection
 pub mod types;
 
 // Re-export all public types for backward compatibility
@@ -34,8 +40,9 @@ pub use detection::*;
 pub use profiling::*;
 pub use types::*;
 
-// **UNIVERSAL STORAGE DETECTOR**
-// Scans system for all available storage and profiles their capabilities
+/// **UNIVERSAL STORAGE DETECTOR**
+///
+/// Scans system for all available storage and profiles their capabilities
 pub struct StorageDetector {
     /// Configuration for detection behavior
     config: DetectionConfig,

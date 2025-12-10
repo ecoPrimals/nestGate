@@ -131,7 +131,7 @@ async fn e2e_scenario_03_auto_reconnect_squirrel() {
 #[tokio::test]
 async fn e2e_scenario_03_concurrent_timeouts() {
     eprintln!("\n🧪 E2E: Concurrent Timeouts");
-    let services = vec!["Songbird", "Squirrel", "ToadStool", "Weasel"];
+    let services = ["Songbird", "Squirrel", "ToadStool", "Weasel"];
 
     let handles: Vec<_> = services
         .iter()

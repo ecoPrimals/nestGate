@@ -205,7 +205,10 @@ pub struct ApiAlertConfig {
 }
 
 impl ApiConfig {
-    /// Create a development-optimized configuration
+    /// Creates a development-optimized API configuration
+    ///
+    /// Returns an `ApiConfig` with relaxed security, verbose logging, permissive rate limiting,
+    /// and debugging features enabled suitable for local development environments.
     #[must_use]
     pub fn development_optimized() -> Self {
         let discovery_config = crate::config::discovery_config::ServiceDiscoveryConfig::default();
@@ -242,7 +245,10 @@ impl ApiConfig {
         }
     }
 
-    /// Create a production-hardened configuration
+    /// Creates a production-hardened API configuration
+    ///
+    /// Returns an `ApiConfig` with strict security, TLS enabled, rate limiting, authentication,
+    /// and production-grade monitoring suitable for production deployments.
     #[must_use]
     pub fn production_hardened() -> Self {
         use crate::constants::hardcoding::{addresses, ports};
@@ -278,11 +284,14 @@ impl ApiConfig {
         }
     }
 
-    /// Validate the API configuration
+    /// Validates the API configuration for correctness
+    ///
+    /// Checks that port is non-zero, max connections is non-zero, and port range is valid.
     ///
     /// # Errors
     ///
-    /// Returns an error if validation fails.
+    /// Returns an error if validation fails (port is zero, max connections is zero, or
+    /// port range start is greater than or equal to port range end).
     pub fn validate(&self) -> Result<()> {
         if self.port == 0 {
             return Err(NestGateError::validation_error("Port cannot be zero"));
@@ -300,7 +309,10 @@ impl ApiConfig {
         Ok(())
     }
 
-    /// Merge this configuration with another, preferring values from `other`
+    /// Merges this configuration with another, preferring values from `other`
+    ///
+    /// Takes all values from `other` and overwrites the current configuration.
+    /// Useful for layering configurations (e.g., defaults + environment overrides).
     #[must_use]
     pub fn merge(mut self, other: Self) -> Self {
         self.bind_address = other.bind_address;
@@ -335,6 +347,10 @@ impl Default for TlsConfig {
 }
 
 impl TlsConfig {
+    /// Creates a production TLS configuration with strict security
+    ///
+    /// Returns a `TlsConfig` with production certificates, CA bundle, and client
+    /// verification enabled for secure production deployments.
     #[must_use]
     pub fn production() -> Self {
         Self {
@@ -354,6 +370,10 @@ impl Default for RateLimitingConfig {
 }
 
 impl RateLimitingConfig {
+    /// Creates a development rate limiting configuration with relaxed limits
+    ///
+    /// Returns a `RateLimitingConfig` with rate limiting disabled and high limits
+    /// suitable for local development and testing.
     #[must_use]
     pub fn development() -> Self {
         Self {
@@ -363,6 +383,10 @@ impl RateLimitingConfig {
         }
     }
 
+    /// Creates a production rate limiting configuration with strict limits
+    ///
+    /// Returns a `RateLimitingConfig` with rate limiting enabled and conservative limits
+    /// to protect against abuse in production environments.
     #[must_use]
     pub fn production() -> Self {
         Self {
@@ -381,6 +405,10 @@ impl Default for ApiSecurityConfig {
 }
 
 impl ApiSecurityConfig {
+    /// Creates a development API security configuration with relaxed settings
+    ///
+    /// Returns an `ApiSecurityConfig` with authentication disabled, CORS permissive,
+    /// and security features relaxed for local development.
     #[must_use]
     pub fn development() -> Self {
         Self {
@@ -393,6 +421,10 @@ impl ApiSecurityConfig {
         }
     }
 
+    /// Creates a production API security configuration with strict authentication
+    ///
+    /// Returns an `ApiSecurityConfig` with all security features enabled, authentication
+    /// required, and strict CORS policies for production deployments.
     #[must_use]
     pub fn production() -> Self {
         Self {
@@ -414,6 +446,10 @@ impl Default for ApiPerformanceConfig {
 }
 
 impl ApiPerformanceConfig {
+    /// Creates a development API performance configuration
+    ///
+    /// Returns an `ApiPerformanceConfig` with balanced settings, compression disabled,
+    /// and debugging features enabled for local development.
     #[must_use]
     pub fn development() -> Self {
         use crate::constants::canonical_defaults::{
@@ -431,6 +467,10 @@ impl ApiPerformanceConfig {
         }
     }
 
+    /// Creates a production API performance configuration with optimized settings
+    ///
+    /// Returns an `ApiPerformanceConfig` with larger buffers, more threads, compression
+    /// enabled, HTTP/2 support, and production-grade caching.
     #[must_use]
     pub fn production() -> Self {
         use crate::constants::canonical_defaults::{
@@ -457,6 +497,10 @@ impl Default for ApiMonitoringConfig {
 }
 
 impl ApiMonitoringConfig {
+    /// Creates a development API monitoring configuration
+    ///
+    /// Returns an `ApiMonitoringConfig` with all monitoring features enabled,
+    /// verbose logging, and profiling for local development and debugging.
     #[must_use]
     pub fn development() -> Self {
         Self {
@@ -471,6 +515,10 @@ impl ApiMonitoringConfig {
         }
     }
 
+    /// Creates a production API monitoring configuration with comprehensive checks
+    ///
+    /// Returns an `ApiMonitoringConfig` with metrics, health checks, and tracing enabled,
+    /// but with verbose logging and profiling disabled for production efficiency.
     #[must_use]
     pub fn production() -> Self {
         Self {
@@ -499,6 +547,10 @@ impl Default for ApiAlertConfig {
 }
 
 impl ApiAlertConfig {
+    /// Creates a production alert configuration with strict thresholds
+    ///
+    /// Returns an `ApiAlertConfig` with conservative thresholds for error rates,
+    /// response times, CPU, and memory usage suitable for production alerting.
     #[must_use]
     pub fn production() -> Self {
         Self {

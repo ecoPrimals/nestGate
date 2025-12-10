@@ -39,25 +39,38 @@ pub struct PoolMetadata {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 /// Poolfailoverstate
 pub enum PoolFailoverState {
-    Active,   // Currently imported and active
+    /// Pool is currently imported and active
+    Active, // Currently imported and active
+    /// Pool is available for import (original owner failed)
     Orphaned, // Available for import (original owner failed)
-    Failed,   // Pool is in a failed state
-    Unknown,  // State cannot be determined
+    /// Pool is in a failed state
+    Failed, // Pool is in a failed state
+    /// Pool state cannot be determined
+    Unknown, // State cannot be determined
 }
 
 /// Pool state for failover management
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 /// Poolstate
 pub enum PoolState {
-    Online,   // Pool is healthy and accessible
+    /// Pool is healthy and accessible
+    Online, // Pool is healthy and accessible
+    /// Pool has issues but is still functional
     Degraded, // Pool has issues but is still functional
-    Offline,  // Pool is not accessible
-    Faulted,  // Pool has critical errors
-    Removed,  // Pool has been removed from configuration
-    Unavail,  // Pool is temporarily unavailable
+    /// Pool is not accessible
+    Offline, // Pool is not accessible
+    /// Pool has critical errors
+    Faulted, // Pool has critical errors
+    /// Pool has been removed from configuration
+    Removed, // Pool has been removed from configuration
+    /// Pool is temporarily unavailable
+    Unavail, // Pool is temporarily unavailable
+    /// Pool is available for import (original owner failed)
     Orphaned, // Available for import (original owner failed)
-    Failed,   // Pool is in a failed state
-    Unknown,  // State cannot be determined
+    /// Pool is in a failed state
+    Failed, // Pool is in a failed state
+    /// Pool state cannot be determined
+    Unknown, // State cannot be determined
 }
 
 // Deprecated FailoverConfig removed - use CanonicalZfsConfig::default().pools.failover instead
@@ -437,6 +450,7 @@ pub struct NodeHealth {
 }
 
 impl NodeHealthMonitor {
+    /// Creates a new node health monitor with the given failover configuration.
     #[must_use]
     pub fn new(config: CanonicalFailoverConfig) -> Self {
         Self {

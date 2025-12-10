@@ -29,7 +29,6 @@ use tracing::warn;
 /// * `snapshots_count` - Total number of snapshots
 /// * `last_check` - Timestamp of last health check
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Zfshealthinfo
 pub struct ZfsHealthInfo {
     /// Current health status
     pub status: String,
@@ -54,7 +53,6 @@ pub struct ZfsHealthInfo {
 /// * `average_response_time_ms` - Average request processing time in milliseconds
 /// * `uptime_seconds` - Service uptime in seconds
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Zfsmetrics
 pub struct ZfsMetrics {
     /// Total number of requests processed
     pub requests_processed: u64,
@@ -79,42 +77,57 @@ pub struct ZfsMetrics {
 /// - Snapshot operations: Create, destroy, and list snapshots
 /// - Health check: Query service health status
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Zfsrequest
 pub enum ZfsRequest {
     /// Pool operations
     PoolCreate {
+        /// Pool name
         name: String,
+        /// Device paths for the pool
         devices: Vec<String>,
     },
     /// Pooldestroy
     PoolDestroy {
+        /// Pool name to destroy
         name: String,
     },
     /// Poolstatus
     PoolStatus {
+        /// Optional pool name filter
         name: Option<String>,
     },
     /// Dataset operations
     DatasetCreate {
+        /// Dataset name
         name: String,
+        /// Dataset properties
         properties: HashMap<String, String>,
     },
+    /// Destroy a dataset
     DatasetDestroy {
+        /// Dataset name to destroy
         name: String,
     },
+    /// List datasets
     DatasetList {
+        /// Optional pool filter
         pool: Option<String>,
     },
 
     /// Snapshot operations
     SnapshotCreate {
+        /// Source dataset
         dataset: String,
+        /// Snapshot name
         name: String,
     },
+    /// Destroy a snapshot
     SnapshotDestroy {
+        /// Snapshot name to destroy
         name: String,
     },
+    /// List snapshots
     SnapshotList {
+        /// Optional dataset filter
         dataset: Option<String>,
     },
 
@@ -127,16 +140,30 @@ pub enum ZfsRequest {
 /// Zfsresponse
 pub enum ZfsResponse {
     /// Pool status information
-    PoolStatus { pools: Vec<PoolInfo> },
+    PoolStatus {
+        /// List of pools
+        pools: Vec<PoolInfo>,
+    },
     /// Dataset listing
-    DatasetList { datasets: Vec<DatasetInfo> },
+    DatasetList {
+        /// List of datasets
+        datasets: Vec<DatasetInfo>,
+    },
     /// Snapshot listing
-    SnapshotList { snapshots: Vec<SnapshotInfo> },
+    SnapshotList {
+        /// List of snapshots
+        snapshots: Vec<SnapshotInfo>,
+    },
     /// Operation success
-    Success { message: String },
+    Success {
+        /// Success message
+        message: String,
+    },
     /// Health status
     Health {
+        /// Health status string
         status: String,
+        /// Health details
         details: HashMap<String, String>,
     },
 }

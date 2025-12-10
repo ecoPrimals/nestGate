@@ -9,12 +9,9 @@ use std::time::Duration;
 #[tokio::test]
 async fn test_invalid_port_configuration_error() {
     // Test port validation error paths
-    assert!(is_valid_port(0) == false, "Port 0 should be invalid");
-    assert!(
-        is_valid_port(65536) == false,
-        "Port >65535 should be invalid"
-    );
-    assert!(is_valid_port(1024) == true, "Valid port should pass");
+    assert!(!is_valid_port(0), "Port 0 should be invalid");
+    assert!(!is_valid_port(65536), "Port >65535 should be invalid");
+    assert!(is_valid_port(1024), "Valid port should pass");
 }
 
 /// **Error Path Test 2: Network Timeout Errors**
@@ -105,7 +102,7 @@ fn test_empty_collection_error_paths() {
     assert_eq!(empty_vec.len(), 0);
     assert_eq!(empty_vec.first(), None);
     assert_eq!(empty_vec.last(), None);
-    assert_eq!(empty_vec.get(0), None);
+    assert_eq!(empty_vec.first(), None);
 }
 
 /// **Error Path Test 8: String Parsing Errors**
@@ -164,6 +161,7 @@ async fn test_resource_exhaustion_handling() {
 #[test]
 fn test_invalid_state_transition_errors() {
     #[derive(Debug, PartialEq)]
+    #[allow(dead_code)] // Test demonstrates state machine concept
     enum State {
         Init,
         Running,

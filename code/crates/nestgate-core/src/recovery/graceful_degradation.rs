@@ -33,7 +33,10 @@ pub enum FallbackStrategy {
     /// Disable feature
     Disable,
     /// Use alternative service
-    Alternative { endpoint: String },
+    Alternative {
+        /// Alternative service endpoint URL
+        endpoint: String,
+    },
 }
 
 /// Graceful degradation manager
@@ -116,3 +119,7 @@ impl Default for GracefulDegradation {
         Self::new()
     }
 }
+
+#[cfg(test)]
+#[path = "graceful_degradation_tests.rs"]
+mod graceful_degradation_tests;

@@ -41,8 +41,8 @@ mod tests {
     fn test_allocation_status_deserialization() {
         let status = AllocationStatus::Failed;
         let json = serde_json::to_string(&status).unwrap();
-        let deserialized: AllocationStatus = serde_json::from_str(&json)
-            .expect("Failed to deserialize");
+        let deserialized: AllocationStatus =
+            serde_json::from_str(&json).expect("Failed to deserialize");
         assert_eq!(status, deserialized);
     }
 
@@ -142,8 +142,8 @@ mod tests {
     fn test_health_status_serialization() {
         let status = HealthStatus::Unhealthy;
         let json = serde_json::to_string(&status).expect("Failed to serialize");
-        let deserialized: HealthStatus = serde_json::from_str(&json)
-            .expect("Failed to deserialize");
+        let deserialized: HealthStatus =
+            serde_json::from_str(&json).expect("Failed to deserialize");
         assert_eq!(status, deserialized);
     }
 
@@ -169,7 +169,7 @@ mod tests {
     fn test_service_state_transitions() {
         let state = ServiceState::Starting;
         assert_ne!(state, ServiceState::Running);
-        
+
         let new_state = ServiceState::Running;
         assert_eq!(new_state, ServiceState::Running);
     }
@@ -178,8 +178,8 @@ mod tests {
     fn test_service_state_serialization() {
         let state = ServiceState::Stopping;
         let json = serde_json::to_string(&state).expect("Failed to serialize");
-        let deserialized: ServiceState = serde_json::from_str(&json)
-            .expect("Failed to deserialize");
+        let deserialized: ServiceState =
+            serde_json::from_str(&json).expect("Failed to deserialize");
         assert_eq!(state, deserialized);
     }
 
@@ -210,8 +210,8 @@ mod tests {
     fn test_performance_tier_serialization() {
         let tier = PerformanceTier::High;
         let json = serde_json::to_string(&tier).expect("Failed to serialize");
-        let deserialized: PerformanceTier = serde_json::from_str(&json)
-            .expect("Failed to deserialize");
+        let deserialized: PerformanceTier =
+            serde_json::from_str(&json).expect("Failed to deserialize");
         assert_eq!(tier, deserialized);
     }
 
@@ -229,7 +229,7 @@ mod tests {
     fn test_health_status_workflow() {
         let mut status = HealthStatus::default();
         assert_eq!(status, HealthStatus::Unknown);
-        
+
         status = HealthStatus::Healthy;
         assert_ne!(status, HealthStatus::Unknown);
     }
@@ -241,7 +241,7 @@ mod tests {
             ServiceState::Starting,
             ServiceState::Running,
         ];
-        
+
         assert_eq!(states.len(), 3);
         assert_eq!(states[2], ServiceState::Running);
     }
@@ -281,36 +281,35 @@ mod tests {
     #[test]
     fn test_allocation_status_hash() {
         use std::collections::HashSet;
-        
+
         let mut set = HashSet::new();
         set.insert(AllocationStatus::Active);
         set.insert(AllocationStatus::Active);
-        
+
         assert_eq!(set.len(), 1);
     }
 
     #[test]
     fn test_storage_tier_hash() {
         use std::collections::HashSet;
-        
+
         let mut set = HashSet::new();
         set.insert(StorageTier::Hot);
         set.insert(StorageTier::Warm);
         set.insert(StorageTier::Hot);
-        
+
         assert_eq!(set.len(), 2);
     }
 
     #[test]
     fn test_service_state_hash() {
         use std::collections::HashSet;
-        
+
         let mut set = HashSet::new();
         set.insert(ServiceState::Running);
         set.insert(ServiceState::Stopped);
-        
+
         assert!(set.contains(&ServiceState::Running));
         assert!(set.contains(&ServiceState::Stopped));
     }
 }
-

@@ -191,6 +191,20 @@ impl Default for ApiPathsConfig {
 }
 
 impl ApiPathsConfig {
+    /// Creates a new API paths configuration with the specified API version.
+    ///
+    /// # Arguments
+    ///
+    /// * `api_version` - The API version to use for all endpoint paths (e.g., "v1", "v2")
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use nestgate_core::config::api_paths::ApiPathsConfig;
+    ///
+    /// let config = ApiPathsConfig::default_with_version("v2");
+    /// // All paths will now use /api/v2/...
+    /// ```
     #[must_use]
     pub fn default_with_version(api_version: &str) -> Self {
         Self {

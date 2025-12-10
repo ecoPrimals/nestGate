@@ -1,5 +1,8 @@
 //! **DEVELOPMENT STUBS MODULE**
 //!
+//! ⚠️ **WARNING**: This module is ONLY available in test/dev builds.
+//! It is NOT compiled into production releases.
+//!
 //! This module provides stub implementations for development and testing environments
 //! where full functionality may not be available (e.g., non-Linux platforms, testing without real services).
 //!
@@ -13,7 +16,16 @@
 //!
 //! ## Feature Gate
 //!
+//! ⚠️ **IMPORTANT**: This entire module is gated and NOT available in production builds.
+//!
 //! Most stubs are gated behind the `dev-stubs` feature flag:
+
+// ═══════════════════════════════════════════════════════════════
+// 🔒 FEATURE GATE: Development/Testing Only
+// ═══════════════════════════════════════════════════════════════
+// This module is NOT compiled in production builds.
+// Only available when running tests or with dev-stubs feature.
+#![cfg(any(test, feature = "dev-stubs"))]
 //!
 //! ```toml
 //! [dependencies]

@@ -1,0 +1,328 @@
+//! Services configuration module  
+//!
+//! **CAPABILITY-BASED DISCOVERY**: Discovers services by WHAT THEY DO, not WHO THEY ARE.
+//!
+//! This module implements the capability-based discovery pattern, allowing NestGate
+//! to discover and integrate with ANY primal offering required capabilities, without
+//! hardcoding specific primal names or URLs.
+//!
+//! # Philosophy
+//!
+//! - ✅ **Capability-based**: "I need security" → discovers ANY security provider
+//! - ❌ **NOT identity-based**: "I need BearDog" → vendor lock-in
+//!
+//! # Example
+//!
+//! ```ignore
+//! use nestgate_core::config::runtime::get_config;
+//!
+//! let services = &get_config().services;
+//!
+//! // ✅ CORRECT: Capability-based discovery
+//! if let Some(security_url) = services.get_capability_url("security") {
+//!     // Connect to ANY primal offering security capability
+//!     let client = SecurityClient::new(&security_url)?;
+//! }
+//!
+//! // ❌ WRONG: Hardcoded primal name (vendor lock-in)
+//! let beardog_url = services.beardog_url.clone(); // DEPRECATED!
+//! ```
+
+use crate::error::Result;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::env;
+
+/// Services configuration for capability-based discovery.
+///
+/// Discovers services by capability type (security, networking, AI, compute)
+/// rather than hardcoded primal names, ensuring zero vendor lock-in.
+///
+/// # Environment Variables
+///
+/// **Modern (capability-based)**:
+/// - `NESTGATE_CAPABILITY_SECURITY` - Security capability provider URL
+/// - `NESTGATE_CAPABILITY_ORCHESTRATION` - Orchestration provider URL
+/// - `NESTGATE_CAPABILITY_NETWORKING` - Networking provider URL
+/// - `NESTGATE_CAPABILITY_AI` - AI/intelligence provider URL
+/// - `NESTGATE_CAPABILITY_COMPUTE` - Compute provider URL
+/// - `NESTGATE_CAPABILITY_ECOSYSTEM` - Ecosystem/OS provider URL
+///
+/// **Legacy (backwards compatibility, deprecated)**:
+/// - `NESTGATE_BEARDOG_URL` → Use `NESTGATE_CAPABILITY_SECURITY`
+/// - `NESTGATE_SONGBIRD_URL` → Use `NESTGATE_CAPABILITY_ORCHESTRATION`
+/// - `NESTGATE_SQUIRREL_URL` → Use `NESTGATE_CAPABILITY_AI`
+/// - `NESTGATE_TOADSTOOL_URL` → Use `NESTGATE_CAPABILITY_COMPUTE`
+/// - `NESTGATE_BIOMEOS_URL` → Use `NESTGATE_CAPABILITY_ECOSYSTEM`
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct ServicesConfig {
+    /// Capability URLs indexed by capability name (e.g., "security", "ai", "compute")
+    /// This replaces individual fields like beardog_url, songbird_url, etc.
+    #[serde(default)]
+    pub discovered_capabilities: HashMap<String, String>,
+
+    /// Legacy field for backwards compatibility (⚠️ deprecated, use capabilities map)
+    #[deprecated(since = "0.2.0", note = "Use get_capability_url(\"security\") instead")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub beardog_url: Option<String>,
+
+    /// Legacy field for backwards compatibility (⚠️ deprecated, use capabilities map)
+    #[deprecated(
+        since = "0.2.0",
+        note = "Use get_capability_url(\"orchestration\") instead"
+    )]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub songbird_url: Option<String>,
+
+    /// Legacy field for backwards compatibility (⚠️ deprecated, use capabilities map)
+    #[deprecated(since = "0.2.0", note = "Use get_capability_url(\"ai\") instead")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub squirrel_url: Option<String>,
+
+    /// Legacy field for backwards compatibility (⚠️ deprecated, use capabilities map)
+    #[deprecated(since = "0.2.0", note = "Use get_capability_url(\"compute\") instead")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub toadstool_url: Option<String>,
+
+    /// Legacy field for backwards compatibility (⚠️ deprecated, use capabilities map)
+    #[deprecated(
+        since = "0.2.0",
+        note = "Use get_capability_url(\"ecosystem\") instead"
+    )]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub biomeos_url: Option<String>,
+
+    /// Service discovery enabled (default: true)
+    pub discovery_enabled: bool,
+
+    /// Service discovery port (default: 8500)
+    pub discovery_port: u16,
+}
+
+impl ServicesConfig {
+    /// Load services configuration from environment variables.
+    ///
+    /// Prefers modern capability-based environment variables, falls back to
+    /// legacy primal-specific variables for backwards compatibility.
+    ///
+    /// # Errors
+    ///
+    /// Currently returns Ok always (no validation failures), but signature
+    /// includes Result for future validation additions.
+    pub fn from_environment() -> Result<Self> {
+        let mut capabilities = HashMap::new();
+
+        // Modern capability-based configuration (PREFERRED)
+        if let Ok(url) = env::var("NESTGATE_CAPABILITY_SECURITY") {
+            capabilities.insert("security".to_string(), url);
+        }
+        if let Ok(url) = env::var("NESTGATE_CAPABILITY_ORCHESTRATION") {
+            capabilities.insert("orchestration".to_string(), url);
+        }
+        if let Ok(url) = env::var("NESTGATE_CAPABILITY_NETWORKING") {
+            capabilities.insert("networking".to_string(), url);
+        }
+        if let Ok(url) = env::var("NESTGATE_CAPABILITY_AI") {
+            capabilities.insert("ai".to_string(), url);
+        }
+        if let Ok(url) = env::var("NESTGATE_CAPABILITY_COMPUTE") {
+            capabilities.insert("compute".to_string(), url);
+        }
+        if let Ok(url) = env::var("NESTGATE_CAPABILITY_ECOSYSTEM") {
+            capabilities.insert("ecosystem".to_string(), url);
+        }
+
+        // Legacy support (backwards compatibility) - DEPRECATED
+        #[allow(deprecated)]
+        let config = Self {
+            discovered_capabilities: capabilities.clone(),
+            beardog_url: env::var("NESTGATE_BEARDOG_URL")
+                .ok()
+                .or_else(|| capabilities.get("security").cloned()),
+            songbird_url: env::var("NESTGATE_SONGBIRD_URL")
+                .ok()
+                .or_else(|| capabilities.get("orchestration").cloned()),
+            squirrel_url: env::var("NESTGATE_SQUIRREL_URL")
+                .ok()
+                .or_else(|| capabilities.get("ai").cloned()),
+            toadstool_url: env::var("NESTGATE_TOADSTOOL_URL")
+                .ok()
+                .or_else(|| capabilities.get("compute").cloned()),
+            biomeos_url: env::var("NESTGATE_BIOMEOS_URL")
+                .ok()
+                .or_else(|| capabilities.get("ecosystem").cloned()),
+            discovery_enabled: env::var("NESTGATE_DISCOVERY_ENABLED")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(true),
+            // ✅ SOVEREIGNTY: Environment-driven discovery port
+            discovery_port: env::var("NESTGATE_DISCOVERY_PORT")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(8083), // Safe default for discovery service
+        };
+
+        Ok(config)
+    }
+
+    /// Get service URL by capability type.
+    ///
+    /// **CAPABILITY-BASED DISCOVERY**: Use this instead of hardcoded service names.
+    /// Discovers services by WHAT THEY DO, not WHO THEY ARE.
+    ///
+    /// # Arguments
+    ///
+    /// * `capability` - The capability type (e.g., "security", "ai", "compute")
+    ///
+    /// # Returns
+    ///
+    /// The URL of a service providing this capability, or `None` if not configured.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// // ✅ CORRECT: Capability-based
+    /// let security_url = services.get_capability_url("security");
+    /// // Discovers ANY primal offering security (BearDog, custom, etc.)
+    ///
+    /// // ❌ WRONG: Primal name hardcoding
+    /// let beardog_url = services.beardog_url.clone();
+    /// // Couples to specific primal - vendor lock-in!
+    /// ```
+    #[must_use]
+    #[allow(deprecated)]
+    pub fn get_capability_url(&self, capability: &str) -> Option<String> {
+        // First try the modern capabilities map (PREFERRED)
+        if let Some(url) = self.discovered_capabilities.get(capability) {
+            return Some(url.clone());
+        }
+
+        // Fall back to legacy fields for backwards compatibility
+        match capability {
+            "security" => self.beardog_url.clone(),
+            "networking" | "orchestration" => self.songbird_url.clone(),
+            "ai" | "intelligence" => self.squirrel_url.clone(),
+            "compute" => self.toadstool_url.clone(),
+            "os" | "system" | "ecosystem" => self.biomeos_url.clone(),
+            _ => None,
+        }
+    }
+
+    /// Check if a capability is configured.
+    ///
+    /// Returns `true` if any service providing this capability is known.
+    #[must_use]
+    pub fn has_capability(&self, capability: &str) -> bool {
+        self.discovered_capabilities.contains_key(capability)
+            || self.get_capability_url(capability).is_some()
+    }
+
+    /// List all configured capabilities.
+    ///
+    /// Returns a sorted list of capability types that have providers configured.
+    #[must_use]
+    #[allow(deprecated)]
+    pub fn available_capabilities(&self) -> Vec<String> {
+        let mut caps: Vec<String> = self.discovered_capabilities.keys().cloned().collect();
+
+        // Add capabilities from legacy fields
+        if self.beardog_url.is_some() && !caps.contains(&"security".to_string()) {
+            caps.push("security".to_string());
+        }
+        if self.songbird_url.is_some() && !caps.contains(&"orchestration".to_string()) {
+            caps.push("orchestration".to_string());
+        }
+        if self.squirrel_url.is_some() && !caps.contains(&"ai".to_string()) {
+            caps.push("ai".to_string());
+        }
+        if self.toadstool_url.is_some() && !caps.contains(&"compute".to_string()) {
+            caps.push("compute".to_string());
+        }
+
+        caps.sort();
+        caps
+    }
+
+    /// Get capability URL with local fallback.
+    ///
+    /// **CAPABILITY-BASED**: Returns URL for a capability type, falling back
+    /// to localhost discovery if not configured.
+    ///
+    /// This is useful for development where services may be running locally.
+    ///
+    /// # Primal Sovereignty
+    ///
+    /// Falls back to environment-configurable localhost endpoints. No hardcoded assumptions.
+    #[must_use]
+    pub fn capability_url_or_local(&self, capability: &str) -> String {
+        use std::env;
+
+        // ✅ SOVEREIGNTY: Environment-driven service port mapping
+        let port = match capability {
+            "security" => env::var("NESTGATE_SECURITY_PORT")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(8084),
+            "networking" | "orchestration" => env::var("NESTGATE_ORCHESTRATION_PORT")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(9091),
+            _ => env::var("NESTGATE_API_PORT")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(8080),
+        };
+
+        // ✅ SOVEREIGNTY: Environment-driven host with compile-time constant fallback
+        let host = env::var("NESTGATE_SERVICE_HOST")
+            .unwrap_or_else(|_| std::net::Ipv4Addr::LOCALHOST.to_string());
+
+        self.get_capability_url(capability)
+            .unwrap_or_else(|| format!("http://{}:{}", host, port))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_capability_based_discovery() {
+        let mut config = ServicesConfig::default();
+        config.discovered_capabilities.insert(
+            "security".to_string(),
+            "http://security-provider:8080".to_string(),
+        );
+
+        assert!(config.has_capability("security"));
+        assert_eq!(
+            config.get_capability_url("security"),
+            Some("http://security-provider:8080".to_string())
+        );
+    }
+
+    #[test]
+    fn test_available_capabilities() {
+        let mut config = ServicesConfig::default();
+        config
+            .discovered_capabilities
+            .insert("security".to_string(), "http://sec:8080".to_string());
+        config
+            .discovered_capabilities
+            .insert("ai".to_string(), "http://ai:9000".to_string());
+
+        let caps = config.available_capabilities();
+        assert!(caps.contains(&"security".to_string()));
+        assert!(caps.contains(&"ai".to_string()));
+    }
+
+    #[test]
+    fn test_no_hardcoded_primal_names() {
+        // This test verifies the capability-based pattern is working
+        let config = ServicesConfig::default();
+
+        // Should work with ANY provider, not specific primals
+        assert_eq!(config.get_capability_url("security"), None);
+        assert_eq!(config.get_capability_url("nonexistent"), None);
+    }
+}

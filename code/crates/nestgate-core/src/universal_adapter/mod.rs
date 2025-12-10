@@ -16,9 +16,13 @@
 //! Universal Adapter module
 
 pub mod adapter_config;
+/// Capability endpoints configuration module
 pub mod capability_endpoints_config;
+/// Universal adapter configuration
 pub mod config;
+/// Capability discovery module
 pub mod discovery;
+/// Discovery configuration
 pub mod discovery_config;
 
 // Capability-based adapters (no hardcoded primal names)
@@ -27,6 +31,9 @@ pub mod capability_system;
 pub mod networking_capability;
 pub mod primal_sovereignty;
 pub mod security_capability;
+
+// Re-export ServiceRegistry for easy access
+pub use crate::universal_primal_discovery::service_registry::ServiceRegistry;
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -54,6 +61,7 @@ pub use security_capability::{
 };
 
 // **MODULE STRUCTURE** - Organize exports for compatibility
+/// Universal adapter types and query structures
 pub mod types {
     use super::{Deserialize, Serialize};
 
@@ -72,6 +80,7 @@ pub mod types {
     }
 
     impl CapabilityQuery {
+        /// Creates a new capability query with the specified capability type
         #[must_use]
         pub fn new(capability_type: impl Into<String>) -> Self {
             Self {
@@ -86,12 +95,14 @@ pub mod types {
             Self::new(capability_type)
         }
 
+        /// Adds an operation filter to the capability query
         #[must_use]
         pub fn with_operation(mut self, operation: impl Into<String>) -> Self {
             self.operation = Some(operation.into());
             self
         }
 
+        /// Adds a custom filter to the query
         #[must_use]
         pub fn with_filter(mut self, filter: impl Into<String>) -> Self {
             self.filters.push(filter.into());
@@ -100,13 +111,16 @@ pub mod types {
     }
 }
 
+/// Canonical module re-exports for backwards compatibility
 pub mod canonical {
     pub use super::CapabilityRequest as CanonicalCapabilityRequest;
 }
 
 // Use comprehensive stats module from stats.rs file
+/// Adapter statistics and metrics
 pub mod stats;
 
+/// Consolidated canonical adapter module
 pub mod consolidated_canonical {
     pub use super::UniversalAdapter as ConsolidatedCanonicalAdapter;
     #[allow(deprecated)]
@@ -591,18 +605,24 @@ mod tests {
             UniversalAdapter::with_discovery_config(Arc::new(config), adapter_endpoint);
 
         // Test capability discovery without hardcoded primal names
+        // Test unwrap OK: test environment is controlled
         let capabilities = adapter
             .discover_capabilities()
             .await
-            .expect("Operation failed");
+            .expect("Test setup: discovery should succeed in test environment");
 
-        // Verify no hardcoded primal names in providers
+        // Verify no hardcoded primal names in providers (capability-based only)
         for capability in capabilities {
-            assert!(!capability.provider.contains("songbird"));
-            assert!(!capability.provider.contains("toadstool"));
-            assert!(!capability.provider.contains("squirrel"));
-            assert!(!capability.provider.contains("beardog"));
-            assert!(!capability.provider.contains("biomeos"));
+            // Validate capability-based naming (e.g., "orchestration", "ai", "security", "storage")
+            let provider = capability.provider.to_lowercase();
+            assert!(
+                !provider.contains("songbird"),
+                "Use 'orchestration' capability"
+            );
+            assert!(!provider.contains("toadstool"), "Use 'storage' capability");
+            assert!(!provider.contains("squirrel"), "Use 'ai' capability");
+            assert!(!provider.contains("beardog"), "Use 'security' capability");
+            assert!(!provider.contains("biomeos"), "Use 'ecosystem' capability");
         }
     }
 
@@ -617,10 +637,12 @@ mod tests {
         adapter
             .discover_capabilities()
             .await
-            .expect("Operation failed");
+            .expect("Test setup: discovery should succeed in test environment");
 
         // Test O(1) capability access
-        let storage_capability = adapter.get_capability("storage").expect("Operation failed");
+        let storage_capability = adapter
+            .get_capability("storage")
+            .expect("Test setup: storage capability should exist");
         assert_eq!(storage_capability.category, "storage");
         assert_eq!(storage_capability.provider, "nestgate-native");
     }
