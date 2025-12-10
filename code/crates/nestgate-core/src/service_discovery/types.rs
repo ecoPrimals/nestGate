@@ -85,8 +85,11 @@ pub enum ServiceCapability {
     Network(CommunicationProtocol),
     /// Custom capability
     Custom {
+        /// Capability namespace
         namespace: String,
+        /// Capability identifier
         capability: String,
+        /// Capability version
         version: String,
     },
 }

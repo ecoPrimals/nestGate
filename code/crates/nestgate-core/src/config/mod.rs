@@ -45,8 +45,10 @@ pub mod sovereignty;
 /// Thread-safe configuration for sovereignty module (eliminates runtime env::var calls)
 pub mod sovereignty_config;
 
-/// **NEW**: Centralized runtime configuration system (eliminates 805+ hardcoded values)
-/// Replaces all hardcoded ports, IPs, endpoints with environment-driven config
+/// Centralized runtime configuration system (eliminates 805+ hardcoded values)
+///
+/// Replaces all hardcoded ports, IPs, endpoints with environment-driven config.
+/// See [`runtime`] module for details.
 pub mod runtime;
 
 /// Configuration validation module
@@ -56,9 +58,20 @@ pub mod validation;
 mod config_validation_tests; // Nov 23, 2025 - P1 test expansion
 #[cfg(test)]
 mod edge_case_tests; // Nov 23, 2025 - P1-5 edge case tests
+#[cfg(test)]
+mod environment_error_tests; // Dec 6, 2025 - P1 comprehensive environment error tests
+#[cfg(test)]
+mod strategic_config_tests_dec11; // Dec 11, 2025 - Strategic configuration tests
+
+// Week 2 test expansion - REMOVED (outdated API) Nov 30, 2025
+// The error_path_tests_week2 module was deleted as it tested a refactored API
 
 /// Service discovery configuration (Week 2 migration)
 pub mod discovery_config;
+/// Modern environment-driven configuration system (Week 2 Dec 2025)
+pub mod environment;
+/// Migration bridge for legacy configuration patterns (Week 2 Dec 2025)
+pub mod migration_bridge;
 
 // ==================== SECTION ====================
 // All deprecated configuration modules have been removed. Use canonical_primary directly:

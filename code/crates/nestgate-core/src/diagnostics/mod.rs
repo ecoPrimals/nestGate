@@ -5,9 +5,14 @@
 //! - `metrics`: System metrics collection and structures
 //! - `diagnostic`: Individual diagnostic entries
 //! - `manager`: Main diagnostics management logic
+
+/// Individual diagnostic entry types and structures for system health reporting.
 pub mod diagnostic;
+/// Diagnostics manager coordinating system-wide diagnostic collection and reporting.
 pub mod manager;
+/// System metrics types for performance and resource monitoring.
 pub mod metrics;
+/// Core diagnostic types including severity levels and diagnostic categories.
 pub mod types;
 pub use diagnostic::*;
 pub use manager::*;

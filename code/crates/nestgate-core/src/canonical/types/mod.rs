@@ -1,10 +1,36 @@
-//
-// This module provides canonical type aliases for complex types used throughout
-// the NestGate ecosystem. This enables zero-copy operations and consistent typing.
-
-//! Types module
+//! Canonical type system for NestGate
+//!
+//! This module provides canonical type aliases for complex types used throughout
+//! the NestGate ecosystem. This enables zero-copy operations and consistent typing.
+//!
+//! # Purpose
+//!
+//! - **Zero-Copy Operations**: Type aliases enable passing complex types by reference
+//! - **Consistent Typing**: Single source of truth for type definitions
+//! - **Ecosystem Integration**: Shared types across all NestGate components
+//!
+//! # Modules
+//!
+//! - [`config_registry`] - Configuration type registries
+//! - [`core_types`] - Core canonical types (alerts, registries, capabilities)
+//!
+//! # Examples
+//!
+//! ```rust
+//! use nestgate_core::canonical::types::ServiceRegistry;
+//!
+//! // Use canonical types for consistent typing
+//! fn process_registry(registry: &ServiceRegistry) {
+//!     // Zero-copy access to registry
+//! }
+//! ```
 
 pub mod config_registry;
+
+/// Core canonical types including alerts, registries, and capability maps
+///
+/// This module contains the fundamental type aliases used throughout NestGate
+/// for service discovery, monitoring, and capability management.
 pub mod core_types;
 
 // Re-export all canonical types

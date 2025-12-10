@@ -351,7 +351,7 @@ mod dataset_operations_tests {
     }
 
     /// Gets All Properties
-    async fn get_all_properties(_name: &DatasetName) -> Result<HashMap<String, String>> {
+    async fn get_all_properties(_name: &DatasetName) -> std::result::Result<HashMap<String, String>> {
         Err(crate::error::ZfsError::CommandError {
             message: "Test environment".into(),
         }.into()

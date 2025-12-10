@@ -285,7 +285,7 @@ fn test_dashboard_time_range_intervals_performance() {
 #[test]
 fn test_dashboard_time_range_data_points_performance() {
     let start = SystemTime::now();
-    let end = start + Duration::from_secs(31536000); // 1 year
+    let end = start + Duration::from_secs(31_536_000); // 1 year
     let granularity = Duration::from_secs(1); // 1 second
 
     let range = DashboardTimeRange::new(start, end, granularity);
@@ -299,7 +299,7 @@ fn test_dashboard_time_range_data_points_performance() {
         elapsed.as_micros() < 1000,
         "Data points computation took too long: {elapsed:?}"
     );
-    assert_eq!(points, 31536000);
+    assert_eq!(points, 31_536_000);
 }
 
 // =====================================================

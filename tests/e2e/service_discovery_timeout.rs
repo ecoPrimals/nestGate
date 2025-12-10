@@ -10,9 +10,12 @@
 //! - Clear logging of missing services occurs
 //! - Automatic reconnection works when services come online
 //! - No crashes or hangs occur
+//!
+//! **MODERNIZED**: Event-driven service discovery using Notify and state polling
 
+use std::sync::Arc;
 use std::time::Duration;
-use tokio::time::sleep;
+use tokio::sync::Notify;
 
 #[tokio::test]
 #[ignore] // Requires service discovery infrastructure
@@ -69,8 +72,22 @@ async fn test_service_discovery_timeout() {
     let mock_services = start_mock_primal_services(&test_env).await;
     assert!(mock_services.is_ok(), "Should be able to start mock services");
     
-    // Step 10: Wait for discovery
-    sleep(Duration::from_secs(2)).await;
+    // Step 10: Wait for discovery (MODERNIZED - event-driven)
+    let discovery_complete = Arc::new(Notify::new());
+    let notify_clone = discovery_complete.clone();
+    
+    tokio::spawn(async move {
+        // Monitor for service discovery
+        while check_service_discovery_status(&test_env).await.services_discovered == 0 {
+            tokio::task::yield_now().await;
+        }
+        notify_clone.notify_one();
+    });
+    
+    tokio::time::timeout(
+        Duration::from_secs(10),
+        discovery_complete.notified()
+    ).await.expect("Services should be discovered");
     
     // Step 11: Verify automatic reconnection
     let reconnect_status = check_service_discovery_status(&test_env).await;
@@ -108,8 +125,25 @@ async fn test_partial_service_availability() {
     let discovery_config = DiscoveryConfig::default();
     let nestgate = initialize_nestgate(&test_env, &discovery_config).await.unwrap();
     
-    // Give time for discovery
-    sleep(Duration::from_secs(1)).await;
+    // Wait for discovery (event-driven)
+    let discovery_ready = Arc::new(Notify::new());
+    let notify_clone = discovery_ready.clone();
+    
+    tokio::spawn(async move {
+        // Poll until at least one service is discovered
+        loop {
+            if check_service_discovery_status(&test_env).await.services_discovered > 0 {
+                notify_clone.notify_one();
+                break;
+            }
+            tokio::task::yield_now().await;
+        }
+    });
+    
+    tokio::time::timeout(
+        Duration::from_secs(5),
+        discovery_ready.notified()
+    ).await.ok();
     
     let status = nestgate.get_status().await;
     
@@ -149,7 +183,10 @@ async fn test_discovery_retry_mechanism() {
     let discovery_handle = tokio::spawn(async move {
         for _ in 0..3 {
             counter_clone.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
-            sleep(Duration::from_millis(200)).await;
+            // Yield instead of sleep - real retry would be event-driven
+            for _ in 0..20 {
+                tokio::task::yield_now().await;
+            }
         }
     });
     
@@ -205,8 +242,28 @@ async fn test_service_health_monitoring() {
     let discovery_config = DiscoveryConfig::default();
     let nestgate = initialize_nestgate(&test_env, &discovery_config).await.unwrap();
     
-    // Wait for discovery
-    sleep(Duration::from_secs(1)).await;
+    // Wait for discovery (event-driven)
+    let health_ready = Arc::new(Notify::new());
+    let notify_clone = health_ready.clone();
+    
+    tokio::spawn({
+        let env = test_env.clone();
+        async move {
+            // Poll until services are discovered
+            loop {
+                if check_service_discovery_status(&env).await.services_discovered > 0 {
+                    notify_clone.notify_one();
+                    break;
+                }
+                tokio::task::yield_now().await;
+            }
+        }
+    });
+    
+    tokio::time::timeout(
+        Duration::from_secs(5),
+        health_ready.notified()
+    ).await.ok();
     
     // Verify services are healthy
     let health = nestgate.get_service_health().await;
@@ -215,8 +272,29 @@ async fn test_service_health_monitoring() {
     // Simulate service degradation
     degrade_mock_service(&test_env, "songbird").await.unwrap();
     
-    // Wait for health check
-    sleep(Duration::from_secs(2)).await;
+    // Wait for health check (event-driven)
+    let health_updated = Arc::new(Notify::new());
+    let notify_clone = health_updated.clone();
+    
+    tokio::spawn({
+        let ng = nestgate.clone();
+        async move {
+            // Poll until health status changes
+            loop {
+                let health = ng.get_service_health().await;
+                if !health.is_healthy("songbird") {
+                    notify_clone.notify_one();
+                    break;
+                }
+                tokio::task::yield_now().await;
+            }
+        }
+    });
+    
+    tokio::time::timeout(
+        Duration::from_secs(5),
+        health_updated.notified()
+    ).await.ok();
     
     // Verify health status updated
     let health_after = nestgate.get_service_health().await;
@@ -341,9 +419,13 @@ async fn attempt_ai_operation(
     _env: &TestEnvironment,
     timeout: Duration,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    // Simulate AI operation attempt
+    // Simulate AI operation attempt (event-driven)
     tokio::time::timeout(timeout, async {
-        sleep(Duration::from_millis(100)).await;
+        // In real code, this would wait for actual service response
+        // For testing, yield to simulate async work
+        for _ in 0..10 {
+            tokio::task::yield_now().await;
+        }
         Err::<(), _>("Service unavailable".into())
     })
     .await?
@@ -406,7 +488,10 @@ async fn attempt_service_discovery(
     _config: &DiscoveryConfig,
     _id: usize,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    sleep(Duration::from_millis(100)).await;
+    // Yield instead of blocking with sleep
+    for _ in 0..10 {
+        tokio::task::yield_now().await;
+    }
     Err("Services not found".into())
 }
 

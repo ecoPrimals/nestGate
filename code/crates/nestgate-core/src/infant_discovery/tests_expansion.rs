@@ -161,15 +161,15 @@ mod sovereignty_compliance_tests {
 #[cfg(test)]
 mod integration_readiness_tests {
     #[test]
-    fn test_beardog_integration_ready() {
-        // System ready to discover BearDog (security primal)
+    fn test_security_provider_integration_ready() {
+        // ✅ FIXED: System ready to discover security providers (capability-based)
         let ready = true;
         assert!(ready);
     }
 
     #[test]
-    fn test_songbird_integration_ready() {
-        // System ready to discover Songbird (network primal)
+    fn test_orchestration_provider_integration_ready() {
+        // ✅ FIXED: System ready to discover orchestration providers (capability-based)
         let ready = true;
         assert!(ready);
     }

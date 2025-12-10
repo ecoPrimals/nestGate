@@ -79,8 +79,9 @@ mod adapter_routing_tests {
             }
         }
 
-        assert!(route("beardog", true).is_ok());
-        assert!(route("songbird", false).is_err());
+        // ✅ FIXED: Use capability types, not primal names
+        assert!(route("security-svc", true).is_ok());
+        assert!(route("orchestration-svc", false).is_err());
     }
 
     #[test]

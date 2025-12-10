@@ -52,7 +52,7 @@
 //
 // ```rust
 // #[test]
-// fn test_service_startup_with_valid_config() -> Result<(), Box<dyn std::error::Error>> {
+// fn test_service_startup_with_valid_config() -> std::result::Result<(), Box<dyn std::error::Error>> {
 //     let config = create_test_config();
 //     let service = start_nestgate_service(config);
 //     assert!(service.is_healthy());
@@ -63,7 +63,7 @@
 use std::process::Command;
 
 #[tokio::test]
-async fn test_binary_help_output() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_binary_help_output() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let output = Command::new("cargo")
         .args(["run", "--bin", "nestgate", "--", "--help"])
         .output()?;
@@ -86,7 +86,7 @@ async fn test_binary_help_output() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[tokio::test]
-async fn test_binary_starts_successfully() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_binary_starts_successfully() -> std::result::Result<(), Box<dyn std::error::Error>> {
     // Test that the binary compiles and can be invoked with --help
     // This is a lightweight smoke test that doesn't require full infrastructure
     let output = Command::new("cargo")
@@ -124,7 +124,7 @@ async fn test_binary_starts_successfully() -> Result<(), Box<dyn std::error::Err
 }
 
 #[tokio::test]
-async fn test_binary_with_invalid_config() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_binary_with_invalid_config() -> std::result::Result<(), Box<dyn std::error::Error>> {
     // Test port parsing logic with invalid input
     let invalid_port = "invalid_port";
 
@@ -142,7 +142,7 @@ async fn test_binary_with_invalid_config() -> Result<(), Box<dyn std::error::Err
 }
 
 #[tokio::test]
-async fn test_client_binary_help() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_client_binary_help() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let output = Command::new("cargo")
         .args(["run", "--bin", "nestgate-client", "--", "--help"])
         .output()
@@ -174,7 +174,7 @@ async fn test_client_binary_help() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[tokio::test]
-async fn test_gui_binary_exists() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_gui_binary_exists() -> std::result::Result<(), Box<dyn std::error::Error>> {
     // Test that the GUI binary target exists in the project structure
     // This is a lightweight test that doesn't actually run the GUI
 
@@ -201,19 +201,21 @@ async fn test_gui_binary_exists() -> Result<(), Box<dyn std::error::Error>> {
 mod cli_tests {
 
     #[test]
-    fn test_environment_variable_parsing() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_environment_variable_parsing() -> std::result::Result<(), Box<dyn std::error::Error>> {
         // Test various environment variable combinations
         let test_cases = vec![
             ("NESTGATE_PORT", "8080".to_string()),
             ("NESTGATE_SERVICE_NAME", "test-service".to_string()),
             (
-                "SONGBIRD_URL",
+                // ✅ FIXED: Use capability-based env var
+                "NESTGATE_ORCHESTRATION_URL",
                 format!(
                     "http://localhost:{}",
                     std::env::var("NESTGATE_SECURITY_PORT").unwrap_or_else(|_| "8081".to_string())
                 ),
             ),
-            ("BEARDOG_URL", "http://localhost:8082".to_string()),
+            // ✅ FIXED: Use capability-based env var
+            ("NESTGATE_SECURITY_URL", "http://localhost:8082".to_string()),
         ];
 
         for (key, value) in test_cases {
@@ -229,7 +231,7 @@ mod cli_tests {
     }
 
     #[test]
-    fn test_service_name_generation() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_service_name_generation() -> std::result::Result<(), Box<dyn std::error::Error>> {
         // Test that service names can be generated if not provided
         std::env::remove_var("NESTGATE_SERVICE_NAME");
 
@@ -245,7 +247,7 @@ mod cli_tests {
 mod configuration_tests {
 
     #[test]
-    fn test_default_configurationvalues() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_default_configurationvalues() -> std::result::Result<(), Box<dyn std::error::Error>> {
         // Test that default values are reasonable
         let default_port = 8080;
         let default_service_prefix = "nestgate";
@@ -255,7 +257,7 @@ mod configuration_tests {
         Ok(())
     }
     #[test]
-    fn test_configuration_precedence() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_configuration_precedence() -> std::result::Result<(), Box<dyn std::error::Error>> {
         // Test that environment variables override defaults
         std::env::set_var("NESTGATE_PORT", "9090");
 
@@ -281,10 +283,11 @@ mod configuration_tests {
 mod integration_mode_tests {
 
     #[test]
-    fn test_standalone_mode_configuration() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_standalone_mode_configuration() -> std::result::Result<(), Box<dyn std::error::Error>> {
         // Test standalone mode (no external URLs)
-        std::env::remove_var("SONGBIRD_URL");
-        std::env::remove_var("BEARDOG_URL");
+        // ✅ FIXED: Use capability-based env vars
+        std::env::remove_var("NESTGATE_ORCHESTRATION_URL");
+        std::env::remove_var("NESTGATE_SECURITY_URL");
 
         // In standalone mode, these should be None
         // ✅ SOVEREIGNTY COMPLIANT: Check capability-based environment variables
@@ -293,7 +296,7 @@ mod integration_mode_tests {
         Ok(())
     }
     #[test]
-    fn test_ecosystem_mode_configuration() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_ecosystem_mode_configuration() -> std::result::Result<(), Box<dyn std::error::Error>> {
         // ✅ SOVEREIGNTY COMPLIANT: Test capability-based configuration
         std::env::set_var(
             "ORCHESTRATION_ENDPOINT",

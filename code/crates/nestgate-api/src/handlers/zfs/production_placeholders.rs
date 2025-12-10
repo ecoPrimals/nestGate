@@ -25,7 +25,6 @@ pub struct ProductionZfsManager;
 impl ProductionZfsManager {
     /// Create a new placeholder manager (matches stub API)
     #[must_use]
-    /// Fn
     pub const fn new(_config: ZfsConfig) -> Self {
         Self
     }
@@ -42,7 +41,6 @@ pub struct ZeroCostZfsOperations;
 impl ZeroCostZfsOperations {
     /// Create a new placeholder zero-cost operations
     #[must_use]
-    /// Fn
     pub const fn new() -> Self {
         Self
     }
@@ -58,7 +56,6 @@ pub struct ZfsHandlerImpl;
 impl ZfsHandlerImpl {
     /// Create a new placeholder handler
     #[must_use]
-    /// Fn
     pub const fn new() -> Self {
         Self
     }

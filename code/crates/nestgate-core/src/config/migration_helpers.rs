@@ -48,6 +48,7 @@ pub fn get_host(env_var: &str, config_host: Option<String>, default: &str) -> St
         return host;
     }
     config_host.unwrap_or_else(|| default.to_string())
+    // Note: unwrap_or_else is safe here - always provides default
 }
 
 /// Build address from host and port
@@ -96,3 +97,6 @@ mod tests {
         assert!(result.is_err());
     }
 }
+
+#[cfg(test)]
+mod migration_helpers_additional_tests;

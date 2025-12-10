@@ -309,7 +309,7 @@ mod hardware_tuning_tests {
     // ==================== Helper Functions (Stubs) ====================
 
     /// Detect Cpu Count
-    async fn detect_cpu_count() -> Result<usize, String> {
+    async fn detect_cpu_count() -> std::result::Result<usize, String> {
         Ok(num_cpus::get())
     }
 
@@ -319,32 +319,32 @@ mod hardware_tuning_tests {
     }
 
     /// Sets Cpu Affinity
-    async fn set_cpu_affinity(_cpus: &[usize]) -> Result<(), String> {
+    async fn set_cpu_affinity(_cpus: &[usize]) -> std::result::Result<(), String> {
         Err("Test environment".to_string())
     }
 
     /// Optimize Thread Pool For Cpus
-    async fn optimize_thread_pool_for_cpus(count: usize) -> Result<(), String> {
+    async fn optimize_thread_pool_for_cpus(count: usize) -> std::result::Result<(), String> {
         if count == 0 { Err("Invalid CPU count".to_string()) } else { Ok(()) }
     }
 
     /// Detect System Memory
-    async fn detect_system_memory() -> Result<u64, String> {
+    async fn detect_system_memory() -> std::result::Result<u64, String> {
         Ok(8 * 1024 * 1024 * 1024) // 8GB
     }
 
     /// Sets Memory Limit
-    async fn set_memory_limit(limit_mb: u64) -> Result<(), String> {
+    async fn set_memory_limit(limit_mb: u64) -> std::result::Result<(), String> {
         if limit_mb == 0 { Err("Invalid limit".to_string()) } else { Ok(()) }
     }
 
     /// Configure Memory Pool
-    async fn configure_memory_pool(_size: usize) -> Result<(), String> {
+    async fn configure_memory_pool(_size: usize) -> std::result::Result<(), String> {
         Ok(())
     }
 
     /// Enable Huge Pages
-    async fn enable_huge_pages() -> Result<(), String> {
+    async fn enable_huge_pages() -> std::result::Result<(), String> {
         Err("Test environment".to_string())
     }
 
@@ -354,7 +354,7 @@ mod hardware_tuning_tests {
     }
 
     /// Sets Io Scheduler
-    async fn set_io_scheduler(_device: &str, scheduler: &str) -> Result<(), String> {
+    async fn set_io_scheduler(_device: &str, scheduler: &str) -> std::result::Result<(), String> {
         if scheduler == "invalid_scheduler" {
             Err("Invalid scheduler".to_string())
         } else {
@@ -363,12 +363,12 @@ mod hardware_tuning_tests {
     }
 
     /// Configure Io Limits
-    async fn configure_io_limits(_device: &str, _read: u64, _write: u64) -> Result<(), String> {
+    async fn configure_io_limits(_device: &str, _read: u64, _write: u64) -> std::result::Result<(), String> {
         Err("Test environment".to_string())
     }
 
     /// Enable Write Cache
-    async fn enable_write_cache(_device: &str) -> Result<(), String> {
+    async fn enable_write_cache(_device: &str) -> std::result::Result<(), String> {
         Err("Test environment".to_string())
     }
 
@@ -378,7 +378,7 @@ mod hardware_tuning_tests {
     }
 
     /// Sets Network Buffer Size
-    async fn set_network_buffer_size(interface: &str, _size: usize) -> Result<(), String> {
+    async fn set_network_buffer_size(interface: &str, _size: usize) -> std::result::Result<(), String> {
         if interface.is_empty() {
             Err("Empty interface".to_string())
         } else {
@@ -387,12 +387,12 @@ mod hardware_tuning_tests {
     }
 
     /// Enable Tcp Offload
-    async fn enable_tcp_offload(_interface: &str) -> Result<(), String> {
+    async fn enable_tcp_offload(_interface: &str) -> std::result::Result<(), String> {
         Err("Test environment".to_string())
     }
 
     /// Configure Mtu
-    async fn configure_mtu(_interface: &str, mtu: u32) -> Result<(), String> {
+    async fn configure_mtu(_interface: &str, mtu: u32) -> std::result::Result<(), String> {
         if mtu > 65535 {
             Err("MTU too large".to_string())
         } else {
@@ -401,7 +401,7 @@ mod hardware_tuning_tests {
     }
 
     /// Sets Zfs Arc Size
-    async fn set_zfs_arc_size(size_mb: u64) -> Result<(), String> {
+    async fn set_zfs_arc_size(size_mb: u64) -> std::result::Result<(), String> {
         if size_mb == u64::MAX {
             Err("Size too large".to_string())
         } else {
@@ -410,27 +410,27 @@ mod hardware_tuning_tests {
     }
 
     /// Configure Zfs Prefetch
-    async fn configure_zfs_prefetch(_enable: bool) -> Result<(), String> {
+    async fn configure_zfs_prefetch(_enable: bool) -> std::result::Result<(), String> {
         Err("Test environment".to_string())
     }
 
     /// Sets Zfs Recordsize
-    async fn set_zfs_recordsize(_size: usize) -> Result<(), String> {
+    async fn set_zfs_recordsize(_size: usize) -> std::result::Result<(), String> {
         Err("Test environment".to_string())
     }
 
     /// Configure Zfs Dedup
-    async fn configure_zfs_dedup(_enable: bool) -> Result<(), String> {
+    async fn configure_zfs_dedup(_enable: bool) -> std::result::Result<(), String> {
         Err("Test environment".to_string())
     }
 
     /// Auto Tune System
-    async fn auto_tune_system() -> Result<(), String> {
+    async fn auto_tune_system() -> std::result::Result<(), String> {
         Ok(())
     }
 
     /// Auto Tune For Workload
-    async fn auto_tune_for_workload(workload: &str) -> Result<(), String> {
+    async fn auto_tune_for_workload(workload: &str) -> std::result::Result<(), String> {
         if workload == "invalid_workload_xyz" {
             Err("Invalid workload".to_string())
         } else {
@@ -444,47 +444,47 @@ mod hardware_tuning_tests {
     }
 
     /// Apply Tuning Profile
-    async fn apply_tuning_profile(_profile: &str) -> Result<(), String> {
+    async fn apply_tuning_profile(_profile: &str) -> std::result::Result<(), String> {
         Ok(())
     }
 
     /// Benchmark Cpu Performance
-    async fn benchmark_cpu_performance() -> Result<f64, String> {
+    async fn benchmark_cpu_performance() -> std::result::Result<f64, String> {
         Ok(100.0)
     }
 
     /// Benchmark Memory Bandwidth
-    async fn benchmark_memory_bandwidth() -> Result<f64, String> {
+    async fn benchmark_memory_bandwidth() -> std::result::Result<f64, String> {
         Ok(10000.0)
     }
 
     /// Benchmark Storage Iops
-    async fn benchmark_storage_iops(_device: &str) -> Result<u64, String> {
+    async fn benchmark_storage_iops(_device: &str) -> std::result::Result<u64, String> {
         Ok(5000)
     }
 
     /// Benchmark Network Throughput
-    async fn benchmark_network_throughput(_interface: &str) -> Result<f64, String> {
+    async fn benchmark_network_throughput(_interface: &str) -> std::result::Result<f64, String> {
         Ok(1000.0)
     }
 
     /// Validates  Current Tuning
-    async fn validate_current_tuning() -> Result<bool, String> {
+    async fn validate_current_tuning() -> std::result::Result<bool, String> {
         Ok(true)
     }
 
     /// Export Tuning Configuration
-    async fn export_tuning_configuration() -> Result<HashMap<String, String>, String> {
+    async fn export_tuning_configuration() -> std::result::Result<HashMap<String, String>, String> {
         Ok(HashMap::new())
     }
 
     /// Import Tuning Configuration
-    async fn import_tuning_configuration(_config: HashMap<String, String>) -> Result<(), String> {
+    async fn import_tuning_configuration(_config: HashMap<String, String>) -> std::result::Result<(), String> {
         Ok(())
     }
 
     /// Reset Tuning To Defaults
-    async fn reset_tuning_to_defaults() -> Result<(), String> {
+    async fn reset_tuning_to_defaults() -> std::result::Result<(), String> {
         Ok(())
     }
 }

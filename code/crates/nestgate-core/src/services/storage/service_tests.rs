@@ -169,8 +169,8 @@ mod storage_service_tests {
             .expect("Service creation failed");
 
         let pools = service.get_pools().await;
-        // Should return a HashMap (might be empty initially)
-        assert!(pools.len() >= 0);
+        // Should return a HashMap (usize length is always >= 0)
+        assert!(pools.len() < usize::MAX);
     }
 
     #[tokio::test]
@@ -197,8 +197,8 @@ mod storage_service_tests {
             .expect("Service creation failed");
 
         let quotas = service.get_quotas().await;
-        // Should return a HashMap (might be empty initially)
-        assert!(quotas.len() >= 0);
+        // Should return a HashMap (usize length is always >= 0)
+        assert!(quotas.len() < usize::MAX);
     }
 
     #[tokio::test]

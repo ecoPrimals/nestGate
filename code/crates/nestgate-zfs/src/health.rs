@@ -99,11 +99,13 @@ pub struct ZfsHealthMonitor {
     background_tasks: BackgroundTasks,
 }
 impl HealthStatus {
+    /// Returns `true` if the health status is critical.
     #[must_use]
     pub fn is_critical(&self) -> bool {
         matches!(self, Self::Critical)
     }
 
+    /// Returns `true` if the health status is healthy.
     #[must_use]
     pub fn is_healthy(&self) -> bool {
         matches!(self, HealthStatus::Healthy)

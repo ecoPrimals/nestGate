@@ -6,6 +6,7 @@
 
 pub mod engine;
 pub mod monitoring;
+/// Performance engine type definitions
 pub mod types;
 
 // Test modules

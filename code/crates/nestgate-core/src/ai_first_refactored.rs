@@ -207,14 +207,27 @@ pub enum AIErrorCategory {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 /// Retrystrategy
 pub enum RetryStrategy {
-    /// Noretry
+    /// No retry - fail immediately
     NoRetry,
-    /// Linearbackoff
-    LinearBackoff { interval_ms: u64, max_attempts: u32 },
-    /// Exponentialbackoff
-    ExponentialBackoff { base_ms: u64, max_attempts: u32 },
-    /// Custombackoff
-    CustomBackoff { intervals_ms: Vec<u64> },
+    /// Linear backoff retry strategy
+    LinearBackoff {
+        /// Interval between retries in milliseconds
+        interval_ms: u64,
+        /// Maximum number of retry attempts
+        max_attempts: u32,
+    },
+    /// Exponential backoff retry strategy
+    ExponentialBackoff {
+        /// Base interval in milliseconds (doubles each retry)
+        base_ms: u64,
+        /// Maximum number of retry attempts
+        max_attempts: u32,
+    },
+    /// Custom backoff with specific intervals
+    CustomBackoff {
+        /// Custom intervals in milliseconds for each retry
+        intervals_ms: Vec<u64>,
+    },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -249,6 +262,7 @@ pub enum ActionType {
     Restart,
     /// Continue
     Continue,
+    /// Custom action type
     Custom(String),
 }
 
@@ -327,6 +341,7 @@ pub struct AIFirstResponseBuilder<T> {
     ai_metadata: Option<AIResponseMetadata>,
 }
 impl<T> AIFirstResponseBuilder<T> {
+    /// Create a new AI-first response builder with the given data
     #[must_use]
     pub fn new(data: T) -> Self {
         Self {
@@ -339,6 +354,7 @@ impl<T> AIFirstResponseBuilder<T> {
         }
     }
 
+    /// Add an error to the response
     #[must_use]
     pub fn with_error(mut self, error: AIFirstError) -> Self {
         self.success = false;
@@ -346,18 +362,21 @@ impl<T> AIFirstResponseBuilder<T> {
         self
     }
 
+    /// Set the AI confidence score (clamped between 0.0 and 1.0)
     #[must_use]
     pub fn with_confidence(mut self, score: f64) -> Self {
         self.confidence_score = score.clamp(0.0, 1.0);
         self
     }
 
+    /// Add a suggested action to the response
     #[must_use]
     pub fn add_suggestion(mut self, action: SuggestedAction) -> Self {
         self.suggested_actions.push(action);
         self
     }
 
+    /// Add AI metadata to the response
     #[must_use]
     pub fn with_metadata(mut self, metadata: AIResponseMetadata) -> Self {
         self.ai_metadata = Some(metadata);

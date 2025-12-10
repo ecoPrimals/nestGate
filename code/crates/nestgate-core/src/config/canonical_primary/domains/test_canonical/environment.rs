@@ -40,14 +40,17 @@ impl Default for TestResourceConfig {
 }
 
 impl TestEnvironmentConfig {
+    /// Creates a CI-optimized test environment configuration
     #[must_use]
     pub fn ci_optimized() -> Self {
         Self::default()
     }
+    /// Creates a development-optimized test environment configuration
     #[must_use]
     pub fn development_optimized() -> Self {
         Self::default()
     }
+    /// Merges this configuration with another, taking precedence
     #[must_use]
     pub fn merge(self, _other: Self) -> Self {
         self

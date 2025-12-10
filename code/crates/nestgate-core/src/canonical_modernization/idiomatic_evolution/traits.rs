@@ -42,9 +42,11 @@ pub trait IdiomaticBuilder<T> {
 /// Provides context-aware cloning that can optimize based on usage patterns
 pub trait SmartClone {
     /// Clone with optimization hints
+    #[must_use]
     fn smart_clone(&self) -> Self;
 
     /// Clone with specific context for optimization
+    #[must_use]
     fn smart_clone_with_context(&self, context: &str) -> Self
     where
         Self: Sized,
@@ -59,6 +61,10 @@ pub trait SmartClone {
 /// Marks types as compatible with the evolution system
 pub trait EvolutionCompatible {
     /// Check if the type is compatible with current evolution standards
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if compatibility check fails or version mismatch occurs
     fn check_compatibility(&self) -> crate::Result<bool>;
 
     /// Get evolution version information
@@ -67,6 +73,10 @@ pub trait EvolutionCompatible {
     }
 
     /// Apply evolution compatibility fixes
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if compatibility fixes cannot be applied
     fn apply_compatibility_fixes(&mut self) -> crate::Result<()> {
         Ok(())
     }
@@ -76,6 +86,10 @@ pub trait EvolutionCompatible {
 /// Provides modernization capabilities for legacy types
 pub trait ModernizationTrait {
     /// Apply modernization patterns
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if modernization patterns fail to apply
     fn apply_modernization(self) -> crate::Result<Self>
     where
         Self: Sized;

@@ -6,8 +6,9 @@
 use super::metadata::EvolutionMetadata;
 
 /// Idiomatic configuration builder
+///
+/// Builder pattern for constructing `IdiomaticConfig` instances
 #[allow(dead_code)] // Framework infrastructure
-/// Builder pattern for constructing IdiomaticConfig instances
 pub struct IdiomaticConfigBuilder<T> {
     #[allow(dead_code)] // Framework field - intentionally unused
     inner: Option<T>,
@@ -61,8 +62,9 @@ impl<T> Default for IdiomaticConfigBuilder<T> {
 }
 
 /// Smart configuration builder with evolution tracking
+///
+/// Builder pattern for constructing `SmartConfig` instances
 #[allow(dead_code)] // Framework infrastructure
-/// Builder pattern for constructing SmartConfig instances
 pub struct SmartConfigBuilder<T> {
     #[allow(dead_code)] // Framework field - intentionally unused
     config: Option<T>,
@@ -124,8 +126,9 @@ impl<T> Default for SmartConfigBuilder<T> {
 }
 
 /// Evolution-aware builder
+///
+/// Builder pattern for constructing `EvolutionAware` instances
 #[allow(dead_code)] // Framework infrastructure
-/// Builder pattern for constructing EvolutionAware instances
 pub struct EvolutionAwareBuilder<T> {
     #[allow(dead_code)] // Framework field - intentionally unused
     target: Option<T>,

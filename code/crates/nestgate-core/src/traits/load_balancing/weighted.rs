@@ -18,6 +18,10 @@ pub struct WeightedRoundRobinLoadBalancer {
     stats: Arc<parking_lot::RwLock<LoadBalancerStats>>,
 }
 impl WeightedRoundRobinLoadBalancer {
+    /// Creates a new weighted round-robin load balancer.
+    ///
+    /// The balancer distributes requests proportionally based on endpoint weights,
+    /// using a smooth weighted round-robin algorithm for fair distribution.
     #[must_use]
     pub fn new() -> Self {
         Self {
@@ -156,6 +160,10 @@ pub struct WeightedRandomLoadBalancer {
     stats: Arc<parking_lot::RwLock<LoadBalancerStats>>,
 }
 impl WeightedRandomLoadBalancer {
+    /// Creates a new weighted random load balancer.
+    ///
+    /// The balancer selects endpoints randomly with probability proportional
+    /// to their assigned weights, providing stochastic load distribution.
     #[must_use]
     pub fn new() -> Self {
         Self {

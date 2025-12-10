@@ -9,7 +9,7 @@ use tokio::sync::{mpsc, RwLock};
 use crate::snapshot::SnapshotPolicy;
 use crate::tier::TierStats;
 
-// Type aliases to reduce complexity
+/// Type alias for tier-specific performance metrics map with thread-safe access.
 pub type TierMetricsMap = Arc<RwLock<HashMap<StorageTier, TierPerformanceData>>>;
 /// Type alias for Alertconditionsvec
 pub type AlertConditionsVec = Arc<RwLock<Vec<AlertCondition>>>;
@@ -39,7 +39,6 @@ use std::time::Duration;
 /// * `network_throughput_mbs` - Network throughput in megabytes per second
 /// * `system_load_average` - System load average (1-minute)
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Systemperformancemetrics
 pub struct SystemPerformanceMetrics {
     /// Memory utilization percentage (0.0-100.0)
     pub memory_utilization_percent: f64,
@@ -65,7 +64,6 @@ pub struct SystemPerformanceMetrics {
 /// * `available_mb` - Available memory in megabytes
 /// * `used_mb` - Used memory in megabytes
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Memoryinfo
 pub struct MemoryInfo {
     /// Memory utilization percentage (0.0-100.0)
     pub utilization_percent: f64,
@@ -147,6 +145,7 @@ impl Default for DiskIoStats {
 /// Zfsperformancemonitor
 pub struct ZfsPerformanceMonitor {
     // config removed - using shared ZfsConfig instead
+    /// Pool manager for ZFS pool operations
     pub pool_manager: Arc<ZfsPoolManager>,
     /// Dataset Manager
     pub dataset_manager: Arc<ZfsDatasetManager>,

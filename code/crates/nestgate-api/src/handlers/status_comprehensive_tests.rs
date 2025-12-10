@@ -198,15 +198,15 @@ fn test_get_status_handler() {
     assert!(status.timestamp > 0);
 }
 
-#[test]
-fn test_status_uptime_increases() {
+#[tokio::test]
+async fn test_status_uptime_increases() {
     initialize_uptime();
 
     let response1 = get_status();
     let status1 = response1.0;
 
-    // Sleep for a short time
-    std::thread::sleep(std::time::Duration::from_millis(100));
+    // Sleep for a short time (non-blocking, concurrent)
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 
     let response2 = get_status();
     let status2 = response2.0;

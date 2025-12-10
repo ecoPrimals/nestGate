@@ -1,13 +1,13 @@
 //! Load Balancing Module - Capability Discovery Integration
 //!
-//! **ARCHITECTURE NOTE**: Load balancing is Songbird's domain, not NestGate's.
+//! **ARCHITECTURE NOTE**: Load balancing is the networking layer's domain, not NestGate's.
 //! NestGate is a **storage primal** focused on ZFS, datasets, and data management.
 //!
 //! # Migration from Mocks
 //!
 //! **Old Approach (DELETED)**:
 //! ```rust,ignore
-//! // DON'T: Hardcoded implementations that duplicate Songbird
+//! // DON'T: Hardcoded implementations that duplicate networking layer
 //! let balancer = MockLoadBalancer::new();
 //! balancer.distribute_request(req).await?;
 //! ```
@@ -16,7 +16,7 @@
 //! ```rust,ignore
 //! use nestgate_core::universal_adapter::capability_discovery::*;
 //!
-//! // Discover networking primal (Songbird) dynamically
+//! // Discover networking capability dynamically (any provider)
 //! let discovery = CapabilityDiscovery::new();
 //! let networking_providers = discovery
 //!     .discover(CapabilityType::Networking)
@@ -96,7 +96,7 @@ pub struct BackendServer {
     pub healthy: bool,
 }
 
-// NOTE: No implementations here - use capability discovery to find Songbird
+// NOTE: No implementations here - use capability discovery to find networking capability
 // See module documentation for examples
 
 #[cfg(test)]

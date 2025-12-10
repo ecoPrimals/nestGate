@@ -86,15 +86,21 @@ pub struct SyncFileInfo {
     pub tier: UnifiedTierType,
 }
 /// Sync operation types
+///
+/// Represents the different types of file synchronization operations that can be performed.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Syncoperation
 pub enum SyncOperation {
+    /// Create a new file
     Create(SyncFileInfo),
+    /// Update an existing file
     Update(SyncFileInfo),
+    /// Delete a file at the specified path
     Delete(PathBuf),
-    /// Move
+    /// Move a file from one location to another
     Move {
+        /// Source path of the file to move
         from: PathBuf,
+        /// Destination path where the file should be moved
         to: PathBuf,
     },
 }
@@ -131,15 +137,17 @@ pub struct SyncConflict {
     pub created_at: SystemTime,
 }
 /// File change type for change detection
+///
+/// Tracks the different types of changes that can occur to files during synchronization.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Types of FileChange
 pub enum FileChangeType {
-    /// Created
+    /// File was newly created
     Created,
-    /// Modified
+    /// File was modified
     Modified,
-    /// Deleted
+    /// File was deleted
     Deleted,
+    /// File was moved to a new location (contains the new path)
     Moved(PathBuf),
 }
 /// Change detection event

@@ -37,19 +37,32 @@ pub struct StreamingRpcConfig {
     pub compression_enabled: bool,
 }
 impl Default for StreamingRpcConfig {
-    /// Returns the default instance
+    /// Returns the default instance using EnvironmentConfig
+    /// 
+    /// Configuration via environment variables:
+    /// - `NESTGATE_STREAMING_RPC_ADDRESS`: Full bind address (overrides below)
+    /// - `NESTGATE_BIND_ADDRESS`: Bind address (default: from EnvironmentConfig)
+    /// - `NESTGATE_STREAMING_RPC_PORT`: RPC port (default: from EnvironmentConfig)
+    /// - `NESTGATE_MAX_CONCURRENT_STREAMS`: Max streams (default: 100)
+    /// - `NESTGATE_STREAM_TIMEOUT_SECONDS`: Timeout (default: 300)
+    /// - `NESTGATE_STREAM_BUFFER_SIZE`: Buffer size (default: 1024)
+    /// - `NESTGATE_STREAM_COMPRESSION`: Enable compression (default: true)
     fn default() -> Self { 
-        use nestgate_core::constants::hardcoding::{addresses, ports};
+        use nestgate_core::config::environment::EnvironmentConfig;
+        
+        // Load environment config with proper fallbacks
+        let env_config = EnvironmentConfig::from_env()
+            .unwrap_or_else(|_| EnvironmentConfig::default());
         
         Self {
             bind_endpoint: std::env::var("NESTGATE_STREAMING_RPC_ADDRESS")
                 .unwrap_or_else(|_| {
                     let bind_addr = std::env::var("NESTGATE_BIND_ADDRESS")
-                        .unwrap_or_else(|_| addresses::BIND_ALL_IPV4.to_string());
+                        .unwrap_or_else(|_| env_config.network.host.clone());
                     let port = std::env::var("NESTGATE_STREAMING_RPC_PORT")
                         .ok()
                         .and_then(|p| p.parse().ok())
-                        .unwrap_or(ports::STREAMING_RPC_DEFAULT);
+                        .unwrap_or_else(|| env_config.network.port.get());
                     format!("{}:{}", bind_addr, port)
                 }),
             max_concurrent_streams: std::env::var("NESTGATE_MAX_CONCURRENT_STREAMS")

@@ -140,7 +140,7 @@ pub enum ApiStatus {
 /// **ZERO-COST POOL HANDLER WITH COMPILE-TIME CONFIGURATION**
 /// **PERFORMANCE**: Const generics eliminate runtime configuration overhead
 pub struct ZeroCostPoolHandler<const MAX_REQUESTS: usize, const TIMEOUT_MS: u64> {
-    /// Request cache with compile-time capacity (Arc<String> keys for zero-copy)
+    /// Request cache with compile-time capacity (`Arc<String>` keys for zero-copy)
     request_cache: Arc<RwLock<HashMap<Arc<String>, CachedRequest>>>,
     /// Configuration phantom
     _config: PhantomData<()>,
@@ -168,14 +168,12 @@ impl<const MAX_REQUESTS: usize, const TIMEOUT_MS: u64>
 
     /// Get maximum requests (compile-time constant)
     #[must_use]
-    /// Fn
     pub const fn max_requests() -> usize {
         MAX_REQUESTS
     }
 
     /// Get timeout (compile-time constant)
     #[must_use]
-    /// Fn
     pub const fn timeout_ms() -> u64 {
         TIMEOUT_MS
     }
@@ -380,9 +378,9 @@ struct CachedRequest {
 /// Handler for ZeroCostDataset requests
 pub struct ZeroCostDatasetHandler<
     T: Send + Sync + Clone + 'static,
-    /// Cache Size
+    // Cache Size
     const CACHE_SIZE: usize,
-    /// Timeout Ms
+    // Timeout Ms
     const TIMEOUT_MS: u64,
 > {
     /// Dataset management interface
@@ -568,28 +566,24 @@ impl<const MAX_ROUTES: usize, const MAX_MIDDLEWARE: usize>
 
     /// Check if we can add more routes
     #[must_use]
-    /// Fn
     pub const fn can_add_route(&self) -> bool {
         self.routes.len() < MAX_ROUTES
     }
 
     /// Check if we can add more middleware
     #[must_use]
-    /// Fn
     pub const fn can_add_middleware(&self) -> bool {
         self.middleware_count < MAX_MIDDLEWARE
     }
 
     /// Get max routes at compile-time
     #[must_use]
-    /// Fn
     pub const fn max_routes() -> usize {
         MAX_ROUTES
     }
 
     /// Get max middleware at compile-time
     #[must_use]
-    /// Fn
     pub const fn max_middleware() -> usize {
         MAX_MIDDLEWARE
     }
@@ -659,7 +653,6 @@ impl ApiHandlerMigrationGuide {
 
     /// Expected performance improvements
     #[must_use]
-    /// Fn
     pub const fn expected_improvements() -> (f64, f64, f64) {
         (
             35.0, // Performance gain % (moderate due to async_trait elimination)

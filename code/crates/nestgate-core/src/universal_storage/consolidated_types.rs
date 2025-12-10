@@ -27,9 +27,15 @@ pub enum UniversalStorageType {
     /// Local file system storage
     Local,
     /// Network file system (NFS)
-    Nfs { version: NfsVersion },
+    Nfs {
+        /// NFS protocol version
+        version: NfsVersion,
+    },
     /// Server Message Block (SMB/CIFS)
-    Smb { version: SmbVersion },
+    Smb {
+        /// SMB protocol version
+        version: SmbVersion,
+    },
     /// Object storage (S3-compatible)
     Object,
     /// Block storage
@@ -43,7 +49,10 @@ pub enum UniversalStorageType {
     /// Cache storage
     Cache,
     /// Cloud storage
-    Cloud { provider: CloudProvider },
+    Cloud {
+        /// Cloud storage provider (AWS, Azure, GCP, or custom)
+        provider: CloudProvider,
+    },
     /// Distributed storage
     Distributed,
     /// Custom storage type
@@ -77,14 +86,26 @@ pub enum SmbVersion {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 /// Cloudprovider
 pub enum CloudProvider {
-    /// Aws
-    AWS { region: String },
-    /// Azure
-    Azure { subscription_id: String },
-    /// Gcp
-    GCP { project_id: String },
-    /// Custom
-    Custom { endpoint: String },
+    /// AWS cloud provider
+    AWS {
+        /// AWS region identifier (e.g., "us-east-1")
+        region: String,
+    },
+    /// Azure cloud provider
+    Azure {
+        /// Azure subscription ID
+        subscription_id: String,
+    },
+    /// Google Cloud Platform provider
+    GCP {
+        /// GCP project ID
+        project_id: String,
+    },
+    /// Custom cloud provider
+    Custom {
+        /// Custom endpoint URL
+        endpoint: String,
+    },
 }
 // ==================== SECTION ====================
 
@@ -171,8 +192,11 @@ pub enum StorageCapability {
     Versioning,
     /// Backup
     Backup,
+    /// Restore operations (data recovery)
     Restore,
+    /// Monitoring and observability
     Monitoring,
+    /// Custom capability type with arbitrary name
     Custom(String),
 }
 /// Storage permissions
@@ -253,37 +277,56 @@ pub struct StorageIoMetrics {
 pub enum UniversalStorageRequest {
     /// Read
     Read {
+        /// Optional byte range for partial reads
         range: Option<std::ops::Range<u64>>,
     },
     /// Write
     Write {
+        /// Data to write
         data: Vec<u8>,
+        /// Whether to overwrite existing data
         overwrite: bool,
     },
     /// Delete
     Delete {
+        /// Whether to delete recursively
         recursive: bool,
     },
+    /// List resources in storage
     List {
+        /// Whether to list recursively
         recursive: bool,
+        /// Optional filter pattern
         filter: Option<String>,
     },
+    /// Create a new storage resource
     CreateResource {
+        /// Resource configuration
         #[allow(deprecated)]
         config: Box<StorageResourceConfig>,
     },
+    /// Get resource metadata
     GetMetadata {},
+    /// Set resource metadata
     SetMetadata {
+        /// Metadata key-value pairs
         metadata: HashMap<String, serde_json::Value>,
     },
+    /// Create a snapshot
     Snapshot {
+        /// Snapshot name
         name: String,
     },
+    /// Restore from snapshot
     Restore {},
+    /// Stream data
     Stream {
+        /// Optional byte range for streaming
         range: Option<std::ops::Range<u64>>,
     },
+    /// Monitor storage events
     Monitor {
+        /// Event types to monitor
         events: Vec<StorageEventType>,
     },
 }
@@ -293,43 +336,68 @@ pub enum UniversalStorageRequest {
 pub enum UniversalStorageResponse {
     /// Readresponse
     ReadResponse {
+        /// Data read from storage
         data: Vec<u8>,
+        /// Optional metadata about the read operation
         metadata: Option<StorageMetadata>,
     },
     /// Writeresponse
     WriteResponse {
+        /// Number of bytes written
         bytes_written: u64,
+        /// Optional checksum of written data
         checksum: Option<String>,
     },
     /// Deleteresponse
     DeleteResponse {
+        /// Number of items deleted
         deleted_items: u64,
     },
+    /// List response with storage items
     ListResponse {
+        /// List of storage items
         items: Vec<StorageItem>,
     },
+    /// Create response
     CreateResponse {},
+    /// Metadata response
     MetadataResponse {
+        /// Storage metadata
         metadata: StorageMetadata,
     },
+    /// Snapshot response
     SnapshotResponse {
+        /// Unique snapshot identifier
         snapshot_id: String,
+        /// Timestamp when snapshot was created
         created_at: DateTime<Utc>,
     },
+    /// Restore response
     RestoreResponse {
+        /// Number of bytes restored
         restored_bytes: u64,
+        /// Number of items restored
         restored_items: u64,
     },
+    /// Stream response
     StreamResponse {
+        /// Unique stream identifier
         stream_id: String,
+        /// Size of data chunks in stream
         chunk_size: usize,
     },
+    /// Monitor response with event data
     MonitorResponse {
+        /// Unique monitor session identifier
         monitor_id: String,
+        /// Storage events that occurred
         events: Vec<StorageEvent>,
     },
+    /// Error response
     Error {
+        /// Error message
         error: String,
+        /// Error code for categorization
         error_code: String,
     },
 }

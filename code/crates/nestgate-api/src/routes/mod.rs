@@ -1,4 +1,47 @@
-//! Routes module
+//! API Routes Module
+//!
+//! Defines all HTTP routes and endpoints for the NestGate REST API.
+//!
+//! # Architecture
+//!
+//! Routes are organized hierarchically:
+//! - `/health` - Health check and system status
+//! - `/api/v1/storage/*` - Storage management (pools, datasets, snapshots)
+//! - `/api/v1/monitoring/*` - Metrics and performance analytics
+//! - `/api/v1/workspaces/*` - Workspace management
+//! - `/api/v1/load-testing/*` - Load testing and benchmarking
+//!
+//! # Handler Organization
+//!
+//! Handlers are grouped by domain:
+//! - `storage`: ZFS pool/dataset operations
+//! - `performance_analytics`: Metrics and recommendations
+//! - `workspace_management`: Multi-tenant workspace isolation
+//! - `load_testing`: Performance testing infrastructure
+//!
+//! # State Management
+//!
+//! The [`AppState`] struct contains shared resources:
+//! - `zfs_manager`: ZFS operations manager
+//! - Configuration and connection pools (as needed)
+//!
+//! # Example
+//!
+//! ```rust,ignore
+//! use nestgate_api::routes::create_router;
+//!
+//! #[tokio::main]
+//! async fn main() {
+//!     let router = create_router();
+//!     let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
+//!     axum::serve(listener, router).await.unwrap();
+//! }
+//! ```
+//!
+//! # Feature Flags
+//!
+//! - `dev-stubs`: Use stub implementations for development/testing
+//! - `streaming-rpc`: Enable bidirectional RPC streaming (optional)
 
 use axum::{
     routing::{delete, get, patch, post, put},
@@ -107,7 +150,6 @@ impl AppState {
 
     /// Initialize storage systems - ZFS manager and Universal Storage Bridge
     #[must_use]
-    /// Fn
     pub const fn with_zfs_manager(self) -> Self {
         // ZFS manager already initialized in constructor
         self

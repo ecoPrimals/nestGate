@@ -409,22 +409,36 @@ pub struct XssSettings {
 
 impl MiddlewareSecuritySettings {
     /// Development security settings
+    ///
+    /// # Primal Sovereignty
+    ///
+    /// All endpoints configurable via environment variables. No hardcoded assumptions.
+    ///
+    /// # Environment Variables
+    ///
+    /// - `NESTGATE_DEV_HOST`: Development host (default: localhost)
+    /// - `NESTGATE_DEV_FRONTEND_PORT`: Frontend port (default: 3000)
+    /// - `NESTGATE_API_PORT`: API port (default: 8080)
     pub fn development() -> Self {
         Self {
             cors: CorsSettings {
                 enabled: true,
                 allowed_origins: {
-                    use nestgate_core::constants::hardcoding::{addresses, ports};
+                    // ✅ SOVEREIGNTY: Environment-driven CORS configuration
+                    let host = env::var("NESTGATE_DEV_HOST")
+                        .unwrap_or_else(|_| "localhost".to_string());
+                    let frontend_port = env::var("NESTGATE_DEV_FRONTEND_PORT")
+                        .ok()
+                        .and_then(|s| s.parse::<u16>().ok())
+                        .unwrap_or(3000);
+                    let api_port = env::var("NESTGATE_API_PORT")
+                        .ok()
+                        .and_then(|s| s.parse::<u16>().ok())
+                        .unwrap_or(8080);
+                    
                     vec![
-                        format!("http://{}:3000", addresses::LOCALHOST_NAME),
-                        format!(
-                            "http://{}:{}",
-                            addresses::LOCALHOST_NAME,
-                            env::var("NESTGATE_API_PORT")
-                                .ok()
-                                .and_then(|s| s.parse().ok())
-                                .unwrap_or(ports::HTTP_DEFAULT)
-                        ),
+                        format!("http://{}:{}", host, frontend_port),
+                        format!("http://{}:{}", host, api_port),
                     ]
                 },
                 allowed_methods: vec![

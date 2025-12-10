@@ -117,8 +117,11 @@ pub enum SecurityDecision {
     RequireAdditionalAuth,
     /// Requiremfa
     RequireMFA,
-    /// Ratelimit
-    RateLimit { retry_after: u64 },
+    /// Rate limit exceeded - includes time in seconds to wait before retrying
+    RateLimit {
+        /// Number of seconds to wait before retrying
+        retry_after: u64,
+    },
 }
 /// Authentication credentials
 #[derive(Debug, Clone, Serialize, Deserialize)]

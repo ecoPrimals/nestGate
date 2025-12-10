@@ -252,8 +252,8 @@ impl Default for DiscoveryConfig {
 }
 
 // Load balancing configuration
-/// **⚠️ DEPRECATED**: Load balancing should be handled by Songbird (network layer)
-#[deprecated(since = "0.11.2", note = "NestGate is a storage system. Use Songbird for load balancing")]
+/// **⚠️ DEPRECATED**: Load balancing should be handled by networking layer (capability-based)
+#[deprecated(since = "0.11.2", note = "NestGate is a storage system. Use orchestration/networking capability for load balancing")]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 /// Configuration for LoadBalancing
 pub struct LoadBalancingConfig {

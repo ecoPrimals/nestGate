@@ -61,7 +61,6 @@ pub struct JsonRpcService {
 impl JsonRpcService {
     /// Create a new JSON RPC service
     #[must_use]
-    /// Fn
     pub const fn new(base_url: String) -> Self {
         Self { base_url }
     }
@@ -82,7 +81,6 @@ impl JsonRpcService {
 
     /// Check connection status
     #[must_use]
-    /// Fn
     pub const fn check_connection_status(&self) -> bool {
         // Simplified - assume always connected
         true
@@ -110,7 +108,6 @@ impl JsonRpcService {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     #[must_use]
-    /// Fn
     pub const fn subscribe(&self, _event_type: &str) -> Result<(), RpcError> {
         // Simplified stub implementation
         Ok(())

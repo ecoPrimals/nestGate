@@ -404,7 +404,7 @@ fn test_many_services() {
     // All should have unique node IDs
     let mut ids = std::collections::HashSet::new();
     for service in &services {
-        ids.insert(service.get_service_info().service_id.clone());
+        ids.insert(service.node_id().to_string());
     }
 
     // Some IDs might collide due to UUID generation, but most should be unique
@@ -421,10 +421,10 @@ fn test_extreme_metadata_size() {
             .insert(format!("key-{}", i), "x".repeat(1000));
     }
 
-    let service = ZfsService::new(config);
-    let info = service.get_service_info();
+    let service = ZfsService::new(config.clone());
+    let config_ref = service.config();
 
-    assert_eq!(info.metadata.len(), 10000);
+    assert_eq!(config_ref.metadata.len(), 10000);
 }
 
 #[test]
@@ -435,5 +435,5 @@ fn test_register_with_many_orchestrators() {
         .collect();
 
     let service = ZfsService::new(config);
-    assert!(!service.get_service_info().service_id.is_empty());
+    assert!(!service.service_id().is_empty());
 }

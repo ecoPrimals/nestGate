@@ -58,7 +58,7 @@ fn test_service_type_values() {
 #[test]
 fn test_capability_list() {
     // Test capability list structure
-    let capabilities = vec![
+    let capabilities = [
         "snapshot".to_string(),
         "replication".to_string(),
         "compression".to_string(),
@@ -152,7 +152,7 @@ fn test_health_metrics_structure() {
 
     // Test metric value parsing
     let cpu: f64 = metrics.get("cpu_usage").unwrap().parse().unwrap();
-    assert!(cpu >= 0.0 && cpu <= 100.0);
+    assert!((0.0..=100.0).contains(&cpu));
 }
 
 // ==================== LOAD BALANCING TESTS ====================
@@ -160,7 +160,7 @@ fn test_health_metrics_structure() {
 #[test]
 fn test_load_distribution_calculation() {
     // Test load calculation across nodes
-    let node_loads = vec![("node-1", 45.0), ("node-2", 62.0), ("node-3", 38.0)];
+    let node_loads = [("node-1", 45.0), ("node-2", 62.0), ("node-3", 38.0)];
 
     let total_load: f64 = node_loads.iter().map(|(_, load)| load).sum();
     let avg_load = total_load / node_loads.len() as f64;
@@ -183,7 +183,7 @@ fn test_capacity_based_routing() {
         used_gb: u64,
     }
 
-    let nodes = vec![
+    let nodes = [
         Node {
             name: "node-1",
             total_gb: 1000,
@@ -228,7 +228,7 @@ fn test_weighted_load_balancing() {
         current_load: u32,
     }
 
-    let nodes = vec![
+    let nodes = [
         WeightedNode {
             name: "high-perf",
             weight: 10,
@@ -287,7 +287,7 @@ fn test_service_filtering() {
         region: &'static str,
     }
 
-    let services = vec![
+    let services = [
         Service {
             name: "srv-1",
             service_type: "zfs-storage",
@@ -343,7 +343,7 @@ fn test_leader_election_simulation() {
         startup_time: u64,
     }
 
-    let nodes = vec![
+    let nodes = [
         Node {
             id: "node-1",
             priority: 5,
@@ -409,7 +409,7 @@ fn test_split_brain_detection() {
     };
 
     let total_nodes = 5;
-    let nodes_in_partitions = partition1.nodes.len() + partition2.nodes.len();
+    let _nodes_in_partitions = partition1.nodes.len() + partition2.nodes.len();
 
     // Split brain: no partition has majority
     let has_majority_1 = partition1.nodes.len() > total_nodes / 2;
@@ -573,12 +573,13 @@ fn test_json_serialization() {
 
 #[tokio::test]
 async fn test_async_service_registration() {
-    // Test async service registration
-    tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+    // ✅ EVOLUTION: No artificial delays - test real async behavior
+    // Test async service registration without sleeps
 
-    // Simulate registration
-    let service_id = "test-service";
+    // Simulate registration (instant)
+    let service_id = String::from("test-service");
     assert!(!service_id.is_empty());
+    assert_eq!(service_id, "test-service");
 }
 
 #[tokio::test]

@@ -329,8 +329,11 @@ pub mod performance {
 
         // Traditional pattern simulation (Arc<dyn Fn>)
         let traditional_factory: Arc<dyn Fn() -> Result<TcpConnection> + Send + Sync> = Arc::new(|| {
-            // Simulate Arc<dyn Fn> overhead
-            std::thread::sleep(Duration::from_nanos(200));
+            // Simulate Arc<dyn Fn> overhead (using spin instead of blocking)
+            let start = std::time::Instant::now();
+            while start.elapsed() < Duration::from_nanos(200) {
+                std::hint::spin_loop();
+            }
             Ok(TcpConnection {
                 endpoint: "127.0.0.1".to_string(),
                 port: 8080,

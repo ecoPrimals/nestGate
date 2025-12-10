@@ -62,18 +62,25 @@ impl Default for CapabilityRoutingConfig {
 
 /// Errors that can occur during capability routing
 #[derive(Debug, thiserror::Error)]
-/// Errors that can occur during CapabilityRouting operations
 pub enum CapabilityRoutingError {
+    /// No fallback provider available for the requested capability
     #[error("No fallback available for capability: {0}")]
     NoFallbackAvailable(String),
+
+    /// Universal adapter encountered an error
     #[error("Universal adapter error: {0}")]
     AdapterError(String),
+
+    /// Fallback provider execution failed
     #[error("Fallback execution failed: {0}")]
     FallbackError(String),
+
+    /// JSON serialization/deserialization error
     #[error("Serialization error: {0}")]
     SerializationError(String),
+
+    /// Timeout waiting for adapter response
     #[error("Timeout waiting for adapter response")]
-    /// Timeout
     Timeout,
 }
 /// Trait for fallback providers
@@ -97,15 +104,21 @@ pub trait FallbackProvider: Send + Sync {
 
 /// Enum wrapper for fallback providers to avoid trait object issues
 #[derive(Debug)]
-/// Fallbackproviderwrapper
 pub enum FallbackProviderWrapper {
+    /// Security capability fallback provider
     Security(crate::ecosystem_integration::fallback_providers::security::SecurityFallbackProvider),
+
+    /// AI capability fallback provider
     Ai(crate::ecosystem_integration::fallback_providers::ai::AiFallbackProvider),
+
+    /// Orchestration capability fallback provider
     Orchestration(crate::ecosystem_integration::fallback_providers::orchestration::OrchestrationFallbackProvider),
+
+    /// ZFS capability fallback provider
     Zfs(crate::ecosystem_integration::fallback_providers::zfs::ZfsFallbackProvider),
 }
 impl FallbackProviderWrapper {
-    /// Execute
+    /// Execute a fallback operation through the wrapped provider
     pub async fn execute(
         &self,
         operation: &str,
@@ -124,6 +137,7 @@ impl FallbackProviderWrapper {
         }
     }
 
+    /// Returns list of operations supported by this fallback provider
     #[must_use]
     pub fn supported_operations(&self) -> Vec<String> {
         match self {
@@ -134,6 +148,10 @@ impl FallbackProviderWrapper {
         }
     }
 
+    /// Returns metadata about this fallback provider
+    ///
+    /// Provides key-value metadata describing the provider's capabilities,
+    /// version, and configuration details.
     #[must_use]
     pub fn metadata(&self) -> HashMap<String, String> {
         match self {

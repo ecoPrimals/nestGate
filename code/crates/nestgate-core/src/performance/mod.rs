@@ -11,6 +11,10 @@ mod connection_pool_tests;
 pub mod advanced_optimizations;
 pub mod safe_optimizations;
 
+/// **NEW SAFE RING BUFFER** - 100% safe, high-performance SPSC buffer
+/// Use this instead of unsafe ring buffers - same performance, zero unsafe code!
+pub mod safe_ring_buffer;
+
 // Re-export key performance features
 pub use connection_pool::{
     ConnectionPoolConfig, ConnectionPoolManager, HttpConnectionPool, PoolStats,

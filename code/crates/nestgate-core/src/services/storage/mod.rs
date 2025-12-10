@@ -6,8 +6,11 @@
 // **REPLACES**: storage.rs (886 lines) with modular architecture
 /// **PROVIDES**: Focused storage modules with clear separation of concerns
 // Core storage service and configuration
+/// Storage configuration module
 pub mod config;
+/// Storage service implementation
 pub mod service;
+/// Storage type definitions
 pub mod types;
 
 #[cfg(test)]

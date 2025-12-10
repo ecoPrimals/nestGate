@@ -39,7 +39,7 @@ enum SystemState {
 /// Backup information
 struct Backup {
     id: String,
-    created_at: SystemTime,
+    _created_at: SystemTime,
     data_snapshot: HashMap<String, Vec<u8>>,
     metadata: HashMap<String, String>,
 }
@@ -48,7 +48,7 @@ impl Backup {
     fn new(id: &str) -> Self {
         Self {
             id: id.to_string(),
-            created_at: SystemTime::now(),
+            _created_at: SystemTime::now(),
             data_snapshot: HashMap::new(),
             metadata: HashMap::new(),
         }
@@ -66,8 +66,9 @@ impl Backup {
         self.data_snapshot.values().map(|v| v.len()).sum()
     }
 
+    #[allow(dead_code)] // Test utility method for backup metadata
     fn age(&self) -> Duration {
-        self.created_at.elapsed().unwrap_or(Duration::from_secs(0))
+        self._created_at.elapsed().unwrap_or(Duration::from_secs(0))
     }
 }
 

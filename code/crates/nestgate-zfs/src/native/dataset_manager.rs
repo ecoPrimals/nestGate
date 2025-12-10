@@ -202,14 +202,22 @@ impl NativeZfsDatasetManager {
             size: used_bytes + available_bytes,
             used: used_bytes,
             available: available_bytes,
-            compression: compression_ratio.map_or_else(|| "lz4".into(), |r| r.to_string()),
-            checksum: "sha256".into(), // Default checksum
-            tier: nestgate_core::canonical_types::StorageTier::Warm, // Default tier
+            mountpoint: if mount_point.is_empty() || mount_point == "none" {
+                None
+            } else {
+                Some(std::path::PathBuf::from(&mount_point))
+            },
             mount_point: if mount_point.is_empty() || mount_point == "none" {
                 None
             } else {
                 Some(std::path::PathBuf::from(mount_point))
             },
+            dataset_type: "filesystem".to_string(),
+            compression: compression_ratio.map_or_else(|| "lz4".into(), |r| r.to_string()),
+            checksum: "sha256".into(), // Default checksum
+            referenced: used_bytes,    // Approximation
+            compression_ratio: compression_ratio.unwrap_or(1.0),
+            tier: nestgate_core::canonical_types::StorageTier::Warm, // Default tier
             properties: properties.clone(),
             created_at: std::time::SystemTime::now(),
         })

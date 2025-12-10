@@ -330,7 +330,7 @@ impl ConnectionPool {
     }
 
     /// Gets Connection
-    async fn get_connection(&self) -> Result<Connection, String> {
+    async fn get_connection(&self) -> std::result::Result<Connection, String> {
         let mut id = self.next_id.write().await;
         let conn = Connection { id: *id };
         *id += 1;
@@ -342,7 +342,7 @@ impl ConnectionPool {
     }
 
     /// Return Connection
-    async fn return_connection(&self, _conn: Connection) -> Result<(), String> {
+    async fn return_connection(&self, _conn: Connection) -> std::result::Result<(), String> {
         Ok(())
     }
 

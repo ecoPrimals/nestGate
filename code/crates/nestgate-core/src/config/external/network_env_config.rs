@@ -223,8 +223,12 @@ mod tests {
             }
         });
 
-        let (host1, port1) = handle1.await.unwrap();
-        let (host2, port2) = handle2.await.unwrap();
+        let (host1, port1) = handle1
+            .await
+            .expect("First task should complete successfully");
+        let (host2, port2) = handle2
+            .await
+            .expect("Second task should complete successfully");
 
         assert_eq!(host1, Some("api1.example.com".to_string()));
         assert_eq!(port1, Some(8080));

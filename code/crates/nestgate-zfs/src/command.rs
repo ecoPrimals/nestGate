@@ -37,17 +37,51 @@ impl Default for ZfsCommand {
 }
 
 impl ZfsCommand {
+    /// Creates a new ZFS command executor with default settings
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nestgate_zfs::command::ZfsCommand;
+    /// let cmd = ZfsCommand::new();
+    /// ```
     #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// Enables or disables dry-run mode
+    ///
+    /// When enabled, commands will be validated but not executed.
+    ///
+    /// # Arguments
+    ///
+    /// * `dry_run` - If true, commands won't actually execute
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nestgate_zfs::command::ZfsCommand;
+    /// let cmd = ZfsCommand::new().with_dry_run(true);
+    /// ```
     #[must_use]
     pub fn with_dry_run(mut self, dry_run: bool) -> Self {
         self.dry_run = dry_run;
         self
     }
 
+    /// Sets the command execution timeout
+    ///
+    /// # Arguments
+    ///
+    /// * `timeout_seconds` - Maximum time to wait for command completion
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nestgate_zfs::command::ZfsCommand;
+    /// let cmd = ZfsCommand::new().with_timeout(60);
+    /// ```
     #[must_use]
     pub fn with_timeout(mut self, timeout_seconds: u64) -> Self {
         self.timeout_seconds = timeout_seconds;
@@ -237,6 +271,7 @@ pub struct ZfsOperations {
     command: ZfsCommand,
 }
 impl ZfsOperations {
+    /// Creates a new `ZfsOperations` instance with default configuration.
     #[must_use]
     pub fn new() -> Self {
         Self {
@@ -244,6 +279,10 @@ impl ZfsOperations {
         }
     }
 
+    /// Sets whether operations should be performed in dry-run mode.
+    ///
+    /// # Arguments
+    /// * `dry_run` - If `true`, operations will be simulated without actual execution.
     #[must_use]
     pub fn with_dry_run(mut self, dry_run: bool) -> Self {
         self.command = self.command.with_dry_run(dry_run);

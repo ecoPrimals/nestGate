@@ -31,11 +31,17 @@ pub mod real_adapter_router;
 pub use ecosystem_config::{EcosystemDiscoveryConfig, SharedEcosystemConfig};
 
 // ✅ FALLBACK PROVIDERS - Graceful degradation when capabilities unavailable
+
+/// Fallback providers for ecosystem capabilities when primary services are unavailable
+///
+/// This module provides graceful degradation by implementing local fallback
+/// behavior when external primal services cannot be reached.
 pub mod fallback_providers {
     use crate::ecosystem_integration::capability_router::FallbackProvider;
     use crate::error::NestGateError;
     // Removed unused async_trait import for pedantic perfection
 
+    /// Security fallback providers for authentication and authorization when primary security services are unavailable
     pub mod security {
         use super::{FallbackProvider, NestGateError};
 
@@ -58,6 +64,10 @@ pub mod fallback_providers {
         }
 
         impl SecurityFallbackProvider {
+            /// Creates a new security fallback provider with the specified mode
+            ///
+            /// # Arguments
+            /// * `mode` - The fallback authentication mode to use
             #[must_use]
             pub fn new(mode: SecurityFallbackMode) -> Self {
                 Self {
@@ -116,6 +126,7 @@ pub mod fallback_providers {
         }
     }
 
+    /// AI fallback providers for machine learning and intelligence capabilities when primary AI services are unavailable
     pub mod ai {
         use super::{FallbackProvider, NestGateError};
 
@@ -138,6 +149,10 @@ pub mod fallback_providers {
         }
 
         impl AiFallbackProvider {
+            /// Creates a new AI fallback provider with the specified mode
+            ///
+            /// # Arguments
+            /// * `mode` - The fallback AI processing mode to use
             #[must_use]
             pub fn new(mode: AiFallbackMode) -> Self {
                 Self {
@@ -207,6 +222,7 @@ pub mod fallback_providers {
         }
     }
 
+    /// Orchestration fallback providers for workflow and service coordination when primary orchestration services are unavailable
     pub mod orchestration {
         use super::{FallbackProvider, NestGateError};
 
@@ -223,6 +239,9 @@ pub mod fallback_providers {
         }
 
         impl OrchestrationFallbackProvider {
+            /// Creates a new orchestration fallback provider
+            ///
+            /// Provides local orchestration capabilities when external services are unavailable.
             #[must_use]
             pub fn new() -> Self {
                 Self
@@ -290,6 +309,7 @@ pub mod fallback_providers {
         }
     }
 
+    /// Compute fallback providers for processing and computation when primary compute services are unavailable
     pub mod compute {
         use super::NestGateError;
 
@@ -304,6 +324,9 @@ pub mod fallback_providers {
         }
 
         impl ComputeFallbackProvider {
+            /// Creates a new compute fallback provider
+            ///
+            /// Provides local computation capabilities when external services are unavailable.
             #[must_use]
             pub fn new() -> Self {
                 Self
@@ -320,6 +343,7 @@ pub mod fallback_providers {
         }
     }
 
+    /// ZFS fallback providers for storage operations when primary ZFS services are unavailable
     pub mod zfs {
         use super::{FallbackProvider, NestGateError};
 
@@ -336,6 +360,9 @@ pub mod fallback_providers {
         }
 
         impl ZfsFallbackProvider {
+            /// Creates a new ZFS fallback provider
+            ///
+            /// Provides local ZFS storage operations when external services are unavailable.
             #[must_use]
             pub fn new() -> Self {
                 Self

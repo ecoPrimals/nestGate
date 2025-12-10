@@ -8,7 +8,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-// Type aliases for complex types to improve readability
+/// Type alias for thread-safe pool information map.
 pub type PoolInfoMap = Arc<RwLock<HashMap<String, ZeroCostPoolInfo>>>;
 /// Type alias for Datasetinfomap
 pub type DatasetInfoMap = Arc<RwLock<HashMap<String, ZeroCostDatasetInfo>>>;

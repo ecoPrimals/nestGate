@@ -18,19 +18,19 @@ pub mod cpu;
 // Memory optimization settings
 pub mod memory;
 // I/O optimization settings
-pub mod io;
-// Network performance settings
-pub mod network;
-// Caching performance settings
+/// Caching performance settings
 pub mod caching;
-// Concurrency and threading configuration
+/// Concurrency and threading configuration
 pub mod concurrency;
-// Performance monitoring and metrics
-pub mod monitoring;
-// Optimization profiles
-pub mod profiles;
-// Environment-specific settings
+/// Environment-specific settings
 pub mod environment;
+pub mod io;
+/// Performance monitoring and metrics
+pub mod monitoring;
+/// Network performance settings
+pub mod network;
+/// Optimization profiles
+pub mod profiles;
 // ==================== RE-EXPORTS ====================
 
 pub use caching::{CacheOptimizationConfig, CachePerformanceConfig, CacheWarmingConfig};
@@ -48,9 +48,9 @@ pub use profiles::{OptimizationProfile, OptimizationProfiles};
 
 // ==================== BACKWARD COMPATIBILITY ALIASES ====================
 
-// Backward compatibility alias for existing PerformanceConfig usage
+/// Backward compatibility alias for existing `PerformanceConfig` usage
 pub type PerformanceConfig = CanonicalPerformanceConfig;
-// Backward compatibility alias for UnifiedPerformanceConfig
+/// Backward compatibility alias for `UnifiedPerformanceConfig`
 pub type UnifiedPerformanceConfig = CanonicalPerformanceConfig;
-// Backward compatibility alias for UnifiedPerformanceTestConfig
+/// Backward compatibility alias for `UnifiedPerformanceTestConfig`
 pub type UnifiedPerformanceTestConfig = CanonicalPerformanceConfig;

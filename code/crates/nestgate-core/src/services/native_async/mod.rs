@@ -43,7 +43,6 @@ mod tests {
     };
     // Removed unresolved smart_abstractions import
     use anyhow::Result;
-    use std::env;
     use std::time::SystemTime;
 
     #[cfg(test)]
@@ -59,9 +58,13 @@ mod tests {
 
     #[cfg(test)]
     impl Default for MockServiceInfo {
-        /// Returns the default instance
+        /// Returns the default instance with environment-driven configuration
         fn default() -> Self {
-            use crate::constants::hardcoding::{addresses, ports};
+            use crate::config::environment::EnvironmentConfig;
+
+            // Load from environment for consistency with production
+            let env_config =
+                EnvironmentConfig::from_env().unwrap_or_else(|_| EnvironmentConfig::default());
 
             Self {
                 id: "test-service-123".to_string(),
@@ -69,12 +72,8 @@ mod tests {
                 version: "1.0.0".to_string(),
                 endpoints: vec![format!(
                     "http://{}:{}",
-                    env::var("NESTGATE_API_HOST")
-                        .unwrap_or_else(|_| addresses::LOCALHOST_NAME.to_string()),
-                    env::var("NESTGATE_API_PORT")
-                        .ok()
-                        .and_then(|s| s.parse().ok())
-                        .unwrap_or(ports::HTTP_DEFAULT)
+                    env_config.network.host,
+                    env_config.network.port.get()
                 )],
             }
         }

@@ -13,8 +13,10 @@ async fn test_concurrent_operations_no_panic() {
 
     for i in 0..iterations {
         let handle = tokio::spawn(async move {
-            // Simulate concurrent operations
-            tokio::time::sleep(Duration::from_micros(i as u64 * 10)).await;
+            // Yield to test concurrent execution (not timing)
+            for _ in 0..i {
+                tokio::task::yield_now().await;
+            }
             format!("task_{}", i)
         });
         handles.push(handle);
@@ -158,10 +160,8 @@ async fn test_notify_pattern() {
         "notified"
     });
 
-    // Give task time to start waiting
-    tokio::time::sleep(Duration::from_millis(10)).await;
-
-    // Notify the waiting task
+    // Yield to ensure task starts, then notify immediately
+    tokio::task::yield_now().await;
     notify.notify_one();
 
     let result = handle.await.expect("Should complete");
@@ -307,10 +307,17 @@ async fn test_option_handling() {
     } else {
         Some(42)
     };
-    let none_value: Option<u32> = None;
+    // Test dynamic None value (not a literal)
+    let none_value: Option<u32> = if std::env::var("__ALSO_NEVER_SET").is_ok() {
+        Some(99)
+    } else {
+        None
+    };
 
     assert_eq!(some_value.unwrap_or(0), 42);
-    assert_eq!(none_value.unwrap_or(0), 0);
+    // Test Option default value handling with dynamic None
+    let default_val = none_value.unwrap_or(0);
+    assert_eq!(default_val, 0);
 
     assert_eq!(some_value.map(|x| x * 2), Some(84));
     assert_eq!(none_value.map(|x| x * 2), None);
@@ -360,12 +367,13 @@ async fn test_select_operations() {
     let (tx2, mut rx2) = tokio::sync::oneshot::channel();
 
     tokio::spawn(async move {
-        tokio::time::sleep(Duration::from_millis(10)).await;
+        // Send immediately - select will choose first ready channel
         let _ = tx1.send("first");
     });
 
     tokio::spawn(async move {
-        tokio::time::sleep(Duration::from_millis(100)).await;
+        // Yield to allow tx1 to send first, then send
+        tokio::task::yield_now().await;
         let _ = tx2.send("second");
     });
 

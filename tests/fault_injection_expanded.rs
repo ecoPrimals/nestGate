@@ -52,7 +52,7 @@ mod expanded_fault_injection {
     async fn fault_inject_partial_response() {
         // Simulate incomplete/partial response
         async fn fetch_data() -> Result<Vec<u8>, String> {
-            let full_data = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+            let full_data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
             let partial_data = full_data[0..5].to_vec(); // Only half
             Ok(partial_data)
         }

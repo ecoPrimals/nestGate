@@ -129,9 +129,13 @@ impl NativeZfsPoolManager {
 
         // Create PoolCapacity
         let capacity = PoolCapacity {
+            total: size_bytes,
             total_bytes: size_bytes,
+            used: allocated_bytes,
             used_bytes: allocated_bytes,
+            available: free_bytes,
             available_bytes: free_bytes,
+            utilization_percent: (allocated_bytes as f64 / size_bytes as f64) * 100.0,
             fragmentation_percent: 0.0, // Would be parsed from status
             deduplication_ratio: 1.0,   // Would be parsed from status
         };

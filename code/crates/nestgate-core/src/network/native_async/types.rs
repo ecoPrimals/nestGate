@@ -77,6 +77,7 @@ pub enum ConnectionStatus {
     Connected,
     /// Disconnected
     Disconnected,
+    /// An error occurred with the connection
     Error(String),
 }
 /// Network request
@@ -179,10 +180,12 @@ mod tests {
 
     #[test]
     fn test_network_connection_creation() {
+        use crate::constants::{network::LOCALHOST, DEFAULT_API_PORT};
+
         let connection = NetworkConnection {
             connection_id: "conn-123".to_string(),
             protocol: "http".to_string(),
-            local_endpoint: "127.0.0.1:8080".to_string(),
+            local_endpoint: format!("{}:{}", LOCALHOST, DEFAULT_API_PORT),
             established_at: Utc::now(),
             status: ConnectionStatus::Connected,
             metadata: HashMap::new(),

@@ -42,6 +42,14 @@ mod tests;
 // MultiTierCacheConfig imported via pub use below
 pub mod manager;
 pub mod multi_tier;
+
+/// Cache type definitions and traits
+///
+/// This module provides core types for cache operations including:
+/// - `CacheEntry`: Individual cache entry representation
+/// - `CachePolicy`: Cache eviction policies (LRU, LFU, etc.)
+/// - `CacheStats`: Cache performance statistics
+/// - `StorageTier`: Multi-tier cache tier definitions
 pub mod types;
 pub use manager::CacheManager;
 #[allow(deprecated)]
@@ -221,7 +229,24 @@ impl CacheSystemStats {
     }
 }
 
-// Cache builder for easy configuration
+/// Builder pattern for constructing cache systems
+///
+/// Provides a fluent API for configuring single-tier or multi-tier cache systems
+/// with various policies, sizes, and TTL settings.
+///
+/// # Example
+///
+/// ```rust,ignore
+/// use nestgate_core::cache::{CacheBuilder, CachePolicy};
+/// use std::time::Duration;
+///
+/// let cache = CacheBuilder::new()
+///     .with_policy(CachePolicy::Lru)
+///     .with_hot_tier_size(1000)
+///     .with_ttl(Duration::from_secs(300))
+///     .build()
+///     .await?;
+/// ```
 pub struct CacheBuilder {
     config: crate::config::canonical_primary::CacheConfig,
     multi_tier: bool,

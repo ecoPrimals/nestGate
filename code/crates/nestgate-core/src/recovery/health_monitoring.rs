@@ -253,3 +253,7 @@ impl Default for HealthMonitor {
         Self::new(Duration::from_secs(30))
     }
 }
+
+#[cfg(test)]
+#[path = "health_monitoring_tests.rs"]
+mod health_monitoring_tests;

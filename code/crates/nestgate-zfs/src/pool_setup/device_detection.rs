@@ -53,16 +53,21 @@ pub enum DeviceType {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 /// Speedclass
 pub enum SpeedClass {
+    /// Ultra-fast devices (NVMe Gen4, Optane)
     UltraFast, // NVMe Gen4, Optane
-    Fast,      // NVMe Gen3, High-end SATA SSD
-    Medium,    // Standard SATA SSD
-    Slow,      // HDD
+    /// Fast devices (NVMe Gen3, High-end SATA SSD)
+    Fast, // NVMe Gen3, High-end SATA SSD
+    /// Medium speed devices (Standard SATA SSD)
+    Medium, // Standard SATA SSD
+    /// Slow devices (HDD)
+    Slow, // HDD
 }
 /// Device scanner for detecting and classifying storage devices
 pub struct DeviceScanner {
     config: DeviceDetectionConfig,
 }
 impl DeviceScanner {
+    /// Creates a new device scanner with the given configuration.
     #[must_use]
     pub fn new(config: DeviceDetectionConfig) -> Self {
         Self { config }

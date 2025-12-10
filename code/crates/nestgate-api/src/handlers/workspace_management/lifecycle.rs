@@ -437,10 +437,14 @@ pub fn migrate_workspace(
     }
 
     // Step 2: Create migration snapshot
+    // Modern: Proper error handling for system time
     let timestamp = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map(|d| d.as_secs())
-        .unwrap_or(0); // Fallback to 0 if system time is before UNIX_EPOCH
+        .unwrap_or_else(|_| {
+            warn!("⚠️ System time before UNIX epoch, using current timestamp");
+            0
+        });
     
     let migration_snapshot = format!(
         "{}@migrate_{}",

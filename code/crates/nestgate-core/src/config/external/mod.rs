@@ -34,6 +34,7 @@
 //! ```
 
 pub mod network;
+/// Network environment configuration
 pub mod network_env_config;
 pub mod services;
 pub mod services_config;

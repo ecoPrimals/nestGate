@@ -16,7 +16,6 @@ pub struct PerformanceAnalyzer {
 impl PerformanceAnalyzer {
     /// Create new performance analyzer
     #[must_use]
-    /// Fn
     pub const fn new(config: AnalyzerConfig) -> Self {
         Self { config }
     }

@@ -21,12 +21,12 @@
 //!     .await?;
 //!
 //! if let Some(provider) = orchestration_providers.first() {
-//!     // Use discovered orchestration primal (e.g., Songbird)
+//!     // Use discovered orchestration capability (implementation-agnostic)
 //!     provider.call("orchestrate_workflow", request).await?;
 //! }
 //! ```
 //!
-//! No hardcoded "Songbird" or other primal names - pure capability discovery.
+//! No hardcoded implementation names - pure capability discovery.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

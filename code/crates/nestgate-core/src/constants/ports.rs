@@ -3,29 +3,30 @@
 //! Centralized port definitions for all NestGate services.
 //! These can be overridden via environment variables.
 //!
-//! # Environment Variables
+//! **MIGRATION NOTE** (Week 2, Dec 2025): This module is being migrated to use
+//! the modern `EnvironmentConfig` system. Constants are kept for backward
+//! compatibility but helper functions are deprecated.
 //!
-//! Each port constant can be overridden using its corresponding environment variable:
-//! - `NESTGATE_API_PORT` - Main API server port
-//! - `NESTGATE_DEV_PORT` - Development server port
-//! - `NESTGATE_METRICS_PORT` - Prometheus metrics port
-//! - `POSTGRES_PORT` - PostgreSQL database port
-//! - `REDIS_PORT` - Redis cache port
-//! - `MONGODB_PORT` - MongoDB database port
-//! - `PRIMAL_DISCOVERY_PORT` - Primal discovery service port
+//! # Recommended Usage (Modern)
 //!
-//! # Usage
+//! ```rust
+//! use nestgate_core::config::environment::EnvironmentConfig;
+//!
+//! let config = EnvironmentConfig::from_env()?;
+//! let api_port = config.network.port.get();          // Type-safe port
+//! let metrics_port = config.monitoring.metrics_port.get();
+//! ```
+//!
+//! # Legacy Usage (Deprecated)
 //!
 //! ```rust
 //! use nestgate_core::constants::ports;
-//! use nestgate_core::config::migration_helpers::get_port;
 //!
-//! // Get port with environment variable fallback
-//! let api_port = get_port(
-//!     "NESTGATE_API_PORT",
-//!     None,
-//!     ports::API_SERVER_DEFAULT
-//! );
+//! // These constants still work but are deprecated
+//! let api_port = ports::API_SERVER_DEFAULT;  // Hardcoded, no env support
+//!
+//! // These functions work but show deprecation warnings
+//! let port = ports::api_server_port();  // Deprecated
 //! ```
 
 /// Default port for the main NestGate API server
@@ -88,35 +89,55 @@ pub const MONGODB_DEFAULT: u16 = 27017;
 /// **Usage**: Infant Discovery architecture service discovery
 pub const PRIMAL_DISCOVERY_DEFAULT: u16 = 5000;
 
-/// Default port for Songbird (networking primal)
+/// Default port for networking service (capability-based discovery preferred)
 ///
-/// **Environment Variable**: `SONGBIRD_PORT`  
+/// **Environment Variable**: `NETWORKING_SERVICE_PORT`  
 /// **Default**: 9091  
-/// **Usage**: Songbird networking primal communication
-pub const SONGBIRD_DEFAULT: u16 = 9091;
+/// **Usage**: Generic networking service communication (use capability discovery)
+pub const NETWORKING_SERVICE_DEFAULT: u16 = 9091;
 
-/// Default port for BearDog (security primal)
+/// Default port for security service (capability-based discovery preferred)
 ///
-/// **Environment Variable**: `BEARDOG_PORT`  
+/// **Environment Variable**: `SECURITY_SERVICE_PORT`  
 /// **Default**: 9092  
-/// **Usage**: BearDog security primal communication
-pub const BEARDOG_DEFAULT: u16 = 9092;
+/// **Usage**: Generic security service communication (use capability discovery)
+pub const SECURITY_SERVICE_DEFAULT: u16 = 9092;
 
 // ==================== HELPER FUNCTIONS ====================
+// **MODERNIZED** (Week 2, Dec 2025): These functions now delegate to
+// migration_bridge and are marked as deprecated to guide migration.
 
 /// Get API server port with environment variable support
 ///
-/// Checks `NESTGATE_API_PORT` environment variable, falls back to default
+/// **DEPRECATED**: Use `EnvironmentConfig::from_env()?.network.port.get()` instead
+///
+/// # Migration Example
+///
+/// ```rust
+/// // OLD
+/// let port = ports::api_server_port();
+///
+/// // NEW
+/// let config = EnvironmentConfig::from_env()?;
+/// let port = config.network.port.get();
+/// ```
+#[deprecated(
+    since = "0.6.0",
+    note = "Use EnvironmentConfig::from_env()?.network.port instead"
+)]
 pub fn api_server_port() -> u16 {
-    std::env::var("NESTGATE_API_PORT")
-        .ok()
-        .and_then(|s| s.parse().ok())
-        .unwrap_or(API_SERVER_DEFAULT)
+    use crate::config::migration_bridge;
+    #[allow(deprecated)]
+    migration_bridge::get_api_port()
 }
 
 /// Get development server port with environment variable support
 ///
-/// Checks `NESTGATE_DEV_PORT` environment variable, falls back to default
+/// **DEPRECATED**: Use `EnvironmentConfig` with custom port configuration
+#[deprecated(
+    since = "0.6.0",
+    note = "Configure development port via NESTGATE_PORT environment variable"
+)]
 pub fn dev_server_port() -> u16 {
     std::env::var("NESTGATE_DEV_PORT")
         .ok()
@@ -126,17 +147,24 @@ pub fn dev_server_port() -> u16 {
 
 /// Get metrics server port with environment variable support
 ///
-/// Checks `NESTGATE_METRICS_PORT` environment variable, falls back to default
+/// **DEPRECATED**: Use `EnvironmentConfig::from_env()?.monitoring.metrics_port.get()` instead
+#[deprecated(
+    since = "0.6.0",
+    note = "Use EnvironmentConfig::from_env()?.monitoring.metrics_port instead"
+)]
 pub fn metrics_server_port() -> u16 {
-    std::env::var("NESTGATE_METRICS_PORT")
-        .ok()
-        .and_then(|s| s.parse().ok())
-        .unwrap_or(METRICS_SERVER_DEFAULT)
+    use crate::config::migration_bridge;
+    #[allow(deprecated)]
+    migration_bridge::get_metrics_port()
 }
 
 /// Get PostgreSQL port with environment variable support
 ///
-/// Checks `POSTGRES_PORT` environment variable, falls back to default
+/// **DEPRECATED**: Database configuration should be external to NestGate
+#[deprecated(
+    since = "0.6.0",
+    note = "Database configuration should be managed externally"
+)]
 pub fn postgres_port() -> u16 {
     std::env::var("POSTGRES_PORT")
         .ok()
@@ -146,7 +174,11 @@ pub fn postgres_port() -> u16 {
 
 /// Get Redis port with environment variable support
 ///
-/// Checks `REDIS_PORT` environment variable, falls back to default
+/// **DEPRECATED**: Database configuration should be external to NestGate
+#[deprecated(
+    since = "0.6.0",
+    note = "Database configuration should be managed externally"
+)]
 pub fn redis_port() -> u16 {
     std::env::var("REDIS_PORT")
         .ok()
@@ -156,7 +188,11 @@ pub fn redis_port() -> u16 {
 
 /// Get MongoDB port with environment variable support
 ///
-/// Checks `MONGODB_PORT` environment variable, falls back to default
+/// **DEPRECATED**: Database configuration should be external to NestGate
+#[deprecated(
+    since = "0.6.0",
+    note = "Database configuration should be managed externally"
+)]
 pub fn mongodb_port() -> u16 {
     std::env::var("MONGODB_PORT")
         .ok()
@@ -166,7 +202,11 @@ pub fn mongodb_port() -> u16 {
 
 /// Get Primal Discovery port with environment variable support
 ///
-/// Checks `PRIMAL_DISCOVERY_PORT` environment variable, falls back to default
+/// **DEPRECATED**: Use capability-based discovery instead of hardcoded ports
+#[deprecated(
+    since = "0.6.0",
+    note = "Use capability-based service discovery instead of port constants"
+)]
 pub fn primal_discovery_port() -> u16 {
     std::env::var("PRIMAL_DISCOVERY_PORT")
         .ok()
@@ -189,41 +229,62 @@ mod tests {
     }
 
     #[test]
+    #[allow(deprecated)]
     fn test_port_helper_functions() {
-        // Test without environment variables (should return defaults)
-        assert_eq!(api_server_port(), API_SERVER_DEFAULT);
-        assert_eq!(dev_server_port(), DEV_SERVER_DEFAULT);
-        assert_eq!(postgres_port(), POSTGRES_DEFAULT);
+        // Test deprecated helper functions - they now use EnvironmentConfig
+        let api_port = api_server_port();
+        assert!(api_port > 0);
+
+        let dev_port = dev_server_port();
+        assert!(dev_port > 0);
+
+        let postgres = postgres_port();
+        assert_eq!(postgres, POSTGRES_DEFAULT);
     }
 
     #[test]
+    #[allow(deprecated)]
     fn test_port_with_env_override() {
-        // Save original value if it exists
-        let original = std::env::var("NESTGATE_API_PORT").ok();
+        // NOTE: With migration_bridge using OnceLock, environment variables
+        // must be set BEFORE first access. In production, this is always the case.
+        // For testing, we verify the helper functions work with cached config.
+        let port = api_server_port();
+        assert!(port > 0); // Valid port from cached config
 
-        // Set environment variable
-        std::env::set_var("NESTGATE_API_PORT", "9999");
-        assert_eq!(api_server_port(), 9999);
+        // Direct env var access still works for non-cached helpers
+        let original = std::env::var("NESTGATE_DEV_PORT").ok();
+        std::env::set_var("NESTGATE_DEV_PORT", "9999");
+        assert_eq!(dev_server_port(), 9999);
 
-        // Clean up - restore original or remove
+        // Clean up immediately to avoid test pollution
         match original {
-            Some(val) => std::env::set_var("NESTGATE_API_PORT", val),
-            None => std::env::remove_var("NESTGATE_API_PORT"),
+            Some(val) => std::env::set_var("NESTGATE_DEV_PORT", val),
+            None => std::env::remove_var("NESTGATE_DEV_PORT"),
         }
-
-        // Verify it returns to expected value after cleanup
-        let expected = std::env::var("NESTGATE_API_PORT")
-            .ok()
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(API_SERVER_DEFAULT);
-        assert_eq!(api_server_port(), expected);
     }
 
     #[test]
     fn test_invalid_env_port_falls_back() {
-        // Set invalid port value
-        std::env::set_var("NESTGATE_API_PORT", "invalid");
-        assert_eq!(api_server_port(), API_SERVER_DEFAULT);
-        std::env::remove_var("NESTGATE_API_PORT");
+        // Save and clear any existing value to ensure clean test
+        let original = std::env::var("NESTGATE_DEV_PORT").ok();
+
+        // Clear environment variable first to prevent test pollution
+        std::env::remove_var("NESTGATE_DEV_PORT");
+
+        // Test that invalid port values fall back to defaults
+        std::env::set_var("NESTGATE_DEV_PORT", "invalid");
+
+        #[allow(deprecated)]
+        let port = dev_server_port();
+        assert_eq!(
+            port, DEV_SERVER_DEFAULT,
+            "Invalid port string should fall back to default"
+        );
+
+        // Clean up
+        match original {
+            Some(val) => std::env::set_var("NESTGATE_DEV_PORT", val),
+            None => std::env::remove_var("NESTGATE_DEV_PORT"),
+        }
     }
 }

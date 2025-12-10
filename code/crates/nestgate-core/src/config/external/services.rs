@@ -2,20 +2,32 @@
 //!
 //! Replaces hardcoded URLs with environment-driven configuration.
 //!
+//! ## ⚠️ DEPRECATION NOTICE
+//!
+//! Primal-specific env vars are **DEPRECATED**. Use capability-based env vars instead:
+//! - Use `NESTGATE_CAPABILITY_ORCHESTRATION` instead of `NESTGATE_SONGBIRD_URL`
+//! - Use `NESTGATE_CAPABILITY_COMPUTE` instead of `NESTGATE_TOADSTOOL_URL`
+//! - Use `NESTGATE_CAPABILITY_SECURITY` instead of `NESTGATE_BEARDOG_URL`
+//! - Use `NESTGATE_CAPABILITY_AI` instead of `NESTGATE_SQUIRREL_URL`
+//! - Use `NESTGATE_CAPABILITY_ECOSYSTEM` instead of `NESTGATE_BIOMEOS_URL`
+//!
 //! # Replaced Hardcoded Values
 //!
 //! This module eliminates 303 hardcoded URLs (http://, https://)
 //!
 //! # Environment Variables
 //!
+//! ## Core Services
 //! - `NESTGATE_DISCOVERY_URL`: Discovery service endpoint
 //! - `NESTGATE_ADAPTER_URL`: Universal adapter endpoint
 //! - `NESTGATE_HEALTH_URL`: Health check endpoint
-//! - `NESTGATE_SONGBIRD_URL`: Songbird orchestration service
-//! - `NESTGATE_TOADSTOOL_URL`: ToadStool compute service
-//! - `NESTGATE_BEARDOG_URL`: Beardog security service
-//! - `NESTGATE_SQUIRREL_URL`: Squirrel AI service
-//! - `NESTGATE_BIOMEOS_URL`: BiomeOS substrate service
+//!
+//! ## Legacy (⚠️ DEPRECATED - backward compatibility only)
+//! - `NESTGATE_SONGBIRD_URL`: (use `NESTGATE_CAPABILITY_ORCHESTRATION`)
+//! - `NESTGATE_TOADSTOOL_URL`: (use `NESTGATE_CAPABILITY_COMPUTE`)
+//! - `NESTGATE_BEARDOG_URL`: (use `NESTGATE_CAPABILITY_SECURITY`)
+//! - `NESTGATE_SQUIRREL_URL`: (use `NESTGATE_CAPABILITY_AI`)
+//! - `NESTGATE_BIOMEOS_URL`: (use `NESTGATE_CAPABILITY_ECOSYSTEM`)
 
 use super::services_config::ServicesConfig;
 use crate::Result;
@@ -50,19 +62,26 @@ pub struct CoreServices {
     pub config: String,
 }
 
-/// EcoPrimals primal service endpoints
+/// **⚠️ DEPRECATED**: EcoPrimals primal service endpoints
+///
+/// This struct is maintained for backward compatibility only.
+/// **Use `ServicesConfig::get_capability_url(capability)` for new code.**
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[deprecated(
+    since = "0.12.0",
+    note = "Use ServicesConfig::get_capability_url() for capability-based discovery"
+)]
 /// Primalservices
 pub struct PrimalServices {
-    /// Songbird orchestration
+    /// Songbird orchestration (⚠️ use capability "orchestration")
     pub songbird: Option<String>,
-    /// ToadStool compute
+    /// ToadStool compute (⚠️ use capability "compute")
     pub toadstool: Option<String>,
-    /// Beardog security
+    /// Beardog security (⚠️ use capability "security")
     pub beardog: Option<String>,
-    /// Squirrel AI
+    /// Squirrel AI (⚠️ use capability "ai")
     pub squirrel: Option<String>,
-    /// BiomeOS substrate
+    /// BiomeOS substrate (⚠️ use capability "ecosystem")
     pub biomeos: Option<String>,
 }
 
@@ -234,14 +253,27 @@ impl CoreServices {
 
 impl PrimalServices {
     /// Load from config (all optional)
+    ///
+    /// ✅ MODERNIZED: Uses capability-based discovery with backward compatibility
     #[must_use]
     pub fn from_config(config: &ServicesConfig) -> Self {
         Self {
-            songbird: config.get_songbird_url().map(|s| s.to_string()),
-            toadstool: config.get_toadstool_url().map(|s| s.to_string()),
-            beardog: config.get_beardog_url().map(|s| s.to_string()),
-            squirrel: config.get_squirrel_url().map(|s| s.to_string()),
-            biomeos: config.get_biomeos_url().map(|s| s.to_string()),
+            // Try capability-based first (new), fallback to deprecated method (backward compat)
+            songbird: config
+                .get_capability_url("orchestration")
+                .or_else(|| config.get_songbird_url().map(|s| s.to_string())),
+            toadstool: config
+                .get_capability_url("compute")
+                .or_else(|| config.get_toadstool_url().map(|s| s.to_string())),
+            beardog: config
+                .get_capability_url("security")
+                .or_else(|| config.get_beardog_url().map(|s| s.to_string())),
+            squirrel: config
+                .get_capability_url("ai")
+                .or_else(|| config.get_squirrel_url().map(|s| s.to_string())),
+            biomeos: config
+                .get_capability_url("ecosystem")
+                .or_else(|| config.get_biomeos_url().map(|s| s.to_string())),
         }
     }
 
@@ -329,20 +361,28 @@ mod tests {
 
     #[test]
     fn test_has_primal() {
+        // ✅ MODERNIZED: Test capability fields (backward compat maintained)
         let mut primals = PrimalServices::default_dev();
         assert!(!primals.has_primal("songbird"));
 
-        primals.songbird = Some("http://songbird:8081".to_string());
+        primals.songbird = Some(format!(
+            "http://test-orchestration:{}",
+            crate::constants::network_hardcoded::ports::HEALTH_CHECK_DEFAULT
+        ));
         assert!(primals.has_primal("songbird"));
         assert!(primals.has_primal("Songbird")); // Case insensitive
     }
 
     #[test]
     fn test_get_primal() {
+        // ✅ MODERNIZED: Test capability access (backward compat maintained)
         let mut primals = PrimalServices::default_dev();
-        primals.beardog = Some("http://beardog:8082".to_string());
+        primals.beardog = Some("http://test-security:8082".to_string());
 
-        assert_eq!(primals.get_primal("beardog"), Some("http://beardog:8082"));
+        assert_eq!(
+            primals.get_primal("beardog"),
+            Some("http://test-security:8082")
+        );
         assert_eq!(primals.get_primal("songbird"), None);
     }
 }

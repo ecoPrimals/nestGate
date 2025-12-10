@@ -35,7 +35,7 @@ fn test_empty_string_edge_cases() {
 /// **Edge Case Test 3: Single Element Collections**
 #[test]
 fn test_single_element_collections() {
-    let single_vec = vec![42];
+    let single_vec = [42];
 
     assert_eq!(single_vec.len(), 1);
     assert_eq!(single_vec.first(), Some(&42));
@@ -79,7 +79,7 @@ fn test_unicode_edge_cases() {
     ];
 
     for sample in unicode_samples {
-        assert!(sample.len() > 0);
+        assert!(!sample.is_empty());
         assert!(sample.chars().count() > 0);
     }
 }
@@ -226,8 +226,8 @@ fn test_option_result_chaining() {
     let some_val = Some(42);
     let none_val: Option<i32> = None;
 
-    assert_eq!(some_val.and_then(|x| Some(x * 2)), Some(84));
-    assert_eq!(none_val.and_then(|x| Some(x * 2)), None);
+    assert_eq!(some_val.map(|x| x * 2), Some(84));
+    assert_eq!(none_val.map(|x| x * 2), None);
 
     assert_eq!(some_val.or(Some(100)), Some(42));
     assert_eq!(none_val.or(Some(100)), Some(100));

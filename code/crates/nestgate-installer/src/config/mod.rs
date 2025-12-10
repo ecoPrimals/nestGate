@@ -111,7 +111,7 @@ pub mod installer_config_factory {
     /// Development configuration
     #[must_use]
     pub fn development() -> InstallerConfig {
-        /// Installerconfig
+        // Installerconfig
         InstallerConfig {
             base_config: NestGateCanonicalConfig::default(),
             installation_path: "/opt/nestgate".to_string(),

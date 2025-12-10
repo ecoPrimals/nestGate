@@ -18,5 +18,8 @@ pub use core_errors::NestGateUnifiedError;
 
 // Domain-specific error implementations are available through the unified type
 
-// **THE** primary error type - canonical across all NestGate
+/// The primary error type for all NestGate operations
+///
+/// This is the canonical error type used across all NestGate crates and modules.
+/// It provides a unified interface for error handling with domain-specific variants.
 pub type NestGateError = NestGateUnifiedError;

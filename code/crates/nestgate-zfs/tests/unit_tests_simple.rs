@@ -5,7 +5,7 @@ use nestgate_zfs::{config::ZfsConfig, ZfsPoolManager};
 use std::collections::HashMap;
 
 #[test]
-fn test_zfs_config_creation() -> Result<(), Box<dyn std::error::Error>> {
+fn test_zfs_config_creation() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let config = ZfsConfig::default();
 
     // Just test that the config can be created
@@ -16,7 +16,7 @@ fn test_zfs_config_creation() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
-fn test_zfs_pool_manager_creation() -> Result<(), Box<dyn std::error::Error>> {
+fn test_zfs_pool_manager_creation() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let config = ZfsConfig::default();
     let _manager = ZfsPoolManager::new_production(config);
 
@@ -27,7 +27,7 @@ fn test_zfs_pool_manager_creation() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
-fn test_basic_data_structures() -> Result<(), Box<dyn std::error::Error>> {
+fn test_basic_data_structures() -> std::result::Result<(), Box<dyn std::error::Error>> {
     // Test basic HashMap operations that are used throughout the codebase
     let mut test_map: HashMap<String, String> = HashMap::new();
     test_map.insert("test_key".to_string(), "test_value".to_string());
@@ -38,7 +38,7 @@ fn test_basic_data_structures() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
-fn test_string_operations() -> Result<(), Box<dyn std::error::Error>> {
+fn test_string_operations() -> std::result::Result<(), Box<dyn std::error::Error>> {
     // Test string operations commonly used in ZFS operations
     let pool_name = "test_pool";
     let formatted_name = format!("zfs_{}", pool_name);
@@ -49,7 +49,7 @@ fn test_string_operations() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
-fn test_error_handling_patterns() -> Result<(), Box<dyn std::error::Error>> {
+fn test_error_handling_patterns() -> std::result::Result<(), Box<dyn std::error::Error>> {
     // Test that our error handling patterns work correctly
     let result: Result<String, Box<dyn std::error::Error>> = Ok("success".to_string());
 

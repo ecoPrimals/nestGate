@@ -193,11 +193,11 @@ mod resilience_pattern_edge_cases {
         assert_eq!(timeouts.len(), 5);
     }
 
-    #[test]
-    fn test_deadline_exceeded() {
+    #[tokio::test]
+    async fn test_deadline_exceeded() {
         let start = std::time::Instant::now();
         let deadline = start + Duration::from_millis(100);
-        std::thread::sleep(Duration::from_millis(50));
+        tokio::time::sleep(Duration::from_millis(50)).await;
         let now = std::time::Instant::now();
         assert!(now < deadline);
     }

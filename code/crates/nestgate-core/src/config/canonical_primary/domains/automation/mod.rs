@@ -454,7 +454,10 @@ impl Default for AnalysisConfig {
 }
 
 impl AnalysisConfig {
-    /// Create development configuration with sensible defaults
+    /// Creates a development-optimized configuration for automated analysis
+    ///
+    /// Returns an `AnalysisConfig` with relaxed scanning intervals and smaller file size limits
+    /// suitable for local development environments.
     #[must_use]
     pub fn development() -> Self {
         Self {
@@ -468,6 +471,10 @@ impl AnalysisConfig {
         }
     }
 
+    /// Creates a production-hardened configuration for data quality analysis
+    ///
+    /// Returns an `AnalysisConfig` with aggressive scanning, deep analysis enabled,
+    /// and increased parallelism for production workloads.
     #[must_use]
     pub fn production() -> Self {
         Self {
@@ -492,6 +499,10 @@ impl Default for PredictionConfig {
 }
 
 impl PredictionConfig {
+    /// Creates a development-optimized configuration for predictive analytics
+    ///
+    /// Returns a `PredictionConfig` with shorter prediction windows and lower confidence
+    /// thresholds suitable for development and testing.
     #[must_use]
     pub fn development() -> Self {
         Self {
@@ -504,6 +515,10 @@ impl PredictionConfig {
         }
     }
 
+    /// Creates a production-hardened configuration for predictive analytics
+    ///
+    /// Returns a `PredictionConfig` with longer prediction windows, higher confidence
+    /// thresholds, and real-time predictions enabled for production workloads.
     #[must_use]
     pub fn production() -> Self {
         Self {
@@ -527,6 +542,10 @@ impl Default for MlPredictionConfig {
 }
 
 impl MlPredictionConfig {
+    /// Creates a development-optimized configuration for ML prediction
+    ///
+    /// Returns an `MlPredictionConfig` with ML features disabled by default and smaller
+    /// training datasets suitable for development environments.
     #[must_use]
     pub fn development() -> Self {
         Self {
@@ -539,6 +558,10 @@ impl MlPredictionConfig {
         }
     }
 
+    /// Creates a production-hardened configuration for ML prediction
+    ///
+    /// Returns an `MlPredictionConfig` with ML enabled, auto-retraining, larger datasets,
+    /// and strict confidence thresholds for production workloads.
     #[must_use]
     pub fn production() -> Self {
         Self {
@@ -562,6 +585,10 @@ impl Default for AiAutomationConfig {
 }
 
 impl AiAutomationConfig {
+    /// Creates a development-optimized configuration for AI automation
+    ///
+    /// Returns an `AiAutomationConfig` with AI features disabled but learning mode enabled,
+    /// suitable for development and model training.
     #[must_use]
     pub fn development() -> Self {
         Self {
@@ -575,6 +602,10 @@ impl AiAutomationConfig {
         }
     }
 
+    /// Creates a production-hardened configuration for AI automation
+    ///
+    /// Returns an `AiAutomationConfig` with all AI features enabled, predictive scaling,
+    /// auto-optimization, and strict confidence thresholds for production workloads.
     #[must_use]
     pub fn production() -> Self {
         Self {
@@ -599,6 +630,10 @@ impl Default for LifecycleConfig {
 }
 
 impl LifecycleConfig {
+    /// Creates a development-optimized configuration for data lifecycle management
+    ///
+    /// Returns a `LifecycleConfig` with lifecycle features disabled and shorter retention
+    /// periods suitable for development environments.
     #[must_use]
     pub fn development() -> Self {
         Self {
@@ -612,6 +647,10 @@ impl LifecycleConfig {
         }
     }
 
+    /// Creates a production-hardened configuration for data lifecycle management
+    ///
+    /// Returns a `LifecycleConfig` with lifecycle enabled, auto-tiering, longer retention
+    /// periods, and comprehensive transition rules for production workloads.
     #[must_use]
     pub fn production() -> Self {
         Self {
@@ -640,6 +679,10 @@ impl Default for OptimizationConfig {
 }
 
 impl OptimizationConfig {
+    /// Creates a development-optimized configuration for system optimization
+    ///
+    /// Returns an `OptimizationConfig` with optimization features disabled and balanced
+    /// settings suitable for development environments.
     #[must_use]
     pub fn development() -> Self {
         Self {
@@ -653,6 +696,10 @@ impl OptimizationConfig {
         }
     }
 
+    /// Creates a production-hardened configuration for system optimization
+    ///
+    /// Returns an `OptimizationConfig` with all optimization features enabled, frequent
+    /// optimization runs, and aggressive settings for production workloads.
     #[must_use]
     pub fn production() -> Self {
         Self {
@@ -677,6 +724,10 @@ impl Default for WorkflowsConfig {
 }
 
 impl WorkflowsConfig {
+    /// Creates a development-optimized configuration for workflow engine
+    ///
+    /// Returns a `WorkflowsConfig` with workflows disabled and reduced concurrency
+    /// suitable for development environments.
     #[must_use]
     pub fn development() -> Self {
         Self {
@@ -689,6 +740,10 @@ impl WorkflowsConfig {
         }
     }
 
+    /// Creates a production-hardened configuration for workflow engine
+    ///
+    /// Returns a `WorkflowsConfig` with workflows enabled, high concurrency, longer timeouts,
+    /// scheduling, and versioning for production workloads.
     #[must_use]
     pub fn production() -> Self {
         Self {
@@ -712,6 +767,10 @@ impl Default for SchedulingConfig {
 }
 
 impl SchedulingConfig {
+    /// Creates a development-optimized configuration for task scheduling
+    ///
+    /// Returns a `SchedulingConfig` with scheduling disabled and simple configuration
+    /// suitable for development environments.
     #[must_use]
     pub fn development() -> Self {
         Self {
@@ -724,6 +783,10 @@ impl SchedulingConfig {
         }
     }
 
+    /// Creates a production-hardened configuration for task scheduling
+    ///
+    /// Returns a `SchedulingConfig` with scheduling enabled, cron support, distributed
+    /// scheduling, and maintenance windows configured for production workloads.
     #[must_use]
     pub fn production() -> Self {
         Self {
@@ -750,6 +813,10 @@ impl Default for TriggersConfig {
 }
 
 impl TriggersConfig {
+    /// Creates a development-optimized configuration for event triggers
+    ///
+    /// Returns a `TriggersConfig` with triggers disabled and slower evaluation intervals
+    /// suitable for development environments.
     #[must_use]
     pub fn development() -> Self {
         Self {
@@ -762,6 +829,10 @@ impl TriggersConfig {
         }
     }
 
+    /// Creates a production-hardened configuration for event triggers
+    ///
+    /// Returns a `TriggersConfig` with all trigger types enabled and fast evaluation
+    /// intervals for production workloads.
     #[must_use]
     pub fn production() -> Self {
         Self {
@@ -785,6 +856,10 @@ impl Default for ActionsConfig {
 }
 
 impl ActionsConfig {
+    /// Creates a development-optimized configuration for automated actions
+    ///
+    /// Returns an `ActionsConfig` with actions disabled except notifications,
+    /// suitable for safe development environments.
     #[must_use]
     pub fn development() -> Self {
         Self {
@@ -798,6 +873,10 @@ impl ActionsConfig {
         }
     }
 
+    /// Creates a production-hardened configuration for automated actions
+    ///
+    /// Returns an `ActionsConfig` with all action types enabled, higher retry limits,
+    /// and comprehensive action types for production workloads.
     #[must_use]
     pub fn production() -> Self {
         Self {

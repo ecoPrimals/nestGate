@@ -178,7 +178,7 @@ mod expanded_chaos_scenarios {
     async fn chaos_service_intermittent_failure() {
         // Service fails intermittently
         async fn unreliable_service(attempt: usize) -> Result<String, String> {
-            if attempt % 3 == 0 {
+            if attempt.is_multiple_of(3) {
                 Err("Service temporarily unavailable".to_string())
             } else {
                 Ok("Success".to_string())
@@ -248,12 +248,14 @@ mod expanded_chaos_scenarios {
         // Task 1: locks A then tries B
         let task1 = tokio::spawn(async move {
             let _a = ra1.lock().await;
-            tokio::time::sleep(Duration::from_millis(10)).await;
+            // Yield to allow task2 to start and create potential deadlock
+            tokio::task::yield_now().await;
             let _b = rb1.lock().await;
             42
         });
 
-        tokio::time::sleep(Duration::from_millis(5)).await;
+        // Yield to ensure task1 starts before task2
+        tokio::task::yield_now().await;
 
         let ra2 = Arc::clone(&resource_a);
         let rb2 = Arc::clone(&resource_b);
@@ -261,7 +263,8 @@ mod expanded_chaos_scenarios {
         // Task 2: locks B then tries A (opposite order)
         let task2 = tokio::spawn(async move {
             let _b = rb2.lock().await;
-            tokio::time::sleep(Duration::from_millis(10)).await;
+            // Yield to allow potential deadlock scenario
+            tokio::task::yield_now().await;
             let _a = ra2.lock().await;
             43
         });

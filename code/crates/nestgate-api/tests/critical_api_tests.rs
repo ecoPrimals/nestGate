@@ -29,10 +29,14 @@ fn test_status_endpoint_has_valid_timestamp() {
 fn test_status_endpoint_uptime_increases() {
     initialize_uptime();
     let response1 = get_status();
-    std::thread::sleep(std::time::Duration::from_millis(100));
+
+    // Modern pattern: Test monotonicity without artificial delay
+    // Uptime is based on actual elapsed time, not sleep
+    // Even with minimal elapsed time, uptime should be monotonic
     let response2 = get_status();
 
-    // Uptime should increase (or at least not decrease)
+    // Uptime should never decrease (monotonic guarantee)
+    // This tests the uptime tracking logic, not sleep timing
     assert!(response2.0.uptime >= response1.0.uptime);
 }
 
@@ -158,10 +162,13 @@ fn test_system_status_timestamp_ordering() {
     initialize_uptime();
 
     let response1 = get_status();
-    std::thread::sleep(std::time::Duration::from_millis(10));
+    // Modern pattern: Test timestamp monotonicity without artificial delay
+    // System timestamps have nanosecond precision and are monotonic
+    // If timestamps are identical, that tests precision, not sleep timing
     let response2 = get_status();
 
-    // Timestamp should be monotonically increasing
+    // Timestamp should be monotonically increasing (or equal if same nanosecond)
+    // This tests the timestamp generation logic, not sleep
     assert!(response2.0.timestamp >= response1.0.timestamp);
 }
 

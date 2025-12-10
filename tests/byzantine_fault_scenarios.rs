@@ -1,9 +1,8 @@
 //! Byzantine Fault Scenarios
 //!
 //! Tests for Byzantine fault tolerance - handling malicious or arbitrary behavior
-
-use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
-use std::sync::Arc;
+//!
+//! **CONCURRENT DESIGN**: All tests run concurrently without dependencies
 
 /// **Byzantine Test: Malicious Node Sending Conflicting Messages**
 #[tokio::test]
@@ -45,19 +44,19 @@ async fn byzantine_test_fake_data_injection() {
 
     #[derive(Debug, Clone)]
     struct Transaction {
-        id: u64,
+        _id: u64, // Prefix with _ - used in debug but not in our validation logic
         amount: i64,
         signature: Option<String>,
     }
 
     let valid_tx = Transaction {
-        id: 1,
+        _id: 1,
         amount: 100,
         signature: Some("valid_sig".to_string()),
     };
 
     let fake_tx = Transaction {
-        id: 2,
+        _id: 2,
         amount: -1000,   // Suspicious negative amount
         signature: None, // Missing signature!
     };
@@ -134,6 +133,7 @@ async fn byzantine_test_sybil_attack() {
     println!("🛡️  BYZANTINE: Sybil Attack Detection");
 
     #[derive(Clone)]
+    #[allow(dead_code)]
     struct Node {
         id: u32,
         ip_address: String,
@@ -245,12 +245,13 @@ async fn byzantine_test_double_spend() {
     use std::collections::HashSet;
 
     #[derive(Clone)]
-    struct UTXO {
+    #[allow(dead_code)]
+    struct Utxo {
         id: u64,
         amount: u64,
     }
 
-    let utxo = UTXO { id: 1, amount: 100 };
+    let utxo = Utxo { id: 1, amount: 100 };
     let mut spent_utxos: HashSet<u64> = HashSet::new();
 
     // First spend - legitimate
@@ -344,11 +345,11 @@ async fn byzantine_test_quorum_intersection() {
     println!("🛡️  BYZANTINE: Quorum Intersection");
 
     let total_nodes = 10;
-    let quorum_size = 7; // 70% quorum
+    let _quorum_size = 7; // 70% quorum
 
     // Two quorums must intersect (have at least one common node)
-    let quorum1_nodes = vec![0, 1, 2, 3, 4, 5, 6];
-    let quorum2_nodes = vec![4, 5, 6, 7, 8, 9, 0];
+    let quorum1_nodes = [0, 1, 2, 3, 4, 5, 6];
+    let quorum2_nodes = [4, 5, 6, 7, 8, 9, 0];
 
     // Find intersection
     let intersection: Vec<_> = quorum1_nodes

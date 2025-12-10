@@ -273,8 +273,8 @@ fn test_api_error_from_json_syntax_error() {
     }
 }
 
-#[test]
-fn test_error_response_timestamp_ordering() {
+#[tokio::test]
+async fn test_error_response_timestamp_ordering() {
     let error1 = ErrorResponse {
         error: "First".to_string(),
         code: "FIRST".to_string(),
@@ -282,7 +282,7 @@ fn test_error_response_timestamp_ordering() {
         timestamp: chrono::Utc::now(),
     };
 
-    std::thread::sleep(std::time::Duration::from_millis(10));
+    tokio::time::sleep(std::time::Duration::from_millis(10)).await;
 
     let error2 = ErrorResponse {
         error: "Second".to_string(),

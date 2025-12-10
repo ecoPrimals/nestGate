@@ -63,6 +63,7 @@ lazy_static = "1.4"
 tempfile = "3.8"
 regex = "1.10"
 fastrand = "2.0"
+sysinfo = "0.30"
 
 
 [dev-dependencies]
@@ -70,6 +71,8 @@ tokio-test = { workspace = true }
 tempfile = "3.8"
 criterion = { version = "0.5", features = ["html_reports"] }
 serial_test = "3.0"
+temp-env = { version = "0.3.6", features = ["async_closure"] }
+mockall = "0.13"
 
 [[bench]]
 name = "performance_validation"
@@ -96,5 +99,6 @@ experimental-features = []
 # **MOCK SEPARATION** - Test-only features
 mock-services = []
 test-doubles = []
+mock-metrics = [] # TESTING ONLY - use mock metrics instead of real system metrics
 # Development stubs - include mock/stub implementations for testing (CRITICAL for production safety)
 dev-stubs = [] 

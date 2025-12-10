@@ -29,7 +29,6 @@ impl RetryExecutor {
     /// # Returns
     /// * New retry executor instance
     #[must_use]
-    /// Fn
     pub const fn new(config: RetryPolicy) -> Self {
         Self { config }
     }

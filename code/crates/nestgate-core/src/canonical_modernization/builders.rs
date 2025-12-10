@@ -7,8 +7,9 @@ use crate::error::Result;
 // Removed unused imports: serde::{Deserialize, Serialize}
 
 /// Canonical configuration builder
+///
+/// Builder pattern for constructing `CanonicalConfig` instances
 #[derive(Debug, Clone)]
-/// Builder pattern for constructing CanonicalConfig instances
 pub struct CanonicalConfigBuilder {
     config: NestGateCanonicalConfig,
 }

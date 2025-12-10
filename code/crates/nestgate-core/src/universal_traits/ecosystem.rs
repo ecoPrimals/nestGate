@@ -107,6 +107,7 @@ pub enum PrimalType {
     Network,
     /// Monitoring
     Monitoring,
+    /// A custom ecosystem role defined by the user
     Custom(String),
 }
 /// Inter-primal request structure

@@ -58,6 +58,7 @@ pub struct CapabilityDescriptor {
     pub id: String,
     /// Capability type (inferred from behavior)
     pub capability_type: CapabilityType,
+    /// Optional endpoint URL for this capability
     pub endpoint: Option<String>,
     /// Capability metadata (learned at runtime)
     pub metadata: HashMap<String, String>,
@@ -81,16 +82,20 @@ pub enum CapabilityType {
     Unknown,
 }
 
+/// Statistics tracking discovery operations and performance
 #[derive(Debug, Default, Clone)]
 pub struct DiscoveryStats {
     /// Total capabilities discovered
     pub total_discovered: u64,
+    /// Number of discovery attempts made
     pub discovery_attempts: u64,
     /// Average discovery time (nanoseconds)
     pub avg_discovery_time_ns: u64,
+    /// Complexity metric for connection establishment
     pub connection_complexity: f64,
 }
 
+/// Tracks connection complexity metrics for performance monitoring
 pub struct ConnectionComplexityTracker {
     connection_times: Vec<u64>,
     max_complexity_deviation: f64,
@@ -343,11 +348,14 @@ impl<const MAX_CAPABILITIES: usize> InfantDiscoverySystem<MAX_CAPABILITIES> {
     }
 }
 
+/// Represents a connection to a discovered capability
 #[derive(Debug)]
 pub struct Connection {
+    /// Unique identifier for this connection
     pub id: String,
     /// Discovered endpoint
     pub endpoint: Option<String>,
+    /// Timestamp when the connection was established
     pub established_at: std::time::SystemTime,
     /// Complexity order (must be 1 for O(1))
     pub complexity_order: u8,

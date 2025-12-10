@@ -640,27 +640,27 @@ mod tests {
         assert!(pool.size() <= 2);
     }
 
-    #[test]
-    fn test_concurrent_access() -> std::result::Result<(), Box<dyn std::error::Error>> {
+    #[tokio::test]
+    async fn test_concurrent_access() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let pool = Arc::new(MemoryPool::new(Vec::<u8>::new, 1, 10));
         let mut handles = vec![];
 
-        // Spawn multiple threads
+        // Spawn multiple async tasks (concurrent, non-blocking)
         for i in 0..5 {
             let pool_clone = Arc::clone(&pool);
-            let handle = thread::spawn(move || {
+            let handle = tokio::spawn(async move {
                 let mut buffer = pool_clone.get();
                 buffer.push(i as u8);
-                thread::sleep(Duration::from_millis(10));
+                tokio::time::sleep(Duration::from_millis(10)).await;
                 buffer[0]
-            );
+            });
             handles.push(handle);
         }
 
-        // Wait for all threads
+        // Wait for all async tasks (concurrent, non-blocking)
         for handle in handles {
-            let result = handle.join().map_err(|e| {
-                format!("Thread join failed: {e:?}")
+            let result = handle.await.map_err(|e| {
+                format!("Task join failed: {e:?}")
             })?;
             assert!(result < 5);
         }

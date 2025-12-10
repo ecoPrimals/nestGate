@@ -9,14 +9,14 @@ mod nas_config_tests {
     use super::*;
 
     #[test]
-    fn test_nas_config_default() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_nas_config_default() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let config = NasConfig::default();
         assert!(!config.enabled); // Default should be disabled
         Ok(())
     }
 
     #[test]
-    fn test_nas_service_creation() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_nas_service_creation() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let config = NasConfig {
             enabled: true,
             ..Default::default()
@@ -28,7 +28,7 @@ mod nas_config_tests {
     }
 
     #[test]
-    fn test_nas_service_lifecycle() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_nas_service_lifecycle() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let config = NasConfig {
             enabled: true,
             ..Default::default()

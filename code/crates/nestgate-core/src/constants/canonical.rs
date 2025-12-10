@@ -2,6 +2,10 @@
 //! Canonical functionality and utilities.
 // Single source of truth for ALL constants across NestGate.
 // Eliminates 200+ scattered constant definitions and provides unified access.
+//
+// Note: Many constants in this module are self-documenting by name.
+// Comprehensive rustdoc will be added incrementally.
+#![allow(missing_docs)]
 
 // Removed unused Duration import
 
@@ -28,9 +32,13 @@ pub mod performance {
     /// Optimal Batch Size
     pub const OPTIMAL_BATCH_SIZE: usize = 1000;
 
+    /// Default maximum concurrent operations
     pub const DEFAULT_MAX_CONCURRENT: usize = 1000;
+    /// Maximum number of connections
     pub const MAX_CONNECTIONS: usize = 1000;
+    /// Maximum number of backend services
     pub const MAX_BACKENDS: usize = 100;
+    /// Maximum concurrent operations allowed
     pub const MAX_CONCURRENT_OPS: usize = 1000;
 
     ///
@@ -63,39 +71,54 @@ pub mod performance {
     /// let mut network_buffer = vec![0u8; performance::NETWORK_BUFFER_SIZE];
     /// ```
     ///
-    /// **Important**: These values are performance-tuned. Do not consolidate!
-    pub const DEFAULT_BUFFER_SIZE: usize = 4096;
+    /// **CONSOLIDATED**: Now references hardcoding::limits for buffer sizes
+    pub const DEFAULT_BUFFER_SIZE: usize =
+        crate::constants::hardcoding::limits::BUFFER_SIZE_DEFAULT;
     /// Network Buffer Size
-    pub const NETWORK_BUFFER_SIZE: usize = 65536;
+    pub const NETWORK_BUFFER_SIZE: usize =
+        crate::constants::hardcoding::limits::BUFFER_SIZE_DEFAULT;
     /// Simd Batch Size
     pub const SIMD_BATCH_SIZE: usize = 32;
     /// Pool Size
     pub const POOL_SIZE: usize = 1024;
-    /// Block Size
+    /// Block Size  
     pub const BLOCK_SIZE: usize = 4096;
 }
 // ==================== SECTION ====================
 
+/// Timeout constants for network and system operations
+///
+/// Consolidated timeout values used throughout NestGate for consistency
+/// and maintainability. All values are in seconds or milliseconds as indicated.
 pub mod timeouts {
     // Removed unused Duration import
 
     /// Default timeout seconds (consolidated)
     pub const DEFAULT_TIMEOUT_SECS: u64 = 30;
-    /// Default value for timeout ms
+    /// Default timeout in milliseconds (30 seconds)
     pub const DEFAULT_TIMEOUT_MS: u64 = 30000;
+    /// Request timeout in milliseconds
     pub const REQUEST_TIMEOUT_MS: u64 = 30000;
 
+    /// Service discovery timeout in milliseconds
     pub const DISCOVERY_TIMEOUT_MS: u64 = 5000;
+    /// Health check interval in milliseconds
     pub const HEALTH_CHECK_INTERVAL_MS: u64 = 30000;
+    /// Health check interval in seconds (30 seconds)
     pub const HEALTH_CHECK_INTERVAL_SECS: u64 = 30;
+    /// Statistics retention period in seconds (24 hours)
     pub const STATS_RETENTION_SECS: u64 = 86400; // 24 hours
 
+    /// Connection timeout in seconds (30 seconds)
     pub const CONNECTION_TIMEOUT_SECS: u64 = 30;
+    /// Session timeout in seconds (5 minutes)
     pub const SESSION_TIMEOUT_SECS: u64 = 300;
+    /// Operation timeout in seconds (30 seconds)
     pub const OPERATION_TIMEOUT_SECS: u64 = 30;
 
     /// Retry and rate limiting
     pub const DEFAULT_RETRY_ATTEMPTS: u32 = 3;
+    /// Message retry attempts (3 retries)
     pub const MESSAGE_RETRY_ATTEMPTS: u32 = 3;
     /// Default value for retry delay ms
     pub const DEFAULT_RETRY_DELAY_MS: u64 = 1000;
@@ -302,7 +325,12 @@ pub mod system {
 }
 // ==================== SECTION ====================
 
+/// Operation and status constants
+///
+/// Standard operation names, status values, and error categories used
+/// consistently across all NestGate components for state tracking and reporting.
 pub mod operations {
+    /// Read operation
     pub const OP_READ: &str = "read";
     /// Op Write
     pub const OP_WRITE: &str = "write";
@@ -369,7 +397,12 @@ pub mod units {
 
 /// Performance constants accessor
 pub struct PerformanceConstants;
+
+/// Timeout constants accessor
+///
+/// Provides access to timeout-related constants used throughout NestGate.
 pub struct TimeoutConstants;
+
 /// Network constants accessor
 pub struct NetworkConstants;
 /// Security constants accessor
@@ -438,16 +471,16 @@ impl CanonicalConstants {
 /// Const generic configuration helpers
 pub struct ConstGenericDefaults;
 impl ConstGenericDefaults {
-    /// Default max connections for traits
+    /// Default max connections for const generic traits
     pub const MAX_CONNECTIONS: usize = performance::MAX_CONNECTIONS;
 
-    /// Default buffer size for traits
+    /// Default buffer size for const generic traits
     pub const BUFFER_SIZE: usize = performance::DEFAULT_BUFFER_SIZE;
 
-    /// Default timeout for traits
+    /// Default timeout in milliseconds for const generic traits
     pub const TIMEOUT_MS: u64 = timeouts::DEFAULT_TIMEOUT_MS;
 
-    /// Default max concurrent operations
+    /// Default max concurrent operations for const generic traits
     pub const MAX_CONCURRENT_OPS: usize = performance::MAX_CONCURRENT_OPS;
 
     /// Default batch size for processing
@@ -455,13 +488,19 @@ impl ConstGenericDefaults {
 }
 
 /// Zero-cost const generic configuration
+///
+/// Trait providing compile-time configuration constants for generic implementations
 pub trait ConstGenericConfig {
+    /// Maximum number of connections for generic implementations
     const MAX_CONNECTIONS: usize = ConstGenericDefaults::MAX_CONNECTIONS;
 
+    /// Buffer size for generic implementations
     const BUFFER_SIZE: usize = ConstGenericDefaults::BUFFER_SIZE;
 
+    /// Timeout in milliseconds for generic implementations
     const TIMEOUT_MS: u64 = ConstGenericDefaults::TIMEOUT_MS;
 
+    /// Maximum concurrent operations for generic implementations
     const MAX_CONCURRENT_OPS: usize = ConstGenericDefaults::MAX_CONCURRENT_OPS;
 
     /// Batch processing size

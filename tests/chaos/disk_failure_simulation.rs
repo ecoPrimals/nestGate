@@ -312,8 +312,10 @@ mod disk_failure_tests {
             let notify = start_notify.clone();
             let handle = tokio::spawn(async move {
                 notify.notified().await; // Wait for start signal
-                // Stagger operations realistically
-                tokio::time::sleep(Duration::from_micros((i * 500) as u64)).await;
+                // Stagger operations using yield instead of microsleep
+                for _ in 0..i {
+                    tokio::task::yield_now().await;
+                }
                 disk_clone.write(b"data").await
             });
             handles.push(handle);
@@ -327,9 +329,10 @@ mod disk_failure_tests {
             let disk = disk.clone();
             async move {
                 for _ in 0..5 {
-                    tokio::time::sleep(Duration::from_micros(2000)).await;
+                    // Yield to allow operations to process
+                    tokio::task::yield_now().await;
                     disk.enable_failure();
-                    tokio::time::sleep(Duration::from_micros(1000)).await;
+                    tokio::task::yield_now().await;
                     disk.disable_failure();
                 }
             }

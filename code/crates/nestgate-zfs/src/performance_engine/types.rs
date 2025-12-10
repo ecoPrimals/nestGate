@@ -11,7 +11,7 @@ use serde::de;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 /// Performance engine configuration
-#[derive(Debug, Clone)]
+///
 /// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
 ///
 /// **Migration Path**:
@@ -26,15 +26,21 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 /// ```
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[derive(Debug, Clone)]
 #[deprecated(
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
 pub struct PerformanceEngineConfig {
+    /// Interval between monitoring cycles
     pub monitoring_interval: std::time::Duration,
+    /// Interval between optimization runs
     pub optimization_interval: std::time::Duration,
+    /// Interval for bottleneck detection
     pub bottleneck_detection_interval: std::time::Duration,
+    /// Maximum number of concurrent optimizations
     pub max_concurrent_optimizations: usize,
+    /// Enable AI-powered guidance
     pub enable_ai_guidance: bool,
 }
 impl Default for PerformanceEngineConfig {
@@ -52,104 +58,163 @@ impl Default for PerformanceEngineConfig {
 /// Optimization state tracking
 #[derive(Debug, Clone, PartialEq, Default)]
 pub enum OptimizationState {
+    /// No optimization in progress
     #[default]
     Idle,
+    /// Collecting metrics
     Collecting,
+    /// Analyzing performance data
     Analyzing,
+    /// Applying optimizations
     Optimizing,
+    /// Validating optimization results
     Validating,
+    /// Optimization successfully applied
     Applied,
 }
 /// ZFS performance metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZfsPerformanceMetrics {
+    /// When these metrics were collected
     pub timestamp: SystemTime,
+    /// Per-pool performance metrics
     pub pool_metrics: HashMap<String, ZfsPoolMetrics>,
+    /// Per-dataset performance metrics
     pub dataset_metrics: HashMap<String, ZfsDatasetMetrics>,
+    /// System memory usage statistics
     pub system_memory: SystemMemoryUsage,
+    /// ARC (Adaptive Replacement Cache) statistics
     pub arc_stats: ArcStatistics,
 }
 /// ZFS pool metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZfsPoolMetrics {
+    /// Name of the ZFS pool
     pub pool_name: String,
+    /// Read operations per second
     pub read_ops: f64,
+    /// Write operations per second
     pub write_ops: f64,
+    /// Read bandwidth in bytes/second
     pub read_bandwidth: f64,
+    /// Write bandwidth in bytes/second
     pub write_bandwidth: f64,
+    /// Average latency in milliseconds
     pub latency: f64,
+    /// Cache hit ratio (0.0 to 1.0)
     pub cache_hit_ratio: f64,
+    /// Pool fragmentation percentage (0.0 to 100.0)
     pub fragmentation: f64,
 }
 /// ZFS dataset metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZfsDatasetMetrics {
+    /// Name of the ZFS dataset
     pub dataset_name: String,
+    /// Detected I/O access pattern
     pub access_pattern: AccessPattern,
+    /// Deduplication ratio (1.0 = no dedup, >1.0 = space saved)
     pub dedup_ratio: f64,
+    /// Record size in bytes
     pub record_size: u64,
 }
 /// Access pattern classification
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum AccessPattern {
+    /// Sequential I/O pattern
     Sequential,
+    /// Random I/O pattern
     Random,
+    /// Mixed sequential and random I/O
     Mixed,
 }
 /// System memory usage
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemMemoryUsage {
+    /// Total system memory in bytes
     pub total: u64,
+    /// Available memory in bytes
     pub available: u64,
+    /// Used memory in bytes
     pub used: u64,
 }
 /// ARC statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ArcStatistics {
+    /// Current ARC size in bytes
     pub size: u64,
+    /// Target ARC size in bytes
     pub target_size: u64,
+    /// Cache hit ratio (0.0 to 1.0)
     pub hit_ratio: f64,
+    /// Cache miss ratio (0.0 to 1.0)
     pub miss_ratio: f64,
 }
 /// ZFS bottleneck detection
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZfsBottleneck {
+    /// Type of bottleneck detected
     pub bottleneck_type: ZfsBottleneckType,
+    /// Severity level of the bottleneck
     pub severity: BottleneckSeverity,
+    /// Name of the affected ZFS pool
     pub pool_name: String,
+    /// Name of the affected dataset (if applicable)
     pub dataset_name: Option<String>,
+    /// Human-readable description of the bottleneck
     pub description: String,
+    /// Impact score (0.0 to 1.0, higher = more severe)
     pub impact_score: f64,
 }
 /// Types of ZFS bottlenecks
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ZfsBottleneckType {
+    /// High latency detected
     HighLatency,
+    /// Low throughput detected
     LowThroughput,
+    /// High cache miss rate
     CacheMiss,
+    /// High pool fragmentation
     Fragmentation,
+    /// System memory pressure
     MemoryPressure,
+    /// High CPU utilization
     CpuUtilization,
+    /// Network bandwidth saturation
     NetworkBandwidth,
+    /// Disk I/O saturation
     DiskIo,
 }
 /// Bottleneck severity levels
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum BottleneckSeverity {
+    /// Low severity - minor impact
     Low,
+    /// Medium severity - noticeable impact
     Medium,
+    /// High severity - significant impact
     High,
+    /// Critical severity - severe impact requiring immediate attention
     Critical,
 }
 /// Performance optimization result
 #[derive(Debug, Clone, Default)]
 pub struct PerformanceOptimizationResult {
+    /// List of optimizations that were applied
     pub applied_optimizations: Vec<AppliedOptimization>,
+    /// Overall performance improvement percentage
     pub performance_improvement: f64,
+    /// List of bottlenecks that were resolved
     pub bottlenecks_resolved: Vec<ZfsBottleneck>,
+    /// Additional recommendations for further optimization
     pub recommendations: Vec<String>,
 }
 impl PerformanceOptimizationResult {
+    /// Merge another optimization result into this one
+    ///
+    /// Combines optimizations, improvements, bottlenecks, and recommendations
+    /// from multiple optimization runs.
     pub fn merge_with(&mut self, other: PerformanceOptimizationResult) {
         self.applied_optimizations
             .extend(other.applied_optimizations);
@@ -162,163 +227,249 @@ impl PerformanceOptimizationResult {
 /// Applied optimization tracking
 #[derive(Debug, Clone)]
 pub struct AppliedOptimization {
+    /// Type of optimization applied
     pub optimization_type: OptimizationType,
+    /// Human-readable description of the optimization
     pub description: String,
+    /// Measured performance impact (percentage improvement)
     pub performance_impact: f64,
+    /// Timestamp when optimization was applied
     pub applied_at: SystemTime,
 }
 /// Types of optimizations
 #[derive(Debug, Clone)]
 pub enum OptimizationType {
+    /// Cache-related optimization
     CacheOptimization,
+    /// Latency reduction optimization
     LatencyOptimization,
+    /// Throughput improvement optimization
     ThroughputOptimization,
+    /// Defragmentation operation
     FragmentationDefrag,
+    /// ARC (cache) tuning
     ArcTuning,
+    /// Record size optimization
     RecordSizeOptimization,
+    /// Compression algorithm optimization
     CompressionOptimization,
 }
 /// Performance alert
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceAlert {
+    /// Type of performance alert
     pub alert_type: AlertType,
+    /// Severity level of the alert
     pub severity: AlertSeverity,
+    /// Name of the affected ZFS pool
     pub pool_name: String,
+    /// Name of the affected dataset (if applicable)
     pub dataset_name: Option<String>,
+    /// Human-readable alert description
     pub description: String,
+    /// When the alert was triggered
     pub timestamp: SystemTime,
 }
 /// Alert types
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum AlertType {
+    /// Performance has degraded below acceptable thresholds
     PerformanceDegradation,
+    /// A performance bottleneck has been identified
     BottleneckDetected,
+    /// A performance threshold has been exceeded
     ThresholdExceeded,
+    /// An optimization attempt has failed
     OptimizationFailed,
 }
-/// Alert severity levels
+/// Alert severity levels for performance monitoring
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum AlertSeverity {
+    /// Informational alert - no action required
     Info,
+    /// Warning alert - attention recommended
     Warning,
+    /// Error alert - action required
     Error,
+    /// Critical alert - immediate action required
     Critical,
 }
 /// Alert response
 #[derive(Debug, Clone, Default)]
 pub struct AlertResponse {
+    /// Whether mitigation was applied successfully
     pub mitigation_applied: bool,
+    /// Result of optimization if applied
     pub optimization_result: Option<PerformanceOptimizationResult>,
+    /// Whether follow-up action is required
     pub follow_up_required: bool,
 }
-/// Workload pattern analysis
+/// Workload pattern analysis for storage optimization
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WorkloadPattern {
+    /// Detected I/O access pattern (sequential, random, or mixed)
     pub access_pattern: AccessPattern,
+    /// Distribution of I/O request sizes as histogram
     pub io_size_distribution: HashMap<String, f64>,
+    /// Ratio of read operations to write operations
     pub read_write_ratio: f64,
+    /// Temporal locality score (0.0 to 1.0, higher = better cache performance)
     pub temporal_locality: f64,
 }
-/// ZFS configuration context
+/// ZFS configuration context for optimization decisions
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZfsConfigurationContext {
+    /// Name of the ZFS pool being configured
     pub pool_name: String,
+    /// Optional dataset name for dataset-specific configuration
     pub dataset_name: Option<String>,
+    /// Current ZFS configuration parameters (key-value pairs)
     pub current_configuration: HashMap<String, String>,
+    /// Detected workload pattern for this storage
     pub workload_pattern: WorkloadPattern,
+    /// System hardware and resource capabilities
     pub system_capabilities: SystemCapabilities,
 }
-/// ZFS expertise context
+/// ZFS expertise context for intelligent optimization
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZfsExpertiseContext {
+    /// Storage tier classification (hot, warm, cold, archive)
     pub storage_tier: StorageTier,
+    /// Historical access patterns observed
     pub access_patterns: Vec<AccessPattern>,
+    /// Current performance metrics snapshot
     pub current_performance: ZfsPerformanceMetrics,
+    /// List of identified performance bottlenecks
     pub identified_bottlenecks: Vec<ZfsBottleneck>,
 }
-/// System capabilities
+/// System hardware capabilities and resources
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemCapabilities {
+    /// Number of CPU cores available
     pub cpu_cores: u32,
+    /// Total system memory in gigabytes
     pub memory_gb: u32,
+    /// Type of storage hardware (e.g., "NVMe", "SSD", "HDD")
     pub storage_type: String,
+    /// Network bandwidth capacity in gigabits per second
     pub network_bandwidth_gbps: f64,
 }
-/// ZFS tuning result
+/// ZFS tuning operation result
 #[derive(Debug, Clone, Default)]
 pub struct ZfsTuningResult {
+    /// Whether tuning parameters were successfully applied
     pub tuning_applied: bool,
+    /// Map of parameter names to their new values
     pub parameter_changes: HashMap<String, String>,
+    /// Expected performance improvement as percentage
     pub expected_improvement: f64,
+    /// Whether validation testing is required after tuning
     pub validation_required: bool,
 }
 /// Performance optimization request
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PerformanceOptimizationRequest {
+    /// Name of the ZFS pool to optimize
     pub pool_name: String,
+    /// Optional dataset name for specific dataset optimization
     pub dataset_name: Option<String>,
+    /// Current optimization strategy being used
     pub optimization_strategy: EcosystemOptimizationStrategy,
+    /// Current performance metrics
     pub current_metrics: ZfsPerformanceMetrics,
+    /// ZFS configuration context
     pub configuration_context: ZfsConfigurationContext,
 }
 /// Ecosystem optimization strategy
 #[derive(Debug, Serialize, Deserialize)]
 pub enum EcosystemOptimizationStrategy {
+    /// Optimize for minimum latency
     LatencyOptimization,
+    /// Optimize for maximum throughput
     ThroughputOptimization,
+    /// Balance latency and throughput
     BalancedOptimization,
+    /// Custom optimization strategy with specified name
     CustomStrategy(String),
 }
 /// AI optimization recommendation
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AiOptimizationRecommendation {
+    /// Recommended optimization strategy
     pub strategy: EcosystemOptimizationStrategy,
+    /// Confidence score for the recommendation (0.0-1.0)
     pub confidence_score: f64,
+    /// Expected performance improvement percentage
     pub expected_improvement: f64,
+    /// Recommended parameter values
     pub parameter_recommendations: HashMap<String, String>,
+    /// Risk assessment description
     pub risk_assessment: String,
 }
 /// ZFS tuning request
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZfsTuningRequest {
+    /// Name of the ZFS pool
     pub pool_name: String,
+    /// Optional dataset name
     pub dataset_name: Option<String>,
+    /// Detected workload pattern
     pub workload_pattern: WorkloadPattern,
+    /// Current ZFS configuration parameters
     pub current_configuration: HashMap<String, String>,
+    /// Performance goals for tuning
     pub performance_goals: Vec<String>,
+    /// System hardware capabilities
     pub system_capabilities: SystemCapabilities,
+    /// ZFS configuration context
     pub configuration_context: ZfsConfigurationContext,
+    /// Expertise level context for tuning
     pub expertise_context: ZfsExpertiseContext,
 }
 /// Ecosystem tuning recommendations
 #[derive(Debug, Serialize, Deserialize)]
 pub struct EcosystemTuningRecommendations {
+    /// List of tuning recommendations
     pub recommendations: Vec<ZfsTuningRecommendation>,
+    /// Overall confidence score (0.0-1.0)
     pub overall_confidence: f64,
+    /// Estimated performance improvement percentage
     pub estimated_improvement: f64,
 }
 /// ZFS tuning recommendation
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ZfsTuningRecommendation {
+    /// ZFS parameter to tune
     pub parameter: String,
+    /// Recommended value for the parameter
     pub recommendedvalue: String,
+    /// Confidence level in this recommendation (0.0-1.0)
     pub confidence: f64,
+    /// Expected performance impact percentage
     pub expected_impact: f64,
 }
 /// Performance alert analysis request
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PerformanceAlertAnalysisRequest {
+    /// The performance alert being analyzed
     pub alert: PerformanceAlert,
+    /// Historical performance metrics for trend analysis
     pub historical_metrics: Vec<ZfsPerformanceMetrics>,
+    /// Current ZFS configuration parameters
     pub current_configuration: HashMap<String, String>,
+    /// System hardware and resource capabilities
     pub system_capabilities: SystemCapabilities,
 }
 /// Ecosystem alert analysis
 #[derive(Debug, Serialize, Deserialize)]
 pub struct EcosystemAlertAnalysis {
+    /// Root cause analysis description
     pub root_cause_analysis: String,
+    /// Recommended remediation actions
     pub recommended_actions: Vec<String>,
+    /// Confidence score for the analysis (0.0 to 1.0)
     pub confidence_score: f64,
+    /// Alert urgency level classification
     pub urgency_level: AlertSeverity,
 }
 /// Custom serialization for `SystemTime`
@@ -341,6 +492,11 @@ pub mod system_time_serde {
         serializer.serialize_u64(duration.as_secs())
     }
 
+    /// Deserialize a `SystemTime` from Unix timestamp
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if deserialization fails or timestamp is invalid
     pub fn deserialize<'de, D>(deserializer: D) -> std::result::Result<SystemTime, D::Error>
     where
         D: Deserializer<'de>,

@@ -71,18 +71,22 @@ impl Default for KeyManagementConfig {
 }
 
 impl EncryptionSecurityConfig {
+    /// Returns a production-hardened encryption configuration
     #[must_use]
     pub fn production_hardened() -> Self {
         Self::default()
     }
+    /// Returns a development-optimized encryption configuration
     #[must_use]
     pub fn development_optimized() -> Self {
         Self::default()
     }
+    /// Returns a compliance-focused encryption configuration
     #[must_use]
     pub fn compliance_focused() -> Self {
         Self::default()
     }
+    /// Merges this configuration with another
     #[must_use]
     pub fn merge(self, _other: Self) -> Self {
         self

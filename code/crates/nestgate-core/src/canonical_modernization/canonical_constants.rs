@@ -10,12 +10,14 @@
 /// **PERFORMANCE CONSTANTS**
 ///
 /// Performance tuning and optimization constants
+/// **CONSOLIDATED**: Now references hardcoding module for common values
 pub mod performance {
-    /// Default buffer size for I/O operations (bytes)
-    pub const DEFAULT_BUFFER_SIZE_BYTES: usize = 8192; // 8KB
+    /// Default buffer size - **CONSOLIDATED** to hardcoding::limits
+    pub const DEFAULT_BUFFER_SIZE_BYTES: usize =
+        crate::constants::hardcoding::limits::BUFFER_SIZE_DEFAULT;
 
-    /// Maximum buffer size in bytes (1MB)
-    pub const MAX_BUFFER_SIZE_BYTES: usize = 1024 * 1024; // 1MB
+    /// Maximum buffer size - **CONSOLIDATED** to hardcoding::limits
+    pub const MAX_BUFFER_SIZE_BYTES: usize = crate::constants::hardcoding::limits::BUFFER_SIZE_MAX;
 
     /// Maximum number of concurrent operations
     pub const MAX_CONCURRENT_OPERATIONS: usize = 1000;
@@ -23,8 +25,8 @@ pub mod performance {
     /// Default batch size for bulk operations
     pub const DEFAULT_BATCH_SIZE: usize = 1000;
 
-    /// Maximum number of retry attempts
-    pub const MAX_RETRY_ATTEMPTS: u32 = 3;
+    /// Maximum number of retry attempts - **CONSOLIDATED** to hardcoding::limits
+    pub const MAX_RETRY_ATTEMPTS: u32 = crate::constants::hardcoding::limits::MAX_RETRIES;
 
     /// Default performance monitoring interval (seconds)
     pub const PERFORMANCE_MONITOR_INTERVAL_SECS: u64 = 30;
@@ -38,11 +40,12 @@ pub mod performance {
     /// Maximum number of concurrent requests (zero-cost architecture)
     pub const MAX_CONCURRENT_REQUESTS: usize = 10000;
 
-    /// Maximum number of concurrent connections (zero-cost architecture)
-    pub const MAX_CONCURRENT_CONNECTIONS: usize = 1000;
+    /// Maximum number of concurrent connections - **CONSOLIDATED** to hardcoding::limits
+    pub const MAX_CONCURRENT_CONNECTIONS: usize =
+        crate::constants::hardcoding::limits::MAX_CONNECTIONS;
 
-    /// Default request timeout (milliseconds)
-    pub const REQUEST_TIMEOUT_MS: u64 = 30000;
+    /// Default request timeout - **CONSOLIDATED** to hardcoding::timeouts
+    pub const REQUEST_TIMEOUT_MS: u64 = crate::constants::hardcoding::timeouts::REQUEST_MS;
 
     /// Cache line size for memory optimization
     pub const CACHE_LINE_SIZE: usize = 64;
@@ -61,6 +64,15 @@ pub mod network {
     pub const DEFAULT_TIMEOUT_SECS: u64 = 30;
 
     /// Default API port
+    ///
+    /// # Environment Variable
+    /// Override with `NESTGATE_API_PORT`
+    ///
+    /// # Usage
+    /// ```rust
+    /// use nestgate_core::constants::ports;
+    /// let port = ports::api_server_port(); // Environment-aware
+    /// ```
     pub const DEFAULT_API_PORT: u16 = 8080;
 
     /// Default bind address

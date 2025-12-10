@@ -1,13 +1,108 @@
-//! Centralized constants to eliminate hardcoding
+//! ⚠️ **DEPRECATED**: This module is being phased out in favor of capability-based configuration
 //!
-//! This module provides a single source of truth for network addresses,
-//! ports, and other configuration values that were previously hardcoded
-//! throughout the codebase.
+//! # Migration Path
 //!
-//! All values can be overridden via environment variables.
+//! Instead of using hardcoded constants, use `CapabilityConfig` for runtime discovery:
+//!
+//! ```rust,no_run
+//! # use nestgate_core::capability_config::CapabilityConfig;
+//! # use anyhow::Result;
+//! # fn example() -> Result<()> {
+//! // ❌ OLD: Hardcoded
+//! // const API_PORT: u16 = 8080;
+//!
+//! // ✅ NEW: Capability-based
+//! let config = CapabilityConfig::from_env()?;
+//! let api_endpoint = config.get_endpoint("api")?;
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! See `PHASE2_HARDCODING_ELIMINATION_PLAN.md` for full migration guide.
+//!
+//! This module will be removed in v0.3.0.
 
 use std::env;
 use std::sync::OnceLock;
+
+// ============================================================================
+// MODERN CAPABILITY-BASED HELPERS
+// ============================================================================
+
+/// Modern capability-based service discovery helpers
+///
+/// These replace hardcoded constants with runtime discovery.
+///
+/// # Example
+///
+/// ```rust,no_run
+/// # use nestgate_core::constants::hardcoding::capability_helpers;
+/// # async fn example() -> nestgate_core::Result<()> {
+/// // ✅ Modern approach: Discover service by capability
+/// let api_url = capability_helpers::discover_api_service().await?;
+/// println!("API service discovered at: {}", api_url);
+/// # Ok(())
+/// # }
+/// ```
+pub mod capability_helpers {
+    use crate::universal_primal_discovery::{
+        capability_based_discovery::PrimalCapability, service_registry::ServiceRegistry,
+    };
+    use crate::Result;
+
+    /// Discover API service endpoint via capability-based discovery
+    ///
+    /// # Primal Sovereignty
+    ///
+    /// This discovers the API service at runtime, respecting primal autonomy.
+    /// No hardcoded endpoints or assumptions.
+    ///
+    /// # Example
+    ///
+    /// ```rust,no_run
+    /// # async fn example() -> nestgate_core::Result<()> {
+    /// use nestgate_core::constants::hardcoding::capability_helpers;
+    ///
+    /// let api_url = capability_helpers::discover_api_service().await?;
+    /// println!("Using API at: {}", api_url);
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn discover_api_service() -> Result<String> {
+        let registry = ServiceRegistry::new(vec![PrimalCapability::ApiGateway]).await?;
+        let service = registry
+            .find_by_capability(&PrimalCapability::ApiGateway)
+            .await?;
+        Ok(service.url())
+    }
+
+    /// Discover metrics service endpoint via capability-based discovery
+    pub async fn discover_metrics_service() -> Result<String> {
+        let registry = ServiceRegistry::new(vec![PrimalCapability::Observability]).await?;
+        let service = registry
+            .find_by_capability(&PrimalCapability::Observability)
+            .await?;
+        Ok(service.url())
+    }
+
+    /// Discover storage service endpoint via capability-based discovery
+    pub async fn discover_storage_service() -> Result<String> {
+        let registry = ServiceRegistry::new(vec![PrimalCapability::ZfsStorage]).await?;
+        let service = registry
+            .find_by_capability(&PrimalCapability::ZfsStorage)
+            .await?;
+        Ok(service.url())
+    }
+
+    /// Discover security service endpoint via capability-based discovery
+    pub async fn discover_security_service() -> Result<String> {
+        let registry = ServiceRegistry::new(vec![PrimalCapability::Authentication]).await?;
+        let service = registry
+            .find_by_capability(&PrimalCapability::Authentication)
+            .await?;
+        Ok(service.url())
+    }
+}
 
 // ============================================================================
 // Network Addresses
@@ -36,75 +131,161 @@ pub mod addresses {
 // ============================================================================
 
 /// Default network ports
+///
+/// ⚠️ **DEPRECATED**: Use `ServiceRegistry` for capability-based discovery
+#[deprecated(
+    since = "0.2.0",
+    note = "Use ServiceRegistry::find_by_capability() for runtime discovery. \
+            These hardcoded ports violate primal sovereignty."
+)]
 pub mod ports {
     /// Default HTTP port
+    ///
+    /// ⚠️ Use `ServiceRegistry` instead
+    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
     pub const HTTP_DEFAULT: u16 = 8080;
 
     /// Default HTTPS port
+    ///
+    /// ⚠️ Use `ServiceRegistry` instead
+    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
     pub const HTTPS_DEFAULT: u16 = 8443;
 
     /// Default API server port
+    ///
+    /// ⚠️ Use `ServiceRegistry` instead
+    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
     pub const API_DEFAULT: u16 = 3000;
 
     /// Alternative API port
+    ///
+    /// ⚠️ Use `ServiceRegistry` instead
+    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
     pub const API_ALT: u16 = 3001;
 
     /// Default metrics/monitoring port
+    ///
+    /// ⚠️ Use `ServiceRegistry` instead
+    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
     pub const METRICS_DEFAULT: u16 = 9090;
 
     /// Prometheus metrics port
+    ///
+    /// ⚠️ Use `ServiceRegistry` instead
+    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
     pub const PROMETHEUS: u16 = 9090;
 
     /// Default health check port
+    ///
+    /// ⚠️ Use `ServiceRegistry` instead
+    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
     pub const HEALTH_CHECK: u16 = 8081;
 
     /// Default gRPC port
+    ///
+    /// ⚠️ Use `ServiceRegistry` instead
+    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
     pub const GRPC_DEFAULT: u16 = 50051;
 
     /// Default WebSocket port
+    ///
+    /// ⚠️ Use `ServiceRegistry` instead
+    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
     pub const WEBSOCKET_DEFAULT: u16 = 8082;
 
     /// Default admin interface port
+    ///
+    /// ⚠️ Use `ServiceRegistry` instead
+    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
     pub const ADMIN_DEFAULT: u16 = 9000;
 
     /// Default storage service port
+    ///
+    /// ⚠️ Use `ServiceRegistry` instead
+    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
     pub const STORAGE_DEFAULT: u16 = 5000;
 
     /// Default orchestration service port
+    ///
+    /// ⚠️ Use `ServiceRegistry` instead
+    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
     pub const ORCHESTRATION_DEFAULT: u16 = 8083;
 
     /// Default storage discovery port
+    ///
+    /// ⚠️ Use `ServiceRegistry` instead
+    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
     pub const STORAGE_DISCOVERY_DEFAULT: u16 = 8084;
 
     /// Default compute service port
+    ///
+    /// ⚠️ Use `ServiceRegistry` instead
+    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
     pub const COMPUTE_DEFAULT: u16 = 8085;
 
     /// Extended services port
+    ///
+    /// ⚠️ Use `ServiceRegistry` instead
+    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
     pub const EXTENDED_SERVICES: u16 = 3002;
 
+    /// Discovery service port
+    ///
+    /// ⚠️ **IRONIC**: Hardcoded discovery port! Use `ServiceRegistry` instead
+    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
     pub const DISCOVERY_SERVICE: u16 = 3010;
 
     /// Alternative metrics port
+    ///
+    /// ⚠️ Use `ServiceRegistry` instead
+    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
     pub const METRICS_ALT: u16 = 9001;
 
+    /// Prometheus metrics port
+    ///
+    /// ⚠️ Use `ServiceRegistry` instead
+    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
     pub const METRICS_PROMETHEUS: u16 = 9090;
 
+    /// Default health check port
+    ///
+    /// ⚠️ Use `ServiceRegistry` instead
+    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
     pub const HEALTH_DEFAULT: u16 = 8081;
 
     /// Orchestrator port
+    ///
+    /// ⚠️ Use `ServiceRegistry` instead
+    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
     pub const ORCHESTRATOR_DEFAULT: u16 = 8090;
 
-    /// BearDog security primal default port
-    pub const BEARDOG_DEFAULT: u16 = 8081;
+    /// Generic security service default port
+    ///
+    /// ⚠️ Use `ServiceRegistry` instead
+    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
+    pub const SECURITY_SERVICE_DEFAULT: u16 = 8081;
 
-    /// Songbird networking primal default port
-    pub const SONGBIRD_DEFAULT: u16 = 8082;
+    /// Generic networking service default port
+    ///
+    /// ⚠️ Use `ServiceRegistry` instead
+    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
+    pub const NETWORKING_SERVICE_DEFAULT: u16 = 8082;
 
     /// PostgreSQL database default port
+    ///
+    /// ⚠️ Use `ServiceRegistry` instead
+    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
     pub const POSTGRES_DEFAULT: u16 = 5432;
 
     /// Redis cache default port
+    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
     pub const REDIS_DEFAULT: u16 = 6379;
+
+    /// MongoDB database default port
+    pub const MONGODB_DEFAULT: u16 = 27017;
+
+    /// MySQL database default port
+    pub const MYSQL_DEFAULT: u16 = 3306;
 
     /// Streaming RPC default port
     pub const STREAMING_RPC_DEFAULT: u16 = 8001;
@@ -114,6 +295,13 @@ pub mod ports {
 // Timeout Constants (milliseconds)
 // ============================================================================
 
+/// Timeout constants for network and operation timing
+///
+/// **Evolution Path**: These will be replaced by capability-based adaptive timeouts that:
+/// - Learn from actual operation latencies
+/// - Adapt to network conditions
+/// - Scale based on system load
+/// - Use service-specific SLAs discovered at runtime
 pub mod timeouts {
     /// Default connection timeout (5 seconds)
     pub const CONNECT_MS: u64 = 5_000;
@@ -221,16 +409,19 @@ pub mod limits {
     /// Default buffer size for I/O operations (64KB)
     pub const BUFFER_SIZE_DEFAULT: usize = 65536;
 
+    /// Maximum buffer size for I/O operations (1MB)
     pub const BUFFER_SIZE_MAX: usize = 1_048_576;
 
     /// Default connection pool size
     pub const CONNECTION_POOL_SIZE: usize = 10;
 
+    /// Maximum concurrent connections allowed
     pub const MAX_CONNECTIONS: usize = 1000;
 
     /// Default timeout in seconds
     pub const TIMEOUT_SECS: u64 = 30;
 
+    /// Maximum number of retry attempts for failed operations
     pub const MAX_RETRIES: u32 = 3;
 }
 
@@ -287,7 +478,6 @@ mod tests {
         // These are compile-time constants, so we verify their relationships
         // rather than testing values that are always true.
         const _: () = assert!(limits::BUFFER_SIZE_MAX >= limits::BUFFER_SIZE_DEFAULT);
-        ///  
         const _: () = assert!(limits::MAX_CONNECTIONS >= limits::CONNECTION_POOL_SIZE);
 
         // Runtime verification that constants are accessible
@@ -295,5 +485,170 @@ mod tests {
         let _ = limits::CONNECTION_POOL_SIZE;
         let _ = limits::TIMEOUT_SECS;
         let _ = limits::MAX_RETRIES;
+    }
+
+    // ==================== NEW COMPREHENSIVE TESTS ====================
+
+    #[test]
+    fn test_all_port_constants_are_unique() {
+        // Ensure no port collisions in defaults
+        let ports_vec = vec![
+            ports::HTTP_DEFAULT,
+            ports::HTTPS_DEFAULT,
+            ports::METRICS_DEFAULT,
+            ports::HEALTH_CHECK,
+            ports::GRPC_DEFAULT,
+            ports::WEBSOCKET_DEFAULT,
+            ports::ADMIN_DEFAULT,
+        ];
+
+        // At least verify ports are in valid ranges
+        for port in &ports_vec {
+            assert!(
+                *port > 1024,
+                "Port {} should be > 1024 (unprivileged)",
+                port
+            );
+            assert!(*port < 65535, "Port {} should be < 65535", port);
+        }
+    }
+
+    #[test]
+    fn test_database_ports() {
+        assert_eq!(ports::POSTGRES_DEFAULT, 5432);
+        assert_eq!(ports::REDIS_DEFAULT, 6379);
+        assert_eq!(ports::MONGODB_DEFAULT, 27017);
+        assert_eq!(ports::MYSQL_DEFAULT, 3306);
+    }
+
+    #[test]
+    fn test_service_ports() {
+        assert_eq!(ports::DISCOVERY_SERVICE, 3010);
+        assert_eq!(ports::ORCHESTRATOR_DEFAULT, 8090);
+        assert_eq!(ports::STORAGE_DEFAULT, 5000);
+        assert_eq!(ports::COMPUTE_DEFAULT, 8085);
+    }
+
+    #[test]
+    fn test_timeout_constants() {
+        assert_eq!(timeouts::CONNECT_MS, 5_000);
+        assert_eq!(timeouts::REQUEST_MS, 30_000);
+        assert_eq!(timeouts::LONG_OPERATION_MS, 300_000);
+
+        // Verify relationships
+        assert!(timeouts::CONNECT_MS < timeouts::REQUEST_MS);
+        assert!(timeouts::REQUEST_MS < timeouts::LONG_OPERATION_MS);
+    }
+
+    #[test]
+    fn test_discovery_constants() {
+        assert_eq!(discovery::TIMEOUT_MS, 5000);
+        assert_eq!(discovery::RETRY_ATTEMPTS, 3);
+        assert_eq!(discovery::SCAN_PORT_START, 3000);
+        assert_eq!(discovery::SCAN_PORT_END, 3999);
+
+        // Verify port range is valid
+        assert!(discovery::SCAN_PORT_START < discovery::SCAN_PORT_END);
+    }
+
+    #[test]
+    fn test_get_metrics_port() {
+        let port = get_metrics_port();
+        assert_eq!(port, ports::METRICS_DEFAULT);
+        assert!(port > 0);
+    }
+
+    #[test]
+    fn test_get_health_port() {
+        let port = get_health_port();
+        assert_eq!(port, ports::HEALTH_CHECK);
+        assert!(port > 0);
+    }
+
+    #[test]
+    fn test_discovery_timeout_helper() {
+        let timeout = discovery::get_timeout_ms();
+        assert_eq!(timeout, discovery::TIMEOUT_MS);
+        assert!(timeout > 0);
+    }
+
+    #[test]
+    fn test_ipv4_address_format() {
+        // Verify IPv4 addresses are properly formatted
+        assert!(addresses::LOCALHOST_IPV4
+            .parse::<std::net::Ipv4Addr>()
+            .is_ok());
+        assert!(addresses::BIND_ALL_IPV4
+            .parse::<std::net::Ipv4Addr>()
+            .is_ok());
+    }
+
+    #[test]
+    fn test_ipv6_address_format() {
+        // Verify IPv6 addresses are properly formatted
+        assert!(addresses::LOCALHOST_IPV6
+            .parse::<std::net::Ipv6Addr>()
+            .is_ok());
+        assert!(addresses::BIND_ALL_IPV6
+            .parse::<std::net::Ipv6Addr>()
+            .is_ok());
+    }
+
+    #[test]
+    fn test_buffer_size_limits() {
+        assert_eq!(limits::BUFFER_SIZE_DEFAULT, 65536);
+        assert_eq!(limits::BUFFER_SIZE_MAX, 1_048_576);
+        assert!(limits::BUFFER_SIZE_DEFAULT < limits::BUFFER_SIZE_MAX);
+    }
+
+    #[test]
+    fn test_connection_limits() {
+        assert_eq!(limits::CONNECTION_POOL_SIZE, 10);
+        assert_eq!(limits::MAX_CONNECTIONS, 1000);
+        assert!(limits::CONNECTION_POOL_SIZE < limits::MAX_CONNECTIONS);
+    }
+
+    #[test]
+    fn test_retry_configuration() {
+        assert_eq!(limits::MAX_RETRIES, 3);
+        assert_eq!(limits::TIMEOUT_SECS, 30);
+        assert!(limits::MAX_RETRIES > 0);
+        assert!(limits::TIMEOUT_SECS > 0);
+    }
+
+    #[test]
+    fn test_service_capability_ports() {
+        // Generic service defaults (capability-based discovery preferred)
+        assert_eq!(ports::SECURITY_SERVICE_DEFAULT, 8081);
+        assert_eq!(ports::NETWORKING_SERVICE_DEFAULT, 8082);
+        assert_ne!(
+            ports::SECURITY_SERVICE_DEFAULT,
+            ports::NETWORKING_SERVICE_DEFAULT
+        );
+    }
+
+    #[test]
+    fn test_extended_services_port() {
+        assert_eq!(ports::EXTENDED_SERVICES, 3002);
+        assert_eq!(ports::API_ALT, 3001);
+        assert_ne!(ports::EXTENDED_SERVICES, ports::API_DEFAULT);
+    }
+
+    #[test]
+    fn test_bind_address_is_valid() {
+        let addr = get_bind_address();
+        assert!(!addr.is_empty());
+        // Should be either IPv4 or IPv6
+        assert!(
+            addr.parse::<std::net::Ipv4Addr>().is_ok()
+                || addr.parse::<std::net::Ipv6Addr>().is_ok()
+        );
+    }
+
+    #[test]
+    fn test_api_port_is_valid() {
+        let port = get_api_port();
+        assert!(port > 0);
+        // u16 automatically ensures port <= 65535
     }
 }

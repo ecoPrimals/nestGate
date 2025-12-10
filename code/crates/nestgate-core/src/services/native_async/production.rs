@@ -56,6 +56,7 @@ pub enum ConnectionStatus {
     Connected,
     /// Disconnected
     Disconnected,
+    /// An error occurred in the service
     Error(String),
 }
 

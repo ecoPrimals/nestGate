@@ -6,7 +6,7 @@ use std::time::Duration;
 
 /// Test `RemoteZfsService` creation and connection
 #[tokio::test]
-async fn test_remote_service_creation() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_remote_service_creation() -> std::result::Result<(), Box<dyn std::error::Error>> {
     use std::env;
     // Test successful connection
     let endpoint = format!(
@@ -34,7 +34,7 @@ async fn test_remote_service_creation() -> Result<(), Box<dyn std::error::Error>
 
 /// Test connection management
 #[tokio::test]
-async fn test_connection_management() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_connection_management() -> std::result::Result<(), Box<dyn std::error::Error>> {
     // Note: ConnectionManager is a placeholder for future implementation
     // Testing basic configuration structure for now
     // Use environment-driven configuration
@@ -60,7 +60,7 @@ async fn test_connection_management() -> Result<(), Box<dyn std::error::Error>> 
 
 /// Test connection statistics
 #[tokio::test]
-async fn test_connection_statistics() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_connection_statistics() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let stats = ConnectionStats {
         total_requests: 100,
         successful_requests: 95,
@@ -82,7 +82,7 @@ async fn test_connection_statistics() -> Result<(), Box<dyn std::error::Error>> 
 /// **Priority**: Medium (coverage sprint)
 #[tokio::test]
 #[ignore = "Requires connection pool infrastructure - deferred to connection management phase"]
-async fn test_connection_errors() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_connection_errors() -> std::result::Result<(), Box<dyn std::error::Error>> {
     // Test expansion tracked in coverage sprint
     // Will implement when ConnectionError type is available
     Ok(())
@@ -95,7 +95,7 @@ async fn test_connection_errors() -> Result<(), Box<dyn std::error::Error>> {
 /// **Priority**: High (resilience feature)
 #[tokio::test]
 #[ignore = "Requires circuit breaker infrastructure - deferred to resilience phase"]
-async fn test_circuit_breaker() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_circuit_breaker() -> std::result::Result<(), Box<dyn std::error::Error>> {
     // Will implement circuit breaker pattern:
     // - Failure threshold detection
     // - Automatic recovery timeout
@@ -110,7 +110,7 @@ async fn test_circuit_breaker() -> Result<(), Box<dyn std::error::Error>> {
 /// **Priority**: High (operational readiness)
 #[tokio::test]
 #[ignore = "Requires health check infrastructure - deferred to monitoring phase"]
-async fn test_health_checking() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_health_checking() -> std::result::Result<(), Box<dyn std::error::Error>> {
     // Will implement health check patterns:
     // - Periodic health probes
     // - Degraded state detection
@@ -125,7 +125,7 @@ async fn test_health_checking() -> Result<(), Box<dyn std::error::Error>> {
 /// **Priority**: High (reliability feature)
 #[tokio::test]
 #[ignore = "Requires retry infrastructure - deferred to reliability phase"]
-async fn test_retry_logic() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_retry_logic() -> std::result::Result<(), Box<dyn std::error::Error>> {
     // Will implement retry patterns:
     // - Exponential backoff
     // - Max retry limits
@@ -140,7 +140,7 @@ async fn test_retry_logic() -> Result<(), Box<dyn std::error::Error>> {
 /// **Priority**: Medium (performance optimization)
 #[tokio::test]
 #[ignore = "Requires connection pool infrastructure - deferred to performance phase"]
-async fn test_connection_pooling() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_connection_pooling() -> std::result::Result<(), Box<dyn std::error::Error>> {
     // Will implement connection pool:
     // - Pool size management
     // - Connection reuse
@@ -155,7 +155,7 @@ async fn test_connection_pooling() -> Result<(), Box<dyn std::error::Error>> {
 /// **Priority**: High (operational reliability)
 #[tokio::test]
 #[ignore = "Requires error recovery infrastructure - deferred to reliability phase"]
-async fn test_error_recovery() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_error_recovery() -> std::result::Result<(), Box<dyn std::error::Error>> {
     // Will implement error recovery:
     // - Automatic reconnection
     // - Failure statistics tracking
@@ -165,7 +165,7 @@ async fn test_error_recovery() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Integration test for remote service operations
 #[tokio::test]
-async fn test_remote_service_operations() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_remote_service_operations() -> std::result::Result<(), Box<dyn std::error::Error>> {
     // This would be a comprehensive integration test
     // Testing actual ZFS operations through the remote service
     // For now, we test the interface compliance
@@ -184,7 +184,7 @@ async fn test_remote_service_operations() -> Result<(), Box<dyn std::error::Erro
 /// **Priority**: Medium (configuration safety)
 #[tokio::test]
 #[ignore = "Requires configuration validation infrastructure - deferred to config phase"]
-async fn test_configuration_validation() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_configuration_validation() -> std::result::Result<(), Box<dyn std::error::Error>> {
     // Will implement config validation:
     // - Required field validation
     // - Range checking (timeouts, ports)
@@ -199,7 +199,7 @@ async fn test_configuration_validation() -> Result<(), Box<dyn std::error::Error
 /// **Priority**: High (performance under load)
 #[tokio::test]
 #[ignore = "Requires concurrency infrastructure - deferred to performance phase"]
-async fn test_concurrent_connections() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_concurrent_connections() -> std::result::Result<(), Box<dyn std::error::Error>> {
     // Will implement concurrency tests:
     // - Parallel connection handling
     // - Thread safety verification
@@ -217,7 +217,7 @@ mod integration_tests {
     /// **Priority**: High (integration testing)
     #[tokio::test]
     #[ignore = "Requires full service infrastructure - deferred to E2E phase"]
-    async fn test_service_lifecycle() -> Result<(), Box<dyn std::error::Error>> {
+    async fn test_service_lifecycle() -> std::result::Result<(), Box<dyn std::error::Error>> {
         // Will implement full lifecycle:
         // - Service discovery
         // - Connection establishment
@@ -233,7 +233,7 @@ mod integration_tests {
     /// **Priority**: High (reliability)
     #[tokio::test]
     #[ignore = "Requires error infrastructure - deferred to error handling phase"]
-    async fn test_error_scenarios() -> Result<(), Box<dyn std::error::Error>> {
+    async fn test_error_scenarios() -> std::result::Result<(), Box<dyn std::error::Error>> {
         // Will implement error scenarios:
         // - Network failures
         // - Timeout handling

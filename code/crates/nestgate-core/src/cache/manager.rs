@@ -70,6 +70,7 @@ pub struct CacheEntry {
     pub access_count: u64,
 }
 impl CacheEntry {
+    /// Create a new cache entry with the given data
     #[must_use]
     pub fn new(data: Vec<u8>) -> Self {
         let now = SystemTime::now();
@@ -81,12 +82,13 @@ impl CacheEntry {
         }
     }
 
+    /// Check if this cache entry has expired based on the given TTL
     #[must_use]
     pub fn is_expired(&self, ttl: Duration) -> bool {
         self.created_at.elapsed().unwrap_or(Duration::ZERO) > ttl
     }
 
-    /// Access
+    /// Record an access to this cache entry
     pub fn access(&mut self) {
         self.last_accessed = SystemTime::now();
         self.access_count += 1;
@@ -107,6 +109,7 @@ pub struct CacheStats {
     pub size: usize,
 }
 impl CacheStats {
+    /// Calculate the cache hit rate as a percentage (0.0 to 1.0)
     #[must_use]
     pub fn hit_rate(&self) -> f64 {
         if self.hits + self.misses == 0 {

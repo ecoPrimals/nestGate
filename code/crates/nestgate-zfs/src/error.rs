@@ -7,6 +7,9 @@ use nestgate_core::error::{InternalErrorDetails, NestGateError};
 // ==================== SECTION ====================
 
 /// Canonical error creation helpers for ZFS operations
+///
+/// Provides ergonomic methods for creating ZFS-specific errors that integrate
+/// with the unified NestGate error system.
 pub struct ZfsErrorBuilder;
 impl ZfsErrorBuilder {
     /// Create a generic ZFS error (for backward compatibility)
@@ -165,8 +168,11 @@ pub enum ZfsOperation {
     SnapshotCreate,
     /// Snapshotdestroy
     SnapshotDestroy,
+    /// Generic command operation
     Command,
+    /// System check operation
     SystemCheck,
+    /// Configuration operation
     Configuration,
 }
 
@@ -526,7 +532,7 @@ mod tests {
 pub use nestgate_core::error::Result;
 // Re-export ZfsError from types module for backward compatibility
 pub use crate::types::ZfsError;
-// Define ZfsResult as an alias to Result with ZfsError
+/// Type alias for ZFS operation results using the canonical error system.
 pub type ZfsResult<T> = Result<T>;
 
 // ==================== SECTION ====================

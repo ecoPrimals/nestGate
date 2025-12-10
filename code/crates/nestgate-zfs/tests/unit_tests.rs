@@ -10,7 +10,7 @@ mod config_unit_tests {
     use super::*;
 
     #[test]
-    fn test_zfs_config_defaults() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_zfs_config_defaults() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let config = ZfsConfig::default();
 
         // Verify basic ZFS configuration
@@ -31,7 +31,7 @@ mod config_unit_tests {
     }
 
     #[test]
-    fn test_zfs_config_custom() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_zfs_config_custom() -> std::result::Result<(), Box<dyn std::error::Error>> {
         use std::time::Duration;
 
         let config = ZfsConfig {
@@ -54,7 +54,7 @@ mod storage_tier_tests {
     use super::*;
 
     #[test]
-    fn test_storage_tier_hierarchy() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_storage_tier_hierarchy() -> std::result::Result<(), Box<dyn std::error::Error>> {
         // Test storage tier ordering
         let hot = CoreStorageTier::Hot;
         let warm = CoreStorageTier::Warm;
@@ -74,7 +74,7 @@ mod path_handling_tests {
     use super::*;
 
     #[test]
-    fn test_pathbuf_operations() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_pathbuf_operations() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let path1 = PathBuf::from("/test/dataset");
         let path2 = PathBuf::from("/test/dataset");
         let path3 = PathBuf::from("/different/path");
@@ -87,7 +87,7 @@ mod path_handling_tests {
     }
 
     #[test]
-    fn test_zfs_dataset_paths() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_zfs_dataset_paths() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let pool_path = PathBuf::from("/tank");
         let dataset_path = PathBuf::from("/tank/dataset");
 
@@ -104,7 +104,7 @@ mod time_handling_tests {
     use super::*;
 
     #[test]
-    fn test_system_time_operations() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_system_time_operations() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let now = SystemTime::now();
         let later = SystemTime::now();
 
@@ -120,7 +120,7 @@ mod hashmap_tests {
     use super::*;
 
     #[test]
-    fn test_property_map_operations() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_property_map_operations() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let mut properties = HashMap::new();
 
         properties.insert("compression".to_string(), "lz4".to_string());
@@ -134,7 +134,7 @@ mod hashmap_tests {
     }
 
     #[test]
-    fn test_tier_property_mapping() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_tier_property_mapping() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let mut tier_props = HashMap::new();
 
         tier_props.insert("hot".to_string(), "lz4".to_string());

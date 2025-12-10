@@ -52,9 +52,19 @@ pub enum ScheduleFrequency {
     /// Take snapshots daily at specific hour
     Daily(u8),
     /// Take snapshots weekly on specific day and hour
-    Weekly { day: u8, hour: u8 },
+    Weekly {
+        /// Day of week (0-6, where 0 is Sunday)
+        day: u8,
+        /// Hour of day (0-23)
+        hour: u8,
+    },
     /// Monthly schedule
-    Monthly { day: u8, hour: u8 },
+    Monthly {
+        /// Day of month (1-31)
+        day: u8,
+        /// Hour of day (0-23)
+        hour: u8,
+    },
     /// Custom cron-like schedule
     Custom(String),
 }

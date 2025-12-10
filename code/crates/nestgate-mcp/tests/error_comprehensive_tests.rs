@@ -263,7 +263,7 @@ fn test_error_with_json_like_message() {
 #[test]
 fn test_error_in_result() {
     /// Returns Error
-    fn returns_error() -> Result<(), nestgate_core::NestGateError> {
+    fn returns_error() -> std::result::Result<(), nestgate_core::NestGateError> {
         Err(mcp_connection_error("Test"))
     }
 
@@ -274,12 +274,12 @@ fn test_error_in_result() {
 #[test]
 fn test_error_propagation() {
     /// Inner
-    fn inner() -> Result<(), nestgate_core::NestGateError> {
+    fn inner() -> std::result::Result<(), nestgate_core::NestGateError> {
         Err(mcp_connection_error("Inner error"))
     }
 
     /// Outer
-    fn outer() -> Result<(), nestgate_core::NestGateError> {
+    fn outer() -> std::result::Result<(), nestgate_core::NestGateError> {
         inner()?;
         Ok(())
     }

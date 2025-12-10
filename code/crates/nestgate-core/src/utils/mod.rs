@@ -8,6 +8,7 @@
 pub mod fs;
 pub mod memory_optimization;
 pub mod network;
+mod network_error_tests;
 pub mod string;
 pub mod system;
 

@@ -22,12 +22,14 @@ use crate::{
 };
 
 // Module declarations
+/// AI-powered tier optimization
 pub mod ai_tier_optimization;
 pub mod dataset_operations;
 pub mod health;
 pub mod initialization;
 pub mod performance;
 pub mod pool_operations;
+/// ZFS manager type definitions
 pub mod types;
 pub mod utilities;
 

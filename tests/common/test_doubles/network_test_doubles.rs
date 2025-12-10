@@ -5,7 +5,7 @@
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use tokio::time::{sleep, Duration};
+// Note: sleep and Duration available if needed for network simulation
 
 use super::TestDoubleConfig;
 
@@ -55,7 +55,10 @@ impl NetworkTestDouble {
     }
 
     pub fn get_operations(&self) -> Vec<String> {
-        self.operations.lock()?.clone()
+        self.operations
+            .lock()
+            .map(|ops| ops.clone())
+            .unwrap_or_default()
     }
 
     async fn record_operation(&self, operation: &str) -> Result<(), NetworkTestError> {
@@ -93,13 +96,40 @@ impl MockNetworkForTesting {
             .await?;
         Ok("fake_response".to_string())
     }
+
+    /// Initialize the mock network
+    pub fn initialize(&mut self) -> Result<(), NetworkTestError> {
+        Ok(())
+    }
+
+    /// Cleanup the mock network
+    pub fn cleanup(&mut self) -> Result<(), String> {
+        self.reset()
+    }
+
+    /// Reset the mock network to initial state
+    pub fn reset(&mut self) -> Result<(), String> {
+        if let Ok(mut ops) = self.test_double.operations.lock() {
+            ops.clear();
+        }
+        Ok(())
+    }
 }
 
-#[derive(Debug, thiserror::Error)]
+// Simple error type for test doubles - no thiserror needed in tests
+#[derive(Debug)]
 pub enum NetworkTestError {
-    #[error("Simulated network failure: {0}")]
     SimulatedFailure(String),
-
-    #[error("Test connection timeout")]
     Timeout,
 }
+
+impl std::fmt::Display for NetworkTestError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::SimulatedFailure(msg) => write!(f, "Simulated network failure: {}", msg),
+            Self::Timeout => write!(f, "Test connection timeout"),
+        }
+    }
+}
+
+impl std::error::Error for NetworkTestError {}

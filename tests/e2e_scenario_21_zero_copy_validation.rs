@@ -7,7 +7,6 @@
 mod zero_copy_validation {
     use std::sync::Arc;
     use std::time::Duration;
-    use tokio::time::timeout;
 
     // Note: bytes crate needed for buffer sharing test
     // Add to Cargo.toml dev-dependencies: bytes = "1.5"
@@ -22,7 +21,7 @@ mod zero_copy_validation {
 
         // Verify Arc semantics (same allocation)
         assert_eq!(Arc::strong_count(&data), 3);
-        assert_eq!(Arc::ptr_eq(&data, &data_clone1), true);
+        assert!(Arc::ptr_eq(&data, &data_clone1));
 
         // Cleanup
         drop(data_clone1);
@@ -91,20 +90,20 @@ mod zero_copy_validation {
         // Test Arc-based config sharing (zero-copy)
         #[derive(Debug, Clone)]
         struct Config {
-            timeout: Duration,
-            max_connections: usize,
+            _timeout: Duration,      // Reserved for timeout tests
+            _max_connections: usize, // Reserved for connection pool tests
         }
 
         let config = Arc::new(Config {
-            timeout: Duration::from_secs(30),
-            max_connections: 100,
+            _timeout: Duration::from_secs(30),
+            _max_connections: 100,
         });
 
         let config_ref1 = Arc::clone(&config);
-        let config_ref2 = Arc::clone(&config);
+        let _config_ref2 = Arc::clone(&config); // Keep for future reference counting tests
 
         // Multiple services share same config (zero-copy)
         assert_eq!(Arc::strong_count(&config), 3);
-        assert_eq!(Arc::ptr_eq(&config, &config_ref1), true);
+        assert!(Arc::ptr_eq(&config, &config_ref1));
     }
 }

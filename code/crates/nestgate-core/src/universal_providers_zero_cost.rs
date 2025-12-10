@@ -47,20 +47,47 @@ pub struct Signature {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Securitydecision
+/// Security decision with context and remediation information
+///
+/// Represents the outcome of a security check with detailed reasoning
+/// and actionable information for the user.
 pub enum SecurityDecision {
-    /// Allow
+    /// Access is allowed
+    ///
+    /// The requested operation has been approved based on security policies.
     Allow {
+        /// Explanation of why access was granted
         reason: String,
+        /// Whether the decision was enhanced by a security provider
+        ///
+        /// `true` if a dedicated security primal participated in the decision,
+        /// `false` if using built-in security logic only
         enhanced_by_security_provider: bool,
     },
-    /// Deny
+    /// Access is denied
+    ///
+    /// The requested operation has been rejected by security policies.
     Deny {
+        /// Explanation of why access was denied
+        ///
+        /// Should be user-friendly and respectful, explaining the security
+        /// concern without exposing sensitive system details.
         reason: String,
+        /// Optional guidance on how to gain access
+        ///
+        /// Provides actionable steps the user can take to resolve the issue,
+        /// such as requesting permissions or providing additional credentials.
         remediation: Option<String>,
     },
-    /// Requirelicense
-    RequireLicense { terms: String, contact: String },
+    /// License agreement required
+    ///
+    /// The requested operation requires acceptance of specific terms.
+    RequireLicense {
+        /// License terms that must be accepted
+        terms: String,
+        /// Contact information for license inquiries
+        contact: String,
+    },
 }
 
 // ==================== SECTION ====================
@@ -133,6 +160,10 @@ pub trait ZeroCostSecurityProvider: Send + Sync + 'static {
         signature: &Signature,
     ) -> impl Future<Output = std::result::Result<bool, Self::Error>> + Send;
 
+    /// Performs a health check on the security provider.
+    ///
+    /// Returns `Ok(true)` if the provider is healthy and can perform cryptographic operations,
+    /// `Ok(false)` if degraded, or `Err` if the health check itself failed.
     fn health_check(&self) -> impl Future<Output = std::result::Result<bool, Self::Error>> + Send;
 }
 
@@ -289,6 +320,10 @@ pub trait ZeroCostOrchestrationProvider: Send + Sync + 'static {
         instance_id: &Self::InstanceId,
     ) -> impl Future<Output = std::result::Result<ServiceStatus, Self::Error>> + Send;
 
+    /// Performs a health check on the orchestration provider.
+    ///
+    /// Returns `Ok(true)` if the provider can orchestrate services,
+    /// `Ok(false)` if degraded, or `Err` if the health check failed.
     fn health_check(&self) -> impl Future<Output = std::result::Result<bool, Self::Error>> + Send;
 }
 
@@ -332,17 +367,23 @@ pub trait ZeroCostComputeProvider: Send + Sync + 'static {
         &self,
     ) -> impl Future<Output = std::result::Result<ComputeResources, Self::Error>> + Send;
 
+    /// Performs a health check for the compute provider.
+    ///
+    /// # Returns
+    /// A future that resolves to `Ok(true)` if healthy, `Ok(false)` otherwise, or an error.
     fn health_check(&self) -> impl Future<Output = std::result::Result<bool, Self::Error>> + Send;
 }
 
 // ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Represents the current status of a service including health and availability information.
 pub struct ServiceStatus {
     /// Running
     pub running: bool,
     /// Replicas
     pub replicas: u32,
+    /// The health status description of the service
     pub health: String,
     /// Last Updated
     pub last_updated: std::time::SystemTime,

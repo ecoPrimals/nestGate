@@ -23,13 +23,23 @@ pub struct SovereigntyRuntimeConfig {
 pub type SharedSovereigntyRuntimeConfig = Arc<SovereigntyRuntimeConfig>;
 
 impl SovereigntyRuntimeConfig {
-    /// Creates a new `SovereigntyRuntimeConfig` with default values.
+    /// Creates a new `SovereigntyRuntimeConfig` with default values from environment.
+    ///
+    /// Environment variables:
+    /// - `NESTGATE_API_PORT`: API port (default: from EnvironmentConfig)
+    /// - `NESTGATE_BIND_ADDRESS`: Bind address (default: from EnvironmentConfig)
     pub fn new() -> Self {
+        use crate::config::environment::EnvironmentConfig;
+
+        // Load environment configuration with proper fallbacks
+        let env_config =
+            EnvironmentConfig::from_env().unwrap_or_else(|_| EnvironmentConfig::default());
+
         Self {
             api_endpoint: None,
             api_host: None,
-            api_port: 8080,
-            bind_address: crate::constants::LOCALHOST.to_string(),
+            api_port: env_config.network.port.get(),
+            bind_address: env_config.network.host.clone(),
             ws_endpoint: None,
             discovery_endpoint: None,
             orchestration_endpoint: None,
@@ -45,9 +55,9 @@ impl SovereigntyRuntimeConfig {
         let api_port = env::var("NESTGATE_API_PORT")
             .ok()
             .and_then(|p| p.parse().ok())
-            .unwrap_or(8080);
+            .unwrap_or(8080); // Safe: always provides default port
         let bind_address = env::var("NESTGATE_BIND_ADDRESS")
-            .unwrap_or_else(|_| crate::constants::LOCALHOST.to_string());
+            .unwrap_or_else(|_| crate::constants::LOCALHOST.to_string()); // Safe: always provides default
         let ws_endpoint = env::var("NESTGATE_WS_ENDPOINT").ok();
         let discovery_endpoint = env::var("NESTGATE_DISCOVERY_ENDPOINT").ok();
         let orchestration_endpoint = env::var("NESTGATE_ORCHESTRATION_ENDPOINT").ok();
@@ -66,6 +76,21 @@ impl SovereigntyRuntimeConfig {
     }
 
     // Builder methods for testing
+
+    /// Builder method to set the API endpoint.
+    ///
+    /// # Arguments
+    ///
+    /// * `endpoint` - The full API endpoint URL (e.g., "http://localhost:8080")
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use nestgate_core::config::sovereignty_config::SovereigntyConfig;
+    ///
+    /// let config = SovereigntyConfig::default()
+    ///     .with_api_endpoint("http://api.example.com".to_string());
+    /// ```
     pub fn with_api_endpoint(mut self, endpoint: String) -> Self {
         self.api_endpoint = Some(endpoint);
         self

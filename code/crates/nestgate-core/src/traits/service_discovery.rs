@@ -25,6 +25,10 @@ pub struct ServiceQuery {
 }
 
 impl ServiceQuery {
+    /// Creates a new service query with default settings.
+    ///
+    /// By default, queries return only healthy services without filtering
+    /// by name, tags, or namespace.
     #[must_use]
     pub fn new() -> Self {
         Self {
@@ -53,6 +57,10 @@ impl ServiceQuery {
         self
     }
 
+    /// Modifies the query to include unhealthy services in results.
+    ///
+    /// By default, only healthy services are returned. Use this method
+    /// to include services in any health state.
     #[must_use]
     pub fn include_unhealthy(mut self) -> Self {
         self.healthy_only = false;
@@ -123,15 +131,21 @@ pub enum ServiceEvent {
 
     /// Service was updated
     Updated {
+        /// The unique identifier of the updated service
         service_id: String,
+        /// The previous service information before the update
         old_info: Box<ServiceInfo>,
+        /// The new service information after the update
         new_info: Box<ServiceInfo>,
     },
 
     /// Service health status changed
     HealthChanged {
+        /// The unique identifier of the service with changed health
         service_id: String,
+        /// The previous health status before the change
         old_status: HealthStatus,
+        /// The new health status after the change
         new_status: HealthStatus,
     },
 

@@ -34,12 +34,11 @@ mod infant_discovery_validation {
     #[ignore]
     async fn test_zero_configuration_discovery() {
         // Test that services can discover each other without pre-configuration
-        let mut discovered_services = Vec::new();
-
-        // Simulate service discovery
-        discovered_services.push(("nestgate-api", "http://localhost:8080"));
-        discovered_services.push(("nestgate-core", "http://localhost:8081"));
-        discovered_services.push(("nestgate-zfs", "http://localhost:8082"));
+        let discovered_services = [
+            ("nestgate-api", "http://localhost:8080"),
+            ("nestgate-core", "http://localhost:8081"),
+            ("nestgate-zfs", "http://localhost:8082"),
+        ];
 
         assert_eq!(discovered_services.len(), 3);
         assert!(discovered_services
@@ -51,6 +50,7 @@ mod infant_discovery_validation {
     #[ignore]
     async fn test_service_health_propagation() {
         #[derive(Debug, Clone)]
+        #[allow(dead_code)]
         struct ServiceHealth {
             name: String,
             healthy: bool,

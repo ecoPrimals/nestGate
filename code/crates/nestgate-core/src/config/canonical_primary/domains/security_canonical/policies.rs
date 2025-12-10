@@ -93,18 +93,36 @@ impl Default for PrivacyConfig {
 }
 
 impl SecurityPoliciesConfig {
+    /// Creates a production-hardened security policies configuration.
+    ///
+    /// Returns the default configuration optimized for production use.
     #[must_use]
     pub fn production_hardened() -> Self {
         Self::default()
     }
+    /// Creates a development-optimized security policies configuration.
+    ///
+    /// Returns the default configuration suitable for development environments.
     #[must_use]
     pub fn development_optimized() -> Self {
         Self::default()
     }
+    /// Creates a compliance-focused security policies configuration.
+    ///
+    /// Returns the default configuration tailored for compliance requirements.
     #[must_use]
     pub fn compliance_focused() -> Self {
         Self::default()
     }
+    /// Merges this configuration with another, returning self unchanged.
+    ///
+    /// # Arguments
+    ///
+    /// * `_other` - The other configuration (currently ignored)
+    ///
+    /// # Returns
+    ///
+    /// Returns self without modification
     #[must_use]
     pub fn merge(self, _other: Self) -> Self {
         self

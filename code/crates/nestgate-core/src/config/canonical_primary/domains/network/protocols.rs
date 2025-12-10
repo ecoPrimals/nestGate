@@ -45,6 +45,10 @@ pub struct GrpcConfig {
 }
 
 impl NetworkProtocolConfig {
+    /// Creates a development-optimized network protocol configuration
+    ///
+    /// Returns a `NetworkProtocolConfig` with HTTP/1.1, WebSocket enabled with large frames,
+    /// and gRPC disabled for simplified local development.
     #[must_use]
     pub fn development_optimized() -> Self {
         Self {
@@ -64,6 +68,10 @@ impl NetworkProtocolConfig {
         }
     }
 
+    /// Creates a production-hardened network protocol configuration with HTTP/2
+    ///
+    /// Returns a `NetworkProtocolConfig` with HTTP/2, optimized WebSocket frames,
+    /// and gRPC enabled for high-performance production deployments.
     #[must_use]
     pub fn production_hardened() -> Self {
         Self {
@@ -83,15 +91,23 @@ impl NetworkProtocolConfig {
         }
     }
 
-    /// Function description
+    /// Validates the network protocol configuration for correctness
+    ///
+    /// Currently performs basic validation. Can be extended to validate protocol-specific
+    /// settings like frame sizes, message limits, and version compatibility.
     ///
     /// # Errors
     ///
-    /// This function will return an error if the operation fails.
+    /// Returns an error if validation fails. Currently always succeeds but may be extended
+    /// with additional validation rules in the future.
     pub fn validate(&self) -> Result<()> {
         Ok(())
     }
 
+    /// Merges another protocol configuration into this one, overwriting with other's values
+    ///
+    /// Takes all protocol settings from `other` and replaces the current configuration.
+    /// Useful for layering configurations (e.g., defaults + environment overrides).
     #[must_use]
     pub fn merge(mut self, other: Self) -> Self {
         self.http = other.http;

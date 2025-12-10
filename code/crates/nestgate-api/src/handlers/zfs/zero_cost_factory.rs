@@ -34,7 +34,6 @@ impl<const MAX_POOLS: usize> Default for ZeroCostNativeZfsService<MAX_POOLS> {
 impl<const MAX_POOLS: usize> ZeroCostNativeZfsService<MAX_POOLS> {
     /// Create a new zero-cost native ZFS service instance
     #[must_use]
-    /// Fn
     pub const fn new() -> Self {
         Self {
             inner: ZeroCostZfsOperations::new(),
@@ -62,7 +61,6 @@ impl<const MAX_POOLS: usize> Default for ZeroCostNativeZfsService<MAX_POOLS> {
 impl<const MAX_POOLS: usize> ZeroCostNativeZfsService<MAX_POOLS> {
     /// Create a new placeholder service
     #[must_use]
-    /// Fn
     pub const fn new() -> Self {
         Self
     }

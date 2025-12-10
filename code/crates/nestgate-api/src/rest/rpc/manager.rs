@@ -371,13 +371,11 @@ impl UnifiedRpcManager {
         Ok(())
     }
 
-    /// Fn
     const fn start_health_monitoring(&self) -> Result<(), RpcError> {
         // Implementation for health monitoring background task
         Ok(())
     }
 
-    /// Fn
     const fn start_metrics_collection(&self) -> Result<(), RpcError> {
         // Implementation for metrics collection background task
         Ok(())
@@ -450,7 +448,6 @@ impl UniversalSecurityLayer {
     /// # Returns
     /// * New security layer instance
     #[must_use]
-    /// Fn
     pub const fn new(_config: &RpcSecurityConfig) -> Self {
         Self
     }
@@ -501,7 +498,6 @@ impl LoadBalancer {
     /// # Returns
     /// * New load balancer instance
     #[must_use]
-    /// Fn
     pub const fn new(_config: &LoadBalancingConfig) -> Self {
         Self
     }
@@ -516,7 +512,6 @@ impl StreamRegistry {
     /// # Returns
     /// * New stream registry instance
     #[must_use]
-    /// Fn
     pub const fn new(_config: &StreamConfig) -> Self {
         Self
     }
@@ -531,7 +526,6 @@ impl MetricsCollector {
     /// # Returns
     /// * New metrics collector instance
     #[must_use]
-    /// Fn
     pub const fn new(
         _config: &nestgate_core::config::canonical_primary::domains::performance::MetricsConfig,
     ) -> Self {

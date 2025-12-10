@@ -163,14 +163,23 @@ pub enum RetryStrategy {
     Immediate,
     /// Exponential backoff
     ExponentialBackoff {
+        /// Base delay in milliseconds
         base_delay_ms: u64,
+        /// Maximum number of retry attempts
         max_retries: u32,
     },
     /// Fixed interval retry
-    FixedInterval { interval_ms: u64, max_retries: u32 },
+    FixedInterval {
+        /// Interval between retries in milliseconds
+        interval_ms: u64,
+        /// Maximum number of retry attempts
+        max_retries: u32,
+    },
     /// Custom retry logic
     Custom {
+        /// Identifier for the retry strategy
         strategy_id: String,
+        /// Strategy-specific parameters
         parameters: HashMap<String, serde_json::Value>,
     },
 }

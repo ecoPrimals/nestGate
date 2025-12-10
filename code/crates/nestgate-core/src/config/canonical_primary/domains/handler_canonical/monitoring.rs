@@ -56,18 +56,25 @@ impl Default for MonitoringHandlerConfig {
 }
 
 impl MonitoringHandlerConfig {
+    /// Returns a production-optimized configuration
     #[must_use]
     pub fn production_optimized() -> Self {
         Self::default()
     }
+
+    /// Returns a development-optimized configuration
     #[must_use]
     pub fn development_optimized() -> Self {
         Self::default()
     }
+
+    /// Returns a high-performance configuration
     #[must_use]
     pub fn high_performance() -> Self {
         Self::default()
     }
+
+    /// Merges this configuration with another, returning the merged result
     #[must_use]
     pub fn merge(self, _other: Self) -> Self {
         self

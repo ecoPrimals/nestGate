@@ -12,6 +12,21 @@ pub use crate::constants::canonical::timeouts::DEFAULT_TIMEOUT_MS;
 pub use super::canonical_defaults::performance::NETWORK_BUFFER_SIZE;
 
 // Backward compatibility: DEFAULT_BUFFER_SIZE for network code should use NETWORK_BUFFER_SIZE
+/// Default network buffer size for I/O operations
+///
+/// **Size**: 8KB (8192 bytes) - optimized for network I/O
+///
+/// **Trade-offs**:
+/// - Smaller buffers: Lower memory, more system calls
+/// - Larger buffers: Higher memory, fewer system calls
+/// - 8KB balances these for typical network operations
+///
+/// **Performance**: Reduces system call overhead while fitting comfortably in CPU cache.
+///
+/// **Evolution**: Future versions will use adaptive buffer sizing based on:
+/// - Connection bandwidth detection
+/// - Available system memory
+/// - Traffic patterns (bulk transfer vs request/response)
 pub const DEFAULT_BUFFER_SIZE: usize = super::canonical_defaults::performance::NETWORK_BUFFER_SIZE;
 
 // ==================== PORT CONSTANTS ====================

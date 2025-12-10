@@ -10,11 +10,22 @@
 
 // Core modules
 pub mod adaptive_backend; // ✅ Adaptive ZFS: system or internal
+
+/// Storage backends (S3, Azure, GCS, etc.)
+pub mod backends;
+
+/// Command execution module for ZFS commands
 pub mod command;
+
 pub mod dataset;
+
+/// Error types and error handling for ZFS operations
 pub mod error;
+
 pub mod pool;
 pub mod pool_helpers;
+
+/// Core type definitions for ZFS operations
 pub mod types;
 
 // Performance and optimization
@@ -29,12 +40,24 @@ pub mod zero_cost_zfs_operations;
 pub mod health;
 #[cfg(test)]
 mod health_tests;
+
+#[cfg(test)]
+mod zfs_edge_cases_tests; // Dec 10, 2025 - Comprehensive edge case tests
+
+/// Metrics collection and reporting for ZFS operations
 pub mod metrics;
+
+/// Production readiness validation and operational checks
 pub mod production_readiness;
 #[cfg(test)]
 mod production_readiness_tests;
 
 // Real operations module (re-export for compatibility)
+/// Real ZFS operations module - production implementations
+///
+/// This module contains actual ZFS command execution and native ZFS operations.
+/// It provides the production-ready implementations of ZFS functionality including
+/// pool management, dataset operations, and snapshot handling.
 pub mod real_zfs_operations {
     pub use crate::production_readiness::RealZfsOperations;
 }
@@ -62,6 +85,10 @@ pub mod config;
 
 // Development and testing
 pub mod byob;
+/// Development environment configuration and helpers
+///
+/// This module provides development-time helpers and configurations for working
+/// with ZFS in development environments where actual ZFS may not be available.
 pub mod dev_environment;
 
 // Performance engine

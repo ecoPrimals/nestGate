@@ -27,15 +27,35 @@
 use serde::{Deserialize, Serialize};
 
 // Import all test configuration modules
+
+/// Chaos engineering and fault injection test configurations
 pub mod chaos;
+
+/// End-to-end integration test configurations
 pub mod e2e;
+
+/// Test environment setup and configuration
 pub mod environment;
+
+/// Global test settings and defaults
 pub mod global;
+
+/// Integration test configurations
 pub mod integration;
+
+/// Load and stress testing configurations
 pub mod load;
+
+/// Mock and stub configurations for testing
 pub mod mocking;
+
+/// Performance and benchmark test configurations
 pub mod performance;
+
+/// Security and authentication test configurations
 pub mod security;
+
+/// Unit test configurations and helpers
 pub mod unit;
 
 // Re-export all configuration types
@@ -157,9 +177,17 @@ impl CanonicalTestConfigs {
 
 // ==================== BACKWARD COMPATIBILITY ALIASES ====================
 
-// Backward compatibility alias for existing TestConfig usage
+/// Backward compatibility alias for existing TestConfig usage
+///
+/// **Deprecated**: Use `CanonicalTestConfigs` directly instead
 pub type TestConfig = CanonicalTestConfigs;
-// Backward compatibility alias for UnifiedTestConfig
+
+/// Backward compatibility alias for UnifiedTestConfig
+///
+/// **Deprecated**: Use `CanonicalTestConfigs` directly instead
 pub type UnifiedTestConfig = CanonicalTestConfigs;
-// Backward compatibility alias for TestConfigs
+
+/// Backward compatibility alias for TestConfigs
+///
+/// **Deprecated**: Use `CanonicalTestConfigs` directly instead
 pub type TestConfigs = CanonicalTestConfigs;

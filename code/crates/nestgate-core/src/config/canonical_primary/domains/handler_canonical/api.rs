@@ -117,18 +117,25 @@ impl Default for RateLimitHandlerConfig {
 }
 
 impl ApiHandlerConfig {
+    /// Creates a production-optimized configuration
     #[must_use]
     pub fn production_optimized() -> Self {
         Self::default()
     }
+
+    /// Creates a development-optimized configuration
     #[must_use]
     pub fn development_optimized() -> Self {
         Self::default()
     }
+
+    /// Creates a high-performance configuration
     #[must_use]
     pub fn high_performance() -> Self {
         Self::default()
     }
+
+    /// Merges two configurations, preferring values from self
     #[must_use]
     pub fn merge(self, _other: Self) -> Self {
         self

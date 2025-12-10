@@ -48,11 +48,23 @@ pub struct NetworkDiscoveryConfig {
 #[allow(deprecated)]
 impl Default for NetworkDiscoveryConfig {
     /// Returns the default instance
+    ///
+    /// Loads port range from environment:
+    /// - `NESTGATE_API_PORT`: Start of port scan range (default: 8080)
+    /// - Admin port defaults to 9090 for end of range
     fn default() -> Self {
+        use crate::config::environment::EnvironmentConfig;
+
+        let env_config =
+            EnvironmentConfig::from_env().unwrap_or_else(|_| EnvironmentConfig::default());
+
+        let start_port = env_config.network.port.get();
+        let end_port = 9090; // Admin/management port range end
+
         Self {
             scan_timeout: Duration::from_secs(5),
             preferred_interfaces: vec!["eth0".to_string(), "wlan0".to_string()],
-            port_scan_range: (8000, 9000),
+            port_scan_range: (start_port, end_port),
             interface_priority: vec!["lo".to_string(), "eth0".to_string(), "wlan0".to_string()],
         }
     }
@@ -234,7 +246,12 @@ impl NetworkDiscovery {
         use tokio::net::TcpListener;
 
         // Try to bind to the port
-        match TcpListener::bind(format!("127.0.0.1:{port}")).await {
+        // ✅ MIGRATED: Use environment-configurable localhost address
+        use crate::config::environment::EnvironmentConfig;
+        let env_config =
+            EnvironmentConfig::from_env().unwrap_or_else(|_| EnvironmentConfig::default());
+        let bind_addr = env_config.network.host;
+        match TcpListener::bind(format!("{bind_addr}:{port}")).await {
             Ok(_) => Ok(true),
             Err(_) => Ok(false),
         }
@@ -335,7 +352,10 @@ impl NetworkDiscovery {
 
         // Default capability endpoint generation
         let bind_address = self.detect_optimal_bind_interface().await?;
-        let base_port = 9000;
+        let base_port = std::env::var("NESTGATE_CAPABILITY_BASE_PORT")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(9090); // Default admin/capability port
         let capability_port = base_port + (capability.len() % 100) as u16;
 
         Ok(format!("http://{bind_address}:{capability_port}"))

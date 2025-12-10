@@ -54,6 +54,7 @@ impl Default for SecurityEnvironmentConfig {
 }
 
 impl EnvironmentSecuritySettings {
+    /// Returns security settings optimized for development environment
     #[must_use]
     pub fn development() -> Self {
         Self {
@@ -69,6 +70,7 @@ impl EnvironmentSecuritySettings {
         }
     }
 
+    /// Returns security settings optimized for staging environment
     #[must_use]
     pub fn staging() -> Self {
         Self {
@@ -84,6 +86,7 @@ impl EnvironmentSecuritySettings {
         }
     }
 
+    /// Returns security settings optimized for production environment
     #[must_use]
     pub fn production() -> Self {
         Self {
@@ -101,18 +104,22 @@ impl EnvironmentSecuritySettings {
 }
 
 impl SecurityEnvironmentConfig {
+    /// Returns a production-hardened security environment configuration
     #[must_use]
     pub fn production_hardened() -> Self {
         Self::default()
     }
+    /// Returns a development-optimized security environment configuration
     #[must_use]
     pub fn development_optimized() -> Self {
         Self::default()
     }
+    /// Returns a compliance-focused security environment configuration
     #[must_use]
     pub fn compliance_focused() -> Self {
         Self::default()
     }
+    /// Merges this configuration with another
     #[must_use]
     pub fn merge(self, _other: Self) -> Self {
         self

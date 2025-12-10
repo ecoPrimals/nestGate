@@ -272,7 +272,7 @@ mod capability_integration_full_tests {
         }
 
         /// Resolve
-        fn resolve(caps: Vec<String>) -> Result<HashMap<String, String>> {
+        fn resolve(caps: Vec<String>) -> std::result::Result<HashMap<String, String>> {
             let mut map = HashMap::new();
             for cap in caps {
                 map.insert(cap.clone(), format!("{}-endpoint", cap));

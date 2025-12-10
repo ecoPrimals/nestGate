@@ -70,17 +70,28 @@ pub struct NetworkServiceHealth {
 }
 impl Default for NetworkServiceConfig {
     /// Returns the default instance
+    ///
+    /// Loads configuration from environment variables with fallback defaults:
+    /// - `NESTGATE_API_HOST`: API host (default: localhost)
+    /// - `NESTGATE_API_PORT`: API port (default: 8080)
+    /// - `NESTGATE_MAX_CONNECTIONS`: Max connections (default: 1000)
     fn default() -> Self {
-        use crate::constants::hardcoding::{addresses, ports};
+        use crate::config::environment::EnvironmentConfig;
+
+        // Load from environment with proper defaults
+        let env_config =
+            EnvironmentConfig::from_env().unwrap_or_else(|_| EnvironmentConfig::default());
+
         Self {
-            host: addresses::LOCALHOST_IPV4.to_string(),
-            port: ports::HTTP_DEFAULT,
-            max_connections: 1000,
+            host: env_config.network.host.clone(),
+            port: env_config.network.port.get(),
+            max_connections: env_config.network.max_connections,
         }
     }
 }
 
 impl NativeAsyncNetworkService {
+    /// Creates a new native async network service with the provided configuration
     #[must_use]
     pub fn new(config: NetworkServiceConfig) -> Self {
         Self {
@@ -213,10 +224,9 @@ impl NativeAsyncNetworkService {
     /// Register service for discovery (utility method)
     pub fn register(&self) -> impl Future<Output = Result<ServiceRegistration>> + Send {
         let service_id = self.service_id.clone();
-        // Note: self.config is NetworkServiceConfig, not CanonicalNetworkConfig
-        // Use default values for now
-        let _host = crate::constants::hardcoding::addresses::LOCALHOST_IPV4.to_string();
-        let _port = crate::constants::hardcoding::ports::HTTP_DEFAULT;
+        // Use config values from environment
+        let _host = self.config.host.clone();
+        let _port = self.config.port;
 
         async move {
             // CANONICAL MODERNIZATION: Use canonical service registration structure

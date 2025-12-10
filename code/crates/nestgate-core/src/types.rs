@@ -4,8 +4,8 @@
 use serde::{Deserialize, Serialize};
 use std::fmt::{self, Display};
 
-#[cfg(test)]
-mod types_tests;
+// Tests moved to tests/comprehensive_type_tests.rs for better organization
+// This complies with 1000-line limit and separates concerns
 
 /// Allocation status for resources
 ///
@@ -18,8 +18,9 @@ mod types_tests;
 /// * `Inactive` - Resource is allocated but not currently in use
 /// * `Pending` - Resource allocation is pending/in progress
 /// * `Failed` - Resource allocation has failed
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+///
 /// Status values for Allocation
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum AllocationStatus {
     /// Resource is currently allocated and in use
     Active,

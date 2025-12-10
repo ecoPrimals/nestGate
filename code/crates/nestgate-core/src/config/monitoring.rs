@@ -268,10 +268,18 @@ impl Default for MonitoringConfig {
 
 impl Default for PrometheusConfig {
     /// Returns the default instance
+    ///
+    /// Loads Prometheus configuration from environment:
+    /// - `NESTGATE_METRICS_PORT`: Prometheus metrics port (default: 9090)
     fn default() -> Self {
+        use crate::config::environment::EnvironmentConfig;
+
+        let env_config =
+            EnvironmentConfig::from_env().unwrap_or_else(|_| EnvironmentConfig::default());
+
         Self {
             enabled: true,
-            port: 9090, // Standard Prometheus port
+            port: env_config.monitoring.metrics_port.get(), // Standard Prometheus port
         }
     }
 }

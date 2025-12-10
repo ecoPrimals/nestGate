@@ -46,6 +46,7 @@ pub enum StorageBackendType {
     Memory,
     /// Distributed
     Distributed,
+    /// Custom storage backend type
     Custom(String),
 }
 
@@ -69,51 +70,84 @@ pub struct StorageBackend {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Storagebackendspecificconfig
+/// Storage backend specific configuration
 pub enum StorageBackendSpecificConfig {
-    /// Filesystem
+    /// Filesystem backend configuration
     Filesystem {
+        /// Root path for filesystem storage
         root_path: PathBuf,
+        /// File permissions (Unix mode)
         permissions: u32,
+        /// Whether to create directories if they don't exist
         create_dirs: bool,
     },
-    /// Zfs
+    /// ZFS backend configuration
     Zfs {
+        /// ZFS pool name
         pool_name: String,
+        /// Dataset prefix for namespacing
         dataset_prefix: String,
+        /// ZFS compression algorithm
         compression: ZfsCompression,
+        /// Enable ZFS deduplication
         deduplication: bool,
     },
+    /// S3-compatible storage configuration
     S3Compatible {
+        /// S3 endpoint URL
         endpoint: String,
+        /// AWS region
         region: String,
+        /// S3 bucket name
         bucket: String,
+        /// AWS access key ID
         access_key_id: String,
+        /// AWS secret access key
         secret_access_key: String,
+        /// Use SSL/TLS for connections
         use_ssl: bool,
     },
+    /// Azure Blob Storage configuration
     Azure {
+        /// Azure storage account name
         account_name: String,
+        /// Azure storage account key
         account_key: String,
+        /// Azure blob container name
         container: String,
+        /// Optional Azure endpoint suffix (e.g., for sovereign clouds)
         endpoint_suffix: Option<String>,
     },
+    /// Google Cloud Storage configuration
     Gcs {
+        /// GCP project ID
         project_id: String,
+        /// GCS bucket name
         bucket: String,
+        /// Path to service account credentials JSON file
         credentials_path: Option<PathBuf>,
+        /// Service account key as JSON string
         service_account_key: Option<String>,
     },
+    /// In-memory storage configuration
     Memory {
+        /// Maximum memory size in bytes
         max_size: usize,
+        /// Memory eviction policy
         eviction_policy: MemoryEvictionPolicy,
     },
+    /// Distributed storage configuration
     Distributed {
+        /// Distributed storage nodes
         nodes: Vec<DistributedStorageNode>,
+        /// Consistency level for distributed operations
         consistency_level: ConsistencyLevel,
+        /// Replication factor across nodes
         replication_factor: u32,
     },
+    /// Custom storage backend configuration
     Custom {
+        /// Custom JSON configuration
         config: serde_json::Value,
     },
 }
@@ -349,12 +383,17 @@ pub struct RoutingRule {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Routingcondition
+/// Routing condition for backend selection
 pub enum RoutingCondition {
+    /// Match based on path prefix
     PathPrefix(String),
+    /// Match based on file extension
     FileExtension(String),
+    /// Match based on file size
     FileSize(FileSizeCondition),
+    /// Match based on content type
     ContentType(String),
+    /// Custom routing condition
     Custom(String),
 }
 

@@ -99,27 +99,27 @@ impl CanonicalService for MockService {
     type Error = TestError;
 
     /// Start
-    async fn start(&self) -> Result<(), Self::Error> {
+    async fn start(&self) -> std::result::Result<(), Self::Error> {
         Ok(())
     }
 
     /// Stop
-    async fn stop(&self) -> Result<(), Self::Error> {
+    async fn stop(&self) -> std::result::Result<(), Self::Error> {
         Ok(())
     }
 
     /// Checks if Healthy
-    async fn is_healthy(&self) -> Result<Self::Health, Self::Error> {
+    async fn is_healthy(&self) -> std::result::Result<Self::Health, Self::Error> {
         Ok(self.health.clone())
     }
 
     /// Gets Metrics
-    async fn get_metrics(&self) -> Result<Self::Metrics, Self::Error> {
+    async fn get_metrics(&self) -> std::result::Result<Self::Metrics, Self::Error> {
         Ok(self.metrics.clone())
     }
 
     /// Capabilities
-    async fn capabilities(&self) -> Result<ServiceCapabilities, Self::Error> {
+    async fn capabilities(&self) -> std::result::Result<ServiceCapabilities, Self::Error> {
         Ok(ServiceCapabilities {
             can_scale: true,
             can_migrate: false,
@@ -241,25 +241,25 @@ impl CanonicalProvider<String> for MockProvider {
     type Metadata = HashMap<String, String>;
 
     /// Provide
-    async fn provide(&self, _config: Self::Config) -> Result<String, Self::Error> {
+    async fn provide(&self, _config: Self::Config) -> std::result::Result<String, Self::Error> {
         Ok("provided-value".to_string())
     }
 
     /// Configure
-    async fn configure(&mut self, config: Self::Config) -> Result<(), Self::Error> {
+    async fn configure(&mut self, config: Self::Config) -> std::result::Result<(), Self::Error> {
         self.config = config;
         Ok(())
     }
 
     /// Metadata
-    async fn metadata(&self) -> Result<Self::Metadata, Self::Error> {
+    async fn metadata(&self) -> std::result::Result<Self::Metadata, Self::Error> {
         let mut meta = HashMap::new();
         meta.insert("name".to_string(), self.config.name.clone());
         Ok(meta)
     }
 
     /// Health Check
-    async fn health_check(&self) -> Result<ProviderHealth, Self::Error> {
+    async fn health_check(&self) -> std::result::Result<ProviderHealth, Self::Error> {
         Ok(ProviderHealth {
             is_healthy: true,
             last_check: SystemTime::now(),
@@ -268,7 +268,7 @@ impl CanonicalProvider<String> for MockProvider {
     }
 
     /// Capabilities
-    async fn capabilities(&self) -> Result<ProviderCapabilities, Self::Error> {
+    async fn capabilities(&self) -> std::result::Result<ProviderCapabilities, Self::Error> {
         use crate::unified_enums::service_types::UnifiedServiceType;
         Ok(ProviderCapabilities {
             supported_types: vec![UnifiedServiceType::Generic],

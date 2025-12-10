@@ -299,6 +299,7 @@ fn test_health_check_frequency() {
 fn test_health_degradation_detection() {
     // Test detecting health degradation
     #[derive(Debug, PartialEq, PartialOrd)]
+    #[allow(dead_code)]
     enum HealthLevel {
         Online = 4,
         Degraded = 3,
@@ -326,6 +327,7 @@ fn test_health_degradation_detection() {
 fn test_pool_scrub_status() {
     // Test pool scrub status tracking
     #[derive(Debug, PartialEq)]
+    #[allow(dead_code)]
     enum ScrubStatus {
         NotRunning,
         InProgress,
@@ -477,7 +479,7 @@ fn test_throughput_calculation() {
 #[test]
 fn test_latency_percentiles() {
     // Test latency percentile calculations
-    let mut latencies = vec![1.0, 2.0, 3.0, 5.0, 8.0, 10.0, 15.0, 20.0, 25.0, 50.0];
+    let mut latencies = [1.0, 2.0, 3.0, 5.0, 8.0, 10.0, 15.0, 20.0, 25.0, 50.0];
     latencies.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
     // Calculate P50 (median) - for 10 elements, this is index 5
@@ -611,7 +613,7 @@ async fn test_async_pool_operations() {
     tokio::time::sleep(std::time::Duration::from_millis(10)).await;
 
     let pool_name = "test-pool";
-    assert!(!pool_name.is_empty());
+    assert_eq!(pool_name, "test-pool");
 }
 
 #[tokio::test]

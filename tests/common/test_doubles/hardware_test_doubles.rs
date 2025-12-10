@@ -13,6 +13,7 @@ pub struct HardwareTestDouble {
     config: TestDoubleConfig,
     detected_hardware: Arc<Mutex<HashMap<String, HardwareInfo>>>,
     operations: Arc<Mutex<Vec<String>>>,
+    pub call_count: Arc<Mutex<u32>>, // Added for compatibility
 }
 
 #[derive(Debug, Clone)]
@@ -35,6 +36,7 @@ impl HardwareTestDouble {
             config,
             detected_hardware: Arc::new(Mutex::new(HashMap::new())),
             operations: Arc::new(Mutex::new(Vec::new())),
+            call_count: Arc::new(Mutex::new(0)),
         }
     }
 
@@ -68,7 +70,10 @@ impl HardwareTestDouble {
     }
 
     pub fn get_operations(&self) -> Vec<String> {
-        self.operations.lock()?.clone()
+        self.operations
+            .lock()
+            .map(|ops| ops.clone())
+            .unwrap_or_default()
     }
 
     async fn record_operation(&self, operation: &str) -> Result<(), HardwareTestError> {
@@ -99,13 +104,44 @@ impl MockHardwareForTesting {
             .record_operation(&format!("initialize_hardware:{}", device_type))
             .await
     }
+
+    /// Initialize the mock hardware
+    pub fn initialize(&mut self) -> Result<(), HardwareTestError> {
+        Ok(())
+    }
+
+    /// Cleanup the mock hardware
+    pub fn cleanup(&mut self) -> Result<(), String> {
+        self.reset()
+    }
+
+    /// Reset hardware mock to initial state
+    pub fn reset(&mut self) -> Result<(), String> {
+        // Reset the test double state
+        if let Ok(mut ops) = self.test_double.operations.lock() {
+            ops.clear();
+        }
+        if let Ok(mut calls) = self.test_double.call_count.lock() {
+            *calls = 0;
+        }
+        Ok(())
+    }
 }
 
-#[derive(Debug, thiserror::Error)]
+// Simple error type for test doubles - no thiserror needed in tests
+#[derive(Debug)]
 pub enum HardwareTestError {
-    #[error("Simulated hardware failure: {0}")]
     SimulatedFailure(String),
-
-    #[error("Hardware not detected")]
     NotDetected,
 }
+
+impl std::fmt::Display for HardwareTestError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::SimulatedFailure(msg) => write!(f, "Simulated hardware failure: {}", msg),
+            Self::NotDetected => write!(f, "Hardware not detected"),
+        }
+    }
+}
+
+impl std::error::Error for HardwareTestError {}

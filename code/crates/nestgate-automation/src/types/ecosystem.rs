@@ -25,6 +25,11 @@ pub struct EcosystemConfig {
 // ServiceInfo definition removed - use canonical_types::service::ServiceInfo
 
 /// Capability provider for ecosystem integration
+///
+/// # Primal Sovereignty
+///
+/// Providers are discovered at runtime via capability discovery, not hardcoded.
+/// Use `from_discovery()` or `builder()` to create instances with explicit configuration.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 /// Capabilityprovider
 pub struct CapabilityProvider {
@@ -34,13 +39,63 @@ pub struct CapabilityProvider {
     pub name: String,
     /// Capabilities
     pub capabilities: Vec<String>,
-    /// Endpoint
+    /// Endpoint (discovered at runtime, not hardcoded)
     pub endpoint: String,
     /// Status
     pub status: ProviderStatus,
     /// Additional metadata key-value pairs
     pub metadata: HashMap<String, String>,
 }
+
+impl CapabilityProvider {
+    /// Create a new provider with explicit configuration
+    ///
+    /// # Primal Sovereignty
+    ///
+    /// This enforces explicit configuration - no hardcoded endpoints.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use nestgate_automation::types::ecosystem::{CapabilityProvider, ProviderStatus};
+    /// # use std::collections::HashMap;
+    /// let provider = CapabilityProvider::new(
+    ///     "provider-001",
+    ///     "Storage Provider",
+    ///     vec!["storage".to_string()],
+    ///     "http://192.168.1.100:8080", // Discovered, not hardcoded
+    /// );
+    /// ```
+    pub fn new(
+        id: impl Into<String>,
+        name: impl Into<String>,
+        capabilities: Vec<String>,
+        endpoint: impl Into<String>,
+    ) -> Self {
+        Self {
+            id: id.into(),
+            name: name.into(),
+            capabilities,
+            endpoint: endpoint.into(),
+            status: ProviderStatus::Active,
+            metadata: HashMap::new(),
+        }
+    }
+
+    /// Create a test provider with explicit configuration
+    ///
+    /// **Test-only**: For production, use capability discovery.
+    #[cfg(test)]
+    pub fn test_default() -> Self {
+        Self::new(
+            "test-provider",
+            "Test Provider",
+            vec!["storage".to_string()],
+            "http://localhost:8080", // Explicit for tests
+        )
+    }
+}
+
 /// Provider status enumeration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 /// Status values for Provider
@@ -53,19 +108,6 @@ pub enum ProviderStatus {
     Error,
     /// Unknown
     Unknown,
-}
-impl Default for CapabilityProvider {
-    /// Returns the default instance
-    fn default() -> Self {
-        Self {
-            id: "default".to_string(),
-            name: "Default Provider".to_string(),
-            capabilities: vec!["storage".to_string()],
-            endpoint: nestgate_core::constants::canonical_defaults::network::build_api_url(),
-            status: ProviderStatus::Active,
-            metadata: HashMap::new(),
-        }
-    }
 }
 
 #[cfg(test)]
@@ -107,13 +149,19 @@ mod tests {
     }
 
     #[test]
-    fn test_capability_provider_default() {
-        let provider = CapabilityProvider::default();
+    fn test_capability_provider_new() {
+        let provider = CapabilityProvider::new(
+            "provider-001",
+            "Storage Provider",
+            vec!["storage".to_string()],
+            "http://192.168.1.100:8080",
+        );
 
-        assert_eq!(provider.id, "default");
-        assert_eq!(provider.name, "Default Provider");
+        assert_eq!(provider.id, "provider-001");
+        assert_eq!(provider.name, "Storage Provider");
         assert_eq!(provider.capabilities.len(), 1);
         assert_eq!(provider.capabilities[0], "storage");
+        assert_eq!(provider.endpoint, "http://192.168.1.100:8080");
     }
 
     #[test]
@@ -144,10 +192,8 @@ mod tests {
 
     #[test]
     fn test_provider_status_active() {
-        let provider = CapabilityProvider {
-            status: ProviderStatus::Active,
-            ..Default::default()
-        };
+        let mut provider = CapabilityProvider::test_default();
+        provider.status = ProviderStatus::Active;
 
         match provider.status {
             ProviderStatus::Active => {}
@@ -157,10 +203,8 @@ mod tests {
 
     #[test]
     fn test_provider_status_inactive() {
-        let provider = CapabilityProvider {
-            status: ProviderStatus::Inactive,
-            ..Default::default()
-        };
+        let mut provider = CapabilityProvider::test_default();
+        provider.status = ProviderStatus::Inactive;
 
         match provider.status {
             ProviderStatus::Inactive => {}
@@ -170,10 +214,8 @@ mod tests {
 
     #[test]
     fn test_provider_status_error() {
-        let provider = CapabilityProvider {
-            status: ProviderStatus::Error,
-            ..Default::default()
-        };
+        let mut provider = CapabilityProvider::test_default();
+        provider.status = ProviderStatus::Error;
 
         match provider.status {
             ProviderStatus::Error => {}
@@ -183,7 +225,7 @@ mod tests {
 
     #[test]
     fn test_provider_serialization() {
-        let provider = CapabilityProvider::default();
+        let provider = CapabilityProvider::test_default();
         let json = serde_json::to_string(&provider).expect("Failed to serialize");
         let deserialized: CapabilityProvider =
             serde_json::from_str(&json).expect("Failed to deserialize");
@@ -191,6 +233,7 @@ mod tests {
         assert_eq!(provider.id, deserialized.id);
         assert_eq!(provider.name, deserialized.name);
         assert_eq!(provider.capabilities, deserialized.capabilities);
+        assert_eq!(provider.endpoint, deserialized.endpoint);
     }
 
     #[test]

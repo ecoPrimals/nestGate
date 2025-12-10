@@ -1,3 +1,34 @@
+//! # Services Configuration
+//!
+//! ## ⚠️ MIGRATION TO CAPABILITY-BASED DISCOVERY
+//!
+//! This module is in transition from primal-name-based to capability-based service discovery.
+//!
+//! ### Deprecated Pattern (Primal Names):
+//! ```rust,ignore
+//! // ❌ DEPRECATED: Hardcoded primal names
+//! let songbird_url = config.get_songbird_url();
+//! let beardog_url = config.get_beardog_url();
+//! ```
+//!
+//! ### New Pattern (Capability-Based):
+//! ```rust,ignore
+//! // ✅ CORRECT: Capability-based discovery
+//! let orchestration_url = config.get_capability_url("orchestration");
+//! let security_url = config.get_capability_url("security");
+//! ```
+//!
+//! ### Environment Variables:
+//! - **Legacy (supported)**: `NESTGATE_SONGBIRD_URL`, `NESTGATE_BEARDOG_URL`, etc.
+//! - **New (preferred)**: `NESTGATE_CAPABILITY_ORCHESTRATION`, `NESTGATE_CAPABILITY_SECURITY`, etc.
+//!
+//! ### Migration Timeline:
+//! - **v0.11.x**: Both patterns supported (backward compatibility)
+//! - **v0.12.x**: Deprecation warnings for primal-specific methods
+//! - **v0.13.x**: Primal-specific methods may be removed
+//!
+//! Use `get_capability_url()` for new code.
+
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -13,12 +44,16 @@ pub struct ServicesConfig {
     metrics_url: Option<String>,
     config_url: Option<String>,
 
-    // Primal service URLs
+    // ⚠️ DEPRECATED: Primal-specific URLs (use capability-based discovery instead)
+    // Kept for backward compatibility only
     songbird_url: Option<String>,
     toadstool_url: Option<String>,
     beardog_url: Option<String>,
     squirrel_url: Option<String>,
     biomeos_url: Option<String>,
+
+    // Capability-based service URLs (NESTGATE_CAPABILITY_*)
+    capabilities: HashMap<String, String>,
 
     // External service URLs (dynamic NESTGATE_EXTERNAL_*)
     external_services: HashMap<String, String>,
@@ -41,6 +76,7 @@ impl ServicesConfig {
             beardog_url: None,
             squirrel_url: None,
             biomeos_url: None,
+            capabilities: HashMap::new(),
             external_services: HashMap::new(),
         }
     }
@@ -57,18 +93,57 @@ impl ServicesConfig {
         config.metrics_url = std::env::var("NESTGATE_METRICS_URL").ok();
         config.config_url = std::env::var("NESTGATE_CONFIG_URL").ok();
 
-        // Primal services
+        // Legacy primal services (deprecated, but supported for backward compatibility)
         config.songbird_url = std::env::var("NESTGATE_SONGBIRD_URL").ok();
         config.toadstool_url = std::env::var("NESTGATE_TOADSTOOL_URL").ok();
         config.beardog_url = std::env::var("NESTGATE_BEARDOG_URL").ok();
         config.squirrel_url = std::env::var("NESTGATE_SQUIRREL_URL").ok();
         config.biomeos_url = std::env::var("NESTGATE_BIOMEOS_URL").ok();
 
+        // Scan for capability-based NESTGATE_CAPABILITY_* entries (NEW)
+        for (key, value) in std::env::vars() {
+            if let Some(name) = key.strip_prefix("NESTGATE_CAPABILITY_") {
+                config.capabilities.insert(name.to_lowercase(), value);
+            }
+        }
+
         // Scan for dynamic NESTGATE_EXTERNAL_* entries
         for (key, value) in std::env::vars() {
             if let Some(name) = key.strip_prefix("NESTGATE_EXTERNAL_") {
                 config.external_services.insert(name.to_lowercase(), value);
             }
+        }
+
+        // Map legacy primal names to capabilities (automatic migration)
+        if let Some(url) = &config.songbird_url {
+            config
+                .capabilities
+                .entry("orchestration".to_string())
+                .or_insert_with(|| url.clone());
+        }
+        if let Some(url) = &config.beardog_url {
+            config
+                .capabilities
+                .entry("security".to_string())
+                .or_insert_with(|| url.clone());
+        }
+        if let Some(url) = &config.squirrel_url {
+            config
+                .capabilities
+                .entry("ai".to_string())
+                .or_insert_with(|| url.clone());
+        }
+        if let Some(url) = &config.toadstool_url {
+            config
+                .capabilities
+                .entry("compute".to_string())
+                .or_insert_with(|| url.clone());
+        }
+        if let Some(url) = &config.biomeos_url {
+            config
+                .capabilities
+                .entry("ecosystem".to_string())
+                .or_insert_with(|| url.clone());
         }
 
         config
@@ -145,29 +220,96 @@ impl ServicesConfig {
         self.health_url.as_deref()
     }
 
-    // Primal service accessors (all optional)
+    // ═══════════════════════════════════════════════════════════════════
+    // CAPABILITY-BASED SERVICE DISCOVERY (NEW - Use These!)
+    // ═══════════════════════════════════════════════════════════════════
+
+    /// Get service URL by capability type (NEW - Preferred Method)
+    ///
+    /// **CAPABILITY-BASED DISCOVERY**: Use this instead of primal-specific methods.
+    /// Discovers services by WHAT THEY DO, not WHO they are.
+    ///
+    /// # Arguments
+    /// * `capability` - Capability type: "orchestration", "security", "ai", "compute", "storage", "ecosystem"
+    ///
+    /// # Example
+    /// ```ignore
+    /// // ✅ CORRECT: Capability-based
+    /// let security_url = config.get_capability_url("security");
+    /// let orchestration_url = config.get_capability_url("orchestration");
+    ///
+    /// // ❌ DEPRECATED: Don't use primal-specific methods
+    /// // let beardog_url = config.get_beardog_url();
+    /// ```
+    ///
+    /// # Returns
+    /// `Some(url)` if the capability is configured, `None` otherwise
+    pub fn get_capability_url(&self, capability: &str) -> Option<String> {
+        self.capabilities.get(capability).cloned()
+    }
+
+    /// Get all configured capabilities
+    ///
+    /// Returns a map of capability types to their URLs
+    pub fn get_all_capabilities(&self) -> &HashMap<String, String> {
+        &self.capabilities
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // DEPRECATED: Primal-specific service accessors (Use get_capability_url instead!)
+    // ═══════════════════════════════════════════════════════════════════
 
     /// Gets Songbird Url
+    ///
+    /// **⚠️ DEPRECATED**: Use `get_capability_url("orchestration")` instead
+    #[deprecated(
+        since = "0.12.0",
+        note = "Use get_capability_url(\"orchestration\") for capability-based discovery"
+    )]
     pub fn get_songbird_url(&self) -> Option<&str> {
         self.songbird_url.as_deref()
     }
 
     /// Gets Toadstool Url
+    ///
+    /// **⚠️ DEPRECATED**: Use `get_capability_url("compute")` instead
+    #[deprecated(
+        since = "0.12.0",
+        note = "Use get_capability_url(\"compute\") for capability-based discovery"
+    )]
     pub fn get_toadstool_url(&self) -> Option<&str> {
         self.toadstool_url.as_deref()
     }
 
     /// Gets Beardog Url
+    ///
+    /// **⚠️ DEPRECATED**: Use `get_capability_url("security")` instead
+    #[deprecated(
+        since = "0.12.0",
+        note = "Use get_capability_url(\"security\") for capability-based discovery"
+    )]
     pub fn get_beardog_url(&self) -> Option<&str> {
         self.beardog_url.as_deref()
     }
 
     /// Gets Squirrel Url
+    ///
+    /// **⚠️ DEPRECATED**: Use `get_capability_url("ai")` instead
+    #[deprecated(
+        since = "0.12.0",
+        note = "Use get_capability_url(\"ai\") for capability-based discovery"
+    )]
     pub fn get_squirrel_url(&self) -> Option<&str> {
         self.squirrel_url.as_deref()
     }
 
     /// Gets Biomeos Url
+    ///
+    /// **⚠️ DEPRECATED**: Use `get_capability_url("ecosystem")` instead
+    #[deprecated(
+        since = "0.12.0",
+        note = "Use get_capability_url(\"ecosystem\") for capability-based discovery"
+    )]
     pub fn get_biomeos_url(&self) -> Option<&str> {
         self.biomeos_url.as_deref()
     }
@@ -216,27 +358,72 @@ impl ServicesConfig {
         self
     }
 
+    /// Builder method to set capability URL (NEW - Preferred)
+    ///
+    /// # Example
+    /// ```ignore
+    /// let config = ServicesConfig::new()
+    ///     .with_capability("orchestration", "http://orchestration:8080")
+    ///     .with_capability("security", "http://security:9000");
+    /// ```
+    pub fn with_capability(
+        mut self,
+        capability: impl Into<String>,
+        url: impl Into<String>,
+    ) -> Self {
+        self.capabilities.insert(capability.into(), url.into());
+        self
+    }
+
     /// Builder method to set Songbird Url
+    ///
+    /// **⚠️ DEPRECATED**: Use `with_capability("orchestration", url)` instead
+    #[deprecated(
+        since = "0.12.0",
+        note = "Use with_capability(\"orchestration\", url) for capability-based discovery"
+    )]
     pub fn with_songbird_url(mut self, url: String) -> Self {
-        self.songbird_url = Some(url);
+        self.songbird_url = Some(url.clone());
+        self.capabilities.insert("orchestration".to_string(), url);
         self
     }
 
     /// Builder method to set Toadstool Url
+    ///
+    /// **⚠️ DEPRECATED**: Use `with_capability("compute", url)` instead
+    #[deprecated(
+        since = "0.12.0",
+        note = "Use with_capability(\"compute\", url) for capability-based discovery"
+    )]
     pub fn with_toadstool_url(mut self, url: String) -> Self {
-        self.toadstool_url = Some(url);
+        self.toadstool_url = Some(url.clone());
+        self.capabilities.insert("compute".to_string(), url);
         self
     }
 
     /// Builder method to set Beardog Url
+    ///
+    /// **⚠️ DEPRECATED**: Use `with_capability("security", url)` instead
+    #[deprecated(
+        since = "0.12.0",
+        note = "Use with_capability(\"security\", url) for capability-based discovery"
+    )]
     pub fn with_beardog_url(mut self, url: String) -> Self {
-        self.beardog_url = Some(url);
+        self.beardog_url = Some(url.clone());
+        self.capabilities.insert("security".to_string(), url);
         self
     }
 
     /// Builder method to set Squirrel Url
+    ///
+    /// **⚠️ DEPRECATED**: Use `with_capability("ai", url)` instead
+    #[deprecated(
+        since = "0.12.0",
+        note = "Use with_capability(\"ai\", url) for capability-based discovery"
+    )]
     pub fn with_squirrel_url(mut self, url: String) -> Self {
-        self.squirrel_url = Some(url);
+        self.squirrel_url = Some(url.clone());
+        self.capabilities.insert("ai".to_string(), url);
         self
     }
 
@@ -274,18 +461,24 @@ mod tests {
             "http://127.0.0.1:8080/discovery"
         );
         assert_eq!(config.get_adapter_url(), "http://127.0.0.1:8080/adapter");
-        assert!(config.get_songbird_url().is_none());
+        // ✅ MODERNIZED: Use capability-based access
+        assert!(config.get_capability_url("orchestration").is_none());
     }
 
     #[test]
     fn test_services_config_builder() {
+        // ✅ MODERNIZED: Use capability-based builder pattern
         let config = ServicesConfig::new()
             .with_discovery_url("http://discovery:8080".to_string())
-            .with_songbird_url("http://songbird:9000".to_string())
+            .with_capability("orchestration", "http://test-orchestration:9000")
             .with_external_service("custom".to_string(), "http://custom:8000".to_string());
 
         assert_eq!(config.get_discovery_url(), "http://discovery:8080");
-        assert_eq!(config.get_songbird_url(), Some("http://songbird:9000"));
+        // ✅ MODERNIZED: Check capability instead of primal name
+        assert_eq!(
+            config.get_capability_url("orchestration"),
+            Some("http://test-orchestration:9000".to_string())
+        );
         assert_eq!(
             config.get_external_service("custom"),
             Some("http://custom:8000")

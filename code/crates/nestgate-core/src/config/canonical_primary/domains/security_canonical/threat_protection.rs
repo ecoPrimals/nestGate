@@ -107,18 +107,39 @@ impl Default for MalwareProtectionConfig {
 }
 
 impl ThreatProtectionConfig {
+    /// Creates a production-hardened threat protection configuration.
+    ///
+    /// Returns the default configuration optimized for production use with
+    /// enhanced security measures.
     #[must_use]
     pub fn production_hardened() -> Self {
         Self::default()
     }
+    /// Creates a development-optimized threat protection configuration.
+    ///
+    /// Returns the default configuration suitable for development environments
+    /// with relaxed security for faster iteration.
     #[must_use]
     pub fn development_optimized() -> Self {
         Self::default()
     }
+    /// Creates a compliance-focused threat protection configuration.
+    ///
+    /// Returns the default configuration tailored for compliance requirements
+    /// with comprehensive threat detection and logging.
     #[must_use]
     pub fn compliance_focused() -> Self {
         Self::default()
     }
+    /// Merges this configuration with another, returning self unchanged.
+    ///
+    /// # Arguments
+    ///
+    /// * `_other` - The other configuration (currently ignored)
+    ///
+    /// # Returns
+    ///
+    /// Returns self without modification
     #[must_use]
     pub fn merge(self, _other: Self) -> Self {
         self

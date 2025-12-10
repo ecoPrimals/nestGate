@@ -1,38 +1,46 @@
-//! **PRIMAL DISCOVERY STUBS**
+//! **PRIMAL DISCOVERY STUBS** - Development/Testing Only
 //!
-//! Stub implementations for Universal Primal Discovery operations.
+//! ⚠️ **WARNING**: This module contains hardcoded values and should NEVER be used in production!
+//!
+//! ## ⛔ DO NOT USE IN PRODUCTION
+//!
+//! This module provides stub implementations with **hardcoded fallbacks** for testing only.
+//! Production code MUST use [`CapabilityAwareDiscovery`] which has zero hardcoding.
 //!
 //! ## Purpose
 //!
-//! Provides fallback implementations for discovery operations when full discovery is unavailable:
-//! - Service endpoint discovery
-//! - Resource limit discovery
-//! - Bind address discovery
-//! - Port allocation
-//!
-//! ## When to Use
-//!
-//! - Development on non-production environments
-//! - Testing without real service discovery infrastructure
+//! Provides fallback implementations for discovery operations **in development/test environments only**:
+//! - Unit testing without real discovery infrastructure
 //! - CI/CD pipelines
 //! - Local development
+//! - Integration tests
+//!
+//! ## ✅ Production Alternative
+//!
+//! ```rust,ignore
+//! // ❌ NEVER DO THIS IN PRODUCTION:
+//! use nestgate_core::dev_stubs::primal_discovery::discover_port;
+//! let port = discover_port("api")?;  // Returns hardcoded 8080!
+//!
+//! // ✅ PRODUCTION CODE SHOULD USE:
+//! use nestgate_core::universal_primal_discovery::production_capability_bridge::*;
+//! let discovery = CapabilityAwareDiscovery::initialize(&config).await?;
+//! let services = discovery.find_service("api").await?;  // Runtime discovery!
+//! ```
 //!
 //! ## Feature Gate
 //!
-//! Available only with `dev-stubs` feature flag.
+//! This module should be gated behind `#[cfg(test)]` or a `dev-mode` feature flag.
 //!
-//! ## Migration Note
+//! ## Deprecation Timeline
 //!
-//! **Moved**: November 10, 2025  
-//! **From**: `universal_primal_discovery/stubs.rs`  
-//! **To**: `dev_stubs/primal_discovery.rs`  
+//! - **v0.12.0** (Current): Available but deprecated, warnings added
+//! - **v0.13.0** (Q1 2026): Only available in test configuration
+//! - **v0.14.0** (Q2 2026): Removed entirely
 //!
-//! Old imports are deprecated and will be removed in v0.12.0 (May 2026).
-//!
-//! **⚠️ DEVELOPMENT ONLY**: This module is only available with `dev-stubs` feature
+//! [`CapabilityAwareDiscovery`]: crate::universal_primal_discovery::production_capability_bridge::CapabilityAwareDiscovery
 use crate::Result;
 // **MIGRATED**: Using canonical config system instead of deprecated unified_types
-use crate::capabilities::discovery::DiscoveryManager;
 #[allow(deprecated)]
 use crate::config::canonical_primary::{
     domains::network::CanonicalNetworkConfig as UnifiedNetworkConfig, NestGateCanonicalConfig,
@@ -45,6 +53,14 @@ use std::time::Duration;
 // Deprecated type alias removed - use UnifiedNetworkConfig directly
 
 /// Discover bind address for a service
+///
+/// ⚠️ **WARNING**: Returns hardcoded values! Do not use in production!
+///
+/// **Production Alternative**: Use `CapabilityAwareDiscovery::find_service()` instead.
+#[deprecated(
+    since = "0.12.0",
+    note = "Use CapabilityAwareDiscovery for production - this returns hardcoded values!"
+)]
 pub fn discover_bind_address(service_name: &str) -> Result<IpAddr> {
     match service_name {
         "api" | "web" | "http" => Ok(crate::safe_operations::safe_parse_ip_with_fallback(
@@ -67,12 +83,24 @@ pub fn discover_bind_address(service_name: &str) -> Result<IpAddr> {
     }
 }
 /// Discover endpoint for a service
+///
+/// ⚠️ **WARNING**: Returns hardcoded values! Do not use in production!
+#[deprecated(
+    since = "0.12.0",
+    note = "Use CapabilityAwareDiscovery for production - this returns hardcoded values!"
+)]
 pub fn discover_endpoint(service_name: &str) -> Result<SocketAddr> {
     let port = get_fallback_port(service_name);
     let addr = discover_bind_address(service_name)?;
     Ok(SocketAddr::new(addr, port))
 }
 /// Discover limit for a service
+///
+/// ⚠️ **WARNING**: Returns hardcoded values! Do not use in production!
+#[deprecated(
+    since = "0.12.0",
+    note = "Use CapabilityAwareDiscovery for production - this returns hardcoded values!"
+)]
 pub fn discover_limit(resource_type: &str) -> Result<usize> {
     match resource_type {
         "connections" => Ok(1000),
@@ -83,6 +111,12 @@ pub fn discover_limit(resource_type: &str) -> Result<usize> {
     }
 }
 /// Discover port for a service
+///
+/// ⚠️ **WARNING**: Returns hardcoded values! Do not use in production!
+#[deprecated(
+    since = "0.12.0",
+    note = "Use CapabilityAwareDiscovery for production - this returns hardcoded values!"
+)]
 pub fn discover_port(service_name: &str) -> Result<u16> {
     Ok(get_fallback_port(service_name))
 }
@@ -132,12 +166,16 @@ pub struct NetworkConfigAdapter {
     #[allow(dead_code)]
     config: NestGateCanonicalConfig,
     #[allow(dead_code)]
-    discovery_manager: Arc<RwLock<DiscoveryManager>>,
+    discovery_manager: Arc<RwLock<()>>, // Placeholder for capability registry
     #[allow(dead_code)]
     stats: Arc<RwLock<AdapterStats>>,
 }
 #[allow(deprecated)]
 impl NetworkConfigAdapter {
+    /// Creates a new NetworkConfigAdapter with default configuration
+    ///
+    /// # Arguments
+    /// * `service_name` - Name of the service to configure
     #[must_use]
     pub fn new(service_name: String) -> Self {
         let network_config = UnifiedNetworkConfig {
@@ -153,11 +191,12 @@ impl NetworkConfigAdapter {
         Self {
             service_name,
             config,
-            discovery_manager: Arc::new(RwLock::new(DiscoveryManager::new())),
+            discovery_manager: Arc::new(RwLock::new(())), // Placeholder
             stats: Arc::new(RwLock::new(AdapterStats::default())),
         }
     }
 
+    /// Returns a reference to the network configuration
     #[must_use]
     pub fn config(&self) -> &UnifiedNetworkConfig {
         &self.config.network
@@ -171,12 +210,19 @@ pub struct StandaloneNetworkAdapter {
     #[allow(dead_code)]
     config: NestGateCanonicalConfig,
     #[allow(dead_code)]
-    discovery_manager: Arc<RwLock<DiscoveryManager>>,
+    discovery_manager: Arc<RwLock<()>>, // Placeholder for capability registry
     #[allow(dead_code)]
     stats: Arc<RwLock<AdapterStats>>,
     endpoints: HashMap<String, SocketAddr>,
 }
 impl StandaloneNetworkAdapter {
+    /// Creates a new standalone network adapter for development/testing.
+    ///
+    /// This adapter provides a simple standalone configuration for development
+    /// environments where full service discovery is not needed.
+    ///
+    /// # Arguments
+    /// * `service_name` - The name of the service this adapter represents
     #[must_use]
     pub fn new(service_name: String) -> Self {
         let mut endpoints = HashMap::new();
@@ -189,7 +235,7 @@ impl StandaloneNetworkAdapter {
         Self {
             service_name,
             config: NestGateCanonicalConfig::default(), // Placeholder, needs proper initialization
-            discovery_manager: Arc::new(RwLock::new(DiscoveryManager::new())),
+            discovery_manager: Arc::new(RwLock::new(())), // Placeholder
             stats: Arc::new(RwLock::new(AdapterStats::default())),
             endpoints,
         }
@@ -204,11 +250,19 @@ impl StandaloneNetworkAdapter {
         discover_endpoint(service)
     }
 
+    /// Returns all configured endpoints for this adapter.
+    ///
+    /// # Returns
+    /// A map of service names to their socket addresses
     #[must_use]
     pub fn all_endpoints(&self) -> HashMap<String, SocketAddr> {
         self.endpoints.clone()
     }
 
+    /// Returns whether this adapter is operating in standalone mode.
+    ///
+    /// # Returns
+    /// Always returns `true` for the standalone adapter
     #[must_use]
     pub fn is_standalone(&self) -> bool {
         true

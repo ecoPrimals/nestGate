@@ -1,12 +1,34 @@
+//! Timeout configuration module
+//!
+//! Provides thread-safe configuration for all timeout values including connection timeouts,
+//! request timeouts, idle timeouts, keepalive intervals, and retry delays. All values are
+//! loaded from environment variables at initialization time.
+//!
+//! # Example
+//!
+//! ```rust
+//! use nestgate_core::constants::timeouts_config::TimeoutsConfig;
+//!
+//! // Load from environment
+//! let config = TimeoutsConfig::from_env();
+//! let conn_timeout = config.connection_timeout();
+//! let request_timeout = config.request_timeout();
+//!
+//! // Or build for testing
+//! let test_config = TimeoutsConfig::from_env()
+//!     .with_connection_timeout_secs(30)
+//!     .with_request_timeout_secs(60);
+//! ```
 use std::env;
 use std::sync::Arc;
 use std::time::Duration;
 
-/// Configuration for timeout values, loaded from environment variables.
+/// Configuration for timeout values, loaded from environment variables
+///
 /// This struct centralizes all `env::var` calls for the `timeouts` module
-/// to eliminate direct `env::var` calls from production code.
+/// to eliminate direct `env::var` calls from production code. All values are
+/// immutable after construction, making this thread-safe.
 #[derive(Debug, Clone)]
-/// Configuration for Timeouts
 pub struct TimeoutsConfig {
     connection_timeout_secs: u64,
     request_timeout_secs: u64,

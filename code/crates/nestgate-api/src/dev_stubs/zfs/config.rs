@@ -96,14 +96,12 @@ pub struct ProductionZfsManager {
 impl ProductionZfsManager {
     /// Create a new production ZFS manager with the given configuration
     #[must_use]
-    /// Fn
     pub const fn new(config: ZfsConfig) -> Self {
         Self { config }
     }
 
     /// Get reference to the ZFS configuration
     #[must_use]
-    /// Fn
     pub const fn config(&self) -> &ZfsConfig {
         &self.config
     }

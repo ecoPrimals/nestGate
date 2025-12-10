@@ -85,7 +85,14 @@ where
         MAX_SIZE
     }
 
-    /// Timeout Ms
+    /// Returns the compile-time specified timeout in milliseconds
+    ///
+    /// This value is determined at compile time and has zero runtime cost.
+    /// The timeout is applied to all operations that may block.
+    ///
+    /// # Returns
+    ///
+    /// The timeout duration in milliseconds
     pub fn timeout_ms(&self) -> u64 {
         TIMEOUT_MS
     }
@@ -147,12 +154,27 @@ impl<const MAX_SIZE: usize, const TIMEOUT_MS: u64> ZeroCostSystemBuilder<MAX_SIZ
         )
     }
 
-    /// Get compile-time configuration
+    /// Returns the compile-time specified maximum size
+    ///
+    /// This is a compile-time constant that determines the maximum
+    /// size for various system resources (cache capacity, buffers, etc.).
+    ///
+    /// # Returns
+    ///
+    /// The maximum size configured at compile time
     #[must_use]
     pub fn max_size() -> usize {
         MAX_SIZE
     }
 
+    /// Returns the compile-time specified timeout in milliseconds
+    ///
+    /// This is a compile-time constant that determines the default
+    /// timeout for blocking operations.
+    ///
+    /// # Returns
+    ///
+    /// The timeout duration in milliseconds
     #[must_use]
     pub fn timeout_ms() -> u64 {
         TIMEOUT_MS

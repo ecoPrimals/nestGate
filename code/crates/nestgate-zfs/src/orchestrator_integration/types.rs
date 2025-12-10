@@ -80,7 +80,7 @@ impl Default for ZfsServiceConfig {
         Self {
             service_name: "nestgate-zfs".to_string(),
             bind_address: if config.network.bind_all {
-                "0.0.0.0".to_string()
+                nestgate_core::constants::hardcoding::addresses::BIND_ALL_IPV4.to_string()
             } else {
                 config.network.api_host.to_string()
             },

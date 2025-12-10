@@ -34,34 +34,31 @@
 //! - Health monitoring
 //! - Real-time bidirectional communication
 
+use anyhow::{Context, Result};
 use nestgate_api::routes::{create_router, AppState};
-use nestgate_core::constants::network_defaults as addresses;
-use nestgate_core::defaults::env_helpers;
+use nestgate_core::config::environment::EnvironmentConfig;
+use nestgate_core::NestGateError;
 use std::net::SocketAddr;
 use tokio::signal;
 use tower_http::trace::TraceLayer;
-use tracing::{debug, info, warn};
+use tracing::{debug, info};
 // Note: tracing_subscriber not available - using basic tracing
 // use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 /// Server configuration with RPC capabilities
 ///
-/// ✅ MIGRATED: Now uses canonical configuration pattern with separate bind_address and api_port
-/// instead of deprecated bind_endpoint SocketAddr.
+/// ✅ MODERNIZED (Week 2): Now uses EnvironmentConfig for all settings
+/// Eliminates hardcoded defaults and manual env::var parsing
 #[derive(Debug, Clone)]
 /// Configuration for Server
 pub struct ServerConfig {
-    /// Server bind address (IP address)
-    pub bind_address: String,
-    /// API server port
-    pub api_port: u16,
+    /// Environment configuration (network, storage, monitoring, etc.)
+    pub env_config: EnvironmentConfig,
     /// Enable CORS
     pub enable_cors: bool,
     /// Enable request tracing
     pub enable_tracing: bool,
-    /// Log level
-    pub log_level: String,
-    /// Beardog RPC address (tarpc)
+    /// Security service RPC address (tarpc)
     pub security_capability: Option<String>,
     /// Orchestration RPC address (JSON RPC)
     pub orchestration_capability: Option<String>,
@@ -71,21 +68,33 @@ pub struct ServerConfig {
 
 impl ServerConfig {
     /// Get bind endpoint as SocketAddr
-    pub fn bind_endpoint(&self) -> SocketAddr {
-        format!("{}:{}", self.bind_address, self.api_port)
-            .parse()
-            .unwrap_or_else(|_| SocketAddr::from(([0, 0, 0, 0], self.api_port)))
+    pub fn bind_endpoint(&self) -> Result<SocketAddr, std::net::AddrParseError> {
+        self.env_config.bind_address()
+    }
+
+    /// Get API port
+    pub fn api_port(&self) -> u16 {
+        self.env_config.network.port.get()
+    }
+
+    /// Get bind address string
+    pub fn bind_address(&self) -> &str {
+        &self.env_config.network.host
+    }
+
+    /// Get log level
+    pub fn log_level(&self) -> &str {
+        &self.env_config.monitoring.log_level
     }
 }
+
 impl Default for ServerConfig {
-    /// Returns the default instance
+    /// Returns the default instance using EnvironmentConfig
     fn default() -> Self {
         Self {
-            bind_address: env_helpers::bind_address(),
-            api_port: env_helpers::api_port(),
+            env_config: EnvironmentConfig::default(),
             enable_cors: true,
             enable_tracing: true,
-            log_level: "info".to_string(),
             security_capability: None,
             orchestration_capability: None,
             enable_rpc: true,
@@ -94,17 +103,18 @@ impl Default for ServerConfig {
 }
 /// Start the nestgate API server
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Initialize configuration
-    let config = load_config();
+async fn main() -> Result<()> {
+    // Initialize configuration from environment
+    let config = load_config().context("Failed to load server configuration")?;
 
     // Initialize logging
-    init_logging(&config.log_level);
+    init_logging(config.log_level());
 
     info!("🚀 Starting NestGate Data API Server with Real-time Bidirectional RPC");
     info!(
         "📡 Bind endpoint: {}:{}",
-        config.bind_address, config.api_port
+        config.bind_address(),
+        config.api_port()
     );
     info!("🔧 Configuration: {:?}", config);
 
@@ -139,11 +149,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_enhanced_api_endpoints(&config);
 
     // Start server
-    let bind_endpoint = config.bind_endpoint();
+    let bind_endpoint = config
+        .bind_endpoint()
+        .map_err(|e| NestGateError::internal(format!("Invalid bind address: {e}")))?;
     info!("🌐 Starting server on {}", bind_endpoint);
     info!("📊 Ready to serve ZFS data with real-time bidirectional RPC!");
 
-    let listener = tokio::net::TcpListener::bind(bind_endpoint).await?;
+    let listener = tokio::net::TcpListener::bind(bind_endpoint)
+        .await
+        .context("Failed to bind TCP listener")?;
 
     // Start server with graceful shutdown
     axum::serve(listener, app)
@@ -155,43 +169,31 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Load server configuration with RPC settings
-fn load_config() -> ServerConfig {
-    let mut config = ServerConfig::default();
-    // Override with environment variables
-    if let Ok(bind_addr) = std::env::var("NESTGATE_API_BIND") {
-        // Parse full address (e.g., "0.0.0.0:8080")
-        if let Ok(addr) = bind_addr.parse::<SocketAddr>() {
-            config.bind_address = addr.ip().to_string();
-            config.api_port = addr.port();
-        } else {
-            warn!(
-                "Invalid NESTGATE_API_BIND endpoint: {}, using default",
-                bind_addr
-            );
-        }
-    }
+///
+/// ✅ MODERNIZED (Week 2): Uses EnvironmentConfig for all settings
+/// Eliminates manual env::var parsing and unwrap() calls
+fn load_config() -> Result<ServerConfig> {
+    // Load base configuration from environment
+    let env_config =
+        EnvironmentConfig::from_env().context("Failed to load environment configuration")?;
 
-    // Also support separate BIND_ADDRESS and API_PORT env vars
-    if let Ok(addr) = std::env::var("NESTGATE_BIND_ADDRESS") {
-        config.bind_address = addr;
-    }
-    if let Ok(port) = std::env::var("NESTGATE_API_PORT") {
-        if let Ok(parsed_port) = port.parse() {
-            config.api_port = parsed_port;
-        }
-    }
-
-    if let Ok(log_level) = std::env::var("NESTGATE_LOG_LEVEL") {
-        config.log_level = log_level;
-    }
-
-    if let Ok(cors) = std::env::var("NESTGATE_ENABLE_CORS") {
-        config.enable_cors = cors.parse().unwrap_or(true);
-    }
-
-    if let Ok(tracing) = std::env::var("NESTGATE_ENABLE_TRACING") {
-        config.enable_tracing = tracing.parse().unwrap_or(true);
-    }
+    let mut config = ServerConfig {
+        env_config,
+        enable_cors: std::env::var("NESTGATE_ENABLE_CORS")
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(true),
+        enable_tracing: std::env::var("NESTGATE_ENABLE_TRACING")
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(true),
+        enable_rpc: std::env::var("NESTGATE_ENABLE_RPC")
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(true),
+        security_capability: None,
+        orchestration_capability: None,
+    };
 
     // ✅ UNIVERSAL ADAPTER INTEGRATION - Pure capability-based discovery
     // Zero hardcoded primal knowledge - system starts with infant-like discovery
@@ -206,17 +208,13 @@ fn load_config() -> ServerConfig {
     // ✅ MODERN CAPABILITY DISCOVERY - Universal adapter integration
     if let Ok(universal_adapter_enabled) = std::env::var("UNIVERSAL_ADAPTER_ENABLED") {
         if universal_adapter_enabled.parse().unwrap_or(true) {
-            tracing::info!("Universal adapter enabled - using capability-based service discovery");
+            info!("Universal adapter enabled - using capability-based service discovery");
             // Universal adapter will handle service discovery automatically
             // No hardcoded addresses needed
         }
     }
 
-    if let Ok(enable_rpc) = std::env::var("NESTGATE_ENABLE_RPC") {
-        config.enable_rpc = enable_rpc.parse().unwrap_or(true);
-    }
-
-    config
+    Ok(config)
 }
 
 /// Initialize logging
@@ -317,7 +315,7 @@ fn print_enhanced_api_endpoints(config: &ServerConfig) {
 
         if config.security_capability.is_some() {
             println!("├─────────────────────────────────────────────────────────────────────┤");
-            println!("│ BEARDOG SECURITY RPC (tarpc - High Performance Binary)             │");
+            println!("│ SECURITY SERVICE RPC (tarpc - High Performance Binary)             │");
             println!("├─────────────────────────────────────────────────────────────────────┤");
             println!("│ • encrypt_data              - Encrypt sensitive data                │");
             println!("│ • decrypt_data              - Decrypt encrypted data                │");
@@ -331,7 +329,7 @@ fn print_enhanced_api_endpoints(config: &ServerConfig) {
 
         if config.orchestration_capability.is_some() {
             println!("├─────────────────────────────────────────────────────────────────────┤");
-            println!("│ SONGBIRD ORCHESTRATION RPC (JSON RPC - Standard HTTP)              │");
+            println!("│ ORCHESTRATION SERVICE RPC (JSON RPC - Standard HTTP)               │");
             println!("├─────────────────────────────────────────────────────────────────────┤");
             println!("│ • register_service          - Register service with orchestrator    │");
             println!("│ • discover_services         - Discover available services           │");
@@ -349,8 +347,8 @@ fn print_enhanced_api_endpoints(config: &ServerConfig) {
     println!("\n🌐 Server Configuration:");
     println!(
         "  📡 API Server: http://{}:{}",
-        addresses::LOCALHOST_NAME,
-        config.api_port
+        config.bind_address(),
+        config.api_port()
     );
     if let Some(security_addr) = &config.security_capability {
         println!("  🔐 Security (tarpc): {security_addr}");
@@ -362,25 +360,25 @@ fn print_enhanced_api_endpoints(config: &ServerConfig) {
     println!("\n🧪 Example Usage:");
     println!(
         "  📊 Health: curl http://{}:{}/health",
-        addresses::LOCALHOST_NAME,
-        config.api_port
+        config.bind_address(),
+        config.api_port()
     );
     println!(
         "  📈 Metrics: curl http://{}:{}/api/v1/monitoring/metrics",
-        addresses::LOCALHOST_NAME,
-        config.api_port
+        config.bind_address(),
+        config.api_port()
     );
     println!(
         "  🗄️ Datasets: curl http://{}:{}/api/v1/zfs/datasets",
-        addresses::LOCALHOST_NAME,
-        config.api_port
+        config.bind_address(),
+        config.api_port()
     );
 
     if config.enable_rpc {
         println!(
             "  🔐 Security RPC: curl -X POST http://{}:{}/api/v1/rpc/call \\",
-            addresses::LOCALHOST_NAME,
-            config.api_port
+            config.bind_address(),
+            config.api_port()
         );
         println!("    -H 'Content-Type: application/json' \\");
         println!(
@@ -388,8 +386,8 @@ fn print_enhanced_api_endpoints(config: &ServerConfig) {
         );
         println!(
             "  🎼 Orchestration RPC: curl -X POST http://{}:{}/api/v1/rpc/call \\",
-            addresses::LOCALHOST_NAME,
-            config.api_port
+            config.bind_address(),
+            config.api_port()
         );
         println!("    -H 'Content-Type: application/json' \\");
         println!(
@@ -399,8 +397,8 @@ fn print_enhanced_api_endpoints(config: &ServerConfig) {
 
     println!(
         "  🔌 WebSocket: ws://{}:{}/ws/metrics",
-        addresses::LOCALHOST_NAME,
-        config.api_port
+        config.bind_address(),
+        config.api_port()
     );
     println!();
 }

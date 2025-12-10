@@ -8,7 +8,7 @@ use nestgate_core::response::api_response::ApiResponse;
 use std::collections::HashMap;
 
 #[test]
-fn test_api_response_success() -> Result<(), Box<dyn std::error::Error>> {
+fn test_api_response_success() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let response = ApiResponse::success("test data".to_string());
     assert!(response.success);
     assert_eq!(response.data, Some("test data".to_string()));
@@ -18,7 +18,7 @@ fn test_api_response_success() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
-fn test_api_response_error() -> Result<(), Box<dyn std::error::Error>> {
+fn test_api_response_error() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let response = ApiResponse::<()>::error("Test error message".to_string());
 
     assert!(!response.success);
@@ -29,7 +29,7 @@ fn test_api_response_error() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
-fn test_create_pool_request_serialization() -> Result<(), Box<dyn std::error::Error>> {
+fn test_create_pool_request_serialization() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let request = CreatePoolRequest {
         name: "test_pool".to_string(),
         _devices: vec!["/dev/sda".to_string(), "/dev/sdb".to_string()],
@@ -61,7 +61,8 @@ fn test_create_pool_request_serialization() -> Result<(), Box<dyn std::error::Er
 }
 
 #[test]
-fn test_create_dataset_request_serialization() -> Result<(), Box<dyn std::error::Error>> {
+fn test_create_dataset_request_serialization() -> std::result::Result<(), Box<dyn std::error::Error>>
+{
     use nestgate_core::canonical_types::StorageTier;
 
     let request = CreateDatasetRequest {
@@ -92,7 +93,7 @@ fn test_create_dataset_request_serialization() -> Result<(), Box<dyn std::error:
 }
 
 #[test]
-fn test_pool_config_defaults() -> Result<(), Box<dyn std::error::Error>> {
+fn test_pool_config_defaults() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let minimal_config = PoolConfig {
         raid_level: None,
         compression: None,
@@ -112,7 +113,7 @@ fn test_pool_config_defaults() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
-fn test_zfs_api_state_structure() -> Result<(), Box<dyn std::error::Error>> {
+fn test_zfs_api_state_structure() -> std::result::Result<(), Box<dyn std::error::Error>> {
     // Test that ZfsApiState can be constructed
     // Note: We can't easily test the actual state without dependencies
     // This test validates the structure exists and is accessible
@@ -124,7 +125,7 @@ fn test_zfs_api_state_structure() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
-fn test_request_validation_edge_cases() -> Result<(), Box<dyn std::error::Error>> {
+fn test_request_validation_edge_cases() -> std::result::Result<(), Box<dyn std::error::Error>> {
     // Test empty pool name
     let empty_name_request = CreatePoolRequest {
         name: String::new(),
@@ -151,7 +152,7 @@ fn test_request_validation_edge_cases() -> Result<(), Box<dyn std::error::Error>
 }
 
 #[test]
-fn test_dataset_request_minimal() -> Result<(), Box<dyn std::error::Error>> {
+fn test_dataset_request_minimal() -> std::result::Result<(), Box<dyn std::error::Error>> {
     use nestgate_core::canonical_types::StorageTier;
 
     let minimal_request = CreateDatasetRequest {

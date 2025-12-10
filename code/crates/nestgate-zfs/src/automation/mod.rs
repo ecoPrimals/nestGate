@@ -16,7 +16,9 @@ pub mod actions;
 pub mod engine;
 pub mod integration;
 pub mod lifecycle;
+/// Automation policy definitions
 pub mod policies;
+/// Test utilities for automation
 pub mod tests;
 pub mod tier_evaluation;
 pub mod types;

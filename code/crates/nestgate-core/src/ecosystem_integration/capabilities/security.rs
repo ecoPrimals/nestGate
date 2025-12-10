@@ -21,12 +21,12 @@
 //!     .await?;
 //!
 //! if let Some(provider) = security_providers.first() {
-//!     // Use discovered security primal (e.g., BearDog)
+//!     // Use discovered security capability (implementation-agnostic)
 //!     provider.call("encrypt", data).await?;
 //! }
 //! ```
 //!
-//! No hardcoded "BearDog" or other primal names - pure capability-based discovery.
+//! No hardcoded implementation names - pure capability-based discovery.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

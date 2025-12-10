@@ -6,6 +6,13 @@
 //! All data returned is HARDCODED and does not reflect actual system state.
 //!
 //! **DO NOT USE IN PRODUCTION** - Use real implementations from respective crates instead.
+
+// ═══════════════════════════════════════════════════════════════
+// 🔒 FEATURE GATE: Development/Testing Only
+// ═══════════════════════════════════════════════════════════════
+// This module is NOT compiled in production builds.
+// Only available with the 'dev-stubs' feature flag.
+#![cfg(feature = "dev-stubs")]
 //!
 //! # Purpose
 //!
@@ -39,8 +46,6 @@
 //! - Replaced scattered stub files with organized module structure
 //! - All stubs now in centralized location for easier maintenance
 //! - Deprecated: Individual stub files (zfs_stub.rs, stub_helpers.rs)
-
-#![cfg(feature = "dev-stubs")]
 
 pub mod hardware;
 pub mod testing;

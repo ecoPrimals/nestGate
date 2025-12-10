@@ -676,7 +676,6 @@ impl Default for ZfsHandlerImpl {
 impl ZfsHandlerImpl {
     /// Create a new ZFS handler instance
     #[must_use]
-    /// Fn
     pub const fn new() -> Self {
         Self
     }

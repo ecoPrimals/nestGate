@@ -17,6 +17,7 @@ pub struct RoundRobinLoadBalancer {
     stats: Arc<parking_lot::RwLock<LoadBalancerStats>>,
 }
 impl RoundRobinLoadBalancer {
+    /// Creates a new round-robin load balancer
     #[must_use]
     pub fn new() -> Self {
         Self {
@@ -104,6 +105,10 @@ pub struct LeastConnectionsLoadBalancer {
     stats: Arc<parking_lot::RwLock<LoadBalancerStats>>,
 }
 impl LeastConnectionsLoadBalancer {
+    /// Creates a new least connections load balancer.
+    ///
+    /// The balancer tracks active connections per endpoint and routes
+    /// new requests to the endpoint with the fewest active connections.
     #[must_use]
     pub fn new() -> Self {
         Self {
@@ -216,6 +221,10 @@ pub struct RandomLoadBalancer {
     stats: Arc<parking_lot::RwLock<LoadBalancerStats>>,
 }
 impl RandomLoadBalancer {
+    /// Creates a new random load balancer.
+    ///
+    /// The balancer uses cryptographically secure randomness to distribute
+    /// requests evenly across available endpoints.
     #[must_use]
     pub fn new() -> Self {
         Self {

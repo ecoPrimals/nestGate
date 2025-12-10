@@ -1,13 +1,13 @@
 //! **E2E SCENARIO 3: SERVICE DISCOVERY TIMEOUT**
 //!
-//! **Objective**: Test behavior when primal services (Songbird/Squirrel) don't respond
+//! **Objective**: Test behavior when capability services (orchestration/ai) don't respond
 //!
 //! **Priority**: Critical
 //! **Complexity**: Medium
 //!
 //! **Test Flow**:
-//! 1. Start NestGate without Songbird/Squirrel
-//! 2. Trigger operations requiring AI/metadata services
+//! 1. Start NestGate without orchestration/AI capability providers
+//! 2. Trigger operations requiring these capabilities
 //! 3. Verify timeout handling
 //! 4. Check degraded mode operation
 //! 5. Bring services online (simulated)
@@ -15,9 +15,11 @@
 //!
 //! **Expected Outcomes**:
 //! - Graceful degradation to local operation
-//! - Clear logging of missing services
+//! - Clear logging of missing capabilities
 //! - No crashes or hangs
 //! - Automatic service reconnection
+//!
+//! **Note**: Uses capability-based discovery (not hardcoded primal names)
 
 use std::time::Duration;
 use std::net::{SocketAddr, IpAddr, Ipv4Addr};
@@ -80,40 +82,40 @@ mod service_discovery_tests {
     // ==================== TEST 1: SERVICE DISCOVERY TIMEOUT ====================
 
     #[tokio::test]
-    async fn test_songbird_discovery_timeout() {
-        eprintln!("\n🧪 TEST: Songbird (AI) Service Discovery Timeout");
+    async fn test_orchestration_capability_discovery_timeout() {
+        eprintln!("\n🧪 TEST: Orchestration Capability Discovery Timeout");
         
         let timeout_duration = Duration::from_secs(2);
-        let result = discover_service_with_timeout("Songbird", timeout_duration).await;
+        let result = discover_service_with_timeout("orchestration", timeout_duration).await;
         
         assert!(result.is_ok(), "Discovery should not crash on timeout");
         assert!(result.unwrap().is_none(), "Should return None on timeout");
         
-        eprintln!("✅ Songbird discovery timeout handled gracefully");
+        eprintln!("✅ Orchestration capability discovery timeout handled gracefully");
     }
 
     #[tokio::test]
-    async fn test_squirrel_discovery_timeout() {
-        eprintln!("\n🧪 TEST: Squirrel (Metadata) Service Discovery Timeout");
+    async fn test_ai_capability_discovery_timeout() {
+        eprintln!("\n🧪 TEST: AI Capability Discovery Timeout");
         
         let timeout_duration = Duration::from_secs(2);
-        let result = discover_service_with_timeout("Squirrel", timeout_duration).await;
+        let result = discover_service_with_timeout("ai", timeout_duration).await;
         
         assert!(result.is_ok(), "Discovery should not crash on timeout");
         assert!(result.unwrap().is_none(), "Should return None on timeout");
         
-        eprintln!("✅ Squirrel discovery timeout handled gracefully");
+        eprintln!("✅ AI capability discovery timeout handled gracefully");
     }
 
     // ==================== TEST 2: DEGRADED MODE OPERATION ====================
 
     #[tokio::test]
-    async fn test_degraded_mode_operation_without_songbird() {
-        eprintln!("\n🧪 TEST: Degraded Mode Operation (No AI Service)");
+    async fn test_degraded_mode_operation_without_orchestration() {
+        eprintln!("\n🧪 TEST: Degraded Mode Operation (No Orchestration Capability)");
         
-        // Attempt to discover Songbird
-        let songbird = discover_service_with_timeout("Songbird", Duration::from_secs(1)).await;
-        assert!(songbird.unwrap().is_none(), "Songbird should not be available");
+        // Attempt to discover orchestration capability
+        let orchestration = discover_service_with_timeout("orchestration", Duration::from_secs(1)).await;
+        assert!(orchestration.unwrap().is_none(), "Orchestration capability should not be available");
         
         // Fall back to degraded mode
         let result = operate_in_degraded_mode().await;
@@ -124,18 +126,18 @@ mod service_discovery_tests {
     }
 
     #[tokio::test]
-    async fn test_degraded_mode_operation_without_squirrel() {
-        eprintln!("\n🧪 TEST: Degraded Mode Operation (No Metadata Service)");
+    async fn test_degraded_mode_operation_without_ai() {
+        eprintln!("\n🧪 TEST: Degraded Mode Operation (No AI Capability)");
         
-        // Attempt to discover Squirrel
-        let squirrel = discover_service_with_timeout("Squirrel", Duration::from_secs(1)).await;
-        assert!(squirrel.unwrap().is_none(), "Squirrel should not be available");
+        // Attempt to discover AI capability
+        let ai = discover_service_with_timeout("ai", Duration::from_secs(1)).await;
+        assert!(ai.unwrap().is_none(), "AI capability should not be available");
         
         // Fall back to degraded mode
         let result = operate_in_degraded_mode().await;
         assert!(result.is_ok(), "Should operate in degraded mode");
         
-        eprintln!("✅ Degraded mode operation successful without metadata");
+        eprintln!("✅ Degraded mode operation successful without AI capability");
     }
 
     // ==================== TEST 3: NO CRASHES OR HANGS ====================
@@ -144,11 +146,11 @@ mod service_discovery_tests {
     async fn test_multiple_timeout_no_crash() {
         eprintln!("\n🧪 TEST: Multiple Timeouts Do Not Crash System");
         
-        let services = vec!["Songbird", "Squirrel", "ToadStool"];
+        let capabilities = vec!["orchestration", "ai", "compute"];
         let timeout_duration = Duration::from_secs(1);
         
-        for service in services {
-            let result = discover_service_with_timeout(service, timeout_duration).await;
+        for capability in capabilities {
+            let result = discover_service_with_timeout(capability, timeout_duration).await;
             assert!(result.is_ok(), "Multiple timeouts should not crash");
         }
         
@@ -174,15 +176,15 @@ mod service_discovery_tests {
     // ==================== TEST 4: AUTOMATIC RECONNECTION ====================
 
     #[tokio::test]
-    async fn test_automatic_reconnection_songbird() {
-        eprintln!("\n🧪 TEST: Automatic Reconnection to Songbird");
+    async fn test_automatic_reconnection_orchestration() {
+        eprintln!("\n🧪 TEST: Automatic Reconnection to Orchestration Capability");
         
         // Initial discovery fails
-        let initial = discover_service_with_timeout("Songbird", Duration::from_secs(1)).await;
+        let initial = discover_service_with_timeout("orchestration", Duration::from_secs(1)).await;
         assert!(initial.unwrap().is_none(), "Initial connection should fail");
         
         // Attempt automatic reconnection
-        let reconnected = attempt_reconnection("Songbird", 5).await;
+        let reconnected = attempt_reconnection("orchestration", 5).await;
         assert!(reconnected.is_ok(), "Reconnection attempt should not crash");
         assert!(reconnected.unwrap(), "Should eventually reconnect");
         
@@ -190,36 +192,36 @@ mod service_discovery_tests {
     }
 
     #[tokio::test]
-    async fn test_automatic_reconnection_squirrel() {
-        eprintln!("\n🧪 TEST: Automatic Reconnection to Squirrel");
+    async fn test_automatic_reconnection_ai() {
+        eprintln!("\n🧪 TEST: Automatic Reconnection to AI Capability");
         
         // Initial discovery fails
-        let initial = discover_service_with_timeout("Squirrel", Duration::from_secs(1)).await;
+        let initial = discover_service_with_timeout("ai", Duration::from_secs(1)).await;
         assert!(initial.unwrap().is_none(), "Initial connection should fail");
         
         // Attempt automatic reconnection
-        let reconnected = attempt_reconnection("Squirrel", 5).await;
+        let reconnected = attempt_reconnection("ai", 5).await;
         assert!(reconnected.is_ok(), "Reconnection attempt should not crash");
         assert!(reconnected.unwrap(), "Should eventually reconnect");
         
-        eprintln!("✅ Automatic reconnection to metadata service successful");
+        eprintln!("✅ Automatic reconnection to AI capability successful");
     }
 
     // ==================== TEST 5: CONCURRENT TIMEOUT HANDLING ====================
 
     #[tokio::test]
-    async fn test_concurrent_service_discovery_timeouts() {
-        eprintln!("\n🧪 TEST: Concurrent Service Discovery Timeouts");
+    async fn test_concurrent_capability_discovery_timeouts() {
+        eprintln!("\n🧪 TEST: Concurrent Capability Discovery Timeouts");
         
-        let services = vec!["Songbird", "Squirrel", "ToadStool", "Weasel"];
+        let capabilities = vec!["orchestration", "ai", "compute", "security"];
         let timeout_duration = Duration::from_secs(1);
         
         // Launch concurrent discoveries
-        let handles: Vec<_> = services
+        let handles: Vec<_> = capabilities
             .iter()
-            .map(|&service| {
+            .map(|&capability| {
                 tokio::spawn(async move {
-                    discover_service_with_timeout(service, timeout_duration).await
+                    discover_service_with_timeout(capability, timeout_duration).await
                 })
             })
             .collect();
@@ -310,14 +312,14 @@ mod service_discovery_tests {
 
     #[tokio::test]
     async fn test_full_scenario_3_integration() {
-        eprintln!("\n🧪 INTEGRATION TEST: Full Scenario 3 - Service Discovery Timeout");
+        eprintln!("\n🧪 INTEGRATION TEST: Full Scenario 3 - Capability Discovery Timeout");
         
-        // Step 1: Start without services
-        eprintln!("Step 1: Starting NestGate without Songbird/Squirrel");
-        let songbird = discover_service_with_timeout("Songbird", Duration::from_secs(1)).await;
-        let squirrel = discover_service_with_timeout("Squirrel", Duration::from_secs(1)).await;
-        assert!(songbird.unwrap().is_none());
-        assert!(squirrel.unwrap().is_none());
+        // Step 1: Start without capabilities
+        eprintln!("Step 1: Starting NestGate without orchestration/AI capabilities");
+        let orchestration = discover_service_with_timeout("orchestration", Duration::from_secs(1)).await;
+        let ai = discover_service_with_timeout("ai", Duration::from_secs(1)).await;
+        assert!(orchestration.unwrap().is_none());
+        assert!(ai.unwrap().is_none());
         
         // Step 2: Operate in degraded mode
         eprintln!("Step 2: Operating in degraded mode");
@@ -328,15 +330,15 @@ mod service_discovery_tests {
         eprintln!("Step 3: Verifying system stability");
         assert!(true, "System stable");
         
-        // Step 4: Simulate services coming online
-        eprintln!("Step 4: Services coming online");
-        let reconnect_songbird = attempt_reconnection("Songbird", 5).await;
-        let reconnect_squirrel = attempt_reconnection("Squirrel", 5).await;
+        // Step 4: Simulate capabilities coming online
+        eprintln!("Step 4: Capabilities coming online");
+        let reconnect_orchestration = attempt_reconnection("orchestration", 5).await;
+        let reconnect_ai = attempt_reconnection("ai", 5).await;
         
         // Step 5: Verify reconnection
         eprintln!("Step 5: Verifying automatic reconnection");
-        assert!(reconnect_songbird.unwrap());
-        assert!(reconnect_squirrel.unwrap());
+        assert!(reconnect_orchestration.unwrap());
+        assert!(reconnect_ai.unwrap());
         
         eprintln!("\n✅ SCENARIO 3 COMPLETE: All objectives met");
         eprintln!("   - Graceful degradation ✓");

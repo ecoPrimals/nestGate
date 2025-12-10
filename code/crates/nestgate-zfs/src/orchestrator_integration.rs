@@ -6,7 +6,7 @@
 //! # Overview
 //!
 //! The orchestrator integration enables:
-//! - **Service Registration**: Register ZFS services with orchestrators (Songbird, Kubernetes)
+//! - **Service Registration**: Register ZFS services with orchestrators (capability-based, K8s)
 //! - **Health Reporting**: Real-time health status and metrics reporting
 //! - **Load Balancing**: Coordinate distributed ZFS operations
 //! - **Service Discovery**: Dynamic discovery of ZFS nodes in the cluster
@@ -14,7 +14,7 @@
 //!
 //! # Integration Points
 //!
-//! - **Songbird**: Native ecoPrimals orchestrator integration
+//! - **Orchestration Service**: Native ecoPrimals orchestrator integration (capability-based)
 //! - **Kubernetes**: Service mesh and discovery integration
 //! - **Custom Orchestrators**: Generic registration interface
 //!
@@ -37,7 +37,7 @@
 //! // Port is now configurable via environment variable NESTGATE_ORCHESTRATION_PORT (default: 9091)
 //! // use nestgate_core::config::port_config::get_port_config;
 //! // service.register_with_orchestrator(
-//! //     &format!("http://songbird:{}", get_port_config().orchestration_port)
+//! //     &format!("http://orchestrator:{}", get_port_config().orchestration_port)
 //! // ).await?;
 //!
 //! // Perform health check
@@ -58,6 +58,9 @@
 
 pub mod service;
 pub mod types;
+
+#[cfg(test)]
+mod tests;
 
 // Re-export commonly used types
 pub use service::ZfsService;

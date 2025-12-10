@@ -64,13 +64,13 @@ mod discovery_timeout_tests {
             assert_eq!(
                 timeout.as_secs(),
                 if i == 0 {
-                    /// 5
+                    // 5
                     5
                 } else if i == 1 {
-                    /// 10
+                    // 10
                     10
                 } else {
-                    /// 30
+                    // 30
                     30
                 }
             );

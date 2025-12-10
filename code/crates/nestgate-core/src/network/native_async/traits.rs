@@ -34,6 +34,7 @@ pub trait NativeAsyncServiceDiscovery<
         service_name: &str,
     ) -> impl Future<Output = Result<Vec<Self::ServiceInfo>>> + Send;
 
+    /// Watches for service changes and returns a stream of events
     fn watch(&self) -> impl Future<Output = Result<Vec<Self::ServiceEvent>>> + Send;
 
     /// Update health status - compile-time optimization
@@ -68,16 +69,19 @@ pub trait NativeAsyncServiceDiscovery<
         metadata: HashMap<String, String>,
     ) -> impl Future<Output = Result<()>> + Send;
 
+    /// Returns the maximum number of services
     #[must_use]
     fn max_services() -> usize {
         MAX_SERVICES
     }
 
+    /// Returns the discovery timeout in seconds
     #[must_use]
     fn discovery_timeout_seconds() -> u64 {
         DISCOVERY_TIMEOUT_SECS
     }
 
+    /// Returns the watch buffer size
     #[must_use]
     fn watch_buffer_size() -> usize {
         WATCH_BUFFER_SIZE
@@ -133,11 +137,13 @@ pub trait NativeAsyncProtocolHandler<
         -> impl Future<Output = Result<Duration>> + Send;
 
     /// Max connections at compile-time
+    /// Returns the maximum number of connections.
     #[must_use]
     fn max_connections() -> usize {
         MAX_CONNECTIONS
     }
 
+    /// Returns the connection timeout in seconds.
     #[must_use]
     fn connection_timeout_seconds() -> u64 {
         CONNECTION_TIMEOUT_SECS
@@ -202,6 +208,7 @@ pub trait NativeAsyncUnifiedServiceInterface<
         MAX_REQUESTS_PER_SEC
     }
 
+    /// Returns the health check interval in seconds.
     #[must_use]
     fn health_check_interval_seconds() -> u64 {
         HEALTH_CHECK_INTERVAL_SECS
@@ -257,6 +264,7 @@ pub trait NativeAsyncLoadBalancer<
         MAX_BACKENDS
     }
 
+    /// Returns the health check interval in seconds.
     #[must_use]
     fn health_check_interval_seconds() -> u64 {
         HEALTH_CHECK_INTERVAL_SECS

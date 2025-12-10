@@ -52,12 +52,11 @@ async fn test_service_mesh_routing() {
 async fn test_service_discovery_and_registration() {
     println!("🔄 E2E Scenario 38B: Service Discovery");
 
-    let mut service_registry: Vec<String> = Vec::new();
-
-    // Register services
-    service_registry.push("service-a".to_string());
-    service_registry.push("service-b".to_string());
-    service_registry.push("service-c".to_string());
+    // Register services - using iterator pattern for flexibility
+    let service_registry: Vec<String> = ["service-a", "service-b", "service-c"]
+        .iter()
+        .map(|s| s.to_string())
+        .collect();
 
     // Discover services
     let discovered = service_registry

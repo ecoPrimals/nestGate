@@ -31,18 +31,57 @@ pub trait ZeroCostString<const N: usize> {
 
 /// **ZERO-COST**: Type-level configuration
 ///
-/// Configuration that exists only at compile time
+/// Configuration that exists only at compile time, enabling the compiler
+/// to optimize away all abstraction overhead. Values are baked into the
+/// binary at compile time with zero runtime cost.
+///
+/// # Zero-Cost Guarantee
+///
+/// All configuration access compiles to direct constant values with no
+/// runtime overhead, function calls, or memory lookups.
+///
+/// # Usage
+///
+/// Implement this trait for different environments (production, development,
+/// test) to get compile-time specialized configurations.
+///
+/// # Examples
+///
+/// ```rust,no_run
+/// # use nestgate_core::zero_cost_evolution::ZeroCostConfig;
+/// struct MyConfig;
+/// impl ZeroCostConfig for MyConfig {
+///     const BUFFER_SIZE: usize = 4096;
+///     const MAX_CONNECTIONS: usize = 1000;
+///     const TIMEOUT_MS: u64 = 5000;
+///     const DEBUG: bool = false;
+/// }
+/// ```
 pub trait ZeroCostConfig {
+    /// Buffer size for I/O operations (compile-time constant)
     const BUFFER_SIZE: usize;
+
+    /// Maximum number of concurrent connections (compile-time constant)
     const MAX_CONNECTIONS: usize;
 
+    /// Default timeout in milliseconds (compile-time constant)
     const TIMEOUT_MS: u64;
 
-    /// Enable debug mode at compile time
+    /// Enable debug mode at compile time (eliminates debug code in release builds)
     const DEBUG: bool;
 }
 
-/// Production configuration - optimized for performance
+/// Production configuration - optimized for maximum performance
+///
+/// Uses large buffers, high connection limits, and disables debug checks
+/// for optimal throughput and latency in production environments.
+///
+/// # Characteristics
+///
+/// - Large network buffers for high throughput
+/// - Maximum connection capacity
+/// - Debug mode disabled (eliminates debug code)
+/// - Optimized for latency and throughput
 pub struct ProductionConfig;
 impl ZeroCostConfig for ProductionConfig {
     const BUFFER_SIZE: usize =
@@ -50,11 +89,21 @@ impl ZeroCostConfig for ProductionConfig {
     const MAX_CONNECTIONS: usize =
         crate::constants::canonical_defaults::performance::MAX_CONNECTIONS;
     const TIMEOUT_MS: u64 = crate::constants::canonical::timeouts::DEFAULT_TIMEOUT_MS;
-    /// Debug
+    /// Debug mode disabled for production
     const DEBUG: bool = false;
 }
 
-/// Development configuration - optimized for debugging
+/// Development configuration - optimized for debugging and diagnostics
+///
+/// Uses moderate buffers, enables debug checks, and provides better
+/// error messages at the cost of some performance.
+///
+/// # Characteristics
+///
+/// - Moderate buffer sizes for memory efficiency
+/// - Standard connection limits
+/// - Debug mode enabled (includes validation and logging)
+/// - Optimized for diagnostics and development experience
 pub struct DevelopmentConfig;
 impl ZeroCostConfig for DevelopmentConfig {
     const BUFFER_SIZE: usize =
@@ -62,7 +111,7 @@ impl ZeroCostConfig for DevelopmentConfig {
     const MAX_CONNECTIONS: usize =
         crate::constants::canonical_defaults::performance::MAX_CONNECTIONS;
     const TIMEOUT_MS: u64 = crate::constants::canonical::timeouts::DEFAULT_TIMEOUT_MS;
-    /// Debug
+    /// Debug mode enabled for development
     const DEBUG: bool = true;
 }
 

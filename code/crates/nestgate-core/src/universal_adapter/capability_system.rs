@@ -4,6 +4,7 @@
 //! all primal hardcoding. Each primal only knows itself and discovers others through
 //! capability advertisement and discovery.
 
+use crate::universal_primal_discovery::service_registry::ServiceRegistry;
 use crate::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -37,6 +38,25 @@ pub enum CapabilityCategory {
     Network,
     /// Data capabilities (databases, caching, streaming)
     Data,
+}
+
+impl CapabilityCategory {
+    /// Convert to PrimalCapability for service registry discovery
+    pub fn to_primal_capability(
+        &self,
+    ) -> crate::universal_primal_discovery::capability_based_discovery::PrimalCapability {
+        use crate::universal_primal_discovery::capability_based_discovery::PrimalCapability;
+        match self {
+            Self::Storage => PrimalCapability::ZfsStorage,
+            Self::Orchestration => PrimalCapability::Custom("orchestration".to_string()),
+            Self::Compute => PrimalCapability::Custom("compute".to_string()),
+            Self::Security => PrimalCapability::Authentication,
+            Self::Intelligence => PrimalCapability::Custom("intelligence".to_string()),
+            Self::Management => PrimalCapability::Custom("management".to_string()),
+            Self::Network => PrimalCapability::Custom("network".to_string()),
+            Self::Data => PrimalCapability::DataSync,
+        }
+    }
 }
 
 /// Specific capability that a service provides
@@ -354,13 +374,15 @@ impl CapabilityRegistry {
 
 /// Universal capability router that eliminates all primal hardcoding
 /// Each primal only knows itself and discovers others through capability advertisement
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 /// Capabilityrouter
 pub struct CapabilityRouter {
     /// Registry of discovered capabilities
     registry: Arc<RwLock<CapabilityRegistry>>,
     /// Our own service identity (only thing we know about ourselves)
     self_identity: NestGateSelfKnowledge,
+    /// **NEW**: ServiceRegistry for capability-based discovery (no hardcoded URLs!)
+    service_registry: Option<Arc<ServiceRegistry>>,
 }
 
 impl CapabilityRouter {
@@ -369,7 +391,17 @@ impl CapabilityRouter {
         Self {
             registry: Arc::new(RwLock::new(CapabilityRegistry::new())),
             self_identity: NestGateSelfKnowledge::default(),
+            service_registry: None,
         }
+    }
+
+    /// Set the service registry for capability-based discovery
+    ///
+    /// This enables the router to discover services dynamically instead of
+    /// using hardcoded endpoints.
+    pub fn with_service_registry(mut self, registry: Arc<ServiceRegistry>) -> Self {
+        self.service_registry = Some(registry);
+        self
     }
 
     /// Route capability request without knowing specific primal names
@@ -451,12 +483,40 @@ impl CapabilityRouter {
         service: &DiscoveredService,
         request: CapabilityRequest,
     ) -> Result<CapabilityResponse> {
-        // Use universal adapter to communicate (no primal-specific protocols)
-        let config = CapabilityEndpointsConfig::from_env();
-        let endpoint = config
-            .service_endpoint()
-            .map(|s| s.to_string())
-            .unwrap_or_else(crate::constants::canonical_defaults::network::build_api_url);
+        // **EVOLUTION**: Use ServiceRegistry for dynamic discovery (no hardcoded URLs!)
+        let endpoint = if let Some(registry) = &self.service_registry {
+            // Try capability-based discovery first
+            match registry
+                .find_by_capability(&request.category.to_primal_capability())
+                .await
+            {
+                Ok(discovered_service) => discovered_service.url(),
+                Err(_) => {
+                    // Fallback to environment config if discovery fails
+                    let config = CapabilityEndpointsConfig::from_env();
+                    config
+                        .service_endpoint()
+                        .map(|s| s.to_string())
+                        .ok_or_else(|| {
+                            crate::NestGateError::not_found(format!(
+                                "No endpoint found for capability: {:?}",
+                                request.category
+                            ))
+                        })?
+                }
+            }
+        } else {
+            // No registry configured - fall back to environment config only
+            let config = CapabilityEndpointsConfig::from_env();
+            config
+                .service_endpoint()
+                .map(|s| s.to_string())
+                .ok_or_else(|| {
+                    crate::NestGateError::not_found(
+                        "No service registry configured and no environment endpoint set",
+                    )
+                })?
+        };
 
         // Generic capability request - works with any primal
         let response = self
@@ -649,6 +709,7 @@ mod tests {
         let mut registry = CapabilityRegistry::new();
 
         // Register a compute service with default endpoint (test doesn't need async resolution)
+        #[allow(deprecated)]
         let compute_service = DiscoveredService::new(
             "compute-service",
             "container-runtime",

@@ -507,27 +507,83 @@ impl PerformanceProfiler {
 }
 
 /// **COMPILE-TIME PERFORMANCE CONSTANTS**
-/// Performance-related constants computed at compile time
+///
+/// Architecture-specific constants computed at compile time for optimal performance.
+/// These values are baked into the binary with zero runtime overhead.
+///
+/// # Zero-Cost Guarantee
+///
+/// All constants are resolved at compile time. Accessing them has the same
+/// performance as inline constants with no function call overhead.
+///
+/// # Architecture Tuning
+///
+/// Constants are tuned for modern x86-64 architectures with AVX2 support.
+/// Values are based on:
+/// - L1 cache: 32-64KB per core
+/// - L2 cache: 256KB-1MB per core  
+/// - L3 cache: 8-32MB shared
+/// - Cache line: 64 bytes
+/// - Page size: 4KB
+///
+/// # Usage
+///
+/// ```rust,no_run
+/// # use nestgate_core::performance::advanced_optimizations::PerformanceConstants;
+/// // Use compile-time constants for buffer sizing
+/// let buffer = vec![0u8; PerformanceConstants::OPTIMAL_BUFFER_SIZE];
+///
+/// // Align data structures to cache lines
+/// #[repr(align(64))] // PerformanceConstants::CACHE_LINE_SIZE
+/// struct CacheAligned {
+///     data: [u8; 64],
+/// }
+/// ```
 pub struct PerformanceConstants;
 impl PerformanceConstants {
-    /// Optimal buffer size for current architecture
+    /// Optimal buffer size for I/O operations (64KB)
+    ///
+    /// This size balances:
+    /// - L1/L2 cache efficiency
+    /// - Memory allocation overhead
+    /// - System call batching
+    /// - Page alignment benefits
     pub const OPTIMAL_BUFFER_SIZE: usize = 64 * 1024; // 64KB
 
-    /// CPU cache line size
+    /// CPU cache line size (64 bytes)
+    ///
+    /// Critical for preventing false sharing in concurrent code.
+    /// Align hot data structures to this size.
     pub const CACHE_LINE_SIZE: usize = 64;
 
-    /// Page size for memory alignment
+    /// Operating system page size (4KB)
+    ///
+    /// Used for memory alignment and efficient page table usage.
+    /// Aligning allocations to page boundaries can improve TLB efficiency.
     pub const PAGE_SIZE: usize = 4096;
 
+    /// Maximum SIMD width in bytes (32 bytes for AVX2)
+    ///
+    /// Used to determine optimal batch sizes for vectorized operations.
+    /// AVX2 provides 256-bit (32-byte) wide vector operations.
     pub const MAX_SIMD_WIDTH: usize = 32; // AVX2
 
-    /// Recommended batch size for vectorized operations
+    /// Recommended batch size for vectorized operations (8 elements)
+    ///
+    /// Optimal batch size for processing u32 elements with AVX2.
+    /// Calculated as: MAX_SIMD_WIDTH / sizeof(u32) = 32 / 4 = 8
     pub const VECTORIZED_BATCH_SIZE: usize = Self::MAX_SIMD_WIDTH / 4; // 8 elements for u32
 
-    /// Memory prefetch distance
+    /// Memory prefetch distance (64 bytes)
+    ///
+    /// How far ahead to prefetch memory for optimal cache utilization.
+    /// Typically one cache line ahead.
     pub const PREFETCH_DISTANCE: usize = 64;
 
-    /// Branch prediction threshold
+    /// Branch prediction threshold (90%)
+    ///
+    /// When a branch is taken more than 90% of the time, modern CPUs
+    /// can predict it very effectively. Use this to optimize hot paths.
     pub const BRANCH_PREDICTION_THRESHOLD: f64 = 0.9;
 }
 

@@ -60,8 +60,21 @@ pub fn api_url() -> String {
 }
 
 /// Legacy constants for backward compatibility
+///
+/// **Deprecation**: These will be removed in v1.0.0. Use capability-based configuration instead.
+/// Default connection timeout
+///
+/// **Legacy**: Prefer capability-based timeout discovery from service metadata.
 pub const DEFAULT_TIMEOUT_MS: u64 = 5000;
+
+/// Maximum connection pool size
+///
+/// **Legacy**: Prefer dynamic pool sizing based on system resource detection.
 pub const MAX_CONNECTIONS: usize = 1000;
+
+/// Default I/O buffer size
+///
+/// **Legacy**: Prefer operation-specific buffer sizes from performance module.
 pub const BUFFER_SIZE: usize = 8192;
 /// Default value for retry attempts
 pub const DEFAULT_RETRY_ATTEMPTS: u32 = 3;

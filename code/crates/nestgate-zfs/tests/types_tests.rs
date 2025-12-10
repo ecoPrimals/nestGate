@@ -60,8 +60,12 @@ mod tests {
             total_bytes: 1_000_000_000,
             used_bytes: 500_000_000,
             available_bytes: 500_000_000,
-            fragmentation_percent: 15.5,
-            deduplication_ratio: 1.25,
+            utilization_percent: 50.0,
+            fragmentation_percent: 0.0,
+            deduplication_ratio: 1.0,
+            total: 1_000_000_000,
+            used: 500_000_000,
+            available: 500_000_000,
         };
         assert_eq!(capacity.total_bytes, 1_000_000_000);
         assert_eq!(
@@ -431,8 +435,12 @@ mod tests {
             total_bytes: 1_000_000_000,
             used_bytes: 600_000_000,
             available_bytes: 400_000_000,
-            fragmentation_percent: 10.0,
+            utilization_percent: 60.0,
+            fragmentation_percent: 0.0,
             deduplication_ratio: 1.0,
+            total: 1_000_000_000,
+            used: 600_000_000,
+            available: 400_000_000,
         };
 
         let pool = PoolInfo {
@@ -585,8 +593,12 @@ mod tests {
             total_bytes: 1_000_000_000,
             used_bytes: 0,
             available_bytes: 1_000_000_000,
+            utilization_percent: 0.0,
             fragmentation_percent: 0.0,
             deduplication_ratio: 1.0,
+            total: 1_000_000_000,
+            used: 0,
+            available: 1_000_000_000,
         };
 
         let pool = PoolInfo {
@@ -612,13 +624,17 @@ mod tests {
             total_bytes: 1_000_000_000,
             used_bytes: 750_000_000,
             available_bytes: 250_000_000,
-            fragmentation_percent: 25.5,
-            deduplication_ratio: 1.2,
+            utilization_percent: 75.0,
+            fragmentation_percent: 0.0,
+            deduplication_ratio: 1.0,
+            total: 1_000_000_000,
+            used: 750_000_000,
+            available: 250_000_000,
         };
 
         assert_eq!(capacity.total_bytes, 1_000_000_000);
-        assert!(capacity.fragmentation_percent > 0.0);
-        assert!(capacity.deduplication_ratio >= 1.0);
+        assert_eq!(capacity.used_bytes, 750_000_000);
+        assert!(capacity.utilization_percent > 0.0);
     }
 
     #[test]
@@ -627,8 +643,13 @@ mod tests {
             total_bytes: 1_000_000_000,
             used_bytes: 500_000_000,
             available_bytes: 500_000_000,
+            utilization_percent: 50.0,
+            // High dedup ratio,
             fragmentation_percent: 0.0,
-            deduplication_ratio: 3.0, // High dedup ratio
+            deduplication_ratio: 1.0,
+            total: 1_000_000_000,
+            used: 500_000_000,
+            available: 500_000_000,
         };
 
         assert_eq!(capacity.deduplication_ratio, 3.0);

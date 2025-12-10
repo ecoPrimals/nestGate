@@ -505,7 +505,6 @@
 // to the NestGate installation system.
 
 #[cfg(test)]
-
 mod tests {
     use crate::config::InstallerConfig;
     use tempfile::TempDir;

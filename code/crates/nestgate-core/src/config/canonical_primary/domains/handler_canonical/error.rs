@@ -56,18 +56,25 @@ impl Default for ErrorHandlerConfig {
 }
 
 impl ErrorHandlerConfig {
+    /// Creates a production-optimized error handler configuration
     #[must_use]
     pub fn production_optimized() -> Self {
         Self::default()
     }
+
+    /// Creates a development-optimized error handler configuration
     #[must_use]
     pub fn development_optimized() -> Self {
         Self::default()
     }
+
+    /// Creates a high-performance error handler configuration
     #[must_use]
     pub fn high_performance() -> Self {
         Self::default()
     }
+
+    /// Merges two error handler configurations, preferring values from self
     #[must_use]
     pub fn merge(self, _other: Self) -> Self {
         self

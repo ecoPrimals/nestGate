@@ -24,7 +24,7 @@ mod automation_unit_tests {
     use super::*;
 
     #[test]
-    fn test_tier_scoring_algorithm_basic() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_tier_scoring_algorithm_basic() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let large_frequently_accessed = nestgate_zfs::automation::DatasetMetrics {
             file_size: 10 * 1024 * 1024 * 1024, // 10GB
             days_since_access: 1.0,             // Accessed yesterday
@@ -40,7 +40,7 @@ mod automation_unit_tests {
     }
 
     #[test]
-    fn test_dataset_lifecycle_creation() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_dataset_lifecycle_creation() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let dataset = DatasetLifecycle {
             dataset_name: "test-dataset".to_string(),
             current_tier: StorageTier::Hot.into(),
@@ -60,7 +60,7 @@ mod automation_unit_tests {
     }
 
     #[test]
-    fn test_lifecycle_rule_validation() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_lifecycle_rule_validation() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let rule = LifecycleRule {
             name: "test-rule".to_string(),
             condition: "age_days>30".to_string(),
