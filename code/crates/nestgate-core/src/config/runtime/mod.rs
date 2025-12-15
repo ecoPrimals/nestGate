@@ -139,11 +139,18 @@ impl NestGateRuntimeConfig {
 ///
 /// # Errors
 ///
-/// Returns error if environment variables contain invalid values.
+/// Returns error if environment variables contain invalid values AND no defaults can be used.
+/// In practice, this gracefully falls back to defaults with a warning.
 pub fn init_config() -> Result<()> {
-    GLOBAL_CONFIG.get_or_init(|| {
-        NestGateRuntimeConfig::from_environment()
-            .expect("Failed to initialize configuration from environment")
+    GLOBAL_CONFIG.get_or_init(|| match NestGateRuntimeConfig::from_environment() {
+        Ok(config) => config,
+        Err(e) => {
+            tracing::warn!(
+                "Failed to load configuration from environment: {}. Using defaults.",
+                e
+            );
+            NestGateRuntimeConfig::default()
+        }
     });
     Ok(())
 }
@@ -153,15 +160,24 @@ pub fn init_config() -> Result<()> {
 /// This lazily initializes the configuration on first call. The configuration
 /// is then cached for the lifetime of the process.
 ///
-/// # Panics
+/// # Graceful Degradation
 ///
-/// Panics if environment variables contain invalid values. Call [`init_config()`]
-/// at application startup to handle errors gracefully.
+/// If environment loading fails, this function logs a warning and returns
+/// sensible defaults. This ensures the application can start even with
+/// configuration issues. Call [`init_config()`] at startup to initialize
+/// explicitly and handle errors if needed.
 #[must_use]
 pub fn get_config() -> &'static NestGateRuntimeConfig {
-    GLOBAL_CONFIG.get_or_init(|| {
-        NestGateRuntimeConfig::from_environment()
-            .expect("Failed to load configuration from environment")
+    GLOBAL_CONFIG.get_or_init(|| match NestGateRuntimeConfig::from_environment() {
+        Ok(config) => config,
+        Err(e) => {
+            tracing::warn!(
+                "Failed to load configuration from environment: {}. Using defaults. \
+                     Consider calling init_config() at startup for explicit error handling.",
+                e
+            );
+            NestGateRuntimeConfig::default()
+        }
     })
 }
 
