@@ -535,7 +535,7 @@ mod tests {
             StorageTier::Cache,
             StorageTier::Archive,
         ];
-        
+
         for tier in tiers {
             let dataset = backend
                 .create_dataset(&pool, &format!("data-{:?}", tier), tier.clone())

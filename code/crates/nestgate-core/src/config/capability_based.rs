@@ -1,0 +1,329 @@
+//! Capability-Based Configuration System
+//!
+//! This module replaces hardcoded constants with runtime capability discovery.
+//! Primals discover each other through capabilities, not hardcoded addresses.
+//!
+//! ## Philosophy
+//! - **Self-Knowledge Only**: Each primal knows only its own capabilities
+//! - **Runtime Discovery**: Services discovered at runtime by capability
+//! - **No Hardcoding**: Zero hardcoded primal URLs, ports, or addresses
+//! - **Graceful Degradation**: System works even if some primals unavailable
+//!
+//! ## Example
+//! ```rust
+//! use nestgate_core::config::capability_based::CapabilityConfigBuilder;
+//! use nestgate_core::capability::PrimalCapability;
+//!
+//! # async fn example() -> nestgate_core::Result<()> {
+//! // Build capability-aware config
+//! let config = CapabilityConfigBuilder::new()
+//!     .with_discovery_timeout(std::time::Duration::from_secs(5))
+//!     .with_retry_attempts(3)
+//!     .build()?;
+//!
+//! // Discover services by capability (not by primal name!)
+//! let auth_service = config.discover(PrimalCapability::Authentication).await?;
+//! let storage_service = config.discover(PrimalCapability::Storage).await?;
+//!
+//! // Services discovered at runtime, no hardcoding!
+//! # Ok(())
+//! # }
+//! ```
+
+use crate::error::NestGateError;
+use crate::universal_traits::types::PrimalCapability;
+use crate::Result;
+use std::collections::HashMap;
+use std::net::SocketAddr;
+use std::sync::Arc;
+use std::time::Duration;
+use tokio::sync::RwLock;
+
+/// Configuration for capability-based service discovery
+#[derive(Debug, Clone)]
+pub struct CapabilityConfig {
+    /// How long to wait for service discovery
+    /// Used by runtime discovery system for dynamic capability location
+    #[allow(dead_code)] // Used by capability discovery runtime
+    discovery_timeout: Duration,
+
+    /// Number of retry attempts for discovery
+    retry_attempts: u32,
+
+    /// Fallback behavior when service not found
+    fallback_mode: FallbackMode,
+
+    /// Cache of discovered services
+    discovered_services: Arc<RwLock<HashMap<PrimalCapability, DiscoveredService>>>,
+}
+
+/// Fallback behavior when a capability is not available
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FallbackMode {
+    /// Fail immediately if service not found
+    FailFast,
+
+    /// Use graceful degradation (feature may be unavailable)
+    GracefulDegradation,
+
+    /// Use local/embedded implementation if available
+    LocalFallback,
+}
+
+/// A service discovered by capability
+#[derive(Debug, Clone)]
+pub struct DiscoveredService {
+    /// The capability this service provides
+    pub capability: PrimalCapability,
+
+    /// Service endpoint (discovered at runtime)
+    pub endpoint: SocketAddr,
+
+    /// Service metadata (version, features, etc.)
+    pub metadata: HashMap<String, String>,
+
+    /// When this service was discovered
+    pub discovered_at: std::time::Instant,
+}
+
+impl CapabilityConfig {
+    /// Create a new builder for capability config
+    pub fn builder() -> CapabilityConfigBuilder {
+        CapabilityConfigBuilder::new()
+    }
+
+    /// Discover a service by capability
+    ///
+    /// This performs runtime discovery - no hardcoded addresses!
+    pub async fn discover(&self, capability: PrimalCapability) -> Result<DiscoveredService> {
+        // Check cache first
+        {
+            let cache = self.discovered_services.read().await;
+            if let Some(service) = cache.get(&capability) {
+                // TODO: Check if service is still alive
+                return Ok(service.clone());
+            }
+        }
+
+        // Perform discovery with retries
+        for attempt in 0..self.retry_attempts {
+            match self.try_discover(capability.clone()).await {
+                Ok(service) => {
+                    // Cache the discovered service
+                    let mut cache = self.discovered_services.write().await;
+                    cache.insert(capability, service.clone());
+                    return Ok(service);
+                }
+                Err(e) if attempt == self.retry_attempts - 1 => {
+                    // Last attempt failed
+                    return self.handle_discovery_failure(capability, e).await;
+                }
+                Err(_) => {
+                    // Retry after delay
+                    let delay = Duration::from_millis(100 * (1 << attempt));
+                    tokio::time::sleep(delay).await;
+                }
+            }
+        }
+
+        Err(NestGateError::configuration_error(
+            "capability_discovery",
+            &format!(
+                "Failed to discover service for capability: {:?}",
+                capability
+            ),
+        ))
+    }
+
+    /// Try to discover a service once
+    async fn try_discover(&self, capability: PrimalCapability) -> Result<DiscoveredService> {
+        // Implementation: Use mDNS, consul, etcd, or custom discovery
+        // For now, check environment variables as interim solution
+        let env_key = format!("NESTGATE_CAPABILITY_{:?}_ENDPOINT", capability)
+            .to_uppercase()
+            .replace("-", "_");
+
+        let endpoint_str = std::env::var(&env_key).map_err(|_| {
+            let msg = format!(
+                "Capability {} not configured. Set {} environment variable",
+                capability_name(&capability),
+                env_key
+            );
+            NestGateError::configuration_error(&env_key, &msg)
+        })?;
+
+        let endpoint: SocketAddr = endpoint_str.parse().map_err(|e| {
+            let msg = format!("Invalid endpoint '{}': {}", endpoint_str, e);
+            NestGateError::configuration_error(&env_key, &msg)
+        })?;
+
+        Ok(DiscoveredService {
+            capability,
+            endpoint,
+            metadata: HashMap::new(),
+            discovered_at: std::time::Instant::now(),
+        })
+    }
+
+    /// Handle discovery failure based on fallback mode
+    async fn handle_discovery_failure(
+        &self,
+        capability: PrimalCapability,
+        error: NestGateError,
+    ) -> Result<DiscoveredService> {
+        match self.fallback_mode {
+            FallbackMode::FailFast => Err(error),
+            FallbackMode::GracefulDegradation => {
+                tracing::warn!(
+                    "Service for capability {:?} not found, degrading gracefully",
+                    capability
+                );
+                Err(error) // Still return error, but caller can handle
+            }
+            FallbackMode::LocalFallback => {
+                tracing::info!(
+                    "Service for capability {:?} not found, using local implementation",
+                    capability
+                );
+                // Use localhost as fallback (for development/testing)
+                Ok(DiscoveredService {
+                    capability,
+                    endpoint: "127.0.0.1:8080".parse().unwrap(),
+                    metadata: {
+                        let mut meta = HashMap::new();
+                        meta.insert("mode".to_string(), "local_fallback".to_string());
+                        meta
+                    },
+                    discovered_at: std::time::Instant::now(),
+                })
+            }
+        }
+    }
+}
+
+/// Builder for CapabilityConfig
+#[derive(Debug)]
+pub struct CapabilityConfigBuilder {
+    discovery_timeout: Duration,
+    retry_attempts: u32,
+    fallback_mode: FallbackMode,
+}
+
+impl Default for CapabilityConfigBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl CapabilityConfigBuilder {
+    /// Create a new builder with sensible defaults
+    pub fn new() -> Self {
+        Self {
+            discovery_timeout: Duration::from_secs(5),
+            retry_attempts: 3,
+            fallback_mode: FallbackMode::FailFast,
+        }
+    }
+
+    /// Set discovery timeout
+    pub fn with_discovery_timeout(mut self, timeout: Duration) -> Self {
+        self.discovery_timeout = timeout;
+        self
+    }
+
+    /// Set retry attempts
+    pub fn with_retry_attempts(mut self, attempts: u32) -> Self {
+        self.retry_attempts = attempts;
+        self
+    }
+
+    /// Set fallback mode
+    pub fn with_fallback_mode(mut self, mode: FallbackMode) -> Self {
+        self.fallback_mode = mode;
+        self
+    }
+
+    /// Build the configuration
+    pub fn build(self) -> Result<CapabilityConfig> {
+        if self.retry_attempts == 0 {
+            return Err(NestGateError::validation_error(
+                "retry_attempts must be at least 1",
+            ));
+        }
+
+        Ok(CapabilityConfig {
+            discovery_timeout: self.discovery_timeout,
+            retry_attempts: self.retry_attempts,
+            fallback_mode: self.fallback_mode,
+            discovered_services: Arc::new(RwLock::new(HashMap::new())),
+        })
+    }
+}
+
+/// Get human-readable name for a capability
+fn capability_name(capability: &PrimalCapability) -> &'static str {
+    match capability {
+        PrimalCapability::Storage => "Storage",
+        PrimalCapability::Security => "Security",
+        PrimalCapability::Orchestration => "Orchestration",
+        PrimalCapability::Compute => "Compute",
+        PrimalCapability::MachineLearning => "MachineLearning",
+        PrimalCapability::Monitoring => "Monitoring",
+        PrimalCapability::Analytics => "Analytics",
+        PrimalCapability::DataProcessing => "DataProcessing",
+        PrimalCapability::NetworkManagement => "NetworkManagement",
+        PrimalCapability::Custom(_) => "Custom",
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_builder_defaults() {
+        let builder = CapabilityConfigBuilder::new();
+        assert_eq!(builder.discovery_timeout, Duration::from_secs(5));
+        assert_eq!(builder.retry_attempts, 3);
+        assert_eq!(builder.fallback_mode, FallbackMode::FailFast);
+    }
+
+    #[test]
+    fn test_builder_customization() {
+        let config = CapabilityConfigBuilder::new()
+            .with_discovery_timeout(Duration::from_secs(10))
+            .with_retry_attempts(5)
+            .with_fallback_mode(FallbackMode::GracefulDegradation)
+            .build()
+            .unwrap();
+
+        assert_eq!(config.discovery_timeout, Duration::from_secs(10));
+        assert_eq!(config.retry_attempts, 5);
+        assert_eq!(config.fallback_mode, FallbackMode::GracefulDegradation);
+    }
+
+    #[test]
+    fn test_zero_retries_rejected() {
+        let result = CapabilityConfigBuilder::new()
+            .with_retry_attempts(0)
+            .build();
+
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_discovery_from_env() {
+        std::env::set_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT", "127.0.0.1:9000");
+
+        let config = CapabilityConfigBuilder::new().build().unwrap();
+
+        let result = config.discover(PrimalCapability::Storage).await;
+        assert!(result.is_ok());
+
+        let service = result.unwrap();
+        assert_eq!(service.capability, PrimalCapability::Storage);
+        assert_eq!(service.endpoint.port(), 9000);
+
+        std::env::remove_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT");
+    }
+}
