@@ -1,0 +1,367 @@
+code/crates/nestgate-network/src/ports.rs:279:        let json = r#"{"port":4000,"service_name":"cache","port_type":"REDIS","allocated_at":{"secs_since_epoch":1234567890,"nanos_since_epoch":0}}"#;
+code/crates/nestgate-performance/src/zero_copy/network_interface.rs:351:        let addr: SocketAddr = "127.0.0.1:8080".parse().unwrap();
+code/crates/nestgate-canonical/src/error.rs:220:        let err = NestGateError::network_endpoint("timeout", "localhost:8080");
+code/crates/nestgate-canonical/src/error.rs:224:        assert!(msg.contains("localhost:8080"));
+code/crates/nestgate-canonical/src/error.rs:452:        let original = NestGateError::network_endpoint("timeout", "localhost:8080");
+code/crates/nestgate-automation/src/types/ecosystem.rs:66:    ///     "http://192.168.1.100:8080", // Discovered, not hardcoded
+code/crates/nestgate-automation/src/types/ecosystem.rs:157:            "http://192.168.1.100:8080",
+code/crates/nestgate-automation/src/types/ecosystem.rs:164:        assert_eq!(provider.endpoint, "http://192.168.1.100:8080");
+code/crates/nestgate-automation/src/types/ecosystem.rs:176:            endpoint: "http://localhost:9000".to_string(),
+code/crates/nestgate-mcp/src/error.rs:418:            local_endpoint: Some("localhost:8080".to_string()),
+code/crates/nestgate-mcp/src/error.rs:419:            remote_endpoint: Some("server:9090".to_string()),
+code/crates/nestgate-core/src/network/comprehensive_error_paths_dec11.rs:168:            "127.0.0.1:99999",    // Port too large
+code/crates/nestgate-core/src/network/comprehensive_error_paths_dec11.rs:171:            ":8080",              // Missing host
+code/crates/nestgate-core/src/network/comprehensive_error_paths_dec11.rs:201:            let addr = format!("{}:8080", host);
+code/crates/nestgate-core/src/network/comprehensive_error_paths_dec11.rs:292:            tokio::net::TcpStream::connect("[::1]:12345"),
+code/crates/nestgate-core/src/network/comprehensive_error_paths_dec11.rs:303:            "[::1]:8080",              // Localhost
+code/crates/nestgate-core/src/network/comprehensive_error_paths_dec11.rs:306:            "[::ffff:127.0.0.1]:8080", // IPv4-mapped IPv6
+code/crates/nestgate-core/src/network/comprehensive_error_paths_dec11.rs:507:                let addr = format!("{}:8080", host);
+code/crates/nestgate-core/src/network/client/mod.rs:121:        let _endpoint = Endpoint::from_url("http://localhost:8080");
+code/crates/nestgate-core/src/network/client/pool.rs:274:        let endpoint = Endpoint::from_url("http://localhost:8080").unwrap();
+code/crates/nestgate-core/src/network/client/pool.rs:286:        let endpoint = Endpoint::from_url("http://localhost:8080").unwrap();
+code/crates/nestgate-core/src/network/client/pool.rs:310:        let endpoint = Endpoint::from_url("http://localhost:8080").unwrap();
+code/crates/nestgate-core/src/network/client/utils.rs:83:        let endpoint = parse_endpoint("https://example.com:8443").await.unwrap();
+code/crates/nestgate-core/src/network/client/types.rs:216:    /// let endpoint = Endpoint::from_url("http://localhost:8080")?;
+code/crates/nestgate-core/src/network/client/types.rs:363:        let ep = Endpoint::from_url("http://localhost:8080").unwrap();
+code/crates/nestgate-core/src/network/client/types.rs:378:        assert_eq!(ep.base_url(), "http://localhost:8080");
+code/crates/nestgate-core/src/data_sources/steam_data_service.rs:552:            endpoint: "http://gaming-rig-2:8080".to_string(),
+code/crates/nestgate-core/src/data_sources/steam_data_service.rs:575:            endpoint: "http://gaming-rig-1:8080".to_string(),
+code/crates/nestgate-core/src/universal_primal_discovery/registry.rs:115:                Migration: Set ORCHESTRATION_DISCOVERY_ENDPOINT=http://orchestration-service:8080"
+code/crates/nestgate-core/src/universal_primal_discovery/registry.rs:127:                Migration: Set COMPUTE_DISCOVERY_ENDPOINT=http://compute-service:8080"
+code/crates/nestgate-core/src/universal_primal_discovery/service_registry.rs:94:    /// assert_eq!(endpoint.url(), "http://127.0.0.1:8080");
+code/crates/nestgate-core/src/universal_primal_discovery/service_registry.rs:298:        assert_eq!(endpoint.url(), "https://192.168.1.100:3000");
+code/crates/nestgate-core/src/universal_primal_discovery/migration_to_self_knowledge.rs:261:        pub const ORCHESTRATOR_URL: &str = "http://orchestrator:8080";
+code/crates/nestgate-core/src/universal_primal_discovery/migration_to_self_knowledge.rs:262:        pub const AI_URL: &str = "http://ai:9000";
+code/crates/nestgate-core/src/universal_primal_discovery/registry_config.rs:224:            .with_registry_url("http://registry:8080".to_string())
+code/crates/nestgate-core/src/universal_primal_discovery/registry_config.rs:225:            .with_service_mesh_endpoint("http://mesh:9090".to_string())
+code/crates/nestgate-core/src/universal_primal_discovery/registry_config.rs:226:            .with_registry_entry("database", "endpoint", "postgres://db:5432".to_string())
+code/crates/nestgate-core/src/universal_primal_discovery/registry_config.rs:229:        assert_eq!(config.get_registry_url(), Some("http://registry:8080"));
+code/crates/nestgate-core/src/universal_primal_discovery/registry_config.rs:230:        assert_eq!(config.get_service_mesh_endpoint(), Some("http://mesh:9090"));
+code/crates/nestgate-core/src/universal_primal_discovery/registry_config.rs:234:            Some("postgres://db:5432")
+code/crates/nestgate-core/src/universal_primal_discovery/registry_config.rs:242:            RegistryConfig::new().with_service_mesh_endpoint("http://mesh:9090".to_string());
+code/crates/nestgate-core/src/universal_primal_discovery/registry_config.rs:252:            Arc::new(RegistryConfig::new().with_registry_url("http://registry1:8080".to_string()));
+code/crates/nestgate-core/src/universal_primal_discovery/registry_config.rs:254:            Arc::new(RegistryConfig::new().with_registry_url("http://registry2:8080".to_string()));
+code/crates/nestgate-core/src/universal_primal_discovery/registry_config.rs:261:                    assert_eq!(config.get_registry_url(), Some("http://registry1:8080"));
+code/crates/nestgate-core/src/universal_primal_discovery/registry_config.rs:270:                    assert_eq!(config.get_registry_url(), Some("http://registry2:8080"));
+code/crates/nestgate-core/src/universal_primal_discovery/registry_config.rs:284:            "http://service:8080".to_string(),
+code/crates/nestgate-core/src/universal_primal_discovery/registry_config.rs:290:            Some("http://service:8080")
+code/crates/nestgate-core/src/universal_primal_discovery/registry_config.rs:294:            Some("http://service:8080")
+code/crates/nestgate-core/src/universal_primal_discovery/capability_based_discovery.rs:534:        let addr: SocketAddr = "127.0.0.1:8080".parse().unwrap();
+code/crates/nestgate-core/src/universal_primal_discovery/capability_based_discovery.rs:537:        assert_eq!(endpoint.url(), "http://127.0.0.1:8080/api/v1");
+code/crates/nestgate-core/src/universal_primal_discovery/network_discovery_config.rs:244:        config.set_service_endpoint("storage", "http://storage:9000");
+code/crates/nestgate-core/src/universal_primal_discovery/network_discovery_config.rs:245:        config.set_service_endpoint("cache", "redis://cache:6379");
+code/crates/nestgate-core/src/universal_primal_discovery/network_discovery_config.rs:249:            Some("http://storage:9000")
+code/crates/nestgate-core/src/universal_primal_discovery/network_discovery_config.rs:253:            Some("http://storage:9000")
+code/crates/nestgate-core/src/universal_primal_discovery/network_discovery_config.rs:257:            Some("redis://cache:6379")
+code/crates/nestgate-core/src/universal_primal_discovery/network_discovery_config.rs:266:        config.set_capability_endpoint("orchestration", "http://orch:8080");
+code/crates/nestgate-core/src/universal_primal_discovery/network_discovery_config.rs:267:        config.set_capability_endpoint("security", "http://sec:7070");
+code/crates/nestgate-core/src/universal_primal_discovery/network_discovery_config.rs:271:            Some("http://orch:8080")
+code/crates/nestgate-core/src/universal_primal_discovery/network_discovery_config.rs:275:            Some("http://orch:8080")
+code/crates/nestgate-core/src/universal_primal_discovery/network_discovery_config.rs:279:            Some("http://sec:7070")
+code/crates/nestgate-core/src/universal_primal_discovery/network_discovery_config.rs:288:        config.set_service_endpoint("api", "http://api:8000");
+code/crates/nestgate-core/src/universal_primal_discovery/network_discovery_config.rs:289:        config.set_service_endpoint("web", "http://web:3000");
+code/crates/nestgate-core/src/universal_primal_discovery/network_discovery_config.rs:290:        config.set_service_endpoint("cache", "redis://cache:6379");
+code/crates/nestgate-core/src/universal_primal_discovery/network_discovery_config.rs:303:        config.set_capability_endpoint("orchestration", "http://orch:8080");
+code/crates/nestgate-core/src/universal_primal_discovery/network_discovery_config.rs:304:        config.set_capability_endpoint("compute", "http://compute:9090");
+code/crates/nestgate-core/src/universal_primal_discovery/network_discovery_config.rs:344:        config.set_service_endpoint("MyService", "http://localhost:18080");
+code/crates/nestgate-core/src/universal_adapter/adapter_config.rs:27://! config.set_discovery_endpoint("orchestration", "http://orch:8080");
+code/crates/nestgate-core/src/universal_adapter/adapter_config.rs:317:            "http://example.com:9000/adapter"
+code/crates/nestgate-core/src/universal_adapter/adapter_config.rs:380:        let sec_endpoint = "http://sec:7070".to_string();
+code/crates/nestgate-core/src/universal_adapter/adapter_config.rs:392:            Some(&"http://sec:7070".to_string())
+code/crates/nestgate-core/src/universal_adapter/config.rs:253:        // Default: 3 endpoints starting from 127.0.0.1:8080
+code/crates/nestgate-core/src/universal_adapter/config.rs:280:        let config = AdapterConfig::new().add_endpoint("http://custom:9000/discovery".to_string());
+code/crates/nestgate-core/src/universal_adapter/config.rs:286:            .contains(&"http://custom:9000/discovery".to_string()));
+code/crates/nestgate-core/src/universal_adapter/config.rs:303:            .add_endpoint("http://endpoint1:8080/discovery".to_string())
+code/crates/nestgate-core/src/universal_adapter/config.rs:304:            .add_endpoint("http://endpoint2:8080/discovery".to_string())
+code/crates/nestgate-core/src/universal_adapter/config.rs:363:            config = config.add_endpoint(format!("http://endpoint{i}:8080/discovery"));
+code/crates/nestgate-core/src/universal_adapter/primal_sovereignty.rs:374:        assert!(capability.endpoint.contains(":8081"));
+code/crates/nestgate-core/src/universal_adapter/discovery_config.rs:191:            .with_security_endpoint("http://security:9000".to_string());
+code/crates/nestgate-core/src/universal_adapter/discovery_config.rs:196:        assert!(security.contains(&"http://security:9000".to_string()));
+code/crates/nestgate-core/src/universal_adapter/discovery_config.rs:227:                    assert!(config.get_base_endpoint().contains("config1:5000"));
+code/crates/nestgate-core/src/universal_adapter/discovery_config.rs:236:                    assert!(config.get_base_endpoint().contains("config2:6000"));
+code/crates/nestgate-core/src/universal_adapter/discovery_config.rs:248:            "http://a:8080/discovery".to_string(),
+code/crates/nestgate-core/src/universal_adapter/discovery_config.rs:249:            "http://b:9090/discovery".to_string(),
+code/crates/nestgate-core/src/universal_adapter/discovery_config.rs:256:        assert_eq!(result[0], "http://a:8080/discovery");
+code/crates/nestgate-core/src/universal_adapter/discovery_config.rs:257:        assert_eq!(result[1], "http://b:9090/discovery");
+code/crates/nestgate-core/src/universal_adapter/discovery_config.rs:265:            .with_security_endpoint("http://sec:9000".to_string())
+code/crates/nestgate-core/src/universal_adapter/discovery_config.rs:266:            .with_ai_endpoint("http://ai:9001".to_string());
+code/crates/nestgate-core/src/universal_adapter/discovery_config.rs:274:        assert!(security.iter().any(|e| e == "http://sec:9000"));
+code/crates/nestgate-core/src/universal_adapter/discovery_config.rs:276:        assert!(ai.iter().any(|e| e == "http://ai:9001"));
+code/crates/nestgate-core/src/universal_adapter/capability_discovery.rs:303:        assert!(providers[0].endpoint.contains("127.0.0.1:8080"));
+code/crates/nestgate-core/src/universal_adapter/capability_discovery.rs:593:        assert!(providers[0].endpoint.contains("127.0.0.1:9090"));
+code/crates/nestgate-core/src/universal_adapter/discovery.rs:615:            endpoint: "http://custom:9000".to_string(),
+code/crates/nestgate-core/src/universal_adapter/discovery.rs:626:        assert_eq!(config.endpoint, "http://custom:9000");
+code/crates/nestgate-core/src/primal_self_knowledge.rs:601:        assert_eq!(endpoint.url(), "http://localhost:8080/api");
+code/crates/nestgate-core/src/primal_self_knowledge.rs:604:            Some("http://localhost:8080/health".to_string())
+code/crates/nestgate-core/src/discovery/capability_scanner.rs:312:        config.set_endpoint("orchestration", "http://orchestration-svc:8080");
+code/crates/nestgate-core/src/discovery/capability_scanner.rs:313:        config.set_endpoint("security", "http://security-svc:9000");
+code/crates/nestgate-core/src/discovery/capability_scanner.rs:333:        assert_eq!(orchestration.endpoint, "http://orchestration-svc:8080");
+code/crates/nestgate-core/src/discovery/capability_scanner.rs:343:        config.set_endpoint("ai", "http://ai-svc:7000");
+code/crates/nestgate-core/src/discovery/capability_scanner.rs:344:        config.set_endpoint("storage", "http://storage:8080");
+code/crates/nestgate-core/src/discovery/capability_scanner.rs:372:            "http://ai-svc:7000"
+code/crates/nestgate-core/src/discovery/capability_scanner.rs:382:            "http://storage:8080"
+code/crates/nestgate-core/src/discovery/capability_scanner_config.rs:115:    /// config.set_endpoint("orchestration", "http://orch:8080");
+code/crates/nestgate-core/src/discovery/capability_scanner_config.rs:236:        config.set_endpoint("orchestration", "http://orch:8080");
+code/crates/nestgate-core/src/discovery/capability_scanner_config.rs:240:            Some("http://orch:8080")
+code/crates/nestgate-core/src/discovery/capability_scanner_config.rs:249:        config.set_endpoint("security", "http://sec:8081");
+code/crates/nestgate-core/src/discovery/capability_scanner_config.rs:278:        config.set_endpoint("storage", "http://storage:8083");
+code/crates/nestgate-core/src/discovery/capability_scanner_config.rs:281:        assert_eq!(cloned.get_endpoint("storage"), Some("http://storage:8083"));
+code/crates/nestgate-core/src/discovery/capability_scanner_config.rs:304:        config.set_endpoint("orch", "http://orch:8080");
+code/crates/nestgate-core/src/discovery/capability_scanner_config.rs:305:        config.set_endpoint("sec", "http://sec:8081");
+code/crates/nestgate-core/src/discovery/capability_scanner_config.rs:306:        config.set_endpoint("ai", "http://ai:8082");
+code/crates/nestgate-core/src/discovery/network_discovery.rs:161:        // mDNS: 224.0.0.251:5353 (RFC 6762)
+code/crates/nestgate-core/src/discovery/network_discovery.rs:162:        // SSDP: 239.255.255.250:1900 (UPnP specification)
+code/crates/nestgate-core/src/discovery/network_discovery.rs:166:                "224.0.0.251:5353"
+code/crates/nestgate-core/src/discovery/network_discovery.rs:169:                "239.255.255.250:1900"
+code/crates/nestgate-core/src/discovery/network_discovery.rs:531:            "NESTGATE-DISCOVERY:orchestration:http://orchestration-service:8080:priority=100";
+code/crates/nestgate-core/src/discovery/network_discovery.rs:537:        assert_eq!(capability.endpoint, "http://orchestration-service:8080");
+code/crates/nestgate-core/src/examples/spore_integration_demo.rs:167:    let security_endpoint = Some("https://security.local:8443".to_string());
+code/crates/nestgate-core/src/config/runtime/network.rs:235:        assert!(url.contains(":8080"));
+code/crates/nestgate-core/src/config/runtime/services.rs:294:            "http://security-provider:8080".to_string(),
+code/crates/nestgate-core/src/config/runtime/services.rs:300:            Some("http://security-provider:8080".to_string())
+code/crates/nestgate-core/src/config/runtime/services.rs:309:            .insert("security".to_string(), "http://sec:8080".to_string());
+code/crates/nestgate-core/src/config/runtime/services.rs:312:            .insert("ai".to_string(), "http://ai:9000".to_string());
+code/crates/nestgate-core/src/config/mod.rs:17:/// - 121 ports (:8080, :3000, :5432, :6379, :9090)
+code/crates/nestgate-core/src/config/external/mod.rs:10://! - 121 ports (:8080, :3000, :5432, :6379, :9090)
+code/crates/nestgate-core/src/config/external/network.rs:8://! - 121 hardcoded ports (:8080, :3000, :5432, :6379, :9090)
+code/crates/nestgate-core/src/config/external/network.rs:279:        assert_eq!(url, "postgresql://localhost:5432/nestgate");
+code/crates/nestgate-core/src/config/external/network.rs:285:        assert_eq!(config.redis_url(), "redis://localhost:6379");
+code/crates/nestgate-core/src/config/external/network.rs:291:        assert_eq!(config.metrics_endpoint(), "0.0.0.0:9090");
+code/crates/nestgate-core/src/config/external/network.rs:300:        assert_eq!(endpoint.url("https"), "https://example.com:8080");
+code/crates/nestgate-core/src/config/external/services_config.rs:366:    ///     .with_capability("orchestration", "http://orchestration:8080")
+code/crates/nestgate-core/src/config/external/services_config.rs:367:    ///     .with_capability("security", "http://security:9000");
+code/crates/nestgate-core/src/config/external/services_config.rs:461:            "http://127.0.0.1:8080/discovery"
+code/crates/nestgate-core/src/config/external/services_config.rs:463:        assert_eq!(config.get_adapter_url(), "http://127.0.0.1:8080/adapter");
+code/crates/nestgate-core/src/config/external/services_config.rs:472:            .with_discovery_url("http://discovery:8080".to_string())
+code/crates/nestgate-core/src/config/external/services_config.rs:474:            .with_external_service("custom".to_string(), "http://custom:8000".to_string());
+code/crates/nestgate-core/src/config/external/services_config.rs:476:        assert_eq!(config.get_discovery_url(), "http://discovery:8080");
+code/crates/nestgate-core/src/config/external/services_config.rs:484:            Some("http://custom:8000")
+code/crates/nestgate-core/src/config/external/services_config.rs:491:            .with_discovery_url("http://prod-discovery:8080".to_string())
+code/crates/nestgate-core/src/config/external/services_config.rs:492:            .with_adapter_url("http://prod-adapter:8080".to_string())
+code/crates/nestgate-core/src/config/external/services_config.rs:493:            .with_health_url("http://prod-health:8080".to_string());
+code/crates/nestgate-core/src/config/external/services_config.rs:504:            ServicesConfig::new().with_discovery_url("http://discovery1:8080".to_string()),
+code/crates/nestgate-core/src/config/external/services_config.rs:507:            ServicesConfig::new().with_discovery_url("http://discovery2:8080".to_string()),
+code/crates/nestgate-core/src/config/external/services_config.rs:515:                    assert_eq!(config.get_discovery_url(), "http://discovery1:8080");
+code/crates/nestgate-core/src/config/external/services_config.rs:524:                    assert_eq!(config.get_discovery_url(), "http://discovery2:8080");
+code/crates/nestgate-core/src/config/port_migration.rs:38://! export NESTGATE_CAPABILITY_HTTP_API_ENDPOINT="http://localhost:8080"
+code/crates/nestgate-core/src/config/port_migration.rs:39://! export NESTGATE_CAPABILITY_STORAGE_ENDPOINT="http://localhost:9000"
+code/crates/nestgate-core/src/config/port_migration.rs:169:            "http://localhost:9999",
+code/crates/nestgate-core/src/config/port_migration.rs:190:            "http://localhost:19090",
+code/crates/nestgate-core/src/config/port_migration.rs:203:            "http://storage:8888",
+code/crates/nestgate-core/src/config/error_path_expansion_dec11.rs:132:        std::env::set_var("NESTGATE_HOST", "localhost:8080");
+code/crates/nestgate-core/src/config/capability_based.rs:189:                    endpoint: "127.0.0.1:8080".parse().unwrap(),
+code/crates/nestgate-core/src/config/capability_based.rs:314:        std::env::set_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT", "127.0.0.1:9000");
+code/crates/nestgate-core/src/config/network_defaults_v2_config.rs:350:        assert_eq!(config.api_bind_address(), "127.0.0.1:8080");
+code/crates/nestgate-core/src/config/network_defaults_v2_config.rs:351:        assert_eq!(config.api_url(), "http://127.0.0.1:8080");
+code/crates/nestgate-core/src/config/network_defaults_v2_config.rs:376:        assert_eq!(config.api_bind_address(), "0.0.0.0:9000");
+code/crates/nestgate-core/src/config/network_defaults_v2_config.rs:377:        assert_eq!(config.api_url(), "http://0.0.0.0:9000");
+code/crates/nestgate-core/src/config/network_defaults_v2_config.rs:408:                assert_eq!(config_clone.api_bind_address(), "192.168.1.100:7070");
+code/crates/nestgate-core/src/config/defaults_config.rs:299:        assert_eq!(config.get_api_base_url(), "http://127.0.0.1:7777");
+code/crates/nestgate-core/src/config/defaults_config.rs:300:        assert_eq!(config.get_websocket_base_url(), "ws://127.0.0.1:6666");
+code/crates/nestgate-core/src/config/migration_helpers.rs:91:        assert_eq!(addr, "localhost:18080");
+code/crates/nestgate-core/src/config/sovereignty_config.rs:84:    /// * `endpoint` - The full API endpoint URL (e.g., "http://localhost:8080")
+code/crates/nestgate-core/src/config/sovereignty_config.rs:228:            .with_api_endpoint("http://custom:9090".to_string());
+code/crates/nestgate-core/src/config/sovereignty_config.rs:232:        assert_eq!(config.api_endpoint(), "http://custom:9090");
+code/crates/nestgate-core/src/config/sovereignty_config.rs:241:        assert_eq!(config.api_endpoint(), "http://myhost:8888");
+code/crates/nestgate-core/src/config/sovereignty_config.rs:242:        assert_eq!(config.websocket_endpoint(), "ws://127.0.0.1:8888/ws");
+code/crates/nestgate-core/src/config/sovereignty_config.rs:243:        assert_eq!(config.discovery_endpoint(), "http://myhost:8888/discovery");
+code/crates/nestgate-core/src/config/sovereignty_config.rs:304:        assert!(endpoint1.contains("127.0.0.1:8080"));
+code/crates/nestgate-core/src/config/sovereignty_config.rs:305:        assert!(endpoint2.contains("0.0.0.0:9090"));
+code/crates/nestgate-core/src/config/network_defaults.rs:31://! - `NESTGATE_API_BIND` - Full bind address (default: "127.0.0.1:8080")
+code/crates/nestgate-core/src/config/network_defaults.rs:35://! - `NESTGATE_METRICS_BIND` - Metrics bind address (default: "127.0.0.1:9090")
+code/crates/nestgate-core/src/config/network_defaults.rs:39://! - `NESTGATE_WS_BIND` - WebSocket bind address (default: "127.0.0.1:8081")
+code/crates/nestgate-core/src/config/network_defaults.rs:43://! - `NESTGATE_HEALTH_BIND` - Health check bind address (default: "127.0.0.1:8082")
+code/crates/nestgate-core/src/config/network_defaults.rs:47://! - `NESTGATE_STORAGE_BIND` - Storage bind address (default: "127.0.0.1:5000")
+code/crates/nestgate-core/src/config/network_defaults.rs:92:/// - `NESTGATE_API_BIND`: Full bind address (e.g., "0.0.0.0:8080")
+code/crates/nestgate-core/src/config/network_defaults.rs:95:/// Returns `"127.0.0.1:8080"` constructed from `api_host()` and `api_port()`
+code/crates/nestgate-core/src/config/network_defaults.rs:101:/// API server URL (e.g., "http://127.0.0.1:8080")
+code/crates/nestgate-core/src/config/network_defaults.rs:133:/// Returns `"127.0.0.1:9090"`
+code/crates/nestgate-core/src/config/network_defaults.rs:159:/// Returns `"127.0.0.1:8081"`
+code/crates/nestgate-core/src/config/network_defaults.rs:165:/// WebSocket URL (e.g., "ws://127.0.0.1:8081")
+code/crates/nestgate-core/src/config/network_defaults.rs:197:/// Returns `"127.0.0.1:8082"`
+code/crates/nestgate-core/src/config/network_defaults.rs:203:/// Health check URL (e.g., "http://127.0.0.1:8082/health")
+code/crates/nestgate-core/src/config/network_defaults.rs:235:/// Returns `"127.0.0.1:5000"`
+code/crates/nestgate-core/src/config/network_defaults.rs:314:        assert_eq!(config.api_bind_address(), "127.0.0.1:8080");
+code/crates/nestgate-core/src/config/network_defaults.rs:315:        assert_eq!(config.api_url(), "http://127.0.0.1:8080");
+code/crates/nestgate-core/src/config/network_defaults.rs:326:        assert_eq!(config.api_bind_address(), "0.0.0.0:9000");
+code/crates/nestgate-core/src/config/network_defaults.rs:353:        assert_eq!(bind_all_interfaces(8080), "0.0.0.0:8080");
+code/crates/nestgate-core/src/config/network_defaults.rs:354:        assert_eq!(bind_localhost(8080), "127.0.0.1:8080");
+code/crates/nestgate-core/src/config/network_defaults.rs:364:        assert!(url.contains(":8080"));
+code/crates/nestgate-core/src/config/network_defaults.rs:384:        assert!(url.contains(":8081"));
+code/crates/nestgate-core/src/config/network_defaults.rs:404:        assert!(url.contains(":8082"));
+code/crates/nestgate-core/src/config/network_defaults.rs:469:        assert_eq!(bind_all_interfaces(3000), "0.0.0.0:3000");
+code/crates/nestgate-core/src/config/network_defaults.rs:470:        assert_eq!(bind_all_interfaces(65535), "0.0.0.0:65535");
+code/crates/nestgate-core/src/config/network_defaults.rs:477:        assert_eq!(bind_localhost(3000), "127.0.0.1:3000");
+code/crates/nestgate-core/src/config/network_defaults.rs:478:        assert_eq!(bind_localhost(65535), "127.0.0.1:65535");
+code/crates/nestgate-core/src/config/network_defaults.rs:516:        assert_eq!(config.api_bind_address(), "192.168.1.100:9999");
+code/crates/nestgate-core/src/config/sovereignty.rs:56:    /// Replace hardcoded localhost:8080 with environment-driven value
+code/crates/nestgate-core/src/config/sovereignty.rs:61:    /// Replace hardcoded 127.0.0.1:8080 with environment-driven value
+code/crates/nestgate-core/src/config/sovereignty.rs:70:    /// Replace hardcoded ws://localhost:8080 with environment-driven value
+code/crates/nestgate-core/src/config/discovery_config.rs:20:/// Replaces hardcoded URLs like "http://localhost:8080" with configurable endpoints.
+code/crates/nestgate-core/src/config/discovery_config.rs:159:                "http://127.0.0.1:8080".to_string(),
+code/crates/nestgate-core/src/config/discovery_config.rs:160:                "http://127.0.0.1:8081".to_string(),
+code/crates/nestgate-core/src/config/discovery_config.rs:161:                "http://127.0.0.1:8082".to_string(),
+code/crates/nestgate-core/src/config/discovery_config.rs:216:        assert_eq!(endpoint, "http://127.0.0.1:8081");
+code/crates/nestgate-core/src/config/discovery_config.rs:242:            "http://server1:8080,http://server2:8081,http://server3:8082",
+code/crates/nestgate-core/src/config/discovery_config.rs:249:            .contains(&"http://server1:8080".to_string()));
+code/crates/nestgate-core/src/config/discovery_config.rs:252:            .contains(&"http://server2:8081".to_string()));
+code/crates/nestgate-core/src/config/discovery_config.rs:255:            .contains(&"http://server3:8082".to_string()));
+code/crates/nestgate-core/src/config/discovery_config.rs:272:        assert!(endpoints.contains(&"http://127.0.0.1:8080".to_string()));
+code/crates/nestgate-core/src/config/discovery_config.rs:273:        assert!(endpoints.contains(&"http://127.0.0.1:8081".to_string()));
+code/crates/nestgate-core/src/config/discovery_config.rs:274:        assert!(endpoints.contains(&"http://127.0.0.1:8082".to_string()));
+code/crates/nestgate-core/src/config/discovery_config.rs:280:            "http://custom1:9090".to_string(),
+code/crates/nestgate-core/src/config/discovery_config.rs:281:            "http://custom2:9091".to_string(),
+code/crates/nestgate-core/src/config/validation.rs:327:                .expected_format("IP:PORT (e.g., 127.0.0.1:8080)")
+code/crates/nestgate-core/src/config/canonical_primary/supporting_types.rs:38:            endpoints: vec!["http://localhost:9090".to_string()],
+code/crates/nestgate-core/src/defaults_v2_config.rs:269:        assert_eq!(config.api_url(), "http://example.com:9000");
+code/crates/nestgate-core/src/defaults_v2_config.rs:270:        assert_eq!(config.websocket_url(), "ws://example.com:9001");
+code/crates/nestgate-core/src/defaults_v2_config.rs:271:        assert_eq!(config.health_url(), "http://example.com:9002/health");
+code/crates/nestgate-core/src/zero_cost/migrated_universal_service_provider.rs:328:            endpoints: vec![format!("http://localhost:8080/{self.service_id}")],
+code/crates/nestgate-core/src/primal_discovery/migration.rs:118:    /// Full endpoint URL (e.g., "http://192.168.1.100:8080")
+code/crates/nestgate-core/src/primal_discovery/migration.rs:269:        assert_eq!(endpoint, "http://localhost:7777");
+code/crates/nestgate-core/src/primal_discovery/migration.rs:288:        assert_eq!(endpoint, "http://localhost:6666");
+code/crates/nestgate-core/src/primal_discovery/migration.rs:323:        assert_eq!(endpoint3, "http://localhost:3333");
+code/crates/nestgate-core/src/primal_discovery/migration.rs:361:        assert_eq!(endpoint, "http://localhost:8080");
+code/crates/nestgate-core/src/primal_discovery/migration.rs:372:        std::env::set_var("SERVICE_URL", "https://api.example.com:8443");
+code/crates/nestgate-core/src/primal_discovery/migration.rs:379:        assert_eq!(endpoint, "https://api.example.com:8443");
+code/crates/nestgate-core/src/primal_discovery/migration.rs:398:        assert_eq!(endpoint1, "http://localhost:5000");
+code/crates/nestgate-core/src/primal_discovery/migration.rs:409:            endpoint2, "http://localhost:5000",
+code/crates/nestgate-core/src/primal_discovery/migration.rs:422:            endpoint3, "http://localhost:6000",
+code/crates/nestgate-core/src/primal_discovery/migration.rs:445:        assert_eq!(endpoint, "http://localhost:7000");
+code/crates/nestgate-core/src/primal_discovery/migration.rs:486:        assert_eq!(e1, "http://localhost:6001");
+code/crates/nestgate-core/src/primal_discovery/migration.rs:487:        assert_eq!(e2, "http://localhost:6002");
+code/crates/nestgate-core/src/primal_discovery/migration.rs:488:        assert_eq!(e3, "http://localhost:6003");
+code/crates/nestgate-core/src/primal_discovery/migration.rs:510:        assert_eq!(endpoint, "http://localhost:7070");
+code/crates/nestgate-core/src/primal_discovery/migration.rs:529:        assert_eq!(endpoint, "http://localhost:8181");
+code/crates/nestgate-core/src/primal_discovery/runtime_discovery.rs:485:            endpoint: Some("http://localhost:8080".to_string()),
+code/crates/nestgate-core/src/primal_discovery/runtime_discovery.rs:491:            endpoint: "http://localhost:8080".to_string(),
+code/crates/nestgate-core/src/primal_discovery/runtime_discovery.rs:497:        assert_eq!(connection.endpoint, "http://localhost:8080");
+code/crates/nestgate-core/src/universal_providers.rs:654:            UniversalSecurityWrapper::auto_detect_provider_type("https://security.local:8443"),
+code/crates/nestgate-core/src/universal_providers.rs:659:                "http://orchestration.local:8000"
+code/crates/nestgate-core/src/universal_providers.rs:664:            UniversalComputeWrapper::auto_detect_provider_type("http://compute.local:9000"),
+code/crates/nestgate-core/src/capability_config.rs:23://! // NO hardcoded "localhost:8080"!
+code/crates/nestgate-core/src/capability_config.rs:33://! NESTGATE_API_ENDPOINT=0.0.0.0:8080
+code/crates/nestgate-core/src/capability_config.rs:34://! NESTGATE_METRICS_ENDPOINT=0.0.0.0:9090
+code/crates/nestgate-core/src/capability_config.rs:193:    /// export NESTGATE_API_ENDPOINT=0.0.0.0:8080
+code/crates/nestgate-core/src/capability_config.rs:194:    /// export NESTGATE_METRICS_ENDPOINT=0.0.0.0:9090
+code/crates/nestgate-core/src/environment_config.rs:416:                .with_orchestration_url(Some("http://orch:8888".to_string())),
+code/crates/nestgate-core/src/service_discovery/dynamic_endpoints_config.rs:31:/// config.set_endpoint("api", "http://api:8080");
+code/crates/nestgate-core/src/service_discovery/dynamic_endpoints_config.rs:184:        config.set_endpoint("api", "http://api:8080");
+code/crates/nestgate-core/src/service_discovery/dynamic_endpoints_config.rs:186:        assert_eq!(config.get_endpoint("api"), Some("http://api:8080"));
+code/crates/nestgate-core/src/service_discovery/dynamic_endpoints_config.rs:212:        config.set_endpoint("api", "http://api:8080");
+code/crates/nestgate-core/src/service_discovery/dynamic_endpoints_config.rs:213:        config.set_endpoint("storage", "http://storage:8081");
+code/crates/nestgate-core/src/service_discovery/dynamic_endpoints_config.rs:214:        config.set_endpoint("cache", "http://cache:8082");
+code/crates/nestgate-core/src/service_discovery/dynamic_endpoints_config.rs:236:        config.set_endpoint("service", "http://service:8080");
+code/crates/nestgate-core/src/service_discovery/dynamic_endpoints_config.rs:239:        assert_eq!(cloned.get_endpoint("service"), Some("http://service:8080"));
+code/crates/nestgate-core/src/ecosystem_integration/ecosystem_config.rs:27://! config.set_discovery_endpoint("orchestration", "http://orch:8080");
+code/crates/nestgate-core/src/ecosystem_integration/ecosystem_config.rs:159:        config.set_discovery_endpoint("orchestration", "http://orch:8080");
+code/crates/nestgate-core/src/ecosystem_integration/ecosystem_config.rs:160:        config.set_discovery_endpoint("storage", "http://storage:9090");
+code/crates/nestgate-core/src/ecosystem_integration/ecosystem_config.rs:164:            Some("http://orch:8080")
+code/crates/nestgate-core/src/ecosystem_integration/ecosystem_config.rs:168:            Some("http://storage:9090")
+code/crates/nestgate-core/src/ecosystem_integration/ecosystem_config.rs:218:        config.set_discovery_endpoint("orchestration", "http://orch:8080");
+code/crates/nestgate-core/src/ecosystem_integration/ecosystem_config.rs:219:        config.set_discovery_endpoint("storage", "http://storage:9090");
+code/crates/nestgate-core/src/ecosystem_integration/ecosystem_config.rs:220:        config.set_discovery_endpoint("security", "http://sec:7070");
+code/crates/nestgate-core/src/ecosystem_integration/ecosystem_config.rs:226:            Some(&"http://orch:8080".to_string())
+code/crates/nestgate-core/src/ecosystem_integration/ecosystem_config.rs:230:            Some(&"http://storage:9090".to_string())
+code/crates/nestgate-core/src/ecosystem_integration/ecosystem_config.rs:234:            Some(&"http://sec:7070".to_string())
+code/crates/nestgate-core/src/ecosystem_integration/ecosystem_config.rs:242:        config.set_discovery_endpoint("orchestration", "http://orch:8080");
+code/crates/nestgate-core/src/ecosystem_integration/ecosystem_config.rs:243:        config.set_discovery_endpoint("compute", "http://compute:9090");
+code/crates/nestgate-core/src/ecosystem_integration/ecosystem_config.rs:265:        config.set_discovery_endpoint("orchestration", "http://orch:8080");
+code/crates/nestgate-core/src/self_knowledge/mod.rs:63://!     .with_endpoint("api", "0.0.0.0:8080")
+code/crates/nestgate-core/src/self_knowledge/mod.rs:64://!     .with_endpoint("metrics", "0.0.0.0:9090")
+code/crates/nestgate-core/src/self_knowledge/mod.rs:90://! const ORCHESTRATOR_URL: &str = "http://orchestrator:8080";
+code/crates/nestgate-core/src/self_knowledge/mod.rs:91://! const AI_SERVICE_URL: &str = "http://ai:9000";
+code/crates/nestgate-core/src/self_knowledge/examples.rs:22:    const ORCHESTRATOR_URL: &str = "http://orchestrator:8080";  // Demo only
+code/crates/nestgate-core/src/self_knowledge/examples.rs:23:    const AI_SERVICE_URL: &str = "http://ai-service:9000";      // Demo only
+code/crates/nestgate-core/src/self_knowledge/examples.rs:24:    const SECURITY_SERVICE_URL: &str = "http://beardog:8443";   // Demo only
+code/crates/nestgate-core/src/self_knowledge/examples.rs:240:                .with_endpoint("api", format!("10.0.1.{}:9000", 100 + i).parse()?)
+code/crates/nestgate-core/src/capability_resolver.rs:562:            "http://localhost:8080",
+code/crates/nestgate-core/src/capability_resolver.rs:583:            "http://storage-server:9000",
+code/crates/nestgate-core/src/capability_resolver.rs:615:            "http://localhost:9090",
+code/crates/nestgate-core/src/capability_based_config.rs:578:        assert_eq!(endpoint.url(), "http://localhost:8080/api/v1");
+code/crates/nestgate-core/src/canonical/types/core_types.rs:319:            endpoint: "http://localhost:9000".to_string(),
+code/crates/nestgate-core/src/canonical/types/core_types.rs:327:        assert_eq!(info.endpoint, "http://localhost:9000");
+code/crates/nestgate-core/src/canonical/types/core_types.rs:535:            endpoint: "http://localhost:18080".to_string(),
+code/crates/nestgate-core/src/unified_capabilities.rs:418:            "http://localhost:8888",
+code/crates/nestgate-core/src/cert/validator.rs:17:            "http://localhost:8080/adapter".to_string(),
+code/crates/nestgate-core/src/cert/manager.rs:21:            "http://localhost:8080/adapter".to_string(),
+code/crates/nestgate-core/src/primal_discovery.rs:203:            .unwrap_or_else(|| "http://localhost:8080".into())
+code/crates/nestgate-core/src/primal_discovery.rs:349:        assert_eq!(endpoint.url(), "http://127.0.0.1:8080");
+code/crates/nestgate-core/src/services/native_async/mod.rs:99:                url: "http://localhost:9999".to_string(),
+code/crates/nestgate-core/src/capability_config/examples.rs:30:    // NESTGATE_API_ENDPOINT=0.0.0.0:8080
+code/crates/nestgate-core/src/capability_config/examples.rs:31:    // NESTGATE_METRICS_ENDPOINT=0.0.0.0:9090
+code/crates/nestgate-core/src/capability_config/examples.rs:32:    // NESTGATE_HEALTH_ENDPOINT=0.0.0.0:8081
+code/crates/nestgate-core/src/capability_config/examples.rs:72:    // const BEARDOG_ENDPOINT: &str = "localhost:3000";
+code/crates/nestgate-core/src/capabilities/mod.rs:68://!     connect_to_security_service("beardog:8443").await?;
+code/crates/nestgate-core/src/capabilities/routing/mod.rs:166:        let adapter = PrimalAgnosticAdapter::new("http://localhost:18080".to_string());
+code/crates/nestgate-core/src/capabilities/routing/mod.rs:172:        let adapter = PrimalAgnosticAdapter::new("http://localhost:18080".to_string());
+code/crates/nestgate-core/src/capabilities/taxonomy/mod.rs:29://!     "http://discovered-storage:9000".to_string(),
+code/crates/nestgate-core/src/capabilities/taxonomy/capability.rs:80:            "http://storage:9000".to_string(),
+code/crates/nestgate-core/src/capabilities/taxonomy/capability.rs:84:        assert_eq!(cap.endpoint, "http://storage:9000");
+code/crates/nestgate-core/src/capabilities/taxonomy/capability.rs:95:            "http://discovered-service:8080".to_string(),
+code/crates/nestgate-core/src/capabilities/taxonomy/capability.rs:103:        assert_eq!(cap.endpoint, "http://discovered-service:8080");
+code/crates/nestgate-core/src/capabilities/taxonomy/capability.rs:111:        let cap = Capability::new(CapabilityType::Security, "http://security:8443".to_string())
+code/crates/nestgate-core/src/capabilities/taxonomy/capability.rs:119:        let cap = Capability::new(CapabilityType::Compute, "http://compute:5000".to_string())
+code/crates/nestgate-core/src/capabilities/taxonomy/capability.rs:129:            "http://ai:3000".to_string(),
+code/crates/nestgate-core/src/capabilities/taxonomy/capability.rs:140:            "http://storage:9000".to_string(),
+code/crates/nestgate-core/src/capabilities/taxonomy/capability.rs:146:            "http://storage:9000".to_string(),
+code/crates/nestgate-core/src/capabilities/taxonomy/capability.rs:158:            "http://queue:5672".to_string(),
+code/crates/nestgate-core/src/capabilities/taxonomy/capability.rs:172:        let cap = Capability::new(CapabilityType::Security, "http://security:8080".to_string())
+code/crates/nestgate-core/src/capabilities/taxonomy/capability.rs:190:            "http://ai:3000".to_string(),
+code/crates/nestgate-core/src/capabilities/taxonomy/capability.rs:203:        let cap = Capability::new(CapabilityType::Management, "http://mgmt:8080".to_string());
+code/crates/nestgate-core/src/capabilities/taxonomy/capability.rs:215:        let cap1 = Capability::new(CapabilityType::Compute, "http://compute:8080".to_string());
+code/crates/nestgate-core/src/capabilities/taxonomy/capability.rs:230:            ("tcp", "tcp://service:9000"),
+code/crates/nestgate-core/src/capabilities/taxonomy/capability.rs:231:            ("grpc", "grpc://service:50051"),
+code/crates/nestgate-core/src/capabilities/taxonomy/capability.rs:232:            ("ws", "ws://service:8080"),
+code/crates/nestgate-core/src/capabilities/taxonomy/capability.rs:233:            ("wss", "wss://service:8443"),
+code/crates/nestgate-core/src/capabilities/taxonomy/capability.rs:248:        let cap1 = Capability::new(CapabilityType::Compute, "http://compute:9000".to_string());
+code/crates/nestgate-core/src/capabilities/taxonomy/capability.rs:249:        let cap2 = Capability::new(CapabilityType::Compute, "http://compute:9000".to_string());
+code/crates/nestgate-core/src/capabilities/taxonomy/capability.rs:250:        let cap3 = Capability::new(CapabilityType::Compute, "http://different:9000".to_string());
+code/crates/nestgate-core/src/capabilities/taxonomy/capability.rs:259:        let mut cap = Capability::new(CapabilityType::Security, "http://auth:8080".to_string());
+code/crates/nestgate-core/src/capabilities/taxonomy/capability.rs:274:            "http://service:8080",
+code/crates/nestgate-core/src/capabilities/taxonomy/capability.rs:275:            "https://secure-service:8443",
+code/crates/nestgate-core/src/capabilities/taxonomy/capability.rs:276:            "tcp://message-queue:5672",
+code/crates/nestgate-core/src/capabilities/taxonomy/capability.rs:277:            "grpc://api-service:9090",
+code/crates/nestgate-core/src/capabilities/taxonomy/capability.rs:299:            let cap = Capability::new(storage_type.clone(), "http://storage:5000".to_string());
+code/crates/nestgate-core/src/constants/sovereignty_helpers_config.rs:337:        assert_eq!(config.api_endpoint(), "127.0.0.1:8080");
+code/crates/nestgate-core/src/constants/sovereignty_helpers_config.rs:338:        assert_eq!(config.http_api_endpoint(), "http://127.0.0.1:8080");
+code/crates/nestgate-core/src/constants/sovereignty_helpers_config.rs:339:        assert_eq!(config.websocket_endpoint(), "ws://127.0.0.1:8080/ws");
+code/crates/nestgate-core/src/constants/sovereignty_helpers_config.rs:342:            "http://127.0.0.1:8080/discovery"
+code/crates/nestgate-core/src/constants/sovereignty_helpers_config.rs:344:        assert_eq!(config.database_endpoint(), "127.0.0.1:5432");
+code/crates/nestgate-core/src/constants/sovereignty_helpers_config.rs:345:        assert_eq!(config.dev_endpoint(), "127.0.0.1:3000");
+code/crates/nestgate-core/src/constants/sovereignty_helpers_config.rs:358:        assert_eq!(config.http_api_endpoint(), "https://example.com:9000");
+code/crates/nestgate-core/src/constants/sovereignty_helpers_config.rs:359:        assert_eq!(config.websocket_endpoint(), "wss://example.com:9000/ws");
+code/crates/nestgate-core/src/constants/sovereignty_helpers_config.rs:383:                assert_eq!(config_clone.api_endpoint(), "192.168.1.100:7070");
+code/crates/nestgate-core/src/constants/domains/network.rs:197:                api_base: "http://localhost:18080/api/v1", // Test port
+code/crates/nestgate-core/src/constants/domains/network.rs:198:                discovery: "http://localhost:18083/discovery", // Test port
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:22:    pub const DEFAULT_API_BASE_URL: &str = "http://localhost:8080";
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:34:    pub const DEFAULT_WEBSOCKET_URL: &str = "ws://localhost:8080/ws";
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:46:    pub const DEFAULT_METRICS_URL: &str = "http://localhost:9090";
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:55:    pub const DEFAULT_WEB_UI_URL: &str = "http://localhost:3000";
+code/crates/nestgate-core/src/constants/consolidated.rs:187:    /// Returns the full API URL (e.g., "http://localhost:8080")
+code/crates/nestgate-core/src/constants/consolidated.rs:690:        assert_eq!(nc.api_url(), "http://127.0.0.1:8080");
+code/crates/nestgate-core/src/constants/consolidated.rs:691:        assert_eq!(nc.health_url(), "http://127.0.0.1:8081");
+code/crates/nestgate-core/src/constants/consolidated.rs:692:        assert_eq!(nc.websocket_url(), "ws://127.0.0.1:8082/ws");
+code/crates/nestgate-core/src/constants/consolidated.rs:707:        assert!(sc.postgres_url().starts_with("postgresql://127.0.0.1:5432"));
+code/crates/nestgate-core/src/constants/consolidated.rs:708:        assert!(sc.redis_url().starts_with("redis://127.0.0.1:6379"));
+code/crates/nestgate-core/src/constants/system_config.rs:244:        assert_eq!(config.api_url(), "http://127.0.0.1:8080");
+code/crates/nestgate-core/src/constants/system_config.rs:257:            .with_api_url("http://example.com:9000".to_string());
+code/crates/nestgate-core/src/constants/system_config.rs:266:        assert_eq!(config.api_url(), "http://example.com:9000");
+code/crates/nestgate-core/src/constants/system_config.rs:308:        assert_eq!(config.api_url(), "http://192.168.1.100:7070");
+code/crates/nestgate-core/src/constants/capability_discovery.rs:14://! let url = "http://localhost:8080";
+code/crates/nestgate-core/src/constants/capability_discovery.rs:50:    /// // Returns: "http://192.168.1.5:8080" (discovered dynamically)
+code/crates/nestgate-core/src/constants/capability_discovery.rs:131:/// // Replace: "http://localhost:8080"
+code/crates/nestgate-core/src/constants/capability_discovery.rs:139:/// Get API endpoint (migrated from hardcoded localhost:8080)
+code/crates/nestgate-core/src/constants/capability_discovery.rs:152:/// Get metrics endpoint (migrated from hardcoded localhost:9090)
+code/crates/nestgate-core/src/constants/capability_discovery.rs:160:/// Get health endpoint (migrated from hardcoded localhost:8081)
+code/crates/nestgate-core/src/constants/capability_discovery.rs:174:        std::env::set_var("NESTGATE_TEST_URL", "http://custom-host:9999");
+code/crates/nestgate-core/src/utils/network.rs:326:        assert!(is_valid_url("http://localhost:18080"));
+code/crates/nestgate-core/src/utils/network.rs:540:        let url2 = parse_url("http://localhost:18080").expect("Should parse URL with port");
+code/crates/nestgate-core/src/utils/network.rs:692:        assert!(is_valid_ipv6("2001:0db8:0000:0000:0000:0000:0000:0001"));
+code/crates/nestgate-core/src/capability_aware_config.rs:528:        assert!(endpoint.unwrap().contains("127.0.0.1:9090"));
+code/crates/nestgate-core/src/capability_aware_config.rs:584:        assert!(endpoint.contains("127.0.0.1:7777"));
+code/crates/nestgate-core/src/zero_cost_security_provider/types_coverage_boost.rs:344:            Some("2001:0db8:85a3:0000:0000:8a2e:0370:7334".to_string()),
+code/crates/nestgate-zfs/src/backends/object_storage.rs:417:            || endpoint_lower.contains(":9000") // Default MinIO port
+code/crates/nestgate-zfs/src/backends/object_storage.rs:625:            "http://localhost:9000"
+code/crates/nestgate-zfs/src/backends/object_storage.rs:689:            "http://localhost:9000",    // Local MinIO
+code/crates/nestgate-api/src/handlers/status.rs:109:        assert!(json.contains("\"uptime\":3600"));
