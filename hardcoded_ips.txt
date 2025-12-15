@@ -1,0 +1,593 @@
+code/crates/nestgate-network/src/network_coverage_expansion.rs:293:        let localhost = Ipv4Addr::new(127, 0, 0, 1);
+code/crates/nestgate-network/src/network_coverage_expansion.rs:294:        assert!(localhost.is_loopback());
+code/crates/nestgate-network/src/types.rs:358:        // Safe: 127.0.0.1 is always a valid IP address (IPv4 localhost)
+code/crates/nestgate-network/src/types.rs:361:        let localhost_addr = addresses::LOCALHOST_NAME
+code/crates/nestgate-network/src/types.rs:374:                .unwrap_or(localhost_addr)
+code/crates/nestgate-network/src/nfs.rs:544:                "10.0.0.0/8".to_string(),
+code/crates/nestgate-installer/src/lib.rs:255://     bind_address: "0.0.0.0".to_string(),
+code/crates/nestgate-performance/src/zero_copy_networking.rs:288:            std::env::var("NESTGATE_LOCAL_BIND").unwrap_or_else(|_| "0.0.0.0:0".to_string());
+code/crates/nestgate-performance/src/zero_copy/network_interface.rs:130:            std::env::var("NESTGATE_LOCAL_BIND").unwrap_or_else(|_| "0.0.0.0:0".to_string());
+code/crates/nestgate-performance/src/zero_copy/network_interface.rs:351:        let addr: SocketAddr = "127.0.0.1:8080".parse().unwrap();
+code/crates/nestgate-middleware/src/config/security.rs:419:    /// - `NESTGATE_DEV_HOST`: Development host (default: localhost)
+code/crates/nestgate-middleware/src/config/security.rs:429:                        .unwrap_or_else(|_| "localhost".to_string());
+code/crates/nestgate-canonical/src/error.rs:220:        let err = NestGateError::network_endpoint("timeout", "localhost:8080");
+code/crates/nestgate-canonical/src/error.rs:224:        assert!(msg.contains("localhost:8080"));
+code/crates/nestgate-canonical/src/error.rs:452:        let original = NestGateError::network_endpoint("timeout", "localhost:8080");
+code/crates/nestgate-canonical/src/types/config_types.rs:193:                .unwrap_or_else(|_| "127.0.0.1".to_string()),
+code/crates/nestgate-automation/src/types/ecosystem.rs:176:            endpoint: "http://localhost:9000".to_string(),
+code/crates/nestgate-mcp/src/security/policies.rs:111:                allowed_ips: vec!["0.0.0.0/0".to_string()], // Allow all by default
+code/crates/nestgate-mcp/src/security/policies.rs:143:                allowed_ips: vec!["10.0.0.0/8".to_string(), "172.16.0.0/12".to_string()],
+code/crates/nestgate-mcp/src/security/policies.rs:309:        if pattern == "0.0.0.0/0" {
+code/crates/nestgate-mcp/src/error.rs:418:            local_endpoint: Some("localhost:8080".to_string()),
+code/crates/nestgate-core/src/defaults.rs:291:        assert_eq!(database::DEFAULT_DB_HOST, "localhost");
+code/crates/nestgate-core/src/defaults.rs:347:        // NOTE: With EnvironmentConfig, default is 127.0.0.1 (not 0.0.0.0)
+code/crates/nestgate-core/src/defaults.rs:348:        // This is safer for development. Production should set NESTGATE_HOST=0.0.0.0
+code/crates/nestgate-core/src/defaults.rs:350:        assert_eq!(addr, "127.0.0.1"); // EnvironmentConfig default
+code/crates/nestgate-core/src/defaults.rs:357:        // EnvironmentConfig.network.host (default: "127.0.0.1")
+code/crates/nestgate-core/src/defaults.rs:359:        assert_eq!(hostname, "127.0.0.1"); // EnvironmentConfig default
+code/crates/nestgate-core/src/defaults.rs:403:        assert!(url.contains("localhost"));
+code/crates/nestgate-core/src/defaults.rs:415:        assert!(url.contains("localhost"));
+code/crates/nestgate-core/src/defaults.rs:427:        // URL builders may use localhost or the hostname - just verify they work
+code/crates/nestgate-core/src/network/comprehensive_error_paths_dec11.rs:94:                    let addr: SocketAddr = format!("127.0.0.1:{}", port).parse().unwrap();
+code/crates/nestgate-core/src/network/comprehensive_error_paths_dec11.rs:127:            let addr: SocketAddr = format!("127.0.0.1:{}", port).parse().unwrap();
+code/crates/nestgate-core/src/network/comprehensive_error_paths_dec11.rs:152:        let result = "127.0.0.1:0".parse::<SocketAddr>();
+code/crates/nestgate-core/src/network/comprehensive_error_paths_dec11.rs:168:            "127.0.0.1:99999",    // Port too large
+code/crates/nestgate-core/src/network/comprehensive_error_paths_dec11.rs:169:            "127.0.0.1:-1",       // Negative port
+code/crates/nestgate-core/src/network/comprehensive_error_paths_dec11.rs:170:            "127.0.0.1",          // Missing port
+code/crates/nestgate-core/src/network/comprehensive_error_paths_dec11.rs:197:        // Test common localhost variants
+code/crates/nestgate-core/src/network/comprehensive_error_paths_dec11.rs:198:        let variants = vec!["localhost", "127.0.0.1", "::1"];
+code/crates/nestgate-core/src/network/comprehensive_error_paths_dec11.rs:204:            // All localhost variants should resolve
+code/crates/nestgate-core/src/network/comprehensive_error_paths_dec11.rs:266:                    let addr: SocketAddr = format!("127.0.0.1:{}", 30000 + i).parse().unwrap();
+code/crates/nestgate-core/src/network/comprehensive_error_paths_dec11.rs:306:            "[::ffff:127.0.0.1]:8080", // IPv4-mapped IPv6
+code/crates/nestgate-core/src/network/comprehensive_error_paths_dec11.rs:350:        let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
+code/crates/nestgate-core/src/network/comprehensive_error_paths_dec11.rs:376:        let valid_ipv4 = vec!["0.0.0.0", "127.0.0.1", "192.168.1.1", "255.255.255.255"];
+code/crates/nestgate-core/src/network/comprehensive_error_paths_dec11.rs:416:        let cidr_addresses = vec!["192.168.1.0/24", "10.0.0.0/8", "172.16.0.0/12"];
+code/crates/nestgate-core/src/network/comprehensive_error_paths_dec11.rs:502:        let hostnames = vec!["localhost", "127.0.0.1", "::1"];
+code/crates/nestgate-core/src/network/native_async/service.rs:75:    /// - `NESTGATE_API_HOST`: API host (default: localhost)
+code/crates/nestgate-core/src/network/client/mod.rs:121:        let _endpoint = Endpoint::from_url("http://localhost:8080");
+code/crates/nestgate-core/src/network/client/mod.rs:140:        let endpoint = http_endpoint("localhost", 8080).await.unwrap();
+code/crates/nestgate-core/src/network/client/mod.rs:141:        assert_eq!(endpoint.host, "localhost");
+code/crates/nestgate-core/src/network/client/pool.rs:274:        let endpoint = Endpoint::from_url("http://localhost:8080").unwrap();
+code/crates/nestgate-core/src/network/client/pool.rs:286:        let endpoint = Endpoint::from_url("http://localhost:8080").unwrap();
+code/crates/nestgate-core/src/network/client/pool.rs:310:        let endpoint = Endpoint::from_url("http://localhost:8080").unwrap();
+code/crates/nestgate-core/src/network/client/utils.rs:27:/// let endpoint = http_endpoint("localhost", 8080).await?;
+code/crates/nestgate-core/src/network/client/utils.rs:69:        let endpoint = http_endpoint("localhost", 8080).await.unwrap();
+code/crates/nestgate-core/src/network/client/utils.rs:70:        assert_eq!(endpoint.host, "localhost");
+code/crates/nestgate-core/src/network/client/types.rs:216:    /// let endpoint = Endpoint::from_url("http://localhost:8080")?;
+code/crates/nestgate-core/src/network/client/types.rs:363:        let ep = Endpoint::from_url("http://localhost:8080").unwrap();
+code/crates/nestgate-core/src/network/client/types.rs:364:        assert_eq!(ep.host, "localhost");
+code/crates/nestgate-core/src/network/client/types.rs:376:        let ep = Endpoint::http("localhost".to_string(), Port::new(8080).unwrap());
+code/crates/nestgate-core/src/network/client/types.rs:378:        assert_eq!(ep.base_url(), "http://localhost:8080");
+code/crates/nestgate-core/src/universal_primal_discovery/registry.rs:138:        // Fallback to localhost for development (from config or default)
+code/crates/nestgate-core/src/universal_primal_discovery/registry.rs:261:                "No service mesh configuration detected - using localhost fallback".to_string(),
+code/crates/nestgate-core/src/universal_primal_discovery/network.rs:249:        // ✅ MIGRATED: Use environment-configurable localhost address
+code/crates/nestgate-core/src/universal_primal_discovery/service_registry.rs:94:    /// assert_eq!(endpoint.url(), "http://127.0.0.1:8080");
+code/crates/nestgate-core/src/universal_primal_discovery/migration_to_self_knowledge.rs:145:    let host = std::env::var("NESTGATE_API_HOST").unwrap_or_else(|_| "0.0.0.0".to_string());
+code/crates/nestgate-core/src/universal_primal_discovery/migration_to_self_knowledge.rs:161:    let host = std::env::var("NESTGATE_METRICS_HOST").unwrap_or_else(|_| "0.0.0.0".to_string());
+code/crates/nestgate-core/src/universal_primal_discovery/migration_to_self_knowledge.rs:177:    let host = std::env::var("NESTGATE_WEBSOCKET_HOST").unwrap_or_else(|_| "0.0.0.0".to_string());
+code/crates/nestgate-core/src/universal_primal_discovery/capability_based_discovery.rs:343:        let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
+code/crates/nestgate-core/src/universal_primal_discovery/capability_based_discovery.rs:534:        let addr: SocketAddr = "127.0.0.1:8080".parse().unwrap();
+code/crates/nestgate-core/src/universal_primal_discovery/capability_based_discovery.rs:537:        assert_eq!(endpoint.url(), "http://127.0.0.1:8080/api/v1");
+code/crates/nestgate-core/src/universal_primal_discovery/production_discovery_config.rs:208:            .with_service_bind("API".to_string(), "0.0.0.0".to_string())
+code/crates/nestgate-core/src/universal_primal_discovery/production_discovery_config.rs:214:        assert_eq!(config.get_service_bind("API"), Some("0.0.0.0"));
+code/crates/nestgate-core/src/universal_primal_discovery/network_discovery_config.rs:344:        config.set_service_endpoint("MyService", "http://localhost:18080");
+code/crates/nestgate-core/src/universal_primal_discovery/production_discovery.rs:123:        // Parse localhost address with safe fallback
+code/crates/nestgate-core/src/universal_primal_discovery/production_discovery.rs:331:            "api" | "web" => IpAddr::V4(Ipv4Addr::UNSPECIFIED), // 0.0.0.0 for external access
+code/crates/nestgate-core/src/universal_primal_discovery/production_discovery.rs:333:                // Parse localhost with proper error handling
+code/crates/nestgate-core/src/universal_primal_discovery/production_discovery.rs:336:                    .unwrap_or(IpAddr::V4(Ipv4Addr::LOCALHOST)) // 127.0.0.1 for internal services
+code/crates/nestgate-core/src/universal_primal_discovery/production_discovery.rs:863:            host: "localhost".to_string(),
+code/crates/nestgate-core/src/universal_primal_discovery/production_discovery.rs:869:        assert_eq!(endpoint.host, "localhost");
+code/crates/nestgate-core/src/universal_primal_discovery/production_discovery.rs:904:        assert_eq!(api_bind, IpAddr::V4(Ipv4Addr::UNSPECIFIED)); // 0.0.0.0 for external access
+code/crates/nestgate-core/src/universal_primal_discovery/production_discovery.rs:907:        // Should be localhost for internal services
+code/crates/nestgate-core/src/canonical_modernization/constants_consolidation.rs:173:            ("DEFAULT_BIND_ADDRESS", ConstantValue::String("127.0.0.1".to_string()), "Default bind address"),
+code/crates/nestgate-core/src/canonical_modernization/constants_consolidation.rs:518:            "127.0.0.1" => "LOCALHOST".to_string(),
+code/crates/nestgate-core/src/canonical_modernization/constants_consolidation.rs:519:            "0.0.0.0" => "ALL_INTERFACES".to_string(),
+code/crates/nestgate-core/src/canonical_modernization/unified_types.rs:437:            bind_endpoint: "0.0.0.0".to_string(),
+code/crates/nestgate-core/src/canonical_modernization/service_metadata.rs:115:            endpoint: "localhost".to_string(),
+code/crates/nestgate-core/src/canonical_modernization/constants/network.rs:10:pub const LOCALHOST_IPV4: &str = "127.0.0.1";
+code/crates/nestgate-core/src/canonical_modernization/constants/network.rs:12:pub const LOCALHOST_NAME: &str = "localhost";
+code/crates/nestgate-core/src/canonical_modernization/constants/network.rs:14:pub const BIND_ALL_IPV4: &str = "0.0.0.0";
+code/crates/nestgate-core/src/universal_adapter/adapter_config.rs:113:    /// - `NESTGATE_HOST`: Host for fallback endpoints (default: "localhost")
+code/crates/nestgate-core/src/universal_adapter/adapter_config.rs:251:        // Runtime config uses 127.0.0.1 (IpAddr format) instead of "localhost"
+code/crates/nestgate-core/src/universal_adapter/adapter_config.rs:252:        assert_eq!(config.get_host(), "127.0.0.1");
+code/crates/nestgate-core/src/universal_adapter/adapter_config.rs:290:        // Runtime config uses 127.0.0.1 instead of "localhost"
+code/crates/nestgate-core/src/universal_adapter/adapter_config.rs:291:        let default_endpoint = format!("http://127.0.0.1:{}/adapter", ports::HTTP_DEFAULT);
+code/crates/nestgate-core/src/universal_adapter/adapter_config.rs:356:        // Runtime config uses 127.0.0.1 instead of "localhost"
+code/crates/nestgate-core/src/universal_adapter/adapter_config.rs:357:        assert_eq!(config.get_host(), "127.0.0.1");
+code/crates/nestgate-core/src/universal_adapter/config.rs:253:        // Default: 3 endpoints starting from 127.0.0.1:8080
+code/crates/nestgate-core/src/universal_adapter/config.rs:258:            .any(|e| e.starts_with("http://127.0.0.1:")));
+code/crates/nestgate-core/src/universal_adapter/discovery_config.rs:61:    /// ✅ MIGRATED: Uses configured discovery host instead of hardcoded localhost
+code/crates/nestgate-core/src/universal_adapter/discovery_config.rs:181:        // ServiceDiscoveryConfig uses 127.0.0.1 by default
+code/crates/nestgate-core/src/universal_adapter/discovery_config.rs:182:        assert!(endpoints[0].contains("127.0.0.1"));
+code/crates/nestgate-core/src/universal_adapter/capability_discovery.rs:104:    /// Example: "http://localhost:{port}" or discovered via mDNS
+code/crates/nestgate-core/src/universal_adapter/capability_discovery.rs:209:    /// - `CAPABILITY_NETWORKING_ENDPOINT=http://localhost:{port}`
+code/crates/nestgate-core/src/universal_adapter/capability_discovery.rs:210:    /// - `CAPABILITY_SECURITY_ENDPOINT=http://localhost:{port}`
+code/crates/nestgate-core/src/universal_adapter/capability_discovery.rs:270:    /// ✅ MIGRATED: Replaces hardcoded "localhost:port" with configurable endpoints
+code/crates/nestgate-core/src/universal_adapter/capability_discovery.rs:302:        // ✅ MIGRATED: Now uses ServiceDiscoveryConfig default host (127.0.0.1)
+code/crates/nestgate-core/src/universal_adapter/capability_discovery.rs:303:        assert!(providers[0].endpoint.contains("127.0.0.1:8080"));
+code/crates/nestgate-core/src/universal_adapter/capability_discovery.rs:593:        assert!(providers[0].endpoint.contains("127.0.0.1:9090"));
+code/crates/nestgate-core/src/universal_adapter/discovery.rs:338:    /// ✅ MIGRATED: Replaces hardcoded "localhost:port" with configurable endpoints
+code/crates/nestgate-core/src/safe_operations/pedantic.rs:19:            "Invalid IP address format in {}: '{}' (expected format like 127.0.0.1 or ::1)",
+code/crates/nestgate-core/src/primal_self_knowledge.rs:269:        let api_host = std::env::var("NESTGATE_API_HOST").unwrap_or_else(|_| "0.0.0.0".to_string());
+code/crates/nestgate-core/src/primal_self_knowledge.rs:595:            address: "localhost".to_string(),
+code/crates/nestgate-core/src/primal_self_knowledge.rs:601:        assert_eq!(endpoint.url(), "http://localhost:8080/api");
+code/crates/nestgate-core/src/primal_self_knowledge.rs:604:            Some("http://localhost:8080/health".to_string())
+code/crates/nestgate-core/src/primal_self_knowledge.rs:625:                address: "localhost".to_string(),
+code/crates/nestgate-core/src/discovery/network_discovery.rs:548:            "127.0.0.1".parse().expect("Network operation failed"),
+code/crates/nestgate-core/src/discovery/network_discovery.rs:549:            "127.0.0.1".parse().expect("Network operation failed"),
+code/crates/nestgate-core/src/smart_abstractions/smart_default.rs:156:    //             host: "127.0.0.1".to_string(),
+code/crates/nestgate-core/src/smart_abstractions/smart_default.rs:253:        assert_eq!(SmartDefaults::DEFAULT_HOST, "127.0.0.1");
+code/crates/nestgate-core/src/smart_abstractions/smart_default.rs:256:        assert_eq!(SmartDefaults::default_host(), "127.0.0.1");
+code/crates/nestgate-core/src/smart_abstractions/notification_channels.rs:276:            smtp_server: "127.0.0.1".to_string(),
+code/crates/nestgate-core/src/crypto_locks.rs:543:            ip_endpoint: "127.0.0.1".to_string(),
+code/crates/nestgate-core/src/crypto_locks.rs:564:            ip_endpoint: "127.0.0.1".to_string(),
+code/crates/nestgate-core/src/config/runtime/mod.rs:40://! - `NESTGATE_API_HOST` → `network.api_host` (default: "127.0.0.1")
+code/crates/nestgate-core/src/config/runtime/mod.rs:50://! - **Migration pattern**: Replace `"localhost"` with `get_config().network.api_host`
+code/crates/nestgate-core/src/config/runtime/network.rs:18:/// - `NESTGATE_API_HOST` - API bind address (default: 127.0.0.1)
+code/crates/nestgate-core/src/config/runtime/network.rs:28:/// - `NESTGATE_BIND_ALL` - Bind to 0.0.0.0 (default: false)
+code/crates/nestgate-core/src/config/runtime/network.rs:33:    /// API host (default: 127.0.0.1)
+code/crates/nestgate-core/src/config/runtime/network.rs:63:    /// Bind all interfaces (default: false, binds 127.0.0.1 only)
+code/crates/nestgate-core/src/config/runtime/network.rs:91:                    IpAddr::V4(Ipv4Addr::LOCALHOST) // 127.0.0.1
+code/crates/nestgate-core/src/config/runtime/network.rs:195:            "127.0.0.1"
+code/crates/nestgate-core/src/config/runtime/network.rs:197:                .expect("INVARIANT: '127.0.0.1' is a valid IpAddr")
+code/crates/nestgate-core/src/config/runtime/cache.rs:13:/// - `NESTGATE_REDIS_HOST` - Redis host (default: "localhost")
+code/crates/nestgate-core/src/config/runtime/cache.rs:36:            redis_host: env::var("NESTGATE_REDIS_HOST").unwrap_or_else(|_| "localhost".to_string()),
+code/crates/nestgate-core/src/config/runtime/cache.rs:62:            redis_host: "localhost".to_string(),
+code/crates/nestgate-core/src/config/runtime/database.rs:13:/// - `NESTGATE_DB_HOST` - Database host (default: "localhost")
+code/crates/nestgate-core/src/config/runtime/database.rs:49:            host: env::var("NESTGATE_DB_HOST").unwrap_or_else(|_| "localhost".to_string()),
+code/crates/nestgate-core/src/config/runtime/database.rs:81:            host: "localhost".to_string(),
+code/crates/nestgate-core/src/config/runtime/services.rs:249:    /// to localhost discovery if not configured.
+code/crates/nestgate-core/src/config/runtime/services.rs:255:    /// Falls back to environment-configurable localhost endpoints. No hardcoded assumptions.
+code/crates/nestgate-core/src/config/defaults.rs:135:    /// Default bind address for production (localhost only - secure default)
+code/crates/nestgate-core/src/config/defaults.rs:138:        "127.0.0.1"
+code/crates/nestgate-core/src/config/defaults.rs:144:        "0.0.0.0"
+code/crates/nestgate-core/src/config/defaults.rs:331:        assert_eq!(NetworkAddressDefaults::secure_bind(), "127.0.0.1");
+code/crates/nestgate-core/src/config/defaults.rs:336:        assert_eq!(NetworkAddressDefaults::development_bind(), "0.0.0.0");
+code/crates/nestgate-core/src/config/defaults.rs:341:        assert_eq!(NetworkAddressDefaults::hostname(), "localhost");
+code/crates/nestgate-core/src/config/defaults.rs:347:        assert_eq!(NetworkAddressDefaults::get_bind_address(), "127.0.0.1");
+code/crates/nestgate-core/src/config/defaults.rs:355:            "0.0.0.0"
+code/crates/nestgate-core/src/config/defaults.rs:362:        assert_eq!(NetworkAddressDefaults::get_hostname(), "localhost");
+code/crates/nestgate-core/src/config/defaults.rs:368:        assert_eq!(NetworkAddressDefaults::get_external_hostname(), "localhost");
+code/crates/nestgate-core/src/config/defaults.rs:373:        // Security check: secure_bind should be localhost only
+code/crates/nestgate-core/src/config/defaults.rs:374:        assert_eq!(NetworkAddressDefaults::secure_bind(), "127.0.0.1");
+code/crates/nestgate-core/src/config/defaults.rs:375:        assert_ne!(NetworkAddressDefaults::secure_bind(), "0.0.0.0");
+code/crates/nestgate-core/src/config/defaults.rs:381:        assert_eq!(NetworkAddressDefaults::development_bind(), "0.0.0.0");
+code/crates/nestgate-core/src/config/mod.rs:18:/// - 391 localhost/IP addresses (127.0.0.1, 0.0.0.0, localhost)
+code/crates/nestgate-core/src/config/external/mod.rs:11://! - 391 localhost/IP addresses (127.0.0.1, 0.0.0.0, localhost)
+code/crates/nestgate-core/src/config/external/network.rs:9://! - 391 hardcoded IPs (127.0.0.1, 0.0.0.0, localhost)
+code/crates/nestgate-core/src/config/external/network.rs:14://! - `NESTGATE_API_HOST`: API server host (default: 0.0.0.0)
+code/crates/nestgate-core/src/config/external/network.rs:16://! - `NESTGATE_DB_HOST`: Database host (default: localhost)
+code/crates/nestgate-core/src/config/external/network.rs:18://! - `NESTGATE_REDIS_HOST`: Redis host (default: localhost)
+code/crates/nestgate-core/src/config/external/network.rs:20://! - `NESTGATE_METRICS_HOST`: Metrics host (default: 0.0.0.0)
+code/crates/nestgate-core/src/config/external/network.rs:66:                "0.0.0.0",
+code/crates/nestgate-core/src/config/external/network.rs:98:                host: "0.0.0.0".to_string(),
+code/crates/nestgate-core/src/config/external/network.rs:272:        assert_eq!(config.api_host(), "0.0.0.0");
+code/crates/nestgate-core/src/config/external/network.rs:279:        assert_eq!(url, "postgresql://localhost:5432/nestgate");
+code/crates/nestgate-core/src/config/external/network.rs:285:        assert_eq!(config.redis_url(), "redis://localhost:6379");
+code/crates/nestgate-core/src/config/external/network.rs:291:        assert_eq!(config.metrics_endpoint(), "0.0.0.0:9090");
+code/crates/nestgate-core/src/config/external/network.rs:306:        let endpoint = EndpointConfig::from_env("NONEXISTENT", "localhost", 8080)
+code/crates/nestgate-core/src/config/external/network.rs:308:        assert_eq!(endpoint.host, "localhost");
+code/crates/nestgate-core/src/config/external/services_config.rs:458:        // Should use default URLs (ServiceDiscoveryConfig defaults to 127.0.0.1)
+code/crates/nestgate-core/src/config/external/services_config.rs:461:            "http://127.0.0.1:8080/discovery"
+code/crates/nestgate-core/src/config/external/services_config.rs:463:        assert_eq!(config.get_adapter_url(), "http://127.0.0.1:8080/adapter");
+code/crates/nestgate-core/src/config/external/services_config.rs:560:        // All core services should have 127.0.0.1 defaults (from ServiceDiscoveryConfig)
+code/crates/nestgate-core/src/config/external/services_config.rs:561:        assert!(config.get_discovery_url().contains("127.0.0.1"));
+code/crates/nestgate-core/src/config/external/services_config.rs:562:        assert!(config.get_adapter_url().contains("127.0.0.1"));
+code/crates/nestgate-core/src/config/external/services_config.rs:563:        assert!(config.get_health_url().contains("127.0.0.1"));
+code/crates/nestgate-core/src/config/external/services_config.rs:564:        assert!(config.get_metrics_url().contains("127.0.0.1"));
+code/crates/nestgate-core/src/config/external/services_config.rs:565:        assert!(config.get_config_url().contains("127.0.0.1"));
+code/crates/nestgate-core/src/config/port_migration.rs:38://! export NESTGATE_CAPABILITY_HTTP_API_ENDPOINT="http://localhost:8080"
+code/crates/nestgate-core/src/config/port_migration.rs:39://! export NESTGATE_CAPABILITY_STORAGE_ENDPOINT="http://localhost:9000"
+code/crates/nestgate-core/src/config/port_migration.rs:169:            "http://localhost:9999",
+code/crates/nestgate-core/src/config/port_migration.rs:190:            "http://localhost:19090",
+code/crates/nestgate-core/src/config/error_path_expansion_dec11.rs:122:        std::env::set_var("NESTGATE_HOST", "http://localhost");
+code/crates/nestgate-core/src/config/error_path_expansion_dec11.rs:132:        std::env::set_var("NESTGATE_HOST", "localhost:8080");
+code/crates/nestgate-core/src/config/federation.rs:419:                || config.cluster_endpoint().contains("localhost")
+code/crates/nestgate-core/src/config/federation.rs:503:        let default_endpoint = format!("localhost:{}", discovery_config.discovery_base_port);
+code/crates/nestgate-core/src/config/capability_based.rs:189:                    endpoint: "127.0.0.1:8080".parse().unwrap(),
+code/crates/nestgate-core/src/config/capability_based.rs:314:        std::env::set_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT", "127.0.0.1:9000");
+code/crates/nestgate-core/src/config/network_defaults_v2_config.rs:348:        assert_eq!(config.api_host(), "127.0.0.1");
+code/crates/nestgate-core/src/config/network_defaults_v2_config.rs:350:        assert_eq!(config.api_bind_address(), "127.0.0.1:8080");
+code/crates/nestgate-core/src/config/network_defaults_v2_config.rs:351:        assert_eq!(config.api_url(), "http://127.0.0.1:8080");
+code/crates/nestgate-core/src/config/network_defaults_v2_config.rs:364:            .with_api_host("0.0.0.0".to_string())
+code/crates/nestgate-core/src/config/network_defaults_v2_config.rs:374:        assert_eq!(config.api_host(), "0.0.0.0");
+code/crates/nestgate-core/src/config/network_defaults_v2_config.rs:376:        assert_eq!(config.api_bind_address(), "0.0.0.0:9000");
+code/crates/nestgate-core/src/config/network_defaults_v2_config.rs:377:        assert_eq!(config.api_url(), "http://0.0.0.0:9000");
+code/crates/nestgate-core/src/config/network_defaults_v2_config.rs:390:        assert_eq!(config.api_host(), "127.0.0.1");
+code/crates/nestgate-core/src/config/runtime_config.rs:72:    /// External hostname (from NESTGATE_HOSTNAME or localhost)
+code/crates/nestgate-core/src/config/runtime_config.rs:150:    /// Whether to bind only to localhost (from NESTGATE_LOCALHOST_ONLY or true)
+code/crates/nestgate-core/src/config/runtime_config.rs:151:    pub localhost_only: bool,
+code/crates/nestgate-core/src/config/runtime_config.rs:176:        let addr = if self.security.localhost_only {
+code/crates/nestgate-core/src/config/runtime_config.rs:355:        let localhost_only = env::var("NESTGATE_LOCALHOST_ONLY")
+code/crates/nestgate-core/src/config/runtime_config.rs:358:                // Default to secure: localhost only unless explicitly configured
+code/crates/nestgate-core/src/config/runtime_config.rs:369:            localhost_only,
+code/crates/nestgate-core/src/config/runtime_config.rs:518:        assert_eq!(config.bind_endpoint, "127.0.0.1");
+code/crates/nestgate-core/src/config/defaults_config.rs:277:        assert_eq!(config.get_bind_address(), "127.0.0.1");
+code/crates/nestgate-core/src/config/defaults_config.rs:278:        assert_eq!(config.get_hostname(), "localhost");
+code/crates/nestgate-core/src/config/defaults_config.rs:299:        assert_eq!(config.get_api_base_url(), "http://127.0.0.1:7777");
+code/crates/nestgate-core/src/config/defaults_config.rs:300:        assert_eq!(config.get_websocket_base_url(), "ws://127.0.0.1:6666");
+code/crates/nestgate-core/src/config/migration_helpers.rs:90:        let addr = build_address("localhost", 18080).unwrap();
+code/crates/nestgate-core/src/config/migration_helpers.rs:91:        assert_eq!(addr, "localhost:18080");
+code/crates/nestgate-core/src/config/sovereignty_config.rs:84:    /// * `endpoint` - The full API endpoint URL (e.g., "http://localhost:8080")
+code/crates/nestgate-core/src/config/sovereignty_config.rs:219:        assert!(config.api_endpoint().contains("127.0.0.1"));
+code/crates/nestgate-core/src/config/sovereignty_config.rs:227:            .with_bind_address("0.0.0.0".to_string())
+code/crates/nestgate-core/src/config/sovereignty_config.rs:231:        assert_eq!(config.bind_address(), "0.0.0.0");
+code/crates/nestgate-core/src/config/sovereignty_config.rs:242:        assert_eq!(config.websocket_endpoint(), "ws://127.0.0.1:8888/ws");
+code/crates/nestgate-core/src/config/sovereignty_config.rs:284:                .with_bind_address("127.0.0.1".to_string()),
+code/crates/nestgate-core/src/config/sovereignty_config.rs:289:                .with_bind_address("0.0.0.0".to_string()),
+code/crates/nestgate-core/src/config/sovereignty_config.rs:304:        assert!(endpoint1.contains("127.0.0.1:8080"));
+code/crates/nestgate-core/src/config/sovereignty_config.rs:305:        assert!(endpoint2.contains("0.0.0.0:9090"));
+code/crates/nestgate-core/src/config/environment.rs:114:        // ✅ Fallback to localhost (compile-time constant) if parse fails
+code/crates/nestgate-core/src/config/environment.rs:184:    /// Host address to bind to (default: 127.0.0.1)
+code/crates/nestgate-core/src/config/environment.rs:291:            host: "127.0.0.1".to_string(),
+code/crates/nestgate-core/src/config/environment.rs:613:        assert_eq!(config.network.host, "127.0.0.1");
+code/crates/nestgate-core/src/config/environment.rs:622:        assert_eq!(config.network.host, "127.0.0.1");
+code/crates/nestgate-core/src/config/environment.rs:650:        assert_eq!(config.host, "127.0.0.1");
+code/crates/nestgate-core/src/config/network_defaults.rs:14://! // Get API server host (defaults to 127.0.0.1, overridable via NESTGATE_API_HOST)
+code/crates/nestgate-core/src/config/network_defaults.rs:29://! - `NESTGATE_API_HOST` - API server hostname (default: "127.0.0.1")
+code/crates/nestgate-core/src/config/network_defaults.rs:31://! - `NESTGATE_API_BIND` - Full bind address (default: "127.0.0.1:8080")
+code/crates/nestgate-core/src/config/network_defaults.rs:35://! - `NESTGATE_METRICS_BIND` - Metrics bind address (default: "127.0.0.1:9090")
+code/crates/nestgate-core/src/config/network_defaults.rs:39://! - `NESTGATE_WS_BIND` - WebSocket bind address (default: "127.0.0.1:8081")
+code/crates/nestgate-core/src/config/network_defaults.rs:43://! - `NESTGATE_HEALTH_BIND` - Health check bind address (default: "127.0.0.1:8082")
+code/crates/nestgate-core/src/config/network_defaults.rs:47://! - `NESTGATE_STORAGE_BIND` - Storage bind address (default: "127.0.0.1:5000")
+code/crates/nestgate-core/src/config/network_defaults.rs:71:/// Returns `"127.0.0.1"` if not set (safe for development)
+code/crates/nestgate-core/src/config/network_defaults.rs:92:/// - `NESTGATE_API_BIND`: Full bind address (e.g., "0.0.0.0:8080")
+code/crates/nestgate-core/src/config/network_defaults.rs:95:/// Returns `"127.0.0.1:8080"` constructed from `api_host()` and `api_port()`
+code/crates/nestgate-core/src/config/network_defaults.rs:101:/// API server URL (e.g., "http://127.0.0.1:8080")
+code/crates/nestgate-core/src/config/network_defaults.rs:133:/// Returns `"127.0.0.1:9090"`
+code/crates/nestgate-core/src/config/network_defaults.rs:159:/// Returns `"127.0.0.1:8081"`
+code/crates/nestgate-core/src/config/network_defaults.rs:165:/// WebSocket URL (e.g., "ws://127.0.0.1:8081")
+code/crates/nestgate-core/src/config/network_defaults.rs:197:/// Returns `"127.0.0.1:8082"`
+code/crates/nestgate-core/src/config/network_defaults.rs:203:/// Health check URL (e.g., "http://127.0.0.1:8082/health")
+code/crates/nestgate-core/src/config/network_defaults.rs:235:/// Returns `"127.0.0.1:5000"`
+code/crates/nestgate-core/src/config/network_defaults.rs:281:/// Get bind address for all interfaces (0.0.0.0)
+code/crates/nestgate-core/src/config/network_defaults.rs:287:/// Binding to 0.0.0.0 exposes the service to all network interfaces.
+code/crates/nestgate-core/src/config/network_defaults.rs:294:/// Get localhost bind address
+code/crates/nestgate-core/src/config/network_defaults.rs:298:pub fn bind_localhost(port: u16) -> String {
+code/crates/nestgate-core/src/config/network_defaults.rs:312:        assert_eq!(config.api_host(), "127.0.0.1");
+code/crates/nestgate-core/src/config/network_defaults.rs:314:        assert_eq!(config.api_bind_address(), "127.0.0.1:8080");
+code/crates/nestgate-core/src/config/network_defaults.rs:315:        assert_eq!(config.api_url(), "http://127.0.0.1:8080");
+code/crates/nestgate-core/src/config/network_defaults.rs:321:            .with_api_host("0.0.0.0".to_string())
+code/crates/nestgate-core/src/config/network_defaults.rs:324:        assert_eq!(config.api_host(), "0.0.0.0");
+code/crates/nestgate-core/src/config/network_defaults.rs:326:        assert_eq!(config.api_bind_address(), "0.0.0.0:9000");
+code/crates/nestgate-core/src/config/network_defaults.rs:353:        assert_eq!(bind_all_interfaces(8080), "0.0.0.0:8080");
+code/crates/nestgate-core/src/config/network_defaults.rs:354:        assert_eq!(bind_localhost(8080), "127.0.0.1:8080");
+code/crates/nestgate-core/src/config/network_defaults.rs:435:            .with_api_host("0.0.0.0".to_string())
+code/crates/nestgate-core/src/config/network_defaults.rs:444:            .with_api_host("0.0.0.0".to_string())
+code/crates/nestgate-core/src/config/network_defaults.rs:452:            .with_api_host("0.0.0.0".to_string())
+code/crates/nestgate-core/src/config/network_defaults.rs:460:            .with_api_host("0.0.0.0".to_string())
+code/crates/nestgate-core/src/config/network_defaults.rs:467:        assert_eq!(bind_all_interfaces(80), "0.0.0.0:80");
+code/crates/nestgate-core/src/config/network_defaults.rs:468:        assert_eq!(bind_all_interfaces(443), "0.0.0.0:443");
+code/crates/nestgate-core/src/config/network_defaults.rs:469:        assert_eq!(bind_all_interfaces(3000), "0.0.0.0:3000");
+code/crates/nestgate-core/src/config/network_defaults.rs:470:        assert_eq!(bind_all_interfaces(65535), "0.0.0.0:65535");
+code/crates/nestgate-core/src/config/network_defaults.rs:475:        assert_eq!(bind_localhost(80), "127.0.0.1:80");
+code/crates/nestgate-core/src/config/network_defaults.rs:476:        assert_eq!(bind_localhost(443), "127.0.0.1:443");
+code/crates/nestgate-core/src/config/network_defaults.rs:477:        assert_eq!(bind_localhost(3000), "127.0.0.1:3000");
+code/crates/nestgate-core/src/config/network_defaults.rs:478:        assert_eq!(bind_localhost(65535), "127.0.0.1:65535");
+code/crates/nestgate-core/src/config/network_defaults.rs:487:        assert_eq!(config.api_host(), "127.0.0.1");
+code/crates/nestgate-core/src/config/sovereignty.rs:56:    /// Replace hardcoded localhost:8080 with environment-driven value
+code/crates/nestgate-core/src/config/sovereignty.rs:57:    pub fn replace_localhost_8080() -> String {
+code/crates/nestgate-core/src/config/sovereignty.rs:61:    /// Replace hardcoded 127.0.0.1:8080 with environment-driven value
+code/crates/nestgate-core/src/config/sovereignty.rs:70:    /// Replace hardcoded ws://localhost:8080 with environment-driven value
+code/crates/nestgate-core/src/config/sovereignty.rs:71:    pub fn replace_ws_localhost_8080() -> String {
+code/crates/nestgate-core/src/config/sovereignty.rs:131:        let endpoint = migration_helpers::replace_localhost_8080();
+code/crates/nestgate-core/src/config/sovereignty.rs:143:        let endpoint = migration_helpers::replace_ws_localhost_8080();
+code/crates/nestgate-core/src/config/sovereignty.rs:179:                    let _ = migration_helpers::replace_localhost_8080();
+code/crates/nestgate-core/src/config/sovereignty.rs:181:                    let _ = migration_helpers::replace_ws_localhost_8080();
+code/crates/nestgate-core/src/config/discovery_config.rs:9://! - `NESTGATE_DISCOVERY_HOST`: Discovery host (default: 127.0.0.1)
+code/crates/nestgate-core/src/config/discovery_config.rs:20:/// Replaces hardcoded URLs like "http://localhost:8080" with configurable endpoints.
+code/crates/nestgate-core/src/config/discovery_config.rs:27:    /// Discovery host (default: localhost)
+code/crates/nestgate-core/src/config/discovery_config.rs:159:                "http://127.0.0.1:8080".to_string(),
+code/crates/nestgate-core/src/config/discovery_config.rs:160:                "http://127.0.0.1:8081".to_string(),
+code/crates/nestgate-core/src/config/discovery_config.rs:161:                "http://127.0.0.1:8082".to_string(),
+code/crates/nestgate-core/src/config/discovery_config.rs:163:            discovery_host: "127.0.0.1".to_string(),
+code/crates/nestgate-core/src/config/discovery_config.rs:170:        assert_eq!(config.discovery_host, "127.0.0.1");
+code/crates/nestgate-core/src/config/discovery_config.rs:208:            discovery_host: "127.0.0.1".to_string(),
+code/crates/nestgate-core/src/config/discovery_config.rs:216:        assert_eq!(endpoint, "http://127.0.0.1:8081");
+code/crates/nestgate-core/src/config/discovery_config.rs:224:            discovery_host: "127.0.0.1".to_string(),
+code/crates/nestgate-core/src/config/discovery_config.rs:268:            .map(|offset| format!("http://127.0.0.1:{}", 8080 + offset))
+code/crates/nestgate-core/src/config/discovery_config.rs:272:        assert!(endpoints.contains(&"http://127.0.0.1:8080".to_string()));
+code/crates/nestgate-core/src/config/discovery_config.rs:273:        assert!(endpoints.contains(&"http://127.0.0.1:8081".to_string()));
+code/crates/nestgate-core/src/config/discovery_config.rs:274:        assert!(endpoints.contains(&"http://127.0.0.1:8082".to_string()));
+code/crates/nestgate-core/src/config/validation.rs:327:                .expected_format("IP:PORT (e.g., 127.0.0.1:8080)")
+code/crates/nestgate-core/src/config/canonical_primary/supporting_types.rs:38:            endpoints: vec!["http://localhost:9090".to_string()],
+code/crates/nestgate-core/src/config/canonical_primary/domains/network/security.rs:40:            allowed_ips: vec!["10.0.0.0/8".to_string()],
+code/crates/nestgate-core/src/interface/event_types.rs:119:            endpoint: format!("http://localhost:{}/events", TEST_EVENT_PORT),
+code/crates/nestgate-core/src/connection_pool/zero_cost_connection_pool.rs:327:        let factory = ZeroCostTcpConnectionFactory::new("127.0.0.1".to_string(), 8080, Duration::from_secs(30));
+code/crates/nestgate-core/src/connection_pool/zero_cost_connection_pool.rs:338:                endpoint: "127.0.0.1".to_string(),
+code/crates/nestgate-core/src/defaults_v2_config.rs:242:        assert_eq!(config.bind_address(), "0.0.0.0");
+code/crates/nestgate-core/src/defaults_v2_config.rs:243:        assert_eq!(config.hostname(), "localhost");
+code/crates/nestgate-core/src/defaults_v2_config.rs:279:        assert_eq!(config.hostname(), "localhost");
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:326:        format!("0.0.0.0:{API_PORT}")
+code/crates/nestgate-core/src/zero_cost/const_generic_config.rs:331:        format!("127.0.0.1:{INTERNAL_PORT}")
+code/crates/nestgate-core/src/zero_cost/migrated_universal_service_provider.rs:328:            endpoints: vec![format!("http://localhost:8080/{self.service_id}")],
+code/crates/nestgate-core/src/dev_stubs/primal_discovery.rs:67:            "0.0.0.0",
+code/crates/nestgate-core/src/dev_stubs/primal_discovery.rs:73:                "127.0.0.1",
+code/crates/nestgate-core/src/dev_stubs/primal_discovery.rs:79:            "127.0.0.1",
+code/crates/nestgate-core/src/primal_discovery/migration.rs:170:                let url = format!("http://localhost:{}", port);
+code/crates/nestgate-core/src/primal_discovery/migration.rs:187:            let url = format!("http://localhost:{}", port);
+code/crates/nestgate-core/src/primal_discovery/migration.rs:269:        assert_eq!(endpoint, "http://localhost:7777");
+code/crates/nestgate-core/src/primal_discovery/migration.rs:288:        assert_eq!(endpoint, "http://localhost:6666");
+code/crates/nestgate-core/src/primal_discovery/migration.rs:323:        assert_eq!(endpoint3, "http://localhost:3333");
+code/crates/nestgate-core/src/primal_discovery/migration.rs:361:        assert_eq!(endpoint, "http://localhost:8080");
+code/crates/nestgate-core/src/primal_discovery/migration.rs:398:        assert_eq!(endpoint1, "http://localhost:5000");
+code/crates/nestgate-core/src/primal_discovery/migration.rs:409:            endpoint2, "http://localhost:5000",
+code/crates/nestgate-core/src/primal_discovery/migration.rs:422:            endpoint3, "http://localhost:6000",
+code/crates/nestgate-core/src/primal_discovery/migration.rs:445:        assert_eq!(endpoint, "http://localhost:7000");
+code/crates/nestgate-core/src/primal_discovery/migration.rs:486:        assert_eq!(e1, "http://localhost:6001");
+code/crates/nestgate-core/src/primal_discovery/migration.rs:487:        assert_eq!(e2, "http://localhost:6002");
+code/crates/nestgate-core/src/primal_discovery/migration.rs:488:        assert_eq!(e3, "http://localhost:6003");
+code/crates/nestgate-core/src/primal_discovery/migration.rs:510:        assert_eq!(endpoint, "http://localhost:7070");
+code/crates/nestgate-core/src/primal_discovery/migration.rs:529:        assert_eq!(endpoint, "http://localhost:8181");
+code/crates/nestgate-core/src/primal_discovery/migration.rs:574:                &format!("http://localhost:{}", 5000 + i)
+code/crates/nestgate-core/src/primal_discovery/runtime_discovery.rs:485:            endpoint: Some("http://localhost:8080".to_string()),
+code/crates/nestgate-core/src/primal_discovery/runtime_discovery.rs:491:            endpoint: "http://localhost:8080".to_string(),
+code/crates/nestgate-core/src/primal_discovery/runtime_discovery.rs:497:        assert_eq!(connection.endpoint, "http://localhost:8080");
+code/crates/nestgate-core/src/capability_config.rs:23://! // NO hardcoded "localhost:8080"!
+code/crates/nestgate-core/src/capability_config.rs:33://! NESTGATE_API_ENDPOINT=0.0.0.0:8080
+code/crates/nestgate-core/src/capability_config.rs:34://! NESTGATE_METRICS_ENDPOINT=0.0.0.0:9090
+code/crates/nestgate-core/src/capability_config.rs:48://! let addr = SocketAddr::new("127.0.0.1".parse()?, API_PORT);
+code/crates/nestgate-core/src/capability_config.rs:148:    /// Default bind address (0.0.0.0 for all interfaces)
+code/crates/nestgate-core/src/capability_config.rs:193:    /// export NESTGATE_API_ENDPOINT=0.0.0.0:8080
+code/crates/nestgate-core/src/capability_config.rs:194:    /// export NESTGATE_METRICS_ENDPOINT=0.0.0.0:9090
+code/crates/nestgate-core/src/capability_config.rs:329:    /// Uses 0.0.0.0 (all interfaces) with sensible port ranges.
+code/crates/nestgate-core/src/capability_config.rs:355:            bind_address: "0.0.0.0".to_string(),
+code/crates/nestgate-core/src/capability_config.rs:367:    /// Uses 127.0.0.1 (localhost only) for safety.
+code/crates/nestgate-core/src/capability_config.rs:370:        defaults.bind_address = "127.0.0.1".to_string();
+code/crates/nestgate-core/src/capability_config.rs:403:        assert_eq!(defaults.bind_address, "0.0.0.0");
+code/crates/nestgate-core/src/capability_config.rs:407:        assert_eq!(dev_defaults.bind_address, "127.0.0.1");
+code/crates/nestgate-core/src/environment_config.rs:47:    pub const DEFAULT_BIND_STANDALONE: &'static str = "127.0.0.1";
+code/crates/nestgate-core/src/environment_config.rs:49:    pub const DEFAULT_BIND_ORCHESTRATION: &'static str = "0.0.0.0";
+code/crates/nestgate-core/src/environment_config.rs:343:        assert_eq!(config.bind_interface_standalone(), "127.0.0.1");
+code/crates/nestgate-core/src/environment_config.rs:344:        assert_eq!(config.bind_interface_orchestration(), "0.0.0.0");
+code/crates/nestgate-core/src/environment_config.rs:354:        assert_eq!(config.bind_interface(false), "127.0.0.1");
+code/crates/nestgate-core/src/environment_config.rs:367:        assert_eq!(config.bind_interface(true), "0.0.0.0");
+code/crates/nestgate-core/src/config_root/mod.rs:139:            host: "0.0.0.0".to_string(),
+code/crates/nestgate-core/src/service_discovery/service_discovery_edge_cases.rs:67:        let localhost_v4 = SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 8080);
+code/crates/nestgate-core/src/service_discovery/service_discovery_edge_cases.rs:68:        let localhost_v6 = SocketAddr::new(IpAddr::V6(Ipv6Addr::LOCALHOST), 8080);
+code/crates/nestgate-core/src/service_discovery/service_discovery_edge_cases.rs:69:        assert_eq!(localhost_v4.port(), 8080);
+code/crates/nestgate-core/src/service_discovery/service_discovery_edge_cases.rs:70:        assert_eq!(localhost_v6.port(), 8080);
+code/crates/nestgate-core/src/service_discovery/dynamic_endpoints_config.rs:54:            hostname: "localhost".to_string(),
+code/crates/nestgate-core/src/service_discovery/dynamic_endpoints_config.rs:194:        assert_eq!(config.hostname(), "localhost");
+code/crates/nestgate-core/src/service_discovery/dynamic_endpoints_config.rs:246:        assert_eq!(config.hostname(), "localhost");
+code/crates/nestgate-core/src/service_discovery/dynamic_endpoints.rs:14:/// Dynamic endpoint resolver that eliminates hardcoded localhost URLs
+code/crates/nestgate-core/src/service_discovery/dynamic_endpoints.rs:146:    /// Allocate dynamic endpoint (no hardcoded localhost)
+code/crates/nestgate-core/src/self_knowledge/builder.rs:25:///     .with_endpoint("api", &format!("0.0.0.0:{}", get_api_port()).parse()?)
+code/crates/nestgate-core/src/self_knowledge/builder.rs:26:///     .with_endpoint("metrics", &format!("0.0.0.0:{}", get_metrics_port()).parse()?)
+code/crates/nestgate-core/src/self_knowledge/builder.rs:199:                    "127.0.0.1:{}",
+code/crates/nestgate-core/src/self_knowledge/builder.rs:259:                    "127.0.0.1:{}",
+code/crates/nestgate-core/src/self_knowledge/builder.rs:268:                    "127.0.0.1:{}",
+code/crates/nestgate-core/src/self_knowledge/builder.rs:277:                    "127.0.0.1:{}",
+code/crates/nestgate-core/src/self_knowledge/mod.rs:63://!     .with_endpoint("api", "0.0.0.0:8080")
+code/crates/nestgate-core/src/self_knowledge/mod.rs:64://!     .with_endpoint("metrics", "0.0.0.0:9090")
+code/crates/nestgate-core/src/self_knowledge/examples.rs:95:            .with_endpoint("api", format!("0.0.0.0:{}", crate::constants::network_hardcoded::get_api_port()).parse()?)
+code/crates/nestgate-core/src/self_knowledge/examples.rs:96:            .with_endpoint("metrics", format!("0.0.0.0:{}", crate::constants::network_hardcoded::get_metrics_port()).parse()?)
+code/crates/nestgate-core/src/capability_resolver.rs:208:                host: url.host_str().unwrap_or("localhost").to_string(),
+code/crates/nestgate-core/src/capability_resolver.rs:243:                            host: url.host_str().unwrap_or("localhost").to_string(),
+code/crates/nestgate-core/src/capability_resolver.rs:389:                    host: url.host_str().unwrap_or("localhost").to_string(),
+code/crates/nestgate-core/src/capability_resolver.rs:562:            "http://localhost:8080",
+code/crates/nestgate-core/src/capability_resolver.rs:572:        assert_eq!(service.host, "localhost");
+code/crates/nestgate-core/src/capability_resolver.rs:615:            "http://localhost:9090",
+code/crates/nestgate-core/src/enterprise/clustering.rs:815:                        format!("127.0.0.1:{}", port)
+code/crates/nestgate-core/src/capability_based_config.rs:254:        let api_addr = Self::resolve_address_from_env("NESTGATE_API_HOST", "0.0.0.0")?;
+code/crates/nestgate-core/src/capability_based_config.rs:573:            address: "localhost".to_string(),
+code/crates/nestgate-core/src/capability_based_config.rs:578:        assert_eq!(endpoint.url(), "http://localhost:8080/api/v1");
+code/crates/nestgate-core/src/sovereignty_config.rs:115:        if api_endpoint.contains("localhost") && env::var("NESTGATE_API_ENDPOINT").is_err() {
+code/crates/nestgate-core/src/sovereignty_config.rs:117:                "API endpoint using localhost without explicit user configuration".to_string(),
+code/crates/nestgate-core/src/environment.rs:37:    /// Network bind interface (127.0.0.1 for standalone, 0.0.0.0 for orchestration)
+code/crates/nestgate-core/src/canonical/dynamic_config/validators.rs:91:                    message: "Binding to all interfaces (0.0.0.0) may be a security risk"
+code/crates/nestgate-core/src/canonical/types/core_types.rs:319:            endpoint: "http://localhost:9000".to_string(),
+code/crates/nestgate-core/src/canonical/types/core_types.rs:327:        assert_eq!(info.endpoint, "http://localhost:9000");
+code/crates/nestgate-core/src/canonical/types/core_types.rs:535:            endpoint: "http://localhost:18080".to_string(),
+code/crates/nestgate-core/src/unified_capabilities.rs:418:            "http://localhost:8888",
+code/crates/nestgate-core/src/cert/validator.rs:17:            "http://localhost:8080/adapter".to_string(),
+code/crates/nestgate-core/src/cert/manager.rs:21:            "http://localhost:8080/adapter".to_string(),
+code/crates/nestgate-core/src/primal_discovery.rs:203:            .unwrap_or_else(|| "http://localhost:8080".into())
+code/crates/nestgate-core/src/primal_discovery.rs:349:        assert_eq!(endpoint.url(), "http://127.0.0.1:8080");
+code/crates/nestgate-core/src/error/variants/network_errors.rs:124:        let error = NetworkErrorDetails::timeout("localhost");
+code/crates/nestgate-core/src/error/variants/network_errors.rs:126:        assert_eq!(error.message, "Network timeout for endpoint: localhost");
+code/crates/nestgate-core/src/error/variants/network_errors.rs:128:        assert_eq!(error.endpoint, Some("localhost".to_string()));
+code/crates/nestgate-core/src/services/native_async/mod.rs:99:                url: "http://localhost:9999".to_string(),
+code/crates/nestgate-core/src/capability_config/examples.rs:14:    // let addr = SocketAddr::new("0.0.0.0".parse()?, API_PORT);
+code/crates/nestgate-core/src/capability_config/examples.rs:30:    // NESTGATE_API_ENDPOINT=0.0.0.0:8080
+code/crates/nestgate-core/src/capability_config/examples.rs:31:    // NESTGATE_METRICS_ENDPOINT=0.0.0.0:9090
+code/crates/nestgate-core/src/capability_config/examples.rs:32:    // NESTGATE_HEALTH_ENDPOINT=0.0.0.0:8081
+code/crates/nestgate-core/src/capability_config/examples.rs:72:    // const BEARDOG_ENDPOINT: &str = "localhost:3000";
+code/crates/nestgate-core/src/capability_config/examples.rs:148:        assert_eq!(dev.bind_address, "127.0.0.1");
+code/crates/nestgate-core/src/capability_config/examples.rs:151:        assert_eq!(prod.bind_address, "0.0.0.0");
+code/crates/nestgate-core/src/capabilities/discovery/registry.rs:125:                host: "localhost".to_string(),
+code/crates/nestgate-core/src/capabilities/discovery/registry.rs:152:            endpoint: Endpoint::http("localhost".to_string(), 8080),
+code/crates/nestgate-core/src/capabilities/discovery/registry.rs:181:            endpoint: Endpoint::http("localhost".to_string(), 8080),
+code/crates/nestgate-core/src/capabilities/discovery/registry.rs:212:            endpoint: Endpoint::http("localhost".to_string(), 9001),
+code/crates/nestgate-core/src/capabilities/discovery/registry.rs:221:            endpoint: Endpoint::http("localhost".to_string(), 9002),
+code/crates/nestgate-core/src/capabilities/discovery/registry.rs:251:            endpoint: Endpoint::http("localhost".to_string(), 8080),
+code/crates/nestgate-core/src/capabilities/discovery/registry.rs:312:            endpoint: Endpoint::http("localhost".to_string(), 8080),
+code/crates/nestgate-core/src/capabilities/discovery/registry.rs:326:            endpoint: Endpoint::http("localhost".to_string(), 8081),
+code/crates/nestgate-core/src/capabilities/discovery/registry.rs:356:            endpoint: Endpoint::http("localhost".to_string(), 5432),
+code/crates/nestgate-core/src/capabilities/discovery/registry.rs:365:            endpoint: Endpoint::http("localhost".to_string(), 8080),
+code/crates/nestgate-core/src/capabilities/discovery/registry.rs:394:            endpoint: Endpoint::http("localhost".to_string(), 8080),
+code/crates/nestgate-core/src/capabilities/discovery/registry.rs:428:                endpoint: Endpoint::http("localhost".to_string(), 8080 + i),
+code/crates/nestgate-core/src/capabilities/discovery/registry.rs:466:            endpoint: Endpoint::http("localhost".to_string(), 8080),
+code/crates/nestgate-core/src/capabilities/discovery/registry.rs:514:            endpoint: Endpoint::http("localhost".to_string(), 8001),
+code/crates/nestgate-core/src/capabilities/discovery/registry.rs:523:            endpoint: Endpoint::http("localhost".to_string(), 8002),
+code/crates/nestgate-core/src/capabilities/discovery/registry.rs:551:            endpoint: Endpoint::http("localhost".to_string(), 8080),
+code/crates/nestgate-core/src/capabilities/discovery/registry.rs:604:            endpoint: Endpoint::http("localhost".to_string(), 8080),
+code/crates/nestgate-core/src/capabilities/discovery/service_descriptor.rs:234:            endpoint: Endpoint::http("localhost".to_string(), 8080),
+code/crates/nestgate-core/src/capabilities/discovery/service_descriptor.rs:249:            endpoint: Endpoint::http("localhost".to_string(), 8080),
+code/crates/nestgate-core/src/capabilities/discovery/service_descriptor.rs:282:        let http = Endpoint::http("localhost".to_string(), 8080);
+code/crates/nestgate-core/src/capabilities/discovery/service_descriptor.rs:286:        let https = Endpoint::https("localhost".to_string(), 443);
+code/crates/nestgate-core/src/capabilities/discovery/detector.rs:84:        let hosts = vec!["localhost", "127.0.0.1"];
+code/crates/nestgate-core/src/capabilities/discovery/resolver.rs:202:                host: "localhost".to_string(),
+code/crates/nestgate-core/src/capabilities/discovery/resolver.rs:248:            endpoint: Endpoint::http("localhost".to_string(), 8001),
+code/crates/nestgate-core/src/capabilities/discovery/resolver.rs:260:            endpoint: Endpoint::http("localhost".to_string(), 8002),
+code/crates/nestgate-core/src/capabilities/discovery/resolver.rs:293:            endpoint: Endpoint::http("localhost".to_string(), 9001),
+code/crates/nestgate-core/src/capabilities/discovery/resolver.rs:307:            endpoint: Endpoint::http("localhost".to_string(), 9002),
+code/crates/nestgate-core/src/capabilities/discovery/resolver.rs:354:            endpoint: Endpoint::http("localhost".to_string(), 7001),
+code/crates/nestgate-core/src/capabilities/discovery/resolver.rs:363:            endpoint: Endpoint::http("localhost".to_string(), 7002),
+code/crates/nestgate-core/src/capabilities/discovery/resolver.rs:390:            endpoint: Endpoint::http("localhost".to_string(), 6001),
+code/crates/nestgate-core/src/capabilities/discovery/resolver.rs:417:            endpoint: Endpoint::http("localhost".to_string(), 5001),
+code/crates/nestgate-core/src/capabilities/discovery/resolver.rs:449:            endpoint: Endpoint::http("localhost".to_string(), 4001),
+code/crates/nestgate-core/src/capabilities/discovery/resolver.rs:458:            endpoint: Endpoint::http("localhost".to_string(), 4002),
+code/crates/nestgate-core/src/capabilities/discovery/resolver.rs:491:            endpoint: Endpoint::http("localhost".to_string(), 3001),
+code/crates/nestgate-core/src/capabilities/discovery/resolver.rs:503:            endpoint: Endpoint::http("localhost".to_string(), 3002),
+code/crates/nestgate-core/src/capabilities/discovery/resolver.rs:546:            endpoint: Endpoint::http("localhost".to_string(), 2001),
+code/crates/nestgate-core/src/capabilities/discovery/resolver.rs:593:            endpoint: Endpoint::http("localhost".to_string(), 1001),
+code/crates/nestgate-core/src/capabilities/routing/mod.rs:166:        let adapter = PrimalAgnosticAdapter::new("http://localhost:18080".to_string());
+code/crates/nestgate-core/src/capabilities/routing/mod.rs:172:        let adapter = PrimalAgnosticAdapter::new("http://localhost:18080".to_string());
+code/crates/nestgate-core/src/constants/sovereignty_helpers_config.rs:45:    pub const DEFAULT_API_HOST: &'static str = "127.0.0.1";
+code/crates/nestgate-core/src/constants/sovereignty_helpers_config.rs:55:    pub const DEFAULT_BIND_ADDRESS: &'static str = "0.0.0.0";
+code/crates/nestgate-core/src/constants/sovereignty_helpers_config.rs:57:    pub const DEFAULT_DB_HOST: &'static str = "127.0.0.1";
+code/crates/nestgate-core/src/constants/sovereignty_helpers_config.rs:61:    pub const DEFAULT_DEV_HOST: &'static str = "127.0.0.1";
+code/crates/nestgate-core/src/constants/sovereignty_helpers_config.rs:322:        assert_eq!(config.api_host(), "127.0.0.1");
+code/crates/nestgate-core/src/constants/sovereignty_helpers_config.rs:327:        assert_eq!(config.bind_address(), "0.0.0.0");
+code/crates/nestgate-core/src/constants/sovereignty_helpers_config.rs:328:        assert_eq!(config.db_host(), "127.0.0.1");
+code/crates/nestgate-core/src/constants/sovereignty_helpers_config.rs:330:        assert_eq!(config.dev_host(), "127.0.0.1");
+code/crates/nestgate-core/src/constants/sovereignty_helpers_config.rs:337:        assert_eq!(config.api_endpoint(), "127.0.0.1:8080");
+code/crates/nestgate-core/src/constants/sovereignty_helpers_config.rs:338:        assert_eq!(config.http_api_endpoint(), "http://127.0.0.1:8080");
+code/crates/nestgate-core/src/constants/sovereignty_helpers_config.rs:339:        assert_eq!(config.websocket_endpoint(), "ws://127.0.0.1:8080/ws");
+code/crates/nestgate-core/src/constants/sovereignty_helpers_config.rs:342:            "http://127.0.0.1:8080/discovery"
+code/crates/nestgate-core/src/constants/sovereignty_helpers_config.rs:344:        assert_eq!(config.database_endpoint(), "127.0.0.1:5432");
+code/crates/nestgate-core/src/constants/sovereignty_helpers_config.rs:345:        assert_eq!(config.dev_endpoint(), "127.0.0.1:3000");
+code/crates/nestgate-core/src/constants/sovereignty_helpers_config.rs:365:        assert_eq!(config.api_host(), "127.0.0.1");
+code/crates/nestgate-core/src/constants/mod.rs:45://! - `NESTGATE_HOST`: Bind address (default: 127.0.0.1)
+code/crates/nestgate-core/src/constants/domains/network.rs:75:    pub localhost: &'static str,
+code/crates/nestgate-core/src/constants/domains/network.rs:77:    /// Any address (0.0.0.0)
+code/crates/nestgate-core/src/constants/domains/network.rs:193:                bind: "127.0.0.1",
+code/crates/nestgate-core/src/constants/domains/network.rs:194:                localhost: "127.0.0.1",
+code/crates/nestgate-core/src/constants/domains/network.rs:195:                any: "0.0.0.0",
+code/crates/nestgate-core/src/constants/domains/network.rs:196:                loopback: "127.0.0.1",
+code/crates/nestgate-core/src/constants/domains/network.rs:197:                api_base: "http://localhost:18080/api/v1", // Test port
+code/crates/nestgate-core/src/constants/domains/network.rs:198:                discovery: "http://localhost:18083/discovery", // Test port
+code/crates/nestgate-core/src/constants/domains/network.rs:251:    pub const DEFAULT_BIND_ADDRESS: &str = "127.0.0.1";
+code/crates/nestgate-core/src/constants/domains/network.rs:253:    /// Get localhost address
+code/crates/nestgate-core/src/constants/domains/network.rs:254:    pub const LOCALHOST: &str = "127.0.0.1";
+code/crates/nestgate-core/src/constants/network.rs:40:/// Default localhost address
+code/crates/nestgate-core/src/constants/network.rs:41:pub const LOCALHOST: &str = "127.0.0.1";
+code/crates/nestgate-core/src/constants/network.rs:44:pub const DEFAULT_BIND_ADDRESS: &str = "0.0.0.0";
+code/crates/nestgate-core/src/constants/sovereignty_helpers.rs:105:            assert!(SovereigntyConfig::api_endpoint().contains("127.0.0.1"));
+code/crates/nestgate-core/src/constants/system.rs:84:pub const DEFAULT_BIND_HOST: &str = "127.0.0.1";
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:17:        format!("http://localhost:{}", port)
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:22:    pub const DEFAULT_API_BASE_URL: &str = "http://localhost:8080";
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:29:        format!("ws://localhost:{}/ws", port)
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:34:    pub const DEFAULT_WEBSOCKET_URL: &str = "ws://localhost:8080/ws";
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:41:        format!("http://localhost:{}", port)
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:46:    pub const DEFAULT_METRICS_URL: &str = "http://localhost:9090";
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:51:        format!("http://localhost:{}", port)
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:55:    pub const DEFAULT_WEB_UI_URL: &str = "http://localhost:3000";
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:58:    pub const LOCALHOST: &str = "127.0.0.1";
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:61:    pub const DEFAULT_BIND_ADDRESS: &str = "0.0.0.0";
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:71:    /// **DEPRECATED**: This function uses hardcoded localhost fallback which violates
+code/crates/nestgate-core/src/constants/canonical_defaults.rs:90:        note = "Use ServiceRegistry for capability-based discovery or require explicit environment configuration. Hardcoded localhost fallback will be removed."
+code/crates/nestgate-core/src/constants/network_hardcoded.rs:18:    /// Localhost IPv4 address (127.0.0.1)
+code/crates/nestgate-core/src/constants/network_hardcoded.rs:20:    pub const LOCALHOST_IPV4: &str = "127.0.0.1";
+code/crates/nestgate-core/src/constants/network_hardcoded.rs:23:    pub const LOCALHOST_NAME: &str = "localhost";
+code/crates/nestgate-core/src/constants/network_hardcoded.rs:25:    /// Bind to all IPv4 interfaces (0.0.0.0)
+code/crates/nestgate-core/src/constants/network_hardcoded.rs:27:    pub const BIND_ALL_IPV4: &str = "0.0.0.0";
+code/crates/nestgate-core/src/constants/network_hardcoded.rs:143:    /// **Examples**: "0.0.0.0" (all interfaces), "127.0.0.1" (localhost only)
+code/crates/nestgate-core/src/constants/network_hardcoded.rs:164:/// Default: 0.0.0.0 (bind all interfaces)
+code/crates/nestgate-core/src/constants/network_hardcoded.rs:221:        assert_eq!(addresses::LOCALHOST_IPV4, "127.0.0.1");
+code/crates/nestgate-core/src/constants/network_hardcoded.rs:222:        assert_eq!(addresses::LOCALHOST_NAME, "localhost");
+code/crates/nestgate-core/src/constants/network_hardcoded.rs:223:        assert_eq!(addresses::BIND_ALL_IPV4, "0.0.0.0");
+code/crates/nestgate-core/src/constants/network_hardcoded.rs:240:        assert!(addr == "0.0.0.0" || !addr.is_empty()); // Either default or env override
+code/crates/nestgate-core/src/constants/hardcoding.rs:113:    /// IPv4 localhost address
+code/crates/nestgate-core/src/constants/hardcoding.rs:114:    pub const LOCALHOST_IPV4: &str = "127.0.0.1";
+code/crates/nestgate-core/src/constants/hardcoding.rs:116:    /// IPv6 localhost address
+code/crates/nestgate-core/src/constants/hardcoding.rs:120:    pub const LOCALHOST_NAME: &str = "localhost";
+code/crates/nestgate-core/src/constants/hardcoding.rs:123:    pub const BIND_ALL_IPV4: &str = "0.0.0.0";
+code/crates/nestgate-core/src/constants/hardcoding.rs:329:/// Falls back to `0.0.0.0` if not set.
+code/crates/nestgate-core/src/constants/hardcoding.rs:438:        assert_eq!(addresses::LOCALHOST_IPV4, "127.0.0.1");
+code/crates/nestgate-core/src/constants/hardcoding.rs:440:        assert_eq!(addresses::LOCALHOST_NAME, "localhost");
+code/crates/nestgate-core/src/constants/hardcoding.rs:441:        assert_eq!(addresses::BIND_ALL_IPV4, "0.0.0.0");
+code/crates/nestgate-core/src/constants/consolidated.rs:26://! - `NESTGATE_API_HOST` - API server host (default: 127.0.0.1)
+code/crates/nestgate-core/src/constants/consolidated.rs:28://! - `NESTGATE_BIND_ADDRESS` - Bind address (default: 0.0.0.0)
+code/crates/nestgate-core/src/constants/consolidated.rs:60:    localhost_ipv4: String,
+code/crates/nestgate-core/src/constants/consolidated.rs:61:    localhost_ipv6: String,
+code/crates/nestgate-core/src/constants/consolidated.rs:70:            // Hosts (default to localhost for security)
+code/crates/nestgate-core/src/constants/consolidated.rs:71:            api_host: env_or("NESTGATE_API_HOST", "127.0.0.1"),
+code/crates/nestgate-core/src/constants/consolidated.rs:72:            metrics_host: env_or("NESTGATE_METRICS_HOST", "127.0.0.1"),
+code/crates/nestgate-core/src/constants/consolidated.rs:73:            health_host: env_or("NESTGATE_HEALTH_HOST", "127.0.0.1"),
+code/crates/nestgate-core/src/constants/consolidated.rs:74:            admin_host: env_or("NESTGATE_ADMIN_HOST", "127.0.0.1"),
+code/crates/nestgate-core/src/constants/consolidated.rs:88:            bind_address: env_or("NESTGATE_BIND_ADDRESS", "0.0.0.0"),
+code/crates/nestgate-core/src/constants/consolidated.rs:89:            localhost_ipv4: "127.0.0.1".to_string(),
+code/crates/nestgate-core/src/constants/consolidated.rs:90:            localhost_ipv6: "::1".to_string(),
+code/crates/nestgate-core/src/constants/consolidated.rs:91:            bind_all_ipv4: "0.0.0.0".to_string(),
+code/crates/nestgate-core/src/constants/consolidated.rs:106:    /// Returns the API host address (e.g., "localhost" or "0.0.0.0")
+code/crates/nestgate-core/src/constants/consolidated.rs:164:    /// Returns the bind address for server sockets (read from NESTGATE_BIND_ADDRESS or default "0.0.0.0")
+code/crates/nestgate-core/src/constants/consolidated.rs:169:    pub fn localhost_ipv4(&self) -> &str {
+code/crates/nestgate-core/src/constants/consolidated.rs:170:        &self.localhost_ipv4
+code/crates/nestgate-core/src/constants/consolidated.rs:173:    pub fn localhost_ipv6(&self) -> &str {
+code/crates/nestgate-core/src/constants/consolidated.rs:174:        &self.localhost_ipv6
+code/crates/nestgate-core/src/constants/consolidated.rs:187:    /// Returns the full API URL (e.g., "http://localhost:8080")
+code/crates/nestgate-core/src/constants/consolidated.rs:249:            postgres_host: env_or("NESTGATE_POSTGRES_HOST", "127.0.0.1"),
+code/crates/nestgate-core/src/constants/consolidated.rs:255:            redis_host: env_or("NESTGATE_REDIS_HOST", "127.0.0.1"),
+code/crates/nestgate-core/src/constants/consolidated.rs:690:        assert_eq!(nc.api_url(), "http://127.0.0.1:8080");
+code/crates/nestgate-core/src/constants/consolidated.rs:691:        assert_eq!(nc.health_url(), "http://127.0.0.1:8081");
+code/crates/nestgate-core/src/constants/consolidated.rs:692:        assert_eq!(nc.websocket_url(), "ws://127.0.0.1:8082/ws");
+code/crates/nestgate-core/src/constants/consolidated.rs:698:        assert_eq!(sc.postgres_host(), "127.0.0.1");
+code/crates/nestgate-core/src/constants/consolidated.rs:700:        assert_eq!(sc.redis_host(), "127.0.0.1");
+code/crates/nestgate-core/src/constants/consolidated.rs:707:        assert!(sc.postgres_url().starts_with("postgresql://127.0.0.1:5432"));
+code/crates/nestgate-core/src/constants/consolidated.rs:708:        assert!(sc.redis_url().starts_with("redis://127.0.0.1:6379"));
+code/crates/nestgate-core/src/constants/canonical.rs:144:    pub const DEFAULT_BIND_ADDRESS: &str = "0.0.0.0";
+code/crates/nestgate-core/src/constants/canonical.rs:146:    pub const LOCALHOST: &str = "127.0.0.1";
+code/crates/nestgate-core/src/constants/system_config.rs:43:    pub const DEFAULT_BIND_HOST: &'static str = "127.0.0.1";
+code/crates/nestgate-core/src/constants/system_config.rs:243:        assert_eq!(config.bind_host(), "127.0.0.1");
+code/crates/nestgate-core/src/constants/system_config.rs:244:        assert_eq!(config.api_url(), "http://127.0.0.1:8080");
+code/crates/nestgate-core/src/constants/system_config.rs:256:            .with_bind_host("0.0.0.0".to_string())
+code/crates/nestgate-core/src/constants/system_config.rs:265:        assert_eq!(config.bind_host(), "0.0.0.0");
+code/crates/nestgate-core/src/constants/network_defaults_config.rs:165:        assert_eq!(config.get_bind_address(), "0.0.0.0");
+code/crates/nestgate-core/src/constants/network_defaults_config.rs:166:        assert_eq!(config.get_api_host(), "localhost");
+code/crates/nestgate-core/src/constants/network_defaults_config.rs:167:        assert_eq!(config.get_db_host(), "localhost");
+code/crates/nestgate-core/src/constants/network_defaults_config.rs:168:        assert_eq!(config.get_redis_host(), "localhost");
+code/crates/nestgate-core/src/constants/network_defaults.rs:16:/// Default localhost IPv4 address
+code/crates/nestgate-core/src/constants/network_defaults.rs:17:pub const LOCALHOST_IPV4: Ipv4Addr = Ipv4Addr::LOCALHOST; // 127.0.0.1
+code/crates/nestgate-core/src/constants/network_defaults.rs:19:/// Default localhost IPv6 address  
+code/crates/nestgate-core/src/constants/network_defaults.rs:23:pub const BIND_ALL_IPV4: Ipv4Addr = Ipv4Addr::UNSPECIFIED; // 0.0.0.0
+code/crates/nestgate-core/src/constants/network_defaults.rs:30:/// Default localhost hostname
+code/crates/nestgate-core/src/constants/network_defaults.rs:31:pub const LOCALHOST_NAME: &str = "localhost";
+code/crates/nestgate-core/src/constants/network_defaults.rs:34:pub const DEFAULT_BIND_ADDRESS: &str = "0.0.0.0";
+code/crates/nestgate-core/src/constants/network_defaults.rs:77:    std::env::var("NESTGATE_DB_HOST").unwrap_or_else(|_| "localhost".to_string())
+code/crates/nestgate-core/src/constants/network_defaults.rs:89:    std::env::var("NESTGATE_REDIS_HOST").unwrap_or_else(|_| "localhost".to_string())
+code/crates/nestgate-core/src/constants/capability_discovery.rs:14://! let url = "http://localhost:8080";
+code/crates/nestgate-core/src/constants/capability_discovery.rs:95:                if host_str != "localhost" {
+code/crates/nestgate-core/src/constants/capability_discovery.rs:131:/// // Replace: "http://localhost:8080"
+code/crates/nestgate-core/src/constants/capability_discovery.rs:139:/// Get API endpoint (migrated from hardcoded localhost:8080)
+code/crates/nestgate-core/src/constants/capability_discovery.rs:152:/// Get metrics endpoint (migrated from hardcoded localhost:9090)
+code/crates/nestgate-core/src/constants/capability_discovery.rs:160:/// Get health endpoint (migrated from hardcoded localhost:8081)
+code/crates/nestgate-core/src/utils/network.rs:223:            // 10.0.0.0/8
+code/crates/nestgate-core/src/utils/network.rs:251:/// Get the localhost IP address as a string
+code/crates/nestgate-core/src/utils/network.rs:252:pub fn localhost() -> &'static str {
+code/crates/nestgate-core/src/utils/network.rs:256:/// Get the IPv6 localhost address as a string
+code/crates/nestgate-core/src/utils/network.rs:257:pub fn localhost_ipv6() -> &'static str {
+code/crates/nestgate-core/src/utils/network.rs:258:    "::1"  // IPv6 localhost - standard, not configurable
+code/crates/nestgate-core/src/utils/network.rs:283:        assert!(is_valid_cidr("10.0.0.0/8"));
+code/crates/nestgate-core/src/utils/network.rs:326:        assert!(is_valid_url("http://localhost:18080"));
+code/crates/nestgate-core/src/utils/network.rs:368:        assert!(is_loopback_ip(&"127.0.0.1".parse().expect("Network operation failed")));
+code/crates/nestgate-core/src/utils/network.rs:423:        assert!(parse_cidr("10.0.0.0/0").is_ok());
+code/crates/nestgate-core/src/utils/network.rs:424:        assert!(parse_cidr("10.0.0.0/32").is_ok());
+code/crates/nestgate-core/src/utils/network.rs:453:        assert!(is_valid_hostname("localhost"));
+code/crates/nestgate-core/src/utils/network.rs:497:        assert!(!is_valid_domain("localhost"));
+code/crates/nestgate-core/src/utils/network.rs:540:        let url2 = parse_url("http://localhost:18080").expect("Should parse URL with port");
+code/crates/nestgate-core/src/utils/network.rs:619:        // 10.0.0.0/8
+code/crates/nestgate-core/src/utils/network.rs:620:        assert!(is_private_ip(&parse_ip("10.0.0.0").expect("Valid IP")));
+code/crates/nestgate-core/src/utils/network.rs:642:        assert!(is_loopback_ip(&parse_ip("127.0.0.1").expect("Valid loopback IP")));
+code/crates/nestgate-core/src/utils/network.rs:671:        let localhost = localhost();
+code/crates/nestgate-core/src/utils/network.rs:672:        assert_eq!(localhost, "127.0.0.1");
+code/crates/nestgate-core/src/utils/network.rs:673:        assert!(is_valid_ipv4(localhost));
+code/crates/nestgate-core/src/utils/network.rs:674:        assert!(is_loopback_ip(&parse_ip(localhost).expect("Localhost should be valid IP")));
+code/crates/nestgate-core/src/utils/network.rs:680:        assert!(is_valid_ipv4("0.0.0.0"));
+code/crates/nestgate-core/src/capability_aware_config.rs:426:        // Check if we can bind to 0.0.0.0 (all interfaces)
+code/crates/nestgate-core/src/capability_aware_config.rs:431:        // Fall back to localhost
+code/crates/nestgate-core/src/capability_aware_config.rs:468:    TcpListener::bind(("127.0.0.1", port)).await.is_ok()
+code/crates/nestgate-core/src/capability_aware_config.rs:521:        std::env::set_var("NESTGATE_METRICS_HOST", "127.0.0.1");
+code/crates/nestgate-core/src/capability_aware_config.rs:528:        assert!(endpoint.unwrap().contains("127.0.0.1:9090"));
+code/crates/nestgate-core/src/capability_aware_config.rs:571:        std::env::set_var("NESTGATE_API_HOST", "127.0.0.1");
+code/crates/nestgate-core/src/capability_aware_config.rs:580:        assert_eq!(host, "127.0.0.1".parse::<IpAddr>().unwrap());
+code/crates/nestgate-core/src/capability_aware_config.rs:584:        assert!(endpoint.contains("127.0.0.1:7777"));
+code/crates/nestgate-zfs/src/config/health.rs:68:                    .unwrap_or_else(|_| "localhost".to_string());
+code/crates/nestgate-zfs/src/backends/object_storage.rs:415:            || endpoint_lower.contains("localhost")
+code/crates/nestgate-zfs/src/backends/object_storage.rs:416:            || endpoint_lower.contains("127.0.0.1")
+code/crates/nestgate-zfs/src/backends/object_storage.rs:625:            "http://localhost:9000"
+code/crates/nestgate-zfs/src/backends/object_storage.rs:689:            "http://localhost:9000",    // Local MinIO
+code/crates/nestgate-zfs/src/manager/initialization.rs:248:                    std::env::var("NESTGATE_ZFS_HOST").unwrap_or_else(|_| "localhost".to_string());
+code/crates/nestgate-api/examples/dev_server.rs:22://! NESTGATE_API_HOST=0.0.0.0 cargo run --package nestgate-api --example dev_server
+code/crates/nestgate-api/src/bin/nestgate-api-server.rs:24://! - `NESTGATE_BIND_ADDRESS`: Bind address (default: from environment or 0.0.0.0)
