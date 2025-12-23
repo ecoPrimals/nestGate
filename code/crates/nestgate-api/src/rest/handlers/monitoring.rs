@@ -279,8 +279,8 @@ pub async fn get_alerts(
     // Simulate system resource alerts
     // ✅ REAL METRICS: Get actual current CPU usage
     let mut sys = sysinfo::System::new();
-    sys.refresh_cpu_all();
-    let current_cpu = f64::from(sys.global_cpu_usage());
+    sys.refresh_cpu();
+    let current_cpu = f64::from(sys.global_cpu_info().cpu_usage());
     if current_cpu > 80.0 {
         alerts.push(Alert {
             id: "alert_002".to_string(),

@@ -47,8 +47,8 @@ use tracing::{debug, info};
 
 /// Server configuration with RPC capabilities
 ///
-/// ✅ MODERNIZED (Week 2): Now uses EnvironmentConfig for all settings
-/// Eliminates hardcoded defaults and manual env::var parsing
+/// ✅ MODERNIZED (Week 2): Now uses `EnvironmentConfig` for all settings
+/// Eliminates hardcoded defaults and manual `env::var` parsing
 #[derive(Debug, Clone)]
 /// Configuration for Server
 pub struct ServerConfig {
@@ -67,29 +67,35 @@ pub struct ServerConfig {
 }
 
 impl ServerConfig {
-    /// Get bind endpoint as SocketAddr
+    /// Get bind endpoint as `SocketAddr`
+    ///
+    /// # Errors
+    /// Returns an error if the bind address cannot be parsed
     pub fn bind_endpoint(&self) -> Result<SocketAddr, std::net::AddrParseError> {
         self.env_config.bind_address()
     }
 
     /// Get API port
+    #[must_use]
     pub fn api_port(&self) -> u16 {
         self.env_config.network.port.get()
     }
 
     /// Get bind address string
+    #[must_use]
     pub fn bind_address(&self) -> &str {
         &self.env_config.network.host
     }
 
     /// Get log level
+    #[must_use]
     pub fn log_level(&self) -> &str {
         &self.env_config.monitoring.log_level
     }
 }
 
 impl Default for ServerConfig {
-    /// Returns the default instance using EnvironmentConfig
+    /// Returns the default instance using `EnvironmentConfig`
     fn default() -> Self {
         Self {
             env_config: EnvironmentConfig::default(),
@@ -170,8 +176,8 @@ async fn main() -> Result<()> {
 
 /// Load server configuration with RPC settings
 ///
-/// ✅ MODERNIZED (Week 2): Uses EnvironmentConfig for all settings
-/// Eliminates manual env::var parsing and unwrap() calls
+/// ✅ MODERNIZED (Week 2): Uses `EnvironmentConfig` for all settings
+/// Eliminates manual `env::var` parsing and `unwrap()` calls
 fn load_config() -> Result<ServerConfig> {
     // Load base configuration from environment
     let env_config =
@@ -222,10 +228,9 @@ fn init_logging(log_level: &str) {
     let level = match log_level.to_lowercase().as_str() {
         "trace" => tracing::Level::TRACE,
         "debug" => tracing::Level::DEBUG,
-        "info" => tracing::Level::INFO,
         "warn" => tracing::Level::WARN,
         "error" => tracing::Level::ERROR,
-        _ => tracing::Level::INFO,
+        _ => tracing::Level::INFO, // "info" or unknown defaults to INFO
     };
     // Initialize basic tracing (tracing_subscriber not available)
     println!("Initializing tracing with level: {level:?}");
@@ -259,6 +264,7 @@ fn print_enhanced_banner() {
     );
 }
 /// Print enhanced API endpoints with RPC capabilities
+#[allow(clippy::too_many_lines)]
 fn print_enhanced_api_endpoints(config: &ServerConfig) {
     println!("\n📋 Complete API Endpoints with Real-time Bidirectional RPC:");
     println!("┌─────────────────────────────────────────────────────────────────────┐");
