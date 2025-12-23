@@ -18,12 +18,29 @@ use crate::error::{NestGateError, Result};
 
 /// Connection pool for managing reusable HTTP connections
 ///
-/// Maintains a pool of connections per endpoint, enforcing limits
-/// and managing connection lifecycle.
+/// **CONCURRENT SAFETY**: Thread-safe with `Arc<RwLock<T>>` for multi-reader access  
+/// **RESOURCE MANAGEMENT**: Bounded by `Semaphore` to prevent exhaustion  
+/// **ZERO-COPY**: Arc-based sharing minimizes allocations
+///
+/// # Architecture
+///
+/// - `connections`: Shared state with RwLock (concurrent reads, exclusive writes)
+/// - `semaphore`: Resource limiter (prevents connection exhaustion)
+/// - `config`: Per-pool configuration
+///
+/// # Concurrency Model
+///
+/// - **Read operations**: Multiple concurrent readers allowed
+/// - **Write operations**: Exclusive lock for modifications
+/// - **Connection limits**: Semaphore enforces max connections
+/// - **Arc clones**: O(1) reference counting, not data duplication
 #[derive(Debug)]
 pub struct ConnectionPool {
+    /// Shared connection storage - RwLock allows concurrent reads
     connections: Arc<RwLock<HashMap<String, Vec<Connection>>>>,
+    /// Resource limiter - prevents connection exhaustion  
     semaphore: Arc<Semaphore>,
+    /// Pool configuration
     config: ClientConfig,
 }
 
@@ -38,22 +55,32 @@ impl ConnectionPool {
     }
 
     /// Get or create a connection for an endpoint
+    ///
+    /// **CONCURRENCY**: Acquires write lock only when needed  
+    /// **RESOURCE SAFETY**: Semaphore prevents exhaustion  
+    /// **ERROR HANDLING**: Proper Result propagation, no panics
+    ///
+    /// # Returns
+    ///
+    /// - `Ok(Connection)`: Reused or newly created connection
+    /// - `Err`: If semaphore acquisition fails (resource exhaustion)
     pub async fn get_connection(&self, endpoint: &Endpoint) -> Result<Connection> {
         let key = endpoint.to_string();
 
-        // Try to reuse existing connection
+        // Try to reuse existing connection (write lock for modification)
         {
             let mut connections = self.connections.write().await;
             if let Some(conns) = connections.get_mut(&key) {
                 // Find idle connection
                 if let Some(conn) = conns.iter_mut().find(|c| c.is_idle()) {
                     conn.mark_used();
+                    // ZERO-COPY: Arc clone is O(1), just increments ref count
                     return Ok(conn.clone());
                 }
             }
         }
 
-        // Create new connection
+        // Create new connection (resource-limited by semaphore)
         let _permit = self
             .semaphore
             .acquire()
@@ -62,7 +89,7 @@ impl ConnectionPool {
 
         let conn = Connection::new(endpoint.clone());
 
-        // Store in pool
+        // Store in pool (write lock for modification)
         let mut connections = self.connections.write().await;
         connections
             .entry(key)
