@@ -20,7 +20,7 @@ fastrand = "2.0"
 toml = "0.8"
 sha2 = "0.10"
 rand = "0.8"
-sysinfo = "0.37.0"
+sysinfo = "0.30"
 url = "2.5.7"
 async-stream = "0.3"
 
