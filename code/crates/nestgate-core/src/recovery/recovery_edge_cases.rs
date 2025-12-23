@@ -111,7 +111,7 @@ mod retry_strategy_edge_cases {
         let base = Duration::from_millis(100);
         let multiplier: f64 = 2.0;
         let results: Vec<_> = (0..5)
-            .map(|i| base.as_millis() as f64 * multiplier.powi(i as i32))
+            .map(|i| base.as_millis() as f64 * multiplier.powi(i))
             .collect();
         assert!(results[4] > results[0]);
     }
@@ -121,7 +121,7 @@ mod retry_strategy_edge_cases {
         let base = Duration::from_millis(100);
         let multiplier: f64 = 1.0;
         let results: Vec<_> = (0..5)
-            .map(|i| base.as_millis() as f64 * multiplier.powi(i as i32))
+            .map(|i| base.as_millis() as f64 * multiplier.powi(i))
             .collect();
         assert_eq!(results[0], results[4]);
     }
@@ -135,7 +135,7 @@ mod retry_strategy_edge_cases {
             backoff_multiplier: 2.0,
             jitter: true,
         };
-        assert_eq!(config.jitter, true);
+        assert!(config.jitter);
     }
 }
 
@@ -155,7 +155,7 @@ mod fallback_edge_cases {
 
     #[test]
     fn test_multiple_fallbacks() {
-        let fallbacks = vec!["fallback1", "fallback2", "fallback3"];
+        let fallbacks = ["fallback1", "fallback2", "fallback3"];
         assert_eq!(fallbacks.len(), 3);
     }
 
@@ -183,7 +183,7 @@ mod resilience_pattern_edge_cases {
 
     #[test]
     fn test_timeout_boundaries() {
-        let timeouts = vec![
+        let timeouts = [
             Duration::ZERO,
             Duration::from_millis(1),
             Duration::from_secs(1),

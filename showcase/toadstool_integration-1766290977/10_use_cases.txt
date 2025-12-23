@@ -1,0 +1,17 @@
+Use Case 1: Research Lab
+  • 10 researchers, shared GPU cluster
+  • Central dataset storage (NestGate)
+  • Parallel training jobs (ToadStool)
+  • Experiment tracking with snapshots
+
+Use Case 2: Production ML
+  • Automated training pipelines
+  • Model versioning and rollback
+  • A/B testing different models
+  • Performance monitoring
+
+Use Case 3: Multi-GPU Training
+  • 8 GPUs across 4 nodes
+  • Shared data access from NestGate
+  • Distributed training coordination
+  • Checkpoint synchronization

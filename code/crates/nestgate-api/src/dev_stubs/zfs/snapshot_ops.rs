@@ -27,7 +27,7 @@ impl SnapshotOperations for ProductionZfsManager {
     /// List Snapshots
     fn list_snapshots(&self, dataset: &str) -> Result<Vec<ZeroCostSnapshotInfo>, ZfsError> {
         Ok(vec![ZeroCostSnapshotInfo {
-            name: format!("{}@snap1", dataset),
+            name: format!("{dataset}@snap1"),
             used: 1_000_000,
             referenced: 100_000_000,
             creation_time: "2025-01-01T00:00:00Z".to_string(),

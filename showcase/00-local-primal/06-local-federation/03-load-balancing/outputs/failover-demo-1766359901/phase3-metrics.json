@@ -1,0 +1,13 @@
+{
+  "phase": "degraded_operation",
+  "nodes": 2,
+  "nodes_down": 1,
+  "total_rps": 450,
+  "node1_rps": 225,
+  "node2_rps": 0,
+  "node3_rps": 225,
+  "latency_p50_ms": 2.5,
+  "latency_p95_ms": 6.2,
+  "requests_lost": 0,
+  "status": "degraded"
+}

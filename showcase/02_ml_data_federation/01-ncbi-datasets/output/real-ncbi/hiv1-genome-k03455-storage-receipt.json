@@ -1,0 +1,23 @@
+{
+  "operation": "store",
+  "timestamp": "2025-12-22T07:53:58-05:00",
+  "status": "success",
+  "dataset": {
+    "id": "hiv1-genome-k03455",
+    "checksum": "3d660cd824b3979393b6d4aa475f4c68e5931ba9467626a16ae2ebdb2c2f7a26",
+    "size_bytes": 9965
+  },
+  "storage": {
+    "tower": "westgate",
+    "port": 7200,
+    "service": {"service":"nestgate-api","version":"0.1.0","status":"ok"},
+    "location": "zfs://pool0/datasets/ncbi/hiv1-genome-k03455",
+    "stored_at": "2025-12-22T07:53:58-05:00"
+  },
+  "compression": {
+    "algorithm": "zstd",
+    "original_size": 9965,
+    "compressed_size": 3986,
+    "ratio": 2.5
+  }
+}

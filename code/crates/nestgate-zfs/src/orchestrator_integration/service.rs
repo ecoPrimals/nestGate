@@ -3,7 +3,7 @@
 //! This module contains the ZfsService implementation that handles registration
 //! and coordination with orchestration systems.
 
-use super::types::{ServiceRegistration, ZfsHealthStatus, ZfsServiceConfig};
+use super::types::{ServiceInfo, ServiceRegistration, ZfsHealthStatus, ZfsServiceConfig};
 use anyhow::{bail, Result};
 use std::sync::Arc;
 use std::time::SystemTime;
@@ -242,6 +242,33 @@ impl ZfsService {
     #[must_use]
     pub fn last_health_check(&self) -> Option<SystemTime> {
         self.last_health_check
+    }
+
+    /// Get comprehensive service information
+    ///
+    /// Returns a `ServiceInfo` struct containing all service metadata,
+    /// endpoints, capabilities, and health status information.
+    ///
+    /// # Example
+    ///
+    /// ```rust,ignore
+    /// let service = ZfsService::new(config);
+    /// let info = service.get_service_info();
+    /// println!("Service: {} at {}", info.service_id, info.endpoints[0]);
+    /// ```
+    #[must_use]
+    pub fn get_service_info(&self) -> ServiceInfo {
+        ServiceInfo {
+            service_id: self.node_id.clone(),
+            service_type: "zfs-storage".to_string(),
+            endpoints: self.endpoints(),
+            capabilities: self.config.capabilities.clone(),
+            metadata: self.config.metadata.clone(),
+            last_heartbeat: self
+                .last_health_check
+                .and_then(|t| t.duration_since(SystemTime::UNIX_EPOCH).ok())
+                .map(|d| d.as_secs()),
+        }
     }
 }
 

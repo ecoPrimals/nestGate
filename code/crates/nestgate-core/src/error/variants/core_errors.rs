@@ -474,18 +474,6 @@ impl NestGateUnifiedError {
 
     /// Create a security error
     #[must_use]
-    pub fn security(message: &str) -> Self {
-        Self::Security(Box::new(SecurityErrorDetails {
-            message: message.to_string(),
-            operation: None,
-            principal: None,
-            security_data: None,
-            context: None,
-        }))
-    }
-
-    /// Create a security error
-    #[must_use]
     pub fn security_error(message: &str) -> Self {
         Self::Security(Box::new(SecurityErrorDetails {
             message: message.to_string(),

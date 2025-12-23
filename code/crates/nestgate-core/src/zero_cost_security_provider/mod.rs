@@ -11,11 +11,11 @@
 //!
 //! # Modules
 //!
-//! - [`traits`] - Core security provider traits
-//! - [`types`] - Security types and structures (~120 lines)
-//! - [`authentication`] - Authentication operations (~180 lines)
-//! - [`config`] - Configuration management (~80 lines)
-//! - [`metadata`] - Metadata and capabilities (~60 lines)
+//! - [`traits`](self::traits) - Core security provider traits
+//! - [`types`](self::types) - Security types and structures (~120 lines)
+//! - `authentication` - Authentication operations (~180 lines)
+//! - `config` - Configuration management (~80 lines)
+//! - `metadata` - Metadata and capabilities (~60 lines)
 //!
 //! # Modularization Achievement
 //!
@@ -81,6 +81,25 @@ pub use authentication::{
 // };
 pub use config::ZeroCostSecurityConfig;
 pub use metadata::ZeroCostSecurityMetadata;
+
+/// Compatibility module for test infrastructure
+///
+/// **TEMPORARY**: This module alias enables existing integration tests to compile
+/// during the test infrastructure fix phase. Tests were written against the old
+/// module structure before security provider modularization.
+///
+/// **Migration Path**:
+/// - Old: `use nestgate_core::zero_cost_security_provider::capability_auth::*;`
+/// - New: `use nestgate_core::zero_cost_security_provider::authentication::*;`
+///
+/// Once all tests are updated, this alias can be removed.
+pub mod capability_auth {
+    /// Compatibility re-exports for test infrastructure
+    ///
+    /// This module re-exports authentication types under the old `capability_auth`
+    /// name to maintain test compatibility during the infrastructure fix phase.
+    pub use super::authentication::*;
+}
 
 // **MODULARIZATION ACHIEVEMENT**
 //

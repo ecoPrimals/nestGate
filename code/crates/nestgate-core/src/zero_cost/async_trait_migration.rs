@@ -1,5 +1,6 @@
 //! Async Trait Migration module
 
+use crate::math::float_compare::approx_eq_f64;
 use crate::NestGateError;
 use std::collections::HashMap;
 use std::future::Future;
@@ -589,8 +590,9 @@ pub trait NativeAsyncProtocolHandler<
 
     /// Calculate performance improvements
     fn calculate_performance_improvements(&mut self) {
-        let total_traits = self.(trait_mappings.len() as f64);
-        if total_traits == 0.0 {
+        let total_traits = self.trait_mappings.len() as f64;
+        // ✅ MODERN: Use epsilon for zero check in production code
+        if approx_eq_f64(total_traits, 0.0, 1e-9) {
             return;
         }
 

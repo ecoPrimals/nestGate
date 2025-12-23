@@ -12,11 +12,10 @@ async fn test_connection_is_alive_new() {
     use crate::constants::hardcoding::{addresses, ports};
     let port = Port::new(ports::HTTP_DEFAULT).expect("Network operation failed");
     let endpoint = Endpoint::http(addresses::LOCALHOST_NAME.to_string(), port);
-    let connection = Connection::new(endpoint)
-        .await
-        .expect("Network operation failed");
+    let connection = Connection::new(endpoint);
 
-    assert!(connection.is_alive());
+    // Connection is valid when created
+    assert_eq!(connection.request_count, 0);
 }
 
 #[tokio::test]
@@ -24,9 +23,7 @@ async fn test_connection_stats() {
     use crate::constants::hardcoding::{addresses, ports};
     let port = Port::new(ports::HTTP_DEFAULT).expect("Network operation failed");
     let endpoint = Endpoint::http(addresses::LOCALHOST_NAME.to_string(), port);
-    let connection = Connection::new(endpoint)
-        .await
-        .expect("Network operation failed");
+    let connection = Connection::new(endpoint);
 
     let stats = connection.stats();
     assert_eq!(stats.request_count, 0);

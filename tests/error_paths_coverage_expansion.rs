@@ -96,7 +96,7 @@ fn test_environment_config_default_is_valid() {
 
     // Verify defaults are sensible
     assert!(config.network.port.get() >= 1024);
-    assert!(config.network.port.get() <= 65535);
+    // Note: Port is u16, so it's always <= 65535 (no need to check)
     assert!(!config.network.host.is_empty());
 }
 
@@ -162,7 +162,8 @@ fn test_port_inequality() {
 #[test]
 fn test_port_clone() {
     let port1 = Port::new(8080).unwrap();
-    let port2 = port1.clone();
+    // Port implements Copy, so we can just copy it directly
+    let port2 = port1;
     assert_eq!(port1, port2);
 }
 

@@ -6,7 +6,6 @@
 #[cfg(test)]
 mod network_connection_failures {
     use crate::network::client::*;
-    use std::time::Duration;
 
     #[test]
     fn test_connection_refused_error_handling() {
@@ -99,7 +98,7 @@ mod network_retry_exhaustion {
     use crate::network::client::*;
 
     #[test]
-    fn test_max_redirects_exceeded() {
+    fn test_max_retries_exceeded() {
         let error = HttpClientError::TooManyRedirects { count: 10 };
 
         assert!(error.to_string().contains("10"));
@@ -227,7 +226,7 @@ mod network_endpoint_edge_cases {
             port,
         };
 
-        let url = endpoint.url();
+        let url = endpoint.base_url();
         assert!(url.contains("http://"));
     }
 
@@ -240,7 +239,7 @@ mod network_endpoint_edge_cases {
             port,
         };
 
-        let url = endpoint.url();
+        let url = endpoint.base_url();
         assert!(url.contains("example.com"));
     }
 
@@ -253,7 +252,7 @@ mod network_endpoint_edge_cases {
             port,
         };
 
-        let url = endpoint.url();
+        let url = endpoint.base_url();
         assert!(url.contains("192.168.1.1"));
     }
 
@@ -266,7 +265,7 @@ mod network_endpoint_edge_cases {
             port,
         };
 
-        let url = endpoint.url();
+        let url = endpoint.base_url();
         assert!(url.contains("65535"));
     }
 }
@@ -288,7 +287,7 @@ mod network_concurrent_operations {
                     host: "localhost".to_string(),
                     port,
                 };
-                endpoint.url()
+                endpoint.base_url()
             });
             handles.push(handle);
         }
@@ -344,7 +343,7 @@ mod network_resource_limits {
             port,
         };
 
-        let url = endpoint.url();
+        let url = endpoint.base_url();
         assert!(url.contains(&long_host));
     }
 }
@@ -394,6 +393,6 @@ mod network_protocol_edge_cases {
             port: port2,
         };
 
-        assert_eq!(ep1.url(), ep2.url());
+        assert_eq!(ep1.base_url(), ep2.base_url());
     }
 }

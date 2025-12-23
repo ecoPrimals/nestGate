@@ -1,0 +1,26 @@
+📱 From iPhone/iPad:
+  1. Open Safari: http://nestgate.local:8080
+  2. Login with your account
+  3. Upload photos: Tap "Upload" button
+  4. Download files: Tap file to view/download
+
+💻 From Windows:
+  1. Map network drive: \\nestgate.local\share
+  2. Or use web UI: http://nestgate.local:8080
+  3. Drag & drop files
+
+🍎 From Mac:
+  1. Finder → Go → Connect to Server
+  2. smb://nestgate.local
+  3. Or use web UI: http://nestgate.local:8080
+  4. Enable Time Machine backups
+
+📱 From Android:
+  1. Open Chrome: http://nestgate.local:8080
+  2. Login with your account
+  3. Install PWA for app-like experience
+
+🌐 Remote Access (away from home):
+  1. Set up port forwarding (8080)
+  2. Use VPN for security
+  3. Or use WireGuard/Tailscale

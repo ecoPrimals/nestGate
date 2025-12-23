@@ -597,8 +597,8 @@ mod tests {
     async fn test_universal_adapter_discovery() {
         // Use injected config instead of env vars
         let mut config = AdapterDiscoveryConfig::new();
-        config.set_discovery_endpoint("orchestration", &test_endpoint("test-orch", 8080));
-        config.set_discovery_endpoint("compute", &test_endpoint("test-compute", 9090));
+        config.set_discovery_endpoint("orchestration", test_endpoint("test-orch", 8080));
+        config.set_discovery_endpoint("compute", test_endpoint("test-compute", 9090));
 
         let adapter_endpoint = test_endpoint("localhost", 8080) + "/adapter";
         let mut adapter =
@@ -651,8 +651,8 @@ mod tests {
     async fn test_adapter_with_discovery_config() {
         // Test the new with_discovery_config constructor
         let mut config = AdapterDiscoveryConfig::new();
-        config.set_discovery_endpoint("orchestration", &test_endpoint("orch-test", 8080));
-        config.set_discovery_endpoint("security", &test_endpoint("sec-test", 7070));
+        config.set_discovery_endpoint("orchestration", test_endpoint("orch-test", 8080));
+        config.set_discovery_endpoint("security", test_endpoint("sec-test", 7070));
 
         let adapter = UniversalAdapter::with_discovery_config(
             Arc::new(config),
@@ -667,10 +667,10 @@ mod tests {
     async fn test_concurrent_adapter_instances() {
         // Test that multiple adapters with different configs work concurrently
         let mut config1 = AdapterDiscoveryConfig::new();
-        config1.set_discovery_endpoint("orchestration", &test_endpoint("orch1", 8080));
+        config1.set_discovery_endpoint("orchestration", test_endpoint("orch1", 8080));
 
         let mut config2 = AdapterDiscoveryConfig::new();
-        config2.set_discovery_endpoint("compute", &test_endpoint("compute2", 9090));
+        config2.set_discovery_endpoint("compute", test_endpoint("compute2", 9090));
 
         let adapter_endpoint = test_endpoint("localhost", 8080) + "/adapter";
         let mut adapter1 =

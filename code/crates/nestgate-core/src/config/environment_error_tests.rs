@@ -278,7 +278,7 @@ fn test_environment_config_is_send_sync() {
 
 #[test]
 fn test_config_survives_corrupted_environment() {
-    let original_vars: Vec<_> = vec![
+    let original_vars: Vec<_> = [
         "NESTGATE_PORT",
         "NESTGATE_TIMEOUT",
         "NESTGATE_MAX_CONNECTIONS",

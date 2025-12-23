@@ -18,34 +18,34 @@ mod discovery_integration {
 
     #[tokio::test]
     async fn test_timeout_expiration() {
-        let result = timeout(Duration::from_micros(1), async {
-            tokio::time::sleep(Duration::from_secs(1)).await
-        })
-        .await;
+        // ✅ MODERN: Test timeout with future that never completes (not sleep!)
+        use std::future::pending;
+        let result = timeout(Duration::from_micros(1), pending::<()>()).await;
 
         assert!(result.is_err(), "Should timeout");
     }
 
     #[tokio::test]
     async fn test_zero_timeout() {
+        // ✅ MODERN: Test zero timeout with instant operation
         let result = timeout(Duration::from_millis(0), async {
-            tokio::time::sleep(Duration::from_millis(1)).await;
             Ok::<(), ()>(())
         })
         .await;
 
-        // Zero timeout might succeed or fail depending on scheduling
-        assert!(result.is_ok() || result.is_err());
+        // Zero timeout with instant operation should succeed
+        assert!(result.is_ok());
     }
 
     // ==================== CONCURRENCY ====================
 
     #[tokio::test]
     async fn test_concurrent_operations() {
+        // ✅ MODERNIZED: True concurrent execution without artificial delays
         let handles: Vec<_> = (0..20)
             .map(|i| {
                 tokio::spawn(async move {
-                    tokio::time::sleep(Duration::from_millis(1)).await;
+                    // Removed sleep - tests real concurrent execution
                     i
                 })
             })
@@ -81,15 +81,15 @@ mod discovery_integration {
 
     #[tokio::test]
     async fn test_recovery_after_timeout() {
+        // ✅ MODERN: Test recovery using pending() for timeout
+        use std::future::pending;
+        
         // First operation timeouts
-        let result1 = timeout(Duration::from_micros(1), async {
-            tokio::time::sleep(Duration::from_secs(1)).await
-        })
-        .await;
+        let result1 = timeout(Duration::from_micros(1), pending::<()>()).await;
 
         assert!(result1.is_err());
 
-        // Second operation succeeds
+        // Second operation succeeds immediately
         let result2 = timeout(Duration::from_millis(100), async { Ok::<(), ()>(()) }).await;
 
         assert!(result2.is_ok());
@@ -97,11 +97,11 @@ mod discovery_integration {
 
     #[tokio::test]
     async fn test_multiple_timeout_recovery() {
+        // ✅ MODERN: Test multiple timeouts using pending()
+        use std::future::pending;
+        
         for _ in 0..10 {
-            let _ = timeout(Duration::from_micros(1), async {
-                tokio::time::sleep(Duration::from_secs(1)).await
-            })
-            .await;
+            let _ = timeout(Duration::from_micros(1), pending::<()>()).await;
         }
 
         // Should still work after many timeouts
@@ -112,13 +112,13 @@ mod discovery_integration {
 
     #[tokio::test]
     async fn test_concurrent_timeout_recovery() {
+        // ✅ MODERN: Test concurrent timeouts using pending()
+        use std::future::pending;
+        
         let handles: Vec<_> = (0..20)
             .map(|_| {
                 tokio::spawn(async move {
-                    timeout(Duration::from_micros(1), async {
-                        tokio::time::sleep(Duration::from_secs(1)).await
-                    })
-                    .await
+                    timeout(Duration::from_micros(1), pending::<()>()).await
                 })
             })
             .collect();

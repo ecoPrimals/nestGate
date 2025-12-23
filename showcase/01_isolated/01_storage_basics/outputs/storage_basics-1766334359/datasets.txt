@@ -1,0 +1,8 @@
+total 28K
+drwxrwxr-x 7 eastgate eastgate 4.0K Dec 21 11:26 .
+drwxrwxr-x 3 eastgate eastgate 4.0K Dec 21 11:25 ..
+drwxrwxr-x 2 eastgate eastgate 4.0K Dec 21 11:26 backups
+drwxrwxr-x 2 eastgate eastgate 4.0K Dec 21 11:26 cache
+drwxrwxr-x 2 eastgate eastgate 4.0K Dec 21 11:26 data
+drwxrwxr-x 2 eastgate eastgate 4.0K Dec 21 11:26 logs
+drwxrwxr-x 2 eastgate eastgate 4.0K Dec 21 11:26 tmp

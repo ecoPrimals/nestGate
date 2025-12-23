@@ -255,7 +255,8 @@ fn test_throughput_calculation() {
 
     // Should have throughput calculated (calculation is immediate)
     // throughput_bytes_per_second is unsigned, always >= 0
-    assert!(snapshot.throughput_bytes_per_second > 0 || snapshot.throughput_bytes_per_second == 0);
+    // throughput_bytes_per_second is u64, always >= 0
+    assert!(snapshot.throughput_bytes_per_second >= 0);
 }
 
 // ==================== CONCURRENT OPERATION TESTS ====================

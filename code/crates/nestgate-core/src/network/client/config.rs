@@ -35,6 +35,10 @@ pub struct ClientConfig<const DEFAULT_TIMEOUT_MS: u64 = 30000> {
     pub max_retries: usize,
     /// Initial retry delay
     pub retry_delay: Duration,
+    /// Enable response compression (gzip, deflate)
+    pub enable_compression: bool,
+    /// Follow HTTP redirects automatically
+    pub follow_redirects: bool,
 }
 
 impl<const DEFAULT_TIMEOUT_MS: u64> ClientConfig<DEFAULT_TIMEOUT_MS> {
@@ -47,6 +51,8 @@ impl<const DEFAULT_TIMEOUT_MS: u64> ClientConfig<DEFAULT_TIMEOUT_MS> {
             idle_timeout: Duration::from_secs(90),
             max_retries: 3,
             retry_delay: Duration::from_millis(100),
+            enable_compression: true,
+            follow_redirects: true,
         }
     }
 
@@ -65,6 +71,18 @@ impl<const DEFAULT_TIMEOUT_MS: u64> ClientConfig<DEFAULT_TIMEOUT_MS> {
     /// Set maximum retries
     pub fn with_max_retries(mut self, max: usize) -> Self {
         self.max_retries = max;
+        self
+    }
+
+    /// Enable or disable compression
+    pub fn with_compression(mut self, enabled: bool) -> Self {
+        self.enable_compression = enabled;
+        self
+    }
+
+    /// Enable or disable automatic redirects
+    pub fn with_redirects(mut self, enabled: bool) -> Self {
+        self.follow_redirects = enabled;
         self
     }
 }

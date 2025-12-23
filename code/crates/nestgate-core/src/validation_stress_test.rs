@@ -126,7 +126,8 @@ fn stress_test_consensus_math() -> Vec<String> {
 
     // Test consensus percentage edge cases
     let percentage = calculate_consensus_percentage(1, 0);
-    if !percentage.is_infinite() && percentage != 0.0 {
+    // ✅ MODERN: Use epsilon for zero check
+    if !percentage.is_infinite() && percentage.abs() > 1e-9 {
         issues.push(format!(
             "❌ Division by zero not handled properly: {percentage}"
         ));
@@ -171,7 +172,8 @@ async fn stress_test_return_builders() -> Vec<String> {
         -1.0, // Invalid percentage
     );
 
-    if empty_grant.consensus_percentage < 0.0 {
+    // ✅ MODERN: Use epsilon for negative check
+    if empty_grant.consensus_percentage < -1e-9 {
         issues.push("❌ Negative consensus percentage not validated".to_string());
     }
 

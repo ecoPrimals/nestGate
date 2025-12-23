@@ -22,9 +22,9 @@ fn test_request_post_json_with_body() {
     assert_eq!(request.path, "/api/v1/login");
     assert!(request.headers.contains_key("content-type"));
 
-    match request.body {
-        RequestBody::String(s) => assert!(s.contains("email")),
-        _ => panic!("Expected String body"),
+    match &request.body {
+        Some(RequestBody::Json(s)) => assert!(s.contains("email")),
+        _ => panic!("Expected JSON body"),
     }
 }
 

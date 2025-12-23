@@ -68,10 +68,11 @@ mod auth_encryption_tests_week3 {
 
     #[test]
     fn test_jwt_signature_validation_hs256() {
-        // Test HS256 signature validation
-        let secret = "my_secret_key_256_bits_long";
+        // Test HS256 signature validation (requires >= 256 bits = 32 bytes)
+        let secret = "my_secret_key_256_bits_long_enough!!";
         let signature_valid = secret.len() >= 32;
         assert!(signature_valid);
+        assert_eq!(secret.len(), 36); // Verify length (actual count)
     }
 
     #[test]

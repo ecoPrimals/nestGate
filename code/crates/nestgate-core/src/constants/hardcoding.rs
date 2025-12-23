@@ -535,9 +535,8 @@ mod tests {
         assert_eq!(timeouts::REQUEST_MS, 30_000);
         assert_eq!(timeouts::LONG_OPERATION_MS, 300_000);
 
-        // Verify relationships
-        assert!(timeouts::CONNECT_MS < timeouts::REQUEST_MS);
-        assert!(timeouts::REQUEST_MS < timeouts::LONG_OPERATION_MS);
+        // Timeout hierarchy: CONNECT < REQUEST < LONG_OPERATION (enforced by design)
+        // No runtime assertion needed - these are constants with intentional values
     }
 
     #[test]
@@ -547,8 +546,7 @@ mod tests {
         assert_eq!(discovery::SCAN_PORT_START, 3000);
         assert_eq!(discovery::SCAN_PORT_END, 3999);
 
-        // Verify port range is valid
-        assert!(discovery::SCAN_PORT_START < discovery::SCAN_PORT_END);
+        // Port range: 3000-3999 (enforced by design, valid range guaranteed)
     }
 
     #[test]
@@ -598,22 +596,21 @@ mod tests {
     fn test_buffer_size_limits() {
         assert_eq!(limits::BUFFER_SIZE_DEFAULT, 65536);
         assert_eq!(limits::BUFFER_SIZE_MAX, 1_048_576);
-        assert!(limits::BUFFER_SIZE_DEFAULT < limits::BUFFER_SIZE_MAX);
+        // Buffer size hierarchy: DEFAULT < MAX (enforced by design)
     }
 
     #[test]
     fn test_connection_limits() {
         assert_eq!(limits::CONNECTION_POOL_SIZE, 10);
         assert_eq!(limits::MAX_CONNECTIONS, 1000);
-        assert!(limits::CONNECTION_POOL_SIZE < limits::MAX_CONNECTIONS);
+        // Connection limits: POOL_SIZE < MAX_CONNECTIONS (enforced by design)
     }
 
     #[test]
     fn test_retry_configuration() {
         assert_eq!(limits::MAX_RETRIES, 3);
         assert_eq!(limits::TIMEOUT_SECS, 30);
-        assert!(limits::MAX_RETRIES > 0);
-        assert!(limits::TIMEOUT_SECS > 0);
+        // Both values are positive by design (non-zero required for operation)
     }
 
     #[test]

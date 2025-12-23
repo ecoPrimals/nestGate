@@ -60,6 +60,8 @@ const NESTGATE_ENV_VARS: &[&str] = &[
 /// ```rust
 /// use tests::common::env_isolation::IsolatedEnvironment;
 ///
+/// # Example
+/// ```no_run
 /// #[test]
 /// fn test_with_env_vars() {
 ///     let mut env = IsolatedEnvironment::new("my_test");

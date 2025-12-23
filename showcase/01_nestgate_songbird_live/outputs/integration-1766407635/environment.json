@@ -1,0 +1,13 @@
+{
+  "timestamp": "2025-12-22T07:47:31-05:00",
+  "songbird": {
+    "pid": 1982446,
+    "port": 8080,
+    "log": "outputs/integration-1766407635/songbird.log"
+  },
+  "nestgate_nodes": [
+    {"name": "westgate", "port": 9005, "pid": 1983919},
+    {"name": "eastgate", "port": 9006, "pid": 1984054}
+  ],
+  "output_dir": "outputs/integration-1766407635"
+}

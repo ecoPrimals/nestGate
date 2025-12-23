@@ -1,0 +1,5 @@
+  ✅ Created share: /nestgate-home/photos
+  ✅ Created share: /nestgate-home/videos
+  ✅ Created share: /nestgate-home/documents
+  ✅ Created share: /nestgate-home/music
+  ✅ Created share: /nestgate-home/backups

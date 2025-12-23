@@ -5,14 +5,18 @@
 
 use nestgate_core::config::capability_based::{CapabilityConfigBuilder, FallbackMode};
 use nestgate_core::error::Result;
-use nestgate_core::universal_traits::types::PrimalCapability;
+use nestgate_core::universal_traits::PrimalCapability;
 
 /// ❌ OLD APPROACH: Hardcoded constants (ANTI-PATTERN)
 mod old_hardcoded_approach {
-    // ❌ BAD: Hardcoded primal URLs
+    // ❌ BAD: Hardcoded primal URLs (These are examples of what NOT to do)
+    #[allow(dead_code)]
     pub const BEARDOG_URL: &str = "http://localhost:3000";
+    #[allow(dead_code)]
     pub const SONGBIRD_URL: &str = "http://localhost:8080";
+    #[allow(dead_code)]
     pub const STORAGE_PORT: u16 = 9000;
+    #[allow(dead_code)]
     pub const API_PORT: u16 = 8080;
 
     #[allow(dead_code)]

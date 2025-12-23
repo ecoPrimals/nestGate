@@ -29,9 +29,7 @@
 
 #![cfg(feature = "dev-stubs")]
 
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use tracing::{debug, info};
 
 /// **ZFS CONFIGURATION (Development Stub)**
 ///

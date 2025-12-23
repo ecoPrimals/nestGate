@@ -87,6 +87,38 @@ impl NestGateUnifiedError {
             },
         ))
     }
+
+    /// Create a configuration error (convenience constructor)
+    ///
+    /// # Example
+    /// ```
+    /// use nestgate_core::error::NestGateError;
+    /// let error = NestGateError::config("Invalid configuration");
+    /// ```
+    pub fn config(message: impl Into<String>) -> Self {
+        Self::Configuration(Box::new(
+            crate::error::variants::core_errors::ConfigurationErrorDetails {
+                field: String::new(),
+                message: message.into(),
+                currentvalue: None,
+                expected: None,
+                user_error: false,
+            },
+        ))
+    }
+
+    /// Create a configuration error with field
+    pub fn config_with_field(field: impl Into<String>, message: impl Into<String>) -> Self {
+        Self::Configuration(Box::new(
+            crate::error::variants::core_errors::ConfigurationErrorDetails {
+                field: field.into(),
+                message: message.into(),
+                currentvalue: None,
+                expected: None,
+                user_error: false,
+            },
+        ))
+    }
 }
 
 #[cfg(test)]

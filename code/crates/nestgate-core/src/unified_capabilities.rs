@@ -226,7 +226,7 @@ impl CapabilityMapper {
 
     /// Get environment variable name for capability
     ///
-    /// This enables environment-driven discovery: `NESTGATE_CAPABILITY_<NAME>_ENDPOINT`
+    /// This enables environment-driven discovery: `NESTGATE_CAPABILITY_{NAME}_ENDPOINT`
     pub fn env_var_name(unified: &UnifiedCapability) -> String {
         format!(
             "NESTGATE_CAPABILITY_{}_ENDPOINT",

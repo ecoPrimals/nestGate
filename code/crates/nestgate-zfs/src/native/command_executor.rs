@@ -345,7 +345,7 @@ impl NativeZfsCommandExecutor {
                     // These are safe ZFS commands
                 }
                 _ => {
-                    return Err(NestGateError::security(&format!(
+                    return Err(NestGateError::security(format!(
                         "Unsafe ZFS command: {command}"
                     )));
                 }

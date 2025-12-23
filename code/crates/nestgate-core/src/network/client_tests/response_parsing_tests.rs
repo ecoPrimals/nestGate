@@ -8,32 +8,32 @@ use serde::Deserialize;
 use std::collections::HashMap;
 
 // ==================== RESPONSE PARSING TESTS ====================
-#[tokio::test]
-async fn test_response_text_empty() {
+#[test]
+fn test_response_text_empty() {
     let response = Response {
         status: StatusCode::OK,
         headers: HashMap::new(),
         body: vec![],
     };
 
-    let text = response.text().await.expect("Network operation failed");
+    let text = response.text().expect("Network operation failed");
     assert_eq!(text, "");
 }
 
-#[tokio::test]
-async fn test_response_text_with_content() {
+#[test]
+fn test_response_text_with_content() {
     let response = Response {
         status: StatusCode::OK,
         headers: HashMap::new(),
         body: b"Hello, World!".to_vec(),
     };
 
-    let text = response.text().await.expect("Network operation failed");
+    let text = response.text().expect("Network operation failed");
     assert_eq!(text, "Hello, World!");
 }
 
-#[tokio::test]
-async fn test_response_json_array() {
+#[test]
+fn test_response_json_array() {
     #[derive(Deserialize, Debug, PartialEq)]
     struct User {
         id: i32,
@@ -47,7 +47,7 @@ async fn test_response_json_array() {
         body: json_str.as_bytes().to_vec(),
     };
 
-    let result: crate::Result<Vec<User>> = response.json().await;
+    let result = response.json::<Vec<User>>();
     assert!(result.is_ok());
 
     let users = result.expect("Network operation failed");
@@ -56,8 +56,8 @@ async fn test_response_json_array() {
     assert_eq!(users[1].name, "Bob");
 }
 
-#[tokio::test]
-async fn test_response_json_nested() {
+#[test]
+fn test_response_json_nested() {
     #[derive(Deserialize, Debug, PartialEq)]
     struct ApiResponse {
         success: bool,
@@ -77,7 +77,7 @@ async fn test_response_json_nested() {
         body: json_str.as_bytes().to_vec(),
     };
 
-    let result: crate::Result<ApiResponse> = response.json().await;
+    let result = response.json::<ApiResponse>();
     assert!(result.is_ok());
 
     let api_response = result.expect("Network operation failed");

@@ -573,7 +573,8 @@ impl TracingConfig {
             return Err("Queue size must be greater than 0".to_string());
         }
 
-        if self.performance.sampling_rate < 0.0 || self.performance.sampling_rate > 1.0 {
+        // ✅ MODERN: Use epsilon for range validation
+        if self.performance.sampling_rate < -1e-9 || self.performance.sampling_rate > 1.0 + 1e-9 {
             return Err("Sampling rate must be between 0.0 and 1.0".to_string());
         }
 

@@ -194,7 +194,8 @@ fn test_option_some_handling() {
 #[test]
 fn test_validation_empty_name() {
     // Test that empty names are rejected - demonstrating validation logic
-    let name = "";
+    // Use runtime variable instead of const to avoid clippy::const_is_empty
+    let name = String::new(); // Runtime empty string
 
     // Demonstrate the validation would be needed in real code
     let result: Result<()> = if name.is_empty() {
@@ -209,8 +210,8 @@ fn test_validation_empty_name() {
 #[test]
 fn test_validation_valid_name() {
     // Test that valid names are accepted
-    let name = "valid-name";
-    assert!(!name.is_empty());
+    // Use String to avoid const expression issues
+    let name = String::from("valid-name");
 
     let result: Result<()> = if name.is_empty() {
         Err(NestGateError::validation_error("Name cannot be empty"))
@@ -219,6 +220,7 @@ fn test_validation_valid_name() {
     };
 
     assert!(result.is_ok());
+    assert!(!name.is_empty());
 }
 
 #[test]
@@ -226,7 +228,8 @@ fn test_validation_whitespace_only() {
     // Test that whitespace-only strings are detected
     let name = "   ";
     assert!(!name.is_empty());
-    assert!(name.trim().is_empty());
+    // Whitespace-only strings have zero length when trimmed
+    assert_eq!(name.trim().len(), 0);
 }
 
 #[test]
@@ -346,8 +349,7 @@ mod advanced_scenarios {
     fn test_nested_error_context() {
         // Test error with nested context
         let inner_error = NestGateError::internal_error("Inner failure", "inner");
-        let outer_error =
-            NestGateError::internal_error(&format!("Outer: {}", inner_error), "outer");
+        let outer_error = NestGateError::internal_error(format!("Outer: {}", inner_error), "outer");
 
         assert!(outer_error.to_string().contains("Outer"));
     }
@@ -372,7 +374,7 @@ mod advanced_scenarios {
         // Test error recovery with fallback
         fn operation_with_fallback() -> String {
             let result: Result<String> = Err(NestGateError::internal_error("Failed", "test"));
-            result.unwrap_or_else(|_| "fallback".to_string())
+            result.unwrap_or("fallback".to_string())
         }
 
         assert_eq!(operation_with_fallback(), "fallback");

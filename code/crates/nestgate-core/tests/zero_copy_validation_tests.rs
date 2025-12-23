@@ -28,7 +28,7 @@ mod zero_copy_pattern_tests {
 
     #[test]
     fn test_slice_borrowing() {
-        let data = vec![1, 2, 3, 4, 5];
+        let data = [1, 2, 3, 4, 5];
         let slice: &[i32] = &data[1..4];
 
         // No copy, just reference
@@ -47,7 +47,7 @@ mod zero_copy_pattern_tests {
 
         // Both work without copying
         assert_eq!(process_bytes(&vec), 3);
-        assert_eq!(process_bytes(&array), 3);
+        assert_eq!(process_bytes(array), 3);
     }
 
     #[test]
@@ -88,7 +88,7 @@ mod zero_copy_pattern_tests {
 
         let expensive_data = vec![0u8; 1000];
         let rc = Rc::new(expensive_data);
-        let rc_clone = Rc::clone(&rc);
+        let _rc_clone = Rc::clone(&rc);
 
         // Cheap clone (just pointer + refcount)
         assert_eq!(Rc::strong_count(&rc), 2);
@@ -100,7 +100,7 @@ mod zero_copy_pattern_tests {
 
     #[test]
     fn test_iter_no_copy() {
-        let data = vec![1, 2, 3, 4, 5];
+        let data = [1, 2, 3, 4, 5];
 
         // Iterator doesn't copy
         let sum: i32 = data.iter().sum();
@@ -184,6 +184,7 @@ mod memory_efficiency_tests {
     fn test_enum_size_optimization() {
         use std::mem::size_of;
 
+        #[allow(dead_code)]
         enum OptimizedEnum {
             Small(u8),
             Medium(u16),

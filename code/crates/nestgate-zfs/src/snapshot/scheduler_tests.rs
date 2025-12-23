@@ -4,14 +4,8 @@
 //! from the current 1.06% baseline.
 
 use super::policy::{RetentionPolicy, ScheduleFrequency, SnapshotPolicy};
-use super::scheduler::PolicyScheduler;
-use crate::dataset::ZfsDatasetManager;
-use crate::performance::types::SnapshotPolicyMap;
 use crate::types::StorageTier;
-use nestgate_core::Result as CoreResult;
 use std::collections::HashMap;
-use std::sync::Arc;
-use tokio::sync::RwLock;
 
 /// Helper to create test policy matching actual struct
 fn create_test_policy(name: &str, enabled: bool, frequency: ScheduleFrequency) -> SnapshotPolicy {
