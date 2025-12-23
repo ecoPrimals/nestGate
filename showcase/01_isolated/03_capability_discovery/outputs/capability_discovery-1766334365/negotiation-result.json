@@ -1,0 +1,23 @@
+{
+  "negotiation_time": "2025-12-21T11:26:07-05:00",
+  "requirements_met": {
+    "storage": {
+      "required_gb": 10,
+      "available_gb": 285,
+      "met": true
+    },
+    "network": {
+      "required": ["http"],
+      "available": [
+  "http-client",
+  "raw-sockets"
+],
+      "met": true
+    }
+  },
+  "optional_met": {
+    "compute": false,
+    "crypto": true
+  },
+  "overall_status": "operational"
+}

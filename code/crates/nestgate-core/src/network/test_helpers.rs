@@ -58,7 +58,7 @@ pub fn assert_valid_port(port_num: u16) {
 
 /// Assert that an endpoint URL matches expected format
 pub fn assert_endpoint_format(endpoint: &Endpoint, expected_host: &str, expected_port: u16) {
-    let url = endpoint.url();
+    let url = endpoint.base_url();
     assert!(url.contains(expected_host), "URL should contain host");
     assert!(
         url.contains(&expected_port.to_string()),
@@ -92,8 +92,8 @@ mod tests {
     fn test_helper_test_http_endpoint() {
         let port = test_api_port();
         let endpoint = test_http_endpoint("api.example.com", port);
-        assert!(endpoint.url().starts_with("http://"));
-        assert!(endpoint.url().contains("api.example.com"));
+        assert!(endpoint.base_url().starts_with("http://"));
+        assert!(endpoint.base_url().contains("api.example.com"));
     }
 
     #[test]
@@ -127,11 +127,11 @@ mod tests {
     fn test_helper_timeout() {
         let timeout = test_timeout_ms(5000);
         assert_eq!(
-            timeout.as_duration(),
+            timeout,
             std::time::Duration::from_millis(5000)
         );
 
         let timeout = test_timeout_secs(5);
-        assert_eq!(timeout.as_duration(), std::time::Duration::from_secs(5));
+        assert_eq!(timeout, std::time::Duration::from_secs(5));
     }
 }

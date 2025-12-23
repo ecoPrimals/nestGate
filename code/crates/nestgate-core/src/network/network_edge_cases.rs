@@ -52,7 +52,7 @@ mod network_retry_edge_cases {
             backoff_multiplier: 2.0,
             jitter: true,
         };
-        assert_eq!(config.jitter, true);
+        assert!(config.jitter);
     }
 
     #[test]
@@ -115,7 +115,8 @@ mod network_retry_edge_cases {
             backoff_multiplier: -1.0,
             jitter: false,
         };
-        assert!(config.backoff_multiplier < 0.0);
+        // ✅ MODERN: Negative backoff multiplier (use epsilon)
+        assert!(config.backoff_multiplier < -1e-9);
     }
 
     #[test]

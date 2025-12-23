@@ -4,17 +4,15 @@
 
 #[cfg(test)]
 mod capability_config_tests {
-    use nestgate_core::config::capability_based::{
-        CapabilityConfig, CapabilityConfigBuilder, FallbackMode,
-    };
+    use nestgate_core::config::capability_based::{CapabilityConfigBuilder, FallbackMode};
     use nestgate_core::universal_traits::types::PrimalCapability;
     use std::time::Duration;
 
     #[test]
     fn test_builder_default_values() {
         let config = CapabilityConfigBuilder::new().build().unwrap();
-        assert_eq!(config.discovery_timeout, Duration::from_secs(5));
-        assert_eq!(config.retry_attempts, 3);
+        assert_eq!(config.discovery_timeout(), Duration::from_secs(5));
+        assert_eq!(config.retry_attempts(), 3);
     }
 
     #[test]
@@ -24,7 +22,7 @@ mod capability_config_tests {
             .with_discovery_timeout(timeout)
             .build()
             .unwrap();
-        assert_eq!(config.discovery_timeout, timeout);
+        assert_eq!(config.discovery_timeout(), timeout);
     }
 
     #[test]
@@ -33,7 +31,7 @@ mod capability_config_tests {
             .with_retry_attempts(5)
             .build()
             .unwrap();
-        assert_eq!(config.retry_attempts, 5);
+        assert_eq!(config.retry_attempts(), 5);
     }
 
     #[test]
@@ -50,19 +48,19 @@ mod capability_config_tests {
             .with_fallback_mode(FallbackMode::FailFast)
             .build()
             .unwrap();
-        assert_eq!(fail_fast.fallback_mode, FallbackMode::FailFast);
+        assert_eq!(fail_fast.fallback_mode(), FallbackMode::FailFast);
 
         let graceful = CapabilityConfigBuilder::new()
             .with_fallback_mode(FallbackMode::GracefulDegradation)
             .build()
             .unwrap();
-        assert_eq!(graceful.fallback_mode, FallbackMode::GracefulDegradation);
+        assert_eq!(graceful.fallback_mode(), FallbackMode::GracefulDegradation);
 
         let local = CapabilityConfigBuilder::new()
             .with_fallback_mode(FallbackMode::LocalFallback)
             .build()
             .unwrap();
-        assert_eq!(local.fallback_mode, FallbackMode::LocalFallback);
+        assert_eq!(local.fallback_mode(), FallbackMode::LocalFallback);
     }
 
     #[tokio::test]
@@ -235,9 +233,9 @@ mod capability_config_tests {
             .build()
             .unwrap();
 
-        assert_eq!(config.discovery_timeout, Duration::from_secs(15));
-        assert_eq!(config.retry_attempts, 7);
-        assert_eq!(config.fallback_mode, FallbackMode::GracefulDegradation);
+        assert_eq!(config.discovery_timeout(), Duration::from_secs(15));
+        assert_eq!(config.retry_attempts(), 7);
+        assert_eq!(config.fallback_mode(), FallbackMode::GracefulDegradation);
     }
 
     #[tokio::test]

@@ -1,0 +1,6 @@
+  Batch 1: Vacation 2025 (50 photos, 250MB)
+  Batch 2: Birthday party (30 photos, 150MB)
+  Batch 3: Daily snapshots (100 photos, 400MB)
+  Total: 180 photos, 800MB
+  Upload time: 8 seconds @ 100MB/s
+  ✅ All photos backed up automatically

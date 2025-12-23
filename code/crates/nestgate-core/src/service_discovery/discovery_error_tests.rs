@@ -54,7 +54,7 @@ mod discovery_timeout_tests {
 
     #[test]
     fn test_progressive_timeout() {
-        let timeouts = vec![
+        let timeouts = [
             Duration::from_secs(5),
             Duration::from_secs(10),
             Duration::from_secs(30),
@@ -348,7 +348,7 @@ mod discovery_performance_tests {
     fn test_error_creation_performance() {
         let start = std::time::Instant::now();
         for i in 0..100 {
-            let _ = NestGateError::internal_error(&format!("Error {}", i), "discovery");
+            let _ = NestGateError::internal_error(format!("Error {}", i), "discovery");
         }
         let duration = start.elapsed();
         // Should create errors quickly (< 10ms)

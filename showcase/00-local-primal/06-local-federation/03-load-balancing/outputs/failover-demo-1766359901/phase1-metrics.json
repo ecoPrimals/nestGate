@@ -1,0 +1,11 @@
+{
+  "phase": "normal_operation",
+  "nodes": 3,
+  "total_rps": 450,
+  "node1_rps": 150,
+  "node2_rps": 150,
+  "node3_rps": 150,
+  "latency_p50_ms": 2.3,
+  "latency_p95_ms": 5.1,
+  "status": "healthy"
+}

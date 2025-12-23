@@ -248,7 +248,13 @@ impl Cli {
                 })?;
             }
             Commands::Service { action } => {
-                println!("🚀 Service management not yet implemented: {action:?}");
+                let mut service_manager = crate::commands::service::ServiceManager::new();
+                service_manager.execute(action).await.map_err(|e| {
+                    BinErrorHelper::runtime_error(
+                        e.to_string(),
+                        Some("service_command".to_string()),
+                    )
+                })?;
             }
             Commands::Doctor { comprehensive, fix } => {
                 println!(

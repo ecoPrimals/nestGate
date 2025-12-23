@@ -1,0 +1,6 @@
+total 11M
+-rw-rw-r-- 1 eastgate eastgate 344 Dec 21 11:26 backups-snapshot-1766334359.tar.gz
+-rw-rw-r-- 1 eastgate eastgate 243 Dec 21 11:26 cache-snapshot-1766334359.tar.gz
+-rw-rw-r-- 1 eastgate eastgate 11M Dec 21 11:26 data-snapshot-1766334359.tar.gz
+-rw-rw-r-- 1 eastgate eastgate 514 Dec 21 11:26 logs-snapshot-1766334359.tar.gz
+-rw-rw-r-- 1 eastgate eastgate 241 Dec 21 11:26 tmp-snapshot-1766334359.tar.gz

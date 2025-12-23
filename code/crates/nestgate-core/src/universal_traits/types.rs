@@ -41,7 +41,7 @@ pub enum SecurityLevel {
     TopSecret,
 }
 /// Primal capability enumeration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 /// Primalcapability
 pub enum PrimalCapability {
     /// Storage

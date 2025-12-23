@@ -25,7 +25,7 @@ mod adapter_query_edge_cases {
 
     #[test]
     fn test_query_normalization() {
-        let queries = vec![
+        let queries = [
             "GetUserInfo",
             "get-user-info",
             "get_user_info",
@@ -44,7 +44,7 @@ mod adapter_query_edge_cases {
     #[test]
     fn test_query_special_characters() {
         let query = "query@#$%^&*()_+-=[]{}|;':,.<>?/";
-        assert!(query.len() > 0);
+        assert!(!query.is_empty());
     }
 }
 

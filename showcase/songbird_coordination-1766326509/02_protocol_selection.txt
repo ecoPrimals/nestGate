@@ -1,0 +1,6 @@
+Songbird analyzes available protocols:
+  • HTTP/REST:  5ms latency - Good for discovery
+  • JSON-RPC:   2ms latency - Good for operations ✓
+  • tarpc:      50μs latency - Best for performance (🚧 coming soon)
+
+Decision: Use JSON-RPC for workflow operations

@@ -378,6 +378,7 @@ pub struct PortValidator<const PORT: usize>;
 impl<const PORT: usize> ZeroCostValidation<PORT> for PortValidator<PORT> {
     /// Validates data
     fn validate() -> bool {
+        // PORT is usize, so range up to 65535 must be checked
         PORT > 0 && PORT <= 65535
     }
 }

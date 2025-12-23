@@ -35,11 +35,11 @@ impl DatasetOperations for ProductionZfsManager {
     /// List Datasets
     fn list_datasets(&self, pool: &str) -> Result<Vec<ZeroCostDatasetInfo>, ZfsError> {
         Ok(vec![ZeroCostDatasetInfo {
-            name: format!("{}/data", pool),
+            name: format!("{pool}/data"),
             used: 100_000_000_000,
             available: 900_000_000_000,
             referenced: 100_000_000_000,
-            mountpoint: format!("/{}/data", pool),
+            mountpoint: format!("/{pool}/data"),
             mounted: true,
         }])
     }
@@ -52,11 +52,11 @@ impl DatasetOperations for ProductionZfsManager {
         _tier: StorageTier,
     ) -> Result<ZeroCostDatasetInfo, ZfsError> {
         Ok(ZeroCostDatasetInfo {
-            name: format!("{}/{}", pool, name),
+            name: format!("{pool}/{name}"),
             used: 0,
             available: 1_000_000_000,
             referenced: 0,
-            mountpoint: format!("/{}/{}", pool, name),
+            mountpoint: format!("/{pool}/{name}"),
             mounted: true,
         })
     }

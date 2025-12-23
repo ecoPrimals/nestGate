@@ -146,3 +146,13 @@ nestgate-port-manager-*.tar.gz
 # Fuzz testing
 /fuzz/artifacts/
 /fuzz/corpus/ 
+# Audit and analysis artifacts
+.audit-artifacts/
+
+# Showcase output files (can be large)
+showcase/**/outputs/**/*.dat
+showcase/**/output/**/*.fasta
+showcase/**/outputs/**/*.fasta
+showcase/**/output/**/*.dat
+*.dat
+large-genome.fasta

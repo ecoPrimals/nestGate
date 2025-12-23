@@ -49,6 +49,41 @@ pub enum ZfsError {
     /// I/O operation error
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
+
+    /// Capacity too small for operation
+    #[error("Capacity too small: {message}")]
+    CapacityTooSmall {
+        /// Error message describing the capacity constraint
+        message: String,
+    },
+
+    /// Capacity exceeded
+    #[error("Capacity exceeded: {message}")]
+    CapacityExceeded {
+        /// Error message describing the capacity violation
+        message: String,
+    },
+
+    /// Invalid path provided
+    #[error("Invalid path: {message}")]
+    InvalidPath {
+        /// Error message describing the invalid path
+        message: String,
+    },
+
+    /// Invalid property specified
+    #[error("Invalid property: {message}")]
+    InvalidProperty {
+        /// Error message describing the invalid property
+        message: String,
+    },
+
+    /// Cross-pool rename attempted (not supported)
+    #[error("Cross-pool rename not supported: {message}")]
+    CrossPoolRename {
+        /// Error message describing the attempted cross-pool operation
+        message: String,
+    },
 }
 
 impl ZfsError {
@@ -83,6 +118,41 @@ impl ZfsError {
     /// Create a configuration error with a message
     pub fn config_error(message: impl Into<String>) -> Self {
         Self::ConfigError {
+            message: message.into(),
+        }
+    }
+
+    /// Create a capacity too small error
+    pub fn capacity_too_small(message: impl Into<String>) -> Self {
+        Self::CapacityTooSmall {
+            message: message.into(),
+        }
+    }
+
+    /// Create a capacity exceeded error
+    pub fn capacity_exceeded(message: impl Into<String>) -> Self {
+        Self::CapacityExceeded {
+            message: message.into(),
+        }
+    }
+
+    /// Create an invalid path error
+    pub fn invalid_path(message: impl Into<String>) -> Self {
+        Self::InvalidPath {
+            message: message.into(),
+        }
+    }
+
+    /// Create an invalid property error
+    pub fn invalid_property(message: impl Into<String>) -> Self {
+        Self::InvalidProperty {
+            message: message.into(),
+        }
+    }
+
+    /// Create a cross-pool rename error
+    pub fn cross_pool_rename(message: impl Into<String>) -> Self {
+        Self::CrossPoolRename {
             message: message.into(),
         }
     }

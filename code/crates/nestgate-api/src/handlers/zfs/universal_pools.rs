@@ -151,7 +151,7 @@ pub async fn create_universal_pool(
         .zfs_manager
         .create_pool(&request.name, request._devices.clone(), None)
     {
-        Ok(_) => {
+        Ok(()) => {
             info!("✅ Successfully created pool: {}", request.name);
             Json(json!({
                 "status": "success",

@@ -1,0 +1,7 @@
+  Cameras: 10 security cameras
+  Resolution: 1080p @ 15fps
+  Bitrate: 2 Mbps per camera (H.264)
+  Total: 20 Mbps = 2.5 MB/s
+  Daily volume: ~200GB/day (24/7 recording)
+  Motion-only: ~20GB/day (90% reduction)
+  ✅ Camera footage recording

@@ -11,7 +11,7 @@ fn test_port_in_endpoint() {
     let port = Port::new(3000).expect("Network operation failed");
     let endpoint = Endpoint::http("api.example.com".to_string(), port);
 
-    assert_eq!(endpoint.url(), "http://api.example.com:3000");
+    assert_eq!(endpoint.url(""), "http://api.example.com:3000");
 }
 
 #[test]

@@ -2,7 +2,7 @@
 //!
 //! Mock implementations for ZFS pool operations.
 //!
-//! **Extracted**: November 19, 2025 - From dev_stubs/zfs.rs  
+//! **Extracted**: November 19, 2025 - From dev_stubs/zfs.rs\
 //! **Lines**: ~350 (from original 1,015-line file)
 
 #![cfg(feature = "dev-stubs")]
@@ -48,13 +48,13 @@ impl PoolOperations for ProductionZfsManager {
 
     /// Gets Pool Status
     fn get_pool_status(&self, pool: &str) -> Result<String, ZfsError> {
-        Ok(format!("Pool {} is ONLINE (STUB)", pool))
+        Ok(format!("Pool {pool} is ONLINE (STUB)"))
     }
 
     /// Creates  Pool
     fn create_pool(
         &self,
-        name: &str,
+        _name: &str,
         _devices: Vec<String>,
         _tier: Option<String>,
     ) -> Result<(), ZfsError> {

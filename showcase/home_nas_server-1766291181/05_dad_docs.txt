@@ -1,0 +1,8 @@
+  Folder: /documents/work-2025/
+  Files: 150 documents (presentations, spreadsheets, PDFs)
+  Size: 1.2GB
+  Features:
+    • Version history (automatic)
+    • Previous versions available
+    • Searchable via web UI
+  ✅ All documents synced and protected

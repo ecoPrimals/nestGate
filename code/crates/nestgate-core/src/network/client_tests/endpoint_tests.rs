@@ -38,7 +38,7 @@ fn test_endpoint_url_http() {
         ports::HTTP_DEFAULT
     );
 
-    assert_eq!(endpoint.url(), expected_url);
+    assert_eq!(endpoint.base_url(), expected_url);
 }
 
 #[test]
@@ -46,7 +46,7 @@ fn test_endpoint_url_https() {
     let port = Port::new(443).expect("Network operation failed");
     let endpoint = Endpoint::https("example.com".to_string(), port);
 
-    assert_eq!(endpoint.url(), "https://example.com:443");
+    assert_eq!(endpoint.base_url(), "https://example.com:443");
 }
 
 #[test]

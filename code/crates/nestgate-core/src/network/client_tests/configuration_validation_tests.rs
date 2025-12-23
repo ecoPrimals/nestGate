@@ -7,18 +7,18 @@ use super::super::client::*;
 
 // ==================== CONFIGURATION VALIDATION TESTS ====================
 #[test]
-fn test_config_max_redirects_validation() {
+fn test_config_max_retries_validation() {
     let mut config = ClientConfig::<30000>::default();
 
-    // Test various redirect limits
-    config.max_redirects = 0;
-    assert_eq!(config.max_redirects, 0);
+    // Test various retry limits
+    config.max_retries = 0;
+    assert_eq!(config.max_retries, 0);
 
-    config.max_redirects = 5;
-    assert_eq!(config.max_redirects, 5);
+    config.max_retries = 5;
+    assert_eq!(config.max_retries, 5);
 
-    config.max_redirects = 20;
-    assert_eq!(config.max_redirects, 20);
+    config.max_retries = 20;
+    assert_eq!(config.max_retries, 20);
 }
 
 #[test]

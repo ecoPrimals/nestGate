@@ -119,8 +119,8 @@ async fn test_zfs_availability_check() {
     let available = RealZfsOperations::is_available().await;
     // Result depends on whether ZFS is installed
     // Both true and false are valid in test environments
-    // Variable exists and is boolean
-    assert!(available || !available, "Available is a valid boolean");
+    // This test verifies the method is callable without panicking
+    let _ = available; // Verify method returns bool
 }
 
 // ==================== REPORT WITH FINDINGS TESTS ====================

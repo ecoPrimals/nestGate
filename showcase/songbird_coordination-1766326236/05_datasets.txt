@@ -1,0 +1,2 @@
+  • main-pool/ml-training-data (250GB)
+  • main-pool/model-weights (50GB)

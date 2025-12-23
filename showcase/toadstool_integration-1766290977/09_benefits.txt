@@ -1,0 +1,19 @@
+Architecture Benefits:
+  ✅ Separation of Concerns: Compute (ToadStool) + Storage (NestGate)
+  ✅ Scalability: Scale compute and storage independently
+  ✅ Flexibility: Run any compute workload, any storage backend
+  ✅ Versioning: Built-in model versioning with snapshots
+  ✅ Reproducibility: Track all training parameters
+
+Performance Benefits:
+  ✅ Streaming: No need to copy entire dataset
+  ✅ Compression: 1.8x storage efficiency (ZFS)
+  ✅ Deduplication: Automatic for similar data
+  ✅ Snapshots: Zero-cost versioning (CoW)
+  ✅ High Throughput: 25GB/s read, 20GB/s write
+
+Operational Benefits:
+  ✅ Centralized Storage: One source of truth for data
+  ✅ Multi-Tenant: Multiple training jobs, one storage
+  ✅ Disaster Recovery: Automatic snapshots and replication
+  ✅ Monitoring: Track storage usage and performance

@@ -197,17 +197,17 @@ async fn test_response_json_nested() {
 #[test]
 fn test_client_config_custom_values() {
     let mut config = ClientConfig::<30000>::default();
-    config.max_connections = 200;
+    config.max_connections_per_host = 200;
     config.max_connections_per_host = 20;
     config.enable_compression = false;
     config.follow_redirects = false;
-    config.max_redirects = 10;
+    config.max_retries = 10;
 
-    assert_eq!(config.max_connections, 200);
+    assert_eq!(config.max_connections_per_host, 200);
     assert_eq!(config.max_connections_per_host, 20);
     assert!(!config.enable_compression);
     assert!(!config.follow_redirects);
-    assert_eq!(config.max_redirects, 10);
+    assert_eq!(config.max_retries, 10);
 }
 
 #[test]
@@ -222,9 +222,9 @@ fn test_client_config_timeout_variations() {
     let config_30s = ClientConfig::<30000>::default();
     let config_60s = ClientConfig::<60000>::default();
 
-    assert_eq!(config_5s.timeout.as_duration(), Duration::from_secs(5));
-    assert_eq!(config_30s.timeout.as_duration(), Duration::from_secs(30));
-    assert_eq!(config_60s.timeout.as_duration(), Duration::from_secs(60));
+    assert_eq!(config_5s.timeout, Duration::from_secs(5));
+    assert_eq!(config_30s.timeout, Duration::from_secs(30));
+    assert_eq!(config_60s.timeout, Duration::from_secs(60));
 }
 
 // ==================== TIMEOUT COMPREHENSIVE TESTS ====================
@@ -241,7 +241,7 @@ fn test_timeout_various_durations() {
 
     for (ms, expected_duration) in timeouts {
         let timeout = TimeoutMs::new(ms);
-        assert_eq!(timeout.as_duration(), expected_duration);
+        assert_eq!(timeout, expected_duration);
     }
 }
 
@@ -471,7 +471,7 @@ fn test_max_retry_attempts() {
 #[tokio::test]
 async fn test_connection_pool_respects_max_connections() {
     let mut config = ClientConfig::<30000>::default();
-    config.max_connections = 2; // Very low limit for testing
+    config.max_connections_per_host = 2; // Very low limit for testing
     let pool = ConnectionPool::new(config);
 
     let port = Port::new(8080).expect("Network operation failed");
@@ -555,7 +555,7 @@ async fn test_multiple_endpoints_with_client() {
         Port::new(9090).expect("Network operation failed"),
     );
 
-    assert_ne!(endpoint1.url(), endpoint2.url());
+    assert_ne!(endpoint1.base_url(), endpoint2.base_url());
 }
 
 // ==================== ERROR SCENARIO ADVANCED TESTS ====================
@@ -599,18 +599,18 @@ fn test_error_message_formats() {
 // ==================== CONFIGURATION VALIDATION TESTS ====================
 
 #[test]
-fn test_config_max_redirects_validation() {
+fn test_config_max_retries_validation() {
     let mut config = ClientConfig::<30000>::default();
 
-    // Test various redirect limits
-    config.max_redirects = 0;
-    assert_eq!(config.max_redirects, 0);
+    // Test various retry limits
+    config.max_retries = 0;
+    assert_eq!(config.max_retries, 0);
 
-    config.max_redirects = 5;
-    assert_eq!(config.max_redirects, 5);
+    config.max_retries = 5;
+    assert_eq!(config.max_retries, 5);
 
-    config.max_redirects = 20;
-    assert_eq!(config.max_redirects, 20);
+    config.max_retries = 20;
+    assert_eq!(config.max_retries, 20);
 }
 
 #[test]
@@ -707,23 +707,23 @@ fn test_request_body_string_content_types() {
     let xml_body = r#"<root><key>value</key></root>"#;
     let plain_body = "plain text content";
 
-    let body1 = RequestBody::String(json_body);
-    let body2 = RequestBody::String(xml_body);
-    let body3 = RequestBody::String(plain_body);
+    let body1 = RequestBody::Json(json_body);
+    let body2 = RequestBody::Json(xml_body);
+    let body3 = RequestBody::Json(plain_body);
 
     match body1 {
-        RequestBody::String(s) => assert!(s.contains("key")),
-        _ => panic!("Expected String"),
+        RequestBody::Json(s) => assert!(s.contains("key")),
+        _ => panic!("Expected Json"),
     }
 
     match body2 {
-        RequestBody::String(s) => assert!(s.contains("<root>")),
-        _ => panic!("Expected String"),
+        RequestBody::Json(s) => assert!(s.contains("<root>")),
+        _ => panic!("Expected Json"),
     }
 
     match body3 {
-        RequestBody::String(s) => assert!(s.contains("plain")),
-        _ => panic!("Expected String"),
+        RequestBody::Json(s) => assert!(s.contains("plain")),
+        _ => panic!("Expected Json"),
     }
 }
 
@@ -786,7 +786,7 @@ fn test_scheme_clone() {
 #[test]
 fn test_timeout_very_large() {
     let timeout = TimeoutMs::new(u64::MAX);
-    assert!(timeout.as_duration().as_millis() > 0);
+    assert!(timeout.as_millis() > 0);
 }
 
 #[test]
@@ -794,9 +794,9 @@ fn test_timeout_millisecond_precision() {
     let timeout1 = TimeoutMs::new(1);
     let timeout2 = TimeoutMs::new(2);
 
-    assert!(timeout2.as_duration() > timeout1.as_duration());
+    assert!(timeout2 > timeout1);
     assert_eq!(
-        timeout2.as_duration().as_millis() - timeout1.as_duration().as_millis(),
+        timeout2.as_millis() - timeout1.as_millis(),
         1
     );
 }

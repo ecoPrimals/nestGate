@@ -611,8 +611,9 @@ mod tests {
             efficiency_trend: 0.02,
             prediction_window: Duration::from_secs(600),
         };
-        assert!(analysis.cpu_trend > 0.0);
-        assert!(analysis.throughput_trend > 0.0);
+        // ✅ MODERN: Use epsilon for positive trend checks
+        assert!(analysis.cpu_trend > 1e-9);
+        assert!(analysis.throughput_trend > 1e-9);
     }
 
     #[test]
@@ -624,8 +625,9 @@ mod tests {
             efficiency_trend: -0.01,
             prediction_window: Duration::from_secs(300),
         };
-        assert!(analysis.cpu_trend < 0.0);
-        assert!(analysis.throughput_trend < 0.0);
+        // ✅ MODERN: Use epsilon for negative trend checks
+        assert!(analysis.cpu_trend < -1e-9);
+        assert!(analysis.throughput_trend < -1e-9);
     }
 
     #[test]

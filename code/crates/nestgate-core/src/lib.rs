@@ -24,8 +24,17 @@ pub mod canonical_types;
 /// Capability-based service discovery
 pub mod capabilities;
 pub mod capability_config;
+/// **UNIFIED**: Capability resolver - bridge for all registry systems
+/// Provides common interface for capability-based service discovery
+pub mod capability_resolver;
+/// Compile-time assertions for constant validation
+pub mod compile_time_assertions;
 /// **PRIMARY**: Unified configuration system - single source of truth
 pub mod config;
+
+// Re-export test configuration when dev-stubs feature is enabled
+#[cfg(feature = "dev-stubs")]
+pub use config::canonical_primary::CanonicalTestConfigs;
 /// **PRIMARY**: Unified constants system
 pub mod constants;
 /// Data source integrations (Steam, NCBI, etc.)
@@ -70,6 +79,9 @@ pub mod service_discovery;
 pub mod traits;
 /// Core types module - basic data structures
 pub mod types;
+/// **UNIFIED**: Unified capability types across all systems
+/// Single capability enum used by all discovery mechanisms
+pub mod unified_capabilities;
 /// Universal adapter for primal integration
 pub mod universal_adapter;
 /// Universal primal discovery system
@@ -93,6 +105,8 @@ pub mod diagnostics;
 pub mod events;
 /// Hardware tuning and optimization
 pub mod hardware_tuning;
+/// Mathematical utilities (float comparison, etc.)
+pub mod math;
 /// Observability and monitoring
 pub mod observability;
 /// Response handling

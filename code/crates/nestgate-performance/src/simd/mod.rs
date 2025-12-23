@@ -388,8 +388,9 @@ mod tests {
         metrics.set_speedup(4.5);
         metrics.calculate_bandwidth(4000); // 4KB
 
+        // ✅ MODERN: Use epsilon for positive value checks
         assert!(
-            metrics.throughput_ops_per_sec > 0.0,
+            metrics.throughput_ops_per_sec > 1e-9,
             "Throughput should be positive"
         );
         assert_eq!(
@@ -397,7 +398,7 @@ mod tests {
             "Speedup should match set value"
         );
         assert!(
-            metrics.memory_bandwidth_gbps > 0.0,
+            metrics.memory_bandwidth_gbps > 1e-9,
             "Bandwidth should be positive"
         );
 

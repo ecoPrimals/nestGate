@@ -84,7 +84,7 @@ mod connection_edge_cases {
         let common_ports = vec![8080, 3000, 5432, 6379, 9090];
         for port in common_ports {
             assert!(port >= 1024, "Port {} should be non-privileged", port);
-            assert!(port <= 65535, "Port {} should be valid", port);
+            // Valid range is guaranteed by u16 type
         }
     }
 

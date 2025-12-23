@@ -16,6 +16,7 @@
 //! - **Load Testing**: Performance testing infrastructure
 //! - **Metrics**: System metrics collection and reporting
 //! - **Performance Analytics**: Performance analysis and recommendations
+//! - **RPC**: JSON-RPC and protocol discovery for inter-primal communication
 //! - **Storage**: ZFS pool, dataset, and snapshot operations
 //! - **Workspace Management**: Multi-tenant workspace isolation
 //! - **ZFS**: Low-level ZFS operations
@@ -129,6 +130,11 @@ pub mod performance_analyzer;
 ///
 /// Comprehensive performance dashboard with real-time monitoring.
 pub mod performance_dashboard;
+
+/// **RPC HANDLERS MODULE**
+///
+/// JSON-RPC and protocol discovery for inter-primal communication.
+pub mod rpc_handlers;
 
 /// **STATUS MODULE**
 ///

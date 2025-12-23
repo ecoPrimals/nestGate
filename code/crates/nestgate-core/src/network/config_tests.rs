@@ -17,7 +17,7 @@ mod network_config_tests {
         
         assert!(config.enabled, "Network should be enabled by default");
         assert_eq!(config.timeout, Duration::from_millis(DEFAULT_TIMEOUT_MS));
-        assert_eq!(config.max_connections, DEFAULT_MAX_CONNECTIONS);
+        assert_eq!(config.max_connections_per_host, DEFAULT_MAX_CONNECTIONS);
         assert_eq!(config.buffer_size, DEFAULT_BUFFER_SIZE);
     }
 
@@ -32,7 +32,7 @@ mod network_config_tests {
         
         assert!(!config.enabled);
         assert_eq!(config.timeout, Duration::from_secs(10));
-        assert_eq!(config.max_connections, 50);
+        assert_eq!(config.max_connections_per_host, 50);
         assert_eq!(config.buffer_size, 2048);
     }
 
@@ -43,7 +43,7 @@ mod network_config_tests {
         
         assert_eq!(config1.enabled, config2.enabled);
         assert_eq!(config1.timeout, config2.timeout);
-        assert_eq!(config1.max_connections, config2.max_connections);
+        assert_eq!(config1.max_connections_per_host, config2.max_connections_per_host);
         assert_eq!(config1.buffer_size, config2.buffer_size);
     }
 
@@ -92,7 +92,7 @@ mod network_config_tests {
             buffer_size: 1024,
         };
         
-        assert_eq!(config.max_connections, 1);
+        assert_eq!(config.max_connections_per_host, 1);
     }
 
     #[test]
@@ -104,7 +104,7 @@ mod network_config_tests {
             buffer_size: 1024,
         };
         
-        assert_eq!(config.max_connections, 10000);
+        assert_eq!(config.max_connections_per_host, 10000);
     }
 
     #[test]
@@ -420,7 +420,7 @@ mod network_config_tests {
         
         let config = config.unwrap();
         assert!(config.enabled);
-        assert_eq!(config.max_connections, 10);
+        assert_eq!(config.max_connections_per_host, 10);
     }
 
     #[test]
@@ -432,7 +432,7 @@ mod network_config_tests {
         
         assert_eq!(config1.enabled, config2.enabled);
         assert_eq!(config1.timeout, config2.timeout);
-        assert_eq!(config1.max_connections, config2.max_connections);
+        assert_eq!(config1.max_connections_per_host, config2.max_connections_per_host);
         assert_eq!(config1.buffer_size, config2.buffer_size);
     }
 

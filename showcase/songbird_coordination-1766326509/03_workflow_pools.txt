@@ -1,0 +1,2 @@
+  • main-pool: 1000GB total, 600GB available
+  • backup-pool: 500GB total, 350GB available

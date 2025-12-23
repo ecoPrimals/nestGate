@@ -37,9 +37,15 @@ mod error_handling_tests {
 
     #[test]
     fn test_result_type_ok() {
-        let result: Result<i32> = Ok(42);
+        // Test actual config operation result, not literal
+        let result: Result<i32> = parse_test_value("42");
         assert!(result.is_ok());
         assert_eq!(result.unwrap_or(0), 42);
+    }
+
+    fn parse_test_value(s: &str) -> Result<i32> {
+        s.parse::<i32>()
+            .map_err(|_| NestGateError::configuration_error("test_value", "Invalid integer"))
     }
 
     #[test]

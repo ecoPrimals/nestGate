@@ -27,7 +27,7 @@ mod protocol_comprehensive_tests {
     #[test]
     fn test_protocol_clone() {
         let protocol1 = Protocol::Http;
-        let protocol2 = protocol1.clone();
+        let protocol2 = protocol1;
         assert_eq!(protocol1, protocol2);
     }
 
@@ -97,7 +97,7 @@ mod protocol_comprehensive_tests {
     #[test]
     fn test_performance_preference_clone() {
         let pref1 = PerformancePreference::Reliability;
-        let pref2 = pref1.clone();
+        let pref2 = pref1;
         assert_eq!(pref1, pref2);
     }
 
@@ -231,7 +231,7 @@ mod protocol_comprehensive_tests {
 
     #[test]
     fn test_multiple_protocol_configs() {
-        let configs = vec![
+        let configs = [
             ProtocolConfig {
                 protocol: Protocol::Http,
                 options: std::collections::HashMap::new(),

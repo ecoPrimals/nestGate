@@ -116,7 +116,7 @@ fn test_service_discovery_limits_validation() {
     let config = ServiceDiscoveryConfig::default();
 
     // Verify limits exist and are reasonable
-    for (_key, &limit) in &config.resource_limits {
+    for &limit in config.resource_limits.values() {
         assert!(limit > 0, "Resource limit should be positive");
         assert!(limit < 1_000_000, "Resource limit should be reasonable");
     }
@@ -127,7 +127,7 @@ fn test_service_discovery_timeouts_validation() {
     let config = ServiceDiscoveryConfig::default();
 
     // Verify timeouts exist and are reasonable
-    for (_key, &timeout) in &config.operation_timeouts {
+    for &timeout in config.operation_timeouts.values() {
         assert!(
             timeout > Duration::from_secs(0),
             "Timeout should be positive"

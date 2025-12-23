@@ -1,0 +1,15 @@
+Snapshot: nestgate-home@daily-2025-12-21
+  Total data: 47.3GB
+  Snapshot time: < 1 second
+  Overhead: ~0.5GB (1% of used space)
+  
+Retention policy:
+  • Daily snapshots: 30 days
+  • Weekly snapshots: 6 months
+  • Monthly snapshots: 1 year
+  
+Protection benefits:
+  ✅ Ransomware protection (immutable)
+  ✅ Accidental deletion recovery
+  ✅ Version history for all files
+  ✅ Zero data loss

@@ -69,5 +69,12 @@ workspace = true
 [dependencies.thiserror]
 workspace = true
 
+[dependencies.tarpc]
+version = "0.34"
+features = ["tokio1", "serde-transport", "serde-transport-json"]
+
+[dependencies.futures]
+version = "0.3"
+
 [dev-dependencies.tokio-test]
 workspace = true

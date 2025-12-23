@@ -34,6 +34,7 @@ pub mod command;
 pub mod config;
 pub mod dataset;
 pub mod errors;
+pub mod parsers; // ZFS output parsers
 pub mod performance;
 pub mod pool;
 pub mod snapshot;
@@ -44,6 +45,7 @@ pub use command::*;
 pub use config::*;
 pub use dataset::*;
 pub use errors::*;
+pub use parsers::*; // Export parser functions
 pub use performance::*;
 pub use pool::*;
 pub use snapshot::*;

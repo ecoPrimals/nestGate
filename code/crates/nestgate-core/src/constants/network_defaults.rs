@@ -154,11 +154,9 @@ mod tests {
         let is_prod = is_production();
 
         // At least one should be determinable
-        // Valid environment detection (always true, but documents intent)
-        #[allow(clippy::overly_complex_bool_expr)]
-        {
-            assert!(is_dev || is_prod || (!is_dev && !is_prod));
-        }
+        // Environment detection - type system guarantees these are valid booleans
+        // Just verify we can determine the environment
+        let _environment_determined = is_dev || is_prod;
     }
 }
 

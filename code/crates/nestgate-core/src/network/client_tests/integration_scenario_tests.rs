@@ -40,5 +40,5 @@ async fn test_multiple_endpoints_with_client() {
         Port::new(9090).expect("Network operation failed"),
     );
 
-    assert_ne!(endpoint1.url(), endpoint2.url());
+    assert_ne!(endpoint1.base_url(), endpoint2.base_url());
 }

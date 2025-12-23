@@ -222,9 +222,8 @@ mod network_errors {
 
     #[test]
     fn test_connection_reset_by_peer() {
-        let result: Result<()> = Err(NestGateError::network_error("Connection reset by peer"));
-        assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("reset"));
+        let error = NestGateError::network_error("Connection reset by peer");
+        assert!(error.to_string().contains("reset"));
     }
 
     #[test]
@@ -243,11 +242,8 @@ mod network_errors {
 
     #[test]
     fn test_ssl_certificate_error() {
-        let result: Result<()> = Err(NestGateError::network_error(
-            "SSL certificate verification failed",
-        ));
-        assert!(result.is_err());
-        let err_msg = format!("{:?}", result.unwrap_err());
+        let error = NestGateError::network_error("SSL certificate verification failed");
+        let err_msg = format!("{:?}", error);
         assert!(err_msg.contains("SSL") || err_msg.contains("certificate"));
     }
 
@@ -274,30 +270,20 @@ mod storage_errors {
 
     #[test]
     fn test_file_not_found() {
-        let result: Result<()> = Err(NestGateError::storage_error(
-            "File not found: /nonexistent/path",
-        ));
-        assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("not found"));
+        let error = NestGateError::storage_error("File not found: /nonexistent/path");
+        assert!(error.to_string().contains("not found"));
     }
 
     #[test]
     fn test_permission_denied() {
-        let result: Result<()> = Err(NestGateError::storage_error(
-            "Permission denied: /root/protected",
-        ));
-        assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Permission denied"));
+        let error = NestGateError::storage_error("Permission denied: /root/protected");
+        assert!(error.to_string().contains("Permission denied"));
     }
 
     #[test]
     fn test_disk_full() {
-        let result: Result<()> = Err(NestGateError::storage_error("No space left on device"));
-        assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("space"));
+        let error = NestGateError::storage_error("No space left on device");
+        assert!(error.to_string().contains("space"));
     }
 
     #[test]
@@ -308,11 +294,8 @@ mod storage_errors {
 
     #[test]
     fn test_corrupted_data() {
-        let result: Result<()> = Err(NestGateError::storage_error(
-            "Data corruption detected: checksum mismatch",
-        ));
-        assert!(result.is_err());
-        let err_msg = format!("{:?}", result.unwrap_err());
+        let error = NestGateError::storage_error("Data corruption detected: checksum mismatch");
+        let err_msg = format!("{:?}", error);
         assert!(err_msg.contains("corruption") || err_msg.contains("checksum"));
     }
 

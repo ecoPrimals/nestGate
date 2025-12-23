@@ -42,7 +42,7 @@ async fn test_connection_pool_return_connection() {
         .get_connection(&endpoint)
         .await
         .expect("Network operation failed");
-    pool.return_connection(&endpoint, connection).await;
+    pool.return_connection(connection).await;
 }
 
 #[tokio::test]
@@ -59,7 +59,7 @@ async fn test_connection_pool_reuse() {
         .get_connection(&endpoint)
         .await
         .expect("Network operation failed");
-    pool.return_connection(&endpoint, conn1).await;
+    pool.return_connection(conn1).await;
 
     // Get another connection (should potentially reuse)
     let conn2 = pool.get_connection(&endpoint).await;

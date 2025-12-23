@@ -1,0 +1,13 @@
+Protocol Performance (4 operations):
+┌────────────┬──────────┬─────────────┬──────────────────┐
+│ Protocol   │ Latency  │ Total Time  │ Use Case         │
+├────────────┼──────────┼─────────────┼──────────────────┤
+│ HTTP/REST  │ ~5ms     │ ~20ms       │ Discovery, APIs  │
+│ JSON-RPC   │ ~2ms     │ ~8ms        │ Operations ✓     │
+│ tarpc      │ ~50μs    │ ~200μs      │ Performance 🚧   │
+└────────────┴──────────┴─────────────┴──────────────────┘
+
+Performance Benefit:
+  • JSON-RPC vs HTTP: 2.5x faster
+  • tarpc vs JSON-RPC: 40x faster (when available)
+  • tarpc vs HTTP: 100x faster (when available)

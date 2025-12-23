@@ -57,38 +57,36 @@ impl PortConfiguration {
     /// Create configuration with all defaults (for testing)
     #[must_use]
     pub fn with_defaults() -> Self {
-        use crate::constants::hardcoding::ports;
-        
         Self {
-            api_port: ports::HTTP_DEFAULT,
-            health_port: ports::HTTPS_DEFAULT,
-            metrics_port: ports::METRICS_DEFAULT,
-            admin_port: ports::ADMIN_DEFAULT,
-            websocket_port: ports::WEBSOCKET_DEFAULT,
-            rpc_port: ports::GRPC_DEFAULT,
-            database_port: ports::POSTGRES_DEFAULT,
-            redis_port: ports::REDIS_DEFAULT,
-            message_queue_port: 5672,
-            orchestration_port: 9091,
+            api_port: 8080,  // HTTP standard port
+            health_port: 8443, // HTTPS alt port for health
+            metrics_port: 9090, // Prometheus standard port
+            admin_port: 9091,  // Prometheus admin standard
+            websocket_port: 8082, // WebSocket common port
+            rpc_port: 50051, // gRPC standard port
+            database_port: 5432, // PostgreSQL standard port
+            redis_port: 6379, // Redis standard port
+            message_queue_port: 5672, // RabbitMQ standard port
+            orchestration_port: 9091, // Orchestration service port
         }
     }
 
     /// Create test configuration with known test ports
+    ///
+    /// Uses high-numbered ports to avoid conflicts with production services
     #[must_use]
     pub fn for_testing() -> Self {
-        use crate::constants::testing;
-        
         Self {
-            api_port: testing::TEST_HTTP_PORT,
-            health_port: testing::TEST_HTTPS_PORT,
-            metrics_port: 19090,
-            admin_port: 18081,
-            websocket_port: 18082,
-            rpc_port: 15051,
-            database_port: 15432,
-            redis_port: 16379,
-            message_queue_port: 15672,
-            orchestration_port: 19091,
+            api_port: 18080,  // Test HTTP port (high number to avoid conflicts)
+            health_port: 18443, // Test HTTPS port
+            metrics_port: 19090, // Test Prometheus port
+            admin_port: 18081,  // Test admin port
+            websocket_port: 18082, // Test WebSocket port
+            rpc_port: 15051, // Test gRPC port
+            database_port: 15432, // Test PostgreSQL port
+            redis_port: 16379, // Test Redis port
+            message_queue_port: 15672, // Test RabbitMQ port
+            orchestration_port: 19091, // Test orchestration port
         }
     }
 }
@@ -176,17 +174,17 @@ mod tests {
     #[test]
     fn test_all_default_ports_valid() {
         let config = PortConfiguration::from_env();
-        // All ports should be non-zero and in valid range
-        assert!(config.api_port > 0 && config.api_port <= 65535);
-        assert!(config.health_port > 0 && config.health_port <= 65535);
-        assert!(config.metrics_port > 0 && config.metrics_port <= 65535);
-        assert!(config.admin_port > 0 && config.admin_port <= 65535);
-        assert!(config.websocket_port > 0 && config.websocket_port <= 65535);
-        assert!(config.rpc_port > 0 && config.rpc_port <= 65535);
-        assert!(config.database_port > 0 && config.database_port <= 65535);
-        assert!(config.redis_port > 0 && config.redis_port <= 65535);
-        assert!(config.message_queue_port > 0 && config.message_queue_port <= 65535);
-        assert!(config.orchestration_port > 0 && config.orchestration_port <= 65535);
+        // All ports should be non-zero (valid range is guaranteed by u16 type)
+        assert!(config.api_port > 0);
+        assert!(config.health_port > 0);
+        assert!(config.metrics_port > 0);
+        assert!(config.admin_port > 0);
+        assert!(config.websocket_port > 0);
+        assert!(config.rpc_port > 0);
+        assert!(config.database_port > 0);
+        assert!(config.redis_port > 0);
+        assert!(config.message_queue_port > 0);
+        assert!(config.orchestration_port > 0);
     }
 
     #[test]
@@ -271,10 +269,10 @@ mod tests {
     fn test_with_defaults_ports_valid() {
         let config = PortConfiguration::with_defaults();
         
-        // All default ports should be in valid range
-        assert!(config.api_port > 0 && config.api_port <= 65535);
-        assert!(config.health_port > 0 && config.health_port <= 65535);
-        assert!(config.metrics_port > 0 && config.metrics_port <= 65535);
+        // All default ports should be non-zero (valid range is guaranteed by u16 type)
+        assert!(config.api_port > 0);
+        assert!(config.health_port > 0);
+        assert!(config.metrics_port > 0);
     }
 
     #[test]

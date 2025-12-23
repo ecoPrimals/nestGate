@@ -1,0 +1,6 @@
+NestGate Home NAS Setup:
+  • Storage Pool: nestgate-home (simulated 2TB)
+  • Family Shares: photos, videos, documents, music
+  • User Accounts: mom, dad, alice, bob
+  • Web UI: http://localhost:8080
+  • Network Discovery: nestgate.local (mDNS)

@@ -17,9 +17,6 @@ fn test_timeout_millisecond_precision() {
     let timeout1 = TimeoutMs::new(1);
     let timeout2 = TimeoutMs::new(2);
 
-    assert!(timeout2.as_duration() > timeout1.as_duration());
-    assert_eq!(
-        timeout2.as_duration().as_millis() - timeout1.as_duration().as_millis(),
-        1
-    );
+    assert!(timeout2 > timeout1);
+    assert_eq!(timeout2.as_millis() - timeout1.as_millis(), 1);
 }

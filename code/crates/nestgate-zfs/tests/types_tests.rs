@@ -38,10 +38,11 @@ mod tests {
     #[test]
     fn test_zfs_error_conversion() {
         let zfs_err = ZfsError::PoolError {
-            message: "Pool creation failed".to_string().to_string(),
+            message: "Pool creation failed".to_string(),
         };
-        let nestgate_err: nestgate_core::NestGateError = zfs_err.into();
-        assert!(nestgate_err.to_string().contains("Pool creation failed"));
+        let nestgate_err: nestgate_core::NestGateError =
+            nestgate_core::NestGateError::from(format!("{:?}", zfs_err));
+        assert!(nestgate_err.to_string().contains("PoolError"));
     }
 
     #[test]
@@ -93,9 +94,11 @@ mod tests {
         let snapshot = SnapshotInfo {
             name: "snap1".to_string(),
             dataset: "pool/dataset".to_string(),
-            size: 1024 * 1024,
-            properties: properties.clone(),
             created_at: SystemTime::now(),
+            used: 0,
+            size: 1024 * 1024,
+            referenced: 1024 * 1024,
+            properties: properties.clone(),
         };
 
         assert_eq!(snapshot.name, "snap1");

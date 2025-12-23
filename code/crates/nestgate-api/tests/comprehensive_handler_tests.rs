@@ -3,8 +3,8 @@
 //! This test suite expands coverage for critical API handlers,
 //! targeting edge cases, error paths, and validation logic.
 
-use crate::error::ApiError;
-use crate::handlers::*;
+use nestgate_api::error::ApiError;
+use nestgate_api::handlers::*;
 use serde_json::json;
 
 // ==================== ZFS HANDLER TESTS ====================
@@ -290,7 +290,9 @@ fn validate_dataset_path(_path: &str) -> std::result::Result<(), ApiError> {
 
 fn validate_quota(_quota: i64) -> std::result::Result<(), ApiError> {
     if _quota < 0 {
-        return Err(ApiError::invalid_input("Quota cannot be negative"));
+        return Err(ApiError::InvalidRequest(
+            "Quota cannot be negative".to_string(),
+        ));
     }
     Ok(())
 }
@@ -300,7 +302,9 @@ fn validate_quota_against_capacity(
     _capacity: u64,
 ) -> std::result::Result<(), ApiError> {
     if _quota > _capacity {
-        return Err(ApiError::invalid_input("Quota exceeds pool capacity"));
+        return Err(ApiError::InvalidRequest(
+            "Quota exceeds pool capacity".to_string(),
+        ));
     }
     Ok(())
 }
@@ -311,7 +315,9 @@ fn validate_snapshot_name(_name: &str) -> std::result::Result<(), ApiError> {
 
 fn validate_snapshot_retention(_count: u32) -> std::result::Result<(), ApiError> {
     if _count > 1000 {
-        return Err(ApiError::invalid_input("Retention count too high"));
+        return Err(ApiError::InvalidRequest(
+            "Retention count too high".to_string(),
+        ));
     }
     Ok(())
 }
@@ -319,23 +325,29 @@ fn validate_snapshot_retention(_count: u32) -> std::result::Result<(), ApiError>
 fn parse_pool_health(_status: &str) -> std::result::Result<String, ApiError> {
     match _status {
         "ONLINE" | "DEGRADED" | "FAULTED" | "OFFLINE" => Ok(_status.to_string()),
-        _ => Err(ApiError::invalid_input("Invalid health status")),
+        _ => Err(ApiError::InvalidRequest(
+            "Invalid health status".to_string(),
+        )),
     }
 }
 
 fn validate_filesystem_path(_path: &str) -> std::result::Result<(), ApiError> {
     if _path.contains("..") {
-        return Err(ApiError::invalid_input("Path traversal not allowed"));
+        return Err(ApiError::InvalidRequest(
+            "Path traversal not allowed".to_string(),
+        ));
     }
     if !_path.starts_with('/') {
-        return Err(ApiError::invalid_input("Only absolute paths allowed"));
+        return Err(ApiError::InvalidRequest(
+            "Only absolute paths allowed".to_string(),
+        ));
     }
     Ok(())
 }
 
 fn check_quota_enforcement(_used: u64, _quota: u64) -> std::result::Result<(), ApiError> {
     if _used > _quota {
-        return Err(ApiError::quota_exceeded());
+        return Err(ApiError::InvalidRequest("Quota exceeded".to_string()));
     }
     Ok(())
 }
@@ -394,7 +406,9 @@ fn check_permission(_user: &str, _required: &str) -> std::result::Result<(), Api
     if _user == "admin_user" && _required == "admin" {
         Ok(())
     } else if _user == "regular_user" && _required == "admin" {
-        Err(ApiError::insufficient_permissions())
+        Err(ApiError::InvalidRequest(
+            "Insufficient permissions".to_string(),
+        ))
     } else {
         Ok(())
     }

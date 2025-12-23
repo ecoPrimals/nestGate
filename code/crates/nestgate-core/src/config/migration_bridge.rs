@@ -40,7 +40,7 @@ static GLOBAL_CONFIG: OnceLock<EnvironmentConfig> = OnceLock::new();
 ///
 /// # Error Handling
 ///
-/// This function uses `unwrap_or_else` to provide graceful degradation.
+/// This function provides graceful degradation using proper error handling.
 /// If environment loading fails, it logs the error and falls back to defaults.
 /// This ensures the application can start even with configuration issues.
 fn global_config() -> &'static EnvironmentConfig {

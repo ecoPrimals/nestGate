@@ -5,8 +5,8 @@
 use nestgate_core::universal_primal_discovery::{
     backends::mdns::{MdnsConfig, MdnsDiscoveryBackend},
     capability_based_discovery::{
-        BindingInfo, DiscoveryBackend, DiscoveryQuery, HealthStatus, PeerDescriptor,
-        PrimalCapability, PrimalId, PrimalSelfKnowledge, Protocol,
+        BindingInfo, DiscoveryBackend, DiscoveryQuery, HealthStatus, PrimalCapability, PrimalId,
+        PrimalSelfKnowledge, Protocol,
     },
 };
 use std::net::{IpAddr, Ipv4Addr};
@@ -39,10 +39,10 @@ async fn test_mdns_announce_self_knowledge() {
     let backend = MdnsDiscoveryBackend::new();
 
     let self_knowledge = PrimalSelfKnowledge {
-        id: PrimalId::new("test-primal"),
+        id: PrimalId::from_string("test-primal".to_string()),
         capabilities: vec![
-            PrimalCapability::new("storage"),
-            PrimalCapability::new("zfs_management"),
+            PrimalCapability::ZfsStorage,
+            PrimalCapability::Custom("zfs_management".to_string()),
         ],
         binding: BindingInfo {
             address: IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
@@ -73,8 +73,8 @@ async fn test_mdns_query_capabilities() {
 
     // First announce ourselves
     let self_knowledge = PrimalSelfKnowledge {
-        id: PrimalId::new("storage-primal"),
-        capabilities: vec![PrimalCapability::new("storage")],
+        id: PrimalId::from_string("storage-primal".to_string()),
+        capabilities: vec![PrimalCapability::ZfsStorage],
         binding: BindingInfo {
             address: IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
             port: 8080,
@@ -91,17 +91,19 @@ async fn test_mdns_query_capabilities() {
 
     // Now query for storage capability
     let query = DiscoveryQuery {
-        required_capabilities: vec![PrimalCapability::new("storage")],
+        required_capabilities: vec![PrimalCapability::ZfsStorage],
         optional_capabilities: vec![],
-        max_results: Some(10),
-        timeout: Some(Duration::from_secs(1)),
+        max_latency: Some(Duration::from_secs(1)),
+        min_health: HealthStatus::Degraded {
+            reason: "acceptable".to_string(),
+        },
     };
 
     let result = backend.query(&query).await;
     assert!(result.is_ok(), "Query should succeed");
 
     let peers = result.unwrap();
-    assert!(peers.len() > 0, "Should find at least ourselves");
+    assert!(!peers.is_empty(), "Should find at least ourselves");
 
     // Verify we found ourselves
     let found_self = peers.iter().any(|p| p.id.as_str() == "storage-primal");
@@ -115,10 +117,10 @@ async fn test_mdns_query_multiple_capabilities() {
 
     // Announce a primal with multiple capabilities
     let self_knowledge = PrimalSelfKnowledge {
-        id: PrimalId::new("multi-cap-primal"),
+        id: PrimalId::from_string("multi-cap-primal".to_string()),
         capabilities: vec![
-            PrimalCapability::new("storage"),
-            PrimalCapability::new("security"),
+            PrimalCapability::ZfsStorage,
+            PrimalCapability::Authentication,
         ],
         binding: BindingInfo {
             address: IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
@@ -137,12 +139,14 @@ async fn test_mdns_query_multiple_capabilities() {
     // Query requiring BOTH capabilities
     let query = DiscoveryQuery {
         required_capabilities: vec![
-            PrimalCapability::new("storage"),
-            PrimalCapability::new("security"),
+            PrimalCapability::ZfsStorage,
+            PrimalCapability::Authentication,
         ],
         optional_capabilities: vec![],
-        max_results: Some(10),
-        timeout: Some(Duration::from_secs(1)),
+        max_latency: Some(Duration::from_secs(1)),
+        min_health: HealthStatus::Degraded {
+            reason: "acceptable".to_string(),
+        },
     };
 
     let result = backend.query(&query).await;
@@ -153,8 +157,8 @@ async fn test_mdns_query_multiple_capabilities() {
     // Should find our multi-capability primal
     let found = peers.iter().any(|p| {
         p.id.as_str() == "multi-cap-primal"
-            && p.capabilities.contains(&PrimalCapability::new("storage"))
-            && p.capabilities.contains(&PrimalCapability::new("security"))
+            && p.capabilities.contains(&PrimalCapability::ZfsStorage)
+            && p.capabilities.contains(&PrimalCapability::Authentication)
     });
 
     assert!(found, "Should find primal with both capabilities");
@@ -165,12 +169,12 @@ async fn test_mdns_unannounce() {
     // Test unannouncing
     let backend = MdnsDiscoveryBackend::new();
 
-    let primal_id = PrimalId::new("temporary-primal");
+    let primal_id = PrimalId::from_string("temporary-primal".to_string());
 
     // Announce
     let self_knowledge = PrimalSelfKnowledge {
         id: primal_id.clone(),
-        capabilities: vec![PrimalCapability::new("test")],
+        capabilities: vec![PrimalCapability::Custom("test".to_string())],
         binding: BindingInfo {
             address: IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
             port: 7070,
@@ -191,10 +195,12 @@ async fn test_mdns_unannounce() {
 
     // Query to verify it's gone
     let query = DiscoveryQuery {
-        required_capabilities: vec![PrimalCapability::new("test")],
+        required_capabilities: vec![PrimalCapability::Custom("test".to_string())],
         optional_capabilities: vec![],
-        max_results: Some(10),
-        timeout: Some(Duration::from_secs(1)),
+        max_latency: Some(Duration::from_secs(1)),
+        min_health: HealthStatus::Degraded {
+            reason: "acceptable".to_string(),
+        },
     };
 
     let peers = backend.query(&query).await.expect("Query should succeed");
@@ -211,8 +217,8 @@ async fn test_mdns_zero_hardcoding_principle() {
     // We announce ONLY our self-knowledge
     // No hardcoded peer names, no hardcoded addresses
     let self_knowledge = PrimalSelfKnowledge {
-        id: PrimalId::new("autonomous-primal"),
-        capabilities: vec![PrimalCapability::new("autonomous")],
+        id: PrimalId::from_string("autonomous-primal".to_string()),
+        capabilities: vec![PrimalCapability::Custom("autonomous".to_string())],
         binding: BindingInfo {
             address: IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
             port: 6060,
@@ -231,21 +237,23 @@ async fn test_mdns_zero_hardcoding_principle() {
 
     // We discover by CAPABILITY, not by name
     let query = DiscoveryQuery {
-        required_capabilities: vec![PrimalCapability::new("autonomous")],
+        required_capabilities: vec![PrimalCapability::Custom("autonomous".to_string())],
         optional_capabilities: vec![],
-        max_results: None,
-        timeout: None,
+        max_latency: None,
+        min_health: HealthStatus::Degraded {
+            reason: "acceptable".to_string(),
+        },
     };
 
     let peers = backend.query(&query).await.expect("Query should succeed");
 
     // The system works WITHOUT any hardcoded names
-    assert!(peers.len() > 0, "Discovery works without hardcoding");
+    assert!(!peers.is_empty(), "Discovery works without hardcoding");
 
     // Verify we found by capability, not by predetermined name
     let found = peers.iter().any(|p| {
         p.capabilities
-            .contains(&PrimalCapability::new("autonomous"))
+            .contains(&PrimalCapability::Custom("autonomous".to_string()))
     });
 
     assert!(found, "Capability-based discovery successful");
@@ -256,8 +264,8 @@ async fn test_mdns_self_discovery() {
     // Test that a primal can discover itself (useful for verification)
     let backend = MdnsDiscoveryBackend::new();
 
-    let my_id = PrimalId::new("self-aware-primal");
-    let my_capability = PrimalCapability::new("self-awareness");
+    let my_id = PrimalId::from_string("self-aware-primal".to_string());
+    let my_capability = PrimalCapability::Custom("self-awareness".to_string());
 
     let self_knowledge = PrimalSelfKnowledge {
         id: my_id.clone(),
@@ -280,14 +288,16 @@ async fn test_mdns_self_discovery() {
     let query = DiscoveryQuery {
         required_capabilities: vec![my_capability],
         optional_capabilities: vec![],
-        max_results: Some(1),
-        timeout: Some(Duration::from_secs(1)),
+        max_latency: Some(Duration::from_secs(1)),
+        min_health: HealthStatus::Degraded {
+            reason: "acceptable".to_string(),
+        },
     };
 
     let peers = backend.query(&query).await.expect("Query should succeed");
 
     // Should find ourselves
-    assert!(peers.len() > 0, "Should discover self");
+    assert!(!peers.is_empty(), "Should discover self");
     assert_eq!(
         peers[0].id.as_str(),
         "self-aware-primal",
@@ -302,8 +312,8 @@ async fn test_mdns_capability_filtering() {
 
     // Announce storage primal
     let storage = PrimalSelfKnowledge {
-        id: PrimalId::new("storage-only"),
-        capabilities: vec![PrimalCapability::new("storage")],
+        id: PrimalId::from_string("storage-only".to_string()),
+        capabilities: vec![PrimalCapability::ZfsStorage],
         binding: BindingInfo {
             address: IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
             port: 8001,
@@ -315,8 +325,8 @@ async fn test_mdns_capability_filtering() {
 
     // Announce security primal
     let security = PrimalSelfKnowledge {
-        id: PrimalId::new("security-only"),
-        capabilities: vec![PrimalCapability::new("security")],
+        id: PrimalId::from_string("security-only".to_string()),
+        capabilities: vec![PrimalCapability::Authentication],
         binding: BindingInfo {
             address: IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
             port: 8002,
@@ -337,10 +347,12 @@ async fn test_mdns_capability_filtering() {
 
     // Query for storage only
     let storage_query = DiscoveryQuery {
-        required_capabilities: vec![PrimalCapability::new("storage")],
+        required_capabilities: vec![PrimalCapability::ZfsStorage],
         optional_capabilities: vec![],
-        max_results: None,
-        timeout: Some(Duration::from_secs(1)),
+        max_latency: Some(Duration::from_secs(1)),
+        min_health: HealthStatus::Degraded {
+            reason: "acceptable".to_string(),
+        },
     };
 
     let storage_peers = backend
@@ -358,10 +370,12 @@ async fn test_mdns_capability_filtering() {
 
     // Query for security only
     let security_query = DiscoveryQuery {
-        required_capabilities: vec![PrimalCapability::new("security")],
+        required_capabilities: vec![PrimalCapability::Authentication],
         optional_capabilities: vec![],
-        max_results: None,
-        timeout: Some(Duration::from_secs(1)),
+        max_latency: Some(Duration::from_secs(1)),
+        min_health: HealthStatus::Degraded {
+            reason: "acceptable".to_string(),
+        },
     };
 
     let security_peers = backend
@@ -386,8 +400,10 @@ async fn test_mdns_empty_query() {
     let query = DiscoveryQuery {
         required_capabilities: vec![],
         optional_capabilities: vec![],
-        max_results: None,
-        timeout: Some(Duration::from_secs(1)),
+        max_latency: Some(Duration::from_secs(1)),
+        min_health: HealthStatus::Degraded {
+            reason: "acceptable".to_string(),
+        },
     };
 
     let result = backend.query(&query).await;

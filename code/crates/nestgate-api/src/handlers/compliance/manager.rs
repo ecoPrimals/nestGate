@@ -5,6 +5,7 @@
 //! Manager module
 
 use chrono::{Duration as ChronoDuration, Utc};
+use nestgate_core::math::float_compare::approx_eq_f32;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -154,7 +155,8 @@ impl ComplianceManager {
             .map(|f| f.required_controls.len())
             .sum::<usize>() as f32;
 
-        if total_controls == 0.0 {
+        // ✅ MODERN: Use epsilon for zero check in production code
+        if approx_eq_f32(total_controls, 0.0) {
             return 100.0;
         }
 

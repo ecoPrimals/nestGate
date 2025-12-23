@@ -288,7 +288,7 @@ mod adapter_performance_tests {
     fn test_error_creation_performance() {
         let start = std::time::Instant::now();
         for i in 0..100 {
-            let _ = NestGateError::internal_error(&format!("Error {}", i), "adapter");
+            let _ = NestGateError::internal_error(format!("Error {}", i), "adapter");
         }
         let duration = start.elapsed();
         // Should create errors quickly (< 10ms)

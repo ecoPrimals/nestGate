@@ -406,7 +406,7 @@ fn validate_positive_integer_test(n: i64) -> std::result::Result<(), TestError> 
     }
 }
 
-fn validate_integer_range_test(n: i64) -> std::result::Result<(), TestError> {
+fn validate_integer_range_test(_n: i64) -> std::result::Result<(), TestError> {
     Ok(()) // All i64 values are valid
 }
 
@@ -422,7 +422,7 @@ fn safe_divide_test(a: i64, b: i64) -> std::result::Result<i64, TestError> {
     }
 }
 
-fn process_collection_test(items: &[i32]) -> std::result::Result<(), TestError> {
+fn process_collection_test(_items: &[i32]) -> std::result::Result<(), TestError> {
     Ok(())
 }
 

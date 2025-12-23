@@ -17,14 +17,13 @@ mod primal_id_tests {
 
     #[test]
     fn test_primal_id_from_environment_creates_unique_id() {
+        // ✅ MODERN: Test uniqueness without sleep
+        // IDs should be unique due to timestamps and/or random components
         let id1 = PrimalId::from_environment().expect("Should create ID");
-
-        // Sleep briefly to ensure different timestamp
-        std::thread::sleep(std::time::Duration::from_millis(2));
-
         let id2 = PrimalId::from_environment().expect("Should create ID");
 
-        // IDs should be unique (different timestamps)
+        // ✅ CONCURRENT: Time progresses naturally during execution
+        // IDs are unique due to timestamp precision and implementation details
         assert_ne!(id1.as_str(), id2.as_str());
     }
 

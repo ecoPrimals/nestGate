@@ -182,13 +182,13 @@ mod network_comprehensive_coverage {
     #[test]
     fn test_registered_ports_range() {
         let registered_port = 8080;
-        assert!(registered_port >= 1024 && registered_port < 49152);
+        assert!((1024..49152).contains(&registered_port));
     }
 
     #[test]
     fn test_dynamic_ports_range() {
         let dynamic_port = 50000;
-        assert!(dynamic_port >= 49152 && dynamic_port <= 65535);
+        assert!((49152..=65535).contains(&dynamic_port));
     }
 
     // ==================== SOCKET ADDRESS TESTS ====================

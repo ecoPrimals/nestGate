@@ -77,7 +77,7 @@ mod error_strategic_tests {
 
     #[test]
     fn test_multiple_error_types() {
-        let errors = vec![
+        let errors = [
             NestGateError::configuration_error("config", "config error"),
             NestGateError::from(io::Error::new(
                 io::ErrorKind::PermissionDenied,
@@ -185,7 +185,7 @@ mod error_strategic_tests {
             Err(NestGateError::configuration_error("field", "error"))
         }
 
-        let result: Result<i32, NestGateError> = fallible().or_else(|_| Ok(100));
+        let result: Result<i32, NestGateError> = fallible().or(Ok(100));
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), 100);
     }
@@ -206,7 +206,7 @@ mod error_strategic_tests {
             Err(NestGateError::configuration_error("field", "error"))
         }
 
-        let value = fallible().unwrap_or_else(|_| 99);
+        let value = fallible().unwrap_or(99);
         assert_eq!(value, 99);
     }
 

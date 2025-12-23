@@ -164,7 +164,7 @@ pub async fn create_pool(
 
     match get_zfs_service(&state).await {
         Ok(service) => match service.create_pool(&request.name, request._devices.clone(), None) {
-            Ok(_) => {
+            Ok(()) => {
                 info!("✅ Pool created successfully: {}", request.name);
                 // Return a basic response since create_pool doesn't return pool info
                 Ok(Json(ZeroCostPoolInfo {
@@ -444,7 +444,7 @@ pub async fn create_snapshot(
                                 datasets.into_iter().find(|d| d.name == dataset_name)
                             {
                                 match service.create_snapshot(&dataset.name, &request.name) {
-                                    Ok(_) => {
+                                    Ok(()) => {
                                         info!(
                                             "✅ Snapshot created successfully: {}/{}@{}",
                                             pool_name, dataset_name, request.name

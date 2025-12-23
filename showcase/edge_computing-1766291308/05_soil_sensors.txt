@@ -1,0 +1,7 @@
+  Sensors: 10 soil moisture sensors
+  Sample rate: 1 reading/10 seconds
+  Data format: timestamp, sensor_id, moisture_percent
+  Data size: 1 reading/sec × 24 bytes = 24 bytes/sec
+  Daily volume: ~2MB/day
+  Compressed: ~400KB/day
+  ✅ Soil moisture data streaming

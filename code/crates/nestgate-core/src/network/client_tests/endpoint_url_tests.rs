@@ -11,7 +11,7 @@ fn test_endpoint_url_construction() {
     let port = Port::new(8443).expect("Network operation failed");
     let endpoint = Endpoint::https("secure.api.com".to_string(), port);
 
-    assert_eq!(endpoint.url(), "https://secure.api.com:8443");
+    assert_eq!(endpoint.base_url(), "https://secure.api.com:8443");
 }
 
 #[test]
@@ -26,6 +26,6 @@ fn test_endpoint_with_various_ports() {
     for (port_num, expected_url) in ports_and_urls {
         let port = Port::new(port_num).expect("Network operation failed");
         let endpoint = Endpoint::http("example.com".to_string(), port);
-        assert_eq!(endpoint.url(), expected_url);
+        assert_eq!(endpoint.base_url(), expected_url);
     }
 }

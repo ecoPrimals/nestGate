@@ -139,8 +139,9 @@ mod network_coverage_expansion {
         let info = types::ConnectionInfo::new("conn-1".to_string(), addr);
 
         let age = info.age();
-        // age.as_millis() returns u128, always >= 0
-        assert!(age.as_millis() > 0 || age.as_millis() == 0);
+        // age.as_millis() returns u128, always >= 0 (type system guarantees this)
+        // Just verify we can call the method
+        let _millis = age.as_millis();
     }
 
     // ==================== SERVICE INFO TESTS ====================
@@ -326,31 +327,29 @@ mod network_coverage_expansion {
         let config = NetworkConfig::default();
         assert!(config.api.max_connections > 0);
         // Verify bind address is configured
-        assert!(format!("{:?}", config.api.bind_address).len() > 0);
+        assert!(!format!("{:?}", config.api.bind_address).is_empty());
     }
 
     #[test]
     fn test_security_config_defaults() {
         let config = NetworkConfig::default();
         // Verify security config exists
-        assert!(format!("{:?}", config.security).len() > 0);
+        assert!(!format!("{:?}", config.security).is_empty());
     }
 
     #[test]
     fn test_performance_config_defaults() {
         let config = NetworkConfig::default();
         // Verify performance config exists
-        assert!(format!("{:?}", config.performance).len() > 0);
+        assert!(!format!("{:?}", config.performance).is_empty());
     }
 
     #[test]
     fn test_monitoring_config_defaults() {
         let config = NetworkConfig::default();
         // Config is created successfully - verify it exists
-        assert!(
-            config.monitoring.metrics_enabled || !config.monitoring.metrics_enabled,
-            "Config monitoring field exists"
-        );
+        // Type system guarantees metrics_enabled is a valid boolean
+        let _metrics_enabled = config.monitoring.metrics_enabled;
     }
 
     // ==================== PROTOCOL TESTS ====================
@@ -359,7 +358,7 @@ mod network_coverage_expansion {
     fn test_protocol_config_defaults() {
         let config = NetworkConfig::default();
         // Verify protocol config exists
-        assert!(format!("{:?}", config.protocols).len() > 0);
+        assert!(!format!("{:?}", config.protocols).is_empty());
     }
 
     // ==================== CONCURRENT ACCESS TESTS ====================

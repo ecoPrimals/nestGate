@@ -12,7 +12,6 @@
 // ═══════════════════════════════════════════════════════════════
 // This module is NOT compiled in production builds.
 // Only available with the 'dev-stubs' feature flag.
-#![cfg(feature = "dev-stubs")]
 //!
 //! # Purpose
 //!

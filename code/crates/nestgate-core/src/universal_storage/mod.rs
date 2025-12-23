@@ -77,6 +77,14 @@ pub mod storage_detector_config;
 // TEMPORARILY DISABLED: Compilation issues being resolved
 // pub mod enterprise;
 
+// ==================== MODERN VENDOR-AGNOSTIC STORAGE ====================
+
+/// **UNIVERSAL AGNOSTIC STORAGE** (December 15, 2025)
+///
+/// Zero vendor coupling. Protocol-based discovery.
+/// Works with any storage system: AWS, MinIO, Wasabi, Azure, GCS, or future systems.
+pub mod universal;
+
 // ==================== RE-EXPORTS ====================
 
 // Re-export zero-cost storage backend
@@ -87,6 +95,12 @@ pub use zero_cost_storage_traits::{
 };
 // Re-export storage detector config
 pub use storage_detector_config::{SharedStorageDetectorConfig, StorageDetectorConfig};
+
+// Re-export universal agnostic storage
+pub use universal::{
+    AuthenticationPattern, DiscoveredProtocol, DiscoveredStorage, StorageFeature,
+    StorageOperationPattern, TransportProtocol, UniversalStorageAdapter, UniversalStorageDiscovery,
+};
 
 // Enterprise storage capabilities
 // TEMPORARILY DISABLED: Module compilation issues being resolved

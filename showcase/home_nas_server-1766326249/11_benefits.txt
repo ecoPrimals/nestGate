@@ -1,0 +1,33 @@
+💰 Cost Savings:
+  NestGate Home NAS:        $125 (Raspberry Pi + 2TB drive)
+  vs. Synology DS220+:      $450 (SAVED: $325)
+  vs. Cloud (5 years):      $600 (SAVED: $475)
+  
+  Total savings: $325-475 over alternatives
+
+🚀 Performance:
+  Upload speed:     100 MB/s (Gigabit Ethernet)
+  Download speed:   100 MB/s
+  Web UI response:  < 50ms
+  Snapshot time:    < 1 second
+  Recovery time:    Instant (ZFS clone)
+
+🔒 Privacy & Security:
+  ✅ Your data stays home (not in the cloud)
+  ✅ No monthly subscription fees
+  ✅ No corporate data mining
+  ✅ Complete control
+
+👨‍👩‍👧‍👦 Family Features:
+  ✅ Easy to use (web UI, no command line)
+  ✅ Per-user accounts with quotas
+  ✅ Shared folders for family content
+  ✅ Mobile access (any device)
+  ✅ Automatic protection (snapshots)
+
+🌟 Key Advantages:
+  • Zero Configuration: Works out of the box
+  • User Friendly: No IT skills required
+  • Reliable: Enterprise-grade ZFS storage
+  • Extensible: Add drives, users, features anytime
+  • Open Source: No vendor lock-in

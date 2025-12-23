@@ -1,0 +1,122 @@
+@#$%^&*() MALFORMED HEADER !!!
+>sequence_1 with spaces and (weird) [characters] {everywhere}
+ATCGatcgATCGatcg
+>sequence2_no_description
+NNNNNNNNNNNNNNNN
+ATCGATCG
+@FASTQ_MIXED_IN
+ATCGATCGATCGATCG
++
+IIIIIIIIIIIIIIII
+   WHITESPACE  EVERYWHERE   
+\t\t\tTABS AND SPACES\t\t\t
+
+>another_seq|||extra|pipes|||
+ATCGATCGATCGATCGATCGATCGATCG
+
+
+EMPTY LINES ABOVE
+
+>seq_with_numbers_123456789
+ATCG1234ATCG5678  <- NUMBERS IN SEQUENCE??
+END_OF_UGLY_DATA
+Random line 1 with ATBWLzGNes09qqOaSdmQl9vKTL4=
+Random line 2 with PQJHdfC52UZWb4v9p3JthM3c6fo=
+Random line 3 with GqB1Hk+JmduZBJZahVjcPqpimk8=
+Random line 4 with 5HbWttOK0e8uo5j//RV3JbgIF9M=
+Random line 5 with Sw0nlHH5pZvQKAGoDPdKBqZabFg=
+Random line 6 with Avzt0Z4TEyhH6PRE4SioU2UkWHs=
+Random line 7 with xtp7yRuTQTr1Ag4HwZxQCFB2Oxc=
+Random line 8 with 8jibwg7DV/pHWPoDL65H0YJ08Bo=
+Random line 9 with ki9MYBBBHMvz1HM1Ge9IfI1orhs=
+Random line 10 with vy9MZlAScgzhb7sNq5+Dfn2hzOk=
+Random line 11 with Q4FOxg++SbxnKiOsTlOueFvWA7I=
+Random line 12 with BDis+ZjbEKddhTBFcd3PTFuHxXc=
+Random line 13 with pKdlzE9EZ65MyO/Cc6DgttrHGyo=
+Random line 14 with +ui1+0Ov+LEEx5v4wdU4vQrp6R8=
+Random line 15 with /ePf04qRbJjtk9P4T9tKPN50m/Y=
+Random line 16 with 2QX+2CDxQ3VcmTJsOWxGu0U8nTg=
+Random line 17 with pcM0xgsxb6Rz8a2uz5YP3e6rXRA=
+Random line 18 with xMJZ69xRrMN3VuGxNf4o06GDpJc=
+Random line 19 with gZWyraryizhh8uRpTZLx9SdyinI=
+Random line 20 with PozA7+0g8i+mhf1MgkWDDrZRCnc=
+Random line 21 with kRhyd7bTfDeMGB7P+TGELjNlEfg=
+Random line 22 with elDp1C/yh++Xxh7pMrTHM+p0tww=
+Random line 23 with MLxWS0PZROSCb9b6ufeSY+Q9AHQ=
+Random line 24 with VKXqQzaczxsOLkrsIMB13tyfCls=
+Random line 25 with 1vtQQegeOxbpornCu3Tk++tcqoI=
+Random line 26 with iViUJe0UnYbplQYRWoqO2Qn0ezw=
+Random line 27 with P3aUew1pyJCHkSc4InKrZ1o8cGU=
+Random line 28 with CHlmvJL6EnjwL91gfofkkAOBXI8=
+Random line 29 with xwqXvrYfindKQEdrcWFyXGZKw/Q=
+Random line 30 with 9pK0PeBZpxxWu+347BIbGSUvmFs=
+Random line 31 with YxoaDjZVC+TZ85/WpM7JIax1ToA=
+Random line 32 with 397lLQuluLEXSHSHO9B3V4LngAo=
+Random line 33 with NKA+6MiELJ6NEp2IA41QirJ26to=
+Random line 34 with Gq0J6KCHSUTGgXhYD3fU2zXMsYc=
+Random line 35 with 1f3e7YxTw5JUY2pjlxpvzM8mA88=
+Random line 36 with Xons5Smo/oSene95ngRTrgIxAjU=
+Random line 37 with jRYhRsnHsXoGm17ptZtzpoMAzCU=
+Random line 38 with +kizgL710R74DinRg2Ruoy8EMnQ=
+Random line 39 with 8/xh399rWJS6BG/ertt8iem/rEo=
+Random line 40 with VGzcTgHk9aPT3UPLnrTqp8jSpkc=
+Random line 41 with e994EiHIFdNdqYSaL9ysIOIdozk=
+Random line 42 with +fPdU3Qx42uoYpJIw9AxnyqWPgc=
+Random line 43 with FLPmZh9zoP/qWOZE3MAa86NKXkY=
+Random line 44 with srkOFa6kad0F+4VXkcUoGFXPGFw=
+Random line 45 with 57cSXHO7/O2gSZiwyBZ5j4OUp1U=
+Random line 46 with VKZQZ7aBKucWeT+7jcyDMnNNY8U=
+Random line 47 with ZBwzBI8rW3JK/7eiLR54LvovI4I=
+Random line 48 with 6xbQlZ8tVNKC2SBXwkMAAdZNqZM=
+Random line 49 with ymXfWJHrA9F01kAT7QYbM1XMBVM=
+Random line 50 with V62Ct2UFKalS7E9p7iASzhVwu3Y=
+Random line 51 with SM0cZYges5ZJAYfb9d54pzSn+5s=
+Random line 52 with va5l+gwG/WLuflcEhcaia2b5o3Y=
+Random line 53 with JF76b4TQ93MKC8xjYWlw+o2amwE=
+Random line 54 with 4NoiiIVWvQ76V8+JHRHG5wKCw4A=
+Random line 55 with gtDc79y0dQzBZUOCBYhM4JjjAqg=
+Random line 56 with VOwAIR0ruRBaypizJ2zTHvPKy0c=
+Random line 57 with m+z0n4Q5EU1/HlnC9GZaXJFcj2Y=
+Random line 58 with Odbv15tNecCwTkixUlhMvNAjvrI=
+Random line 59 with iRMkfQqfpC8Mx2TOVo6uVFbcZ1c=
+Random line 60 with Yz4mMLLyy/po3QnwUveUXSq2+p4=
+Random line 61 with +46gZEcAHTLYsTq9+Vs0185j0YM=
+Random line 62 with b8kPkr5UVC0vwlLxO+nQ6Ol7iTg=
+Random line 63 with 5NlQtT/P4Gsr22yIK02ACo+wd7s=
+Random line 64 with 345rkketBoKrKQ8A3vx9P3T/C+w=
+Random line 65 with eO1tkQKQcVf2tS85coa3PxXZjVk=
+Random line 66 with /mKT2ccqQiktObggdFCLjczH2d8=
+Random line 67 with S2EEoIO7HlrM4kYlcgFwfUtc6LU=
+Random line 68 with EXTNUvGI5UHUz11b5/Gprbv/LU4=
+Random line 69 with coHH2LNCOOWF1SSRzSn2aB8FvDs=
+Random line 70 with JYCSVET3HAlMjGUqdrf7MNbp0pI=
+Random line 71 with q741fgz+zSLAqU8saBeftmIAmUs=
+Random line 72 with Wq9GfQOxWIzc+z3nG6bqllhdUwA=
+Random line 73 with sPDnIxLIEoFxyjfO1gvwe44ZLoc=
+Random line 74 with drgqsTN8QbGXMRwlv0ePApc5aXs=
+Random line 75 with e95ypr8S7k0uKpETjN+maOy/SJ4=
+Random line 76 with yoHqy3jQE27c+OEPraiULkCoUHc=
+Random line 77 with RNotxRsv52Z9z2NgReCMRQ7+KZ0=
+Random line 78 with aTCSb7TgiU4NskHbElHfPWz/Q9k=
+Random line 79 with 2UwoYqRAgNBL6GHGJt3RTCPhF0c=
+Random line 80 with GLN7UwV+YF6IOpmCKg5up/XyU8w=
+Random line 81 with f6noaHJoybVzcJkrYUuQ+2N57yU=
+Random line 82 with VwogSonKBjY+OWXjyz5pr3Q4j9w=
+Random line 83 with MicbtNEJrXRhMIHR0qJftH/xjQc=
+Random line 84 with vfE36nSxmuCgB9SPaRa8et8HJzo=
+Random line 85 with qNzp5hl1Xkc+tn7MGL1r5IphSD0=
+Random line 86 with HUYIBZjBTn6KbYR6ZRN3s55cMAE=
+Random line 87 with tSBdGtTnJ9vNV/zLFm20NMgjYU8=
+Random line 88 with MpoM9Z58GckX3IJKz2On3isH0+U=
+Random line 89 with YXbbzYmYF5nocUA6msPwca5rDto=
+Random line 90 with uRxDTGHnL+xWe3WLPfsPjd2O8CQ=
+Random line 91 with d7Q8MHsBiyj1lhN28em2RG/7vxU=
+Random line 92 with w8G2vLH0JzTE9UguzYzQ6tPM2gk=
+Random line 93 with s69ncYmvioJ56UWasPgAw1EYL+8=
+Random line 94 with 7sBoYY0ZmQTPlzKd2TVmDtYEmag=
+Random line 95 with NlieMffuVvmMasFV8HvkTZkDLKQ=
+Random line 96 with MnXpRnN5GAS3KnJFZsUSxFYNF1k=
+Random line 97 with VjPuP3UlizwITTNPsnCaK5Tf+aU=
+Random line 98 with X9VhQRoinWe/Ie2u5Wu1ye9+mvQ=
+Random line 99 with z57en+OAxYHljz65Yu2mLSpPfTw=
+Random line 100 with J6yjQaLeMgA8ZrTZQkLlWKOiODc=

@@ -239,7 +239,7 @@ mod error_edge_cases {
         let err = NestGateError::internal_error(&long_msg, "context");
         let display = format!("{}", err);
         // Should handle long messages without panic
-        assert!(display.len() > 0);
+        assert!(!display.is_empty());
     }
 
     #[test]

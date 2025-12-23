@@ -57,6 +57,7 @@ use crate::handlers::{
     performance_analytics::{
         get_performance_alerts, get_performance_metrics, get_performance_recommendations,
     },
+    rpc_handlers::{get_protocol_capabilities, handle_jsonrpc, rpc_health},
     storage::{
         get_storage_datasets, get_storage_metrics, get_storage_pools, get_storage_snapshots,
     },
@@ -221,6 +222,13 @@ pub fn create_router() -> Router<AppState> {
         .route("/api/v1/storage/datasets", get(get_storage_datasets))
         .route("/api/v1/storage/snapshots", get(get_storage_snapshots))
         .route("/api/v1/storage/metrics", get(get_storage_metrics))
+        // RPC routes
+        .route("/jsonrpc", post(handle_jsonrpc))
+        .route(
+            "/api/v1/protocol/capabilities",
+            get(get_protocol_capabilities),
+        )
+        .route("/api/v1/rpc/health", get(rpc_health))
         // ZFS routes (now universal storage-agnostic)
         .route(
             "/api/v1/zfs/pools",
@@ -402,6 +410,13 @@ fn create_router_with_initialized_state(app_state: AppState) -> Router {
         .route("/api/v1/storage/datasets", get(get_storage_datasets))
         .route("/api/v1/storage/snapshots", get(get_storage_snapshots))
         .route("/api/v1/storage/metrics", get(get_storage_metrics))
+        // RPC routes
+        .route("/jsonrpc", post(handle_jsonrpc))
+        .route(
+            "/api/v1/protocol/capabilities",
+            get(get_protocol_capabilities),
+        )
+        .route("/api/v1/rpc/health", get(rpc_health))
         // ZFS routes (now universal storage-agnostic)
         .route(
             "/api/v1/zfs/pools",

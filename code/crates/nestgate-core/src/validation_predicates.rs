@@ -184,7 +184,8 @@ pub fn are_alert_thresholds_valid(
         && is_valid_percentage_threshold(memory_threshold)
         && is_valid_percentage_threshold(disk_threshold)
         && is_valid_percentage_threshold(error_rate_threshold)
-        && latency_threshold >= 0.0
+        // ✅ MODERN: Use epsilon for non-negative check
+        && latency_threshold >= -1e-9
 }
 
 /// Check if user has required role for operation

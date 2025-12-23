@@ -1,0 +1,7 @@
+  Sensors: 20 humidity sensors
+  Sample rate: 1 reading/second
+  Data format: timestamp, sensor_id, humidity_percent
+  Data size: 20 readings/sec × 24 bytes = 480 bytes/sec
+  Daily volume: ~40MB/day (uncompressed)
+  Compressed: ~8MB/day (5x compression)
+  ✅ Humidity data streaming

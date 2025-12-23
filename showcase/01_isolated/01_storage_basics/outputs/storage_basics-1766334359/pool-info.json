@@ -1,0 +1,8 @@
+{
+  "pool_name": "nestgate-demo-1766334359",
+  "backend": "filesystem",
+  "created": "2025-12-21T11:25:59-05:00",
+  "size_mb": 1024,
+  "compression": "none",
+  "path": "outputs/storage_basics-1766334359/storage"
+}

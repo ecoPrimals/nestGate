@@ -3,6 +3,7 @@
 // Comprehensive metrics system for monitoring NestGate performance,
 //! provider health, storage operations, and system resources.
 
+use crate::math::float_compare::approx_eq_f64;
 use crate::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -258,7 +259,8 @@ impl StorageMetrics {
 
     /// Get throughput in MB/s for reads
     pub fn read_throughput_mbps(&self) -> f64 {
-        if self.read_operations == 0 || self.avg_read_latency_ms == 0.0 {
+        // ✅ MODERN: Use epsilon for zero check in production code
+        if self.read_operations == 0 || approx_eq_f64(self.avg_read_latency_ms, 0.0, 1e-9) {
             return 0.0;
         }
         let avg_bytes_per_read = self.bytes_read as f64 / self.read_operations as f64;

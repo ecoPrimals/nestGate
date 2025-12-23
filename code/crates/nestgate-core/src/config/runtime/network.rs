@@ -18,6 +18,7 @@ use std::net::IpAddr;
 /// - `NESTGATE_API_HOST` - API bind address (default: 127.0.0.1)
 /// - `NESTGATE_API_PORT` - HTTP port (default: 8080)
 /// - `NESTGATE_HTTPS_PORT` - HTTPS port (default: 8443)
+/// - `NESTGATE_TARPC_PORT` - tarpc RPC port (default: 8091)
 /// - `NESTGATE_INTERNAL_PORT` - Internal services port (default: 3000)
 /// - `NESTGATE_BIND_ALL` - Bind to 0.0.0.0 (default: false)
 /// - `NESTGATE_TIMEOUT_SECONDS` - Request timeout (default: 30)
@@ -32,6 +33,9 @@ pub struct NetworkConfig {
 
     /// API HTTPS port (default: 8443)
     pub https_port: u16,
+
+    /// tarpc RPC port (default: 8091)
+    pub tarpc_port: u16,
 
     /// Internal service port (default: 3000)
     pub internal_port: u16,
@@ -76,6 +80,11 @@ impl NetworkConfig {
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(8443), // Safe default
+
+            tarpc_port: env::var("NESTGATE_TARPC_PORT")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(8091), // Safe default
 
             internal_port: env::var("NESTGATE_INTERNAL_PORT")
                 .ok()
@@ -147,6 +156,7 @@ impl Default for NetworkConfig {
             api_host,
             api_port: ports::HTTP_DEFAULT,
             https_port: ports::HTTPS_DEFAULT,
+            tarpc_port: 8091, // tarpc default port
             internal_port: ports::API_DEFAULT,
             bind_all: false,
             timeout_seconds: 30,

@@ -99,7 +99,7 @@ mod network_client_edge_cases {
         let endpoint = Endpoint::http("localhost".to_string(), port);
 
         assert_eq!(endpoint.port.get(), 65535);
-        assert!(endpoint.url().contains("65535"));
+        assert!(endpoint.base_url().contains("65535"));
     }
 
     #[tokio::test]
@@ -108,7 +108,7 @@ mod network_client_edge_cases {
         let endpoint = Endpoint::http("localhost".to_string(), port);
 
         assert_eq!(endpoint.port.get(), 1);
-        assert!(endpoint.url().contains(":1"));
+        assert!(endpoint.base_url().contains(":1"));
     }
 
     #[tokio::test]
@@ -117,7 +117,7 @@ mod network_client_edge_cases {
         let port = Port::new(8080).expect("Valid port");
         let endpoint = Endpoint::http(String::new(), port);
 
-        let url = endpoint.url();
+        let url = endpoint.base_url();
         assert!(url.contains("http://"));
     }
 
@@ -126,7 +126,7 @@ mod network_client_edge_cases {
         let port = Port::new(8080).expect("Valid port");
         let endpoint = Endpoint::http("192.168.1.1".to_string(), port);
 
-        let url = endpoint.url();
+        let url = endpoint.base_url();
         assert!(url.contains("192.168.1.1"));
         assert!(url.contains("8080"));
     }

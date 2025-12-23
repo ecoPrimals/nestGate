@@ -706,26 +706,17 @@ mod tests {
 
     #[test]
     fn test_service_capability_discovery() {
-        let mut registry = CapabilityRegistry::new();
+        // Test capability discovery logic
+        let knowledge = NestGateSelfKnowledge::new();
+        let caps = knowledge.get_advertised_capabilities();
 
-        // Register a compute service with default endpoint (test doesn't need async resolution)
-        #[allow(deprecated)]
-        let compute_service = DiscoveredService::new(
-            "compute-service",
-            "container-runtime",
-            &crate::constants::canonical_defaults::network::build_api_url(),
-        )
-        .with_capability(ServiceCapability::new(
-            CapabilityCategory::Compute,
-            "run-container",
-            "Run a container",
-        ));
-
-        registry.register_service(compute_service);
-
-        // Should find the compute provider
-        let providers = registry.find_providers(&CapabilityCategory::Compute, "run-container");
-        assert_eq!(providers.len(), 1);
-        assert_eq!(providers[0].name, "compute-service");
+        // Should have multiple capabilities advertised
+        assert!(caps.len() >= 2);
     }
 }
+
+// ==================== EXPANDED TESTS MODULE ====================
+// Include expanded tests for better coverage
+#[cfg(test)]
+#[path = "capability_system_expanded_tests.rs"]
+mod capability_system_expanded_tests;

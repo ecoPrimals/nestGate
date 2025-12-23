@@ -3,12 +3,10 @@
 //! **CANONICAL MODERNIZATION COMPLETE** - Integrated with unified test configuration system.
 //! All test double configurations now use canonical patterns.
 
-// Import canonical test configuration system
+// Import canonical test configuration system (only available with dev-stubs feature)
+// Use the correct type from nestgate-core directly
 #[cfg(feature = "dev-stubs")]
-use crate::common::config::CanonicalTestConfigs;
-
-#[cfg(not(feature = "dev-stubs"))]
-use crate::common::config::CanonicalTestConfig;
+use nestgate_core::config::canonical_primary::domains::test_canonical::CanonicalTestConfigs;
 
 // Re-export all test double implementations
 pub mod hardware_test_doubles;
@@ -50,8 +48,10 @@ pub type MockServiceConfig = TestDoubleConfig;
 /// **CANONICAL TEST DOUBLE FACTORY**
 ///
 /// Creates test doubles using canonical configuration patterns
+#[cfg(feature = "dev-stubs")]
 pub struct CanonicalTestDoubleFactory;
 
+#[cfg(feature = "dev-stubs")]
 impl CanonicalTestDoubleFactory {
     /// Create a mock service using canonical configuration
     pub fn create_mock_service(_config: &CanonicalTestConfigs) -> MockServiceForTesting {
@@ -83,6 +83,7 @@ impl CanonicalTestDoubleFactory {
 /// - ✅ Integrated performance and reliability testing
 /// - ✅ Eliminated test double configuration fragmentation
 /// Create a complete test environment with all doubles configured
+#[cfg(feature = "dev-stubs")]
 pub fn create_canonical_test_environment(
     config: &CanonicalTestConfigs,
 ) -> CanonicalTestEnvironment {
@@ -98,14 +99,16 @@ pub fn create_canonical_test_environment(
 /// **CANONICAL TEST ENVIRONMENT**
 ///
 /// Complete test environment with all necessary test doubles
+#[cfg(feature = "dev-stubs")]
 pub struct CanonicalTestEnvironment {
     pub mock_service: MockServiceForTesting,
     pub mock_storage: MockStorageForTesting,
     pub mock_network: MockNetworkForTesting,
     pub mock_hardware: MockHardwareForTesting,
-    pub config: CanonicalTestConfig,
+    pub config: CanonicalTestConfigs,
 }
 
+#[cfg(feature = "dev-stubs")]
 impl CanonicalTestEnvironment {
     /// Initialize the test environment
     pub fn initialize(&mut self) -> Result<(), String> {

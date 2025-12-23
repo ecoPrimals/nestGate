@@ -275,61 +275,69 @@ fn test_service_info_with_ipv6_address() {
 
 // ==================== REGISTRATION EDGE CASES ====================
 
-#[test]
-fn test_register_with_empty_url() {
+#[tokio::test]
+async fn test_register_with_empty_url() {
     let config = ZfsServiceConfig::default();
     let mut service = ZfsService::new(config);
 
-    let result = service.register_with_orchestrator("");
+    let result = service.register_with_orchestrator("").await;
     assert!(result.is_err());
 }
 
-#[test]
-fn test_register_with_invalid_url() {
+#[tokio::test]
+async fn test_register_with_invalid_url() {
     let config = ZfsServiceConfig::default();
     let mut service = ZfsService::new(config);
 
-    let result = service.register_with_orchestrator("not a url");
+    let result = service.register_with_orchestrator("not a url").await;
     assert!(result.is_err());
 }
 
-#[test]
-fn test_register_with_localhost() {
+#[tokio::test]
+async fn test_register_with_localhost() {
     let config = ZfsServiceConfig::default();
     let mut service = ZfsService::new(config);
 
-    let result = service.register_with_orchestrator("http://localhost:3000");
+    let result = service
+        .register_with_orchestrator("http://localhost:3000")
+        .await;
     assert!(result.is_ok());
 }
 
-#[test]
-fn test_register_with_ipv4() {
+#[tokio::test]
+async fn test_register_with_ipv4() {
     let config = ZfsServiceConfig::default();
     let mut service = ZfsService::new(config);
 
-    let result = service.register_with_orchestrator("http://192.168.1.1:8080");
+    let result = service
+        .register_with_orchestrator("http://192.168.1.1:8080")
+        .await;
     assert!(result.is_ok());
 }
 
-#[test]
-fn test_register_with_very_long_url() {
+#[tokio::test]
+async fn test_register_with_very_long_url() {
     let config = ZfsServiceConfig::default();
     let mut service = ZfsService::new(config);
 
     let long_url = format!("http://example.com/{}", "a".repeat(10000));
-    let result = service.register_with_orchestrator(&long_url);
+    let result = service.register_with_orchestrator(&long_url).await;
     assert!(result.is_ok());
 }
 
-#[test]
-fn test_register_multiple_times() {
+#[tokio::test]
+async fn test_register_multiple_times() {
     let config = ZfsServiceConfig::default();
     let mut service = ZfsService::new(config);
 
-    let result1 = service.register_with_orchestrator("http://example.com");
+    let result1 = service
+        .register_with_orchestrator("http://example.com")
+        .await;
     assert!(result1.is_ok());
 
-    let result2 = service.register_with_orchestrator("http://example.com");
+    let result2 = service
+        .register_with_orchestrator("http://example.com")
+        .await;
     assert!(result2.is_ok());
 }
 

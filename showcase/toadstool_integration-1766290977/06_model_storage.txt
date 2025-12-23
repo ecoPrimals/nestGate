@@ -1,0 +1,4 @@
+  ToadStool: Save model weights to NestGate
+  Model size: 500MB
+  Destination: main-pool/model-weights-resnet50-v1
+  ✅ Dataset created: main-pool/model-weights-resnet50-v1

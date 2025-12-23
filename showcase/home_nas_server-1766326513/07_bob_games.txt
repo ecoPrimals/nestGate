@@ -1,0 +1,8 @@
+  Minecraft worlds: 3 saves, 1.5GB
+  Steam backups: 10 games, 25GB
+  Total: 26.5GB
+  Features:
+    • Automatic daily backups
+    • Never lose progress
+    • Easy restore
+  ✅ Game saves protected

@@ -99,55 +99,46 @@ impl NetworkDefaultsConfig {
         }
     }
 
-    // Port getters with fallback to hardcoded defaults
+    // Port getters with fallback to established defaults
 
     /// Gets Api Port
     pub fn get_api_port(&self) -> u16 {
-        use crate::constants::hardcoding::ports;
-        self.api_port.unwrap_or(ports::API_DEFAULT)
+        self.api_port.unwrap_or(3000) // API default (Node.js convention)
     }
 
     /// Gets Websocket Port
     pub fn get_websocket_port(&self) -> u16 {
-        use crate::constants::hardcoding::ports;
-        self.websocket_port.unwrap_or(ports::WEBSOCKET_DEFAULT)
+        self.websocket_port.unwrap_or(8082) // WebSocket default
     }
 
     /// Gets Http Port
     pub fn get_http_port(&self) -> u16 {
-        use crate::constants::hardcoding::ports;
-        self.http_port.unwrap_or(ports::HTTP_DEFAULT)
+        self.http_port.unwrap_or(8080) // HTTP default
     }
 
     /// Gets Nas Http Port
     pub fn get_nas_http_port(&self) -> u16 {
-        use crate::constants::hardcoding::ports;
-        self.nas_http_port.unwrap_or(ports::HTTP_DEFAULT)
+        self.nas_http_port.unwrap_or(8080) // HTTP default for NAS
     }
 
     /// Gets Dev Server Port
     pub fn get_dev_server_port(&self) -> u16 {
-        use crate::constants::hardcoding::ports;
-        self.dev_server_port.unwrap_or(ports::API_DEFAULT)
+        self.dev_server_port.unwrap_or(3000) // Development server default
     }
 
     /// Gets Metrics Port
     pub fn get_metrics_port(&self) -> u16 {
-        use crate::constants::hardcoding::ports;
-        self.metrics_port.unwrap_or(ports::METRICS_PROMETHEUS)
+        self.metrics_port.unwrap_or(9090) // Prometheus default
     }
 
     /// Gets Health Port
     pub fn get_health_port(&self) -> u16 {
-        use crate::constants::hardcoding::ports;
-        self.health_port.unwrap_or(ports::HEALTH_DEFAULT)
+        self.health_port.unwrap_or(8081) // Health check default
     }
 
     /// Gets Orchestrator Port
     pub fn get_orchestrator_port(&self) -> u16 {
-        use crate::constants::hardcoding::ports;
-        self.orchestrator_port
-            .unwrap_or(ports::ORCHESTRATOR_DEFAULT)
+        self.orchestrator_port.unwrap_or(8090) // Orchestrator default
     }
 
     // Address getters with fallback to defaults

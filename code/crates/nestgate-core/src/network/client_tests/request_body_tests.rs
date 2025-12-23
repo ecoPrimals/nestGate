@@ -8,32 +8,33 @@ use super::super::client::*;
 // ==================== REQUEST BODY TESTS ====================
 #[test]
 fn test_request_body_empty() {
-    let body = RequestBody::Empty;
+    let data: &[u8] = &[];
+    let body = RequestBody::Raw(data);
     match body {
-        RequestBody::Empty => (),
-        _ => panic!("Expected Empty body"),
+        RequestBody::Raw(b) => assert_eq!(b.len(), 0),
+        _ => panic!("Expected Raw empty body"),
     }
 }
 
 #[test]
-fn test_request_body_bytes() {
+fn test_request_body_raw() {
     let data = b"test data";
-    let body = RequestBody::Bytes(data);
+    let body = RequestBody::Raw(data);
 
     match body {
-        RequestBody::Bytes(b) => assert_eq!(b, data),
-        _ => panic!("Expected Bytes body"),
+        RequestBody::Raw(b) => assert_eq!(b, data),
+        _ => panic!("Expected Raw body"),
     }
 }
 
 #[test]
-fn test_request_body_string() {
-    let data = "test string";
-    let body = RequestBody::String(data);
+fn test_request_body_json() {
+    let data = r#"{"test":"string"}"#;
+    let body = RequestBody::Json(data);
 
     match body {
-        RequestBody::String(s) => assert_eq!(s, data),
-        _ => panic!("Expected String body"),
+        RequestBody::Json(s) => assert_eq!(s, data),
+        _ => panic!("Expected JSON body"),
     }
 }
 
@@ -44,23 +45,23 @@ fn test_request_body_sizes() {
     let medium_data = vec![0u8; 1024]; // 1KB
     let large_data = vec![0u8; 1024 * 1024]; // 1MB
 
-    let body1 = RequestBody::Bytes(small_data);
-    let body2 = RequestBody::Bytes(&medium_data);
-    let body3 = RequestBody::Bytes(&large_data);
+    let body1 = RequestBody::Raw(small_data);
+    let body2 = RequestBody::Raw(&medium_data);
+    let body3 = RequestBody::Raw(&large_data);
 
     match body1 {
-        RequestBody::Bytes(b) => assert_eq!(b.len(), 5),
-        _ => panic!("Expected Bytes"),
+        RequestBody::Raw(b) => assert_eq!(b.len(), 5),
+        _ => panic!("Expected Raw"),
     }
 
     match body2 {
-        RequestBody::Bytes(b) => assert_eq!(b.len(), 1024),
-        _ => panic!("Expected Bytes"),
+        RequestBody::Raw(b) => assert_eq!(b.len(), 1024),
+        _ => panic!("Expected Raw"),
     }
 
     match body3 {
-        RequestBody::Bytes(b) => assert_eq!(b.len(), 1024 * 1024),
-        _ => panic!("Expected Bytes"),
+        RequestBody::Raw(b) => assert_eq!(b.len(), 1024 * 1024),
+        _ => panic!("Expected Raw"),
     }
 }
 
@@ -70,22 +71,22 @@ fn test_request_body_string_content_types() {
     let xml_body = r#"<root><key>value</key></root>"#;
     let plain_body = "plain text content";
 
-    let body1 = RequestBody::String(json_body);
-    let body2 = RequestBody::String(xml_body);
-    let body3 = RequestBody::String(plain_body);
+    let body1 = RequestBody::Json(json_body);
+    let body2 = RequestBody::Json(xml_body);
+    let body3 = RequestBody::Json(plain_body);
 
     match body1 {
-        RequestBody::String(s) => assert!(s.contains("key")),
-        _ => panic!("Expected String"),
+        RequestBody::Json(s) => assert!(s.contains("key")),
+        _ => panic!("Expected Json"),
     }
 
     match body2 {
-        RequestBody::String(s) => assert!(s.contains("<root>")),
-        _ => panic!("Expected String"),
+        RequestBody::Json(s) => assert!(s.contains("<root>")),
+        _ => panic!("Expected Json"),
     }
 
     match body3 {
-        RequestBody::String(s) => assert!(s.contains("plain")),
-        _ => panic!("Expected String"),
+        RequestBody::Json(s) => assert!(s.contains("plain")),
+        _ => panic!("Expected Json"),
     }
 }

@@ -26,9 +26,9 @@ impl std::fmt::Display for ZfsError {
     /// Fmt
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::OperationFailed(msg) => write!(f, "ZFS operation failed: {}", msg),
-            Self::PoolNotFound(pool) => write!(f, "Pool not found: {}", pool),
-            Self::DatasetError(msg) => write!(f, "Dataset error: {}", msg),
+            Self::OperationFailed(msg) => write!(f, "ZFS operation failed: {msg}"),
+            Self::PoolNotFound(pool) => write!(f, "Pool not found: {pool}"),
+            Self::DatasetError(msg) => write!(f, "Dataset error: {msg}"),
         }
     }
 }
@@ -41,6 +41,9 @@ pub type ZfsResult<T> = Result<T, ZfsError>;
 /// **SNAPSHOT INFORMATION**
 ///
 /// Information about a ZFS snapshot.
+///
+/// **Note**: Currently unused in dev stubs, reserved for future snapshot operations.
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 /// Snapshotinfo
 pub struct SnapshotInfo {
@@ -255,6 +258,10 @@ impl ZeroCostZfsOperations {
 /// **PERFORMANCE OPTIMIZER**
 ///
 /// ZFS performance optimization service.
+///
+/// ⚠️ **DEV STUB**: This is mock code, but types are used in production.
+/// **TODO**: Move to production implementation in nestgate-zfs crate.
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 /// Performanceoptimizer
 pub struct PerformanceOptimizer;
@@ -281,6 +288,7 @@ impl PerformanceOptimizer {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
+    #[allow(dead_code)]
     pub fn optimize_performance(&self) -> Result<(), ZfsError> {
         info!("Running ZFS performance optimization");
         Ok(())
@@ -290,6 +298,10 @@ impl PerformanceOptimizer {
 /// **CONFIDENCE CALCULATOR**
 ///
 /// Calculates confidence scores for ZFS operations and predictions.
+///
+/// ⚠️ **DEV STUB**: This is mock code, but types are used in production.
+/// **TODO**: Move to production implementation in nestgate-zfs crate.
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 /// Confidencecalculator
 pub struct ConfidenceCalculator;
@@ -310,6 +322,7 @@ impl ConfidenceCalculator {
 
     /// Calculate confidence score based on provided metrics
     #[must_use]
+    #[allow(dead_code)]
     pub const fn calculate_confidence(&self, _metrics: &HashMap<String, f64>) -> f64 {
         0.85 // Placeholder confidence score
     }
@@ -372,6 +385,9 @@ pub struct ZeroCostSnapshotInfo {
 /// **ZERO-COST DATASET INFO EXTENDED**
 ///
 /// Extended dataset information with additional metadata.
+///
+/// ⚠️ **UNUSED**: Reserved for future use. Consider removing if not needed.
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 /// Zerocostdatasetinfoextended
 pub struct ZeroCostDatasetInfoExtended {

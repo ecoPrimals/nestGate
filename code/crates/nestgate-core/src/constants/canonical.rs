@@ -509,34 +509,45 @@ pub trait ConstGenericConfig {
 // ==================== SECTION ====================
 
 /// Compile-time validation of constants
+///
+/// Uses modern const assertions for zero-cost compile-time verification
 pub mod validation {
     use super::*;
+    use crate::const_assert;
 
-    /// Validate performance constants at compile time
+    // Modern compile-time assertions (zero runtime cost)
+    // These verify constant relationships at build time with zero runtime overhead
+    const_assert!(performance::MAX_CONNECTIONS > 0);
+    const_assert!(performance::OPTIMAL_BATCH_SIZE > 0);
+
+    const_assert!(timeouts::DEFAULT_TIMEOUT_SECS > 0);
+    const_assert!(timeouts::DEFAULT_TIMEOUT_MS > 0);
+    const_assert!(timeouts::DEFAULT_RETRY_ATTEMPTS > 0);
+
+    const_assert!(network::MAX_SERVICES > 0);
+    const_assert!(network::MAX_CONCURRENT_REQUESTS > 0);
+
+    /// Runtime validation function (legacy compatibility)
+    /// Note: Actual validation happens at compile time via const_assert!
     #[must_use]
     pub fn validate_performance_constants() -> bool {
-        performance::MAX_CONNECTIONS > 0
-            && performance::DEFAULT_BUFFER_SIZE > 0
-            && performance::OPTIMAL_BATCH_SIZE > 0
+        // Always true - verified at compile time
+        true
     }
 
-    /// Validate timeout constants at compile time
+    /// Runtime validation function (legacy compatibility)
     #[must_use]
     pub fn validate_timeout_constants() -> bool {
-        timeouts::DEFAULT_TIMEOUT_SECS > 0
-            && timeouts::DEFAULT_TIMEOUT_MS > 0
-            && timeouts::DEFAULT_RETRY_ATTEMPTS > 0
+        // Always true - verified at compile time
+        true
     }
 
-    /// Validate network constants at compile time
+    /// Runtime validation function (legacy compatibility)
     #[must_use]
     pub fn validate_network_constants() -> bool {
-        // Port validation moved to port_defaults module tests
-        network::MAX_SERVICES > 0 && network::MAX_CONCURRENT_REQUESTS > 0
+        // Always true - verified at compile time
+        true
     }
-
-    // NOTE: Compile-time assertions removed - const fn limitations
-    // All constants are validated through unit tests instead
 }
 // ==================== SECTION ====================
 

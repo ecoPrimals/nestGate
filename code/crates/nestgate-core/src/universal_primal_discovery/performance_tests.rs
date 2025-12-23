@@ -338,7 +338,7 @@ mod performance_discovery_tests {
 
     #[test]
     fn test_performance_discovery_default() {
-        let discovery = PerformanceDiscovery::default();
+        let discovery = PerformanceDiscovery;
         drop(discovery);
     }
 
@@ -346,7 +346,7 @@ mod performance_discovery_tests {
     fn test_performance_discovery_multiple_instances() {
         let d1 = PerformanceDiscovery::new();
         let d2 = PerformanceDiscovery::new();
-        let d3 = PerformanceDiscovery::default();
+        let d3 = PerformanceDiscovery;
 
         drop(d1);
         drop(d2);
@@ -451,7 +451,8 @@ mod performance_test_runner_tests {
 
         let optimal = result.unwrap();
         assert!(optimal.timeout.as_secs() > 0 || optimal.timeout.as_millis() > 0);
-        assert!(optimal.confidence >= 0.0 && optimal.confidence <= 1.0);
+        // ✅ MODERN: Use epsilon for confidence range check
+        assert!(optimal.confidence >= -1e-9 && optimal.confidence <= 1.0 + 1e-9);
         assert!(optimal.test_iterations > 0);
     }
 
@@ -526,9 +527,9 @@ mod performance_test_runner_tests {
 
         let optimal = runner.discover_optimal_timeout().await.unwrap();
 
-        // Confidence should be between 0 and 1
-        assert!(optimal.confidence >= 0.0);
-        assert!(optimal.confidence <= 1.0);
+        // ✅ MODERN: Confidence should be between 0 and 1 (with epsilon)
+        assert!(optimal.confidence >= -1e-9);
+        assert!(optimal.confidence <= 1.0 + 1e-9);
     }
 }
 
@@ -654,7 +655,7 @@ mod performance_edge_cases {
 
     #[test]
     fn test_test_type_all_variants() {
-        let types = vec![
+        let types = [
             TestType::Load,
             TestType::Stress,
             TestType::Spike,

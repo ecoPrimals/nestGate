@@ -103,7 +103,7 @@ mod tests {
         let serialized = serde_json::to_string(&status);
         assert!(serialized.is_ok(), "SystemStatus should serialize");
 
-        let json = serialized.unwrap(); // Test context: Known to succeed
+        let json = serialized.unwrap();
         assert!(json.contains("\"status\":\"healthy\""));
         assert!(json.contains("\"version\":\"1.0.0\""));
         assert!(json.contains("\"uptime\":3600"));
@@ -121,7 +121,7 @@ mod tests {
         let status: std::result::Result<SystemStatus, _> = serde_json::from_str(json);
         assert!(status.is_ok(), "SystemStatus should deserialize");
 
-        let status = status.unwrap(); // Test context: Known to succeed
+        let status = status.unwrap();
         assert_eq!(status.status, "healthy");
         assert_eq!(status.version, "1.0.0");
     }

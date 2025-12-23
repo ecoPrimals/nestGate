@@ -235,7 +235,8 @@ mod tests {
                 return Err(Box::new(std::io::Error::new(
                     std::io::ErrorKind::Other,
                     "Test assertion failed",
-                )));
+                ))
+                    as Box<dyn std::error::Error + Send + Sync>);
             }
         }
 

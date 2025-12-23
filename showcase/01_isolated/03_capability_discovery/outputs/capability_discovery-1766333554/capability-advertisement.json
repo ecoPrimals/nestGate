@@ -1,0 +1,29 @@
+{
+  "primal": "NestGate",
+  "node_id": "nestgate-pop-os",
+  "version": "0.1.0",
+  "timestamp": "2025-12-21T11:12:38-05:00",
+  "advertised_capabilities": {
+    "storage": {
+      "backends": [
+  "zfs",
+  "filesystem"
+],
+      "available_gb": 284,
+      "features": ["snapshots", "compression", "deduplication"]
+    },
+    "api": {
+      "endpoints": ["http://localhost:8082"],
+      "protocols": ["rest", "grpc"],
+      "version": "v1"
+    },
+    "resources": {
+      "cpu_cores": 24,
+      "memory_gb": 31,
+      "load_capacity": "medium"
+    }
+  },
+  "discovery_methods": ["mDNS", "port-scan", "api-query"],
+  "mesh_ready": true,
+  "sovereignty_compliant": true
+}

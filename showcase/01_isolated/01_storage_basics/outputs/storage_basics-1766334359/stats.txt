@@ -1,0 +1,9 @@
+Total size: 11M
+Datasets: 5
+Files: 12
+Snapshots: 5
+   data: 11M (2 files)
+   logs: 28K (6 files)
+   backups: 16K (2 files)
+   cache: 8.0K (1 files)
+   tmp: 8.0K (1 files)

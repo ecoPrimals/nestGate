@@ -2,7 +2,7 @@
 //! Security Errors functionality and utilities.
 //! This module provides security-specific error types and helper functions.
 
-use super::core_errors::SecurityErrorDetails;
+use super::core_errors::{NestGateUnifiedError, SecurityErrorDetails};
 
 impl SecurityErrorDetails {
     /// Create a security error with just a message
@@ -36,5 +36,34 @@ impl SecurityErrorDetails {
             security_data: None,
             context: None,
         }
+    }
+}
+
+// ==================== CONVENIENCE CONSTRUCTORS ON MAIN ERROR TYPE ====================
+
+impl NestGateUnifiedError {
+    /// Create an authentication error (convenience constructor)
+    ///
+    /// # Example
+    /// ```
+    /// use nestgate_core::error::NestGateError;
+    /// let error = NestGateError::auth("Invalid credentials");
+    /// ```
+    pub fn auth(message: impl Into<String>) -> Self {
+        Self::Security(Box::new(SecurityErrorDetails::authentication_error(
+            message,
+        )))
+    }
+
+    /// Create a security error (full form)
+    pub fn security(message: impl Into<String>) -> Self {
+        Self::Security(Box::new(SecurityErrorDetails::new(message)))
+    }
+
+    /// Create an authorization error with principal
+    pub fn authorization(message: impl Into<String>, principal: impl Into<String>) -> Self {
+        Self::Security(Box::new(SecurityErrorDetails::authorization_error(
+            message, principal,
+        )))
     }
 }
