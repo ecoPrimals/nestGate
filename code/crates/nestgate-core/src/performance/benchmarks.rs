@@ -1,3 +1,5 @@
+//! Benchmarks module
+
 use crate::error::NestGateError;
 //
 // Specific benchmark implementations for different performance patterns.
@@ -45,7 +47,8 @@ pub fn run_config_lookup_benchmark(
     _benchmark_name: &str,
     iterations: usize,
 ) -> Result<BenchmarkResults> {
-    // Traditional: Runtime configuration lookup
+    // Traditional: Runtime configuration lookup (old pattern for benchmark comparison)
+    // ✅ NOTE: This hardcoded value is intentional for benchmark baseline
     let start = Instant::now();
     for _ in 0..iterations {
         let _config = std::env::var("NESTGATE_API_PORT").unwrap_or_else(|_| "8080".to_string());

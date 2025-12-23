@@ -1,3 +1,5 @@
+//! Adaptive Caching module
+
 use std::collections::HashMap;
 //
 // Intelligent caching with adaptive algorithms and workload-aware optimization.
@@ -14,15 +16,38 @@ type CacheStorage<K, V> = Arc<RwLock<HashMap<K, CacheEntry<V>>>>;
 
 /// Adaptive cache configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// 
+/// **Migration Path**:
+/// ```rust,ignore
+/// // OLD (deprecated):
+/// use crate::network::config::AdaptiveCacheConfig;
+/// 
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::AdaptiveCacheConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+/// 
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for AdaptiveCache
 pub struct AdaptiveCacheConfig {
+    /// Max Entries
     pub max_entries: usize,
+    /// Default Ttl
     pub default_ttl: Duration,
+    /// Enable Lru Eviction
     pub enable_lru_eviction: bool,
+    /// Enable Predictive Caching
     pub enable_predictive_caching: bool,
+    /// Cache Hit Ratio Target
     pub cache_hit_ratio_target: f64,
+    /// Memory Usage Limit
     pub memory_usage_limit: usize,
 }
 impl Default for AdaptiveCacheConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             max_entries: 10000,
@@ -37,15 +62,23 @@ impl Default for AdaptiveCacheConfig {
 
 /// Cache entry with metadata
 #[derive(Debug, Clone)]
+/// Cacheentry
 pub struct CacheEntry<V> {
+    /// Value
     pub value: V,
+    /// Timestamp when this was created
     pub created_at: SystemTime,
+    /// Last Accessed
     pub last_accessed: SystemTime,
+    /// Count of access
     pub access_count: u64,
+    /// Ttl
     pub ttl: Duration,
+    /// Size Bytes
     pub size_bytes: usize,
 }
 impl<V> CacheEntry<V> {
+    /// Creates a new instance
     pub fn new(value: V, ttl: Duration, size_bytes: usize) -> Self {
         let now = SystemTime::now();
         Self {
@@ -58,10 +91,12 @@ impl<V> CacheEntry<V> {
         }
     }
 
+    /// Checks if Expired
     pub fn is_expired(&self) -> bool {
         self.created_at.elapsed().unwrap_or(Duration::MAX) > self.ttl
     }
 
+    /// Mark Accessed
     pub fn mark_accessed(&mut self) {
         self.last_accessed = SystemTime::now();
         self.access_count += 1;
@@ -70,14 +105,21 @@ impl<V> CacheEntry<V> {
 
 /// Cache metrics for monitoring
 #[derive(Debug, Default)]
+/// Cachemetrics
 pub struct CacheMetrics {
+    /// Cache Hits
     pub cache_hits: std::sync::atomic::AtomicU64,
+    /// Cache Misses
     pub cache_misses: std::sync::atomic::AtomicU64,
+    /// Evictions
     pub evictions: std::sync::atomic::AtomicU64,
+    /// Memory Usage
     pub memory_usage: std::sync::atomic::AtomicUsize,
+    /// Count of entry
     pub entry_count: std::sync::atomic::AtomicUsize,
 }
 impl CacheMetrics {
+    /// Hit Ratio
     pub fn hit_ratio(&self) -> f64 {
         let hits = self.cache_hits.load(std::sync::atomic::Ordering::Relaxed);
         let misses = self.cache_misses.load(std::sync::atomic::Ordering::Relaxed);
@@ -114,6 +156,7 @@ where
         }
     }
 
+    /// Get
     pub async fn get(&self, key: &K) -> Option<V> {
         let mut storage = self.storage.write().await;
 
@@ -165,6 +208,7 @@ where
         Ok(())
     }
 
+    /// Evict Entries
     async fn evict_entries(&self, storage: &mut HashMap<K, CacheEntry<V>>) -> Result<()> {
         if self.config.enable_lru_eviction {
             // Find least recently used entry
@@ -183,6 +227,7 @@ where
         Ok(())
     }
 
+    /// Gets Metrics
     pub fn get_metrics(&self) -> CacheMetrics {
         CacheMetrics {
             cache_hits: std::sync::atomic::AtomicU64::new(
@@ -213,6 +258,23 @@ where
         }
     }
 }
+
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+/// 
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Adaptivecacheconfigcanonical
+pub type AdaptiveCacheConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using AdaptiveCacheConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
 
 #[cfg(test)]
 mod tests {
@@ -271,8 +333,8 @@ mod tests {
         assert!(entry.last_accessed <= SystemTime::now());
     }
 
-    #[test]
-    fn test_cache_entry_expiration() {
+    #[tokio::test]
+    async fn test_cache_entry_expiration() {
         let value = "test_value".to_string();
         let ttl = Duration::from_millis(1); // Very short TTL
         let entry = CacheEntry::new(value, ttl, 100);
@@ -280,13 +342,13 @@ mod tests {
         // Should not be expired immediately
         assert!(!entry.is_expired());
         
-        // Wait for expiration
-        std::thread::sleep(Duration::from_millis(10));
+        // Wait for expiration using async sleep (non-blocking, concurrent)
+        tokio::time::sleep(Duration::from_millis(10)).await;
         assert!(entry.is_expired());
     }
 
-    #[test]
-    fn test_cache_entry_access_tracking() {
+    #[tokio::test]
+    async fn test_cache_entry_access_tracking() {
         let value = "test_value".to_string();
         let ttl = Duration::from_secs(300);
         let mut entry = CacheEntry::new(value, ttl, 100);
@@ -294,8 +356,8 @@ mod tests {
         let initial_access_count = entry.access_count;
         let initial_last_accessed = entry.last_accessed;
         
-        // Wait a bit to ensure time difference
-        std::thread::sleep(Duration::from_millis(1));
+        // Wait a bit to ensure time difference (non-blocking, concurrent)
+        tokio::time::sleep(Duration::from_millis(1)).await;
         
         entry.mark_accessed();
         

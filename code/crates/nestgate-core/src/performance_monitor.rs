@@ -1,3 +1,5 @@
+//! Performance Monitor module
+
 use crate::error::NestGateError;
 use std::collections::HashMap;
 //
@@ -12,11 +14,14 @@ use std::time::{Duration, Instant};
 
 // Type aliases to reduce complexity
 type MetricsStorage = Arc<RwLock<HashMap<String, String>>>;
+/// Type alias for MetricsReadGuard
 type MetricsReadGuard<'a> = RwLockReadGuard<'a, HashMap<String, String>>;
+/// Type alias for MetricsWriteGuard
 type MetricsWriteGuard<'a> = RwLockWriteGuard<'a, HashMap<String, String>>;
 
 /// Performance monitoring system for tracking optimizations
 #[derive(Debug)]
+/// Performancemonitor
 pub struct PerformanceMonitor {
     /// Metrics storage
     metrics: MetricsStorage,
@@ -44,6 +49,7 @@ impl PerformanceMonitor {
         Ok(metrics.clone())
     }
 
+    /// Safe Write Lock
     fn safe_write_lock(&self) -> crate::Result<MetricsWriteGuard> {
         self.metrics
             .write()
@@ -223,6 +229,7 @@ impl PerformanceMonitor {
 }
 
 impl Clone for PerformanceMonitor {
+    /// Clone
     fn clone(&self) -> Self {
         Self {
             metrics: Arc::clone(&self.metrics),
@@ -233,6 +240,7 @@ impl Clone for PerformanceMonitor {
 }
 
 impl Default for PerformanceMonitor {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -240,6 +248,7 @@ impl Default for PerformanceMonitor {
 
 /// Individual performance metric
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performancemetric
 pub struct PerformanceMetric {
     /// Metric name
     pub name: String,
@@ -312,6 +321,7 @@ impl PerformanceMetric {
 
 /// Performance summary
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performancesummary
 pub struct PerformanceSummary {
     /// Total operations recorded
     pub total_operations: u64,

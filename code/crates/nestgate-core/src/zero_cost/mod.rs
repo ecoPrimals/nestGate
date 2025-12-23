@@ -6,8 +6,8 @@
 //! ## Architecture Overview
 //!
 //! The zero-cost architecture achieves 40-60% performance improvements by:
-//! - Eliminating Arc<dyn Trait> runtime dispatch overhead
-//! - Replacing async_trait Future boxing with native async
+//! - Eliminating `Arc<dyn Trait>` runtime dispatch overhead
+//! - Replacing `async_trait` Future boxing with native async
 //! - Using compile-time dependency injection
 //! - Implementing zero-allocation data structures
 //! - Providing direct method dispatch

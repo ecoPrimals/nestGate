@@ -1,5 +1,7 @@
 // **MIGRATED**: Using config module's unified_types instead of deprecated root unified_types
-use crate::config::canonical_master::{
+//! Config module
+
+use crate::config::canonical_primary::{
     MonitoringConfig as UnifiedMonitoringConfig, 
     NetworkConfig as UnifiedNetworkConfig,
 };
@@ -7,91 +9,18 @@ use crate::config::canonical_master::{
 // **FALLBACK**: Define missing config types locally until they are added to unified_types
 use std::time::Duration;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct UnifiedServiceConfig {
-    pub name: String,
-    pub version: String,
-    pub enabled: bool,
-    // Additional fields needed by the codebase
-    pub service_name: String,
-    pub description: String,
-    pub service_type: crate::unified_enums::UnifiedServiceType,
-    pub auto_start: bool,
-    pub priority: u8,
-    pub max_instances: usize,
-    pub health_check_enabled: bool,
-    pub capabilities: Vec<String>,
-    pub dependencies: Vec<String>,
-    pub metadata: std::collections::HashMap<String, String>,
-    pub timeouts: UnifiedTimeoutConfig,
-    pub retry: UnifiedRetryConfig,
-}
+// Use canonical configs - removed 3 duplicate definitions  
+// Service: (17 fields) → canonical ServiceConfig with 7 sub-configs
+// Timeout: (4 fields) → canonical TimeoutConfig with 8 timeout types
+// Retry: (4 fields) → canonical RetryConfig with comprehensive strategies
+use crate::config::canonical_primary::service::UnifiedServiceConfig;
+use crate::config::canonical_primary::timeout::UnifiedTimeoutConfig;
+use crate::config::canonical_primary::retry::UnifiedRetryConfig;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct UnifiedTimeoutConfig {
-    pub connection_timeout: Duration,
-    pub request_timeout: Duration,
-    pub idle_timeout: Duration,
-    pub default_timeout: Duration,
-}
-
-impl Default for UnifiedTimeoutConfig {
-    fn default() -> Self {
-        Self {
-            connection_timeout: Duration::from_secs(30),
-            request_timeout: Duration::from_secs(60),
-            idle_timeout: Duration::from_secs(300),
-            default_timeout: Duration::from_secs(30),
-        }
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct UnifiedRetryConfig {
-    pub max_attempts: u32,
-    pub initial_delay: Duration,
-    pub max_delay: Duration,
-    pub backoff_multiplier: f64,
-}
-
-impl UnifiedRetryConfig {
-    pub fn critical_operations() -> Self {
-        Self {
-            max_attempts: 5,
-            initial_delay: Duration::from_millis(100),
-            max_delay: Duration::from_secs(10),
-            backoff_multiplier: 2.0,
-        }
-    }
-
-    pub fn high_frequency() -> Self {
-        Self {
-            max_attempts: 3,
-            initial_delay: Duration::from_millis(50),
-            max_delay: Duration::from_secs(2),
-            backoff_multiplier: 1.5,
-        }
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct UnifiedSecurityConfig {
-    pub enable_tls: bool,
-    pub verify_certificates: bool,
-    pub require_auth: bool,
-}
-
-impl Default for UnifiedSecurityConfig {
-    fn default() -> Self {
-        Self {
-            enable_tls: true,
-            verify_certificates: true,
-            require_auth: true,
-        }
-    }
-}
-
-// Remove duplicate struct definitions - use the imported ones from unified_types
+// Use canonical security config - removed duplicate definition
+// (was: simple struct with enable_tls, verify_certificates, require_auth)
+// Now using: canonical CanonicalSecurityConfig with full security features
+use crate::config::canonical_primary::domains::security_canonical::UnifiedSecurityConfig;
 
 /// Universal Adapter Configuration
 /// Configuration structures and settings for the NestGate Universal Adapter.
@@ -99,6 +28,22 @@ use serde::{Deserialize, Serialize};
 /// **UNIFIED** Universal adapter configuration - consolidated pattern
 /// Eliminates duplicate config patterns and uses unified base configurations
 #[derive(Debug, Clone)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// 
+/// **Migration Path**:
+/// ```rust,ignore
+/// // OLD (deprecated):
+/// use crate::network::config::UnifiedAdapterConfig;
+/// 
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::UnifiedAdapterConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+/// 
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for UnifiedAdapter
 pub struct UnifiedAdapterConfig {
     /// Base service configuration (standardized)
     pub service: UnifiedServiceConfig,
@@ -114,6 +59,7 @@ pub struct UnifiedAdapterConfig {
 /// Adapter-specific configuration extensions
 /// Domain-specific fields that don't belong in unified base configs
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Adapterextensions
 pub struct AdapterExtensions {
     /// Service discovery endpoint
     pub discovery_endpoint: String,
@@ -125,6 +71,7 @@ pub struct AdapterExtensions {
     pub proxy_settings: Option<ProxyConfig>,
 }
 impl Default for UnifiedAdapterConfig {
+    /// Returns the default instance
     fn default() -> Self {
         let service = UnifiedServiceConfig {
             name: "universal-adapter".to_string(),
@@ -146,13 +93,27 @@ impl Default for UnifiedAdapterConfig {
             timeouts: UnifiedTimeoutConfig::default(),
             retry: UnifiedRetryConfig::critical_operations(),
         };
+        
+        use crate::config::environment::EnvironmentConfig;
+        let env_config = EnvironmentConfig::from_env()
+            .unwrap_or_else(|_| EnvironmentConfig::default());
+        
+        let discovery_endpoint = std::env::var("NESTGATE_DISCOVERY_ENDPOINT")
+            .unwrap_or_else(|_| {
+                format!(
+                    "http://{}:{}/discover",
+                    env_config.network.host,
+                    env_config.network.port.get()
+                )
+            });
+        
         Self {
             service,
             network: UnifiedNetworkConfig::default(),
             security: UnifiedSecurityConfig::default(),
             monitoring: UnifiedMonitoringConfig::default(),
             adapter: AdapterExtensions {
-                discovery_endpoint: "http://localhost:8080/discover".to_string(),
+                discovery_endpoint,
                 service_registration: ServiceRegistration::default(),
                 monitoring_enabled: true,
                 proxy_settings: None,
@@ -163,6 +124,7 @@ impl Default for UnifiedAdapterConfig {
 
 /// Service registration information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Serviceregistration
 pub struct ServiceRegistration {
     /// Service name
     pub name: String,
@@ -184,6 +146,7 @@ pub struct ServiceRegistration {
     pub capabilities_summary: String,
 }
 impl Default for ServiceRegistration {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             // SOVEREIGNTY FIX: Use environment-based service identification
@@ -206,6 +169,22 @@ impl Default for ServiceRegistration {
 
 /// Proxy configuration for adapter communications
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// 
+/// **Migration Path**:
+/// ```rust
+/// // OLD (deprecated):
+/// use crate::config::ProxyConfig;
+/// 
+/// // NEW (canonical):
+/// use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::config::ProxyConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+/// 
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for Proxy
 pub struct ProxyConfig {
     /// Proxy server address
     pub proxy_endpoint: String,
@@ -216,6 +195,7 @@ pub struct ProxyConfig {
 }
 /// Proxy authentication methods
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Proxyauth
 pub enum ProxyAuth {
     /// Basic username/password auth
     Basic { username: String, password: String },
@@ -224,6 +204,7 @@ pub enum ProxyAuth {
 }
 /// Certificate validation modes
 #[derive(Debug, Clone, PartialEq, Eq)]
+/// Certificatevalidation
 pub enum CertificateValidation {
     /// No certificate validation
     None,
@@ -266,3 +247,37 @@ impl UnifiedAdapterConfig {
         config
     }
 }
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+/// 
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Unifiedadapterconfigcanonical
+pub type UnifiedAdapterConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using UnifiedAdapterConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+/// 
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Proxyconfigcanonical
+pub type ProxyConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using ProxyConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+

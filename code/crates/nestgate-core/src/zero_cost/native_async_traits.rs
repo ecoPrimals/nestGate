@@ -12,8 +12,11 @@ pub trait NativeAsyncUniversalProvider<
     const TIMEOUT_SECS: u64 = 300,
 >
 {
+    /// Type alias for ServiceInfo
     type ServiceInfo: Clone + Send + Sync + 'static;
+    /// Type alias for HealthStatus
     type HealthStatus: Clone + Send + Sync + 'static;
+    /// Type alias for ConfigData
     type ConfigData: Clone + Send + Sync + 'static;
     /// Initialize provider - native async, no Future boxing
     fn initialize(&self, config: Self::ConfigData) -> impl Future<Output = Result<()>> + Send;
@@ -39,7 +42,6 @@ pub trait NativeAsyncUniversalProvider<
         MAX_SERVICES
     }
 
-    /// Timeout configuration at compile-time
     #[must_use]
     fn timeout_seconds() -> u64 {
         TIMEOUT_SECS
@@ -48,14 +50,18 @@ pub trait NativeAsyncUniversalProvider<
 
 /// Native async security provider trait - replaces #[`async_trait`] `SecurityPrimalProvider`
 /// **DEPRECATED**: Native async security patterns integrated into canonical traits
-#[deprecated(since = "0.9.0", note = "Use crate::traits::canonical_unified_traits::CanonicalSecurity - native async throughout")]
+#[deprecated(since = "0.9.0", note = "Use crate::traits::canonical::CanonicalSecurity - native async throughout")]
 pub trait NativeAsyncSecurityProvider<
     const MAX_TOKENS: usize = 10000,
+    /// Token Expiry Secs
     const TOKEN_EXPIRY_SECS: u64 = 3600,
 >
 {
+    /// Type alias for Token
     type Token: Clone + Send + Sync + 'static;
+    /// Type alias for AuthResult
     type AuthResult: Clone + Send + Sync + 'static;
+    /// Type alias for Credentials
     type Credentials: Clone + Send + Sync + 'static;
     /// Authenticate user - native async
     fn authenticate(
@@ -93,14 +99,17 @@ pub trait NativeAsyncSecurityProvider<
 
 /// Native async storage provider trait - replaces #[`async_trait`] `StoragePrimalProvider`
 /// **DEPRECATED**: Native async patterns integrated into canonical traits
-#[deprecated(since = "0.9.0", note = "Use crate::traits::canonical_unified_traits::CanonicalStorage - native async throughout")]
+#[deprecated(since = "0.9.0", note = "Use crate::traits::canonical::CanonicalStorage - native async throughout")]
 pub trait NativeAsyncStorageProvider<
     const MAX_OBJECTS: usize = 100_000,
     const MAX_OBJECT_SIZE: usize = { 1024 * 1024 * 10 },
 >
 {
+    /// Type alias for ObjectId
     type ObjectId: Clone + Send + Sync + 'static;
+    /// Type alias for ObjectData
     type ObjectData: Clone + Send + Sync + 'static;
+    /// Type alias for ObjectMetadata
     type ObjectMetadata: Clone + Send + Sync + 'static;
     /// Store object - native async
     fn store_object(
@@ -146,9 +155,13 @@ pub trait NativeAsyncComputeProvider<
     const MAX_CPU_CORES: usize = 64,
 >
 {
+    /// Type alias for WorkloadId
     type WorkloadId: Clone + Send + Sync + 'static;
+    /// Type alias for WorkloadSpec
     type WorkloadSpec: Clone + Send + Sync + 'static;
+    /// Type alias for WorkloadResult
     type WorkloadResult: Clone + Send + Sync + 'static;
+    /// Type alias for ResourceUsage
     type ResourceUsage: Clone + Send + Sync + 'static;
     /// Submit workload - native async
     fn submit_workload(
@@ -190,8 +203,11 @@ pub trait NativeAsyncNetworkProvider<
     const BUFFER_SIZE: usize = 8192,
 >
 {
+    /// Type alias for ConnectionId
     type ConnectionId: Clone + Send + Sync + 'static;
+    /// Type alias for NetworkData
     type NetworkData: Clone + Send + Sync + 'static;
+    /// Type alias for ConnectionInfo
     type ConnectionInfo: Clone + Send + Sync + 'static;
     /// Establish connection - native async
     fn connect(&self, endpoint: &str) -> impl Future<Output = Result<Self::ConnectionId>> + Send;
@@ -227,7 +243,6 @@ pub trait NativeAsyncNetworkProvider<
         MAX_CONNECTIONS
     }
 
-    /// Buffer size at compile-time
     #[must_use]
     fn buffer_size() -> usize {
         BUFFER_SIZE
@@ -240,8 +255,11 @@ pub trait NativeAsyncDiscoveryProvider<
     const DISCOVERY_TIMEOUT_SECS: u64 = 30,
 >
 {
+    /// Type alias for EndpointId
     type EndpointId: Clone + Send + Sync + 'static;
+    /// Type alias for EndpointInfo
     type EndpointInfo: Clone + Send + Sync + 'static;
+    /// Type alias for DiscoveryQuery
     type DiscoveryQuery: Clone + Send + Sync + 'static;
     /// Discover endpoints - native async
     fn discover(
@@ -266,7 +284,6 @@ pub trait NativeAsyncDiscoveryProvider<
         info: Self::EndpointInfo,
     ) -> impl Future<Output = Result<()>> + Send;
 
-    /// Health check endpoint - compile-time optimization
     fn health_check_endpoint(
         &self,
         id: &Self::EndpointId,
@@ -278,7 +295,6 @@ pub trait NativeAsyncDiscoveryProvider<
         MAX_ENDPOINTS
     }
 
-    /// Discovery timeout at compile-time
     #[must_use]
     fn discovery_timeout_seconds() -> u64 {
         DISCOVERY_TIMEOUT_SECS
@@ -291,9 +307,13 @@ pub trait NativeAsyncUniversalZfsService<
     const MAX_DATASETS: usize = 10000,
 >
 {
+    /// Type alias for PoolInfo
     type PoolInfo: Clone + Send + Sync + 'static;
+    /// Type alias for DatasetInfo
     type DatasetInfo: Clone + Send + Sync + 'static;
+    /// Type alias for SnapshotInfo
     type SnapshotInfo: Clone + Send + Sync + 'static;
+    /// Type alias for OperationResult
     type OperationResult: Clone + Send + Sync + 'static;
     /// Execute ZFS operation - native async
     fn execute_operation(&self) -> impl Future<Output = Result<Self::OperationResult>> + Send;
@@ -340,6 +360,7 @@ pub struct ProductionUniversalProvider {
     initialized: std::sync::Arc<std::sync::atomic::AtomicBool>,
 }
 impl Default for ProductionUniversalProvider {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             initialized: std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
@@ -348,16 +369,21 @@ impl Default for ProductionUniversalProvider {
 }
 
 impl NativeAsyncUniversalProvider<1000, 300> for ProductionUniversalProvider {
+    /// Type alias for ServiceInfo
     type ServiceInfo = String;
+    /// Type alias for HealthStatus
     type HealthStatus = String;
+    /// Type alias for ConfigData
     type ConfigData = std::collections::HashMap<String, String>;
 
+    /// Initialize
     async fn initialize(&self, _config: Self::ConfigData) -> Result<()> {
         self.initialized
             .store(true, std::sync::atomic::Ordering::Relaxed);
         Ok(())
     }
 
+    /// Gets Service Info
     async fn get_service_info(&self, service_id: &str) -> Result<Self::ServiceInfo> {
         Ok(format!("Production service info for: {service_id}"))
     }
@@ -366,6 +392,7 @@ impl NativeAsyncUniversalProvider<1000, 300> for ProductionUniversalProvider {
         Ok("Production service healthy".to_string())
     }
 
+    /// List Services
     async fn list_services(&self) -> Result<Vec<Self::ServiceInfo>> {
         Ok(vec![
             "production_security".to_string(),
@@ -374,6 +401,7 @@ impl NativeAsyncUniversalProvider<1000, 300> for ProductionUniversalProvider {
         ])
     }
 
+    /// Shutdown
     async fn shutdown(&self) -> Result<()> {
         self.initialized
             .store(false, std::sync::atomic::Ordering::Relaxed);
@@ -384,14 +412,19 @@ impl NativeAsyncUniversalProvider<1000, 300> for ProductionUniversalProvider {
 /// Development implementation for testing
 pub struct DevelopmentUniversalProvider;
 impl NativeAsyncUniversalProvider<1000, 600> for DevelopmentUniversalProvider {
+    /// Type alias for ServiceInfo
     type ServiceInfo = String;
+    /// Type alias for HealthStatus
     type HealthStatus = String;
+    /// Type alias for ConfigData
     type ConfigData = std::collections::HashMap<String, String>;
 
+    /// Initialize
     async fn initialize(&self, _config: Self::ConfigData) -> Result<()> {
         Ok(())
     }
 
+    /// Gets Service Info
     async fn get_service_info(&self, service_id: &str) -> Result<Self::ServiceInfo> {
         Ok(format!("Development service info for: {service_id}"))
     }
@@ -400,10 +433,12 @@ impl NativeAsyncUniversalProvider<1000, 600> for DevelopmentUniversalProvider {
         Ok("Development service healthy".to_string())
     }
 
+    /// List Services
     async fn list_services(&self) -> Result<Vec<Self::ServiceInfo>> {
         Ok(vec!["dev_test_service".to_string()])
     }
 
+    /// Shutdown
     async fn shutdown(&self) -> Result<()> {
         Ok(())
     }
@@ -411,6 +446,7 @@ impl NativeAsyncUniversalProvider<1000, 600> for DevelopmentUniversalProvider {
 
 /// Native async orchestration system - replaces multiple #[`async_trait`] patterns
 #[allow(dead_code)]
+/// Nativeasyncorchestrator
 pub struct NativeAsyncOrchestrator<
     UniversalProvider,
     SecurityProvider,
@@ -434,7 +470,6 @@ where
     SecurityProvider: NativeAsyncSecurityProvider,
     StorageProvider: NativeAsyncStorageProvider,
 {
-    /// Maximum concurrent operations supported
     #[must_use]
     pub fn max_concurrent_operations() -> usize {
         MAX_SERVICES
@@ -528,10 +563,15 @@ where
 
 /// Orchestrator statistics
 #[derive(Debug, Clone)]
+/// Orchestratorstats
 pub struct OrchestratorStats {
+    /// Active Services
     pub active_services: usize,
+    /// Max Services
     pub max_services: usize,
+    /// Max Tokens
     pub max_tokens: usize,
+    /// Max Objects
     pub max_objects: usize,
 }
 /// Type aliases for production use
@@ -541,6 +581,7 @@ pub type ProductionOrchestrator = NativeAsyncOrchestrator<
     crate::zero_cost::storage::ProductionStorageProvider,   // From existing zero-cost module
     10000,                                                  // Max services
 >;
+/// Type alias for Developmentorchestrator
 pub type DevelopmentOrchestrator = NativeAsyncOrchestrator<
     DevelopmentUniversalProvider,
     crate::zero_cost::security::DevelopmentSecurityProvider, // From existing zero-cost module

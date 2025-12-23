@@ -11,8 +11,9 @@ use nestgate_zfs::{
 
 // Development: Use stubs for local development without ZFS
 #[cfg(feature = "dev-stubs")]
-use crate::handlers::zfs_stub::{
-    ProductionZfsManager, ZeroCostDatasetInfo, ZeroCostPoolInfo, ZeroCostSnapshotInfo,
+use crate::dev_stubs::zfs::{
+    DatasetOperations, PoolOperations, ProductionZfsManager, SnapshotOperations,
+    ZeroCostDatasetInfo, ZeroCostPoolInfo, ZeroCostSnapshotInfo,
 };
 
 use crate::routes::AppState;
@@ -34,6 +35,7 @@ use tracing::{error, info, warn};
 /// Request structure for creating a new ZFS pool with specified _devices.
 /// Part of the canonical modernized ZFS API.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+/// Request parameters for CreatePool operation
 pub struct CreatePoolRequest {
     /// Name of the ZFS pool to create
     pub name: String,
@@ -46,6 +48,7 @@ pub struct CreatePoolRequest {
 /// Request structure for creating a new ZFS dataset with optional properties.
 /// Part of the canonical modernized ZFS API.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+/// Request parameters for CreateDataset operation
 pub struct CreateDatasetRequest {
     /// Name of the ZFS dataset to create
     pub name: String,
@@ -58,6 +61,7 @@ pub struct CreateDatasetRequest {
 /// Request structure for creating a new ZFS snapshot of a dataset.
 /// Part of the canonical modernized ZFS API.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+/// Request parameters for CreateSnapshot operation
 pub struct CreateSnapshotRequest {
     /// Dataset to snapshot
     pub dataset: String,
@@ -70,6 +74,7 @@ pub struct CreateSnapshotRequest {
 /// Response structure containing ZFS system health information.
 /// Part of the canonical modernized ZFS API.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+/// Response data for ZfsHealth operation
 pub struct ZfsHealthResponse {
     /// Overall ZFS system health status
     pub healthy: bool,
@@ -158,10 +163,17 @@ pub async fn create_pool(
     );
 
     match get_zfs_service(&state).await {
-        Ok(service) => match service.create_pool(&request.name, &request._devices.clone()) {
-            Ok(pool) => {
+        Ok(service) => match service.create_pool(&request.name, request._devices.clone(), None) {
+            Ok(()) => {
                 info!("✅ Pool created successfully: {}", request.name);
-                Ok(Json(pool))
+                // Return a basic response since create_pool doesn't return pool info
+                Ok(Json(ZeroCostPoolInfo {
+                    name: request.name.clone(),
+                    health: "ONLINE".to_string(),
+                    size: 0,
+                    allocated: 0,
+                    free: 0,
+                }))
             }
             Err(e) => {
                 error!("❌ Failed to create pool: {}", e);
@@ -432,12 +444,18 @@ pub async fn create_snapshot(
                                 datasets.into_iter().find(|d| d.name == dataset_name)
                             {
                                 match service.create_snapshot(&dataset.name, &request.name) {
-                                    Ok(snapshot) => {
+                                    Ok(()) => {
                                         info!(
                                             "✅ Snapshot created successfully: {}/{}@{}",
                                             pool_name, dataset_name, request.name
                                         );
-                                        Ok(Json(snapshot))
+                                        // Return a basic response since create_snapshot doesn't return snapshot info
+                                        Ok(Json(ZeroCostSnapshotInfo {
+                                            name: format!("{}@{}", dataset.name, request.name),
+                                            creation_time: chrono::Utc::now().to_rfc3339(),
+                                            used: 0,
+                                            referenced: 0,
+                                        }))
                                     }
                                     Err(e) => {
                                         error!("❌ Failed to create snapshot: {}", e);
@@ -645,9 +663,11 @@ pub async fn predict_tier(
 
 /// ZFS handler implementation for the API
 #[derive(Debug, Clone)]
+/// Zfshandlerimpl
 pub struct ZfsHandlerImpl;
 
 impl Default for ZfsHandlerImpl {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

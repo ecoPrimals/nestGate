@@ -13,6 +13,7 @@ use std::fmt;
 ///
 /// Hierarchical error severity classification for better error management
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+/// Errorseverity
 pub enum ErrorSeverity {
     /// Trace-level errors (debugging information)
     Trace = 0,
@@ -31,6 +32,7 @@ pub enum ErrorSeverity {
 }
 
 impl fmt::Display for ErrorSeverity {
+    /// Fmt
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             ErrorSeverity::Trace => write!(f, "TRACE"),
@@ -48,6 +50,7 @@ impl fmt::Display for ErrorSeverity {
 ///
 /// Rich context information for enhanced error diagnostics
 #[derive(Debug, Clone)]
+/// Errorcontext
 pub struct ErrorContext {
     /// Component that generated the error
     pub component: String,
@@ -117,6 +120,7 @@ impl ErrorContext {
 ///
 /// Advanced error type with rich context and recovery information
 #[derive(Debug, Clone)]
+/// Error type for Enhanced operations
 pub struct EnhancedError {
     /// Core error message
     pub message: String,
@@ -248,6 +252,7 @@ impl EnhancedError {
 }
 
 impl fmt::Display for EnhancedError {
+    /// Fmt
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "[{}] {}: {} ({}:{})", 
                self.context.severity,
@@ -279,9 +284,12 @@ enum CircuitState {
 }
 
 impl CircuitBreaker {
+    /// Creates a new instance
     pub fn new(failure_threshold: u32, recovery_timeout: Duration) -> Self {
         Self {
+            /// Failure Threshold
             failure_threshold,
+            /// Recovery Timeout
             recovery_timeout,
             failure_count: AtomicU64::new(0),
             last_failure_time: std::sync::Mutex::new(None),
@@ -377,7 +385,10 @@ impl CircuitBreaker {
     
     /// Get current circuit breaker state
     pub fn state(&self) -> CircuitState {
-        *self.state.lock().expect("Failed to acquire lock")
+        *self.state.lock().unwrap_or_else(|poisoned| {
+            // Mutex was poisoned, but we can recover by accessing the underlying data
+            poisoned.into_inner()
+        })
     }
     
     /// Get current failure count
@@ -398,6 +409,7 @@ pub struct RetryStrategy {
 }
 
 impl RetryStrategy {
+    /// Creates a new instance
     pub fn new() -> Self {
         Self {
             max_attempts: 3,
@@ -485,6 +497,7 @@ impl RetryStrategy {
         }))
     }
     
+    /// Calculate Delay
     fn calculate_delay(&self, attempt: u32) -> Duration {
         let delay_ms = (self.base_delay.as_millis() as f64) 
             * self.backoff_multiplier.powi((attempt - 1) as i32);
@@ -506,6 +519,7 @@ impl RetryStrategy {
 }
 
 impl Default for RetryStrategy {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -521,9 +535,13 @@ pub struct ErrorAggregator {
 }
 
 #[derive(Debug, Default)]
+/// Errorstats
 pub struct ErrorStats {
+    /// Total Errors
     pub total_errors: AtomicU64,
+    /// Errors By Severity
     pub errors_by_severity: HashMap<ErrorSeverity, AtomicU64>,
+    /// Errors By Component
     pub errors_by_component: std::sync::Mutex<HashMap<String, AtomicU64>>,
 }
 
@@ -560,14 +578,22 @@ impl ErrorAggregator {
         }
         
         {
-            let mut component_stats = self.stats.errors_by_component.lock().expect("Failed to acquire lock");
+            let mut component_stats = self.stats.errors_by_component.lock().unwrap_or_else(|poisoned| {
+                // Mutex was poisoned, but we can recover by accessing the underlying data
+                tracing::warn!("Error aggregator component_stats mutex poisoned");
+                poisoned.into_inner()
+            });
             component_stats.entry(error.context.component.clone())
                 .or_insert_with(|| AtomicU64::new(0))
                 .fetch_add(1, Ordering::Relaxed);
         }
         
         // Store error
-        let mut errors = self.errors.lock().expect("Failed to acquire lock");
+        let mut errors = self.errors.lock().unwrap_or_else(|poisoned| {
+            // Mutex was poisoned, but we can recover by accessing the underlying data
+            tracing::warn!("Error aggregator errors mutex poisoned");
+            poisoned.into_inner()
+        });
         errors.push(error);
         
         // Trim if over max capacity
@@ -578,12 +604,20 @@ impl ErrorAggregator {
     
     /// Get all errors
     pub fn get_errors(&self) -> Vec<EnhancedError> {
-        self.errors.lock().expect("Failed to acquire lock").clone()
+        self.errors.lock().unwrap_or_else(|poisoned| {
+            // Mutex was poisoned, but we can recover by accessing the underlying data
+            tracing::warn!("Error aggregator errors mutex poisoned");
+            poisoned.into_inner()
+        }).clone()
     }
     
     /// Get errors by severity
     pub fn get_errors_by_severity(&self, severity: ErrorSeverity) -> Vec<EnhancedError> {
-        self.errors.lock().expect("Failed to acquire lock")
+        self.errors.lock().unwrap_or_else(|poisoned| {
+            // Mutex was poisoned, but we can recover by accessing the underlying data
+            tracing::warn!("Error aggregator errors mutex poisoned");
+            poisoned.into_inner()
+        })
             .iter()
             .filter(|e| e.context.severity == severity)
             .cloned()
@@ -597,7 +631,11 @@ impl ErrorAggregator {
     
     /// Clear all errors
     pub fn clear(&self) {
-        self.errors.lock().expect("Failed to acquire lock").clear();
+        self.errors.lock().unwrap_or_else(|poisoned| {
+            // Mutex was poisoned, but we can recover by accessing the underlying data
+            tracing::warn!("Error aggregator errors mutex poisoned");
+            poisoned.into_inner()
+        }).clear();
     }
 }
 

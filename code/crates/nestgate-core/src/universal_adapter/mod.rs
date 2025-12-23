@@ -13,18 +13,55 @@
 //
 // **NO HARDCODED CONNECTIONS:** All inter-primal communication goes through this adapter.
 
+//! Universal Adapter module
+
+pub mod adapter_config;
+/// Capability endpoints configuration module
+pub mod capability_endpoints_config;
+/// Universal adapter configuration
 pub mod config;
+/// Capability discovery module
 pub mod discovery;
+/// Discovery configuration
+pub mod discovery_config;
+
+// Capability-based adapters (no hardcoded primal names)
+pub mod capability_discovery;
+pub mod capability_system;
+pub mod networking_capability;
+pub mod primal_sovereignty;
+pub mod security_capability;
+
+// Re-export ServiceRegistry for easy access
+pub use crate::universal_primal_discovery::service_registry::ServiceRegistry;
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::sync::Arc;
 use std::time::SystemTime;
+
+// Export config types for external use
+pub use adapter_config::{AdapterDiscoveryConfig, SharedDiscoveryConfig};
+pub use capability_endpoints_config::{CapabilityEndpointsConfig, SharedCapabilityEndpointsConfig};
+pub use discovery_config::{DiscoveryRuntimeConfig, SharedDiscoveryRuntimeConfig};
 
 // **COMPATIBILITY EXPORTS** - For modules expecting legacy structure
 pub use CapabilityRequest as CanonicalCapabilityRequest;
 pub use UniversalAdapter as PrimalAgnosticAdapter;
 
+// **NEW CAPABILITY ADAPTERS** - Zero hardcoded primal names
+pub use capability_discovery::{CapabilityDiscovery, CapabilityProvider, CapabilityType};
+pub use networking_capability::{
+    CircuitBreakerRequest, CircuitBreakerResponse, LoadBalanceRequest, LoadBalanceResponse,
+    NetworkingCapability,
+};
+pub use security_capability::{
+    InputValidationRequest, InputValidationResponse, IntrusionDetectionRequest,
+    IntrusionDetectionResponse, RateLimitRequest, RateLimitResponse, SecurityCapability,
+};
+
 // **MODULE STRUCTURE** - Organize exports for compatibility
+/// Universal adapter types and query structures
 pub mod types {
     use super::{Deserialize, Serialize};
 
@@ -32,13 +69,18 @@ pub mod types {
 
     /// Query for discovering capabilities through universal adapter
     #[derive(Debug, Clone, Serialize, Deserialize)]
+    /// Capabilityquery
     pub struct CapabilityQuery {
+        /// Capability
         pub capability: String,
+        /// Operation
         pub operation: Option<String>,
+        /// Filters
         pub filters: Vec<String>,
     }
 
     impl CapabilityQuery {
+        /// Creates a new capability query with the specified capability type
         #[must_use]
         pub fn new(capability_type: impl Into<String>) -> Self {
             Self {
@@ -53,12 +95,14 @@ pub mod types {
             Self::new(capability_type)
         }
 
+        /// Adds an operation filter to the capability query
         #[must_use]
         pub fn with_operation(mut self, operation: impl Into<String>) -> Self {
             self.operation = Some(operation.into());
             self
         }
 
+        /// Adds a custom filter to the query
         #[must_use]
         pub fn with_filter(mut self, filter: impl Into<String>) -> Self {
             self.filters.push(filter.into());
@@ -67,21 +111,26 @@ pub mod types {
     }
 }
 
+/// Canonical module re-exports for backwards compatibility
 pub mod canonical {
     pub use super::CapabilityRequest as CanonicalCapabilityRequest;
 }
 
 // Use comprehensive stats module from stats.rs file
+/// Adapter statistics and metrics
 pub mod stats;
 
+/// Consolidated canonical adapter module
 pub mod consolidated_canonical {
     pub use super::UniversalAdapter as ConsolidatedCanonicalAdapter;
+    #[allow(deprecated)]
     pub use super::UniversalAdapterConfig as CanonicalAdapterConfig;
 }
 
 /// Universal Adapter for O(1) capability-based connections
 /// Replaces hardcoded primal-to-primal connections
 #[derive(Debug, Clone)]
+/// Universaladapter
 pub struct UniversalAdapter {
     /// Adapter endpoint URL
     pub endpoint: String,
@@ -89,12 +138,35 @@ pub struct UniversalAdapter {
     pub capabilities: HashMap<String, CapabilityInfo>,
     /// Discovery cache
     pub discovery_cache: HashMap<String, CachedCapability>,
-    /// Adapter configuration
+    /// Adapter configuration (cache/timeout settings)
+    #[allow(deprecated)]
+    /// Configuration for
     pub config: UniversalAdapterConfig,
+    /// Discovery configuration (immutable, thread-safe)
+    pub discovery_config: SharedDiscoveryConfig,
 }
 
 /// Configuration for the universal adapter
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+///
+/// **Migration Path**:
+/// ```rust,ignore
+/// // OLD (deprecated):
+/// use crate::network::config::UniversalAdapterConfig;
+///
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::UniversalAdapterConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+///
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(
+    since = "0.11.0",
+    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
+/// Configuration for UniversalAdapter
 pub struct UniversalAdapterConfig {
     /// Discovery timeout in seconds
     pub discovery_timeout: u64,
@@ -108,6 +180,7 @@ pub struct UniversalAdapterConfig {
 
 /// Information about a capability provided by any primal
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Capabilityinfo
 pub struct CapabilityInfo {
     /// Capability category (orchestration, compute, security, ai, storage, etc.)
     pub category: String,
@@ -127,6 +200,7 @@ pub struct CapabilityInfo {
 
 /// Cached capability information
 #[derive(Debug, Clone)]
+/// Cachedcapability
 pub struct CachedCapability {
     /// Capability information
     pub info: CapabilityInfo,
@@ -138,6 +212,7 @@ pub struct CachedCapability {
 
 /// Universal adapter request for capability access
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for Capability operation
 pub struct CapabilityRequest {
     /// Target capability category
     pub capability: String,
@@ -186,6 +261,7 @@ impl CapabilityRequest {
 
 /// Universal adapter response
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for Capability operation
 pub struct CapabilityResponse {
     /// Response status
     pub status: String,
@@ -201,6 +277,9 @@ pub struct CapabilityResponse {
 
 impl UniversalAdapter {
     /// Create new universal adapter instance
+    ///
+    /// This constructor loads discovery configuration from environment variables.
+    /// For testing or custom configurations, use `with_discovery_config()`.
     #[must_use]
     pub fn new(endpoint: String) -> Self {
         Self {
@@ -208,6 +287,25 @@ impl UniversalAdapter {
             capabilities: HashMap::new(),
             discovery_cache: HashMap::new(),
             config: UniversalAdapterConfig::default(),
+            discovery_config: Arc::new(AdapterDiscoveryConfig::from_env()),
+        }
+    }
+
+    /// Create a new adapter with a specific discovery configuration
+    ///
+    /// This is the recommended constructor for testing and when you need
+    /// explicit control over discovery endpoints.
+    #[must_use]
+    pub fn with_discovery_config(
+        discovery_config: SharedDiscoveryConfig,
+        endpoint: String,
+    ) -> Self {
+        Self {
+            endpoint,
+            capabilities: HashMap::new(),
+            discovery_cache: HashMap::new(),
+            config: UniversalAdapterConfig::default(),
+            discovery_config,
         }
     }
 
@@ -296,11 +394,14 @@ impl UniversalAdapter {
 
     /// Discover orchestration capabilities through dynamic discovery
     async fn discover_orchestration_capabilities(&mut self) -> Result<(), String> {
-        if let Ok(endpoint) = std::env::var("ORCHESTRATION_DISCOVERY_ENDPOINT") {
+        if let Some(endpoint) = self
+            .discovery_config
+            .get_discovery_endpoint("orchestration")
+        {
             let capability = CapabilityInfo {
                 category: "orchestration".to_string(),
                 provider: "dynamic-orchestration".to_string(),
-                endpoint,
+                endpoint: endpoint.to_string(),
                 performance_tier: "standard".to_string(),
                 availability: 99.5,
                 metadata: HashMap::new(),
@@ -314,11 +415,11 @@ impl UniversalAdapter {
 
     /// Discover compute capabilities through dynamic discovery
     async fn discover_compute_capabilities(&mut self) -> Result<(), String> {
-        if let Ok(endpoint) = std::env::var("COMPUTE_DISCOVERY_ENDPOINT") {
+        if let Some(endpoint) = self.discovery_config.get_discovery_endpoint("compute") {
             let capability = CapabilityInfo {
                 category: "compute".to_string(),
                 provider: "dynamic-compute".to_string(),
-                endpoint,
+                endpoint: endpoint.to_string(),
                 performance_tier: "high_performance".to_string(),
                 availability: 98.5,
                 metadata: HashMap::new(),
@@ -331,11 +432,11 @@ impl UniversalAdapter {
 
     /// Discover security capabilities through dynamic discovery
     async fn discover_security_capabilities(&mut self) -> Result<(), String> {
-        if let Ok(endpoint) = std::env::var("SECURITY_DISCOVERY_ENDPOINT") {
+        if let Some(endpoint) = self.discovery_config.get_discovery_endpoint("security") {
             let capability = CapabilityInfo {
                 category: "security".to_string(),
                 provider: "dynamic-security".to_string(),
-                endpoint,
+                endpoint: endpoint.to_string(),
                 performance_tier: "enterprise".to_string(),
                 availability: 99.9,
                 metadata: HashMap::new(),
@@ -348,11 +449,14 @@ impl UniversalAdapter {
 
     /// Discover AI capabilities through dynamic discovery
     async fn discover_ai_capabilities(&mut self) -> Result<(), String> {
-        if let Ok(endpoint) = std::env::var("AI_DISCOVERY_ENDPOINT") {
+        if let Some(endpoint) = self
+            .discovery_config
+            .get_discovery_endpoint("artificial_intelligence")
+        {
             let capability = CapabilityInfo {
                 category: "artificial_intelligence".to_string(),
                 provider: "dynamic-ai".to_string(),
-                endpoint,
+                endpoint: endpoint.to_string(),
                 performance_tier: "standard".to_string(),
                 availability: 97.5,
                 metadata: HashMap::new(),
@@ -382,13 +486,13 @@ impl UniversalAdapter {
 
     /// Discover ecosystem capabilities through dynamic discovery
     async fn discover_ecosystem_capabilities(&mut self) -> Result<(), String> {
-        if let Ok(endpoint) = std::env::var("ECOSYSTEM_DISCOVERY_ENDPOINT") {
+        if let Some(endpoint) = self.discovery_config.get_discovery_endpoint("ecosystem") {
             let capability = CapabilityInfo {
                 category: "ecosystem".to_string(),
                 provider: "dynamic-ecosystem".to_string(),
-                endpoint,
+                endpoint: endpoint.to_string(),
                 performance_tier: "standard".to_string(),
-                availability: 98.0,
+                availability: 99.0,
                 metadata: HashMap::new(),
                 discovered_at: SystemTime::now(),
             };
@@ -436,7 +540,9 @@ impl UniversalAdapter {
     }
 }
 
+#[allow(deprecated)]
 impl Default for UniversalAdapterConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             discovery_timeout: 30,
@@ -455,55 +561,147 @@ pub fn validate_primal_sovereignty() -> Result<(), String> {
     Ok(())
 }
 
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+///
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Universaladapterconfigcanonical
+pub type UniversalAdapterConfigCanonical =
+    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using UniversalAdapterConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+
+#[cfg(test)]
+mod adapter_edge_cases;
+#[cfg(test)]
+mod adapter_error_tests; // Nov 23, 2025 - P1 test expansion // Nov 23, 2025 - P1-5 edge case tests
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
+    /// Helper to create test endpoint
+    /// ✅ MIGRATED: Replaces hardcoded endpoints with configurable ones
+    fn test_endpoint(service: &str, port: u16) -> String {
+        format!("http://{}:{}", service, port)
+    }
+
     #[tokio::test]
     async fn test_universal_adapter_discovery() {
-        let adapter_endpoint = std::env::var("UNIVERSAL_ADAPTER_ENDPOINT").unwrap_or_else(|_| {
-            format!(
-                "http://{}:{}/adapter",
-                std::env::var("NESTGATE_HOST").unwrap_or_else(|_| "localhost".to_string()),
-                std::env::var("NESTGATE_PORT").unwrap_or_else(|_| "8080".to_string())
-            )
-        });
-        let mut adapter = UniversalAdapter::new(adapter_endpoint);
+        // Use injected config instead of env vars
+        let mut config = AdapterDiscoveryConfig::new();
+        config.set_discovery_endpoint("orchestration", test_endpoint("test-orch", 8080));
+        config.set_discovery_endpoint("compute", test_endpoint("test-compute", 9090));
+
+        let adapter_endpoint = test_endpoint("localhost", 8080) + "/adapter";
+        let mut adapter =
+            UniversalAdapter::with_discovery_config(Arc::new(config), adapter_endpoint);
 
         // Test capability discovery without hardcoded primal names
+        // Test unwrap OK: test environment is controlled
         let capabilities = adapter
             .discover_capabilities()
             .await
-            .expect("Operation failed");
+            .expect("Test setup: discovery should succeed in test environment");
 
-        // Verify no hardcoded primal names in providers
+        // Verify no hardcoded primal names in providers (capability-based only)
         for capability in capabilities {
-            assert!(!capability.provider.contains("songbird"));
-            assert!(!capability.provider.contains("toadstool"));
-            assert!(!capability.provider.contains("squirrel"));
-            assert!(!capability.provider.contains("beardog"));
-            assert!(!capability.provider.contains("biomeos"));
+            // Validate capability-based naming (e.g., "orchestration", "ai", "security", "storage")
+            let provider = capability.provider.to_lowercase();
+            assert!(
+                !provider.contains("songbird"),
+                "Use 'orchestration' capability"
+            );
+            assert!(!provider.contains("toadstool"), "Use 'storage' capability");
+            assert!(!provider.contains("squirrel"), "Use 'ai' capability");
+            assert!(!provider.contains("beardog"), "Use 'security' capability");
+            assert!(!provider.contains("biomeos"), "Use 'ecosystem' capability");
         }
     }
 
     #[tokio::test]
     async fn test_o1_capability_access() {
-        let adapter_endpoint = std::env::var("UNIVERSAL_ADAPTER_ENDPOINT").unwrap_or_else(|_| {
-            format!(
-                "http://{}:{}/adapter",
-                std::env::var("NESTGATE_HOST").unwrap_or_else(|_| "localhost".to_string()),
-                std::env::var("NESTGATE_PORT").unwrap_or_else(|_| "8080".to_string())
-            )
-        });
-        let mut adapter = UniversalAdapter::new(adapter_endpoint);
+        // Use injected config for clean test
+        let config = AdapterDiscoveryConfig::new(); // Empty config, only storage (self-knowledge)
+        let adapter_endpoint = test_endpoint("localhost", 8080) + "/adapter";
+
+        let mut adapter =
+            UniversalAdapter::with_discovery_config(Arc::new(config), adapter_endpoint);
         adapter
             .discover_capabilities()
             .await
-            .expect("Operation failed");
+            .expect("Test setup: discovery should succeed in test environment");
 
         // Test O(1) capability access
-        let storage_capability = adapter.get_capability("storage").expect("Operation failed");
+        let storage_capability = adapter
+            .get_capability("storage")
+            .expect("Test setup: storage capability should exist");
         assert_eq!(storage_capability.category, "storage");
         assert_eq!(storage_capability.provider, "nestgate-native");
+    }
+
+    #[tokio::test]
+    async fn test_adapter_with_discovery_config() {
+        // Test the new with_discovery_config constructor
+        let mut config = AdapterDiscoveryConfig::new();
+        config.set_discovery_endpoint("orchestration", test_endpoint("orch-test", 8080));
+        config.set_discovery_endpoint("security", test_endpoint("sec-test", 7070));
+
+        let adapter = UniversalAdapter::with_discovery_config(
+            Arc::new(config),
+            "http://test:3000/adapter".to_string(),
+        );
+
+        assert_eq!(adapter.endpoint, "http://test:3000/adapter");
+        assert_eq!(adapter.capabilities.len(), 0); // No discovery run yet
+    }
+
+    #[tokio::test]
+    async fn test_concurrent_adapter_instances() {
+        // Test that multiple adapters with different configs work concurrently
+        let mut config1 = AdapterDiscoveryConfig::new();
+        config1.set_discovery_endpoint("orchestration", test_endpoint("orch1", 8080));
+
+        let mut config2 = AdapterDiscoveryConfig::new();
+        config2.set_discovery_endpoint("compute", test_endpoint("compute2", 9090));
+
+        let adapter_endpoint = test_endpoint("localhost", 8080) + "/adapter";
+        let mut adapter1 =
+            UniversalAdapter::with_discovery_config(Arc::new(config1), adapter_endpoint.clone());
+
+        let mut adapter2 =
+            UniversalAdapter::with_discovery_config(Arc::new(config2), adapter_endpoint);
+
+        // Run discoveries concurrently
+        let handle1 = tokio::spawn(async move {
+            adapter1.discover_capabilities().await.unwrap();
+            adapter1.capabilities
+        });
+
+        let handle2 = tokio::spawn(async move {
+            adapter2.discover_capabilities().await.unwrap();
+            adapter2.capabilities
+        });
+
+        let caps1 = handle1.await.unwrap();
+        let caps2 = handle2.await.unwrap();
+
+        // Verify each adapter got its own capabilities
+        assert!(caps1.contains_key("orchestration"));
+        assert!(!caps1.contains_key("compute"));
+
+        assert!(caps2.contains_key("compute"));
+        assert!(!caps2.contains_key("orchestration"));
+
+        // Both should have storage (self-knowledge)
+        assert!(caps1.contains_key("storage"));
+        assert!(caps2.contains_key("storage"));
     }
 }

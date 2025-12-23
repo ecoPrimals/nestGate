@@ -28,6 +28,7 @@ use crate::constants::canonical::performance::{DEFAULT_BUFFER_SIZE, NETWORK_BUFF
 
 /// High-performance memory pool with configurable buffer sizes
 #[derive(Debug)]
+/// Memorypool
 pub struct MemoryPool<T>
 where
     T: Default + Clone + Send + 'static,
@@ -204,6 +205,7 @@ impl<T> Default for MemoryPool<T>
 where
     T: Default + Clone + Send + 'static,
 {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new(T::default, 5, 50)
     }
@@ -228,30 +230,33 @@ where
     ///
     /// # Panics
     /// Panics if the buffer has already been taken with `take()`. This indicates a logic error.
+    #[allow(clippy::expect_used)] // Documented panic for logic errors
     pub fn get(&self) -> &T {
         self.buffer
             .as_ref()
-            .expect("Buffer has been taken - this indicates a logic error in buffer usage")
+            .expect("BUG: Buffer was already taken - logic error in PooledBuffer usage")
     }
 
     /// Get a mutable reference to the buffer
     ///
     /// # Panics
     /// Panics if the buffer has already been taken with `take()`. This indicates a logic error.
+    #[allow(clippy::expect_used)] // Documented panic for logic errors
     pub fn get_mut(&mut self) -> &mut T {
         self.buffer
             .as_mut()
-            .expect("Buffer has been taken - this indicates a logic error in buffer usage")
+            .expect("BUG: Buffer was already taken - logic error in PooledBuffer usage")
     }
 
     /// Take ownership of the buffer (prevents return to pool)
     ///
     /// # Panics
     /// Panics if the buffer has already been taken. This indicates a logic error.
+    #[allow(clippy::expect_used)] // Documented panic for logic errors
     pub fn take(mut self) -> Box<T> {
         self.buffer
             .take()
-            .expect("Buffer has already been taken - this indicates a logic error in buffer usage")
+            .expect("BUG: Buffer was already taken - logic error in PooledBuffer usage")
     }
 
     /// Check if the buffer is still available (not taken)
@@ -264,6 +269,7 @@ impl<T> Drop for PoolGuard<T>
 where
     T: Send + 'static,
 {
+    /// Drop
     fn drop(&mut self) {
         if let Some(buffer) = self.buffer.take() {
             let usage_time = self.acquired_at.elapsed();
@@ -305,8 +311,10 @@ impl<T> std::ops::Deref for PoolGuard<T>
 where
     T: Send + 'static,
 {
+    /// Type alias for Target
     type Target = T;
 
+    /// Deref
     fn deref(&self) -> &Self::Target {
         self.get()
     }
@@ -316,6 +324,7 @@ impl<T> std::ops::DerefMut for PoolGuard<T>
 where
     T: Send + 'static,
 {
+    /// Deref Mut
     fn deref_mut(&mut self) -> &mut Self::Target {
         self.get_mut()
     }
@@ -324,6 +333,7 @@ where
 /// Memory pool performance statistics
 /// Optimized for zero-copy access - all fields are Copy types
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+/// Poolstatistics
 pub struct PoolStatistics {
     /// Number of successful buffer retrievals from pool
     pub hits: u64,
@@ -345,6 +355,7 @@ pub struct PoolStatistics {
     pub total_usage_time: Duration,
 }
 impl PoolStatistics {
+    /// Creates a new instance
     fn new() -> Self {
         Self {
             hits: 0,
@@ -404,6 +415,7 @@ impl PoolStatistics {
 
 /// Specialized buffer pool for common data types
 pub type BufferPool = MemoryPool<Vec<u8>>;
+/// Type alias for Stringpool
 pub type StringPool = MemoryPool<String>;
 // Global buffer pools for common usage patterns
 lazy_static::lazy_static! {
@@ -461,14 +473,17 @@ lazy_static::lazy_static! {
 pub fn get_4kb_buffer() -> PoolGuard<Vec<u8>> {
     GLOBAL_4KB_BUFFER_POOL.get()
 }
+/// Gets 64Kb Buffer
 pub fn get_64kb_buffer() -> PoolGuard<Vec<u8>> {
     GLOBAL_64KB_BUFFER_POOL.get()
 }
 
+/// Gets 1Mb Buffer
 pub fn get_1mb_buffer() -> PoolGuard<Vec<u8>> {
     GLOBAL_1MB_BUFFER_POOL.get()
 }
 
+/// Gets String Buffer
 pub fn get_string_buffer() -> PoolGuard<String> {
     GLOBAL_STRING_POOL.get()
 }
@@ -477,10 +492,12 @@ pub fn get_string_buffer() -> PoolGuard<String> {
 pub fn get_command_buffer() -> PoolGuard<Vec<u8>> {
     GLOBAL_CMD_BUFFER_POOL.get()
 }
+/// Gets Network Buffer
 pub fn get_network_buffer() -> PoolGuard<Vec<u8>> {
     GLOBAL_NETWORK_BUFFER_POOL.get()
 }
 
+/// Gets Json Buffer
 pub fn get_json_buffer() -> PoolGuard<String> {
     GLOBAL_JSON_BUFFER_POOL.get()
 }
@@ -509,8 +526,11 @@ pub fn global_buffer_pool_stats() -> (
 pub struct MemoryPoolManager {
     pools: Vec<Arc<dyn PoolInterface>>,
 }
+/// PoolInterface trait
 trait PoolInterface: Send + Sync {
+    /// Size
     fn size(&self) -> usize;
+    /// Clear
     fn clear(&self);
 }
 
@@ -518,10 +538,12 @@ impl<T> PoolInterface for MemoryPool<T>
 where
     T: Default + Clone + Send + 'static,
 {
+    /// Size
     fn size(&self) -> usize {
         self.size()
     }
 
+    /// Clear
     fn clear(&self) {
         self.clear()
     }
@@ -557,6 +579,7 @@ impl MemoryPoolManager {
 }
 
 impl Default for MemoryPoolManager {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -617,27 +640,27 @@ mod tests {
         assert!(pool.size() <= 2);
     }
 
-    #[test]
-    fn test_concurrent_access() -> std::result::Result<(), Box<dyn std::error::Error>> {
+    #[tokio::test]
+    async fn test_concurrent_access() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let pool = Arc::new(MemoryPool::new(Vec::<u8>::new, 1, 10));
         let mut handles = vec![];
 
-        // Spawn multiple threads
+        // Spawn multiple async tasks (concurrent, non-blocking)
         for i in 0..5 {
             let pool_clone = Arc::clone(&pool);
-            let handle = thread::spawn(move || {
+            let handle = tokio::spawn(async move {
                 let mut buffer = pool_clone.get();
                 buffer.push(i as u8);
-                thread::sleep(Duration::from_millis(10));
+                tokio::time::sleep(Duration::from_millis(10)).await;
                 buffer[0]
-            );
+            });
             handles.push(handle);
         }
 
-        // Wait for all threads
+        // Wait for all async tasks (concurrent, non-blocking)
         for handle in handles {
-            let result = handle.join().map_err(|e| {
-                format!("Thread join failed: {e:?}")
+            let result = handle.await.map_err(|e| {
+                format!("Task join failed: {e:?}")
             })?;
             assert!(result < 5);
         }
@@ -669,7 +692,8 @@ mod tests {
         let _buf2 = pool.get();
 
         let stats = pool.statistics();
-        assert!(stats.hit_ratio() >= 0.0 && stats.hit_ratio() <= 1.0);
+        // ✅ MODERN: Use epsilon for hit ratio range check
+        assert!(stats.hit_ratio() >= -1e-9 && stats.hit_ratio() <= 1.0 + 1e-9);
         assert!(stats.avg_acquisition_time().as_nanos() > 0);
         assert!(!stats.performance_assessment().is_empty());
     }

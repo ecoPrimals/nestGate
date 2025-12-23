@@ -7,6 +7,7 @@ use tracing::{debug, info, warn};
 
 /// Simple storage access request to security capability
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for StorageAccess operation
 pub struct StorageAccessRequest {
     /// Token to validate (from security capability authentication)
     pub token: String,
@@ -17,6 +18,7 @@ pub struct StorageAccessRequest {
 }
 /// Simple response from security capability about storage access
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for StorageAccess operation
 pub struct StorageAccessResponse {
     /// Whether access is allowed
     pub allowed: bool,
@@ -29,6 +31,7 @@ pub struct StorageAccessResponse {
 }
 /// Standalone authentication configuration for fallback mode
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for StandaloneAuth
 pub struct StandaloneAuthConfig {
     /// Enable standalone mode (no security capability required)
     pub enabled: bool,
@@ -40,6 +43,7 @@ pub struct StandaloneAuthConfig {
     pub token_validation: bool,
 }
 impl Default for StandaloneAuthConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true, // Conservative default - enable standalone for development
@@ -52,6 +56,7 @@ impl Default for StandaloneAuthConfig {
 
 /// Authentication Adapter using Universal Adapter Architecture
 #[derive(Debug)]
+/// Universalauthadapter
 pub struct UniversalAuthAdapter {
     /// Reference to the universal adapter for ecosystem communication
     adapter: Option<crate::universal_adapter::PrimalAgnosticAdapter>,
@@ -98,8 +103,11 @@ impl UniversalAuthAdapter {
                     let capabilities = capabilities_result.as_array().unwrap_or(&empty_vec);
                     if let Some(security_capability) = capabilities.first() {
                         info!("✅ Found security capability: {}", security_capability);
+                        // Use ServiceDiscoveryConfig for endpoint construction
+                        let config = crate::config::discovery_config::ServiceDiscoveryConfig::default();
+                        let base_endpoint = config.build_endpoint(config.discovery_base_port);
                         return Ok(format!(
-                            "http://localhost:8080/security/{security_capability}"
+                            "{}/security/{}", base_endpoint, security_capability
                         ));
                     }
                 }

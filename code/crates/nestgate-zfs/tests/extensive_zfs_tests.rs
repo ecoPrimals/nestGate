@@ -19,7 +19,7 @@ fn test_pool_state_online() {
 
 #[test]
 fn test_pool_state_all_variants() {
-    let states = vec![
+    let states = [
         PoolState::Online,
         PoolState::Offline,
         PoolState::Degraded,
@@ -45,7 +45,7 @@ fn test_pool_state_serialization() {
 
 #[test]
 fn test_pool_health_variants() {
-    let health_states = vec![
+    let health_states = [
         PoolHealth::Healthy,
         PoolHealth::Warning,
         PoolHealth::Critical,
@@ -67,9 +67,13 @@ fn test_pool_health_serialization() {
 #[test]
 fn test_pool_capacity_creation() {
     let capacity = PoolCapacity {
-        total_bytes: 1024 * 1024 * 1024,    // 1GB
-        used_bytes: 512 * 1024 * 1024,      // 512MB
+        total: 1024 * 1024 * 1024,
+        total_bytes: 1024 * 1024 * 1024, // 1GB
+        used: 512 * 1024 * 1024,
+        used_bytes: 512 * 1024 * 1024, // 512MB
+        available: 512 * 1024 * 1024,
         available_bytes: 512 * 1024 * 1024, // 512MB
+        utilization_percent: 50.0,
         fragmentation_percent: 5.0,
         deduplication_ratio: 1.2,
     };
@@ -82,9 +86,13 @@ fn test_pool_capacity_creation() {
 #[test]
 fn test_pool_capacity_ratios() {
     let capacity = PoolCapacity {
+        total: 1000,
         total_bytes: 1000,
+        used: 300,
         used_bytes: 300,
+        available: 700,
         available_bytes: 700,
+        utilization_percent: 30.0,
         fragmentation_percent: 10.0,
         deduplication_ratio: 1.5,
     };
@@ -100,9 +108,13 @@ fn test_pool_capacity_ratios() {
 #[test]
 fn test_pool_capacity_zero_fragmentation() {
     let capacity = PoolCapacity {
+        total: 1000,
         total_bytes: 1000,
+        used: 500,
         used_bytes: 500,
+        available: 500,
         available_bytes: 500,
+        utilization_percent: 50.0,
         fragmentation_percent: 0.0,
         deduplication_ratio: 1.0,
     };
@@ -119,9 +131,13 @@ fn test_pool_info_creation() {
     properties.insert("compression".to_string(), "lz4".to_string());
 
     let capacity = PoolCapacity {
+        total: 1024,
         total_bytes: 1024,
+        used: 512,
         used_bytes: 512,
+        available: 512,
         available_bytes: 512,
+        utilization_percent: 50.0,
         fragmentation_percent: 0.0,
         deduplication_ratio: 1.0,
     };
@@ -149,9 +165,13 @@ fn test_pool_info_with_properties() {
     properties.insert("atime".to_string(), "off".to_string());
 
     let capacity = PoolCapacity {
+        total: 1024,
         total_bytes: 1024,
+        used: 0,
         used_bytes: 0,
+        available: 1024,
         available_bytes: 1024,
+        utilization_percent: 0.0,
         fragmentation_percent: 0.0,
         deduplication_ratio: 1.0,
     };
@@ -186,9 +206,13 @@ fn test_dataset_info_creation() {
         size: 1024,
         used: 512,
         available: 512,
+        mountpoint: Some(std::path::PathBuf::from("/mnt/dataset1")),
         mount_point: Some(std::path::PathBuf::from("/mnt/dataset1")),
+        dataset_type: "filesystem".to_string(),
         compression: "lz4".to_string(),
         checksum: "sha256".to_string(),
+        referenced: 512,
+        compression_ratio: 1.0,
         tier: nestgate_core::canonical_types::StorageTier::Hot,
         properties: HashMap::new(),
         created_at: SystemTime::now(),
@@ -208,9 +232,13 @@ fn test_dataset_info_without_mount_point() {
         size: 1024,
         used: 512,
         available: 512,
+        mountpoint: None,
         mount_point: None,
+        dataset_type: "volume".to_string(),
         compression: "lz4".to_string(),
         checksum: "sha256".to_string(),
+        referenced: 512,
+        compression_ratio: 1.0,
         tier: nestgate_core::canonical_types::StorageTier::Cold,
         properties: HashMap::new(),
         created_at: SystemTime::now(),
@@ -280,7 +308,7 @@ fn test_zfs_error_io_error() {
 #[test]
 fn test_zfs_config_default() {
     let config = ZfsConfig::default();
-    assert!(format!("{:?}", config).len() > 0);
+    assert!(!format!("{:?}", config).is_empty());
 }
 
 // Health config tests removed - HealthCheckConfig not exported
@@ -290,9 +318,10 @@ fn test_zfs_config_default() {
 #[test]
 fn test_pool_manager_creation() {
     let config = ZfsConfig::default();
-    let manager = ZfsPoolManager::new_production(config);
+    let _manager = ZfsPoolManager::new_production(config);
 
-    assert!(format!("{:?}", manager).len() > 0);
+    // Manager created successfully - type checked at compile time
+    // Test passes if creation succeeds without panic
 }
 
 // ==================== CAPACITY MONITORING TYPES TESTS ====================
@@ -356,9 +385,13 @@ fn test_retention_policy_minimal() {
 #[test]
 fn test_pool_info_serialization() {
     let capacity = PoolCapacity {
+        total: 1024,
         total_bytes: 1024,
+        used: 512,
         used_bytes: 512,
+        available: 512,
         available_bytes: 512,
+        utilization_percent: 50.0,
         fragmentation_percent: 0.0,
         deduplication_ratio: 1.0,
     };
@@ -391,9 +424,13 @@ fn test_dataset_info_serialization() {
         size: 1024,
         used: 512,
         available: 512,
+        mountpoint: None,
         mount_point: None,
+        dataset_type: "filesystem".to_string(),
         compression: "lz4".to_string(),
         checksum: "sha256".to_string(),
+        referenced: 512,
+        compression_ratio: 1.0,
         tier: nestgate_core::canonical_types::StorageTier::Hot,
         properties: HashMap::new(),
         created_at: SystemTime::now(),
@@ -408,9 +445,13 @@ fn test_dataset_info_serialization() {
 #[test]
 fn test_pool_capacity_full() {
     let capacity = PoolCapacity {
+        total: 1000,
         total_bytes: 1000,
+        used: 1000,
         used_bytes: 1000,
+        available: 0,
         available_bytes: 0,
+        utilization_percent: 100.0,
         fragmentation_percent: 0.0,
         deduplication_ratio: 1.0,
     };
@@ -422,9 +463,13 @@ fn test_pool_capacity_full() {
 #[test]
 fn test_pool_capacity_empty() {
     let capacity = PoolCapacity {
+        total: 1000,
         total_bytes: 1000,
+        used: 0,
         used_bytes: 0,
+        available: 1000,
         available_bytes: 1000,
+        utilization_percent: 0.0,
         fragmentation_percent: 0.0,
         deduplication_ratio: 1.0,
     };

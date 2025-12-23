@@ -2,6 +2,8 @@
 // Creates the appropriate ZFS service implementation based on configuration
 // with automatic backend detection and fail-safe wrapping.
 
+//! Factory module
+
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -10,8 +12,8 @@ use crate::handlers::zfs::universal_zfs::{
     config::{ZfsBackend, ZfsServiceConfig},
     fail_safe::FailSafeZfsService,
     traits::UniversalZfsService,
-    types::{UniversalZfsError, UniversalZfsResult},
 };
+use crate::handlers::zfs::universal_zfs_types::{UniversalZfsError, UniversalZfsResult};
 use tracing::{debug, error, info, warn};
 
 // Type alias to reduce complexity
@@ -53,7 +55,7 @@ impl ZfsServiceFactory {
     }
 
     /// Create service based on configuration with proper cloning
-    pub fn create_service(
+    pub async fn create_service(
         config: ZfsServiceConfig,
     ) -> UniversalZfsResult<Arc<dyn UniversalZfsService>> {
         info!("Creating ZFS service with backend: {:?}", config.backend);
@@ -90,11 +92,13 @@ impl ZfsServiceFactory {
                     ));
                 fail_safe_service.with_fallback(fallback_enum)
             } else {
+                // Fail Safe Service
                 fail_safe_service
             };
 
             Arc::new(fail_safe_service) as Arc<dyn UniversalZfsService>
         } else {
+            // Primary Service
             primary_service
         };
 
@@ -112,6 +116,7 @@ impl ZfsServiceFactory {
     }
 
     /// CANONICAL MODERNIZATION: Production service creation always uses real implementation
+    #[must_use]
     pub fn create_production_service() -> Arc<dyn UniversalZfsService> {
         Arc::new(
             crate::handlers::zfs::universal_zfs::backends::native::core::NativeZfsService::new(),
@@ -226,22 +231,25 @@ impl ZfsServiceFactory {
 
     /// Detect remote ZFS services
     async fn detect_remote_services() -> Option<Arc<dyn UniversalZfsService>> {
-        use nestgate_core::constants::hardcoding::{addresses, ports};
-        
+        // ✅ MIGRATED: Now uses centralized runtime configuration
+        use nestgate_core::config::runtime::get_config;
+
+        // Get configuration from centralized system
+        let config = get_config();
+
         // Check common service discovery endpoints
         let endpoints = vec![
-            format!("http://{}:{}/api/v1/zfs/health", 
-                std::env::var("NESTGATE_ZFS_SERVICE_HOST")
-                    .unwrap_or_else(|_| addresses::LOCALHOST_NAME.to_string()),
-                std::env::var("NESTGATE_ZFS_SERVICE_PORT")
-                    .ok()
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(ports::HTTP_DEFAULT)
+            format!(
+                "http://{}:{}/api/v1/zfs/health",
+                config.network.api_host, config.network.api_port
             ),
-            format!("http://zfs-service:{}/api/v1/zfs/health", ports::HTTP_DEFAULT),
+            format!(
+                "http://zfs-service:{}/api/v1/zfs/health",
+                config.network.api_port
+            ),
         ];
 
-        for endpoint in endpoints {
+        for endpoint in &endpoints {
             debug!("Checking remote ZFS service at: {}", endpoint);
 
             // Try to connect to the service
@@ -278,7 +286,7 @@ impl ZfsServiceFactory {
     }
 
     /// Create service for testing with specific configuration
-    pub fn create_test_service(
+    pub async fn create_test_service(
         backend: ZfsBackend,
         fail_safe_enabled: bool,
     ) -> UniversalZfsResult<Arc<dyn UniversalZfsService>> {
@@ -326,27 +334,32 @@ pub trait ServiceConfigBuilder {
     fn with_retry_policy(self, enabled: bool) -> Self;
 }
 impl ServiceConfigBuilder for ZfsServiceConfig {
+    /// Builder method to set Backend
     fn with_backend(mut self, backend: ZfsBackend) -> Self {
         self.backend = backend;
         self
     }
 
+    /// Builder method to set Fail Safe
     fn with_fail_safe(mut self, enabled: bool) -> Self {
         self.fail_safe.circuit_breaker.enabled = enabled;
         self.fail_safe.retry_policy.enabled = enabled;
         self
     }
 
+    /// Builder method to set Graceful Degradation
     fn with_graceful_degradation(mut self, enabled: bool) -> Self {
         self.fail_safe.enable_graceful_degradation = enabled;
         self
     }
 
+    /// Builder method to set Circuit Breaker
     fn with_circuit_breaker(mut self, enabled: bool) -> Self {
         self.fail_safe.circuit_breaker.enabled = enabled;
         self
     }
 
+    /// Builder method to set Retry Policy
     fn with_retry_policy(mut self, enabled: bool) -> Self {
         self.fail_safe.retry_policy.enabled = enabled;
         self

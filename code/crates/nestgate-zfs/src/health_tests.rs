@@ -180,8 +180,7 @@ mod tests {
             drop(monitor);
         }
 
-        // Should not panic
-        assert!(true);
+        // Test passed without panic - no assertion needed
     }
 
     #[test]
@@ -213,6 +212,7 @@ mod tests {
         for (i, level) in levels.into_iter().enumerate() {
             let alert = Alert {
                 id: format!("alert-{}", i),
+                /// Level
                 level,
                 message: "Test message".to_string(),
                 timestamp: SystemTime::now(),

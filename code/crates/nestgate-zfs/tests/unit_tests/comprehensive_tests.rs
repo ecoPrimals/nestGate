@@ -1,6 +1,8 @@
 //
 // Comprehensive unit tests for overall validation
 
+//! Comprehensive Tests module
+
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::time::SystemTime;
@@ -22,7 +24,7 @@ mod unit_tests_comprehensive {
     use super::*;
 
     #[test]
-    fn test_zfs_pool_config_validation() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_zfs_pool_config_validation() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let config = ZfsConfig::default();
 
         // Test valid configuration
@@ -39,7 +41,7 @@ mod unit_tests_comprehensive {
     Ok(())
     }
     #[test]
-    fn test_integration_consistency() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_integration_consistency() -> std::result::Result<(), Box<dyn std::error::Error>> {
         // Test that all components work together consistently
         let config = ZfsConfig::default();
         assert!(config.validate().is_ok());
@@ -61,7 +63,7 @@ mod unit_tests_comprehensive {
     }
 
     #[test]
-    fn test_system_wide_defaults() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_system_wide_defaults() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let config = ZfsConfig::default();
         
         // Test that all systems have sensible defaults
@@ -75,7 +77,7 @@ mod unit_tests_comprehensive {
     }
 
     #[test]
-    fn test_error_handling_consistency() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_error_handling_consistency() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let config = ZfsConfig::default();
         
         // Test that validation consistently returns proper results

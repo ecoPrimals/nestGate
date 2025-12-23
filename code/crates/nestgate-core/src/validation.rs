@@ -1,9 +1,7 @@
 
-/// Validation result type
-// Use canonical ValidationResult from error::idiomatic
-pub use crate::error::idiomatic::ValidationResult;
 /// Validation error types
 #[derive(Debug, Clone)]
+/// Errors that can occur during Validation operations
 pub enum ValidationError {
     /// Invalid format
     InvalidFormat { field: String, reason: String },
@@ -17,6 +15,7 @@ pub enum ValidationError {
     },
 }
 impl std::fmt::Display for ValidationError {
+    /// Fmt
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             ValidationError::InvalidFormat { field, reason } => {
@@ -36,6 +35,12 @@ impl std::fmt::Display for ValidationError {
 }
 
 impl std::error::Error for ValidationError {}
+
+/// Validation result type - specialized for ValidationError
+/// 
+/// **Note**: This is a domain-specific Result type, not the deprecated ValidationResult
+/// from the old unified_result_system. This uses the local ValidationError.
+type ValidationResult<T> = Result<T, ValidationError>;
 
 /// Basic validation utilities
 pub mod utils {
@@ -79,3 +84,7 @@ pub mod utils {
         Ok(())
     }
 }
+
+#[cfg(test)]
+#[path = "validation_tests.rs"]
+mod validation_tests;

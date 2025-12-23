@@ -1,3 +1,5 @@
+//! Real Storage Service module
+
 use crate::error::NestGateError;
 use std::collections::HashMap;
 // Real Storage Service Implementation
@@ -16,6 +18,7 @@ use crate::canonical_modernization::consolidated_storage_types::*;
 
 /// Real storage service implementation
 #[derive(Debug)]
+/// Service implementation for RealStorage
 pub struct RealStorageService {
     /// Storage root directory
     /// File metadata cache
@@ -27,25 +30,55 @@ pub struct RealStorageService {
 }
 /// Storage configuration
 #[derive(Debug, Clone)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// 
+/// **Migration Path**:
+/// ```rust
+/// // OLD (deprecated):
+/// use crate::config::StorageConfig;
+/// 
+/// // NEW (canonical):
+/// use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::config::StorageConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+/// 
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for Storage
 pub struct StorageConfig {
+    /// Root Directory
     pub root_directory: String,
+    /// Size of max file
     pub max_file_size: u64,
+    /// Cache Enabled
     pub cache_enabled: bool,
+    /// Compression Enabled
     pub compression_enabled: bool,
+    /// Backup Enabled
     pub backup_enabled: bool,
 }
 /// Storage statistics
 #[derive(Debug, Clone, Default)]
+/// Storagestatistics
 pub struct StorageStatistics {
+    /// Total Files
     pub total_files: u64,
+    /// Size of total
     pub total_size: u64,
+    /// Count of reads
     pub reads_count: u64,
+    /// Count of writes
     pub writes_count: u64,
+    /// Count of errors
     pub errors_count: u64,
+    /// Cache Hits
     pub cache_hits: u64,
+    /// Cache Misses
     pub cache_misses: u64,
 }
 impl Default for StorageConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             root_directory: "./storage".to_string(),
@@ -333,8 +366,25 @@ impl RealStorageService {
 }
 
 /// Storage service trait - **ZERO-COST NATIVE ASYNC**
-/// **DEPRECATED**: Use `crate::traits::canonical_unified_traits::CanonicalStorage` instead.
+/// **DEPRECATED**: Use `crate::traits::canonical::CanonicalStorage` instead.
 /// This trait is a fragment that should be consolidated into the canonical storage system.
-#[deprecated(since = "0.9.0", note = "Use crate::traits::canonical_unified_traits::CanonicalStorage or crate::traits::unified_storage::UnifiedStorage")]
+#[deprecated(since = "0.9.0", note = "Use crate::traits::canonical::CanonicalStorage or crate::traits::unified_storage::UnifiedStorage")]
 pub trait StorageService: Send + Sync {
 }
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+/// 
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Storageconfigcanonical
+pub type StorageConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using StorageConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+

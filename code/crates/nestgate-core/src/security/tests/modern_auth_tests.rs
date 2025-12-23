@@ -17,6 +17,7 @@ struct ModernAuthManager {
     users: HashMap<String, String>, // username -> password hash
 }
 impl ModernAuthManager {
+    /// Creates a new instance
     fn new() -> Self {
         let mut users = HashMap::new();
         users.insert("test_user".to_string(), "hashed_password".to_string());
@@ -25,6 +26,7 @@ impl ModernAuthManager {
         Self { users }
     }
 
+    /// Authenticate
     fn authenticate(&self, username: &str, password: &str) -> Result<bool> {
         if let Some(_stored_hash) = self.users.get(username) {
             // Mock authentication - in real implementation would verify hash
@@ -34,6 +36,7 @@ impl ModernAuthManager {
         }
     }
 
+    /// Creates  Token
     fn create_token(&self, username: &str) -> Result<String> {
         if self.users.contains_key(username) {
             Ok(format!("modern_token_for_{username}"))
@@ -47,6 +50,7 @@ impl ModernAuthManager {
         }
     }
 
+    /// Validates  Token
     fn validate_token(&self, token: &str) -> Result<String> {
         if token.starts_with("modern_token_for_") {
             let username = token.strip_prefix("modern_token_for_").unwrap_or("unknown");

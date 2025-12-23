@@ -55,6 +55,46 @@ NESTGATE_API_ENDPOINT=http://localhost:8080
 # API URL for client connections
 NESTGATE_API_URL=http://localhost:8080
 
+# Development server port
+NESTGATE_DEV_PORT=3000
+
+# Alternative API port
+NESTGATE_ALT_API_PORT=8081
+
+# ============================================================================
+# SERVICE PORTS
+# ============================================================================
+
+# PostgreSQL port
+NESTGATE_POSTGRES_PORT=5432
+
+# Redis port
+NESTGATE_REDIS_PORT=6379
+
+# MongoDB port
+NESTGATE_MONGODB_PORT=27017
+
+# Prometheus metrics port
+NESTGATE_PROMETHEUS_PORT=9090
+
+# Grafana dashboard port
+NESTGATE_GRAFANA_PORT=3000
+
+# ZFS management port
+NESTGATE_ZFS_PORT=8082
+
+# MCP (Model Context Protocol) port
+NESTGATE_MCP_PORT=8083
+
+# RPC service port
+NESTGATE_RPC_PORT=9000
+
+# WebSocket port
+NESTGATE_WS_PORT=8084
+
+# gRPC port
+NESTGATE_GRPC_PORT=50051
+
 # ============================================================================
 # DEVELOPMENT & TESTING
 # ============================================================================

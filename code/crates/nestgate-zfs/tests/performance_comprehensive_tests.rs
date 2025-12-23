@@ -7,6 +7,8 @@
 // - Alert handling and response
 // - ZFS parameter tuning
 
+//! Performance Comprehensive Tests module
+
 use nestgate_zfs::performance_engine::{
     AccessPattern, AlertResponse, AlertSeverity, AlertType, AppliedOptimization, ArcStatistics,
     BottleneckSeverity, OptimizationType, PerformanceAlert, PerformanceOptimizationResult,
@@ -21,11 +23,17 @@ use std::time::SystemTime;
 mod test_utils {
     use super::*;
 
+    /// Creates  Test Configuration Context
     pub fn create_test_configuration_context() -> ZfsConfigurationContext {
+        let mut current_configuration = HashMap::new();
+        current_configuration.insert("compression".to_string(), "lz4".to_string());
+        current_configuration.insert("recordsize".to_string(), "128K".to_string());
+        current_configuration.insert("atime".to_string(), "off".to_string());
+
         ZfsConfigurationContext {
             pool_name: "testpool".to_string(),
             dataset_name: Some("testpool/data".to_string()),
-            current_configuration: HashMap::new(),
+            current_configuration,
             workload_pattern: WorkloadPattern {
                 access_pattern: AccessPattern::Random,
                 io_size_distribution: HashMap::new(),
@@ -34,13 +42,14 @@ mod test_utils {
             },
             system_capabilities: SystemCapabilities {
                 cpu_cores: 8,
-                memory_gb: 16,
+                memory_gb: 32,
                 storage_type: "SSD".to_string(),
                 network_bandwidth_gbps: 10.0,
             },
         }
     }
 
+    /// Creates  Test Workload Pattern
     pub fn create_test_workload_pattern() -> WorkloadPattern {
         let mut io_size_distribution = HashMap::new();
         io_size_distribution.insert("4K".to_string(), 0.4);
@@ -55,6 +64,7 @@ mod test_utils {
         }
     }
 
+    /// Creates  Test Pool Metrics
     pub fn create_test_pool_metrics(pool_name: &str) -> ZfsPoolMetrics {
         ZfsPoolMetrics {
             pool_name: pool_name.to_string(),
@@ -68,6 +78,7 @@ mod test_utils {
         }
     }
 
+    /// Creates  Test Dataset Metrics
     pub fn create_test_dataset_metrics(dataset_name: &str) -> ZfsDatasetMetrics {
         ZfsDatasetMetrics {
             dataset_name: dataset_name.to_string(),
@@ -77,6 +88,7 @@ mod test_utils {
         }
     }
 
+    /// Creates  Test Performance Metrics
     pub fn create_test_performance_metrics() -> ZfsPerformanceMetrics {
         let mut pool_metrics = HashMap::new();
         pool_metrics.insert("testpool".to_string(), create_test_pool_metrics("testpool"));
@@ -105,6 +117,7 @@ mod test_utils {
         }
     }
 
+    /// Creates  Test Bottleneck
     pub fn create_test_bottleneck(severity: BottleneckSeverity) -> ZfsBottleneck {
         ZfsBottleneck {
             bottleneck_type: ZfsBottleneckType::HighLatency,
@@ -115,28 +128,14 @@ mod test_utils {
             impact_score: 0.8,
         }
     }
-
-    pub fn create_test_workload_pattern() -> WorkloadPattern {
-        let mut io_size_distribution = HashMap::new();
-        io_size_distribution.insert("small".to_string(), 0.3);
-        io_size_distribution.insert("medium".to_string(), 0.5);
-        io_size_distribution.insert("large".to_string(), 0.2);
-
-        WorkloadPattern {
-            access_pattern: AccessPattern::Random,
-            io_size_distribution,
-            read_write_ratio: 0.7,
-            temporal_locality: 0.6,
-        }
-    }
 }
 
 #[cfg(test)]
 mod performance_metrics_tests {
-    use super::*;
+    use super::test_utils::*;
 
     #[test]
-    fn test_performance_metrics_creation() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_performance_metrics_creation() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let metrics = create_test_performance_metrics();
 
         assert_eq!(metrics.pool_metrics.len(), 1);
@@ -146,7 +145,7 @@ mod performance_metrics_tests {
         Ok(())
     }
     #[test]
-    fn test_pool_metrics_validation() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_pool_metrics_validation() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let pool_metrics = create_test_pool_metrics("testpool");
 
         assert_eq!(pool_metrics.pool_name, "testpool");
@@ -158,7 +157,7 @@ mod performance_metrics_tests {
     }
 
     #[test]
-    fn test_dataset_metrics_validation() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_dataset_metrics_validation() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let dataset_metrics = create_test_dataset_metrics("testpool/data");
 
         assert_eq!(dataset_metrics.dataset_name, "testpool/data");
@@ -170,9 +169,11 @@ mod performance_metrics_tests {
 
 #[cfg(test)]
 mod bottleneck_detection_tests {
+    use super::test_utils::*;
+    use super::*;
 
     #[test]
-    fn test_bottleneck_creation() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_bottleneck_creation() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let bottleneck = create_test_bottleneck(BottleneckSeverity::High);
 
         assert_eq!(bottleneck.severity, BottleneckSeverity::High);
@@ -182,7 +183,7 @@ mod bottleneck_detection_tests {
         Ok(())
     }
     #[test]
-    fn test_bottleneck_types() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_bottleneck_types() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let bottleneck_types = [
             ZfsBottleneckType::HighLatency,
             ZfsBottleneckType::LowThroughput,
@@ -199,7 +200,7 @@ mod bottleneck_detection_tests {
     }
 
     #[test]
-    fn test_bottleneck_severity_ordering() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_bottleneck_severity_ordering() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let severities = [
             BottleneckSeverity::Low,
             BottleneckSeverity::Medium,
@@ -216,9 +217,11 @@ mod bottleneck_detection_tests {
 
 #[cfg(test)]
 mod optimization_tests {
+    use super::test_utils::*;
+    use super::*;
 
     #[test]
-    fn test_applied_optimization_creation() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_applied_optimization_creation() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let optimization = AppliedOptimization {
             optimization_type: OptimizationType::CacheOptimization,
             description: "Improved ARC cache configuration".to_string(),
@@ -232,7 +235,7 @@ mod optimization_tests {
     }
 
     #[test]
-    fn test_optimization_result_creation() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_optimization_result_creation() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let optimization = AppliedOptimization {
             optimization_type: OptimizationType::LatencyOptimization,
             description: "Reduced latency through record size optimization".to_string(),
@@ -251,18 +254,18 @@ mod optimization_tests {
         assert_eq!(result.performance_improvement, 30.0);
         assert_eq!(result.bottlenecks_resolved.len(), 1);
         assert_eq!(result.recommendations.len(), 1);
+        Ok(())
     }
 
     #[test]
-    fn test_optimization_result_merge() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_optimization_result_merge() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let mut result1 = PerformanceOptimizationResult {
             applied_optimizations: vec![AppliedOptimization {
-                    optimization_type: OptimizationType::CacheOptimization,
-                    description: "Cache optimization".to_string(),
-                    performance_impact: 0.2,
-                    applied_at: SystemTime::now(),
-            Ok(())
-                }],
+                optimization_type: OptimizationType::CacheOptimization,
+                description: "Cache optimization".to_string(),
+                performance_impact: 0.2,
+                applied_at: SystemTime::now(),
+            }],
             performance_improvement: 20.0,
             bottlenecks_resolved: vec![create_test_bottleneck(BottleneckSeverity::Low)],
             recommendations: vec!["First recommendation".to_string()],
@@ -286,10 +289,11 @@ mod optimization_tests {
         assert_eq!(result1.performance_improvement, 35.0);
         assert_eq!(result1.bottlenecks_resolved.len(), 2);
         assert_eq!(result1.recommendations.len(), 2);
+        Ok(())
     }
 
     #[test]
-    fn test_optimization_types() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_optimization_types() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let types = [
             OptimizationType::CacheOptimization,
             OptimizationType::LatencyOptimization,
@@ -308,8 +312,10 @@ mod optimization_tests {
 #[cfg(test)]
 mod alert_handling_tests {
 
+    use super::*;
+
     #[test]
-    fn test_performance_alert_creation() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_performance_alert_creation() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let alert = PerformanceAlert {
             alert_type: AlertType::PerformanceDegradation,
             severity: AlertSeverity::Warning,
@@ -327,15 +333,14 @@ mod alert_handling_tests {
     }
 
     #[test]
-    fn test_alert_response_creation() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_alert_response_creation() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let optimization_result = PerformanceOptimizationResult {
             applied_optimizations: vec![AppliedOptimization {
-                    optimization_type: OptimizationType::CacheOptimization,
-                    description: "Applied cache optimization".to_string(),
-                    performance_impact: 0.25,
-                    applied_at: SystemTime::now(),
-            Ok(())
-                }],
+                optimization_type: OptimizationType::CacheOptimization,
+                description: "Applied cache optimization".to_string(),
+                performance_impact: 0.25,
+                applied_at: SystemTime::now(),
+            }],
             performance_improvement: 25.0,
             bottlenecks_resolved: vec![],
             recommendations: vec!["Monitor cache hit ratio".to_string()],
@@ -350,10 +355,11 @@ mod alert_handling_tests {
         assert!(response.mitigation_applied);
         assert!(response.optimization_result.is_some());
         assert!(!response.follow_up_required);
+        Ok(())
     }
 
     #[test]
-    fn test_alert_types() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_alert_types() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let alert_types = [
             AlertType::PerformanceDegradation,
             AlertType::BottleneckDetected,
@@ -366,7 +372,7 @@ mod alert_handling_tests {
     }
 
     #[test]
-    fn test_alert_severity_levels() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_alert_severity_levels() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let severities = [
             AlertSeverity::Info,
             AlertSeverity::Warning,
@@ -382,8 +388,11 @@ mod alert_handling_tests {
 #[cfg(test)]
 mod tuning_tests {
 
+    use super::*;
+
     #[test]
-    fn test_tuning_recommendation_creation() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_tuning_recommendation_creation() -> std::result::Result<(), Box<dyn std::error::Error>>
+    {
         let recommendation = ZfsTuningRecommendation {
             parameter: "recordsize".to_string(),
             recommendedvalue: "1M".to_string(),
@@ -399,7 +408,7 @@ mod tuning_tests {
     }
 
     #[test]
-    fn test_tuning_result_creation() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_tuning_result_creation() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let mut parameter_changes = HashMap::new();
         parameter_changes.insert("recordsize".to_string(), "1M".to_string());
         parameter_changes.insert("compression".to_string(), "zstd".to_string());
@@ -419,14 +428,14 @@ mod tuning_tests {
     }
 
     #[test]
-    fn test_tuning_recommendations_validation() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_tuning_recommendations_validation(
+    ) -> std::result::Result<(), Box<dyn std::error::Error>> {
         let recommendations = vec![
             ZfsTuningRecommendation {
                 parameter: "recordsize".to_string(),
                 recommendedvalue: "1M".to_string(),
                 confidence: 0.90,
                 expected_impact: 0.35,
-        Ok(())
             },
             ZfsTuningRecommendation {
                 parameter: "compression".to_string(),
@@ -466,15 +475,17 @@ mod tuning_tests {
                 )
             })?;
         assert_eq!(compression_rec.recommendedvalue, "zstd");
+        Ok(())
     }
 }
 
 #[cfg(test)]
 mod configuration_tests {
     use super::test_utils::*;
+    use super::*;
 
     #[test]
-    fn test_workload_pattern_creation() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_workload_pattern_creation() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let pattern = create_test_workload_pattern();
 
         assert_eq!(pattern.access_pattern, AccessPattern::Random);
@@ -484,7 +495,8 @@ mod configuration_tests {
         Ok(())
     }
     #[test]
-    fn test_configuration_context_creation() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_configuration_context_creation() -> std::result::Result<(), Box<dyn std::error::Error>>
+    {
         let context = create_test_configuration_context();
 
         assert_eq!(context.pool_name, "testpool");
@@ -496,7 +508,8 @@ mod configuration_tests {
     }
 
     #[test]
-    fn test_system_capabilities_validation() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_system_capabilities_validation() -> std::result::Result<(), Box<dyn std::error::Error>>
+    {
         let capabilities = SystemCapabilities {
             cpu_cores: 16,
             memory_gb: 64,
@@ -514,9 +527,12 @@ mod configuration_tests {
 
 #[cfg(test)]
 mod integration_tests {
+    use super::test_utils::*;
+    use super::*;
 
     #[test]
-    fn test_comprehensive_performance_scenario() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_comprehensive_performance_scenario(
+    ) -> std::result::Result<(), Box<dyn std::error::Error>> {
         // Create initial metrics
         let _metrics = create_test_performance_metrics();
 
@@ -530,7 +546,6 @@ mod integration_tests {
                 dataset_name: Some("testpool/data".to_string()),
                 description: "Low cache hit ratio".to_string(),
                 impact_score: 0.6,
-        Ok(())
             },
         ];
 
@@ -576,10 +591,11 @@ mod integration_tests {
 
         assert!(alert_response.mitigation_applied);
         assert!(alert_response.optimization_result.is_some());
+        Ok(())
     }
 
     #[test]
-    fn test_tuning_workflow() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_tuning_workflow() -> std::result::Result<(), Box<dyn std::error::Error>> {
         // Create configuration context
         let _context = create_test_configuration_context();
 
@@ -590,7 +606,6 @@ mod integration_tests {
                 recommendedvalue: "1M".to_string(),
                 confidence: 0.90,
                 expected_impact: 0.40,
-        Ok(())
             },
             ZfsTuningRecommendation {
                 parameter: "compression".to_string(),
@@ -618,5 +633,6 @@ mod integration_tests {
         assert_eq!(tuning_result.parameter_changes.len(), 2);
         assert_eq!(tuning_result.expected_improvement, 65.0);
         assert!(tuning_result.validation_required);
+        Ok(())
     }
 }

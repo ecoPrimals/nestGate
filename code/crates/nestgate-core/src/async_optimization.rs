@@ -1,3 +1,5 @@
+//! Async Optimization module
+
 use crate::error::NestGateError;
 // Advanced Async Optimization Module
 //
@@ -118,8 +120,10 @@ where
     F: Future,
     E: From<NestGateError>,
 {
+    /// Type alias for Output
     type Output = Result<F::Output, E>;
 
+    /// Poll
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         // Implementation would use timeout logic here
         // For now, just forward to the inner future
@@ -286,11 +290,12 @@ impl OptimizedAsyncSemaphore {
     }
 
     /// Acquire permit with optimized waiting
+    #[allow(clippy::expect_used)] // Semaphore never closed
     pub async fn acquire(&self) -> tokio::sync::SemaphorePermit<'_> {
         self.semaphore
             .acquire()
             .await
-            .expect("Semaphore should not be closed")
+            .expect("BUG: Semaphore is never closed")
     }
 
     /// Try to acquire permit without waiting

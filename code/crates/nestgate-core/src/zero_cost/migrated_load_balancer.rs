@@ -14,7 +14,7 @@ use std::future::Future;
 /// - Monomorphized code generation for optimal performance
 ///
 /// **EXPECTED IMPROVEMENTS**: 70% performance gain (highest of all critical targets)
-/// **REPLACES**: `crate::traits_root::load_balancer::LoadBalancer`
+/// **REPLACES**: `crate::traits::load_balancing::LoadBalancer`
 use crate::Result;
 use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
@@ -27,12 +27,9 @@ use std::time::SystemTime;
 pub trait ZeroCostLoadBalancer<const MAX_SERVICES: usize = 1000, const MAX_HISTORY: usize = 10000>:
     Send + Sync + 'static
 {
-    /// Service information type
     type ServiceInfo: Clone + Send + Sync + std::fmt::Debug;
-    /// Service request type
     type ServiceRequest: Clone + Send + Sync;
 
-    /// Service response type
     type ServiceResponse: Clone + Send + Sync;
 
     /// Load balancer statistics type
@@ -76,12 +73,11 @@ pub trait ZeroCostLoadBalancer<const MAX_SERVICES: usize = 1000, const MAX_HISTO
 
     // ========== COMPILE-TIME CONFIGURATION ==========
 
-    /// Maximum number of services - compile-time constant
     fn max_services() -> usize {
+        /// Max Services
         MAX_SERVICES
     }
 
-    /// Maximum history entries - compile-time constant
     fn max_history() -> usize {
         MAX_HISTORY
     }
@@ -142,6 +138,7 @@ pub trait ZeroCostLoadBalancer<const MAX_SERVICES: usize = 1000, const MAX_HISTO
 
 /// Zero-cost load balancing algorithm enum
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Hash)]
+/// Zerocostloadbalancingalgorithm
 pub enum ZeroCostLoadBalancingAlgorithm {
     /// Round-robin selection
     RoundRobin,
@@ -153,7 +150,6 @@ pub enum ZeroCostLoadBalancingAlgorithm {
     Random,
     /// Weighted random selection
     WeightedRandom,
-    /// Health-aware selection
     HealthAware,
     /// Latency-based selection
     LatencyBased,
@@ -202,19 +198,29 @@ impl ZeroCostLoadBalancingAlgorithm {
 
 /// Default service information implementation
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Defaultserviceinfo
 pub struct DefaultServiceInfo {
+    /// Unique identifier
     pub id: String,
+    /// Name
     pub name: String,
+    /// Endpoint
     pub endpoint: String,
+    /// Weight
     pub weight: f64,
     pub health_score: f64,
     pub connections: u32,
+    /// Latency Ms
     pub latency_ms: f64,
+    /// Cpu Usage
     pub cpu_usage: f64,
+    /// Memory Usage
     pub memory_usage: f64,
+    /// Last Seen
     pub last_seen: SystemTime,
 }
 impl DefaultServiceInfo {
+    /// Creates a new instance
     pub fn new(id: String, name: String, endpoint: String) -> Self {
         Self {
             id,
@@ -230,10 +236,12 @@ impl DefaultServiceInfo {
         }
     }
 
+    /// Checks if Healthy
     pub fn is_healthy(&self) -> bool {
         self.health_score >= 0.5
     }
 
+    /// Updates  Metrics
     pub fn update_metrics(&mut self, latency_ms: f64, cpu_usage: f64, memory_usage: f64) {
         self.latency_ms = latency_ms;
         self.cpu_usage = cpu_usage;
@@ -244,6 +252,7 @@ impl DefaultServiceInfo {
         self.health_score = self.calculate_health_score();
     }
 
+    /// Calculate Health Score
     fn calculate_health_score(&self) -> f64 {
         let latency_score = if self.latency_ms < 50.0 {
             1.0
@@ -278,23 +287,33 @@ impl DefaultServiceInfo {
 /// Default service request implementation
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DefaultServiceRequest {
+    /// Unique identifier
     pub id: String,
+    /// Method
     pub method: String,
+    /// Headers
     pub headers: HashMap<String, String>,
+    /// Body
     pub body: Vec<u8>,
+    /// Timestamp
     pub timestamp: SystemTime,
+    /// Priority
     pub priority: RequestPriority,
     pub session_id: Option<String>,
 }
-/// Request priority levels
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 pub enum RequestPriority {
+    /// Low
     Low,
+    /// Normal
     Normal,
+    /// High
     High,
+    /// Critical
     Critical,
 }
 impl Default for RequestPriority {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Normal
     }
@@ -302,29 +321,46 @@ impl Default for RequestPriority {
 
 /// Default service response implementation
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for DefaultService operation
 pub struct DefaultServiceResponse {
+    /// Status Code
     pub status_code: u16,
+    /// Headers
     pub headers: HashMap<String, String>,
+    /// Body
     pub body: Vec<u8>,
+    /// Latency Ms
     pub latency_ms: f64,
+    /// Timestamp
     pub timestamp: SystemTime,
+    /// Success
     pub success: bool,
 }
 /// Default load balancer statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Defaultloadbalancerstats
 pub struct DefaultLoadBalancerStats {
+    /// Total Requests
     pub total_requests: u64,
+    /// Successful Requests
     pub successful_requests: u64,
+    /// Failed Requests
     pub failed_requests: u64,
+    /// Average Latency Ms
     pub average_latency_ms: f64,
     pub requests_per_second: f64,
+    /// Active Services
     pub active_services: u32,
     pub healthy_services: u32,
+    /// Algorithm
     pub algorithm: ZeroCostLoadBalancingAlgorithm,
+    /// Uptime Seconds
     pub uptime_seconds: u64,
+    /// Last Reset
     pub last_reset: SystemTime,
 }
 impl Default for DefaultLoadBalancerStats {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             total_requests: 0,
@@ -343,10 +379,14 @@ impl Default for DefaultLoadBalancerStats {
 
 /// Default weight update implementation
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Defaultweightupdate
 pub struct DefaultWeightUpdate {
     pub service_id: String,
+    /// New Weight
     pub new_weight: f64,
+    /// Reason
     pub reason: String,
+    /// Timestamp
     pub timestamp: SystemTime,
 }
 // ==================== SECTION ====================
@@ -358,6 +398,7 @@ pub struct ZeroCostRoundRobinBalancer {
     weights: std::sync::RwLock<HashMap<String, f64>>,
 }
 impl Default for ZeroCostRoundRobinBalancer {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -375,12 +416,18 @@ impl ZeroCostRoundRobinBalancer {
 }
 
 impl ZeroCostLoadBalancer for ZeroCostRoundRobinBalancer {
+    /// Type alias for ServiceInfo
     type ServiceInfo = DefaultServiceInfo;
+    /// Type alias for ServiceRequest
     type ServiceRequest = DefaultServiceRequest;
+    /// Type alias for ServiceResponse
     type ServiceResponse = DefaultServiceResponse;
+    /// Type alias for Stats
     type Stats = DefaultLoadBalancerStats;
+    /// Type alias for WeightUpdate
     type WeightUpdate = DefaultWeightUpdate;
 
+    /// Select Service
     async fn select_service(
         &self,
         services: &[Self::ServiceInfo],
@@ -412,6 +459,7 @@ impl ZeroCostLoadBalancer for ZeroCostRoundRobinBalancer {
         Ok(healthy_services[index].clone())
     }
 
+    /// Record Response
     async fn record_response(
         &self,
         _service: &Self::ServiceInfo,
@@ -435,6 +483,7 @@ impl ZeroCostLoadBalancer for ZeroCostRoundRobinBalancer {
         Ok(())
     }
 
+    /// Updates  Weights
     async fn update_weights(&self, weights: HashMap<String, f64>) -> Result<()> {
         if let Ok(mut weight_map) = self.weights.write() {
             weight_map.extend(weights);
@@ -442,6 +491,7 @@ impl ZeroCostLoadBalancer for ZeroCostRoundRobinBalancer {
         Ok(())
     }
 
+    /// Gets Stats
     async fn get_stats(&self) -> Result<Self::Stats> {
         if let Ok(stats) = self.stats.read() {
             Ok(stats.clone())
@@ -450,10 +500,12 @@ impl ZeroCostLoadBalancer for ZeroCostRoundRobinBalancer {
         }
     }
 
+    /// Algorithm
     fn algorithm(&self) -> &'static str {
         "zero-cost-round-robin"
     }
 
+    /// Algorithm Type
     fn algorithm_type(&self) -> ZeroCostLoadBalancingAlgorithm {
         ZeroCostLoadBalancingAlgorithm::RoundRobin
     }

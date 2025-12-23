@@ -9,6 +9,7 @@ use std::collections::HashMap;
 
 /// Unified error response structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for UnifiedError operation
 pub struct UnifiedErrorResponse {
     /// Error message for display
     pub message: String,
@@ -101,6 +102,7 @@ impl UnifiedErrorResponse {
 }
 
 impl IntoResponse for UnifiedErrorResponse {
+    /// Into Response
     fn into_response(self) -> Response {
         let status_code = self.to_status_code();
         (status_code, Json(self)).into_response()
@@ -226,12 +228,17 @@ impl ErrorResponseFactory {
 
 /// Legacy error response for backward compatibility
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for LegacyError operation
 pub struct LegacyErrorResponse {
+    /// Error
     pub error: String,
+    /// Code
     pub code: Option<String>,
+    /// Timestamp
     pub timestamp: String,
 }
 impl From<UnifiedErrorResponse> for LegacyErrorResponse {
+    /// From
     fn from(unified: UnifiedErrorResponse) -> Self {
         Self {
             error: unified.message,
@@ -242,58 +249,12 @@ impl From<UnifiedErrorResponse> for LegacyErrorResponse {
 }
 
 impl IntoResponse for LegacyErrorResponse {
+    /// Into Response
     fn into_response(self) -> Response {
         (StatusCode::INTERNAL_SERVER_ERROR, Json(self)).into_response()
     }
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_simple_error_response() {
-        let error = UnifiedErrorResponse::simple("Test error", "TEST_ERROR", "test-component");
-        assert_eq!(error.message, "Test error");
-        assert_eq!(error.code, "TEST_ERROR");
-        assert_eq!(error.component, "test-component");
-        assert_eq!(error.status, 500);
-    }
-
-    #[test]
-    fn test_error_response_with_status() {
-        let error = UnifiedErrorResponse::with_status("Bad request", "BAD_REQUEST", "test", 400);
-        assert_eq!(error.status, 400);
-        assert_eq!(error.to_status_code(), StatusCode::BAD_REQUEST);
-    }
-
-    #[test]
-    fn test_error_factory_methods() {
-        let bad_request = ErrorResponseFactory::bad_request("Invalid input");
-        assert_eq!(bad_request.status, 400);
-        assert_eq!(bad_request.code, "BAD_REQUEST");
-
-        let not_found = ErrorResponseFactory::not_found("/api/test");
-        assert_eq!(not_found.status, 404);
-        assert_eq!(not_found.code, "NOT_FOUND");
-    }
-
-    #[test]
-    fn test_validation_error_with_details() {
-        let error =
-            ErrorResponseFactory::validation_error("username", "must be at least 3 characters");
-        assert_eq!(error.status, 400);
-        assert!(error.details.is_some());
-
-        let details = error.details.unwrap_or_default();
-        assert_eq!(details["field"], serde_json::json!("username"));
-    }
-
-    #[test]
-    fn test_legacy_error_conversion() {
-        let unified = UnifiedErrorResponse::simple("Test", "TEST", "component");
-        let legacy: LegacyErrorResponse = unified.into();
-        assert_eq!(legacy.error, "Test");
-        assert_eq!(legacy.code, Some("TEST".to_string()));
-    }
-}
+#[path = "error_response_tests.rs"]
+mod tests;

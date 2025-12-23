@@ -1,3 +1,5 @@
+//! Runtime Config module
+
 use std::collections::HashMap;
 //
 // Provides dynamic configuration management that eliminates hardcoded values
@@ -8,9 +10,26 @@ use std::env;
 use std::net::SocketAddr;
 use std::str::FromStr;
 use crate::constants::hardcoding::{addresses, ports};
+use crate::error::utilities::safe_env_var_or_default;
 
 /// Runtime configuration manager that eliminates hardcoded values
 #[derive(Debug, Clone)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// 
+/// **Migration Path**:
+/// ```rust
+/// // OLD (deprecated):
+/// use crate::config::RuntimeConfig;
+/// 
+/// // NEW (canonical):
+/// use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::config::RuntimeConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+/// 
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for Runtime
 pub struct RuntimeConfig {
     /// Network configuration
     pub network: NetworkRuntimeConfig,
@@ -23,6 +42,22 @@ pub struct RuntimeConfig {
 }
 /// Network runtime configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// 
+/// **Migration Path**:
+/// ```rust,ignore
+/// // OLD (deprecated):
+/// use crate::network::config::NetworkRuntimeConfig;
+/// 
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::NetworkRuntimeConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+/// 
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for NetworkRuntime
 pub struct NetworkRuntimeConfig {
     /// Primary API port (from NESTGATE_API_PORT or intelligent default)
     pub api_port: u16,
@@ -41,6 +76,22 @@ pub struct NetworkRuntimeConfig {
 }
 /// Service runtime configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// 
+/// **Migration Path**:
+/// ```rust,ignore
+/// // OLD (deprecated):
+/// use crate::network::config::ServiceRuntimeConfig;
+/// 
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::ServiceRuntimeConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+/// 
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for ServiceRuntime
 pub struct ServiceRuntimeConfig {
     /// Service ID (from NESTGATE_SERVICE_ID or generated UUID)
     pub service_id: String,
@@ -53,6 +104,22 @@ pub struct ServiceRuntimeConfig {
 }
 /// Storage runtime configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// 
+/// **Migration Path**:
+/// ```rust
+/// // OLD (deprecated):
+/// use crate::config::StorageRuntimeConfig;
+/// 
+/// // NEW (canonical):
+/// use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::config::StorageRuntimeConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+/// 
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for StorageRuntime
 pub struct StorageRuntimeConfig {
     /// ZFS backend (from NESTGATE_ZFS_BACKEND or "auto")
     pub zfs_backend: String,
@@ -63,6 +130,22 @@ pub struct StorageRuntimeConfig {
 }
 /// Security runtime configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// 
+/// **Migration Path**:
+/// ```rust,ignore
+/// // OLD (deprecated):
+/// use crate::network::config::SecurityRuntimeConfig;
+/// 
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::SecurityRuntimeConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+/// 
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for SecurityRuntime
 pub struct SecurityRuntimeConfig {
     /// Whether to bind only to localhost (from NESTGATE_LOCALHOST_ONLY or true)
     pub localhost_only: bool,
@@ -89,16 +172,17 @@ impl RuntimeConfig {
 
     /// Get the primary API socket address
     pub fn api_socket_addr(&self) -> SocketAddr {
+        let discovery_config = crate::config::discovery_config::ServiceDiscoveryConfig::default();
         let addr = if self.security.localhost_only {
-            format!("{}:{}", addresses::LOCALHOST_IPV4, self.network.api_port)
+            format!("{}:{}", discovery_config.discovery_host, self.network.api_port)
         } else {
             format!("{}:{}", self.network.bind_address, self.network.api_port)
         };
 
         SocketAddr::from_str(&addr).unwrap_or_else(|_| {
-            format!("{}:{}", addresses::LOCALHOST_IPV4, ports::HTTP_DEFAULT)
+            format!("{}:{}", discovery_config.discovery_host, discovery_config.discovery_base_port)
                 .parse()
-                .unwrap_or_else(|_| SocketAddr::from(([127, 0, 0, 1], ports::HTTP_DEFAULT)))
+                .unwrap_or_else(|_| SocketAddr::from(([127, 0, 0, 1], discovery_config.discovery_base_port)))
         })
     }
 
@@ -149,6 +233,7 @@ impl RuntimeConfig {
 }
 
 impl NetworkRuntimeConfig {
+    /// Creates from Environment
     fn from_environment() -> Self {
         // Get base API port from environment or use intelligent default
         let api_port = env::var("NESTGATE_API_PORT")
@@ -156,9 +241,9 @@ impl NetworkRuntimeConfig {
             .and_then(|s| s.parse().ok())
             .or_else(|| env::var("PORT").ok().and_then(|s| s.parse().ok()))
             .unwrap_or_else(|| {
-                // Intelligent default: use 8000 for production, 8080 for development
-                let env_type =
-                    env::var("NESTGATE_ENV").unwrap_or_else(|_| "development".to_string());
+                use crate::constants::hardcoding::ports;
+                // Intelligent default: use 8000 for production, HTTP_DEFAULT for development
+                let env_type = safe_env_var_or_default("NESTGATE_ENV", "development");
                 if env_type == "production" {
                     8000
                 } else {
@@ -181,16 +266,14 @@ impl NetworkRuntimeConfig {
             .and_then(|s| s.parse().ok())
             .unwrap_or(api_port + 3);
 
-        let bind_address = env::var("NESTGATE_BIND_ADDRESS").unwrap_or_else(|_| {
-            // Secure default: localhost only unless explicitly configured
-            if env::var("NESTGATE_ALLOW_EXTERNAL").is_ok() {
-                addresses::BIND_ALL_IPV4.to_string()
-            } else {
-                addresses::LOCALHOST_IPV4.to_string()
-            }
-        );
+        let bind_address_default = if env::var("NESTGATE_ALLOW_EXTERNAL").is_ok() {
+            addresses::BIND_ALL_IPV4
+        } else {
+            addresses::LOCALHOST_IPV4
+        };
+        let bind_address = safe_env_var_or_default("NESTGATE_BIND_ADDRESS", bind_address_default).to_string();
 
-        let hostname = env::var("NESTGATE_HOSTNAME").unwrap_or_else(|| addresses::LOCALHOST_NAME.to_string());
+        let hostname = safe_env_var_or_default("NESTGATE_HOSTNAME", addresses::LOCALHOST_NAME).to_string();
 
         // Load custom service endpoints from environment
         let mut service_endpoints = HashMap::new();
@@ -215,12 +298,12 @@ impl NetworkRuntimeConfig {
 }
 
 impl ServiceRuntimeConfig {
+    /// Creates from Environment
     fn from_environment() -> Self {
         let service_id = env::var("NESTGATE_SERVICE_ID")
             .unwrap_or_else(|_| format!("nestgate-{}", uuid::Uuid::new_v4().simple()));
 
-        let service_name =
-            env::var("NESTGATE_SERVICE_NAME").unwrap_or_else(|_| "nestgate".to_string());
+        let service_name = safe_env_var_or_default("NESTGATE_SERVICE_NAME", "nestgate").to_string();
 
         let environment = env::var("NESTGATE_ENV")
             .or_else(|_| env::var("NODE_ENV"))
@@ -247,6 +330,7 @@ impl ServiceRuntimeConfig {
 }
 
 impl StorageRuntimeConfig {
+    /// Creates from Environment
     fn from_environment() -> Self {
         let zfs_backend = env::var("NESTGATE_ZFS_BACKEND").unwrap_or_else(|_| "auto".to_string());
 
@@ -266,6 +350,7 @@ impl StorageRuntimeConfig {
 }
 
 impl SecurityRuntimeConfig {
+    /// Creates from Environment
     fn from_environment() -> Self {
         let localhost_only = env::var("NESTGATE_LOCALHOST_ONLY")
             .map(|s| s.parse().unwrap_or(true))
@@ -306,6 +391,91 @@ pub fn get_service_port(service_type: &str) -> u16 {
 pub fn get_service_endpoint(service_type: &str) -> String {
     get_runtime_config().service_endpoint(service_type)
 }
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+/// 
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Networkruntimeconfigcanonical
+pub type NetworkRuntimeConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using NetworkRuntimeConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+/// 
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Serviceruntimeconfigcanonical
+pub type ServiceRuntimeConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using ServiceRuntimeConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+/// 
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Securityruntimeconfigcanonical
+pub type SecurityRuntimeConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using SecurityRuntimeConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+/// 
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Storageruntimeconfigcanonical
+pub type StorageRuntimeConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using StorageRuntimeConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+/// 
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Runtimeconfigcanonical
+pub type RuntimeConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using RuntimeConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+
 #[cfg(test)]
 mod tests {
     use super::*;

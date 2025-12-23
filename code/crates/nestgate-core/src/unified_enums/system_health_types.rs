@@ -8,6 +8,7 @@ use std::fmt;
 /// **THE** `SystemStatus` - unified across all modules
 /// Replaces `SystemStatus` definitions across system monitoring modules
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Status values for UnifiedSystem
 pub enum UnifiedSystemStatus {
     /// System is operational
     Operational,
@@ -27,12 +28,14 @@ pub enum UnifiedSystemStatus {
     Custom(String),
 }
 impl Default for UnifiedSystemStatus {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Unknown
     }
 }
 
 impl fmt::Display for UnifiedSystemStatus {
+    /// Fmt
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Operational => write!(f, "operational"),
@@ -52,6 +55,7 @@ impl fmt::Display for UnifiedSystemStatus {
 /// **THE** `TestType` - unified across all modules
 /// Replaces `TestType` definitions in test frameworks and automation
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Types of UnifiedTest
 pub enum UnifiedTestType {
     /// Unit test
     Unit,
@@ -79,12 +83,14 @@ pub enum UnifiedTestType {
     Custom(String),
 }
 impl Default for UnifiedTestType {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Unit
     }
 }
 
 impl fmt::Display for UnifiedTestType {
+    /// Fmt
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Unit => write!(f, "unit"),
@@ -108,6 +114,7 @@ impl fmt::Display for UnifiedTestType {
 /// **THE** `MonitoringStatus` - unified across all modules
 /// Replaces `MonitoringStatus` definitions in observability modules
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Status values for UnifiedMonitoring
 pub enum UnifiedMonitoringStatus {
     /// Monitoring is active
     Active,
@@ -123,12 +130,14 @@ pub enum UnifiedMonitoringStatus {
     Custom(String),
 }
 impl Default for UnifiedMonitoringStatus {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Active
     }
 }
 
 impl fmt::Display for UnifiedMonitoringStatus {
+    /// Fmt
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Active => write!(f, "active"),

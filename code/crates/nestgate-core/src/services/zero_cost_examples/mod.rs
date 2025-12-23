@@ -11,6 +11,8 @@
 // ==================== SECTION ====================
 
 // Configuration management service examples
+//! Zero Cost Examples module
+
 pub mod config_manager;
 // Legacy async_trait implementations
 pub mod legacy_implementations;

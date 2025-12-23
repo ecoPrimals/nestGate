@@ -12,7 +12,7 @@ mod cache_functional_tests {
 
     #[tokio::test]
     async fn test_cache_system_enum_single_tier_operations() {
-        let cache_config = crate::config::canonical_master::CacheConfig {
+        let cache_config = crate::config::canonical_primary::CacheConfig {
             enabled: true,
             size_bytes: 1024 * 1024, // 1MB
             cache_type: "lru".to_string(),
@@ -170,7 +170,7 @@ mod cache_functional_tests {
 
     #[tokio::test]
     async fn test_cache_system_type_checking() {
-        let cache_config = crate::config::canonical_master::CacheConfig {
+        let cache_config = crate::config::canonical_primary::CacheConfig {
             enabled: true,
             size_bytes: 1024 * 1024, // 1MB
             cache_type: "lru".to_string(),
@@ -198,7 +198,7 @@ mod cache_functional_tests {
 
     #[tokio::test]
     async fn test_cache_lifecycle_complete() {
-        let cache_config = crate::config::canonical_master::CacheConfig {
+        let cache_config = crate::config::canonical_primary::CacheConfig {
             enabled: true,
             size_bytes: 1024 * 1024, // 1MB
             cache_type: "lru".to_string(),
@@ -235,7 +235,6 @@ mod cache_functional_tests {
 #[cfg(test)]
 mod cache_manager_entry_tests {
     use super::*;
-    use std::thread;
     use std::time::Duration;
 
     #[test]
@@ -271,13 +270,13 @@ mod cache_manager_entry_tests {
         assert!(entry.is_expired(Duration::from_millis(0)));
     }
 
-    #[test]
-    fn test_cache_entry_access_time_updates() {
+    #[tokio::test]
+    async fn test_cache_entry_access_time_updates() {
         let data = b"test_data".to_vec();
         let mut entry = manager::CacheEntry::new(data);
 
         let first_access = entry.last_accessed;
-        thread::sleep(Duration::from_millis(10));
+        tokio::time::sleep(Duration::from_millis(10)).await;
         entry.access();
         let second_access = entry.last_accessed;
 
@@ -340,15 +339,19 @@ mod cache_stats_tests {
 
     #[test]
     fn test_cache_stats_incremental_updates() {
-        let mut stats = manager::CacheStats::default();
-
-        stats.hits = 10;
-        stats.misses = 5;
+        let stats = manager::CacheStats {
+            hits: 10,
+            misses: 5,
+            ..Default::default()
+        };
         assert_eq!(stats.hit_rate(), 10.0 / 15.0);
 
-        stats.hits = 20;
-        stats.misses = 5;
-        assert_eq!(stats.hit_rate(), 20.0 / 25.0);
+        let stats2 = manager::CacheStats {
+            hits: 20,
+            misses: 5,
+            ..Default::default()
+        };
+        assert_eq!(stats2.hit_rate(), 20.0 / 25.0);
     }
 }
 

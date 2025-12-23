@@ -1,12 +1,14 @@
 //
 // Builder patterns for creating and validating canonical configurations.
 
-use crate::config::canonical_master::system_config::DeploymentEnvironment;
-use crate::config::canonical_master::NestGateCanonicalConfig;
+use crate::config::canonical_primary::system_config::DeploymentEnvironment;
+use crate::config::canonical_primary::NestGateCanonicalConfig;
 use crate::error::Result;
 // Removed unused imports: serde::{Deserialize, Serialize}
 
 /// Canonical configuration builder
+///
+/// Builder pattern for constructing `CanonicalConfig` instances
 #[derive(Debug, Clone)]
 pub struct CanonicalConfigBuilder {
     config: NestGateCanonicalConfig,
@@ -65,6 +67,7 @@ impl CanonicalConfigBuilder {
 }
 
 impl Default for CanonicalConfigBuilder {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

@@ -6,6 +6,7 @@ use std::time::Duration;
 
 /// Intelligent tier assignment settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Tierassignmentsettings
 pub struct TierAssignmentSettings {
     /// Enable intelligent tier assignment
     pub enabled: bool,
@@ -19,31 +20,51 @@ pub struct TierAssignmentSettings {
     pub manual_overrides: TierOverrideSettings,
 }
     #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Tierassignmentalgorithm
 pub struct TierAssignmentAlgorithm {
+    /// Name
     pub name: String,
+    /// Algorithm Type
     pub algorithm_type: String,
+    /// Configuration for 
     pub config: HashMap<String, serde_json::Value>,
+    /// Weight
     pub weight: f64,
 }
     #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Tiertransitionrule
 pub struct TierTransitionRule {
+    /// From Tier
     pub from_tier: String,
+    /// To Tier
     pub to_tier: String,
+    /// Conditions
     pub conditions: Vec<TransitionCondition>,
+    /// Cooldown Period
     pub cooldown_period: Duration,
 }
     #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Transitioncondition
 pub struct TransitionCondition {
+    /// Metric
     pub metric: String,
+    /// Operator
     pub operator: String, // "gt", "lt", "eq", "gte", "lte"
+    /// Value
     pub value: f64,
+    /// Duration
     pub duration: Duration,
 }
     #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Tieroverridesettings
 pub struct TierOverrideSettings {
+    /// Allow Manual Overrides
     pub allow_manual_overrides: bool,
+    /// Override Timeout
     pub override_timeout: Duration,
+    /// Authorized Users
     pub authorized_users: Vec<String>,
+    /// Audit Overrides
     pub audit_overrides: bool,
 }
 // Factory methods for different environments
@@ -71,6 +92,7 @@ impl TierAssignmentSettings {
         }
     }
 
+    /// Production
     pub fn production() -> Self {
         Self {
             enabled: true,
@@ -116,6 +138,7 @@ impl TierAssignmentSettings {
         }
     }
 
+    /// Performance Focused
     pub fn performance_focused() -> Self {
         Self {
             enabled: true,
@@ -161,6 +184,7 @@ impl TierAssignmentSettings {
         }
     }
 
+    /// Reliability Focused
     pub fn reliability_focused() -> Self {
         Self {
             enabled: true,
@@ -236,6 +260,7 @@ impl TierAssignmentSettings {
 }
 
 impl Default for TierAssignmentSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: false,
@@ -248,6 +273,7 @@ impl Default for TierAssignmentSettings {
 }
 
 impl Default for TierOverrideSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             allow_manual_overrides: false,

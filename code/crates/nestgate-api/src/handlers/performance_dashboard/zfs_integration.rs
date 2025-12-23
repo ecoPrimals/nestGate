@@ -2,6 +2,8 @@
 // This module contains all ZFS-specific functionality extracted from the main handlers
 // to maintain the 1000-line file size limit.
 
+//! Zfs Integration module
+
 use crate::handlers::performance_dashboard::types::*;
 use nestgate_core::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
@@ -60,23 +62,37 @@ pub fn calculate_pool_trends(
 // ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Poolinfo
 pub struct PoolInfo {
+    /// Name
     pub name: String,
+    /// Health
     pub health: String,
+    /// Capacity
     pub capacity: String,
 }
     #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Poolcapacity
 pub struct PoolCapacity {
+    /// Total
     pub total: u64,
+    /// Used
     pub used: u64,
+    /// Available
     pub available: u64,
 }
     #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Pooltrendpoint
 pub struct PoolTrendPoint {
+    /// Timestamp
     pub timestamp: u64,
+    /// Used Bytes
     pub used_bytes: u64,
+    /// Total Bytes
     pub total_bytes: u64,
+    /// Io Operations
     pub io_operations: u64,
+    /// Throughput Mbps
     pub throughput_mbps: f64,
 }
 
@@ -152,17 +168,29 @@ pub fn calculate_growth_rate(_pools: &[PoolInfo]) -> f64 {
 // ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Zfsiostats
 pub struct ZfsIOStats {
+    /// Pool name
     pub pool_name: String,
+    /// Read Ops Per Sec
     pub read_ops_per_sec: f64,
+    /// Write Ops Per Sec
     pub write_ops_per_sec: f64,
+    /// Read Throughput Mbps
     pub read_throughput_mbps: f64,
+    /// Write Throughput Mbps
     pub write_throughput_mbps: f64,
+    /// Average Read Latency
     pub average_read_latency: f64,
+    /// Average Write Latency
     pub average_write_latency: f64,
+    /// Peak Read Latency
     pub peak_read_latency: f64,
+    /// Peak Write Latency
     pub peak_write_latency: f64,
+    /// Queue Depth Average
     pub queue_depth_average: f64,
+    /// Io Sizes
     pub io_sizes: Vec<u32>,
 }
 
@@ -186,13 +214,21 @@ pub fn get_zfs_io_stats(pool_name: &str) -> Result<ZfsIOStats, String> {
 // ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Zfsarcstats
 pub struct ZfsArcStats {
+    /// Arc Hits
     pub arc_hits: u64,
+    /// Arc Accesses
     pub arc_accesses: u64,
+    /// L2Arc Hits
     pub l2arc_hits: u64,
+    /// L2Arc Accesses
     pub l2arc_accesses: u64,
+    /// Arc Size Current
     pub arc_size_current: u64,
+    /// Arc Size Target
     pub arc_size_target: u64,
+    /// Arc Components
     pub arc_components: HashMap<String, u64>,
 }
 
@@ -228,11 +264,17 @@ pub fn get_arc_stats_fallback() -> Result<ZfsArcStats, String> {
 // ==================== SECTION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Systemcapacity
 pub struct SystemCapacity {
+    /// Total Pools
     pub total_pools: usize,
+    /// Total Capacity Bytes
     pub total_capacity_bytes: u64,
+    /// Used Capacity Bytes
     pub used_capacity_bytes: u64,
+    /// Available Capacity Bytes
     pub available_capacity_bytes: u64,
+    /// Utilization Percentage
     pub utilization_percentage: f64,
 }
 
@@ -302,10 +344,15 @@ pub fn generate_capacity_forecast(
     Ok(forecast)
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Capacityforecastpoint
 pub struct CapacityForecastPoint {
+    /// Timestamp
     pub timestamp: u64,
+    /// Projected Used Bytes
     pub projected_used_bytes: u64,
+    /// Projected Utilization Percentage
     pub projected_utilization_percentage: f64,
+    /// Confidence Level
     pub confidence_level: f64,
 }
 

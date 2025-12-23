@@ -10,6 +10,7 @@ use std::time::SystemTime;
 /// 
 /// Represents a specific capability that a service provides
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+/// Servicecapability
 pub struct ServiceCapability {
     /// Capability name
     pub name: String,
@@ -23,6 +24,7 @@ pub struct ServiceCapability {
     pub enabled: bool,
 }
 impl Default for ServiceCapability {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             name: "generic".to_string(),
@@ -38,6 +40,7 @@ impl Default for ServiceCapability {
 /// 
 /// Comprehensive metadata for services in the NestGate ecosystem
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Universalservicemetadata
 pub struct UniversalServiceMetadata {
     /// Service identifier
     pub service_id: String,
@@ -65,6 +68,7 @@ pub struct UniversalServiceMetadata {
     pub status: ServiceStatus,
 }
 impl Default for UniversalServiceMetadata {
+    /// Returns the default instance
     fn default() -> Self {
         let now = SystemTime::now();
         Self {
@@ -88,6 +92,7 @@ impl Default for UniversalServiceMetadata {
 /// 
 /// Represents a service endpoint
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Serviceendpoint
 pub struct ServiceEndpoint {
     /// Endpoint name
     pub name: String,
@@ -103,6 +108,7 @@ pub struct ServiceEndpoint {
     pub metadata: HashMap<String, String>,
 }
 impl Default for ServiceEndpoint {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             name: "default".to_string(),
@@ -119,6 +125,7 @@ impl Default for ServiceEndpoint {
 /// 
 /// Represents a service dependency
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Servicedependency
 pub struct ServiceDependency {
     /// Dependency service name
     pub service_name: String,
@@ -130,6 +137,7 @@ pub struct ServiceDependency {
     pub metadata: HashMap<String, String>,
 }
 impl Default for ServiceDependency {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             service_name: "unknown".to_string(),
@@ -144,6 +152,7 @@ impl Default for ServiceDependency {
 /// 
 /// Represents the current status of a service
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+/// Status values for Service
 pub enum ServiceStatus {
     /// Service is running
     Running,
@@ -161,6 +170,7 @@ pub enum ServiceStatus {
     Unknown,
 }
 impl Default for ServiceStatus {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Unknown
     }

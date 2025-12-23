@@ -1,9 +1,9 @@
 // 🚀 ECOSYSTEM UNIFICATION: Import unified types
 
 /// **MODERNIZED**: UnifiedConfig now uses UnifiedConnectionPoolConfig directly
-pub type PoolConfig = crate::config::canonical_master::UnifiedConnectionPoolConfig;
+pub type PoolConfig = crate::config::canonical_primary::UnifiedConnectionPoolConfig;
 // 🚀 MODERN CONVENIENCE METHODS: Extend UnifiedConnectionPoolConfig with pool-specific methods
-impl crate::config::canonical_master::UnifiedConnectionPoolConfig {
+impl crate::config::canonical_primary::UnifiedConnectionPoolConfig {
     /// Create a new pool configuration with custom parameters
     pub fn new_pool_config(
         min_connections: usize,

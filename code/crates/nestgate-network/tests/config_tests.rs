@@ -13,8 +13,8 @@ fn test_default_network_config() {
     let config = default_network_config();
 
     // Verify config is created successfully
-    assert!(config.network.api.max_connections > 0);
-    assert!(config.network.api.connection_timeout.as_secs() > 0);
+    assert!(config.api.max_connections > 0);
+    assert!(config.api.connection_timeout.as_secs() > 0);
 }
 
 #[test]
@@ -22,11 +22,8 @@ fn test_production_network_config() {
     let config = production_network_config();
 
     // Production should have higher limits
-    assert_eq!(config.network.api.max_connections, 2000);
-    assert_eq!(
-        config.network.api.connection_timeout,
-        Duration::from_secs(10)
-    );
+    assert_eq!(config.api.max_connections, 2000);
+    assert_eq!(config.api.connection_timeout, Duration::from_secs(10));
 }
 
 #[test]
@@ -34,11 +31,8 @@ fn test_development_network_config() {
     let config = development_network_config();
 
     // Development should have lower limits and longer timeouts
-    assert_eq!(config.network.api.max_connections, 100);
-    assert_eq!(
-        config.network.api.connection_timeout,
-        Duration::from_secs(30)
-    );
+    assert_eq!(config.api.max_connections, 100);
+    assert_eq!(config.api.connection_timeout, Duration::from_secs(30));
 }
 
 #[test]
@@ -47,10 +41,10 @@ fn test_production_vs_development_config() {
     let dev = development_network_config();
 
     // Production should have more connections
-    assert!(prod.network.api.max_connections > dev.network.api.max_connections);
+    assert!(prod.api.max_connections > dev.api.max_connections);
 
     // Development should have longer timeout
-    assert!(dev.network.api.connection_timeout > prod.network.api.connection_timeout);
+    assert!(dev.api.connection_timeout > prod.api.connection_timeout);
 }
 
 #[test]
@@ -58,7 +52,7 @@ fn test_network_config_builder() {
     let config = NetworkConfigBuilder::new().build();
 
     // Builder should create valid config
-    assert!(config.network.api.max_connections > 0);
+    assert!(config.api.max_connections > 0);
 }
 
 #[test]
@@ -76,13 +70,10 @@ fn test_network_config_clone() {
     let cloned = original.clone();
 
     // Cloned config should have same values
+    assert_eq!(original.api.max_connections, cloned.api.max_connections);
     assert_eq!(
-        original.network.api.max_connections,
-        cloned.network.api.max_connections
-    );
-    assert_eq!(
-        original.network.api.connection_timeout,
-        cloned.network.api.connection_timeout
+        original.api.connection_timeout,
+        cloned.api.connection_timeout
     );
 }
 
@@ -96,7 +87,7 @@ fn test_config_timeout_values() {
 
     for (name, config) in configs {
         // All configs should have reasonable timeout values
-        let timeout_secs = config.network.api.connection_timeout.as_secs();
+        let timeout_secs = config.api.connection_timeout.as_secs();
         assert!(
             timeout_secs >= 5,
             "{} timeout too short: {}",
@@ -122,7 +113,7 @@ fn test_config_connection_limits() {
 
     for (name, config) in configs {
         // All configs should have reasonable connection limits
-        let max_conns = config.network.api.max_connections;
+        let max_conns = config.api.max_connections;
         assert!(
             max_conns >= 10,
             "{} max_connections too low: {}",
@@ -158,8 +149,5 @@ fn test_network_config_builder_multiple_builds() {
     let config1 = builder1.build();
     let config2 = builder2.build();
 
-    assert_eq!(
-        config1.network.api.max_connections,
-        config2.network.api.max_connections
-    );
+    assert_eq!(config1.api.max_connections, config2.api.max_connections);
 }

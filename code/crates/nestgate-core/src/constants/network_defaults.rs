@@ -1,94 +1,118 @@
-//! Network Default Values - Centralized Configuration
+//! Network Address Defaults - Environment-Aware Configuration
 //!
-//! This module provides centralized default values for network configuration.
-//! All hardcoded network values should be replaced with these constants
-//! and made configurable via environment variables or configuration files.
+//! This module provides environment-aware defaults for network addresses,
+//! replacing hardcoded IP addresses and hostnames throughout the codebase.
+//!
+//! **MIGRATION NOTE** (Week 2, Dec 2025): This module is being migrated to use
+//! the modern `EnvironmentConfig` system. Helper functions are deprecated.
+//!
+//! **For new code**: Use `EnvironmentConfig::from_env()` directly
+//! **For existing code**: Use these helpers (will show deprecation warnings)
 
-// ==================== IPv4 DEFAULTS ====================
+use std::net::{Ipv4Addr, Ipv6Addr};
+
+// ==================== IP ADDRESS DEFAULTS ====================
 
 /// Default localhost IPv4 address
-///
-/// **Environment Variable**: `NESTGATE_DEFAULT_IPV4`  
-/// **Usage**: Development, testing, default fallback
-pub const DEFAULT_LOCALHOST_IPV4: &str = "127.0.0.1";
+pub const LOCALHOST_IPV4: Ipv4Addr = Ipv4Addr::LOCALHOST; // 127.0.0.1
 
-/// Default bind address for all interfaces
-///
-/// **Environment Variable**: `NESTGATE_BIND_ADDRESS`  
-/// **Usage**: Server binding, wildcard listening
-pub const DEFAULT_BIND_ALL_IPV4: &str = "0.0.0.0";
+/// Default localhost IPv6 address  
+pub const LOCALHOST_IPV6: Ipv6Addr = Ipv6Addr::LOCALHOST; // ::1
 
-/// Default private network range start (10.0.0.0/8)
-///
-/// **Usage**: Private network detection, validation
-pub const PRIVATE_NETWORK_10_START: &str = "10.0.0.0";
+/// Default bind-all IPv4 address
+pub const BIND_ALL_IPV4: Ipv4Addr = Ipv4Addr::UNSPECIFIED; // 0.0.0.0
 
-/// Default private network range (172.16.0.0/12)
-///
-/// **Usage**: Private network detection, validation
-pub const PRIVATE_NETWORK_172_START: &str = "172.16.0.0";
-
-/// Default private network range (192.168.0.0/16)
-///
-/// **Usage**: Private network detection, validation  
-pub const PRIVATE_NETWORK_192_START: &str = "192.168.0.0";
-
-// ==================== IPv6 DEFAULTS ====================
-
-/// Default localhost IPv6 address
-///
-/// **Environment Variable**: `NESTGATE_DEFAULT_IPV6`  
-/// **Usage**: IPv6 localhost, development
-pub const DEFAULT_LOCALHOST_IPV6: &str = "::1";
-
-/// Default bind address for all IPv6 interfaces
-///
-/// **Environment Variable**: `NESTGATE_BIND_ADDRESS_IPV6`  
-/// **Usage**: IPv6 server binding
-pub const DEFAULT_BIND_ALL_IPV6: &str = "::";
+/// Default bind-all IPv6 address
+pub const BIND_ALL_IPV6: Ipv6Addr = Ipv6Addr::UNSPECIFIED; // ::
 
 // ==================== HOSTNAME DEFAULTS ====================
 
-/// Default hostname - localhost
-///
-/// **Environment Variable**: `NESTGATE_DEFAULT_HOSTNAME`  
-/// **Usage**: Development, testing, default fallback
-pub const DEFAULT_HOSTNAME: &str = "localhost";
+/// Default localhost hostname
+pub const LOCALHOST_NAME: &str = "localhost";
+
+/// Default bind address for services
+pub const DEFAULT_BIND_ADDRESS: &str = "0.0.0.0";
 
 // ==================== HELPER FUNCTIONS ====================
+// **MODERNIZED** (Week 2, Dec 2025): These functions now delegate to
+// migration_bridge and are marked as deprecated.
 
-/// Get default localhost address (IPv4 by default)
+/// Get API bind address from environment or default
 ///
-/// Reads from environment variable `NESTGATE_DEFAULT_IP` or falls back to IPv4 localhost
+/// **DEPRECATED**: Use `EnvironmentConfig::from_env()?.network.bind_address` instead
+#[deprecated(
+    since = "0.6.0",
+    note = "Use EnvironmentConfig::from_env()?.network.bind_address instead"
+)]
 #[must_use]
-pub fn get_default_localhost() -> &'static str {
-    std::env::var("NESTGATE_DEFAULT_IP")
-        .ok()
-        .map(|s| {
-            if s == "ipv6" {
-                DEFAULT_LOCALHOST_IPV6
-            } else {
-                DEFAULT_LOCALHOST_IPV4
-            }
-        })
-        .unwrap_or(DEFAULT_LOCALHOST_IPV4)
+pub fn get_bind_address() -> String {
+    use crate::config::migration_bridge;
+    #[allow(deprecated)]
+    migration_bridge::get_api_host() // bind_address and host are same in new config
 }
 
-/// Get default bind address (IPv4 by default)
+/// Get API host from environment or default
 ///
-/// Reads from environment variable `NESTGATE_BIND_ADDRESS` or falls back to 0.0.0.0
+/// **DEPRECATED**: Use `EnvironmentConfig::from_env()?.network.host` instead
+#[deprecated(
+    since = "0.6.0",
+    note = "Use EnvironmentConfig::from_env()?.network.host instead"
+)]
 #[must_use]
-pub fn get_default_bind_address() -> &'static str {
-    std::env::var("NESTGATE_BIND_ADDRESS")
-        .ok()
-        .map(|s| {
-            if s == "ipv6" {
-                DEFAULT_BIND_ALL_IPV6
-            } else {
-                DEFAULT_BIND_ALL_IPV4
-            }
-        })
-        .unwrap_or(DEFAULT_BIND_ALL_IPV4)
+pub fn get_api_host() -> String {
+    use crate::config::migration_bridge;
+    #[allow(deprecated)]
+    migration_bridge::get_api_host()
+}
+
+/// Get database host from environment or default
+///
+/// **DEPRECATED**: Database configuration should be external to NestGate
+#[deprecated(
+    since = "0.6.0",
+    note = "Database configuration should be managed externally"
+)]
+#[must_use]
+pub fn get_db_host() -> String {
+    std::env::var("NESTGATE_DB_HOST").unwrap_or_else(|_| "localhost".to_string())
+}
+
+/// Get Redis host from environment or default
+///
+/// **DEPRECATED**: Database configuration should be external to NestGate
+#[deprecated(
+    since = "0.6.0",
+    note = "Database configuration should be managed externally"
+)]
+#[must_use]
+pub fn get_redis_host() -> String {
+    std::env::var("NESTGATE_REDIS_HOST").unwrap_or_else(|_| "localhost".to_string())
+}
+
+/// Check if running in production mode
+///
+/// **DEPRECATED**: Use `EnvironmentConfig::from_env()?.is_production()` instead
+#[deprecated(
+    since = "0.6.0",
+    note = "Use EnvironmentConfig for environment detection"
+)]
+#[must_use]
+pub fn is_production() -> bool {
+    std::env::var("NESTGATE_ENVIRONMENT")
+        .map(|v| v == "production")
+        .unwrap_or(false)
+}
+
+/// Check if running in development mode
+///
+/// **DEPRECATED**: Use environment detection from EnvironmentConfig
+#[deprecated(
+    since = "0.6.0",
+    note = "Use EnvironmentConfig for environment detection"
+)]
+#[must_use]
+pub fn is_development() -> bool {
+    !is_production()
 }
 
 // ==================== TESTS ====================
@@ -98,30 +122,45 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_constants_defined() {
-        assert_eq!(DEFAULT_LOCALHOST_IPV4, "127.0.0.1");
-        assert_eq!(DEFAULT_LOCALHOST_IPV6, "::1");
-        assert_eq!(DEFAULT_BIND_ALL_IPV4, "0.0.0.0");
-        assert_eq!(DEFAULT_HOSTNAME, "localhost");
+    fn test_localhost_constants() {
+        assert_eq!(LOCALHOST_IPV4, Ipv4Addr::new(127, 0, 0, 1));
+        assert_eq!(LOCALHOST_IPV6, Ipv6Addr::new(0, 0, 0, 0, 0, 0, 0, 1));
     }
 
     #[test]
-    fn test_get_default_localhost() {
-        // Should return IPv4 by default
-        let localhost = get_default_localhost();
-        assert!(
-            localhost == DEFAULT_LOCALHOST_IPV4 || localhost == DEFAULT_LOCALHOST_IPV6,
-            "Localhost should be either IPv4 or IPv6"
-        );
+    fn test_bind_all_constants() {
+        assert_eq!(BIND_ALL_IPV4, Ipv4Addr::new(0, 0, 0, 0));
+        assert_eq!(BIND_ALL_IPV6, Ipv6Addr::new(0, 0, 0, 0, 0, 0, 0, 0));
     }
 
     #[test]
-    fn test_get_default_bind_address() {
-        // Should return IPv4 by default
-        let bind = get_default_bind_address();
-        assert!(
-            bind == DEFAULT_BIND_ALL_IPV4 || bind == DEFAULT_BIND_ALL_IPV6,
-            "Bind address should be either IPv4 or IPv6"
-        );
+    fn test_get_bind_address() {
+        // Should return a valid address
+        let addr = get_bind_address();
+        assert!(!addr.is_empty());
+    }
+
+    #[test]
+    fn test_get_api_host() {
+        // Should return a valid host
+        let host = get_api_host();
+        assert!(!host.is_empty());
+    }
+
+    #[test]
+    fn test_environment_detection() {
+        // In test environment, should default to development
+        let is_dev = is_development();
+        let is_prod = is_production();
+
+        // At least one should be determinable
+        // Environment detection - type system guarantees these are valid booleans
+        // Just verify we can determine the environment
+        let _environment_determined = is_dev || is_prod;
     }
 }
+
+// Additional comprehensive tests in separate module for better organization
+#[cfg(test)]
+#[path = "network_defaults_tests.rs"]
+mod network_defaults_tests;

@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 // Migration utilities no longer needed - using canonical configurations
 
+#[allow(dead_code)] // Reserved for future validation settings
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ValidationSettings {
     /// System requirements
@@ -15,6 +16,7 @@ pub struct ValidationSettings {
     /// Health monitoring
     pub health_checks: HealthCheckSettings,
 }
+#[allow(dead_code)] // Reserved for future pre-install checks
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PreInstallCheckSettings {
     /// Check system requirements
@@ -38,6 +40,7 @@ pub struct PreInstallCheckSettings {
     /// Validate checksums during installation
     pub validate_checksums: bool,
 }
+#[allow(dead_code)] // Reserved for future post-install validation
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PostInstallValidationSettings {
     /// Validate service installation
@@ -49,6 +52,7 @@ pub struct PostInstallValidationSettings {
     /// Run smoke tests
     pub run_smoke_tests: bool,
 }
+#[allow(dead_code)] // Reserved for future health check settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HealthCheckSettings {
     /// Enable health checks
@@ -62,6 +66,7 @@ pub struct HealthCheckSettings {
 }
 
 impl Default for PreInstallCheckSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             check_system_requirements: true,
@@ -79,6 +84,7 @@ impl Default for PreInstallCheckSettings {
 }
 
 impl Default for PostInstallValidationSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             validate_service: true,
@@ -90,6 +96,7 @@ impl Default for PostInstallValidationSettings {
 }
 
 impl Default for HealthCheckSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,

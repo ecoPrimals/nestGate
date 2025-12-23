@@ -9,6 +9,7 @@ pub struct ZeroCopyMemoryPool {
 }
 
 impl Default for ZeroCopyMemoryPool {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -44,8 +45,12 @@ impl ZeroCopyMemoryPool {
 
 /// Memory pool statistics
 #[derive(Debug, Clone)]
+/// Poolstats
 pub struct PoolStats {
+    /// Total Buffers
     pub total_buffers: usize,
+    /// Available Buffers
     pub available_buffers: usize,
+    /// Allocated Bytes
     pub allocated_bytes: usize,
 } 

@@ -2,8 +2,14 @@
 //
 // Analysis tools and reporting functionality for storage systems.
 
+//! Analysis module
+
 use super::types::{DetectedStorage, StorageAnalysisReport};
 use crate::unified_enums::storage_types::{UnifiedStorageCapability, UnifiedStorageType};
+
+#[cfg(test)]
+#[path = "analysis_tests.rs"]
+mod analysis_tests;
 
 /// Storage analyzer for generating insights and recommendations
 pub struct StorageAnalyzer {
@@ -13,6 +19,7 @@ pub struct StorageAnalyzer {
     performance_threshold: f64,
 }
 impl Default for StorageAnalyzer {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -300,11 +307,17 @@ impl StorageAnalyzer {
 
 /// Use cases for storage selection
 #[derive(Debug, Clone, Copy)]
+/// Storageusecase
 pub enum StorageUseCase {
+    /// Highperformance
     HighPerformance,
+    /// Lowcost
     LowCost,
+    /// Highcapacity
     HighCapacity,
+    /// Backup
     Backup,
+    /// Archive
     Archive,
 }
 impl StorageAnalysisReport {

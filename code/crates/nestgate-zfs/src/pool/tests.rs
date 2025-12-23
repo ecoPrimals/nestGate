@@ -45,6 +45,11 @@ mod pool_manager_tests {
             used_bytes: 400,
             available_bytes: 600,
             utilization_percent: 40.0,
+            fragmentation_percent: 0.0,
+            deduplication_ratio: 1.0,
+            total: 1000,
+            used: 400,
+            available: 600,
         };
 
         assert_eq!(capacity.total_bytes, 1000);
@@ -64,6 +69,11 @@ mod pool_manager_tests {
                 used_bytes: 500_000_000,
                 available_bytes: 500_000_000,
                 utilization_percent: 50.0,
+                fragmentation_percent: 0.0,
+                deduplication_ratio: 1.0,
+                total: 1_000_000_000,
+                used: 500_000_000,
+                available: 500_000_000,
             },
             devices: vec!["/dev/sda".to_string(), "/dev/sdb".to_string()],
             properties: HashMap::new(),
@@ -290,6 +300,11 @@ mod pool_manager_tests {
             used_bytes: 0,
             available_bytes: 1_000_000_000,
             utilization_percent: 0.0,
+            fragmentation_percent: 0.0,
+            deduplication_ratio: 1.0,
+            total: 1_000_000_000,
+            used: 0,
+            available: 1_000_000_000,
         };
 
         assert_eq!(capacity.utilization_percent, 0.0);
@@ -303,6 +318,11 @@ mod pool_manager_tests {
             used_bytes: 1_000_000_000,
             available_bytes: 0,
             utilization_percent: 100.0,
+            fragmentation_percent: 0.0,
+            deduplication_ratio: 1.0,
+            total: 1_000_000_000,
+            used: 1_000_000_000,
+            available: 0,
         };
 
         assert_eq!(capacity.utilization_percent, 100.0);
@@ -316,6 +336,11 @@ mod pool_manager_tests {
             used_bytes: 250_000_000,
             available_bytes: 750_000_000,
             utilization_percent: 25.0,
+            fragmentation_percent: 0.0,
+            deduplication_ratio: 1.0,
+            total: 1_000_000_000,
+            used: 250_000_000,
+            available: 750_000_000,
         };
 
         assert_eq!(
@@ -337,6 +362,11 @@ mod pool_manager_tests {
                 used_bytes: 500,
                 available_bytes: 500,
                 utilization_percent: 50.0,
+                fragmentation_percent: 0.0,
+                deduplication_ratio: 1.0,
+                total: 1000,
+                used: 500,
+                available: 500,
             },
             devices: vec![],
             properties: HashMap::new(),
@@ -353,17 +383,25 @@ mod pool_manager_tests {
             "state": "Online",
             "health": "Healthy",
             "capacity": {
+                "total": 1000,
                 "total_bytes": 1000,
+                "used": 500,
                 "used_bytes": 500,
+                "available": 500,
                 "available_bytes": 500,
-                "utilization_percent": 50.0
+                "utilization_percent": 50.0,
+                "fragmentation_percent": 0.0,
+                "deduplication_ratio": 1.0
             },
             "devices": [],
             "properties": {}
         }"#;
 
         let pool: std::result::Result<PoolInfo, _> = serde_json::from_str(json);
-        assert!(pool.is_ok());
+        if let Err(e) = &pool {
+            eprintln!("Deserialization error: {}", e);
+        }
+        assert!(pool.is_ok(), "Failed to deserialize: {:?}", pool.err());
         let pool = pool.expect("ZFS operation failed");
         assert_eq!(pool.name, "deserialize_test");
     }
@@ -399,6 +437,11 @@ mod pool_manager_tests {
                 used_bytes: 0,
                 available_bytes: 100_000_000_000,
                 utilization_percent: 0.0,
+                fragmentation_percent: 0.0,
+                deduplication_ratio: 1.0,
+                total: 100_000_000_000,
+                used: 0,
+                available: 100_000_000_000,
             },
             devices: devices.clone(),
             properties: HashMap::new(),
@@ -423,6 +466,11 @@ mod pool_manager_tests {
                 used_bytes: 0,
                 available_bytes: 1000,
                 utilization_percent: 0.0,
+                fragmentation_percent: 0.0,
+                deduplication_ratio: 1.0,
+                total: 1000,
+                used: 0,
+                available: 1000,
             },
             devices: vec![],
             properties: properties.clone(),
@@ -441,6 +489,11 @@ mod pool_manager_tests {
             used_bytes: u64::MAX / 4,
             available_bytes: u64::MAX / 4,
             utilization_percent: 50.0,
+            fragmentation_percent: 0.0,
+            deduplication_ratio: 1.0,
+            total: 0,
+            used: 0,
+            available: 0,
         };
 
         assert!(capacity.total_bytes > 0);
@@ -467,6 +520,11 @@ mod pool_manager_tests {
             used_bytes: used,
             available_bytes: available,
             utilization_percent: (used as f64 / total as f64) * 100.0,
+            fragmentation_percent: 0.0,
+            deduplication_ratio: 1.0,
+            total: 0,
+            used: 0,
+            available: 0,
         };
 
         assert_eq!(capacity.total_bytes, total);
@@ -495,6 +553,11 @@ mod pool_manager_tests {
                 used_bytes: 1_000_000_000,
                 available_bytes: 2_000_000_000,
                 utilization_percent: 33.33,
+                fragmentation_percent: 0.0,
+                deduplication_ratio: 1.0,
+                total: 3_000_000_000,
+                used: 1_000_000_000,
+                available: 2_000_000_000,
             },
             devices: devices.clone(),
             properties: HashMap::new(),
@@ -519,6 +582,11 @@ mod pool_manager_tests {
             used_bytes: 500,
             available_bytes: 500,
             utilization_percent: 50.0,
+            fragmentation_percent: 0.0,
+            deduplication_ratio: 1.0,
+            total: 1000,
+            used: 500,
+            available: 500,
         };
 
         let json = serde_json::to_string(&capacity).expect("Failed to serialize");

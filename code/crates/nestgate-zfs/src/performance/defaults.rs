@@ -1,3 +1,5 @@
+//! Defaults module
+
 use std::collections::HashMap;
 use std::time::SystemTime;
 
@@ -13,6 +15,7 @@ use crate::types::StorageTier;
 // Default implementation moved to unified configuration system
 
 impl Default for CurrentPerformanceMetrics {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             timestamp: SystemTime::now(),
@@ -26,6 +29,7 @@ impl Default for CurrentPerformanceMetrics {
 }
 
 impl Default for PoolPerformanceMetrics {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             total_iops: 80000.0,
@@ -40,6 +44,7 @@ impl Default for PoolPerformanceMetrics {
 }
 
 impl Default for SystemResourceMetrics {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             cpu_utilization_percent: 25.0,
@@ -53,6 +58,7 @@ impl Default for SystemResourceMetrics {
 }
 
 impl Default for IoStatistics {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             total_reads: 1_000_000,
@@ -66,6 +72,7 @@ impl Default for IoStatistics {
 }
 
 impl Default for PerformanceTrends {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             iops_trend: 0.0,
@@ -78,6 +85,7 @@ impl Default for PerformanceTrends {
 }
 
 impl Default for TierPerformanceTargets {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             target_iops: 50000.0,
@@ -90,6 +98,7 @@ impl Default for TierPerformanceTargets {
 }
 
 impl Default for SlaCompliance {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             latency_compliance: 98.5,
@@ -101,6 +110,7 @@ impl Default for SlaCompliance {
 }
 
 impl Default for PoolProperties {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             fragmentation: 0.0,
@@ -111,6 +121,7 @@ impl Default for PoolProperties {
 }
 
 impl Default for DatasetPerformanceStats {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             read_iops: 0.0,

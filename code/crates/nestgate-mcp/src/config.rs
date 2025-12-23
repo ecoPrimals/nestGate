@@ -5,7 +5,7 @@
 //! are now part of the unified canonical configuration.
 
 // Re-export from canonical configuration system
-pub use nestgate_core::config::canonical_master::{McpConfig, NestGateCanonicalConfig};
+pub use nestgate_core::config::canonical_primary::{McpConfig, NestGateCanonicalConfig};
 
 // Removed unused imports for pedantic perfection
 
@@ -15,7 +15,7 @@ pub use nestgate_core::config::canonical_master::{McpConfig, NestGateCanonicalCo
 // Use the canonical configuration system instead:
 //
 // ```rust
-// use nestgate_core::config::canonical_master::{NestGateCanonicalConfig, McpConfig};
+// use nestgate_core::config::canonical_primary::{NestGateCanonicalConfig, McpConfig};
 //
 // let config = NestGateCanonicalConfig::default();
 // let mcp_config = config.services.mcp;

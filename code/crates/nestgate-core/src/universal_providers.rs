@@ -13,6 +13,7 @@ use std::time::{Duration, SystemTime};
 /// Universal Security Provider Wrapper
 /// Provides a universal interface for any security provider (Security, custom, enterprise)
 #[allow(dead_code)]
+/// Universalsecuritywrapper
 pub struct UniversalSecurityWrapper {
     provider_name: String,
     endpoint: String,
@@ -21,13 +22,19 @@ pub struct UniversalSecurityWrapper {
 }
 /// Trait for any security client (Security, Vault, etc.)
 /// **DEPRECATED**: Client pattern consolidated into canonical security
-#[deprecated(since = "0.9.0", note = "Use crate::traits::canonical_unified_traits::CanonicalSecurity with client adapter")]
+#[deprecated(since = "0.9.0", note = "Use crate::traits::canonical::CanonicalSecurity with client adapter")]
 pub trait SecurityClient: Send + Sync {
+    /// Authenticate
     fn authenticate(&self, credentials: &Credentials) -> impl std::future::Future<Output = Result<AuthToken>> + Send;
+    /// Encrypt
     fn encrypt(&self, data: &[u8], algorithm: &str) -> impl std::future::Future<Output = Result<Vec<u8>> + Send;
+    /// Decrypt
     fn decrypt(&self, encrypted: &[u8], algorithm: &str) -> impl std::future::Future<Output = Result<Vec<u8>> + Send;
+    /// Sign Data
     fn sign_data(&self, data: &[u8]) -> impl std::future::Future<Output = Result<Signature>> + Send;
+    /// Verify Signature
     fn verify_signature(&self, data: &[u8], signature: &Signature) -> impl std::future::Future<Output = Result<bool>> + Send;
+    /// Health Check
     fn health_check(&self) -> impl std::future::Future<Output = Result<bool>> + Send;
 }
 impl UniversalSecurityWrapper {
@@ -64,6 +71,7 @@ impl UniversalSecurityWrapper {
 }
 
 impl SecurityPrimalProvider for UniversalSecurityWrapper {
+    /// Authenticate
     async fn authenticate(&self, credentials: &Credentials) -> Result<AuthToken> {
         if let Some(client) = &self.client {
             client.authenticate(credentials).await
@@ -107,6 +115,7 @@ impl SecurityPrimalProvider for UniversalSecurityWrapper {
         }
     }
 
+    /// Validates  Token
     async fn validate_token(&self, token: &str, _data: &[u8]) -> Result<bool> {
         if let Some(_client) = &self.client {
             // Note: SecurityClient trait doesn't have this method with data parameter
@@ -134,6 +143,7 @@ impl SecurityPrimalProvider for UniversalSecurityWrapper {
         }
     }
 
+    /// Sign Data
     async fn sign_data(&self, data: &[u8]) -> Result<Signature> {
         if let Some(client) = &self.client {
             client.sign_data(data).await
@@ -155,6 +165,7 @@ impl SecurityPrimalProvider for UniversalSecurityWrapper {
         }
     }
 
+    /// Verify Signature
     async fn verify_signature(&self, data: &[u8], signature: &Signature) -> Result<bool> {
         if let Some(client) = &self.client {
             client.verify_signature(data, signature).await
@@ -175,6 +186,7 @@ impl SecurityPrimalProvider for UniversalSecurityWrapper {
         }
     }
 
+    /// Encrypt
     async fn encrypt(&self, data: &[u8], algorithm: &str) -> Result<Vec<u8>> {
         if let Some(client) = &self.client {
             client.encrypt(data, algorithm).await
@@ -195,6 +207,7 @@ impl SecurityPrimalProvider for UniversalSecurityWrapper {
         }
     }
 
+    /// Decrypt
     async fn decrypt(&self, encrypted_data: &[u8], algorithm: &str) -> Result<Vec<u8>> {
         if let Some(client) = &self.client {
             client.decrypt(encrypted_data, algorithm).await
@@ -215,11 +228,13 @@ impl SecurityPrimalProvider for UniversalSecurityWrapper {
         }
     }
 
+    /// Gets Key Id
     async fn get_key_id(&self) -> Result<String> {
         // Default implementation - could be customized per provider type
         Ok(format!("{self.provider_name}-key"))
     }
 
+    /// Generate Validation Token
     async fn generate_validation_token(&self, data: &[u8]) -> Result<String> {
         // Generate a simple validation token - could delegate to underlying client
         let mut hasher = Sha256::new();
@@ -228,6 +243,7 @@ impl SecurityPrimalProvider for UniversalSecurityWrapper {
         Ok(format!("{:x}")))
     }
 
+    /// Evaluate Boundary Access
     async fn evaluate_boundary_access(
         &self,
         source: &str,
@@ -245,6 +261,7 @@ impl SecurityPrimalProvider for UniversalSecurityWrapper {
 /// Universal Orchestration Provider Wrapper  
 /// Provides a universal interface for any orchestration provider (Orchestration, Kubernetes, etc.)
 #[allow(dead_code)]
+/// Universalorchestrationwrapper
 pub struct UniversalOrchestrationWrapper {
     provider_name: String,
     endpoint: String,
@@ -253,13 +270,19 @@ pub struct UniversalOrchestrationWrapper {
 }
 /// Trait for any orchestration client (Orchestration, Kubernetes, etc.)
 pub trait OrchestrationClient: Send + Sync {
+    /// Register Service
     fn register_service(&self, service: &ServiceRegistration) -> impl std::future::Future<Output = Result<String>> + Send;
+    /// Discover Services
     fn discover_services(&self, service_type: &str) -> impl std::future::Future<Output = Result<Vec<ServiceInstance>> + Send;
+    /// Allocate Port
     fn allocate_port(&self, service: &str, port_type: &str) -> impl std::future::Future<Output = Result<u16>> + Send;
+    /// Release Port
     fn release_port(&self, service: &str, port: u16) -> impl std::future::Future<Output = Result<()>> + Send;
+    /// Health Check
     fn health_check(&self) -> impl std::future::Future<Output = Result<bool>> + Send;
 }
 impl UniversalOrchestrationWrapper {
+    /// Creates a new instance
     pub fn new(provider_name: String, endpoint: String, capabilities: Vec<String>) -> Self {
         Self {
             provider_name,
@@ -275,6 +298,7 @@ impl UniversalOrchestrationWrapper {
         self
     }
 
+    /// Auto Detect Provider Type
     pub fn auto_detect_provider_type(endpoint: &str) -> String {
         // Use standard orchestration patterns for generic detection
         if endpoint.contains("8000") || endpoint.contains("orchestration") {
@@ -294,6 +318,7 @@ impl UniversalOrchestrationWrapper {
 }
 
 impl OrchestrationPrimalProvider for UniversalOrchestrationWrapper {
+    /// Register Service
     async fn register_service(&self, service: &ServiceRegistration) -> Result<String> {
         if let Some(client) = &self.client {
             client.register_service(service).await
@@ -303,6 +328,7 @@ impl OrchestrationPrimalProvider for UniversalOrchestrationWrapper {
         }
     }
 
+    /// Discover Services
     async fn discover_services(&self, service_type: &str) -> Result<Vec<ServiceInstance>> {
         if let Some(client) = &self.client {
             client.discover_services(service_type).await
@@ -312,6 +338,7 @@ impl OrchestrationPrimalProvider for UniversalOrchestrationWrapper {
         }
     }
 
+    /// Allocate Port
     async fn allocate_port(&self, service: &str, port_type: &str) -> Result<u16> {
         if let Some(client) = &self.client {
             client.allocate_port(service, port_type).await
@@ -321,6 +348,7 @@ impl OrchestrationPrimalProvider for UniversalOrchestrationWrapper {
         }
     }
 
+    /// Release Port
     async fn release_port(&self, service: &str, port: u16) -> Result<()> {
         if let Some(client) = &self.client {
             client.release_port(service, port).await
@@ -330,6 +358,7 @@ impl OrchestrationPrimalProvider for UniversalOrchestrationWrapper {
         }
     }
 
+    /// Route Request
     async fn route_request(&self, request: &InterPrimalRequest) -> Result<InterPrimalResponse> {
         // Default routing implementation
         Ok(InterPrimalResponse {
@@ -340,12 +369,14 @@ impl OrchestrationPrimalProvider for UniversalOrchestrationWrapper {
         })
     }
 
+    /// Gets Service Health
     async fn get_service_health(&self, service: &str) -> Result<ServiceHealth> {
         // Default health check
         tracing::debug!("Getting health for service: {}", service);
         Ok(ServiceHealth::Healthy)
     }
 
+    /// Load Balance
     async fn load_balance(
         &self,
         _service: &str,
@@ -361,25 +392,31 @@ impl OrchestrationPrimalProvider for UniversalOrchestrationWrapper {
 }
 
 /// Universal Compute Provider Wrapper
-/// Provides a universal interface for any compute provider (ToadStool, Docker, etc.)
+/// Provides a universal interface for any compute provider (Docker, Kubernetes, etc.)
 #[allow(dead_code)]
+/// Universalcomputewrapper
 pub struct UniversalComputeWrapper {
     provider_name: String,
     endpoint: String,
     capabilities: Vec<String>,
     client: Option<Arc<dyn ComputePrimalProvider>>,
 }
-/// Trait for any compute client (ToadStool, Docker, etc.)
+/// Trait for any compute client (Docker, Kubernetes, etc.)
 pub trait ComputeClient: Send + Sync {
+    /// Allocate Resources
     fn allocate_resources(&self, spec: &ResourceSpec) -> impl std::future::Future<Output = Result<ResourceAllocation>> + Send;
+    /// Execute Workload
     fn execute_workload(&self, workload: &WorkloadSpec) -> impl std::future::Future<Output = Result<WorkloadResult>> + Send;
+    /// Monitor Performance
     async fn monitor_performance(
         &self,
         allocation: &ResourceAllocation,
     ) -> Result<PerformanceMetrics>;
+    /// Health Check
     fn health_check(&self) -> impl std::future::Future<Output = Result<bool>> + Send;
 }
 impl UniversalComputeWrapper {
+    /// Creates a new instance
     pub fn new(provider_name: String, endpoint: String, capabilities: Vec<String>) -> Self {
         Self {
             provider_name,
@@ -395,6 +432,7 @@ impl UniversalComputeWrapper {
         self
     }
 
+    /// Auto Detect Provider Type
     pub fn auto_detect_provider_type(endpoint: &str) -> String {
         // Use standard compute patterns for generic detection
         if endpoint.contains("9000") || endpoint.contains("compute") {
@@ -412,6 +450,7 @@ impl UniversalComputeWrapper {
 }
 
 impl ComputePrimalProvider for UniversalComputeWrapper {
+    /// Allocate Resources
     async fn allocate_resources(&self, spec: &ResourceSpec) -> Result<ResourceAllocation> {
         if let Some(client) = &self.client {
             client.allocate_resources(spec).await
@@ -426,6 +465,7 @@ impl ComputePrimalProvider for UniversalComputeWrapper {
         }
     }
 
+    /// Execute Workload
     async fn execute_workload(&self, workload: &WorkloadSpec) -> Result<WorkloadResult> {
         if let Some(client) = &self.client {
             client.execute_workload(workload).await
@@ -440,6 +480,7 @@ impl ComputePrimalProvider for UniversalComputeWrapper {
         }
     }
 
+    /// Monitor Performance
     async fn monitor_performance(
         &self,
         allocation: &ResourceAllocation,
@@ -457,6 +498,7 @@ impl ComputePrimalProvider for UniversalComputeWrapper {
         }
     }
 
+    /// Scale Resources
     async fn scale_resources(
         &self,
         allocation: &ResourceAllocation,
@@ -475,6 +517,7 @@ impl ComputePrimalProvider for UniversalComputeWrapper {
         }
     }
 
+    /// Gets Resource Utilization
     async fn get_resource_utilization(&self) -> Result<ResourceUtilization> {
         if let Some(client) = &self.client {
             client.get_resource_utilization().await
@@ -490,6 +533,7 @@ impl ComputePrimalProvider for UniversalComputeWrapper {
         }
     }
 
+    /// Detect Platform
     async fn detect_platform(&self) -> Result<PlatformCapabilities> {
         if let Some(client) = &self.client {
             client.detect_platform().await
@@ -505,6 +549,7 @@ impl ComputePrimalProvider for UniversalComputeWrapper {
         }
     }
 
+    /// Optimize Allocation
     async fn optimize_allocation(
         &self,
         current: &ResourceAllocation,
@@ -530,6 +575,7 @@ impl ComputePrimalProvider for UniversalComputeWrapper {
         })
     }
     
+    /// Detect System Features
     fn detect_system_features(&self) -> Vec<String> {
         let mut features = Vec::new();
         

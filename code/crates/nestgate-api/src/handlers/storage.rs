@@ -8,9 +8,11 @@ use std::process::Command;
 ///
 /// Main handler for storage operations and management.
 #[derive(Debug, Clone)]
+/// Handler for Storage requests
 pub struct StorageHandler;
 
 impl Default for StorageHandler {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -26,6 +28,7 @@ impl StorageHandler {
 
 /// Storage pool information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagepool
 pub struct StoragePool {
     /// Pool name
     pub name: String,
@@ -44,6 +47,7 @@ pub struct StoragePool {
 }
 /// Storage dataset information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagedataset
 pub struct StorageDataset {
     /// Dataset name
     pub name: String,
@@ -62,6 +66,7 @@ pub struct StorageDataset {
 }
 /// Storage snapshot information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagesnapshot
 pub struct StorageSnapshot {
     /// Name of the storage volume
     pub name: String,
@@ -76,6 +81,7 @@ pub struct StorageSnapshot {
 }
 /// Storage metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagemetrics
 pub struct StorageMetrics {
     /// Total number of storage pools
     pub total_pools: u32,
@@ -99,6 +105,10 @@ pub struct StorageMetrics {
 /// **GET STORAGE POOLS HANDLER**
 ///
 /// Retrieve information about all storage pools.
+///
+/// # Errors
+///
+/// This function currently always returns `Ok`, but returns `Result` for future error handling.
 #[must_use]
 pub async fn get_storage_pools() -> Result<Json<Vec<StoragePoolInfo>>, StatusCode> {
     let pools = vec![
@@ -124,6 +134,10 @@ pub async fn get_storage_pools() -> Result<Json<Vec<StoragePoolInfo>>, StatusCod
 /// **GET STORAGE DATASETS HANDLER**
 ///
 /// Retrieve information about all storage datasets.
+///
+/// # Errors
+///
+/// This function currently always returns `Ok`, but returns `Result` for future error handling.
 #[must_use]
 pub async fn get_storage_datasets() -> Result<Json<Vec<StorageDatasetInfo>>, StatusCode> {
     let datasets = vec![
@@ -149,6 +163,10 @@ pub async fn get_storage_datasets() -> Result<Json<Vec<StorageDatasetInfo>>, Sta
 /// **GET STORAGE SNAPSHOTS HANDLER**
 ///
 /// Retrieve information about all storage snapshots.
+///
+/// # Errors
+///
+/// This function currently always returns `Ok`, but returns `Result` for future error handling.
 #[must_use]
 pub async fn get_storage_snapshots() -> Result<Json<Vec<StorageSnapshotInfo>>, StatusCode> {
     let snapshots = vec![
@@ -172,6 +190,10 @@ pub async fn get_storage_snapshots() -> Result<Json<Vec<StorageSnapshotInfo>>, S
 /// **GET STORAGE METRICS HANDLER**
 ///
 /// Retrieve current storage performance metrics.
+///
+/// # Errors
+///
+/// This function currently always returns `Ok`, but returns `Result` for future error handling.
 #[must_use]
 pub async fn get_storage_metrics() -> Result<Json<StorageMetrics>, StatusCode> {
     let metrics = StorageMetrics {
@@ -193,6 +215,7 @@ pub async fn get_storage_metrics() -> Result<Json<StorageMetrics>, StatusCode> {
 ///
 /// Information about a storage pool.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagepoolinfo
 pub struct StoragePoolInfo {
     /// Pool name
     pub name: String,
@@ -210,6 +233,7 @@ pub struct StoragePoolInfo {
 ///
 /// Information about a storage dataset.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagedatasetinfo
 pub struct StorageDatasetInfo {
     /// Dataset name
     pub name: String,
@@ -227,6 +251,7 @@ pub struct StorageDatasetInfo {
 ///
 /// Information about a storage snapshot.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagesnapshotinfo
 pub struct StorageSnapshotInfo {
     /// Snapshot name
     pub name: String,
@@ -241,7 +266,7 @@ pub struct StorageSnapshotInfo {
 /// **STORAGE UTILITY FUNCTIONS**
 ///
 /// These functions are kept for future storage integration and testing purposes.
-
+///
 /// Collect real storage pools from system
 #[allow(dead_code)] // Reserved for future real storage integration
 async fn collect_real_storage_pools(
@@ -452,7 +477,8 @@ fn get_directory_usage(
 /// Create fallback dataset for user home directory
 #[allow(dead_code)] // Reserved for fallback storage implementation
 async fn create_fallback_home_dataset() -> StorageDataset {
-    let home_dir = std::env::var("HOME").unwrap_or_else(|_| "/home".to_string());
+    use nestgate_core::error::utilities::safe_env_var_or_default;
+    let home_dir = safe_env_var_or_default("HOME", "/home");
     let (size, used, available) = get_directory_usage(&home_dir).unwrap_or((0, 0, 0));
     StorageDataset {
         name: "user_home".to_string(),
@@ -606,11 +632,13 @@ async fn collect_fallback_storage_metrics() -> StorageMetrics {
 
 /// Storage manager for storage operations
 #[derive(Debug, Clone)]
+/// Manager for Storage operations
 pub struct StorageManager {
     // Placeholder fields
 }
 
 impl Default for StorageManager {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

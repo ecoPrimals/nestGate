@@ -2,8 +2,8 @@
 
 use super::core::NativeZfsService;
 use super::parsing;
-use crate::handlers::zfs::universal_zfs::types::{SnapshotConfig, SnapshotInfo};
 use crate::handlers::zfs::universal_zfs::UniversalZfsResult;
+use crate::handlers::zfs::universal_zfs_types::{SnapshotConfig, SnapshotInfo};
 
 /// List all snapshots in the system or for a specific pool
 ///
@@ -16,7 +16,7 @@ use crate::handlers::zfs::universal_zfs::UniversalZfsResult;
 ///
 /// # Returns
 /// * `UniversalZfsResult<Vec<SnapshotInfo>>` - List of snapshot information
-pub fn list_snapshots(
+pub async fn list_snapshots(
     service: &NativeZfsService,
     pool_name: Option<&str>,
 ) -> UniversalZfsResult<Vec<SnapshotInfo>> {
@@ -38,22 +38,24 @@ pub fn list_snapshots(
 ///
 /// # Returns
 /// * `UniversalZfsResult<SnapshotInfo>` - Information about the created snapshot
-pub fn create_snapshot(
+pub async fn create_snapshot(
     service: &NativeZfsService,
     config: &SnapshotConfig,
 ) -> UniversalZfsResult<SnapshotInfo> {
-    let snapshot_name = format!("{config.dataset}@snapshot");
+    let snapshot_name = format!("{}@snapshot", config.dataset);
     service
         .execute_zfs_command("zfs", &["snapshot", &snapshot_name])
         .await?;
     // Return snapshot info
     Ok(SnapshotInfo {
         name: config.name.clone(),
-        dataset: config.dataset.clone(),
-        created_at: std::time::SystemTime::now(),
-        size_bytes: 0,
+        creation_time: std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs(),
+        used: 0,
+        referenced: 0,
         properties: std::collections::HashMap::new(),
-        description: config.description.clone(),
     })
 }
 
@@ -69,7 +71,7 @@ pub fn create_snapshot(
 ///
 /// # Returns
 /// * `UniversalZfsResult<()>` - Success or error result
-pub fn destroy_snapshot(
+pub async fn destroy_snapshot(
     service: &NativeZfsService,
     snapshot_name: &str,
     recursive: bool,

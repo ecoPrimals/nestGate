@@ -1,9 +1,13 @@
 //
 // Comprehensive ZFS pool setup with device detection, validation, and creation
 
+//! Pool Setup module
+
 use tracing::info;
 use tracing::warn;
+/// Pool configuration utilities
 pub mod config;
+/// Pool creation and management
 pub mod creation;
 pub mod device_detection;
 pub mod validation;
@@ -18,6 +22,25 @@ pub use device_detection::{
     DeviceScanner, DeviceType as DetectionDeviceType, SpeedClass, StorageDevice,
 };
 pub use validation::{PoolSetupValidator, ValidationResult};
+
+// Tests
+#[cfg(test)]
+mod config_tests;
+// #[cfg(test)]
+// mod creation_tests;  // Disabled: Tests non-existent types (PoolName, VdevType)
+#[cfg(test)]
+mod device_detection_tests;
+#[cfg(test)]
+mod tests;
+
+// #[cfg(test)]
+// mod comprehensive_tests;  // Disabled: Uses outdated API (49 errors) - needs refactoring to match current types
+#[cfg(test)]
+mod pool_setup_tests;
+#[cfg(test)]
+mod types_tests;
+#[cfg(test)]
+mod validation_tests;
 
 use std::collections::HashMap;
 // Removed unused tracing import
@@ -37,30 +60,39 @@ fn convert_device_type(detection_type: &DetectionDeviceType) -> ConfigDeviceType
 
 /// Pool setup specific errors
 #[derive(Debug, thiserror::Error)]
+/// Errors that can occur during PoolSetup operations
 pub enum PoolSetupError {
+    /// Device validation failed
     #[error("Device validation failed: {0}")]
     DeviceValidation(String),
+    /// Pool creation failed
     #[error("Pool creation failed: {0}")]
     PoolCreation(String),
 
+    /// Configuration error
     #[error("Configuration error: {0}")]
     Configuration(String),
 
+    /// Device scanning failed
     #[error("Device scanning failed: {0}")]
     DeviceScanning(String),
 
+    /// Insufficient devices available
     #[error("Insufficient devices: {0}")]
     InsufficientDevices(String),
 
+    /// ZFS command execution failed
     #[error("ZFS command failed: {0}")]
     ZfsCommand(String),
 
     #[error("Core error: {0}")]
+    /// Core NestGate error
     Core(#[from] NestGateError),
 }
 
 /// Result of pool setup operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Poolsetupresult
 pub struct PoolSetupResult {
     /// Pool name that was created
     pub pool_name: String,
@@ -366,6 +398,7 @@ impl ZfsPoolSetup {
         }
     }
 
+    /// Gets Device Type Summary
     fn get_device_type_summary(&self) -> HashMap<DetectionDeviceType, usize> {
         let mut summary = HashMap::new();
         for device in &self.devices {
@@ -374,6 +407,7 @@ impl ZfsPoolSetup {
         summary
     }
 
+    /// Gets Speed Class Summary
     fn get_speed_class_summary(&self) -> HashMap<SpeedClass, usize> {
         let mut summary = HashMap::new();
         for device in &self.devices {
@@ -382,6 +416,7 @@ impl ZfsPoolSetup {
         summary
     }
 
+    /// Gets Recommendations
     fn get_recommendations(&self) -> Vec<String> {
         let mut recommendations = Vec::new();
         let available = self.get_available_devices();
@@ -414,12 +449,19 @@ impl ZfsPoolSetup {
 
 /// System report structure
 #[derive(Debug, Clone)]
+/// Systemreport
 pub struct SystemReport {
+    /// Total Devices
     pub total_devices: usize,
+    /// Available Devices
     pub available_devices: usize,
+    /// Devices By Type
     pub devices_by_type: HashMap<DetectionDeviceType, usize>,
+    /// Devices By Speed
     pub devices_by_speed: HashMap<SpeedClass, usize>,
+    /// Existing Pools
     pub existing_pools: Vec<String>,
+    /// Recommendations
     pub recommendations: Vec<String>,
 }
 /// Production ZFS setup function

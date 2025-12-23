@@ -2,6 +2,8 @@
 // This module contains the main performance optimization engine that coordinates
 // all ZFS performance monitoring and optimization activities.
 
+//! Engine module
+
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime};
@@ -55,6 +57,7 @@ pub struct PerformanceOptimizationEngine {
 }
 
 impl PerformanceOptimizationEngine {
+    /// Creates a new performance optimization engine with the given configuration and managers.
     #[must_use]
     pub fn new(
         config: ZfsConfig,
@@ -234,6 +237,7 @@ impl PerformanceOptimizationEngine {
 
     // Performance Monitoring Infrastructure
 
+    /// Start Performance Monitoring
     async fn start_performance_monitoring(&self) -> Result<()> {
         let monitor = self.performance_monitor.clone();
         let pool_manager = self.pool_manager.clone();
@@ -261,6 +265,7 @@ impl PerformanceOptimizationEngine {
         Ok(())
     }
 
+    /// Start Optimization Loop
     async fn start_optimization_loop(&self) -> Result<()> {
         let engine = Arc::new(self.clone());
 
@@ -283,6 +288,7 @@ impl PerformanceOptimizationEngine {
         Ok(())
     }
 
+    /// Start Bottleneck Detection
     async fn start_bottleneck_detection(&self) -> Result<()> {
         let _performance_monitor = self.performance_monitor.clone();
         let _pool_manager = self.pool_manager.clone();
@@ -548,6 +554,7 @@ impl PerformanceOptimizationEngine {
 }
 
 impl Clone for PerformanceOptimizationEngine {
+    /// Clone
     fn clone(&self) -> Self {
         Self {
             config: self.config.clone(),
@@ -567,6 +574,7 @@ impl Clone for PerformanceOptimizationEngine {
 
 // Default implementation for ZfsPerformanceMetrics
 impl Default for ZfsPerformanceMetrics {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             timestamp: std::time::SystemTime::now(),

@@ -1,194 +1,128 @@
-use std::collections::HashMap;
-use std::sync::Arc;
-use std::time::Duration;
-use serde::{Deserialize, Serialize};
-use crate::error::{NestGateError, NestGateUnifiedError, Result};
+//! Logging Module - Simplified Wrapper Around `tracing`
+//!
+//! **ARCHITECTURE NOTE**: NestGate uses `tracing` crate directly for logging.
+//! We are a **storage primal**, not a logging infrastructure provider.
+//!
+//! # Deleted Stubs
+//!
+//! **Previously had these stub implementations** (DELETED):
+//! - `aggregator.rs` - Log aggregation (not our domain)
+//! - `storage.rs` - Log storage (not our domain)
+//! - `search.rs` - Log search (not our domain)
+//! - `analysis.rs` - Log analysis (not our domain)
+//! - `ingestion.rs` - Log ingestion (not our domain)
+//! - `destinations.rs` - Log routing (not our domain)
+//! - `alerts.rs` - Log alerting (not our domain)
+//!
+//! # Modern Approach
+//!
+//! ```rust
+//! // Just use `tracing` directly
+//! use tracing::{debug, error, info, trace, warn};
+//!
+//! info!("Dataset created: {}", name);
+//! error!("Failed to create snapshot: {}", err);
+//! debug!("Cache hit for key: {}", key);
+//! ```
+//!
+//! For structured logging:
+//! ```rust
+//! use tracing::{info, instrument};
+//!
+//! #[instrument]
+//! async fn create_dataset(name: &str) -> Result<Dataset> {
+//!     info!(name = %name, "Creating dataset");
+//!     // Implementation...
+//! }
+//! ```
+//!
+//! # Log Aggregation
+//!
+//! For production deployments, use external tools:
+//! - **Grafana Loki** - Log aggregation and search
+//! - **ELK Stack** - Elasticsearch, Logstash, Kibana
+//! - **Promtail** - Log shipping
+//! - **Fluentd** - Log collection and forwarding
+//!
+//! NestGate emits logs in structured format (JSON) that these tools can consume.
 
-//! Modern mod Module
-//! 
-//! This module provides logging functionality using modern Rust patterns
-//! and zero-cost abstractions.
+// Re-export tracing macros for convenience
+pub use tracing::{debug, error, info, trace, warn, instrument, event, span, Level};
 
-use std::time::Duration;
-use std::sync::Arc;
-use std::collections::HashMap;
-use serde::{Deserialize, Serialize};
+// Configuration and types (keep these)
+pub mod config;
+pub mod error;
+pub mod traits;
+pub mod types;
 
-use crate::error::{NestGateError, Result};
-
-// ==================== MODULE CONSTANTS ====================
-
-/// Module version for compatibility tracking
-pub use crate::constants::shared::MODULE_VERSION;
-
-/// Default configuration values
-/// Default configuration values from canonical constants
-pub use crate::constants::network::{
-    DEFAULT_TIMEOUT_MS, DEFAULT_BUFFER_SIZE, DEFAULT_MAX_CONNECTIONS
-};
-
-// ==================== CORE TYPES ====================
-
-/// Configuration for this module
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Config {
-    pub enabled: bool,
-    pub timeout: Duration,
-    pub max_connections: usize,
-    pub buffer_size: usize,
-}
-
-impl Default for Config {
-    fn default() -> Self {
-        Self {
-            enabled: true,
-            timeout: Duration::from_millis(DEFAULT_TIMEOUT_MS),
-            max_connections: DEFAULT_MAX_CONNECTIONS,
-            buffer_size: DEFAULT_BUFFER_SIZE,
-        }
-    }
-}
-
-/// Service interface re-exported from canonical source
-/// See: `crate::traits_root::service::Service` for the unified implementation
-pub use crate::traits_root::service::Service;
-
-/// Health status enumeration
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-pub enum HealthStatus {
-    Healthy,
-    Degraded,
-    Unhealthy,
-}
-
-/// Performance metrics for monitoring
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Metrics {
-    pub requests_processed: u64,
-    pub errors_encountered: u64,
-    pub average_response_time: Duration,
-    pub memory_usage_bytes: u64,
-}
-
-impl Default for Metrics {
-    fn default() -> Self {
-        Self {
-            requests_processed: 0,
-            errors_encountered: 0,
-            average_response_time: Duration::from_millis(0),
-            memory_usage_bytes: 0,
-        }
-    }
-}
-
-// ==================== IMPLEMENTATION STUB ====================
-
-/// Default implementation of the service
-#[derive(Debug)]
-pub struct DefaultService {
-    config: Config,
-    metrics: Arc<tokio::sync::RwLock<Metrics>>,
-}
-
-impl DefaultService {
-    /// Create a new service instance
-    pub fn new(config: Config) -> Self {
-        Self {
-            config,
-            metrics: Arc::new(tokio::sync::RwLock::new(Metrics::default())),
-        }
-    }
+/// Initialize tracing subscriber for NestGate
+///
+/// This sets up structured logging with JSON formatting for production.
+pub fn init() {
+    use tracing_subscriber::{fmt, EnvFilter};
     
-    /// Get current metrics
-    pub async fn get_metrics(&self) -> Metrics {
-        self.metrics.read().await.clone()
-    }
+    fmt()
+        .with_env_filter(
+            EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| EnvFilter::new("info"))
+        )
+        .json()
+        .init();
 }
 
-impl Service for DefaultService {
-    fn initialize(&self) -> impl std::future::Future<Output = Result<()>> + Send {
-        // Initialization implementation
-        tracing::info!("Initializing {} service with config: {:?}", 
-                      stringify!(mod), config);
-        Ok(())
-    }
+/// Initialize tracing subscriber for development
+///
+/// This uses human-readable formatting for local development.
+pub fn init_dev() {
+    use tracing_subscriber::{fmt, EnvFilter};
     
-    fn health_check(&self) -> impl std::future::Future<Output = Result<HealthStatus>> + Send {
-        // Health check implementation
-        Ok(HealthStatus::Healthy)
-    }
-    
-    fn shutdown(&self) -> impl std::future::Future<Output = Result<()>> + Send {
-        // Shutdown implementation
-        tracing::info!("Shutting down {} service", stringify!(mod));
-        Ok(())
-    }
+    fmt()
+        .with_env_filter(
+            EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| EnvFilter::new("debug"))
+        )
+        .pretty()
+        .init();
 }
 
-// ==================== UTILITY FUNCTIONS ====================
-
-/// Create a default service instance
-pub fn create_service() -> DefaultService {
-    DefaultService::new(Config::default())
-}
-
-/// Validate configuration
-pub async fn validate_config(config: &Config) -> crate::Result<()> {
-    if config.max_connections == 0 {
-        return Err(NestGateError::configuration_error(
-            "logging",
-            "max_connections must be greater than 0"
-        ));
-    }
+/// Initialize tracing subscriber for testing
+///
+/// This captures logs for test assertions.
+#[cfg(test)]
+pub fn init_test() {
+    use tracing_subscriber::{fmt, EnvFilter};
     
-    if config.buffer_size == 0 {
-        return Err(NestGateError::configuration_error(
-            "logging",
-            "buffer_size must be greater than 0"
-        ));
-    }
-    
-    Ok(())
+    let _ = fmt()
+        .with_env_filter(EnvFilter::new("trace"))
+        .with_test_writer()
+        .try_init();
 }
-
-// ==================== TESTS ====================
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     
-
     #[test]
-    fn test_config_default() {
-        let config = Config::default();
-        assert!(config.enabled);
-        assert_eq!(config.max_connections, DEFAULT_MAX_CONNECTIONS);
+    fn test_logging_macros_work() {
+        init_test();
+        
+        info!("Test log message");
+        debug!("Debug message with data: {}", 42);
+        warn!("Warning message");
+        error!("Error message");
     }
-
+    
     #[test]
-    fn test_config_validation() {
-        let mut config = Config::default();
-        assert!(validate_config(&config).is_ok());
+    fn test_structured_logging() {
+        init_test();
         
-        config.max_connections = 0;
-        assert!(validate_config(&config).is_err());
-    }
-
-    #[tokio::test]
-    async fn test_service_creation() {
-        let service = create_service();
-        let config = Config::default();
+        let dataset_name = "test-dataset";
+        let size_bytes = 1024u64;
         
-        assert!(service.initialize(&config).await.is_ok());
-        assert_eq!(service.health_check().await.expect("Operation failed"), HealthStatus::Healthy);
-        assert!(service.shutdown().await.is_ok());
-    }
-
-    #[tokio::test]
-    async fn test_metrics() {
-        let service = create_service();
-        let metrics = service.get_metrics().await;
-        
-        assert_eq!(metrics.requests_processed, 0);
-        assert_eq!(metrics.errors_encountered, 0);
+        info!(
+            dataset = %dataset_name,
+            size_bytes = size_bytes,
+            "Created dataset"
+        );
     }
 }

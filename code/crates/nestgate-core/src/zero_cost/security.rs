@@ -12,15 +12,20 @@ fn is_valid_token(token: &str) -> bool {
 }
 /// Production-optimized security provider
 #[derive(Clone)]
+/// Productionsecurityprovider
 pub struct ProductionSecurityProvider;
 impl ZeroCostSecurityProvider for ProductionSecurityProvider {
+    /// Type alias for TokenInfo
     type TokenInfo = String;
+    /// Type alias for Result
     type Result = crate::Result<String>;
 
+    /// Max Tokens
     fn max_tokens() -> usize {
         10000 // Production limit
     }
 
+    /// Generate Token
     fn generate_token(
         &self,
         user_id: &str,
@@ -32,6 +37,7 @@ impl ZeroCostSecurityProvider for ProductionSecurityProvider {
         }
     }
 
+    /// Validates  Token
     fn validate_token(
         &self,
         token: &str,
@@ -47,6 +53,7 @@ impl ZeroCostSecurityProvider for ProductionSecurityProvider {
         }
     }
 
+    /// Revoke Token
     fn revoke_token(&self, token: &str) -> impl std::future::Future<Output = Self::Result> + Send {
         let token = token.to_string();
         async move {
@@ -58,15 +65,20 @@ impl ZeroCostSecurityProvider for ProductionSecurityProvider {
 
 /// Development-optimized security provider
 #[derive(Clone)]
+/// Developmentsecurityprovider
 pub struct DevelopmentSecurityProvider;
 impl ZeroCostSecurityProvider for DevelopmentSecurityProvider {
+    /// Type alias for TokenInfo
     type TokenInfo = String;
+    /// Type alias for Result
     type Result = crate::Result<String>;
 
+    /// Max Tokens
     fn max_tokens() -> usize {
         1000 // Development limit
     }
 
+    /// Generate Token
     fn generate_token(
         &self,
         user_id: &str,
@@ -78,6 +90,7 @@ impl ZeroCostSecurityProvider for DevelopmentSecurityProvider {
         }
     }
 
+    /// Validates  Token
     fn validate_token(
         &self,
         token: &str,
@@ -94,6 +107,7 @@ impl ZeroCostSecurityProvider for DevelopmentSecurityProvider {
         }
     }
 
+    /// Revoke Token
     fn revoke_token(&self, token: &str) -> impl std::future::Future<Output = Self::Result> + Send {
         let token = token.to_string();
         async move {

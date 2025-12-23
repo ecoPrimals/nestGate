@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 
 /// Comprehensive information about detected storage
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Detectedstorage
 pub struct DetectedStorage {
     /// Unique identifier for this storage
     pub identifier: String,
@@ -30,6 +31,7 @@ pub struct DetectedStorage {
 }
 /// Performance profile of a storage system
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performanceprofile
 pub struct PerformanceProfile {
     /// Sequential read throughput (MB/s)
     pub read_throughput_mbps: f64,
@@ -47,6 +49,7 @@ pub struct PerformanceProfile {
     pub optimal_block_size: u32,
 }
 impl Default for PerformanceProfile {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             read_throughput_mbps: 100.0,
@@ -62,6 +65,7 @@ impl Default for PerformanceProfile {
 
 /// Cost profile for storage (mainly for cloud storage)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Costprofile
 pub struct CostProfile {
     /// Cost per GB per month (USD)
     pub storage_cost_per_gb_month: f64,
@@ -73,6 +77,7 @@ pub struct CostProfile {
     pub is_free_tier: bool,
 }
 impl Default for CostProfile {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             storage_cost_per_gb_month: 0.023, // AWS S3 standard pricing
@@ -85,66 +90,112 @@ impl Default for CostProfile {
 
 /// Storage analysis report
 #[derive(Debug, Clone)]
+/// Storageanalysisreport
 pub struct StorageAnalysisReport {
+    /// Filesystem Total
     pub filesystem_total: u64,
+    /// Filesystem Used
     pub filesystem_used: u64,
+    /// Filesystem Usage Percent
     pub filesystem_usage_percent: f64,
+    /// Memory Total
     pub memory_total: u64,
+    /// Memory Free
     pub memory_free: u64,
+    /// Memory Usage Percent
     pub memory_usage_percent: f64,
+    /// Recommendations
     pub recommendations: Vec<String>,
 }
 /// Filesystem statistics
 #[derive(Debug, Clone)]
+/// Filesystemstats
 pub struct FilesystemStats {
+    /// Total Bytes
     pub total_bytes: u64,
+    /// Free Bytes
     pub free_bytes: u64,
+    /// Used Bytes
     pub used_bytes: u64,
+    /// Usage Percent
     pub usage_percent: f64,
+    /// Inode Total
     pub inode_total: u64,
+    /// Inode Free
     pub inode_free: u64,
+    /// Filesystem Type
     pub filesystem_type: String,
+    /// Mount Point
     pub mount_point: String,
+    /// Device
     pub device: String,
 }
 /// Memory information
 #[derive(Debug, Clone)]
+/// Memoryinfo
 pub struct MemoryInfo {
+    /// Total Bytes
     pub total_bytes: u64,
+    /// Available Bytes
     pub available_bytes: u64,
+    /// Used Bytes
     pub used_bytes: u64,
+    /// Usage Percent
     pub usage_percent: f64,
+    /// Swap Total
     pub swap_total: u64,
+    /// Swap Free
     pub swap_free: u64,
 }
 /// Cloud storage bucket information
 #[derive(Debug, Clone)]
+/// Cloudbucket
 pub struct CloudBucket {
+    /// Name
     pub name: String,
+    /// Region
     pub region: String,
+    /// Storage Class
     pub storage_class: String,
+    /// Size Bytes
     pub size_bytes: u64,
+    /// Count of object
     pub object_count: u64,
+    /// Last Modified
     pub last_modified: Option<String>,
 }
 /// Network share information
 #[derive(Debug, Clone)]
+/// Networkshare
 pub struct NetworkShare {
+    /// Share name
     pub share_name: String,
+    /// Protocol
     pub protocol: String, // SMB, NFS, etc.
+    /// Server
     pub server: String,
+    /// Mount Point
     pub mount_point: Option<String>,
+    /// Available Space
     pub available_space: u64,
+    /// Whether mounted
     pub is_mounted: bool,
 }
 /// Block device information
 #[derive(Debug, Clone)]
+/// Blockdevice
 pub struct BlockDevice {
+    /// Device name
     pub device_name: String,
+    /// Size Bytes
     pub size_bytes: u64,
+    /// Device Type
     pub device_type: String, // SSD, HDD, NVMe, etc.
+    /// Whether removable
     pub is_removable: bool,
+    /// Whether readonly
     pub is_readonly: bool,
+    /// Filesystem
     pub filesystem: Option<String>,
 }
 impl DetectedStorage {

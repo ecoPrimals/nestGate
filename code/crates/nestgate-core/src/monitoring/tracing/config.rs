@@ -8,6 +8,7 @@ use std::time::Duration;
 
 /// Tracing configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Tracing
 pub struct TracingConfig {
     /// Log level (trace, debug, info, warn, error)
     pub level: String,
@@ -28,6 +29,7 @@ pub struct TracingConfig {
     pub custom_fields: HashMap<String, String>,
 }
 impl Default for TracingConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             level: "info".to_string(),
@@ -44,6 +46,22 @@ impl Default for TracingConfig {
 
 /// Log aggregation configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// 
+/// **Migration Path**:
+/// ```rust
+/// // OLD (deprecated):
+/// use crate::config::LogAggregationConfig;
+/// 
+/// // NEW (canonical):
+/// use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::config::LogAggregationConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+/// 
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for LogAggregation
 pub struct LogAggregationConfig {
     /// Enable log aggregation
     pub enabled: bool,
@@ -57,6 +75,7 @@ pub struct LogAggregationConfig {
     pub retention: LogRetentionConfig,
 }
 impl Default for LogAggregationConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -70,6 +89,7 @@ impl Default for LogAggregationConfig {
 
 /// External log destination configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Logdestination
 pub enum LogDestination {
     /// Elasticsearch destination
     Elasticsearch {
@@ -98,18 +118,40 @@ pub enum LogDestination {
 }
 /// Elasticsearch authentication
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Elasticsearchauth
 pub enum ElasticsearchAuth {
+    /// Basic
     Basic { username: String, password: String },
+    /// Apikey
     ApiKey { key: String },
 }
 /// Loki authentication
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Lokiauth
 pub enum LokiAuth {
+    /// Basic
     Basic { username: String, password: String },
+    /// Bearer
     Bearer { token: String },
 }
 /// Log retention configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// 
+/// **Migration Path**:
+/// ```rust
+/// // OLD (deprecated):
+/// use crate::config::LogRetentionConfig;
+/// 
+/// // NEW (canonical):
+/// use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::config::LogRetentionConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+/// 
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for LogRetention
 pub struct LogRetentionConfig {
     /// Maximum age of log files
     pub max_age: Duration,
@@ -121,6 +163,7 @@ pub struct LogRetentionConfig {
     pub compress: bool,
 }
 impl Default for LogRetentionConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             max_age: Duration::from_secs(30 * 24 * 3600), // 30 days
@@ -130,3 +173,36 @@ impl Default for LogRetentionConfig {
         }
     }
 } 
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+/// 
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Logaggregationconfigcanonical
+pub type LogAggregationConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using LogAggregationConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+/// 
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Logretentionconfigcanonical
+pub type LogRetentionConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using LogRetentionConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+

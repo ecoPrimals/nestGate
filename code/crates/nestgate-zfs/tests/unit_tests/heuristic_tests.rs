@@ -1,6 +1,8 @@
 //
 // Tests for heuristic-based optimization
 
+//! Heuristic Tests module
+
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::time::SystemTime;
@@ -22,7 +24,7 @@ mod heuristic_unit_tests {
     use super::*;
 
     #[test]
-    fn test_heuristic_config_defaults() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_heuristic_config_defaults() -> std::result::Result<(), Box<dyn std::error::Error>> {
         // Heuristic configuration test (AI functionality has been sunset)
         let config = ZfsConfig::default();
 
@@ -33,7 +35,7 @@ mod heuristic_unit_tests {
     Ok(())
     }
     #[test]
-    fn test_performance_expectation() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_performance_expectation() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let hot_tier_expectation =
             nestgate_automation::types::optimization::PerformanceExpectation {
                 expected_iops: 2000,

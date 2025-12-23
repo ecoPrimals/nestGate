@@ -2,11 +2,11 @@
 //! 
 //! This test validates security integration functionality using canonical patterns
 //! **CANONICAL MODERNIZATION**: Updated to use simple, working patterns
+//!
+//! **MODERN CONCURRENCY**: Uses yield_now() for async coordination instead of sleep().
 
-use nestgate_core::config::canonical_master::NestGateCanonicalConfig as NestGateUnifiedConfig;
+use nestgate_core::config::canonical_primary::NestGateCanonicalConfig as NestGateUnifiedConfig;
 use nestgate_core::constants::Environment;
-use std::time::Duration;
-use tokio::time::sleep;
 use tracing::info;
 
 /// Test security integration configuration
@@ -19,7 +19,7 @@ async fn test_security_integration_config() -> Result<(), Box<dyn std::error::Er
     assert!(!config.system.instance_name.is_empty());
     
     // Test environment-specific security integration configuration
-    let dev_config = nestgate_core::config::canonical_master::create_config_for_environment(Environment::Development);
+    let dev_config = nestgate_core::config::canonical_primary::create_config_for_environment(Environment::Development);
     assert!(!dev_config.system.instance_name.is_empty());
     
     info!("✅ Security integration configuration test completed");
@@ -43,7 +43,7 @@ async fn test_security_authentication() -> Result<(), Box<dyn std::error::Error>
         info!("Executing {} operation ({}ms)", operation, duration);
         
         // Simulate authentication operation
-        sleep(Duration::from_millis(duration as u64)).await;
+        tokio::task::yield_now().await;
         
         // Verify authentication operation is valid
         assert!(!operation.is_empty(), "Operation should be specified");
@@ -72,7 +72,7 @@ async fn test_security_authorization() -> Result<(), Box<dyn std::error::Error>>
         info!("Processing {} authorization ({}ms)", step, duration);
         
         // Simulate authorization step
-        sleep(Duration::from_millis(duration as u64)).await;
+        tokio::task::yield_now().await;
         
         // Verify authorization step is valid
         assert!(!step.is_empty(), "Step should be specified");
@@ -94,7 +94,7 @@ async fn test_security_encryption() -> Result<(), Box<dyn std::error::Error>> {
     // Test security encryption cycles
     for i in 0..5 {
         let cycle_time = (i + 1) * 22;
-        sleep(Duration::from_millis(cycle_time as u64)).await;
+        tokio::task::yield_now().await;
         
         let elapsed = start_time.elapsed();
         info!("Encryption cycle {}: {}ms, total elapsed: {:?}", i + 1, cycle_time, elapsed);
@@ -125,7 +125,7 @@ async fn test_security_threat_detection() -> Result<(), Box<dyn std::error::Erro
         info!("Testing {} scenario ({}ms)", scenario, detection_time);
         
         // Simulate threat detection
-        sleep(Duration::from_millis(detection_time as u64 / 2)).await;
+        tokio::task::yield_now().await;
         
         // Verify threat detection is valid
         assert!(!scenario.is_empty(), "Scenario should be specified");
@@ -154,7 +154,7 @@ async fn test_security_audit_compliance() -> Result<(), Box<dyn std::error::Erro
         info!("Performing {} audit ({}ms)", check, audit_time);
         
         // Simulate audit check
-        sleep(Duration::from_millis(audit_time as u64)).await;
+        tokio::task::yield_now().await;
         
         // Verify audit check is valid
         assert!(!check.is_empty(), "Check should be specified");
@@ -172,13 +172,13 @@ async fn test_security_environments() -> Result<(), Box<dyn std::error::Error>> 
     info!("🌍 Testing security integration across environments");
     
     // Test development environment security integration
-    let dev_config = nestgate_core::config::canonical_master::create_config_for_environment(Environment::Development);
+    let dev_config = nestgate_core::config::canonical_primary::create_config_for_environment(Environment::Development);
     assert!(!dev_config.system.instance_name.is_empty());
     assert!(matches!(dev_config.environment, Environment::Development));
     info!("Development security integration configuration validated");
     
     // Test production environment security integration
-    let prod_config = nestgate_core::config::canonical_master::create_config_for_environment(Environment::Production);
+    let prod_config = nestgate_core::config::canonical_primary::create_config_for_environment(Environment::Production);
     assert!(!prod_config.system.instance_name.is_empty());
     assert!(matches!(prod_config.environment, Environment::Production));
     info!("Production security integration configuration validated");

@@ -5,6 +5,8 @@
 // - Service management and deployment
 // - System diagnostics and troubleshooting
 
+//! Cli module
+
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
@@ -42,17 +44,21 @@ For more information: https://github.com/your-org/nestgate
 pub struct Cli {
     /// Enable verbose logging
     #[arg(short, long, global = true)]
+    /// Verbose
     pub verbose: bool,
 
     /// Configuration file path
     #[arg(short, long, global = true)]
+    /// Configuration for
     pub config: Option<PathBuf>,
 
     /// Output format (json, yaml, table)
     #[arg(long, global = true, default_value = "table")]
+    /// Output
     pub output: String,
 
     #[command(subcommand)]
+    /// Command
     pub command: Commands,
 }
 #[derive(Debug, Subcommand)]
@@ -226,6 +232,10 @@ impl Cli {
         // Setup logging
         setup_logging(self.verbose);
 
+        // 🔒 CRITICAL SECURITY: Validate JWT secret before starting
+        // This prevents production deployment with insecure default values
+        nestgate_core::jwt_validation::validate_jwt_secret_or_exit();
+
         // Print banner
         print_banner();
 
@@ -238,7 +248,13 @@ impl Cli {
                 })?;
             }
             Commands::Service { action } => {
-                println!("🚀 Service management not yet implemented: {action:?}");
+                let mut service_manager = crate::commands::service::ServiceManager::new();
+                service_manager.execute(action).await.map_err(|e| {
+                    BinErrorHelper::runtime_error(
+                        e.to_string(),
+                        Some("service_command".to_string()),
+                    )
+                })?;
             }
             Commands::Doctor { comprehensive, fix } => {
                 println!(

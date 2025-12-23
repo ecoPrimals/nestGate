@@ -5,12 +5,14 @@ pub struct SIMDHasher {
     state: [u64; 4], // SIMD-friendly state vector
 }
 impl Default for SIMDHasher {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
 }
 
 impl SIMDHasher {
+    /// Creates a new instance
     pub fn new() -> Self {
         Self {
             state: [
@@ -66,6 +68,7 @@ impl SIMDHasher {
         }
     }
 
+    /// Processes  Remainder
     fn process_remainder(&mut self, remainder: &[u8]) {
         // Handle non-SIMD-aligned remainder
         let mut temp = [0u8; 32];
@@ -73,6 +76,7 @@ impl SIMDHasher {
         self.process_chunk_simd(&temp);
     }
 
+    /// Finalize
     fn finalize(&self) -> u64 {
         // Fold SIMD state down to single hash value
         self.state[0] ^ self.state[1] ^ self.state[2] ^ self.state[3]
@@ -196,6 +200,7 @@ impl SIMDStringOps {
             }
         }
 
+        /// None
         None
     }
 
@@ -209,6 +214,7 @@ impl SIMDStringOps {
                 return Some(i);
             }
         }
+        /// None
         None
     }
 

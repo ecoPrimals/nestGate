@@ -3,6 +3,8 @@
 // Core type definitions for the unified RPC layer including requests,
 // responses, configurations, and error types.
 
+//! Types module
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
@@ -11,6 +13,7 @@ use uuid::Uuid;
 
 /// Unified RPC request that can be sent over either tarpc or JSON RPC
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for UnifiedRpc operation
 pub struct UnifiedRpcRequest {
     /// Unique request identifier
     pub id: Uuid,
@@ -35,6 +38,7 @@ pub struct UnifiedRpcRequest {
 }
 /// Request priority levels for processing order
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+/// Requestpriority
 pub enum RequestPriority {
     /// Low priority - background tasks
     Low = 1,
@@ -46,6 +50,7 @@ pub enum RequestPriority {
     Critical = 4,
 }
 impl Default for RequestPriority {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Normal
     }
@@ -53,6 +58,7 @@ impl Default for RequestPriority {
 
 /// Unified RPC response
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for UnifiedRpc operation
 pub struct UnifiedRpcResponse {
     /// Request ID this response corresponds to
     pub request_id: Uuid,
@@ -71,6 +77,7 @@ pub struct UnifiedRpcResponse {
 }
 /// Performance metrics for RPC responses
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Responsemetrics
 pub struct ResponseMetrics {
     /// Time spent processing the request (milliseconds)
     pub processing_time_ms: u64,
@@ -82,6 +89,7 @@ pub struct ResponseMetrics {
 
 /// RPC stream event for bidirectional communication
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Rpcstreamevent
 pub struct RpcStreamEvent {
     /// Stream identifier
     pub stream_id: Uuid,
@@ -94,6 +102,7 @@ pub struct RpcStreamEvent {
 }
 /// RPC connection type
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// Types of RpcConnection
 pub enum RpcConnectionType {
     /// Binary RPC via tarpc (for security, high-performance)
     Tarpc,
@@ -128,6 +137,7 @@ pub trait UnifiedRpcService: Send + Sync {
 /// **DYN-COMPATIBLE RPC SERVICE WRAPPER**
 /// Wrapper enum for dynamic dispatch of RPC services
 #[derive(Debug)]
+/// Dynrpcservice
 pub enum DynRpcService {
     /// JSON-RPC service implementation for HTTP-based communication
     JsonRpc(crate::rest::rpc::json_rpc_service::JsonRpcService),
@@ -202,6 +212,7 @@ impl DynRpcService {
 
 /// RPC operation errors
 #[derive(Debug, thiserror::Error, serde::Serialize)]
+/// Errors that can occur during Rpc operations
 pub enum RpcError {
     /// Failed to establish RPC connection
     #[error("Connection failed: {0}")]
@@ -232,6 +243,7 @@ pub enum RpcError {
 }
 
 impl From<serde_json::Error> for RpcError {
+    /// From
     fn from(err: serde_json::Error) -> Self {
         Self::Serialization(err.to_string())
     }

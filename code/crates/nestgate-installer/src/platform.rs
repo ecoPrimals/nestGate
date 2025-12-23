@@ -8,16 +8,25 @@
 // - System requirements validation
 // - Platform-specific installation paths
 
+//! Platform module
+
 use anyhow::Result;
 use std::path::Path;
 
 #[derive(Debug, Clone)]
 pub struct PlatformInfo {
+    /// Os
     pub os: String,
+    /// Arch
     pub arch: String,
+    /// Supports Systemd
     pub supports_systemd: bool,
+    /// Supports Launchd
     pub supports_launchd: bool,
+    /// Supports Windows Service
     pub supports_windows_service: bool,
+    #[allow(dead_code)] // Reserved for future binary extension support
+    /// Binary Extension
     pub binary_extension: String,
 }
 
@@ -190,4 +199,168 @@ fn create_desktop_shortcut_windows(_install_path: &Path, _name: &str) -> Result<
     // For now, we'll skip this and focus on core functionality
     println!("Desktop shortcut creation not yet implemented on Windows");
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_platform_info_detect() {
+        let info = PlatformInfo::detect();
+        assert!(!info.os.is_empty());
+        assert!(!info.arch.is_empty());
+    }
+
+    #[test]
+    fn test_platform_info_os_values() {
+        let info = PlatformInfo::detect();
+        // Should be one of the common OS values
+        assert!(
+            info.os == "linux"
+                || info.os == "macos"
+                || info.os == "windows"
+                || info.os == "freebsd"
+        );
+    }
+
+    #[test]
+    fn test_platform_info_arch_values() {
+        let info = PlatformInfo::detect();
+        // Should be a valid architecture
+        assert!(
+            info.arch == "x86_64"
+                || info.arch == "aarch64"
+                || info.arch == "arm"
+                || info.arch == "i686"
+        );
+    }
+
+    #[test]
+    fn test_platform_info_clone() {
+        let info = PlatformInfo::detect();
+        let cloned = info.clone();
+        assert_eq!(info.os, cloned.os);
+        assert_eq!(info.arch, cloned.arch);
+        assert_eq!(info.supports_systemd, cloned.supports_systemd);
+    }
+
+    #[test]
+    fn test_platform_info_debug() {
+        let info = PlatformInfo::detect();
+        let debug_str = format!("{:?}", info);
+        assert!(debug_str.contains("PlatformInfo"));
+    }
+
+    #[test]
+    fn test_service_install_supported() {
+        let info = PlatformInfo::detect();
+        let supported = info.service_install_supported();
+        // At least one service manager should be supported on common platforms
+        assert!(supported);
+    }
+
+    #[test]
+    #[cfg(target_os = "linux")]
+    fn test_linux_specific_flags() {
+        let info = PlatformInfo::detect();
+        assert!(info.supports_systemd);
+        assert!(!info.supports_launchd);
+        assert!(!info.supports_windows_service);
+        assert_eq!(info.os, "linux");
+    }
+
+    #[test]
+    #[cfg(target_os = "macos")]
+    fn test_macos_specific_flags() {
+        let info = PlatformInfo::detect();
+        assert!(!info.supports_systemd);
+        assert!(info.supports_launchd);
+        assert!(!info.supports_windows_service);
+        assert_eq!(info.os, "macos");
+    }
+
+    #[test]
+    #[cfg(target_os = "windows")]
+    fn test_windows_specific_flags() {
+        let info = PlatformInfo::detect();
+        assert!(!info.supports_systemd);
+        assert!(!info.supports_launchd);
+        assert!(info.supports_windows_service);
+        assert_eq!(info.os, "windows");
+    }
+
+    #[test]
+    fn test_get_binary_name() {
+        let info = PlatformInfo::detect();
+        let binary = info.get_binary_name("nestgate");
+        assert!(binary.contains("nestgate"));
+        assert!(binary.ends_with(".exe"));
+    }
+
+    #[test]
+    fn test_get_binary_name_different_names() {
+        let info = PlatformInfo::detect();
+        let names = vec!["app", "server", "daemon", "service"];
+
+        for name in names {
+            let binary = info.get_binary_name(name);
+            assert!(binary.starts_with(name));
+        }
+    }
+
+    #[test]
+    #[cfg(target_os = "windows")]
+    fn test_binary_extension_windows() {
+        let info = PlatformInfo::detect();
+        assert_eq!(info.binary_extension, ".exe");
+    }
+
+    #[test]
+    #[cfg(not(target_os = "windows"))]
+    fn test_binary_extension_unix() {
+        let info = PlatformInfo::detect();
+        assert_eq!(info.binary_extension, "");
+    }
+
+    #[test]
+    fn test_platform_info_multiple_detect_calls() {
+        let info1 = PlatformInfo::detect();
+        let info2 = PlatformInfo::detect();
+
+        assert_eq!(info1.os, info2.os);
+        assert_eq!(info1.arch, info2.arch);
+        assert_eq!(info1.supports_systemd, info2.supports_systemd);
+    }
+
+    #[test]
+    fn test_platform_info_service_manager_exclusivity() {
+        let info = PlatformInfo::detect();
+
+        // Only one service manager should be supported at a time
+        let count = [
+            info.supports_systemd,
+            info.supports_launchd,
+            info.supports_windows_service,
+        ]
+        .iter()
+        .filter(|&&x| x)
+        .count();
+
+        assert_eq!(count, 1, "Exactly one service manager should be supported");
+    }
+
+    #[test]
+    fn test_platform_info_consistency() {
+        let info = PlatformInfo::detect();
+
+        // Verify consistency between OS and service manager support
+        if info.os == "linux" {
+            assert!(info.supports_systemd);
+        } else if info.os == "macos" {
+            assert!(info.supports_launchd);
+        } else if info.os == "windows" {
+            assert!(info.supports_windows_service);
+        }
+    }
 }

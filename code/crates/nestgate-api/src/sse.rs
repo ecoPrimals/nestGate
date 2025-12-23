@@ -9,6 +9,8 @@
 // - Event-driven notifications
 // - Backpressure handling
 
+//! Sse module
+
 use anyhow::Result;
 use axum::{
     extract::{Query, State},
@@ -32,6 +34,7 @@ use crate::event_coordination::EventCoordinator;
 
 /// SSE connection parameters
 #[derive(Debug, Deserialize)]
+/// Sseparams
 pub struct SseParams {
     /// Stream type to subscribe to
     pub stream: Option<String>,
@@ -46,6 +49,7 @@ pub struct SseParams {
 }
 /// SSE event types that can be streamed
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of SseEvent
 pub enum SseEventType {
     /// Storage operation events
     StorageOperation,
@@ -64,6 +68,7 @@ pub enum SseEventType {
 }
 /// SSE event payload
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Sseevent
 pub struct SseEvent {
     /// Event identifier
     pub id: Uuid,
@@ -80,6 +85,7 @@ pub struct SseEvent {
 }
 /// Event priority for SSE streaming
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+/// Eventpriority
 pub enum EventPriority {
     /// Low priority events (background updates)
     Low = 1,
@@ -103,6 +109,7 @@ pub struct SseManager {
 }
 /// SSE connection information
 #[derive(Debug, Clone)]
+/// Sseconnection
 pub struct SseConnection {
     /// Connection identifier
     pub id: Uuid,
@@ -119,6 +126,37 @@ pub struct SseConnection {
 }
 /// SSE connection configuration
 #[derive(Debug, Clone)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// 
+/// **Migration Path**:
+/// ```rust,ignore
+/// // OLD (deprecated):
+/// use crate::network::config::SseConnectionConfig;
+/// 
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::SseConnectionConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+/// 
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// 
+/// **Migration Path**:
+/// ```rust,ignore
+/// // OLD (deprecated):
+/// use crate::network::config::SseConnectionConfig;
+/// 
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::SseConnectionConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+/// 
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for SseConnection
 pub struct SseConnectionConfig {
     /// Buffer size for events
     pub buffer_size: usize,
@@ -131,6 +169,7 @@ pub struct SseConnectionConfig {
 }
 /// SSE streaming statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Ssestats
 pub struct SseStats {
     /// Total connections ever created
     pub total_connections: u64,
@@ -146,6 +185,7 @@ pub struct SseStats {
     pub last_reset: SystemTime,
 }
 impl Default for SseManager {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -461,6 +501,7 @@ impl SseManager {
 }
 
 impl Clone for SseManager {
+    /// Clone
     fn clone(&self) -> Self { Self {
             connections: self.connections.clone(),
             event_broadcaster: self.event_broadcaster.clone(),
@@ -560,3 +601,37 @@ pub fn create_metrics_event(metrics: HashMap<String, f64>) -> SseEvent {
         priority: EventPriority::Normal,
     }
 }
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+/// 
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Sseconnectionconfigcanonical
+pub type SseConnectionConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using SseConnectionConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+/// 
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Sseconnectionconfigcanonical
+pub type SseConnectionConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using SseConnectionConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+

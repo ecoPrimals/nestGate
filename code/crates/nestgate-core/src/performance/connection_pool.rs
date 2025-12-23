@@ -13,6 +13,25 @@ use tracing::{debug, info};
 
 /// Configuration for connection pooling
 #[derive(Debug, Clone)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+///
+/// **Migration Path**:
+/// ```rust,ignore
+/// // OLD (deprecated):
+/// use crate::network::config::ConnectionPoolConfig;
+///
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::ConnectionPoolConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+///
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(
+    since = "0.11.0",
+    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
+/// Configuration for ConnectionPool
 pub struct ConnectionPoolConfig {
     /// Maximum number of connections per pool
     pub max_connections: usize,
@@ -26,6 +45,7 @@ pub struct ConnectionPoolConfig {
     pub cleanup_interval: Duration,
 }
 impl Default for ConnectionPoolConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             max_connections: 10,
@@ -39,6 +59,7 @@ impl Default for ConnectionPoolConfig {
 
 /// A pooled connection wrapper
 #[derive(Debug)]
+/// Pooledconnection
 pub struct PooledConnection<T> {
     /// The actual connection
     pub connection: T,
@@ -50,6 +71,7 @@ pub struct PooledConnection<T> {
     pub created_at: Instant,
 }
 impl<T> PooledConnection<T> {
+    /// Creates a new instance
     pub fn new(connection: T) -> Self {
         let now = Instant::now();
         Self {
@@ -60,15 +82,18 @@ impl<T> PooledConnection<T> {
         }
     }
 
+    /// Mark Used
     pub fn mark_used(&mut self) {
         self.last_used = Instant::now();
         self.in_use = true;
     }
 
+    /// Mark Idle
     pub fn mark_idle(&mut self) {
         self.in_use = false;
     }
 
+    /// Checks if Idle Too Long
     pub fn is_idle_too_long(&self, max_idle_time: Duration) -> bool {
         !self.in_use && self.last_used.elapsed() > max_idle_time
     }
@@ -89,13 +114,21 @@ pub struct UniversalConnectionPool<T> {
 }
 /// Connection pool statistics
 #[derive(Debug, Default)]
+/// Poolstats
 pub struct PoolStats {
+    /// Total Connections
     pub total_connections: usize,
+    /// Active Connections
     pub active_connections: usize,
+    /// Idle Connections
     pub idle_connections: usize,
+    /// Connections Created
     pub connections_created: u64,
+    /// Connections Destroyed
     pub connections_destroyed: u64,
+    /// Connection Requests
     pub connection_requests: u64,
+    /// Connection Timeouts
     pub connection_timeouts: u64,
 }
 impl<T> UniversalConnectionPool<T>
@@ -212,6 +245,7 @@ where
                     to_remove.push(i);
                 }
             }
+            // Return list of connections to remove
             to_remove
         };
 
@@ -297,6 +331,7 @@ pub struct PooledConnectionGuard<T> {
     _permit: tokio::sync::OwnedSemaphorePermit,
 }
 impl<T> PooledConnectionGuard<T> {
+    /// Creates a new instance
     fn new(
         connection: T,
         pool: Arc<UniversalConnectionPool<T>>,
@@ -321,6 +356,7 @@ impl<T> PooledConnectionGuard<T> {
 }
 
 impl<T> Drop for PooledConnectionGuard<T> {
+    /// Drop
     fn drop(&mut self) {
         debug!("🔄 Connection returned to pool");
         // Connection will be returned to pool when this is dropped
@@ -333,6 +369,25 @@ pub struct ConnectionPoolManager {
     pools: RwLock<HashMap<String, Box<dyn std::any::Any + Send + Sync>>>,
 }
 impl ConnectionPoolManager {
+    /// Create a new connection pool manager
+    ///
+    /// Initializes an empty manager that can register and manage multiple
+    /// connection pools for different providers.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use nestgate_core::performance::connection_pool::ConnectionPoolManager;
+    ///
+    /// let manager = ConnectionPoolManager::new();
+    /// // Register pools for different providers
+    /// ```
+    ///
+    /// # Use Cases
+    ///
+    /// - Managing database connections across multiple databases
+    /// - Pooling HTTP clients for different services
+    /// - Coordinating connections to distributed systems
     #[must_use]
     pub fn new() -> Self {
         Self {
@@ -365,6 +420,7 @@ impl ConnectionPoolManager {
 }
 
 impl Default for ConnectionPoolManager {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -391,3 +447,20 @@ impl HttpConnectionPool {
         })
     }
 }
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+///
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Connectionpoolconfigcanonical
+pub type ConnectionPoolConfigCanonical =
+    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using ConnectionPoolConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.

@@ -10,6 +10,7 @@ use std::time::Duration;
 use std::time::SystemTime;
 /// Hardware-agnostic tuning engine
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Hardwareagnostictuner
 pub struct HardwareAgnosticTuner {
     /// Current tuning profiles
     pub profiles: HashMap<String, TuningProfile>,
@@ -57,6 +58,7 @@ impl HardwareAgnosticTuner {
 }
 
 impl Default for HardwareAgnosticTuner {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -64,6 +66,25 @@ impl Default for HardwareAgnosticTuner {
 
 /// Hardware configuration for tuning
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+///
+/// **Migration Path**:
+/// ```rust,ignore
+/// // OLD (deprecated):
+/// use crate::config::HardwareConfiguration;
+///
+/// // NEW (canonical):
+/// use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::config::HardwareConfiguration; // Now aliases to CanonicalNetworkConfig
+/// ```
+///
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(
+    since = "0.11.0",
+    note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
+/// Hardwareconfiguration
 pub struct HardwareConfiguration {
     /// Configuration settings
     pub settings: HashMap<String, String>,
@@ -77,6 +98,7 @@ pub struct HardwareConfiguration {
     pub storage_config: StorageConfiguration,
 }
 impl Default for HardwareConfiguration {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             settings: HashMap::new(),
@@ -90,6 +112,7 @@ impl Default for HardwareConfiguration {
 
 /// Power management configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Powermanagement
 pub struct PowerManagement {
     /// Power profile
     pub profile: String,
@@ -99,6 +122,7 @@ pub struct PowerManagement {
     pub gpu_power_limit: Option<f64>,
 }
 impl Default for PowerManagement {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             profile: "balanced".to_string(),
@@ -110,6 +134,25 @@ impl Default for PowerManagement {
 
 /// Memory configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+///
+/// **Migration Path**:
+/// ```rust,ignore
+/// // OLD (deprecated):
+/// use crate::config::MemoryConfiguration;
+///
+/// // NEW (canonical):
+/// use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::config::MemoryConfiguration; // Now aliases to CanonicalNetworkConfig
+/// ```
+///
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(
+    since = "0.11.0",
+    note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
+/// Memoryconfiguration
 pub struct MemoryConfiguration {
     /// Memory frequency
     pub frequency: Option<u64>,
@@ -120,6 +163,25 @@ pub struct MemoryConfiguration {
 }
 /// Storage configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+///
+/// **Migration Path**:
+/// ```rust,ignore
+/// // OLD (deprecated):
+/// use crate::config::StorageConfiguration;
+///
+/// // NEW (canonical):
+/// use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::config::StorageConfiguration; // Now aliases to CanonicalNetworkConfig
+/// ```
+///
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(
+    since = "0.11.0",
+    note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
+/// Storageconfiguration
 pub struct StorageConfiguration {
     /// Storage devices
     pub devices: Vec<StorageDevice>,
@@ -128,6 +190,7 @@ pub struct StorageConfiguration {
 }
 /// Storage device configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagedevice
 pub struct StorageDevice {
     /// Device path
     /// Device type
@@ -137,9 +200,11 @@ pub struct StorageDevice {
 }
 /// Storage device type
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Types of Storage
 pub enum StorageType {
     /// Solid State Drive
     #[default]
+    /// Ssd
     SSD,
     /// Hard Disk Drive
     HDD,
@@ -150,6 +215,7 @@ pub enum StorageType {
 }
 /// Tuning profile
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Tuningprofile
 pub struct TuningProfile {
     /// Profile name
     pub name: String,
@@ -163,6 +229,7 @@ pub struct TuningProfile {
     pub requirements: Vec<String>,
 }
 impl Default for TuningProfile {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             name: "default".to_string(),
@@ -176,6 +243,7 @@ impl Default for TuningProfile {
 
 /// Tuning result
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Tuningresult
 pub struct TuningResult {
     /// Whether tuning was successful
     pub success: bool,
@@ -193,6 +261,7 @@ pub struct TuningResult {
 
 /// Benchmark result for hardware performance testing
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Benchmarkresult
 pub struct BenchmarkResult {
     /// Benchmark name
     pub name: String,
@@ -206,6 +275,7 @@ pub struct BenchmarkResult {
 
 /// Live hardware metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Livehardwaremetrics
 pub struct LiveHardwareMetrics {
     /// CPU utilization percentage
     pub cpu_utilization: f64,
@@ -221,6 +291,7 @@ pub struct LiveHardwareMetrics {
 
 /// Compute resource allocation
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Computeallocation
 pub struct ComputeAllocation {
     /// CPU cores allocated
     pub cpu_cores: u32,
@@ -234,6 +305,7 @@ pub struct ComputeAllocation {
 
 /// GPU resource allocation
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Gpuallocation
 pub struct GpuAllocation {
     /// GPU device ID
     pub device_id: u32,
@@ -247,6 +319,7 @@ pub struct GpuAllocation {
 
 /// Compute resource request
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for ComputeResource operation
 pub struct ComputeResourceRequest {
     /// Requested CPU cores
     pub cpu_cores: u32,
@@ -262,6 +335,7 @@ pub struct ComputeResourceRequest {
 
 /// Tuning service registration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Tuningserviceregistration
 pub struct TuningServiceRegistration {
     /// Service name
     pub name: String,
@@ -275,9 +349,11 @@ pub struct TuningServiceRegistration {
 
 /// External lock type for resource extraction
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Types of ExternalLock
 pub enum ExternalLockType {
     /// Sovereign external lock
     #[default]
+    /// Sovereignexternal
     SovereignExternal,
     /// Collaborative lock
     Collaborative,
@@ -286,6 +362,7 @@ pub enum ExternalLockType {
 }
 /// Extraction lock for resource access
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Extractionlock
 pub struct ExtractionLock {
     /// Lock type
     pub lock_type: ExternalLockType,
@@ -302,6 +379,7 @@ pub struct ExtractionLock {
 }
 /// Cryptographic proof for extraction
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Cryptographicproof
 pub struct CryptographicProof {
     /// Proof signature
     pub signature: String,
@@ -313,6 +391,7 @@ pub struct CryptographicProof {
     pub algorithm: String,
 }
 impl Default for CryptographicProof {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             signature: String::new(),
@@ -325,6 +404,7 @@ impl Default for CryptographicProof {
 
 /// Extraction restrictions
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Extractionrestrictions
 pub struct ExtractionRestrictions {
     /// Maximum extraction size
     pub max_size: Option<u64>,
@@ -337,6 +417,7 @@ pub struct ExtractionRestrictions {
 }
 /// Time-based restrictions
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Timerestrictions
 pub struct TimeRestrictions {
     /// Start time
     pub start_time: SystemTime,
@@ -348,6 +429,7 @@ pub struct TimeRestrictions {
     pub recurring: Option<String>,
 }
 impl Default for TimeRestrictions {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             start_time: SystemTime::now(),
@@ -360,6 +442,7 @@ impl Default for TimeRestrictions {
 
 /// Copyleft requirements for extraction
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Copyleftrequirements
 pub struct CopyleftRequirements {
     /// License type
     pub license_type: String,
@@ -371,6 +454,7 @@ pub struct CopyleftRequirements {
     pub commercial_restrictions: Vec<String>,
 }
 impl Default for CopyleftRequirements {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             license_type: "AGPL-3.0".to_string(),
@@ -380,6 +464,57 @@ impl Default for CopyleftRequirements {
         }
     }
 }
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+///
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Storageconfigurationcanonical
+pub type StorageConfigurationCanonical =
+    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using StorageConfiguration (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+///
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Hardwareconfigurationcanonical
+pub type HardwareConfigurationCanonical =
+    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using HardwareConfiguration (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+///
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Memoryconfigurationcanonical
+pub type MemoryConfigurationCanonical =
+    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using MemoryConfiguration (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
 
 #[cfg(test)]
 mod tests {

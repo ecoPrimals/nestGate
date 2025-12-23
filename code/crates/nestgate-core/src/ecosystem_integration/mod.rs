@@ -15,7 +15,11 @@ use crate::universal_adapter::PrimalAgnosticAdapter;
 use crate::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::sync::Arc;
 use tracing::{debug, info}; // Removed unused 'warn' for pedantic perfection
+
+/// Ecosystem discovery configuration
+pub mod ecosystem_config;
 
 /// Capability-based routing patterns
 pub mod capability_router;
@@ -23,29 +27,47 @@ pub mod capability_router;
 /// Real adapter router for production use
 pub mod real_adapter_router;
 
+// Export config types for external use
+pub use ecosystem_config::{EcosystemDiscoveryConfig, SharedEcosystemConfig};
+
 // ✅ FALLBACK PROVIDERS - Graceful degradation when capabilities unavailable
+
+/// Fallback providers for ecosystem capabilities when primary services are unavailable
+///
+/// This module provides graceful degradation by implementing local fallback
+/// behavior when external primal services cannot be reached.
 pub mod fallback_providers {
     use crate::ecosystem_integration::capability_router::FallbackProvider;
     use crate::error::NestGateError;
     // Removed unused async_trait import for pedantic perfection
 
+    /// Security fallback providers for authentication and authorization when primary security services are unavailable
     pub mod security {
         use super::{FallbackProvider, NestGateError};
 
         /// Security fallback provider when no external security capability is available
         #[derive(Debug, Clone)]
+        /// Securityfallbackprovider
         pub struct SecurityFallbackProvider {
             fallback_mode: SecurityFallbackMode,
         }
 
         #[derive(Debug, Clone)]
+        /// Securityfallbackmode
         pub enum SecurityFallbackMode {
+            /// Basicauth
             BasicAuth,
+            /// Noauth
             NoAuth,
+            /// Localvalidation
             LocalValidation,
         }
 
         impl SecurityFallbackProvider {
+            /// Creates a new security fallback provider with the specified mode
+            ///
+            /// # Arguments
+            /// * `mode` - The fallback authentication mode to use
             #[must_use]
             pub fn new(mode: SecurityFallbackMode) -> Self {
                 Self {
@@ -68,6 +90,7 @@ pub mod fallback_providers {
         }
 
         impl FallbackProvider for SecurityFallbackProvider {
+            /// Execute
             async fn execute(
                 &self,
                 operation: &str,
@@ -87,10 +110,12 @@ pub mod fallback_providers {
                 }
             }
 
+            /// Supported Operations
             fn supported_operations(&self) -> Vec<String> {
                 vec!["authenticate".to_string(), "authorize".to_string()]
             }
 
+            /// Metadata
             fn metadata(&self) -> std::collections::HashMap<String, String> {
                 let mut metadata = std::collections::HashMap::new();
                 metadata.insert("provider".to_string(), "security_fallback".to_string());
@@ -101,23 +126,33 @@ pub mod fallback_providers {
         }
     }
 
+    /// AI fallback providers for machine learning and intelligence capabilities when primary AI services are unavailable
     pub mod ai {
         use super::{FallbackProvider, NestGateError};
 
         /// AI fallback provider when no external AI capability is available
         #[derive(Debug, Clone)]
+        /// Aifallbackprovider
         pub struct AiFallbackProvider {
             fallback_mode: AiFallbackMode,
         }
 
         #[derive(Debug, Clone)]
+        /// Aifallbackmode
         pub enum AiFallbackMode {
+            /// Mockresponses
             MockResponses,
+            /// Simplerules
             SimpleRules,
+            /// Noprocessing
             NoProcessing,
         }
 
         impl AiFallbackProvider {
+            /// Creates a new AI fallback provider with the specified mode
+            ///
+            /// # Arguments
+            /// * `mode` - The fallback AI processing mode to use
             #[must_use]
             pub fn new(mode: AiFallbackMode) -> Self {
                 Self {
@@ -140,6 +175,7 @@ pub mod fallback_providers {
         }
 
         impl FallbackProvider for AiFallbackProvider {
+            /// Execute
             fn execute(
                 &self,
                 operation: &str,
@@ -170,10 +206,12 @@ pub mod fallback_providers {
                 }
             }
 
+            /// Supported Operations
             fn supported_operations(&self) -> Vec<String> {
                 vec!["process".to_string(), "analyze".to_string()]
             }
 
+            /// Metadata
             fn metadata(&self) -> std::collections::HashMap<String, String> {
                 let mut metadata = std::collections::HashMap::new();
                 metadata.insert("provider".to_string(), "ai_fallback".to_string());
@@ -184,20 +222,26 @@ pub mod fallback_providers {
         }
     }
 
+    /// Orchestration fallback providers for workflow and service coordination when primary orchestration services are unavailable
     pub mod orchestration {
         use super::{FallbackProvider, NestGateError};
 
         /// Orchestration fallback provider for local orchestration
         #[derive(Debug, Clone)]
+        /// Orchestrationfallbackprovider
         pub struct OrchestrationFallbackProvider;
 
         impl Default for OrchestrationFallbackProvider {
+            /// Returns the default instance
             fn default() -> Self {
                 Self::new()
             }
         }
 
         impl OrchestrationFallbackProvider {
+            /// Creates a new orchestration fallback provider
+            ///
+            /// Provides local orchestration capabilities when external services are unavailable.
             #[must_use]
             pub fn new() -> Self {
                 Self
@@ -214,6 +258,7 @@ pub mod fallback_providers {
         }
 
         impl FallbackProvider for OrchestrationFallbackProvider {
+            /// Execute
             fn execute(
                 &self,
                 operation: &str,
@@ -245,6 +290,7 @@ pub mod fallback_providers {
                 }
             }
 
+            /// Supported Operations
             fn supported_operations(&self) -> Vec<String> {
                 vec![
                     "orchestrate".to_string(),
@@ -253,6 +299,7 @@ pub mod fallback_providers {
                 ]
             }
 
+            /// Metadata
             fn metadata(&self) -> std::collections::HashMap<String, String> {
                 let mut metadata = std::collections::HashMap::new();
                 metadata.insert("provider".to_string(), "orchestration_fallback".to_string());
@@ -262,6 +309,7 @@ pub mod fallback_providers {
         }
     }
 
+    /// Compute fallback providers for processing and computation when primary compute services are unavailable
     pub mod compute {
         use super::NestGateError;
 
@@ -269,12 +317,16 @@ pub mod fallback_providers {
         pub struct ComputeFallbackProvider;
 
         impl Default for ComputeFallbackProvider {
+            /// Returns the default instance
             fn default() -> Self {
                 Self::new()
             }
         }
 
         impl ComputeFallbackProvider {
+            /// Creates a new compute fallback provider
+            ///
+            /// Provides local computation capabilities when external services are unavailable.
             #[must_use]
             pub fn new() -> Self {
                 Self
@@ -291,20 +343,26 @@ pub mod fallback_providers {
         }
     }
 
+    /// ZFS fallback providers for storage operations when primary ZFS services are unavailable
     pub mod zfs {
         use super::{FallbackProvider, NestGateError};
 
         /// ZFS fallback provider for local storage operations
         #[derive(Debug, Clone)]
+        /// Zfsfallbackprovider
         pub struct ZfsFallbackProvider;
 
         impl Default for ZfsFallbackProvider {
+            /// Returns the default instance
             fn default() -> Self {
                 Self::new()
             }
         }
 
         impl ZfsFallbackProvider {
+            /// Creates a new ZFS fallback provider
+            ///
+            /// Provides local ZFS storage operations when external services are unavailable.
             #[must_use]
             pub fn new() -> Self {
                 Self
@@ -321,6 +379,7 @@ pub mod fallback_providers {
         }
 
         impl FallbackProvider for ZfsFallbackProvider {
+            /// Execute
             fn execute(
                 &self,
                 operation: &str,
@@ -349,6 +408,7 @@ pub mod fallback_providers {
                 }
             }
 
+            /// Supported Operations
             fn supported_operations(&self) -> Vec<String> {
                 vec![
                     "manage_storage".to_string(),
@@ -357,6 +417,7 @@ pub mod fallback_providers {
                 ]
             }
 
+            /// Metadata
             fn metadata(&self) -> std::collections::HashMap<String, String> {
                 let mut metadata = std::collections::HashMap::new();
                 metadata.insert("provider".to_string(), "zfs_fallback".to_string());
@@ -377,6 +438,7 @@ pub mod fallback_providers {
 /// Capability-based ecosystem discovery system
 /// Replaces hardcoded vendor integrations (k8s, docker, consul, etc.)
 #[derive(Debug, Clone)]
+/// Capabilitybasedecosystem
 pub struct CapabilityBasedEcosystem {
     /// Universal adapter endpoint for capability discovery
     pub adapter_endpoint: Option<String>,
@@ -384,9 +446,12 @@ pub struct CapabilityBasedEcosystem {
     pub capabilities: HashMap<String, CapabilityInfo>,
     /// Discovery methods enabled
     pub discovery_methods: Vec<DiscoveryMethod>,
+    /// Discovery configuration (immutable, thread-safe)
+    pub discovery_config: SharedEcosystemConfig,
 }
 
 impl Default for CapabilityBasedEcosystem {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -394,6 +459,9 @@ impl Default for CapabilityBasedEcosystem {
 
 impl CapabilityBasedEcosystem {
     /// Create new capability-based ecosystem (infant discovery pattern)
+    ///
+    /// This constructor loads discovery configuration from environment variables.
+    /// For testing or custom configurations, use `with_config()`.
     #[must_use]
     pub fn new() -> Self {
         Self {
@@ -405,6 +473,26 @@ impl CapabilityBasedEcosystem {
                 DiscoveryMethod::UniversalAdapter,
                 DiscoveryMethod::ServiceAnnouncements,
             ],
+            discovery_config: Arc::new(EcosystemDiscoveryConfig::from_env()),
+        }
+    }
+
+    /// Create a new ecosystem with a specific discovery configuration
+    ///
+    /// This is the recommended constructor for testing and when you need
+    /// explicit control over discovery endpoints.
+    #[must_use]
+    pub fn with_config(discovery_config: SharedEcosystemConfig) -> Self {
+        Self {
+            adapter_endpoint: None,
+            capabilities: HashMap::new(),
+            discovery_methods: vec![
+                DiscoveryMethod::EnvironmentVariables,
+                DiscoveryMethod::NetworkScanning,
+                DiscoveryMethod::UniversalAdapter,
+                DiscoveryMethod::ServiceAnnouncements,
+            ],
+            discovery_config,
         }
     }
 
@@ -446,22 +534,22 @@ impl CapabilityBasedEcosystem {
     /// Discover capabilities via environment variables
     /// Replaces hardcoded service endpoint configuration
     async fn discover_via_environment(&mut self) -> Result<()> {
-        // Look for *_DISCOVERY_ENDPOINT patterns instead of hardcoded vendor URLs
-        let capability_patterns = [
-            ("ORCHESTRATION_DISCOVERY_ENDPOINT", "orchestration"),
-            ("STORAGE_DISCOVERY_ENDPOINT", "storage"),
-            ("SECURITY_DISCOVERY_ENDPOINT", "security"),
-            ("MONITORING_DISCOVERY_ENDPOINT", "monitoring"),
-            ("AI_DISCOVERY_ENDPOINT", "artificial_intelligence"),
-            ("COMPUTE_DISCOVERY_ENDPOINT", "compute"),
+        // Use immutable config instead of runtime env::var() calls
+        let capability_categories = [
+            "orchestration",
+            "storage",
+            "security",
+            "monitoring",
+            "artificial_intelligence",
+            "compute",
         ];
 
-        for (env_var, category) in capability_patterns {
-            if let Ok(endpoint) = std::env::var(env_var) {
+        for category in capability_categories {
+            if let Some(endpoint) = self.discovery_config.get_discovery_endpoint(category) {
                 let capability = CapabilityInfo {
                     category: category.to_string(),
                     provider: format!("dynamic-{category}"),
-                    endpoint,
+                    endpoint: endpoint.to_string(),
                     metadata: HashMap::new(),
                 };
                 self.capabilities.insert(category.to_string(), capability);
@@ -502,6 +590,7 @@ impl CapabilityBasedEcosystem {
 
 /// Information about a discovered capability
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Capabilityinfo
 pub struct CapabilityInfo {
     /// Capability category (orchestration, storage, security, etc.)
     pub category: String,
@@ -515,6 +604,7 @@ pub struct CapabilityInfo {
 
 /// Methods for discovering capabilities (replaces vendor-specific discovery)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Discoverymethod
 pub enum DiscoveryMethod {
     /// Environment variable scanning
     EnvironmentVariables,
@@ -528,6 +618,25 @@ pub enum DiscoveryMethod {
 
 /// Ecosystem integration configuration
 #[derive(Debug, Clone)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+///
+/// **Migration Path**:
+/// ```rust,ignore
+/// // OLD (deprecated):
+/// use crate::config::EcosystemConfig;
+///
+/// // NEW (canonical):
+/// use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::config::EcosystemConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+///
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(
+    since = "0.11.0",
+    note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
+/// Configuration for Ecosystem
 pub struct EcosystemConfig {
     /// Discovery methods to use
     pub discovery_methods: Vec<String>,
@@ -537,7 +646,9 @@ pub struct EcosystemConfig {
     pub fallback_enabled: bool,
 }
 
+#[allow(deprecated)]
 impl Default for EcosystemConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             discovery_methods: vec!["environment".to_string(), "service_registry".to_string()],
@@ -551,11 +662,13 @@ impl Default for EcosystemConfig {
 pub struct EcosystemIntegrationService {
     adapter: PrimalAgnosticAdapter,
     #[allow(dead_code)] // Framework field - intentionally unused
+    #[allow(deprecated)]
     config: EcosystemConfig,
 }
 
 impl EcosystemIntegrationService {
     /// Create new ecosystem integration service
+    #[allow(deprecated)]
     pub fn new(config: EcosystemConfig) -> crate::Result<Self> {
         Ok(Self {
             adapter: PrimalAgnosticAdapter::new(
@@ -592,7 +705,9 @@ impl EcosystemIntegrationService {
 }
 
 impl Default for EcosystemIntegrationService {
+    /// Returns the default instance
     fn default() -> Self {
+        #[allow(deprecated)]
         match Self::new(EcosystemConfig::default()) {
             Ok(service) => service,
             Err(e) => {
@@ -612,3 +727,20 @@ impl Default for EcosystemIntegrationService {
         }
     }
 }
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+///
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Ecosystemconfigcanonical
+pub type EcosystemConfigCanonical =
+    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using EcosystemConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.

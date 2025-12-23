@@ -14,6 +14,22 @@ use super::aggregation::LogAggregator;
 
 /// Tracing configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// 
+/// **Migration Path**:
+/// ```rust,ignore
+/// // OLD (deprecated):
+/// use crate::network::config::TracingConfig;
+/// 
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::TracingConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+/// 
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for Tracing
 pub struct TracingConfig {
     /// Log level (trace, debug, info, warn, error)
     pub level: String,
@@ -35,6 +51,7 @@ pub struct TracingConfig {
 }
 }
 impl Default for TracingConfig {
+    /// Returns the default instance
     fn default() -> Self { Self {
             level: "info".to_string(),
             console_enabled: true,
@@ -51,14 +68,20 @@ impl Default for TracingConfig {
 
 /// Trace context for distributed tracing
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Tracecontext
 pub struct TraceContext {
+    /// Trace identifier
     pub trace_id: String,
+    /// Span identifier
     pub span_id: String,
+    /// Parent Span identifier
     pub parent_span_id: Option<String>,
+    /// Baggage
     pub baggage: HashMap<String, String>,
 }
 }
 impl Default for TraceContext {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -247,6 +270,23 @@ macro_rules! instrument_fn {
     };
 }
 }
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+/// 
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Tracingconfigcanonical
+pub type TracingConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using TracingConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+
 #[cfg(test)]
 mod tests {
     use super::*;

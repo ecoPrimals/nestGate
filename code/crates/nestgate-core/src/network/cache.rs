@@ -18,14 +18,37 @@ pub use crate::constants::network::{
     DEFAULT_TIMEOUT_MS, DEFAULT_BUFFER_SIZE, DEFAULT_MAX_CONNECTIONS
 };
 // ==================== CORE TYPES ====================
-/// Configuration for this module
+/// Configuration for network cache module
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Config {
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// 
+/// **Migration Path**:
+/// ```rust
+/// // OLD (deprecated):
+/// use crate::config::NetworkCacheConfig;
+/// 
+/// // NEW (canonical):
+/// use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::config::NetworkCacheConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+/// 
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for NetworkCache
+pub struct NetworkCacheConfig {
+    /// Whether this feature is enabled
     pub enabled: bool,
+    /// Timeout
     pub timeout: Duration,
+    /// Max Connections
     pub max_connections: usize,
+    /// Size of buffer
     pub buffer_size: usize,
-impl Default for Config {
+}
+
+impl Default for NetworkCacheConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -34,25 +57,19 @@ impl Default for Config {
             buffer_size: DEFAULT_BUFFER_SIZE,
         }
     }
-/// Service interface for this module
-pub trait Service: Send + Sync {
-    /// Initialize the service
-    fn initialize(&self) -> impl std::future::Future<Output = Result<()>> + Send;
-    /// Check service health
-    fn health_check(&self) -> impl std::future::Future<Output = Result<HealthStatus>> + Send;
-    /// Shutdown the service gracefully
-    fn shutdown(&self) -> impl std::future::Future<Output = Result<()>> + Send;
-/// Health status enumeration
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-pub enum HealthStatus {
-    Healthy,
-    Degraded,
-    Unhealthy,
+// ==================== USE CANONICAL TRAIT ====================
+// Use canonical Service trait from traits module instead of duplicating
+pub use super::traits::{Service, HealthStatus};
+
 /// Performance metrics for monitoring
 pub struct Metrics {
+    /// Requests Processed
     pub requests_processed: u64,
+    /// Errors Encountered
     pub errors_encountered: u64,
+    /// Average Response Time
     pub average_response_time: Duration,
+    /// Memory Usage Bytes
     pub memory_usage_bytes: u64,
 impl Default for Metrics {
             requests_processed: 0,
@@ -62,35 +79,41 @@ impl Default for Metrics {
 // ==================== IMPLEMENTATION STUB ====================
 /// Default implementation of the service
 #[derive(Debug)]
+/// Service implementation for Default
 pub struct DefaultService {
-    config: Config,
+    config: NetworkCacheConfig,
     metrics: Arc<tokio::sync::RwLock<Metrics>>,
+}
+
 impl DefaultService {
     /// Create a new service instance
-    pub fn new(config: Config) -> Self {
+    pub fn new(config: NetworkCacheConfig) -> Self {
             config,
             metrics: Arc::new(tokio::sync::RwLock::new(Metrics::default())),
     /// Get current metrics
     pub async fn get_metrics(&self) -> Metrics {
         self.metrics.read().await.clone()
 impl Service for DefaultService {
+    /// Initialize
     fn initialize(&self) -> impl std::future::Future<Output = Result<()>> + Send {
         // Initialization implementation
         tracing::info!("Initializing {} service with config: {:?}", 
                       stringify!(cache), config);
         Ok(())
+    /// Health Check
     fn health_check(&self) -> impl std::future::Future<Output = Result<HealthStatus>> + Send {
         // Health check implementation
         Ok(HealthStatus::Healthy)
+    /// Shutdown
     fn shutdown(&self) -> impl std::future::Future<Output = Result<()>> + Send {
         // Shutdown implementation
         tracing::info!("Shutting down {} service", stringify!(cache));
 // ==================== UTILITY FUNCTIONS ====================
 /// Create a default service instance
 pub fn create_service() -> DefaultService {
-    DefaultService::new(Config::default())
+    DefaultService::new(NetworkCacheConfig::default())
 /// Validate configuration
-pub async fn validate_config(config: &Config) -> crate::Result<()> {
+pub async fn validate_config(config: &NetworkCacheConfig) -> crate::Result<()> {
     if config.max_connections == 0 {
         return Err(NestGateError::configuration_error(
             "cache",
@@ -105,15 +128,35 @@ pub async fn validate_config(config: &Config) -> crate::Result<()> {
     }
     Ok(())
 // ==================== TESTS ====================
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+/// 
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Networkcacheconfigcanonical
+pub type NetworkCacheConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using NetworkCacheConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+
 #[cfg(test)]
 mod tests {
     #[test]
     fn test_config_default() {
-        let config = Config::default();
+        let config = NetworkCacheConfig::default();
         assert!(config.enabled);
         assert_eq!(config.max_connections, DEFAULT_MAX_CONNECTIONS);
+    }
+    
+    #[tokio::test]
     fn test_config_validation() {
-        let mut config = Config::default();
+        let mut config = NetworkCacheConfig::default();
         assert!(validate_config(&config).is_ok());
         
         config.max_connections = 0;

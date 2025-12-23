@@ -9,6 +9,8 @@
 pub mod config;
 pub mod error;
 pub mod traits;
+// Note: types is now a directory with sub-modules (mod.rs)
+// All types are re-exported from types/mod.rs for backward compatibility
 pub mod types;
 
 // Re-export main types

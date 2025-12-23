@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 //
 // **⚠️ EXPERIMENTAL MODULE - NOT FOR PRODUCTION USE**
 //
@@ -7,6 +6,8 @@ use std::collections::HashMap;
 //
 // To enable: `cargo build --features "experimental-zero-cost"`
 
+#[cfg(debug_assertions)]
+use std::collections::HashMap;
 use std::marker::PhantomData;
 use std::mem::MaybeUninit;
 
@@ -30,39 +31,87 @@ pub trait ZeroCostString<const N: usize> {
 
 /// **ZERO-COST**: Type-level configuration
 ///
-/// Configuration that exists only at compile time
+/// Configuration that exists only at compile time, enabling the compiler
+/// to optimize away all abstraction overhead. Values are baked into the
+/// binary at compile time with zero runtime cost.
+///
+/// # Zero-Cost Guarantee
+///
+/// All configuration access compiles to direct constant values with no
+/// runtime overhead, function calls, or memory lookups.
+///
+/// # Usage
+///
+/// Implement this trait for different environments (production, development,
+/// test) to get compile-time specialized configurations.
+///
+/// # Examples
+///
+/// ```rust,no_run
+/// # use nestgate_core::zero_cost_evolution::ZeroCostConfig;
+/// struct MyConfig;
+/// impl ZeroCostConfig for MyConfig {
+///     const BUFFER_SIZE: usize = 4096;
+///     const MAX_CONNECTIONS: usize = 1000;
+///     const TIMEOUT_MS: u64 = 5000;
+///     const DEBUG: bool = false;
+/// }
+/// ```
 pub trait ZeroCostConfig {
-    /// Buffer size determined at compile time
+    /// Buffer size for I/O operations (compile-time constant)
     const BUFFER_SIZE: usize;
-    /// Maximum connections at compile time
+
+    /// Maximum number of concurrent connections (compile-time constant)
     const MAX_CONNECTIONS: usize;
 
-    /// Timeout in milliseconds at compile time
+    /// Default timeout in milliseconds (compile-time constant)
     const TIMEOUT_MS: u64;
 
-    /// Enable debug mode at compile time
+    /// Enable debug mode at compile time (eliminates debug code in release builds)
     const DEBUG: bool;
 }
 
-/// Production configuration - optimized for performance
+/// Production configuration - optimized for maximum performance
+///
+/// Uses large buffers, high connection limits, and disables debug checks
+/// for optimal throughput and latency in production environments.
+///
+/// # Characteristics
+///
+/// - Large network buffers for high throughput
+/// - Maximum connection capacity
+/// - Debug mode disabled (eliminates debug code)
+/// - Optimized for latency and throughput
 pub struct ProductionConfig;
 impl ZeroCostConfig for ProductionConfig {
     const BUFFER_SIZE: usize =
         crate::constants::canonical_defaults::performance::NETWORK_BUFFER_SIZE;
     const MAX_CONNECTIONS: usize =
         crate::constants::canonical_defaults::performance::MAX_CONNECTIONS;
-    const TIMEOUT_MS: u64 = crate::constants::canonical_defaults::timeouts::DEFAULT_TIMEOUT_MS;
+    const TIMEOUT_MS: u64 = crate::constants::canonical::timeouts::DEFAULT_TIMEOUT_MS;
+    /// Debug mode disabled for production
     const DEBUG: bool = false;
 }
 
-/// Development configuration - optimized for debugging
+/// Development configuration - optimized for debugging and diagnostics
+///
+/// Uses moderate buffers, enables debug checks, and provides better
+/// error messages at the cost of some performance.
+///
+/// # Characteristics
+///
+/// - Moderate buffer sizes for memory efficiency
+/// - Standard connection limits
+/// - Debug mode enabled (includes validation and logging)
+/// - Optimized for diagnostics and development experience
 pub struct DevelopmentConfig;
 impl ZeroCostConfig for DevelopmentConfig {
     const BUFFER_SIZE: usize =
         crate::constants::canonical_defaults::performance::DEFAULT_BUFFER_SIZE;
     const MAX_CONNECTIONS: usize =
         crate::constants::canonical_defaults::performance::MAX_CONNECTIONS;
-    const TIMEOUT_MS: u64 = crate::constants::canonical_defaults::timeouts::DEFAULT_TIMEOUT_MS;
+    const TIMEOUT_MS: u64 = crate::constants::canonical::timeouts::DEFAULT_TIMEOUT_MS;
+    /// Debug mode enabled for development
     const DEBUG: bool = true;
 }
 
@@ -70,12 +119,14 @@ impl ZeroCostConfig for DevelopmentConfig {
 ///
 /// ✅ SAFE IMPLEMENTATION - No unsafe code
 #[derive(Debug)]
+/// Zerocostarray
 pub struct ZeroCostArray<T, const N: usize> {
     data: Vec<T>,
     capacity: usize,
 }
 
 impl<T, const N: usize> Default for ZeroCostArray<T, N> {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -164,6 +215,7 @@ pub struct ZeroCostPool<T, const POOL_SIZE: usize, const BLOCK_SIZE: usize> {
 impl<T, const POOL_SIZE: usize, const BLOCK_SIZE: usize> Default
     for ZeroCostPool<T, POOL_SIZE, BLOCK_SIZE>
 {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -247,7 +299,6 @@ impl<T, const POOL_SIZE: usize, const BLOCK_SIZE: usize> ZeroCostPool<T, POOL_SI
 
 /// **ZERO-COST**: Branch-free operations
 ///
-/// Operations that avoid conditional branches for better performance
 pub struct ZeroCostOps;
 impl ZeroCostOps {
     /// Branch-free minimum
@@ -285,6 +336,7 @@ impl ZeroCostOps {
 ///
 /// Data structures optimized for CPU cache efficiency
 #[repr(align(64))] // Align to cache line size
+/// Cachealigned
 pub struct CacheAligned<T> {
     data: T,
 }
@@ -312,11 +364,11 @@ impl<T> CacheAligned<T> {
 
 /// **ZERO-COST**: Service with compile-time configuration
 ///
-/// Service that configures itself at compile time
 pub struct ZeroCostService<C: ZeroCostConfig> {
     _config: PhantomData<C>,
 }
 impl<C: ZeroCostConfig> Default for ZeroCostService<C> {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -462,7 +514,7 @@ mod tests {
         // All these are compile-time constants
         assert_eq!(ZeroCostService::<ProductionConfig>::buffer_size(), 8192);
         assert_eq!(ZeroCostService::<ProductionConfig>::max_connections(), 1000);
-        assert_eq!(ZeroCostService::<ProductionConfig>::timeout_ms(), 5000);
+        assert_eq!(ZeroCostService::<ProductionConfig>::timeout_ms(), 30000); // Updated: canonical value (was 5000)
         assert!(!ZeroCostService::<ProductionConfig>::is_debug());
 
         // Test data processing

@@ -10,12 +10,14 @@ use super::TestDoubleConfig;
 
 /// Service test double for testing service operations
 pub struct ServiceTestDouble {
+    #[allow(dead_code)] // Test fixture field
     config: TestDoubleConfig,
     registered_services: Arc<Mutex<HashMap<String, TestService>>>,
     operations: Arc<Mutex<Vec<String>>>,
 }
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)] // Test fixture
 struct TestService {
     name: String,
     status: ServiceStatus,
@@ -23,6 +25,7 @@ struct TestService {
 }
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)] // Test fixture
 enum ServiceStatus {
     Running,
     Stopped,
@@ -61,7 +64,10 @@ impl ServiceTestDouble {
     }
 
     pub fn get_operations(&self) -> Vec<String> {
-        self.operations.lock()?.clone()
+        self.operations
+            .lock()
+            .map(|ops| ops.clone())
+            .unwrap_or_default()
     }
 
     async fn record_operation(&self, operation: &str) -> Result<(), ServiceTestError> {
@@ -89,10 +95,38 @@ impl MockServiceForTesting {
             .record_operation(&format!("start_service:{}", name))
             .await
     }
+
+    /// Initialize the mock service
+    pub fn initialize(&mut self) -> Result<(), ServiceTestError> {
+        Ok(())
+    }
+
+    /// Cleanup the mock service
+    pub fn cleanup(&mut self) -> Result<(), String> {
+        self.reset()
+    }
+
+    /// Reset the mock service to initial state
+    pub fn reset(&mut self) -> Result<(), String> {
+        if let Ok(mut ops) = self.test_double.operations.lock() {
+            ops.clear();
+        }
+        Ok(())
+    }
 }
 
-#[derive(Debug, thiserror::Error)]
+// Simple error type for test doubles - no thiserror needed in tests
+#[derive(Debug)]
 pub enum ServiceTestError {
-    #[error("Simulated service failure: {0}")]
     SimulatedFailure(String),
 }
+
+impl std::fmt::Display for ServiceTestError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::SimulatedFailure(msg) => write!(f, "Simulated service failure: {}", msg),
+        }
+    }
+}
+
+impl std::error::Error for ServiceTestError {}

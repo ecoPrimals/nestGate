@@ -11,43 +11,64 @@ use serde::{Deserialize, Serialize};
 /// Storage provisioning request
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZeroCostStorageProvisionRequest {
+    /// Volume name
     pub volume_name: String,
+    /// Size in gigabytes
     pub size_gb: u64,
+    /// Tier
     pub tier: String,
+    /// Replication Factor
     pub replication_factor: u8,
+    /// Additional metadata key-value pairs
     pub metadata: HashMap<String, String>,
 }
 /// Volume mount request
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZeroCostVolumeMountRequest {
+    /// Volume name
     pub volume_name: String,
+    /// Mount Point
     pub mount_point: String,
+    /// Read Only
     pub read_only: bool,
+    /// Options
     pub options: HashMap<String, String>,
 }
 /// Backup operation request
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZeroCostBackupRequest {
+    /// Source
     pub source: String,
+    /// Destination
     pub destination: String,
+    /// Encryption
     pub encryption: bool,
+    /// Compression
     pub compression: bool,
+    /// Schedule
     pub schedule: Option<String>,
 }
 /// Coordination result
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Zerocostcoordinationresult
 pub struct ZeroCostCoordinationResult {
     pub service_id: String,
     pub operation_id: String,
+    /// Status
     pub status: CoordinationStatus,
     pub message: String,
+    /// Additional metadata key-value pairs
     pub metadata: HashMap<String, String>,
 }
 /// Coordination status
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Status values for Coordination
 pub enum CoordinationStatus {
+    /// Success
     Success,
+    /// Pending
     Pending,
+    /// Failed
     Failed,
     Timeout,
 }
@@ -91,10 +112,15 @@ pub trait ZeroCostUniversalCoordination: Send + Sync + 'static {
 
 /// Coordination service health information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Coordinationhealth
 pub struct CoordinationHealth {
+    /// Active Coordinations
     pub active_coordinations: usize,
+    /// Success Rate
     pub success_rate: f64,
+    /// Average Latency Ms
     pub average_latency_ms: f64,
+    /// Connected Services
     pub connected_services: Vec<String>,
 }
 // ==================== SECTION ====================
@@ -123,6 +149,7 @@ impl<const MAX_CONCURRENT: usize> ZeroCostCoordinationService<MAX_CONCURRENT> {
 impl<const MAX_CONCURRENT: usize> ZeroCostUniversalCoordination
     for ZeroCostCoordinationService<MAX_CONCURRENT>
 {
+    /// Coordinate Storage Provisioning
     async fn coordinate_storage_provisioning(
         &self,
         request: ZeroCostStorageProvisionRequest,
@@ -148,6 +175,7 @@ impl<const MAX_CONCURRENT: usize> ZeroCostUniversalCoordination
         Ok(vec![result])
     }
 
+    /// Coordinate Volume Mounting
     async fn coordinate_volume_mounting(
         &self,
         request: ZeroCostVolumeMountRequest,
@@ -168,6 +196,7 @@ impl<const MAX_CONCURRENT: usize> ZeroCostUniversalCoordination
         Ok(vec![result])
     }
 
+    /// Coordinate Backup Operations
     async fn coordinate_backup_operations(
         &self,
         request: ZeroCostBackupRequest,
@@ -188,6 +217,7 @@ impl<const MAX_CONCURRENT: usize> ZeroCostUniversalCoordination
         Ok(vec![result])
     }
 
+    /// Gets Coordination Capabilities
     fn get_coordination_capabilities(&self) -> Vec<String> {
         vec![
             "storage_provisioning".to_string(),
@@ -218,6 +248,7 @@ impl<T> CoordinationCompatibilityBridge<T>
 where
     T: ZeroCostUniversalCoordination,
 {
+    /// Creates a new instance
     pub fn new(inner: T) -> Self {
         Self { inner }
     }

@@ -29,10 +29,14 @@ fn test_status_endpoint_has_valid_timestamp() {
 fn test_status_endpoint_uptime_increases() {
     initialize_uptime();
     let response1 = get_status();
-    std::thread::sleep(std::time::Duration::from_millis(100));
+
+    // Modern pattern: Test monotonicity without artificial delay
+    // Uptime is based on actual elapsed time, not sleep
+    // Even with minimal elapsed time, uptime should be monotonic
     let response2 = get_status();
 
-    // Uptime should increase (or at least not decrease)
+    // Uptime should never decrease (monotonic guarantee)
+    // This tests the uptime tracking logic, not sleep timing
     assert!(response2.0.uptime >= response1.0.uptime);
 }
 
@@ -57,7 +61,7 @@ fn test_system_status_json_round_trip() {
 #[test]
 fn test_system_status_with_empty_status() {
     let status = SystemStatus {
-        status: "".to_string(),
+        status: String::new(),
         version: "1.0.0".to_string(),
         uptime: 0,
         timestamp: 0,
@@ -93,7 +97,7 @@ fn test_system_status_debug_format() {
         timestamp: 1234567890,
     };
 
-    let debug_str = format!("{:?}", status);
+    let debug_str = format!("{status:?}");
     assert!(debug_str.contains("healthy"));
     assert!(debug_str.contains("1.0.0"));
 }
@@ -158,10 +162,13 @@ fn test_system_status_timestamp_ordering() {
     initialize_uptime();
 
     let response1 = get_status();
-    std::thread::sleep(std::time::Duration::from_millis(10));
+    // Modern pattern: Test timestamp monotonicity without artificial delay
+    // System timestamps have nanosecond precision and are monotonic
+    // If timestamps are identical, that tests precision, not sleep timing
     let response2 = get_status();
 
-    // Timestamp should be monotonically increasing
+    // Timestamp should be monotonically increasing (or equal if same nanosecond)
+    // This tests the timestamp generation logic, not sleep
     assert!(response2.0.timestamp >= response1.0.timestamp);
 }
 
@@ -211,7 +218,7 @@ mod edge_cases {
     fn test_system_status_empty_version() {
         let status = SystemStatus {
             status: "healthy".to_string(),
-            version: "".to_string(),
+            version: String::new(),
             uptime: 3600,
             timestamp: 1234567890,
         };
@@ -255,8 +262,7 @@ mod performance {
         // Should complete 1000 calls in under 100ms
         assert!(
             elapsed.as_millis() < 100,
-            "Status endpoint too slow: {:?}",
-            elapsed
+            "Status endpoint too slow: {elapsed:?}"
         );
     }
 
@@ -278,8 +284,7 @@ mod performance {
         // Should serialize 10000 times in under 50ms
         assert!(
             elapsed.as_millis() < 50,
-            "Serialization too slow: {:?}",
-            elapsed
+            "Serialization too slow: {elapsed:?}"
         );
     }
 }

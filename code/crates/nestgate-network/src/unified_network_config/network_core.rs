@@ -14,6 +14,7 @@ use std::time::Duration;
 /// Network-specific configuration extensions
 /// Domain-specific fields that don't belong in unified base configs
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Networkextensions
 pub struct NetworkExtensions {
     /// VLAN configuration
     pub vlan: NetworkVlanSettings,
@@ -37,10 +38,15 @@ pub struct NetworkExtensions {
 /// CANONICAL MODERNIZATION: Simplified type alias without type parameters
 pub type UnifiedNetworkConfig = crate::types::NetworkConfig;
 
+/// NetworkConfigExt trait
 pub trait NetworkConfigExt {
+    /// Development
     fn development() -> Self;
+    /// Production
     fn production() -> Self;
+    /// High Performance
     fn high_performance() -> Self;
+    /// Testing
     fn testing() -> Self;
 }
 
@@ -53,24 +59,24 @@ impl NetworkConfigExt for NetworkConfig {
     /// Create production configuration optimized for high-load production
     fn production() -> Self {
         let mut config = Self::default();
-        config.network.api.max_connections = 10000;
-        config.network.api.connection_timeout = Duration::from_secs(60);
+        config.api.max_connections = 10000;
+        config.api.connection_timeout = Duration::from_secs(60);
         config
     }
 
     /// Create high-performance configuration for maximum throughput
     fn high_performance() -> Self {
         let mut config = Self::default();
-        config.network.api.max_connections = 50000;
-        config.network.api.connection_timeout = Duration::from_secs(120);
+        config.api.max_connections = 50000;
+        config.api.connection_timeout = Duration::from_secs(120);
         config
     }
 
     /// Create testing configuration optimized for integration tests
     fn testing() -> Self {
         let mut config = Self::default();
-        config.network.api.max_connections = 100;
-        config.network.api.connection_timeout = Duration::from_secs(10);
+        config.api.max_connections = 100;
+        config.api.connection_timeout = Duration::from_secs(10);
         config
     }
 }

@@ -323,7 +323,7 @@ mod tests {
     fn test_url_validation() {
         // Valid URLs
         assert!(is_valid_url("https://example.com"));
-        assert!(is_valid_url("http://localhost:8080"));
+        assert!(is_valid_url("http://localhost:18080"));
         assert!(is_valid_http_url("https://example.com"));
 
         // Invalid URLs
@@ -537,8 +537,8 @@ mod tests {
         assert_eq!(url1.host_str(), Some("example.com"));
         
         // Valid URL with port
-        let url2 = parse_url("http://localhost:8080").expect("Should parse URL with port");
-        assert_eq!(url2.port(), Some(8080));
+        let url2 = parse_url("http://localhost:18080").expect("Should parse URL with port");
+        assert_eq!(url2.port(), Some(18080));
         
         // Valid URL with path
         let url3 = parse_url("https://example.com/path/to/resource").expect("Should parse URL with path");
@@ -617,53 +617,53 @@ mod tests {
     fn test_private_ip_ranges_comprehensive() {
         // All private IPv4 ranges
         // 10.0.0.0/8
-        assert!(is_private_ip(&"10.0.0.0".parse().unwrap()));
-        assert!(is_private_ip(&"10.255.255.255".parse().unwrap()));
+        assert!(is_private_ip(&parse_ip("10.0.0.0").expect("Valid IP")));
+        assert!(is_private_ip(&parse_ip("10.255.255.255").expect("Valid IP")));
         
         // 172.16.0.0/12
-        assert!(is_private_ip(&"172.16.0.0".parse().unwrap()));
-        assert!(is_private_ip(&"172.31.255.255".parse().unwrap()));
-        assert!(!is_private_ip(&"172.15.0.0".parse().unwrap())); // Just outside range
-        assert!(!is_private_ip(&"172.32.0.0".parse().unwrap())); // Just outside range
+        assert!(is_private_ip(&parse_ip("172.16.0.0").expect("Valid IP")));
+        assert!(is_private_ip(&parse_ip("172.31.255.255").expect("Valid IP")));
+        assert!(!is_private_ip(&parse_ip("172.15.0.0").expect("Valid IP"))); // Just outside range
+        assert!(!is_private_ip(&parse_ip("172.32.0.0").expect("Valid IP"))); // Just outside range
         
         // 192.168.0.0/16
-        assert!(is_private_ip(&"192.168.0.0".parse().unwrap()));
-        assert!(is_private_ip(&"192.168.255.255".parse().unwrap()));
+        assert!(is_private_ip(&parse_ip("192.168.0.0").expect("Valid IP")));
+        assert!(is_private_ip(&parse_ip("192.168.255.255").expect("Valid IP")));
         
         // Public IPs
-        assert!(!is_private_ip(&"8.8.8.8".parse().unwrap()));
-        assert!(!is_private_ip(&"1.1.1.1".parse().unwrap()));
-        assert!(!is_private_ip(&"74.125.224.72".parse().unwrap())); // Google
+        assert!(!is_private_ip(&parse_ip("8.8.8.8").expect("Valid IP")));
+        assert!(!is_private_ip(&parse_ip("1.1.1.1").expect("Valid IP")));
+        assert!(!is_private_ip(&parse_ip("74.125.224.72").expect("Valid IP"))); // Google
     }
     
     #[test]
     fn test_loopback_addresses() {
         // IPv4 loopback (127.0.0.0/8)
-        assert!(is_loopback_ip(&"127.0.0.1".parse().unwrap()));
-        assert!(is_loopback_ip(&"127.0.0.2".parse().unwrap()));
-        assert!(is_loopback_ip(&"127.255.255.255".parse().unwrap()));
+        assert!(is_loopback_ip(&parse_ip("127.0.0.1").expect("Valid loopback IP")));
+        assert!(is_loopback_ip(&parse_ip("127.0.0.2").expect("Valid loopback IP")));
+        assert!(is_loopback_ip(&parse_ip("127.255.255.255").expect("Valid loopback IP")));
         
         // IPv6 loopback (::1)
-        assert!(is_loopback_ip(&"::1".parse().unwrap()));
+        assert!(is_loopback_ip(&parse_ip("::1").expect("Valid IPv6 loopback")));
         
         // Not loopback
-        assert!(!is_loopback_ip(&"192.168.1.1".parse().unwrap()));
-        assert!(!is_loopback_ip(&"8.8.8.8".parse().unwrap()));
+        assert!(!is_loopback_ip(&parse_ip("192.168.1.1").expect("Valid IP")));
+        assert!(!is_loopback_ip(&parse_ip("8.8.8.8").expect("Valid public IP")));
     }
     
     #[test]
     fn test_multicast_addresses() {
         // IPv4 multicast (224.0.0.0/4)
-        assert!(is_multicast_ip(&"224.0.0.1".parse().unwrap()));
-        assert!(is_multicast_ip(&"239.255.255.255".parse().unwrap()));
+        assert!(is_multicast_ip(&parse_ip("224.0.0.1").expect("Valid multicast IP")));
+        assert!(is_multicast_ip(&parse_ip("239.255.255.255").expect("Valid multicast IP")));
         
         // IPv6 multicast (ff00::/8)
-        assert!(is_multicast_ip(&"ff02::1".parse().unwrap()));
+        assert!(is_multicast_ip(&parse_ip("ff02::1").expect("Valid IPv6 multicast")));
         
         // Not multicast
-        assert!(!is_multicast_ip(&"192.168.1.1".parse().unwrap()));
-        assert!(!is_multicast_ip(&"8.8.8.8".parse().unwrap()));
-        assert!(!is_multicast_ip(&"::1".parse().unwrap()));
+        assert!(!is_multicast_ip(&parse_ip("192.168.1.1").expect("Valid IP")));
+        assert!(!is_multicast_ip(&parse_ip("8.8.8.8").expect("Valid public IP")));
+        assert!(!is_multicast_ip(&parse_ip("::1").expect("Valid loopback")));
     }
     
     #[test]
@@ -671,7 +671,7 @@ mod tests {
         let localhost = localhost();
         assert_eq!(localhost, "127.0.0.1");
         assert!(is_valid_ipv4(localhost));
-        assert!(is_loopback_ip(&localhost.parse().unwrap()));
+        assert!(is_loopback_ip(&parse_ip(localhost).expect("Localhost should be valid IP")));
     }
     
     #[test]

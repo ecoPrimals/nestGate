@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 /// **UNIFIED API EXTENSIONS**
 /// Consolidates all API-specific configuration patterns
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Unifiedapiextensions
 pub struct UnifiedApiExtensions {
     /// HTTP server and REST API settings
     pub http_server: ApiHttpServerSettings,
@@ -28,6 +29,7 @@ pub struct UnifiedApiExtensions {
     pub storage: ApiStorageSettings,
 }
 impl Default for UnifiedApiExtensions {
+    /// Returns the default instance
     fn default() -> Self { Self {
             http_server: ApiHttpServerSettings::default(),
             streaming: ApiStreamingSettings::default(),
@@ -44,6 +46,22 @@ impl Default for UnifiedApiExtensions {
 /// **UNIFIED API CONFIGURATION - CANONICAL MODERNIZATION**
 /// The single source of truth for all API configuration across the system
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// 
+/// **Migration Path**:
+/// ```rust,ignore
+/// // OLD (deprecated):
+/// use crate::network::config::UnifiedApiConfig;
+/// 
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::UnifiedApiConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+/// 
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for UnifiedApi
 pub struct UnifiedApiConfig {
     /// Base canonical configuration
     pub base: CanonicalModernizedConfig,
@@ -51,6 +69,7 @@ pub struct UnifiedApiConfig {
     pub api_extensions: UnifiedApiExtensions,
 }
 impl Default for UnifiedApiConfig {
+    /// Returns the default instance
     fn default() -> Self { Self {
             base: CanonicalModernizedConfig::default(),
             api_extensions: UnifiedApiExtensions::default(),
@@ -83,6 +102,7 @@ impl UnifiedApiConfig {
      }
 
 impl Default for UnifiedApiExtensions {
+    /// Returns the default instance
     fn default() -> Self { Self {
             http_server: ApiHttpServerSettings::default(),
             streaming: ApiStreamingSettings::default(),
@@ -95,3 +115,20 @@ impl Default for UnifiedApiExtensions {
             storage: ApiStorageSettings::default(),
      }
     }
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+/// 
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Unifiedapiconfigcanonical
+pub type UnifiedApiConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using UnifiedApiConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+

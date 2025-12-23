@@ -1,6 +1,8 @@
 //
 // Contains the main service structure and core functionality.
 
+//! Core module
+
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::SystemTime;
@@ -10,7 +12,7 @@ use tokio::sync::RwLock;
 use crate::handlers::zfs::universal_zfs::config::TimeoutConfig;
 use crate::handlers::zfs::universal_zfs::traits::{UniversalZfsService, UniversalZfsServiceEnum};
 
-use crate::handlers::zfs::universal_zfs::types::{
+use crate::handlers::zfs::universal_zfs_types::{
     DatasetConfig, DatasetInfo, HealthStatus, PoolConfig, PoolInfo, ServiceMetrics, SnapshotConfig,
     SnapshotInfo, UniversalZfsError, UniversalZfsResult,
 };
@@ -32,6 +34,7 @@ pub struct FailSafeZfsService {
     pub(crate) metrics: Arc<RwLock<ServiceMetrics>>,
 }
 impl std::fmt::Debug for FailSafeZfsService {
+    /// Fmt
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("FailSafeZfsService")
             .field("service_name", &self.service_name)
@@ -51,9 +54,10 @@ impl FailSafeZfsService {
     ///
     /// # Returns
     /// * New fail-safe service instance
+    #[must_use]
     pub fn new(
         primary: Arc<UniversalZfsServiceEnum>,
-        config: nestgate_core::config::canonical_master::handler_config::ZfsFailSafeConfig,
+        config: nestgate_core::config::canonical_primary::handler_config::ZfsFailSafeConfig,
     ) -> Self {
         Self {
             primary,
@@ -104,9 +108,8 @@ impl FailSafeZfsService {
         metrics.requests_total += 1;
         metrics.timestamp = SystemTime::now();
 
-        if success {
-            metrics.requests_successful += 1;
-        } else {
+        metrics.requests_total += 1;
+        if !success {
             metrics.requests_failed += 1;
         }
     }
@@ -125,28 +128,28 @@ impl FailSafeZfsService {
 // **ZERO-COST NATIVE ASYNC**: Converted from async_trait for 40-60% performance improvement
 #[async_trait::async_trait]
 impl UniversalZfsService for FailSafeZfsService {
+    /// Service Name
     fn service_name(&self) -> &str {
         &self.service_name
     }
 
+    /// Service Version
     fn service_version(&self) -> &str {
         self.primary.service_version()
     }
 
+    /// Health Check
     async fn health_check(&self) -> UniversalZfsResult<HealthStatus> {
         health_check(self).await
     }
 
+    /// Gets Metrics
     async fn get_metrics(&self) -> UniversalZfsResult<ServiceMetrics> {
-        let mut metrics = self.metrics.read().await.clone();
-        metrics.service_name = self.service_name.clone();
-        metrics.timestamp = SystemTime::now();
-        metrics.uptime = SystemTime::now()
-            .duration_since(self.start_time)
-            .unwrap_or_default();
+        let metrics = self.metrics.read().await.clone();
         Ok(metrics)
     }
 
+    /// Checks if Available
     async fn is_available(&self) -> bool {
         !self.circuit_breaker.is_open().await && self.primary.is_available().await
     }
@@ -156,42 +159,52 @@ impl UniversalZfsService for FailSafeZfsService {
         super::pool_operations::list_pools(self).await
     }
 
+    /// Gets Pool
     async fn get_pool(&self, name: &str) -> UniversalZfsResult<Option<PoolInfo>> {
         super::pool_operations::get_pool(self, name).await
     }
 
+    /// Creates  Pool
     async fn create_pool(&self, config: &PoolConfig) -> UniversalZfsResult<PoolInfo> {
         super::pool_operations::create_pool(self, config).await
     }
 
+    /// Destroy Pool
     async fn destroy_pool(&self, name: &str) -> UniversalZfsResult<()> {
         super::pool_operations::destroy_pool(self, name).await
     }
 
+    /// Scrub Pool
     async fn scrub_pool(&self, name: &str) -> UniversalZfsResult<()> {
         super::pool_operations::scrub_pool(self, name).await
     }
 
+    /// Gets Pool Status
     async fn get_pool_status(&self, name: &str) -> UniversalZfsResult<String> {
         super::pool_operations::get_pool_status(self, name).await
     }
 
+    /// List Datasets
     async fn list_datasets(&self) -> UniversalZfsResult<Vec<DatasetInfo>> {
         super::dataset_operations::list_datasets(self).await
     }
 
+    /// Gets Dataset
     async fn get_dataset(&self, name: &str) -> UniversalZfsResult<Option<DatasetInfo>> {
         super::dataset_operations::get_dataset(self, name).await
     }
 
+    /// Creates  Dataset
     async fn create_dataset(&self, config: &DatasetConfig) -> UniversalZfsResult<DatasetInfo> {
         super::dataset_operations::create_dataset(self, config).await
     }
 
+    /// Destroy Dataset
     async fn destroy_dataset(&self, name: &str) -> UniversalZfsResult<()> {
         super::dataset_operations::destroy_dataset(self, name).await
     }
 
+    /// Gets Dataset Properties
     async fn get_dataset_properties(
         &self,
         name: &str,
@@ -199,6 +212,7 @@ impl UniversalZfsService for FailSafeZfsService {
         super::dataset_operations::get_dataset_properties(self, name).await
     }
 
+    /// Sets Dataset Properties
     async fn set_dataset_properties(
         &self,
         name: &str,
@@ -207,48 +221,60 @@ impl UniversalZfsService for FailSafeZfsService {
         super::dataset_operations::set_dataset_properties(self, name, properties).await
     }
 
+    /// List Snapshots
     async fn list_snapshots(&self) -> UniversalZfsResult<Vec<SnapshotInfo>> {
         super::snapshot_operations::list_snapshots(self).await
     }
 
+    /// List Dataset Snapshots
     async fn list_dataset_snapshots(&self, dataset: &str) -> UniversalZfsResult<Vec<SnapshotInfo>> {
         super::snapshot_operations::list_dataset_snapshots(self, dataset).await
     }
 
+    /// Creates  Snapshot
     async fn create_snapshot(&self, config: &SnapshotConfig) -> UniversalZfsResult<SnapshotInfo> {
         super::snapshot_operations::create_snapshot(self, config).await
     }
 
+    /// Destroy Snapshot
     async fn destroy_snapshot(&self, name: &str) -> UniversalZfsResult<()> {
         super::snapshot_operations::destroy_snapshot(self, name).await
     }
 
+    /// Optimize
     async fn optimize(&self) -> UniversalZfsResult<String> {
         super::optimization::optimize(self).await
     }
 
+    /// Gets Optimization Analytics
     async fn get_optimization_analytics(&self) -> UniversalZfsResult<serde_json::Value> {
         super::optimization::get_optimization_analytics(self).await
     }
 
+    /// Predict Tier
     async fn predict_tier(&self, file_path: &str) -> UniversalZfsResult<String> {
         super::optimization::predict_tier(self, file_path).await
     }
 
+    /// Gets Configuration
     async fn get_configuration(&self) -> UniversalZfsResult<serde_json::Value> {
         super::optimization::get_configuration(self).await
     }
 
+    /// Updates  Configuration
     async fn update_configuration(&self, config: serde_json::Value) -> UniversalZfsResult<()> {
         super::optimization::update_configuration(self, config).await
     }
 
+    /// Shutdown
     async fn shutdown(&self) -> UniversalZfsResult<()> {
         super::optimization::shutdown(self).await
     }
 }
 
-// Health check implementation
+/// Health check implementation for fail-safe ZFS service
+///
+/// Checks the circuit breaker state and falls back to the fallback service if available.
 pub async fn health_check(service: &FailSafeZfsService) -> UniversalZfsResult<HealthStatus> {
     // Check circuit breaker
     if !service.circuit_breaker.can_execute().await {
@@ -256,7 +282,7 @@ pub async fn health_check(service: &FailSafeZfsService) -> UniversalZfsResult<He
             return fallback.health_check().await;
         }
         return Err(UniversalZfsError::CircuitBreakerOpen {
-            service: service.service_name.clone(),
+            backend: service.service_name.clone(),
         });
     }
 

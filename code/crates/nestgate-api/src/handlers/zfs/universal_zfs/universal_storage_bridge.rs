@@ -3,10 +3,14 @@
 // not just ZFS. It translates ZFS concepts (pools, datasets, snapshots)
 // to universal storage operations that work on filesystems, object storage, etc.
 
-use crate::handlers::zfs::universal_zfs::types::*;
+//! Universal Storage Bridge module
+
+use crate::handlers::zfs::universal_zfs_types::{
+    DatasetConfig, DatasetInfo, DatasetType, PoolCapacity, PoolHealth, PoolInfo, PoolState,
+    UniversalZfsError, UniversalZfsResult,
+};
 use std::collections::HashMap;
 
-use std::time::SystemTime;
 use tracing::{debug, info, warn};
 
 /// Universal Storage Bridge - Makes ZFS API work with any storage backend
@@ -15,7 +19,7 @@ pub struct UniversalStorageBridge {
 }
 impl UniversalStorageBridge {
     /// Create a new universal storage bridge
-    pub fn new() -> UniversalZfsResult<Self> {
+    pub const fn new() -> UniversalZfsResult<Self> {
         Ok(Self {
             preferred_backend: None,
         })
@@ -67,10 +71,12 @@ impl UniversalStorageBridge {
         let output = std::process::Command::new("zpool")
             .args(["list", "-H", "-o", "name,size,alloc,free,health"])
             .output()
-            .map_err(|_e| UniversalZfsError::internal(format!("Failed to execute ZFS command")))?;
+            .map_err(|_e| {
+                UniversalZfsError::internal("Failed to execute ZFS command".to_string())
+            })?;
 
         if !output.status.success() {
-            return Err(UniversalZfsError::internal("zpool list command failed").into());
+            return Err(UniversalZfsError::internal("zpool list command failed"));
         }
 
         let stdout = String::from_utf8_lossy(&output.stdout);
@@ -97,14 +103,9 @@ impl UniversalStorageBridge {
                     name,
                     state: PoolState::Active, // Use correct enum variant
                     capacity: PoolCapacity {
-                        total_bytes,
-                        used_bytes,
-                        available_bytes,
-                        utilization_percent: if total_bytes > 0 {
-                            (used_bytes as f64 / total_bytes as f64) * 100.0
-                        } else {
-                            0.0
-                        },
+                        total: total_bytes,
+                        used: used_bytes,
+                        available: available_bytes,
                     },
                     health: match health_str {
                         "ONLINE" => PoolHealth::Online,
@@ -112,11 +113,7 @@ impl UniversalStorageBridge {
                         "FAULTED" => PoolHealth::Faulted,
                         _ => PoolHealth::Unknown,
                     },
-                    _devices: vec![], // Would need additional zpool status call
-                    errors: vec![],  // Fix: use Vec instead of HashMap
-                    created_at: SystemTime::now(), // Would need zpool history
-                    last_scrub: None,
-                    scrub_status: ScrubStatus::None, // Add missing field
+                    scrub: None,
                     properties: HashMap::new(),
                 });
             }
@@ -137,15 +134,10 @@ impl UniversalStorageBridge {
         let output = std::process::Command::new("df")
             .args(["-h", "--output=source,fstype,size,used,avail,target"])
             .output()
-            .map_err(|_e| {
-                UniversalZfsError::internal(format!(
-                    "Failed to execute df: {}",
-                    e
-                ))
-            })?;
+            .map_err(|e| UniversalZfsError::internal(format!("Failed to execute df: {e}")))?;
 
         if !output.status.success() {
-            return Err(UniversalZfsError::internal("df command failed").into());
+            return Err(UniversalZfsError::internal("df command failed"));
         }
 
         let stdout = String::from_utf8_lossy(&output.stdout);
@@ -172,21 +164,12 @@ impl UniversalStorageBridge {
                         name: "default_pool".to_string(),
                         state: PoolState::Active, // Use correct enum variant
                         capacity: PoolCapacity {
-                            total_bytes,
-                            used_bytes,
-                            available_bytes,
-                            utilization_percent: if total_bytes > 0 {
-                                (used_bytes as f64 / total_bytes as f64) * 100.0
-                            } else {
-                                0.0
-                            },
+                            total: total_bytes,
+                            used: used_bytes,
+                            available: available_bytes,
                         },
                         health: PoolHealth::Online,
-                        _devices: vec![],
-                        errors: vec![], // Fix: use Vec instead of HashMap
-                        created_at: SystemTime::now(),
-                        last_scrub: None,
-                        scrub_status: ScrubStatus::None, // Add missing field
+                        scrub: None,
                         properties: {
                             let mut props = HashMap::new();
                             props.insert("filesystem_type".to_string(), fstype.to_string());
@@ -211,17 +194,12 @@ impl UniversalStorageBridge {
             name: "root-filesystem".to_string(),
             state: PoolState::Active, // Use correct enum variant
             capacity: PoolCapacity {
-                total_bytes: 0,
-                used_bytes: 0,
-                available_bytes: 0,
-                utilization_percent: 0.0,
+                total: 0,
+                used: 0,
+                available: 0,
             },
             health: PoolHealth::Unknown,
-            _devices: vec![],
-            errors: vec![], // Fix: use Vec instead of HashMap
-            created_at: SystemTime::now(),
-            last_scrub: None,
-            scrub_status: ScrubStatus::None, // Add missing field
+            scrub: None,
             properties: HashMap::new(),
         };
 
@@ -246,17 +224,17 @@ impl UniversalStorageBridge {
         }
 
         let size_str = size_str.trim();
-        let (number_part, unit) =
-            if let Some(pos) = size_str.chars().position(|c| c.is_alphabetic()) {
-                let (num, unit) = size_str.split_at(pos);
-                (num, unit)
-            } else {
-                (size_str, "")
-            };
+        let (number_part, unit) = if let Some(pos) = size_str.chars().position(char::is_alphabetic)
+        {
+            let (num, unit) = size_str.split_at(pos);
+            (num, unit)
+        } else {
+            (size_str, "")
+        };
 
         let number: f64 = number_part
             .parse()
-            .map_err(|_| UniversalZfsError::internal(format!("Failed to parse size value")))?;
+            .map_err(|_| UniversalZfsError::internal("Failed to parse size value".to_string()))?;
 
         let multiplier = match unit.to_uppercase().as_str() {
             "K" | "KB" => 1024,
@@ -267,10 +245,8 @@ impl UniversalStorageBridge {
             "" => 1,
             _ => {
                 return Err(UniversalZfsError::internal(format!(
-                    "Unknown size unit: {}",
-                    e
-                ))
-                .into())
+                    "Unknown size unit: {unit}"
+                )))
             }
         };
 
@@ -299,7 +275,7 @@ impl UniversalStorageBridge {
     }
 
     /// Create a dataset (directory) via universal storage
-    pub fn create_dataset(&self, config: &DatasetConfig) -> UniversalZfsResult<DatasetInfo> {
+    pub async fn create_dataset(&self, config: &DatasetConfig) -> UniversalZfsResult<DatasetInfo> {
         info!("🏗️ Creating dataset: {}", config.name);
 
         let backend = self.get_active_backend().await?;
@@ -318,28 +294,24 @@ impl UniversalStorageBridge {
         let output = std::process::Command::new("zfs")
             .args(["create", &config.name])
             .output()
-            .map_err(|_e| UniversalZfsError::internal(format!("Failed to execute command")))?;
+            .map_err(|_e| UniversalZfsError::internal("Failed to execute command".to_string()))?;
 
         if !output.status.success() {
             let error = String::from_utf8_lossy(&output.stderr);
             return Err(UniversalZfsError::internal(format!(
-                "ZFS dataset creation failed: {}",
-                error
-            ))
-            .into());
+                "ZFS dataset creation failed: {error}"
+            )));
         }
 
         // Return dataset info (would need to query ZFS for real details)
         Ok(DatasetInfo {
             name: config.name.clone(),
             dataset_type: DatasetType::Filesystem, // Fix: use correct enum variant
-            used_space: 0,
-            available_space: 0,
-            parent: None,
-            children: vec![],
-            created_at: SystemTime::now(), // Add missing field
-            mount_point: Some(format!("/self.base_url")), // Add missing field
-            properties: HashMap::new(),    // Add missing field
+            used: 0,
+            available: 0,
+            referenced: 0,
+            mountpoint: Some("/self.base_url".to_string()), // Add missing field
+            properties: HashMap::new(),                     // Add missing field
         })
     }
 
@@ -351,26 +323,25 @@ impl UniversalStorageBridge {
         let path = std::path::Path::new(&config.name);
 
         std::fs::create_dir_all(path)
-            .map_err(|_e| UniversalZfsError::internal(format!("Failed to create directory")))?;
+            .map_err(|_e| UniversalZfsError::internal("Failed to create directory".to_string()))?;
 
         info!("✅ Created filesystem dataset at: {:?}", path);
 
         Ok(DatasetInfo {
             name: config.name.clone(),
             dataset_type: DatasetType::Filesystem, // Fix: use correct enum variant
-            used_space: 0,
-            available_space: 0,
-            parent: None,
-            children: vec![],
-            created_at: SystemTime::now(),          // Add missing field
-            mount_point: Some(config.name.clone()), // Add missing field
-            properties: HashMap::new(),             // Add missing field
+            used: 0,
+            available: 0,
+            referenced: 0,
+            mountpoint: Some(config.name.clone()), // Add missing field
+            properties: HashMap::new(),            // Add missing field
         })
     }
 }
 
 // Make it cloneable for the auto-detection logic
 impl Clone for UniversalStorageBridge {
+    /// Clone
     fn clone(&self) -> Self {
         Self {
             preferred_backend: self.preferred_backend.clone(),

@@ -2,11 +2,11 @@
 //! 
 //! This test validates capability architecture functionality using canonical patterns
 //! **CANONICAL MODERNIZATION**: Updated to use simple, working patterns
+//!
+//! **MODERN CONCURRENCY**: Uses yield_now() for async coordination instead of sleep().
 
-use nestgate_core::config::canonical_master::NestGateCanonicalConfig as NestGateUnifiedConfig;
+use nestgate_core::config::canonical_primary::NestGateCanonicalConfig as NestGateUnifiedConfig;
 use nestgate_core::constants::Environment;
-use std::time::Duration;
-use tokio::time::sleep;
 use tracing::info;
 
 /// Test capability architecture validation configuration
@@ -19,7 +19,7 @@ async fn test_capability_architecture_config() -> Result<(), Box<dyn std::error:
     assert!(!config.system.instance_name.is_empty());
     
     // Test environment-specific capability architecture configuration
-    let dev_config = nestgate_core::config::canonical_master::create_config_for_environment(Environment::Development);
+    let dev_config = nestgate_core::config::canonical_primary::create_config_for_environment(Environment::Development);
     assert!(!dev_config.system.instance_name.is_empty());
     
     info!("✅ Capability architecture validation configuration test completed");
@@ -43,7 +43,7 @@ async fn test_capability_discovery() -> Result<(), Box<dyn std::error::Error>> {
         info!("Executing {} discovery ({}ms)", process, discovery_time);
         
         // Simulate discovery process
-        sleep(Duration::from_millis(discovery_time as u64)).await;
+        tokio::task::yield_now().await;
         
         // Verify discovery process is valid
         assert!(!process.is_empty(), "Discovery process should be specified");
@@ -72,7 +72,7 @@ async fn test_capability_architecture_patterns() -> Result<(), Box<dyn std::erro
         info!("Validating {} architecture ({}ms)", pattern, validation_time);
         
         // Simulate pattern validation
-        sleep(Duration::from_millis(validation_time as u64)).await;
+        tokio::task::yield_now().await;
         
         // Verify pattern is valid
         assert!(!pattern.is_empty(), "Pattern should be specified");
@@ -101,7 +101,7 @@ async fn test_capability_interface_validation() -> Result<(), Box<dyn std::error
         info!("Checking {} interface ({}ms)", component, check_time);
         
         // Simulate interface check
-        sleep(Duration::from_millis(check_time as u64)).await;
+        tokio::task::yield_now().await;
         
         // Verify interface component is valid
         assert!(!component.is_empty(), "Component should be specified");
@@ -130,7 +130,7 @@ async fn test_capability_dependency_management() -> Result<(), Box<dyn std::erro
         info!("Managing {} dependency ({}ms)", aspect, management_time);
         
         // Simulate dependency management
-        sleep(Duration::from_millis(management_time as u64 / 2)).await;
+        tokio::task::yield_now().await;
         
         // Verify dependency aspect is valid
         assert!(!aspect.is_empty(), "Aspect should be specified");
@@ -152,7 +152,7 @@ async fn test_capability_runtime_validation() -> Result<(), Box<dyn std::error::
     // Test runtime validation cycles
     for i in 0..5 {
         let validation_cycle = (i + 1) * 20;
-        sleep(Duration::from_millis(validation_cycle as u64)).await;
+        tokio::task::yield_now().await;
         
         let elapsed = start_time.elapsed();
         info!("Runtime validation {}: {}ms, total elapsed: {:?}", i + 1, validation_cycle, elapsed);
@@ -172,13 +172,13 @@ async fn test_capability_architecture_environments() -> Result<(), Box<dyn std::
     info!("🌍 Testing capability architecture across environments");
     
     // Test development environment capability architecture
-    let dev_config = nestgate_core::config::canonical_master::create_config_for_environment(Environment::Development);
+    let dev_config = nestgate_core::config::canonical_primary::create_config_for_environment(Environment::Development);
     assert!(!dev_config.system.instance_name.is_empty());
     assert!(matches!(dev_config.environment, Environment::Development));
     info!("Development capability architecture configuration validated");
     
     // Test production environment capability architecture
-    let prod_config = nestgate_core::config::canonical_master::create_config_for_environment(Environment::Production);
+    let prod_config = nestgate_core::config::canonical_primary::create_config_for_environment(Environment::Production);
     assert!(!prod_config.system.instance_name.is_empty());
     assert!(matches!(prod_config.environment, Environment::Production));
     info!("Production capability architecture configuration validated");

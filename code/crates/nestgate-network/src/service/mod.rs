@@ -18,11 +18,14 @@ use nestgate_core::NestGateError;
 
 // Type aliases for complex types to improve readability and reduce warnings
 type ConnectionMap = Arc<RwLock<HashMap<String, ConnectionInfo>>>;
+/// Type alias for PortMap
 type PortMap = Arc<RwLock<HashMap<u16, String>>>;
+/// Type alias for ServiceMap
 type ServiceMap = Arc<RwLock<HashMap<String, ServiceInfo>>>;
 
 /// Real network service implementation
 #[derive(Debug)]
+/// Service implementation for RealNetwork
 pub struct RealNetworkService {
     /// Configuration
     config: NetworkConfig,
@@ -76,20 +79,21 @@ impl RealNetworkService {
     pub async fn start(&self) -> nestgate_core::Result<()> {
         info!(
             "Starting real network service on {}:{}",
-            self.config.network.api.bind_address, self.config.network.api.port
+            self.config.api.bind_address, self.config.api.port
         );
 
-        let addr = format!(
-            "{}:{}",
-            std::env::var("NESTGATE_BIND_ADDRESS").unwrap_or_else(|_| {
-                use nestgate_core::constants::hardcoding::addresses;
-                addresses::LOCALHOST_NAME.to_string()
-            }),
-            std::env::var("NESTGATE_API_PORT").unwrap_or_else(|_| {
-                use nestgate_core::constants::hardcoding::ports;
-                ports::HTTP_DEFAULT.to_string()
-            })
-        );
+        // ✅ MIGRATED: Now uses centralized runtime configuration
+        let addr = {
+            use nestgate_core::config::runtime::get_config;
+            use nestgate_core::constants::hardcoding::addresses;
+            let config = get_config();
+            let host = if config.network.bind_all {
+                addresses::BIND_ALL_IPV4
+            } else {
+                &config.network.api_host.to_string()
+            };
+            format!("{}:{}", host, config.network.api_port)
+        };
         let listener = TcpListener::bind(&addr).await.map_err(|_| {
             NestGateError::network_error(&format!("Failed to bind to endpoint: {addr}"))
         })?;
@@ -148,8 +152,7 @@ impl RealNetworkService {
         let mut allocated_ports = self.allocated_ports.write().await;
 
         // Find an available port in the configured range
-        for port in self.config.extensions.port_range_start..=self.config.extensions.port_range_end
-        {
+        for port in self.config.api.port_range_start..=self.config.api.port_range_end {
             if let std::collections::hash_map::Entry::Vacant(e) = allocated_ports.entry(port) {
                 e.insert(service_name.to_string());
                 info!("Allocated port {} for service {}", port, service_name);
@@ -217,11 +220,9 @@ impl RealNetworkService {
 
         // Consider healthy if we have reasonable resource usage
         let healthy = (stats.active_connections as usize)
-            < self.config.network.api.max_connections as usize
+            < self.config.api.max_connections as usize
             && stats.allocated_ports
-                < u32::from(
-                    self.config.extensions.port_range_end - self.config.extensions.port_range_start,
-                );
+                < u32::from(self.config.api.port_range_end - self.config.api.port_range_start);
 
         if healthy {
             debug!("Network service health check: OK");

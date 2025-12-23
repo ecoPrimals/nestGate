@@ -6,27 +6,51 @@
 
 // Sub-module declarations
 pub mod dynamic_endpoints;
+pub mod dynamic_endpoints_config; // ✅ NEW: Concurrent-safe configuration
+/// Service registry implementation
 pub mod registry;
-pub mod types; // ✅ NEW: Dynamic endpoint resolution system
+/// Service discovery types
+pub mod types;
+
+#[cfg(test)]
+mod discovery_error_tests; // Nov 23, 2025 - P1 test expansion
+#[cfg(test)]
+mod service_discovery_edge_cases; // Nov 23, 2025 - P1-5 edge case tests // ✅ NEW: Dynamic endpoint resolution system
 
 // Re-export all public types for backward compatibility
 pub use dynamic_endpoints::{resolve_service_endpoint, DynamicEndpointResolver};
+pub use dynamic_endpoints_config::{DynamicEndpointsConfig, SharedEndpointsConfig}; // ✅ NEW: Export config
 pub use types::*; // ✅ NEW: Export dynamic endpoint functionality
 
 // Convenience re-exports for common usage patterns
 pub use crate::service_discovery::registry::{InMemoryServiceRegistry, UniversalServiceRegistry};
 
 // Backward compatibility aliases for legacy code
+/// Type alias for the universal service registry trait object.
+///
+/// This provides a dynamic interface for service discovery implementations,
+/// allowing runtime polymorphism for different registry backends.
 pub type ServiceDiscovery = dyn UniversalServiceRegistry;
+/// Type alias for Serviceregistry
 pub type ServiceRegistry = InMemoryServiceRegistry;
 
 // Convenience function to create a new service registry
 #[must_use]
+/// Creates a new in-memory service registry.
+///
+/// Returns an in-memory implementation of the service registry suitable for
+/// development, testing, and single-node deployments.
 pub fn create_service_registry() -> InMemoryServiceRegistry {
     InMemoryServiceRegistry::new()
 }
 // Convenience function to create a universal service registration
 #[must_use]
+/// Creates a service registration with the specified name and capabilities.
+///
+/// # Arguments
+/// * `name` - The unique name for this service
+/// * `_category` - The service category (reserved for future use)
+/// * `capabilities` - List of capabilities provided by this service
 pub fn create_service_registration(
     name: String,
     _category: ServiceCategory,
@@ -49,6 +73,7 @@ pub fn create_service_registration(
 }
 // Create a service role for common patterns
 #[must_use]
+/// Creates a storage service role with standard permissions
 pub fn create_storage_role() -> ServiceRole {
     ServiceRole {
         name: "Storage Provider".to_string(),
@@ -64,6 +89,7 @@ pub fn create_storage_role() -> ServiceRole {
 }
 // Create a service role for AI services
 #[must_use]
+/// Creates an AI service role with standard permissions
 pub fn create_ai_role() -> ServiceRole {
     ServiceRole {
         name: "AI Provider".to_string(),
@@ -100,6 +126,7 @@ pub fn create_ai_role() -> ServiceRole {
 }
 // Create a service role for security services
 #[must_use]
+/// Creates a security service role with standard permissions
 pub fn create_security_role() -> ServiceRole {
     ServiceRole {
         name: "Security Provider".to_string(),

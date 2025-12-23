@@ -18,12 +18,25 @@ pub struct ZeroCostMemoryCache<const CAPACITY: usize> {
 }
 
 impl<const CAPACITY: usize> Default for ZeroCostMemoryCache<CAPACITY> {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
 }
 
 impl<const CAPACITY: usize> ZeroCostMemoryCache<CAPACITY> {
+    /// Creates a new zero-cost memory cache with compile-time capacity
+    ///
+    /// The capacity is specified as a const generic parameter, allowing
+    /// the compiler to optimize allocations at compile time.
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// # use nestgate_core::zero_cost::providers::ZeroCostMemoryCache;
+    /// let cache: ZeroCostMemoryCache<1024> = ZeroCostMemoryCache::new();
+    /// assert_eq!(cache.capacity(), 1024);
+    /// ```
     #[must_use]
     pub fn new() -> Self {
         Self {
@@ -32,6 +45,13 @@ impl<const CAPACITY: usize> ZeroCostMemoryCache<CAPACITY> {
         }
     }
 
+    /// Returns the compile-time specified capacity of this cache
+    ///
+    /// This value is determined at compile time and has zero runtime cost.
+    ///
+    /// # Returns
+    ///
+    /// The maximum number of entries this cache can hold
     #[must_use]
     pub fn capacity(&self) -> usize {
         CAPACITY
@@ -41,16 +61,19 @@ impl<const CAPACITY: usize> ZeroCostMemoryCache<CAPACITY> {
 impl<const CAPACITY: usize> ZeroCostCacheProvider<String, Vec<u8>>
     for ZeroCostMemoryCache<CAPACITY>
 {
+    /// Get
     fn get(&self, key: &String) -> Option<Vec<u8>> {
         self.data.get(key).cloned()
     }
 
+    /// Set
     fn set(&self, _key: String, _value: Vec<u8>) -> Result<(), ZeroCostError> {
         // In a real implementation, this would be mutable
         // For demo purposes, we simulate success
         Ok(())
     }
 
+    /// Remove
     fn remove(&self, _key: &String) -> bool {
         // In a real implementation, this would be mutable
         // For demo purposes, we simulate success
@@ -64,18 +87,62 @@ pub struct ZeroCostJwtProvider {
 }
 
 impl ZeroCostJwtProvider {
+    /// Creates a new JWT provider with the specified secret key
+    ///
+    /// The secret key is used for signing and verifying JWT tokens.
+    /// It must be kept secure and should be at least 256 bits (32 bytes).
+    ///
+    /// # Arguments
+    ///
+    /// * `secret` - A 32-byte secret key for JWT operations
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// # use nestgate_core::zero_cost::providers::ZeroCostJwtProvider;
+    /// let secret = [0u8; 32]; // In production, use a secure random key
+    /// let provider = ZeroCostJwtProvider::new(secret);
+    /// ```
     #[must_use]
     pub fn new(secret: [u8; 32]) -> Self {
         Self { secret }
     }
 
-    /// Get the secret key for JWT operations
+    /// Returns a reference to the secret key used for JWT operations
+    ///
+    /// # Security
+    ///
+    /// The secret key should never be exposed to untrusted parties.
+    /// Use this method only for internal cryptographic operations.
+    ///
+    /// # Returns
+    ///
+    /// A reference to the 32-byte secret key
     #[must_use]
     pub fn secret(&self) -> &[u8; 32] {
         &self.secret
     }
 
-    /// Verify JWT signature (simplified implementation)
+    /// Verifies the signature of a JWT token
+    ///
+    /// This is a simplified implementation for demonstration purposes.
+    /// In production, use a proper JWT library like `jsonwebtoken`.
+    ///
+    /// # Arguments
+    ///
+    /// * `token` - The JWT token string to verify
+    ///
+    /// # Returns
+    ///
+    /// `true` if the signature is valid, `false` otherwise
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// # use nestgate_core::zero_cost::providers::ZeroCostJwtProvider;
+    /// # let provider = ZeroCostJwtProvider::new([0u8; 32]);
+    /// let is_valid = provider.verify_signature("eyJhbGc...");
+    /// ```
     #[must_use]
     pub fn verify_signature(&self, token: &str) -> bool {
         // Simplified JWT verification using the secret
@@ -85,6 +152,7 @@ impl ZeroCostJwtProvider {
 
 #[allow(deprecated)] // Example provider for zero-cost patterns demonstration
 impl ZeroCostSecurityProvider<String, String> for ZeroCostJwtProvider {
+    /// Authenticate
     fn authenticate(&self, credentials: &String) -> Result<String, ZeroCostError> {
         if credentials.len() > 3 {
             Ok(format!("jwt_token_{credentials}"))
@@ -93,10 +161,12 @@ impl ZeroCostSecurityProvider<String, String> for ZeroCostJwtProvider {
         }
     }
 
+    /// Validates data
     fn validate(&self, token: &String) -> bool {
         token.starts_with("jwt_token_")
     }
 
+    /// Refresh
     fn refresh(&self, token: &String) -> Result<String, ZeroCostError> {
         if self.validate(token) {
             Ok(format!("{token}_refreshed"))
@@ -112,18 +182,53 @@ pub struct ZeroCostFileStorage {
 }
 
 impl ZeroCostFileStorage {
+    /// Creates a new file storage provider with the specified base path
+    ///
+    /// All file operations will be restricted to paths within this base directory,
+    /// providing a basic level of path traversal protection.
+    ///
+    /// # Arguments
+    ///
+    /// * `base_path` - The root directory for all storage operations
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// # use nestgate_core::zero_cost::providers::ZeroCostFileStorage;
+    /// let storage = ZeroCostFileStorage::new("/var/lib/nestgate".to_string());
+    /// ```
     #[must_use]
     pub fn new(base_path: String) -> Self {
         Self { base_path }
     }
 
-    /// Get the base path for file operations
+    /// Returns the base path for all file operations
+    ///
+    /// # Returns
+    ///
+    /// A string slice containing the base directory path
     #[must_use]
     pub fn base_path(&self) -> &str {
         &self.base_path
     }
 
-    /// Check if a path is within the base path
+    /// Validates that a path is within the base path
+    ///
+    /// This provides basic protection against path traversal attacks by ensuring
+    /// that all operations stay within the configured base directory.
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - The path to validate
+    ///
+    /// # Returns
+    ///
+    /// `true` if the path is within the base path, `false` otherwise
+    ///
+    /// # Security
+    ///
+    /// This is a simplified check. For production use, canonicalize paths
+    /// and perform more robust validation.
     #[must_use]
     pub fn is_path_valid(&self, path: &str) -> bool {
         path.starts_with(&self.base_path)
@@ -132,18 +237,21 @@ impl ZeroCostFileStorage {
 
 #[allow(deprecated)] // Example provider for zero-cost patterns demonstration
 impl ZeroCostStorageProvider<String, Vec<u8>> for ZeroCostFileStorage {
+    /// Store
     fn store(&self, _key: String, _value: Vec<u8>) -> Result<(), ZeroCostError> {
         // In a real implementation, this would write to filesystem
         // For demo purposes, we simulate success
         Ok(())
     }
 
+    /// Retrieve
     fn retrieve(&self, _key: &String) -> Option<Vec<u8>> {
         // In a real implementation, this would read from filesystem
         // For demo purposes, we return dummy data
         Some(vec![1, 2, 3, 4])
     }
 
+    /// Deletes resource
     fn delete(&self, _key: &String) -> bool {
         // In a real implementation, this would delete from filesystem
         // For demo purposes, we simulate success

@@ -5,10 +5,15 @@ use std::time::{Duration, SystemTime};
 
 /// Alert severity levels
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+/// Alertseverity
 pub enum AlertSeverity {
+    /// Info
     Info,
+    /// Warning
     Warning,
+    /// Error
     Error,
+    /// Critical
     Critical,
 }
 impl AlertSeverity {
@@ -35,6 +40,7 @@ impl AlertSeverity {
 
 /// Alert rule condition types
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Alertcondition
 pub enum AlertCondition {
     /// Threshold-based condition (value > threshold, value < threshold, etc.)
     Threshold {
@@ -60,16 +66,24 @@ pub enum AlertCondition {
 }
 /// Threshold comparison operators
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Thresholdoperator
 pub enum ThresholdOperator {
+    /// Greaterthan
     GreaterThan,
+    /// Lessthan
     LessThan,
+    /// Greaterthanorequal
     GreaterThanOrEqual,
+    /// Lessthanorequal
     LessThanOrEqual,
+    /// Equal
     Equal,
+    /// Notequal
     NotEqual,
 }
 /// Active alert instance
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Alert
 pub struct Alert {
     /// Unique alert identifier
     pub id: String,
@@ -94,6 +108,7 @@ pub struct Alert {
 }
 /// Alert status states
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Status values for Alert
 pub enum AlertStatus {
     /// Alert is active and firing
     Active,

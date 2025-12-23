@@ -1,4 +1,6 @@
 // use crate::error::NestGateError; // Import kept for test usage
+//! Zero Cost Storage Backend module
+
 use serde::{Deserialize, Serialize};
 use std::future::Future;
 use std::path::PathBuf;
@@ -18,8 +20,11 @@ pub trait ZeroCostStorageBackend<
     const OPERATION_TIMEOUT_SECS: u64 = 30,
 >
 {
+    /// Type alias for Error
     type Error: Send + Sync + 'static;
+    /// Type alias for Config
     type Config: Clone + Send + Sync + 'static;
+    /// Type alias for Metadata
     type Metadata: Clone + Send + Sync + 'static;
     /// Initialize storage backend - native async, no Future boxing
     fn initialize(
@@ -55,10 +60,12 @@ pub trait ZeroCostStorageBackend<
     fn max_concurrent_operations() -> usize {
         MAX_CONCURRENT_OPS
     }
+    /// Returns the maximum file size in bytes for storage operations
     #[must_use]
     fn max_file_size_bytes() -> usize {
         MAX_FILE_SIZE_MB * 1024 * 1024
     }
+    /// Returns the default timeout duration for storage operations
     #[must_use]
     fn operation_timeout() -> Duration {
         Duration::from_secs(OPERATION_TIMEOUT_SECS)
@@ -72,6 +79,7 @@ pub trait ZeroCostStorageBackend<
 /// Zero-cost implementation using native async methods and const generics
 /// for compile-time optimization.
 #[derive(Debug, Clone)]
+/// Zerocostfilesystembackend
 pub struct ZeroCostFilesystemBackend<
     const MAX_OPS: usize = 1000,
     const MAX_SIZE_MB: usize = 1024,
@@ -80,17 +88,26 @@ pub struct ZeroCostFilesystemBackend<
     config: FilesystemConfig,
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Filesystem
 pub struct FilesystemConfig {
+    /// Base Path
     pub base_path: PathBuf,
+    /// Create Dirs
     pub create_dirs: bool,
+    /// Sync Writes
     pub sync_writes: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Filesystemmetadata
 pub struct FilesystemMetadata {
+    /// Size
     pub size: u64,
+    /// Created
     pub created: std::time::SystemTime,
+    /// Modified
     pub modified: std::time::SystemTime,
+    /// Whether dir
     pub is_dir: bool,
 }
 
@@ -120,10 +137,14 @@ impl<const MAX_OPS: usize, const MAX_SIZE_MB: usize, const TIMEOUT_SECS: u64>
     ZeroCostStorageBackend<MAX_OPS, MAX_SIZE_MB, TIMEOUT_SECS>
     for ZeroCostFilesystemBackend<MAX_OPS, MAX_SIZE_MB, TIMEOUT_SECS>
 {
+    /// Type alias for Error
     type Error = std::io::Error;
+    /// Type alias for Config
     type Config = FilesystemConfig;
+    /// Type alias for Metadata
     type Metadata = FilesystemMetadata;
 
+    /// Initialize
     async fn initialize(&mut self, config: Self::Config) -> std::result::Result<(), Self::Error> {
         self.config = config.clone();
 
@@ -134,6 +155,7 @@ impl<const MAX_OPS: usize, const MAX_SIZE_MB: usize, const TIMEOUT_SECS: u64>
         Ok(())
     }
 
+    /// Read
     async fn read(&self) -> std::result::Result<Vec<u8>, Self::Error> {
         let full_path = self.config.base_path.join("datafile");
 
@@ -149,6 +171,7 @@ impl<const MAX_OPS: usize, const MAX_SIZE_MB: usize, const TIMEOUT_SECS: u64>
         fs::read(full_path).await
     }
 
+    /// Write
     async fn write(&self, data: Vec<u8>) -> std::result::Result<(), Self::Error> {
         let full_path = self.config.base_path.join("datafile");
 
@@ -176,6 +199,7 @@ impl<const MAX_OPS: usize, const MAX_SIZE_MB: usize, const TIMEOUT_SECS: u64>
         Ok(())
     }
 
+    /// Deletes resource
     async fn delete(&self) -> std::result::Result<(), Self::Error> {
         let full_path = self.config.base_path.join("datafile");
 
@@ -188,6 +212,7 @@ impl<const MAX_OPS: usize, const MAX_SIZE_MB: usize, const TIMEOUT_SECS: u64>
         Ok(())
     }
 
+    /// List
     async fn list(&self) -> std::result::Result<Vec<String>, Self::Error> {
         let full_path = self.config.base_path.clone();
         let mut entries = fs::read_dir(full_path).await?;
@@ -202,6 +227,7 @@ impl<const MAX_OPS: usize, const MAX_SIZE_MB: usize, const TIMEOUT_SECS: u64>
         Ok(result)
     }
 
+    /// Metadata
     async fn metadata(&self) -> std::result::Result<Self::Metadata, Self::Error> {
         let full_path = self.config.base_path.join("datafile");
         let metadata = fs::metadata(full_path).await?;
@@ -214,6 +240,7 @@ impl<const MAX_OPS: usize, const MAX_SIZE_MB: usize, const TIMEOUT_SECS: u64>
         })
     }
 
+    /// Exists
     async fn exists(&self) -> std::result::Result<bool, Self::Error> {
         let full_path = self.config.base_path.join("datafile");
         Ok(full_path.exists())
@@ -326,6 +353,7 @@ mod tests {
 
     #[test]
     fn test_compile_time_constants() {
+        /// Type alias for TestBackend
         type TestBackend = ZeroCostFilesystemBackend<500, 256, 15>;
 
         assert_eq!(TestBackend::max_concurrent_operations(), 500);

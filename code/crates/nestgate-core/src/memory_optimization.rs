@@ -13,6 +13,7 @@ use std::alloc::{GlobalAlloc, Layout};
 ///
 /// Comprehensive memory usage tracking and analysis
 #[derive(Debug, Default)]
+/// Memorystats
 pub struct MemoryStats {
     /// Total allocations made
     pub total_allocations: AtomicU64,
@@ -35,6 +36,7 @@ pub struct MemoryStats {
 }
 
 impl MemoryStats {
+    /// Creates a new instance
     pub fn new() -> Self {
         Self::default()
     }
@@ -311,6 +313,7 @@ impl MemoryPressureDetector {
         }
     }
     
+    /// Gets Memory Usage Percentage
     fn get_memory_usage_percentage(&self) -> Result<f64, &'static str> {
         // In a real implementation, this would query system memory usage
         // For this example, we'll return a simulated value
@@ -517,6 +520,7 @@ impl MemoryProfiler {
         }
     }
     
+    /// Generate Suggestions
     fn generate_suggestions(&self, categories: &[CategoryReport]) -> Vec<String> {
         let mut suggestions = Vec::new();
         
@@ -550,18 +554,28 @@ impl MemoryProfiler {
 ///
 /// Comprehensive memory usage report
 #[derive(Debug)]
+/// Memoryreport
 pub struct MemoryReport {
+    /// Categories
     pub categories: Vec<CategoryReport>,
+    /// Total Runtime
     pub total_runtime: Duration,
+    /// Suggestions
     pub suggestions: Vec<String>,
 }
 
 #[derive(Debug)]
+/// Categoryreport
 pub struct CategoryReport {
+    /// Category
     pub category: String,
+    /// Count of allocation
     pub allocation_count: u64,
+    /// Total Bytes
     pub total_bytes: u64,
+    /// Average Bytes
     pub average_bytes: f64,
+    /// Last Allocation Ago
     pub last_allocation_ago: Duration,
 }
 

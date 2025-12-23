@@ -6,6 +6,10 @@
 // **AUTO-CONVERSION**: Middleware automatically wraps responses
 // **MANUAL CONTROL**: Direct AIFirstResponse construction when needed
 
+#[cfg(test)]
+#[path = "ai_first_example_coverage_boost.rs"]
+mod ai_first_example_coverage_boost;
+
 use axum::{
     extract::{Path, Query},
     http::StatusCode,
@@ -24,6 +28,7 @@ use std::collections::HashMap;
 ///
 /// Response structure that includes AI-powered insights and confidence scoring.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for AIFirst operation
 pub struct AIFirstResponse<T> {
     /// The actual response data
     pub data: T,
@@ -54,6 +59,7 @@ async fn example_handler() -> Json<AIFirstResponse<String>> {
 ///
 /// AI-generated action recommendation with metadata and priority.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Suggestedaction
 pub struct SuggestedAction {
     /// Unique identifier for this action
     pub action_id: String,
@@ -77,6 +83,7 @@ pub struct SuggestedAction {
 ///
 /// Categories of actions that can be suggested by the AI system.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of Action
 pub enum ActionType {
     /// Optimize system performance or resource utilization
     Optimize,
@@ -114,6 +121,7 @@ pub fn ai_response_with_actions<T>(data: T, _actions: Vec<SuggestedAction>) -> A
 
 /// Example data structure for API responses
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storageinfo
 pub struct StorageInfo {
     /// Name of the storage pool
     pub pool_name: String,
@@ -130,6 +138,7 @@ pub struct StorageInfo {
 }
 /// Query parameters for storage operations
 #[derive(Debug, Deserialize)]
+/// Storagequery
 pub struct StorageQuery {
     /// Optional pool name filter
     pub pool: Option<String>,
@@ -138,6 +147,7 @@ pub struct StorageQuery {
 }
 /// Request body for storage operations
 #[derive(Debug, Deserialize)]
+/// Request parameters for Storage operation
 pub struct StorageRequest {
     /// The storage operation to perform
     pub b_operation: String,
@@ -160,10 +170,14 @@ pub fn create_routes() -> Router {
 }
 /// Get storage information - demonstrates automatic AI-First conversion
 ///
+/// # Errors
+///
+/// Returns `StatusCode` error if storage information cannot be retrieved.
+///
 /// This endpoint returns standard JSON that gets automatically wrapped
 /// by the AI-First middleware into the ecosystem-standard format.
 pub async fn get_storage_info(
-    Query(_params): Query<StorageQuery>,
+    Query(params): Query<StorageQuery>,
 ) -> Result<Json<Vec<StorageInfo>>, StatusCode> {
     // Simulate storage data retrieval
     let storage_pools = vec![
@@ -185,7 +199,7 @@ pub async fn get_storage_info(
         },
     ];
     // Filter by pool if specified
-    let filtered_pools = if let Some(pool_filter) = _params.pool {
+    let filtered_pools = if let Some(pool_filter) = params.pool {
         storage_pools
             .into_iter()
             .filter(|p| p.pool_name.contains(&pool_filter))
@@ -202,6 +216,7 @@ pub async fn get_storage_info(
 ///
 /// Comprehensive information about a storage pool.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Poolinfo
 pub struct PoolInfo {
     /// Name of the storage pool
     pub pool_name: String,
@@ -221,6 +236,7 @@ pub struct PoolInfo {
 ///
 /// Query parameters for pool information requests.
 #[derive(Debug, Deserialize)]
+/// Poolquery
 pub struct PoolQuery {
     /// Optional pool name filter
     pub pool: Option<String>,
@@ -232,6 +248,7 @@ pub struct PoolQuery {
 ///
 /// Request structure for pool operations.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for PoolOperation operation
 pub struct PoolOperationRequest {
     /// Operation to perform on the pool
     pub b_operation: String,
@@ -298,12 +315,12 @@ pub async fn get_pool_info(
                     description: "Consider running pool scrub to check integrity".to_string(),
                     confidence: 0.8,
                     parameters: {
-                        let mut _params = HashMap::new();
-                        _params.insert(
+                        let mut params = HashMap::new();
+                        params.insert(
                             "pool_name".to_string(),
                             serde_json::Value::String(pool_name),
                         );
-                        _params
+                        params
                     },
                     priority: 1, // High priority for degraded pools
                     dependencies: Vec::new(),
@@ -323,13 +340,17 @@ pub async fn get_pool_info(
 }
 
 /// Execute storage operation - demonstrates error handling with AI-First format
+///
+/// # Errors
+///
+/// Returns `StatusCode` error if the storage operation cannot be executed.
 pub async fn execute_storage_operation(
     Json(request): Json<PoolOperationRequest>,
 ) -> Result<Json<AIFirstResponse<String>>, StatusCode> {
     // Simulate operation execution
     let result = match request.b_operation.as_str() {
         "scrub" => {
-            let _message = "Scrub operation started for pool".to_string();
+            let message = "Scrub operation started for pool".to_string();
 
             let suggestions = vec![SuggestedAction {
                 action_id: "poll_scrub_status".to_string(),
@@ -337,29 +358,29 @@ pub async fn execute_storage_operation(
                 description: "Poll scrub status every 5 minutes".to_string(),
                 confidence: 0.9,
                 parameters: {
-                    let mut _params = HashMap::new();
-                    _params.insert(
+                    let mut params = HashMap::new();
+                    params.insert(
                         "poll_interval_ms".to_string(),
-                        serde_json::Value::Number(serde_json::Number::from(300000)),
+                        serde_json::Value::Number(serde_json::Number::from(300_000)),
                     );
-                    _params.insert(
+                    params.insert(
                         "pool_name".to_string(),
                         serde_json::Value::String(request.pool_name.clone()),
                     );
-                    _params
+                    params
                 },
                 priority: 1, // High priority
                 dependencies: Vec::new(),
-                estimated_duration_ms: Some(3600000),
+                estimated_duration_ms: Some(3_600_000),
             }];
-            ai_response_with_actions(_message, suggestions)
+            ai_response_with_actions(message, suggestions)
         }
         "snapshot" => {
-            let _message = "Snapshot created for pool: self.base_url".to_string();
-            ai_success_with_confidence(_message, 0.95)
+            let message = "Snapshot created for pool: self.base_url".to_string();
+            ai_success_with_confidence(message, 0.95)
         }
         "export" => {
-            let _message = "Export initiated for pool: self.base_url".to_string();
+            let message = "Export initiated for pool: self.base_url".to_string();
 
             let suggestions = vec![SuggestedAction {
                 action_id: "verify_export".to_string(),
@@ -369,16 +390,16 @@ pub async fn execute_storage_operation(
                 parameters: HashMap::new(),
                 priority: 2, // Medium priority
                 dependencies: Vec::new(),
-                estimated_duration_ms: Some(600000), // 10 minutes
+                estimated_duration_ms: Some(600_000), // 10 minutes
             }];
 
-            ai_response_with_actions(_message, suggestions)
+            ai_response_with_actions(message, suggestions)
         }
         _ => {
             // Unsupported operation - this would normally return an error
             // but for demo purposes, we'll return a low-confidence response
-            let _message = "Operation 'self.base_url' not supported".to_string();
-            ai_success_with_confidence(_message, 0.1)
+            let message = "Operation 'self.base_url' not supported".to_string();
+            ai_success_with_confidence(message, 0.1)
         }
     };
 
@@ -417,7 +438,7 @@ pub async fn demo_confidence_levels() -> Json<AIFirstResponse<Vec<OptimizationSc
         parameters: HashMap::new(),
         priority: 3, // Low priority
         dependencies: Vec::new(),
-        estimated_duration_ms: Some(86400000), // 1 day
+        estimated_duration_ms: Some(86_400_000), // 1 day
     }];
 
     Json(ai_response_with_actions(demos, suggestions))
@@ -497,6 +518,7 @@ pub async fn demo_suggested_actions() -> Json<AIFirstResponse<Vec<AutomationCapa
 ///
 /// AI-generated optimization scenario with confidence scoring.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Optimizationscenario
 pub struct OptimizationScenario {
     /// Name of the optimization scenario
     pub scenario: String,
@@ -510,6 +532,7 @@ pub struct OptimizationScenario {
 ///
 /// Describes an automation capability with AI assessment.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Automationcapability
 pub struct AutomationCapability {
     /// Category of automation capability
     pub category: String,
@@ -520,9 +543,11 @@ pub struct AutomationCapability {
 }
 /// Extension trait to add confidence to existing AI-First responses
 trait AIFirstResponseExt<T> {
+    /// Builder method to set Confidence
     fn with_confidence(self, confidence: f64) -> AIFirstResponse<T>;
 }
 impl<T> AIFirstResponseExt<T> for AIFirstResponse<T> {
+    /// Builder method to set Confidence
     fn with_confidence(mut self, confidence: f64) -> Self {
         self.confidence_score = confidence.clamp(0.0, 1.0);
         self
@@ -560,3 +585,8 @@ pub fn ai_pool_status(Path(pool_name): Path<String>) -> Json<AIFirstResponse<Poo
 
     Json(ai_success_with_confidence(pool_info, 0.95))
 }
+
+// Tests moved to ai_first_example_tests.rs for file size compliance
+
+// Tests moved to ai_first_example_tests.rs for file size compliance
+// (703 lines of tests separated from 571 lines of implementation)

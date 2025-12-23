@@ -30,7 +30,9 @@ pub use crate::simd::{
 
 // Legacy type aliases for backward compatibility
 pub type SimdBatchProcessor32 = SimdBatchProcessor<32>;
+/// Type alias for Simdbatchprocessor64
 pub type SimdBatchProcessor64 = SimdBatchProcessor<64>;
+/// Type alias for Simdbatchprocessor128
 pub type SimdBatchProcessor128 = SimdBatchProcessor<128>;
 
 // Legacy constants

@@ -4,67 +4,130 @@
 //
 // **CANONICAL MODERNIZATION**: Migrated to zero-cost native async patterns
 
+//! Handlers module
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
 
+use nestgate_core::error::utilities::safe_env_var_or_default;
 use nestgate_core::error::Result;
 
 use crate::config::ZfsConfig;
 use tracing::warn;
 
 /// ZFS service health information
+///
+/// Contains health status and resource counts for a ZFS service instance.
+/// Used for monitoring and service discovery health checks.
+///
+/// # Fields
+///
+/// * `status` - Current health status ("healthy", "degraded", "unhealthy")
+/// * `pools_count` - Number of ZFS pools managed
+/// * `datasets_count` - Total number of datasets across all pools
+/// * `snapshots_count` - Total number of snapshots
+/// * `last_check` - Timestamp of last health check
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZfsHealthInfo {
+    /// Current health status
     pub status: String,
+    /// Number of ZFS pools managed by this service
     pub pools_count: usize,
+    /// Total number of datasets across all pools
     pub datasets_count: usize,
+    /// Total number of snapshots
     pub snapshots_count: usize,
+    /// Timestamp of last health check
     pub last_check: std::time::SystemTime,
 }
+
 /// ZFS service metrics
+///
+/// Operational metrics for ZFS service performance and reliability monitoring.
+///
+/// # Fields
+///
+/// * `requests_processed` - Total number of requests handled
+/// * `errors_count` - Total number of errors encountered
+/// * `average_response_time_ms` - Average request processing time in milliseconds
+/// * `uptime_seconds` - Service uptime in seconds
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZfsMetrics {
+    /// Total number of requests processed
     pub requests_processed: u64,
+    /// Total number of errors encountered
     pub errors_count: u64,
+    /// Average response time in milliseconds
     pub average_response_time_ms: f64,
+    /// Service uptime in seconds
     pub uptime_seconds: u64,
 }
+
 /// ZFS operation request types
+///
+/// Enumeration of all supported ZFS operations that can be requested
+/// through the service API. Each variant contains the parameters needed
+/// for that specific operation.
+///
+/// # Variants
+///
+/// - Pool operations: Create, destroy, and query ZFS pools
+/// - Dataset operations: Create, destroy, and list datasets
+/// - Snapshot operations: Create, destroy, and list snapshots
+/// - Health check: Query service health status
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ZfsRequest {
     /// Pool operations
     PoolCreate {
+        /// Pool name
         name: String,
+        /// Device paths for the pool
         devices: Vec<String>,
     },
+    /// Pooldestroy
     PoolDestroy {
+        /// Pool name to destroy
         name: String,
     },
+    /// Poolstatus
     PoolStatus {
+        /// Optional pool name filter
         name: Option<String>,
     },
     /// Dataset operations
     DatasetCreate {
+        /// Dataset name
         name: String,
+        /// Dataset properties
         properties: HashMap<String, String>,
     },
+    /// Destroy a dataset
     DatasetDestroy {
+        /// Dataset name to destroy
         name: String,
     },
+    /// List datasets
     DatasetList {
+        /// Optional pool filter
         pool: Option<String>,
     },
 
     /// Snapshot operations
     SnapshotCreate {
+        /// Source dataset
         dataset: String,
+        /// Snapshot name
         name: String,
     },
+    /// Destroy a snapshot
     SnapshotDestroy {
+        /// Snapshot name to destroy
         name: String,
     },
+    /// List snapshots
     SnapshotList {
+        /// Optional dataset filter
         dataset: Option<String>,
     },
 
@@ -74,46 +137,79 @@ pub enum ZfsRequest {
 
 /// ZFS operation responses
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Zfsresponse
 pub enum ZfsResponse {
     /// Pool status information
-    PoolStatus { pools: Vec<PoolInfo> },
+    PoolStatus {
+        /// List of pools
+        pools: Vec<PoolInfo>,
+    },
     /// Dataset listing
-    DatasetList { datasets: Vec<DatasetInfo> },
+    DatasetList {
+        /// List of datasets
+        datasets: Vec<DatasetInfo>,
+    },
     /// Snapshot listing
-    SnapshotList { snapshots: Vec<SnapshotInfo> },
+    SnapshotList {
+        /// List of snapshots
+        snapshots: Vec<SnapshotInfo>,
+    },
     /// Operation success
-    Success { message: String },
+    Success {
+        /// Success message
+        message: String,
+    },
     /// Health status
     Health {
+        /// Health status string
         status: String,
+        /// Health details
         details: HashMap<String, String>,
     },
 }
 /// Pool information structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Poolinfo
 pub struct PoolInfo {
+    /// Name
     pub name: String,
+    /// State
     pub state: String,
+    /// Size
     pub size: String,
+    /// Allocated
     pub allocated: String,
+    /// Free
     pub free: String,
+    /// Devices
     pub devices: Vec<String>,
 }
 /// Dataset information structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Datasetinfo
 pub struct DatasetInfo {
+    /// Name
     pub name: String,
+    /// Used
     pub used: String,
+    /// Available
     pub available: String,
+    /// Referenced
     pub referenced: String,
+    /// Mountpoint
     pub mountpoint: String,
 }
 /// Snapshot information structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Snapshotinfo
 pub struct SnapshotInfo {
+    /// Name
     pub name: String,
+    /// Used
     pub used: String,
+    /// Referenced
     pub referenced: String,
+    /// Creation
     pub creation: String,
 }
 /// ZFS Request Handler Service
@@ -137,7 +233,7 @@ impl ZfsRequestHandler {
     #[must_use]
     pub fn get_default_pool_name(&self) -> String {
         // Use environment variable or fallback to default
-        std::env::var("NESTGATE_DEFAULT_POOL").unwrap_or_else(|_| "tank".to_string())
+        safe_env_var_or_default("NESTGATE_DEFAULT_POOL", "tank").to_string()
     }
 
     /// Check if performance monitoring is enabled
@@ -184,6 +280,7 @@ impl ZfsRequestHandler {
         }
     }
 
+    /// Handles  Pool Status
     async fn handle_pool_status(&self, name: Option<String>) -> Result<ZfsResponse> {
         // Use configured pool name or provided name
         let pool_name = name.unwrap_or_else(|| self.get_default_pool_name());
@@ -207,6 +304,7 @@ impl ZfsRequestHandler {
         }
     }
 
+    /// Handles  Dataset List
     async fn handle_dataset_list(&self, pool: Option<String>) -> Result<ZfsResponse> {
         // Use configured pool name or provided pool
         let pool_name = pool.unwrap_or_else(|| self.get_default_pool_name());
@@ -229,6 +327,7 @@ impl ZfsRequestHandler {
         }
     }
 
+    /// Handles  Snapshot List
     async fn handle_snapshot_list(&self, dataset: Option<String>) -> Result<ZfsResponse> {
         // Check if ZFS is available for real operations
         if crate::real_zfs_operations::RealZfsOperations::is_available().await {
@@ -248,6 +347,7 @@ impl ZfsRequestHandler {
         }
     }
 
+    /// Handles  Health Check
     fn handle_health_check(&self) -> Result<ZfsResponse> {
         let mut details = HashMap::new();
         details.insert("pools".to_string(), "1".to_string());
@@ -263,3 +363,7 @@ impl ZfsRequestHandler {
 
 // REMOVED: UniversalService trait implementation - trait no longer exists
 // All service functionality has been migrated to the canonical trait system
+
+#[cfg(test)]
+#[path = "handlers_tests.rs"]
+mod handlers_tests;

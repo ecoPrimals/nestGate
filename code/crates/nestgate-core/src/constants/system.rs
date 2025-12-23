@@ -2,7 +2,8 @@
 //!
 //! System-level constants and default values with environment variable support.
 
-use std::env;
+// Import the configuration module for concurrent-safe access
+use super::system_config::SystemConfig;
 
 /// Default instance name for `NestGate` services
 pub const DEFAULT_INSTANCE_NAME: &str = "nestgate-default";
@@ -13,76 +14,73 @@ pub const DEFAULT_SERVICE_NAME: &str = "nestgate";
 /// Get timeout in milliseconds from environment or default
 #[must_use]
 pub fn timeout_ms() -> u64 {
-    env::var("NESTGATE_TIMEOUT_MS")
-        .ok()
-        .and_then(|s| s.parse().ok())
-        .unwrap_or(5000)
+    SystemConfig::from_env().timeout_ms()
 }
 
 /// Get max connections from environment or default
 #[must_use]
 pub fn max_connections() -> usize {
-    env::var("NESTGATE_MAX_CONNECTIONS")
-        .ok()
-        .and_then(|s| s.parse().ok())
-        .unwrap_or(1000)
+    SystemConfig::from_env().max_connections()
 }
 
 /// Get buffer size from environment or default
 #[must_use]
 pub fn buffer_size() -> usize {
-    env::var("NESTGATE_BUFFER_SIZE")
-        .ok()
-        .and_then(|s| s.parse().ok())
-        .unwrap_or(8192)
+    SystemConfig::from_env().buffer_size()
 }
 
 /// Get default retry attempts from environment or default
 #[must_use]
 pub fn default_retry_attempts() -> u32 {
-    env::var("NESTGATE_RETRY_ATTEMPTS")
-        .ok()
-        .and_then(|s| s.parse().ok())
-        .unwrap_or(3)
+    SystemConfig::from_env().retry_attempts()
 }
 
 /// Get health check interval from environment or default
 #[must_use]
 pub fn health_check_interval() -> u64 {
-    env::var("NESTGATE_HEALTH_CHECK_INTERVAL")
-        .ok()
-        .and_then(|s| s.parse().ok())
-        .unwrap_or(30)
+    SystemConfig::from_env().health_check_interval()
 }
 
 /// Get API port from environment or default
 #[must_use]
 pub fn api_port() -> u16 {
-    env::var("NESTGATE_API_PORT")
-        .ok()
-        .and_then(|s| s.parse().ok())
-        .unwrap_or(crate::constants::network::DEFAULT_API_PORT)
+    SystemConfig::from_env().api_port()
 }
 
 /// Get bind host from environment or default
 #[must_use]
 pub fn bind_host() -> String {
-    env::var("NESTGATE_BIND_HOST").unwrap_or_else(|_| "127.0.0.1".to_string())
+    SystemConfig::from_env().bind_host()
 }
 
 /// Get API URL from environment or default
 #[must_use]
 pub fn api_url() -> String {
-    env::var("NESTGATE_API_URL")
-        .unwrap_or_else(|_| format!("http://{}:{}", bind_host(), api_port()))
+    SystemConfig::from_env().api_url()
 }
 
 /// Legacy constants for backward compatibility
+///
+/// **Deprecation**: These will be removed in v1.0.0. Use capability-based configuration instead.
+/// Default connection timeout
+///
+/// **Legacy**: Prefer capability-based timeout discovery from service metadata.
 pub const DEFAULT_TIMEOUT_MS: u64 = 5000;
+
+/// Maximum connection pool size
+///
+/// **Legacy**: Prefer dynamic pool sizing based on system resource detection.
 pub const MAX_CONNECTIONS: usize = 1000;
+
+/// Default I/O buffer size
+///
+/// **Legacy**: Prefer operation-specific buffer sizes from performance module.
 pub const BUFFER_SIZE: usize = 8192;
+/// Default value for retry attempts
 pub const DEFAULT_RETRY_ATTEMPTS: u32 = 3;
+/// Default value for health check interval
 pub const DEFAULT_HEALTH_CHECK_INTERVAL: u64 = 30;
+/// Default value for bind host
 pub const DEFAULT_BIND_HOST: &str = "127.0.0.1";
 
 #[cfg(test)]
@@ -101,6 +99,7 @@ mod tests {
     }
 
     impl EnvGuard {
+        /// Creates a new instance
         fn new(key: &str, value: &str) -> Self {
             let original = env::var(key).ok();
             env::set_var(key, value);
@@ -112,6 +111,7 @@ mod tests {
     }
 
     impl Drop for EnvGuard {
+        /// Drop
         fn drop(&mut self) {
             match &self.original {
                 Some(value) => env::set_var(&self.key, value),

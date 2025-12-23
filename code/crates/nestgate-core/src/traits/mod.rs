@@ -1,25 +1,71 @@
-// **CANONICAL TRAITS SYSTEM**
-//! Module definitions and exports.
-// This module provides the unified trait system for NestGate, consolidating
-//! all service interfaces into canonical patterns. All deprecated traits
-//! have been migrated to the canonical system.
+//! Canonical Traits System for NestGate
+//!
+//! **UNIFIED TRAIT SYSTEM**: This module provides the canonical trait definitions
+//! for all service interfaces in NestGate.
+//!
+//! ## Recently Migrated (November 7, 2025)
+//!
+//! The following modules have been migrated from `traits_root/`:
+//! - `service_trait` - Service lifecycle traits
+//! - `communication` - Inter-service communication
+//! - `service_discovery` - Service registration and discovery
+//! - `health_checks` - Health monitoring
+//! - `config_provider` - Configuration management
+//! - `load_balancing` - Load balancing algorithms
+//!
+//! **Migration Note**: Imports from `traits_root` are deprecated.
+//! Use `nestgate_core::traits::` instead.
 
-// ==================== CANONICAL TRAIT SYSTEM ====================
+// ==================== NEW CANONICAL MODULES (Nov 7, 2025) ====================
 
-// **THE** canonical trait system - single source of truth for all service interfaces
-pub mod canonical_unified_traits;
-// Canonical provider unification patterns
+// Migrated from traits_root/ - now canonical
+pub mod communication;
+pub mod config_provider;
+pub mod health_checks;
+pub mod load_balancing;
+pub mod service_discovery;
+pub mod service_trait;
+
+// ==================== EXISTING CANONICAL TRAIT SYSTEM ====================
+
+// Other trait modules
+pub mod async_migration_system;
+pub mod canonical_hierarchy;
 pub mod canonical_provider_unification;
-// **THE** Unified Storage trait - single source of truth
-pub mod unified_storage;
-// Domain-specific trait extensions
+
+// **NEW** (Nov 19, 2025): Refactored canonical traits into focused modules
+// **MIGRATION COMPLETE** (Nov 19, 2025): All code migrated to modular structure
+pub mod canonical;
+
 pub mod domain_extensions;
-// Native async trait patterns (modern, zero-cost)
+pub mod migration;
 pub mod native_async;
+/// Security provider migration adapters (backwards compatibility)
+/// **NEW**: November 10, 2025 - Phase 2A Provider Trait Consolidation
+pub mod security_migration;
+pub mod unified_storage;
+pub mod universal;
+pub mod universal_service_zero_cost;
+
 // ==================== RE-EXPORTS ====================
 
-// Re-export the canonical traits for easy access
-pub use canonical_unified_traits::{
+// Re-export newly migrated traits (Nov 7, 2025)
+pub use communication::{
+    CommunicationLayer, CommunicationResponse, CommunicationStats, MessageType, ServiceAddress,
+    ServiceMessage,
+};
+pub use config_provider::{ConfigProvider, ConfigProviderInfo, FederationConfig};
+pub use health_checks::{HealthCheck, HealthMonitor, HealthState, HealthStatus};
+pub use load_balancing::{
+    HealthAwareLoadBalancer, LeastConnectionsLoadBalancer, LoadBalancer, LoadBalancerStats,
+    LoadBalancingAlgorithm, RandomLoadBalancer, RoundRobinLoadBalancer, ServiceStats,
+    WeightedRandomLoadBalancer, WeightedRoundRobinLoadBalancer,
+};
+pub use service_discovery::{ServiceDiscovery, ServiceEvent, ServiceQuery};
+pub use service_trait::Service;
+
+// Re-export the canonical traits for easy access (NEW MODULE STRUCTURE - Nov 19, 2025)
+pub use canonical::{
     CanonicalAutomation, CanonicalMcp, CanonicalNetwork, CanonicalProvider,
     CanonicalProviderFactory, CanonicalSecurity, CanonicalService, CanonicalServiceFactory,
     CanonicalStorage, ZeroCostService,
@@ -67,8 +113,9 @@ pub use domain_extensions::{StorageServiceExtension, ZfsServiceExtension};
 // use crate::universal_storage::canonical_storage::CanonicalStorageBackend;
 //
 // // New unified approach
-// use crate::traits::canonical_unified_traits::CanonicalStorage;
+// use crate::traits::canonical::CanonicalStorage;
 // ```
+
 // **MIGRATION STATUS**: All deprecated traits have been successfully migrated
 // to the canonical trait system. The following deprecated items have been removed:
 //
@@ -77,6 +124,7 @@ pub use domain_extensions::{StorageServiceExtension, ZfsServiceExtension};
 // - `async_trait` patterns → Use native async patterns
 // - Legacy provider interfaces → Use `CanonicalProvider<T>`
 // - **REDUNDANT STORAGE TRAITS** → Use `CanonicalStorage` instead
+
 // **CANONICAL TRAIT HIERARCHY**:
 // ```rust
 // CanonicalService (base trait for all services)
@@ -99,12 +147,15 @@ pub use domain_extensions::{StorageServiceExtension, ZfsServiceExtension};
 // **NATIVE ASYNC PATTERNS**:
 // All traits now use `impl Future` patterns instead of `async_trait`
 // for zero-cost async abstractions.
+
 // ==================== CONVENIENCE TYPE ALIASES ====================
 // Note: Type aliases using `dyn Trait` with `impl Future` returns are not object-safe
 // These are provided for documentation purposes but cannot be used as trait objects
+
 // ==================== VALIDATION FUNCTIONS ====================
 
-// Validate that a service implements the canonical interface
+/// Validate that a service implements the canonical interface
+/// Returns true if the service passes validation checks
 pub fn validate_canonical_service<S>(_service: &S) -> bool
 where
     S: CanonicalService,
@@ -112,7 +163,9 @@ where
     // Service validation logic would go here
     true
 }
-// Validate that a provider implements the canonical interface
+
+/// Validate that a provider implements the canonical interface
+/// Returns true if the provider passes validation checks
 pub fn validate_canonical_provider<T, P>(_provider: &P) -> bool
 where
     P: CanonicalProvider<T>,

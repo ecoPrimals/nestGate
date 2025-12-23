@@ -3,6 +3,7 @@
 // Comprehensive metrics system for monitoring NestGate performance,
 //! provider health, storage operations, and system resources.
 
+use crate::math::float_compare::approx_eq_f64;
 use crate::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -27,6 +28,7 @@ pub struct MetricsCollector {
 }
 /// Configuration for metrics collection
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Metrics
 pub struct MetricsConfig {
     /// How often to collect system metrics
     pub collection_interval: Duration,
@@ -40,12 +42,26 @@ pub struct MetricsConfig {
     pub labels: HashMap<String, String>,
 }
 impl Default for MetricsConfig {
+    /// Returns the default instance
+    ///
+    /// Loads metrics configuration from environment:
+    /// - `NESTGATE_METRICS_PORT`: Metrics port (default: 9090)
+    /// - `NESTGATE_API_HOST`: API host for metrics endpoint
     fn default() -> Self {
+        use crate::config::environment::EnvironmentConfig;
+        
+        let env_config = EnvironmentConfig::from_env()
+            .unwrap_or_else(|_| EnvironmentConfig::default());
+        
+        let metrics_port = env_config.monitoring.metrics_port.get();
+        let config = crate::config::discovery_config::ServiceDiscoveryConfig::default();
+        let metrics_endpoint = format!("{}/metrics", config.build_endpoint(metrics_port));
+        
         Self {
             collection_interval: Duration::from_secs(30),
             retention_period: Duration::from_secs(3600), // 1 hour
             export_enabled: true,
-            export_endpoints: vec!["http://localhost:9090/metrics".to_string()],
+            export_endpoints: vec![metrics_endpoint],
             labels: HashMap::new(),
         }
     }
@@ -53,6 +69,7 @@ impl Default for MetricsConfig {
 
 /// System-level metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Systemmetrics
 pub struct SystemMetrics {
     /// CPU usage percentage (0.0 - 100.0)
     pub cpu_usage: f64,
@@ -76,6 +93,7 @@ pub struct SystemMetrics {
     pub timestamp: SystemTime,
 }
 impl Default for SystemMetrics {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             cpu_usage: 0.0,
@@ -94,6 +112,7 @@ impl Default for SystemMetrics {
 
 /// Provider-specific metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Providermetrics
 pub struct ProviderMetrics {
     /// Provider name
     pub provider_name: String,
@@ -170,6 +189,7 @@ impl ProviderMetrics {
 
 /// Storage backend metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagemetrics
 pub struct StorageMetrics {
     /// Storage backend name
     pub backend_name: String,
@@ -197,6 +217,7 @@ pub struct StorageMetrics {
     pub used_space: Option<u64>,
 }
 impl StorageMetrics {
+    /// Creates a new instance
     pub fn new(backend_name: String, backend_type: String) -> Self {
         Self {
             backend_name,
@@ -238,7 +259,8 @@ impl StorageMetrics {
 
     /// Get throughput in MB/s for reads
     pub fn read_throughput_mbps(&self) -> f64 {
-        if self.read_operations == 0 || self.avg_read_latency_ms == 0.0 {
+        // ✅ MODERN: Use epsilon for zero check in production code
+        if self.read_operations == 0 || approx_eq_f64(self.avg_read_latency_ms, 0.0, 1e-9) {
             return 0.0;
         }
         let avg_bytes_per_read = self.bytes_read as f64 / self.read_operations as f64;
@@ -250,10 +272,13 @@ impl StorageMetrics {
 
 /// Performance metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performancemetrics
 pub struct PerformanceMetrics {
     /// Request latency percentiles
     pub latency_p50: f64,
+    /// Latency P95
     pub latency_p95: f64,
+    /// Latency P99
     pub latency_p99: f64,
     /// Throughput (requests per second)
     pub throughput_rps: f64,
@@ -269,6 +294,7 @@ pub struct PerformanceMetrics {
     latency_samples: Vec<f64>,
 }
 impl Default for PerformanceMetrics {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             latency_p50: 0.0,
@@ -516,11 +542,13 @@ impl MetricsCollector {
         Ok(rand::random::<f64>() * 100.0)
     }
 
+    /// Gets Memory Usage
     fn get_memory_usage(&self) -> Result<u64> {
         // Simulate memory usage
         Ok(1024 * 1024 * 1024) // 1GB
     }
 
+    /// Gets Memory Available
     fn get_memory_available(&self) -> Result<u64> {
         // Simulate available memory
         Ok(4 * 1024 * 1024 * 1024) // 4GB
@@ -529,6 +557,7 @@ impl MetricsCollector {
 
 // Make MetricsCollector cloneable for background tasks
 impl Clone for MetricsCollector {
+    /// Clone
     fn clone(&self) -> Self {
         Self {
             system_metrics: Arc::clone(&self.system_metrics),
@@ -547,14 +576,20 @@ pub struct MetricsExporter {
 }
 /// Supported export formats
 #[derive(Debug, Clone)]
+/// Exportformat
 pub enum ExportFormat {
+    /// Prometheus
     Prometheus,
+    /// Json
     Json,
+    /// Influxdb
     InfluxDB,
 }
 impl MetricsExporter {
+    /// Creates a new instance
     pub fn new(collector: Arc<MetricsCollector>, format: ExportFormat) -> Self {
         Self {
+            /// Collector
             collector,
             export_format: format,
         }
@@ -576,6 +611,7 @@ impl MetricsExporter {
         }
     }
 
+    /// Export Prometheus
     async fn export_prometheus(&self) -> Result<String> {
         let system = self.collector.get_system_metrics().await;
         let providers = self.collector.get_all_provider_metrics().await;
@@ -621,6 +657,7 @@ impl MetricsExporter {
         Ok(output)
     }
 
+    /// Export Json
     async fn export_json(&self) -> Result<String> {
         let system = self.collector.get_system_metrics().await;
         let providers = self.collector.get_all_provider_metrics().await;
@@ -637,6 +674,7 @@ impl MetricsExporter {
             location: Some("MetricsExporter::export_json".to_string())})
     }
 
+    /// Export Influxdb
     async fn export_influxdb(&self) -> Result<String> {
         let system = self.collector.get_system_metrics().await;
         let providers = self.collector.get_all_provider_metrics().await;

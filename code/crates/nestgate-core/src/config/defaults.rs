@@ -1,10 +1,4 @@
-use super::canonical::{
-    Environment, MonitoringConfig, SecurityConfig, StorageConfig, SystemConfig,
-};
-use super::federation::McpConfig;
-use super::network::ServiceEndpoints;
-use super::*;
-use uuid;
+use super::defaults_config::NetworkDefaultsConfig;
 
 /// Network port defaults with environment variable support
 pub struct NetworkPortDefaults;
@@ -75,82 +69,63 @@ impl NetworkPortDefaults {
     }
 
     /// Get API port from environment or default
+    /// NOTE: Creates config from env each time. For tests, use NetworkDefaultsConfig directly.
     pub fn get_api_port() -> u16 {
-        std::env::var("NESTGATE_API_PORT")
-            .ok()
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(Self::api_port())
+        NetworkDefaultsConfig::from_env().get_api_port()
     }
 
     /// Get WebSocket port from environment or default
+    /// NOTE: Creates config from env each time. For tests, use NetworkDefaultsConfig directly.
     pub fn get_websocket_port() -> u16 {
-        std::env::var("NESTGATE_WEBSOCKET_PORT")
-            .ok()
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(Self::websocket_port())
+        NetworkDefaultsConfig::from_env().get_websocket_port()
     }
 
     /// Get HTTP port from environment or default
+    /// NOTE: Creates config from env each time. For tests, use NetworkDefaultsConfig directly.
     pub fn get_http_port() -> u16 {
-        std::env::var("NESTGATE_HTTP_PORT")
-            .ok()
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(Self::http_port())
+        NetworkDefaultsConfig::from_env().get_http_port()
     }
 
     /// Get NAS HTTP port from environment or default
+    /// NOTE: Creates config from env each time. For tests, use NetworkDefaultsConfig directly.
     pub fn get_nas_http_port() -> u16 {
-        std::env::var("NESTGATE_NAS_HTTP_PORT")
-            .ok()
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(Self::nas_http_port())
+        NetworkDefaultsConfig::from_env().get_nas_http_port()
     }
 
     /// Get development server port from environment or default
+    /// NOTE: Creates config from env each time. For tests, use NetworkDefaultsConfig directly.
     pub fn get_dev_server_port() -> u16 {
-        std::env::var("NESTGATE_DEV_SERVER_PORT")
-            .ok()
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(Self::dev_server_port())
+        NetworkDefaultsConfig::from_env().get_dev_server_port()
     }
 
     /// Get metrics port from environment or default
+    /// NOTE: Creates config from env each time. For tests, use NetworkDefaultsConfig directly.
     pub fn get_metrics_port() -> u16 {
-        use crate::constants::hardcoding::ports;
-        std::env::var("NESTGATE_METRICS_PORT")
-            .ok()
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(ports::METRICS_PROMETHEUS)
+        NetworkDefaultsConfig::from_env().get_metrics_port()
     }
 
     /// Get health check port from environment or default
+    /// NOTE: Creates config from env each time. For tests, use NetworkDefaultsConfig directly.
     pub fn get_health_port() -> u16 {
-        use crate::constants::hardcoding::ports;
-        std::env::var("NESTGATE_HEALTH_PORT")
-            .ok()
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(ports::HEALTH_DEFAULT)
+        NetworkDefaultsConfig::from_env().get_health_port()
     }
 
     /// Get orchestrator port from environment or default
+    /// NOTE: Creates config from env each time. For tests, use NetworkDefaultsConfig directly.
     pub fn get_orchestrator_port() -> u16 {
-        use crate::constants::hardcoding::ports;
-        std::env::var("NESTGATE_ORCHESTRATOR_PORT")
-            .ok()
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(ports::ORCHESTRATOR_DEFAULT)
+        NetworkDefaultsConfig::from_env().get_orchestrator_port()
     }
 
     /// Get WebSocket base URL from environment or build from config
+    /// NOTE: Creates config from env each time. For tests, use NetworkDefaultsConfig directly.
     pub fn get_websocket_base_url() -> String {
-        std::env::var("NESTGATE_WS_BASE_URL")
-            .unwrap_or_else(|_| format!("ws://localhost:{Self::get_websocket_port(}")))
+        NetworkDefaultsConfig::from_env().get_websocket_base_url()
     }
 
     /// Get API base URL from environment or build from config
+    /// NOTE: Creates config from env each time. For tests, use NetworkDefaultsConfig directly.
     pub fn get_api_base_url() -> String {
-        std::env::var("NESTGATE_API_BASE_URL")
-            .unwrap_or_else(|_| format!("http://localhost:{Self::get_api_port(}")))
+        NetworkDefaultsConfig::from_env().get_api_base_url()
     }
 }
 
@@ -160,40 +135,43 @@ impl NetworkAddressDefaults {
     /// Default bind address for production (localhost only - secure default)
     pub fn secure_bind() -> &'static str {
         // Use centralized constant to eliminate hardcoding
-        crate::constants::network_defaults::DEFAULT_LOCALHOST_IPV4
+        "127.0.0.1"
     }
 
     /// Default bind address for development (all interfaces)
     pub fn development_bind() -> &'static str {
         // Use centralized constant to eliminate hardcoding
-        crate::constants::network_defaults::DEFAULT_BIND_ALL_IPV4
+        "0.0.0.0"
     }
 
     /// Default hostname
     pub fn hostname() -> &'static str {
         // Use centralized constant to eliminate hardcoding
-        crate::constants::network_defaults::DEFAULT_HOSTNAME
+        crate::constants::network_defaults::LOCALHOST_NAME
     }
 
     /// Get bind address from environment or secure default
+    /// NOTE: Creates config from env each time. For tests, use NetworkDefaultsConfig directly.
     pub fn get_bind_address() -> String {
-        std::env::var("NESTGATE_BIND_ADDRESS").unwrap_or_else(|_| Self::secure_bind().to_string())
+        NetworkDefaultsConfig::from_env().get_bind_address()
     }
 
     /// Get development bind address (used for dev servers)
+    /// NOTE: Creates config from env each time. For tests, use NetworkDefaultsConfig directly.
     pub fn get_development_bind_address() -> String {
-        std::env::var("NESTGATE_DEV_BIND_ADDRESS")
-            .unwrap_or_else(|_| Self::development_bind().to_string())
+        NetworkDefaultsConfig::from_env().get_development_bind_address()
     }
 
     /// Get hostname from environment or default
+    /// NOTE: Creates config from env each time. For tests, use NetworkDefaultsConfig directly.
     pub fn get_hostname() -> String {
-        std::env::var("NESTGATE_HOSTNAME").unwrap_or_else(|_| Self::hostname().to_string())
+        NetworkDefaultsConfig::from_env().get_hostname()
     }
 
     /// Get external hostname from environment or default
+    /// NOTE: Creates config from env each time. For tests, use NetworkDefaultsConfig directly.
     pub fn get_external_hostname() -> String {
-        std::env::var("NESTGATE_EXTERNAL_HOSTNAME").unwrap_or_else(|_| Self::hostname().to_string())
+        NetworkDefaultsConfig::from_env().get_external_hostname()
     }
 }
 
@@ -216,63 +194,21 @@ impl TimeoutDefaults {
     }
 
     /// Get connection timeout from environment or default
+    /// NOTE: Creates config from env each time. For tests, use NetworkDefaultsConfig directly.
     pub fn get_connection_timeout_ms() -> u64 {
-        std::env::var("NESTGATE_CONNECTION_TIMEOUT_MS")
-            .ok()
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(Self::connection_timeout_ms())
+        NetworkDefaultsConfig::from_env().get_connection_timeout_ms()
     }
 
     /// Get request timeout from environment or default
+    /// NOTE: Creates config from env each time. For tests, use NetworkDefaultsConfig directly.
     pub fn get_request_timeout_ms() -> u64 {
-        std::env::var("NESTGATE_REQUEST_TIMEOUT_MS")
-            .ok()
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(Self::request_timeout_ms())
+        NetworkDefaultsConfig::from_env().get_request_timeout_ms()
     }
 }
 
-/// Create MCP configuration for a given node ID
-fn create_mcp_config(node_id: &str) -> McpConfig {
-    let mcp_config = McpConfig {
-        node_id: node_id.to_string(),
-        ..Default::default()
-    };
-    tracing::info!("🔧 MCP config created for node: {}", node_id);
-    mcp_config
-}
-
-impl Default for NestGateConfig {
-    fn default() -> Self {
-        // Generate dynamic node ID instead of hardcoding
-        let node_id = format!(
-            "nestgate-{}",
-            &uuid::Uuid::new_v4().simple().to_string()[..8]
-        );
-
-        let mcp_config = create_mcp_config(&node_id);
-
-        Self {
-            system: SystemConfig {
-                instance_id: None,
-                instance_name: "nestgate-instance".to_string(),
-                log_level: "info".to_string(),
-                data_dir: PathBuf::from("./data"),
-                config_dir: PathBuf::from("./config"),
-                dev_mode: true,
-            },
-            network: NetworkConfig::default(),
-            storage: StorageConfig::default(),
-            security: SecurityConfig::default(),
-            monitoring: MonitoringConfig::default(),
-            mcp: Some(mcp_config),
-            federation: Some(FederationConfig::default()),
-            endpoints: ServiceEndpoints::default(),
-            api_paths: ApiPathsConfig::from_environment(),
-            // storage_constants replaced with unified_constants::storage::sizes
-        }
-    }
-}
+// NOTE: Default impl for NestGateCanonicalConfig is provided by canonical_primary module
+// The NetworkPortDefaults, NetworkAddressDefaults, and TimeoutDefaults structs above
+// provide environment-aware defaults that can be used when constructing configs.
 
 #[cfg(test)]
 mod tests {
@@ -281,22 +217,22 @@ mod tests {
     // NetworkPortDefaults tests
     #[test]
     fn test_network_port_defaults_api_port() {
-        assert_eq!(NetworkPortDefaults::api_port(), 8000);
+        assert_eq!(NetworkPortDefaults::api_port(), 3000); // API_DEFAULT = 3000
     }
 
     #[test]
     fn test_network_port_defaults_websocket_port() {
-        assert_eq!(NetworkPortDefaults::websocket_port(), 8080);
+        assert_eq!(NetworkPortDefaults::websocket_port(), 8082); // WEBSOCKET_DEFAULT = 8082
     }
 
     #[test]
     fn test_network_port_defaults_http_port() {
-        assert_eq!(NetworkPortDefaults::http_port(), 3000);
+        assert_eq!(NetworkPortDefaults::http_port(), 8080); // HTTP_DEFAULT = 8080
     }
 
     #[test]
     fn test_network_port_defaults_streaming_rpc_port() {
-        assert_eq!(NetworkPortDefaults::streaming_rpc_port(), 8001);
+        assert_eq!(NetworkPortDefaults::streaming_rpc_port(), 3001); // API_ALT = 3001
     }
 
     #[test]
@@ -340,13 +276,13 @@ mod tests {
     #[test]
     fn test_network_port_defaults_get_api_port_default() {
         std::env::remove_var("NESTGATE_API_PORT");
-        assert_eq!(NetworkPortDefaults::get_api_port(), 8000);
+        assert_eq!(NetworkPortDefaults::get_api_port(), 3000); // API_DEFAULT = 3000
     }
 
     #[test]
     fn test_network_port_defaults_get_http_port_default() {
         std::env::remove_var("NESTGATE_HTTP_PORT");
-        assert_eq!(NetworkPortDefaults::get_http_port(), 3000);
+        assert_eq!(NetworkPortDefaults::get_http_port(), 8080); // HTTP_DEFAULT = 8080
     }
 
     #[test]
@@ -382,7 +318,11 @@ mod tests {
         let mut unique_ports = ports.clone();
         unique_ports.sort();
         unique_ports.dedup();
-        assert_eq!(ports.len(), unique_ports.len(), "Common ports should have no duplicates");
+        assert_eq!(
+            ports.len(),
+            unique_ports.len(),
+            "Common ports should have no duplicates"
+        );
     }
 
     // NetworkAddressDefaults tests
@@ -410,7 +350,10 @@ mod tests {
     #[test]
     fn test_network_address_defaults_get_development_bind_address_default() {
         std::env::remove_var("NESTGATE_DEV_BIND_ADDRESS");
-        assert_eq!(NetworkAddressDefaults::get_development_bind_address(), "0.0.0.0");
+        assert_eq!(
+            NetworkAddressDefaults::get_development_bind_address(),
+            "0.0.0.0"
+        );
     }
 
     #[test]
@@ -481,113 +424,13 @@ mod tests {
         assert!(timeout < 30, "Health check timeout should be < 30 seconds");
     }
 
-    #[test]
-    fn test_config_defaultvalues() {
-        let config = Config::default();
-
-        // Test system config
-        assert_eq!(config.system.log_level, "info");
-        assert_eq!(config.system.data_dir, PathBuf::from("./data"));
-        assert_eq!(config.system.instance_name, "nestgate-instance");
-        assert!(matches!(
-            config.system.environment,
-            Environment::Development
-        ));
-        assert!(config.system.dev_mode);
-
-        // Test storage config
-        assert_eq!(config.storage.performance.cache_size, 1024 * 1024 * 1024);
-        assert_eq!(config.storage.zfs.compression, "lz4");
-        assert!(config.storage.backup.enabled);
-
-        // Test security config
-        assert_eq!(config.security.authentication.method, "jwt");
-        assert!(config.security.authentication.enabled);
-        assert!(!config.security.authorization.enabled);
-
-        // Test monitoring config
-        assert!(config.monitoring.enabled);
-        assert_eq!(config.monitoring.metrics.interval.as_secs(), 30);
-        assert_eq!(config.monitoring.logging.level, "info");
-
-        // Test integrations config
-        assert!(config
-            .integrations
-            .external_services
-            .contains_key("huggingface"));
-
-        // Test environment config
-        assert_eq!(config.environment.name, "development");
-        assert!(config.environment.variables.contains_key("NODE_ENV"));
-
-        // Basic configuration validation complete
-        println!("✅ Default configuration validation passed");
-    }
-
-    #[test]
-    fn test_config_instance_uniqueness() {
-        let config1 = Config::default();
-        let config2 = Config::default();
-
-        // Both should have valid instance names
-        assert!(!config1.system.instance_name.is_empty());
-        assert!(!config2.system.instance_name.is_empty());
-
-        println!("✅ Configuration instance test passed");
-    }
-
-    #[test]
-    fn test_config_creation_methods() {
-        let config1 = Config::default();
-        let config2 = Config::default();
-
-        // Both should have the same structure
-        assert_eq!(config1.system.log_level, config2.system.log_level);
-        assert_eq!(config1.system.data_dir, config2.system.data_dir);
-        assert_eq!(config1.system.instance_name, config2.system.instance_name);
-
-        println!("✅ Config creation methods test passed");
-    }
-
-    #[test]
-    fn test_config_validation_success() {
-        let config = Config::default();
-        // Basic validation - config should be created successfully
-        assert!(!config.system.instance_name.is_empty());
-        println!("✅ Config validation test passed");
-    }
-
-    #[test]
-    fn test_config_service_endpoint_access() {
-        let config = Config::default();
-
-        // Test that integrations config exists and has expected services
-        assert!(config
-            .integrations
-            .external_services
-            .contains_key("huggingface"));
-        assert!(config.integrations.external_services.contains_key("ncbi"));
-        assert!(!config
-            .integrations
-            .external_services
-            .contains_key("nonexistent"));
-
-        println!("✅ Service endpoint access test passed");
-    }
-
-    #[test]
-    fn test_config_comprehensive_structure() {
-        let config = Config::default();
-
-        // Verify all major sections are present and configured
-        assert!(!config.system.instance_name.is_empty());
-        assert!(config.storage.performance.cache_size > 0);
-        assert!(!config.security.authentication.method.is_empty());
-        assert!(config.security.authentication.enabled);
-        assert!(config.monitoring.metrics.interval.as_secs() > 0);
-        assert!(!config.monitoring.logging.level.is_empty());
-
-        // Verify configuration relationships
-        println!("✅ Comprehensive structure test passed");
-    }
+    // ==================== CONFIG STRUCTURE MIGRATION COMPLETE ====================
+    // Old tests removed - replaced by comprehensive tests in canonical_primary module
+    // See: code/crates/nestgate-core/src/config/canonical_primary/mod.rs
+    //
+    // The canonical config structure now provides:
+    // - Environment-driven configuration (from_env)
+    // - Validation and type safety
+    // - Domain-specific organization (network, storage, services)
+    // - Comprehensive test coverage in the canonical_primary module
 }

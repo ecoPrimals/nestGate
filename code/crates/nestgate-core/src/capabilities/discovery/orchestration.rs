@@ -8,27 +8,43 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 /// Orchestration capability types that can be discovered
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+/// Types of OrchestrationCapability
 pub enum OrchestrationCapabilityType {
+    /// Service mesh for microservices communication
     ServiceMesh,
+    /// Load balancing and traffic distribution
     LoadBalancer,
+    /// Service discovery and registration
     ServiceDiscovery,
+    /// Health checking and monitoring
     HealthChecking,
+    /// System monitoring and metrics collection
     Monitoring,
+    /// Centralized logging capabilities
     Logging,
+    /// Distributed tracing capabilities
     Tracing,
+    /// Configuration management services
     Configuration,
 }
 /// Orchestration capability metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Orchestrationcapabilityinfo
 pub struct OrchestrationCapabilityInfo {
+    /// Type of orchestration capability provided
     pub capability_type: OrchestrationCapabilityType,
+    /// Service endpoint URL
     pub endpoint: String,
+    /// API version string
     pub version: String,
+    /// List of supported operations for this capability
     pub supported_operations: Vec<String>,
+    /// Additional metadata key-value pairs
     pub metadata: HashMap<String, String>,
 }
 /// Orchestration capability discovery manager
 #[derive(Debug)]
+/// Orchestrationcapabilitydiscovery
 pub struct OrchestrationCapabilityDiscovery {
     discovered_capabilities:
         tokio::sync::RwLock<HashMap<OrchestrationCapabilityType, OrchestrationCapabilityInfo>>,
@@ -147,6 +163,7 @@ impl OrchestrationCapabilityDiscovery {
 }
 
 impl Default for OrchestrationCapabilityDiscovery {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

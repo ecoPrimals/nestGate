@@ -1,0 +1,11 @@
+{
+  "required_capabilities": [
+    {"type": "storage", "min_gb": 10},
+    {"type": "network", "protocols": ["http"]}
+  ],
+  "optional_capabilities": [
+    {"type": "compute", "gpu": false},
+    {"type": "crypto", "provider": "beardog"}
+  ],
+  "negotiation_strategy": "graceful-degradation"
+}

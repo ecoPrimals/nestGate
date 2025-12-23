@@ -6,15 +6,25 @@ use std::time::{Duration, SystemTime};
 
 /// Production metrics collector
 #[derive(Debug, Default)]
+/// Productionmetrics
 pub struct ProductionMetrics {
+    /// Total Requests
     pub total_requests: u64,
+    /// Successful Requests
     pub successful_requests: u64,
+    /// Failed Requests
     pub failed_requests: u64,
+    /// Total Processing Time
     pub total_processing_time: Duration,
+    /// Avg Response Time
     pub avg_response_time: Duration,
+    /// Current Load
     pub current_load: f64,
+    /// Memory Usage
     pub memory_usage: u64,
+    /// Cpu Usage
     pub cpu_usage: f64,
+    /// Last Updated
     pub last_updated: Option<SystemTime>,
 }
 impl ProductionMetrics {

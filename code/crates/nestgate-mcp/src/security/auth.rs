@@ -9,6 +9,7 @@ use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
 /// Authentication token for MCP sessions
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Authtoken
 pub struct AuthToken {
     /// Token value
     pub token: String,
@@ -33,6 +34,7 @@ impl AuthToken {
 
 /// Authentication manager for MCP connections
 #[derive(Debug)]
+/// Manager for Auth operations
 pub struct AuthManager {
     /// Active tokens
     tokens: HashMap<String, AuthToken>,
@@ -144,12 +146,14 @@ impl TokenAuthenticator {
             valid_tokens: HashMap::new(),
          }
 
+    /// Add Token
     pub fn add_token(&mut self, token: String, auth_token: AuthToken) {
         self.valid_tokens.insert(token, auth_token);
     }
 }
 
 impl Authenticator for TokenAuthenticator {
+    /// Authenticate
     fn authenticate(&self, credentials: &AuthCredentials) -> Result<AuthToken> {
         if let Some(api_key) = &credentials.api_key {
             if let Some(token) = self.valid_tokens.get(api_key) {
@@ -166,6 +170,7 @@ impl Authenticator for TokenAuthenticator {
         ))
     }
 
+    /// Validates data
     fn validate(&self, token: &str) -> Result<bool> {
         Ok(self
             .valid_tokens
@@ -176,6 +181,7 @@ impl Authenticator for TokenAuthenticator {
 }
 
 impl Default for TokenAuthenticator {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

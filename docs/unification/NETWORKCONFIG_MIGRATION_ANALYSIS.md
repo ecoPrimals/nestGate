@@ -17,9 +17,9 @@ pub type NetworkConfig = StandardDomainConfig<NetworkExtensions>;
 
 **Current Imports**:
 - `nestgate_core::unified_config_consolidation::StandardDomainConfig`
-- `nestgate_core::unified_config_master::NestGateMasterConfig`
+- `nestgate_core::unified_config_primary::NestGatePrimaryConfig`
 
-**Problem**: Using OLD unified config system, not the NEW canonical_master
+**Problem**: Using OLD unified config system, not the NEW canonical_primary
 
 ---
 
@@ -27,7 +27,7 @@ pub type NetworkConfig = StandardDomainConfig<NetworkExtensions>;
 
 **THE Canonical NetworkConfig**:
 ```rust
-// canonical_master/domains/network/mod.rs:48
+// canonical_primary/domains/network/mod.rs:48
 pub struct CanonicalNetworkConfig {
     pub api: NetworkApiConfig,
     pub orchestration: NetworkOrchestrationConfig,
@@ -51,7 +51,7 @@ pub struct CanonicalNetworkConfig {
 
 ### Phase 2: Update Imports
 1. Replace `unified_config_consolidation` imports
-2. Use `canonical_master::domains::network` instead
+2. Use `canonical_primary::domains::network` instead
 3. Update `config.rs` module
 
 ### Phase 3: Update Extensions
@@ -70,7 +70,7 @@ pub struct CanonicalNetworkConfig {
 
 ### Priority 1 (Core Type Aliases)
 1. `src/types.rs` - Update NetworkConfig type alias
-2. `src/config.rs` - Update to use canonical_master
+2. `src/config.rs` - Update to use canonical_primary
 3. `src/lib.rs` - Update re-exports
 
 ### Priority 2 (Extensions & Compatibility)
@@ -85,7 +85,7 @@ pub struct CanonicalNetworkConfig {
 ## ✅ SUCCESS CRITERIA
 
 - [ ] NetworkConfig type alias points to CanonicalNetworkConfig
-- [ ] All imports from canonical_master
+- [ ] All imports from canonical_primary
 - [ ] Zero compilation errors
 - [ ] All tests pass
 - [ ] Backward compatibility maintained where needed

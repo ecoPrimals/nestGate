@@ -1,3 +1,5 @@
+//! Types module
+
 use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
@@ -5,23 +7,34 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::sync::watch;
 use uuid::Uuid;
 
-use crate::config::canonical_master::NestGateCanonicalConfig as CanonicalConfig;
+use crate::config::canonical_primary::NestGateCanonicalConfig as CanonicalConfig;
 use crate::error::CanonicalResult as Result;
 
 /// Configuration version with metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configversion
 pub struct ConfigVersion {
+    /// Unique identifier
     pub id: String,
+    /// Version Number
     pub version_number: u64,
+    /// Timestamp
     pub timestamp: SystemTime,
+    /// Human-readable description
     pub description: String,
+    /// Author
     pub author: String,
+    /// Configuration for snapshot
     pub config_snapshot: CanonicalConfig,
+    /// Validation Status
     pub validation_status: ValidationStatus,
+    /// Applied Successfully
     pub applied_successfully: bool,
+    /// Rollback Available
     pub rollback_available: bool,
 }
 impl ConfigVersion {
+    /// Creates a new instance
     pub fn new(config: CanonicalConfig, description: String, author: String) -> Self {
         let timestamp = SystemTime::now();
         let version_number = timestamp
@@ -44,83 +57,133 @@ impl ConfigVersion {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Status values for Validation
 pub enum ValidationStatus {
+    /// Pending
     Pending,
+    /// Valid
     Valid,
+    /// Invalid
     Invalid,
+    /// Warning
     Warning,
 }
 
 /// Configuration change description
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configchange
 pub struct ConfigChange {
+    /// Section
     pub section: ConfigSection,
+    /// Change Type
     pub change_type: ChangeType,
+    /// Oldvalue
     pub oldvalue: Option<serde_json::Value>,
+    /// Newvalue
     pub newvalue: serde_json::Value,
+    /// Human-readable description
     pub description: String,
 }
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+/// Configsection
 pub enum ConfigSection {
+    /// Storage
     Storage,
+    /// Network
     Network,
+    /// Security
     Security,
+    /// Monitoring
     Monitoring,
     Custom(String),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of Change
 pub enum ChangeType {
+    /// Add
     Add,
+    /// Modify
     Modify,
+    /// Remove
     Remove,
 }
 
 /// Configuration validation report
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Validationreport
 pub struct ValidationReport {
+    /// Whether valid
     pub is_valid: bool,
+    /// Errors
     pub errors: Vec<ValidationError>,
+    /// Warnings
     pub warnings: Vec<ValidationWarning>,
+    /// Recommendations
     pub recommendations: Vec<String>,
+    /// Estimated Impact
     pub estimated_impact: ImpactAssessment,
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Error type for Validation operations
 pub struct ValidationError {
+    /// Code
     pub code: String,
+    /// Message
     pub message: String,
+    /// Severity
     pub severity: ErrorSeverity,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Validationwarning
 pub struct ValidationWarning {
+    /// Code
     pub code: String,
+    /// Message
     pub message: String,
+    /// Recommendation
     pub recommendation: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Errorseverity
 pub enum ErrorSeverity {
+    /// Critical
     Critical,
+    /// High
     High,
+    /// Medium
     Medium,
+    /// Low
     Low,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Impactassessment
 pub struct ImpactAssessment {
+    /// Restart Required
     pub restart_required: bool,
+    /// Performance Impact
     pub performance_impact: PerformanceImpact,
+    /// Affected Components
     pub affected_components: Vec<String>,
+    /// Estimated Downtime
     pub estimated_downtime: Option<std::time::Duration>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performanceimpact
 pub enum PerformanceImpact {
+    /// None
     None,
+    /// Minimal
     Minimal,
+    /// Moderate
     Moderate,
+    /// High
     High,
+    /// Severe
     Severe,
 }
 
@@ -153,12 +216,19 @@ pub trait DynamicConfiguration {
 
 /// Configuration backup with metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configbackup
 pub struct ConfigBackup {
+    /// Backup identifier
     pub backup_id: String,
+    /// Timestamp when this was created
     pub created_at: SystemTime,
+    /// Source System
     pub source_system: String,
+    /// Configuration for current
     pub current_config: CanonicalConfig,
+    /// Version History
     pub version_history: Option<Vec<ConfigVersion>>,
+    /// Additional metadata key-value pairs
     pub metadata: HashMap<String, String>,
 }
 /// Configuration validator trait - **ZERO-COST NATIVE ASYNC**

@@ -5,6 +5,25 @@ use serde::{Deserialize, Serialize};
 
 /// Pool discovery configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+///
+/// **Migration Path**:
+/// ```rust,ignore
+/// // OLD (deprecated):
+/// use crate::network::config::PoolDiscoveryConfig;
+///
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::PoolDiscoveryConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+///
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(
+    since = "0.11.0",
+    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
+/// Configuration for PoolDiscovery
 pub struct PoolDiscoveryConfig {
     /// Enable automatic pool discovery
     pub auto_discovery: bool,
@@ -20,6 +39,7 @@ pub struct PoolDiscoveryConfig {
     pub validate_health: bool,
 }
 impl Default for PoolDiscoveryConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             auto_discovery: true,
@@ -46,3 +66,20 @@ impl PoolDiscoveryConfig {
         }
     }
 }
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+///
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Pooldiscoveryconfigcanonical
+pub type PoolDiscoveryConfigCanonical =
+    nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using PoolDiscoveryConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.

@@ -18,6 +18,7 @@ use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 /// **CACHE-LINE ALIGNED ATOMIC COUNTER**
 /// Prevents false sharing between CPU cores for optimal performance
 #[repr(align(64))] // Align to cache line size
+/// Cachealignedcounter
 pub struct CacheAlignedCounter {
     value: AtomicU64,
     _padding: [u8; 64 - size_of::<AtomicU64>()], // Pad to full cache line
@@ -73,6 +74,7 @@ pub struct LockFreeRingBuffer<T, const SIZE: usize> {
 }
 
 impl<T, const SIZE: usize> Default for LockFreeRingBuffer<T, SIZE> {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -296,6 +298,7 @@ pub struct MemoryPool<const BLOCK_SIZE: usize, const POOL_SIZE: usize> {
 impl<const BLOCK_SIZE: usize, const POOL_SIZE: usize> Default
     for MemoryPool<BLOCK_SIZE, POOL_SIZE>
 {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -343,10 +346,11 @@ impl<const BLOCK_SIZE: usize, const POOL_SIZE: usize> MemoryPool<BLOCK_SIZE, POO
             let start = current_free * BLOCK_SIZE;
             let end = start + std::mem::size_of::<usize>();
             let next_free_bytes = &self.pool[start..end];
+            #[allow(clippy::expect_used)] // Slice length guaranteed by usize size
             let next_free = usize::from_ne_bytes(
                 next_free_bytes
                     .try_into()
-                    .expect("Slice has correct length"),
+                    .expect("BUG: Slice length matches usize size"),
             );
 
             // Try to update free list atomically
@@ -438,11 +442,17 @@ impl<const BLOCK_SIZE: usize, const POOL_SIZE: usize> MemoryPool<BLOCK_SIZE, POO
 
 /// Pool statistics
 #[derive(Debug, Clone)]
+/// Poolstats
 pub struct PoolStats {
+    /// Total Blocks
     pub total_blocks: usize,
+    /// Allocated Blocks
     pub allocated_blocks: usize,
+    /// Free Blocks
     pub free_blocks: usize,
+    /// Utilization Percent
     pub utilization_percent: f64,
+    /// Size of block
     pub block_size: usize,
 }
 /// **PERFORMANCE PROFILER**
@@ -451,6 +461,7 @@ pub struct PerformanceProfiler {
     counters: [CacheAlignedCounter; 16], // Up to 16 different metrics
 }
 impl Default for PerformanceProfiler {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -496,28 +507,83 @@ impl PerformanceProfiler {
 }
 
 /// **COMPILE-TIME PERFORMANCE CONSTANTS**
-/// Performance-related constants computed at compile time
+///
+/// Architecture-specific constants computed at compile time for optimal performance.
+/// These values are baked into the binary with zero runtime overhead.
+///
+/// # Zero-Cost Guarantee
+///
+/// All constants are resolved at compile time. Accessing them has the same
+/// performance as inline constants with no function call overhead.
+///
+/// # Architecture Tuning
+///
+/// Constants are tuned for modern x86-64 architectures with AVX2 support.
+/// Values are based on:
+/// - L1 cache: 32-64KB per core
+/// - L2 cache: 256KB-1MB per core  
+/// - L3 cache: 8-32MB shared
+/// - Cache line: 64 bytes
+/// - Page size: 4KB
+///
+/// # Usage
+///
+/// ```rust,no_run
+/// # use nestgate_core::performance::advanced_optimizations::PerformanceConstants;
+/// // Use compile-time constants for buffer sizing
+/// let buffer = vec![0u8; PerformanceConstants::OPTIMAL_BUFFER_SIZE];
+///
+/// // Align data structures to cache lines
+/// #[repr(align(64))] // PerformanceConstants::CACHE_LINE_SIZE
+/// struct CacheAligned {
+///     data: [u8; 64],
+/// }
+/// ```
 pub struct PerformanceConstants;
 impl PerformanceConstants {
-    /// Optimal buffer size for current architecture
+    /// Optimal buffer size for I/O operations (64KB)
+    ///
+    /// This size balances:
+    /// - L1/L2 cache efficiency
+    /// - Memory allocation overhead
+    /// - System call batching
+    /// - Page alignment benefits
     pub const OPTIMAL_BUFFER_SIZE: usize = 64 * 1024; // 64KB
 
-    /// CPU cache line size
+    /// CPU cache line size (64 bytes)
+    ///
+    /// Critical for preventing false sharing in concurrent code.
+    /// Align hot data structures to this size.
     pub const CACHE_LINE_SIZE: usize = 64;
 
-    /// Page size for memory alignment
+    /// Operating system page size (4KB)
+    ///
+    /// Used for memory alignment and efficient page table usage.
+    /// Aligning allocations to page boundaries can improve TLB efficiency.
     pub const PAGE_SIZE: usize = 4096;
 
-    /// Maximum SIMD vector width in bytes
+    /// Maximum SIMD width in bytes (32 bytes for AVX2)
+    ///
+    /// Used to determine optimal batch sizes for vectorized operations.
+    /// AVX2 provides 256-bit (32-byte) wide vector operations.
     pub const MAX_SIMD_WIDTH: usize = 32; // AVX2
 
-    /// Recommended batch size for vectorized operations
+    /// Recommended batch size for vectorized operations (8 elements)
+    ///
+    /// Optimal batch size for processing u32 elements with AVX2.
+    /// Calculated as: MAX_SIMD_WIDTH / sizeof(u32) = 32 / 4 = 8
     pub const VECTORIZED_BATCH_SIZE: usize = Self::MAX_SIMD_WIDTH / 4; // 8 elements for u32
 
-    /// Memory prefetch distance
+    /// Memory prefetch distance (64 bytes)
+    ///
+    /// How far ahead to prefetch memory for optimal cache utilization.
+    /// Typically one cache line ahead.
     pub const PREFETCH_DISTANCE: usize = 64;
 
-    /// Branch prediction threshold
+    /// Branch prediction threshold (90%)
+    ///
+    /// When a branch is taken more than 90% of the time, modern CPUs
+    /// can predict it very effectively. Use this to optimize hot paths.
     pub const BRANCH_PREDICTION_THRESHOLD: f64 = 0.9;
 }
 

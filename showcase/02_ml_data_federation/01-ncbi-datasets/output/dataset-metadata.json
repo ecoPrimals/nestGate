@@ -1,0 +1,28 @@
+{
+  "dataset_info": {
+    "id": "ncbi-human-chr22-2025-12",
+    "name": "Human Chromosome 22 Subset",
+    "source": "NCBI RefSeq",
+    "source_url": "https://ncbi.nlm.nih.gov/nuccore/NC_000022",
+    "downloaded_at": "2025-12-22T07:50:06-05:00",
+    "version": "GRCh38.p14"
+  },
+  "content": {
+    "format": "FASTA",
+    "sequences": 102,
+    "total_bases": 6120,
+    "size_bytes": 16295,
+    "checksum": "de944beb6441c898d5fcba0bae62dec283b8ea650db512f12e5e0f34a299df66"
+  },
+  "storage": {
+    "primary_location": "westgate",
+    "backup_location": "stradgate",
+    "compression": "zstd",
+    "deduplication": true
+  },
+  "access": {
+    "visibility": "team",
+    "license": "public_domain",
+    "citation": "NCBI RefSeq Release 110"
+  }
+}

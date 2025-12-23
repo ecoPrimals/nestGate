@@ -13,6 +13,8 @@ pub mod crud;
 ///
 /// Performance optimization and resource management for workspaces.
 pub mod optimization;
+#[cfg(test)]
+mod optimization_tests;
 
 /// **WORKSPACE STORAGE**
 ///
@@ -67,11 +69,13 @@ pub use secrets::create_workspace_secret;
 ///
 /// Central manager for all workspace operations and coordination.
 #[derive(Debug, Clone)]
+/// Manager for Workspace operations
 pub struct WorkspaceManager {
     // Implementation details hidden for brevity
 }
 
 impl Default for WorkspaceManager {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -96,6 +100,9 @@ impl WorkspaceManager {
 // TEMP_DISABLED: #[cfg(test)]
 // TEMP_DISABLED: mod collaboration_tests;
 
+#[cfg(test)]
+mod collaboration_tests;
+
 // TEMP_DISABLED: #[cfg(test)]
 // TEMP_DISABLED: mod storage_workspace_tests;
 
@@ -105,8 +112,22 @@ impl WorkspaceManager {
 // TEMP_DISABLED: #[cfg(test)]
 // TEMP_DISABLED: mod secrets_tests;
 
-// TEMP_DISABLED: #[cfg(test)]
-// TEMP_DISABLED: mod crud_tests;
+#[cfg(test)]
+mod crud_final_tests;
+#[cfg(test)]
+mod crud_tests;
 
-// TEMP_DISABLED: #[cfg(test)]
-// TEMP_DISABLED: mod teams_tests;
+#[cfg(test)]
+mod storage_tests;
+
+#[cfg(test)]
+mod teams_tests;
+
+#[cfg(test)]
+mod secrets_tests;
+
+#[cfg(test)]
+mod templates_tests;
+
+#[cfg(test)]
+mod error_path_tests_comprehensive;

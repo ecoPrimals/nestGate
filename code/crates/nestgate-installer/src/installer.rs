@@ -26,6 +26,8 @@
 // # }
 // ```
 
+//! Installer module
+
 use anyhow::{Context, Result};
 use console::Style;
 use dialoguer::Confirm;
@@ -42,12 +44,19 @@ use crate::wizard::InstallationWizard;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InstallationInfo {
+    /// Version
     pub version: String,
+    /// Install Date
     pub install_date: chrono::DateTime<chrono::Utc>,
+    /// Install Path
     pub install_path: PathBuf,
+    /// Configuration for path
     pub config_path: PathBuf,
+    /// Data Path
     pub data_path: PathBuf,
+    /// Service Installed
     pub service_installed: bool,
+    /// Features
     pub features: Vec<String>,
 }
 
@@ -125,12 +134,13 @@ impl NestGateInstaller {
                 if remove_data { " (including data)" } else { "" }
             );
 
+            #[allow(clippy::expect_used)] // install_dir must be set by builder
             if !Confirm::new()
                 .with_prompt(format!(
                     "Directory {} already exists. Overwrite?",
                     self.install_dir
                         .as_ref()
-                        .expect("Operation failed")
+                        .expect("BUG: install_dir must be set before uninstall")
                         .display()
                 ))
                 .interact()?
@@ -400,6 +410,7 @@ impl NestGateInstaller {
         self.get_installation_info().is_ok()
     }
 
+    /// Check System Requirements
     async fn check_system_requirements(&self) -> Result<()> {
         // Check disk space (at least 100MB)
         // Check memory (at least 512MB)
@@ -409,10 +420,12 @@ impl NestGateInstaller {
         Ok(())
     }
 
+    /// Check System Requirements Silent
     async fn check_system_requirements_silent(&self) -> bool {
         self.check_system_requirements().await.is_ok()
     }
 
+    /// Check Zfs Availability
     async fn check_zfs_availability(&self) -> bool {
         // Check if ZFS is available on the system
         std::process::Command::new("zfs")
@@ -437,6 +450,7 @@ impl NestGateInstaller {
         Ok(())
     }
 
+    /// Save Installation Info
     fn save_installation_info(&self, info: &InstallationInfo) -> Result<()> {
         let info_path = self.get_installation_info_path();
         let info_json = serde_json::to_string_pretty(info)?;
@@ -444,6 +458,7 @@ impl NestGateInstaller {
         Ok(())
     }
 
+    /// Gets Installation Info
     fn get_installation_info(&self) -> Result<InstallationInfo> {
         let info_path = self.get_installation_info_path();
         let info_json = fs::read_to_string(&info_path).context("Installation info not found")?;
@@ -452,11 +467,228 @@ impl NestGateInstaller {
         Ok(info)
     }
 
+    /// Gets Installation Info Path
     fn get_installation_info_path(&self) -> PathBuf {
         if let Some(data_dir) = dirs::data_dir() {
             data_dir.join("nestgate").join("install-info.json")
         } else {
             PathBuf::from(".nestgate-install-info.json")
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::Utc;
+    use std::path::PathBuf;
+
+    /// Creates  Test Installation Info
+    fn create_test_installation_info() -> InstallationInfo {
+        InstallationInfo {
+            version: "1.0.0".to_string(),
+            install_date: Utc::now(),
+            install_path: PathBuf::from("/opt/nestgate"),
+            config_path: PathBuf::from("/etc/nestgate"),
+            data_path: PathBuf::from("/var/lib/nestgate"),
+            service_installed: true,
+            features: vec!["zfs".to_string(), "nfs".to_string()],
+        }
+    }
+
+    #[test]
+    fn test_installation_info_creation() {
+        let info = create_test_installation_info();
+        assert_eq!(info.version, "1.0.0");
+        assert_eq!(info.install_path, PathBuf::from("/opt/nestgate"));
+        assert!(info.service_installed);
+        assert_eq!(info.features.len(), 2);
+    }
+
+    #[test]
+    fn test_installation_info_clone() {
+        let info = create_test_installation_info();
+        let cloned = info.clone();
+        assert_eq!(info.version, cloned.version);
+        assert_eq!(info.install_path, cloned.install_path);
+    }
+
+    #[test]
+    fn test_installation_info_serialization() {
+        let info = create_test_installation_info();
+        let serialized = serde_json::to_string(&info)
+            .expect("Test: installation info serialization should succeed");
+        assert!(serialized.contains("1.0.0"));
+        assert!(serialized.contains("/opt/nestgate"));
+    }
+
+    #[test]
+    fn test_installation_info_deserialization() {
+        let json = r#"{
+            "version": "2.0.0",
+            "install_date": "2025-01-01T00:00:00Z",
+            "install_path": "/usr/local/nestgate",
+            "config_path": "/etc/nestgate",
+            "data_path": "/var/lib/nestgate",
+            "service_installed": false,
+            "features": ["zfs"]
+        }"#;
+        let info: InstallationInfo = serde_json::from_str(json)
+            .expect("Test: installation info deserialization should succeed");
+        assert_eq!(info.version, "2.0.0");
+        assert_eq!(info.install_path, PathBuf::from("/usr/local/nestgate"));
+        assert!(!info.service_installed);
+    }
+
+    #[test]
+    fn test_installation_info_empty_features() {
+        let info = InstallationInfo {
+            version: "1.0.0".to_string(),
+            install_date: Utc::now(),
+            install_path: PathBuf::from("/opt/nestgate"),
+            config_path: PathBuf::from("/etc/nestgate"),
+            data_path: PathBuf::from("/var/lib/nestgate"),
+            service_installed: false,
+            features: vec![],
+        };
+        assert!(info.features.is_empty());
+    }
+
+    #[test]
+    fn test_installation_info_many_features() {
+        let features = vec![
+            "zfs".to_string(),
+            "nfs".to_string(),
+            "smb".to_string(),
+            "monitoring".to_string(),
+            "backup".to_string(),
+        ];
+        let info = InstallationInfo {
+            version: "1.0.0".to_string(),
+            install_date: Utc::now(),
+            install_path: PathBuf::from("/opt/nestgate"),
+            config_path: PathBuf::from("/etc/nestgate"),
+            data_path: PathBuf::from("/var/lib/nestgate"),
+            service_installed: true,
+            features: features.clone(),
+        };
+        assert_eq!(info.features.len(), 5);
+        assert!(info.features.contains(&"monitoring".to_string()));
+    }
+
+    #[test]
+    fn test_installer_new() {
+        let installer = NestGateInstaller::new(None);
+        assert!(installer.is_ok());
+    }
+
+    #[test]
+    fn test_installer_new_with_path() {
+        let install_dir = Some(PathBuf::from("/custom/install"));
+        let installer = NestGateInstaller::new(install_dir);
+        assert!(installer.is_ok());
+    }
+
+    #[test]
+    fn test_installer_new_with_different_paths() {
+        let paths = vec![
+            "/usr/local/nestgate",
+            "/opt/nestgate",
+            "/home/user/nestgate",
+            "C:\\Program Files\\NestGate",
+        ];
+
+        for path in paths {
+            let installer = NestGateInstaller::new(Some(PathBuf::from(path)));
+            assert!(
+                installer.is_ok(),
+                "Failed to create installer with path: {}",
+                path
+            );
+        }
+    }
+
+    #[test]
+    fn test_installation_info_debug() {
+        let info = create_test_installation_info();
+        let debug_str = format!("{:?}", info);
+        assert!(debug_str.contains("InstallationInfo"));
+        assert!(debug_str.contains("1.0.0"));
+    }
+
+    #[test]
+    fn test_installation_info_version_formats() {
+        let versions = vec!["1.0.0", "2.1.3", "0.9.0-beta", "3.0.0-rc1"];
+
+        for version in versions {
+            let info = InstallationInfo {
+                version: version.to_string(),
+                install_date: Utc::now(),
+                install_path: PathBuf::from("/opt/nestgate"),
+                config_path: PathBuf::from("/etc/nestgate"),
+                data_path: PathBuf::from("/var/lib/nestgate"),
+                service_installed: true,
+                features: vec![],
+            };
+            assert_eq!(info.version, version);
+        }
+    }
+
+    #[test]
+    fn test_installation_info_path_types() {
+        let install_paths = vec![
+            PathBuf::from("/"),
+            PathBuf::from("/opt/nestgate"),
+            PathBuf::from("C:\\Program Files\\NestGate"),
+            PathBuf::from("/usr/local/bin"),
+        ];
+
+        for path in install_paths {
+            let info = InstallationInfo {
+                version: "1.0.0".to_string(),
+                install_date: Utc::now(),
+                install_path: path.clone(),
+                config_path: PathBuf::from("/etc/nestgate"),
+                data_path: PathBuf::from("/var/lib/nestgate"),
+                service_installed: true,
+                features: vec![],
+            };
+            assert_eq!(info.install_path, path);
+        }
+    }
+
+    #[test]
+    fn test_installer_multiple_instances() {
+        let installer1 = NestGateInstaller::new(None);
+        let installer2 = NestGateInstaller::new(Some(PathBuf::from("/opt/nestgate")));
+
+        // Both should be valid instances
+        assert!(installer1.is_ok());
+        assert!(installer2.is_ok());
+    }
+
+    #[test]
+    fn test_installation_info_service_states() {
+        let installed = InstallationInfo {
+            version: "1.0.0".to_string(),
+            install_date: Utc::now(),
+            install_path: PathBuf::from("/opt/nestgate"),
+            config_path: PathBuf::from("/etc/nestgate"),
+            data_path: PathBuf::from("/var/lib/nestgate"),
+            service_installed: true,
+            features: vec![],
+        };
+        assert!(installed.service_installed);
+
+        let not_installed = InstallationInfo {
+            version: "1.0.0".to_string(),
+            install_date: Utc::now(),
+            install_path: PathBuf::from("/opt/nestgate"),
+            config_path: PathBuf::from("/etc/nestgate"),
+            data_path: PathBuf::from("/var/lib/nestgate"),
+            service_installed: false,
+            features: vec![],
+        };
+        assert!(!not_installed.service_installed);
     }
 }

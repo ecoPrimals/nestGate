@@ -1,3 +1,5 @@
+//! Monitor module
+
 use std::path::PathBuf;
 
 use tracing::info;
@@ -10,10 +12,12 @@ use crate::error::BinResult;
 pub struct MonitorManager {}
 
 impl MonitorManager {
+    /// Creates a new instance
     pub fn new() -> Self {
         Self {}
     }
 
+    /// Start Monitoring
     pub async fn start_monitoring(
         &mut self, 
         interval: u64, 
@@ -34,10 +38,13 @@ impl MonitorManager {
         }
         
         // Simulate monitoring
+        // ✅ MODERN CONCURRENT: Use interval timer for proper async coordination
+        let mut interval_timer = tokio::time::interval(std::time::Duration::from_secs(interval));
+        
         for i in 1..=5 {
+            interval_timer.tick().await; // Wait for next interval
             println!("📈 Metrics #{}: CPU: {}%, Memory: {}MB, Storage: {}GB", 
                 i, 15 + i * 2, 45 + i * 3, 234 + i);
-            tokio::time::sleep(std::time::Duration::from_secs(interval)).await;
         }
         
         println!("✅ Monitoring completed");
@@ -47,6 +54,7 @@ impl MonitorManager {
 }
 
 impl Default for MonitorManager {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

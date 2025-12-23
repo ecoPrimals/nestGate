@@ -28,6 +28,7 @@ pub struct ProductionCache {
 }
 
 impl Default for ProductionCache {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             data: std::sync::Arc::new(tokio::sync::RwLock::new(HashMap::new())),
@@ -36,17 +37,20 @@ impl Default for ProductionCache {
 }
 
 impl ZeroCostCache<String, Vec<u8>> for ProductionCache {
+    /// Get
     async fn get(&self, key: &String) -> Option<Vec<u8>> {
         let data = self.data.read().await;
         data.get(key).cloned()
     }
 
+    /// Set
     async fn set(&self, key: String, value: Vec<u8>) -> Result<()> {
         let mut data = self.data.write().await;
         data.insert(key, value);
         Ok(())
     }
 
+    /// Remove
     async fn remove(&self, key: &String) -> Option<Vec<u8>> {
         let mut data = self.data.write().await;
         data.remove(key)
@@ -54,21 +58,25 @@ impl ZeroCostCache<String, Vec<u8>> for ProductionCache {
 }
 
 #[derive(Default)]
+/// Developmentcache
 pub struct DevelopmentCache {
     data: HashMap<String, Vec<u8>>,
 }
 
 impl ZeroCostCache<String, Vec<u8>> for DevelopmentCache {
+    /// Get
     async fn get(&self, key: &String) -> Option<Vec<u8>> {
         self.data.get(key).cloned()
     }
 
+    /// Set
     async fn set(&self, key: String, value: Vec<u8>) -> Result<()> {
         // For development, we simulate the operation
         let _ = (key, value);
         Ok(())
     }
 
+    /// Remove
     async fn remove(&self, key: &String) -> Option<Vec<u8>> {
         // For development, we simulate the operation
         let _ = key;
@@ -85,6 +93,7 @@ pub struct ZeroCostUniversalAdapterImpl<Storage, Security, Network> {
     network: Network,
 }
 impl<Storage, Security, Network> ZeroCostUniversalAdapterImpl<Storage, Security, Network> {
+    /// Creates a new instance
     pub fn new(storage: Storage, security: Security, network: Network) -> Self {
         Self {
             storage,
@@ -133,6 +142,7 @@ pub type DevelopmentAdapter = ZeroCostUniversalAdapterImpl<
 >;
 /// Zero-cost `NestGate` system with compile-time composition
 #[allow(dead_code)]
+/// Zerocostnestgate
 pub struct ZeroCostNestGate<Adapter, Cache, const MAX_CONNECTIONS: usize = 1000> {
     adapter: Adapter,
     cache: Cache,

@@ -1,7 +1,9 @@
 // Simplified, unified installer configuration using canonical patterns
 
 // Migration utilities no longer needed - using canonical configurations
-use nestgate_core::config::canonical_master::NestGateCanonicalConfig;
+//! Config module
+
+use nestgate_core::config::canonical_primary::NestGateCanonicalConfig;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
@@ -28,11 +30,15 @@ pub mod validation;
 /// Installer configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InstallerConfig {
+    /// Configuration for base
     pub base_config: NestGateCanonicalConfig,
+    /// Installation Path
     pub installation_path: String,
+    /// Environment
     pub environment: String,
 }
 impl Default for InstallerConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             base_config: NestGateCanonicalConfig::default(),
@@ -74,6 +80,7 @@ impl InstallerConfig {
 
 /// Installer-specific configuration extensions
 /// Domain-specific fields that don't belong in unified base configs
+#[allow(dead_code)] // Reserved for future installer extensions
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct InstallerExtensions {
     /// Installation mode and behavior
@@ -85,6 +92,7 @@ pub struct InstallerExtensions {
     /// Enable verbose output
     pub verbose: bool,
 }
+#[allow(dead_code)] // Reserved for future installation modes
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub enum InstallMode {
     #[default]
@@ -97,12 +105,13 @@ pub enum InstallMode {
 pub mod installer_config_factory {
     use super::InstallerConfig;
     // CANONICAL MODERNIZATION: Use canonical config builder instead of missing builders module
-    use nestgate_core::config::canonical_master::NestGateCanonicalConfig;
+    use nestgate_core::config::canonical_primary::NestGateCanonicalConfig;
     // Use the correct Environment enum from unified_types
 
     /// Development configuration
     #[must_use]
     pub fn development() -> InstallerConfig {
+        // Installerconfig
         InstallerConfig {
             base_config: NestGateCanonicalConfig::default(),
             installation_path: "/opt/nestgate".to_string(),
@@ -112,6 +121,7 @@ pub mod installer_config_factory {
 
     /// Production configuration
     #[must_use]
+    #[allow(dead_code)] // Reserved for future production config
     pub fn production() -> InstallerConfig {
         InstallerConfig {
             base_config: NestGateCanonicalConfig::default(),

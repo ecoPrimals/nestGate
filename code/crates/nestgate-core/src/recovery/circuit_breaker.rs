@@ -10,6 +10,7 @@ use tracing::{debug, info, warn};
 
 /// Circuit breaker states
 #[derive(Debug, Clone, PartialEq)]
+/// Circuitstate
 pub enum CircuitState {
     /// Circuit is closed - requests pass through
     Closed,
@@ -21,6 +22,7 @@ pub enum CircuitState {
 
 /// Circuit breaker configuration
 #[derive(Debug, Clone)]
+/// Configuration for CircuitBreaker
 pub struct CircuitBreakerConfig {
     /// Failure threshold to open circuit
     pub failure_threshold: u32,
@@ -33,6 +35,7 @@ pub struct CircuitBreakerConfig {
 }
 
 impl Default for CircuitBreakerConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             failure_threshold: 5,
@@ -45,6 +48,7 @@ impl Default for CircuitBreakerConfig {
 
 /// Circuit breaker implementation
 #[derive(Debug)]
+/// Circuitbreaker
 pub struct CircuitBreaker {
     /// Circuit breaker configuration
     config: CircuitBreakerConfig,
@@ -293,11 +297,17 @@ impl CircuitBreaker {
 
 /// Circuit breaker metrics
 #[derive(Debug, Clone)]
+/// Circuitbreakermetrics
 pub struct CircuitBreakerMetrics {
+    /// Service name
     pub service_name: String,
+    /// State
     pub state: CircuitState,
+    /// Count of failure
     pub failure_count: u32,
+    /// Count of success
     pub success_count: u32,
+    /// Last Failure Time
     pub last_failure_time: Option<Instant>,
 }
 

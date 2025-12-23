@@ -14,6 +14,7 @@ use serde::{Deserialize, Serialize};
 /// **CANONICAL**: Unified event type for all system events
 /// This replaces multiple scattered EventType enums with a single, comprehensive classification
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+/// Types of UnifiedEvent
 pub enum UnifiedEventType {
     // === CONNECTION EVENTS ===
     /// Connection established (WebSocket, RPC, etc.)
@@ -118,6 +119,7 @@ pub enum UnifiedEventType {
 }
 
 impl Default for UnifiedEventType {
+    /// Returns the default instance
     fn default() -> Self {
         Self::SystemMonitoring
     }
@@ -221,20 +223,32 @@ impl UnifiedEventType {
 
 /// Event categories for grouping and filtering
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+/// Eventcategory
 pub enum EventCategory {
+    /// Connection
     Connection,
+    /// Data
     Data,
+    /// Service
     Service,
+    /// Security
     Security,
+    /// System
     System,
+    /// Storage
     Storage,
+    /// Streaming
     Streaming,
+    /// Notification
     Notification,
+    /// Workflow
     Workflow,
+    /// Custom
     Custom,
 }
 /// Event priority levels
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+/// Eventpriority
 pub enum EventPriority {
     Low = 1,
     Normal = 2,
@@ -244,6 +258,7 @@ pub enum EventPriority {
 /// **MIGRATION HELPERS**
 /// These functions help migrate from old EventType enums to the unified system
 impl From<&str> for UnifiedEventType {
+    /// From
     fn from(s: &str) -> Self {
         match s.to_lowercase().as_str() {
             "connectionestablished" | "connection_established" => Self::ConnectionEstablished,
@@ -272,6 +287,7 @@ impl From<&str> for UnifiedEventType {
 }
 
 impl std::fmt::Display for UnifiedEventType {
+    /// Fmt
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Custom(s) => write!(f, "Custom({s})"),

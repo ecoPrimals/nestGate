@@ -1,0 +1,25 @@
+Processing sensor data locally (no cloud):
+
+Hourly Aggregations:
+  • Average temperature by zone (8 zones)
+  • Min/max humidity readings
+  • Soil moisture trends
+  Processing time: <1 second
+  
+Anomaly Detection:
+  • Temperature spikes (>35°C alert)
+  • Humidity drops (<40% alert)
+  • Soil dryness (<20% moisture)
+  Detection latency: <5 seconds (real-time)
+  
+Video Analytics:
+  • Motion detection (save only active periods)
+  • Object detection (vehicles, animals, people)
+  • Time-lapse generation (1 frame/minute)
+  Processing: Real-time on-device (no cloud ML)
+  
+Storage Optimization:
+  • Keep raw data: 30 days
+  • Keep hourly aggregates: 1 year
+  • Keep daily summaries: Forever
+  Space saved: 90% vs. keeping all raw data

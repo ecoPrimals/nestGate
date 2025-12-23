@@ -17,6 +17,7 @@ use std::time::Duration;
 /// - Connection limits, buffer sizes
 /// - Protocol-specific settings
 #[derive(Debug, Clone)]
+/// Networkdomainconstants
 pub struct NetworkDomainConstants {
     /// Port configuration
     pub ports: NetworkPorts,
@@ -37,6 +38,7 @@ pub struct NetworkDomainConstants {
     pub protocols: NetworkProtocols,
 }
 #[derive(Debug, Clone)]
+/// Networkports
 pub struct NetworkPorts {
     /// Primary API server port
     pub api: u16,
@@ -64,6 +66,7 @@ pub struct NetworkPorts {
 }
 
 #[derive(Debug, Clone)]
+/// Networkaddresses
 pub struct NetworkAddresses {
     /// Default bind address
     pub bind: &'static str,
@@ -85,6 +88,7 @@ pub struct NetworkAddresses {
 }
 
 #[derive(Debug, Clone)]
+/// Networktimeouts
 pub struct NetworkTimeouts {
     /// Connection establishment timeout
     pub connection: Duration,
@@ -109,6 +113,7 @@ pub struct NetworkTimeouts {
 }
 
 #[derive(Debug, Clone)]
+/// Networklimits
 pub struct NetworkLimits {
     /// Maximum concurrent connections
     pub max_connections: usize,
@@ -130,6 +135,7 @@ pub struct NetworkLimits {
 }
 
 #[derive(Debug, Clone)]
+/// Networkbuffers
 pub struct NetworkBuffers {
     /// Default network buffer size
     pub default: usize,
@@ -151,6 +157,7 @@ pub struct NetworkBuffers {
 }
 
 #[derive(Debug, Clone)]
+/// Networkprotocols
 pub struct NetworkProtocols {
     /// HTTP protocol version
     pub http_version: &'static str,
@@ -169,6 +176,7 @@ pub struct NetworkProtocols {
 }
 
 impl Default for NetworkDomainConstants {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             ports: NetworkPorts {
@@ -186,8 +194,8 @@ impl Default for NetworkDomainConstants {
                 localhost: "127.0.0.1",
                 any: "0.0.0.0",
                 loopback: "127.0.0.1",
-                api_base: "http://localhost:8080/api/v1",
-                discovery: "http://localhost:8083/discovery",
+                api_base: "http://localhost:18080/api/v1", // Test port
+                discovery: "http://localhost:18083/discovery", // Test port
             },
             timeouts: NetworkTimeouts {
                 connection: Duration::from_secs(30),

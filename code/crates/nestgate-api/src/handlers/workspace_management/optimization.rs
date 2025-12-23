@@ -2,6 +2,8 @@
 // Advanced ZFS optimization including compression, recordsize, cache settings,
 // deduplication, and AI-assisted optimization recommendations.
 
+//! Optimization module
+
 use axum::{extract::Json, extract::Path, http::StatusCode};
 use serde_json::{json, Value};
 
@@ -81,6 +83,7 @@ struct StoragePattern {
     read_write_ratio: f64,
 }
 
+/// Analyze Storage Patterns
 fn analyze_storage_patterns(dataset_name: &str) -> StoragePattern {
     // Get file statistics using zfs and system commands
     let mut file_types = std::collections::HashMap::new();
@@ -114,6 +117,7 @@ fn analyze_storage_patterns(dataset_name: &str) -> StoragePattern {
     }
 }
 
+/// Optimize Compression
 fn optimize_compression(dataset_name: &str, pattern: &StoragePattern) -> Option<String> {
     // Choose compression algorithm based on file type distribution
     let optimal_compression = if pattern.file_type_distribution.get("text").unwrap_or(&0.0) > &0.5 {
@@ -141,6 +145,7 @@ fn optimize_compression(dataset_name: &str, pattern: &StoragePattern) -> Option<
     }
 }
 
+/// Optimize Recordsize
 fn optimize_recordsize(dataset_name: &str, pattern: &StoragePattern) -> Option<String> {
     // Determine optimal recordsize based on workload patterns
     let optimal_recordsize = if pattern.sequential_vs_random > 0.8 {
@@ -168,6 +173,7 @@ fn optimize_recordsize(dataset_name: &str, pattern: &StoragePattern) -> Option<S
     }
 }
 
+/// Optimize Cache Settings
 fn optimize_cache_settings(dataset_name: &str, pattern: &StoragePattern) -> Option<String> {
     // Optimize cache settings based on read/write patterns
     let (primarycache, secondarycache) = if pattern.read_write_ratio > 5.0 {
@@ -197,6 +203,7 @@ fn optimize_cache_settings(dataset_name: &str, pattern: &StoragePattern) -> Opti
     }
 }
 
+/// Optimize Deduplication
 fn optimize_deduplication(dataset_name: &str) -> Option<String> {
     // Enable deduplication if it's beneficial
     let result = std::process::Command::new("zfs")
@@ -215,17 +222,18 @@ fn optimize_deduplication(dataset_name: &str) -> Option<String> {
     }
 }
 
+/// Request Ai Optimization
 async fn request_ai_optimization(dataset_name: &str, pattern: &StoragePattern) -> Option<String> {
-    // Try to use any available AI primal provider via universal adapter
-    // Create universal adapter for ecosystem integration
-    use nestgate_core::constants::hardcoding::{addresses, ports};
-    let endpoint = std::env::var("NESTGATE_ECOSYSTEM_ENDPOINT").unwrap_or_else(|_| {
-        format!(
-            "http://{}:{}",
-            addresses::LOCALHOST_NAME,
-            ports::HTTP_DEFAULT
-        )
-    });
+    // ✅ MIGRATED: Now uses capability-based discovery (not primal names!)
+    // Try to use any available AI provider via capability discovery
+    use nestgate_core::config::runtime::{capability_url, get_config};
+
+    // Get endpoint via capability-based discovery (not primal names!)
+    let endpoint = capability_url("ai") // AI capability (any provider)
+        .or_else(|| capability_url("intelligence")) // Alternative capability name
+        .or_else(|| capability_url("orchestration")) // Fallback to orchestration
+        .unwrap_or_else(|| get_config().network.api_base_url());
+
     let mut _adapter = nestgate_core::universal_adapter::UniversalAdapter::new(endpoint);
 
     // Discover available AI capabilities
@@ -267,6 +275,7 @@ async fn request_ai_optimization(dataset_name: &str, pattern: &StoragePattern) -
     None
 }
 
+/// Gets Optimization Stats
 fn get_optimization_stats(dataset_name: &str) -> Value {
     // Get final statistics after optimization
     let stats_result = std::process::Command::new("zfs")

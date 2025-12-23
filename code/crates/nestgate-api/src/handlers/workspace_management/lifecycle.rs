@@ -13,6 +13,22 @@ use tracing::{debug, error, info, warn};
 
 /// Backup configuration for workspace operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// 
+/// **Migration Path**:
+/// ```rust
+/// // OLD (deprecated):
+/// use crate::config::BackupConfig;
+/// 
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::config::BackupConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+/// 
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for Backup
 pub struct BackupConfig {
     /// Backup name/identifier
     pub backup_name: String,
@@ -28,6 +44,22 @@ pub struct BackupConfig {
 
 /// Restore configuration for workspace operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// 
+/// **Migration Path**:
+/// ```rust,ignore
+/// // OLD (deprecated):
+/// use crate::network::config::RestoreConfig;
+/// 
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::RestoreConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+/// 
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for Restore
 pub struct RestoreConfig {
     /// Backup to restore from
     pub backup_name: String,
@@ -41,6 +73,22 @@ pub struct RestoreConfig {
 
 /// Migration configuration for workspace operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// 
+/// **Migration Path**:
+/// ```rust
+/// // OLD (deprecated):
+/// use crate::config::MigrationConfig;
+/// 
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::config::MigrationConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+/// 
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for Migration
 pub struct MigrationConfig {
     /// Target pool for migration
     pub target_pool: String,
@@ -54,6 +102,7 @@ pub struct MigrationConfig {
 
 /// Migration strategy options
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Migrationstrategy
 pub enum MigrationStrategy {
     /// Copy data to new location, keep original
     Copy,
@@ -81,8 +130,8 @@ pub fn backup_workspace(
 
     let dataset_name = format!("nestpool/workspaces/{workspace_id}");
     let snapshot_name = format!("{}@backup_{}", dataset_name, config.backup_name);
-    let backup_dir = std::env::var("NESTGATE_BACKUP_DIR")
-        .unwrap_or_else(|_| "/var/backups/nestgate".to_string());
+    use nestgate_core::error::utilities::safe_env_var_or_default;
+    let backup_dir = safe_env_var_or_default("NESTGATE_BACKUP_DIR", "/var/backups/nestgate");
     let backup_file = format!(
         "{}/workspace_{}_{}.zfs",
         backup_dir, workspace_id, config.backup_name
@@ -225,8 +274,8 @@ pub fn restore_workspace(
 
     let target_workspace = config.target_workspace_id.as_ref().unwrap_or(&workspace_id);
     let dataset_name = format!("nestpool/workspaces/{target_workspace}");
-    let backup_dir = std::env::var("NESTGATE_BACKUP_DIR")
-        .unwrap_or_else(|_| "/var/backups/nestgate".to_string());
+    use nestgate_core::error::utilities::safe_env_var_or_default;
+    let backup_dir = safe_env_var_or_default("NESTGATE_BACKUP_DIR", "/var/backups/nestgate");
     let backup_file = format!(
         "{}/workspace_{}_{}.zfs",
         backup_dir, workspace_id, config.backup_name
@@ -388,10 +437,14 @@ pub fn migrate_workspace(
     }
 
     // Step 2: Create migration snapshot
+    // Modern: Proper error handling for system time
     let timestamp = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map(|d| d.as_secs())
-        .unwrap_or_else(|_| 0); // Fallback to 0 if system time is before UNIX_EPOCH
+        .unwrap_or_else(|_| {
+            warn!("⚠️ System time before UNIX epoch, using current timestamp");
+            0
+        });
     
     let migration_snapshot = format!(
         "{}@migrate_{}",
@@ -456,8 +509,8 @@ pub fn list_workspace_backups(
 ) -> Result<Json<Value>, StatusCode> {
     info!("📋 Listing backups for workspace: {}", workspace_id);
 
-    let backup_dir = std::env::var("NESTGATE_BACKUP_DIR")
-        .unwrap_or_else(|_| "/var/backups/nestgate".to_string());
+    use nestgate_core::error::utilities::safe_env_var_or_default;
+    let backup_dir = safe_env_var_or_default("NESTGATE_BACKUP_DIR", "/var/backups/nestgate");
 
     let backup_pattern = format!("workspace_{workspace_id}_");
     let mut backups = Vec::new();
@@ -504,6 +557,7 @@ pub fn list_workspace_backups(
 
 // Private helper functions
 
+/// Gets Workspace Info
 async fn get_workspace_info(dataset_name: &str) -> Result<Value, ()> {
     let info_result = Command::new("zfs")
         .args([
@@ -537,6 +591,7 @@ async fn get_workspace_info(dataset_name: &str) -> Result<Value, ()> {
     }
 }
 
+/// Perform Copy Migration
 async fn perform_copy_migration(
     snapshot: &str,
     target_dataset: &str,
@@ -629,6 +684,7 @@ async fn perform_copy_migration(
     }
 }
 
+/// Perform Move Migration
 async fn perform_move_migration(
     snapshot: &str,
     target_dataset: &str,
@@ -692,6 +748,7 @@ async fn perform_move_migration(
     }
 }
 
+/// Perform Replicate Migration
 async fn perform_replicate_migration(
     snapshot: &str,
     target_dataset: &str,
@@ -716,3 +773,54 @@ async fn perform_replicate_migration(
         "note": "Incremental replication can be performed using the same snapshot base"
     }))
 }
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+/// 
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Restoreconfigcanonical
+pub type RestoreConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using RestoreConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+/// 
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Backupconfigcanonical
+pub type BackupConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using BackupConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+/// 
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Migrationconfigcanonical
+pub type MigrationConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using MigrationConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+

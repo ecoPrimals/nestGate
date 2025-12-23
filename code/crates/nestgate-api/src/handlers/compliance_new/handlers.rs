@@ -191,10 +191,12 @@ mod tests {
     use tokio::sync::RwLock;
     use chrono::Duration as ChronoDuration;
 
+    /// Creates  Test State
     fn create_test_state() -> ComplianceState {
         Arc::new(RwLock::new(ComplianceManager::new()))
     }
 
+    /// Creates  Test Retention Policy
     fn create_test_retention_policy() -> RetentionPolicy {
         RetentionPolicy {
             id: "test-policy".to_string(),
@@ -362,7 +364,7 @@ mod tests {
     #[test]
     fn test_initialize_compliance_manager_creates_manager() {
         let manager = initialize_compliance_manager();
-        assert!(manager.regulatory_frameworks.len() > 0);
+        assert!(manager.regulatory_frameworks!debug_str.is_empty());
     }
 
     #[test]

@@ -2,6 +2,8 @@
 // Contains utility functions for parsing ZFS output, capacity calculations,
 // and other helper functions used throughout the ZFS manager.
 
+//! Utilities module
+
 use super::types::CapacityInfo;
 use crate::error::{create_zfs_error, ZfsOperation};
 use nestgate_core::Result;

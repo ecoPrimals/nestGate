@@ -8,7 +8,7 @@ use std::time::SystemTime;
 
 #[test]
 fn test_health_status_variants() {
-    let statuses = vec![
+    let statuses = [
         HealthStatus::Healthy,
         HealthStatus::Warning,
         HealthStatus::Critical,
@@ -46,7 +46,7 @@ fn test_health_status_display() {
 fn test_health_status_debug() {
     let status = HealthStatus::Healthy;
     let debug_str = format!("{:?}", status);
-    assert!(debug_str.len() > 0);
+    assert!(!debug_str.is_empty());
 }
 
 #[test]
@@ -118,7 +118,7 @@ fn test_health_report_debug() {
     };
 
     let debug_str = format!("{:?}", report);
-    assert!(debug_str.len() > 0);
+    assert!(!debug_str.is_empty());
 }
 
 #[test]
@@ -139,7 +139,7 @@ fn test_health_report_clone() {
 
 #[test]
 fn test_alert_level_variants() {
-    let levels = vec![AlertLevel::Info, AlertLevel::Warning, AlertLevel::Critical];
+    let levels = [AlertLevel::Info, AlertLevel::Warning, AlertLevel::Critical];
 
     assert_eq!(levels.len(), 3);
 }
@@ -148,7 +148,7 @@ fn test_alert_level_variants() {
 fn test_alert_level_debug() {
     let level = AlertLevel::Warning;
     let debug_str = format!("{:?}", level);
-    assert!(debug_str.len() > 0);
+    assert!(!debug_str.is_empty());
 }
 
 #[test]
@@ -212,7 +212,7 @@ fn test_alert_debug() {
     };
 
     let debug_str = format!("{:?}", alert);
-    assert!(debug_str.len() > 0);
+    assert!(!debug_str.is_empty());
 }
 
 #[test]
@@ -236,7 +236,7 @@ fn test_alert_clone() {
 fn test_health_status_serialization() {
     let status = HealthStatus::Healthy;
     let json = serde_json::to_string(&status).expect("Failed to serialize");
-    assert!(json.len() > 0);
+    assert!(!json.is_empty());
 }
 
 #[test]
@@ -282,7 +282,7 @@ fn test_health_report_deserialization() {
 fn test_alert_level_serialization() {
     let level = AlertLevel::Critical;
     let json = serde_json::to_string(&level).expect("Failed to serialize");
-    assert!(json.len() > 0);
+    assert!(!json.is_empty());
 }
 
 #[test]
@@ -364,31 +364,30 @@ fn test_multiple_alerts() {
 
 #[test]
 fn test_health_report_collection() {
-    let mut reports = Vec::new();
-
-    reports.push(HealthReport {
-        component_type: "pool".to_string(),
-        component_name: "pool1".to_string(),
-        status: HealthStatus::Healthy,
-        last_check: SystemTime::now(),
-        details: "OK".to_string(),
-    });
-
-    reports.push(HealthReport {
-        component_type: "pool".to_string(),
-        component_name: "pool2".to_string(),
-        status: HealthStatus::Warning,
-        last_check: SystemTime::now(),
-        details: "High usage".to_string(),
-    });
-
-    reports.push(HealthReport {
-        component_type: "pool".to_string(),
-        component_name: "pool3".to_string(),
-        status: HealthStatus::Critical,
-        last_check: SystemTime::now(),
-        details: "Failure".to_string(),
-    });
+    let now = SystemTime::now();
+    let reports = vec![
+        HealthReport {
+            component_type: "pool".to_string(),
+            component_name: "pool1".to_string(),
+            status: HealthStatus::Healthy,
+            last_check: now,
+            details: "OK".to_string(),
+        },
+        HealthReport {
+            component_type: "pool".to_string(),
+            component_name: "pool2".to_string(),
+            status: HealthStatus::Warning,
+            last_check: now,
+            details: "High usage".to_string(),
+        },
+        HealthReport {
+            component_type: "pool".to_string(),
+            component_name: "pool3".to_string(),
+            status: HealthStatus::Critical,
+            last_check: now,
+            details: "Failure".to_string(),
+        },
+    ];
 
     assert_eq!(reports.len(), 3);
 

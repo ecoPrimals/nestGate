@@ -9,27 +9,51 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
 // Export canonical types as primary API
-pub use nestgate_core::config::canonical_master::{
+pub use nestgate_core::config::canonical_primary::{
     ZfsBackendConfig, ZfsFailSafeConfig, ZfsHandlerConfig, ZfsObservabilityConfig,
     ZfsPerformanceConfig, ZfsSecurityConfig,
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
+///
+/// **Migration Path**:
+/// ```rust,ignore
+/// // OLD (deprecated):
+/// use crate::network::config::RemoteConfig;
+///
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::RemoteConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+///
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(
+    since = "0.11.0",
+    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
+/// Configuration for Remote
 pub struct RemoteConfig {
+    /// Remote ZFS service endpoint URL
     pub endpoint: String,
+    /// Connection timeout duration
     pub timeout: Duration,
+    /// Optional authentication token
     pub auth: Option<String>,
 }
 
 /// Primary ZFS service configuration - uses canonical system
 pub type ZfsServiceConfig = ZfsHandlerConfig;
 /// Create default ZFS service configuration using canonical system
+#[must_use]
 pub fn default_zfs_config() -> ZfsHandlerConfig {
     ZfsHandlerConfig::default()
 }
 /// Create ZFS configuration from environment using canonical system
+#[must_use]
 pub fn zfs_config_from_env() -> ZfsHandlerConfig {
-    use nestgate_core::config::canonical_master::handler_config::CanonicalHandlerConfigs;
+    use nestgate_core::config::canonical_primary::handler_config::CanonicalHandlerConfigs;
     // Use specific default for handlers since the full config may be complex
     let handlers_config = CanonicalHandlerConfigs::default();
     handlers_config.zfs
@@ -55,14 +79,38 @@ pub type SecurityConfig = ZfsSecurityConfig;
 
 /// Circuit breaker configuration for fail-safe operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
+///
+/// **Migration Path**:
+/// ```rust,ignore
+/// // OLD (deprecated):
+/// use crate::network::config::CircuitBreakerConfig;
+///
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::CircuitBreakerConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+///
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(
+    since = "0.11.0",
+    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
+/// Configuration for CircuitBreaker
 pub struct CircuitBreakerConfig {
+    /// Whether circuit breaker is enabled
     pub enabled: bool,
+    /// Number of failures before circuit opens
     pub failure_threshold: u32,
+    /// Time to wait before attempting recovery
     pub recovery_timeout: Duration,
+    /// Maximum calls allowed in half-open state
     pub half_open_max_calls: u32,
 }
 
 impl Default for CircuitBreakerConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -75,13 +123,36 @@ impl Default for CircuitBreakerConfig {
 
 /// Timeout configuration for operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
+///
+/// **Migration Path**:
+/// ```rust,ignore
+/// // OLD (deprecated):
+/// use crate::network::config::TimeoutConfig;
+///
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::TimeoutConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+///
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(
+    since = "0.11.0",
+    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
+/// Configuration for Timeout
 pub struct TimeoutConfig {
+    /// Timeout for ZFS operations
     pub operation_timeout: Duration,
+    /// Timeout for establishing connections
     pub connection_timeout: Duration,
+    /// Timeout for health check operations
     pub health_check_timeout: Duration,
 }
 
 impl Default for TimeoutConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             operation_timeout: Duration::from_secs(60),
@@ -93,14 +164,20 @@ impl Default for TimeoutConfig {
 
 /// Retry policy configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Retrypolicy
 pub struct RetryPolicy {
+    /// Maximum number of retry attempts
     pub max_attempts: u32,
+    /// Initial delay before first retry
     pub initial_delay: Duration,
+    /// Maximum delay between retries
     pub max_delay: Duration,
+    /// Multiplier for exponential backoff
     pub backoff_multiplier: f64,
 }
 
 impl Default for RetryPolicy {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             max_attempts: 3,
@@ -113,11 +190,66 @@ impl Default for RetryPolicy {
 
 /// ZFS backend type for configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of ZfsBackend
 pub enum ZfsBackendType {
+    /// Native ZFS backend (local system commands)
     Native,
+    /// Remote ZFS backend (network connections)
     Remote(RemoteConfig),
+    /// Mock backend for testing
     Mock,
 }
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+///
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Remoteconfigcanonical
+pub type RemoteConfigCanonical =
+    nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using RemoteConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+///
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Circuitbreakerconfigcanonical
+pub type CircuitBreakerConfigCanonical =
+    nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using CircuitBreakerConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+///
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Timeoutconfigcanonical
+pub type TimeoutConfigCanonical =
+    nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using TimeoutConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
 
 #[cfg(test)]
 mod tests {

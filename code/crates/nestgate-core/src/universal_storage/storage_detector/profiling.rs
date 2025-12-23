@@ -2,6 +2,8 @@
 //
 // Performance benchmarking and profiling for storage systems.
 
+//! Profiling module
+
 use super::types::{DetectedStorage, PerformanceProfile};
 use crate::unified_enums::storage_types::UnifiedStorageType;
 use crate::Result;
@@ -16,6 +18,7 @@ pub struct PerformanceProfiler {
     test_data_size: usize,
 }
 impl Default for PerformanceProfiler {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

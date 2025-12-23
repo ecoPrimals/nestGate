@@ -7,7 +7,7 @@ use nestgate_zfs::config::{CompressionType, PoolType};
 
 #[test]
 fn test_pool_type_variants() {
-    let types = vec![
+    let types = [
         PoolType::Standard,
         PoolType::Mirror,
         PoolType::RaidZ1,
@@ -29,7 +29,7 @@ fn test_pool_type_debug() {
     let pool_type = PoolType::Mirror;
     let debug_str = format!("{:?}", pool_type);
 
-    assert!(debug_str.len() > 0);
+    assert!(!debug_str.is_empty());
     assert!(debug_str.contains("Mirror"));
 }
 
@@ -48,7 +48,7 @@ fn test_pool_type_serialization() {
     let pool_type = PoolType::RaidZ1;
     let json = serde_json::to_string(&pool_type).expect("Failed to serialize");
 
-    assert!(json.len() > 0);
+    assert!(!json.is_empty());
 }
 
 #[test]
@@ -72,7 +72,7 @@ fn test_all_pool_types_serialize() {
 
     for pool_type in types {
         let json = serde_json::to_string(&pool_type).expect("Failed to serialize");
-        assert!(json.len() > 0);
+        assert!(!json.is_empty());
     }
 }
 
@@ -80,7 +80,7 @@ fn test_all_pool_types_serialize() {
 
 #[test]
 fn test_compression_type_variants() {
-    let types = vec![
+    let types = [
         CompressionType::None,
         CompressionType::Lz4,
         CompressionType::Gzip,
@@ -101,7 +101,7 @@ fn test_compression_type_debug() {
     let compression = CompressionType::Lz4;
     let debug_str = format!("{:?}", compression);
 
-    assert!(debug_str.len() > 0);
+    assert!(!debug_str.is_empty());
     assert!(debug_str.contains("Lz4"));
 }
 
@@ -120,7 +120,7 @@ fn test_compression_type_serialization() {
     let compression = CompressionType::Gzip;
     let json = serde_json::to_string(&compression).expect("Failed to serialize");
 
-    assert!(json.len() > 0);
+    assert!(!json.is_empty());
 }
 
 #[test]
@@ -143,7 +143,7 @@ fn test_all_compression_types_serialize() {
 
     for compression in types {
         let json = serde_json::to_string(&compression).expect("Failed to serialize");
-        assert!(json.len() > 0);
+        assert!(!json.is_empty());
     }
 }
 
@@ -182,21 +182,19 @@ fn test_match_compression_type() {
 
 #[test]
 fn test_pool_type_collection() {
-    let mut types = Vec::new();
-    types.push(PoolType::Standard);
-    types.push(PoolType::Mirror);
-    types.push(PoolType::RaidZ1);
+    let types = [PoolType::Standard, PoolType::Mirror, PoolType::RaidZ1];
 
     assert_eq!(types.len(), 3);
 }
 
 #[test]
 fn test_compression_type_collection() {
-    let mut compressions = Vec::new();
-    compressions.push(CompressionType::None);
-    compressions.push(CompressionType::Lz4);
-    compressions.push(CompressionType::Gzip);
-    compressions.push(CompressionType::Zstd);
+    let compressions = [
+        CompressionType::None,
+        CompressionType::Lz4,
+        CompressionType::Gzip,
+        CompressionType::Zstd,
+    ];
 
     assert_eq!(compressions.len(), 4);
 }
@@ -221,13 +219,14 @@ fn test_pool_and_compression_combination() {
 
 #[test]
 fn test_multiple_configurations() {
+    #[allow(dead_code)]
     struct PoolConfig {
         name: String,
         pool_type: PoolType,
         compression: CompressionType,
     }
 
-    let configs = vec![
+    let configs = [
         PoolConfig {
             name: "pool1".to_string(),
             pool_type: PoolType::Standard,
@@ -330,7 +329,7 @@ fn test_serialize_pool_type_vector() {
     let types = vec![PoolType::Standard, PoolType::Mirror, PoolType::RaidZ1];
 
     let json = serde_json::to_string(&types).expect("Failed to serialize");
-    assert!(json.len() > 0);
+    assert!(!json.is_empty());
 }
 
 #[test]
@@ -342,7 +341,7 @@ fn test_serialize_compression_type_vector() {
     ];
 
     let json = serde_json::to_string(&types).expect("Failed to serialize");
-    assert!(json.len() > 0);
+    assert!(!json.is_empty());
 }
 
 #[test]

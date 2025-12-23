@@ -2,11 +2,11 @@
 //! 
 //! This test validates NAS setup E2E workflow functionality using canonical patterns
 //! **CANONICAL MODERNIZATION**: Updated to use simple, working patterns
+//!
+//! **MODERN CONCURRENCY**: Uses yield_now() for async coordination instead of sleep().
 
-use nestgate_core::config::canonical_master::NestGateCanonicalConfig as NestGateUnifiedConfig;
+use nestgate_core::config::canonical_primary::NestGateCanonicalConfig as NestGateUnifiedConfig;
 use nestgate_core::constants::Environment;
-use std::time::Duration;
-use tokio::time::sleep;
 use tracing::info;
 
 /// Test NAS setup E2E workflow configuration
@@ -19,7 +19,7 @@ async fn test_nas_setup_workflow_config() -> Result<(), Box<dyn std::error::Erro
     assert!(!config.system.instance_name.is_empty());
     
     // Test environment-specific NAS setup E2E workflow configuration
-    let dev_config = nestgate_core::config::canonical_master::create_config_for_environment(Environment::Development);
+    let dev_config = nestgate_core::config::canonical_primary::create_config_for_environment(Environment::Development);
     assert!(!dev_config.system.instance_name.is_empty());
     
     info!("✅ NAS setup E2E workflow configuration test completed");
@@ -43,7 +43,7 @@ async fn test_nas_initialization_workflow() -> Result<(), Box<dyn std::error::Er
         info!("Executing {} operation ({}ms)", operation, duration);
         
         // Simulate initialization operation
-        sleep(Duration::from_millis(duration as u64)).await;
+        tokio::task::yield_now().await;
         
         // Verify initialization operation is valid
         assert!(!operation.is_empty(), "Operation should be specified");
@@ -72,7 +72,7 @@ async fn test_nas_storage_configuration_workflow() -> Result<(), Box<dyn std::er
         info!("Processing {} operation ({}ms)", operation, duration);
         
         // Simulate storage operation
-        sleep(Duration::from_millis(duration as u64)).await;
+        tokio::task::yield_now().await;
         
         // Verify storage operation is valid
         assert!(!operation.is_empty(), "Operation should be specified");
@@ -94,7 +94,7 @@ async fn test_nas_setup_workflow_monitoring() -> Result<(), Box<dyn std::error::
     // Test NAS setup workflow monitoring cycles
     for i in 0..6 {
         let cycle_time = (i + 1) * 25;
-        sleep(Duration::from_millis(cycle_time as u64)).await;
+        tokio::task::yield_now().await;
         
         let elapsed = start_time.elapsed();
         info!("NAS setup monitoring cycle {}: {}ms, total elapsed: {:?}", i + 1, cycle_time, elapsed);
@@ -125,7 +125,7 @@ async fn test_nas_setup_network_configuration() -> Result<(), Box<dyn std::error
         info!("Testing {} scenario ({}ms)", scenario, configuration_time);
         
         // Simulate network configuration scenario
-        sleep(Duration::from_millis(configuration_time as u64)).await;
+        tokio::task::yield_now().await;
         
         // Verify network configuration scenario is valid
         assert!(!scenario.is_empty(), "Scenario should be specified");
@@ -154,7 +154,7 @@ async fn test_nas_setup_workflow_validation() -> Result<(), Box<dyn std::error::
         info!("Testing {} feature ({}ms)", feature, processing_time);
         
         // Simulate validation feature
-        sleep(Duration::from_millis(processing_time as u64)).await;
+        tokio::task::yield_now().await;
         
         // Verify validation feature is valid
         assert!(!feature.is_empty(), "Feature should be specified");
@@ -172,13 +172,13 @@ async fn test_nas_setup_workflow_environments() -> Result<(), Box<dyn std::error
     info!("🌍 Testing NAS setup E2E workflow across environments");
     
     // Test development environment NAS setup E2E workflow
-    let dev_config = nestgate_core::config::canonical_master::create_config_for_environment(Environment::Development);
+    let dev_config = nestgate_core::config::canonical_primary::create_config_for_environment(Environment::Development);
     assert!(!dev_config.system.instance_name.is_empty());
     assert!(matches!(dev_config.environment, Environment::Development));
     info!("Development NAS setup E2E workflow configuration validated");
     
     // Test production environment NAS setup E2E workflow
-    let prod_config = nestgate_core::config::canonical_master::create_config_for_environment(Environment::Production);
+    let prod_config = nestgate_core::config::canonical_primary::create_config_for_environment(Environment::Production);
     assert!(!prod_config.system.instance_name.is_empty());
     assert!(matches!(prod_config.environment, Environment::Production));
     info!("Production NAS setup E2E workflow configuration validated");

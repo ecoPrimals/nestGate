@@ -14,16 +14,24 @@ use std::time::{Duration, Instant};
 
 /// Test type enumeration
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
+/// Types of Test
 pub enum TestType {
     #[default]
+    /// Load
     Load,
+    /// Stress
     Stress,
+    /// Spike
     Spike,
+    /// Volume
     Volume,
+    /// Endurance
     Endurance,
+    /// Scalability
     Scalability,
 }
 impl std::fmt::Display for TestType {
+    /// Fmt
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{self:?}")
     }
@@ -33,51 +41,73 @@ impl std::fmt::Display for TestType {
 
 // 🚀 MODERNIZATION: UnifiedConfig now uses UnifiedPerformanceTestConfig directly
 /// **MODERNIZED**: `UnifiedConfig` now uses `UnifiedPerformanceTestConfig` directly  
-pub type PerformanceTestConfig = crate::config::canonical_master::PerformanceConfig;
+pub type PerformanceTestConfig = crate::config::canonical_primary::PerformanceConfig;
 // 🚀 FULLY MODERN: All performance testing functionality now uses UnifiedPerformanceTestConfig directly
 // No legacy implementation needed - use UnifiedPerformanceTestConfig::default() and methods
 
 /// Response time thresholds for performance validation
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Responsetimethresholds
 pub struct ResponseTimeThresholds {
+    /// P50
     pub p50: Duration,
+    /// P95
     pub p95: Duration,
+    /// P99
     pub p99: Duration,
+    /// Max
     pub max: Duration,
 }
 /// Test data configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for TestData
 pub struct TestDataConfig {
+    /// Use Random Data
     pub use_random_data: bool,
+    /// Size of data
     pub data_size: usize,
+    /// Data Variance
     pub data_variance: f64,
 }
 /// Optimal timeout result
 #[derive(Debug, Clone)]
+/// Optimaltimeout
 pub struct OptimalTimeout {
+    /// Timeout
     pub timeout: Duration,
+    /// Confidence
     pub confidence: f64,
+    /// Test Iterations
     pub test_iterations: usize,
+    /// Baseline Latency
     pub baseline_latency: Duration,
 }
 /// Performance test result
 #[derive(Debug, Clone)]
+/// Testresult
 pub struct TestResult {
+    /// Test name
     pub test_name: String,
+    /// Latency
     pub latency: Duration,
+    /// Success
     pub success: bool,
+    /// Error Message
     pub error_message: Option<String>,
+    /// Timestamp
     pub timestamp: std::time::Instant,
 }
 /// Enhanced Performance Test Runner with unified configuration
 #[derive(Debug)]
+/// Performancetestrunner
 pub struct PerformanceTestRunner {
-    pub config: crate::config::canonical_master::PerformanceConfig,
+    /// Configuration for
+    pub config: crate::config::canonical_primary::PerformanceConfig,
 }
 impl PerformanceTestRunner {
     /// Create new performance test runner
     #[must_use]
-    pub fn new(config: crate::config::canonical_master::PerformanceConfig) -> Self {
+    pub fn new(config: crate::config::canonical_primary::PerformanceConfig) -> Self {
         Self { config }
     }
 
@@ -165,8 +195,10 @@ impl PerformanceTestRunner {
 
 /// Performance Discovery Service
 #[derive(Debug)]
+/// Performancediscovery
 pub struct PerformanceDiscovery;
 impl Default for PerformanceDiscovery {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -189,7 +221,7 @@ impl PerformanceDiscovery {
     /// - Network or I/O errors occur
     pub async fn discover_optimal_timeout(&self, _service_name: &str) -> Result<Duration> {
         // Use default performance test config for discovery
-        let config = crate::config::canonical_master::PerformanceConfig::default();
+        let config = crate::config::canonical_primary::PerformanceConfig::default();
         let runner = PerformanceTestRunner::new(config);
 
         let optimal = runner.discover_optimal_timeout().await?;

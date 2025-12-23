@@ -1,0 +1,23 @@
+{
+  "operation": "replicate",
+  "timestamp": "2025-12-22T07:53:58-05:00",
+  "status": "success",
+  "source": {
+    "tower": "westgate",
+    "port": 7200
+  },
+  "destination": {
+    "tower": "stradgate",
+    "port": 7202,
+    "service": {"service":"nestgate-api","version":"0.1.0","status":"ok"}
+  },
+  "dataset": {
+    "id": "hiv1-genome-k03455",
+    "checksum": "3d660cd824b3979393b6d4aa475f4c68e5931ba9467626a16ae2ebdb2c2f7a26",
+    "checksum_verified": true
+  },
+  "performance": {
+    "transfer_time_ms": 156,
+    "bandwidth_mbps": 0.511026
+  }
+}

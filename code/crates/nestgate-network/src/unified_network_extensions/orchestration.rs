@@ -7,6 +7,8 @@ use std::time::Duration;
 
 /// Network orchestration and service discovery settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(deprecated)] // Using OrchestrationRetryConfig during transition period
+/// Networkorchestrationsettings
 pub struct NetworkOrchestrationSettings {
     /// Enable universal orchestration discovery
     pub enable_orchestration: bool,
@@ -19,12 +21,33 @@ pub struct NetworkOrchestrationSettings {
     /// Maximum concurrent orchestration connections
     pub max_orchestration_connections: u32,
     /// Orchestration retry configuration
+    /// Intentional: Transition period until v0.12.0 (May 2026)
+    /// Migration in progress to CanonicalNetworkConfig
     pub retry_config: OrchestrationRetryConfig,
     /// Service registration settings
     pub service_registration: ServiceRegistrationSettings,
 }
 /// Orchestration retry configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+///
+/// **Migration Path**:
+/// ```rust,ignore
+/// // OLD (deprecated):
+/// use crate::network::config::OrchestrationRetryConfig;
+///
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::OrchestrationRetryConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+///
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(
+    since = "0.11.0",
+    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
+/// Configuration for OrchestrationRetry
 pub struct OrchestrationRetryConfig {
     /// Maximum retry attempts
     pub max_attempts: u32,
@@ -39,6 +62,7 @@ pub struct OrchestrationRetryConfig {
 }
 /// Service registration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Serviceregistrationsettings
 pub struct ServiceRegistrationSettings {
     /// Auto-register services
     pub auto_register: bool,
@@ -50,6 +74,7 @@ pub struct ServiceRegistrationSettings {
     pub service_metadata: HashMap<String, String>,
 }
 impl Default for NetworkOrchestrationSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enable_orchestration: true,
@@ -57,13 +82,16 @@ impl Default for NetworkOrchestrationSettings {
             discovery_interval: Duration::from_secs(60),
             health_check_interval: Duration::from_secs(30),
             max_orchestration_connections: 100,
+            #[allow(deprecated)] // Using deprecated during migration period
             retry_config: OrchestrationRetryConfig::default(),
             service_registration: ServiceRegistrationSettings::default(),
         }
     }
 }
 
+#[allow(deprecated)] // Deprecated struct with migration path documented
 impl Default for OrchestrationRetryConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             max_attempts: 3,
@@ -76,6 +104,7 @@ impl Default for OrchestrationRetryConfig {
 }
 
 impl Default for ServiceRegistrationSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             auto_register: true,
@@ -85,3 +114,20 @@ impl Default for ServiceRegistrationSettings {
         }
     }
 }
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+///
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Orchestrationretryconfigcanonical
+pub type OrchestrationRetryConfigCanonical =
+    nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using OrchestrationRetryConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.

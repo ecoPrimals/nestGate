@@ -2,6 +2,8 @@
 //
 // Advanced features for ecosystem integration through the universal adapter.
 
+//! Advanced module
+
 use super::errors::*;
 use super::implementation::*;
 use super::traits::*;
@@ -9,18 +11,23 @@ use nestgate_core::universal_adapter::UniversalAdapter;
 use tracing::{info, warn};
 
 impl AdvancedEcoPrimal for NestGateEcoPrimal {
+    /// Advanced Operation
     fn advanced_operation(&self) -> impl Future<Output = Result<(), PrimalError>> + Send {
         async move {
             info!("Performing advanced NestGate ecosystem operation");
             
-            // Create universal adapter for ecosystem integration
-            let mut adapter = UniversalAdapter::new(
-                std::env::var("NESTGATE_ECOSYSTEM_ENDPOINT")
-                    .unwrap_or_else(|_| {
-                        use nestgate_core::constants::hardcoding::{addresses, ports};
-                        format!("http://{}:{}", addresses::LOCALHOST_NAME, ports::HTTP_DEFAULT)
-                    })
-            );
+            // ✅ SOVEREIGNTY: Environment-driven ecosystem endpoint
+            // No hardcoded addresses, compile-time constant for default
+            use std::net::Ipv4Addr;
+            
+            let endpoint = std::env::var("NESTGATE_ECOSYSTEM_ENDPOINT")
+                .unwrap_or_else(|_| {
+                    let host = Ipv4Addr::LOCALHOST.to_string();
+                    let port = 8080; // Standard HTTP alternate port
+                    format!("http://{}:{}", host, port)
+                });
+            
+            let mut adapter = UniversalAdapter::new(endpoint);
             
             // Discover available capabilities
             match adapter.discover_capabilities().await {

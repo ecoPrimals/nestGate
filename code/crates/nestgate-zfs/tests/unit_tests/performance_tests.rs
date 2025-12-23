@@ -1,6 +1,8 @@
 //
 // Tests for performance metrics and tier functionality
 
+//! Performance Tests module
+
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::time::SystemTime;
@@ -22,7 +24,7 @@ mod performance_unit_tests {
     use super::*;
 
     #[test]
-    fn test_tier_metrics_hierarchy() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_tier_metrics_hierarchy() -> std::result::Result<(), Box<dyn std::error::Error>> {
         // Test that tier metrics have expected hierarchy
         let hot_metrics = TierMetrics::default_for_tier(CoreStorageTier::Hot);
         let warm_metrics = TierMetrics::default_for_tier(CoreStorageTier::Warm);
@@ -38,7 +40,7 @@ mod performance_unit_tests {
     Ok(())
     }
     #[test]
-    fn test_performance_profile_characteristics() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_performance_profile_characteristics() -> std::result::Result<(), Box<dyn std::error::Error>> {
         // Test performance profile characteristics
         let config = ZfsConfig::default();
         let hot_config = config.get_tier_config(&CoreStorageTier::Hot);
@@ -76,7 +78,7 @@ mod performance_unit_tests {
     }
 
     #[test]
-    fn test_alert_conditions() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_alert_conditions() -> std::result::Result<(), Box<dyn std::error::Error>> {
         // Test alert condition creation
         let alert = AlertCondition {
             metric: AlertMetric::ReadLatency,

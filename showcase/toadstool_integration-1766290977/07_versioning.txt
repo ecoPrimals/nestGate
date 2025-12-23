@@ -1,0 +1,4 @@
+  NestGate: Creating snapshot for version control
+  Snapshot: model-weights-resnet50-v1@2025-12-21-15:00
+  Metadata: Training params, dataset version, metrics
+  ✅ Snapshot created

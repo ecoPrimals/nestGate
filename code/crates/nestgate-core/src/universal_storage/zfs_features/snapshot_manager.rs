@@ -1,3 +1,5 @@
+//! Snapshot Manager module
+
 use crate::error::NestGateError;
 use std::collections::HashMap;
 //
@@ -13,6 +15,7 @@ type SnapshotMetadataMap = Arc<RwLock<HashMap<String, SnapshotMetadata>>>;
 
 /// Snapshot manager for creating and managing ZFS snapshots
 #[derive(Debug)]
+/// Manager for Snapshot operations
 pub struct SnapshotManager {
     // cow_manager: Arc<CowManager>,  // Temporarily disabled
     config: SnapshotConfig,
@@ -150,19 +153,25 @@ impl SnapshotManager {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Snapshot
 pub struct SnapshotConfig;
 
 impl Default for SnapshotConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self
     }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Snapshotid
 pub struct SnapshotId(pub String);
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Snapshotmetadata
 pub struct SnapshotMetadata {
+    /// Unique identifier
     pub id: SnapshotId,
+    /// Name
     pub name: String,
 }

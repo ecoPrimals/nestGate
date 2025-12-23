@@ -34,14 +34,42 @@ pub use safe_batch_processor::{SafeSimdBatchProcessor, SimdBatchProcessor};
 // Re-export commonly used types for convenience
 pub use types::{SimdCapabilities, SimdError, SimdStats};
 
-// Type aliases for common configurations
+/// Standard batch processor with balanced performance (batch size: 32)
+///
+/// This is the recommended default for most use cases, providing a good balance
+/// between throughput and latency.
 pub type StandardBatchProcessor = SimdBatchProcessor<32>;
+
+/// High-throughput batch processor optimized for bulk operations (batch size: 128)
+///
+/// Optimized for scenarios where maximizing throughput is more important than
+/// minimizing latency. Best for large-scale data processing pipelines.
 pub type HighThroughputBatchProcessor = SimdBatchProcessor<128>;
+
+/// Low-latency batch processor optimized for responsiveness (batch size: 8)
+///
+/// Optimized for scenarios where minimizing latency is critical. Best for
+/// real-time processing and interactive applications.
 pub type LowLatencyBatchProcessor = SimdBatchProcessor<8>;
 
-// SIMD processing constants
+/// Default SIMD batch size for balanced performance
+///
+/// This value (32) provides a good balance between throughput and latency
+/// for most use cases. It's large enough to benefit from SIMD optimizations
+/// while small enough to maintain reasonable latency.
 pub const DEFAULT_BATCH_SIZE: usize = 32;
+
+/// Maximum allowed SIMD batch size
+///
+/// This limit (1024) prevents excessive memory usage and ensures reasonable
+/// processing times. Larger batches may not provide additional SIMD benefits
+/// and can increase latency unacceptably.
 pub const MAX_BATCH_SIZE: usize = 1024;
+
+/// Minimum SIMD batch size for meaningful optimization
+///
+/// Below this threshold (4), SIMD optimizations provide minimal benefit
+/// and scalar implementations may be more efficient.
 pub const MIN_BATCH_SIZE: usize = 4;
 
 #[cfg(test)]
@@ -76,6 +104,7 @@ mod integration_tests {
 
         // Verify constants are sensible - compile-time validation
         const _: () = assert!(MIN_BATCH_SIZE < DEFAULT_BATCH_SIZE);
+        ///  
         const _: () = assert!(DEFAULT_BATCH_SIZE < MAX_BATCH_SIZE);
     }
 

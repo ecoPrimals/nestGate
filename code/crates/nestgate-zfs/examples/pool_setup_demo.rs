@@ -2,6 +2,8 @@
 // Demonstrates the pure Rust ZFS pool setup functionality with hardware detection
 // and intelligent configuration recommendations.
 
+//! Pool Setup Demo module
+
 use nestgate_zfs::pool_setup::ZfsPoolSetup;
 use tracing::error;
 use tracing::info;
@@ -128,4 +130,6 @@ async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     info!("  1. Ensure the device is not in use");
     info!("  2. Run with sudo privileges");
     info!("  3. Use the setup_production_zfs() function");
+
+    Ok(())
 }

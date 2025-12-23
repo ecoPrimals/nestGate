@@ -32,14 +32,20 @@ pub mod defaults {
 
 /// Configuration for this module
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Config {
+/// Configuration for SchedulingTypes
+pub struct SchedulingTypesConfig {
+    /// Whether this feature is enabled
     pub enabled: bool,
+    /// Timeout
     pub timeout: Duration,
+    /// Max Connections
     pub max_connections: usize,
+    /// Size of buffer
     pub buffer_size: usize,
 }
 
-impl Default for Config {
+impl Default for SchedulingTypesConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -51,27 +57,37 @@ impl Default for Config {
 }
 
 /// Service interface re-exported from canonical source
-/// See: `crate::traits_root::service::Service` for the unified implementation
-pub use crate::traits_root::service::Service;
+/// See: `crate::traits::Service` for the unified implementation
+pub use crate::traits::Service;
 
 /// Health status enumeration
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+/// Status values for Health
 pub enum HealthStatus {
+    /// Healthy
     Healthy,
+    /// Degraded
     Degraded,
+    /// Unhealthy
     Unhealthy,
 }
 
 /// Performance metrics for monitoring
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Metrics
 pub struct Metrics {
+    /// Requests Processed
     pub requests_processed: u64,
+    /// Errors Encountered
     pub errors_encountered: u64,
+    /// Average Response Time
     pub average_response_time: Duration,
+    /// Memory Usage Bytes
     pub memory_usage_bytes: u64,
 }
 
 impl Default for Metrics {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             requests_processed: 0,
@@ -90,14 +106,15 @@ impl Default for Metrics {
 
 /// Default implementation of the service
 #[derive(Debug)]
+/// Service implementation for Default
 pub struct DefaultService {
-    config: Config,
+    config: SchedulingTypesConfig,
     metrics: Arc<tokio::sync::RwLock<Metrics>>,
 }
 
 impl DefaultService {
     /// Create a new service instance
-    pub fn new(config: Config) -> Self {
+    pub fn new(config: SchedulingTypesConfig) -> Self {
         Self {
             config,
             metrics: Arc::new(tokio::sync::RwLock::new(Metrics::default())),
@@ -111,6 +128,7 @@ impl DefaultService {
 }
 
 impl Service for DefaultService {
+    /// Initialize
     fn initialize(&self) -> impl std::future::Future<Output = Result<()>> + Send {
         // Initialization implementation
         tracing::info!("Initializing {} service with config: {:?}", 
@@ -118,11 +136,13 @@ impl Service for DefaultService {
         Ok(())
     }
     
+    /// Health Check
     fn health_check(&self) -> impl std::future::Future<Output = Result<HealthStatus>> + Send {
         // Health check implementation
         Ok(HealthStatus::Healthy)
     }
     
+    /// Shutdown
     fn shutdown(&self) -> impl std::future::Future<Output = Result<()>> + Send {
         // Shutdown implementation
         tracing::info!("Shutting down {} service", stringify!(types));
@@ -134,11 +154,11 @@ impl Service for DefaultService {
 
 /// Create a default service instance
 pub fn create_service() -> DefaultService {
-    DefaultService::new(Config::default())
+    DefaultService::new(SchedulingTypesConfig::default())
 }
 
 /// Validate configuration
-pub async fn validate_config(config: &Config) -> crate::Result<()> {
+pub async fn validate_config(config: &SchedulingTypesConfig) -> crate::Result<()> {
     if config.max_connections == 0 {
         return Err(NestGateUnifiedError::configuration_error(
             "max_connections must be greater than 0"
@@ -162,7 +182,7 @@ mod tests {
 
     #[test]
     fn test_config_default() {
-        let config = Config::default();
+        let config = SchedulingTypesConfig::default();
         assert!(config.enabled);
         assert_eq!(config.max_connections, DEFAULT_MAX_CONNECTIONS);
     }
@@ -179,7 +199,7 @@ mod tests {
     #[tokio::test]
     async fn test_service_creation() {
         let service = create_service();
-        let config = Config::default();
+        let config = SchedulingTypesConfig::default();
         
         assert!(service.initialize(&config).await.is_ok());
         assert_eq!(service.health_check().await.expect("Operation failed"), HealthStatus::Healthy);

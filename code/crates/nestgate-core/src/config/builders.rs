@@ -112,6 +112,7 @@ impl ConfigBuilder {
 }
 
 impl Default for ConfigBuilder {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -145,77 +146,8 @@ pub fn create_testing_config() -> Result<NestGateCanonicalConfig> {
         .build()
 }
 // ==================== SECTION ====================
-
-// ==================== SECTION ====================
 // Migration utilities have been removed as migration is complete.
-// All configurations now use canonical_master::NestGateCanonicalConfig directly.
-
-        // Migrate common environment variables
-        if let Ok(service_name) = std::env::var("NESTGATE_SERVICE_NAME") {
-            builder = builder.instance_name(service_name);
-        }
-
-        if let Ok(env) = std::env::var("NESTGATE_ENVIRONMENT") {
-            builder = builder.environment(env);
-        }
-
-        if let Ok(log_level) = std::env::var("NESTGATE_LOG_LEVEL") {
-            let level = match log_level.to_lowercase().as_str() {
-                "error" => LogLevel::Error,
-                "warn" => LogLevel::Warn,
-                "info" => LogLevel::Info,
-                "debug" => LogLevel::Debug,
-                "trace" => LogLevel::Trace,
-                _ => LogLevel::Info,
-            };
-            builder = builder.log_level(level);
-        }
-
-        if let Ok(debug) = std::env::var("NESTGATE_DEBUG") {
-            let debug_mode = debug.to_lowercase() == "true" || debug == "1";
-            builder = builder.debug_mode(debug_mode);
-        }
-
-        if let Ok(data_dir) = std::env::var("NESTGATE_DATA_DIR") {
-            builder = builder.data_dir(data_dir);
-        }
-
-        if let Ok(api_host) = std::env::var("NESTGATE_API_HOST") {
-            builder = builder.api_bind_address(api_host);
-        }
-
-        if let Ok(api_port) = std::env::var("NESTGATE_API_PORT") {
-            if let Ok(port) = api_port.parse::<u16>() {
-                builder = builder.api_port(port);
-            }
-        }
-
-        self.migration_stats.configs_migrated += 1;
-        builder.build()
-    }
-
-    /// Generate migration report
-    pub fn generate_report(&self) -> String {
-        format!(
-            "Migration Report:\n\
-             - Configurations migrated: {}\n\
-             - Warnings generated: {}\n\
-             - Deprecated fields removed: {}\n\
-             - Warnings: {:?}",
-            self.migration_stats.configs_migrated,
-            self.migration_stats.warnings_generated,
-            self.migration_stats.deprecated_fields_removed,
-            self.warnings
-        )
-    }
-}
-
-impl Default for ConfigMigrationManager {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
+// All configurations now use canonical_primary::NestGateCanonicalConfig directly.
 // ==================== SECTION ====================
 
 /// Configuration validation utilities

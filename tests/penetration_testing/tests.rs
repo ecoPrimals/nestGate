@@ -1,5 +1,5 @@
 /// Penetration Testing Tests
-use crate::common::config::CanonicalTestConfig;
+use nestgate_core::config::NestGateCanonicalConfig;
 
 #[tokio::test]
 async fn test_penetration_basic() -> Result<(), Box<dyn std::error::Error>> {

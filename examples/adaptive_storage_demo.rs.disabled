@@ -1,0 +1,194 @@
+// Adaptive Storage Demo - Shows NestGate's intelligent compression routing
+//
+// This example demonstrates:
+// - Entropy-based compression routing
+// - Different strategies for different data types
+// - Compression ratio reporting
+// - Metrics collection
+//
+// Run with: cargo run --example adaptive_storage_demo
+
+use anyhow::Result;
+use bytes::Bytes;
+use nestgate_core::storage::{NestGateStorage, StorageStrategy};
+use std::path::PathBuf;
+use tempfile::TempDir;
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    // Initialize tracing
+    tracing_subscriber::fmt::init();
+
+    println!("╔═══════════════════════════════════════════════════════════════╗");
+    println!("║                                                               ║");
+    println!("║    🎯 NestGate Adaptive Storage Demo                         ║");
+    println!("║                                                               ║");
+    println!("╚═══════════════════════════════════════════════════════════════╝");
+    println!();
+
+    // Create temporary storage directory
+    let temp_dir = TempDir::new()?;
+    let storage = NestGateStorage::new(temp_dir.path().to_path_buf());
+    storage.initialize().await?;
+
+    println!("✅ Storage initialized at: {:?}", temp_dir.path());
+    println!();
+
+    // Test 1: Genomic data (highly compressible)
+    println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    println!("Test 1: Genomic FASTA Data (Low Entropy)");
+    println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+
+    let genomic_data = create_genomic_data();
+    println!("Original size: {} bytes", genomic_data.len());
+
+    let receipt = storage.store(genomic_data.clone()).await?;
+    println!("Stored size:   {} bytes", receipt.stored_size);
+
+    let ratio = receipt.size as f64 / receipt.stored_size as f64;
+    println!("Compression:   {:.2}:1", ratio);
+    println!("Strategy:      {:?}", receipt.strategy);
+
+    match receipt.strategy {
+        StorageStrategy::Compressed { algorithm, ratio } => {
+            println!("Algorithm:     {:?}", algorithm);
+            println!("Actual ratio:  {:.2}:1", ratio);
+        }
+        _ => {}
+    }
+    println!();
+
+    // Test 2: Random data (uncompressible)
+    println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    println!("Test 2: Random Data (High Entropy)");
+    println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+
+    let random_data = create_random_data();
+    println!("Original size: {} bytes", random_data.len());
+
+    let receipt = storage.store(random_data.clone()).await?;
+    println!("Stored size:   {} bytes", receipt.stored_size);
+    println!("Strategy:      {:?}", receipt.strategy);
+
+    match receipt.strategy {
+        StorageStrategy::Raw => {
+            println!("✅ Correctly detected high entropy - skipped compression!");
+        }
+        _ => {
+            println!("⚠️  Unexpected strategy for random data");
+        }
+    }
+    println!();
+
+    // Test 3: Text data (compressible)
+    println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    println!("Test 3: Text Data (Moderate Entropy)");
+    println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+
+    let text_data = create_text_data();
+    println!("Original size: {} bytes", text_data.len());
+
+    let receipt = storage.store(text_data.clone()).await?;
+    println!("Stored size:   {} bytes", receipt.stored_size);
+
+    let ratio = receipt.size as f64 / receipt.stored_size as f64;
+    println!("Compression:   {:.2}:1", ratio);
+    println!("Strategy:      {:?}", receipt.strategy);
+    println!();
+
+    // Test 4: Deduplication
+    println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    println!("Test 4: Deduplication (Same Genomic Data)");
+    println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+
+    let receipt = storage.store(genomic_data.clone()).await?;
+    println!("Strategy:      {:?}", receipt.strategy);
+
+    match receipt.strategy {
+        StorageStrategy::Deduplicated => {
+            println!("✅ Correctly detected duplicate - no storage needed!");
+        }
+        _ => {
+            println!("⚠️  Expected deduplication");
+        }
+    }
+    println!();
+
+    // Test 5: Retrieval and verification
+    println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    println!("Test 5: Retrieval and Hash Verification");
+    println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+
+    let retrieved = storage.retrieve(&receipt.hash).await?;
+    println!("Retrieved:     {} bytes", retrieved.len());
+
+    let original_hash = blake3::hash(&genomic_data);
+    let retrieved_hash = blake3::hash(&retrieved);
+
+    if original_hash == retrieved_hash {
+        println!("✅ Hash verification passed!");
+    } else {
+        println!("❌ Hash mismatch!");
+    }
+    println!();
+
+    // Show metrics
+    println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    println!("Storage Metrics Summary");
+    println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+
+    let snapshot = storage.metrics_snapshot();
+    println!("Total operations:    {}", snapshot.total_operations);
+    println!("Total bytes stored:  {}", snapshot.total_bytes_stored);
+    println!("Total bytes saved:   {}", snapshot.total_bytes_saved);
+    println!("Savings percentage:  {:.1}%", snapshot.savings_percent);
+    println!(
+        "Avg compression:     {:.2}:1",
+        snapshot.compression_ratio_avg
+    );
+    println!("Avg entropy:         {:.2}", snapshot.entropy_avg);
+    println!();
+
+    println!("Strategy breakdown:");
+    for (strategy, count) in snapshot.strategy_counts.iter() {
+        println!("  {}: {} operations", strategy, count);
+    }
+    println!();
+
+    println!("╔═══════════════════════════════════════════════════════════════╗");
+    println!("║                                                               ║");
+    println!("║    ✅ Demo Complete! Adaptive storage working!               ║");
+    println!("║                                                               ║");
+    println!("╚═══════════════════════════════════════════════════════════════╝");
+
+    Ok(())
+}
+
+/// Create genomic FASTA data (highly compressible, low entropy)
+fn create_genomic_data() -> Bytes {
+    let mut data = String::from(">chr1 Example chromosome\n");
+
+    // Repetitive DNA sequences (ATCG pattern)
+    for _ in 0..100 {
+        data.push_str("ATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCG\n");
+    }
+
+    Bytes::from(data)
+}
+
+/// Create random data (uncompressible, high entropy)
+fn create_random_data() -> Bytes {
+    use rand::RngCore;
+
+    let mut rng = rand::thread_rng();
+    let mut data = vec![0u8; 10_000];
+    rng.fill_bytes(&mut data);
+
+    Bytes::from(data)
+}
+
+/// Create text data (compressible, moderate entropy)
+fn create_text_data() -> Bytes {
+    let text = "The quick brown fox jumps over the lazy dog. ".repeat(200);
+    Bytes::from(text)
+}

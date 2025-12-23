@@ -6,36 +6,63 @@
 /// - Registry-based configuration
 use crate::{NestGateError, Result};
 use std::collections::HashMap;
+use std::sync::Arc;
 use std::time::Duration;
+
+use super::registry_config::{RegistryConfig, SharedRegistryConfig};
 /// Discovery query configuration
 #[derive(Debug, Clone)]
+/// Discoveryquery
 pub struct DiscoveryQuery {
+    /// Service name
     pub service_name: String,
+    /// Query Type
     pub query_type: String,
+    /// Timeout
     pub timeout: Duration,
+    /// Fallback Enabled
     pub fallback_enabled: bool,
 }
 /// Service registry client
 #[derive(Debug)]
+/// Serviceregistryclient
 pub struct ServiceRegistryClient {
     base_url: Option<String>,
     timeout: Duration,
     registry_cache: HashMap<String, String>,
+    /// Configuration for
+    pub config: SharedRegistryConfig,
 }
+
 impl Default for ServiceRegistryClient {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
 }
 
 impl ServiceRegistryClient {
-    /// Create new service registry client
+    /// Create new service registry client using environment variables
+    /// NOTE: Creates config from env each time. For tests, use with_config() directly.
     #[must_use]
     pub fn new() -> Self {
+        let config = Arc::new(RegistryConfig::from_env());
         Self {
-            base_url: std::env::var("NESTGATE_REGISTRY_URL").ok(),
+            base_url: config.get_registry_url().map(|s| s.to_string()),
             timeout: Duration::from_secs(10),
             registry_cache: HashMap::new(),
+            config,
+        }
+    }
+
+    /// Create service registry client with injected configuration (for tests)
+    #[must_use]
+    pub fn with_config(config: SharedRegistryConfig) -> Self {
+        Self {
+            base_url: config.get_registry_url().map(|s| s.to_string()),
+            timeout: Duration::from_secs(10),
+            registry_cache: HashMap::new(),
+            config,
         }
     }
 
@@ -54,14 +81,9 @@ impl ServiceRegistryClient {
             return Ok(cachedvalue.clone());
         }
 
-        // Try environment-based registry lookup
-        let env_key = format!(
-            "NESTGATE_REGISTRY_{}_{}",
-            service_name.to_uppercase(),
-            query_type.to_uppercase()
-        );
-        if let Ok(value) = std::env::var(&env_key) {
-            return Ok(value);
+        // Try config-based registry lookup (captured from environment at initialization)
+        if let Some(value) = self.config.get_registry_entry(service_name, query_type) {
+            return Ok(value.to_string());
         }
 
         // Fallback to service mesh discovery
@@ -77,8 +99,8 @@ impl ServiceRegistryClient {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     pub fn query_service_mesh(&self, service_name: &str) -> Result<String> {
-        // Check for service mesh environment variables
-        if let Ok(mesh_endpoint) = std::env::var("NESTGATE_SERVICE_MESH_ENDPOINT") {
+        // Check for service mesh configuration (from injected config)
+        if let Some(mesh_endpoint) = self.config.get_service_mesh_endpoint() {
             return Ok(format!("{mesh_endpoint}/{service_name}"));
         }
 
@@ -86,7 +108,7 @@ impl ServiceRegistryClient {
         // DEPRECATED: Direct Kubernetes integration - migrate to capability-based orchestration
         // Migration Guide: Use ORCHESTRATION_DISCOVERY_ENDPOINT instead of KUBERNETES_NAMESPACE
         // Legacy compatibility maintained
-        if let Ok(k8s_namespace) = std::env::var("KUBERNETES_NAMESPACE") {
+        if let Some(k8s_namespace) = self.config.get_kubernetes_namespace() {
             tracing::warn!(
                 "DEPRECATED: KUBERNETES_NAMESPACE detected. Please migrate to ORCHESTRATION_DISCOVERY_ENDPOINT. \
                 This direct Kubernetes integration will be removed in version 4.0.0. \
@@ -98,7 +120,7 @@ impl ServiceRegistryClient {
         // DEPRECATED: Docker Compose service discovery - migrate to capability-based compute
         // Migration Guide: Use COMPUTE_DISCOVERY_ENDPOINT instead of DOCKER_COMPOSE_PROJECT
         // Legacy compatibility maintained
-        if std::env::var("DOCKER_COMPOSE_PROJECT").is_ok() {
+        if self.config.has_docker_compose_project() {
             tracing::warn!(
                 "DEPRECATED: DOCKER_COMPOSE_PROJECT detected. Please migrate to COMPUTE_DISCOVERY_ENDPOINT. \
                 This direct Docker integration will be removed in version 4.0.0. \
@@ -108,14 +130,17 @@ impl ServiceRegistryClient {
         }
 
         // Modern capability-based discovery (preferred method)
-        if let Ok(endpoint) = std::env::var("CAPABILITY_DISCOVERY_ENDPOINT") {
+        if let Some(endpoint) = self.config.get_capability_discovery_endpoint() {
             tracing::info!("Using modern capability-based discovery: {}", endpoint);
             return Ok(format!("{endpoint}/{service_name}"));
         }
 
-        // Fallback to localhost for development
-        Ok(std::env::var("NESTGATE_API_ENDPOINT")
-            .unwrap_or_else(|_| crate::constants::canonical_defaults::network::build_api_url()))
+        // Fallback to localhost for development (from config or default)
+        Ok(self
+            .config
+            .get_api_endpoint()
+            .map(|s| s.to_string())
+            .unwrap_or_else(crate::constants::canonical_defaults::network::build_api_url))
     }
 
     /// **CAPABILITY REGISTRATION**: Register capability endpoint
@@ -153,29 +178,21 @@ impl ServiceRegistryClient {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     pub fn discover_port_via_adapter(&self, service_name: &str, port_type: &str) -> Result<u16> {
-        // Try adapter-based discovery through environment
-        let adapter_env_key = format!(
-            "NESTGATE_ADAPTER_{}_{}_PORT",
-            service_name.to_uppercase(),
-            port_type.to_uppercase()
-        );
+        // Try adapter-based discovery through config (captured from environment at initialization)
+        let adapter_key = format!("{}_{}", service_name, port_type);
 
-        if let Ok(port_str) = std::env::var(&adapter_env_key) {
-            port_str.parse::<u16>().map_err(|e| {
-                NestGateError::configuration_error_detailed(
-                    "port_configuration".to_string(),
-                    format!("Invalid port configuration '{port_str}': {e}"),
-                    Some(port_str.clone()),
-                    Some("valid u16 integer".to_string()),
-                    true,
-                )
-            })
+        if let Some(port) = self.config.get_adapter_port(&adapter_key) {
+            Ok(port)
         } else {
             Err(NestGateError::configuration_error_detailed(
                 "adapter_configuration".to_string(),
                 format!("No adapter configuration found for {service_name}:{port_type}"),
                 None,
-                Some(format!("environment variable {adapter_env_key}")),
+                Some(format!(
+                    "environment variable NESTGATE_ADAPTER_{}_{}_PORT",
+                    service_name.to_uppercase(),
+                    port_type.to_uppercase()
+                )),
                 true,
             ))
         }
@@ -198,7 +215,7 @@ impl ServiceRegistryClient {
             self.base_url.is_some().to_string(),
         );
 
-        // Check environment-based discovery
+        // Check configuration-based discovery (captured from environment at initialization)
         let env_vars = vec![
             "NESTGATE_REGISTRY_URL",
             "NESTGATE_SERVICE_MESH_ENDPOINT",
@@ -209,7 +226,7 @@ impl ServiceRegistryClient {
         for env_var in env_vars {
             health.insert(
                 env_var.to_lowercase(),
-                std::env::var(env_var).is_ok().to_string(),
+                self.config.has_env_var(env_var).to_string(),
             );
         }
 
@@ -238,11 +255,8 @@ impl ServiceRegistryClient {
             warnings.push("No registry URL configured - using fallback discovery".to_string());
         }
 
-        // Check for service mesh configuration
-        if std::env::var("NESTGATE_SERVICE_MESH_ENDPOINT").is_err()
-            && std::env::var("KUBERNETES_NAMESPACE").is_err()
-            && std::env::var("DOCKER_COMPOSE_PROJECT").is_err()
-        {
+        // Check for service mesh configuration (from config)
+        if !self.config.has_service_mesh() {
             warnings.push(
                 "No service mesh configuration detected - using localhost fallback".to_string(),
             );
@@ -281,24 +295,26 @@ impl ServiceRegistryClient {
             self.registry_cache.len().to_string(),
         );
 
-        // Add discovery method availability
+        // Add discovery method availability (from config)
         config.insert(
             "service_mesh_available".to_string(),
-            std::env::var("NESTGATE_SERVICE_MESH_ENDPOINT")
-                .is_ok()
+            self.config
+                .has_env_var("NESTGATE_SERVICE_MESH_ENDPOINT")
                 .to_string(),
         );
         config.insert(
             // DEPRECATED: Kubernetes orchestration - migrate to capability-based orchestration
             // Capability-based discovery implemented
             "kubernetes_available".to_string(),
-            std::env::var("KUBERNETES_NAMESPACE").is_ok().to_string(),
+            self.config.has_env_var("KUBERNETES_NAMESPACE").to_string(),
         );
         config.insert(
             // DEPRECATED: Docker containerization - migrate to capability-based container runtime
             // Capability-based discovery implemented
             "docker_compose_available".to_string(),
-            std::env::var("DOCKER_COMPOSE_PROJECT").is_ok().to_string(),
+            self.config
+                .has_env_var("DOCKER_COMPOSE_PROJECT")
+                .to_string(),
         );
 
         Ok(config)

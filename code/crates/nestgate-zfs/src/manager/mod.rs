@@ -4,6 +4,8 @@
 // ZFS operations including pool management, dataset operations, snapshots, tier management,
 // and automated optimization.
 
+//! Manager module
+
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
@@ -20,14 +22,22 @@ use crate::{
 };
 
 // Module declarations
+/// AI-powered tier optimization
 pub mod ai_tier_optimization;
 pub mod dataset_operations;
 pub mod health;
 pub mod initialization;
 pub mod performance;
 pub mod pool_operations;
+/// ZFS manager type definitions
 pub mod types;
 pub mod utilities;
+
+// Test modules
+#[cfg(test)]
+mod tests;
+#[cfg(test)]
+mod tests_comprehensive;
 
 // Re-export types for convenience
 pub use types::*;
@@ -62,6 +72,7 @@ pub struct ZfsManager {
     orchestrator_enabled: bool,
 }
 impl std::fmt::Debug for ZfsManager {
+    /// Fmt
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("ZfsManager")
             .field("pool_manager", &self.pool_manager)

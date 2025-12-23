@@ -75,6 +75,7 @@ pub struct RoutingRule {
     pub priority: u32,
 }
 impl Default for NotificationSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -88,6 +89,7 @@ impl Default for NotificationSettings {
 }
 
 impl Default for NotificationFormattingSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             rich_formatting: true,
@@ -99,6 +101,7 @@ impl Default for NotificationFormattingSettings {
 }
 
 impl Default for NotificationThrottlingSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,

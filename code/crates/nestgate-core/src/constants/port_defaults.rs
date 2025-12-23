@@ -4,6 +4,8 @@
 //! All hardcoded port numbers should be replaced with these constants
 //! and made configurable via environment variables or configuration files.
 
+use super::port_defaults_config::PortConfig;
+
 // ==================== NESTGATE SERVICE PORTS ====================
 
 /// Default NestGate API server port
@@ -107,36 +109,84 @@ pub const DEFAULT_KAFKA_PORT: u16 = 9092;
 // ==================== HELPER FUNCTIONS ====================
 
 /// Get API port from environment or default
+/// NOTE: Creates config from env each time. For tests, use PortConfig directly.
 ///
 /// Reads from `NESTGATE_API_PORT` environment variable, falls back to default
 #[must_use]
 pub fn get_api_port() -> u16 {
-    std::env::var("NESTGATE_API_PORT")
-        .ok()
-        .and_then(|s| s.parse().ok())
-        .unwrap_or(DEFAULT_API_PORT)
+    PortConfig::from_env().get_api_port()
 }
 
 /// Get metrics port from environment or default
+/// NOTE: Creates config from env each time. For tests, use PortConfig directly.
 ///
 /// Reads from `NESTGATE_METRICS_PORT` environment variable, falls back to default
 #[must_use]
 pub fn get_metrics_port() -> u16 {
-    std::env::var("NESTGATE_METRICS_PORT")
-        .ok()
-        .and_then(|s| s.parse().ok())
-        .unwrap_or(DEFAULT_METRICS_PORT)
+    PortConfig::from_env().get_metrics_port()
 }
 
 /// Get health check port from environment or default
+/// NOTE: Creates config from env each time. For tests, use PortConfig directly.
 ///
 /// Reads from `NESTGATE_HEALTH_PORT` environment variable, falls back to default
 #[must_use]
 pub fn get_health_port() -> u16 {
-    std::env::var("NESTGATE_HEALTH_PORT")
-        .ok()
-        .and_then(|s| s.parse().ok())
-        .unwrap_or(DEFAULT_HEALTH_PORT)
+    PortConfig::from_env().get_health_port()
+}
+
+/// Get admin port from environment or default
+/// NOTE: Creates config from env each time. For tests, use PortConfig directly.
+///
+/// Reads from `NESTGATE_ADMIN_PORT` environment variable, falls back to default
+#[must_use]
+pub fn get_admin_port() -> u16 {
+    PortConfig::from_env().get_admin_port()
+}
+
+/// Get development port from environment or default
+/// NOTE: Creates config from env each time. For tests, use PortConfig directly.
+///
+/// Reads from `NESTGATE_DEV_PORT` environment variable, falls back to default
+#[must_use]
+pub fn get_dev_port() -> u16 {
+    PortConfig::from_env().get_dev_port()
+}
+
+/// Get PostgreSQL port from environment or default
+/// NOTE: Creates config from env each time. For tests, use PortConfig directly.
+///
+/// Reads from `NESTGATE_POSTGRES_PORT` environment variable, falls back to default
+#[must_use]
+pub fn get_postgres_port() -> u16 {
+    PortConfig::from_env().get_postgres_port()
+}
+
+/// Get Redis port from environment or default
+/// NOTE: Creates config from env each time. For tests, use PortConfig directly.
+///
+/// Reads from `NESTGATE_REDIS_PORT` environment variable, falls back to default
+#[must_use]
+pub fn get_redis_port() -> u16 {
+    PortConfig::from_env().get_redis_port()
+}
+
+/// Get Prometheus port from environment or default
+/// NOTE: Creates config from env each time. For tests, use PortConfig directly.
+///
+/// Reads from `NESTGATE_PROMETHEUS_PORT` environment variable, falls back to default
+#[must_use]
+pub fn get_prometheus_port() -> u16 {
+    PortConfig::from_env().get_prometheus_port()
+}
+
+/// Get Grafana port from environment or default
+/// NOTE: Creates config from env each time. For tests, use PortConfig directly.
+///
+/// Reads from `NESTGATE_GRAFANA_PORT` environment variable, falls back to default
+#[must_use]
+pub fn get_grafana_port() -> u16 {
+    PortConfig::from_env().get_grafana_port()
 }
 
 /// Parse port from string with validation
@@ -156,10 +206,11 @@ mod tests {
     #[test]
     fn test_port_constants_valid() {
         // All ports should be non-zero (u16 type ensures they're <= 65535)
-        assert!(DEFAULT_API_PORT > 0);
-        assert!(DEFAULT_METRICS_PORT > 0);
-        assert!(DEFAULT_POSTGRES_PORT > 0);
-        assert!(DEFAULT_REDIS_PORT > 0);
+        // These are const values but we verify they're set to non-zero
+        assert_ne!(DEFAULT_API_PORT, 0);
+        assert_ne!(DEFAULT_METRICS_PORT, 0);
+        assert_ne!(DEFAULT_POSTGRES_PORT, 0);
+        assert_ne!(DEFAULT_REDIS_PORT, 0);
     }
 
     #[test]
@@ -192,3 +243,8 @@ mod tests {
         assert_eq!(parse_port(""), None); // Empty string
     }
 }
+
+// Additional comprehensive tests in separate module for better organization
+#[cfg(test)]
+#[path = "port_defaults_tests.rs"]
+mod port_defaults_tests;

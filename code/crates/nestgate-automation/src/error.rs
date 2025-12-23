@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::fmt;
 /// Automation-specific error types
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Errors that can occur during Automation operations
 pub enum AutomationError {
     /// Analysis error
     AnalysisError(String),
@@ -17,6 +18,7 @@ pub enum AutomationError {
     CoreError(NestGateError),
 }
 impl fmt::Display for AutomationError {
+    /// Fmt
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             AutomationError::AnalysisError(msg) => write!(f, "Analysis error: {msg}"),
@@ -31,12 +33,14 @@ impl fmt::Display for AutomationError {
 impl std::error::Error for AutomationError {}
 
 impl From<NestGateError> for AutomationError {
+    /// From
     fn from(err: NestGateError) -> Self {
         AutomationError::CoreError(err)
     }
 }
 
 impl From<std::io::Error> for AutomationError {
+    /// From
     fn from(err: std::io::Error) -> Self {
         AutomationError::IoError(err.to_string())
     }
@@ -125,6 +129,7 @@ mod tests {
 
     #[test]
     fn test_error_is_send_sync() {
+        /// Assert Send Sync
         fn assert_send_sync<T: Send + Sync>() {}
         assert_send_sync::<AutomationError>();
     }

@@ -126,7 +126,8 @@ fn stress_test_consensus_math() -> Vec<String> {
 
     // Test consensus percentage edge cases
     let percentage = calculate_consensus_percentage(1, 0);
-    if !percentage.is_infinite() && percentage != 0.0 {
+    // ✅ MODERN: Use epsilon for zero check
+    if !percentage.is_infinite() && percentage.abs() > 1e-9 {
         issues.push(format!(
             "❌ Division by zero not handled properly: {percentage}"
         ));
@@ -143,7 +144,7 @@ fn stress_test_consensus_math() -> Vec<String> {
     }
 
 /// **RETURN BUILDERS STRESS TEST**
-fn stress_test_return_builders() -> Vec<String> {
+async fn stress_test_return_builders() -> Vec<String> {
     let mut issues = Vec::new();
     // Test with extreme permission lists
     let huge_permissions = vec!["permission".to_string(); 1_000_000];
@@ -171,13 +172,14 @@ fn stress_test_return_builders() -> Vec<String> {
         -1.0, // Invalid percentage
     );
 
-    if empty_grant.consensus_percentage < 0.0 {
+    // ✅ MODERN: Use epsilon for negative check
+    if empty_grant.consensus_percentage < -1e-9 {
         issues.push("❌ Negative consensus percentage not validated".to_string());
     }
 
-    // Test timestamp consistency
+    // Test timestamp consistency (non-blocking, concurrent)
     let response1 = build_api_success("test".to_string());
-    std::thread::sleep(std::time::Duration::from_millis(1));
+    tokio::time::sleep(std::time::Duration::from_millis(1)).await;
     let response2 = build_api_success("test".to_string());
 
     if response1.timestamp >= response2.timestamp {

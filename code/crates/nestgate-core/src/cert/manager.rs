@@ -4,7 +4,7 @@ use std::collections::HashMap;
 // unused Arc import removed
 // Import NestGateCanonicalConfig from unified_types module
 // Removed unused import for pedantic perfection
-use crate::config::canonical_master::NestGateCanonicalConfig; // Updated import
+use crate::config::canonical_primary::NestGateCanonicalConfig; // Updated import
 use crate::Result;
 
 /// Certificate manager that uses the universal adapter for ecosystem integration

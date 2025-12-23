@@ -29,6 +29,7 @@ pub struct SafeSimdBatchProcessor<const BATCH_SIZE: usize = 32> {
 impl<const BATCH_SIZE: usize> SafeSimdBatchProcessor<BATCH_SIZE> {
     /// Create new safe SIMD batch processor
     #[must_use]
+    /// Fn
     pub const fn new() -> Self {
         Self {
             _phantom: std::marker::PhantomData,
@@ -37,6 +38,7 @@ impl<const BATCH_SIZE: usize> SafeSimdBatchProcessor<BATCH_SIZE> {
 
     /// Get the batch size for this processor
     #[must_use]
+    /// Fn
     pub const fn batch_size(&self) -> usize {
         BATCH_SIZE
     }
@@ -138,6 +140,7 @@ impl<const BATCH_SIZE: usize> SafeSimdBatchProcessor<BATCH_SIZE> {
 }
 
 impl<const BATCH_SIZE: usize> Default for SafeSimdBatchProcessor<BATCH_SIZE> {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

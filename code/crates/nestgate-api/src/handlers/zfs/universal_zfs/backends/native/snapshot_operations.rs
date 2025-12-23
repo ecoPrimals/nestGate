@@ -1,10 +1,16 @@
-//
-// Contains all snapshot-related operations for the native ZFS backend.
+//! Snapshot-related operations for the native ZFS backend.
+//!
+//! This module provides zero-copy optimized ZFS snapshot operations including
+//! listing, creating, destroying, and rolling back snapshots.
+//!
+//! **Tests**: Located in `snapshot_operations_tests.rs` (sibling file)
+//! Note: Tests are in a separate file for better organization.
+//! Run with: `cargo test snapshot_operations`
 
 use std::collections::HashMap;
 // Removed unused tracing import
 
-use crate::handlers::zfs::universal_zfs::types::{
+use crate::handlers::zfs::universal_zfs_types::{
     SnapshotConfig, SnapshotInfo, UniversalZfsError, UniversalZfsResult,
 };
 use tracing::info;
@@ -30,23 +36,25 @@ pub async fn list_snapshots(service: &NativeZfsService) -> UniversalZfsResult<Ve
 }
 
 /// Parse a single snapshot line (zero-copy optimized)
-fn parse_snapshot_line(line: &str) -> Option<SnapshotInfo> {
+pub fn parse_snapshot_line(line: &str) -> Option<SnapshotInfo> {
     let parts: Vec<&str> = line.split('\t').collect();
     if parts.len() >= 3 {
         Some(SnapshotInfo {
             name: parts[0].into(),
-            dataset: parts[0].split('@').next().unwrap_or("").into(),
-            created_at: std::time::SystemTime::now(),
-            size_bytes: parse_size(parts[1]).unwrap_or(0),
+            creation_time: std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_secs(),
+            used: parse_size(parts[1]).unwrap_or(0),
+            referenced: parse_size(parts[1]).unwrap_or(0),
             properties: HashMap::new(),
-            description: None,
         })
     } else {
         None
     }
 }
 /// List snapshots for a specific dataset (zero-copy optimized)
-pub fn list_dataset_snapshots(
+pub async fn list_dataset_snapshots(
     service: &NativeZfsService,
     dataset: &str,
 ) -> UniversalZfsResult<Vec<SnapshotInfo>> {
@@ -76,7 +84,7 @@ pub fn list_dataset_snapshots(
 }
 
 /// Create a new ZFS snapshot (zero-copy optimized)
-pub fn create_snapshot(
+pub async fn create_snapshot(
     service: &NativeZfsService,
     config: &SnapshotConfig,
 ) -> UniversalZfsResult<SnapshotInfo> {
@@ -116,7 +124,7 @@ pub fn create_snapshot(
 }
 
 /// Destroy a ZFS snapshot
-pub fn destroy_snapshot(service: &NativeZfsService, name: &str) -> UniversalZfsResult<()> {
+pub async fn destroy_snapshot(service: &NativeZfsService, name: &str) -> UniversalZfsResult<()> {
     info!("Destroying snapshot: {}", name);
     // Execute `zfs destroy snapshot_name`
     service.execute_zfs_command(&["destroy", name]).await?;
@@ -125,7 +133,7 @@ pub fn destroy_snapshot(service: &NativeZfsService, name: &str) -> UniversalZfsR
 }
 
 /// Helper function to parse ZFS size strings (zero-copy optimized)
-fn parse_size(size_str: &str) -> Option<u64> {
+pub fn parse_size(size_str: &str) -> Option<u64> {
     if size_str == "-" {
         return Some(0);
     }

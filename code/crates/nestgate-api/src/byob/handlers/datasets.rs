@@ -2,6 +2,8 @@
 // This module contains all the HTTP handlers for dataset-related operations
 // including creating, reading, updating, and deleting datasets.
 
+//! Datasets module
+
 use axum::{
     extract::{Path, State},
     response::{IntoResponse, Json},

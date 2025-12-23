@@ -1,0 +1,13 @@
+Smart Farm Edge Deployment:
+  • Platform: Raspberry Pi 4 (4GB RAM, ARM64)
+  • Storage: 256GB USB SSD (faster than SD)
+  • Network: Ethernet (reliable) + WiFi (backup)
+  • Power: 5W consumption, battery backup available
+  • Location: Farm equipment shed (outdoor)
+  
+Edge Node Configuration:
+  • Node ID: edge-farm-001
+  • Storage Pool: nestgate-edge (256GB)
+  • Retention: 30 days sensors, 7 days video
+  • Sync Interval: Every hour (when online)
+  • Offline Buffer: 48 hours capacity

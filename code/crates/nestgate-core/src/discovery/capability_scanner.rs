@@ -3,13 +3,13 @@
 //! Environment capability detection implementation for the Infant Discovery Architecture.
 
 use crate::error::NestGateError;
-use async_trait::async_trait;
 use std::collections::HashMap;
-use std::env;
+use std::future::Future;
 use tracing::{debug, info, warn};
 
 /// Information about a discovered capability
 #[derive(Debug, Clone)]
+/// Capabilityinfo
 pub struct CapabilityInfo {
     /// Type of capability (orchestration, security, ai, etc.)
     pub capability_type: String,
@@ -22,92 +22,117 @@ pub struct CapabilityInfo {
 }
 
 /// Trait for capability discovery methods
-#[async_trait]
+///
+/// **NATIVE ASYNC**: Uses `impl Future` for zero-cost abstractions (no boxing overhead)
 pub trait DiscoveryMethod: Send + Sync {
-    /// Discover capabilities using this method
-    async fn discover(&self) -> Result<Vec<CapabilityInfo>, NestGateError>;
+    /// Discover capabilities using this method - native async, no boxing
+    fn discover(&self) -> impl Future<Output = Result<Vec<CapabilityInfo>, NestGateError>> + Send;
 
     /// Get the name of this discovery method
     fn method_name(&self) -> &str;
 }
 
 /// Environment variable discovery method
+///
+/// **MODERN CONCURRENT-SAFE DESIGN:**
+/// This uses dependency injection with immutable configuration instead of
+/// reading global environment variables at runtime. This eliminates race
+/// conditions and makes the code truly thread-safe.
+///
+/// # Example
+///
+/// ```rust
+/// use std::sync::Arc;
+/// use nestgate_core::discovery::{EnvironmentDiscovery, EnvironmentDiscoveryConfig};
+///
+/// // Production: Load from environment once at startup
+/// let discovery = EnvironmentDiscovery::from_env();
+///
+/// // Testing: Inject config (no env var pollution!)
+/// let mut config = EnvironmentDiscoveryConfig::new();
+/// config.set_endpoint("orchestration", "http://test:8080");
+/// let discovery = EnvironmentDiscovery::with_config(Arc::new(config));
+/// ```
+#[derive(Debug, Clone)]
+/// Environmentdiscovery
 pub struct EnvironmentDiscovery {
-    /// Known capability patterns to scan for
-    capability_patterns: Vec<String>,
+    /// Immutable configuration (thread-safe via Arc)
+    config: std::sync::Arc<super::capability_scanner_config::EnvironmentDiscoveryConfig>,
 }
 
 impl EnvironmentDiscovery {
-    /// Create a new environment discovery scanner
+    /// Create a new environment discovery scanner with default configuration
+    ///
+    /// **Note:** This loads environment variables once at construction time,
+    /// not on every `discover()` call. This is thread-safe and efficient.
     #[must_use]
     pub fn new() -> Self {
-        Self {
-            capability_patterns: vec![
-                "ORCHESTRATION_DISCOVERY_ENDPOINT".to_string(),
-                "SECURITY_DISCOVERY_ENDPOINT".to_string(),
-                "AI_DISCOVERY_ENDPOINT".to_string(),
-                "STORAGE_DISCOVERY_ENDPOINT".to_string(),
-                "MONITORING_DISCOVERY_ENDPOINT".to_string(),
-                "COMPUTE_DISCOVERY_ENDPOINT".to_string(),
-                "NETWORK_DISCOVERY_ENDPOINT".to_string(),
-            ],
-        }
+        Self::from_env()
     }
 
-    /// Add a custom capability pattern to scan for
-    pub fn add_pattern(&mut self, pattern: String) {
-        self.capability_patterns.push(pattern);
+    /// Create from environment variables (recommended for production)
+    ///
+    /// Loads configuration once from environment, then uses immutable config.
+    #[must_use]
+    pub fn from_env() -> Self {
+        Self::with_config(super::capability_scanner_config::shared_config_from_env())
+    }
+
+    /// Create with explicit configuration (recommended for testing)
+    ///
+    /// This allows injecting test configuration without polluting the
+    /// environment. Makes tests truly isolated and parallel-safe.
+    #[must_use]
+    pub fn with_config(
+        config: std::sync::Arc<super::capability_scanner_config::EnvironmentDiscoveryConfig>,
+    ) -> Self {
+        Self { config }
+    }
+
+    /// Get the current configuration (for inspection/testing)
+    #[must_use]
+    pub fn config(&self) -> &super::capability_scanner_config::EnvironmentDiscoveryConfig {
+        &self.config
     }
 }
 
 impl Default for EnvironmentDiscovery {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
 }
 
-#[async_trait]
 impl DiscoveryMethod for EnvironmentDiscovery {
+    /// Discover
     async fn discover(&self) -> Result<Vec<CapabilityInfo>, NestGateError> {
         let mut capabilities = Vec::new();
 
-        debug!("Scanning environment variables for capabilities");
+        debug!("Scanning configuration for capabilities");
 
-        for pattern in &self.capability_patterns {
-            if let Ok(endpoint) = env::var(pattern) {
-                let capability_type = pattern
-                    .strip_suffix("_DISCOVERY_ENDPOINT")
-                    .unwrap_or(pattern)
-                    .to_lowercase();
+        // Read from IMMUTABLE config, not global environment
+        for (capability_type, endpoint) in self.config.endpoints() {
+            info!("Found {} capability at: {}", capability_type, endpoint);
 
-                info!("Found {} capability at: {}", capability_type, endpoint);
+            let mut metadata = HashMap::new();
+            metadata.insert("source".to_string(), "environment".to_string());
 
-                let mut metadata = HashMap::new();
-                metadata.insert("source".to_string(), "environment".to_string());
-                metadata.insert("pattern".to_string(), pattern.clone());
-
-                // Check for additional metadata environment variables
-                let auth_key = format!("{}_AUTH_KEY", capability_type.to_uppercase());
-                if let Ok(auth) = env::var(&auth_key) {
-                    metadata.insert("auth_key".to_string(), auth);
-                }
-
-                let timeout_key = format!("{}_TIMEOUT_MS", capability_type.to_uppercase());
-                if let Ok(timeout) = env::var(&timeout_key) {
-                    metadata.insert("timeout_ms".to_string(), timeout);
-                }
-
-                capabilities.push(CapabilityInfo {
-                    capability_type,
-                    endpoint,
-                    confidence: 0.95, // High confidence for explicit env vars
-                    metadata,
-                });
+            // Get all metadata for this capability from config
+            let cap_metadata = self.config.all_metadata(capability_type);
+            for (key, value) in cap_metadata {
+                metadata.insert(key, value);
             }
+
+            capabilities.push(CapabilityInfo {
+                capability_type: capability_type.clone(),
+                endpoint: endpoint.clone(),
+                confidence: 0.95, // High confidence for explicit configuration
+                metadata,
+            });
         }
 
         if capabilities.is_empty() {
-            warn!("No capabilities found in environment variables");
+            warn!("No capabilities found in configuration");
         } else {
             info!(
                 "Found {} capabilities via environment discovery",
@@ -118,15 +143,58 @@ impl DiscoveryMethod for EnvironmentDiscovery {
         Ok(capabilities)
     }
 
+    /// Method Name
     fn method_name(&self) -> &str {
         "environment"
     }
 }
 
+/// **DISCOVERY METHOD ENUM**
+///
+/// Enum dispatch for discovery methods - zero-cost alternative to `Box<dyn DiscoveryMethod>`.
+/// This enables native async while maintaining runtime polymorphism through enum dispatch.
+#[derive(Debug)]
+/// Discoverymethodimpl
+pub enum DiscoveryMethodImpl {
+    /// Environment variable discovery
+    Environment(EnvironmentDiscovery),
+    /// DNS-SRV discovery (requires network_discovery module)
+    #[allow(dead_code)]
+    Dns(super::network_discovery::DnsServiceDiscovery),
+    /// Multicast discovery (requires network_discovery module)
+    #[allow(dead_code)]
+    Multicast(super::network_discovery::MulticastDiscovery),
+    /// Port scan discovery (requires network_discovery module)
+    #[allow(dead_code)]
+    PortScan(super::network_discovery::PortScanDiscovery),
+}
+
+impl DiscoveryMethod for DiscoveryMethodImpl {
+    /// Discover
+    async fn discover(&self) -> Result<Vec<CapabilityInfo>, NestGateError> {
+        match self {
+            Self::Environment(method) => method.discover().await,
+            Self::Dns(method) => method.discover().await,
+            Self::Multicast(method) => method.discover().await,
+            Self::PortScan(method) => method.discover().await,
+        }
+    }
+
+    /// Method Name
+    fn method_name(&self) -> &str {
+        match self {
+            Self::Environment(method) => method.method_name(),
+            Self::Dns(method) => method.method_name(),
+            Self::Multicast(method) => method.method_name(),
+            Self::PortScan(method) => method.method_name(),
+        }
+    }
+}
+
 /// Capability scanner that orchestrates multiple discovery methods
 pub struct CapabilityScanner {
-    /// Discovery methods to use
-    discovery_methods: Vec<Box<dyn DiscoveryMethod>>,
+    /// Discovery methods to use (enum dispatch for zero-cost async)
+    discovery_methods: Vec<DiscoveryMethodImpl>,
     /// Cache of discovered capabilities
     capability_cache: HashMap<String, CapabilityInfo>,
 }
@@ -140,14 +208,15 @@ impl CapabilityScanner {
             capability_cache: HashMap::new(),
         };
 
-        // Add default discovery methods
-        scanner.add_discovery_method(Box::new(EnvironmentDiscovery::new()));
+        // Add default discovery methods (using enum dispatch for zero-cost async)
+        scanner.add_discovery_method(DiscoveryMethodImpl::Environment(EnvironmentDiscovery::new()));
 
+        // Return the configured scanner
         scanner
     }
 
-    /// Add a discovery method
-    pub fn add_discovery_method(&mut self, method: Box<dyn DiscoveryMethod>) {
+    /// Add a discovery method (using enum dispatch)
+    pub fn add_discovery_method(&mut self, method: DiscoveryMethodImpl) {
         self.discovery_methods.push(method);
     }
 
@@ -219,6 +288,7 @@ impl CapabilityScanner {
 }
 
 impl Default for CapabilityScanner {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -227,52 +297,23 @@ impl Default for CapabilityScanner {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serial_test::serial;
-    use std::env;
+    use std::sync::Arc;
+
+    // **MODERN CONCURRENT-SAFE TESTS**
+    // Uses dependency injection via EnvironmentDiscoveryConfig
+    // No environment variable pollution - tests can run in parallel!
 
     #[tokio::test]
-    #[serial]
     async fn test_environment_discovery() {
-        // Clean up all possible discovery endpoint environment variables first
-        let discovery_patterns = vec![
-            "ORCHESTRATION_DISCOVERY_ENDPOINT",
-            "SECURITY_DISCOVERY_ENDPOINT",
-            "AI_DISCOVERY_ENDPOINT",
-            "STORAGE_DISCOVERY_ENDPOINT",
-            "MONITORING_DISCOVERY_ENDPOINT",
-            "COMPUTE_DISCOVERY_ENDPOINT",
-            "NETWORK_DISCOVERY_ENDPOINT",
-        ];
+        // Create test config with explicit endpoints (no env pollution)
+        let mut config =
+            crate::discovery::capability_scanner_config::EnvironmentDiscoveryConfig::new();
+        // ✅ FIXED: Use generic endpoint names, not primal names
+        config.set_endpoint("orchestration", "http://orchestration-svc:8080");
+        config.set_endpoint("security", "http://security-svc:9000");
 
-        // Clean up any existing environment variables from other tests
-        for pattern in &discovery_patterns {
-            env::remove_var(pattern);
-        }
-
-        // Also clean up any auth/timeout related vars that might interfere
-        for pattern in &discovery_patterns {
-            let capability_type = pattern
-                .strip_suffix("_DISCOVERY_ENDPOINT")
-                .unwrap_or(pattern)
-                .to_uppercase();
-            env::remove_var(format!("{capability_type}_AUTH_KEY"));
-            env::remove_var(format!("{capability_type}_TIMEOUT_MS"));
-        }
-
-        // Set up only the test environment variables we want
-        env::set_var("ORCHESTRATION_DISCOVERY_ENDPOINT", "http://songbird:8080");
-        env::set_var("SECURITY_DISCOVERY_ENDPOINT", "http://beardog:9000");
-
-        let discovery = EnvironmentDiscovery::new();
+        let discovery = EnvironmentDiscovery::with_config(Arc::new(config));
         let capabilities = discovery.discover().await.expect("Operation failed");
-
-        // Debug output to help troubleshoot
-        if capabilities.len() != 2 {
-            eprintln!("Expected 2 capabilities, got {}", capabilities.len());
-            for cap in &capabilities {
-                eprintln!("  - {} at {}", cap.capability_type, cap.endpoint);
-            }
-        }
 
         assert_eq!(
             capabilities.len(),
@@ -289,49 +330,31 @@ mod tests {
             .iter()
             .find(|c| c.capability_type == "orchestration")
             .expect("Operation failed");
-        assert_eq!(orchestration.endpoint, "http://songbird:8080");
+        assert_eq!(orchestration.endpoint, "http://orchestration-svc:8080");
         assert_eq!(orchestration.confidence, 0.95);
-
-        // Clean up all discovery environment variables and related metadata
-        for pattern in &discovery_patterns {
-            env::remove_var(pattern);
-            let capability_type = pattern
-                .strip_suffix("_DISCOVERY_ENDPOINT")
-                .unwrap_or(pattern)
-                .to_uppercase();
-            env::remove_var(format!("{capability_type}_AUTH_KEY"));
-            env::remove_var(format!("{capability_type}_TIMEOUT_MS"));
-        }
     }
 
     #[tokio::test]
-    #[serial]
     async fn test_capability_scanner() {
-        // Clean up all possible environment variables first
-        let discovery_patterns = vec![
-            "ORCHESTRATION_DISCOVERY_ENDPOINT",
-            "SECURITY_DISCOVERY_ENDPOINT",
-            "AI_DISCOVERY_ENDPOINT",
-            "STORAGE_DISCOVERY_ENDPOINT",
-            "MONITORING_DISCOVERY_ENDPOINT",
-            "COMPUTE_DISCOVERY_ENDPOINT",
-            "NETWORK_DISCOVERY_ENDPOINT",
-        ];
+        // Create test config with explicit endpoints (concurrent-safe!)
+        let mut config =
+            crate::discovery::capability_scanner_config::EnvironmentDiscoveryConfig::new();
+        // ✅ FIXED: Use generic endpoint names, not primal names
+        config.set_endpoint("ai", "http://ai-svc:7000");
+        config.set_endpoint("storage", "http://storage:8080");
 
-        for pattern in &discovery_patterns {
-            env::remove_var(pattern);
-        }
-
-        // Set up test environment BEFORE creating scanner
-        env::set_var("AI_DISCOVERY_ENDPOINT", "http://squirrel:7000");
-        env::set_var("STORAGE_DISCOVERY_ENDPOINT", "http://storage:8080");
-
-        let mut scanner = CapabilityScanner::new();
+        // Create scanner with injected config (no env pollution!)
+        let mut scanner = CapabilityScanner {
+            discovery_methods: vec![DiscoveryMethodImpl::Environment(
+                EnvironmentDiscovery::with_config(Arc::new(config)),
+            )],
+            capability_cache: HashMap::new(),
+        };
 
         let capabilities = scanner.scan_capabilities().await.expect("Operation failed");
         assert!(
             !capabilities.is_empty(),
-            "Expected to find capabilities, but found none. Check environment variable discovery."
+            "Expected to find capabilities, but found none"
         );
         assert_eq!(
             capabilities.len(),
@@ -346,7 +369,7 @@ mod tests {
         );
         assert_eq!(
             ai_capability.expect("Operation failed").endpoint,
-            "http://squirrel:7000"
+            "http://ai-svc:7000"
         );
 
         let storage_capability = scanner.get_capability("storage");
@@ -358,10 +381,10 @@ mod tests {
             storage_capability.expect("Operation failed").endpoint,
             "http://storage:8080"
         );
-
-        // Clean up all discovery environment variables
-        for pattern in &discovery_patterns {
-            env::remove_var(pattern);
-        }
     }
 }
+
+// ==================== TESTS ====================
+#[cfg(test)]
+#[path = "capability_scanner_tests_v2.rs"]
+mod capability_scanner_tests;

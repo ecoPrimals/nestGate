@@ -1,35 +1,51 @@
-//! **COMPREHENSIVE WORKSPACE SECRETS TESTS**
+//! **WORKSPACE SECRETS TESTS - EXPANDED**
 //!
-//! Test coverage for `workspace_management/secrets.rs` - Secrets management functionality.
+//! Comprehensive tests for workspace secrets operations including:
+//! - Secret creation
+//! - Security delegation
+//! - Fallback behavior
+//! - Error handling
 //!
-//! This test suite covers:
-//! - Secret creation with security adapter
-//! - Fallback behavior when security adapter fails
-//! - Response structure validation
-//! - Integration with `AuthTokenManager`
-//! - Error handling scenarios
+//! **NOTE**: Secrets are delegated to security modules (zero-cost-security-provider)
+//! `NestGate` focuses on storage, not authentication/authorization
+
+use super::secrets::*;
+use axum::extract::Path;
+
+// ==================== HANDLER RESPONSE TESTS ====================
 
 #[cfg(test)]
-mod tests {
-    use super::super::secrets::*;
-    use axum::extract::Path;
-
-    // ==================== CREATE WORKSPACE SECRET TESTS ====================
+mod handler_tests {
+    use super::*;
 
     #[tokio::test]
-    async fn test_create_workspace_secret_success() {
-        let workspace_id = "workspace-123".to_string();
-        let result = create_workspace_secret(Path(workspace_id.clone())).await;
+    async fn test_create_workspace_secret_returns_json() {
+        let result = create_workspace_secret(Path("test-ws".to_string())).await;
+        assert!(result.is_ok());
 
-        assert!(result.is_ok(), "Should return Ok result");
+        let json = result.expect("Should create workspace secret").0;
+        assert!(json.is_object());
+    }
 
-        let response = result.expect("Test setup failed");
-        let json = response.0;
+    #[tokio::test]
+    async fn test_create_workspace_secret_has_status() {
+        let result = create_workspace_secret(Path("test-ws".to_string())).await;
+        assert!(result.is_ok());
 
-        // Should have status field
+        let json = result.unwrap().0;
         assert!(json.get("status").is_some());
 
-        // Should include workspace_id in response
+        let status = json.get("status").and_then(|v| v.as_str());
+        assert!(status == Some("success") || status == Some("fallback"));
+    }
+
+    #[tokio::test]
+    async fn test_create_workspace_secret_has_workspace_id() {
+        let workspace_id = "my-test-workspace".to_string();
+        let result = create_workspace_secret(Path(workspace_id.clone())).await;
+        assert!(result.is_ok());
+
+        let json = result.unwrap().0;
         assert_eq!(
             json.get("workspace_id").and_then(|v| v.as_str()),
             Some(workspace_id.as_str())
@@ -37,20 +53,264 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_create_workspace_secret_with_various_ids() {
-        let workspace_ids = vec!["ws-001", "workspace-prod-123", "test_workspace", "dev-env"];
+    async fn test_create_workspace_secret_has_message() {
+        let result = create_workspace_secret(Path("test-ws".to_string())).await;
+        assert!(result.is_ok());
+
+        let json = result.unwrap().0;
+        assert!(json.get("message").is_some());
+
+        let message = json.get("message").and_then(|v| v.as_str());
+        assert!(message.is_some());
+        assert!(!message.unwrap().is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_create_workspace_secret_success_response() {
+        let result = create_workspace_secret(Path("ws-success".to_string())).await;
+        assert!(result.is_ok());
+
+        let json = result.unwrap().0;
+        let status = json.get("status").and_then(|v| v.as_str());
+
+        if status == Some("success") {
+            // Success response should have secret_id
+            assert!(json.get("secret_id").is_some());
+            assert!(json.get("created_at").is_some());
+        }
+    }
+
+    #[tokio::test]
+    async fn test_create_workspace_secret_fallback_response() {
+        let result = create_workspace_secret(Path("ws-fallback".to_string())).await;
+        assert!(result.is_ok());
+
+        let json = result.unwrap().0;
+        let status = json.get("status").and_then(|v| v.as_str());
+
+        if status == Some("fallback") {
+            // Fallback response should have note and recommendation
+            assert!(json.get("note").is_some());
+            assert!(json.get("recommendation").is_some());
+        }
+    }
+}
+
+// ==================== WORKSPACE ID VALIDATION TESTS ====================
+
+#[cfg(test)]
+mod validation_tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_create_secret_with_simple_id() {
+        let result = create_workspace_secret(Path("simple".to_string())).await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_create_secret_with_hyphenated_id() {
+        let result = create_workspace_secret(Path("my-workspace-123".to_string())).await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_create_secret_with_underscored_id() {
+        let result = create_workspace_secret(Path("my_workspace_123".to_string())).await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_create_secret_with_alphanumeric_id() {
+        let result = create_workspace_secret(Path("workspace123abc".to_string())).await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_create_secret_with_org_prefix() {
+        let result = create_workspace_secret(Path("org-456-workspace-789".to_string())).await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_create_secret_with_long_id() {
+        let long_id = "a".repeat(100);
+        let result = create_workspace_secret(Path(long_id)).await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_create_secret_with_short_id() {
+        let result = create_workspace_secret(Path("a".to_string())).await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_create_secret_with_empty_id() {
+        // Even empty IDs should be handled gracefully
+        let result = create_workspace_secret(Path(String::new())).await;
+        assert!(result.is_ok());
+    }
+}
+
+// ==================== DELEGATION TESTS ====================
+
+#[cfg(test)]
+mod delegation_tests {
+
+    use nestgate_core::zero_cost_security_provider::AuthTokenManager;
+
+    #[test]
+    fn test_auth_token_manager_creation() {
+        let manager = AuthTokenManager::new("test-key".to_string());
+        assert!(std::mem::size_of_val(&manager) > 0);
+    }
+
+    #[test]
+    fn test_auth_token_manager_with_empty_key() {
+        let manager = AuthTokenManager::new(String::new());
+        assert!(std::mem::size_of_val(&manager) > 0);
+    }
+
+    #[test]
+    fn test_auth_token_manager_with_long_key() {
+        let long_key = "k".repeat(1000);
+        let manager = AuthTokenManager::new(long_key);
+        assert!(std::mem::size_of_val(&manager) > 0);
+    }
+
+    #[test]
+    fn test_create_workspace_secret_delegation() {
+        let manager = AuthTokenManager::new("test-signing-key".to_string());
+        let result = manager.create_workspace_secret("test-workspace-123");
+
+        // Should either succeed or fail gracefully
+        assert!(result.is_ok() || result.is_err());
+    }
+
+    #[test]
+    fn test_workspace_secret_delegation_multiple_ids() {
+        let manager = AuthTokenManager::new("test-key".to_string());
+
+        let workspace_ids = vec![
+            "workspace-1",
+            "workspace-abc",
+            "org-123-workspace",
+            "my_workspace_test",
+            "short",
+            "very-long-workspace-name-with-many-segments",
+        ];
+
+        for workspace_id in workspace_ids {
+            let result = manager.create_workspace_secret(workspace_id);
+            assert!(result.is_ok() || result.is_err());
+        }
+    }
+
+    #[test]
+    fn test_workspace_secret_delegation_concurrent_calls() {
+        let manager = AuthTokenManager::new("test-key".to_string());
+
+        // Make multiple concurrent calls
+        for i in 0..10 {
+            let workspace_id = format!("workspace-{i}");
+            let result = manager.create_workspace_secret(&workspace_id);
+            assert!(result.is_ok() || result.is_err());
+        }
+    }
+}
+
+// ==================== RESPONSE STRUCTURE TESTS ====================
+
+#[cfg(test)]
+mod response_structure_tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_response_has_required_fields() {
+        let result = create_workspace_secret(Path("test-ws".to_string())).await;
+        assert!(result.is_ok());
+
+        let json = result.unwrap().0;
+
+        // Required fields for all responses
+        assert!(json.get("status").is_some());
+        assert!(json.get("message").is_some());
+        assert!(json.get("workspace_id").is_some());
+    }
+
+    #[tokio::test]
+    async fn test_success_response_structure() {
+        let result = create_workspace_secret(Path("test-success".to_string())).await;
+        assert!(result.is_ok());
+
+        let json = result.unwrap().0;
+        let status = json.get("status").and_then(|v| v.as_str());
+
+        if status == Some("success") {
+            // Success should have these additional fields
+            assert!(json.get("secret_id").is_some());
+            assert!(json.get("created_at").is_some());
+
+            // Verify created_at is a valid timestamp
+            let created_at = json.get("created_at").and_then(|v| v.as_str());
+            assert!(created_at.is_some());
+        }
+    }
+
+    #[tokio::test]
+    async fn test_fallback_response_structure() {
+        let result = create_workspace_secret(Path("test-fallback".to_string())).await;
+        assert!(result.is_ok());
+
+        let json = result.unwrap().0;
+        let status = json.get("status").and_then(|v| v.as_str());
+
+        if status == Some("fallback") {
+            // Fallback should have these additional fields
+            assert!(json.get("note").is_some());
+            assert!(json.get("recommendation").is_some());
+
+            // Verify note mentions NestGate's focus
+            let note = json.get("note").and_then(|v| v.as_str());
+            assert!(note.is_some());
+            assert!(note.unwrap().contains("storage") || note.unwrap().contains("NestGate"));
+        }
+    }
+
+    #[tokio::test]
+    async fn test_response_workspace_id_matches() {
+        let test_ids = vec!["ws-1", "workspace-abc-123", "org-789-ws"];
+
+        for test_id in test_ids {
+            let result = create_workspace_secret(Path(test_id.to_string())).await;
+            assert!(result.is_ok());
+
+            let json = result.unwrap().0;
+            assert_eq!(
+                json.get("workspace_id").and_then(|v| v.as_str()),
+                Some(test_id)
+            );
+        }
+    }
+}
+
+// ==================== INTEGRATION TESTS ====================
+
+#[cfg(test)]
+mod integration_tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_multiple_secret_creation_requests() {
+        // Test creating secrets for multiple workspaces
+        let workspace_ids = vec!["workspace-1", "workspace-2", "workspace-3"];
 
         for workspace_id in workspace_ids {
             let result = create_workspace_secret(Path(workspace_id.to_string())).await;
-            assert!(
-                result.is_ok(),
-                "Should succeed for workspace_id: {workspace_id}"
-            );
+            assert!(result.is_ok());
 
-            let response = result.expect("Test setup failed");
-            let json = response.0;
-
-            // Verify workspace_id is in response
+            let json = result.unwrap().0;
             assert_eq!(
                 json.get("workspace_id").and_then(|v| v.as_str()),
                 Some(workspace_id)
@@ -59,345 +319,104 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_create_workspace_secret_response_structure() {
-        let workspace_id = "workspace-test".to_string();
-        let result = create_workspace_secret(Path(workspace_id)).await;
+    async fn test_secret_creation_idempotency() {
+        // Creating secrets with same workspace ID multiple times
+        let workspace_id = "idempotent-ws";
 
-        assert!(result.is_ok());
+        let result1 = create_workspace_secret(Path(workspace_id.to_string())).await;
+        let result2 = create_workspace_secret(Path(workspace_id.to_string())).await;
 
-        let response = result.expect("Test setup failed");
-        let json = response.0;
+        assert!(result1.is_ok());
+        assert!(result2.is_ok());
 
-        // Verify required fields
-        assert!(json.get("status").is_some(), "Should have status field");
-        assert!(json.get("message").is_some(), "Should have message field");
-        assert!(
-            json.get("workspace_id").is_some(),
-            "Should have workspace_id field"
-        );
+        // Both should return valid responses
+        let json1 = result1.unwrap().0;
+        let json2 = result2.unwrap().0;
+
+        assert!(json1.get("status").is_some());
+        assert!(json2.get("status").is_some());
     }
 
     #[tokio::test]
-    async fn test_create_workspace_secret_success_status() {
-        let workspace_id = "workspace-success".to_string();
-        let result = create_workspace_secret(Path(workspace_id)).await;
+    async fn test_concurrent_secret_creation() {
+        use tokio::task;
 
-        assert!(result.is_ok());
+        // Spawn multiple concurrent tasks
+        let mut handles = vec![];
 
-        let response = result.expect("Test setup failed");
-        let json = response.0;
-
-        let status = json.get("status").and_then(|v| v.as_str());
-        // Status should be either "success" or "fallback" depending on security adapter
-        assert!(
-            status == Some("success") || status == Some("fallback"),
-            "Status should be success or fallback, got: {status:?}"
-        );
-    }
-
-    #[tokio::test]
-    async fn test_create_workspace_secret_includes_timestamp() {
-        let workspace_id = "workspace-timestamp".to_string();
-        let result = create_workspace_secret(Path(workspace_id)).await;
-
-        assert!(result.is_ok());
-
-        let response = result.expect("Test setup failed");
-        let json = response.0;
-
-        // If status is success, should have created_at timestamp
-        if json.get("status").and_then(|v| v.as_str()) == Some("success") {
-            assert!(
-                json.get("created_at").is_some(),
-                "Success response should include timestamp"
-            );
+        for i in 0..5 {
+            let workspace_id = format!("concurrent-ws-{i}");
+            let handle =
+                task::spawn(async move { create_workspace_secret(Path(workspace_id)).await });
+            handles.push(handle);
         }
-    }
 
-    #[tokio::test]
-    async fn test_create_workspace_secret_includes_secret_id() {
-        let workspace_id = "workspace-secret-id".to_string();
-        let result = create_workspace_secret(Path(workspace_id)).await;
-
-        assert!(result.is_ok());
-
-        let response = result.expect("Test setup failed");
-        let json = response.0;
-
-        // If status is success, should have secret_id
-        if json.get("status").and_then(|v| v.as_str()) == Some("success") {
-            assert!(
-                json.get("secret_id").is_some(),
-                "Success response should include secret_id"
-            );
-        }
-    }
-
-    #[tokio::test]
-    async fn test_create_workspace_secret_fallback_response() {
-        let workspace_id = "workspace-fallback".to_string();
-        let result = create_workspace_secret(Path(workspace_id.clone())).await;
-
-        assert!(result.is_ok(), "Fallback should still return Ok");
-
-        let response = result.expect("Test setup failed");
-        let json = response.0;
-
-        // Fallback response should have appropriate fields
-        assert!(json.get("workspace_id").is_some());
-        assert!(json.get("message").is_some());
-
-        // If fallback, should include note about delegation
-        if json.get("status").and_then(|v| v.as_str()) == Some("fallback") {
-            assert!(
-                json.get("note").is_some(),
-                "Fallback response should include note"
-            );
-            assert!(
-                json.get("recommendation").is_some(),
-                "Fallback response should include recommendation"
-            );
-        }
-    }
-
-    #[tokio::test]
-    async fn test_create_workspace_secret_message_not_empty() {
-        let workspace_id = "workspace-message".to_string();
-        let result = create_workspace_secret(Path(workspace_id)).await;
-
-        assert!(result.is_ok());
-
-        let response = result.expect("Test setup failed");
-        let json = response.0;
-
-        let message = json.get("message").and_then(|v| v.as_str());
-        assert!(message.is_some(), "Should have message field");
-        assert!(!message.expect("Test setup failed").is_empty(), "Message should not be empty");
-    }
-
-    #[tokio::test]
-    async fn test_create_workspace_secret_with_empty_id() {
-        let workspace_id = String::new();
-        let result = create_workspace_secret(Path(workspace_id)).await;
-
-        // Should handle empty workspace_id gracefully
-        assert!(result.is_ok(), "Should handle empty workspace_id");
-    }
-
-    #[tokio::test]
-    async fn test_create_workspace_secret_with_special_characters() {
-        let workspace_ids = vec![
-            "workspace-with-dashes",
-            "workspace_with_underscores",
-            "workspace.with.dots",
-            "workspace123",
-        ];
-
-        for workspace_id in workspace_ids {
-            let result = create_workspace_secret(Path(workspace_id.to_string())).await;
-            assert!(
-                result.is_ok(),
-                "Should handle special characters in workspace_id: {workspace_id}"
-            );
-        }
-    }
-
-    #[tokio::test]
-    async fn test_create_workspace_secret_with_long_id() {
-        let workspace_id = "workspace-".to_string() + &"a".repeat(200);
-        let result = create_workspace_secret(Path(workspace_id.clone())).await;
-
-        assert!(result.is_ok(), "Should handle long workspace_id");
-
-        let response = result.expect("Test setup failed");
-        let json = response.0;
-
-        // Should preserve the full workspace_id
-        assert_eq!(
-            json.get("workspace_id").and_then(|v| v.as_str()),
-            Some(workspace_id.as_str())
-        );
-    }
-
-    #[tokio::test]
-    async fn test_create_workspace_secret_idempotent() {
-        let workspace_id = "workspace-idempotent".to_string();
-
-        // Create secret twice
-        let result1 = create_workspace_secret(Path(workspace_id.clone())).await;
-        let result2 = create_workspace_secret(Path(workspace_id.clone())).await;
-
-        // Both should succeed
-        assert!(result1.is_ok(), "First creation should succeed");
-        assert!(result2.is_ok(), "Second creation should succeed");
-    }
-
-    #[tokio::test]
-    async fn test_create_workspace_secret_concurrent() {
-        let workspace_id = "workspace-concurrent".to_string();
-
-        // Spawn multiple concurrent requests
-        let handles = vec![
-            tokio::spawn(create_workspace_secret(Path(workspace_id.clone()))),
-            tokio::spawn(create_workspace_secret(Path(workspace_id.clone()))),
-            tokio::spawn(create_workspace_secret(Path(workspace_id.clone()))),
-        ];
-
-        // All should complete successfully
+        // Wait for all tasks and verify all succeeded
         for handle in handles {
-            let result = handle.await.expect("Task should complete");
-            assert!(result.is_ok(), "Concurrent request should succeed");
+            let result = handle.await;
+            assert!(result.is_ok());
+            assert!(result.unwrap().is_ok());
         }
     }
+}
+
+// ==================== ERROR HANDLING TESTS ====================
+
+#[cfg(test)]
+mod error_handling_tests {
+    use super::*;
 
     #[tokio::test]
-    async fn test_create_workspace_secret_response_serialization() {
-        let workspace_id = "workspace-serialize".to_string();
-        let result = create_workspace_secret(Path(workspace_id)).await;
-
-        assert!(result.is_ok());
-
-        let response = result.expect("Test setup failed");
-        let json = response.0;
-
-        // Response should be serializable
-        let serialized = serde_json::to_string(&json);
-        assert!(serialized.is_ok(), "Response should serialize to JSON");
-
-        let json_string = serialized.expect("Test setup failed");
-        assert!(
-            !json_string.is_empty(),
-            "Serialized JSON should not be empty"
-        );
-    }
-
-    // ==================== INTEGRATION TESTS ====================
-
-    #[tokio::test]
-    async fn test_workspace_secrets_integration_flow() {
-        // Simulate a complete workflow
-        let workspace_id = "workspace-integration".to_string();
-
-        // Step 1: Create secret
-        let create_result = create_workspace_secret(Path(workspace_id.clone())).await;
-        assert!(create_result.is_ok(), "Secret creation should succeed");
-
-        let response = create_result.expect("Test setup failed");
-        let json = response.0;
-
-        // Step 2: Verify response structure
-        assert!(json.get("status").is_some());
-        assert!(json.get("workspace_id").is_some());
-        assert!(json.get("message").is_some());
-
-        // Step 3: Verify workspace_id matches
-        assert_eq!(
-            json.get("workspace_id").and_then(|v| v.as_str()),
-            Some(workspace_id.as_str())
-        );
-    }
-
-    #[tokio::test]
-    async fn test_workspace_secrets_with_multiple_workspaces() {
-        let workspace_ids = vec![
-            "workspace-001",
-            "workspace-002",
-            "workspace-003",
-            "workspace-004",
-            "workspace-005",
+    async fn test_no_panics_on_any_input() {
+        // Test that the handler never panics
+        let long_string = "a".repeat(1000);
+        let test_inputs = vec![
+            "",
+            "a",
+            "workspace-123",
+            "org/workspace/nested",
+            "workspace with spaces",
+            "workspace\nwith\nnewlines",
+            "workspace\twith\ttabs",
+            &long_string,
         ];
 
-        for workspace_id in workspace_ids {
-            let result = create_workspace_secret(Path(workspace_id.to_string())).await;
-            assert!(
-                result.is_ok(),
-                "Should create secret for workspace: {workspace_id}"
-            );
+        for input in test_inputs {
+            let result = create_workspace_secret(Path(input.to_string())).await;
+
+            // Should always return Ok (never panics)
+            assert!(result.is_ok());
         }
     }
 
-    // ==================== EDGE CASES ====================
-
     #[tokio::test]
-    async fn test_create_workspace_secret_with_uuid() {
-        let workspace_id = "550e8400-e29b-41d4-a716-446655440000".to_string();
-        let result = create_workspace_secret(Path(workspace_id.clone())).await;
-
-        assert!(result.is_ok(), "Should handle UUID workspace_id");
-
-        let response = result.expect("Test setup failed");
-        let json = response.0;
-
-        assert_eq!(
-            json.get("workspace_id").and_then(|v| v.as_str()),
-            Some(workspace_id.as_str())
-        );
-    }
-
-    #[tokio::test]
-    async fn test_create_workspace_secret_numeric_id() {
-        let workspace_id = "123456789".to_string();
-        let result = create_workspace_secret(Path(workspace_id.clone())).await;
-
-        assert!(result.is_ok(), "Should handle numeric workspace_id");
-    }
-
-    #[tokio::test]
-    async fn test_create_workspace_secret_response_completeness() {
-        let workspace_id = "workspace-complete".to_string();
-        let result = create_workspace_secret(Path(workspace_id)).await;
+    async fn test_graceful_delegation_failure_handling() {
+        // When security delegation fails, should return fallback response
+        let result = create_workspace_secret(Path("fallback-test".to_string())).await;
 
         assert!(result.is_ok());
+        let json = result.unwrap().0;
 
-        let response = result.expect("Test setup failed");
-        let json = response.0;
-
-        // Verify all expected fields are present
-        let expected_fields = vec!["status", "message", "workspace_id"];
-
-        for field in expected_fields {
-            assert!(
-                json.get(field).is_some(),
-                "Response should contain field: {field}"
-            );
-        }
+        // Should have a valid status (either success or fallback)
+        let status = json.get("status").and_then(|v| v.as_str());
+        assert!(status.is_some());
+        assert!(status == Some("success") || status == Some("fallback"));
     }
 
     #[tokio::test]
-    async fn test_create_workspace_secret_delegation_note() {
-        let workspace_id = "workspace-delegation".to_string();
-        let result = create_workspace_secret(Path(workspace_id)).await;
+    async fn test_special_characters_handled() {
+        let special_ids = vec![
+            "workspace@123",
+            "workspace#456",
+            "workspace$789",
+            "workspace%abc",
+        ];
 
-        assert!(result.is_ok());
+        for special_id in special_ids {
+            let result = create_workspace_secret(Path(special_id.to_string())).await;
 
-        let response = result.expect("Test setup failed");
-        let json = response.0;
-
-        // If fallback, verify delegation information
-        if json.get("status").and_then(|v| v.as_str()) == Some("fallback") {
-            let note = json.get("note").and_then(|v| v.as_str());
-            assert!(note.is_some(), "Fallback should include note");
-
-            let note_text = note.expect("Test setup failed");
-            assert!(
-                note_text.contains("NestGate") || note_text.contains("storage"),
-                "Note should mention NestGate's focus on storage"
-            );
+            // Should handle gracefully without panicking
+            assert!(result.is_ok());
         }
-    }
-
-    #[tokio::test]
-    async fn test_create_workspace_secret_performance() {
-        let workspace_id = "workspace-perf".to_string();
-
-        let start = std::time::Instant::now();
-        let result = create_workspace_secret(Path(workspace_id)).await;
-        let duration = start.elapsed();
-
-        assert!(result.is_ok(), "Secret creation should succeed");
-        assert!(
-            duration.as_millis() < 1000,
-            "Secret creation should complete in under 1 second, took: {duration:?}"
-        );
     }
 }

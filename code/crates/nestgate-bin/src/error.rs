@@ -9,6 +9,8 @@
 // - Consistent error formatting and serialization
 // - Idiomatic Result types with proper error propagation
 
+//! Error module
+
 use nestgate_core::error::{CanonicalResult, NestGateError};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -153,6 +155,7 @@ impl BinErrorHelper {
 ///
 /// Implements the canonical `IntoNestGateError` trait for seamless integration
 impl From<NestGateBinError> for NestGateError {
+    /// From
     fn from(err: NestGateBinError) -> NestGateError {
         match err {
             NestGateBinError::ArgumentParsingError { argument, message } => {
@@ -270,12 +273,14 @@ pub trait BinResultExt<T> {
 }
 
 impl<T> BinResultExt<T> for BinResult<T> {
+    /// Builder method to set Context
     fn with_context(self, context: &str) -> CanonicalResult<T> {
         self.map_err(|_e| {
             NestGateError::internal_error(format!("Context: {context}"), "nestgate-bin")
         })
     }
 
+    /// Into Canonical
     fn into_canonical(self) -> CanonicalResult<T> {
         self.map_err(|_e| NestGateError::internal_error("Conversion error", "nestgate-bin"))
     }
@@ -290,3 +295,213 @@ impl<T> BinResultExt<T> for BinResult<T> {
 /// 4. Idiomatic Result type usage
 /// 5. Seamless integration with the broader error ecosystem
 pub struct CanonicalErrorDemo;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_command_execution_failed() {
+        let error =
+            NestGateBinError::command_failed("test failed", Some("ls".to_string()), Some(1));
+        assert!(error.to_string().contains("Command execution failed"));
+        assert!(error.to_string().contains("test failed"));
+    }
+
+    #[test]
+    fn test_command_execution_failed_minimal() {
+        let error = NestGateBinError::command_failed("failed", None, None);
+        assert!(error.to_string().contains("Command execution failed"));
+    }
+
+    #[test]
+    fn test_configuration_error() {
+        let error =
+            NestGateBinError::config_error("invalid config", Some("/etc/config".to_string()));
+        assert!(error.to_string().contains("Configuration error"));
+        assert!(error.to_string().contains("invalid config"));
+    }
+
+    #[test]
+    fn test_configuration_error_without_path() {
+        let error = NestGateBinError::config_error("missing field", None);
+        assert!(error.to_string().contains("Configuration error"));
+    }
+
+    #[test]
+    fn test_argument_parsing_error() {
+        let error = NestGateBinError::argument_error("invalid value", Some("--port".to_string()));
+        assert!(error.to_string().contains("Argument parsing error"));
+        assert!(error.to_string().contains("invalid value"));
+    }
+
+    #[test]
+    fn test_argument_parsing_error_no_arg() {
+        let error = NestGateBinError::argument_error("missing", None);
+        assert!(error.to_string().contains("Argument parsing error"));
+    }
+
+    #[test]
+    fn test_service_initialization_error() {
+        let error = NestGateBinError::service_init_error(
+            "failed to start",
+            Some("http-server".to_string()),
+        );
+        assert!(error.to_string().contains("Service initialization error"));
+        assert!(error.to_string().contains("failed to start"));
+    }
+
+    #[test]
+    fn test_service_initialization_error_no_name() {
+        let error = NestGateBinError::service_init_error("crashed", None);
+        assert!(error.to_string().contains("Service initialization error"));
+    }
+
+    #[test]
+    fn test_runtime_error() {
+        let error =
+            NestGateBinError::runtime_error("panic occurred", Some("data_processing".to_string()));
+        assert!(error.to_string().contains("Runtime error"));
+        assert!(error.to_string().contains("panic occurred"));
+    }
+
+    #[test]
+    fn test_runtime_error_no_operation() {
+        let error = NestGateBinError::runtime_error("general error", None);
+        assert!(error.to_string().contains("Runtime error"));
+    }
+
+    #[test]
+    fn test_error_clone() {
+        let error = NestGateBinError::command_failed("test", None, None);
+        let cloned = error.clone();
+        assert_eq!(error.to_string(), cloned.to_string());
+    }
+
+    #[test]
+    fn test_error_serialization() {
+        let error = NestGateBinError::config_error("test", Some("path".to_string()));
+        let serialized =
+            serde_json::to_string(&error).expect("Test: error serialization should succeed");
+        assert!(serialized.contains("Configuration"));
+    }
+
+    #[test]
+    fn test_error_deserialization() {
+        let json = r#"{"RuntimeError":{"message":"test","operation":"op"}}"#;
+        let error: NestGateBinError =
+            serde_json::from_str(json).expect("Test: error deserialization should succeed");
+        assert!(error.to_string().contains("Runtime error"));
+    }
+
+    #[test]
+    fn test_bin_error_helper_command_execution() {
+        let error =
+            BinErrorHelper::command_execution_error("failed", Some("cmd".to_string()), Some(127));
+        assert!(error.to_string().contains("Command execution failed"));
+    }
+
+    #[test]
+    fn test_bin_error_helper_configuration() {
+        let error = BinErrorHelper::configuration_error("bad config", Some("/path".to_string()));
+        assert!(error.to_string().contains("Configuration"));
+    }
+
+    #[test]
+    fn test_bin_error_helper_argument_parsing() {
+        let error = BinErrorHelper::argument_parsing_error("invalid", Some("--flag".to_string()));
+        assert!(error.to_string().contains("Argument parsing error"));
+    }
+
+    #[test]
+    fn test_bin_error_helper_service_init() {
+        let error =
+            BinErrorHelper::service_initialization_error("crashed", Some("api".to_string()));
+        assert!(error.to_string().contains("Service initialization error"));
+    }
+
+    #[test]
+    fn test_bin_error_helper_runtime() {
+        let error = BinErrorHelper::runtime_error("error", Some("processing".to_string()));
+        assert!(error.to_string().contains("Runtime error"));
+    }
+
+    #[test]
+    fn test_conversion_to_nestgate_error_argument() {
+        let bin_error = NestGateBinError::argument_error("test", Some("arg".to_string()));
+        let nestgate_error: NestGateError = bin_error.into();
+        assert!(nestgate_error.to_string().contains("Argument parsing"));
+    }
+
+    #[test]
+    fn test_conversion_to_nestgate_error_config() {
+        let bin_error = NestGateBinError::config_error("test", Some("path".to_string()));
+        let nestgate_error: NestGateError = bin_error.into();
+        assert!(nestgate_error.to_string().contains("Configuration"));
+    }
+
+    #[test]
+    fn test_conversion_to_nestgate_error_runtime() {
+        let bin_error = NestGateBinError::runtime_error("test", Some("op".to_string()));
+        let nestgate_error: NestGateError = bin_error.into();
+        assert!(nestgate_error.to_string().contains("Runtime"));
+    }
+
+    #[test]
+    fn test_conversion_to_nestgate_error_service_init() {
+        let bin_error = NestGateBinError::service_init_error("test", Some("service".to_string()));
+        let nestgate_error: NestGateError = bin_error.into();
+        assert!(nestgate_error.to_string().contains("Service"));
+    }
+
+    #[test]
+    fn test_conversion_to_nestgate_error_command() {
+        let bin_error = NestGateBinError::command_failed("test", Some("cmd".to_string()), Some(1));
+        let nestgate_error: NestGateError = bin_error.into();
+        assert!(nestgate_error.to_string().contains("Command"));
+    }
+
+    #[test]
+    fn test_result_with_context() {
+        let result: BinResult<()> = Err(NestGateError::internal_error("test", "test"));
+        let with_ctx = result.with_context("additional context");
+        assert!(with_ctx.is_err());
+    }
+
+    #[test]
+    fn test_result_into_canonical() {
+        let result: BinResult<()> = Err(NestGateError::internal_error("test", "test"));
+        let canonical = result.into_canonical();
+        assert!(canonical.is_err());
+    }
+
+    #[test]
+    fn test_helper_functions_with_string_refs() {
+        let error = BinErrorHelper::command_execution_error("test", None, None);
+        assert!(error.to_string().contains("Command execution failed"));
+    }
+
+    #[test]
+    fn test_all_error_variants_have_messages() {
+        let errors = vec![
+            NestGateBinError::command_failed("msg", None, None),
+            NestGateBinError::config_error("msg", None),
+            NestGateBinError::argument_error("msg", None),
+            NestGateBinError::service_init_error("msg", None),
+            NestGateBinError::runtime_error("msg", None),
+        ];
+
+        for error in errors {
+            assert!(error.to_string().contains("msg"));
+        }
+    }
+
+    #[test]
+    fn test_error_with_exit_codes() {
+        let codes = vec![0, 1, 127, 255];
+        for code in codes {
+            let error = NestGateBinError::command_failed("test", None, Some(code));
+            let _ = error.to_string(); // Should not panic
+        }
+    }
+}

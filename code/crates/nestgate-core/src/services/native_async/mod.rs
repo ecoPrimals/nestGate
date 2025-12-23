@@ -1,13 +1,16 @@
 // CLEANED: Removed unused imports as part of canonical modernization
 // use std::collections::HashMap;
 // use std::future::Future;
+/// Development-mode service implementations with mock support
 pub mod development;
+/// Production-ready service implementations
 pub mod production;
 // Native Async Services Module - Split for File Size Compliance
 // This module was split from native_async_final_services.rs to maintain the 2000-line limit
 /// while preserving all functionality and maintaining backward compatibility
 // Sub-module declarations
 pub mod traits;
+/// Type definitions for native async services
 pub mod types;
 // Re-export all public types and traits for backward compatibility
 #[allow(deprecated)] // Re-export for backwards compatibility
@@ -40,12 +43,12 @@ mod tests {
     };
     // Removed unresolved smart_abstractions import
     use anyhow::Result;
-    use std::env;
     use std::time::SystemTime;
 
     #[cfg(test)]
     /// Mock service info for testing
     #[derive(Debug, Clone)]
+    #[allow(dead_code)]
     struct MockServiceInfo {
         id: String,
         name: String,
@@ -55,8 +58,13 @@ mod tests {
 
     #[cfg(test)]
     impl Default for MockServiceInfo {
+        /// Returns the default instance with environment-driven configuration
         fn default() -> Self {
-            use crate::constants::hardcoding::{addresses, ports};
+            use crate::config::environment::EnvironmentConfig;
+
+            // Load from environment for consistency with production
+            let env_config =
+                EnvironmentConfig::from_env().unwrap_or_else(|_| EnvironmentConfig::default());
 
             Self {
                 id: "test-service-123".to_string(),
@@ -64,12 +72,8 @@ mod tests {
                 version: "1.0.0".to_string(),
                 endpoints: vec![format!(
                     "http://{}:{}",
-                    env::var("NESTGATE_API_HOST")
-                        .unwrap_or_else(|_| addresses::LOCALHOST_NAME.to_string()),
-                    env::var("NESTGATE_API_PORT")
-                        .ok()
-                        .and_then(|s| s.parse().ok())
-                        .unwrap_or(ports::HTTP_DEFAULT)
+                    env_config.network.host,
+                    env_config.network.port.get()
                 )],
             }
         }
@@ -204,6 +208,7 @@ mod tests {
     }
 
     // Mock types for testing
+    #[allow(dead_code)]
     struct ServiceRequest {
         service_name: String,
         data: Vec<u8>,
@@ -213,15 +218,19 @@ mod tests {
         name: String,
     }
 
+    #[allow(dead_code)]
     impl NativeAsyncService {
+        /// Creates a new instance
         fn new(name: String) -> Self {
             Self { name }
         }
 
+        /// Gets Config
         fn get_config(&self) -> String {
             format!("config_for_{}", self.name)
         }
 
+        /// Processes data
         fn process(&self, _data: &str) -> String {
             format!("processed_by_{}", self.name)
         }

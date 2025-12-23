@@ -93,6 +93,7 @@ pub struct PerformanceAlert {
     pub enabled: bool,
 }
 impl Default for FsMonitorPerformanceSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             buffer_sizes: BufferSizeSettings::default(),
@@ -109,6 +110,7 @@ impl Default for FsMonitorPerformanceSettings {
 }
 
 impl Default for BufferSizeSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             event_buffer_size: 8192,
@@ -120,6 +122,7 @@ impl Default for BufferSizeSettings {
 }
 
 impl Default for ThreadPoolSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             min_threads: 2,
@@ -131,6 +134,7 @@ impl Default for ThreadPoolSettings {
 }
 
 impl Default for MemoryManagementSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             max_memory_usage: 1024 * 1024 * 1024, // 1GB
@@ -142,6 +146,7 @@ impl Default for MemoryManagementSettings {
 }
 
 impl Default for IoOptimizationSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enable_async_io: true,
@@ -154,6 +159,7 @@ impl Default for IoOptimizationSettings {
 }
 
 impl Default for PerformanceMonitoringSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,

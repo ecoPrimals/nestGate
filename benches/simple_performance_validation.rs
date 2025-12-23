@@ -176,6 +176,14 @@ criterion_group!(
 
 criterion_main!(performance_benchmarks);
 
+fn result_operation(success: bool) -> Result<String, String> {
+    if success {
+        Ok("success".to_string())
+    } else {
+        Err("error".to_string())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -188,13 +196,5 @@ mod tests {
 
         let result = result_operation(false);
         assert!(result.is_err());
-    }
-}
-
-fn result_operation(success: bool) -> Result<String, String> {
-    if success {
-        Ok("success".to_string())
-    } else {
-        Err("error".to_string())
     }
 }

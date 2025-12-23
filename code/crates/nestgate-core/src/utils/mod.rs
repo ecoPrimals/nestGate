@@ -8,14 +8,21 @@
 pub mod fs;
 pub mod memory_optimization;
 pub mod network;
+mod network_error_tests;
 pub mod string;
 pub mod system;
 
 // **100% SAFE SYSTEM OPERATIONS** - Zero unsafe code
 pub mod completely_safe_system;
 
+// Thread-safe configuration for safe system operations (eliminates runtime env::var calls)
+pub mod safe_system_config;
+
 // Re-export safe system operations for easy access
 pub use completely_safe_system::{PrivilegeInfo, SafePrivilegeChecker, SafeSystemOps};
+
+// Re-export safe system config types
+pub use safe_system_config::{SafeSystemConfig, SharedSafeSystemConfig};
 
 // Re-export key functions for convenience
 pub use fs::*;

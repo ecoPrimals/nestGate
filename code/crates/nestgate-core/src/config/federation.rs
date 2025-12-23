@@ -4,6 +4,25 @@ use uuid;
 
 /// MCP integration configuration (from Phase 1)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+///
+/// **Migration Path**:
+/// ```rust,ignore
+/// // OLD (deprecated):
+/// use crate::network::config::McpConfig;
+///
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::McpConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+///
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(
+    since = "0.11.0",
+    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
+/// Configuration for Mcp
 pub struct McpConfig {
     /// Enable MCP integration
     pub enabled: bool,
@@ -22,6 +41,25 @@ pub struct McpConfig {
 
 /// MCP capabilities configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+///
+/// **Migration Path**:
+/// ```rust,ignore
+/// // OLD (deprecated):
+/// use crate::config::McpCapabilitiesConfig;
+///
+/// // NEW (canonical):
+/// use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::config::McpCapabilitiesConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+///
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(
+    since = "0.11.0",
+    note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
+/// Configuration for McpCapabilities
 pub struct McpCapabilitiesConfig {
     /// Supported storage protocols
     pub storage_protocols: Vec<String>,
@@ -37,6 +75,25 @@ pub struct McpCapabilitiesConfig {
 
 /// Federation configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+///
+/// **Migration Path**:
+/// ```rust,ignore
+/// // OLD (deprecated):
+/// use crate::network::config::FederationConfig;
+///
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::FederationConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+///
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(
+    since = "0.11.0",
+    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
+/// Configuration for Federation
 pub struct FederationConfig {
     /// Enable federation
     pub enabled: bool,
@@ -53,7 +110,9 @@ pub struct FederationConfig {
     pub heartbeat_interval: u64,
 }
 
+#[allow(deprecated)]
 impl Default for McpConfig {
+    /// Returns the default instance
     fn default() -> Self {
         // Generate dynamic node ID instead of hardcoding
         let node_id = format!(
@@ -65,8 +124,10 @@ impl Default for McpConfig {
             enabled: false, // Disabled by default - orchestration service manages MCP
             cluster_endpoint: std::env::var("NESTGATE_CLUSTER_ENDPOINT")
                 // SOVEREIGNTY FIX: Use environment-based cluster endpoint discovery
-            .unwrap_or_else(|_| std::env::var("NESTGATE_CLUSTER_ENDPOINT")
-                .unwrap_or_else(|_| "dynamic://cluster-capability")),
+                .unwrap_or_else(|_| {
+                    std::env::var("NESTGATE_CLUSTER_ENDPOINT")
+                        .unwrap_or_else(|_| "dynamic://cluster-capability".to_string())
+                }),
             node_id,
             federation_enabled: false,
             capabilities: McpCapabilitiesConfig::default(),
@@ -74,7 +135,9 @@ impl Default for McpConfig {
     }
 }
 
+#[allow(deprecated)]
 impl Default for McpCapabilitiesConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             storage_protocols: vec!["nfs".to_string(), "smb".to_string(), "s3".to_string()],
@@ -85,7 +148,9 @@ impl Default for McpCapabilitiesConfig {
     }
 }
 
+#[allow(deprecated)]
 impl Default for FederationConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: false, // Disabled by default - orchestration service manages federation
@@ -97,6 +162,7 @@ impl Default for FederationConfig {
     }
 }
 
+#[allow(deprecated)]
 impl McpConfig {
     /// Check if MCP is enabled
     pub fn is_enabled(&self) -> bool {
@@ -126,7 +192,7 @@ impl McpConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn validate(&self) -> Result<(), String>  {
+    pub fn validate(&self) -> Result<(), String> {
         if self.enabled {
             if self.cluster_endpoint.is_empty() {
                 return Err("Cluster endpoint cannot be empty when MCP is enabled".to_string());
@@ -141,6 +207,7 @@ impl McpConfig {
     }
 }
 
+#[allow(deprecated)]
 impl McpCapabilitiesConfig {
     /// Check if a storage protocol is supported
     pub fn supports_protocol(&self, protocol: &str) -> bool {
@@ -184,7 +251,7 @@ impl McpCapabilitiesConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn validate(&self) -> Result<(), String>  {
+    pub fn validate(&self) -> Result<(), String> {
         if self.max_volume_size == 0 {
             return Err("Max volume size must be greater than 0".to_string());
         }
@@ -204,6 +271,7 @@ impl McpCapabilitiesConfig {
     }
 }
 
+#[allow(deprecated)]
 impl FederationConfig {
     /// Check if federation is enabled
     pub fn is_enabled(&self) -> bool {
@@ -260,7 +328,7 @@ impl FederationConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn validate(&self) -> Result<(), String>  {
+    pub fn validate(&self) -> Result<(), String> {
         if self.enabled {
             if self.cluster_name.is_empty() {
                 return Err("Cluster name cannot be empty when federation is enabled".to_string());
@@ -283,6 +351,57 @@ impl FederationConfig {
         Ok(())
     }
 }
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+///
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Mcpconfigcanonical
+pub type McpConfigCanonical =
+    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using McpConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+///
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Federationconfigcanonical
+pub type FederationConfigCanonical =
+    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using FederationConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+///
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Mcpcapabilitiesconfigcanonical
+pub type McpCapabilitiesConfigCanonical =
+    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using McpCapabilitiesConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
 
 #[cfg(test)]
 mod tests {
@@ -352,12 +471,13 @@ mod tests {
         let mut config = FederationConfig::default();
 
         // Test adding peer
-        config.add_peer("node1.example.com".to_string());
+        let peer_name = "node1.example.com".to_string();
+        config.add_peer(peer_name.clone());
         assert_eq!(config.peers().len(), 1);
-        assert!(config.peers().contains(&"node1.example.com"));
+        assert!(config.peers().contains(&peer_name));
 
         // Test removing peer
-        config.remove_peer("node1.example.com");
+        config.remove_peer(&peer_name);
         assert_eq!(config.peers().len(), 0);
     }
 
@@ -378,8 +498,11 @@ mod tests {
 
         // Empty node ID should fail
         // SOVEREIGNTY FIX: Use environment-based endpoint in tests
+        use crate::error::utilities::safe_env_var_or_default;
+        let discovery_config = crate::config::discovery_config::ServiceDiscoveryConfig::default();
+        let default_endpoint = format!("localhost:{}", discovery_config.discovery_base_port);
         config.cluster_endpoint =
-            std::env::var("TEST_CLUSTER_ENDPOINT").unwrap_or_else(|_| "localhost:8080".to_string());
+            safe_env_var_or_default("TEST_CLUSTER_ENDPOINT", &default_endpoint).to_string();
         config.node_id = "".to_string();
         assert!(config.validate().is_err());
     }

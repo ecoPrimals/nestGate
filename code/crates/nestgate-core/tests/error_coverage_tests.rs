@@ -34,7 +34,7 @@ fn test_error_configuration() {
 
 #[test]
 fn test_error_network() {
-    let error = NestGateError::network_error("connect to localhost:8080 failed");
+    let error = NestGateError::network_error("connect to localhost:18080 failed");
 
     assert!(matches!(error, NestGateError::Network(_)));
 }
@@ -65,7 +65,12 @@ fn test_error_from_string() {
 #[test]
 fn test_result_ok() {
     let result: Result<i32> = Ok(42);
-    assert_eq!(result.expect("Test setup failed"), 42);
+    assert!(result.is_ok());
+    // Use pattern matching instead of unwrap_or for test clarity
+    match result {
+        Ok(value) => assert_eq!(value, 42),
+        Err(_) => panic!("Expected Ok, got Err"),
+    }
 }
 
 #[test]
@@ -77,16 +82,19 @@ fn test_result_err() {
 
 // ==================== ERROR PROPAGATION TESTS ====================
 
+/// Function That Returns Result
 fn function_that_returns_result() -> Result<String> {
     Ok("success".to_string())
 }
 
+/// Function That Returns Error
 fn function_that_returns_error() -> Result<String> {
     Err(NestGateError::api_error("test: intentional error"))
 }
 
 #[test]
 fn test_error_propagation_with_question_mark() {
+    /// Caller
     fn caller() -> Result<String> {
         let value = function_that_returns_result()?;
         Ok(value)
@@ -97,6 +105,7 @@ fn test_error_propagation_with_question_mark() {
 
 #[test]
 fn test_error_propagation_failure() {
+    /// Caller
     fn caller() -> Result<String> {
         let _value = function_that_returns_error()?;
         Ok("should not reach here".to_string())
@@ -196,18 +205,22 @@ fn test_and_then_pattern() {
 
 #[test]
 fn test_error_recovery_with_default() {
-    let result: Result<String> = Err(NestGateError::storage_error("config default not found"));
+    let error = NestGateError::storage_error("config default not found");
 
-    let value = result.unwrap_or_else(|_| "default_value".to_string());
+    // Test error recovery with unwrap_or on a real Result
+    let fallback_fn = || -> Result<String> { Err(error) };
+    let value = fallback_fn().unwrap_or_else(|_| "default_value".to_string());
     assert_eq!(value, "default_value");
 }
 
 #[test]
 fn test_error_recovery_with_fallback() {
+    /// Primary Source
     fn primary_source() -> Result<i32> {
         Err(NestGateError::network_error("fetch from primary failed"))
     }
 
+    /// Fallback Source
     fn fallback_source() -> Result<i32> {
         Ok(42)
     }

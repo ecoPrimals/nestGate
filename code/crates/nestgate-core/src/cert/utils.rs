@@ -247,7 +247,12 @@ B05lc3RHYXBLMREWDQYDVQQKDAZOZXN0R2F0ZTERDw0GA1UEAwwITmVzdEdhdGU=
     }
 }
 
-// 🚀 MODERN CERTIFICATE MANAGEMENT: Pure dynamic discovery architecture
+/// Modern certificate management with dynamic discovery
+///
+/// This module provides certificate utilities that use dynamic service discovery
+/// instead of hardcoded endpoints. Only available with the `dev-stubs` feature.
+///
+/// **Note**: This is developmental and should not be used in production yet.
 #[cfg(feature = "dev-stubs")]
 pub mod modern {
     use super::*;
@@ -274,7 +279,7 @@ pub mod modern {
         //     bind_endpoint: _endpoint.ip(),
         //     port: _endpoint.port(),
         //     ..Default::default()
-        // }; // UnifiedNetworkConfig module removed - use canonical_master if needed
+        // }; // UnifiedNetworkConfig module removed - use canonical_primary if needed
 
         // Create and return the certificate using actual Certificate struct fields
         Ok(Certificate {
@@ -406,6 +411,7 @@ pub mod modern {
     }
 
     impl Default for CertificateConfig {
+        /// Returns the default instance
         fn default() -> Self {
             Self {
                 principal: "nestgate".to_string(),

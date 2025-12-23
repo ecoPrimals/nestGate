@@ -4,6 +4,8 @@
 // universal storage operations.
 
 // Removed unused import: crate::handlers::zfs_stub::ZeroCostZfsOperations
+//! Universal Pools module
+
 use axum::{
     extract::{Path, State},
     http::StatusCode,
@@ -16,10 +18,15 @@ use tracing::{info, warn};
 
 use crate::routes::AppState;
 
+// Import traits for dev-stubs
+#[cfg(feature = "dev-stubs")]
+use crate::dev_stubs::zfs::PoolOperations;
+
 /// **CREATE UNIVERSAL POOL REQUEST**
 ///
 /// Request structure for creating a new universal storage pool.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for CreateUniversalPool operation
 pub struct CreateUniversalPoolRequest {
     /// Pool name to create
     pub name: String,
@@ -142,14 +149,13 @@ pub async fn create_universal_pool(
         .collect();
     match state
         .zfs_manager
-        .create_pool(&request.name, &request._devices)
+        .create_pool(&request.name, request._devices.clone(), None)
     {
-        Ok(pool) => {
+        Ok(()) => {
             info!("✅ Successfully created pool: {}", request.name);
             Json(json!({
                 "status": "success",
-                "pool": pool,
-                "message": format!("Pool 'self.base_url' created successfully")
+                "message": format!("Pool '{}' created successfully", request.name)
             }))
         }
         Err(e) => {

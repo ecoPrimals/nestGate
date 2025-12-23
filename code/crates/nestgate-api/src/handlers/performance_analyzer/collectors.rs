@@ -8,6 +8,7 @@ use tokio::time::{interval, Duration};
 
 /// Data collection coordinator
 #[derive(Debug)]
+/// Datacollector
 pub struct DataCollector {
     /// System metrics collector
     pub system_collector: Arc<SystemMetricsCollector>,
@@ -84,6 +85,7 @@ impl DataCollector {
 
 /// Metrics snapshot with metadata
 #[derive(Debug, Clone)]
+/// Metricssnapshot
 pub struct MetricsSnapshot {
     /// Collected system performance metrics
     pub system_metrics: SystemMetrics,
@@ -95,6 +97,7 @@ pub struct MetricsSnapshot {
 
 /// Batch metrics collector for high-throughput scenarios
 #[derive(Debug)]
+/// Batchcollector
 pub struct BatchCollector {
     /// Individual collectors
     pub collectors: Vec<Arc<SystemMetricsCollector>>,
@@ -107,7 +110,7 @@ impl BatchCollector {
     #[must_use]
     pub fn new(batch_size: usize) -> Self {
         let mut collectors = Vec::new();
-        for i in 0..batch_size {
+        for _i in 0..batch_size {
             collectors.push(Arc::new(SystemMetricsCollector::new(60))); // 60 second intervals
         }
 
@@ -145,5 +148,159 @@ impl BatchCollector {
         }
 
         Ok(results)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_data_collector_new() {
+        let collector = DataCollector::new(60);
+        assert_eq!(collector.interval, Duration::from_secs(60));
+        assert_eq!(collector.system_collector.interval_seconds, 60);
+    }
+
+    #[tokio::test]
+    async fn test_collect_all_metrics() {
+        let collector = DataCollector::new(5);
+        let metrics = collector
+            .collect_all_metrics()
+            .await
+            .expect("Should collect metrics");
+
+        assert!(metrics.cpu_usage_percent >= 0.0);
+        assert!(metrics.memory_usage_bytes > 0);
+    }
+
+    #[tokio::test]
+    async fn test_get_latest_snapshot() {
+        let collector = DataCollector::new(5);
+        let snapshot = collector
+            .get_latest_snapshot()
+            .await
+            .expect("Should get snapshot");
+
+        assert_eq!(snapshot.collector_id, "default");
+        assert!(snapshot.system_metrics.cpu_usage_percent >= 0.0);
+    }
+
+    #[test]
+    fn test_metrics_snapshot_creation() {
+        let metrics = SystemMetrics {
+            cpu_usage_percent: 35.5,
+            memory_usage_bytes: 2 * 1024 * 1024 * 1024,
+            disk_io_metrics: super::super::metrics::DiskIOMetrics {
+                read_bytes_per_sec: 1024 * 1024,
+                write_bytes_per_sec: 512 * 1024,
+                read_ops_per_sec: 100,
+                write_ops_per_sec: 50,
+            },
+            network_metrics: super::super::metrics::NetworkMetrics {
+                rx_bytes_per_sec: 1024 * 1024,
+                tx_bytes_per_sec: 512 * 1024,
+                rx_packets_per_sec: 1000,
+                tx_packets_per_sec: 500,
+            },
+            timestamp: std::time::SystemTime::now(),
+        };
+
+        let snapshot = MetricsSnapshot {
+            system_metrics: metrics,
+            collection_timestamp: std::time::SystemTime::now(),
+            collector_id: "test-collector".to_string(),
+        };
+
+        assert_eq!(snapshot.collector_id, "test-collector");
+        assert_eq!(snapshot.system_metrics.cpu_usage_percent, 35.5);
+    }
+
+    #[test]
+    fn test_batch_collector_new() {
+        let batch_collector = BatchCollector::new(5);
+        assert_eq!(batch_collector.batch_size, 5);
+        assert_eq!(batch_collector.collectors.len(), 5);
+    }
+
+    #[tokio::test]
+    async fn test_batch_collector_collect() {
+        let batch_collector = BatchCollector::new(3);
+        let results = batch_collector
+            .collect_batch()
+            .await
+            .expect("Should collect batch");
+
+        assert_eq!(results.len(), 3);
+        for metrics in results {
+            assert!(metrics.cpu_usage_percent >= 0.0);
+            assert!(metrics.memory_usage_bytes > 0);
+        }
+    }
+
+    #[test]
+    fn test_data_collector_different_intervals() {
+        let collector1 = DataCollector::new(30);
+        let collector2 = DataCollector::new(60);
+        let collector3 = DataCollector::new(120);
+
+        assert_eq!(collector1.interval, Duration::from_secs(30));
+        assert_eq!(collector2.interval, Duration::from_secs(60));
+        assert_eq!(collector3.interval, Duration::from_secs(120));
+    }
+
+    #[test]
+    fn test_batch_collector_multiple_sizes() {
+        let small = BatchCollector::new(2);
+        let medium = BatchCollector::new(5);
+        let large = BatchCollector::new(10);
+
+        assert_eq!(small.collectors.len(), 2);
+        assert_eq!(medium.collectors.len(), 5);
+        assert_eq!(large.collectors.len(), 10);
+    }
+
+    #[test]
+    fn test_metrics_snapshot_with_different_collectors() {
+        let metrics = SystemMetrics {
+            cpu_usage_percent: 50.0,
+            memory_usage_bytes: 1024 * 1024 * 1024,
+            disk_io_metrics: super::super::metrics::DiskIOMetrics {
+                read_bytes_per_sec: 1024,
+                write_bytes_per_sec: 512,
+                read_ops_per_sec: 10,
+                write_ops_per_sec: 5,
+            },
+            network_metrics: super::super::metrics::NetworkMetrics {
+                rx_bytes_per_sec: 2048,
+                tx_bytes_per_sec: 1024,
+                rx_packets_per_sec: 100,
+                tx_packets_per_sec: 50,
+            },
+            timestamp: std::time::SystemTime::now(),
+        };
+
+        let snapshots = vec![
+            MetricsSnapshot {
+                system_metrics: metrics.clone(),
+                collection_timestamp: std::time::SystemTime::now(),
+                collector_id: "collector-1".to_string(),
+            },
+            MetricsSnapshot {
+                system_metrics: metrics.clone(),
+                collection_timestamp: std::time::SystemTime::now(),
+                collector_id: "collector-2".to_string(),
+            },
+            MetricsSnapshot {
+                system_metrics: metrics,
+                collection_timestamp: std::time::SystemTime::now(),
+                collector_id: "collector-3".to_string(),
+            },
+        ];
+
+        assert_eq!(snapshots.len(), 3);
+        assert_eq!(snapshots[0].collector_id, "collector-1");
+        assert_eq!(snapshots[1].collector_id, "collector-2");
+        assert_eq!(snapshots[2].collector_id, "collector-3");
     }
 }

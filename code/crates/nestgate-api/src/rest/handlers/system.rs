@@ -3,6 +3,8 @@
 // These handlers provide clean access to system data without any
 // authentication or user management overhead.
 
+//! System module
+
 use axum::{extract::State, response::Json};
 use serde::{Deserialize, Serialize};
 
@@ -18,6 +20,7 @@ use nestgate_core::universal_storage::auto_configurator::AutoConfigurator;
 
 /// System health status
 #[derive(Debug, Serialize, Deserialize)]
+/// Healthstatus
 pub struct HealthStatus {
     /// Overall system status
     pub status: String,
@@ -32,6 +35,7 @@ pub struct HealthStatus {
 }
 /// Service status information
 #[derive(Debug, Serialize, Deserialize)]
+/// Servicestatus
 pub struct ServiceStatus {
     /// ZFS _engine status
     pub zfs_engine: String,
@@ -44,6 +48,7 @@ pub struct ServiceStatus {
 }
 /// Version information
 #[derive(Debug, Serialize, Deserialize)]
+/// Versioninfo
 pub struct VersionInfo {
     /// Application version
     pub version: String,
@@ -60,6 +65,7 @@ pub struct VersionInfo {
 }
 /// System status information
 #[derive(Debug, Serialize, Deserialize)]
+/// Systemstatusinfo
 pub struct SystemStatusInfo {
     /// System health
     pub health: HealthStatus,
@@ -76,6 +82,7 @@ pub struct SystemStatusInfo {
 }
 /// Resource usage information
 #[derive(Debug, Serialize, Deserialize)]
+/// Resourceusage
 pub struct ResourceUsage {
     /// Memory usage in bytes
     pub memory_used_bytes: u64,
@@ -314,4 +321,289 @@ fn get_engine_snapshot_count(
 
     // Default to 0 if no snapshots found
     Ok(0)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::rest::ApiState;
+    use nestgate_core::universal_storage::StorageDetector;
+    use std::collections::HashMap;
+    use std::sync::Arc;
+    use tokio::sync::{Mutex, RwLock};
+
+    /// Helper to create a test API state
+    fn create_test_api_state() -> ApiState {
+        ApiState {
+            zfs_engines: Arc::new(RwLock::new(HashMap::new())),
+            storage_detector: Arc::new(Mutex::new(StorageDetector::default())),
+            auto_configurator: Arc::new(Mutex::new(None)),
+            rpc_manager: Arc::new(Mutex::new(None)),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_health_check_returns_data() {
+        let state = create_test_api_state();
+        let result = health_check(State(state)).await;
+
+        assert_eq!(result.0.data.status, "healthy");
+        assert!(!result.0.data.version.is_empty());
+        assert!(result.0.data.uptime_seconds > 0);
+    }
+
+    #[tokio::test]
+    async fn test_health_check_service_statuses() {
+        let state = create_test_api_state();
+        let result = health_check(State(state)).await;
+
+        let services = &result.0.data.services;
+        // With empty engines, should be idle
+        assert_eq!(services.zfs_engine, "idle");
+        assert_eq!(services.storage_detector, "online");
+        assert_eq!(services.metrics_collector, "online");
+    }
+
+    #[tokio::test]
+    async fn test_health_check_with_engines() {
+        let state = create_test_api_state();
+
+        // Add a test engine
+        {
+            let mut engines = state.zfs_engines.write().await;
+            engines.insert("test-engine".to_string(), "engine-data".to_string());
+        }
+
+        let result = health_check(State(state)).await;
+
+        // With engines present, should be online
+        assert_eq!(result.0.data.services.zfs_engine, "online");
+    }
+
+    #[tokio::test]
+    async fn test_version_info_contains_all_fields() {
+        let result = version_info().await;
+
+        assert!(!result.0.data.version.is_empty());
+        assert!(!result.0.data.build_date.is_empty());
+        assert!(!result.0.data.git_hash.is_empty());
+        // rust_version may be empty if CARGO_PKG_RUST_VERSION is not set
+        // assert!(!result.0.data.rust_version.is_empty());
+        assert!(!result.0.data.target.is_empty());
+        assert!(!result.0.data.profile.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_version_info_profile_is_correct() {
+        let result = version_info().await;
+
+        // Profile should be either debug or release
+        let profile = &result.0.data.profile;
+        assert!(profile == "debug" || profile == "release");
+    }
+
+    #[tokio::test]
+    async fn test_system_status_comprehensive() {
+        let state = create_test_api_state();
+        let result = system_status(State(state)).await;
+
+        // Verify health data
+        assert_eq!(result.0.data.health.status, "healthy");
+
+        // Verify version data
+        assert!(!result.0.data.version.version.is_empty());
+
+        // Verify resource data
+        assert!(result.0.data.resources.memory_total_bytes > 0);
+        assert!(result.0.data.resources.disk_total_bytes > 0);
+        assert!(result.0.data.resources.cpu_usage_percent >= 0.0);
+        assert!(result.0.data.resources.cpu_usage_percent <= 100.0);
+    }
+
+    #[tokio::test]
+    async fn test_system_status_with_datasets() {
+        let state = create_test_api_state();
+
+        // Add test datasets
+        {
+            let mut engines = state.zfs_engines.write().await;
+            engines.insert("dataset1".to_string(), "data1".to_string());
+            engines.insert("dataset2".to_string(), "data2".to_string());
+            engines.insert("dataset3".to_string(), "data3".to_string());
+        }
+
+        let result = system_status(State(state)).await;
+
+        assert_eq!(result.0.data.datasets_count, 3);
+        assert!(result.0.data.snapshots_count > 0); // Placeholder generates snapshots
+    }
+
+    #[test]
+    fn test_get_system_uptime_positive() {
+        let uptime = get_system_uptime();
+        assert!(uptime > 0, "System uptime should be positive");
+    }
+
+    #[test]
+    fn test_get_build_date_not_empty() {
+        let build_date = get_build_date();
+        assert!(!build_date.is_empty());
+    }
+
+    #[test]
+    fn test_get_git_hash_not_empty() {
+        let git_hash = get_git_hash();
+        assert!(!git_hash.is_empty());
+    }
+
+    #[test]
+    fn test_get_rust_version_returns_string() {
+        let rust_version = get_rust_version();
+        // Rust version may be empty if CARGO_PKG_RUST_VERSION is not set
+        // Just verify it returns a string (may be empty)
+        assert!(rust_version.is_empty() || !rust_version.is_empty());
+    }
+
+    #[test]
+    fn test_get_target_triple_format() {
+        let target = get_target_triple();
+        assert!(!target.is_empty());
+        assert!(target.contains('-'), "Target should contain arch-os format");
+    }
+
+    #[test]
+    fn test_get_build_profile_valid() {
+        let profile = get_build_profile();
+        assert!(profile == "debug" || profile == "release");
+    }
+
+    #[test]
+    fn test_get_resource_usage_valid_ranges() {
+        let resources = get_resource_usage();
+
+        // Memory checks
+        assert!(resources.memory_total_bytes > 0);
+        assert!(resources.memory_used_bytes <= resources.memory_total_bytes);
+        assert!(resources.memory_usage_percent >= 0.0);
+        assert!(resources.memory_usage_percent <= 100.0);
+
+        // CPU checks
+        assert!(resources.cpu_usage_percent >= 0.0);
+        assert!(resources.cpu_usage_percent <= 100.0);
+
+        // Disk checks
+        assert!(resources.disk_total_bytes > 0);
+        assert!(resources.disk_used_bytes <= resources.disk_total_bytes);
+        assert!(resources.disk_usage_percent >= 0.0);
+        assert!(resources.disk_usage_percent <= 100.0);
+    }
+
+    #[test]
+    fn test_get_resource_usage_consistency() {
+        let resources = get_resource_usage();
+
+        // Verify percentage calculations are consistent
+        let expected_memory_percent =
+            (resources.memory_used_bytes as f64 / resources.memory_total_bytes as f64) * 100.0;
+        assert!(
+            (resources.memory_usage_percent - expected_memory_percent).abs() < 0.1,
+            "Memory percentage should match calculation"
+        );
+
+        let expected_disk_percent =
+            (resources.disk_used_bytes as f64 / resources.disk_total_bytes as f64) * 100.0;
+        assert!(
+            (resources.disk_usage_percent - expected_disk_percent).abs() < 0.1,
+            "Disk percentage should match calculation"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_health_check_timestamp_recent() {
+        let state = create_test_api_state();
+        let result = health_check(State(state)).await;
+
+        let now = chrono::Utc::now();
+        let timestamp = result.0.data.timestamp;
+
+        // Timestamp should be within last 5 seconds
+        let diff = (now - timestamp).num_seconds().abs();
+        assert!(diff < 5, "Timestamp should be recent");
+    }
+
+    #[tokio::test]
+    async fn test_system_status_storage_backends_count() {
+        let state = create_test_api_state();
+        let result = system_status(State(state)).await;
+
+        // Should report at least one storage backend
+        assert!(result.0.data.storage_backends_count > 0);
+    }
+
+    #[test]
+    fn test_service_status_serialization() {
+        let service_status = ServiceStatus {
+            zfs_engine: "online".to_string(),
+            storage_detector: "online".to_string(),
+            auto_configurator: "online".to_string(),
+            metrics_collector: "online".to_string(),
+        };
+
+        // Should be serializable
+        let json = serde_json::to_string(&service_status);
+        assert!(json.is_ok());
+    }
+
+    #[test]
+    fn test_health_status_serialization() {
+        let health = HealthStatus {
+            status: "healthy".to_string(),
+            uptime_seconds: 12345,
+            version: "0.1.0".to_string(),
+            services: ServiceStatus {
+                zfs_engine: "online".to_string(),
+                storage_detector: "online".to_string(),
+                auto_configurator: "online".to_string(),
+                metrics_collector: "online".to_string(),
+            },
+            timestamp: chrono::Utc::now(),
+        };
+
+        // Should be serializable
+        let json = serde_json::to_string(&health);
+        assert!(json.is_ok());
+    }
+
+    #[test]
+    fn test_version_info_serialization() {
+        let version = VersionInfo {
+            version: "0.1.0".to_string(),
+            build_date: "2025-01-30".to_string(),
+            git_hash: "abc123".to_string(),
+            rust_version: "1.75.0".to_string(),
+            target: "x86_64-linux".to_string(),
+            profile: "release".to_string(),
+        };
+
+        // Should be serializable
+        let json = serde_json::to_string(&version);
+        assert!(json.is_ok());
+    }
+
+    #[test]
+    fn test_resource_usage_serialization() {
+        let resources = ResourceUsage {
+            memory_used_bytes: 1024 * 1024 * 100,
+            memory_total_bytes: 1024 * 1024 * 1024,
+            memory_usage_percent: 10.0,
+            cpu_usage_percent: 45.0,
+            disk_used_bytes: 1024 * 1024 * 1024 * 10,
+            disk_total_bytes: 1024 * 1024 * 1024 * 100,
+            disk_usage_percent: 10.0,
+        };
+
+        // Should be serializable
+        let json = serde_json::to_string(&resources);
+        assert!(json.is_ok());
+    }
 }

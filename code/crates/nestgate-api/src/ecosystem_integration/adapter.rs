@@ -65,22 +65,34 @@ impl UniversalEcosystemAdapter {
 
 /// Service adapter trait
 pub trait ServiceAdapter: Send + Sync {
+    /// Name
     fn name(&self) -> &str;
+    /// Handles  Request
     fn handle_request(&self, request: ServiceRequest) -> Result<ServiceResponse>;
 }
 /// Generic service request
 #[derive(Debug, Clone)]
+/// Request parameters for Service operation
 pub struct ServiceRequest {
+    /// Unique identifier
     pub id: Uuid,
+    /// Method
     pub method: String,
+    /// Path
     pub path: String,
+    /// Headers
     pub headers: HashMap<String, String>,
+    /// Body
     pub body: Option<serde_json::Value>,
 }
 /// Generic service response
 #[derive(Debug, Clone)]
+/// Response data for Service operation
 pub struct ServiceResponse {
+    /// Unique identifier
     pub id: Uuid,
+    /// Status
     pub status: String,
+    /// Data
     pub data: serde_json::Value,
 } 

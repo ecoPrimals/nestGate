@@ -1,28 +1,31 @@
+//! Implementation module
+
 use serde_json::json;
 use std::collections::HashMap;
-use std::time::{Duration, SystemTime};
+use std::time::SystemTime;
 use tracing::debug;
 
 use super::service::RemoteZfsService;
-use crate::handlers::zfs::universal_zfs::{
-    traits::UniversalZfsService,
-    types::{
-        DatasetConfig, DatasetInfo, HealthStatus, PoolConfig, PoolInfo, ServiceMetrics,
-        ServiceStatus, SnapshotConfig, SnapshotInfo, UniversalZfsError, UniversalZfsResult,
-    },
+use crate::handlers::zfs::universal_zfs::traits::UniversalZfsService;
+use crate::handlers::zfs::universal_zfs_types::{
+    DatasetConfig, DatasetInfo, HealthStatus, PoolConfig, PoolInfo, ServiceMetrics, ServiceStatus,
+    SnapshotConfig, SnapshotInfo, UniversalZfsError, UniversalZfsResult,
 };
 
 // **ASYNC TRAIT IMPLEMENTATION**: Using async_trait for proper lifetime handling
 #[async_trait::async_trait]
 impl UniversalZfsService for RemoteZfsService {
+    /// Service Name
     fn service_name(&self) -> &str {
-        &self.service_name()
+        self.service_name()
     }
 
+    /// Service Version
     fn service_version(&self) -> &str {
-        &self.service_version()
+        self.service_version()
     }
 
+    /// Health Check
     async fn health_check(&self) -> UniversalZfsResult<HealthStatus> {
         debug!("Getting health status via remote service");
 
@@ -32,7 +35,7 @@ impl UniversalZfsService for RemoteZfsService {
                 // Parse health response or assume healthy if endpoint responds
                 response
                     .get("healthy")
-                    .and_then(|v| v.as_bool())
+                    .and_then(serde_json::Value::as_bool)
                     .unwrap_or(true)
             }
             Err(_) => {
@@ -48,16 +51,13 @@ impl UniversalZfsService for RemoteZfsService {
             } else {
                 ServiceStatus::Degraded
             },
-            last_check: SystemTime::now(),
-            zfs_available: true,
-            pools_healthy: true,
-            datasets_healthy: true,
-            system_healthy: overall_healthy,
             checks: vec![],
-            metrics: None,
+            last_check: SystemTime::now(),
+            metadata: HashMap::new(),
         })
     }
 
+    /// Gets Metrics
     async fn get_metrics(&self) -> UniversalZfsResult<ServiceMetrics> {
         debug!("Getting service metrics via remote service");
 
@@ -77,26 +77,23 @@ impl UniversalZfsService for RemoteZfsService {
         Ok(ServiceMetrics {
             service_name: self.service_name().to_string(),
             timestamp: SystemTime::now(),
-            uptime: self.uptime(),
             requests_total: 0,
-            requests_successful: 0,
             requests_failed: 0,
-            average_response_time: Duration::from_millis(0),
             error_rate: 0.0,
-            circuit_breaker_state: "CLOSED".to_string(),
-            active_connections: 0,
+            latency_avg: 0.0,
+            latency_p95: 0.0,
+            latency_p99: 0.0,
             custom_metrics: metrics,
         })
     }
 
+    /// Checks if Available
     async fn is_available(&self) -> bool {
         // Check availability by attempting to connect to remote service
-        match self.client().get("/health").await {
-            Ok(_) => true,
-            Err(_) => false,
-        }
+        (self.client().get("/health").await).is_ok()
     }
 
+    /// List Pools
     async fn list_pools(&self) -> UniversalZfsResult<Vec<PoolInfo>> {
         debug!("Listing pools via remote service");
 
@@ -122,10 +119,11 @@ impl UniversalZfsService for RemoteZfsService {
         }
     }
 
+    /// Gets Pool
     async fn get_pool(&self, name: &str) -> UniversalZfsResult<Option<PoolInfo>> {
         debug!("Getting pool '{}' via remote service", name);
 
-        let endpoint = format!("/api/v1/pools/self.base_url");
+        let endpoint = "/api/v1/pools/self.base_url".to_string();
         match self.client().get(&endpoint).await {
             Ok(response) => {
                 // Parse response into PoolInfo
@@ -149,6 +147,7 @@ impl UniversalZfsService for RemoteZfsService {
         }
     }
 
+    /// Creates  Pool
     async fn create_pool(&self, config: &PoolConfig) -> UniversalZfsResult<PoolInfo> {
         debug!("Creating pool '{}' via remote service", config.name);
         let start_time = std::time::Instant::now();
@@ -156,7 +155,6 @@ impl UniversalZfsService for RemoteZfsService {
         let request_body = json!({
             "name": config.name,
             "_devices": config._devices,
-            "raid_level": config.raid_level,
             "properties": config.properties,
         });
 
@@ -166,28 +164,29 @@ impl UniversalZfsService for RemoteZfsService {
                 // Parse response into PoolInfo
                 serde_json::from_value(response).map_err(|_e| UniversalZfsError::Backend {
                     backend: "remote".to_string(),
-                    message: format!("Failed to parse pool response: self.base_url"),
+                    message: "Failed to parse pool response: self.base_url".to_string(),
                 })
             }
             Err(e) => {
-                let error = format!("Failed to create pool: self.base_url");
+                let error = "Failed to create pool: self.base_url".to_string();
                 self.record_failure(error.clone()).await;
                 Err(e)
             }
         }
     }
 
+    /// Destroy Pool
     async fn destroy_pool(&self, name: &str) -> UniversalZfsResult<()> {
         debug!("Destroying pool '{}' via remote service", name);
 
-        let endpoint = format!("/api/v1/pools/self.base_url");
+        let endpoint = "/api/v1/pools/self.base_url".to_string();
         match self.client().delete(&endpoint).await {
             Ok(_) => {
                 debug!("Successfully destroyed pool '{}'", name);
                 Ok(())
             }
             Err(e) => {
-                let _error_msg = format!("Failed to destroy pool: self.base_url");
+                let _error_msg = "Failed to destroy pool: self.base_url".to_string();
                 debug!("{}", _error_msg);
                 self.record_failure(_error_msg).await;
                 Err(e)
@@ -195,17 +194,18 @@ impl UniversalZfsService for RemoteZfsService {
         }
     }
 
+    /// Scrub Pool
     async fn scrub_pool(&self, name: &str) -> UniversalZfsResult<()> {
         debug!("Scrubbing pool '{}' via remote service", name);
 
-        let endpoint = format!("/api/v1/pools/self.base_url/scrub");
+        let endpoint = "/api/v1/pools/self.base_url/scrub".to_string();
         match self.client().post(&endpoint, json!({})).await {
             Ok(_) => {
                 debug!("Successfully started scrub for pool '{}'", name);
                 Ok(())
             }
             Err(e) => {
-                let _error_msg = format!("Failed to scrub pool: self.base_url");
+                let _error_msg = "Failed to scrub pool: self.base_url".to_string();
                 debug!("{}", _error_msg);
                 self.record_failure(_error_msg).await;
                 Err(e)
@@ -213,10 +213,11 @@ impl UniversalZfsService for RemoteZfsService {
         }
     }
 
+    /// Gets Pool Status
     async fn get_pool_status(&self, name: &str) -> UniversalZfsResult<String> {
         debug!("Getting pool status for '{}' via remote service", name);
 
-        let endpoint = format!("/api/v1/pools/self.base_url/status");
+        let endpoint = "/api/v1/pools/self.base_url/status".to_string();
         match self.client().get(&endpoint).await {
             Ok(response) => {
                 // Extract status from response
@@ -235,6 +236,7 @@ impl UniversalZfsService for RemoteZfsService {
         }
     }
 
+    /// List Datasets
     async fn list_datasets(&self) -> UniversalZfsResult<Vec<DatasetInfo>> {
         debug!("Listing datasets via remote service");
 
@@ -260,10 +262,11 @@ impl UniversalZfsService for RemoteZfsService {
         }
     }
 
+    /// Gets Dataset
     async fn get_dataset(&self, name: &str) -> UniversalZfsResult<Option<DatasetInfo>> {
         debug!("Getting dataset '{}' via remote service", name);
 
-        let endpoint = format!("/api/v1/datasets/self.base_url");
+        let endpoint = "/api/v1/datasets/self.base_url".to_string();
         match self.client().get(&endpoint).await {
             Ok(response) => {
                 // Parse response into DatasetInfo
@@ -290,14 +293,13 @@ impl UniversalZfsService for RemoteZfsService {
         }
     }
 
+    /// Creates  Dataset
     async fn create_dataset(&self, config: &DatasetConfig) -> UniversalZfsResult<DatasetInfo> {
         debug!("Creating dataset '{}' via remote service", config.name);
         let start_time = std::time::Instant::now();
 
         let request_body = json!({
             "name": config.name,
-            "parent": config.parent,
-            "dataset_type": config.dataset_type,
             "properties": config.properties,
         });
 
@@ -305,26 +307,24 @@ impl UniversalZfsService for RemoteZfsService {
             Ok(response) => {
                 self.record_success(start_time.elapsed()).await;
                 // Parse response into DatasetInfo
-                serde_json::from_value(response).map_err(|_e| UniversalZfsError::Backend {
+                serde_json::from_value(response).map_err(|e| UniversalZfsError::Backend {
                     backend: "remote".to_string(),
-                    message: format!(
-                        "Failed to parse dataset response: {}",
-                        e
-                    ),
+                    message: format!("Failed to parse dataset response: {e}"),
                 })
             }
             Err(e) => {
-                let error = format!("Failed to create dataset: self.base_url");
+                let error = "Failed to create dataset: self.base_url".to_string();
                 self.record_failure(error.clone()).await;
                 Err(e)
             }
         }
     }
 
+    /// Destroy Dataset
     async fn destroy_dataset(&self, name: &str) -> UniversalZfsResult<()> {
         debug!("Destroying dataset '{}' via remote service", name);
 
-        let endpoint = format!("/api/v1/datasets/self.base_url");
+        let endpoint = "/api/v1/datasets/self.base_url".to_string();
         match self.client().delete(&endpoint).await {
             Ok(_) => {
                 debug!("Successfully destroyed dataset '{}'", name);
@@ -339,6 +339,7 @@ impl UniversalZfsService for RemoteZfsService {
         }
     }
 
+    /// Gets Dataset Properties
     async fn get_dataset_properties(
         &self,
         name: &str,
@@ -348,7 +349,7 @@ impl UniversalZfsService for RemoteZfsService {
             name
         );
 
-        let endpoint = format!("/api/v1/datasets/self.base_url/properties");
+        let endpoint = "/api/v1/datasets/self.base_url/properties".to_string();
         match self.client().get(&endpoint).await {
             Ok(response) => {
                 // Parse response into HashMap<String, String>
@@ -375,6 +376,7 @@ impl UniversalZfsService for RemoteZfsService {
         }
     }
 
+    /// Sets Dataset Properties
     async fn set_dataset_properties(
         &self,
         name: &str,
@@ -385,7 +387,7 @@ impl UniversalZfsService for RemoteZfsService {
             name
         );
 
-        let endpoint = format!("/api/v1/datasets/self.base_url/properties");
+        let endpoint = "/api/v1/datasets/self.base_url/properties".to_string();
         let request_body = json!({
             "properties": properties
         });
@@ -402,6 +404,7 @@ impl UniversalZfsService for RemoteZfsService {
         }
     }
 
+    /// List Snapshots
     async fn list_snapshots(&self) -> UniversalZfsResult<Vec<SnapshotInfo>> {
         debug!("Listing snapshots via remote service");
 
@@ -427,13 +430,14 @@ impl UniversalZfsService for RemoteZfsService {
         }
     }
 
+    /// List Dataset Snapshots
     async fn list_dataset_snapshots(&self, dataset: &str) -> UniversalZfsResult<Vec<SnapshotInfo>> {
         debug!(
             "Listing snapshots for dataset '{}' via remote service",
             dataset
         );
 
-        let endpoint = format!("/api/v1/datasets/self.base_url/snapshots");
+        let endpoint = "/api/v1/datasets/self.base_url/snapshots".to_string();
         match self.client().get(&endpoint).await {
             Ok(response) => {
                 // Parse response into Vec<SnapshotInfo>
@@ -460,6 +464,7 @@ impl UniversalZfsService for RemoteZfsService {
         }
     }
 
+    /// Creates  Snapshot
     async fn create_snapshot(&self, config: &SnapshotConfig) -> UniversalZfsResult<SnapshotInfo> {
         debug!("Creating snapshot '{}' via remote service", config.name);
         let start_time = std::time::Instant::now();
@@ -467,7 +472,6 @@ impl UniversalZfsService for RemoteZfsService {
         let request_body = json!({
             "name": config.name,
             "dataset": config.dataset,
-            "description": config.description,
             "properties": config.properties,
         });
 
@@ -475,26 +479,24 @@ impl UniversalZfsService for RemoteZfsService {
             Ok(response) => {
                 self.record_success(start_time.elapsed()).await;
                 // Parse response into SnapshotInfo
-                serde_json::from_value(response).map_err(|_e| UniversalZfsError::Backend {
+                serde_json::from_value(response).map_err(|e| UniversalZfsError::Backend {
                     backend: "remote".to_string(),
-                    message: format!(
-                        "Failed to parse snapshot response: {}",
-                        e
-                    ),
+                    message: format!("Failed to parse snapshot response: {e}"),
                 })
             }
             Err(e) => {
-                let error = format!("Failed to create snapshot: self.base_url");
+                let error = "Failed to create snapshot: self.base_url".to_string();
                 self.record_failure(error.clone()).await;
                 Err(e)
             }
         }
     }
 
+    /// Destroy Snapshot
     async fn destroy_snapshot(&self, name: &str) -> UniversalZfsResult<()> {
         debug!("Destroying snapshot '{}' via remote service", name);
 
-        let endpoint = format!("/api/v1/snapshots/self.base_url");
+        let endpoint = "/api/v1/snapshots/self.base_url".to_string();
         match self.client().delete(&endpoint).await {
             Ok(_) => {
                 debug!("Successfully destroyed snapshot '{}'", name);
@@ -509,6 +511,7 @@ impl UniversalZfsService for RemoteZfsService {
         }
     }
 
+    /// Optimize
     async fn optimize(&self) -> UniversalZfsResult<String> {
         debug!("Running optimization via remote service");
 
@@ -530,6 +533,7 @@ impl UniversalZfsService for RemoteZfsService {
         }
     }
 
+    /// Gets Optimization Analytics
     async fn get_optimization_analytics(&self) -> UniversalZfsResult<serde_json::Value> {
         debug!("Getting optimization analytics via remote service");
 
@@ -552,6 +556,7 @@ impl UniversalZfsService for RemoteZfsService {
         }
     }
 
+    /// Predict Tier
     async fn predict_tier(&self, file_path: &str) -> UniversalZfsResult<String> {
         debug!("Predicting tier for '{}' via remote service", file_path);
 
@@ -585,6 +590,7 @@ impl UniversalZfsService for RemoteZfsService {
         }
     }
 
+    /// Gets Configuration
     async fn get_configuration(&self) -> UniversalZfsResult<serde_json::Value> {
         debug!("Getting configuration via remote service");
 
@@ -612,6 +618,7 @@ impl UniversalZfsService for RemoteZfsService {
         }
     }
 
+    /// Updates  Configuration
     async fn update_configuration(&self, config: serde_json::Value) -> UniversalZfsResult<()> {
         debug!("Updating configuration via remote service");
 
@@ -621,8 +628,7 @@ impl UniversalZfsService for RemoteZfsService {
                 Ok(())
             }
             Err(e) => {
-                let _error_msg =
-                    format!("Failed to update configuration: self.base_url");
+                let _error_msg = "Failed to update configuration: self.base_url".to_string();
                 debug!("{}", _error_msg);
                 self.record_failure(_error_msg).await;
                 Err(e)
@@ -630,6 +636,7 @@ impl UniversalZfsService for RemoteZfsService {
         }
     }
 
+    /// Shutdown
     async fn shutdown(&self) -> UniversalZfsResult<()> {
         debug!("Shutting down remote service");
 

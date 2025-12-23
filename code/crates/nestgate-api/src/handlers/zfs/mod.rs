@@ -21,6 +21,18 @@ pub mod basic;
 /// Conditionally uses real or stub types based on features.
 pub mod types;
 
+/// **UNIVERSAL ZFS TYPES**
+///
+/// Comprehensive types for Universal ZFS Service including errors, pool/dataset types,
+/// and health monitoring. Refactored into modular structure (Nov 13, 2025).
+pub mod universal_zfs_types;
+
+/// **UNIVERSAL ZFS SERVICE**
+///
+/// Universal ZFS service with multiple backend support, fail-safe operations,
+/// circuit breakers, and comprehensive error handling.
+pub mod universal_zfs;
+
 /// **UNIVERSAL POOLS** (Development Only)
 ///
 /// New storage-agnostic pools handler for unified storage management.

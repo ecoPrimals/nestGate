@@ -1,0 +1,4 @@
+  ✅ Created partition: /nestgate-edge/sensors
+  ✅ Created partition: /nestgate-edge/cameras
+  ✅ Created partition: /nestgate-edge/analytics
+  ✅ Created partition: /nestgate-edge/buffer

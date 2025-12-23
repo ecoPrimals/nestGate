@@ -1,3 +1,5 @@
+//! Standards Integration Example module
+
 use crate::universal_adapter::{PrimalAgnosticAdapter, CapabilityCategory, CapabilityRequest};
 //
 // This example demonstrates how all three ecosystem standards work together
@@ -38,12 +40,21 @@ impl StandardsIntegrationDemo {
     pub fn new() -> Self { // Create NestGate EcoPrimal
         let eco_primal = NestGateEcoPrimal::new();
 
-        // Create service registration
-        use nestgate_core::constants::hardcoding::{addresses, ports};
+        // ✅ SOVEREIGNTY: Environment-driven service registration
+        // No hardcoded addresses or ports, compile-time constants only
+        use std::net::Ipv4Addr;
+        
+        let host = std::env::var("NESTGATE_DEMO_HOST")
+            .unwrap_or_else(|_| Ipv4Addr::LOCALHOST.to_string());
+        let port = std::env::var("NESTGATE_DEMO_PORT")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(8080);
+        
         let service_registration = NestGateServiceRegistration::create_registration(
             "demo-instance".to_string(),
-            addresses::LOCALHOST_IPV4.to_string(),
-            ports::HTTP_DEFAULT,
+            host,
+            port,
             Some("demo-biome".to_string()),
         );
 
@@ -345,6 +356,7 @@ impl StandardsIntegrationDemo {
 }
 
 impl Default for StandardsIntegrationDemo {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

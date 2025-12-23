@@ -3,9 +3,11 @@
 // Split into logical sub-modules to maintain code organization and comply with file size limits.
 
 // Note: error module moved to nestgate-core
-// use crate::error::ApiResult;
+// use crate::error::ApiResult; // DEPRECATED: Now using canonical Result<T>
+//! Analyzer module
+
 use nestgate_core::canonical_modernization::canonical_constants;
-use nestgate_core::error::ApiResult;
+use nestgate_core::Result; // Canonical Result type (Nov 10, 2025 consolidation)
 use serde::{Deserialize, Serialize};
 
 // **CANONICAL MODERNIZATION**: Use canonical constants instead of scattered definitions
@@ -43,6 +45,7 @@ impl OptimizationTitle {
 ///
 /// A performance insight with recommendations for system optimization.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performanceinsight
 pub struct PerformanceInsight {
     /// Impact level of this insight
     pub impact: String,
@@ -55,6 +58,7 @@ pub struct PerformanceInsight {
 }
 /// Performance analyzer
 #[derive(Debug)]
+/// Performanceanalyzer
 pub struct PerformanceAnalyzer;
 impl PerformanceAnalyzer {
     /// Create new analyzer
@@ -63,7 +67,7 @@ impl PerformanceAnalyzer {
     }
 
     /// Analyze storage performance and capacity
-    pub fn analyze_storage(&self) -> ApiResult<PerformanceInsight> {
+    pub fn analyze_storage(&self) -> Result<PerformanceInsight> {
         Ok(PerformanceInsight {
             impact: ImpactLevel::HIGH.to_string(),
             title: OptimizationTitle::EXPAND_STORAGE.to_string(),
@@ -77,7 +81,7 @@ impl PerformanceAnalyzer {
     }
 
     /// Analyze system fragmentation levels
-    pub fn analyze_fragmentation(&self) -> ApiResult<PerformanceInsight> {
+    pub fn analyze_fragmentation(&self) -> Result<PerformanceInsight> {
         Ok(PerformanceInsight {
             impact: ImpactLevel::HIGH.to_string(),
             title: OptimizationTitle::SCHEDULE_DEFRAG.to_string(),

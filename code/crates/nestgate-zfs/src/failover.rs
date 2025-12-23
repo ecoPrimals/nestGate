@@ -2,6 +2,8 @@
 // Handles automatic failover and pool takeover for high availability scenarios.
 // Allows one NestGate instance to take over ZFS pools from a failed instance.
 
+//! Failover module
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -19,35 +21,56 @@ use tracing::info;
 
 /// Metadata about a ZFS pool for failover tracking
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Poolmetadata
 pub struct PoolMetadata {
+    /// Name
     pub name: String,
+    /// Original Owner
     pub original_owner: String,
+    /// Last Seen
     pub last_seen: SystemTime,
+    /// Import Guid
     pub import_guid: Option<String>,
+    /// State
     pub state: PoolFailoverState,
 }
 
 /// State of a pool in the failover system
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Poolfailoverstate
 pub enum PoolFailoverState {
-    Active,   // Currently imported and active
+    /// Pool is currently imported and active
+    Active, // Currently imported and active
+    /// Pool is available for import (original owner failed)
     Orphaned, // Available for import (original owner failed)
-    Failed,   // Pool is in a failed state
-    Unknown,  // State cannot be determined
+    /// Pool is in a failed state
+    Failed, // Pool is in a failed state
+    /// Pool state cannot be determined
+    Unknown, // State cannot be determined
 }
 
 /// Pool state for failover management
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+/// Poolstate
 pub enum PoolState {
-    Online,   // Pool is healthy and accessible
+    /// Pool is healthy and accessible
+    Online, // Pool is healthy and accessible
+    /// Pool has issues but is still functional
     Degraded, // Pool has issues but is still functional
-    Offline,  // Pool is not accessible
-    Faulted,  // Pool has critical errors
-    Removed,  // Pool has been removed from configuration
-    Unavail,  // Pool is temporarily unavailable
+    /// Pool is not accessible
+    Offline, // Pool is not accessible
+    /// Pool has critical errors
+    Faulted, // Pool has critical errors
+    /// Pool has been removed from configuration
+    Removed, // Pool has been removed from configuration
+    /// Pool is temporarily unavailable
+    Unavail, // Pool is temporarily unavailable
+    /// Pool is available for import (original owner failed)
     Orphaned, // Available for import (original owner failed)
-    Failed,   // Pool is in a failed state
-    Unknown,  // State cannot be determined
+    /// Pool is in a failed state
+    Failed, // Pool is in a failed state
+    /// Pool state cannot be determined
+    Unknown, // State cannot be determined
 }
 
 // Deprecated FailoverConfig removed - use CanonicalZfsConfig::default().pools.failover instead
@@ -57,24 +80,36 @@ pub enum PoolState {
 /// Modern replacement for the deprecated `FailoverConfig`.
 /// Integrated into the canonical ZFS configuration system.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for CanonicalFailover
 pub struct CanonicalFailoverConfig {
+    /// Auto Takeover Enabled
     pub auto_takeover_enabled: bool,
+    /// Health Check Interval Secs
     pub health_check_interval_secs: u64,
+    /// Takeover Timeout Secs
     pub takeover_timeout_secs: u64,
+    /// Node Failure Timeout Secs
     pub node_failure_timeout_secs: u64,
+    /// Max Takeover Attempts
     pub max_takeover_attempts: u32,
+    /// Failback Enabled
     pub failback_enabled: bool,
+    /// Failback Delay Secs
     pub failback_delay_secs: u64,
+    /// Configuration for notification
     pub notification_config: Option<FailoverNotificationConfig>,
 }
 
 impl Default for CanonicalFailoverConfig {
+    /// Returns the default instance
     fn default() -> Self {
+        use crate::constants::NODE_FAILURE_TIMEOUT_SECS;
+
         Self {
             auto_takeover_enabled: true,
             health_check_interval_secs: 30,
-            takeover_timeout_secs: 300,     // 5 minutes
-            node_failure_timeout_secs: 180, // 3 minutes
+            takeover_timeout_secs: 300, // 5 minutes
+            node_failure_timeout_secs: NODE_FAILURE_TIMEOUT_SECS,
             max_takeover_attempts: 3,
             failback_enabled: true,
             failback_delay_secs: 60,
@@ -85,17 +120,43 @@ impl Default for CanonicalFailoverConfig {
 
 /// Notification configuration for failover events
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+///
+/// **Migration Path**:
+/// ```rust,ignore
+/// // OLD (deprecated):
+/// use crate::network::config::FailoverNotificationConfig;
+///
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::FailoverNotificationConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+///
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(
+    since = "0.11.0",
+    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
+/// Configuration for FailoverNotification
 pub struct FailoverNotificationConfig {
+    /// Email Enabled
     pub email_enabled: bool,
+    /// Email Recipients
     pub email_recipients: Vec<String>,
+    /// Webhook Enabled
     pub webhook_enabled: bool,
+    /// Webhook Url
     pub webhook_url: Option<String>,
+    /// Slack Enabled
     pub slack_enabled: bool,
+    /// Slack Webhook
     pub slack_webhook: Option<String>,
 }
 
 /// Manages ZFS pool takeover operations
 #[allow(dead_code)] // Configuration fields used in advanced failover scenarios
+/// Manager for PoolTakeover operations
 pub struct PoolTakeoverManager {
     config: ZfsConfig,
     failover_config: CanonicalFailoverConfig,
@@ -378,13 +439,18 @@ pub struct NodeHealthMonitor {
 }
 
 #[derive(Debug, Clone)]
+/// Nodehealth
 pub struct NodeHealth {
+    /// Node identifier
     pub node_id: String,
+    /// Last Heartbeat
     pub last_heartbeat: SystemTime,
+    /// Whether alive
     pub is_alive: bool,
 }
 
 impl NodeHealthMonitor {
+    /// Creates a new node health monitor with the given failover configuration.
     #[must_use]
     pub fn new(config: CanonicalFailoverConfig) -> Self {
         Self {
@@ -441,6 +507,23 @@ impl NodeHealthMonitor {
         }
     }
 }
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+///
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Failovernotificationconfigcanonical
+pub type FailoverNotificationConfigCanonical =
+    nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using FailoverNotificationConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
 
 #[cfg(test)]
 mod tests {

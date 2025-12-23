@@ -4,6 +4,8 @@
 // These routes provide external access to hardware tuning capabilities
 // while enforcing crypto lock protection for commercial extraction.
 
+//! Hardware Tuning module
+
 use crate::handlers::hardware_tuning::{
 use tracing::info;
 use tracing::error;

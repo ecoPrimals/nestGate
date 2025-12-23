@@ -1,0 +1,6 @@
+{
+  "service": "nestgate",
+  "version": "2.0.0",
+  "protocols": ["http", "jsonrpc", "tarpc"],
+  "capabilities": ["storage", "zfs", "snapshots", "replication"]
+}

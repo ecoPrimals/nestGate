@@ -1,17 +1,38 @@
 use crate::canonical_types::service::{ServiceState, ServiceType};
-use crate::constants::hardcoding::ports;
+// ports removed - unused import
 /// **CANONICAL ADAPTER DISCOVERY**
 ///
 /// Consolidated discovery utilities for the universal adapter system.
 use crate::Result;
 // Removed unused import for pedantic perfection
+use super::discovery_config::{DiscoveryRuntimeConfig, SharedDiscoveryRuntimeConfig};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 use tracing::{debug, warn}; // Removed unused 'info' for pedantic perfection
 
 /// Service discovery configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+///
+/// **Migration Path**:
+/// ```rust,ignore
+/// // OLD (deprecated):
+/// use crate::network::config::DiscoveryConfig;
+///
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::DiscoveryConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+///
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(
+    since = "0.11.0",
+    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
+/// Configuration for Discovery
 pub struct DiscoveryConfig {
     /// Discovery endpoint
     pub endpoint: String,
@@ -24,7 +45,9 @@ pub struct DiscoveryConfig {
     /// Enabled discovery methods
     pub methods: Vec<DiscoveryMethod>,
 }
+#[allow(deprecated)]
 impl Default for DiscoveryConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             endpoint: crate::constants::canonical_defaults::network::build_endpoint(),
@@ -41,6 +64,7 @@ impl Default for DiscoveryConfig {
 
 /// Discovery methods
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Discoverymethod
 pub enum DiscoveryMethod {
     /// Environment variable discovery
     Environment,
@@ -55,6 +79,7 @@ pub enum DiscoveryMethod {
 }
 /// Discovered service information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Service implementation for Discovered
 pub struct DiscoveredService {
     /// Service identifier
     pub id: String,
@@ -77,6 +102,7 @@ pub struct DiscoveredService {
 }
 /// Discovery result
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Discoveryresult
 pub struct DiscoveryResult {
     /// Discovered services
     pub services: Vec<DiscoveredService>,
@@ -90,6 +116,7 @@ pub struct DiscoveryResult {
     pub error: Option<String>,
 }
 /// Discover available services using canonical discovery
+#[allow(deprecated)]
 pub fn discover_services(config: &DiscoveryConfig) -> Result<DiscoveryResult> {
     let start_time = std::time::Instant::now();
 
@@ -115,6 +142,7 @@ pub fn discover_services(config: &DiscoveryConfig) -> Result<DiscoveryResult> {
     })
 }
 /// Discover services by capability
+#[allow(deprecated)]
 pub fn discover_by_capability(
     config: &DiscoveryConfig,
     capability: &str,
@@ -140,43 +168,36 @@ pub fn health_check_service(service: &DiscoveredService) -> Result<bool> {
 
 /// Capability discovery service for universal adapter
 #[derive(Debug, Clone)]
+/// Capabilitydiscovery
 pub struct CapabilityDiscovery {
     registry: HashMap<String, Vec<String>>,
     discovery_endpoints: Vec<String>,
+    runtime_config: SharedDiscoveryRuntimeConfig,
 }
 
 impl CapabilityDiscovery {
-    /// Create a new capability discovery instance
-    pub fn new() -> crate::Result<Self> {
-        use crate::constants::hardcoding::addresses;
-
-        // Use environment variables or build from constants
-        let discovery_endpoints = std::env::var("NESTGATE_DISCOVERY_ENDPOINTS")
-            .map(|s| s.split(',').map(|e| e.trim().to_string()).collect())
-            .unwrap_or_else(|_| {
-                vec![
-                    format!(
-                        "http://{}:{}/discovery",
-                        addresses::LOCALHOST_NAME,
-                        ports::ORCHESTRATION_DEFAULT
-                    ),
-                    format!(
-                        "http://{}:{}/discovery",
-                        addresses::LOCALHOST_NAME,
-                        ports::STORAGE_DISCOVERY_DEFAULT
-                    ),
-                ]
-            });
+    /// Create a new capability discovery instance with runtime config
+    pub fn with_runtime_config(
+        runtime_config: SharedDiscoveryRuntimeConfig,
+    ) -> crate::Result<Self> {
+        let discovery_endpoints = runtime_config.get_discovery_endpoints();
 
         let mut discovery = Self {
             registry: HashMap::new(),
             discovery_endpoints,
+            runtime_config,
         };
 
         // Initialize with default capability mappings
         discovery.initialize_default_capabilities();
 
         Ok(discovery)
+    }
+
+    /// Create a new capability discovery instance (backward compatibility)
+    /// NOTE: Creates config from env each time. For tests, use with_runtime_config() directly.
+    pub fn new() -> crate::Result<Self> {
+        Self::with_runtime_config(Arc::new(DiscoveryRuntimeConfig::from_env()))
     }
 
     /// Find capabilities by type
@@ -205,89 +226,37 @@ impl CapabilityDiscovery {
 
     /// Initialize default capability mappings with environment-driven endpoints
     fn initialize_default_capabilities(&mut self) {
-        use crate::constants::hardcoding::{addresses, ports};
-
-        let base_endpoint = std::env::var("NESTGATE_BASE_ENDPOINT").unwrap_or_else(|_| {
-            format!(
-                "http://{}:{}",
-                addresses::LOCALHOST_NAME,
-                ports::HTTP_DEFAULT
-            )
-        });
+        let base_endpoint = self.runtime_config.get_base_endpoint();
 
         // Security capabilities
         self.registry.insert(
             "security".to_string(),
-            vec![
-                format!("{base_endpoint}/security"),
-                std::env::var("NESTGATE_SECURITY_ENDPOINT").unwrap_or_else(|_| {
-                    format!(
-                        "http://{}:{}/auth",
-                        addresses::LOCALHOST_NAME,
-                        ports::HEALTH_CHECK
-                    )
-                }),
-            ],
+            self.runtime_config.get_security_endpoint(&base_endpoint),
         );
 
         // AI capabilities
         self.registry.insert(
             "ai".to_string(),
-            vec![
-                format!("{base_endpoint}/ai"),
-                std::env::var("NESTGATE_AI_ENDPOINT").unwrap_or_else(|_| {
-                    format!(
-                        "http://{}:{}/ml",
-                        addresses::LOCALHOST_NAME,
-                        ports::WEBSOCKET_DEFAULT
-                    )
-                }),
-            ],
+            self.runtime_config.get_ai_endpoint(&base_endpoint),
         );
 
         // Orchestration capabilities
         self.registry.insert(
             "orchestration".to_string(),
-            vec![
-                format!("{base_endpoint}/orchestration"),
-                std::env::var("NESTGATE_ORCHESTRATION_ENDPOINT").unwrap_or_else(|_| {
-                    format!(
-                        "http://{}:{}/workflow",
-                        addresses::LOCALHOST_NAME,
-                        ports::ORCHESTRATION_DEFAULT
-                    )
-                }),
-            ],
+            self.runtime_config
+                .get_orchestration_endpoint(&base_endpoint),
         );
 
         // Storage/ZFS capabilities
         self.registry.insert(
             "storage".to_string(),
-            vec![
-                format!("{base_endpoint}/storage"),
-                std::env::var("NESTGATE_STORAGE_ENDPOINT").unwrap_or_else(|_| {
-                    format!(
-                        "http://{}:{}/zfs",
-                        addresses::LOCALHOST_NAME,
-                        ports::STORAGE_DISCOVERY_DEFAULT
-                    )
-                }),
-            ],
+            self.runtime_config.get_storage_endpoint(&base_endpoint),
         );
 
         // Compute capabilities
         self.registry.insert(
             "compute".to_string(),
-            vec![
-                format!("{base_endpoint}/compute"),
-                std::env::var("NESTGATE_COMPUTE_ENDPOINT").unwrap_or_else(|_| {
-                    format!(
-                        "http://{}:{}/processing",
-                        addresses::LOCALHOST_NAME,
-                        ports::COMPUTE_DEFAULT
-                    )
-                }),
-            ],
+            self.runtime_config.get_compute_endpoint(&base_endpoint),
         );
     }
 
@@ -331,19 +300,46 @@ impl CapabilityDiscovery {
 }
 
 impl Default for CapabilityDiscovery {
+    /// Returns the default instance
     fn default() -> Self {
         // CapabilityDiscovery::new() cannot actually fail - it just initializes data structures
         // If it ever returns an error, we use empty defaults as fallback
         Self::new().unwrap_or_else(|_| Self {
             registry: HashMap::new(),
             discovery_endpoints: Vec::new(),
+            runtime_config: Arc::new(DiscoveryRuntimeConfig::new()),
         })
     }
 }
 
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+///
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Discoveryconfigcanonical
+pub type DiscoveryConfigCanonical =
+    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using DiscoveryConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::config::discovery_config::ServiceDiscoveryConfig;
+
+    /// Helper to create test endpoint using ServiceDiscoveryConfig
+    /// ✅ MIGRATED: Replaces hardcoded "localhost:port" with configurable endpoints
+    fn test_endpoint(port: u16) -> String {
+        let config = ServiceDiscoveryConfig::default();
+        format!("http://{}:{}", config.discovery_host, port)
+    }
 
     #[test]
     fn test_discovery_config_default() {
@@ -376,12 +372,14 @@ mod tests {
 
     #[test]
     fn test_discovered_service_creation() {
+        use crate::constants::{network_defaults::LOCALHOST_NAME, port_defaults::get_admin_port};
+        let endpoint = format!("http://{}:{}", LOCALHOST_NAME, get_admin_port());
         let service = DiscoveredService {
             id: "test-service-1".to_string(),
             name: "Test Service".to_string(),
             service_type: ServiceType::Storage,
             state: ServiceState::Running,
-            endpoint: "http://localhost:8080".to_string(),
+            endpoint,
             capabilities: vec!["storage".to_string(), "backup".to_string()],
             metadata: HashMap::new(),
             discovered_at: SystemTime::now(),
@@ -440,12 +438,14 @@ mod tests {
 
     #[test]
     fn test_health_check_running_service() {
+        use crate::constants::{network_defaults::LOCALHOST_NAME, port_defaults::get_admin_port};
+        let endpoint = format!("http://{}:{}", LOCALHOST_NAME, get_admin_port());
         let service = DiscoveredService {
             id: "test-1".to_string(),
             name: "Test".to_string(),
             service_type: ServiceType::Storage,
             state: ServiceState::Running,
-            endpoint: "http://localhost:8080".to_string(),
+            endpoint,
             capabilities: vec![],
             metadata: HashMap::new(),
             discovered_at: SystemTime::now(),
@@ -463,7 +463,7 @@ mod tests {
             name: "Test".to_string(),
             service_type: ServiceType::Storage,
             state: ServiceState::Stopped,
-            endpoint: "http://localhost:8080".to_string(),
+            endpoint: test_endpoint(8080),
             capabilities: vec![],
             metadata: HashMap::new(),
             discovered_at: SystemTime::now(),
@@ -481,7 +481,7 @@ mod tests {
             name: "Test".to_string(),
             service_type: ServiceType::Storage,
             state: ServiceState::Starting,
-            endpoint: "http://localhost:8080".to_string(),
+            endpoint: test_endpoint(8080),
             capabilities: vec![],
             metadata: HashMap::new(),
             discovered_at: SystemTime::now(),
@@ -499,7 +499,7 @@ mod tests {
             name: "Test".to_string(),
             service_type: ServiceType::Storage,
             state: ServiceState::Failed,
-            endpoint: "http://localhost:8080".to_string(),
+            endpoint: test_endpoint(8080),
             capabilities: vec![],
             metadata: HashMap::new(),
             discovered_at: SystemTime::now(),
@@ -514,7 +514,8 @@ mod tests {
     fn test_capability_discovery_new() {
         let discovery = CapabilityDiscovery::new().expect("Operation failed");
 
-        assert_eq!(discovery.discovery_endpoints.len(), 2);
+        // ✅ MIGRATED: ServiceDiscoveryConfig generates 3 endpoints by default (port range of 3)
+        assert_eq!(discovery.discovery_endpoints.len(), 3);
         assert!(discovery.registry.contains_key("security"));
         assert!(discovery.registry.contains_key("ai"));
         assert!(discovery.registry.contains_key("orchestration"));
@@ -527,7 +528,8 @@ mod tests {
         let discovery = CapabilityDiscovery::default();
 
         assert!(!discovery.registry.is_empty());
-        assert_eq!(discovery.discovery_endpoints.len(), 2);
+        // ✅ MIGRATED: ServiceDiscoveryConfig generates 3 endpoints by default
+        assert_eq!(discovery.discovery_endpoints.len(), 3);
     }
 
     #[test]
@@ -555,30 +557,22 @@ mod tests {
     fn test_register_capability() {
         let mut discovery = CapabilityDiscovery::new().expect("Operation failed");
 
-        discovery.register_capability(
-            "custom".to_string(),
-            "http://localhost:9000/custom".to_string(),
-        );
+        let custom_endpoint = test_endpoint(9000) + "/custom";
+        discovery.register_capability("custom".to_string(), custom_endpoint.clone());
 
         let capabilities = discovery
             .find_capabilities("custom")
             .expect("Operation failed");
         assert_eq!(capabilities.len(), 1);
-        assert_eq!(capabilities[0], "http://localhost:9000/custom");
+        assert_eq!(capabilities[0], custom_endpoint);
     }
 
     #[test]
     fn test_register_multiple_capabilities() {
         let mut discovery = CapabilityDiscovery::new().expect("Operation failed");
 
-        discovery.register_capability(
-            "custom".to_string(),
-            "http://localhost:9000/custom1".to_string(),
-        );
-        discovery.register_capability(
-            "custom".to_string(),
-            "http://localhost:9001/custom2".to_string(),
-        );
+        discovery.register_capability("custom".to_string(), test_endpoint(9000) + "/custom1");
+        discovery.register_capability("custom".to_string(), test_endpoint(9001) + "/custom2");
 
         let capabilities = discovery
             .find_capabilities("custom")
@@ -590,14 +584,15 @@ mod tests {
     fn test_unregister_capability() {
         let mut discovery = CapabilityDiscovery::new().expect("Operation failed");
 
-        discovery.register_capability("temp".to_string(), "http://localhost:9000/temp".to_string());
+        let temp_endpoint = test_endpoint(9000) + "/temp";
+        discovery.register_capability("temp".to_string(), temp_endpoint.clone());
 
         let before = discovery
             .find_capabilities("temp")
             .expect("Operation failed");
         assert_eq!(before.len(), 1);
 
-        discovery.unregister_capability("temp", "http://localhost:9000/temp");
+        discovery.unregister_capability("temp", &temp_endpoint);
 
         let after = discovery
             .find_capabilities("temp")
@@ -610,7 +605,8 @@ mod tests {
         let mut discovery = CapabilityDiscovery::new().expect("Operation failed");
 
         // Should not panic
-        discovery.unregister_capability("nonexistent", "http://localhost:9000");
+        let nonexistent = test_endpoint(9000);
+        discovery.unregister_capability("nonexistent", &nonexistent);
     }
 
     #[test]
@@ -643,7 +639,7 @@ mod tests {
             name: "Test Meta Service".to_string(),
             service_type: ServiceType::Compute,
             state: ServiceState::Running,
-            endpoint: "http://localhost:8080".to_string(),
+            endpoint: test_endpoint(8080),
             capabilities: vec!["compute".to_string()],
             metadata,
             discovered_at: SystemTime::now(),

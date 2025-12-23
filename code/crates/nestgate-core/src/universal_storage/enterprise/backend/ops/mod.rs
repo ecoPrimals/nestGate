@@ -1,3 +1,5 @@
+//! Ops module
+
 use std::collections::HashMap;
 //
 // This module provides a modularized implementation of enterprise storage operations,
@@ -47,9 +49,13 @@ pub type DuplicationResult = crate::error::CanonicalResult<(Vec<crate::universal
 
 // Parameters for incremental backup operations
 pub struct IncrementalBackupParams<'a> {
+    /// Src
     pub src: &'a Path,
+    /// Dst
     pub dst: &'a Path,
+    /// Base Files
     pub base_files: &'a HashSet<PathBuf>,
+    /// Base Timestamp
     pub base_timestamp: SystemTime,
 }
 // **MODULARIZATION COMPLETE**

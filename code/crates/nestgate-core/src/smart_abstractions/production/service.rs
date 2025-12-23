@@ -2,8 +2,12 @@
 //! Service functionality and utilities.
 // Real production implementation of the SmartService trait
 
+#[cfg(test)]
+#[path = "service_tests.rs"]
+mod service_tests;
+
 use crate::canonical_types::{ServiceHealth, ServiceMetrics, UnifiedHealthStatus};
-use crate::canonical_unified_traits::HealthStatus;
+use crate::canonical::HealthStatus;
 use crate::error::{NestGateError, Result};
 use crate::smart_abstractions::{
     ServiceMetadata, SmartService, UniversalServiceRequest, UniversalServiceResponse,
@@ -338,30 +342,35 @@ impl ProductionSmartService {
         Ok(())
     }
 
+    /// Initialize Validation Engine
     async fn initialize_validation_engine(&self) -> Result<()> {
         debug!("Initializing validation engine");
         // Initialize validation rules, schemas, and validators
         Ok(())
     }
 
+    /// Initialize Aggregation Engine
     async fn initialize_aggregation_engine(&self) -> Result<()> {
         debug!("Initializing aggregation engine");
         // Initialize aggregation rules, storage, and processors
         Ok(())
     }
 
+    /// Initialize Default Components
     async fn initialize_default_components(&self) -> Result<()> {
         debug!("Initializing default service components");
         // Initialize basic service infrastructure
         Ok(())
     }
 
+    /// Start Metrics Collection
     async fn start_metrics_collection(&self) -> Result<()> {
         debug!("Starting metrics collection");
         // Start periodic metrics collection
         Ok(())
     }
 
+    /// Start Health Monitoring
     async fn start_health_monitoring(&self) -> Result<()> {
         debug!("Starting health monitoring");
         // Start periodic health checks
@@ -384,12 +393,14 @@ impl ProductionSmartService {
         Ok(())
     }
 
+    /// Stop Background Tasks
     async fn stop_background_tasks(&self) -> Result<()> {
         debug!("Stopping background tasks");
         // Stop all background monitoring and maintenance tasks
         Ok(())
     }
 
+    /// Collect Final Metrics
     async fn collect_final_metrics(&self) -> Result<()> {
         debug!("Collecting final metrics");
         let mut metrics = self.metrics.write().await;
@@ -407,16 +418,19 @@ impl ProductionSmartService {
         Ok(())
     }
 
+    /// Cleanup Validation Engine
     async fn cleanup_validation_engine(&self) -> Result<()> {
         debug!("Cleaning up validation engine");
         Ok(())
     }
 
+    /// Cleanup Aggregation Engine
     async fn cleanup_aggregation_engine(&self) -> Result<()> {
         debug!("Cleaning up aggregation engine");
         Ok(())
     }
 
+    /// Cleanup Default Components
     async fn cleanup_default_components(&self) -> Result<()> {
         debug!("Cleaning up default service components");
         Ok(())
@@ -425,10 +439,12 @@ impl ProductionSmartService {
 
 #[cfg(feature = "production")]
 impl SmartService for ProductionSmartService {
+    /// Metadata
     fn metadata(&self) -> &ServiceMetadata {
         &self.metadata
     }
 
+    /// Start
     async fn start(&mut self) -> Result<()> {
         info!("Starting production service: {}", self.metadata.service_type);
         
@@ -451,6 +467,7 @@ impl SmartService for ProductionSmartService {
         Ok(())
     }
 
+    /// Stop
     async fn stop(&mut self) -> Result<()> {
         info!("Stopping production service: {}", self.metadata.service_type);
         
@@ -473,6 +490,7 @@ impl SmartService for ProductionSmartService {
         Ok(())
     }
 
+    /// Health Check
     async fn health_check(&self) -> Result<UnifiedHealthStatus> {
         // Comprehensive health check
         let state = self.state.read().await;
@@ -484,6 +502,7 @@ impl SmartService for ProductionSmartService {
         }
     }
 
+    /// Handles  Request
     fn handle_request(
         &self,
         request: UniversalServiceRequest,
@@ -510,6 +529,7 @@ impl SmartService for ProductionSmartService {
         }
     }
 
+    /// Gets Metrics
     async fn get_metrics(&self) -> Result<ServiceMetrics> {
         // Production metrics collection
         let uptime = if let Some(start_time) = *self.start_time.read().await {
@@ -528,6 +548,7 @@ impl SmartService for ProductionSmartService {
         })
     }
 
+    /// Updates  Config
     async fn update_config(&mut self, config: HashMap<String, String>) -> Result<()> {
         info!("Updating production service configuration");
         
@@ -540,6 +561,7 @@ impl SmartService for ProductionSmartService {
         Ok(())
     }
 
+    /// Capabilities
     fn capabilities(&self) -> &[String] {
         &self.metadata.capabilities
     }

@@ -6,7 +6,11 @@ use std::collections::HashMap;
 use crate::universal_adapter::{types::CapabilityQuery, PrimalAgnosticAdapter};
 use crate::Result;
 use std::sync::Arc;
-// Universal router for all service communication
+
+/// Universal router for all service communication
+///
+/// Routes requests to appropriate services through the Universal Adapter,
+/// replacing hardcoded network constants with dynamic discovery.
 pub struct UniversalRouter {
     adapter: Arc<PrimalAgnosticAdapter>,
     /// Cached endpoint mappings
@@ -157,14 +161,15 @@ mod tests {
     use super::*;
     use crate::universal_adapter::PrimalAgnosticAdapter;
 
+    /// Creates  Test Router
     fn create_test_router() -> UniversalRouter {
-        let adapter = PrimalAgnosticAdapter::new("http://localhost:8080".to_string());
+        let adapter = PrimalAgnosticAdapter::new("http://localhost:18080".to_string());
         UniversalRouter::new(Arc::new(adapter))
     }
 
     #[tokio::test]
     async fn test_universal_router_new() {
-        let adapter = PrimalAgnosticAdapter::new("http://localhost:8080".to_string());
+        let adapter = PrimalAgnosticAdapter::new("http://localhost:18080".to_string());
         let router = UniversalRouter::new(Arc::new(adapter));
 
         // Test that router is created successfully

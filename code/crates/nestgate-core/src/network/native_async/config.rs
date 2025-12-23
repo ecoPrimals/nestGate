@@ -1,38 +1,22 @@
 /// Network Configuration Module
-/// Configuration structures for native async network implementation
-use serde::{Deserialize, Serialize};
-use std::time::Duration;
-/// Network configuration for native async implementation
-/// Network configuration for native async networking
-/// Defines connection parameters, timeouts, and performance settings
-/// **⚠️ DEPRECATED**: Use `CanonicalNetworkConfig` from `canonical_master::domains::network`
-#[deprecated(
-    since = "0.9.0",
-    note = "Use canonical_master::domains::network::CanonicalNetworkConfig instead"
-)]
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct NetworkConfig {
-    /// Server host
-    pub host: String,
-    /// Server port
-    pub port: u16,
-    /// Connection timeout
-    pub connection_timeout: Duration,
-    /// Request timeout
-    pub request_timeout: Duration,
-    /// Enable TLS
-    pub enable_tls: bool,
-}
-#[allow(deprecated)] // Keeping for backwards compatibility during migration
-impl Default for NetworkConfig {
-    fn default() -> Self {
-        use crate::constants::hardcoding::ports;
-        Self {
-            host: crate::constants::canonical_defaults::network::LOCALHOST.to_string(),
-            port: ports::HTTP_DEFAULT,
-            connection_timeout: Duration::from_secs(30),
-            request_timeout: Duration::from_secs(60),
-            enable_tls: false,
-        }
+///
+/// **DEPRECATED MODULE**: This module previously contained a deprecated `NetworkConfig` struct.
+/// All functionality has been migrated to the canonical configuration system.
+///
+/// **Migration Path**: Use `canonical_primary::domains::network::CanonicalNetworkConfig` instead.
+///
+/// This file is kept for module structure but contains no exported types.
+// Note: All deprecated NetworkConfig code has been removed (November 10, 2025)
+// Use canonical_primary::domains::network::CanonicalNetworkConfig for all network configuration
+#[cfg(test)]
+mod tests {
+    // All tests for deprecated NetworkConfig have been removed
+    // See canonical_primary::domains::network tests for current network config tests
+
+    #[test]
+    fn test_deprecated_module_marker() {
+        // This test exists to ensure the module compiles
+        // Deprecated module marker - config migrated to canonical system
+        // This is just a placeholder to prevent removal
     }
 }

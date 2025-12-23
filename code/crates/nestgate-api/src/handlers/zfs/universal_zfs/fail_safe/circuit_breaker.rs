@@ -1,6 +1,8 @@
 //
 // Provides circuit breaker functionality for fail-safe operations.
 
+//! Circuit Breaker module
+
 use std::sync::Arc;
 use std::time::SystemTime;
 use tokio::sync::RwLock;
@@ -10,8 +12,13 @@ use crate::handlers::zfs::universal_zfs::config::CircuitBreakerConfig;
 use tracing::info;
 use tracing::warn;
 
+#[cfg(test)]
+#[path = "circuit_breaker_tests.rs"]
+mod circuit_breaker_tests;
+
 /// Circuit breaker states
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+/// Circuitbreakerstate
 pub enum CircuitBreakerState {
     /// Circuit is closed, requests flow through normally
     Closed,
@@ -22,6 +29,7 @@ pub enum CircuitBreakerState {
 }
 /// Circuit breaker implementation
 #[derive(Debug)]
+/// Circuitbreaker
 pub struct CircuitBreaker {
     config: CircuitBreakerConfig,
     state: Arc<RwLock<CircuitBreakerState>>,
@@ -37,6 +45,7 @@ impl CircuitBreaker {
     ///
     /// # Returns
     /// * New circuit breaker instance in the closed state
+    #[must_use]
     pub fn new(config: CircuitBreakerConfig) -> Self {
         Self {
             config,
@@ -51,7 +60,7 @@ impl CircuitBreaker {
     ///
     /// # Returns
     /// * `true` if the circuit is open (blocking requests), `false` otherwise
-    pub fn is_open(&self) -> bool {
+    pub async fn is_open(&self) -> bool {
         if !self.config.enabled {
             return false;
         }
@@ -64,7 +73,7 @@ impl CircuitBreaker {
     ///
     /// # Returns
     /// * `true` if operations can be executed, `false` if they should be blocked
-    pub fn can_execute(&self) -> bool {
+    pub async fn can_execute(&self) -> bool {
         if !self.config.enabled {
             return true;
         }
@@ -99,7 +108,7 @@ impl CircuitBreaker {
     /// Updates the circuit breaker state based on a successful operation.
     /// In half-open state, this will transition back to closed.
     /// In closed state, this resets the failure count.
-    pub fn record_success(&self) {
+    pub async fn record_success(&self) {
         if !self.config.enabled {
             return;
         }
@@ -126,7 +135,7 @@ impl CircuitBreaker {
     /// Updates the circuit breaker state based on a failed operation.
     /// Increments failure count and may trigger state transitions
     /// if failure threshold is exceeded.
-    pub fn record_failure(&self) {
+    pub async fn record_failure(&self) {
         if !self.config.enabled {
             return;
         }
@@ -156,11 +165,12 @@ impl CircuitBreaker {
     /// Get the current state of the circuit breaker
     ///
     /// # Returns
-    /// * Current circuit breaker state (Closed, Open, or HalfOpen)
+    /// * Current circuit breaker state (Closed, Open, or `HalfOpen`)
     pub async fn get_state(&self) -> CircuitBreakerState {
         self.state.read().await.clone()
     }
 
+    /// Transition To Closed
     async fn transition_to_closed(&self) {
         info!("Circuit breaker transitioning to CLOSED");
         *self.state.write().await = CircuitBreakerState::Closed;
@@ -168,12 +178,14 @@ impl CircuitBreaker {
         *self.half_open_calls.write().await = 0;
     }
 
+    /// Transition To Open
     async fn transition_to_open(&self) {
         warn!("Circuit breaker transitioning to OPEN");
         *self.state.write().await = CircuitBreakerState::Open;
         *self.last_failure_time.write().await = Some(SystemTime::now());
     }
 
+    /// Transition To Half Open
     async fn transition_to_half_open(&self) {
         info!("Circuit breaker transitioning to HALF-OPEN");
         *self.state.write().await = CircuitBreakerState::HalfOpen;

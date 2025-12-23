@@ -2,6 +2,8 @@
 // Contains all dataset-related operations including creation, destruction,
 // and snapshot management.
 
+//! Dataset Operations module
+
 use crate::error::{create_zfs_error, ZfsOperation};
 use crate::types::StorageTier;
 use nestgate_core::Result;
@@ -12,10 +14,13 @@ use tracing::info;
 
 /// Dataset analyzer for ZFS operations
 #[derive(Debug, Clone)]
+/// Datasetanalyzer
 pub struct DatasetAnalyzer {
+    /// Configuration for
     pub config: std::collections::HashMap<String, String>,
 }
 impl DatasetAnalyzer {
+    /// Creates a new dataset analyzer with empty configuration.
     #[must_use]
     pub fn new() -> Self {
         Self {
@@ -25,6 +30,7 @@ impl DatasetAnalyzer {
 }
 
 impl Default for DatasetAnalyzer {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

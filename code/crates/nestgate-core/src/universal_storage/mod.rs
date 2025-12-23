@@ -1,32 +1,89 @@
-// **UNIVERSAL STORAGE SYSTEM**
-//! Module definitions and exports.
-// This module provides the unified storage abstraction layer for NestGate,
-// consolidating all storage backends into a single, consistent interface.
-//! Module definitions and exports.
-// **ARCHITECTURE**:
-// - Unified trait system for all storage operations
-// - Factory pattern for backend creation
-// - Comprehensive monitoring and metrics
-// - Zero-cost abstractions where possible
+//! **UNIVERSAL STORAGE SYSTEM**
+//!
+//! Unified storage abstraction layer for NestGate, consolidating all storage backends
+//! into a single, consistent interface with zero-cost abstractions.
+//!
+//! # Architecture
+//!
+//! The universal storage system provides:
+//! - **Unified Trait System**: Consistent interface for all storage operations
+//! - **Factory Pattern**: Dynamic backend creation based on configuration
+//! - **Comprehensive Monitoring**: Metrics and performance tracking
+//! - **Zero-Cost Abstractions**: No runtime overhead for abstractions
+//! - **Backend Agnostic**: Support for filesystem, object storage, block storage, ZFS
+//!
+//! # Supported Backends
+//!
+//! - **ZFS**: Advanced filesystem with snapshots, compression, deduplication
+//! - **Filesystem**: Standard POSIX filesystem operations  
+//! - **Object Storage**: S3-compatible object storage (planned)
+//! - **Block Storage**: Raw block device access (planned)
+//!
+//! # Example Usage
+//!
+//! ```rust,ignore
+//! use nestgate_core::universal_storage::{
+//!     ZeroCostStorageBackend, StorageDetector, StorageConfig
+//! };
+//!
+//! // Auto-detect available storage backends
+//! let detector = StorageDetector::new();
+//! let backends = detector.detect_backends().await?;
+//!
+//! // Create storage backend
+//! let config = StorageConfig::default();
+//! let backend = ZeroCostStorageBackend::new(config)?;
+//!
+//! // Perform operations
+//! backend.create_dataset("my-data").await?;
+//! backend.create_snapshot("my-data@backup").await?;
+//! ```
+//!
+//! # Status
+//!
+//! **Production Ready**: ✅ Core functionality complete  
+//! **Test Coverage**: Comprehensive edge case and error tests  
+//! **Performance**: Zero-cost abstractions with Arc for efficient sharing
 
 // ==================== CANONICAL STORAGE SYSTEM ====================
 
-// Zero-cost storage backend implementations
+/// Zero-cost storage backend implementations for optimal performance
 pub mod zero_cost_storage_backend;
-// Zero-cost storage trait definitions
+
+/// Zero-cost storage trait definitions for type-safe, zero-overhead abstractions
 pub mod zero_cost_storage_traits;
-// Consolidated type definitions
+
+/// Consolidated type definitions for storage operations
 pub mod consolidated_types;
-// Auto-configuration for storage backends
+
+// Test expansion for consolidated types (Nov 6, 2025)
+#[cfg(test)]
+mod consolidated_types_tests;
+
+#[cfg(test)]
+mod storage_edge_cases;
+#[cfg(test)]
+mod storage_error_tests; // Nov 23, 2025 - P1 test expansion // Nov 23, 2025 - P1-5 edge case tests
+                         // Auto-configuration for storage backends
 pub mod auto_configurator;
 // Storage detection and discovery
 pub mod storage_detector;
+// Storage detector runtime configuration
+pub mod storage_detector_config;
 // Zero-copy optimizations for storage operations
 // TEMPORARILY DISABLED: Compilation issues being resolved
 // pub mod zero_copy;
 // Enterprise storage operations
 // TEMPORARILY DISABLED: Compilation issues being resolved
 // pub mod enterprise;
+
+// ==================== MODERN VENDOR-AGNOSTIC STORAGE ====================
+
+/// **UNIVERSAL AGNOSTIC STORAGE** (December 15, 2025)
+///
+/// Zero vendor coupling. Protocol-based discovery.
+/// Works with any storage system: AWS, MinIO, Wasabi, Azure, GCS, or future systems.
+pub mod universal;
 
 // ==================== RE-EXPORTS ====================
 
@@ -35,6 +92,14 @@ pub use zero_cost_storage_backend::ZeroCostStorageBackend;
 // Re-export zero-cost storage traits
 pub use zero_cost_storage_traits::{
     ZeroCostStorageBackend as ZeroCostStorageBackendTrait, ZeroCostStorageProvider,
+};
+// Re-export storage detector config
+pub use storage_detector_config::{SharedStorageDetectorConfig, StorageDetectorConfig};
+
+// Re-export universal agnostic storage
+pub use universal::{
+    AuthenticationPattern, DiscoveredProtocol, DiscoveredStorage, StorageFeature,
+    StorageOperationPattern, TransportProtocol, UniversalStorageAdapter, UniversalStorageDiscovery,
 };
 
 // Enterprise storage capabilities
@@ -63,7 +128,7 @@ pub use storage_detector::{DetectedStorage, StorageDetector};
 
 // **MIGRATION COMPLETE**:
 // All storage interfaces have been successfully migrated to the canonical system.
-// Use crate::traits::canonical_unified_traits::CanonicalStorage for all new storage implementations.
+// Use crate::traits::canonical::CanonicalStorage for all new storage implementations.
 // Use crate::traits::unified_storage::UnifiedStorage for comprehensive storage operations.
 
 #[cfg(test)]

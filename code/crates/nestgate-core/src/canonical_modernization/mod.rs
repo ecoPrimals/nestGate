@@ -17,13 +17,13 @@ pub mod builders;
 pub mod idiomatic_evolution;
 /// Unified enumerations providing standardized enum types
 pub mod unified_enums;
-/// Unified types system providing consistent type definitions
-pub mod unified_types;
+/// ⚠️ REMOVED: unified_types was migrated to config::canonical_primary (November 2025)
+// pub mod unified_types; // REMOVED - use config::canonical_primary
 /// Zero-cost trait implementations providing high-performance abstractions
 pub mod zero_cost_traits;
 // ==================== SECTION ====================
 
-use crate::config::canonical_master::NestGateCanonicalConfig;
+use crate::config::canonical_primary::NestGateCanonicalConfig;
 
 /// **BACKWARD COMPATIBILITY**: Legacy configuration type alias for migration compatibility
 pub type CanonicalModernizedConfig = NestGateCanonicalConfig;
@@ -40,14 +40,20 @@ pub mod service_metadata {
 
     /// Service dependency definition
     #[derive(Debug, Clone, Serialize, Deserialize)]
+    /// Servicedependency
     pub struct ServiceDependency {
+        /// Name of the service this dependency references
         pub service_name: String,
+        /// Version requirement specification (semver format)
         pub version_requirement: String,
+        /// Whether this dependency is optional
         pub optional: bool,
+        /// Additional metadata for the dependency
         pub metadata: HashMap<String, String>,
     }
 
     impl Default for ServiceDependency {
+        /// Returns the default instance
         fn default() -> Self {
             Self {
                 service_name: "unknown".to_string(),
@@ -60,22 +66,37 @@ pub mod service_metadata {
 
     /// Universal service metadata
     #[derive(Debug, Clone, Serialize, Deserialize)]
+    /// Universalservicemetadata
     pub struct UniversalServiceMetadata {
+        /// Unique identifier for the service
         pub service_id: String,
+        /// Human-readable name of the service
         pub service_name: String,
+        /// Version string for the service (semver format)
         pub service_version: String,
+        /// Human-readable description of the service
         pub description: String,
+        /// List of capabilities provided by the service
         pub capabilities: Vec<String>,
+        /// Network endpoints where the service is available
         pub endpoints: Vec<ServiceEndpoint>,
+        /// Services this service depends on
         pub dependencies: Vec<ServiceDependency>,
+        /// Additional service metadata
         pub metadata: HashMap<String, String>,
+        /// Timestamp when the service was created
         pub created_at: SystemTime,
+        /// Timestamp when the service was last updated
         pub updated_at: SystemTime,
+        /// Runtime configuration key-value pairs
         pub configuration: HashMap<String, String>,
+        /// Classification tags for the service
         pub tags: Vec<String>,
+        /// Current operational status of the service
         pub status: ServiceStatus,
     }
     impl Default for UniversalServiceMetadata {
+        /// Returns the default instance
         fn default() -> Self {
             let now = SystemTime::now();
             Self {
@@ -101,9 +122,8 @@ pub mod service_metadata {
 
 pub use canonical_constants::*;
 
-// Re-export from unified_types - only types that actually exist
-// pub use unified_types::{UnifiedNetworkConfig, UnifiedServiceConfig}; // UnifiedNetworkConfig removed - use canonical_master instead
-pub use unified_types::UnifiedServiceConfig;
+// Re-export from canonical_primary (unified_types deprecated)
+pub use crate::config::canonical_primary::service::ServiceConfig as UnifiedServiceConfig;
 // Re-export from unified_enums - only enums that actually exist
 pub use crate::unified_enums::service_types::{UnifiedServiceState, UnifiedServiceType};
 // pub use zero_cost_traits::*; // Unused import

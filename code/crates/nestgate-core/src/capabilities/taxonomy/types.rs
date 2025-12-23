@@ -7,32 +7,33 @@ use serde::{Deserialize, Serialize};
 
 /// Standard capability types in the ecoPrimals ecosystem
 ///
-/// These replace hardcoded primal names (songbird, toadstool, etc.)
-/// and vendor names (k8s, redis, etc.)
+/// These replace hardcoded primal/vendor names with capability-based discovery
+/// (e.g., "orchestration" instead of specific implementations)
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+/// Types of Capability
 pub enum CapabilityType {
     // ═══════════════════════════════════════════════════════════════
     // PRIMAL CAPABILITIES (No Primal Names!)
     // ═══════════════════════════════════════════════════════════════
     /// Orchestration capability (e.g., workflow management, service coordination)
-    /// - Discovered: Whatever provides orchestration (maybe Songbird, maybe something else)
-    /// - NOT hardcoded: Never assume "Songbird" exists
+    /// - Discovered at runtime: any service providing orchestration
+    /// - NOT hardcoded: no assumptions about specific implementations
     Orchestration,
 
     /// Compute capability (e.g., parallel processing, job execution)
-    /// - Discovered: Whatever provides compute (maybe Toadstool, maybe something else)
-    /// - NOT hardcoded: Never assume "Toadstool" exists
+    /// - Discovered at runtime: any service providing compute
+    /// - NOT hardcoded: no assumptions about specific implementations
     Compute,
 
     /// AI/ML capability (e.g., model inference, training, analysis)
-    /// - Discovered: Whatever provides AI (maybe Squirrel, maybe something else)
-    /// - NOT hardcoded: Never assume "Squirrel" exists
+    /// - Discovered at runtime: any service providing AI
+    /// - NOT hardcoded: no assumptions about specific implementations
     ArtificialIntelligence,
 
     /// Security capability (e.g., authentication, encryption, access control)
-    /// - Discovered: Whatever provides security (maybe `BearDog`, maybe something else)
-    /// - NOT hardcoded: Never assume "`BearDog`" exists
+    /// - Discovered at runtime: any service providing security
+    /// - NOT hardcoded: no assumptions about specific implementations
     Security,
 
     /// Management capability (e.g., biome management, lifecycle control)
@@ -267,8 +268,10 @@ impl CapabilityType {
 }
 
 impl std::str::FromStr for CapabilityType {
+    /// Type alias for Err
     type Err = std::convert::Infallible;
 
+    /// Creates from Str
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Ok(match s {
             // Primal capabilities
@@ -316,6 +319,7 @@ impl std::str::FromStr for CapabilityType {
 /// Capability category for organizational purposes
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+/// Capabilitycategory
 pub enum CapabilityCategory {
     /// Primal-level capabilities (orchestration, compute, AI, security, etc.)
     Primal,

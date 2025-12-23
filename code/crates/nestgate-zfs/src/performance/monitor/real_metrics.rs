@@ -2,6 +2,8 @@
 // This module provides actual system metrics collection instead of mock data.
 // It interfaces with the operating system to gather real performance data.
 
+//! Real Metrics module
+
 use std::collections::HashMap;
 // use std::time::SystemTime; // Unused currently
 use tokio::process::Command;
@@ -288,5 +290,227 @@ impl RealMetricsCollector {
         };
 
         Ok(value * multiplier)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_bandwidth_kilobytes() {
+        let result = RealMetricsCollector::parse_bandwidth("512K");
+        assert!(result.is_ok());
+        let value = result.expect("Test: parse_bandwidth should succeed");
+        // 512K -> 512 / 1024 = 0.5 MB/s
+        assert!((value - 0.5).abs() < 0.01);
+    }
+
+    #[test]
+    fn test_parse_bandwidth_megabytes() {
+        let result = RealMetricsCollector::parse_bandwidth("100M");
+        assert!(result.is_ok());
+        let value = result.expect("Test: parse_bandwidth should succeed");
+        assert!((value - 100.0).abs() < 0.01);
+    }
+
+    #[test]
+    fn test_parse_bandwidth_gigabytes() {
+        let result = RealMetricsCollector::parse_bandwidth("2G");
+        assert!(result.is_ok());
+        let value = result.expect("Test: parse_bandwidth should succeed");
+        // 2G -> 2 * 1024 = 2048 MB/s
+        assert!((value - 2048.0).abs() < 0.01);
+    }
+
+    #[test]
+    fn test_parse_bandwidth_terabytes() {
+        let result = RealMetricsCollector::parse_bandwidth("1T");
+        assert!(result.is_ok());
+        let value = result.unwrap();
+        // 1T -> 1 * 1024 * 1024 = 1048576 MB/s
+        assert!((value - 1048576.0).abs() < 1.0);
+    }
+
+    #[test]
+    fn test_parse_bandwidth_decimal_values() {
+        let result = RealMetricsCollector::parse_bandwidth("1.5M");
+        assert!(result.is_ok());
+        let value = result.unwrap();
+        assert!((value - 1.5).abs() < 0.01);
+    }
+
+    #[test]
+    fn test_parse_bandwidth_zero() {
+        let result = RealMetricsCollector::parse_bandwidth("0M");
+        assert!(result.is_ok());
+        let value = result.unwrap();
+        assert_eq!(value, 0.0);
+    }
+
+    #[test]
+    fn test_parse_bandwidth_invalid() {
+        let result = RealMetricsCollector::parse_bandwidth("invalid");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_parse_bandwidth_no_unit() {
+        let result = RealMetricsCollector::parse_bandwidth("100");
+        assert!(result.is_ok());
+        // No unit assumes bytes: 100 bytes -> 100 / (1024 * 1024) MB/s
+        let value = result.unwrap();
+        assert!(value < 0.001); // Very small value
+    }
+
+    #[test]
+    fn test_parse_bandwidth_large_values() {
+        let values = vec![
+            ("1024K", 1.0),    // 1024K = 1M
+            ("1024M", 1024.0), // 1024M = 1024M
+            ("10G", 10240.0),  // 10G = 10240M
+        ];
+
+        for (input, expected) in values {
+            let result = RealMetricsCollector::parse_bandwidth(input);
+            assert!(result.is_ok());
+            let value = result.unwrap();
+            assert!(
+                (value - expected).abs() < 1.0,
+                "Failed for input: {}",
+                input
+            );
+        }
+    }
+
+    #[test]
+    fn test_parse_bandwidth_no_whitespace() {
+        // Parser doesn't handle whitespace, so test without it
+        let result = RealMetricsCollector::parse_bandwidth("100M");
+        assert!(result.is_ok());
+        let value = result.unwrap();
+        assert!((value - 100.0).abs() < 0.01);
+    }
+
+    #[test]
+    fn test_system_resource_metrics_default() {
+        let metrics = SystemResourceMetrics::default();
+
+        assert!(metrics.cpu_utilization_percent >= 0.0);
+        assert!(metrics.memory_usage_bytes > 0);
+        assert!(metrics.available_memory_bytes > 0);
+        assert!(metrics.load_average_1m >= 0.0);
+    }
+
+    #[test]
+    fn test_pool_performance_metrics_default() {
+        let metrics = PoolPerformanceMetrics::default();
+
+        assert!(metrics.total_iops > 0.0);
+        assert!(metrics.total_throughput_mbs > 0.0);
+        assert!(metrics.avg_latency_ms >= 0.0);
+        assert!(metrics.utilization_percent >= 0.0);
+        assert!(metrics.compression_ratio >= 1.0);
+    }
+
+    #[tokio::test]
+    async fn test_collect_system_metrics_returns_result() {
+        // This will use fallback values if system calls fail
+        let result = RealMetricsCollector::collect_system_metrics().await;
+
+        // Should always return Ok with default values as fallback
+        assert!(result.is_ok());
+
+        let metrics = result.unwrap();
+        assert!(metrics.cpu_utilization_percent >= 0.0);
+        assert!(metrics.memory_usage_bytes > 0);
+    }
+
+    #[tokio::test]
+    async fn test_collect_pool_metrics_returns_result() {
+        let result = RealMetricsCollector::collect_pool_metrics("nonexistent-pool").await;
+
+        // Should return Ok with default values even if pool doesn't exist
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_bandwidth_parsing_edge_cases() {
+        // Test very small values
+        let result = RealMetricsCollector::parse_bandwidth("0.001M");
+        assert!(result.is_ok());
+        assert!(result.unwrap() < 0.01);
+
+        // Test very large values
+        let result = RealMetricsCollector::parse_bandwidth("9999G");
+        assert!(result.is_ok());
+        assert!(result.unwrap() > 1000000.0);
+    }
+
+    #[test]
+    fn test_bandwidth_unit_conversions() {
+        // 1KB = 1/1024 MB
+        let kb_result = RealMetricsCollector::parse_bandwidth("1024K");
+        assert!(kb_result.is_ok());
+        assert!((kb_result.unwrap() - 1.0).abs() < 0.01);
+
+        // 1GB = 1024 MB
+        let gb_result = RealMetricsCollector::parse_bandwidth("1G");
+        assert!(gb_result.is_ok());
+        assert!((gb_result.unwrap() - 1024.0).abs() < 0.01);
+
+        // 1TB = 1024*1024 MB
+        let tb_result = RealMetricsCollector::parse_bandwidth("1T");
+        assert!(tb_result.is_ok());
+        assert!((tb_result.unwrap() - 1048576.0).abs() < 1.0);
+    }
+
+    #[test]
+    fn test_parse_bandwidth_fractional() {
+        let test_cases = vec![
+            ("0.5M", 0.5),
+            ("1.25M", 1.25),
+            ("2.75G", 2816.0), // 2.75 * 1024
+            ("0.1K", 0.0977),  // ~0.1 / 1024
+        ];
+
+        for (input, expected) in test_cases {
+            let result = RealMetricsCollector::parse_bandwidth(input);
+            assert!(result.is_ok(), "Failed to parse: {}", input);
+            let value = result.unwrap();
+            assert!(
+                (value - expected).abs() < 1.0,
+                "Input: {}, Expected: {}, Got: {}",
+                input,
+                expected,
+                value
+            );
+        }
+    }
+
+    #[test]
+    fn test_bandwidth_multiple_valid_units() {
+        // Test a mix of valid unit formats
+        let valid_inputs = vec![("1K", 1.0 / 1024.0), ("1M", 1.0), ("1G", 1024.0)];
+
+        for (input, expected_approx) in valid_inputs {
+            let result = RealMetricsCollector::parse_bandwidth(input);
+            assert!(result.is_ok(), "Failed to parse: {}", input);
+            let value = result.unwrap();
+            assert!(
+                (value - expected_approx).abs() / expected_approx < 0.1,
+                "Input {} expected ~{} but got {}",
+                input,
+                expected_approx,
+                value
+            );
+        }
+    }
+
+    #[test]
+    fn test_bandwidth_parsing_empty_string() {
+        // Empty string should fail parsing
+        let result = RealMetricsCollector::parse_bandwidth("");
+        assert!(result.is_err());
     }
 }
