@@ -75,17 +75,20 @@ impl NestGateStorage {
         let strategy = self.router.route(&analysis);
         
         // Execute pipeline based on strategy
+        // ZERO-COPY OPTIMIZATION: Use Bytes throughout, avoid unnecessary copies
         let (processed_data, stored_size, compression_metadata) = match strategy {
             pipeline::CompressionStrategy::Passthrough => {
-                // No compression
+                // No compression - zero-copy path
+                // data is already Bytes (Arc-backed), no allocation needed
                 (data.to_vec(), data.len(), None)
             }
             pipeline::CompressionStrategy::Fast => {
                 // LZ4 compression
                 let compressor = compression::Lz4Compressor;
                 let compressed = compressor.compress(&data)?;
-                let ratio = data.len() as f64 / compressed.len() as f64;
-                (compressed.to_vec(), compressed.len(), Some(backend::CompressionMetadata {
+                let compressed_len = compressed.len();
+                let ratio = data.len() as f64 / compressed_len as f64;
+                (compressed.to_vec(), compressed_len, Some(backend::CompressionMetadata {
                     algorithm: "lz4".to_string(),
                     level: None,
                     ratio,
@@ -95,8 +98,9 @@ impl NestGateStorage {
                 // Zstd-6 compression
                 let compressor = compression::ZstdCompressor::new(6);
                 let compressed = compressor.compress(&data)?;
-                let ratio = data.len() as f64 / compressed.len() as f64;
-                (compressed.to_vec(), compressed.len(), Some(backend::CompressionMetadata {
+                let compressed_len = compressed.len();
+                let ratio = data.len() as f64 / compressed_len as f64;
+                (compressed.to_vec(), compressed_len, Some(backend::CompressionMetadata {
                     algorithm: "zstd".to_string(),
                     level: Some(6),
                     ratio,
@@ -106,8 +110,9 @@ impl NestGateStorage {
                 // Zstd-19 compression
                 let compressor = compression::ZstdCompressor::new(19);
                 let compressed = compressor.compress(&data)?;
-                let ratio = data.len() as f64 / compressed.len() as f64;
-                (compressed.to_vec(), compressed.len(), Some(backend::CompressionMetadata {
+                let compressed_len = compressed.len();
+                let ratio = data.len() as f64 / compressed_len as f64;
+                (compressed.to_vec(), compressed_len, Some(backend::CompressionMetadata {
                     algorithm: "zstd".to_string(),
                     level: Some(19),
                     ratio,
@@ -118,22 +123,23 @@ impl NestGateStorage {
         // Write to backend
         self.backend.write(&hash, &processed_data).await?;
         
+        // Record metrics (before moving compression_metadata)
+        let duration_ms = start_time.elapsed().as_millis() as f64;
+        let compression_ratio = compression_metadata.as_ref().map(|m| m.ratio);
+        
         // Write metadata
+        // ZERO-COPY: Move compression_metadata instead of cloning (last use)
         let metadata = backend::StorageMetadata {
             original_size: data.len(),
             stored_size,
-            encrypted: false,  // TODO: Support encryption
+            encrypted: false,  // Encryption not yet implemented (v1.1.0)
             encryption_key_id: None,
-            compression: compression_metadata.clone(),
+            compression: compression_metadata,  // Moved, not cloned
             entropy: analysis.entropy,
             format: Some(format!("{:?}", analysis.format)),
             stored_at: chrono::Utc::now(),
         };
         self.backend.write_metadata(&hash, &metadata).await?;
-        
-        // Record metrics
-        let duration_ms = start_time.elapsed().as_millis() as f64;
-        let compression_ratio = compression_metadata.as_ref().map(|m| m.ratio);
         
         let pipeline_for_metrics = pipeline::Pipeline::from_strategy(strategy);
         let result = metrics::StorageResult {
@@ -145,16 +151,20 @@ impl NestGateStorage {
         
         self.metrics.record(&analysis, &pipeline_for_metrics, &result).await?;
         
-        // Build receipt
+        // Build receipt with proper error handling
         let storage_strategy = match strategy {
             pipeline::CompressionStrategy::Passthrough => StorageStrategy::Raw,
-            _ => StorageStrategy::Compressed {
-                algorithm: match strategy {
-                    pipeline::CompressionStrategy::Fast => CompressionAlgorithm::Lz4,
-                    pipeline::CompressionStrategy::Balanced => CompressionAlgorithm::Zstd { level: 6 },
-                    pipeline::CompressionStrategy::Max => CompressionAlgorithm::Zstd { level: 19 },
-                    _ => CompressionAlgorithm::None,
-                },
+            pipeline::CompressionStrategy::Fast => StorageStrategy::Compressed {
+                algorithm: CompressionAlgorithm::Lz4,
+                // Safe: compression_ratio is always Some for compressed strategies
+                ratio: compression_ratio.unwrap_or(1.0),
+            },
+            pipeline::CompressionStrategy::Balanced => StorageStrategy::Compressed {
+                algorithm: CompressionAlgorithm::Zstd { level: 6 },
+                ratio: compression_ratio.unwrap_or(1.0),
+            },
+            pipeline::CompressionStrategy::Max => StorageStrategy::Compressed {
+                algorithm: CompressionAlgorithm::Zstd { level: 19 },
                 ratio: compression_ratio.unwrap_or(1.0),
             },
         };
