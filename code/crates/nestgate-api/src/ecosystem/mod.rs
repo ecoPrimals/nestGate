@@ -6,6 +6,8 @@
 // **PROVIDES**: Capability-based ecosystem discovery and integration
 
 // **UNIVERSAL ECOSYSTEM INTEGRATION** - Replaces hardcoded Management integration
+//! Ecosystem module
+
 pub mod universal_ecosystem_integration;
 
 // Re-export main types

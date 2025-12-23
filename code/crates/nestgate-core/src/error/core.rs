@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize,
 
 /// Error context information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Errorcontext
 pub struct ErrorContext {
     /// Operation being performed when error occurred
     pub operation: String,
@@ -15,6 +16,7 @@ pub struct ErrorContext {
     pub timestamp: SystemTime,
 }
 impl Default for ErrorContext {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             operation: "unknown".to_string(),

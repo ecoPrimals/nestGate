@@ -3,14 +3,14 @@
 //! Tests for pool information, state, health, and capacity types
 
 #[cfg(test)]
-mod pool_types_tests {
+mod tests {
     use crate::pool::types::{PoolCapacity, PoolHealth, PoolInfo, PoolState};
     use std::collections::HashMap;
 
     /// Test 1: PoolState enum variants
     #[test]
     fn test_pool_state_variants() {
-        let states = vec![
+        let states = [
             PoolState::Online,
             PoolState::Offline,
             PoolState::Degraded,
@@ -34,7 +34,7 @@ mod pool_types_tests {
     /// Test 3: PoolHealth enum variants
     #[test]
     fn test_pool_health_variants() {
-        let health_states = vec![
+        let health_states = [
             PoolHealth::Healthy,
             PoolHealth::Warning,
             PoolHealth::Critical,
@@ -62,6 +62,11 @@ mod pool_types_tests {
             used_bytes: 500_000_000_000,      // 500GB
             available_bytes: 500_000_000_000, // 500GB
             utilization_percent: 50.0,
+            fragmentation_percent: 0.0,
+            deduplication_ratio: 1.0,
+            total: 1_000_000_000_000,
+            used: 500_000_000_000,
+            available: 500_000_000_000,
         };
 
         assert_eq!(capacity.total_bytes, 1_000_000_000_000);
@@ -78,6 +83,11 @@ mod pool_types_tests {
             used_bytes: 0,
             available_bytes: 0,
             utilization_percent: 0.0,
+            fragmentation_percent: 0.0,
+            deduplication_ratio: 1.0,
+            total: 0,
+            used: 0,
+            available: 0,
         };
 
         assert_eq!(capacity.total_bytes, 0);
@@ -92,6 +102,11 @@ mod pool_types_tests {
             used_bytes: u64::MAX,
             available_bytes: 0,
             utilization_percent: 100.0,
+            fragmentation_percent: 0.0,
+            deduplication_ratio: 1.0,
+            total: 0,
+            used: 0,
+            available: 0,
         };
 
         assert_eq!(capacity.total_bytes, u64::MAX);
@@ -115,6 +130,11 @@ mod pool_types_tests {
                 used_bytes: 100_000_000_000,
                 available_bytes: 900_000_000_000,
                 utilization_percent: 10.0,
+                fragmentation_percent: 0.0,
+                deduplication_ratio: 1.0,
+                total: 1_000_000_000_000,
+                used: 100_000_000_000,
+                available: 900_000_000_000,
             },
             devices: vec!["/dev/sda".to_string(), "/dev/sdb".to_string()],
             properties: properties.clone(),
@@ -140,6 +160,11 @@ mod pool_types_tests {
                 used_bytes: 0,
                 available_bytes: 0,
                 utilization_percent: 0.0,
+                fragmentation_percent: 0.0,
+                deduplication_ratio: 1.0,
+                total: 0,
+                used: 0,
+                available: 0,
             },
             devices: vec![],
             properties: HashMap::new(),
@@ -165,6 +190,11 @@ mod pool_types_tests {
                 used_bytes: 50_000_000_000_000,
                 available_bytes: 50_000_000_000_000,
                 utilization_percent: 50.0,
+                fragmentation_percent: 0.0,
+                deduplication_ratio: 1.0,
+                total: 100_000_000_000_000,
+                used: 50_000_000_000_000,
+                available: 50_000_000_000_000,
             },
             devices: devices.clone(),
             properties: HashMap::new(),
@@ -186,6 +216,11 @@ mod pool_types_tests {
                 used_bytes: 500_000_000,
                 available_bytes: 500_000_000,
                 utilization_percent: 50.0,
+                fragmentation_percent: 0.0,
+                deduplication_ratio: 1.0,
+                total: 1_000_000_000,
+                used: 500_000_000,
+                available: 500_000_000,
             },
             devices: vec!["/dev/sda".to_string()],
             properties: HashMap::new(),
@@ -206,6 +241,11 @@ mod pool_types_tests {
             used_bytes: 300_000_000,
             available_bytes: 700_000_000,
             utilization_percent: 30.0,
+            fragmentation_percent: 0.0,
+            deduplication_ratio: 1.0,
+            total: 1_000_000_000,
+            used: 300_000_000,
+            available: 700_000_000,
         };
 
         // Verify used + available equals total
@@ -246,6 +286,11 @@ mod pool_types_tests {
                 used_bytes: 0,
                 available_bytes: 1_000_000_000,
                 utilization_percent: 0.0,
+                fragmentation_percent: 0.0,
+                deduplication_ratio: 1.0,
+                total: 1_000_000_000,
+                used: 0,
+                available: 1_000_000_000,
             },
             devices: vec![],
             properties: HashMap::new(),
@@ -273,6 +318,11 @@ mod pool_types_tests {
                 used_bytes: 0,
                 available_bytes: 1_000_000_000,
                 utilization_percent: 0.0,
+                fragmentation_percent: 0.0,
+                deduplication_ratio: 1.0,
+                total: 1_000_000_000,
+                used: 0,
+                available: 1_000_000_000,
             },
             devices: vec![],
             properties: properties.clone(),
@@ -292,6 +342,11 @@ mod pool_types_tests {
             used_bytes: 1_000_000_000,
             available_bytes: 0,
             utilization_percent: 100.0,
+            fragmentation_percent: 0.0,
+            deduplication_ratio: 1.0,
+            total: 1_000_000_000,
+            used: 1_000_000_000,
+            available: 0,
         };
         assert_eq!(full.utilization_percent, 100.0);
 
@@ -301,6 +356,11 @@ mod pool_types_tests {
             used_bytes: 0,
             available_bytes: 1_000_000_000,
             utilization_percent: 0.0,
+            fragmentation_percent: 0.0,
+            deduplication_ratio: 1.0,
+            total: 1_000_000_000,
+            used: 0,
+            available: 1_000_000_000,
         };
         assert_eq!(empty.utilization_percent, 0.0);
     }
@@ -354,6 +414,11 @@ mod pool_types_tests {
                 used_bytes: 0,
                 available_bytes: 1_000_000_000,
                 utilization_percent: 0.0,
+                fragmentation_percent: 0.0,
+                deduplication_ratio: 1.0,
+                total: 1_000_000_000,
+                used: 0,
+                available: 1_000_000_000,
             },
             devices: vec![],
             properties: properties.clone(),

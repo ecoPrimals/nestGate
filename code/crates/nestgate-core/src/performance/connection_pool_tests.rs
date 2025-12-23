@@ -13,6 +13,7 @@ struct MockConnection {
 }
 
 impl MockConnection {
+    /// Creates a new instance
     fn new(id: u32) -> Self {
         Self { id }
     }
@@ -63,16 +64,16 @@ mod tests {
         assert!(!pooled.in_use);
     }
 
-    #[test]
-    fn test_pooled_connection_idle_detection() {
+    #[tokio::test]
+    async fn test_pooled_connection_idle_detection() {
         let conn = MockConnection::new(1);
         let pooled = PooledConnection::new(conn);
 
         // Immediately created connection should not be idle too long
         assert!(!pooled.is_idle_too_long(Duration::from_secs(1)));
 
-        // Very short max_idle_time should detect as idle
-        std::thread::sleep(Duration::from_millis(10));
+        // Very short max_idle_time should detect as idle (non-blocking, concurrent)
+        tokio::time::sleep(Duration::from_millis(10)).await;
         assert!(pooled.is_idle_too_long(Duration::from_millis(1)));
     }
 

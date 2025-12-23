@@ -8,6 +8,7 @@ use std::collections::HashMap;
 
 /// Primal _metadata information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Primalmetadata
 pub struct PrimalMetadata {
     /// Primal name (e.g., "NestGate")
     pub name: String,
@@ -38,6 +39,7 @@ pub struct PrimalMetadata {
 }
 /// Primal types
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Types of Primal
 pub enum PrimalType {
     /// Core system primals (authentication, routing, etc.)
     Core,
@@ -54,6 +56,7 @@ pub enum PrimalType {
 }
 /// Primal capabilities
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Primalcapability
 pub enum PrimalCapability {
     /// HTTP/HTTPS server capabilities
     HttpServer,
@@ -90,6 +93,7 @@ pub enum PrimalCapability {
 }
 /// Primal health status
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+/// Primalhealth
 pub enum PrimalHealth {
     /// Primal is healthy and operational
     Healthy,
@@ -102,6 +106,7 @@ pub enum PrimalHealth {
 }
 /// Primal request structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for Primal operation
 pub struct PrimalRequest {
     /// Request ID for tracking
     pub request_id: String,
@@ -124,6 +129,7 @@ pub struct PrimalRequest {
 }
 /// Primal response structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for Primal operation
 pub struct PrimalResponse {
     /// Response status code
     pub status_code: u16,
@@ -138,6 +144,7 @@ pub struct PrimalResponse {
 }
 /// Primal metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Primalmetrics
 pub struct PrimalMetrics {
     /// Request count
     pub request_count: u64,
@@ -156,6 +163,22 @@ pub struct PrimalMetrics {
 }
 /// Logging configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// 
+/// **Migration Path**:
+/// ```rust
+/// // OLD (deprecated):
+/// use crate::config::LoggingConfig;
+/// 
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::config::LoggingConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+/// 
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for Logging
 pub struct LoggingConfig {
     /// Log level (error, warn, info, debug, trace)
     pub level: String,
@@ -170,3 +193,20 @@ pub struct LoggingConfig {
     /// Custom logging configuration
     pub custom: HashMap<String, serde_json::Value>,
 }
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+/// 
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Loggingconfigcanonical
+pub type LoggingConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using LoggingConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+

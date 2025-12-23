@@ -2,11 +2,11 @@
 //! 
 //! This test validates test utils integration functionality using canonical patterns
 //! **CANONICAL MODERNIZATION**: Updated to use simple, working patterns
+//!
+//! **MODERN CONCURRENCY**: Uses yield_now() for async coordination instead of sleep().
 
-use nestgate_core::config::canonical_master::NestGateCanonicalConfig as NestGateUnifiedConfig;
+use nestgate_core::config::canonical_primary::NestGateCanonicalConfig as NestGateUnifiedConfig;
 use nestgate_core::constants::Environment;
-use std::time::Duration;
-use tokio::time::sleep;
 use tracing::info;
 
 /// Test test utils integration configuration
@@ -19,7 +19,7 @@ async fn test_test_utils_integration_config() -> Result<(), Box<dyn std::error::
     assert!(!config.system.instance_name.is_empty());
     
     // Test environment-specific test utils integration configuration
-    let dev_config = nestgate_core::config::canonical_master::create_config_for_environment(Environment::Development);
+    let dev_config = nestgate_core::config::canonical_primary::create_config_for_environment(Environment::Development);
     assert!(!dev_config.system.instance_name.is_empty());
     
     info!("✅ Test utils integration configuration test completed");
@@ -43,7 +43,7 @@ async fn test_test_utility_helpers() -> Result<(), Box<dyn std::error::Error>> {
         info!("Executing {} helper ({}ms)", operation, duration);
         
         // Simulate helper operation
-        sleep(Duration::from_millis(duration as u64)).await;
+        tokio::task::yield_now().await;
         
         // Verify helper operation is valid
         assert!(!operation.is_empty(), "Operation should be specified");
@@ -72,7 +72,7 @@ async fn test_test_data_management() -> Result<(), Box<dyn std::error::Error>> {
         info!("Processing {} operation ({}ms)", operation, duration);
         
         // Simulate data operation
-        sleep(Duration::from_millis(duration as u64)).await;
+        tokio::task::yield_now().await;
         
         // Verify data operation is valid
         assert!(!operation.is_empty(), "Operation should be specified");
@@ -94,7 +94,7 @@ async fn test_test_framework_integration() -> Result<(), Box<dyn std::error::Err
     // Test test framework integration cycles
     for i in 0..5 {
         let cycle_time = (i + 1) * 18;
-        sleep(Duration::from_millis(cycle_time as u64)).await;
+        tokio::task::yield_now().await;
         
         let elapsed = start_time.elapsed();
         info!("Framework integration cycle {}: {}ms, total elapsed: {:?}", i + 1, cycle_time, elapsed);
@@ -125,7 +125,7 @@ async fn test_test_assertion_utilities() -> Result<(), Box<dyn std::error::Error
         info!("Testing {} scenario ({}ms)", scenario, assertion_time);
         
         // Simulate assertion scenario
-        sleep(Duration::from_millis(assertion_time as u64)).await;
+        tokio::task::yield_now().await;
         
         // Verify assertion scenario is valid
         assert!(!scenario.is_empty(), "Scenario should be specified");
@@ -154,7 +154,7 @@ async fn test_test_configuration_utilities() -> Result<(), Box<dyn std::error::E
         info!("Testing {} feature ({}ms)", feature, processing_time);
         
         // Simulate configuration feature
-        sleep(Duration::from_millis(processing_time as u64)).await;
+        tokio::task::yield_now().await;
         
         // Verify configuration feature is valid
         assert!(!feature.is_empty(), "Feature should be specified");
@@ -172,13 +172,13 @@ async fn test_test_utils_environments() -> Result<(), Box<dyn std::error::Error>
     info!("🌍 Testing test utils integration across environments");
     
     // Test development environment test utils integration
-    let dev_config = nestgate_core::config::canonical_master::create_config_for_environment(Environment::Development);
+    let dev_config = nestgate_core::config::canonical_primary::create_config_for_environment(Environment::Development);
     assert!(!dev_config.system.instance_name.is_empty());
     assert!(matches!(dev_config.environment, Environment::Development));
     info!("Development test utils integration configuration validated");
     
     // Test production environment test utils integration
-    let prod_config = nestgate_core::config::canonical_master::create_config_for_environment(Environment::Production);
+    let prod_config = nestgate_core::config::canonical_primary::create_config_for_environment(Environment::Production);
     assert!(!prod_config.system.instance_name.is_empty());
     assert!(matches!(prod_config.environment, Environment::Production));
     info!("Production test utils integration configuration validated");

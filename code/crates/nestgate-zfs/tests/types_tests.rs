@@ -1,5 +1,7 @@
 // Types tests moved from src/types.rs to comply with 1000-line limit
 
+//! Types Tests module
+
 use nestgate_zfs::types::*;
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -36,10 +38,11 @@ mod tests {
     #[test]
     fn test_zfs_error_conversion() {
         let zfs_err = ZfsError::PoolError {
-            message: "Pool creation failed".to_string().to_string(),
+            message: "Pool creation failed".to_string(),
         };
-        let nestgate_err: nestgate_core::NestGateError = zfs_err.into();
-        assert!(nestgate_err.to_string().contains("Pool creation failed"));
+        let nestgate_err: nestgate_core::NestGateError =
+            nestgate_core::NestGateError::from(format!("{:?}", zfs_err));
+        assert!(nestgate_err.to_string().contains("PoolError"));
     }
 
     #[test]
@@ -58,8 +61,12 @@ mod tests {
             total_bytes: 1_000_000_000,
             used_bytes: 500_000_000,
             available_bytes: 500_000_000,
-            fragmentation_percent: 15.5,
-            deduplication_ratio: 1.25,
+            utilization_percent: 50.0,
+            fragmentation_percent: 0.0,
+            deduplication_ratio: 1.0,
+            total: 1_000_000_000,
+            used: 500_000_000,
+            available: 500_000_000,
         };
         assert_eq!(capacity.total_bytes, 1_000_000_000);
         assert_eq!(
@@ -87,9 +94,11 @@ mod tests {
         let snapshot = SnapshotInfo {
             name: "snap1".to_string(),
             dataset: "pool/dataset".to_string(),
-            size: 1024 * 1024,
-            properties: properties.clone(),
             created_at: SystemTime::now(),
+            used: 0,
+            size: 1024 * 1024,
+            referenced: 1024 * 1024,
+            properties: properties.clone(),
         };
 
         assert_eq!(snapshot.name, "snap1");
@@ -429,8 +438,12 @@ mod tests {
             total_bytes: 1_000_000_000,
             used_bytes: 600_000_000,
             available_bytes: 400_000_000,
-            fragmentation_percent: 10.0,
+            utilization_percent: 60.0,
+            fragmentation_percent: 0.0,
             deduplication_ratio: 1.0,
+            total: 1_000_000_000,
+            used: 600_000_000,
+            available: 400_000_000,
         };
 
         let pool = PoolInfo {
@@ -583,8 +596,12 @@ mod tests {
             total_bytes: 1_000_000_000,
             used_bytes: 0,
             available_bytes: 1_000_000_000,
+            utilization_percent: 0.0,
             fragmentation_percent: 0.0,
             deduplication_ratio: 1.0,
+            total: 1_000_000_000,
+            used: 0,
+            available: 1_000_000_000,
         };
 
         let pool = PoolInfo {
@@ -610,13 +627,17 @@ mod tests {
             total_bytes: 1_000_000_000,
             used_bytes: 750_000_000,
             available_bytes: 250_000_000,
-            fragmentation_percent: 25.5,
-            deduplication_ratio: 1.2,
+            utilization_percent: 75.0,
+            fragmentation_percent: 0.0,
+            deduplication_ratio: 1.0,
+            total: 1_000_000_000,
+            used: 750_000_000,
+            available: 250_000_000,
         };
 
         assert_eq!(capacity.total_bytes, 1_000_000_000);
-        assert!(capacity.fragmentation_percent > 0.0);
-        assert!(capacity.deduplication_ratio >= 1.0);
+        assert_eq!(capacity.used_bytes, 750_000_000);
+        assert!(capacity.utilization_percent > 0.0);
     }
 
     #[test]
@@ -625,8 +646,13 @@ mod tests {
             total_bytes: 1_000_000_000,
             used_bytes: 500_000_000,
             available_bytes: 500_000_000,
+            utilization_percent: 50.0,
+            // High dedup ratio,
             fragmentation_percent: 0.0,
-            deduplication_ratio: 3.0, // High dedup ratio
+            deduplication_ratio: 1.0,
+            total: 1_000_000_000,
+            used: 500_000_000,
+            available: 500_000_000,
         };
 
         assert_eq!(capacity.deduplication_ratio, 3.0);

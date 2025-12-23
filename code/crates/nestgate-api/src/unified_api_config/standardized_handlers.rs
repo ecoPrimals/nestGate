@@ -74,6 +74,7 @@ impl<T> HandlerConfigBuilder<T> {
 }
 
 impl<T> Default for HandlerConfigBuilder<T> {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -83,11 +84,15 @@ impl<T> Default for HandlerConfigBuilder<T> {
 
 /// Configuration validation error
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Error type for Config operations
 pub struct ConfigError {
+    /// Field
     pub field: String,
+    /// Message
     pub message: String,
 }
 impl std::fmt::Display for ConfigError {
+    /// Fmt
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "Configuration error in {}: {}", self.field, self.message)
     }
@@ -107,6 +112,7 @@ pub trait ConfigValidator {
 
 // Implement validation for common handler config
 impl ConfigValidator for CommonHandlerConfig {
+    /// Validates data
     fn validate(&self) -> Vec<ConfigError> {
         let mut errors = Vec::new();
 
@@ -251,6 +257,7 @@ impl HandlerConfigRegistry {
 }
 
 impl Default for HandlerConfigRegistry {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

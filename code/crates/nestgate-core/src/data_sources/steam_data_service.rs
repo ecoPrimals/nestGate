@@ -4,9 +4,9 @@
 //! Handles game library storage, save data federation, and asset caching.
 
 use crate::error::NestGateError;
-use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::future::Future;
 use std::path::PathBuf;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -17,6 +17,7 @@ pub type SteamAppId = u32;
 
 /// Steam game metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Gamemetadata
 pub struct GameMetadata {
     /// Steam App ID
     pub app_id: SteamAppId,
@@ -40,6 +41,7 @@ pub struct GameMetadata {
 
 /// Play statistics for a game
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Playstats
 pub struct PlayStats {
     /// Total playtime in minutes
     pub total_playtime_minutes: u32,
@@ -55,6 +57,7 @@ pub struct PlayStats {
 
 /// Achievement data for a game
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Achievementdata
 pub struct AchievementData {
     /// Total achievements available
     pub total_achievements: u32,
@@ -68,6 +71,7 @@ pub struct AchievementData {
 
 /// Individual achievement
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Achievement
 pub struct Achievement {
     /// Achievement ID
     pub id: String,
@@ -83,6 +87,7 @@ pub struct Achievement {
 
 /// Game library storage component
 #[derive(Debug)]
+/// Gamelibrarystorage
 pub struct GameLibraryStorage {
     /// Game metadata indexed by App ID
     game_metadata: Arc<RwLock<HashMap<SteamAppId, GameMetadata>>>,
@@ -95,6 +100,7 @@ pub struct GameLibraryStorage {
 }
 
 impl Default for GameLibraryStorage {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -251,6 +257,7 @@ impl GameLibraryStorage {
 
 /// Library statistics summary
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Librarystats
 pub struct LibraryStats {
     /// Total number of games in library
     pub total_games: usize,
@@ -264,6 +271,7 @@ pub struct LibraryStats {
 
 /// Save data federation node
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Federationnode
 pub struct FederationNode {
     /// Node identifier
     pub id: String,
@@ -279,6 +287,7 @@ pub struct FederationNode {
 
 /// Save data conflict resolution strategy
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Conflictresolution
 pub enum ConflictResolution {
     /// Use the most recent save
     MostRecent,
@@ -292,6 +301,7 @@ pub enum ConflictResolution {
 
 /// Save data federation component
 #[derive(Debug)]
+/// Savedatafederation
 pub struct SaveDataFederation {
     /// Federation nodes
     sync_targets: Arc<RwLock<Vec<FederationNode>>>,
@@ -381,6 +391,7 @@ impl SaveDataFederation {
 
 /// Federation status summary
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Federationstatus
 pub struct FederationStatus {
     /// Total number of federation nodes
     pub total_nodes: usize,
@@ -394,6 +405,7 @@ pub struct FederationStatus {
 
 /// Main Steam data service
 #[derive(Debug)]
+/// Service implementation for SteamData
 pub struct SteamDataService {
     /// Game library storage
     pub game_library_storage: GameLibraryStorage,
@@ -458,6 +470,7 @@ impl SteamDataService {
 
 /// Service health status
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Servicehealth
 pub struct ServiceHealth {
     /// Service identifier
     pub service_name: String,
@@ -472,26 +485,32 @@ pub struct ServiceHealth {
 }
 
 impl Default for SteamDataService {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
 }
 
-/// Data source provider trait implementation for Steam
-#[async_trait]
+/// Data source provider trait implementation for Steam - native async for zero-cost abstractions
 pub trait SteamDataProvider: Send + Sync {
-    /// Fetch game data from Steam API
-    async fn fetch_game_data(&self, app_id: SteamAppId) -> Result<GameMetadata, NestGateError>;
+    /// Fetch game data from Steam API - native async, no boxing
+    fn fetch_game_data(
+        &self,
+        app_id: SteamAppId,
+    ) -> impl Future<Output = Result<GameMetadata, NestGateError>> + Send;
 
-    /// Fetch user's game library
-    async fn fetch_user_library(&self, steam_id: u64) -> Result<Vec<GameMetadata>, NestGateError>;
+    /// Fetch user's game library - native async, no boxing
+    fn fetch_user_library(
+        &self,
+        steam_id: u64,
+    ) -> impl Future<Output = Result<Vec<GameMetadata>, NestGateError>> + Send;
 
-    /// Fetch achievement data for a game
-    async fn fetch_achievements(
+    /// Fetch achievement data for a game - native async, no boxing
+    fn fetch_achievements(
         &self,
         app_id: SteamAppId,
         steam_id: u64,
-    ) -> Result<AchievementData, NestGateError>;
+    ) -> impl Future<Output = Result<AchievementData, NestGateError>> + Send;
 }
 
 #[cfg(test)]

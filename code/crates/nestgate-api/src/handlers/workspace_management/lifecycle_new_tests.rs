@@ -89,14 +89,14 @@ mod workspace_lifecycle_additional_tests {
         };
 
         assert!(!workspace.name.is_empty());
-        assert!(workspace.name.len() > 0);
+        assert!(workspace.name!debug_str.is_empty());
         assert!(workspace.name.len() < 256); // Reasonable length
     }
 
-    #[test]
-    fn test_workspace_update_timestamp() {
+    #[tokio::test]
+    async fn test_workspace_update_timestamp() {
         let created = std::time::SystemTime::now();
-        std::thread::sleep(std::time::Duration::from_millis(10));
+        tokio::time::sleep(std::time::Duration::from_millis(10)).await;
         let updated = std::time::SystemTime::now();
 
         let workspace = WorkspaceMetadata {

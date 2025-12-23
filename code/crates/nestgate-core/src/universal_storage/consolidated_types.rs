@@ -22,13 +22,20 @@ use std::time::Duration;
 
 /// **THE** Universal Storage Type - replaces all `StorageType` enums
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Types of UniversalStorage
 pub enum UniversalStorageType {
     /// Local file system storage
     Local,
     /// Network file system (NFS)
-    Nfs { version: NfsVersion },
+    Nfs {
+        /// NFS protocol version
+        version: NfsVersion,
+    },
     /// Server Message Block (SMB/CIFS)
-    Smb { version: SmbVersion },
+    Smb {
+        /// SMB protocol version
+        version: SmbVersion,
+    },
     /// Object storage (S3-compatible)
     Object,
     /// Block storage
@@ -42,7 +49,10 @@ pub enum UniversalStorageType {
     /// Cache storage
     Cache,
     /// Cloud storage
-    Cloud { provider: CloudProvider },
+    Cloud {
+        /// Cloud storage provider (AWS, Azure, GCP, or custom)
+        provider: CloudProvider,
+    },
     /// Distributed storage
     Distributed,
     /// Custom storage type
@@ -50,31 +60,58 @@ pub enum UniversalStorageType {
 }
 /// NFS protocol versions
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
+/// Nfsversion
 pub enum NfsVersion {
+    /// V3
     V3,
+    /// V4
     V4,
+    /// V41
     V41,
+    /// V42
     V42,
 }
 /// SMB protocol versions  
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
+/// Smbversion
 pub enum SmbVersion {
+    /// V2
     V2,
+    /// V3
     V3,
+    /// V31
     V31,
 }
 /// Cloud storage providers
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+/// Cloudprovider
 pub enum CloudProvider {
-    AWS { region: String },
-    Azure { subscription_id: String },
-    GCP { project_id: String },
-    Custom { endpoint: String },
+    /// AWS cloud provider
+    AWS {
+        /// AWS region identifier (e.g., "us-east-1")
+        region: String,
+    },
+    /// Azure cloud provider
+    Azure {
+        /// Azure subscription ID
+        subscription_id: String,
+    },
+    /// Google Cloud Platform provider
+    GCP {
+        /// GCP project ID
+        project_id: String,
+    },
+    /// Custom cloud provider
+    Custom {
+        /// Custom endpoint URL
+        endpoint: String,
+    },
 }
 // ==================== SECTION ====================
 
 /// **THE** Universal Storage Resource - consolidates all storage resource types
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Universalstorageresource
 pub struct UniversalStorageResource {
     /// Unique resource identifier
     pub resource_id: String,
@@ -114,6 +151,7 @@ pub struct UniversalStorageResource {
 }
 /// Storage resource types
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Types of StorageResource
 pub enum StorageResourceType {
     /// Storage pool
     Pool,
@@ -132,23 +170,38 @@ pub enum StorageResourceType {
 }
 /// Storage capabilities
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Storagecapability
 pub enum StorageCapability {
+    /// Readwrite
     ReadWrite,
+    /// Readonly
     ReadOnly,
+    /// Streaming
     Streaming,
+    /// Replication
     Replication,
+    /// Snapshots
     Snapshots,
+    /// Compression
     Compression,
+    /// Deduplication
     Deduplication,
+    /// Encryption
     Encryption,
+    /// Versioning
     Versioning,
+    /// Backup
     Backup,
+    /// Restore operations (data recovery)
     Restore,
+    /// Monitoring and observability
     Monitoring,
+    /// Custom capability type with arbitrary name
     Custom(String),
 }
 /// Storage permissions
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagepermissions
 pub struct StoragePermissions {
     /// Owner permissions
     pub owner: Vec<String>,
@@ -161,18 +214,26 @@ pub struct StoragePermissions {
 }
 /// Storage health status
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Status values for StorageHealth
 pub enum StorageHealthStatus {
+    /// Healthy
     Healthy,
+    /// Warning
     Warning,
+    /// Critical
     Critical,
+    /// Offline
     Offline,
+    /// Maintenance
     Maintenance,
+    /// Unknown
     Unknown,
 }
 // ==================== SECTION ====================
 
 /// Storage performance metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storageperformancemetrics
 pub struct StoragePerformanceMetrics {
     /// Read operations per second
     pub read_ops_per_sec: f64,
@@ -193,6 +254,7 @@ pub struct StoragePerformanceMetrics {
 }
 /// Storage I/O metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storageiometrics
 pub struct StorageIoMetrics {
     /// Total read operations
     pub total_reads: u64,
@@ -211,83 +273,155 @@ pub struct StorageIoMetrics {
 
 /// Universal storage request
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Universalstoragerequest
 pub enum UniversalStorageRequest {
+    /// Read
     Read {
+        /// Optional byte range for partial reads
         range: Option<std::ops::Range<u64>>,
     },
+    /// Write
     Write {
+        /// Data to write
         data: Vec<u8>,
+        /// Whether to overwrite existing data
         overwrite: bool,
     },
+    /// Delete
     Delete {
+        /// Whether to delete recursively
         recursive: bool,
     },
+    /// List resources in storage
     List {
+        /// Whether to list recursively
         recursive: bool,
+        /// Optional filter pattern
         filter: Option<String>,
     },
+    /// Create a new storage resource
     CreateResource {
+        /// Resource configuration
+        #[allow(deprecated)]
         config: Box<StorageResourceConfig>,
     },
+    /// Get resource metadata
     GetMetadata {},
+    /// Set resource metadata
     SetMetadata {
+        /// Metadata key-value pairs
         metadata: HashMap<String, serde_json::Value>,
     },
+    /// Create a snapshot
     Snapshot {
+        /// Snapshot name
         name: String,
     },
+    /// Restore from snapshot
     Restore {},
+    /// Stream data
     Stream {
+        /// Optional byte range for streaming
         range: Option<std::ops::Range<u64>>,
     },
+    /// Monitor storage events
     Monitor {
+        /// Event types to monitor
         events: Vec<StorageEventType>,
     },
 }
 /// Universal storage response
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Universalstorageresponse
 pub enum UniversalStorageResponse {
+    /// Readresponse
     ReadResponse {
+        /// Data read from storage
         data: Vec<u8>,
+        /// Optional metadata about the read operation
         metadata: Option<StorageMetadata>,
     },
+    /// Writeresponse
     WriteResponse {
+        /// Number of bytes written
         bytes_written: u64,
+        /// Optional checksum of written data
         checksum: Option<String>,
     },
+    /// Deleteresponse
     DeleteResponse {
+        /// Number of items deleted
         deleted_items: u64,
     },
+    /// List response with storage items
     ListResponse {
+        /// List of storage items
         items: Vec<StorageItem>,
     },
+    /// Create response
     CreateResponse {},
+    /// Metadata response
     MetadataResponse {
+        /// Storage metadata
         metadata: StorageMetadata,
     },
+    /// Snapshot response
     SnapshotResponse {
+        /// Unique snapshot identifier
         snapshot_id: String,
+        /// Timestamp when snapshot was created
         created_at: DateTime<Utc>,
     },
+    /// Restore response
     RestoreResponse {
+        /// Number of bytes restored
         restored_bytes: u64,
+        /// Number of items restored
         restored_items: u64,
     },
+    /// Stream response
     StreamResponse {
+        /// Unique stream identifier
         stream_id: String,
+        /// Size of data chunks in stream
         chunk_size: usize,
     },
+    /// Monitor response with event data
     MonitorResponse {
+        /// Unique monitor session identifier
         monitor_id: String,
+        /// Storage events that occurred
         events: Vec<StorageEvent>,
     },
+    /// Error response
     Error {
+        /// Error message
         error: String,
+        /// Error code for categorization
         error_code: String,
     },
 }
 /// Storage resource configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+///
+/// **Migration Path**:
+/// ```rust,ignore
+/// // OLD (deprecated):
+/// use crate::config::StorageResourceConfig;
+///
+/// // NEW (canonical):
+/// use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::config::StorageResourceConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+///
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(
+    since = "0.11.0",
+    note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
+/// Configuration for StorageResource
 pub struct StorageResourceConfig {
     /// Resource name
     pub name: String,
@@ -308,6 +442,7 @@ pub struct StorageResourceConfig {
 }
 /// Storage performance requirements
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storageperformancerequirements
 pub struct StoragePerformanceRequirements {
     /// Minimum read IOPS
     pub min_read_iops: Option<u32>,
@@ -324,20 +459,32 @@ pub struct StoragePerformanceRequirements {
 
 /// Storage event types
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Types of StorageEvent
 pub enum StorageEventType {
+    /// Created
     Created,
+    /// Modified
     Modified,
+    /// Deleted
     Deleted,
+    /// Moved
     Moved,
+    /// Accessed
     Accessed,
+    /// Permissionschanged
     PermissionsChanged,
+    /// Healthchanged
     HealthChanged,
+    /// Capacitychanged
     CapacityChanged,
+    /// Performancealert
     PerformanceAlert,
+    /// Error
     Error,
 }
 /// Storage event
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storageevent
 pub struct StorageEvent {
     /// Event ID
     pub event_id: String,
@@ -355,6 +502,7 @@ pub struct StorageEvent {
 
 /// Storage item (file or directory)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storageitem
 pub struct StorageItem {
     /// Item name
     pub name: String,
@@ -378,18 +526,28 @@ pub struct StorageItem {
 }
 /// Storage item types
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Types of StorageItem
 pub enum StorageItemType {
+    /// File
     File,
+    /// Directory
     Directory,
+    /// Symlink
     Symlink,
+    /// Blockdevice
     BlockDevice,
+    /// Chardevice
     CharDevice,
+    /// Pipe
     Pipe,
+    /// Socket
     Socket,
+    /// Unknown
     Unknown,
 }
 /// Storage metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagemetadata
 pub struct StorageMetadata {
     /// Content type
     pub content_type: Option<String>,
@@ -413,8 +571,9 @@ pub struct StorageMetadata {
 /// **DEPRECATED**: Use canonical storage traits instead
 #[deprecated(
     since = "0.9.0",
-    note = "Use crate::traits::canonical_unified_traits::CanonicalStorage or crate::traits::unified_storage::UnifiedStorage"
+    note = "Use crate::traits::canonical::CanonicalStorage or crate::traits::unified_storage::UnifiedStorage"
 )]
+/// UniversalStorageBackend trait
 pub trait UniversalStorageBackend: Send + Sync {
     /// Handle a storage request
     fn handle_request(
@@ -440,6 +599,7 @@ pub trait UniversalStorageBackend: Send + Sync {
     ) -> impl std::future::Future<Output = Result<StoragePerformanceMetrics>> + Send;
 
     /// Initialize backend with configuration
+    #[allow(deprecated)]
     fn initialize(
         &mut self,
         config: StorageResourceConfig,
@@ -452,24 +612,28 @@ pub trait UniversalStorageBackend: Send + Sync {
 // ==================== SECTION ====================
 
 impl Default for UniversalStorageType {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Local
     }
 }
 
 impl Default for StorageResourceType {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Dataset
     }
 }
 
 impl Default for StorageHealthStatus {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Unknown
     }
 }
 
 impl Default for StoragePermissions {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             owner: vec!["read".to_string(), "write".to_string()],
@@ -481,6 +645,7 @@ impl Default for StoragePermissions {
 }
 
 impl Default for StoragePerformanceMetrics {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             read_ops_per_sec: 0.0,
@@ -535,6 +700,7 @@ impl UniversalStorageType {
     }
 }
 
+#[allow(deprecated)]
 impl StorageResourceConfig {
     /// Create a new storage resource configuration
     #[must_use]
@@ -577,18 +743,45 @@ impl StorageResourceConfig {
 
 /// Storage request structure for handling storage operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for Storage operation
 pub struct StorageRequest {
+    /// Operation
     pub operation: String,
+    /// Path
     pub path: Option<String>,
+    /// Data
     pub data: Option<Vec<u8>>,
+    /// Additional metadata key-value pairs
     pub metadata: HashMap<String, String>,
 }
 
 /// Storage response structure for returning operation results
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for Storage operation
 pub struct StorageResponse {
+    /// Success
     pub success: bool,
+    /// Data
     pub data: Option<Vec<u8>>,
+    /// Additional metadata key-value pairs
     pub metadata: HashMap<String, String>,
+    /// Error
     pub error: Option<String>,
 }
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+///
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Storageresourceconfigcanonical
+pub type StorageResourceConfigCanonical =
+    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using StorageResourceConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.

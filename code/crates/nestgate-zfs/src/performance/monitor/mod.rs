@@ -1,5 +1,28 @@
-//! Split from monolithic monitor.rs for maintainability and 2000-line compliance
-//! Core monitoring implementation with specialized metrics, analysis, and reporting modules
+//! ZFS Performance Monitoring System.
+//!
+//! This module provides comprehensive performance monitoring for ZFS storage,
+//! split from a monolithic implementation for maintainability and modularity.
+//!
+//! # Architecture
+//!
+//! The monitoring system is organized into specialized sub-modules:
+//! - `analysis`: Performance trend analysis and anomaly detection
+//! - `metrics`: Metrics collection and aggregation
+//! - `real_metrics`: Real-time metric gathering from ZFS
+//! - `reporting`: Alert generation and reporting
+//!
+//! # Examples
+//!
+//! ```no_run
+//! use nestgate_zfs::performance::monitor::ZfsPerformanceMonitor;
+//!
+//! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+//! let monitor = ZfsPerformanceMonitor::new(config, pool_manager, dataset_manager)?;
+//! monitor.start_monitoring().await?;
+//! # Ok(())
+//! # }
+//! ```
+
 use crate::types::StorageTier;
 use crate::{config::ZfsConfig, dataset::ZfsDatasetManager, pool::ZfsPoolManager};
 use nestgate_core::Result as CoreResult;
@@ -16,11 +39,24 @@ use super::types::{
     ZfsPerformanceMonitor,
 };
 
-// Re-export specialized modules
+// Re-export specialized modules for convenience
+
+/// Performance trend analysis and anomaly detection.
 pub mod analysis;
+
+/// Metrics collection and aggregation.
 pub mod metrics;
+
+/// Real-time metric gathering from ZFS.
 pub mod real_metrics;
+
+/// Alert generation and reporting.
 pub mod reporting;
+
+#[cfg(test)]
+mod analysis_tests;
+#[cfg(test)]
+mod metrics_tests;
 
 impl ZfsPerformanceMonitor {
     /// Create performance monitor for testing

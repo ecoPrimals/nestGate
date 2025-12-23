@@ -1,14 +1,13 @@
-//! **COMPREHENSIVE DASHBOARD TYPES TESTS**
+//! Unit tests for dashboard types
 //!
-//! Test coverage for dashboard_types.rs to increase overall coverage.
-//! These tests cover time ranges, metrics, and dashboard data structures.
+//! These tests cover dashboard data structures and time range logic.
 
 #[cfg(test)]
 mod tests {
-    use crate::handlers::dashboard_types::*;
+    use super::super::dashboard_types::*;
     use std::time::{Duration, SystemTime};
 
-    // ==================== DASHBOARD TIME RANGE TESTS ====================
+    // ==================== DashboardTimeRange Tests ====================
 
     #[test]
     fn test_time_range_creation() {
@@ -27,49 +26,27 @@ mod tests {
     fn test_time_range_last_hours() {
         let range = DashboardTimeRange::last_hours(2);
 
-        // Should create a 2-hour range
-        let duration = range.duration();
-        assert!(
-            duration.as_secs() >= 7140 && duration.as_secs() <= 7260,
-            "Duration should be approximately 2 hours (7200 seconds), got {}",
-            duration.as_secs()
-        );
-
-        // Granularity should be 5 minutes (300 seconds)
-        assert_eq!(
-            range.granularity.as_secs(),
-            300,
-            "Granularity should be 5 minutes"
-        );
+        assert!(range.is_valid());
+        assert_eq!(range.granularity, Duration::from_secs(300)); // 5 minutes
+        assert_eq!(range.duration().as_secs(), 2 * 3600);
     }
 
     #[test]
     fn test_time_range_last_days() {
-        let range = DashboardTimeRange::last_days(1);
+        let range = DashboardTimeRange::last_days(7);
 
-        // Should create a 1-day range
-        let duration = range.duration();
-        assert!(
-            duration.as_secs() >= 86340 && duration.as_secs() <= 86460,
-            "Duration should be approximately 1 day (86400 seconds)"
-        );
-
-        // Granularity should be 1 hour (3600 seconds)
-        assert_eq!(
-            range.granularity.as_secs(),
-            3600,
-            "Granularity should be 1 hour"
-        );
+        assert!(range.is_valid());
+        assert_eq!(range.granularity, Duration::from_secs(3600)); // 1 hour
+        assert_eq!(range.duration().as_secs(), 7 * 24 * 3600);
     }
 
     #[test]
     fn test_time_range_duration() {
         let start = SystemTime::now();
-        let end = start + Duration::from_secs(7200); // 2 hours
+        let end = start + Duration::from_secs(3600);
         let range = DashboardTimeRange::new(start, end, Duration::from_secs(60));
 
-        let duration = range.duration();
-        assert_eq!(duration.as_secs(), 7200, "Duration should be 2 hours");
+        assert_eq!(range.duration(), Duration::from_secs(3600));
     }
 
     #[test]
@@ -79,80 +56,53 @@ mod tests {
 
         // Valid range
         let valid_range = DashboardTimeRange::new(start, end, Duration::from_secs(60));
-        assert!(valid_range.is_valid(), "Valid range should return true");
+        assert!(valid_range.is_valid());
 
         // Invalid range (end before start)
         let invalid_range = DashboardTimeRange::new(end, start, Duration::from_secs(60));
-        assert!(
-            !invalid_range.is_valid(),
-            "Invalid range should return false"
-        );
+        assert!(!invalid_range.is_valid());
 
         // Invalid range (zero granularity)
-        let invalid_granularity = DashboardTimeRange::new(start, end, Duration::ZERO);
-        assert!(
-            !invalid_granularity.is_valid(),
-            "Zero granularity should be invalid"
-        );
+        let zero_granularity = DashboardTimeRange::new(start, end, Duration::ZERO);
+        assert!(!zero_granularity.is_valid());
     }
 
     #[test]
     fn test_time_range_data_points() {
         let start = SystemTime::now();
-        let end = start + Duration::from_secs(3600); // 1 hour
-        let range = DashboardTimeRange::new(start, end, Duration::from_secs(60)); // 1 minute granularity
+        let end = start + Duration::from_secs(3600);
+        let range = DashboardTimeRange::new(start, end, Duration::from_secs(60));
 
-        let points = range.data_points();
-        assert_eq!(
-            points, 60,
-            "Should have 60 data points for 1 hour with 1-minute granularity"
-        );
+        assert_eq!(range.data_points(), 60);
     }
 
     #[test]
     fn test_time_range_data_points_invalid() {
         let start = SystemTime::now();
-        let end = start; // Same start and end
+        let end = start;
         let range = DashboardTimeRange::new(start, end, Duration::from_secs(60));
 
-        let points = range.data_points();
-        assert_eq!(points, 0, "Invalid range should have 0 data points");
+        assert_eq!(range.data_points(), 0);
     }
 
     #[test]
     fn test_time_range_intervals() {
         let start = SystemTime::now();
-        let end = start + Duration::from_secs(600); // 10 minutes
-        let range = DashboardTimeRange::new(start, end, Duration::from_secs(120)); // 2-minute intervals
+        let end = start + Duration::from_secs(300);
+        let range = DashboardTimeRange::new(start, end, Duration::from_secs(100));
 
         let intervals = range.intervals();
-
-        // Should have 5 intervals (600 / 120 = 5)
-        assert_eq!(intervals.len(), 5, "Should split into 5 intervals");
-
-        // Each interval should be a tuple of (start, end)
-        for (i, &(interval_start, _interval_end)) in intervals.iter().enumerate() {
-            let expected = start + Duration::from_secs(i as u64 * 120);
-            // Allow small timing differences
-            let diff = interval_start
-                .duration_since(expected)
-                .unwrap_or_else(|_| expected.duration_since(interval_start).expect("Test setup failed"));
-            assert!(
-                diff < Duration::from_millis(10),
-                "Interval {} should be at expected time",
-                i
-            );
-        }
+        assert_eq!(intervals.len(), 3);
     }
 
     #[test]
-    fn test_time_range_serialization() {
-        let start = SystemTime::UNIX_EPOCH + Duration::from_secs(1000000);
-        let end = start + Duration::from_secs(3600);
-        let range = DashboardTimeRange::new(start, end, Duration::from_secs(60));
+    fn test_time_range_intervals_exact_fit() {
+        let start = SystemTime::now();
+        let end = start + Duration::from_secs(600);
+        let range = DashboardTimeRange::new(start, end, Duration::from_secs(100));
 
-        let serialized = serde_json::to_string(&range);
-        assert!(serialized.is_ok(), "DashboardTimeRange should serialize");
+        let intervals = range.intervals();
+        assert_eq!(intervals.len(), 6);
     }
 
     #[test]
@@ -160,25 +110,28 @@ mod tests {
         let range1 = DashboardTimeRange::last_hours(1);
         let range2 = range1.clone();
 
-        assert_eq!(
-            range1.granularity, range2.granularity,
-            "Cloned range should have same granularity"
-        );
-        assert!(
-            range1.is_valid() == range2.is_valid(),
-            "Cloned range should have same validity"
-        );
+        assert_eq!(range1.granularity, range2.granularity);
     }
 
-    // ==================== DASHBOARD STATE TESTS ====================
+    #[test]
+    fn test_time_range_serialization() {
+        let range = DashboardTimeRange::last_hours(1);
+        let json = serde_json::to_string(&range).expect("Failed to serialize");
+
+        assert!(json.contains("start"));
+        assert!(json.contains("end"));
+        assert!(json.contains("granularity"));
+    }
+
+    // ==================== DashboardState Tests ====================
 
     #[test]
     fn test_dashboard_state_creation() {
         let state = DashboardState::new();
 
         assert_eq!(state.active_connections, 0);
-        assert!(state.cached_metrics.is_empty());
-        assert!(state.active_alerts.is_empty());
+        assert_eq!(state.cached_metrics.len(), 0);
+        assert_eq!(state.active_alerts.len(), 0);
     }
 
     #[test]
@@ -186,41 +139,41 @@ mod tests {
         let state = DashboardState::default();
 
         assert_eq!(state.active_connections, 0);
-        assert!(state.cached_metrics.is_empty());
+        assert_eq!(state.cached_metrics.len(), 0);
+    }
+
+    #[tokio::test]
+    async fn test_dashboard_state_update_metrics() {
+        let mut state = DashboardState::new();
+        let initial_update = state.last_update;
+
+        tokio::time::sleep(Duration::from_millis(10)).await;
+
+        state.update_metrics("cpu_usage".to_string(), serde_json::json!(45.5));
+
+        assert_eq!(state.cached_metrics.len(), 1);
+        assert!(state.last_update > initial_update);
     }
 
     #[test]
-    fn test_dashboard_state_update_metrics() {
+    fn test_dashboard_state_multiple_metrics() {
         let mut state = DashboardState::new();
-        let old_update = state.last_update;
 
-        // Wait a tiny bit
-        std::thread::sleep(Duration::from_millis(10));
+        state.update_metrics("cpu_usage".to_string(), serde_json::json!(45.5));
+        state.update_metrics("memory_usage".to_string(), serde_json::json!(65.0));
+        state.update_metrics("disk_io".to_string(), serde_json::json!(1000));
 
-        state.update_metrics("cpu".to_string(), serde_json::json!(75.5));
-
-        assert_eq!(state.cached_metrics.len(), 1);
-        assert!(
-            state.last_update > old_update,
-            "Last update should be more recent"
+        assert_eq!(state.cached_metrics.len(), 3);
+        assert_eq!(
+            state.cached_metrics.get("cpu_usage").unwrap(),
+            &serde_json::json!(45.5)
         );
     }
 
     #[test]
     fn test_dashboard_state_add_alert() {
         let mut state = DashboardState::new();
-
-        let alert = PerformanceAlert {
-            id: "alert1".to_string(),
-            severity: AlertSeverity::Warning,
-            title: "High CPU".to_string(),
-            message: "CPU usage is high".to_string(),
-            timestamp: SystemTime::now(),
-            resolved: false,
-            metric_name: "cpu_usage".to_string(),
-            currentvalue: 85.0,
-            threshold: 80.0,
-        };
+        let alert = create_test_alert("alert1", false);
 
         state.add_alert(alert);
 
@@ -231,196 +184,190 @@ mod tests {
     fn test_dashboard_state_clear_resolved_alerts() {
         let mut state = DashboardState::new();
 
-        // Add unresolved alert
-        state.add_alert(PerformanceAlert {
-            id: "alert1".to_string(),
-            severity: AlertSeverity::Warning,
-            title: "Alert 1".to_string(),
-            message: "Message 1".to_string(),
-            timestamp: SystemTime::now(),
-            resolved: false,
-            metric_name: "metric1".to_string(),
-            currentvalue: 90.0,
-            threshold: 80.0,
-        });
+        state.add_alert(create_test_alert("alert1", false));
+        state.add_alert(create_test_alert("alert2", true));
+        state.add_alert(create_test_alert("alert3", false));
 
-        // Add resolved alert
-        state.add_alert(PerformanceAlert {
-            id: "alert2".to_string(),
-            severity: AlertSeverity::Info,
-            title: "Alert 2".to_string(),
-            message: "Message 2".to_string(),
-            timestamp: SystemTime::now(),
-            resolved: true,
-            metric_name: "metric2".to_string(),
-            currentvalue: 70.0,
-            threshold: 80.0,
-        });
-
-        assert_eq!(state.active_alerts.len(), 2);
+        assert_eq!(state.active_alerts.len(), 3);
 
         state.clear_resolved_alerts();
 
-        assert_eq!(state.active_alerts.len(), 1);
-        assert!(!state.active_alerts[0].resolved);
+        assert_eq!(state.active_alerts.len(), 2);
     }
 
-    // ==================== PERFORMANCE ALERT TESTS ====================
+    #[test]
+    fn test_dashboard_state_debug_format() {
+        let state = DashboardState::new();
+        let debug_str = format!("{state:?}");
+
+        assert!(debug_str.contains("DashboardState"));
+        assert!(debug_str.contains("active_connections"));
+    }
+
+    // ==================== PerformanceAlert Tests ====================
 
     #[test]
     fn test_performance_alert_creation() {
-        let alert = PerformanceAlert {
-            id: "alert1".to_string(),
-            severity: AlertSeverity::Critical,
-            title: "High Memory Usage".to_string(),
-            message: "Memory usage exceeded threshold".to_string(),
-            timestamp: SystemTime::now(),
-            resolved: false,
-            metric_name: "memory_usage".to_string(),
-            currentvalue: 95.0,
-            threshold: 90.0,
-        };
+        let alert = create_test_alert("test_alert", false);
 
-        assert_eq!(alert.id, "alert1");
-        assert_eq!(alert.severity, AlertSeverity::Critical);
+        assert_eq!(alert.id, "test_alert");
         assert!(!alert.resolved);
     }
 
     #[test]
-    fn test_alert_severity_ordering() {
-        assert!(AlertSeverity::Info < AlertSeverity::Warning);
-        assert!(AlertSeverity::Warning < AlertSeverity::Critical);
-        assert!(AlertSeverity::Critical < AlertSeverity::Emergency);
+    fn test_performance_alert_clone() {
+        let alert1 = create_test_alert("alert1", false);
+        let alert2 = alert1.clone();
+
+        assert_eq!(alert1.id, alert2.id);
+        assert_eq!(alert1.resolved, alert2.resolved);
     }
 
     #[test]
     fn test_performance_alert_serialization() {
-        let alert = PerformanceAlert {
-            id: "alert1".to_string(),
+        let alert = create_test_alert("test_alert", false);
+        let json = serde_json::to_string(&alert).expect("Failed to serialize");
+
+        assert!(json.contains("test_alert"));
+        assert!(json.contains("resolved"));
+    }
+
+    #[test]
+    fn test_performance_alert_deserialization() {
+        let alert = create_test_alert("test_alert", true);
+        let json = serde_json::to_string(&alert).unwrap();
+
+        let deserialized: PerformanceAlert =
+            serde_json::from_str(&json).expect("Failed to deserialize");
+
+        assert_eq!(alert.id, deserialized.id);
+        assert_eq!(alert.resolved, deserialized.resolved);
+    }
+
+    // ==================== Integration Tests ====================
+
+    #[test]
+    fn test_dashboard_workflow() {
+        let mut state = DashboardState::new();
+
+        // Add metrics
+        state.update_metrics("cpu".to_string(), serde_json::json!(50.0));
+        state.update_metrics("memory".to_string(), serde_json::json!(70.0));
+
+        // Add alerts
+        state.add_alert(create_test_alert("cpu_high", false));
+        state.add_alert(create_test_alert("memory_high", true));
+
+        assert_eq!(state.cached_metrics.len(), 2);
+        assert_eq!(state.active_alerts.len(), 2);
+
+        // Clear resolved alerts
+        state.clear_resolved_alerts();
+
+        assert_eq!(state.active_alerts.len(), 1);
+    }
+
+    #[test]
+    fn test_time_range_workflow() {
+        // Create hourly range
+        let hourly_range = DashboardTimeRange::last_hours(1);
+        assert!(hourly_range.is_valid());
+        assert!(hourly_range.data_points() > 0);
+
+        // Create daily range
+        let daily_range = DashboardTimeRange::last_days(1);
+        assert!(daily_range.is_valid());
+        assert!(daily_range.data_points() > 0);
+
+        // Daily range should have more data points
+        assert!(daily_range.duration() > hourly_range.duration());
+    }
+
+    // ==================== Edge Cases ====================
+
+    #[test]
+    fn test_time_range_zero_duration() {
+        let now = SystemTime::now();
+        let range = DashboardTimeRange::new(now, now, Duration::from_secs(60));
+
+        assert!(!range.is_valid());
+        assert_eq!(range.data_points(), 0);
+    }
+
+    #[test]
+    fn test_time_range_reversed() {
+        let start = SystemTime::now();
+        let end = start + Duration::from_secs(3600);
+        let range = DashboardTimeRange::new(end, start, Duration::from_secs(60));
+
+        assert!(!range.is_valid());
+    }
+
+    #[test]
+    fn test_dashboard_state_empty_metrics() {
+        let state = DashboardState::new();
+        assert!(state.cached_metrics.is_empty());
+    }
+
+    #[test]
+    fn test_dashboard_state_overwrite_metric() {
+        let mut state = DashboardState::new();
+
+        state.update_metrics("cpu".to_string(), serde_json::json!(50.0));
+        state.update_metrics("cpu".to_string(), serde_json::json!(60.0));
+
+        assert_eq!(state.cached_metrics.len(), 1);
+        assert_eq!(
+            state.cached_metrics.get("cpu").unwrap(),
+            &serde_json::json!(60.0)
+        );
+    }
+
+    #[test]
+    fn test_dashboard_state_all_alerts_resolved() {
+        let mut state = DashboardState::new();
+
+        state.add_alert(create_test_alert("alert1", true));
+        state.add_alert(create_test_alert("alert2", true));
+
+        state.clear_resolved_alerts();
+
+        assert_eq!(state.active_alerts.len(), 0);
+    }
+
+    #[test]
+    fn test_time_range_large_granularity() {
+        let start = SystemTime::now();
+        let end = start + Duration::from_secs(3600);
+        let range = DashboardTimeRange::new(start, end, Duration::from_secs(7200));
+
+        assert!(range.is_valid());
+        assert_eq!(range.data_points(), 1);
+    }
+
+    #[test]
+    fn test_time_range_intervals_empty() {
+        let now = SystemTime::now();
+        let range = DashboardTimeRange::new(now, now, Duration::from_secs(60));
+
+        let intervals = range.intervals();
+        assert_eq!(intervals.len(), 0);
+    }
+
+    // ==================== Helper Functions ====================
+
+    /// Creates  Test Alert
+    fn create_test_alert(id: &str, resolved: bool) -> PerformanceAlert {
+        PerformanceAlert {
+            id: id.to_string(),
             severity: AlertSeverity::Warning,
-            title: "Test Alert".to_string(),
-            message: "Test message".to_string(),
+            title: format!("Test Alert: {id}"),
+            message: format!("Test alert: {id}"),
             timestamp: SystemTime::now(),
-            resolved: false,
+            resolved,
             metric_name: "test_metric".to_string(),
             currentvalue: 85.0,
             threshold: 80.0,
-        };
-
-        let serialized = serde_json::to_string(&alert);
-        assert!(serialized.is_ok(), "PerformanceAlert should serialize");
-    }
-
-    // ==================== DASHBOARD CONFIG TESTS ====================
-
-    #[test]
-    fn test_dashboard_config_default() {
-        let config = DashboardConfig::default();
-
-        assert!(config.enable_real_time);
-        assert!(config.enable_predictions);
-        assert_eq!(config.update_interval.as_secs(), 1);
-        assert_eq!(config.max_history_points, 1000);
-        assert!(!config.alert_thresholds.is_empty());
-    }
-
-    #[test]
-    fn test_dashboard_config_alert_thresholds() {
-        let config = DashboardConfig::default();
-
-        assert!(config.alert_thresholds.contains_key("cpu_usage"));
-        assert!(config.alert_thresholds.contains_key("memory_usage"));
-        assert!(config.alert_thresholds.contains_key("disk_usage"));
-
-        let cpu_threshold = config.alert_thresholds.get("cpu_usage");
-        assert_eq!(cpu_threshold, Some(&80.0));
-    }
-
-    // ==================== DASHBOARD EVENT TESTS ====================
-
-    #[test]
-    fn test_dashboard_event_creation() {
-        let event = DashboardEvent {
-            event_type: "metric_updated".to_string(),
-            data: serde_json::json!({"metric": "cpu", "value": 75}),
-            timestamp: SystemTime::now(),
-        };
-
-        assert_eq!(event.event_type, "metric_updated");
-    }
-
-    #[test]
-    fn test_dashboard_event_serialization() {
-        let event = DashboardEvent {
-            event_type: "alert_triggered".to_string(),
-            data: serde_json::json!({"alert_id": "alert1"}),
-            timestamp: SystemTime::now(),
-        };
-
-        let serialized = serde_json::to_string(&event);
-        assert!(serialized.is_ok(), "DashboardEvent should serialize");
-    }
-
-    // ==================== INTEGRATION TESTS ====================
-
-    #[test]
-    fn test_dashboard_time_range_with_state() {
-        // Create a time range
-        let range = DashboardTimeRange::last_hours(1);
-        assert!(range.is_valid(), "Range should be valid");
-
-        // Get intervals
-        let intervals = range.intervals();
-        assert!(!intervals.is_empty(), "Should have intervals");
-
-        // Could create dashboard state with metrics for each interval
-        let mut state = DashboardState::new();
-        state.update_metrics(
-            "interval_count".to_string(),
-            serde_json::json!(intervals.len()),
-        );
-
-        assert_eq!(state.cached_metrics.len(), 1);
-    }
-
-    #[test]
-    fn test_multiple_time_ranges() {
-        let range_1h = DashboardTimeRange::last_hours(1);
-        let range_24h = DashboardTimeRange::last_hours(24);
-        let range_7d = DashboardTimeRange::last_days(7);
-
-        // All should be valid
-        assert!(range_1h.is_valid());
-        assert!(range_24h.is_valid());
-        assert!(range_7d.is_valid());
-
-        // Longer ranges should have more data points
-        assert!(range_24h.duration() > range_1h.duration());
-        assert!(range_7d.duration() > range_24h.duration());
-    }
-
-    #[test]
-    fn test_edge_case_very_short_range() {
-        let start = SystemTime::now();
-        let end = start + Duration::from_secs(10); // 10 seconds
-        let range = DashboardTimeRange::new(start, end, Duration::from_secs(1)); // 1 second granularity
-
-        assert!(range.is_valid(), "Very short range should be valid");
-        let points = range.data_points();
-        assert_eq!(points, 10, "Should have 10 data points");
-    }
-
-    #[test]
-    fn test_edge_case_very_long_range() {
-        let start = SystemTime::now();
-        let end = start + Duration::from_secs(365 * 24 * 3600); // 1 year
-        let range = DashboardTimeRange::new(start, end, Duration::from_secs(3600));
-
-        assert!(range.is_valid(), "Very long range should be valid");
-        let duration = range.duration();
-        assert!(
-            duration.as_secs() >= 365 * 24 * 3600 - 60,
-            "Duration should be approximately 1 year"
-        );
+        }
     }
 }

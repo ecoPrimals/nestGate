@@ -4,6 +4,8 @@
 // allowing NestGate to interact with other primal services through
 // a standardized interface.
 
+//! Universal Primal module
+
 use crate::handlers::zfs::universal_zfs::types::UniversalZfsResult;
 use nestgate_core::{
     ecosystem_integration::capabilities::UniversalCapability,
@@ -52,6 +54,7 @@ pub trait StoragePrimalProvider: Send + Sync {
 
 /// Storage capabilities that NestGate provides
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+/// Storagecapability
 pub enum StorageCapability {
     // Core storage capabilities
     /// ZFS pool management and administration
@@ -131,6 +134,7 @@ pub enum StorageCapability {
 
 /// Universal primal types
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Types of Primal
 pub enum PrimalType {
     /// Storage services (NestGate)
     Storage,
@@ -145,6 +149,7 @@ pub enum PrimalType {
 }
 /// Universal request structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for Universal operation
 pub struct UniversalRequest {
     /// Unique request identifier
     pub id: String,
@@ -159,6 +164,7 @@ pub struct UniversalRequest {
 }
 /// Universal response structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for Universal operation
 pub struct UniversalResponse {
     /// Response identifier matching the request
     pub id: String,
@@ -173,6 +179,7 @@ pub struct UniversalResponse {
 }
 /// Health status
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Healthstatus
 pub struct HealthStatus {
     /// Current health status (e.g., "healthy", "degraded", "unhealthy")
     pub status: String,
@@ -187,6 +194,7 @@ pub struct HealthStatus {
 }
 /// Discovered primal information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Discoveredprimal
 pub struct DiscoveredPrimal {
     /// Unique primal identifier
     pub id: String,
@@ -223,6 +231,7 @@ pub struct NestGateStoragePrimal {
 }
 /// Configuration for NestGate primal
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for NestGatePrimal
 pub struct NestGatePrimalConfig {
     /// Host address for the primal service
     pub host: String,
@@ -234,6 +243,7 @@ pub struct NestGatePrimalConfig {
     pub primal_registry_endpoint: Option<String>,
 }
 impl Default for NestGateStoragePrimal {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -272,18 +282,22 @@ impl NestGateStoragePrimal {
 }
 
 impl StoragePrimalProvider for NestGateStoragePrimal {
+    /// Primal Id
     fn primal_id(&self) -> &str {
         "nestgate"
     }
 
+    /// Primal Type
     fn primal_type(&self) -> PrimalType {
         PrimalType::Storage
     }
 
+    /// Capabilities
     fn capabilities(&self) -> Vec<StorageCapability> {
         self.capabilities.clone()
     }
 
+    /// Handles  Request
     async fn handle_request(&self, request: UniversalRequest) -> Result<UniversalResponse, String> {
         // Handle universal requests from other primals
         match request.operation.as_str() {
@@ -333,6 +347,7 @@ impl StoragePrimalProvider for NestGateStoragePrimal {
         }
     }
 
+    /// Health Check
     fn health_check(&self) -> HealthStatus {
         HealthStatus {
             status: "healthy".to_string(),
@@ -343,6 +358,7 @@ impl StoragePrimalProvider for NestGateStoragePrimal {
         }
     }
 
+    /// Register With Ecosystem
     async fn register_with_ecosystem(&self) -> Result<(), String> {
         // Removed unused tracing import
 
@@ -415,6 +431,7 @@ impl StoragePrimalProvider for NestGateStoragePrimal {
         }
     }
 
+    ///  Metadata
     fn _metadata(&self) -> HashMap<String, String> {
         self._metadata.clone()
     }
@@ -422,23 +439,46 @@ impl StoragePrimalProvider for NestGateStoragePrimal {
 
 impl NestGateStoragePrimal {
     /// Discover other primals on the local network
+    ///
+    /// **MODERNIZED** (Week 2, Day 3): Now uses EnvironmentConfig for discovery ports.
+    /// Discovery port range can be configured via `NESTGATE_DISCOVERY_PORT_RANGE` environment variable.
+    ///
+    /// # Primal Sovereignty
+    ///
+    /// Uses environment-driven configuration for all port discovery. No hardcoded assumptions.
     async fn discover_local_primals(&self) -> Result<Vec<DiscoveredPrimal>, String> {
-        // Removed unused tracing import
-        use nestgate_core::constants::hardcoding::ports;
+        use nestgate_core::config::environment::EnvironmentConfig;
+        use std::env;
 
         let mut discovered_primals = Vec::new();
 
-        // Check common primal ports (8080-8090, 3000-3010)
-        let common_ports = vec![
-            ports::HTTP_DEFAULT,
-            ports::HEALTH_CHECK,
-            ports::WEBSOCKET_DEFAULT,
-            ports::METRICS_DEFAULT,
-            3000, // Custom port for extended services
-            3001, // Custom port for extended services
-            3002, // Custom port for extended services
-            3010, // Custom port for discovery
+        // Load discovery port configuration from environment
+        let config = EnvironmentConfig::from_env()
+            .map_err(|e| format!("Failed to load discovery config: {}", e))?;
+        
+        let discovery_ports = config.discovery.port_range.clone();
+        
+        // ✅ SOVEREIGNTY: Standard service ports from environment
+        // Using compile-time constants for defaults (zero runtime overhead)
+        let standard_ports = vec![
+            env::var("NESTGATE_API_PORT")
+                .ok().and_then(|s| s.parse().ok())
+                .unwrap_or(8080), // Standard HTTP alternate
+            env::var("NESTGATE_HEALTH_PORT")
+                .ok().and_then(|s| s.parse().ok())
+                .unwrap_or(8081), // Health check standard
+            env::var("NESTGATE_WS_PORT")
+                .ok().and_then(|s| s.parse().ok())
+                .unwrap_or(8082), // WebSocket standard
+            env::var("NESTGATE_METRICS_PORT")
+                .ok().and_then(|s| s.parse().ok())
+                .unwrap_or(9090), // Prometheus standard
         ];
+        
+        // Combine standard ports with configured discovery range
+        let common_ports: Vec<u16> = standard_ports.into_iter()
+            .chain(discovery_ports.into_iter())
+            .collect();
 
         for port in common_ports {
             if port == self.config.port {

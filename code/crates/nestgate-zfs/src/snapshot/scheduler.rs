@@ -2,6 +2,8 @@
 // Handles scheduling and execution of snapshot policies including
 // retention management and automated snapshot creation.
 
+//! Scheduler module
+
 use chrono::{Datelike, Timelike};
 // Removed unused HashMap import
 use std::sync::Arc;
@@ -16,7 +18,7 @@ use nestgate_core::{NestGateError, Result as CoreResult};
 use super::operations::SnapshotOperationType;
 use super::policy::{RetentionPolicy, ScheduleFrequency, SnapshotPolicy};
 use super::types::{SnapshotInfo, SnapshotOperation, SnapshotOperationStatus};
-// use crate::config::canonical_master::NestGateCanonicalConfigSource; // Module not yet implemented
+// use crate::config::canonical_primary::NestGateCanonicalConfigSource; // Module not yet implemented
 use std::time::Duration;
 use tracing::debug;
 use tracing::error;
@@ -25,6 +27,7 @@ use tracing::warn;
 
 /// Policy scheduler for managing automated snapshot creation
 #[derive(Debug)]
+/// Policyscheduler
 pub struct PolicyScheduler {
     dataset_manager: Arc<ZfsDatasetManager>,
     policies: SnapshotPolicyMap,

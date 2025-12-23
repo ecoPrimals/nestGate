@@ -4,7 +4,7 @@
 //! scattered FSMonitor-specific configuration structures.
 
 // Re-export from canonical configuration system
-pub use nestgate_core::config::canonical_master::{FsMonitorConfig, NestGateCanonicalConfig};
+pub use nestgate_core::config::canonical_primary::{FsMonitorConfig, NestGateCanonicalConfig};
 
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -123,7 +123,7 @@ impl FsMonitor {
 // Use the canonical configuration system instead:
 //
 // ```rust
-// use nestgate_core::config::canonical_master::{NestGateCanonicalConfig, FsMonitorConfig};
+// use nestgate_core::config::canonical_primary::{NestGateCanonicalConfig, FsMonitorConfig};
 //
 // let config = NestGateCanonicalConfig::default();
 // let fsmonitor_config = config.services.fsmonitor;
@@ -239,14 +239,17 @@ mod tests {
         struct TestHandler;
 
         impl FsEventHandler for TestHandler {
+            /// Handles  Event
             fn handle_event(&self, _event: &FsEvent) -> Result<(), FsMonitorError> {
                 Ok(())
             }
 
+            /// Name
             fn name(&self) -> &str {
                 "test_handler"
             }
 
+            /// Handles S Event Type
             fn handles_event_type(&self, _event_type: &FsEventType) -> bool {
                 true
             }
@@ -299,14 +302,17 @@ mod tests {
         struct SelectiveHandler;
 
         impl FsEventHandler for SelectiveHandler {
+            /// Handles  Event
             fn handle_event(&self, _event: &FsEvent) -> Result<(), FsMonitorError> {
                 Ok(())
             }
 
+            /// Name
             fn name(&self) -> &str {
                 "selective"
             }
 
+            /// Handles S Event Type
             fn handles_event_type(&self, event_type: &FsEventType) -> bool {
                 matches!(event_type, FsEventType::Create | FsEventType::Delete)
             }
@@ -362,24 +368,30 @@ mod tests {
         struct Handler2;
 
         impl FsEventHandler for Handler1 {
+            /// Handles  Event
             fn handle_event(&self, _event: &FsEvent) -> Result<(), FsMonitorError> {
                 Ok(())
             }
+            /// Name
             fn name(&self) -> &str {
                 "handler1"
             }
+            /// Handles S Event Type
             fn handles_event_type(&self, _: &FsEventType) -> bool {
                 true
             }
         }
 
         impl FsEventHandler for Handler2 {
+            /// Handles  Event
             fn handle_event(&self, _event: &FsEvent) -> Result<(), FsMonitorError> {
                 Ok(())
             }
+            /// Name
             fn name(&self) -> &str {
                 "handler2"
             }
+            /// Handles S Event Type
             fn handles_event_type(&self, _: &FsEventType) -> bool {
                 true
             }

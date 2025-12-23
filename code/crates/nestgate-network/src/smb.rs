@@ -1,6 +1,8 @@
 //
 // This module provides SMB server functionality for the NestGate system
 
+//! Smb module
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -15,21 +17,30 @@ use tracing::error;
 
 /// SMB share configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Smbshare
 pub struct SmbShare {
+    /// Path
     pub path: PathBuf,
+    /// Name
     pub name: String,
+    /// Comment
     pub comment: String,
+    /// Read Only
     pub read_only: bool,
+    /// Guest Ok
     pub guest_ok: bool,
+    /// Browseable
     pub browseable: bool,
 }
 /// SMB server state
 #[derive(Debug)]
+/// Smbserver
 pub struct SmbServer {
     shares: Arc<RwLock<HashMap<String, SmbShare>>>,
     running: Arc<RwLock<bool>>,
 }
 impl Default for SmbServer {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -365,17 +376,26 @@ impl SmbServer {
 
 /// SMB mount request
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for SmbMount operation
 pub struct SmbMountRequest {
+    /// Share name
     pub share_name: String,
+    /// Mount Point
     pub mount_point: PathBuf,
+    /// Username
     pub username: Option<String>,
+    /// Password
     pub password: Option<String>,
 }
 /// SMB mount response
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for SmbMount operation
 pub struct SmbMountResponse {
+    /// Mount identifier
     pub mount_id: String,
+    /// Success
     pub success: bool,
+    /// Message
     pub message: String,
 }
 /// Handle SMB mount request

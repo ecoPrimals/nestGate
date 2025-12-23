@@ -8,7 +8,7 @@
 //! This module is only available with `dev-stubs` feature.
 
 #[cfg(feature = "dev-stubs")]
-use crate::handlers::zfs_stub::ZeroCostZfsOperations;
+use crate::dev_stubs::zfs::ZeroCostZfsOperations;
 
 #[cfg(feature = "dev-stubs")]
 /// **ZERO-COST NATIVE ZFS SERVICE** (Development Only)
@@ -16,6 +16,7 @@ use crate::handlers::zfs_stub::ZeroCostZfsOperations;
 /// High-performance ZFS service implementation with zero-cost abstractions.
 #[derive(Debug, Clone)]
 #[allow(dead_code)] // Inner field used for ZFS operations
+/// Service implementation for ZeroCostNativeZfs
 pub struct ZeroCostNativeZfsService<const MAX_POOLS: usize> {
     /// ZFS operations interface
     inner: ZeroCostZfsOperations,
@@ -23,6 +24,7 @@ pub struct ZeroCostNativeZfsService<const MAX_POOLS: usize> {
 
 #[cfg(feature = "dev-stubs")]
 impl<const MAX_POOLS: usize> Default for ZeroCostNativeZfsService<MAX_POOLS> {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -44,10 +46,12 @@ impl<const MAX_POOLS: usize> ZeroCostNativeZfsService<MAX_POOLS> {
 ///
 /// Placeholder for production builds.
 #[derive(Debug, Clone)]
+/// Service implementation for ZeroCostNativeZfs
 pub struct ZeroCostNativeZfsService<const MAX_POOLS: usize>;
 
 #[cfg(not(feature = "dev-stubs"))]
 impl<const MAX_POOLS: usize> Default for ZeroCostNativeZfsService<MAX_POOLS> {
+    /// Returns the default instance
     fn default() -> Self {
         Self
     }

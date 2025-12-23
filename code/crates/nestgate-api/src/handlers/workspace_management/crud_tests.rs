@@ -1,263 +1,417 @@
 //! **WORKSPACE CRUD TESTS**
 //!
-//! Comprehensive tests for workspace lifecycle management operations.
+//! Comprehensive tests for workspace CRUD operations including:
+//! - Workspace creation, reading, updating, and deletion
+//! - ZFS integration validation
+//! - Error handling and edge cases
+//! - Helper function coverage
 
-#[tokio::test]
-async fn test_workspace_operations_without_zfs() {
-    // These tests verify error handling when ZFS is not available
-    // In a real environment with ZFS configured, they would test actual operations
+use super::crud::*;
+use axum::http::StatusCode;
+use serde_json::json;
 
-    let result = super::crud::get_workspaces().await;
-    // Should either succeed with empty list or return error gracefully
-    // Both are acceptable outcomes when ZFS is not configured
-    assert!(result.is_ok() || result.is_err());
+// ==================== HELPER FUNCTION TESTS ====================
+
+#[cfg(test)]
+mod helper_tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_size_with_bytes() {
+        assert_eq!(parse_size("1024"), 1024);
+        assert_eq!(parse_size("0"), 0);
+        assert_eq!(parse_size("999999"), 999999);
+    }
+
+    #[test]
+    fn test_parse_size_with_kilobytes() {
+        assert_eq!(parse_size("1K"), 1024);
+        assert_eq!(parse_size("10K"), 10240);
+        assert_eq!(parse_size("1.5K"), 1536);
+    }
+
+    #[test]
+    fn test_parse_size_with_megabytes() {
+        assert_eq!(parse_size("1M"), 1024 * 1024);
+        assert_eq!(parse_size("10M"), 10 * 1024 * 1024);
+        assert_eq!(parse_size("1.5M"), (1.5 * 1024.0 * 1024.0) as u64);
+    }
+
+    #[test]
+    fn test_parse_size_with_gigabytes() {
+        assert_eq!(parse_size("1G"), 1024 * 1024 * 1024);
+        assert_eq!(parse_size("5G"), 5 * 1024 * 1024 * 1024);
+        assert_eq!(
+            parse_size("1.25G"),
+            (1.25 * 1024.0 * 1024.0 * 1024.0) as u64
+        );
+    }
+
+    #[test]
+    fn test_parse_size_with_terabytes() {
+        assert_eq!(parse_size("1T"), 1024_u64 * 1024 * 1024 * 1024);
+        assert_eq!(parse_size("2T"), 2 * 1024_u64 * 1024 * 1024 * 1024);
+    }
+
+    #[test]
+    fn test_parse_size_with_petabytes() {
+        assert_eq!(parse_size("1P"), 1024_u64 * 1024 * 1024 * 1024 * 1024);
+    }
+
+    #[test]
+    fn test_parse_size_edge_cases() {
+        // Special values
+        assert_eq!(parse_size("none"), 0);
+        assert_eq!(parse_size("-"), 0);
+        assert_eq!(parse_size(""), 0);
+        assert_eq!(parse_size("   "), 0);
+
+        // Invalid formats
+        assert_eq!(parse_size("invalid"), 0);
+        assert_eq!(parse_size("K"), 0);
+        assert_eq!(parse_size("X"), 0);
+    }
+
+    #[test]
+    fn test_parse_size_case_insensitive() {
+        assert_eq!(parse_size("1k"), 1024);
+        assert_eq!(parse_size("1m"), 1024 * 1024);
+        assert_eq!(parse_size("1g"), 1024 * 1024 * 1024);
+    }
 }
 
-#[tokio::test]
-async fn test_get_workspaces_response_structure() {
-    use axum::http::StatusCode;
+// ==================== WORKSPACE ID VALIDATION TESTS ====================
 
-    let result = super::crud::get_workspaces().await;
+#[cfg(test)]
+mod validation_tests {
+    use super::*;
 
-    match result {
-        Ok(json) => {
-            // If successful, verify JSON structure
-            let value = json.0;
+    #[tokio::test]
+    async fn test_get_workspace_with_invalid_id_empty() {
+        let result = get_workspace(axum::extract::Path(String::new())).await;
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
+    async fn test_get_workspace_with_invalid_id_slash() {
+        let result = get_workspace(axum::extract::Path("ws/invalid".to_string())).await;
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
+    async fn test_update_workspace_config_with_invalid_id_empty() {
+        let config = json!({
+            "quota": "20G"
+        });
+        let result =
+            update_workspace_config(axum::extract::Path(String::new()), axum::Json(config)).await;
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
+    async fn test_update_workspace_config_with_invalid_id_slash() {
+        let config = json!({
+            "quota": "20G"
+        });
+        let result = update_workspace_config(
+            axum::extract::Path("ws/invalid".to_string()),
+            axum::Json(config),
+        )
+        .await;
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
+    async fn test_delete_workspace_with_invalid_id_empty() {
+        let result = delete_workspace(axum::extract::Path(String::new())).await;
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
+    async fn test_delete_workspace_with_invalid_id_path_traversal() {
+        let result = delete_workspace(axum::extract::Path("../etc/passwd".to_string())).await;
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
+    async fn test_delete_workspace_with_invalid_id_slash() {
+        let result = delete_workspace(axum::extract::Path("ws/123".to_string())).await;
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), StatusCode::BAD_REQUEST);
+    }
+}
+
+// ==================== WORKSPACE CREATION TESTS ====================
+
+#[cfg(test)]
+mod creation_tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_create_workspace_with_minimal_config() {
+        let request = json!({
+            "name": "test-workspace"
+        });
+
+        // This will fail in test environment (no ZFS), but tests the validation path
+        let result = create_workspace(axum::Json(request)).await;
+
+        // We expect an error since ZFS won't be available, but it shouldn't be BAD_REQUEST
+        if result.is_err() {
+            assert_eq!(result.unwrap_err(), StatusCode::INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    #[tokio::test]
+    async fn test_create_workspace_with_full_config() {
+        let request = json!({
+            "name": "production-workspace",
+            "quota": "50G",
+            "compression": "zstd",
+            "recordsize": "1M"
+        });
+
+        let result = create_workspace(axum::Json(request)).await;
+
+        // Will fail in test environment (no ZFS)
+        if result.is_err() {
+            assert_eq!(result.unwrap_err(), StatusCode::INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    #[tokio::test]
+    async fn test_create_workspace_with_invalid_name_empty() {
+        let request = json!({
+            "name": ""
+        });
+
+        let result = create_workspace(axum::Json(request)).await;
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
+    async fn test_create_workspace_with_invalid_name_too_long() {
+        let long_name = "a".repeat(101);
+        let request = json!({
+            "name": long_name
+        });
+
+        let result = create_workspace(axum::Json(request)).await;
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
+    async fn test_create_workspace_without_name() {
+        let request = json!({
+            "quota": "10G"
+        });
+
+        // Should use default name "unnamed-workspace"
+        let result = create_workspace(axum::Json(request)).await;
+
+        // Will fail in test environment (no ZFS)
+        if result.is_err() {
+            assert_eq!(result.unwrap_err(), StatusCode::INTERNAL_SERVER_ERROR);
+        }
+    }
+}
+
+// ==================== UPDATE CONFIG TESTS ====================
+
+#[cfg(test)]
+mod update_tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_update_workspace_config_quota() {
+        let config = json!({
+            "quota": "20G"
+        });
+
+        let result = update_workspace_config(
+            axum::extract::Path("ws-123".to_string()),
+            axum::Json(config),
+        )
+        .await;
+
+        // Will fail in test environment (no ZFS/workspace doesn't exist)
+        if result.is_err() {
+            // Could be BAD_REQUEST if all updates fail
+            let status = result.unwrap_err();
+            assert!(
+                status == StatusCode::BAD_REQUEST || status == StatusCode::INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn test_update_workspace_config_compression() {
+        let config = json!({
+            "compression": "zstd"
+        });
+
+        let result = update_workspace_config(
+            axum::extract::Path("ws-456".to_string()),
+            axum::Json(config),
+        )
+        .await;
+
+        if result.is_err() {
+            let status = result.unwrap_err();
+            assert!(
+                status == StatusCode::BAD_REQUEST || status == StatusCode::INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn test_update_workspace_config_name() {
+        let config = json!({
+            "name": "renamed-workspace"
+        });
+
+        let result = update_workspace_config(
+            axum::extract::Path("ws-789".to_string()),
+            axum::Json(config),
+        )
+        .await;
+
+        if result.is_err() {
+            let status = result.unwrap_err();
+            assert!(
+                status == StatusCode::BAD_REQUEST || status == StatusCode::INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn test_update_workspace_config_multiple_properties() {
+        let config = json!({
+            "name": "updated-workspace",
+            "quota": "100G",
+            "compression": "lz4"
+        });
+
+        let result = update_workspace_config(
+            axum::extract::Path("ws-multi".to_string()),
+            axum::Json(config),
+        )
+        .await;
+
+        if result.is_err() {
+            let status = result.unwrap_err();
+            assert!(
+                status == StatusCode::BAD_REQUEST || status == StatusCode::INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn test_update_workspace_config_empty() {
+        let config = json!({});
+
+        let result = update_workspace_config(
+            axum::extract::Path("ws-empty".to_string()),
+            axum::Json(config),
+        )
+        .await;
+
+        // Empty config should be rejected
+        if result.is_err() {
+            let status = result.unwrap_err();
+            assert_eq!(status, StatusCode::BAD_REQUEST);
+        }
+    }
+}
+
+// ==================== INTEGRATION TESTS ====================
+
+#[cfg(test)]
+mod integration_tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_get_workspaces_basic() {
+        // This will fail without ZFS, but tests the handler structure
+        let result = get_workspaces().await;
+
+        // Should return either success (empty list) or error
+        if result.is_ok() {
+            let response = result.unwrap();
+            let value = response.0;
             assert!(value.get("status").is_some());
-            assert!(value.get("workspaces").is_some());
         }
-        Err(status) => {
-            // If error, should be internal server error
-            assert!(status == StatusCode::INTERNAL_SERVER_ERROR);
-        }
+    }
+
+    #[tokio::test]
+    async fn test_workspace_crud_flow_validation() {
+        // Test the validation flow without ZFS
+
+        // 1. Create workspace with valid name
+        let create_request = json!({
+            "name": "test-flow"
+        });
+        let _ = create_workspace(axum::Json(create_request)).await;
+
+        // 2. Try to create with invalid name
+        let invalid_create = json!({
+            "name": ""
+        });
+        let result = create_workspace(axum::Json(invalid_create)).await;
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), StatusCode::BAD_REQUEST);
+
+        // 3. Try to get with invalid ID
+        let result = get_workspace(axum::extract::Path(String::new())).await;
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), StatusCode::BAD_REQUEST);
+
+        // 4. Try to delete with invalid ID
+        let result = delete_workspace(axum::extract::Path("../path".to_string())).await;
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), StatusCode::BAD_REQUEST);
     }
 }
 
-#[tokio::test]
-async fn test_create_workspace_validation() {
-    use axum::extract::Json;
-    use serde_json::json;
+// ==================== ENVIRONMENT VARIABLE TESTS ====================
 
-    // Test with invalid empty name
-    let request = json!({
-        "name": ""
-    });
+#[cfg(test)]
+mod env_tests {
+    use super::*;
+    use std::env;
 
-    let result = super::crud::create_workspace(Json(request)).await;
-    // Should fail validation for empty name
-    assert!(result.is_err());
-}
+    #[tokio::test]
+    async fn test_create_workspace_uses_env_pool_name() {
+        // Set custom pool name
+        env::set_var("NESTGATE_WORKSPACE_POOL", "custom-pool");
 
-#[tokio::test]
-async fn test_create_workspace_long_name_validation() {
-    use axum::extract::Json;
-    use axum::http::StatusCode;
-    use serde_json::json;
+        let request = json!({
+            "name": "env-test"
+        });
 
-    // Test with name exceeding 100 characters
-    let long_name = "a".repeat(101);
-    let request = json!({
-        "name": long_name
-    });
+        let _ = create_workspace(axum::Json(request)).await;
 
-    let result = super::crud::create_workspace(Json(request)).await;
+        // Clean up
+        env::remove_var("NESTGATE_WORKSPACE_POOL");
 
-    if let Err(status) = result {
-        assert_eq!(status, StatusCode::BAD_REQUEST);
-    } else {
-        // If ZFS is available and succeeds, that's also valid
+        // Test passes if no panic occurs
     }
-}
 
-#[tokio::test]
-async fn test_get_workspace_invalid_id() {
-    use axum::extract::Path;
-    use axum::http::StatusCode;
+    #[tokio::test]
+    async fn test_get_workspace_uses_default_pool_name() {
+        // Ensure env var is not set
+        env::remove_var("NESTGATE_WORKSPACE_POOL");
 
-    // Test with invalid workspace ID containing slash
-    let result = super::crud::get_workspace(Path("invalid/id".to_string())).await;
+        let _ = get_workspace(axum::extract::Path("test-id".to_string())).await;
 
-    match result {
-        Err(status) => {
-            assert_eq!(status, StatusCode::BAD_REQUEST);
-        }
-        Ok(_) => panic!("Should reject invalid workspace ID"),
+        // Test passes if default "zfspool" is used (no panic)
     }
-}
-
-#[tokio::test]
-async fn test_get_workspace_empty_id() {
-    use axum::extract::Path;
-    use axum::http::StatusCode;
-
-    // Test with empty workspace ID
-    let result = super::crud::get_workspace(Path(String::new())).await;
-
-    match result {
-        Err(status) => {
-            assert_eq!(status, StatusCode::BAD_REQUEST);
-        }
-        Ok(_) => panic!("Should reject empty workspace ID"),
-    }
-}
-
-#[tokio::test]
-async fn test_update_workspace_invalid_id() {
-    use axum::extract::{Json, Path};
-    use axum::http::StatusCode;
-    use serde_json::json;
-
-    // Test with invalid workspace ID
-    let config = json!({"quota": "10G"});
-    let result =
-        super::crud::update_workspace_config(Path("invalid/id".to_string()), Json(config)).await;
-
-    match result {
-        Err(status) => {
-            assert_eq!(status, StatusCode::BAD_REQUEST);
-        }
-        Ok(_) => panic!("Should reject invalid workspace ID"),
-    }
-}
-
-#[tokio::test]
-async fn test_delete_workspace_invalid_id() {
-    use axum::extract::Path;
-    use axum::http::StatusCode;
-
-    // Test with invalid workspace ID containing path traversal
-    let result = super::crud::delete_workspace(Path("../malicious".to_string())).await;
-
-    match result {
-        Err(status) => {
-            assert_eq!(status, StatusCode::BAD_REQUEST);
-        }
-        Ok(_) => panic!("Should reject path traversal attempt"),
-    }
-}
-
-#[tokio::test]
-async fn test_delete_workspace_empty_id() {
-    use axum::extract::Path;
-    use axum::http::StatusCode;
-
-    // Test with empty workspace ID
-    let result = super::crud::delete_workspace(Path(String::new())).await;
-
-    match result {
-        Err(status) => {
-            assert_eq!(status, StatusCode::BAD_REQUEST);
-        }
-        Ok(_) => panic!("Should reject empty workspace ID"),
-    }
-}
-
-#[tokio::test]
-async fn test_delete_workspace_path_traversal() {
-    use axum::extract::Path;
-    use axum::http::StatusCode;
-
-    // Test with path traversal attempt
-    let result = super::crud::delete_workspace(Path("workspace/../etc/passwd".to_string())).await;
-
-    match result {
-        Err(status) => {
-            assert_eq!(status, StatusCode::BAD_REQUEST);
-        }
-        Ok(_) => panic!("Should reject path traversal"),
-    }
-}
-
-#[tokio::test]
-async fn test_delete_workspace_slash_in_id() {
-    use axum::extract::Path;
-    use axum::http::StatusCode;
-
-    // Test with slash in workspace ID
-    let result = super::crud::delete_workspace(Path("work/space".to_string())).await;
-
-    match result {
-        Err(status) => {
-            assert_eq!(status, StatusCode::BAD_REQUEST);
-        }
-        Ok(_) => panic!("Should reject workspace ID with slash"),
-    }
-}
-
-#[tokio::test]
-async fn test_create_workspace_with_valid_options() {
-    use axum::extract::Json;
-    use serde_json::json;
-
-    // Test with valid workspace creation options
-    let request = json!({
-        "name": "test-workspace",
-        "quota": "10G",
-        "compression": "lz4",
-        "recordsize": "128K"
-    });
-
-    let result = super::crud::create_workspace(Json(request)).await;
-
-    // Result depends on whether ZFS is available
-    // Both success and error are acceptable
-    assert!(result.is_ok() || result.is_err());
-}
-
-#[tokio::test]
-async fn test_update_workspace_quota() {
-    use axum::extract::{Json, Path};
-    use serde_json::json;
-
-    // Test quota update
-    let config = json!({"quota": "20G"});
-    let result =
-        super::crud::update_workspace_config(Path("test-workspace".to_string()), Json(config))
-            .await;
-
-    // Result depends on whether workspace exists and ZFS is available
-    assert!(result.is_ok() || result.is_err());
-}
-
-#[tokio::test]
-async fn test_update_workspace_compression() {
-    use axum::extract::{Json, Path};
-    use serde_json::json;
-
-    // Test compression update
-    let config = json!({"compression": "gzip"});
-    let result =
-        super::crud::update_workspace_config(Path("test-workspace".to_string()), Json(config))
-            .await;
-
-    assert!(result.is_ok() || result.is_err());
-}
-
-#[tokio::test]
-async fn test_update_workspace_name() {
-    use axum::extract::{Json, Path};
-    use serde_json::json;
-
-    // Test name update
-    let config = json!({"name": "renamed-workspace"});
-    let result =
-        super::crud::update_workspace_config(Path("test-workspace".to_string()), Json(config))
-            .await;
-
-    assert!(result.is_ok() || result.is_err());
-}
-
-#[tokio::test]
-async fn test_multiple_concurrent_workspace_reads() {
-    // Test concurrent read operations
-    let fut1 = super::crud::get_workspaces();
-    let fut2 = super::crud::get_workspaces();
-    let fut3 = super::crud::get_workspaces();
-
-    let results = tokio::join!(fut1, fut2, fut3);
-
-    // All should complete (either success or error)
-    assert!(results.0.is_ok() || results.0.is_err());
-    assert!(results.1.is_ok() || results.1.is_err());
-    assert!(results.2.is_ok() || results.2.is_err());
 }

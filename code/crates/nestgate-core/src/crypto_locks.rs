@@ -2,6 +2,8 @@
 // **MODERNIZED**: Updated to use current error handling and patterns
 
 // use crate::error::SecurityError; // Removed - using unified error system
+//! Crypto Locks module
+
 use crate::universal_spore::{
     AuthorizationDecision, OperationRequest, UniversalCryptographicSpore, UserContext,
 };
@@ -14,6 +16,7 @@ use std::time::{Duration, SystemTime};
 
 /// Cryptographic proof - managed by any security primal provider
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Cryptoproof
 pub struct CryptoProof {
     /// Proof identifier
     pub proof_id: String,
@@ -33,7 +36,27 @@ pub struct CryptoProof {
     pub validation_token: String,
 }
 impl CryptoProof {
-    /// Create new proof using security context
+    /// Create new proof using security context.
+    ///
+    /// ⚠️ **DEPRECATED**: This function has incomplete implementation and is never used.
+    ///
+    /// # Status
+    ///
+    /// - **Compilation**: ❌ Broken (undefined `security_provider` variable)
+    /// - **Usage**: Never used in codebase (verified Nov 19, 2025)
+    /// - **Action**: Marked deprecated, will be removed or properly implemented
+    ///
+    /// # Migration
+    ///
+    /// If you need cryptographic proof generation, use the security provider directly:
+    ///
+    /// ```rust,ignore
+    /// use nestgate_core::traits::SecurityProvider;
+    ///
+    /// let provider = get_security_provider();
+    /// let signature = provider.sign_data(data).await?;
+    /// let key_id = provider.get_key_id().await?;
+    /// ```
     ///
     /// # Errors
     ///
@@ -41,40 +64,24 @@ impl CryptoProof {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn new_with_security_context(
-        data: &[u8],
-        context: &str,
+    #[deprecated(
+        since = "0.11.0",
+        note = "Incomplete implementation with undefined security_provider variable. Never used in codebase. Will be removed in v0.12.0 unless proper implementation is needed."
+    )]
+    #[allow(dead_code)]
+    pub async fn new_with_security_context(
+        _data: &[u8],
+        _context: &str,
     ) -> Result<Self>  {
-        println!("Creating crypto proof with security provider");
-
-        // Generate proof data
-        let proof_data = Self::generate_proof_data(data, context)?;
-
-        // Get security provider key ID and signature
-        let key_id = security_provider.get_key_id().await?;
-        let signature_result = security_provider.sign_data(&proof_data).await?;
-
-        // Generate security provider validation token
-        let validation_token = security_provider
-            .generate_validation_token(&proof_data)
-            .await?;
-
-        // Calculate proof hash
-        let proof_hash = Self::hash_proof_data(&proof_data, &signature_result.signature)?;
-
-        Ok(Self {
-            proof_id: uuid::Uuid::new_v4().to_string(),
-            proof_data,
-            key_id,
-            signature: signature_result.signature,
-            timestamp: SystemTime::now(),
-            nonce: Self::generate_nonce(),
-            proof_hash,
-            validation_token,
-        })
+        // This function has broken implementation (undefined security_provider)
+        // Marked deprecated and will be removed unless a real use case emerges
+        Err(NestGateError::configuration_error(
+            "crypto_proof",
+            "new_with_security_context is deprecated and not implemented. Use security provider directly."
+        ))
     }
 
-    /// Validate proof using security validation
+    /// Validate proof using security validation.
     ///
     /// # Errors
     ///
@@ -82,7 +89,7 @@ impl CryptoProof {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-                pub fn validate_with_security_context(&self) -> Result<bool>  {
+    pub fn validate_with_security_context(&self) -> Result<bool>  {
         println!("Validating crypto proof with security provider");
 
         // Check timestamp validity (not too old)
@@ -171,6 +178,7 @@ impl CryptoProof {
 
 /// Access request for crypto lock evaluation
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for Access operation
 pub struct AccessRequest {
     /// Source identifier
     pub source: String,
@@ -184,6 +192,7 @@ pub struct AccessRequest {
 }
 /// Access decision result
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Accessdecision
 pub enum AccessDecision {
     /// Access allowed
     Allow { reason: String },
@@ -196,17 +205,26 @@ pub enum AccessDecision {
 }
 /// Statistics for lock operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Lockstats
 pub struct LockStats {
+    /// Locks Created
     pub locks_created: usize,
+    /// Locks Expired
     pub locks_expired: usize,
+    /// Violations Detected
     pub violations_detected: usize,
+    /// Corporate Accesses
     pub corporate_accesses: usize,
+    /// Individual Accesses
     pub individual_accesses: usize,
+    /// Expired Locks
     pub expired_locks: usize,
+    /// Lock Expiration
     pub lock_expiration: Duration,
 }
 /// Corporate detection pattern for identifying business usage
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Corporatedetectionpattern
 pub struct CorporateDetectionPattern {
     /// Pattern name
     pub name: String,
@@ -452,13 +470,21 @@ impl ExternalBoundaryGuardian {
 
 /// Spore status information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Sporestatus
 pub struct SporeStatus {
+    /// Spore identifier
     pub spore_id: String,
+    /// Generation
     pub generation: u32,
+    /// Security Provider Integrated
     pub security_provider_integrated: bool,
+    /// Count of operations
     pub operations_count: u64,
+    /// Total Locks
     pub total_locks: usize,
+    /// Valid Locks
     pub valid_locks: usize,
+    /// Last Evolution
     pub last_evolution: SystemTime,
 }
 /// Create a spore-enhanced boundary guardian

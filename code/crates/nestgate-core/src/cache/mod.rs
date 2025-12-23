@@ -3,7 +3,9 @@
 // Provides caching infrastructure including multi-tier caching,
 // TTL management, and performance optimization.
 
-use crate::config::canonical_master::NestGateCanonicalConfig;
+//! Cache module
+
+use crate::config::canonical_primary::NestGateCanonicalConfig;
 
 #[cfg(test)]
 mod tests;
@@ -19,7 +21,7 @@ mod tests;
 // ### Basic Single-Tier Cache
 // ```rust
 // use crate::cache::{CacheManager, NestGateCanonicalConfig};
-// let config = crate::config::canonical_master::NestGateCanonicalConfig::default();
+// let config = crate::config::canonical_primary::NestGateCanonicalConfig::default();
 // let cache = CacheManager::new(config)?;
 // // Put data in cache
 // cache.put("key", b"data".to_vec()).await?;
@@ -31,7 +33,7 @@ mod tests;
 // ### Multi-Tier Cache
 // ```rust
 // use crate::cache::{MultiTierCache, MultiTierCacheConfig};
-// let config = crate::config::canonical_master::NestGateCanonicalConfig::default();
+// let config = crate::config::canonical_primary::NestGateCanonicalConfig::default();
 // let cache = MultiTierCache::new(config)?;
 // // Data automatically starts in hot tier and may be promoted/demoted
 // cache.put("key", b"data".to_vec()).await?;
@@ -40,8 +42,17 @@ mod tests;
 // MultiTierCacheConfig imported via pub use below
 pub mod manager;
 pub mod multi_tier;
+
+/// Cache type definitions and traits
+///
+/// This module provides core types for cache operations including:
+/// - `CacheEntry`: Individual cache entry representation
+/// - `CachePolicy`: Cache eviction policies (LRU, LFU, etc.)
+/// - `CacheStats`: Cache performance statistics
+/// - `StorageTier`: Multi-tier cache tier definitions
 pub mod types;
 pub use manager::CacheManager;
+#[allow(deprecated)]
 pub use multi_tier::{MultiTierCache, MultiTierCacheConfig, MultiTierCacheStats};
 pub use types::{CacheEntry, CachePolicy, CacheStats, EfficiencyMetrics, StorageTier};
 
@@ -50,6 +61,7 @@ pub use crate::Result as CacheResult;
 
 // The cache system providing both single-tier and multi-tier caching
 #[allow(clippy::large_enum_variant)]
+/// Cachesystem
 pub enum CacheSystem {
     /// Single-tier cache
     SingleTier(CacheManager),
@@ -59,9 +71,10 @@ pub enum CacheSystem {
 impl CacheSystem {
     /// Create a cache with a single tier for small deployments
     pub fn single_tier(
-        cache_config: crate::config::canonical_master::CacheConfig,
+        cache_config: crate::config::canonical_primary::CacheConfig,
     ) -> crate::Result<Self> {
         // Convert to UnifiedCacheConfig
+        #[allow(deprecated)]
         let unified_config = crate::cache::manager::UnifiedCacheConfig {
             max_size: cache_config.hot_tier_size.unwrap_or(1000) as usize,
             ttl_seconds: cache_config.ttl_seconds,
@@ -74,6 +87,7 @@ impl CacheSystem {
     }
 
     /// Create a multi-tier cache system
+    #[allow(deprecated)]
     pub fn multi_tier(cache_config: MultiTierCacheConfig) -> crate::Result<Self> {
         let cache = MultiTierCache::new(cache_config)?;
         Ok(CacheSystem::MultiTier(cache))
@@ -161,6 +175,7 @@ impl CacheSystem {
 // Cache system statistics
 #[derive(Debug, Clone)]
 #[allow(clippy::large_enum_variant)]
+/// Cachesystemstats
 pub enum CacheSystemStats {
     /// Single-tier cache statistics
     SingleTier(CacheStats),
@@ -214,10 +229,28 @@ impl CacheSystemStats {
     }
 }
 
-// Cache builder for easy configuration
+/// Builder pattern for constructing cache systems
+///
+/// Provides a fluent API for configuring single-tier or multi-tier cache systems
+/// with various policies, sizes, and TTL settings.
+///
+/// # Example
+///
+/// ```rust,ignore
+/// use nestgate_core::cache::{CacheBuilder, CachePolicy};
+/// use std::time::Duration;
+///
+/// let cache = CacheBuilder::new()
+///     .with_policy(CachePolicy::Lru)
+///     .with_hot_tier_size(1000)
+///     .with_ttl(Duration::from_secs(300))
+///     .build()
+///     .await?;
+/// ```
 pub struct CacheBuilder {
-    config: crate::config::canonical_master::CacheConfig,
+    config: crate::config::canonical_primary::CacheConfig,
     multi_tier: bool,
+    #[allow(deprecated)]
     multi_tier_config: Option<MultiTierCacheConfig>,
 }
 impl CacheBuilder {
@@ -225,7 +258,7 @@ impl CacheBuilder {
     #[must_use]
     pub fn new() -> Self {
         Self {
-            config: crate::config::canonical_master::CacheConfig::default(),
+            config: crate::config::canonical_primary::CacheConfig::default(),
             multi_tier: false,
             multi_tier_config: None,
         }
@@ -307,6 +340,7 @@ impl CacheBuilder {
 }
 
 impl Default for CacheBuilder {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

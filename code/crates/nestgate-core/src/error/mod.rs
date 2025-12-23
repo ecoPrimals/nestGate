@@ -8,8 +8,24 @@
 pub mod context;
 pub mod conversions;
 pub mod data;
-pub mod unified_result_system;
+pub mod utilities; // Consolidated error helpers
 pub mod variants;
+
+#[cfg(test)]
+mod utilities_comprehensive_tests;
+
+#[cfg(test)]
+mod error_edge_cases;
+#[cfg(test)]
+mod error_path_expansion_tests; // Nov 23, 2025 - P1 test expansion // Nov 23, 2025 - P1-5 edge case tests
+#[cfg(test)]
+mod error_path_tests_dec11; // Dec 11, 2025 - Strategic error path tests
+#[cfg(test)]
+mod strategic_error_tests_phase1; // Dec 10, 2025 - Phase 1 strategic tests (50+ tests)
+
+// Deprecated modules removed (November 10, 2025)
+// - helpers.rs → migrated to utilities.rs
+// - modernized_error_helpers.rs → migrated to utilities.rs
 
 // ==================== EXPORTS ====================
 
@@ -21,17 +37,20 @@ pub use context::{ErrorContext, RetryInfo};
 // Re-export data types from data module
 pub use data::*;
 
-// Type alias for convenience
+/// Type alias for NestGate unified error type
+///
+/// Convenience alias for `NestGateUnifiedError` used throughout the codebase.
 pub type NestGateError = NestGateUnifiedError;
+
+/// Type alias for NestGate Result type
+///
+/// Standard Result type using `NestGateError` as the error variant.
 pub type Result<T> = std::result::Result<T, NestGateError>;
 
-// Re-export result types from unified_result_system
-// Note: Error type aliases removed to avoid conflicts with domain_errors.rs
-// Use NestGateUnifiedError helper constructors instead
-pub use self::unified_result_system::{
-    ApiResult, CanonicalResult, ConfigResult, McpResult, NetworkResult, SecurityResult,
-    StorageResult, ValidationResult, ZfsResult,
-};
+// Re-export core result types from result_types module (root-level canonical location)
+// Note: unified_result_system was merged into result_types for single source of truth
+// All domain-specific aliases have been removed (November 10, 2025) - use Result<T> instead
+pub use crate::result_types::{CanonicalResult, ResultExt, TestResult};
 
 // Re-export error detail structs from variants
 pub use self::variants::core_errors::{
@@ -82,15 +101,21 @@ use std::collections::HashMap;
 
 /// Error severity levels
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// Errorseverity
 pub enum ErrorSeverity {
+    /// Info
     Info,
+    /// Warning
     Warning,
+    /// Error
     Error,
+    /// Critical
     Critical,
 }
 
-/// Convert legacy Result<T> to canonical Result<T>
+/// Convert legacy `Result<T>` to canonical `Result<T>`
 pub fn migrate_result<T>(legacy_result: std::result::Result<T, NestGateError>) -> Result<T> {
+    // Pass through the legacy result as-is
     legacy_result
 }
 
@@ -204,6 +229,7 @@ pub fn analyze_error_patterns(errors: &[NestGateError]) -> HashMap<String, usize
 // ==================== TEST UTILITIES ====================
 
 #[cfg(test)]
+/// Test utilities for error handling
 pub mod test_utils {
     use super::*;
 
@@ -222,10 +248,8 @@ pub mod test_utils {
         internal_error!("Test internal error")
     }
 }
-pub mod modernized_error_helpers;
-pub use modernized_error_helpers::*;
-pub mod helpers;
-pub use helpers::*;
+
+// Note: helpers and modernized_error_helpers are now deprecated (see top of file)
 
 #[cfg(test)]
 mod error_path_tests {
@@ -440,3 +464,6 @@ mod comprehensive_tests;
 
 #[cfg(test)]
 mod comprehensive_unit_tests;
+
+// Test expansion for error handling was completed Nov 6, 2025
+// Tests are now in comprehensive_tests.rs

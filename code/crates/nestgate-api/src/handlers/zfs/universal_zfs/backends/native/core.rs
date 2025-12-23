@@ -1,30 +1,31 @@
 //
 // Contains the main service structure and core utilities for the native ZFS backend.
 
+//! Core module
+
 use std::collections::HashMap;
-use std::time::Duration;
 use std::time::SystemTime;
 use tokio::process::Command;
 // Removed unused tracing import
 
-use crate::handlers::zfs::universal_zfs::{
-    traits::UniversalZfsService,
-    types::{
-        HealthCheck, HealthStatus, ServiceMetrics, ServiceStatus, UniversalZfsError,
-        UniversalZfsResult,
-    },
+use crate::handlers::zfs::universal_zfs::traits::UniversalZfsService;
+use crate::handlers::zfs::universal_zfs_types::{
+    HealthCheck, HealthStatus, ServiceMetrics, ServiceStatus, UniversalZfsError, UniversalZfsResult,
 };
 use tracing::debug;
 
 /// Native ZFS service implementation
 #[derive(Debug, Clone)]
+/// Service implementation for NativeZfs
 pub struct NativeZfsService {
     pub(crate) service_name: &'static str,
     pub(crate) service_version: &'static str,
+    #[allow(dead_code)]
     pub(crate) start_time: SystemTime,
 }
 impl NativeZfsService {
     /// Create a new native ZFS service
+    #[must_use]
     pub fn new() -> Self {
         Self {
             service_name: "native-zfs",
@@ -49,13 +50,15 @@ impl NativeZfsService {
             .args(args)
             .output()
             .await
-            .map_err(|_e| UniversalZfsError::internal(format!("Failed to execute ZFS command")))?;
+            .map_err(|_e| {
+                UniversalZfsError::internal("Failed to execute ZFS command".to_string())
+            })?;
 
         if !output.status.success() {
             let _stderr = String::from_utf8_lossy(&output.stderr);
             return Err(UniversalZfsError::backend(
                 "native-zfs",
-                format!("ZFS command failed: self.base_url"),
+                "ZFS command failed: self.base_url".to_string(),
             ));
         }
 
@@ -71,14 +74,14 @@ impl NativeZfsService {
             .output()
             .await
             .map_err(|_e| {
-                UniversalZfsError::internal(format!("Failed to execute zpool command"))
+                UniversalZfsError::internal("Failed to execute zpool command".to_string())
             })?;
 
         if !output.status.success() {
             let _stderr = String::from_utf8_lossy(&output.stderr);
             return Err(UniversalZfsError::backend(
                 "native-zfs",
-                format!("zpool command failed: self.base_url"),
+                "zpool command failed: self.base_url".to_string(),
             ));
         }
 
@@ -112,6 +115,7 @@ impl NativeZfsService {
 }
 
 impl Default for NativeZfsService {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -120,18 +124,22 @@ impl Default for NativeZfsService {
 // **ZERO-COST NATIVE ASYNC**: Converted from async_trait for 40-60% performance improvement
 #[async_trait::async_trait]
 impl UniversalZfsService for NativeZfsService {
+    /// Service Name
     fn service_name(&self) -> &str {
         self.service_name
     }
 
+    /// Service Version
     fn service_version(&self) -> &str {
         self.service_version
     }
 
+    /// Checks if Available
     async fn is_available(&self) -> bool {
         true // Native ZFS is always available when compiled in
     }
 
+    /// Health Check
     async fn health_check(&self) -> UniversalZfsResult<HealthStatus> {
         let zfs_available = Self::is_available().await;
 
@@ -145,31 +153,21 @@ impl UniversalZfsService for NativeZfsService {
         let checks = vec![
             HealthCheck {
                 name: "zfs_available".into(),
-                status: if zfs_available {
-                    ServiceStatus::Healthy
-                } else {
-                    ServiceStatus::Unhealthy
-                },
-                duration: Duration::from_millis(10),
-                message: if zfs_available {
+                passed: zfs_available,
+                message: Some(if zfs_available {
                     "ZFS is available".into()
                 } else {
                     "ZFS is not available".into()
-                },
+                }),
             },
             HealthCheck {
                 name: "pools_accessible".into(),
-                status: if pools_healthy {
-                    ServiceStatus::Healthy
-                } else {
-                    ServiceStatus::Unhealthy
-                },
-                duration: Duration::from_millis(15),
-                message: if pools_healthy {
+                passed: pools_healthy,
+                message: Some(if pools_healthy {
                     "ZFS pools are accessible".into()
                 } else {
                     "Cannot access ZFS pools".into()
-                },
+                }),
             },
         ];
 
@@ -184,16 +182,13 @@ impl UniversalZfsService for NativeZfsService {
         Ok(HealthStatus {
             service_name: self.service_name.into(),
             status: overall_status,
-            last_check: SystemTime::now(),
-            zfs_available,
-            pools_healthy,
-            datasets_healthy: pools_healthy,
-            system_healthy: pools_healthy,
             checks,
-            metrics: None,
+            last_check: SystemTime::now(),
+            metadata: HashMap::new(),
         })
     }
 
+    /// Gets Metrics
     async fn get_metrics(&self) -> UniversalZfsResult<ServiceMetrics> {
         let mut custom_metrics = HashMap::new();
 
@@ -203,16 +198,12 @@ impl UniversalZfsService for NativeZfsService {
         Ok(ServiceMetrics {
             service_name: self.service_name.into(),
             timestamp: SystemTime::now(),
-            uptime: SystemTime::now()
-                .duration_since(self.start_time)
-                .unwrap_or_default(),
             requests_total: 0,
-            requests_successful: 0,
             requests_failed: 0,
-            average_response_time: Duration::from_millis(0),
             error_rate: 0.0,
-            circuit_breaker_state: "CLOSED".into(),
-            active_connections: 0,
+            latency_avg: 0.0,
+            latency_p95: 0.0,
+            latency_p99: 0.0,
             custom_metrics,
         })
     }
@@ -220,60 +211,70 @@ impl UniversalZfsService for NativeZfsService {
     // Forward declarations for methods implemented in other modules
     async fn list_pools(
         &self,
-    ) -> UniversalZfsResult<Vec<crate::handlers::zfs::universal_zfs::types::PoolInfo>> {
+    ) -> UniversalZfsResult<Vec<crate::handlers::zfs::universal_zfs_types::PoolInfo>> {
         super::pool_operations::list_pools(self).await
     }
 
+    /// Gets Pool
     async fn get_pool(
         &self,
         name: &str,
-    ) -> UniversalZfsResult<Option<crate::handlers::zfs::universal_zfs::types::PoolInfo>> {
+    ) -> UniversalZfsResult<Option<crate::handlers::zfs::universal_zfs_types::PoolInfo>> {
         super::pool_operations::get_pool(self, name).await
     }
 
+    /// Creates  Pool
     async fn create_pool(
         &self,
-        config: &crate::handlers::zfs::universal_zfs::types::PoolConfig,
-    ) -> UniversalZfsResult<crate::handlers::zfs::universal_zfs::types::PoolInfo> {
+        config: &crate::handlers::zfs::universal_zfs_types::PoolConfig,
+    ) -> UniversalZfsResult<crate::handlers::zfs::universal_zfs_types::PoolInfo> {
         super::pool_operations::create_pool(self, config).await
     }
 
+    /// Destroy Pool
     async fn destroy_pool(&self, name: &str) -> UniversalZfsResult<()> {
-        super::pool_operations::destroy_pool(self, name).await
+        super::pool_operations::destroy_pool(self, name)
     }
 
+    /// Scrub Pool
     async fn scrub_pool(&self, name: &str) -> UniversalZfsResult<()> {
         super::pool_operations::scrub_pool(self, name).await
     }
 
+    /// Gets Pool Status
     async fn get_pool_status(&self, name: &str) -> UniversalZfsResult<String> {
         super::pool_operations::get_pool_status(self, name).await
     }
 
+    /// List Datasets
     async fn list_datasets(
         &self,
-    ) -> UniversalZfsResult<Vec<crate::handlers::zfs::universal_zfs::types::DatasetInfo>> {
+    ) -> UniversalZfsResult<Vec<crate::handlers::zfs::universal_zfs_types::DatasetInfo>> {
         super::dataset_operations::list_datasets(self).await
     }
 
+    /// Gets Dataset
     async fn get_dataset(
         &self,
         name: &str,
-    ) -> UniversalZfsResult<Option<crate::handlers::zfs::universal_zfs::types::DatasetInfo>> {
+    ) -> UniversalZfsResult<Option<crate::handlers::zfs::universal_zfs_types::DatasetInfo>> {
         super::dataset_operations::get_dataset(self, name).await
     }
 
+    /// Creates  Dataset
     async fn create_dataset(
         &self,
-        config: &crate::handlers::zfs::universal_zfs::types::DatasetConfig,
-    ) -> UniversalZfsResult<crate::handlers::zfs::universal_zfs::types::DatasetInfo> {
+        config: &crate::handlers::zfs::universal_zfs_types::DatasetConfig,
+    ) -> UniversalZfsResult<crate::handlers::zfs::universal_zfs_types::DatasetInfo> {
         super::dataset_operations::create_dataset(self, config).await
     }
 
+    /// Destroy Dataset
     async fn destroy_dataset(&self, name: &str) -> UniversalZfsResult<()> {
         super::dataset_operations::destroy_dataset(self, name).await
     }
 
+    /// Gets Dataset Properties
     async fn get_dataset_properties(
         &self,
         name: &str,
@@ -281,6 +282,7 @@ impl UniversalZfsService for NativeZfsService {
         super::dataset_operations::get_dataset_properties(self, name).await
     }
 
+    /// Sets Dataset Properties
     async fn set_dataset_properties(
         &self,
         name: &str,
@@ -289,50 +291,60 @@ impl UniversalZfsService for NativeZfsService {
         super::dataset_operations::set_dataset_properties(self, name, properties).await
     }
 
+    /// List Snapshots
     async fn list_snapshots(
         &self,
-    ) -> UniversalZfsResult<Vec<crate::handlers::zfs::universal_zfs::types::SnapshotInfo>> {
+    ) -> UniversalZfsResult<Vec<crate::handlers::zfs::universal_zfs_types::SnapshotInfo>> {
         super::snapshot_operations::list_snapshots(self).await
     }
 
+    /// List Dataset Snapshots
     async fn list_dataset_snapshots(
         &self,
         dataset: &str,
-    ) -> UniversalZfsResult<Vec<crate::handlers::zfs::universal_zfs::types::SnapshotInfo>> {
+    ) -> UniversalZfsResult<Vec<crate::handlers::zfs::universal_zfs_types::SnapshotInfo>> {
         super::snapshot_operations::list_dataset_snapshots(self, dataset).await
     }
 
+    /// Creates  Snapshot
     async fn create_snapshot(
         &self,
-        config: &crate::handlers::zfs::universal_zfs::types::SnapshotConfig,
-    ) -> UniversalZfsResult<crate::handlers::zfs::universal_zfs::types::SnapshotInfo> {
+        config: &crate::handlers::zfs::universal_zfs_types::SnapshotConfig,
+    ) -> UniversalZfsResult<crate::handlers::zfs::universal_zfs_types::SnapshotInfo> {
         super::snapshot_operations::create_snapshot(self, config).await
     }
 
+    /// Destroy Snapshot
     async fn destroy_snapshot(&self, name: &str) -> UniversalZfsResult<()> {
         super::snapshot_operations::destroy_snapshot(self, name).await
     }
 
+    /// Optimize
     async fn optimize(&self) -> UniversalZfsResult<String> {
         super::optimization::optimize(self).await
     }
 
+    /// Gets Optimization Analytics
     async fn get_optimization_analytics(&self) -> UniversalZfsResult<serde_json::Value> {
         super::optimization::get_optimization_analytics(self).await
     }
 
+    /// Predict Tier
     async fn predict_tier(&self, file_path: &str) -> UniversalZfsResult<String> {
         super::optimization::predict_tier(self, file_path).await
     }
 
+    /// Gets Configuration
     async fn get_configuration(&self) -> UniversalZfsResult<serde_json::Value> {
         super::configuration::get_configuration(self).await
     }
 
+    /// Updates  Configuration
     async fn update_configuration(&self, config: serde_json::Value) -> UniversalZfsResult<()> {
         super::configuration::update_configuration(self, config)
     }
 
+    /// Shutdown
     async fn shutdown(&self) -> UniversalZfsResult<()> {
         super::configuration::shutdown(self)
     }

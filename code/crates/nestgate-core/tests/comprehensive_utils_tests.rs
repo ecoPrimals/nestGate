@@ -37,19 +37,19 @@ fn test_duration_comparisons() {
     assert_eq!(short, Duration::from_secs(1));
 }
 
-#[test]
-fn test_system_time_now() {
+#[tokio::test]
+async fn test_system_time_now() {
     let now1 = SystemTime::now();
-    std::thread::sleep(Duration::from_millis(10));
+    tokio::time::sleep(Duration::from_millis(10)).await;
     let now2 = SystemTime::now();
 
     assert!(now2 > now1);
 }
 
-#[test]
-fn test_system_time_elapsed() {
+#[tokio::test]
+async fn test_system_time_elapsed() {
     let start = SystemTime::now();
-    std::thread::sleep(Duration::from_millis(50));
+    tokio::time::sleep(Duration::from_millis(50)).await;
 
     let elapsed = start.elapsed().expect("Time went backwards");
     assert!(elapsed.as_millis() >= 50);
@@ -167,6 +167,7 @@ fn test_path_is_absolute_relative() {
 // ==================== VECTOR OPERATIONS TESTS ====================
 
 #[test]
+#[allow(clippy::const_is_empty)] // Testing basic collection methods
 fn test_vec_creation() {
     let vec1: Vec<i32> = Vec::new();
     assert_eq!(vec1.len(), 0);
@@ -359,6 +360,7 @@ fn test_option_some_none() {
 }
 
 #[test]
+#[allow(clippy::unnecessary_literal_unwrap)] // Intentionally testing unwrap_or behavior
 fn test_option_unwrap_or() {
     let some_val = Some(42);
     let none_val: Option<i32> = None;
@@ -410,6 +412,7 @@ fn test_result_ok_err() {
 }
 
 #[test]
+#[allow(clippy::unnecessary_literal_unwrap)] // Intentionally testing unwrap_or behavior
 fn test_result_unwrap_or() {
     let ok_val: Result<i32, String> = Ok(42);
     let err_val: Result<i32, String> = Err("error".to_string());

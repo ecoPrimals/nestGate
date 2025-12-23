@@ -1,0 +1,37 @@
+⚠️  Internet Connection Lost (power outage at ISP)
+  Time: 12:00 PM
+  Status: Edge node continues on battery backup
+  
+Offline Capabilities:
+  ✅ Sensor data collection: CONTINUES
+  ✅ Camera recording: CONTINUES
+  ✅ Local analytics: CONTINUES
+  ✅ Storage: Buffering for later sync
+  ✅ Alerting: Local SMS gateway (no internet required)
+  ✅ Web UI: Available on local network
+  
+Buffer Status:
+  Current buffer: 2.5GB (15 minutes of data)
+  Buffer capacity: 80GB (48 hours capacity)
+  Projected full: 47.5 hours from now
+  
+No Data Loss: All data safely buffered locally
+
+🔋 Running on battery backup (8 hours capacity)
+✅ Internet Connection Restored
+  Time: 3:00 PM (3 hours offline)
+  Buffered data: 7.5GB
+  Auto-reconnecting to central server...
+  
+Sync Process:
+  ✅ Verified central server availability
+  ✅ Authenticated securely
+  ✅ Resuming data sync (compression enabled)
+  ✅ Bandwidth limit: 20 Mbps
+  ✅ ETA: 50 minutes for full sync
+  
+Data Integrity:
+  ✅ All 10,800 sensor readings intact
+  ✅ All 3 hours of camera footage intact
+  ✅ Checksums verified
+  ✅ No data loss!

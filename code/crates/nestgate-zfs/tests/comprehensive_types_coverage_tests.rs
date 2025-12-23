@@ -8,8 +8,6 @@
 //! - Type conversions and helpers
 
 use nestgate_zfs::types::*;
-use serde_json;
-use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 // ==================== BOTTLENECK REPORT TESTS ====================
@@ -498,7 +496,7 @@ fn test_types_can_be_combined() {
     };
 
     // All types can coexist and reference the same dataset
-    assert!(true);
+    // Test passes if all type creations succeed without panic
 }
 
 #[test]
@@ -519,7 +517,7 @@ fn test_all_types_are_cloneable() {
     };
     let _cloned = capacity.clone();
 
-    assert!(true); // If we get here, all clones succeeded
+    // Test passes if all clone operations succeed without panic
 }
 
 #[test]

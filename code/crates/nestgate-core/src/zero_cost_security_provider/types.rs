@@ -10,6 +10,7 @@ use uuid::Uuid;
 
 /// **Credentials for authentication**
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Zerocostcredentials
 pub struct ZeroCostCredentials {
     /// Username for authentication
     pub username: String,
@@ -70,9 +71,11 @@ impl ZeroCostCredentials {
 
 /// **Authentication methods**
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+/// Authmethod
 pub enum AuthMethod {
     /// Password-based authentication
     #[default]
+    /// Password
     Password,
     /// Token-based authentication
     Token,
@@ -114,6 +117,7 @@ impl AuthMethod {
 
 /// **Authentication token**
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Zerocostauthtoken
 pub struct ZeroCostAuthToken {
     /// Token string
     pub token: String,
@@ -199,6 +203,7 @@ impl ZeroCostAuthToken {
 
 /// **Digital signature**
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Zerocostsignature
 pub struct ZeroCostSignature {
     /// Signature algorithm used
     pub algorithm: String,
@@ -248,6 +253,7 @@ impl ZeroCostSignature {
 
 /// **Security operation result**
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Securityoperationresult
 pub struct SecurityOperationResult<T> {
     /// Operation success status
     pub success: bool,
@@ -302,6 +308,7 @@ impl<T> SecurityOperationResult<T> {
 
 /// **Security context for operations**
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Securitycontext
 pub struct SecurityContext {
     /// User ID performing the operation
     pub user_id: String,

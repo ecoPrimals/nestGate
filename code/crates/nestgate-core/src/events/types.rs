@@ -23,14 +23,38 @@ pub use crate::constants::network::{
 
 /// Configuration for this module
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Config {
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+///
+/// **Migration Path**:
+/// ```rust,ignore
+/// // OLD (deprecated):
+/// use crate::network::config::EventsTypesConfig;
+///
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::EventsTypesConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+///
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(
+    since = "0.11.0",
+    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
+/// Configuration for EventsTypes
+pub struct EventsTypesConfig {
+    /// Whether this feature is enabled
     pub enabled: bool,
+    /// Timeout
     pub timeout: Duration,
+    /// Max Connections
     pub max_connections: usize,
+    /// Size of buffer
     pub buffer_size: usize,
 }
 
-impl Default for Config {
+impl Default for EventsTypesConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -41,28 +65,41 @@ impl Default for Config {
     }
 }
 
+/// Type alias for convenience in tests
+pub type Config = EventsTypesConfig;
+
 /// Service interface re-exported from canonical source
-/// See: `crate::traits_root::service::Service` for the unified implementation
-pub use crate::traits_root::service::Service;
+/// See: `crate::traits::Service` for the unified implementation
+pub use crate::traits::Service;
 
 /// Health status enumeration
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+/// Status values for Health
 pub enum HealthStatus {
+    /// Healthy
     Healthy,
+    /// Degraded
     Degraded,
+    /// Unhealthy
     Unhealthy,
 }
 
 /// Performance metrics for monitoring
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Metrics
 pub struct Metrics {
+    /// Requests Processed
     pub requests_processed: u64,
+    /// Errors Encountered
     pub errors_encountered: u64,
+    /// Average Response Time
     pub average_response_time: Duration,
+    /// Memory Usage Bytes
     pub memory_usage_bytes: u64,
 }
 
 impl Default for Metrics {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             requests_processed: 0,
@@ -73,19 +110,20 @@ impl Default for Metrics {
     }
 }
 
-// ==================== IMPLEMENTATION STUB ====================
+// ==================== IMPLEMENTATION ====================
 
 /// Default implementation of the service
 #[derive(Debug)]
+/// Service implementation for Default
 pub struct DefaultService {
     #[allow(dead_code)] // Stored for future use
-    config: Config,
+    config: EventsTypesConfig,
     metrics: Arc<tokio::sync::RwLock<Metrics>>,
 }
 
 impl DefaultService {
     /// Create a new service instance
-    pub fn new(config: Config) -> Self {
+    pub fn new(config: EventsTypesConfig) -> Self {
         Self {
             config,
             metrics: Arc::new(tokio::sync::RwLock::new(Metrics::default())),
@@ -99,29 +137,35 @@ impl DefaultService {
 }
 
 impl Service for DefaultService {
+    /// Name
     fn name(&self) -> &str {
         "types"
     }
 
+    /// Initialize
     async fn initialize(&self) -> Result<()> {
         tracing::info!("Initializing types service");
         Ok(())
     }
 
+    /// Health Check
     async fn health_check(&self) -> Result<bool> {
         Ok(true)
     }
 
+    /// Start
     async fn start(&self) -> Result<()> {
         tracing::info!("Starting types service");
         Ok(())
     }
 
+    /// Stop
     async fn stop(&self) -> Result<()> {
         tracing::info!("Stopping types service");
         Ok(())
     }
 
+    /// Shutdown
     async fn shutdown(&self) -> Result<()> {
         tracing::info!("Shutting down types service");
         Ok(())
@@ -132,11 +176,11 @@ impl Service for DefaultService {
 
 /// Create a default service instance
 pub fn create_service() -> DefaultService {
-    DefaultService::new(Config::default())
+    DefaultService::new(EventsTypesConfig::default())
 }
 
 /// Validate configuration
-pub async fn validate_config(config: &Config) -> crate::Result<()> {
+pub async fn validate_config(config: &EventsTypesConfig) -> crate::Result<()> {
     if config.max_connections == 0 {
         return Err(NestGateError::configuration_error(
             "events_types",
@@ -156,6 +200,23 @@ pub async fn validate_config(config: &Config) -> crate::Result<()> {
 
 // ==================== TESTS ====================
 
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+///
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Eventstypesconfigcanonical
+pub type EventsTypesConfigCanonical =
+    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using EventsTypesConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -163,7 +224,7 @@ mod tests {
 
     #[test]
     fn test_config_default() {
-        let config = Config::default();
+        let config = EventsTypesConfig::default();
         assert!(config.enabled);
         assert_eq!(config.max_connections, DEFAULT_MAX_CONNECTIONS);
     }

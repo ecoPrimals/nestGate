@@ -17,3 +17,6 @@ pub use metrics::{
     SystemMetrics,
 };
 pub use tracing::{create_span, initialize_tracing, TraceContext, TracingConfig};
+
+#[cfg(test)]
+mod tests;

@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::time::Duration;
-use nestgate_core::unified_final_config::supporting_types::StandardDomainConfig;
+use nestgate_core::config::canonical_primary::domains::ConsolidatedDomainConfigs;
 
 /// User access levels for NAS shares
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -13,6 +13,7 @@ pub enum AccessLevel {
     Admin,
     }
 impl Default for AccessLevel {
+    /// Returns the default instance
     fn default() -> Self { AccessLevel::ReadOnly
      }
 
@@ -75,6 +76,7 @@ pub struct PerformanceSettings {
     pub deduplication_enabled: bool,
     }
 impl Default for ShareSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             name: "default-share".to_string(),
             path: PathBuf::from("/nas/shares/default"),
@@ -87,6 +89,7 @@ impl Default for ShareSettings {
     }
 
 impl Default for AccessControlSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             users: vec!["admin".to_string()],
             groups: vec!["users".to_string()],
@@ -99,6 +102,7 @@ impl Default for AccessControlSettings {
     }
 
 impl Default for BackupSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             enabled: true,
             schedule: "0 2 * * *".to_string(), // Daily at 2 AM
@@ -111,6 +115,7 @@ impl Default for BackupSettings {
     }
 
 impl Default for PerformanceSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             quota_gb: None,
             max_file_size_gb: Some(10),

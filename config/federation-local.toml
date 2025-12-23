@@ -1,0 +1,253 @@
+# ==============================================================================
+# NestGate Local Federation Configuration
+# ==============================================================================
+#
+# Connects NestGate to local songbird orchestrator and toadstool services
+#
+# Date: November 10, 2025
+# Status: LIVE INTEGRATION
+#
+# ==============================================================================
+
+[service]
+name = "nestgate-storage-provider"
+version = "0.11.3"
+primal_type = "storage"
+description = "NestGate ZFS Storage & Data Management for Ecosystem"
+
+# Service binding
+host = "192.168.1.144"  # Local network IP
+port = 9001              # NestGate service port
+health_port = 9002       # Health check port
+
+[federation]
+enabled = true
+auto_register = true
+heartbeat_interval_secs = 30
+discovery_mode = "active"  # active | passive | hybrid
+
+# ==============================================================================
+# Songbird Orchestrator Configuration
+# ==============================================================================
+
+[federation.songbird]
+enabled = true
+orchestrator_url = "http://192.168.1.144:8080"
+health_endpoint = "http://192.168.1.144:8080/health"
+register_endpoint = "http://192.168.1.144:8080/api/v1/register"
+capabilities_endpoint = "http://192.168.1.144:8080/api/v1/capabilities"
+
+# Service registration details for songbird
+registration = { \
+  service_id = "nestgate-storage-001", \
+  service_type = "storage", \
+  primal_name = "nestgate", \
+  capabilities = ["zfs_storage", "dataset_management", "model_storage", "versioning", "compression", "snapshots"], \
+  tags = ["storage", "zfs", "data", "models", "datasets"], \
+  metadata = { version = "0.11.3", protocol = "http" } \
+}
+
+# ==============================================================================
+# Toadstool Integration Configuration
+# ==============================================================================
+
+[federation.toadstool]
+enabled = true
+byob_server_url = "http://192.168.1.144:8084"
+health_endpoint = "http://192.168.1.144:8084/health"
+
+# Capabilities we provide to toadstool
+capabilities = [
+  "dataset_streaming",      # Stream large ML datasets
+  "model_storage",          # Store trained models
+  "checkpoint_management",  # Training checkpoints
+  "data_versioning"         # Version control for data
+]
+
+# ==============================================================================
+# Capabilities We Advertise
+# ==============================================================================
+
+[capabilities]
+
+[capabilities.storage]
+type = "zfs_native"
+features = ["compression", "deduplication", "snapshots", "clones"]
+max_dataset_size_gb = 1000
+compression_ratio = "2-4x"
+snapshot_speed_ms = 10
+
+[capabilities.datasets]
+supported_formats = ["tar", "zip", "raw", "parquet", "safetensors", "gguf"]
+streaming_capable = true
+max_concurrent_streams = 10
+throughput_mbs = 500
+
+[capabilities.models]
+max_model_size_gb = 100
+versioning = true
+automatic_checksum = true
+formats = ["safetensors", "gguf", "onnx", "pytorch", "tensorflow"]
+
+[capabilities.performance]
+read_throughput_mbs = 850
+write_throughput_mbs = 450
+api_latency_ms = 5
+concurrent_operations = 100
+
+# ==============================================================================
+# Endpoints We Expose
+# ==============================================================================
+
+[endpoints]
+base_url = "http://192.168.1.144:9001"
+
+[endpoints.datasets]
+list = "/api/v1/datasets"
+get = "/api/v1/datasets/{id}"
+stream = "/api/v1/datasets/{id}/stream"
+create = "/api/v1/datasets"
+snapshot = "/api/v1/datasets/{id}/snapshot"
+
+[endpoints.models]
+list = "/api/v1/models/{primal}"
+get = "/api/v1/models/{primal}/{id}"
+upload = "/api/v1/models/{primal}/{id}"
+download = "/api/v1/models/{primal}/{id}/download"
+version = "/api/v1/models/{primal}/{id}/versions"
+
+[endpoints.health]
+check = "/health"
+metrics = "/metrics"
+status = "/status"
+
+# ==============================================================================
+# Security & Access Control
+# ==============================================================================
+
+[security]
+require_authentication = false  # Disable for local federation
+require_tls = false              # HTTP for local development
+allowed_primals = ["songbird", "toadstool", "squirrel", "beardog", "biomeOS"]
+
+# Per-primal quotas (GB)
+[security.quotas]
+songbird = 500
+toadstool = 750
+squirrel = 1000
+beardog = 500
+biomeOS = 250
+
+# ==============================================================================
+# Data Storage Configuration
+# ==============================================================================
+
+[storage]
+root_dir = "~/nestgate_data"
+datasets_dir = "~/nestgate_data/datasets"
+models_dir = "~/nestgate_data/models"
+temp_dir = "/tmp/nestgate_temp"
+
+# ZFS pool configuration (if available)
+[storage.zfs]
+enabled = true
+pool_name = "nestgate_pool"
+compression = "lz4"  # lz4 | gzip | zstd
+deduplication = false  # Disable for performance
+auto_snapshot = true
+snapshot_interval_hours = 24
+
+# ==============================================================================
+# Monitoring & Telemetry
+# ==============================================================================
+
+[monitoring]
+enabled = true
+export_format = "prometheus"
+metrics_port = 9002
+export_interval_secs = 60
+
+# Metrics to track
+collect_metrics = [
+  "api_request_count",
+  "api_latency_histogram",
+  "storage_operations",
+  "bandwidth_usage",
+  "active_streams",
+  "error_rate"
+]
+
+# ==============================================================================
+# Logging Configuration
+# ==============================================================================
+
+[logging]
+level = "info"  # trace | debug | info | warn | error
+format = "json"  # json | pretty | compact
+output = "stdout"
+include_timestamps = true
+include_caller = true
+
+# Log specific events
+log_events = [
+  "service_registration",
+  "capability_request",
+  "dataset_access",
+  "model_upload",
+  "health_check",
+  "errors"
+]
+
+# ==============================================================================
+# Performance Tuning
+# ==============================================================================
+
+[performance]
+worker_threads = 8
+max_concurrent_requests = 100
+request_timeout_secs = 300
+stream_buffer_size_kb = 8192
+connection_pool_size = 50
+
+# ==============================================================================
+# Development & Debug
+# ==============================================================================
+
+[development]
+auto_reload = false
+debug_mode = false
+expose_internal_endpoints = true
+log_all_requests = false
+
+# ==============================================================================
+# Federation Discovery
+# ==============================================================================
+
+[discovery]
+# How often to rediscover services
+refresh_interval_secs = 60
+
+# Discovery methods (in order of preference)
+methods = [
+  "environment",  # Check NESTGATE_FEDERATION_* env vars
+  "file",         # Read from federation config file
+  "mdns",         # mDNS/Bonjour discovery
+  "consul"        # Consul service registry
+]
+
+# Service announcement
+announce = true
+announcement_ttl_secs = 300
+
+# ==============================================================================
+# Example Environment Variables (for dynamic configuration)
+# ==============================================================================
+#
+# NESTGATE_FEDERATION_ENABLED=true
+# NESTGATE_SONGBIRD_URL=http://192.168.1.144:8080
+# NESTGATE_TOADSTOOL_URL=http://192.168.1.144:8084
+# NESTGATE_SERVICE_PORT=9001
+# NESTGATE_DATA_DIR=/nestgate_data
+#
+# ==============================================================================
+

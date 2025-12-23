@@ -8,6 +8,7 @@ use tracing::{info, warn};
 
 /// Degradation levels
 #[derive(Debug, Clone, Copy, PartialEq)]
+/// Degradationlevel
 pub enum DegradationLevel {
     /// Full functionality
     Normal,
@@ -23,6 +24,7 @@ pub enum DegradationLevel {
 
 /// Fallback strategy
 #[derive(Debug, Clone)]
+/// Fallbackstrategy
 pub enum FallbackStrategy {
     /// Return cached data
     Cache,
@@ -31,11 +33,15 @@ pub enum FallbackStrategy {
     /// Disable feature
     Disable,
     /// Use alternative service
-    Alternative { endpoint: String },
+    Alternative {
+        /// Alternative service endpoint URL
+        endpoint: String,
+    },
 }
 
 /// Graceful degradation manager
 #[derive(Debug)]
+/// Gracefuldegradation
 pub struct GracefulDegradation {
     /// Current degradation level
     level: DegradationLevel,
@@ -108,7 +114,12 @@ impl GracefulDegradation {
 }
 
 impl Default for GracefulDegradation {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
 }
+
+#[cfg(test)]
+#[path = "graceful_degradation_tests.rs"]
+mod graceful_degradation_tests;

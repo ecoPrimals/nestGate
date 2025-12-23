@@ -19,11 +19,15 @@ use tracing::warn;
 // Removed unused tracing import
 /// ZFS command execution framework
 #[derive(Debug, Clone)]
+/// Zfscommand
 pub struct ZfsCommand {
+    /// Dry Run
     pub dry_run: bool,
+    /// Timeout Seconds
     pub timeout_seconds: u64,
 }
 impl Default for ZfsCommand {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             dry_run: false,
@@ -33,17 +37,51 @@ impl Default for ZfsCommand {
 }
 
 impl ZfsCommand {
+    /// Creates a new ZFS command executor with default settings
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nestgate_zfs::command::ZfsCommand;
+    /// let cmd = ZfsCommand::new();
+    /// ```
     #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// Enables or disables dry-run mode
+    ///
+    /// When enabled, commands will be validated but not executed.
+    ///
+    /// # Arguments
+    ///
+    /// * `dry_run` - If true, commands won't actually execute
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nestgate_zfs::command::ZfsCommand;
+    /// let cmd = ZfsCommand::new().with_dry_run(true);
+    /// ```
     #[must_use]
     pub fn with_dry_run(mut self, dry_run: bool) -> Self {
         self.dry_run = dry_run;
         self
     }
 
+    /// Sets the command execution timeout
+    ///
+    /// # Arguments
+    ///
+    /// * `timeout_seconds` - Maximum time to wait for command completion
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nestgate_zfs::command::ZfsCommand;
+    /// let cmd = ZfsCommand::new().with_timeout(60);
+    /// ```
     #[must_use]
     pub fn with_timeout(mut self, timeout_seconds: u64) -> Self {
         self.timeout_seconds = timeout_seconds;
@@ -145,10 +183,15 @@ impl ZfsCommand {
 
 /// Result of a command execution
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Commandresult
 pub struct CommandResult {
+    /// Success
     pub success: bool,
+    /// Stdout
     pub stdout: String,
+    /// Stderr
     pub stderr: String,
+    /// Exit Code
     pub exit_code: i32,
 }
 impl CommandResult {
@@ -228,6 +271,7 @@ pub struct ZfsOperations {
     command: ZfsCommand,
 }
 impl ZfsOperations {
+    /// Creates a new `ZfsOperations` instance with default configuration.
     #[must_use]
     pub fn new() -> Self {
         Self {
@@ -235,6 +279,10 @@ impl ZfsOperations {
         }
     }
 
+    /// Sets whether operations should be performed in dry-run mode.
+    ///
+    /// # Arguments
+    /// * `dry_run` - If `true`, operations will be simulated without actual execution.
     #[must_use]
     pub fn with_dry_run(mut self, dry_run: bool) -> Self {
         self.command = self.command.with_dry_run(dry_run);
@@ -429,6 +477,7 @@ impl ZfsOperations {
 }
 
 impl Default for ZfsOperations {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -447,36 +496,58 @@ fn extract_scan_status(output: &str) -> String {
 
 /// ZFS Pool information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Zfspool
 pub struct ZfsPool {
+    /// Name
     pub name: String,
+    /// Size
     pub size: String,
+    /// Allocated
     pub allocated: String,
+    /// Free
     pub free: String,
+    /// Health
     pub health: String,
 }
 /// Pool status information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Poolstatus
 pub struct PoolStatus {
+    /// Name
     pub name: String,
+    /// State
     pub state: String,
+    /// Scan
     pub scan: String,
+    /// Errors
     pub errors: String,
+    /// Raw Output
     pub raw_output: String,
 }
 /// ZFS Dataset information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Zfsdataset
 pub struct ZfsDataset {
+    /// Name
     pub name: String,
+    /// Used
     pub used: String,
+    /// Available
     pub available: String,
+    /// Referenced
     pub referenced: String,
+    /// Mountpoint
     pub mountpoint: String,
 }
 /// ZFS Snapshot information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Zfssnapshot
 pub struct ZfsSnapshot {
+    /// Name
     pub name: String,
+    /// Used
     pub used: String,
+    /// Creation
     pub creation: String,
 }
 #[cfg(test)]
@@ -509,7 +580,7 @@ mod tests {
             CommandResult {
                 success: false,
                 stdout: String::new(),
-                stderr: format!("Operation failed: error details"),
+                stderr: "Operation failed: error details".to_string(),
                 exit_code: 1,
             }
         });

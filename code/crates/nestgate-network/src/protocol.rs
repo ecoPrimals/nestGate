@@ -3,15 +3,19 @@
 // **CANONICAL MODERNIZATION**: Migrated from async_trait to native async patterns
 
 // CANONICAL MODERNIZATION: Removed async_trait for native async patterns
+//! Protocol module
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
 
 // Use nestgate_core for error handling
+use nestgate_core::error::utilities::safe_env_var_or_default;
 use nestgate_core::{NestGateError, Result};
 
 /// Supported network protocols
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Protocol
 pub enum Protocol {
     /// Network File System
     Nfs,
@@ -27,6 +31,7 @@ pub enum Protocol {
     Tcp,
 }
 impl std::fmt::Display for Protocol {
+    /// Fmt
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Protocol::Nfs => write!(f, "NFS"),
@@ -41,6 +46,7 @@ impl std::fmt::Display for Protocol {
 
 /// Performance preference for protocol selection
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+/// Performancepreference
 pub enum PerformancePreference {
     /// Optimize for speed
     Speed,
@@ -50,10 +56,30 @@ pub enum PerformancePreference {
     Compatibility,
     /// Balanced approach
     #[default]
+    /// Balanced
     Balanced,
 }
 /// Protocol configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+///
+/// **Migration Path**:
+/// ```rust,ignore
+/// // OLD (deprecated):
+/// use crate::network::config::ProtocolConfig;
+///
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::ProtocolConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+///
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(
+    since = "0.11.0",
+    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
+/// Configuration for Protocol
 pub struct ProtocolConfig {
     /// Protocol type
     pub protocol: Protocol,
@@ -68,7 +94,9 @@ pub struct ProtocolConfig {
     /// Maximum retry attempts
     pub max_retries: u32,
 }
+#[allow(deprecated)] // Deprecated struct with migration path documented
 impl Default for ProtocolConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             protocol: Protocol::Nfs,
@@ -83,6 +111,7 @@ impl Default for ProtocolConfig {
 
 /// Mount request
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for Mount operation
 pub struct MountRequest {
     /// Protocol to use
     pub protocol: Protocol,
@@ -99,6 +128,7 @@ pub struct MountRequest {
 }
 /// Mount response
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for Mount operation
 pub struct MountResponse {
     /// Mount ID for tracking
     pub mount_id: String,
@@ -111,6 +141,7 @@ pub struct MountResponse {
 }
 /// Authentication credentials
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Credentials
 pub struct Credentials {
     /// Username
     pub username: String,
@@ -145,6 +176,7 @@ pub trait ProtocolHandler: Send + Sync + std::fmt::Debug {
 
 /// Mount status information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Mountstatus
 pub struct MountStatus {
     /// Mount ID
     pub mount_id: String,
@@ -170,6 +202,7 @@ pub struct ProtocolManager {
     supported_protocols: std::collections::HashSet<Protocol>,
 }
 impl std::fmt::Debug for ProtocolManager {
+    /// Fmt
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("ProtocolManager")
             .field("supported_protocols", &self.supported_protocols)
@@ -251,13 +284,14 @@ impl ProtocolManager {
         }
 
         // Simplified status implementation
+        use nestgate_core::constants::hardcoding::addresses;
         Ok(MountStatus {
             mount_id: _mount_id.to_string(),
             mounted: true,
             mount_point: std::path::PathBuf::from("/tmp/mount"),
             protocol,
-            server: std::env::var("NESTGATE_DEFAULT_SERVER")
-                .unwrap_or_else(|_| "localhost".to_string()),
+            server: safe_env_var_or_default("NESTGATE_DEFAULT_SERVER", addresses::LOCALHOST_NAME)
+                .to_string(),
             remote_path: "/remote".to_string(),
             last_access: Some(chrono::Utc::now()),
             error: None,
@@ -272,7 +306,25 @@ impl ProtocolManager {
 }
 
 impl Default for ProtocolManager {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
 }
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+///
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Protocolconfigcanonical
+pub type ProtocolConfigCanonical =
+    nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using ProtocolConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.

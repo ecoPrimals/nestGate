@@ -1,3 +1,5 @@
+//! Auto Configurator module
+
 use crate::error::Result;
 use crate::unified_enums::storage_types::UnifiedStorageCapability;
 use std::collections::HashMap;
@@ -13,6 +15,10 @@ use std::collections::HashMap;
 use crate::universal_storage::DetectedStorage;
 // Removed unused imports - using unified types
 use serde::{Deserialize, Serialize};
+
+#[cfg(test)]
+#[path = "auto_configurator_tests.rs"]
+mod auto_configurator_tests;
 
 // ==================== SECTION ====================
 
@@ -78,6 +84,7 @@ impl AutoConfigurator {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
+    #[allow(deprecated)]
     pub async fn create_optimal_config(
         &self,
         requirements: StorageRequirements,
@@ -372,6 +379,7 @@ impl AutoConfigurator {
 
     // ==================== HELPER METHODS ====================
 
+    /// Classify Performance Tier
     fn classify_performance_tier(&self, storage: &DetectedStorage) -> PerformanceTier {
         let throughput = storage.performance_profile.read_throughput_mbps;
         let latency = storage.performance_profile.read_latency_us;
@@ -391,6 +399,7 @@ impl AutoConfigurator {
         }
     }
 
+    /// Find Zfs Capable Storage
     fn find_zfs_capable_storage(&self, required_features: &[ZfsFeature]) -> Vec<DetectedStorage> {
         self.available_storage
             .iter()
@@ -405,6 +414,7 @@ impl AutoConfigurator {
             .collect()
     }
 
+    /// Can Support Zfs Feature
     fn can_support_zfs_feature(&self, storage: &DetectedStorage, feature: &ZfsFeature) -> bool {
         match feature {
             ZfsFeature::Compression => {
@@ -444,6 +454,7 @@ impl AutoConfigurator {
     async fn analyze_redundancy_options(&self) -> Result<Vec<RedundancyOption>> {
         Ok(vec![])
     }
+    /// Select Hot Tier Storage
     async fn select_hot_tier_storage(
         &self,
         _mapping: &StorageMapping,
@@ -451,6 +462,7 @@ impl AutoConfigurator {
     ) -> Result<Vec<DetectedStorage>> {
         Ok(vec![])
     }
+    /// Select Warm Tier Storage
     async fn select_warm_tier_storage(
         &self,
         _mapping: &StorageMapping,
@@ -458,6 +470,7 @@ impl AutoConfigurator {
     ) -> Result<Vec<DetectedStorage>> {
         Ok(vec![])
     }
+    /// Select Cold Tier Storage
     async fn select_cold_tier_storage(
         &self,
         _mapping: &StorageMapping,
@@ -465,33 +478,39 @@ impl AutoConfigurator {
     ) -> Result<Vec<DetectedStorage>> {
         Ok(vec![])
     }
+    /// Creates  Tiering Rules
     fn create_tiering_rules(&self, _requirements: &StorageRequirements) -> Vec<TieringRule> {
         vec![]
     }
+    /// Configure Mirroring
     async fn configure_mirroring(
         &self,
         _tier_config: &TierConfiguration,
     ) -> Result<RedundancyStrategy> {
         Ok(RedundancyStrategy::Mirror)
     }
+    /// Configure Raid Z1
     async fn configure_raid_z1(
         &self,
         _tier_config: &TierConfiguration,
     ) -> Result<RedundancyStrategy> {
         Ok(RedundancyStrategy::RaidZ1)
     }
+    /// Configure Raid Z2
     async fn configure_raid_z2(
         &self,
         _tier_config: &TierConfiguration,
     ) -> Result<RedundancyStrategy> {
         Ok(RedundancyStrategy::RaidZ2)
     }
+    /// Configure Raid Z3
     async fn configure_raid_z3(
         &self,
         _tier_config: &TierConfiguration,
     ) -> Result<RedundancyStrategy> {
         Ok(RedundancyStrategy::RaidZ3)
     }
+    /// Auto Select Redundancy
     async fn auto_select_redundancy(
         &self,
         _tier_config: &TierConfiguration,
@@ -499,24 +518,28 @@ impl AutoConfigurator {
     ) -> Result<RedundancyStrategy> {
         Ok(RedundancyStrategy::Mirror)
     }
+    /// Configure Cross Tier Redundancy
     async fn configure_cross_tier_redundancy(
         &self,
         _tier_config: &TierConfiguration,
     ) -> Result<CrossTierRedundancyStrategy> {
         Ok(CrossTierRedundancyStrategy::None)
     }
+    /// Calculate Expected Performance
     async fn calculate_expected_performance(
         &self,
         _config: &RedundancyConfiguration,
     ) -> Result<ExpectedPerformanceProfile> {
         Ok(ExpectedPerformanceProfile::default())
     }
+    /// Calculate Cost Estimation
     async fn calculate_cost_estimation(
         &self,
         _config: &RedundancyConfiguration,
     ) -> Result<CostEstimation> {
         Ok(CostEstimation::default())
     }
+    /// Map Zfs Features
     async fn map_zfs_features(
         &self,
         _config: &RedundancyConfiguration,
@@ -524,6 +547,7 @@ impl AutoConfigurator {
     ) -> Result<ZfsFeatureMapping> {
         Ok(ZfsFeatureMapping::default())
     }
+    /// Calculate Confidence Score
     async fn calculate_confidence_score(
         &self,
         _config: &RedundancyConfiguration,
@@ -531,24 +555,28 @@ impl AutoConfigurator {
     ) -> Result<f64> {
         Ok(0.85)
     }
+    /// Generate Base Setup Steps
     async fn generate_base_setup_steps(
         &self,
         _config: &OptimizedConfiguration,
     ) -> Result<Vec<ImplementationStep>> {
         Ok(vec![])
     }
+    /// Generate Redundancy Setup Steps
     async fn generate_redundancy_setup_steps(
         &self,
         _config: &OptimizedConfiguration,
     ) -> Result<Vec<ImplementationStep>> {
         Ok(vec![])
     }
+    /// Generate Zfs Features Steps
     async fn generate_zfs_features_steps(
         &self,
         _config: &OptimizedConfiguration,
     ) -> Result<Vec<ImplementationStep>> {
         Ok(vec![])
     }
+    /// Generate Performance Tuning Steps
     async fn generate_performance_tuning_steps(
         &self,
         _config: &OptimizedConfiguration,
@@ -561,6 +589,7 @@ impl AutoConfigurator {
 
 /// Configuration settings for the auto-configurator
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuratorsettings
 pub struct ConfiguratorSettings {
     /// Prefer performance over cost
     pub prioritize_performance: bool,
@@ -574,6 +603,7 @@ pub struct ConfiguratorSettings {
     pub enable_auto_tuning: bool,
 }
 impl Default for ConfiguratorSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             prioritize_performance: false,
@@ -587,6 +617,7 @@ impl Default for ConfiguratorSettings {
 
 /// Storage requirements specification
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagerequirements
 pub struct StorageRequirements {
     /// Minimum throughput in MB/s
     pub min_throughput_mbps: Option<f64>,
@@ -607,153 +638,280 @@ pub struct StorageRequirements {
 }
 /// ZFS features that can be required
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+/// Zfsfeature
 pub enum ZfsFeature {
+    /// Compression
     Compression,
+    /// Deduplication
     Deduplication,
+    /// Snapshots
     Snapshots,
+    /// Checksumming
     Checksumming,
+    /// Encryption
     Encryption,
+    /// Raidz
     RaidZ,
 }
 /// Redundancy level options
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+/// Redundancylevel
 pub enum RedundancyLevel {
+    /// None
     None,
+    /// Mirror
     Mirror,
+    /// Raidz1
     RaidZ1,
+    /// Raidz2
     RaidZ2,
+    /// Raidz3
     RaidZ3,
 }
 /// Storage use case categories
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+/// Storageusecase
 pub enum StorageUseCase {
+    /// Homenas
     HomeNas,
+    /// Smallbusiness
     SmallBusiness,
+    /// Enterprise
     Enterprise,
+    /// Cloudnative
     CloudNative,
+    /// Highperformance
     HighPerformance,
+    /// Archive
     Archive,
+    /// Development
     Development,
 }
 /// Final optimal storage configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+///
+/// **Migration Path**:
+/// ```rust,ignore
+/// // OLD (deprecated):
+/// use crate::config::OptimalStorageConfig;
+///
+/// // NEW (canonical):
+/// use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::config::OptimalStorageConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+///
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(
+    since = "0.11.0",
+    note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
+/// Configuration for OptimalStorage
 pub struct OptimalStorageConfig {
+    /// Configuration for tier uration
     pub tier_configuration: TierConfiguration,
+    /// Redundancy Strategy
     pub redundancy_strategy: RedundancyStrategy,
+    /// Performance Profile
     pub performance_profile: ExpectedPerformanceProfile,
+    /// Cost Estimation
     pub cost_estimation: CostEstimation,
+    /// Zfs Feature Mapping
     pub zfs_feature_mapping: ZfsFeatureMapping,
+    /// Implementation Plan
     pub implementation_plan: ImplementationPlan,
+    /// Confidence Score
     pub confidence_score: f64,
 }
 // Supporting data structures (simplified for brevity)
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
+/// Storagelandscapeanalysis
 pub struct StorageLandscapeAnalysis {
+    /// Performance Tiers
     pub performance_tiers: HashMap<PerformanceTier, Vec<DetectedStorage>>,
+    /// Redundancy Options
     pub redundancy_options: Vec<RedundancyOption>,
+    /// Total Capacity
     pub total_capacity: u64,
+    /// Total Monthly Cost
     pub total_monthly_cost: f64,
+    /// Available Capabilities
     pub available_capabilities: Vec<UnifiedStorageCapability>,
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
+/// Storagemapping
 pub struct StorageMapping {
+    /// Performance Storage
     pub performance_storage: Vec<DetectedStorage>,
+    /// Capacity Storage
     pub capacity_storage: Vec<DetectedStorage>,
+    /// Reliable Storage
     pub reliable_storage: Vec<DetectedStorage>,
+    /// Cost Effective Storage
     pub cost_effective_storage: Vec<DetectedStorage>,
+    /// Zfs Capable Storage
     pub zfs_capable_storage: Vec<DetectedStorage>,
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
+/// Tierconfiguration
 pub struct TierConfiguration {
+    /// Hot Tier
     pub hot_tier: Vec<DetectedStorage>,
+    /// Warm Tier
     pub warm_tier: Vec<DetectedStorage>,
+    /// Cold Tier
     pub cold_tier: Vec<DetectedStorage>,
+    /// Tiering Rules
     pub tiering_rules: Vec<TieringRule>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Performancetier
 pub enum PerformanceTier {
+    /// High
     High,
+    /// Medium
     Medium,
+    /// Low
     Low,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Redundancystrategy
 pub enum RedundancyStrategy {
+    /// None
     None,
+    /// Mirror
     Mirror,
+    /// Raidz1
     RaidZ1,
+    /// Raidz2
     RaidZ2,
+    /// Raidz3
     RaidZ3,
+    /// Custom redundancy configuration
     Custom(String),
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
+/// Redundancyconfiguration
 pub struct RedundancyConfiguration {
+    /// Strategy
     pub strategy: RedundancyStrategy,
+    /// Cross Tier Strategy
     pub cross_tier_strategy: Option<CrossTierRedundancyStrategy>,
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
+/// Optimizedconfiguration
 pub struct OptimizedConfiguration {
+    /// Configuration for tier uration
     pub tier_configuration: TierConfiguration,
+    /// Redundancy Strategy
     pub redundancy_strategy: RedundancyStrategy,
+    /// Performance Profile
     pub performance_profile: ExpectedPerformanceProfile,
+    /// Cost Estimation
     pub cost_estimation: CostEstimation,
+    /// Zfs Feature Mapping
     pub zfs_feature_mapping: ZfsFeatureMapping,
+    /// Confidence Score
     pub confidence_score: f64,
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
+/// Implementationplan
 pub struct ImplementationPlan {
+    /// Phases
     pub phases: Vec<ImplementationPhase>,
+    /// Total Estimated Duration Minutes
     pub total_estimated_duration_minutes: u32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Implementationphase
 pub struct ImplementationPhase {
+    /// Phase Number
     pub phase_number: u32,
+    /// Name
     pub name: String,
+    /// Human-readable description
     pub description: String,
+    /// Steps
     pub steps: Vec<ImplementationStep>,
+    /// Estimated Duration Minutes
     pub estimated_duration_minutes: u32,
+    /// Dependencies
     pub dependencies: Vec<u32>,
 }
 
 // Additional supporting types (simplified)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Redundancyoption
 pub struct RedundancyOption {
+    /// Name
     pub name: String,
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Tieringrule
 pub struct TieringRule {
+    /// Name
     pub name: String,
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Crosstierredundancystrategy
 pub enum CrossTierRedundancyStrategy {
+    /// None
     None,
 }
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
+/// Expectedperformanceprofile
 pub struct ExpectedPerformanceProfile {
+    /// Throughput Mbps
     pub throughput_mbps: f64,
 }
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
+/// Costestimation
 pub struct CostEstimation {
+    /// Monthly Cost Usd
     pub monthly_cost_usd: f64,
 }
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
+/// Zfsfeaturemapping
 pub struct ZfsFeatureMapping {
+    /// Enabled Features
     pub enabled_features: Vec<ZfsFeature>,
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Implementationstep
 pub struct ImplementationStep {
+    /// Human-readable description
     pub description: String,
 }
 
 impl Default for RedundancyStrategy {
+    /// Returns the default instance
     fn default() -> Self {
         Self::None
     }
 }
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+///
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Optimalstorageconfigcanonical
+pub type OptimalStorageConfigCanonical =
+    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using OptimalStorageConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.

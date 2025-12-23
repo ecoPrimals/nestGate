@@ -1,7 +1,7 @@
 /// 
 /// Shared configuration structures used across all handler types.
 /// This module contains the base configuration patterns and common types.
-use nestgate_core::unified_final_config::supporting_types::StandardDomainConfig;
+use nestgate_core::config::canonical_primary::domains::ConsolidatedDomainConfigs;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
@@ -15,6 +15,7 @@ pub type HandlerConfig = StandardDomainConfig;
 /// Handler-specific configuration extensions
 /// Generic type parameter allows for handler-specific configuration data
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Handlerextensions
 pub struct HandlerExtensions<T> {
     /// Common handler configuration
     pub common: CommonHandlerConfig,
@@ -23,6 +24,22 @@ pub struct HandlerExtensions<T> {
 }
 /// Common configuration shared by all handlers
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// 
+/// **Migration Path**:
+/// ```rust,ignore
+/// // OLD (deprecated):
+/// use crate::network::config::CommonHandlerConfig;
+/// 
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::CommonHandlerConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+/// 
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for CommonHandler
 pub struct CommonHandlerConfig {
     /// Handler name/identifier
     pub handler_name: String,
@@ -44,6 +61,7 @@ pub struct CommonHandlerConfig {
     pub environment_overrides: HashMap<String, String>,
 }
 impl Default for CommonHandlerConfig {
+    /// Returns the default instance
     fn default() -> Self { Self {
             handler_name: "default".to_string(),
             enabled: true,
@@ -59,6 +77,7 @@ impl Default for CommonHandlerConfig {
 
 /// Rate limiting configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for RateLimit
 pub struct RateLimitConfig {
     /// Enable rate limiting
     pub enabled: bool,
@@ -72,12 +91,17 @@ pub struct RateLimitConfig {
     pub action: RateLimitAction,
 }
     #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Ratelimitaction
 pub enum RateLimitAction {
+    /// Block
     Block,
+    /// Queue
     Queue,
+    /// Throttle
     Throttle,
 }
 impl Default for RateLimitConfig {
+    /// Returns the default instance
     fn default() -> Self { Self {
             enabled: true,
             requests_per_second: 100,
@@ -89,6 +113,7 @@ impl Default for RateLimitConfig {
 
 /// Retry configuration for failed requests
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Retry
 pub struct RetryConfig {
     /// Enable retry logic
     pub enabled: bool,
@@ -104,6 +129,7 @@ pub struct RetryConfig {
     pub jitter: bool,
 }
 impl Default for RetryConfig {
+    /// Returns the default instance
     fn default() -> Self { Self {
             enabled: true,
             max_attempts: 3,
@@ -116,6 +142,22 @@ impl Default for RetryConfig {
 
 /// Logging configuration for handlers
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// 
+/// **Migration Path**:
+/// ```rust,ignore
+/// // OLD (deprecated):
+/// use crate::network::config::LoggingConfig;
+/// 
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::LoggingConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+/// 
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for Logging
 pub struct LoggingConfig {
     /// Enable logging
     pub enabled: bool,
@@ -131,12 +173,17 @@ pub struct LoggingConfig {
     pub log_sensitive_headers: bool,
 }
     #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Logformat
 pub enum LogFormat {
+    /// Json
     Json,
+    /// Text
     Text,
+    /// Structured
     Structured,
 }
 impl Default for LoggingConfig {
+    /// Returns the default instance
     fn default() -> Self { Self {
             enabled: true,
             level: "info".to_string(),
@@ -150,3 +197,71 @@ impl Default for LoggingConfig {
 /// **CANONICAL MODERNIZATION** - Use canonical metrics configuration
 pub use nestgate_core::CanonicalMetricsConfig as MetricsConfig; 
 // ==================== SECTION ====================
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+/// 
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Loggingconfigcanonical
+pub type LoggingConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using LoggingConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+/// 
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Performancemetricsconfigcanonical
+pub type PerformanceMetricsConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using PerformanceMetricsConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+/// 
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Metricsconfigcanonical
+pub type MetricsConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using MetricsConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+/// 
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Commonhandlerconfigcanonical
+pub type CommonHandlerConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using CommonHandlerConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+

@@ -1,24 +1,26 @@
 //
 // Pool operations with circuit breaker and retry logic.
 
+//! Pool Operations module
+
 use crate::handlers::zfs::universal_zfs::traits::UniversalZfsService;
-use crate::handlers::zfs::universal_zfs::types::{
+use crate::handlers::zfs::universal_zfs_types::{
     PoolConfig, PoolInfo, UniversalZfsError, UniversalZfsResult,
 };
 
 use super::core::FailSafeZfsService;
 
+/// List Pools
 pub async fn list_pools(service: &FailSafeZfsService) -> UniversalZfsResult<Vec<PoolInfo>> {
     // Check if circuit breaker allows execution
     if !service.circuit_breaker.can_execute().await {
         // Try fallback service if available
         if let Some(fallback) = &service.fallback {
             return fallback.list_pools().await;
-        } else {
-            return Err(UniversalZfsError::internal(
-                "Circuit breaker open and no fallback available",
-            ));
         }
+        return Err(UniversalZfsError::internal(
+            "Circuit breaker open and no fallback available",
+        ));
     }
 
     // Execute primary service with circuit breaker tracking
@@ -39,6 +41,7 @@ pub async fn list_pools(service: &FailSafeZfsService) -> UniversalZfsResult<Vec<
     }
 }
 
+/// Gets Pool
 pub async fn get_pool(
     service: &FailSafeZfsService,
     name: &str,
@@ -47,11 +50,10 @@ pub async fn get_pool(
     if !service.circuit_breaker.can_execute().await {
         if let Some(fallback) = &service.fallback {
             return fallback.get_pool(name).await;
-        } else {
-            return Err(UniversalZfsError::internal(
-                "Circuit breaker open and no fallback available",
-            ));
         }
+        return Err(UniversalZfsError::internal(
+            "Circuit breaker open and no fallback available",
+        ));
     }
 
     // Execute primary service with circuit breaker tracking
@@ -71,6 +73,7 @@ pub async fn get_pool(
     }
 }
 
+/// Creates  Pool
 pub async fn create_pool(
     service: &FailSafeZfsService,
     config: &PoolConfig,
@@ -79,11 +82,10 @@ pub async fn create_pool(
     if !service.circuit_breaker.can_execute().await {
         if let Some(fallback) = &service.fallback {
             return fallback.create_pool(config).await;
-        } else {
-            return Err(UniversalZfsError::internal(
-                "Circuit breaker open and no fallback available",
-            ));
         }
+        return Err(UniversalZfsError::internal(
+            "Circuit breaker open and no fallback available",
+        ));
     }
 
     // Execute primary service with circuit breaker tracking
@@ -103,16 +105,16 @@ pub async fn create_pool(
     }
 }
 
+/// Destroy Pool
 pub async fn destroy_pool(service: &FailSafeZfsService, name: &str) -> UniversalZfsResult<()> {
     // Check if circuit breaker allows execution
     if !service.circuit_breaker.can_execute().await {
         if let Some(fallback) = &service.fallback {
             return fallback.destroy_pool(name).await;
-        } else {
-            return Err(UniversalZfsError::internal(
-                "Circuit breaker open and no fallback available",
-            ));
         }
+        return Err(UniversalZfsError::internal(
+            "Circuit breaker open and no fallback available",
+        ));
     }
 
     // Execute primary service with circuit breaker tracking
@@ -132,16 +134,16 @@ pub async fn destroy_pool(service: &FailSafeZfsService, name: &str) -> Universal
     }
 }
 
+/// Scrub Pool
 pub async fn scrub_pool(service: &FailSafeZfsService, name: &str) -> UniversalZfsResult<()> {
     // Check if circuit breaker allows execution
     if !service.circuit_breaker.can_execute().await {
         if let Some(fallback) = &service.fallback {
             return fallback.scrub_pool(name).await;
-        } else {
-            return Err(UniversalZfsError::internal(
-                "Circuit breaker open and no fallback available",
-            ));
         }
+        return Err(UniversalZfsError::internal(
+            "Circuit breaker open and no fallback available",
+        ));
     }
 
     // Execute primary service with circuit breaker tracking
@@ -161,6 +163,7 @@ pub async fn scrub_pool(service: &FailSafeZfsService, name: &str) -> UniversalZf
     }
 }
 
+/// Gets Pool Status
 pub async fn get_pool_status(
     service: &FailSafeZfsService,
     name: &str,
@@ -169,11 +172,10 @@ pub async fn get_pool_status(
     if !service.circuit_breaker.can_execute().await {
         if let Some(fallback) = &service.fallback {
             return fallback.get_pool_status(name).await;
-        } else {
-            return Err(UniversalZfsError::internal(
-                "Circuit breaker open and no fallback available",
-            ));
         }
+        return Err(UniversalZfsError::internal(
+            "Circuit breaker open and no fallback available",
+        ));
     }
 
     // Execute primary service with circuit breaker tracking

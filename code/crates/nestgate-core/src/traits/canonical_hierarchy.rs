@@ -119,17 +119,15 @@ pub trait CanonicalService: Send + Sync + 'static {
     /// configuration updates are supported. If not supported, don't implement.
     fn update_config(
         &mut self,
-        config: Self::Config,
+        _config: Self::Config,
     ) -> impl Future<Output = Result<(), Self::Error>> + Send
     where
         Self: Sized,
     {
         async move {
-            // Default: Drop the config to avoid "must use" warnings
-            let _ = config;
-            // This default implementation will not be called in practice
-            // as implementations should override this method
-            unreachable!("update_config not implemented - this service does not support dynamic configuration updates")
+            // Default: Not supported
+            // Implementations should override this method to support dynamic configuration
+            panic!("update_config not implemented - this service does not support dynamic configuration updates")
         }
     }
 
@@ -192,6 +190,17 @@ pub trait CanonicalService: Send + Sync + 'static {
 ///     }
 /// }
 /// ```
+#[deprecated(
+    since = "0.11.2",
+    note = "Use crate::traits::canonical::CanonicalProvider instead. \
+            This alternative definition extends CanonicalService and is less flexible. \
+            The canonical version is standalone with customizable Config/Error types. \
+            Migration: Replace canonical_hierarchy::CanonicalProvider with \
+            canonical::CanonicalProvider and add explicit Config/Error types. \
+            Target removal: v0.12.0 (May 2026). \
+            See: CANONICAL_PROVIDER_COMPARISON.md for detailed migration guide."
+)]
+/// CanonicalProvider trait
 pub trait CanonicalProvider<T>: CanonicalService {
     /// Provider-specific metadata
     type Metadata: Clone + Send + Sync + 'static;
@@ -290,9 +299,13 @@ pub trait CanonicalProvider<T>: CanonicalService {
 /// }
 /// ```
 ///
-/// **DEPRECATED**: Use `crate::traits::canonical_unified_traits::CanonicalStorage` instead.
+/// **DEPRECATED**: Use `crate::traits::canonical::CanonicalStorage` instead.
 /// This is a duplicate definition maintained for backward compatibility only.
-#[deprecated(since = "0.9.0", note = "Use crate::traits::canonical_unified_traits::CanonicalStorage instead - unified in canonical_unified_traits module")]
+#[deprecated(
+    since = "0.9.0",
+    note = "Use crate::traits::canonical::CanonicalStorage instead - unified in canonical_unified_traits module"
+)]
+/// CanonicalStorage trait
 pub trait CanonicalStorage: CanonicalService {
     /// Storage key type
     type Key: Clone + Send + Sync + 'static;
@@ -333,9 +346,10 @@ pub trait CanonicalStorage: CanonicalService {
         &self,
         keys: &[Self::Key],
     ) -> impl Future<Output = Result<Vec<Option<Self::Value>>, Self::Error>> + Send {
-        async {
+        let keys = keys.to_vec(); // Clone to avoid borrowing issues
+        async move {
             let mut results = Vec::with_capacity(keys.len());
-            for key in keys {
+            for key in &keys {
                 results.push(self.read(key).await?);
             }
             Ok(results)
@@ -400,7 +414,7 @@ pub trait CanonicalStorage: CanonicalService {
         to: Self::Key,
     ) -> impl Future<Output = Result<(), Self::Error>> + Send {
         async {
-            self.copy(from, &to).await?;
+            self.copy(from, to).await?;
             self.delete(from).await?;
             Ok(())
         }
@@ -489,8 +503,12 @@ pub trait CanonicalStorage: CanonicalService {
 ///     }
 /// }
 /// ```
-/// **DEPRECATED**: Use canonical_unified_traits::CanonicalSecurity instead
-#[deprecated(since = "0.9.0", note = "Use crate::traits::canonical_unified_traits::CanonicalSecurity instead - unified in canonical_unified_traits module")]
+/// **DEPRECATED**: Use canonical::CanonicalSecurity instead
+#[deprecated(
+    since = "0.9.0",
+    note = "Use crate::traits::canonical::CanonicalSecurity instead - unified in canonical_unified_traits module"
+)]
+/// CanonicalSecurity trait
 pub trait CanonicalSecurity: CanonicalService {
     /// Token type (JWT, session, etc.)
     type Token: Clone + Send + Sync + 'static;
@@ -572,7 +590,7 @@ pub trait CanonicalSecurity: CanonicalService {
     // delegate to the simpler methods or return "not supported" errors.
 
     /// Sign data and return structured signature (optional, delegates to sign by default)
-    /// 
+    ///
     /// Default implementation delegates to `sign()` and wraps in a generic signature structure.
     /// Override for more sophisticated signature formats (e.g., with key IDs, algorithms).
     fn sign_data(&self, data: &[u8]) -> impl Future<Output = Result<Vec<u8>, Self::Error>> + Send {
@@ -580,7 +598,7 @@ pub trait CanonicalSecurity: CanonicalService {
     }
 
     /// Verify structured signature (optional, delegates to verify by default)
-    /// 
+    ///
     /// Default implementation delegates to `verify()`.
     /// Override for more sophisticated signature verification.
     fn verify_signature(
@@ -592,7 +610,7 @@ pub trait CanonicalSecurity: CanonicalService {
     }
 
     /// Get the key ID used for signing (optional)
-    /// 
+    ///
     /// Default implementation returns None to indicate no key ID tracking.
     /// Override if your implementation tracks key IDs.
     fn get_key_id(&self) -> impl Future<Output = Result<Option<String>, Self::Error>> + Send {
@@ -600,7 +618,7 @@ pub trait CanonicalSecurity: CanonicalService {
     }
 
     /// Hash data with specific algorithm (optional)
-    /// 
+    ///
     /// Default implementation returns "not supported" error.
     /// Override to provide hashing capabilities.
     fn hash_data(
@@ -613,32 +631,34 @@ pub trait CanonicalSecurity: CanonicalService {
     {
         async {
             // Default: not supported - implementations must override
-            // We use unreachable here as a placeholder since we can't construct Self::Error generically
-            unimplemented!("hash_data not implemented - override this method to provide hashing")
+            panic!("hash_data not implemented - override this method to provide hashing")
         }
     }
 
     /// Generate random bytes (optional)
-    /// 
+    ///
     /// Default implementation returns "not supported" error.
     /// Override to provide random generation capabilities.
-    fn generate_random(&self, _length: usize) -> impl Future<Output = Result<Vec<u8>, Self::Error>> + Send
+    fn generate_random(
+        &self,
+        _length: usize,
+    ) -> impl Future<Output = Result<Vec<u8>, Self::Error>> + Send
     where
         Self: Sized,
     {
         async {
             // Default: not supported - implementations must override
-            unimplemented!("generate_random not implemented - override this method to provide random generation")
+            panic!("generate_random not implemented - override this method to provide random generation")
         }
     }
 
-    /// Derive key from master key (optional)
-    /// 
+    /// Derive key from primary key (optional)
+    ///
     /// Default implementation returns "not supported" error.
     /// Override to provide key derivation capabilities.
     fn derive_key(
         &self,
-        _master_key: &[u8],
+        _primary_key: &[u8],
         _salt: &[u8],
         _info: &[u8],
     ) -> impl Future<Output = Result<Vec<u8>, Self::Error>> + Send
@@ -647,12 +667,12 @@ pub trait CanonicalSecurity: CanonicalService {
     {
         async {
             // Default: not supported - implementations must override
-            unimplemented!("derive_key not implemented - override this method to provide key derivation")
+            panic!("derive_key not implemented - override this method to provide key derivation")
         }
     }
 
     /// Evaluate boundary access control (optional)
-    /// 
+    ///
     /// Default implementation delegates to `authorize()`.
     /// Override for more sophisticated boundary access control.
     fn evaluate_boundary_access(
@@ -665,7 +685,7 @@ pub trait CanonicalSecurity: CanonicalService {
     }
 
     /// Create session for principal (optional)
-    /// 
+    ///
     /// Default implementation creates a token via `authenticate`.
     /// Override for session-based authentication systems.
     fn create_session(
@@ -676,7 +696,7 @@ pub trait CanonicalSecurity: CanonicalService {
     }
 
     /// Validate session token (optional)
-    /// 
+    ///
     /// Default implementation delegates to `validate_token`.
     /// Override for session-specific validation logic.
     fn validate_session(
@@ -725,8 +745,11 @@ pub trait ZeroCostService<T>: Send + Sync + 'static {
 #[macro_export]
 macro_rules! assert_zero_cost {
     ($t:ty) => {
+        ///
         const _: () = {
+            /// Assert Send Sync
             fn assert_send_sync<T: Send + Sync>() {}
+            /// Assert Zero Sized
             fn assert_zero_sized<T>() {
                 assert_send_sync::<T>();
             }
@@ -742,4 +765,4 @@ macro_rules! assert_zero_cost {
 // They will be exported after migration is complete (Week 8).
 //
 // For now, use them explicitly:
-// use nestgate_core::traits::canonical_hierarchy::{CanonicalService, ...}; 
+// use nestgate_core::traits::canonical_hierarchy::{CanonicalService, ...};

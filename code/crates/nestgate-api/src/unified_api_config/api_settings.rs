@@ -6,6 +6,8 @@
 // Originally 902 lines, now split into focused modules under `settings/`.
 
 // Re-export all settings from the organized sub-modules
+//! Api Settings module
+
 pub use settings::*;
 
 // Declare the settings sub-module
@@ -77,7 +79,6 @@ mod tests {
         let _discovery = ApiServiceDiscoverySettings::default();
         let _rpc = ApiRpcTimeoutSettings::default();
         
-        // If we get here, all settings types are properly defined
-        assert!(true);
+        // Test passes if all settings types are properly defined and accessible
     }
 }

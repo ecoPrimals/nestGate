@@ -10,14 +10,21 @@
 // - Integration with the NestGate ecosystem
 // - Performance optimization and migration coordination
 
+//! Automation module
+
 pub mod actions;
 pub mod engine;
 pub mod integration;
 pub mod lifecycle;
+/// Automation policy definitions
 pub mod policies;
+/// Test utilities for automation
 pub mod tests;
 pub mod tier_evaluation;
 pub mod types;
+
+#[cfg(test)]
+mod engine_tests;
 
 // Import canonical automation types from modernized package
 /// **CANONICAL**: Use ZFS-specific Result type for automation

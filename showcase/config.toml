@@ -1,0 +1,154 @@
+# NestGate Showcase Configuration
+# Configure demonstration parameters and safety limits
+
+[showcase]
+version = "1.0.0"
+name = "NestGate Live Showcase"
+
+# Disk space limits (safety)
+max_disk_usage = "20GB"
+warn_threshold = "15GB"
+min_required = "10GB"
+
+# Demo settings
+duration_seconds = 60
+concurrent_operations = 100
+iterations = 1000
+
+# Safety settings
+auto_cleanup = true
+require_confirmation = false
+dry_run = false
+verbose = false
+
+[zfs]
+# Pool configuration
+pool_name = "nestgate_demo"
+pool_size = "10GB"
+use_files = true  # Use file-backed pools (safe, no real disks)
+mount_point = "/tmp/nestgate_showcase"
+
+# ZFS features to demonstrate
+enable_compression = true
+enable_deduplication = false  # Requires significant RAM
+enable_snapshots = true
+compression_algorithm = "lz4"  # Fast and efficient
+
+[performance]
+# Benchmark configuration
+warmup_iterations = 100
+measurement_iterations = 1000
+thread_count = 0  # 0 = auto-detect CPU count
+
+# Performance targets
+target_ops_per_sec = 100000
+target_latency_ms = 1.0
+target_memory_mb = 100
+
+[api]
+# API server configuration
+host = "127.0.0.1"
+port = 8080
+enable_tls = false
+
+# Endpoints to demonstrate
+enable_rest = true
+enable_rpc = true
+enable_websocket = true
+
+[monitoring]
+# Metrics collection
+metrics_port = 3000
+update_interval_ms = 1000
+retention_hours = 24
+
+# Dashboard settings
+enable_dashboard = true
+dashboard_auto_open = true
+dashboard_refresh_sec = 1
+
+[security]
+# Security demo settings
+enable_auth = true
+enable_encryption = false  # For demo simplicity
+audit_logging = true
+
+# Demo credentials (DO NOT use in production!)
+demo_user = "demo"
+demo_password = "showcase123"
+
+[data_generation]
+# Test data generation
+text_data_mb = 50
+binary_data_mb = 50
+mixed_data_mb = 100
+
+# Workload patterns
+simulate_logs = true
+simulate_metrics = true
+simulate_config_files = true
+
+[network]
+# Network simulation
+simulate_latency_ms = 0
+simulate_bandwidth_mbps = 1000
+simulate_packet_loss = 0.0
+
+[logging]
+# Logging configuration
+level = "info"  # debug, info, warn, error
+format = "pretty"  # pretty, json
+output = "outputs/logs/showcase.log"
+console = true
+
+[cleanup]
+# Cleanup settings
+auto_cleanup_on_exit = true
+auto_cleanup_on_error = true
+preserve_logs = true
+preserve_metrics = true
+
+# Manual cleanup options
+cleanup_zfs_pools = true
+cleanup_mount_points = true
+cleanup_temp_files = true
+cleanup_generated_data = true
+
+[paths]
+# Directory paths (relative to showcase/)
+output_dir = "outputs"
+logs_dir = "outputs/logs"
+metrics_dir = "outputs/metrics"
+screenshots_dir = "outputs/screenshots"
+data_dir = "data"
+temp_dir = "/tmp/nestgate_showcase"
+
+[display]
+# Output formatting
+use_colors = true
+show_progress_bars = true
+show_ascii_art = true
+column_width = 60
+
+# Status indicators
+success_symbol = "✓"
+warning_symbol = "⚠"
+error_symbol = "✗"
+info_symbol = "→"
+
+[advanced]
+# Advanced settings (for developers)
+enable_profiling = false
+enable_flamegraph = false
+enable_memory_tracking = false
+
+# Debug options
+debug_mode = false
+trace_syscalls = false
+dump_core_on_error = false
+
+# Performance tuning
+cpu_affinity = []  # Empty = no pinning
+io_scheduler = "auto"  # auto, cfq, deadline, noop
+nice_level = 0  # Process priority (-20 to 19)
+

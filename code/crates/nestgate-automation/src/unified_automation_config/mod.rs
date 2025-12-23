@@ -21,6 +21,7 @@ pub use workflows::*;
 //! **UNIFIED AUTOMATION EXTENSIONS**
 //! Main configuration structure that composes all specialized modules
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Unifiedautomationextensions
 pub struct UnifiedAutomationExtensions {
     /// Lifecycle management settings
     pub lifecycle: LifecycleSettings,
@@ -38,6 +39,7 @@ pub struct UnifiedAutomationExtensions {
 //! CANONICAL MODERNIZATION: Simplified type alias without type parameters
 pub type UnifiedAutomationConfig = StandardDomainConfig;
 impl SmartDefault for UnifiedAutomationExtensions {
+    /// Smart Default
     fn smart_default() -> Self {
         Self {
             lifecycle: LifecycleSettings::smart_default(),
@@ -50,6 +52,7 @@ impl SmartDefault for UnifiedAutomationExtensions {
 }
 
 impl Default for UnifiedAutomationExtensions {
+    /// Returns the default instance
     fn default() -> Self {
         Self::smart_default()
     }

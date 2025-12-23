@@ -4,6 +4,8 @@
 
 // Removed unused Future import
 
+//! Traits module
+
 use super::{
     analytics::{DeduplicationReport, DetailedMetrics, OptimizationReport},
     replication::{BackupManifest, ReplicationJob, StorageTarget},

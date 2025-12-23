@@ -7,8 +7,32 @@ use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 use tokio::sync::RwLock;
 
+/// Metric value types for custom metrics
+#[derive(Debug, Clone)]
+pub enum MetricValue {
+    /// Gauge metric: a value that can go up or down
+    Gauge(f64),
+    /// Counter metric: a value that only increases
+    Counter(u64),
+    /// Histogram: distribution of values
+    Histogram(Vec<f64>),
+    /// Summary: aggregated statistics
+    Summary {
+        /// Total sum of all values
+        sum: f64,
+        /// Count of values
+        count: u64,
+    },
+    /// String metric value
+    String(String),
+}
+
+/// Type alias for custom metrics storage
+pub type CustomMetricsMap = HashMap<String, MetricValue>;
+
 /// Performance metrics structure
 #[derive(Debug, Clone)]
+/// Performancemetrics
 pub struct PerformanceMetrics {
     /// Timestamp when metrics were collected
     pub timestamp: SystemTime,
@@ -26,6 +50,7 @@ pub struct PerformanceMetrics {
     pub custom_metrics: HashMap<String, f64>,
 }
 impl Default for PerformanceMetrics {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             timestamp: SystemTime::now(),
@@ -41,12 +66,14 @@ impl Default for PerformanceMetrics {
 
 /// Metrics registry for collecting and storing performance data
 #[derive(Debug)]
+/// Metricsregistry
 pub struct MetricsRegistry {
     metrics_history: Arc<RwLock<Vec<PerformanceMetrics>>>,
     max_history: usize,
-    custom_metrics: Arc<RwLock<crate::canonical_modernization::unified_types::CustomMetricsMap>>,
+    custom_metrics: Arc<RwLock<CustomMetricsMap>>,
 }
 impl Default for MetricsRegistry {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -107,10 +134,7 @@ impl MetricsRegistry {
     /// - Network or I/O errors occur
     pub async fn record_custom_metric(&self, name: &str, value: f64) -> Result<()> {
         let mut custom = self.custom_metrics.write().await;
-        custom.insert(
-            name.to_string(),
-            crate::canonical_modernization::unified_types::MetricValue::Gauge(value),
-        );
+        custom.insert(name.to_string(), MetricValue::Gauge(value));
 
         tracing::debug!("Recorded custom metric: {} = {}", name, value);
         Ok(())
@@ -141,25 +165,92 @@ impl MetricsRegistry {
     async fn gather_system_metrics(&self) -> Result<PerformanceMetrics> {
         let custom = self.custom_metrics.read().await;
 
-        // In a real implementation, this would collect actual system metrics
-        // For now, return mock data
-        Ok(PerformanceMetrics {
-            timestamp: SystemTime::now(),
-            cpu_usage: 25.0,                          // Mock CPU usage
-            memory_usage: 1024 * 1024 * 512,          // Mock 512MB used
-            memory_available: 1024 * 1024 * 1024 * 2, // Mock 2GB available
-            disk_iops: 100.0,
-            network_bytes_per_sec: 1024.0 * 1024.0, // Mock 1MB/s
-            custom_metrics: custom.iter().map(|(k, v)| {
-                (k.clone(), match v {
-                    crate::canonical_modernization::unified_types::MetricValue::Gauge(val) => *val,
-                    crate::canonical_modernization::unified_types::MetricValue::Counter(val) => *val as f64,
-                    crate::canonical_modernization::unified_types::MetricValue::Histogram(val) => val.iter().sum::<f64>() / (val.len() as f64),
-                    crate::canonical_modernization::unified_types::MetricValue::Summary { sum, count: _ } => *sum,
-                    crate::canonical_modernization::unified_types::MetricValue::String(_) => 0.0,
-                })
-            }).collect(),
-        })
+        #[cfg(not(feature = "mock-metrics"))]
+        {
+            // REAL METRICS: Use sysinfo for actual system monitoring
+            use sysinfo::{Disks, Networks, System};
+
+            let mut sys = System::new_all();
+            sys.refresh_all();
+
+            // Calculate CPU usage (average across cores - global CPU)
+            let cpu_usage = sys.global_cpu_info().cpu_usage() as f64;
+
+            // Memory metrics
+            let memory_usage = sys.used_memory();
+            let memory_available = sys.available_memory();
+
+            // Network metrics (sum across all interfaces)
+            let networks = Networks::new_with_refreshed_list();
+            let network_bytes_per_sec: f64 = networks
+                .values()
+                .map(|data| (data.received() + data.transmitted()) as f64)
+                .sum();
+
+            // Disk I/O metrics (sum across all disks)
+            let disks = Disks::new_with_refreshed_list();
+            let disk_iops: f64 = disks
+                .iter()
+                .map(|_| 1.0) // Simplified: count active disks
+                .sum();
+
+            Ok(PerformanceMetrics {
+                timestamp: SystemTime::now(),
+                cpu_usage,
+                memory_usage,
+                memory_available,
+                disk_iops,
+                network_bytes_per_sec,
+                custom_metrics: custom
+                    .iter()
+                    .map(|(k, v)| {
+                        (
+                            k.clone(),
+                            match v {
+                                MetricValue::Gauge(val) => *val,
+                                MetricValue::Counter(val) => *val as f64,
+                                MetricValue::Histogram(val) => {
+                                    val.iter().sum::<f64>() / (val.len() as f64)
+                                }
+                                MetricValue::Summary { sum, count: _ } => *sum,
+                                MetricValue::String(_) => 0.0,
+                            },
+                        )
+                    })
+                    .collect(),
+            })
+        }
+
+        #[cfg(feature = "mock-metrics")]
+        {
+            // MOCK METRICS: For testing only
+            tracing::warn!("Using mock metrics - enable 'mock-metrics' feature is ON");
+            Ok(PerformanceMetrics {
+                timestamp: SystemTime::now(),
+                cpu_usage: 25.0,                          // Mock CPU usage
+                memory_usage: 1024 * 1024 * 512,          // Mock 512MB used
+                memory_available: 1024 * 1024 * 1024 * 2, // Mock 2GB available
+                disk_iops: 100.0,
+                network_bytes_per_sec: 1024.0 * 1024.0, // Mock 1MB/s
+                custom_metrics: custom
+                    .iter()
+                    .map(|(k, v)| {
+                        (
+                            k.clone(),
+                            match v {
+                                MetricValue::Gauge(val) => *val,
+                                MetricValue::Counter(val) => *val as f64,
+                                MetricValue::Histogram(val) => {
+                                    val.iter().sum::<f64>() / (val.len() as f64)
+                                }
+                                MetricValue::Summary { sum, count: _ } => *sum,
+                                MetricValue::String(_) => 0.0,
+                            },
+                        )
+                    })
+                    .collect(),
+            })
+        }
     }
 }
 

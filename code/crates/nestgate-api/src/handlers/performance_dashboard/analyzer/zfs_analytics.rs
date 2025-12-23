@@ -1,6 +1,8 @@
 //
 // Handles ZFS-specific performance analysis including pool trends, capacity analysis, and I/O performance.
 
+//! Zfs Analytics module
+
 use crate::handlers::performance_dashboard::types::*;
 use nestgate_core::{Result, NestGateError};
 use nestgate_zfs::ZfsManager;
@@ -11,11 +13,13 @@ use tracing::{debug, info, warn};
 type PerformanceSnapshot = serde_json::Value;
 
 #[derive(Debug, Clone)]
+/// Zfsanalyzer
 pub struct ZfsAnalyzer {
     zfs_manager: Arc<ZfsManager>,
 }
 
 impl ZfsAnalyzer {
+    /// Creates a new instance
     pub fn new(zfs_manager: Arc<ZfsManager>) -> Self { Self { zfs_manager  }
 
     /// Create with default configuration - PRODUCTION READY

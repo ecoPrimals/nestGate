@@ -3,23 +3,32 @@
 // storage tier for datasets based on access patterns, size, performance
 // requirements, and policy rules.
 
+//! Tier Evaluation module
+
 use std::time::SystemTime;
 // Removed unused tracing import
 
 use super::types::{AutomationPolicy, DatasetMetadata};
+use crate::error::ZfsError;
 use crate::types::StorageTier;
-use crate::types::ZfsResult as Result;
 use tracing::debug;
 use tracing::info;
 
 /// Intelligent tier scoring system for dataset placement
 #[derive(Debug)]
+/// Tierscoring
 pub struct TierScoring {
+    /// Hot Score
     pub hot_score: f64,
+    /// Warm Score
     pub warm_score: f64,
+    /// Cold Score
     pub cold_score: f64,
+    /// Hot Reasons
     pub hot_reasons: Vec<String>,
+    /// Warm Reasons
     pub warm_reasons: Vec<String>,
+    /// Cold Reasons
     pub cold_reasons: Vec<String>,
 }
 impl TierScoring {
@@ -68,6 +77,7 @@ impl TierScoring {
 }
 
 impl Default for TierScoring {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -78,7 +88,7 @@ pub fn evaluate_tier_by_intelligent_rules(
     dataset_name: &str,
     metadata: &DatasetMetadata,
     policies: &std::collections::HashMap<String, AutomationPolicy>,
-) -> Result<StorageTier> {
+) -> Result<StorageTier, ZfsError> {
     let mut tier_score = TierScoring::new();
     // 1. Size-based scoring (larger files tend toward cold storage)
     if metadata.size_bytes > 10 * 1024 * 1024 * 1024 {

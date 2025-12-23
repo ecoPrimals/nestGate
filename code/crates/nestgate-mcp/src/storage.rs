@@ -1,6 +1,8 @@
 //
 // Storage management for MCP integration
 
+//! Storage module
+
 use crate::{
     types::{MountInfo, MountRequest, MountStatus, NfsVersion, StorageProtocol, StorageTier},
     Result,
@@ -17,43 +19,69 @@ use tracing::info;
 
 /// Storage volume configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Volume
 pub struct VolumeConfig {
+    /// Name
     pub name: String,
+    /// Size Bytes
     pub size_bytes: u64,
+    /// Tier
     pub tier: StorageTier,
+    /// Mount Point
     pub mount_point: String,
+    /// Filesystem
     pub filesystem: String,
+    /// Options
     pub options: HashMap<String, String>,
 }
 /// Storage volume information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Volumeinfo
 pub struct VolumeInfo {
+    /// Name
     pub name: String,
+    /// Size Bytes
     pub size_bytes: u64,
+    /// Used Bytes
     pub used_bytes: u64,
+    /// Available Bytes
     pub available_bytes: u64,
+    /// Tier
     pub tier: StorageTier,
+    /// Mount Point
     pub mount_point: String,
+    /// Filesystem
     pub filesystem: String,
+    /// Mounted
     pub mounted: bool,
+    /// Health
     pub health: String,
 }
 /// management storage statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Biomestoragestats
 pub struct BiomeStorageStats {
+    /// Biome identifier
     pub biome_id: String,
+    /// Count of volume
     pub volume_count: usize,
+    /// Total Size Bytes
     pub total_size_bytes: u64,
+    /// Total Used Bytes
     pub total_used_bytes: u64,
+    /// Total Available Bytes
     pub total_available_bytes: u64,
+    /// Volumes
     pub volumes: Vec<VolumeInfo>,
 }
 /// MCP Storage Manager
 #[derive(Debug, Clone)]
+/// Manager for McpStorage operations
 pub struct McpStorageManager {
     volumes: Arc<RwLock<HashMap<String, VolumeInfo>>>,
 }
 impl Default for McpStorageManager {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -505,10 +533,12 @@ impl McpStorageManager {
 
 /// Storage adapter for orchestrator integration
 #[derive(Debug, Clone)]
+/// Storageadapter
 pub struct StorageAdapter {
     _manager: McpStorageManager,
 }
 impl Default for StorageAdapter {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

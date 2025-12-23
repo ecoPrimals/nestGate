@@ -16,11 +16,11 @@ pub use crate::Result;
 // This trait has been superseded by the canonical storage system.
 // **MIGRATION PATH**:
 // - Old: `StorageBackend`
-// - New: `crate::traits::canonical_unified_traits::CanonicalStorage`
+// - New: `crate::traits::canonical::CanonicalStorage`
 //
 // The new CanonicalStorage trait is a comprehensive, unified interface that
 // replaces all fragmented storage trait definitions.
-#[deprecated(since = "2.1.0", note = "Use crate::traits::canonical_unified_traits::CanonicalStorage instead")]
+#[deprecated(since = "2.1.0", note = "Use crate::traits::canonical::CanonicalStorage instead")]
 pub trait StorageBackend {
     /// Get backend name
     fn name(&self) -> &str;
@@ -40,12 +40,19 @@ pub trait StorageBackend {
 }
 // Storage metadata information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagemetadata
 pub struct StorageMetadata {
+    /// Size
     pub size: u64,
+    /// Timestamp when this was created
     pub created_at: SystemTime,
+    /// Modified At
     pub modified_at: SystemTime,
+    /// Content Type
     pub content_type: Option<String>,
+    /// Etag
     pub etag: Option<String>,
+    /// Custom Metadata
     pub custom_metadata: HashMap<String, String>,
 }
 // Re-export backend implementations

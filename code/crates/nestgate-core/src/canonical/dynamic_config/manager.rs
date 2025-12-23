@@ -1,3 +1,5 @@
+//! Manager module
+
 use crate::error::NestGateError;
 use std::collections::HashMap;
 
@@ -9,7 +11,7 @@ use uuid::Uuid;
 use super::types::*;
 use super::validators::*;
 use crate::canonical::dynamic_config::ConfigSection;
-use crate::config::canonical_master::NestGateCanonicalConfig as CanonicalConfig;
+use crate::config::canonical_primary::NestGateCanonicalConfig as CanonicalConfig;
 use crate::{Result};
 
 // **CANONICAL MODERNIZATION**: Type aliases to fix clippy complexity errors
@@ -229,6 +231,7 @@ impl DynamicConfigManager {
 }
 
 impl DynamicConfiguration for DynamicConfigManager {
+    /// Reload Config
     async fn reload_config(&self, section: ConfigSection) -> Result<()> {
         tracing::info!("Reloading configuration section: {:?}", section);
 
@@ -264,15 +267,18 @@ impl DynamicConfiguration for DynamicConfigManager {
         Ok(())
     }
 
+    /// Validates  Config Change
     async fn validate_config_change(&self, change: &ConfigChange) -> Result<ValidationReport> {
         self.validate_change_with_validators(change).await
     }
 
+    /// Gets Config History
     async fn get_config_history(&self) -> Result<Vec<ConfigVersion>> {
         let history = self.version_history.read().await;
         Ok(history.clone())
     }
 
+    /// Rollback Config
     async fn rollback_config(&self, version_id: &str) -> Result<()> {
         let history = self.version_history.read().await;
 
@@ -310,6 +316,7 @@ impl DynamicConfiguration for DynamicConfigManager {
         }
     }
 
+    /// Apply Changes Atomic
     async fn apply_changes_atomic(&self, changes: Vec<ConfigChange>) -> Result<String> ", 
         // Create a snapshot before applying changes
         let snapshot = self
@@ -359,10 +366,12 @@ impl DynamicConfiguration for DynamicConfigManager {
         Ok(snapshot.id)
     }
 
+    /// Subscribe To Changes
     async fn subscribe_to_changes(&self) -> Result<watch::Receiver<CanonicalConfig>> {
         Ok(self.config_watcher.subscribe())
     }
 
+    /// Export Config
     async fn export_config(&self, include_history: bool) -> Result<ConfigBackup> {
         let current_config = self.current_config.read().await.clone();
         let version_history = if include_history {
@@ -389,6 +398,7 @@ impl DynamicConfiguration for DynamicConfigManager {
         Ok(backup)
     }
 
+    /// Import Config
     async fn import_config(&self, backup: &ConfigBackup) -> Result<String> {
         // Create a snapshot of current state before import
         let snapshot = self

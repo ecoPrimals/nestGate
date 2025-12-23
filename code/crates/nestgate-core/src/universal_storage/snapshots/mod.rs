@@ -38,8 +38,12 @@ use std::path::{Path, PathBuf};
 use thiserror::Error;
 use tokio::fs;
 
+// Use canonical Result type from error module
+use crate::error::Result;
+
 /// Snapshot-related errors
 #[derive(Debug, Error)]
+/// Errors that can occur during Snapshot operations
 pub enum SnapshotError {
     /// I/O error during snapshot operations
     #[error("I/O error: {0}")]
@@ -70,11 +74,12 @@ pub enum SnapshotError {
     RollbackFailed(String),
 }
 
-/// Result type for snapshot operations
-pub type Result<T> = std::result::Result<T, SnapshotError>;
+// Note: Now using crate::error::Result<T> instead of local Result type
+// SnapshotError is converted to NestGateError via From trait when needed
 
 /// Snapshot strategies for different platforms and filesystems
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Snapshotstrategy
 pub enum SnapshotStrategy {
     /// Hardlink-based snapshots (Linux/macOS, space-efficient)
     /// - Speed: Very fast
@@ -131,6 +136,7 @@ impl SnapshotStrategy {
 }
 
 impl Default for SnapshotStrategy {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Auto
     }
@@ -138,6 +144,7 @@ impl Default for SnapshotStrategy {
 
 /// Snapshot metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Snapshotmetadata
 pub struct SnapshotMetadata {
     /// Unique snapshot ID
     pub id: String,

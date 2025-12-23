@@ -12,7 +12,7 @@
 /// - Single source of truth for all primal configuration
 /// - Consistent configuration patterns with base unified configs
 /// - Extensible architecture for primal-specific settings
-use nestgate_core::unified_final_config::supporting_types::StandardDomainConfig;
+use nestgate_core::config::canonical_primary::domains::ConsolidatedDomainConfigs;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
@@ -20,6 +20,7 @@ use std::time::Duration;
 /// **UNIFIED PRIMAL EXTENSIONS**
 /// Consolidates all primal-specific configuration patterns
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Unifiedprimalextensions
 pub struct UnifiedPrimalExtensions {
     /// Primal ecosystem integration settings
     pub ecosystem: PrimalEcosystemSettings,
@@ -42,6 +43,7 @@ pub struct UnifiedPrimalExtensions {
 }
 /// Primal ecosystem integration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Primalecosystemsettings
 pub struct PrimalEcosystemSettings {
     /// Whether to participate in the primal ecosystem
     pub enabled: bool,
@@ -60,6 +62,7 @@ pub struct PrimalEcosystemSettings {
 }
 /// Primal discovery and service registry settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Primaldiscoverysettings
 pub struct PrimalDiscoverySettings {
     /// Enable automatic primal discovery
     pub auto_discovery: bool,
@@ -78,6 +81,7 @@ pub struct PrimalDiscoverySettings {
 }
 /// Network discovery settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Networkdiscoverysettings
 pub struct NetworkDiscoverySettings {
     /// Enable mDNS discovery
     pub mdns_enabled: bool,
@@ -92,6 +96,7 @@ pub struct NetworkDiscoverySettings {
 }
 /// Service registry settings - MIGRATING TO CAPABILITY-BASED DISCOVERY
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Serviceregistrysettings
 pub struct ServiceRegistrySettings {
     // DEPRECATED: Consul service discovery - migrate to capability-based discovery
     // Capability-based discovery implemented
@@ -99,9 +104,11 @@ pub struct ServiceRegistrySettings {
     // Capability-based discovery implemented
     /// Registry type - DEPRECATED: Use capability discovery instead
     #[deprecated(since = "3.0.0", note = "Use universal adapter capability discovery")]
+    /// Registry Type
     pub registry_type: String,
     /// Registry endpoints - DEPRECATED: Use capability discovery instead
     #[deprecated(since = "3.0.0", note = "Use universal adapter capability discovery")]
+    /// Endpoints
     pub endpoints: Vec<String>,
     /// Service TTL
     pub service_ttl: Duration,
@@ -112,6 +119,7 @@ pub struct ServiceRegistrySettings {
 }
 /// Primal authentication settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Primalauthsettings
 pub struct PrimalAuthSettings {
     /// Authentication method
     pub auth_method: String,
@@ -124,6 +132,7 @@ pub struct PrimalAuthSettings {
 }
 /// Token-based authentication settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Tokenauthsettings
 pub struct TokenAuthSettings {
     /// Token expiration time
     pub token_expiry: Duration,
@@ -136,6 +145,7 @@ pub struct TokenAuthSettings {
 }
 /// Certificate-based authentication settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Certauthsettings
 pub struct CertAuthSettings {
     /// Client certificate path
     pub client_cert_path: Option<String>,
@@ -148,6 +158,7 @@ pub struct CertAuthSettings {
 }
 /// Session management settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Sessionsettings
 pub struct SessionSettings {
     /// Session timeout
     pub session_timeout: Duration,
@@ -160,6 +171,7 @@ pub struct SessionSettings {
 }
 /// Load balancing settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Primalloadbalancingsettings
 pub struct PrimalLoadBalancingSettings {
     /// Load balancing algorithm
     pub algorithm: String,
@@ -172,6 +184,7 @@ pub struct PrimalLoadBalancingSettings {
 }
 /// Health check settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Healthchecksettings
 pub struct HealthCheckSettings {
     /// Health check interval
     pub interval: Duration,
@@ -186,6 +199,7 @@ pub struct HealthCheckSettings {
 }
 /// Failover settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Failoversettings
 pub struct FailoverSettings {
     /// Enable automatic failover
     pub enabled: bool,
@@ -198,6 +212,7 @@ pub struct FailoverSettings {
 }
 /// Circuit breaker settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Circuitbreakersettings
 pub struct CircuitBreakerSettings {
     /// Enable circuit breaker
     pub enabled: bool,
@@ -210,6 +225,7 @@ pub struct CircuitBreakerSettings {
 }
 /// API endpoint settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Primalendpointsettings
 pub struct PrimalEndpointSettings {
     /// Base URL for API endpoints
     pub base_url: String,
@@ -224,6 +240,7 @@ pub struct PrimalEndpointSettings {
 }
 /// Retry settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Retrysettings
 pub struct RetrySettings {
     /// Maximum retry attempts
     pub max_attempts: u32,
@@ -236,6 +253,7 @@ pub struct RetrySettings {
 }
 /// TLS settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Primaltlssettings
 pub struct PrimalTlsSettings {
     /// Enable TLS
     pub enabled: bool,
@@ -252,6 +270,7 @@ pub struct PrimalTlsSettings {
 }
 /// CORS settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Primalcorssettings
 pub struct PrimalCorsSettings {
     /// Enable CORS
     pub enabled: bool,
@@ -268,6 +287,7 @@ pub struct PrimalCorsSettings {
 }
 /// Health monitoring settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Primalhealthsettings
 pub struct PrimalHealthSettings {
     /// Health check endpoint
     pub endpoint: String,
@@ -282,6 +302,7 @@ pub struct PrimalHealthSettings {
 }
 /// Metrics and telemetry settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Metrics
 pub struct MetricsConfig {
     /// Enable metrics collection
     pub enabled: bool,
@@ -298,6 +319,7 @@ pub struct MetricsConfig {
 }
 /// Custom metric configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Metric
 pub struct MetricConfig {
     /// Metric type (counter, gauge, histogram, etc.)
     pub metric_type: String,
@@ -328,6 +350,7 @@ impl UnifiedPrimalConfig {
 }
 
 impl Default for UnifiedPrimalExtensions {
+    /// Returns the default instance
     fn default() -> Self { Self {
             ecosystem: PrimalEcosystemSettings::default(),
             discovery: PrimalDiscoverySettings::default(),
@@ -343,6 +366,7 @@ impl Default for UnifiedPrimalExtensions {
 
 // Default implementations for all settings structs
 impl Default for PrimalEcosystemSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             enabled: true,
             primal_id: "nestgate".to_string(),
@@ -359,6 +383,7 @@ impl Default for PrimalEcosystemSettings {
 }
 
 impl Default for PrimalDiscoverySettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             auto_discovery: true,
             discovery_interval: Duration::from_secs(30),
@@ -371,6 +396,7 @@ impl Default for PrimalDiscoverySettings {
 }
 
 impl Default for NetworkDiscoverySettings {
+    /// Returns the default instance
     fn default() -> Self { 
         use nestgate_core::constants::hardcoding::ports;
         
@@ -378,13 +404,19 @@ impl Default for NetworkDiscoverySettings {
             mdns_enabled: true,
             mdns_service_name: "_nestgate._tcp".to_string(),
             broadcast_enabled: false,
-            discovery_port_range: (ports::HTTP_DEFAULT, ports::ADMIN_DEFAULT),
+            // ✅ MIGRATED: Use centralized config for port ranges
+            discovery_port_range: {
+                use nestgate_core::config::runtime::get_config;
+                let config = get_config();
+                (config.network.api_port, config.network.api_port + 100)
+            },
             discovery_timeout: Duration::from_secs(5),
         }
     }
 }
 
 impl Default for ServiceRegistrySettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             registry_type: "memory".to_string(),
             endpoints: vec![],
@@ -395,6 +427,7 @@ impl Default for ServiceRegistrySettings {
 }
 
 impl Default for PrimalAuthSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             auth_method: "token".to_string(),
             token_auth: TokenAuthSettings::default(),
@@ -404,6 +437,7 @@ impl Default for PrimalAuthSettings {
 }
 
 impl Default for TokenAuthSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             token_expiry: Duration::from_secs(3600),
             refresh_interval: Duration::from_secs(1800),
@@ -413,6 +447,7 @@ impl Default for TokenAuthSettings {
 }
 
 impl Default for CertAuthSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             client_cert_path: None,
             client_key_path: None,
@@ -422,6 +457,7 @@ impl Default for CertAuthSettings {
 }
 
 impl Default for SessionSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             session_timeout: Duration::from_secs(1800),
             storage_type: "memory".to_string(),
@@ -431,6 +467,7 @@ impl Default for SessionSettings {
 }
 
 impl Default for PrimalLoadBalancingSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             algorithm: "round_robin".to_string(),
             health_checks: HealthCheckSettings::default(),
@@ -440,6 +477,7 @@ impl Default for PrimalLoadBalancingSettings {
 }
 
 impl Default for HealthCheckSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             interval: Duration::from_secs(30),
             timeout: Duration::from_secs(5),
@@ -450,6 +488,7 @@ impl Default for HealthCheckSettings {
 }
 
 impl Default for FailoverSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             enabled: true,
             timeout: Duration::from_secs(10),
@@ -459,6 +498,7 @@ impl Default for FailoverSettings {
 }
 
 impl Default for CircuitBreakerSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             enabled: true,
             failure_threshold: 5,
@@ -468,16 +508,15 @@ impl Default for CircuitBreakerSettings {
 }
 
 impl Default for PrimalEndpointSettings {
+    /// Returns the default instance
     fn default() -> Self { 
-        use nestgate_core::constants::hardcoding::{addresses, ports};
-        use std::env;
+        // ✅ MIGRATED: Now uses centralized runtime configuration
+        use nestgate_core::config::runtime::get_config;
         
-        let host = env::var("NESTGATE_API_HOST")
-            .unwrap_or_else(|_| addresses::LOCALHOST_NAME.to_string());
-        let port = env::var("NESTGATE_API_PORT")
-            .ok()
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(ports::HTTP_DEFAULT);
+        let config = get_config();
+        let host = config.network.api_host.to_string();
+        let port = config.network.api_port
+            .unwrap_or(8080); // Standard HTTP alternate port
         
         Self {
             base_url: format!("http://{}:{}", host, port),
@@ -490,6 +529,7 @@ impl Default for PrimalEndpointSettings {
 }
 
 impl Default for RetrySettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             max_attempts: 3,
             initial_delay: Duration::from_millis(100),
@@ -499,6 +539,7 @@ impl Default for RetrySettings {
 }
 
 impl Default for PrimalTlsSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             enabled: false,
             version: "1.3".to_string(),
@@ -510,6 +551,7 @@ impl Default for PrimalTlsSettings {
 }
 
 impl Default for PrimalCorsSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             enabled: true,
             allowed_origins: vec!["*".to_string()],
@@ -526,6 +568,7 @@ impl Default for PrimalCorsSettings {
 }
 
 impl Default for PrimalHealthSettings {
+    /// Returns the default instance
     fn default() -> Self { Self {
             endpoint: "/health".to_string(),
             check_interval: Duration::from_secs(30),
@@ -536,6 +579,7 @@ impl Default for PrimalHealthSettings {
 }
 
 impl Default for MetricsConfig {
+    /// Returns the default instance
     fn default() -> Self { Self {
             enabled: true,
             endpoint: "/metrics".to_string(),
@@ -546,6 +590,7 @@ impl Default for MetricsConfig {
 }
 
 impl Default for MetricConfig {
+    /// Returns the default instance
     fn default() -> Self { Self {
             metric_type: "counter".to_string(),
             description: "Custom metric".to_string(),

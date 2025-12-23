@@ -13,10 +13,13 @@ pub mod response_builders;
 #[cfg(feature = "dev-stubs")]
 pub mod mock_builders;
 // Configuration and utility builders
+/// Configuration builder utilities for type-safe config construction
 pub mod config_builders;
 // Specialized JSON and API builders
+/// JSON response builders for API handlers and test assertions
 pub mod json_builders;
 // Test modules
+/// Test utilities and helper functions for builder pattern testing
 pub mod tests;
 // Re-export all public builder functions for backward compatibility
 pub use json_builders::build_json_response;

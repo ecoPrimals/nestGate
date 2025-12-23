@@ -1,13 +1,14 @@
 //
 // Core management implementation for the unified RPC system.
 
+//! Manager module
+
 use super::config::{
     ConnectionPoolConfig, HealthMonitoringConfig, LoadBalancingConfig, NestGateRpcConfig,
     RpcSecurityConfig, StreamConfig,
 };
 use super::types::{
-    DynRpcService, ResponseMetrics, RpcError, RpcStreamEvent, UnifiedRpcRequest,
-    UnifiedRpcResponse, UnifiedRpcService,
+    DynRpcService, ResponseMetrics, RpcError, RpcStreamEvent, UnifiedRpcRequest, UnifiedRpcResponse,
 };
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -20,6 +21,7 @@ use uuid::Uuid;
 /// Main RPC manager for handling unified communications
 #[derive(Clone)] // Remove Debug derive since services field can't be debugged
 #[allow(dead_code)] // Development RPC manager - fields used conditionally
+/// Manager for UnifiedRpc operations
 pub struct UnifiedRpcManager {
     /// Configuration
     config: NestGateRpcConfig,
@@ -42,6 +44,7 @@ pub struct UnifiedRpcManager {
 }
 
 impl std::fmt::Display for UnifiedRpcManager {
+    /// Fmt
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "UnifiedRpcManager(connections: active)")
     }
@@ -49,6 +52,7 @@ impl std::fmt::Display for UnifiedRpcManager {
 /// Connection pool for managing RPC connections
 #[derive(Debug, Clone)]
 #[allow(dead_code)] // Development connection pool - fields used conditionally
+/// Connectionpool
 pub struct ConnectionPool {
     connections: HashMap<String, Vec<ConnectionInfo>>,
     max_connections_per_service: usize,
@@ -57,6 +61,7 @@ pub struct ConnectionPool {
 /// Connection information
 #[derive(Debug, Clone)]
 #[allow(dead_code)] // Development connection info - fields used conditionally
+/// Connectioninfo
 pub struct ConnectionInfo {
     id: Uuid,
     service_name: String,
@@ -67,6 +72,7 @@ pub struct ConnectionInfo {
 }
 /// Connection status
 #[derive(Debug, Clone, PartialEq, Eq)]
+/// Status values for Connection
 pub enum ConnectionStatus {
     /// Connection is healthy and available
     Healthy,
@@ -82,6 +88,7 @@ pub enum ConnectionStatus {
 /// Monitors health of RPC connections and services.
 #[derive(Debug, Clone)]
 #[allow(dead_code)] // Health monitoring fields used for service reliability
+/// Connectionhealthmonitor
 pub struct ConnectionHealthMonitor {
     /// Health check results for each service
     health_checks: HashMap<String, HealthCheckResult>,
@@ -96,6 +103,7 @@ pub struct ConnectionHealthMonitor {
 /// Result of a health check for a specific service.
 #[derive(Debug, Clone)]
 #[allow(dead_code)] // Health check fields used for monitoring
+/// Healthcheckresult
 pub struct HealthCheckResult {
     /// Name of the service being monitored
     service_name: String,
@@ -111,6 +119,7 @@ pub struct HealthCheckResult {
     error_message: Option<String>,
 }
 impl Default for UnifiedRpcManager {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -413,18 +422,22 @@ impl ConnectionHealthMonitor {
 /// Universal security layer for RPC operations
 #[derive(Debug, Clone)]
 #[allow(dead_code)] // Development security layer - fields used conditionally
+/// Universalsecuritylayer
 pub struct UniversalSecurityLayer;
 /// Load balancer for RPC services
 #[derive(Debug, Clone)]
 #[allow(dead_code)] // Development load balancer - fields used conditionally
+/// Loadbalancer
 pub struct LoadBalancer;
 /// Stream registry for managing bidirectional streams
 #[derive(Debug, Clone)]
 #[allow(dead_code)] // Development stream registry - fields used conditionally
+/// Streamregistry
 pub struct StreamRegistry;
 /// Metrics collector for RPC operations
 #[derive(Debug, Clone)]
 #[allow(dead_code)] // Development metrics collector - fields used conditionally
+/// Metricscollector
 pub struct MetricsCollector;
 impl UniversalSecurityLayer {
     /// Create a new universal security layer
@@ -514,7 +527,7 @@ impl MetricsCollector {
     /// * New metrics collector instance
     #[must_use]
     pub const fn new(
-        _config: &nestgate_core::config::canonical_master::domains::performance::MetricsConfig,
+        _config: &nestgate_core::config::canonical_primary::domains::performance::MetricsConfig,
     ) -> Self {
         Self
     }
@@ -531,6 +544,25 @@ impl MetricsCollector {
 ///
 /// Configuration for collecting and reporting RPC performance metrics
 /// including request latency, throughput, and error rates.
+/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
+///
+/// **Migration Path**:
+/// ```rust,ignore
+/// // OLD (deprecated):
+/// use crate::network::config::MetricsConfig;
+///
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::MetricsConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+///
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(
+    since = "0.11.0",
+    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
+/// Configuration for Metrics
 pub struct MetricsConfig {
     /// Enable or disable metrics collection
     pub enabled: bool,
@@ -539,6 +571,7 @@ pub struct MetricsConfig {
 }
 
 impl Default for MetricsConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -546,3 +579,20 @@ impl Default for MetricsConfig {
         }
     }
 }
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+///
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Metricsconfigcanonical
+pub type MetricsConfigCanonical =
+    nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using MetricsConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.

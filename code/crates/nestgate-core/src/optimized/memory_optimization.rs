@@ -1,3 +1,5 @@
+//! Memory Optimization module
+
 use crate::error::NestGateError;
 use std::collections::HashMap;
 //
@@ -19,16 +21,40 @@ pub struct MemoryOptimizationManager {
 }
 /// Memory optimization configuration
 #[derive(Debug, Clone)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// 
+/// **Migration Path**:
+/// ```rust,ignore
+/// // OLD (deprecated):
+/// use crate::network::config::MemoryConfig;
+/// 
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::MemoryConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+/// 
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for Memory
 pub struct MemoryConfig {
+    /// Max Memory Usage
     pub max_memory_usage: u64,
+    /// Cache Size Limit
     pub cache_size_limit: u64,
+    /// Pool Size Limit
     pub pool_size_limit: u64,
+    /// Cleanup Interval
     pub cleanup_interval: Duration,
+    /// Enable Huge Pages
     pub enable_huge_pages: bool,
+    /// Memory Mapped Threshold
     pub memory_mapped_threshold: u64,
+    /// Zero Copy Threshold
     pub zero_copy_threshold: u64,
 }
 impl Default for MemoryConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             max_memory_usage: 8 * 1024 * 1024 * 1024, // 8GB
@@ -44,18 +70,31 @@ impl Default for MemoryConfig {
 
 /// Memory usage metrics
 #[derive(Debug, Default, Clone)]
+/// Memorymetrics
 pub struct MemoryMetrics {
+    /// Total Allocated
     pub total_allocated: u64,
+    /// Cache Usage
     pub cache_usage: u64,
+    /// Pool Usage
     pub pool_usage: u64,
+    /// Peak Usage
     pub peak_usage: u64,
+    /// Count of allocation
     pub allocation_count: u64,
+    /// Count of deallocation
     pub deallocation_count: u64,
+    /// Cache Hits
     pub cache_hits: u64,
+    /// Cache Misses
     pub cache_misses: u64,
+    /// Pool Hits
     pub pool_hits: u64,
+    /// Pool Misses
     pub pool_misses: u64,
+    /// Zero Copy Operations
     pub zero_copy_operations: u64,
+    /// Memory Savings Bytes
     pub memory_savings_bytes: u64,
 }
 /// Smart cache manager with LRU and adaptive sizing
@@ -67,21 +106,34 @@ pub struct CacheManager {
 }
 /// Cache entry with metadata
 #[derive(Debug, Clone)]
+/// Cacheentry
 pub struct CacheEntry {
+    /// Data
     pub data: Arc<Vec<u8>>,
+    /// Size
     pub size: u64,
+    /// Timestamp when this was created
     pub created_at: Instant,
+    /// Last Accessed
     pub last_accessed: Instant,
+    /// Count of access
     pub access_count: u64,
+    /// Ttl
     pub ttl: Option<Duration>,
 }
 /// Cache statistics
 #[derive(Debug, Default, Clone)]
+/// Cachestats
 pub struct CacheStats {
+    /// Hits
     pub hits: u64,
+    /// Misses
     pub misses: u64,
+    /// Evictions
     pub evictions: u64,
+    /// Size of total
     pub total_size: u64,
+    /// Count of entry
     pub entry_count: u64,
 }
 /// Memory pool manager for buffer reuse
@@ -94,21 +146,34 @@ pub struct PoolManager {
 }
 /// Pool statistics
 #[derive(Debug, Default, Clone)]
+/// Poolstats
 pub struct PoolStats {
+    /// Size of small pool
     pub small_pool_size: usize,
+    /// Size of medium pool
     pub medium_pool_size: usize,
+    /// Size of large pool
     pub large_pool_size: usize,
+    /// Total Allocations
     pub total_allocations: u64,
+    /// Total Reuses
     pub total_reuses: u64,
+    /// Memory Saved
     pub memory_saved: u64,
 }
 /// Memory optimization strategies
 pub enum OptimizationStrategy {
+    /// Zerocopy
     ZeroCopy,
+    /// Bufferreuse
     BufferReuse,
+    /// Stringinterning
     StringInterning,
+    /// Memorymapping
     MemoryMapping,
+    /// Lazyloading
     LazyLoading,
+    /// Compression
     Compression,
 }
 impl MemoryOptimizationManager {
@@ -255,41 +320,48 @@ impl MemoryOptimizationManager {
 
     /// Private helper methods
 
+    /// Increment Zero Copy Operations
     async fn increment_zero_copy_operations(&self) {
         let mut metrics = self.metrics.write().await;
         metrics.zero_copy_operations += 1;
     }
 
+    /// Optimize Zero Copy
     async fn optimize_zero_copy(&self) -> Result<()> {
         println!("🚀 Optimizing zero-copy operations...");
         // Implementation for zero-copy optimization
         Ok(())
     }
 
+    /// Optimize Buffer Reuse
     async fn optimize_buffer_reuse(&self) -> Result<()> {
         println!("♻️ Optimizing buffer reuse...");
         // Implementation for buffer reuse optimization
         Ok(())
     }
 
+    /// Optimize String Interning
     async fn optimize_string_interning(&self) -> Result<()> {
         println!("📝 Optimizing string interning...");
         // Implementation for string interning optimization
         Ok(())
     }
 
+    /// Optimize Memory Mapping
     async fn optimize_memory_mapping(&self) -> Result<()> {
         println!("🗺️ Optimizing memory mapping...");
         // Implementation for memory mapping optimization
         Ok(())
     }
 
+    /// Optimize Lazy Loading
     async fn optimize_lazy_loading(&self) -> Result<()> {
         println!("⏳ Optimizing lazy loading...");
         // Implementation for lazy loading optimization
         Ok(())
     }
 
+    /// Optimize Compression
     async fn optimize_compression(&self) -> Result<()> {
         println!("🗜️ Optimizing compression...");
         // Implementation for compression optimization
@@ -609,6 +681,23 @@ impl OptimizedBuffer {
         self.len() == 0
     }
 }
+
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+/// 
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Memoryconfigcanonical
+pub type MemoryConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using MemoryConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
 
 #[cfg(test)]
 mod tests {

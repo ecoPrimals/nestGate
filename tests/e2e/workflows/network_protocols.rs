@@ -2,13 +2,13 @@
 ///
 /// This module contains workflow tests for network protocol operations.
 /// Extracted from the original e2e_comprehensive_workflows.rs for better maintainability.
+///
+/// **MODERN CONCURRENCY**: Uses yield_now() for async coordination instead of sleep().
 use super::WorkflowResults;
 use crate::common::config::UnifiedTestConfig;
 use nestgate_core::Result;
 use std::collections::HashMap;
-use std::time::Duration;
 use std::time::Instant;
-use tokio::time::sleep;
 
 /// Test network protocol workflow
 pub async fn test_network_protocol_workflow(config: &UnifiedTestConfig) -> Result<WorkflowResults> {
@@ -100,21 +100,21 @@ pub async fn test_network_protocol_workflow(config: &UnifiedTestConfig) -> Resul
 
 /// Simulate NFS share setup
 async fn simulate_nfs_share_setup() -> Result<()> {
-    sleep(Duration::from_millis(180)).await;
+    tokio::task::yield_now().await;
     println!("    📁 NFS share configured: /mnt/nestgate_nfs");
     Ok(())
 }
 
 /// Simulate SMB share setup
 async fn simulate_smb_share_setup() -> Result<()> {
-    sleep(Duration::from_millis(160)).await;
+    tokio::task::yield_now().await;
     println!("    🗂️ SMB share configured: \\\\nestgate\\storage");
     Ok(())
 }
 
 /// Simulate protocol integration test
 async fn simulate_protocol_integration_test() -> Result<()> {
-    sleep(Duration::from_millis(220)).await;
+    tokio::task::yield_now().await;
     println!("    🔗 Protocol integration: NFS + SMB working correctly");
     Ok(())
 }

@@ -22,6 +22,7 @@ pub mod safe_simd;
 
 /// SIMD capability detection and feature flags
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// Simdcapabilities
 pub struct SimdCapabilities {
     /// SSE2 support (baseline requirement)
     pub sse2: bool,
@@ -150,6 +151,7 @@ impl SimdEngine {
 }
 
 impl Default for SimdEngine {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -213,6 +215,7 @@ impl BatchProcessor {
 }
 
 impl Default for BatchProcessor {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -220,6 +223,7 @@ impl Default for BatchProcessor {
 
 /// Performance metrics for SIMD operations
 #[derive(Debug, Clone)]
+/// Simdmetrics
 pub struct SimdMetrics {
     /// Operation name
     pub operation: String,
@@ -384,8 +388,9 @@ mod tests {
         metrics.set_speedup(4.5);
         metrics.calculate_bandwidth(4000); // 4KB
 
+        // ✅ MODERN: Use epsilon for positive value checks
         assert!(
-            metrics.throughput_ops_per_sec > 0.0,
+            metrics.throughput_ops_per_sec > 1e-9,
             "Throughput should be positive"
         );
         assert_eq!(
@@ -393,7 +398,7 @@ mod tests {
             "Speedup should match set value"
         );
         assert!(
-            metrics.memory_bandwidth_gbps > 0.0,
+            metrics.memory_bandwidth_gbps > 1e-9,
             "Bandwidth should be positive"
         );
 

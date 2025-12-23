@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 /// Universal health status enumeration
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Status values for Health
 pub enum HealthStatus {
     /// Service is fully operational
     Healthy,
@@ -16,6 +17,7 @@ pub enum HealthStatus {
     Unknown,
 }
 impl Default for HealthStatus {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Unknown
     }
@@ -45,6 +47,7 @@ impl HealthStatus {
 
 /// Health check result with detailed information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Healthcheckresult
 pub struct HealthCheckResult {
     /// Overall health status
     pub status: HealthStatus,
@@ -61,6 +64,7 @@ pub type UnifiedHealthStatus = HealthStatus;
 pub type HealthState = HealthStatus;
 /// Service metrics for health monitoring
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Unifiedservicemetrics
 pub struct UnifiedServiceMetrics {
     /// CPU usage percentage
     pub cpu_usage: f64,

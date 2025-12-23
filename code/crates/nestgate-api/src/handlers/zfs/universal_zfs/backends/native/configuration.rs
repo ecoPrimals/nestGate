@@ -3,7 +3,9 @@
 
 // Removed unused tracing import
 
-use crate::handlers::zfs::universal_zfs::types::{UniversalZfsError, UniversalZfsResult};
+//! Configuration module
+
+use crate::handlers::zfs::universal_zfs_types::{UniversalZfsError, UniversalZfsResult};
 
 use super::core::NativeZfsService;
 use tracing::info;
@@ -57,8 +59,7 @@ pub fn update_configuration(
         }
         Ok(())
     } else {
-        Err(UniversalZfsError::validation(
-            "config",
+        Err(UniversalZfsError::invalid_input(
             "Invalid configuration format - expected JSON object",
         ))
     }

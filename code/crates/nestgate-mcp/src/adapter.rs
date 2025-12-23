@@ -1,6 +1,8 @@
 //
 // Adapter for MCP protocol integration
 
+//! Adapter module
+
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -13,14 +15,21 @@ use tracing::warn;
 
 /// MCP Adapter Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Adapter
 pub struct AdapterConfig {
+    /// Name
     pub name: String,
+    /// Endpoint
     pub endpoint: String,
+    /// Timeout Seconds
     pub timeout_seconds: u64,
+    /// Retry Attempts
     pub retry_attempts: u32,
+    /// Capabilities
     pub capabilities: Vec<String>,
 }
 impl Default for AdapterConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             name: "nestgate-mcp".to_string(),
@@ -42,13 +51,19 @@ impl Default for AdapterConfig {
 
 /// MCP Adapter State
 #[derive(Debug, Clone)]
+/// Adapterstate
 pub struct AdapterState {
+    /// Connected
     pub connected: bool,
+    /// Last Heartbeat
     pub last_heartbeat: std::time::SystemTime,
+    /// Count of error
     pub error_count: u32,
+    /// Capabilities
     pub capabilities: Vec<String>,
 }
 impl Default for AdapterState {
+    /// Returns the default instance
     fn default() -> Self { Self {
             connected: false,
             last_heartbeat: std::time::SystemTime::now(),
@@ -59,6 +74,7 @@ impl Default for AdapterState {
 
 /// MCP Protocol Adapter
 #[derive(Debug)]
+/// Mcpadapter
 pub struct McpAdapter {
     config: AdapterConfig,
     state: Arc<RwLock<AdapterState>>,

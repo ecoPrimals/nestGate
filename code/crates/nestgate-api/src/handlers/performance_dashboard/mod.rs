@@ -20,3 +20,12 @@ pub use handlers::{
 
 // TEMP_DISABLED: #[cfg(test)]
 // TEMP_DISABLED: mod handlers_tests;
+
+#[cfg(test)]
+mod optimizer_tests;
+
+#[cfg(test)]
+mod handlers_tests;
+
+#[cfg(test)]
+mod metrics_tests;

@@ -5,6 +5,7 @@ use std::collections::HashMap;
 use std::time::Duration;
 /// Workflow settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Workflowsettings
 pub struct WorkflowSettings {
     /// Enable workflows
     pub enabled: bool,
@@ -16,6 +17,7 @@ pub struct WorkflowSettings {
     pub max_concurrent: u32,
 }
     #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Workflowdefinition
 pub struct WorkflowDefinition {
     /// Workflow name
     pub name: String,
@@ -27,6 +29,7 @@ pub struct WorkflowDefinition {
     pub timeout: Duration,
 }
 impl SmartDefault for WorkflowSettings {
+    /// Smart Default
     fn smart_default() -> Self {
         Self {
             enabled: true,
@@ -38,6 +41,7 @@ impl SmartDefault for WorkflowSettings {
 }
 
 impl Default for WorkflowSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self::smart_default()
     }

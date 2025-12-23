@@ -8,6 +8,13 @@ use super::registry::ServiceRegistryClient;
 use super::*;
 use std::time::Duration;
 
+// Test port constant
+const TEST_PORT: u16 = 18080;
+
+fn test_endpoint() -> String {
+    format!("http://localhost:{}", TEST_PORT)
+}
+
 /// Test basic instantiation of discovery system
 #[test]
 fn test_universal_primal_discovery_new() {
@@ -61,9 +68,16 @@ fn test_cache_entry_expiration() {
     // Immediately should not be expired
     assert!(!entry.is_expired());
 
-    // After sleep, should be expired
-    std::thread::sleep(Duration::from_millis(5));
-    assert!(entry.is_expired());
+    // Modern pattern: Test expiration with explicit timestamp manipulation
+    // Rather than sleeping, we test the time-based logic directly
+    let expired_entry = CacheEntry {
+        value: "test".to_string(),
+        created_at: std::time::SystemTime::now() - Duration::from_millis(10), // Already expired
+        ttl: Duration::from_millis(1),
+        access_count: 0,
+        last_accessed: std::time::SystemTime::now(),
+    };
+    assert!(expired_entry.is_expired());
 }
 
 /// Test cache entry access tracking
@@ -93,9 +107,9 @@ fn test_network_discovery_initialization() {
 /// Test performance discovery subsystem initialization
 #[test]
 fn test_performance_discovery_initialization() {
-    let perf_discovery = performance::PerformanceDiscovery::new();
+    let _perf_discovery = performance::PerformanceDiscovery::new();
     // Performance discovery should be created successfully
-    drop(perf_discovery);
+    // Automatically dropped at end of scope
 }
 
 /// Test service registry client initialization
@@ -238,12 +252,12 @@ fn test_cache_endpoint_operations() {
     assert!(cache.get_endpoint_discovery("test-service").is_none());
 
     // Store endpoint
-    cache.store_endpoint_discovery("test-service", "http://localhost:8080");
+    cache.store_endpoint_discovery("test-service", &test_endpoint());
 
     // Retrieve endpoint
     assert_eq!(
         cache.get_endpoint_discovery("test-service"),
-        Some("http://localhost:8080".to_string())
+        Some(test_endpoint())
     );
 }
 
@@ -420,6 +434,7 @@ fn test_cache_thread_safety() {
 /// Test discovery system Send
 #[test]
 fn test_discovery_send() {
+    /// Assert Send
     fn assert_send<T: Send>() {}
 
     // Verify types can be sent between threads

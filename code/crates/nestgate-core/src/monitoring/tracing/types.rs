@@ -8,6 +8,7 @@ use std::time::SystemTime;
 
 /// Structured log entry
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Logentry
 pub struct LogEntry {
     /// Log timestamp
     pub timestamp: SystemTime,
@@ -34,6 +35,7 @@ pub struct LogEntry {
 }
 /// Trace context for distributed tracing
 #[derive(Debug, Clone)]
+/// Tracecontext
 pub struct TraceContext {
     /// Trace ID
     pub trace_id: String,
@@ -45,6 +47,7 @@ pub struct TraceContext {
     pub flags: u8,
 }
 impl Default for TraceContext {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

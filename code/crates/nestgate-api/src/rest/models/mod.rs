@@ -58,6 +58,7 @@ pub use zfs::*; // This includes ZfsMetrics from zfs module
 ///
 /// A response wrapper that includes caching metadata for API responses.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for Cached operation
 pub struct CachedResponse<T> {
     /// The actual response data
     pub data: T,
@@ -71,6 +72,7 @@ pub struct CachedResponse<T> {
 ///
 /// Standard API response wrapper with success/error handling.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for Api operation
 pub struct ApiResponse<T> {
     /// Whether the request was successful
     pub success: bool,

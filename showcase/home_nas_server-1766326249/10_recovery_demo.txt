@@ -1,0 +1,23 @@
+Scenario: Alice accidentally deleted her school project folder
+
+Step 1: Alice realizes the folder is gone
+  • Folder: /videos/school-projects/
+  • Files: 5 videos, 2.5GB
+  • Panic level: 😱
+
+Step 2: Open web UI, go to "Snapshots"
+  • Click "Browse Snapshots"
+  • Select yesterday's snapshot
+  • Navigate to /videos/school-projects/
+
+Step 3: Restore files
+  • Click "Restore Folder"
+  • Files instantly restored (ZFS clone)
+  • Recovery time: < 1 second
+  • Panic level: 😊
+
+Result:
+  ✅ All files recovered (2.5GB in 1 second)
+  ✅ No data loss
+  ✅ No expensive recovery service needed
+  ✅ Alice's homework saved!

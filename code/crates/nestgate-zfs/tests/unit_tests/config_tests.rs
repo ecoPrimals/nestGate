@@ -1,6 +1,8 @@
 //
 // Tests for ZFS configuration settings and defaults
 
+//! Config Tests module
+
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::time::SystemTime;
@@ -22,7 +24,7 @@ mod config_unit_tests {
     use super::*;
 
     #[test]
-    fn test_zfs_config_defaults() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_zfs_config_defaults() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let config = ZfsConfig::default();
 
         // Test configuration defaults (using actual field names from struct)
@@ -41,7 +43,7 @@ mod config_unit_tests {
     Ok(())
     }
     #[test]
-    fn test_tier_config_hierarchy() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_tier_config_hierarchy() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let config = ZfsConfig::default();
 
         let hot = config.get_tier_config(&CoreStorageTier::Hot);
@@ -88,7 +90,7 @@ mod config_unit_tests {
     }
 
     #[test]
-    fn test_migration_rules_thresholds() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_migration_rules_thresholds() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let config = ZfsConfig::default();
 
         let hot = config.get_tier_config(&CoreStorageTier::Hot);
@@ -108,7 +110,7 @@ mod config_unit_tests {
     }
 
     #[test]
-    fn test_capacity_limits() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_capacity_limits() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let config = ZfsConfig::default();
 
         let hot = config.get_tier_config(&CoreStorageTier::Hot);

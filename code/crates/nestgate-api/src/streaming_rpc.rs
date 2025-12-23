@@ -8,6 +8,22 @@ use tokio::sync::{broadcast, RwLock};
 
 /// Streaming RPC server configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// 
+/// **Migration Path**:
+/// ```rust,ignore
+/// // OLD (deprecated):
+/// use crate::network::config::StreamingRpcConfig;
+/// 
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::StreamingRpcConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+/// 
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for StreamingRpc
 pub struct StreamingRpcConfig {
     /// Bind address for streaming RPC server
     pub bind_endpoint: String,
@@ -21,15 +37,33 @@ pub struct StreamingRpcConfig {
     pub compression_enabled: bool,
 }
 impl Default for StreamingRpcConfig {
+    /// Returns the default instance using EnvironmentConfig
+    /// 
+    /// Configuration via environment variables:
+    /// - `NESTGATE_STREAMING_RPC_ADDRESS`: Full bind address (overrides below)
+    /// - `NESTGATE_BIND_ADDRESS`: Bind address (default: from EnvironmentConfig)
+    /// - `NESTGATE_STREAMING_RPC_PORT`: RPC port (default: from EnvironmentConfig)
+    /// - `NESTGATE_MAX_CONCURRENT_STREAMS`: Max streams (default: 100)
+    /// - `NESTGATE_STREAM_TIMEOUT_SECONDS`: Timeout (default: 300)
+    /// - `NESTGATE_STREAM_BUFFER_SIZE`: Buffer size (default: 1024)
+    /// - `NESTGATE_STREAM_COMPRESSION`: Enable compression (default: true)
     fn default() -> Self { 
-        use nestgate_core::constants::hardcoding::addresses;
+        use nestgate_core::config::environment::EnvironmentConfig;
+        
+        // Load environment config with proper fallbacks
+        let env_config = EnvironmentConfig::from_env()
+            .unwrap_or_else(|_| EnvironmentConfig::default());
         
         Self {
             bind_endpoint: std::env::var("NESTGATE_STREAMING_RPC_ADDRESS")
                 .unwrap_or_else(|_| {
                     let bind_addr = std::env::var("NESTGATE_BIND_ADDRESS")
-                        .unwrap_or_else(|_| addresses::BIND_ALL_IPV4.to_string());
-                    format!("{}:8001", bind_addr)
+                        .unwrap_or_else(|_| env_config.network.host.clone());
+                    let port = std::env::var("NESTGATE_STREAMING_RPC_PORT")
+                        .ok()
+                        .and_then(|p| p.parse().ok())
+                        .unwrap_or_else(|| env_config.network.port.get());
+                    format!("{}:{}", bind_addr, port)
                 }),
             max_concurrent_streams: std::env::var("NESTGATE_MAX_CONCURRENT_STREAMS")
                 .ok()
@@ -97,6 +131,7 @@ impl StreamingRpcServer {
 }
 
 impl Default for StreamingRpcServer {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new(StreamingRpcConfig::default())
     }
@@ -110,3 +145,20 @@ pub fn create_streaming_rpc_server() -> StreamingRpcServer {
 pub fn create_streaming_rpc_server_with_config(config: StreamingRpcConfig) -> StreamingRpcServer {
     StreamingRpcServer::new(config)
 }
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+/// 
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Streamingrpcconfigcanonical
+pub type StreamingRpcConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using StreamingRpcConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+

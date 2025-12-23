@@ -133,7 +133,7 @@ fn test_constants_retry_attempts() {
     use nestgate_mcp::constants::*;
 
     assert_eq!(DEFAULT_RETRY_ATTEMPTS, 3);
-    assert!(DEFAULT_RETRY_ATTEMPTS > 0);
+    assert_ne!(DEFAULT_RETRY_ATTEMPTS, 0);
 }
 
 #[test]

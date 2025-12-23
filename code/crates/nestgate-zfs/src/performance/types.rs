@@ -1,3 +1,5 @@
+//! Types module
+
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 use std::sync::Arc;
@@ -7,11 +9,15 @@ use tokio::sync::{mpsc, RwLock};
 use crate::snapshot::SnapshotPolicy;
 use crate::tier::TierStats;
 
-// Type aliases to reduce complexity
+/// Type alias for tier-specific performance metrics map with thread-safe access.
 pub type TierMetricsMap = Arc<RwLock<HashMap<StorageTier, TierPerformanceData>>>;
+/// Type alias for Alertconditionsvec
 pub type AlertConditionsVec = Arc<RwLock<Vec<AlertCondition>>>;
+/// Type alias for Activealertsvec
 pub type ActiveAlertsVec = Arc<RwLock<Vec<ActiveAlert>>>;
+/// Type alias for Snapshotpolicymap
 pub type SnapshotPolicyMap = Arc<RwLock<HashMap<String, SnapshotPolicy>>>;
+/// Type alias for Tierstatsmap
 pub type TierStatsMap = Arc<RwLock<HashMap<StorageTier, TierStats>>>;
 
 use crate::types::StorageTier;
@@ -19,24 +25,57 @@ use crate::{dataset::ZfsDatasetManager, pool::ZfsPoolManager};
 // Removed unused import: StorageTier as CoreStorageTier
 use std::time::Duration;
 
-/// System performance metrics
+/// System performance metrics snapshot
+///
+/// Captures system-wide resource utilization metrics for performance monitoring
+/// and bottleneck detection. Used by the performance monitoring system to track
+/// system health and identify resource constraints.
+///
+/// # Fields
+///
+/// * `memory_utilization_percent` - Memory usage as percentage (0.0-100.0)
+/// * `cpu_utilization_percent` - CPU usage as percentage (0.0-100.0)
+/// * `disk_queue_depth` - Number of pending I/O operations
+/// * `network_throughput_mbs` - Network throughput in megabytes per second
+/// * `system_load_average` - System load average (1-minute)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemPerformanceMetrics {
+    /// Memory utilization percentage (0.0-100.0)
     pub memory_utilization_percent: f64,
+    /// CPU utilization percentage (0.0-100.0)
     pub cpu_utilization_percent: f64,
+    /// Number of pending disk I/O operations
     pub disk_queue_depth: u64,
+    /// Network throughput in megabytes per second
     pub network_throughput_mbs: f64,
+    /// System load average over 1 minute
     pub system_load_average: f64,
 }
-/// Memory information structure
+
+/// Memory information and utilization
+///
+/// Detailed memory usage statistics for the system, tracking total,
+/// available, and used memory in megabytes.
+///
+/// # Fields
+///
+/// * `utilization_percent` - Memory utilization as percentage (0.0-100.0)
+/// * `total_mb` - Total system memory in megabytes
+/// * `available_mb` - Available memory in megabytes
+/// * `used_mb` - Used memory in megabytes
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MemoryInfo {
+    /// Memory utilization percentage (0.0-100.0)
     pub utilization_percent: f64,
+    /// Total system memory in megabytes
     pub total_mb: u64,
+    /// Available memory in megabytes
     pub available_mb: u64,
+    /// Used memory in megabytes
     pub used_mb: u64,
 }
 impl Default for SystemPerformanceMetrics {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             memory_utilization_percent: 0.0,
@@ -49,6 +88,7 @@ impl Default for SystemPerformanceMetrics {
 }
 
 impl Default for MemoryInfo {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             utilization_percent: 0.0,
@@ -59,15 +99,36 @@ impl Default for MemoryInfo {
     }
 }
 
-/// Disk I/O statistics
+/// Disk I/O statistics and performance metrics
+///
+/// Tracks disk I/O performance including queue depth, throughput, and IOPS
+/// (Input/Output Operations Per Second) for read and write operations.
+///
+/// # Fields
+///
+/// * `queue_depth` - Number of pending I/O operations in the queue
+/// * `throughput_mbs` - Disk throughput in megabytes per second
+/// * `read_iops` - Read operations per second
+/// * `write_iops` - Write operations per second
+///
+/// # Usage
+///
+/// Used for monitoring disk performance and identifying I/O bottlenecks
+/// in the storage subsystem.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Diskiostats
 pub struct DiskIoStats {
+    /// Number of pending I/O operations in the queue
     pub queue_depth: u64,
+    /// Disk throughput in megabytes per second
     pub throughput_mbs: f64,
+    /// Read operations per second (IOPS)
     pub read_iops: u64,
+    /// Write operations per second (IOPS)
     pub write_iops: u64,
 }
 impl Default for DiskIoStats {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             queue_depth: 0,
@@ -81,9 +142,12 @@ impl Default for DiskIoStats {
 /// ZFS performance monitor
 #[derive(Debug)]
 #[allow(dead_code)] // Fields used in comprehensive performance monitoring
+/// Zfsperformancemonitor
 pub struct ZfsPerformanceMonitor {
     // config removed - using shared ZfsConfig instead
+    /// Pool manager for ZFS pool operations
     pub pool_manager: Arc<ZfsPoolManager>,
+    /// Dataset Manager
     pub dataset_manager: Arc<ZfsDatasetManager>,
     /// Real-time metrics
     pub current_metrics: Arc<RwLock<CurrentPerformanceMetrics>>,
@@ -98,7 +162,9 @@ pub struct ZfsPerformanceMonitor {
 
     /// Background tasks
     pub collection_task: Option<tokio::task::JoinHandle<()>>,
+    /// Analysis Task
     pub analysis_task: Option<tokio::task::JoinHandle<()>>,
+    /// Alert Task
     pub alert_task: Option<tokio::task::JoinHandle<()>>,
 
     /// Alert notification channel
@@ -107,6 +173,7 @@ pub struct ZfsPerformanceMonitor {
 
 /// Performance monitoring configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for  RemovedPerformance
 pub struct _RemovedPerformanceConfig {
     /// Metrics collection interval in seconds
     pub collection_interval: u64,
@@ -127,6 +194,7 @@ pub struct _RemovedPerformanceConfig {
 }
 /// Current performance metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Currentperformancemetrics
 pub struct CurrentPerformanceMetrics {
     /// Timestamp of last update
     pub timestamp: SystemTime,
@@ -143,6 +211,7 @@ pub struct CurrentPerformanceMetrics {
 }
 /// Pool performance metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Poolperformancemetrics
 pub struct PoolPerformanceMetrics {
     /// Total IOPS across all datasets
     pub total_iops: f64,
@@ -161,6 +230,7 @@ pub struct PoolPerformanceMetrics {
 }
 /// Tier-specific performance metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Tiermetrics
 pub struct TierMetrics {
     /// Storage tier
     pub tier: StorageTier,
@@ -189,6 +259,7 @@ pub struct TierMetrics {
 }
 /// System resource metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Systemresourcemetrics
 pub struct SystemResourceMetrics {
     /// CPU utilization percentage
     pub cpu_utilization_percent: f64,
@@ -205,6 +276,7 @@ pub struct SystemResourceMetrics {
 }
 /// I/O statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Iostatistics
 pub struct IoStatistics {
     /// Total read operations
     pub total_reads: u64,
@@ -221,6 +293,7 @@ pub struct IoStatistics {
 }
 /// Performance snapshot for historical analysis
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performancesnapshot
 pub struct PerformanceSnapshot {
     /// Timestamp
     pub timestamp: SystemTime,
@@ -231,6 +304,7 @@ pub struct PerformanceSnapshot {
 }
 /// Performance trends analysis
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performancetrends
 pub struct PerformanceTrends {
     /// IOPS trend (positive = increasing)
     pub iops_trend: f64,
@@ -245,6 +319,7 @@ pub struct PerformanceTrends {
 }
 /// Tier performance data
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Tierperformancedata
 pub struct TierPerformanceData {
     /// Tier type
     pub tier: StorageTier,
@@ -257,6 +332,7 @@ pub struct TierPerformanceData {
 }
 /// Performance targets for a tier
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Tierperformancetargets
 pub struct TierPerformanceTargets {
     /// Target IOPS
     pub target_iops: f64,
@@ -271,6 +347,7 @@ pub struct TierPerformanceTargets {
 }
 /// SLA compliance metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Slacompliance
 pub struct SlaCompliance {
     /// Latency compliance percentage
     pub latency_compliance: f64,
@@ -283,6 +360,7 @@ pub struct SlaCompliance {
 }
 /// Alert condition
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Alertcondition
 pub struct AlertCondition {
     /// Unique identifier
     pub id: String,
@@ -305,6 +383,7 @@ pub struct AlertCondition {
 }
 /// Alert metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Alertmetric
 pub enum AlertMetric {
     /// IOPS
     Iops,
@@ -329,6 +408,7 @@ pub enum AlertMetric {
 }
 /// Alert operators
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Alertoperator
 pub enum AlertOperator {
     /// Greater than
     GreaterThan,
@@ -345,6 +425,7 @@ pub enum AlertOperator {
 }
 /// Alert severity levels
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Alertseverity
 pub enum AlertSeverity {
     /// Critical alert
     Critical,
@@ -355,6 +436,7 @@ pub enum AlertSeverity {
 }
 /// Active alert
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Activealert
 pub struct ActiveAlert {
     /// Alert condition ID
     pub condition_id: String,
@@ -381,6 +463,7 @@ pub struct ActiveAlert {
 }
 /// Alert notification
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Alert
 pub struct Alert {
     /// Alert type
     pub alert_type: AlertType,
@@ -389,6 +472,7 @@ pub struct Alert {
 }
 /// Alert types
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of Alert
 pub enum AlertType {
     /// New alert triggered
     Triggered,
@@ -400,18 +484,27 @@ pub enum AlertType {
 /// I/O statistics summary
 #[derive(Debug, Clone)]
 pub(crate) struct IoStatsSummary {
+    /// Read Ops
     pub read_ops: u64,
+    /// Write Ops
     pub write_ops: u64,
+    /// Read Throughput Mbs
     pub read_throughput_mbs: f64,
+    /// Write Throughput Mbs
     pub write_throughput_mbs: f64,
+    /// Read Latency Ms
     pub read_latency_ms: f64,
+    /// Write Latency Ms
     pub write_latency_ms: f64,
 }
 /// Pool properties
 #[derive(Debug, Clone)]
 pub(crate) struct PoolProperties {
+    /// Fragmentation
     pub fragmentation: f64,
+    /// Compression Ratio
     pub compression_ratio: f64,
+    /// Dedup Ratio
     pub dedup_ratio: f64,
 }
 #[allow(dead_code)] // Development/testing structure - intentionally unused
@@ -447,21 +540,34 @@ impl LocalMemoryInfo {
 /// Pool I/O statistics
 #[derive(Debug, Clone, Default)]
 pub(crate) struct PoolIoStats {
+    /// Read Ops
     pub read_ops: u64,
+    /// Write Ops
     pub write_ops: u64,
+    /// Bytes Read
     pub bytes_read: u64,
+    /// Bytes Written
     pub bytes_written: u64,
 }
 /// Dataset performance statistics
 #[derive(Debug, Clone)]
 pub(crate) struct DatasetPerformanceStats {
+    /// Read Iops
     pub read_iops: f64,
+    /// Write Iops
     pub write_iops: f64,
+    /// Read Throughput Mbs
     pub read_throughput_mbs: f64,
+    /// Write Throughput Mbs
     pub write_throughput_mbs: f64,
+    /// Read Latency Ms
     pub read_latency_ms: f64,
+    /// Write Latency Ms
     pub write_latency_ms: f64,
+    /// Utilization Percent
     pub utilization_percent: f64,
+    /// Compression Effectiveness
     pub compression_effectiveness: f64,
+    /// Deduplication Effectiveness
     pub deduplication_effectiveness: f64,
 }

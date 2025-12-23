@@ -3,6 +3,8 @@
 // all automation activities including policy evaluation, lifecycle management,
 // and tier optimization.
 
+//! Engine module
+
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
@@ -11,6 +13,7 @@ use tokio::sync::RwLock;
 
 // Type aliases to reduce complexity
 type PolicyMap = Arc<RwLock<HashMap<String, AutomationPolicy>>>;
+/// Type alias for LifecycleMap
 type LifecycleMap = Arc<RwLock<HashMap<String, DatasetLifecycle>>>;
 use tracing::debug;
 use tracing::info;
@@ -28,11 +31,13 @@ use crate::config::DatasetAutomationConfig;
 use crate::error::ZfsResult as Result;
 use crate::types::StorageTier;
 use crate::{dataset::ZfsDatasetManager, pool::ZfsPoolManager};
+use nestgate_core::error::NestGateUnifiedError;
 // Migration engine placeholder - not yet implemented
 // use crate::migration::MigrationEngine;
 
 /// Intelligent dataset automation engine
 #[derive(Debug)]
+/// Datasetautomation
 pub struct DatasetAutomation {
     /// Pool management
     pool_manager: Arc<ZfsPoolManager>,
@@ -338,11 +343,15 @@ impl DatasetAutomation {
 
         let policies = self.policies.read().await;
         tier_evaluation::evaluate_tier_by_intelligent_rules(dataset_name, metadata, &policies)
+            .map_err(|e| {
+                NestGateUnifiedError::storage_error(&format!("Tier evaluation failed: {}", e))
+            })
     }
 }
 
 // Enable cloning for background tasks using Arc patterns for zero-copy sharing
 impl Clone for DatasetAutomation {
+    /// Clone
     fn clone(&self) -> Self {
         Self {
             pool_manager: Arc::clone(&self.pool_manager),

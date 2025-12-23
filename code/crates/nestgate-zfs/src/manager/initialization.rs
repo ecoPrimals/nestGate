@@ -2,6 +2,8 @@
 // Handles the complex initialization process for the ZFS manager and all its components,
 // including lifecycle management (start/stop) and orchestrator registration.
 
+//! Initialization module
+
 use crate::error::{create_zfs_error, ZfsOperation};
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -87,7 +89,7 @@ impl ZfsManager {
             Arc::new(crate::manager::dataset_operations::DatasetAnalyzer::new());
 
         // Initialize migration engine with RwLock using shared config
-        // let migration_config = nestgate_core::config::canonical_master::domains::test_canonical::unit::MigrationConfig::default();
+        // let migration_config = nestgate_core::config::canonical_primary::domains::test_canonical::unit::MigrationConfig::default();
         // let migration_engine = Arc::new(RwLock::new(MigrationEngine::with_shared_config(
         //     migration_config,
         //     Arc::clone(&shared_config),
@@ -241,8 +243,14 @@ impl ZfsManager {
                 "dataset_management,snapshot_operations,tier_management".to_string(),
             );
             details.insert("endpoint".to_string(), {
-                use nestgate_core::constants::hardcoding::{addresses, ports};
-                format!("{}:{}", addresses::LOCALHOST_NAME, ports::HTTP_DEFAULT)
+                // ✅ SOVEREIGNTY: Environment-driven endpoint configuration
+                let host =
+                    std::env::var("NESTGATE_ZFS_HOST").unwrap_or_else(|_| "localhost".to_string());
+                let port = std::env::var("NESTGATE_ZFS_PORT")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(8080);
+                format!("{}:{}", host, port)
             });
             details.insert("version".to_string(), env!("CARGO_PKG_VERSION").to_string());
             details

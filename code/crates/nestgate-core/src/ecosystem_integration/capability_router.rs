@@ -13,10 +13,30 @@ use tracing::{debug, info, warn};
 
 // Type aliases to reduce complexity
 type FallbackProvidersMap = Arc<RwLock<HashMap<String, FallbackProviderWrapper>>>;
+/// Type alias for ConnectionCacheMap
 type ConnectionCacheMap = Arc<RwLock<HashMap<String, serde_json::Value>>>;
 
 /// Configuration for capability routing behavior
 #[derive(Debug, Clone)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+///
+/// **Migration Path**:
+/// ```rust,ignore
+/// // OLD (deprecated):
+/// use crate::config::CapabilityRoutingConfig;
+///
+/// // NEW (canonical):
+/// use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::config::CapabilityRoutingConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+///
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(
+    since = "0.11.0",
+    note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
+/// Configuration for CapabilityRouting
 pub struct CapabilityRoutingConfig {
     /// Timeout for universal adapter attempts
     pub adapter_timeout: Duration,
@@ -27,7 +47,9 @@ pub struct CapabilityRoutingConfig {
     /// Whether to cache successful adapter connections
     pub cache_connections: bool,
 }
+#[allow(deprecated)]
 impl Default for CapabilityRoutingConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             adapter_timeout: Duration::from_secs(5),
@@ -41,14 +63,23 @@ impl Default for CapabilityRoutingConfig {
 /// Errors that can occur during capability routing
 #[derive(Debug, thiserror::Error)]
 pub enum CapabilityRoutingError {
+    /// No fallback provider available for the requested capability
     #[error("No fallback available for capability: {0}")]
     NoFallbackAvailable(String),
+
+    /// Universal adapter encountered an error
     #[error("Universal adapter error: {0}")]
     AdapterError(String),
+
+    /// Fallback provider execution failed
     #[error("Fallback execution failed: {0}")]
     FallbackError(String),
+
+    /// JSON serialization/deserialization error
     #[error("Serialization error: {0}")]
     SerializationError(String),
+
+    /// Timeout waiting for adapter response
     #[error("Timeout waiting for adapter response")]
     Timeout,
 }
@@ -74,12 +105,20 @@ pub trait FallbackProvider: Send + Sync {
 /// Enum wrapper for fallback providers to avoid trait object issues
 #[derive(Debug)]
 pub enum FallbackProviderWrapper {
+    /// Security capability fallback provider
     Security(crate::ecosystem_integration::fallback_providers::security::SecurityFallbackProvider),
+
+    /// AI capability fallback provider
     Ai(crate::ecosystem_integration::fallback_providers::ai::AiFallbackProvider),
+
+    /// Orchestration capability fallback provider
     Orchestration(crate::ecosystem_integration::fallback_providers::orchestration::OrchestrationFallbackProvider),
+
+    /// ZFS capability fallback provider
     Zfs(crate::ecosystem_integration::fallback_providers::zfs::ZfsFallbackProvider),
 }
 impl FallbackProviderWrapper {
+    /// Execute a fallback operation through the wrapped provider
     pub async fn execute(
         &self,
         operation: &str,
@@ -98,6 +137,7 @@ impl FallbackProviderWrapper {
         }
     }
 
+    /// Returns list of operations supported by this fallback provider
     #[must_use]
     pub fn supported_operations(&self) -> Vec<String> {
         match self {
@@ -108,6 +148,10 @@ impl FallbackProviderWrapper {
         }
     }
 
+    /// Returns metadata about this fallback provider
+    ///
+    /// Provides key-value metadata describing the provider's capabilities,
+    /// version, and configuration details.
     #[must_use]
     pub fn metadata(&self) -> HashMap<String, String> {
         match self {
@@ -126,6 +170,7 @@ pub struct UniversalCapabilityRouter {
     /// Local fallback implementations
     fallback_providers: FallbackProvidersMap,
     /// Configuration for routing behavior
+    #[allow(deprecated)]
     config: CapabilityRoutingConfig,
     /// Cache for successful adapter connections
     connection_cache: ConnectionCacheMap,
@@ -134,23 +179,32 @@ pub struct UniversalCapabilityRouter {
 }
 /// Metrics for monitoring routing performance
 #[derive(Debug, Default)]
+/// Routingmetrics
 pub struct RoutingMetrics {
+    /// Total Requests
     pub total_requests: u64,
+    /// Adapter Successes
     pub adapter_successes: u64,
+    /// Adapter Failures
     pub adapter_failures: u64,
+    /// Fallback Uses
     pub fallback_uses: u64,
+    /// Cache Hits
     pub cache_hits: u64,
+    /// Average Response Time Ms
     pub average_response_time_ms: f64,
 }
 impl UniversalCapabilityRouter {
     /// Create a new universal capability router
     #[must_use]
+    #[allow(deprecated)]
     pub fn new(adapter: Arc<PrimalAgnosticAdapter>) -> Self {
         Self::with_config(adapter, CapabilityRoutingConfig::default())
     }
 
     /// Create a new universal capability router with custom configuration
     #[must_use]
+    #[allow(deprecated)]
     pub fn with_config(
         adapter: Arc<PrimalAgnosticAdapter>,
         config: CapabilityRoutingConfig,
@@ -391,14 +445,38 @@ impl UniversalCapabilityRouter {
 
 /// Health status of the router
 #[derive(Debug, Serialize, Deserialize)]
+/// Routerhealthstatus
 pub struct RouterHealthStatus {
+    /// Healthy
     pub healthy: bool,
+    /// Adapter Available
     pub adapter_available: bool,
+    /// Registered Capabilities
     pub registered_capabilities: usize,
+    /// Total Requests
     pub total_requests: u64,
+    /// Success Rate
     pub success_rate: f64,
+    /// Average Response Time Ms
     pub average_response_time_ms: f64,
 }
 // Tests temporarily commented out due to string encoding issues
 // Can be re-enabled after manual UTF-8 fixes
 // Test module temporarily removed due to encoding issues
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+///
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Capabilityroutingconfigcanonical
+pub type CapabilityRoutingConfigCanonical =
+    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using CapabilityRoutingConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.

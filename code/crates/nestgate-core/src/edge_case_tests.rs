@@ -227,6 +227,7 @@ mod edge_cases {
     /// Edge Case 19: Error propagation through Result chains
     #[test]
     fn test_edge_error_result_chains() {
+        /// Operation
         fn operation() -> Result<u32> {
             Err(NestGateError::internal_error("base error", "test"))
         }

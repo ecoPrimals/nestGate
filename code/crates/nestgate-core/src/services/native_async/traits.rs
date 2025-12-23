@@ -1,9 +1,4 @@
 use crate::Result;
-use std::pin::Pin;
-
-// Type alias for health check results
-pub type HealthCheckFuture =
-    Pin<Box<dyn std::future::Future<Output = Result<Vec<(String, bool)>>> + Send>>;
 
 /// Native async load balancer trait - replaces #[`async_trait`] `LoadBalancer`
 pub trait NativeAsyncLoadBalancer<
@@ -12,10 +7,15 @@ pub trait NativeAsyncLoadBalancer<
     const STATS_RETENTION_SECS: u64 = 86400, // 24 hours
     const HEALTH_CHECK_INTERVAL_SECS: u64 = 30,
 >: Send + Sync {
+    /// Type alias for ServiceInfo
     type ServiceInfo: Clone + Send + Sync + 'static;
+    /// Type alias for ServiceRequest
     type ServiceRequest: Clone + Send + Sync + 'static;
+    /// Type alias for ServiceResponse
     type ServiceResponse: Clone + Send + Sync + 'static;
+    /// Type alias for LoadBalancerStats
     type LoadBalancerStats: Clone + Send + Sync + 'static;
+    /// Type alias for ServiceStats
     type ServiceStats: Clone + Send + Sync + 'static;
     /// Add service - native async, no Future boxing
     fn add_service(&self, service: Self::ServiceInfo) -> impl std::future::Future<Output = Result<()>> + Send;
@@ -35,8 +35,8 @@ pub trait NativeAsyncLoadBalancer<
     /// Get service statistics - direct async method
     fn get_service_stats(&self, service_id: &str) -> impl std::future::Future<Output = Result<Self::ServiceStats>> + Send;
 
-    /// Health check all services - native async
-    fn health_check_all(&self) -> HealthCheckFuture;
+    /// Performs health checks on all services and returns their status
+    fn health_check_all(&self) -> impl std::future::Future<Output = Result<Vec<(String, bool)>>> + Send;
 
     /// Update service weight - no Future boxing
     fn update_service_weight(&self, service_id: &str, weight: f64) -> impl std::future::Future<Output = Result<()>> + Send;
@@ -51,9 +51,13 @@ pub trait NativeAsyncLoadBalancer<
     fn service_exists(&self, service_id: &str) -> impl std::future::Future<Output = Result<bool>> + Send;
 
     /// Compile-time constants
+    /// Returns the maximum number of services.
     #[must_use] fn max_services() -> usize { MAX_SERVICES }
+    /// Returns the maximum number of concurrent requests.
     #[must_use] fn max_concurrent_requests() -> usize { MAX_CONCURRENT_REQUESTS }
+    /// Returns the statistics retention duration in seconds.
     #[must_use] fn stats_retention_seconds() -> u64 { STATS_RETENTION_SECS }
+    /// Returns the health check interval in seconds.
     #[must_use] fn health_check_interval_seconds() -> u64 { HEALTH_CHECK_INTERVAL_SECS }
     }
 
@@ -65,8 +69,11 @@ pub trait NativeAsyncCommunicationProvider<
     const MESSAGE_RETRY_ATTEMPTS: u32 = 3,
 >: Send + Sync
 {
+    /// Type alias for Message
     type Message: Clone + Send + Sync + 'static;
+    /// Type alias for Address
     type Address: Clone + Send + Sync + 'static;
+    /// Type alias for ConnectionInfo
     type ConnectionInfo: Clone + Send + Sync + 'static;
     /// Send message - native async, no Future boxing
     fn send_message(
@@ -114,18 +121,22 @@ pub trait NativeAsyncCommunicationProvider<
     ) -> impl std::future::Future<Output = Result<std::time::Duration>> + Send;
 
     /// Compile-time constants
+    /// Returns the maximum number of connections.
     #[must_use]
     fn max_connections() -> usize {
         MAX_CONNECTIONS
     }
+    /// Returns the maximum message size.
     #[must_use]
     fn max_message_size() -> usize {
         MAX_MESSAGE_SIZE
     }
+    /// Returns the connection timeout in seconds.
     #[must_use]
     fn connection_timeout_seconds() -> u64 {
         CONNECTION_TIMEOUT_SECS
     }
+    /// Returns the number of message retry attempts.
     #[must_use]
     fn message_retry_attempts() -> u32 {
         MESSAGE_RETRY_ATTEMPTS
@@ -140,9 +151,13 @@ pub trait NativeAsyncMCPProtocolHandler<
     const PROTOCOL_VERSION: u32 = 1,
 >: Send + Sync
 {
+    /// Type alias for SessionInfo
     type SessionInfo: Clone + Send + Sync + 'static;
+    /// Type alias for Message
     type Message: Clone + Send + Sync + 'static;
+    /// Type alias for Response
     type Response: Clone + Send + Sync + 'static;
+    /// Type alias for Error
     type Error: Clone + Send + Sync + 'static;
     /// Create session - native async, no Future boxing
     fn create_session(
@@ -188,18 +203,22 @@ pub trait NativeAsyncMCPProtocolHandler<
     ) -> impl std::future::Future<Output = Result<std::time::Duration>> + Send;
 
     /// Compile-time constants
+    /// Returns the maximum number of sessions.
     #[must_use]
     fn max_sessions() -> usize {
         MAX_SESSIONS
     }
+    /// Returns the session timeout in seconds.
     #[must_use]
     fn session_timeout_seconds() -> u64 {
         SESSION_TIMEOUT_SECS
     }
+    /// Returns the maximum message size.
     #[must_use]
     fn max_message_size() -> usize {
         MAX_MESSAGE_SIZE
     }
+    /// Returns the protocol version.
     #[must_use]
     fn protocol_version() -> u32 {
         PROTOCOL_VERSION
@@ -214,8 +233,11 @@ pub trait NativeAsyncAutomationService<
     const MAX_WORKFLOW_STEPS: usize = 100,
 >: Send + Sync
 {
+    /// Type alias for WorkflowDefinition
     type WorkflowDefinition: Clone + Send + Sync + 'static;
+    /// Type alias for WorkflowExecution
     type WorkflowExecution: Clone + Send + Sync + 'static;
+    /// Type alias for ExecutionResult
     type ExecutionResult: Clone + Send + Sync + 'static;
     /// Create workflow - native async, no Future boxing
     fn create_workflow(
@@ -254,18 +276,22 @@ pub trait NativeAsyncAutomationService<
     ) -> impl std::future::Future<Output = Result<Self::ExecutionResult>> + Send;
 
     /// Compile-time constants
+    /// Returns the maximum number of workflows.
     #[must_use]
     fn max_workflows() -> usize {
         MAX_WORKFLOWS
     }
+    /// Returns the maximum number of concurrent executions.
     #[must_use]
     fn max_concurrent_executions() -> usize {
         MAX_CONCURRENT_EXECUTIONS
     }
+    /// Returns the execution timeout in seconds.
     #[must_use]
     fn execution_timeout_seconds() -> u64 {
         EXECUTION_TIMEOUT_SECS
     }
+    /// Returns the maximum number of workflow steps.
     #[must_use]
     fn max_workflow_steps() -> usize {
         MAX_WORKFLOW_STEPS
@@ -278,7 +304,9 @@ pub trait NativeAsyncUniversalServiceProvider<
     const SERVICE_TIMEOUT_SECS: u64 = 300,
 >: Send + Sync
 {
+    /// Type alias for ServiceDefinition
     type ServiceDefinition: Clone + Send + Sync + 'static;
+    /// Type alias for ServiceInstance
     type ServiceInstance: Clone + Send + Sync + 'static;
     /// Register service - native async, no Future boxing
     fn register_service(
@@ -304,10 +332,12 @@ pub trait NativeAsyncUniversalServiceProvider<
     ) -> impl std::future::Future<Output = Result<Vec<Self::ServiceDefinition>>> + Send;
 
     /// Compile-time constants
+    /// Returns the maximum number of services.
     #[must_use]
     fn max_services() -> usize {
         MAX_SERVICES
     }
+    /// Returns the service timeout in seconds.
     #[must_use]
     fn service_timeout_seconds() -> u64 {
         SERVICE_TIMEOUT_SECS
@@ -318,14 +348,17 @@ pub trait NativeAsyncUniversalServiceProvider<
 /// **DEPRECATED**: Service pattern consolidated into canonical security
 #[deprecated(
     since = "0.9.0",
-    note = "Use crate::traits::canonical_unified_traits::CanonicalSecurity for security services"
+    note = "Use crate::traits::canonical::CanonicalSecurity for security services"
 )]
+/// NativeAsyncSecurityService trait
 pub trait NativeAsyncSecurityService<
     const MAX_SESSIONS: usize = 1000,
     const SESSION_DURATION_SECS: u64 = 300,
 >: Send + Sync
 {
+    /// Type alias for AuthRequest
     type AuthRequest: Clone + Send + Sync + 'static;
+    /// Type alias for AuthResponse
     type AuthResponse: Clone + Send + Sync + 'static;
     /// Authenticate - native async, no Future boxing
     fn authenticate(
@@ -338,10 +371,12 @@ pub trait NativeAsyncSecurityService<
         -> impl std::future::Future<Output = Result<bool>> + Send;
 
     /// Compile-time constants
+    /// Returns the maximum number of sessions.
     #[must_use]
     fn max_sessions() -> usize {
         MAX_SESSIONS
     }
+    /// Returns the session duration in seconds.
     #[must_use]
     fn session_duration_seconds() -> u64 {
         SESSION_DURATION_SECS
@@ -354,7 +389,9 @@ pub trait NativeAsyncMcpService<
     const REQUEST_TIMEOUT_SECS: u64 = 300,
 >: Send + Sync
 {
+    /// Type alias for Request
     type Request: Clone + Send + Sync + 'static;
+    /// Type alias for Response
     type Response: Clone + Send + Sync + 'static;
     /// Process request - native async, no Future boxing
     fn process_request(
@@ -362,14 +399,19 @@ pub trait NativeAsyncMcpService<
         request: Self::Request,
     ) -> impl std::future::Future<Output = Result<Self::Response>> + Send;
 
-    /// Health check - direct async method
+    /// Performs a health check for the MCP service.
+    ///
+    /// # Returns
+    /// A future that resolves to `Ok(true)` if healthy, `Ok(false)` otherwise, or an error.
     fn health_check(&self) -> impl std::future::Future<Output = Result<bool>> + Send;
 
     /// Compile-time constants
+    /// Returns the maximum number of connections.
     #[must_use]
     fn max_connections() -> usize {
         MAX_CONNECTIONS
     }
+    /// Returns the request timeout in seconds.
     #[must_use]
     fn request_timeout_seconds() -> u64 {
         REQUEST_TIMEOUT_SECS
@@ -382,7 +424,9 @@ pub trait NativeAsyncWorkflowService<
     const EXECUTION_TIMEOUT_SECS: u64 = 300,
 >: Send + Sync
 {
+    /// Type alias for Workflow
     type Workflow: Clone + Send + Sync + 'static;
+    /// Type alias for ExecutionContext
     type ExecutionContext: Clone + Send + Sync + 'static;
     /// Execute workflow - native async, no Future boxing
     fn execute(
@@ -397,10 +441,12 @@ pub trait NativeAsyncWorkflowService<
     ) -> impl std::future::Future<Output = Result<String>> + Send;
 
     /// Compile-time constants
+    /// Returns the maximum number of workflows.
     #[must_use]
     fn max_workflows() -> usize {
         MAX_WORKFLOWS
     }
+    /// Returns the execution timeout in seconds.
     #[must_use]
     fn execution_timeout_seconds() -> u64 {
         EXECUTION_TIMEOUT_SECS

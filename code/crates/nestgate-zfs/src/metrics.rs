@@ -7,6 +7,7 @@ use std::time::SystemTime;
 
 /// ZFS metrics collector
 #[derive(Debug)]
+/// Zfsmetrics
 pub struct ZfsMetrics {
     /// Total operations counter
     total_operations: AtomicU64,
@@ -21,14 +22,23 @@ pub struct ZfsMetrics {
 }
 /// Current metrics snapshot
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Metricssnapshot
 pub struct MetricsSnapshot {
+    /// Operations Per Second
     pub operations_per_second: f64,
+    /// Throughput Bytes Per Second
     pub throughput_bytes_per_second: u64,
+    /// Average Latency Ms
     pub average_latency_ms: f64,
+    /// Error Rate
     pub error_rate: f64,
+    /// Total Operations
     pub total_operations: u64,
+    /// Total Bytes
     pub total_bytes: u64,
+    /// Uptime Seconds
     pub uptime_seconds: u64,
+    /// Timestamp
     pub timestamp: SystemTime,
 }
 impl ZfsMetrics {
@@ -117,6 +127,7 @@ impl ZfsMetrics {
 }
 
 impl Default for ZfsMetrics {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

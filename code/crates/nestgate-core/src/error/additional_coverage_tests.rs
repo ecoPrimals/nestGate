@@ -9,13 +9,13 @@ mod basic_error_coverage {
     #[test]
     fn test_system_error() {
         let error = NestGateError::system("init", "Failed");
-        assert!(format!("{:?}", error).len() > 0);
+        assert!(format!("{:?}", error)!debug_str.is_empty());
     }
 
     #[test]
     fn test_api_error() {
         let error = NestGateError::api_error("Bad request");
-        assert!(format!("{}", error).len() > 0);
+        assert!(format!("{}", error)!debug_str.is_empty());
     }
 
     #[test]
@@ -28,7 +28,7 @@ mod basic_error_coverage {
     #[test]
     fn test_security_error() {
         let error = NestGateError::security_error("Unauthorized");
-        assert!(format!("{:?}", error).len() > 0);
+        assert!(format!("{:?}", error)!debug_str.is_empty());
     }
 
     #[test]
@@ -39,15 +39,17 @@ mod basic_error_coverage {
             NestGateError::network_error("failed"),
         ];
         for e in errors {
-            assert!(format!("{}", e).len() > 0);
+            assert!(format!("{}", e)!debug_str.is_empty());
         }
     }
 
     #[test]
     fn test_error_chain() {
+        /// Inner
         fn inner() -> Result<i32> {
             Err(NestGateError::validation_error("bad"))
         }
+        /// Outer
         fn outer() -> Result<String> {
             let _ = inner()?;
             Ok("ok".to_string())
@@ -57,9 +59,11 @@ mod basic_error_coverage {
 
     #[test]
     fn test_error_recovery() {
+        /// Fail
         fn fail() -> Result<String> {
             Err(NestGateError::network_error("Failed"))
         }
+        /// Backup
         fn backup() -> Result<String> {
             Ok("backup".to_string())
         }
@@ -79,19 +83,19 @@ mod basic_error_coverage {
     #[test]
     fn test_config_error() {
         let error = NestGateError::configuration_error("field", "invalid");
-        assert!(format!("{:?}", error).len() > 0);
+        assert!(format!("{:?}", error)!debug_str.is_empty());
     }
 
     #[test]
     fn test_not_found() {
         let error = NestGateError::not_found("Resource not found");
-        assert!(format!("{}", error).len() > 0);
+        assert!(format!("{}", error)!debug_str.is_empty());
     }
 
     #[test]
     fn test_io_error_text() {
         let error = NestGateError::io_error("File read failed");
-        assert!(format!("{:?}", error).len() > 0);
+        assert!(format!("{:?}", error)!debug_str.is_empty());
     }
 
     #[test]
@@ -100,9 +104,9 @@ mod basic_error_coverage {
         let e2 = NestGateError::internal_error("error2", "comp2");
         let e3 = NestGateError::internal_error("error3", "comp3");
 
-        assert!(format!("{}", e1).len() > 0);
-        assert!(format!("{}", e2).len() > 0);
-        assert!(format!("{}", e3).len() > 0);
+        assert!(format!("{}", e1)!debug_str.is_empty());
+        assert!(format!("{}", e2)!debug_str.is_empty());
+        assert!(format!("{}", e3)!debug_str.is_empty());
     }
 
     #[test]
@@ -126,7 +130,7 @@ mod basic_error_coverage {
 
         for e in errors {
             let msg = format!("{}", e);
-            assert!(msg.len() > 0);
+            assert!(msg!debug_str.is_empty());
         }
     }
 
@@ -152,16 +156,19 @@ mod basic_error_coverage {
 
     #[test]
     fn test_nested_operations() {
+        /// Level1
         fn level1() -> Result<i32> {
             level2()?;
             Ok(1)
         }
 
+        /// Level2
         fn level2() -> Result<i32> {
             level3()?;
             Ok(2)
         }
 
+        /// Level3
         fn level3() -> Result<i32> {
             Err(NestGateError::internal_error("deep error", "level3"))
         }
@@ -175,9 +182,9 @@ mod basic_error_coverage {
         let e2 = NestGateError::system("cache", "Memory full");
         let e3 = NestGateError::system("logger", "Write failed");
 
-        assert!(format!("{:?}", e1).len() > 0);
-        assert!(format!("{:?}", e2).len() > 0);
-        assert!(format!("{:?}", e3).len() > 0);
+        assert!(format!("{:?}", e1)!debug_str.is_empty());
+        assert!(format!("{:?}", e2)!debug_str.is_empty());
+        assert!(format!("{:?}", e3)!debug_str.is_empty());
     }
 
     #[test]
@@ -187,7 +194,7 @@ mod basic_error_coverage {
         let e3 = NestGateError::security_error("Session expired");
 
         for e in [e1, e2, e3] {
-            assert!(format!("{}", e).len() > 0);
+            assert!(format!("{}", e)!debug_str.is_empty());
         }
     }
 }

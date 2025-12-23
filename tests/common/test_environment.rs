@@ -47,6 +47,21 @@ pub struct TestTimeouts {
 
 /// **TEST DATABASE CONFIGURATION**
 #[derive(Debug, Clone)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// 
+/// **Migration Path**:
+/// ```rust
+/// // OLD (deprecated):
+/// use crate::network::config::TestDatabaseConfig;
+/// 
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::TestDatabaseConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+/// 
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
 pub struct TestDatabaseConfig {
     /// Database host
     pub host: String,
@@ -77,6 +92,9 @@ impl Default for TestEnvironment {
 
 impl TestEnvironment {
     /// Create test environment from environment variables with sensible defaults
+    ///
+    /// **Note**: This reads environment variables without locking. For tests that
+    /// modify environment variables, use `from_environment_isolated()` instead.
     pub fn from_environment() -> Self {
         let host = env::var("NESTGATE_TEST_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
         let port = env::var("NESTGATE_TEST_PORT")
@@ -100,6 +118,33 @@ impl TestEnvironment {
             database: TestDatabaseConfig::from_environment(),
             storage: TestStorageConfig::from_environment(),
         }
+    }
+    
+    /// Create test environment from environment variables with lock protection
+    ///
+    /// Returns both the environment and the guard that holds the lock.
+    /// The lock is released when the guard is dropped, ensuring proper cleanup.
+    ///
+    /// **Use this** when your test modifies environment variables or needs
+    /// to ensure consistent env state across the test.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use tests::common::test_environment::TestEnvironment;
+    ///
+    /// #[test]
+    /// fn test_with_env() {
+    ///     let (mut env, _lock) = TestEnvironment::from_environment_isolated("my_test");
+    ///     // Lock held until _lock is dropped
+    /// }
+    /// ```
+    pub fn from_environment_isolated(
+        test_name: &str,
+    ) -> (Self, crate::common::env_isolation::IsolatedEnvironment) {
+        let isolated_env = crate::common::env_isolation::IsolatedEnvironment::new(test_name);
+        let env = Self::from_environment();
+        (env, isolated_env)
     }
 
     /// Create test environment for unit tests
@@ -355,23 +400,40 @@ pub fn test_service_address(service_name: &str) -> String {
     get_test_environment().get_service_address(service_name)
 }
 
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+/// 
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+pub type TestDatabaseConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using TestDatabaseConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn test_environment_from_env_vars() -> Result<(), Box<dyn std::error::Error>> {
-        // Test environment variable configuration
-        env::set_var("NESTGATE_TEST_HOST", "testhost.example.com");
-        env::set_var("NESTGATE_TEST_PORT", "9090");
+        // Test environment variable configuration with isolation
+        let mut isolated_env = crate::common::env_isolation::IsolatedEnvironment::new(
+            "test_environment_from_env_vars"
+        );
+        isolated_env.set("NESTGATE_TEST_HOST", "testhost.example.com");
+        isolated_env.set("NESTGATE_TEST_PORT", "9090");
 
         let env = TestEnvironment::from_environment();
         assert_eq!(env.host, "testhost.example.com");
         assert_eq!(env.port, 9090);
 
-        // Cleanup
-        env::remove_var("NESTGATE_TEST_HOST");
-        env::remove_var("NESTGATE_TEST_PORT");
+        // Automatic cleanup via Drop
         Ok(())
     }
 

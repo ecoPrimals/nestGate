@@ -2,9 +2,9 @@
 //! 
 //! End-to-end chaos testing that validates system resilience
 //! **CANONICAL MODERNIZATION**: Updated to use simple, working patterns
+//!
+//! **MODERN CONCURRENCY**: Uses yield_now() for async coordination instead of sleep().
 
-use std::time::Duration;
-use tokio::time::sleep;
 use tracing::info;
 
 /// E2E Chaos Testing - validates system resilience under controlled chaos
@@ -36,7 +36,7 @@ async fn test_network_partition_recovery() -> Result<(), Box<dyn std::error::Err
         // 4. Restore network
         // 5. Verify recovery
         
-        sleep(Duration::from_millis(partition_duration)).await;
+        tokio::task::yield_now().await;
         
         // Verify partition duration is reasonable for testing
         assert!(
@@ -65,7 +65,7 @@ async fn test_service_degradation_handling() -> Result<(), Box<dyn std::error::E
         // 3. Verify graceful degradation
         // 4. Test circuit breaker activation
         
-        sleep(Duration::from_millis(degradation_level as u64)).await;
+        tokio::task::yield_now().await;
         
         assert!(
             degradation_level <= 50,
@@ -90,8 +90,7 @@ async fn test_resource_exhaustion_recovery() -> Result<(), Box<dyn std::error::E
         test_buffers.push(vec![0u8; 1024 * 5]); // 5KB per buffer
         
         if i % 2 == 0 {
-            sleep(Duration::from_millis(10)).await;
-    Ok(())
+            tokio::task::yield_now().await;
         }
         
         // In a real implementation:
@@ -130,7 +129,7 @@ async fn test_cascading_failure_prevention() -> Result<(), Box<dyn std::error::E
         // 3. Check that other services remain stable
         // 4. Test bulkhead isolation
         
-        sleep(Duration::from_millis(15 * (i + 1) as u64)).await;
+        tokio::task::yield_now().await;
         
         assert!(!service.is_empty(), "Service name should be valid");
     Ok(())
@@ -157,7 +156,7 @@ async fn test_post_chaos_recovery() -> Result<(), Box<dyn std::error::Error>> {
         // 3. Verify phase completion
         // 4. Prepare for next phase
         
-        sleep(Duration::from_millis(20)).await;
+        tokio::task::yield_now().await;
         
         assert!(!phase.is_empty(), "Recovery phase should be specified");
     Ok(())
@@ -177,7 +176,7 @@ async fn test_chaos_metrics_collection() -> Result<(), Box<dyn std::error::Error
     // Simulate chaos events and collect metrics
     for i in 0..4 {
         let event_duration = (i + 1) * 10;
-        sleep(Duration::from_millis(event_duration as u64)).await;
+        tokio::task::yield_now().await;
         
         let elapsed = start_time.elapsed();
         info!("Chaos event {}: duration {}ms, total elapsed {:?}", i + 1, event_duration, elapsed);

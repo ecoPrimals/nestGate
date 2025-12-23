@@ -7,6 +7,7 @@ pub struct NetworkDomain {
     // Domain-specific state
     }
 impl NetworkDomain {
+    /// Creates a new instance
     pub fn new() -> Self {
         Self {}
     }
@@ -15,6 +16,7 @@ impl NetworkDomain {
     }
 
 impl Default for NetworkDomain {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

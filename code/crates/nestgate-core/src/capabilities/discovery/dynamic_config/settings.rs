@@ -7,6 +7,7 @@ use std::time::Duration;
 /// **UNIFIED DYNAMIC DISCOVERY EXTENSIONS**
 /// Consolidates all dynamic discovery configuration patterns
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Unifieddynamicdiscoveryextensions
 pub struct UnifiedDynamicDiscoveryExtensions {
     /// Timeout discovery settings
     pub timeout: TimeoutDiscoverySettings,
@@ -22,6 +23,7 @@ pub struct UnifiedDynamicDiscoveryExtensions {
 }
 /// Timeout discovery configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Timeoutdiscoverysettings
 pub struct TimeoutDiscoverySettings {
     /// Enable dynamic timeout discovery
     pub enable_dynamic_timeouts: bool,
@@ -34,6 +36,7 @@ pub struct TimeoutDiscoverySettings {
 }
 /// Network discovery configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Networkdiscoverysettings
 pub struct NetworkDiscoverySettings {
     /// Enable dynamic network discovery
     pub enable_network_discovery: bool,
@@ -46,6 +49,7 @@ pub struct NetworkDiscoverySettings {
 }
 /// Security discovery configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Securitydiscoverysettings
 pub struct SecurityDiscoverySettings {
     /// Enable dynamic security discovery
     pub enable_security_discovery: bool,
@@ -56,6 +60,7 @@ pub struct SecurityDiscoverySettings {
 }
 /// Environment discovery configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Environmentdiscoverysettings
 pub struct EnvironmentDiscoverySettings {
     /// Enable dynamic environment discovery
     pub enable_environment_discovery: bool,
@@ -66,6 +71,7 @@ pub struct EnvironmentDiscoverySettings {
 }
 /// Storage discovery configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagediscoverysettings
 pub struct StorageDiscoverySettings {
     /// Enable dynamic storage discovery
     pub enable_storage_discovery: bool,
@@ -76,6 +82,7 @@ pub struct StorageDiscoverySettings {
 }
 /// Cache discovery configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Cachediscoverysettings
 pub struct CacheDiscoverySettings {
     /// Enable dynamic cache discovery
     pub enable_cache_discovery: bool,
@@ -86,6 +93,7 @@ pub struct CacheDiscoverySettings {
 }
 /// Certificate discovery configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Certificatediscoverysettings
 pub struct CertificateDiscoverySettings {
     /// Enable certificate discovery
     pub enabled: bool,
@@ -96,6 +104,7 @@ pub struct CertificateDiscoverySettings {
 }
 /// Storage capacity threshold settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagecapacitythresholds
 pub struct StorageCapacityThresholds {
     /// Warning threshold percentage
     pub warning_threshold: f64,
@@ -103,6 +112,7 @@ pub struct StorageCapacityThresholds {
     pub critical_threshold: f64,
 }
 impl Default for UnifiedDynamicDiscoveryExtensions {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             timeout: TimeoutDiscoverySettings::default(),
@@ -115,6 +125,7 @@ impl Default for UnifiedDynamicDiscoveryExtensions {
 }
 
 impl Default for TimeoutDiscoverySettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enable_dynamic_timeouts: true,
@@ -126,6 +137,7 @@ impl Default for TimeoutDiscoverySettings {
 }
 
 impl Default for NetworkDiscoverySettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enable_network_discovery: true,
@@ -137,6 +149,7 @@ impl Default for NetworkDiscoverySettings {
 }
 
 impl Default for SecurityDiscoverySettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enable_security_discovery: true,
@@ -147,6 +160,7 @@ impl Default for SecurityDiscoverySettings {
 }
 
 impl Default for EnvironmentDiscoverySettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enable_environment_discovery: true,
@@ -157,6 +171,7 @@ impl Default for EnvironmentDiscoverySettings {
 }
 
 impl Default for StorageDiscoverySettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enable_storage_discovery: true,
@@ -167,6 +182,7 @@ impl Default for StorageDiscoverySettings {
 }
 
 impl Default for CacheDiscoverySettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enable_cache_discovery: true,
@@ -177,6 +193,7 @@ impl Default for CacheDiscoverySettings {
 }
 
 impl Default for CertificateDiscoverySettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: false,
@@ -187,6 +204,7 @@ impl Default for CertificateDiscoverySettings {
 }
 
 impl Default for StorageCapacityThresholds {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             warning_threshold: 80.0,

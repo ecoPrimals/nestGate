@@ -6,6 +6,7 @@ use nestgate_core::Result;
 
 /// Optimization _engine interface
 #[derive(Debug)]
+/// Optimizationengineinterface
 pub struct OptimizationEngineInterface {
     // Implementation fields would go here
 }
@@ -33,6 +34,7 @@ impl OptimizationEngineInterface {
 }
 
 impl Default for OptimizationEngineInterface {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

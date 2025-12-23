@@ -8,11 +8,27 @@ use serde::{Deserialize, Serialize};
 
 /// Universal security primal provider trait
 /// **CANONICAL MODERNIZATION**: Native async trait without `async_trait` overhead
-/// **DEPRECATED**: Primal provider pattern consolidated
+/// **DEPRECATED**: Consolidated into canonical SecurityProvider
+///
+/// # Migration Path
+///
+/// **Old code**:
+/// ```rust,ignore
+/// impl SecurityPrimalProvider for MyProvider { ... }
+/// ```
+///
+/// **New code**:
+/// ```rust,ignore
+/// impl SecurityProvider for MyProvider { ... }
+/// ```
+///
+/// See: `crate::traits::canonical_provider_unification::SecurityProvider`
+/// Timeline: Deprecated v0.11.3 (Nov 2025), Remove v0.12.0 (May 2026)
 #[deprecated(
-    since = "0.9.0",
-    note = "Use crate::traits::canonical_unified_traits::CanonicalSecurity with primal adapter"
+    since = "0.11.3",
+    note = "Use crate::traits::canonical_provider_unification::SecurityProvider - enhanced with 14 comprehensive security methods. Migration guide: docs/guides/SECURITY_PROVIDER_MIGRATION.md"
 )]
+/// SecurityPrimalProvider trait
 pub trait SecurityPrimalProvider: Send + Sync {
     /// Authenticate with provided credentials
     fn authenticate(
@@ -91,33 +107,55 @@ pub trait SecurityPrimalProvider: Send + Sync {
 
 /// Security decision enumeration
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Securitydecision
 pub enum SecurityDecision {
+    /// Allow
     Allow,
+    /// Deny
     Deny,
+    /// Requireadditionalauth
     RequireAdditionalAuth,
+    /// Requiremfa
     RequireMFA,
-    RateLimit { retry_after: u64 },
+    /// Rate limit exceeded - includes time in seconds to wait before retrying
+    RateLimit {
+        /// Number of seconds to wait before retrying
+        retry_after: u64,
+    },
 }
 /// Authentication credentials
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Credentials
 pub struct Credentials {
+    /// Username
     pub username: String,
+    /// Password
     pub password: String,
+    /// Mfa Token
     pub mfa_token: Option<String>,
+    /// Client Info
     pub client_info: Option<String>,
 }
 /// Authentication token
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Authtoken
 pub struct AuthToken {
+    /// Token
     pub token: String,
+    /// Expires At
     pub expires_at: std::time::SystemTime,
+    /// Permissions
     pub permissions: Vec<String>,
 }
 /// Cryptographic signature
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Signature
 pub struct Signature {
+    /// Algorithm
     pub algorithm: String,
+    /// Signature
     pub signature: Vec<u8>,
+    /// Key identifier
     pub key_id: Option<String>,
 }
 #[cfg(test)]
@@ -130,6 +168,7 @@ mod tests {
     }
 
     impl MockSecurityProvider {
+        /// Creates a new instance
         fn new() -> Self {
             Self {
                 key_id: "test-key-123".to_string(),
@@ -139,6 +178,7 @@ mod tests {
 
     #[allow(deprecated)] // Test mock using deprecated trait
     impl SecurityPrimalProvider for MockSecurityProvider {
+        /// Authenticate
         async fn authenticate(&self, credentials: &Credentials) -> Result<AuthToken> {
             if credentials.username == "test_user" && credentials.password == "test_pass" {
                 Ok(AuthToken {
@@ -151,6 +191,7 @@ mod tests {
             }
         }
 
+        /// Encrypt
         async fn encrypt(&self, data: &[u8], algorithm: &str) -> Result<Vec<u8>> {
             if algorithm == "AES256" {
                 let mut encrypted = data.to_vec();
@@ -166,6 +207,7 @@ mod tests {
             }
         }
 
+        /// Decrypt
         async fn decrypt(&self, encrypted: &[u8], algorithm: &str) -> Result<Vec<u8>> {
             if algorithm == "AES256" {
                 let mut decrypted = encrypted.to_vec();
@@ -181,6 +223,7 @@ mod tests {
             }
         }
 
+        /// Sign Data
         async fn sign_data(&self, data: &[u8]) -> Result<Signature> {
             Ok(Signature {
                 algorithm: "RS256".to_string(),
@@ -189,6 +232,7 @@ mod tests {
             })
         }
 
+        /// Verify Signature
         async fn verify_signature(&self, data: &[u8], signature: &Signature) -> Result<bool> {
             if signature.algorithm == "RS256" {
                 let expected: Vec<u8> = data.iter().map(|b| b.wrapping_add(1)).collect();
@@ -198,10 +242,12 @@ mod tests {
             }
         }
 
+        /// Gets Key Id
         async fn get_key_id(&self) -> Result<String> {
             Ok(self.key_id.clone())
         }
 
+        /// Hash Data
         async fn hash_data(&self, data: &[u8], algorithm: &str) -> Result<Vec<u8>> {
             match algorithm {
                 "SHA256" => Ok(data.iter().map(|b| b.wrapping_mul(2)).collect()),
@@ -211,10 +257,12 @@ mod tests {
             }
         }
 
+        /// Generate Random
         async fn generate_random(&self, length: usize) -> Result<Vec<u8>> {
             Ok((0..length).map(|_| fastrand::u8(..)).collect())
         }
 
+        /// Derive Key
         async fn derive_key(
             &self,
             password: &str,
@@ -225,6 +273,7 @@ mod tests {
             Ok(combined.as_bytes().to_vec())
         }
 
+        /// Creates  Session
         async fn create_session(&self, user_id: &str, permissions: Vec<String>) -> Result<String> {
             let permissions_str = permissions.join(",");
             Ok(format!(
@@ -233,6 +282,7 @@ mod tests {
             ))
         }
 
+        /// Validates  Session
         async fn validate_session(&self, session_token: &str) -> Result<SecurityDecision> {
             if session_token.starts_with("session_") {
                 Ok(SecurityDecision::Allow)
@@ -243,6 +293,7 @@ mod tests {
             }
         }
 
+        /// Evaluate Boundary Access
         async fn evaluate_boundary_access(
             &self,
             source: &str,
@@ -292,7 +343,10 @@ mod tests {
         assert!(result.is_err());
     }
 
+    // Note: These tests use deprecated SecurityPrimalProvider API
+    // Use CanonicalSecurity trait for new code
     #[tokio::test]
+    #[allow(deprecated)]
     async fn test_encryption_decryption() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let provider = MockSecurityProvider::new();
         let data = b"Hello, World!";
@@ -309,6 +363,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[allow(deprecated)]
     async fn test_signing_and_verification() -> std::result::Result<(), Box<dyn std::error::Error>>
     {
         let provider = MockSecurityProvider::new();
@@ -330,6 +385,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[allow(deprecated)]
     async fn test_key_id() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let provider = MockSecurityProvider::new();
         let key_id = provider.get_key_id().await?;
@@ -338,6 +394,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[allow(deprecated)]
     async fn test_hash_data() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let provider = MockSecurityProvider::new();
         let data = b"test data";
@@ -352,6 +409,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[allow(deprecated)] // Testing deprecated API for backwards compatibility
     async fn test_generate_random() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let provider = MockSecurityProvider::new();
 
@@ -365,6 +423,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[allow(deprecated)] // Testing deprecated API for backwards compatibility
     async fn test_derive_key() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let provider = MockSecurityProvider::new();
         let password = "test_password";
@@ -387,6 +446,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[allow(deprecated)] // Testing deprecated API for backwards compatibility
     async fn test_session_management() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let provider = MockSecurityProvider::new();
         let user_id = "user123";
@@ -473,6 +533,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[allow(deprecated)] // Testing deprecated API for backwards compatibility
     async fn test_boundary_access_evaluation() -> Result<()> {
         let provider = MockSecurityProvider::new();
 

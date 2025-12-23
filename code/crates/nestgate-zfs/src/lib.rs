@@ -3,12 +3,29 @@
 //! This crate provides ZFS storage management functionality for `NestGate`,
 //! with canonical configuration integration and zero-cost abstractions.
 
+// Temporary allow deprecated during canonical config migration
+#![warn(missing_docs)]
+#![warn(rustdoc::broken_intra_doc_links)]
+#![allow(deprecated)]
+
 // Core modules
+pub mod adaptive_backend; // ✅ Adaptive ZFS: system or internal
+
+/// Storage backends (S3, Azure, GCS, etc.)
+pub mod backends;
+
+/// Command execution module for ZFS commands
 pub mod command;
+
 pub mod dataset;
+
+/// Error types and error handling for ZFS operations
 pub mod error;
+
 pub mod pool;
 pub mod pool_helpers;
+
+/// Core type definitions for ZFS operations
 pub mod types;
 
 // Performance and optimization
@@ -17,14 +34,30 @@ pub mod zero_cost_zfs_handler;
 pub mod zero_cost_zfs_operations;
 
 // Configuration and management
-pub mod canonical_zfs_config;
+// ⚠️ REMOVED: canonical_zfs_config was deprecated and removed in v0.11.0 (November 2025)
+// Use types::ZfsStorageConfig or types::CanonicalZfsConfig instead
+// pub mod canonical_zfs_config; // REMOVED - use types::ZfsStorageConfig
 pub mod health;
 #[cfg(test)]
 mod health_tests;
+
+#[cfg(test)]
+mod zfs_edge_cases_tests; // Dec 10, 2025 - Comprehensive edge case tests
+
+/// Metrics collection and reporting for ZFS operations
 pub mod metrics;
+
+/// Production readiness validation and operational checks
 pub mod production_readiness;
+#[cfg(test)]
+mod production_readiness_tests;
 
 // Real operations module (re-export for compatibility)
+/// Real ZFS operations module - production implementations
+///
+/// This module contains actual ZFS command execution and native ZFS operations.
+/// It provides the production-ready implementations of ZFS functionality including
+/// pool management, dataset operations, and snapshot handling.
 pub mod real_zfs_operations {
     pub use crate::production_readiness::RealZfsOperations;
 }
@@ -44,12 +77,18 @@ pub mod failover;
 pub mod handlers;
 pub mod manager;
 pub mod tier;
+#[cfg(test)]
+mod tier_tests;
 
 // Configuration
 pub mod config;
 
 // Development and testing
 pub mod byob;
+/// Development environment configuration and helpers
+///
+/// This module provides development-time helpers and configurations for working
+/// with ZFS in development environments where actual ZFS may not be available.
 pub mod dev_environment;
 
 // Performance engine
@@ -57,6 +96,8 @@ pub mod performance_engine;
 
 // Native implementations
 pub mod native;
+#[cfg(test)]
+mod native_command_executor_tests;
 
 // Constants
 pub mod constants;
@@ -65,18 +106,33 @@ pub mod constants;
 #[cfg(test)]
 mod command_tests;
 #[cfg(test)]
+mod comprehensive_coverage_boost;
+#[cfg(test)]
 mod pool_types_tests;
+#[cfg(test)]
+mod zfs_final_coverage_boost;
 
 // Re-exports for common usage
 pub use command::ZfsCommand;
 pub use dataset::ZfsDatasetManager;
 pub use error::ZfsError;
 pub use pool::ZfsPoolManager;
-pub use types::*;
+// Re-export types module items individually
+pub use types::{DatasetInfo, PoolInfo, PoolStatus, SnapshotInfo};
+
 pub use zero_cost_zfs_operations::ProductionZfsManager;
-// pub use canonical_zfs_config::{ZfsConfig, ZfsExtensions}; // Module not yet implemented
-// #[allow(deprecated)]
-// pub use canonical_zfs_config::CanonicalZfsConfig; // Module not yet implemented
-pub use canonical_zfs_config::ZfsConfig;
+// Re-export zero-cost types for test modules
+pub use zero_cost_zfs_operations::{ZeroCostDatasetInfo, ZeroCostPoolInfo, ZeroCostSnapshotInfo};
+
+// **CANONICAL ZFS CONFIGURATION EXPORTS**
+// Re-export canonical types for easy access
+pub use types::{
+    CanonicalZfsConfig, ZfsDatasetConfig, ZfsMigrationConfig, ZfsMonitoringConfig,
+    ZfsPerformanceConfig, ZfsPoolConfig, ZfsSnapshotConfig, ZfsStorageConfig,
+};
+
+// Backward compatibility: export as ZfsConfig
+pub use types::CanonicalZfsConfig as ZfsConfig;
+
 pub use pool_setup::ZfsPoolSetup;
 pub use production_readiness::ProductionReadinessValidator;

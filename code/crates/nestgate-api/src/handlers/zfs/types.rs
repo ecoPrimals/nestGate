@@ -2,6 +2,8 @@
 // This module contains all the shared types, request/response structures,
 // and data models used by the ZFS API handlers.
 
+//! Types module
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -12,18 +14,20 @@ use nestgate_zfs::ProductionZfsManager;
 
 // Development: Use stub manager
 #[cfg(feature = "dev-stubs")]
-use crate::handlers::zfs_stub::ProductionZfsManager;
+use crate::dev_stubs::zfs::ProductionZfsManager;
 
 use nestgate_core::canonical_types::StorageTier;
 
 /// ZFS API state container
 #[derive(Clone)]
+/// Zfsapistate
 pub struct ZfsApiState {
     /// ZFS manager instance
     pub zfs_manager: Arc<ProductionZfsManager>,
 }
 /// Pool creation request
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for CreatePool operation
 pub struct CreatePoolRequest {
     /// Pool name
     pub name: String,
@@ -34,6 +38,7 @@ pub struct CreatePoolRequest {
 }
 /// Pool configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Pool
 pub struct PoolConfig {
     /// RAID level (mirror, raidz1, raidz2, raidz3)
     pub raid_level: Option<String>,
@@ -46,6 +51,7 @@ pub struct PoolConfig {
 }
 /// Dataset creation request
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for CreateDataset operation
 pub struct CreateDatasetRequest {
     /// Dataset name
     pub name: String,
@@ -58,6 +64,7 @@ pub struct CreateDatasetRequest {
 }
 /// Snapshot creation request
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for CreateSnapshot operation
 pub struct CreateSnapshotRequest {
     /// Snapshot name
     pub name: String,
@@ -70,6 +77,7 @@ pub struct CreateSnapshotRequest {
 }
 /// Tier migration request
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for TierMigration operation
 pub struct TierMigrationRequest {
     /// Dataset path
     pub dataset_path: String,
@@ -84,6 +92,7 @@ pub struct TierMigrationRequest {
 }
 /// Query parameters for listing operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Listquery
 pub struct ListQuery {
     /// Limit number of results
     pub limit: Option<usize>,
@@ -98,12 +107,14 @@ pub struct ListQuery {
 pub use nestgate_core::response::ApiResponse;
 /// Tier prediction request
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for TierPrediction operation
 pub struct TierPredictionRequest {
     /// Path to the file for tier prediction
     pub file_path: String,
 }
 /// Performance analytics request
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for PerformanceAnalytics operation
 pub struct PerformanceAnalyticsRequest {
     /// Pool name to analyze
     pub pool_name: Option<String>,
@@ -114,6 +125,7 @@ pub struct PerformanceAnalyticsRequest {
 }
 /// Optimization request
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for Optimization operation
 pub struct OptimizationRequest {
     /// Target to optimize (pool, dataset, or system)
     pub target: String,
@@ -124,6 +136,7 @@ pub struct OptimizationRequest {
 }
 /// Manifest provisioning request
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for ManifestProvisioning operation
 pub struct ManifestProvisioningRequest {
     /// Service manifest
     pub manifest: serde_json::Value,
@@ -132,6 +145,7 @@ pub struct ManifestProvisioningRequest {
 }
 /// Management volume request
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for ManagementVolume operation
 pub struct ManagementVolumeRequest {
     /// Volume name
     pub name: String,
@@ -144,6 +158,7 @@ pub struct ManagementVolumeRequest {
 }
 /// Agent runtime request
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for AgentRuntime operation
 pub struct AgentRuntimeRequest {
     /// Agent name
     pub name: String,
@@ -154,6 +169,7 @@ pub struct AgentRuntimeRequest {
 }
 /// Health check response
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for HealthCheck operation
 pub struct HealthCheckResponse {
     /// Overall health status
     pub status: String,
@@ -164,6 +180,7 @@ pub struct HealthCheckResponse {
 }
 /// Status response
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for Status operation
 pub struct StatusResponse {
     /// System status
     pub status: String,

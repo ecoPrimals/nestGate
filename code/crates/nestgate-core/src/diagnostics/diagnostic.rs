@@ -6,6 +6,7 @@ use std::time::SystemTime;
 
 /// Individual diagnostic entry
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Diagnostic
 pub struct Diagnostic {
     /// Diagnostic ID
     pub id: String,
@@ -111,3 +112,7 @@ impl Diagnostic {
             .as_secs()
     }
 }
+
+#[cfg(test)]
+#[path = "diagnostic_tests.rs"]
+mod tests;

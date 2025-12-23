@@ -106,6 +106,7 @@ fn test_retry_attempts_constant() {
 
 #[test]
 fn test_storage_tier_type_safety() {
+    /// Accepts Storage Tier
     fn accepts_storage_tier(_tier: StorageTier) -> bool {
         true
     }
@@ -114,6 +115,7 @@ fn test_storage_tier_type_safety() {
 
 #[test]
 fn test_error_type_safety() {
+    /// Accepts Error
     fn accepts_error(_error: NestGateError) -> bool {
         true
     }
@@ -123,6 +125,7 @@ fn test_error_type_safety() {
 
 #[test]
 fn test_result_type_safety() {
+    /// Returns Result
     fn returns_result() -> Result<String> {
         Ok("test".to_string())
     }
@@ -280,6 +283,7 @@ fn test_max_connections_reasonable_bounds() {
 
 #[test]
 fn test_error_propagation() {
+    /// May Fail
     fn may_fail(should_fail: bool) -> Result<String> {
         if should_fail {
             Err(NestGateError::internal_error(
@@ -297,10 +301,12 @@ fn test_error_propagation() {
 
 #[test]
 fn test_error_chaining() {
+    /// Inner
     fn inner() -> Result<i32> {
         Ok(42)
     }
 
+    /// Outer
     fn outer() -> Result<i32> {
         inner()
     }
@@ -345,6 +351,7 @@ fn test_constants_integration() {
 
 #[test]
 fn test_error_result_integration() {
+    /// Processes data
     fn process() -> Result<StorageTier> {
         Ok(StorageTier::Hot)
     }

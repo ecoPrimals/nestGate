@@ -24,7 +24,7 @@ use crate::{Result, NestGateError};
 use crate::traits::{UniversalService, UniversalServiceRequest, UniversalServiceResponse};
 use crate::unified_enums::{UnifiedServiceType, UnifiedServiceState};
 // **MIGRATED**: Using canonical config system instead of deprecated unified_types
-use crate::config::canonical_master::NestGateCanonicalConfig as NestGateCanonicalConfig;
+use crate::config::canonical_primary::NestGateCanonicalConfig as NestGateCanonicalConfig;
 // **MIGRATED**: Using local UnifiedServiceConfig definition
 use crate::service_discovery::config::UnifiedServiceConfig;
 
@@ -32,8 +32,11 @@ use crate::service_discovery::config::UnifiedServiceConfig;
 
 /// Universal Test Factory trait for creating test objects
 use crate::error::NestGateError;
+/// TestFactory trait
 pub trait TestFactory<T> {
+    /// Type alias for Config
     type Config;
+    /// Type alias for Error
     type Error: std::error::Error + Send + Sync + 'static;
     
     /// Create a test instance with default configuration
@@ -50,6 +53,7 @@ pub trait TestFactory<T> {
 }
 /// Test scenarios for different testing contexts
 #[derive(Debug, Clone, PartialEq, Eq)]
+/// Testscenario
 pub enum TestScenario {
     /// Unit testing scenario
     Unit,
@@ -112,12 +116,17 @@ impl ServiceTestFactory {
 
 /// Service behavior configuration for testing
 #[derive(Debug, Clone)]
+/// Servicebehavior
 pub struct ServiceBehavior {
+    /// Response Delay
     pub response_delay: Duration,
+    /// Success Rate
     pub success_rate: f64,
+    /// Enable Realistic Errors
     pub enable_realistic_errors: bool,
 }
 impl Default for ServiceBehavior {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             response_delay: Duration::from_millis(1), // Fast for tests
@@ -295,6 +304,7 @@ impl TestDataFactory {
 
 /// Trait for generating test data
 pub trait TestDataGenerator {
+    /// Generate For Scenario
     fn generate_for_scenario(scenario: &TestScenario, index: usize) -> Self;
 }
 // ==================== SECTION ====================
@@ -306,6 +316,7 @@ pub struct MockTestService {
     config: UnifiedServiceConfig,
 }
 impl MockTestService {
+    /// Creates a new instance
     pub fn new(service_type: UnifiedServiceType, behavior: ServiceBehavior) -> Self {
         Self {
             service_type,
@@ -316,15 +327,19 @@ impl MockTestService {
 }
 
 impl UniversalService for MockTestService {
+    /// Type alias for Config
     type Config = UnifiedServiceConfig;
+    /// Type alias for Health
     type Health = bool;
     
+    /// Initialize
     async fn initialize(&mut self, config: Self::Config) -> Result<()> {
         tokio::time::sleep(self.behavior.response_delay).await;
         self.config = config;
         Ok(())
     }
     
+    /// Start
     async fn start(&mut self) -> Result<()> {
         tokio::time::sleep(self.behavior.response_delay).await;
         if self.should_simulate_error() {
@@ -333,16 +348,19 @@ impl UniversalService for MockTestService {
         Ok(())
     }
     
+    /// Stop
     async fn stop(&mut self) -> Result<()> {
         tokio::time::sleep(self.behavior.response_delay).await;
         Ok(())
     }
     
+    /// Health Check
     async fn health_check(&self) -> Result<bool> {
         tokio::time::sleep(self.behavior.response_delay).await;
         Ok(!self.behavior.should_fail)
     }
     
+    /// Handles  Request
     async fn handle_request(&self, _request: UniversalServiceRequest) -> Result<UniversalServiceResponse> {
         tokio::time::sleep(self.behavior.response_delay).await;
         Ok(UniversalServiceResponse {
@@ -354,6 +372,7 @@ impl UniversalService for MockTestService {
         })
     }
 
+    /// Status
     async fn status(&self) -> crate::unified_enums::UnifiedServiceState {
         if self.behavior.should_fail {
             crate::unified_enums::UnifiedServiceState::Failed
@@ -362,20 +381,24 @@ impl UniversalService for MockTestService {
         }
     }
 
+    /// Health
     async fn health(&self) -> Result<Self::Health> {
         self.health_check().await
     }
 
+    /// Service Id
     fn service_id(&self) -> &str {
         "mock-test-service"
     }
 
+    /// Service Type
     fn service_type(&self) -> crate::unified_enums::UnifiedServiceType {
         self.service_type.clone()
     }
 }
 
 impl MockTestService {
+    /// Should Simulate Error
     fn should_simulate_error(&self) -> bool {
         if !self.behavior.enable_realistic_errors {
             return false;
@@ -388,9 +411,13 @@ impl MockTestService {
 
 /// Service health information for testing
 #[derive(Debug, Clone, Serialize)]
+/// Servicehealth
 pub struct ServiceHealth {
+    /// Whether healthy
     pub is_healthy: bool,
+    /// Uptime
     pub uptime: Duration,
+    /// Memory Usage
     pub memory_usage: f64,
 }
 /// Test service registry
@@ -405,14 +432,17 @@ impl TestServiceRegistry {
         }
     }
     
+    /// Register Service
     pub fn register_service(&mut self, name: String, service: Arc<dyn UniversalService<Config = UnifiedServiceConfig, Health = ServiceHealth>>) {
         self.services.insert(name, service);
     }
     
+    /// Gets Service
     pub fn get_service(&self, name: &str) -> Option<&Arc<dyn UniversalService<Config = UnifiedServiceConfig, Health = ServiceHealth>>> {
         self.services.get(name)
     }
     
+    /// List Services
     pub fn list_services(&self) -> Vec<&String> {
         self.services.keys().collect()
     }
@@ -434,6 +464,7 @@ impl MemoryStorageBackend {
 }
 
 impl crate::universal_storage::UniversalStorageBackend for MemoryStorageBackend {
+    /// Handles  Request
     async fn handle_request(
         &self,
         request: crate::universal_storage::UniversalStorageRequest,
@@ -470,10 +501,12 @@ impl crate::universal_storage::UniversalStorageBackend for MemoryStorageBackend 
         }
     }
     
+    /// Backend Type
     fn backend_type(&self) -> crate::universal_storage::UniversalStorageType {
         crate::universal_storage::UniversalStorageType::Memory
     }
     
+    /// Capabilities
     fn capabilities(&self) -> Vec<crate::universal_storage::StorageCapability> {
         vec![
             crate::universal_storage::StorageCapability::ReadWrite,
@@ -481,22 +514,27 @@ impl crate::universal_storage::UniversalStorageBackend for MemoryStorageBackend 
         ]
     }
     
+    /// Checks if Available
     async fn is_available(&self) -> bool {
         true
     }
     
+    /// Health Check
     async fn health_check(&self) -> Result<crate::universal_storage::StorageHealthStatus> {
         Ok(crate::universal_storage::StorageHealthStatus::Healthy)
     }
     
+    /// Gets Metrics
     async fn get_metrics(&self) -> Result<crate::universal_storage::StoragePerformanceMetrics> {
         Ok(crate::universal_storage::StoragePerformanceMetrics::default())
     }
     
+    /// Initialize
     async fn initialize(&mut self, _config: crate::universal_storage::StorageResourceConfig) -> Result<()> {
         Ok(())
     }
     
+    /// Shutdown
     async fn shutdown(&mut self) -> Result<()> {
         self.data.write().await.clear();
         Ok(())
@@ -513,6 +551,7 @@ impl LocalStorageBackend {
 }
 
 impl UnifiedStorageBackend for LocalStorageBackend {
+    /// Handles  Request
     async fn handle_request(
         &self,
         _request: crate::universal_storage::UniversalStorageRequest,
@@ -524,18 +563,22 @@ impl UnifiedStorageBackend for LocalStorageBackend {
         })
     }
     
+    /// Backend Type
     fn backend_type(&self) -> UnifiedStorageType {
         UnifiedStorageType::Local
     }
     
+    /// Capabilities
     fn capabilities(&self) -> Vec<StorageCapability> {
         vec![StorageCapability::ReadWrite]
     }
     
+    /// Checks if Available
     async fn is_available(&self) -> bool {
         self.base_path.exists()
     }
     
+    /// Health Check
     async fn health_check(&self) -> Result<crate::universal_storage::StorageHealthStatus> {
         if self.is_available().await {
             Ok(crate::universal_storage::StorageHealthStatus::Healthy)
@@ -544,15 +587,18 @@ impl UnifiedStorageBackend for LocalStorageBackend {
         }
     }
     
+    /// Gets Metrics
     async fn get_metrics(&self) -> Result<crate::universal_storage::StoragePerformanceMetrics> {
         Ok(crate::universal_storage::StoragePerformanceMetrics::default())
     }
     
+    /// Initialize
     async fn initialize(&mut self, _config: crate::universal_storage::StorageResourceConfig) -> Result<()> {
         tokio::fs::create_dir_all(&self.base_path).await?;
         Ok(())
     }
     
+    /// Shutdown
     async fn shutdown(&mut self) -> Result<()> {
         Ok(())
     }
@@ -563,12 +609,14 @@ pub struct MockStorageBackend {
     storage_type: crate::universal_storage::UniversalStorageType,
 }
 impl MockStorageBackend {
+    /// Creates a new instance
     pub fn new(storage_type: crate::universal_storage::UniversalStorageType) -> Self {
         Self { storage_type }
     }
 }
 
 impl crate::universal_storage::UniversalStorageBackend for MockStorageBackend {
+    /// Handles  Request
     async fn handle_request(
         &self,
         _request: UnifiedStorageRequest,
@@ -579,30 +627,37 @@ impl crate::universal_storage::UniversalStorageBackend for MockStorageBackend {
         })
     }
     
+    /// Backend Type
     fn backend_type(&self) -> crate::universal_storage::UniversalStorageType {
         self.storage_type.clone()
     }
     
+    /// Capabilities
     fn capabilities(&self) -> Vec<crate::universal_storage::StorageCapability> {
         self.storage_type.default_capabilities()
     }
     
+    /// Checks if Available
     async fn is_available(&self) -> bool {
         true
     }
     
+    /// Health Check
     async fn health_check(&self) -> Result<crate::universal_storage::StorageHealthStatus> {
         Ok(crate::universal_storage::StorageHealthStatus::Healthy)
     }
     
+    /// Gets Metrics
     async fn get_metrics(&self) -> Result<crate::universal_storage::StoragePerformanceMetrics> {
         Ok(crate::universal_storage::StoragePerformanceMetrics::default())
     }
     
+    /// Initialize
     async fn initialize(&mut self, _config: crate::universal_storage::StorageResourceConfig) -> Result<()> {
         Ok(())
     }
     
+    /// Shutdown
     async fn shutdown(&mut self) -> Result<()> {
         Ok(())
     }

@@ -1,6 +1,8 @@
 //
 // Simplified tests for basic functionality without ecosystem integration
 
+//! Advanced Features Tests module
+
 use nestgate_zfs::performance_engine::BottleneckSeverity;
 use std::collections::HashMap;
 use std::time::SystemTime;
@@ -48,6 +50,7 @@ pub struct RetentionAnalyzer {
 }
 
 impl RetentionAnalyzer {
+    /// Creates a new instance
     pub fn new() -> Self {
         Self {
             config: HashMap::new(),
@@ -56,6 +59,7 @@ impl RetentionAnalyzer {
 }
 
 impl Default for RetentionAnalyzer {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -111,7 +115,7 @@ pub struct SnapshotOptimization {
     pub deduplication: bool,
 }
 #[test]
-fn test_usage_patterns_default() -> Result<(), Box<dyn std::error::Error>> {
+fn test_usage_patterns_default() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let patterns = UsagePatterns {
         access_frequency: 0.5,
         modification_frequency: 0.3,
@@ -127,7 +131,7 @@ fn test_usage_patterns_default() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
-fn test_retention_result_creation() -> Result<(), Box<dyn std::error::Error>> {
+fn test_retention_result_creation() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let result = RetentionResult {
         snapshots_deleted: 3,
         space_freed_bytes: 1024 * 1024 * 100, // 100MB
@@ -143,7 +147,7 @@ fn test_retention_result_creation() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
-fn test_retention_plan_structure() -> Result<(), Box<dyn std::error::Error>> {
+fn test_retention_plan_structure() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let plan = RetentionPlan {
         dataset_name: "test-dataset".to_string(),
         retention_days: 30,
@@ -159,7 +163,7 @@ fn test_retention_plan_structure() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
-fn test_snapshot_requirements_and_policy() -> Result<(), Box<dyn std::error::Error>> {
+fn test_snapshot_requirements_and_policy() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let requirements = SnapshotRequirements {
         dataset_name: "test-dataset".to_string(),
         frequency: SnapshotFrequency::Daily,
@@ -181,7 +185,7 @@ fn test_snapshot_requirements_and_policy() -> Result<(), Box<dyn std::error::Err
 }
 
 #[test]
-fn test_retention_analyzer() -> Result<(), Box<dyn std::error::Error>> {
+fn test_retention_analyzer() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let _analyzer = RetentionAnalyzer::new();
 
     // Test that the analyzer was created successfully
@@ -191,7 +195,7 @@ fn test_retention_analyzer() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
-fn test_system_metrics_structure() -> Result<(), Box<dyn std::error::Error>> {
+fn test_system_metrics_structure() -> std::result::Result<(), Box<dyn std::error::Error>> {
     // Comment out the SystemMetrics test since it uses different field names in the actual implementation
     // let metrics = SystemMetrics { ... };
     // Test passes with stub data validation
@@ -211,7 +215,7 @@ fn test_system_metrics_structure() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
-fn test_replication_requirements() -> Result<(), Box<dyn std::error::Error>> {
+fn test_replication_requirements() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let requirements = ReplicationRequirements {
         min_replicas: 2,
         max_replicas: 5,
@@ -225,7 +229,7 @@ fn test_replication_requirements() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
-fn test_performance_bottleneck() -> Result<(), Box<dyn std::error::Error>> {
+fn test_performance_bottleneck() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let bottleneck = PerformanceBottleneck {
         bottleneck_type: BottleneckType::IoLatency,
         severity: BottleneckSeverity::Medium,
@@ -239,7 +243,7 @@ fn test_performance_bottleneck() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
-fn test_capacity_forecast() -> Result<(), Box<dyn std::error::Error>> {
+fn test_capacity_forecast() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let forecast = CapacityForecast {
         predicted_usage: vec![CapacityPrediction {
             timestamp: SystemTime::now(),

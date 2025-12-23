@@ -2,11 +2,11 @@
 //! 
 //! This test validates E2E performance optimization workflows using canonical patterns
 //! **CANONICAL MODERNIZATION**: Updated to use simple, working patterns
+//!
+//! **MODERN CONCURRENCY**: Uses yield_now() for async coordination instead of sleep().
 
-use nestgate_core::config::canonical_master::NestGateCanonicalConfig as NestGateUnifiedConfig;
+use nestgate_core::config::canonical_primary::NestGateCanonicalConfig as NestGateUnifiedConfig;
 use nestgate_core::constants::Environment;
-use std::time::Duration;
-use tokio::time::sleep;
 use tracing::info;
 
 /// Test E2E performance optimization workflow configuration
@@ -19,7 +19,7 @@ async fn test_performance_optimization_config() -> Result<(), Box<dyn std::error
     assert!(!config.system.instance_name.is_empty());
     
     // Test environment-specific performance optimization configuration
-    let dev_config = nestgate_core::config::canonical_master::create_config_for_environment(Environment::Development);
+    let dev_config = nestgate_core::config::canonical_primary::create_config_for_environment(Environment::Development);
     assert!(!dev_config.system.instance_name.is_empty());
     
     info!("✅ E2E performance optimization configuration test completed");
@@ -43,7 +43,7 @@ async fn test_performance_optimization_workflow() -> Result<(), Box<dyn std::err
         info!("Executing {} phase ({}ms)", phase, execution_time);
         
         // Simulate workflow phase execution
-        sleep(Duration::from_millis(execution_time as u64)).await;
+        tokio::task::yield_now().await;
         
         // Verify phase is valid
         assert!(!phase.is_empty(), "Phase should be specified");
@@ -65,7 +65,7 @@ async fn test_performance_metrics_collection() -> Result<(), Box<dyn std::error:
     // Test E2E performance metrics collection cycles
     for i in 0..5 {
         let collection_time = (i + 1) * 20;
-        sleep(Duration::from_millis(collection_time as u64)).await;
+        tokio::task::yield_now().await;
         
         let elapsed = start_time.elapsed();
         info!("Metrics collection {}: {}ms, total elapsed: {:?}", i + 1, collection_time, elapsed);
@@ -96,7 +96,7 @@ async fn test_performance_optimization_strategies() -> Result<(), Box<dyn std::e
         info!("Applying {} strategy ({}ms)", strategy, optimization_time);
         
         // Simulate strategy application
-        sleep(Duration::from_millis(optimization_time as u64)).await;
+        tokio::task::yield_now().await;
         
         // Verify strategy is valid
         assert!(!strategy.is_empty(), "Strategy should be specified");
@@ -125,7 +125,7 @@ async fn test_performance_monitoring() -> Result<(), Box<dyn std::error::Error>>
         info!("Testing {} monitoring ({}ms)", scenario, monitoring_time);
         
         // Simulate monitoring scenario
-        sleep(Duration::from_millis(monitoring_time as u64)).await;
+        tokio::task::yield_now().await;
         
         // Verify monitoring scenario is valid
         assert!(!scenario.is_empty(), "Scenario should be specified");
@@ -154,7 +154,7 @@ async fn test_performance_optimization_validation() -> Result<(), Box<dyn std::e
         info!("Performing {} validation ({}ms)", check_type, validation_time);
         
         // Simulate validation check
-        sleep(Duration::from_millis(validation_time as u64 / 2)).await;
+        tokio::task::yield_now().await;
         
         // Verify validation check is valid
         assert!(!check_type.is_empty(), "Check type should be specified");
@@ -172,13 +172,13 @@ async fn test_performance_optimization_environments() -> Result<(), Box<dyn std:
     info!("🌍 Testing E2E performance optimization across environments");
     
     // Test development environment performance optimization
-    let dev_config = nestgate_core::config::canonical_master::create_config_for_environment(Environment::Development);
+    let dev_config = nestgate_core::config::canonical_primary::create_config_for_environment(Environment::Development);
     assert!(!dev_config.system.instance_name.is_empty());
     assert!(matches!(dev_config.environment, Environment::Development));
     info!("Development performance optimization configuration validated");
     
     // Test production environment performance optimization
-    let prod_config = nestgate_core::config::canonical_master::create_config_for_environment(Environment::Production);
+    let prod_config = nestgate_core::config::canonical_primary::create_config_for_environment(Environment::Production);
     assert!(!prod_config.system.instance_name.is_empty());
     assert!(matches!(prod_config.environment, Environment::Production));
     info!("Production performance optimization configuration validated");

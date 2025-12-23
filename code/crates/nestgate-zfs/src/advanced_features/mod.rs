@@ -2,10 +2,17 @@
 // This module contains advanced ZFS analytics and monitoring capabilities
 // split into focused, maintainable sub-modules for better code organization.
 
+//! Advanced Features module
+
+/// Cache analytics and ARC/L2ARC statistics
 pub mod cache;
+/// Capacity monitoring and bottleneck detection
 pub mod capacity;
+/// Compression analytics and efficiency monitoring
 pub mod compression;
+/// Replication analytics and performance tracking
 pub mod replication;
+/// Snapshot analytics and policy management
 pub mod snapshots;
 
 // Re-export commonly used types for easier access

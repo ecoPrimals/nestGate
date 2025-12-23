@@ -5,6 +5,9 @@
 use chrono::Utc;
 use nestgate_network::api::{OrchestrationCapability, ServiceInstance, ServiceStatus};
 
+// Test port constant
+const TEST_PORT: u16 = 18080;
+
 #[test]
 fn test_service_status_equality() {
     assert_eq!(ServiceStatus::Running, ServiceStatus::Running);
@@ -18,7 +21,7 @@ fn test_service_instance_creation() {
         id: "test-001".to_string(),
         name: "test-service".to_string(),
         host: "localhost".to_string(),
-        port: 8080,
+        port: TEST_PORT,
         status: ServiceStatus::Running,
         created_at: Utc::now(),
         updated_at: Utc::now(),
@@ -26,7 +29,7 @@ fn test_service_instance_creation() {
 
     assert_eq!(instance.id, "test-001");
     assert_eq!(instance.name, "test-service");
-    assert_eq!(instance.port, 8080);
+    assert_eq!(instance.port, TEST_PORT);
     assert_eq!(instance.status, ServiceStatus::Running);
 }
 

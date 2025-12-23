@@ -14,9 +14,13 @@ pub trait NativeAsyncServiceDiscovery<
     const HEALTH_UPDATE_INTERVAL_SECS: u64 = 60,
 >: Send + Sync
 {
+    /// Type alias for ServiceInfo
     type ServiceInfo: Clone + Send + Sync + 'static;
+    /// Type alias for ServiceEvent
     type ServiceEvent: Clone + Send + Sync + 'static;
+    /// Type alias for HealthStatus
     type HealthStatus: Clone + Send + Sync + 'static;
+    /// Type alias for Query
     type Query: Clone + Send + Sync + 'static;
     /// Register service - native async, no Future boxing
     fn register(&self, service: Self::ServiceInfo) -> impl Future<Output = Result<()>> + Send;
@@ -30,7 +34,7 @@ pub trait NativeAsyncServiceDiscovery<
         service_name: &str,
     ) -> impl Future<Output = Result<Vec<Self::ServiceInfo>>> + Send;
 
-    /// Watch for service changes - native async
+    /// Watches for service changes and returns a stream of events
     fn watch(&self) -> impl Future<Output = Result<Vec<Self::ServiceEvent>>> + Send;
 
     /// Update health status - compile-time optimization
@@ -65,19 +69,19 @@ pub trait NativeAsyncServiceDiscovery<
         metadata: HashMap<String, String>,
     ) -> impl Future<Output = Result<()>> + Send;
 
-    /// Maximum number of services that can be discovered at compile-time
+    /// Returns the maximum number of services
     #[must_use]
     fn max_services() -> usize {
         MAX_SERVICES
     }
 
-    /// Discovery timeout at compile-time
+    /// Returns the discovery timeout in seconds
     #[must_use]
     fn discovery_timeout_seconds() -> u64 {
         DISCOVERY_TIMEOUT_SECS
     }
 
-    /// Watch buffer size at compile-time
+    /// Returns the watch buffer size
     #[must_use]
     fn watch_buffer_size() -> usize {
         WATCH_BUFFER_SIZE
@@ -92,9 +96,13 @@ pub trait NativeAsyncProtocolHandler<
     const BUFFER_SIZE: usize = 8192,
 >: Send + Sync
 {
+    /// Type alias for Connection
     type Connection: Clone + Send + Sync + 'static;
+    /// Type alias for Request
     type Request: Clone + Send + Sync + 'static;
+    /// Type alias for Response
     type Response: Clone + Send + Sync + 'static;
+    /// Type alias for Config
     type Config: Clone + Send + Sync + 'static;
     /// Establish connection - native async, no Future boxing
     fn connect(
@@ -129,12 +137,13 @@ pub trait NativeAsyncProtocolHandler<
         -> impl Future<Output = Result<Duration>> + Send;
 
     /// Max connections at compile-time
+    /// Returns the maximum number of connections.
     #[must_use]
     fn max_connections() -> usize {
         MAX_CONNECTIONS
     }
 
-    /// Connection timeout at compile-time
+    /// Returns the connection timeout in seconds.
     #[must_use]
     fn connection_timeout_seconds() -> u64 {
         CONNECTION_TIMEOUT_SECS
@@ -155,9 +164,13 @@ pub trait NativeAsyncUnifiedServiceInterface<
     const SERVICE_TIMEOUT_SECS: u64 = 60,
 >: Send + Sync
 {
+    /// Type alias for HealthStatus
     type HealthStatus: Clone + Send + Sync + 'static;
+    /// Type alias for Metrics
     type Metrics: Clone + Send + Sync + 'static;
+    /// Type alias for ServiceInfo
     type ServiceInfo: Clone + Send + Sync + 'static;
+    /// Type alias for Configuration
     type Configuration: Clone + Send + Sync + 'static;
     /// Get service health - native async, no Future boxing
     fn health(&self) -> impl Future<Output = Result<Self::HealthStatus>> + Send;
@@ -195,7 +208,7 @@ pub trait NativeAsyncUnifiedServiceInterface<
         MAX_REQUESTS_PER_SEC
     }
 
-    /// Health check interval at compile-time
+    /// Returns the health check interval in seconds.
     #[must_use]
     fn health_check_interval_seconds() -> u64 {
         HEALTH_CHECK_INTERVAL_SECS
@@ -209,9 +222,13 @@ pub trait NativeAsyncLoadBalancer<
     const MAX_REQUESTS_PER_BACKEND: usize = 1000,
 >: Send + Sync
 {
+    /// Type alias for Backend
     type Backend: Clone + Send + Sync + 'static;
+    /// Type alias for Request
     type Request: Clone + Send + Sync + 'static;
+    /// Type alias for Response
     type Response: Clone + Send + Sync + 'static;
+    /// Type alias for HealthCheck
     type HealthCheck: Clone + Send + Sync + 'static;
     /// Select backend - native async, no Future boxing
     fn select_backend(
@@ -247,7 +264,7 @@ pub trait NativeAsyncLoadBalancer<
         MAX_BACKENDS
     }
 
-    /// Health check interval at compile-time
+    /// Returns the health check interval in seconds.
     #[must_use]
     fn health_check_interval_seconds() -> u64 {
         HEALTH_CHECK_INTERVAL_SECS

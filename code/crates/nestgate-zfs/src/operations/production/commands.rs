@@ -2,6 +2,8 @@
 ///
 // Command execution and caching for ZFS operations
 
+//! Commands module
+
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime};
@@ -11,7 +13,7 @@ use serde::{Deserialize, Serialize};
 
 use nestgate_core::error::Result;
 use nestgate_core::constants::zfs;
-use nestgate_core::config::canonical_master::ZfsOperationsConfig;
+use nestgate_core::config::canonical_primary::ZfsOperationsConfig;
 
 // ==================== COMMAND EXECUTION ====================
 
@@ -39,6 +41,7 @@ pub struct CommandCache {
 ///
 /// A cached command result with metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Cachedcommand
 pub struct CachedCommand {
     /// Command that was executed
     pub command: String,
@@ -56,6 +59,7 @@ pub struct CachedCommand {
 ///
 /// Statistics about cache performance
 #[derive(Debug, Default)]
+/// Cachestats
 pub struct CacheStats {
     /// Total cache hits
     pub hits: u64,
@@ -225,6 +229,7 @@ impl CommandCache {
 }
 
 impl Default for CommandCache {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

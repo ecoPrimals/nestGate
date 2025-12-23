@@ -8,16 +8,36 @@ use crate::ecosystem_integration::capability_router::{FallbackProvider, Capabili
 
 /// AI fallback provider using heuristic algorithms
 #[derive(Debug)]
+/// Aifallbackprovider
 pub struct AiFallbackProvider {
     config: AiFallbackConfig,
 }
 #[derive(Debug, Clone)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// 
+/// **Migration Path**:
+/// ```rust
+/// // OLD (deprecated):
+/// use crate::config::AiFallbackConfig;
+/// 
+/// // NEW (canonical):
+/// use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::config::AiFallbackConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+/// 
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for AiFallback
 pub struct AiFallbackConfig {
+    /// Confidence Threshold
     pub confidence_threshold: f64,
+    /// Enable Logging
     pub enable_logging: bool,
 }
 
 impl Default for AiFallbackConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             confidence_threshold: 0.7,
@@ -27,16 +47,19 @@ impl Default for AiFallbackConfig {
 }
 
 impl Default for AiFallbackProvider {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
 }
 
 impl AiFallbackProvider {
+    /// Creates a new instance
     pub fn new() -> Self {
         Self::with_config(AiFallbackConfig::default())
     }
 
+    /// Builder method to set Config
     pub fn with_config(config: AiFallbackConfig) -> Self {
         Self { config }
     }
@@ -119,6 +142,7 @@ impl AiFallbackProvider {
 }
 
 impl FallbackProvider for AiFallbackProvider {
+    /// Execute
     async fn execute(
         &self,
         operation: &str,
@@ -133,6 +157,7 @@ impl FallbackProvider for AiFallbackProvider {
         }
     }
 
+    /// Supported Operations
     fn supported_operations(&self) -> Vec<String> {
         vec![
             "optimize_storage".to_string(),
@@ -142,6 +167,7 @@ impl FallbackProvider for AiFallbackProvider {
         ]
     }
 
+    /// Metadata
     fn metadata(&self) -> HashMap<String, String> {
         let mut metadata = HashMap::new();
         metadata.insert("provider_type".to_string(), "ai_fallback".to_string());
@@ -153,3 +179,20 @@ impl FallbackProvider for AiFallbackProvider {
         metadata
     }
 }
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+/// 
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Aifallbackconfigcanonical
+pub type AiFallbackConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using AiFallbackConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+

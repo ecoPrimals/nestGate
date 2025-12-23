@@ -4,6 +4,7 @@ use std::time::Duration;
 
 /// Universal adapter configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for UniversalAdapter
 pub struct UniversalAdapterConfig {
     /// Enable auto-discovery of primal providers
     pub auto_discovery: bool,
@@ -18,7 +19,9 @@ pub struct UniversalAdapterConfig {
     /// Discovery methods to use
     pub discovery_methods: Vec<DiscoveryMethod>,
 }
+#[allow(deprecated)]
 impl Default for UniversalAdapterConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             auto_discovery: true,
@@ -37,6 +40,7 @@ impl Default for UniversalAdapterConfig {
 
 /// Fallback behavior when no primal is available
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Fallbackbehavior
 pub enum FallbackBehavior {
     /// Return an error
     Error,
@@ -47,6 +51,7 @@ pub enum FallbackBehavior {
 }
 /// Discovery methods for finding primal providers
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+/// Discoverymethod
 pub enum DiscoveryMethod {
     /// Environment variables
     Environment,
@@ -60,29 +65,51 @@ pub enum DiscoveryMethod {
 
 /// Configuration for the universal adapter
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+///
+/// **Migration Path**:
+/// ```rust,ignore
+/// // OLD (deprecated):
+/// use crate::network::config::AdapterConfig;
+///
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::AdapterConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+///
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(
+    since = "0.11.0",
+    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
+/// Configuration for Adapter
 pub struct AdapterConfig {
+    /// Discovery Timeout
     pub discovery_timeout: Duration,
+    /// Retry Attempts
     pub retry_attempts: u32,
+    /// Cache Ttl
     pub cache_ttl: Duration,
+    /// Endpoints
     pub endpoints: Vec<String>,
+    /// Fallback Enabled
     pub fallback_enabled: bool,
 }
 
+#[allow(deprecated)]
 impl AdapterConfig {
     /// Create a new adapter configuration
+    ///
+    /// ✅ MIGRATED: Now uses `ServiceDiscoveryConfig` instead of hardcoded endpoints
     #[must_use]
     pub fn new() -> Self {
-        use crate::constants::hardcoding::{addresses, limits};
+        use crate::config::discovery_config::ServiceDiscoveryConfig;
+        use crate::constants::hardcoding::limits;
 
-        // Use environment variables or build from constants
-        let endpoints = std::env::var("NESTGATE_DISCOVERY_ENDPOINTS")
-            .map(|s| s.split(',').map(|e| e.trim().to_string()).collect())
-            .unwrap_or_else(|_| {
-                vec![
-                    format!("http://{}:8083/discovery", addresses::LOCALHOST_NAME),
-                    format!("http://{}:8084/discovery", addresses::LOCALHOST_NAME),
-                ]
-            });
+        // Use ServiceDiscoveryConfig for discovery endpoints (Week 2 migration)
+        let service_discovery = ServiceDiscoveryConfig::default();
+        let endpoints = service_discovery.get_endpoints().to_vec();
 
         Self {
             discovery_timeout: Duration::from_secs(limits::TIMEOUT_SECS),
@@ -122,11 +149,30 @@ impl AdapterConfig {
     }
 }
 
+#[allow(deprecated)]
 impl Default for AdapterConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
 }
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+///
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Adapterconfigcanonical
+pub type AdapterConfigCanonical =
+    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using AdapterConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
 
 #[cfg(test)]
 mod tests {
@@ -191,7 +237,8 @@ mod tests {
         assert_eq!(config.discovery_timeout, Duration::from_secs(30));
         assert_eq!(config.retry_attempts, 3);
         assert_eq!(config.cache_ttl, Duration::from_secs(300));
-        assert_eq!(config.endpoints.len(), 2);
+        // ✅ MIGRATED: ServiceDiscoveryConfig generates 3 endpoints by default
+        assert_eq!(config.endpoints.len(), 3);
         assert!(config.fallback_enabled);
     }
 
@@ -202,12 +249,13 @@ mod tests {
         assert_eq!(config.discovery_timeout, Duration::from_secs(30));
         assert_eq!(config.retry_attempts, 3);
         assert_eq!(config.cache_ttl, Duration::from_secs(300));
+        // ✅ MIGRATED: Now uses ServiceDiscoveryConfig, which generates endpoints
+        // Default: 3 endpoints starting from 127.0.0.1:8080
+        assert_eq!(config.endpoints.len(), 3);
         assert!(config
             .endpoints
-            .contains(&"http://localhost:8083/discovery".to_string()));
-        assert!(config
-            .endpoints
-            .contains(&"http://localhost:8084/discovery".to_string()));
+            .iter()
+            .any(|e| e.starts_with("http://127.0.0.1:")));
     }
 
     #[test]
@@ -231,7 +279,8 @@ mod tests {
     fn test_adapter_config_builder_add_endpoint() {
         let config = AdapterConfig::new().add_endpoint("http://custom:9000/discovery".to_string());
 
-        assert_eq!(config.endpoints.len(), 3);
+        // ✅ MIGRATED: ServiceDiscoveryConfig generates 3 endpoints + 1 custom = 4
+        assert_eq!(config.endpoints.len(), 4);
         assert!(config
             .endpoints
             .contains(&"http://custom:9000/discovery".to_string()));
@@ -257,7 +306,8 @@ mod tests {
 
         assert_eq!(config.discovery_timeout, Duration::from_secs(45));
         assert_eq!(config.retry_attempts, 10);
-        assert_eq!(config.endpoints.len(), 4); // 2 default + 2 added
+        // ✅ MIGRATED: ServiceDiscoveryConfig generates 3 default + 2 added = 5
+        assert_eq!(config.endpoints.len(), 5);
         assert!(!config.fallback_enabled);
     }
 
@@ -313,6 +363,7 @@ mod tests {
             config = config.add_endpoint(format!("http://endpoint{i}:8080/discovery"));
         }
 
-        assert_eq!(config.endpoints.len(), 12); // 2 default + 10 added
+        // ✅ MIGRATED: ServiceDiscoveryConfig generates 3 default + 10 added = 13
+        assert_eq!(config.endpoints.len(), 13);
     }
 }

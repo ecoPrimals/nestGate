@@ -13,6 +13,7 @@ use tracing::{debug, error, info, warn};
 
 /// Overall health status
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Status values for Health
 pub enum HealthStatus {
     /// All systems operational
     Healthy,
@@ -42,6 +43,7 @@ impl HealthStatus {
 
 /// Health information for a specific component
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Componenthealth
 pub struct ComponentHealth {
     /// Component name
     pub name: String,
@@ -60,6 +62,7 @@ pub struct ComponentHealth {
 }
 /// Result of a health check
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Healthcheckresult
 pub struct HealthCheckResult {
     /// Timestamp of the check
     pub timestamp: SystemTime,
@@ -72,6 +75,7 @@ pub struct HealthCheckResult {
 }
 /// System-wide health information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Systemhealth
 pub struct SystemHealth {
     /// Overall system status
     pub overall_status: HealthStatus,
@@ -86,6 +90,7 @@ pub struct SystemHealth {
 }
 /// Summary of health check results
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Healthsummary
 pub struct HealthSummary {
     /// Total number of components
     pub total_components: usize,
@@ -100,6 +105,7 @@ pub struct HealthSummary {
 }
 /// Health check configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for HealthCheck
 pub struct HealthCheckConfig {
     /// How often to perform health checks
     pub check_interval: Duration,
@@ -113,6 +119,7 @@ pub struct HealthCheckConfig {
     pub custom_endpoints: Vec<String>,
 }
 impl Default for HealthCheckConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             check_interval: Duration::from_secs(30),
@@ -495,6 +502,7 @@ impl HealthCheckManager {
 
 // Make HealthCheckManager cloneable for background tasks
 impl Clone for HealthCheckManager {
+    /// Clone
     fn clone(&self) -> Self {
         Self {
             config: self.config.clone(),
@@ -530,14 +538,17 @@ impl GenericHealthChecker {
 }
 
 impl HealthCheckable for GenericHealthChecker {
+    /// Health Check
     fn health_check(&self) -> impl std::future::Future<Output = Result<HealthStatus>> + Send {
         async move { (self.health_check_fn)() }
     }
 
+    /// Component Name
     fn component_name(&self) -> &str {
         &self.name
     }
 
+    /// Component Type
     fn component_type(&self) -> &str {
         &self.component_type
     }

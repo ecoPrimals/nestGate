@@ -63,6 +63,8 @@
 // }
 // ```
 
+//! Unit Tests module
+
 use std::path::PathBuf;
 
 #[cfg(test)]
@@ -78,10 +80,12 @@ mod protocol_tests {
     }
 
     impl Protocol {
+        /// Checks if Valid
         fn is_valid(&self) -> bool {
             true
         }
 
+        /// Default Port
         fn default_port(&self) -> u16 {
             match self {
                 Protocol::Nfs => 2049,
@@ -91,6 +95,7 @@ mod protocol_tests {
             }
         }
 
+        /// Supports Encryption
         fn supports_encryption(&self) -> bool {
             match self {
                 Protocol::Nfs => true,
@@ -100,10 +105,12 @@ mod protocol_tests {
             }
         }
 
+        /// Checks if Network Protocol
         fn is_network_protocol(&self) -> bool {
             true
         }
 
+        /// Checks if Compatible With
         fn is_compatible_with(&self, _other: &Protocol) -> bool {
             true // Most protocols can coexist
         }
@@ -178,22 +185,27 @@ mod access_mode_tests {
     }
 
     impl AccessMode {
+        /// Checks if Valid
         fn is_valid(&self) -> bool {
             true
         }
 
+        /// Can Read
         fn can_read(&self) -> bool {
             matches!(self, AccessMode::ReadOnly | AccessMode::ReadWrite)
         }
 
+        /// Can Write
         fn can_write(&self) -> bool {
             matches!(self, AccessMode::ReadWrite | AccessMode::WriteOnly)
         }
 
+        /// Upgrade To Readwrite
         fn upgrade_to_readwrite(self) -> Self {
             AccessMode::ReadWrite
         }
 
+        /// Downgrade To Readonly
         fn downgrade_to_readonly(self) -> Self {
             AccessMode::ReadOnly
         }
@@ -281,6 +293,7 @@ mod share_config_tests {
     }
 
     impl ShareConfig {
+        /// Creates a new instance
         fn new(name: String, path: PathBuf) -> Self {
             ShareConfig {
                 name,
@@ -292,14 +305,17 @@ mod share_config_tests {
             }
         }
 
+        /// Checks if Valid
         fn is_valid(&self) -> bool {
             !self.name.is_empty() && self.path.is_absolute() && self.max_connections > 0
         }
 
+        /// Sets Protocol
         fn set_protocol(&mut self, protocol: &str) {
             self.protocol = protocol.to_string();
         }
 
+        /// Sets Access Mode
         fn set_access_mode(&mut self, mode: &str) {
             self.access_mode = mode.to_string();
         }
@@ -382,6 +398,7 @@ mod permission_tests {
     }
 
     impl Permission {
+        /// Creates a new instance
         fn new(user: String, share: String, access_level: String) -> Self {
             Permission {
                 user,
@@ -391,18 +408,22 @@ mod permission_tests {
             }
         }
 
+        /// Checks if Valid
         fn is_valid(&self) -> bool {
             !self.user.is_empty() && !self.share.is_empty() && !self.access_level.is_empty()
         }
 
+        /// Allows Read
         fn allows_read(&self) -> bool {
             matches!(self.access_level.as_str(), "ReadOnly" | "ReadWrite")
         }
 
+        /// Allows Write
         fn allows_write(&self) -> bool {
             matches!(self.access_level.as_str(), "ReadWrite" | "WriteOnly")
         }
 
+        /// Checks if Expired
         fn is_expired(&self) -> bool {
             // For testing, permissions don't expire
             false

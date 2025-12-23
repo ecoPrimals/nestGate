@@ -8,8 +8,6 @@
 //!
 //! **For production hardware tuning**: Implement using `sysinfo` crate.
 
-#![cfg(feature = "dev-stubs")]
-
 use axum::{http::StatusCode, response::Json};
 use chrono::Utc;
 use tracing::info;
@@ -48,6 +46,7 @@ use nestgate_core::{NestGateError, Result};
 /// ```
 #[derive(Debug, Clone)]
 #[allow(dead_code)] // Fields used for configuration and monitoring
+/// Handler for RealHardwareTuning requests
 pub struct RealHardwareTuningHandler {
     /// Hardware tuning configuration
     config: HardwareTuningConfig,
@@ -58,6 +57,7 @@ pub struct RealHardwareTuningHandler {
 }
 
 impl Default for RealHardwareTuningHandler {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -482,6 +482,7 @@ impl RealHardwareTuningHandler {
         })
     }
 
+    /// Detect Cpu Info
     fn detect_cpu_info(&self) -> Result<CpuInfo> {
         // Read from /proc/cpuinfo or use system APIs
         let cpu_info = std::fs::read_to_string("/proc/cpuinfo").map_err(|_e| {
@@ -505,6 +506,7 @@ impl RealHardwareTuningHandler {
         Ok(CpuInfo { cores, model })
     }
 
+    /// Detect Memory Info
     fn detect_memory_info(&self) -> Result<MemoryInfo> {
         // Read from /proc/meminfo
         let meminfo = std::fs::read_to_string("/proc/meminfo").map_err(|_e| {
@@ -526,6 +528,7 @@ impl RealHardwareTuningHandler {
         Ok(MemoryInfo { total_gb })
     }
 
+    /// Detect Gpu Info
     async fn detect_gpu_info(&self) -> Option<GpuInfo> {
         // Try to detect GPU using nvidia-smi or other tools
         if let Ok(output) = tokio::process::Command::new("nvidia-smi")

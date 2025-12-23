@@ -1,5 +1,7 @@
-// NOTE: This example demonstrates the RPC system concept.
-// The actual implementation may have evolved. This is kept as documentation.
+//! RPC System Demo Example
+//!
+//! NOTE: This example demonstrates the RPC system concept.
+//! The actual implementation may have evolved. This is kept as documentation.
 
 use serde_json::json;
 

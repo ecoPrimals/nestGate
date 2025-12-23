@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 /// Aggregates performance, capacity, and health metrics across all ZFS pools
 /// and datasets for system-wide monitoring and analysis.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Zfsmetrics
 pub struct ZfsMetrics {
     /// Total number of ZFS pools in the system
     pub pool_count: u32,
@@ -31,6 +32,7 @@ pub struct ZfsMetrics {
 /// Provides detailed metrics about ZFS memory cache performance including
 /// size, hit ratios, and memory utilization patterns.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Arcstats
 pub struct ArcStats {
     /// Current ARC size in bytes
     pub size_bytes: u64,
@@ -51,6 +53,7 @@ pub struct ArcStats {
 /// Tracks compression algorithm performance, space savings, and efficiency
 /// across datasets and pools.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Compressionstats
 pub struct CompressionStats {
     /// Compression algorithm in use (lz4, gzip, zstd, etc.)
     pub algorithm: String,
@@ -67,6 +70,7 @@ pub struct CompressionStats {
 /// Provides metrics on deduplication effectiveness, space savings, and
 /// performance impact across the storage system.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Deduplicationstats
 pub struct DeduplicationStats {
     /// Deduplication ratio achieved (e.g., 1.5 = 1.5:1 dedup)
     pub dedup_ratio: f64,
@@ -83,6 +87,7 @@ pub struct DeduplicationStats {
 /// Captures read/write operations, throughput, and latency metrics
 /// for performance monitoring and optimization.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Iostats
 pub struct IoStats {
     /// Total read operations performed
     pub read_ops: u64,
@@ -103,6 +108,7 @@ pub struct IoStats {
 /// Represents a single ZFS storage pool with its configuration,
 /// capacity, health status, and performance characteristics.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Poolinfo
 pub struct PoolInfo {
     /// Pool name identifier
     pub name: String,
@@ -123,6 +129,7 @@ pub struct PoolInfo {
 /// Provides a consistent response format with data payload and
 /// associated _metadata for API responses.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for Data operation
 pub struct DataResponse<T> {
     /// The actual data payload
     pub data: T,

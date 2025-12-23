@@ -5,19 +5,18 @@
 //!
 //! ⚠️ IMPORTANT: These are NOT hardware abstractions - they are test infrastructure only.
 
-// use async_trait::async_trait;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use tokio::time::{sleep, Duration};
+// Note: sleep and Duration available if needed for storage simulation
 
 use super::TestDoubleConfig;
-use nestgate_core::types::StorageTier;
+// Use canonical types - the modern location
+use nestgate_core::canonical_types::storage::StorageTier;
 
 /// Storage test double for unit testing
 ///
 /// This is a pure test mock that simulates storage operations for testing purposes.
 /// It can be configured to simulate various failure conditions.
-use nestgate_core::canonical_types::StorageTier;
 pub struct StorageTestDouble {
     config: TestDoubleConfig,
     operations: Arc<Mutex<Vec<String>>>,
@@ -54,7 +53,10 @@ impl StorageTestDouble {
 
     /// Get list of operations that were called
     pub fn get_operations(&self) -> Vec<String> {
-        self.operations.lock()?.clone()
+        self.operations
+            .lock()
+            .map(|ops| ops.clone())
+            .unwrap_or_default()
     }
 
     /// Clear operation history
@@ -80,7 +82,7 @@ impl StorageTestDouble {
 
         // Simulate response delay
         if self.config.response_delay_ms > 0 {
-            sleep(Duration::from_millis(self.config.response_delay_ms)).await;
+            tokio::task::yield_now().await;
         }
 
         // Log if verbose
@@ -145,17 +147,46 @@ impl MockStorageForTesting {
     pub fn simulate_failure(&self, operation: &str) {
         self.test_double.add_failure(operation);
     }
+
+    /// Initialize the mock storage
+    pub fn initialize(&mut self) -> Result<(), TestStorageError> {
+        Ok(())
+    }
+
+    /// Cleanup the mock storage
+    pub fn cleanup(&mut self) -> Result<(), String> {
+        self.reset()
+    }
+
+    /// Reset the mock storage to initial state
+    pub fn reset(&mut self) -> Result<(), String> {
+        if let Ok(mut ops) = self.test_double.operations.lock() {
+            ops.clear();
+        }
+        if let Ok(mut failures) = self.test_double.should_fail_operations.lock() {
+            failures.clear();
+        }
+        Ok(())
+    }
 }
 
-/// Test-specific storage error
-#[derive(Debug, thiserror::Error)]
+/// Test-specific storage error - simple implementation for tests
+#[derive(Debug)]
 pub enum TestStorageError {
-    #[error("Simulated test failure for operation: {0}")]
     SimulatedFailure(String),
-
-    #[error("Test configuration error: {0}")]
     ConfigError(String),
 }
+
+impl std::fmt::Display for TestStorageError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::SimulatedFailure(op) => write!(f, "Simulated test failure for operation: {}", op),
+            Self::ConfigError(msg) => write!(f, "Test configuration error: {}", msg),
+        }
+    }
+}
+
+impl std::error::Error for TestStorageError {}
 
 #[cfg(test)]
 mod tests {
@@ -171,6 +202,8 @@ mod tests {
         let operations = test_double.get_operations();
         assert_eq!(operations.len(), 1);
         assert_eq!(operations[0], "test_operation");
+
+        Ok(())
     }
 
     #[tokio::test]
@@ -182,10 +215,12 @@ mod tests {
 
         let operations = mock.get_test_operations();
         assert!(operations.contains(&"create_pool:test-pool".to_string()));
+
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_simulated_failures() -> Result<(), Box<dyn std::error::Error>> {
+    async fn test_simulated_failures() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let mock = MockStorageForTesting::new();
         mock.simulate_failure("create_pool:fail-pool");
 
@@ -200,8 +235,11 @@ mod tests {
                 return Err(Box::new(std::io::Error::new(
                     std::io::ErrorKind::Other,
                     "Test assertion failed",
-                )));
+                ))
+                    as Box<dyn std::error::Error + Send + Sync>);
             }
         }
+
+        Ok(())
     }
 }

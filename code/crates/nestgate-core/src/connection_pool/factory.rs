@@ -1,7 +1,7 @@
 /// Connection Pool Factory Functions
 /// Provides convenient factory functions for creating commonly used connection pools.
 use super::ConnectionPool;
-use crate::config::canonical_master::NestGateCanonicalConfig;
+use crate::config::canonical_primary::NestGateCanonicalConfig;
 use reqwest::Client;
 use std::sync::Arc;
 use std::time::Duration;
@@ -11,10 +11,10 @@ pub type HttpConnectionPool = ConnectionPool<Client>;
 /// This factory function creates a connection pool optimized for HTTP clients,
 /// with reasonable defaults for web service communication.
 pub fn create_http_pool(
-    config: Option<crate::config::canonical_master::UnifiedConnectionPoolConfig>,
+    config: Option<crate::config::canonical_primary::UnifiedConnectionPoolConfig>,
 ) -> crate::Result<HttpConnectionPool> {
     let unified_config = config.unwrap_or_else(|| {
-        let mut config = crate::config::canonical_master::UnifiedConnectionPoolConfig::default();
+        let mut config = crate::config::canonical_primary::UnifiedConnectionPoolConfig::default();
         config.min_connections = 2;
         config.max_connections = 10;
         config.max_idle_time_seconds = 300;
@@ -47,7 +47,7 @@ pub fn create_http_pool(
         }));
 
     // Create NestGateCanonicalConfig with connection pool configuration
-            let mut unified_config = crate::config::canonical_master::NestGateCanonicalConfig::default();
+            let mut unified_config = crate::config::canonical_primary::NestGateCanonicalConfig::default();
     unified_config.connection_pool = pool_config;
 
     HttpConnectionPool::new(unified_config, factory, health_check)

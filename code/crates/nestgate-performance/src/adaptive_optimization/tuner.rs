@@ -34,6 +34,7 @@ impl AutoTuner {
 }
 
 impl Default for AutoTuner {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

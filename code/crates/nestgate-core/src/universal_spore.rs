@@ -2,6 +2,8 @@
 // Provides seamless integration with the Spore ecosystem
 // **MODERNIZED**: Updated to use current patterns and remove deprecated code
 
+//! Universal Spore module
+
 use crate::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -10,6 +12,7 @@ use uuid::Uuid;
 
 /// Universal Cryptographic Spore - Self-contained security for any primal
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Universalcryptographicspore
 pub struct UniversalCryptographicSpore {
     /// Unique spore identifier
     pub spore_id: String,
@@ -52,6 +55,7 @@ pub struct UniversalCryptographicSpore {
 
 /// Genetic blueprint for autonomous spore evolution
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Geneticblueprint
 pub struct GeneticBlueprint {
     /// Evolution rules embedded in the spore
     pub evolution_rules: Vec<EvolutionRule>,
@@ -70,6 +74,7 @@ pub struct GeneticBlueprint {
 
 /// Self-contained permission matrix
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Permissionmatrix
 pub struct PermissionMatrix {
     /// Individual user permissions (always full)
     pub individual_permissions: IndividualPermissions,
@@ -85,6 +90,7 @@ pub struct PermissionMatrix {
 
 /// Policy contract embedded in every spore
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Policycontract
 pub struct PolicyContract {
     /// Your terms for corporate usage
     pub corporate_terms: CorporateTerms,
@@ -103,6 +109,7 @@ pub struct PolicyContract {
 
 /// Autonomous violation detection
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Violationdetector
 pub struct ViolationDetector {
     /// Corporate usage detection patterns
     pub corporate_patterns: Vec<CorporatePattern>,
@@ -118,6 +125,7 @@ pub struct ViolationDetector {
 
 /// Evolution engine for spawning children
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Evolutionengine
 pub struct EvolutionEngine {
     /// Conditions that trigger evolution
     pub evolution_triggers: Vec<EvolutionTrigger>,
@@ -133,6 +141,7 @@ pub struct EvolutionEngine {
 
 /// Optional security provider integration (universal adapter routing)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Securityproviderintegration
 pub struct SecurityProviderIntegration {
     /// Security provider type (discovered via universal adapter)
     pub provider_type: String,
@@ -396,29 +405,43 @@ impl UniversalCryptographicSpore {
 
 /// Operation request for authorization
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Request parameters for Operation operation
 pub struct OperationRequest {
+    /// Operation Type
     pub operation_type: String,
+    /// User Context
     pub user_context: UserContext,
+    /// Additional metadata key-value pairs
     pub metadata: HashMap<String, String>,
+    /// Timestamp
     pub timestamp: SystemTime,
 }
 /// User context information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Usercontext
 pub struct UserContext {
+    /// User identifier
     pub user_id: Option<String>,
+    /// Session identifier
     pub session_id: String,
+    /// Ip Endpoint
     pub ip_endpoint: String,
+    /// User Agent
     pub user_agent: Option<String>,
+    /// Environment Info
     pub environment_info: HashMap<String, String>,
 }
 /// Authorization decision from spore
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Authorizationdecision
 pub enum AuthorizationDecision {
+    /// Allow
     Allow {
         permissions: Permissions,
         restrictions: Vec<String>,
         enhanced_by_security_provider: bool,
     },
+    /// Deny
     Deny {
         reason: String,
         violation_type: String,
@@ -432,57 +455,84 @@ pub enum AuthorizationDecision {
 }
 /// User classification result
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Userclassification
 pub enum UserClassification {
+    /// Individual
     Individual,
+    /// Corporate
     Corporate {
         organization_profile: OrganizationProfile,
     },
 }
 // Supporting types with sensible defaults
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Individualpermissions
 pub struct IndividualPermissions {
+    /// Full Access
     pub full_access: bool,
+    /// Capabilities
     pub capabilities: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Corporatepermissions
 pub struct CorporatePermissions {
+    /// Organization identifier
     pub organization_id: String,
+    /// Permissions
     pub permissions: Vec<String>,
+    /// Restrictions
     pub restrictions: Vec<String>,
+    /// License Valid Until
     pub license_valid_until: SystemTime,
+    /// Entropy Requirements
     pub entropy_requirements: EntropyTier,
 }
 
 impl CorporatePermissions {
+    /// Checks if Valid
     fn is_valid(&self) -> bool {
         SystemTime::now() < self.license_valid_until
     }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Corporateterms
 pub struct CorporateTerms {
+    /// Base Monthly Rate
     pub base_monthly_rate: f64,
+    /// Automation Tax Multiplier
     pub automation_tax_multiplier: f64,
+    /// Entropy Requirements
     pub entropy_requirements: EntropyTier,
+    /// Human Supervision Discount
     pub human_supervision_discount: f64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Individualpolicy
 pub struct IndividualPolicy {
+    /// Always Free
     pub always_free: bool,
+    /// No Restrictions
     pub no_restrictions: bool,
+    /// Full Capabilities
     pub full_capabilities: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Entropyrequirements
 pub struct EntropyRequirements {
+    /// Minimum Tier
     pub minimum_tier: EntropyTier,
+    /// Human Entropy Bonus
     pub human_entropy_bonus: f64,
+    /// Automation Penalty
     pub automation_penalty: f64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Entropytier
 pub enum EntropyTier {
     Machine,    // Pure automation
     Supervised, // Some human oversight
@@ -490,39 +540,61 @@ pub enum EntropyTier {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Organizationprofile
 pub struct OrganizationProfile {
+    /// Organization identifier
     pub organization_id: String,
+    /// Organization name
     pub organization_name: String,
+    /// Scale
     pub scale: OrganizationScale,
+    /// Automation Level
     pub automation_level: AutomationLevel,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Organizationscale
 pub enum OrganizationScale {
+    /// Smallbusiness
     SmallBusiness,
+    /// Regionalbusiness
     RegionalBusiness,
+    /// Nationalenterprise
     NationalEnterprise,
+    /// Globalenterprise
     GlobalEnterprise,
+    /// Hyperscale
     Hyperscale,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Automationlevel
 pub enum AutomationLevel {
+    /// Highlyautomated
     HighlyAutomated,
+    /// Partiallyautomated
     PartiallyAutomated,
+    /// Humansupervised
     HumanSupervised,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Usagestatistics
 pub struct UsageStatistics {
+    /// Count of operations
     pub operations_count: u64,
+    /// Violations Detected
     pub violations_detected: u64,
+    /// Count of evolution
     pub evolution_count: u32,
+    /// Performance Score
     pub performance_score: f64,
+    /// Last Activity
     pub last_activity: SystemTime,
 }
 
 impl UsageStatistics {
+    /// Creates a new instance
     fn new() -> Self {
         Self {
             operations_count: 0,
@@ -535,9 +607,13 @@ impl UsageStatistics {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Status values for Integration
 pub enum IntegrationStatus {
+    /// Connected
     Connected,
+    /// Disconnected
     Disconnected,
+    /// Error
     Error,
 }
 
@@ -545,6 +621,7 @@ pub enum IntegrationStatus {
 // These will be fully implemented as we build out the system
 
 impl Default for GeneticBlueprint {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             evolution_rules: vec![],
@@ -557,18 +634,21 @@ impl Default for GeneticBlueprint {
 }
 
 impl GeneticBlueprint {
+    /// Default For Primal
     fn default_for_primal(_primal_name: &str) -> Self {
         Self::default()
     }
 }
 
 impl Default for PermissionMatrix {
+    /// Returns the default instance
     fn default() -> Self {
         Self::default_individual_friendly()
     }
 }
 
 impl PermissionMatrix {
+    /// Default Individual Friendly
     fn default_individual_friendly() -> Self {
         Self {
             individual_permissions: IndividualPermissions {
@@ -583,12 +663,14 @@ impl PermissionMatrix {
 }
 
 impl Default for PolicyContract {
+    /// Returns the default instance
     fn default() -> Self {
         Self::default_sovereignty_preserving()
     }
 }
 
 impl PolicyContract {
+    /// Default Sovereignty Preserving
     fn default_sovereignty_preserving() -> Self {
         Self {
             corporate_terms: CorporateTerms {
@@ -616,6 +698,7 @@ impl PolicyContract {
 
 // Placeholder types - will be fully implemented
 impl ViolationDetector {
+    /// Default Corporate Aware
     fn default_corporate_aware() -> Self {
         Self {
             corporate_patterns: vec![],
@@ -625,6 +708,7 @@ impl ViolationDetector {
         }
     }
 
+    /// Check For Violations
     fn check_for_violations(
         &self,
     ) -> Result<Option<ViolationResult>> {
@@ -634,13 +718,18 @@ impl ViolationDetector {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Violationresult
 pub struct ViolationResult {
+    /// Reason
     pub reason: String,
+    /// Violation Type
     pub violation_type: String,
+    /// Suggested Remediation
     pub suggested_remediation: String,
 }
 
 impl EvolutionEngine {
+    /// Default Autonomous
     fn default_autonomous() -> Self {
         Self {
             evolution_triggers: vec![],
@@ -650,6 +739,7 @@ impl EvolutionEngine {
         }
     }
 
+    /// Evolve Genetics
     fn evolve_genetics(
         &self,
         _current: &GeneticBlueprint,
@@ -662,32 +752,41 @@ impl EvolutionEngine {
 
 // Additional placeholder types
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Evolutionrule
 pub struct EvolutionRule;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Fitnessalgorithm
 pub enum FitnessAlgorithm {
+    /// Basicperformance
     BasicPerformance,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Threatadaptation
 pub struct ThreatAdaptation;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Operationrestriction
 pub struct OperationRestriction;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Temporalrestriction
 pub struct TemporalRestriction;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Response data for Violation operation
 pub struct ViolationResponse;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Corporatepattern
 pub struct CorporatePattern;
 
 impl CorporatePattern {
         Ok(false) // Placeholder
     }
 
+    /// Extract Organization Profile
     fn extract_organization_profile(
         &self,
     ) -> Result<OrganizationProfile> {
@@ -702,42 +801,53 @@ impl CorporatePattern {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Automationdetector
 pub struct AutomationDetector;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Extractionsignature
 pub struct ExtractionSignature;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Monitoringthresholds
 pub struct MonitoringThresholds;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Evolutiontrigger
 pub struct EvolutionTrigger;
 
 impl EvolutionTrigger {
+    /// Checks if Triggered
     fn is_triggered(&self, _stats: &UsageStatistics, _last_evolution: SystemTime) -> Result<bool> {
         Ok(false) // Placeholder
     }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Spawnparameters
 pub struct SpawnParameters;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Diversityrules
 pub struct DiversityRules;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Optimizationpattern
 pub struct OptimizationPattern;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Permissions
 pub struct Permissions;
 
 impl From<IndividualPermissions> for Permissions {
+    /// From
     fn from(_perms: IndividualPermissions) -> Self {
         Self // Placeholder
     }
 }
 
 impl From<CorporatePermissions> for Permissions {
+    /// From
     fn from(_perms: CorporatePermissions) -> Self {
         Self // Placeholder
     }

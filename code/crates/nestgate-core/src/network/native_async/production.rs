@@ -13,12 +13,13 @@ use super::types::{
     ServiceEventType, ServiceQuery,
 };
 // **MIGRATED**: Using canonical config system instead of deprecated unified_types
-use crate::config::canonical_master::domains::network::CanonicalNetworkConfig as UnifiedNetworkConfig;
+use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig as UnifiedNetworkConfig;
 
 use std::collections::HashMap;
 
 // Type aliases to reduce complexity
 type ServiceMap = Arc<RwLock<HashMap<String, ServiceInfo>>>;
+/// Type alias for ConnectionMap
 type ConnectionMap = Arc<RwLock<HashMap<String, NetworkConnection>>>;
 
 /// Production service discovery implementation
@@ -29,6 +30,7 @@ pub struct ProductionServiceDiscovery {
     events: std::sync::Arc<tokio::sync::RwLock<Vec<ServiceEvent>>>,
 }
 impl Default for ProductionServiceDiscovery {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             services: std::sync::Arc::new(tokio::sync::RwLock::new(HashMap::new())),
@@ -38,11 +40,16 @@ impl Default for ProductionServiceDiscovery {
 }
 
 impl NativeAsyncServiceDiscovery<10000, 30, 1000, 60> for ProductionServiceDiscovery {
+    /// Type alias for ServiceInfo
     type ServiceInfo = ServiceInfo;
+    /// Type alias for ServiceEvent
     type ServiceEvent = ServiceEvent;
+    /// Type alias for HealthStatus
     type HealthStatus = crate::unified_enums::UnifiedHealthStatus;
+    /// Type alias for Query
     type Query = ServiceQuery;
 
+    /// Register
     async fn register(&self, service: Self::ServiceInfo) -> Result<()> {
         // Native async service registration - no Future boxing overhead
         let mut services = self.services.write().await;
@@ -61,6 +68,7 @@ impl NativeAsyncServiceDiscovery<10000, 30, 1000, 60> for ProductionServiceDisco
         Ok(())
     }
 
+    /// Deregister
     async fn deregister(&self, service_id: &str) -> Result<()> {
         // Direct async method - no Future boxing
         let mut services = self.services.write().await;
@@ -78,6 +86,7 @@ impl NativeAsyncServiceDiscovery<10000, 30, 1000, 60> for ProductionServiceDisco
         Ok(())
     }
 
+    /// Discover
     async fn discover(&self, service_name: &str) -> Result<Vec<Self::ServiceInfo>> {
         // Native async discovery - no Future boxing
         let services = self.services.read().await;
@@ -90,12 +99,14 @@ impl NativeAsyncServiceDiscovery<10000, 30, 1000, 60> for ProductionServiceDisco
         Ok(matching_services)
     }
 
+    /// Watch
     async fn watch(&self) -> Result<Vec<Self::ServiceEvent>> {
         // Direct async method for watching changes
         let events = self.events.read().await;
         Ok(events.clone())
     }
 
+    /// Health Update
     async fn health_update(&self, service_id: &str, status: Self::HealthStatus) -> Result<()> {
         // Native async health update
         let mut services = self.services.write().await;
@@ -116,18 +127,21 @@ impl NativeAsyncServiceDiscovery<10000, 30, 1000, 60> for ProductionServiceDisco
         Ok(())
     }
 
+    /// List All
     async fn list_all(&self) -> Result<Vec<Self::ServiceInfo>> {
         // Compile-time optimization for listing
         let services = self.services.read().await;
         Ok(services.values().cloned().collect())
     }
 
+    /// Exists
     async fn exists(&self, service_id: &str) -> Result<bool> {
         // Direct async method
         let services = self.services.read().await;
         Ok(services.contains_key(service_id))
     }
 
+    /// Query
     async fn query(&self, query: Self::Query) -> Result<Vec<Self::ServiceInfo>> {
         // Native async querying with filters
         let services = self.services.read().await;
@@ -159,11 +173,13 @@ impl NativeAsyncServiceDiscovery<10000, 30, 1000, 60> for ProductionServiceDisco
         Ok(filtered_services)
     }
 
+    /// Gets Service
     async fn get_service(&self, service_id: &str) -> Result<Option<Self::ServiceInfo>> {
         let services = self.services.read().await;
         Ok(services.get(service_id).cloned())
     }
 
+    /// Updates  Service
     async fn update_service(
         &self,
         service_id: &str,
@@ -185,6 +201,7 @@ pub struct ProductionProtocolHandler {
     connections: ConnectionMap,
 }
 impl Default for ProductionProtocolHandler {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             connections: Arc::new(RwLock::new(HashMap::new())),
@@ -193,11 +210,16 @@ impl Default for ProductionProtocolHandler {
 }
 
 impl NativeAsyncProtocolHandler<1000, 30, 3, 8192> for ProductionProtocolHandler {
+    /// Type alias for Connection
     type Connection = NetworkConnection;
+    /// Type alias for Request
     type Request = NetworkRequest;
+    /// Type alias for Response
     type Response = NetworkResponse;
+    /// Type alias for Config
     type Config = UnifiedNetworkConfig;
 
+    /// Connect
     async fn connect(&self, config: &Self::Config) -> Result<Self::Connection> {
         // Native async connection - no Future boxing overhead
         let connection = NetworkConnection {
@@ -217,6 +239,7 @@ impl NativeAsyncProtocolHandler<1000, 30, 3, 8192> for ProductionProtocolHandler
         Ok(connection)
     }
 
+    /// Send Request
     async fn send_request(
         &self,
         _connection: &Self::Connection,
@@ -234,6 +257,7 @@ impl NativeAsyncProtocolHandler<1000, 30, 3, 8192> for ProductionProtocolHandler
         Ok(response)
     }
 
+    /// Disconnect
     async fn disconnect(&self, connection: &Self::Connection) -> Result<()> {
         // Native async disconnection
         let mut connections = self.connections.write().await;
@@ -241,16 +265,19 @@ impl NativeAsyncProtocolHandler<1000, 30, 3, 8192> for ProductionProtocolHandler
         Ok(())
     }
 
+    /// Handles  Connection
     async fn handle_connection(&self, connection: Self::Connection) -> Result<()> {
         // Compile-time optimization for connection handling
         println!("Handling connection: {}", connection.connection_id);
         Ok(())
     }
 
+    /// Connection Status
     async fn connection_status(&self, connection: &Self::Connection) -> Result<String> {
         Ok(format!("{:?}", connection.status))
     }
 
+    /// Ping
     async fn ping(&self, _connection: &Self::Connection) -> Result<std::time::Duration> {
         // Direct async method for ping
         Ok(std::time::Duration::from_millis(5))

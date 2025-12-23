@@ -5,7 +5,7 @@
 
 #![cfg(test)]
 
-use super::canonical_unified_traits::*;
+use super::canonical::*;
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
 
@@ -20,6 +20,7 @@ struct TestConfig {
 }
 
 impl Default for TestConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             name: "test-service".to_string(),
@@ -51,6 +52,7 @@ struct TestError {
 }
 
 impl std::fmt::Display for TestError {
+    /// Fmt
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "TestError: {}", self.message)
     }
@@ -67,6 +69,7 @@ struct MockService {
 }
 
 impl MockService {
+    /// Creates a new instance
     fn new() -> Self {
         Self {
             config: TestConfig::default(),
@@ -85,33 +88,43 @@ impl MockService {
 }
 
 impl CanonicalService for MockService {
+    /// Type alias for Config
     type Config = TestConfig;
+    /// Type alias for Health
     type Health = TestHealth;
+    /// Type alias for Metrics
     type Metrics = TestMetrics;
+    /// Type alias for Error
     type Error = TestError;
 
-    async fn start(&mut self) -> Result<(), Self::Error> {
+    /// Start
+    async fn start(&mut self) -> std::result::Result<(), Self::Error> {
         self.started = true;
         Ok(())
     }
 
-    async fn stop(&mut self) -> Result<(), Self::Error> {
+    /// Stop
+    async fn stop(&mut self) -> std::result::Result<(), Self::Error> {
         self.started = false;
         Ok(())
     }
 
-    async fn health(&self) -> Result<Self::Health, Self::Error> {
+    /// Health
+    async fn health(&self) -> std::result::Result<Self::Health, Self::Error> {
         Ok(self.health.clone())
     }
 
+    /// Config
     fn config(&self) -> &Self::Config {
         &self.config
     }
 
-    async fn metrics(&self) -> Result<Self::Metrics, Self::Error> {
+    /// Metrics
+    async fn metrics(&self) -> std::result::Result<Self::Metrics, Self::Error> {
         Ok(self.metrics.clone())
     }
 
+    /// Name
     fn name(&self) -> &str {
         "mock-service"
     }
@@ -199,6 +212,7 @@ struct MockProvider {
 }
 
 impl MockProvider {
+    /// Creates a new instance
     fn new() -> Self {
         Self {
             items: HashMap::new(),
@@ -210,11 +224,15 @@ impl<T> CanonicalProvider<T> for MockProvider
 where
     T: Send + Sync + 'static,
 {
+    /// Type alias for Key
     type Key = String;
+    /// Type alias for Value
     type Value = String;
+    /// Type alias for Error
     type Error = TestError;
 
-    async fn provide(&self, key: Self::Key) -> Result<Self::Value, Self::Error> {
+    /// Provide
+    async fn provide(&self, key: Self::Key) -> std::result::Result<Self::Value, Self::Error> {
         self.items
             .get(&key)
             .cloned()
@@ -223,16 +241,19 @@ where
             })
     }
 
-    async fn provision(&mut self, key: Self::Key, value: Self::Value) -> Result<(), Self::Error> {
+    /// Provision
+    async fn provision(&mut self, key: Self::Key, value: Self::Value) -> std::result::Result<(), Self::Error> {
         self.items.insert(key, value);
         Ok(())
     }
 
-    async fn deprovision(&mut self, key: Self::Key) -> Result<(), Self::Error> {
+    /// Deprovision
+    async fn deprovision(&mut self, key: Self::Key) -> std::result::Result<(), Self::Error> {
         self.items.remove(&key);
         Ok(())
     }
 
+    /// List Keys
     async fn list_keys(&self) -> Result<Vec<Self::Key>, Self::Error> {
         Ok(self.items.keys().cloned().collect())
     }
@@ -316,6 +337,7 @@ struct MockStorage {
 }
 
 impl MockStorage {
+    /// Creates a new instance
     fn new() -> Self {
         Self {
             data: HashMap::new(),
@@ -324,12 +346,17 @@ impl MockStorage {
 }
 
 impl CanonicalStorage for MockStorage {
+    /// Type alias for Path
     type Path = String;
+    /// Type alias for Data
     type Data = Vec<u8>;
+    /// Type alias for Metadata
     type Metadata = StorageMetadata;
+    /// Type alias for Error
     type Error = TestError;
 
-    async fn read(&self, path: Self::Path) -> Result<Self::Data, Self::Error> {
+    /// Read
+    async fn read(&self, path: Self::Path) -> std::result::Result<Self::Data, Self::Error> {
         self.data
             .get(&path)
             .cloned()
@@ -338,21 +365,25 @@ impl CanonicalStorage for MockStorage {
             })
     }
 
-    async fn write(&mut self, path: Self::Path, data: Self::Data) -> Result<(), Self::Error> {
+    /// Write
+    async fn write(&mut self, path: Self::Path, data: Self::Data) -> std::result::Result<(), Self::Error> {
         self.data.insert(path, data);
         Ok(())
     }
 
-    async fn delete(&mut self, path: Self::Path) -> Result<(), Self::Error> {
+    /// Deletes resource
+    async fn delete(&mut self, path: Self::Path) -> std::result::Result<(), Self::Error> {
         self.data.remove(&path);
         Ok(())
     }
 
-    async fn exists(&self, path: Self::Path) -> Result<bool, Self::Error> {
+    /// Exists
+    async fn exists(&self, path: Self::Path) -> std::result::Result<bool, Self::Error> {
         Ok(self.data.contains_key(&path))
     }
 
-    async fn metadata(&self, path: Self::Path) -> Result<Self::Metadata, Self::Error> {
+    /// Metadata
+    async fn metadata(&self, path: Self::Path) -> std::result::Result<Self::Metadata, Self::Error> {
         if self.data.contains_key(&path) {
             Ok(StorageMetadata {
                 size_bytes: self.data.get(&path).map(|d| d.len() as u64).unwrap_or(0),
@@ -473,6 +504,7 @@ struct MockSecurity {
 }
 
 impl MockSecurity {
+    /// Creates a new instance
     fn new() -> Self {
         Self {
             authenticated_users: HashMap::new(),
@@ -482,15 +514,20 @@ impl MockSecurity {
 }
 
 impl CanonicalSecurity for MockSecurity {
+    /// Type alias for Credentials
     type Credentials = SecurityCredentials;
+    /// Type alias for Token
     type Token = String;
+    /// Type alias for Permission
     type Permission = String;
+    /// Type alias for Error
     type Error = TestError;
 
+    /// Authenticate
     async fn authenticate(
         &self,
         credentials: Self::Credentials,
-    ) -> Result<Self::Token, Self::Error> {
+    ) -> std::result::Result<Self::Token, Self::Error> {
         if self
             .authenticated_users
             .get(&credentials.username)
@@ -505,11 +542,12 @@ impl CanonicalSecurity for MockSecurity {
         }
     }
 
+    /// Authorize
     async fn authorize(
         &self,
         token: Self::Token,
         permission: Self::Permission,
-    ) -> Result<bool, Self::Error> {
+    ) -> std::result::Result<bool, Self::Error> {
         let username = token.strip_prefix("token-").unwrap_or("");
         Ok(self
             .authorized_actions
@@ -518,13 +556,15 @@ impl CanonicalSecurity for MockSecurity {
             .unwrap_or(false))
     }
 
-    async fn revoke(&mut self, token: Self::Token) -> Result<(), Self::Error> {
+    /// Revoke
+    async fn revoke(&mut self, token: Self::Token) -> std::result::Result<(), Self::Error> {
         let username = token.strip_prefix("token-").unwrap_or("");
         self.authenticated_users.remove(username);
         Ok(())
     }
 
-    async fn validate(&self, token: Self::Token) -> Result<bool, Self::Error> {
+    /// Validates data
+    async fn validate(&self, token: Self::Token) -> std::result::Result<bool, Self::Error> {
         let username = token.strip_prefix("token-").unwrap_or("");
         Ok(self
             .authenticated_users
@@ -640,6 +680,7 @@ struct MockZeroCostService<const N: usize> {
 }
 
 impl<const N: usize> MockZeroCostService<N> {
+    /// Creates a new instance
     fn new() -> Self {
         Self { buffer: [0; N] }
     }
@@ -649,16 +690,20 @@ impl<const N: usize, T> ZeroCostService<T> for MockZeroCostService<N>
 where
     T: Send + Sync + 'static,
 {
+    /// Type alias for Config
     type Config = usize;
+    /// Type alias for Error
     type Error = TestError;
 
-    async fn execute(&self, _config: Self::Config) -> Result<T, Self::Error>
+    /// Execute
+    async fn execute(&self, _config: Self::Config) -> std::result::Result<T, Self::Error>
     where
         T: Default,
     {
         Ok(T::default())
     }
 
+    /// Buffer Size
     fn buffer_size(&self) -> usize {
         N
     }

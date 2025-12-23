@@ -38,15 +38,23 @@ impl ZfsMigrationGuide {
 pub struct ZfsBenchmark;
 impl ZfsBenchmark {
     /// Benchmark ZFS operations
+    ///
+    /// Modern pattern: Simulate work without sleep using CPU-bound task
     pub async fn benchmark_zfs_operations<Z>(_zfs: &Z, operations: u32) -> Duration
     where
         Z: ZeroCostZfsOperations,
     {
         let start = std::time::Instant::now();
 
-        // This would benchmark actual ZFS operations
-        // For safety, we'll just measure the time
-        tokio::time::sleep(Duration::from_millis(u64::from(operations))).await;
+        // Modern pattern: Simulate operations without sleep
+        // In real use, this would call actual ZFS operations
+        // For benchmarking simulation, we can use a non-blocking calculation
+        tokio::task::yield_now().await;
+
+        // Simulate varying work based on operation count
+        let _simulated_work: u64 = (0..operations)
+            .map(|i| u64::from(i).wrapping_mul(7919))
+            .sum();
 
         start.elapsed()
     }
@@ -72,7 +80,10 @@ mod tests {
         DevelopmentZfsManager, EnterpriseZfsManager, HighPerformanceZfsManager,
         ProductionZfsManager, TestingZfsManager,
     };
-    use crate::{StorageTier, ZeroCostDatasetInfo, ZeroCostPoolInfo, ZeroCostSnapshotInfo};
+    use crate::zero_cost_zfs_operations::{
+        ZeroCostDatasetInfo, ZeroCostPoolInfo, ZeroCostSnapshotInfo,
+    };
+    use nestgate_core::canonical_types::StorageTier;
     use std::collections::HashMap;
     use std::path::PathBuf;
 
@@ -180,12 +191,10 @@ mod tests {
     fn test_zero_cost_dataset_info_creation() {
         let dataset_info = ZeroCostDatasetInfo {
             name: "test_dataset".to_string(),
-            full_name: "test_pool/test_dataset".to_string(),
             pool: "test_pool".to_string(),
             tier: StorageTier::Hot,
             size: 100000,
             used: 50000,
-            available: 50000,
             properties: HashMap::new(),
             mount_point: Some(PathBuf::from("/mnt/test")),
             created_at: std::time::SystemTime::now(),
@@ -209,12 +218,10 @@ mod tests {
         for (tier, name) in tiers {
             let dataset = ZeroCostDatasetInfo {
                 name: format!("dataset_{}", name),
-                full_name: format!("test_pool/dataset_{}", name),
                 pool: "test_pool".to_string(),
                 tier: tier.clone(),
                 size: 100000,
                 used: 0,
-                available: 100000,
                 properties: HashMap::new(),
                 mount_point: None,
                 created_at: std::time::SystemTime::now(),
@@ -227,12 +234,10 @@ mod tests {
     fn test_dataset_info_serialization() {
         let dataset_info = ZeroCostDatasetInfo {
             name: "test_dataset".to_string(),
-            full_name: "test_pool/test_dataset".to_string(),
             pool: "test_pool".to_string(),
             tier: StorageTier::Warm,
             size: 100000,
             used: 50000,
-            available: 50000,
             properties: HashMap::new(),
             mount_point: Some(PathBuf::from("/mnt/test")),
             created_at: std::time::SystemTime::now(),
@@ -250,12 +255,10 @@ mod tests {
     fn test_dataset_info_without_mount_point() {
         let dataset_info = ZeroCostDatasetInfo {
             name: "unmounted_dataset".to_string(),
-            full_name: "test_pool/unmounted_dataset".to_string(),
             pool: "test_pool".to_string(),
             tier: StorageTier::Archive,
             size: 100000,
             used: 0,
-            available: 100000,
             properties: HashMap::new(),
             mount_point: None,
             created_at: std::time::SystemTime::now(),
@@ -273,12 +276,10 @@ mod tests {
 
         let dataset_info = ZeroCostDatasetInfo {
             name: "configured_dataset".to_string(),
-            full_name: "test_pool/configured_dataset".to_string(),
             pool: "test_pool".to_string(),
             tier: StorageTier::Hot,
             size: 1000000000,
             used: 0,
-            available: 1000000000,
             properties: properties.clone(),
             mount_point: Some(PathBuf::from("/data")),
             created_at: std::time::SystemTime::now(),

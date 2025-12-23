@@ -576,22 +576,27 @@ mod tests {
         true
     }
 
+    /// Can Validate Environment
     fn can_validate_environment() -> bool {
         true
     }
 
+    /// Validates  String
     fn validate_string(s: &str) -> bool {
         !s.is_empty()
     }
 
+    /// Validates  Path
     fn validate_path(path: &str) -> bool {
         !path.is_empty() && path.starts_with('/')
     }
 
+    /// Checks if Valid Install Path
     fn is_valid_install_path(path: &str) -> bool {
         !path.is_empty()
     }
 
+    /// Normalize Path
     fn normalize_path(path: &str) -> String {
         path.replace("//", "/")
     }
@@ -706,9 +711,11 @@ mod installer_comprehensive_tests {
 
     #[test]
     fn test_config_modification() {
-        let mut config = InstallerConfig::default();
-        config.installation_path = "/custom/path".to_string();
-        config.environment = "testing".to_string();
+        let config = InstallerConfig {
+            installation_path: "/custom/path".to_string(),
+            environment: "testing".to_string(),
+            ..InstallerConfig::default()
+        };
 
         assert_eq!(config.installation_path, "/custom/path");
         assert_eq!(config.environment, "testing");
@@ -845,9 +852,11 @@ mod installer_comprehensive_tests {
 
     #[test]
     fn test_installer_extensions_modification() {
-        let mut ext = crate::config::InstallerExtensions::default();
-        ext.force_install = true;
-        ext.verbose = true;
+        let mut ext = crate::config::InstallerExtensions {
+            force_install: true,
+            verbose: true,
+            ..crate::config::InstallerExtensions::default()
+        };
         ext.components.push("zfs".to_string());
 
         assert!(ext.force_install);
@@ -888,6 +897,7 @@ mod installer_comprehensive_tests {
         result
     }
 
+    /// Checks if Valid Install Path
     fn is_valid_install_path(path: &str) -> bool {
         !path.is_empty() && (path.starts_with('/') || (cfg!(windows) && path.len() >= 3))
     }

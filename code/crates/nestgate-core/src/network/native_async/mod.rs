@@ -1,12 +1,19 @@
+//! Native Async module
+
+/// Configuration types for native async networking
 pub mod config;
+/// Development-mode implementations for testing
 pub mod development;
+/// Production-ready async network implementations
 pub mod production;
 pub mod service;
 // Native Async Network Module - Split for File Size Compliance
 // This module was split from native_async_network.rs to maintain the 2000-line limit
 // while preserving all functionality and maintaining backward compatibility
 // Sub-module declarations
+/// Trait definitions for native async networking
 pub mod traits;
+/// Type definitions for native async networking
 pub mod types;
 // Re-export all public types and traits for backward compatibility
 pub use traits::{
@@ -22,7 +29,7 @@ pub use types::{
 };
 
 // **MIGRATED**: Using canonical config system from domains/network
-pub use crate::config::canonical_master::domains::network::CanonicalNetworkConfig as UnifiedNetworkConfig;
+pub use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig as UnifiedNetworkConfig;
 
 pub use production::{
     // ProductionNetworkManager, ProductionServiceDiscovery, // These will be implemented as needed
@@ -34,7 +41,9 @@ pub use development::{DevelopmentNetworkServiceDiscovery, DevelopmentServiceDisc
 pub use service::NativeAsyncNetworkService;
 
 // Type aliases for compatibility
+/// Type alias for production network service discovery implementation
 pub type ProductionNetworkServiceDiscovery = production::ProductionServiceDiscovery;
+/// Type alias for Productionnetworkprotocolhandler
 pub type ProductionNetworkProtocolHandler = production::ProductionProtocolHandler;
 
 // Tests module
@@ -54,11 +63,13 @@ mod tests {
 
         /// Mock service discovery for testing
         #[derive(Debug, Clone)]
+        #[allow(dead_code)]
         pub(super) struct MockServiceDiscovery {
             services: HashMap<String, String>,
         }
 
         impl MockServiceDiscovery {
+            #[allow(dead_code)]
             pub(super) fn new() -> Self {
                 let mut services = HashMap::new();
                 // SOVEREIGNTY FIX: Use environment-based service registration instead of hardcoded services
@@ -72,6 +83,7 @@ mod tests {
                 Self { services }
             }
 
+            #[allow(dead_code)]
             pub(super) fn discover(&self, service_name: &str) -> Result<Vec<String>> {
                 self.services
                     .get(service_name)
@@ -81,6 +93,7 @@ mod tests {
 
         /// Mock protocol config for testing
         #[derive(Debug, Clone)]
+        #[allow(dead_code)]
         pub(super) struct MockProtocolConfig {
             protocol: String,
             timeout_ms: u64,
@@ -94,10 +107,11 @@ mod tests {
         }
 
         impl Default for MockProtocolConfig {
+            /// Returns the default instance
             fn default() -> Self {
                 Self {
                     protocol: "http".to_string(),
-                    timeout_ms: crate::constants::canonical_defaults::timeouts::DEFAULT_TIMEOUT_MS,
+                    timeout_ms: crate::constants::canonical::timeouts::DEFAULT_TIMEOUT_MS,
                     protocol_type: "HTTP".to_string(),
                     host: crate::constants::canonical_defaults::network::LOCALHOST.to_string(),
                     port: crate::constants::DEFAULT_API_PORT,
@@ -111,15 +125,20 @@ mod tests {
 
         /// Mock service event type for testing
         #[derive(Debug, Clone)]
+        #[allow(dead_code)]
         pub(super) enum MockServiceEventType {
+            /// Serviceup
             ServiceUp,
+            /// Servicedown
             ServiceDown,
+            /// Configchanged
             ConfigChanged,
             Registered, // Added missing variant
         }
 
         /// Mock service info for testing
         #[derive(Debug, Clone)]
+        #[allow(dead_code)]
         pub(super) struct MockServiceInfo {
             name: String,
             status: crate::unified_enums::UnifiedServiceState,
@@ -129,6 +148,7 @@ mod tests {
         }
 
         impl Default for MockServiceInfo {
+            /// Returns the default instance
             fn default() -> Self {
                 Self {
                     // SOVEREIGNTY FIX: Use capability-based naming
@@ -204,7 +224,7 @@ mod tests {
         let handler = ProductionProtocolHandler::default();
 
         // Test native async connection - no Future boxing
-        let config = crate::config::canonical_master::domains::network::CanonicalNetworkConfig::development_optimized();
+        let config = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig::development_optimized();
 
         let connection = handler.connect(&config).await;
         assert!(connection.is_ok());

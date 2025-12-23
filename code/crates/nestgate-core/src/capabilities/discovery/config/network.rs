@@ -10,11 +10,14 @@
 // - Port scanning and service detection
 // - Network topology discovery
 
+//! Network module
+
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
 /// Network discovery configuration settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Networkdiscoverysettings
 pub struct NetworkDiscoverySettings {
     /// Enable network discovery
     pub enabled: bool,
@@ -22,6 +25,7 @@ pub struct NetworkDiscoverySettings {
     pub timeout: Duration,
 }
 impl Default for NetworkDiscoverySettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,
@@ -31,6 +35,11 @@ impl Default for NetworkDiscoverySettings {
 }
 
 impl NetworkDiscoverySettings {
+    /// Validates the network discovery settings
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the settings are invalid
     pub fn validate(&self) -> crate::Result<()> {
         Ok(())
     }

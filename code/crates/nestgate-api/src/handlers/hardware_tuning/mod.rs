@@ -19,9 +19,9 @@ pub use production_placeholders as handlers;
 
 pub mod types;
 
+#[cfg(test)]
+mod strategic_coverage_tests_dec11;
+
 // Re-export the main types and functions
 pub use handlers::*;
 pub use types::*;
-
-// TEMP_DISABLED: #[cfg(test)]
-// TEMP_DISABLED: mod types_tests;

@@ -8,79 +8,130 @@ use std::time::Duration;
 
 // Define the missing types here since they were removed in the refactor
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of Handler
 pub enum HandlerType {
+    /// Api
     Api,
+    /// Middleware
     Middleware,
+    /// Event
     Event,
+    /// Error
     Error,
+    /// Validation
     Validation,
+    /// Security
     Security,
+    /// Performance
     Performance,
+    /// Lifecycle
     Lifecycle,
+    /// Zfsoperation
     ZfsOperation,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Handlerphase
 pub enum HandlerPhase {
+    /// Initialization
     Initialization,
+    /// Preprocessing
     PreProcessing,
+    /// Processing
     Processing,
+    /// Postprocessing
     PostProcessing,
+    /// Cleanup
     Cleanup,
+    /// Errorhandling
     ErrorHandling,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Workflowstate
 pub enum WorkflowState {
+    /// Pending
     Pending,
+    /// Running
     Running,
+    /// Paused
     Paused,
+    /// Completed
     Completed,
+    /// Failed
     Failed,
+    /// Cancelled
     Cancelled,
+    /// Retrying
     Retrying,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of Monitoring
 pub enum MonitoringType {
+    /// Metrics
     Metrics,
+    /// Logging
     Logging,
+    /// Tracing
     Tracing,
+    /// Alerting
     Alerting,
+    /// Health
     Health,
+    /// Performance
     Performance,
 }
 
 /// Storage-specific error context
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Storageerrordata
 pub struct StorageErrorData {
+    /// Pool name
     pub pool_name: Option<String>,
+    /// Dataset name
     pub dataset_name: Option<String>,
     #[serde(default)]
+    /// Operation Type
     pub operation_type: String,
+    /// Filesystem Path
     pub filesystem_path: Option<String>,
+    /// Available Space
     pub available_space: Option<u64>,
+    /// Required Space
     pub required_space: Option<u64>,
+    /// Error Code
     pub error_code: Option<i32>,
     #[serde(default)]
+    /// Count of retry
     pub retry_count: u32,
     #[serde(default)]
+    /// Context
     pub context: HashMap<String, String>,
 }
 
 /// Network-specific error context
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Networkerrordata
 pub struct NetworkErrorData {
+    /// Endpoint
     pub endpoint: Option<String>,
+    /// Port
     pub port: Option<u16>,
+    /// Protocol
     pub protocol: String,
+    /// Timeout Duration
     pub timeout_duration: Option<Duration>,
+    /// Count of retry
     pub retry_count: u32,
+    /// Response Code
     pub response_code: Option<u16>,
+    /// Context
     pub context: HashMap<String, String>,
 }
 
 impl Default for NetworkErrorData {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             endpoint: None,
@@ -96,30 +147,44 @@ impl Default for NetworkErrorData {
 
 /// Security-specific error context
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Securityerrordata
 pub struct SecurityErrorData {
+    /// Principal
     pub principal: Option<String>,
     #[serde(default)]
+    /// Operation
     pub operation: String,
+    /// Resource
     pub resource: Option<String>,
     #[serde(default)]
+    /// Required Permissions
     pub required_permissions: Vec<String>,
     #[serde(default)]
+    /// Actual Permissions
     pub actual_permissions: Vec<String>,
+    /// Authentication Method
     pub authentication_method: Option<String>,
     #[serde(default)]
+    /// Context
     pub context: HashMap<String, String>,
 }
 
 /// Security severity levels
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+/// Securityseverity
 pub enum SecuritySeverity {
+    /// Info
     Info,
+    /// Warning
     Warning,
+    /// Error
     Error,
+    /// Critical
     Critical,
 }
 
 impl Default for SecuritySeverity {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Warning
     }
@@ -127,16 +192,24 @@ impl Default for SecuritySeverity {
 
 /// Automation-specific error context
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Automationerrordata
 pub struct AutomationErrorData {
+    /// Workflow identifier
     pub workflow_id: Option<String>,
+    /// Step name
     pub step_name: Option<String>,
+    /// Automation Type
     pub automation_type: String,
+    /// Count of retry
     pub retry_count: u32,
+    /// Max Retries
     pub max_retries: u32,
+    /// Context
     pub context: HashMap<String, String>,
 }
 
 impl Default for AutomationErrorData {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             workflow_id: None,
@@ -158,7 +231,7 @@ mod tests {
     fn test_handler_type_variants() {
         let api = HandlerType::Api;
         let middleware = HandlerType::Middleware;
-        let event = HandlerType::Event;
+        let _event = HandlerType::Event;
 
         // Test Debug formatting
         assert!(format!("{api:?}").contains("Api"));
@@ -222,14 +295,16 @@ mod tests {
 
     #[test]
     fn test_storage_error_data_with_values() {
-        let mut data = StorageErrorData::default();
-        data.pool_name = Some("test-pool".to_string());
-        data.dataset_name = Some("test-dataset".to_string());
-        data.operation_type = "create".to_string();
-        data.available_space = Some(1024);
-        data.required_space = Some(2048);
-        data.error_code = Some(42);
-        data.retry_count = 3;
+        let data = StorageErrorData {
+            pool_name: Some("test-pool".to_string()),
+            dataset_name: Some("test-dataset".to_string()),
+            operation_type: "create".to_string(),
+            available_space: Some(1024),
+            required_space: Some(2048),
+            error_code: Some(42),
+            retry_count: 3,
+            ..Default::default()
+        };
 
         assert_eq!(data.pool_name, Some("test-pool".to_string()));
         assert_eq!(data.dataset_name, Some("test-dataset".to_string()));
@@ -242,8 +317,10 @@ mod tests {
 
     #[test]
     fn test_storage_error_data_clone() {
-        let mut data = StorageErrorData::default();
-        data.pool_name = Some("test-pool".to_string());
+        let data = StorageErrorData {
+            pool_name: Some("test-pool".to_string()),
+            ..Default::default()
+        };
 
         let cloned = data.clone();
         assert_eq!(cloned.pool_name, Some("test-pool".to_string()));
@@ -265,16 +342,19 @@ mod tests {
 
     #[test]
     fn test_network_error_data_with_values() {
-        let mut data = NetworkErrorData::default();
-        data.endpoint = Some("http://example.com".to_string());
-        data.port = Some(8080);
-        data.protocol = "HTTPS".to_string();
-        data.timeout_duration = Some(Duration::from_secs(30));
-        data.retry_count = 2;
-        data.response_code = Some(404);
+        use crate::constants::hardcoding::ports;
+        let data = NetworkErrorData {
+            endpoint: Some("http://example.com".to_string()),
+            port: Some(ports::HTTP_DEFAULT),
+            protocol: "HTTPS".to_string(),
+            timeout_duration: Some(Duration::from_secs(30)),
+            retry_count: 2,
+            response_code: Some(404),
+            ..Default::default()
+        };
 
         assert_eq!(data.endpoint, Some("http://example.com".to_string()));
-        assert_eq!(data.port, Some(8080));
+        assert_eq!(data.port, Some(ports::HTTP_DEFAULT));
         assert_eq!(data.protocol, "HTTPS");
         assert_eq!(data.timeout_duration, Some(Duration::from_secs(30)));
         assert_eq!(data.retry_count, 2);
@@ -283,8 +363,10 @@ mod tests {
 
     #[test]
     fn test_network_error_data_clone() {
-        let mut data = NetworkErrorData::default();
-        data.endpoint = Some("http://test.com".to_string());
+        let data = NetworkErrorData {
+            endpoint: Some("http://test.com".to_string()),
+            ..Default::default()
+        };
 
         let cloned = data.clone();
         assert_eq!(cloned.endpoint, Some("http://test.com".to_string()));
@@ -306,13 +388,15 @@ mod tests {
 
     #[test]
     fn test_security_error_data_with_values() {
-        let mut data = SecurityErrorData::default();
-        data.principal = Some("user@example.com".to_string());
-        data.operation = "read".to_string();
-        data.resource = Some("/api/data".to_string());
-        data.required_permissions = vec!["read".to_string(), "write".to_string()];
-        data.actual_permissions = vec!["read".to_string()];
-        data.authentication_method = Some("jwt".to_string());
+        let data = SecurityErrorData {
+            principal: Some("user@example.com".to_string()),
+            operation: "read".to_string(),
+            resource: Some("/api/data".to_string()),
+            required_permissions: vec!["read".to_string(), "write".to_string()],
+            actual_permissions: vec!["read".to_string()],
+            authentication_method: Some("jwt".to_string()),
+            ..Default::default()
+        };
 
         assert_eq!(data.principal, Some("user@example.com".to_string()));
         assert_eq!(data.operation, "read");
@@ -324,8 +408,10 @@ mod tests {
 
     #[test]
     fn test_security_error_data_clone() {
-        let mut data = SecurityErrorData::default();
-        data.principal = Some("test@example.com".to_string());
+        let data = SecurityErrorData {
+            principal: Some("test@example.com".to_string()),
+            ..Default::default()
+        };
 
         let cloned = data.clone();
         assert_eq!(cloned.principal, Some("test@example.com".to_string()));
@@ -374,13 +460,17 @@ mod tests {
 
     #[test]
     fn test_automation_error_data_with_values() {
-        let mut data = AutomationErrorData::default();
-        data.workflow_id = Some("workflow-123".to_string());
-        data.step_name = Some("step-1".to_string());
-        data.automation_type = "deployment".to_string();
-        data.retry_count = 2;
-        data.max_retries = 5;
-        data.context.insert("key".to_string(), "value".to_string());
+        let mut context = std::collections::HashMap::new();
+        context.insert("key".to_string(), "value".to_string());
+
+        let data = AutomationErrorData {
+            workflow_id: Some("workflow-123".to_string()),
+            step_name: Some("step-1".to_string()),
+            automation_type: "deployment".to_string(),
+            retry_count: 2,
+            max_retries: 5,
+            context,
+        };
 
         assert_eq!(data.workflow_id, Some("workflow-123".to_string()));
         assert_eq!(data.step_name, Some("step-1".to_string()));
@@ -392,8 +482,10 @@ mod tests {
 
     #[test]
     fn test_automation_error_data_clone() {
-        let mut data = AutomationErrorData::default();
-        data.workflow_id = Some("test-workflow".to_string());
+        let data = AutomationErrorData {
+            workflow_id: Some("test-workflow".to_string()),
+            ..Default::default()
+        };
 
         let cloned = data.clone();
         assert_eq!(cloned.workflow_id, Some("test-workflow".to_string()));

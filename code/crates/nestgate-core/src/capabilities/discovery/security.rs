@@ -8,27 +8,43 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 /// Security capability types that can be discovered
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+/// Types of SecurityCapability
 pub enum SecurityCapabilityType {
+    /// User authentication services
     Authentication,
+    /// Authorization and permission management
     Authorization,
+    /// Encryption and cryptographic services
     Encryption,
+    /// TLS/SSL certificate management
     CertificateManagement,
+    /// Audit logging and compliance
     AuditLogging,
+    /// Threat detection and security monitoring
     ThreatDetection,
+    /// Access control and policy enforcement
     AccessControl,
+    /// Secret and credential management
     SecretManagement,
 }
 /// Security capability metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Securitycapabilityinfo
 pub struct SecurityCapabilityInfo {
+    /// Type of security capability provided
     pub capability_type: SecurityCapabilityType,
+    /// Service endpoint URL
     pub endpoint: String,
+    /// API version string
     pub version: String,
+    /// List of supported operations for this capability
     pub supported_operations: Vec<String>,
+    /// Additional metadata key-value pairs
     pub metadata: HashMap<String, String>,
 }
 /// Security capability discovery manager
 #[derive(Debug)]
+/// Securitycapabilitydiscovery
 pub struct SecurityCapabilityDiscovery {
     discovered_capabilities:
         tokio::sync::RwLock<HashMap<SecurityCapabilityType, SecurityCapabilityInfo>>,
@@ -147,6 +163,7 @@ impl SecurityCapabilityDiscovery {
 }
 
 impl Default for SecurityCapabilityDiscovery {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

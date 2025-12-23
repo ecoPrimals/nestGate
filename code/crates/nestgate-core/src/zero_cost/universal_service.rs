@@ -12,7 +12,7 @@ use std::collections::HashMap;
 /// - Direct method dispatch (no vtable overhead)
 /// - Monomorphized code generation for optimal performance
 ///
-/// **REPLACES**: `crate::traits::canonical_unified_traits::CanonicalService`
+/// **REPLACES**: `crate::traits::canonical::CanonicalService`
 use crate::Result;
 use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
@@ -138,6 +138,7 @@ pub trait ZeroCostConfigurableService: ZeroCostUniversalService {
 ///
 /// Optimized health status representation for zero-cost services
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Zerocostservicehealth
 pub enum ZeroCostServiceHealth {
     /// Service is healthy and operational
     Healthy {
@@ -172,6 +173,7 @@ pub enum ZeroCostServiceHealth {
 }
 /// **Health metrics for zero-cost services**
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Healthmetrics
 pub struct HealthMetrics {
     /// CPU usage percentage (0.0-100.0)
     pub cpu_usage: f64,
@@ -192,6 +194,7 @@ pub struct HealthMetrics {
 ///
 /// Comprehensive metadata for zero-cost services
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Zerocostservicemetadata
 pub struct ZeroCostServiceMetadata {
     /// Service unique identifier
     pub service_id: Uuid,
@@ -268,21 +271,27 @@ mod tests {
     }
 
     impl ZeroCostUniversalService for MockZeroCostService {
+        /// Type alias for Config
         type Config = MockConfig;
+        /// Type alias for Health
         type Health = ZeroCostServiceHealth;
+        /// Type alias for Metadata
         type Metadata = ZeroCostServiceMetadata;
 
+        /// Start
         async fn start(&mut self, config: Self::Config) -> Result<()> {
             self.config = config;
             self.running = true;
             Ok(())
         }
 
+        /// Stop
         async fn stop(&mut self) -> Result<()> {
             self.running = false;
             Ok(())
         }
 
+        /// Health Check
         async fn health_check(&self) -> Self::Health {
             if self.running {
                 healthy_status()
@@ -294,6 +303,7 @@ mod tests {
             }
         }
 
+        /// Metadata
         fn metadata(&self) -> Self::Metadata {
             ZeroCostServiceMetadata {
                 service_id: self.id,
@@ -308,18 +318,22 @@ mod tests {
             }
         }
 
+        /// Service Id
         fn service_id(&self) -> Uuid {
             self.id
         }
 
+        /// Service Name
         fn service_name(&self) -> &str {
             &self.name
         }
 
+        /// Current Config
         fn current_config(&self) -> &Self::Config {
             &self.config
         }
 
+        /// Updates  Config
         async fn update_config(&mut self, config: Self::Config) -> Result<()> {
             self.config = config;
             Ok(())

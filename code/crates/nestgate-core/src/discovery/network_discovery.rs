@@ -4,8 +4,8 @@
 
 use super::capability_scanner::{CapabilityInfo, DiscoveryMethod};
 use crate::error::NestGateError;
-use async_trait::async_trait;
 use std::collections::HashMap;
+// Removed unused import: use std::future::Future;
 use std::net::{IpAddr, SocketAddr};
 use std::time::Duration;
 use tokio::net::UdpSocket;
@@ -13,6 +13,8 @@ use tokio::time::timeout;
 use tracing::{debug, info, warn};
 
 /// DNS-SRV record discovery method
+#[derive(Debug)]
+/// Dnsservicediscovery
 pub struct DnsServiceDiscovery {
     /// Domain to search for SRV records
     domain: String,
@@ -50,8 +52,8 @@ impl DnsServiceDiscovery {
     }
 }
 
-#[async_trait]
 impl DiscoveryMethod for DnsServiceDiscovery {
+    /// Discover
     async fn discover(&self) -> Result<Vec<CapabilityInfo>, NestGateError> {
         let mut capabilities = Vec::new();
 
@@ -97,6 +99,7 @@ impl DiscoveryMethod for DnsServiceDiscovery {
         Ok(capabilities)
     }
 
+    /// Method Name
     fn method_name(&self) -> &str {
         "dns-srv"
     }
@@ -125,14 +128,21 @@ impl DnsServiceDiscovery {
 
 /// SRV record structure
 #[derive(Debug, Clone)]
+/// Srvrecord
 pub struct SrvRecord {
+    /// Priority
     pub priority: u16,
+    /// Weight
     pub weight: u16,
+    /// Port
     pub port: u16,
+    /// Target
     pub target: String,
 }
 
 /// Multicast discovery method
+#[derive(Debug)]
+/// Multicastdiscovery
 pub struct MulticastDiscovery {
     /// Multicast groups to listen on
     multicast_groups: Vec<SocketAddr>,
@@ -147,14 +157,18 @@ impl MulticastDiscovery {
     /// Create a new multicast discovery
     #[must_use]
     pub fn new() -> Self {
+        // SAFETY: These are well-known, standard multicast addresses that will never fail to parse
+        // mDNS: 224.0.0.251:5353 (RFC 6762)
+        // SSDP: 239.255.255.250:1900 (UPnP specification)
+        #[allow(clippy::expect_used)]
         Self {
             multicast_groups: vec![
                 "224.0.0.251:5353"
                     .parse()
-                    .expect("hardcoded mDNS address is valid"), // mDNS
+                    .expect("BUG: mDNS multicast address is standard and must parse"), // mDNS
                 "239.255.255.250:1900"
                     .parse()
-                    .expect("hardcoded SSDP address is valid"), // SSDP
+                    .expect("BUG: SSDP multicast address is standard and must parse"), // SSDP
             ],
             timeout_duration: Duration::from_secs(3),
             discovery_message: "NESTGATE-DISCOVERY".to_string(),
@@ -173,13 +187,14 @@ impl MulticastDiscovery {
 }
 
 impl Default for MulticastDiscovery {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
 }
 
-#[async_trait]
 impl DiscoveryMethod for MulticastDiscovery {
+    /// Discover
     async fn discover(&self) -> Result<Vec<CapabilityInfo>, NestGateError> {
         let mut capabilities = Vec::new();
 
@@ -215,6 +230,7 @@ impl DiscoveryMethod for MulticastDiscovery {
         Ok(capabilities)
     }
 
+    /// Method Name
     fn method_name(&self) -> &str {
         "multicast"
     }
@@ -226,7 +242,11 @@ impl MulticastDiscovery {
         &self,
         group: &SocketAddr,
     ) -> Result<Vec<String>, NestGateError> {
-        let socket = UdpSocket::bind("0.0.0.0:0").await.map_err(|e| {
+        let bind_addr = format!(
+            "{}:0",
+            crate::constants::network_defaults::get_bind_address()
+        );
+        let socket = UdpSocket::bind(&bind_addr).await.map_err(|e| {
             NestGateError::Internal(Box::new(
                 crate::error::variants::core_errors::InternalErrorDetails {
                     message: format!("Failed to bind UDP socket: {e}"),
@@ -327,6 +347,8 @@ impl MulticastDiscovery {
 }
 
 /// Network port scanning discovery
+#[derive(Debug)]
+/// Portscandiscovery
 pub struct PortScanDiscovery {
     /// IP ranges to scan
     ip_ranges: Vec<IpRange>,
@@ -339,28 +361,44 @@ pub struct PortScanDiscovery {
 
 /// IP range for scanning
 #[derive(Debug, Clone)]
+/// Iprange
 pub struct IpRange {
+    /// Start
     pub start: IpAddr,
+    /// End
     pub end: IpAddr,
 }
 
 impl PortScanDiscovery {
     /// Create a new port scan discovery
+    ///
+    /// Loads port configuration from environment:
+    /// - `NESTGATE_API_PORT`: Default HTTP port (default: 8080)
+    /// - `NESTGATE_METRICS_PORT`: Metrics port (default: 9090)
+    /// - `NESTGATE_HEALTH_PORT`: Health check port (default: 8081)
+    /// - `NESTGATE_WEBSOCKET_PORT`: WebSocket port (default: 9001)
     #[must_use]
     pub fn new() -> Self {
-        use crate::constants::hardcoding::ports;
+        use crate::config::environment::EnvironmentConfig;
+
+        let env_config =
+            EnvironmentConfig::from_env().unwrap_or_else(|_| EnvironmentConfig::default());
+
+        let api_port = env_config.network.port.get();
+        let metrics_port = env_config.monitoring.metrics_port.get();
+
+        // Use default ports for health (8081) and websocket (9001) until env config expands
+        let health_port = 8081;
+        let websocket_port = 9001;
 
         let mut capability_ports = HashMap::new();
         capability_ports.insert(
             "orchestration".to_string(),
-            vec![ports::HTTP_DEFAULT, 8443, ports::METRICS_DEFAULT],
+            vec![api_port, 8443, metrics_port],
         );
         capability_ports.insert("security".to_string(), vec![9000, 9443]);
         capability_ports.insert("ai".to_string(), vec![7000, 7443, 8000]);
-        capability_ports.insert(
-            "storage".to_string(),
-            vec![ports::HEALTH_CHECK, ports::WEBSOCKET_DEFAULT],
-        );
+        capability_ports.insert("storage".to_string(), vec![health_port, websocket_port]);
 
         Self {
             ip_ranges: Vec::new(),
@@ -376,23 +414,32 @@ impl PortScanDiscovery {
 
     /// Add local network ranges (192.168.x.x, 10.x.x.x, 172.16-31.x.x)
     pub fn add_local_networks(&mut self) {
+        // SAFETY: These are hardcoded RFC 1918 private IP addresses that will never fail to parse
+        #[allow(clippy::expect_used)]
         // Add common local network ranges
-        self.add_ip_range(
-            "192.168.1.1"
-                .parse()
-                .expect("hardcoded IP address is valid"),
-            "192.168.1.254"
-                .parse()
-                .expect("hardcoded IP address is valid"),
-        );
-        self.add_ip_range(
-            "10.0.0.1".parse().expect("hardcoded IP address is valid"),
-            "10.0.0.254".parse().expect("hardcoded IP address is valid"),
-        );
+        {
+            self.add_ip_range(
+                "192.168.1.1"
+                    .parse()
+                    .expect("BUG: RFC 1918 private IP address must parse"),
+                "192.168.1.254"
+                    .parse()
+                    .expect("BUG: RFC 1918 private IP address must parse"),
+            );
+            self.add_ip_range(
+                "10.0.0.1"
+                    .parse()
+                    .expect("BUG: RFC 1918 private IP address must parse"),
+                "10.0.0.254"
+                    .parse()
+                    .expect("BUG: RFC 1918 private IP address must parse"),
+            );
+        }
     }
 }
 
 impl Default for PortScanDiscovery {
+    /// Returns the default instance
     fn default() -> Self {
         let mut discovery = Self::new();
         discovery.add_local_networks();
@@ -400,8 +447,8 @@ impl Default for PortScanDiscovery {
     }
 }
 
-#[async_trait]
 impl DiscoveryMethod for PortScanDiscovery {
+    /// Discover
     async fn discover(&self) -> Result<Vec<CapabilityInfo>, NestGateError> {
         let mut capabilities = Vec::new();
 
@@ -438,6 +485,7 @@ impl DiscoveryMethod for PortScanDiscovery {
         Ok(capabilities)
     }
 
+    /// Method Name
     fn method_name(&self) -> &str {
         "port-scan"
     }
@@ -478,14 +526,15 @@ mod tests {
     async fn test_multicast_discovery() {
         let discovery = MulticastDiscovery::new();
 
-        // Test announcement parsing
-        let announcement = "NESTGATE-DISCOVERY:orchestration:http://songbird:8080:priority=100";
+        // Test announcement parsing (generic orchestration capability)
+        let announcement =
+            "NESTGATE-DISCOVERY:orchestration:http://orchestration-service:8080:priority=100";
         let capability = discovery
             .parse_announcement(announcement)
             .expect("Network operation failed");
 
         assert_eq!(capability.capability_type, "orchestration");
-        assert_eq!(capability.endpoint, "http://songbird:8080");
+        assert_eq!(capability.endpoint, "http://orchestration-service:8080");
         assert_eq!(
             capability.metadata.get("priority"),
             Some(&"100".to_string())

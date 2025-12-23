@@ -9,12 +9,17 @@
 //! - Mock services isolated to test builds only
 //! - Zero-cost abstractions with real ZFS integration
 
+/// ZFS backend implementations (native, remote)
 pub mod backends;
+/// Configuration for ZFS services and backends
 pub mod config;
+/// Factory for creating ZFS service instances
 pub mod factory;
+/// Fail-safe wrappers with circuit breakers and retry logic
 pub mod fail_safe;
+/// Core traits for ZFS service abstraction
 pub mod traits;
-pub mod types;
+/// Bridge between Universal ZFS and Universal Storage
 pub mod universal_storage_bridge;
 
 // Re-export main production types
@@ -23,11 +28,13 @@ pub use config::{CircuitBreakerConfig, RetryPolicy, ZfsBackend, ZfsServiceConfig
 pub use factory::ZfsServiceFactory;
 pub use fail_safe::FailSafeZfsService;
 pub use traits::{DynZfsService, UniversalZfsService};
-pub use types::{
+pub use universal_storage_bridge::UniversalStorageBridge;
+
+// Re-export types from sibling universal_zfs_types module
+pub use super::universal_zfs_types::{
     DatasetConfig, DatasetInfo, HealthStatus, PoolInfo, ServiceMetrics, SnapshotConfig,
     SnapshotInfo, UniversalZfsError, UniversalZfsResult,
 };
-pub use universal_storage_bridge::UniversalStorageBridge;
 
 // Mock service only available in test builds
 #[cfg(test)]

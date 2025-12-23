@@ -2,11 +2,11 @@
 //! 
 //! This test validates universal data adapter integration functionality using canonical patterns
 //! **CANONICAL MODERNIZATION**: Updated to use simple, working patterns
+//!
+//! **MODERN CONCURRENCY**: Uses yield_now() for async coordination instead of sleep().
 
-use nestgate_core::config::canonical_master::NestGateCanonicalConfig as NestGateUnifiedConfig;
+use nestgate_core::config::canonical_primary::NestGateCanonicalConfig as NestGateUnifiedConfig;
 use nestgate_core::constants::Environment;
-use std::time::Duration;
-use tokio::time::sleep;
 use tracing::info;
 
 /// Test universal data adapter integration configuration
@@ -19,7 +19,7 @@ async fn test_universal_data_adapter_config() -> Result<(), Box<dyn std::error::
     assert!(!config.system.instance_name.is_empty());
     
     // Test environment-specific universal data adapter integration configuration
-    let dev_config = nestgate_core::config::canonical_master::create_config_for_environment(Environment::Development);
+    let dev_config = nestgate_core::config::canonical_primary::create_config_for_environment(Environment::Development);
     assert!(!dev_config.system.instance_name.is_empty());
     
     info!("✅ Universal data adapter integration configuration test completed");
@@ -43,7 +43,7 @@ async fn test_universal_data_adapter_operations() -> Result<(), Box<dyn std::err
         info!("Executing {} operation ({}ms)", operation, duration);
         
         // Simulate adapter operation
-        sleep(Duration::from_millis(duration as u64)).await;
+        tokio::task::yield_now().await;
         
         // Verify adapter operation is valid
         assert!(!operation.is_empty(), "Operation should be specified");
@@ -72,7 +72,7 @@ async fn test_universal_data_adapter_protocols() -> Result<(), Box<dyn std::erro
         info!("Processing {} protocol ({}ms)", operation, duration);
         
         // Simulate protocol operation
-        sleep(Duration::from_millis(duration as u64)).await;
+        tokio::task::yield_now().await;
         
         // Verify protocol operation is valid
         assert!(!operation.is_empty(), "Operation should be specified");
@@ -94,7 +94,7 @@ async fn test_universal_data_adapter_performance() -> Result<(), Box<dyn std::er
     // Test universal data adapter performance cycles
     for i in 0..6 {
         let cycle_time = (i + 1) * 20;
-        sleep(Duration::from_millis(cycle_time as u64)).await;
+        tokio::task::yield_now().await;
         
         let elapsed = start_time.elapsed();
         info!("Data adapter performance cycle {}: {}ms, total elapsed: {:?}", i + 1, cycle_time, elapsed);
@@ -125,7 +125,7 @@ async fn test_universal_data_adapter_error_handling() -> Result<(), Box<dyn std:
         info!("Testing {} scenario ({}ms recovery)", scenario, recovery_time);
         
         // Simulate error scenario
-        sleep(Duration::from_millis(recovery_time as u64 / 2)).await;
+        tokio::task::yield_now().await;
         
         // Verify error scenario is valid
         assert!(!scenario.is_empty(), "Scenario should be specified");
@@ -154,7 +154,7 @@ async fn test_universal_data_adapter_caching() -> Result<(), Box<dyn std::error:
         info!("Testing {} feature ({}ms)", feature, processing_time);
         
         // Simulate caching feature
-        sleep(Duration::from_millis(processing_time as u64)).await;
+        tokio::task::yield_now().await;
         
         // Verify caching feature is valid
         assert!(!feature.is_empty(), "Feature should be specified");
@@ -172,13 +172,13 @@ async fn test_universal_data_adapter_environments() -> Result<(), Box<dyn std::e
     info!("🌍 Testing universal data adapter integration across environments");
     
     // Test development environment universal data adapter integration
-    let dev_config = nestgate_core::config::canonical_master::create_config_for_environment(Environment::Development);
+    let dev_config = nestgate_core::config::canonical_primary::create_config_for_environment(Environment::Development);
     assert!(!dev_config.system.instance_name.is_empty());
     assert!(matches!(dev_config.environment, Environment::Development));
     info!("Development universal data adapter integration configuration validated");
     
     // Test production environment universal data adapter integration
-    let prod_config = nestgate_core::config::canonical_master::create_config_for_environment(Environment::Production);
+    let prod_config = nestgate_core::config::canonical_primary::create_config_for_environment(Environment::Production);
     assert!(!prod_config.system.instance_name.is_empty());
     assert!(matches!(prod_config.environment, Environment::Production));
     info!("Production universal data adapter integration configuration validated");

@@ -1,10 +1,11 @@
-use crate::Result;
+use nestgate_core::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use tracing::{debug, info};
 
 /// AI-driven tier optimization for ZFS storage
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Aitieroptimizer
 pub struct AiTierOptimizer {
     /// Configuration for AI optimization
     config: AiOptimizationConfig,
@@ -13,6 +14,25 @@ pub struct AiTierOptimizer {
 }
 /// Configuration for AI tier optimization
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+///
+/// **Migration Path**:
+/// ```rust,ignore
+/// // OLD (deprecated):
+/// use crate::network::config::AiOptimizationConfig;
+///
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::AiOptimizationConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+///
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(
+    since = "0.11.0",
+    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
+/// Configuration for AiOptimization
 pub struct AiOptimizationConfig {
     /// Enable AI optimization
     pub enabled: bool,
@@ -25,6 +45,7 @@ pub struct AiOptimizationConfig {
 }
 /// Performance metrics for AI optimization
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performancemetric
 pub struct PerformanceMetric {
     /// Timestamp of the metric
     pub timestamp: u64,
@@ -39,6 +60,7 @@ pub struct PerformanceMetric {
 }
 /// Data access patterns for optimization
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Accesspattern
 pub enum AccessPattern {
     /// Sequential access pattern
     Sequential,
@@ -48,6 +70,7 @@ pub enum AccessPattern {
     Mixed,
 }
 impl Default for AiOptimizationConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: false,
@@ -235,6 +258,7 @@ impl AiTierOptimizer {
 
 /// Storage tier types
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+/// Types of Tier
 pub enum TierType {
     /// Hot tier - fast access, expensive storage
     Hot,
@@ -245,6 +269,7 @@ pub enum TierType {
 }
 /// Tier optimization recommendation
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Tieroptimizationrecommendation
 pub struct TierOptimizationRecommendation {
     /// Dataset name
     pub dataset: String,
@@ -256,4 +281,336 @@ pub struct TierOptimizationRecommendation {
     pub confidence: f64,
     /// Human-readable reason for the recommendation
     pub reason: String,
+}
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+///
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Aioptimizationconfigcanonical
+pub type AiOptimizationConfigCanonical =
+    nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using AiOptimizationConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Creates  Test Config
+    fn create_test_config() -> AiOptimizationConfig {
+        AiOptimizationConfig {
+            enabled: true,
+            optimization_interval: 600,
+            min_data_points: 10,
+            performance_threshold: 0.75,
+        }
+    }
+
+    /// Creates  Test Metric
+    fn create_test_metric(
+        read_ops: u64,
+        write_ops: u64,
+        avg_latency: f64,
+        access_pattern: AccessPattern,
+    ) -> PerformanceMetric {
+        PerformanceMetric {
+            timestamp: 1000,
+            read_ops,
+            write_ops,
+            avg_latency,
+            access_pattern,
+        }
+    }
+
+    #[test]
+    fn test_ai_optimization_config_default() {
+        let config = AiOptimizationConfig::default();
+        assert!(!config.enabled);
+        assert_eq!(config.optimization_interval, 3600);
+        assert_eq!(config.min_data_points, 100);
+        assert_eq!(config.performance_threshold, 0.8);
+    }
+
+    #[test]
+    fn test_ai_tier_optimizer_creation() {
+        let config = create_test_config();
+        let optimizer = AiTierOptimizer::new(config.clone());
+        assert!(optimizer.config.enabled);
+        assert_eq!(optimizer.config.min_data_points, 10);
+    }
+
+    #[test]
+    fn test_add_metric() {
+        let config = create_test_config();
+        let mut optimizer = AiTierOptimizer::new(config);
+
+        let metric = create_test_metric(100, 50, 50.0, AccessPattern::Sequential);
+        optimizer.add_metric("dataset1".to_string(), metric.clone());
+
+        assert_eq!(optimizer.performance_history.len(), 1);
+        assert_eq!(
+            optimizer.performance_history.get("dataset1").unwrap().len(),
+            1
+        );
+    }
+
+    #[test]
+    fn test_add_multiple_metrics() {
+        let config = create_test_config();
+        let mut optimizer = AiTierOptimizer::new(config);
+
+        for i in 0..5 {
+            let metric = create_test_metric(100 + i, 50, 50.0, AccessPattern::Sequential);
+            optimizer.add_metric("dataset1".to_string(), metric);
+        }
+
+        assert_eq!(
+            optimizer.performance_history.get("dataset1").unwrap().len(),
+            5
+        );
+    }
+
+    #[test]
+    fn test_performance_metric_creation() {
+        let metric = create_test_metric(100, 50, 25.5, AccessPattern::Random);
+        assert_eq!(metric.read_ops, 100);
+        assert_eq!(metric.write_ops, 50);
+        assert_eq!(metric.avg_latency, 25.5);
+        assert!(matches!(metric.access_pattern, AccessPattern::Random));
+    }
+
+    #[test]
+    fn test_access_pattern_variants() {
+        let sequential = AccessPattern::Sequential;
+        let random = AccessPattern::Random;
+        let mixed = AccessPattern::Mixed;
+
+        // Just ensure all variants are constructible
+        assert!(matches!(sequential, AccessPattern::Sequential));
+        assert!(matches!(random, AccessPattern::Random));
+        assert!(matches!(mixed, AccessPattern::Mixed));
+    }
+
+    #[test]
+    fn test_tier_type_equality() {
+        assert_eq!(TierType::Hot, TierType::Hot);
+        assert_eq!(TierType::Warm, TierType::Warm);
+        assert_eq!(TierType::Cold, TierType::Cold);
+        assert_ne!(TierType::Hot, TierType::Warm);
+        assert_ne!(TierType::Warm, TierType::Cold);
+    }
+
+    #[test]
+    fn test_tier_type_clone() {
+        let tier = TierType::Hot;
+        let cloned = tier.clone();
+        assert_eq!(tier, cloned);
+    }
+
+    #[test]
+    fn test_tier_optimization_recommendation_creation() {
+        let recommendation = TierOptimizationRecommendation {
+            dataset: "test_dataset".to_string(),
+            current_tier: TierType::Cold,
+            recommended_tier: TierType::Hot,
+            confidence: 0.85,
+            reason: "High activity".to_string(),
+        };
+
+        assert_eq!(recommendation.dataset, "test_dataset");
+        assert_eq!(recommendation.current_tier, TierType::Cold);
+        assert_eq!(recommendation.recommended_tier, TierType::Hot);
+        assert_eq!(recommendation.confidence, 0.85);
+    }
+
+    #[test]
+    fn test_determine_access_pattern_sequential() {
+        let config = create_test_config();
+        let optimizer = AiTierOptimizer::new(config);
+
+        let metrics = vec![
+            create_test_metric(100, 50, 50.0, AccessPattern::Sequential),
+            create_test_metric(100, 50, 50.0, AccessPattern::Sequential),
+            create_test_metric(100, 50, 50.0, AccessPattern::Sequential),
+            create_test_metric(100, 50, 50.0, AccessPattern::Random),
+        ];
+
+        let pattern = optimizer.determine_access_pattern(&metrics);
+        assert!(matches!(pattern, AccessPattern::Sequential));
+    }
+
+    #[test]
+    fn test_determine_access_pattern_random() {
+        let config = create_test_config();
+        let optimizer = AiTierOptimizer::new(config);
+
+        let metrics = vec![
+            create_test_metric(100, 50, 50.0, AccessPattern::Random),
+            create_test_metric(100, 50, 50.0, AccessPattern::Random),
+            create_test_metric(100, 50, 50.0, AccessPattern::Random),
+            create_test_metric(100, 50, 50.0, AccessPattern::Sequential),
+        ];
+
+        let pattern = optimizer.determine_access_pattern(&metrics);
+        assert!(matches!(pattern, AccessPattern::Random));
+    }
+
+    #[test]
+    fn test_determine_access_pattern_mixed() {
+        let config = create_test_config();
+        let optimizer = AiTierOptimizer::new(config);
+
+        let metrics = vec![
+            create_test_metric(100, 50, 50.0, AccessPattern::Sequential),
+            create_test_metric(100, 50, 50.0, AccessPattern::Sequential),
+            create_test_metric(100, 50, 50.0, AccessPattern::Random),
+            create_test_metric(100, 50, 50.0, AccessPattern::Random),
+        ];
+
+        let pattern = optimizer.determine_access_pattern(&metrics);
+        assert!(matches!(pattern, AccessPattern::Mixed));
+    }
+
+    #[test]
+    fn test_calculate_confidence_low_variance() {
+        let config = create_test_config();
+        let optimizer = AiTierOptimizer::new(config);
+
+        let metrics = vec![
+            create_test_metric(100, 50, 50.0, AccessPattern::Sequential),
+            create_test_metric(100, 50, 51.0, AccessPattern::Sequential),
+            create_test_metric(100, 50, 49.0, AccessPattern::Sequential),
+        ];
+
+        let confidence = optimizer.calculate_confidence(&metrics);
+        assert!(confidence > 0.6); // Should have relatively high confidence
+    }
+
+    #[test]
+    fn test_calculate_variance_empty_metrics() {
+        let config = create_test_config();
+        let optimizer = AiTierOptimizer::new(config);
+
+        let metrics: Vec<PerformanceMetric> = vec![];
+        let variance = optimizer.calculate_variance(&metrics);
+        assert_eq!(variance, 1.0);
+    }
+
+    #[test]
+    fn test_calculate_variance_single_metric() {
+        let config = create_test_config();
+        let optimizer = AiTierOptimizer::new(config);
+
+        let metrics = vec![create_test_metric(100, 50, 50.0, AccessPattern::Sequential)];
+        let variance = optimizer.calculate_variance(&metrics);
+        assert_eq!(variance, 0.0); // Single point has no variance
+    }
+
+    #[test]
+    fn test_generate_reason_cold_to_hot() {
+        let config = create_test_config();
+        let optimizer = AiTierOptimizer::new(config);
+
+        let reason = optimizer.generate_reason(&TierType::Cold, &TierType::Hot, 50.0, 5000);
+        assert!(reason.contains("High activity"));
+        assert!(reason.contains("5000"));
+    }
+
+    #[test]
+    fn test_generate_reason_hot_to_cold() {
+        let config = create_test_config();
+        let optimizer = AiTierOptimizer::new(config);
+
+        let reason = optimizer.generate_reason(&TierType::Hot, &TierType::Cold, 500.0, 50);
+        assert!(reason.contains("Minimal usage"));
+        assert!(reason.contains("50"));
+    }
+
+    #[test]
+    fn test_config_clone() {
+        let config1 = create_test_config();
+        let config2 = config1.clone();
+        assert_eq!(config1.enabled, config2.enabled);
+        assert_eq!(config1.optimization_interval, config2.optimization_interval);
+    }
+
+    #[test]
+    fn test_optimizer_multiple_datasets() {
+        let config = create_test_config();
+        let mut optimizer = AiTierOptimizer::new(config);
+
+        optimizer.add_metric(
+            "dataset1".to_string(),
+            create_test_metric(100, 50, 50.0, AccessPattern::Sequential),
+        );
+        optimizer.add_metric(
+            "dataset2".to_string(),
+            create_test_metric(200, 100, 75.0, AccessPattern::Random),
+        );
+
+        assert_eq!(optimizer.performance_history.len(), 2);
+    }
+
+    #[tokio::test]
+    async fn test_analyze_and_optimize_disabled() {
+        let mut config = create_test_config();
+        config.enabled = false;
+        let optimizer = AiTierOptimizer::new(config);
+
+        let result = optimizer.analyze_and_optimize().await.unwrap();
+        assert_eq!(result.len(), 0);
+    }
+
+    #[tokio::test]
+    async fn test_analyze_and_optimize_insufficient_data() {
+        let config = create_test_config();
+        let mut optimizer = AiTierOptimizer::new(config);
+
+        // Add only 5 metrics when min_data_points is 10
+        for _ in 0..5 {
+            optimizer.add_metric(
+                "dataset1".to_string(),
+                create_test_metric(100, 50, 50.0, AccessPattern::Sequential),
+            );
+        }
+
+        let result = optimizer.analyze_and_optimize().await.unwrap();
+        assert_eq!(result.len(), 0); // Should not recommend anything
+    }
+
+    #[tokio::test]
+    async fn test_determine_current_tier() {
+        let config = create_test_config();
+        let optimizer = AiTierOptimizer::new(config);
+
+        let tier = optimizer
+            .determine_current_tier("any_dataset")
+            .await
+            .unwrap();
+        assert_eq!(tier, TierType::Warm); // Default implementation returns Warm
+    }
+
+    #[test]
+    fn test_metric_serialization() {
+        let metric = create_test_metric(100, 50, 50.0, AccessPattern::Sequential);
+        let serialized = serde_json::to_string(&metric).unwrap();
+        assert!(serialized.contains("100"));
+        assert!(serialized.contains("50.0"));
+    }
+
+    #[test]
+    fn test_tier_type_serialization() {
+        let tier = TierType::Hot;
+        let serialized = serde_json::to_string(&tier).unwrap();
+        let deserialized: TierType = serde_json::from_str(&serialized).unwrap();
+        assert_eq!(tier, deserialized);
+    }
 }

@@ -6,6 +6,7 @@ use crate::zero_cost::ZeroCostServiceHealth;
 
 /// **Configuration for the example service**
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for ExampleConfigManager
 pub struct ExampleConfigManagerConfig {
     /// Configuration storage path
     /// Maximum number of configurations to cache
@@ -16,6 +17,7 @@ pub struct ExampleConfigManagerConfig {
     pub validate_configs: bool,
 }
 impl Default for ExampleConfigManagerConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             max_cached_configs: 100,
@@ -27,6 +29,7 @@ impl Default for ExampleConfigManagerConfig {
 
 /// **Health status for configuration manager**
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Exampleconfigmanagerhealth
 pub struct ExampleConfigManagerHealth {
     /// Number of configurations currently loaded
     pub loaded_configs: usize,
@@ -40,6 +43,7 @@ pub struct ExampleConfigManagerHealth {
     pub uptime_seconds: u64,
 }
 impl From<ExampleConfigManagerHealth> for ZeroCostServiceHealth {
+    /// From
     fn from(health: ExampleConfigManagerHealth) -> Self {
         Self {
             status: if health.cached_configs > 0 { "healthy".to_string() } else { "degraded".to_string() },

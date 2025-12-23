@@ -8,7 +8,10 @@
 // - snapshot_operations: Snapshot fail-safe operations
 // - optimization: Optimization and configuration operations
 
+//! Fail Safe module
+
 mod circuit_breaker;
+/// Core fail-safe service implementation
 pub mod core;
 mod dataset_operations;
 mod optimization;

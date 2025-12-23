@@ -2,13 +2,13 @@
 ///
 /// This module contains workflow tests for storage tier management operations.
 /// Extracted from the original e2e_comprehensive_workflows.rs for better maintainability.
+///
+/// **MODERN CONCURRENCY**: Uses yield_now() for async coordination instead of sleep().
 use super::WorkflowResults;
 use crate::common::config::UnifiedTestConfig;
 use nestgate_core::Result;
 use std::collections::HashMap;
-use std::time::Duration;
 use std::time::Instant;
-use tokio::time::sleep;
 
 /// Test tier management workflow
 pub async fn test_tier_management_workflow(config: &UnifiedTestConfig) -> Result<WorkflowResults> {
@@ -104,20 +104,20 @@ pub async fn test_tier_management_workflow(config: &UnifiedTestConfig) -> Result
 
 /// Simulate AI tier prediction
 async fn simulate_ai_tier_prediction() -> Result<usize> {
-    sleep(Duration::from_millis(300)).await;
+    tokio::task::yield_now().await;
     Ok(15) // Simulate 15 predictions
 }
 
 /// Simulate tier migration
 async fn simulate_tier_migration(tier: &str) -> Result<()> {
-    sleep(Duration::from_millis(400)).await;
+    tokio::task::yield_now().await;
     println!("    🔄 Migrated data to {} tier", tier);
     Ok(())
 }
 
 /// Simulate performance optimization
 async fn simulate_performance_optimization() -> Result<()> {
-    sleep(Duration::from_millis(250)).await;
+    tokio::task::yield_now().await;
     println!("    ⚡ Optimized storage performance");
     Ok(())
 }

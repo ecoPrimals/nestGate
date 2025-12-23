@@ -3,7 +3,9 @@
 
 // Removed unused tracing import
 
-use crate::handlers::zfs::universal_zfs::types::UniversalZfsResult;
+//! Optimization module
+
+use crate::handlers::zfs::universal_zfs_types::UniversalZfsResult;
 
 use super::core::NativeZfsService;
 use tracing::info;
@@ -31,28 +33,19 @@ pub async fn optimize(service: &NativeZfsService) -> UniversalZfsResult<String> 
                 let _ = service
                     .execute_zfs_command(&["set", "compression=lz4", pool])
                     .await;
-                results.push(format!(
-                    "Optimized compression for {}",
-                    e
-                ));
+                results.push(format!("Optimized compression for {pool}"));
 
                 // Optimize record size for large files
                 let _ = service
                     .execute_zfs_command(&["set", "recordsize=128k", pool])
                     .await;
-                results.push(format!(
-                    "Optimized record size for {}",
-                    e
-                ));
+                results.push(format!("Optimized record size for {pool}"));
 
                 // Enable deduplication if beneficial
                 let _ = service
                     .execute_zfs_command(&["set", "dedup=on", pool])
                     .await;
-                results.push(format!(
-                    "Enabled deduplication for {}",
-                    e
-                ));
+                results.push(format!("Enabled deduplication for {pool}"));
             }
         }
     }
@@ -92,7 +85,7 @@ pub async fn get_optimization_analytics(
         if parts.len() >= 4 {
             let used = parse_size(parts[1]).unwrap_or(0);
             let available = parse_size(parts[2]).unwrap_or(0);
-            let compression_ratio: f64 = parts[3].replace("x", "").parse().unwrap_or(1.0);
+            let compression_ratio: f64 = parts[3].replace('x', "").parse().unwrap_or(1.0);
 
             total_used += used;
             total_available += available;
@@ -100,16 +93,10 @@ pub async fn get_optimization_analytics(
 
             // Generate recommendations
             if compression_ratio < 1.2 {
-                recommendations.push(format!(
-                    "Consider enabling compression for {}",
-                    e
-                ));
+                recommendations.push(format!("Consider enabling compression for {}", parts[0]));
             }
             if available < used / 10 {
-                recommendations.push(format!(
-                    "Pool {} is running low on space",
-                    e
-                ));
+                recommendations.push(format!("Pool {} is running low on space", parts[0]));
             }
 
             // Safely access the pools array, or skip if corrupted
@@ -131,10 +118,10 @@ pub async fn get_optimization_analytics(
 
     analytics["total_used"] = total_used.into();
     analytics["total_available"] = total_available.into();
-    analytics["average_compression_ratio"] = if !compression_ratios.is_empty() {
-        (compression_ratios.iter().sum::<f64>() / (compression_ratios.len() as f64)).into()
-    } else {
+    analytics["average_compression_ratio"] = if compression_ratios.is_empty() {
         1.0.into()
+    } else {
+        (compression_ratios.iter().sum::<f64>() / (compression_ratios.len() as f64)).into()
     };
     analytics["optimization_recommendations"] = recommendations.into();
 
@@ -142,7 +129,7 @@ pub async fn get_optimization_analytics(
 }
 
 /// Predict optimal storage tier for a file (zero-copy optimized)
-pub fn predict_tier(
+pub async fn predict_tier(
     service: &NativeZfsService,
     file_path: &str,
 ) -> UniversalZfsResult<String> {
@@ -153,8 +140,8 @@ pub fn predict_tier(
     let tier = match &stat_output {
         Ok(output) => {
             // Parse file size and access patterns
-            let size_mb = extract_file_size(&output).unwrap_or(0) / (1024 * 1024);
-            let access_time = extract_access_time(&output);
+            let size_mb = extract_file_size(output).unwrap_or(0) / (1024 * 1024);
+            let access_time = extract_access_time(output);
 
             // Simple tier prediction logic
             if size_mb < 10 {
@@ -175,7 +162,7 @@ pub fn predict_tier(
         }
     };
 
-    Ok(tier.into())
+    Ok(tier)
 }
 
 /// Helper function to parse ZFS size strings (zero-copy optimized)

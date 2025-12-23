@@ -47,11 +47,12 @@ pub use traits::{
 
 // ==================== MAIN EVOLUTION SYSTEM ====================
 
-// **THE** canonical idiomatic evolution system for NestGate
-//
-// This system provides comprehensive evolution tracking, smart defaults,
-// and modernization patterns for the entire ecosystem.
+/// **THE** canonical idiomatic evolution system for NestGate
+///
+/// This system provides comprehensive evolution tracking, smart defaults,
+/// and modernization patterns for the entire ecosystem.
 #[derive(Debug, Clone, Default)]
+/// Idiomaticevolutionsystem
 pub struct IdiomaticEvolutionSystem {
     /// Evolution metadata tracking
     pub metadata: EvolutionMetadata,
@@ -101,6 +102,10 @@ impl IdiomaticEvolutionSystem {
     }
 
     /// Apply evolution patterns to a configuration
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if modernization fails or compatibility validation fails
     pub fn apply_evolution<T>(&self, config: T) -> crate::Result<T>
     where
         T: EvolutionCompatible + ModernizationTrait,
@@ -115,6 +120,10 @@ impl IdiomaticEvolutionSystem {
     }
 
     /// Track evolution progress
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if progress tracking fails or version validation fails
     pub fn track_evolution(&mut self, component: &str, version: &str) -> crate::Result<()> {
         self.metadata
             .track_component_evolution(component, version)?;
@@ -167,8 +176,26 @@ impl IdiomaticEvolutionSystem {
     }
 }
 
-// Evolution statistics
+/// Evolution statistics for tracking canonical modernization progress
+///
+/// This struct captures comprehensive metrics about the modernization process,
+/// including component counts, compatibility scores, and overall progress.
+///
+/// # Examples
+///
+/// ```
+/// use nestgate_core::canonical_modernization::idiomatic_evolution::EvolutionStats;
+///
+/// let stats = EvolutionStats {
+///     total_components: 100,
+///     modernized_components: 75,
+///     compatibility_score: 0.95,
+///     evolution_progress: 75.0,
+/// };
+/// assert_eq!(stats.evolution_progress, 75.0);
+/// ```
 #[derive(Debug, Clone)]
+/// Evolutionstats
 pub struct EvolutionStats {
     /// Total number of components being evolved
     pub total_components: u32,
@@ -191,5 +218,12 @@ pub struct EvolutionStats {
 // - SmartDefault trait (use directly)
 // - IdiomaticBuilder<T> trait (use directly)
 
-// Backward compatibility alias for evolution metadata
+/// Backward compatibility alias for evolution metadata
+///
+/// This type alias provides compatibility with legacy code that references
+/// `LegacyEvolutionMetadata`. New code should use `EvolutionMetadata` directly.
+///
+/// # Deprecated
+///
+/// This alias exists for backward compatibility only. Use `EvolutionMetadata` directly in new code.
 pub type LegacyEvolutionMetadata = EvolutionMetadata;

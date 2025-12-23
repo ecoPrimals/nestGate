@@ -1,3 +1,5 @@
+//! Canonical Types module
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::SystemTime;
@@ -16,9 +18,11 @@ pub mod service {
 
     /// Service identification
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+    /// Serviceid
     pub struct ServiceId(pub String);
 
     impl Default for ServiceId {
+        /// Returns the default instance
         fn default() -> Self {
             Self(uuid::Uuid::new_v4().to_string())
         }
@@ -26,43 +30,73 @@ pub mod service {
 
     /// Service states
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+    /// Servicestate
     pub enum ServiceState {
+        /// Service is in the process of starting up
         Starting,
+        /// Service is running and operational
         Running,
+        /// Service is in the process of shutting down
         Stopping,
+        /// Service has stopped and is not running
         Stopped,
+        /// Service has encountered a failure and cannot operate
         Failed,
+        /// Service is under maintenance and temporarily unavailable
         Maintenance,
+        /// Service state is unknown or cannot be determined
         Unknown,
     }
 
     /// Service types
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+    /// Types of Service
     pub enum ServiceType {
+        /// API service handling HTTP/REST requests
         Api,
+        /// Storage service managing data persistence
         Storage,
+        /// Network service handling connectivity and routing
         Network,
+        /// Security service managing authentication and authorization
         Security,
+        /// Monitoring service collecting metrics and health data
         Monitoring,
+        /// Automation service handling scheduled tasks and workflows
         Automation,
+        /// MCP (Model Context Protocol) service
         Mcp,
+        /// ZFS storage management service
         Zfs,
+        /// Custom service type with user-defined name
         Custom(String),
+        /// Generic service type for unspecified services
         Generic,
+        /// Compute service handling processing workloads
         Compute,
     }
 
     /// Service configuration
     #[derive(Debug, Clone, Serialize, Deserialize)]
+    /// Configuration for Service
     pub struct ServiceConfig {
+        /// Unique service identifier
         pub id: ServiceId,
+        /// Human-readable service name
         pub name: String,
+        /// Type of service
         pub service_type: ServiceType,
+        /// Current operational state
         pub state: ServiceState,
+        /// Network port if applicable
         pub port: Option<u16>,
+        /// Host address if applicable
         pub host: Option<String>,
+        /// Additional service metadata
         pub metadata: HashMap<String, String>,
+        /// Timestamp when service was created
         pub created_at: SystemTime,
+        /// Timestamp of last update
         pub updated_at: SystemTime,
     }
     /// **CANONICAL SERVICE INFO** - Consolidates all `ServiceInfo` definitions
@@ -72,35 +106,53 @@ pub mod service {
     /// - automation/src/types/ecosystem.rs  
     /// - diagnostics/metrics.rs
     /// - And other scattered definitions
+    ///
+    /// Service Information structure
     #[derive(Debug, Clone, Serialize, Deserialize)]
     pub struct ServiceInfo {
         // Core identification
+        /// Unique service identifier
         pub service_id: String,
+        /// Primary service name
         pub service_name: String,
-        pub name: String, // Backward compatibility alias
+        /// Service name (backward compatibility alias)
+        pub name: String,
+        /// Service version string
         pub version: String,
 
         // Status and health
+        /// Current operational status
         pub status: ServiceState,
+        /// Human-readable health status
         pub health_status: String,
-        pub health: Option<String>, // Backward compatibility
+        /// Health status (backward compatibility)
+        pub health: Option<String>,
 
         // Runtime information
+        /// Service uptime in seconds
         pub uptime_seconds: Option<u64>,
+        /// Process ID if available
         pub pid: Option<u32>,
+        /// Service start timestamp
         pub start_time: Option<SystemTime>,
 
         // Performance metrics
+        /// CPU usage percentage
         pub cpu_percent: Option<f64>,
+        /// Memory usage in bytes
         pub memory_bytes: Option<u64>,
 
         // Configuration and metadata
+        /// Service capabilities list
         pub capabilities: Vec<String>,
+        /// Additional metadata key-value pairs
         pub metadata: HashMap<String, String>,
+        /// Optional service description
         pub description: Option<String>,
     }
 
     impl Default for ServiceInfo {
+        /// Returns the default instance
         fn default() -> Self {
             Self {
                 service_id: ServiceId::default().0,
@@ -124,24 +176,39 @@ pub mod service {
 
     /// Service metrics
     #[derive(Debug, Clone, Serialize, Deserialize)]
+    /// Servicemetrics
     pub struct ServiceMetrics {
+        /// CPU usage as a percentage (0-100)
         pub cpu_usage_percent: f64,
+        /// Memory usage in bytes
         pub memory_usage_bytes: u64,
+        /// Service uptime in seconds
         pub uptime_seconds: u64,
+        /// Average requests per second
         pub requests_per_second: f64,
+        /// Error rate as a percentage (0-100)
         pub error_rate_percent: f64,
+        /// Timestamp of last metrics update
         pub last_updated: SystemTime,
     }
 
     /// Service metadata
     #[derive(Debug, Clone, Serialize, Deserialize)]
+    /// Servicemetadata
     pub struct ServiceMetadata {
+        /// Unique service identifier
         pub service_id: String,
+        /// Type of service
         pub service_type: ServiceType,
+        /// Timestamp when service was created
         pub created_at: SystemTime,
+        /// Current health/operational status
         pub health_status: ServiceState,
+        /// List of service capabilities
         pub capabilities: Vec<String>,
+        /// Service endpoint URLs
         pub endpoints: HashMap<String, String>,
+        /// Service configuration parameters
         pub configuration: HashMap<String, String>,
     }
 }
@@ -155,35 +222,54 @@ pub mod network {
 
     /// Connection status
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+    /// Status values for Connection
     pub enum ConnectionStatus {
+        /// Connection is established and active
         Connected,
+        /// Connection is not established
         Disconnected,
+        /// Connection is in progress
         Connecting,
+        /// Connection attempt failed
         Failed,
+        /// Connection attempt timed out
         Timeout,
     }
 
     /// Network protocol types
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+    /// Protocol
     pub enum Protocol {
+        /// HTTP protocol
         Http,
+        /// HTTPS (secure HTTP) protocol
         Https,
+        /// TCP protocol
         Tcp,
+        /// UDP protocol
         Udp,
+        /// WebSocket protocol
         WebSocket,
+        /// gRPC protocol
         Grpc,
+        /// Custom protocol with specified name
         Custom(String),
     }
 
     /// Network endpoint
     #[derive(Debug, Clone, Serialize, Deserialize)]
+    /// Endpoint
     pub struct Endpoint {
+        /// Hostname or IP address
         pub host: String,
+        /// Port number
         pub port: u16,
+        /// Network protocol
         pub protocol: Protocol,
     }
 
     impl Default for Endpoint {
+        /// Returns the default instance
         fn default() -> Self {
             Self {
                 host: LOCALHOST.to_string(),
@@ -199,14 +285,20 @@ pub mod system {
 
     /// Allocation status for resources
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+    /// Status values for Allocation
     pub enum AllocationStatus {
+        /// Resource is actively allocated
         Active,
+        /// Resource is not allocated
         Inactive,
+        /// Resource allocation is pending
         Pending,
+        /// Resource allocation has failed
         Failed,
     }
 
     impl Default for AllocationStatus {
+        /// Returns the default instance
         fn default() -> Self {
             Self::Inactive
         }
@@ -220,48 +312,79 @@ pub mod storage {
 
     /// Storage tiers for data classification
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+    /// Storagetier
     pub enum StorageTier {
-        Hot,     // Frequent access - NVMe/SSD
-        Warm,    // Regular access - SSD
-        Cold,    // Infrequent access - HDD
-        Cache,   // Ultra-fast cache - RAM/NVMe cache
-        Archive, // Long-term storage - Tape/Cloud
+        /// Frequent access - NVMe/SSD tier
+        Hot,
+        /// Regular access - SSD tier
+        Warm,
+        /// Infrequent access - HDD tier
+        Cold,
+        /// Ultra-fast cache - RAM/NVMe cache tier
+        Cache,
+        /// Long-term storage - Tape/Cloud tier
+        Archive,
     }
 
     /// Storage operation types
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+    /// Storageoperation
     pub enum StorageOperation {
+        /// Read data from storage
         Read,
+        /// Write data to storage
         Write,
+        /// Delete data from storage
         Delete,
+        /// Copy data within storage
         Copy,
+        /// Move data within storage
         Move,
+        /// Backup data to another location
         Backup,
+        /// Restore data from backup
         Restore,
+        /// Compress data for storage efficiency
         Compress,
+        /// Decompress data for access
         Decompress,
     }
 
     /// Storage metadata
     #[derive(Debug, Clone, Serialize, Deserialize)]
+    /// Storagemetadata
     pub struct StorageMetadata {
+        /// Size of the stored data in bytes
         pub size_bytes: u64,
+        /// Timestamp when the data was created
         pub created_at: SystemTime,
+        /// Timestamp when the data was last modified
         pub modified_at: SystemTime,
+        /// Timestamp when the data was last accessed
         pub accessed_at: SystemTime,
+        /// Storage tier where the data resides
         pub tier: StorageTier,
+        /// Whether the data is compressed
         pub compressed: bool,
+        /// Whether the data is encrypted
         pub encrypted: bool,
+        /// Optional checksum for data integrity verification
         pub checksum: Option<String>,
+        /// User-defined tags for categorization and metadata
         pub tags: HashMap<String, String>,
     }
 
     /// Storage resource
     #[derive(Debug, Clone, Serialize, Deserialize)]
+    /// Storageresource
     pub struct StorageResource {
+        /// Unique identifier for the resource
         pub id: String,
+        /// Metadata about the storage resource
         pub metadata: StorageMetadata,
+        /// Optional permissions string
         pub permissions: Option<String>,
+        /// Optional owner identifier
         pub owner: Option<String>,
     }
 }
@@ -272,32 +395,51 @@ pub mod security {
 
     /// Authentication methods
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+    /// Authmethod
     pub enum AuthMethod {
+        /// Token-based authentication
         Token,
+        /// API key authentication
         ApiKey,
+        /// Certificate-based authentication
         Certificate,
+        /// OAuth2 authentication
         OAuth2,
+        /// Basic authentication (username/password)
         Basic,
+        /// No authentication required
         None,
     }
 
     /// Access levels
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+    /// Accesslevel
     pub enum AccessLevel {
+        /// Read-only access
         Read,
+        /// Read and write access
         Write,
+        /// Administrative access
         Admin,
+        /// Owner-level access with full control
         Owner,
     }
 
     /// Security context
     #[derive(Debug, Clone, Serialize, Deserialize)]
+    /// Securitycontext
     pub struct SecurityContext {
+        /// Optional user identifier
         pub user_id: Option<String>,
+        /// User roles for role-based access control
         pub roles: Vec<String>,
+        /// Granted permissions
         pub permissions: Vec<String>,
+        /// Access level for this context
         pub access_level: AccessLevel,
+        /// Authentication method used
         pub auth_method: AuthMethod,
+        /// Optional token expiration timestamp
         pub token_expires_at: Option<SystemTime>,
     }
 }
@@ -310,41 +452,66 @@ pub mod events {
 
     /// Event severity levels
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+    /// Eventseverity
     pub enum EventSeverity {
+        /// Debug-level events for detailed troubleshooting
         Debug,
+        /// Informational events for general logging
         Info,
+        /// Warning events for potential issues
         Warning,
+        /// Error events for failures
         Error,
+        /// Critical events requiring immediate attention
         Critical,
     }
 
     /// Event categories
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+    /// Eventcategory
     pub enum EventCategory {
+        /// System-level events
         System,
+        /// Security-related events
         Security,
+        /// Network events
         Network,
+        /// Storage events
         Storage,
+        /// User action events
         User,
+        /// Application-level events
         Application,
+        /// Performance-related events
         Performance,
+        /// Custom event category
         Custom(String),
     }
 
     /// Event structure
     #[derive(Debug, Clone, Serialize, Deserialize)]
+    /// Event
     pub struct Event {
+        /// Unique event identifier
         pub id: String,
+        /// Timestamp when the event occurred
         pub timestamp: SystemTime,
+        /// Category of the event
         pub category: EventCategory,
+        /// Severity level of the event
         pub severity: EventSeverity,
+        /// Human-readable event message
         pub message: String,
+        /// Source that generated the event
         pub source: String,
+        /// Additional structured data for the event
         pub data: HashMap<String, serde_json::Value>,
+        /// Tags for event categorization and filtering
         pub tags: Vec<String>,
     }
 
     impl Default for Event {
+        /// Returns the default instance
         fn default() -> Self {
             Self {
                 id: uuid::Uuid::new_v4().to_string(),
@@ -367,31 +534,49 @@ pub mod api {
 
     /// Request structure
     #[derive(Debug, Clone, Serialize, Deserialize)]
+    /// Request parameters for  operation
     pub struct Request {
+        /// Unique request identifier
         pub id: String,
+        /// HTTP method (GET, POST, etc.)
         pub method: String,
+        /// Request headers
         pub headers: HashMap<String, String>,
+        /// Optional request body
         pub body: Option<serde_json::Value>,
+        /// Timestamp when the request was received
         pub timestamp: SystemTime,
     }
 
     /// Response structure
     #[derive(Debug, Clone, Serialize, Deserialize)]
+    /// Response data for  operation
     pub struct Response {
+        /// Associated request identifier
         pub request_id: String,
+        /// HTTP status code
         pub status_code: u16,
+        /// Response headers
         pub headers: HashMap<String, String>,
+        /// Optional response body
         pub body: Option<serde_json::Value>,
+        /// Timestamp when the response was generated
         pub timestamp: SystemTime,
+        /// Processing time in milliseconds
         pub processing_time_ms: u64,
     }
 
     /// API error structure
     #[derive(Debug, Clone, Serialize, Deserialize)]
+    /// Error type for Api operations
     pub struct ApiError {
+        /// Error code for categorization
         pub code: String,
+        /// Human-readable error message
         pub message: String,
+        /// Optional additional error details
         pub details: Option<serde_json::Value>,
+        /// Timestamp when the error occurred
         pub timestamp: SystemTime,
     }
 }
@@ -403,30 +588,47 @@ pub mod health {
 
     /// Health status
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+    /// Status values for Health
     pub enum HealthStatus {
+        /// System is fully operational
         Healthy,
+        /// System is operational but with reduced performance
         Degraded,
+        /// System is not operational
         Unhealthy,
+        /// Health status cannot be determined
         Unknown,
     }
 
     /// Health check result
     #[derive(Debug, Clone, Serialize, Deserialize)]
+    /// Healthcheck
     pub struct HealthCheck {
+        /// Component being checked
         pub component: String,
+        /// Health status of the component
         pub status: HealthStatus,
+        /// Optional message with additional details
         pub message: Option<String>,
+        /// Timestamp of the health check
         pub timestamp: SystemTime,
+        /// Response time in milliseconds
         pub response_time_ms: u64,
+        /// Additional metadata about the health check
         pub metadata: HashMap<String, serde_json::Value>,
     }
 
     /// System health summary
     #[derive(Debug, Clone, Serialize, Deserialize)]
+    /// Systemhealth
     pub struct SystemHealth {
+        /// Overall system health status
         pub overall_status: HealthStatus,
+        /// Individual component health checks
         pub components: Vec<HealthCheck>,
+        /// Timestamp of last health check update
         pub last_updated: SystemTime,
+        /// System uptime in seconds
         pub uptime_seconds: u64,
     }
 }
@@ -438,6 +640,7 @@ pub mod handlers {
     /// Universal handler configuration pattern
     /// Replaces all scattered handler-specific config structs
     #[derive(Debug, Clone, Serialize, Deserialize)]
+    /// Configuration for UniversalHandler
     pub struct UniversalHandlerConfig<T = ()> {
         /// Handler identification
         pub handler_id: String,
@@ -458,6 +661,7 @@ pub mod handlers {
     }
     /// Rate limiting configuration
     #[derive(Debug, Clone, Serialize, Deserialize)]
+    /// Configuration for RateLimit
     pub struct RateLimitConfig {
         /// Enable rate limiting
         pub enabled: bool,
@@ -469,6 +673,7 @@ pub mod handlers {
 
     /// Retry configuration
     #[derive(Debug, Clone, Serialize, Deserialize)]
+    /// Configuration for Retry
     pub struct RetryConfig {
         /// Enable retries
         pub enabled: bool,
@@ -484,6 +689,7 @@ pub mod handlers {
 
     /// Monitoring configuration
     #[derive(Debug, Clone, Serialize, Deserialize)]
+    /// Configuration for Monitoring
     pub struct MonitoringConfig {
         /// Enable monitoring
         pub enabled: bool,
@@ -497,6 +703,7 @@ pub mod handlers {
 
     // Default implementations
     impl<T: Default> Default for UniversalHandlerConfig<T> {
+        /// Returns the default instance
         fn default() -> Self {
             Self {
                 handler_id: String::new(),
@@ -512,6 +719,7 @@ pub mod handlers {
     }
 
     impl Default for RateLimitConfig {
+        /// Returns the default instance
         fn default() -> Self {
             Self {
                 enabled: false,
@@ -522,6 +730,7 @@ pub mod handlers {
     }
 
     impl Default for RetryConfig {
+        /// Returns the default instance
         fn default() -> Self {
             Self {
                 enabled: true,
@@ -534,6 +743,7 @@ pub mod handlers {
     }
 
     impl Default for MonitoringConfig {
+        /// Returns the default instance
         fn default() -> Self {
             Self {
                 enabled: true,
@@ -553,13 +763,21 @@ pub mod handlers {
 
 /// Response status enumeration
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Status values for Response
 pub enum ResponseStatus {
+    /// Operation completed successfully
     Success,
+    /// Operation failed with an error
     Error,
+    /// Operation completed partially
     Partial,
+    /// Operation timed out
     Timeout,
+    /// Requested resource was not found
     NotFound,
+    /// Unauthorized access attempted
     Unauthorized,
+    /// Access forbidden
     Forbidden,
 }
 // ==================== SECTION ====================
@@ -611,6 +829,7 @@ pub use system::AllocationStatus;
 mod tests {
     use super::*;
 
+    /// Parses  Service State
     fn parse_service_state(state: &str) -> ServiceState {
         match state {
             "running" => ServiceState::Running,
@@ -621,6 +840,7 @@ mod tests {
         }
     }
 
+    /// Parses  Service Type
     fn parse_service_type(service_type: &str) -> ServiceType {
         match service_type {
             "storage" => ServiceType::Storage,

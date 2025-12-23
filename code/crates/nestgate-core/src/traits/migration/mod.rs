@@ -25,7 +25,5 @@ pub mod storage_adapters;
 
 // Re-export commonly used adapters
 pub use storage_adapters::{
-    NativeAsyncStorageAdapter,
-    StoragePrimalAdapter,
-    ZeroCostStorageAdapter,
-}; 
+    NativeAsyncStorageAdapter, StoragePrimalAdapter, ZeroCostStorageAdapter,
+};

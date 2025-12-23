@@ -1,12 +1,22 @@
+//! Observability module
+
 use crate::error::NestGateError;
 use std::collections::HashMap;
 //
 // Comprehensive monitoring, metrics, and tracing infrastructure for NestGate.
 // Provides unified observability across all system components.
 
+/// Health check infrastructure for monitoring system and component health status.
 pub mod health_checks;
+/// Metrics collection and aggregation for performance monitoring and analysis.
 pub mod metrics;
+/// Distributed tracing configuration for request flow and performance analysis.
 pub mod tracing_config;
+
+#[cfg(test)]
+mod health_checks_tests;
+#[cfg(test)]
+mod observability_comprehensive_tests;
 
 // Re-export key observability components
 pub use health_checks::{HealthChecker, HealthStatus, SystemHealth};
@@ -17,7 +27,13 @@ use crate::Result;
 use std::sync::Arc;
 use std::time::Duration;
 
-// Central observability coordinator
+/// Central observability coordinator that manages metrics, health checks, and tracing.
+///
+/// Provides a unified interface for all observability concerns including:
+/// - Metrics collection and aggregation
+/// - Health status monitoring
+/// - Distributed tracing coordination
+/// - System-wide observability configuration
 pub struct ObservabilityManager {
     metrics: Arc<MetricsRegistry>,
     health_checker: Arc<HealthChecker>,
@@ -25,6 +41,7 @@ pub struct ObservabilityManager {
 }
 // Configuration for observability features
 #[derive(Debug, Clone)]
+/// Configuration for Observability
 pub struct ObservabilityConfig {
     /// Enable metrics collection
     pub metrics_enabled: bool,
@@ -40,6 +57,7 @@ pub struct ObservabilityConfig {
     pub max_metrics_history: usize,
 }
 impl Default for ObservabilityConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             metrics_enabled: true,
@@ -193,7 +211,15 @@ impl ObservabilityManager {
 
 // Global observability instance
 static OBSERVABILITY: std::sync::OnceLock<Arc<ObservabilityManager>> = std::sync::OnceLock::new();
-// Initialize global observability
+
+/// Initialize global observability system with the provided configuration.
+///
+/// This function sets up the global observability manager and starts background
+/// metrics collection and health checking. Should be called once at application startup.
+///
+/// # Errors
+///
+/// Returns an error if observability has already been initialized.
 pub fn init_observability(config: ObservabilityConfig) -> Result<()> {
     let manager = Arc::new(ObservabilityManager::new(config));
     OBSERVABILITY.set(manager.clone()).map_err(|_| {
@@ -211,11 +237,21 @@ pub fn init_observability(config: ObservabilityConfig) -> Result<()> {
     Ok(())
 }
 
-// Get global observability manager
+/// Get the global observability manager instance.
+///
+/// Returns `None` if observability has not been initialized via `init_observability()`.
 pub fn get_observability() -> Option<Arc<ObservabilityManager>> {
     OBSERVABILITY.get().cloned()
 }
-// Record a metric using the global observability manager
+
+/// Record a metric using the global observability manager.
+///
+/// If observability is not initialized, logs a warning and returns Ok.
+/// This allows graceful degradation when observability is not configured.
+///
+/// # Errors
+///
+/// Returns an error if the metric recording fails (e.g., invalid metric name or value).
 pub async fn record_metric(name: &str, value: f64) -> Result<()> {
     if let Some(obs) = get_observability() {
         obs.record_metric(name, value, HashMap::new()).await
@@ -227,7 +263,16 @@ pub async fn record_metric(name: &str, value: f64) -> Result<()> {
         Ok(())
     }
 }
-// Get current system health
+
+/// Get current system health status from all monitored components.
+///
+/// Returns a comprehensive health report including status for all registered
+/// health checkers. If observability is not initialized, returns a default
+/// unhealthy status.
+///
+/// # Errors
+///
+/// Returns an error if health status cannot be retrieved from the system.
 pub async fn get_system_health() -> Result<SystemHealth> {
     if let Some(obs) = get_observability() {
         obs.get_health().await

@@ -1,193 +1,103 @@
-use std::collections::HashMap;
-use std::sync::Arc;
-use std::time::Duration;
+//! Load Balancing Module - Capability Discovery Integration
+//!
+//! **ARCHITECTURE NOTE**: Load balancing is the networking layer's domain, not NestGate's.
+//! NestGate is a **storage primal** focused on ZFS, datasets, and data management.
+//!
+//! # Migration from Mocks
+//!
+//! **Old Approach (DELETED)**:
+//! ```rust,ignore
+//! // DON'T: Hardcoded implementations that duplicate networking layer
+//! let balancer = MockLoadBalancer::new();
+//! balancer.distribute_request(req).await?;
+//! ```
+//!
+//! **Modern Approach (USE THIS)**:
+//! ```rust,ignore
+//! use nestgate_core::universal_adapter::capability_discovery::*;
+//!
+//! // Discover networking capability dynamically (any provider)
+//! let discovery = CapabilityDiscovery::new();
+//! let networking_providers = discovery
+//!     .discover(CapabilityType::Networking)
+//!     .await?;
+//!
+//! if let Some(provider) = networking_providers.first() {
+//!     // Use discovered primal for load balancing
+//!     provider.handle_load_balanced_request(req).await?;
+//! } else {
+//!     // Fallback: direct connection (no load balancing)
+//!     direct_connection(req).await?;
+//! }
+//! ```
+//!
+//! # Why This Architecture?
+//!
+//! 1. **Sovereignty**: Each primal knows only itself - no hardcoded primal names
+//! 2. **Modularity**: Primals can be added/removed dynamically
+//! 3. **Zero Duplication**: No mock implementations that duplicate other primals
+//! 4. **Production Ready**: Real discovery, real delegation, no stubs
+//!
+//! # Trait Definitions
+//!
+//! These traits define the interface for capability discovery.
+//! **Do NOT implement these** - discover them via capability system.
+
 use serde::{Deserialize, Serialize};
-use crate::error::{NestGateError, NestGateUnifiedError, Result};
 
-//! Modern mod Module
-//! 
-//! This module provides core functionality using modern Rust patterns
-//! and zero-cost abstractions.
-
-use std::time::Duration;
-use std::sync::Arc;
-use std::collections::HashMap;
-use serde::{Deserialize, Serialize};
-
-use crate::error::{NestGateError, Result};
-
-// ==================== MODULE CONSTANTS ====================
-
-/// Module version for compatibility tracking
-pub use crate::constants::shared::MODULE_VERSION;
-
-/// Default configuration values from canonical constants
-pub use crate::constants::network::{
-    DEFAULT_TIMEOUT_MS, DEFAULT_BUFFER_SIZE, DEFAULT_MAX_CONNECTIONS
-};
-
-// ==================== CORE TYPES ====================
-
-/// Configuration for this module
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Config {
-    pub enabled: bool,
-    pub timeout: Duration,
-    pub max_connections: usize,
-    pub buffer_size: usize,
-}
-
-impl Default for Config {
-    fn default() -> Self {
-        Self {
-            enabled: true,
-            timeout: Duration::from_millis(DEFAULT_TIMEOUT_MS),
-            max_connections: DEFAULT_MAX_CONNECTIONS,
-            buffer_size: DEFAULT_BUFFER_SIZE,
-        }
-    }
-}
-
-/// Service interface re-exported from canonical source
-/// See: `crate::traits_root::service::Service` for the unified implementation
-pub use crate::traits_root::service::Service;
-
-/// Health status enumeration
+/// Load balancing strategy hint (for capability discovery)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-pub enum HealthStatus {
-    Healthy,
-    Degraded,
-    Unhealthy,
+/// Loadbalancingstrategy
+pub enum LoadBalancingStrategy {
+    /// Roundrobin
+    RoundRobin,
+    /// Leastconnections
+    LeastConnections,
+    /// Weightedrandom
+    WeightedRandom,
+    /// Iphash
+    IpHash,
 }
 
-/// Performance metrics for monitoring
+/// Load balancing configuration (for capability requests)
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Metrics {
-    pub requests_processed: u64,
-    pub errors_encountered: u64,
-    pub average_response_time: Duration,
-    pub memory_usage_bytes: u64,
+/// Configuration for LoadBalancing
+pub struct LoadBalancingConfig {
+    /// Strategy
+    pub strategy: LoadBalancingStrategy,
+    /// Health Check Interval Secs
+    pub health_check_interval_secs: u64,
+    /// Max Retries
+    pub max_retries: u32,
 }
 
-impl Default for Metrics {
+impl Default for LoadBalancingConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
-            requests_processed: 0,
-            errors_encountered: 0,
-            average_response_time: Duration::from_millis(0),
-            memory_usage_bytes: 0,
+            strategy: LoadBalancingStrategy::RoundRobin,
+            health_check_interval_secs: 30,
+            max_retries: 3,
         }
     }
 }
 
-// ==================== IMPLEMENTATION STUB ====================
-
-/// Default implementation of the service
-#[derive(Debug)]
-pub struct DefaultService {
-    config: Config,
-    metrics: Arc<tokio::sync::RwLock<Metrics>>,
+/// Backend server information (for capability requests)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+/// Backendserver
+pub struct BackendServer {
+    /// Unique identifier
+    pub id: String,
+    /// Address
+    pub address: String,
+    /// Weight
+    pub weight: u32,
+    /// Healthy
+    pub healthy: bool,
 }
 
-impl DefaultService {
-    /// Create a new service instance
-    pub fn new(config: Config) -> Self {
-        Self {
-            config,
-            metrics: Arc::new(tokio::sync::RwLock::new(Metrics::default())),
-        }
-    }
-    
-    /// Get current metrics
-    pub async fn get_metrics(&self) -> Metrics {
-        self.metrics.read().await.clone()
-    }
-}
-
-impl Service for DefaultService {
-    fn initialize(&self) -> impl std::future::Future<Output = Result<()>> + Send {
-        // Initialization implementation
-        tracing::info!("Initializing {} service with config: {:?}", 
-                      stringify!(mod), config);
-        Ok(())
-    }
-    
-    fn health_check(&self) -> impl std::future::Future<Output = Result<HealthStatus>> + Send {
-        // Health check implementation
-        Ok(HealthStatus::Healthy)
-    }
-    
-    fn shutdown(&self) -> impl std::future::Future<Output = Result<()>> + Send {
-        // Shutdown implementation
-        tracing::info!("Shutting down {} service", stringify!(mod));
-        Ok(())
-    }
-}
-
-// ==================== UTILITY FUNCTIONS ====================
-
-/// Create a default service instance
-pub fn create_service() -> DefaultService {
-    DefaultService::new(Config::default())
-}
-
-/// Validate configuration
-pub async fn validate_config(config: &Config) -> crate::Result<()> {
-    if config.max_connections == 0 {
-        return Err(NestGateError::configuration_error(
-            "load_balancing",
-            "max_connections must be greater than 0"
-        ));
-    }
-    
-    if config.buffer_size == 0 {
-        return Err(NestGateError::configuration_error(
-            "load_balancing",
-            "buffer_size must be greater than 0"
-        ));
-    }
-    
-    Ok(())
-}
-
-// ==================== TESTS ====================
+// NOTE: No implementations here - use capability discovery to find networking capability
+// See module documentation for examples
 
 #[cfg(test)]
-mod tests {
-    
-
-    #[test]
-    fn test_config_default() {
-        let config = Config::default();
-        assert!(config.enabled);
-        assert_eq!(config.max_connections, DEFAULT_MAX_CONNECTIONS);
-    }
-
-    #[test]
-    fn test_config_validation() {
-        let mut config = Config::default();
-        assert!(validate_config(&config).is_ok());
-        
-        config.max_connections = 0;
-        assert!(validate_config(&config).is_err());
-    }
-
-    #[tokio::test]
-    async fn test_service_creation() {
-        let service = create_service();
-        let config = Config::default();
-        
-        assert!(service.initialize(&config).await.is_ok());
-        assert_eq!(service.health_check().await.expect("Operation failed"), HealthStatus::Healthy);
-        assert!(service.shutdown().await.is_ok());
-    }
-
-    #[tokio::test]
-    async fn test_metrics() {
-        let service = create_service();
-        let metrics = service.get_metrics().await;
-        
-        assert_eq!(metrics.requests_processed, 0);
-        assert_eq!(metrics.errors_encountered, 0);
-    }
-}
+mod tests;

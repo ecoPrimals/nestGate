@@ -3,7 +3,7 @@
 //! This module adds extensive unit tests for critical paths to boost coverage from 17.8% toward 90%.
 //! Focus areas: error handling, config validation, core types, utility functions.
 
-use crate::config::canonical_master::{DevelopmentConfig, ProductionConfig};
+use crate::config::canonical_primary::{DevelopmentConfig, ProductionConfig};
 use crate::error::{NestGateError, Result};
 use std::collections::HashMap;
 
@@ -55,7 +55,7 @@ mod error_handling_tests {
 #[cfg(test)]
 mod config_tests {
     use super::*;
-    use crate::config::canonical_master::DeploymentEnvironment;
+    use crate::config::canonical_primary::DeploymentEnvironment;
 
     #[test]
     fn test_development_config_defaults() {

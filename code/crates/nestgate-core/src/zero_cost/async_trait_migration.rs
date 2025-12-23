@@ -1,3 +1,6 @@
+//! Async Trait Migration module
+
+use crate::math::float_compare::approx_eq_f64;
 use crate::NestGateError;
 use std::collections::HashMap;
 use std::future::Future;
@@ -25,6 +28,7 @@ use crate::{Result, NestGateError};
 /// **ASYNC TRAIT MIGRATION MANAGER**
 /// Handles systematic migration from async_trait to zero-cost patterns
 #[derive(Debug)]
+/// Manager for AsyncTraitMigration operations
 pub struct AsyncTraitMigrationManager {
     /// Migration statistics
     pub stats: MigrationStats,
@@ -35,6 +39,7 @@ pub struct AsyncTraitMigrationManager {
 }
 /// Migration statistics
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Migrationstats
 pub struct MigrationStats {
     /// Total async_trait patterns found
     pub total_async_traits: u32,
@@ -51,6 +56,7 @@ pub struct MigrationStats {
 }
 /// Performance improvement estimates
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Performanceimprovements
 pub struct PerformanceImprovements {
     /// Estimated throughput improvement percentage
     pub throughput_improvement_percent: f64,
@@ -63,6 +69,7 @@ pub struct PerformanceImprovements {
 }
 /// Migration warning
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Migrationwarning
 pub struct MigrationWarning {
     /// Warning category
     pub category: MigrationWarningCategory,
@@ -75,6 +82,7 @@ pub struct MigrationWarning {
 }
 /// Migration warning categories
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Migrationwarningcategory
 pub enum MigrationWarningCategory {
     /// Complex trait requiring manual migration
     ComplexTraitMigration,
@@ -88,6 +96,7 @@ pub enum MigrationWarningCategory {
     LifetimeComplexity,
 }
 impl std::fmt::Display for MigrationWarningCategory {
+    /// Fmt
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             MigrationWarningCategory::ComplexTraitMigration => write!(f, "ComplexTraitMigration"),
@@ -101,6 +110,7 @@ impl std::fmt::Display for MigrationWarningCategory {
 
 /// Trait migration configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Traitmigration
 pub struct TraitMigration {
     /// Source trait name
     pub source_trait: String,
@@ -121,6 +131,7 @@ pub struct TraitMigration {
 }
 /// Migration complexity levels
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Migrationcomplexity
 pub enum MigrationComplexity {
     /// Simple trait with basic async methods
     Simple,
@@ -133,6 +144,7 @@ pub enum MigrationComplexity {
 }
 /// Const generic parameter
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Constgenericparam
 pub struct ConstGenericParam {
     /// Parameter name
     pub name: String,
@@ -429,10 +441,13 @@ pub trait NativeAsyncLoadBalancer<
     const MAX_SERVICES: usize = 1000,
     const HEALTH_CHECK_INTERVAL_SECS: u64 = 60,
     const MAX_RETRIES: u32 = 3,
+    /// Load Balance Algorithm
     const LOAD_BALANCE_ALGORITHM: &'static str = "round_robin",
 >: Send + Sync
 {{
+    /// Type alias for Service
     type Service: Clone + Send + Sync + 'static;
+    /// Type alias for HealthStatus
     type HealthStatus: Clone + Send + Sync + 'static;
     /// Add service - native async, no Future boxing
     fn add_service(
@@ -446,7 +461,6 @@ pub trait NativeAsyncLoadBalancer<
     /// Get next service - no Future boxing
     fn get_next_service(&self) -> impl Future<Output = Result<Self::Service>> + Send;
 
-    /// Health check all services - native async
     fn health_check_all(&self) -> impl Future<Output = Result<Vec<(String, bool)>>> + Send;
 
     /// Update service health - compile-time optimization
@@ -459,7 +473,9 @@ pub trait NativeAsyncLoadBalancer<
     /// Compile-time constants
     fn max_services() -> usize {{ MAX_SERVICES }
     fn health_check_interval_seconds() -> u64 {{ HEALTH_CHECK_INTERVAL_SECS }
+    /// Max Retries
     fn max_retries() -> u32 {{ MAX_RETRIES }
+    /// Load Balance Algorithm
     fn load_balance_algorithm() -> &'static str {{ LOAD_BALANCE_ALGORITHM }
 }
 ");
@@ -488,9 +504,13 @@ pub trait NativeAsyncProtocolHandler<
     const BUFFER_SIZE: usize = 8192,
 >: Send + Sync
 {{
+    /// Type alias for Connection
     type Connection: Clone + Send + Sync + 'static;
+    /// Type alias for Request
     type Request: Clone + Send + Sync + 'static;
+    /// Type alias for Response
     type Response: Clone + Send + Sync + 'static;
+    /// Type alias for Config
     type Config: Clone + Send + Sync + 'static;
     /// Establish connection - native async, no Future boxing
     fn connect(
@@ -520,6 +540,7 @@ pub trait NativeAsyncProtocolHandler<
     /// Compile-time constants
     fn max_connections() -> usize {{ MAX_CONNECTIONS }
     fn connection_timeout_seconds() -> u64 {{ CONNECTION_TIMEOUT_SECS }
+    /// Max Retries
     fn max_retries() -> u32 {{ MAX_RETRIES }
     fn buffer_size() -> usize {{ BUFFER_SIZE }
 }
@@ -569,8 +590,9 @@ pub trait NativeAsyncProtocolHandler<
 
     /// Calculate performance improvements
     fn calculate_performance_improvements(&mut self) {
-        let total_traits = self.(trait_mappings.len() as f64);
-        if total_traits == 0.0 {
+        let total_traits = self.trait_mappings.len() as f64;
+        // ✅ MODERN: Use epsilon for zero check in production code
+        if approx_eq_f64(total_traits, 0.0, 1e-9) {
             return;
         }
 
@@ -627,68 +649,110 @@ pub trait NativeAsyncProtocolHandler<
 
 /// Async trait information for migration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Asynctraitinfo
 pub struct AsyncTraitInfo {
+    /// Trait name
     pub trait_name: String,
+    /// Methods
     pub methods: Vec<AsyncMethod>,
+    /// Associated Types
     pub associated_types: Vec<String>,
+    /// Generic Parameters
     pub generic_parameters: Vec<String>,
+    /// Trait Bounds
     pub trait_bounds: Vec<String>,
 }
 /// Async method information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Asyncmethod
 pub struct AsyncMethod {
+    /// Name
     pub name: String,
+    /// Parameters
     pub parameters: Vec<String>,
+    /// Return Type
     pub return_type: String,
+    /// Whether async
     pub is_async: bool,
+    /// Const Generic Bounds
     pub const_generic_bounds: Vec<String>,
 }
 /// Zero-cost trait definition
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Zerocosttraitdefinition
 pub struct ZeroCostTraitDefinition {
+    /// Trait name
     pub trait_name: String,
+    /// Const Generics
     pub const_generics: Vec<ConstGenericParam>,
+    /// Methods
     pub methods: Vec<ZeroCostMethod>,
+    /// Associated Types
     pub associated_types: Vec<String>,
+    /// Trait Bounds
     pub trait_bounds: Vec<String>,
+    /// Performance Characteristics
     pub performance_characteristics: PerformanceCharacteristics,
 }
 /// Zero-cost method definition
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Zerocostmethod
 pub struct ZeroCostMethod {
+    /// Name
     pub name: String,
+    /// Parameters
     pub parameters: Vec<String>,
+    /// Return Type
     pub return_type: String,
+    /// Whether async
     pub is_async: bool,
+    /// Const Generic Bounds
     pub const_generic_bounds: Vec<String>,
 }
 /// Performance characteristics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performancecharacteristics
 pub struct PerformanceCharacteristics {
+    /// Zero Cost Abstraction
     pub zero_cost_abstraction: bool,
+    /// Static Dispatch
     pub static_dispatch: bool,
+    /// No Future Boxing
     pub no_future_boxing: bool,
+    /// Compile Time Optimization
     pub compile_time_optimization: bool,
+    /// Estimated Speedup Percent
     pub estimated_speedup_percent: f64,
 }
 /// Async trait analysis results
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Asynctraitanalysis
 pub struct AsyncTraitAnalysis {
+    /// Total Async Traits
     pub total_async_traits: u32,
+    /// Trait Patterns
     pub trait_patterns: HashMap<String, u32>,
+    /// Complexity Distribution
     pub complexity_distribution: HashMap<String, u32>,
+    /// Migration Readiness
     pub migration_readiness: HashMap<String, String>,
 }
 /// Migration summary
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Migrationsummary
 pub struct MigrationSummary {
     pub stats: MigrationStats,
+    /// Count of warnings
     pub warnings_count: usize,
+    /// Automatic Migrations
     pub automatic_migrations: usize,
+    /// Manual Migrations
     pub manual_migrations: usize,
+    /// Estimated Performance Gain
     pub estimated_performance_gain: f64,
 }
 impl Default for AsyncTraitMigrationManager {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

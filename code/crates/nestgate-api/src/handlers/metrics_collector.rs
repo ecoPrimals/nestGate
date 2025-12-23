@@ -1,6 +1,8 @@
 //
 // Real-time metrics collection and data aggregation for the performance dashboard.
 
+//! Metrics Collector module
+
 use nestgate_core::Result;
 // use crate::error::SystemResource;  // Missing module
 use serde::{Deserialize, Serialize};
@@ -21,6 +23,7 @@ use tracing::warn;
 ///
 /// Real-time system and storage metrics collection.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Realtimemetrics
 pub struct RealTimeMetrics {
     /// Timestamp when these metrics were collected
     pub timestamp: SystemTime,
@@ -46,6 +49,7 @@ pub struct RealTimeMetrics {
 ///
 /// Performance and utilization metrics for a storage pool.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Poolmetrics
 pub struct PoolMetrics {
     /// Name of the storage pool
     pub name: String,
@@ -77,6 +81,7 @@ pub struct PoolMetrics {
 ///
 /// System-wide performance and resource utilization metrics.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Systemmetrics
 pub struct SystemMetrics {
     /// CPU usage percentage (currently unused, prefixed with _)
     pub _cpu_usage: f64,
@@ -96,6 +101,7 @@ pub struct SystemMetrics {
 ///
 /// Network input/output performance statistics.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Networkiometrics
 pub struct NetworkIOMetrics {
     /// Total bytes sent over network
     pub bytes_sent: u64,
@@ -111,6 +117,7 @@ pub struct NetworkIOMetrics {
 ///
 /// Disk input/output performance statistics.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Diskiometrics
 pub struct DiskIOMetrics {
     /// Total bytes read from disk
     pub read_bytes: u64,
@@ -126,6 +133,7 @@ pub struct DiskIOMetrics {
 ///
 /// Point-in-time snapshot of system resource utilization.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Systemsnapshot
 pub struct SystemSnapshot {
     /// Timestamp when this snapshot was taken
     pub timestamp: SystemTime,
@@ -149,6 +157,7 @@ pub struct SystemSnapshot {
 ///
 /// Single data point for I/O performance metrics.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Iometricspoint
 pub struct IOMetricsPoint {
     /// Timestamp for this measurement
     pub timestamp: SystemTime,
@@ -166,6 +175,7 @@ pub struct IOMetricsPoint {
 ///
 /// Single data point for cache performance metrics.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Cachemetricspoint
 pub struct CacheMetricsPoint {
     /// Timestamp for this measurement
     pub timestamp: SystemTime,
@@ -183,6 +193,7 @@ pub struct CacheMetricsPoint {
 ///
 /// Complete metrics data point for time series analysis.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Comprehensivemetricspoint
 pub struct ComprehensiveMetricsPoint {
     /// Timestamp for this comprehensive measurement
     pub timestamp: SystemTime,
@@ -198,6 +209,7 @@ pub struct ComprehensiveMetricsPoint {
 ///
 /// Single data point for capacity utilization metrics.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Capacitymetricspoint
 pub struct CapacityMetricsPoint {
     /// Timestamp for this measurement
     pub timestamp: SystemTime,
@@ -210,6 +222,7 @@ pub struct CapacityMetricsPoint {
 }
 /// Real-time metrics collection _engine
 #[derive(Debug)]
+/// Realtimemetricscollector
 pub struct RealTimeMetricsCollector {
     // Implementation details
 }
@@ -752,6 +765,7 @@ impl RealTimeMetricsCollector {
 }
 
 impl Default for RealTimeMetricsCollector {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -759,6 +773,7 @@ impl Default for RealTimeMetricsCollector {
 
 /// State structure for the metrics collector
 #[derive(Debug, Clone)]
+/// Metricscollectorstate
 pub struct MetricsCollectorState {
     /// Real-time metrics data
     pub current_metrics: Arc<tokio::sync::RwLock<Option<RealTimeMetrics>>>,
@@ -771,6 +786,7 @@ pub struct MetricsCollectorState {
 }
 
 impl Default for MetricsCollectorState {
+    /// Returns the default instance
     fn default() -> Self {
         let (sender, _) = broadcast::channel(1000);
         Self {
@@ -780,4 +796,51 @@ impl Default for MetricsCollectorState {
             last_collection: Arc::new(tokio::sync::RwLock::new(None)),
         }
     }
+}
+
+// ==================== TEST-ONLY STUBS ====================
+
+#[cfg(test)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// Metricscollector
+pub struct MetricsCollector;
+
+#[cfg(test)]
+impl MetricsCollector {
+    #[must_use]
+    pub fn new() -> Self {
+        Self
+    }
+}
+
+#[cfg(test)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+/// Applicationmetrics
+pub struct ApplicationMetrics {
+    /// Total Requests
+    pub total_requests: u64,
+    /// Successful Requests
+    pub successful_requests: u64,
+    /// Failed Requests
+    pub failed_requests: u64,
+    /// Average Response Time Ms
+    pub average_response_time_ms: f64,
+    /// Requests Per Second
+    pub requests_per_second: f64,
+    /// Active Connections
+    pub active_connections: u32,
+    /// Error Rate
+    pub error_rate: f64,
+}
+
+#[cfg(test)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+/// Metricssnapshot
+pub struct MetricsSnapshot {
+    /// Timestamp
+    pub timestamp: SystemTime,
+    /// System
+    pub system: SystemMetrics,
+    /// Application
+    pub application: ApplicationMetrics,
 }

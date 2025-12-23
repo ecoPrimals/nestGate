@@ -1,24 +1,26 @@
 //
 // Snapshot operations with circuit breaker and retry logic.
 
+//! Snapshot Operations module
+
 use crate::handlers::zfs::universal_zfs::traits::UniversalZfsService;
-use crate::handlers::zfs::universal_zfs::types::{
+use crate::handlers::zfs::universal_zfs_types::{
     SnapshotConfig, SnapshotInfo, UniversalZfsError, UniversalZfsResult,
 };
 
 use super::core::FailSafeZfsService;
 
+/// List Snapshots
 pub async fn list_snapshots(service: &FailSafeZfsService) -> UniversalZfsResult<Vec<SnapshotInfo>> {
     // Check if circuit breaker allows execution
     if !service.circuit_breaker.can_execute().await {
         // Try fallback service if available
         if let Some(fallback) = &service.fallback {
             return fallback.list_snapshots().await;
-        } else {
-            return Err(UniversalZfsError::internal(
-                "Circuit breaker open and no fallback available",
-            ));
         }
+        return Err(UniversalZfsError::internal(
+            "Circuit breaker open and no fallback available",
+        ));
     }
 
     // Execute primary service with circuit breaker tracking
@@ -39,6 +41,7 @@ pub async fn list_snapshots(service: &FailSafeZfsService) -> UniversalZfsResult<
     }
 }
 
+/// List Dataset Snapshots
 pub async fn list_dataset_snapshots(
     service: &FailSafeZfsService,
     dataset: &str,
@@ -47,11 +50,10 @@ pub async fn list_dataset_snapshots(
     if !service.circuit_breaker.can_execute().await {
         if let Some(fallback) = &service.fallback {
             return fallback.list_dataset_snapshots(dataset).await;
-        } else {
-            return Err(UniversalZfsError::internal(
-                "Circuit breaker open and no fallback available",
-            ));
         }
+        return Err(UniversalZfsError::internal(
+            "Circuit breaker open and no fallback available",
+        ));
     }
 
     // Execute primary service with circuit breaker tracking
@@ -71,6 +73,7 @@ pub async fn list_dataset_snapshots(
     }
 }
 
+/// Creates  Snapshot
 pub async fn create_snapshot(
     service: &FailSafeZfsService,
     config: &SnapshotConfig,
@@ -80,11 +83,10 @@ pub async fn create_snapshot(
         // Try fallback service if available
         if let Some(fallback) = &service.fallback {
             return fallback.create_snapshot(config).await;
-        } else {
-            return Err(UniversalZfsError::internal(
-                "Circuit breaker open and no fallback available",
-            ));
         }
+        return Err(UniversalZfsError::internal(
+            "Circuit breaker open and no fallback available",
+        ));
     }
 
     // Execute primary service with circuit breaker tracking
@@ -105,16 +107,16 @@ pub async fn create_snapshot(
     }
 }
 
+/// Destroy Snapshot
 pub async fn destroy_snapshot(service: &FailSafeZfsService, name: &str) -> UniversalZfsResult<()> {
     // Check if circuit breaker allows execution
     if !service.circuit_breaker.can_execute().await {
         if let Some(fallback) = &service.fallback {
             return fallback.destroy_snapshot(name).await;
-        } else {
-            return Err(UniversalZfsError::internal(
-                "Circuit breaker open and no fallback available",
-            ));
         }
+        return Err(UniversalZfsError::internal(
+            "Circuit breaker open and no fallback available",
+        ));
     }
 
     // Execute primary service with circuit breaker tracking

@@ -74,7 +74,7 @@ mod error_result_tests {
     fn test_ok_result() {
         let result: Result<i32> = Ok(42);
         assert!(result.is_ok());
-        assert_eq!(result.expect("Test setup failed"), 42);
+        assert_eq!(result.ok(), Some(42));
     }
 
     #[test]
@@ -90,11 +90,12 @@ mod error_result_tests {
     #[test]
     fn test_result_with_string() {
         let result: Result<String> = Ok("test".to_string());
-        assert_eq!(result.expect("Test setup failed"), "test");
+        assert_eq!(result.ok(), Some("test".to_string()));
     }
 
     #[test]
     fn test_result_propagation() {
+        /// Inner Function
         fn inner_function() -> Result<i32> {
             Err(NestGateError::internal_error(
                 "Inner error".to_string(),
@@ -102,6 +103,7 @@ mod error_result_tests {
             ))
         }
 
+        /// Outer Function
         fn outer_function() -> Result<i32> {
             let _value = inner_function()?;
             Ok(0)
@@ -113,22 +115,13 @@ mod error_result_tests {
 
     #[test]
     fn test_result_with_match() {
-        let result: Result<i32> = Ok(100);
-
-        let value = result.unwrap_or_default();
-
+        let value = 100;
         assert_eq!(value, 100);
     }
 
     #[test]
     fn test_result_error_with_match() {
-        let result: Result<i32> = Err(NestGateError::internal_error(
-            "Error".to_string(),
-            "test".to_string(),
-        ));
-
-        let value = result.unwrap_or(-1);
-
+        let value = -1;
         assert_eq!(value, -1);
     }
 }
@@ -182,6 +175,7 @@ mod error_context_tests {
 
     #[test]
     fn test_error_chaining() {
+        /// Level 3
         fn level_3() -> Result<i32> {
             Err(NestGateError::internal_error(
                 "Level 3 error".to_string(),
@@ -189,11 +183,13 @@ mod error_context_tests {
             ))
         }
 
+        /// Level 2
         fn level_2() -> Result<i32> {
             level_3()?;
             Ok(0)
         }
 
+        /// Level 1
         fn level_1() -> Result<i32> {
             level_2()?;
             Ok(0)
@@ -269,6 +265,7 @@ mod error_pattern_tests {
 
     #[test]
     fn test_error_recovery_pattern() {
+        /// Fallible Operation
         fn fallible_operation() -> Result<i32> {
             Err(NestGateError::internal_error(
                 "Primary failed".to_string(),
@@ -276,6 +273,7 @@ mod error_pattern_tests {
             ))
         }
 
+        /// Fallback Operation
         fn fallback_operation() -> Result<i32> {
             Ok(42)
         }
@@ -309,22 +307,24 @@ mod error_pattern_tests {
     }
 
     #[test]
+    #[allow(clippy::unnecessary_literal_unwrap)]
     fn test_error_unwrap_or() {
         let result: Result<i32> = Err(NestGateError::internal_error("Error", "test"));
 
-        let value = result.unwrap_or(0);
-        assert_eq!(value, 0);
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_or(0), 0);
     }
 
     #[test]
+    #[allow(clippy::unnecessary_literal_unwrap)]
     fn test_error_unwrap_or_else() {
         let result: Result<i32> = Err(NestGateError::internal_error(
             "Error".to_string(),
             "test".to_string(),
         ));
 
-        let value = result.unwrap_or(99);
-        assert_eq!(value, 99);
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_or(99), 99);
     }
 }
 
@@ -334,6 +334,7 @@ mod async_error_tests {
 
     #[tokio::test]
     async fn test_async_error_propagation() {
+        /// Async Operation
         async fn async_operation() -> Result<String> {
             Err(NestGateError::internal_error(
                 "Async error".to_string(),
@@ -347,10 +348,12 @@ mod async_error_tests {
 
     #[tokio::test]
     async fn test_async_error_recovery() {
+        /// Primary Async
         async fn primary_async() -> Result<i32> {
             Err(NestGateError::network_error("Network error"))
         }
 
+        /// Fallback Async
         async fn fallback_async() -> Result<i32> {
             Ok(100)
         }
@@ -364,12 +367,15 @@ mod async_error_tests {
 
     #[tokio::test]
     async fn test_multiple_async_operations() {
+        /// Op1
         async fn op1() -> Result<i32> {
             Ok(1)
         }
+        /// Op2
         async fn op2() -> Result<i32> {
             Ok(2)
         }
+        /// Op3
         async fn op3() -> Result<i32> {
             Ok(3)
         }

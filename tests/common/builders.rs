@@ -3,7 +3,7 @@
 // Provides builder patterns for creating test data and configurations
 // in a consistent and maintainable way.
 
-use nestgate_core::config::canonical_master::CanonicalMasterConfig;
+use nestgate_core::config::canonical_primary::CanonicalMasterConfig;
 use nestgate_core::config::defaults::*;
 use nestgate_core::environment::Environment;
 

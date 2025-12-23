@@ -119,7 +119,9 @@ fn test_nestgate_error_creation() {
 fn test_nestgate_result_ok() {
     let result: NestGateResult<i32> = Ok(42);
     assert!(result.is_ok());
-    assert_eq!(result.expect("Test setup failed"), 42);
+    if let Ok(value) = result {
+        assert_eq!(value, 42);
+    }
 }
 
 #[test]
@@ -135,7 +137,9 @@ fn test_nestgate_result_err() {
     )));
 
     assert!(result.is_err());
-    assert!(result.unwrap_err().to_string().contains("Test error"));
+    if let Err(error) = result {
+        assert!(error.to_string().contains("Test error"));
+    }
 }
 
 #[test]
@@ -225,11 +229,12 @@ fn test_discovery_stats_default() {
 
 #[test]
 fn test_discovery_stats_clone() {
-    let mut stats = DiscoveryStats::default();
-    stats.total_discovered = 5;
-    stats.discovery_attempts = 10;
-    stats.avg_discovery_time_ns = 1000;
-    stats.connection_complexity = 1.5;
+    let stats = DiscoveryStats {
+        total_discovered: 5,
+        discovery_attempts: 10,
+        avg_discovery_time_ns: 1000,
+        connection_complexity: 1.5,
+    };
 
     let cloned_stats = stats.clone();
     assert_eq!(stats.total_discovered, cloned_stats.total_discovered);

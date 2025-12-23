@@ -4,6 +4,7 @@
 use serde::{Deserialize, Serialize};
 /// Unified storage backend types
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+/// Types of UnifiedStorage
 pub enum UnifiedStorageType {
     /// Local filesystem storage
     Local,
@@ -21,6 +22,7 @@ pub enum UnifiedStorageType {
     Custom(String),
 }
 impl Default for UnifiedStorageType {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Local
     }
@@ -28,6 +30,7 @@ impl Default for UnifiedStorageType {
 
 /// Storage operation types
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+/// Storageoperation
 pub enum StorageOperation {
     /// Read data from storage
     Read,
@@ -52,6 +55,7 @@ pub enum StorageOperation {
 }
 /// Storage tier levels for data lifecycle management
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+/// Storagetier
 pub enum StorageTier {
     /// Hot storage - frequently accessed data
     Hot = 0,
@@ -65,6 +69,7 @@ pub enum StorageTier {
     Frozen = 4,
 }
 impl Default for StorageTier {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Hot
     }
@@ -98,6 +103,7 @@ impl StorageTier {
 
 /// Storage capacity and usage information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagecapacity
 pub struct StorageCapacity {
     /// Total storage capacity in bytes
     pub total_bytes: u64,
@@ -141,6 +147,7 @@ impl StorageCapacity {
 }
 
 impl Default for StorageCapacity {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new(0, 0)
     }
@@ -148,6 +155,7 @@ impl Default for StorageCapacity {
 
 /// Storage capability flags for different storage backend features
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+/// Unifiedstoragecapability
 pub enum UnifiedStorageCapability {
     /// Compression support
     Compression,

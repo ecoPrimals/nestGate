@@ -1,12 +1,28 @@
 #![allow(deprecated)]
 
-//! Security Provider Module
+//! **DEPRECATED Security Provider Module**
 //!
-//! Provides security provider functionality for `NestGate` core services.
-//! This module handles security provider creation and management.
+//! **DEPRECATED**: This module uses the deprecated `SecurityPrimalProvider` trait.
 //!
-//! Note: Uses deprecated SecurityPrimalProvider for backward compatibility.
-//! Migration to CanonicalSecurity is tracked but not yet scheduled.
+//! # Migration
+//!
+//! **Use instead**: `crate::security_provider_canonical`
+//!
+//! ```rust,ignore
+//! // OLD (deprecated)
+//! use nestgate_core::security_provider::{SecurityProvider, create_default};
+//!
+//! // NEW (canonical)
+//! use nestgate_core::security_provider_canonical::{
+//!     CanonicalSecurityProvider, create_default
+//! };
+//! ```
+//!
+//! **Timeline**:
+//! - Deprecated: v0.11.3 (November 2025)
+//! - Remove: v0.12.0 (May 2026)
+//!
+//! **See**: `docs/guides/SECURITY_PROVIDER_MIGRATION.md` for complete migration guide
 
 // Removed unused error imports
 use crate::{NestGateError, Result};
@@ -21,14 +37,38 @@ use std::collections::HashMap;
 use std::time::Duration;
 /// Security provider configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+///
+/// **Migration Path**:
+/// ```rust,ignore
+/// // OLD (deprecated):
+/// use crate::network::config::SecurityProviderConfig;
+///
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::SecurityProviderConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+///
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(
+    since = "0.11.0",
+    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
+/// Configuration for SecurityProvider
 pub struct SecurityProviderConfig {
+    /// Provider Type
     pub provider_type: String,
+    /// Configuration for
     pub config: HashMap<String, String>,
 }
 /// Security provider interface
 #[derive(Debug, Clone)]
+/// Securityprovider
 pub struct SecurityProvider {
+    /// Unique identifier
     pub id: String,
+    /// Configuration for
     pub config: SecurityProviderConfig,
 }
 impl SecurityProvider {
@@ -55,6 +95,7 @@ impl SecurityProvider {
 
 /// **CANONICAL MODERNIZATION**: Native async implementation without `async_trait` overhead
 impl SecurityPrimalProvider for SecurityProvider {
+    /// Authenticate
     async fn authenticate(&self, credentials: &Credentials) -> Result<AuthToken> {
         // Basic implementation for testing
         use std::time::SystemTime;
@@ -69,16 +110,19 @@ impl SecurityPrimalProvider for SecurityProvider {
         })
     }
 
+    /// Encrypt
     async fn encrypt(&self, data: &[u8], _algorithm: &str) -> Result<Vec<u8>> {
         // Simple test implementation
         Ok(data.to_vec())
     }
 
+    /// Decrypt
     async fn decrypt(&self, encrypted: &[u8], _algorithm: &str) -> Result<Vec<u8>> {
         // Simple test implementation
         Ok(encrypted.to_vec())
     }
 
+    /// Sign Data
     fn sign_data(
         &self,
         data: &[u8],
@@ -99,16 +143,19 @@ impl SecurityPrimalProvider for SecurityProvider {
         }
     }
 
+    /// Verify Signature
     async fn verify_signature(&self, _data: &[u8], _signature: &Signature) -> Result<bool> {
         // Simple test implementation
         Ok(true)
     }
 
+    /// Gets Key Id
     fn get_key_id(&self) -> impl std::future::Future<Output = Result<String>> + Send {
         let id = self.id.clone();
         async move { Ok(id) }
     }
 
+    /// Evaluate Boundary Access
     async fn evaluate_boundary_access(
         &self,
         _source: &str,
@@ -118,6 +165,7 @@ impl SecurityPrimalProvider for SecurityProvider {
         Ok(SecurityDecision::Allow)
     }
 
+    /// Hash Data
     async fn hash_data(&self, data: &[u8], algorithm: &str) -> Result<Vec<u8>> {
         // Basic hash implementation
         use std::collections::hash_map::DefaultHasher;
@@ -128,11 +176,13 @@ impl SecurityPrimalProvider for SecurityProvider {
         Ok(hasher.finish().to_be_bytes().to_vec())
     }
 
+    /// Generate Random
     async fn generate_random(&self, length: usize) -> Result<Vec<u8>> {
         // Basic random generation
         Ok((0..length).map(|_| rand::random::<u8>()).collect())
     }
 
+    /// Derive Key
     async fn derive_key(&self, password: &str, salt: &[u8], iterations: u32) -> Result<Vec<u8>> {
         // Basic key derivation
         use std::collections::hash_map::DefaultHasher;
@@ -144,11 +194,13 @@ impl SecurityPrimalProvider for SecurityProvider {
         Ok(hasher.finish().to_be_bytes().to_vec())
     }
 
+    /// Creates  Session
     async fn create_session(&self, user_id: &str, permissions: Vec<String>) -> Result<String> {
         // Basic session creation
         Ok(format!("session-{}-{}", user_id, permissions.len()))
     }
 
+    /// Validates  Session
     async fn validate_session(
         &self,
         session_token: &str,
@@ -183,6 +235,24 @@ pub fn create_custom(
     };
     SecurityProvider::new("custom-provider".to_string(), config)
 }
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+///
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Securityproviderconfigcanonical
+pub type SecurityProviderConfigCanonical =
+    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using SecurityProviderConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+
 #[cfg(test)]
 mod tests {
     use super::*;

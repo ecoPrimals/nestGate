@@ -5,6 +5,8 @@
 // use nestgate_core::smart_abstractions::smart_default::SmartDefault;
 // SmartDefault temporarily disabled for compilation
 // use nestgate_core::error::idiomatic_evolution::SmartDefault;
+//! Types module
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -31,6 +33,7 @@ pub enum FsEventType {
     MetadataChanged,
 }
 impl Default for FsEventType {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Modified
     }
@@ -55,6 +58,7 @@ pub struct FsEvent {
     pub metadata: HashMap<String, serde_json::Value>,
 }
 impl Default for FsEvent {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             event_type: FsEventType::default(),
@@ -91,6 +95,7 @@ pub struct FsMonitorStats {
     pub performance_metrics: HashMap<String, f64>,
 }
 impl Default for FsMonitorStats {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             total_events: 0,
@@ -123,6 +128,7 @@ pub struct EventFilter {
     pub max_file_size: Option<u64>,
 }
 impl Default for EventFilter {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             include_types: vec![
@@ -159,6 +165,7 @@ pub struct PerformanceSettings {
     pub high_performance_mode: bool,
 }
 impl Default for PerformanceSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             debounce_duration: Duration::from_millis(100),
@@ -183,6 +190,7 @@ pub struct NotificationChannel {
     pub enabled: bool,
 }
 impl Default for NotificationChannel {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             name: "default".to_string(),
@@ -195,6 +203,21 @@ impl Default for NotificationChannel {
 
 /// Watch configuration for a specific path
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// 
+/// **Migration Path**:
+/// ```rust
+/// // OLD (deprecated):
+/// use crate::config::WatchConfig;
+/// 
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::config::WatchConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+/// 
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
 pub struct WatchConfig {
     /// Path to watch
     pub path: PathBuf,
@@ -208,6 +231,7 @@ pub struct WatchConfig {
     pub enabled: bool,
 }
 impl Default for WatchConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             path: PathBuf::from("/mnt/storage"),
@@ -218,3 +242,19 @@ impl Default for WatchConfig {
         }
     }
 }
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+/// 
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+pub type WatchConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using WatchConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+

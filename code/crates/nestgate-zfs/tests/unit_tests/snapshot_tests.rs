@@ -1,6 +1,8 @@
 //
 // Tests for snapshot policy and retention
 
+//! Snapshot Tests module
+
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::time::SystemTime;
@@ -22,7 +24,7 @@ mod snapshot_unit_tests {
     use super::*;
 
     #[test]
-    fn test_snapshot_policy_validation() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_snapshot_policy_validation() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let policy = SnapshotPolicy::default();
 
         assert_eq!(policy.name, "default");
@@ -33,7 +35,7 @@ mod snapshot_unit_tests {
     Ok(())
     }
     #[test]
-    fn test_retention_policy_custom() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_retention_policy_custom() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let policy = RetentionPolicy::Custom {
             hourly_hours: 24,
             daily_days: 30,
@@ -66,7 +68,7 @@ mod snapshot_unit_tests {
     }
 
     #[test]
-    fn test_snapshot_schedule_creation() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_snapshot_schedule_creation() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let schedule = ScheduleFrequency::Hours(4);
         assert!(matches!(schedule, ScheduleFrequency::Hours(4)));
         

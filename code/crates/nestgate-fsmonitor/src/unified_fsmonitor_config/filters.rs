@@ -68,6 +68,7 @@ pub struct CustomFilter {
     pub priority: u32,
 }
 impl Default for FilterSettings {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             enabled: true,

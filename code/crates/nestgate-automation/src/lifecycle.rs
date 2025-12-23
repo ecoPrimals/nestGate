@@ -1,6 +1,8 @@
 //
 // Automated dataset lifecycle management and optimization scheduling
 
+//! Lifecycle module
+
 use crate::Result;
 use nestgate_core::error::NestGateError;
 use nestgate_core::unified_enums::storage_types::StorageTier;
@@ -15,6 +17,7 @@ use tracing::warn;
 
 /// Lifecycle stage for datasets
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+/// Lifecyclestage
 pub enum LifecycleStage {
     /// Newly created dataset
     Created,
@@ -31,8 +34,11 @@ pub enum LifecycleStage {
 }
 /// Lifecycle policy for dataset management
 #[derive(Debug, Clone)]
+/// Lifecyclepolicy
 pub struct LifecyclePolicy {
+    /// Name
     pub name: String,
+    /// Human-readable description
     pub description: String,
     /// Transition rules between stages
     pub transitions: Vec<LifecycleTransition>,
@@ -45,9 +51,13 @@ pub struct LifecyclePolicy {
 }
 /// Transition rule between lifecycle stages
 #[derive(Debug, Clone)]
+/// Lifecycletransition
 pub struct LifecycleTransition {
+    /// From Stage
     pub from_stage: LifecycleStage,
+    /// To Stage
     pub to_stage: LifecycleStage,
+    /// Conditions
     pub conditions: Vec<TransitionCondition>,
     /// Minimum time in current stage before transition
     pub min_stage_duration: Duration,
@@ -56,6 +66,7 @@ pub struct LifecycleTransition {
 }
 /// Condition for stage transitions
 #[derive(Debug, Clone)]
+/// Transitioncondition
 pub enum TransitionCondition {
     /// Age of dataset exceeds threshold
     AgeExceeds(Duration),
@@ -70,15 +81,22 @@ pub enum TransitionCondition {
 }
 /// Comparison operators for conditions
 #[derive(Debug, Clone)]
+/// Comparisonoperator
 pub enum ComparisonOperator {
+    /// Greaterthan
     GreaterThan,
+    /// Lessthan
     LessThan,
+    /// Equal
     Equal,
+    /// Greaterthanorequal
     GreaterThanOrEqual,
+    /// Lessthanorequal
     LessThanOrEqual,
 }
 /// Actions to perform during lifecycle management
 #[derive(Debug, Clone)]
+/// Lifecycleaction
 pub enum LifecycleAction {
     /// Move dataset to different tier
     ChangeTier(StorageTier),
@@ -99,28 +117,45 @@ pub enum LifecycleAction {
 }
 /// Dataset lifecycle state
 #[derive(Debug, Clone)]
+/// Datasetlifecyclestate
 pub struct DatasetLifecycleState {
+    /// Dataset name
     pub dataset_name: String,
+    /// Current Stage
     pub current_stage: LifecycleStage,
+    /// Stage Entered At
     pub stage_entered_at: SystemTime,
+    /// Last Evaluated At
     pub last_evaluated_at: SystemTime,
+    /// Applied Policies
     pub applied_policies: Vec<String>,
+    /// Pending Actions
     pub pending_actions: Vec<LifecycleAction>,
+    /// Metrics
     pub metrics: HashMap<String, f64>,
 }
 /// Lifecycle evaluation result
 #[derive(Debug, Clone)]
+/// Lifecycleevaluation
 pub struct LifecycleEvaluation {
+    /// Dataset name
     pub dataset_name: String,
+    /// Current Stage
     pub current_stage: LifecycleStage,
+    /// Recommended Stage
     pub recommended_stage: Option<LifecycleStage>,
+    /// Recommended Actions
     pub recommended_actions: Vec<LifecycleAction>,
+    /// Applied Policies
     pub applied_policies: Vec<String>,
+    /// Evaluation Timestamp
     pub evaluation_timestamp: SystemTime,
+    /// Next Evaluation
     pub next_evaluation: SystemTime,
 }
 /// Dataset lifecycle manager
 #[derive(Debug)]
+/// Manager for DatasetLifecycle operations
 pub struct DatasetLifecycleManager {
     /// Active lifecycle policies
     policies: RwLock<Vec<LifecyclePolicy>>,
@@ -135,6 +170,7 @@ pub struct DatasetLifecycleManager {
 }
 /// Configuration for lifecycle management
 #[derive(Debug, Clone)]
+/// Configuration for Lifecycle
 pub struct LifecycleConfig {
     /// How often to evaluate dataset lifecycles
     pub evaluation_interval: Duration,
@@ -146,6 +182,7 @@ pub struct LifecycleConfig {
     pub default_policies: Vec<String>,
 }
 impl Default for LifecycleConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             evaluation_interval: Duration::from_secs(
@@ -163,23 +200,34 @@ impl Default for LifecycleConfig {
 
 /// Scheduled task for lifecycle management
 #[derive(Debug)]
+/// Scheduledtask
 pub enum ScheduledTask {
     EvaluateDataset(String),
     ExecuteAction(String, LifecycleAction),
+    /// Policyupdate
     PolicyUpdate,
+    /// Statscollection
     StatsCollection,
 }
 /// Lifecycle management statistics
 #[derive(Debug, Clone, Default)]
+/// Lifecyclestats
 pub struct LifecycleStats {
+    /// Total Datasets
     pub total_datasets: u64,
+    /// Datasets By Stage
     pub datasets_by_stage: HashMap<LifecycleStage, u64>,
+    /// Total Transitions
     pub total_transitions: u64,
+    /// Total Actions Executed
     pub total_actions_executed: u64,
+    /// Last Evaluation Time
     pub last_evaluation_time: Option<SystemTime>,
+    /// Average Evaluation Duration
     pub average_evaluation_duration: Duration,
 }
 impl Default for DatasetLifecycleManager {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -735,5 +783,67 @@ impl DatasetLifecycleManager {
         stats.average_evaluation_duration = Duration::from_millis(
             ((stats.average_evaluation_duration.as_millis() + duration.as_millis()) / 2) as u64,
         );
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_lifecycle_stage_variants() {
+        assert_eq!(LifecycleStage::Created, LifecycleStage::Created);
+        assert_ne!(LifecycleStage::Active, LifecycleStage::Aging);
+    }
+
+    #[test]
+    fn test_lifecycle_config_default() {
+        let config = LifecycleConfig::default();
+        assert_eq!(config.max_concurrent_actions, 5);
+        assert!(config.require_approval_for_destructive);
+        assert_eq!(config.default_policies[0], "standard");
+    }
+
+    #[test]
+    fn test_lifecycle_stats_default() {
+        let stats = LifecycleStats::default();
+        assert_eq!(stats.total_datasets, 0);
+        assert!(stats.last_evaluation_time.is_none());
+    }
+
+    #[test]
+    fn test_comparison_operator_variants() {
+        let gt = ComparisonOperator::GreaterThan;
+        let lt = ComparisonOperator::LessThan;
+        assert!(matches!(gt, ComparisonOperator::GreaterThan));
+        assert!(matches!(lt, ComparisonOperator::LessThan));
+    }
+
+    #[test]
+    fn test_lifecycle_action_variants() {
+        let action1 = LifecycleAction::ChangeTier(StorageTier::Cold);
+        let action2 = LifecycleAction::EnableCompression;
+        assert!(matches!(action1, LifecycleAction::ChangeTier(_)));
+        assert!(matches!(action2, LifecycleAction::EnableCompression));
+    }
+
+    #[tokio::test]
+    async fn test_lifecycle_manager_new() {
+        let _manager = DatasetLifecycleManager::new();
+        // Manager spawns async tasks, just verify creation doesn't panic
+    }
+
+    #[tokio::test]
+    async fn test_lifecycle_manager_default() {
+        let _manager = DatasetLifecycleManager::default();
+        // Manager spawns async tasks, just verify creation doesn't panic
+    }
+
+    #[test]
+    fn test_scheduled_task_variants() {
+        let task1 = ScheduledTask::PolicyUpdate;
+        let task2 = ScheduledTask::StatsCollection;
+        assert!(matches!(task1, ScheduledTask::PolicyUpdate));
+        assert!(matches!(task2, ScheduledTask::StatsCollection));
     }
 }

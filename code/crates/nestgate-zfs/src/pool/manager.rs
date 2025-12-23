@@ -15,6 +15,7 @@ use super::types::{PoolCapacity, PoolHealth, PoolInfo, PoolState};
 
 /// ZFS Pool Manager - handles pool operations and management
 #[derive(Debug, Clone)]
+/// Manager for ZfsPool operations
 pub struct ZfsPoolManager {
     #[allow(dead_code)]
     config: ZfsConfig,
@@ -212,10 +213,15 @@ impl ZfsPoolManager {
             state,
             health,
             capacity: PoolCapacity {
+                total: total_bytes,
                 total_bytes,
+                used: used_bytes,
                 used_bytes,
+                available: available_bytes,
                 available_bytes,
                 utilization_percent: cap_str.trim_end_matches('%').parse().unwrap_or(0.0),
+                fragmentation_percent: 0.0,
+                deduplication_ratio: 1.0,
             },
             devices: Vec::new(), // Would be populated by separate command
             properties: HashMap::new(),

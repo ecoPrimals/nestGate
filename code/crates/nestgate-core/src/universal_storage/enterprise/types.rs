@@ -10,6 +10,7 @@ use std::time::{Duration, SystemTime};
 /// 
 /// Represents a storage target for enterprise operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagetarget
 pub struct StorageTarget {
     /// Target identifier
     pub id: String,
@@ -27,6 +28,7 @@ pub struct StorageTarget {
     pub active: bool,
 }
 impl Default for StorageTarget {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             id: "default-target".to_string(),
@@ -44,6 +46,7 @@ impl Default for StorageTarget {
 /// 
 /// Different types of storage targets
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+/// Types of StorageTarget
 pub enum StorageTargetType {
     /// Local filesystem storage
     Local,
@@ -61,6 +64,7 @@ pub enum StorageTargetType {
     Custom(String),
 }
 impl Default for StorageTargetType {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Local
     }
@@ -70,6 +74,7 @@ impl Default for StorageTargetType {
 /// 
 /// Metadata for storage targets
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Storagetargetmetadata
 pub struct StorageTargetMetadata {
     /// Creation timestamp
     pub created_at: SystemTime,
@@ -85,6 +90,7 @@ pub struct StorageTargetMetadata {
     pub extra: HashMap<String, String>,
 }
 impl Default for StorageTargetMetadata {
+    /// Returns the default instance
     fn default() -> Self {
         let now = SystemTime::now();
         Self {
@@ -102,6 +108,7 @@ impl Default for StorageTargetMetadata {
 /// 
 /// Represents a data replication job
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Replicationjob
 pub struct ReplicationJob {
     /// Job identifier
     pub id: String,
@@ -125,6 +132,7 @@ pub struct ReplicationJob {
     pub updated_at: SystemTime,
 }
 impl Default for ReplicationJob {
+    /// Returns the default instance
     fn default() -> Self {
         let now = SystemTime::now();
         Self {
@@ -146,6 +154,7 @@ impl Default for ReplicationJob {
 /// 
 /// Status of a replication job
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+/// Status values for Replication
 pub enum ReplicationStatus {
     /// Job is pending execution
     Pending,
@@ -161,6 +170,7 @@ pub enum ReplicationStatus {
     Paused,
 }
 impl Default for ReplicationStatus {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Pending
     }
@@ -170,6 +180,7 @@ impl Default for ReplicationStatus {
 /// 
 /// Configuration for replication jobs
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for Replication
 pub struct ReplicationConfig {
     /// Replication mode
     pub mode: ReplicationMode,
@@ -185,6 +196,7 @@ pub struct ReplicationConfig {
     pub retry_delay: Duration,
 }
 impl Default for ReplicationConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             mode: ReplicationMode::Incremental,
@@ -201,6 +213,7 @@ impl Default for ReplicationConfig {
 /// 
 /// Different replication modes
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+/// Replicationmode
 pub enum ReplicationMode {
     /// Full replication
     Full,
@@ -212,6 +225,7 @@ pub enum ReplicationMode {
     Snapshot,
 }
 impl Default for ReplicationMode {
+    /// Returns the default instance
     fn default() -> Self {
         Self::Incremental
     }
@@ -221,6 +235,7 @@ impl Default for ReplicationMode {
 /// 
 /// Progress tracking for replication jobs
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Replicationprogress
 pub struct ReplicationProgress {
     /// Total bytes to replicate
     pub total_bytes: u64,
@@ -237,6 +252,7 @@ pub struct ReplicationProgress {
     /// Current operation
 }
 impl Default for ReplicationProgress {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             total_bytes: 0,
@@ -253,6 +269,7 @@ impl Default for ReplicationProgress {
 /// 
 /// Represents a backup operation
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Backupjob
 pub struct BackupJob {
     /// Job identifier
     pub id: String,
@@ -272,6 +289,7 @@ pub struct BackupJob {
     pub metadata: HashMap<String, String>,
 }
 impl Default for BackupJob {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             id: "default-backup-job".to_string(),
@@ -290,6 +308,7 @@ impl Default for BackupJob {
 /// 
 /// Represents a backup manifest with metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Backupmanifest
 pub struct BackupManifest {
     /// Manifest identifier
     pub id: String,
@@ -308,6 +327,7 @@ pub struct BackupManifest {
     pub checksum: String,
 }
 impl Default for BackupManifest {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             id: "default-manifest".to_string(),
@@ -325,6 +345,7 @@ impl Default for BackupManifest {
 /// 
 /// Represents a file entry in a backup manifest
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Backupfileentry
 pub struct BackupFileEntry {
     /// File path
     /// File size in bytes
@@ -337,6 +358,7 @@ pub struct BackupFileEntry {
     pub permissions: String,
 }
 impl Default for BackupFileEntry {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             size: 0,
@@ -351,6 +373,7 @@ impl Default for BackupFileEntry {
 /// 
 /// Represents detailed metrics for enterprise operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Detailedmetrics
 pub struct DetailedMetrics {
     /// Metrics identifier
     pub id: String,
@@ -372,6 +395,7 @@ pub struct DetailedMetrics {
     pub metrics: HashMap<String, String>,
 }
 impl Default for DetailedMetrics {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             id: "default-metrics".to_string(),
@@ -391,6 +415,7 @@ impl Default for DetailedMetrics {
 /// 
 /// Represents an optimization report for enterprise operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Optimizationreport
 pub struct OptimizationReport {
     /// Report identifier
     pub id: String,
@@ -407,6 +432,7 @@ pub struct OptimizationReport {
     pub complexity_score: u8,
 }
 impl Default for OptimizationReport {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             id: "default-optimization-report".to_string(),
@@ -423,6 +449,7 @@ impl Default for OptimizationReport {
 /// 
 /// Represents a deduplication report for enterprise storage
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Deduplicationreport
 pub struct DeduplicationReport {
     /// Report identifier
     pub id: String,
@@ -442,6 +469,7 @@ pub struct DeduplicationReport {
     pub processing_time_ms: u64,
 }
 impl Default for DeduplicationReport {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             id: "default-dedup-report".to_string(),
@@ -460,6 +488,7 @@ impl Default for DeduplicationReport {
 /// 
 /// Represents a storage tiering report for enterprise operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Tieringreport
 pub struct TieringReport {
     /// Report identifier
     pub id: String,
@@ -475,6 +504,7 @@ pub struct TieringReport {
     pub performance_impact: String,
 }
 impl Default for TieringReport {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             id: "default-tiering-report".to_string(),
@@ -491,6 +521,7 @@ impl Default for TieringReport {
 /// 
 /// Represents a single tiering recommendation
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Tieringrecommendation
 pub struct TieringRecommendation {
     /// File path or pattern
     /// Current tier
@@ -503,6 +534,7 @@ pub struct TieringRecommendation {
     pub confidence: u8,
 }
 impl Default for TieringRecommendation {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             current_tier: "hot".to_string(),

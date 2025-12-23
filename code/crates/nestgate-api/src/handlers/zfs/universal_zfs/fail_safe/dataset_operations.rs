@@ -1,15 +1,18 @@
 //
 // Dataset operations with circuit breaker and retry logic.
 
+//! Dataset Operations module
+
 use std::collections::HashMap;
 
 use crate::handlers::zfs::universal_zfs::traits::UniversalZfsService;
-use crate::handlers::zfs::universal_zfs::types::{
+use crate::handlers::zfs::universal_zfs_types::{
     DatasetConfig, DatasetInfo, UniversalZfsError, UniversalZfsResult,
 };
 
 use super::core::FailSafeZfsService;
 
+/// List Datasets
 pub async fn list_datasets(service: &FailSafeZfsService) -> UniversalZfsResult<Vec<DatasetInfo>> {
     // Check circuit breaker
     if !service.circuit_breaker.can_execute().await {
@@ -18,9 +21,9 @@ pub async fn list_datasets(service: &FailSafeZfsService) -> UniversalZfsResult<V
         } else {
             // Try fallback operation
             match service.execute_fallback_operation("list_datasets", &service.primary) {
-                Ok(_) => Ok(Vec::new()), // Return empty list as fallback
+                Ok(()) => Ok(Vec::new()), // Return empty list as fallback
                 Err(_) => Err(UniversalZfsError::CircuitBreakerOpen {
-                    service: service.service_name.clone(),
+                    backend: service.service_name.clone(),
                 }),
             }
         };
@@ -56,6 +59,7 @@ pub async fn list_datasets(service: &FailSafeZfsService) -> UniversalZfsResult<V
     result
 }
 
+/// Gets Dataset
 pub async fn get_dataset(
     service: &FailSafeZfsService,
     name: &str,
@@ -64,11 +68,10 @@ pub async fn get_dataset(
     if !service.circuit_breaker.can_execute().await {
         if let Some(fallback) = &service.fallback {
             return fallback.get_dataset(name).await;
-        } else {
-            return Err(UniversalZfsError::internal(
-                "Circuit breaker open and no fallback available",
-            ));
         }
+        return Err(UniversalZfsError::internal(
+            "Circuit breaker open and no fallback available",
+        ));
     }
 
     // Execute primary service with circuit breaker tracking
@@ -88,6 +91,7 @@ pub async fn get_dataset(
     }
 }
 
+/// Creates  Dataset
 pub async fn create_dataset(
     service: &FailSafeZfsService,
     config: &DatasetConfig,
@@ -96,11 +100,10 @@ pub async fn create_dataset(
     if !service.circuit_breaker.can_execute().await {
         if let Some(fallback) = &service.fallback {
             return fallback.create_dataset(config).await;
-        } else {
-            return Err(UniversalZfsError::internal(
-                "Circuit breaker open and no fallback available",
-            ));
         }
+        return Err(UniversalZfsError::internal(
+            "Circuit breaker open and no fallback available",
+        ));
     }
 
     // Execute primary service with circuit breaker tracking
@@ -120,16 +123,16 @@ pub async fn create_dataset(
     }
 }
 
+/// Destroy Dataset
 pub async fn destroy_dataset(service: &FailSafeZfsService, name: &str) -> UniversalZfsResult<()> {
     // Check if circuit breaker allows execution
     if !service.circuit_breaker.can_execute().await {
         if let Some(fallback) = &service.fallback {
             return fallback.destroy_dataset(name).await;
-        } else {
-            return Err(UniversalZfsError::internal(
-                "Circuit breaker open and no fallback available",
-            ));
         }
+        return Err(UniversalZfsError::internal(
+            "Circuit breaker open and no fallback available",
+        ));
     }
 
     // Execute primary service with circuit breaker tracking
@@ -149,6 +152,7 @@ pub async fn destroy_dataset(service: &FailSafeZfsService, name: &str) -> Univer
     }
 }
 
+/// Gets Dataset Properties
 pub async fn get_dataset_properties(
     service: &FailSafeZfsService,
     name: &str,
@@ -157,11 +161,10 @@ pub async fn get_dataset_properties(
     if !service.circuit_breaker.can_execute().await {
         if let Some(fallback) = &service.fallback {
             return fallback.get_dataset_properties(name).await;
-        } else {
-            return Err(UniversalZfsError::internal(
-                "Circuit breaker open and no fallback available",
-            ));
         }
+        return Err(UniversalZfsError::internal(
+            "Circuit breaker open and no fallback available",
+        ));
     }
 
     // Execute primary service with circuit breaker tracking
@@ -181,6 +184,7 @@ pub async fn get_dataset_properties(
     }
 }
 
+/// Sets Dataset Properties
 pub async fn set_dataset_properties(
     service: &FailSafeZfsService,
     name: &str,
@@ -190,11 +194,10 @@ pub async fn set_dataset_properties(
     if !service.circuit_breaker.can_execute().await {
         if let Some(fallback) = &service.fallback {
             return fallback.set_dataset_properties(name, properties).await;
-        } else {
-            return Err(UniversalZfsError::internal(
-                "Circuit breaker open and no fallback available",
-            ));
         }
+        return Err(UniversalZfsError::internal(
+            "Circuit breaker open and no fallback available",
+        ));
     }
 
     // Execute primary service with circuit breaker tracking

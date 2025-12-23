@@ -2,6 +2,8 @@
 // This module provides filesystem-based storage operations that simulate
 // ZFS functionality for development environments without dedicated hardware.
 
+//! Storage Abstraction module
+
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -27,6 +29,25 @@ pub struct DevEnvironmentStorageService {
 }
 /// Configuration for storage abstraction
 #[derive(Debug, Clone)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+///
+/// **Migration Path**:
+/// ```rust,ignore
+/// // OLD (deprecated):
+/// use crate::config::StorageAbstractionConfig;
+///
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::config::StorageAbstractionConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+///
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(
+    since = "0.11.0",
+    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
+/// Configuration for StorageAbstraction
 pub struct StorageAbstractionConfig {
     /// Base directory for all operations
     pub base_directory: PathBuf,
@@ -38,6 +59,7 @@ pub struct StorageAbstractionConfig {
     pub simulate_zfs_features: bool,
 }
 impl Default for StorageAbstractionConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             base_directory: std::env::temp_dir().join("nestgate-dev-storage"),
@@ -361,19 +383,44 @@ impl DevEnvironmentStorageService {
 
 /// Storage statistics for development environment
 #[derive(Debug, Clone)]
+/// Storagestats
 pub struct StorageStats {
+    /// Total Pools
     pub total_pools: usize,
+    /// Total Datasets
     pub total_datasets: usize,
+    /// Total Size Bytes
     pub total_size_bytes: u64,
+    /// Total Used Bytes
     pub total_used_bytes: u64,
+    /// Available Bytes
     pub available_bytes: u64,
+    /// Abstraction Type
     pub abstraction_type: String,
 }
 impl Default for DevEnvironmentStorageService {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
 }
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+///
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Storageabstractionconfigcanonical
+pub type StorageAbstractionConfigCanonical =
+    nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using StorageAbstractionConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
 
 #[cfg(test)]
 mod tests {

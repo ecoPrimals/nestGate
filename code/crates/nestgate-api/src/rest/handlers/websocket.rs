@@ -3,6 +3,8 @@
 // These handlers provide live data feeds for management dashboards
 // without any authentication or user management overhead.
 
+//! Websocket module
+
 use axum::extract::ws::{Message, WebSocket};
 use axum::{
     extract::{Query, State, WebSocketUpgrade},
@@ -23,6 +25,7 @@ use crate::rest::ApiState;
 
 /// Query parameters for WebSocket connections
 #[derive(Debug, Deserialize)]
+/// Websocketquery
 pub struct WebSocketQuery {
     /// Update interval in seconds
     pub interval: Option<u64>,
@@ -238,6 +241,7 @@ async fn get_current_metrics(state: &ApiState) -> Result<SystemMetrics, String> 
 
 /// Log entry structure for WebSocket streaming
 #[derive(Debug, serde::Serialize)]
+/// Logentry
 pub struct LogEntry {
     /// Timestamp when the log entry was created
     pub timestamp: chrono::DateTime<chrono::Utc>,
@@ -300,6 +304,7 @@ fn generate_sample_log_entry(level_filter: &str) -> LogEntry {
 
 /// System event structure for WebSocket streaming
 #[derive(Debug, serde::Serialize)]
+/// Systemevent
 pub struct SystemEvent {
     /// Unique identifier for the event
     pub id: String,
@@ -401,6 +406,7 @@ fn generate_realtime_cpu_usage() -> f64 {
     (base + variation).min(95.0)
 }
 
+/// Generate Realtime Memory Usage
 fn generate_realtime_memory_usage() -> f64 {
     let mut hasher = DefaultHasher::new();
     (chrono::Utc::now().timestamp_millis() + 1).hash(&mut hasher);
@@ -411,6 +417,7 @@ fn generate_realtime_memory_usage() -> f64 {
     (base + variation).min(90.0)
 }
 
+/// Generate Realtime Disk Read
 fn generate_realtime_disk_read() -> f64 {
     let mut hasher = DefaultHasher::new();
     (chrono::Utc::now().timestamp_millis() + 2).hash(&mut hasher);
@@ -421,6 +428,7 @@ fn generate_realtime_disk_read() -> f64 {
     base + variation
 }
 
+/// Generate Realtime Disk Write
 fn generate_realtime_disk_write() -> f64 {
     let mut hasher = DefaultHasher::new();
     (chrono::Utc::now().timestamp_millis() + 3).hash(&mut hasher);
@@ -431,14 +439,17 @@ fn generate_realtime_disk_write() -> f64 {
     base + variation
 }
 
+/// Generate Realtime Read Iops
 fn generate_realtime_read_iops() -> u64 {
     (generate_realtime_disk_read() * 120.0) as u64
 }
 
+/// Generate Realtime Write Iops
 fn generate_realtime_write_iops() -> u64 {
     (generate_realtime_disk_write() * 110.0) as u64
 }
 
+/// Generate Realtime Queue Depth
 fn generate_realtime_queue_depth() -> f64 {
     let mut hasher = DefaultHasher::new();
     (chrono::Utc::now().timestamp_millis() + 4).hash(&mut hasher);
@@ -449,6 +460,7 @@ fn generate_realtime_queue_depth() -> f64 {
     (base + variation).max(0.1)
 }
 
+/// Generate Realtime Network Rx
 fn generate_realtime_network_rx() -> u64 {
     let mut hasher = DefaultHasher::new();
     (chrono::Utc::now().timestamp_millis() + 5).hash(&mut hasher);
@@ -459,18 +471,22 @@ fn generate_realtime_network_rx() -> u64 {
     base + variation
 }
 
+/// Generate Realtime Network Tx
 fn generate_realtime_network_tx() -> u64 {
     generate_realtime_network_rx() / 2
 }
 
+/// Generate Realtime Network Rx Packets
 fn generate_realtime_network_rx_packets() -> u64 {
     generate_realtime_network_rx() / 1400
 }
 
+/// Generate Realtime Network Tx Packets
 fn generate_realtime_network_tx_packets() -> u64 {
     generate_realtime_network_tx() / 1400
 }
 
+/// Generate Realtime Cache Hit Ratio
 fn generate_realtime_cache_hit_ratio() -> f64 {
     let mut hasher = DefaultHasher::new();
     (chrono::Utc::now().timestamp_millis() + 6).hash(&mut hasher);

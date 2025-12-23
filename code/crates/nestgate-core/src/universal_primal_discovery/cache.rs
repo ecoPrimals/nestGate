@@ -8,15 +8,22 @@ use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
 /// Cache entry with TTL
 #[derive(Debug, Clone)]
+/// Cacheentry
 pub struct CacheEntry {
+    /// Value
     pub value: String,
+    /// Timestamp when this was created
     pub created_at: SystemTime,
+    /// Ttl
     pub ttl: Duration,
+    /// Count of access
     pub access_count: u64,
+    /// Last Accessed
     pub last_accessed: SystemTime,
 }
 impl CacheEntry {
     #[must_use]
+    /// Creates a new cached entry with the specified value and time-to-live
     pub fn new(value: String, ttl: Duration) -> Self {
         let now = SystemTime::now();
         Self {
@@ -29,10 +36,12 @@ impl CacheEntry {
     }
 
     #[must_use]
+    /// Checks if this cached entry has expired based on its TTL
     pub fn is_expired(&self) -> bool {
         self.created_at.elapsed().unwrap_or(Duration::ZERO) > self.ttl
     }
 
+    /// Access
     pub fn access(&mut self) -> String {
         self.access_count += 1;
         self.last_accessed = SystemTime::now();
@@ -42,6 +51,7 @@ impl CacheEntry {
 
 /// Discovery result cache
 #[derive(Debug)]
+/// Discoverycache
 pub struct DiscoveryCache {
     /// Port discoveries cache
     port_cache: HashMap<String, CacheEntry>,
@@ -57,6 +67,7 @@ pub struct DiscoveryCache {
     max_cache_size: usize,
 }
 impl Default for DiscoveryCache {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

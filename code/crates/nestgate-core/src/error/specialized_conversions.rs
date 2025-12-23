@@ -26,6 +26,7 @@ use crate::error::{
 use crate::resilience::circuit_breaker::CircuitBreakerError;
 
 impl From<CircuitBreakerError> for NestGateError {
+    /// From
     fn from(err: CircuitBreakerError) -> Self {
         match err {
             CircuitBreakerError::CircuitOpen { name } => {
@@ -61,6 +62,7 @@ impl From<CircuitBreakerError> for NestGateError {
 use crate::services::auth::types::AuthError;
 
 impl From<AuthError> for NestGateError {
+    /// From
     fn from(err: AuthError) -> Self {
         let message = match err {
             AuthError::InvalidCredentials => "Invalid username or password",
@@ -91,6 +93,7 @@ impl From<AuthError> for NestGateError {
 use crate::simd::types::SimdError;
 
 impl From<SimdError> for NestGateError {
+    /// From
     fn from(err: SimdError) -> Self {
         let message = match err {
             SimdError::LengthMismatch => "Input and output arrays have different lengths",
@@ -117,6 +120,7 @@ impl From<SimdError> for NestGateError {
 use crate::ecosystem_integration::capability_router::CapabilityRoutingError;
 
 impl From<CapabilityRoutingError> for NestGateError {
+    /// From
     fn from(err: CapabilityRoutingError) -> Self {
         let message = format!("{err}");
         NestGateError::Internal(Box::new(InternalErrorDetails {
@@ -134,6 +138,7 @@ impl From<CapabilityRoutingError> for NestGateError {
 use crate::security::rate_limiter::RateLimitError;
 
 impl From<RateLimitError> for NestGateError {
+    /// From
     fn from(err: RateLimitError) -> Self {
         let message = format!("{err}");
         NestGateError::Security(Box::new(SecurityErrorDetails {
@@ -151,6 +156,7 @@ impl From<RateLimitError> for NestGateError {
 use crate::universal_security_client::client::UniversalSecurityError;
 
 impl From<UniversalSecurityError> for NestGateError {
+    /// From
     fn from(err: UniversalSecurityError) -> Self {
         let message = format!("{err}");
         NestGateError::Security(Box::new(SecurityErrorDetails {
@@ -168,6 +174,7 @@ impl From<UniversalSecurityError> for NestGateError {
 use crate::security::input_validation::InputValidationError;
 
 impl From<InputValidationError> for NestGateError {
+    /// From
     fn from(err: InputValidationError) -> Self {
         let message = format!("{err}");
         NestGateError::Validation(Box::new(ValidationErrorDetails {
@@ -185,6 +192,7 @@ impl From<InputValidationError> for NestGateError {
 use crate::smart_abstractions::notification_channels::NotificationError;
 
 impl From<NotificationError> for NestGateError {
+    /// From
     fn from(err: NotificationError) -> Self {
         let message = format!("{err}");
         NestGateError::External(Box::new(ExternalErrorDetails {
@@ -201,6 +209,7 @@ impl From<NotificationError> for NestGateError {
 use crate::zero_cost::types::ZeroCostError;
 
 impl From<ZeroCostError> for NestGateError {
+    /// From
     fn from(err: ZeroCostError) -> Self {
         let message = format!("{err}");
         NestGateError::Performance(Box::new(PerformanceErrorDetails {

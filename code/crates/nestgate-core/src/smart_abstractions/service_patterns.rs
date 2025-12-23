@@ -84,18 +84,21 @@ impl SmartServiceFactory {
 
     /// Create a mock service for testing
     ///
+    /// **TEST ONLY**: This function should only be used in test code
+    ///
     /// # Errors
     ///
     /// This function will return an error if:
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn create_mock_service(
+    #[cfg(any(test, feature = "dev-stubs"))]
+    pub fn create_mock_service(
         &self,
         service_type: UnifiedServiceType,
         behavior: MockServiceBehavior,
     ) -> Result<Box<dyn SmartService>>  {
-        let service_id = format!("mock-{Uuid::new_v4(}"));
+        let service_id = format!("mock-{}", Uuid::new_v4());
         let metadata = ServiceMetadata {
             service_id: service_id.clone(),
             service_type,
@@ -148,6 +151,7 @@ impl SmartServiceFactory {
         service_type: &UnifiedServiceType,
     ) -> HashMap<String, String> {
         let mut endpoints = HashMap::new();
+        let discovery_config = crate::config::discovery_config::ServiceDiscoveryConfig::default();
 
         let base_port = match service_type {
             UnifiedServiceType::Storage => unified_constants::network::ports::API_PORT,
@@ -156,17 +160,20 @@ impl SmartServiceFactory {
             _ => unified_constants::network::ports::API_PORT,
         };
 
+        let base_endpoint = discovery_config.build_endpoint(base_port);
+        let metrics_endpoint = discovery_config.build_endpoint(base_port + 1);
+
         endpoints.insert(
             "health".to_string(),
-            format!("http://localhost:{base_port}/health"),
+            format!("{}/health", base_endpoint),
         );
         endpoints.insert(
             "metrics".to_string(),
-            format!("http://localhost:{base_port + 1}/metrics"),
+            format!("{}/metrics", metrics_endpoint),
         );
         endpoints.insert(
             "api".to_string(),
-            format!("http://localhost:{base_port}/api/v1"),
+            format!("{}/api/v1", base_endpoint),
         );
 
         endpoints
@@ -204,6 +211,7 @@ impl SmartServiceFactory {
 }
 
 impl Default for SmartServiceFactory {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -245,25 +253,55 @@ pub trait SmartService: Send + Sync {
 
 /// Comprehensive service metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Servicemetadata
 pub struct ServiceMetadata {
+    /// Service identifier
     pub service_id: String,
+    /// Service Type
     pub service_type: UnifiedServiceType,
+    /// Timestamp when this was created
     pub created_at: SystemTime,
+    /// Health Status
     pub health_status: UnifiedHealthStatus,
+    /// Capabilities
     pub capabilities: Vec<String>,
+    /// Endpoints
     pub endpoints: HashMap<String, String>,
+    /// Configuration for uration
     pub configuration: HashMap<String, String>,
 }
 /// Service factory configuration
 #[derive(Debug, Clone)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// 
+/// **Migration Path**:
+/// ```rust,ignore
+/// // OLD (deprecated):
+/// use crate::network::config::ServiceFactoryConfig;
+/// 
+/// // NEW (canonical):
+/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::network::config::ServiceFactoryConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+/// 
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for ServiceFactory
 pub struct ServiceFactoryConfig {
+    /// Default Timeout
     pub default_timeout: Duration,
+    /// Health Check Interval
     pub health_check_interval: Duration,
+    /// Max Retries
     pub max_retries: u32,
+    /// Enable Metrics
     pub enable_metrics: bool,
+    /// Enable Tracing
     pub enable_tracing: bool,
 }
 impl Default for ServiceFactoryConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             default_timeout: Duration::from_secs(30),
@@ -277,17 +315,27 @@ impl Default for ServiceFactoryConfig {
 
 /// Service performance metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Servicemetrics
 pub struct ServiceMetrics {
+    /// Requests Total
     pub requests_total: u64,
+    /// Requests Successful
     pub requests_successful: u64,
+    /// Requests Failed
     pub requests_failed: u64,
+    /// Average Response Time Ms
     pub average_response_time_ms: f64,
+    /// Uptime Seconds
     pub uptime_seconds: u64,
+    /// Memory Usage in megabytes
     pub memory_usage_mb: u64,
+    /// Cpu Usage Percent
     pub cpu_usage_percent: f64,
+    /// Custom Metrics
     pub custom_metrics: HashMap<String, f64>,
 }
 impl Default for ServiceMetrics {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             requests_total: 0,
@@ -306,6 +354,7 @@ impl Default for ServiceMetrics {
 
 /// Generic smart service wrapper that provides intelligent defaults
 #[allow(dead_code)] // Service wrapper - field used internally
+/// Smartservicewrapper
 pub struct SmartServiceWrapper {
     metadata: ServiceMetadata,
     config: ServiceFactoryConfig,
@@ -314,6 +363,7 @@ pub struct SmartServiceWrapper {
     start_time: Option<SystemTime>,
 }
 impl SmartServiceWrapper {
+    /// Creates a new instance
     pub fn new(metadata: ServiceMetadata, config: ServiceFactoryConfig) -> Self {
         Self {
             metadata,
@@ -326,10 +376,12 @@ impl SmartServiceWrapper {
 }
 
 impl SmartService for SmartServiceWrapper {
+    /// Metadata
     fn metadata(&self) -> &ServiceMetadata {
         &self.metadata
     }
 
+    /// Start
     async fn start(&mut self) -> Result<()> {
         self.state = UnifiedServiceState::Starting;
 
@@ -354,6 +406,7 @@ impl SmartService for SmartServiceWrapper {
         Ok(())
     }
 
+    /// Stop
     async fn stop(&mut self) -> Result<()> {
         self.state = UnifiedServiceState::Stopping;
 
@@ -367,6 +420,7 @@ impl SmartService for SmartServiceWrapper {
         Ok(())
     }
 
+    /// Health Check
     async fn health_check(&self) -> Result<UnifiedHealthStatus> {
         match self.state {
             UnifiedServiceState::Running => Ok(UnifiedHealthStatus::Healthy),
@@ -378,6 +432,7 @@ impl SmartService for SmartServiceWrapper {
         }
     }
 
+    /// Handles  Request
     fn handle_request(
         &self,
         request: UniversalServiceRequest,
@@ -419,12 +474,14 @@ impl SmartService for SmartServiceWrapper {
         }
     }
 
+    /// Gets Metrics
     async fn get_metrics(&self) -> Result<ServiceMetrics> {
         let mut metrics = self.metrics.clone();
         metrics.uptime_seconds = self.get_uptime_seconds();
         Ok(metrics)
     }
 
+    /// Updates  Config
     async fn update_config(&mut self, config: HashMap<String, String>) -> Result<()> {
         // Intelligent configuration updates
         for (key, value) in config {
@@ -438,12 +495,14 @@ impl SmartService for SmartServiceWrapper {
         Ok(())
     }
 
+    /// Capabilities
     fn capabilities(&self) -> &[String] {
         &self.metadata.capabilities
     }
 }
 
 impl SmartServiceWrapper {
+    /// Gets Uptime Seconds
     fn get_uptime_seconds(&self) -> u64 {
         self.start_time
             .map(|start| {
@@ -459,16 +518,23 @@ impl SmartServiceWrapper {
 // ==================== SECTION ====================
 
 /// Mock service behavior configuration
-#[cfg(test)]
+#[cfg(any(test, feature = "dev-stubs"))]
 #[derive(Debug, Clone)]
+/// Mockservicebehavior
 pub struct MockServiceBehavior {
+    /// Response Delay
     pub response_delay: Duration,
+    /// Failure Rate
     pub failure_rate: f64,
+    /// Custom Responses
     pub custom_responses: HashMap<String, serde_json::Value>,
+    /// Health Status
     pub health_status: UnifiedHealthStatus,
 }
-#[cfg(test)]
+
+#[cfg(any(test, feature = "dev-stubs"))]
 impl Default for MockServiceBehavior {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             response_delay: Duration::from_millis(10),
@@ -480,7 +546,8 @@ impl Default for MockServiceBehavior {
 }
 
 /// Mock smart service for testing
-#[cfg(test)]
+#[cfg(any(test, feature = "dev-stubs"))]
+/// Service implementation for MockSmart
 pub struct MockSmartService {
     metadata: ServiceMetadata,
     behavior: MockServiceBehavior,
@@ -488,8 +555,10 @@ pub struct MockSmartService {
     metrics: ServiceMetrics,
     start_time: Option<SystemTime>,
 }
-#[cfg(test)]
+
+#[cfg(any(test, feature = "dev-stubs"))]
 impl MockSmartService {
+    /// Creates a new instance
     pub fn new(metadata: ServiceMetadata, behavior: MockServiceBehavior) -> Self {
         Self {
             metadata,
@@ -501,27 +570,32 @@ impl MockSmartService {
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "dev-stubs"))]
 impl SmartService for MockSmartService {
+    /// Metadata
     fn metadata(&self) -> &ServiceMetadata {
         &self.metadata
     }
 
+    /// Start
     async fn start(&mut self) -> Result<()> {
         self.state = UnifiedServiceState::Running;
         self.start_time = Some(SystemTime::now());
         Ok(())
     }
 
+    /// Stop
     async fn stop(&mut self) -> Result<()> {
         self.state = UnifiedServiceState::Stopped;
         Ok(())
     }
 
+    /// Health Check
     async fn health_check(&self) -> Result<UnifiedHealthStatus> {
         Ok(self.behavior.health_status.clone())
     }
 
+    /// Handles  Request
     fn handle_request(
         &self,
         request: UniversalServiceRequest,
@@ -559,14 +633,17 @@ impl SmartService for MockSmartService {
         }
     }
 
+    /// Gets Metrics
     async fn get_metrics(&self) -> Result<ServiceMetrics> {
         Ok(self.metrics.clone())
     }
 
+    /// Updates  Config
     async fn update_config(&mut self, _config: HashMap<String, String>) -> Result<()> {
         Ok(())
     }
 
+    /// Capabilities
     fn capabilities(&self) -> &[String] {
         &self.metadata.capabilities
     }
@@ -581,20 +658,32 @@ pub struct SmartServiceDiscovery {
     health_monitor: Arc<RwLock<HashMap<String, HealthRecord>>>,
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Serviceregistration
 pub struct ServiceRegistration {
+    /// Service identifier
     pub service_id: String,
+    /// Service Type
     pub service_type: UnifiedServiceType,
+    /// Endpoints
     pub endpoints: HashMap<String, String>,
+    /// Capabilities
     pub capabilities: Vec<String>,
+    /// Registered At
     pub registered_at: SystemTime,
+    /// Last Heartbeat
     pub last_heartbeat: SystemTime,
 }
 
 #[derive(Debug, Clone)]
+/// Healthrecord
 pub struct HealthRecord {
+    /// Service identifier
     pub service_id: String,
+    /// Status
     pub status: UnifiedHealthStatus,
+    /// Last Check
     pub last_check: SystemTime,
+    /// Consecutive Failures
     pub consecutive_failures: u32,
 }
 
@@ -736,6 +825,7 @@ impl SmartServiceDiscovery {
 }
 
 impl Default for SmartServiceDiscovery {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -748,6 +838,8 @@ pub fn create_service_factory() -> SmartServiceFactory {
     SmartServiceFactory::new()
 }
 /// Create a mock service with default behavior
+/// **TEST ONLY**: This function should only be used in test code
+#[cfg(any(test, feature = "dev-stubs"))]
 pub async fn create_mock_service(
     service_type: UnifiedServiceType,
 ) -> Result<Box<dyn SmartService>> {

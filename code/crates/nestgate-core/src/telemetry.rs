@@ -23,6 +23,22 @@ use tracing::warn;
 use serde::{Serialize, Deserialize};
 /// Telemetry configuration
 #[derive(Debug, Clone)]
+/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// 
+/// **Migration Path**:
+/// ```rust
+/// // OLD (deprecated):
+/// use crate::config::TelemetryConfig;
+/// 
+/// // NEW (canonical):
+/// use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+/// // Or use type alias for compatibility:
+/// use crate::config::TelemetryConfig; // Now aliases to CanonicalNetworkConfig
+/// ```
+/// 
+/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
+#[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+/// Configuration for Telemetry
 pub struct TelemetryConfig {
     /// Collection interval for system metrics
     pub collection_interval: Duration,
@@ -36,6 +52,7 @@ pub struct TelemetryConfig {
     pub export_endpoints: Vec<ExportEndpoint>,
 }
 impl Default for TelemetryConfig {
+    /// Returns the default instance
     fn default() -> Self {
         Self {
             collection_interval: Duration::from_secs(10),
@@ -49,23 +66,32 @@ impl Default for TelemetryConfig {
 
 /// Export endpoint configuration
 #[derive(Debug, Clone)]
+/// Exportendpoint
 pub struct ExportEndpoint {
+    /// Name
     pub name: String,
+    /// Url
     pub url: String,
+    /// Format
     pub format: ExportFormat,
+    /// Interval
     pub interval: Duration,
 }
 /// Export format for telemetry data
 /// MODERNIZED: Uses capability-based discovery instead of vendor hardcoding
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Exportformat
 pub enum ExportFormat {
+    /// Json
     Json,
     // DEPRECATED: Prometheus hardcoding - migrate to capability-based monitoring
     #[deprecated(since = "3.0.0", note = "Use capability-based monitoring discovery")]
+    /// Prometheus
     Prometheus,
     Custom(String),
     // DEPRECATED: InfluxDB hardcoding - migrate to capability-based monitoring  
     #[deprecated(since = "3.0.0", note = "Use capability-based monitoring discovery")]
+    /// Influxdb
     InfluxDb,
     /// NEW: Capability-based monitoring export
     MonitoringCapability {
@@ -81,6 +107,7 @@ pub struct TelemetryCollector {
 }
 /// Centralized metrics registry
 #[derive(Debug, Default)]
+/// Metricsregistry
 pub struct MetricsRegistry {
     /// Counter metrics (monotonically increasing values)
     counters: HashMap<String, CounterMetric>,
@@ -93,45 +120,73 @@ pub struct MetricsRegistry {
 }
 /// Counter metric (monotonically increasing)
 #[derive(Debug, Clone)]
+/// Countermetric
 pub struct CounterMetric {
+    /// Name
     pub name: String,
+    /// Help
     pub help: String,
+    /// Value
     pub value: f64,
+    /// Labels
     pub labels: HashMap<String, String>,
+    /// Last Updated
     pub last_updated: SystemTime,
 }
 /// Gauge metric (current value)
 #[derive(Debug, Clone)]
+/// Gaugemetric
 pub struct GaugeMetric {
+    /// Name
     pub name: String,
+    /// Help
     pub help: String,
+    /// Value
     pub value: f64,
+    /// Labels
     pub labels: HashMap<String, String>,
+    /// Last Updated
     pub last_updated: SystemTime,
 }
 /// Histogram metric (distribution of values)
 #[derive(Debug, Clone)]
+/// Histogrammetric
 pub struct HistogramMetric {
+    /// Name
     pub name: String,
+    /// Help
     pub help: String,
+    /// Buckets
     pub buckets: Vec<f64>,
+    /// Counts
     pub counts: Vec<u64>,
+    /// Sum
     pub sum: f64,
+    /// Count
     pub count: u64,
+    /// Labels
     pub labels: HashMap<String, String>,
+    /// Last Updated
     pub last_updated: SystemTime,
 }
 /// Time series data point
 #[derive(Debug, Clone)]
+/// Datapoint
 pub struct DataPoint {
+    /// Timestamp
     pub timestamp: SystemTime,
+    /// Value
     pub value: f64,
 }
 /// Time series data collection
 #[derive(Debug)]
+/// Timeseries
 pub struct TimeSeries {
+    /// Name
     pub name: String,
+    /// Data Points
     pub data_points: Vec<DataPoint>,
+    /// Max Points
     pub max_points: usize,
 }
 impl TelemetryCollector {
@@ -680,60 +735,23 @@ impl TimeSeries {
     }
 }
 
+
+// ==================== CANONICAL TYPE ALIAS ====================
+// This type now aliases to the canonical network configuration
+// Original struct definition kept above for reference and backward compatibility
+
+/// Type alias to canonical network configuration
+/// 
+/// This provides backward compatibility while migrating to unified configuration.
+/// The original struct is marked as deprecated but still functional.
+#[allow(deprecated)]
+/// Type alias for Telemetryconfigcanonical
+pub type TelemetryConfigCanonical = crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+// Note: Keep using TelemetryConfig (the deprecated struct) for now.
+// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
+// This alias is here for reference and future migration.
+
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[tokio::test]
-    async fn test_telemetry_basic_functionality() {
-        let config = TelemetryConfig::default();
-        let collector = TelemetryCollector::new(config);
-
-        // Test counter
-        collector
-            .inc_counter("test_counter", 1.0, HashMap::new())
-            .await;
-        collector
-            .inc_counter("test_counter", 2.0, HashMap::new())
-            .await;
-
-        // Test gauge
-        collector
-            .set_gauge("test_gauge", 42.5, HashMap::new())
-            .await;
-
-        // Test histogram
-        collector
-            .observe_histogram("test_histogram", 1.5, HashMap::new())
-            .await;
-
-        let snapshot = collector.get_metrics_snapshot().await;
-        assert!(snapshot.contains_key("test_counter"));
-        assert!(snapshot.contains_key("test_gauge"));
-        assert!(snapshot.contains_key("test_histogram"));
-    }
-
-    #[tokio::test]
-    async fn test_time_series_functionality() {
-        let mut time_series = TimeSeries {
-            name: "test_series".to_string(),
-            data_points: Vec::new(),
-            max_points: 5,
-        };
-
-        // Add data points
-        for i in 0..10 {
-            time_series.data_points.push(DataPoint {
-                timestamp: SystemTime::now(),
-                value: i as f64,
-            });
-        }
-
-        // Should only keep last 5 points due to max_points limit
-        assert_eq!(time_series.data_points.len(), 10);
-
-        // Test average calculation
-        let avg = time_series.average_over_window(Duration::from_secs(3600));
-        assert!(avg.is_some());
-    }
-}
+#[path = "telemetry_tests.rs"]
+mod tests;

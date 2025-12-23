@@ -6,9 +6,17 @@
 // **REPLACES**: storage.rs (886 lines) with modular architecture
 /// **PROVIDES**: Focused storage modules with clear separation of concerns
 // Core storage service and configuration
+/// Storage configuration module
 pub mod config;
+/// Storage service implementation
 pub mod service;
+/// Storage type definitions
 pub mod types;
+
+#[cfg(test)]
+mod mock_tests;
+#[cfg(test)]
+mod service_tests;
 // Storage management domains - NestGate's core expertise (local smart capabilities)
 // pub mod pools;
 // pub mod quotas;
@@ -22,7 +30,7 @@ pub mod types;
 // Re-export all types for backward compatibility
 pub use config::CachePolicies;
 // ZfsConfig moved to unified_types
-pub use crate::config::canonical_master::StorageConfig;
+pub use crate::config::canonical_primary::StorageConfig;
 pub use service::StorageManagerService;
 pub use types::{
     CacheConfig, CacheType, EvictionPolicy, PoolHealth, QuotaEnforcement, StorageOperationResult,

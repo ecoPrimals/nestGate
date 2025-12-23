@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 /// Individual permission for MCP operations
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+/// Permission
 pub struct Permission {
     /// Permission name (e.g., "mcp.read", "mcp.write", "mcp.admin")
     pub name: String,
@@ -35,6 +36,7 @@ impl Permission {
 
 /// Permission manager for MCP security
 #[derive(Debug)]
+/// Manager for Permission operations
 pub struct PermissionManager {
     /// Available roles
     roles: HashMap<String, Role>,
@@ -181,6 +183,7 @@ impl PermissionManager {
 }
 
 impl Default for PermissionManager {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

@@ -2,6 +2,8 @@
 // This module provides real-time ZFS performance monitoring capabilities,
 // including metrics collection, trend analysis, and alerting.
 
+//! Monitoring module
+
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::SystemTime;
@@ -10,9 +12,13 @@ use tokio::sync::RwLock;
 
 // Placeholder type until AlertThresholds is available
 #[derive(Debug, Default)]
+/// Alertthresholds
 pub struct AlertThresholds {
+    /// Cpu Threshold
     pub cpu_threshold: f32,
+    /// Memory Threshold
     pub memory_threshold: f32,
+    /// Disk Threshold
     pub disk_threshold: f32,
 }
 use tracing::debug;
@@ -29,12 +35,16 @@ use super::types::{
 
 // **CANONICAL MODERNIZATION**: Type aliases to fix clippy complexity warnings
 type PoolMetricsMap = Arc<RwLock<HashMap<String, ZfsPoolMetrics>>>;
+/// Type alias for DatasetMetricsMap
 type DatasetMetricsMap = Arc<RwLock<HashMap<String, ZfsDatasetMetrics>>>;
+/// Type alias for MetricsCacheMap
 type MetricsCacheMap = Arc<RwLock<HashMap<String, ZfsPerformanceMetrics>>>;
+/// Type alias for AlertThresholdsArc
 type AlertThresholdsArc = Arc<RwLock<AlertThresholds>>;
 
 /// Real-time performance monitor
 #[derive(Debug)]
+/// Realtimeperformancemonitor
 pub struct RealTimePerformanceMonitor {
     #[allow(dead_code)]
     pool_metrics: PoolMetricsMap,
@@ -44,13 +54,18 @@ pub struct RealTimePerformanceMonitor {
     alert_thresholds: AlertThresholdsArc,
     metrics_cache: MetricsCacheMap,
 }
+
+/// Type alias for backwards compatibility with test code
+pub type PerformanceMonitor = RealTimePerformanceMonitor;
 impl Default for RealTimePerformanceMonitor {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
 }
 
 impl RealTimePerformanceMonitor {
+    /// Creates a new real-time performance monitor with default configuration.
     #[must_use]
     pub fn new() -> Self {
         Self {

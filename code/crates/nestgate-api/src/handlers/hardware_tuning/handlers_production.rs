@@ -26,6 +26,7 @@ use crate::error::{ApiError, Result};
 ///
 /// Real implementation using `sysinfo` crate for actual system detection and monitoring.
 #[derive(Debug, Clone)]
+/// Handler for RealHardwareTuning requests
 pub struct RealHardwareTuningHandler {
     /// Hardware tuning configuration
     #[allow(dead_code)]
@@ -39,6 +40,7 @@ pub struct RealHardwareTuningHandler {
 }
 
 impl Default for RealHardwareTuningHandler {
+    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -122,6 +124,7 @@ impl RealHardwareTuningHandler {
         clippy::needless_pass_by_value,
         clippy::useless_conversion
     )]
+    /// Allocate System Resources
     fn allocate_system_resources(
         &self,
         request: ComputeResourceRequest,
@@ -163,6 +166,7 @@ impl RealHardwareTuningHandler {
         clippy::manual_map,
         clippy::to_string_in_format_args
     )]
+    /// Analyze System Profile
     fn analyze_system_profile(&self) -> Result<SystemProfile> {
         let mut sys = System::new_all();
         sys.refresh_all();
