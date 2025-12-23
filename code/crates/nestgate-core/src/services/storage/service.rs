@@ -98,7 +98,10 @@ impl StorageManagerService {
                     Some(Arc::new(service))
                 }
                 Err(e) => {
-                    warn!("⚠️  Failed to initialize adaptive storage: {}, falling back to legacy", e);
+                    warn!(
+                        "⚠️  Failed to initialize adaptive storage: {}, falling back to legacy",
+                        e
+                    );
                     None
                 }
             }
@@ -443,13 +446,13 @@ impl StorageManagerService {
     ///
     /// Returns an error if storage fails
     #[cfg(feature = "adaptive-storage")]
-    pub async fn store_adaptive(&self, data: bytes::Bytes) -> Result<super::service_integration::StoreDataResponse> {
+    pub async fn store_adaptive(
+        &self,
+        data: bytes::Bytes,
+    ) -> Result<super::service_integration::StoreDataResponse> {
         if let Some(adaptive) = &self.adaptive_storage {
             adaptive.store_data(data).await.map_err(|e| {
-                NestGateError::storage_operation(
-                    format!("Adaptive storage failed: {}", e),
-                    false,
-                )
+                NestGateError::storage_operation(format!("Adaptive storage failed: {}", e), false)
             })
         } else {
             Err(NestGateError::feature_not_enabled(
@@ -468,10 +471,7 @@ impl StorageManagerService {
     pub async fn retrieve_adaptive(&self, hash: &[u8; 32]) -> Result<bytes::Bytes> {
         if let Some(adaptive) = &self.adaptive_storage {
             adaptive.retrieve_data(hash).await.map_err(|e| {
-                NestGateError::storage_operation(
-                    format!("Adaptive retrieval failed: {}", e),
-                    false,
-                )
+                NestGateError::storage_operation(format!("Adaptive retrieval failed: {}", e), false)
             })
         } else {
             Err(NestGateError::feature_not_enabled(
@@ -487,7 +487,9 @@ impl StorageManagerService {
     ///
     /// Returns an error if metrics retrieval fails
     #[cfg(feature = "adaptive-storage")]
-    pub async fn get_adaptive_metrics(&self) -> Result<super::service_integration::MetricsResponse> {
+    pub async fn get_adaptive_metrics(
+        &self,
+    ) -> Result<super::service_integration::MetricsResponse> {
         if let Some(adaptive) = &self.adaptive_storage {
             Ok(adaptive.get_metrics().await)
         } else {
@@ -504,13 +506,13 @@ impl StorageManagerService {
     ///
     /// Returns an error if analysis fails
     #[cfg(feature = "adaptive-storage")]
-    pub async fn analyze_data(&self, data: &[u8]) -> Result<super::service_integration::AnalysisResponse> {
+    pub async fn analyze_data(
+        &self,
+        data: &[u8],
+    ) -> Result<super::service_integration::AnalysisResponse> {
         if let Some(adaptive) = &self.adaptive_storage {
             adaptive.analyze_data(data).await.map_err(|e| {
-                NestGateError::storage_operation(
-                    format!("Data analysis failed: {}", e),
-                    false,
-                )
+                NestGateError::storage_operation(format!("Data analysis failed: {}", e), false)
             })
         } else {
             Err(NestGateError::feature_not_enabled(

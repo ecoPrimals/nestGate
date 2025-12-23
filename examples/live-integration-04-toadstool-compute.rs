@@ -16,7 +16,7 @@ async fn main() -> anyhow::Result<()> {
 
     // Simulate storage check (in real implementation, this would check actual storage)
     let storage_available = true;
-    
+
     if storage_available {
         println!("   ✅ NestGate storage available");
         println!("   Storage capabilities:");
@@ -37,7 +37,7 @@ async fn main() -> anyhow::Result<()> {
     println!();
 
     let toadstool_endpoint = "http://localhost:8081";
-    
+
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(2))
         .build()?;
@@ -55,17 +55,17 @@ async fn main() -> anyhow::Result<()> {
             println!();
             println!("📝 Step 3: Demonstrating integration pattern (conceptual)...");
             println!();
-            
+
             // Show the integration pattern even without live ToadStool
             demonstrate_integration_pattern();
-            
+
             println!();
             println!("✅ SUCCESS: Integration pattern demonstrated!");
             println!("   - NestGate storage ready");
             println!("   - ToadStool integration pattern clear");
             println!("   - Compute + Storage workflow understood");
             println!();
-            
+
             return Ok(());
         }
     }
@@ -111,7 +111,7 @@ async fn main() -> anyhow::Result<()> {
 fn demonstrate_integration_pattern() {
     println!("   Compute + Storage Workflow:");
     println!();
-    
+
     println!("   📥 Phase 1: Data Input");
     println!("      1. ToadStool receives compute task");
     println!("      2. Discovers NestGate storage service");
@@ -152,4 +152,3 @@ fn demonstrate_integration_pattern() {
     println!("      • All → Squirrel: Cache hot data");
     println!("      • Songbird orchestrates: Complete workflow");
 }
-

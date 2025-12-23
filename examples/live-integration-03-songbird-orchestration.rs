@@ -15,7 +15,7 @@ async fn main() -> anyhow::Result<()> {
     println!();
 
     let songbird_endpoint = "http://localhost:8080";
-    
+
     // Try to connect to Songbird
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(2))
@@ -58,7 +58,7 @@ async fn main() -> anyhow::Result<()> {
 
     // Step 2: Check Songbird capabilities
     println!("🎼 Step 2: Checking Songbird capabilities...");
-    
+
     // Try common capability endpoints
     let capability_endpoints = vec![
         "/api/capabilities",
@@ -133,4 +133,3 @@ async fn main() -> anyhow::Result<()> {
 
     Ok(())
 }
-

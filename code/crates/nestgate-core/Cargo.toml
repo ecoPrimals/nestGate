@@ -96,6 +96,7 @@ zero-cost-optimizations = []
 advanced-monitoring = []
 security-scanning = []
 experimental-features = []
+adaptive-storage = [] # Adaptive storage with entropy analysis and smart compression
 # **MOCK SEPARATION** - Test-only features
 mock-services = []
 test-doubles = []
