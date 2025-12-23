@@ -150,7 +150,7 @@ mod service_discovery_patterns {
             fn register(&mut self, capability: &str, service: &str) {
                 self.services
                     .entry(capability.to_string())
-                    .or_insert_with(Vec::new)
+                    .or_default()
                     .push(service.to_string());
             }
 

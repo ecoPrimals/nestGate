@@ -85,7 +85,7 @@ impl PrimalId {
     /// Generates a unique ID from:
     /// - Hostname from environment
     /// - Process ID
-    /// - Current timestamp
+    /// - Current timestamp (nanosecond precision)
     ///
     /// This ensures unique IDs for each primal instance.
     pub fn from_environment() -> Result<Self> {
@@ -94,10 +94,13 @@ impl PrimalId {
             .unwrap_or_else(|_| "unknown".to_string());
 
         let pid = std::process::id();
+
+        // ✅ CONCURRENT FIX: Use nanosecond precision for truly unique IDs
+        // Milliseconds were insufficient for rapid successive calls
         let timestamp = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .map_err(|e| NestGateError::internal(format!("System time error: {e}")))?
-            .as_millis();
+            .as_nanos();
 
         Ok(Self(format!("{}-{}-{}", hostname, pid, timestamp)))
     }

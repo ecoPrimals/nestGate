@@ -31,9 +31,8 @@ impl SovereigntyRuntimeConfig {
     pub fn new() -> Self {
         use crate::config::environment::EnvironmentConfig;
 
-        // Load environment configuration with proper fallbacks
-        let env_config =
-            EnvironmentConfig::from_env().unwrap_or_else(|_| EnvironmentConfig::default());
+        // Load environment configuration with proper fallbacks - Modern idiomatic pattern
+        let env_config = EnvironmentConfig::from_env().unwrap_or_default();
 
         Self {
             api_endpoint: None,
@@ -55,9 +54,9 @@ impl SovereigntyRuntimeConfig {
         let api_port = env::var("NESTGATE_API_PORT")
             .ok()
             .and_then(|p| p.parse().ok())
-            .unwrap_or(8080); // Safe: always provides default port
+            .unwrap_or(8080); // Idiomatic: always provides safe default
         let bind_address = env::var("NESTGATE_BIND_ADDRESS")
-            .unwrap_or_else(|_| crate::constants::LOCALHOST.to_string()); // Safe: always provides default
+            .unwrap_or_else(|_| crate::constants::LOCALHOST.to_string()); // Idiomatic: computed default
         let ws_endpoint = env::var("NESTGATE_WS_ENDPOINT").ok();
         let discovery_endpoint = env::var("NESTGATE_DISCOVERY_ENDPOINT").ok();
         let orchestration_endpoint = env::var("NESTGATE_ORCHESTRATION_ENDPOINT").ok();

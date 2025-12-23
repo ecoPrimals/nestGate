@@ -89,6 +89,20 @@ pub type CapabilityResult<T> = Result<T, CapabilityError>;
 /// Can be removed once all references are updated (estimated: Phase 2 completion).
 pub type DiscoveryManager = CapabilityRegistry;
 
+/// Alias for test compatibility during infrastructure fix phase
+///
+/// **TEMPORARY**: This alias enables existing integration tests to compile while
+/// we systematically update them to use the new API structure.
+///
+/// **Migration Path**:
+/// - Phase 1: Add alias (enables compilation)
+/// - Phase 2: Update tests incrementally
+/// - Phase 3: Remove alias once all tests updated
+///
+/// **Old pattern**: `CapabilityDiscovery::new()`
+/// **New pattern**: `CapabilityRegistry::new()`
+pub type CapabilityDiscovery = CapabilityRegistry;
+
 /// Errors that can occur during capability operations
 #[derive(Debug, thiserror::Error)]
 pub enum CapabilityError {

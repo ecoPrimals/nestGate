@@ -6,8 +6,6 @@
 #[cfg(test)]
 mod discovery_error_scenarios {
     use crate::universal_primal_discovery::capability_based_discovery::*;
-    use crate::Result;
-    use std::time::Duration;
 
     #[test]
     fn test_primal_id_creation() {
@@ -79,7 +77,6 @@ mod discovery_error_scenarios {
 
 #[cfg(test)]
 mod discovery_timeout_scenarios {
-    use super::*;
     use std::time::Duration;
 
     #[tokio::test]
@@ -246,13 +243,13 @@ mod discovery_capability_combinations {
 
     #[test]
     fn test_single_capability() {
-        let capabilities = vec![PrimalCapability::ZfsStorage];
+        let capabilities = [PrimalCapability::ZfsStorage];
         assert_eq!(capabilities.len(), 1);
     }
 
     #[test]
     fn test_multiple_capabilities() {
-        let capabilities = vec![
+        let capabilities = [
             PrimalCapability::ZfsStorage,
             PrimalCapability::ApiGateway,
             PrimalCapability::Authentication,
@@ -262,7 +259,8 @@ mod discovery_capability_combinations {
 
     #[test]
     fn test_duplicate_capabilities() {
-        let capabilities = vec![
+        // Test that we can handle duplicate capabilities (e.g., for deduplication logic)
+        let capabilities = [
             PrimalCapability::ZfsStorage,
             PrimalCapability::ZfsStorage, // Duplicate
         ];

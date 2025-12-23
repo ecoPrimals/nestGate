@@ -5,7 +5,6 @@
 
 #[cfg(test)]
 mod strategic_error_tests {
-    use super::*;
     use std::time::Duration;
 
     // ==================== NETWORK ERROR PATHS ====================
@@ -85,6 +84,7 @@ mod strategic_error_tests {
 
         #[derive(Deserialize)]
         struct Config {
+            #[allow(dead_code)]
             required_field: String,
         }
 
@@ -100,6 +100,7 @@ mod strategic_error_tests {
 
         #[derive(Deserialize)]
         struct Config {
+            #[allow(dead_code)]
             port: u16,
         }
 

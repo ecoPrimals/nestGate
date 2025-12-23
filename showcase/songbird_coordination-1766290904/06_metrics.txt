@@ -1,0 +1,4 @@
+  Total Capacity: 1500GB
+  Used: 650GB
+  Available: 850GB
+  Compression: 1.8x

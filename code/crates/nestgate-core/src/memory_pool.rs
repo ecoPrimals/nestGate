@@ -692,7 +692,8 @@ mod tests {
         let _buf2 = pool.get();
 
         let stats = pool.statistics();
-        assert!(stats.hit_ratio() >= 0.0 && stats.hit_ratio() <= 1.0);
+        // ✅ MODERN: Use epsilon for hit ratio range check
+        assert!(stats.hit_ratio() >= -1e-9 && stats.hit_ratio() <= 1.0 + 1e-9);
         assert!(stats.avg_acquisition_time().as_nanos() > 0);
         assert!(!stats.performance_assessment().is_empty());
     }

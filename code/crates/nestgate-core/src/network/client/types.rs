@@ -52,7 +52,7 @@ impl Port {
 /// Type-safe timeout duration
 ///
 /// Wrapper around milliseconds to prevent mixing up time units.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct TimeoutMs(u64);
 
 impl TimeoutMs {
@@ -64,6 +64,16 @@ impl TimeoutMs {
     /// Convert to Duration
     pub fn as_duration(self) -> Duration {
         Duration::from_millis(self.0)
+    }
+
+    /// Get milliseconds value
+    pub fn as_millis(self) -> u64 {
+        self.0
+    }
+
+    /// Get inner value (alias for as_millis)
+    pub fn get(self) -> u64 {
+        self.0
     }
 }
 
@@ -339,7 +349,10 @@ mod tests {
     fn test_port_validation() {
         assert!(Port::new(0).is_err());
         assert!(Port::new(8080).is_ok());
-        assert_eq!(Port::new(443).unwrap().get(), 443);
+
+        // ✅ EVOLVED: Proper error handling instead of unwrap
+        let port = Port::new(443).expect("Port 443 should be valid");
+        assert_eq!(port.get(), 443);
     }
 
     #[test]
@@ -360,12 +373,15 @@ mod tests {
 
     #[test]
     fn test_endpoint_from_url() {
-        let ep = Endpoint::from_url("http://localhost:8080").unwrap();
+        // ✅ EVOLVED: Test unwraps with clear failure context
+        let ep = Endpoint::from_url("http://localhost:8080")
+            .expect("Valid HTTP URL should parse successfully");
         assert_eq!(ep.host, "localhost");
         assert_eq!(ep.port.get(), 8080);
         assert_eq!(ep.scheme, Scheme::Http);
 
-        let ep = Endpoint::from_url("https://api.example.com:443/path").unwrap();
+        let ep = Endpoint::from_url("https://api.example.com:443/path")
+            .expect("Valid HTTPS URL with path should parse successfully");
         assert_eq!(ep.host, "api.example.com");
         assert_eq!(ep.port.get(), 443);
         assert_eq!(ep.scheme, Scheme::Https);
@@ -373,7 +389,9 @@ mod tests {
 
     #[test]
     fn test_endpoint_url_generation() {
-        let ep = Endpoint::http("localhost".to_string(), Port::new(8080).unwrap());
+        // ✅ EVOLVED: Test setup with clear context
+        let port = Port::new(8080).expect("Port 8080 is valid for test setup");
+        let ep = Endpoint::http("localhost".to_string(), port);
         assert_eq!(ep.url("/api/test"), "http://localhost:8080/api/test");
         assert_eq!(ep.base_url(), "http://localhost:8080");
     }

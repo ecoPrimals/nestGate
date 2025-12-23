@@ -2,9 +2,9 @@
 //!
 //! These tests target ZFS pool and dataset management edge cases
 
-use crate::error::ZfsError;
-use crate::manager::*;
-use crate::types::*;
+use nestgate_zfs::error::ZfsError;
+use nestgate_zfs::manager::*;
+use nestgate_zfs::types::*;
 
 #[cfg(test)]
 mod pool_management_tests {
@@ -20,7 +20,10 @@ mod pool_management_tests {
     async fn test_pool_creation_below_min_capacity() {
         let result = create_pool_with_capacity("testpool", 32 * 1024 * 1024); // 32MB too small
         assert!(result.is_err());
-        assert!(matches!(result.unwrap_err(), ZfsError::CapacityTooSmall));
+        assert!(matches!(
+            result.unwrap_err(),
+            ZfsError::CapacityTooSmall { .. }
+        ));
     }
 
     #[tokio::test]
@@ -213,7 +216,9 @@ mod performance_optimization_tests {
 // Helper functions and types
 fn create_pool_with_capacity(_name: &str, _capacity: u64) -> std::result::Result<(), ZfsError> {
     if _capacity < 64 * 1024 * 1024 {
-        return Err(ZfsError::CapacityTooSmall);
+        return Err(ZfsError::CapacityTooSmall {
+            message: "Capacity too small".to_string(),
+        });
     }
     Ok(())
 }
@@ -221,7 +226,9 @@ fn create_pool_with_capacity(_name: &str, _capacity: u64) -> std::result::Result
 fn validate_pool_capacity(_capacity: u64) -> std::result::Result<(), ZfsError> {
     if _capacity > 1024 * 1024 * 1024 * 1024 * 1024 {
         // 1PB limit
-        return Err(ZfsError::CapacityExceeded);
+        return Err(ZfsError::CapacityExceeded {
+            message: "Capacity exceeded".to_string(),
+        });
     }
     Ok(())
 }
@@ -251,7 +258,7 @@ fn calculate_fragmentation(_total: u64, _free: u64) -> f64 {
 
 fn create_dataset(_path: &str) -> std::result::Result<(), ZfsError> {
     if _path.contains("//") {
-        return Err(ZfsError::InvalidPath);
+        return Err(ZfsError::invalid_path("Invalid path contains //"));
     }
     Ok(())
 }
@@ -270,7 +277,9 @@ fn set_dataset_property(
     _value: &str,
 ) -> std::result::Result<(), ZfsError> {
     if _property == "compression" && _value == "invalid" {
-        return Err(ZfsError::InvalidProperty);
+        return Err(ZfsError::InvalidProperty {
+            message: "Invalid compression value".to_string(),
+        });
     }
     Ok(())
 }
@@ -279,7 +288,9 @@ fn validate_dataset_rename(_old: &str, _new: &str) -> std::result::Result<(), Zf
     let old_pool = _old.split('/').next().unwrap_or("");
     let new_pool = _new.split('/').next().unwrap_or("");
     if old_pool != new_pool {
-        return Err(ZfsError::CrossPoolRename);
+        return Err(ZfsError::CrossPoolRename {
+            message: format!("Cannot rename across pools: {} -> {}", old_pool, new_pool),
+        });
     }
     Ok(())
 }

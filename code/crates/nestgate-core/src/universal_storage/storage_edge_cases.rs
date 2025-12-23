@@ -34,7 +34,7 @@ mod storage_path_edge_cases {
     fn test_path_components() {
         let path = PathBuf::from("/home/user/documents/file.txt");
         let components: Vec<_> = path.components().collect();
-        assert!(components.len() > 0);
+        assert!(!components.is_empty());
     }
 
     #[test]
@@ -80,7 +80,7 @@ mod storage_path_edge_cases {
     fn test_path_canonicalization_attempt() {
         // Test that we can create paths for canonicalization
         let path = PathBuf::from("./test/../file.txt");
-        assert!(path.as_os_str().len() > 0);
+        assert!(!path.as_os_str().is_empty());
     }
 }
 
@@ -96,7 +96,7 @@ mod storage_operation_edge_cases {
 
     #[test]
     fn test_small_buffer() {
-        let data = vec![0u8; 10];
+        let data = [0u8; 10];
         assert_eq!(data.len(), 10);
         assert!(!data.is_empty());
     }
@@ -132,14 +132,14 @@ mod storage_operation_edge_cases {
 
     #[test]
     fn test_buffer_slicing() {
-        let data = vec![1, 2, 3, 4, 5];
+        let data = [1, 2, 3, 4, 5];
         let slice = &data[1..4];
         assert_eq!(slice, &[2, 3, 4]);
     }
 
     #[test]
     fn test_buffer_iteration() {
-        let data = vec![1, 2, 3, 4, 5];
+        let data = [1, 2, 3, 4, 5];
         let sum: u8 = data.iter().sum();
         assert_eq!(sum, 15);
     }

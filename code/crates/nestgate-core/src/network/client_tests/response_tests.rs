@@ -30,21 +30,21 @@ fn test_response_is_not_success_404() {
     assert!(!response.is_success());
 }
 
-#[tokio::test]
-async fn test_response_text() {
+#[test]
+fn test_response_text() {
     let response = Response {
         status: StatusCode::OK,
         headers: HashMap::new(),
         body: b"test response".to_vec(),
     };
 
-    let text = response.text().await;
+    let text = response.text();
     assert!(text.is_ok());
     assert_eq!(text.expect("Network operation failed"), "test response");
 }
 
-#[tokio::test]
-async fn test_response_json() {
+#[test]
+fn test_response_json() {
     #[derive(Deserialize, Debug, PartialEq)]
     struct TestData {
         name: String,
@@ -58,7 +58,7 @@ async fn test_response_json() {
         body: json_str.as_bytes().to_vec(),
     };
 
-    let result: crate::Result<TestData> = response.json().await;
+    let result = response.json::<TestData>();
     assert!(result.is_ok());
 
     let data = result.expect("Network operation failed");
@@ -67,8 +67,8 @@ async fn test_response_json() {
 }
 
 // ==================== RESPONSE ADVANCED TESTS ====================
-#[tokio::test]
-async fn test_response_with_headers() {
+#[test]
+fn test_response_with_headers() {
     let mut headers = HashMap::new();
     headers.insert("content-type".to_string(), "application/json".to_string());
     headers.insert("x-request-id".to_string(), "123-456".to_string());
@@ -83,8 +83,8 @@ async fn test_response_with_headers() {
     assert_eq!(response.headers.len(), 2);
 }
 
-#[tokio::test]
-async fn test_response_large_body() {
+#[test]
+fn test_response_large_body() {
     let large_body = vec![0u8; 1024 * 1024]; // 1MB
 
     let response = Response {

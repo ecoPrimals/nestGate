@@ -38,10 +38,13 @@ impl MonitorManager {
         }
         
         // Simulate monitoring
+        // ✅ MODERN CONCURRENT: Use interval timer for proper async coordination
+        let mut interval_timer = tokio::time::interval(std::time::Duration::from_secs(interval));
+        
         for i in 1..=5 {
+            interval_timer.tick().await; // Wait for next interval
             println!("📈 Metrics #{}: CPU: {}%, Memory: {}MB, Storage: {}GB", 
                 i, 15 + i * 2, 45 + i * 3, 234 + i);
-            tokio::time::sleep(std::time::Duration::from_secs(interval)).await;
         }
         
         println!("✅ Monitoring completed");

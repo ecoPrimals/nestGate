@@ -78,12 +78,12 @@ mod primal_id_edge_cases {
 mod service_endpoint_edge_cases {
     #[test]
     fn test_endpoint_invalid_port() {
-        let ports = vec![0u16, u16::MAX];
+        // Test boundary conditions for port values
+        let ports = [0u16, u16::MAX];
         let invalid_port: u32 = 70000; // Out of u16 range
 
-        for port in ports {
-            assert!(port <= u16::MAX);
-        }
+        // u16 ports are always within valid range by type definition
+        assert!(ports.len() == 2); // Verify test data
         assert!(invalid_port > u16::MAX as u32);
     }
 
@@ -141,7 +141,7 @@ mod capability_discovery_edge_cases {
 
     #[test]
     fn test_capability_duplicate() {
-        let capabilities = vec!["zfs", "zfs", "api"];
+        let capabilities = ["zfs", "zfs", "api"];
         let unique: std::collections::HashSet<_> = capabilities.iter().collect();
         assert!(unique.len() < capabilities.len());
     }

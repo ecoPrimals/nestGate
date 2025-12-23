@@ -68,18 +68,18 @@ impl NetworkConfig {
             )?,
             database: EndpointConfig::from_env(
                 "NESTGATE_DB",
-                crate::constants::hardcoding::addresses::LOCALHOST_NAME,
-                crate::constants::hardcoding::ports::POSTGRES_DEFAULT,
+                "localhost", // Safe default: localhost-only access
+                5432,        // PostgreSQL standard port
             )?,
             redis: EndpointConfig::from_env(
                 "NESTGATE_REDIS",
-                crate::constants::hardcoding::addresses::LOCALHOST_NAME,
-                crate::constants::hardcoding::ports::REDIS_DEFAULT,
+                "localhost", // Safe default: localhost-only access
+                6379,        // Redis standard port
             )?,
             metrics: EndpointConfig::from_env(
                 "NESTGATE_METRICS",
-                crate::constants::hardcoding::addresses::BIND_ALL_IPV4,
-                crate::constants::hardcoding::ports::METRICS_DEFAULT,
+                "0.0.0.0", // Safe default: bind all interfaces for monitoring
+                9090,      // Prometheus standard port
             )?,
             discovery: EndpointConfig::from_env(
                 "NESTGATE_DISCOVERY",
@@ -95,20 +95,20 @@ impl NetworkConfig {
         let discovery_config = crate::config::discovery_config::ServiceDiscoveryConfig::default();
         Self {
             api: EndpointConfig {
-                host: "0.0.0.0".to_string(),
+                host: "0.0.0.0".to_string(), // Safe dev default: bind all interfaces
                 port: discovery_config.discovery_base_port,
             },
             database: EndpointConfig {
-                host: crate::constants::hardcoding::addresses::LOCALHOST_NAME.to_string(),
-                port: crate::constants::hardcoding::ports::POSTGRES_DEFAULT,
+                host: "localhost".to_string(), // Safe dev default: localhost-only
+                port: 5432,                    // PostgreSQL standard port
             },
             redis: EndpointConfig {
-                host: crate::constants::hardcoding::addresses::LOCALHOST_NAME.to_string(),
-                port: crate::constants::hardcoding::ports::REDIS_DEFAULT,
+                host: "localhost".to_string(), // Safe dev default: localhost-only
+                port: 6379,                    // Redis standard port
             },
             metrics: EndpointConfig {
-                host: crate::constants::hardcoding::addresses::BIND_ALL_IPV4.to_string(),
-                port: crate::constants::hardcoding::ports::METRICS_DEFAULT,
+                host: "0.0.0.0".to_string(), // Safe dev default: bind all for monitoring
+                port: 9090,                  // Prometheus standard port
             },
             discovery: EndpointConfig {
                 host: discovery_config.discovery_host.clone(),

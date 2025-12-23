@@ -9,7 +9,7 @@ use super::super::client::*;
 #[tokio::test]
 async fn test_connection_pool_respects_max_connections() {
     let mut config = ClientConfig::<30000>::default();
-    config.max_connections = 2; // Very low limit for testing
+    config.max_connections_per_host = 2; // Very low limit for testing
     let pool = ConnectionPool::new(config);
 
     let port = Port::new(8080).expect("Network operation failed");

@@ -128,3 +128,6 @@ mod secrets_tests;
 
 #[cfg(test)]
 mod templates_tests;
+
+#[cfg(test)]
+mod error_path_tests_comprehensive;

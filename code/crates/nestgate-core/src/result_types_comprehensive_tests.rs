@@ -318,7 +318,7 @@ mod result_types_tests {
     #[test]
     fn test_result_or_else() {
         let result: Result<i32> = Err(NestGateError::validation("error"));
-        let recovered: Result<i32> = result.or_else(|_| Ok(100));
+        let recovered: Result<i32> = result.or(Ok(100));
         assert!(recovered.is_ok());
         assert_eq!(recovered.unwrap(), 100);
     }
@@ -333,7 +333,7 @@ mod result_types_tests {
     #[test]
     fn test_result_unwrap_or_else() {
         let result: Result<i32> = Err(NestGateError::validation("error"));
-        let value = result.unwrap_or_else(|_| 888);
+        let value = result.unwrap_or(888);
         assert_eq!(value, 888);
     }
 
@@ -385,7 +385,7 @@ mod result_types_tests {
 
     #[test]
     fn test_io_error_conversion() {
-        let io_err = io::Error::new(io::ErrorKind::Other, "test error");
+        let io_err = io::Error::other("test error");
         let result: Result<()> = Err(io_err.into());
         assert!(result.is_err());
     }
@@ -401,7 +401,7 @@ mod result_types_tests {
     fn test_nested_error_handling() {
         /// Inner Operation
         fn inner_operation() -> std::result::Result<i32, io::Error> {
-            Err(io::Error::new(io::ErrorKind::Other, "inner error"))
+            Err(io::Error::other("inner error"))
         }
 
         /// Outer Operation

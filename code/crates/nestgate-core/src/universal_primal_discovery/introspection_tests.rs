@@ -183,12 +183,12 @@ fn test_hardware_profile_score_ranges() {
         recommended_limits: HashMap::new(),
     };
 
-    // Verify all scores are within valid range [0.0, 1.0]
-    assert!(profile.cpu_score >= 0.0 && profile.cpu_score <= 1.0);
-    assert!(profile.memory_score >= 0.0 && profile.memory_score <= 1.0);
-    assert!(profile.storage_score >= 0.0 && profile.storage_score <= 1.0);
-    assert!(profile.network_score >= 0.0 && profile.network_score <= 1.0);
-    assert!(profile.overall_score >= 0.0 && profile.overall_score <= 1.0);
+    // ✅ MODERN: Verify all scores are within valid range [0.0, 1.0] using epsilon
+    assert!(profile.cpu_score >= -1e-9 && profile.cpu_score <= 1.0 + 1e-9);
+    assert!(profile.memory_score >= -1e-9 && profile.memory_score <= 1.0 + 1e-9);
+    assert!(profile.storage_score >= -1e-9 && profile.storage_score <= 1.0 + 1e-9);
+    assert!(profile.network_score >= -1e-9 && profile.network_score <= 1.0 + 1e-9);
+    assert!(profile.overall_score >= -1e-9 && profile.overall_score <= 1.0 + 1e-9);
 }
 
 #[test]
@@ -298,7 +298,8 @@ async fn test_detect_system_capabilities() {
     if let Ok(capabilities) = result {
         assert!(capabilities.cpu_cores > 0);
         assert!(capabilities.logical_cores >= capabilities.cpu_cores);
-        assert!(capabilities.memory_gb > 0.0);
+        // ✅ MODERN: Use epsilon for float comparison
+        assert!(capabilities.memory_gb > 1e-9);
         assert!(!capabilities.os_type.is_empty());
     }
 }
@@ -319,12 +320,12 @@ async fn test_hardware_profile_structure() {
         recommended_limits,
     };
 
-    // Verify all scores are in valid range
-    assert!(profile.cpu_score >= 0.0 && profile.cpu_score <= 1.0);
-    assert!(profile.memory_score >= 0.0 && profile.memory_score <= 1.0);
-    assert!(profile.storage_score >= 0.0 && profile.storage_score <= 1.0);
-    assert!(profile.network_score >= 0.0 && profile.network_score <= 1.0);
-    assert!(profile.overall_score >= 0.0 && profile.overall_score <= 1.0);
+    // ✅ MODERN: Verify all scores are in valid range using epsilon
+    assert!(profile.cpu_score >= -1e-9 && profile.cpu_score <= 1.0 + 1e-9);
+    assert!(profile.memory_score >= -1e-9 && profile.memory_score <= 1.0 + 1e-9);
+    assert!(profile.storage_score >= -1e-9 && profile.storage_score <= 1.0 + 1e-9);
+    assert!(profile.network_score >= -1e-9 && profile.network_score <= 1.0 + 1e-9);
+    assert!(profile.overall_score >= -1e-9 && profile.overall_score <= 1.0 + 1e-9);
 }
 
 // ==================== REPEATED DISCOVERY TESTS ====================

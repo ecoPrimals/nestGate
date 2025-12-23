@@ -10,6 +10,7 @@ use super::TestDoubleConfig;
 
 /// Hardware test double for testing hardware detection and operations
 pub struct HardwareTestDouble {
+    #[allow(dead_code)] // Test fixture field
     config: TestDoubleConfig,
     detected_hardware: Arc<Mutex<HashMap<String, HardwareInfo>>>,
     operations: Arc<Mutex<Vec<String>>>,
@@ -17,6 +18,7 @@ pub struct HardwareTestDouble {
 }
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)] // Test fixture
 struct HardwareInfo {
     device_type: String,
     status: HardwareStatus,
@@ -24,6 +26,7 @@ struct HardwareInfo {
 }
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)] // Test fixture
 enum HardwareStatus {
     Available,
     Unavailable,

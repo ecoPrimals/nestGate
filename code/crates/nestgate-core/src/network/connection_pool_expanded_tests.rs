@@ -14,7 +14,7 @@ use tokio::sync::RwLock;
 #[test]
 fn test_pool_config_default() {
     let config = ConnectionPoolConfig::default();
-    assert!(config.max_connections > 0);
+    assert!(config.max_connections_per_host > 0);
     // min_idle_connections is u32, always >= 0
     assert!(config.connection_timeout_ms > 0);
 }
@@ -29,7 +29,7 @@ fn test_pool_config_custom_values() {
         max_lifetime_ms: 600000,
     };
 
-    assert_eq!(config.max_connections, 100);
+    assert_eq!(config.max_connections_per_host, 100);
     assert_eq!(config.min_idle_connections, 10);
     assert_eq!(config.connection_timeout_ms, 5000);
 }
@@ -44,7 +44,7 @@ fn test_pool_config_validation() {
         max_lifetime_ms: 60000,
     };
 
-    assert!(config.min_idle_connections <= config.max_connections);
+    assert!(config.min_idle_connections <= config.max_connections_per_host);
     assert!(config.connection_timeout_ms < config.idle_timeout_ms);
 }
 
@@ -71,7 +71,7 @@ fn test_pool_config_large_values() {
         max_lifetime_ms: 3600000,
     };
 
-    assert_eq!(config.max_connections, 10000);
+    assert_eq!(config.max_connections_per_host, 10000);
 }
 
 // ==================== CONNECTION POOL LIFECYCLE TESTS ====================
@@ -268,7 +268,7 @@ fn test_pool_config_min_equals_max() {
         max_lifetime_ms: 60000,
     };
 
-    assert_eq!(config.min_idle_connections, config.max_connections);
+    assert_eq!(config.min_idle_connections, config.max_connections_per_host);
 }
 
 #[test]

@@ -41,7 +41,7 @@ fn test_endpoint_url_http() {
         ports::HTTP_DEFAULT
     );
 
-    assert_eq!(endpoint.url(), expected_url);
+    assert_eq!(endpoint.base_url(), expected_url);
 }
 
 #[test]
@@ -49,7 +49,7 @@ fn test_endpoint_url_https() {
     let port = Port::new(443).expect("Network operation failed");
     let endpoint = Endpoint::https("example.com".to_string(), port);
 
-    assert_eq!(endpoint.url(), "https://example.com:443");
+    assert_eq!(endpoint.base_url(), "https://example.com:443");
 }
 
 #[test]
@@ -136,13 +136,13 @@ fn test_request_body_bytes() {
 }
 
 #[test]
-fn test_request_body_string() {
-    let data = "test string";
-    let body = RequestBody::String(data);
+fn test_request_body_json() {
+    let data = r#"{"test":"string"}"#;
+    let body = RequestBody::Json(data);
 
     match body {
-        RequestBody::String(s) => assert_eq!(s, data),
-        _ => panic!("Expected String body"),
+        RequestBody::Json(s) => assert_eq!(s, data),
+        _ => panic!("Expected JSON body"),
     }
 }
 
@@ -212,18 +212,18 @@ async fn test_response_json() {
 fn test_client_config_default() {
     let config = ClientConfig::<30000>::default();
 
-    assert_eq!(config.timeout.as_duration(), Duration::from_millis(30000));
-    assert_eq!(config.max_connections, 100);
+    assert_eq!(config.timeout, Duration::from_millis(30000));
+    assert_eq!(config.max_connections_per_host, 100);
     assert_eq!(config.max_connections_per_host, 10);
     assert!(config.enable_compression);
     assert!(config.follow_redirects);
-    assert_eq!(config.max_redirects, 5);
+    assert_eq!(config.max_retries, 5);
 }
 
 #[test]
 fn test_client_config_custom_timeout() {
     let config = ClientConfig::<60000>::default();
-    assert_eq!(config.timeout.as_duration(), Duration::from_millis(60000));
+    assert_eq!(config.timeout, Duration::from_millis(60000));
 }
 
 #[test]
@@ -279,7 +279,7 @@ fn test_port_in_endpoint() {
     let port = Port::new(3000).expect("Network operation failed");
     let endpoint = Endpoint::http("api.example.com".to_string(), port);
 
-    assert_eq!(endpoint.url(), "http://api.example.com:3000");
+    assert_eq!(endpoint.base_url(), "http://api.example.com:3000");
 }
 
 #[test]
@@ -505,9 +505,9 @@ fn test_request_post_json_with_body() {
     assert_eq!(request.path, "/api/v1/login");
     assert!(request.headers.contains_key("content-type"));
 
-    match request.body {
-        RequestBody::String(s) => assert!(s.contains("email")),
-        _ => panic!("Expected String body"),
+    match &request.body {
+        Some(RequestBody::Json(s)) => assert!(s.contains("email")),
+        _ => panic!("Expected JSON body"),
     }
 }
 
@@ -540,7 +540,7 @@ fn test_endpoint_url_construction() {
     let port = Port::new(8443).expect("Network operation failed");
     let endpoint = Endpoint::https("secure.api.com".to_string(), port);
 
-    assert_eq!(endpoint.url(), "https://secure.api.com:8443");
+    assert_eq!(endpoint.base_url(), "https://secure.api.com:8443");
 }
 
 #[test]
@@ -555,7 +555,7 @@ fn test_endpoint_with_various_ports() {
     for (port_num, expected_url) in ports_and_urls {
         let port = Port::new(port_num).expect("Network operation failed");
         let endpoint = Endpoint::http("example.com".to_string(), port);
-        assert_eq!(endpoint.url(), expected_url);
+        assert_eq!(endpoint.base_url(), expected_url);
     }
 }
 

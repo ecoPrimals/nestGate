@@ -1,0 +1,7 @@
+Workflow: Image Classification Training
+
+Phase 1: Data Loading
+  ToadStool: Request training dataset from NestGate
+  Dataset: ml-training-data (250GB, 1M images)
+  Loading strategy: Stream batches (no full copy)
+  ✅ Data stream initialized

@@ -1,0 +1,252 @@
+# data-federation.yaml
+# Songbird Workflow for Data Federation Across NestGate Towers
+#
+# Uses DYNAMIC SERVICE DISCOVERY via Songbird's service registry
+# No hardcoded topology - towers self-register and are discovered at runtime
+#
+# Network Effect:
+#   - NestGate towers register themselves with Songbird on startup
+#   - Workflow queries Songbird's service registry for available nodes
+#   - Towers selected dynamically based on capabilities, not hardcoded names
+#   - Works with any number of nodes (1 to N)
+#   - Automatically adapts to node failures and additions
+
+name: "nestgate-data-federation"
+version: "2.0.0"
+description: "Orchestrate data storage, replication, and sharding across NestGate towers using dynamic discovery"
+
+# Service discovery configuration
+discovery:
+  # Query Songbird's service registry for available NestGate nodes
+  primal_type: "nestgate"
+  
+  # Required capabilities
+  required_capabilities:
+    - "storage"
+  
+  # Optional capabilities (nice to have)
+  preferred_capabilities:
+    - "large-scale"
+    - "replication"
+    - "cold-storage"
+  
+  # Minimum nodes needed for workflow to proceed
+  min_nodes: 1
+  
+  # Preferred number of replicas
+  target_replicas: 2
+  
+  # Selection strategy
+  selection:
+    strategy: "capability-based"  # Select by capabilities, not hardcoded names
+    fallback: "any-available"     # Use any healthy node if preferred not available
+    
+  # Health requirements
+  health_check:
+    required: true
+    max_age_sec: 60  # Use nodes with recent heartbeat
+
+# Tower selection rules (dynamic, not hardcoded)
+tower_selection:
+  # Primary storage: prefer node with "cold-storage" or "large-scale" capability
+  primary:
+    prefer_capabilities: ["cold-storage", "large-scale"]
+    prefer_role: "primary"
+    fallback: "highest-capacity"
+  
+  # Backup storage: prefer node with "replication" or "backup" capability  
+  backup:
+    prefer_capabilities: ["replication", "backup"]
+    prefer_role: "backup"
+    fallback: "any-available"
+  
+  # Additional replicas: use any available storage nodes
+  additional:
+    min_count: 0
+    max_count: 3
+    prefer_different_availability_zones: true
+
+# Workflow stages (using dynamic tower discovery)
+stages:
+  # Stage 0: Discover available storage nodes
+  - name: "discover-towers"
+    description: "Query Songbird service registry for available NestGate storage nodes"
+    action:
+      type: "service-discovery"
+      query:
+        primal: "nestgate"
+        capabilities: ["storage"]
+        min_healthy: 1
+    output: "available_towers"
+  
+  # Stage 1: Store data to primary (dynamically selected)
+  - name: "store-to-primary"
+    description: "Store data/models to primary storage node (selected by capabilities)"
+    tower: "${select_tower(tower_selection.primary)}"  # Dynamic selection
+    action:
+      type: "http"
+      method: "POST"
+      path: "/api/v1/data/store"
+      headers:
+        Content-Type: "application/json"
+      body: "${input.data}"
+    retry:
+      max_attempts: 3
+      backoff_sec: 2
+    on_failure: "abort"
+
+  # Stage 2: Replicate to backup (dynamically selected)
+  - name: "replicate-to-backup"
+    description: "Replicate data to backup storage node (selected by capabilities)"
+    tower: "${select_tower(tower_selection.backup, exclude=[stages.store-to-primary.tower])}"
+    action:
+      type: "http"
+      method: "POST"
+      path: "/api/v1/data/store"
+      headers:
+        Content-Type: "application/json"
+      body: "${stages.store-to-primary.response}"
+    retry:
+      max_attempts: 3
+      backoff_sec: 2
+    on_failure: "continue"  # Primary storage succeeded, backup failure is tolerable
+    condition: "count(available_towers) >= 2"  # Only if multiple nodes available
+
+  # Stage 3: Replicate to additional nodes (dynamic, up to target_replicas)
+  - name: "replicate-to-additional"
+    description: "Replicate to additional nodes for redundancy"
+    action:
+      type: "parallel"
+      for_each: "${select_towers(tower_selection.additional, exclude=[stages.store-to-primary.tower, stages.replicate-to-backup.tower])}"
+      task:
+        tower: "${item}"
+        action:
+          type: "http"
+          method: "POST"
+          path: "/api/v1/data/store"
+          headers:
+            Content-Type: "application/json"
+          body: "${stages.store-to-primary.response}"
+    retry:
+      max_attempts: 1
+      backoff_sec: 1
+    on_failure: "continue"  # Additional replicas are optional
+    condition: "count(available_towers) >= 3"
+
+  # Stage 4: Verify replication across federation
+  - name: "verify-federation"
+    description: "Verify data is accessible across all towers"
+    action:
+      type: "parallel"
+      for_each: "${available_towers}"
+      task:
+        tower: "${item}"
+        action:
+          type: "http"
+          method: "GET"
+          path: "/health"
+    on_failure: "continue"
+
+# Failover strategy (dynamic)
+failover:
+  enabled: true
+  strategy: "capability-based"  # Use capabilities, not priority numbers
+  min_healthy_nodes: 1
+  health_check_interval_sec: 30
+  
+  # Automatic promotion rules
+  promotion:
+    # If primary fails, promote backup to primary
+    promote_backup_to_primary: true
+    # If backup fails, promote additional to backup
+    promote_additional_to_backup: true
+    # Re-discover nodes after promotion
+    rediscover_after_promotion: true
+
+# Data distribution policy (dynamic)
+data_policy:
+  # Primary selected by capabilities, not hardcoded name
+  primary_storage: "${select_tower(tower_selection.primary)}"
+  
+  # Replication factor adapts to available nodes
+  replication_factor:
+    min: 1
+    target: 2
+    max: 5
+  
+  sharding:
+    enabled: true
+    strategy: "consistent-hash"
+    # Backup to any available nodes with replication capability
+    backup_to: "${select_towers(capabilities=['replication'])}"
+  
+  # Model-specific policies
+  model_storage:
+    # Prefer cold storage, fallback to any
+    default_location: "${select_tower(capabilities=['cold-storage'], fallback='any')}"
+    size_threshold_gb: 50
+    auto_replicate: true
+    compression: true
+
+# Monitoring and alerts
+monitoring:
+  metrics:
+    - tower_health
+    - replication_lag
+    - storage_capacity
+    - failover_events
+    - discovery_changes  # Track when nodes join/leave
+  
+  alerts:
+    - name: "tower-down"
+      condition: "tower.healthy == false"
+      severity: "warning"
+      action: "trigger-failover"
+    
+    - name: "primary-down"
+      condition: "stages.store-to-primary.tower.healthy == false"
+      severity: "critical"
+      action: "promote-backup"
+    
+    - name: "replication-failed"
+      condition: "stages.replicate-to-backup.failed"
+      severity: "warning"
+      action: "retry"
+    
+    - name: "no-nodes-available"
+      condition: "count(available_towers) == 0"
+      severity: "critical"
+      action: "abort-workflow"
+
+# Outputs
+outputs:
+  discovered_towers: "${stages.discover-towers.output}"
+  primary_tower: "${stages.store-to-primary.tower}"
+  primary_receipt: "${stages.store-to-primary.response}"
+  backup_tower: "${stages.replicate-to-backup.tower}"
+  backup_receipt: "${stages.replicate-to-backup.response}"
+  additional_receipts: "${stages.replicate-to-additional.responses}"
+  federation_health: "${stages.verify-federation.response}"
+  total_replicas: "${count(stages.replicate-to-additional.responses) + 2}"
+  towers_used: "${unique([stages.store-to-primary.tower, stages.replicate-to-backup.tower] + stages.replicate-to-additional.towers)}"
+
+# Example service registration (what NestGate nodes send to Songbird)
+# This is just documentation - actual registration happens in NestGate code
+example_registration:
+  primal_name: "nestgate"
+  instance_name: "westgate"  # Human-readable name (optional)
+  endpoint:
+    protocol: "http"
+    host: "192.168.1.100"
+    port: 7200
+  capabilities:
+    - "storage"
+    - "cold-storage"
+    - "large-scale"
+  metadata:
+    role: "primary"
+    capacity_gb: 10000
+    available_gb: 5800
+    zfs_pool: "pool0"
+    compression: "zstd"
+  heartbeat_interval_sec: 30

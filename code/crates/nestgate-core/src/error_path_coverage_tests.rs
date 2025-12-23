@@ -127,7 +127,7 @@ mod error_path_coverage {
     fn test_error_debug_display() {
         let error = NestGateError::internal("debug test");
         let debug_str = format!("{:?}", error);
-        assert!(debug_str.len() > 0);
+        assert!(!debug_str.is_empty());
     }
 
     // ==================== ERROR CHAINING TESTS ====================
@@ -163,7 +163,7 @@ mod error_path_coverage {
 
         /// Operation2
         fn operation2() -> Result<i32> {
-            operation1().or_else(|_| Err(NestGateError::storage_error("storage failed")))
+            operation1().map_err(|_| NestGateError::storage_error("storage failed"))
         }
 
         let result = operation2();
@@ -176,7 +176,7 @@ mod error_path_coverage {
     fn test_empty_error_message() {
         let error = NestGateError::internal("");
         let error_str = error.to_string();
-        assert!(error_str.len() > 0); // Should still have error type
+        assert!(!error_str.is_empty()); // Should still have error type
     }
 
     #[test]
@@ -189,7 +189,7 @@ mod error_path_coverage {
     #[test]
     fn test_error_with_special_characters() {
         let error = NestGateError::validation_error("Error: \n\t\r \"quoted\" 'text'");
-        assert!(error.to_string().len() > 0);
+        assert!(!error.to_string().is_empty());
     }
 
     #[test]
@@ -243,14 +243,14 @@ mod error_path_coverage {
     #[test]
     fn test_result_or_else_ok() {
         let result: Result<i32> = Ok(10);
-        let recovered: Result<i32> = result.or_else(|_| Ok(0));
+        let recovered: Result<i32> = result.or(Ok(0));
         assert_eq!(recovered.unwrap(), 10);
     }
 
     #[test]
     fn test_result_or_else_err() {
         let result: Result<i32> = Err(NestGateError::internal("test"));
-        let recovered: Result<i32> = result.or_else(|_| Ok(42));
+        let recovered: Result<i32> = result.or(Ok(42));
         assert_eq!(recovered.unwrap(), 42);
     }
 
@@ -264,7 +264,7 @@ mod error_path_coverage {
     #[test]
     fn test_result_unwrap_or_else() {
         let result: Result<i32> = Err(NestGateError::internal("test"));
-        let value = result.unwrap_or_else(|_| 200);
+        let value = result.unwrap_or(200);
         assert_eq!(value, 200);
     }
 
@@ -317,7 +317,7 @@ mod error_path_coverage {
         let handles: Vec<_> = (0..10)
             .map(|i| {
                 tokio::spawn(async move {
-                    let error = NestGateError::internal(&format!("error {}", i));
+                    let error = NestGateError::internal(format!("error {}", i));
                     assert!(error.to_string().contains(&i.to_string()));
                 })
             })
@@ -406,7 +406,7 @@ mod error_path_coverage {
         ];
 
         for error in errors {
-            assert!(error.to_string().len() > 0);
+            assert!(!error.to_string().is_empty());
         }
     }
 }

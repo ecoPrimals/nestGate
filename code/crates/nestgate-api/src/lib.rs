@@ -83,6 +83,12 @@ pub mod rest;
 /// URL routing configuration and endpoint definitions for the API server.
 pub mod routes;
 
+/// **NESTGATE RPC SERVICE MODULE**
+///
+/// tarpc and JSON-RPC interfaces for inter-primal communication.
+/// Enables high-performance binary RPC (tarpc) and universal HTTP-based RPC (JSON-RPC).
+pub mod nestgate_rpc_service;
+
 /// **DEV STUBS MODULE** (Feature-gated: `dev-stubs`)
 ///
 /// Development stub implementations for testing and local development.

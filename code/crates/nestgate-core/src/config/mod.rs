@@ -45,6 +45,12 @@ pub mod sovereignty;
 /// Thread-safe configuration for sovereignty module (eliminates runtime env::var calls)
 pub mod sovereignty_config;
 
+/// Capability-based service discovery for configuration
+pub mod capability_discovery;
+
+/// Agnostic configuration module (environment-driven, discovery-based)
+pub mod agnostic_config;
+
 /// Centralized runtime configuration system (eliminates 805+ hardcoded values)
 ///
 /// Replaces all hardcoded ports, IPs, endpoints with environment-driven config.
@@ -56,6 +62,9 @@ pub mod validation;
 
 #[cfg(test)]
 mod config_validation_tests; // Nov 23, 2025 - P1 test expansion
+
+#[cfg(test)]
+mod comprehensive_error_path_tests_dec20; // Dec 20, 2025 - Error path coverage expansion
 #[cfg(test)]
 mod edge_case_tests; // Nov 23, 2025 - P1-5 edge case tests
 #[cfg(test)]
@@ -72,6 +81,9 @@ pub mod discovery_config;
 pub mod environment;
 /// Migration bridge for legacy configuration patterns (Week 2 Dec 2025)
 pub mod migration_bridge;
+
+/// Capability-based configuration system (runtime discovery, no hardcoding)
+pub mod capability_based;
 
 // ==================== SECTION ====================
 // All deprecated configuration modules have been removed. Use canonical_primary directly:

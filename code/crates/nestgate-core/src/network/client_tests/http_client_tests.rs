@@ -27,6 +27,6 @@ async fn test_http_client_stats() {
     let stats = client.stats().await;
 
     assert_eq!(stats.active_requests, 0);
-    assert_eq!(stats.total_requests, 0);
-    assert_eq!(stats.failed_requests, 0);
+    assert_eq!(stats.total_connections, 0);
+    assert_eq!(stats.idle_connections, 0);
 }

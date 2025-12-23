@@ -125,7 +125,7 @@ mod error_conversion_edge_cases {
 
         for i in 0..100 {
             error = Err(NestGateError::internal_error(
-                &format!("Error {}", i),
+                format!("Error {}", i),
                 "test_component",
             ));
         }
@@ -276,7 +276,7 @@ mod error_recovery_edge_cases {
             Err(NestGateError::validation_error("initial error"));
 
         let recovered =
-            result.or_else(|_| Err(NestGateError::internal_error("recovery failed", "recovery")));
+            result.map_err(|_| NestGateError::internal_error("recovery failed", "recovery"));
 
         assert!(recovered.is_err());
     }

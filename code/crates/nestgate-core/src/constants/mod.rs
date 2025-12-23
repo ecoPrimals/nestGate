@@ -50,6 +50,7 @@
 pub mod canonical;
 pub mod canonical_defaults; // Canonical constants - single source of truth
                             // magic_numbers_replacement removed - was migration artifact with zero usages
+pub mod capability_port_discovery;
 pub mod network;
 pub mod network_defaults;
 /// Network configuration with environment-driven defaults.

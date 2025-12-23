@@ -45,10 +45,7 @@ pub use types::{
     ZfsResult,
 };
 
-// Internal re-exports for module access
-pub(crate) use dataset_ops::*;
-pub(crate) use pool_ops::*;
-pub(crate) use snapshot_ops::*;
+// Internal re-exports for module access (used by integration within dev_stubs)
 
 // Public trait exports for use with ProductionZfsManager
 pub use dataset_ops::DatasetOperations;

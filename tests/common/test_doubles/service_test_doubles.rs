@@ -10,12 +10,14 @@ use super::TestDoubleConfig;
 
 /// Service test double for testing service operations
 pub struct ServiceTestDouble {
+    #[allow(dead_code)] // Test fixture field
     config: TestDoubleConfig,
     registered_services: Arc<Mutex<HashMap<String, TestService>>>,
     operations: Arc<Mutex<Vec<String>>>,
 }
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)] // Test fixture
 struct TestService {
     name: String,
     status: ServiceStatus,
@@ -23,6 +25,7 @@ struct TestService {
 }
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)] // Test fixture
 enum ServiceStatus {
     Running,
     Stopped,

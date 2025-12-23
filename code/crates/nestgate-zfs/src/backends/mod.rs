@@ -29,6 +29,13 @@ pub mod azure;
 pub mod gcs;
 pub mod s3;
 
+/// AWS Signature V4 authentication (protocol-first, no AWS SDK)
+pub mod aws_auth;
+
+/// Protocol-first HTTP client for universal object storage (NO vendor SDKs)
+/// Works with ANY S3-compatible storage: AWS, MinIO, Ceph, Wasabi, DigitalOcean, etc.
+pub mod protocol_http;
+
 // Re-exports
 pub use azure::AzureBackend;
 pub use gcs::GcsBackend;

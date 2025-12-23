@@ -124,7 +124,7 @@ impl PrimalService {
 struct DiscoveryManager {
     services: Arc<RwLock<HashMap<PrimalType, Arc<PrimalService>>>>,
     auto_discovery_enabled: Arc<AtomicBool>,
-    discovery_interval_ms: u64,
+    _discovery_interval_ms: u64,
 }
 
 impl DiscoveryManager {
@@ -132,7 +132,7 @@ impl DiscoveryManager {
         Self {
             services: Arc::new(RwLock::new(HashMap::new())),
             auto_discovery_enabled: Arc::new(AtomicBool::new(true)),
-            discovery_interval_ms,
+            _discovery_interval_ms: discovery_interval_ms,
         }
     }
 

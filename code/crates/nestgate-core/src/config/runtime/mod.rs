@@ -6,19 +6,19 @@
 //! # Architecture
 //!
 //! Configuration is loaded from environment variables on first access via
-//! [`get_config()`], using [`OnceLock`](std::sync::OnceLock) for thread-safe
+//! configuration initialization functions, using [`OnceLock`](std::sync::OnceLock) for thread-safe
 //! lazy initialization. This provides zero-cost abstraction with no runtime overhead.
 //!
 //! # Organization
 //!
 //! The configuration is organized into domain-specific modules:
-//! - [`network`] - API endpoints, ports, timeouts, connection pooling
-//! - [`services`] - Service discovery, registration, health checks
-//! - [`storage`] - Backend configuration, paths, quotas, retention
-//! - [`database`] - Connection pooling, query limits, credentials
-//! - [`cache`] - TTL, size limits, eviction policies (Redis, in-memory)
-//! - [`monitoring`] - Metrics, logging, tracing, alerting
-//! - [`security`] - Authentication, encryption, access control
+//! - `network` - API endpoints, ports, timeouts, connection pooling
+//! - `services` - Service discovery, registration, health checks
+//! - `storage` - Backend configuration, paths, quotas, retention
+//! - `database` - Connection pooling, query limits, credentials
+//! - `cache` - TTL, size limits, eviction policies (Redis, in-memory)
+//! - `monitoring` - Metrics, logging, tracing, alerting
+//! - `security` - Authentication, encryption, access control
 //!
 //! # Example Usage
 //!
@@ -53,7 +53,7 @@
 //! # Thread Safety
 //!
 //! All configuration is immutable after initialization and the global instance
-//! is stored in a [`OnceLock`] for safe concurrent access.
+//! is stored in a [`OnceLock`](std::sync::OnceLock) for safe concurrent access.
 
 use crate::error::Result;
 use serde::{Deserialize, Serialize};

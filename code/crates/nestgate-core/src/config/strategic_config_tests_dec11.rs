@@ -46,7 +46,7 @@ mod config_strategic_tests {
     #[test]
     fn test_port_clone() {
         let port1 = Port::new(8080).unwrap();
-        let port2 = port1.clone();
+        let port2 = port1;
         assert_eq!(port1.get(), port2.get());
     }
 

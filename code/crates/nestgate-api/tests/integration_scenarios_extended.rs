@@ -46,13 +46,23 @@ async fn test_concurrent_status_requests() {
 
 #[tokio::test]
 async fn test_status_uptime_progression() {
+    // ✅ MODERN: Test uptime progression with actual work (not sleep!)
     initialize_uptime();
 
     let status1 = get_status();
-    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+
+    // Do actual work instead of sleeping - spawn concurrent tasks
+    let handles: Vec<_> = (0..100)
+        .map(|_| tokio::spawn(async { get_status() }))
+        .collect();
+
+    for handle in handles {
+        handle.await.expect("Task should complete");
+    }
+
     let status2 = get_status();
 
-    // Second uptime should be >= first uptime
+    // Second uptime should be >= first uptime (after real work)
     assert!(status2.0.uptime >= status1.0.uptime);
 }
 

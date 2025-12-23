@@ -1,0 +1,8 @@
+🎵 Family: Shared music library...
+  Albums: 200 albums, 2,500 songs
+  Size: 15GB (MP3 + FLAC)
+  Features:
+    • Streaming to all devices
+    • Playlist management
+    • Album artwork
+  ✅ Music library accessible to everyone

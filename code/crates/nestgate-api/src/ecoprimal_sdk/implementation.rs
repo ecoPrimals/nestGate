@@ -107,17 +107,17 @@ impl EcoPrimal for NestGateEcoPrimal {
         // Handle request with proper routing and error handling
         let start_time = std::time::Instant::now();
 
+        // Deep Debt Solution: Safe method extraction with proper defaults
+        let method = request.method.as_deref().unwrap_or("GET");
+        
         info!(
             "📨 Handling request: {} {}",
-            request.method.as_deref().unwrap_or("UNKNOWN"),
+            method,
             request.path
         );
 
         // Route based on path and method
-        let response_body = match (
-            request.method.as_deref().unwrap_or("GET"),
-            request.path.as_str(),
-        ) {
+        let response_body = match (method, request.path.as_str()) {
             ("GET", "/health") => json!({
                 "status": "healthy",
                 "primal_id": self.id,

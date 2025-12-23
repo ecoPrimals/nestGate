@@ -114,7 +114,7 @@ mod capability_discovery_tests {
             NetworkingCapability, SecurityCapability,
         };
 
-        let capabilities = vec![
+        let capabilities = [
             Capability::Storage(StorageCapability::ObjectStorage),
             Capability::Networking(NetworkingCapability::LoadBalancing),
             Capability::Security(SecurityCapability::Authentication),
@@ -202,11 +202,16 @@ mod resource_cleanup_tests {
 
     #[test]
     fn test_option_unwrap_or_pattern() {
-        let some_value: Option<i32> = Some(42);
-        let none_value: Option<i32> = None;
+        // Test with dynamic values to avoid clippy unnecessary_literal_unwrap
+        fn get_some() -> Option<i32> {
+            Some(42)
+        }
+        fn get_none() -> Option<i32> {
+            None
+        }
 
-        assert_eq!(some_value.unwrap_or(0), 42);
-        assert_eq!(none_value.unwrap_or(0), 0);
+        assert_eq!(get_some().unwrap_or(0), 42);
+        assert_eq!(get_none().unwrap_or(0), 0);
     }
 
     #[test]
@@ -214,11 +219,16 @@ mod resource_cleanup_tests {
         use nestgate_core::error::NestGateError;
         use nestgate_core::Result;
 
-        let ok_result: Result<i32> = Ok(42);
-        let err_result: Result<i32> = Err(NestGateError::network_error("test"));
+        // Test with dynamic values to avoid clippy unnecessary_literal_unwrap
+        fn get_ok() -> Result<i32> {
+            Ok(42)
+        }
+        fn get_err() -> Result<i32> {
+            Err(NestGateError::network_error("test"))
+        }
 
-        assert_eq!(ok_result.unwrap_or_else(|_| 0), 42);
-        assert_eq!(err_result.unwrap_or_else(|_| 0), 0);
+        assert_eq!(get_ok().unwrap_or(0), 42);
+        assert_eq!(get_err().unwrap_or(0), 0);
     }
 }
 
