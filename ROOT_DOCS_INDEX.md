@@ -1,252 +1,281 @@
-# 📚 NestGate Root Documentation Index
+# 📚 NestGate Documentation Index
 
+**Version**: 2.0.0  
 **Last Updated**: December 23, 2025  
-**Status**: ✅ Current with v0.1.0 release and deep debt resolution
+**Status**: ✅ Production Ready - Auth Evolution Complete
 
 ---
 
-## 🎯 **START HERE**
+## 🚀 **START HERE**
 
-**New to NestGate?** Begin with these essential documents:
+### **New Users**
+1. **[00_START_HERE.md](./00_START_HERE.md)** - Quick start guide
+2. **[README.md](./README.md)** - Project overview
+3. **[STATUS.md](./STATUS.md)** - Current project status
 
-1. **[README.md](README.md)** - ✨ **UPDATED**: Main project overview with live integration status
-2. **[00_START_HERE.md](00_START_HERE.md)** - Quick navigation guide
-3. **[STATUS.md](STATUS.md)** - Current project status and metrics
-
----
-
-## 🚀 **LATEST ACHIEVEMENTS** (December 23, 2025)
-
-### **v0.1.0 Release & Stabilization**
-- **[SESSION_COMPLETE_DEC_23_2025.md](SESSION_COMPLETE_DEC_23_2025.md)** - ⭐ **Complete session report**
-- **[PROGRESS_SUMMARY_DEC_23_2025.md](PROGRESS_SUMMARY_DEC_23_2025.md)** - Session achievements
-- **[COMPREHENSIVE_AUDIT_REPORT_DEC_23_2025.md](COMPREHENSIVE_AUDIT_REPORT_DEC_23_2025.md)** - Full audit
-
-### **Deep Debt Resolution**
-- **[DEEP_DEBT_RESOLUTION_TRACKER.md](DEEP_DEBT_RESOLUTION_TRACKER.md)** - ⭐ **Active tracking framework**
-- **[STABILIZATION_PLAN_DEC_23_2025.md](STABILIZATION_PLAN_DEC_23_2025.md)** - Phased plan
-- **[WORKSPACE_CLEANUP_COMPLETE_DEC_23_2025.md](WORKSPACE_CLEANUP_COMPLETE_DEC_23_2025.md)** - Cleanup report
+### **Latest Updates** (Dec 23, 2025)
+1. **[MISSION_COMPLETE_DEC_23_2025.md](./MISSION_COMPLETE_DEC_23_2025.md)** - Complete delivery report
+2. **[code/crates/nestgate-core/src/security/AUTH_EVOLUTION.md](./code/crates/nestgate-core/src/security/AUTH_EVOLUTION.md)** - Auth architecture guide (450 lines)
 
 ---
 
-## 📖 **DOCUMENTATION CATEGORIES**
+## 🎯 **AUTH EVOLUTION (v2.0.0)** - NEW!
 
-### **🎓 Core Documentation**
+### **Technical Documentation**
+1. **[AUTH_EVOLUTION.md](./code/crates/nestgate-core/src/security/AUTH_EVOLUTION.md)** (450 lines)
+   - Complete technical guide
+   - Architecture diagrams
+   - Configuration reference
+   - API examples
 
-#### Getting Started
-- **[README.md](README.md)** - Main project overview (UPDATED with live integration)
-- **[00_START_HERE.md](00_START_HERE.md)** - Navigation and quick links
-- **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** - Command reference
-- **[STATUS.md](STATUS.md)** - Current status and metrics
+2. **[NESTGATE_V2_AUTH_EVOLUTION_RELEASE.md](./NESTGATE_V2_AUTH_EVOLUTION_RELEASE.md)**
+   - Release notes
+   - Configuration guide
+   - Integration team notes
 
-#### Architecture & Design
-- **[ARCHITECTURE_OVERVIEW.md](ARCHITECTURE_OVERVIEW.md)** - System architecture
-- **[specs/SPECS_MASTER_INDEX.md](specs/SPECS_MASTER_INDEX.md)** - Technical specifications
-- **[EVOLUTION_ROADMAP.md](EVOLUTION_ROADMAP.md)** - Future direction
+3. **[AUTH_EVOLUTION_COMPLETE_DEC_23_2025.md](./AUTH_EVOLUTION_COMPLETE_DEC_23_2025.md)**
+   - Implementation summary
+   - Statistics & metrics
+   - Verification steps
 
-#### Operations
-- **[OPERATIONS_RUNBOOK.md](OPERATIONS_RUNBOOK.md)** - Operations guide
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution guidelines
-- **[CHANGELOG.md](CHANGELOG.md)** - Version history
+### **Delivery Reports**
+1. **[MISSION_COMPLETE_DEC_23_2025.md](./MISSION_COMPLETE_DEC_23_2025.md)**
+   - Complete mission report
+   - Git status
+   - Next steps
 
----
+2. **[FINAL_DELIVERY_SUMMARY_DEC_23_2025.md](./FINAL_DELIVERY_SUMMARY_DEC_23_2025.md)**
+   - Master delivery summary
+   - All deliverables
+   - Final status
 
-### **🌍 Ecosystem Integration**
-
-#### Current Status (NEW!)
-- **[ECOSYSTEM_INTEGRATION_PLAN.md](ECOSYSTEM_INTEGRATION_PLAN.md)** - ⭐ Integration roadmap & current status
-- **[showcase/SESSION_4_EXTENDED_COMPLETE_DEC_21_2025.md](showcase/SESSION_4_EXTENDED_COMPLETE_DEC_21_2025.md)** - Latest milestone report
-- **[README_ECOSYSTEM_INTEGRATION.md](README_ECOSYSTEM_INTEGRATION.md)** - Integration overview
-
-#### Live Integration Guides
-- **[showcase/01_nestgate_songbird_live/](showcase/01_nestgate_songbird_live/)** - ⭐ **NEW**: Live orchestration
-  - `INDEX.md` - Complete documentation
-  - `QUICK_START.md` - Fast reference
-  - `README.md` - Architecture and setup
-  - `LIVE_INTEGRATION_WORKING.md` - Status report
-
-#### Phase Reports
-- **[showcase/PHASE_2_COMPLETE_LIVE_INTEGRATION_DEC_21_2025.md](showcase/PHASE_2_COMPLETE_LIVE_INTEGRATION_DEC_21_2025.md)** - Integration complete
-- **[showcase/PHASE_3_PROGRESS_SERVICE_REGISTRATION_DEC_21_2025.md](showcase/PHASE_3_PROGRESS_SERVICE_REGISTRATION_DEC_21_2025.md)** - Protocol defined
+3. **[COMPLETE_DELIVERY_DEC_23_2025.md](./COMPLETE_DELIVERY_DEC_23_2025.md)**
+   - Deployment summary
+   - Verification checklist
 
 ---
 
-### **🎪 Showcase & Demos**
+## 🧪 **TESTING & QUALITY**
 
-#### Verification
-- **[00_SHOWCASE_VERIFICATION_ZERO_MOCKS_DEC_21_2025.md](00_SHOWCASE_VERIFICATION_ZERO_MOCKS_DEC_21_2025.md)** - Zero mocks proof
-- **[00_NESTGATE_SHOWCASE_SUCCESS_DEC_21_2025.md](00_NESTGATE_SHOWCASE_SUCCESS_DEC_21_2025.md)** - Showcase success report
+### **Test Suite Analysis**
+1. **[TEST_SUITE_AUDIT_DEC_23_2025.md](./TEST_SUITE_AUDIT_DEC_23_2025.md)** (365 lines)
+   - Comprehensive test analysis
+   - 640 files, 15,249 tests analyzed
+   - Quality issues identified
 
-#### Guides
-- **[showcase/PROGRESSIVE_SHOWCASE_GUIDE.md](showcase/PROGRESSIVE_SHOWCASE_GUIDE.md)** - 20-minute walkthrough
-- **[showcase/QUICK_RUN_GUIDE.md](showcase/QUICK_RUN_GUIDE.md)** - Fast demo guide
-- **[showcase/START_HERE.md](showcase/START_HERE.md)** - Showcase navigation
+2. **[TEST_SUITE_RECOMMENDATIONS_DEC_23_2025.md](./TEST_SUITE_RECOMMENDATIONS_DEC_23_2025.md)** (449 lines)
+   - Quick wins (cargo-nextest)
+   - Test organization strategies
+   - CI/CD recommendations
 
-#### Live Demos
-- **[showcase/01_nestgate_songbird_live/](showcase/01_nestgate_songbird_live/)** - Multi-node orchestration
-- **[showcase/00-local-primal/](showcase/00-local-primal/)** - Local capabilities
+3. **[TEST_PASSOVER_COMPLETE_DEC_23_2025.md](./TEST_PASSOVER_COMPLETE_DEC_23_2025.md)**
+   - Executive summary
+   - Success metrics
 
----
-
-### **📊 Audits & Reports**
-
-#### Latest Audits (December 23, 2025) ⭐ **NEW**
-- **[COMPREHENSIVE_AUDIT_REPORT_DEC_23_2025.md](COMPREHENSIVE_AUDIT_REPORT_DEC_23_2025.md)** - ⭐ **Latest full audit**
-- **[CRITICAL_FIXES_ACTION_PLAN.md](CRITICAL_FIXES_ACTION_PLAN.md)** - Action plan
-- **[DEEP_DEBT_RESOLUTION_TRACKER.md](DEEP_DEBT_RESOLUTION_TRACKER.md)** - ⭐ **Active tracker**
-
-#### Session Reports (December 23, 2025)
-- **[SESSION_COMPLETE_DEC_23_2025.md](SESSION_COMPLETE_DEC_23_2025.md)** - ⭐ **Latest session**
-- **[PROGRESS_SUMMARY_DEC_23_2025.md](PROGRESS_SUMMARY_DEC_23_2025.md)** - Session progress
-- **[STABILIZATION_PLAN_DEC_23_2025.md](STABILIZATION_PLAN_DEC_23_2025.md)** - Modernization plan
-- **[WORKSPACE_CLEANUP_COMPLETE_DEC_23_2025.md](WORKSPACE_CLEANUP_COMPLETE_DEC_23_2025.md)** - Cleanup report
-
-#### Previous Audits (December 21, 2025)
-- **[AUDIT_EXECUTIVE_SUMMARY_DEC_21_2025.md](AUDIT_EXECUTIVE_SUMMARY_DEC_21_2025.md)** - Executive summary
-- **[COMPLETE_SESSION_SUMMARY_DEC_21_2025.md](COMPLETE_SESSION_SUMMARY_DEC_21_2025.md)** - Session summary
+### **Quality Tracking**
+- **[DEEP_DEBT_RESOLUTION_TRACKER.md](./DEEP_DEBT_RESOLUTION_TRACKER.md)** - Technical debt tracking
+- **[CRITICAL_FIXES_ACTION_PLAN.md](./CRITICAL_FIXES_ACTION_PLAN.md)** - Action items
 
 ---
 
-### **🔧 Development**
+## 📖 **CORE DOCUMENTATION**
 
-#### Setup & Build
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** - How to contribute
-- **[Cargo.toml](Cargo.toml)** - Project manifest
-- **[Makefile](Makefile)** - Build automation
+### **Architecture & Design**
+- **[ARCHITECTURE_OVERVIEW.md](./ARCHITECTURE_OVERVIEW.md)** - System architecture
+- **[ECOSYSTEM_INTEGRATION_PLAN.md](./ECOSYSTEM_INTEGRATION_PLAN.md)** - ecoPrimals integration
+- **[DOCUMENTATION_INDEX.md](./DOCUMENTATION_INDEX.md)** - Full documentation map
 
-#### Testing
-- **[tests/](tests/)** - Test suite
-- **[benchmarks/](benches/)** - Performance benchmarks
-- **[Makefile.coverage](Makefile.coverage)** - Coverage automation
+### **Project Management**
+- **[ROADMAP.md](./ROADMAP.md)** - Development roadmap
+- **[EVOLUTION_ROADMAP.md](./EVOLUTION_ROADMAP.md)** - Long-term evolution
+- **[CHANGELOG.md](./CHANGELOG.md)** - Version history
 
-#### Scripts
-- **[scripts/](scripts/)** - Utility scripts
-- **[QUICK_COMMANDS.sh](QUICK_COMMANDS.sh)** - Common commands
-- **[quick_status.sh](quick_status.sh)** - Status checker
-
----
-
-### **🚀 Deployment**
-
-#### Production
-- **[00_READY_TO_DEPLOY_DEC_21_2025.md](00_READY_TO_DEPLOY_DEC_21_2025.md)** - Deployment readiness
-- **[OPERATIONS_RUNBOOK.md](OPERATIONS_RUNBOOK.md)** - Operations guide
-- **[deploy/](deploy/)** - Deployment configurations
-
-#### Quick Deploy
-- **[DEPLOY_NOW.sh](DEPLOY_NOW.sh)** - Quick deployment
-- **[QUICK_DEPLOY.sh](QUICK_DEPLOY.sh)** - Fast deployment
-- **[verify_deployment_readiness.sh](verify_deployment_readiness.sh)** - Verification
+### **Contributing**
+- **[CONTRIBUTING.md](./CONTRIBUTING.md)** - How to contribute
+- **[OPERATIONS_RUNBOOK.md](./OPERATIONS_RUNBOOK.md)** - Operations guide
 
 ---
 
-## 🗺️ **NAVIGATION BY ROLE**
+## 🔧 **TECHNICAL GUIDES**
 
-### **For New Users**
-1. [README.md](README.md) - Overview
-2. [showcase/01_nestgate_songbird_live/QUICK_START.md](showcase/01_nestgate_songbird_live/QUICK_START.md) - Try live integration
-3. [showcase/PROGRESSIVE_SHOWCASE_GUIDE.md](showcase/PROGRESSIVE_SHOWCASE_GUIDE.md) - Guided tour
+### **Configuration**
+- **[config/](./config/)** - Configuration examples
+  - `production.toml` - Production configuration
+  - `environment-variables.example` - Environment variables
+  - `canonical-master.toml` - Canonical configuration
 
-### **For Developers**
-1. [ARCHITECTURE_OVERVIEW.md](ARCHITECTURE_OVERVIEW.md) - System design
-2. [CONTRIBUTING.md](CONTRIBUTING.md) - Development guide
-3. [specs/SPECS_MASTER_INDEX.md](specs/SPECS_MASTER_INDEX.md) - Specifications
+### **Security** (NEW!)
+- **[code/crates/nestgate-core/src/security/AUTH_EVOLUTION.md](./code/crates/nestgate-core/src/security/AUTH_EVOLUTION.md)** - Authentication guide
+- **[showcase/03_encryption_storage/HANDOFF_TO_BEARDOG.md](./showcase/03_encryption_storage/HANDOFF_TO_BEARDOG.md)** - BearDog integration
 
-### **For Integration Engineers**
-1. [ECOSYSTEM_INTEGRATION_PLAN.md](ECOSYSTEM_INTEGRATION_PLAN.md) - Integration status
-2. [showcase/SESSION_4_EXTENDED_COMPLETE_DEC_21_2025.md](showcase/SESSION_4_EXTENDED_COMPLETE_DEC_21_2025.md) - Latest achievements
-3. [showcase/01_nestgate_songbird_live/INDEX.md](showcase/01_nestgate_songbird_live/INDEX.md) - Live orchestration guide
+### **Storage**
+- **[docs/storage/](./docs/storage/)** - Storage documentation
+- **[docs/zfs/](./docs/zfs/)** - ZFS integration
 
-### **For Operations**
-1. [OPERATIONS_RUNBOOK.md](OPERATIONS_RUNBOOK.md) - Operations guide
-2. [00_READY_TO_DEPLOY_DEC_21_2025.md](00_READY_TO_DEPLOY_DEC_21_2025.md) - Deployment readiness
-3. [STATUS.md](STATUS.md) - Current status
+### **Networking**
+- **[docs/network/](./docs/network/)** - Network layer docs
+- **[docs/ecosystem/](./docs/ecosystem/)** - Ecosystem integration
 
 ---
 
-## 📈 **DOCUMENT STATUS**
+## 🎬 **SHOWCASE & DEMOS**
 
-### **Recently Updated** (December 23, 2025)
-- ✅ **README.md** - Updated with v0.1.0 release and current status
-- ✅ **STATUS.md** - Current metrics and deep debt status
-- ✅ **00_START_HERE.md** - Navigation updated for Dec 23 session
-- ✅ **CHANGELOG.md** - v0.1.0 release details added
-- ✅ **ROOT_DOCS_INDEX.md** - This file, updated for Dec 23
+### **Live Demonstrations**
+- **[showcase/PROGRESSIVE_SHOWCASE_GUIDE.md](./showcase/PROGRESSIVE_SHOWCASE_GUIDE.md)** - Showcase guide
+- **[showcase/00_SHOWCASE_VERIFICATION_ZERO_MOCKS_DEC_21_2025.md](./showcase/00_SHOWCASE_VERIFICATION_ZERO_MOCKS_DEC_21_2025.md)** - Verification
+- **[demos/README.md](./demos/README.md)** - Demo overview
 
-### **New Documents** (December 23, 2025)
-- 🆕 **SESSION_COMPLETE_DEC_23_2025.md** - Complete session report
-- 🆕 **COMPREHENSIVE_AUDIT_REPORT_DEC_23_2025.md** - Full codebase audit
-- 🆕 **DEEP_DEBT_RESOLUTION_TRACKER.md** - ⭐ Active tracking framework
-- 🆕 **STABILIZATION_PLAN_DEC_23_2025.md** - Phased modernization plan
-- 🆕 **PROGRESS_SUMMARY_DEC_23_2025.md** - Session achievements
-- 🆕 **WORKSPACE_CLEANUP_COMPLETE_DEC_23_2025.md** - Cleanup report
-- 🆕 **CRITICAL_FIXES_ACTION_PLAN.md** - Immediate action items
-- 🆕 **QUICK_COMMIT_AND_RELEASE_GUIDE.md** - Team release guide
-- 🆕 **TEAM_NOTIFICATION_RELEASE_v0.1.0.md** - Release notification
-
-### **Active Documents**
-- 📝 **STATUS.md** - Always current (updated Dec 23)
-- 📝 **CHANGELOG.md** - Updated with v0.1.0 release
-- 📝 **DEEP_DEBT_RESOLUTION_TRACKER.md** - ⭐ Active tracking
+### **Integration Examples**
+- **[examples/](./examples/)** - Code examples
+- **[tests/e2e/](./tests/e2e/)** - End-to-end tests
 
 ---
 
-## 🔍 **FINDING SPECIFIC INFORMATION**
+## 🚀 **DEPLOYMENT**
 
-### **Integration Topics**
-- **Live orchestration**: `showcase/01_nestgate_songbird_live/`
-- **Service registration**: `showcase/PHASE_3_PROGRESS_SERVICE_REGISTRATION_DEC_21_2025.md`
-- **Multi-node setup**: `showcase/01_nestgate_songbird_live/setup-multi-node.sh`
-- **Ecosystem status**: `ECOSYSTEM_INTEGRATION_PLAN.md`
+### **Production Deployment**
+- **[deploy/](./deploy/)** - Deployment scripts
+- **[QUICK_DEPLOY.sh](./QUICK_DEPLOY.sh)** - Quick deployment
+- **[verify_deployment_readiness.sh](./verify_deployment_readiness.sh)** - Deployment verification
 
-### **Technical Topics**
-- **Architecture**: `ARCHITECTURE_OVERVIEW.md`
-- **Specifications**: `specs/SPECS_MASTER_INDEX.md`
-- **API design**: `docs/api/`
-- **Performance**: `benches/` and performance reports
-
-### **Operational Topics**
-- **Deployment**: `00_READY_TO_DEPLOY_DEC_21_2025.md`
-- **Operations**: `OPERATIONS_RUNBOOK.md`
-- **Troubleshooting**: `QUICK_REFERENCE.md`
-- **Status checks**: `quick_status.sh`
+### **Docker & K8s**
+- **[Dockerfile](./Dockerfile)** - Docker image
+- **[docker-compose.yml](./docker-compose.yml)** - Docker Compose
+- **[k8s-deployment.yaml](./k8s-deployment.yaml)** - Kubernetes deployment
 
 ---
 
-## 📊 **METRICS**
+## 📊 **MONITORING & OPERATIONS**
 
-### **Documentation Coverage**
-- **Root documents**: 20+ files
-- **Showcase docs**: 135+ markdown files
-- **Specifications**: 24 detailed specs
-- **Integration guides**: 7+ comprehensive guides
+### **Operations**
+- **[OPERATIONS_RUNBOOK.md](./OPERATIONS_RUNBOOK.md)** - Operations guide
+- **[QUICK_REFERENCE.md](./QUICK_REFERENCE.md)** - Quick reference
+- **[QUICK_COMMANDS.sh](./QUICK_COMMANDS.sh)** - Useful commands
 
-### **Quality**
-- **Up-to-date**: ✅ Current as of Dec 23, 2025 (v0.1.0 release)
-- **Comprehensive**: ✅ All aspects covered
-- **Verified**: ✅ Build stable, release published
-- **Tracked**: ✅ Deep debt resolution framework active
+### **Scripts**
+- **[scripts/](./scripts/)** - Utility scripts
+  - `test-live-integration.sh` - Live integration testing
+  - `clippy_pedantic_analysis.sh` - Code quality checks
+  - `coverage.sh` - Coverage reports
+
+---
+
+## 📝 **SPECIFICATIONS**
+
+### **Technical Specs**
+- **[specs/](./specs/)** - Technical specifications
+  - `00_OVERVIEW.md` - Overview
+  - `01_STORAGE.md` - Storage architecture
+  - `02_NETWORK.md` - Network layer
+  - `03_SECURITY.md` - Security design
+
+---
+
+## 🔄 **RECENT UPDATES**
+
+### **December 23, 2025** - Auth Evolution
+- ✅ Pluggable authentication architecture
+- ✅ BearDog + JWT providers
+- ✅ 42 tests (100% passing)
+- ✅ Comprehensive documentation (9 files)
+- ✅ Binary deployed (phase1bins + BiomeOS)
+
+### **Previous Updates**
+- **Dec 23, 2025**: Build stabilization (v0.1.0)
+- **Dec 22, 2025**: Zero-copy optimization
+- **Dec 21, 2025**: Security honesty
+- **Dec 20, 2025**: Feature flag fixes
 
 ---
 
 ## 🎯 **QUICK LINKS**
 
-### **Most Important** (December 23, 2025)
-1. **[README.md](README.md)** - Start here!
-2. **[SESSION_COMPLETE_DEC_23_2025.md](SESSION_COMPLETE_DEC_23_2025.md)** - Latest complete report
-3. **[DEEP_DEBT_RESOLUTION_TRACKER.md](DEEP_DEBT_RESOLUTION_TRACKER.md)** - ⭐ Active modernization
-4. **[STATUS.md](STATUS.md)** - Current metrics
+### **For Developers**
+- [Quick Start](./00_START_HERE.md)
+- [Contributing Guide](./CONTRIBUTING.md)
+- [Development Roadmap](./ROADMAP.md)
 
-### **Quick Actions**
-- **Check status**: `cargo build --release`
-- **Run tests**: `cargo test --workspace`
-- **View release**: Check GitHub releases for v0.1.0
-- **Track progress**: Read `DEEP_DEBT_RESOLUTION_TRACKER.md`
+### **For Integration Teams**
+- [Auth Evolution Guide](./code/crates/nestgate-core/src/security/AUTH_EVOLUTION.md)
+- [Ecosystem Integration](./ECOSYSTEM_INTEGRATION_PLAN.md)
+- [API Documentation](./docs/)
+
+### **For Operators**
+- [Operations Runbook](./OPERATIONS_RUNBOOK.md)
+- [Deployment Guide](./deploy/)
+- [Quick Reference](./QUICK_REFERENCE.md)
 
 ---
 
-**Status**: ✅ All documentation current and organized  
-**Last Major Update**: December 23, 2025 (v0.1.0 release)  
-**Next Update**: When reaching B+ grade (87/100) with Phase 4 complete
+## 📚 **DOCUMENTATION STRUCTURE**
 
-🔧 **Stable build released, deep modernization underway!**
+```
+nestgate/
+├── 00_START_HERE.md                     ⭐ Start here
+├── README.md                             ⭐ Overview
+├── STATUS.md                             ⭐ Current status
+├── ROOT_DOCS_INDEX.md                    ⭐ This file
+│
+├── Auth Evolution (v2.0.0)               🎉 NEW!
+│   ├── AUTH_EVOLUTION.md                 Technical guide
+│   ├── NESTGATE_V2_AUTH_EVOLUTION_RELEASE.md
+│   ├── MISSION_COMPLETE_DEC_23_2025.md
+│   └── FINAL_DELIVERY_SUMMARY_DEC_23_2025.md
+│
+├── Testing & Quality
+│   ├── TEST_SUITE_AUDIT_DEC_23_2025.md
+│   ├── TEST_SUITE_RECOMMENDATIONS_DEC_23_2025.md
+│   └── TEST_PASSOVER_COMPLETE_DEC_23_2025.md
+│
+├── Core Documentation
+│   ├── ARCHITECTURE_OVERVIEW.md
+│   ├── CHANGELOG.md
+│   ├── CONTRIBUTING.md
+│   ├── ROADMAP.md
+│   └── docs/                             Detailed docs
+│
+├── Configuration
+│   ├── config/                           Config examples
+│   └── production.env                    Environment vars
+│
+├── Showcase & Demos
+│   ├── showcase/                         Live demos
+│   ├── demos/                            Code demos
+│   └── examples/                         Examples
+│
+└── Operations
+    ├── OPERATIONS_RUNBOOK.md
+    ├── deploy/                           Deployment
+    └── scripts/                          Utilities
+```
+
+---
+
+## 🆘 **SUPPORT**
+
+### **Issues & Questions**
+- **GitHub Issues**: https://github.com/ecoPrimals/nestGate/issues
+- **Documentation**: This index + linked docs
+- **Community**: ecoPrimals Discord
+
+### **Quick Help**
+```bash
+# View status
+./quick_status.sh
+
+# Run tests
+cargo test --workspace
+
+# Build release
+cargo build --release
+
+# Deploy
+./QUICK_DEPLOY.sh
+```
+
+---
+
+**Last Updated**: December 23, 2025  
+**Version**: 2.0.0  
+**Status**: ✅ Production Ready  
+**Auth**: ✅ BearDog + JWT (pluggable)
