@@ -272,4 +272,10 @@ mod edge_case_tests;
 mod result_types_comprehensive_tests;
 
 #[cfg(test)]
+mod concurrent_stress_tests; // Dec 28, 2025 - Concurrent evolution stress tests
+
+#[cfg(test)]
+mod production_stress_tests; // Dec 28, 2025 - Production concurrent stress tests
+
+#[cfg(test)]
 mod core_coverage_boost;

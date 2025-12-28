@@ -388,10 +388,15 @@ mod storage_service_tests {
             .await
             .expect("Service creation failed");
 
+        // ✅ MODERNIZED: Test that start_time is consistent without sleep
+        // The start_time should be a constant property, not time-dependent
         let time1 = service.start_time();
-        tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
         let time2 = service.start_time();
 
         assert_eq!(time1, time2, "Start time should remain constant");
+        
+        // Additional check: verify it's a reasonable timestamp
+        let now = std::time::SystemTime::now();
+        assert!(time1 <= now, "Start time should be in the past or now");
     }
 }

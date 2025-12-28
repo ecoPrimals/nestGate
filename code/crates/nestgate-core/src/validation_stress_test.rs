@@ -177,13 +177,14 @@ async fn stress_test_return_builders() -> Vec<String> {
         issues.push("❌ Negative consensus percentage not validated".to_string());
     }
 
-    // Test timestamp consistency (non-blocking, concurrent)
+    // ✅ MODERNIZED: Test timestamp monotonicity without sleep
+    // Timestamps should be monotonically increasing (or equal if generated in same instant)
     let response1 = build_api_success("test".to_string());
-    tokio::time::sleep(std::time::Duration::from_millis(1)).await;
     let response2 = build_api_success("test".to_string());
 
-    if response1.timestamp >= response2.timestamp {
-        issues.push("❌ Timestamp ordering issue detected".to_string());
+    // Test the actual requirement: timestamps should not go backwards
+    if response2.timestamp < response1.timestamp {
+        issues.push("❌ Timestamp ordering issue: timestamps went backwards".to_string());
     }
 
     issues

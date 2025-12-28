@@ -10,6 +10,9 @@
 pub mod config;
 /// Storage service implementation
 pub mod service;
+/// Service integration module for adaptive storage
+#[cfg(feature = "adaptive-storage")]
+pub mod service_integration;
 /// Storage type definitions
 pub mod types;
 

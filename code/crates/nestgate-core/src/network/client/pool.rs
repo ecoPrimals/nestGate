@@ -313,10 +313,12 @@ mod tests {
         let endpoint = Endpoint::from_url("http://localhost:8080").unwrap();
         let mut conn = Connection::new(endpoint);
 
-        std::thread::sleep(Duration::from_millis(10));
+        // ✅ MODERNIZED: Test behavior directly, not timing
+        // The sleep was artificial - we test the operation's effect, not elapsed time
+        let initial_count = conn.request_count;
         conn.mark_used();
 
-        assert_eq!(conn.request_count, 1);
+        assert_eq!(conn.request_count, initial_count + 1);
         assert!(!conn.is_idle());
     }
 

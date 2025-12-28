@@ -40,9 +40,10 @@ pub struct StorageManagerService {
     start_time: SystemTime,
     /// Service configuration
     config: StorageServiceConfig,
-    /// Adaptive storage engine (new unified system)
-    #[cfg(feature = "adaptive-storage")]
-    adaptive_storage: Option<Arc<super::service_integration::AdaptiveStorageService>>,
+    // TODO: Complete adaptive storage implementation
+    // Disabled until NestGateStorage module is fully implemented
+    // #[cfg(feature = "adaptive-storage")]
+    // adaptive_storage: Option<Arc<super::service_integration::AdaptiveStorageService>>,
 }
 impl StorageManagerService {
     /// Create a new Storage Manager Service with real implementations
@@ -87,25 +88,27 @@ impl StorageManagerService {
         //         })?,
         // );
 
-        // Initialize adaptive storage if feature is enabled
-        #[cfg(feature = "adaptive-storage")]
-        let adaptive_storage = {
-            use std::path::PathBuf;
-            let storage_path = PathBuf::from(&config.base_path).join("adaptive");
-            match super::service_integration::AdaptiveStorageService::new(storage_path).await {
-                Ok(service) => {
-                    info!("✅ Adaptive storage engine initialized");
-                    Some(Arc::new(service))
-                }
-                Err(e) => {
-                    warn!(
-                        "⚠️  Failed to initialize adaptive storage: {}, falling back to legacy",
-                        e
-                    );
-                    None
-                }
-            }
-        };
+        // TODO: Complete adaptive storage implementation
+        // Disabled until NestGateStorage module is fully implemented
+        // Following NestGate philosophy: "No mocks in production, evolve to complete implementations"
+        // #[cfg(feature = "adaptive-storage")]
+        // let adaptive_storage = {
+        //     use std::path::PathBuf;
+        //     let storage_path = PathBuf::from(&config.base_path).join("adaptive");
+        //     match super::service_integration::AdaptiveStorageService::new(storage_path).await {
+        //         Ok(service) => {
+        //             info!("✅ Adaptive storage engine initialized");
+        //             Some(Arc::new(service))
+        //         }
+        //         Err(e) => {
+        //             warn!(
+        //                 "⚠️  Failed to initialize adaptive storage: {}, falling back to legacy",
+        //                 e
+        //             );
+        //             None
+        //         }
+        //     }
+        // };
 
         let service = Self {
             service_id: Uuid::new_v4(),
@@ -117,8 +120,9 @@ impl StorageManagerService {
             start_time: SystemTime::now(),
             zfs_config: config.zfs.clone(),
             config,
-            #[cfg(feature = "adaptive-storage")]
-            adaptive_storage,
+            // TODO: Re-enable when adaptive storage is complete
+            // #[cfg(feature = "adaptive-storage")]
+            // adaptive_storage,
         };
 
         // Initialize service with real implementations
@@ -437,103 +441,14 @@ impl StorageManagerService {
         !self.zfs_config.zfs_binary.is_empty()
     }
 
-    /// Store data using adaptive storage (if enabled)
-    ///
-    /// This method uses the new adaptive storage engine when available,
-    /// providing intelligent compression and routing based on data characteristics.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if storage fails
-    #[cfg(feature = "adaptive-storage")]
-    pub async fn store_adaptive(
-        &self,
-        data: bytes::Bytes,
-    ) -> Result<super::service_integration::StoreDataResponse> {
-        if let Some(adaptive) = &self.adaptive_storage {
-            adaptive.store_data(data).await.map_err(|e| {
-                NestGateError::storage_operation(format!("Adaptive storage failed: {}", e), false)
-            })
-        } else {
-            Err(NestGateError::feature_not_enabled(
-                "adaptive-storage".to_string(),
-                "Adaptive storage is not enabled or failed to initialize".to_string(),
-            ))
-        }
-    }
-
-    /// Retrieve data using adaptive storage (if enabled)
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if retrieval fails
-    #[cfg(feature = "adaptive-storage")]
-    pub async fn retrieve_adaptive(&self, hash: &[u8; 32]) -> Result<bytes::Bytes> {
-        if let Some(adaptive) = &self.adaptive_storage {
-            adaptive.retrieve_data(hash).await.map_err(|e| {
-                NestGateError::storage_operation(format!("Adaptive retrieval failed: {}", e), false)
-            })
-        } else {
-            Err(NestGateError::feature_not_enabled(
-                "adaptive-storage".to_string(),
-                "Adaptive storage is not enabled or failed to initialize".to_string(),
-            ))
-        }
-    }
-
-    /// Get adaptive storage metrics (if enabled)
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if metrics retrieval fails
-    #[cfg(feature = "adaptive-storage")]
-    pub async fn get_adaptive_metrics(
-        &self,
-    ) -> Result<super::service_integration::MetricsResponse> {
-        if let Some(adaptive) = &self.adaptive_storage {
-            Ok(adaptive.get_metrics().await)
-        } else {
-            Err(NestGateError::feature_not_enabled(
-                "adaptive-storage".to_string(),
-                "Adaptive storage is not enabled or failed to initialize".to_string(),
-            ))
-        }
-    }
-
-    /// Analyze data characteristics (if adaptive storage is enabled)
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if analysis fails
-    #[cfg(feature = "adaptive-storage")]
-    pub async fn analyze_data(
-        &self,
-        data: &[u8],
-    ) -> Result<super::service_integration::AnalysisResponse> {
-        if let Some(adaptive) = &self.adaptive_storage {
-            adaptive.analyze_data(data).await.map_err(|e| {
-                NestGateError::storage_operation(format!("Data analysis failed: {}", e), false)
-            })
-        } else {
-            Err(NestGateError::feature_not_enabled(
-                "adaptive-storage".to_string(),
-                "Adaptive storage is not enabled or failed to initialize".to_string(),
-            ))
-        }
-    }
-
-    /// Check if adaptive storage is available
-    #[cfg(feature = "adaptive-storage")]
+    // TODO: Complete adaptive storage implementation
+    // These methods are disabled until NestGateStorage module is fully implemented
+    // Following NestGate philosophy: "No mocks in production, evolve to complete implementations"
+    
+    /// Check if adaptive storage is available (always false - incomplete implementation)
     #[must_use]
     pub fn is_adaptive_storage_available(&self) -> bool {
-        self.adaptive_storage.is_some()
-    }
-
-    /// Check if adaptive storage is available (always false without feature)
-    #[cfg(not(feature = "adaptive-storage"))]
-    #[must_use]
-    pub fn is_adaptive_storage_available(&self) -> bool {
-        false
+        false // Disabled until complete implementation
     }
 }
 

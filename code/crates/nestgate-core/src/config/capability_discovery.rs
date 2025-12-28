@@ -174,16 +174,20 @@ pub async fn discover_with_fallback(
 /// # }
 /// ```
 pub async fn announce_capability(capability: &str, endpoint: &str, ttl: Duration) -> Result<()> {
-    // TODO: Implement actual capability announcement
-    // For now, this is a placeholder for the pattern
-
-    log::info!(
-        "Announcing capability '{}' at '{}' (TTL: {:?})",
+    // TODO: Complete Infant Discovery system implementation first
+    // The InfantDiscoverySystem currently lacks `announce_capability()` method
+    // Following philosophy: "No mocks in production - mark incomplete until real implementation"
+    
+    tracing::info!(
+        "📢 Would announce capability '{}' at '{}' (TTL: {:?}) - awaiting InfantDiscoverySystem.announce_capability()",
         capability,
         endpoint,
         ttl
     );
-
+    
+    // For now, log the announcement intent
+    // This will be implemented when InfantDiscoverySystem is complete
+    
     Ok(())
 }
 
@@ -191,12 +195,18 @@ pub async fn announce_capability(capability: &str, endpoint: &str, ttl: Duration
 
 /// Discover from capability registry (primary method)
 async fn discover_from_capability_registry(capability: &str) -> Result<ServiceEndpoint> {
-    // TODO: Implement actual capability registry query
-    // This will integrate with Infant Discovery system
-
-    // For now, return not found to fall through to other methods
+    // TODO: Complete Infant Discovery system implementation first
+    // The InfantDiscoverySystem currently lacks `discover_capabilities()` method
+    // Following philosophy: "No mocks in production - mark incomplete until real implementation"
+    
+    tracing::debug!(
+        "Capability registry discovery not yet complete for: {}",
+        capability
+    );
+    
+    // Return not found to fall through to environment/default discovery
     Err(NestGateError::network_error(&format!(
-        "Capability registry not yet implemented for '{}'",
+        "Capability registry discovery requires InfantDiscoverySystem.discover_capabilities() implementation (capability: {})",
         capability
     )))
 }
@@ -223,11 +233,41 @@ async fn discover_from_environment(capability: &str) -> Result<ServiceEndpoint> 
 
 /// Discover from local network (mDNS, etc.)
 async fn discover_from_local(capability: &str) -> Result<ServiceEndpoint> {
-    // TODO: Implement mDNS discovery
-    // This will scan local network for services advertising this capability
-
+    // EVOLUTION: Implement mDNS discovery for local network scanning
+    // Following philosophy: "Discover primals at runtime via mDNS/Songbird"
+    
+    tracing::debug!("Attempting local mDNS discovery for: {}", capability);
+    
+    // Try mDNS discovery (Songbird integration)
+    // This scans the local network for services advertising this capability
+    #[cfg(feature = "mdns-discovery")]
+    {
+        use crate::universal_primal_discovery::backends::mdns::MdnsDiscoveryBackend;
+        
+        let mdns_backend = MdnsDiscoveryBackend::new()
+            .map_err(|e| NestGateError::network_error(&format!("mDNS init failed: {:?}", e)))?;
+        
+        // Scan for services with this capability
+        let services = mdns_backend
+            .discover_services(capability, std::time::Duration::from_secs(5))
+            .await
+            .map_err(|e| NestGateError::network_error(&format!("mDNS scan failed: {:?}", e)))?;
+        
+        if let Some(service) = services.first() {
+            tracing::info!("✅ Discovered {} via mDNS: {}", capability, service.endpoint);
+            return Ok(ServiceEndpoint {
+                capability: capability.to_string(),
+                endpoint: service.endpoint.clone(),
+                ttl: Duration::from_secs(60), // mDNS entries have short TTL
+                source: DiscoverySource::LocalDiscovery,
+            });
+        }
+    }
+    
+    // mDNS feature not enabled or no services found
+    tracing::debug!("mDNS discovery returned no results for '{}'", capability);
     Err(NestGateError::network_error(&format!(
-        "Local discovery not yet implemented for '{}'",
+        "No local services found for capability '{}'",
         capability
     )))
 }
