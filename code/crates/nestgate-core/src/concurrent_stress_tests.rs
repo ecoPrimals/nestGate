@@ -18,10 +18,10 @@
 
 #[cfg(test)]
 mod concurrent_stress_tests {
-    use std::sync::Arc;
-    use std::sync::atomic::{AtomicU64, Ordering};
-    use tokio::sync::RwLock;
     use futures::future::join_all;
+    use std::sync::atomic::{AtomicU64, Ordering};
+    use std::sync::Arc;
+    use tokio::sync::RwLock;
 
     /// Test concurrent access to shared atomic counter
     /// Verifies that atomic operations are truly atomic under high concurrency
@@ -143,7 +143,10 @@ mod concurrent_stress_tests {
 
         // All tasks should complete successfully
         assert_eq!(results.len(), num_tasks);
-        assert!(results.iter().all(|r| r.is_ok()), "All tasks should complete");
+        assert!(
+            results.iter().all(|r| r.is_ok()),
+            "All tasks should complete"
+        );
         assert_eq!(
             completed.load(Ordering::SeqCst),
             num_tasks as u64,
@@ -367,4 +370,3 @@ mod concurrent_stress_tests {
         );
     }
 }
-

@@ -394,7 +394,7 @@ mod storage_service_tests {
         let time2 = service.start_time();
 
         assert_eq!(time1, time2, "Start time should remain constant");
-        
+
         // Additional check: verify it's a reasonable timestamp
         let now = std::time::SystemTime::now();
         assert!(time1 <= now, "Start time should be in the past or now");

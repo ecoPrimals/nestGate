@@ -444,7 +444,7 @@ impl StorageManagerService {
     // TODO: Complete adaptive storage implementation
     // These methods are disabled until NestGateStorage module is fully implemented
     // Following NestGate philosophy: "No mocks in production, evolve to complete implementations"
-    
+
     /// Check if adaptive storage is available (always false - incomplete implementation)
     #[must_use]
     pub fn is_adaptive_storage_available(&self) -> bool {

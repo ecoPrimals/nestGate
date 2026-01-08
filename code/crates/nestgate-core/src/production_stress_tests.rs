@@ -18,10 +18,10 @@
 
 #[cfg(test)]
 mod production_stress_tests {
-    use std::sync::Arc;
-    use std::sync::atomic::{AtomicU64, Ordering};
-    use tokio::sync::RwLock;
     use futures::future::join_all;
+    use std::sync::atomic::{AtomicU64, Ordering};
+    use std::sync::Arc;
+    use tokio::sync::RwLock;
 
     /// Test concurrent storage service stats access
     /// Verifies that stats can be safely accessed by many concurrent readers
@@ -50,9 +50,7 @@ mod production_stress_tests {
         let handles: Vec<_> = (0..100)
             .map(|_| {
                 let service = service.clone();
-                tokio::spawn(async move {
-                    service.stats().await
-                })
+                tokio::spawn(async move { service.stats().await })
             })
             .collect();
 
@@ -292,4 +290,3 @@ mod production_stress_tests {
         assert_eq!(counter.load(Ordering::SeqCst), 10000);
     }
 }
-

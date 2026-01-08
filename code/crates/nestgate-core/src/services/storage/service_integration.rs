@@ -23,17 +23,17 @@ impl AdaptiveStorageService {
             engine: crate::storage::NestGateStorage::new(base_path),
         }
     }
-    
+
     /// Initialize storage
     pub async fn initialize(&self) -> Result<()> {
         self.engine.initialize().await
     }
-    
+
     /// Store data with adaptive compression
     pub async fn store_data(&self, data: Vec<u8>) -> Result<StorageReceipt> {
         let bytes = Bytes::from(data);
         let receipt = self.engine.store(bytes).await?;
-        
+
         // Log the decision made
         tracing::info!(
             "Stored {} bytes as {} bytes using {:?}",
@@ -41,7 +41,7 @@ impl AdaptiveStorageService {
             receipt.stored_size,
             receipt.strategy
         );
-        
+
         Ok(StorageReceipt {
             hash: hex::encode(receipt.hash),
             original_size: receipt.size,
@@ -55,39 +55,42 @@ impl AdaptiveStorageService {
             encryption: format!("{:?}", receipt.encryption),
         })
     }
-    
+
     /// Retrieve data
     pub async fn retrieve_data(&self, hash: &str) -> Result<Vec<u8>> {
         let hash_bytes = hex::decode(hash)?;
-        let hash_array: [u8; 32] = hash_bytes.try_into()
+        let hash_array: [u8; 32] = hash_bytes
+            .try_into()
             .map_err(|_| anyhow::anyhow!("Invalid hash length"))?;
-        
+
         let data = self.engine.retrieve(&hash_array).await?;
         Ok(data.to_vec())
     }
-    
+
     /// Check if data exists
     pub async fn data_exists(&self, hash: &str) -> Result<bool> {
         let hash_bytes = hex::decode(hash)?;
-        let hash_array: [u8; 32] = hash_bytes.try_into()
+        let hash_array: [u8; 32] = hash_bytes
+            .try_into()
             .map_err(|_| anyhow::anyhow!("Invalid hash length"))?;
-        
+
         self.engine.exists(&hash_array).await
     }
-    
+
     /// Delete data
     pub async fn delete_data(&self, hash: &str) -> Result<()> {
         let hash_bytes = hex::decode(hash)?;
-        let hash_array: [u8; 32] = hash_bytes.try_into()
+        let hash_array: [u8; 32] = hash_bytes
+            .try_into()
             .map_err(|_| anyhow::anyhow!("Invalid hash length"))?;
-        
+
         self.engine.delete(&hash_array).await
     }
-    
+
     /// Get metrics snapshot
     pub fn get_metrics(&self) -> MetricsSnapshot {
         let snapshot = self.engine.metrics_snapshot();
-        
+
         MetricsSnapshot {
             total_operations: snapshot.total_operations,
             total_bytes_stored: snapshot.total_bytes_stored,
@@ -105,13 +108,12 @@ impl AdaptiveStorageService {
             operation_time_p95_ms: snapshot.operation_time_p95_ms,
         }
     }
-    
+
     /// Analyze data without storing
     pub async fn analyze_data(&self, data: &[u8]) -> Result<DataAnalysisResult> {
         // Use the analyzer directly
-        let analysis = crate::storage::analysis::DataAnalyzer::new()
-            .analyze(data)?;
-        
+        let analysis = crate::storage::analysis::DataAnalyzer::new().analyze(data)?;
+
         Ok(DataAnalysisResult {
             entropy: analysis.entropy,
             format: format!("{:?}", analysis.format),
@@ -174,53 +176,55 @@ pub struct DataAnalysisResult {
 mod tests {
     use super::*;
     use tempfile::TempDir;
-    
+
     #[tokio::test]
     async fn test_integration_store_retrieve() {
         let temp_dir = TempDir::new().unwrap();
         let service = AdaptiveStorageService::new(temp_dir.path().to_path_buf());
         service.initialize().await.unwrap();
-        
+
         // Store data
         let data = b"Hello, NestGate!".to_vec();
         let receipt = service.store_data(data.clone()).await.unwrap();
-        
+
         // Verify receipt
         assert_eq!(receipt.original_size, data.len());
         assert!(!receipt.hash.is_empty());
-        
+
         // Retrieve data
         let retrieved = service.retrieve_data(&receipt.hash).await.unwrap();
         assert_eq!(retrieved, data);
     }
-    
+
     #[tokio::test]
     async fn test_integration_metrics() {
         let temp_dir = TempDir::new().unwrap();
         let service = AdaptiveStorageService::new(temp_dir.path().to_path_buf());
         service.initialize().await.unwrap();
-        
+
         // Store some data
         service.store_data(b"Test data".to_vec()).await.unwrap();
-        
+
         // Get metrics
         let metrics = service.get_metrics();
         assert_eq!(metrics.total_operations, 1);
         assert!(metrics.total_bytes_stored > 0);
     }
-    
+
     #[tokio::test]
     async fn test_integration_analyze() {
         let temp_dir = TempDir::new().unwrap();
         let service = AdaptiveStorageService::new(temp_dir.path().to_path_buf());
         service.initialize().await.unwrap();
-        
+
         // Analyze genomic data
         let genomic = b"ATCGATCGATCG".repeat(100);
         let analysis = service.analyze_data(&genomic).await.unwrap();
-        
-        assert!(analysis.entropy < 3.0, "Genomic data should have low entropy");
+
+        assert!(
+            analysis.entropy < 3.0,
+            "Genomic data should have low entropy"
+        );
         assert!(analysis.compressibility_estimate > 0.5);
     }
 }
-

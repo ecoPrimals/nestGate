@@ -1,4 +1,0 @@
-  ✅ User: mom (quota: 100GB)
-  ✅ User: dad (quota: 200GB)
-  ✅ User: alice (quota: 50GB)
-  ✅ User: bob (quota: 50GB)

@@ -1,5 +1,0 @@
-16K	outputs/storage_basics-1766334359/storage/backups
-8.0K	outputs/storage_basics-1766334359/storage/cache
-11M	outputs/storage_basics-1766334359/storage/data
-28K	outputs/storage_basics-1766334359/storage/logs
-8.0K	outputs/storage_basics-1766334359/storage/tmp

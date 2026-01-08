@@ -177,17 +177,17 @@ pub async fn announce_capability(capability: &str, endpoint: &str, ttl: Duration
     // TODO: Complete Infant Discovery system implementation first
     // The InfantDiscoverySystem currently lacks `announce_capability()` method
     // Following philosophy: "No mocks in production - mark incomplete until real implementation"
-    
+
     tracing::info!(
         "📢 Would announce capability '{}' at '{}' (TTL: {:?}) - awaiting InfantDiscoverySystem.announce_capability()",
         capability,
         endpoint,
         ttl
     );
-    
+
     // For now, log the announcement intent
     // This will be implemented when InfantDiscoverySystem is complete
-    
+
     Ok(())
 }
 
@@ -198,12 +198,12 @@ async fn discover_from_capability_registry(capability: &str) -> Result<ServiceEn
     // TODO: Complete Infant Discovery system implementation first
     // The InfantDiscoverySystem currently lacks `discover_capabilities()` method
     // Following philosophy: "No mocks in production - mark incomplete until real implementation"
-    
+
     tracing::debug!(
         "Capability registry discovery not yet complete for: {}",
         capability
     );
-    
+
     // Return not found to fall through to environment/default discovery
     Err(NestGateError::network_error(&format!(
         "Capability registry discovery requires InfantDiscoverySystem.discover_capabilities() implementation (capability: {})",
@@ -235,26 +235,30 @@ async fn discover_from_environment(capability: &str) -> Result<ServiceEndpoint> 
 async fn discover_from_local(capability: &str) -> Result<ServiceEndpoint> {
     // EVOLUTION: Implement mDNS discovery for local network scanning
     // Following philosophy: "Discover primals at runtime via mDNS/Songbird"
-    
+
     tracing::debug!("Attempting local mDNS discovery for: {}", capability);
-    
+
     // Try mDNS discovery (Songbird integration)
     // This scans the local network for services advertising this capability
     #[cfg(feature = "mdns-discovery")]
     {
         use crate::universal_primal_discovery::backends::mdns::MdnsDiscoveryBackend;
-        
+
         let mdns_backend = MdnsDiscoveryBackend::new()
             .map_err(|e| NestGateError::network_error(&format!("mDNS init failed: {:?}", e)))?;
-        
+
         // Scan for services with this capability
         let services = mdns_backend
             .discover_services(capability, std::time::Duration::from_secs(5))
             .await
             .map_err(|e| NestGateError::network_error(&format!("mDNS scan failed: {:?}", e)))?;
-        
+
         if let Some(service) = services.first() {
-            tracing::info!("✅ Discovered {} via mDNS: {}", capability, service.endpoint);
+            tracing::info!(
+                "✅ Discovered {} via mDNS: {}",
+                capability,
+                service.endpoint
+            );
             return Ok(ServiceEndpoint {
                 capability: capability.to_string(),
                 endpoint: service.endpoint.clone(),
@@ -263,7 +267,7 @@ async fn discover_from_local(capability: &str) -> Result<ServiceEndpoint> {
             });
         }
     }
-    
+
     // mDNS feature not enabled or no services found
     tracing::debug!("mDNS discovery returned no results for '{}'", capability);
     Err(NestGateError::network_error(&format!(
