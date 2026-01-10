@@ -47,6 +47,7 @@ pub mod jsonrpc_server;
 pub mod tarpc_client;
 pub mod tarpc_server;
 pub mod tarpc_types;
+pub mod unix_socket_server;
 
 // Re-export key types
 pub use tarpc_types::{
@@ -58,6 +59,7 @@ pub use tarpc_types::{
 pub use jsonrpc_server::{JsonRpcConfig, JsonRpcServer};
 pub use tarpc_client::NestGateRpcClient;
 pub use tarpc_server::{serve_tarpc, NestGateRpcService};
+pub use unix_socket_server::JsonRpcUnixServer;
 
 #[cfg(test)]
 mod tests {

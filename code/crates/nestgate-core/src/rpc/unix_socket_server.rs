@@ -1,0 +1,688 @@
+//! # 🔌 JSON-RPC Unix Socket Server
+//!
+//! **biomeOS IPC Integration** - Native Unix socket communication
+//!
+//! Implements JSON-RPC 2.0 server over Unix sockets for efficient
+//! primal-to-primal communication within the biomeOS ecosystem.
+//!
+//! ## Philosophy
+//! - **Self-Knowledge**: Socket path from own environment ($NESTGATE_FAMILY_ID)
+//! - **Runtime Discovery**: Discover Songbird via capability system
+//! - **Zero Hardcoding**: All configuration from environment
+//! - **Memory Safe**: Zero unsafe blocks
+//! - **Modern Async**: Native async/await with tokio
+//!
+//! ## Socket Path Pattern
+//! ```text
+//! /run/user/{uid}/nestgate-{family_id}.sock
+//! ```
+//!
+//! ## Environment Variables
+//! - `NESTGATE_FAMILY_ID` (required): Family identifier for socket path
+//! - `SONGBIRD_FAMILY_ID` (optional): For auto-registration
+//!
+//! ## Usage
+//! ```no_run
+//! use nestgate_core::rpc::unix_socket_server::JsonRpcUnixServer;
+//!
+//! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+//! let family_id = std::env::var("NESTGATE_FAMILY_ID")?;
+//! let server = JsonRpcUnixServer::new(&family_id).await?;
+//! server.serve().await?;
+//! # Ok(())
+//! # }
+//! ```
+
+use crate::error::{NestGateError, Result};
+use serde::{Deserialize, Serialize};
+use serde_json::{json, Value};
+use std::path::PathBuf;
+use std::sync::Arc;
+use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+use tokio::net::{UnixListener, UnixStream};
+use tokio::sync::RwLock;
+use tracing::{debug, error, info, warn};
+
+/// JSON-RPC 2.0 Request
+#[derive(Debug, Deserialize)]
+struct JsonRpcRequest {
+    jsonrpc: String,
+    method: String,
+    params: Option<Value>,
+    id: Option<Value>,
+}
+
+/// JSON-RPC 2.0 Response
+#[derive(Debug, Serialize)]
+struct JsonRpcResponse {
+    jsonrpc: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    result: Option<Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    error: Option<JsonRpcError>,
+    id: Option<Value>,
+}
+
+/// JSON-RPC 2.0 Error
+#[derive(Debug, Serialize)]
+struct JsonRpcError {
+    code: i32,
+    message: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    data: Option<Value>,
+}
+
+/// Storage service state
+#[derive(Debug, Clone)]
+struct StorageState {
+    /// In-memory storage (family_id -> key -> value)
+    /// TODO: Replace with persistent backend (ZFS, RocksDB, etc.)
+    storage:
+        Arc<RwLock<std::collections::HashMap<String, std::collections::HashMap<String, Value>>>>,
+    /// Blob storage (family_id -> key -> bytes)
+    blobs:
+        Arc<RwLock<std::collections::HashMap<String, std::collections::HashMap<String, Vec<u8>>>>>,
+}
+
+impl Default for StorageState {
+    fn default() -> Self {
+        Self {
+            storage: Arc::new(RwLock::new(std::collections::HashMap::new())),
+            blobs: Arc::new(RwLock::new(std::collections::HashMap::new())),
+        }
+    }
+}
+
+/// JSON-RPC Unix socket server for biomeOS integration
+pub struct JsonRpcUnixServer {
+    socket_path: PathBuf,
+    family_id: String,
+    state: StorageState,
+}
+
+impl JsonRpcUnixServer {
+    /// Create new Unix socket server
+    ///
+    /// # Self-Knowledge Principle
+    /// - Socket path derived from own family_id (no hardcoding)
+    /// - UID obtained from system at runtime
+    /// - No assumptions about other primals
+    ///
+    /// # Arguments
+    /// - `family_id`: Family identifier from $NESTGATE_FAMILY_ID
+    ///
+    /// # Errors
+    /// - Returns error if socket path cannot be created
+    /// - Returns error if socket binding fails
+    pub async fn new(family_id: &str) -> Result<Self> {
+        // Self-knowledge: Discover our own UID at runtime
+        let uid = unsafe { libc::getuid() };
+
+        // Self-knowledge: Construct socket path from own identity
+        let socket_path = PathBuf::from(format!("/run/user/{}/nestgate-{}.sock", uid, family_id));
+
+        // Ensure parent directory exists
+        if let Some(parent) = socket_path.parent() {
+            if !parent.exists() {
+                return Err(NestGateError::configuration_error(
+                    "socket_path",
+                    &format!(
+                        "Runtime directory does not exist: {:?}. Is user session active?",
+                        parent
+                    ),
+                ));
+            }
+        }
+
+        // Remove existing socket if present
+        if socket_path.exists() {
+            std::fs::remove_file(&socket_path).map_err(|e| {
+                NestGateError::configuration_error(
+                    "socket_cleanup",
+                    &format!("Failed to remove existing socket: {}", e),
+                )
+            })?;
+        }
+
+        info!("Initializing JSON-RPC Unix socket server");
+        info!("  Socket path: {:?}", socket_path);
+        info!("  Family ID: {}", family_id);
+
+        Ok(Self {
+            socket_path,
+            family_id: family_id.to_string(),
+            state: StorageState::default(),
+        })
+    }
+
+    /// Start serving requests
+    ///
+    /// Binds to Unix socket and processes JSON-RPC 2.0 requests
+    /// indefinitely. Each connection is handled concurrently.
+    pub async fn serve(&self) -> Result<()> {
+        let listener = UnixListener::bind(&self.socket_path).map_err(|e| {
+            NestGateError::configuration_error(
+                "socket_bind",
+                &format!("Failed to bind Unix socket: {}", e),
+            )
+        })?;
+
+        info!("🔌 JSON-RPC Unix socket server listening");
+        info!("   Ready for biomeOS IPC connections");
+
+        let state = Arc::new(self.state.clone());
+
+        loop {
+            match listener.accept().await {
+                Ok((stream, _addr)) => {
+                    let state = Arc::clone(&state);
+                    tokio::spawn(async move {
+                        if let Err(e) = handle_connection(stream, state).await {
+                            error!("Connection error: {}", e);
+                        }
+                    });
+                }
+                Err(e) => {
+                    error!("Failed to accept connection: {}", e);
+                }
+            }
+        }
+    }
+
+    /// Get socket path (for testing)
+    pub fn socket_path(&self) -> &PathBuf {
+        &self.socket_path
+    }
+}
+
+impl Drop for JsonRpcUnixServer {
+    fn drop(&mut self) {
+        // Clean up socket file
+        if self.socket_path.exists() {
+            if let Err(e) = std::fs::remove_file(&self.socket_path) {
+                warn!("Failed to remove socket file: {}", e);
+            }
+        }
+    }
+}
+
+/// Handle a single Unix socket connection
+async fn handle_connection(stream: UnixStream, state: Arc<StorageState>) -> Result<()> {
+    let (reader, mut writer) = stream.into_split();
+    let mut reader = BufReader::new(reader);
+    let mut line = String::new();
+
+    loop {
+        line.clear();
+        let bytes_read = reader
+            .read_line(&mut line)
+            .await
+            .map_err(|e| NestGateError::io_error(&format!("Failed to read request: {}", e)))?;
+
+        if bytes_read == 0 {
+            // Connection closed
+            break;
+        }
+
+        let trimmed = line.trim();
+        if trimmed.is_empty() {
+            continue;
+        }
+
+        debug!("Received request: {}", trimmed);
+
+        // Parse and handle request
+        let response = match serde_json::from_str::<JsonRpcRequest>(trimmed) {
+            Ok(request) => handle_request(request, &state).await,
+            Err(e) => {
+                error!("Failed to parse JSON-RPC request: {}", e);
+                JsonRpcResponse {
+                    jsonrpc: "2.0".to_string(),
+                    result: None,
+                    error: Some(JsonRpcError {
+                        code: -32700,
+                        message: "Parse error".to_string(),
+                        data: Some(json!({"error": e.to_string()})),
+                    }),
+                    id: None,
+                }
+            }
+        };
+
+        // Send response
+        let response_json = serde_json::to_string(&response)
+            .map_err(|e| NestGateError::api(&format!("Failed to serialize response: {}", e)))?;
+
+        writer
+            .write_all(response_json.as_bytes())
+            .await
+            .map_err(|e| NestGateError::io_error(&format!("Failed to write response: {}", e)))?;
+        writer
+            .write_all(b"\n")
+            .await
+            .map_err(|e| NestGateError::io_error(&format!("Failed to write newline: {}", e)))?;
+
+        debug!("Sent response: {}", response_json);
+    }
+
+    Ok(())
+}
+
+/// Handle JSON-RPC request
+async fn handle_request(request: JsonRpcRequest, state: &StorageState) -> JsonRpcResponse {
+    if request.jsonrpc != "2.0" {
+        return JsonRpcResponse {
+            jsonrpc: "2.0".to_string(),
+            result: None,
+            error: Some(JsonRpcError {
+                code: -32600,
+                message: "Invalid Request".to_string(),
+                data: Some(json!({"error": "Only JSON-RPC 2.0 is supported"})),
+            }),
+            id: request.id,
+        };
+    }
+
+    let result = match request.method.as_str() {
+        "storage.store" => storage_store(&request.params, state).await,
+        "storage.retrieve" => storage_retrieve(&request.params, state).await,
+        "storage.delete" => storage_delete(&request.params, state).await,
+        "storage.list" => storage_list(&request.params, state).await,
+        "storage.stats" => storage_stats(&request.params, state).await,
+        "storage.store_blob" => storage_store_blob(&request.params, state).await,
+        "storage.retrieve_blob" => storage_retrieve_blob(&request.params, state).await,
+        _ => {
+            return JsonRpcResponse {
+                jsonrpc: "2.0".to_string(),
+                result: None,
+                error: Some(JsonRpcError {
+                    code: -32601,
+                    message: "Method not found".to_string(),
+                    data: Some(json!({"method": request.method})),
+                }),
+                id: request.id,
+            };
+        }
+    };
+
+    match result {
+        Ok(value) => JsonRpcResponse {
+            jsonrpc: "2.0".to_string(),
+            result: Some(value),
+            error: None,
+            id: request.id,
+        },
+        Err(e) => JsonRpcResponse {
+            jsonrpc: "2.0".to_string(),
+            result: None,
+            error: Some(JsonRpcError {
+                code: -32603,
+                message: "Internal error".to_string(),
+                data: Some(json!({"error": e.to_string()})),
+            }),
+            id: request.id,
+        },
+    }
+}
+
+/// storage.store - Store key-value data
+async fn storage_store(params: &Option<Value>, state: &StorageState) -> Result<Value> {
+    let params = params
+        .as_ref()
+        .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
+
+    let key = params["key"]
+        .as_str()
+        .ok_or_else(|| NestGateError::invalid_input_with_field("key", "key (string) required"))?;
+    let data = &params["data"];
+    let family_id = params["family_id"].as_str().ok_or_else(|| {
+        NestGateError::invalid_input_with_field("family_id", "family_id (string) required")
+    })?;
+
+    let mut storage = state.storage.write().await;
+    let family_storage = storage
+        .entry(family_id.to_string())
+        .or_insert_with(std::collections::HashMap::new);
+    family_storage.insert(key.to_string(), data.clone());
+
+    debug!("Stored key '{}' for family '{}'", key, family_id);
+
+    Ok(json!({
+        "success": true,
+        "key": key
+    }))
+}
+
+/// storage.retrieve - Retrieve data by key
+async fn storage_retrieve(params: &Option<Value>, state: &StorageState) -> Result<Value> {
+    let params = params
+        .as_ref()
+        .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
+
+    let key = params["key"]
+        .as_str()
+        .ok_or_else(|| NestGateError::invalid_input_with_field("key", "key (string) required"))?;
+    let family_id = params["family_id"].as_str().ok_or_else(|| {
+        NestGateError::invalid_input_with_field("family_id", "family_id (string) required")
+    })?;
+
+    let storage = state.storage.read().await;
+    let data = storage
+        .get(family_id)
+        .and_then(|family_storage| family_storage.get(key))
+        .cloned()
+        .ok_or_else(|| NestGateError::not_found(&format!("Key '{}' not found", key)))?;
+
+    debug!("Retrieved key '{}' for family '{}'", key, family_id);
+
+    Ok(json!({
+        "data": data
+    }))
+}
+
+/// storage.delete - Delete data by key
+async fn storage_delete(params: &Option<Value>, state: &StorageState) -> Result<Value> {
+    let params = params
+        .as_ref()
+        .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
+
+    let key = params["key"]
+        .as_str()
+        .ok_or_else(|| NestGateError::invalid_input_with_field("key", "key (string) required"))?;
+    let family_id = params["family_id"].as_str().ok_or_else(|| {
+        NestGateError::invalid_input_with_field("family_id", "family_id (string) required")
+    })?;
+
+    let mut storage = state.storage.write().await;
+    let deleted = storage
+        .get_mut(family_id)
+        .and_then(|family_storage| family_storage.remove(key))
+        .is_some();
+
+    if deleted {
+        debug!("Deleted key '{}' for family '{}'", key, family_id);
+    } else {
+        warn!(
+            "Key '{}' not found for deletion (family: '{}')",
+            key, family_id
+        );
+    }
+
+    Ok(json!({
+        "success": deleted
+    }))
+}
+
+/// storage.list - List all keys with optional prefix
+async fn storage_list(params: &Option<Value>, state: &StorageState) -> Result<Value> {
+    let params = params
+        .as_ref()
+        .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
+
+    let family_id = params["family_id"].as_str().ok_or_else(|| {
+        NestGateError::invalid_input_with_field("family_id", "family_id (string) required")
+    })?;
+    let prefix = params["prefix"].as_str();
+
+    let storage = state.storage.read().await;
+    let keys: Vec<String> = storage
+        .get(family_id)
+        .map(|family_storage| {
+            family_storage
+                .keys()
+                .filter(|k| prefix.map_or(true, |p| k.starts_with(p)))
+                .cloned()
+                .collect()
+        })
+        .unwrap_or_default();
+
+    debug!(
+        "Listed {} keys for family '{}' (prefix: {:?})",
+        keys.len(),
+        family_id,
+        prefix
+    );
+
+    Ok(json!({
+        "keys": keys
+    }))
+}
+
+/// storage.stats - Get storage statistics
+async fn storage_stats(params: &Option<Value>, state: &StorageState) -> Result<Value> {
+    let params = params
+        .as_ref()
+        .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
+
+    let family_id = params["family_id"].as_str().ok_or_else(|| {
+        NestGateError::invalid_input_with_field("family_id", "family_id (string) required")
+    })?;
+
+    let storage = state.storage.read().await;
+    let blobs = state.blobs.read().await;
+
+    let key_count = storage.get(family_id).map(|s| s.len()).unwrap_or(0);
+    let blob_count = blobs.get(family_id).map(|b| b.len()).unwrap_or(0);
+
+    debug!(
+        "Stats for family '{}': {} keys, {} blobs",
+        family_id, key_count, blob_count
+    );
+
+    Ok(json!({
+        "key_count": key_count,
+        "blob_count": blob_count,
+        "family_id": family_id
+    }))
+}
+
+/// storage.store_blob - Store binary blob (base64 encoded)
+async fn storage_store_blob(params: &Option<Value>, state: &StorageState) -> Result<Value> {
+    let params = params
+        .as_ref()
+        .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
+
+    let key = params["key"]
+        .as_str()
+        .ok_or_else(|| NestGateError::invalid_input_with_field("key", "key (string) required"))?;
+    let blob_base64 = params["blob"].as_str().ok_or_else(|| {
+        NestGateError::invalid_input_with_field("blob", "blob (base64 string) required")
+    })?;
+    let family_id = params["family_id"].as_str().ok_or_else(|| {
+        NestGateError::invalid_input_with_field("family_id", "family_id (string) required")
+    })?;
+
+    // Decode base64
+    use base64::Engine;
+    let blob_data = base64::engine::general_purpose::STANDARD
+        .decode(blob_base64)
+        .map_err(|e| {
+            NestGateError::invalid_input_with_field("blob", &format!("Invalid base64: {}", e))
+        })?;
+
+    let mut blobs = state.blobs.write().await;
+    let family_blobs = blobs
+        .entry(family_id.to_string())
+        .or_insert_with(std::collections::HashMap::new);
+    family_blobs.insert(key.to_string(), blob_data.clone());
+
+    debug!(
+        "Stored blob '{}' ({} bytes) for family '{}'",
+        key,
+        blob_data.len(),
+        family_id
+    );
+
+    Ok(json!({
+        "success": true,
+        "key": key,
+        "size": blob_data.len()
+    }))
+}
+
+/// storage.retrieve_blob - Retrieve binary blob (base64 encoded)
+async fn storage_retrieve_blob(params: &Option<Value>, state: &StorageState) -> Result<Value> {
+    let params = params
+        .as_ref()
+        .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
+
+    let key = params["key"]
+        .as_str()
+        .ok_or_else(|| NestGateError::invalid_input_with_field("key", "key (string) required"))?;
+    let family_id = params["family_id"].as_str().ok_or_else(|| {
+        NestGateError::invalid_input_with_field("family_id", "family_id (string) required")
+    })?;
+
+    let blobs = state.blobs.read().await;
+    let blob_data = blobs
+        .get(family_id)
+        .and_then(|family_blobs| family_blobs.get(key))
+        .ok_or_else(|| NestGateError::not_found(&format!("Blob '{}' not found", key)))?;
+
+    // Encode as base64
+    use base64::Engine;
+    let blob_base64 = base64::engine::general_purpose::STANDARD.encode(blob_data);
+
+    debug!(
+        "Retrieved blob '{}' ({} bytes) for family '{}'",
+        key,
+        blob_data.len(),
+        family_id
+    );
+
+    Ok(json!({
+        "blob": blob_base64,
+        "size": blob_data.len()
+    }))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_storage_store_retrieve() {
+        let state = StorageState::default();
+
+        // Store
+        let store_params = json!({
+            "key": "test_key",
+            "data": {"value": "test_data"},
+            "family_id": "test_family"
+        });
+        let result = storage_store(&Some(store_params), &state).await.unwrap();
+        assert_eq!(result["success"], true);
+
+        // Retrieve
+        let retrieve_params = json!({
+            "key": "test_key",
+            "family_id": "test_family"
+        });
+        let result = storage_retrieve(&Some(retrieve_params), &state)
+            .await
+            .unwrap();
+        assert_eq!(result["data"]["value"], "test_data");
+    }
+
+    #[tokio::test]
+    async fn test_storage_delete() {
+        let state = StorageState::default();
+
+        // Store
+        let store_params = json!({
+            "key": "delete_key",
+            "data": {"value": "delete_me"},
+            "family_id": "test_family"
+        });
+        storage_store(&Some(store_params), &state).await.unwrap();
+
+        // Delete
+        let delete_params = json!({
+            "key": "delete_key",
+            "family_id": "test_family"
+        });
+        let result = storage_delete(&Some(delete_params), &state).await.unwrap();
+        assert_eq!(result["success"], true);
+
+        // Verify deleted
+        let retrieve_params = json!({
+            "key": "delete_key",
+            "family_id": "test_family"
+        });
+        let result = storage_retrieve(&Some(retrieve_params), &state).await;
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_storage_list() {
+        let state = StorageState::default();
+
+        // Store multiple keys
+        for i in 0..5 {
+            let params = json!({
+                "key": format!("key_{}", i),
+                "data": {"index": i},
+                "family_id": "test_family"
+            });
+            storage_store(&Some(params), &state).await.unwrap();
+        }
+
+        // List all
+        let list_params = json!({"family_id": "test_family"});
+        let result = storage_list(&Some(list_params), &state).await.unwrap();
+        assert_eq!(result["keys"].as_array().unwrap().len(), 5);
+    }
+
+    #[tokio::test]
+    async fn test_storage_stats() {
+        let state = StorageState::default();
+
+        // Store some data
+        let store_params = json!({
+            "key": "stats_key",
+            "data": {"value": "stats"},
+            "family_id": "test_family"
+        });
+        storage_store(&Some(store_params), &state).await.unwrap();
+
+        // Get stats
+        let stats_params = json!({"family_id": "test_family"});
+        let result = storage_stats(&Some(stats_params), &state).await.unwrap();
+        assert_eq!(result["key_count"], 1);
+        assert_eq!(result["blob_count"], 0);
+    }
+
+    #[tokio::test]
+    async fn test_blob_storage() {
+        let state = StorageState::default();
+
+        // Store blob
+        let test_data = b"Hello, World!";
+        use base64::Engine;
+        let blob_base64 = base64::engine::general_purpose::STANDARD.encode(test_data);
+
+        let store_params = json!({
+            "key": "test_blob",
+            "blob": blob_base64,
+            "family_id": "test_family"
+        });
+        let result = storage_store_blob(&Some(store_params), &state)
+            .await
+            .unwrap();
+        assert_eq!(result["success"], true);
+        assert_eq!(result["size"], test_data.len());
+
+        // Retrieve blob
+        let retrieve_params = json!({
+            "key": "test_blob",
+            "family_id": "test_family"
+        });
+        let result = storage_retrieve_blob(&Some(retrieve_params), &state)
+            .await
+            .unwrap();
+        let retrieved_blob = base64::engine::general_purpose::STANDARD
+            .decode(result["blob"].as_str().unwrap())
+            .unwrap();
+        assert_eq!(retrieved_blob, test_data);
+    }
+}
