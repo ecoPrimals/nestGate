@@ -44,9 +44,8 @@ use tracing::{debug, info, warn};
 
 use crate::error::{NestGateError, Result};
 use crate::rpc::tarpc_types::{
-    CapabilityRegistration, DatasetInfo, DatasetParams, HealthStatus,
-    NestGateRpcError, ObjectInfo, OperationResult, ProtocolInfo, RegistrationResult, ServiceInfo,
-    StorageMetrics, VersionInfo,
+    CapabilityRegistration, DatasetInfo, DatasetParams, HealthStatus, NestGateRpcError, ObjectInfo,
+    OperationResult, ProtocolInfo, RegistrationResult, ServiceInfo, StorageMetrics, VersionInfo,
 };
 
 // Import the generated client from the tarpc macro
@@ -367,7 +366,10 @@ impl NestGateRpcClient {
     ///
     /// # Errors
     /// Returns error if registration fails
-    pub async fn register_capability(&self, registration: CapabilityRegistration) -> Result<RegistrationResult> {
+    pub async fn register_capability(
+        &self,
+        registration: CapabilityRegistration,
+    ) -> Result<RegistrationResult> {
         debug!("Registering capability: {}", registration.capability);
         let client = self.get_connection().await?;
         let ctx = tarpc::context::current();
@@ -480,9 +482,15 @@ impl NestGateRpcClient {
     async fn connect(&self) -> Result<GeneratedClient> {
         info!("Connecting to NestGate tarpc server at {}", self.addr);
 
-        let transport = tarpc::serde_transport::tcp::connect(self.addr, tokio_serde::formats::Bincode::default)
-            .await
-            .map_err(|e| NestGateError::network_error(&format!("Failed to connect to {}: {}", self.addr, e)))?;
+        let transport =
+            tarpc::serde_transport::tcp::connect(self.addr, tokio_serde::formats::Bincode::default)
+                .await
+                .map_err(|e| {
+                    NestGateError::network_error(&format!(
+                        "Failed to connect to {}: {}",
+                        self.addr, e
+                    ))
+                })?;
 
         let client = GeneratedClient::new(client::Config::default(), transport).spawn();
 
@@ -500,16 +508,22 @@ impl NestGateRpcClient {
     fn parse_endpoint(endpoint: &str) -> Result<SocketAddr> {
         // Parse tarpc://host:port
         if !endpoint.starts_with("tarpc://") {
-            return Err(NestGateError::configuration_error("endpoint", &format!(
-                "Invalid tarpc endpoint (must start with tarpc://): {}",
-                endpoint
-            )));
+            return Err(NestGateError::configuration_error(
+                "endpoint",
+                &format!(
+                    "Invalid tarpc endpoint (must start with tarpc://): {}",
+                    endpoint
+                ),
+            ));
         }
 
         let addr_str = endpoint.strip_prefix("tarpc://").unwrap();
-        addr_str
-            .parse()
-            .map_err(|e| NestGateError::configuration_error("endpoint", &format!("Invalid socket address {}: {}", addr_str, e)))
+        addr_str.parse().map_err(|e| {
+            NestGateError::configuration_error(
+                "endpoint",
+                &format!("Invalid socket address {}: {}", addr_str, e),
+            )
+        })
     }
 
     /// Convert RPC error to NestGateError
@@ -525,23 +539,29 @@ impl NestGateRpcClient {
                 NestGateError::not_found(&format!("Object not found: {}/{}", dataset, key))
             }
             NestGateRpcError::ObjectAlreadyExists { dataset, key } => {
-                NestGateError::api_internal_error(&format!("Object already exists: {}/{}", dataset, key))
+                NestGateError::api_internal_error(&format!(
+                    "Object already exists: {}/{}",
+                    dataset, key
+                ))
             }
             NestGateRpcError::InvalidParameters { message } => {
                 NestGateError::validation_error(&message)
             }
-            NestGateRpcError::StorageFull { required, available } => {
-                NestGateError::storage_error(&format!(
-                    "Storage full: required {} bytes, available {} bytes",
-                    required, available
-                ))
-            }
-            NestGateRpcError::QuotaExceeded { dataset, quota, requested } => {
-                NestGateError::storage_error(&format!(
-                    "Quota exceeded for dataset {}: quota {} bytes, requested {} bytes",
-                    dataset, quota, requested
-                ))
-            }
+            NestGateRpcError::StorageFull {
+                required,
+                available,
+            } => NestGateError::storage_error(&format!(
+                "Storage full: required {} bytes, available {} bytes",
+                required, available
+            )),
+            NestGateRpcError::QuotaExceeded {
+                dataset,
+                quota,
+                requested,
+            } => NestGateError::storage_error(&format!(
+                "Quota exceeded for dataset {}: quota {} bytes, requested {} bytes",
+                dataset, quota, requested
+            )),
             NestGateRpcError::PermissionDenied { message } => {
                 NestGateError::authorization(&message, "storage")
             }
@@ -551,9 +571,7 @@ impl NestGateRpcClient {
             NestGateRpcError::ServiceUnavailable { message } => {
                 NestGateError::service_unavailable(&message)
             }
-            NestGateRpcError::ConnectionError { message } => {
-                NestGateError::network_error(&message)
-            }
+            NestGateRpcError::ConnectionError { message } => NestGateError::network_error(&message),
             NestGateRpcError::Timeout { operation } => {
                 NestGateError::timeout_error(&operation, std::time::Duration::from_secs(5))
             }

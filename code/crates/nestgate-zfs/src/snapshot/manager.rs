@@ -55,28 +55,6 @@ pub struct ZfsSnapshotManager {
 }
 
 impl ZfsSnapshotManager {
-    /// Create snapshot manager for testing
-    #[must_use]
-    pub fn new_for_testing() -> Self {
-        let config = ZfsConfig::default();
-        let pool_manager = Arc::new(ZfsPoolManager::new_production(config.clone()));
-        let dataset_manager = Arc::new(ZfsDatasetManager::new(config, pool_manager));
-        let policies = Arc::new(RwLock::new(HashMap::new()));
-        let operation_queue = Arc::new(RwLock::new(Vec::new()));
-
-        Self {
-            config: ZfsConfig::default(),
-            dataset_manager: dataset_manager.clone(),
-            policies: policies.clone(),
-            snapshot_cache: Arc::new(RwLock::new(HashMap::new())),
-            operation_queue: operation_queue.clone(),
-            statistics: Arc::new(RwLock::new(SnapshotStatistics::default())),
-            policy_scheduler: PolicyScheduler::new(dataset_manager, policies, operation_queue),
-            shutdown_tx: None,
-            background_tasks: Vec::new(),
-        }
-    }
-
     /// Create a new snapshot manager
     #[must_use]
     pub fn new(config: ZfsConfig, dataset_manager: Arc<ZfsDatasetManager>) -> Self {
@@ -452,5 +430,36 @@ impl ZfsSnapshotManager {
     /// Parse schedule frequency to duration for next execution
     pub fn parse_schedule(&self, schedule: &ScheduleFrequency) -> CoreResult<Duration> {
         self.policy_scheduler.parse_schedule(schedule)
+    }
+}
+
+// ========== TEST-ONLY CONSTRUCTORS ==========
+// Isolated from production code to maintain clear boundaries
+
+#[cfg(test)]
+impl ZfsSnapshotManager {
+    /// Create snapshot manager for testing
+    ///
+    /// **TEST-ONLY**: This constructor is only available in test builds.
+    /// Production code must use `ZfsSnapshotManager::new()` with proper configuration.
+    #[must_use]
+    pub fn new_for_testing() -> Self {
+        let config = ZfsConfig::default();
+        let pool_manager = Arc::new(ZfsPoolManager::new_production(config.clone()));
+        let dataset_manager = Arc::new(ZfsDatasetManager::new(config, pool_manager));
+        let policies = Arc::new(RwLock::new(HashMap::new()));
+        let operation_queue = Arc::new(RwLock::new(Vec::new()));
+
+        Self {
+            config: ZfsConfig::default(),
+            dataset_manager: dataset_manager.clone(),
+            policies: policies.clone(),
+            snapshot_cache: Arc::new(RwLock::new(HashMap::new())),
+            operation_queue: operation_queue.clone(),
+            statistics: Arc::new(RwLock::new(SnapshotStatistics::default())),
+            policy_scheduler: PolicyScheduler::new(dataset_manager, policies, operation_queue),
+            shutdown_tx: None,
+            background_tasks: Vec::new(),
+        }
     }
 }

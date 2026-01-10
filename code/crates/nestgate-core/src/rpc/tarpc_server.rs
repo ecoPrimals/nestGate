@@ -56,10 +56,10 @@ use crate::rpc::tarpc_types::{
 pub struct NestGateRpcService {
     /// In-memory datasets (Phase 1 - will be replaced with real storage)
     datasets: Arc<RwLock<HashMap<String, DatasetInfo>>>,
-    
+
     /// In-memory objects (Phase 1 - will be replaced with real storage)
     objects: Arc<RwLock<HashMap<String, HashMap<String, (Vec<u8>, ObjectInfo)>>>>,
-    
+
     /// Start time for uptime calculation
     start_time: SystemTime,
 }
@@ -93,10 +93,7 @@ impl NestGateRpcService {
 
     /// Get uptime in seconds
     fn uptime_seconds(&self) -> u64 {
-        self.start_time
-            .elapsed()
-            .unwrap_or_default()
-            .as_secs()
+        self.start_time.elapsed().unwrap_or_default().as_secs()
     }
 
     /// Calculate storage metrics
@@ -166,7 +163,7 @@ impl NestGateRpc for NestGateRpcService {
         };
 
         datasets.insert(name.clone(), dataset.clone());
-        
+
         // Initialize empty object map for this dataset
         let mut objects = self.objects.write().await;
         objects.insert(name, HashMap::new());
@@ -175,7 +172,10 @@ impl NestGateRpc for NestGateRpcService {
         Ok(dataset)
     }
 
-    async fn list_datasets(self, _context: Context) -> std::result::Result<Vec<DatasetInfo>, NestGateRpcError> {
+    async fn list_datasets(
+        self,
+        _context: Context,
+    ) -> std::result::Result<Vec<DatasetInfo>, NestGateRpcError> {
         debug!("RPC: list_datasets()");
 
         let datasets = self.datasets.read().await;
@@ -204,13 +204,13 @@ impl NestGateRpc for NestGateRpcService {
         debug!("RPC: delete_dataset({})", name);
 
         let mut datasets = self.datasets.write().await;
-        
+
         if !datasets.contains_key(&name) {
             return Err(NestGateRpcError::DatasetNotFound { dataset: name });
         }
 
         datasets.remove(&name);
-        
+
         // Remove all objects in dataset
         let mut objects = self.objects.write().await;
         objects.remove(&name);
@@ -242,9 +242,7 @@ impl NestGateRpc for NestGateRpcService {
         }
 
         let mut objects = self.objects.write().await;
-        let dataset_objects = objects
-            .entry(dataset.clone())
-            .or_insert_with(HashMap::new);
+        let dataset_objects = objects.entry(dataset.clone()).or_insert_with(HashMap::new);
 
         let now = Self::current_timestamp();
         let object_info = ObjectInfo {
@@ -283,11 +281,12 @@ impl NestGateRpc for NestGateRpcService {
         debug!("RPC: retrieve_object({}/{})", dataset, key);
 
         let objects = self.objects.read().await;
-        let dataset_objects = objects
-            .get(&dataset)
-            .ok_or_else(|| NestGateRpcError::DatasetNotFound {
-                dataset: dataset.clone(),
-            })?;
+        let dataset_objects =
+            objects
+                .get(&dataset)
+                .ok_or_else(|| NestGateRpcError::DatasetNotFound {
+                    dataset: dataset.clone(),
+                })?;
 
         dataset_objects
             .get(&key)
@@ -304,11 +303,12 @@ impl NestGateRpc for NestGateRpcService {
         debug!("RPC: get_object_metadata({}/{})", dataset, key);
 
         let objects = self.objects.read().await;
-        let dataset_objects = objects
-            .get(&dataset)
-            .ok_or_else(|| NestGateRpcError::DatasetNotFound {
-                dataset: dataset.clone(),
-            })?;
+        let dataset_objects =
+            objects
+                .get(&dataset)
+                .ok_or_else(|| NestGateRpcError::DatasetNotFound {
+                    dataset: dataset.clone(),
+                })?;
 
         dataset_objects
             .get(&key)
@@ -326,11 +326,12 @@ impl NestGateRpc for NestGateRpcService {
         debug!("RPC: list_objects({}, {:?}, {:?})", dataset, prefix, limit);
 
         let objects = self.objects.read().await;
-        let dataset_objects = objects
-            .get(&dataset)
-            .ok_or_else(|| NestGateRpcError::DatasetNotFound {
-                dataset: dataset.clone(),
-            })?;
+        let dataset_objects =
+            objects
+                .get(&dataset)
+                .ok_or_else(|| NestGateRpcError::DatasetNotFound {
+                    dataset: dataset.clone(),
+                })?;
 
         let mut results: Vec<ObjectInfo> = dataset_objects
             .iter()
@@ -360,11 +361,12 @@ impl NestGateRpc for NestGateRpcService {
         debug!("RPC: delete_object({}/{})", dataset, key);
 
         let mut objects = self.objects.write().await;
-        let dataset_objects = objects
-            .get_mut(&dataset)
-            .ok_or_else(|| NestGateRpcError::DatasetNotFound {
-                dataset: dataset.clone(),
-            })?;
+        let dataset_objects =
+            objects
+                .get_mut(&dataset)
+                .ok_or_else(|| NestGateRpcError::DatasetNotFound {
+                    dataset: dataset.clone(),
+                })?;
 
         let (_, info) = dataset_objects
             .remove(&key)
@@ -511,9 +513,12 @@ impl NestGateRpc for NestGateRpcService {
 pub async fn serve_tarpc(addr: SocketAddr, service: NestGateRpcService) -> Result<()> {
     info!("🚀 Starting NestGate tarpc server on {}", addr);
 
-    let listener = tarpc::serde_transport::tcp::listen(addr, tokio_serde::formats::Bincode::default)
-        .await
-        .map_err(|e| NestGateError::network_error(&format!("Failed to bind to {}: {}", addr, e)))?;
+    let listener =
+        tarpc::serde_transport::tcp::listen(addr, tokio_serde::formats::Bincode::default)
+            .await
+            .map_err(|e| {
+                NestGateError::network_error(&format!("Failed to bind to {}: {}", addr, e))
+            })?;
 
     info!("✅ NestGate tarpc server listening on {}", addr);
 
@@ -598,7 +603,7 @@ mod tests {
     #[tokio::test]
     async fn test_list_datasets() {
         let service = NestGateRpcService::new();
-        
+
         // Create a dataset
         service
             .clone()
@@ -611,7 +616,11 @@ mod tests {
             .unwrap();
 
         // List datasets
-        let datasets = service.clone().list_datasets(Context::current()).await.unwrap();
+        let datasets = service
+            .clone()
+            .list_datasets(Context::current())
+            .await
+            .unwrap();
         assert_eq!(datasets.len(), 1);
         assert_eq!(datasets[0].name, "test-dataset");
     }
@@ -619,7 +628,7 @@ mod tests {
     #[tokio::test]
     async fn test_store_retrieve_object() {
         let service = NestGateRpcService::new();
-        
+
         // Create dataset
         service
             .clone()

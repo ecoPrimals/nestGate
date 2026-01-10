@@ -67,15 +67,6 @@ impl ZfsDatasetManager {
         }
     }
 
-    /// Create dataset manager for testing
-    #[cfg(test)]
-    pub fn new_for_testing() -> Self {
-        Self {
-            config: Arc::new(ZfsConfig::default()),
-            pool_manager: Arc::new(ZfsPoolManager::new_for_testing()),
-        }
-    }
-
     /// Create a new ZFS dataset
     ///
     /// # Errors
@@ -588,5 +579,22 @@ impl ZfsDatasetManager {
         }
 
         Ok(snapshots)
+    }
+}
+
+// ========== TEST-ONLY CONSTRUCTORS ==========
+// Isolated from production code to maintain clear boundaries
+
+#[cfg(test)]
+impl ZfsDatasetManager {
+    /// Create dataset manager for testing
+    ///
+    /// **TEST-ONLY**: This constructor is only available in test builds.
+    /// Production code must use `ZfsDatasetManager::new()` with proper configuration.
+    pub fn new_for_testing() -> Self {
+        Self {
+            config: Arc::new(ZfsConfig::default()),
+            pool_manager: Arc::new(ZfsPoolManager::new_for_testing()),
+        }
     }
 }

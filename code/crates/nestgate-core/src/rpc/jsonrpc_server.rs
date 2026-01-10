@@ -67,7 +67,7 @@ impl Default for JsonRpcConfig {
         Self {
             addr: SocketAddr::new(IpAddr::V6(Ipv6Addr::UNSPECIFIED), 8092),
             log_requests: true,
-            max_request_size: 100 * 1024 * 1024,  // 100 MB for large objects
+            max_request_size: 100 * 1024 * 1024, // 100 MB for large objects
             max_response_size: 100 * 1024 * 1024, // 100 MB
         }
     }
@@ -100,7 +100,10 @@ impl JsonRpcServer {
 
     /// Build and start the JSON-RPC server
     pub async fn start(self) -> Result<(ServerHandle, SocketAddr), Box<dyn std::error::Error>> {
-        info!("🚀 Starting NestGate JSON-RPC 2.0 server on {}", self.config.addr);
+        info!(
+            "🚀 Starting NestGate JSON-RPC 2.0 server on {}",
+            self.config.addr
+        );
 
         // Build server
         let server = Server::builder().build(self.config.addr).await?;
@@ -258,12 +261,24 @@ impl JsonRpcServer {
 
             // Decode base64 data
             let data = base64::Engine::decode(&base64::engine::general_purpose::STANDARD, &p.data)
-                .map_err(|e| ErrorObjectOwned::owned(-32602, format!("Invalid base64 data: {}", e), None::<()>))?;
+                .map_err(|e| {
+                    ErrorObjectOwned::owned(
+                        -32602,
+                        format!("Invalid base64 data: {}", e),
+                        None::<()>,
+                    )
+                })?;
 
             let state = ctx.as_ref();
             let service_clone = state.service.clone();
             let result = service_clone
-                .store_object(tarpc::context::current(), p.dataset, p.key, data, p.metadata)
+                .store_object(
+                    tarpc::context::current(),
+                    p.dataset,
+                    p.key,
+                    data,
+                    p.metadata,
+                )
                 .await
                 .map_err(|e| ErrorObjectOwned::owned(-32603, e.to_string(), None::<()>))?;
 
@@ -277,59 +292,65 @@ impl JsonRpcServer {
         })?;
 
         // nestgate.retrieveObject
-        module.register_async_method("nestgate.retrieveObject", |params, ctx, _ext| async move {
-            #[derive(serde::Deserialize)]
-            struct Params {
-                dataset: String,
-                key: String,
-            }
+        module.register_async_method(
+            "nestgate.retrieveObject",
+            |params, ctx, _ext| async move {
+                #[derive(serde::Deserialize)]
+                struct Params {
+                    dataset: String,
+                    key: String,
+                }
 
-            let p: Params = params.parse()?;
-            debug!("JSON-RPC: retrieveObject({}/{})", p.dataset, p.key);
+                let p: Params = params.parse()?;
+                debug!("JSON-RPC: retrieveObject({}/{})", p.dataset, p.key);
 
-            let state = ctx.as_ref();
-            let service_clone = state.service.clone();
-            let data = service_clone
-                .retrieve_object(tarpc::context::current(), p.dataset, p.key)
-                .await
-                .map_err(|e| ErrorObjectOwned::owned(-32603, e.to_string(), None::<()>))?;
+                let state = ctx.as_ref();
+                let service_clone = state.service.clone();
+                let data = service_clone
+                    .retrieve_object(tarpc::context::current(), p.dataset, p.key)
+                    .await
+                    .map_err(|e| ErrorObjectOwned::owned(-32603, e.to_string(), None::<()>))?;
 
-            // Encode to base64
-            let encoded = base64::engine::general_purpose::STANDARD.encode(&data);
+                // Encode to base64
+                let encoded = base64::engine::general_purpose::STANDARD.encode(&data);
 
-            Ok::<_, ErrorObjectOwned>(serde_json::json!({
-                "data": encoded,
-                "size_bytes": data.len(),
-            }))
-        })?;
+                Ok::<_, ErrorObjectOwned>(serde_json::json!({
+                    "data": encoded,
+                    "size_bytes": data.len(),
+                }))
+            },
+        )?;
 
         // nestgate.getObjectMetadata
-        module.register_async_method("nestgate.getObjectMetadata", |params, ctx, _ext| async move {
-            #[derive(serde::Deserialize)]
-            struct Params {
-                dataset: String,
-                key: String,
-            }
+        module.register_async_method(
+            "nestgate.getObjectMetadata",
+            |params, ctx, _ext| async move {
+                #[derive(serde::Deserialize)]
+                struct Params {
+                    dataset: String,
+                    key: String,
+                }
 
-            let p: Params = params.parse()?;
-            debug!("JSON-RPC: getObjectMetadata({}/{})", p.dataset, p.key);
+                let p: Params = params.parse()?;
+                debug!("JSON-RPC: getObjectMetadata({}/{})", p.dataset, p.key);
 
-            let state = ctx.as_ref();
-            let service_clone = state.service.clone();
-            let info = service_clone
-                .get_object_metadata(tarpc::context::current(), p.dataset, p.key)
-                .await
-                .map_err(|e| ErrorObjectOwned::owned(-32603, e.to_string(), None::<()>))?;
+                let state = ctx.as_ref();
+                let service_clone = state.service.clone();
+                let info = service_clone
+                    .get_object_metadata(tarpc::context::current(), p.dataset, p.key)
+                    .await
+                    .map_err(|e| ErrorObjectOwned::owned(-32603, e.to_string(), None::<()>))?;
 
-            Ok::<_, ErrorObjectOwned>(serde_json::json!({
-                "key": info.key,
-                "dataset": info.dataset,
-                "size_bytes": info.size_bytes,
-                "created_at": info.created_at,
-                "modified_at": info.modified_at,
-                "metadata": info.metadata,
-            }))
-        })?;
+                Ok::<_, ErrorObjectOwned>(serde_json::json!({
+                    "key": info.key,
+                    "dataset": info.dataset,
+                    "size_bytes": info.size_bytes,
+                    "created_at": info.created_at,
+                    "modified_at": info.modified_at,
+                    "metadata": info.metadata,
+                }))
+            },
+        )?;
 
         // nestgate.listObjects
         module.register_async_method("nestgate.listObjects", |params, ctx, _ext| async move {
@@ -343,7 +364,10 @@ impl JsonRpcServer {
             }
 
             let p: Params = params.parse()?;
-            debug!("JSON-RPC: listObjects({}, {:?}, {:?})", p.dataset, p.prefix, p.limit);
+            debug!(
+                "JSON-RPC: listObjects({}, {:?}, {:?})",
+                p.dataset, p.prefix, p.limit
+            );
 
             let state = ctx.as_ref();
             let service_clone = state.service.clone();
@@ -400,37 +424,43 @@ impl JsonRpcServer {
         module: &mut RpcModule<JsonRpcState>,
     ) -> Result<(), Box<dyn std::error::Error>> {
         // nestgate.registerCapability
-        module.register_async_method("nestgate.registerCapability", |params, _ctx, _ext| async move {
-            #[derive(serde::Deserialize)]
-            struct Params {
-                capability: String,
-                endpoint: String,
-                #[serde(default)]
-                metadata: Option<HashMap<String, String>>,
-            }
+        module.register_async_method(
+            "nestgate.registerCapability",
+            |params, _ctx, _ext| async move {
+                #[derive(serde::Deserialize)]
+                struct Params {
+                    capability: String,
+                    endpoint: String,
+                    #[serde(default)]
+                    metadata: Option<HashMap<String, String>>,
+                }
 
-            let p: Params = params.parse()?;
-            debug!("JSON-RPC: registerCapability({})", p.capability);
+                let p: Params = params.parse()?;
+                debug!("JSON-RPC: registerCapability({})", p.capability);
 
-            // TODO: Wire to universal adapter
-            warn!("⚠️  Capability registration not yet wired to universal adapter");
+                // TODO: Wire to universal adapter
+                warn!("⚠️  Capability registration not yet wired to universal adapter");
 
-            Ok::<_, ErrorObjectOwned>(serde_json::json!({
-                "success": true,
-                "message": format!("Capability {} registered (stub)", p.capability),
-            }))
-        })?;
+                Ok::<_, ErrorObjectOwned>(serde_json::json!({
+                    "success": true,
+                    "message": format!("Capability {} registered (stub)", p.capability),
+                }))
+            },
+        )?;
 
         // nestgate.discoverCapability
-        module.register_async_method("nestgate.discoverCapability", |params, _ctx, _ext| async move {
-            let capability: String = params.one()?;
-            debug!("JSON-RPC: discoverCapability({})", capability);
+        module.register_async_method(
+            "nestgate.discoverCapability",
+            |params, _ctx, _ext| async move {
+                let capability: String = params.one()?;
+                debug!("JSON-RPC: discoverCapability({})", capability);
 
-            // TODO: Wire to universal adapter
-            warn!("⚠️  Capability discovery not yet wired to universal adapter");
+                // TODO: Wire to universal adapter
+                warn!("⚠️  Capability discovery not yet wired to universal adapter");
 
-            Ok::<_, ErrorObjectOwned>(Vec::<serde_json::Value>::new())
-        })?;
+                Ok::<_, ErrorObjectOwned>(Vec::<serde_json::Value>::new())
+            },
+        )?;
 
         Ok(())
     }
@@ -445,9 +475,7 @@ impl JsonRpcServer {
 
             let state = ctx.as_ref();
             let service_clone = state.service.clone();
-            let health = service_clone
-                .health(tarpc::context::current())
-                .await;
+            let health = service_clone.health(tarpc::context::current()).await;
 
             Ok::<_, ErrorObjectOwned>(serde_json::json!({
                 "status": health.status,
@@ -462,9 +490,7 @@ impl JsonRpcServer {
 
             let state = ctx.as_ref();
             let service_clone = state.service.clone();
-            let metrics = service_clone
-                .metrics(tarpc::context::current())
-                .await;
+            let metrics = service_clone.metrics(tarpc::context::current()).await;
 
             Ok::<_, ErrorObjectOwned>(serde_json::json!({
                 "total_capacity_bytes": metrics.total_capacity_bytes,
@@ -481,9 +507,7 @@ impl JsonRpcServer {
 
             let state = ctx.as_ref();
             let service_clone = state.service.clone();
-            let version = service_clone
-                .version(tarpc::context::current())
-                .await;
+            let version = service_clone.version(tarpc::context::current()).await;
 
             Ok::<_, ErrorObjectOwned>(serde_json::json!({
                 "version": version.version,
@@ -499,9 +523,7 @@ impl JsonRpcServer {
 
             let state = ctx.as_ref();
             let service_clone = state.service.clone();
-            let protocols = service_clone
-                .protocols(tarpc::context::current())
-                .await;
+            let protocols = service_clone.protocols(tarpc::context::current()).await;
 
             let results: Vec<serde_json::Value> = protocols
                 .into_iter()
@@ -562,7 +584,7 @@ mod tests {
             service: service.clone(),
             start_time: std::time::Instant::now(),
         };
-        
+
         // Verify state is clonable
         let _state_clone = state.clone();
     }
@@ -590,7 +612,7 @@ mod tests {
         let service1 = NestGateRpcService::new();
         let service2 = NestGateRpcService::new();
         let config = JsonRpcConfig::default();
-        
+
         let _server1 = JsonRpcServer::new(service1, config.clone());
         let _server2 = JsonRpcServer::new(service2, config);
     }

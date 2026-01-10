@@ -42,12 +42,6 @@ pub struct MetricsSnapshot {
     pub timestamp: SystemTime,
 }
 impl ZfsMetrics {
-    /// Create metrics collector for testing
-    #[must_use]
-    pub fn new_for_testing() -> Self {
-        Self::new()
-    }
-
     /// Create a new metrics collector
     #[must_use]
     pub fn new() -> Self {
@@ -129,6 +123,21 @@ impl ZfsMetrics {
 impl Default for ZfsMetrics {
     /// Returns the default instance
     fn default() -> Self {
+        Self::new()
+    }
+}
+
+// ========== TEST-ONLY CONSTRUCTORS ==========
+// Isolated from production code to maintain clear boundaries
+
+#[cfg(test)]
+impl ZfsMetrics {
+    /// Create metrics collector for testing
+    ///
+    /// **TEST-ONLY**: This constructor is only available in test builds.
+    /// Production code should use `ZfsMetrics::new()`.
+    #[must_use]
+    pub fn new_for_testing() -> Self {
         Self::new()
     }
 }
