@@ -141,7 +141,7 @@ impl NestGateRpc for NestGateRpcService {
         _context: Context,
         name: String,
         params: DatasetParams,
-    ) -> Result<DatasetInfo, NestGateRpcError> {
+    ) -> std::result::Result<DatasetInfo, NestGateRpcError> {
         debug!("RPC: create_dataset({})", name);
 
         let mut datasets = self.datasets.write().await;
@@ -173,7 +173,7 @@ impl NestGateRpc for NestGateRpcService {
         Ok(dataset)
     }
 
-    async fn list_datasets(self, _context: Context) -> Result<Vec<DatasetInfo>, NestGateRpcError> {
+    async fn list_datasets(self, _context: Context) -> std::result::Result<Vec<DatasetInfo>, NestGateRpcError> {
         debug!("RPC: list_datasets()");
 
         let datasets = self.datasets.read().await;
@@ -184,7 +184,7 @@ impl NestGateRpc for NestGateRpcService {
         self,
         _context: Context,
         name: String,
-    ) -> Result<DatasetInfo, NestGateRpcError> {
+    ) -> std::result::Result<DatasetInfo, NestGateRpcError> {
         debug!("RPC: get_dataset({})", name);
 
         let datasets = self.datasets.read().await;
@@ -198,7 +198,7 @@ impl NestGateRpc for NestGateRpcService {
         self,
         _context: Context,
         name: String,
-    ) -> Result<OperationResult, NestGateRpcError> {
+    ) -> std::result::Result<OperationResult, NestGateRpcError> {
         debug!("RPC: delete_dataset({})", name);
 
         let mut datasets = self.datasets.write().await;
@@ -228,7 +228,7 @@ impl NestGateRpc for NestGateRpcService {
         key: String,
         data: Vec<u8>,
         metadata: Option<HashMap<String, String>>,
-    ) -> Result<ObjectInfo, NestGateRpcError> {
+    ) -> std::result::Result<ObjectInfo, NestGateRpcError> {
         debug!("RPC: store_object({}/{})", dataset, key);
 
         // Verify dataset exists
@@ -277,7 +277,7 @@ impl NestGateRpc for NestGateRpcService {
         _context: Context,
         dataset: String,
         key: String,
-    ) -> Result<Vec<u8>, NestGateRpcError> {
+    ) -> std::result::Result<Vec<u8>, NestGateRpcError> {
         debug!("RPC: retrieve_object({}/{})", dataset, key);
 
         let objects = self.objects.read().await;
@@ -298,7 +298,7 @@ impl NestGateRpc for NestGateRpcService {
         _context: Context,
         dataset: String,
         key: String,
-    ) -> Result<ObjectInfo, NestGateRpcError> {
+    ) -> std::result::Result<ObjectInfo, NestGateRpcError> {
         debug!("RPC: get_object_metadata({}/{})", dataset, key);
 
         let objects = self.objects.read().await;
@@ -320,7 +320,7 @@ impl NestGateRpc for NestGateRpcService {
         dataset: String,
         prefix: Option<String>,
         limit: Option<usize>,
-    ) -> Result<Vec<ObjectInfo>, NestGateRpcError> {
+    ) -> std::result::Result<Vec<ObjectInfo>, NestGateRpcError> {
         debug!("RPC: list_objects({}, {:?}, {:?})", dataset, prefix, limit);
 
         let objects = self.objects.read().await;
@@ -354,7 +354,7 @@ impl NestGateRpc for NestGateRpcService {
         _context: Context,
         dataset: String,
         key: String,
-    ) -> Result<OperationResult, NestGateRpcError> {
+    ) -> std::result::Result<OperationResult, NestGateRpcError> {
         debug!("RPC: delete_object({}/{})", dataset, key);
 
         let mut objects = self.objects.write().await;
@@ -393,7 +393,7 @@ impl NestGateRpc for NestGateRpcService {
         self,
         _context: Context,
         registration: CapabilityRegistration,
-    ) -> Result<RegistrationResult, NestGateRpcError> {
+    ) -> std::result::Result<RegistrationResult, NestGateRpcError> {
         debug!("RPC: register_capability({})", registration.capability);
 
         // TODO: Wire to universal adapter / service registry
@@ -412,7 +412,7 @@ impl NestGateRpc for NestGateRpcService {
         self,
         _context: Context,
         capability: String,
-    ) -> Result<Vec<ServiceInfo>, NestGateRpcError> {
+    ) -> std::result::Result<Vec<ServiceInfo>, NestGateRpcError> {
         debug!("RPC: discover_capability({})", capability);
 
         // TODO: Wire to universal adapter / service registry

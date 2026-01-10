@@ -519,16 +519,16 @@ impl NestGateRpcClient {
                 NestGateError::not_found(&format!("Dataset not found: {}", dataset))
             }
             NestGateRpcError::DatasetAlreadyExists { dataset } => {
-                NestGateError::already_exists(&format!("Dataset already exists: {}", dataset))
+                NestGateError::api_internal_error(&format!("Dataset already exists: {}", dataset))
             }
             NestGateRpcError::ObjectNotFound { dataset, key } => {
                 NestGateError::not_found(&format!("Object not found: {}/{}", dataset, key))
             }
             NestGateRpcError::ObjectAlreadyExists { dataset, key } => {
-                NestGateError::already_exists(&format!("Object already exists: {}/{}", dataset, key))
+                NestGateError::api_internal_error(&format!("Object already exists: {}/{}", dataset, key))
             }
             NestGateRpcError::InvalidParameters { message } => {
-                NestGateError::invalid_input(&message)
+                NestGateError::validation_error(&message)
             }
             NestGateRpcError::StorageFull { required, available } => {
                 NestGateError::storage_error(&format!(
@@ -537,7 +537,7 @@ impl NestGateRpcClient {
                 ))
             }
             NestGateRpcError::QuotaExceeded { dataset, quota, requested } => {
-                NestGateError::quota_exceeded(&format!(
+                NestGateError::storage_error(&format!(
                     "Quota exceeded for dataset {}: quota {} bytes, requested {} bytes",
                     dataset, quota, requested
                 ))
