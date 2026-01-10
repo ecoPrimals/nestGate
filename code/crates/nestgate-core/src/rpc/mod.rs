@@ -44,6 +44,7 @@
 //! ```
 
 pub mod jsonrpc_server;
+pub mod songbird_registration;
 pub mod tarpc_client;
 pub mod tarpc_server;
 pub mod tarpc_types;
@@ -57,6 +58,7 @@ pub use tarpc_types::{
 };
 
 pub use jsonrpc_server::{JsonRpcConfig, JsonRpcServer};
+pub use songbird_registration::SongbirdRegistration;
 pub use tarpc_client::NestGateRpcClient;
 pub use tarpc_server::{serve_tarpc, NestGateRpcService};
 pub use unix_socket_server::JsonRpcUnixServer;
