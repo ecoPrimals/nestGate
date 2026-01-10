@@ -85,6 +85,12 @@ pub mod migration_bridge;
 /// Capability-based configuration system (runtime discovery, no hardcoding)
 pub mod capability_based;
 
+/// Port configuration system (environment-driven, zero hardcoding)
+///
+/// Replaces all hardcoded port constants with configurable values.
+/// Environment variables: NESTGATE_API_PORT, NESTGATE_METRICS_PORT, etc.
+pub mod ports;
+
 // ==================== SECTION ====================
 // All deprecated configuration modules have been removed. Use canonical_primary directly:
 // - core → canonical_primary::NestGateCanonicalConfig
@@ -117,6 +123,9 @@ pub use network_defaults_v2_config::{NetworkDefaultsV2Config, SharedNetworkDefau
 
 // Sovereignty configuration types
 pub use sovereignty_config::{SharedSovereigntyRuntimeConfig, SovereigntyRuntimeConfig};
+
+// Port configuration types
+pub use ports::{PortConfig, PortConfigBuilder};
 
 // Note: Detailed configuration types are defined inline in canonical_primary
 // and will be accessible through the canonical_primary module directly
