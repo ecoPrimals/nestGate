@@ -573,7 +573,7 @@ mod tests {
 
     #[test]
     fn test_parse_endpoint_invalid() {
-        let result = NestGateRpcClient::parse_endpoint("http://localhost:8080");
+        let result = NestGateRpcClient::parse_endpoint("http://127.0.0.1:8080");
         assert!(result.is_err());
     }
 
