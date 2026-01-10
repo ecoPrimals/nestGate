@@ -601,6 +601,7 @@ mod tests {
         
         // Create a dataset
         service
+            .clone()
             .create_dataset(
                 Context::current(),
                 "test-dataset".to_string(),
@@ -610,7 +611,7 @@ mod tests {
             .unwrap();
 
         // List datasets
-        let datasets = service.list_datasets(Context::current()).await.unwrap();
+        let datasets = service.clone().list_datasets(Context::current()).await.unwrap();
         assert_eq!(datasets.len(), 1);
         assert_eq!(datasets[0].name, "test-dataset");
     }
@@ -621,6 +622,7 @@ mod tests {
         
         // Create dataset
         service
+            .clone()
             .create_dataset(
                 Context::current(),
                 "test-dataset".to_string(),
@@ -632,6 +634,7 @@ mod tests {
         // Store object
         let data = vec![1, 2, 3, 4, 5];
         service
+            .clone()
             .store_object(
                 Context::current(),
                 "test-dataset".to_string(),
@@ -644,6 +647,7 @@ mod tests {
 
         // Retrieve object
         let retrieved = service
+            .clone()
             .retrieve_object(
                 Context::current(),
                 "test-dataset".to_string(),
