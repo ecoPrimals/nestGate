@@ -203,10 +203,31 @@ impl<'a> CapabilityResolver for InMemoryRegistryAdapter<'a> {
                 NestGateError::internal_error("Invalid endpoint URL", "capability_resolver")
             })?;
 
+            // Extract host - no hardcoded fallback, error if missing
+            let host = url.host_str()
+                .ok_or_else(|| NestGateError::configuration_error(
+                    "endpoint_host",
+                    &format!("Service endpoint URL missing host: {}", endpoint.url)
+                ))?
+                .to_string();
+
+            // Extract port with protocol-based defaults
+            let port = url.port().or_else(|| {
+                match endpoint.protocol {
+                    crate::service_discovery::types::CommunicationProtocol::Http => Some(80),
+                    crate::service_discovery::types::CommunicationProtocol::Grpc => Some(9090),
+                    crate::service_discovery::types::CommunicationProtocol::WebSocket => Some(80),
+                    _ => None,
+                }
+            }).ok_or_else(|| NestGateError::configuration_error(
+                "endpoint_port",
+                &format!("Service endpoint URL missing port and no default for protocol: {}", endpoint.url)
+            ))?;
+
             Ok(ResolvedService {
                 id: service.service_id.to_string(),
-                host: url.host_str().unwrap_or("localhost").to_string(),
-                port: url.port().unwrap_or(8080),
+                host,
+                port,
                 protocol: match endpoint.protocol {
                     crate::service_discovery::types::CommunicationProtocol::Http => "http",
                     crate::service_discovery::types::CommunicationProtocol::Grpc => "grpc",
@@ -238,18 +259,33 @@ impl<'a> CapabilityResolver for InMemoryRegistryAdapter<'a> {
                 .filter_map(|service| {
                     service.endpoints.first().and_then(|endpoint| {
                         // Parse URL to extract host and port
-                        endpoint.url.parse::<url::Url>().ok().map(|url| ResolvedService {
-                            id: service.service_id.to_string(),
-                            host: url.host_str().unwrap_or("localhost").to_string(),
-                            port: url.port().unwrap_or(8080),
-                            protocol: match endpoint.protocol {
-                                crate::service_discovery::types::CommunicationProtocol::Http => "http",
-                                crate::service_discovery::types::CommunicationProtocol::Grpc => "grpc",
-                                crate::service_discovery::types::CommunicationProtocol::WebSocket => "ws",
-                                _ => "http",
-                            }.to_string(),
-                            capabilities: vec![capability.clone()],
-                            is_healthy: true,
+                        endpoint.url.parse::<url::Url>().ok().and_then(|url| {
+                            // Extract host - skip service if host is missing
+                            let host = url.host_str()?.to_string();
+
+                            // Extract port with protocol-based defaults
+                            let port = url.port().or_else(|| {
+                                match endpoint.protocol {
+                                    crate::service_discovery::types::CommunicationProtocol::Http => Some(80),
+                                    crate::service_discovery::types::CommunicationProtocol::Grpc => Some(9090),
+                                    crate::service_discovery::types::CommunicationProtocol::WebSocket => Some(80),
+                                    _ => None,
+                                }
+                            })?; // Skip service if no port and no default
+
+                            Some(ResolvedService {
+                                id: service.service_id.to_string(),
+                                host,
+                                port,
+                                protocol: match endpoint.protocol {
+                                    crate::service_discovery::types::CommunicationProtocol::Http => "http",
+                                    crate::service_discovery::types::CommunicationProtocol::Grpc => "grpc",
+                                    crate::service_discovery::types::CommunicationProtocol::WebSocket => "ws",
+                                    _ => "http",
+                                }.to_string(),
+                                capabilities: vec![capability.clone()],
+                                is_healthy: true,
+                            })
                         })
                     })
                 })
@@ -371,22 +407,32 @@ impl CapabilityResolver for EnvironmentResolver {
 
             // Parse URL or host:port format
             if let Ok(url) = value.parse::<url::Url>() {
-                let port = url
-                    .port()
-                    .or_else(|| {
-                        // Use default port for protocol if not specified
-                        match url.scheme() {
-                            "https" => Some(443),
-                            "http" => Some(80),
-                            "grpc" => Some(9090),
-                            _ => None,
-                        }
-                    })
-                    .unwrap_or(8080);
+                // Extract host - error if missing
+                let host = url.host_str()
+                    .ok_or_else(|| NestGateError::configuration_error(
+                        "capability_endpoint_host",
+                        &format!("Environment variable {} has URL without host: {}", env_var, value)
+                    ))?
+                    .to_string();
+
+                // Extract port with protocol-based defaults
+                let port = url.port().or_else(|| {
+                    // Use default port for protocol if not specified
+                    match url.scheme() {
+                        "https" => Some(443),
+                        "http" => Some(80),
+                        "grpc" => Some(9090),
+                        "ws" | "wss" => Some(80),
+                        _ => None,
+                    }
+                }).ok_or_else(|| NestGateError::configuration_error(
+                    "capability_endpoint_port",
+                    &format!("Environment variable {} has URL without port and no default for scheme: {}", env_var, url.scheme())
+                ))?;
 
                 Ok(ResolvedService {
                     id: "env-configured".to_string(),
-                    host: url.host_str().unwrap_or("localhost").to_string(),
+                    host,
                     port,
                     protocol: url.scheme().to_string(),
                     capabilities: vec![capability.clone()],
