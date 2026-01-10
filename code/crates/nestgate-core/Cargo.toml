@@ -69,6 +69,9 @@ tempfile = "3.8"
 regex = "1.10"
 fastrand = "2.0"
 sysinfo = "0.30"
+tarpc = { workspace = true, features = ["tokio1", "serde-transport", "serde1"] }
+tokio-serde = { workspace = true, features = ["bincode"] }
+bincode.workspace = true
 
 
 [dev-dependencies]

@@ -47,6 +47,8 @@ pub mod defaults_v2_config;
 pub mod discovery;
 /// Ecosystem integration patterns
 pub mod ecosystem_integration;
+/// **RPC MODULE**: tarpc + JSON-RPC for primal-to-primal communication
+pub mod rpc;
 /// Environment configuration utilities
 pub mod environment;
 /// Environment configuration - thread-safe config for environment detection
