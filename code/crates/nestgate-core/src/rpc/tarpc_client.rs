@@ -40,7 +40,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use tokio::sync::RwLock;
-use tracing::{debug, info, warn};
+use tracing::{debug, info};
 
 use crate::error::{NestGateError, Result};
 use crate::rpc::tarpc_types::{

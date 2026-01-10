@@ -486,32 +486,62 @@ pub enum NestGateRpcError {
     },
 
     /// Object not found
-    ObjectNotFound { dataset: String, key: String },
+    ObjectNotFound {
+        /// Dataset name
+        dataset: String,
+        /// Object key
+        key: String,
+    },
 
     /// Object already exists
-    ObjectAlreadyExists { dataset: String, key: String },
+    ObjectAlreadyExists {
+        /// Dataset name
+        dataset: String,
+        /// Object key
+        key: String,
+    },
 
     /// Invalid parameters
-    InvalidParameters { message: String },
+    InvalidParameters {
+        /// Error message describing the invalid parameters
+        message: String,
+    },
 
     /// Storage full
-    StorageFull { required: u64, available: u64 },
+    StorageFull {
+        /// Required storage space in bytes
+        required: u64,
+        /// Available storage space in bytes
+        available: u64,
+    },
 
     /// Quota exceeded
     QuotaExceeded {
+        /// Dataset name
         dataset: String,
+        /// Quota limit in bytes
         quota: u64,
+        /// Requested storage in bytes
         requested: u64,
     },
 
     /// Permission denied
-    PermissionDenied { message: String },
+    PermissionDenied {
+        /// Error message describing the permission denial
+        message: String,
+    },
 
     /// Internal error
-    InternalError { message: String },
+    InternalError {
+        /// Error message describing the internal error
+        message: String,
+    },
 
     /// Service unavailable
-    ServiceUnavailable { message: String },
+    ServiceUnavailable {
+        /// Error message describing why service is unavailable
+        message: String,
+    },
 
     /// Connection error
     ConnectionError {

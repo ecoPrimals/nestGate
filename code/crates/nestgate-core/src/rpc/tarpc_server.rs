@@ -33,7 +33,6 @@ use futures_util::StreamExt;
 use tarpc::context::Context;
 use tarpc::server::Channel;
 use tokio::sync::RwLock;
-use tokio_serde::formats::Bincode;
 use tracing::{debug, info, warn};
 
 use crate::error::{NestGateError, Result};

@@ -35,7 +35,6 @@
 
 use std::collections::HashMap;
 use std::net::SocketAddr;
-use std::sync::Arc;
 
 use base64::Engine;
 use jsonrpsee::{
@@ -46,7 +45,7 @@ use jsonrpsee::{
 use tracing::{debug, info, warn};
 
 use super::tarpc_server::NestGateRpcService;
-use super::tarpc_types::{DatasetParams, NestGateRpc, OperationResult};
+use super::tarpc_types::{DatasetParams, NestGateRpc};
 
 /// JSON-RPC server configuration
 #[derive(Debug, Clone)]
