@@ -248,7 +248,7 @@ impl Default for ResourceInfo {
 }
 
 /// Health status of this primal
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum HealthStatus {
     /// Fully operational, accepting requests
     Healthy,
@@ -260,16 +260,11 @@ pub enum HealthStatus {
     Unhealthy,
 
     /// Starting up, not ready yet
+    #[default]
     Starting,
 
     /// Shutting down gracefully
     Stopping,
-}
-
-impl Default for HealthStatus {
-    fn default() -> Self {
-        Self::Starting
-    }
 }
 
 /// Information about a discovered primal
