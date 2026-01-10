@@ -8,7 +8,6 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use thiserror::Error;
 use tokio::fs;
-use tracing::error;
 
 #[derive(Error, Debug)]
 pub enum RefinedMigratorError {

@@ -260,7 +260,7 @@ impl ZfsServiceFactory {
                         // Create RemoteZfsService with proper configuration
                         let remote_config =
                             crate::handlers::zfs::universal_zfs::config::RemoteConfig {
-                                endpoint: endpoint.to_string(),
+                                endpoint: endpoint.clone(),
                                 timeout: Duration::from_secs(30),
                                 auth: None,
                             };

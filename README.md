@@ -1,10 +1,10 @@
 # 🚀 NestGate - Universal Storage Gateway
 
-**Version**: 0.1.0  
-**Status**: ✅ **Stable Build + Deep Debt Resolution In Progress**  
-**Grade**: **B (82/100)** - Build stabilized, modernization underway  
-**Latest**: 🔧 **Build Stabilization + Zero-Copy Optimizations** (Dec 23, 2025)  
-**Release**: ✅ **v0.1.0 Published** - Checksums verified, binary available
+**Version**: 0.1.0-beta  
+**Status**: 🔄 **Active Development - Week 1 Improvements**  
+**Grade**: **B- (82/100)** - Not production ready, 6-week improvement plan active  
+**Latest**: 📊 **Comprehensive Audit + Evolution Plan** (Jan 9, 2026)  
+**Release**: ⚠️ **v0.1.0-beta** - Stable build, production readiness in progress
 
 [![Tests](https://img.shields.io/badge/tests-1392_passing-brightgreen)]()
 [![Build](https://img.shields.io/badge/build-passing-brightgreen)]()
@@ -79,6 +79,14 @@ cd showcase/03_encryption_storage
 ---
 
 ## 📊 **Current Status**
+
+### **⚠️ IMPORTANT: Encryption Status (January 9, 2026)**
+- **Encryption**: ⚠️ NOT YET IMPLEMENTED - Planned for v1.1.0
+- **Security**: Data stored unencrypted - Module returns explicit errors
+- **BearDog Integration**: Framework ready, implementation in progress
+- **Production Use**: Do NOT use for sensitive data until v1.1.0
+
+**See**: `crates/nestgate-core/src/storage/encryption.rs` for current honest implementation
 
 ### **Storage Innovation Achievements** (December 22, 2025)
 - 🎉 **Adaptive Storage Pipeline**: Intelligent compression based on entropy & format

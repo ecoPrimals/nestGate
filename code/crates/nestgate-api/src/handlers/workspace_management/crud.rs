@@ -284,7 +284,7 @@ pub async fn get_workspace(Path(workspace_id): Path<String>) -> Result<Json<Valu
             // ✅ EVOLVED: Proper error handling with safe fallback
             let workspace_name = properties
                 .get("org.nestgate:workspace_name")
-                .map(|s| s.to_string())
+                .cloned()
                 .unwrap_or_else(|| workspace_id.replace('-', " "));
 
             Ok(Json(json!({
