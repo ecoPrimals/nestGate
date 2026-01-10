@@ -72,6 +72,7 @@ sysinfo = "0.30"
 tarpc = { workspace = true, features = ["tokio1", "serde-transport", "serde1", "tcp"] }
 tokio-serde = { workspace = true, features = ["bincode"] }
 bincode.workspace = true
+jsonrpsee = { version = "0.26.0", features = ["server"] }
 
 
 [dev-dependencies]
