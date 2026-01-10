@@ -474,10 +474,16 @@ pub struct ProtocolInfo {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum NestGateRpcError {
     /// Dataset not found
-    DatasetNotFound { dataset: String },
+    DatasetNotFound {
+        /// Name of the dataset that was not found
+        dataset: String,
+    },
 
     /// Dataset already exists
-    DatasetAlreadyExists { dataset: String },
+    DatasetAlreadyExists {
+        /// Name of the dataset that already exists
+        dataset: String,
+    },
 
     /// Object not found
     ObjectNotFound { dataset: String, key: String },
@@ -508,10 +514,16 @@ pub enum NestGateRpcError {
     ServiceUnavailable { message: String },
 
     /// Connection error
-    ConnectionError { message: String },
+    ConnectionError {
+        /// Error message describing the connection failure
+        message: String,
+    },
 
     /// Timeout
-    Timeout { operation: String },
+    Timeout {
+        /// Operation that timed out
+        operation: String,
+    },
 }
 
 impl std::fmt::Display for NestGateRpcError {
