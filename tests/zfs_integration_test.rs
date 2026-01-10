@@ -43,7 +43,10 @@ async fn test_zfs_integration() -> Result<()> {
     // Create ZFS manager
     let config = ZfsConfig::default();
     let manager = ZfsManager::new(config).await.map_err(|e| {
-        NestGateError::internal_error(format!("Failed to create ZFS manager: {e}"), "test_component")
+        NestGateError::internal_error(
+            format!("Failed to create ZFS manager: {e}"),
+            "test_component",
+        )
     })?;
 
     println!("✅ ZFS manager created successfully");

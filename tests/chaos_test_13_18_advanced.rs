@@ -8,11 +8,10 @@
 /// - Time skew issues
 ///
 /// **Evolution**: Modern async, proper error handling, realistic chaos
-
-use nestgate_core::{Result, NestGateError};
-use tokio::time::{sleep, Duration};
+use nestgate_core::{NestGateError, Result};
 use std::sync::Arc;
 use tokio::sync::RwLock;
+use tokio::time::{sleep, Duration};
 
 #[tokio::test]
 #[ignore = "Chaos test - potentially destructive"]
@@ -30,7 +29,7 @@ async fn chaos_test_13_cascading_failures() -> Result<()> {
     println!("  • Cache service: Elevated error rate");
     println!("  • Queue service: Building backlog");
     sleep(Duration::from_millis(100)).await;
-    
+
     // System should NOT cascade failure to all services
     println!("  ✓ Storage service: Operating normally (isolated)");
     println!("  ✓ Auth service: Degraded mode (cached credentials)");
@@ -83,7 +82,7 @@ async fn chaos_test_14_byzantine_failures() -> Result<()> {
 
     println!("  • Valid checksums: {}/{}", valid_checksums, total_nodes);
     println!("  • Consensus threshold: {}", threshold);
-    
+
     if valid_checksums >= threshold {
         println!("  ✓ Consensus reached: Checksum abc123 is correct");
         println!("  ⚠️  Node 3 marked as Byzantine");
@@ -125,13 +124,19 @@ async fn chaos_test_15_split_brain_resolution() -> Result<()> {
     let total_nodes = 5;
     let quorum = (total_nodes / 2) + 1; // Majority: 3
 
-    println!("  • Partition A: {} nodes (quorum: {})", partition_a_size, quorum);
-    println!("  • Partition B: {} nodes (quorum: {})", partition_b_size, quorum);
+    println!(
+        "  • Partition A: {} nodes (quorum: {})",
+        partition_a_size, quorum
+    );
+    println!(
+        "  • Partition B: {} nodes (quorum: {})",
+        partition_b_size, quorum
+    );
 
     if partition_a_size >= quorum {
         println!("  ✓ Partition A has quorum - accepting writes");
     }
-    
+
     if partition_b_size < quorum {
         println!("  ✓ Partition B lacks quorum - read-only mode");
     }
@@ -167,15 +172,15 @@ async fn chaos_test_16_resource_starvation() -> Result<()> {
 
     // Phase 1: Simulate resource exhaustion
     println!("\n📊 Phase 1: Simulating resource exhaustion...");
-    
+
     // Memory exhaustion
     println!("  • Memory: 95% utilized (warning threshold exceeded)");
     println!("  • Action: Enabling aggressive caching eviction");
-    
+
     // CPU saturation
     println!("  • CPU: 98% utilized (critical threshold)");
     println!("  • Action: Request throttling activated");
-    
+
     // Disk I/O saturation
     println!("  • Disk I/O: 100% queue depth");
     println!("  • Action: I/O priority scheduling enabled");

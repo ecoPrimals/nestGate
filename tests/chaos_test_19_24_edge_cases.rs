@@ -9,8 +9,7 @@
 /// - Clock drift extremes
 ///
 /// **Evolution**: Modern async, proper error handling, realistic edge cases
-
-use nestgate_core::{Result, NestGateError};
+use nestgate_core::{NestGateError, Result};
 use tokio::time::{sleep, Duration};
 
 #[tokio::test]
@@ -32,13 +31,16 @@ async fn chaos_test_19_simultaneous_multi_node_failure() -> Result<()> {
     let quorum = (total_nodes / 2) + 1;
 
     if remaining_nodes >= quorum {
-        println!("  ✓ Quorum maintained: {}/{} nodes", remaining_nodes, quorum);
+        println!(
+            "  ✓ Quorum maintained: {}/{} nodes",
+            remaining_nodes, quorum
+        );
         println!("  ✓ Cluster can continue operations");
     } else {
         println!("  ❌ Quorum lost: {}/{} nodes", remaining_nodes, quorum);
         return Err(NestGateError::internal_error(
             "Quorum lost - cannot continue",
-            "chaos_test"
+            "chaos_test",
         ));
     }
 
@@ -194,7 +196,7 @@ async fn chaos_test_22_disk_full_scenario() -> Result<()> {
 
     // Phase 3: Automatic space recovery
     println!("\n🧹 Phase 3: Automatic space recovery...");
-    
+
     println!("\n  Strategy 1: Snapshot cleanup");
     println!("    • Finding old snapshots older than 90 days");
     println!("    • Deleting 15 snapshots");
@@ -291,9 +293,9 @@ async fn chaos_test_24_clock_drift_extreme() -> Result<()> {
     let node_times = vec![
         ("Node 1", 1704844800, 0),
         ("Node 2", 1704844805, 5),
-        ("Node 3", 1704841000, -3800),  // 1+ hour behind!
+        ("Node 3", 1704841000, -3800), // 1+ hour behind!
         ("Node 4", 1704844800, 0),
-        ("Node 5", 1704848400, 3600),   // 1 hour ahead!
+        ("Node 5", 1704848400, 3600), // 1 hour ahead!
     ];
 
     for (node, timestamp, skew) in &node_times {
@@ -316,7 +318,7 @@ async fn chaos_test_24_clock_drift_extreme() -> Result<()> {
 
     // Phase 3: Mitigation strategies
     println!("\n🛡️  Phase 3: Applying clock drift mitigation...");
-    
+
     println!("\n  Strategy 1: Logical clocks");
     println!("    • Using Lamport timestamps for ordering");
     println!("    • Using vector clocks for causality");

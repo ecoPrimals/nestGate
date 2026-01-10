@@ -1,3 +1,4 @@
+use nestgate_core::canonical_types::StorageTier;
 /// E2E Test Scenario: Advanced Storage Orchestration
 ///
 /// Tests complex storage orchestration workflows including:
@@ -7,9 +8,7 @@
 /// - Quota management and enforcement
 ///
 /// **Evolution**: Modern async patterns, proper error handling, no unwraps
-
-use nestgate_core::{Result, NestGateError};
-use nestgate_core::canonical_types::StorageTier;
+use nestgate_core::{NestGateError, Result};
 use tokio::time::{sleep, Duration};
 
 #[tokio::test]
@@ -45,7 +44,7 @@ async fn test_e2e_scenario_44_storage_orchestration() -> Result<()> {
 
     // Phase 3: Simulate access patterns and automatic tiering
     println!("\n🔄 Phase 3: Simulating automatic tiering...");
-    
+
     // Simulate hot data cooling down over time
     println!("  • Hot data accessed: 0 times in 30 days");
     println!("  • Triggering automatic migration: Hot → Warm");
@@ -62,8 +61,8 @@ async fn test_e2e_scenario_44_storage_orchestration() -> Result<()> {
     println!("\n📊 Phase 4: Testing quota management...");
     let quotas = vec![
         ("user-workspace", 100_000_000_000_u64), // 100GB
-        ("team-shared", 1_000_000_000_000_u64), // 1TB
-        ("archive", 10_000_000_000_000_u64), // 10TB
+        ("team-shared", 1_000_000_000_000_u64),  // 1TB
+        ("archive", 10_000_000_000_000_u64),     // 10TB
     ];
 
     for (dataset, quota) in &quotas {
@@ -74,8 +73,9 @@ async fn test_e2e_scenario_44_storage_orchestration() -> Result<()> {
     let current_usage = 95_000_000_000_u64; // 95GB
     let quota_limit = 100_000_000_000_u64; // 100GB
     let usage_percent = (current_usage * 100) / quota_limit;
-    
-    println!("  • Current usage: {}GB / {}GB ({}%)", 
+
+    println!(
+        "  • Current usage: {}GB / {}GB ({}%)",
         current_usage / 1_000_000_000,
         quota_limit / 1_000_000_000,
         usage_percent
@@ -182,7 +182,10 @@ async fn test_e2e_scenario_46_data_lifecycle_management() -> Result<()> {
     ];
 
     for (dtype, tier, retention_days) in &data_types {
-        println!("  ✓ {}: {:?} tier, {} day retention", dtype, tier, retention_days);
+        println!(
+            "  ✓ {}: {:?} tier, {} day retention",
+            dtype, tier, retention_days
+        );
     }
 
     // Phase 2: Implement retention policies
@@ -195,7 +198,7 @@ async fn test_e2e_scenario_46_data_lifecycle_management() -> Result<()> {
 
     // Phase 3: Simulate lifecycle transitions
     println!("\n🔄 Phase 3: Simulating lifecycle transitions...");
-    
+
     // Day 31: User documents cleanup
     println!("  • Day 31: Checking user-documents...");
     println!("    - Found 15 inactive documents");
