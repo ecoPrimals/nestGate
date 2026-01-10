@@ -579,13 +579,13 @@ mod tests {
 
     #[test]
     fn test_client_creation() {
-        let client = NestGateRpcClient::new("tarpc://localhost:8091").unwrap();
-        assert_eq!(client.endpoint, "tarpc://localhost:8091");
+        let client = NestGateRpcClient::new("tarpc://127.0.0.1:8091").unwrap();
+        assert_eq!(client.endpoint, "tarpc://127.0.0.1:8091");
     }
 
     #[test]
     fn test_with_timeout() {
-        let client = NestGateRpcClient::new("tarpc://localhost:8091")
+        let client = NestGateRpcClient::new("tarpc://127.0.0.1:8091")
             .unwrap()
             .with_timeout(Duration::from_secs(10));
         assert_eq!(client.timeout, Duration::from_secs(10));
