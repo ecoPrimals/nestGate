@@ -196,11 +196,29 @@ pub struct PrimalInfo {
 
 impl PrimalInfo {
     /// Get primary endpoint URL
-    pub fn primary_endpoint(&self) -> String {
+    ///
+    /// # Returns
+    ///
+    /// Returns the first endpoint URL if available, otherwise returns an error.
+    /// This function no longer has hardcoded fallbacks - callers must handle the None case.
+    ///
+    /// # Philosophy
+    ///
+    /// Each primal knows only itself. If no endpoint is configured, that's a
+    /// configuration error, not something to paper over with hardcoded localhost.
+    pub fn primary_endpoint(&self) -> Option<String> {
+        self.endpoints.first().map(|e| e.url())
+    }
+
+    /// Get primary endpoint URL or a default from environment
+    ///
+    /// This is a convenience method that checks `NESTGATE_DEFAULT_ENDPOINT` environment
+    /// variable as a fallback. Still no hardcoded values.
+    pub fn primary_endpoint_or_env_default(&self) -> Option<String> {
         self.endpoints
             .first()
             .map(|e| e.url())
-            .unwrap_or_else(|| "http://localhost:8080".into())
+            .or_else(|| std::env::var("NESTGATE_DEFAULT_ENDPOINT").ok())
     }
 
     /// Check if primal is stale (not seen recently)
