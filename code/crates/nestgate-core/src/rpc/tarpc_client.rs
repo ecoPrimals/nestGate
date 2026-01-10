@@ -500,7 +500,7 @@ impl NestGateRpcClient {
     fn parse_endpoint(endpoint: &str) -> Result<SocketAddr> {
         // Parse tarpc://host:port
         if !endpoint.starts_with("tarpc://") {
-            return Err(NestGateError::configuration_error(&format!(
+            return Err(NestGateError::configuration_error("endpoint", &format!(
                 "Invalid tarpc endpoint (must start with tarpc://): {}",
                 endpoint
             )));
@@ -509,7 +509,7 @@ impl NestGateRpcClient {
         let addr_str = endpoint.strip_prefix("tarpc://").unwrap();
         addr_str
             .parse()
-            .map_err(|e| NestGateError::configuration_error(&format!("Invalid socket address {}: {}", addr_str, e)))
+            .map_err(|e| NestGateError::configuration_error("endpoint", &format!("Invalid socket address {}: {}", addr_str, e)))
     }
 
     /// Convert RPC error to NestGateError
