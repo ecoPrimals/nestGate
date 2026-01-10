@@ -64,17 +64,40 @@ impl HealthMonitoringConfig {
             alerting_enabled: true,
             alert_endpoints: {
                 // ✅ SOVEREIGNTY: Environment-driven alert configuration
-                let host = std::env::var("NESTGATE_ALERT_HOST")
-                    .unwrap_or_else(|_| "localhost".to_string());
-                let port = std::env::var("NESTGATE_ALERT_PORT")
+                // Alert endpoints should be explicitly configured in production
+                // For development, this can be optional
+                let endpoints = std::env::var("NESTGATE_ALERT_ENDPOINTS")
                     .ok()
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(8080);
-
-                vec![
-                    format!("email:admin@{}", host),
-                    format!("webhook:http://{}:{}/alerts", host, port),
-                ]
+                    .map(|endpoints_str| {
+                        // Parse comma-separated endpoints
+                        endpoints_str
+                            .split(',')
+                            .map(|s| s.trim().to_string())
+                            .collect::<Vec<_>>()
+                    })
+                    .unwrap_or_else(|| {
+                        // Development-only fallback - logs warning
+                        tracing::warn!(
+                            "NESTGATE_ALERT_ENDPOINTS not set. Using development defaults. \
+                             Set NESTGATE_ALERT_ENDPOINTS in production."
+                        );
+                        
+                        // Development convenience: local endpoints
+                        // In production, this code path should never execute
+                        let dev_host = std::env::var("NESTGATE_DEV_HOST")
+                            .unwrap_or_else(|_| "localhost".to_string());
+                        let dev_port = std::env::var("NESTGATE_DEV_PORT")
+                            .ok()
+                            .and_then(|s| s.parse().ok())
+                            .unwrap_or(8080);
+                        
+                        vec![
+                            format!("email:dev@{}", dev_host),
+                            format!("webhook:http://{}:{}/alerts", dev_host, dev_port),
+                        ]
+                    });
+                
+                endpoints
             },
         }
     }
