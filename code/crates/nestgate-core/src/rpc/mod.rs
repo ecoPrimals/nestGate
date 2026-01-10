@@ -46,6 +46,7 @@
 pub mod tarpc_types;
 pub mod tarpc_client;
 pub mod tarpc_server;
+pub mod jsonrpc_server;
 
 // Re-export key types
 pub use tarpc_types::{
@@ -66,6 +67,7 @@ pub use tarpc_types::{
 
 pub use tarpc_client::NestGateRpcClient;
 pub use tarpc_server::{NestGateRpcService, serve_tarpc};
+pub use jsonrpc_server::{JsonRpcConfig, JsonRpcServer};
 
 #[cfg(test)]
 mod tests {
@@ -76,5 +78,6 @@ mod tests {
         // Verify key types are exported
         let _ = DatasetParams::default();
         let _ = NestGateRpcService::new();
+        let _ = JsonRpcConfig::default();
     }
 }
