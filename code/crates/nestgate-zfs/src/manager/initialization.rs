@@ -243,14 +243,41 @@ impl ZfsManager {
                 "dataset_management,snapshot_operations,tier_management".to_string(),
             );
             details.insert("endpoint".to_string(), {
-                // ✅ SOVEREIGNTY: Environment-driven endpoint configuration
-                let host =
-                    std::env::var("NESTGATE_ZFS_HOST").unwrap_or_else(|_| "localhost".to_string());
-                let port = std::env::var("NESTGATE_ZFS_PORT")
-                    .ok()
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(8080);
-                format!("{}:{}", host, port)
+                // ✅ SELF-KNOWLEDGE: ZFS primal knows its own endpoint
+                // This should come from ZFS's own configuration, not environment guessing
+                // 
+                // PHILOSOPHY: Each primal has self-knowledge. ZFS service endpoint
+                // should be defined in ZFS configuration, not discovered from generic env vars.
+                //
+                // MIGRATION: Use ZFS's actual bind address from its configuration
+                let endpoint = if let Ok(zfs_endpoint) = std::env::var("NESTGATE_ZFS_ENDPOINT") {
+                    // Explicit ZFS endpoint provided (production)
+                    zfs_endpoint
+                } else if let (Ok(host), Ok(port)) = (
+                    std::env::var("NESTGATE_ZFS_HOST"),
+                    std::env::var("NESTGATE_ZFS_PORT").and_then(|s| s.parse::<u16>().map_err(|_| std::env::VarError::NotPresent))
+                ) {
+                    // Legacy: Separate host/port (deprecated)
+                    tracing::warn!(
+                        "Using legacy NESTGATE_ZFS_HOST/PORT. Consider using NESTGATE_ZFS_ENDPOINT instead."
+                    );
+                    format!("{}:{}", host, port)
+                } else {
+                    // Development: Use ZFS config's actual bind address
+                    // This is self-knowledge - ZFS knows where IT is listening
+                    let bind_addr = &self.config.bind_address;
+                    let bind_port = self.config.port;
+                    
+                    tracing::debug!(
+                        "ZFS endpoint from self-knowledge: {}:{}",
+                        bind_addr,
+                        bind_port
+                    );
+                    
+                    format!("{}:{}", bind_addr, bind_port)
+                };
+                
+                endpoint
             });
             details.insert("version".to_string(), env!("CARGO_PKG_VERSION").to_string());
             details
