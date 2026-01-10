@@ -509,9 +509,9 @@ impl NestGateRpc for NestGateRpcService {
 pub async fn serve_tarpc(addr: SocketAddr, service: NestGateRpcService) -> Result<()> {
     info!("🚀 Starting NestGate tarpc server on {}", addr);
 
-    let listener = tarpc::serde_transport::tcp::listen(addr, Bincode::default)
+    let listener = tarpc::serde_transport::tcp::listen(addr, tokio_serde::formats::Bincode::default)
         .await
-        .map_err(|e| NestGateError::connection_error(&format!("Failed to bind to {}: {}", addr, e)))?;
+        .map_err(|e| NestGateError::network_error(&format!("Failed to bind to {}: {}", addr, e)))?;
 
     info!("✅ NestGate tarpc server listening on {}", addr);
 
