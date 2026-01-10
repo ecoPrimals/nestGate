@@ -52,27 +52,6 @@ pub struct TierStatus {
     pub stats: TierStats,
 }
 impl TierManager {
-    /// Create tier manager for testing
-    #[must_use]
-    pub fn new_for_testing() -> Self {
-        let mut tier_stats_inner = HashMap::new();
-        tier_stats_inner.insert(StorageTier::Hot, TierStats::default());
-        tier_stats_inner.insert(StorageTier::Warm, TierStats::default());
-        tier_stats_inner.insert(StorageTier::Cold, TierStats::default());
-        let tier_stats = Arc::new(RwLock::new(tier_stats_inner));
-
-        Self {
-            config: ZfsConfig::default(),
-            pool_manager: Arc::new(ZfsPoolManager::new_production(ZfsConfig::default())),
-            dataset_manager: Arc::new({
-                let config = ZfsConfig::default();
-                let pool_manager = Arc::new(ZfsPoolManager::new_production(config.clone()));
-                ZfsDatasetManager::new(config, pool_manager)
-            }),
-            tier_stats,
-        }
-    }
-
     /// Create a new tier manager
     ///
     /// # Errors
@@ -261,5 +240,34 @@ impl TierManager {
 
         *self.tier_stats.write().await = stats;
         Ok(())
+    }
+}
+
+// ========== TEST-ONLY CONSTRUCTORS ==========
+// Isolated from production code to maintain clear boundaries
+
+#[cfg(test)]
+impl TierManager {
+    /// Create tier manager for testing
+    ///
+    /// **TEST-ONLY**: This constructor is only available in test builds.
+    /// Production code must use `TierManager::new()` with proper configuration.
+    pub fn new_for_testing() -> Self {
+        let mut tier_stats_inner = HashMap::new();
+        tier_stats_inner.insert(StorageTier::Hot, TierStats::default());
+        tier_stats_inner.insert(StorageTier::Warm, TierStats::default());
+        tier_stats_inner.insert(StorageTier::Cold, TierStats::default());
+        let tier_stats = Arc::new(RwLock::new(tier_stats_inner));
+
+        Self {
+            config: ZfsConfig::default(),
+            pool_manager: Arc::new(ZfsPoolManager::new_production(ZfsConfig::default())),
+            dataset_manager: Arc::new({
+                let config = ZfsConfig::default();
+                let pool_manager = Arc::new(ZfsPoolManager::new_production(config.clone()));
+                ZfsDatasetManager::new(config, pool_manager)
+            }),
+            tier_stats,
+        }
     }
 }

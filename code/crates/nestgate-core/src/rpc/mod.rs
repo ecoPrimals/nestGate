@@ -43,31 +43,21 @@
 //! # }
 //! ```
 
-pub mod tarpc_types;
+pub mod jsonrpc_server;
 pub mod tarpc_client;
 pub mod tarpc_server;
-pub mod jsonrpc_server;
+pub mod tarpc_types;
 
 // Re-export key types
 pub use tarpc_types::{
-    CapabilityRegistration,
-    DatasetInfo,
-    DatasetParams,
-    HealthStatus,
-    NestGateRpc,
-    NestGateRpcError,
-    ObjectInfo,
-    OperationResult,
-    ProtocolInfo,
-    RegistrationResult,
-    ServiceInfo,
-    StorageMetrics,
-    VersionInfo,
+    CapabilityRegistration, DatasetInfo, DatasetParams, HealthStatus, NestGateRpc,
+    NestGateRpcError, ObjectInfo, OperationResult, ProtocolInfo, RegistrationResult, ServiceInfo,
+    StorageMetrics, VersionInfo,
 };
 
-pub use tarpc_client::NestGateRpcClient;
-pub use tarpc_server::{NestGateRpcService, serve_tarpc};
 pub use jsonrpc_server::{JsonRpcConfig, JsonRpcServer};
+pub use tarpc_client::NestGateRpcClient;
+pub use tarpc_server::{serve_tarpc, NestGateRpcService};
 
 #[cfg(test)]
 mod tests {

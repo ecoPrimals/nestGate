@@ -75,18 +75,10 @@ impl ZfsPoolManager {
         Ok(manager)
     }
 
-    /// Create instance for testing with default configuration
-    #[cfg(test)]
-    pub fn new_for_testing() -> Self {
-        Self {
-            config: ZfsConfig::default(),
-            discovered_pools: std::sync::Arc::new(tokio::sync::RwLock::new(
-                std::collections::HashMap::new(),
-            )),
-        }
-    }
-
     /// Create instance for real production use
+    ///
+    /// This is the primary constructor for production code. Use this instead of
+    /// `new()` when you have a synchronous context and need immediate initialization.
     #[must_use]
     pub fn new_production(config: ZfsConfig) -> Self {
         Self {
@@ -509,5 +501,24 @@ impl ZfsPoolManager {
         }
 
         Ok(None)
+    }
+}
+
+// ========== TEST-ONLY CONSTRUCTORS ==========
+// Isolated from production code to maintain clear boundaries
+
+#[cfg(test)]
+impl ZfsPoolManager {
+    /// Create instance for testing with default configuration
+    ///
+    /// **TEST-ONLY**: This constructor is only available in test builds.
+    /// Production code must use `ZfsPoolManager::new()` or `new_production()`.
+    pub fn new_for_testing() -> Self {
+        Self {
+            config: ZfsConfig::default(),
+            discovered_pools: std::sync::Arc::new(tokio::sync::RwLock::new(
+                std::collections::HashMap::new(),
+            )),
+        }
     }
 }

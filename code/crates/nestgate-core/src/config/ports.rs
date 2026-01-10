@@ -233,9 +233,7 @@ impl PortConfigBuilder {
             metrics_port: self
                 .metrics_port
                 .unwrap_or(PortConfig::DEFAULT_METRICS_PORT),
-            health_port: self
-                .health_port
-                .unwrap_or(PortConfig::DEFAULT_HEALTH_PORT),
+            health_port: self.health_port.unwrap_or(PortConfig::DEFAULT_HEALTH_PORT),
             admin_port: self.admin_port.unwrap_or(PortConfig::DEFAULT_ADMIN_PORT),
             discovery_port: self
                 .discovery_port
@@ -284,8 +282,7 @@ mod tests {
     fn test_serialization() {
         let ports = PortConfig::default_dev();
         let json = serde_json::to_string(&ports).expect("Serialization failed");
-        let deserialized: PortConfig =
-            serde_json::from_str(&json).expect("Deserialization failed");
+        let deserialized: PortConfig = serde_json::from_str(&json).expect("Deserialization failed");
         assert_eq!(ports, deserialized);
     }
 }

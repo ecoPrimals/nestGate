@@ -47,8 +47,6 @@ pub mod defaults_v2_config;
 pub mod discovery;
 /// Ecosystem integration patterns
 pub mod ecosystem_integration;
-/// **RPC MODULE**: tarpc + JSON-RPC for primal-to-primal communication
-pub mod rpc;
 /// Environment configuration utilities
 pub mod environment;
 /// Environment configuration - thread-safe config for environment detection
@@ -70,6 +68,8 @@ pub mod primal_discovery;
 pub mod recovery;
 /// **PRIMARY**: Canonical Result type aliases (Nov 10, 2025 consolidation)
 pub mod result_types;
+/// **RPC MODULE**: tarpc + JSON-RPC for primal-to-primal communication
+pub mod rpc;
 /// **NEW**: Self-knowledge pattern for primal sovereignty (Dec 3, 2025)
 ///
 /// **Philosophy**: Each primal knows only itself, discovers others at runtime.
