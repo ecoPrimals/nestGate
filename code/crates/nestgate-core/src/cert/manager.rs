@@ -16,10 +16,49 @@ pub struct CertificateManager {
 }
 impl CertificateManager {
     /// Create a new certificate manager
+    ///
+    /// # Configuration
+    ///
+    /// The adapter endpoint is determined from environment variables:
+    /// - `NESTGATE_ADAPTER_ENDPOINT` - Full adapter URL (preferred)
+    /// - Falls back to `NESTGATE_API_URL` with `/adapter` suffix
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if no adapter endpoint is configured. This ensures
+    /// explicit configuration rather than hidden hardcoded values.
+    ///
+    /// # Migration from hardcoded localhost
+    ///
+    /// **Before** (hardcoded):
+    /// ```ignore
+    /// // Hardcoded http://localhost:8080/adapter
+    /// let manager = CertificateManager::new(config)?;
+    /// ```
+    ///
+    /// **After** (environment-driven):
+    /// ```bash
+    /// export NESTGATE_ADAPTER_ENDPOINT="http://your-server:8080/adapter"
+    /// # OR
+    /// export NESTGATE_API_URL="http://your-server:8080"
+    /// ```
     pub fn new(config: NestGateCanonicalConfig) -> crate::Result<Self> {
-        let adapter = crate::universal_adapter::PrimalAgnosticAdapter::new(
-            "http://localhost:8080/adapter".to_string(),
-        );
+        // Try explicit adapter endpoint first
+        let adapter_url = std::env::var("NESTGATE_ADAPTER_ENDPOINT")
+            .or_else(|_| {
+                // Fall back to API URL + /adapter suffix
+                std::env::var("NESTGATE_API_URL")
+                    .map(|base| format!("{}/adapter", base.trim_end_matches('/')))
+            })
+            .map_err(|_| {
+                crate::NestGateError::configuration_error(
+                    "adapter_endpoint",
+                    "Certificate manager requires NESTGATE_ADAPTER_ENDPOINT or NESTGATE_API_URL to be set. \
+                     No hardcoded defaults for sovereignty compliance."
+                )
+            })?;
+
+        let adapter = crate::universal_adapter::PrimalAgnosticAdapter::new(adapter_url);
         Ok(Self { adapter, config })
     }
 
