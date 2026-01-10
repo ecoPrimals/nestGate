@@ -17,9 +17,9 @@ All test-only constructors moved behind `#[cfg(test)]` blocks:
 - ✅ `metrics.rs`
 - ✅ `snapshot/manager.rs`
 
-### **2. Hardcoded Endpoint Evolution** ✅ STARTED
+### **2. Hardcoded Endpoint Evolution** ✅ 3 INSTANCES COMPLETE
 
-#### **primal_discovery.rs** - Eliminated Hardcoded Fallback
+#### **Instance 1: primal_discovery.rs** - Eliminated Hardcoded Fallback
 
 **Before** (❌ Hardcoded localhost fallback):
 ```rust
@@ -58,6 +58,53 @@ pub fn primary_endpoint_or_env_default(&self) -> Option<String> {
 - ✅ Callers must explicitly handle missing configuration
 - ✅ Environment-driven fallback option available
 - ✅ Configuration errors become visible instead of masked
+
+#### **Instance 2: cert/validator.rs** - CertificateValidator::new()
+
+**Before** (❌ Hardcoded localhost):
+```rust
+pub fn new(config: NestGateCanonicalConfig) -> crate::Result<Self> {
+    let adapter = PrimalAgnosticAdapter::new(
+        "http://localhost:8080/adapter".to_string()
+    );
+    Ok(Self { adapter, config })
+}
+```
+
+**After** (✅ Environment-driven with fallback hierarchy):
+```rust
+pub fn new(config: NestGateCanonicalConfig) -> crate::Result<Self> {
+    let adapter_url = std::env::var("NESTGATE_ADAPTER_ENDPOINT")
+        .or_else(|_| {
+            std::env::var("NESTGATE_API_URL")
+                .map(|base| format!("{}/adapter", base.trim_end_matches('/')))
+        })
+        .map_err(|_| {
+            crate::NestGateError::configuration_error(
+                "adapter_endpoint",
+                "Certificate validator requires NESTGATE_ADAPTER_ENDPOINT or NESTGATE_API_URL"
+            )
+        })?;
+    
+    let adapter = PrimalAgnosticAdapter::new(adapter_url);
+    Ok(Self { adapter, config })
+}
+```
+
+**Impact**:
+- ✅ No hardcoded localhost
+- ✅ Fallback hierarchy: NESTGATE_ADAPTER_ENDPOINT → NESTGATE_API_URL
+- ✅ Clear error when misconfigured
+- ✅ Sovereignty maintained
+
+#### **Instance 3: cert/manager.rs** - CertificateManager::new()
+
+**Evolution**: Identical pattern to cert/validator.rs
+
+**Impact**:
+- ✅ Unified configuration approach across certificate subsystem
+- ✅ Both validator and manager use same environment variables
+- ✅ Consistent error messages
 
 ---
 
