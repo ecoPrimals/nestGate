@@ -31,13 +31,43 @@ pub struct CacheConfig {
 
 impl CacheConfig {
     /// Load cache configuration from environment variables.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if NESTGATE_REDIS_HOST is not set. Redis is an external service
+    /// and must be explicitly configured - no hardcoded localhost assumption.
+    ///
+    /// # Philosophy
+    ///
+    /// External services (Redis, databases) must be explicitly configured.
+    /// Hardcoded "localhost" violates sovereignty principles and hides
+    /// deployment configuration issues.
+    ///
+    /// # Migration
+    ///
+    /// **Before** (silently used localhost):
+    /// ```ignore
+    /// let config = CacheConfig::from_environment()?;
+    /// ```
+    ///
+    /// **After** (requires explicit config):
+    /// ```bash
+    /// export NESTGATE_REDIS_HOST="redis.internal"
+    /// export NESTGATE_REDIS_PORT="6379"
+    /// ```
     pub fn from_environment() -> Result<Self> {
+        let redis_host = env::var("NESTGATE_REDIS_HOST")
+            .map_err(|_| crate::NestGateError::configuration_error(
+                "redis_host",
+                "NESTGATE_REDIS_HOST must be set explicitly. No hardcoded localhost for external services."
+            ))?;
+
         Ok(Self {
-            redis_host: env::var("NESTGATE_REDIS_HOST").unwrap_or_else(|_| "localhost".to_string()),
+            redis_host,
             redis_port: env::var("NESTGATE_REDIS_PORT")
                 .ok()
                 .and_then(|s| s.parse().ok())
-                .unwrap_or(6379),
+                .unwrap_or(6379), // Port 6379 is Redis default (industry standard)
             ttl_seconds: env::var("NESTGATE_CACHE_TTL_SECONDS")
                 .ok()
                 .and_then(|s| s.parse().ok())

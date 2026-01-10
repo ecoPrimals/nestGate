@@ -44,13 +44,51 @@ pub struct DatabaseConfig {
 
 impl DatabaseConfig {
     /// Load database configuration from environment variables.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if NESTGATE_DB_HOST is not set. Database is an external service
+    /// and must be explicitly configured - no hardcoded localhost assumption.
+    ///
+    /// # Philosophy
+    ///
+    /// External services (databases, Redis) must be explicitly configured.
+    /// Hardcoded "localhost" violates sovereignty principles and hides
+    /// deployment configuration issues.
+    ///
+    /// # Security
+    ///
+    /// Database credentials should NEVER have defaults. Empty password default
+    /// is for local development only and should fail in production.
+    ///
+    /// # Migration
+    ///
+    /// **Before** (silently used localhost):
+    /// ```ignore
+    /// let config = DatabaseConfig::from_environment()?;
+    /// ```
+    ///
+    /// **After** (requires explicit config):
+    /// ```bash
+    /// export NESTGATE_DB_HOST="postgres.internal"
+    /// export NESTGATE_DB_PORT="5432"
+    /// export NESTGATE_DB_NAME="nestgate"
+    /// export NESTGATE_DB_USER="app_user"
+    /// export NESTGATE_DB_PASSWORD="secure_password"
+    /// ```
     pub fn from_environment() -> Result<Self> {
+        let host = env::var("NESTGATE_DB_HOST")
+            .map_err(|_| crate::NestGateError::configuration_error(
+                "database_host",
+                "NESTGATE_DB_HOST must be set explicitly. No hardcoded localhost for external services."
+            ))?;
+
         Ok(Self {
-            host: env::var("NESTGATE_DB_HOST").unwrap_or_else(|_| "localhost".to_string()),
+            host,
             port: env::var("NESTGATE_DB_PORT")
                 .ok()
                 .and_then(|s| s.parse().ok())
-                .unwrap_or(5432),
+                .unwrap_or(5432), // Port 5432 is PostgreSQL default (industry standard)
             name: env::var("NESTGATE_DB_NAME").unwrap_or_else(|_| "nestgate".to_string()),
             user: env::var("NESTGATE_DB_USER").unwrap_or_else(|_| "nestgate".to_string()),
             password: env::var("NESTGATE_DB_PASSWORD").unwrap_or_default(),
