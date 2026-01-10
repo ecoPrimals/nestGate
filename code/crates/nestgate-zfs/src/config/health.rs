@@ -81,7 +81,7 @@ impl HealthMonitoringConfig {
                             "NESTGATE_ALERT_ENDPOINTS not set. Using development defaults. \
                              Set NESTGATE_ALERT_ENDPOINTS in production."
                         );
-                        
+
                         // Development convenience: local endpoints
                         // In production, this code path should never execute
                         let dev_host = std::env::var("NESTGATE_DEV_HOST")
@@ -90,13 +90,13 @@ impl HealthMonitoringConfig {
                             .ok()
                             .and_then(|s| s.parse().ok())
                             .unwrap_or(8080);
-                        
+
                         vec![
                             format!("email:dev@{}", dev_host),
                             format!("webhook:http://{}:{}/alerts", dev_host, dev_port),
                         ]
                     });
-                
+
                 endpoints
             },
         }

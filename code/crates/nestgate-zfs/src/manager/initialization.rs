@@ -267,16 +267,16 @@ impl ZfsManager {
                     // This is self-knowledge - ZFS knows where IT is listening
                     let bind_addr = &self.config.bind_address;
                     let bind_port = self.config.port;
-                    
+
                     tracing::debug!(
                         "ZFS endpoint from self-knowledge: {}:{}",
                         bind_addr,
                         bind_port
                     );
-                    
+
                     format!("{}:{}", bind_addr, bind_port)
                 };
-                
+
                 endpoint
             });
             details.insert("version".to_string(), env!("CARGO_PKG_VERSION").to_string());

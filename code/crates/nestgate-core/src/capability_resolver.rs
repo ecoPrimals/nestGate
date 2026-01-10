@@ -204,25 +204,34 @@ impl<'a> CapabilityResolver for InMemoryRegistryAdapter<'a> {
             })?;
 
             // Extract host - no hardcoded fallback, error if missing
-            let host = url.host_str()
-                .ok_or_else(|| NestGateError::configuration_error(
-                    "endpoint_host",
-                    &format!("Service endpoint URL missing host: {}", endpoint.url)
-                ))?
+            let host = url
+                .host_str()
+                .ok_or_else(|| {
+                    NestGateError::configuration_error(
+                        "endpoint_host",
+                        &format!("Service endpoint URL missing host: {}", endpoint.url),
+                    )
+                })?
                 .to_string();
 
             // Extract port with protocol-based defaults
-            let port = url.port().or_else(|| {
-                match endpoint.protocol {
+            let port = url
+                .port()
+                .or_else(|| match endpoint.protocol {
                     crate::service_discovery::types::CommunicationProtocol::Http => Some(80),
                     crate::service_discovery::types::CommunicationProtocol::Grpc => Some(9090),
                     crate::service_discovery::types::CommunicationProtocol::WebSocket => Some(80),
                     _ => None,
-                }
-            }).ok_or_else(|| NestGateError::configuration_error(
-                "endpoint_port",
-                &format!("Service endpoint URL missing port and no default for protocol: {}", endpoint.url)
-            ))?;
+                })
+                .ok_or_else(|| {
+                    NestGateError::configuration_error(
+                        "endpoint_port",
+                        &format!(
+                            "Service endpoint URL missing port and no default for protocol: {}",
+                            endpoint.url
+                        ),
+                    )
+                })?;
 
             Ok(ResolvedService {
                 id: service.service_id.to_string(),
@@ -408,11 +417,17 @@ impl CapabilityResolver for EnvironmentResolver {
             // Parse URL or host:port format
             if let Ok(url) = value.parse::<url::Url>() {
                 // Extract host - error if missing
-                let host = url.host_str()
-                    .ok_or_else(|| NestGateError::configuration_error(
-                        "capability_endpoint_host",
-                        &format!("Environment variable {} has URL without host: {}", env_var, value)
-                    ))?
+                let host = url
+                    .host_str()
+                    .ok_or_else(|| {
+                        NestGateError::configuration_error(
+                            "capability_endpoint_host",
+                            &format!(
+                                "Environment variable {} has URL without host: {}",
+                                env_var, value
+                            ),
+                        )
+                    })?
                     .to_string();
 
                 // Extract port with protocol-based defaults

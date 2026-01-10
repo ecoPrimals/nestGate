@@ -232,35 +232,32 @@ impl AgnosticConfig {
     /// hardcode infrastructure assumptions. If no endpoint is configured,
     /// we don't silently use localhost.
     pub fn api_endpoint(&self) -> Option<String> {
-        self.endpoints
-            .get("api")
-            .cloned()
-            .or_else(|| {
-                // Try to construct from environment
-                std::env::var("NESTGATE_API_HOST")
-                    .ok()
-                    .map(|host| format!("http://{}:{}", host, self.api_port()))
-            })
+        self.endpoints.get("api").cloned().or_else(|| {
+            // Try to construct from environment
+            std::env::var("NESTGATE_API_HOST")
+                .ok()
+                .map(|host| format!("http://{}:{}", host, self.api_port()))
+        })
     }
-    
+
     /// Get API endpoint or default for development
     ///
     /// **Development only**: This method provides a localhost fallback for local development.
     /// Production code should use `api_endpoint()` and handle the None case explicitly.
-    #[cfg_attr(not(debug_assertions), deprecated(
-        note = "Use api_endpoint() in production and handle None explicitly"
-    ))]
+    #[cfg_attr(
+        not(debug_assertions),
+        deprecated(note = "Use api_endpoint() in production and handle None explicitly")
+    )]
     pub fn api_endpoint_or_dev_default(&self) -> String {
-        self.api_endpoint()
-            .unwrap_or_else(|| {
-                #[cfg(debug_assertions)]
-                tracing::debug!(
-                    "Using development default API endpoint: localhost:{}",
-                    self.api_port()
-                );
-                
-                format!("http://localhost:{}", self.api_port())
-            })
+        self.api_endpoint().unwrap_or_else(|| {
+            #[cfg(debug_assertions)]
+            tracing::debug!(
+                "Using development default API endpoint: localhost:{}",
+                self.api_port()
+            );
+
+            format!("http://localhost:{}", self.api_port())
+        })
     }
 
     /// Get API port
