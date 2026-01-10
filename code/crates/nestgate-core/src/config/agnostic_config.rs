@@ -414,8 +414,10 @@ mod tests {
 
         assert!(config.is_ok(), "Should build config with defaults");
         let endpoint = config.unwrap().api_endpoint();
-        assert!(!endpoint.is_empty(), "Endpoint should not be empty");
-        assert!(endpoint.contains("localhost") || endpoint.contains("127.0.0.1"));
+        assert!(endpoint.is_some(), "Endpoint should be present");
+        let endpoint_str = endpoint.unwrap();
+        assert!(!endpoint_str.is_empty(), "Endpoint should not be empty");
+        assert!(endpoint_str.contains("localhost") || endpoint_str.contains("127.0.0.1"));
     }
 
     #[test]
