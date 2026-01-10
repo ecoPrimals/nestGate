@@ -19,7 +19,7 @@ serde_json = { workspace = true }
 [dev-dependencies]
 tokio-test = { workspace = true }
 rand = { workspace = true }
-uuid = { workspace = true }
+uuid = { workspace = true, features = ["v4"] }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 async-trait = { workspace = true }
@@ -48,6 +48,7 @@ rstest.workspace = true
 test-log = "0.2.18"
 temp-env = "0.3.6"
 portpicker = "0.1.1"
+base64.workspace = true
 
 [features]
 default = []
