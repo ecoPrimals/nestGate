@@ -76,7 +76,9 @@ impl Default for JsonRpcConfig {
 /// Shared state for JSON-RPC methods
 #[derive(Clone)]
 pub struct JsonRpcState {
+    /// RPC service instance
     pub service: NestGateRpcService,
+    /// Server start time for uptime tracking
     pub start_time: std::time::Instant,
 }
 
