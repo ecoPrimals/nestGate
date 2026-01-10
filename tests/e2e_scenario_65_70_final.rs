@@ -8,8 +8,7 @@
 /// - Advanced security scenarios
 ///
 /// **Evolution**: Modern async patterns, proper error handling, production-ready
-
-use nestgate_core::{Result, NestGateError};
+use nestgate_core::{NestGateError, Result};
 use tokio::time::{sleep, Duration};
 
 #[tokio::test]

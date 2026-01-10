@@ -9,8 +9,7 @@
 /// - Compliance auditing
 ///
 /// **Evolution**: Modern async patterns, proper error handling, no unwraps
-
-use nestgate_core::{Result, NestGateError};
+use nestgate_core::{NestGateError, Result};
 use tokio::time::{sleep, Duration};
 
 #[tokio::test]
@@ -27,25 +26,25 @@ async fn test_e2e_scenario_48_zero_downtime_upgrade() -> Result<()> {
 
     // Phase 2: Rolling upgrade sequence
     println!("\n🔄 Phase 2: Rolling upgrade - Node by node...");
-    
+
     for node_id in 1..=5 {
         println!("\n  Node {}/5:", node_id);
         println!("    • Draining connections...");
         sleep(Duration::from_millis(50)).await;
         println!("    ✓ Connections drained");
-        
+
         println!("    • Updating binary...");
         sleep(Duration::from_millis(100)).await;
         println!("    ✓ Binary updated: v1.2.3 → v1.3.0");
-        
+
         println!("    • Restarting service...");
         sleep(Duration::from_millis(80)).await;
         println!("    ✓ Service started");
-        
+
         println!("    • Health check...");
         sleep(Duration::from_millis(50)).await;
         println!("    ✓ Node {} healthy", node_id);
-        
+
         println!("    • Rejoining cluster...");
         println!("    ✓ Node {} rejoined", node_id);
     }
@@ -188,7 +187,7 @@ async fn test_e2e_scenario_51_performance_tuning() -> Result<()> {
 
     // Phase 2: Apply optimizations
     println!("\n🔧 Phase 2: Applying optimizations...");
-    
+
     println!("\n  Optimization 1: ARC cache tuning");
     println!("    • Increasing ARC size: 8GB → 16GB");
     println!("    ✓ Cache hit rate improved: 65% → 87%");

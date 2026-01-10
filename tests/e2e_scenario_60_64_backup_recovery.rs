@@ -9,8 +9,7 @@
 /// - Recovery point objectives (RPO)
 ///
 /// **Evolution**: Modern async patterns, proper error handling, production-ready DR
-
-use nestgate_core::{Result, NestGateError};
+use nestgate_core::{NestGateError, Result};
 use tokio::time::{sleep, Duration};
 
 #[tokio::test]
@@ -204,7 +203,7 @@ async fn test_e2e_scenario_63_backup_validation_testing() -> Result<()> {
 
     // Phase 3: Integrity checks
     println!("\n🔍 Phase 3: Comprehensive integrity checks...");
-    
+
     println!("\n  Check 1: File count");
     println!("    - Expected: 12,345");
     println!("    - Actual: 12,345");

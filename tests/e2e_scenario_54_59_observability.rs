@@ -9,8 +9,7 @@
 /// - Capacity planning
 ///
 /// **Evolution**: Modern async patterns, proper error handling, production-ready observability
-
-use nestgate_core::{Result, NestGateError};
+use nestgate_core::{NestGateError, Result};
 use tokio::time::{sleep, Duration};
 
 #[tokio::test]
@@ -29,7 +28,7 @@ async fn test_e2e_scenario_54_metrics_collection() -> Result<()> {
     // Phase 2: Collect metrics over time
     println!("\n📈 Phase 2: Collecting metrics (60s window)...");
     sleep(Duration::from_millis(100)).await;
-    
+
     let metrics = vec![
         ("cpu.usage", 45.2, "%"),
         ("memory.used", 15.8, "GB"),
