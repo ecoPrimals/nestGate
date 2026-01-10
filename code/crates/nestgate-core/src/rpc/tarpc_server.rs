@@ -29,7 +29,9 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use futures_util::StreamExt;
 use tarpc::context::Context;
+use tarpc::server::Channel;
 use tokio::sync::RwLock;
 use tokio_serde::formats::Bincode;
 use tracing::{debug, info, warn};
@@ -528,14 +530,12 @@ pub async fn serve_tarpc(addr: SocketAddr, service: NestGateRpcService) -> Resul
         .map(|transport| {
             let server = tarpc::server::BaseChannel::with_defaults(transport);
             let service = service.clone();
-            async move {
-                server
-                    .execute(service.serve())
-                    .await
-            }
+            server.execute(service.serve())
         })
-        .buffer_unordered(100)
-        .for_each(|_| async {})
+        .flatten()
+        .for_each(|response| async move {
+            tokio::spawn(response);
+        })
         .await;
 
     Ok(())
