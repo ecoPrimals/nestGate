@@ -12,7 +12,7 @@ use tokio::time::interval;
 // Removed unused tracing import
 
 use crate::{
-    config::ZfsConfig, dataset::ZfsDatasetManager, pool::ZfsPoolManager, types::StorageTier,
+    config::ZfsConfig, dataset::ZfsDatasetManager, types::StorageTier,
 };
 use nestgate_core::Result as CoreResult;
 
