@@ -539,4 +539,59 @@ mod tests {
         let config = JsonRpcConfig::default();
         let _server = JsonRpcServer::new(service, config);
     }
+
+    #[test]
+    fn test_jsonrpc_config_custom() {
+        use std::net::{IpAddr, Ipv4Addr};
+        let config = JsonRpcConfig {
+            addr: SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 9999),
+            log_requests: false,
+            max_request_size: 1024,
+            max_response_size: 2048,
+        };
+        assert!(!config.log_requests);
+        assert_eq!(config.max_request_size, 1024);
+        assert_eq!(config.max_response_size, 2048);
+        assert_eq!(config.addr.port(), 9999);
+    }
+
+    #[tokio::test]
+    async fn test_jsonrpc_state_creation() {
+        let service = NestGateRpcService::new();
+        let state = JsonRpcState {
+            service: service.clone(),
+            start_time: std::time::Instant::now(),
+        };
+        
+        // Verify state is clonable
+        let _state_clone = state.clone();
+    }
+
+    #[test]
+    fn test_base64_encoding_decoding() {
+        let data = b"Hello, NestGate!";
+        let encoded = base64::engine::general_purpose::STANDARD.encode(data);
+        let decoded = base64::engine::general_purpose::STANDARD
+            .decode(&encoded)
+            .unwrap();
+        assert_eq!(data.to_vec(), decoded);
+    }
+
+    #[test]
+    fn test_jsonrpc_endpoint_format() {
+        let config = JsonRpcConfig::default();
+        let addr_str = format!("http://{}/jsonrpc", config.addr);
+        assert!(addr_str.contains("/jsonrpc"));
+    }
+
+    #[test]
+    fn test_multiple_servers() {
+        // Verify we can create multiple server instances
+        let service1 = NestGateRpcService::new();
+        let service2 = NestGateRpcService::new();
+        let config = JsonRpcConfig::default();
+        
+        let _server1 = JsonRpcServer::new(service1, config.clone());
+        let _server2 = JsonRpcServer::new(service2, config);
+    }
 }
