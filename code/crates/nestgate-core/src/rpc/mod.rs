@@ -43,11 +43,13 @@
 //! # }
 //! ```
 
+pub mod audit_storage;
 pub mod jsonrpc_server;
 pub mod songbird_registration;
 pub mod tarpc_client;
 pub mod tarpc_server;
 pub mod tarpc_types;
+pub mod template_storage;
 pub mod unix_socket_server;
 
 // Re-export key types
@@ -57,10 +59,15 @@ pub use tarpc_types::{
     StorageMetrics, VersionInfo,
 };
 
+pub use audit_storage::{
+    AuditStorage, ExecutionAudit, ExecutionStatus, GraphModification, ModificationType,
+    NodeOutcome, NodeStatus,
+};
 pub use jsonrpc_server::{JsonRpcConfig, JsonRpcServer};
 pub use songbird_registration::SongbirdRegistration;
 pub use tarpc_client::NestGateRpcClient;
 pub use tarpc_server::{serve_tarpc, NestGateRpcService};
+pub use template_storage::{GraphTemplate, TemplateMetadata, TemplateStorage};
 pub use unix_socket_server::JsonRpcUnixServer;
 
 #[cfg(test)]
