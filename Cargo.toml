@@ -15,6 +15,9 @@ nestgate-core = { path = "code/crates/nestgate-core" }
 nestgate-canonical = { path = "code/crates/nestgate-canonical" }
 tokio = { workspace = true }
 serde_json = { workspace = true }
+chrono = { workspace = true, features = ["serde"], optional = true }
+uuid = { workspace = true, features = ["v4", "serde"], optional = true }
+libc.workspace = true
 
 [dev-dependencies]
 tokio-test = { workspace = true }
@@ -56,6 +59,8 @@ default = []
 dev-stubs = ["nestgate-core/dev-stubs"]
 # Streaming RPC - enable enhanced streaming capabilities
 streaming-rpc = []
+chrono = ["dep:chrono"]
+uuid = ["dep:uuid"]
 
 [workspace]
 resolver = "2"
