@@ -82,6 +82,10 @@ struct StorageState {
     /// Blob storage (family_id -> key -> bytes)
     blobs:
         Arc<RwLock<std::collections::HashMap<String, std::collections::HashMap<String, Vec<u8>>>>>,
+    /// Template storage for collaborative intelligence
+    templates: crate::rpc::template_storage::TemplateStorage,
+    /// Audit storage for execution tracking
+    audits: crate::rpc::audit_storage::AuditStorage,
 }
 
 impl Default for StorageState {
@@ -89,6 +93,8 @@ impl Default for StorageState {
         Self {
             storage: Arc::new(RwLock::new(std::collections::HashMap::new())),
             blobs: Arc::new(RwLock::new(std::collections::HashMap::new())),
+            templates: crate::rpc::template_storage::TemplateStorage::new(),
+            audits: crate::rpc::audit_storage::AuditStorage::new(),
         }
     }
 }
@@ -291,6 +297,11 @@ async fn handle_request(request: JsonRpcRequest, state: &StorageState) -> JsonRp
         "storage.stats" => storage_stats(&request.params, state).await,
         "storage.store_blob" => storage_store_blob(&request.params, state).await,
         "storage.retrieve_blob" => storage_retrieve_blob(&request.params, state).await,
+        "templates.store" => templates_store(&request.params, state).await,
+        "templates.retrieve" => templates_retrieve(&request.params, state).await,
+        "templates.list" => templates_list(&request.params, state).await,
+        "templates.community_top" => templates_community_top(&request.params, state).await,
+        "audit.store_execution" => audit_store_execution(&request.params, state).await,
         _ => {
             return JsonRpcResponse {
                 jsonrpc: "2.0".to_string(),
@@ -553,6 +564,211 @@ async fn storage_retrieve_blob(params: &Option<Value>, state: &StorageState) -> 
     Ok(json!({
         "blob": blob_base64,
         "size": blob_data.len()
+    }))
+}
+
+/// templates.store - Store graph template
+async fn templates_store(params: &Option<Value>, state: &StorageState) -> Result<Value> {
+    let params = params
+        .as_ref()
+        .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
+
+    let name = params["name"]
+        .as_str()
+        .ok_or_else(|| NestGateError::invalid_input_with_field("name", "name (string) required"))?
+        .to_string();
+    let description = params["description"]
+        .as_str()
+        .ok_or_else(|| {
+            NestGateError::invalid_input_with_field("description", "description (string) required")
+        })?
+        .to_string();
+    let graph_data = params["graph_data"].clone();
+    let user_id = params["user_id"]
+        .as_str()
+        .ok_or_else(|| {
+            NestGateError::invalid_input_with_field("user_id", "user_id (string) required")
+        })?
+        .to_string();
+    let family_id = params["family_id"]
+        .as_str()
+        .ok_or_else(|| {
+            NestGateError::invalid_input_with_field("family_id", "family_id (string) required")
+        })?
+        .to_string();
+
+    // Parse metadata
+    let metadata = if let Some(meta_value) = params.get("metadata") {
+        serde_json::from_value(meta_value.clone()).map_err(|e| {
+            NestGateError::invalid_input_with_field(
+                "metadata",
+                &format!("Invalid metadata format: {}", e),
+            )
+        })?
+    } else {
+        crate::rpc::template_storage::TemplateMetadata::default()
+    };
+
+    let (template_id, version) = state
+        .templates
+        .store_template(name, description, graph_data, user_id, family_id, metadata)
+        .await?;
+
+    debug!("Stored template '{}' (version {})", template_id, version);
+
+    Ok(json!({
+        "template_id": template_id,
+        "version": version,
+        "created_at": chrono::Utc::now().to_rfc3339(),
+        "success": true
+    }))
+}
+
+/// templates.retrieve - Retrieve graph template by ID
+async fn templates_retrieve(params: &Option<Value>, state: &StorageState) -> Result<Value> {
+    let params = params
+        .as_ref()
+        .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
+
+    let template_id = params["template_id"].as_str().ok_or_else(|| {
+        NestGateError::invalid_input_with_field("template_id", "template_id (string) required")
+    })?;
+    let family_id = params["family_id"].as_str().ok_or_else(|| {
+        NestGateError::invalid_input_with_field("family_id", "family_id (string) required")
+    })?;
+
+    let template = state
+        .templates
+        .retrieve_template(template_id, family_id)
+        .await?;
+
+    debug!(
+        "Retrieved template '{}' for family '{}'",
+        template_id, family_id
+    );
+
+    Ok(serde_json::to_value(template)
+        .map_err(|e| NestGateError::api(&format!("Failed to serialize template: {}", e)))?)
+}
+
+/// templates.list - List templates with filtering
+async fn templates_list(params: &Option<Value>, state: &StorageState) -> Result<Value> {
+    let params = params
+        .as_ref()
+        .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
+
+    let family_id = params["family_id"].as_str().ok_or_else(|| {
+        NestGateError::invalid_input_with_field("family_id", "family_id (string) required")
+    })?;
+
+    // Optional filters
+    let user_id = params.get("user_id").and_then(|v| v.as_str());
+    let niche_type = params.get("niche_type").and_then(|v| v.as_str());
+    let is_community = params.get("is_community").and_then(|v| v.as_bool());
+
+    let tags: Option<Vec<String>> = params.get("tags").and_then(|v| {
+        v.as_array().map(|arr| {
+            arr.iter()
+                .filter_map(|t| t.as_str().map(String::from))
+                .collect()
+        })
+    });
+
+    let templates = state
+        .templates
+        .list_templates(
+            family_id,
+            user_id,
+            tags.as_deref(),
+            niche_type,
+            is_community,
+        )
+        .await?;
+
+    debug!(
+        "Listed {} templates for family '{}' with filters",
+        templates.len(),
+        family_id
+    );
+
+    Ok(json!({
+        "templates": templates,
+        "total": templates.len()
+    }))
+}
+
+/// templates.community_top - Get top community templates
+async fn templates_community_top(params: &Option<Value>, state: &StorageState) -> Result<Value> {
+    let params = params
+        .as_ref()
+        .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
+
+    let niche_type = params.get("niche_type").and_then(|v| v.as_str());
+    let limit = params.get("limit").and_then(|v| v.as_u64()).unwrap_or(10) as usize;
+    let min_usage = params
+        .get("min_usage")
+        .and_then(|v| v.as_u64())
+        .unwrap_or(0);
+
+    let top_templates = state
+        .templates
+        .get_community_top(niche_type, limit, min_usage)
+        .await?;
+
+    let result: Vec<Value> = top_templates
+        .into_iter()
+        .map(|(template, score)| {
+            json!({
+                "id": template.id,
+                "name": template.name,
+                "description": template.description,
+                "score": score,
+                "usage_count": template.metadata.usage_count,
+                "success_rate": template.metadata.success_rate,
+                "community_rating": template.metadata.community_rating,
+                "rating_count": template.metadata.rating_count,
+                "metadata": {
+                    "tags": template.metadata.tags,
+                    "niche_type": template.metadata.niche_type
+                }
+            })
+        })
+        .collect();
+
+    debug!(
+        "Retrieved {} top community templates (niche: {:?})",
+        result.len(),
+        niche_type
+    );
+
+    Ok(json!({
+        "templates": result
+    }))
+}
+
+/// audit.store_execution - Store execution audit trail
+async fn audit_store_execution(params: &Option<Value>, state: &StorageState) -> Result<Value> {
+    let params = params
+        .as_ref()
+        .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
+
+    // Deserialize the entire audit structure from params
+    let audit: crate::rpc::audit_storage::ExecutionAudit = serde_json::from_value(params.clone())
+        .map_err(|e| {
+        NestGateError::invalid_input_with_field(
+            "audit_data",
+            &format!("Invalid audit data format: {}", e),
+        )
+    })?;
+
+    let audit_id = state.audits.store_audit(audit).await?;
+
+    debug!("Stored execution audit '{}'", audit_id);
+
+    Ok(json!({
+        "audit_id": audit_id,
+        "stored_at": chrono::Utc::now().to_rfc3339(),
+        "success": true
     }))
 }
 
