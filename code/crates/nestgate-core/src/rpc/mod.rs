@@ -45,6 +45,7 @@
 
 pub mod audit_storage;
 pub mod jsonrpc_server;
+pub mod socket_config;
 pub mod songbird_registration;
 pub mod tarpc_client;
 pub mod tarpc_server;
@@ -64,6 +65,7 @@ pub use audit_storage::{
     NodeOutcome, NodeStatus,
 };
 pub use jsonrpc_server::{JsonRpcConfig, JsonRpcServer};
+pub use socket_config::{SocketConfig, SocketConfigSource};
 pub use songbird_registration::SongbirdRegistration;
 pub use tarpc_client::NestGateRpcClient;
 pub use tarpc_server::{serve_tarpc, NestGateRpcService};

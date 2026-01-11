@@ -24,7 +24,7 @@ async fn send_jsonrpc(
     // Write request
     let (reader, mut writer) = stream.split();
     let mut reader = BufReader::new(reader);
-    
+
     let request_json = serde_json::to_string(&request)?;
     writer.write_all(request_json.as_bytes()).await?;
     writer.write_all(b"\n").await?;
@@ -33,7 +33,7 @@ async fn send_jsonrpc(
     let mut response_line = String::new();
     reader.read_line(&mut response_line).await?;
     let response: serde_json::Value = serde_json::from_str(&response_line)?;
-    
+
     Ok(response)
 }
 
@@ -42,8 +42,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🤝 Collaborative Intelligence Example\n");
 
     // Connect to NestGate
-    let family_id = std::env::var("NESTGATE_FAMILY_ID")
-        .unwrap_or_else(|_| "example_ci".to_string());
+    let family_id =
+        std::env::var("NESTGATE_FAMILY_ID").unwrap_or_else(|_| "example_ci".to_string());
     let uid = unsafe { libc::getuid() };
     let socket_path = format!("/run/user/{}/nestgate-{}.sock", uid, family_id);
 
@@ -54,7 +54,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // ========================================================================
     // PART 1: Template Storage
     // ========================================================================
-    
+
     println!("📝 Part 1: Storing a Graph Template");
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
@@ -103,7 +103,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     });
 
     let response = send_jsonrpc(&mut stream, "templates.store", template_params, 1).await?;
-    
+
     if let Some(result) = response.get("result") {
         let template_id = result["template_id"].as_str().unwrap();
         println!("✅ Template stored!");
@@ -114,7 +114,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         // ====================================================================
         // PART 2: Retrieve Template
         // ====================================================================
-        
+
         println!("🔍 Part 2: Retrieving Template");
         println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
@@ -124,19 +124,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         });
 
         let response = send_jsonrpc(&mut stream, "templates.retrieve", retrieve_params, 2).await?;
-        
+
         if let Some(result) = response.get("result") {
             println!("✅ Template retrieved!");
             println!("   Name: {}", result["name"]);
             println!("   Description: {}", result["description"]);
-            println!("   Nodes: {}", result["graph_data"]["nodes"].as_array().unwrap().len());
+            println!(
+                "   Nodes: {}",
+                result["graph_data"]["nodes"].as_array().unwrap().len()
+            );
             println!("   Tags: {:?}\n", result["metadata"]["tags"]);
         }
 
         // ====================================================================
         // PART 3: List Templates
         // ====================================================================
-        
+
         println!("📋 Part 3: Listing Templates");
         println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
@@ -146,16 +149,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         });
 
         let response = send_jsonrpc(&mut stream, "templates.list", list_params, 3).await?;
-        
+
         if let Some(result) = response.get("result") {
             let total = result["total"].as_u64().unwrap();
             println!("✅ Found {} template(s)", total);
-            
+
             if let Some(templates) = result["templates"].as_array() {
                 for template in templates {
-                    println!("   • {} ({})", 
-                        template["name"], 
-                        template["id"]);
+                    println!("   • {} ({})", template["name"], template["id"]);
                 }
             }
             println!();
@@ -164,7 +165,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         // ====================================================================
         // PART 4: Execution Audit
         // ====================================================================
-        
+
         println!("📊 Part 4: Storing Execution Audit");
         println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
@@ -220,7 +221,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         });
 
         let response = send_jsonrpc(&mut stream, "audit.store_execution", audit_params, 4).await?;
-        
+
         if let Some(result) = response.get("result") {
             println!("✅ Audit stored!");
             println!("   Audit ID: {}", result["audit_id"]);
@@ -230,7 +231,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         // ====================================================================
         // PART 5: Community Top Templates
         // ====================================================================
-        
+
         println!("🏆 Part 5: Discovering Top Community Templates");
         println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
@@ -264,17 +265,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         });
 
         let response = send_jsonrpc(&mut stream, "templates.community_top", top_params, 6).await?;
-        
+
         if let Some(result) = response.get("result") {
             if let Some(templates) = result["templates"].as_array() {
                 println!("✅ Found {} top template(s):", templates.len());
                 for (i, template) in templates.iter().enumerate() {
-                    println!("   {}. {} (Score: {:.2})",
+                    println!(
+                        "   {}. {} (Score: {:.2})",
                         i + 1,
                         template["name"],
                         template["score"].as_f64().unwrap_or(0.0)
                     );
-                    println!("      Usage: {}, Success Rate: {:.0}%",
+                    println!(
+                        "      Usage: {}, Success Rate: {:.0}%",
                         template["usage_count"],
                         template["success_rate"].as_f64().unwrap_or(0.0) * 100.0
                     );
@@ -290,6 +293,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   • Community sharing accelerates learning across teams");
     println!("   • Audit trails capture human modifications for AI learning");
     println!("   • Smart ranking surfaces the most successful patterns");
-    
+
     Ok(())
 }

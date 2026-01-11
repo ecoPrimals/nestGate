@@ -107,48 +107,37 @@ pub struct JsonRpcUnixServer {
 }
 
 impl JsonRpcUnixServer {
-    /// Create new Unix socket server
+    /// Create new Unix socket server with standardized configuration
+    ///
+    /// # Configuration Priority (3-tier fallback)
+    ///
+    /// 1. `NESTGATE_SOCKET` env var (explicit override)
+    /// 2. XDG runtime: `/run/user/{uid}/nestgate-{family}.sock` (recommended)
+    /// 3. Temp fallback: `/tmp/nestgate-{family}-{node}.sock` (least secure)
     ///
     /// # Self-Knowledge Principle
-    /// - Socket path derived from own family_id (no hardcoding)
-    /// - UID obtained from system at runtime
-    /// - No assumptions about other primals
+    /// - Socket path derived from environment and own identity
+    /// - Agnostic to deployment environment
+    /// - Buildable (creates directories, cleans old sockets)
+    /// - No hardcoding or assumptions
     ///
     /// # Arguments
     /// - `family_id`: Family identifier from $NESTGATE_FAMILY_ID
     ///
     /// # Errors
-    /// - Returns error if socket path cannot be created
+    /// - Returns error if socket path cannot be prepared
     /// - Returns error if socket binding fails
     pub async fn new(family_id: &str) -> Result<Self> {
-        // Self-knowledge: Discover our own UID at runtime
-        let uid = unsafe { libc::getuid() };
+        // Use standardized socket configuration
+        let socket_config = crate::rpc::socket_config::SocketConfig::from_environment()?;
 
-        // Self-knowledge: Construct socket path from own identity
-        let socket_path = PathBuf::from(format!("/run/user/{}/nestgate-{}.sock", uid, family_id));
+        // Log configuration for debugging
+        socket_config.log_summary();
 
-        // Ensure parent directory exists
-        if let Some(parent) = socket_path.parent() {
-            if !parent.exists() {
-                return Err(NestGateError::configuration_error(
-                    "socket_path",
-                    &format!(
-                        "Runtime directory does not exist: {:?}. Is user session active?",
-                        parent
-                    ),
-                ));
-            }
-        }
+        // Prepare socket path (create dirs, remove old socket)
+        socket_config.prepare_socket_path()?;
 
-        // Remove existing socket if present
-        if socket_path.exists() {
-            std::fs::remove_file(&socket_path).map_err(|e| {
-                NestGateError::configuration_error(
-                    "socket_cleanup",
-                    &format!("Failed to remove existing socket: {}", e),
-                )
-            })?;
-        }
+        let socket_path = socket_config.socket_path;
 
         info!("Initializing JSON-RPC Unix socket server");
         info!("  Socket path: {:?}", socket_path);
