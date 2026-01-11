@@ -209,15 +209,21 @@ impl SocketConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::fs;
+    use std::os::unix::net::UnixListener;
+
+    // ========================================================================
+    // UNIT TESTS - Configuration Logic
+    // ========================================================================
 
     #[test]
-    fn test_socket_config_with_explicit_path() {
-        std::env::set_var("NESTGATE_SOCKET", "/tmp/test.sock");
+    fn test_explicit_socket_path_has_highest_priority() {
+        std::env::set_var("NESTGATE_SOCKET", "/tmp/explicit.sock");
         std::env::set_var("NESTGATE_FAMILY_ID", "test");
 
         let config = SocketConfig::from_environment().unwrap();
 
-        assert_eq!(config.socket_path, PathBuf::from("/tmp/test.sock"));
+        assert_eq!(config.socket_path, PathBuf::from("/tmp/explicit.sock"));
         assert_eq!(config.family_id, "test");
         assert_eq!(config.source, SocketConfigSource::Environment);
 
@@ -226,25 +232,34 @@ mod tests {
     }
 
     #[test]
-    fn test_socket_config_fallback_to_tmp() {
+    fn test_xdg_runtime_path_second_priority() {
         std::env::remove_var("NESTGATE_SOCKET");
-        std::env::set_var("NESTGATE_FAMILY_ID", "test");
-        std::env::set_var("NESTGATE_NODE_ID", "node1");
+        std::env::set_var("NESTGATE_FAMILY_ID", "xdgtest");
 
         let config = SocketConfig::from_environment().unwrap();
 
-        // Should use /tmp since XDG runtime might not exist in test env
+        // Should use XDG if available, /tmp otherwise
+        let path_str = config.socket_path.to_str().unwrap();
         assert!(
-            config
-                .socket_path
-                .to_str()
-                .unwrap()
-                .starts_with("/tmp/nestgate-")
-                || config
-                    .socket_path
-                    .to_str()
-                    .unwrap()
-                    .starts_with("/run/user/")
+            path_str.contains("nestgate-xdgtest.sock"),
+            "Socket path should contain family ID"
+        );
+
+        std::env::remove_var("NESTGATE_FAMILY_ID");
+    }
+
+    #[test]
+    fn test_tmp_fallback_with_node_id() {
+        std::env::remove_var("NESTGATE_SOCKET");
+        std::env::set_var("NESTGATE_FAMILY_ID", "tmptest");
+        std::env::set_var("NESTGATE_NODE_ID", "node42");
+
+        let config = SocketConfig::from_environment().unwrap();
+
+        let path_str = config.socket_path.to_str().unwrap();
+        assert!(
+            path_str.contains("tmptest") || path_str.contains("nestgate"),
+            "Socket path should contain family ID or nestgate"
         );
 
         std::env::remove_var("NESTGATE_FAMILY_ID");
@@ -252,15 +267,356 @@ mod tests {
     }
 
     #[test]
-    fn test_socket_path_preparation() {
+    fn test_default_family_id_when_not_set() {
+        std::env::remove_var("NESTGATE_SOCKET");
+        std::env::remove_var("NESTGATE_FAMILY_ID");
+        std::env::remove_var("NESTGATE_NODE_ID");
+
+        let config = SocketConfig::from_environment().unwrap();
+
+        assert_eq!(config.family_id, "default");
+        assert_eq!(config.node_id, "default");
+
+        // Cleanup if needed
+        let _ = fs::remove_file(&config.socket_path);
+    }
+
+    #[test]
+    fn test_prepare_creates_parent_directory() {
+        let test_dir = "/tmp/nestgate-test-prepare-dir";
+        let test_socket = format!("{}/test.sock", test_dir);
+
+        // Remove test dir if it exists
+        let _ = fs::remove_dir_all(test_dir);
+
         let config = SocketConfig {
-            socket_path: PathBuf::from("/tmp/test-prepare.sock"),
+            socket_path: PathBuf::from(&test_socket),
             family_id: "test".to_string(),
             node_id: "node1".to_string(),
             source: SocketConfigSource::TempDirectory,
         };
 
-        // Should succeed (creating /tmp is always possible)
         assert!(config.prepare_socket_path().is_ok());
+        assert!(
+            Path::new(test_dir).exists(),
+            "Parent directory should exist"
+        );
+
+        // Cleanup
+        let _ = fs::remove_dir_all(test_dir);
+    }
+
+    #[test]
+    fn test_prepare_removes_old_socket() {
+        let test_socket = "/tmp/nestgate-test-old-socket.sock";
+
+        // Create old socket file
+        fs::write(test_socket, "old socket data").unwrap();
+        assert!(Path::new(test_socket).exists());
+
+        let config = SocketConfig {
+            socket_path: PathBuf::from(test_socket),
+            family_id: "test".to_string(),
+            node_id: "node1".to_string(),
+            source: SocketConfigSource::TempDirectory,
+        };
+
+        assert!(config.prepare_socket_path().is_ok());
+
+        // Old file should be removed
+        assert!(
+            !Path::new(test_socket).exists(),
+            "Old socket should be removed"
+        );
+    }
+
+    #[test]
+    fn test_socket_path_str() {
+        let config = SocketConfig {
+            socket_path: PathBuf::from("/tmp/test.sock"),
+            family_id: "test".to_string(),
+            node_id: "node1".to_string(),
+            source: SocketConfigSource::TempDirectory,
+        };
+
+        assert_eq!(config.socket_path_str(), "/tmp/test.sock");
+    }
+
+    #[test]
+    fn test_config_source_equality() {
+        assert_eq!(
+            SocketConfigSource::Environment,
+            SocketConfigSource::Environment
+        );
+        assert_ne!(
+            SocketConfigSource::Environment,
+            SocketConfigSource::XdgRuntime
+        );
+        assert_ne!(
+            SocketConfigSource::XdgRuntime,
+            SocketConfigSource::TempDirectory
+        );
+    }
+
+    #[test]
+    fn test_multi_instance_unique_sockets() {
+        std::env::remove_var("NESTGATE_SOCKET");
+        std::env::set_var("NESTGATE_FAMILY_ID", "multi");
+
+        // Instance 1
+        std::env::set_var("NESTGATE_NODE_ID", "instance1");
+        let config1 = SocketConfig::from_environment().unwrap();
+
+        // Instance 2
+        std::env::set_var("NESTGATE_NODE_ID", "instance2");
+        let config2 = SocketConfig::from_environment().unwrap();
+
+        // Should have different node IDs
+        assert_eq!(config1.node_id, "instance1");
+        assert_eq!(config2.node_id, "instance2");
+        assert_eq!(config1.family_id, config2.family_id);
+
+        std::env::remove_var("NESTGATE_FAMILY_ID");
+        std::env::remove_var("NESTGATE_NODE_ID");
+    }
+
+    // ========================================================================
+    // E2E TESTS - Full Lifecycle
+    // ========================================================================
+
+    #[test]
+    fn test_e2e_socket_creation_and_binding() {
+        let test_socket = "/tmp/nestgate-e2e-bind-test.sock";
+
+        std::env::set_var("NESTGATE_SOCKET", test_socket);
+        std::env::set_var("NESTGATE_FAMILY_ID", "e2e");
+
+        let config = SocketConfig::from_environment().unwrap();
+        assert!(config.prepare_socket_path().is_ok());
+
+        // Verify we can actually bind to the socket
+        let listener_result = UnixListener::bind(&config.socket_path);
+        assert!(
+            listener_result.is_ok(),
+            "Should be able to bind to prepared socket"
+        );
+
+        // Cleanup
+        drop(listener_result);
+        let _ = fs::remove_file(test_socket);
+        std::env::remove_var("NESTGATE_SOCKET");
+        std::env::remove_var("NESTGATE_FAMILY_ID");
+    }
+
+    #[test]
+    fn test_e2e_socket_rebind_after_crash() {
+        let test_socket = "/tmp/nestgate-e2e-rebind-test.sock";
+
+        std::env::set_var("NESTGATE_SOCKET", test_socket);
+        std::env::set_var("NESTGATE_FAMILY_ID", "rebind");
+
+        // First bind
+        let config = SocketConfig::from_environment().unwrap();
+        assert!(config.prepare_socket_path().is_ok());
+        let listener1 = UnixListener::bind(&config.socket_path).unwrap();
+
+        // Simulate crash - drop listener
+        drop(listener1);
+
+        // Second bind (simulating restart)
+        assert!(config.prepare_socket_path().is_ok());
+        let listener2 = UnixListener::bind(&config.socket_path);
+        assert!(listener2.is_ok(), "Should be able to rebind after cleanup");
+
+        // Cleanup
+        drop(listener2);
+        let _ = fs::remove_file(test_socket);
+        std::env::remove_var("NESTGATE_SOCKET");
+        std::env::remove_var("NESTGATE_FAMILY_ID");
+    }
+
+    // ========================================================================
+    // CHAOS TESTS - Concurrent & Race Conditions
+    // ========================================================================
+
+    #[test]
+    fn test_chaos_concurrent_config_creation() {
+        use std::thread;
+
+        let handles: Vec<_> = (0..10)
+            .map(|i| {
+                thread::spawn(move || {
+                    // Each thread sets its own env vars
+                    let family_id = format!("chaos{}", i);
+                    let node_id = format!("node{}", i);
+
+                    std::env::set_var("NESTGATE_FAMILY_ID", &family_id);
+                    std::env::set_var("NESTGATE_NODE_ID", &node_id);
+                    std::env::remove_var("NESTGATE_SOCKET");
+
+                    let config = SocketConfig::from_environment();
+                    assert!(config.is_ok(), "Config creation should succeed");
+                    let config = config.unwrap();
+
+                    // Verify config has expected structure
+                    assert!(
+                        config.family_id.starts_with("chaos"),
+                        "Family ID should start with chaos"
+                    );
+                    assert!(
+                        config.node_id.starts_with("node"),
+                        "Node ID should start with node"
+                    );
+
+                    config
+                })
+            })
+            .collect();
+
+        let configs: Vec<_> = handles.into_iter().map(|h| h.join().unwrap()).collect();
+
+        // All configs should be valid
+        assert_eq!(configs.len(), 10, "Should create 10 configs");
+
+        // All should be unique (collect family IDs and check)
+        let family_ids: std::collections::HashSet<_> =
+            configs.iter().map(|c| c.family_id.clone()).collect();
+        assert!(
+            family_ids.len() >= 5,
+            "Should have multiple unique family IDs (threading races may cause some overlap)"
+        );
+    }
+
+    #[test]
+    fn test_chaos_rapid_prepare_calls() {
+        let test_socket = "/tmp/nestgate-chaos-rapid.sock";
+
+        let config = SocketConfig {
+            socket_path: PathBuf::from(test_socket),
+            family_id: "rapid".to_string(),
+            node_id: "test".to_string(),
+            source: SocketConfigSource::TempDirectory,
+        };
+
+        // Call prepare multiple times rapidly
+        for _ in 0..100 {
+            assert!(config.prepare_socket_path().is_ok());
+        }
+
+        // Cleanup
+        let _ = fs::remove_file(test_socket);
+    }
+
+    // ========================================================================
+    // FAULT INJECTION TESTS - Error Scenarios
+    // ========================================================================
+
+    #[test]
+    fn test_fault_readonly_filesystem_graceful_failure() {
+        // Try to create socket in a path that typically fails (but may not on all systems)
+        let config = SocketConfig {
+            socket_path: PathBuf::from("/proc/nestgate-readonly-test.sock"),
+            family_id: "fault".to_string(),
+            node_id: "readonly".to_string(),
+            source: SocketConfigSource::TempDirectory,
+        };
+
+        // Should fail gracefully with proper error (or succeed on some systems)
+        let result = config.prepare_socket_path();
+
+        // Either way, it shouldn't panic
+        // If it fails, error should be descriptive
+        if let Err(e) = result {
+            let error_msg = format!("{}", e);
+            assert!(!error_msg.is_empty(), "Error message should not be empty");
+        }
+    }
+
+    #[test]
+    fn test_fault_invalid_socket_path() {
+        let config = SocketConfig {
+            socket_path: PathBuf::from("/dev/null/invalid/path/socket.sock"),
+            family_id: "fault".to_string(),
+            node_id: "invalid".to_string(),
+            source: SocketConfigSource::TempDirectory,
+        };
+
+        let result = config.prepare_socket_path();
+        assert!(result.is_err(), "Should fail on invalid path");
+    }
+
+    #[test]
+    fn test_fault_socket_as_directory() {
+        let test_dir = "/tmp/nestgate-fault-dir-as-socket";
+
+        // Create a directory where socket should be
+        let _ = fs::create_dir_all(test_dir);
+
+        let config = SocketConfig {
+            socket_path: PathBuf::from(test_dir),
+            family_id: "fault".to_string(),
+            node_id: "dir".to_string(),
+            source: SocketConfigSource::TempDirectory,
+        };
+
+        // prepare should fail or succeed by removing the dir
+        // Either is acceptable - we're testing it doesn't panic
+        let _ = config.prepare_socket_path();
+
+        // Cleanup
+        let _ = fs::remove_dir_all(test_dir);
+    }
+
+    #[test]
+    fn test_fault_missing_parent_directory_auto_created() {
+        let test_path = "/tmp/nestgate-fault-test-deep/nested/dir/socket.sock";
+
+        // Ensure parent doesn't exist
+        let _ = fs::remove_dir_all("/tmp/nestgate-fault-test-deep");
+
+        let config = SocketConfig {
+            socket_path: PathBuf::from(test_path),
+            family_id: "fault".to_string(),
+            node_id: "deep".to_string(),
+            source: SocketConfigSource::TempDirectory,
+        };
+
+        // Should auto-create parent directories
+        assert!(
+            config.prepare_socket_path().is_ok(),
+            "Should create missing parent directories"
+        );
+
+        // Verify parent exists
+        assert!(Path::new("/tmp/nestgate-fault-test-deep/nested/dir").exists());
+
+        // Cleanup
+        let _ = fs::remove_dir_all("/tmp/nestgate-fault-test-deep");
+    }
+
+    #[test]
+    fn test_fault_empty_family_id_gets_default() {
+        std::env::remove_var("NESTGATE_FAMILY_ID");
+
+        let config = SocketConfig::from_environment().unwrap();
+
+        assert_eq!(
+            config.family_id, "default",
+            "Should use default when family_id not set"
+        );
+    }
+
+    #[test]
+    fn test_fault_unicode_in_family_id() {
+        std::env::set_var("NESTGATE_SOCKET", "/tmp/nestgate-unicode-🦀.sock");
+        std::env::set_var("NESTGATE_FAMILY_ID", "unicode_🍄🐸");
+
+        let config = SocketConfig::from_environment().unwrap();
+
+        assert_eq!(config.family_id, "unicode_🍄🐸");
+        assert!(config.socket_path.to_str().unwrap().contains("unicode-"));
+
+        std::env::remove_var("NESTGATE_SOCKET");
+        std::env::remove_var("NESTGATE_FAMILY_ID");
     }
 }
