@@ -45,6 +45,103 @@ impl ServiceManager {
 
     // Start NestGate service
     async fn start_service(&self, port: Option<u16>, config: Option<&str>) -> BinResult<()> {
+        println!("\n╔════════════════════════════════════════════════════════════╗");
+        println!("║                                                            ║");
+        println!("║  🏠 NestGate v{:<47}║", env!("CARGO_PKG_VERSION"));
+        println!("║     Universal ZFS & Storage Management                    ║");
+        println!("║                                                            ║");
+        println!("╚════════════════════════════════════════════════════════════╝\n");
+
+        // Check if Unix socket mode is requested (biomeOS ecosystem mode)
+        let socket_requested =
+            std::env::var("NESTGATE_SOCKET").is_ok() || std::env::var("NESTGATE_FAMILY_ID").is_ok();
+
+        if socket_requested {
+            // ✅ ECOSYSTEM MODE: Unix socket with JSON-RPC
+            self.start_unix_socket_mode().await
+        } else {
+            // ✅ STANDALONE MODE: HTTP with JWT authentication
+            self.start_http_mode(port, config).await
+        }
+    }
+
+    // Start Unix socket mode (ecosystem/atomic architecture)
+    async fn start_unix_socket_mode(&self) -> BinResult<()> {
+        use nestgate_core::rpc::{JsonRpcUnixServer, SocketConfig};
+
+        info!("🔌 Starting in ECOSYSTEM MODE (Unix socket)");
+
+        // Get socket configuration with 3-tier fallback
+        let socket_config = SocketConfig::from_environment().map_err(|e| {
+            crate::error::NestGateBinError::service_init_error(
+                format!("Failed to get socket configuration: {}", e),
+                Some("socket-config".to_string()),
+            )
+        })?;
+
+        // Log configuration
+        socket_config.log_summary();
+
+        // Get family ID for server creation
+        let family_id = socket_config.family_id.clone();
+
+        println!("✅ Configuration validated");
+        println!("🔌 Socket path: {}", socket_config.socket_path.display());
+        println!("👪 Family ID: {}", family_id);
+        println!("🆔 Node ID: {}", socket_config.node_id);
+        println!(
+            "📍 Source: {}",
+            match socket_config.source {
+                nestgate_core::rpc::SocketConfigSource::Environment => "NESTGATE_SOCKET env var",
+                nestgate_core::rpc::SocketConfigSource::XdgRuntime => "XDG runtime directory",
+                nestgate_core::rpc::SocketConfigSource::TempDirectory => "/tmp fallback",
+            }
+        );
+
+        // Create Unix socket server
+        let server = JsonRpcUnixServer::new(&family_id).await.map_err(|e| {
+            crate::error::NestGateBinError::service_init_error(
+                format!("Failed to create Unix socket server: {}", e),
+                Some("unix-socket".to_string()),
+            )
+        })?;
+
+        println!("\n✅ JSON-RPC Unix Socket Server ready");
+        println!("\n📊 Available RPC Methods:");
+        println!("  Storage:");
+        println!("    • storage.store(family_id, key, value)");
+        println!("    • storage.retrieve(family_id, key)");
+        println!("    • storage.delete(family_id, key)");
+        println!("    • storage.list(family_id, prefix?)");
+        println!("    • storage.store_blob(family_id, key, data_base64)");
+        println!("    • storage.retrieve_blob(family_id, key)");
+        println!("    • storage.exists(family_id, key)");
+        println!("  Templates:");
+        println!("    • templates.store(template)");
+        println!("    • templates.retrieve(template_id, version?)");
+        println!("    • templates.list(filters?)");
+        println!("    • templates.community_top(niche_type?, limit?)");
+        println!("  Audit:");
+        println!("    • audit.store_execution(audit)");
+        println!("\n🔐 Security: BearDog genetic key validation (when available)");
+        println!("🎯 Mode: Ecosystem (atomic architecture)");
+        println!("\nPress Ctrl+C to stop\n");
+
+        // Start server (blocking)
+        server.serve().await.map_err(|e| {
+            crate::error::NestGateBinError::runtime_error(
+                format!("Unix socket server error: {}", e),
+                Some("unix-socket-serve".to_string()),
+            )
+        })?;
+
+        Ok(())
+    }
+
+    // Start HTTP mode (standalone/development)
+    async fn start_http_mode(&self, port: Option<u16>, config: Option<&str>) -> BinResult<()> {
+        info!("🌐 Starting in STANDALONE MODE (HTTP)");
+
         // ✅ MIGRATED: Use runtime configuration instead of hardcoding
         let runtime_config = nestgate_core::config::runtime::get_config();
 
@@ -62,18 +159,11 @@ impl ServiceManager {
         };
         let bind_addr = format!("{}:{}", bind_host, http_port);
 
-        info!("🚀 Starting NestGate service on {}", bind_addr);
+        info!("🚀 Starting NestGate HTTP service on {}", bind_addr);
 
         if let Some(config_path) = config {
             info!("📄 Using configuration file: {}", config_path);
         }
-
-        println!("\n╔════════════════════════════════════════════════════════════╗");
-        println!("║                                                            ║");
-        println!("║  🏠 NestGate v{:<47}║", env!("CARGO_PKG_VERSION"));
-        println!("║     Universal ZFS & Storage Management                    ║");
-        println!("║                                                            ║");
-        println!("╚════════════════════════════════════════════════════════════╝\n");
 
         // Create the API router from nestgate-api crate
         use nestgate_api::routes::create_router_with_state;
@@ -125,6 +215,8 @@ impl ServiceManager {
             "  tarpc      - Port {} (~50μs latency) 🚧 Coming soon",
             tarpc_port
         );
+        println!("🔐 Security: JWT authentication");
+        println!("🎯 Mode: Standalone (development/testing)");
         println!("\nPress Ctrl+C to stop\n");
 
         // Start the HTTP server
