@@ -70,7 +70,17 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
 
-// Simplified capability type (will use proper taxonomy later)
+/// Simplified capability type for service discovery
+///
+/// Represents a capability that a service can provide or request.
+/// This is a simplified string-based representation that will eventually
+/// use the proper capability taxonomy from `crate::capabilities::taxonomy`.
+///
+/// # Examples
+/// - "storage"
+/// - "compute"
+/// - "orchestration"
+/// - "security"
 pub type Capability = String;
 
 /// Service discovery information

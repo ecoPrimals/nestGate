@@ -443,7 +443,7 @@ impl StorageManagerService {
     // TODO: Re-enable adaptive storage methods once storage module is fixed
     // Adaptive storage provides intelligent compression and routing
     // See: code/crates/nestgate-core/src/storage/ for implementation
-    // 
+    //
     // Planned methods:
     // - store_adaptive(data) -> StorageReceipt
     // - retrieve_adaptive(hash) -> Bytes

@@ -107,6 +107,9 @@ advanced-monitoring = []
 security-scanning = []
 experimental-features = []
 adaptive-storage = [] # Adaptive storage with entropy analysis and smart compression
+# **DISCOVERY BACKENDS** - Service discovery integration
+consul = [] # Consul-based service discovery (datacenter/cloud)
+kubernetes = [] # Kubernetes-based service discovery (orchestrated environments)
 # **MOCK SEPARATION** - Test-only features
 mock-services = []
 test-doubles = []
