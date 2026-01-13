@@ -12,7 +12,6 @@
 //! - Clear error messages guide remediation
 
 use std::time::Duration;
-use tokio::time::sleep;
 
 #[tokio::test]
 #[ignore] // Requires ZFS and capacity manipulation
@@ -174,7 +173,6 @@ async fn test_snapshot_space_management() {
     destroy_snapshot(&test_env, &snapshot_name).await.unwrap();
     
     // Verify space was reclaimed
-    sleep(Duration::from_secs(1)).await; // Allow time for space reclamation
     
     let status_after = get_pool_status(&test_env, &pool_name).await.unwrap();
     assert!(

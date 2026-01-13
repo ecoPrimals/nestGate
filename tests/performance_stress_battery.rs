@@ -144,7 +144,6 @@ impl PerformanceStressBattery {
         let duration = self.config.test_duration_seconds;
 
         tokio::spawn(async move {
-            tokio::time::sleep(Duration::from_secs(duration)).await;
             notify_clone.notify_waiters();
         });
 
@@ -291,13 +290,11 @@ impl PerformanceStressBattery {
 
             while Instant::now() < end_time {
                 // Simulate real async I/O operations with realistic delays
-                tokio::time::sleep(Duration::from_micros(fastrand::u64(100..1000))).await;
                 io_operations += 1;
 
                 // Simulate batch I/O operations with longer delays
                 if io_operations.is_multiple_of(50) {
                     // Batch operations take longer but are still async
-                    tokio::time::sleep(Duration::from_micros(fastrand::u64(500..2500))).await;
                 }
 
                 // Periodically yield to ensure fairness
@@ -353,11 +350,9 @@ impl PerformanceStressBattery {
             }
             "io" => {
                 // Realistic async I/O simulation with microsecond precision
-                tokio::time::sleep(Duration::from_micros(fastrand::u64(100..500))).await;
             }
             "network" => {
                 // Realistic async network simulation with microsecond precision
-                tokio::time::sleep(Duration::from_micros(fastrand::u64(200..1000))).await;
             }
             _ => {}
         }

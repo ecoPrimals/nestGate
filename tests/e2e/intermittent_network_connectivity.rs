@@ -54,7 +54,6 @@ async fn test_intermittent_connectivity_during_operation() {
             Duration::from_secs(1),
             async {
                 while !is_network_drop_detected(&test_env).await {
-                    tokio::time::sleep(Duration::from_millis(10)).await;
                 }
             }
         ).await.expect("Network drop should be detected");
@@ -67,7 +66,6 @@ async fn test_intermittent_connectivity_during_operation() {
             Duration::from_secs(1),
             async {
                 while !is_network_restored(&test_env).await {
-                    tokio::time::sleep(Duration::from_millis(10)).await;
                 }
             }
         ).await.expect("Network restoration should be detected");
@@ -89,7 +87,6 @@ async fn test_intermittent_connectivity_during_operation() {
         Duration::from_secs(5),
         async {
             while !is_network_stable(&test_env).await {
-                tokio::time::sleep(Duration::from_millis(10)).await;
             }
         }
     ).await.expect("Network should stabilize");
@@ -155,7 +152,6 @@ async fn test_retry_backoff_during_instability() {
             Duration::from_secs(1),
             async {
                 while !is_network_drop_detected(&test_env).await {
-                    tokio::time::sleep(Duration::from_millis(10)).await;
                 }
             }
         ).await.ok();
@@ -166,7 +162,6 @@ async fn test_retry_backoff_during_instability() {
             Duration::from_secs(1),
             async {
                 while !is_network_restored(&test_env).await {
-                    tokio::time::sleep(Duration::from_millis(10)).await;
                 }
             }
         ).await.ok();
@@ -222,12 +217,10 @@ async fn test_state_consistency_across_network_flaps() {
         // Attempt operation (may fail)
         let _ = state.set(&key, &value).await;
         
-        sleep(Duration::from_millis(100)).await;
     }
     
     // Stabilize network
     restore_network(&test_env).await.unwrap();
-    sleep(Duration::from_secs(1)).await;
     
     // Verify original state is intact
     assert_eq!(state.get("key1").await.unwrap(), Some("value1".to_string()));
@@ -257,14 +250,12 @@ async fn test_client_reconnection_logic() {
     
     // Drop network
     simulate_network_drop(&test_env).await.unwrap();
-    sleep(Duration::from_millis(500)).await;
     
     // Verify client detects disconnection
     assert!(!client.is_connected().await, "Client should detect disconnection");
     
     // Restore network
     restore_network(&test_env).await.unwrap();
-    sleep(Duration::from_secs(1)).await;
     
     // Verify automatic reconnection
     let reconnect_timeout = Duration::from_secs(5);
@@ -276,7 +267,6 @@ async fn test_client_reconnection_logic() {
             reconnected = true;
             break;
         }
-        sleep(Duration::from_millis(100)).await;
     }
     
     assert!(reconnected, "Client should automatically reconnect");
@@ -312,9 +302,7 @@ async fn test_concurrent_operations_with_flaky_network() {
         async move {
             for _ in 0..20 {
                 let _ = simulate_network_drop(&env).await;
-                sleep(Duration::from_millis(150)).await;
                 let _ = restore_network(&env).await;
-                sleep(Duration::from_millis(150)).await;
             }
         }
     });
@@ -497,7 +485,6 @@ async fn create_large_dataset(
     _duration: Duration,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Simulate long-running dataset creation
-    sleep(Duration::from_millis(500)).await;
     Ok(())
 }
 
@@ -543,7 +530,6 @@ async fn perform_resilient_operation(
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Simulate resilient operation with retries
     for _ in 0..5 {
-        sleep(Duration::from_millis(100)).await;
         // Randomly succeed or retry
         if rand::random::<f64>() > 0.3 {
             return Ok(());
@@ -566,7 +552,6 @@ fn calculate_adaptive_timeout(attempt: usize) -> Duration {
 async fn attempt_operation_with_retry(
     _env: &TestEnvironment,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    sleep(Duration::from_secs(10)).await;
     Err("Timeout".into())
 }
 

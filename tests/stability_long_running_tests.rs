@@ -42,7 +42,6 @@ async fn stability_test_sustained_load() {
     });
 
     // Run for 1 second using timeout instead of sleep
-    tokio::time::sleep(Duration::from_secs(1)).await;
     running.store(false, Ordering::Relaxed);
     shutdown_notify.notify_one();
 

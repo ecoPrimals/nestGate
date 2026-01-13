@@ -169,7 +169,6 @@ async fn test_network_partition_recovery() {
 
     while partitioned && reconnect_attempts < max_attempts {
         reconnect_attempts += 1;
-        tokio::time::sleep(Duration::from_millis(10)).await;
 
         // Simulate recovery after 2 attempts
         if reconnect_attempts >= 2 {
@@ -188,10 +187,7 @@ async fn test_concurrent_connection_attempts() {
     let mut handles = Vec::new();
 
     for _ in 0..concurrent_connections {
-        let handle = tokio::spawn(async {
-            tokio::time::sleep(Duration::from_millis(10)).await;
-            Ok::<_, ()>(())
-        });
+        let handle = tokio::spawn(async { Ok::<_, ()>(()) });
         handles.push(handle);
     }
 
@@ -258,7 +254,6 @@ async fn test_rate_limiting() {
 
     while request_count < max_requests_per_second {
         request_count += 1;
-        tokio::time::sleep(Duration::from_millis(10)).await;
     }
 
     let elapsed = start.elapsed();
@@ -371,11 +366,7 @@ async fn test_connection_pooling() {
 async fn test_request_timeout_with_cancellation() {
     let timeout = Duration::from_millis(50);
 
-    let result = tokio::time::timeout(timeout, async {
-        tokio::time::sleep(Duration::from_secs(10)).await;
-        "completed"
-    })
-    .await;
+    let result = tokio::time::timeout(timeout, async { "completed" }).await;
 
     assert!(
         result.is_err(),

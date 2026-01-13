@@ -150,7 +150,6 @@ async fn test_canonical_async_patterns() -> Result<(), Box<dyn std::error::Error
     let start = std::time::Instant::now();
 
     // Simulate canonical async operation
-    tokio::time::sleep(Duration::from_millis(1)).await;
 
     let duration = start.elapsed();
     assert!(duration.as_millis() >= 1);

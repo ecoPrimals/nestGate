@@ -9,7 +9,7 @@
 /// - Capacity planning
 ///
 /// **Evolution**: Modern async patterns, proper error handling, production-ready observability
-use nestgate_core::{NestGateError, Result};
+use nestgate_core::Result;
 use tokio::time::{sleep, Duration};
 
 #[tokio::test]
@@ -27,7 +27,6 @@ async fn test_e2e_scenario_54_metrics_collection() -> Result<()> {
 
     // Phase 2: Collect metrics over time
     println!("\n📈 Phase 2: Collecting metrics (60s window)...");
-    sleep(Duration::from_millis(100)).await;
 
     let metrics = vec![
         ("cpu.usage", 45.2, "%"),
@@ -50,7 +49,6 @@ async fn test_e2e_scenario_54_metrics_collection() -> Result<()> {
     println!("\n🔍 Phase 3: Aggregating and analyzing...");
     println!("  • Time window: Last 60 seconds");
     println!("  • Aggregation: Mean, P50, P95, P99");
-    sleep(Duration::from_millis(80)).await;
     println!("  ✓ Aggregated 1,234 data points");
     println!("  ✓ Calculated 10 metrics");
 
@@ -97,8 +95,6 @@ async fn test_e2e_scenario_55_distributed_tracing() -> Result<()> {
     for (service, duration, description) in &spans {
         println!("  • {}: {}ms - {}", service, duration, description);
     }
-
-    sleep(Duration::from_millis(100)).await;
 
     // Phase 3: Calculate end-to-end latency
     println!("\n⏱️  Phase 3: Analyzing trace...");
@@ -148,7 +144,6 @@ async fn test_e2e_scenario_56_log_aggregation() -> Result<()> {
 
     // Phase 2: Aggregate and parse logs
     println!("\n📊 Phase 2: Aggregating logs...");
-    sleep(Duration::from_millis(100)).await;
     println!("  ✓ Collected {} log entries", total_logs);
     println!("  ✓ Parsed structured fields");
     println!("  ✓ Enriched with metadata");
@@ -211,7 +206,6 @@ async fn test_e2e_scenario_57_alerting_system() -> Result<()> {
     println!("  • Threshold: 80%");
     println!("  • Duration: 6 minutes");
     println!("  • Severity: WARNING");
-    sleep(Duration::from_millis(80)).await;
     println!("  ✓ Alert: cpu_high TRIGGERED");
 
     // Phase 3: Alert routing and delivery
@@ -222,7 +216,6 @@ async fn test_e2e_scenario_57_alerting_system() -> Result<()> {
     println!("    - Slack: #ops-alerts");
     println!("    - PagerDuty: ops-oncall");
     println!("    - Email: ops@nestgate.io");
-    sleep(Duration::from_millis(100)).await;
     println!("  ✓ Alert delivered to 3 channels");
 
     // Phase 4: Acknowledgment and resolution
@@ -230,7 +223,6 @@ async fn test_e2e_scenario_57_alerting_system() -> Result<()> {
     println!("  • Alert acknowledged by: ops-engineer-1");
     println!("  • Time to acknowledge: 2 minutes");
     println!("  • Action taken: Scaled up workers");
-    sleep(Duration::from_millis(80)).await;
     println!("  • CPU usage: 87.5% → 62.3%");
     println!("  ✓ Alert resolved");
 
@@ -262,7 +254,6 @@ async fn test_e2e_scenario_58_performance_profiling() -> Result<()> {
     println!("\n📊 Phase 2: Collecting samples...");
     println!("  • Simulating production load");
     println!("  • Request rate: 10,000 req/s");
-    sleep(Duration::from_millis(150)).await;
     println!("  ✓ Collected 5,940 samples");
 
     // Phase 3: Analyze hot paths
@@ -296,7 +287,6 @@ async fn test_e2e_scenario_58_performance_profiling() -> Result<()> {
     println!("\n🔥 Phase 5: Generating visualization...");
     println!("  • Creating flamegraph");
     println!("  • Output: /tmp/nestgate-flamegraph.svg");
-    sleep(Duration::from_millis(80)).await;
     println!("  ✓ Flamegraph generated");
 
     println!("\n✅ E2E Scenario 58: Performance Profiling - PASSED");
@@ -312,7 +302,6 @@ async fn test_e2e_scenario_59_capacity_planning() -> Result<()> {
     println!("\n📊 Phase 1: Analyzing historical data...");
     println!("  • Time range: Last 90 days");
     println!("  • Metrics: CPU, Memory, Disk, Network");
-    sleep(Duration::from_millis(100)).await;
     println!("  ✓ Loaded 129,600 data points");
 
     // Phase 2: Analyze growth trends
@@ -335,7 +324,6 @@ async fn test_e2e_scenario_59_capacity_planning() -> Result<()> {
     println!("    - Storage: 10TB (72% used)");
     println!("    - Compute: 64 cores (55% avg)");
     println!("    - Memory: 256GB (68% avg)");
-    sleep(Duration::from_millis(100)).await;
     println!("  • Projected capacity at 180 days:");
     println!("    - Storage: 23.4TB needed (10TB current) ❌");
     println!("    - Compute: 89 cores needed (64 current) ❌");

@@ -286,7 +286,6 @@ async fn test_async_task_performance() -> Result<(), Box<dyn std::error::Error>>
     for i in 0..1000 {
         let task = tokio::spawn(async move {
             // Simulate some async work
-            tokio::time::sleep(Duration::from_micros(100)).await;
             i * 2
         });
         

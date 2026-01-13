@@ -48,13 +48,11 @@ async fn test_e2e_scenario_44_storage_orchestration() -> Result<()> {
     // Simulate hot data cooling down over time
     println!("  • Hot data accessed: 0 times in 30 days");
     println!("  • Triggering automatic migration: Hot → Warm");
-    sleep(Duration::from_millis(100)).await;
     println!("  ✓ Migration completed successfully");
 
     // Simulate warm data cooling further
     println!("  • Warm data accessed: 0 times in 90 days");
     println!("  • Triggering automatic migration: Warm → Cold");
-    sleep(Duration::from_millis(100)).await;
     println!("  ✓ Migration completed successfully");
 
     // Phase 4: Test quota enforcement
@@ -88,7 +86,6 @@ async fn test_e2e_scenario_44_storage_orchestration() -> Result<()> {
     // Phase 5: Test cross-pool replication
     println!("\n🔄 Phase 5: Testing cross-pool replication...");
     println!("  • Replicating critical-data from pool-1 to pool-2");
-    sleep(Duration::from_millis(150)).await;
     println!("  ✓ Replication completed: 1.5GB transferred");
     println!("  ✓ Verification: Checksums match");
 
@@ -132,7 +129,6 @@ async fn test_e2e_scenario_45_multi_primal_coordination() -> Result<()> {
     println!("\n🔐 Phase 2: Coordinating storage with security...");
     println!("  • NestGate: Creating encrypted workspace");
     println!("  • Requesting encryption key from BearDog...");
-    sleep(Duration::from_millis(100)).await;
     println!("  ✓ BearDog: Generated encryption key");
     println!("  • NestGate: Applying encryption to dataset");
     println!("  ✓ Encrypted storage ready");
@@ -142,7 +138,6 @@ async fn test_e2e_scenario_45_multi_primal_coordination() -> Result<()> {
     println!("  • Songbird: Analyzing network topology");
     println!("  • Detected: 3 availability zones");
     println!("  • NestGate: Placing replicas for optimal latency");
-    sleep(Duration::from_millis(100)).await;
     println!("  ✓ Replica 1: Zone A (local)");
     println!("  ✓ Replica 2: Zone B (remote, low latency)");
     println!("  ✓ Replica 3: Zone C (remote, DR)");
@@ -153,7 +148,6 @@ async fn test_e2e_scenario_45_multi_primal_coordination() -> Result<()> {
     println!("  • NestGate: Reserving storage resources");
     println!("  • BearDog: Validating access permissions");
     println!("  • Songbird: Establishing connections");
-    sleep(Duration::from_millis(150)).await;
     println!("  ✓ All primals ready - transaction can proceed");
 
     // Phase 5: Verify coordination metrics
@@ -203,14 +197,12 @@ async fn test_e2e_scenario_46_data_lifecycle_management() -> Result<()> {
     println!("  • Day 31: Checking user-documents...");
     println!("    - Found 15 inactive documents");
     println!("    - Triggering deletion...");
-    sleep(Duration::from_millis(50)).await;
     println!("    ✓ Deleted 15 documents, freed 45MB");
 
     // Day 91: Log archival
     println!("  • Day 91: Processing application-logs...");
     println!("    - Found 1.2GB logs for archival");
     println!("    - Compressing and moving to Cold storage...");
-    sleep(Duration::from_millis(100)).await;
     println!("    ✓ Archived 1.2GB → 180MB (85% compression)");
 
     // Day 366: Audit trail cleanup
@@ -248,7 +240,6 @@ async fn test_e2e_scenario_47_disaster_recovery_drill() -> Result<()> {
     println!("\n💥 Phase 1: Simulating disaster scenario...");
     println!("  🔥 DISASTER: Primary datacenter lost connection");
     println!("  • Time: T+0s - Detecting failure...");
-    sleep(Duration::from_millis(100)).await;
     println!("  ✓ Failure detected in 1.2s");
 
     // Phase 2: Automatic failover
@@ -256,7 +247,6 @@ async fn test_e2e_scenario_47_disaster_recovery_drill() -> Result<()> {
     println!("  • Promoting secondary to primary");
     println!("  • Redirecting client connections");
     println!("  • Updating DNS records");
-    sleep(Duration::from_millis(200)).await;
     println!("  ✓ Failover completed in 3.8s");
 
     // Phase 3: Verify data consistency
@@ -264,7 +254,6 @@ async fn test_e2e_scenario_47_disaster_recovery_drill() -> Result<()> {
     println!("  • Checking replication lag: 0.3s");
     println!("  • Comparing checksums across replicas");
     println!("  • Verifying transaction logs");
-    sleep(Duration::from_millis(150)).await;
     println!("  ✓ Data consistency verified");
     println!("  ✓ No data loss detected");
 
@@ -272,7 +261,6 @@ async fn test_e2e_scenario_47_disaster_recovery_drill() -> Result<()> {
     println!("\n↩️  Phase 4: Testing failback to primary...");
     println!("  • Primary datacenter: Back online");
     println!("  • Syncing changes from secondary (125MB)");
-    sleep(Duration::from_millis(180)).await;
     println!("  ✓ Sync completed");
     println!("  • Failing back to primary");
     println!("  ✓ Failback successful");

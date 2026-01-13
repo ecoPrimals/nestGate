@@ -242,7 +242,7 @@ fn test_port_serialization_roundtrip() {
 fn test_config_clone_independence() {
     // Ensure NESTGATE_PORT is set for test environment
     std::env::set_var("NESTGATE_PORT", "8080");
-    
+
     let config1 = EnvironmentConfig::from_env().expect("Config should load");
     let config2 = config1.clone();
 
@@ -251,7 +251,7 @@ fn test_config_clone_independence() {
 
     // But be independent (not sharing internal state)
     // This is validated by the fact that clone() works
-    
+
     std::env::remove_var("NESTGATE_PORT");
 }
 

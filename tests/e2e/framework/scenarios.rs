@@ -461,7 +461,6 @@ impl<'a> LoadTestingRunner<'a> {
                     }
                     
                     // Small delay between requests
-                    tokio::time::sleep(Duration::from_millis(100)).await;
                 }
                 
                 (request_count, successful_requests)

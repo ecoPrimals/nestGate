@@ -51,13 +51,17 @@ use crate::rpc::tarpc_types::{
 /// - Async operations throughout
 /// - Zero unsafe blocks
 /// - Production-ready error handling
+// Type alias for object storage map (dataset -> key -> (data, info))
+type ObjectStorage = HashMap<String, HashMap<String, (Vec<u8>, ObjectInfo)>>;
+
+/// NestGate RPC service implementing the tarpc interface
 #[derive(Clone)]
 pub struct NestGateRpcService {
     /// In-memory datasets (Phase 1 - will be replaced with real storage)
     datasets: Arc<RwLock<HashMap<String, DatasetInfo>>>,
 
     /// In-memory objects (Phase 1 - will be replaced with real storage)
-    objects: Arc<RwLock<HashMap<String, HashMap<String, (Vec<u8>, ObjectInfo)>>>>,
+    objects: Arc<RwLock<ObjectStorage>>,
 
     /// Start time for uptime calculation
     start_time: SystemTime,

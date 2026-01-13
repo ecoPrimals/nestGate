@@ -327,7 +327,6 @@ impl AttackSuite {
             results.push(result);
 
             // Small delay between attacks
-            tokio::time::sleep(Duration::from_millis(100)).await;
         }
 
         results

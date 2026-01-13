@@ -339,7 +339,7 @@ impl TemplateStorage {
         let storage = self.templates.read().await;
 
         // Collect all community templates across families
-        let mut community_templates: Vec<GraphTemplate> = storage
+        let community_templates: Vec<GraphTemplate> = storage
             .values()
             .flat_map(|family_templates| family_templates.values())
             .filter(|t| {

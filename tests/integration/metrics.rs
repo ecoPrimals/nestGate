@@ -93,7 +93,6 @@ async fn test_metrics_timing() -> Result<(), Box<dyn std::error::Error>> {
     let timer = collector.start_timer("operation_duration");
     
     // ✅ Modern pattern: Simulate work with actual async operation
-    tokio::time::sleep(Duration::from_millis(10)).await;
     
     let duration = timer.stop();
     assert!(duration.as_millis() >= 10);

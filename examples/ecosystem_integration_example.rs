@@ -45,7 +45,10 @@ async fn use_toadstool_for_compute() -> Result<()> {
 
     println!(
         "✅ Discovered compute service at: {}",
-        compute_service.primary_endpoint()
+        compute_service
+            .primary_endpoint()
+            .as_deref()
+            .unwrap_or("unknown")
     );
 
     // Now we can use it (via HTTP, gRPC, etc.)
@@ -71,7 +74,10 @@ async fn integrate_with_songbird() -> Result<()> {
 
     println!(
         "✅ Discovered orchestrator: {}",
-        orchestrator.primary_endpoint()
+        orchestrator
+            .primary_endpoint()
+            .as_deref()
+            .unwrap_or("unknown")
     );
 
     // Register with orchestrator for workflow participation
@@ -94,7 +100,10 @@ async fn use_beardog_for_encryption() -> Result<()> {
 
     println!(
         "✅ Discovered crypto service: {}",
-        crypto_service.primary_endpoint()
+        crypto_service
+            .primary_endpoint()
+            .as_deref()
+            .unwrap_or("unknown")
     );
 
     // Use for dataset encryption
@@ -129,7 +138,7 @@ async fn ecosystem_workflow_example() -> Result<()> {
     if let Ok(compute) = discovery.discover_capability("compute_execution").await {
         println!(
             "   ✅ Found compute service: {}",
-            compute.primary_endpoint()
+            compute.primary_endpoint().as_deref().unwrap_or("unknown")
         );
     } else {
         println!("   ℹ️  No compute service available");
@@ -141,7 +150,10 @@ async fn ecosystem_workflow_example() -> Result<()> {
     {
         println!(
             "   ✅ Found orchestrator: {}",
-            orchestrator.primary_endpoint()
+            orchestrator
+                .primary_endpoint()
+                .as_deref()
+                .unwrap_or("unknown")
         );
     } else {
         println!("   ℹ️  No orchestrator available");
@@ -151,7 +163,10 @@ async fn ecosystem_workflow_example() -> Result<()> {
         .discover_capability("cryptographic_operations")
         .await
     {
-        println!("   ✅ Found crypto service: {}", crypto.primary_endpoint());
+        println!(
+            "   ✅ Found crypto service: {}",
+            crypto.primary_endpoint().as_deref().unwrap_or("unknown")
+        );
     } else {
         println!("   ℹ️  No crypto service available");
     }

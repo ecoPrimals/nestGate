@@ -54,11 +54,9 @@ async fn chaos_test_19_simultaneous_multi_node_failure() -> Result<()> {
 
     // Phase 4: Automatic re-replication
     println!("\n🔄 Phase 4: Triggering automatic re-replication...");
-    sleep(Duration::from_millis(150)).await;
     println!("  • Identifying under-replicated data: 50% of total");
     println!("  • Creating new replicas on remaining nodes");
     println!("  • Progress: 0%... 25%... 50%... 75%... 100%");
-    sleep(Duration::from_millis(200)).await;
     println!("  ✓ Re-replication complete");
     println!("  ✓ All data now has 3+ copies");
 
@@ -88,7 +86,6 @@ async fn chaos_test_20_corrupt_metadata_recovery() -> Result<()> {
     // Phase 2: Attempt automatic recovery
     println!("\n🔧 Phase 2: Attempting automatic recovery...");
     println!("  • Searching for metadata replicas");
-    sleep(Duration::from_millis(100)).await;
     println!("  ✓ Found 2 metadata replicas");
     println!("  • Comparing checksums...");
     println!("    - Replica 1: ❌ Corrupt");
@@ -98,7 +95,6 @@ async fn chaos_test_20_corrupt_metadata_recovery() -> Result<()> {
 
     // Phase 3: Rebuild from replicas
     println!("\n🔄 Phase 3: Rebuilding from valid replicas...");
-    sleep(Duration::from_millis(150)).await;
     println!("  • Reconstructing metadata tree");
     println!("  • Verifying directory structure");
     println!("  • Checking file pointers");
@@ -116,7 +112,6 @@ async fn chaos_test_20_corrupt_metadata_recovery() -> Result<()> {
     println!("\n🧹 Phase 5: Cleaning up corrupt replica...");
     println!("  • Marking corrupt metadata for replacement");
     println!("  • Copying valid metadata to corrupt location");
-    sleep(Duration::from_millis(80)).await;
     println!("  ✓ Corrupt replica replaced");
     println!("  ✓ All 3 replicas now valid");
 
@@ -143,7 +138,6 @@ async fn chaos_test_21_memory_exhaustion() -> Result<()> {
     println!("  • Evicting ARC cache: 3.2GB freed");
     println!("  • Stopping background tasks");
     println!("  • Refusing new connections");
-    sleep(Duration::from_millis(100)).await;
     println!("  ✓ Freed 5.7GB memory");
 
     // Phase 3: Critical memory threshold
@@ -159,7 +153,6 @@ async fn chaos_test_21_memory_exhaustion() -> Result<()> {
     println!("  • Background compaction: Suspended (500MB freed)");
     println!("  • Read cache: Reduced to minimum (1.5GB freed)");
     println!("  • Write buffers: Flushed (800MB freed)");
-    sleep(Duration::from_millis(120)).await;
     println!("  ✓ Total freed: 2.8GB");
     println!("  • Memory usage: 95% → 86%");
     println!("  ✓ Crisis averted - no OOM kill");
@@ -200,19 +193,16 @@ async fn chaos_test_22_disk_full_scenario() -> Result<()> {
     println!("\n  Strategy 1: Snapshot cleanup");
     println!("    • Finding old snapshots older than 90 days");
     println!("    • Deleting 15 snapshots");
-    sleep(Duration::from_millis(100)).await;
     println!("    ✓ Freed: 180GB");
 
     println!("\n  Strategy 2: Compression");
     println!("    • Identifying compressible data");
     println!("    • Applying LZ4 compression");
-    sleep(Duration::from_millis(80)).await;
     println!("    ✓ Space saved: 320GB (effective)");
 
     println!("\n  Strategy 3: Deduplication");
     println!("    • Scanning for duplicate blocks");
     println!("    • Deduplicating: 12,345 blocks");
-    sleep(Duration::from_millis(100)).await;
     println!("    ✓ Space saved: 250GB");
 
     // Phase 4: Space recovered
@@ -226,7 +216,6 @@ async fn chaos_test_22_disk_full_scenario() -> Result<()> {
     println!("\n✅ Phase 5: Retry original write...");
     println!("  • Retrying write: 600GB");
     println!("  • Available space: 1,250GB");
-    sleep(Duration::from_millis(100)).await;
     println!("  ✓ Write succeeded");
     println!("  • New free space: 650GB");
 
@@ -256,7 +245,6 @@ async fn chaos_test_23_network_partition_healing() -> Result<()> {
 
     // Phase 3: Network heals
     println!("\n🔗 Phase 3: Network partition healing...");
-    sleep(Duration::from_millis(150)).await;
     println!("  • Network connectivity restored");
     println!("  • Nodes detecting each other");
     println!("  • Initiating reconciliation protocol");
@@ -266,7 +254,6 @@ async fn chaos_test_23_network_partition_healing() -> Result<()> {
     println!("  • Comparing state versions: v5.1234 vs v5.0");
     println!("  • Primary partition (A) has authoritative state");
     println!("  • Syncing 1,234 transactions to Partition B");
-    sleep(Duration::from_millis(200)).await;
     println!("  ✓ Transaction replay: 100% complete");
     println!("  ✓ State synchronized: All nodes at v5.1234");
 
@@ -332,7 +319,6 @@ async fn chaos_test_24_clock_drift_extreme() -> Result<()> {
 
     println!("\n  Strategy 3: Emergency NTP sync");
     println!("    • Force NTP synchronization");
-    sleep(Duration::from_millis(150)).await;
     println!("    • Node 3: Adjusted forward by 3800s");
     println!("    • Node 5: Adjusted backward by 3600s");
     println!("    ✓ All nodes within ±5s tolerance");

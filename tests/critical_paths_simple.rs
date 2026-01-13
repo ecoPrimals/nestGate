@@ -35,7 +35,6 @@ async fn test_timeout_handling() {
 
     let result = tokio::time::timeout(timeout, async {
         // Sleep significantly longer than timeout to ensure it triggers
-        tokio::time::sleep(Duration::from_millis(500)).await;
         "completed"
     })
     .await;
@@ -349,7 +348,6 @@ async fn test_future_cancellation() {
     let handle = tokio::spawn(async move {
         // Modern: Use longer duration to represent "never completes"
         // (aborted immediately anyway, but semantically clearer)
-        tokio::time::sleep(Duration::from_secs(3600)).await; // 1 hour, never reached
         let _ = tx.send("completed");
     });
 

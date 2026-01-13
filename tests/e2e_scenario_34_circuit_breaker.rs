@@ -108,7 +108,6 @@ mod circuit_breaker_pattern {
         assert_eq!(cb.state, CircuitState::Open);
 
         // Wait for timeout
-        tokio::time::sleep(Duration::from_millis(150)).await;
 
         // Should transition to half-open
         assert!(cb.can_attempt());
@@ -126,7 +125,6 @@ mod circuit_breaker_pattern {
         assert_eq!(cb.state, CircuitState::Open);
 
         // Wait for timeout and transition to half-open
-        tokio::time::sleep(Duration::from_millis(100)).await;
         assert!(cb.can_attempt());
 
         // Successful request should close circuit

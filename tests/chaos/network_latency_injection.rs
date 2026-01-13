@@ -243,7 +243,6 @@ mod network_latency_tests {
                     }
                     Err(_) => {
                         if attempt < max_retries - 1 {
-                            tokio::time::sleep(Duration::from_millis(50)).await;
                         }
                     }
                 }
@@ -375,7 +374,6 @@ mod network_latency_tests {
                     match net.send_request(b"data").await {
                         Ok(response) => return Ok((i, response, attempt + 1)),
                         Err(_) if attempt < 2 => {
-                            tokio::time::sleep(Duration::from_millis(100)).await;
                         }
                         Err(e) => return Err(e),
                     }

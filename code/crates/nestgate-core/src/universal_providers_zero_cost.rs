@@ -495,7 +495,10 @@ mod tests {
     impl ZeroCostSecurityProvider for MockSecurityProvider {
         type Error = String;
 
-        async fn authenticate(&self, _credentials: &Credentials) -> std::result::Result<AuthToken, Self::Error> {
+        async fn authenticate(
+            &self,
+            _credentials: &Credentials,
+        ) -> std::result::Result<AuthToken, Self::Error> {
             Ok(AuthToken {
                 token: "test_token".to_string(),
                 expires_at: SystemTime::now(),
@@ -503,11 +506,19 @@ mod tests {
             })
         }
 
-        async fn encrypt(&self, data: &[u8], _algorithm: &str) -> std::result::Result<Vec<u8>, Self::Error> {
+        async fn encrypt(
+            &self,
+            data: &[u8],
+            _algorithm: &str,
+        ) -> std::result::Result<Vec<u8>, Self::Error> {
             Ok(data.to_vec())
         }
 
-        async fn decrypt(&self, encrypted: &[u8], _algorithm: &str) -> std::result::Result<Vec<u8>, Self::Error> {
+        async fn decrypt(
+            &self,
+            encrypted: &[u8],
+            _algorithm: &str,
+        ) -> std::result::Result<Vec<u8>, Self::Error> {
             Ok(encrypted.to_vec())
         }
 
@@ -519,7 +530,11 @@ mod tests {
             })
         }
 
-        async fn verify_signature(&self, _data: &[u8], _signature: &Signature) -> std::result::Result<bool, Self::Error> {
+        async fn verify_signature(
+            &self,
+            _data: &[u8],
+            _signature: &Signature,
+        ) -> std::result::Result<bool, Self::Error> {
             Ok(true)
         }
 
@@ -532,7 +547,7 @@ mod tests {
     #[allow(deprecated)]
     fn test_zero_cost_security_wrapper_creation() {
         let provider = MockSecurityProvider;
-        let wrapper: ZeroCostUniversalSecurityWrapper<MockSecurityProvider, 1000> = 
+        let wrapper: ZeroCostUniversalSecurityWrapper<MockSecurityProvider, 1000> =
             ZeroCostUniversalSecurityWrapper::new(
                 "test_provider".to_string(),
                 "http://localhost:8080".to_string(),
@@ -549,7 +564,7 @@ mod tests {
     #[allow(deprecated)]
     async fn test_zero_cost_wrapper_authenticate() {
         let provider = MockSecurityProvider;
-        let wrapper: ZeroCostUniversalSecurityWrapper<MockSecurityProvider, 1000> = 
+        let wrapper: ZeroCostUniversalSecurityWrapper<MockSecurityProvider, 1000> =
             ZeroCostUniversalSecurityWrapper::new(
                 "test".to_string(),
                 "http://test".to_string(),
@@ -572,7 +587,7 @@ mod tests {
     #[allow(deprecated)]
     async fn test_zero_cost_wrapper_encrypt() {
         let provider = MockSecurityProvider;
-        let wrapper: ZeroCostUniversalSecurityWrapper<MockSecurityProvider, 1000> = 
+        let wrapper: ZeroCostUniversalSecurityWrapper<MockSecurityProvider, 1000> =
             ZeroCostUniversalSecurityWrapper::new(
                 "test".to_string(),
                 "http://test".to_string(),
@@ -589,7 +604,7 @@ mod tests {
     #[allow(deprecated)]
     async fn test_zero_cost_wrapper_decrypt() {
         let provider = MockSecurityProvider;
-        let wrapper: ZeroCostUniversalSecurityWrapper<MockSecurityProvider, 1000> = 
+        let wrapper: ZeroCostUniversalSecurityWrapper<MockSecurityProvider, 1000> =
             ZeroCostUniversalSecurityWrapper::new(
                 "test".to_string(),
                 "http://test".to_string(),
@@ -606,7 +621,7 @@ mod tests {
     #[allow(deprecated)]
     async fn test_zero_cost_wrapper_batch_authenticate() {
         let provider = MockSecurityProvider;
-        let wrapper: ZeroCostUniversalSecurityWrapper<MockSecurityProvider, 1000> = 
+        let wrapper: ZeroCostUniversalSecurityWrapper<MockSecurityProvider, 1000> =
             ZeroCostUniversalSecurityWrapper::new(
                 "test".to_string(),
                 "http://test".to_string(),
@@ -685,7 +700,10 @@ mod tests {
         };
 
         match decision {
-            SecurityDecision::Allow { enhanced_by_security_provider, .. } => {
+            SecurityDecision::Allow {
+                enhanced_by_security_provider,
+                ..
+            } => {
                 assert!(enhanced_by_security_provider);
             }
             _ => panic!("Expected Allow variant"),

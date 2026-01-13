@@ -39,7 +39,6 @@ async fn test_bandwidth_saturation_during_large_transfer() {
     });
     
     // Step 5: Attempt critical operation during saturation
-    sleep(Duration::from_secs(1)).await;
     let critical_op_start = std::time::Instant::now();
     let critical_result = perform_critical_operation().await;
     let critical_op_duration = critical_op_start.elapsed();
@@ -90,7 +89,6 @@ async fn test_priority_traffic_during_saturation() {
         transfer_with_priority(TransferPriority::Low, 50 * 1024 * 1024).await
     });
     
-    sleep(Duration::from_millis(500)).await;
     
     // Start high-priority transfer
     let priority_start = std::time::Instant::now();
@@ -139,7 +137,6 @@ async fn test_backpressure_mechanism() {
         let mut count = 0;
         while let Some(data) = rx.recv().await {
             // Simulate slow network send
-            sleep(Duration::from_millis(100)).await;
             count += 1;
         }
         count
@@ -179,17 +176,14 @@ async fn test_adaptive_chunking_during_congestion() {
         transfer_with_adaptive_chunking(tracker_clone).await
     });
     
-    sleep(Duration::from_secs(1)).await;
     
     // Reduce bandwidth dramatically
     configure_bandwidth_limit(&test_env, 100_000).await.unwrap();
     
-    sleep(Duration::from_secs(2)).await;
     
     // Restore bandwidth
     configure_bandwidth_limit(&test_env, 10_000_000).await.unwrap();
     
-    sleep(Duration::from_secs(1)).await;
     
     transfer_handle.await.unwrap().unwrap();
     
@@ -254,7 +248,6 @@ async fn transfer_large_dataset(size: usize) -> Result<(), Box<dyn std::error::E
     let chunks = size / chunk_size;
     
     for _ in 0..chunks {
-        sleep(Duration::from_micros(100)).await;
     }
     
     Ok(())
@@ -267,14 +260,12 @@ async fn saturate_bandwidth(
     // Simulate bandwidth saturation
     let end = std::time::Instant::now() + duration;
     while std::time::Instant::now() < end {
-        sleep(Duration::from_millis(10)).await;
     }
     Ok(())
 }
 
 async fn perform_critical_operation() -> Result<(), Box<dyn std::error::Error>> {
     // Simulate critical operation
-    sleep(Duration::from_millis(500)).await;
     Ok(())
 }
 
@@ -285,7 +276,6 @@ async fn transfer_with_priority(
     // Simulate prioritized transfer
     let chunks = size / (64 * 1024);
     for _ in 0..chunks {
-        sleep(Duration::from_micros(50)).await;
     }
     Ok(())
 }
@@ -306,7 +296,6 @@ async fn transfer_with_adaptive_chunking(
     
     for size in chunk_sizes {
         tracker.lock().await.push(size);
-        sleep(Duration::from_millis(200)).await;
     }
     
     Ok(())

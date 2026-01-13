@@ -20,7 +20,6 @@ async fn chaos_test_13_cascading_failures() -> Result<()> {
 
     // Phase 1: Simulate initial failure
     println!("\n🔥 Phase 1: Initial failure - database connection lost");
-    sleep(Duration::from_millis(50)).await;
     println!("  ✓ Circuit breaker opened for database");
 
     // Phase 2: Cascading effect
@@ -28,7 +27,6 @@ async fn chaos_test_13_cascading_failures() -> Result<()> {
     println!("  • API service: Detecting database failure");
     println!("  • Cache service: Elevated error rate");
     println!("  • Queue service: Building backlog");
-    sleep(Duration::from_millis(100)).await;
 
     // System should NOT cascade failure to all services
     println!("  ✓ Storage service: Operating normally (isolated)");
@@ -44,7 +42,6 @@ async fn chaos_test_13_cascading_failures() -> Result<()> {
 
     // Phase 4: Gradual recovery
     println!("\n📈 Phase 4: Database recovering...");
-    sleep(Duration::from_millis(150)).await;
     println!("  • Connection 1/10: Established");
     println!("  • Circuit breaker: Half-open");
     println!("  • Testing health checks...");
@@ -93,7 +90,6 @@ async fn chaos_test_14_byzantine_failures() -> Result<()> {
     println!("  • Removing Node 3 from cluster");
     println!("  • Redistributing workload to healthy nodes");
     println!("  • Node 3: Quarantined for investigation");
-    sleep(Duration::from_millis(100)).await;
     println!("  ✓ Cluster operating with 4/5 nodes");
 
     // Phase 4: Verify continued operation
@@ -143,7 +139,6 @@ async fn chaos_test_15_split_brain_resolution() -> Result<()> {
 
     // Phase 3: Network heals
     println!("\n🔗 Phase 3: Network partition resolving...");
-    sleep(Duration::from_millis(150)).await;
     println!("  • Network connectivity restored");
     println!("  • Nodes rejoining cluster");
 
@@ -185,8 +180,6 @@ async fn chaos_test_16_resource_starvation() -> Result<()> {
     println!("  • Disk I/O: 100% queue depth");
     println!("  • Action: I/O priority scheduling enabled");
 
-    sleep(Duration::from_millis(100)).await;
-
     // Phase 2: Priority-based resource allocation
     println!("\n⚖️  Phase 2: Priority-based allocation...");
     println!("  • Critical operations: 60% resources (health checks, monitoring)");
@@ -204,7 +197,6 @@ async fn chaos_test_16_resource_starvation() -> Result<()> {
 
     // Phase 4: Resource recovery
     println!("\n📈 Phase 4: Resources recovering...");
-    sleep(Duration::from_millis(150)).await;
     println!("  • Memory: 95% → 72% (freed 23%)");
     println!("  • CPU: 98% → 65% (reduced by 33%)");
     println!("  • Disk I/O: 100% → 45% (normalized)");
@@ -237,7 +229,7 @@ async fn chaos_test_17_time_skew_chaos() -> Result<()> {
     ];
 
     for (node, timestamp) in &node_times {
-        let skew = timestamp - 1704844800;
+        let skew: i64 = timestamp - 1704844800;
         if skew.abs() > 30 {
             println!("  ⚠️  {}: {}s skew (CRITICAL)", node, skew);
         } else if skew.abs() > 5 {
@@ -256,7 +248,6 @@ async fn chaos_test_17_time_skew_chaos() -> Result<()> {
 
     // Phase 3: NTP synchronization
     println!("\n🔄 Phase 3: Triggering NTP synchronization...");
-    sleep(Duration::from_millis(100)).await;
     println!("  • Node 3: Time adjusted by -10s");
     println!("  • Node 5: Time adjusted by +150s");
     println!("  ✓ All nodes within ±1s tolerance");
@@ -288,7 +279,6 @@ async fn chaos_test_18_thundering_herd() -> Result<()> {
     println!("  • Detected: 10,000 duplicate requests");
     println!("  • Coalescing to: 1 backend request");
     println!("  • Other 9,999 requests: Waiting on single result");
-    sleep(Duration::from_millis(100)).await;
     println!("  ✓ Backend load: 1 request (instead of 10,000)");
 
     // Phase 3: Staggered cache refresh

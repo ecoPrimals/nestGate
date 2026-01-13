@@ -19,6 +19,16 @@ use std::path::PathBuf;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::UnixStream;
 
+mod common;
+use common::sync_utils::wait_for_condition;
+
+/// Helper: Wait for socket to be ready with retries
+async fn wait_for_socket_ready(socket_path: &PathBuf) {
+    wait_for_condition(|| socket_path.exists(), std::time::Duration::from_secs(5))
+        .await
+        .expect("Server socket should be created");
+}
+
 /// Test helper: Send JSON-RPC request and get response
 async fn send_jsonrpc_request(
     socket_path: &PathBuf,
@@ -72,7 +82,7 @@ async fn test_biomeos_pattern_store_retrieve() {
     });
 
     // Wait for server to start
-    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+    wait_for_socket_ready(&socket_path).await;
 
     // Store data (biomeOS pattern)
     let store_params = json!({
@@ -114,7 +124,7 @@ async fn test_biomeos_pattern_list_keys() {
         server.serve().await.ok();
     });
 
-    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+    wait_for_socket_ready(&socket_path).await;
 
     // Store multiple keys with prefix
     for i in 0..5 {
@@ -162,7 +172,7 @@ async fn test_biomeos_pattern_stats() {
         server.serve().await.ok();
     });
 
-    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+    wait_for_socket_ready(&socket_path).await;
 
     // Store some data
     let params = json!({
@@ -197,7 +207,7 @@ async fn test_biomeos_pattern_blob_storage() {
         server.serve().await.ok();
     });
 
-    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+    wait_for_socket_ready(&socket_path).await;
 
     // Store blob (biomeOS pattern)
     let test_data = b"Binary data from biomeOS client";
@@ -245,7 +255,7 @@ async fn test_biomeos_pattern_delete() {
         server.serve().await.ok();
     });
 
-    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+    wait_for_socket_ready(&socket_path).await;
 
     // Store data
     let store_params = json!({
@@ -294,7 +304,7 @@ async fn test_biomeos_pattern_family_isolation() {
         server.serve().await.ok();
     });
 
-    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+    wait_for_socket_ready(&socket_path).await;
 
     // Store data for family 1
     let store_params_1 = json!({
@@ -349,7 +359,7 @@ async fn test_biomeos_pattern_concurrent_operations() {
         server.serve().await.ok();
     });
 
-    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+    wait_for_socket_ready(&socket_path).await;
 
     // Spawn multiple concurrent operations (biomeOS pattern)
     let mut handles = vec![];
@@ -395,7 +405,7 @@ async fn test_biomeos_pattern_error_handling() {
         server.serve().await.ok();
     });
 
-    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+    wait_for_socket_ready(&socket_path).await;
 
     // Test 1: Retrieve non-existent key
     let retrieve_params = json!({
@@ -436,7 +446,7 @@ async fn test_biomeos_pattern_json_rpc_compliance() {
         server.serve().await.ok();
     });
 
-    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+    wait_for_socket_ready(&socket_path).await;
 
     // Test JSON-RPC 2.0 compliance
     let params = json!({
@@ -466,7 +476,7 @@ async fn test_biomeos_pattern_large_data() {
         server.serve().await.ok();
     });
 
-    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+    wait_for_socket_ready(&socket_path).await;
 
     // Store large JSON object
     let large_data = json!({

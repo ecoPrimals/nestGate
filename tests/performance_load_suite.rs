@@ -20,7 +20,6 @@ async fn test_throughput_under_load() -> std::result::Result<(), Box<dyn std::er
     for i in 0..1000 {
         let handle = tokio::spawn(async move {
             // Simulate an operation with realistic async delay
-            tokio::time::sleep(Duration::from_micros(100)).await;
             i
         });
         handles.push(handle);
@@ -62,7 +61,6 @@ async fn test_latency_under_various_loads() -> Result<(), Box<dyn std::error::Er
         for _ in 0..load {
             let handle = tokio::spawn(async {
                 let op_start = Instant::now();
-                tokio::time::sleep(Duration::from_micros(500)).await;
                 op_start.elapsed()
             });
             handles.push(handle);

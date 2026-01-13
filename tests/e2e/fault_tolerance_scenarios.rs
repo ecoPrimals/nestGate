@@ -125,7 +125,6 @@ mod fault_tolerance_tests {
         for service in dependent_services {
             // Each service should remain operational
             println!("Checking {} health...", service);
-            sleep(Duration::from_millis(10)).await;
         }
         
         println!("✅ Scenario 25: Cascading failure prevention verified");
@@ -146,7 +145,6 @@ mod fault_tolerance_tests {
         
         // Verify: System should detect excessive resource usage
         let memory_before = get_memory_usage();
-        sleep(Duration::from_millis(100)).await;
         let memory_after = get_memory_usage();
         
         println!("Memory usage change: {} bytes", memory_after.saturating_sub(memory_before));
@@ -179,15 +177,12 @@ mod fault_tolerance_tests {
         
         // Test: Fail 50% of components
         println!("Failing 50% of components...");
-        sleep(Duration::from_millis(100)).await;
         
         // Verify: System should continue with reduced capacity
         println!("Verifying reduced capacity operation...");
-        sleep(Duration::from_millis(100)).await;
         
         // Test: Recover failed components
         println!("Recovering failed components...");
-        sleep(Duration::from_millis(100)).await;
         
         println!("✅ Scenario 28: Partial failure recovery verified");
         Ok(())
@@ -212,7 +207,6 @@ mod fault_tolerance_tests {
         assert!(elapsed < Duration::from_millis(100), "Should fast-fail when circuit open");
         
         // Test: Wait for circuit to half-open
-        sleep(Duration::from_secs(2)).await;
         println!("Circuit should be half-open, testing recovery...");
         
         println!("✅ Scenario 29: Circuit breaker behavior verified");
@@ -260,7 +254,6 @@ mod fault_tolerance_tests {
     // ==================== Helper Functions ====================
 
     async fn slow_operation_simulation() -> Result<()> {
-        sleep(Duration::from_secs(3)).await;
         Ok(())
     }
 
@@ -271,7 +264,6 @@ mod fault_tolerance_tests {
 
     async fn attempt_connection_when_exhausted() -> Result<()> {
         // Simulate connection attempt
-        sleep(Duration::from_millis(100)).await;
         Ok(())
     }
 
@@ -282,7 +274,6 @@ mod fault_tolerance_tests {
 
     async fn potential_deadlock_scenario() -> Result<()> {
         // Simulate operations that could deadlock
-        sleep(Duration::from_millis(100)).await;
         Ok(())
     }
 

@@ -24,7 +24,6 @@ async fn chaos_test_25_datacenter_failure() -> Result<()> {
 
     // Phase 2: Automatic failover
     println!("\n🔄 Phase 2: Automatic regional failover...");
-    sleep(Duration::from_millis(150)).await;
     println!("  • Detecting datacenter loss");
     println!("  • Initiating failover to US-WEST-2");
     println!("  • Rebalancing workload to remaining 30 nodes");
@@ -39,7 +38,6 @@ async fn chaos_test_25_datacenter_failure() -> Result<()> {
 
     // Phase 4: Automatic recovery
     println!("\n🔧 Phase 4: Datacenter recovery...");
-    sleep(Duration::from_millis(200)).await;
     println!("  • US-EAST-1 back online");
     println!("  • Syncing state from active regions");
     println!("  • Rebalancing workload");
@@ -63,7 +61,6 @@ async fn chaos_test_26_bit_flip_corruption() -> Result<()> {
     // Phase 2: Checksum validation
     println!("\n🔍 Phase 2: Checksum validation...");
     println!("  • Computing checksums for affected region");
-    sleep(Duration::from_millis(100)).await;
     println!("  ❌ Checksum mismatch detected");
     println!("  • Corrupted blocks: 3");
     println!("  • Action: Recovering from replicas");
@@ -74,7 +71,6 @@ async fn chaos_test_26_bit_flip_corruption() -> Result<()> {
     println!("  • Loading replica 2: ✓ Valid");
     println!("  • Loading replica 3: ✓ Valid");
     println!("  • Consensus: Using replicas 2 & 3");
-    sleep(Duration::from_millis(80)).await;
     println!("  ✓ Data recovered");
 
     // Phase 4: Repair corrupted replicas
@@ -104,12 +100,10 @@ async fn chaos_test_27_total_network_isolation() -> Result<()> {
     println!("  • Buffering writes locally");
     println!("  • Serving reads from local cache");
     println!("  • Marking self as isolated in local state");
-    sleep(Duration::from_millis(100)).await;
     println!("  ✓ Operating autonomously");
 
     // Phase 3: Network restoration
     println!("\n🔗 Phase 3: Network restored...");
-    sleep(Duration::from_millis(150)).await;
     println!("  • Network interfaces: UP");
     println!("  • Reconnecting to cluster");
     println!("  • Syncing buffered writes: 234 operations");
@@ -143,14 +137,12 @@ async fn chaos_test_28_cascading_hardware_failures() -> Result<()> {
     println!("  • Device: /dev/sdb");
     println!("  • Status: I/O errors");
     println!("  • Pool status: DEGRADED");
-    sleep(Duration::from_millis(100)).await;
     println!("  ⚠️  Warning: Only 1 disk remaining in 3-disk RAID");
 
     // Phase 3: Emergency data preservation
     println!("\n🚨 Phase 3: Emergency data preservation...");
     println!("  • Initiating emergency replication");
     println!("  • Target: Remote nodes with available capacity");
-    sleep(Duration::from_millis(200)).await;
     println!("  ✓ Critical data replicated to safe nodes");
     println!("  • Data preserved: 100%");
 
@@ -159,7 +151,6 @@ async fn chaos_test_28_cascading_hardware_failures() -> Result<()> {
     println!("  • Adding new disk: /dev/sdd");
     println!("  • Adding new disk: /dev/sde");
     println!("  • Rebuilding RAID array");
-    sleep(Duration::from_millis(150)).await;
     println!("  ✓ RAID rebuilt");
     println!("  ✓ Pool status: ONLINE");
 

@@ -44,7 +44,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Connect to NestGate
     let family_id =
         std::env::var("NESTGATE_FAMILY_ID").unwrap_or_else(|_| "example_ci".to_string());
-    let uid = unsafe { libc::getuid() };
+    let uid = nestgate_core::platform::get_current_uid();
     let socket_path = format!("/run/user/{}/nestgate-{}.sock", uid, family_id);
 
     println!("📡 Connecting to: {}", socket_path);

@@ -520,7 +520,9 @@ mod tests {
         let discovery = NetworkDiscovery::with_runtime_config(runtime_config);
 
         // Try to find an available port starting from a high number
-        let result = discovery.discover_available_port("test_service", 50000).await;
+        let result = discovery
+            .discover_available_port("test_service", 50000)
+            .await;
         // Should find at least one available port
         assert!(result.is_ok());
         if let Ok(port) = result {
@@ -610,13 +612,9 @@ mod tests {
         let d1 = Arc::clone(&discovery);
         let d2 = Arc::clone(&discovery);
 
-        let handle1 = tokio::spawn(async move {
-            d1.discover_bind_address("service1").await
-        });
+        let handle1 = tokio::spawn(async move { d1.discover_bind_address("service1").await });
 
-        let handle2 = tokio::spawn(async move {
-            d2.discover_bind_address("service2").await
-        });
+        let handle2 = tokio::spawn(async move { d2.discover_bind_address("service2").await });
 
         let result1 = handle1.await.unwrap();
         let result2 = handle2.await.unwrap();
@@ -633,13 +631,11 @@ mod tests {
         let d1 = Arc::clone(&discovery);
         let d2 = Arc::clone(&discovery);
 
-        let handle1 = tokio::spawn(async move {
-            d1.discover_available_port("service1", 55000).await
-        });
+        let handle1 =
+            tokio::spawn(async move { d1.discover_available_port("service1", 55000).await });
 
-        let handle2 = tokio::spawn(async move {
-            d2.discover_available_port("service2", 56000).await
-        });
+        let handle2 =
+            tokio::spawn(async move { d2.discover_available_port("service2", 56000).await });
 
         let result1 = handle1.await.unwrap();
         let result2 = handle2.await.unwrap();
@@ -668,7 +664,7 @@ mod tests {
         let discovery = NetworkDiscovery::with_runtime_config(runtime_config);
 
         let services = vec!["service1", "service2", "service3"];
-        
+
         for service in services {
             let result = discovery.discover_service_endpoint(service).await;
             assert!(result.is_ok());

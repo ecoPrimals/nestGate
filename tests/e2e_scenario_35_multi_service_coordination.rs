@@ -25,8 +25,6 @@ async fn test_multi_service_coordination() {
         }
     }
 
-    tokio::time::sleep(Duration::from_millis(50)).await;
-
     {
         let mut states = service_states.write().await;
         for state in states.iter_mut() {

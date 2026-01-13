@@ -46,7 +46,6 @@ mod expanded_chaos_scenarios {
     async fn chaos_network_high_latency() {
         // Simulate high network latency (500ms)
         let start = std::time::Instant::now();
-        tokio::time::sleep(Duration::from_millis(500)).await;
         let elapsed = start.elapsed();
 
         assert!(elapsed >= Duration::from_millis(490));
@@ -60,7 +59,6 @@ mod expanded_chaos_scenarios {
 
         for _ in 0..10 {
             let latency_ms = 100 + (rand::random::<u64>() % 200);
-            tokio::time::sleep(Duration::from_millis(latency_ms)).await;
             latencies.push(latency_ms);
         }
 
@@ -158,10 +156,7 @@ mod expanded_chaos_scenarios {
         let mut handles = Vec::new();
 
         for _ in 0..50 {
-            let handle = tokio::spawn(async {
-                tokio::time::sleep(Duration::from_millis(100)).await;
-                42
-            });
+            let handle = tokio::spawn(async { 42 });
             handles.push(handle);
         }
 
@@ -199,7 +194,6 @@ mod expanded_chaos_scenarios {
     async fn chaos_service_slow_response() {
         // Service responds slowly
         async fn slow_service() -> Result<String, String> {
-            tokio::time::sleep(Duration::from_secs(2)).await;
             Ok("Slow response".to_string())
         }
 

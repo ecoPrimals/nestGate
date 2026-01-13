@@ -150,7 +150,6 @@ impl PortAllocator {
 ///
 /// # Anti-pattern (OLD):
 /// ```ignore
-/// tokio::time::sleep(Duration::from_millis(100)).await;
 /// assert!(service.is_ready());
 /// ```
 ///

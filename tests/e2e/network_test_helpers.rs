@@ -35,7 +35,6 @@ where
         max_duration,
         async {
             while !condition() {
-                tokio::time::sleep(Duration::from_millis(10)).await;
             }
         }
     )

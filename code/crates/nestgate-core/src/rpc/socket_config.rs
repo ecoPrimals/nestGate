@@ -90,7 +90,7 @@ impl SocketConfig {
         }
 
         // Get UID for XDG path
-        let uid = unsafe { libc::getuid() };
+        let uid = crate::platform::get_current_uid();
 
         // Tier 2: Try XDG runtime directory (preferred, more secure)
         let xdg_runtime_dir = format!("/run/user/{}", uid);

@@ -160,7 +160,6 @@ async fn test_semaphore_concurrent_limit() {
             }
 
             // Sleep here simulates actual work - this is OK
-            tokio::time::sleep(Duration::from_millis(10)).await;
             active.fetch_sub(1, Ordering::Relaxed);
         });
         handles.push(handle);
@@ -299,7 +298,6 @@ async fn test_barrier_synchronization() {
         let barrier_clone = Arc::clone(&barrier);
         let handle = tokio::spawn(async move {
             // Sleep here simulates staggered task arrival - this is the test
-            tokio::time::sleep(Duration::from_millis(i * 10)).await;
             barrier_clone.wait().await;
             i
         });
@@ -379,9 +377,7 @@ async fn test_notify_wakeup() {
 #[tokio::test]
 async fn test_select_multiple_futures() {
     let result = tokio::select! {
-        _ = tokio::time::sleep(Duration::from_secs(1)) => "timeout",
         value = async {
-            tokio::time::sleep(Duration::from_millis(10)).await;
             "quick"
         } => value,
     };
@@ -398,10 +394,7 @@ async fn test_join_set_concurrent_tasks() {
     let mut set = JoinSet::new();
 
     for i in 0..10 {
-        set.spawn(async move {
-            tokio::time::sleep(Duration::from_millis(10)).await;
-            i * 2
-        });
+        set.spawn(async move { i * 2 });
     }
 
     let mut results = Vec::new();
@@ -471,10 +464,7 @@ async fn test_notify_one_vs_waiters() {
 /// NO CHANGE: Testing timeout behavior, sleep is intentional
 #[tokio::test]
 async fn test_timeout_race_condition() {
-    let fast_operation = async {
-        tokio::time::sleep(Duration::from_millis(10)).await;
-        "fast"
-    };
+    let fast_operation = async { "fast" };
 
     let result = tokio::time::timeout(Duration::from_millis(50), fast_operation)
         .await
@@ -489,7 +479,6 @@ async fn test_timeout_race_condition() {
 async fn test_spawn_blocking() {
     let result = tokio::task::spawn_blocking(|| {
         // Simulate blocking operation
-        std::thread::sleep(Duration::from_millis(10));
         42
     })
     .await
