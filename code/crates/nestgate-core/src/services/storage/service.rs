@@ -449,15 +449,15 @@ impl StorageManagerService {
     pub async fn store_adaptive(
         &self,
         data: bytes::Bytes,
-    ) -> Result<super::service_integration::StoreDataResponse> {
+    ) -> Result<super::service_integration::StorageReceipt> {
         if let Some(adaptive) = &self.adaptive_storage {
-            adaptive.store_data(data).await.map_err(|e| {
+            adaptive.store_data(data.to_vec()).await.map_err(|e| {
                 NestGateError::storage_operation(format!("Adaptive storage failed: {}", e), false)
             })
         } else {
             Err(NestGateError::feature_not_enabled(
-                "adaptive-storage".to_string(),
-                "Adaptive storage is not enabled or failed to initialize".to_string(),
+                "adaptive-storage",
+                "Adaptive storage is not enabled or failed to initialize",
             ))
         }
     }
@@ -470,13 +470,15 @@ impl StorageManagerService {
     #[cfg(feature = "adaptive-storage")]
     pub async fn retrieve_adaptive(&self, hash: &[u8; 32]) -> Result<bytes::Bytes> {
         if let Some(adaptive) = &self.adaptive_storage {
-            adaptive.retrieve_data(hash).await.map_err(|e| {
+            let hash_str = hex::encode(hash);
+            let data: Vec<u8> = adaptive.retrieve_data(&hash_str).await.map_err(|e| {
                 NestGateError::storage_operation(format!("Adaptive retrieval failed: {}", e), false)
-            })
+            })?;
+            Ok(bytes::Bytes::from(data))
         } else {
             Err(NestGateError::feature_not_enabled(
-                "adaptive-storage".to_string(),
-                "Adaptive storage is not enabled or failed to initialize".to_string(),
+                "adaptive-storage",
+                "Adaptive storage is not enabled or failed to initialize",
             ))
         }
     }
@@ -489,13 +491,15 @@ impl StorageManagerService {
     #[cfg(feature = "adaptive-storage")]
     pub async fn get_adaptive_metrics(
         &self,
-    ) -> Result<super::service_integration::MetricsResponse> {
+    ) -> Result<super::service_integration::MetricsSnapshot> {
         if let Some(adaptive) = &self.adaptive_storage {
-            Ok(adaptive.get_metrics().await)
+            // get_metrics is sync, not async
+            let metrics: super::service_integration::MetricsSnapshot = adaptive.get_metrics();
+            Ok(metrics)
         } else {
             Err(NestGateError::feature_not_enabled(
-                "adaptive-storage".to_string(),
-                "Adaptive storage is not enabled or failed to initialize".to_string(),
+                "adaptive-storage",
+                "Adaptive storage is not enabled or failed to initialize",
             ))
         }
     }
@@ -509,15 +513,16 @@ impl StorageManagerService {
     pub async fn analyze_data(
         &self,
         data: &[u8],
-    ) -> Result<super::service_integration::AnalysisResponse> {
+    ) -> Result<super::service_integration::DataAnalysisResult> {
         if let Some(adaptive) = &self.adaptive_storage {
-            adaptive.analyze_data(data).await.map_err(|e| {
+            let result: super::service_integration::DataAnalysisResult = adaptive.analyze_data(data).await.map_err(|e| {
                 NestGateError::storage_operation(format!("Data analysis failed: {}", e), false)
-            })
+            })?;
+            Ok(result)
         } else {
             Err(NestGateError::feature_not_enabled(
-                "adaptive-storage".to_string(),
-                "Adaptive storage is not enabled or failed to initialize".to_string(),
+                "adaptive-storage",
+                "Adaptive storage is not enabled or failed to initialize",
             ))
         }
     }

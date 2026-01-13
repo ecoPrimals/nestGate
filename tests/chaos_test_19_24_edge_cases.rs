@@ -290,7 +290,7 @@ async fn chaos_test_24_clock_drift_extreme() -> Result<()> {
 
     // Phase 1: Detect extreme clock drift
     println!("\n🕐 Phase 1: Detecting extreme clock drift...");
-    let node_times = vec![
+    let node_times: Vec<(&str, i64, i64)> = vec![
         ("Node 1", 1704844800, 0),
         ("Node 2", 1704844805, 5),
         ("Node 3", 1704841000, -3800), // 1+ hour behind!
@@ -298,10 +298,11 @@ async fn chaos_test_24_clock_drift_extreme() -> Result<()> {
         ("Node 5", 1704848400, 3600), // 1 hour ahead!
     ];
 
-    for (node, timestamp, skew) in &node_times {
-        if skew.abs() > 300 {
+    for (node, _timestamp, skew) in &node_times {
+        let abs_skew = skew.abs();
+        if abs_skew > 300 {
             println!("  🚨 {}: {}s skew (CRITICAL - over 5 minutes)", node, skew);
-        } else if skew.abs() > 30 {
+        } else if abs_skew > 30 {
             println!("  ⚠️  {}: {}s skew (WARNING)", node, skew);
         } else {
             println!("  ✓ {}: {}s skew (OK)", node, skew);
