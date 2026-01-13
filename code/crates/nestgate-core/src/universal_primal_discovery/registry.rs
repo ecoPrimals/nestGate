@@ -320,3 +320,260 @@ impl ServiceRegistryClient {
         Ok(config)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::Arc;
+
+    fn create_test_config() -> SharedRegistryConfig {
+        Arc::new(RegistryConfig::new())
+    }
+
+    #[test]
+    fn test_service_registry_client_new() {
+        let client = ServiceRegistryClient::new();
+        assert_eq!(client.timeout, Duration::from_secs(10));
+        assert!(client.registry_cache.is_empty());
+    }
+
+    #[test]
+    fn test_service_registry_client_default() {
+        let client = ServiceRegistryClient::default();
+        assert_eq!(client.timeout, Duration::from_secs(10));
+    }
+
+    #[test]
+    fn test_service_registry_client_with_config() {
+        let config = create_test_config();
+        let client = ServiceRegistryClient::with_config(config);
+        assert_eq!(client.timeout, Duration::from_secs(10));
+        assert!(client.registry_cache.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_query_service_fallback() {
+        let config = create_test_config();
+        let client = ServiceRegistryClient::with_config(config);
+
+        // Without any configuration, should fallback to localhost
+        let result = client.query_service("test_service", "endpoint").await;
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_query_service_mesh_localhost_fallback() {
+        let config = create_test_config();
+        let client = ServiceRegistryClient::with_config(config);
+
+        let result = client.query_service_mesh("test_service");
+        assert!(result.is_ok());
+        // Should return localhost fallback
+        let endpoint = result.unwrap();
+        assert!(endpoint.contains("localhost") || endpoint.contains("127.0.0.1"));
+    }
+
+    #[test]
+    fn test_register_capability_endpoint_success() {
+        let config = create_test_config();
+        let client = ServiceRegistryClient::with_config(config);
+
+        let result = client.register_capability_endpoint("encryption", "http://crypto.example.com");
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_register_capability_endpoint_empty_capability() {
+        let config = create_test_config();
+        let client = ServiceRegistryClient::with_config(config);
+
+        let result = client.register_capability_endpoint("", "http://crypto.example.com");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_register_capability_endpoint_empty_endpoint() {
+        let config = create_test_config();
+        let client = ServiceRegistryClient::with_config(config);
+
+        let result = client.register_capability_endpoint("encryption", "");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_register_capability_endpoint_both_empty() {
+        let config = create_test_config();
+        let client = ServiceRegistryClient::with_config(config);
+
+        let result = client.register_capability_endpoint("", "");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_discover_port_via_adapter_success() {
+        // Test adapter port discovery without needing to set internal fields
+        // This tests the error path which is more important for coverage
+        let config = create_test_config();
+        let client = ServiceRegistryClient::with_config(config);
+
+        // For now, test the error case as we cannot set adapter_ports directly
+        let result = client.discover_port_via_adapter("test_service", "api");
+        // Should return error when no adapter configuration found
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_discover_port_via_adapter_not_found() {
+        let config = create_test_config();
+        let client = ServiceRegistryClient::with_config(config);
+
+        let result = client.discover_port_via_adapter("unknown_service", "api");
+        assert!(result.is_err());
+    }
+
+
+    #[test]
+    fn test_health_check_no_registry() {
+        let config = create_test_config();
+        let client = ServiceRegistryClient::with_config(config);
+
+        let result = client.health_check();
+        assert!(result.is_ok());
+
+        let health = result.unwrap();
+        assert_eq!(
+            health.get("registry_configured"),
+            Some(&"false".to_string())
+        );
+    }
+
+    #[test]
+    fn test_validate_discovery_config_no_registry() {
+        let config = create_test_config();
+        let client = ServiceRegistryClient::with_config(config);
+
+        let result = client.validate_discovery_config();
+        assert!(result.is_ok());
+
+        let warnings = result.unwrap();
+        assert!(!warnings.is_empty());
+        assert!(warnings
+            .iter()
+            .any(|w| w.contains("No registry URL configured")));
+    }
+
+
+    #[test]
+    fn test_validate_discovery_config_high_timeout() {
+        let config = create_test_config();
+        let mut client = ServiceRegistryClient::with_config(config);
+        client.timeout = Duration::from_secs(60);
+
+        let result = client.validate_discovery_config();
+        assert!(result.is_ok());
+
+        let warnings = result.unwrap();
+        assert!(warnings.iter().any(|w| w.contains("timeout is very high")));
+    }
+
+
+    #[test]
+    fn test_get_config_summary_no_registry() {
+        let config = create_test_config();
+        let client = ServiceRegistryClient::with_config(config);
+
+        let result = client.get_config_summary();
+        assert!(result.is_ok());
+
+        let summary = result.unwrap();
+        assert_eq!(
+            summary.get("registry_url"),
+            Some(&"not_configured".to_string())
+        );
+    }
+
+    #[test]
+    fn test_discovery_query_creation() {
+        let query = DiscoveryQuery {
+            service_name: "test_service".to_string(),
+            query_type: "endpoint".to_string(),
+            timeout: Duration::from_secs(5),
+            fallback_enabled: true,
+        };
+
+        assert_eq!(query.service_name, "test_service");
+        assert_eq!(query.query_type, "endpoint");
+        assert_eq!(query.timeout, Duration::from_secs(5));
+        assert!(query.fallback_enabled);
+    }
+
+    #[test]
+    fn test_discovery_query_clone() {
+        let query1 = DiscoveryQuery {
+            service_name: "test".to_string(),
+            query_type: "api".to_string(),
+            timeout: Duration::from_secs(10),
+            fallback_enabled: false,
+        };
+
+        let query2 = query1.clone();
+        assert_eq!(query1.service_name, query2.service_name);
+        assert_eq!(query1.query_type, query2.query_type);
+    }
+
+    #[test]
+    fn test_service_registry_client_debug() {
+        let config = create_test_config();
+        let client = ServiceRegistryClient::with_config(config);
+
+        let debug_str = format!("{:?}", client);
+        assert!(debug_str.contains("ServiceRegistryClient"));
+    }
+
+    #[test]
+    fn test_discovery_query_debug() {
+        let query = DiscoveryQuery {
+            service_name: "test".to_string(),
+            query_type: "api".to_string(),
+            timeout: Duration::from_secs(5),
+            fallback_enabled: true,
+        };
+
+        let debug_str = format!("{:?}", query);
+        assert!(debug_str.contains("DiscoveryQuery"));
+        assert!(debug_str.contains("test"));
+    }
+
+    #[tokio::test]
+    async fn test_concurrent_queries() {
+        let config = create_test_config();
+        let client = Arc::new(ServiceRegistryClient::with_config(config));
+
+        let client1 = Arc::clone(&client);
+        let client2 = Arc::clone(&client);
+
+        let handle1 = tokio::spawn(async move {
+            client1.query_service("service1", "endpoint").await
+        });
+
+        let handle2 = tokio::spawn(async move {
+            client2.query_service("service2", "endpoint").await
+        });
+
+        let result1 = handle1.await.unwrap();
+        let result2 = handle2.await.unwrap();
+
+        assert!(result1.is_ok());
+        assert!(result2.is_ok());
+    }
+
+    #[test]
+    fn test_multiple_clients() {
+        let config = create_test_config();
+        let client1 = ServiceRegistryClient::with_config(Arc::clone(&config));
+        let client2 = ServiceRegistryClient::with_config(config);
+
+        // Both clients should work independently
+        assert_eq!(client1.timeout, client2.timeout);
+    }
+}

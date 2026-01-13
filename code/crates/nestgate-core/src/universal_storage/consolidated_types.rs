@@ -785,3 +785,230 @@ pub type StorageResourceConfigCanonical =
 // Note: Keep using StorageResourceConfig (the deprecated struct) for now.
 // We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
 // This alias is here for reference and future migration.
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_universal_storage_type_default() {
+        let storage_type = UniversalStorageType::default();
+        assert_eq!(storage_type, UniversalStorageType::Local);
+    }
+
+    #[test]
+    fn test_universal_storage_type_variants() {
+        let local = UniversalStorageType::Local;
+        let zfs = UniversalStorageType::Zfs;
+        let memory = UniversalStorageType::Memory;
+        
+        assert!(matches!(local, UniversalStorageType::Local));
+        assert!(matches!(zfs, UniversalStorageType::Zfs));
+        assert!(matches!(memory, UniversalStorageType::Memory));
+    }
+
+    #[test]
+    fn test_universal_storage_type_clone() {
+        let storage1 = UniversalStorageType::Object;
+        let storage2 = storage1.clone();
+        assert_eq!(storage1, storage2);
+    }
+
+    #[test]
+    fn test_universal_storage_type_with_nfs() {
+        let nfs = UniversalStorageType::Nfs {
+            version: NfsVersion::V4,
+        };
+        
+        match nfs {
+            UniversalStorageType::Nfs { version } => {
+                assert_eq!(version, NfsVersion::V4);
+            }
+            _ => panic!("Expected NFS variant"),
+        }
+    }
+
+    #[test]
+    fn test_universal_storage_type_with_cloud() {
+        let cloud = UniversalStorageType::Cloud {
+            provider: CloudProvider::AWS {
+                region: "us-east-1".to_string(),
+            },
+        };
+        
+        match cloud {
+            UniversalStorageType::Cloud { provider } => {
+                match provider {
+                    CloudProvider::AWS { region } => {
+                        assert_eq!(region, "us-east-1");
+                    }
+                    _ => panic!("Expected AWS provider"),
+                }
+            }
+            _ => panic!("Expected Cloud variant"),
+        }
+    }
+
+    #[test]
+    fn test_nfs_version_variants() {
+        assert!(matches!(NfsVersion::V3, NfsVersion::V3));
+        assert!(matches!(NfsVersion::V4, NfsVersion::V4));
+        assert_eq!(NfsVersion::V4, NfsVersion::V4);
+    }
+
+    #[test]
+    fn test_smb_version_variants() {
+        assert!(matches!(SmbVersion::V2, SmbVersion::V2));
+        assert!(matches!(SmbVersion::V3, SmbVersion::V3));
+        assert_eq!(SmbVersion::V3, SmbVersion::V3);
+    }
+
+    #[test]
+    fn test_cloud_provider_variants() {
+        let aws = CloudProvider::AWS {
+            region: "us-west-2".to_string(),
+        };
+        let azure = CloudProvider::Azure {
+            subscription_id: "sub-123".to_string(),
+        };
+        let gcp = CloudProvider::GCP {
+            project_id: "project-456".to_string(),
+        };
+
+        assert!(matches!(aws, CloudProvider::AWS { .. }));
+        assert!(matches!(azure, CloudProvider::Azure { .. }));
+        assert!(matches!(gcp, CloudProvider::GCP { .. }));
+    }
+
+    #[test]
+    fn test_storage_resource_type_default() {
+        let resource_type = StorageResourceType::default();
+        assert_eq!(resource_type, StorageResourceType::Dataset);
+    }
+
+    #[test]
+    fn test_storage_health_status_default() {
+        let health = StorageHealthStatus::default();
+        assert_eq!(health, StorageHealthStatus::Unknown);
+    }
+
+    #[test]
+    fn test_storage_health_status_variants() {
+        assert_eq!(StorageHealthStatus::Healthy, StorageHealthStatus::Healthy);
+        assert_ne!(StorageHealthStatus::Healthy, StorageHealthStatus::Critical);
+    }
+
+    #[test]
+    fn test_storage_permissions_default() {
+        let perms = StoragePermissions::default();
+        assert!(perms.owner.contains(&"read".to_string()));
+        assert!(perms.owner.contains(&"write".to_string()));
+        assert!(perms.group.contains(&"read".to_string()));
+        assert!(perms.other.is_empty());
+    }
+
+    #[test]
+    fn test_storage_performance_metrics_default() {
+        let metrics = StoragePerformanceMetrics::default();
+        assert_eq!(metrics.read_ops_per_sec, 0.0);
+        assert_eq!(metrics.write_ops_per_sec, 0.0);
+        assert_eq!(metrics.utilization_percent, 0.0);
+    }
+
+    #[test]
+    fn test_storage_capability_variants() {
+        let cap1 = StorageCapability::ReadWrite;
+        let cap2 = StorageCapability::Encryption;
+        let cap3 = StorageCapability::Snapshots;
+
+        assert_eq!(cap1, StorageCapability::ReadWrite);
+        assert_ne!(cap1, cap2);
+        assert_ne!(cap2, cap3);
+    }
+
+    #[test]
+    fn test_storage_type_supports_capability() {
+        let zfs = UniversalStorageType::Zfs;
+        assert!(zfs.supports_capability(&StorageCapability::Snapshots));
+        assert!(zfs.supports_capability(&StorageCapability::Compression));
+        assert!(zfs.supports_capability(&StorageCapability::Deduplication));
+
+        let object = UniversalStorageType::Object;
+        assert!(object.supports_capability(&StorageCapability::Versioning));
+    }
+
+    #[test]
+    fn test_storage_type_default_capabilities() {
+        let zfs_caps = UniversalStorageType::Zfs.default_capabilities();
+        assert!(zfs_caps.contains(&StorageCapability::ReadWrite));
+        assert!(zfs_caps.contains(&StorageCapability::Snapshots));
+
+        let object_caps = UniversalStorageType::Object.default_capabilities();
+        assert!(object_caps.contains(&StorageCapability::Versioning));
+
+        let memory_caps = UniversalStorageType::Memory.default_capabilities();
+        assert!(memory_caps.contains(&StorageCapability::Streaming));
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn test_storage_resource_config_new() {
+        let config = StorageResourceConfig::new(
+            "test_storage".to_string(),
+            UniversalStorageType::Zfs,
+        );
+
+        assert_eq!(config.name, "test_storage");
+        assert_eq!(config.storage_type, UniversalStorageType::Zfs);
+        assert!(!config.capabilities.is_empty());
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn test_storage_resource_config_builder() {
+        let config = StorageResourceConfig::new(
+            "test".to_string(),
+            UniversalStorageType::Object,
+        )
+        .with_size(1024 * 1024)
+        .with_capability(StorageCapability::Encryption);
+
+        assert_eq!(config.initial_size, Some(1024 * 1024));
+        assert!(config.capabilities.contains(&StorageCapability::Encryption));
+    }
+
+    #[test]
+    fn test_storage_event_type_variants() {
+        assert_eq!(StorageEventType::Created, StorageEventType::Created);
+        assert_ne!(StorageEventType::Created, StorageEventType::Modified);
+    }
+
+    #[test]
+    fn test_storage_request_variants() {
+        let read = UniversalStorageRequest::Read { range: None };
+        let write = UniversalStorageRequest::Write {
+            data: vec![1, 2, 3],
+            overwrite: true,
+        };
+        let delete = UniversalStorageRequest::Delete { recursive: false };
+
+        assert!(matches!(read, UniversalStorageRequest::Read { .. }));
+        assert!(matches!(write, UniversalStorageRequest::Write { .. }));
+        assert!(matches!(delete, UniversalStorageRequest::Delete { .. }));
+    }
+
+    #[test]
+    fn test_storage_response_variants() {
+        let read_resp = UniversalStorageResponse::ReadResponse {
+            data: vec![1, 2, 3],
+            metadata: None,
+        };
+        let write_resp = UniversalStorageResponse::WriteResponse {
+            bytes_written: 100,
+            checksum: Some("abc123".to_string()),
+        };
+
+        assert!(matches!(read_resp, UniversalStorageResponse::ReadResponse { .. }));
+        assert!(matches!(write_resp, UniversalStorageResponse::WriteResponse { .. }));
+    }
+}

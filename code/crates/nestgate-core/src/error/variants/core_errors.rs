@@ -874,4 +874,28 @@ impl NestGateUnifiedError {
             user_error: true,
         }))
     }
+
+    /// Create a feature not enabled error
+    ///
+    /// Used when optional features are accessed but not enabled
+    #[must_use]
+    pub fn feature_not_enabled(feature: impl Into<String>, message: impl Into<String>) -> Self {
+        Self::NotImplemented(Box::new(NotImplementedErrorDetails {
+            feature: feature.into(),
+            message: Some(message.into()),
+            planned_version: None,
+        }))
+    }
+
+    /// Create a storage operation error with operation name
+    #[must_use]
+    pub fn storage_operation(message: impl Into<String>, _recoverable: bool) -> Self {
+        Self::Storage(Box::new(StorageErrorDetails {
+            message: message.into(),
+            operation: Some("storage_operation".to_string()),
+            resource: None,
+            storage_data: None,
+            context: None,
+        }))
+    }
 }

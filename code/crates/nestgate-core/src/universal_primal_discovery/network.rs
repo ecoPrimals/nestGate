@@ -405,3 +405,280 @@ pub type NetworkDiscoveryConfigCanonical =
 // Note: Keep using NetworkDiscoveryConfig (the deprecated struct) for now.
 // We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
 // This alias is here for reference and future migration.
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::net::{Ipv4Addr, Ipv6Addr};
+
+    fn create_test_runtime_config() -> SharedNetworkRuntimeConfig {
+        Arc::new(NetworkRuntimeConfig::new())
+    }
+
+    #[test]
+    fn test_network_discovery_new() {
+        let discovery = NetworkDiscovery::new();
+        assert!(format!("{:?}", discovery).contains("NetworkDiscovery"));
+    }
+
+    #[test]
+    fn test_network_discovery_default() {
+        let discovery = NetworkDiscovery::default();
+        assert!(format!("{:?}", discovery).contains("NetworkDiscovery"));
+    }
+
+    #[test]
+    fn test_network_discovery_with_config() {
+        let config = NestGateCanonicalConfig::default();
+        let discovery = NetworkDiscovery::with_config(config);
+        assert!(format!("{:?}", discovery).contains("NetworkDiscovery"));
+    }
+
+    #[test]
+    fn test_network_discovery_with_runtime_config() {
+        let runtime_config = create_test_runtime_config();
+        let discovery = NetworkDiscovery::with_runtime_config(runtime_config);
+        assert!(format!("{:?}", discovery).contains("NetworkDiscovery"));
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn test_network_discovery_config_default() {
+        let config = NetworkDiscoveryConfig::default();
+        assert_eq!(config.scan_timeout, Duration::from_secs(5));
+        assert!(config.port_scan_range.0 > 0);
+        assert!(config.port_scan_range.1 > config.port_scan_range.0);
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn test_network_discovery_config_clone() {
+        let config1 = NetworkDiscoveryConfig::default();
+        let config2 = config1.clone();
+        assert_eq!(config1.scan_timeout, config2.scan_timeout);
+    }
+
+    #[test]
+    fn test_interface_info_creation() {
+        let interface = InterfaceInfo {
+            name: "eth0".to_string(),
+            ip_endpoint: IpAddr::V4(Ipv4Addr::new(192, 168, 1, 100)),
+            is_up: true,
+            is_loopback: false,
+            priority_score: 100,
+        };
+
+        assert_eq!(interface.name, "eth0");
+        assert!(interface.is_up);
+        assert!(!interface.is_loopback);
+        assert_eq!(interface.priority_score, 100);
+    }
+
+    #[test]
+    fn test_interface_info_clone() {
+        let interface1 = InterfaceInfo {
+            name: "lo".to_string(),
+            ip_endpoint: IpAddr::V4(Ipv4Addr::LOCALHOST),
+            is_up: true,
+            is_loopback: true,
+            priority_score: 10,
+        };
+
+        let interface2 = interface1.clone();
+        assert_eq!(interface1.name, interface2.name);
+        assert_eq!(interface1.is_loopback, interface2.is_loopback);
+    }
+
+    #[test]
+    fn test_interface_info_debug() {
+        let interface = InterfaceInfo {
+            name: "wlan0".to_string(),
+            ip_endpoint: IpAddr::V4(Ipv4Addr::new(10, 0, 0, 1)),
+            is_up: true,
+            is_loopback: false,
+            priority_score: 50,
+        };
+
+        let debug_str = format!("{:?}", interface);
+        assert!(debug_str.contains("InterfaceInfo"));
+        assert!(debug_str.contains("wlan0"));
+    }
+
+    #[tokio::test]
+    async fn test_discover_bind_address() {
+        let runtime_config = create_test_runtime_config();
+        let discovery = NetworkDiscovery::with_runtime_config(runtime_config);
+
+        let result = discovery.discover_bind_address("test_service").await;
+        // Should return an IP address (either from config or detected)
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_discover_available_port() {
+        let runtime_config = create_test_runtime_config();
+        let discovery = NetworkDiscovery::with_runtime_config(runtime_config);
+
+        // Try to find an available port starting from a high number
+        let result = discovery.discover_available_port("test_service", 50000).await;
+        // Should find at least one available port
+        assert!(result.is_ok());
+        if let Ok(port) = result {
+            assert!(port >= 50000);
+        }
+    }
+
+    #[tokio::test]
+    async fn test_detect_optimal_bind_interface() {
+        let runtime_config = create_test_runtime_config();
+        let discovery = NetworkDiscovery::with_runtime_config(runtime_config);
+
+        let result = discovery.detect_optimal_bind_interface().await;
+        // Should return an IP (might be localhost if no interfaces)
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_port_is_available() {
+        let runtime_config = create_test_runtime_config();
+        let discovery = NetworkDiscovery::with_runtime_config(runtime_config);
+
+        // Port 1 is typically privileged and should not be available
+        let result1 = discovery.port_is_available(1).await;
+        // Just check it returns a result
+        assert!(result1.is_ok());
+
+        // High port should likely be available
+        let result2 = discovery.port_is_available(60000).await;
+        assert!(result2.is_ok());
+    }
+
+    #[test]
+    fn test_get_available_interfaces() {
+        let runtime_config = create_test_runtime_config();
+        let discovery = NetworkDiscovery::with_runtime_config(runtime_config);
+
+        let result = discovery.get_available_interfaces();
+        // Should return a result (might be empty or have interfaces)
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_discover_service_endpoint() {
+        let runtime_config = create_test_runtime_config();
+        let discovery = NetworkDiscovery::with_runtime_config(runtime_config);
+
+        let result = discovery.discover_service_endpoint("test_service").await;
+        // Should resolve to some endpoint
+        assert!(result.is_ok());
+        if let Ok(endpoint) = result {
+            assert!(endpoint.starts_with("http://"));
+        }
+    }
+
+    #[tokio::test]
+    async fn test_discover_service_endpoint_different_services() {
+        let runtime_config = create_test_runtime_config();
+        let discovery = NetworkDiscovery::with_runtime_config(runtime_config);
+
+        let result1 = discovery.discover_service_endpoint("service1").await;
+        let result2 = discovery.discover_service_endpoint("service2").await;
+
+        assert!(result1.is_ok());
+        assert!(result2.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_get_network_config() {
+        let runtime_config = create_test_runtime_config();
+        let discovery = NetworkDiscovery::with_runtime_config(runtime_config);
+
+        let result = discovery.get_network_config().await;
+        assert!(result.is_ok());
+
+        let config = result.unwrap();
+        assert!(config.contains_key("scan_timeout"));
+        assert!(config.contains_key("port_range"));
+        assert!(config.contains_key("preferred_interfaces"));
+    }
+
+    #[tokio::test]
+    async fn test_concurrent_bind_address_discovery() {
+        let runtime_config = Arc::new(NetworkRuntimeConfig::new());
+        let discovery = Arc::new(NetworkDiscovery::with_runtime_config(runtime_config));
+
+        let d1 = Arc::clone(&discovery);
+        let d2 = Arc::clone(&discovery);
+
+        let handle1 = tokio::spawn(async move {
+            d1.discover_bind_address("service1").await
+        });
+
+        let handle2 = tokio::spawn(async move {
+            d2.discover_bind_address("service2").await
+        });
+
+        let result1 = handle1.await.unwrap();
+        let result2 = handle2.await.unwrap();
+
+        assert!(result1.is_ok());
+        assert!(result2.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_concurrent_port_discovery() {
+        let runtime_config = Arc::new(NetworkRuntimeConfig::new());
+        let discovery = Arc::new(NetworkDiscovery::with_runtime_config(runtime_config));
+
+        let d1 = Arc::clone(&discovery);
+        let d2 = Arc::clone(&discovery);
+
+        let handle1 = tokio::spawn(async move {
+            d1.discover_available_port("service1", 55000).await
+        });
+
+        let handle2 = tokio::spawn(async move {
+            d2.discover_available_port("service2", 56000).await
+        });
+
+        let result1 = handle1.await.unwrap();
+        let result2 = handle2.await.unwrap();
+
+        assert!(result1.is_ok());
+        assert!(result2.is_ok());
+    }
+
+    #[test]
+    fn test_interface_info_ipv6() {
+        let interface = InterfaceInfo {
+            name: "eth0".to_string(),
+            ip_endpoint: IpAddr::V6(Ipv6Addr::LOCALHOST),
+            is_up: true,
+            is_loopback: true,
+            priority_score: 20,
+        };
+
+        assert!(interface.ip_endpoint.is_ipv6());
+        assert!(interface.is_loopback);
+    }
+
+    #[tokio::test]
+    async fn test_multiple_service_discoveries() {
+        let runtime_config = create_test_runtime_config();
+        let discovery = NetworkDiscovery::with_runtime_config(runtime_config);
+
+        let services = vec!["service1", "service2", "service3"];
+        
+        for service in services {
+            let result = discovery.discover_service_endpoint(service).await;
+            assert!(result.is_ok());
+        }
+    }
+
+    #[test]
+    fn test_network_discovery_config_debug() {
+        let config = NetworkDiscoveryConfig::default();
+        let debug_str = format!("{:?}", config);
+        assert!(debug_str.contains("NetworkDiscoveryConfig"));
+    }
+}
