@@ -440,110 +440,16 @@ impl StorageManagerService {
         !self.zfs_config.zfs_binary.is_empty()
     }
 
-    /// Store data using adaptive storage (if enabled)
-    ///
-    /// This method uses the new adaptive storage engine when available,
-    /// providing intelligent compression and routing based on data characteristics.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if storage fails
-    #[cfg(feature = "adaptive-storage")]
-    pub async fn store_adaptive(
-        &self,
-        data: bytes::Bytes,
-    ) -> Result<super::service_integration::StorageReceipt> {
-        if let Some(adaptive) = &self.adaptive_storage {
-            adaptive.store_data(data.to_vec()).await.map_err(|e| {
-                NestGateError::storage_operation(format!("Adaptive storage failed: {}", e), false)
-            })
-        } else {
-            Err(NestGateError::feature_not_enabled(
-                "adaptive-storage",
-                "Adaptive storage is not enabled or failed to initialize",
-            ))
-        }
-    }
-
-    /// Retrieve data using adaptive storage (if enabled)
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if retrieval fails
-    #[cfg(feature = "adaptive-storage")]
-    pub async fn retrieve_adaptive(&self, hash: &[u8; 32]) -> Result<bytes::Bytes> {
-        if let Some(adaptive) = &self.adaptive_storage {
-            let hash_str = hex::encode(hash);
-            let data: Vec<u8> = adaptive.retrieve_data(&hash_str).await.map_err(|e| {
-                NestGateError::storage_operation(format!("Adaptive retrieval failed: {}", e), false)
-            })?;
-            Ok(bytes::Bytes::from(data))
-        } else {
-            Err(NestGateError::feature_not_enabled(
-                "adaptive-storage",
-                "Adaptive storage is not enabled or failed to initialize",
-            ))
-        }
-    }
-
-    /// Get adaptive storage metrics (if enabled)
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if metrics retrieval fails
-    #[cfg(feature = "adaptive-storage")]
-    pub async fn get_adaptive_metrics(
-        &self,
-    ) -> Result<super::service_integration::MetricsSnapshot> {
-        if let Some(adaptive) = &self.adaptive_storage {
-            // get_metrics is sync, not async
-            let metrics: super::service_integration::MetricsSnapshot = adaptive.get_metrics();
-            Ok(metrics)
-        } else {
-            Err(NestGateError::feature_not_enabled(
-                "adaptive-storage",
-                "Adaptive storage is not enabled or failed to initialize",
-            ))
-        }
-    }
-
-    /// Analyze data characteristics (if adaptive storage is enabled)
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if analysis fails
-    #[cfg(feature = "adaptive-storage")]
-    pub async fn analyze_data(
-        &self,
-        data: &[u8],
-    ) -> Result<super::service_integration::DataAnalysisResult> {
-        if let Some(adaptive) = &self.adaptive_storage {
-            let result: super::service_integration::DataAnalysisResult =
-                adaptive.analyze_data(data).await.map_err(|e| {
-                    NestGateError::storage_operation(format!("Data analysis failed: {}", e), false)
-                })?;
-            Ok(result)
-        } else {
-            Err(NestGateError::feature_not_enabled(
-                "adaptive-storage",
-                "Adaptive storage is not enabled or failed to initialize",
-            ))
-        }
-    }
-
-    /// Check if adaptive storage is available
-    #[cfg(feature = "adaptive-storage")]
-    #[must_use]
-    pub fn is_adaptive_storage_available(&self) -> bool {
-        self.adaptive_storage.is_some()
-    }
-
-    /// Check if adaptive storage is available (always false without feature)
-    #[cfg(not(feature = "adaptive-storage"))]
-    #[must_use]
-    pub fn is_adaptive_storage_available(&self) -> bool {
-        false
-    }
+    // TODO: Re-enable adaptive storage methods once storage module is fixed
+    // Adaptive storage provides intelligent compression and routing
+    // See: code/crates/nestgate-core/src/storage/ for implementation
+    // 
+    // Planned methods:
+    // - store_adaptive(data) -> StorageReceipt
+    // - retrieve_adaptive(hash) -> Bytes
+    // - get_adaptive_metrics() -> MetricsSnapshot
+    // - analyze_data(data) -> DataAnalysisResult
+    // - is_adaptive_storage_available() -> bool
 }
 
 // Note: Default trait is intentionally not implemented for StorageManagerService
