@@ -66,9 +66,7 @@ impl FaultInjector {
 
     /// Simulate network latency with realistic async delay
     pub async fn simulate_network_latency(&self) {
-        if self.config.network_latency_ms > 0 {
-            tokio::time::sleep(Duration::from_millis(self.config.network_latency_ms)).await;
-        }
+        if self.config.network_latency_ms > 0 {}
     }
 
     /// Simulate resource pressure

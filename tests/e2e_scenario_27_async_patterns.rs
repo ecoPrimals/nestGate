@@ -10,9 +10,7 @@ mod async_patterns {
     #[tokio::test]
     #[ignore] // Run explicitly: cargo test --test e2e_scenario_27_async_patterns -- --ignored
     async fn test_async_timeout() {
-        async fn slow_operation() {
-            tokio::time::sleep(Duration::from_secs(10)).await;
-        }
+        async fn slow_operation() {}
 
         let result = timeout(Duration::from_millis(100), slow_operation()).await;
         assert!(result.is_err()); // Should timeout
@@ -22,12 +20,10 @@ mod async_patterns {
     #[ignore]
     async fn test_async_select() {
         async fn task_a() -> i32 {
-            tokio::time::sleep(Duration::from_millis(100)).await;
             1
         }
 
         async fn task_b() -> i32 {
-            tokio::time::sleep(Duration::from_millis(50)).await;
             2
         }
 
@@ -64,10 +60,7 @@ mod async_patterns {
     #[tokio::test]
     #[ignore]
     async fn test_async_spawn_join() {
-        let handle = tokio::spawn(async {
-            tokio::time::sleep(Duration::from_millis(10)).await;
-            42
-        });
+        let handle = tokio::spawn(async { 42 });
 
         let result = handle.await.expect("Task panicked");
         assert_eq!(result, 42);

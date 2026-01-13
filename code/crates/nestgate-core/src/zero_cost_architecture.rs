@@ -100,13 +100,13 @@ mod tests {
     #[test]
     fn test_benchmark_traditional_vs_zero_cost() {
         let results = benchmark_traditional_vs_zero_cost();
-        
+
         // Traditional should have some latency
         assert!(results.traditional_latency_ns > 0);
-        
+
         // Zero-cost should be faster or equal
         assert!(results.zero_cost_latency_ns <= results.traditional_latency_ns);
-        
+
         // Improvement percent should be reasonable
         assert!(results.improvement_percent >= 0.0);
         assert!(results.improvement_percent <= 100.0);
@@ -115,7 +115,7 @@ mod tests {
     #[test]
     fn test_benchmark_results_structure() {
         let results = benchmark_traditional_vs_zero_cost();
-        
+
         // Verify all fields are populated
         let _ = results.traditional_latency_ns;
         let _ = results.zero_cost_latency_ns;
@@ -125,7 +125,7 @@ mod tests {
     #[test]
     fn test_migration_guide_exists() {
         use crate::universal_providers_zero_cost::ZERO_COST_MIGRATION_GUIDE;
-        
+
         assert!(!ZERO_COST_MIGRATION_GUIDE.is_empty());
         assert!(ZERO_COST_MIGRATION_GUIDE.contains("Arc<dyn>"));
         assert!(ZERO_COST_MIGRATION_GUIDE.contains("Zero-Cost"));
@@ -136,7 +136,7 @@ mod tests {
         // Run benchmark multiple times to ensure consistency
         let result1 = benchmark_traditional_vs_zero_cost();
         let result2 = benchmark_traditional_vs_zero_cost();
-        
+
         // Both should show improvements
         assert!(result1.improvement_percent >= 0.0);
         assert!(result2.improvement_percent >= 0.0);
@@ -145,7 +145,7 @@ mod tests {
     #[test]
     fn test_benchmark_returns_valid_results() {
         let results = benchmark_traditional_vs_zero_cost();
-        
+
         // Check that all metrics are valid numbers
         assert!(results.traditional_latency_ns < u64::MAX);
         assert!(results.zero_cost_latency_ns < u64::MAX);

@@ -48,6 +48,7 @@
 // ==================== CANONICAL STORAGE SYSTEM ====================
 
 /// Zero-cost storage backend implementations for optimal performance
+pub mod types;
 pub mod zero_cost_storage_backend;
 
 /// Zero-cost storage trait definitions for type-safe, zero-overhead abstractions

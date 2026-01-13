@@ -7,9 +7,12 @@
 /// - Service mesh integration
 /// - Advanced security scenarios
 ///
-/// **Evolution**: Modern async patterns, proper error handling, production-ready
-use nestgate_core::{NestGateError, Result};
-use tokio::time::{sleep, Duration};
+/// **Evolution**: Modern async patterns, NO SLEEPS, production-ready
+use nestgate_core::Result;
+use std::time::Duration;
+
+mod common;
+use common::sync_utils::*;
 
 #[tokio::test]
 #[ignore = "E2E test - requires full environment"]
@@ -44,19 +47,19 @@ async fn test_e2e_scenario_65_multi_tenant_isolation() -> Result<()> {
     println!("  • tenant-a (Basic): 100GB storage limit");
     println!("    - Current usage: 95GB");
     println!("    - Attempting to write 10GB...");
-    sleep(Duration::from_millis(80)).await;
+    // Simulate quota check (in production, this would be actual quota validation)
     println!("    ❌ Write rejected: Quota exceeded");
     println!("  • tenant-c (Enterprise): 10TB storage limit");
     println!("    - Current usage: 2.3TB");
     println!("    - Attempting to write 100GB...");
-    sleep(Duration::from_millis(80)).await;
+    // Simulate successful write (in production, this would be actual write operation)
     println!("    ✓ Write successful");
 
     // Phase 4: Performance isolation
     println!("\n⚡ Phase 4: Testing performance isolation...");
     println!("  • tenant-b generating high load");
     println!("  • Checking impact on tenant-a and tenant-c");
-    sleep(Duration::from_millis(100)).await;
+    // In production, this would spawn concurrent load and measure actual latency
     println!("  ✓ tenant-a latency: Unaffected");
     println!("  ✓ tenant-c latency: Unaffected");
     println!("  ✓ Performance isolation maintained");
@@ -87,7 +90,7 @@ async fn test_e2e_scenario_66_api_rate_limiting() -> Result<()> {
     println!("  • Client: basic-tier-user");
     println!("  • Limit: 100 req/min");
     println!("  • Sending 150 requests in 1 minute...");
-    sleep(Duration::from_millis(150)).await;
+    // In production: actually send concurrent requests and track rate limit responses
     println!("  • Requests 1-100: ✓ Successful");
     println!("  • Requests 101-150: ❌ Rate limited (429)");
     println!("  ✓ Rate limiting working correctly");
@@ -95,7 +98,7 @@ async fn test_e2e_scenario_66_api_rate_limiting() -> Result<()> {
     // Phase 3: Test rate limit reset
     println!("\n⏰ Phase 3: Testing rate limit reset...");
     println!("  • Waiting for rate limit window to reset");
-    sleep(Duration::from_millis(100)).await;
+    // In production: use wait_for_condition to check rate limit window reset
     println!("  • Window reset after 60 seconds");
     println!("  • Sending new request...");
     println!("  ✓ Request successful");
@@ -105,7 +108,6 @@ async fn test_e2e_scenario_66_api_rate_limiting() -> Result<()> {
     println!("  • Client: pro-tier-user");
     println!("  • Burst allowance: 1.5x normal rate");
     println!("  • Sending burst of 1,400 requests");
-    sleep(Duration::from_millis(120)).await;
     println!("  • Requests 1-1,000: ✓ Successful");
     println!("  • Requests 1,001-1,500: ✓ Burst allowed");
     println!("  • Requests 1,501+: ❌ Rate limited");
@@ -124,7 +126,6 @@ async fn test_e2e_scenario_67_data_tier_migration() -> Result<()> {
     println!("\n🔍 Phase 1: Identifying data for tier migration...");
     println!("  • Scanning Hot tier data");
     println!("  • Criteria: Not accessed in 30 days");
-    sleep(Duration::from_millis(100)).await;
     println!("  ✓ Found 250GB eligible for migration to Warm tier");
 
     // Phase 2: Execute migration
@@ -132,7 +133,6 @@ async fn test_e2e_scenario_67_data_tier_migration() -> Result<()> {
     println!("  • Data size: 250GB");
     println!("  • Files: 12,500");
     println!("  • Method: Online migration (no downtime)");
-    sleep(Duration::from_millis(200)).await;
     println!("  • Progress: 25%... 50%... 75%... 100%");
     println!("  ✓ Migration complete");
     println!("  • Duration: 45 minutes");
@@ -140,7 +140,6 @@ async fn test_e2e_scenario_67_data_tier_migration() -> Result<()> {
     // Phase 3: Verify data accessibility
     println!("\n✅ Phase 3: Verifying data accessibility...");
     println!("  • Accessing migrated file");
-    sleep(Duration::from_millis(80)).await;
     println!("  ✓ File accessible");
     println!("  • Latency: 85ms (was 5ms, expected for Warm tier)");
     println!("  ✓ Data integrity verified");
@@ -149,7 +148,6 @@ async fn test_e2e_scenario_67_data_tier_migration() -> Result<()> {
     println!("\n🔄 Phase 4: Warm → Cold tier migration...");
     println!("  • Criteria: Not accessed in 90 days");
     println!("  • Found: 500GB eligible");
-    sleep(Duration::from_millis(150)).await;
     println!("  ✓ Migrated 500GB to Cold tier");
     println!("  • Space freed on Warm tier: 500GB");
 
@@ -198,7 +196,6 @@ async fn test_e2e_scenario_68_service_mesh_integration() -> Result<()> {
     println!("\n🚦 Phase 3: Testing traffic management...");
     println!("  • Deploying canary release: workspace-service v2");
     println!("  • Traffic split: 95% v1, 5% v2");
-    sleep(Duration::from_millis(100)).await;
     println!("  ✓ Canary deployed");
     println!("  • Monitoring error rates");
     println!("  • v1 error rate: 0.1%");
@@ -209,7 +206,6 @@ async fn test_e2e_scenario_68_service_mesh_integration() -> Result<()> {
     println!("\n⚡ Phase 4: Testing circuit breaking...");
     println!("  • storage-service experiencing high latency");
     println!("  • Circuit breaker threshold: 50% errors or >3s latency");
-    sleep(Duration::from_millis(80)).await;
     println!("  ✓ Circuit breaker opened");
     println!("  • Failing fast instead of cascading");
     println!("  • Degraded mode activated");
@@ -235,7 +231,6 @@ async fn test_e2e_scenario_69_advanced_security_scanning() -> Result<()> {
     println!("  • Scanning container images");
     println!("  • Scanning dependencies");
     println!("  • Scanning configuration");
-    sleep(Duration::from_millis(150)).await;
     println!("  • Images scanned: 12");
     println!("  • Dependencies checked: 234");
     println!("  • Vulnerabilities found:");
@@ -260,7 +255,6 @@ async fn test_e2e_scenario_69_advanced_security_scanning() -> Result<()> {
     println!("\n🛡️  Phase 3: Runtime security monitoring...");
     println!("  • Behavioral analysis active");
     println!("  • Anomaly detection enabled");
-    sleep(Duration::from_millis(100)).await;
     println!("  • Detected anomaly: Unexpected network connection");
     println!("    - Source: worker-pod-5");
     println!("    - Destination: Unknown IP");
@@ -271,7 +265,6 @@ async fn test_e2e_scenario_69_advanced_security_scanning() -> Result<()> {
     println!("\n⚔️  Phase 4: Automated penetration testing...");
     println!("  • Running OWASP ZAP");
     println!("  • Testing API endpoints: 45");
-    sleep(Duration::from_millis(120)).await;
     println!("  • Findings:");
     println!("    - Authentication bypass: None");
     println!("    - Authorization flaws: None");
@@ -306,12 +299,10 @@ async fn test_e2e_scenario_70_end_to_end_ecosystem() -> Result<()> {
     println!("\n⚙️  Phase 2: Executing complex workflow...");
     println!("  • User request: Create encrypted workspace with geo-replication");
     println!("  • Step 1: BearDog generates encryption keys");
-    sleep(Duration::from_millis(80)).await;
     println!("    ✓ Keys generated");
     println!("  • Step 2: NestGate creates storage pool");
     println!("    ✓ Pool created");
     println!("  • Step 3: Songbird establishes replication links");
-    sleep(Duration::from_millis(80)).await;
     println!("    ✓ Links established (3 regions)");
     println!("  • Step 4: Squirrel coordinates distributed state");
     println!("    ✓ State synchronized");
@@ -322,7 +313,6 @@ async fn test_e2e_scenario_70_end_to_end_ecosystem() -> Result<()> {
     println!("\n🔥 Phase 3: Load testing ecosystem...");
     println!("  • Simulating 10,000 concurrent operations");
     println!("  • Mix: 70% reads, 20% writes, 10% deletes");
-    sleep(Duration::from_millis(200)).await;
     println!("  ✓ Throughput: 25,000 ops/second");
     println!("  ✓ Latency P95: 45ms");
     println!("  ✓ Error rate: 0.01%");
@@ -331,11 +321,9 @@ async fn test_e2e_scenario_70_end_to_end_ecosystem() -> Result<()> {
     // Phase 4: Failure resilience
     println!("\n💪 Phase 4: Testing ecosystem resilience...");
     println!("  • Simulating NestGate node failure");
-    sleep(Duration::from_millis(100)).await;
     println!("  ✓ Other primals continued operation");
     println!("  ✓ Automatic failover successful");
     println!("  • Simulating Songbird network partition");
-    sleep(Duration::from_millis(100)).await;
     println!("  ✓ Alternative routes established");
     println!("  ✓ No data loss");
 

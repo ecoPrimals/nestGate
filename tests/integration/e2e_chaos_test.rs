@@ -140,7 +140,6 @@ async fn inject_chaos_with_monitoring(
     match chaos_type {
         ChaosType::NetworkLatency(delay) => {
             println!("🌐 E2E: Injecting network latency with monitoring: {:?}", delay);
-            tokio::time::sleep(*delay).await;
         },
         ChaosType::ServiceFailure(service_type) => {
             println!("💥 E2E: Injecting monitored service failure: {:?}", service_type);
@@ -150,15 +149,12 @@ async fn inject_chaos_with_monitoring(
                 recovery_time: Duration::from_secs(1),
                 data_loss: false,
             });
-            tokio::time::sleep(Duration::from_secs(2)).await;
         },
         ChaosType::ResourceExhaustion(resource) => {
             println!("📈 E2E: Injecting monitored resource exhaustion: {}", resource);
-            tokio::time::sleep(Duration::from_secs(1)).await;
         },
         ChaosType::DataCorruption => {
             println!("🗂️ E2E: Injecting monitored data corruption scenario");
-            tokio::time::sleep(Duration::from_millis(500)).await;
         },
     }
     

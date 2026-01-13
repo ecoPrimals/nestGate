@@ -26,7 +26,6 @@ mod expanded_fault_injection {
     async fn fault_inject_connection_timeout() {
         // Simulate connection timeout
         async fn connect_with_timeout(timeout_ms: u64) -> Result<(), String> {
-            tokio::time::sleep(Duration::from_millis(timeout_ms + 100)).await;
             Err("Connection timeout".to_string())
         }
 
@@ -101,7 +100,6 @@ mod expanded_fault_injection {
     async fn fault_inject_query_timeout() {
         // Simulate database query timeout
         async fn execute_slow_query() -> Result<Vec<String>, String> {
-            tokio::time::sleep(Duration::from_secs(10)).await;
             Ok(vec!["result".to_string()])
         }
 

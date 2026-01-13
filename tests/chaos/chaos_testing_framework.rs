@@ -259,7 +259,6 @@ impl ChaosTestingFramework {
                 results.push(result);
 
                 // Wait for system recovery between tests
-                tokio::time::sleep(Duration::from_secs(5)).await;
             }
             Ok(results)
         }
@@ -273,7 +272,6 @@ impl ChaosTestingFramework {
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         // Dry run mode - just simulate
         if self.config.dry_run_mode {
-            tokio::time::sleep(Duration::from_millis(100)).await;
             result.metrics.system_availability = 99.9;
             return Ok(());
         }
@@ -301,7 +299,6 @@ impl ChaosTestingFramework {
             if self.system_interface.health_check().await? {
                 break;
             }
-            tokio::time::sleep(Duration::from_secs(1)).await;
             recovery_attempts += 1;
         }
 
@@ -496,14 +493,12 @@ mod tests {
         fn apply_chaos(&self, _scenario: &ChaosScenario) -> impl std::future::Future<Output = Result<(), Box<dyn std::error::Error + Send + Sync>>> + Send {
             self.healthy.store(false, std::sync::atomic::Ordering::Relaxed);
             async move {
-                tokio::time::sleep(Duration::from_millis(10)).await;
                 Ok(())
             }
         }
 
         fn remove_chaos(&self, _scenario: &ChaosScenario) -> impl std::future::Future<Output = Result<(), Box<dyn std::error::Error + Send + Sync>>> + Send {
             async move {
-                tokio::time::sleep(Duration::from_millis(10)).await;
                 Ok(())
             }
         }
@@ -526,7 +521,6 @@ mod tests {
         fn trigger_recovery(&self) -> impl std::future::Future<Output = Result<(), Box<dyn std::error::Error + Send + Sync>>> + Send {
             let healthy_ref = &self.healthy;
             async move {
-                tokio::time::sleep(Duration::from_millis(100)).await;
                 healthy_ref.store(true, std::sync::atomic::Ordering::Relaxed);
                 Ok(())
             }

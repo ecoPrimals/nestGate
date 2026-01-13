@@ -79,7 +79,8 @@ type GeneratedClient = crate::rpc::tarpc_types::NestGateRpcClient;
 /// ```
 #[derive(Clone)]
 pub struct NestGateRpcClient {
-    /// Original endpoint string
+    /// Original endpoint string (kept for debugging and error messages)
+    #[allow(dead_code)]
     endpoint: String,
 
     /// Parsed socket address
@@ -185,7 +186,7 @@ impl NestGateRpcClient {
         client
             .create_dataset(ctx, name.to_string(), params)
             .await
-            .map_err(|e| NestGateError::api_internal_error(&format!("RPC call failed: {}", e)))?
+            .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {}", e)))?
             .map_err(Self::convert_rpc_error)
     }
 
@@ -201,7 +202,7 @@ impl NestGateRpcClient {
         client
             .list_datasets(ctx)
             .await
-            .map_err(|e| NestGateError::api_internal_error(&format!("RPC call failed: {}", e)))?
+            .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {}", e)))?
             .map_err(Self::convert_rpc_error)
     }
 
@@ -220,7 +221,7 @@ impl NestGateRpcClient {
         client
             .get_dataset(ctx, name.to_string())
             .await
-            .map_err(|e| NestGateError::api_internal_error(&format!("RPC call failed: {}", e)))?
+            .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {}", e)))?
             .map_err(Self::convert_rpc_error)
     }
 
@@ -239,7 +240,7 @@ impl NestGateRpcClient {
         client
             .delete_dataset(ctx, name.to_string())
             .await
-            .map_err(|e| NestGateError::api_internal_error(&format!("RPC call failed: {}", e)))?
+            .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {}", e)))?
             .map_err(Self::convert_rpc_error)
     }
 
@@ -267,7 +268,7 @@ impl NestGateRpcClient {
         client
             .store_object(ctx, dataset.to_string(), key.to_string(), data, metadata)
             .await
-            .map_err(|e| NestGateError::api_internal_error(&format!("RPC call failed: {}", e)))?
+            .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {}", e)))?
             .map_err(Self::convert_rpc_error)
     }
 
@@ -287,7 +288,7 @@ impl NestGateRpcClient {
         client
             .retrieve_object(ctx, dataset.to_string(), key.to_string())
             .await
-            .map_err(|e| NestGateError::api_internal_error(&format!("RPC call failed: {}", e)))?
+            .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {}", e)))?
             .map_err(Self::convert_rpc_error)
     }
 
@@ -307,7 +308,7 @@ impl NestGateRpcClient {
         client
             .get_object_metadata(ctx, dataset.to_string(), key.to_string())
             .await
-            .map_err(|e| NestGateError::api_internal_error(&format!("RPC call failed: {}", e)))?
+            .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {}", e)))?
             .map_err(Self::convert_rpc_error)
     }
 
@@ -333,7 +334,7 @@ impl NestGateRpcClient {
         client
             .list_objects(ctx, dataset.to_string(), prefix, limit)
             .await
-            .map_err(|e| NestGateError::api_internal_error(&format!("RPC call failed: {}", e)))?
+            .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {}", e)))?
             .map_err(Self::convert_rpc_error)
     }
 
@@ -353,7 +354,7 @@ impl NestGateRpcClient {
         client
             .delete_object(ctx, dataset.to_string(), key.to_string())
             .await
-            .map_err(|e| NestGateError::api_internal_error(&format!("RPC call failed: {}", e)))?
+            .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {}", e)))?
             .map_err(Self::convert_rpc_error)
     }
 
@@ -377,7 +378,7 @@ impl NestGateRpcClient {
         client
             .register_capability(ctx, registration)
             .await
-            .map_err(|e| NestGateError::api_internal_error(&format!("RPC call failed: {}", e)))?
+            .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {}", e)))?
             .map_err(Self::convert_rpc_error)
     }
 
@@ -396,7 +397,7 @@ impl NestGateRpcClient {
         client
             .discover_capability(ctx, capability.to_string())
             .await
-            .map_err(|e| NestGateError::api_internal_error(&format!("RPC call failed: {}", e)))?
+            .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {}", e)))?
             .map_err(Self::convert_rpc_error)
     }
 
@@ -414,7 +415,7 @@ impl NestGateRpcClient {
         client
             .health(ctx)
             .await
-            .map_err(|e| NestGateError::api_internal_error(&format!("RPC call failed: {}", e)))
+            .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {}", e)))
     }
 
     /// Get storage metrics
@@ -429,7 +430,7 @@ impl NestGateRpcClient {
         client
             .metrics(ctx)
             .await
-            .map_err(|e| NestGateError::api_internal_error(&format!("RPC call failed: {}", e)))
+            .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {}", e)))
     }
 
     /// Get version information
@@ -444,7 +445,7 @@ impl NestGateRpcClient {
         client
             .version(ctx)
             .await
-            .map_err(|e| NestGateError::api_internal_error(&format!("RPC call failed: {}", e)))
+            .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {}", e)))
     }
 
     /// Get available protocols
@@ -459,7 +460,7 @@ impl NestGateRpcClient {
         client
             .protocols(ctx)
             .await
-            .map_err(|e| NestGateError::api_internal_error(&format!("RPC call failed: {}", e)))
+            .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {}", e)))
     }
 
     // ==================== INTERNAL HELPERS ====================
@@ -517,7 +518,12 @@ impl NestGateRpcClient {
             ));
         }
 
-        let addr_str = endpoint.strip_prefix("tarpc://").unwrap();
+        let addr_str = endpoint.strip_prefix("tarpc://").ok_or_else(|| {
+            NestGateError::configuration_error(
+                "endpoint",
+                &format!("endpoint must start with 'tarpc://': {}", endpoint),
+            )
+        })?;
         addr_str.parse().map_err(|e| {
             NestGateError::configuration_error(
                 "endpoint",
@@ -530,16 +536,16 @@ impl NestGateRpcClient {
     fn convert_rpc_error(error: NestGateRpcError) -> NestGateError {
         match error {
             NestGateRpcError::DatasetNotFound { dataset } => {
-                NestGateError::not_found(&format!("Dataset not found: {}", dataset))
+                NestGateError::not_found(format!("Dataset not found: {}", dataset))
             }
             NestGateRpcError::DatasetAlreadyExists { dataset } => {
-                NestGateError::api_internal_error(&format!("Dataset already exists: {}", dataset))
+                NestGateError::api_internal_error(format!("Dataset already exists: {}", dataset))
             }
             NestGateRpcError::ObjectNotFound { dataset, key } => {
-                NestGateError::not_found(&format!("Object not found: {}/{}", dataset, key))
+                NestGateError::not_found(format!("Object not found: {}/{}", dataset, key))
             }
             NestGateRpcError::ObjectAlreadyExists { dataset, key } => {
-                NestGateError::api_internal_error(&format!(
+                NestGateError::api_internal_error(format!(
                     "Object already exists: {}/{}",
                     dataset, key
                 ))

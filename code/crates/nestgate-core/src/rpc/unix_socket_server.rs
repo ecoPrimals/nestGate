@@ -36,6 +36,7 @@
 use crate::error::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
@@ -77,11 +78,10 @@ struct JsonRpcError {
 struct StorageState {
     /// In-memory storage (family_id -> key -> value)
     /// TODO: Replace with persistent backend (ZFS, RocksDB, etc.)
-    storage:
-        Arc<RwLock<std::collections::HashMap<String, std::collections::HashMap<String, Value>>>>,
+    storage: Arc<RwLock<HashMap<String, HashMap<String, Value>>>>,
     /// Blob storage (family_id -> key -> bytes)
-    blobs:
-        Arc<RwLock<std::collections::HashMap<String, std::collections::HashMap<String, Vec<u8>>>>>,
+    #[allow(clippy::type_complexity)]
+    blobs: Arc<RwLock<HashMap<String, HashMap<String, Vec<u8>>>>>,
     /// Template storage for collaborative intelligence
     templates: crate::rpc::template_storage::TemplateStorage,
     /// Audit storage for execution tracking
@@ -91,8 +91,8 @@ struct StorageState {
 impl Default for StorageState {
     fn default() -> Self {
         Self {
-            storage: Arc::new(RwLock::new(std::collections::HashMap::new())),
-            blobs: Arc::new(RwLock::new(std::collections::HashMap::new())),
+            storage: Arc::new(RwLock::new(HashMap::new())),
+            blobs: Arc::new(RwLock::new(HashMap::new())),
             templates: crate::rpc::template_storage::TemplateStorage::new(),
             audits: crate::rpc::audit_storage::AuditStorage::new(),
         }
@@ -102,6 +102,8 @@ impl Default for StorageState {
 /// JSON-RPC Unix socket server for biomeOS integration
 pub struct JsonRpcUnixServer {
     socket_path: PathBuf,
+    /// Family ID for primal identification (used in future multi-primal features)
+    #[allow(dead_code)]
     family_id: String,
     state: StorageState,
 }
@@ -212,7 +214,7 @@ async fn handle_connection(stream: UnixStream, state: Arc<StorageState>) -> Resu
         let bytes_read = reader
             .read_line(&mut line)
             .await
-            .map_err(|e| NestGateError::io_error(&format!("Failed to read request: {}", e)))?;
+            .map_err(|e| NestGateError::io_error(format!("Failed to read request: {}", e)))?;
 
         if bytes_read == 0 {
             // Connection closed
@@ -246,16 +248,16 @@ async fn handle_connection(stream: UnixStream, state: Arc<StorageState>) -> Resu
 
         // Send response
         let response_json = serde_json::to_string(&response)
-            .map_err(|e| NestGateError::api(&format!("Failed to serialize response: {}", e)))?;
+            .map_err(|e| NestGateError::api(format!("Failed to serialize response: {}", e)))?;
 
         writer
             .write_all(response_json.as_bytes())
             .await
-            .map_err(|e| NestGateError::io_error(&format!("Failed to write response: {}", e)))?;
+            .map_err(|e| NestGateError::io_error(format!("Failed to write response: {}", e)))?;
         writer
             .write_all(b"\n")
             .await
-            .map_err(|e| NestGateError::io_error(&format!("Failed to write newline: {}", e)))?;
+            .map_err(|e| NestGateError::io_error(format!("Failed to write newline: {}", e)))?;
 
         debug!("Sent response: {}", response_json);
     }
@@ -371,7 +373,7 @@ async fn storage_retrieve(params: &Option<Value>, state: &StorageState) -> Resul
         .get(family_id)
         .and_then(|family_storage| family_storage.get(key))
         .cloned()
-        .ok_or_else(|| NestGateError::not_found(&format!("Key '{}' not found", key)))?;
+        .ok_or_else(|| NestGateError::not_found(format!("Key '{}' not found", key)))?;
 
     debug!("Retrieved key '{}' for family '{}'", key, family_id);
 
@@ -430,7 +432,7 @@ async fn storage_list(params: &Option<Value>, state: &StorageState) -> Result<Va
         .map(|family_storage| {
             family_storage
                 .keys()
-                .filter(|k| prefix.map_or(true, |p| k.starts_with(p)))
+                .filter(|k| prefix.is_none_or(|p| k.starts_with(p)))
                 .cloned()
                 .collect()
         })
@@ -497,7 +499,7 @@ async fn storage_store_blob(params: &Option<Value>, state: &StorageState) -> Res
     let blob_data = base64::engine::general_purpose::STANDARD
         .decode(blob_base64)
         .map_err(|e| {
-            NestGateError::invalid_input_with_field("blob", &format!("Invalid base64: {}", e))
+            NestGateError::invalid_input_with_field("blob", format!("Invalid base64: {}", e))
         })?;
 
     let mut blobs = state.blobs.write().await;
@@ -537,7 +539,7 @@ async fn storage_retrieve_blob(params: &Option<Value>, state: &StorageState) -> 
     let blob_data = blobs
         .get(family_id)
         .and_then(|family_blobs| family_blobs.get(key))
-        .ok_or_else(|| NestGateError::not_found(&format!("Blob '{}' not found", key)))?;
+        .ok_or_else(|| NestGateError::not_found(format!("Blob '{}' not found", key)))?;
 
     // Encode as base64
     use base64::Engine;
@@ -591,7 +593,7 @@ async fn templates_store(params: &Option<Value>, state: &StorageState) -> Result
         serde_json::from_value(meta_value.clone()).map_err(|e| {
             NestGateError::invalid_input_with_field(
                 "metadata",
-                &format!("Invalid metadata format: {}", e),
+                format!("Invalid metadata format: {}", e),
             )
         })?
     } else {
@@ -636,8 +638,8 @@ async fn templates_retrieve(params: &Option<Value>, state: &StorageState) -> Res
         template_id, family_id
     );
 
-    Ok(serde_json::to_value(template)
-        .map_err(|e| NestGateError::api(&format!("Failed to serialize template: {}", e)))?)
+    serde_json::to_value(template)
+        .map_err(|e| NestGateError::api(format!("Failed to serialize template: {}", e)))
 }
 
 /// templates.list - List templates with filtering
@@ -746,7 +748,7 @@ async fn audit_store_execution(params: &Option<Value>, state: &StorageState) -> 
         .map_err(|e| {
         NestGateError::invalid_input_with_field(
             "audit_data",
-            &format!("Invalid audit data format: {}", e),
+            format!("Invalid audit data format: {}", e),
         )
     })?;
 

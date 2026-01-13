@@ -30,10 +30,8 @@ async fn test_e2e_scenario_60_automated_backups() -> Result<()> {
     println!("  • Source: production-workspace");
     println!("  • Size: 2.5TB");
     println!("  • Type: Incremental (since last backup)");
-    sleep(Duration::from_millis(150)).await;
     println!("  • Changed data: 125GB");
     println!("  • Processing...");
-    sleep(Duration::from_millis(150)).await;
     println!("  ✓ Backup completed");
     println!("  • Duration: 18 minutes");
     println!("  • Compressed size: 89GB (29% reduction)");
@@ -43,7 +41,6 @@ async fn test_e2e_scenario_60_automated_backups() -> Result<()> {
     println!("  • Computing checksums");
     println!("  • Verifying file count: 12,345 files");
     println!("  • Testing random sample: 100 files");
-    sleep(Duration::from_millis(100)).await;
     println!("  ✓ All checksums valid");
     println!("  ✓ File count matches");
     println!("  ✓ Sample restoration successful");
@@ -52,7 +49,6 @@ async fn test_e2e_scenario_60_automated_backups() -> Result<()> {
     println!("\n☁️  Phase 4: Uploading to remote storage...");
     println!("  • Destination: S3 (us-west-2)");
     println!("  • Transfer: 89GB");
-    sleep(Duration::from_millis(120)).await;
     println!("  ✓ Upload completed");
     println!("  • Bandwidth used: 750 Mbps");
 
@@ -91,10 +87,8 @@ async fn test_e2e_scenario_61_point_in_time_recovery() -> Result<()> {
     println!("\n📥 Phase 3: Downloading backup...");
     println!("  • Source: S3 (us-west-2)");
     println!("  • Size: 89GB (compressed)");
-    sleep(Duration::from_millis(150)).await;
     println!("  ✓ Download completed");
     println!("  • Decompressing...");
-    sleep(Duration::from_millis(100)).await;
     println!("  ✓ Decompressed: 125GB");
 
     // Phase 4: Restore data
@@ -102,7 +96,6 @@ async fn test_e2e_scenario_61_point_in_time_recovery() -> Result<()> {
     println!("  • Destination: recovery-workspace");
     println!("  • Files to restore: 12,345");
     println!("  • Restoring...");
-    sleep(Duration::from_millis(200)).await;
     println!("  ✓ Restoration complete");
     println!("  • Duration: 25 minutes");
 
@@ -144,7 +137,6 @@ async fn test_e2e_scenario_62_cross_region_replication() -> Result<()> {
     println!("\n🔄 Phase 2: Initial synchronization...");
     println!("  • Data size: 2.5TB");
     println!("  • Syncing to 3 regions");
-    sleep(Duration::from_millis(200)).await;
     println!("  ✓ us-west-2: 2.5TB synced");
     println!("  ✓ eu-west-1: 2.5TB synced");
     println!("  ✓ ap-southeast-1: 2.5TB synced");
@@ -161,7 +153,6 @@ async fn test_e2e_scenario_62_cross_region_replication() -> Result<()> {
     // Phase 4: Verify consistency
     println!("\n🔍 Phase 4: Consistency verification...");
     println!("  • Comparing checksums across regions");
-    sleep(Duration::from_millis(150)).await;
     println!("  ✓ us-east-1 ↔ us-west-2: Consistent");
     println!("  ✓ us-east-1 ↔ eu-west-1: Consistent");
     println!("  ✓ us-east-1 ↔ ap-southeast-1: Consistent");
@@ -170,7 +161,6 @@ async fn test_e2e_scenario_62_cross_region_replication() -> Result<()> {
     println!("\n🚨 Phase 5: Testing regional failover...");
     println!("  • Simulating us-east-1 outage");
     println!("  • Promoting us-west-2 to primary");
-    sleep(Duration::from_millis(100)).await;
     println!("  ✓ Failover completed");
     println!("  • Failover time: 8.3 seconds");
     println!("  • Data loss: 0 bytes (replication lag: 1.2s)");
@@ -195,10 +185,8 @@ async fn test_e2e_scenario_63_backup_validation_testing() -> Result<()> {
     println!("\n🔄 Phase 2: Restoring to test environment...");
     println!("  • Target: test-recovery-workspace");
     println!("  • Downloading from S3");
-    sleep(Duration::from_millis(150)).await;
     println!("  ✓ Downloaded: 89GB");
     println!("  • Decompressing and restoring");
-    sleep(Duration::from_millis(150)).await;
     println!("  ✓ Restored: 125GB (12,345 files)");
 
     // Phase 3: Integrity checks
@@ -221,7 +209,6 @@ async fn test_e2e_scenario_63_backup_validation_testing() -> Result<()> {
 
     println!("\n  Check 4: Application startup");
     println!("    - Starting application with restored data");
-    sleep(Duration::from_millis(80)).await;
     println!("    ✓ Application started successfully");
 
     println!("\n  Check 5: Functional testing");
@@ -272,7 +259,6 @@ async fn test_e2e_scenario_64_business_continuity_drill() -> Result<()> {
     println!("\n🔄 Phase 3: Failing over to DR site...");
     println!("  • DR location: us-west-2");
     println!("  • Systems to restore: 12 critical services");
-    sleep(Duration::from_millis(200)).await;
     println!("  • Restoring from latest backup");
     println!("  • Repointing DNS");
     println!("  • Restoring network connectivity");

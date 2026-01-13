@@ -20,8 +20,6 @@ async fn chaos_test_cascading_failures() {
         svcs[0] = false; // Primary service fails
     }
 
-    tokio::time::sleep(Duration::from_millis(10)).await;
-
     // Cascade to dependent services
     {
         let mut svcs = services.write().await;
@@ -56,7 +54,6 @@ async fn chaos_test_memory_pressure() {
     println!("  💾 Allocated {}MB", target_mb);
 
     // Verify system still responsive
-    tokio::time::sleep(Duration::from_millis(10)).await;
 
     println!("✅ System stable under memory pressure");
 }
@@ -188,15 +185,11 @@ async fn chaos_test_thundering_herd() {
 
         let handle = tokio::spawn(async move {
             // Wait for resource
-            while !resource.load(Ordering::Relaxed) {
-                tokio::time::sleep(Duration::from_micros(100)).await;
-            }
+            while !resource.load(Ordering::Relaxed) {}
             counter.fetch_add(1, Ordering::Relaxed);
         });
         handles.push(handle);
     }
-
-    tokio::time::sleep(Duration::from_millis(10)).await;
 
     // Make resource available - triggers thundering herd
     resource_available.store(true, Ordering::Relaxed);
@@ -290,7 +283,6 @@ async fn chaos_test_resource_starvation() {
             match tokio::time::timeout(Duration::from_millis(50), resources_clone.acquire()).await {
                 Ok(_permit) => {
                     // Got resource
-                    tokio::time::sleep(Duration::from_millis(20)).await;
                 }
                 Err(_) => {
                     // Starved - couldn't get resource in time

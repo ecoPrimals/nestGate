@@ -217,7 +217,7 @@ impl<'a> CapabilityResolver for InMemoryRegistryAdapter<'a> {
             // Extract port with protocol-based defaults
             let port = url
                 .port()
-                .or_else(|| match endpoint.protocol {
+                .or(match endpoint.protocol {
                     crate::service_discovery::types::CommunicationProtocol::Http => Some(80),
                     crate::service_discovery::types::CommunicationProtocol::Grpc => Some(9090),
                     crate::service_discovery::types::CommunicationProtocol::WebSocket => Some(80),
@@ -273,13 +273,11 @@ impl<'a> CapabilityResolver for InMemoryRegistryAdapter<'a> {
                             let host = url.host_str()?.to_string();
 
                             // Extract port with protocol-based defaults
-                            let port = url.port().or_else(|| {
-                                match endpoint.protocol {
-                                    crate::service_discovery::types::CommunicationProtocol::Http => Some(80),
-                                    crate::service_discovery::types::CommunicationProtocol::Grpc => Some(9090),
-                                    crate::service_discovery::types::CommunicationProtocol::WebSocket => Some(80),
-                                    _ => None,
-                                }
+                            let port = url.port().or(match endpoint.protocol {
+                                crate::service_discovery::types::CommunicationProtocol::Http => Some(80),
+                                crate::service_discovery::types::CommunicationProtocol::Grpc => Some(9090),
+                                crate::service_discovery::types::CommunicationProtocol::WebSocket => Some(80),
+                                _ => None,
                             })?; // Skip service if no port and no default
 
                             Some(ResolvedService {

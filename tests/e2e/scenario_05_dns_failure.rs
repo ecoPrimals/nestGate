@@ -130,7 +130,6 @@ async fn test_dns_recovery_after_failure() {
     assert!(first_result.is_err(), "First attempt should fail");
 
     // Simulate DNS recovery (wait a bit)
-    tokio::time::sleep(Duration::from_millis(100)).await;
 
     // In real scenario, DNS might recover
     // For now, verify error handling is consistent
@@ -186,7 +185,6 @@ async fn attempt_connection_with_ip(addr: SocketAddr) -> Result<(), String> {
 async fn resolve_with_timeout(hostname: &str, timeout: Duration) -> Result<SocketAddr, String> {
     // Simulate DNS resolution with timeout
     let resolution = tokio::time::timeout(timeout, async {
-        tokio::time::sleep(Duration::from_millis(200)).await;
         Err::<SocketAddr, String>(format!("DNS resolution failed: {}", hostname))
     });
 

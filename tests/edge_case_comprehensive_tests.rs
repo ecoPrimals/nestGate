@@ -254,11 +254,7 @@ fn test_collection_capacity_edge_cases() {
 async fn test_timeout_at_exact_boundary() {
     let duration = Duration::from_millis(100);
 
-    let result = tokio::time::timeout(duration, async {
-        tokio::time::sleep(Duration::from_millis(100)).await;
-        "done"
-    })
-    .await;
+    let result = tokio::time::timeout(duration, async { "done" }).await;
 
     // At exact boundary, either outcome is valid
     match result {

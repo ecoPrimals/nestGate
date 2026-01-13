@@ -40,9 +40,10 @@ pub struct StorageManagerService {
     start_time: SystemTime,
     /// Service configuration
     config: StorageServiceConfig,
-    /// Adaptive storage engine (new unified system)
-    #[cfg(feature = "adaptive-storage")]
-    adaptive_storage: Option<Arc<super::service_integration::AdaptiveStorageService>>,
+    // TODO: Re-enable adaptive storage once storage module compilation is fixed
+    // /// Adaptive storage engine (new unified system)
+    // #[cfg(feature = "adaptive-storage")]
+    // adaptive_storage: Option<Arc<super::service_integration::AdaptiveStorageService>>,
 }
 impl StorageManagerService {
     /// Create a new Storage Manager Service with real implementations
@@ -87,25 +88,27 @@ impl StorageManagerService {
         //         })?,
         // );
 
-        // Initialize adaptive storage if feature is enabled
-        #[cfg(feature = "adaptive-storage")]
-        let adaptive_storage = {
-            use std::path::PathBuf;
-            let storage_path = PathBuf::from(&config.base_path).join("adaptive");
-            match super::service_integration::AdaptiveStorageService::new(storage_path).await {
-                Ok(service) => {
-                    info!("✅ Adaptive storage engine initialized");
-                    Some(Arc::new(service))
-                }
-                Err(e) => {
-                    warn!(
-                        "⚠️  Failed to initialize adaptive storage: {}, falling back to legacy",
-                        e
-                    );
-                    None
-                }
-            }
-        };
+        // TODO: Re-enable adaptive storage once storage module compilation is fixed
+        // // Initialize adaptive storage if feature is enabled
+        // #[cfg(feature = "adaptive-storage")]
+        // let adaptive_storage = {
+        //     use std::path::PathBuf;
+        //     let storage_path = PathBuf::from(&config.base_path).join("adaptive");
+        //     let service = super::service_integration::AdaptiveStorageService::new(storage_path);
+        //     match service.initialize().await {
+        //         Ok(()) => {
+        //             info!("✅ Adaptive storage engine initialized");
+        //             Some(Arc::new(service))
+        //         }
+        //         Err(e) => {
+        //             warn!(
+        //                 "⚠️  Failed to initialize adaptive storage: {}, falling back to legacy",
+        //                 e
+        //             );
+        //             None
+        //         }
+        //     }
+        // };
 
         let service = Self {
             service_id: Uuid::new_v4(),
@@ -515,9 +518,10 @@ impl StorageManagerService {
         data: &[u8],
     ) -> Result<super::service_integration::DataAnalysisResult> {
         if let Some(adaptive) = &self.adaptive_storage {
-            let result: super::service_integration::DataAnalysisResult = adaptive.analyze_data(data).await.map_err(|e| {
-                NestGateError::storage_operation(format!("Data analysis failed: {}", e), false)
-            })?;
+            let result: super::service_integration::DataAnalysisResult =
+                adaptive.analyze_data(data).await.map_err(|e| {
+                    NestGateError::storage_operation(format!("Data analysis failed: {}", e), false)
+                })?;
             Ok(result)
         } else {
             Err(NestGateError::feature_not_enabled(

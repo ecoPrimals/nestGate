@@ -318,7 +318,7 @@ async fn test_fault_very_long_family_id() {
 #[tokio::test]
 async fn test_integration_atomic_deployment_scenario() {
     // Simulate Nest Atomic deployment
-    let uid = unsafe { libc::getuid() };
+    let uid = nestgate_core::platform::get_current_uid();
     let socket_path = format!("/tmp/nestgate-atomic-{}.sock", uid);
     let family_id = "nat0";
     let node_id = "nest1";

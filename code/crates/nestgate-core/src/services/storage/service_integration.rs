@@ -62,7 +62,7 @@ impl AdaptiveStorageService {
         let hash_array: [u8; 32] = hash_bytes.try_into()
             .map_err(|_| anyhow::anyhow!("Invalid hash length"))?;
         
-        let data = self.engine.retrieve(&hash_array).await?;
+        let data: Bytes = self.engine.retrieve(&hash_array).await?;
         Ok(data.to_vec())
     }
     

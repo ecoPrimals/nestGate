@@ -191,7 +191,6 @@ async fn test_request_timeout() -> Result<()> {
 
     // Simulate fast request (should succeed)
     let fast_request = async {
-        tokio::time::sleep(Duration::from_millis(10)).await;
         Ok::<_, NestGateError>(())
     };
 

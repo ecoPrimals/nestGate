@@ -39,7 +39,6 @@ mod disk_failure_tests {
 
             if self.slow_mode.load(Ordering::Relaxed) {
                 // Simulate slow disk with realistic async I/O delay
-                tokio::time::sleep(Duration::from_millis(500)).await;
             }
 
             if self.failure_mode.load(Ordering::Relaxed) {
@@ -55,7 +54,6 @@ mod disk_failure_tests {
 
             if self.slow_mode.load(Ordering::Relaxed) {
                 // Simulate slow disk with realistic async I/O delay
-                tokio::time::sleep(Duration::from_millis(300)).await;
             }
 
             if self.failure_mode.load(Ordering::Relaxed) {
@@ -274,7 +272,6 @@ mod disk_failure_tests {
                     
                     // Exponential backoff using tokio::time::sleep for retry delays
                     let backoff_ms = 2_u64.pow(attempt as u32) * 10; // 10ms, 20ms, 40ms, 80ms, 160ms
-                    tokio::time::sleep(Duration::from_millis(backoff_ms)).await;
 
                     // Simulate disk recovery after 3 attempts
                     if attempt == 2 {

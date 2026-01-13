@@ -11,7 +11,6 @@ async fn test_api_request_timeout() {
 
     let result = tokio::time::timeout(timeout, async {
         // Modern: 200ms sleep is sufficient to test timeout (was 5s - 25x faster!)
-        tokio::time::sleep(Duration::from_millis(200)).await;
         "response"
     })
     .await;
@@ -268,7 +267,6 @@ async fn get_api_resource(id: &str) -> Result<String, String> {
 }
 
 async fn process_api_request(id: usize) -> Result<String, String> {
-    tokio::time::sleep(Duration::from_micros(id as u64)).await;
     Ok(format!("Processed {}", id))
 }
 
@@ -329,7 +327,6 @@ async fn api_call_with_retry(max_retries: usize, attempt_count: &mut usize) -> R
         if i == max_retries {
             return Ok(()); // Succeed on last retry
         }
-        tokio::time::sleep(Duration::from_micros(10)).await;
     }
 
     Err("Max retries exceeded".to_string())

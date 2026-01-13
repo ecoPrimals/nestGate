@@ -109,7 +109,6 @@ async fn test_chaos_monitoring() -> Result<(), Box<dyn std::error::Error>> {
         tokio::task::yield_now().await;
 
         // Simulate minimal processing time (1ms) for chaos event
-        tokio::time::sleep(tokio::time::Duration::from_millis(1)).await;
 
         let elapsed = start_time.elapsed();
         info!("Chaos iteration {}: elapsed {:?}", i + 1, elapsed);

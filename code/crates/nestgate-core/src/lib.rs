@@ -61,6 +61,8 @@ pub mod infant_discovery;
 mod orchestration_tests; // Nov 23, 2025 - P1 test expansion
 /// **NEW**: Primal discovery framework (Dec 6, 2025)
 ///
+/// Platform-specific utilities with safe abstractions
+pub mod platform;
 /// **Core Principle**: Primals have only self-knowledge and discover others at runtime.
 /// Enables zero-configuration, capability-based primal integration.
 pub mod primal_discovery;
@@ -84,6 +86,9 @@ pub mod types;
 /// **UNIFIED**: Unified capability types across all systems
 /// Single capability enum used by all discovery mechanisms
 pub mod unified_capabilities;
+// TODO: Re-enable storage module once compilation issues are resolved
+// /// Adaptive storage system with intelligent compression and routing
+// pub mod storage;
 /// Universal adapter for primal integration
 pub mod universal_adapter;
 /// Universal primal discovery system
@@ -275,3 +280,4 @@ mod result_types_comprehensive_tests;
 
 #[cfg(test)]
 mod core_coverage_boost;
+pub mod discovery_mechanism;

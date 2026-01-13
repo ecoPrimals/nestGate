@@ -132,7 +132,7 @@ impl SongbirdRegistration {
     async fn discover_songbird_socket() -> Option<String> {
         // Primary: Use $SONGBIRD_FAMILY_ID for discovery
         if let Ok(songbird_family_id) = std::env::var("SONGBIRD_FAMILY_ID") {
-            let uid = unsafe { libc::getuid() };
+            let uid = crate::platform::get_current_uid();
             let socket_path = format!("/run/user/{}/songbird-{}.sock", uid, songbird_family_id);
 
             debug!("Checking Songbird socket: {}", socket_path);
@@ -177,7 +177,7 @@ impl SongbirdRegistration {
         info!("🎵 Registering with Songbird orchestrator...");
 
         // Build registration data
-        let uid = unsafe { libc::getuid() };
+        let uid = crate::platform::get_current_uid();
         let socket_path = format!("/run/user/{}/nestgate-{}.sock", uid, self.family_id);
 
         let registration = ServiceRegistrationData {
@@ -246,32 +246,32 @@ impl SongbirdRegistration {
         });
 
         let request_json = serde_json::to_string(&request)
-            .map_err(|e| NestGateError::api(&format!("Failed to serialize request: {}", e)))?;
+            .map_err(|e| NestGateError::api(format!("Failed to serialize request: {}", e)))?;
 
         // Send request
         writer
             .write_all(request_json.as_bytes())
             .await
-            .map_err(|e| NestGateError::io_error(&format!("Failed to send request: {}", e)))?;
+            .map_err(|e| NestGateError::io_error(format!("Failed to send request: {}", e)))?;
         writer
             .write_all(b"\n")
             .await
-            .map_err(|e| NestGateError::io_error(&format!("Failed to send newline: {}", e)))?;
+            .map_err(|e| NestGateError::io_error(format!("Failed to send newline: {}", e)))?;
 
         // Read response
         let mut response_line = String::new();
         reader
             .read_line(&mut response_line)
             .await
-            .map_err(|e| NestGateError::io_error(&format!("Failed to read response: {}", e)))?;
+            .map_err(|e| NestGateError::io_error(format!("Failed to read response: {}", e)))?;
 
         // Parse response
         let response: serde_json::Value = serde_json::from_str(&response_line)
-            .map_err(|e| NestGateError::api(&format!("Failed to parse response: {}", e)))?;
+            .map_err(|e| NestGateError::api(format!("Failed to parse response: {}", e)))?;
 
         // Check for errors
         if let Some(error) = response.get("error") {
-            return Err(NestGateError::api(&format!(
+            return Err(NestGateError::api(format!(
                 "Songbird registration failed: {}",
                 error
             )));
@@ -340,22 +340,22 @@ impl SongbirdRegistration {
         });
 
         let request_json = serde_json::to_string(&request)
-            .map_err(|e| NestGateError::api(&format!("Failed to serialize request: {}", e)))?;
+            .map_err(|e| NestGateError::api(format!("Failed to serialize request: {}", e)))?;
 
         writer
             .write_all(request_json.as_bytes())
             .await
-            .map_err(|e| NestGateError::io_error(&format!("Failed to send request: {}", e)))?;
+            .map_err(|e| NestGateError::io_error(format!("Failed to send request: {}", e)))?;
         writer
             .write_all(b"\n")
             .await
-            .map_err(|e| NestGateError::io_error(&format!("Failed to send newline: {}", e)))?;
+            .map_err(|e| NestGateError::io_error(format!("Failed to send newline: {}", e)))?;
 
         let mut response_line = String::new();
         reader
             .read_line(&mut response_line)
             .await
-            .map_err(|e| NestGateError::io_error(&format!("Failed to read response: {}", e)))?;
+            .map_err(|e| NestGateError::io_error(format!("Failed to read response: {}", e)))?;
 
         Ok(())
     }

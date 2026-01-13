@@ -250,7 +250,8 @@ mod tests {
         let scenario = FaultInjectionScenario::new(FaultType::ServiceCrash, true);
         let result = scenario.run().unwrap();
         assert!(result.success);
-        assert!(result.duration.as_millis() >= 0);
+        // Duration is always >= 0, no need to check
+        assert!(result.duration.as_millis() < 10000); // Sanity check: should complete in under 10s
     }
 
     #[test]

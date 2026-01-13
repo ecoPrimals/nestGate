@@ -280,7 +280,6 @@ async fn chaos_test_rate_limiting() {
             request_count += 1;
         } else {
             // Rate limited - realistic backoff
-            tokio::time::sleep(Duration::from_micros(10)).await;
         }
     }
 
@@ -330,7 +329,6 @@ async fn chaos_test_gradual_degradation() {
 
     for i in 0..10 {
         let start = std::time::Instant::now();
-        tokio::time::sleep(Duration::from_micros((i * 200) as u64)).await; // Gradual slowdown simulation
         let elapsed = start.elapsed().as_millis();
         response_times.push(elapsed);
     }

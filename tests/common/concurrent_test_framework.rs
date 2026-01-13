@@ -22,7 +22,6 @@
 //!
 //! ```rust,ignore
 //! // ❌ OLD: Time-based, fragile
-//! tokio::time::sleep(Duration::from_millis(100)).await;
 //! assert!(service.is_ready());
 //!
 //! // ✅ NEW: Event-based, robust
@@ -37,8 +36,6 @@
 //!
 //! ```rust,ignore
 //! // ❌ OLD: Sleep to coordinate tasks
-//! tokio::spawn(async { task1().await; sleep(Duration::from_secs(1)).await; });
-//! tokio::spawn(async { task2().await; sleep(Duration::from_secs(1)).await; });
 //!
 //! // ✅ NEW: Barrier for coordination
 //! let barrier = Arc::new(Barrier::new(2));

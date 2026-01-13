@@ -11,7 +11,6 @@
 //! - System remains consistent under concurrent load
 
 use std::time::Duration;
-use tokio::time::sleep;
 
 #[tokio::test]
 #[ignore] // Requires ZFS
@@ -250,7 +249,6 @@ async fn test_read_write_consistency() {
         tokio::spawn(async move {
             for _ in 0..10 {
                 let _ = write_to_dataset(&env, &dataset, 100_000).await;
-                sleep(Duration::from_millis(50)).await;
             }
         })
     }).collect();
@@ -262,7 +260,6 @@ async fn test_read_write_consistency() {
         tokio::spawn(async move {
             for _ in 0..20 {
                 let _ = get_dataset_usage(&env, &dataset).await;
-                sleep(Duration::from_millis(25)).await;
             }
         })
     }).collect();
@@ -312,7 +309,6 @@ async fn create_dataset(
     _env: &TestEnvironment,
     _name: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    sleep(Duration::from_millis(10)).await;
     Ok(())
 }
 
@@ -328,7 +324,6 @@ async fn write_to_dataset(
     _dataset: &str,
     _size: u64,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    sleep(Duration::from_millis(10)).await;
     Ok(())
 }
 
@@ -343,7 +338,6 @@ async fn create_snapshot(
     _env: &TestEnvironment,
     _name: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    sleep(Duration::from_millis(5)).await;
     Ok(())
 }
 
@@ -358,7 +352,6 @@ async fn destroy_dataset(
     _env: &TestEnvironment,
     _name: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    sleep(Duration::from_millis(5)).await;
     Ok(())
 }
 

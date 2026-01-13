@@ -375,7 +375,7 @@ mod tests {
             version: HttpVersion::Http1_1,
             tls: None,
         };
-        
+
         let pattern = UniversalStorageDiscovery::discover_operations(
             "https://s3.example.com/bucket/data",
             &transport,
@@ -395,7 +395,7 @@ mod tests {
             version: HttpVersion::Http1_1,
             tls: None,
         };
-        
+
         let pattern = UniversalStorageDiscovery::discover_operations(
             "https://blob.example.com/container/data",
             &transport,
@@ -414,12 +414,9 @@ mod tests {
         let transport = TransportProtocol::UnixSocket {
             path: "./storage".to_string(),
         };
-        
-        let pattern = UniversalStorageDiscovery::discover_operations(
-            "file://./storage",
-            &transport,
-        )
-        .await;
+
+        let pattern =
+            UniversalStorageDiscovery::discover_operations("file://./storage", &transport).await;
 
         assert!(pattern.is_some());
         match pattern.unwrap() {
@@ -430,10 +427,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_probe_endpoint_https() {
-        let discovered = UniversalStorageDiscovery::probe_endpoint(
-            "test",
-            "https://example.com/storage"
-        ).await;
+        let discovered =
+            UniversalStorageDiscovery::probe_endpoint("test", "https://example.com/storage").await;
 
         assert!(discovered.is_some());
         let storage = discovered.unwrap();
@@ -443,10 +438,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_probe_endpoint_http() {
-        let discovered = UniversalStorageDiscovery::probe_endpoint(
-            "cache",
-            "http://localhost:9000/data"
-        ).await;
+        let discovered =
+            UniversalStorageDiscovery::probe_endpoint("cache", "http://localhost:9000/data").await;
 
         assert!(discovered.is_some());
         let storage = discovered.unwrap();
@@ -455,10 +448,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_probe_endpoint_file() {
-        let discovered = UniversalStorageDiscovery::probe_endpoint(
-            "local",
-            "file://./storage"
-        ).await;
+        let discovered =
+            UniversalStorageDiscovery::probe_endpoint("local", "file://./storage").await;
 
         assert!(discovered.is_some());
         let storage = discovered.unwrap();
@@ -468,7 +459,9 @@ mod tests {
     #[tokio::test]
     async fn test_discover_from_env_no_storage_vars() {
         // Test with no STORAGE_*_ENDPOINT environment variables
-        let storage = UniversalStorageDiscovery::discover_from_env().await.unwrap();
+        let storage = UniversalStorageDiscovery::discover_from_env()
+            .await
+            .unwrap();
         // Should return empty or only find existing env vars
         assert!(storage.is_empty() || !storage.is_empty());
     }
@@ -476,10 +469,10 @@ mod tests {
     #[tokio::test]
     async fn test_discover_all() {
         let discovered = UniversalStorageDiscovery::discover_all().await.unwrap();
-        
+
         // Should at least discover local storage
         assert!(!discovered.is_empty());
-        
+
         // Check that local storage is included
         assert!(discovered.iter().any(|s| s.name == "local"));
     }
@@ -487,45 +480,39 @@ mod tests {
     #[test]
     fn test_probe_basic_features() {
         let _features = UniversalStorageDiscovery::probe_basic_features();
-        
+
         // FeatureSet is returned - just ensure the function works
         // The actual features are checked elsewhere
     }
 
     #[tokio::test]
     async fn test_detect_api_info_http() {
-        let _api_info = UniversalStorageDiscovery::detect_api_info(
-            "http://example.com/api"
-        ).await;
+        let _api_info = UniversalStorageDiscovery::detect_api_info("http://example.com/api").await;
 
         // detect_api_info returns ApiInfo directly - just ensure it doesn't panic
     }
 
     #[tokio::test]
     async fn test_detect_api_info_https() {
-        let _api_info = UniversalStorageDiscovery::detect_api_info(
-            "https://secure.example.com/api"
-        ).await;
+        let _api_info =
+            UniversalStorageDiscovery::detect_api_info("https://secure.example.com/api").await;
 
         // Should return valid ApiInfo without panicking
     }
 
     #[tokio::test]
     async fn test_detect_auth_pattern_with_key() {
-        let pattern = UniversalStorageDiscovery::detect_auth_pattern(
-            "test",
-            "https://api.example.com"
-        ).await;
+        let pattern =
+            UniversalStorageDiscovery::detect_auth_pattern("test", "https://api.example.com").await;
 
         assert!(pattern.is_some());
     }
 
     #[tokio::test]
     async fn test_detect_auth_pattern_no_key() {
-        let pattern = UniversalStorageDiscovery::detect_auth_pattern(
-            "nokey",
-            "https://api.example.com"
-        ).await;
+        let pattern =
+            UniversalStorageDiscovery::detect_auth_pattern("nokey", "https://api.example.com")
+                .await;
 
         assert!(pattern.is_some());
     }
@@ -555,14 +542,10 @@ mod tests {
     #[tokio::test]
     async fn test_concurrent_discovery() {
         use std::sync::Arc;
-        
-        let handle1 = tokio::spawn(async {
-            UniversalStorageDiscovery::discover_local().await
-        });
 
-        let handle2 = tokio::spawn(async {
-            UniversalStorageDiscovery::discover_local().await
-        });
+        let handle1 = tokio::spawn(async { UniversalStorageDiscovery::discover_local().await });
+
+        let handle2 = tokio::spawn(async { UniversalStorageDiscovery::discover_local().await });
 
         let result1 = handle1.await.unwrap();
         let result2 = handle2.await.unwrap();
@@ -577,7 +560,7 @@ mod tests {
         let _ = UniversalStorageDiscovery::discover_all().await.unwrap();
         let _ = UniversalStorageDiscovery::discover_all().await.unwrap();
         let discovered = UniversalStorageDiscovery::discover_all().await.unwrap();
-        
+
         assert!(!discovered.is_empty());
     }
 
@@ -585,12 +568,13 @@ mod tests {
     async fn test_probe_endpoint_with_s3() {
         let discovered = UniversalStorageDiscovery::probe_endpoint(
             "backup",
-            "https://s3.amazonaws.com/mybucket"
-        ).await;
+            "https://s3.amazonaws.com/mybucket",
+        )
+        .await;
 
         assert!(discovered.is_some());
         let storage = discovered.unwrap();
-        
+
         // Should detect object store pattern
         match storage.protocol.operation_pattern {
             StorageOperationPattern::ObjectStore { .. } => {}
@@ -604,7 +588,7 @@ mod tests {
             version: HttpVersion::Http1_1,
             tls: None,
         };
-        
+
         let pattern = UniversalStorageDiscovery::discover_operations(
             "https://api.example.com/data",
             &transport,

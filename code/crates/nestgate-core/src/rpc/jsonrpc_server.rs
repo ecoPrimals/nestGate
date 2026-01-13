@@ -429,6 +429,7 @@ impl JsonRpcServer {
             "nestgate.registerCapability",
             |params, _ctx, _ext| async move {
                 #[derive(serde::Deserialize)]
+                #[allow(dead_code)]
                 struct Params {
                     capability: String,
                     endpoint: String,
@@ -439,7 +440,7 @@ impl JsonRpcServer {
                 let p: Params = params.parse()?;
                 debug!("JSON-RPC: registerCapability({})", p.capability);
 
-                // TODO: Wire to universal adapter
+                // TODO: Wire to universal adapter - will use endpoint and metadata
                 warn!("⚠️  Capability registration not yet wired to universal adapter");
 
                 Ok::<_, ErrorObjectOwned>(serde_json::json!({

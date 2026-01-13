@@ -38,7 +38,6 @@ pub async fn test_performance_monitoring_real_metrics() -> CoreResult<()> {
         info!("📈 Metrics collection {}: CPU: {:.2}%, Memory: {:.2}%, I/O: {} ops/sec", 
               i + 1, metrics.cpu_usage, metrics.memory_usage, metrics.io_operations_per_second);
         
-        tokio::time::sleep(Duration::from_millis(500)).await;
     }
     Ok(())
     let collection_time = start_time.elapsed();
@@ -104,7 +103,6 @@ pub async fn test_performance_under_load() -> CoreResult<()> {
         }
         
         // Small delay to prevent overwhelming the system
-        tokio::time::sleep(Duration::from_millis(100)).await;
     }
     Ok(())
     

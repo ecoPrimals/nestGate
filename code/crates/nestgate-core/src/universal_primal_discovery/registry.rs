@@ -431,7 +431,6 @@ mod tests {
         assert!(result.is_err());
     }
 
-
     #[test]
     fn test_health_check_no_registry() {
         let config = create_test_config();
@@ -462,7 +461,6 @@ mod tests {
             .any(|w| w.contains("No registry URL configured")));
     }
 
-
     #[test]
     fn test_validate_discovery_config_high_timeout() {
         let config = create_test_config();
@@ -475,7 +473,6 @@ mod tests {
         let warnings = result.unwrap();
         assert!(warnings.iter().any(|w| w.contains("timeout is very high")));
     }
-
 
     #[test]
     fn test_get_config_summary_no_registry() {
@@ -552,13 +549,11 @@ mod tests {
         let client1 = Arc::clone(&client);
         let client2 = Arc::clone(&client);
 
-        let handle1 = tokio::spawn(async move {
-            client1.query_service("service1", "endpoint").await
-        });
+        let handle1 =
+            tokio::spawn(async move { client1.query_service("service1", "endpoint").await });
 
-        let handle2 = tokio::spawn(async move {
-            client2.query_service("service2", "endpoint").await
-        });
+        let handle2 =
+            tokio::spawn(async move { client2.query_service("service2", "endpoint").await });
 
         let result1 = handle1.await.unwrap();
         let result2 = handle2.await.unwrap();

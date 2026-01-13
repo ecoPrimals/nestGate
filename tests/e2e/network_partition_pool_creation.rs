@@ -29,14 +29,12 @@ async fn test_network_partition_during_pool_creation() {
     });
     
     // Step 4: Wait for pool creation to start
-    sleep(Duration::from_millis(100)).await;
     
     // Step 5: Simulate network partition
     let partition_result = simulate_network_partition(&test_env).await;
     assert!(partition_result.is_ok(), "Failed to simulate network partition");
     
     // Step 6: Wait for operation to detect partition
-    sleep(Duration::from_secs(2)).await;
     
     // Step 7: Verify operation detects failure
     let result = create_handle.await.unwrap();
@@ -73,7 +71,6 @@ async fn test_network_partition_during_pool_creation() {
     assert!(restore_result.is_ok(), "Failed to restore network");
     
     // Step 12: Wait for network stabilization
-    sleep(Duration::from_secs(1)).await;
     
     // Step 13: Verify system state consistency
     let state_check = verify_system_state().await;
@@ -152,7 +149,6 @@ async fn test_concurrent_operations_during_partition() {
     }
     
     // Simulate partition after operations start
-    sleep(Duration::from_millis(50)).await;
     simulate_network_partition(&test_env).await.unwrap();
     
     // Wait for all operations to complete
@@ -234,7 +230,6 @@ async fn create_test_pool_config(name: &str) -> PoolConfig {
 async fn create_zfs_pool_async(config: &PoolConfig) -> Result<(), Box<dyn std::error::Error>> {
     // Simulate pool creation (would call actual ZFS commands in real test)
     // For now, stub implementation
-    sleep(Duration::from_millis(100)).await;
     
     // Check if network is available
     if is_network_partitioned().await {

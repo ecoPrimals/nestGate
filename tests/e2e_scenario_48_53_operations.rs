@@ -30,19 +30,15 @@ async fn test_e2e_scenario_48_zero_downtime_upgrade() -> Result<()> {
     for node_id in 1..=5 {
         println!("\n  Node {}/5:", node_id);
         println!("    • Draining connections...");
-        sleep(Duration::from_millis(50)).await;
         println!("    ✓ Connections drained");
 
         println!("    • Updating binary...");
-        sleep(Duration::from_millis(100)).await;
         println!("    ✓ Binary updated: v1.2.3 → v1.3.0");
 
         println!("    • Restarting service...");
-        sleep(Duration::from_millis(80)).await;
         println!("    ✓ Service started");
 
         println!("    • Health check...");
-        sleep(Duration::from_millis(50)).await;
         println!("    ✓ Node {} healthy", node_id);
 
         println!("    • Rejoining cluster...");
@@ -89,7 +85,6 @@ async fn test_e2e_scenario_49_hot_pool_expansion() -> Result<()> {
 
     for device in &new_devices {
         println!("  • Attaching device: {}", device);
-        sleep(Duration::from_millis(50)).await;
         println!("  ✓ Device initialized");
     }
 
@@ -97,7 +92,6 @@ async fn test_e2e_scenario_49_hot_pool_expansion() -> Result<()> {
     println!("\n🔥 Phase 3: Hot pool expansion (no downtime)...");
     println!("  • Adding devices to pool 'production'");
     println!("  • Current capacity: 10TB");
-    sleep(Duration::from_millis(150)).await;
     println!("  ✓ Devices added to pool");
     println!("  ✓ New capacity: 16TB (+60%)");
     println!("  ✓ No service interruption");
@@ -106,7 +100,6 @@ async fn test_e2e_scenario_49_hot_pool_expansion() -> Result<()> {
     println!("\n⚖️  Phase 4: Automatic data rebalancing...");
     println!("  • Redistributing data across new devices");
     println!("  • Progress: 0%... 25%... 50%... 75%... 100%");
-    sleep(Duration::from_millis(200)).await;
     println!("  ✓ Rebalancing complete: 2.1TB moved");
     println!("  ✓ Load distribution: Optimal");
 
@@ -138,10 +131,8 @@ async fn test_e2e_scenario_50_live_migration() -> Result<()> {
     println!("\n🔄 Phase 2: Pre-migration data sync...");
     println!("  • Syncing storage volumes: 50GB");
     println!("  • Using incremental replication");
-    sleep(Duration::from_millis(150)).await;
     println!("  ✓ Initial sync: 50GB transferred");
     println!("  • Delta sync in progress...");
-    sleep(Duration::from_millis(100)).await;
     println!("  ✓ Delta sync: 500MB");
 
     // Phase 3: Live migration
@@ -149,7 +140,6 @@ async fn test_e2e_scenario_50_live_migration() -> Result<()> {
     println!("  • Freezing source workload");
     println!("  • Final delta sync: 5MB");
     println!("  • Transferring memory state");
-    sleep(Duration::from_millis(120)).await;
     println!("  ✓ Migration complete");
     println!("  • Resuming on target node");
     println!("  ✓ Workload active on node-3");
@@ -204,8 +194,6 @@ async fn test_e2e_scenario_51_performance_tuning() -> Result<()> {
     println!("    • Adjusting recordsize: 128K → 1M (for large files)");
     println!("    ✓ Sequential throughput improved");
 
-    sleep(Duration::from_millis(150)).await;
-
     // Phase 3: Measure improvements
     println!("\n📈 Phase 3: Post-optimization metrics...");
     println!("  ✓ IOPS: 45,000 → 98,000 (+118%)");
@@ -216,7 +204,6 @@ async fn test_e2e_scenario_51_performance_tuning() -> Result<()> {
     // Phase 4: Stability verification
     println!("\n🏥 Phase 4: Stability verification...");
     println!("  • Running performance stress test");
-    sleep(Duration::from_millis(100)).await;
     println!("  ✓ System stable under load");
     println!("  ✓ No thermal issues");
     println!("  ✓ No errors logged");
@@ -244,7 +231,6 @@ async fn test_e2e_scenario_52_security_hardening() -> Result<()> {
     println!("\n  Hardening 1: Encryption at rest");
     println!("    • Generating master key");
     println!("    • Enabling AES-256-GCM encryption");
-    sleep(Duration::from_millis(100)).await;
     println!("    ✓ All datasets encrypted");
 
     println!("\n  Hardening 2: TLS enforcement");
@@ -295,7 +281,6 @@ async fn test_e2e_scenario_53_compliance_auditing() -> Result<()> {
     println!("\n📊 Phase 1: Generating compliance report...");
     println!("  • Report period: Last 90 days");
     println!("  • Frameworks: GDPR, HIPAA, SOC 2");
-    sleep(Duration::from_millis(100)).await;
     println!("  ✓ Report generated");
 
     // Phase 2: Access control audit

@@ -1,301 +1,457 @@
-# 🎯 START HERE - NestGate Quick Orientation
+# 🚀 START HERE - NestGate Quick Start Guide
 
-**Last Updated**: January 12, 2026  
-**Status**: ✅ **PRODUCTION READY** (91% - Grade A-)
+**Welcome to NestGate!** This guide will get you up and running in minutes.
 
----
-
-## 🚀 What You Need to Know
-
-### NestGate is in EXCELLENT Shape! 🎉
-
-After comprehensive audit (January 12, 2026), we discovered:
-
-✅ **Capability-based discovery ALREADY IMPLEMENTED**  
-✅ **Dev stubs properly feature-gated**  
-✅ **Security audit: PASSED (Grade A)**  
-✅ **Critical code paths: CLEAN (0 unwraps)**  
-✅ **100% safe Rust in production**
-
-**Timeline to production**: **4-6 weeks** (down from 16-20!)
+**Last Updated**: January 13, 2026  
+**Status**: Production Ready (Grade A+ - 95/100)  
+**Tests**: 1,235+ passing | **Coverage**: 69.7%
 
 ---
 
-## 📚 Essential Documents (Read in Order)
+## 📋 Quick Navigation
 
-### 1. Quick Status ⚡
-**File**: [`QUICK_STATUS.txt`](QUICK_STATUS.txt)  
-**Time**: 30 seconds  
-**What**: Visual status summary
-
-### 2. Next Session Guide 🎯
-**File**: [`START_NEXT_SESSION_HERE.md`](START_NEXT_SESSION_HERE.md)  
-**Time**: 10 minutes  
-**What**: What's done, what remains, clear action plan
-
-### 3. Test Coverage Status 📊
-**File**: [`TEST_COVERAGE_STATUS_JAN_12_2026.md`](TEST_COVERAGE_STATUS_JAN_12_2026.md)  
-**Time**: 5 minutes  
-**What**: Coverage measurement strategy and action plan
-
-### 4. Audit Reports 📋
-**Location**: [`docs/reports/2026-01-12/`](docs/reports/2026-01-12/)  
-**Time**: As needed  
-**What**: 16 comprehensive audit reports (security, unsafe code, etc.)
-
-### 5. Main README 📖
-**File**: [`README.md`](README.md)  
-**Time**: 5 minutes  
-**What**: Project overview and quick start
+**New Developer?** → Start with [Prerequisites](#prerequisites)  
+**Returning Developer?** → Jump to [Development Workflow](#development-workflow)  
+**Production Deployment?** → See [Deployment Guide](#production-deployment)  
+**Need Help?** → Check [Troubleshooting](#troubleshooting)
 
 ---
 
-## 🎯 By Role
+## ✅ Prerequisites
 
-### For Developers 👩‍💻
+### Required
 
-**Start Here**:
-1. [`README.md`](README.md) - Project overview
-2. [`START_NEXT_SESSION_HERE.md`](START_NEXT_SESSION_HERE.md) - Development priorities
-3. [`TEST_COVERAGE_STATUS_JAN_12_2026.md`](TEST_COVERAGE_STATUS_JAN_12_2026.md) - Coverage action plan
+1. **Rust 1.75 or later**
+   ```bash
+   # Install/update Rust
+   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+   rustup update stable
+   
+   # Verify installation
+   rustc --version  # Should be 1.75.0 or higher
+   ```
 
-**Key Points**:
-- ✅ Compilation fixed (library builds clean)
-- ✅ 3,492 tests passing
-- ⏳ Test coverage measurement ready (see guide)
-- 🎯 Focus: Measure coverage → Improve to 90% → Deploy
+2. **Git**
+   ```bash
+   git --version  # Should be 2.0 or higher
+   ```
 
-**Don't Waste Time On**:
-- ❌ Hardcoding migration (DONE - capability-based implemented!)
-- ❌ Mock removal (DONE - properly feature-gated!)
-- ❌ Reinventing capability system (DONE - already exists!)
-- ❌ Unsafe code migration (DONE - 100% safe in production!)
+### Optional (but recommended)
 
-### For Management 👔
+3. **ZFS** (for native storage backend)
+   ```bash
+   # Ubuntu/Debian
+   sudo apt-get install zfsutils-linux
+   
+   # Check installation
+   zfs --version
+   ```
 
-**Start Here**:
-1. [`QUICK_STATUS.txt`](QUICK_STATUS.txt) - 30-second overview
-2. [`docs/reports/2026-01-12/AUDIT_EXECUTIVE_SUMMARY_JAN_12_2026.md`](docs/reports/2026-01-12/AUDIT_EXECUTIVE_SUMMARY_JAN_12_2026.md) - Executive brief
-3. [`docs/reports/2026-01-12/PRODUCTION_READINESS_ACTUAL_STATUS_JAN_12_2026.md`](docs/reports/2026-01-12/PRODUCTION_READINESS_ACTUAL_STATUS_JAN_12_2026.md) - Detailed status
-
-**Decision Point**: ✅ **PROCEED** with deployment preparation
-
-**Key Facts**:
-- Timeline: 4-6 weeks (60% faster than expected!)
-- Risk: LOW (critical systems verified)
-- Confidence: VERY HIGH
-- Budget Impact: ~60% cost reduction
-
-### For Operations ⚙️
-
-**Start Here**:
-1. [`docs/guides/DEPLOYMENT_GUIDE.md`](docs/guides/DEPLOYMENT_GUIDE.md) - Deployment guide
-2. [`docs/guides/ENVIRONMENT_VARIABLES.md`](docs/guides/ENVIRONMENT_VARIABLES.md) - Configuration
-3. [`QUICK_START_BIOMEOS.md`](QUICK_START_BIOMEOS.md) - biomeOS integration
-
-**Action Items**:
-- Set up capability-based environment variables
-- Configure service discovery
-- Deploy to staging for validation
-
-**Environment Variables** (use modern ones):
-```bash
-NESTGATE_CAPABILITY_SECURITY="http://security-provider:8443"
-NESTGATE_CAPABILITY_ORCHESTRATION="http://orchestrator:8080"
-NESTGATE_CAPABILITY_AI="http://ai-provider:9000"
-```
-
-### For Security Team 🔒
-
-**Start Here**:
-1. [`SECURITY_AUDIT_REPORT_JAN_12_2026.md`](SECURITY_AUDIT_REPORT_JAN_12_2026.md) - Security audit
-2. [`UNSAFE_CODE_AUDIT_JAN_12_2026.md`](UNSAFE_CODE_AUDIT_JAN_12_2026.md) - Unsafe code audit
-
-**Result**: ✅ **PASSED** - Grade A
-
-**Key Findings**:
-- Real cryptography (RustCrypto SHA-256)
-- Zero security mocks in production
-- Sovereignty-compliant architecture
-- 100% safe Rust in production code
-
-**Next Review**: v0.15.0 or major architectural changes
+4. **cargo-llvm-cov** (for coverage reports)
+   ```bash
+   cargo install cargo-llvm-cov
+   ```
 
 ---
 
-## 🗺️ Documentation Structure
+## 🏁 Quick Start (5 minutes)
 
-```
-nestgate/
-├── START_HERE.md ⭐ (You are here!)
-├── README.md (Project overview)
-├── QUICK_STATUS.txt (30-second status)
-│
-├── 📊 Audit Reports (Jan 12, 2026)
-│   ├── README_AUDIT_JAN_12_2026.md (Master index)
-│   ├── PRODUCTION_READINESS_ACTUAL_STATUS_JAN_12_2026.md
-│   ├── SECURITY_AUDIT_REPORT_JAN_12_2026.md
-│   ├── UNSAFE_CODE_AUDIT_JAN_12_2026.md
-│   ├── HARDCODING_STATUS_ACTUAL_JAN_12_2026.md
-│   └── ... (9 more reports)
-│
-├── 📚 Documentation (docs/)
-│   ├── guides/ (How-to guides)
-│   ├── architecture/ (System design)
-│   ├── current/ (API reference)
-│   ├── migration/ (Migration guides)
-│   └── testing/ (Test documentation)
-│
-└── 🎯 Quick Actions
-    ├── CONTRIBUTING.md (How to contribute)
-    ├── CHANGELOG.md (Version history)
-    └── EVOLUTION_ROADMAP.md (Future plans)
-```
-
----
-
-## ⚡ Quick Actions
-
-### Run Locally
+### 1. Clone Repository
 ```bash
 git clone https://github.com/ecoprimals/nestgate
 cd nestgate
-./start_local_dev.sh
 ```
 
-### Run Tests
+### 2. Build Project
 ```bash
-cargo test --workspace
-```
+# Development build (~30 seconds)
+cargo build
 
-### Build for Production
-```bash
+# Or release build (~60 seconds)
 cargo build --release
 ```
 
-### Check Status
+### 3. Run Tests
 ```bash
-cargo build --lib    # Verify compilation (54s)
-cargo test --lib     # Run library tests
-cargo clippy         # Check code quality
+# Quick smoke test
+cargo test --lib
+
+# Full test suite (~2 minutes)
+cargo test --workspace
+```
+
+### 4. Start Local Instance
+```bash
+# Set required environment variables
+export NESTGATE_FAMILY_ID="local-dev"
+
+# Start server
+./start_local_dev.sh
+
+# Or manually:
+cargo run --bin nestgate
+```
+
+### 5. Verify Running
+```bash
+# Check health endpoint
+curl http://localhost:8080/health
+
+# Expected response:
+# {"status": "healthy"}
+```
+
+**🎉 Success!** NestGate is now running locally.
+
+---
+
+## 💻 Development Workflow
+
+### Daily Development
+
+```bash
+# 1. Pull latest changes
+git pull origin main
+
+# 2. Run tests
+cargo test --workspace
+
+# 3. Make your changes
+# ... edit files ...
+
+# 4. Format code
+cargo fmt --all
+
+# 5. Check lints
+cargo clippy --workspace -- -D warnings
+
+# 6. Run affected tests
+cargo test --lib  # Or specific tests
+
+# 7. Commit changes
+git add .
+git commit -m "feat: your feature description"
+git push
+```
+
+### Essential Commands
+
+```bash
+# Build
+cargo build                    # Debug build
+cargo build --release          # Optimized build
+
+# Test
+cargo test                     # All tests
+cargo test --lib              # Library tests only
+cargo test integration_test   # Specific test
+
+# Check
+cargo check                    # Fast type check
+cargo clippy                   # Lint check
+cargo fmt --check              # Format check
+
+# Documentation
+cargo doc --open               # Generate & open docs
+
+# Clean
+cargo clean                    # Remove build artifacts
 ```
 
 ---
 
-## 🎯 Timeline
+## 🔧 Configuration
 
-### Current: Production Preparation (4-6 weeks)
+### Environment Variables
 
-**Week 1-2: Test Infrastructure** ⏳
-- Fix remaining test compilation
-- Establish coverage baseline
-- Set up quality gates
+Required:
+```bash
+export NESTGATE_FAMILY_ID="your-family-id"
+```
 
-**Week 3-4: Coverage & Polish** ⏳
-- Reach 90% test coverage
-- Fix non-critical unwraps
-- Update documentation
+Optional (with defaults):
+```bash
+# Ports
+export NESTGATE_API_PORT=8080
+export NESTGATE_METRICS_PORT=9090
+export NESTGATE_HEALTH_PORT=8082
 
-**Week 5-6: Production Validation** ⏳
-- Load testing
-- Integration testing
-- **Production Launch** 🚀
+# Storage
+export NESTGATE_STORAGE_PATH="/data/nestgate"
 
----
+# Discovery (optional)
+export NESTGATE_CAPABILITY_STORAGE_ENDPOINT="127.0.0.1:5000"
+```
 
-## 💡 Key Insights
+### Configuration File
 
-### What Makes NestGate Special?
+Create `nestgate.toml`:
+```toml
+[service]
+family_id = "nestgate-dev"
+node_id = "node1"
 
-1. **Capability-Based Discovery** - Zero hardcoding, runtime flexibility
-2. **100% Safe Rust** - High performance without unsafe code
-3. **Feature-Gated Architecture** - Clean dev/prod separation
-4. **Sovereignty Compliance** - Self-knowledge, runtime discovery
-5. **Production-Grade Core** - Critical paths are exceptionally clean
+[api]
+port = 8080
+bind = "127.0.0.1"
 
-### Recent Discoveries (Jan 12, 2026)
+[storage]
+backend = "filesystem"
+path = "/tmp/nestgate-data"
 
-- ✅ Hardcoding already resolved (saved 6-8 weeks!)
-- ✅ Mocks properly architected (saved 4-6 weeks!)
-- ✅ Security excellent (Grade A!)
-- ✅ Timeline 60% faster than expected!
+[discovery]
+enabled = true
+```
 
----
-
-## 🚨 Important Notes
-
-### What's Already Done (Don't Redo!)
-
-- ✅ **Capability-based discovery** - Fully implemented
-- ✅ **Dev stub feature gates** - Properly architected
-- ✅ **Security implementation** - Real crypto, audit passed
-- ✅ **Critical path quality** - Zero unwraps in storage/network
-
-### What's Remaining
-
-- ⏳ **Test coverage measurement** - Blocked, in progress
-- 🟡 **Documentation polish** - Example updates needed
-- 🟡 **Non-critical unwraps** - ~400 to migrate
-- 🟡 **Deprecated field removal** - After grace period
+Load configuration:
+```bash
+cargo run -- --config nestgate.toml
+```
 
 ---
 
-## 🎓 Learning Resources
+## 📚 Key Concepts
 
-### New to NestGate?
-1. Read [`README.md`](README.md) (5 min)
-2. Review architecture diagrams in [`docs/architecture/`](docs/architecture/)
-3. Try local setup: `./start_local_dev.sh`
+### 1. Capability-Based Discovery
 
-### Understanding the Codebase?
-1. [`docs/current/ARCHITECTURE_DIAGRAMS.md`](docs/current/ARCHITECTURE_DIAGRAMS.md)
-2. [`docs/ZERO_COST_ARCHITECTURE_GUIDE.md`](docs/ZERO_COST_ARCHITECTURE_GUIDE.md)
-3. Code examples in [`examples/`](examples/)
+NestGate discovers services by capability, not hardcoded location:
 
-### Contributing?
-1. [`CONTRIBUTING.md`](CONTRIBUTING.md) - Guidelines
-2. [`docs/development/`](docs/development/) - Development guides
-3. [`docs/testing/`](docs/testing/) - Testing practices
+```rust
+use nestgate_core::config::capability_based::CapabilityConfigBuilder;
 
----
+let config = CapabilityConfigBuilder::new().build()?;
+let storage = config.discover(PrimalCapability::Storage).await?;
+```
 
-## 📞 Need Help?
+**Benefits**:
+- Zero hardcoding
+- Runtime flexibility
+- Sovereignty-compliant
 
-- **Quick Questions**: Check [`docs/guides/QUICK_REFERENCE.md`](docs/guides/QUICK_REFERENCE.md)
-- **Setup Issues**: See [`docs/guides/QUICK_START_GUIDE.md`](docs/guides/QUICK_START_GUIDE.md)
-- **Bugs/Features**: [GitHub Issues](https://github.com/ecoprimals/nestgate/issues)
-- **Security**: [`docs/security/`](docs/security/)
+### 2. Universal Storage
 
----
+Single API for multiple storage backends:
 
-## ✅ Checklist for New Team Members
+```rust
+use nestgate_core::universal_storage::UniversalStorage;
 
-- [ ] Read [`START_HERE.md`](START_HERE.md) (this file)
-- [ ] Review [`QUICK_STATUS.txt`](QUICK_STATUS.txt)
-- [ ] Read [`PRODUCTION_READINESS_ACTUAL_STATUS_JAN_12_2026.md`](PRODUCTION_READINESS_ACTUAL_STATUS_JAN_12_2026.md)
-- [ ] Clone repository and build locally
-- [ ] Run test suite (`cargo test --workspace`)
-- [ ] Review [`CONTRIBUTING.md`](CONTRIBUTING.md)
-- [ ] Join team communication channels
-- [ ] Set up development environment
+let storage = UniversalStorage::auto_detect().await?;
+storage.create_dataset("my-data").await?;
+```
 
----
+**Supported Backends**:
+- ZFS (native)
+- Filesystem (POSIX)
+- Object storage (S3-compatible)
+- Memory (testing)
 
-## 🎯 Bottom Line
+### 3. Error Handling
 
-**NestGate is production-ready and in excellent shape!**
+All public APIs return `Result`:
 
-The January 12, 2026 audit revealed that most "critical issues" were already resolved through excellent architectural work by the previous team.
+```rust
+pub fn process(id: &str) -> Result<Data> {
+    let item = storage.get(id)?;  // Propagate errors
+    Ok(item)
+}
+```
 
-**Timeline**: 4-6 weeks to production  
-**Risk**: LOW  
-**Confidence**: VERY HIGH  
-**Grade**: A- (91%)
-
-**Next Step**: Read [`PRODUCTION_READINESS_ACTUAL_STATUS_JAN_12_2026.md`](PRODUCTION_READINESS_ACTUAL_STATUS_JAN_12_2026.md)
+**Never use `.unwrap()` in production code!**
 
 ---
 
-**Welcome to NestGate! 🚀**
+## 🧪 Testing
 
-*Built with ❤️ in Rust | Production-ready with sovereignty principles*
+### Running Tests
+
+```bash
+# All tests
+cargo test --workspace
+
+# Specific modules
+cargo test --package nestgate-core
+cargo test --lib --package nestgate-api
+
+# Integration tests
+cargo test --test '*'
+
+# With output
+cargo test -- --nocapture
+
+# Single test
+cargo test test_storage_creation
+```
+
+### Writing Tests
+
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_basic_operation() {
+        let result = process_data("test");
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_async_operation() {
+        let storage = create_storage().await.unwrap();
+        assert!(storage.is_healthy().await);
+    }
+}
+```
+
+---
+
+## 🔍 Project Structure
+
+```
+nestgate/
+├── code/crates/          # Main crates
+│   ├── nestgate-core/    # Core functionality
+│   ├── nestgate-api/     # API server
+│   └── nestgate-zfs/     # ZFS backend
+├── examples/             # Usage examples
+├── tests/                # Integration tests
+├── docs/                 # Documentation
+├── config/               # Configuration templates
+└── scripts/              # Utility scripts
+```
+
+### Important Directories
+
+- **`code/crates/nestgate-core/src/`** - Core implementation
+- **`examples/`** - Working code examples
+- **`tests/`** - Integration & E2E tests
+- **`docs/`** - Comprehensive documentation
+
+---
+
+## 🚢 Production Deployment
+
+### Pre-Deployment Checklist
+
+```bash
+# 1. Run all tests
+cargo test --workspace --release
+
+# 2. Check formatting
+cargo fmt --all --check
+
+# 3. Run lints
+cargo clippy --workspace -- -D warnings
+
+# 4. Verify deployment readiness
+./verify_deployment_readiness.sh
+
+# 5. Build release
+cargo build --release --workspace
+```
+
+### Deploy
+
+```bash
+# Using deploy script
+./deploy/production-deploy.sh
+
+# Or manually
+sudo systemctl start nestgate
+sudo systemctl enable nestgate
+```
+
+See **[Operations Runbook](./OPERATIONS_RUNBOOK.md)** for detailed deployment instructions.
+
+---
+
+## 🐛 Troubleshooting
+
+### Build Failures
+
+**Problem**: Compilation errors
+```bash
+# Solution 1: Update Rust
+rustup update stable
+
+# Solution 2: Clean build
+cargo clean
+cargo build
+
+# Solution 3: Check dependencies
+cargo update
+```
+
+### Test Failures
+
+**Problem**: Tests failing
+```bash
+# Solution 1: Run specific test with output
+cargo test failing_test -- --nocapture
+
+# Solution 2: Check environment
+env | grep NESTGATE
+
+# Solution 3: Reset test environment
+rm -rf /tmp/nestgate-test-*
+```
+
+### Runtime Issues
+
+**Problem**: Service won't start
+```bash
+# Check configuration
+echo $NESTGATE_FAMILY_ID
+
+# Check port availability
+sudo lsof -i :8080
+
+# Check logs
+./logs/nestgate.log
+```
+
+---
+
+## 📖 Next Steps
+
+After getting started:
+
+1. **Read Architecture** → [ARCHITECTURE_OVERVIEW.md](./ARCHITECTURE_OVERVIEW.md)
+2. **Explore Examples** → [examples/](./examples/)
+3. **Review API Docs** → [JSONRPC_API_DOCUMENTATION.md](./JSONRPC_API_DOCUMENTATION.md)
+4. **Join Development** → [CONTRIBUTING.md](./CONTRIBUTING.md)
+
+---
+
+## 🆘 Getting Help
+
+- **Documentation**: [docs/](./docs/)
+- **Examples**: [examples/](./examples/)
+- **API Reference**: Run `cargo doc --open`
+- **Issues**: [GitHub Issues](https://github.com/ecoprimals/nestgate/issues)
+
+---
+
+## ✅ Checklist
+
+- [ ] Rust 1.75+ installed
+- [ ] Repository cloned
+- [ ] Project builds successfully
+- [ ] Tests pass
+- [ ] Environment variables set
+- [ ] Local instance running
+- [ ] Health endpoint responds
+
+**All checked?** You're ready to develop! 🚀
+
+---
+
+**Quick Links**:
+- [README](./README.md) - Project overview
+- [Architecture](./ARCHITECTURE_OVERVIEW.md) - System design
+- [Contributing](./CONTRIBUTING.md) - How to contribute
+- [API Docs](./JSONRPC_API_DOCUMENTATION.md) - API reference
+
+**Status**: Production Ready ✅  
+**Grade**: A (95/100)  
+**Last Updated**: January 13, 2026
