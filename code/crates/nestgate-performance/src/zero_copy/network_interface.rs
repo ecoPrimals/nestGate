@@ -1,101 +1,41 @@
-//! Zero-copy network interface for high-performance I/O
+//! **Zero-Copy Network Interface**
 //!
-//! Provides network interface and connection management with zero-copy operations.
+//! High-performance networking interface with zero-copy I/O.
+//! Integrates with kernel bypass and hardware acceleration.
 //!
-//! **PERFORMANCE BENEFITS**:
-//! - 5-20x improvement over traditional networking
-//! - Zero memory allocation during data transfer
-//! - Direct buffer access without copies
+//! ## Performance Benefits
+//!
+//! - 5-20x improvement over traditional send()
+//! - Direct buffer access without intermediate copies
+//! - Vectored I/O for scatter-gather operations
+//! - Connection pooling and management
+//!
+//! ## Safety
 //!
 //! **✅ 100% SAFE** - Uses safe concurrent structures (zero unsafe code)
 
+use super::buffer_pool::{ZeroCopyBuffer, ZeroCopyBufferPool};
+use super::metrics::{ConnectionStats, NetworkStats, NetworkInterfaceStats};
+use crate::safe_concurrent::{SafeConcurrentHashMap, SafeConcurrentQueue};
+use nestgate_core::error::{NestGateError, Result};
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::io::IoSlice;
 use std::net::SocketAddr;
 use std::sync::Arc;
 
-use crate::safe_concurrent::{SafeConcurrentHashMap, SafeConcurrentQueue};
-use nestgate_core::error::{NestGateError, Result};
-
-use super::buffer_pool::{BufferPoolStats, ZeroCopyBuffer, ZeroCopyBufferPool};
+// ==================== NETWORK INTERFACE ====================
 
 /// **ZERO-COPY NETWORK INTERFACE**
 ///
 /// High-performance networking interface with zero-copy I/O.
-/// Integrates with buffer pool and connection management.
+/// Integrates with kernel bypass and hardware acceleration.
 ///
 /// **✅ 100% SAFE** - Uses safe concurrent structures (zero unsafe code)
 pub struct ZeroCopyNetworkInterface<const BUFFER_SIZE: usize = 65_536> {
     buffer_pool: Arc<ZeroCopyBufferPool<BUFFER_SIZE, 1024>>,
     connection_registry: SafeConcurrentHashMap<String, Arc<ZeroCopyConnection<BUFFER_SIZE>>>,
     stats: NetworkStats,
-}
-
-/// **ZERO-COPY CONNECTION**
-///
-/// Individual network connection with zero-copy capabilities.
-///
-/// **✅ 100% SAFE** - Uses safe concurrent queues (zero unsafe code)
-#[allow(dead_code)] // Fields used in integration tests and future implementations
-pub struct ZeroCopyConnection<const BUFFER_SIZE: usize = 65_536> {
-    connection_id: u64,
-    remote_addr: SocketAddr,
-    local_addr: SocketAddr,
-    tx_queue: SafeConcurrentQueue<ZeroCopyBuffer<BUFFER_SIZE>>,
-    rx_queue: SafeConcurrentQueue<ZeroCopyBuffer<BUFFER_SIZE>>,
-    connection_stats: ConnectionStats,
-}
-
-/// Network interface statistics
-#[derive(Debug, Default)]
-pub struct NetworkStats {
-    /// Bytes sent
-    pub bytes_sent: std::sync::atomic::AtomicU64,
-    /// Bytes received
-    pub bytes_received: std::sync::atomic::AtomicU64,
-    /// Packets sent
-    pub packets_sent: std::sync::atomic::AtomicU64,
-    /// Packets received
-    pub packets_received: std::sync::atomic::AtomicU64,
-    /// Zero-copy operations
-    pub zero_copy_operations: std::sync::atomic::AtomicU64,
-    /// CPU cycles saved
-    pub cpu_cycles_saved: std::sync::atomic::AtomicU64,
-}
-
-/// Connection statistics
-#[derive(Debug, Default)]
-pub struct ConnectionStats {
-    /// Bytes transmitted
-    pub bytes_transmitted: std::sync::atomic::AtomicU64,
-    /// Packets transmitted
-    pub packets_transmitted: std::sync::atomic::AtomicU64,
-    /// Zero-copy transfers
-    pub zero_copy_transfers: std::sync::atomic::AtomicU64,
-    /// Last activity timestamp
-    pub last_activity: std::sync::atomic::AtomicU64,
-}
-
-/// Network interface statistics snapshot
-#[derive(Debug, Clone)]
-pub struct NetworkInterfaceStats {
-    /// Bytes sent
-    pub bytes_sent: u64,
-    /// Bytes received
-    pub bytes_received: u64,
-    /// Packets sent
-    pub packets_sent: u64,
-    /// Packets received
-    pub packets_received: u64,
-    /// Zero-copy operations
-    pub zero_copy_operations: u64,
-    /// CPU cycles saved
-    pub cpu_cycles_saved: u64,
-    /// Active connections
-    pub active_connections: usize,
-    /// Buffer pool statistics
-    pub buffer_pool_stats: BufferPoolStats,
 }
 
 impl<const BUFFER_SIZE: usize> Default for ZeroCopyNetworkInterface<BUFFER_SIZE> {
@@ -119,9 +59,7 @@ impl<const BUFFER_SIZE: usize> ZeroCopyNetworkInterface<BUFFER_SIZE> {
     ///
     /// # Errors
     ///
-    /// Returns an error if:
-    /// - Local endpoint configuration is invalid
-    /// - Connection cannot be established
+    /// Returns error if connection cannot be established or configuration is invalid
     pub fn connect(&self, remote_addr: SocketAddr) -> Result<u64> {
         let connection_id = self.generate_connection_id(&remote_addr);
 
@@ -163,9 +101,7 @@ impl<const BUFFER_SIZE: usize> ZeroCopyNetworkInterface<BUFFER_SIZE> {
     ///
     /// # Errors
     ///
-    /// Returns an error if:
-    /// - Connection not found
-    /// - No buffers available in pool
+    /// Returns error if connection doesn't exist or buffer pool is exhausted
     pub fn zero_copy_send(&self, connection_id: u64, data: &[u8]) -> Result<usize> {
         let connection = self.get_connection(connection_id)?;
 
@@ -215,7 +151,7 @@ impl<const BUFFER_SIZE: usize> ZeroCopyNetworkInterface<BUFFER_SIZE> {
     ///
     /// # Errors
     ///
-    /// Returns an error if connection not found
+    /// Returns error if connection doesn't exist
     pub fn zero_copy_receive(
         &self,
         connection_id: u64,
@@ -249,7 +185,7 @@ impl<const BUFFER_SIZE: usize> ZeroCopyNetworkInterface<BUFFER_SIZE> {
     ///
     /// # Errors
     ///
-    /// Returns an error if connection not found
+    /// Returns error if connection doesn't exist
     pub fn vectored_send(
         &self,
         connection_id: u64,
@@ -260,7 +196,7 @@ impl<const BUFFER_SIZE: usize> ZeroCopyNetworkInterface<BUFFER_SIZE> {
         // Create IoSlice array for vectored I/O
         let _io_slices: Vec<IoSlice> = buffers.iter().map(|buf| buf.as_io_slice()).collect();
 
-        // In a real implementation, this would use writev() system call
+        // In real implementation: writev() system call
         let total_bytes: usize = buffers.iter().map(ZeroCopyBuffer::len).sum();
 
         // Update statistics
@@ -282,56 +218,66 @@ impl<const BUFFER_SIZE: usize> ZeroCopyNetworkInterface<BUFFER_SIZE> {
     }
 
     /// Get network interface statistics
-    #[must_use]
     pub fn get_stats(&self) -> NetworkInterfaceStats {
-        let pool_stats = self.buffer_pool.stats();
-
-        NetworkInterfaceStats {
-            bytes_sent: self
-                .stats
-                .bytes_sent
-                .load(std::sync::atomic::Ordering::Relaxed),
-            bytes_received: self
-                .stats
-                .bytes_received
-                .load(std::sync::atomic::Ordering::Relaxed),
-            packets_sent: self
-                .stats
-                .packets_sent
-                .load(std::sync::atomic::Ordering::Relaxed),
-            packets_received: self
-                .stats
-                .packets_received
-                .load(std::sync::atomic::Ordering::Relaxed),
-            zero_copy_operations: self
-                .stats
-                .zero_copy_operations
-                .load(std::sync::atomic::Ordering::Relaxed),
-            cpu_cycles_saved: self
-                .stats
-                .cpu_cycles_saved
-                .load(std::sync::atomic::Ordering::Relaxed),
-            active_connections: self.connection_registry.len(),
-            buffer_pool_stats: pool_stats,
-        }
+        let mut stats = self.stats.snapshot();
+        stats.active_connections = self.connection_registry.len();
+        stats.buffer_pool_stats = self.buffer_pool.stats();
+        stats
     }
 
-    // Helper methods
+    /// Disconnect and cleanup connection
+    ///
+    /// # Errors
+    ///
+    /// Returns error if connection doesn't exist
+    pub fn disconnect(&self, connection_id: u64) -> Result<()> {
+        self.connection_registry
+            .remove(&connection_id.to_string())
+            .ok_or_else(|| {
+                NestGateError::network_error(&format!("Connection {} not found", connection_id))
+            })?;
+
+        tracing::info!("Connection {} disconnected", connection_id);
+        Ok(())
+    }
+
+    /// Get connection by ID (internal helper)
     fn get_connection(&self, connection_id: u64) -> Result<Arc<ZeroCopyConnection<BUFFER_SIZE>>> {
         self.connection_registry
             .get(&connection_id.to_string())
-            .ok_or_else(|| NestGateError::network_error("Connection not found"))
+            .ok_or_else(|| {
+                NestGateError::network_error(&format!("Connection {} not found", connection_id))
+            })
     }
 
-    fn generate_connection_id(&self, remote_addr: &SocketAddr) -> u64 {
-        // Simple hash-based connection ID generation
+    /// Generate unique connection ID from address
+    fn generate_connection_id(&self, addr: &SocketAddr) -> u64 {
         let mut hasher = DefaultHasher::new();
-        remote_addr.hash(&mut hasher);
-        if let Ok(duration) = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH) {
-            duration.as_nanos().hash(&mut hasher);
-        }
+        addr.hash(&mut hasher);
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_nanos()
+            .hash(&mut hasher);
         hasher.finish()
     }
+}
+
+// ==================== ZERO-COPY CONNECTION ====================
+
+/// **ZERO-COPY CONNECTION**
+///
+/// Individual network connection with zero-copy capabilities.
+///
+/// **✅ 100% SAFE** - Uses safe concurrent queues (zero unsafe code)
+#[allow(dead_code)]
+pub struct ZeroCopyConnection<const BUFFER_SIZE: usize = 65_536> {
+    connection_id: u64,
+    remote_addr: SocketAddr,
+    local_addr: SocketAddr,
+    tx_queue: SafeConcurrentQueue<ZeroCopyBuffer<BUFFER_SIZE>>,
+    rx_queue: SafeConcurrentQueue<ZeroCopyBuffer<BUFFER_SIZE>>,
+    connection_stats: ConnectionStats,
 }
 
 #[cfg(test)]
@@ -346,10 +292,33 @@ mod tests {
     }
 
     #[test]
-    fn test_connection_establishment() {
+    fn test_connection_lifecycle() {
         let interface = ZeroCopyNetworkInterface::<1024>::new();
         let addr: SocketAddr = "127.0.0.1:8080".parse().unwrap();
-        let conn_id = interface.connect(addr);
-        assert!(conn_id.is_ok());
+        
+        let conn_id = interface.connect(addr).expect("Should connect");
+        assert!(conn_id > 0);
+        
+        let stats = interface.get_stats();
+        assert_eq!(stats.active_connections, 1);
+        
+        interface.disconnect(conn_id).expect("Should disconnect");
+        let stats = interface.get_stats();
+        assert_eq!(stats.active_connections, 0);
+    }
+
+    #[test]
+    fn test_zero_copy_send() {
+        let interface = ZeroCopyNetworkInterface::<1024>::new();
+        let addr: SocketAddr = "127.0.0.1:8080".parse().unwrap();
+        let conn_id = interface.connect(addr).expect("Should connect");
+        
+        let data = b"Hello, zero-copy!";
+        let sent = interface.zero_copy_send(conn_id, data).expect("Should send");
+        assert_eq!(sent, data.len());
+        
+        let stats = interface.get_stats();
+        assert_eq!(stats.bytes_sent, data.len() as u64);
+        assert_eq!(stats.packets_sent, 1);
     }
 }

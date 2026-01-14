@@ -1,457 +1,358 @@
-# 🚀 START HERE - NestGate Quick Start Guide
+# 🦅 Welcome to NestGate!
 
-**Welcome to NestGate!** This guide will get you up and running in minutes.
-
-**Last Updated**: January 13, 2026  
-**Status**: Production Ready (Grade A+ - 95/100)  
-**Tests**: 1,235+ passing | **Coverage**: 69.7%
+**Last Updated**: January 14, 2026
 
 ---
 
-## 📋 Quick Navigation
+## 👋 **New to NestGate?**
 
-**New Developer?** → Start with [Prerequisites](#prerequisites)  
-**Returning Developer?** → Jump to [Development Workflow](#development-workflow)  
-**Production Deployment?** → See [Deployment Guide](#production-deployment)  
-**Need Help?** → Check [Troubleshooting](#troubleshooting)
+Welcome! This guide will get you started quickly.
 
 ---
 
-## ✅ Prerequisites
+## 🎯 **Quick Overview**
 
-### Required
+**NestGate** is a sovereign, zero-cost storage orchestrator for the Primal Ecosystem.
 
-1. **Rust 1.75 or later**
-   ```bash
-   # Install/update Rust
-   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-   rustup update stable
-   
-   # Verify installation
-   rustc --version  # Should be 1.75.0 or higher
-   ```
+**Current Status**: **B+ (88/100)** - Production capable with ongoing evolution
 
-2. **Git**
-   ```bash
-   git --version  # Should be 2.0 or higher
-   ```
-
-### Optional (but recommended)
-
-3. **ZFS** (for native storage backend)
-   ```bash
-   # Ubuntu/Debian
-   sudo apt-get install zfsutils-linux
-   
-   # Check installation
-   zfs --version
-   ```
-
-4. **cargo-llvm-cov** (for coverage reports)
-   ```bash
-   cargo install cargo-llvm-cov
-   ```
+**Key Features**:
+- 🤖 Infant Discovery Architecture
+- ⚡ Zero-Cost Performance
+- 🌐 Universal Storage Adapter
+- 🔒 Sovereign by Design
+- 🛡️ Top 0.1% Safety
 
 ---
 
-## 🏁 Quick Start (5 minutes)
+## 🚀 **5-Minute Quick Start**
 
-### 1. Clone Repository
+### **1. Clone and Build**:
+
 ```bash
-git clone https://github.com/ecoprimals/nestgate
+git clone https://github.com/your-org/nestgate.git
 cd nestgate
-```
-
-### 2. Build Project
-```bash
-# Development build (~30 seconds)
-cargo build
-
-# Or release build (~60 seconds)
 cargo build --release
 ```
 
-### 3. Run Tests
-```bash
-# Quick smoke test
-cargo test --lib
+### **2. Run Tests**:
 
-# Full test suite (~2 minutes)
-cargo test --workspace
+```bash
+cargo test
+# Expected: 3,607 tests passing ✅
 ```
 
-### 4. Start Local Instance
-```bash
-# Set required environment variables
-export NESTGATE_FAMILY_ID="local-dev"
+### **3. Start NestGate**:
 
-# Start server
+```bash
 ./start_local_dev.sh
-
-# Or manually:
-cargo run --bin nestgate
 ```
 
-### 5. Verify Running
+### **4. Check Status**:
+
 ```bash
-# Check health endpoint
-curl http://localhost:8080/health
-
-# Expected response:
-# {"status": "healthy"}
+curl http://localhost:8000/health
 ```
 
-**🎉 Success!** NestGate is now running locally.
+**Done!** 🎉 NestGate is running!
 
 ---
 
-## 💻 Development Workflow
+## 📚 **What to Read Next**
 
-### Daily Development
+### **For Users**:
+1. 📖 **[README](README.md)** - Project overview and features
+2. 🎯 **[Current Status](CURRENT_STATUS.md)** - Project health and metrics
+3. 📝 **[Quick Reference](QUICK_REFERENCE.md)** - Common commands and patterns
+4. 🗺️ **[Roadmap](ROADMAP.md)** - Future plans and milestones
 
-```bash
-# 1. Pull latest changes
-git pull origin main
+### **For Developers**:
+1. 🤝 **[Contributing Guide](CONTRIBUTING.md)** - How to contribute
+2. 🏗️ **[Architecture Docs](docs/architecture/)** - System design
+3. 🧪 **[Testing Guide](docs/testing/)** - Writing tests
+4. 📊 **[Latest Session Report](EXCEPTIONAL_SESSION_COMPLETE_JAN_13_2026.md)** - Recent progress
 
-# 2. Run tests
-cargo test --workspace
-
-# 3. Make your changes
-# ... edit files ...
-
-# 4. Format code
-cargo fmt --all
-
-# 5. Check lints
-cargo clippy --workspace -- -D warnings
-
-# 6. Run affected tests
-cargo test --lib  # Or specific tests
-
-# 7. Commit changes
-git add .
-git commit -m "feat: your feature description"
-git push
-```
-
-### Essential Commands
-
-```bash
-# Build
-cargo build                    # Debug build
-cargo build --release          # Optimized build
-
-# Test
-cargo test                     # All tests
-cargo test --lib              # Library tests only
-cargo test integration_test   # Specific test
-
-# Check
-cargo check                    # Fast type check
-cargo clippy                   # Lint check
-cargo fmt --check              # Format check
-
-# Documentation
-cargo doc --open               # Generate & open docs
-
-# Clean
-cargo clean                    # Remove build artifacts
-```
+### **For Operators**:
+1. 🚀 **[Deployment Guide](docs/operations/)** - Production deployment
+2. 📊 **[Monitoring Guide](docs/operations/)** - Observability setup
+3. 🔧 **[Troubleshooting](docs/guides/)** - Common issues
+4. 🔐 **[Security Guide](docs/security/)** - Security best practices
 
 ---
 
-## 🔧 Configuration
+## 🏗️ **Architecture Overview**
 
-### Environment Variables
+### **Core Components**:
 
-Required:
-```bash
-export NESTGATE_FAMILY_ID="your-family-id"
+```
+NestGate
+├── nestgate-core         - Orchestration engine
+│   ├── Infant Discovery  - Runtime primal discovery
+│   ├── Zero-Cost Layer   - Performance optimizations
+│   └── Universal Adapter - Storage abstraction
+│
+├── nestgate-api          - REST API
+│   ├── Handlers          - Request handlers
+│   └── Middleware        - Auth, logging, etc.
+│
+├── nestgate-zfs          - ZFS Backend
+│   ├── Pool Management   - ZFS pool operations
+│   ├── Snapshots         - Snapshot management
+│   └── Monitoring        - Health checks
+│
+├── nestgate-mcp          - MCP Protocol
+│   ├── Messages          - Protocol messages
+│   └── Handlers          - Message processing
+│
+└── nestgate-performance  - Optimizations
+    ├── Zero-Copy         - Network optimizations
+    ├── Memory            - Memory management
+    └── SIMD              - Vector operations
 ```
 
-Optional (with defaults):
-```bash
-# Ports
-export NESTGATE_API_PORT=8080
-export NESTGATE_METRICS_PORT=9090
-export NESTGATE_HEALTH_PORT=8082
+### **Key Concepts**:
 
-# Storage
-export NESTGATE_STORAGE_PATH="/data/nestgate"
-
-# Discovery (optional)
-export NESTGATE_CAPABILITY_STORAGE_ENDPOINT="127.0.0.1:5000"
-```
-
-### Configuration File
-
-Create `nestgate.toml`:
-```toml
-[service]
-family_id = "nestgate-dev"
-node_id = "node1"
-
-[api]
-port = 8080
-bind = "127.0.0.1"
-
-[storage]
-backend = "filesystem"
-path = "/tmp/nestgate-data"
-
-[discovery]
-enabled = true
-```
-
-Load configuration:
-```bash
-cargo run -- --config nestgate.toml
-```
+1. **Infant Discovery**: Primals discover each other at runtime
+2. **Zero-Cost**: Native performance with high-level APIs
+3. **Universal Adapter**: Works with any storage backend
+4. **Capability-Based**: Dynamic service routing
+5. **Sovereign**: No vendor lock-in, full control
 
 ---
 
-## 📚 Key Concepts
+## 🧪 **Testing**
 
-### 1. Capability-Based Discovery
-
-NestGate discovers services by capability, not hardcoded location:
-
-```rust
-use nestgate_core::config::capability_based::CapabilityConfigBuilder;
-
-let config = CapabilityConfigBuilder::new().build()?;
-let storage = config.discover(PrimalCapability::Storage).await?;
-```
-
-**Benefits**:
-- Zero hardcoding
-- Runtime flexibility
-- Sovereignty-compliant
-
-### 2. Universal Storage
-
-Single API for multiple storage backends:
-
-```rust
-use nestgate_core::universal_storage::UniversalStorage;
-
-let storage = UniversalStorage::auto_detect().await?;
-storage.create_dataset("my-data").await?;
-```
-
-**Supported Backends**:
-- ZFS (native)
-- Filesystem (POSIX)
-- Object storage (S3-compatible)
-- Memory (testing)
-
-### 3. Error Handling
-
-All public APIs return `Result`:
-
-```rust
-pub fn process(id: &str) -> Result<Data> {
-    let item = storage.get(id)?;  // Propagate errors
-    Ok(item)
-}
-```
-
-**Never use `.unwrap()` in production code!**
-
----
-
-## 🧪 Testing
-
-### Running Tests
+### **Run All Tests**:
 
 ```bash
-# All tests
-cargo test --workspace
+cargo test
+# Expected: 3,607 passing ✅
+```
 
-# Specific modules
-cargo test --package nestgate-core
-cargo test --lib --package nestgate-api
+### **Run Specific Tests**:
+
+```bash
+# Unit tests only
+cargo test --lib
 
 # Integration tests
 cargo test --test '*'
 
+# Specific module
+cargo test --package nestgate-core
+
 # With output
 cargo test -- --nocapture
-
-# Single test
-cargo test test_storage_creation
 ```
 
-### Writing Tests
-
-```rust
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_basic_operation() {
-        let result = process_data("test");
-        assert!(result.is_ok());
-    }
-
-    #[tokio::test]
-    async fn test_async_operation() {
-        let storage = create_storage().await.unwrap();
-        assert!(storage.is_healthy().await);
-    }
-}
-```
-
----
-
-## 🔍 Project Structure
-
-```
-nestgate/
-├── code/crates/          # Main crates
-│   ├── nestgate-core/    # Core functionality
-│   ├── nestgate-api/     # API server
-│   └── nestgate-zfs/     # ZFS backend
-├── examples/             # Usage examples
-├── tests/                # Integration tests
-├── docs/                 # Documentation
-├── config/               # Configuration templates
-└── scripts/              # Utility scripts
-```
-
-### Important Directories
-
-- **`code/crates/nestgate-core/src/`** - Core implementation
-- **`examples/`** - Working code examples
-- **`tests/`** - Integration & E2E tests
-- **`docs/`** - Comprehensive documentation
-
----
-
-## 🚢 Production Deployment
-
-### Pre-Deployment Checklist
+### **Coverage Report**:
 
 ```bash
-# 1. Run all tests
-cargo test --workspace --release
+cargo llvm-cov --html
+# Open: target/llvm-cov/html/index.html
+```
 
-# 2. Check formatting
-cargo fmt --all --check
+---
 
-# 3. Run lints
-cargo clippy --workspace -- -D warnings
+## 📊 **Current Status**
 
-# 4. Verify deployment readiness
+### **Health Check**:
+
+```
+✅ Tests: 3,607 passing (100%)
+✅ Build: Compiling successfully
+✅ Lints: Passing (5 minor warnings)
+⚠️ Coverage: 70% (target: 90%)
+```
+
+### **Grade**: **B+ (88/100)**
+
+```
+Architecture:     A+ (98/100) ✅ Excellent
+Sovereignty:      A+ (100/100) ✅ Perfect
+Safety:           A  (93/100) ✅ Excellent
+Test Coverage:    C+ (78/100) ⚠️ Needs work
+Error Handling:   D+ (65/100) ❌ Critical
+```
+
+**Path to A+**: 8-week systematic evolution plan
+
+📊 **[View Full Status](CURRENT_STATUS.md)**
+
+---
+
+## 🎯 **Common Tasks**
+
+### **Development**:
+
+```bash
+# Build
+cargo build
+
+# Run
+cargo run
+
+# Test
+cargo test
+
+# Lint
+cargo clippy
+
+# Format
+cargo fmt
+
+# Documentation
+cargo doc --open
+```
+
+### **Deployment**:
+
+```bash
+# Build release
+cargo build --release
+
+# Run production
+./QUICK_DEPLOY.sh
+
+# Check deployment
 ./verify_deployment_readiness.sh
-
-# 5. Build release
-cargo build --release --workspace
 ```
-
-### Deploy
-
-```bash
-# Using deploy script
-./deploy/production-deploy.sh
-
-# Or manually
-sudo systemctl start nestgate
-sudo systemctl enable nestgate
-```
-
-See **[Operations Runbook](./OPERATIONS_RUNBOOK.md)** for detailed deployment instructions.
 
 ---
 
-## 🐛 Troubleshooting
+## 🔧 **Configuration**
 
-### Build Failures
+### **Local Development**:
 
-**Problem**: Compilation errors
 ```bash
-# Solution 1: Update Rust
-rustup update stable
+# Copy example config
+cp config/production.env.example .env
 
-# Solution 2: Clean build
+# Edit configuration
+nano .env
+
+# Start with config
+./start_local_dev.sh
+```
+
+### **Production**:
+
+See [Deployment Guide](docs/operations/) for production configuration.
+
+---
+
+## 🐛 **Troubleshooting**
+
+### **Build Issues**:
+
+```bash
+# Clean and rebuild
 cargo clean
 cargo build
 
-# Solution 3: Check dependencies
+# Update dependencies
 cargo update
 ```
 
-### Test Failures
+### **Test Failures**:
 
-**Problem**: Tests failing
 ```bash
-# Solution 1: Run specific test with output
-cargo test failing_test -- --nocapture
+# Run failing test with output
+cargo test <test_name> -- --nocapture
 
-# Solution 2: Check environment
-env | grep NESTGATE
-
-# Solution 3: Reset test environment
-rm -rf /tmp/nestgate-test-*
+# Run specific package
+cargo test --package nestgate-core
 ```
 
-### Runtime Issues
+### **Common Issues**:
 
-**Problem**: Service won't start
-```bash
-# Check configuration
-echo $NESTGATE_FAMILY_ID
+- **Port already in use**: Check `config/production.env` for port settings
+- **ZFS not available**: Install ZFS or use mock backends for testing
+- **Permission denied**: Run with appropriate permissions or use Docker
 
-# Check port availability
-sudo lsof -i :8080
-
-# Check logs
-./logs/nestgate.log
-```
+See [Troubleshooting Guide](docs/guides/) for more.
 
 ---
 
-## 📖 Next Steps
+## 📖 **Learning Resources**
 
-After getting started:
+### **Documentation**:
+- 📁 [docs/](docs/) - Full documentation
+- 📊 [specs/](specs/) - Specifications
+- 🎯 [examples/](examples/) - Code examples
 
-1. **Read Architecture** → [ARCHITECTURE_OVERVIEW.md](./ARCHITECTURE_OVERVIEW.md)
-2. **Explore Examples** → [examples/](./examples/)
-3. **Review API Docs** → [JSONRPC_API_DOCUMENTATION.md](./JSONRPC_API_DOCUMENTATION.md)
-4. **Join Development** → [CONTRIBUTING.md](./CONTRIBUTING.md)
+### **Recent Progress**:
+- 📝 [Latest Session Report](EXCEPTIONAL_SESSION_COMPLETE_JAN_13_2026.md)
+- 📋 [Session Reports](docs/session-reports/2026-01-jan/)
 
----
-
-## 🆘 Getting Help
-
-- **Documentation**: [docs/](./docs/)
-- **Examples**: [examples/](./examples/)
-- **API Reference**: Run `cargo doc --open`
-- **Issues**: [GitHub Issues](https://github.com/ecoprimals/nestgate/issues)
+### **Community**:
+- 💬 [GitHub Discussions](https://github.com/your-org/nestgate/discussions)
+- 🐛 [Issue Tracker](https://github.com/your-org/nestgate/issues)
+- 📧 [Email Support](mailto:support@your-org.com)
 
 ---
 
-## ✅ Checklist
+## 🤝 **Contributing**
 
-- [ ] Rust 1.75+ installed
-- [ ] Repository cloned
-- [ ] Project builds successfully
-- [ ] Tests pass
-- [ ] Environment variables set
-- [ ] Local instance running
-- [ ] Health endpoint responds
+We welcome contributions! Here's how to get started:
 
-**All checked?** You're ready to develop! 🚀
+1. Read [CONTRIBUTING.md](CONTRIBUTING.md)
+2. Fork the repository
+3. Create a feature branch
+4. Make your changes
+5. Run tests (`cargo test`)
+6. Submit a Pull Request
 
 ---
 
-**Quick Links**:
-- [README](./README.md) - Project overview
-- [Architecture](./ARCHITECTURE_OVERVIEW.md) - System design
-- [Contributing](./CONTRIBUTING.md) - How to contribute
-- [API Docs](./JSONRPC_API_DOCUMENTATION.md) - API reference
+## 📞 **Getting Help**
 
-**Status**: Production Ready ✅  
-**Grade**: A (95/100)  
-**Last Updated**: January 13, 2026
+### **Stuck?**
+
+1. Check [README.md](README.md) for overview
+2. Check [CURRENT_STATUS.md](CURRENT_STATUS.md) for project health
+3. Check [docs/](docs/) for detailed documentation
+4. Check [GitHub Issues](https://github.com/your-org/nestgate/issues)
+5. Ask in [GitHub Discussions](https://github.com/your-org/nestgate/discussions)
+
+### **Found a Bug?**
+
+1. Check [existing issues](https://github.com/your-org/nestgate/issues)
+2. Create a new issue with:
+   - Description of the bug
+   - Steps to reproduce
+   - Expected vs actual behavior
+   - System information
+
+---
+
+## 🎊 **Ready to Dive In?**
+
+Great! Here are your next steps:
+
+### **For Users**:
+→ **[README.md](README.md)** - Learn about features  
+→ **[Quick Reference](QUICK_REFERENCE.md)** - Common patterns  
+→ **[Deployment Guide](docs/operations/)** - Production setup
+
+### **For Developers**:
+→ **[Contributing Guide](CONTRIBUTING.md)** - Start contributing  
+→ **[Architecture Docs](docs/architecture/)** - Understand the system  
+→ **[Latest Report](EXCEPTIONAL_SESSION_COMPLETE_JAN_13_2026.md)** - Recent progress
+
+### **For Operators**:
+→ **[Deployment Guide](docs/operations/)** - Production deployment  
+→ **[Monitoring Guide](docs/operations/)** - Setup observability  
+→ **[Security Guide](docs/security/)** - Security best practices
+
+---
+
+**Welcome to the NestGate family! 🦅**
+
+**Questions?** → [GitHub Discussions](https://github.com/your-org/nestgate/discussions)  
+**Issues?** → [Issue Tracker](https://github.com/your-org/nestgate/issues)  
+**Ideas?** → We'd love to hear them!
+
+---
+
+**Happy Building! 🚀**
