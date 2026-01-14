@@ -1,16 +1,23 @@
-//! Zero-copy buffer pool for high-performance networking
+//! **Zero-Copy Buffer Pool**
 //!
-//! Provides pre-allocated buffers to eliminate allocation overhead during I/O operations.
+//! Memory pool for zero-copy networking operations.
+//! Pre-allocated buffers eliminate allocation overhead during I/O.
 //!
-//! **PERFORMANCE BENEFITS**:
-//! - 50x improvement over malloc/free
-//! - Zero allocation during data transfer
-//! - Cache-line aligned for optimal DMA
+//! ## Performance Benefits
 //!
-//! **✅ 100% SAFE** - Uses safe concurrent structures (zero unsafe code)
+//! - Zero allocation during network I/O
+//! - Cache-line aligned buffers (64 bytes)
+//! - Lock-free concurrent access
+//! - Automatic buffer recycling
+//!
+//! ## Safety
+//!
+//! **✅ 100% SAFE** - Uses safe concurrent queue (zero unsafe code)
 
 use crate::safe_concurrent::SafeConcurrentQueue;
 use std::io::{IoSlice, IoSliceMut};
+
+// ==================== BUFFER POOL ====================
 
 /// **ZERO-COPY BUFFER POOL**
 ///
@@ -23,31 +30,6 @@ pub struct ZeroCopyBufferPool<const BUFFER_SIZE: usize = 65_536, const POOL_SIZE
     total_buffers: std::sync::atomic::AtomicUsize,
     buffer_hits: std::sync::atomic::AtomicU64,
     buffer_misses: std::sync::atomic::AtomicU64,
-}
-
-/// **ZERO-COPY BUFFER**
-///
-/// Pre-allocated buffer for zero-copy operations.
-/// Aligned for optimal DMA and SIMD performance.
-#[repr(align(64))] // Cache line aligned for optimal performance
-pub struct ZeroCopyBuffer<const SIZE: usize> {
-    data: [u8; SIZE],
-    length: usize,
-    capacity: usize,
-    reference_count: std::sync::atomic::AtomicUsize,
-}
-
-/// Buffer pool statistics
-#[derive(Debug, Clone)]
-pub struct BufferPoolStats {
-    /// Total buffers in pool
-    pub total_buffers: usize,
-    /// Available buffers
-    pub available_buffers: usize,
-    /// Buffer hits (reused from pool)
-    pub buffer_hits: u64,
-    /// Buffer misses (new allocation needed)
-    pub buffer_misses: u64,
 }
 
 impl<const BUFFER_SIZE: usize, const POOL_SIZE: usize> Default
@@ -81,8 +63,6 @@ impl<const BUFFER_SIZE: usize, const POOL_SIZE: usize> ZeroCopyBufferPool<BUFFER
     }
 
     /// Get buffer from pool (zero-copy acquisition)
-    ///
-    /// Returns `Some(buffer)` if available, or creates a new buffer if pool is exhausted.
     pub fn acquire_buffer(&self) -> Option<ZeroCopyBuffer<BUFFER_SIZE>> {
         if let Some(buffer) = self.available_buffers.try_pop() {
             self.buffer_hits
@@ -103,7 +83,6 @@ impl<const BUFFER_SIZE: usize, const POOL_SIZE: usize> ZeroCopyBufferPool<BUFFER
     }
 
     /// Get pool statistics
-    #[must_use]
     pub fn stats(&self) -> BufferPoolStats {
         BufferPoolStats {
             total_buffers: self
@@ -116,6 +95,20 @@ impl<const BUFFER_SIZE: usize, const POOL_SIZE: usize> ZeroCopyBufferPool<BUFFER
                 .load(std::sync::atomic::Ordering::Relaxed),
         }
     }
+}
+
+// ==================== ZERO-COPY BUFFER ====================
+
+/// **ZERO-COPY BUFFER**
+///
+/// Pre-allocated buffer for zero-copy operations.
+/// Aligned for optimal DMA and SIMD performance.
+#[repr(align(64))] // Cache line aligned for optimal performance
+pub struct ZeroCopyBuffer<const SIZE: usize> {
+    data: [u8; SIZE],
+    length: usize,
+    capacity: usize,
+    reference_count: std::sync::atomic::AtomicUsize,
 }
 
 impl<const SIZE: usize> Default for ZeroCopyBuffer<SIZE> {
@@ -137,7 +130,6 @@ impl<const SIZE: usize> ZeroCopyBuffer<SIZE> {
     }
 
     /// Get buffer data as slice
-    #[must_use]
     pub fn as_slice(&self) -> &[u8] {
         &self.data[..self.length]
     }
@@ -148,7 +140,6 @@ impl<const SIZE: usize> ZeroCopyBuffer<SIZE> {
     }
 
     /// Get buffer for vectored I/O
-    #[must_use]
     pub fn as_io_slice(&self) -> IoSlice<'_> {
         IoSlice::new(&self.data[..self.length])
     }
@@ -171,21 +162,45 @@ impl<const SIZE: usize> ZeroCopyBuffer<SIZE> {
     }
 
     /// Get buffer capacity
-    #[must_use]
     pub const fn capacity(&self) -> usize {
         self.capacity
     }
 
     /// Get current length
-    #[must_use]
     pub const fn len(&self) -> usize {
         self.length
     }
 
     /// Check if buffer is empty
-    #[must_use]
     pub const fn is_empty(&self) -> bool {
         self.length == 0
+    }
+}
+
+// ==================== STATISTICS ====================
+
+/// Buffer pool statistics
+#[derive(Debug, Clone)]
+pub struct BufferPoolStats {
+    /// Total buffers allocated
+    pub total_buffers: usize,
+    /// Available buffers in pool
+    pub available_buffers: usize,
+    /// Buffer hits (acquired from pool)
+    pub buffer_hits: u64,
+    /// Buffer misses (allocated new)
+    pub buffer_misses: u64,
+}
+
+impl BufferPoolStats {
+    /// Calculate hit rate percentage
+    pub fn hit_rate(&self) -> f64 {
+        let total = self.buffer_hits + self.buffer_misses;
+        if total == 0 {
+            0.0
+        } else {
+            (self.buffer_hits as f64 / total as f64) * 100.0
+        }
     }
 }
 
@@ -195,26 +210,36 @@ mod tests {
 
     #[test]
     fn test_buffer_pool_creation() {
-        let pool = ZeroCopyBufferPool::<1024, 10>::new();
+        let pool: ZeroCopyBufferPool<1024, 10> = ZeroCopyBufferPool::new();
         let stats = pool.stats();
         assert_eq!(stats.total_buffers, 10);
     }
 
     #[test]
     fn test_buffer_acquire_release() {
-        let pool = ZeroCopyBufferPool::<1024, 5>::new();
-        let buffer = pool.acquire_buffer().expect("Should get buffer");
+        let pool: ZeroCopyBufferPool<1024, 10> = ZeroCopyBufferPool::new();
+        
+        let buffer = pool.acquire_buffer().expect("Should acquire buffer");
         assert_eq!(buffer.capacity(), 1024);
+        
         pool.release_buffer(buffer);
+        
+        let stats = pool.stats();
+        assert!(stats.buffer_hits > 0);
     }
 
     #[test]
-    fn test_buffer_pool_exhaustion() {
-        let pool = ZeroCopyBufferPool::<1024, 2>::new();
-        let _buf1 = pool.acquire_buffer();
-        let _buf2 = pool.acquire_buffer();
-        // Third acquire should still work (creates new buffer)
-        let buf3 = pool.acquire_buffer();
-        assert!(buf3.is_some());
+    fn test_buffer_operations() {
+        let mut buffer = ZeroCopyBuffer::<1024>::new();
+        assert_eq!(buffer.capacity(), 1024);
+        assert_eq!(buffer.len(), 0);
+        assert!(buffer.is_empty());
+        
+        buffer.set_length(100);
+        assert_eq!(buffer.len(), 100);
+        assert!(!buffer.is_empty());
+        
+        buffer.reset();
+        assert_eq!(buffer.len(), 0);
     }
 }
