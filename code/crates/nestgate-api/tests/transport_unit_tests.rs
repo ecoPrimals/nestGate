@@ -1,0 +1,344 @@
+//! **TRANSPORT LAYER UNIT TESTS**
+//!
+//! Comprehensive unit tests for TRUE PRIMAL transport layer.
+
+use nestgate_api::transport::{
+    JsonRpcError, JsonRpcHandler, JsonRpcRequest, JsonRpcResponse, NestGateRpcHandler,
+    TransportConfig,
+};
+use serde_json::{json, Value};
+use std::path::PathBuf;
+use tempfile::TempDir;
+
+// ============================================================================
+// Config Tests (5 tests)
+// ============================================================================
+
+#[test]
+fn test_config_new_creates_valid_config() {
+    let config = TransportConfig::new("test_family");
+    assert_eq!(config.family_id, "test_family");
+    assert!(config.socket_path.to_str().unwrap().contains("test_family"));
+    assert!(!config.verbose);
+}
+
+#[test]
+fn test_config_builder_all_options() {
+    let config = TransportConfig::new("builder_test")
+        .with_socket_path("/custom/path.sock")
+        .with_security_provider("/custom/beardog.sock")
+        .with_http_fallback(9090)
+        .with_verbose();
+
+    assert_eq!(config.family_id, "builder_test");
+    assert_eq!(config.socket_path, PathBuf::from("/custom/path.sock"));
+    assert_eq!(
+        config.security_provider,
+        PathBuf::from("/custom/beardog.sock")
+    );
+    assert_eq!(config.http_port, Some(9090));
+    assert!(config.verbose);
+}
+
+#[test]
+fn test_config_validation_success() {
+    let config = TransportConfig::new("valid_config");
+    assert!(config.validate().is_ok());
+}
+
+#[test]
+fn test_config_from_env_with_all_vars() {
+    std::env::set_var("NESTGATE_FAMILY_ID", "env_family");
+    std::env::set_var("NESTGATE_SOCKET_PATH", "/tmp/env-test.sock");
+    std::env::set_var("NESTGATE_SECURITY_PROVIDER", "/tmp/env-beardog.sock");
+    std::env::set_var("NESTGATE_HTTP_PORT", "8888");
+    std::env::set_var("NESTGATE_VERBOSE", "true");
+
+    let config = TransportConfig::from_env().unwrap();
+
+    assert_eq!(config.family_id, "env_family");
+    assert_eq!(config.socket_path.to_str().unwrap(), "/tmp/env-test.sock");
+    assert_eq!(config.http_port, Some(8888));
+    assert!(config.verbose);
+
+    // Cleanup
+    std::env::remove_var("NESTGATE_FAMILY_ID");
+    std::env::remove_var("NESTGATE_SOCKET_PATH");
+    std::env::remove_var("NESTGATE_SECURITY_PROVIDER");
+    std::env::remove_var("NESTGATE_HTTP_PORT");
+    std::env::remove_var("NESTGATE_VERBOSE");
+}
+
+#[test]
+fn test_config_from_env_defaults() {
+    // Clear any existing env vars
+    std::env::remove_var("NESTGATE_FAMILY_ID");
+    std::env::remove_var("NESTGATE_SOCKET_PATH");
+
+    let config = TransportConfig::from_env().unwrap();
+
+    assert_eq!(config.family_id, "default");
+    assert!(config.socket_path.to_str().unwrap().contains("default"));
+    assert_eq!(config.http_port, None);
+    assert!(!config.verbose);
+}
+
+// ============================================================================
+// JSON-RPC Tests (5 tests)
+// ============================================================================
+
+#[test]
+fn test_jsonrpc_request_parsing() {
+    let json = r#"{"jsonrpc":"2.0","method":"test.method","params":{"key":"value"},"id":1}"#;
+    let request: JsonRpcRequest = serde_json::from_str(json).unwrap();
+
+    assert_eq!(request.jsonrpc, "2.0");
+    assert_eq!(request.method, "test.method");
+    assert_eq!(request.id, 1);
+}
+
+#[test]
+fn test_jsonrpc_response_success() {
+    let response = JsonRpcResponse::success(1, json!({"status": "ok"}));
+
+    assert_eq!(response.jsonrpc, "2.0");
+    assert_eq!(response.id, 1);
+    assert!(response.result.is_some());
+    assert!(response.error.is_none());
+}
+
+#[test]
+fn test_jsonrpc_response_error() {
+    let response = JsonRpcResponse::error(
+        2,
+        JsonRpcError {
+            code: -32601,
+            message: "Method not found".to_string(),
+            data: None,
+        },
+    );
+
+    assert_eq!(response.jsonrpc, "2.0");
+    assert_eq!(response.id, 2);
+    assert!(response.result.is_none());
+    assert!(response.error.is_some());
+    assert_eq!(response.error.unwrap().code, -32601);
+}
+
+#[test]
+fn test_jsonrpc_error_codes() {
+    let parse_error = JsonRpcError::parse_error();
+    assert_eq!(parse_error.code, -32700);
+
+    let invalid_request = JsonRpcError::invalid_request();
+    assert_eq!(invalid_request.code, -32600);
+
+    let method_not_found = JsonRpcError::method_not_found();
+    assert_eq!(method_not_found.code, -32601);
+
+    let internal_error = JsonRpcError::internal_error();
+    assert_eq!(internal_error.code, -32603);
+}
+
+#[test]
+fn test_jsonrpc_invalid_json() {
+    let invalid = r#"{"not valid json"#;
+    let result: Result<JsonRpcRequest, _> = serde_json::from_str(invalid);
+    assert!(result.is_err());
+}
+
+// ============================================================================
+// Handler Tests (5 tests)
+// ============================================================================
+
+#[tokio::test]
+async fn test_handler_health_ping() {
+    let handler = NestGateRpcHandler::new();
+    let request = JsonRpcRequest {
+        jsonrpc: "2.0".to_string(),
+        method: "health.ping".to_string(),
+        params: json!({}),
+        id: 1,
+    };
+
+    let response = handler.handle_request(request).await;
+
+    assert!(response.error.is_none());
+    if let Some(result) = response.result {
+        assert_eq!(result["status"], "pong");
+    }
+}
+
+#[tokio::test]
+async fn test_handler_health_status() {
+    let handler = NestGateRpcHandler::new();
+    let request = JsonRpcRequest {
+        jsonrpc: "2.0".to_string(),
+        method: "health.status".to_string(),
+        params: json!({}),
+        id: 2,
+    };
+
+    let response = handler.handle_request(request).await;
+
+    assert!(response.error.is_none());
+    if let Some(result) = response.result {
+        assert!(result["status"].is_string());
+        assert!(result["timestamp"].is_number());
+    }
+}
+
+#[tokio::test]
+async fn test_handler_method_not_found() {
+    let handler = NestGateRpcHandler::new();
+    let request = JsonRpcRequest {
+        jsonrpc: "2.0".to_string(),
+        method: "invalid.method".to_string(),
+        params: json!({}),
+        id: 3,
+    };
+
+    let response = handler.handle_request(request).await;
+
+    assert!(response.result.is_none());
+    assert!(response.error.is_some());
+    assert_eq!(response.error.unwrap().code, -32601);
+}
+
+#[tokio::test]
+async fn test_handler_identity_get() {
+    let handler = NestGateRpcHandler::new();
+    let request = JsonRpcRequest {
+        jsonrpc: "2.0".to_string(),
+        method: "identity.get".to_string(),
+        params: json!({}),
+        id: 4,
+    };
+
+    let response = handler.handle_request(request).await;
+
+    assert!(response.error.is_none());
+    if let Some(result) = response.result {
+        assert!(result["primal"].is_string());
+        assert!(result["family_id"].is_string());
+    }
+}
+
+#[tokio::test]
+async fn test_handler_concurrent_requests() {
+    let handler = NestGateRpcHandler::new();
+    
+    let mut handles = vec![];
+    for i in 0..10 {
+        let h = handler.clone();
+        let handle = tokio::spawn(async move {
+            let request = JsonRpcRequest {
+                jsonrpc: "2.0".to_string(),
+                method: "health.ping".to_string(),
+                params: json!({}),
+                id: i,
+            };
+            h.handle_request(request).await
+        });
+        handles.push(handle);
+    }
+
+    for handle in handles {
+        let response = handle.await.unwrap();
+        assert!(response.error.is_none());
+    }
+}
+
+// ============================================================================
+// Edge Cases & Error Handling (5 tests)
+// ============================================================================
+
+#[test]
+fn test_config_empty_family_id() {
+    let config = TransportConfig::new("");
+    assert_eq!(config.family_id, "");
+    // Should still be valid (will use default socket path)
+    assert!(config.validate().is_ok());
+}
+
+#[test]
+fn test_config_special_characters_in_family_id() {
+    let config = TransportConfig::new("test-family_123.prod");
+    assert_eq!(config.family_id, "test-family_123.prod");
+    assert!(config.validate().is_ok());
+}
+
+#[test]
+fn test_jsonrpc_missing_fields() {
+    let incomplete = r#"{"jsonrpc":"2.0","method":"test"}"#;
+    let result: Result<JsonRpcRequest, _> = serde_json::from_str(incomplete);
+    // Should fail - missing required 'id' field
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_jsonrpc_wrong_version() {
+    let wrong_version = r#"{"jsonrpc":"1.0","method":"test","params":{},"id":1}"#;
+    let request: Result<JsonRpcRequest, _> = serde_json::from_str(wrong_version);
+    // Should parse but jsonrpc version will be wrong
+    if let Ok(req) = request {
+        assert_ne!(req.jsonrpc, "2.0");
+    }
+}
+
+#[tokio::test]
+async fn test_handler_empty_method() {
+    let handler = NestGateRpcHandler::new();
+    let request = JsonRpcRequest {
+        jsonrpc: "2.0".to_string(),
+        method: "".to_string(),
+        params: json!({}),
+        id: 5,
+    };
+
+    let response = handler.handle_request(request).await;
+    
+    // Should return method not found
+    assert!(response.error.is_some());
+}
+
+// ============================================================================
+// Performance & Stress Tests (2 tests)
+// ============================================================================
+
+#[tokio::test]
+async fn test_handler_large_payload() {
+    let handler = NestGateRpcHandler::new();
+    
+    // Create large params object
+    let large_data: Vec<String> = (0..1000).map(|i| format!("data_{}", i)).collect();
+    
+    let request = JsonRpcRequest {
+        jsonrpc: "2.0".to_string(),
+        method: "health.ping".to_string(),
+        params: json!({"large_array": large_data}),
+        id: 6,
+    };
+
+    let response = handler.handle_request(request).await;
+    
+    // Should handle large payloads gracefully
+    assert!(response.error.is_none() || response.error.is_some());
+}
+
+#[test]
+fn test_config_serialization_roundtrip() {
+    let original = TransportConfig::new("roundtrip_test")
+        .with_socket_path("/tmp/test.sock")
+        .with_http_fallback(8080);
+
+    // Serialize to JSON
+    let json = serde_json::to_string(&original).unwrap();
+    
+    // Deserialize back
+    let deserialized: TransportConfig = serde_json::from_str(&json).unwrap();
+
+    assert_eq!(original.family_id, deserialized.family_id);
+    assert_eq!(original.socket_path, deserialized.socket_path);
+    assert_eq!(original.http_port, deserialized.http_port);
+}

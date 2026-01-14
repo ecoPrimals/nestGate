@@ -90,7 +90,7 @@ impl ZeroCostZfsOperations for ObjectStorageBackend {
         );
 
         // Map tier to S3-compatible storage class
-        let storage_class = match tier {
+        let storage_class = match &tier {
             StorageTier::Hot => "STANDARD",
             StorageTier::Warm => "INTELLIGENT_TIERING",
             StorageTier::Cold => "GLACIER_IR", // Instant Retrieval
@@ -110,7 +110,7 @@ impl ZeroCostZfsOperations for ObjectStorageBackend {
             name: name.to_string(),
             pool: pool.name.clone(),
             prefix: prefix.clone(),
-            tier,
+            tier: tier.clone(),
             created_at: std::time::SystemTime::now(),
         };
 
