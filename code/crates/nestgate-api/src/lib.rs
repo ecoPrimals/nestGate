@@ -89,6 +89,20 @@ pub mod routes;
 /// Enables high-performance binary RPC (tarpc) and universal HTTP-based RPC (JSON-RPC).
 pub mod nestgate_rpc_service;
 
+/// **TRANSPORT MODULE** (TRUE PRIMAL)
+///
+/// Unix socket + JSON-RPC 2.0 transport for TRUE PRIMAL architecture.
+/// Primary transport mechanism for production deployments.
+///
+/// **Features**:
+/// - Unix sockets (100x faster than HTTP, port-free)
+/// - JSON-RPC 2.0 protocol (universal, compatible)
+/// - BearDog integration (hardware-backed security)
+/// - Optional HTTP fallback (debugging only)
+///
+/// **Evolution**: January 2026 - TRUE PRIMAL transport implementation
+pub mod transport;
+
 /// **DEV STUBS MODULE** (Feature-gated: `dev-stubs`)
 ///
 /// Development stub implementations for testing and local development.
