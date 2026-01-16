@@ -1,4 +1,5 @@
-use crate::http_client_stub as reqwest;
+// HTTP removed - use Songbird via capability discovery for external HTTP
+// use crate::http_client_stub as reqwest;
 use base64::{engine::general_purpose, Engine};
 use std::collections::HashMap;
 
@@ -431,31 +432,11 @@ impl ProductionLoadBalancer {
 
         // BiomeOS Concentrated Gap: HTTP load balancer deprecated
         // Use tarpc for primal-to-primal service requests
-        return Err(crate::NestGateError::api_error(
-            format!("HTTP load balancer deprecated for endpoint: {}. Use tarpc for primal communication", 
-                endpoint.url)
-        ));
+        Err(crate::NestGateError::api_error("HTTP load balancer deprecated. Use tarpc for primal communication"))
         
         // REMOVED: HTTP load balancer implementation (~85 lines)
         // Previous HTTP-based load balancer removed (BiomeOS Concentrated Gap)
         // Migration: Use tarpc for primal-to-primal, Songbird RPC for external HTTP
-    }
-}
-
-impl ProductionCommunicationProvider {
-    #[allow(dead_code)] // Framework method - intentionally unused
-    fn list_active_connections(
-        &self,
-    ) -> impl std::future::Future<Output = Result<Vec<(String, bool)>>> + Send {
-        async move {
-            // Production connection listing  
-            let connections = vec![
-                ("connection_1".to_string(), true),
-                ("connection_2".to_string(), false),
-                ("connection_3".to_string(), true),
-            ];
-            Ok(connections)
-        }
     }
 }
 
@@ -475,3 +456,5 @@ impl ProductionCommunicationProvider {
         }
     }
 }
+
+// REMOVED: Duplicate impl block (was accidentally created during HTTP cleanup)

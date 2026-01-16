@@ -220,10 +220,7 @@ impl Connection for HttpConnection {
         // BiomeOS Concentrated Gap: External HTTP removed
         // For primal-to-primal: Use tarpc (Unix sockets)
         // For external HTTP: Use Songbird via discover_capability("external-http")
-        return Err(NestGateError::api_error(
-            format!("HTTP adapter deprecated. Endpoint: {}. Use tarpc for primal-to-primal or Songbird RPC for external HTTP", 
-                self.capability_info.endpoint)
-        ));
+        Err(NestGateError::api_error("HTTP adapter deprecated. Use tarpc for primal-to-primal or Songbird RPC for external HTTP"))
 
         // REMOVED: HTTP client implementation (BiomeOS evolution)
         // Previous implementation: ~45 lines of HTTP request/response handling
