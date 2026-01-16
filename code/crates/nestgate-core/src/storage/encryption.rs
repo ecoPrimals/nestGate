@@ -46,6 +46,7 @@ use aes_gcm::{
 use anyhow::{anyhow, Context, Result};
 use argon2::{Argon2, PasswordHasher};
 use argon2::password_hash::{PasswordHasher as _, SaltString};
+use dashmap::DashMap;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -115,7 +116,7 @@ impl EncryptionCoordinator {
         }
         Ok(Self {
             beardog_url,
-            keys: Arc::new(RwLock::new(HashMap::new())),
+            keys: Arc::new(DashMap::new()),
         })
     }
 
@@ -153,11 +154,11 @@ impl EncryptionCoordinator {
         
         let mut key_bytes = [0u8; KEY_SIZE];
         key_bytes.copy_from_slice(&hash_bytes[..KEY_SIZE]);
-        
+
         let key = Key::<Aes256Gcm>::from_slice(&key_bytes);
-        let mut keys = self.keys.write().await;
-        keys.insert(key_id.to_string(), *key);
-        
+        // Lock-free key storage
+        self.keys.insert(key_id.to_string(), *key);
+
         tracing::info!("Derived key for: {}", key_id);
         Ok(())
     }
@@ -216,8 +217,8 @@ impl EncryptionCoordinator {
     /// - Provides authentication (AEAD)
     /// - Safe against chosen-ciphertext attacks
     pub async fn encrypt(&self, data: &[u8], key_id: &str) -> Result<EncryptedData> {
-        let keys = self.keys.read().await;
-        let key = keys
+        // Lock-free key retrieval
+        let key = self.keys
             .get(key_id)
             .ok_or_else(|| anyhow!("Key not found: {}", key_id))?;
 
@@ -341,9 +342,9 @@ impl EncryptionCoordinator {
 
     /// Get number of keys currently stored
     ///
-    /// Useful for diagnostics and testing
+    /// Useful for diagnostics and testing (lock-free)
     pub async fn key_count(&self) -> usize {
-        self.keys.read().await.len()
+        self.keys.len()
     }
 }
 
