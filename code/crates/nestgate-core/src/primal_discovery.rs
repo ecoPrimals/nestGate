@@ -307,33 +307,151 @@ pub trait DiscoveryBackend {
     async fn discover(&self, capability: &str) -> Result<PrimalInfo>;
 }
 
-/// mDNS/DNS-SD discovery backend
+/// Production discovery backend using discovery_mechanism
+///
+/// This integrates with the unified discovery system (discovery_mechanism.rs)
+/// which supports mDNS, Consul, and Kubernetes backends.
+struct ProductionBackend {
+    discovery: Option<Arc<dyn crate::discovery_mechanism::DiscoveryMechanism>>,
+}
+
+impl Default for ProductionBackend {
+    fn default() -> Self {
+        Self { discovery: None }
+    }
+}
+
+impl ProductionBackend {
+    /// Create new backend with auto-detected discovery mechanism
+    async fn new() -> Result<Self> {
+        // Auto-detect best available discovery mechanism
+        let discovery = crate::discovery_mechanism::DiscoveryBuilder::default()
+            .detect()
+            .await
+            .ok();
+
+        if discovery.is_none() {
+            tracing::warn!("No discovery mechanism detected, discovery will use fallbacks");
+        }
+
+        Ok(Self {
+            discovery: discovery.map(Arc::from),
+        })
+    }
+
+    /// Convert primal_discovery SelfKnowledge to discovery_mechanism SelfKnowledge
+    fn convert_self_knowledge(knowledge: &SelfKnowledge) -> crate::self_knowledge::SelfKnowledge {
+        crate::self_knowledge::SelfKnowledge::builder()
+            .with_name(&knowledge.name)
+            .with_capabilities(knowledge.capabilities.clone())
+            .build()
+            .unwrap_or_else(|e| {
+                tracing::error!("Failed to build self-knowledge: {}", e);
+                // Return minimal valid self-knowledge
+                crate::self_knowledge::SelfKnowledge::builder()
+                    .with_name("unknown")
+                    .build()
+                    .unwrap()
+            })
+    }
+
+    /// Convert discovery_mechanism ServiceInfo to PrimalInfo
+    fn convert_service_info(service: crate::discovery_mechanism::ServiceInfo) -> PrimalInfo {
+        PrimalInfo {
+            name: service.name,
+            capabilities: service.capabilities,
+            endpoints: vec![], // Will be populated from endpoint string
+            metadata: service.metadata,
+            last_seen: Instant::now(),
+        }
+    }
+}
+
+#[async_trait::async_trait]
+impl DiscoveryBackend for ProductionBackend {
+    async fn announce(&self, knowledge: &SelfKnowledge) -> Result<()> {
+        tracing::info!(
+            "Announcing {} with capabilities: {:?}",
+            knowledge.name,
+            knowledge.capabilities
+        );
+
+        if let Some(discovery) = &self.discovery {
+            let self_knowledge = Self::convert_self_knowledge(knowledge);
+            discovery.announce(&self_knowledge).await?;
+            tracing::info!("Successfully announced via discovery mechanism");
+        } else {
+            tracing::warn!("No discovery mechanism available, announcement is local only");
+        }
+
+        Ok(())
+    }
+
+    async fn discover(&self, capability: &str) -> Result<PrimalInfo> {
+        if let Some(discovery) = &self.discovery {
+            // Query discovery mechanism
+            let services = discovery.find_by_capability(capability.to_string()).await?;
+
+            // Return first service found
+            if let Some(service) = services.first() {
+                tracing::info!(
+                    "Discovered primal for capability '{}': {} at {}",
+                    capability,
+                    service.name,
+                    service.endpoint
+                );
+                return Ok(Self::convert_service_info(service.clone()));
+            }
+
+            Err(NestGateError::network_error(&format!(
+                "No primal found providing capability: {}",
+                capability
+            )))
+        } else {
+            // Fallback: Try environment variable
+            let env_var = format!("NESTGATE_{}_ENDPOINT", capability.to_uppercase());
+            if let Ok(endpoint) = std::env::var(&env_var) {
+                tracing::info!(
+                    "Discovered primal for capability '{}' from environment: {}",
+                    capability,
+                    endpoint
+                );
+
+                return Ok(PrimalInfo {
+                    name: capability.to_string(),
+                    capabilities: vec![capability.to_string()],
+                    endpoints: vec![],
+                    metadata: HashMap::new(),
+                    last_seen: Instant::now(),
+                });
+            }
+
+            Err(NestGateError::network_error(&format!(
+                "No discovery mechanism available and no environment fallback for capability: {}",
+                capability
+            )))
+        }
+    }
+}
+
+/// mDNS/DNS-SD discovery backend (legacy, uses ProductionBackend)
 #[derive(Default)]
 struct MDnsBackend {
-    // Will be implemented with mdns library
+    _marker: std::marker::PhantomData<()>,
 }
 
 #[async_trait::async_trait]
 impl DiscoveryBackend for MDnsBackend {
     async fn announce(&self, knowledge: &SelfKnowledge) -> Result<()> {
-        // TODO: Implement mDNS announcement
-        // For now, log that we would announce
-        tracing::info!(
-            "Would announce {} with capabilities: {:?}",
-            knowledge.name,
-            knowledge.capabilities
-        );
-        Ok(())
+        // Delegate to production backend
+        let backend = ProductionBackend::new().await?;
+        backend.announce(knowledge).await
     }
 
     async fn discover(&self, capability: &str) -> Result<PrimalInfo> {
-        // TODO: Implement mDNS discovery
-        // For now, return error indicating discovery not yet implemented
-        let msg = format!(
-            "mDNS discovery not yet implemented for capability: {}",
-            capability
-        );
-        Err(NestGateError::validation_error(&msg))
+        // Delegate to production backend
+        let backend = ProductionBackend::new().await?;
+        backend.discover(capability).await
     }
 }
 
