@@ -64,7 +64,8 @@
 //! # }
 //! ```
 
-use crate::http_client_stub as reqwest;
+// HTTP removed - use Songbird via capability discovery for external HTTP
+// use crate::http_client_stub as reqwest;
 use crate::self_knowledge::SelfKnowledge;
 use crate::Result;
 use serde::{Deserialize, Serialize};

@@ -8,7 +8,7 @@
 //! // Use Songbird's RPC methods for external HTTP
 //! ```
 
-use crate::error::{NestGateError, Result};
+use crate::error::Result;
 
 /// Stubbed HTTP client (use Songbird RPC for external HTTP)
 #[derive(Debug, Clone)]
