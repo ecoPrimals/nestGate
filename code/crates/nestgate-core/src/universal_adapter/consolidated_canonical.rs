@@ -20,6 +20,7 @@
 //! - Zero-cost abstractions where possible
 //! - Complete ecosystem integration
 
+use crate::http_client_stub as reqwest;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;

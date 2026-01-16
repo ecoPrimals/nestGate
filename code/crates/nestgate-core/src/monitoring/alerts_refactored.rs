@@ -13,6 +13,7 @@
 // **Original**: 1,052 lines with high cognitive complexity
 // **Refactored**: ~400 lines with clear separation of concerns
 
+use crate::http_client_stub as reqwest;
 use crate::smart_abstractions::prelude::*;
 use crate::{NestGateError, Result};
 use serde::{Deserialize, Serialize};

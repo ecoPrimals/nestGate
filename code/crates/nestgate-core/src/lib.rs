@@ -99,6 +99,9 @@ pub mod universal_storage;
 pub mod uuid_cache;
 // ==================== SPECIALIZED SYSTEMS ====================
 
+/// HTTP client stub (BiomeOS Pure Rust Evolution - replaces reqwest)
+pub mod http_client_stub;
+
 /// AI-first refactored components
 pub mod ai_first_refactored;
 /// Cryptographic operations (Pure Rust - RustCrypto)

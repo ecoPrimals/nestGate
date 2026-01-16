@@ -64,6 +64,7 @@
 //! # }
 //! ```
 
+use crate::http_client_stub as reqwest;
 use crate::self_knowledge::SelfKnowledge;
 use crate::Result;
 use serde::{Deserialize, Serialize};

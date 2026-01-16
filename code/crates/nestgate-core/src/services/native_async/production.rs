@@ -1,3 +1,4 @@
+use crate::http_client_stub as reqwest;
 use base64::{engine::general_purpose, Engine};
 use std::collections::HashMap;
 
