@@ -70,7 +70,7 @@ impl RpcMethodHandler for NestGateRpcHandler {
             "system.info" => self.handle_system_info(params).await,
             
             // Unknown method
-            _ => Err(NestGateError::rpc_error(&format!(
+            _ => Err(NestGateError::api_error(&format!(
                 "Unknown method: {}",
                 method
             ))),
@@ -82,52 +82,52 @@ impl NestGateRpcHandler {
     /// Handle storage.store request
     async fn handle_store(&self, params: Value) -> Result<Value> {
         let request: StoreRequest = serde_json::from_value(params)
-            .map_err(|e| NestGateError::rpc_error(&format!("Invalid params: {}", e)))?;
+            .map_err(|e| NestGateError::api_error(&format!("Invalid params: {}", e)))?;
         
         if let Some(storage) = &self.storage {
             storage.store(&request.key, &request.value).await?;
             Ok(serde_json::json!({"success": true, "key": request.key}))
         } else {
-            Err(NestGateError::rpc_error("Storage backend not configured"))
+            Err(NestGateError::api_error("Storage backend not configured"))
         }
     }
     
     /// Handle storage.retrieve request
     async fn handle_retrieve(&self, params: Value) -> Result<Value> {
         let request: RetrieveRequest = serde_json::from_value(params)
-            .map_err(|e| NestGateError::rpc_error(&format!("Invalid params: {}", e)))?;
+            .map_err(|e| NestGateError::api_error(&format!("Invalid params: {}", e)))?;
         
         if let Some(storage) = &self.storage {
             let value = storage.retrieve(&request.key).await?;
             Ok(serde_json::json!({"key": request.key, "value": value}))
         } else {
-            Err(NestGateError::rpc_error("Storage backend not configured"))
+            Err(NestGateError::api_error("Storage backend not configured"))
         }
     }
     
     /// Handle storage.delete request
     async fn handle_delete(&self, params: Value) -> Result<Value> {
         let request: DeleteRequest = serde_json::from_value(params)
-            .map_err(|e| NestGateError::rpc_error(&format!("Invalid params: {}", e)))?;
+            .map_err(|e| NestGateError::api_error(&format!("Invalid params: {}", e)))?;
         
         if let Some(storage) = &self.storage {
             storage.delete(&request.key).await?;
             Ok(serde_json::json!({"success": true, "key": request.key}))
         } else {
-            Err(NestGateError::rpc_error("Storage backend not configured"))
+            Err(NestGateError::api_error("Storage backend not configured"))
         }
     }
     
     /// Handle storage.list request
     async fn handle_list(&self, params: Value) -> Result<Value> {
         let request: ListRequest = serde_json::from_value(params)
-            .map_err(|e| NestGateError::rpc_error(&format!("Invalid params: {}", e)))?;
+            .map_err(|e| NestGateError::api_error(&format!("Invalid params: {}", e)))?;
         
         if let Some(storage) = &self.storage {
             let keys = storage.list(&request.prefix).await?;
             Ok(serde_json::json!({"keys": keys}))
         } else {
-            Err(NestGateError::rpc_error("Storage backend not configured"))
+            Err(NestGateError::api_error("Storage backend not configured"))
         }
     }
     

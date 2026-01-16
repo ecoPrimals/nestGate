@@ -360,7 +360,7 @@ pub async fn show_version() -> BinResult<()> {
     println!("🏰 NestGate");
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     println!("   Version:       {}", env!("CARGO_PKG_VERSION"));
-    println!("   Build:         {}", env!("PROFILE"));
+    println!("   Build:         {}", if cfg!(debug_assertions) { "debug" } else { "release" });
     println!("   Pure Rust:     100%");
     println!("   HTTP-free:     ✅ (Concentrated Gap compliant)");
     println!("   Lock-free:     10.6% (43/406 files, DashMap)");

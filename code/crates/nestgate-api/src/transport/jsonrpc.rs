@@ -97,7 +97,7 @@ impl JsonRpcResponse {
 ///
 /// Handles JSON-RPC 2.0 requests over Unix sockets.
 pub struct JsonRpcHandler<H> {
-    handler: Arc<H>,
+    pub(crate) handler: Arc<H>,  // Made pub(crate) for Clone impl in server.rs
 }
 
 impl<H> JsonRpcHandler<H>
@@ -122,7 +122,7 @@ where
         
         loop {
             // Read request
-            let n = stream.readable().await
+            let _n = stream.readable().await
                 .map_err(|e| NestGateError::network_error(&format!("Socket not readable: {}", e)))?;
             
             let n = match stream.try_read(&mut buffer) {
@@ -189,7 +189,7 @@ where
         response: &JsonRpcResponse,
     ) -> Result<()> {
         let response_str = serde_json::to_string(response)
-            .map_err(|e| NestGateError::rpc_error(&format!("Failed to serialize response: {}", e)))?;
+            .map_err(|e| NestGateError::api_error(&format!("Failed to serialize response: {}", e)))?;
         
         trace!("Sending response: {}", response_str);
         

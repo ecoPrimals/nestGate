@@ -17,9 +17,13 @@ async fn main() -> BinResult<()> {
     
     let bin_name = std::env::args()
         .next()
-        .and_then(|p| Path::new(&p).file_name())
-        .and_then(|n| n.to_str())
-        .unwrap_or("nestgate");
+        .and_then(|p| {
+            Path::new(&p)
+                .file_name()
+                .and_then(|n| n.to_str())
+                .map(|s| s.to_string())
+        })
+        .unwrap_or_else(|| "nestgate".to_string());
     
     // Auto-daemon mode for backward compatibility
     if bin_name == "nestgate-server" {
