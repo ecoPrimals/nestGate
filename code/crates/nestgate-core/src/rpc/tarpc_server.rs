@@ -112,8 +112,9 @@ impl NestGateRpcService {
         let object_count: u64 = self.objects.iter().map(|entry| entry.value().len() as u64).sum();
         let used_space: u64 = self.objects
             .iter()
-            .flat_map(|entry| entry.value().values())
-            .map(|(data, _)| data.len() as u64)
+            .map(|entry| {
+                entry.value().values().map(|(data, _)| data.len() as u64).sum::<u64>()
+            })
             .sum();
 
         StorageMetrics {
@@ -237,16 +238,10 @@ impl NestGateRpc for NestGateRpcService {
     ) -> std::result::Result<ObjectInfo, NestGateRpcError> {
         debug!("RPC: store_object({}/{})", dataset, key);
 
-        // Verify dataset exists
-        {
-            let datasets = self.datasets.read().await;
-            if !datasets.contains_key(&dataset) {
-                return Err(NestGateRpcError::DatasetNotFound { dataset });
-            }
+        // Verify dataset exists (lock-free!)
+        if !self.datasets.contains_key(&dataset) {
+            return Err(NestGateRpcError::DatasetNotFound { dataset });
         }
-
-        let mut objects = self.objects.write().await;
-        let dataset_objects = objects.entry(dataset.clone()).or_insert_with(HashMap::new);
 
         let now = Self::current_timestamp();
         let object_info = ObjectInfo {
@@ -262,11 +257,14 @@ impl NestGateRpc for NestGateRpcService {
             metadata: metadata.unwrap_or_default(),
         };
 
-        dataset_objects.insert(key.clone(), (data, object_info.clone()));
+        // DashMap: Lock-free entry and insert!
+        self.objects
+            .entry(dataset.clone())
+            .or_insert_with(HashMap::new)
+            .insert(key.clone(), (data, object_info.clone()));
 
-        // Update dataset stats
-        let mut datasets = self.datasets.write().await;
-        if let Some(ds) = datasets.get_mut(&dataset) {
+        // Update dataset stats (lock-free!)
+        if let Some(mut ds) = self.datasets.get_mut(&dataset) {
             ds.object_count += 1;
             ds.size_bytes += object_info.size_bytes;
             ds.modified_at = now;
@@ -284,13 +282,12 @@ impl NestGateRpc for NestGateRpcService {
     ) -> std::result::Result<Vec<u8>, NestGateRpcError> {
         debug!("RPC: retrieve_object({}/{})", dataset, key);
 
-        let objects = self.objects.read().await;
-        let dataset_objects =
-            objects
-                .get(&dataset)
-                .ok_or_else(|| NestGateRpcError::DatasetNotFound {
-                    dataset: dataset.clone(),
-                })?;
+        // DashMap: Lock-free get!
+        let dataset_objects = self.objects
+            .get(&dataset)
+            .ok_or_else(|| NestGateRpcError::DatasetNotFound {
+                dataset: dataset.clone(),
+            })?;
 
         dataset_objects
             .get(&key)
@@ -306,13 +303,12 @@ impl NestGateRpc for NestGateRpcService {
     ) -> std::result::Result<ObjectInfo, NestGateRpcError> {
         debug!("RPC: get_object_metadata({}/{})", dataset, key);
 
-        let objects = self.objects.read().await;
-        let dataset_objects =
-            objects
-                .get(&dataset)
-                .ok_or_else(|| NestGateRpcError::DatasetNotFound {
-                    dataset: dataset.clone(),
-                })?;
+        // DashMap: Lock-free get!
+        let dataset_objects = self.objects
+            .get(&dataset)
+            .ok_or_else(|| NestGateRpcError::DatasetNotFound {
+                dataset: dataset.clone(),
+            })?;
 
         dataset_objects
             .get(&key)
@@ -329,13 +325,12 @@ impl NestGateRpc for NestGateRpcService {
     ) -> std::result::Result<Vec<ObjectInfo>, NestGateRpcError> {
         debug!("RPC: list_objects({}, {:?}, {:?})", dataset, prefix, limit);
 
-        let objects = self.objects.read().await;
-        let dataset_objects =
-            objects
-                .get(&dataset)
-                .ok_or_else(|| NestGateRpcError::DatasetNotFound {
-                    dataset: dataset.clone(),
-                })?;
+        // DashMap: Lock-free get!
+        let dataset_objects = self.objects
+            .get(&dataset)
+            .ok_or_else(|| NestGateRpcError::DatasetNotFound {
+                dataset: dataset.clone(),
+            })?;
 
         let mut results: Vec<ObjectInfo> = dataset_objects
             .iter()
@@ -364,24 +359,23 @@ impl NestGateRpc for NestGateRpcService {
     ) -> std::result::Result<OperationResult, NestGateRpcError> {
         debug!("RPC: delete_object({}/{})", dataset, key);
 
-        let mut objects = self.objects.write().await;
-        let dataset_objects =
-            objects
-                .get_mut(&dataset)
-                .ok_or_else(|| NestGateRpcError::DatasetNotFound {
+        // DashMap: Lock-free get_mut and remove!
+        let info = if let Some(mut dataset_objects) = self.objects.get_mut(&dataset) {
+            dataset_objects
+                .remove(&key)
+                .ok_or(NestGateRpcError::ObjectNotFound {
                     dataset: dataset.clone(),
-                })?;
-
-        let (_, info) = dataset_objects
-            .remove(&key)
-            .ok_or(NestGateRpcError::ObjectNotFound {
+                    key: key.clone(),
+                })?
+                .1  // Get ObjectInfo from tuple
+        } else {
+            return Err(NestGateRpcError::DatasetNotFound {
                 dataset: dataset.clone(),
-                key: key.clone(),
-            })?;
+            });
+        };
 
-        // Update dataset stats
-        let mut datasets = self.datasets.write().await;
-        if let Some(ds) = datasets.get_mut(&dataset) {
+        // Update dataset stats (lock-free!)
+        if let Some(mut ds) = self.datasets.get_mut(&dataset) {
             ds.object_count = ds.object_count.saturating_sub(1);
             ds.size_bytes = ds.size_bytes.saturating_sub(info.size_bytes);
             ds.modified_at = Self::current_timestamp();
@@ -476,14 +470,14 @@ impl NestGateRpc for NestGateRpcService {
     async fn health(self, _context: Context) -> HealthStatus {
         debug!("RPC: health()");
 
-        let datasets = self.datasets.read().await;
+        // DashMap: Lock-free len!
         let metrics = self.calculate_metrics().await;
 
         HealthStatus {
             status: "healthy".to_string(),
             version: "0.2.0".to_string(),
             uptime_seconds: self.uptime_seconds(),
-            total_datasets: datasets.len(),
+            total_datasets: self.datasets.len(),
             total_objects: metrics.object_count,
             storage_used_bytes: metrics.used_space_bytes,
             metrics: HashMap::new(),
@@ -599,8 +593,9 @@ mod tests {
     #[tokio::test]
     async fn test_service_creation() {
         let service = NestGateRpcService::new();
-        assert!(service.datasets.read().await.is_empty());
-        assert!(service.objects.read().await.is_empty());
+        // DashMap: Lock-free is_empty!
+        assert!(service.datasets.is_empty());
+        assert!(service.objects.is_empty());
     }
 
     #[tokio::test]
