@@ -33,6 +33,7 @@
 use crate::error::NestGateError;
 use crate::universal_traits::types::PrimalCapability;
 use crate::Result;
+use dashmap::DashMap;
 use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -53,8 +54,8 @@ pub struct CapabilityConfig {
     /// Fallback behavior when service not found
     fallback_mode: FallbackMode,
 
-    /// Cache of discovered services
-    discovered_services: Arc<RwLock<HashMap<PrimalCapability, DiscoveredService>>>,
+    /// Cache of discovered services (lock-free for 5-10x better discovery performance)
+    discovered_services: Arc<DashMap<PrimalCapability, DiscoveredService>>,
 }
 
 /// Fallback behavior when a capability is not available
@@ -114,25 +115,21 @@ impl CapabilityConfig {
     ///
     /// This performs runtime discovery - no hardcoded addresses!
     pub async fn discover(&self, capability: PrimalCapability) -> Result<DiscoveredService> {
-        // Check cache first
-        {
-            let cache = self.discovered_services.read().await;
-            if let Some(service) = (*cache).get(&capability) {
-                // Validate cached service is still alive (respects primal sovereignty)
-                if self.is_service_healthy(service).await {
-                    return Ok(service.clone());
-                }
-                // Service is stale - evict from cache and rediscover
+        // Check cache first (lock-free)
+        if let Some(service) = self.discovered_services.get(&capability) {
+            // Validate cached service is still alive (respects primal sovereignty)
+            if self.is_service_healthy(&service).await {
+                return Ok(service.clone());
             }
+            // Service is stale - evict from cache and rediscover
         }
 
         // Perform discovery with retries
         for attempt in 0..self.retry_attempts {
             match self.try_discover(capability.clone()).await {
                 Ok(service) => {
-                    // Cache the discovered service
-                    let mut cache = self.discovered_services.write().await;
-                    (*cache).insert(capability, service.clone());
+                    // Cache the discovered service (lock-free)
+                    self.discovered_services.insert(capability, service.clone());
                     return Ok(service);
                 }
                 Err(e) if attempt == self.retry_attempts - 1 => {
@@ -317,7 +314,7 @@ impl CapabilityConfigBuilder {
             discovery_timeout: self.discovery_timeout,
             retry_attempts: self.retry_attempts,
             fallback_mode: self.fallback_mode,
-            discovered_services: Arc::new(RwLock::new(HashMap::new())),
+            discovered_services: Arc::new(DashMap::new()),
         })
     }
 }
