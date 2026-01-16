@@ -1,4 +1,5 @@
-use crate::http_client_stub as reqwest;
+// HTTP removed - use Songbird via capability discovery for external HTTP
+// use crate::http_client_stub as reqwest;
 use base64::{engine::general_purpose, Engine};
 use std::collections::HashMap;
 
@@ -424,90 +425,18 @@ impl ProductionLoadBalancer {
         endpoint: &crate::service_discovery::types::ServiceEndpoint,
         request: &ServiceRequest,
     ) -> Result<ServiceResponse> {
-        let client = reqwest::Client::new();
+        // Generate IDs for tracing
         let request_id = uuid::Uuid::new_v4().to_string();
         let correlation_id = uuid::Uuid::new_v4().to_string();
         let trace_id = uuid::Uuid::new_v4().to_string();
 
-        // Create HTTP request
-        let http_request = client
-            .post(&endpoint.url)
-            .header("Content-Type", "application/json")
-            .header("X-Request-ID", &request_id)
-            .header("X-Correlation-ID", &correlation_id)
-            .header("X-Trace-ID", &trace_id)
-            .json(&{
-                // Use base64 engine for encoding
-                use base64::{engine::general_purpose, Engine as _};
-                serde_json::json!({
-                    "service_name": request.parameters.get("service_name").map(|v| v.as_str().unwrap_or("default")).unwrap_or("default"),
-                    "data": general_purpose::STANDARD.encode(serde_json::to_vec(&request.parameters).unwrap_or_default()),
-                    "request_id": request_id,
-                    "correlation_id": correlation_id,
-                    "trace_id": trace_id
-                })
-            });
-
-        // Send request with timeout
-        let response = tokio::time::timeout(Duration::from_secs(30), http_request.send())
-            .await
-            .map_err(|_| {
-                crate::NestGateError::timeout_error("service_request", Duration::from_secs(30))
-            })?
-            .map_err(|e| {
-                crate::NestGateError::network_error(&format!("HTTP request failed: {e}"))
-            })?;
-
-        // Parse response
-        if response.status().is_success() {
-            let response_body: serde_json::Value = response.json().await.map_err(|e| {
-                // IDIOMATIC EVOLUTION: Network error with rich context
-                crate::NestGateError::network_error(&format!(
-                    "Failed to parse response: {e} (endpoint: {})",
-                    endpoint.url
-                ))
-            })?;
-
-            let data = if let Some(data_b64) = response_body.get("data").and_then(|v| v.as_str()) {
-                // Use base64 engine for decoding
-                general_purpose::STANDARD
-                    .decode(data_b64)
-                    .unwrap_or_else(|_| data_b64.as_bytes().to_vec())
-            } else {
-                response_body.to_string().into_bytes()
-            };
-
-            Ok(ServiceResponse {
-                success: true,
-                data,
-                request_id: Some(request_id),
-                status: crate::canonical_types::ResponseStatus::Success,
-                headers: HashMap::new(),
-                payload: response_body,
-                timestamp: SystemTime::now()
-                    .duration_since(SystemTime::UNIX_EPOCH)
-                    .unwrap_or_default()
-                    .as_secs(),
-                duration: Duration::from_millis(0), // Will be set by caller
-                processing_time: 0,                 // Will be set by caller
-                tags: HashMap::new(),
-                error_details: None,
-                correlation_id: Some(correlation_id),
-                trace_id: Some(trace_id),
-            })
-        } else {
-            let _status_code = response.status().as_u16();
-            let status = response.status();
-            let error_text = response
-                .text()
-                .await
-                .unwrap_or_else(|_| "Unknown error".to_string());
-            // IDIOMATIC EVOLUTION: Network error with status code context
-            Err(crate::NestGateError::network_error(&format!(
-                "Service returned error: {status} - {error_text} (endpoint: {})",
-                endpoint.url
-            )))
-        }
+        // BiomeOS Concentrated Gap: HTTP load balancer deprecated
+        // Use tarpc for primal-to-primal service requests
+        Err(crate::NestGateError::api_error("HTTP load balancer deprecated. Use tarpc for primal communication"))
+        
+        // REMOVED: HTTP load balancer implementation (~85 lines)
+        // Previous HTTP-based load balancer removed (BiomeOS Concentrated Gap)
+        // Migration: Use tarpc for primal-to-primal, Songbird RPC for external HTTP
     }
 }
 
@@ -527,3 +456,5 @@ impl ProductionCommunicationProvider {
         }
     }
 }
+
+// REMOVED: Duplicate impl block (was accidentally created during HTTP cleanup)

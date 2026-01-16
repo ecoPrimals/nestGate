@@ -64,11 +64,14 @@
 //! # }
 //! ```
 
-use crate::http_client_stub as reqwest;
+// HTTP removed - use Songbird via capability discovery for external HTTP
+// use crate::http_client_stub as reqwest;
 use crate::self_knowledge::SelfKnowledge;
 use crate::Result;
+use dashmap::DashMap;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::sync::Arc;
 use std::time::Duration;
 
 /// Simplified capability type for service discovery
@@ -227,7 +230,8 @@ pub mod mdns {
     ///
     /// This is a simple implementation that stores services in memory.
     /// In production, this would use actual mDNS protocol (avahi-daemon, dns-sd, etc.)
-    type ServiceRegistry = Arc<RwLock<HashMap<String, ServiceInfo>>>;
+    /// Lock-free with DashMap for better concurrent discovery performance
+    type ServiceRegistry = Arc<DashMap<String, ServiceInfo>>;
 
     /// mDNS discovery mechanism
     pub struct MdnsDiscovery {
@@ -238,12 +242,12 @@ pub mod mdns {
     }
 
     impl MdnsDiscovery {
-        /// Create new mDNS discovery
+        /// Create new mDNS discovery (lock-free registry)
         pub async fn new(builder: DiscoveryBuilder) -> Result<Self> {
             Ok(Self {
                 timeout: builder.timeout,
                 cache_duration: builder.cache_duration,
-                registry: Arc::new(RwLock::new(HashMap::new())),
+                registry: Arc::new(DashMap::new()),
                 announced_service_id: Arc::new(RwLock::new(None)),
             })
         }
@@ -291,9 +295,8 @@ pub mod mdns {
             let service_info = Self::create_service_info(self_knowledge);
             let service_id = service_info.id.clone();
 
-            // Store in registry
-            let mut registry = self.registry.write().await;
-            registry.insert(service_id.clone(), service_info);
+            // Store in registry (lock-free)
+            self.registry.insert(service_id.clone(), service_info);
 
             // Remember our service ID
             let mut announced = self.announced_service_id.write().await;
@@ -306,11 +309,11 @@ pub mod mdns {
         async fn find_by_capability(&self, capability: Capability) -> Result<Vec<ServiceInfo>> {
             tracing::debug!("mDNS query for capability: {:?}", capability);
 
-            let registry = self.registry.read().await;
-            let matching_services: Vec<ServiceInfo> = registry
-                .values()
+            // Lock-free iteration
+            let matching_services: Vec<ServiceInfo> = self.registry
+                .iter()
+                .map(|entry| entry.value().clone())
                 .filter(|service| service.capabilities.contains(&capability))
-                .cloned()
                 .collect();
 
             tracing::debug!(
@@ -325,8 +328,8 @@ pub mod mdns {
         async fn find_by_id(&self, id: &str) -> Result<Option<ServiceInfo>> {
             tracing::debug!("mDNS lookup service: {}", id);
 
-            let registry = self.registry.read().await;
-            let service = registry.get(id).cloned();
+            // Lock-free lookup
+            let service = self.registry.get(id).map(|entry| entry.value().clone());
 
             if service.is_some() {
                 tracing::debug!("Found service: {}", id);
@@ -340,9 +343,8 @@ pub mod mdns {
         async fn health_check(&self, service_id: &str) -> Result<bool> {
             tracing::debug!("mDNS health check: {}", service_id);
 
-            // Check if service exists in registry
-            let registry = self.registry.read().await;
-            let healthy = registry.contains_key(service_id);
+            // Check if service exists in registry (lock-free)
+            let healthy = self.registry.contains_key(service_id);
 
             tracing::debug!("Service {} health: {}", service_id, healthy);
             Ok(healthy)
@@ -351,8 +353,8 @@ pub mod mdns {
         async fn deregister(&self, service_id: &str) -> Result<()> {
             tracing::info!("mDNS deregister: {}", service_id);
 
-            let mut registry = self.registry.write().await;
-            registry.remove(service_id);
+            // Lock-free remove
+            self.registry.remove(service_id);
 
             // Clear announced service if it was us
             let mut announced = self.announced_service_id.write().await;

@@ -40,10 +40,9 @@ pub struct StorageManagerService {
     start_time: SystemTime,
     /// Service configuration
     config: StorageServiceConfig,
-    // TODO: Re-enable adaptive storage once storage module compilation is fixed
-    // /// Adaptive storage engine (new unified system)
-    // #[cfg(feature = "adaptive-storage")]
-    // adaptive_storage: Option<Arc<super::service_integration::AdaptiveStorageService>>,
+    /// Adaptive storage engine (new unified system)
+    #[cfg(feature = "adaptive-storage")]
+    adaptive_storage: Option<Arc<super::service_integration::AdaptiveStorageService>>,
 }
 impl StorageManagerService {
     /// Create a new Storage Manager Service with real implementations
@@ -88,27 +87,26 @@ impl StorageManagerService {
         //         })?,
         // );
 
-        // TODO: Re-enable adaptive storage once storage module compilation is fixed
-        // // Initialize adaptive storage if feature is enabled
-        // #[cfg(feature = "adaptive-storage")]
-        // let adaptive_storage = {
-        //     use std::path::PathBuf;
-        //     let storage_path = PathBuf::from(&config.base_path).join("adaptive");
-        //     let service = super::service_integration::AdaptiveStorageService::new(storage_path);
-        //     match service.initialize().await {
-        //         Ok(()) => {
-        //             info!("✅ Adaptive storage engine initialized");
-        //             Some(Arc::new(service))
-        //         }
-        //         Err(e) => {
-        //             warn!(
-        //                 "⚠️  Failed to initialize adaptive storage: {}, falling back to legacy",
-        //                 e
-        //             );
-        //             None
-        //         }
-        //     }
-        // };
+        // Initialize adaptive storage if feature is enabled
+        #[cfg(feature = "adaptive-storage")]
+        let adaptive_storage = {
+            use std::path::PathBuf;
+            let storage_path = PathBuf::from(&config.base_path).join("adaptive");
+            let service = super::service_integration::AdaptiveStorageService::new(storage_path);
+            match service.initialize().await {
+                Ok(()) => {
+                    info!("✅ Adaptive storage engine initialized");
+                    Some(Arc::new(service))
+                }
+                Err(e) => {
+                    warn!(
+                        "⚠️  Failed to initialize adaptive storage: {}, falling back to legacy",
+                        e
+                    );
+                    None
+                }
+            }
+        };
 
         let service = Self {
             service_id: Uuid::new_v4(),
@@ -440,16 +438,47 @@ impl StorageManagerService {
         !self.zfs_config.zfs_binary.is_empty()
     }
 
-    // TODO: Re-enable adaptive storage methods once storage module is fixed
-    // Adaptive storage provides intelligent compression and routing
-    // See: code/crates/nestgate-core/src/storage/ for implementation
-    //
-    // Planned methods:
-    // - store_adaptive(data) -> StorageReceipt
-    // - retrieve_adaptive(hash) -> Bytes
-    // - get_adaptive_metrics() -> MetricsSnapshot
-    // - analyze_data(data) -> DataAnalysisResult
-    // - is_adaptive_storage_available() -> bool
+    /// Check if adaptive storage is available
+    #[cfg(feature = "adaptive-storage")]
+    pub fn is_adaptive_storage_available(&self) -> bool {
+        self.adaptive_storage.is_some()
+    }
+
+    /// Check if adaptive storage is available (always false without feature)
+    #[cfg(not(feature = "adaptive-storage"))]
+    pub fn is_adaptive_storage_available(&self) -> bool {
+        false
+    }
+
+    /// Store data using adaptive compression (feature-gated)
+    #[cfg(feature = "adaptive-storage")]
+    pub async fn store_adaptive(&self, data: Vec<u8>) -> Result<crate::storage::StorageReceipt> {
+        if let Some(ref adaptive) = self.adaptive_storage {
+            adaptive.store_data(data).await.map_err(|e| {
+                NestGateError::storage_error(&format!("Adaptive storage failed: {e}"))
+            })
+        } else {
+            Err(NestGateError::storage_error("Adaptive storage not initialized"))
+        }
+    }
+
+    /// Retrieve data using adaptive storage (feature-gated)
+    #[cfg(feature = "adaptive-storage")]
+    pub async fn retrieve_adaptive(&self, hash: &str) -> Result<Vec<u8>> {
+        if let Some(ref adaptive) = self.adaptive_storage {
+            adaptive.retrieve_data(hash).await.map_err(|e| {
+                NestGateError::storage_error(&format!("Adaptive retrieval failed: {e}"))
+            })
+        } else {
+            Err(NestGateError::storage_error("Adaptive storage not initialized"))
+        }
+    }
+
+    /// Get adaptive storage metrics (feature-gated)
+    #[cfg(feature = "adaptive-storage")]
+    pub fn get_adaptive_metrics(&self) -> Option<crate::storage::MetricsSnapshot> {
+        self.adaptive_storage.as_ref().map(|a| a.get_metrics())
+    }
 }
 
 // Note: Default trait is intentionally not implemented for StorageManagerService

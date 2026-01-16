@@ -3,7 +3,8 @@
 // Provides gradual migration from hardcoded values to capability-based discovery
 // with robust fallback chains.
 
-use crate::http_client_stub as reqwest;
+// HTTP removed - use Songbird via capability discovery for external HTTP
+// use crate::http_client_stub as reqwest;
 use crate::error::{NestGateError, Result};
 use crate::primal_discovery::PrimalDiscovery;
 use std::collections::HashMap;
