@@ -13,12 +13,13 @@
 pub mod native;
 /// Native real ZFS operations with production implementations
 pub mod native_real;
-/// Remote ZFS service for distributed operations
-pub mod remote;
+/// Remote ZFS service for distributed operations (HTTP removed)
+// NOTE: remote module disabled - HTTP removed per Concentrated Gap Architecture
+// pub mod remote;
 
 // Re-exports for production use
 pub use native::NativeZfsService;
-pub use remote::RemoteZfsService;
+// pub use remote::RemoteZfsService;  // HTTP removed
 // Note: native_real uses NativeZfsService internally - no separate export needed
 
 use crate::handlers::zfs::universal_zfs::traits::UniversalZfsService;

@@ -59,174 +59,69 @@ type NetworkApiState = Arc<RwLock<HashMap<String, ServiceInstance>>>;
 type ServiceRegistry = Arc<RwLock<HashMap<String, ServiceInstance>>>;
 
 /// Orchestration orchestrator client for network operations
+/// 
+/// NOTE: HTTP removed per Concentrated Gap Architecture
+/// All orchestration now via Songbird gateway using Unix sockets
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 /// Orchestrationcapability
 pub struct OrchestrationCapability {
     /// Base URL for Orchestration orchestrator
     pub base_url: String,
-    /// HTTP client for communication
-    pub client: reqwest::Client,
+    // HTTP client removed - use Unix sockets via Songbird
 }
+#[allow(dead_code)]
 impl OrchestrationCapability {
     /// Create a new Orchestration client
+    /// 
+    /// NOTE: HTTP removed - use Unix sockets via Songbird
     #[must_use]
     pub fn new(base_url: String) -> Self {
-        Self {
-            base_url,
-            client: reqwest::Client::new(),
-        }
+        Self { base_url }
     }
 
     /// Register a service with Orchestration
+    /// 
+    /// NOTE: HTTP removed - use Unix sockets via Songbird
+    #[allow(dead_code)]
     pub async fn register_service(&self, service: &ServiceInstance) -> NestGateResult<()> {
-        let url = "self.base_url/api/v1/services/register".to_string();
-
-        let response = self
-            .client
-            .post(&url)
-            .json(service)
-            .send()
-            .await
-            .map_err(|e| {
-                nestgate_core::error::NestGateError::network_error(&format!(
-                    "Failed to register service: {e}"
-                ))
-            })?;
-
-        if response.status().is_success() {
-            info!("✅ Service registered with Orchestration: {}", service.name);
-            Ok(())
-        } else {
-            let error_msg = format!("Failed to register service: HTTP {}", response.status());
-            error!("{}", error_msg);
-            Err(nestgate_core::error::NestGateError::network_error(
-                &error_msg,
-            ))
-        }
+        // HTTP removed per Concentrated Gap Architecture
+        let _ = service;
+        unimplemented!("HTTP removed - use Unix sockets via Songbird gateway")
     }
 
     /// Request port allocation from Orchestration
+    /// 
+    /// NOTE: HTTP removed - use Unix sockets via Songbird
+    #[allow(dead_code)]
     pub async fn allocate_port(&self, service_name: &str, port_type: &str) -> NestGateResult<u16> {
-        let url = "self.base_url/api/v1/ports/allocate".to_string();
-
-        let request = PortAllocationRequest {
-            service_name: service_name.to_string(),
-            port_type: port_type.to_string(),
-            preferred_port: None,
-        };
-
-        let response = self
-            .client
-            .post(&url)
-            .json(&request)
-            .send()
-            .await
-            .map_err(|e| {
-                nestgate_core::error::NestGateError::network_error(&format!(
-                    "Failed to allocate port: {e}"
-                ))
-            })?;
-
-        if response.status().is_success() {
-            let allocation: PortAllocationResponse = response.json().await.map_err(|e| {
-                nestgate_core::error::NestGateError::network_error(&format!(
-                    "Failed to parse port allocation response: {e}"
-                ))
-            })?;
-
-            info!(
-                "✅ Port allocated by Orchestration: {} -> {}",
-                service_name, allocation.port
-            );
-            Ok(allocation.port)
-        } else {
-            let error_msg = "Failed to allocate port: HTTP self.base_url".to_string();
-            error!("{}", error_msg);
-            Err(nestgate_core::error::NestGateError::network_error(
-                &error_msg,
-            ))
-        }
+        // HTTP removed per Concentrated Gap Architecture
+        let _ = (service_name, port_type);
+        unimplemented!("HTTP removed - use Unix sockets via Songbird gateway")
     }
 
     /// Release port allocation
+    ///
+    /// NOTE: HTTP removed - use Unix sockets via Songbird
+    #[allow(dead_code)]
     pub async fn release_port(&self, service_name: &str, port: u16) -> NestGateResult<()> {
-        let url = "self.base_url/api/v1/ports/release".to_string();
-
-        let request = PortReleaseRequest {
-            service_name: service_name.to_string(),
-            port,
-        };
-
-        let response = self
-            .client
-            .post(&url)
-            .json(&request)
-            .send()
-            .await
-            .map_err(|e| {
-                nestgate_core::NestGateError::network_error(&format!("Failed to release port: {e}"))
-            })?;
-
-        if response.status().is_success() {
-            info!(
-                "✅ Port released by Orchestration: {} -> {}",
-                service_name, port
-            );
-            Ok(())
-        } else {
-            warn!(
-                "Failed to release port {}: HTTP {}",
-                port,
-                response.status()
-            );
-            Ok(()) // Don't fail on port release errors
-        }
+        // HTTP removed per Concentrated Gap Architecture
+        let _ = (service_name, port);
+        unimplemented!("HTTP removed - use Unix sockets via Songbird gateway")
     }
 
     /// Send health status to Orchestration
+    ///
+    /// NOTE: HTTP removed - use Unix sockets via Songbird
+    #[allow(dead_code)]
     pub async fn send_health_status(
         &self,
         service_name: &str,
         status: ServiceStatus,
     ) -> NestGateResult<()> {
-        // ✅ SOVEREIGNTY: Require explicit configuration, no hardcoded fallbacks
-        let base_url = std::env::var("NESTGATE_API_BASE_URL").expect(
-            "NESTGATE_API_BASE_URL must be set explicitly for sovereignty compliance. \
-                     No hardcoded fallbacks. Use ServiceRegistry for dynamic discovery or set \
-                     environment variable.",
-        );
-        let url = format!("{base_url}/api/v1/services/{service_name}/health");
-
-        let request = HealthStatusRequest {
-            service_name: service_name.to_string(),
-            status: status.clone(),
-            timestamp: chrono::Utc::now(),
-            metadata: std::collections::HashMap::new(),
-        };
-
-        let response = self
-            .client
-            .post(&url)
-            .json(&request)
-            .send()
-            .await
-            .map_err(|e| {
-                nestgate_core::NestGateError::network_error(&format!(
-                    "Failed to send health status: {e}"
-                ))
-            })?;
-
-        if response.status().is_success() {
-            debug!(
-                "✅ Health status sent to Orchestration: {} -> {:?}",
-                service_name, status
-            );
-            Ok(())
-        } else {
-            let error_msg = format!("Failed to send health status: HTTP {}", response.status());
-            debug!("{}", error_msg);
-            Err(nestgate_core::NestGateError::network_error(&error_msg))
-        }
+        // HTTP removed per Concentrated Gap Architecture
+        let _ = (service_name, status);
+        unimplemented!("HTTP removed - use Unix sockets via Songbird gateway")
     }
 }
 

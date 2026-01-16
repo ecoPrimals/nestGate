@@ -23,7 +23,8 @@ pub mod traits;
 pub mod universal_storage_bridge;
 
 // Re-export main production types
-pub use backends::{NativeZfsService, RemoteZfsService};
+pub use backends::NativeZfsService;
+// pub use backends::RemoteZfsService;  // HTTP removed
 pub use config::{CircuitBreakerConfig, RetryPolicy, ZfsBackend, ZfsServiceConfig};
 pub use factory::ZfsServiceFactory;
 pub use fail_safe::FailSafeZfsService;
