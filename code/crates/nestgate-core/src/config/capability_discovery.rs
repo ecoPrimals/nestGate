@@ -174,15 +174,40 @@ pub async fn discover_with_fallback(
 /// # }
 /// ```
 pub async fn announce_capability(capability: &str, endpoint: &str, ttl: Duration) -> Result<()> {
-    // TODO: Implement actual capability announcement
-    // For now, this is a placeholder for the pattern
+    use crate::discovery_mechanism::DiscoveryBuilder;
+    use crate::self_knowledge::SelfKnowledge;
 
-    log::info!(
+    tracing::info!(
         "Announcing capability '{}' at '{}' (TTL: {:?})",
         capability,
         endpoint,
         ttl
     );
+
+    // Auto-detect and get discovery mechanism
+    let discovery = DiscoveryBuilder::default()
+        .detect()
+        .await
+        .map_err(|e| {
+            tracing::warn!("Failed to auto-detect discovery mechanism: {}", e);
+            e
+        })
+        .ok();
+
+    // Build self-knowledge for announcement using builder
+    let self_knowledge = SelfKnowledge::builder()
+        .with_name(std::env::var("SERVICE_NAME").unwrap_or_else(|_| "nestgate".to_string()))
+        .with_capability(capability)
+        .build()
+        .map_err(|e| NestGateError::config(&format!("Failed to build self-knowledge: {}", e)))?;
+
+    // Announce to discovery mechanism if available
+    if let Some(discovery) = discovery {
+        discovery.announce(&self_knowledge).await?;
+        tracing::info!("Successfully announced capability '{}'", capability);
+    } else {
+        tracing::warn!("No discovery mechanism available, capability '{}' announced locally only", capability);
+    }
 
     Ok(())
 }
@@ -191,12 +216,43 @@ pub async fn announce_capability(capability: &str, endpoint: &str, ttl: Duration
 
 /// Discover from capability registry (primary method)
 async fn discover_from_capability_registry(capability: &str) -> Result<ServiceEndpoint> {
-    // TODO: Implement actual capability registry query
-    // This will integrate with Infant Discovery system
+    use crate::discovery_mechanism::DiscoveryBuilder;
 
-    // For now, return not found to fall through to other methods
+    // Auto-detect and get discovery mechanism
+    let discovery = DiscoveryBuilder::default()
+        .detect()
+        .await
+        .map_err(|e| {
+            tracing::debug!("Capability registry discovery failed: {}", e);
+            e
+        })?;
+
+    // Query for services providing this capability
+    let services = discovery.find_by_capability(capability.to_string()).await?;
+
+    // Get first healthy service
+    for service in services {
+        // Quick health check (optional, can be expensive)
+        if discovery.health_check(&service.id).await.unwrap_or(false) {
+            tracing::info!(
+                "Discovered {} from capability registry: {} at {}",
+                capability,
+                service.name,
+                service.endpoint
+            );
+
+            return Ok(ServiceEndpoint {
+                capability: capability.to_string(),
+                endpoint: service.endpoint,
+                ttl: Duration::from_secs(300), // 5 minute cache
+                source: DiscoverySource::CapabilityRegistry,
+            });
+        }
+    }
+
+    // No healthy services found
     Err(NestGateError::network_error(&format!(
-        "Capability registry not yet implemented for '{}'",
+        "No healthy services found for capability '{}'",
         capability
     )))
 }
@@ -223,11 +279,40 @@ async fn discover_from_environment(capability: &str) -> Result<ServiceEndpoint> 
 
 /// Discover from local network (mDNS, etc.)
 async fn discover_from_local(capability: &str) -> Result<ServiceEndpoint> {
-    // TODO: Implement mDNS discovery
-    // This will scan local network for services advertising this capability
+    use crate::discovery_mechanism::DiscoveryBuilder;
 
+    // Try mDNS discovery (works without external dependencies)
+    let discovery = DiscoveryBuilder::default()
+        .build_mdns()
+        .await
+        .map_err(|e| {
+            tracing::debug!("Local mDNS discovery failed: {}", e);
+            e
+        })?;
+
+    // Query for services providing this capability
+    let services = discovery.find_by_capability(capability.to_string()).await?;
+
+    // Get first available service
+    if let Some(service) = services.first() {
+        tracing::info!(
+            "Discovered {} from local network: {} at {}",
+            capability,
+            service.name,
+            service.endpoint
+        );
+
+        return Ok(ServiceEndpoint {
+            capability: capability.to_string(),
+            endpoint: service.endpoint.clone(),
+            ttl: Duration::from_secs(60), // 1 minute cache for local discovery
+            source: DiscoverySource::LocalDiscovery,
+        });
+    }
+
+    // No services found
     Err(NestGateError::network_error(&format!(
-        "Local discovery not yet implemented for '{}'",
+        "No local services found for capability '{}'",
         capability
     )))
 }
