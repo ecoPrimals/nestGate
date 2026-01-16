@@ -195,3 +195,12 @@ mod tests;
 #[cfg(test)]
 pub use tests::*;
 
+// ==================== PURE RUST JWT (RustCrypto) ====================
+
+/// Pure Rust JWT implementation using RustCrypto (100% pure Rust, audited!)
+///
+/// **BiomeOS Compliance**: No external HTTP calls, no C dependencies
+/// **Security**: RustCrypto (audited by NCC Group)
+/// **Performance**: Local validation (no network round-trip)
+pub mod jwt_rustcrypto;
+

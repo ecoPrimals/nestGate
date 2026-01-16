@@ -101,6 +101,8 @@ pub mod uuid_cache;
 
 /// AI-first refactored components
 pub mod ai_first_refactored;
+/// Cryptographic operations (Pure Rust - RustCrypto)
+pub mod crypto;
 /// Management integration
 /// Caching system
 pub mod cache;
