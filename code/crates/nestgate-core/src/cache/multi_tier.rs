@@ -1,17 +1,18 @@
 //! Multi-tier cache implementation with hot, warm, and cold storage tiers
 //! Provides intelligent data placement and retrieval across performance tiers.
+//!
+//! **MODERNIZED**: Lock-free concurrent access using DashMap for in-memory tiers
 
 use crate::Result;
-use std::collections::HashMap;
+use dashmap::DashMap;
 use std::sync::Arc;
-use tokio::sync::RwLock;
 
 // Type aliases for complex cache types
 /// Type-erased cache provider for dynamic dispatch across multiple cache implementations.
 /// Enables runtime polymorphism for cache backends while maintaining async trait compatibility.
 pub type CacheProviderBox = Box<dyn CacheProvider<String, Vec<u8>>>;
-/// Type alias for Cachedatamap
-pub type CacheDataMap = Arc<RwLock<HashMap<String, Vec<u8>>>>;
+/// Type alias for lock-free cache data (DashMap!)
+pub type CacheDataMap = Arc<DashMap<String, Vec<u8>>>;
 
 /// Cache provider trait for different storage tiers
 /// **NOTE**: Keeping `async_trait` for dyn compatibility - required for `Box<dyn CacheProvider>`
@@ -320,46 +321,51 @@ impl MultiTierCacheStats {
     }
 }
 
-/// Simple in-memory cache implementation for testing
+/// Simple in-memory cache implementation for testing (lock-free!)
 struct InMemoryCache {
-    data: Arc<RwLock<HashMap<String, Vec<u8>>>>,
+    data: Arc<DashMap<String, Vec<u8>>>,
 }
 impl InMemoryCache {
-    /// Creates a new instance
+    /// Creates a new instance with lock-free concurrent access
     fn new() -> Self {
         Self {
-            data: Arc::new(RwLock::new(HashMap::new())),
+            data: Arc::new(DashMap::new()),
         }
     }
 }
 
 #[async_trait::async_trait]
 impl CacheProvider<String, Vec<u8>> for InMemoryCache {
-    /// Set
+    /// Set (lock-free!)
     async fn set(&self, key: String, value: Vec<u8>) -> Result<()> {
-        self.data.write().await.insert(key, value);
+        // DashMap: Lock-free insert!
+        self.data.insert(key, value);
         Ok(())
     }
 
-    /// Get
+    /// Get (lock-free!)
     async fn get(&self, key: &str) -> Result<Option<Vec<u8>>> {
-        Ok(self.data.read().await.get(key).cloned())
+        // DashMap: Lock-free get!
+        Ok(self.data.get(key).map(|entry| entry.value().clone()))
     }
 
-    /// Remove
+    /// Remove (lock-free!)
     async fn remove(&self, key: &str) -> Result<bool> {
-        Ok(self.data.write().await.remove(key).is_some())
+        // DashMap: Lock-free removal!
+        Ok(self.data.remove(key).is_some())
     }
 
-    /// Clear
+    /// Clear (lock-free!)
     async fn clear(&self) -> Result<()> {
-        self.data.write().await.clear();
+        // DashMap: Lock-free clear!
+        self.data.clear();
         Ok(())
     }
 
-    /// Size
+    /// Size (lock-free!)
     async fn size(&self) -> Result<usize> {
-        Ok(self.data.read().await.len())
+        // DashMap: Lock-free len!
+        Ok(self.data.len())
     }
 }
 
