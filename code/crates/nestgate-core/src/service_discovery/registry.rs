@@ -358,7 +358,7 @@ impl InMemoryServiceRegistry {
         let matching_services: Vec<ServiceInfo> = self
             .services
             .iter()
-            .map(|entry| entry.value())
+            .map(|entry| entry.value().clone())
             .filter(|registration| registration.metadata.category == category)
             .map(|registration| ServiceInfo {
                 service_id: registration.service_id,

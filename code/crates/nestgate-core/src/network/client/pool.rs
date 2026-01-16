@@ -130,7 +130,7 @@ impl ConnectionPool {
         let total_connections: usize = self.connections.iter().map(|entry| entry.value().len()).sum();
         let idle_connections: usize = self.connections
             .iter()
-            .flat_map(|entry| entry.value().iter())
+            .flat_map(|entry| entry.value().clone().into_iter())
             .filter(|c| c.is_idle())
             .count();
 
@@ -197,9 +197,7 @@ impl Connection {
 
         // BiomeOS Pure Rust Evolution: External HTTP removed
         // For external requests, use: discover_orchestration().await?.http_proxy(...)
-        Err(NestGateError::api_error(
-            format!("External HTTP deprecated for {}. Use Songbird RPC via discover_orchestration()", url)
-        ))
+        Err(NestGateError::api_error("External HTTP deprecated. Use Songbird RPC via discover_orchestration()"))
         
         // REMOVED: Previous HTTP client code (lines 204-248)
         // Reason: BiomeOS Concentrated Gap Architecture
