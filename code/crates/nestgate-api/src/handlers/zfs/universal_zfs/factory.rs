@@ -1,6 +1,8 @@
 //
 // Creates the appropriate ZFS service implementation based on configuration
 // with automatic backend detection and fail-safe wrapping.
+//
+// NOTE: Remote backends removed per Concentrated Gap Architecture
 
 //! Factory module
 
@@ -8,7 +10,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use crate::handlers::zfs::universal_zfs::{
-    backends::RemoteZfsService,
+    // backends::RemoteZfsService,  // HTTP removed
     config::{ZfsBackend, ZfsServiceConfig},
     fail_safe::FailSafeZfsService,
     traits::UniversalZfsService,
@@ -41,15 +43,16 @@ impl ZfsServiceFactory {
             }
             ZfsBackend::Remote {
                 endpoint,
-                timeout: _,
+                timeout,
             } => {
-                debug!("Creating remote ZFS backend: {}", endpoint);
-                let remote_config = crate::handlers::zfs::universal_zfs::config::RemoteConfig {
-                    endpoint: endpoint.clone(),
-                    timeout: Duration::from_secs(30),
-                    auth: None,
-                };
-                Box::pin(async move { Self::create_remote_service(&remote_config) })
+                // HTTP removed per Concentrated Gap Architecture
+                let _ = (endpoint, timeout);
+                error!("Remote ZFS backend removed - use native backend");
+                Box::pin(async {
+                    Err(UniversalZfsError::configuration(
+                        "Remote backends removed - use native ZFS".to_string()
+                    ))
+                })
             }
         }
     }
@@ -180,19 +183,16 @@ impl ZfsServiceFactory {
         Ok(Arc::new(service) as Arc<dyn UniversalZfsService>)
     }
 
-    /// Create remote ZFS service
+    /// Create remote ZFS service (HTTP removed)
+    #[allow(dead_code)]
     fn create_remote_service(
         config: &crate::handlers::zfs::universal_zfs::config::RemoteConfig,
     ) -> UniversalZfsResult<Arc<dyn UniversalZfsService>> {
-        // Try to create a real remote service implementation
-        debug!(
-            "Attempting to create remote ZFS service for endpoint: {}",
-            config.endpoint
-        );
-
-        let service = RemoteZfsService::new(config.clone());
-        info!("Successfully created remote ZFS service");
-        Ok(Arc::new(service))
+        let _ = config;
+        error!("Remote ZFS service removed - HTTP removed per Concentrated Gap Architecture");
+        Err(UniversalZfsError::configuration(
+            "Remote backends removed - use native ZFS".to_string()
+        ))
     }
 
     /// Create fallback service
@@ -214,74 +214,23 @@ impl ZfsServiceFactory {
             }
             ZfsBackend::Remote {
                 endpoint,
-                timeout: _,
+                timeout,
             } => {
-                // Create remote ZFS service
-                warn!("Creating remote ZFS service fallback");
-                let remote_config = crate::handlers::zfs::universal_zfs::config::RemoteConfig {
-                    endpoint: endpoint.clone(),
-                    timeout: Duration::from_secs(30),
-                    auth: None,
-                };
-                let service = RemoteZfsService::new(remote_config);
-                Ok(Arc::new(service))
+                // HTTP removed per Concentrated Gap Architecture
+                let _ = (endpoint, timeout);
+                error!("Remote ZFS fallback removed - use native backend");
+                Err(UniversalZfsError::configuration(
+                    "Remote backends removed - use native ZFS".to_string()
+                ))
             }
         }
     }
 
-    /// Detect remote ZFS services
+    /// Detect remote ZFS services (HTTP removed)
+    #[allow(dead_code)]
     async fn detect_remote_services() -> Option<Arc<dyn UniversalZfsService>> {
-        // ✅ MIGRATED: Now uses centralized runtime configuration
-        use nestgate_core::config::runtime::get_config;
-
-        // Get configuration from centralized system
-        let config = get_config();
-
-        // Check common service discovery endpoints
-        let endpoints = vec![
-            format!(
-                "http://{}:{}/api/v1/zfs/health",
-                config.network.api_host, config.network.api_port
-            ),
-            format!(
-                "http://zfs-service:{}/api/v1/zfs/health",
-                config.network.api_port
-            ),
-        ];
-
-        for endpoint in &endpoints {
-            debug!("Checking remote ZFS service at: {}", endpoint);
-
-            // Try to connect to the service
-            match tokio::time::timeout(Duration::from_secs(5), reqwest::get(endpoint)).await {
-                Ok(Ok(response)) => {
-                    if response.status().is_success() {
-                        info!("Found remote ZFS service at: {}", endpoint);
-                        // Create RemoteZfsService with proper configuration
-                        let remote_config =
-                            crate::handlers::zfs::universal_zfs::config::RemoteConfig {
-                                endpoint: endpoint.clone(),
-                                timeout: Duration::from_secs(30),
-                                auth: None,
-                            };
-
-                        let service = RemoteZfsService::new(remote_config);
-                        info!(
-                            "Successfully connected to remote ZFS service at: {}",
-                            endpoint
-                        );
-                        return Some(Arc::new(service));
-                    }
-                }
-                Ok(Err(e)) => {
-                    debug!("Failed to connect to {}: {}", endpoint, e);
-                }
-                Err(_) => {
-                    debug!("Timeout connecting to {}", endpoint);
-                }
-            }
-        }
-
+        // HTTP removed per Concentrated Gap Architecture
+        warn!("Remote ZFS service detection removed - HTTP removed");
         None
     }
 

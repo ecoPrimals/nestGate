@@ -253,21 +253,9 @@ async fn request_ai_optimization(dataset_name: &str, pattern: &StoragePattern) -
             "optimization_context": "zfs_storage_optimization"
         });
 
-        let client = reqwest::Client::new();
-        if let Ok(response) = client
-            .post("fixed".to_string())
-            .json(&request_data)
-            .send()
-            .await
-        {
-            if response.status().is_success() {
-                if let Ok(ai_response) = response.json::<Value>().await {
-                    if let Some(recommendations) = ai_response["recommendations"].as_str() {
-                        return Some(recommendations.to_string());
-                    }
-                }
-            }
-        } else {
+        // HTTP removed per Concentrated Gap Architecture
+        let _ = request_data;
+        tracing::warn!("AI optimization removed - HTTP removed"); else {
             // AI provider not available, continue without AI recommendations
         }
     }
