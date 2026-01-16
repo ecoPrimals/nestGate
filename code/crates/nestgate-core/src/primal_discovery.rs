@@ -41,13 +41,23 @@
 //! # }
 //! ```
 
+/// Capability-based discovery helpers (NEW - USE THIS!)
+#[path = "primal_discovery/capability_helpers.rs"]
+pub mod capability_helpers;
 /// Migration utilities for gradual transition from hardcoded to discovery-based
+#[path = "primal_discovery/migration.rs"]
 pub mod migration;
 /// Runtime discovery client for capability-based primal discovery
+#[path = "primal_discovery/runtime_discovery.rs"]
 pub mod runtime_discovery;
 
 // Re-export key types for convenience
 pub use runtime_discovery::{PrimalConnection, RuntimeDiscovery};
+pub use capability_helpers::{
+    discover_ai, discover_capability, discover_compute, discover_ecosystem,
+    discover_orchestration, discover_security, is_capability_available,
+    DiscoveredService, DiscoverySource,
+};
 
 use std::collections::HashMap;
 use std::net::SocketAddr;
