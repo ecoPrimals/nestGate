@@ -15,7 +15,7 @@ use std::time::{Duration, Instant};
 use tokio::sync::Semaphore;
 
 use super::config::ClientConfig;
-use super::request::{HeaderMap, Request, Response};
+use super::request::{Request, Response};
 use super::types::Endpoint;
 use crate::error::{NestGateError, Result};
 
