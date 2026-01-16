@@ -83,7 +83,8 @@ features = [ "v4",]
 
 [dependencies.reqwest]
 version = "0.11"
-features = [ "json",]
+features = [ "json", "rustls-tls-native-roots",]
+default-features = false
 
 [dev-dependencies.tokio]
 version = "1.0"
