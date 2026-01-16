@@ -1,3 +1,4 @@
+use crate::http_client_stub as reqwest;
 use crate::universal_adapter::{PrimalAgnosticAdapter, CapabilityCategory, CapabilityRequest};
 /// **UNIVERSAL SECURITY CLIENT IMPLEMENTATION**
 /// Universal Security Error types

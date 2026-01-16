@@ -4,6 +4,7 @@
 //! universal data capabilities. This demonstrates how external APIs
 //! can be integrated without hardcoding specific providers.
 
+use crate::http_client_stub as reqwest;
 use crate::data_sources::data_capabilities::*;
 use crate::{NestGateError, Result};
 use reqwest::Client;

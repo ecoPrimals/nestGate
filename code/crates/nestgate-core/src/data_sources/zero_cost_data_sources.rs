@@ -1,5 +1,6 @@
 //! Zero Cost Data Sources module
 
+use crate::http_client_stub as reqwest;
 use crate::error::NestGateError;
 use std::collections::HashMap;
 //

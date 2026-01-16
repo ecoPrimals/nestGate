@@ -2,6 +2,7 @@
 //! Aggregator functionality and utilities.
 // Log batching, buffering, and forwarding to external destinations
 
+use crate::http_client_stub as reqwest;
 use crate::{NestGateError, Result};
 use std::collections::HashMap;
 use std::sync::Arc;

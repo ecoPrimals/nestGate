@@ -1,5 +1,6 @@
 /// Connection Pool Factory Functions
 /// Provides convenient factory functions for creating commonly used connection pools.
+use crate::http_client_stub as reqwest;
 use super::ConnectionPool;
 use crate::config::canonical_primary::NestGateCanonicalConfig;
 use reqwest::Client;

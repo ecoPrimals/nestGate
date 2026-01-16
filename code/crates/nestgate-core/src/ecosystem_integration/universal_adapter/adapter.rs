@@ -1,5 +1,6 @@
 /// Universal Adapter Main Implementation
 /// Core implementation of the NestGate Universal Adapter for ecosystem integration.
+use crate::http_client_stub as reqwest;
 use super::types::{
     CapabilityQuery, CapabilityRequest, CapabilityResponse, ExecutionMetrics, ServiceCapability,
 };

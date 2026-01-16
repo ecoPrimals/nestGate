@@ -2,6 +2,7 @@
 //!
 //! O(1) connection management for capability-based architecture.
 
+use crate::http_client_stub as reqwest;
 use super::capability_scanner::CapabilityInfo;
 use crate::error::NestGateError;
 use bytes::Bytes;

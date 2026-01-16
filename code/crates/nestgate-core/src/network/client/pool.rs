@@ -158,8 +158,8 @@ pub struct Connection {
     pub last_used: Instant,
     /// Number of requests sent on this connection
     pub request_count: u64,
-    /// Underlying reqwest client
-    client: reqwest::Client,
+    /// Underlying HTTP client (stubbed - use Songbird for external HTTP)
+    client: (),
 }
 
 impl Connection {
@@ -171,7 +171,7 @@ impl Connection {
             created_at: Instant::now(),
             last_used: Instant::now(),
             request_count: 0,
-            client: reqwest::Client::new(),
+            client: (), // Stubbed - use Songbird RPC for external HTTP
         }
     }
 
@@ -193,16 +193,11 @@ impl Connection {
         // Build URL
         let url = self.endpoint.url(request.path);
 
-        // Build reqwest request
-        let method = match request.method {
-            super::types::Method::Get => reqwest::Method::GET,
-            super::types::Method::Post => reqwest::Method::POST,
-            super::types::Method::Put => reqwest::Method::PUT,
-            super::types::Method::Delete => reqwest::Method::DELETE,
-            super::types::Method::Patch => reqwest::Method::PATCH,
-            super::types::Method::Head => reqwest::Method::HEAD,
-            super::types::Method::Options => reqwest::Method::OPTIONS,
-        };
+        // BiomeOS Pure Rust Evolution: External HTTP removed
+        // For external requests, use: discover_orchestration().await?.http_proxy(...)
+        return Err(NestGateError::api_error(
+            "External HTTP deprecated. Use Songbird RPC via discover_orchestration()"
+        ));
 
         let mut req_builder = self.client.request(method, &url);
 

@@ -3,6 +3,7 @@
 // Log aggregation and collection functionality for forwarding logs to external systems.
 // Extracted from tracing_setup.rs for file size compliance.
 
+use crate::http_client_stub as reqwest;
 use crate::{NestGateError, Result};
 use std::collections::HashMap;
 use std::sync::Arc;
