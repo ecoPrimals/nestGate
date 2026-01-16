@@ -4,9 +4,8 @@ use crate::security::AuthContext;
 ///
 /// This module provides authentication and authorization functionality
 /// for the NestGate system.
-use std::collections::HashMap;
+use dashmap::DashMap;
 use std::sync::Arc;
-use tokio::sync::RwLock;
 // Security types imported from auth_types module
 use crate::security::{Permission, Role};
 // AuthContext will be replaced with StorageAuthContext where needed
@@ -55,13 +54,15 @@ pub enum AuthMethod {
 }
 
 /// Authentication manager
+/// 
+/// **LOCK-FREE**: Uses DashMap for concurrent authentication
 #[derive(Debug)]
 /// Manager for Auth operations
 pub struct AuthManager {
     /// Users
-    users: Arc<RwLock<HashMap<String, AuthContext>>>,
+    users: Arc<DashMap<String, AuthContext>>,  // ✅ Lock-free
     /// API keys
-    api_keys: Arc<RwLock<HashMap<String, String>>>,
+    api_keys: Arc<DashMap<String, String>>,  // ✅ Lock-free
 }
 
 // Custom Clone implementation

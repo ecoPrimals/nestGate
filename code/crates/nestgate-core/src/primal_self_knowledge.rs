@@ -31,10 +31,9 @@
 //! ```
 
 use anyhow::{Context, Result};
+use dashmap::DashMap;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::sync::Arc;
-use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
 
 /// Primal Self-Knowledge System
@@ -54,8 +53,8 @@ pub struct PrimalSelfKnowledge {
     /// How we can be reached
     endpoints: Arc<Vec<Endpoint>>,
 
-    /// Discovered other primals (runtime only)
-    discovered_primals: Arc<RwLock<HashMap<String, DiscoveredPrimal>>>,
+    /// Discovered other primals (runtime only, lock-free!)
+    discovered_primals: Arc<DashMap<String, DiscoveredPrimal>>,  // ✅ Lock-free
 
     /// Discovery mechanisms we support
     discovery_mechanisms: Vec<DiscoveryMechanism>,
@@ -90,7 +89,7 @@ pub struct Capability {
     pub endpoint: String,
 
     /// Metadata about this capability
-    pub metadata: HashMap<String, String>,
+    pub metadata: std::collections::HashMap<String, String>,
 }
 
 /// An endpoint where we can be reached
@@ -217,7 +216,7 @@ impl PrimalSelfKnowledge {
             identity,
             capabilities,
             endpoints,
-            discovered_primals: Arc::new(RwLock::new(HashMap::new())),
+            discovered_primals: Arc::new(DashMap::new()),  // ✅ Lock-free
             discovery_mechanisms,
         })
     }
@@ -231,7 +230,7 @@ impl PrimalSelfKnowledge {
             name: "storage".to_string(),
             description: "Universal storage management".to_string(),
             endpoint: "/api/v1/storage".to_string(),
-            metadata: HashMap::new(),
+            metadata: std::collections::HashMap::new(),
         });
 
         // Check if ZFS is available
@@ -372,13 +371,10 @@ impl PrimalSelfKnowledge {
     ///
     /// Returns an error if the primal cannot be found.
     pub async fn discover_primal(&mut self, primal_type: &str) -> Result<DiscoveredPrimal> {
-        // 1. Check cache
-        {
-            let discovered = self.discovered_primals.read().await;
-            if let Some(cached) = discovered.get(primal_type) {
-                debug!("Using cached discovery for {}", primal_type);
-                return Ok(cached.clone());
-            }
+        // 1. Check cache (lock-free!)
+        if let Some(cached) = self.discovered_primals.get(primal_type) {
+            debug!("Using cached discovery for {}", primal_type);
+            return Ok(cached.clone());
         }
 
         // 2. Try each discovery mechanism
@@ -388,8 +384,8 @@ impl PrimalSelfKnowledge {
                     info!("Discovered {} via {:?}", primal_type, mechanism);
 
                     // Cache the discovery
-                    let mut discovered = self.discovered_primals.write().await;
-                    discovered.insert(primal_type.to_string(), primal.clone());
+                    // ✅ Lock-free: Insert discovered primal
+                    self.discovered_primals.insert(primal_type.to_string(), primal.clone());
 
                     return Ok(primal);
                 }
@@ -545,9 +541,12 @@ impl PrimalSelfKnowledge {
         &self.endpoints
     }
 
-    /// Get discovered primals
-    pub async fn discovered_primals(&self) -> HashMap<String, DiscoveredPrimal> {
-        self.discovered_primals.read().await.clone()
+    /// Get discovered primals (lock-free!)
+    pub fn discovered_primals(&self) -> std::collections::HashMap<String, DiscoveredPrimal> {
+        self.discovered_primals
+            .iter()
+            .map(|entry| (entry.key().clone(), entry.value().clone()))
+            .collect()
     }
 }
 
@@ -618,7 +617,7 @@ mod tests {
                 name: "storage".to_string(),
                 description: "Storage".to_string(),
                 endpoint: "/storage".to_string(),
-                metadata: HashMap::new(),
+                metadata: std::collections::HashMap::new(),
             }],
             primary_endpoint: Endpoint {
                 protocol: "http".to_string(),

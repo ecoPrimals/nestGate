@@ -17,14 +17,14 @@ use axum::{
     http::HeaderMap,
     response::sse::{Event, Sse},
 };
+use dashmap::DashMap;
 use futures::{Stream, StreamExt};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::convert::Infallible;
 use std::sync::Arc;
 use std::time::Duration;
 use std::time::SystemTime;
-use tokio::sync::{broadcast, RwLock};
+use tokio::sync::broadcast;
 use tokio_stream::wrappers::BroadcastStream;
 use tracing::{debug, info, warn};
 // Removed unused tracing import
@@ -97,13 +97,15 @@ pub enum EventPriority {
     Critical = 4,
 }
 /// SSE stream manager
+/// 
+/// **LOCK-FREE**: Uses DashMap for concurrent connection management
 pub struct SseManager {
     /// Active SSE connections
-    connections: Arc<RwLock<HashMap<Uuid, SseConnection>>>,
+    connections: Arc<DashMap<Uuid, SseConnection>>,  // ✅ DashMap: Lock-free
     /// Event broadcaster
     event_broadcaster: broadcast::Sender<SseEvent>,
     /// Stream statistics
-    stats: Arc<RwLock<SseStats>>,
+    stats: Arc<DashMap<&'static str, u64>>,  // ✅ DashMap: Lock-free stats
     /// Event coordinator integration
     event_coordinator: Option<Arc<EventCoordinator>>,
 }
@@ -237,18 +239,19 @@ impl SseManager {
     #[must_use]
     pub fn new() -> Self {
         let (event_broadcaster, _) = broadcast::channel(10_000); // Large buffer for SSE
+        
+        // Initialize stats DashMap
+        let stats = Arc::new(DashMap::new());
+        stats.insert("total_connections", 0_u64);
+        stats.insert("active_connections", 0_u64);
+        stats.insert("events_sent", 0_u64);
+        stats.insert("bytes_transferred", 0_u64);
+        stats.insert("errors", 0_u64);
 
         Self {
-            connections: Arc::new(RwLock::new(HashMap::new()),
+            connections: Arc::new(DashMap::new()),  // ✅ Lock-free
             event_broadcaster,
-            stats: Arc::new(RwLock::new(SseStats {
-                total_connections: 0,
-                active_connections: 0,
-                events_sent: 0,
-                bytes_transferred: 0,
-                errors: 0,
-                last_reset: SystemTime::now(),
-            }),
+            stats,
             event_coordinator: None,
         }
     }
@@ -290,16 +293,13 @@ impl SseManager {
         };
 
         {
-            let mut connections = self.connections.write().await;
-            connections.insert(connection_id, connection);
+            // ✅ Lock-free insert
+            self.connections.insert(connection_id, connection);
         }
 
-        // Update statistics
-        {
-            let mut stats = self.stats.write().await;
-            stats.total_connections += 1;
-            stats.active_connections += 1;
-        }
+        // Update statistics (lock-free!)
+        self.stats.alter("total_connections", |_, v| v + 1);
+        self.stats.alter("active_connections", |_, v| v + 1);
 
         info!("Created SSE stream for client: {:?}", client_id);
 
@@ -390,29 +390,40 @@ impl SseManager {
         }
     }
 
-    /// Get SSE statistics
-    pub async fn get_stats(&self) -> SseStats {
-        let stats = self.stats.read().await;
-        stats.clone()
+    /// Get SSE statistics (lock-free!)
+    pub fn get_stats(&self) -> SseStats {
+        SseStats {
+            total_connections: *self.stats.get("total_connections").map(|v| *v).unwrap_or(0),
+            active_connections: *self.stats.get("active_connections").map(|v| *v).unwrap_or(0),
+            events_sent: *self.stats.get("events_sent").map(|v| *v).unwrap_or(0),
+            bytes_transferred: *self.stats.get("bytes_transferred").map(|v| *v).unwrap_or(0),
+            errors: *self.stats.get("errors").map(|v| *v).unwrap_or(0),
+            last_reset: SystemTime::now(),  // Simplified - could track separately if needed
+        }
     }
 
-    /// Clean up inactive connections
-    pub async fn cleanup_connections(&self) {
-        let mut connections = self.connections.write().await;
+    /// Clean up inactive connections (lock-free!)
+    pub fn cleanup_connections(&self) {
         let now = SystemTime::now();
         let timeout = Duration::from_secs(300); // 5 minutes timeout
 
-        let mut to_remove = Vec::new();
-        for (id, connection) in connections.iter() {
-            if let Ok(elapsed) = now.duration_since(connection.last_activity) {
-                if elapsed > timeout {
-                    to_remove.push(*id);
+        // ✅ Lock-free: Collect expired connection IDs
+        let to_remove: Vec<Uuid> = self.connections
+            .iter()
+            .filter_map(|entry| {
+                let (id, connection) = entry.pair();
+                if let Ok(elapsed) = now.duration_since(connection.last_activity) {
+                    if elapsed > timeout {
+                        return Some(*id);
+                    }
                 }
-            }
-        }
+                None
+            })
+            .collect();
 
+        // ✅ Lock-free: Remove expired connections
         for id in to_remove {
-            connections.remove(&id);
+            self.connections.remove(&id);
 
             // Update statistics
             if let Ok(mut stats) = self.stats.try_write() {

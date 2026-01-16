@@ -10,8 +10,9 @@
 use serde::{Deserialize, Serialize};
 
 use nestgate_core::uuid_cache::get_or_create_uuid;
-use std::{collections::HashMap, sync::Arc, time::SystemTime};
-use tokio::sync::{broadcast, RwLock};
+use dashmap::DashMap;
+use std::{sync::Arc, time::SystemTime};
+use tokio::sync::broadcast;
 // Removed unused tracing import
 use tracing::info;
 use uuid::Uuid;
@@ -105,10 +106,12 @@ pub struct ConnectionInfo {
     pub subscriptions: Vec<String>,
 }
 /// WebSocket manager for handling connections
+/// 
+/// **LOCK-FREE**: Uses DashMap for concurrent connection management
 pub struct WebSocketManager {
-    connections: Arc<RwLock<HashMap<Uuid, ConnectionInfo>>>,
+    connections: Arc<DashMap<Uuid, ConnectionInfo>>,  // ✅ DashMap: Lock-free concurrent access
     event_broadcaster: broadcast::Sender<WebSocketEvent>,
-    stats: Arc<RwLock<WebSocketStats>>,
+    stats: Arc<DashMap<&'static str, u64>>,  // ✅ DashMap: Lock-free stats
 }
 impl Default for WebSocketManager {
     /// Returns the default instance
@@ -122,24 +125,33 @@ impl WebSocketManager {
     #[must_use]
     pub fn new() -> Self {
         let (event_broadcaster, _) = broadcast::channel(1000);
+        
+        // Initialize stats DashMap
+        let stats = Arc::new(DashMap::new());
+        stats.insert("total_connections", 0);
+        stats.insert("active_connections", 0);
+        stats.insert("messages_sent", 0);
+        stats.insert("messages_received", 0);
+        stats.insert("bytes_transferred", 0);
+        stats.insert("errors", 0);
 
         Self {
-            connections: Arc::new(RwLock::new(HashMap::new()),
+            connections: Arc::new(DashMap::new()),  // ✅ Lock-free
             event_broadcaster,
-            stats: Arc::new(RwLock::new(WebSocketStats {
-                total_connections: 0,
-                active_connections: 0,
-                messages_sent: 0,
-                messages_received: 0,
-                bytes_transferred: 0,
-                errors: 0,
-            }),
+            stats,
         }
     }
 
-    /// Get connection statistics
-    pub async fn get_stats(&self) -> WebSocketStats {
-        self.stats.read().await.clone()
+    /// Get connection statistics (lock-free!)
+    pub fn get_stats(&self) -> WebSocketStats {
+        WebSocketStats {
+            total_connections: *self.stats.get("total_connections").map(|v| *v).unwrap_or(0),
+            active_connections: *self.stats.get("active_connections").map(|v| *v).unwrap_or(0),
+            messages_sent: *self.stats.get("messages_sent").map(|v| *v).unwrap_or(0),
+            messages_received: *self.stats.get("messages_received").map(|v| *v).unwrap_or(0),
+            bytes_transferred: *self.stats.get("bytes_transferred").map(|v| *v).unwrap_or(0),
+            errors: *self.stats.get("errors").map(|v| *v).unwrap_or(0),
+        }
     }
 
     /// Handle WebSocket upgrade
@@ -241,37 +253,35 @@ impl WebSocketManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub async fn broadcast_event(
+        pub fn broadcast_event(
         &self,
         event: WebSocketEvent,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>>  {
-        let connections = self.connections.read().await;
-
+        // ✅ Lock-free iteration over connections
         // Pre-serialize event to avoid repeated serialization for each client (zero-copy optimization)
         let event_json = serde_json::to_string(&event)?;
         let event_size = event_json.len() as u64;
+        let connection_count = self.connections.len();
 
         // Create shared reference for zero-copy broadcasting
         let event_json_ref = Arc::new(event_json);
 
-        // Update statistics
-        if let Ok(mut stats) = self.stats.try_write() {
-            stats.messages_sent += 1; // Changed from events_broadcast to messages_sent
-            stats.bytes_transferred += event_size * connections.len() as u64;
-        }
+        // Update statistics (lock-free!)
+        self.stats.alter("messages_sent", |_, v| v + 1);
+        self.stats.alter("bytes_transferred", |_, v| v + (event_size * connection_count as u64));
 
         // In a real implementation, this would broadcast to all WebSocket connections
         info!(
             "Broadcasting event to {} clients: {}",
-            connections.len(),
+            connection_count,
             event_json_ref
         );
         Ok(())
     }
 
-    /// Get active connection count
-    pub async fn get_connection_count(&self) -> usize {
-        self.connections.read().await.len()
+    /// Get active connection count (lock-free!)
+    pub fn get_connection_count(&self) -> usize {
+        self.connections.len()  // ✅ Lock-free DashMap len()
     }
 }
 

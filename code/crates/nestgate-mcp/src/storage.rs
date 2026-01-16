@@ -7,13 +7,13 @@ use crate::{
     types::{MountInfo, MountRequest, MountStatus, NfsVersion, StorageProtocol, StorageTier},
     Result,
 };
+use dashmap::DashMap;
 use nestgate_core::management::{BiomeContext, VolumeSpec};
 use nestgate_core::error::NestGateError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::SystemTime;
-use tokio::sync::RwLock;
 use tracing::debug;
 use tracing::info;
 
@@ -77,8 +77,10 @@ pub struct BiomeStorageStats {
 /// MCP Storage Manager
 #[derive(Debug, Clone)]
 /// Manager for McpStorage operations
+/// 
+/// **LOCK-FREE**: Uses DashMap for concurrent volume management
 pub struct McpStorageManager {
-    volumes: Arc<RwLock<HashMap<String, VolumeInfo>>>,
+    volumes: Arc<DashMap<String, VolumeInfo>>,  // ✅ Lock-free
 }
 impl Default for McpStorageManager {
     /// Returns the default instance

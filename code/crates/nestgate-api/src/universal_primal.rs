@@ -381,28 +381,9 @@ impl StoragePrimalProvider for NestGateStoragePrimal {
                 "timestamp": current_timestamp()
             });
 
-            // Attempt to register with the primal registry
-            match reqwest::Client::new()
-                .post(format!("fixed")
-                .json(&registration_payload)
-                .send()
-                .await
-            {
-                Ok(response) => {
-                    if response.status().is_success() {
-                        info!("✅ Successfully registered with primal registry");
-                        return Ok(());
-                    } else {
-                        warn!(
-                            "⚠️ Registry registration failed with status: {}",
-                            response.status()
-                        );
-                    }
-                }
-                Err(e) => {
-                    warn!("⚠️ Failed to connect to primal registry: {}", e);
-                }
-            }
+            // HTTP removed per Concentrated Gap Architecture
+            let _ = registration_payload;
+            tracing::warn!("Primal HTTP registration removed - use Unix sockets");
         }
 
         // Fallback to local ecosystem discovery
@@ -488,26 +469,9 @@ impl NestGateStoragePrimal {
             let endpoint = format!("http://self.base_url:self.base_url");
             debug!("🔍 Checking for primal at: {}", endpoint);
 
-            // Try to connect and get primal info
-            match reqwest::Client::new()
-                .get(format!("fixed")
-                .timeout(std::time::Duration::from_secs(2))
-                .send()
-                .await
-            {
-                Ok(response) => {
-                    if response.status().is_success() {
-                        if let Ok(primal_info) = response.json::<DiscoveredPrimal>().await {
-                            info!("✅ Discovered primal: {} at {}", primal_info.id, endpoint);
-                            discovered_primals.push(primal_info);
-                        }
-                    }
-                }
-                Err(_) => {
-                    // Silent failure - just means no primal at this endpoint
-                    debug!("❌ No primal found at: {}", endpoint);
-                }
-            }
+            // HTTP removed per Concentrated Gap Architecture  
+            let _ = endpoint;
+            tracing::warn!("Primal HTTP discovery removed - use Unix sockets");
         }
 
         Ok(discovered_primals)

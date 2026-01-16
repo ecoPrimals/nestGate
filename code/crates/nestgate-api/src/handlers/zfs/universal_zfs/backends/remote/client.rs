@@ -1,3 +1,7 @@
+//! NOTE: HTTP removed per Concentrated Gap Architecture
+//! Remote ZFS operations now via Unix sockets through Songbird gateway
+#![allow(dead_code)]
+
 use serde_json::Value;
 use std::time::Duration;
 use tracing::{debug, error, warn};
@@ -5,44 +9,27 @@ use tracing::{debug, error, warn};
 use crate::handlers::zfs::universal_zfs::config::RemoteConfig;
 use crate::handlers::zfs::universal_zfs_types::{UniversalZfsError, UniversalZfsResult};
 
-/// HTTP client for remote ZFS operations
+/// HTTP client for remote ZFS operations (DEPRECATED - HTTP removed)
 #[derive(Debug, Clone)]
 /// Httpclient
 pub struct HttpClient {
-    client: reqwest::Client,
+    // HTTP client removed - use Unix sockets via Songbird
     endpoint: String,
     timeout: Duration,
 }
 impl HttpClient {
-    /// Create a new HTTP client
+    /// Create a new HTTP client (DEPRECATED - HTTP removed)
     #[must_use]
     pub fn new(config: &RemoteConfig) -> Self {
-        // Build HTTP client with optimized settings
-        let client = reqwest::Client::builder()
-            .timeout(config.timeout)
-            .pool_max_idle_per_host(10)
-            .pool_idle_timeout(Duration::from_secs(90))
-            .tcp_keepalive(Duration::from_secs(60))
-            .connect_timeout(Duration::from_secs(10))
-            .user_agent("nestgate-zfs/1.0.0")
-            .build()
-            .unwrap_or_else(|e| {
-                warn!(
-                    "Failed to create optimized HTTP client, using default: {}",
-                    e
-                );
-                reqwest::Client::new()
-            });
-
         Self {
-            client,
             endpoint: config.endpoint.clone(),
             timeout: config.timeout,
         }
     }
 
-    /// Perform health check
+    /// Perform health check (HTTP removed)
     pub async fn health_check(&self) -> UniversalZfsResult<()> {
+        unimplemented!("HTTP removed - use Unix sockets via Songbird gateway")
         let health_url = format!("{}/health", self.endpoint);
 
         // Try with exponential backoff

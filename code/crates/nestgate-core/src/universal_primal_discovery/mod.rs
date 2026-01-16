@@ -99,9 +99,10 @@ pub use production_discovery::{ProductionServiceDiscovery, ServiceDiscoveryConfi
 pub use production_discovery_config::{ProductionDiscoveryConfig, SharedProductionDiscoveryConfig};
 pub use registry::{DiscoveryQuery, ServiceRegistryClient};
 pub use registry_config::{RegistryConfig, SharedRegistryConfig};
+// NOTE: Re-export dev stubs from the correct location
 #[cfg(feature = "dev-stubs")]
 #[allow(deprecated)]
-pub use stubs::{
-    discover_bind_address, discover_endpoint, discover_limit, discover_port, discover_timeout,
+pub use crate::dev_stubs::primal_discovery::{
     NetworkConfigAdapter, StandaloneNetworkAdapter,
 };
+// Legacy stubs functions removed - use proper discovery APIs

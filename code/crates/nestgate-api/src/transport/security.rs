@@ -43,7 +43,7 @@ impl BearDogClient {
         let socket_path = socket_path.as_ref().to_path_buf();
         
         if socket_path.as_os_str().is_empty() {
-            return Err(NestGateError::config_error(
+            return Err(NestGateError::api_error(
                 "BearDog socket path cannot be empty",
             ));
         }
@@ -81,14 +81,14 @@ impl BearDogClient {
         }
         
         warn!("BearDog not found - security features disabled");
-        Err(NestGateError::discovery_error("BearDog not found"))
+        Err(NestGateError::network_error("BearDog not found"))
     }
     
     async fn try_socket(pattern: &str) -> Result<PathBuf> {
         // For patterns with *, we need to glob
         if pattern.contains('*') {
             // TODO: Implement glob scanning
-            return Err(NestGateError::discovery_error("Glob not yet implemented"));
+            return Err(NestGateError::network_error("Glob not yet implemented"));
         }
         
         let path = PathBuf::from(pattern);
@@ -99,7 +99,7 @@ impl BearDogClient {
             })?;
             Ok(path)
         } else {
-            Err(NestGateError::discovery_error("Socket does not exist"))
+            Err(NestGateError::network_error("Socket does not exist"))
         }
     }
     
@@ -214,7 +214,7 @@ impl BearDogClient {
         
         // Serialize and send request
         let request_json = serde_json::to_vec(request).map_err(|e| {
-            NestGateError::rpc_error(&format!("Failed to serialize request: {}", e))
+            NestGateError::api_error(&format!("Failed to serialize request: {}", e))
         })?;
         
         stream.write_all(&request_json).await.map_err(|e| {
@@ -229,7 +229,7 @@ impl BearDogClient {
         
         // Deserialize response
         let response: BearDogResponse = serde_json::from_slice(&buffer[..n]).map_err(|e| {
-            NestGateError::rpc_error(&format!("Failed to deserialize response: {}", e))
+            NestGateError::api_error(&format!("Failed to deserialize response: {}", e))
         })?;
         
         if !response.success {
