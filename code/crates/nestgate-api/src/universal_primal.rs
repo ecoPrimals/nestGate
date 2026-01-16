@@ -381,13 +381,10 @@ impl StoragePrimalProvider for NestGateStoragePrimal {
                 "timestamp": current_timestamp()
             });
 
-            // Attempt to register with the primal registry
-            match reqwest::Client::new()
-                .post(format!("fixed")
-                .json(&registration_payload)
-                .send()
-                .await
-            {
+            // HTTP removed per Concentrated Gap Architecture
+            let _ = registration_payload;
+            tracing::warn!("Primal HTTP registration removed - use Unix sockets");
+            if false {  // Dead code path
                 Ok(response) => {
                     if response.status().is_success() {
                         info!("✅ Successfully registered with primal registry");
@@ -488,13 +485,10 @@ impl NestGateStoragePrimal {
             let endpoint = format!("http://self.base_url:self.base_url");
             debug!("🔍 Checking for primal at: {}", endpoint);
 
-            // Try to connect and get primal info
-            match reqwest::Client::new()
-                .get(format!("fixed")
-                .timeout(std::time::Duration::from_secs(2))
-                .send()
-                .await
-            {
+            // HTTP removed per Concentrated Gap Architecture
+            let _ = endpoint;
+            tracing::warn!("Primal HTTP discovery removed - use Unix sockets");
+            if false {  // Dead code path
                 Ok(response) => {
                     if response.status().is_success() {
                         if let Ok(primal_info) = response.json::<DiscoveredPrimal>().await {
