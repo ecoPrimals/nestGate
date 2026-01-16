@@ -64,10 +64,7 @@ workspace = true
 [dependencies.async-trait]
 workspace = true
 
-[dependencies.reqwest]
-version = "0.11"
-features = [ "json", "rustls-tls-native-roots",]
-default-features = false
+# reqwest removed (BiomeOS Pure Rust Evolution)
 
 [dependencies.tokio-stream]
 version = "0.1"
@@ -125,10 +122,7 @@ version = "0.7"
 features = [ "codec",]
 optional = true
 
-[dev-dependencies.reqwest]
-version = "0.11"
-features = [ "json", "rustls-tls-native-roots",]
-default-features = false
+# reqwest removed from dev-dependencies (BiomeOS Pure Rust Evolution)
 
 [dev-dependencies.tracing-subscriber]
 workspace = true

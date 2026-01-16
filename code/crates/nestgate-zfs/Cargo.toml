@@ -81,10 +81,7 @@ features = [ "derive",]
 version = "1.0"
 features = [ "v4",]
 
-[dependencies.reqwest]
-version = "0.11"
-features = [ "json", "rustls-tls-native-roots",]
-default-features = false
+# reqwest removed (BiomeOS Pure Rust Evolution)
 
 [dev-dependencies.tokio]
 version = "1.0"
