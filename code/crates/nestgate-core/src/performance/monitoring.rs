@@ -3,11 +3,10 @@
 //! Provides comprehensive performance monitoring, metrics collection, and real-time
 //! analysis with zero-cost abstractions and native async patterns.
 
-use std::collections::HashMap;
+use dashmap::DashMap;
 use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
-use tokio::sync::RwLock;
 use serde::{Deserialize, Serialize};
 
 use crate::error::{NestGateError, Result};
@@ -56,8 +55,8 @@ impl MetricsCollector {
             active_connections: AtomicUsize::new(0),
             peak_connections: AtomicUsize::new(0),
             memory_usage_bytes: AtomicU64::new(0),
-            error_counts: Arc::new(RwLock::new(HashMap::new())),
-            response_time_buckets: Arc::new(RwLock::new(Vec::new())),
+            error_counts: Arc::new(DashMap::new()),  // ✅ Lock-free
+            response_time_buckets: Arc::new(DashMap::new()),  // ✅ Lock-free
             start_time: Instant::now(),
         }
     }
@@ -90,11 +89,11 @@ impl MetricsCollector {
         self.total_requests.fetch_add(1, Ordering::Relaxed);
         self.failed_requests.fetch_add(1, Ordering::Relaxed);
         
-        // Update error counts
-        let mut error_counts = self.error_counts.write().await;
-        let counter = error_counts.entry(error_type.to_string())
-            .or_insert_with(|| AtomicU64::new(0));
-        counter.fetch_add(1, Ordering::Relaxed);
+        // ✅ Lock-free: Update error counts
+        self.error_counts
+            .entry(error_type.to_string())
+            .or_insert_with(|| AtomicU64::new(0))
+            .fetch_add(1, Ordering::Relaxed);
     }
 
     /// Record connection opened
@@ -224,16 +223,17 @@ impl MetricsCollector {
         }
     }
 
-    /// Get error breakdown
-    async fn get_error_breakdown(&self) -> HashMap<String, u64> {
-        let error_counts = self.error_counts.read().await;
-        error_counts.iter()
-            .map(|(k, v)| (k.clone(), v.load(Ordering::Relaxed)))
+    /// Get error breakdown (lock-free!)
+    fn get_error_breakdown(&self) -> std::collections::HashMap<String, u64> {
+        // ✅ Lock-free: Iterate and collect
+        self.error_counts
+            .iter()
+            .map(|entry| (entry.key().clone(), entry.value().load(Ordering::Relaxed)))
             .collect()
     }
 
-    /// Reset all metrics
-    pub async fn reset(&self) {
+    /// Reset all metrics (lock-free!)
+    pub fn reset(&self) {
         self.total_requests.store(0, Ordering::Relaxed);
         self.successful_requests.store(0, Ordering::Relaxed);
         self.failed_requests.store(0, Ordering::Relaxed);
@@ -242,11 +242,9 @@ impl MetricsCollector {
         self.max_response_time_ns.store(0, Ordering::Relaxed);
         self.peak_connections.store(0, Ordering::Relaxed);
         
-        let mut error_counts = self.error_counts.write().await;
-        error_counts.clear();
-        
-        let mut buckets = self.response_time_buckets.write().await;
-        buckets.clear();
+        // ✅ Lock-free clear
+        self.error_counts.clear();
+        self.response_time_buckets.clear();
     }
 }
 

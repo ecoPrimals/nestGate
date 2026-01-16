@@ -56,5 +56,8 @@ workspace = true
 [dependencies.ipnetwork]
 workspace = true
 
+[dependencies.dashmap]
+workspace = true
+
 [dev-dependencies.tokio-test]
 workspace = true

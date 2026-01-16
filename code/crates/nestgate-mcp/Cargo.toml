@@ -53,6 +53,9 @@ workspace = true
 workspace = true
 features = [ "env-filter",]
 
+[dependencies.dashmap]
+workspace = true
+
 [dependencies.uuid]
 workspace = true
 features = [ "v4", "serde",]

@@ -34,6 +34,7 @@
 //! ```
 
 use crate::error::{NestGateError, Result};
+use dashmap::DashMap;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -77,11 +78,10 @@ struct JsonRpcError {
 #[derive(Debug, Clone)]
 struct StorageState {
     /// In-memory storage (family_id -> key -> value)
-    /// TODO: Replace with persistent backend (ZFS, RocksDB, etc.)
-    storage: Arc<RwLock<HashMap<String, HashMap<String, Value>>>>,
+    /// **LOCK-FREE**: Uses DashMap for concurrent storage access
+    storage: Arc<DashMap<String, DashMap<String, Value>>>,  // ✅ Nested DashMaps!
     /// Blob storage (family_id -> key -> bytes)
-    #[allow(clippy::type_complexity)]
-    blobs: Arc<RwLock<HashMap<String, HashMap<String, Vec<u8>>>>>,
+    blobs: Arc<DashMap<String, DashMap<String, Vec<u8>>>>,  // ✅ Nested DashMaps!
     /// Template storage for collaborative intelligence
     templates: crate::rpc::template_storage::TemplateStorage,
     /// Audit storage for execution tracking
@@ -91,8 +91,8 @@ struct StorageState {
 impl Default for StorageState {
     fn default() -> Self {
         Self {
-            storage: Arc::new(RwLock::new(HashMap::new())),
-            blobs: Arc::new(RwLock::new(HashMap::new())),
+            storage: Arc::new(DashMap::new()),
+            blobs: Arc::new(DashMap::new()),
             templates: crate::rpc::template_storage::TemplateStorage::new(),
             audits: crate::rpc::audit_storage::AuditStorage::new(),
         }
