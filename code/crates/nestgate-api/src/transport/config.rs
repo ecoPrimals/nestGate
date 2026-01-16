@@ -127,18 +127,18 @@ impl TransportConfig {
     pub fn validate(&self) -> Result<()> {
         // Validate socket path
         if self.socket_path.as_os_str().is_empty() {
-            return Err(NestGateError::config_error("Socket path cannot be empty"));
+            return Err(NestGateError::api_error("Socket path cannot be empty"));
         }
         
         // Validate security provider path
         if self.security_provider.as_os_str().is_empty() {
-            return Err(NestGateError::config_error("Security provider path cannot be empty"));
+            return Err(NestGateError::api_error("Security provider path cannot be empty"));
         }
         
         // Validate HTTP port if specified
         if let Some(port) = self.http_port {
             if port == 0 {
-                return Err(NestGateError::config_error("HTTP port cannot be 0"));
+                return Err(NestGateError::api_error("HTTP port cannot be 0"));
             }
         }
         

@@ -90,7 +90,7 @@ where
         let shutdown = Arc::clone(&self.shutdown);
         
         let handle = tokio::spawn(async move {
-            let jsonrpc = JsonRpcHandler::new(handler.as_ref());
+            let jsonrpc = JsonRpcHandler { handler: Arc::clone(&handler) };
             
             loop {
                 tokio::select! {
@@ -123,7 +123,7 @@ where
     /// Start HTTP fallback server
     async fn start_http_fallback(&self) -> Result<tokio::task::JoinHandle<()>> {
         let port = self.config.http_port.ok_or_else(|| {
-            NestGateError::config_error("HTTP port not configured")
+            NestGateError::api_error("HTTP port not configured")
         })?;
         
         let shutdown = Arc::clone(&self.shutdown);
@@ -173,7 +173,7 @@ mod tests {
         async fn handle_method(&self, method: &str, _params: Value) -> Result<Value> {
             match method {
                 "test.ping" => Ok(Value::String("pong".to_string())),
-                _ => Err(NestGateError::rpc_error("Unknown method")),
+                _ => Err(NestGateError::api_error("Unknown method")),
             }
         }
     }
