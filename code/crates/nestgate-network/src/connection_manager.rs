@@ -313,21 +313,18 @@ impl OrchestrationConnectionManager {
     pub fn release_connection(&self, connection_id: &str) -> Result<()> {
         info!("🔓 Releasing connection via Orchestration: {}", connection_id);
 
-        // Remove from active connections
-        let mut active = self.active_connections.write().await;
-        let connection = active.remove(connection_id);
-        drop(active);
+        // Remove from active connections (lock-free!)
+        let connection = self.active_connections.remove(connection_id).map(|(_, v)| v);
 
         if let Some(conn) = connection {
-            // Remove from connection pool
-            let mut pool = self.connection_pool.write().await;
-            if let Some(connections) = pool.get_mut(&conn.request.target_service) {
+            // Remove from connection pool (lock-free!)
+            if let Some(mut connections) = self.connection_pool.get_mut(&conn.request.target_service) {
                 connections.retain(|c| c.connection_id != connection_id);
                 if connections.is_empty() {
-                    pool.remove(&conn.request.target_service);
+                    drop(connections);
+                    self.connection_pool.remove(&conn.request.target_service);
                 }
             }
-            drop(pool);
 
             // Notify Orchestration
             // Use canonical OrchestrationClient health_check as a proxy for connection management
@@ -375,23 +372,27 @@ impl OrchestrationConnectionManager {
         Ok(response.endpoint)
     }
 
-    /// List all active connections
+    /// List all active connections (lock-free!)
     pub async fn list_active_connections(&self) -> HashMap<String, ActiveConnection> {
-        self.active_connections.read().await.clone()
+        // DashMap: Lock-free iteration!
+        self.active_connections
+            .iter()
+            .map(|entry| (entry.key().clone(), entry.value().clone()))
+            .collect()
     }
 
-    /// Cleanup expired connections
+    /// Cleanup expired connections (lock-free!)
     pub async fn cleanup_expired_connections(&self) -> Result<()> {
         let now = chrono::Utc::now();
         let mut to_remove = Vec::new();
 
-        {
-            let active = self.active_connections.read().await;
-            for (connection_id, connection) in active.iter() {
-                if let Some(expires_at) = connection.response.expires_at {
-                    if now > expires_at {
-                        to_remove.push(connection_id.clone());
-                    }
+        // DashMap: Lock-free concurrent iteration!
+        for entry in self.active_connections.iter() {
+            let connection_id = entry.key();
+            let connection = entry.value();
+            if let Some(expires_at) = connection.response.expires_at {
+                if now > expires_at {
+                    to_remove.push(connection_id.clone());
                 }
             }
         }
@@ -408,12 +409,13 @@ impl OrchestrationConnectionManager {
         Ok(())
     }
 
-    /// Health check all connections
+    /// Health check all connections (lock-free!)
     pub async fn health_check_connections(&self) -> Result<HashMap<String, bool>> {
         let mut health_status = HashMap::new();
-        let active = self.active_connections.read().await;
 
-        for (connection_id, _connection) in active.iter() {
+        // DashMap: Lock-free concurrent iteration!
+        for entry in self.active_connections.iter() {
+            let connection_id = entry.key();
             // Check if connection is still valid
             let is_healthy = self
                 .orchestration_client
