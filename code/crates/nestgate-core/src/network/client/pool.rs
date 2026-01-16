@@ -197,11 +197,15 @@ impl Connection {
 
         // BiomeOS Pure Rust Evolution: External HTTP removed
         // For external requests, use: discover_orchestration().await?.http_proxy(...)
-        return Err(NestGateError::api_error(
-            "External HTTP deprecated. Use Songbird RPC via discover_orchestration()"
-        ));
-
-        let mut req_builder = self.client.request(method, &url);
+        Err(NestGateError::api_error(
+            format!("External HTTP deprecated for {}. Use Songbird RPC via discover_orchestration()", url)
+        ))
+        
+        // REMOVED: Previous HTTP client code (lines 204-248)
+        // Reason: BiomeOS Concentrated Gap Architecture
+        // Migration: Use Songbird for external HTTP, tarpc for primal-to-primal
+        
+        /*let mut req_builder = self.client.request(method, &url);
 
         // Add headers
         for (key, value) in &request.headers {
@@ -246,6 +250,7 @@ impl Connection {
         })?;
 
         Ok(Response::new(status, headers, body.to_vec()))
+        */
     }
 
     /// Get connection statistics
