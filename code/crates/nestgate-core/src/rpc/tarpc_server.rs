@@ -403,16 +403,41 @@ impl NestGateRpc for NestGateRpcService {
     ) -> std::result::Result<RegistrationResult, NestGateRpcError> {
         debug!("RPC: register_capability({})", registration.capability);
 
-        // TODO: Wire to universal adapter / service registry
-        warn!("⚠️  Capability registration not yet wired to universal adapter");
-
-        Ok(RegistrationResult {
-            success: true,
-            message: format!(
-                "Capability {} registered (stub - needs universal adapter integration)",
-                registration.capability
-            ),
-        })
+        // Get endpoint from registration (prefer tarpc, fallback to jsonrpc)
+        let endpoint = if !registration.tarpc_endpoint.is_empty() {
+            &registration.tarpc_endpoint
+        } else if let Some(ref ep) = registration.jsonrpc_endpoint {
+            ep
+        } else {
+            &registration.tarpc_endpoint // Use tarpc even if empty
+        };
+        
+        // Announce capability via discovery mechanism
+        match crate::config::capability_discovery::announce_capability(
+            &registration.capability,
+            &endpoint,
+            std::time::Duration::from_secs(60), // Default TTL
+        )
+        .await
+        {
+            Ok(()) => {
+                info!("✅ Capability '{}' registered successfully", registration.capability);
+                Ok(RegistrationResult {
+                    success: true,
+                    message: format!(
+                        "Capability {} registered and announced via discovery",
+                        registration.capability
+                    ),
+                })
+            }
+            Err(e) => {
+                warn!("Failed to register capability '{}': {}", registration.capability, e);
+                Ok(RegistrationResult {
+                    success: false,
+                    message: format!("Capability registration failed: {}", e),
+                })
+            }
+        }
     }
 
     async fn discover_capability(
@@ -422,10 +447,27 @@ impl NestGateRpc for NestGateRpcService {
     ) -> std::result::Result<Vec<ServiceInfo>, NestGateRpcError> {
         debug!("RPC: discover_capability({})", capability);
 
-        // TODO: Wire to universal adapter / service registry
-        warn!("⚠️  Capability discovery not yet wired to universal adapter");
-
-        Ok(Vec::new())
+        // Use capability-based discovery to find services
+        match crate::primal_discovery::discover_capability(&capability).await {
+            Ok(service) => {
+                info!("✅ Discovered capability '{}' at {}", capability, service.endpoint);
+                
+                let mut endpoints = HashMap::new();
+                endpoints.insert("primary".to_string(), service.endpoint.clone());
+                
+                Ok(vec![ServiceInfo {
+                    id: service.name.clone(),
+                    capability: capability.clone(),
+                    endpoints,
+                    status: "active".to_string(),
+                    metadata: None,
+                }])
+            }
+            Err(e) => {
+                warn!("Failed to discover capability '{}': {}", capability, e);
+                Ok(Vec::new()) // Return empty instead of error for graceful degradation
+            }
+        }
     }
 
     // ==================== HEALTH & MONITORING ====================

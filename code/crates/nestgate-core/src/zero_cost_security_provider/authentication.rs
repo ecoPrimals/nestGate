@@ -411,14 +411,34 @@ impl HybridAuthenticationManager {
         }
     }
 
-    /// External token validation
+    /// External token validation via Security primal (e.g., BearDog)
     ///
-    /// TODO: Replace with actual HTTP call to Security primal.
-    async fn validate_token_external(&self, _token_str: &str) -> Result<bool> {
-        // Sleep is ACCEPTABLE: Simulating realistic validation delay
-        // Will be replaced with actual async HTTP call
-        tokio::time::sleep(Duration::from_millis(50)).await;
-        Ok(true) // Simulate successful validation
+    /// Uses capability-based discovery to find and call the security service.
+    async fn validate_token_external(&self, token_str: &str) -> Result<bool> {
+        // Discover security service dynamically
+        let security = crate::primal_discovery::discover_security().await?;
+        
+        // Call security service for validation
+        let client = reqwest::Client::new();
+        let response = client
+            .post(format!("{}/auth/validate", security.endpoint))
+            .json(&serde_json::json!({
+                "token": token_str
+            }))
+            .send()
+            .await
+            .map_err(|e| NestGateError::network_error(&format!("Security service call failed: {}", e)))?;
+        
+        if !response.status().is_success() {
+            return Ok(false);
+        }
+        
+        let result: serde_json::Value = response
+            .json()
+            .await
+            .map_err(|e| NestGateError::api_internal_error(&format!("Failed to parse validation response: {}", e)))?;
+        
+        Ok(result.get("valid").and_then(|v| v.as_bool()).unwrap_or(false))
     }
 
     /// Local token validation
@@ -432,22 +452,51 @@ impl HybridAuthenticationManager {
         }
     }
 
-    /// External token refresh
+    /// External token refresh via Security primal (e.g., BearDog)
     ///
-    /// TODO: Replace with actual HTTP call to Security primal.
-    async fn refresh_token_external(&self, _token_str: &str) -> Result<ZeroCostAuthToken> {
-        // Sleep is ACCEPTABLE: Simulating realistic refresh delay
-        // Will be replaced with actual async HTTP call
-        tokio::time::sleep(Duration::from_millis(100)).await;
-
-        let token = ZeroCostAuthToken::new(
-            format!("ext_refresh_{}", uuid::Uuid::new_v4()),
-            "refreshed-user".to_string(),
-            vec!["read".to_string()],
+    /// Uses capability-based discovery to find and call the security service.
+    async fn refresh_token_external(&self, token_str: &str) -> Result<ZeroCostAuthToken> {
+        // Discover security service dynamically
+        let security = crate::primal_discovery::discover_security().await?;
+        
+        // Call security service for refresh
+        let client = reqwest::Client::new();
+        let response = client
+            .post(format!("{}/auth/refresh", security.endpoint))
+            .json(&serde_json::json!({
+                "token": token_str
+            }))
+            .send()
+            .await
+            .map_err(|e| NestGateError::network_error(&format!("Security service call failed: {}", e)))?;
+        
+        if !response.status().is_success() {
+            return Err(NestGateError::security_error("Token refresh failed"));
+        }
+        
+        let result: serde_json::Value = response
+            .json()
+            .await
+            .map_err(|e| NestGateError::api_internal_error(&format!("Failed to parse refresh response: {}", e)))?;
+        
+        // Extract new token from response
+        let token_id = result.get("token_id")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| NestGateError::api_internal_error("Missing token_id in response"))?;
+        let user_id = result.get("user_id")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| NestGateError::api_internal_error("Missing user_id in response"))?;
+        let permissions = result.get("permissions")
+            .and_then(|v| v.as_array())
+            .map(|arr| arr.iter().filter_map(|v| v.as_str().map(String::from)).collect())
+            .unwrap_or_default();
+        
+        Ok(ZeroCostAuthToken::new(
+            token_id.to_string(),
+            user_id.to_string(),
+            permissions,
             self.config.local_token_settings.token_expiry,
-        );
-
-        Ok(token)
+        ))
     }
 
     /// Local token refresh
@@ -466,13 +515,28 @@ impl HybridAuthenticationManager {
         }
     }
 
-    /// External token revocation
+    /// External token revocation via Security primal (e.g., BearDog)
     ///
-    /// TODO: Replace with actual HTTP call to Security primal.
-    async fn revoke_token_external(&self, _token_str: &str) -> Result<()> {
-        // Sleep is ACCEPTABLE: Simulating realistic revocation delay
-        // Will be replaced with actual async HTTP call
-        tokio::time::sleep(Duration::from_millis(50)).await;
+    /// Uses capability-based discovery to find and call the security service.
+    async fn revoke_token_external(&self, token_str: &str) -> Result<()> {
+        // Discover security service dynamically
+        let security = crate::primal_discovery::discover_security().await?;
+        
+        // Call security service for revocation
+        let client = reqwest::Client::new();
+        let response = client
+            .post(format!("{}/auth/revoke", security.endpoint))
+            .json(&serde_json::json!({
+                "token": token_str
+            }))
+            .send()
+            .await
+            .map_err(|e| NestGateError::network_error(&format!("Security service call failed: {}", e)))?;
+        
+        if !response.status().is_success() {
+            return Err(NestGateError::security_error("Token revocation failed"));
+        }
+        
         Ok(())
     }
 }

@@ -440,13 +440,29 @@ impl JsonRpcServer {
                 let p: Params = params.parse()?;
                 debug!("JSON-RPC: registerCapability({})", p.capability);
 
-                // TODO: Wire to universal adapter - will use endpoint and metadata
-                warn!("⚠️  Capability registration not yet wired to universal adapter");
-
-                Ok::<_, ErrorObjectOwned>(serde_json::json!({
-                    "success": true,
-                    "message": format!("Capability {} registered (stub)", p.capability),
-                }))
+                // Announce capability via discovery mechanism
+                match crate::config::capability_discovery::announce_capability(
+                    &p.capability,
+                    &p.endpoint,
+                    std::time::Duration::from_secs(60),
+                )
+                .await
+                {
+                    Ok(()) => {
+                        info!("✅ Capability '{}' registered successfully", p.capability);
+                        Ok::<_, ErrorObjectOwned>(serde_json::json!({
+                            "success": true,
+                            "message": format!("Capability {} registered and announced", p.capability),
+                        }))
+                    }
+                    Err(e) => {
+                        warn!("Failed to register capability '{}': {}", p.capability, e);
+                        Ok::<_, ErrorObjectOwned>(serde_json::json!({
+                            "success": false,
+                            "message": format!("Registration failed: {}", e),
+                        }))
+                    }
+                }
             },
         )?;
 
@@ -457,10 +473,21 @@ impl JsonRpcServer {
                 let capability: String = params.one()?;
                 debug!("JSON-RPC: discoverCapability({})", capability);
 
-                // TODO: Wire to universal adapter
-                warn!("⚠️  Capability discovery not yet wired to universal adapter");
-
-                Ok::<_, ErrorObjectOwned>(Vec::<serde_json::Value>::new())
+                // Use capability-based discovery
+                match crate::primal_discovery::discover_capability(&capability).await {
+                    Ok(service) => {
+                        info!("✅ Discovered capability '{}' at {}", capability, service.endpoint);
+                        Ok::<_, ErrorObjectOwned>(vec![serde_json::json!({
+                            "name": service.name,
+                            "endpoint": service.endpoint,
+                            "capabilities": service.capabilities,
+                        })])
+                    }
+                    Err(e) => {
+                        warn!("Failed to discover capability '{}': {}", capability, e);
+                        Ok::<_, ErrorObjectOwned>(Vec::<serde_json::Value>::new())
+                    }
+                }
             },
         )?;
 
