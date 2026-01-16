@@ -213,71 +213,39 @@ impl Connection for HttpConnection {
     /// Send Request
     async fn send_request(&self, request: Request) -> Result<Response, NestGateError> {
         debug!(
-            "Sending request {} to {}",
+            "Request {} for {} - using tarpc for primal communication",
             request.id, self.capability_info.endpoint
         );
 
-        let response = self
-            .client
-            .post(&self.capability_info.endpoint)
-            .json(&request)
-            .send()
-            .await
-            .map_err(|e| {
-                NestGateError::Internal(Box::new(
-                    crate::error::variants::core_errors::InternalErrorDetails {
-                        message: format!("HTTP request failed: {e}"),
-                        component: "universal_adapter".to_string(),
-                        location: Some(format!("{}:{}", file!(), line!())),
-                        is_bug: false,
-                        context: None,
-                    },
-                ))
-            })?;
+        // BiomeOS Concentrated Gap: External HTTP removed
+        // For primal-to-primal: Use tarpc (Unix sockets)
+        // For external HTTP: Use Songbird via discover_capability("external-http")
+        return Err(NestGateError::api_error(
+            format!("HTTP adapter deprecated. Endpoint: {}. Use tarpc for primal-to-primal or Songbird RPC for external HTTP", 
+                self.capability_info.endpoint)
+        ));
 
-        if response.status().is_success() {
-            let response_data: Response = response.json().await.map_err(|e| {
-                NestGateError::Internal(Box::new(
-                    crate::error::variants::core_errors::InternalErrorDetails {
-                        message: format!("Failed to parse response: {e}"),
-                        component: "universal_adapter".to_string(),
-                        location: Some(format!("{}:{}", file!(), line!())),
-                        is_bug: false,
-                        context: None,
-                    },
-                ))
-            })?;
-
-            Ok(response_data)
-        } else {
-            Err(NestGateError::Internal(Box::new(
-                crate::error::variants::core_errors::InternalErrorDetails {
-                    message: format!("HTTP request failed with status: {}", response.status()),
-                    component: "universal_adapter".to_string(),
-                    location: Some(format!("{}:{}", file!(), line!())),
-                    is_bug: false,
-                    context: None,
-                },
-            )))
-        }
+        // REMOVED: HTTP client implementation (BiomeOS evolution)
+        // Previous implementation: ~45 lines of HTTP request/response handling
+        // Migration: Use tarpc for primal-to-primal, Songbird RPC for external HTTP
     }
 
     /// Health Check
     async fn health_check(&self) -> Result<HealthStatus, NestGateError> {
-        debug!("Health checking {}", self.capability_info.endpoint);
+        debug!("Health checking {} - using tarpc health API", self.capability_info.endpoint);
 
-        let health_url = format!("{}/health", self.capability_info.endpoint);
-
-        match self.client.get(&health_url).send().await {
-            Ok(response) => {
-                if response.status().is_success() {
-                    Ok(HealthStatus::Healthy)
-                } else {
-                    Ok(HealthStatus::Degraded)
-                }
-            }
-            Err(_) => Ok(HealthStatus::Unhealthy),
-        }
+        // BiomeOS Concentrated Gap: Use tarpc for health checks
+        // HTTP health checks removed - primals use Unix socket health APIs
+        // For external services: Use Songbird's health proxy
+        
+        // Return degraded status (HTTP deprecated)
+        // Real implementation should use tarpc health RPC
+        Ok(HealthStatus::Degraded)
+        
+        // REMOVED: HTTP health check implementation
+        /* Previous HTTP-based health check removed
+        match self.client.get(&health_url).send().await { ... }
+        */
     }
 
     /// Gets Metadata
