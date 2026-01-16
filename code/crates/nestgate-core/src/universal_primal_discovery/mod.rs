@@ -69,9 +69,6 @@ mod production_discovery_tests;
 pub mod registry;
 /// Registry configuration
 pub mod registry_config;
-/// Development stubs for testing and development environments
-#[cfg(feature = "dev-stubs")]
-pub mod stubs;
 #[cfg(test)]
 mod tests;
 
