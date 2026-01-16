@@ -186,9 +186,9 @@ impl RealStorageService {
     /// Read data from storage
         debug!("Reading file: {}", path);
 
-        // Check cache first if enabled
+        // Check cache first if enabled (lock-free!)
         if self.config.cache_enabled {
-            if self.metadata_cache.read().await.get(path).is_some() {
+            if self.metadata_cache.contains_key(path) {
                 let mut stats = self.stats.write().await;
                 stats.cache_hits += 1;
             } else {
@@ -270,8 +270,8 @@ impl RealStorageService {
             group: None,
         };
 
-        let mut cache = self.metadata_cache.write().await;
-        cache.insert(path.to_string(), entry);
+        // DashMap: Lock-free insert!
+        self.metadata_cache.insert(path.to_string(), entry);
 
         // Update file count
         let mut stats = self.stats.write().await;
@@ -280,16 +280,16 @@ impl RealStorageService {
         Ok(())
     }
 
-    /// Refresh metadata cache by scanning storage directory
+    /// Refresh metadata cache by scanning storage directory (lock-free!)
     async fn refresh_metadata_cache(&self) -> Result<()> {
         debug!("Refreshing metadata cache");
 
         let entries = self.scan_directory_recursive(&self.root_path, "").await?;
 
-        let mut cache = self.metadata_cache.write().await;
+        // DashMap: Lock-free clear and bulk insert!
+        self.metadata_cache.clear();
         let mut stats = self.stats.write().await;
 
-        cache.clear();
         stats.total_files = 0;
         stats.total_size = 0;
 
@@ -297,7 +297,7 @@ impl RealStorageService {
             if !entry.is_directory {
                 stats.total_files += 1;
                 stats.total_size += entry.size;
-                cache.insert(entry.path.clone(), entry);
+                self.metadata_cache.insert(entry.path.clone(), entry);
             }
         }
 
