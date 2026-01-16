@@ -63,7 +63,8 @@ path = "../nestgate-core"
 
 [dependencies.reqwest]
 version = "0.11"
-features = [ "json", "stream",]
+features = [ "json", "stream", "rustls-tls-native-roots",]
+default-features = false
 
 [dependencies.dialoguer]
 version = "0.11"
