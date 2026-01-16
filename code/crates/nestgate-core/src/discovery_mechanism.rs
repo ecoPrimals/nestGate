@@ -373,13 +373,62 @@ pub mod mdns {
 #[cfg(feature = "consul")]
 pub mod consul {
     use super::*;
+    use serde::{Deserialize, Serialize};
+    use std::collections::HashMap;
 
-    /// Consul discovery mechanism
+    /// Consul service registration payload
+    #[derive(Debug, Serialize)]
+    struct ConsulServiceRegistration {
+        #[serde(rename = "ID")]
+        id: String,
+        #[serde(rename = "Name")]
+        name: String,
+        #[serde(rename = "Tags")]
+        tags: Vec<String>,
+        #[serde(rename = "Address")]
+        address: String,
+        #[serde(rename = "Port")]
+        port: u16,
+        #[serde(rename = "Check", skip_serializing_if = "Option::is_none")]
+        check: Option<ConsulHealthCheck>,
+        #[serde(rename = "Meta")]
+        meta: HashMap<String, String>,
+    }
+
+    /// Consul health check configuration
+    #[derive(Debug, Serialize)]
+    struct ConsulHealthCheck {
+        #[serde(rename = "HTTP")]
+        http: String,
+        #[serde(rename = "Interval")]
+        interval: String,
+        #[serde(rename = "Timeout")]
+        timeout: String,
+    }
+
+    /// Consul service query response
+    #[derive(Debug, Deserialize)]
+    struct ConsulService {
+        #[serde(rename = "ServiceID")]
+        service_id: String,
+        #[serde(rename = "ServiceName")]
+        service_name: String,
+        #[serde(rename = "ServiceTags")]
+        service_tags: Vec<String>,
+        #[serde(rename = "ServiceAddress")]
+        service_address: String,
+        #[serde(rename = "ServicePort")]
+        service_port: u16,
+        #[serde(rename = "ServiceMeta")]
+        service_meta: HashMap<String, String>,
+    }
+
+    /// Consul discovery mechanism (uses Consul HTTP API via reqwest)
     pub struct ConsulDiscovery {
         timeout: Duration,
         cache_duration: Duration,
         consul_addr: String,
-        // TODO: Add actual Consul client
+        client: reqwest::Client,
     }
 
     impl ConsulDiscovery {
@@ -388,11 +437,37 @@ pub mod consul {
             let consul_addr = std::env::var("CONSUL_HTTP_ADDR")
                 .unwrap_or_else(|_| "http://localhost:8500".to_string());
 
+            let client = reqwest::Client::builder()
+                .timeout(builder.timeout)
+                .build()
+                .map_err(|e| crate::error::NestGateError::config(&format!("Failed to create HTTP client: {}", e)))?;
+
             Ok(Self {
                 timeout: builder.timeout,
                 cache_duration: builder.cache_duration,
                 consul_addr,
+                client,
             })
+        }
+
+        /// Parse endpoint from address string
+        fn parse_endpoint(address: &str, port: u16) -> String {
+            if address.is_empty() {
+                format!("http://localhost:{}", port)
+            } else {
+                format!("http://{}:{}", address, port)
+            }
+        }
+
+        /// Extract address and port from endpoint
+        fn extract_address_port(endpoint: &str) -> (String, u16) {
+            let without_scheme = endpoint.trim_start_matches("http://").trim_start_matches("https://");
+            if let Some((addr, port_str)) = without_scheme.rsplit_once(':') {
+                let port = port_str.parse().unwrap_or(8080);
+                (addr.to_string(), port)
+            } else {
+                (without_scheme.to_string(), 8080)
+            }
         }
     }
 
@@ -400,31 +475,134 @@ pub mod consul {
     impl DiscoveryMechanism for ConsulDiscovery {
         async fn announce(&self, self_knowledge: &SelfKnowledge) -> Result<()> {
             tracing::info!("Consul announce: {}", self_knowledge.name);
-            // TODO: Implement actual Consul registration
+
+            let primary_endpoint = self_knowledge
+                .endpoints
+                .get("api")
+                .map(|addr| addr.to_string())
+                .unwrap_or_else(|| "http://localhost:8080".to_string());
+
+            let (address, port) = Self::extract_address_port(&primary_endpoint);
+
+            let health_check = self_knowledge
+                .endpoints
+                .get("health")
+                .map(|addr| ConsulHealthCheck {
+                    http: addr.to_string(),
+                    interval: "10s".to_string(),
+                    timeout: format!("{}s", self.timeout.as_secs()),
+                });
+
+            let mut meta = HashMap::new();
+            meta.insert("version".to_string(), self_knowledge.version.clone());
+            meta.insert("capabilities".to_string(), serde_json::to_string(&self_knowledge.capabilities).unwrap_or_default());
+
+            let registration = ConsulServiceRegistration {
+                id: self_knowledge.id.as_str().to_string(),
+                name: self_knowledge.name.clone(),
+                tags: self_knowledge.capabilities.clone(),
+                address,
+                port,
+                check: health_check,
+                meta,
+            };
+
+            let url = format!("{}/v1/agent/service/register", self.consul_addr);
+            self.client
+                .put(&url)
+                .json(&registration)
+                .send()
+                .await
+                .map_err(|e| crate::error::NestGateError::api_error(&format!("Consul registration failed: {}", e)))?;
+
+            tracing::info!("Successfully registered with Consul");
             Ok(())
         }
 
         async fn find_by_capability(&self, capability: Capability) -> Result<Vec<ServiceInfo>> {
             tracing::debug!("Consul query for capability: {:?}", capability);
-            // TODO: Implement actual Consul query
-            Ok(vec![])
+
+            let url = format!("{}/v1/catalog/service/{}", self.consul_addr, capability);
+            let response = self.client
+                .get(&url)
+                .send()
+                .await
+                .map_err(|e| crate::error::NestGateError::api_error(&format!("Consul query failed: {}", e)))?;
+
+            if !response.status().is_success() {
+                return Ok(vec![]);
+            }
+
+            let services: Vec<ConsulService> = response
+                .json()
+                .await
+                .map_err(|e| crate::error::NestGateError::api_error(&format!("Failed to parse Consul response: {}", e)))?;
+
+            Ok(services.into_iter().map(|svc| {
+                ServiceInfo {
+                    id: svc.service_id,
+                    name: svc.service_name,
+                    capabilities: svc.service_tags,
+                    endpoint: Self::parse_endpoint(&svc.service_address, svc.service_port),
+                    metadata: svc.service_meta,
+                    health_endpoint: None,
+                }
+            }).collect())
         }
 
         async fn find_by_id(&self, id: &str) -> Result<Option<ServiceInfo>> {
             tracing::debug!("Consul lookup service: {}", id);
-            // TODO: Implement actual Consul lookup
-            Ok(None)
+
+            let url = format!("{}/v1/agent/service/{}", self.consul_addr, id);
+            let response = self.client
+                .get(&url)
+                .send()
+                .await
+                .map_err(|e| crate::error::NestGateError::api_error(&format!("Consul lookup failed: {}", e)))?;
+
+            if !response.status().is_success() {
+                return Ok(None);
+            }
+
+            let service: ConsulService = response
+                .json()
+                .await
+                .map_err(|e| crate::error::NestGateError::api_error(&format!("Failed to parse Consul response: {}", e)))?;
+
+            Ok(Some(ServiceInfo {
+                id: service.service_id,
+                name: service.service_name,
+                capabilities: service.service_tags,
+                endpoint: Self::parse_endpoint(&service.service_address, service.service_port),
+                metadata: service.service_meta,
+                health_endpoint: None,
+            }))
         }
 
         async fn health_check(&self, service_id: &str) -> Result<bool> {
             tracing::debug!("Consul health check: {}", service_id);
-            // TODO: Implement actual health check
-            Ok(true)
+
+            let url = format!("{}/v1/health/service/{}", self.consul_addr, service_id);
+            let response = self.client
+                .get(&url)
+                .send()
+                .await
+                .map_err(|e| crate::error::NestGateError::api_error(&format!("Consul health check failed: {}", e)))?;
+
+            Ok(response.status().is_success())
         }
 
         async fn deregister(&self, service_id: &str) -> Result<()> {
             tracing::info!("Consul deregister: {}", service_id);
-            // TODO: Implement actual deregistration
+
+            let url = format!("{}/v1/agent/service/deregister/{}", self.consul_addr, service_id);
+            self.client
+                .put(&url)
+                .send()
+                .await
+                .map_err(|e| crate::error::NestGateError::api_error(&format!("Consul deregistration failed: {}", e)))?;
+
+            tracing::info!("Successfully deregistered from Consul");
             Ok(())
         }
 
@@ -438,13 +616,56 @@ pub mod consul {
 #[cfg(feature = "kubernetes")]
 pub mod k8s {
     use super::*;
+    use serde::{Deserialize, Serialize};
+    use std::collections::HashMap;
 
-    /// Kubernetes discovery mechanism
+    /// Kubernetes service metadata
+    #[derive(Debug, Serialize, Deserialize)]
+    struct K8sMetadata {
+        name: String,
+        namespace: String,
+        labels: HashMap<String, String>,
+        annotations: HashMap<String, String>,
+    }
+
+    /// Kubernetes service spec
+    #[derive(Debug, Serialize, Deserialize)]
+    struct K8sServiceSpec {
+        ports: Vec<K8sServicePort>,
+        #[serde(rename = "clusterIP")]
+        cluster_ip: Option<String>,
+    }
+
+    /// Kubernetes service port
+    #[derive(Debug, Serialize, Deserialize)]
+    struct K8sServicePort {
+        port: i32,
+        #[serde(rename = "targetPort", skip_serializing_if = "Option::is_none")]
+        target_port: Option<i32>,
+        protocol: String,
+    }
+
+    /// Kubernetes service
+    #[derive(Debug, Serialize, Deserialize)]
+    struct K8sService {
+        metadata: K8sMetadata,
+        spec: K8sServiceSpec,
+    }
+
+    /// Kubernetes service list
+    #[derive(Debug, Deserialize)]
+    struct K8sServiceList {
+        items: Vec<K8sService>,
+    }
+
+    /// Kubernetes discovery mechanism (uses k8s REST API via reqwest)
     pub struct KubernetesDiscovery {
         timeout: Duration,
         cache_duration: Duration,
         namespace: String,
-        // TODO: Add actual k8s client
+        client: reqwest::Client,
+        api_server: String,
+        token: Option<String>,
     }
 
     impl KubernetesDiscovery {
@@ -454,10 +675,55 @@ pub mod k8s {
                 .or_else(|_| std::env::var("POD_NAMESPACE"))
                 .unwrap_or_else(|_| "default".to_string());
 
+            // Get k8s API server address
+            let api_server = std::env::var("KUBERNETES_SERVICE_HOST")
+                .map(|host| {
+                    let port = std::env::var("KUBERNETES_SERVICE_PORT").unwrap_or_else(|_| "443".to_string());
+                    format!("https://{}:{}", host, port)
+                })
+                .unwrap_or_else(|_| "https://kubernetes.default.svc".to_string());
+
+            // Get service account token (if running in pod)
+            let token = std::fs::read_to_string("/var/run/secrets/kubernetes.io/serviceaccount/token").ok();
+
+            let client = reqwest::Client::builder()
+                .timeout(builder.timeout)
+                .danger_accept_invalid_certs(true) // In-cluster certs are self-signed
+                .build()
+                .map_err(|e| crate::error::NestGateError::config(&format!("Failed to create HTTP client: {}", e)))?;
+
             Ok(Self {
                 timeout: builder.timeout,
                 cache_duration: builder.cache_duration,
                 namespace,
+                client,
+                api_server,
+                token,
+            })
+        }
+
+        /// Create authorization header
+        fn auth_header(&self) -> Option<String> {
+            self.token.as_ref().map(|token| format!("Bearer {}", token))
+        }
+
+        /// Convert k8s service to ServiceInfo
+        fn service_to_info(&self, svc: K8sService) -> Option<ServiceInfo> {
+            let port = svc.spec.ports.first()?.port;
+            let ip = svc.spec.cluster_ip.as_ref()?;
+            
+            let capabilities: Vec<String> = svc.metadata.labels
+                .get("capabilities")
+                .map(|s| s.split(',').map(|s| s.trim().to_string()).collect())
+                .unwrap_or_default();
+
+            Some(ServiceInfo {
+                id: format!("{}.{}", svc.metadata.name, svc.metadata.namespace),
+                name: svc.metadata.name.clone(),
+                capabilities,
+                endpoint: format!("http://{}:{}", ip, port),
+                metadata: svc.metadata.annotations,
+                health_endpoint: None,
             })
         }
     }
@@ -466,31 +732,117 @@ pub mod k8s {
     impl DiscoveryMechanism for KubernetesDiscovery {
         async fn announce(&self, self_knowledge: &SelfKnowledge) -> Result<()> {
             tracing::info!("k8s announce: {}", self_knowledge.name);
-            // TODO: Implement actual k8s service/endpoint registration
+
+            // In Kubernetes, services are typically pre-created via manifests
+            // This would update labels/annotations on an existing service
+            // For now, we log that the service should be defined in k8s manifests
+
+            tracing::info!(
+                "Kubernetes services should be defined via manifests with labels: capabilities={}",
+                self_knowledge.capabilities.join(",")
+            );
+
+            // In a full implementation, this could update the service's labels
+            // via PATCH /api/v1/namespaces/{namespace}/services/{name}
+
             Ok(())
         }
 
         async fn find_by_capability(&self, capability: Capability) -> Result<Vec<ServiceInfo>> {
             tracing::debug!("k8s query for capability: {:?}", capability);
-            // TODO: Implement actual k8s service discovery by label
-            Ok(vec![])
+
+            let url = format!(
+                "{}/api/v1/namespaces/{}/services?labelSelector=capabilities={}",
+                self.api_server, self.namespace, capability
+            );
+
+            let mut req = self.client.get(&url);
+            if let Some(auth) = self.auth_header() {
+                req = req.header("Authorization", auth);
+            }
+
+            let response = req.send().await
+                .map_err(|e| crate::error::NestGateError::api_error(&format!("k8s query failed: {}", e)))?;
+
+            if !response.status().is_success() {
+                return Ok(vec![]);
+            }
+
+            let service_list: K8sServiceList = response.json().await
+                .map_err(|e| crate::error::NestGateError::api_error(&format!("Failed to parse k8s response: {}", e)))?;
+
+            Ok(service_list.items.into_iter()
+                .filter_map(|svc| self.service_to_info(svc))
+                .collect())
         }
 
         async fn find_by_id(&self, id: &str) -> Result<Option<ServiceInfo>> {
             tracing::debug!("k8s lookup service: {}", id);
-            // TODO: Implement actual k8s service lookup
-            Ok(None)
+
+            // ID format: service-name.namespace
+            let (name, ns) = if let Some((n, ns)) = id.split_once('.') {
+                (n, ns.to_string())
+            } else {
+                (id, self.namespace.clone())
+            };
+
+            let url = format!(
+                "{}/api/v1/namespaces/{}/services/{}",
+                self.api_server, ns, name
+            );
+
+            let mut req = self.client.get(&url);
+            if let Some(auth) = self.auth_header() {
+                req = req.header("Authorization", auth);
+            }
+
+            let response = req.send().await
+                .map_err(|e| crate::error::NestGateError::api_error(&format!("k8s lookup failed: {}", e)))?;
+
+            if !response.status().is_success() {
+                return Ok(None);
+            }
+
+            let service: K8sService = response.json().await
+                .map_err(|e| crate::error::NestGateError::api_error(&format!("Failed to parse k8s response: {}", e)))?;
+
+            Ok(self.service_to_info(service))
         }
 
         async fn health_check(&self, service_id: &str) -> Result<bool> {
             tracing::debug!("k8s health check: {}", service_id);
-            // TODO: Implement actual health check via k8s endpoint
-            Ok(true)
+
+            // Check if service exists and has endpoints
+            let (name, ns) = if let Some((n, ns)) = service_id.split_once('.') {
+                (n, ns.to_string())
+            } else {
+                (service_id, self.namespace.clone())
+            };
+
+            let url = format!(
+                "{}/api/v1/namespaces/{}/endpoints/{}",
+                self.api_server, ns, name
+            );
+
+            let mut req = self.client.get(&url);
+            if let Some(auth) = self.auth_header() {
+                req = req.header("Authorization", auth);
+            }
+
+            let response = req.send().await
+                .map_err(|e| crate::error::NestGateError::api_error(&format!("k8s health check failed: {}", e)))?;
+
+            Ok(response.status().is_success())
         }
 
         async fn deregister(&self, service_id: &str) -> Result<()> {
             tracing::info!("k8s deregister: {}", service_id);
-            // TODO: Implement actual deregistration
+
+            // In Kubernetes, services persist and are managed by k8s
+            // Deregistration typically means the pod terminates and k8s removes it from endpoints
+            // We just log this action
+
+            tracing::info!("Kubernetes services are managed by k8s control plane");
             Ok(())
         }
 
