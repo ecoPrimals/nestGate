@@ -186,8 +186,6 @@ impl BlockStorageBackend {
             NestGateError::io_error(e, "Failed to read /sys/block", "block_storage")
         })?;
 
-        let mut devices = self.devices.write().await;
-
         while let Some(entry) = entries.next_entry().await.map_err(|e| {
             NestGateError::io_error(e, "Failed to read dir entry", "block_storage")
         })? {
@@ -298,10 +296,10 @@ impl BlockStorageBackend {
         Ok(())
     }
 
-    /// List all available devices
+    /// List all available devices (lock-free!)
     pub async fn list_devices(&self) -> Result<Vec<BlockDevice>> {
-        let devices = self.devices.read().await;
-        Ok(devices.values().cloned().collect())
+        // DashMap: Lock-free iteration!
+        Ok(self.devices.iter().map(|entry| entry.value().clone()).collect())
     }
 
     /// Get backend name
