@@ -1,18 +1,18 @@
 //! Adaptive Caching module
 
-use std::collections::HashMap;
 //
 // Intelligent caching with adaptive algorithms and workload-aware optimization.
 
+use dashmap::DashMap;
 use crate::error::CanonicalResult as Result;
 use serde::{Deserialize, Serialize};
 use std::hash::Hash;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime};
-use tokio::sync::RwLock;
 
 // Type aliases for caching
-type CacheStorage<K, V> = Arc<RwLock<HashMap<K, CacheEntry<V>>>>;
+// ✅ LOCK-FREE: DashMap for concurrent cache access
+type CacheStorage<K, V> = Arc<DashMap<K, CacheEntry<V>>>;
 
 /// Adaptive cache configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]

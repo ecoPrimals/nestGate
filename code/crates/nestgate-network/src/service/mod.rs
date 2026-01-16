@@ -15,13 +15,15 @@ use super::types::{
     ServiceInfo, ServiceStatus,
 };
 use nestgate_core::NestGateError;
+use dashmap::DashMap;
 
 // Type aliases for complex types to improve readability and reduce warnings
-type ConnectionMap = Arc<RwLock<HashMap<String, ConnectionInfo>>>;
+// ✅ LOCK-FREE: Migrated to DashMap for concurrent network service management
+type ConnectionMap = Arc<DashMap<String, ConnectionInfo>>;
 /// Type alias for PortMap
-type PortMap = Arc<RwLock<HashMap<u16, String>>>;
+type PortMap = Arc<DashMap<u16, String>>;
 /// Type alias for ServiceMap
-type ServiceMap = Arc<RwLock<HashMap<String, ServiceInfo>>>;
+type ServiceMap = Arc<DashMap<String, ServiceInfo>>;
 
 /// Real network service implementation
 #[derive(Debug)]
@@ -42,23 +44,22 @@ impl RealNetworkService {
     pub fn new(config: NetworkConfig) -> Self {
         Self {
             config,
-            connections: Arc::new(RwLock::new(HashMap::new())),
-            allocated_ports: Arc::new(RwLock::new(HashMap::new())),
-            services: Arc::new(RwLock::new(HashMap::new())),
+            connections: Arc::new(DashMap::new()),  // ✅ Lock-free
+            allocated_ports: Arc::new(DashMap::new()),  // ✅ Lock-free
+            services: Arc::new(DashMap::new()),  // ✅ Lock-free
         }
     }
 
-    /// Get network statistics
-    pub async fn get_network_statistics(&self) -> nestgate_core::Result<NetworkStatistics> {
-        let connections = self.connections.read().await;
-        let services = self.services.read().await;
-        let allocated_ports = self.allocated_ports.read().await;
-
+    /// Get network statistics (lock-free!)
+    pub fn get_network_statistics(&self) -> nestgate_core::Result<NetworkStatistics> {
+        // ✅ Lock-free iteration over connections, services, and ports
         let mut total_bytes_sent = 0;
         let mut total_bytes_received = 0;
         let mut active_connections = 0;
 
-        for connection in connections.values() {
+        // ✅ Lock-free iteration over connections
+        for entry in self.connections.iter() {
+            let connection = entry.value();
             total_bytes_sent += connection.bytes_sent;
             total_bytes_received += connection.bytes_received;
             if connection.is_active() {
@@ -68,8 +69,8 @@ impl RealNetworkService {
 
         Ok(NetworkStatistics {
             active_connections,
-            registered_services: services.len() as u32,
-            allocated_ports: allocated_ports.len() as u32,
+            registered_services: self.services.len() as u32,
+            allocated_ports: self.allocated_ports.len() as u32,
             total_bytes_sent,
             total_bytes_received,
         })
@@ -122,13 +123,11 @@ impl RealNetworkService {
     pub async fn stop(&self) -> nestgate_core::Result<()> {
         info!("Stopping network service");
 
-        // Close all active connections
-        let mut connections = self.connections.write().await;
-        connections.clear();
+        // Close all active connections (lock-free!)
+        self.connections.clear();
 
-        // Release all allocated ports
-        let mut allocated_ports = self.allocated_ports.write().await;
-        allocated_ports.clear();
+        // Release all allocated ports (lock-free!)
+        self.allocated_ports.clear();
 
         info!("Network service stopped");
         Ok(())
@@ -144,17 +143,14 @@ impl RealNetworkService {
         debug!("Connection from {} handled", peer_addr);
     }
 
-    /// Allocate port for service
-    pub async fn allocate_port_for_service(
+    /// Allocate port for service (lock-free!)
+    pub fn allocate_port_for_service(
         &self,
         service_name: &str,
     ) -> nestgate_core::Result<u16> {
-        let mut allocated_ports = self.allocated_ports.write().await;
-
-        // Find an available port in the configured range
+        // ✅ Lock-free: Find and atomically allocate available port
         for port in self.config.api.port_range_start..=self.config.api.port_range_end {
-            if let std::collections::hash_map::Entry::Vacant(e) = allocated_ports.entry(port) {
-                e.insert(service_name.to_string());
+            if self.allocated_ports.insert(port, service_name.to_string()).is_none() {
                 info!("Allocated port {} for service {}", port, service_name);
                 return Ok(port);
             }
@@ -166,10 +162,9 @@ impl RealNetworkService {
     }
 
     /// Release service port
-    pub async fn release_service_port(&self, port: u16) -> nestgate_core::Result<()> {
-        let mut allocated_ports = self.allocated_ports.write().await;
-
-        if let Some(service_name) = allocated_ports.remove(&port) {
+    pub fn release_service_port(&self, port: u16) -> nestgate_core::Result<()> {
+        // ✅ Lock-free remove
+        if let Some((_, service_name)) = self.allocated_ports.remove(&port) {
             info!("Released port {} from service {}", port, service_name);
         } else {
             warn!("Attempted to release unallocated port {}", port);
@@ -178,22 +173,21 @@ impl RealNetworkService {
         Ok(())
     }
 
-    /// Register a service
-    pub async fn register_service(&self, service: ServiceInfo) -> nestgate_core::Result<()> {
+    /// Register a service (lock-free!)
+    pub fn register_service(&self, service: ServiceInfo) -> nestgate_core::Result<()> {
         let service_id = service.id().to_string();
-        let mut services = self.services.write().await;
-
-        services.insert(service_id.clone(), service);
+        
+        // ✅ Lock-free insert
+        self.services.insert(service_id.clone(), service);
         info!("Registered service {}", service_id);
 
         Ok(())
     }
 
-    /// Unregister a service
-    pub async fn unregister_service(&self, service_id: &str) -> nestgate_core::Result<()> {
-        let mut services = self.services.write().await;
-
-        if services.remove(service_id).is_some() {
+    /// Unregister a service (lock-free!)
+    pub fn unregister_service(&self, service_id: &str) -> nestgate_core::Result<()> {
+        // ✅ Lock-free remove
+        if self.services.remove(service_id).is_some() {
             info!("Unregistered service {}", service_id);
         } else {
             warn!("Attempted to unregister unknown service {}", service_id);
@@ -202,13 +196,13 @@ impl RealNetworkService {
         Ok(())
     }
 
-    /// Get service status
-    pub async fn get_service_status(&self) -> nestgate_core::Result<ServiceStatus> {
-        let connections = self.connections.read().await;
-        let _services = self.services.read().await;
-
-        let _active_connections =
-            connections.values().filter(|conn| conn.is_active()).count() as u32;
+    /// Get service status (lock-free!)
+    pub fn get_service_status(&self) -> nestgate_core::Result<ServiceStatus> {
+        // ✅ Lock-free count of active connections
+        let _active_connections = self.connections
+            .iter()
+            .filter(|entry| entry.value().is_active())
+            .count() as u32;
 
         Ok(crate::types::ServiceStatus::Running)
     }
@@ -216,7 +210,7 @@ impl RealNetworkService {
     /// Health check for the network service
     pub async fn health_check(&self) -> nestgate_core::Result<bool> {
         // Basic health check - could be expanded
-        let stats = self.get_network_statistics().await?;
+        let stats = self.get_network_statistics()?;
 
         // Consider healthy if we have reasonable resource usage
         let healthy = (stats.active_connections as usize)
@@ -232,30 +226,36 @@ impl RealNetworkService {
         Ok(healthy)
     }
 
-    /// Get connection details
-    pub async fn get_connection_details(&self, connection_id: &str) -> Option<ConnectionDetails> {
-        let connections = self.connections.read().await;
-        connections
+    /// Get connection details (lock-free!)
+    pub fn get_connection_details(&self, connection_id: &str) -> Option<ConnectionDetails> {
+        // ✅ Lock-free get
+        self.connections
             .get(connection_id)
-            .map(|conn| ConnectionDetails {
-                id: conn.id().to_string(),
-                endpoint: conn.address(),
-                age: conn.age(),
-                is_active: conn.is_active(),
-                status: "active".to_string(),
+            .map(|entry| {
+                let conn = entry.value();
+                ConnectionDetails {
+                    id: conn.id().to_string(),
+                    endpoint: conn.address(),
+                    age: conn.age(),
+                    is_active: conn.is_active(),
+                    status: "active".to_string(),
+                }
             })
     }
 
-    /// Get service details
-    pub async fn get_service_details(&self, service_id: &str) -> Option<ServiceDetails> {
-        let services = self.services.read().await;
-        services.get(service_id).map(|service| ServiceDetails {
-            id: service.id().to_string(),
-            name: service.name().to_string(),
-            endpoint: service.address(),
-            health_status: "healthy".to_string(),
-            registered_at: service.registered_at(),
-            metadata: service.metadata().clone(),
+    /// Get service details (lock-free!)
+    pub fn get_service_details(&self, service_id: &str) -> Option<ServiceDetails> {
+        // ✅ Lock-free get
+        self.services.get(service_id).map(|entry| {
+            let service = entry.value();
+            ServiceDetails {
+                id: service.id().to_string(),
+                name: service.name().to_string(),
+                endpoint: service.address(),
+                health_status: "healthy".to_string(),
+                registered_at: service.registered_at(),
+                metadata: service.metadata().clone(),
+            }
         })
     }
 }

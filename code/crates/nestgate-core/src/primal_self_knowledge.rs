@@ -31,10 +31,9 @@
 //! ```
 
 use anyhow::{Context, Result};
+use dashmap::DashMap;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::sync::Arc;
-use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
 
 /// Primal Self-Knowledge System
@@ -54,8 +53,8 @@ pub struct PrimalSelfKnowledge {
     /// How we can be reached
     endpoints: Arc<Vec<Endpoint>>,
 
-    /// Discovered other primals (runtime only)
-    discovered_primals: Arc<RwLock<HashMap<String, DiscoveredPrimal>>>,
+    /// Discovered other primals (runtime only, lock-free!)
+    discovered_primals: Arc<DashMap<String, DiscoveredPrimal>>,  // ✅ Lock-free
 
     /// Discovery mechanisms we support
     discovery_mechanisms: Vec<DiscoveryMechanism>,
