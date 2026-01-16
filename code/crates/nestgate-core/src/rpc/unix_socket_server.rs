@@ -42,7 +42,6 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::{UnixListener, UnixStream};
-use tokio::sync::RwLock;
 use tracing::{debug, error, info, warn};
 
 /// JSON-RPC 2.0 Request
@@ -341,10 +340,10 @@ async fn storage_store(params: &Option<Value>, state: &StorageState) -> Result<V
         NestGateError::invalid_input_with_field("family_id", "family_id (string) required")
     })?;
 
-    let mut storage = state.storage.write().await;
-    let family_storage = storage
+    // ✅ Lock-free: Get or create family storage, then insert
+    let family_storage = state.storage
         .entry(family_id.to_string())
-        .or_insert_with(std::collections::HashMap::new);
+        .or_insert_with(DashMap::new);
     family_storage.insert(key.to_string(), data.clone());
 
     debug!("Stored key '{}' for family '{}'", key, family_id);
@@ -368,11 +367,10 @@ async fn storage_retrieve(params: &Option<Value>, state: &StorageState) -> Resul
         NestGateError::invalid_input_with_field("family_id", "family_id (string) required")
     })?;
 
-    let storage = state.storage.read().await;
-    let data = storage
+    // ✅ Lock-free: Nested get from DashMap
+    let data = state.storage
         .get(family_id)
-        .and_then(|family_storage| family_storage.get(key))
-        .cloned()
+        .and_then(|family_storage| family_storage.get(key).map(|v| v.clone()))
         .ok_or_else(|| NestGateError::not_found(format!("Key '{}' not found", key)))?;
 
     debug!("Retrieved key '{}' for family '{}'", key, family_id);
@@ -395,9 +393,9 @@ async fn storage_delete(params: &Option<Value>, state: &StorageState) -> Result<
         NestGateError::invalid_input_with_field("family_id", "family_id (string) required")
     })?;
 
-    let mut storage = state.storage.write().await;
-    let deleted = storage
-        .get_mut(family_id)
+    // ✅ Lock-free: Remove from nested DashMap
+    let deleted = state.storage
+        .get(family_id)
         .and_then(|family_storage| family_storage.remove(key))
         .is_some();
 
@@ -426,14 +424,14 @@ async fn storage_list(params: &Option<Value>, state: &StorageState) -> Result<Va
     })?;
     let prefix = params["prefix"].as_str();
 
-    let storage = state.storage.read().await;
-    let keys: Vec<String> = storage
+    // ✅ Lock-free: Iterate keys from nested DashMap
+    let keys: Vec<String> = state.storage
         .get(family_id)
         .map(|family_storage| {
             family_storage
-                .keys()
+                .iter()
+                .map(|entry| entry.key().clone())
                 .filter(|k| prefix.is_none_or(|p| k.starts_with(p)))
-                .cloned()
                 .collect()
         })
         .unwrap_or_default();
@@ -460,11 +458,9 @@ async fn storage_stats(params: &Option<Value>, state: &StorageState) -> Result<V
         NestGateError::invalid_input_with_field("family_id", "family_id (string) required")
     })?;
 
-    let storage = state.storage.read().await;
-    let blobs = state.blobs.read().await;
-
-    let key_count = storage.get(family_id).map(|s| s.len()).unwrap_or(0);
-    let blob_count = blobs.get(family_id).map(|b| b.len()).unwrap_or(0);
+    // ✅ Lock-free: Get counts from DashMaps (no read locks needed!)
+    let key_count = state.storage.get(family_id).map(|s| s.len()).unwrap_or(0);
+    let blob_count = state.blobs.get(family_id).map(|b| b.len()).unwrap_or(0);
 
     debug!(
         "Stats for family '{}': {} keys, {} blobs",
@@ -502,10 +498,10 @@ async fn storage_store_blob(params: &Option<Value>, state: &StorageState) -> Res
             NestGateError::invalid_input_with_field("blob", format!("Invalid base64: {}", e))
         })?;
 
-    let mut blobs = state.blobs.write().await;
-    let family_blobs = blobs
+    // ✅ Lock-free: Store blob in nested DashMap
+    let family_blobs = state.blobs
         .entry(family_id.to_string())
-        .or_insert_with(std::collections::HashMap::new);
+        .or_insert_with(DashMap::new);
     family_blobs.insert(key.to_string(), blob_data.clone());
 
     debug!(
@@ -535,15 +531,15 @@ async fn storage_retrieve_blob(params: &Option<Value>, state: &StorageState) -> 
         NestGateError::invalid_input_with_field("family_id", "family_id (string) required")
     })?;
 
-    let blobs = state.blobs.read().await;
-    let blob_data = blobs
+    // ✅ Lock-free: Get blob from nested DashMap
+    let blob_data = state.blobs
         .get(family_id)
-        .and_then(|family_blobs| family_blobs.get(key))
+        .and_then(|family_blobs| family_blobs.get(key).map(|v| v.clone()))
         .ok_or_else(|| NestGateError::not_found(format!("Blob '{}' not found", key)))?;
 
     // Encode as base64
     use base64::Engine;
-    let blob_base64 = base64::engine::general_purpose::STANDARD.encode(blob_data);
+    let blob_base64 = base64::engine::general_purpose::STANDARD.encode(&blob_data);
 
     debug!(
         "Retrieved blob '{}' ({} bytes) for family '{}'",
