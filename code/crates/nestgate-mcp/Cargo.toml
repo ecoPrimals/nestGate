@@ -72,10 +72,7 @@ path = "../nestgate-core"
 
 [dependencies.indexmap]
 workspace = true
-
-[dependencies.reqwest]
-workspace = true
-features = [ "json",]
+# reqwest removed (BiomeOS Pure Rust Evolution) - removed "json" feature
 
 [dependencies.config]
 workspace = true

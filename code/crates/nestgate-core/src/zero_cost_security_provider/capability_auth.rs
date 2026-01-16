@@ -3,45 +3,44 @@
 
 //! # Capability-Based Authentication
 //!
-//! **EVOLVED FROM STUBS** - Complete implementation using capability discovery.
+//! **BiomeOS Pure Rust Evolution** - Local JWT authentication using RustCrypto.
 //!
-//! ## Philosophy: Self-Knowledge + Runtime Discovery
+//! ## Philosophy: TRUE PRIMAL Architecture
 //!
-//! - **We know ourselves** (our identity, our capabilities)
-//! - **We discover others** (at runtime, via mDNS/Consul/K8s)
-//! - **No hardcoded primal names** (beardog, songbird, etc.)
-//! - **Capability-based** (what can you do, not who you are)
+//! - **Self-knowledge**: We know our identity and capabilities
+//! - **Local validation**: JWT tokens validated locally (no external HTTP)
+//! - **Pure Rust**: 100% Rust, no C dependencies (RustCrypto)
+//! - **Concentrated gap**: External calls (if needed) go through Songbird
 //!
 //! ## Architecture
 //!
 //! ```text
-//! 1. Need authentication capability
-//! 2. Discover services offering "security" capability
-//! 3. Select best available service (latency, availability, etc.)
-//! 4. Make actual HTTP/gRPC call
-//! 5. Cache results for performance
+//! 1. Receive JWT token
+//! 2. Validate signature locally using RustCrypto (HMAC-SHA256 or Ed25519)
+//! 3. Check expiration and claims
+//! 4. Return validation result
+//! (NO external HTTP calls!)
 //! ```
 //!
-//! ## Zero Hardcoding
+//! ## Zero External Dependencies
 //!
-//! This module does NOT contain:
-//! - Service addresses (discovered at runtime)
-//! - Primal names (capability-based only)
-//! - Ports (from configuration)
+//! This module does NOT:
+//! - Make external HTTP calls (BiomeOS compliant)
+//! - Use C dependencies (100% pure Rust)
+//! - Require network connectivity (local validation)
 //!
-//! This module DOES contain:
-//! - Discovery logic
-//! - Capability matching
-//! - HTTP/gRPC client code
-//! - Error handling
-//! - Performance optimizations
+//! This module DOES:
+//! - Validate JWT tokens locally
+//! - Use audited RustCrypto primitives
+//! - Provide fast, secure authentication
+//! - Support distributed architectures
 
 use crate::{
     capabilities::discovery::CapabilityDiscovery,
+    crypto::jwt_rustcrypto::{JwtClaims, JwtHmac},
     error::{NestGateError, Result},
     zero_cost_security_provider::types::*,
 };
-use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use tracing::{debug, warn, instrument};
@@ -93,176 +92,113 @@ pub struct RevokeTokenRequest {
 
 /// Capability-based authentication client
 ///
-/// Discovers authentication services at runtime, no hardcoding.
+/// **BiomeOS Pure Rust**: Local JWT validation, no external HTTP calls.
 pub struct CapabilityAuthClient {
     discovery: CapabilityDiscovery,
-    http_client: Client,
+    jwt_verifier: JwtHmac,
     timeout: Duration,
 }
 
 impl CapabilityAuthClient {
-    /// Create new capability-based auth client
+    /// Create new capability-based auth client with local JWT validation
+    ///
+    /// **BiomeOS Pure Rust**: No external HTTP client needed!
     pub fn new(discovery: CapabilityDiscovery) -> Self {
+        // Get JWT signing key from environment or use default
+        let signing_key = std::env::var("NESTGATE_TOKEN_KEY")
+            .unwrap_or_else(|_| "default-local-key".to_string());
+        
         Self {
             discovery,
-            http_client: Client::builder()
-                .timeout(Duration::from_secs(5))
-                .build()
-                .expect("Failed to create HTTP client"),
+            jwt_verifier: JwtHmac::new(&signing_key),
             timeout: Duration::from_secs(5),
         }
     }
 
-    /// Create with custom timeout
+    /// Create with custom signing key
+    pub fn with_signing_key(discovery: CapabilityDiscovery, signing_key: &str) -> Self {
+        Self {
+            discovery,
+            jwt_verifier: JwtHmac::new(signing_key),
+            timeout: Duration::from_secs(5),
+        }
+    }
+
+    /// Create with custom timeout (kept for API compatibility)
     pub fn with_timeout(mut self, timeout: Duration) -> Self {
         self.timeout = timeout;
-        self.http_client = Client::builder()
-            .timeout(timeout)
-            .build()
-            .expect("Failed to create HTTP client");
         self
     }
 
-    /// Validate token using discovered security capability
+    /// Validate token using local JWT validation (100% pure Rust!)
     ///
-    /// ## Process
-    /// 1. Discover services with authentication capability
-    /// 2. Try each service until success
-    /// 3. Cache result for performance
-    /// 4. Return validation result
+    /// **BiomeOS Pure Rust Evolution**:
+    /// - No external HTTP calls
+    /// - Local JWT signature verification
+    /// - RustCrypto HMAC-SHA256
+    /// - Instant validation (no network latency)
     #[instrument(skip(self, token), fields(token_len = token.len()))]
     pub async fn validate_token(&self, token: &str) -> Result<bool> {
-        // Discover authentication services
-        let services = self
-            .discovery
-            .discover_capabilities(&[AUTH_CAPABILITY])
-            .await?;
-
-        if services.is_empty() {
-            warn!("No authentication services discovered, using fallback");
-            return self.fallback_validation(token).await;
-        }
-
-        debug!("Found {} authentication service(s)", services.len());
-
-        // Try each service until success
-        for service in services {
-            match self.validate_with_service(token, &service.endpoint).await {
-                Ok(result) => {
-                    debug!("Token validation succeeded via {}", service.endpoint);
-                    return Ok(result.valid);
-                }
-                Err(e) => {
-                    warn!(
-                        "Token validation failed with {}: {}",
-                        service.endpoint, e
-                    );
-                    continue;
-                }
+        debug!("Validating JWT token locally (RustCrypto)");
+        
+        // Validate JWT signature and claims locally
+        match self.jwt_verifier.verify(token) {
+            Ok(claims) => {
+                debug!("JWT validated successfully for user: {}", claims.sub);
+                Ok(true)
+            }
+            Err(e) => {
+                warn!("JWT validation failed: {}", e);
+                Ok(false)
             }
         }
-
-        // All services failed, use fallback
-        warn!("All authentication services failed, using fallback");
-        self.fallback_validation(token).await
-    }
-
-    /// Validate token with specific service
-    async fn validate_with_service(
-        &self,
-        token: &str,
-        endpoint: &str,
-    ) -> Result<ValidateTokenResponse> {
-        let url = format!("{}/api/v1/auth/validate", endpoint);
-        let request = ValidateTokenRequest {
-            token: token.to_string(),
-            permissions: None,
-        };
-
-        let response = self
-            .http_client
-            .post(&url)
-            .json(&request)
-            .send()
-            .await
-            .map_err(|e| NestGateError::network_error(format!("HTTP request failed: {}", e)))?;
-
-        if !response.status().is_success() {
-            return Err(NestGateError::security_error(format!(
-                "Validation failed with status: {}",
-                response.status()
-            )));
-        }
-
-        response
-            .json()
-            .await
-            .map_err(|e| NestGateError::network_error(format!("Failed to parse response: {}", e)))
     }
 
     /// Fallback validation (local check)
     ///
-    /// Used when no authentication services are available.
-    /// Checks token format and basic validity.
+    /// Fallback validation removed - using local JWT validation everywhere
+    /// (kept for API compatibility but not used)
+    #[allow(dead_code)]
     async fn fallback_validation(&self, token: &str) -> Result<bool> {
-        // Basic validation: token format check
-        if token.is_empty() {
-            return Ok(false);
-        }
-
-        // Check if token looks like a JWT
-        let parts: Vec<&str> = token.split('.').collect();
-        if parts.len() == 3 {
-            debug!("Token has valid JWT structure");
-            // In production, you'd verify signature with local keys
-            // For now, we accept well-formed JWTs
-            return Ok(true);
-        }
-
-        // Check if token looks like an API key
-        if token.starts_with("nsg_") && token.len() > 20 {
-            debug!("Token looks like valid API key");
-            return Ok(true);
-        }
-
-        debug!("Token failed fallback validation");
-        Ok(false)
+        // This method is obsolete - we use local JWT validation everywhere now
+        self.validate_token(token).await
     }
 
-    /// Refresh token using discovered security capability
+    /// Refresh token using local JWT validation (100% pure Rust!)
+    ///
+    /// **BiomeOS Pure Rust**: Validates old token, issues new token with extended expiry.
     #[instrument(skip(self, token), fields(token_len = token.len()))]
     pub async fn refresh_token(&self, token: &str) -> Result<ZeroCostAuthToken> {
-        let services = self
-            .discovery
-            .discover_capabilities(&[AUTH_CAPABILITY])
-            .await?;
-
-        if services.is_empty() {
-            return Err(NestGateError::security_error(
-                "No authentication services available for refresh",
-            ));
-        }
-
-        for service in services {
-            match self.refresh_with_service(token, &service.endpoint).await {
-                Ok(result) => {
-                    debug!("Token refresh succeeded via {}", service.endpoint);
-                    return Ok(ZeroCostAuthToken::new(
-                        result.token,
-                        result.user_id,
-                        result.permissions,
-                        Duration::from_secs((result.expires_at - chrono::Utc::now().timestamp()) as u64),
-                    ));
-                }
-                Err(e) => {
-                    warn!("Token refresh failed with {}: {}", service.endpoint, e);
-                    continue;
-                }
-            }
-        }
-
-        Err(NestGateError::security_error(
-            "All authentication services failed to refresh token",
+        // Verify the existing token first
+        let old_claims = self.jwt_verifier.verify(token)
+            .map_err(|_| NestGateError::security_error("Cannot refresh invalid token"))?;
+        
+        // Create new token with extended expiry (default: 1 hour)
+        let new_expiry_seconds = 3600i64;
+        let new_claims = JwtClaims {
+            sub: old_claims.sub.clone(),
+            iat: std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs() as i64,
+            exp: std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs() as i64 + new_expiry_seconds,
+            iss: old_claims.iss.clone(),
+            aud: old_claims.aud.clone(),
+            permissions: old_claims.permissions.clone(),
+        };
+        
+        let new_token_str = self.jwt_verifier.sign(&new_claims)?;
+        
+        debug!("JWT refreshed successfully for user: {}", old_claims.sub);
+        
+        Ok(ZeroCostAuthToken::new(
+            new_token_str,
+            old_claims.sub,
+            old_claims.permissions.unwrap_or_default(),
+            Duration::from_secs(new_expiry_seconds as u64),
         ))
     }
 
