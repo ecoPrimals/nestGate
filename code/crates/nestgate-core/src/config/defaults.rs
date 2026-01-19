@@ -4,21 +4,24 @@ use super::defaults_config::NetworkDefaultsConfig;
 pub struct NetworkPortDefaults;
 impl NetworkPortDefaults {
     /// Default API port - configurable via NESTGATE_API_PORT
+    /// 
+    /// ✅ MIGRATED: Now uses centralized get_api_port() function
     pub fn api_port() -> u16 {
-        use crate::constants::hardcoding::ports;
-        ports::API_DEFAULT
+        crate::constants::get_api_port()
     }
 
     /// Default WebSocket port - configurable via NESTGATE_WEBSOCKET_PORT
+    /// 
+    /// ✅ MIGRATED: Now uses centralized get_admin_port() function (WebSocket uses admin port)
     pub fn websocket_port() -> u16 {
-        use crate::constants::hardcoding::ports;
-        ports::WEBSOCKET_DEFAULT
+        crate::constants::get_admin_port()
     }
 
     /// Default HTTP port - configurable via NESTGATE_HTTP_PORT
+    /// 
+    /// ✅ MIGRATED: Now uses centralized get_api_port() function
     pub fn http_port() -> u16 {
-        use crate::constants::hardcoding::ports;
-        ports::HTTP_DEFAULT
+        crate::constants::get_api_port()
     }
 
     /// Default streaming RPC port - configurable via NESTGATE_STREAMING_RPC_PORT

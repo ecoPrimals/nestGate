@@ -39,18 +39,20 @@ impl PortConfiguration {
     /// All ports configurable via environment variables. No hardcoded assumptions.
     #[must_use]
     pub fn from_env() -> Self {
-        // ✅ SOVEREIGNTY: Environment-driven port configuration
+        // ✅ MIGRATED: Now uses centralized environment-driven functions for defaults
+        use crate::constants::{get_api_port, get_admin_port, get_metrics_port, get_postgres_port, get_redis_port};
+        
         Self {
-            api_port: env_var_or_default("NESTGATE_API_PORT", 8080),
-            health_port: env_var_or_default("NESTGATE_HEALTH_PORT", 8443),
-            metrics_port: env_var_or_default("NESTGATE_METRICS_PORT", 9090),
-            admin_port: env_var_or_default("NESTGATE_ADMIN_PORT", 9091),
-            websocket_port: env_var_or_default("NESTGATE_WEBSOCKET_PORT", 8082),
-            rpc_port: env_var_or_default("NESTGATE_RPC_PORT", 50051),
-            database_port: env_var_or_default("NESTGATE_DATABASE_PORT", 5432),
-            redis_port: env_var_or_default("NESTGATE_REDIS_PORT", 6379),
-            message_queue_port: env_var_or_default("NESTGATE_MQ_PORT", 5672),
-            orchestration_port: env_var_or_default("NESTGATE_ORCHESTRATION_PORT", 9091),
+            api_port: env_var_or_default("NESTGATE_API_PORT", get_api_port()),
+            health_port: env_var_or_default("NESTGATE_HEALTH_PORT", 8443), // HTTPS standard
+            metrics_port: env_var_or_default("NESTGATE_METRICS_PORT", get_metrics_port()),
+            admin_port: env_var_or_default("NESTGATE_ADMIN_PORT", get_admin_port()),
+            websocket_port: env_var_or_default("NESTGATE_WEBSOCKET_PORT", 8082), // WebSocket standard
+            rpc_port: env_var_or_default("NESTGATE_RPC_PORT", 50051), // gRPC standard
+            database_port: env_var_or_default("NESTGATE_DATABASE_PORT", get_postgres_port()),
+            redis_port: env_var_or_default("NESTGATE_REDIS_PORT", get_redis_port()),
+            message_queue_port: env_var_or_default("NESTGATE_MQ_PORT", 5672), // RabbitMQ standard
+            orchestration_port: env_var_or_default("NESTGATE_ORCHESTRATION_PORT", 9091), // Prometheus admin
         }
     }
 

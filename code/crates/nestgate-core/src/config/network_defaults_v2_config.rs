@@ -51,29 +51,33 @@ impl NetworkDefaultsV2Config {
     /// Create a new configuration with default values (no env vars)
     #[must_use]
     pub fn new() -> Self {
+        // ✅ MIGRATED: Now uses centralized environment-driven functions
+        use crate::constants::{get_api_port, get_metrics_port, get_health_port, get_admin_port, get_dev_port};
+        use crate::constants::hardcoding::addresses;
+        
         Self {
             // API Server defaults
-            api_host: crate::constants::hardcoding::addresses::LOCALHOST_IPV4.to_string(),
-            api_port: crate::constants::hardcoding::ports::HTTP_DEFAULT,
+            api_host: addresses::LOCALHOST_IPV4.to_string(),
+            api_port: get_api_port(),
             api_bind: None,
             api_url: None,
 
             // Metrics defaults
-            metrics_port: crate::constants::hardcoding::ports::METRICS_DEFAULT,
+            metrics_port: get_metrics_port(),
             metrics_bind: None,
 
             // WebSocket defaults
-            ws_port: crate::constants::hardcoding::ports::WEBSOCKET_DEFAULT,
+            ws_port: get_admin_port(), // WebSocket uses admin port standard
             ws_bind: None,
             ws_url: None,
 
             // Health checks defaults
-            health_port: crate::constants::hardcoding::ports::HEALTH_CHECK,
+            health_port: get_health_port(),
             health_bind: None,
             health_url: None,
 
             // Storage defaults
-            storage_port: crate::constants::hardcoding::ports::STORAGE_DEFAULT,
+            storage_port: get_dev_port(), // Storage uses dev port standard
             storage_bind: None,
 
             // Timeout defaults
