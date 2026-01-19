@@ -90,25 +90,31 @@ impl NetworkConfig {
     }
 
     /// Development defaults
+    /// 
+    /// ✅ MIGRATED: Now uses centralized environment-driven configuration
     #[must_use]
     pub fn default_dev() -> Self {
+        use crate::constants::{get_metrics_port, get_postgres_port, get_redis_port};
+        use crate::constants::hardcoding::addresses;
+        
         let discovery_config = crate::config::discovery_config::ServiceDiscoveryConfig::default();
+        
         Self {
             api: EndpointConfig {
-                host: "0.0.0.0".to_string(), // Safe dev default: bind all interfaces
+                host: addresses::BIND_ALL_IPV4.to_string(), // Safe dev default: bind all interfaces
                 port: discovery_config.discovery_base_port,
             },
             database: EndpointConfig {
-                host: "localhost".to_string(), // Safe dev default: localhost-only
-                port: 5432,                    // PostgreSQL standard port
+                host: addresses::LOCALHOST_NAME.to_string(), // Safe dev default: localhost-only
+                port: get_postgres_port(),                   // Environment-driven with default 5432
             },
             redis: EndpointConfig {
-                host: "localhost".to_string(), // Safe dev default: localhost-only
-                port: 6379,                    // Redis standard port
+                host: addresses::LOCALHOST_NAME.to_string(), // Safe dev default: localhost-only
+                port: get_redis_port(),                      // Environment-driven with default 6379
             },
             metrics: EndpointConfig {
-                host: "0.0.0.0".to_string(), // Safe dev default: bind all for monitoring
-                port: 9090,                  // Prometheus standard port
+                host: addresses::BIND_ALL_IPV4.to_string(), // Safe dev default: bind all for monitoring
+                port: get_metrics_port(),                    // Environment-driven with default 9090
             },
             discovery: EndpointConfig {
                 host: discovery_config.discovery_host.clone(),

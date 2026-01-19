@@ -249,20 +249,26 @@ impl AgnosticConfig {
         deprecated(note = "Use api_endpoint() in production and handle None explicitly")
     )]
     pub fn api_endpoint_or_dev_default(&self) -> String {
+        use crate::constants::hardcoding::addresses;
+        
         self.api_endpoint().unwrap_or_else(|| {
             #[cfg(debug_assertions)]
             tracing::debug!(
-                "Using development default API endpoint: localhost:{}",
+                "Using development default API endpoint: {}:{}",
+                addresses::LOCALHOST_NAME,
                 self.api_port()
             );
 
-            format!("http://localhost:{}", self.api_port())
+            format!("http://{}:{}", addresses::LOCALHOST_NAME, self.api_port())
         })
     }
 
     /// Get API port
+    /// 
+    /// ✅ MIGRATED: Now uses centralized get_api_port() function
     pub fn api_port(&self) -> u16 {
-        self.ports.get("api").copied().unwrap_or(8080)
+        use crate::constants::get_api_port;
+        self.ports.get("api").copied().unwrap_or_else(get_api_port)
     }
 
     /// Get storage endpoint
@@ -271,13 +277,19 @@ impl AgnosticConfig {
     }
 
     /// Get metrics port
+    /// 
+    /// ✅ MIGRATED: Now uses centralized get_metrics_port() function
     pub fn metrics_port(&self) -> u16 {
-        self.ports.get("metrics").copied().unwrap_or(9090)
+        use crate::constants::get_metrics_port;
+        self.ports.get("metrics").copied().unwrap_or_else(get_metrics_port)
     }
 
     /// Get health check port
+    /// 
+    /// ✅ MIGRATED: Now uses centralized get_health_port() function
     pub fn health_port(&self) -> u16 {
-        self.ports.get("health").copied().unwrap_or(8082)
+        use crate::constants::get_health_port;
+        self.ports.get("health").copied().unwrap_or_else(get_health_port)
     }
 
     /// Check if feature is enabled

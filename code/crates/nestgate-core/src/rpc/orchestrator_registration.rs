@@ -275,11 +275,16 @@ impl OrchestratorRegistration {
         use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
         use tokio::net::UnixStream;
 
+        // ⚠️ DEPRECATED: Direct Unix socket connection
+        // TODO: Migrate to Songbird's universal IPC (Phase 3)
+        // See: UNIVERSAL_IPC_EVOLUTION_PLAN_JAN_19_2026.md
+        
         // Try Unix socket first, fall back to HTTP
         if endpoint.starts_with('/') || endpoint.starts_with("unix://") {
             let socket_path = endpoint.trim_start_matches("unix://");
 
             // Connect to orchestrator
+            // ⚠️ DEPRECATED: Use songbird::ipc::connect() instead
             let stream = UnixStream::connect(socket_path).await.map_err(|e| {
                 NestGateError::configuration_error(
                     "orchestrator_connect",
