@@ -1,5 +1,54 @@
 //! # 🔌 JSON-RPC Unix Socket Server
 //!
+//! **⚠️ DEPRECATED**: This module is deprecated as of v2.3.0
+//!
+//! ## Migration to Universal IPC Architecture
+//!
+//! **Connection logic has moved to Songbird** (Universal IPC Layer)
+//!
+//! ### Why This Change?
+//!
+//! - **Separation of Concerns**: NestGate = Storage, Songbird = Communication
+//! - **True Universality**: Songbird abstracts platform differences (Unix/Windows/etc.)
+//! - **Single Responsibility**: Each primal owns its domain
+//!
+//! ### Migration Path
+//!
+//! **Before (NestGate Unix sockets)**:
+//! ```rust,ignore
+//! use nestgate_core::rpc::JsonRpcUnixServer;
+//!
+//! let server = JsonRpcUnixServer::new("myservice").await?;
+//! server.serve().await?;
+//! ```
+//!
+//! **After (Songbird Universal IPC)**:
+//! ```rust,ignore
+//! use songbird::ipc;
+//!
+//! // Register with Songbird (works on ALL platforms!)
+//! let endpoint = ipc::register("myservice").await?;
+//! ipc::listen(endpoint).await?;
+//!
+//! // Songbird stores metadata in NestGate automatically
+//! ```
+//!
+//! ### What NestGate Still Provides
+//!
+//! - ✅ Service metadata storage (`service_metadata` module)
+//! - ✅ Capability-based discovery
+//! - ✅ Persistent service registry
+//!
+//! ### References
+//!
+//! - `UNIVERSAL_IPC_ARCHITECTURE_HANDOFF_JAN_19_2026.md`
+//! - `UNIVERSAL_IPC_EVOLUTION_PLAN_JAN_19_2026.md`
+//! - `code/crates/nestgate-core/src/service_metadata/mod.rs`
+//!
+//! ---
+//!
+//! ## Legacy Documentation (Deprecated)
+//!
 //! **biomeOS IPC Integration** - Native Unix socket communication
 //!
 //! Implements JSON-RPC 2.0 server over Unix sockets for efficient
@@ -21,7 +70,7 @@
 //! - `NESTGATE_FAMILY_ID` (required): Family identifier for socket path
 //! - `SONGBIRD_FAMILY_ID` (optional): For auto-registration
 //!
-//! ## Usage
+//! ## Usage (Deprecated)
 //! ```no_run
 //! use nestgate_core::rpc::unix_socket_server::JsonRpcUnixServer;
 //!
@@ -99,6 +148,15 @@ impl Default for StorageState {
 }
 
 /// JSON-RPC Unix socket server for biomeOS integration
+///
+/// **⚠️ DEPRECATED**: Use `songbird::ipc` instead (Universal IPC Architecture)
+///
+/// Connection logic has moved to Songbird for true platform universality.
+/// See `UNIVERSAL_IPC_EVOLUTION_PLAN_JAN_19_2026.md` for migration guide.
+#[deprecated(
+    since = "2.3.0",
+    note = "Connection logic moved to Songbird (Universal IPC). Use songbird::ipc::register() instead. See UNIVERSAL_IPC_EVOLUTION_PLAN_JAN_19_2026.md"
+)]
 pub struct JsonRpcUnixServer {
     socket_path: PathBuf,
     /// Family ID for primal identification (used in future multi-primal features)

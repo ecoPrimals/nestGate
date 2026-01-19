@@ -89,6 +89,11 @@ pub mod unified_capabilities;
 // TODO: Re-enable storage module once compilation issues are resolved
 // /// Adaptive storage system with intelligent compression and routing
 // pub mod storage;
+
+/// Service metadata storage for Universal IPC Architecture
+/// Stores persistent service registry (metadata only, NOT connections!)
+/// Connection logic is delegated to Songbird
+pub mod service_metadata;
 /// Universal adapter for primal integration
 pub mod universal_adapter;
 /// Universal primal discovery system
