@@ -71,6 +71,12 @@ pub struct HealthReport {
 }
 
 /// Songbird auto-registration manager
+#[deprecated(
+    since = "2.3.0",
+    note = "Direct Unix socket registration with Songbird. \
+            Migrate to Songbird's IPC discovery SERVICE (call /primal/songbird via JSON-RPC). \
+            See UNIVERSAL_IPC_EVOLUTION_PLAN_JAN_19_2026.md for service-based integration."
+)]
 pub struct SongbirdRegistration {
     /// NestGate family ID
     family_id: String,
@@ -93,6 +99,11 @@ impl SongbirdRegistration {
     ///
     /// # Errors
     /// - Returns error if configuration is invalid
+    #[deprecated(
+        since = "2.3.0",
+        note = "Creates direct Unix socket connection to Songbird. \
+                Migrate to Songbird's IPC discovery SERVICE (JSON-RPC at /primal/songbird)."
+    )]
     pub async fn new(family_id: &str) -> Result<Self> {
         // Check if registration is disabled
         let enabled = std::env::var("NESTGATE_DISABLE_SONGBIRD")
