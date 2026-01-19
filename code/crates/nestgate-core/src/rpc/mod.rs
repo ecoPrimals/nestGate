@@ -44,6 +44,7 @@
 //! ```
 
 pub mod audit_storage;
+pub mod jsonrpc_client;
 pub mod jsonrpc_server;
 pub mod orchestrator_registration;
 pub mod socket_config;
@@ -55,6 +56,7 @@ pub mod template_storage;
 pub mod unix_socket_server;
 
 // Re-export key types
+pub use jsonrpc_client::{JsonRpcClient, JsonRpcRequest, JsonRpcResponse, JsonRpcError};
 pub use tarpc_types::{
     CapabilityRegistration, DatasetInfo, DatasetParams, HealthStatus, NestGateRpc,
     NestGateRpcError, ObjectInfo, OperationResult, ProtocolInfo, RegistrationResult, ServiceInfo,
