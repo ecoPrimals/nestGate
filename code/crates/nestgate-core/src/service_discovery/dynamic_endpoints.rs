@@ -189,17 +189,22 @@ impl DynamicEndpointResolver {
         }
 
         // Production port allocation based on service type
-        use crate::constants::{DEFAULT_API_PORT, DEFAULT_HEALTH_PORT, DEFAULT_METRICS_PORT};
+        // ✅ MIGRATED: Now uses environment-driven functions instead of constants
+        use crate::constants::{get_api_port, get_health_port, get_metrics_port};
+        let api_port = get_api_port();
+        let metrics_port = get_metrics_port();
+        let health_port = get_health_port();
+        
         match service_type {
-            "api" => DEFAULT_API_PORT,
-            "websocket" => DEFAULT_API_PORT, // WebSocket on same port as API
-            "metrics" => DEFAULT_METRICS_PORT,
-            "health" => DEFAULT_HEALTH_PORT,
+            "api" => api_port,
+            "websocket" => api_port, // WebSocket on same port as API
+            "metrics" => metrics_port,
+            "health" => health_port,
             "admin" => crate::constants::canonical_defaults::network::DEFAULT_INTERNAL_PORT,
-            "static" => DEFAULT_API_PORT,
+            "static" => api_port,
             _ => {
                 // Dynamic port allocation for unknown services
-                DEFAULT_API_PORT + (service_type.len() % 100) as u16
+                api_port + (service_type.len() % 100) as u16
             }
         }
     }

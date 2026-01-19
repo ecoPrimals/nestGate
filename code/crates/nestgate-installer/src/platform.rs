@@ -11,8 +11,7 @@
 //! Platform module
 
 use anyhow::Result;
-use etcetera::base_strategy;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 #[derive(Debug, Clone)]
 pub struct PlatformInfo {
@@ -80,11 +79,16 @@ pub fn add_to_path(install_path: &Path) -> Result<()> {
 fn add_to_path_unix(install_path: &Path) -> Result<()> {
     use std::fs::OpenOptions;
     use std::io::Write;
+    use etcetera::BaseStrategy;
 
     let shell_rc = if std::env::var("SHELL").unwrap_or_default().contains("zsh") {
-        base_strategy::home_dir().ok().map(|h| h.join(".zshrc"))
+        etcetera::base_strategy::choose_base_strategy()
+            .ok()
+            .map(|strategy| strategy.home_dir().join(".zshrc"))
     } else {
-        base_strategy::home_dir().ok().map(|h| h.join(".bashrc"))
+        etcetera::base_strategy::choose_base_strategy()
+            .ok()
+            .map(|strategy| strategy.home_dir().join(".bashrc"))
     };
 
     if let Some(rc_path) = shell_rc {
@@ -153,10 +157,15 @@ fn create_desktop_shortcut_unix(install_path: &Path, name: &str) -> Result<()> {
     use std::fs;
 
     // Note: etcetera doesn't have desktop_dir, use XDG standard
-    let desktop_dir = std::env::var("XDG_DESKTOP_DIR")
+    use etcetera::BaseStrategy;
+    let desktop_dir: Option<PathBuf> = std::env::var("XDG_DESKTOP_DIR")
         .ok()
         .map(PathBuf::from)
-        .or_else(|| base_strategy::home_dir().ok().map(|h| h.join("Desktop")));
+        .or_else(|| {
+            etcetera::base_strategy::choose_base_strategy()
+                .ok()
+                .map(|strategy| strategy.home_dir().join("Desktop"))
+        });
 
     if let Some(desktop_dir) = desktop_dir {
         let shortcut_path = desktop_dir.join(format!("{}.desktop", "nestgate"));

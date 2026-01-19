@@ -439,21 +439,19 @@ impl NestGateStoragePrimal {
         
         let discovery_ports = config.discovery.port_range.clone();
         
-        // ✅ SOVEREIGNTY: Standard service ports from environment
-        // Using compile-time constants for defaults (zero runtime overhead)
+        // ✅ MIGRATED: Now uses centralized environment-driven functions
+        use nestgate_core::constants::{get_api_port, get_health_port, get_metrics_port};
+        
+        // Get WebSocket port (use admin_port as WS default if not explicitly set)
+        let ws_port = env::var("NESTGATE_WS_PORT")
+            .ok().and_then(|s| s.parse().ok())
+            .unwrap_or(8082);
+        
         let standard_ports = vec![
-            env::var("NESTGATE_API_PORT")
-                .ok().and_then(|s| s.parse().ok())
-                .unwrap_or(8080), // Standard HTTP alternate
-            env::var("NESTGATE_HEALTH_PORT")
-                .ok().and_then(|s| s.parse().ok())
-                .unwrap_or(8081), // Health check standard
-            env::var("NESTGATE_WS_PORT")
-                .ok().and_then(|s| s.parse().ok())
-                .unwrap_or(8082), // WebSocket standard
-            env::var("NESTGATE_METRICS_PORT")
-                .ok().and_then(|s| s.parse().ok())
-                .unwrap_or(9090), // Prometheus standard
+            get_api_port(),      // Environment-driven API port
+            get_health_port(),   // Environment-driven health port
+            ws_port,             // WebSocket port (explicit env var)
+            get_metrics_port(),  // Environment-driven metrics port
         ];
         
         // Combine standard ports with configured discovery range

@@ -62,13 +62,11 @@ impl SovereigntyConfig {
     }
 
     /// Get API port respecting user sovereignty
+    /// 
+    /// ✅ MIGRATED: Now uses centralized get_api_port() function
     pub fn api_port() -> u16 {
-        env::var("NESTGATE_PORT")
-            .unwrap_or_else(|_| {
-                crate::constants::canonical_defaults::network::DEFAULT_API_PORT.to_string()
-            })
-            .parse()
-            .unwrap_or(crate::constants::canonical_defaults::network::DEFAULT_API_PORT)
+        // Use centralized environment-driven configuration
+        crate::constants::get_api_port()
     }
 
     /// Get WebSocket endpoint respecting user sovereignty

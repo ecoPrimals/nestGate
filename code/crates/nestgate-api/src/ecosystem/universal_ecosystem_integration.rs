@@ -213,17 +213,13 @@ impl UniversalEcosystemIntegration {
     fn get_nestgate_endpoints(&self) -> Vec<ServiceEndpoint> {
         use std::net::Ipv4Addr;
         
-        // ✅ SOVEREIGNTY: Environment-driven with sensible defaults
+        // ✅ MIGRATED: Now uses centralized environment-driven functions
         let base_host = std::env::var("NESTGATE_API_HOST")
             .unwrap_or_else(|_| Ipv4Addr::LOCALHOST.to_string());
-        let api_port = std::env::var("NESTGATE_API_PORT")
-            .ok()
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(8080); // Standard HTTP alternate port
-        let metrics_port = std::env::var("NESTGATE_METRICS_PORT")
-            .ok()
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(9090); // Prometheus standard port
+        
+        // Use centralized port configuration (already checks env vars with same defaults)
+        let api_port = nestgate_core::constants::get_api_port();
+        let metrics_port = nestgate_core::constants::get_metrics_port();
         
         vec![
             ServiceEndpoint {

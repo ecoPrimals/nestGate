@@ -469,11 +469,13 @@ impl NestGateInstaller {
 
     /// Gets Installation Info Path
     fn get_installation_info_path(&self) -> PathBuf {
-        use etcetera::base_strategy;
+        use etcetera::BaseStrategy;
 
-        base_strategy::data_dir()
+        etcetera::base_strategy::choose_base_strategy()
             .ok()
-            .map(|d| d.join("nestgate").join("install-info.json"))
+            .and_then(|strategy| {
+                Some(strategy.data_dir().join("nestgate").join("install-info.json"))
+            })
             .unwrap_or_else(|| PathBuf::from(".nestgate-install-info.json"))
     }
 }
