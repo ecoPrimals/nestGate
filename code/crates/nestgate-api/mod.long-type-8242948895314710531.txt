@@ -1,2 +1,0 @@
-fn(axum::extract::State<Arc<AuthService>>, Json<AuthRequest>) -> impl Future<Output = Json<AuthResponse>> {login}
-fn(axum::extract::State<Arc<AuthService>>, Json<AuthRequest>) -> impl Future<Output = Json<AuthResponse>> {login}: Handler<_, _>

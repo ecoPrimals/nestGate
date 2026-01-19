@@ -1,2 +1,0 @@
-fn(axum::extract::State<Arc<AuthService>>, Json<SetModeRequest>) -> impl Future<Output = Json<SetModeResponse>> {auth::set_mode}
-fn(axum::extract::State<Arc<AuthService>>, Json<SetModeRequest>) -> impl Future<Output = Json<SetModeResponse>> {auth::set_mode}: Handler<_, _>

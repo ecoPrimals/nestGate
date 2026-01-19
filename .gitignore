@@ -156,3 +156,7 @@ showcase/**/outputs/**/*.fasta
 showcase/**/output/**/*.dat
 *.dat
 large-genome.fasta
+
+# Build artifacts (should be in target/)
+**/*.rlib
+**/*.long-type-*.txt

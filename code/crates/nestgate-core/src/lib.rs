@@ -86,9 +86,6 @@ pub mod types;
 /// **UNIFIED**: Unified capability types across all systems
 /// Single capability enum used by all discovery mechanisms
 pub mod unified_capabilities;
-// TODO: Re-enable storage module once compilation issues are resolved
-// /// Adaptive storage system with intelligent compression and routing
-// pub mod storage;
 
 /// Service metadata storage for Universal IPC Architecture
 /// Stores persistent service registry (metadata only, NOT connections!)

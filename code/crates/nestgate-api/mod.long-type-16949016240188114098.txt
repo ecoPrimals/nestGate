@@ -1,2 +1,0 @@
-fn(axum::extract::State<types::ZfsApiState>, Json<types::CreatePoolRequest>) -> impl Future<Output = Json<types::ApiResponse<()>>> {basic::create_pool}
-fn(axum::extract::State<types::ZfsApiState>, Json<types::CreatePoolRequest>) -> impl Future<Output = Json<types::ApiResponse<()>>> {basic::create_pool}: Handler<_, _>
