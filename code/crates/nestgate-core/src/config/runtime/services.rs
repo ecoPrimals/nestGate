@@ -257,20 +257,22 @@ impl ServicesConfig {
     pub fn capability_url_or_local(&self, capability: &str) -> String {
         use std::env;
 
-        // ✅ SOVEREIGNTY: Environment-driven service port mapping
+        // ✅ MIGRATED: Environment-driven service port mapping with centralized defaults
+        use crate::constants::get_api_port;
+        
         let port = match capability {
             "security" => env::var("NESTGATE_SECURITY_PORT")
                 .ok()
                 .and_then(|s| s.parse().ok())
-                .unwrap_or(8084),
+                .unwrap_or(8084), // Security service standard
             "networking" | "orchestration" => env::var("NESTGATE_ORCHESTRATION_PORT")
                 .ok()
                 .and_then(|s| s.parse().ok())
-                .unwrap_or(9091),
+                .unwrap_or(9091), // Orchestration standard (Prometheus admin)
             _ => env::var("NESTGATE_API_PORT")
                 .ok()
                 .and_then(|s| s.parse().ok())
-                .unwrap_or(8080),
+                .unwrap_or_else(get_api_port), // Centralized API port
         };
 
         // ✅ SOVEREIGNTY: Environment-driven host with compile-time constant fallback

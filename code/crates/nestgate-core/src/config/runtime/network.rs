@@ -71,25 +71,26 @@ impl NetworkConfig {
                     IpAddr::V4(Ipv4Addr::LOCALHOST) // 127.0.0.1
                 }),
 
+            // ✅ MIGRATED: Now uses centralized environment-driven functions
             api_port: env::var("NESTGATE_API_PORT")
                 .ok()
                 .and_then(|s| s.parse().ok())
-                .unwrap_or(8080), // Safe default
+                .unwrap_or_else(|| crate::constants::get_api_port()),
 
             https_port: env::var("NESTGATE_HTTPS_PORT")
                 .ok()
                 .and_then(|s| s.parse().ok())
-                .unwrap_or(8443), // Safe default
+                .unwrap_or(8443), // HTTPS standard (no dedicated getter yet)
 
             tarpc_port: env::var("NESTGATE_TARPC_PORT")
                 .ok()
                 .and_then(|s| s.parse().ok())
-                .unwrap_or(8091), // Safe default
+                .unwrap_or(8091), // tarpc standard (no dedicated getter yet)
 
             internal_port: env::var("NESTGATE_INTERNAL_PORT")
                 .ok()
                 .and_then(|s| s.parse().ok())
-                .unwrap_or(3000), // Safe default
+                .unwrap_or_else(|| crate::constants::get_dev_port()),
 
             bind_all: env::var("NESTGATE_BIND_ALL")
                 .ok()
