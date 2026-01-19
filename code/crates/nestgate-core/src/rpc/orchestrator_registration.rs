@@ -149,16 +149,14 @@ impl OrchestratorRegistration {
         // Discover orchestrator via capability
         let orchestrator = Self::discover_orchestrator(&discovery).await;
 
-        if orchestrator.is_none() {
+        // Modern pattern: explicit Some/None handling (no unwrap!)
+        if let Some(ref orch) = orchestrator {
+            info!("✅ Discovered orchestrator: {}", orch.name);
+        } else {
             warn!("🎵 No orchestrator discovered - continuing without orchestration");
             info!(
                 "   Orchestrators can be discovered via {}",
                 discovery.mechanism_name()
-            );
-        } else {
-            info!(
-                "✅ Discovered orchestrator: {}",
-                orchestrator.as_ref().unwrap().name
             );
         }
 
