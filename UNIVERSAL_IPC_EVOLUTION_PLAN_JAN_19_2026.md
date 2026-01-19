@@ -68,20 +68,175 @@ NestGate:
 ```
 ✅ SOLUTION: Clean delegation
 
-Songbird (Communication Layer):
+Songbird (Communication Service):
+  - Provides IPC discovery SERVICE (NOT library!)
+  - Exposes /primal/songbird socket with JSON-RPC
   - Creates platform-specific endpoints
   - Handles ALL connections (remote + local IPC)
   - Abstracts platform differences
   
 NestGate (Storage Layer):
-  - Stores service metadata
+  - Stores service metadata (persistent)
   - Enables capability-based discovery
   - Provides persistent registry
+  - Calls Songbird SERVICE for runtime resolution
 
 Application Primals:
-  - Use Songbird for connections
-  - Use NestGate for discovery
+  - Call Songbird SERVICE for connections (JSON-RPC)
+  - Call NestGate for persistent metadata (optional)
+  - NO cross-embedding (service calls only!)
 ```
+
+---
+
+## 🦅 SONGBIRD INTEGRATION (SERVICE-BASED)
+
+### **CRITICAL**: Songbird is a SERVICE, NOT a Library!
+
+**❌ WRONG (Cross-Embedding)**:
+```rust
+// DO NOT DO THIS!
+use songbird_universal_ipc::ipc;  // ❌ Embeds Songbird code!
+let stream = ipc::connect("/primal/beardog").await?;
+```
+
+**✅ CORRECT (Service-Based)**:
+```rust
+// Use Songbird as a SERVICE
+use tokio::net::UnixStream;
+
+// 1. Connect to Songbird service
+let mut songbird = UnixStream::connect("/primal/songbird").await?;
+
+// 2. Ask Songbird via JSON-RPC
+let request = json!({
+    "jsonrpc": "2.0",
+    "method": "ipc.resolve",
+    "params": { "primal": "beardog" },
+    "id": 1
+});
+write_json(&mut songbird, &request).await?;
+
+// 3. Get endpoint from response
+let response: JsonRpcResponse = read_json(&mut songbird).await?;
+let endpoint = response.result.endpoint;
+
+// 4. Connect directly to target
+let stream = UnixStream::connect(&endpoint).await?;
+```
+
+### **Songbird JSON-RPC Protocol**
+
+**Endpoint**: `/primal/songbird` (Unix socket)
+
+**Methods**:
+1. **`ipc.register`** - Register this primal
+   ```json
+   {
+     "jsonrpc": "2.0",
+     "method": "ipc.register",
+     "params": {
+       "primal": "nestgate",
+       "capabilities": ["storage", "discovery"],
+       "endpoint": "/primal/nestgate"
+     },
+     "id": 1
+   }
+   ```
+
+2. **`ipc.resolve`** - Find a primal's endpoint
+   ```json
+   {
+     "jsonrpc": "2.0",
+     "method": "ipc.resolve",
+     "params": { "primal": "beardog" },
+     "id": 1
+   }
+   ```
+
+3. **`ipc.capabilities`** - Find primals by capability
+   ```json
+   {
+     "jsonrpc": "2.0",
+     "method": "ipc.capabilities",
+     "params": { "capability": "crypto" },
+     "id": 1
+   }
+   ```
+
+4. **`ipc.list`** - List all registered primals
+   ```json
+   {
+     "jsonrpc": "2.0",
+     "method": "ipc.list",
+     "params": {},
+     "id": 1
+   }
+   ```
+
+### **NestGate's Integration with Songbird**
+
+**On Startup** (register):
+```rust
+async fn register_with_songbird() -> Result<()> {
+    let mut songbird = UnixStream::connect("/primal/songbird").await?;
+    
+    let request = json!({
+        "jsonrpc": "2.0",
+        "method": "ipc.register",
+        "params": {
+            "primal": "nestgate",
+            "capabilities": ["storage", "discovery", "metadata"],
+            "endpoint": "/primal/nestgate"
+        },
+        "id": 1
+    });
+    
+    write_json(&mut songbird, &request).await?;
+    let _response: JsonRpcResponse = read_json(&mut songbird).await?;
+    Ok(())
+}
+```
+
+**For Discovery** (resolve):
+```rust
+async fn resolve_primal(name: &str) -> Result<String> {
+    // 1. Check our metadata cache first (fast path)
+    if let Ok(meta) = service_store.get_service(name).await {
+        return Ok(meta.native_endpoint);
+    }
+    
+    // 2. Cache miss - ask Songbird (service call)
+    let mut songbird = UnixStream::connect("/primal/songbird").await?;
+    
+    let request = json!({
+        "jsonrpc": "2.0",
+        "method": "ipc.resolve",
+        "params": { "primal": name },
+        "id": 1
+    });
+    
+    write_json(&mut songbird, &request).await?;
+    let response: JsonRpcResponse = read_json(&mut songbird).await?;
+    
+    let endpoint = response.result.endpoint;
+    
+    // 3. Cache in our metadata store
+    service_store.store_service(ServiceMetadata {
+        name: name.to_string(),
+        native_endpoint: endpoint.clone(),
+        // ... other metadata
+    }).await?;
+    
+    Ok(endpoint)
+}
+```
+
+**Key Principles**:
+- ✅ **Service calls ONLY** (no imports)
+- ✅ **Standard JSON-RPC** (protocol-based)
+- ✅ **Cache + fallback** (fast path + discovery)
+- ✅ **Zero cross-embedding** (primal autonomy)
 
 ---
 

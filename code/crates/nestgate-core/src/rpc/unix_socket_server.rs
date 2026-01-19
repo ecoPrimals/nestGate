@@ -155,7 +155,9 @@ impl Default for StorageState {
 /// See `UNIVERSAL_IPC_EVOLUTION_PLAN_JAN_19_2026.md` for migration guide.
 #[deprecated(
     since = "2.3.0",
-    note = "Connection logic moved to Songbird (Universal IPC). Use songbird::ipc::register() instead. See UNIVERSAL_IPC_EVOLUTION_PLAN_JAN_19_2026.md"
+    note = "Connection logic moved to Songbird IPC SERVICE. \
+            Call /primal/songbird via JSON-RPC - DO NOT import songbird code! \
+            See UNIVERSAL_IPC_EVOLUTION_PLAN_JAN_19_2026.md for service-based integration."
 )]
 pub struct JsonRpcUnixServer {
     socket_path: PathBuf,
