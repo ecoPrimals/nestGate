@@ -1,8 +1,16 @@
 //! NestGate binary main entry point
 //!
-//! **UniBin Architecture**: One binary, multiple modes
-//! - Primary: `nestgate` - CLI commands + daemon mode
-//! - Compat: `nestgate-server` - Auto-daemon (backward compatibility)
+//! **TRUE UniBin Architecture**: One binary, multiple modes via subcommands
+//! - Primary: `nestgate <subcommand>` - Modern CLI interface
+//! - Legacy: Detects `nestgate-server` and `nestgate-client` symlinks for backward compatibility
+//!
+//! ## Modes
+//! - `nestgate daemon` - Run as background service
+//! - `nestgate status` - Check service status
+//! - `nestgate health` - Health check
+//! - `nestgate discover` - Discover primals
+//! - `nestgate version` - Show version
+//! - More subcommands available via `nestgate --help`
 
 use clap::Parser;
 use nestgate_bin::{cli::Cli, error::BinResult};
@@ -12,9 +20,9 @@ use tracing::info;
 #[tokio::main]
 async fn main() -> BinResult<()> {
     // ═══════════════════════════════════════════════════════════════════════
-    // UNIBIN: Binary name detection for auto-routing
+    // UNIBIN: Binary name detection for backward compatibility
     // ═══════════════════════════════════════════════════════════════════════
-    
+
     let bin_name = std::env::args()
         .next()
         .and_then(|p| {
@@ -24,18 +32,18 @@ async fn main() -> BinResult<()> {
                 .map(|s| s.to_string())
         })
         .unwrap_or_else(|| "nestgate".to_string());
-    
-    // Auto-daemon mode for backward compatibility
+
+    // Backward compatibility: Auto-daemon mode for 'nestgate-server' symlink
     if bin_name == "nestgate-server" {
-        info!("🏰 NestGate invoked as 'nestgate-server' (legacy mode)");
-        info!("💡 TIP: Use 'nestgate daemon' for the modern UniBin interface");
-        
+        info!("🏰 NestGate invoked as 'nestgate-server' (legacy symlink detected)");
+        info!("💡 RECOMMENDED: Use 'nestgate daemon' for the modern UniBin interface");
+
         // Setup basic logging for daemon mode
         tracing_subscriber::fmt()
             .with_env_filter("nestgate=info")
             .with_target(false)
             .init();
-        
+
         // Run daemon with defaults
         return nestgate_bin::commands::service::run_daemon(
             nestgate_core::defaults::network::DEFAULT_API_PORT,
@@ -44,8 +52,14 @@ async fn main() -> BinResult<()> {
         )
         .await;
     }
-    
-    // Modern UniBin: Parse CLI and execute
+
+    // Backward compatibility: 'nestgate-client' symlink -> just use normal CLI
+    if bin_name == "nestgate-client" {
+        info!("🔧 NestGate invoked as 'nestgate-client' (legacy symlink detected)");
+        info!("💡 RECOMMENDED: Use 'nestgate <command>' directly for the modern UniBin interface");
+    }
+
+    // Modern UniBin: Parse CLI and execute subcommand
     let cli = Cli::parse();
     cli.run().await
 }

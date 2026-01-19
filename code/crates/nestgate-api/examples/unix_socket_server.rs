@@ -22,10 +22,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::INFO)
         .init();
-    
+
     // Create configuration from environment
     let config = TransportConfig::from_env()?;
-    
+
     println!("🚀 Starting NestGate TRUE PRIMAL Server");
     println!("   Family: {}", config.family_id);
     println!("   Socket: {}", config.socket_path.display());
@@ -39,13 +39,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("  - identity.capabilities");
     println!("  - system.info");
     println!();
-    
+
     // Create RPC handler
     let handler = NestGateRpcHandler::new();
-    
+
     // Create and start server
     let server = TransportServer::new(config, handler)?;
-    
+
     // Setup Ctrl+C handler
     let server_clone = server.clone();
     tokio::spawn(async move {
@@ -53,10 +53,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("\n📡 Shutting down...");
         server_clone.shutdown();
     });
-    
+
     // Start server
     server.start().await?;
-    
+
     println!("✅ Server stopped");
     Ok(())
 }

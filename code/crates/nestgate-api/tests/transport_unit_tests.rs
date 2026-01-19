@@ -227,7 +227,7 @@ async fn test_handler_identity_get() {
 #[tokio::test]
 async fn test_handler_concurrent_requests() {
     let handler = NestGateRpcHandler::new();
-    
+
     let mut handles = vec![];
     for i in 0..10 {
         let h = handler.clone();
@@ -297,7 +297,7 @@ async fn test_handler_empty_method() {
     };
 
     let response = handler.handle_request(request).await;
-    
+
     // Should return method not found
     assert!(response.error.is_some());
 }
@@ -309,10 +309,10 @@ async fn test_handler_empty_method() {
 #[tokio::test]
 async fn test_handler_large_payload() {
     let handler = NestGateRpcHandler::new();
-    
+
     // Create large params object
     let large_data: Vec<String> = (0..1000).map(|i| format!("data_{}", i)).collect();
-    
+
     let request = JsonRpcRequest {
         jsonrpc: "2.0".to_string(),
         method: "health.ping".to_string(),
@@ -321,7 +321,7 @@ async fn test_handler_large_payload() {
     };
 
     let response = handler.handle_request(request).await;
-    
+
     // Should handle large payloads gracefully
     assert!(response.error.is_none() || response.error.is_some());
 }
@@ -334,7 +334,7 @@ fn test_config_serialization_roundtrip() {
 
     // Serialize to JSON
     let json = serde_json::to_string(&original).unwrap();
-    
+
     // Deserialize back
     let deserialized: TransportConfig = serde_json::from_str(&json).unwrap();
 

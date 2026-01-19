@@ -52,11 +52,32 @@ impl SimdCapabilities {
     #[must_use]
     pub fn detect() -> Self {
         Self {
+            // x86/x86_64 features - only detect on x86 architectures
+            #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
             has_sse2: is_x86_feature_detected!("sse2"),
+            #[cfg(not(any(target_arch = "x86", target_arch = "x86_64")))]
+            has_sse2: false,
+
+            #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
             has_avx: is_x86_feature_detected!("avx"),
+            #[cfg(not(any(target_arch = "x86", target_arch = "x86_64")))]
+            has_avx: false,
+
+            #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
             has_avx2: is_x86_feature_detected!("avx2"),
+            #[cfg(not(any(target_arch = "x86", target_arch = "x86_64")))]
+            has_avx2: false,
+
+            #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
             has_avx512: is_x86_feature_detected!("avx512f"),
-            has_neon: cfg!(target_arch = "aarch64"), // Simplified NEON detection
+            #[cfg(not(any(target_arch = "x86", target_arch = "x86_64")))]
+            has_avx512: false,
+
+            // ARM NEON support - available on all aarch64 targets
+            #[cfg(target_arch = "aarch64")]
+            has_neon: true,
+            #[cfg(not(target_arch = "aarch64"))]
+            has_neon: false,
         }
     }
 

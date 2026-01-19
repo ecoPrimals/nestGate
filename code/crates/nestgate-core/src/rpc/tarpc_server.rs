@@ -109,11 +109,20 @@ impl NestGateRpcService {
     async fn calculate_metrics(&self) -> StorageMetrics {
         // DashMap: Lock-free concurrent iteration!
         let dataset_count = self.datasets.len();
-        let object_count: u64 = self.objects.iter().map(|entry| entry.value().len() as u64).sum();
-        let used_space: u64 = self.objects
+        let object_count: u64 = self
+            .objects
+            .iter()
+            .map(|entry| entry.value().len() as u64)
+            .sum();
+        let used_space: u64 = self
+            .objects
             .iter()
             .map(|entry| {
-                entry.value().values().map(|(data, _)| data.len() as u64).sum::<u64>()
+                entry
+                    .value()
+                    .values()
+                    .map(|(data, _)| data.len() as u64)
+                    .sum::<u64>()
             })
             .sum();
 
@@ -186,7 +195,11 @@ impl NestGateRpc for NestGateRpcService {
         debug!("RPC: list_datasets()");
 
         // DashMap: Lock-free iteration!
-        Ok(self.datasets.iter().map(|entry| entry.value().clone()).collect())
+        Ok(self
+            .datasets
+            .iter()
+            .map(|entry| entry.value().clone())
+            .collect())
     }
 
     async fn get_dataset(
@@ -283,11 +296,12 @@ impl NestGateRpc for NestGateRpcService {
         debug!("RPC: retrieve_object({}/{})", dataset, key);
 
         // DashMap: Lock-free get!
-        let dataset_objects = self.objects
-            .get(&dataset)
-            .ok_or_else(|| NestGateRpcError::DatasetNotFound {
-                dataset: dataset.clone(),
-            })?;
+        let dataset_objects =
+            self.objects
+                .get(&dataset)
+                .ok_or_else(|| NestGateRpcError::DatasetNotFound {
+                    dataset: dataset.clone(),
+                })?;
 
         dataset_objects
             .get(&key)
@@ -304,11 +318,12 @@ impl NestGateRpc for NestGateRpcService {
         debug!("RPC: get_object_metadata({}/{})", dataset, key);
 
         // DashMap: Lock-free get!
-        let dataset_objects = self.objects
-            .get(&dataset)
-            .ok_or_else(|| NestGateRpcError::DatasetNotFound {
-                dataset: dataset.clone(),
-            })?;
+        let dataset_objects =
+            self.objects
+                .get(&dataset)
+                .ok_or_else(|| NestGateRpcError::DatasetNotFound {
+                    dataset: dataset.clone(),
+                })?;
 
         dataset_objects
             .get(&key)
@@ -326,11 +341,12 @@ impl NestGateRpc for NestGateRpcService {
         debug!("RPC: list_objects({}, {:?}, {:?})", dataset, prefix, limit);
 
         // DashMap: Lock-free get!
-        let dataset_objects = self.objects
-            .get(&dataset)
-            .ok_or_else(|| NestGateRpcError::DatasetNotFound {
-                dataset: dataset.clone(),
-            })?;
+        let dataset_objects =
+            self.objects
+                .get(&dataset)
+                .ok_or_else(|| NestGateRpcError::DatasetNotFound {
+                    dataset: dataset.clone(),
+                })?;
 
         let mut results: Vec<ObjectInfo> = dataset_objects
             .iter()
@@ -367,7 +383,7 @@ impl NestGateRpc for NestGateRpcService {
                     dataset: dataset.clone(),
                     key: key.clone(),
                 })?
-                .1  // Get ObjectInfo from tuple
+                .1 // Get ObjectInfo from tuple
         } else {
             return Err(NestGateRpcError::DatasetNotFound {
                 dataset: dataset.clone(),
@@ -406,7 +422,7 @@ impl NestGateRpc for NestGateRpcService {
         } else {
             &registration.tarpc_endpoint // Use tarpc even if empty
         };
-        
+
         // Announce capability via discovery mechanism
         match crate::config::capability_discovery::announce_capability(
             &registration.capability,
@@ -416,7 +432,10 @@ impl NestGateRpc for NestGateRpcService {
         .await
         {
             Ok(()) => {
-                info!("✅ Capability '{}' registered successfully", registration.capability);
+                info!(
+                    "✅ Capability '{}' registered successfully",
+                    registration.capability
+                );
                 Ok(RegistrationResult {
                     success: true,
                     message: format!(
@@ -426,7 +445,10 @@ impl NestGateRpc for NestGateRpcService {
                 })
             }
             Err(e) => {
-                warn!("Failed to register capability '{}': {}", registration.capability, e);
+                warn!(
+                    "Failed to register capability '{}': {}",
+                    registration.capability, e
+                );
                 Ok(RegistrationResult {
                     success: false,
                     message: format!("Capability registration failed: {}", e),
@@ -445,11 +467,14 @@ impl NestGateRpc for NestGateRpcService {
         // Use capability-based discovery to find services
         match crate::primal_discovery::discover_capability(&capability).await {
             Ok(service) => {
-                info!("✅ Discovered capability '{}' at {}", capability, service.endpoint);
-                
+                info!(
+                    "✅ Discovered capability '{}' at {}",
+                    capability, service.endpoint
+                );
+
                 let mut endpoints = HashMap::new();
                 endpoints.insert("primary".to_string(), service.endpoint.clone());
-                
+
                 Ok(vec![ServiceInfo {
                     id: service.name.clone(),
                     capability: capability.clone(),

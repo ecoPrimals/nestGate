@@ -454,11 +454,14 @@ impl StorageManagerService {
     #[cfg(feature = "adaptive-storage")]
     pub async fn store_adaptive(&self, data: Vec<u8>) -> Result<crate::storage::StorageReceipt> {
         if let Some(ref adaptive) = self.adaptive_storage {
-            adaptive.store_data(data).await.map_err(|e| {
-                NestGateError::storage_error(&format!("Adaptive storage failed: {e}"))
-            })
+            adaptive
+                .store_data(data)
+                .await
+                .map_err(|e| NestGateError::storage_error(&format!("Adaptive storage failed: {e}")))
         } else {
-            Err(NestGateError::storage_error("Adaptive storage not initialized"))
+            Err(NestGateError::storage_error(
+                "Adaptive storage not initialized",
+            ))
         }
     }
 
@@ -470,7 +473,9 @@ impl StorageManagerService {
                 NestGateError::storage_error(&format!("Adaptive retrieval failed: {e}"))
             })
         } else {
-            Err(NestGateError::storage_error("Adaptive storage not initialized"))
+            Err(NestGateError::storage_error(
+                "Adaptive storage not initialized",
+            ))
         }
     }
 

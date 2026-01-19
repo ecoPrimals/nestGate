@@ -125,13 +125,17 @@ impl SecureCrypto {
     /// - Key derivation fails
     /// - Nonce generation fails
     /// - Encryption operation fails
-    pub async fn encrypt(&self, plaintext: &[u8], params: &EncryptionParams) -> Result<EncryptedData> {
+    pub async fn encrypt(
+        &self,
+        plaintext: &[u8],
+        params: &EncryptionParams,
+    ) -> Result<EncryptedData> {
         // NOTE: This is a placeholder implementation
         // Real implementation requires adding crypto dependencies:
         // - aes-gcm = "0.10"
         // - chacha20poly1305 = "0.10"
         // - rand = "0.8"
-        
+
         // For now, return error directing to real implementation
         Err(NestGateError::configuration_error(
             "crypto",
@@ -166,7 +170,7 @@ impl SecureCrypto {
         // NOTE: Placeholder - requires rand crate
         Err(NestGateError::configuration_error(
             "crypto",
-            "Key generation not yet implemented. Add dependency: rand = \"0.8\""
+            "Key generation not yet implemented. Add dependency: rand = \"0.8\"",
         ))
     }
 
@@ -175,7 +179,7 @@ impl SecureCrypto {
         // NOTE: Placeholder - requires rand crate
         Err(NestGateError::configuration_error(
             "crypto",
-            "Nonce generation not yet implemented. Add dependency: rand = \"0.8\""
+            "Nonce generation not yet implemented. Add dependency: rand = \"0.8\"",
         ))
     }
 }
@@ -204,4 +208,3 @@ pub use tests::*;
 /// **Security**: RustCrypto (audited by NCC Group)
 /// **Performance**: Local validation (no network round-trip)
 pub mod jwt_rustcrypto;
-

@@ -77,22 +77,22 @@ pub enum Commands {
         #[arg(long)]
         dev: bool,
     },
-    
+
     /// Show daemon status (UniBin)
     #[command(name = "status")]
     #[command(about = "Check daemon status")]
     Status,
-    
+
     /// Health check (UniBin)
     #[command(name = "health")]
     #[command(about = "Health check for all components")]
     Health,
-    
+
     /// Show version information (UniBin)
     #[command(name = "version")]
     #[command(about = "Show version and build information")]
     Version,
-    
+
     /// Service management
     #[command(name = "service")]
     #[command(about = "Start/stop NestGate services")]
@@ -146,7 +146,7 @@ pub enum Commands {
         #[arg(short, long)]
         duration: Option<u64>,
     },
-    
+
     /// Discovery operations (UniBin)
     #[command(name = "discover")]
     #[command(about = "Discover primals and services")]
@@ -292,50 +292,52 @@ impl Cli {
             // UniBin: Daemon mode command
             Commands::Daemon { port, bind, dev } => {
                 tracing::info!("🏰 Starting NestGate daemon (UniBin mode)");
-                crate::commands::service::run_daemon(port, &bind, dev).await.map_err(|e| {
-                    BinErrorHelper::runtime_error(e.to_string(), Some("daemon".to_string()))
-                })?;
+                crate::commands::service::run_daemon(port, &bind, dev)
+                    .await
+                    .map_err(|e| {
+                        BinErrorHelper::runtime_error(e.to_string(), Some("daemon".to_string()))
+                    })?;
             }
-            
+
             // UniBin: Status command
             Commands::Status => {
                 crate::commands::service::show_status().await.map_err(|e| {
                     BinErrorHelper::runtime_error(e.to_string(), Some("status".to_string()))
                 })?;
             }
-            
+
             // UniBin: Health command
             Commands::Health => {
                 crate::commands::service::show_health().await.map_err(|e| {
                     BinErrorHelper::runtime_error(e.to_string(), Some("health".to_string()))
                 })?;
             }
-            
+
             // UniBin: Version command
             Commands::Version => {
-                crate::commands::service::show_version().await.map_err(|e| {
-                    BinErrorHelper::runtime_error(e.to_string(), Some("version".to_string()))
-                })?;
+                crate::commands::service::show_version()
+                    .await
+                    .map_err(|e| {
+                        BinErrorHelper::runtime_error(e.to_string(), Some("version".to_string()))
+                    })?;
             }
-            
+
             // UniBin: Discover command
-            Commands::Discover { target } => {
-                match target {
-                    DiscoverTarget::Primals => {
-                        println!("🔍 Discovered Primals:");
-                        println!("   (Discovery commands coming soon)");
-                    }
-                    DiscoverTarget::Services => {
-                        println!("🔍 Discovered Services:");
-                        println!("   (Discovery commands coming soon)");
-                    }
-                    DiscoverTarget::Capabilities => {
-                        println!("🔍 Available Capabilities:");
-                        println!("   (Discovery commands coming soon)");
-                    }
+            Commands::Discover { target } => match target {
+                DiscoverTarget::Primals => {
+                    println!("🔍 Discovered Primals:");
+                    println!("   (Discovery commands coming soon)");
                 }
-            }
-            
+                DiscoverTarget::Services => {
+                    println!("🔍 Discovered Services:");
+                    println!("   (Discovery commands coming soon)");
+                }
+                DiscoverTarget::Capabilities => {
+                    println!("🔍 Available Capabilities:");
+                    println!("   (Discovery commands coming soon)");
+                }
+            },
+
             Commands::Zfs { command } => {
                 let mut zfs_handler = crate::commands::zfs::ZfsHandler::new();
                 zfs_handler.execute(command).await.map_err(|e| {

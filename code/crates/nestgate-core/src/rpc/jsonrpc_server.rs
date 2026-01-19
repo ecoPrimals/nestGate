@@ -476,7 +476,10 @@ impl JsonRpcServer {
                 // Use capability-based discovery
                 match crate::primal_discovery::discover_capability(&capability).await {
                     Ok(service) => {
-                        info!("✅ Discovered capability '{}' at {}", capability, service.endpoint);
+                        info!(
+                            "✅ Discovered capability '{}' at {}",
+                            capability, service.endpoint
+                        );
                         Ok::<_, ErrorObjectOwned>(vec![serde_json::json!({
                             "name": service.name,
                             "endpoint": service.endpoint,

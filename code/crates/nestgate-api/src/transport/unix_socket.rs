@@ -27,7 +27,7 @@ impl UnixSocketListener {
             listener: None,
         })
     }
-    
+
     /// Bind to the Unix socket
     ///
     /// # Errors
@@ -38,13 +38,10 @@ impl UnixSocketListener {
         if self.socket_path.exists() {
             info!("Removing old socket: {}", self.socket_path.display());
             std::fs::remove_file(&self.socket_path).map_err(|e| {
-                NestGateError::network_error(&format!(
-                    "Failed to remove old socket: {}",
-                    e
-                ))
+                NestGateError::network_error(&format!("Failed to remove old socket: {}", e))
             })?;
         }
-        
+
         // Create parent directory if it doesn't exist
         if let Some(parent) = self.socket_path.parent() {
             if !parent.exists() {
@@ -56,18 +53,21 @@ impl UnixSocketListener {
                 })?;
             }
         }
-        
+
         // Bind to socket
         let listener = UnixListener::bind(&self.socket_path).map_err(|e| {
             NestGateError::network_error(&format!("Failed to bind Unix socket: {}", e))
         })?;
-        
-        info!("✅ NestGate listening on Unix socket: {}", self.socket_path.display());
-        
+
+        info!(
+            "✅ NestGate listening on Unix socket: {}",
+            self.socket_path.display()
+        );
+
         self.listener = Some(listener);
         Ok(())
     }
-    
+
     /// Accept a connection
     ///
     /// # Errors
@@ -78,14 +78,14 @@ impl UnixSocketListener {
             .listener
             .as_ref()
             .ok_or_else(|| NestGateError::network_error("Listener not bound"))?;
-        
+
         let (stream, _addr) = listener.accept().await.map_err(|e| {
             NestGateError::network_error(&format!("Failed to accept connection: {}", e))
         })?;
-        
+
         Ok(stream)
     }
-    
+
     /// Get socket path
     #[must_use]
     pub fn socket_path(&self) -> &Path {

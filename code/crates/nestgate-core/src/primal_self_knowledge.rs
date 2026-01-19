@@ -54,7 +54,7 @@ pub struct PrimalSelfKnowledge {
     endpoints: Arc<Vec<Endpoint>>,
 
     /// Discovered other primals (runtime only, lock-free!)
-    discovered_primals: Arc<DashMap<String, DiscoveredPrimal>>,  // ✅ Lock-free
+    discovered_primals: Arc<DashMap<String, DiscoveredPrimal>>, // ✅ Lock-free
 
     /// Discovery mechanisms we support
     discovery_mechanisms: Vec<DiscoveryMechanism>,
@@ -216,7 +216,7 @@ impl PrimalSelfKnowledge {
             identity,
             capabilities,
             endpoints,
-            discovered_primals: Arc::new(DashMap::new()),  // ✅ Lock-free
+            discovered_primals: Arc::new(DashMap::new()), // ✅ Lock-free
             discovery_mechanisms,
         })
     }
@@ -385,7 +385,8 @@ impl PrimalSelfKnowledge {
 
                     // Cache the discovery
                     // ✅ Lock-free: Insert discovered primal
-                    self.discovered_primals.insert(primal_type.to_string(), primal.clone());
+                    self.discovered_primals
+                        .insert(primal_type.to_string(), primal.clone());
 
                     return Ok(primal);
                 }

@@ -120,15 +120,22 @@ impl ConnectionPool {
     pub async fn cleanup_idle(&self) {
         // DashMap: Lock-free concurrent iteration and mutation!
         for mut entry in self.connections.iter_mut() {
-            entry.value_mut().retain(|conn| conn.last_used.elapsed() < self.config.idle_timeout);
+            entry
+                .value_mut()
+                .retain(|conn| conn.last_used.elapsed() < self.config.idle_timeout);
         }
     }
 
     /// Get pool statistics (lock-free!)
     pub async fn stats(&self) -> PoolStats {
         // DashMap: Lock-free concurrent iteration!
-        let total_connections: usize = self.connections.iter().map(|entry| entry.value().len()).sum();
-        let idle_connections: usize = self.connections
+        let total_connections: usize = self
+            .connections
+            .iter()
+            .map(|entry| entry.value().len())
+            .sum();
+        let idle_connections: usize = self
+            .connections
             .iter()
             .flat_map(|entry| entry.value().clone().into_iter())
             .filter(|c| c.is_idle())
@@ -197,12 +204,14 @@ impl Connection {
 
         // BiomeOS Pure Rust Evolution: External HTTP removed
         // For external requests, use: discover_orchestration().await?.http_proxy(...)
-        Err(NestGateError::api_error("External HTTP deprecated. Use Songbird RPC via discover_orchestration()"))
-        
+        Err(NestGateError::api_error(
+            "External HTTP deprecated. Use Songbird RPC via discover_orchestration()",
+        ))
+
         // REMOVED: Previous HTTP client code (lines 204-248)
         // Reason: BiomeOS Concentrated Gap Architecture
         // Migration: Use Songbird for external HTTP, tarpc for primal-to-primal
-        
+
         /*let mut req_builder = self.client.request(method, &url);
 
         // Add headers

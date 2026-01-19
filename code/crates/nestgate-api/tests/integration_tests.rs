@@ -18,7 +18,7 @@ use tokio::net::UnixStream;
 #[tokio::test]
 async fn test_handler_request_response_flow() {
     let handler = NestGateRpcHandler::new();
-    
+
     // Create request
     let request = JsonRpcRequest {
         jsonrpc: "2.0".to_string(),
@@ -26,15 +26,15 @@ async fn test_handler_request_response_flow() {
         params: json!({}),
         id: 1,
     };
-    
+
     // Handle request
     let response = handler.handle_request(request).await;
-    
+
     // Verify response
     assert!(response.error.is_none());
     assert!(response.result.is_some());
     assert_eq!(response.id, 1);
-    
+
     if let Some(result) = response.result {
         assert_eq!(result["status"], "pong");
     }
@@ -45,11 +45,11 @@ async fn test_config_to_handler_integration() {
     let config = TransportConfig::new("integration_test")
         .with_socket_path("/tmp/integration_test.sock")
         .with_verbose();
-    
+
     assert!(config.validate().is_ok());
-    
+
     let handler = NestGateRpcHandler::new();
-    
+
     // Handler should work with any config
     let request = JsonRpcRequest {
         jsonrpc: "2.0".to_string(),
@@ -57,7 +57,7 @@ async fn test_config_to_handler_integration() {
         params: json!({}),
         id: 2,
     };
-    
+
     let response = handler.handle_request(request).await;
     assert!(response.error.is_none());
 }
@@ -65,9 +65,9 @@ async fn test_config_to_handler_integration() {
 #[tokio::test]
 async fn test_multiple_handlers_concurrent() {
     let handler = Arc::new(NestGateRpcHandler::new());
-    
+
     let mut handles = vec![];
-    
+
     for i in 0..20 {
         let h = handler.clone();
         let handle = tokio::spawn(async move {
@@ -81,7 +81,7 @@ async fn test_multiple_handlers_concurrent() {
         });
         handles.push(handle);
     }
-    
+
     for (i, handle) in handles.into_iter().enumerate() {
         let response = handle.await.unwrap();
         assert!(response.error.is_none());
@@ -98,15 +98,15 @@ async fn test_config_env_to_transport() {
     std::env::set_var("NESTGATE_FAMILY_ID", "integration");
     std::env::set_var("NESTGATE_SOCKET_PATH", "/tmp/integration.sock");
     std::env::set_var("NESTGATE_VERBOSE", "true");
-    
+
     let config = TransportConfig::from_env().unwrap();
-    
+
     assert_eq!(config.family_id, "integration");
     assert!(config.verbose);
-    
+
     // Config should be valid
     assert!(config.validate().is_ok());
-    
+
     // Cleanup
     std::env::remove_var("NESTGATE_FAMILY_ID");
     std::env::remove_var("NESTGATE_SOCKET_PATH");
@@ -117,14 +117,17 @@ async fn test_config_env_to_transport() {
 async fn test_config_precedence() {
     // Set both env and manual config
     std::env::set_var("NESTGATE_FAMILY_ID", "env_family");
-    
-    let manual_config = TransportConfig::new("manual_family")
-        .with_socket_path("/tmp/manual.sock");
-    
+
+    let manual_config = TransportConfig::new("manual_family").with_socket_path("/tmp/manual.sock");
+
     // Manual config should take precedence
     assert_eq!(manual_config.family_id, "manual_family");
-    assert!(manual_config.socket_path.to_str().unwrap().contains("manual"));
-    
+    assert!(manual_config
+        .socket_path
+        .to_str()
+        .unwrap()
+        .contains("manual"));
+
     // Cleanup
     std::env::remove_var("NESTGATE_FAMILY_ID");
 }
@@ -136,19 +139,19 @@ async fn test_config_precedence() {
 #[tokio::test]
 async fn test_invalid_method_error_flow() {
     let handler = NestGateRpcHandler::new();
-    
+
     let request = JsonRpcRequest {
         jsonrpc: "2.0".to_string(),
         method: "invalid.nonexistent.method".to_string(),
         params: json!({}),
         id: 100,
     };
-    
+
     let response = handler.handle_request(request).await;
-    
+
     assert!(response.result.is_none());
     assert!(response.error.is_some());
-    
+
     let error = response.error.unwrap();
     assert_eq!(error.code, -32601); // Method not found
 }
@@ -156,7 +159,7 @@ async fn test_invalid_method_error_flow() {
 #[tokio::test]
 async fn test_error_recovery_and_next_request() {
     let handler = NestGateRpcHandler::new();
-    
+
     // First request fails
     let bad_request = JsonRpcRequest {
         jsonrpc: "2.0".to_string(),
@@ -164,10 +167,10 @@ async fn test_error_recovery_and_next_request() {
         params: json!({}),
         id: 1,
     };
-    
+
     let error_response = handler.handle_request(bad_request).await;
     assert!(error_response.error.is_some());
-    
+
     // Second request should succeed
     let good_request = JsonRpcRequest {
         jsonrpc: "2.0".to_string(),
@@ -175,7 +178,7 @@ async fn test_error_recovery_and_next_request() {
         params: json!({}),
         id: 2,
     };
-    
+
     let success_response = handler.handle_request(good_request).await;
     assert!(success_response.error.is_none());
     assert!(success_response.result.is_some());
@@ -188,7 +191,7 @@ async fn test_error_recovery_and_next_request() {
 #[tokio::test]
 async fn test_e2e_health_check_flow() {
     let handler = NestGateRpcHandler::new();
-    
+
     // 1. Ping
     let ping_req = JsonRpcRequest {
         jsonrpc: "2.0".to_string(),
@@ -198,7 +201,7 @@ async fn test_e2e_health_check_flow() {
     };
     let ping_resp = handler.handle_request(ping_req).await;
     assert_eq!(ping_resp.result.unwrap()["status"], "pong");
-    
+
     // 2. Status
     let status_req = JsonRpcRequest {
         jsonrpc: "2.0".to_string(),
@@ -208,7 +211,7 @@ async fn test_e2e_health_check_flow() {
     };
     let status_resp = handler.handle_request(status_req).await;
     assert!(status_resp.result.is_some());
-    
+
     // 3. Identity
     let identity_req = JsonRpcRequest {
         jsonrpc: "2.0".to_string(),
@@ -226,13 +229,13 @@ async fn test_e2e_config_handler_lifecycle() {
     std::env::set_var("NESTGATE_FAMILY_ID", "e2e_test");
     let config = TransportConfig::from_env().unwrap();
     std::env::remove_var("NESTGATE_FAMILY_ID");
-    
+
     // 2. Validate config
     assert!(config.validate().is_ok());
-    
+
     // 3. Create handler
     let handler = NestGateRpcHandler::new();
-    
+
     // 4. Send request
     let request = JsonRpcRequest {
         jsonrpc: "2.0".to_string(),
@@ -240,10 +243,10 @@ async fn test_e2e_config_handler_lifecycle() {
         params: json!({}),
         id: 1,
     };
-    
+
     // 5. Get response
     let response = handler.handle_request(request).await;
-    
+
     // 6. Verify success
     assert!(response.error.is_none());
     assert!(response.result.is_some());
@@ -252,7 +255,7 @@ async fn test_e2e_config_handler_lifecycle() {
 #[tokio::test]
 async fn test_e2e_stress_sequential_requests() {
     let handler = NestGateRpcHandler::new();
-    
+
     for i in 0..100 {
         let request = JsonRpcRequest {
             jsonrpc: "2.0".to_string(),
@@ -260,9 +263,9 @@ async fn test_e2e_stress_sequential_requests() {
             params: json!({"iteration": i}),
             id: i as i64,
         };
-        
+
         let response = handler.handle_request(request).await;
-        
+
         assert!(response.error.is_none(), "Request {} failed", i);
         assert_eq!(response.id, i as i64);
     }
@@ -275,9 +278,9 @@ async fn test_e2e_stress_sequential_requests() {
 #[tokio::test]
 async fn test_concurrent_load() {
     let handler = Arc::new(NestGateRpcHandler::new());
-    
+
     let mut handles = vec![];
-    
+
     // Spawn 50 concurrent requests
     for i in 0..50 {
         let h = handler.clone();
@@ -298,7 +301,7 @@ async fn test_concurrent_load() {
         });
         handles.push(handle);
     }
-    
+
     // All should succeed
     for handle in handles {
         let response = handle.await.unwrap();
@@ -309,9 +312,9 @@ async fn test_concurrent_load() {
 #[tokio::test]
 async fn test_rapid_fire_requests() {
     let handler = NestGateRpcHandler::new();
-    
+
     let start = std::time::Instant::now();
-    
+
     for i in 0..1000 {
         let request = JsonRpcRequest {
             jsonrpc: "2.0".to_string(),
@@ -319,13 +322,13 @@ async fn test_rapid_fire_requests() {
             params: json!({}),
             id: i,
         };
-        
+
         let response = handler.handle_request(request).await;
         assert!(response.error.is_none());
     }
-    
+
     let duration = start.elapsed();
-    
+
     // Should complete 1000 requests in reasonable time
     assert!(duration.as_secs() < 10, "Too slow: {:?}", duration);
 }

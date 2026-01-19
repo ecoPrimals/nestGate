@@ -421,7 +421,7 @@ impl HybridAuthenticationManager {
     async fn validate_token_external(&self, token_str: &str) -> Result<bool> {
         // Use local JWT validation with RustCrypto
         let jwt = JwtHmac::new(&self.config.local_token_settings.signing_key);
-        
+
         match jwt.verify(token_str) {
             Ok(claims) => {
                 // Token is valid and not expired
@@ -455,24 +455,32 @@ impl HybridAuthenticationManager {
     async fn refresh_token_external(&self, token_str: &str) -> Result<ZeroCostAuthToken> {
         // Verify the existing token first
         let jwt = JwtHmac::new(&self.config.local_token_settings.signing_key);
-        let old_claims = jwt.verify(token_str)
+        let old_claims = jwt
+            .verify(token_str)
             .map_err(|_| NestGateError::security_error("Cannot refresh invalid token"))?;
-        
+
         // Create new token with extended expiry
         let new_expiry_seconds = self.config.local_token_settings.token_expiry.as_secs() as i64;
         let new_claims = JwtClaims {
             sub: old_claims.sub.clone(),
-            iat: SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs() as i64,
-            exp: SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs() as i64 + new_expiry_seconds,
+            iat: SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs() as i64,
+            exp: SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs() as i64
+                + new_expiry_seconds,
             iss: old_claims.iss.clone(),
             aud: old_claims.aud.clone(),
             permissions: old_claims.permissions.clone(),
         };
-        
+
         let new_token_str = jwt.sign(&new_claims)?;
-        
+
         debug!("JWT refreshed successfully for user: {}", old_claims.sub);
-        
+
         Ok(ZeroCostAuthToken::new(
             new_token_str,
             old_claims.sub,
@@ -506,10 +514,10 @@ impl HybridAuthenticationManager {
         // Remove token from cache (local revocation)
         let mut cache = self.token_cache.write().await;
         cache.remove(token_str);
-        
+
         // TODO: For distributed token revocation, add to blacklist
         // and optionally notify other NestGate instances via Songbird RPC
-        
+
         debug!("Token revoked successfully (local cache)");
         Ok(())
     }

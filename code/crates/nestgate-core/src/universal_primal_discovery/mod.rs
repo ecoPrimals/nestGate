@@ -102,7 +102,5 @@ pub use registry_config::{RegistryConfig, SharedRegistryConfig};
 // NOTE: Re-export dev stubs from the correct location
 #[cfg(feature = "dev-stubs")]
 #[allow(deprecated)]
-pub use crate::dev_stubs::primal_discovery::{
-    NetworkConfigAdapter, StandaloneNetworkAdapter,
-};
+pub use crate::dev_stubs::primal_discovery::{NetworkConfigAdapter, StandaloneNetworkAdapter};
 // Legacy stubs functions removed - use proper discovery APIs

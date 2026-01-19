@@ -114,7 +114,10 @@ impl ZeroCostZfsOperations for ObjectStorageBackend {
             created_at: std::time::SystemTime::now(),
         };
 
-        info!("✅ Object storage dataset created: {} (tier: {:?})", name, tier);
+        info!(
+            "✅ Object storage dataset created: {} (tier: {:?})",
+            name, tier
+        );
         Ok(dataset)
     }
 
@@ -200,7 +203,7 @@ impl ZeroCostZfsOperations for ObjectStorageBackend {
 
         // Future: List objects in pool with delimiter to find prefixes (datasets)
         // For now, return empty list (graceful degradation)
-        
+
         info!("✅ Dataset listing (S3 SDK integration pending)");
         Ok(Vec::new())
     }
@@ -216,7 +219,7 @@ impl ZeroCostZfsOperations for ObjectStorageBackend {
 
         // Future: Search for snapshot markers in dataset prefix
         // For now, return empty list (graceful degradation)
-        
+
         info!("✅ Snapshot listing (S3 SDK integration pending)");
         Ok(Vec::new())
     }

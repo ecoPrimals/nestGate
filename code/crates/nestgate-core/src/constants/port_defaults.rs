@@ -1,8 +1,10 @@
-//! Port Number Defaults - Centralized Configuration
+//! Port Number Defaults - Environment-Driven Configuration
 //!
 //! This module provides centralized default port numbers for various services.
-//! All hardcoded port numbers should be replaced with these constants
-//! and made configurable via environment variables or configuration files.
+//! All ports are configurable via environment variables with smart defaults.
+//!
+//! **Modern Pattern**: Use `get_*_port()` functions (defined below) instead of constants
+//! for runtime environment configuration.
 
 use super::port_defaults_config::PortConfig;
 

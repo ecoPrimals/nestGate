@@ -2,8 +2,8 @@
 //!
 //! Environment-driven configuration for TRUE PRIMAL transport.
 
-use std::path::{Path, PathBuf};
 use nestgate_core::error::{NestGateError, Result};
+use std::path::{Path, PathBuf};
 
 /// **TRANSPORT CONFIGURATION**
 ///
@@ -31,16 +31,16 @@ use nestgate_core::error::{NestGateError, Result};
 pub struct TransportConfig {
     /// Family ID for this primal instance
     pub family_id: String,
-    
+
     /// Unix socket path for primary transport
     pub socket_path: PathBuf,
-    
+
     /// Security provider (BearDog) socket path
     pub security_provider: PathBuf,
-    
+
     /// Optional HTTP fallback port
     pub http_port: Option<u16>,
-    
+
     /// Enable verbose logging
     pub verbose: bool,
 }
@@ -52,23 +52,23 @@ impl TransportConfig {
     ///
     /// Returns error if environment is misconfigured
     pub fn from_env() -> Result<Self> {
-        let family_id = std::env::var("NESTGATE_FAMILY_ID")
-            .unwrap_or_else(|_| "default".to_string());
-        
+        let family_id =
+            std::env::var("NESTGATE_FAMILY_ID").unwrap_or_else(|_| "default".to_string());
+
         let socket_path = std::env::var("NESTGATE_SOCKET_PATH")
             .unwrap_or_else(|_| format!("/tmp/nestgate-{}.sock", family_id));
-        
+
         let security_provider = std::env::var("NESTGATE_SECURITY_PROVIDER")
             .unwrap_or_else(|_| format!("/tmp/beardog-{}-default.sock", family_id));
-        
+
         let http_port = std::env::var("NESTGATE_HTTP_PORT")
             .ok()
             .and_then(|s| s.parse().ok());
-        
+
         let verbose = std::env::var("NESTGATE_VERBOSE")
             .map(|v| v == "1" || v.to_lowercase() == "true")
             .unwrap_or(false);
-        
+
         Ok(Self {
             family_id,
             socket_path: PathBuf::from(socket_path),
@@ -77,7 +77,7 @@ impl TransportConfig {
             verbose,
         })
     }
-    
+
     /// Create new configuration with family ID
     #[must_use]
     pub fn new(family_id: impl Into<String>) -> Self {
@@ -90,35 +90,35 @@ impl TransportConfig {
             verbose: false,
         }
     }
-    
+
     /// Set Unix socket path
     #[must_use]
     pub fn with_socket_path(mut self, path: impl AsRef<Path>) -> Self {
         self.socket_path = path.as_ref().to_path_buf();
         self
     }
-    
+
     /// Set security provider socket path
     #[must_use]
     pub fn with_security_provider(mut self, path: impl AsRef<Path>) -> Self {
         self.security_provider = path.as_ref().to_path_buf();
         self
     }
-    
+
     /// Enable HTTP fallback on specified port
     #[must_use]
     pub fn with_http_fallback(mut self, port: u16) -> Self {
         self.http_port = Some(port);
         self
     }
-    
+
     /// Enable verbose logging
     #[must_use]
     pub fn with_verbose(mut self) -> Self {
         self.verbose = true;
         self
     }
-    
+
     /// Validate configuration
     ///
     /// # Errors
@@ -129,19 +129,21 @@ impl TransportConfig {
         if self.socket_path.as_os_str().is_empty() {
             return Err(NestGateError::api_error("Socket path cannot be empty"));
         }
-        
+
         // Validate security provider path
         if self.security_provider.as_os_str().is_empty() {
-            return Err(NestGateError::api_error("Security provider path cannot be empty"));
+            return Err(NestGateError::api_error(
+                "Security provider path cannot be empty",
+            ));
         }
-        
+
         // Validate HTTP port if specified
         if let Some(port) = self.http_port {
             if port == 0 {
                 return Err(NestGateError::api_error("HTTP port cannot be 0"));
             }
         }
-        
+
         Ok(())
     }
 }

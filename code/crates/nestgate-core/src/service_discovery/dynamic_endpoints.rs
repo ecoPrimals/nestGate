@@ -134,12 +134,15 @@ impl DynamicEndpointResolver {
 
     /// Get cached endpoint (lock-free read)
     async fn get_cached_endpoint(&self, service_type: &str) -> Option<String> {
-        self.endpoint_cache.get(service_type).map(|entry| entry.value().clone())
+        self.endpoint_cache
+            .get(service_type)
+            .map(|entry| entry.value().clone())
     }
 
     /// Cache endpoint for future use (lock-free write)
     async fn cache_endpoint(&self, service_type: &str, endpoint: &str) {
-        self.endpoint_cache.insert(service_type.to_string(), endpoint.to_string());
+        self.endpoint_cache
+            .insert(service_type.to_string(), endpoint.to_string());
     }
 
     /// Allocate dynamic endpoint (no hardcoded localhost)

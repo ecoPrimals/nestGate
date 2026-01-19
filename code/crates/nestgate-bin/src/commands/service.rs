@@ -322,7 +322,7 @@ impl Default for ServiceManager {
 pub async fn run_daemon(port: u16, bind: &str, dev: bool) -> BinResult<()> {
     info!("🏰 Starting NestGate daemon (UniBin mode)");
     info!("   Port: {}, Bind: {}, Dev: {}", port, bind, dev);
-    
+
     let manager = ServiceManager::new();
     manager.start_service(Some(port), None).await
 }
@@ -360,7 +360,14 @@ pub async fn show_version() -> BinResult<()> {
     println!("🏰 NestGate");
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     println!("   Version:       {}", env!("CARGO_PKG_VERSION"));
-    println!("   Build:         {}", if cfg!(debug_assertions) { "debug" } else { "release" });
+    println!(
+        "   Build:         {}",
+        if cfg!(debug_assertions) {
+            "debug"
+        } else {
+            "release"
+        }
+    );
     println!("   Pure Rust:     100%");
     println!("   HTTP-free:     ✅ (Concentrated Gap compliant)");
     println!("   Lock-free:     10.6% (43/406 files, DashMap)");

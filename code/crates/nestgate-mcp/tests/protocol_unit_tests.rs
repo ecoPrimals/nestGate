@@ -54,8 +54,7 @@ fn test_message_with_metadata() {
         metadata: Default::default(),
     };
 
-    msg.metadata
-        .insert("key".to_string(), json!("value"));
+    msg.metadata.insert("key".to_string(), json!("value"));
 
     assert_eq!(msg.metadata.get("key").unwrap(), &json!("value"));
 }
@@ -231,9 +230,7 @@ fn test_service_metadata() {
     service
         .metadata
         .insert("version".to_string(), json!("1.0.0"));
-    service
-        .metadata
-        .insert("uptime".to_string(), json!(3600));
+    service.metadata.insert("uptime".to_string(), json!(3600));
 
     assert_eq!(service.metadata.get("version").unwrap(), &json!("1.0.0"));
     assert_eq!(service.metadata.get("uptime").unwrap(), &json!(3600));
@@ -293,10 +290,7 @@ fn test_health_check_serialization() {
 
 #[test]
 fn test_health_check_types() {
-    assert!(matches!(
-        HealthCheckType::Quick,
-        HealthCheckType::Quick
-    ));
+    assert!(matches!(HealthCheckType::Quick, HealthCheckType::Quick));
     assert!(matches!(HealthCheckType::Full, HealthCheckType::Full));
     assert!(matches!(HealthCheckType::Deep, HealthCheckType::Deep));
 }

@@ -310,7 +310,8 @@ pub mod mdns {
             tracing::debug!("mDNS query for capability: {:?}", capability);
 
             // Lock-free iteration
-            let matching_services: Vec<ServiceInfo> = self.registry
+            let matching_services: Vec<ServiceInfo> = self
+                .registry
                 .iter()
                 .map(|entry| entry.value().clone())
                 .filter(|service| service.capabilities.contains(&capability))
@@ -443,7 +444,12 @@ pub mod consul {
             let client = reqwest::Client::builder()
                 .timeout(builder.timeout)
                 .build()
-                .map_err(|e| crate::error::NestGateError::config(&format!("Failed to create HTTP client: {}", e)))?;
+                .map_err(|e| {
+                    crate::error::NestGateError::config(&format!(
+                        "Failed to create HTTP client: {}",
+                        e
+                    ))
+                })?;
 
             Ok(Self {
                 timeout: builder.timeout,
@@ -464,7 +470,9 @@ pub mod consul {
 
         /// Extract address and port from endpoint
         fn extract_address_port(endpoint: &str) -> (String, u16) {
-            let without_scheme = endpoint.trim_start_matches("http://").trim_start_matches("https://");
+            let without_scheme = endpoint
+                .trim_start_matches("http://")
+                .trim_start_matches("https://");
             if let Some((addr, port_str)) = without_scheme.rsplit_once(':') {
                 let port = port_str.parse().unwrap_or(8080);
                 (addr.to_string(), port)
@@ -487,18 +495,22 @@ pub mod consul {
 
             let (address, port) = Self::extract_address_port(&primary_endpoint);
 
-            let health_check = self_knowledge
-                .endpoints
-                .get("health")
-                .map(|addr| ConsulHealthCheck {
-                    http: addr.to_string(),
-                    interval: "10s".to_string(),
-                    timeout: format!("{}s", self.timeout.as_secs()),
-                });
+            let health_check =
+                self_knowledge
+                    .endpoints
+                    .get("health")
+                    .map(|addr| ConsulHealthCheck {
+                        http: addr.to_string(),
+                        interval: "10s".to_string(),
+                        timeout: format!("{}s", self.timeout.as_secs()),
+                    });
 
             let mut meta = HashMap::new();
             meta.insert("version".to_string(), self_knowledge.version.clone());
-            meta.insert("capabilities".to_string(), serde_json::to_string(&self_knowledge.capabilities).unwrap_or_default());
+            meta.insert(
+                "capabilities".to_string(),
+                serde_json::to_string(&self_knowledge.capabilities).unwrap_or_default(),
+            );
 
             let registration = ConsulServiceRegistration {
                 id: self_knowledge.id.as_str().to_string(),
@@ -516,7 +528,12 @@ pub mod consul {
                 .json(&registration)
                 .send()
                 .await
-                .map_err(|e| crate::error::NestGateError::api_error(&format!("Consul registration failed: {}", e)))?;
+                .map_err(|e| {
+                    crate::error::NestGateError::api_error(&format!(
+                        "Consul registration failed: {}",
+                        e
+                    ))
+                })?;
 
             tracing::info!("Successfully registered with Consul");
             Ok(())
@@ -526,51 +543,52 @@ pub mod consul {
             tracing::debug!("Consul query for capability: {:?}", capability);
 
             let url = format!("{}/v1/catalog/service/{}", self.consul_addr, capability);
-            let response = self.client
-                .get(&url)
-                .send()
-                .await
-                .map_err(|e| crate::error::NestGateError::api_error(&format!("Consul query failed: {}", e)))?;
+            let response = self.client.get(&url).send().await.map_err(|e| {
+                crate::error::NestGateError::api_error(&format!("Consul query failed: {}", e))
+            })?;
 
             if !response.status().is_success() {
                 return Ok(vec![]);
             }
 
-            let services: Vec<ConsulService> = response
-                .json()
-                .await
-                .map_err(|e| crate::error::NestGateError::api_error(&format!("Failed to parse Consul response: {}", e)))?;
+            let services: Vec<ConsulService> = response.json().await.map_err(|e| {
+                crate::error::NestGateError::api_error(&format!(
+                    "Failed to parse Consul response: {}",
+                    e
+                ))
+            })?;
 
-            Ok(services.into_iter().map(|svc| {
-                ServiceInfo {
+            Ok(services
+                .into_iter()
+                .map(|svc| ServiceInfo {
                     id: svc.service_id,
                     name: svc.service_name,
                     capabilities: svc.service_tags,
                     endpoint: Self::parse_endpoint(&svc.service_address, svc.service_port),
                     metadata: svc.service_meta,
                     health_endpoint: None,
-                }
-            }).collect())
+                })
+                .collect())
         }
 
         async fn find_by_id(&self, id: &str) -> Result<Option<ServiceInfo>> {
             tracing::debug!("Consul lookup service: {}", id);
 
             let url = format!("{}/v1/agent/service/{}", self.consul_addr, id);
-            let response = self.client
-                .get(&url)
-                .send()
-                .await
-                .map_err(|e| crate::error::NestGateError::api_error(&format!("Consul lookup failed: {}", e)))?;
+            let response = self.client.get(&url).send().await.map_err(|e| {
+                crate::error::NestGateError::api_error(&format!("Consul lookup failed: {}", e))
+            })?;
 
             if !response.status().is_success() {
                 return Ok(None);
             }
 
-            let service: ConsulService = response
-                .json()
-                .await
-                .map_err(|e| crate::error::NestGateError::api_error(&format!("Failed to parse Consul response: {}", e)))?;
+            let service: ConsulService = response.json().await.map_err(|e| {
+                crate::error::NestGateError::api_error(&format!(
+                    "Failed to parse Consul response: {}",
+                    e
+                ))
+            })?;
 
             Ok(Some(ServiceInfo {
                 id: service.service_id,
@@ -586,11 +604,12 @@ pub mod consul {
             tracing::debug!("Consul health check: {}", service_id);
 
             let url = format!("{}/v1/health/service/{}", self.consul_addr, service_id);
-            let response = self.client
-                .get(&url)
-                .send()
-                .await
-                .map_err(|e| crate::error::NestGateError::api_error(&format!("Consul health check failed: {}", e)))?;
+            let response = self.client.get(&url).send().await.map_err(|e| {
+                crate::error::NestGateError::api_error(&format!(
+                    "Consul health check failed: {}",
+                    e
+                ))
+            })?;
 
             Ok(response.status().is_success())
         }
@@ -598,12 +617,16 @@ pub mod consul {
         async fn deregister(&self, service_id: &str) -> Result<()> {
             tracing::info!("Consul deregister: {}", service_id);
 
-            let url = format!("{}/v1/agent/service/deregister/{}", self.consul_addr, service_id);
-            self.client
-                .put(&url)
-                .send()
-                .await
-                .map_err(|e| crate::error::NestGateError::api_error(&format!("Consul deregistration failed: {}", e)))?;
+            let url = format!(
+                "{}/v1/agent/service/deregister/{}",
+                self.consul_addr, service_id
+            );
+            self.client.put(&url).send().await.map_err(|e| {
+                crate::error::NestGateError::api_error(&format!(
+                    "Consul deregistration failed: {}",
+                    e
+                ))
+            })?;
 
             tracing::info!("Successfully deregistered from Consul");
             Ok(())
@@ -681,19 +704,26 @@ pub mod k8s {
             // Get k8s API server address
             let api_server = std::env::var("KUBERNETES_SERVICE_HOST")
                 .map(|host| {
-                    let port = std::env::var("KUBERNETES_SERVICE_PORT").unwrap_or_else(|_| "443".to_string());
+                    let port = std::env::var("KUBERNETES_SERVICE_PORT")
+                        .unwrap_or_else(|_| "443".to_string());
                     format!("https://{}:{}", host, port)
                 })
                 .unwrap_or_else(|_| "https://kubernetes.default.svc".to_string());
 
             // Get service account token (if running in pod)
-            let token = std::fs::read_to_string("/var/run/secrets/kubernetes.io/serviceaccount/token").ok();
+            let token =
+                std::fs::read_to_string("/var/run/secrets/kubernetes.io/serviceaccount/token").ok();
 
             let client = reqwest::Client::builder()
                 .timeout(builder.timeout)
                 .danger_accept_invalid_certs(true) // In-cluster certs are self-signed
                 .build()
-                .map_err(|e| crate::error::NestGateError::config(&format!("Failed to create HTTP client: {}", e)))?;
+                .map_err(|e| {
+                    crate::error::NestGateError::config(&format!(
+                        "Failed to create HTTP client: {}",
+                        e
+                    ))
+                })?;
 
             Ok(Self {
                 timeout: builder.timeout,
@@ -714,8 +744,10 @@ pub mod k8s {
         fn service_to_info(&self, svc: K8sService) -> Option<ServiceInfo> {
             let port = svc.spec.ports.first()?.port;
             let ip = svc.spec.cluster_ip.as_ref()?;
-            
-            let capabilities: Vec<String> = svc.metadata.labels
+
+            let capabilities: Vec<String> = svc
+                .metadata
+                .labels
                 .get("capabilities")
                 .map(|s| s.split(',').map(|s| s.trim().to_string()).collect())
                 .unwrap_or_default();
@@ -764,17 +796,24 @@ pub mod k8s {
                 req = req.header("Authorization", auth);
             }
 
-            let response = req.send().await
-                .map_err(|e| crate::error::NestGateError::api_error(&format!("k8s query failed: {}", e)))?;
+            let response = req.send().await.map_err(|e| {
+                crate::error::NestGateError::api_error(&format!("k8s query failed: {}", e))
+            })?;
 
             if !response.status().is_success() {
                 return Ok(vec![]);
             }
 
-            let service_list: K8sServiceList = response.json().await
-                .map_err(|e| crate::error::NestGateError::api_error(&format!("Failed to parse k8s response: {}", e)))?;
+            let service_list: K8sServiceList = response.json().await.map_err(|e| {
+                crate::error::NestGateError::api_error(&format!(
+                    "Failed to parse k8s response: {}",
+                    e
+                ))
+            })?;
 
-            Ok(service_list.items.into_iter()
+            Ok(service_list
+                .items
+                .into_iter()
                 .filter_map(|svc| self.service_to_info(svc))
                 .collect())
         }
@@ -799,15 +838,20 @@ pub mod k8s {
                 req = req.header("Authorization", auth);
             }
 
-            let response = req.send().await
-                .map_err(|e| crate::error::NestGateError::api_error(&format!("k8s lookup failed: {}", e)))?;
+            let response = req.send().await.map_err(|e| {
+                crate::error::NestGateError::api_error(&format!("k8s lookup failed: {}", e))
+            })?;
 
             if !response.status().is_success() {
                 return Ok(None);
             }
 
-            let service: K8sService = response.json().await
-                .map_err(|e| crate::error::NestGateError::api_error(&format!("Failed to parse k8s response: {}", e)))?;
+            let service: K8sService = response.json().await.map_err(|e| {
+                crate::error::NestGateError::api_error(&format!(
+                    "Failed to parse k8s response: {}",
+                    e
+                ))
+            })?;
 
             Ok(self.service_to_info(service))
         }
@@ -832,8 +876,9 @@ pub mod k8s {
                 req = req.header("Authorization", auth);
             }
 
-            let response = req.send().await
-                .map_err(|e| crate::error::NestGateError::api_error(&format!("k8s health check failed: {}", e)))?;
+            let response = req.send().await.map_err(|e| {
+                crate::error::NestGateError::api_error(&format!("k8s health check failed: {}", e))
+            })?;
 
             Ok(response.status().is_success())
         }

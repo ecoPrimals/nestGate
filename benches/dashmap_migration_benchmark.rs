@@ -82,11 +82,14 @@ fn bench_single_thread_read(c: &mut Criterion) {
     // Prepare data
     let legacy_map: LegacyMap = Arc::new(RwLock::new(HashMap::new()));
     let modern_map: ModernMap = Arc::new(DashMap::new());
-    
+
     for i in 0..1000 {
         let key = format!("key_{}", i);
         let value = format!("value_{}", i);
-        legacy_map.write().unwrap().insert(key.clone(), value.clone());
+        legacy_map
+            .write()
+            .unwrap()
+            .insert(key.clone(), value.clone());
         modern_map.insert(key, value);
     }
 
@@ -119,7 +122,7 @@ fn bench_single_thread_read(c: &mut Criterion) {
 
 fn bench_concurrent_mixed_workload(c: &mut Criterion) {
     let mut group = c.benchmark_group("concurrent_mixed_workload");
-    
+
     for thread_count in [2, 4, 8, 16].iter() {
         group.throughput(Throughput::Elements(10000 * thread_count));
 
@@ -138,7 +141,7 @@ fn bench_concurrent_mixed_workload(c: &mut Criterion) {
                             // 70% reads, 30% writes (realistic workload)
                             for i in 0..10000 {
                                 let key = format!("key_{}_{}", t, i);
-                                
+
                                 if i % 10 < 7 {
                                     // Read
                                     let _ = map_clone.read().unwrap().get(&key);
@@ -175,7 +178,7 @@ fn bench_concurrent_mixed_workload(c: &mut Criterion) {
                             // 70% reads, 30% writes (realistic workload)
                             for i in 0..10000 {
                                 let key = format!("key_{}_{}", t, i);
-                                
+
                                 if i % 10 < 7 {
                                     // Read
                                     let _ = map_clone.get(&key);
@@ -208,7 +211,7 @@ fn bench_concurrent_mixed_workload(c: &mut Criterion) {
 fn bench_high_contention(c: &mut Criterion) {
     let mut group = c.benchmark_group("high_contention");
     group.measurement_time(Duration::from_secs(10));
-    
+
     let thread_count = 16;
     let ops_per_thread = 5000;
     group.throughput(Throughput::Elements((thread_count * ops_per_thread) as u64));
@@ -278,7 +281,7 @@ criterion_group!(
         .measurement_time(Duration::from_secs(10))
         .sample_size(100)
         .warm_up_time(Duration::from_secs(3));
-    targets = 
+    targets =
         bench_single_thread_insert,
         bench_single_thread_read,
         bench_concurrent_mixed_workload,

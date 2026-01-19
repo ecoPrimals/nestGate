@@ -256,9 +256,9 @@ async fn request_ai_optimization(dataset_name: &str, pattern: &StoragePattern) -
         // HTTP removed per Concentrated Gap Architecture
         let _ = request_data;
         tracing::warn!("AI optimization removed - HTTP removed");
-        
-        if false {  // Dead code stub
-            // AI provider not available, continue without AI recommendations
+
+        if false { // Dead code stub
+             // AI provider not available, continue without AI recommendations
         }
     }
 

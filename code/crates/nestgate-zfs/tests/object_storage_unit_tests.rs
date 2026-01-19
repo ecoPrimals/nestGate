@@ -3,7 +3,7 @@
 //! Comprehensive unit tests for refactored object storage backend.
 
 use nestgate_zfs::backends::object_storage::{
-    ObjectStorageBackend, StorageProvider, ObjectPool, ObjectDataset,
+    ObjectDataset, ObjectPool, ObjectStorageBackend, StorageProvider,
 };
 use nestgate_zfs::StorageTier;
 use std::collections::HashMap;
@@ -22,7 +22,7 @@ fn test_provider_detection_aws() {
 fn test_provider_detection_minio() {
     let provider = StorageProvider::detect_from_endpoint("http://localhost:9000");
     assert!(matches!(provider, StorageProvider::MinIO));
-    
+
     let provider2 = StorageProvider::detect_from_endpoint("https://minio.example.com");
     assert!(matches!(provider2, StorageProvider::MinIO));
 }
@@ -31,7 +31,7 @@ fn test_provider_detection_minio() {
 fn test_provider_detection_generic() {
     let provider = StorageProvider::detect_from_endpoint("https://storage.example.com");
     assert!(matches!(provider, StorageProvider::Generic));
-    
+
     let provider2 = StorageProvider::detect_from_endpoint("http://192.168.1.100:8080");
     assert!(matches!(provider2, StorageProvider::Generic));
 }
@@ -136,14 +136,14 @@ fn test_dataset_prefix_format() {
 fn test_config_from_env_s3_endpoint() {
     std::env::set_var("S3_ENDPOINT", "https://test.s3.example.com");
     std::env::set_var("S3_BUCKET", "test-bucket");
-    
+
     // Config should be discoverable
     let endpoint = std::env::var("S3_ENDPOINT").unwrap();
     let bucket = std::env::var("S3_BUCKET").unwrap();
-    
+
     assert_eq!(endpoint, "https://test.s3.example.com");
     assert_eq!(bucket, "test-bucket");
-    
+
     // Cleanup
     std::env::remove_var("S3_ENDPOINT");
     std::env::remove_var("S3_BUCKET");
@@ -153,13 +153,13 @@ fn test_config_from_env_s3_endpoint() {
 fn test_config_from_env_minio() {
     std::env::set_var("MINIO_ENDPOINT", "http://localhost:9000");
     std::env::set_var("MINIO_BUCKET", "minio-bucket");
-    
+
     let endpoint = std::env::var("MINIO_ENDPOINT").unwrap();
     let bucket = std::env::var("MINIO_BUCKET").unwrap();
-    
+
     assert!(endpoint.contains("localhost:9000"));
     assert_eq!(bucket, "minio-bucket");
-    
+
     // Cleanup
     std::env::remove_var("MINIO_ENDPOINT");
     std::env::remove_var("MINIO_BUCKET");
@@ -170,11 +170,11 @@ fn test_config_precedence_order() {
     // Test that specific configs take precedence over generic
     std::env::set_var("MINIO_ENDPOINT", "http://minio:9000");
     std::env::set_var("S3_ENDPOINT", "https://s3.aws.com");
-    
+
     // MinIO should be checked first (more specific)
     let minio = std::env::var("MINIO_ENDPOINT");
     assert!(minio.is_ok());
-    
+
     // Cleanup
     std::env::remove_var("MINIO_ENDPOINT");
     std::env::remove_var("S3_ENDPOINT");
@@ -186,7 +186,7 @@ fn test_config_validation() {
     std::env::set_var("S3_ENDPOINT", "https://valid.endpoint.com");
     let valid = std::env::var("S3_ENDPOINT").unwrap();
     assert!(valid.starts_with("http"));
-    
+
     std::env::remove_var("S3_ENDPOINT");
 }
 
@@ -246,7 +246,7 @@ fn test_provider_serialization() {
 #[test]
 fn test_many_properties() {
     let mut properties = HashMap::new();
-    
+
     for i in 0..100 {
         properties.insert(format!("key_{}", i), format!("value_{}", i));
     }
@@ -265,9 +265,8 @@ fn test_many_properties() {
 
 #[test]
 fn test_long_prefix_paths() {
-    let long_prefix = format!("pool/{}/{}/{}/{}/dataset",
-        "very", "long", "nested", "path");
-    
+    let long_prefix = format!("pool/{}/{}/{}/{}/dataset", "very", "long", "nested", "path");
+
     let dataset = ObjectDataset {
         name: "nested-dataset".to_string(),
         pool: "pool".to_string(),

@@ -41,19 +41,19 @@ impl BearDogClient {
     /// Returns error if socket path is invalid
     pub fn new(socket_path: impl AsRef<Path>) -> Result<Self> {
         let socket_path = socket_path.as_ref().to_path_buf();
-        
+
         if socket_path.as_os_str().is_empty() {
             return Err(NestGateError::api_error(
                 "BearDog socket path cannot be empty",
             ));
         }
-        
+
         Ok(Self {
             socket_path,
             connected: false,
         })
     }
-    
+
     /// Discover BearDog via runtime socket scanning
     ///
     /// # Errors
@@ -62,47 +62,50 @@ impl BearDogClient {
     pub async fn discover(family_id: &str) -> Result<Self> {
         // Try environment variable first
         if let Ok(socket_path) = std::env::var("NESTGATE_SECURITY_PROVIDER") {
-            info!("Found BearDog via NESTGATE_SECURITY_PROVIDER: {}", socket_path);
+            info!(
+                "Found BearDog via NESTGATE_SECURITY_PROVIDER: {}",
+                socket_path
+            );
             return Self::new(socket_path);
         }
-        
+
         // Scan for BearDog sockets
         let patterns = vec![
             format!("/tmp/beardog-{}-*.sock", family_id),
             format!("/tmp/beardog-{}.sock", family_id),
             "/tmp/beardog-default-default.sock".to_string(),
         ];
-        
+
         for pattern in patterns {
             if let Ok(socket) = Self::try_socket(&pattern).await {
                 info!("Discovered BearDog at: {}", pattern);
                 return Self::new(socket);
             }
         }
-        
+
         warn!("BearDog not found - security features disabled");
         Err(NestGateError::network_error("BearDog not found"))
     }
-    
+
     async fn try_socket(pattern: &str) -> Result<PathBuf> {
         // For patterns with *, we need to glob
         if pattern.contains('*') {
             // TODO: Implement glob scanning
             return Err(NestGateError::network_error("Glob not yet implemented"));
         }
-        
+
         let path = PathBuf::from(pattern);
         if path.exists() {
             // Try to connect
-            UnixStream::connect(&path).await.map_err(|e| {
-                NestGateError::network_error(&format!("Failed to connect: {}", e))
-            })?;
+            UnixStream::connect(&path)
+                .await
+                .map_err(|e| NestGateError::network_error(&format!("Failed to connect: {}", e)))?;
             Ok(path)
         } else {
             Err(NestGateError::network_error("Socket does not exist"))
         }
     }
-    
+
     /// Connect to BearDog
     ///
     /// # Errors
@@ -115,20 +118,17 @@ impl BearDogClient {
                 self.socket_path.display()
             )));
         }
-        
+
         // Test connection
         let _stream = UnixStream::connect(&self.socket_path).await.map_err(|e| {
-            NestGateError::network_error(&format!(
-                "Failed to connect to BearDog: {}",
-                e
-            ))
+            NestGateError::network_error(&format!("Failed to connect to BearDog: {}", e))
         })?;
-        
+
         self.connected = true;
         info!("✅ Connected to BearDog: {}", self.socket_path.display());
         Ok(())
     }
-    
+
     /// Encrypt data using BearDog
     ///
     /// # Errors
@@ -138,16 +138,16 @@ impl BearDogClient {
         if !self.connected {
             return Err(NestGateError::security_error("Not connected to BearDog"));
         }
-        
+
         let request = BearDogRequest {
             method: "encrypt".to_string(),
             data: plaintext.to_vec(),
         };
-        
+
         let response = self.send_request(&request).await?;
         Ok(response.data)
     }
-    
+
     /// Decrypt data using BearDog
     ///
     /// # Errors
@@ -157,16 +157,16 @@ impl BearDogClient {
         if !self.connected {
             return Err(NestGateError::security_error("Not connected to BearDog"));
         }
-        
+
         let request = BearDogRequest {
             method: "decrypt".to_string(),
             data: ciphertext.to_vec(),
         };
-        
+
         let response = self.send_request(&request).await?;
         Ok(response.data)
     }
-    
+
     /// Generate authentication token
     ///
     /// # Errors
@@ -176,18 +176,17 @@ impl BearDogClient {
         if !self.connected {
             return Err(NestGateError::security_error("Not connected to BearDog"));
         }
-        
+
         let request = BearDogRequest {
             method: "generate_token".to_string(),
             data: identity.as_bytes().to_vec(),
         };
-        
+
         let response = self.send_request(&request).await?;
-        String::from_utf8(response.data).map_err(|e| {
-            NestGateError::security_error(&format!("Invalid token: {}", e))
-        })
+        String::from_utf8(response.data)
+            .map_err(|e| NestGateError::security_error(&format!("Invalid token: {}", e)))
     }
-    
+
     /// Validate authentication token
     ///
     /// # Errors
@@ -197,57 +196,60 @@ impl BearDogClient {
         if !self.connected {
             return Err(NestGateError::security_error("Not connected to BearDog"));
         }
-        
+
         let request = BearDogRequest {
             method: "validate_token".to_string(),
             data: token.as_bytes().to_vec(),
         };
-        
+
         let response = self.send_request(&request).await?;
         Ok(!response.data.is_empty() && response.data[0] == 1)
     }
-    
+
     async fn send_request(&self, request: &BearDogRequest) -> Result<BearDogResponse> {
-        let mut stream = UnixStream::connect(&self.socket_path).await.map_err(|e| {
-            NestGateError::network_error(&format!("Failed to connect: {}", e))
-        })?;
-        
+        let mut stream = UnixStream::connect(&self.socket_path)
+            .await
+            .map_err(|e| NestGateError::network_error(&format!("Failed to connect: {}", e)))?;
+
         // Serialize and send request
         let request_json = serde_json::to_vec(request).map_err(|e| {
             NestGateError::api_error(&format!("Failed to serialize request: {}", e))
         })?;
-        
-        stream.write_all(&request_json).await.map_err(|e| {
-            NestGateError::network_error(&format!("Failed to send request: {}", e))
-        })?;
-        
+
+        stream
+            .write_all(&request_json)
+            .await
+            .map_err(|e| NestGateError::network_error(&format!("Failed to send request: {}", e)))?;
+
         // Read response
         let mut buffer = vec![0u8; 65536];
         let n = stream.read(&mut buffer).await.map_err(|e| {
             NestGateError::network_error(&format!("Failed to read response: {}", e))
         })?;
-        
+
         // Deserialize response
         let response: BearDogResponse = serde_json::from_slice(&buffer[..n]).map_err(|e| {
             NestGateError::api_error(&format!("Failed to deserialize response: {}", e))
         })?;
-        
+
         if !response.success {
             return Err(NestGateError::security_error(&format!(
                 "BearDog error: {}",
-                response.error.unwrap_or_else(|| "Unknown error".to_string())
+                response
+                    .error
+                    .unwrap_or_else(|| "Unknown error".to_string())
             )));
         }
-        
+
         Ok(response)
     }
-    
+
     /// Check if connected to BearDog
     #[must_use]
     pub fn is_connected(&self) -> bool {
         self.connected
     }
-    
+
     /// Get socket path
     #[must_use]
     pub fn socket_path(&self) -> &Path {

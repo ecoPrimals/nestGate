@@ -52,12 +52,11 @@ pub mod migration;
 pub mod runtime_discovery;
 
 // Re-export key types for convenience
-pub use runtime_discovery::{PrimalConnection, RuntimeDiscovery};
 pub use capability_helpers::{
-    discover_ai, discover_capability, discover_compute, discover_ecosystem,
-    discover_orchestration, discover_security, is_capability_available,
-    DiscoveredService, DiscoverySource,
+    discover_ai, discover_capability, discover_compute, discover_ecosystem, discover_orchestration,
+    discover_security, is_capability_available, DiscoveredService, DiscoverySource,
 };
+pub use runtime_discovery::{PrimalConnection, RuntimeDiscovery};
 
 // HTTP removed - use Songbird via capability discovery for external HTTP
 // use crate::http_client_stub as reqwest;
@@ -282,14 +281,18 @@ impl PrimalDiscovery {
         let discovered = self.backend.discover(capability).await?;
 
         // Cache for future use (lock-free)
-        self.discovered.insert(capability.to_string(), discovered.clone());
+        self.discovered
+            .insert(capability.to_string(), discovered.clone());
 
         Ok(discovered)
     }
 
     /// Get all discovered primals (lock-free iteration)
     pub async fn list_discovered(&self) -> Vec<PrimalInfo> {
-        self.discovered.iter().map(|entry| entry.value().clone()).collect()
+        self.discovered
+            .iter()
+            .map(|entry| entry.value().clone())
+            .collect()
     }
 
     /// Clear stale discoveries (lock-free)
@@ -508,10 +511,9 @@ mod tests {
             metadata: HashMap::new(),
         };
 
+        // DashMap doesn't need write lock - it's lock-free
         discovery
             .discovered
-            .write()
-            .await
             .insert("test".into(), test_info.clone());
 
         // Should retrieve from cache

@@ -67,10 +67,10 @@ pub trait DomainConfigValidation {
 pub struct ValidationError {
     /// Field that failed validation
     pub field: String,
-    
+
     /// Error message
     pub message: String,
-    
+
     /// Suggested fix
     pub suggestion: Option<String>,
 }
@@ -112,7 +112,7 @@ mod tests {
     fn test_validation_error() {
         let error = ValidationError::new("port", "Invalid port number")
             .with_suggestion("Use port between 1024-65535");
-        
+
         assert_eq!(error.field, "port");
         assert_eq!(error.message, "Invalid port number");
         assert!(error.suggestion.is_some());

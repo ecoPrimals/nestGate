@@ -33,14 +33,14 @@ where
     /// Returns error if configuration is invalid
     pub fn new(config: TransportConfig, handler: H) -> Result<Self> {
         config.validate()?;
-        
+
         Ok(Self {
             config,
             handler: Arc::new(handler),
             shutdown: Arc::new(Notify::new()),
         })
     }
-    
+
     /// Start the server
     ///
     /// # Errors
@@ -50,48 +50,50 @@ where
         info!("🚀 Starting NestGate Transport Server");
         info!("   Family ID: {}", self.config.family_id);
         info!("   Socket: {}", self.config.socket_path.display());
-        
+
         if let Some(port) = self.config.http_port {
             warn!("⚠️  HTTP fallback enabled on port {}", port);
             warn!("   This is for debugging only - production should use Unix sockets");
         }
-        
+
         // Start Unix socket listener
         let unix_handle = self.start_unix_socket().await?;
-        
+
         // Start HTTP fallback if configured
         let http_handle = if self.config.http_port.is_some() {
             Some(self.start_http_fallback().await?)
         } else {
             None
         };
-        
+
         // Wait for shutdown signal
         self.shutdown.notified().await;
-        
+
         info!("📡 Shutting down gracefully...");
-        
+
         // Wait for tasks to complete
         let _ = tokio::join!(unix_handle);
         if let Some(handle) = http_handle {
             let _ = handle.await;
         }
-        
+
         info!("✅ NestGate Transport Server stopped");
         Ok(())
     }
-    
+
     /// Start Unix socket listener
     async fn start_unix_socket(&self) -> Result<tokio::task::JoinHandle<()>> {
         let mut listener = UnixSocketListener::new(&self.config.socket_path)?;
         listener.bind()?;
-        
+
         let handler = Arc::clone(&self.handler);
         let shutdown = Arc::clone(&self.shutdown);
-        
+
         let handle = tokio::spawn(async move {
-            let jsonrpc = JsonRpcHandler { handler: Arc::clone(&handler) };
-            
+            let jsonrpc = JsonRpcHandler {
+                handler: Arc::clone(&handler),
+            };
+
             loop {
                 tokio::select! {
                     _ = shutdown.notified() => {
@@ -116,35 +118,36 @@ where
                 }
             }
         });
-        
+
         Ok(handle)
     }
-    
+
     /// Start HTTP fallback server
     async fn start_http_fallback(&self) -> Result<tokio::task::JoinHandle<()>> {
-        let port = self.config.http_port.ok_or_else(|| {
-            NestGateError::api_error("HTTP port not configured")
-        })?;
-        
+        let port = self
+            .config
+            .http_port
+            .ok_or_else(|| NestGateError::api_error("HTTP port not configured"))?;
+
         let shutdown = Arc::clone(&self.shutdown);
-        
+
         let handle = tokio::spawn(async move {
             // TODO: Implement HTTP fallback in Phase 4
             warn!("HTTP fallback not yet implemented - use Unix sockets");
             shutdown.notified().await;
         });
-        
+
         info!("📡 HTTP fallback placeholder started on port {}", port);
-        
+
         Ok(handle)
     }
-    
+
     /// Signal graceful shutdown
     pub fn shutdown(&self) {
         info!("Shutdown signal received");
         self.shutdown.notify_waiters();
     }
-    
+
     /// Get server configuration
     #[must_use]
     pub fn config(&self) -> &TransportConfig {
@@ -165,9 +168,9 @@ impl<H> Clone for JsonRpcHandler<H> {
 mod tests {
     use super::*;
     use serde_json::Value;
-    
+
     struct TestHandler;
-    
+
     #[async_trait::async_trait]
     impl RpcMethodHandler for TestHandler {
         async fn handle_method(&self, method: &str, _params: Value) -> Result<Value> {

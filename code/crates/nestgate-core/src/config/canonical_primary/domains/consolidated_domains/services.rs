@@ -78,7 +78,7 @@ mod tests {
         let _installer = InstallerDomainConfig::default();
         let _performance = PerformanceDomainConfig::default();
         let _binary = BinaryDomainConfig::default();
-        
+
         // All should compile and default correctly
     }
 }

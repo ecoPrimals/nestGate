@@ -14,8 +14,8 @@ use super::types::{
     ConnectionDetails, ConnectionInfo, NetworkConfig, NetworkStatistics, ServiceDetails,
     ServiceInfo, ServiceStatus,
 };
-use nestgate_core::NestGateError;
 use dashmap::DashMap;
+use nestgate_core::NestGateError;
 
 // Type aliases for complex types to improve readability and reduce warnings
 // ✅ LOCK-FREE: Migrated to DashMap for concurrent network service management
@@ -44,9 +44,9 @@ impl RealNetworkService {
     pub fn new(config: NetworkConfig) -> Self {
         Self {
             config,
-            connections: Arc::new(DashMap::new()),  // ✅ Lock-free
-            allocated_ports: Arc::new(DashMap::new()),  // ✅ Lock-free
-            services: Arc::new(DashMap::new()),  // ✅ Lock-free
+            connections: Arc::new(DashMap::new()), // ✅ Lock-free
+            allocated_ports: Arc::new(DashMap::new()), // ✅ Lock-free
+            services: Arc::new(DashMap::new()),    // ✅ Lock-free
         }
     }
 
@@ -144,13 +144,14 @@ impl RealNetworkService {
     }
 
     /// Allocate port for service (lock-free!)
-    pub fn allocate_port_for_service(
-        &self,
-        service_name: &str,
-    ) -> nestgate_core::Result<u16> {
+    pub fn allocate_port_for_service(&self, service_name: &str) -> nestgate_core::Result<u16> {
         // ✅ Lock-free: Find and atomically allocate available port
         for port in self.config.api.port_range_start..=self.config.api.port_range_end {
-            if self.allocated_ports.insert(port, service_name.to_string()).is_none() {
+            if self
+                .allocated_ports
+                .insert(port, service_name.to_string())
+                .is_none()
+            {
                 info!("Allocated port {} for service {}", port, service_name);
                 return Ok(port);
             }
@@ -176,7 +177,7 @@ impl RealNetworkService {
     /// Register a service (lock-free!)
     pub fn register_service(&self, service: ServiceInfo) -> nestgate_core::Result<()> {
         let service_id = service.id().to_string();
-        
+
         // ✅ Lock-free insert
         self.services.insert(service_id.clone(), service);
         info!("Registered service {}", service_id);
@@ -199,7 +200,8 @@ impl RealNetworkService {
     /// Get service status (lock-free!)
     pub fn get_service_status(&self) -> nestgate_core::Result<ServiceStatus> {
         // ✅ Lock-free count of active connections
-        let _active_connections = self.connections
+        let _active_connections = self
+            .connections
             .iter()
             .filter(|entry| entry.value().is_active())
             .count() as u32;
@@ -229,18 +231,16 @@ impl RealNetworkService {
     /// Get connection details (lock-free!)
     pub fn get_connection_details(&self, connection_id: &str) -> Option<ConnectionDetails> {
         // ✅ Lock-free get
-        self.connections
-            .get(connection_id)
-            .map(|entry| {
-                let conn = entry.value();
-                ConnectionDetails {
-                    id: conn.id().to_string(),
-                    endpoint: conn.address(),
-                    age: conn.age(),
-                    is_active: conn.is_active(),
-                    status: "active".to_string(),
-                }
-            })
+        self.connections.get(connection_id).map(|entry| {
+            let conn = entry.value();
+            ConnectionDetails {
+                id: conn.id().to_string(),
+                endpoint: conn.address(),
+                age: conn.age(),
+                is_active: conn.is_active(),
+                status: "active".to_string(),
+            }
+        })
     }
 
     /// Get service details (lock-free!)

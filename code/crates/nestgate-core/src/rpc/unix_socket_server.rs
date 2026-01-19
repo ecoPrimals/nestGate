@@ -78,9 +78,9 @@ struct JsonRpcError {
 struct StorageState {
     /// In-memory storage (family_id -> key -> value)
     /// **LOCK-FREE**: Uses DashMap for concurrent storage access
-    storage: Arc<DashMap<String, DashMap<String, Value>>>,  // ✅ Nested DashMaps!
+    storage: Arc<DashMap<String, DashMap<String, Value>>>, // ✅ Nested DashMaps!
     /// Blob storage (family_id -> key -> bytes)
-    blobs: Arc<DashMap<String, DashMap<String, Vec<u8>>>>,  // ✅ Nested DashMaps!
+    blobs: Arc<DashMap<String, DashMap<String, Vec<u8>>>>, // ✅ Nested DashMaps!
     /// Template storage for collaborative intelligence
     templates: crate::rpc::template_storage::TemplateStorage,
     /// Audit storage for execution tracking
@@ -341,7 +341,8 @@ async fn storage_store(params: &Option<Value>, state: &StorageState) -> Result<V
     })?;
 
     // ✅ Lock-free: Get or create family storage, then insert
-    let family_storage = state.storage
+    let family_storage = state
+        .storage
         .entry(family_id.to_string())
         .or_insert_with(DashMap::new);
     family_storage.insert(key.to_string(), data.clone());
@@ -368,7 +369,8 @@ async fn storage_retrieve(params: &Option<Value>, state: &StorageState) -> Resul
     })?;
 
     // ✅ Lock-free: Nested get from DashMap
-    let data = state.storage
+    let data = state
+        .storage
         .get(family_id)
         .and_then(|family_storage| family_storage.get(key).map(|v| v.clone()))
         .ok_or_else(|| NestGateError::not_found(format!("Key '{}' not found", key)))?;
@@ -394,7 +396,8 @@ async fn storage_delete(params: &Option<Value>, state: &StorageState) -> Result<
     })?;
 
     // ✅ Lock-free: Remove from nested DashMap
-    let deleted = state.storage
+    let deleted = state
+        .storage
         .get(family_id)
         .and_then(|family_storage| family_storage.remove(key))
         .is_some();
@@ -425,7 +428,8 @@ async fn storage_list(params: &Option<Value>, state: &StorageState) -> Result<Va
     let prefix = params["prefix"].as_str();
 
     // ✅ Lock-free: Iterate keys from nested DashMap
-    let keys: Vec<String> = state.storage
+    let keys: Vec<String> = state
+        .storage
         .get(family_id)
         .map(|family_storage| {
             family_storage
@@ -499,7 +503,8 @@ async fn storage_store_blob(params: &Option<Value>, state: &StorageState) -> Res
         })?;
 
     // ✅ Lock-free: Store blob in nested DashMap
-    let family_blobs = state.blobs
+    let family_blobs = state
+        .blobs
         .entry(family_id.to_string())
         .or_insert_with(DashMap::new);
     family_blobs.insert(key.to_string(), blob_data.clone());
@@ -532,7 +537,8 @@ async fn storage_retrieve_blob(params: &Option<Value>, state: &StorageState) -> 
     })?;
 
     // ✅ Lock-free: Get blob from nested DashMap
-    let blob_data = state.blobs
+    let blob_data = state
+        .blobs
         .get(family_id)
         .and_then(|family_blobs| family_blobs.get(key).map(|v| v.clone()))
         .ok_or_else(|| NestGateError::not_found(format!("Blob '{}' not found", key)))?;

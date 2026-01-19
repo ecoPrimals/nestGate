@@ -30,7 +30,7 @@ impl NestGateRpcHandler {
     pub fn new() -> Self {
         Self { storage: None }
     }
-    
+
     /// Create handler with storage backend
     #[must_use]
     pub fn with_storage(storage: Arc<dyn StorageBackend>) -> Self {
@@ -50,25 +50,25 @@ impl Default for NestGateRpcHandler {
 impl RpcMethodHandler for NestGateRpcHandler {
     async fn handle_method(&self, method: &str, params: Value) -> Result<Value> {
         debug!("Handling RPC method: {}", method);
-        
+
         match method {
             // Storage methods
             "storage.store" => self.handle_store(params).await,
             "storage.retrieve" => self.handle_retrieve(params).await,
             "storage.delete" => self.handle_delete(params).await,
             "storage.list" => self.handle_list(params).await,
-            
+
             // Health methods
             "health.ping" => self.handle_ping(params).await,
             "health.status" => self.handle_status(params).await,
-            
+
             // Identity methods
             "identity.get" => self.handle_identity(params).await,
             "identity.capabilities" => self.handle_capabilities(params).await,
-            
+
             // System methods
             "system.info" => self.handle_system_info(params).await,
-            
+
             // Unknown method
             _ => Err(NestGateError::api_error(&format!(
                 "Unknown method: {}",
@@ -83,7 +83,7 @@ impl NestGateRpcHandler {
     async fn handle_store(&self, params: Value) -> Result<Value> {
         let request: StoreRequest = serde_json::from_value(params)
             .map_err(|e| NestGateError::api_error(&format!("Invalid params: {}", e)))?;
-        
+
         if let Some(storage) = &self.storage {
             storage.store(&request.key, &request.value).await?;
             Ok(serde_json::json!({"success": true, "key": request.key}))
@@ -91,12 +91,12 @@ impl NestGateRpcHandler {
             Err(NestGateError::api_error("Storage backend not configured"))
         }
     }
-    
+
     /// Handle storage.retrieve request
     async fn handle_retrieve(&self, params: Value) -> Result<Value> {
         let request: RetrieveRequest = serde_json::from_value(params)
             .map_err(|e| NestGateError::api_error(&format!("Invalid params: {}", e)))?;
-        
+
         if let Some(storage) = &self.storage {
             let value = storage.retrieve(&request.key).await?;
             Ok(serde_json::json!({"key": request.key, "value": value}))
@@ -104,12 +104,12 @@ impl NestGateRpcHandler {
             Err(NestGateError::api_error("Storage backend not configured"))
         }
     }
-    
+
     /// Handle storage.delete request
     async fn handle_delete(&self, params: Value) -> Result<Value> {
         let request: DeleteRequest = serde_json::from_value(params)
             .map_err(|e| NestGateError::api_error(&format!("Invalid params: {}", e)))?;
-        
+
         if let Some(storage) = &self.storage {
             storage.delete(&request.key).await?;
             Ok(serde_json::json!({"success": true, "key": request.key}))
@@ -117,12 +117,12 @@ impl NestGateRpcHandler {
             Err(NestGateError::api_error("Storage backend not configured"))
         }
     }
-    
+
     /// Handle storage.list request
     async fn handle_list(&self, params: Value) -> Result<Value> {
         let request: ListRequest = serde_json::from_value(params)
             .map_err(|e| NestGateError::api_error(&format!("Invalid params: {}", e)))?;
-        
+
         if let Some(storage) = &self.storage {
             let keys = storage.list(&request.prefix).await?;
             Ok(serde_json::json!({"keys": keys}))
@@ -130,12 +130,12 @@ impl NestGateRpcHandler {
             Err(NestGateError::api_error("Storage backend not configured"))
         }
     }
-    
+
     /// Handle health.ping request
     async fn handle_ping(&self, _params: Value) -> Result<Value> {
         Ok(serde_json::json!({"status": "pong", "timestamp": chrono::Utc::now().timestamp()}))
     }
-    
+
     /// Handle health.status request
     async fn handle_status(&self, _params: Value) -> Result<Value> {
         Ok(serde_json::json!({
@@ -146,12 +146,12 @@ impl NestGateRpcHandler {
             "timestamp": chrono::Utc::now().timestamp()
         }))
     }
-    
+
     /// Handle identity.get request
     async fn handle_identity(&self, _params: Value) -> Result<Value> {
-        let family_id = std::env::var("NESTGATE_FAMILY_ID")
-            .unwrap_or_else(|_| "default".to_string());
-        
+        let family_id =
+            std::env::var("NESTGATE_FAMILY_ID").unwrap_or_else(|_| "default".to_string());
+
         Ok(serde_json::json!({
             "primal": "nestgate",
             "family": family_id,
@@ -159,7 +159,7 @@ impl NestGateRpcHandler {
             "version": env!("CARGO_PKG_VERSION")
         }))
     }
-    
+
     /// Handle identity.capabilities request
     async fn handle_capabilities(&self, _params: Value) -> Result<Value> {
         Ok(serde_json::json!({
@@ -172,7 +172,7 @@ impl NestGateRpcHandler {
             "security": ["beardog"]
         }))
     }
-    
+
     /// Handle system.info request
     async fn handle_system_info(&self, _params: Value) -> Result<Value> {
         Ok(serde_json::json!({
@@ -229,13 +229,13 @@ struct ListRequest {
 pub trait StorageBackend: Send + Sync {
     /// Store a key-value pair
     async fn store(&self, key: &str, value: &[u8]) -> Result<()>;
-    
+
     /// Retrieve a value by key
     async fn retrieve(&self, key: &str) -> Result<Vec<u8>>;
-    
+
     /// Delete a key
     async fn delete(&self, key: &str) -> Result<()>;
-    
+
     /// List keys with optional prefix
     async fn list(&self, prefix: &Option<String>) -> Result<Vec<String>>;
 }
@@ -243,23 +243,23 @@ pub trait StorageBackend: Send + Sync {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     struct MockStorage;
-    
+
     #[async_trait::async_trait]
     impl StorageBackend for MockStorage {
         async fn store(&self, _key: &str, _value: &[u8]) -> Result<()> {
             Ok(())
         }
-        
+
         async fn retrieve(&self, key: &str) -> Result<Vec<u8>> {
             Ok(format!("mock_value_{}", key).into_bytes())
         }
-        
+
         async fn delete(&self, _key: &str) -> Result<()> {
             Ok(())
         }
-        
+
         async fn list(&self, _prefix: &Option<String>) -> Result<Vec<String>> {
             Ok(vec!["key1".to_string(), "key2".to_string()])
         }

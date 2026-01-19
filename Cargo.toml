@@ -148,7 +148,7 @@ uzers = "0.11"
 num_cpus = "1.16"
 sysinfo = "0.30"
 gethostname = "0.4"
-dirs = "5.0"
+etcetera = "0.8"
 
 # Crypto and encoding (RustCrypto - audited, pure Rust!)
 base64 = "0.21"

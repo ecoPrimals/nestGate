@@ -6,113 +6,65 @@ use std::path::{Path, PathBuf};
 /// Installer error type alias
 #[allow(dead_code)] // Reserved for future error handling
 pub type InstallerError = NestGateError;
+
+/// Download manager - STUB
+///
+/// HTTP functionality removed per BiomeOS Pure Rust Evolution and "100% HTTP-Free" goal.
+/// Downloads should go through Songbird primal per Concentrated Gap architecture.
 pub struct DownloadManager {
-    #[allow(dead_code)] // Used for future download functionality
-    client: reqwest::Client,
+    /// Placeholder for future Songbird integration
+    _phantom: std::marker::PhantomData<()>,
 }
 
 impl DownloadManager {
-    /// Create a new download manager
+    /// Create a new download manager (stub)
     #[must_use]
     pub fn new() -> Self {
         Self {
-            client: reqwest::Client::new(),
+            _phantom: std::marker::PhantomData,
         }
     }
 
-    /// Download a specific release to the target directory
+    /// Download a specific release to the target directory (STUB)
     ///
     /// # Errors
     ///
-    /// Returns an error if:
-    /// - The release version is not found
-    /// - Network request fails
-    /// - File download fails
-    /// - Target directory cannot be created
+    /// Returns an error - HTTP downloads not supported.
+    /// Downloads should go through Songbird primal per Concentrated Gap architecture.
+    ///
+    /// # Note
+    ///
+    /// HTTP functionality removed per BiomeOS Pure Rust Evolution and "100% HTTP-Free" goal.
+    /// For production use, integrate with Songbird primal for external HTTP access.
     pub async fn download_release(&self, version: &str, target_dir: &PathBuf) -> Result<PathBuf> {
-        let platform_info = crate::platform::PlatformInfo::detect();
-        let _binary_name = platform_info.get_binary_name("nestgate");
-
-        // In a real implementation, this would download from GitHub releases
-        // For now, we'll simulate by copying the current binary
-        let download_url = format!(
-            "https://github.com/nestgate/nestgate/releases/download/{}/nestgate-{}-{}.tar.gz",
-            version, platform_info.os, platform_info.arch
-        );
-
-        println!(
-            "Downloading NestGate {} for {}-{}",
-            version, platform_info.os, platform_info.arch
-        );
-        println!("URL: {download_url}");
-
-        // Create progress bar
-        let pb = indicatif::ProgressBar::new_spinner();
-        pb.set_style(
-            indicatif::ProgressStyle::default_spinner()
-                .template("{spinner:.green} [{elapsed_precise}] {msg}")
-                .unwrap_or_else(|_| indicatif::ProgressStyle::default_spinner()),
-        );
-        pb.set_message("Downloading...");
-
-        // Actual HTTP download implementation
-        let archive_path = target_dir.join(format!("nestgate-{version}.tar.gz"));
-        std::fs::create_dir_all(target_dir)?;
-
-        // Use reqwest for actual HTTP download
-        let client = reqwest::Client::new();
-        let response = client.get(&download_url).send().await.map_err(|e| {
-            NestGateError::internal_error(format!("Failed to download: {e}"), "download_release")
-        })?;
-
-        if !response.status().is_success() {
-            return Err(NestGateError::internal_error(
-                format!("Download failed with status: {}", response.status()),
-                "download_release",
-            ));
-        }
-
-        let total_size = response.content_length().unwrap_or(0);
-        let mut downloaded = 0u64;
-        let mut file = File::create(&archive_path)?;
-        let mut stream = response.bytes_stream();
-
-        use futures_util::StreamExt;
-        while let Some(chunk) = stream.next().await {
-            let chunk = chunk.map_err(|e| {
-                NestGateError::internal_error(format!("Stream error: {e}"), "download_release")
-            })?;
-            file.write_all(&chunk).map_err(|e| {
-                NestGateError::internal_error(
-                    format!("Failed to write to file: {e}"),
-                    "download_release",
-                )
-            })?;
-            downloaded += chunk.len() as u64;
-
-            if total_size > 0 {
-                let progress = (downloaded as f64 / total_size as f64 * 100.0) as u64;
-                pb.set_message(format!("Downloading... {progress}%"));
-            }
-        }
-
-        pb.finish_with_message("Download complete");
-
-        Ok(archive_path)
+        // Return error with clear guidance
+        Err(NestGateError::internal_error(
+            format!(
+                "HTTP downloads not supported. NestGate is 100% HTTP-Free per Concentrated Gap architecture. \
+                To download version {}, use Songbird primal or manual download to {}",
+                version,
+                target_dir.display()
+            ),
+            "download_release"
+        ))
     }
 
-    /// Check for the latest available release version
+    /// Check for the latest available release version (STUB)
     ///
     /// # Errors
     ///
-    /// Returns an error if:
-    /// - GitHub API request fails
-    /// - Network connection issues
-    /// - Invalid API response format
+    /// Returns an error - HTTP requests not supported.
+    ///  
+    /// # Note
+    ///
+    /// HTTP functionality removed per "100% HTTP-Free" goal.
+    /// Use Songbird primal for external HTTP/API access.
     pub async fn check_latest_version(&self) -> Result<String> {
-        // In production, this would query GitHub API
-        // Retrieve actual latest version from release API
-        Ok("0.9.2".to_string())
+        Err(NestGateError::internal_error(
+            "HTTP API requests not supported. NestGate is 100% HTTP-Free. \
+            Use Songbird primal for version checks.",
+            "check_latest_version",
+        ))
     }
 
     /// Extract downloaded archive to target directory

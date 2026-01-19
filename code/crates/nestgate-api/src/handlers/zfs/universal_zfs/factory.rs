@@ -41,16 +41,13 @@ impl ZfsServiceFactory {
                 debug!("Creating development ZFS backend - using native implementation");
                 Box::pin(async { Self::create_native_service() })
             }
-            ZfsBackend::Remote {
-                endpoint,
-                timeout,
-            } => {
+            ZfsBackend::Remote { endpoint, timeout } => {
                 // HTTP removed per Concentrated Gap Architecture
                 let _ = (endpoint, timeout);
                 error!("Remote ZFS backend removed - use native backend");
                 Box::pin(async {
                     Err(UniversalZfsError::configuration(
-                        "Remote backends removed - use native ZFS".to_string()
+                        "Remote backends removed - use native ZFS".to_string(),
                     ))
                 })
             }
@@ -191,7 +188,7 @@ impl ZfsServiceFactory {
         let _ = config;
         error!("Remote ZFS service removed - HTTP removed per Concentrated Gap Architecture");
         Err(UniversalZfsError::configuration(
-            "Remote backends removed - use native ZFS".to_string()
+            "Remote backends removed - use native ZFS".to_string(),
         ))
     }
 
@@ -212,15 +209,12 @@ impl ZfsServiceFactory {
                 let service = crate::handlers::zfs::universal_zfs::backends::native::core::NativeZfsService::new();
                 Ok(Arc::new(service))
             }
-            ZfsBackend::Remote {
-                endpoint,
-                timeout,
-            } => {
+            ZfsBackend::Remote { endpoint, timeout } => {
                 // HTTP removed per Concentrated Gap Architecture
                 let _ = (endpoint, timeout);
                 error!("Remote ZFS fallback removed - use native backend");
                 Err(UniversalZfsError::configuration(
-                    "Remote backends removed - use native ZFS".to_string()
+                    "Remote backends removed - use native ZFS".to_string(),
                 ))
             }
         }

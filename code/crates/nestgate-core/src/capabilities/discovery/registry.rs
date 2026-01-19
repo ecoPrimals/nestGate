@@ -82,7 +82,8 @@ impl CapabilityRegistry {
         }
 
         // Remove empty capability entries (DashMap: lock-free!)
-        self.capabilities.retain(|_, providers| !providers.is_empty());
+        self.capabilities
+            .retain(|_, providers| !providers.is_empty());
 
         Ok(())
     }

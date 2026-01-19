@@ -387,17 +387,58 @@ impl PortScanDiscovery {
         let api_port = env_config.network.port.get();
         let metrics_port = env_config.monitoring.metrics_port.get();
 
-        // Use default ports for health (8081) and websocket (9001) until env config expands
-        let health_port = 8081;
-        let websocket_port = 9001;
+        // ✅ Environment-driven ports with smart defaults (not hardcoded!)
+        // Override with env vars: NESTGATE_HEALTH_PORT, NESTGATE_WEBSOCKET_PORT, etc.
+        let health_port = std::env::var("NESTGATE_HEALTH_PORT")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(8081);
+
+        let websocket_port = std::env::var("NESTGATE_WEBSOCKET_PORT")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(9001);
+
+        let https_port = std::env::var("NESTGATE_HTTPS_PORT")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(8443);
+
+        let security_port = std::env::var("NESTGATE_SECURITY_PORT")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(9000);
+
+        let security_https_port = std::env::var("NESTGATE_SECURITY_HTTPS_PORT")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(9443);
+
+        let ai_port = std::env::var("NESTGATE_AI_PORT")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(7000);
+
+        let ai_https_port = std::env::var("NESTGATE_AI_HTTPS_PORT")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(7443);
+
+        let ai_alt_port = std::env::var("NESTGATE_AI_ALT_PORT")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(8000);
 
         let mut capability_ports = HashMap::new();
         capability_ports.insert(
             "orchestration".to_string(),
-            vec![api_port, 8443, metrics_port],
+            vec![api_port, https_port, metrics_port],
         );
-        capability_ports.insert("security".to_string(), vec![9000, 9443]);
-        capability_ports.insert("ai".to_string(), vec![7000, 7443, 8000]);
+        capability_ports.insert(
+            "security".to_string(),
+            vec![security_port, security_https_port],
+        );
+        capability_ports.insert("ai".to_string(), vec![ai_port, ai_https_port, ai_alt_port]);
         capability_ports.insert("storage".to_string(), vec![health_port, websocket_port]);
 
         Self {

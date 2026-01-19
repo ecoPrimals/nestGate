@@ -104,13 +104,13 @@ pub mod http_client_stub;
 
 /// AI-first refactored components
 pub mod ai_first_refactored;
-/// Cryptographic operations (Pure Rust - RustCrypto)
-pub mod crypto;
 /// Management integration
 /// Caching system
 pub mod cache;
 /// Certificate management
 pub mod cert;
+/// Cryptographic operations (Pure Rust - RustCrypto)
+pub mod crypto;
 /// Diagnostic tools
 pub mod diagnostics;
 /// Events system for event bus, routing, and pubsub

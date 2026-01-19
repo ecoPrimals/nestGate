@@ -2,9 +2,9 @@
 //!
 //! O(1) connection management for capability-based architecture.
 
-use crate::http_client_stub as reqwest;
 use super::capability_scanner::CapabilityInfo;
 use crate::error::NestGateError;
+use crate::http_client_stub as reqwest;
 use bytes::Bytes;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
@@ -229,16 +229,19 @@ impl Connection for HttpConnection {
 
     /// Health Check
     async fn health_check(&self) -> Result<HealthStatus, NestGateError> {
-        debug!("Health checking {} - using tarpc health API", self.capability_info.endpoint);
+        debug!(
+            "Health checking {} - using tarpc health API",
+            self.capability_info.endpoint
+        );
 
         // BiomeOS Concentrated Gap: Use tarpc for health checks
         // HTTP health checks removed - primals use Unix socket health APIs
         // For external services: Use Songbird's health proxy
-        
+
         // Return degraded status (HTTP deprecated)
         // Real implementation should use tarpc health RPC
         Ok(HealthStatus::Degraded)
-        
+
         // REMOVED: HTTP health check implementation
         /* Previous HTTP-based health check removed
         match self.client.get(&health_url).send().await { ... }

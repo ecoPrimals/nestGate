@@ -432,8 +432,10 @@ impl ProductionLoadBalancer {
 
         // BiomeOS Concentrated Gap: HTTP load balancer deprecated
         // Use tarpc for primal-to-primal service requests
-        Err(crate::NestGateError::api_error("HTTP load balancer deprecated. Use tarpc for primal communication"))
-        
+        Err(crate::NestGateError::api_error(
+            "HTTP load balancer deprecated. Use tarpc for primal communication",
+        ))
+
         // REMOVED: HTTP load balancer implementation (~85 lines)
         // Previous HTTP-based load balancer removed (BiomeOS Concentrated Gap)
         // Migration: Use tarpc for primal-to-primal, Songbird RPC for external HTTP

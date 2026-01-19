@@ -4,8 +4,8 @@
 //! and reduce connection overhead. Works with HTTP clients, database connections,
 //! or any resource that benefits from pooling.
 
-use crate::http_client_stub as reqwest;
 use crate::error::{NestGateError, Result};
+use crate::http_client_stub as reqwest;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, Instant};

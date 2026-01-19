@@ -376,7 +376,8 @@ mod tests {
         // Should have different node IDs
         assert_eq!(config1.node_id, "instance1");
         assert_eq!(config2.node_id, "instance2");
-        assert_eq!(config1.family_id, config2.family_id);
+        assert_eq!(config1.family_id, "multi");
+        assert_eq!(config2.family_id, "multi");
 
         std::env::remove_var("NESTGATE_FAMILY_ID");
         std::env::remove_var("NESTGATE_NODE_ID");

@@ -262,7 +262,10 @@ impl RuntimeDiscovery {
     /// Forces fresh discovery on next request (lock-free remove).
     pub async fn invalidate_cache(&self, capability_type: &str) {
         self.cache.remove(capability_type);
-        debug!("Invalidated cache for capability: {} (lock-free)", capability_type);
+        debug!(
+            "Invalidated cache for capability: {} (lock-free)",
+            capability_type
+        );
     }
 
     /// Clear entire cache (lock-free clear)
@@ -284,7 +287,10 @@ impl RuntimeDiscovery {
         if let Some(cached) = self.cache.get(capability_type) {
             let age = cached.discovered_at.elapsed().unwrap_or(Duration::MAX);
             if age < self.cache_ttl {
-                debug!("Using cached discovery for: {} (lock-free)", capability_type);
+                debug!(
+                    "Using cached discovery for: {} (lock-free)",
+                    capability_type
+                );
                 return Ok(cached.capabilities.clone());
             }
         }

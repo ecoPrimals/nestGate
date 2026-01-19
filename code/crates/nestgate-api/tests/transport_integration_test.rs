@@ -2,9 +2,7 @@
 //!
 //! Integration tests for TRUE PRIMAL transport layer.
 
-use nestgate_api::transport::{
-    NestGateRpcHandler, TransportConfig, TransportServer,
-};
+use nestgate_api::transport::{NestGateRpcHandler, TransportConfig, TransportServer};
 use serde_json::Value;
 use std::time::Duration;
 use tempfile::TempDir;
@@ -16,11 +14,14 @@ use tokio::time::timeout;
 async fn test_transport_config_from_env() {
     std::env::set_var("NESTGATE_FAMILY_ID", "test_family");
     std::env::set_var("NESTGATE_SOCKET_PATH", "/tmp/nestgate-test.sock");
-    
+
     let config = TransportConfig::from_env().unwrap();
     assert_eq!(config.family_id, "test_family");
-    assert_eq!(config.socket_path.to_str().unwrap(), "/tmp/nestgate-test.sock");
-    
+    assert_eq!(
+        config.socket_path.to_str().unwrap(),
+        "/tmp/nestgate-test.sock"
+    );
+
     std::env::remove_var("NESTGATE_FAMILY_ID");
     std::env::remove_var("NESTGATE_SOCKET_PATH");
 }
@@ -35,13 +36,12 @@ async fn test_transport_config_validation() {
 async fn test_server_creation() {
     let temp_dir = TempDir::new().unwrap();
     let socket_path = temp_dir.path().join("test.sock");
-    
-    let config = TransportConfig::new("test")
-        .with_socket_path(&socket_path);
-    
+
+    let config = TransportConfig::new("test").with_socket_path(&socket_path);
+
     let handler = NestGateRpcHandler::new();
     let server = TransportServer::new(config, handler);
-    
+
     assert!(server.is_ok());
 }
 
@@ -49,40 +49,40 @@ async fn test_server_creation() {
 async fn test_jsonrpc_ping() {
     let temp_dir = TempDir::new().unwrap();
     let socket_path = temp_dir.path().join("test-ping.sock");
-    
-    let config = TransportConfig::new("test")
-        .with_socket_path(&socket_path);
-    
+
+    let config = TransportConfig::new("test").with_socket_path(&socket_path);
+
     let handler = NestGateRpcHandler::new();
     let server = TransportServer::new(config, handler).unwrap();
-    
+
     // Start server in background
     let server_clone = server.clone();
     tokio::spawn(async move {
         let _ = server_clone.start().await;
     });
-    
+
     // Wait for server to be ready
     tokio::time::sleep(Duration::from_millis(100)).await;
-    
+
     // Connect and send ping request
     let result = timeout(Duration::from_secs(2), async {
         let mut stream = UnixStream::connect(&socket_path).await?;
-        
+
         let request = r#"{"jsonrpc":"2.0","method":"health.ping","params":{},"id":1}"#;
         stream.write_all(request.as_bytes()).await?;
-        
+
         let mut response = String::new();
         stream.read_to_string(&mut response).await?;
-        
+
         let json: Value = serde_json::from_str(&response)?;
-        
+
         Ok::<Value, Box<dyn std::error::Error>>(json)
-    }).await;
-    
+    })
+    .await;
+
     // Shutdown server
     server.shutdown();
-    
+
     // Check response (may timeout in test environment, which is OK)
     match result {
         Ok(Ok(json)) => {
@@ -111,7 +111,7 @@ fn test_config_builder_pattern() {
         .with_security_provider("/tmp/beardog.sock")
         .with_http_fallback(8080)
         .with_verbose();
-    
+
     assert_eq!(config.family_id, "builder_test");
     assert_eq!(config.socket_path.to_str().unwrap(), "/tmp/test.sock");
     assert_eq!(config.http_port, Some(8080));

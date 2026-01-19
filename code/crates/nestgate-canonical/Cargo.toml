@@ -25,7 +25,7 @@ serde_json = "1.0"
 serde_yaml = "0.9"
 
 # Environment integration
-dirs = "5.0"
+etcetera = "0.8"
 
 # Performance optimization dependencies
 num_cpus = "1.16"

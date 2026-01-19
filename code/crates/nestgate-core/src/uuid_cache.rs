@@ -57,7 +57,7 @@ impl UuidCache {
 
         // Generate new UUID and insert atomically
         let new_uuid = Arc::new(Uuid::new_v4());
-        
+
         // entry API provides lock-free double-check pattern
         match self.cache.entry(key.to_string()) {
             dashmap::mapref::entry::Entry::Occupied(entry) => {

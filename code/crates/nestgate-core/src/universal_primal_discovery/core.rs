@@ -159,7 +159,8 @@ impl UniversalPrimalDiscovery {
 
     /// Cache Discovered Endpoint (lock-free)
     pub async fn cache_discovered_endpoint(&mut self, service_name: &str, endpoint: &str) {
-        self.discovered_endpoints.insert(service_name.to_string(), endpoint.to_string());
+        self.discovered_endpoints
+            .insert(service_name.to_string(), endpoint.to_string());
 
         // Also cache in new system
         self.cache.store_endpoint_discovery(service_name, endpoint);
@@ -167,7 +168,8 @@ impl UniversalPrimalDiscovery {
 
     /// Cache Discovered Timeout (lock-free)
     pub async fn cache_discovered_timeout(&mut self, service_name: &str, timeout: Duration) {
-        self.discovered_timeouts.insert(service_name.to_string(), timeout);
+        self.discovered_timeouts
+            .insert(service_name.to_string(), timeout);
 
         // Also cache in new system
         self.cache.store_timeout_discovery(service_name, timeout);

@@ -59,7 +59,7 @@ type NetworkApiState = Arc<RwLock<HashMap<String, ServiceInstance>>>;
 type ServiceRegistry = Arc<RwLock<HashMap<String, ServiceInstance>>>;
 
 /// Orchestration orchestrator client for network operations
-/// 
+///
 /// NOTE: HTTP removed per Concentrated Gap Architecture
 /// All orchestration now via Songbird gateway using Unix sockets
 #[allow(dead_code)]
@@ -73,7 +73,7 @@ pub struct OrchestrationCapability {
 #[allow(dead_code)]
 impl OrchestrationCapability {
     /// Create a new Orchestration client
-    /// 
+    ///
     /// NOTE: HTTP removed - use Unix sockets via Songbird
     #[must_use]
     pub fn new(base_url: String) -> Self {
@@ -81,7 +81,7 @@ impl OrchestrationCapability {
     }
 
     /// Register a service with Orchestration
-    /// 
+    ///
     /// NOTE: HTTP removed - use Unix sockets via Songbird
     #[allow(dead_code)]
     pub async fn register_service(&self, service: &ServiceInstance) -> NestGateResult<()> {
@@ -91,7 +91,7 @@ impl OrchestrationCapability {
     }
 
     /// Request port allocation from Orchestration
-    /// 
+    ///
     /// NOTE: HTTP removed - use Unix sockets via Songbird
     #[allow(dead_code)]
     pub async fn allocate_port(&self, service_name: &str, port_type: &str) -> NestGateResult<u16> {
