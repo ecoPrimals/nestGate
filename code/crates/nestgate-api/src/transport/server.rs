@@ -1,6 +1,48 @@
 //! **TRANSPORT SERVER**
 //!
-//! Main server implementation for Unix socket + optional HTTP transport.
+//! **⚠️ DEPRECATED**: This module is deprecated as of v2.3.0
+//!
+//! ## Migration to Universal IPC Architecture
+//!
+//! **Connection logic has moved to Songbird** (Universal IPC Layer)
+//!
+//! NestGate now focuses on **metadata storage** and **capability-based discovery**.
+//! All connection handling (Unix sockets, named pipes, etc.) is managed by Songbird.
+//!
+//! ### Migration Path
+//!
+//! **Before (NestGate Transport Server)**:
+//! ```rust,ignore
+//! use nestgate_api::transport::TransportServer;
+//! 
+//! let server = TransportServer::new(config, handler)?;
+//! server.start().await?;
+//! ```
+//!
+//! **After (Songbird Universal IPC)**:
+//! ```rust,ignore
+//! use songbird::ipc;
+//! use nestgate::service_metadata;
+//!
+//! // Register with Songbird
+//! let endpoint = ipc::register("nestgate-api").await?;
+//! 
+//! // Store metadata in NestGate for discovery
+//! service_metadata::store(ServiceMetadata {
+//!     name: "nestgate-api",
+//!     capabilities: vec!["storage", "zfs"],
+//!     virtual_endpoint: endpoint.path(),
+//!     // ... other metadata
+//! }).await?;
+//! 
+//! // Listen for connections via Songbird
+//! ipc::listen(endpoint).await?;
+//! ```
+//!
+//! ### References
+//!
+//! - `UNIVERSAL_IPC_ARCHITECTURE_HANDOFF_JAN_19_2026.md`
+//! - `UNIVERSAL_IPC_EVOLUTION_PLAN_JAN_19_2026.md`
 
 use super::{
     config::TransportConfig,
@@ -14,7 +56,21 @@ use tracing::{error, info, warn};
 
 /// **TRANSPORT SERVER**
 ///
+/// **⚠️ DEPRECATED**: Use `songbird::ipc` instead (Universal IPC Architecture)
+///
 /// Dual-mode server supporting Unix sockets (primary) and HTTP (optional fallback).
+///
+/// ## Migration
+///
+/// Replace with Songbird's Universal IPC which provides:
+/// - Platform-agnostic connection handling
+/// - Automatic endpoint registration
+/// - Metadata storage integration
+/// - Works on ALL platforms (Linux, macOS, Windows, etc.)
+#[deprecated(
+    since = "2.3.0",
+    note = "Connection logic moved to Songbird (Universal IPC). Use songbird::ipc::register() and nestgate::service_metadata for discovery. See UNIVERSAL_IPC_EVOLUTION_PLAN_JAN_19_2026.md"
+)]
 #[derive(Clone)]
 pub struct TransportServer<H> {
     config: TransportConfig,

@@ -55,7 +55,29 @@ pub mod network;
 pub mod network_defaults;
 /// Network configuration with environment-driven defaults.
 pub mod network_defaults_config;
-pub mod network_hardcoded; // NEW: Centralized network constants (Nov 6, 2025)
+pub mod network_hardcoded;
+
+/// Environment-driven network configuration (modern, preferred)
+///
+/// **NEW**: Use this instead of hardcoded constants!
+///
+/// Provides environment-variable driven configuration with sensible defaults.
+/// Integrates with capability-based discovery for true runtime flexibility.
+///
+/// # Migration
+///
+/// **Before** (hardcoded):
+/// ```rust,ignore
+/// use nestgate_core::constants::network_hardcoded::ports::API_DEFAULT;
+/// let port = API_DEFAULT; // HARDCODED!
+/// ```
+///
+/// **After** (environment-driven):
+/// ```rust
+/// use nestgate_core::constants::network_environment::api_port;
+/// let port = api_port(); // Checks NESTGATE_API_PORT, defaults to 8080
+/// ```
+pub mod network_environment; // NEW: Centralized network constants (Nov 6, 2025)
 pub mod port_defaults;
 /// Port configuration with environment-driven defaults.
 pub mod port_defaults_config;

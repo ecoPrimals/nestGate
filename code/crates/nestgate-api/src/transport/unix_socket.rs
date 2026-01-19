@@ -1,6 +1,41 @@
 //! **UNIX SOCKET LISTENER**
 //!
-//! Unix socket transport for TRUE PRIMAL IPC.
+//! **⚠️ DEPRECATED**: This module is deprecated as of v2.3.0
+//!
+//! ## Migration to Universal IPC Architecture
+//!
+//! **Connection logic has moved to Songbird** (Universal IPC Layer)
+//!
+//! ### Why This Change?
+//!
+//! - **Separation of Concerns**: NestGate = Storage, Songbird = Communication
+//! - **True Universality**: Songbird abstracts platform differences (Unix/Windows/etc.)
+//! - **Single Responsibility**: Each primal owns its domain
+//!
+//! ### Migration Path
+//!
+//! **Before (NestGate API Unix sockets)**:
+//! ```rust,ignore
+//! use nestgate_api::transport::UnixSocketListener;
+//! 
+//! let mut listener = UnixSocketListener::new("/tmp/api.sock")?;
+//! listener.bind()?;
+//! ```
+//!
+//! **After (Songbird Universal IPC)**:
+//! ```rust,ignore
+//! use songbird::ipc;
+//!
+//! // Register with Songbird (works on ALL platforms!)
+//! let endpoint = ipc::register("nestgate-api").await?;
+//! ipc::listen(endpoint).await?;
+//! ```
+//!
+//! ### References
+//!
+//! - `UNIVERSAL_IPC_ARCHITECTURE_HANDOFF_JAN_19_2026.md`
+//! - `UNIVERSAL_IPC_EVOLUTION_PLAN_JAN_19_2026.md`
+//! - `code/crates/nestgate-core/src/service_metadata/mod.rs`
 
 use nestgate_core::error::{NestGateError, Result};
 use std::path::{Path, PathBuf};
@@ -9,7 +44,24 @@ use tracing::{error, info, warn};
 
 /// **UNIX SOCKET LISTENER**
 ///
+/// **⚠️ DEPRECATED**: Use `songbird::ipc` instead (Universal IPC Architecture)
+///
 /// Listens for connections on a Unix socket and handles JSON-RPC requests.
+///
+/// ## Migration
+///
+/// Replace with Songbird's Universal IPC:
+/// ```rust,ignore
+/// // Old:
+/// let listener = UnixSocketListener::new("/tmp/api.sock")?;
+/// 
+/// // New:
+/// let endpoint = songbird::ipc::register("nestgate-api").await?;
+/// ```
+#[deprecated(
+    since = "2.3.0",
+    note = "Connection logic moved to Songbird (Universal IPC). Use songbird::ipc::register() instead. See UNIVERSAL_IPC_EVOLUTION_PLAN_JAN_19_2026.md"
+)]
 pub struct UnixSocketListener {
     socket_path: PathBuf,
     listener: Option<UnixListener>,
