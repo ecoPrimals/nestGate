@@ -15,10 +15,6 @@ pub mod service_test_doubles;
 pub mod storage_test_doubles;
 
 // Re-export key types using canonical patterns
-pub use hardware_test_doubles::{HardwareTestDouble, MockHardwareForTesting};
-pub use network_test_doubles::{MockNetworkForTesting, NetworkTestDouble};
-pub use service_test_doubles::{MockServiceForTesting, ServiceTestDouble};
-pub use storage_test_doubles::{MockStorageForTesting, StorageTestDouble};
 
 /// **COMPATIBILITY ALIAS** for test doubles migrating from old patterns
 /// This type will be phased out as all test doubles adopt canonical patterns

@@ -3,7 +3,6 @@
 //! Tests coordination between multiple services under load
 
 use std::sync::Arc;
-use std::time::Duration;
 use tokio::sync::RwLock;
 
 #[tokio::test]

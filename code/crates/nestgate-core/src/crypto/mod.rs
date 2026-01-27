@@ -127,8 +127,8 @@ impl SecureCrypto {
     /// - Encryption operation fails
     pub async fn encrypt(
         &self,
-        plaintext: &[u8],
-        params: &EncryptionParams,
+        _plaintext: &[u8],
+        _params: &EncryptionParams,
     ) -> Result<EncryptedData> {
         // NOTE: This is a placeholder implementation
         // Real implementation requires adding crypto dependencies:
@@ -157,7 +157,7 @@ impl SecureCrypto {
     /// - Authentication tag verification fails
     /// - Decryption operation fails
     /// - Data has been tampered with
-    pub async fn decrypt(&self, encrypted: &EncryptedData) -> Result<Vec<u8>> {
+    pub async fn decrypt(&self, _encrypted: &EncryptedData) -> Result<Vec<u8>> {
         // NOTE: Placeholder - requires crypto dependencies
         Err(NestGateError::configuration_error(
             "crypto",
@@ -166,7 +166,7 @@ impl SecureCrypto {
     }
 
     /// Generate a secure random key of specified length.
-    pub fn generate_key(length: usize) -> Result<Vec<u8>> {
+    pub fn generate_key(_length: usize) -> Result<Vec<u8>> {
         // NOTE: Placeholder - requires rand crate
         Err(NestGateError::configuration_error(
             "crypto",

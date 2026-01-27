@@ -90,15 +90,15 @@ impl NetworkConfig {
     }
 
     /// Development defaults
-    /// 
+    ///
     /// ✅ MIGRATED: Now uses centralized environment-driven configuration
     #[must_use]
     pub fn default_dev() -> Self {
-        use crate::constants::{get_metrics_port, get_postgres_port, get_redis_port};
         use crate::constants::hardcoding::addresses;
-        
+        use crate::constants::{get_metrics_port, get_postgres_port, get_redis_port};
+
         let discovery_config = crate::config::discovery_config::ServiceDiscoveryConfig::default();
-        
+
         Self {
             api: EndpointConfig {
                 host: addresses::BIND_ALL_IPV4.to_string(), // Safe dev default: bind all interfaces
@@ -114,7 +114,7 @@ impl NetworkConfig {
             },
             metrics: EndpointConfig {
                 host: addresses::BIND_ALL_IPV4.to_string(), // Safe dev default: bind all for monitoring
-                port: get_metrics_port(),                    // Environment-driven with default 9090
+                port: get_metrics_port(),                   // Environment-driven with default 9090
             },
             discovery: EndpointConfig {
                 host: discovery_config.discovery_host.clone(),

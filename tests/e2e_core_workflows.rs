@@ -349,7 +349,7 @@ async fn test_e2e_health_monitoring() -> Result<(), Box<dyn std::error::Error>> 
     info!("🎯 E2E Test: Health Monitoring");
 
     // Step 1: Create services with health endpoints
-    let services = vec![
+    let services = [
         ServiceMetadata {
             name: "service-a".to_string(),
             category: ServiceCategory::Storage,

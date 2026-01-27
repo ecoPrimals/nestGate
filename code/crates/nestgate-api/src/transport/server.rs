@@ -14,7 +14,7 @@
 //! **Before (NestGate Transport Server)**:
 //! ```rust,ignore
 //! use nestgate_api::transport::TransportServer;
-//! 
+//!
 //! let server = TransportServer::new(config, handler)?;
 //! server.start().await?;
 //! ```
@@ -26,7 +26,7 @@
 //!
 //! // Register with Songbird
 //! let endpoint = ipc::register("nestgate-api").await?;
-//! 
+//!
 //! // Store metadata in NestGate for discovery
 //! service_metadata::store(ServiceMetadata {
 //!     name: "nestgate-api",
@@ -34,7 +34,7 @@
 //!     virtual_endpoint: endpoint.path(),
 //!     // ... other metadata
 //! }).await?;
-//! 
+//!
 //! // Listen for connections via Songbird
 //! ipc::listen(endpoint).await?;
 //! ```

@@ -102,7 +102,7 @@ fn test_multiple_response_types() {
 /// Test critical path: All error types
 #[test]
 fn test_all_error_types() {
-    let errors = vec![
+    let errors = [
         ErrorResponseFactory::bad_request("test"),
         ErrorResponseFactory::not_found("test"),
         ErrorResponseFactory::unauthorized("test"),

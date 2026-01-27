@@ -200,7 +200,7 @@ impl Connection {
         self.mark_used();
 
         // Build URL
-        let url = self.endpoint.url(request.path);
+        let _url = self.endpoint.url(request.path);
 
         // BiomeOS Pure Rust Evolution: External HTTP removed
         // For external requests, use: discover_orchestration().await?.http_proxy(...)

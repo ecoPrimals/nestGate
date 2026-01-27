@@ -15,7 +15,7 @@
 //! **After** (environment-driven):
 //! ```rust
 //! use nestgate_core::constants::network_environment::api_port;
-//! 
+//!
 //! let port = api_port(); // Checks NESTGATE_API_PORT, defaults to 8080
 //! ```
 //!
@@ -221,8 +221,7 @@ pub fn https_port() -> u16 {
 /// Default binds to all interfaces (0.0.0.0) for deployment flexibility.
 /// Override with "127.0.0.1" for localhost-only in development.
 pub fn bind_address() -> String {
-    env::var("NESTGATE_BIND_ADDRESS")
-        .unwrap_or_else(|_| "0.0.0.0".to_string())
+    env::var("NESTGATE_BIND_ADDRESS").unwrap_or_else(|_| "0.0.0.0".to_string())
 }
 
 /// Get localhost address (always 127.0.0.1 for consistency)
@@ -293,16 +292,16 @@ mod tests {
     fn test_api_port_default() {
         // Clear any existing environment variable
         env::remove_var("NESTGATE_API_PORT");
-        
+
         assert_eq!(api_port(), 8080);
     }
 
     #[test]
     fn test_api_port_environment() {
         env::set_var("NESTGATE_API_PORT", "9999");
-        
+
         assert_eq!(api_port(), 9999);
-        
+
         // Cleanup
         env::remove_var("NESTGATE_API_PORT");
     }
@@ -310,23 +309,23 @@ mod tests {
     #[test]
     fn test_metrics_port_default() {
         env::remove_var("NESTGATE_METRICS_PORT");
-        
+
         assert_eq!(metrics_port(), 9090);
     }
 
     #[test]
     fn test_bind_address_default() {
         env::remove_var("NESTGATE_BIND_ADDRESS");
-        
+
         assert_eq!(bind_address(), "0.0.0.0");
     }
 
     #[test]
     fn test_bind_address_environment() {
         env::set_var("NESTGATE_BIND_ADDRESS", "127.0.0.1");
-        
+
         assert_eq!(bind_address(), "127.0.0.1");
-        
+
         // Cleanup
         env::remove_var("NESTGATE_BIND_ADDRESS");
     }
@@ -342,7 +341,7 @@ mod tests {
         env::remove_var("NESTGATE_CONNECT_TIMEOUT_MS");
         env::remove_var("NESTGATE_REQUEST_TIMEOUT_MS");
         env::remove_var("NESTGATE_KEEPALIVE_MS");
-        
+
         assert_eq!(connect_timeout_ms(), 5000);
         assert_eq!(request_timeout_ms(), 30000);
         assert_eq!(keepalive_ms(), 60000);

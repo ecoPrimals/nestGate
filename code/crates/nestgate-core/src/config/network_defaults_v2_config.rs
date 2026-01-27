@@ -52,9 +52,11 @@ impl NetworkDefaultsV2Config {
     #[must_use]
     pub fn new() -> Self {
         // ✅ MIGRATED: Now uses centralized environment-driven functions
-        use crate::constants::{get_api_port, get_metrics_port, get_health_port, get_admin_port, get_dev_port};
         use crate::constants::hardcoding::addresses;
-        
+        use crate::constants::{
+            get_admin_port, get_api_port, get_dev_port, get_health_port, get_metrics_port,
+        };
+
         Self {
             // API Server defaults
             api_host: addresses::LOCALHOST_IPV4.to_string(),

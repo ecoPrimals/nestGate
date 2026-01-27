@@ -442,6 +442,8 @@ impl ZfsSnapshotManager {
     /// Production code must use `ZfsSnapshotManager::new()` with proper configuration.
     #[must_use]
     pub fn new_for_testing() -> Self {
+        use crate::ZfsPoolManager;
+        
         let config = ZfsConfig::default();
         let pool_manager = Arc::new(ZfsPoolManager::new_production(config.clone()));
         let dataset_manager = Arc::new(ZfsDatasetManager::new(config, pool_manager));

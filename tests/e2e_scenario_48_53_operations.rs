@@ -9,8 +9,7 @@
 /// - Compliance auditing
 ///
 /// **Evolution**: Modern async patterns, proper error handling, no unwraps
-use nestgate_core::{NestGateError, Result};
-use tokio::time::{sleep, Duration};
+use nestgate_core::Result;
 
 #[tokio::test]
 #[ignore = "E2E test - requires full environment"]

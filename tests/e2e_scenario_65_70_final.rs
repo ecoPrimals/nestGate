@@ -9,10 +9,8 @@
 ///
 /// **Evolution**: Modern async patterns, NO SLEEPS, production-ready
 use nestgate_core::Result;
-use std::time::Duration;
 
 mod common;
-use common::sync_utils::*;
 
 #[tokio::test]
 #[ignore = "E2E test - requires full environment"]

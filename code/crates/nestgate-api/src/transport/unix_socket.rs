@@ -17,7 +17,7 @@
 //! **Before (NestGate API Unix sockets)**:
 //! ```rust,ignore
 //! use nestgate_api::transport::UnixSocketListener;
-//! 
+//!
 //! let mut listener = UnixSocketListener::new("/tmp/api.sock")?;
 //! listener.bind()?;
 //! ```
@@ -54,7 +54,7 @@ use tracing::{error, info, warn};
 /// ```rust,ignore
 /// // Old:
 /// let listener = UnixSocketListener::new("/tmp/api.sock")?;
-/// 
+///
 /// // New:
 /// let endpoint = songbird::ipc::register("nestgate-api").await?;
 /// ```

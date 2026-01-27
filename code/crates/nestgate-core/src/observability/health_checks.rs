@@ -8,7 +8,6 @@ use std::collections::HashMap;
 use crate::error::Result;
 use std::sync::Arc;
 use std::time::SystemTime;
-use tokio::sync::RwLock;
 
 // Type alias to resolve clippy::type_complexity warning (lock-free with DashMap for 5-10x better performance)
 type HealthProviderMap = Arc<DashMap<String, Box<dyn HealthCheckProvider + Send + Sync>>>;

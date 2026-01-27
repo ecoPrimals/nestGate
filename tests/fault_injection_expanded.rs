@@ -25,7 +25,7 @@ mod expanded_fault_injection {
     #[ignore]
     async fn fault_inject_connection_timeout() {
         // Simulate connection timeout
-        async fn connect_with_timeout(timeout_ms: u64) -> Result<(), String> {
+        async fn connect_with_timeout(_timeout_ms: u64) -> Result<(), String> {
             Err("Connection timeout".to_string())
         }
 

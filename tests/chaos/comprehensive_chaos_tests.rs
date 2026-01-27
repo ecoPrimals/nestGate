@@ -327,7 +327,7 @@ async fn chaos_test_split_brain() {
 async fn chaos_test_gradual_degradation() {
     let mut response_times = Vec::new();
 
-    for i in 0..10 {
+    for _i in 0..10 {
         let start = std::time::Instant::now();
         let elapsed = start.elapsed().as_millis();
         response_times.push(elapsed);

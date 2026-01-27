@@ -141,7 +141,7 @@ impl PerformanceStressBattery {
         // Wait for test duration using proper async coordination
         let notify = Arc::new(Notify::new());
         let notify_clone = notify.clone();
-        let duration = self.config.test_duration_seconds;
+        let _duration = self.config.test_duration_seconds;
 
         tokio::spawn(async move {
             notify_clone.notify_waiters();

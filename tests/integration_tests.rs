@@ -243,7 +243,7 @@ fn test_type_safety() {
 #[test]
 fn test_capability_composition() {
     // A service can have multiple capabilities
-    let capabilities = vec![
+    let capabilities = [
         ServiceCapability::Storage(StorageType::FileSystem),
         ServiceCapability::Storage(StorageType::Object),
         ServiceCapability::Network(CommunicationProtocol::Http),

@@ -10,7 +10,6 @@
 ///
 /// **Evolution**: Modern async patterns, proper error handling, production-ready observability
 use nestgate_core::Result;
-use tokio::time::{sleep, Duration};
 
 #[tokio::test]
 #[ignore = "E2E test - requires full environment"]

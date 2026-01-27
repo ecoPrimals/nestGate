@@ -4,21 +4,21 @@ use super::defaults_config::NetworkDefaultsConfig;
 pub struct NetworkPortDefaults;
 impl NetworkPortDefaults {
     /// Default API port - configurable via NESTGATE_API_PORT
-    /// 
+    ///
     /// ✅ MIGRATED: Now uses centralized get_api_port() function
     pub fn api_port() -> u16 {
         crate::constants::get_api_port()
     }
 
     /// Default WebSocket port - configurable via NESTGATE_WEBSOCKET_PORT
-    /// 
+    ///
     /// ✅ MIGRATED: Now uses centralized get_admin_port() function (WebSocket uses admin port)
     pub fn websocket_port() -> u16 {
         crate::constants::get_admin_port()
     }
 
     /// Default HTTP port - configurable via NESTGATE_HTTP_PORT
-    /// 
+    ///
     /// ✅ MIGRATED: Now uses centralized get_api_port() function
     pub fn http_port() -> u16 {
         crate::constants::get_api_port()
@@ -184,13 +184,13 @@ impl TimeoutDefaults {
     /// Default connection timeout in milliseconds  
     /// TODO: Migrate to environment-driven configuration
     pub fn connection_timeout_ms() -> u64 {
-        3000  // Will be migrated to NESTGATE_CONNECTION_TIMEOUT_MS
+        3000 // Will be migrated to NESTGATE_CONNECTION_TIMEOUT_MS
     }
 
     /// Default request timeout in milliseconds
     /// TODO: Migrate to environment-driven configuration  
     pub fn request_timeout_ms() -> u64 {
-        30000  // Will be migrated to NESTGATE_REQUEST_TIMEOUT_MS
+        30000 // Will be migrated to NESTGATE_REQUEST_TIMEOUT_MS
     }
 
     /// Default health check timeout in seconds

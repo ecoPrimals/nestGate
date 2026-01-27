@@ -62,7 +62,7 @@ impl SovereigntyConfig {
     }
 
     /// Get API port respecting user sovereignty
-    /// 
+    ///
     /// ✅ MIGRATED: Now uses centralized get_api_port() function
     pub fn api_port() -> u16 {
         // Use centralized environment-driven configuration

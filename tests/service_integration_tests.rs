@@ -8,9 +8,6 @@
 //! - Chaos: Concurrent service starts
 //! - Fault: Error handling and edge cases
 
-use std::time::Duration;
-use tokio::time::timeout;
-
 // ============================================================================
 // UNIT TESTS - Mode Detection Logic
 // ============================================================================
@@ -157,7 +154,6 @@ async fn test_e2e_mode_switching() {
 
 #[tokio::test]
 async fn test_chaos_concurrent_mode_detection() {
-    use std::sync::Arc;
     use tokio::task;
 
     let handles: Vec<_> = (0..20)

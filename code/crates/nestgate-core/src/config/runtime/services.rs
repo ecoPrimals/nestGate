@@ -259,7 +259,7 @@ impl ServicesConfig {
 
         // ✅ MIGRATED: Environment-driven service port mapping with centralized defaults
         use crate::constants::get_api_port;
-        
+
         let port = match capability {
             "security" => env::var("NESTGATE_SECURITY_PORT")
                 .ok()

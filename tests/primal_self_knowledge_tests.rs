@@ -132,7 +132,7 @@ async fn test_primal_discovery_caching() -> Result<()> {
     let _ = primal.discover_primal("songbird").await?;
 
     // Check cache
-    let discovered = primal.discovered_primals().await;
+    let discovered = primal.discovered_primals();
     assert!(discovered.contains_key("songbird"));
 
     std::env::remove_var("SONGBIRD_HOST");
@@ -260,7 +260,7 @@ async fn test_discovered_primals_initially_empty() -> Result<()> {
     use nestgate_core::primal_self_knowledge::PrimalSelfKnowledge;
 
     let primal = PrimalSelfKnowledge::initialize().await?;
-    let discovered = primal.discovered_primals().await;
+    let discovered = primal.discovered_primals();
 
     assert!(discovered.is_empty(), "No primals discovered yet");
 

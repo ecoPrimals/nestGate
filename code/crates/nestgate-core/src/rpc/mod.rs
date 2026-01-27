@@ -56,7 +56,7 @@ pub mod template_storage;
 pub mod unix_socket_server;
 
 // Re-export key types
-pub use jsonrpc_client::{JsonRpcClient, JsonRpcRequest, JsonRpcResponse, JsonRpcError};
+pub use jsonrpc_client::{JsonRpcClient, JsonRpcError, JsonRpcRequest, JsonRpcResponse};
 pub use tarpc_types::{
     CapabilityRegistration, DatasetInfo, DatasetParams, HealthStatus, NestGateRpc,
     NestGateRpcError, ObjectInfo, OperationResult, ProtocolInfo, RegistrationResult, ServiceInfo,

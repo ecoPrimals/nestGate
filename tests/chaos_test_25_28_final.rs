@@ -7,8 +7,7 @@
 /// - Hardware failures
 ///
 /// **Evolution**: Modern async, proper error handling, realistic extreme chaos
-use nestgate_core::{NestGateError, Result};
-use tokio::time::{sleep, Duration};
+use nestgate_core::Result;
 
 #[tokio::test]
 #[ignore = "Chaos test - potentially destructive"]

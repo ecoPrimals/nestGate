@@ -58,7 +58,7 @@
 //! ```
 
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde_json::Value;
 use std::time::Duration;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::UnixStream;
@@ -207,9 +207,10 @@ impl JsonRpcClient {
     /// # }
     /// ```
     pub async fn call(&mut self, method: &str, params: Value) -> Result<Value> {
-        let stream = self.stream.as_mut().ok_or_else(|| {
-            NestGateError::network_error("JSON-RPC client not connected")
-        })?;
+        let stream = self
+            .stream
+            .as_mut()
+            .ok_or_else(|| NestGateError::network_error("JSON-RPC client not connected"))?;
 
         // Create request
         let request = JsonRpcRequest {
@@ -229,21 +230,15 @@ impl JsonRpcClient {
 
         // Send request (JSON-RPC over newline-delimited JSON)
         let request_line = format!("{}\n", request_json);
-        
+
         tokio::time::timeout(self.timeout, stream.write_all(request_line.as_bytes()))
             .await
-            .map_err(|_| {
-                NestGateError::timeout_error("JSON-RPC request", self.timeout)
-            })?
-            .map_err(|e| {
-                NestGateError::network_error(&format!("Failed to send request: {}", e))
-            })?;
+            .map_err(|_| NestGateError::timeout_error("JSON-RPC request", self.timeout))?
+            .map_err(|e| NestGateError::network_error(&format!("Failed to send request: {}", e)))?;
 
         tokio::time::timeout(self.timeout, stream.flush())
             .await
-            .map_err(|_| {
-                NestGateError::timeout_error("JSON-RPC flush", self.timeout)
-            })?
+            .map_err(|_| NestGateError::timeout_error("JSON-RPC flush", self.timeout))?
             .map_err(|e| {
                 NestGateError::network_error(&format!("Failed to flush request: {}", e))
             })?;
@@ -251,12 +246,10 @@ impl JsonRpcClient {
         // Read response (newline-delimited JSON)
         let mut reader = BufReader::new(stream);
         let mut response_line = String::new();
-        
+
         tokio::time::timeout(self.timeout, reader.read_line(&mut response_line))
             .await
-            .map_err(|_| {
-                NestGateError::timeout_error("JSON-RPC response", self.timeout)
-            })?
+            .map_err(|_| NestGateError::timeout_error("JSON-RPC response", self.timeout))?
             .map_err(|e| {
                 NestGateError::network_error(&format!("Failed to read response: {}", e))
             })?;
@@ -352,6 +345,8 @@ mod tests {
 
     #[test]
     fn test_request_serialization() {
+        use serde_json::json;
+        
         let request = JsonRpcRequest {
             jsonrpc: "2.0".to_string(),
             method: "ipc.resolve".to_string(),
@@ -369,7 +364,7 @@ mod tests {
     fn test_response_deserialization_success() {
         let json = r#"{"jsonrpc":"2.0","result":{"endpoint":"/primal/beardog"},"id":1}"#;
         let response: JsonRpcResponse = serde_json::from_str(json).unwrap();
-        
+
         assert_eq!(response.jsonrpc, "2.0");
         assert_eq!(response.id, 1);
         assert!(response.result.is_some());
@@ -378,14 +373,15 @@ mod tests {
 
     #[test]
     fn test_response_deserialization_error() {
-        let json = r#"{"jsonrpc":"2.0","error":{"code":-32601,"message":"Method not found"},"id":1}"#;
+        let json =
+            r#"{"jsonrpc":"2.0","error":{"code":-32601,"message":"Method not found"},"id":1}"#;
         let response: JsonRpcResponse = serde_json::from_str(json).unwrap();
-        
+
         assert_eq!(response.jsonrpc, "2.0");
         assert_eq!(response.id, 1);
         assert!(response.result.is_none());
         assert!(response.error.is_some());
-        
+
         let error = response.error.unwrap();
         assert_eq!(error.code, -32601);
         assert_eq!(error.message, "Method not found");

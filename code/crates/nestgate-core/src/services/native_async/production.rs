@@ -1,6 +1,5 @@
 // HTTP removed - use Songbird via capability discovery for external HTTP
 // use crate::http_client_stub as reqwest;
-use base64::{engine::general_purpose, Engine};
 use std::collections::HashMap;
 
 /// Production Service Implementations
@@ -422,13 +421,13 @@ impl ProductionLoadBalancer {
     /// Try to communicate with a specific endpoint
     async fn try_endpoint(
         &self,
-        endpoint: &crate::service_discovery::types::ServiceEndpoint,
-        request: &ServiceRequest,
+        _endpoint: &crate::service_discovery::types::ServiceEndpoint,
+        _request: &ServiceRequest,
     ) -> Result<ServiceResponse> {
         // Generate IDs for tracing
-        let request_id = uuid::Uuid::new_v4().to_string();
-        let correlation_id = uuid::Uuid::new_v4().to_string();
-        let trace_id = uuid::Uuid::new_v4().to_string();
+        let _request_id = uuid::Uuid::new_v4().to_string();
+        let _correlation_id = uuid::Uuid::new_v4().to_string();
+        let _trace_id = uuid::Uuid::new_v4().to_string();
 
         // BiomeOS Concentrated Gap: HTTP load balancer deprecated
         // Use tarpc for primal-to-primal service requests

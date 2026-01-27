@@ -169,9 +169,10 @@ pub struct ConcurrentCoordinator {
 }
 
 /// Coordinator state
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum CoordinatorState {
     /// Not started
+    #[default]
     Idle,
     /// Starting up
     Starting,
@@ -183,12 +184,6 @@ pub enum CoordinatorState {
     Stopped,
     /// Error state
     Error,
-}
-
-impl Default for CoordinatorState {
-    fn default() -> Self {
-        Self::Idle
-    }
 }
 
 impl ConcurrentCoordinator {

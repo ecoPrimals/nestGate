@@ -92,6 +92,12 @@ pub struct MockHardwareForTesting {
     test_double: HardwareTestDouble,
 }
 
+impl Default for MockHardwareForTesting {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MockHardwareForTesting {
     pub fn new() -> Self {
         Self {

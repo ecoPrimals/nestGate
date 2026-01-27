@@ -9,8 +9,7 @@
 /// - Recovery point objectives (RPO)
 ///
 /// **Evolution**: Modern async patterns, proper error handling, production-ready DR
-use nestgate_core::{NestGateError, Result};
-use tokio::time::{sleep, Duration};
+use nestgate_core::Result;
 
 #[tokio::test]
 #[ignore = "E2E test - requires full environment"]

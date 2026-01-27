@@ -77,9 +77,9 @@ pub fn add_to_path(install_path: &Path) -> Result<()> {
 #[cfg(unix)]
 #[allow(dead_code)] // Platform-specific PATH implementation
 fn add_to_path_unix(install_path: &Path) -> Result<()> {
+    use etcetera::BaseStrategy;
     use std::fs::OpenOptions;
     use std::io::Write;
-    use etcetera::BaseStrategy;
 
     let shell_rc = if std::env::var("SHELL").unwrap_or_default().contains("zsh") {
         etcetera::base_strategy::choose_base_strategy()

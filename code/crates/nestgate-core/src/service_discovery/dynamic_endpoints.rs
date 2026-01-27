@@ -194,7 +194,7 @@ impl DynamicEndpointResolver {
         let api_port = get_api_port();
         let metrics_port = get_metrics_port();
         let health_port = get_health_port();
-        
+
         match service_type {
             "api" => api_port,
             "websocket" => api_port, // WebSocket on same port as API

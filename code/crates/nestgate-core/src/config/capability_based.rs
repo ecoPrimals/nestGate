@@ -38,7 +38,6 @@ use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::Duration;
-use tokio::sync::RwLock;
 
 /// Configuration for capability-based service discovery
 #[derive(Debug, Clone)]

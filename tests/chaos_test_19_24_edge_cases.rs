@@ -10,7 +10,6 @@
 ///
 /// **Evolution**: Modern async, proper error handling, realistic edge cases
 use nestgate_core::{NestGateError, Result};
-use tokio::time::{sleep, Duration};
 
 #[tokio::test]
 #[ignore = "Chaos test - potentially destructive"]

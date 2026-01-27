@@ -144,7 +144,6 @@ fn test_canonical_type_safety() -> Result<(), Box<dyn std::error::Error>> {
 #[tokio::test]
 async fn test_canonical_async_patterns() -> Result<(), Box<dyn std::error::Error>> {
     // Test that modernized async patterns work correctly
-    use std::time::Duration;
 
     // Test async operations complete successfully
     let start = std::time::Instant::now();

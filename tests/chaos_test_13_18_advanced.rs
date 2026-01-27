@@ -8,10 +8,7 @@
 /// - Time skew issues
 ///
 /// **Evolution**: Modern async, proper error handling, realistic chaos
-use nestgate_core::{NestGateError, Result};
-use std::sync::Arc;
-use tokio::sync::RwLock;
-use tokio::time::{sleep, Duration};
+use nestgate_core::Result;
 
 #[tokio::test]
 #[ignore = "Chaos test - potentially destructive"]

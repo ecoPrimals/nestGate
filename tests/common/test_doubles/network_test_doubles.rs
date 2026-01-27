@@ -81,6 +81,12 @@ pub struct MockNetworkForTesting {
     test_double: NetworkTestDouble,
 }
 
+impl Default for MockNetworkForTesting {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MockNetworkForTesting {
     pub fn new() -> Self {
         Self {

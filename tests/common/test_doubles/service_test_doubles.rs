@@ -83,6 +83,12 @@ pub struct MockServiceForTesting {
     test_double: ServiceTestDouble,
 }
 
+impl Default for MockServiceForTesting {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MockServiceForTesting {
     pub fn new() -> Self {
         Self {

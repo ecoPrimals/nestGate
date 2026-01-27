@@ -100,6 +100,12 @@ pub struct MockStorageForTesting {
     fake_data: Arc<Mutex<HashMap<String, String>>>,
 }
 
+impl Default for MockStorageForTesting {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MockStorageForTesting {
     pub fn new() -> Self {
         Self {
@@ -232,10 +238,7 @@ mod tests {
                 assert_eq!(op, "create_pool:fail-pool");
             }
             _ => {
-                return Err(Box::new(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    "Test assertion failed",
-                ))
+                return Err(Box::new(std::io::Error::other("Test assertion failed"))
                     as Box<dyn std::error::Error + Send + Sync>);
             }
         }

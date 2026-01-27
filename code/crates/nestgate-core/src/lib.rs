@@ -24,6 +24,9 @@ pub mod canonical_types;
 /// Capability-based service discovery
 pub mod capabilities;
 pub mod capability_config;
+/// **NEW**: Capability-based primal discovery (Jan 26, 2026)
+/// Deep debt solution: Replace hardcoded primal names with runtime capability discovery
+pub mod capability_discovery;
 /// **UNIFIED**: Capability resolver - bridge for all registry systems
 /// Provides common interface for capability-based service discovery
 pub mod capability_resolver;
