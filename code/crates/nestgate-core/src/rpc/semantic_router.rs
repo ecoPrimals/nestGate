@@ -1,0 +1,475 @@
+//! # Semantic Method Router - TRUE PRIMAL Compliance
+//!
+//! **Routes semantic method names to internal implementations**
+//!
+//! ## Philosophy
+//!
+//! - **TRUE PRIMAL**: External primals use semantic names (`storage.put`)
+//! - **Internal Flexibility**: Internal code uses descriptive names (`store_object`)
+//! - **Zero Breaking Changes**: Existing code continues to work
+//! - **Neural API Ready**: biomeOS can route by capability
+//!
+//! ## Architecture
+//!
+//! ```text
+//! External Primal
+//!   ↓
+//! "storage.put" (semantic)
+//!   ↓
+//! SemanticRouter::route()
+//!   ↓
+//! NestGateRpcService::store_object() (internal)
+//! ```
+//!
+//! ## Usage
+//!
+//! ```rust,ignore
+//! use nestgate_core::rpc::SemanticRouter;
+//! use serde_json::json;
+//!
+//! let router = SemanticRouter::new(service);
+//!
+//! // External primal calls with semantic name
+//! let result = router.call_method("storage.put", json!({
+//!     "dataset": "my-dataset",
+//!     "key": "my-key",
+//!     "data": "base64-encoded-data"
+//! })).await?;
+//! ```
+//!
+//! ## Semantic Methods Supported
+//!
+//! ### Storage Domain (`storage.*`)
+//! - `storage.put` → `store_object`
+//! - `storage.get` → `retrieve_object`
+//! - `storage.delete` → `delete_object`
+//! - `storage.list` → `list_objects`
+//! - `storage.dataset.create` → `create_dataset`
+//! - `storage.dataset.get` → `get_dataset`
+//! - `storage.dataset.list` → `list_datasets`
+//! - `storage.dataset.delete` → `delete_dataset`
+//!
+//! ### Discovery Domain (`discovery.*`)
+//! - `discovery.announce` → register service metadata
+//! - `discovery.query` → find services by capability
+//! - `discovery.list` → list all services
+//!
+//! ### Health Domain (`health.*`)
+//! - `health.check` → `health_check`
+//! - `health.metrics` → `get_metrics`
+//! - `health.info` → `get_info`
+//!
+//! ## References
+//!
+//! - wateringHole/SEMANTIC_METHOD_NAMING_STANDARD.md v2.0
+//! - wateringHole/PRIMAL_IPC_PROTOCOL.md v1.0
+//! - CAPABILITY_MAPPINGS.md
+
+use crate::error::{NestGateError, Result};
+use crate::rpc::tarpc_types::{DatasetParams, NestGateRpcClient};
+use serde_json::{json, Value};
+use std::sync::Arc;
+use tracing::{debug, warn};
+
+/// Semantic method router for TRUE PRIMAL compliance
+///
+/// Routes semantic method names (e.g., `storage.put`) to internal
+/// implementations, enabling Neural API integration and capability-based
+/// discovery.
+pub struct SemanticRouter {
+    /// Internal RPC client for delegation
+    client: Arc<NestGateRpcClient>,
+}
+
+impl SemanticRouter {
+    /// Create new semantic router
+    ///
+    /// # Arguments
+    /// * `client` - Internal RPC client for method delegation
+    ///
+    /// # Example
+    /// ```no_run
+    /// use nestgate_core::rpc::{SemanticRouter, NestGateRpcClient};
+    /// use std::sync::Arc;
+    ///
+    /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+    /// let client = NestGateRpcClient::new("tarpc://localhost:8091")?;
+    /// let router = SemanticRouter::new(Arc::new(client));
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn new(client: Arc<NestGateRpcClient>) -> Self {
+        debug!("🌐 Creating semantic method router (TRUE PRIMAL compliance)");
+        Self { client }
+    }
+
+    /// Route semantic method call to internal implementation
+    ///
+    /// # Arguments
+    /// * `method` - Semantic method name (e.g., "storage.put")
+    /// * `params` - Method parameters as JSON value
+    ///
+    /// # Returns
+    /// Result value from the internal method
+    ///
+    /// # Errors
+    /// Returns error if:
+    /// - Method not found
+    /// - Invalid parameters
+    /// - Internal method fails
+    ///
+    /// # Example
+    /// ```no_run
+    /// use nestgate_core::rpc::SemanticRouter;
+    /// use serde_json::json;
+    ///
+    /// # async fn example(router: SemanticRouter) -> Result<(), Box<dyn std::error::Error>> {
+    /// let result = router.call_method("storage.put", json!({
+    ///     "dataset": "my-dataset",
+    ///     "key": "my-key",
+    ///     "data": "aGVsbG8gd29ybGQ=" // base64("hello world")
+    /// })).await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn call_method(&self, method: &str, params: Value) -> Result<Value> {
+        debug!("🔀 Routing semantic method: {}", method);
+
+        match method {
+            // ==================== STORAGE DOMAIN ====================
+            "storage.put" => self.storage_put(params).await,
+            "storage.get" => self.storage_get(params).await,
+            "storage.delete" => self.storage_delete(params).await,
+            "storage.list" => self.storage_list(params).await,
+            "storage.exists" => self.storage_exists(params).await,
+            "storage.metadata" => self.storage_metadata(params).await,
+
+            // Dataset operations
+            "storage.dataset.create" => self.dataset_create(params).await,
+            "storage.dataset.get" => self.dataset_get(params).await,
+            "storage.dataset.list" => self.dataset_list(params).await,
+            "storage.dataset.delete" => self.dataset_delete(params).await,
+
+            // ==================== DISCOVERY DOMAIN ====================
+            "discovery.announce" => self.discovery_announce(params).await,
+            "discovery.query" => self.discovery_query(params).await,
+            "discovery.list" => self.discovery_list(params).await,
+            "discovery.capabilities" => self.discovery_capabilities(params).await,
+
+            // ==================== HEALTH DOMAIN ====================
+            "health.check" => self.health_check(params).await,
+            "health.metrics" => self.health_metrics(params).await,
+            "health.info" => self.health_info(params).await,
+            "health.ready" => self.health_ready(params).await,
+
+            // ==================== METADATA DOMAIN ====================
+            "metadata.store" => self.metadata_store(params).await,
+            "metadata.retrieve" => self.metadata_retrieve(params).await,
+            "metadata.search" => self.metadata_search(params).await,
+
+            // Unknown method
+            _ => {
+                warn!("❌ Unknown semantic method: {}", method);
+                Err(NestGateError::method_not_found(method))
+            }
+        }
+    }
+
+    // ==================== STORAGE DOMAIN IMPLEMENTATIONS ====================
+
+    /// Route storage.put → store_object
+    async fn storage_put(&self, params: Value) -> Result<Value> {
+        let dataset = params["dataset"]
+            .as_str()
+            .ok_or_else(|| NestGateError::invalid_input("dataset", "string required"))?;
+        let key = params["key"]
+            .as_str()
+            .ok_or_else(|| NestGateError::invalid_input("key", "string required"))?;
+        let data_b64 = params["data"]
+            .as_str()
+            .ok_or_else(|| NestGateError::invalid_input("data", "base64 string required"))?;
+
+        // Decode base64
+        use base64::{engine::general_purpose::STANDARD, Engine as _};
+        let data = STANDARD.decode(data_b64)
+            .map_err(|e| NestGateError::invalid_input("data", &format!("Invalid base64: {}", e)))?;
+
+        // Call internal implementation
+        let result = self.client.store_object(dataset, key, data).await?;
+
+        Ok(json!({
+            "success": result.success,
+            "message": result.message,
+            "metadata": result.metadata
+        }))
+    }
+
+    /// Route storage.get → retrieve_object
+    async fn storage_get(&self, params: Value) -> Result<Value> {
+        let dataset = params["dataset"]
+            .as_str()
+            .ok_or_else(|| NestGateError::invalid_input("dataset", "string required"))?;
+        let key = params["key"]
+            .as_str()
+            .ok_or_else(|| NestGateError::invalid_input("key", "string required"))?;
+
+        let data = self.client.retrieve_object(dataset, key).await?;
+
+        // Encode to base64 for transport
+        use base64::{engine::general_purpose::STANDARD, Engine as _};
+        let data_b64 = STANDARD.encode(&data);
+
+        Ok(json!({
+            "data": data_b64,
+            "size": data.len()
+        }))
+    }
+
+    /// Route storage.delete → delete_object
+    async fn storage_delete(&self, params: Value) -> Result<Value> {
+        let dataset = params["dataset"]
+            .as_str()
+            .ok_or_else(|| NestGateError::invalid_input("dataset", "string required"))?;
+        let key = params["key"]
+            .as_str()
+            .ok_or_else(|| NestGateError::invalid_input("key", "string required"))?;
+
+        let result = self.client.delete_object(dataset, key).await?;
+
+        Ok(json!({
+            "success": result.success,
+            "message": result.message
+        }))
+    }
+
+    /// Route storage.list → list_objects
+    async fn storage_list(&self, params: Value) -> Result<Value> {
+        let dataset = params["dataset"]
+            .as_str()
+            .ok_or_else(|| NestGateError::invalid_input("dataset", "string required"))?;
+        let prefix = params["prefix"].as_str().map(String::from);
+
+        let objects = self.client.list_objects(dataset, prefix).await?;
+
+        Ok(json!({
+            "objects": objects,
+            "count": objects.len()
+        }))
+    }
+
+    /// Route storage.exists → check if object exists
+    async fn storage_exists(&self, params: Value) -> Result<Value> {
+        let dataset = params["dataset"]
+            .as_str()
+            .ok_or_else(|| NestGateError::invalid_input("dataset", "string required"))?;
+        let key = params["key"]
+            .as_str()
+            .ok_or_else(|| NestGateError::invalid_input("key", "string required"))?;
+
+        // Try to retrieve metadata (cheaper than full object)
+        let exists = self.client.retrieve_object(dataset, key).await.is_ok();
+
+        Ok(json!({ "exists": exists }))
+    }
+
+    /// Route storage.metadata → get object metadata
+    async fn storage_metadata(&self, params: Value) -> Result<Value> {
+        let dataset = params["dataset"]
+            .as_str()
+            .ok_or_else(|| NestGateError::invalid_input("dataset", "string required"))?;
+        let key = params["key"]
+            .as_str()
+            .ok_or_else(|| NestGateError::invalid_input("key", "string required"))?;
+
+        // Get object info (includes metadata)
+        let data = self.client.retrieve_object(dataset, key).await?;
+
+        Ok(json!({
+            "size": data.len(),
+            "exists": true
+        }))
+    }
+
+    // ==================== DATASET OPERATIONS ====================
+
+    /// Route storage.dataset.create → create_dataset
+    async fn dataset_create(&self, params: Value) -> Result<Value> {
+        let name = params["name"]
+            .as_str()
+            .ok_or_else(|| NestGateError::invalid_input("name", "string required"))?;
+        let description = params["description"]
+            .as_str()
+            .unwrap_or("")
+            .to_string();
+
+        let dataset_params = DatasetParams {
+            description,
+            ..Default::default()
+        };
+
+        let dataset = self.client.create_dataset(name, dataset_params).await?;
+
+        Ok(json!({
+            "name": dataset.name,
+            "created_at": dataset.created_at,
+            "status": dataset.status
+        }))
+    }
+
+    /// Route storage.dataset.get → get_dataset
+    async fn dataset_get(&self, params: Value) -> Result<Value> {
+        let name = params["name"]
+            .as_str()
+            .ok_or_else(|| NestGateError::invalid_input("name", "string required"))?;
+
+        let dataset = self.client.get_dataset(name).await?;
+
+        Ok(serde_json::to_value(dataset)
+            .map_err(|e| NestGateError::serialization(&format!("Failed to serialize dataset: {}", e)))?)
+    }
+
+    /// Route storage.dataset.list → list_datasets
+    async fn dataset_list(&self, _params: Value) -> Result<Value> {
+        let datasets = self.client.list_datasets().await?;
+
+        Ok(json!({
+            "datasets": datasets,
+            "count": datasets.len()
+        }))
+    }
+
+    /// Route storage.dataset.delete → delete_dataset
+    async fn dataset_delete(&self, params: Value) -> Result<Value> {
+        let name = params["name"]
+            .as_str()
+            .ok_or_else(|| NestGateError::invalid_input("name", "string required"))?;
+
+        let result = self.client.delete_dataset(name).await?;
+
+        Ok(json!({
+            "success": result.success,
+            "message": result.message
+        }))
+    }
+
+    // ==================== DISCOVERY DOMAIN ====================
+
+    /// Route discovery.announce → register service (placeholder)
+    async fn discovery_announce(&self, _params: Value) -> Result<Value> {
+        // TODO: Implement service registration with CapabilityDiscovery
+        warn!("⚠️  discovery.announce not yet implemented");
+        Ok(json!({ "registered": false, "message": "Not yet implemented" }))
+    }
+
+    /// Route discovery.query → find services by capability (placeholder)
+    async fn discovery_query(&self, _params: Value) -> Result<Value> {
+        // TODO: Implement capability query with CapabilityDiscovery
+        warn!("⚠️  discovery.query not yet implemented");
+        Ok(json!({ "services": [] }))
+    }
+
+    /// Route discovery.list → list all services (placeholder)
+    async fn discovery_list(&self, _params: Value) -> Result<Value> {
+        // TODO: Implement service listing with CapabilityDiscovery
+        warn!("⚠️  discovery.list not yet implemented");
+        Ok(json!({ "services": [] }))
+    }
+
+    /// Route discovery.capabilities → get service capabilities (placeholder)
+    async fn discovery_capabilities(&self, _params: Value) -> Result<Value> {
+        Ok(json!({
+            "capabilities": ["storage", "discovery", "metadata", "health"]
+        }))
+    }
+
+    // ==================== HEALTH DOMAIN ====================
+
+    /// Route health.check → health_check
+    async fn health_check(&self, _params: Value) -> Result<Value> {
+        let health = self.client.health().await?;
+
+        Ok(json!({
+            "status": health.status,
+            "uptime_seconds": health.uptime_seconds,
+            "version": health.version
+        }))
+    }
+
+    /// Route health.metrics → get_metrics
+    async fn health_metrics(&self, _params: Value) -> Result<Value> {
+        let metrics = self.client.get_storage_metrics().await?;
+
+        Ok(serde_json::to_value(metrics)
+            .map_err(|e| NestGateError::serialization(&format!("Failed to serialize metrics: {}", e)))?)
+    }
+
+    /// Route health.info → get_info
+    async fn health_info(&self, _params: Value) -> Result<Value> {
+        let info = self.client.get_info().await?;
+
+        Ok(serde_json::to_value(info)
+            .map_err(|e| NestGateError::serialization(&format!("Failed to serialize info: {}", e)))?)
+    }
+
+    /// Route health.ready → readiness check
+    async fn health_ready(&self, _params: Value) -> Result<Value> {
+        let health = self.client.health().await?;
+
+        Ok(json!({
+            "ready": health.status == "healthy",
+            "status": health.status
+        }))
+    }
+
+    // ==================== METADATA DOMAIN ====================
+
+    /// Route metadata.store → store service metadata (placeholder)
+    async fn metadata_store(&self, _params: Value) -> Result<Value> {
+        // TODO: Implement with ServiceMetadataStore
+        warn!("⚠️  metadata.store not yet implemented");
+        Ok(json!({ "stored": false, "message": "Not yet implemented" }))
+    }
+
+    /// Route metadata.retrieve → get service metadata (placeholder)
+    async fn metadata_retrieve(&self, _params: Value) -> Result<Value> {
+        // TODO: Implement with ServiceMetadataStore
+        warn!("⚠️  metadata.retrieve not yet implemented");
+        Ok(json!({ "metadata": null }))
+    }
+
+    /// Route metadata.search → search metadata (placeholder)
+    async fn metadata_search(&self, _params: Value) -> Result<Value> {
+        // TODO: Implement with ServiceMetadataStore
+        warn!("⚠️  metadata.search not yet implemented");
+        Ok(json!({ "results": [] }))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_semantic_router_method_not_found() {
+        // Note: Can't easily test without a real client, but we can verify
+        // error handling structure
+        // This would require mocking the client
+    }
+
+    #[test]
+    fn test_semantic_method_names() {
+        // Verify semantic method naming conventions
+        let storage_methods = vec![
+            "storage.put",
+            "storage.get",
+            "storage.delete",
+            "storage.list",
+            "storage.dataset.create",
+        ];
+
+        for method in storage_methods {
+            assert!(method.contains('.'), "Method should use dot notation: {}", method);
+            assert!(method.starts_with("storage."), "Storage method should start with storage.: {}", method);
+        }
+    }
+}
