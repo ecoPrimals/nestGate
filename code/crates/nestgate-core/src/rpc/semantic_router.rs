@@ -53,11 +53,26 @@
 //! - `discovery.announce` → register service metadata
 //! - `discovery.query` → find services by capability
 //! - `discovery.list` → list all services
+//! - `discovery.capabilities` → get own capabilities
+//!
+//! ### Metadata Domain (`metadata.*`)
+//! - `metadata.store` → store service metadata
+//! - `metadata.retrieve` → get service metadata by name
+//! - `metadata.search` → search services by capability
+//!
+//! ### Crypto Domain (`crypto.*`)
+//! - `crypto.encrypt` → delegate to BearDog (capability discovery!)
+//! - `crypto.decrypt` → delegate to BearDog
+//! - `crypto.generate_key` → delegate to BearDog
+//! - `crypto.generate_nonce` → delegate to BearDog
+//! - `crypto.hash` → delegate to BearDog
+//! - `crypto.verify_hash` → delegate to BearDog
 //!
 //! ### Health Domain (`health.*`)
 //! - `health.check` → `health_check`
 //! - `health.metrics` → `get_metrics`
 //! - `health.info` → `get_info`
+//! - `health.ready` → readiness check
 //!
 //! ## References
 //!
@@ -166,6 +181,14 @@ impl SemanticRouter {
             "metadata.store" => self.metadata_store(params).await,
             "metadata.retrieve" => self.metadata_retrieve(params).await,
             "metadata.search" => self.metadata_search(params).await,
+
+            // ==================== CRYPTO DOMAIN ====================
+            "crypto.encrypt" => self.crypto_encrypt(params).await,
+            "crypto.decrypt" => self.crypto_decrypt(params).await,
+            "crypto.generate_key" => self.crypto_generate_key(params).await,
+            "crypto.generate_nonce" => self.crypto_generate_nonce(params).await,
+            "crypto.hash" => self.crypto_hash(params).await,
+            "crypto.verify_hash" => self.crypto_verify_hash(params).await,
 
             // Unknown method
             _ => {
@@ -663,6 +686,215 @@ impl SemanticRouter {
             "results": results,
             "count": results.len(),
             "query": capability
+        }))
+    }
+
+    // ==================== CRYPTO DOMAIN ====================
+
+    /// Route crypto.encrypt → CryptoDelegate::encrypt
+    ///
+    /// Delegates encryption to BearDog or compatible crypto provider.
+    /// Demonstrates capability-based discovery in action!
+    async fn crypto_encrypt(&self, params: Value) -> Result<Value> {
+        use crate::crypto::{delegate::CryptoDelegate, EncryptionAlgorithm, EncryptionParams};
+        use base64::{engine::general_purpose::STANDARD, Engine as _};
+
+        // Discover and connect to crypto provider
+        let delegate = CryptoDelegate::new().await?;
+
+        // Parse parameters
+        let plaintext_b64 = params["plaintext"]
+            .as_str()
+            .ok_or_else(|| NestGateError::invalid_input("plaintext", "base64 string required"))?;
+
+        let plaintext = STANDARD.decode(plaintext_b64)
+            .map_err(|e| NestGateError::invalid_input("plaintext", &format!("Invalid base64: {}", e)))?;
+
+        let algorithm = match params["algorithm"].as_str().unwrap_or("aes256gcm") {
+            "aes256gcm" => EncryptionAlgorithm::Aes256Gcm,
+            "chacha20poly1305" => EncryptionAlgorithm::ChaCha20Poly1305,
+            algo => return Err(NestGateError::invalid_input("algorithm", &format!("Unsupported algorithm: {}", algo))),
+        };
+
+        let associated_data = if let Some(ad) = params["associated_data"].as_str() {
+            STANDARD.decode(ad)
+                .map_err(|e| NestGateError::invalid_input("associated_data", &format!("Invalid base64: {}", e)))?
+        } else {
+            Vec::new()
+        };
+
+        let encryption_params = EncryptionParams {
+            algorithm,
+            associated_data,
+        };
+
+        // Delegate to crypto provider
+        let encrypted = delegate.encrypt(&plaintext, &encryption_params).await?;
+
+        debug!("🔐 Encryption complete via {}", delegate.provider_info().name);
+
+        Ok(json!({
+            "ciphertext": STANDARD.encode(&encrypted.ciphertext),
+            "nonce": STANDARD.encode(&encrypted.nonce),
+            "algorithm": match encrypted.algorithm {
+                EncryptionAlgorithm::Aes256Gcm => "aes256gcm",
+                EncryptionAlgorithm::ChaCha20Poly1305 => "chacha20poly1305",
+            },
+            "timestamp": encrypted.timestamp,
+            "provider": delegate.provider_info().name
+        }))
+    }
+
+    /// Route crypto.decrypt → CryptoDelegate::decrypt
+    async fn crypto_decrypt(&self, params: Value) -> Result<Value> {
+        use crate::crypto::{delegate::CryptoDelegate, EncryptedData, EncryptionAlgorithm};
+        use base64::{engine::general_purpose::STANDARD, Engine as _};
+
+        let delegate = CryptoDelegate::new().await?;
+
+        // Parse parameters
+        let ciphertext_b64 = params["ciphertext"]
+            .as_str()
+            .ok_or_else(|| NestGateError::invalid_input("ciphertext", "base64 string required"))?;
+
+        let ciphertext = STANDARD.decode(ciphertext_b64)
+            .map_err(|e| NestGateError::invalid_input("ciphertext", &format!("Invalid base64: {}", e)))?;
+
+        let nonce_b64 = params["nonce"]
+            .as_str()
+            .ok_or_else(|| NestGateError::invalid_input("nonce", "base64 string required"))?;
+
+        let nonce = STANDARD.decode(nonce_b64)
+            .map_err(|e| NestGateError::invalid_input("nonce", &format!("Invalid base64: {}", e)))?;
+
+        let algorithm = match params["algorithm"].as_str().unwrap_or("aes256gcm") {
+            "aes256gcm" => EncryptionAlgorithm::Aes256Gcm,
+            "chacha20poly1305" => EncryptionAlgorithm::ChaCha20Poly1305,
+            algo => return Err(NestGateError::invalid_input("algorithm", &format!("Unsupported algorithm: {}", algo))),
+        };
+
+        let encrypted = EncryptedData {
+            ciphertext,
+            nonce,
+            algorithm,
+            timestamp: params["timestamp"].as_u64().unwrap_or(0),
+        };
+
+        // Delegate to crypto provider
+        let plaintext = delegate.decrypt(&encrypted).await?;
+
+        debug!("🔓 Decryption complete via {}", delegate.provider_info().name);
+
+        Ok(json!({
+            "plaintext": STANDARD.encode(&plaintext),
+            "provider": delegate.provider_info().name
+        }))
+    }
+
+    /// Route crypto.generate_key → CryptoDelegate::generate_key
+    async fn crypto_generate_key(&self, params: Value) -> Result<Value> {
+        use crate::crypto::delegate::CryptoDelegate;
+        use base64::{engine::general_purpose::STANDARD, Engine as _};
+
+        let delegate = CryptoDelegate::new().await?;
+
+        let length = params["length"]
+            .as_u64()
+            .ok_or_else(|| NestGateError::invalid_input("length", "number required"))? as usize;
+
+        let key = delegate.generate_key(length).await?;
+
+        debug!("🔑 Key generated ({} bytes) via {}", length, delegate.provider_info().name);
+
+        Ok(json!({
+            "key": STANDARD.encode(&key),
+            "length": key.len(),
+            "provider": delegate.provider_info().name
+        }))
+    }
+
+    /// Route crypto.generate_nonce → CryptoDelegate::generate_nonce
+    async fn crypto_generate_nonce(&self, params: Value) -> Result<Value> {
+        use crate::crypto::{delegate::CryptoDelegate, EncryptionAlgorithm};
+        use base64::{engine::general_purpose::STANDARD, Engine as _};
+
+        let delegate = CryptoDelegate::new().await?;
+
+        let algorithm = match params["algorithm"].as_str().unwrap_or("aes256gcm") {
+            "aes256gcm" => EncryptionAlgorithm::Aes256Gcm,
+            "chacha20poly1305" => EncryptionAlgorithm::ChaCha20Poly1305,
+            algo => return Err(NestGateError::invalid_input("algorithm", &format!("Unsupported algorithm: {}", algo))),
+        };
+
+        let nonce = delegate.generate_nonce(algorithm).await?;
+
+        debug!("🎲 Nonce generated ({} bytes) via {}", nonce.len(), delegate.provider_info().name);
+
+        Ok(json!({
+            "nonce": STANDARD.encode(&nonce),
+            "length": nonce.len(),
+            "provider": delegate.provider_info().name
+        }))
+    }
+
+    /// Route crypto.hash → CryptoDelegate::hash
+    async fn crypto_hash(&self, params: Value) -> Result<Value> {
+        use crate::crypto::delegate::CryptoDelegate;
+        use base64::{engine::general_purpose::STANDARD, Engine as _};
+
+        let delegate = CryptoDelegate::new().await?;
+
+        let data_b64 = params["data"]
+            .as_str()
+            .ok_or_else(|| NestGateError::invalid_input("data", "base64 string required"))?;
+
+        let data = STANDARD.decode(data_b64)
+            .map_err(|e| NestGateError::invalid_input("data", &format!("Invalid base64: {}", e)))?;
+
+        let algorithm = params["algorithm"].as_str().unwrap_or("sha256");
+
+        let hash = delegate.hash(&data, algorithm).await?;
+
+        debug!("🔨 Hash computed ({} bytes) with {} via {}", hash.len(), algorithm, delegate.provider_info().name);
+
+        Ok(json!({
+            "hash": STANDARD.encode(&hash),
+            "algorithm": algorithm,
+            "provider": delegate.provider_info().name
+        }))
+    }
+
+    /// Route crypto.verify_hash → CryptoDelegate::verify_hash
+    async fn crypto_verify_hash(&self, params: Value) -> Result<Value> {
+        use crate::crypto::delegate::CryptoDelegate;
+        use base64::{engine::general_purpose::STANDARD, Engine as _};
+
+        let delegate = CryptoDelegate::new().await?;
+
+        let data_b64 = params["data"]
+            .as_str()
+            .ok_or_else(|| NestGateError::invalid_input("data", "base64 string required"))?;
+
+        let data = STANDARD.decode(data_b64)
+            .map_err(|e| NestGateError::invalid_input("data", &format!("Invalid base64: {}", e)))?;
+
+        let hash_b64 = params["hash"]
+            .as_str()
+            .ok_or_else(|| NestGateError::invalid_input("hash", "base64 string required"))?;
+
+        let hash = STANDARD.decode(hash_b64)
+            .map_err(|e| NestGateError::invalid_input("hash", &format!("Invalid base64: {}", e)))?;
+
+        let algorithm = params["algorithm"].as_str().unwrap_or("sha256");
+
+        let valid = delegate.verify_hash(&data, &hash, algorithm).await?;
+
+        debug!("🔍 Hash verification: {} via {}", if valid { "VALID" } else { "INVALID" }, delegate.provider_info().name);
+
+        Ok(json!({
+            "valid": valid,
+            "algorithm": algorithm,
+            "provider": delegate.provider_info().name
         }))
     }
 }

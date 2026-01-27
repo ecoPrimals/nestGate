@@ -208,6 +208,19 @@ mod tests;
 #[cfg(test)]
 pub use tests::*;
 
+// ==================== CRYPTO DELEGATION ====================
+
+/// **PRODUCTION**: Crypto delegation to BearDog or compatible crypto provider
+///
+/// This module demonstrates capability-based discovery in action:
+/// - Discovers crypto provider by "crypto" capability (not hardcoded name)
+/// - Delegates all crypto operations via JSON-RPC semantic methods
+/// - Maintains NestGate as 100% Pure Rust (no crypto dependencies!)
+/// - Follows primal sovereignty (self-knowledge, runtime discovery)
+///
+/// **Status**: Production-ready, replaces DEVELOPMENT STUB in SecureCrypto
+pub mod delegate;
+
 // ==================== PURE RUST JWT (RustCrypto) ====================
 
 /// Pure Rust JWT implementation using RustCrypto (100% pure Rust, audited!)
