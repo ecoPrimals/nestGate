@@ -193,77 +193,8 @@ pub mod zfs;
 pub use crate::dev_stubs::zfs as zfs_stub;
 // ==================== EXPLICIT RE-EXPORTS ====================
 
-// Core handler types and functions
-// pub use ai_first_example::{
-//     AIFirstHandler, AIFirstResponse, AIFirstRequest,
-//     create_ai_first_handler, process_ai_first_request,
-// };
-
-// pub use compliance::{
-//     ComplianceHandler, ComplianceReport, ComplianceCheck,
-//     run_compliance_check, generate_compliance_report,
-// };
-
-// pub use dashboard_types::{
-//     DashboardData, DashboardMetrics, DashboardWidget,
-//     create_dashboard_data, update_dashboard_metrics,
-// };
-
-// pub use hardware_tuning::{
-//     HardwareTuningHandler, TuningProfile, HardwareMetrics,
-//     apply_tuning_profile, collect_hardware_metrics,
-// };
-
-// Health functionality available through nestgate-core interface module
-// pub use nestgate_core::interface::health_status::HealthStatus;
-
-// Load testing functionality temporarily disabled
-// pub use load_testing::{
-//     LoadTestHandler, LoadTestConfig, LoadTestResult,
-//     run_load_test, analyze_load_test_results,
-// };
-
-// pub use metrics_collector::{
-//     MetricsCollector, MetricsData, MetricPoint,
-//     collect_metrics, export_metrics,
-// };
-
-// pub use performance_analytics::{
-//     PerformanceAnalyzer, PerformanceReport, AnalyticsConfig,
-//     analyze_performance, generate_performance_report,
-// };
-
-// pub use performance_analyzer::{
-//     SystemAnalyzer, AnalysisResult, PerformanceInsight,
-//     analyze_system_performance, get_performance_insights,
-// };
-
-// pub use storage::{
-//     StorageHandler, StorageInfo, StorageOperation,
-//     get_storage_info, perform_storage_operation,
-// };
-
-// pub use workspace_management::{
-//     WorkspaceManager, WorkspaceInfo, WorkspaceOperation,
-//     create_workspace, manage_workspace,
-// };
-
-// pub use zero_cost_api_handlers::{
-//     ZeroCostHandler, ZeroCostResponse, ZeroCostConfig,
-//     create_zero_cost_handler, process_zero_cost_request,
-// };
-
-// ZFS handler types
-// pub use zfs::{
-//     ZfsHandler, ZfsPool, ZfsDataset, ZfsSnapshot,
-//     list_pools, create_dataset, manage_snapshots,
-// };
-
-// Performance dashboard types
-// pub use performance_dashboard::{
-//     PerformanceDashboard, DashboardConfig, DashboardEndpoint,
-//     create_performance_dashboard, update_dashboard_config,
-// };
+// Core handler types available through their respective modules
+// Use direct module imports for clarity (e.g., use crate::handlers::storage::StorageHandler)
 
 // ==================== HANDLER COLLECTIONS ====================
 

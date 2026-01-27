@@ -6,32 +6,9 @@
 // **PROVIDES**: Focused monitoring modules with clear separation of concerns
 // Core tracing configuration and setup
 pub mod config;
-// Monitoring modules - hybrid approach: local smart + external orchestration
-// pub mod initialization;
-// pub mod context;
-// Log management and aggregation
-// pub mod aggregation;
-// pub mod retention;
-// pub mod exporters;
-
-// Distributed tracing and observability
-// pub mod distributed;
-// pub mod spans;
-// pub mod correlation;
 
 // Re-export all types for backward compatibility
 pub use config::{LogAggregationConfig, LogRetentionConfig, TracingConfig};
-// Tracing re-exports - local smart monitoring with optional external integration
-// Local: NestGate storage-specific tracing and metrics
-// External: Route complex analytics to Compute or Orchestration via universal adapter
-// pub use initialization::{init_tracing, TracingInitializer};
-// pub use context::{TraceContext, CorrelationId};
-// pub use aggregation::{LogAggregator, LogEntry, LogLevel};
-// pub use retention::{LogRetentionManager, RetentionPolicy};
-// pub use exporters::{LogExporter, ElkExporter, LokiExporter, JaegerExporter};
-// pub use distributed::{DistributedTracing, TraceCollector};
-// pub use spans::{create_span, SpanBuilder, SpanManager};
-// pub use correlation::{CorrelationManager, RequestTracker};
 
 // **MODULARIZATION ACHIEVEMENT**
 ///

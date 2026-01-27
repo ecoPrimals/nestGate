@@ -61,15 +61,9 @@ pub enum CompressionType {
 }
 pub use automation::{AiAutomationSettings, DatasetAutomationConfig};
 pub use health::HealthMonitoringConfig;
-// pub use metrics::{MetricsConfig, MetricsFormat}; // Metrics module not yet implemented
-// pub use migration::{CapacityLimits, MigrationConfig, MigrationRules}; // Migration module not yet implemented
 pub use crate::automation::policies::MigrationRules;
 pub use pool::PoolDiscoveryConfig;
 pub use security::{AccessControlConfig, KeyManagementConfig, SecurityConfig};
 pub use tiers::CapacityLimits; // Using local definition from tiers.rs
 pub use tiers::{PerformanceProfile, TierConfig, TierConfigurations};
-// pub use unified_zfs_config::ZfsConfig; // Module not yet implemented
-// pub use nestgate_core::config::unified_types::ZfsConfig; // Module not available
-// pub use nestgate_core::config::canonical::types::ZfsConfig; // Module not available
-// pub use nestgate_core::config::domains::ZfsConfig; // Module not available
 pub use nestgate_core::services::storage::config::ZfsConfig;

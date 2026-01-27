@@ -20,15 +20,6 @@ pub mod types;
 mod mock_tests;
 #[cfg(test)]
 mod service_tests;
-// Storage management domains - NestGate's core expertise (local smart capabilities)
-// pub mod pools;
-// pub mod quotas;
-// pub mod cache;
-// pub mod zfs;
-
-// Operations and statistics - local smart storage intelligence
-// pub mod operations;
-// pub mod stats;
 
 // Re-export all types for backward compatibility
 pub use config::CachePolicies;
@@ -41,13 +32,6 @@ pub use types::{
     CacheConfig, CacheType, EvictionPolicy, PoolHealth, QuotaEnforcement, StorageOperationResult,
     StorageOperationType, StoragePool, StoragePoolType, StorageQuota, StorageServiceStats,
 };
-// Storage module re-exports - NestGate's core storage domain
-// These are local smart capabilities, not routed through universal adapter
-// pub use pools::PoolManager;
-// pub use quotas::QuotaManager;
-// pub use cache::CacheManager;
-// pub use zfs::ZfsManager;
-// pub use operations::StorageOperations;
 
 // **MODULARIZATION ACHIEVEMENT**
 ///
