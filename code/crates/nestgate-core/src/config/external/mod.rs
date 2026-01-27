@@ -36,7 +36,7 @@
 pub mod network;
 /// Network environment configuration
 pub mod network_env_config;
-pub mod services;
+// pub mod services; // REMOVED: Deprecated in favor of capability-based configuration
 pub mod services_config;
 
 use crate::Result;
@@ -44,7 +44,7 @@ use serde::{Deserialize, Serialize};
 
 pub use network::NetworkConfig;
 pub use network_env_config::{NetworkEnvConfig, SharedNetworkEnvConfig};
-pub use services::ServiceEndpoints;
+// ServiceEndpoints removed - use capability-based config instead
 pub use services_config::{ServicesConfig, SharedServicesConfig};
 
 /// Complete external configuration
@@ -53,8 +53,8 @@ pub use services_config::{ServicesConfig, SharedServicesConfig};
 pub struct ExternalConfig {
     /// Network configuration (ports, IPs)
     pub network: NetworkConfig,
-    /// Service endpoints (URLs, discovery)
-    pub services: ServiceEndpoints,
+    /// Service endpoints (URLs, discovery) - use ServicesConfig from services_config module
+    pub services: ServicesConfig,
 }
 
 impl ExternalConfig {
@@ -66,7 +66,7 @@ impl ExternalConfig {
     pub fn from_env() -> Result<Self> {
         Ok(Self {
             network: NetworkConfig::from_env()?,
-            services: ServiceEndpoints::from_env()?,
+            services: ServicesConfig::from_env()?,
         })
     }
 
@@ -75,7 +75,7 @@ impl ExternalConfig {
     pub fn default_dev() -> Self {
         Self {
             network: NetworkConfig::default_dev(),
-            services: ServiceEndpoints::default_dev(),
+            services: ServicesConfig::default_dev(),
         }
     }
 
@@ -87,7 +87,7 @@ impl ExternalConfig {
     pub fn from_env_production() -> Result<Self> {
         Ok(Self {
             network: NetworkConfig::from_env_production()?,
-            services: ServiceEndpoints::from_env_production()?,
+            services: ServicesConfig::from_env_production()?,
         })
     }
 }
