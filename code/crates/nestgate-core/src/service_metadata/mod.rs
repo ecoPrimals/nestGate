@@ -184,7 +184,7 @@ impl ServiceMetadataStore {
         for capability in &meta.capabilities {
             self.capability_index
                 .entry(capability.clone())
-                .or_insert_with(Vec::new)
+                .or_default()
                 .push(meta.name.clone());
         }
 
@@ -204,7 +204,7 @@ impl ServiceMetadataStore {
         self.services
             .get(name)
             .map(|entry| entry.value().clone())
-            .ok_or_else(|| NestGateError::not_found(&format!("Service not found: {}", name)))
+            .ok_or_else(|| NestGateError::not_found(format!("Service not found: {}", name)))
     }
 
     /// Find services by capability (capability-based discovery!)
@@ -241,7 +241,7 @@ impl ServiceMetadataStore {
     pub async fn update_heartbeat(&self, name: &str) -> Result<()> {
         self.services
             .get_mut(name)
-            .ok_or_else(|| NestGateError::not_found(&format!("Service not found: {}", name)))?
+            .ok_or_else(|| NestGateError::not_found(format!("Service not found: {}", name)))?
             .last_seen = SystemTime::now();
 
         Ok(())
@@ -253,7 +253,7 @@ impl ServiceMetadataStore {
         let meta = self
             .services
             .remove(name)
-            .ok_or_else(|| NestGateError::not_found(&format!("Service not found: {}", name)))?
+            .ok_or_else(|| NestGateError::not_found(format!("Service not found: {}", name)))?
             .1;
 
         // Remove from capability index

@@ -52,7 +52,7 @@ impl CapabilityRegistry {
         for capability in &service.capabilities {
             self.capabilities
                 .entry(capability.clone())
-                .or_insert_with(Vec::new)
+                .or_default()
                 .push(service.clone());
         }
 

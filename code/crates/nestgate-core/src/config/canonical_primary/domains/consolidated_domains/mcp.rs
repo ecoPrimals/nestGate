@@ -75,20 +75,15 @@ impl Default for McpProtocolConfig {
 }
 
 /// MCP message format
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub enum McpMessageFormat {
     /// JSON format
+    #[default]
     Json,
     /// MessagePack format
     MessagePack,
     /// Protobuf format
     Protobuf,
-}
-
-impl Default for McpMessageFormat {
-    fn default() -> Self {
-        Self::Json
-    }
 }
 
 /// MCP timeout configuration

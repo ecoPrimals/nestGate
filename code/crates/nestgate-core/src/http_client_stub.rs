@@ -49,23 +49,40 @@ impl ClientBuilder {
 }
 
 /// Stubbed HTTP method enum
+///
+/// **ecoBin Compliance**: NestGate does NOT make HTTP calls directly.
+/// All external HTTP is delegated to Songbird primal via JSON-RPC over Unix sockets.
 #[derive(Debug, Clone, Copy)]
 pub enum Method {
+    /// HTTP GET method
     Get,
+    /// HTTP POST method
     Post,
+    /// HTTP PUT method
     Put,
+    /// HTTP DELETE method
     Delete,
+    /// HTTP PATCH method
     Patch,
+    /// HTTP HEAD method
     Head,
+    /// HTTP OPTIONS method
     Options,
 }
 
 impl Method {
+    /// HTTP GET method constant
     pub const GET: Method = Method::Get;
+    /// HTTP POST method constant
     pub const POST: Method = Method::Post;
+    /// HTTP PUT method constant
     pub const PUT: Method = Method::Put;
+    /// HTTP DELETE method constant
     pub const DELETE: Method = Method::Delete;
+    /// HTTP PATCH method constant
     pub const PATCH: Method = Method::Patch;
+    /// HTTP HEAD method constant
     pub const HEAD: Method = Method::Head;
+    /// HTTP OPTIONS method constant
     pub const OPTIONS: Method = Method::Options;
 }

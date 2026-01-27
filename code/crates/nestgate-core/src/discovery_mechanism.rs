@@ -233,10 +233,21 @@ pub mod mdns {
     type ServiceRegistry = Arc<DashMap<String, ServiceInfo>>;
 
     /// mDNS discovery mechanism
+    ///
+    /// **Note**: This is a simplified in-memory implementation for testing.
+    /// Production mDNS would use actual mDNS protocol (avahi-daemon, dns-sd).
+    ///
+    /// **TODO**: Implement proper timeout handling for queries and cache expiration.
     pub struct MdnsDiscovery {
+        /// Query timeout (not yet implemented - reserved for future use)
+        #[allow(dead_code)]
         timeout: Duration,
+        /// Cache duration (not yet implemented - reserved for future use)
+        #[allow(dead_code)]
         cache_duration: Duration,
+        /// In-memory service registry (lock-free)
         registry: ServiceRegistry,
+        /// Our announced service ID
         announced_service_id: Arc<RwLock<Option<String>>>,
     }
 

@@ -95,10 +95,7 @@ impl ConnectionPool {
         let conn = Connection::new(endpoint.clone());
 
         // Store in pool (lock-free!)
-        self.connections
-            .entry(key)
-            .or_insert_with(Vec::new)
-            .push(conn.clone());
+        self.connections.entry(key).or_default().push(conn.clone());
 
         Ok(conn)
     }
@@ -156,6 +153,10 @@ impl ConnectionPool {
 ///
 /// Represents a connection to a specific endpoint with lifecycle tracking.
 #[derive(Debug, Clone)]
+/// Connection metadata for network client pool
+///
+/// **BiomeOS Architecture**: No HTTP client stored here.
+/// External HTTP is delegated to Songbird primal via JSON-RPC over Unix sockets.
 pub struct Connection {
     /// Unique connection ID
     pub id: uuid::Uuid,
@@ -167,8 +168,6 @@ pub struct Connection {
     pub last_used: Instant,
     /// Number of requests sent on this connection
     pub request_count: u64,
-    /// Underlying HTTP client (stubbed - use Songbird for external HTTP)
-    client: (),
 }
 
 impl Connection {
@@ -180,7 +179,6 @@ impl Connection {
             created_at: Instant::now(),
             last_used: Instant::now(),
             request_count: 0,
-            client: (), // Stubbed - use Songbird RPC for external HTTP
         }
     }
 

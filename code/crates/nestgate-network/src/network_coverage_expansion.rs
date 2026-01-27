@@ -248,7 +248,7 @@ mod network_coverage_expansion {
         let config = NetworkConfig::default();
         let service = NetworkService::new(config);
 
-        let stats = service.get_network_statistics().await.unwrap();
+        let stats = service.get_network_statistics().unwrap();
         assert_eq!(stats.active_connections, 0);
     }
 
@@ -258,7 +258,7 @@ mod network_coverage_expansion {
         let service = NetworkService::new(config);
 
         // Verify service was created successfully
-        let stats = service.get_network_statistics().await.unwrap();
+        let stats = service.get_network_statistics().unwrap();
         assert_eq!(stats.active_connections, 0);
     }
 
@@ -390,7 +390,7 @@ mod network_coverage_expansion {
             .map(|_| {
                 let service_clone = service.clone();
                 tokio::spawn(async move {
-                    let _stats = service_clone.get_network_statistics().await;
+                    let _stats = service_clone.get_network_statistics();
                 })
             })
             .collect();

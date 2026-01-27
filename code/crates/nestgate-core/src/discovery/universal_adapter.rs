@@ -4,7 +4,6 @@
 
 use super::capability_scanner::CapabilityInfo;
 use crate::error::NestGateError;
-use crate::http_client_stub as reqwest;
 use bytes::Bytes;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
@@ -158,12 +157,14 @@ impl Connection for ConnectionImpl {
 
 /// HTTP-based connection implementation
 #[derive(Clone)]
-/// Httpconnection
+/// HTTP connection for external HTTP delegation to Songbird
+///
+/// **BiomeOS Architecture**: NestGate does NOT make external HTTP calls directly.
+/// All external HTTP is delegated to Songbird primal via JSON-RPC over Unix sockets.
+/// This struct exists for capability routing, NOT for actual HTTP client usage.
 pub struct HttpConnection {
     /// Capability information
     capability_info: CapabilityInfo,
-    /// HTTP client
-    client: reqwest::Client,
     /// Connection metadata
     metadata: ConnectionMetadata,
 }
@@ -176,23 +177,7 @@ impl HttpConnection {
     /// This function will return an error if:
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
-    /// - Network or I/O errors occur
     pub fn new(capability_info: CapabilityInfo) -> Result<Self, NestGateError> {
-        let client = reqwest::Client::builder()
-            .timeout(std::time::Duration::from_secs(30))
-            .build()
-            .map_err(|e| {
-                NestGateError::Internal(Box::new(
-                    crate::error::variants::core_errors::InternalErrorDetails {
-                        message: format!("Failed to create HTTP client: {e}"),
-                        component: "universal_adapter".to_string(),
-                        location: Some(format!("{}:{}", file!(), line!())),
-                        is_bug: false,
-                        context: None,
-                    },
-                ))
-            })?;
-
         let metadata = ConnectionMetadata {
             connection_type: "http".to_string(),
             endpoint: capability_info.endpoint.clone(),
@@ -203,7 +188,6 @@ impl HttpConnection {
 
         Ok(Self {
             capability_info,
-            client,
             metadata,
         })
     }

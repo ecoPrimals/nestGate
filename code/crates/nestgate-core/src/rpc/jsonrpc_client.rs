@@ -225,7 +225,7 @@ impl JsonRpcClient {
 
         // Serialize request
         let request_json = serde_json::to_string(&request).map_err(|e| {
-            NestGateError::api_internal_error(&format!("Failed to serialize request: {}", e))
+            NestGateError::api_internal_error(format!("Failed to serialize request: {}", e))
         })?;
 
         // Send request (JSON-RPC over newline-delimited JSON)
@@ -257,7 +257,7 @@ impl JsonRpcClient {
         // Parse response
         let response: JsonRpcResponse = serde_json::from_str(&response_line).map_err(|e| {
             warn!("Invalid JSON-RPC response: {}", response_line);
-            NestGateError::api_internal_error(&format!("Failed to parse response: {}", e))
+            NestGateError::api_internal_error(format!("Failed to parse response: {}", e))
         })?;
 
         debug!(
@@ -321,7 +321,7 @@ impl JsonRpcClient {
     {
         let result = self.call(method, params).await?;
         serde_json::from_value(result).map_err(|e| {
-            NestGateError::api_internal_error(&format!(
+            NestGateError::api_internal_error(format!(
                 "Failed to deserialize JSON-RPC result: {}",
                 e
             ))
@@ -346,7 +346,7 @@ mod tests {
     #[test]
     fn test_request_serialization() {
         use serde_json::json;
-        
+
         let request = JsonRpcRequest {
             jsonrpc: "2.0".to_string(),
             method: "ipc.resolve".to_string(),

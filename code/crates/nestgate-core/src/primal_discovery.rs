@@ -318,14 +318,9 @@ pub trait DiscoveryBackend {
 ///
 /// This integrates with the unified discovery system (discovery_mechanism.rs)
 /// which supports mDNS, Consul, and Kubernetes backends.
+#[derive(Default)]
 struct ProductionBackend {
     discovery: Option<Arc<dyn crate::discovery_mechanism::DiscoveryMechanism>>,
-}
-
-impl Default for ProductionBackend {
-    fn default() -> Self {
-        Self { discovery: None }
-    }
 }
 
 impl ProductionBackend {

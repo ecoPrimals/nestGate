@@ -26,11 +26,12 @@
 //!
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 //! // 1. Build self-knowledge
+//! use nestgate_core::constants::ports;
 //! let self_knowledge = SelfKnowledge::builder()
 //!     .with_id("nestgate-001")
 //!     .with_name("nestgate")
 //!     .with_capability("storage")
-//!     .with_endpoint("api", "0.0.0.0:8080".parse()?)
+//!     .with_endpoint("api", ports::get_api_server_addr().parse()?)
 //!     .build()?;
 //!
 //! // 2. Create registration (auto-discovers orchestrator)

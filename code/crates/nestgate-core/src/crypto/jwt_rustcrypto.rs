@@ -119,7 +119,7 @@ impl JwtHmac {
         mac.update(message.as_bytes());
         let signature = mac.finalize().into_bytes();
 
-        let signature_b64 = URL_SAFE_NO_PAD.encode(&signature);
+        let signature_b64 = URL_SAFE_NO_PAD.encode(signature);
 
         Ok(format!("{}.{}", message, signature_b64))
     }

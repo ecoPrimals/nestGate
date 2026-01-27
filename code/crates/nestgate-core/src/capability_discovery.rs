@@ -76,16 +76,16 @@ mod tests;
 pub struct ServiceEndpoint {
     /// Capability this service provides
     pub capability: String,
-    
+
     /// Service name (for logging only, NOT for discovery!)
     pub name: String,
-    
+
     /// Connection endpoint (Unix socket path or TCP address)
     pub endpoint: String,
-    
+
     /// Service version
     pub version: String,
-    
+
     /// When this endpoint was discovered
     #[serde(skip, default = "Instant::now")]
     pub discovered_at: Instant,
@@ -98,17 +98,14 @@ impl ServiceEndpoint {
             .as_str()
             .ok_or_else(|| NestGateError::api_error("Missing service name in response"))?
             .to_string();
-        
+
         let endpoint = value["endpoint"]
             .as_str()
             .ok_or_else(|| NestGateError::api_error("Missing endpoint in response"))?
             .to_string();
-        
-        let version = value["version"]
-            .as_str()
-            .unwrap_or("unknown")
-            .to_string();
-        
+
+        let version = value["version"].as_str().unwrap_or("unknown").to_string();
+
         Ok(Self {
             capability: capability.to_string(),
             name,
@@ -126,10 +123,10 @@ impl ServiceEndpoint {
 pub struct CapabilityDiscovery {
     /// Songbird IPC client for discovery queries
     songbird: JsonRpcClient,
-    
+
     /// Cache of discovered capabilities (for performance)
     cache: Arc<DashMap<String, ServiceEndpoint>>,
-    
+
     /// Cache TTL (time-to-live)
     cache_ttl: Duration,
 }
@@ -154,7 +151,7 @@ impl CapabilityDiscovery {
             cache_ttl: Duration::from_secs(300), // 5 minutes
         }
     }
-    
+
     /// Discover a service providing a specific capability
     ///
     /// # Arguments
@@ -202,44 +199,40 @@ impl CapabilityDiscovery {
                 );
             }
         }
-        
+
         // Query Songbird IPC service
         tracing::info!(
             capability = capability,
             "Discovering service by capability via Songbird IPC"
         );
-        
-        let response = self.songbird
-            .call(
-                "ipc.find_capability",
-                json!({ "capability": capability })
-            )
+
+        let response = self
+            .songbird
+            .call("ipc.find_capability", json!({ "capability": capability }))
             .await
             .map_err(|e| {
-                NestGateError::service_unavailable(&format!(
+                NestGateError::service_unavailable(format!(
                     "Failed to discover capability '{}': {}",
                     capability, e
                 ))
             })?;
-        
+
         // Parse response
-        let services = response["services"]
-            .as_array()
-            .ok_or_else(|| {
-                NestGateError::api_error("Invalid response format: expected 'services' array")
-            })?;
-        
+        let services = response["services"].as_array().ok_or_else(|| {
+            NestGateError::api_error("Invalid response format: expected 'services' array")
+        })?;
+
         if services.is_empty() {
-            return Err(NestGateError::service_unavailable(&format!(
+            return Err(NestGateError::service_unavailable(format!(
                 "No service provides capability '{}'",
                 capability
             )));
         }
-        
+
         // Take first service (TODO: support multiple providers with load balancing)
         let service_value = &services[0];
         let endpoint = ServiceEndpoint::from_response(service_value.clone(), capability)?;
-        
+
         tracing::info!(
             capability = capability,
             service = endpoint.name,
@@ -247,13 +240,13 @@ impl CapabilityDiscovery {
             version = endpoint.version,
             "Discovered service by capability"
         );
-        
+
         // Cache for future use
         self.cache.insert(capability.to_string(), endpoint.clone());
-        
+
         Ok(endpoint)
     }
-    
+
     /// Discover Songbird IPC service itself
     ///
     /// **Special case**: Songbird is the bootstrap service that enables
@@ -286,14 +279,17 @@ impl CapabilityDiscovery {
     /// ```
     pub async fn discover_songbird_ipc() -> Result<JsonRpcClient> {
         tracing::info!("Discovering Songbird IPC service (bootstrap)");
-        
+
         // Try environment variable first
         if let Ok(path) = env::var("SONGBIRD_IPC_PATH") {
             tracing::debug!(path = path, "Trying Songbird IPC path from environment");
             if Path::new(&path).exists() {
                 match JsonRpcClient::connect_unix(&path).await {
                     Ok(client) => {
-                        tracing::info!(path = path, "Connected to Songbird IPC via environment path");
+                        tracing::info!(
+                            path = path,
+                            "Connected to Songbird IPC via environment path"
+                        );
                         return Ok(client);
                     }
                     Err(e) => {
@@ -306,14 +302,17 @@ impl CapabilityDiscovery {
                 }
             }
         }
-        
+
         // Try standard Unix socket path
         let standard_path = "/primal/songbird";
         tracing::debug!(path = standard_path, "Trying standard Songbird IPC path");
         if Path::new(standard_path).exists() {
             match JsonRpcClient::connect_unix(standard_path).await {
                 Ok(client) => {
-                    tracing::info!(path = standard_path, "Connected to Songbird IPC via standard path");
+                    tracing::info!(
+                        path = standard_path,
+                        "Connected to Songbird IPC via standard path"
+                    );
                     return Ok(client);
                 }
                 Err(e) => {
@@ -325,30 +324,26 @@ impl CapabilityDiscovery {
                 }
             }
         }
-        
+
         // Try TCP via environment
         let host = env::var("SONGBIRD_HOST").unwrap_or_else(|_| "localhost".to_string());
         let port = env::var("SONGBIRD_PORT")
             .ok()
             .and_then(|s| s.parse().ok())
             .unwrap_or(8080);
-        
-        tracing::debug!(
-            host = host,
-            port = port,
-            "Trying Songbird IPC via TCP"
-        );
-        
+
+        tracing::debug!(host = host, port = port, "Trying Songbird IPC via TCP");
+
         // TODO: Implement TCP connection for Songbird IPC
         // For now, return error directing to Unix socket setup
         Err(NestGateError::service_unavailable(
             "Songbird IPC not found. Ensure Songbird is running and accessible via:\n\
              1. Unix socket at /primal/songbird, OR\n\
              2. Environment variable SONGBIRD_IPC_PATH, OR\n\
-             3. TCP at SONGBIRD_HOST:SONGBIRD_PORT"
+             3. TCP at SONGBIRD_HOST:SONGBIRD_PORT",
         ))
     }
-    
+
     /// Clear the capability discovery cache
     ///
     /// Useful for testing or when services have changed.
@@ -356,7 +351,7 @@ impl CapabilityDiscovery {
         self.cache.clear();
         tracing::debug!("Capability discovery cache cleared");
     }
-    
+
     /// Get cache statistics
     pub fn cache_stats(&self) -> CacheStats {
         CacheStats {
@@ -371,9 +366,7 @@ impl CapabilityDiscovery {
 pub struct CacheStats {
     /// Number of cached entries
     pub size: usize,
-    
+
     /// Cache TTL in seconds
     pub ttl_seconds: u64,
 }
-
-

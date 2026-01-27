@@ -26,8 +26,10 @@
 //! // Discover storage capability (no hardcoding!)
 //! let client = NestGateRpcClient::discover_by_capability("storage").await?;
 //!
-//! // Or connect directly if endpoint known
-//! let client = NestGateRpcClient::new("tarpc://localhost:8091")?;
+//! // Or connect directly via environment-driven endpoint
+//! let endpoint = std::env::var("NESTGATE_RPC_ENDPOINT")
+//!     .unwrap_or_else(|_| format!("tarpc://{}", nestgate_core::constants::ports::get_rpc_server_addr()));
+//! let client = NestGateRpcClient::new(&endpoint)?;
 //!
 //! // Create dataset
 //! let dataset = client.create_dataset("my-dataset", Default::default()).await?;
@@ -71,7 +73,10 @@ type GeneratedClient = crate::rpc::tarpc_types::NestGateRpcClient;
 /// use nestgate_core::rpc::NestGateRpcClient;
 ///
 /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-/// let client = NestGateRpcClient::new("tarpc://localhost:8091")?;
+/// // Environment-driven: $NESTGATE_RPC_ENDPOINT or default
+/// let endpoint = std::env::var("NESTGATE_RPC_ENDPOINT")
+///     .unwrap_or_else(|_| format!("tarpc://{}", nestgate_core::constants::ports::get_rpc_server_addr()));
+/// let client = NestGateRpcClient::new(&endpoint)?;
 /// let health = client.health().await?;
 /// println!("Service status: {}", health.status);
 /// # Ok(())

@@ -400,10 +400,7 @@ async fn storage_store(params: &Option<Value>, state: &StorageState) -> Result<V
     })?;
 
     // ✅ Lock-free: Get or create family storage, then insert
-    let family_storage = state
-        .storage
-        .entry(family_id.to_string())
-        .or_insert_with(DashMap::new);
+    let family_storage = state.storage.entry(family_id.to_string()).or_default();
     family_storage.insert(key.to_string(), data.clone());
 
     debug!("Stored key '{}' for family '{}'", key, family_id);
@@ -562,10 +559,7 @@ async fn storage_store_blob(params: &Option<Value>, state: &StorageState) -> Res
         })?;
 
     // ✅ Lock-free: Store blob in nested DashMap
-    let family_blobs = state
-        .blobs
-        .entry(family_id.to_string())
-        .or_insert_with(DashMap::new);
+    let family_blobs = state.blobs.entry(family_id.to_string()).or_default();
     family_blobs.insert(key.to_string(), blob_data.clone());
 
     debug!(

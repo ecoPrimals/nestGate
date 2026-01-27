@@ -25,7 +25,8 @@
 //!
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 //! let service = NestGateRpcService::new();
-//! let addr: SocketAddr = "0.0.0.0:8091".parse()?;
+//! // Environment-driven: $NESTGATE_RPC_HOST and $NESTGATE_RPC_PORT
+//! let addr: SocketAddr = nestgate_core::constants::ports::get_rpc_server_addr().parse()?;
 //! serve_tarpc(addr, service).await?;
 //! # Ok(())
 //! # }
@@ -36,7 +37,10 @@
 //! use nestgate_core::rpc::NestGateRpcClient;
 //!
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-//! let client = NestGateRpcClient::new("tarpc://localhost:8091")?;
+//! // Environment-driven: $NESTGATE_RPC_ADDR or default
+//! let rpc_addr = std::env::var("NESTGATE_RPC_ADDR")
+//!     .unwrap_or_else(|_| "tarpc://localhost:8091".to_string());
+//! let client = NestGateRpcClient::new(&rpc_addr)?;
 //! let health = client.health().await?;
 //! println!("Service status: {}", health.status);
 //! # Ok(())
@@ -48,7 +52,7 @@ pub mod jsonrpc_client;
 pub mod jsonrpc_server;
 pub mod orchestrator_registration;
 pub mod socket_config;
-pub mod songbird_registration;
+// pub mod songbird_registration; // REMOVED: Deprecated since v2.3.0, zero production usage
 pub mod tarpc_client;
 pub mod tarpc_server;
 pub mod tarpc_types;
@@ -70,7 +74,7 @@ pub use audit_storage::{
 pub use jsonrpc_server::{JsonRpcConfig, JsonRpcServer};
 pub use orchestrator_registration::OrchestratorRegistration;
 pub use socket_config::{SocketConfig, SocketConfigSource};
-pub use songbird_registration::SongbirdRegistration;
+// pub use songbird_registration::SongbirdRegistration; // REMOVED: Deprecated module removed
 pub use tarpc_client::NestGateRpcClient;
 pub use tarpc_server::{serve_tarpc, NestGateRpcService};
 pub use template_storage::{GraphTemplate, TemplateMetadata, TemplateStorage};

@@ -50,7 +50,15 @@ use serde::{Deserialize, Serialize};
 /// let params = EncryptionParams::default();
 /// let ciphertext = crypto.encrypt(b"secret", &params).await?;
 /// ```
+/// 
+/// **DEVELOPMENT STUB**: This is a placeholder implementation.
+/// Real crypto operations should be delegated to BearDog primal via JSON-RPC,
+/// or use RustCrypto directly (as done in jwt_rustcrypto module).
+///
+/// **TODO**: Either complete implementation with RustCrypto or remove in favor of BearDog delegation.
 pub struct SecureCrypto {
+    /// Selected encryption algorithm (not yet used in placeholder implementation)
+    #[allow(dead_code)]
     algorithm: EncryptionAlgorithm,
 }
 

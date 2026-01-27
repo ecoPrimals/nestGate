@@ -214,6 +214,65 @@ pub fn primal_discovery_port() -> u16 {
         .unwrap_or(PRIMAL_DISCOVERY_DEFAULT)
 }
 
+// ==================== MODERN ENVIRONMENT-DRIVEN HELPERS ====================
+
+/// Get API server address (host:port) from environment
+///
+/// **Environment Variables**:
+/// - `NESTGATE_HOST`: Bind host (default: "0.0.0.0")
+/// - `NESTGATE_PORT`: Bind port (default: 8080)
+///
+/// # Returns
+/// Formatted address string like "0.0.0.0:8080"
+///
+/// # Examples
+///
+/// ```rust
+/// use nestgate_core::constants::ports;
+///
+/// // With defaults
+/// let addr = ports::get_api_server_addr();
+/// assert_eq!(addr, "0.0.0.0:8080");
+///
+/// // With environment override
+/// std::env::set_var("NESTGATE_PORT", "9090");
+/// // addr will use 9090
+/// ```
+pub fn get_api_server_addr() -> String {
+    let host = std::env::var("NESTGATE_HOST").unwrap_or_else(|_| "0.0.0.0".to_string());
+    let port = std::env::var("NESTGATE_PORT")
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(API_SERVER_DEFAULT);
+    format!("{}:{}", host, port)
+}
+
+/// Get RPC server address (host:port) from environment
+///
+/// **Environment Variables**:
+/// - `NESTGATE_RPC_HOST`: Bind host (default: "0.0.0.0")
+/// - `NESTGATE_RPC_PORT`: Bind port (default: 8091)
+///
+/// # Returns
+/// Formatted address string like "0.0.0.0:8091"
+///
+/// # Examples
+///
+/// ```rust
+/// use nestgate_core::constants::ports;
+///
+/// let addr = ports::get_rpc_server_addr();
+/// // Default: "0.0.0.0:8091"
+/// ```
+pub fn get_rpc_server_addr() -> String {
+    let host = std::env::var("NESTGATE_RPC_HOST").unwrap_or_else(|_| "0.0.0.0".to_string());
+    let port = std::env::var("NESTGATE_RPC_PORT")
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(8091);
+    format!("{}:{}", host, port)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

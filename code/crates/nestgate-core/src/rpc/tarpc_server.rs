@@ -19,11 +19,13 @@
 //! ## Usage
 //! ```no_run
 //! use nestgate_core::rpc::{NestGateRpcService, serve_tarpc};
+//! use nestgate_core::constants::ports;
 //! use std::net::SocketAddr;
 //!
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 //! let service = NestGateRpcService::new();
-//! let addr: SocketAddr = "0.0.0.0:8091".parse()?;
+//! // Environment-driven: $NESTGATE_RPC_HOST and $NESTGATE_RPC_PORT
+//! let addr: SocketAddr = ports::get_rpc_server_addr().parse()?;
 //! serve_tarpc(addr, service).await?;
 //! # Ok(())
 //! # }
@@ -273,7 +275,7 @@ impl NestGateRpc for NestGateRpcService {
         // DashMap: Lock-free entry and insert!
         self.objects
             .entry(dataset.clone())
-            .or_insert_with(HashMap::new)
+            .or_default()
             .insert(key.clone(), (data, object_info.clone()));
 
         // Update dataset stats (lock-free!)
@@ -426,7 +428,7 @@ impl NestGateRpc for NestGateRpcService {
         // Announce capability via discovery mechanism
         match crate::config::capability_discovery::announce_capability(
             &registration.capability,
-            &endpoint,
+            endpoint,
             std::time::Duration::from_secs(60), // Default TTL
         )
         .await
@@ -528,25 +530,30 @@ impl NestGateRpc for NestGateRpcService {
     async fn protocols(self, _context: Context) -> Vec<ProtocolInfo> {
         debug!("RPC: protocols()");
 
+        use crate::constants::ports;
+        
+        let api_addr = ports::get_api_server_addr();
+        let rpc_addr = ports::get_rpc_server_addr();
+        
         vec![
             ProtocolInfo {
                 protocol: "tarpc".to_string(),
                 version: "0.34".to_string(),
-                endpoint: "tarpc://0.0.0.0:8091".to_string(),
+                endpoint: format!("tarpc://{}", rpc_addr),
                 priority: 1,
                 enabled: true,
             },
             ProtocolInfo {
                 protocol: "jsonrpc".to_string(),
                 version: "2.0".to_string(),
-                endpoint: "http://0.0.0.0:8080/rpc".to_string(),
+                endpoint: format!("http://{}/rpc", api_addr),
                 priority: 2,
                 enabled: false, // Will be enabled when JSON-RPC implemented
             },
             ProtocolInfo {
                 protocol: "http".to_string(),
                 version: "1.1".to_string(),
-                endpoint: "http://0.0.0.0:8080".to_string(),
+                endpoint: format!("http://{}", api_addr),
                 priority: 3,
                 enabled: false, // Fallback, configurable
             },
@@ -566,11 +573,13 @@ impl NestGateRpc for NestGateRpcService {
 /// # Example
 /// ```no_run
 /// use nestgate_core::rpc::{NestGateRpcService, serve_tarpc};
+/// use nestgate_core::constants::ports;
 /// use std::net::SocketAddr;
 ///
 /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 /// let service = NestGateRpcService::new();
-/// let addr: SocketAddr = "0.0.0.0:8091".parse()?;
+/// // Environment-driven: $NESTGATE_RPC_HOST and $NESTGATE_RPC_PORT
+/// let addr: SocketAddr = ports::get_rpc_server_addr().parse()?;
 /// serve_tarpc(addr, service).await?;
 /// # Ok(())
 /// # }

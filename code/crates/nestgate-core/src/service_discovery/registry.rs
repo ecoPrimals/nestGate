@@ -106,7 +106,7 @@ impl UniversalServiceRegistry for InMemoryServiceRegistry {
         for capability in &registration.capabilities {
             self.capability_index
                 .entry(capability.clone())
-                .or_insert_with(Vec::new)
+                .or_default()
                 .push(service_id);
         }
 

@@ -110,22 +110,29 @@ pub struct ConsolidatedApiHandlersConfig {
     pub workspace: WorkspaceHandlerConfig,
 }
 
-// Handler placeholder types
+// Handler placeholder types - Reserved for future configuration options
+
+/// ZFS handler configuration (reserved for future use)
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ZfsHandlerConfig {}
 
+/// Performance handler configuration (reserved for future use)
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct PerformanceHandlerConfig {}
 
+/// Dashboard handler configuration (reserved for future use)
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct DashboardHandlerConfig {}
 
+/// Load testing handler configuration (reserved for future use)
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct LoadTestingHandlerConfig {}
 
+/// Authentication handler configuration (reserved for future use)
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AuthHandlerConfig {}
 
+/// Workspace handler configuration (reserved for future use)
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct WorkspaceHandlerConfig {}
 

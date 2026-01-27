@@ -199,7 +199,7 @@ pub async fn announce_capability(capability: &str, endpoint: &str, ttl: Duration
         .with_name(std::env::var("SERVICE_NAME").unwrap_or_else(|_| "nestgate".to_string()))
         .with_capability(capability)
         .build()
-        .map_err(|e| NestGateError::config(&format!("Failed to build self-knowledge: {}", e)))?;
+        .map_err(|e| NestGateError::config(format!("Failed to build self-knowledge: {}", e)))?;
 
     // Announce to discovery mechanism if available
     if let Some(discovery) = discovery {

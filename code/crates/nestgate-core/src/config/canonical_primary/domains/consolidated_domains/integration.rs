@@ -50,15 +50,19 @@ pub struct ExternalServiceConfig {
     pub health_check: ExternalHealthCheckConfig,
 }
 
+/// External authentication configuration (reserved for future use)
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ExternalAuthConfig {}
 
+/// External connection configuration (reserved for future use)
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ExternalConnectionConfig {}
 
+/// External retry configuration (reserved for future use)
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ExternalRetryConfig {}
 
+/// External health check configuration (reserved for future use)
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ExternalHealthCheckConfig {}
 
@@ -80,15 +84,19 @@ pub struct ProtocolConfigs {
     pub custom: HashMap<String, CustomProtocolConfig>,
 }
 
+/// HTTP protocol configuration (reserved for future use)
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct HttpProtocolConfig {}
 
+/// gRPC protocol configuration (reserved for future use)
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct GrpcProtocolConfig {}
 
+/// WebSocket protocol configuration (reserved for future use)
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct WebSocketProtocolConfig {}
 
+/// Custom protocol configuration (reserved for future use)
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct CustomProtocolConfig {}
 
@@ -110,15 +118,19 @@ pub struct EcosystemConfig {
     pub capability_routing: CapabilityRoutingConfig,
 }
 
+/// BiomeOS integration configuration (reserved for future use)
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct BiomeOsIntegrationConfig {}
 
+/// Primal ecosystem configuration (reserved for future use)
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct PrimalEcosystemConfig {}
 
+/// Service discovery configuration (reserved for future use)
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ServiceDiscoveryConfig {}
 
+/// Capability routing configuration (reserved for future use)
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct CapabilityRoutingConfig {}
 
