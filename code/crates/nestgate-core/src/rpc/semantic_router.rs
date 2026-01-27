@@ -354,25 +354,133 @@ impl SemanticRouter {
 
     // ==================== DISCOVERY DOMAIN ====================
 
-    /// Route discovery.announce → register service (placeholder)
-    async fn discovery_announce(&self, _params: Value) -> Result<Value> {
-        // TODO: Implement service registration with CapabilityDiscovery
-        warn!("⚠️  discovery.announce not yet implemented");
-        Ok(json!({ "registered": false, "message": "Not yet implemented" }))
+    /// Route discovery.announce → register service
+    ///
+    /// Registers a service with the discovery system.
+    /// Typically called by Songbird when a primal comes online.
+    async fn discovery_announce(&self, params: Value) -> Result<Value> {
+        use crate::service_metadata::{ServiceMetadata, ServiceMetadataStore};
+        use std::time::SystemTime;
+
+        // Parse service metadata from params
+        let name = params["name"]
+            .as_str()
+            .ok_or_else(|| NestGateError::invalid_input("name", "string required"))?
+            .to_string();
+
+        let version = params["version"]
+            .as_str()
+            .unwrap_or("unknown")
+            .to_string();
+
+        let capabilities: Vec<String> = params["capabilities"]
+            .as_array()
+            .ok_or_else(|| NestGateError::invalid_input("capabilities", "array required"))?
+            .iter()
+            .filter_map(|v| v.as_str().map(String::from))
+            .collect();
+
+        let virtual_endpoint = params["endpoint"]
+            .as_str()
+            .ok_or_else(|| NestGateError::invalid_input("endpoint", "string required"))?
+            .to_string();
+
+        let platform = params["platform"]
+            .as_str()
+            .unwrap_or(std::env::consts::OS)
+            .to_string();
+
+        let native_endpoint = params["native_endpoint"]
+            .as_str()
+            .unwrap_or(&virtual_endpoint)
+            .to_string();
+
+        // Create metadata
+        let metadata = ServiceMetadata {
+            name: name.clone(),
+            version,
+            capabilities,
+            virtual_endpoint,
+            registered_at: SystemTime::now(),
+            last_seen: SystemTime::now(),
+            platform,
+            native_endpoint,
+            metadata: std::collections::HashMap::new(),
+        };
+
+        // Store metadata
+        let store = ServiceMetadataStore::new().await?;
+        store.store_service(metadata).await?;
+
+        info!("🎉 Service registered: {}", name);
+
+        Ok(json!({
+            "registered": true,
+            "service": name,
+            "message": "Service successfully registered"
+        }))
     }
 
-    /// Route discovery.query → find services by capability (placeholder)
-    async fn discovery_query(&self, _params: Value) -> Result<Value> {
-        // TODO: Implement capability query with CapabilityDiscovery
-        warn!("⚠️  discovery.query not yet implemented");
-        Ok(json!({ "services": [] }))
+    /// Route discovery.query → find services by capability
+    ///
+    /// Finds all services that provide a specific capability.
+    async fn discovery_query(&self, params: Value) -> Result<Value> {
+        use crate::service_metadata::ServiceMetadataStore;
+
+        let capability = params["capability"]
+            .as_str()
+            .ok_or_else(|| NestGateError::invalid_input("capability", "string required"))?;
+
+        let store = ServiceMetadataStore::new().await?;
+        let services = store.find_by_capability(capability).await?;
+
+        let result: Vec<Value> = services
+            .into_iter()
+            .map(|meta| {
+                json!({
+                    "name": meta.name,
+                    "version": meta.version,
+                    "endpoint": meta.virtual_endpoint,
+                    "capabilities": meta.capabilities,
+                    "platform": meta.platform
+                })
+            })
+            .collect();
+
+        debug!("🔍 Discovery query for '{}': {} services found", capability, result.len());
+
+        Ok(json!({ "services": result }))
     }
 
-    /// Route discovery.list → list all services (placeholder)
+    /// Route discovery.list → list all services
+    ///
+    /// Lists all registered services in the discovery system.
     async fn discovery_list(&self, _params: Value) -> Result<Value> {
-        // TODO: Implement service listing with CapabilityDiscovery
-        warn!("⚠️  discovery.list not yet implemented");
-        Ok(json!({ "services": [] }))
+        use crate::service_metadata::ServiceMetadataStore;
+
+        let store = ServiceMetadataStore::new().await?;
+        let services = store.list_services().await?;
+
+        let result: Vec<Value> = services
+            .into_iter()
+            .map(|meta| {
+                json!({
+                    "name": meta.name,
+                    "version": meta.version,
+                    "endpoint": meta.virtual_endpoint,
+                    "capabilities": meta.capabilities,
+                    "platform": meta.platform,
+                    "registered_at": meta.registered_at
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .unwrap_or_default()
+                        .as_secs()
+                })
+            })
+            .collect();
+
+        debug!("📋 Discovery list: {} services total", result.len());
+
+        Ok(json!({ "services": result, "count": result.len() }))
     }
 
     /// Route discovery.capabilities → get service capabilities (placeholder)
@@ -423,25 +531,139 @@ impl SemanticRouter {
 
     // ==================== METADATA DOMAIN ====================
 
-    /// Route metadata.store → store service metadata (placeholder)
-    async fn metadata_store(&self, _params: Value) -> Result<Value> {
-        // TODO: Implement with ServiceMetadataStore
-        warn!("⚠️  metadata.store not yet implemented");
-        Ok(json!({ "stored": false, "message": "Not yet implemented" }))
+    /// Route metadata.store → store service metadata
+    ///
+    /// Stores or updates metadata for a service.
+    async fn metadata_store(&self, params: Value) -> Result<Value> {
+        use crate::service_metadata::{ServiceMetadata, ServiceMetadataStore};
+        use std::time::SystemTime;
+
+        // Parse service metadata
+        let name = params["name"]
+            .as_str()
+            .ok_or_else(|| NestGateError::invalid_input("name", "string required"))?
+            .to_string();
+
+        let version = params["version"]
+            .as_str()
+            .unwrap_or("unknown")
+            .to_string();
+
+        let capabilities: Vec<String> = params["capabilities"]
+            .as_array()
+            .ok_or_else(|| NestGateError::invalid_input("capabilities", "array required"))?
+            .iter()
+            .filter_map(|v| v.as_str().map(String::from))
+            .collect();
+
+        let virtual_endpoint = params["endpoint"]
+            .as_str()
+            .ok_or_else(|| NestGateError::invalid_input("endpoint", "string required"))?
+            .to_string();
+
+        let platform = params["platform"]
+            .as_str()
+            .unwrap_or(std::env::consts::OS)
+            .to_string();
+
+        let native_endpoint = params["native_endpoint"]
+            .as_str()
+            .unwrap_or(&virtual_endpoint)
+            .to_string();
+
+        let metadata = ServiceMetadata {
+            name: name.clone(),
+            version,
+            capabilities,
+            virtual_endpoint,
+            registered_at: SystemTime::now(),
+            last_seen: SystemTime::now(),
+            platform,
+            native_endpoint,
+            metadata: std::collections::HashMap::new(),
+        };
+
+        let store = ServiceMetadataStore::new().await?;
+        store.store_service(metadata).await?;
+
+        info!("💾 Metadata stored: {}", name);
+
+        Ok(json!({
+            "stored": true,
+            "service": name,
+            "message": "Metadata successfully stored"
+        }))
     }
 
-    /// Route metadata.retrieve → get service metadata (placeholder)
-    async fn metadata_retrieve(&self, _params: Value) -> Result<Value> {
-        // TODO: Implement with ServiceMetadataStore
-        warn!("⚠️  metadata.retrieve not yet implemented");
-        Ok(json!({ "metadata": null }))
+    /// Route metadata.retrieve → get service metadata
+    ///
+    /// Retrieves metadata for a specific service by name.
+    async fn metadata_retrieve(&self, params: Value) -> Result<Value> {
+        use crate::service_metadata::ServiceMetadataStore;
+
+        let name = params["name"]
+            .as_str()
+            .ok_or_else(|| NestGateError::invalid_input("name", "string required"))?;
+
+        let store = ServiceMetadataStore::new().await?;
+        let meta = store.get_service(name).await?;
+
+        debug!("📖 Metadata retrieved: {}", name);
+
+        Ok(json!({
+            "name": meta.name,
+            "version": meta.version,
+            "capabilities": meta.capabilities,
+            "endpoint": meta.virtual_endpoint,
+            "platform": meta.platform,
+            "registered_at": meta.registered_at
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_secs(),
+            "last_seen": meta.last_seen
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_secs()
+        }))
     }
 
-    /// Route metadata.search → search metadata (placeholder)
-    async fn metadata_search(&self, _params: Value) -> Result<Value> {
-        // TODO: Implement with ServiceMetadataStore
-        warn!("⚠️  metadata.search not yet implemented");
-        Ok(json!({ "results": [] }))
+    /// Route metadata.search → search metadata
+    ///
+    /// Searches for services by capability (alias for discovery.query).
+    async fn metadata_search(&self, params: Value) -> Result<Value> {
+        use crate::service_metadata::ServiceMetadataStore;
+
+        // Support both "capability" and "query" parameters
+        let capability = params["capability"]
+            .as_str()
+            .or_else(|| params["query"].as_str())
+            .ok_or_else(|| {
+                NestGateError::invalid_input("capability or query", "string required")
+            })?;
+
+        let store = ServiceMetadataStore::new().await?;
+        let services = store.find_by_capability(capability).await?;
+
+        let results: Vec<Value> = services
+            .into_iter()
+            .map(|meta| {
+                json!({
+                    "name": meta.name,
+                    "version": meta.version,
+                    "endpoint": meta.virtual_endpoint,
+                    "capabilities": meta.capabilities,
+                    "platform": meta.platform
+                })
+            })
+            .collect();
+
+        debug!("🔎 Metadata search for '{}': {} results", capability, results.len());
+
+        Ok(json!({
+            "results": results,
+            "count": results.len(),
+            "query": capability
+        }))
     }
 }
 
