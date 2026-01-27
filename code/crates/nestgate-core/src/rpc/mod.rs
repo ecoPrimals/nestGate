@@ -51,7 +51,10 @@ pub mod audit_storage;
 pub mod jsonrpc_client;
 pub mod jsonrpc_server;
 pub mod orchestrator_registration;
-pub mod semantic_router; // NEW: Semantic method routing for TRUE PRIMAL compliance (Jan 27, 2026)
+/// **TEMPORARILY DISABLED**: semantic_router has 120+ compilation errors from untested commit
+/// Created during rustup outage, never compilation-tested before push
+/// TODO: Fix all API mismatches and re-enable (estimated 1-2 hours)
+// pub mod semantic_router; // NEW: Semantic method routing for TRUE PRIMAL compliance (Jan 27, 2026)
 pub mod socket_config;
 // pub mod songbird_registration; // REMOVED: Deprecated since v2.3.0, zero production usage
 pub mod tarpc_client;
@@ -74,7 +77,7 @@ pub use audit_storage::{
 };
 pub use jsonrpc_server::{JsonRpcConfig, JsonRpcServer};
 pub use orchestrator_registration::OrchestratorRegistration;
-pub use semantic_router::SemanticRouter; // NEW: Semantic method routing (Jan 27, 2026)
+// pub use semantic_router::SemanticRouter; // DISABLED: See line 54
 pub use socket_config::{SocketConfig, SocketConfigSource};
 // pub use songbird_registration::SongbirdRegistration; // REMOVED: Deprecated module removed
 pub use tarpc_client::NestGateRpcClient;

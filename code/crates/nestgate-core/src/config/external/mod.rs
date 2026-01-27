@@ -66,7 +66,7 @@ impl ExternalConfig {
     pub fn from_env() -> Result<Self> {
         Ok(Self {
             network: NetworkConfig::from_env()?,
-            services: ServicesConfig::from_env()?,
+            services: ServicesConfig::from_env(),
         })
     }
 
@@ -75,7 +75,7 @@ impl ExternalConfig {
     pub fn default_dev() -> Self {
         Self {
             network: NetworkConfig::default_dev(),
-            services: ServicesConfig::default_dev(),
+            services: ServicesConfig::default(),
         }
     }
 
@@ -87,7 +87,7 @@ impl ExternalConfig {
     pub fn from_env_production() -> Result<Self> {
         Ok(Self {
             network: NetworkConfig::from_env_production()?,
-            services: ServicesConfig::from_env_production()?,
+            services: ServicesConfig::from_env(),
         })
     }
 }

@@ -10,18 +10,20 @@
 //! - Zero-cost abstractions
 
 // **100% SAFE IMPLEMENTATIONS** - Zero unsafe code
-// Temporarily commented out due to compilation issues
+// ⚠️ DISABLED: File has syntax errors from untested commit (lines 135-145 corrupted)
+// TODO: Restore from backup or rewrite (estimated 2-3 hours)
+// Low priority: Zero-copy buffers are optimization, not core functionality
 // pub mod completely_safe_zero_copy;
 
 // Re-export safe implementations for easy access
-// Temporarily commented out due to compilation issues
+// Disabled until completely_safe_zero_copy is fixed
 // pub use completely_safe_zero_copy::{
 //     CompletlySafeBuffer, CompletlySafeStringBuilder, SafeCircularBuffer, SafeMemoryUtils,
 //     SafePerformanceBench,
 // };
 
 // Type aliases for common buffer sizes (100% safe)
-// Temporarily commented out due to compilation issues
+// Disabled until completely_safe_zero_copy is fixed
 // pub type SmallBuffer = CompletlySafeBuffer<64>;
 // pub type MediumBuffer = CompletlySafeBuffer<256>;
 // pub type LargeBuffer = CompletlySafeBuffer<1024>;

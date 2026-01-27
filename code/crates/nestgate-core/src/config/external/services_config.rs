@@ -34,10 +34,11 @@ use std::sync::Arc;
 
 /// Thread-safe configuration for service endpoints
 /// Captures environment variables at initialization to prevent race conditions
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 /// Configuration for Services
 pub struct ServicesConfig {
     // Core service URLs
+    #[serde(skip_serializing_if = "Option::is_none")]
     discovery_url: Option<String>,
     adapter_url: Option<String>,
     health_url: Option<String>,

@@ -210,16 +210,18 @@ pub use tests::*;
 
 // ==================== CRYPTO DELEGATION ====================
 
+/// **TEMPORARILY DISABLED**: Crypto delegation has compilation errors from untested commit
+/// Created during rustup outage, never compilation-tested before push
+/// Errors: NestGateError::discovery_error(), JsonRpcClient::connect() API mismatches
+/// TODO: Fix API mismatches and re-enable (estimated 30-60 minutes)
+/// 
+/// Original description:
 /// **PRODUCTION**: Crypto delegation to BearDog or compatible crypto provider
-///
-/// This module demonstrates capability-based discovery in action:
 /// - Discovers crypto provider by "crypto" capability (not hardcoded name)
 /// - Delegates all crypto operations via JSON-RPC semantic methods
 /// - Maintains NestGate as 100% Pure Rust (no crypto dependencies!)
 /// - Follows primal sovereignty (self-knowledge, runtime discovery)
-///
-/// **Status**: Production-ready, replaces DEVELOPMENT STUB in SecureCrypto
-pub mod delegate;
+// pub mod delegate;
 
 // ==================== PURE RUST JWT (RustCrypto) ====================
 
