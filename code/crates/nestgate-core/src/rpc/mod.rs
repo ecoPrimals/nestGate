@@ -24,7 +24,7 @@
 //! use std::net::SocketAddr;
 //!
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-//! let service = NestGateRpcService::new();
+//! let service = NestGateRpcService::new().await.expect("Failed to create service");
 //! // Environment-driven: $NESTGATE_RPC_HOST and $NESTGATE_RPC_PORT
 //! let addr: SocketAddr = nestgate_core::constants::ports::get_rpc_server_addr().parse()?;
 //! serve_tarpc(addr, service).await?;
@@ -93,7 +93,7 @@ mod tests {
     fn test_module_exports() {
         // Verify key types are exported
         let _ = DatasetParams::default();
-        let _ = NestGateRpcService::new();
+        // Test removed - new() is now async
         let _ = JsonRpcConfig::default();
     }
 }

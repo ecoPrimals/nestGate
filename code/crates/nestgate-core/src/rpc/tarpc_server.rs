@@ -23,7 +23,7 @@
 //! use std::net::SocketAddr;
 //!
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-//! let service = NestGateRpcService::new();
+//! let service = NestGateRpcService::new().await.expect("Failed to create service");
 //! // Environment-driven: $NESTGATE_RPC_HOST and $NESTGATE_RPC_PORT
 //! let addr: SocketAddr = ports::get_rpc_server_addr().parse()?;
 //! serve_tarpc(addr, service).await?;
@@ -62,10 +62,10 @@ use crate::services::storage::service::StorageManagerService;
 #[derive(Clone)]
 pub struct NestGateRpcService {
     /// Real storage manager (ZFS-backed!)
-    storage_manager: Arc<StorageManagerService>,
+    pub(crate) storage_manager: Arc<StorageManagerService>,
 
     /// Start time for uptime calculation
-    start_time: SystemTime,
+    pub(crate) start_time: SystemTime,
 }
 
 impl NestGateRpcService {
@@ -537,7 +537,7 @@ impl NestGateRpc for NestGateRpcService {
 /// use std::net::SocketAddr;
 ///
 /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-/// let service = NestGateRpcService::new();
+/// let service = NestGateRpcService::new().await.expect("Failed to create service");
 /// // Environment-driven: $NESTGATE_RPC_HOST and $NESTGATE_RPC_PORT
 /// let addr: SocketAddr = ports::get_rpc_server_addr().parse()?;
 /// serve_tarpc(addr, service).await?;
@@ -583,18 +583,41 @@ pub async fn serve_tarpc(addr: SocketAddr, service: NestGateRpcService) -> Resul
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::services::storage::config::StorageServiceConfig;
+    use crate::services::storage::service::StorageManagerService;
+
+    /// Helper: Create test service with temp directory
+    async fn create_test_service() -> Result<NestGateRpcService> {
+        let temp_dir = std::env::temp_dir().join(format!("nestgate_test_{}", uuid::Uuid::new_v4()));
+        let mut config = StorageServiceConfig::default();
+        config.base_path = temp_dir.to_string_lossy().to_string();
+        config.auto_discover_pools = false; // Skip ZFS checks in tests
+        config.enable_quotas = false;
+        config.enable_caching = false;
+        config.enable_monitoring = false;
+        
+        let storage_manager = Arc::new(
+            StorageManagerService::with_config(config).await?
+        );
+        
+        Ok(NestGateRpcService {
+            storage_manager,
+            start_time: SystemTime::now(),
+        })
+    }
 
     #[tokio::test]
     async fn test_service_creation() {
-        let service = NestGateRpcService::new();
-        // DashMap: Lock-free is_empty!
-        assert!(service.datasets.is_empty());
-        assert!(service.objects.is_empty());
+        let service = create_test_service().await.expect("Failed to create service");
+        // Verify storage manager is initialized
+        let datasets = service.storage_manager.list_datasets().await.expect("Failed to list datasets");
+        // New service should have no datasets initially
+        assert_eq!(datasets.len(), 0, "New service should start with empty storage");
     }
 
     #[tokio::test]
     async fn test_health() {
-        let service = NestGateRpcService::new();
+        let service = create_test_service().await.expect("Failed to create service");
         let health = service.health(Context::current()).await;
         assert_eq!(health.status, "healthy");
         assert_eq!(health.version, "0.2.0");
@@ -602,7 +625,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_version() {
-        let service = NestGateRpcService::new();
+        let service = create_test_service().await.expect("Failed to create service");
         let version = service.version(Context::current()).await;
         assert_eq!(version.version, "0.2.0");
         assert_eq!(version.api_version, "1.0");
@@ -610,7 +633,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_protocols() {
-        let service = NestGateRpcService::new();
+        let service = create_test_service().await.expect("Failed to create service");
         let protocols = service.protocols(Context::current()).await;
         assert_eq!(protocols.len(), 3);
         assert_eq!(protocols[0].protocol, "tarpc");
@@ -620,7 +643,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_dataset() {
-        let service = NestGateRpcService::new();
+        let service = create_test_service().await.expect("Failed to create service");
         let result = service
             .create_dataset(
                 Context::current(),
@@ -637,7 +660,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_list_datasets() {
-        let service = NestGateRpcService::new();
+        let service = create_test_service().await.expect("Failed to create service");
 
         // Create a dataset
         service
@@ -662,7 +685,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_store_retrieve_object() {
-        let service = NestGateRpcService::new();
+        let service = create_test_service().await.expect("Failed to create service");
 
         // Create dataset
         service

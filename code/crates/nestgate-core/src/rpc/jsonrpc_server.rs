@@ -578,6 +578,29 @@ impl JsonRpcServer {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::services::storage::config::StorageServiceConfig;
+    use crate::services::storage::service::StorageManagerService;
+    use std::time::SystemTime;
+
+    /// Helper: Create test service with temp directory
+    async fn create_test_service() -> crate::Result<NestGateRpcService> {
+        let temp_dir = std::env::temp_dir().join(format!("nestgate_test_{}", uuid::Uuid::new_v4()));
+        let mut config = StorageServiceConfig::default();
+        config.base_path = temp_dir.to_string_lossy().to_string();
+        config.auto_discover_pools = false; // Skip ZFS checks in tests
+        config.enable_quotas = false;
+        config.enable_caching = false;
+        config.enable_monitoring = false;
+        
+        let storage_manager = std::sync::Arc::new(
+            StorageManagerService::with_config(config).await?
+        );
+        
+        Ok(NestGateRpcService {
+            storage_manager,
+            start_time: SystemTime::now(),
+        })
+    }
 
     #[test]
     fn test_jsonrpc_config_default() {
@@ -587,9 +610,9 @@ mod tests {
         assert_eq!(config.max_response_size, 100 * 1024 * 1024);
     }
 
-    #[test]
-    fn test_jsonrpc_server_creation() {
-        let service = NestGateRpcService::new();
+    #[tokio::test]
+    async fn test_jsonrpc_server_creation() {
+        let service = create_test_service().await.expect("Failed to create service");
         let config = JsonRpcConfig::default();
         let _server = JsonRpcServer::new(service, config);
     }
@@ -611,7 +634,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_jsonrpc_state_creation() {
-        let service = NestGateRpcService::new();
+        let service = create_test_service().await.expect("Failed to create service");
         let state = JsonRpcState {
             service: service.clone(),
             start_time: std::time::Instant::now(),
@@ -638,11 +661,11 @@ mod tests {
         assert!(addr_str.contains("/jsonrpc"));
     }
 
-    #[test]
-    fn test_multiple_servers() {
+    #[tokio::test]
+    async fn test_multiple_servers() {
         // Verify we can create multiple server instances
-        let service1 = NestGateRpcService::new();
-        let service2 = NestGateRpcService::new();
+        let service1 = create_test_service().await.expect("Failed to create service1");
+        let service2 = create_test_service().await.expect("Failed to create service2");
         let config = JsonRpcConfig::default();
 
         let _server1 = JsonRpcServer::new(service1, config.clone());
