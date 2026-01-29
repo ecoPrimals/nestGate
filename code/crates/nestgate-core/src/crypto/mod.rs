@@ -222,7 +222,6 @@ pub use tests::*;
 /// - Maintains NestGate as 100% Pure Rust (no crypto dependencies!)
 /// - Follows primal sovereignty (self-knowledge, runtime discovery)
 // pub mod delegate;
-
 // ==================== PURE RUST JWT (RustCrypto) ====================
 
 /// Pure Rust JWT implementation using RustCrypto (100% pure Rust, audited!)

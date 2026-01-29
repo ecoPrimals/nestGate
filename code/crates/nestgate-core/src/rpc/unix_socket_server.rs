@@ -519,7 +519,7 @@ async fn storage_delete(params: &Option<Value>, state: &StorageState) -> Result<
 }
 
 /// storage.list - List all keys with optional prefix
-async fn storage_list(params: &Option<Value>, state: &StorageState) -> Result<Value> {
+async fn storage_list(params: &Option<Value>, _state: &StorageState) -> Result<Value> {
     let params = params
         .as_ref()
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
@@ -570,7 +570,7 @@ async fn storage_list(params: &Option<Value>, state: &StorageState) -> Result<Va
 }
 
 /// storage.stats - Get storage statistics
-async fn storage_stats(params: &Option<Value>, state: &StorageState) -> Result<Value> {
+async fn storage_stats(params: &Option<Value>, _state: &StorageState) -> Result<Value> {
     let params = params
         .as_ref()
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;

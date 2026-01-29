@@ -197,7 +197,7 @@ impl NestGateRpc for NestGateRpcService {
         self.storage_manager
             .list_datasets()
             .await
-            .map_err(|e| Self::convert_error(e))
+            .map_err(Self::convert_error)
     }
 
     async fn get_dataset(
@@ -211,7 +211,7 @@ impl NestGateRpc for NestGateRpcService {
         let datasets = self.storage_manager
             .list_datasets()
             .await
-            .map_err(|e| Self::convert_error(e))?;
+            .map_err(Self::convert_error)?;
 
         datasets
             .into_iter()
@@ -235,7 +235,7 @@ impl NestGateRpc for NestGateRpcService {
                 message: format!("Dataset {} deleted successfully", name),
                 metadata: HashMap::new(),
             })
-            .map_err(|e| Self::convert_error(e))
+            .map_err(Self::convert_error)
     }
 
     async fn store_object(
@@ -278,7 +278,7 @@ impl NestGateRpc for NestGateRpcService {
         let (data, _info) = self.storage_manager
             .retrieve_object(&dataset, &key)
             .await
-            .map_err(|e| Self::convert_error(e))?;
+            .map_err(Self::convert_error)?;
 
         Ok(data)
     }
@@ -295,7 +295,7 @@ impl NestGateRpc for NestGateRpcService {
         let (_data, object_info) = self.storage_manager
             .retrieve_object(&dataset, &key)
             .await
-            .map_err(|e| Self::convert_error(e))?;
+            .map_err(Self::convert_error)?;
 
         Ok(object_info)
     }
@@ -364,7 +364,7 @@ impl NestGateRpc for NestGateRpcService {
                 message: format!("Object {}/{} deleted successfully", dataset, key),
                 metadata: std::collections::HashMap::new(),
             })
-            .map_err(|e| Self::convert_error(e))
+            .map_err(Self::convert_error)
     }
 
     // ==================== CAPABILITY OPERATIONS ====================
