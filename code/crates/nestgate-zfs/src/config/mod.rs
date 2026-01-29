@@ -59,11 +59,11 @@ pub enum CompressionType {
     /// Zstd
     Zstd,
 }
+pub use crate::automation::policies::MigrationRules;
 pub use automation::{AiAutomationSettings, DatasetAutomationConfig};
 pub use health::HealthMonitoringConfig;
-pub use crate::automation::policies::MigrationRules;
+pub use nestgate_core::services::storage::config::ZfsConfig;
 pub use pool::PoolDiscoveryConfig;
 pub use security::{AccessControlConfig, KeyManagementConfig, SecurityConfig};
 pub use tiers::CapacityLimits; // Using local definition from tiers.rs
 pub use tiers::{PerformanceProfile, TierConfig, TierConfigurations};
-pub use nestgate_core::services::storage::config::ZfsConfig;

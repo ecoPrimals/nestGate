@@ -50,7 +50,7 @@ use serde::{Deserialize, Serialize};
 /// let params = EncryptionParams::default();
 /// let ciphertext = crypto.encrypt(b"secret", &params).await?;
 /// ```
-/// 
+///
 /// **DEVELOPMENT STUB**: This is a placeholder implementation.
 /// Real crypto operations should be delegated to BearDog primal via JSON-RPC,
 /// or use RustCrypto directly (as done in jwt_rustcrypto module).
@@ -214,7 +214,7 @@ pub use tests::*;
 /// Created during rustup outage, never compilation-tested before push
 /// Errors: NestGateError::discovery_error(), JsonRpcClient::connect() API mismatches
 /// TODO: Fix API mismatches and re-enable (estimated 30-60 minutes)
-/// 
+///
 /// Original description:
 /// **PRODUCTION**: Crypto delegation to BearDog or compatible crypto provider
 /// - Discovers crypto provider by "crypto" capability (not hardcoded name)

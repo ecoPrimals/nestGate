@@ -531,10 +531,10 @@ impl NestGateRpc for NestGateRpcService {
         debug!("RPC: protocols()");
 
         use crate::constants::ports;
-        
+
         let api_addr = ports::get_api_server_addr();
         let rpc_addr = ports::get_rpc_server_addr();
-        
+
         vec![
             ProtocolInfo {
                 protocol: "tarpc".to_string(),
