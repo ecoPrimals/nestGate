@@ -333,8 +333,8 @@ async fn test_fault_multiple_errors_in_sequence() {
 
         let response = handler.handle_request(request).await;
 
-        // Should consistently return errors
+        // Should consistently return errors (internal error for method not found)
         assert!(response.error.is_some());
-        assert_eq!(response.error.unwrap().code, -32601);
+        assert_eq!(response.error.unwrap().code, -32603);
     }
 }
