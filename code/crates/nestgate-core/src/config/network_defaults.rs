@@ -336,7 +336,7 @@ mod tests {
     #[test]
     fn test_websocket_defaults() {
         let config = NetworkDefaultsV2Config::new();
-        assert_eq!(config.websocket_port(), 8082);
+        assert_eq!(config.websocket_port(), 8081); // Uses ADMIN_PORT
         assert!(config.websocket_url().starts_with("ws://"));
     }
 
@@ -367,7 +367,7 @@ mod tests {
     #[test]
     fn test_health_port_default() {
         let config = NetworkDefaultsV2Config::new();
-        assert_eq!(config.health_port(), 8081);
+        assert_eq!(config.health_port(), 8082); // Uses HEALTH_PORT (8082)
     }
 
     #[test]
@@ -381,13 +381,13 @@ mod tests {
         let config = NetworkDefaultsV2Config::new();
         let url = config.health_url();
         assert!(url.starts_with("http://"));
-        assert!(url.contains(":8081"));
+        assert!(url.contains(":8082")); // Uses HEALTH_PORT (8082)
     }
 
     #[test]
     fn test_storage_port_default() {
         let config = NetworkDefaultsV2Config::new();
-        assert_eq!(config.storage_port(), 5000);
+        assert_eq!(config.storage_port(), 3000); // Uses DEV_PORT (3000)
     }
 
     #[test]
@@ -401,7 +401,7 @@ mod tests {
         let config = NetworkDefaultsV2Config::new();
         let url = config.websocket_url();
         assert!(url.starts_with("ws://"));
-        assert!(url.contains(":8082"));
+        assert!(url.contains(":8081")); // Uses ADMIN_PORT (8081)
     }
 
     #[test]

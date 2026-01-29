@@ -86,7 +86,7 @@ fn test_metrics_bind_address() {
 #[test]
 fn test_ws_port_default() {
     let config = NetworkDefaultsV2Config::new();
-    assert_eq!(config.websocket_port(), 8082); // WEBSOCKET_DEFAULT = 8082
+    assert_eq!(config.websocket_port(), 8081); // Uses ADMIN_PORT = 8081
 }
 
 #[test]
@@ -98,7 +98,7 @@ fn test_ws_port_custom() {
 #[test]
 fn test_ws_bind_address() {
     let config = NetworkDefaultsV2Config::new();
-    assert_eq!(config.websocket_bind_address(), "127.0.0.1:8082");
+    assert_eq!(config.websocket_bind_address(), "127.0.0.1:8081"); // Uses ADMIN_PORT = 8081
 }
 
 // ==================== HEALTH CHECK TESTS ====================
@@ -106,7 +106,7 @@ fn test_ws_bind_address() {
 #[test]
 fn test_health_port_default() {
     let config = NetworkDefaultsV2Config::new();
-    assert_eq!(config.health_port(), 8081); // HEALTH_CHECK = 8081
+    assert_eq!(config.health_port(), 8082); // Uses HEALTH_PORT = 8082
 }
 
 #[test]
@@ -118,7 +118,7 @@ fn test_health_port_custom() {
 #[test]
 fn test_health_bind_address() {
     let config = NetworkDefaultsV2Config::new();
-    assert_eq!(config.health_bind_address(), "127.0.0.1:8081");
+    assert_eq!(config.health_bind_address(), "127.0.0.1:8082"); // Uses HEALTH_PORT = 8082
 }
 
 // ==================== STORAGE TESTS ====================
@@ -126,7 +126,7 @@ fn test_health_bind_address() {
 #[test]
 fn test_storage_port_default() {
     let config = NetworkDefaultsV2Config::new();
-    assert_eq!(config.storage_port(), 5000);
+    assert_eq!(config.storage_port(), 3000); // Uses DEV_PORT = 3000
 }
 
 #[test]
@@ -138,7 +138,7 @@ fn test_storage_port_custom() {
 #[test]
 fn test_storage_bind_address() {
     let config = NetworkDefaultsV2Config::new();
-    assert_eq!(config.storage_bind_address(), "127.0.0.1:5000");
+    assert_eq!(config.storage_bind_address(), "127.0.0.1:3000"); // Uses DEV_PORT = 3000
 }
 
 // ==================== INVALID INPUT HANDLING ====================

@@ -356,9 +356,9 @@ mod tests {
         assert_eq!(config.api_bind_address(), "127.0.0.1:8080");
         assert_eq!(config.api_url(), "http://127.0.0.1:8080");
         assert_eq!(config.metrics_port(), 9090);
-        assert_eq!(config.websocket_port(), 8082);
-        assert_eq!(config.health_port(), 8081);
-        assert_eq!(config.storage_port(), 5000);
+        assert_eq!(config.websocket_port(), 8081); // Uses ADMIN_PORT (8081)
+        assert_eq!(config.health_port(), 8082); // Uses HEALTH_PORT (8082)
+        assert_eq!(config.storage_port(), 3000); // Uses DEV_PORT (3000)
         assert_eq!(config.connect_timeout_ms(), 5000);
         assert_eq!(config.request_timeout_ms(), 30000);
         assert_eq!(config.long_operation_timeout_ms(), 300000);

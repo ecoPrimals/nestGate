@@ -920,6 +920,7 @@ mod tests {
     use super::*;
 
     #[tokio::test]
+    #[ignore = "Requires write permissions to /var/lib/nestgate/storage - run as integration test"]
     async fn test_storage_store_retrieve() {
         let state = StorageState::new()
             .await
@@ -946,6 +947,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore = "Requires write permissions to /var/lib/nestgate/storage - run as integration test"]
     async fn test_storage_delete() {
         let state = StorageState::new()
             .await
@@ -977,6 +979,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore = "Requires write permissions to /var/lib/nestgate/storage - run as integration test"]
     async fn test_storage_list() {
         let state = StorageState::new()
             .await
@@ -999,6 +1002,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore = "Requires write permissions to /var/lib/nestgate/storage - run as integration test"]
     async fn test_storage_stats() {
         let state = StorageState::new()
             .await
@@ -1020,6 +1024,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore = "Requires write permissions to /var/lib/nestgate/storage - run as integration test"]
     async fn test_blob_storage() {
         let state = StorageState::new()
             .await

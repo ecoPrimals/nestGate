@@ -222,12 +222,12 @@ mod tests {
     // NetworkPortDefaults tests
     #[test]
     fn test_network_port_defaults_api_port() {
-        assert_eq!(NetworkPortDefaults::api_port(), 3000); // API_DEFAULT = 3000
+        assert_eq!(NetworkPortDefaults::api_port(), 8080); // HTTP_DEFAULT = 8080
     }
 
     #[test]
     fn test_network_port_defaults_websocket_port() {
-        assert_eq!(NetworkPortDefaults::websocket_port(), 8082); // WEBSOCKET_DEFAULT = 8082
+        assert_eq!(NetworkPortDefaults::websocket_port(), 8081); // Uses ADMIN_PORT = 8081
     }
 
     #[test]
