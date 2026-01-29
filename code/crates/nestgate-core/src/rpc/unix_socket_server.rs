@@ -394,7 +394,19 @@ async fn storage_store(params: &Option<Value>, state: &StorageState) -> Result<V
     let key = params["key"]
         .as_str()
         .ok_or_else(|| NestGateError::invalid_input_with_field("key", "key (string) required"))?;
-    let data = &params["data"];
+    
+    // ✅ FIX: Accept both "value" (biomeOS) and "data" (legacy) parameters
+    let data = if params.get("value").is_some() && !params["value"].is_null() {
+        &params["value"]
+    } else if params.get("data").is_some() && !params["data"].is_null() {
+        &params["data"]
+    } else {
+        return Err(NestGateError::invalid_input_with_field(
+            "value",
+            "value or data (json) required"
+        ));
+    };
+    
     let family_id = params["family_id"].as_str().ok_or_else(|| {
         NestGateError::invalid_input_with_field("family_id", "family_id (string) required")
     })?;
@@ -403,7 +415,7 @@ async fn storage_store(params: &Option<Value>, state: &StorageState) -> Result<V
     let family_storage = state.storage.entry(family_id.to_string()).or_default();
     family_storage.insert(key.to_string(), data.clone());
 
-    debug!("Stored key '{}' for family '{}'", key, family_id);
+    debug!("Stored key '{}' for family '{}': {:?}", key, family_id, data);
 
     Ok(json!({
         "success": true,
