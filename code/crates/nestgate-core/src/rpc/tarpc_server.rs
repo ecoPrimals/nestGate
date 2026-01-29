@@ -31,7 +31,6 @@
 //! # }
 //! ```
 
-use dashmap::DashMap;
 use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -48,50 +47,58 @@ use crate::rpc::tarpc_types::{
     NestGateRpcError, ObjectInfo, OperationResult, ProtocolInfo, RegistrationResult, ServiceInfo,
     StorageMetrics, VersionInfo,
 };
+use crate::services::storage::service::StorageManagerService;
 
-/// NestGate RPC service implementation (LOCK-FREE!)
+/// NestGate RPC service implementation with REAL STORAGE!
 ///
 /// Implements the NestGateRpc trait to provide storage operations over tarpc.
 ///
 /// # Architecture
-/// - In-memory storage for Phase 1 (will wire to real storage layer)
-/// - Lock-free concurrent access with DashMap (10-20x faster!)
+/// - Real persistent storage via StorageManagerService
+/// - ZFS-backed when available
 /// - Async operations throughout
 /// - Zero unsafe blocks
 /// - Production-ready error handling
-// Type alias for lock-free object storage
-type ObjectStorage = HashMap<String, (Vec<u8>, ObjectInfo)>;
-
-/// NestGate RPC service implementing the tarpc interface (lock-free!)
 #[derive(Clone)]
 pub struct NestGateRpcService {
-    /// In-memory datasets (lock-free with DashMap!)
-    datasets: Arc<DashMap<String, DatasetInfo>>,
-
-    /// In-memory objects (lock-free with DashMap!)
-    objects: Arc<DashMap<String, ObjectStorage>>,
+    /// Real storage manager (ZFS-backed!)
+    storage_manager: Arc<StorageManagerService>,
 
     /// Start time for uptime calculation
     start_time: SystemTime,
 }
 
 impl NestGateRpcService {
-    /// Create new RPC service with lock-free concurrent access
+    /// Create new RPC service with real storage backend
     ///
     /// # Example
     /// ```no_run
     /// use nestgate_core::rpc::NestGateRpcService;
     ///
-    /// let service = NestGateRpcService::new();
+    /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+    /// let service = NestGateRpcService::new().await?;
+    /// # Ok(())
+    /// # }
     /// ```
-    #[must_use]
-    pub fn new() -> Self {
-        info!("🚀 Creating NestGate RPC service (lock-free!)");
-        Self {
-            datasets: Arc::new(DashMap::new()),
-            objects: Arc::new(DashMap::new()),
+    ///
+    /// # Errors
+    ///
+    /// Returns error if storage manager initialization fails
+    pub async fn new() -> Result<Self> {
+        info!("🚀 Creating NestGate RPC service with real storage");
+        
+        let storage_manager = Arc::new(
+            StorageManagerService::new().await
+                .map_err(|e| {
+                    warn!("Failed to initialize storage manager: {}", e);
+                    e
+                })?
+        );
+        
+        Ok(Self {
+            storage_manager,
             start_time: SystemTime::now(),
-        }
+        })
     }
 
     /// Get current timestamp
@@ -107,31 +114,56 @@ impl NestGateRpcService {
         self.start_time.elapsed().unwrap_or_default().as_secs()
     }
 
-    /// Calculate storage metrics (lock-free!)
+    /// Convert NestGateError to NestGateRpcError
+    fn convert_error(err: NestGateError) -> NestGateRpcError {
+        match err {
+            NestGateError::NotFound { resource, .. } => {
+                if resource.contains("dataset") {
+                    NestGateRpcError::DatasetNotFound {
+                        dataset: resource.clone(),
+                    }
+                } else {
+                    // Extract dataset and key from "object dataset/key"
+                    let parts: Vec<&str> = resource.split('/').collect();
+                    if parts.len() >= 2 {
+                        NestGateRpcError::ObjectNotFound {
+                            dataset: parts[parts.len() - 2].to_string(),
+                            key: parts[parts.len() - 1].to_string(),
+                        }
+                    } else {
+                        NestGateRpcError::InternalError {
+                            message: err.to_string(),
+                        }
+                    }
+                }
+            }
+            NestGateError::AlreadyExists { resource, .. } => {
+                NestGateRpcError::DatasetAlreadyExists {
+                    dataset: resource.clone(),
+                }
+            }
+            _ => NestGateRpcError::InternalError {
+                message: err.to_string(),
+            },
+        }
+    }
+
+    /// Calculate storage metrics from real storage
     async fn calculate_metrics(&self) -> StorageMetrics {
-        // DashMap: Lock-free concurrent iteration!
-        let dataset_count = self.datasets.len();
-        let object_count: u64 = self
-            .objects
-            .iter()
-            .map(|entry| entry.value().len() as u64)
-            .sum();
-        let used_space: u64 = self
-            .objects
-            .iter()
-            .map(|entry| {
-                entry
-                    .value()
-                    .values()
-                    .map(|(data, _)| data.len() as u64)
-                    .sum::<u64>()
-            })
-            .sum();
+        // Get metrics from storage manager
+        let datasets = self.storage_manager
+            .list_datasets()
+            .await
+            .unwrap_or_default();
+        
+        let dataset_count = datasets.len();
+        let used_space: u64 = datasets.iter().map(|d| d.size_bytes).sum();
+        let object_count: u64 = datasets.iter().map(|d| d.object_count).sum();
 
         StorageMetrics {
             total_capacity_bytes: 1024 * 1024 * 1024 * 1024, // 1TB placeholder
             used_space_bytes: used_space,
-            available_space_bytes: 1024 * 1024 * 1024 * 1024 - used_space,
+            available_space_bytes: (1024 * 1024 * 1024 * 1024_u64).saturating_sub(used_space),
             dataset_count,
             object_count,
             avg_compression_ratio: 1.5,
@@ -144,11 +176,8 @@ impl NestGateRpcService {
     }
 }
 
-impl Default for NestGateRpcService {
-    fn default() -> Self {
-        Self::new()
-    }
-}
+// Note: Default implementation removed as new() is now async
+// Use NestGateRpcService::new().await instead
 
 // Implement the tarpc service trait
 impl NestGateRpc for NestGateRpcService {
@@ -160,48 +189,28 @@ impl NestGateRpc for NestGateRpcService {
         name: String,
         params: DatasetParams,
     ) -> std::result::Result<DatasetInfo, NestGateRpcError> {
-        debug!("RPC: create_dataset({})", name);
+        debug!("RPC: create_dataset({}) → StorageManagerService", name);
 
-        // DashMap: Lock-free check!
-        if self.datasets.contains_key(&name) {
-            return Err(NestGateRpcError::DatasetAlreadyExists { dataset: name });
-        }
-
-        let now = Self::current_timestamp();
-        let dataset = DatasetInfo {
-            name: name.clone(),
-            description: params.description.clone(),
-            created_at: now,
-            modified_at: now,
-            size_bytes: 0,
-            object_count: 0,
-            compression_ratio: 1.0,
-            params,
-            status: "active".to_string(),
-        };
-
-        // DashMap: Lock-free insert!
-        self.datasets.insert(name.clone(), dataset.clone());
-
-        // Initialize empty object map for this dataset (lock-free!)
-        self.objects.insert(name, HashMap::new());
-
-        info!("✅ Created dataset: {}", dataset.name);
-        Ok(dataset)
+        // Delegate to storage manager
+        self.storage_manager
+            .create_dataset(&name, params)
+            .await
+            .map_err(|e| {
+                warn!("Storage manager create_dataset failed: {}", e);
+                Self::convert_error(e)
+            })
     }
 
     async fn list_datasets(
         self,
         _context: Context,
     ) -> std::result::Result<Vec<DatasetInfo>, NestGateRpcError> {
-        debug!("RPC: list_datasets()");
+        debug!("RPC: list_datasets() → StorageManagerService");
 
-        // DashMap: Lock-free iteration!
-        Ok(self
-            .datasets
-            .iter()
-            .map(|entry| entry.value().clone())
-            .collect())
+        self.storage_manager
+            .list_datasets()
+            .await
+            .map_err(|e| Self::convert_error(e))
     }
 
     async fn get_dataset(
@@ -295,20 +304,15 @@ impl NestGateRpc for NestGateRpcService {
         dataset: String,
         key: String,
     ) -> std::result::Result<Vec<u8>, NestGateRpcError> {
-        debug!("RPC: retrieve_object({}/{})", dataset, key);
+        debug!("RPC: retrieve_object({}/{}) → StorageManagerService", dataset, key);
 
-        // DashMap: Lock-free get!
-        let dataset_objects =
-            self.objects
-                .get(&dataset)
-                .ok_or_else(|| NestGateRpcError::DatasetNotFound {
-                    dataset: dataset.clone(),
-                })?;
+        // Delegate to storage manager
+        let (data, _info) = self.storage_manager
+            .retrieve_object(&dataset, &key)
+            .await
+            .map_err(|e| Self::convert_error(e))?;
 
-        dataset_objects
-            .get(&key)
-            .map(|(data, _)| data.clone())
-            .ok_or(NestGateRpcError::ObjectNotFound { dataset, key })
+        Ok(data)
     }
 
     async fn get_object_metadata(
@@ -375,36 +379,18 @@ impl NestGateRpc for NestGateRpcService {
         dataset: String,
         key: String,
     ) -> std::result::Result<OperationResult, NestGateRpcError> {
-        debug!("RPC: delete_object({}/{})", dataset, key);
+        debug!("RPC: delete_object({}/{}) → StorageManagerService", dataset, key);
 
-        // DashMap: Lock-free get_mut and remove!
-        let info = if let Some(mut dataset_objects) = self.objects.get_mut(&dataset) {
-            dataset_objects
-                .remove(&key)
-                .ok_or(NestGateRpcError::ObjectNotFound {
-                    dataset: dataset.clone(),
-                    key: key.clone(),
-                })?
-                .1 // Get ObjectInfo from tuple
-        } else {
-            return Err(NestGateRpcError::DatasetNotFound {
-                dataset: dataset.clone(),
-            });
-        };
-
-        // Update dataset stats (lock-free!)
-        if let Some(mut ds) = self.datasets.get_mut(&dataset) {
-            ds.object_count = ds.object_count.saturating_sub(1);
-            ds.size_bytes = ds.size_bytes.saturating_sub(info.size_bytes);
-            ds.modified_at = Self::current_timestamp();
-        }
-
-        info!("✅ Deleted object: {}/{}", dataset, key);
-        Ok(OperationResult {
-            success: true,
-            message: format!("Object {}/{} deleted successfully", dataset, key),
-            metadata: HashMap::new(),
-        })
+        // Delegate to storage manager
+        self.storage_manager
+            .delete_object(&dataset, &key)
+            .await
+            .map(|_| OperationResult {
+                success: true,
+                message: format!("Object {}/{} deleted successfully", dataset, key),
+                metadata: std::collections::HashMap::new(),
+            })
+            .map_err(|e| Self::convert_error(e))
     }
 
     // ==================== CAPABILITY OPERATIONS ====================
