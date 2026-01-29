@@ -83,7 +83,6 @@
 //! ```
 
 use crate::error::{NestGateError, Result};
-use dashmap::DashMap;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::path::PathBuf;
@@ -122,27 +121,34 @@ struct JsonRpcError {
 }
 
 /// Storage service state
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 struct StorageState {
-    /// In-memory storage (family_id -> key -> value)
-    /// **LOCK-FREE**: Uses DashMap for concurrent storage access
-    storage: Arc<DashMap<String, DashMap<String, Value>>>, // ✅ Nested DashMaps!
-    /// Blob storage (family_id -> key -> bytes)
-    blobs: Arc<DashMap<String, DashMap<String, Vec<u8>>>>, // ✅ Nested DashMaps!
+    /// Persistent storage manager (filesystem-backed)
+    /// **PRODUCTION**: Uses StorageManagerService for persistent storage
+    storage_manager: Arc<crate::services::storage::StorageManagerService>,
     /// Template storage for collaborative intelligence
     templates: crate::rpc::template_storage::TemplateStorage,
     /// Audit storage for execution tracking
     audits: crate::rpc::audit_storage::AuditStorage,
 }
 
-impl Default for StorageState {
-    fn default() -> Self {
-        Self {
-            storage: Arc::new(DashMap::new()),
-            blobs: Arc::new(DashMap::new()),
+impl StorageState {
+    /// Create new storage state with persistent backend
+    async fn new() -> Result<Self> {
+        let storage_manager = Arc::new(
+            crate::services::storage::StorageManagerService::new()
+                .await
+                .map_err(|e| {
+                    warn!("Failed to initialize storage manager: {}", e);
+                    e
+                })?
+        );
+        
+        Ok(Self {
+            storage_manager,
             templates: crate::rpc::template_storage::TemplateStorage::new(),
             audits: crate::rpc::audit_storage::AuditStorage::new(),
-        }
+        })
     }
 }
 
@@ -203,10 +209,15 @@ impl JsonRpcUnixServer {
         info!("  Socket path: {:?}", socket_path);
         info!("  Family ID: {}", family_id);
 
+        // Initialize persistent storage backend
+        let state = StorageState::new().await?;
+        
+        info!("✅ Unix socket server initialized with persistent storage");
+
         Ok(Self {
             socket_path,
             family_id: family_id.to_string(),
-            state: StorageState::default(),
+            state,
         })
     }
 
@@ -411,11 +422,22 @@ async fn storage_store(params: &Option<Value>, state: &StorageState) -> Result<V
         NestGateError::invalid_input_with_field("family_id", "family_id (string) required")
     })?;
 
-    // ✅ Lock-free: Get or create family storage, then insert
-    let family_storage = state.storage.entry(family_id.to_string()).or_default();
-    family_storage.insert(key.to_string(), data.clone());
+    // ✅ PERSISTENT: Store via StorageManagerService (filesystem-backed)
+    let dataset = family_id;  // Family maps to dataset
+    let object_id = key;
+    
+    // Serialize JSON data to bytes
+    let data_bytes = serde_json::to_vec(data)
+        .map_err(|e| NestGateError::storage_error(&format!("Failed to serialize data: {}", e)))?;
+    
+    // Store via persistent backend
+    state.storage_manager.store_object(
+        dataset,
+        object_id,
+        data_bytes,
+    ).await?;
 
-    debug!("Stored key '{}' for family '{}': {:?}", key, family_id, data);
+    debug!("✅ Stored key '{}' for family '{}' (persistent)", key, family_id);
 
     Ok(json!({
         "success": true,
@@ -436,14 +458,21 @@ async fn storage_retrieve(params: &Option<Value>, state: &StorageState) -> Resul
         NestGateError::invalid_input_with_field("family_id", "family_id (string) required")
     })?;
 
-    // ✅ Lock-free: Nested get from DashMap
-    let data = state
-        .storage
-        .get(family_id)
-        .and_then(|family_storage| family_storage.get(key).map(|v| v.clone()))
-        .ok_or_else(|| NestGateError::not_found(format!("Key '{}' not found", key)))?;
+    // ✅ PERSISTENT: Retrieve from StorageManagerService (filesystem-backed)
+    let dataset = family_id;
+    let object_id = key;
+    
+    // Retrieve from persistent backend (returns (Vec<u8>, ObjectInfo))
+    let (data_bytes, _info) = state.storage_manager.retrieve_object(
+        dataset,
+        object_id
+    ).await?;
+    
+    // Deserialize bytes to JSON
+    let data: Value = serde_json::from_slice(&data_bytes)
+        .map_err(|e| NestGateError::storage_error(&format!("Failed to deserialize data: {}", e)))?;
 
-    debug!("Retrieved key '{}' for family '{}'", key, family_id);
+    debug!("✅ Retrieved key '{}' for family '{}' (persistent)", key, family_id);
 
     Ok(json!({
         "data": data
@@ -463,15 +492,20 @@ async fn storage_delete(params: &Option<Value>, state: &StorageState) -> Result<
         NestGateError::invalid_input_with_field("family_id", "family_id (string) required")
     })?;
 
-    // ✅ Lock-free: Remove from nested DashMap
-    let deleted = state
-        .storage
-        .get(family_id)
-        .and_then(|family_storage| family_storage.remove(key))
-        .is_some();
+    // ✅ PERSISTENT: Delete from StorageManagerService (filesystem-backed)
+    let dataset = family_id;
+    let object_id = key;
+    
+    // Delete from persistent backend
+    let result = state.storage_manager.delete_object(
+        dataset,
+        object_id
+    ).await;
+    
+    let deleted = result.is_ok();
 
     if deleted {
-        debug!("Deleted key '{}' for family '{}'", key, family_id);
+        debug!("✅ Deleted key '{}' for family '{}' (persistent)", key, family_id);
     } else {
         warn!(
             "Key '{}' not found for deletion (family: '{}')",
@@ -495,21 +529,36 @@ async fn storage_list(params: &Option<Value>, state: &StorageState) -> Result<Va
     })?;
     let prefix = params["prefix"].as_str();
 
-    // ✅ Lock-free: Iterate keys from nested DashMap
-    let keys: Vec<String> = state
-        .storage
-        .get(family_id)
-        .map(|family_storage| {
-            family_storage
-                .iter()
-                .map(|entry| entry.key().clone())
-                .filter(|k| prefix.is_none_or(|p| k.starts_with(p)))
-                .collect()
-        })
-        .unwrap_or_default();
+    // ✅ PERSISTENT: List from filesystem (StorageManagerService doesn't have list_objects yet)
+    let dataset = family_id;
+    
+    // Read directly from storage filesystem
+    let base_path = PathBuf::from("/var/lib/nestgate/storage")  // TODO: Get from config
+        .join("datasets")
+        .join(dataset)
+        .join("objects");
+    
+    let mut keys: Vec<String> = Vec::new();
+    if base_path.exists() {
+        if let Ok(mut entries) = tokio::fs::read_dir(&base_path).await {
+            // Read all entries
+            while let Ok(Some(entry)) = entries.next_entry().await {
+                if let Some(file_name) = entry.file_name().to_str() {
+                    // Filter by prefix if provided
+                    if let Some(p) = prefix {
+                        if file_name.starts_with(p) {
+                            keys.push(file_name.to_string());
+                        }
+                    } else {
+                        keys.push(file_name.to_string());
+                    }
+                }
+            }
+        }
+    }
 
     debug!(
-        "Listed {} keys for family '{}' (prefix: {:?})",
+        "✅ Listed {} keys for family '{}' (prefix: {:?}) (persistent)",
         keys.len(),
         family_id,
         prefix
@@ -530,18 +579,37 @@ async fn storage_stats(params: &Option<Value>, state: &StorageState) -> Result<V
         NestGateError::invalid_input_with_field("family_id", "family_id (string) required")
     })?;
 
-    // ✅ Lock-free: Get counts from DashMaps (no read locks needed!)
-    let key_count = state.storage.get(family_id).map(|s| s.len()).unwrap_or(0);
-    let blob_count = state.blobs.get(family_id).map(|b| b.len()).unwrap_or(0);
+    // ✅ PERSISTENT: Get stats from filesystem
+    let dataset = family_id;
+    
+    // Count objects by reading directory
+    let base_path = PathBuf::from("/var/lib/nestgate/storage")
+        .join("datasets")
+        .join(dataset)
+        .join("objects");
+    
+    let key_count = if base_path.exists() {
+        if let Ok(mut entries) = tokio::fs::read_dir(&base_path).await {
+            let mut count = 0;
+            while let Ok(Some(_)) = entries.next_entry().await {
+                count += 1;
+            }
+            count
+        } else {
+            0
+        }
+    } else {
+        0
+    };
 
     debug!(
-        "Stats for family '{}': {} keys, {} blobs",
-        family_id, key_count, blob_count
+        "✅ Stats for family '{}': {} objects (persistent)",
+        family_id, key_count
     );
 
     Ok(json!({
         "key_count": key_count,
-        "blob_count": blob_count,
+        "blob_count": 0,  // No separate blob tracking in new architecture
         "family_id": family_id
     }))
 }
@@ -570,12 +638,19 @@ async fn storage_store_blob(params: &Option<Value>, state: &StorageState) -> Res
             NestGateError::invalid_input_with_field("blob", format!("Invalid base64: {}", e))
         })?;
 
-    // ✅ Lock-free: Store blob in nested DashMap
-    let family_blobs = state.blobs.entry(family_id.to_string()).or_default();
-    family_blobs.insert(key.to_string(), blob_data.clone());
+    // ✅ PERSISTENT: Store blob via StorageManagerService
+    let dataset = family_id;
+    let object_id = key;
+    
+    // Store raw bytes
+    state.storage_manager.store_object(
+        dataset,
+        object_id,
+        blob_data.clone(),
+    ).await?;
 
     debug!(
-        "Stored blob '{}' ({} bytes) for family '{}'",
+        "✅ Stored blob '{}' ({} bytes) for family '{}' (persistent)",
         key,
         blob_data.len(),
         family_id
@@ -601,19 +676,22 @@ async fn storage_retrieve_blob(params: &Option<Value>, state: &StorageState) -> 
         NestGateError::invalid_input_with_field("family_id", "family_id (string) required")
     })?;
 
-    // ✅ Lock-free: Get blob from nested DashMap
-    let blob_data = state
-        .blobs
-        .get(family_id)
-        .and_then(|family_blobs| family_blobs.get(key).map(|v| v.clone()))
-        .ok_or_else(|| NestGateError::not_found(format!("Blob '{}' not found", key)))?;
+    // ✅ PERSISTENT: Retrieve blob from StorageManagerService
+    let dataset = family_id;
+    let object_id = key;
+    
+    // Retrieve raw bytes (returns (Vec<u8>, ObjectInfo))
+    let (blob_data, _info) = state.storage_manager.retrieve_object(
+        dataset,
+        object_id
+    ).await?;
 
     // Encode as base64
     use base64::Engine;
     let blob_base64 = base64::engine::general_purpose::STANDARD.encode(&blob_data);
 
     debug!(
-        "Retrieved blob '{}' ({} bytes) for family '{}'",
+        "✅ Retrieved blob '{}' ({} bytes) for family '{}' (persistent)",
         key,
         blob_data.len(),
         family_id
@@ -836,7 +914,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_storage_store_retrieve() {
-        let state = StorageState::default();
+        let state = StorageState::new().await.expect("Failed to create test storage state");
 
         // Store
         let store_params = json!({
@@ -860,7 +938,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_storage_delete() {
-        let state = StorageState::default();
+        let state = StorageState::new().await.expect("Failed to create test storage state");
 
         // Store
         let store_params = json!({
@@ -889,7 +967,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_storage_list() {
-        let state = StorageState::default();
+        let state = StorageState::new().await.expect("Failed to create test storage state");
 
         // Store multiple keys
         for i in 0..5 {
@@ -909,7 +987,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_storage_stats() {
-        let state = StorageState::default();
+        let state = StorageState::new().await.expect("Failed to create test storage state");
 
         // Store some data
         let store_params = json!({
@@ -928,7 +1006,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_blob_storage() {
-        let state = StorageState::default();
+        let state = StorageState::new().await.expect("Failed to create test storage state");
 
         // Store blob
         let test_data = b"Hello, World!";
