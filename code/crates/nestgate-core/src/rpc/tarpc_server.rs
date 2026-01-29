@@ -86,15 +86,12 @@ impl NestGateRpcService {
     /// Returns error if storage manager initialization fails
     pub async fn new() -> Result<Self> {
         info!("🚀 Creating NestGate RPC service with real storage");
-        
-        let storage_manager = Arc::new(
-            StorageManagerService::new().await
-                .map_err(|e| {
-                    warn!("Failed to initialize storage manager: {}", e);
-                    e
-                })?
-        );
-        
+
+        let storage_manager = Arc::new(StorageManagerService::new().await.map_err(|e| {
+            warn!("Failed to initialize storage manager: {}", e);
+            e
+        })?);
+
         Ok(Self {
             storage_manager,
             start_time: SystemTime::now(),
@@ -111,7 +108,7 @@ impl NestGateRpcService {
         // Simple conversion: wrap error message in InternalError
         // Can enhance later with pattern matching on error types
         let message = err.to_string();
-        
+
         // Try to infer specific error types from message
         if message.contains("not found") || message.contains("Not found") {
             if message.contains("dataset") {
@@ -138,11 +135,12 @@ impl NestGateRpcService {
     /// Calculate storage metrics from real storage
     async fn calculate_metrics(&self) -> StorageMetrics {
         // Get metrics from storage manager
-        let datasets = self.storage_manager
+        let datasets = self
+            .storage_manager
             .list_datasets()
             .await
             .unwrap_or_default();
-        
+
         let dataset_count = datasets.len();
         let used_space: u64 = datasets.iter().map(|d| d.size_bytes).sum();
         let object_count: u64 = datasets.iter().map(|d| d.object_count).sum();
@@ -208,7 +206,8 @@ impl NestGateRpc for NestGateRpcService {
         debug!("RPC: get_dataset({}) → StorageManagerService", name);
 
         // Query from storage manager
-        let datasets = self.storage_manager
+        let datasets = self
+            .storage_manager
             .list_datasets()
             .await
             .map_err(Self::convert_error)?;
@@ -246,10 +245,14 @@ impl NestGateRpc for NestGateRpcService {
         data: Vec<u8>,
         metadata: Option<HashMap<String, String>>,
     ) -> std::result::Result<ObjectInfo, NestGateRpcError> {
-        debug!("RPC: store_object({}/{}) → StorageManagerService [v2]", dataset, key);
+        debug!(
+            "RPC: store_object({}/{}) → StorageManagerService [v2]",
+            dataset, key
+        );
 
         // Delegate to storage manager
-        let mut object_info = self.storage_manager
+        let mut object_info = self
+            .storage_manager
             .store_object(&dataset, &key, data)
             .await
             .map_err(|e| {
@@ -272,10 +275,14 @@ impl NestGateRpc for NestGateRpcService {
         dataset: String,
         key: String,
     ) -> std::result::Result<Vec<u8>, NestGateRpcError> {
-        debug!("RPC: retrieve_object({}/{}) → StorageManagerService", dataset, key);
+        debug!(
+            "RPC: retrieve_object({}/{}) → StorageManagerService",
+            dataset, key
+        );
 
         // Delegate to storage manager
-        let (data, _info) = self.storage_manager
+        let (data, _info) = self
+            .storage_manager
             .retrieve_object(&dataset, &key)
             .await
             .map_err(Self::convert_error)?;
@@ -289,10 +296,14 @@ impl NestGateRpc for NestGateRpcService {
         dataset: String,
         key: String,
     ) -> std::result::Result<ObjectInfo, NestGateRpcError> {
-        debug!("RPC: get_object_metadata({}/{}) → StorageManagerService", dataset, key);
+        debug!(
+            "RPC: get_object_metadata({}/{}) → StorageManagerService",
+            dataset, key
+        );
 
         // Delegate to storage manager (retrieve to get metadata)
-        let (_data, object_info) = self.storage_manager
+        let (_data, object_info) = self
+            .storage_manager
             .retrieve_object(&dataset, &key)
             .await
             .map_err(Self::convert_error)?;
@@ -308,15 +319,18 @@ impl NestGateRpc for NestGateRpcService {
         limit: Option<usize>,
     ) -> std::result::Result<Vec<ObjectInfo>, NestGateRpcError> {
         use std::path::PathBuf;
-        
-        debug!("RPC: list_objects({}, {:?}, {:?}) → StorageManagerService", dataset, prefix, limit);
+
+        debug!(
+            "RPC: list_objects({}, {:?}, {:?}) → StorageManagerService",
+            dataset, prefix, limit
+        );
 
         // Read dataset directory
         let base_path = PathBuf::from(&self.storage_manager.config().base_path);
         let dataset_path = base_path.join("datasets").join(&dataset);
-        
+
         let mut results = Vec::new();
-        
+
         if let Ok(mut entries) = tokio::fs::read_dir(&dataset_path).await {
             while let Ok(Some(entry)) = entries.next_entry().await {
                 if let Ok(file_name) = entry.file_name().into_string() {
@@ -326,13 +340,15 @@ impl NestGateRpc for NestGateRpcService {
                             continue;
                         }
                     }
-                    
+
                     // Get object info
-                    if let Ok((_data, info)) = self.storage_manager
+                    if let Ok((_data, info)) = self
+                        .storage_manager
                         .retrieve_object(&dataset, &file_name)
-                        .await {
+                        .await
+                    {
                         results.push(info);
-                        
+
                         // Apply limit if provided
                         if let Some(lim) = limit {
                             if results.len() >= lim {
@@ -353,7 +369,10 @@ impl NestGateRpc for NestGateRpcService {
         dataset: String,
         key: String,
     ) -> std::result::Result<OperationResult, NestGateRpcError> {
-        debug!("RPC: delete_object({}/{}) → StorageManagerService", dataset, key);
+        debug!(
+            "RPC: delete_object({}/{}) → StorageManagerService",
+            dataset, key
+        );
 
         // Delegate to storage manager
         self.storage_manager
@@ -595,11 +614,9 @@ mod tests {
         config.enable_quotas = false;
         config.enable_caching = false;
         config.enable_monitoring = false;
-        
-        let storage_manager = Arc::new(
-            StorageManagerService::with_config(config).await?
-        );
-        
+
+        let storage_manager = Arc::new(StorageManagerService::with_config(config).await?);
+
         Ok(NestGateRpcService {
             storage_manager,
             start_time: SystemTime::now(),
@@ -608,16 +625,28 @@ mod tests {
 
     #[tokio::test]
     async fn test_service_creation() {
-        let service = create_test_service().await.expect("Failed to create service");
+        let service = create_test_service()
+            .await
+            .expect("Failed to create service");
         // Verify storage manager is initialized
-        let datasets = service.storage_manager.list_datasets().await.expect("Failed to list datasets");
+        let datasets = service
+            .storage_manager
+            .list_datasets()
+            .await
+            .expect("Failed to list datasets");
         // New service should have no datasets initially
-        assert_eq!(datasets.len(), 0, "New service should start with empty storage");
+        assert_eq!(
+            datasets.len(),
+            0,
+            "New service should start with empty storage"
+        );
     }
 
     #[tokio::test]
     async fn test_health() {
-        let service = create_test_service().await.expect("Failed to create service");
+        let service = create_test_service()
+            .await
+            .expect("Failed to create service");
         let health = service.health(Context::current()).await;
         assert_eq!(health.status, "healthy");
         assert_eq!(health.version, "0.2.0");
@@ -625,7 +654,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_version() {
-        let service = create_test_service().await.expect("Failed to create service");
+        let service = create_test_service()
+            .await
+            .expect("Failed to create service");
         let version = service.version(Context::current()).await;
         assert_eq!(version.version, "0.2.0");
         assert_eq!(version.api_version, "1.0");
@@ -633,7 +664,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_protocols() {
-        let service = create_test_service().await.expect("Failed to create service");
+        let service = create_test_service()
+            .await
+            .expect("Failed to create service");
         let protocols = service.protocols(Context::current()).await;
         assert_eq!(protocols.len(), 3);
         assert_eq!(protocols[0].protocol, "tarpc");
@@ -643,7 +676,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_dataset() {
-        let service = create_test_service().await.expect("Failed to create service");
+        let service = create_test_service()
+            .await
+            .expect("Failed to create service");
         let result = service
             .create_dataset(
                 Context::current(),
@@ -660,7 +695,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_list_datasets() {
-        let service = create_test_service().await.expect("Failed to create service");
+        let service = create_test_service()
+            .await
+            .expect("Failed to create service");
 
         // Create a dataset
         service
@@ -685,7 +722,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_store_retrieve_object() {
-        let service = create_test_service().await.expect("Failed to create service");
+        let service = create_test_service()
+            .await
+            .expect("Failed to create service");
 
         // Create dataset
         service

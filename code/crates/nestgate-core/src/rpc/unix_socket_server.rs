@@ -141,9 +141,9 @@ impl StorageState {
                 .map_err(|e| {
                     warn!("Failed to initialize storage manager: {}", e);
                     e
-                })?
+                })?,
         );
-        
+
         Ok(Self {
             storage_manager,
             templates: crate::rpc::template_storage::TemplateStorage::new(),
@@ -211,7 +211,7 @@ impl JsonRpcUnixServer {
 
         // Initialize persistent storage backend
         let state = StorageState::new().await?;
-        
+
         info!("✅ Unix socket server initialized with persistent storage");
 
         Ok(Self {
@@ -405,7 +405,7 @@ async fn storage_store(params: &Option<Value>, state: &StorageState) -> Result<V
     let key = params["key"]
         .as_str()
         .ok_or_else(|| NestGateError::invalid_input_with_field("key", "key (string) required"))?;
-    
+
     // ✅ FIX: Accept both "value" (biomeOS) and "data" (legacy) parameters
     let data = if params.get("value").is_some() && !params["value"].is_null() {
         &params["value"]
@@ -414,30 +414,32 @@ async fn storage_store(params: &Option<Value>, state: &StorageState) -> Result<V
     } else {
         return Err(NestGateError::invalid_input_with_field(
             "value",
-            "value or data (json) required"
+            "value or data (json) required",
         ));
     };
-    
+
     let family_id = params["family_id"].as_str().ok_or_else(|| {
         NestGateError::invalid_input_with_field("family_id", "family_id (string) required")
     })?;
 
     // ✅ PERSISTENT: Store via StorageManagerService (filesystem-backed)
-    let dataset = family_id;  // Family maps to dataset
+    let dataset = family_id; // Family maps to dataset
     let object_id = key;
-    
+
     // Serialize JSON data to bytes
     let data_bytes = serde_json::to_vec(data)
         .map_err(|e| NestGateError::storage_error(&format!("Failed to serialize data: {}", e)))?;
-    
-    // Store via persistent backend
-    state.storage_manager.store_object(
-        dataset,
-        object_id,
-        data_bytes,
-    ).await?;
 
-    debug!("✅ Stored key '{}' for family '{}' (persistent)", key, family_id);
+    // Store via persistent backend
+    state
+        .storage_manager
+        .store_object(dataset, object_id, data_bytes)
+        .await?;
+
+    debug!(
+        "✅ Stored key '{}' for family '{}' (persistent)",
+        key, family_id
+    );
 
     Ok(json!({
         "success": true,
@@ -461,18 +463,21 @@ async fn storage_retrieve(params: &Option<Value>, state: &StorageState) -> Resul
     // ✅ PERSISTENT: Retrieve from StorageManagerService (filesystem-backed)
     let dataset = family_id;
     let object_id = key;
-    
+
     // Retrieve from persistent backend (returns (Vec<u8>, ObjectInfo))
-    let (data_bytes, _info) = state.storage_manager.retrieve_object(
-        dataset,
-        object_id
-    ).await?;
-    
+    let (data_bytes, _info) = state
+        .storage_manager
+        .retrieve_object(dataset, object_id)
+        .await?;
+
     // Deserialize bytes to JSON
     let data: Value = serde_json::from_slice(&data_bytes)
         .map_err(|e| NestGateError::storage_error(&format!("Failed to deserialize data: {}", e)))?;
 
-    debug!("✅ Retrieved key '{}' for family '{}' (persistent)", key, family_id);
+    debug!(
+        "✅ Retrieved key '{}' for family '{}' (persistent)",
+        key, family_id
+    );
 
     Ok(json!({
         "data": data
@@ -495,17 +500,20 @@ async fn storage_delete(params: &Option<Value>, state: &StorageState) -> Result<
     // ✅ PERSISTENT: Delete from StorageManagerService (filesystem-backed)
     let dataset = family_id;
     let object_id = key;
-    
+
     // Delete from persistent backend
-    let result = state.storage_manager.delete_object(
-        dataset,
-        object_id
-    ).await;
-    
+    let result = state
+        .storage_manager
+        .delete_object(dataset, object_id)
+        .await;
+
     let deleted = result.is_ok();
 
     if deleted {
-        debug!("✅ Deleted key '{}' for family '{}' (persistent)", key, family_id);
+        debug!(
+            "✅ Deleted key '{}' for family '{}' (persistent)",
+            key, family_id
+        );
     } else {
         warn!(
             "Key '{}' not found for deletion (family: '{}')",
@@ -531,13 +539,13 @@ async fn storage_list(params: &Option<Value>, _state: &StorageState) -> Result<V
 
     // ✅ PERSISTENT: List from filesystem (StorageManagerService doesn't have list_objects yet)
     let dataset = family_id;
-    
+
     // Read directly from storage filesystem
-    let base_path = PathBuf::from("/var/lib/nestgate/storage")  // TODO: Get from config
+    let base_path = PathBuf::from("/var/lib/nestgate/storage") // TODO: Get from config
         .join("datasets")
         .join(dataset)
         .join("objects");
-    
+
     let mut keys: Vec<String> = Vec::new();
     if base_path.exists() {
         if let Ok(mut entries) = tokio::fs::read_dir(&base_path).await {
@@ -581,13 +589,13 @@ async fn storage_stats(params: &Option<Value>, _state: &StorageState) -> Result<
 
     // ✅ PERSISTENT: Get stats from filesystem
     let dataset = family_id;
-    
+
     // Count objects by reading directory
     let base_path = PathBuf::from("/var/lib/nestgate/storage")
         .join("datasets")
         .join(dataset)
         .join("objects");
-    
+
     let key_count = if base_path.exists() {
         if let Ok(mut entries) = tokio::fs::read_dir(&base_path).await {
             let mut count = 0;
@@ -641,13 +649,12 @@ async fn storage_store_blob(params: &Option<Value>, state: &StorageState) -> Res
     // ✅ PERSISTENT: Store blob via StorageManagerService
     let dataset = family_id;
     let object_id = key;
-    
+
     // Store raw bytes
-    state.storage_manager.store_object(
-        dataset,
-        object_id,
-        blob_data.clone(),
-    ).await?;
+    state
+        .storage_manager
+        .store_object(dataset, object_id, blob_data.clone())
+        .await?;
 
     debug!(
         "✅ Stored blob '{}' ({} bytes) for family '{}' (persistent)",
@@ -679,12 +686,12 @@ async fn storage_retrieve_blob(params: &Option<Value>, state: &StorageState) -> 
     // ✅ PERSISTENT: Retrieve blob from StorageManagerService
     let dataset = family_id;
     let object_id = key;
-    
+
     // Retrieve raw bytes (returns (Vec<u8>, ObjectInfo))
-    let (blob_data, _info) = state.storage_manager.retrieve_object(
-        dataset,
-        object_id
-    ).await?;
+    let (blob_data, _info) = state
+        .storage_manager
+        .retrieve_object(dataset, object_id)
+        .await?;
 
     // Encode as base64
     use base64::Engine;
@@ -914,7 +921,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_storage_store_retrieve() {
-        let state = StorageState::new().await.expect("Failed to create test storage state");
+        let state = StorageState::new()
+            .await
+            .expect("Failed to create test storage state");
 
         // Store
         let store_params = json!({
@@ -938,7 +947,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_storage_delete() {
-        let state = StorageState::new().await.expect("Failed to create test storage state");
+        let state = StorageState::new()
+            .await
+            .expect("Failed to create test storage state");
 
         // Store
         let store_params = json!({
@@ -967,7 +978,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_storage_list() {
-        let state = StorageState::new().await.expect("Failed to create test storage state");
+        let state = StorageState::new()
+            .await
+            .expect("Failed to create test storage state");
 
         // Store multiple keys
         for i in 0..5 {
@@ -987,7 +1000,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_storage_stats() {
-        let state = StorageState::new().await.expect("Failed to create test storage state");
+        let state = StorageState::new()
+            .await
+            .expect("Failed to create test storage state");
 
         // Store some data
         let store_params = json!({
@@ -1006,7 +1021,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_blob_storage() {
-        let state = StorageState::new().await.expect("Failed to create test storage state");
+        let state = StorageState::new()
+            .await
+            .expect("Failed to create test storage state");
 
         // Store blob
         let test_data = b"Hello, World!";

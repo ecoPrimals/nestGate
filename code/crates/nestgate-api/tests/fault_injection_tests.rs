@@ -2,10 +2,10 @@
 //!
 //! Tests for system behavior under injected faults.
 
+use nestgate_api::transport::jsonrpc::JsonRpcError;
 use nestgate_api::transport::{
     JsonRpcHandler, JsonRpcRequest, JsonRpcResponse, NestGateRpcHandler, TransportConfig,
 };
-use nestgate_api::transport::jsonrpc::JsonRpcError;
 use serde_json::{json, Value};
 use std::sync::Arc;
 

@@ -2,10 +2,10 @@
 //!
 //! Comprehensive unit tests for refactored object storage backend.
 
+use nestgate_core::canonical_types::StorageTier;
 use nestgate_zfs::backends::object_storage::{
     ObjectDataset, ObjectPool, ObjectStorageBackend, StorageProvider,
 };
-use nestgate_zfs::StorageTier;
 use std::collections::HashMap;
 
 // ============================================================================
@@ -15,7 +15,7 @@ use std::collections::HashMap;
 #[test]
 fn test_provider_detection_aws() {
     let provider = StorageProvider::detect_from_endpoint("https://s3.amazonaws.com");
-    assert!(matches!(provider, StorageProvider::AWS));
+    assert!(matches!(provider, StorageProvider::AwsS3));
 }
 
 #[test]
@@ -30,10 +30,10 @@ fn test_provider_detection_minio() {
 #[test]
 fn test_provider_detection_generic() {
     let provider = StorageProvider::detect_from_endpoint("https://storage.example.com");
-    assert!(matches!(provider, StorageProvider::Generic));
+    assert!(matches!(provider, StorageProvider::Unknown));
 
     let provider2 = StorageProvider::detect_from_endpoint("http://192.168.1.100:8080");
-    assert!(matches!(provider2, StorageProvider::Generic));
+    assert!(matches!(provider2, StorageProvider::Unknown));
 }
 
 // ============================================================================
@@ -44,33 +44,30 @@ fn test_provider_detection_generic() {
 fn test_object_pool_creation() {
     let pool = ObjectPool {
         name: "test-pool".to_string(),
-        endpoint: "https://s3.example.com".to_string(),
         bucket: "test-bucket".to_string(),
-        provider: StorageProvider::Generic,
-        properties: HashMap::new(),
+        created_at: std::time::SystemTime::now(),
+        metadata: HashMap::new(),
     };
 
     assert_eq!(pool.name, "test-pool");
     assert_eq!(pool.bucket, "test-bucket");
-    assert!(matches!(pool.provider, StorageProvider::Generic));
 }
 
 #[test]
 fn test_object_pool_with_properties() {
-    let mut properties = HashMap::new();
-    properties.insert("region".to_string(), "us-west-2".to_string());
-    properties.insert("versioning".to_string(), "enabled".to_string());
+    let mut metadata = HashMap::new();
+    metadata.insert("region".to_string(), "us-west-2".to_string());
+    metadata.insert("versioning".to_string(), "enabled".to_string());
 
     let pool = ObjectPool {
         name: "production-pool".to_string(),
-        endpoint: "https://s3.amazonaws.com".to_string(),
         bucket: "prod-bucket".to_string(),
-        provider: StorageProvider::AWS,
-        properties,
+        created_at: std::time::SystemTime::now(),
+        metadata: metadata.clone(),
     };
 
-    assert_eq!(pool.properties.get("region").unwrap(), "us-west-2");
-    assert_eq!(pool.properties.get("versioning").unwrap(), "enabled");
+    assert_eq!(pool.metadata.get("region").unwrap(), "us-west-2");
+    assert_eq!(pool.metadata.get("versioning").unwrap(), "enabled");
 }
 
 // ============================================================================
@@ -198,10 +195,9 @@ fn test_config_validation() {
 fn test_empty_pool_name() {
     let pool = ObjectPool {
         name: "".to_string(),
-        endpoint: "https://s3.example.com".to_string(),
         bucket: "test-bucket".to_string(),
-        provider: StorageProvider::Generic,
-        properties: HashMap::new(),
+        created_at: std::time::SystemTime::now(),
+        metadata: HashMap::new(),
     };
 
     // Empty name should still be valid (will be caught by validation)
@@ -212,10 +208,9 @@ fn test_empty_pool_name() {
 fn test_special_characters_in_names() {
     let pool = ObjectPool {
         name: "test-pool_123.prod".to_string(),
-        endpoint: "https://s3.example.com".to_string(),
         bucket: "test-bucket-456".to_string(),
-        provider: StorageProvider::Generic,
-        properties: HashMap::new(),
+        created_at: std::time::SystemTime::now(),
+        metadata: HashMap::new(),
     };
 
     assert!(pool.name.contains('-'));
@@ -226,10 +221,10 @@ fn test_special_characters_in_names() {
 #[test]
 fn test_provider_serialization() {
     let providers = vec![
-        StorageProvider::AWS,
+        StorageProvider::AwsS3,
         StorageProvider::MinIO,
-        StorageProvider::Ceph,
-        StorageProvider::Generic,
+        StorageProvider::Wasabi,
+        StorageProvider::Unknown,
     ];
 
     for provider in providers {
@@ -245,22 +240,21 @@ fn test_provider_serialization() {
 
 #[test]
 fn test_many_properties() {
-    let mut properties = HashMap::new();
+    let mut metadata = HashMap::new();
 
     for i in 0..100 {
-        properties.insert(format!("key_{}", i), format!("value_{}", i));
+        metadata.insert(format!("key_{}", i), format!("value_{}", i));
     }
 
     let pool = ObjectPool {
         name: "property-test".to_string(),
-        endpoint: "https://s3.example.com".to_string(),
         bucket: "test-bucket".to_string(),
-        provider: StorageProvider::Generic,
-        properties,
+        created_at: std::time::SystemTime::now(),
+        metadata: metadata.clone(),
     };
 
-    assert_eq!(pool.properties.len(), 100);
-    assert_eq!(pool.properties.get("key_50").unwrap(), "value_50");
+    assert_eq!(pool.metadata.len(), 100);
+    assert_eq!(pool.metadata.get("key_50").unwrap(), "value_50");
 }
 
 #[test]

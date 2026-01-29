@@ -214,7 +214,7 @@ impl RealZfsOperations {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-        pub fn get_snapshot_list(&self, dataset_name: Option<String>) -> Result<ZfsResponse>  {
+        pub async fn get_snapshot_list(&self, dataset_name: Option<String>) -> Result<ZfsResponse>  {
         let args = if let Some(name) = dataset_name.as_ref() {
             vec![
                 "list",
@@ -409,6 +409,12 @@ impl RealZfsOperations {
 
     /// Check if ZFS is available on the system
     pub async fn is_available() -> bool {
+        // Check if simulation mode is forced (for testing)
+        if std::env::var("NESTGATE_ZFS_SIMULATION_MODE").is_ok() {
+            return false; // Force simulation mode
+        }
+
+        // Check if ZFS command exists
         let result = AsyncCommand::new("which").arg("zfs").output().await;
 
         match result {

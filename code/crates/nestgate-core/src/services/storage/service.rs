@@ -500,19 +500,19 @@ impl StorageManagerService {
         _params: crate::rpc::tarpc_types::DatasetParams,
     ) -> Result<crate::rpc::tarpc_types::DatasetInfo> {
         use std::path::PathBuf;
-        
+
         info!("📦 Creating dataset: {}", name);
-        
+
         // Create dataset directory
         let base_path = PathBuf::from(&self.config.base_path);
         let dataset_path = base_path.join("datasets").join(name);
-        
-        tokio::fs::create_dir_all(&dataset_path).await
-            .map_err(|e| NestGateError::io_error(&format!(
-                "Failed to create dataset directory: {}",
-                e
-            )))?;
-        
+
+        tokio::fs::create_dir_all(&dataset_path)
+            .await
+            .map_err(|e| {
+                NestGateError::io_error(&format!("Failed to create dataset directory: {}", e))
+            })?;
+
         // Create dataset info
         let now = Self::current_timestamp();
         let dataset = crate::rpc::tarpc_types::DatasetInfo {
@@ -526,11 +526,11 @@ impl StorageManagerService {
             params: _params,
             status: "active".to_string(),
         };
-        
+
         info!("✅ Dataset created: {}", name);
         Ok(dataset)
     }
-    
+
     /// List all datasets
     ///
     /// # Errors
@@ -538,52 +538,43 @@ impl StorageManagerService {
     /// Returns error if listing fails
     pub async fn list_datasets(&self) -> Result<Vec<crate::rpc::tarpc_types::DatasetInfo>> {
         use std::path::PathBuf;
-        
+
         debug!("📋 Listing datasets");
-        
+
         let base_path = PathBuf::from(&self.config.base_path);
         let datasets_path = base_path.join("datasets");
-        
+
         // Create datasets dir if it doesn't exist
-        tokio::fs::create_dir_all(&datasets_path).await
-            .map_err(|e| NestGateError::io_error(&format!(
-                "Failed to create datasets directory: {}",
-                e
-            )))?;
-        
+        tokio::fs::create_dir_all(&datasets_path)
+            .await
+            .map_err(|e| {
+                NestGateError::io_error(&format!("Failed to create datasets directory: {}", e))
+            })?;
+
         let mut datasets = Vec::new();
-        let mut entries = tokio::fs::read_dir(&datasets_path).await
-            .map_err(|e| NestGateError::io_error(&format!(
-                "Failed to read datasets directory: {}",
-                e
-            )))?;
-        
-        while let Some(entry) = entries.next_entry().await
-            .map_err(|e| NestGateError::io_error(&format!(
-                "Failed to read directory entry: {}",
-                e
-            )))? {
-            
+        let mut entries = tokio::fs::read_dir(&datasets_path).await.map_err(|e| {
+            NestGateError::io_error(&format!("Failed to read datasets directory: {}", e))
+        })?;
+
+        while let Some(entry) = entries.next_entry().await.map_err(|e| {
+            NestGateError::io_error(&format!("Failed to read directory entry: {}", e))
+        })? {
             let path = entry.path();
             if path.is_dir() {
                 if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
                     // Get directory metadata
-                    let metadata = tokio::fs::metadata(&path).await
-                        .map_err(|e| NestGateError::io_error(&format!(
-                            "Failed to read metadata: {}",
-                            e
-                        )))?;
-                    
-                    let modified = metadata.modified()
-                        .map_err(|e| NestGateError::io_error(&format!(
-                            "Failed to get modification time: {}",
-                            e
-                        )))?;
+                    let metadata = tokio::fs::metadata(&path).await.map_err(|e| {
+                        NestGateError::io_error(&format!("Failed to read metadata: {}", e))
+                    })?;
+
+                    let modified = metadata.modified().map_err(|e| {
+                        NestGateError::io_error(&format!("Failed to get modification time: {}", e))
+                    })?;
                     let modified_at = modified
                         .duration_since(SystemTime::UNIX_EPOCH)
                         .unwrap_or_default()
                         .as_secs() as i64;
-                    
+
                     datasets.push(crate::rpc::tarpc_types::DatasetInfo {
                         name: name.to_string(),
                         description: None,
@@ -598,11 +589,11 @@ impl StorageManagerService {
                 }
             }
         }
-        
+
         debug!("✅ Listed {} datasets", datasets.len());
         Ok(datasets)
     }
-    
+
     /// Store an object in a dataset
     ///
     /// # Errors
@@ -615,28 +606,34 @@ impl StorageManagerService {
         data: Vec<u8>,
     ) -> Result<crate::rpc::tarpc_types::ObjectInfo> {
         use std::path::PathBuf;
-        
-        info!("💾 Storing object: {}/{} ({} bytes)", dataset, key, data.len());
-        
+
+        info!(
+            "💾 Storing object: {}/{} ({} bytes)",
+            dataset,
+            key,
+            data.len()
+        );
+
         // Get dataset path
         let base_path = PathBuf::from(&self.config.base_path);
         let dataset_path = base_path.join("datasets").join(dataset);
         let object_path = dataset_path.join(key);
-        
+
         // Ensure dataset exists
-        tokio::fs::create_dir_all(&dataset_path).await
-            .map_err(|e| NestGateError::io_error(&format!(
-                "Failed to create dataset directory: {}",
-                e
-            )))?;
-        
+        tokio::fs::create_dir_all(&dataset_path)
+            .await
+            .map_err(|e| {
+                NestGateError::io_error(&format!("Failed to create dataset directory: {}", e))
+            })?;
+
         // Write object
-        tokio::fs::write(&object_path, &data).await
-            .map_err(|e| NestGateError::io_error(&format!(
+        tokio::fs::write(&object_path, &data).await.map_err(|e| {
+            NestGateError::io_error(&format!(
                 "Failed to write object {}/{}: {}",
                 dataset, key, e
-            )))?;
-        
+            ))
+        })?;
+
         let now = Self::current_timestamp();
         let object_info = crate::rpc::tarpc_types::ObjectInfo {
             key: key.to_string(),
@@ -650,11 +647,11 @@ impl StorageManagerService {
             compressed: false,
             metadata: std::collections::HashMap::new(),
         };
-        
+
         info!("✅ Object stored: {}/{}", dataset, key);
         Ok(object_info)
     }
-    
+
     /// Retrieve an object from a dataset
     ///
     /// # Errors
@@ -666,43 +663,38 @@ impl StorageManagerService {
         key: &str,
     ) -> Result<(Vec<u8>, crate::rpc::tarpc_types::ObjectInfo)> {
         use std::path::PathBuf;
-        
+
         info!("📖 Retrieving object: {}/{}", dataset, key);
-        
+
         let base_path = PathBuf::from(&self.config.base_path);
         let dataset_path = base_path.join("datasets").join(dataset);
         let object_path = dataset_path.join(key);
-        
+
         // Read object
-        let data = tokio::fs::read(&object_path).await
-            .map_err(|e| {
-                if e.kind() == std::io::ErrorKind::NotFound {
-                    NestGateError::not_found(&format!("object {}/{}", dataset, key))
-                } else {
-                    NestGateError::io_error(&format!(
-                        "Failed to read object {}/{}: {}",
-                        dataset, key, e
-                    ))
-                }
-            })?;
-        
+        let data = tokio::fs::read(&object_path).await.map_err(|e| {
+            if e.kind() == std::io::ErrorKind::NotFound {
+                NestGateError::not_found(&format!("object {}/{}", dataset, key))
+            } else {
+                NestGateError::io_error(&format!(
+                    "Failed to read object {}/{}: {}",
+                    dataset, key, e
+                ))
+            }
+        })?;
+
         // Get metadata
-        let metadata = tokio::fs::metadata(&object_path).await
-            .map_err(|e| NestGateError::io_error(&format!(
-                "Failed to get metadata: {}",
-                e
-            )))?;
-        
-        let modified = metadata.modified()
-            .map_err(|e| NestGateError::io_error(&format!(
-                "Failed to get modification time: {}",
-                e
-            )))?;
+        let metadata = tokio::fs::metadata(&object_path)
+            .await
+            .map_err(|e| NestGateError::io_error(&format!("Failed to get metadata: {}", e)))?;
+
+        let modified = metadata.modified().map_err(|e| {
+            NestGateError::io_error(&format!("Failed to get modification time: {}", e))
+        })?;
         let modified_at = modified
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap_or_default()
             .as_secs() as i64;
-        
+
         let object_info = crate::rpc::tarpc_types::ObjectInfo {
             key: key.to_string(),
             dataset: dataset.to_string(),
@@ -715,11 +707,16 @@ impl StorageManagerService {
             compressed: false,
             metadata: std::collections::HashMap::new(),
         };
-        
-        info!("✅ Object retrieved: {}/{} ({} bytes)", dataset, key, data.len());
+
+        info!(
+            "✅ Object retrieved: {}/{} ({} bytes)",
+            dataset,
+            key,
+            data.len()
+        );
         Ok((data, object_info))
     }
-    
+
     /// Delete an object from a dataset
     ///
     /// # Errors
@@ -727,29 +724,28 @@ impl StorageManagerService {
     /// Returns error if object not found or deletion fails
     pub async fn delete_object(&self, dataset: &str, key: &str) -> Result<()> {
         use std::path::PathBuf;
-        
+
         info!("🗑️  Deleting object: {}/{}", dataset, key);
-        
+
         let base_path = PathBuf::from(&self.config.base_path);
         let dataset_path = base_path.join("datasets").join(dataset);
         let object_path = dataset_path.join(key);
-        
-        tokio::fs::remove_file(&object_path).await
-            .map_err(|e| {
-                if e.kind() == std::io::ErrorKind::NotFound {
-                    NestGateError::not_found(&format!("object {}/{}", dataset, key))
-                } else {
-                    NestGateError::io_error(&format!(
-                        "Failed to delete object {}/{}: {}",
-                        dataset, key, e
-                    ))
-                }
-            })?;
-        
+
+        tokio::fs::remove_file(&object_path).await.map_err(|e| {
+            if e.kind() == std::io::ErrorKind::NotFound {
+                NestGateError::not_found(&format!("object {}/{}", dataset, key))
+            } else {
+                NestGateError::io_error(&format!(
+                    "Failed to delete object {}/{}: {}",
+                    dataset, key, e
+                ))
+            }
+        })?;
+
         info!("✅ Object deleted: {}/{}", dataset, key);
         Ok(())
     }
-    
+
     /// Delete a dataset and all its objects
     ///
     /// # Errors
@@ -757,28 +753,26 @@ impl StorageManagerService {
     /// Returns error if dataset not found or deletion fails
     pub async fn delete_dataset(&self, name: &str) -> Result<()> {
         use std::path::PathBuf;
-        
+
         info!("🗑️  Deleting dataset: {}", name);
-        
+
         let base_path = PathBuf::from(&self.config.base_path);
         let dataset_path = base_path.join("datasets").join(name);
-        
-        tokio::fs::remove_dir_all(&dataset_path).await
+
+        tokio::fs::remove_dir_all(&dataset_path)
+            .await
             .map_err(|e| {
                 if e.kind() == std::io::ErrorKind::NotFound {
                     NestGateError::not_found(&format!("dataset {}", name))
                 } else {
-                    NestGateError::io_error(&format!(
-                        "Failed to delete dataset {}: {}",
-                        name, e
-                    ))
+                    NestGateError::io_error(&format!("Failed to delete dataset {}: {}", name, e))
                 }
             })?;
-        
+
         info!("✅ Dataset deleted: {}", name);
         Ok(())
     }
-    
+
     /// Helper: Get current timestamp
     fn current_timestamp() -> i64 {
         SystemTime::now()

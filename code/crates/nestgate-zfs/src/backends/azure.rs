@@ -512,6 +512,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore = "Requires Azure storage account configuration"]
     async fn test_container_name_generation() {
         let backend = AzureBackend::new().await.unwrap();
         let container = backend.container_name("MyPool_Test");
@@ -546,6 +547,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore = "Requires Azure storage account configuration"]
     async fn test_create_pool() {
         let backend = AzureBackend::new().await.unwrap();
         let pool = backend.create_pool("test-pool", &[]).await;
@@ -577,6 +579,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore = "Requires Azure storage account configuration"]
     async fn test_create_snapshot() {
         let backend = AzureBackend::new().await.unwrap();
         let pool = backend.create_pool("test-pool", &[]).await.unwrap();
@@ -594,6 +597,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore = "Requires Azure storage account configuration"]
     async fn test_list_pools() {
         let backend = AzureBackend::new().await.unwrap();
         backend.create_pool("pool1", &[]).await.unwrap();
