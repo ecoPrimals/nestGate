@@ -742,6 +742,35 @@ impl StorageManagerService {
         Ok(())
     }
     
+    /// Delete a dataset and all its objects
+    ///
+    /// # Errors
+    ///
+    /// Returns error if dataset not found or deletion fails
+    pub async fn delete_dataset(&self, name: &str) -> Result<()> {
+        use std::path::PathBuf;
+        
+        info!("🗑️  Deleting dataset: {}", name);
+        
+        let base_path = PathBuf::from(&self.config.base_path);
+        let dataset_path = base_path.join("datasets").join(name);
+        
+        tokio::fs::remove_dir_all(&dataset_path).await
+            .map_err(|e| {
+                if e.kind() == std::io::ErrorKind::NotFound {
+                    NestGateError::not_found(&format!("dataset {}", name))
+                } else {
+                    NestGateError::io_error(&format!(
+                        "Failed to delete dataset {}: {}",
+                        name, e
+                    ))
+                }
+            })?;
+        
+        info!("✅ Dataset deleted: {}", name);
+        Ok(())
+    }
+    
     /// Helper: Get current timestamp
     fn current_timestamp() -> i64 {
         SystemTime::now()

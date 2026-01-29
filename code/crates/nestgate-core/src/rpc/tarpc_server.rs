@@ -218,12 +218,17 @@ impl NestGateRpc for NestGateRpcService {
         _context: Context,
         name: String,
     ) -> std::result::Result<DatasetInfo, NestGateRpcError> {
-        debug!("RPC: get_dataset({})", name);
+        debug!("RPC: get_dataset({}) → StorageManagerService", name);
 
-        // DashMap: Lock-free get!
-        self.datasets
-            .get(&name)
-            .map(|entry| entry.value().clone())
+        // Query from storage manager
+        let datasets = self.storage_manager
+            .list_datasets()
+            .await
+            .map_err(|e| Self::convert_error(e))?;
+
+        datasets
+            .into_iter()
+            .find(|d| d.name == name)
             .ok_or(NestGateRpcError::DatasetNotFound { dataset: name })
     }
 
@@ -232,24 +237,18 @@ impl NestGateRpc for NestGateRpcService {
         _context: Context,
         name: String,
     ) -> std::result::Result<OperationResult, NestGateRpcError> {
-        debug!("RPC: delete_dataset({})", name);
+        debug!("RPC: delete_dataset({}) → StorageManagerService", name);
 
-        // DashMap: Lock-free check and remove!
-        if !self.datasets.contains_key(&name) {
-            return Err(NestGateRpcError::DatasetNotFound { dataset: name });
-        }
-
-        self.datasets.remove(&name);
-
-        // Remove all objects in dataset (lock-free!)
-        self.objects.remove(&name);
-
-        info!("✅ Deleted dataset: {}", name);
-        Ok(OperationResult {
-            success: true,
-            message: format!("Dataset {} deleted successfully", name),
-            metadata: HashMap::new(),
-        })
+        // Delegate to storage manager
+        self.storage_manager
+            .delete_dataset(&name)
+            .await
+            .map(|_| OperationResult {
+                success: true,
+                message: format!("Dataset {} deleted successfully", name),
+                metadata: HashMap::new(),
+            })
+            .map_err(|e| Self::convert_error(e))
     }
 
     async fn store_object(
