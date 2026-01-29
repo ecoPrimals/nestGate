@@ -168,7 +168,8 @@ where
         Ok(())
     }
 
-    async fn handle_request(&self, request: JsonRpcRequest) -> JsonRpcResponse {
+    /// Handle JSON-RPC request
+    pub async fn handle_request(&self, request: JsonRpcRequest) -> JsonRpcResponse {
         debug!("Handling method: {}", request.method);
 
         match self

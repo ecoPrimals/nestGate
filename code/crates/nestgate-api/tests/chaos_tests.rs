@@ -5,7 +5,7 @@
 use nestgate_api::transport::{
     JsonRpcHandler, JsonRpcRequest, NestGateRpcHandler, TransportConfig,
 };
-use serde_json::json;
+use serde_json::{json, Value};
 use std::sync::Arc;
 use tokio::time::{sleep, Duration};
 
@@ -15,7 +15,7 @@ use tokio::time::{sleep, Duration};
 
 #[tokio::test]
 async fn test_chaos_delayed_responses() {
-    let handler = NestGateRpcHandler::new();
+    let handler = JsonRpcHandler::new(NestGateRpcHandler::new());
 
     let mut handles = vec![];
 
@@ -32,7 +32,7 @@ async fn test_chaos_delayed_responses() {
                 jsonrpc: "2.0".to_string(),
                 method: "health.ping".to_string(),
                 params: json!({"delay_test": i}),
-                id: i as i64,
+                id: Value::from(i as i64),
             };
             h.handle_request(request).await
         });
@@ -48,7 +48,8 @@ async fn test_chaos_delayed_responses() {
 
 #[tokio::test]
 async fn test_chaos_burst_traffic() {
-    let handler = Arc::new(NestGateRpcHandler::new());
+    let handler = JsonRpcHandler::new(NestGateRpcHandler::new());
+    let handler = Arc::new(handler);
 
     // Simulate burst of 100 requests at once
     let mut handles = vec![];
@@ -60,7 +61,7 @@ async fn test_chaos_burst_traffic() {
                 jsonrpc: "2.0".to_string(),
                 method: "health.ping".to_string(),
                 params: json!({"burst_id": i}),
-                id: i as i64,
+                id: Value::from(i as i64),
             };
             h.handle_request(request).await
         });
@@ -82,7 +83,7 @@ async fn test_chaos_burst_traffic() {
 
 #[tokio::test]
 async fn test_chaos_interleaved_methods() {
-    let handler = NestGateRpcHandler::new();
+    let handler = JsonRpcHandler::new(NestGateRpcHandler::new());
 
     let methods = vec!["health.ping", "health.status", "identity.get"];
 
@@ -93,7 +94,7 @@ async fn test_chaos_interleaved_methods() {
             jsonrpc: "2.0".to_string(),
             method: method.to_string(),
             params: json!({"test_id": i}),
-            id: i as i64,
+            id: Value::from(i as i64),
         };
 
         let response = handler.handle_request(request).await;
@@ -107,7 +108,7 @@ async fn test_chaos_interleaved_methods() {
 
 #[tokio::test]
 async fn test_chaos_memory_pressure() {
-    let handler = NestGateRpcHandler::new();
+    let handler = JsonRpcHandler::new(NestGateRpcHandler::new());
 
     // Create large payloads to simulate memory pressure
     let large_data: Vec<String> = (0..10000).map(|i| format!("data_{}", i)).collect();
@@ -117,7 +118,7 @@ async fn test_chaos_memory_pressure() {
             jsonrpc: "2.0".to_string(),
             method: "health.ping".to_string(),
             params: json!({"large_payload": &large_data, "iteration": i}),
-            id: i,
+            id: Value::from(i),
         };
 
         let response = handler.handle_request(request).await;
@@ -147,13 +148,13 @@ async fn test_chaos_concurrent_handler_creation() {
     // Create multiple handlers concurrently
     for i in 0..50 {
         let handle = tokio::spawn(async move {
-            let handler = NestGateRpcHandler::new();
+            let handler = JsonRpcHandler::new(NestGateRpcHandler::new());
 
             let request = JsonRpcRequest {
                 jsonrpc: "2.0".to_string(),
                 method: "health.ping".to_string(),
                 params: json!({"handler_id": i}),
-                id: i as i64,
+                id: Value::from(i as i64),
             };
 
             handler.handle_request(request).await
@@ -173,7 +174,7 @@ async fn test_chaos_concurrent_handler_creation() {
 
 #[tokio::test]
 async fn test_chaos_timeout_simulation() {
-    let handler = NestGateRpcHandler::new();
+    let handler = JsonRpcHandler::new(NestGateRpcHandler::new());
 
     // Send requests with varying "simulated timeout" durations
     for i in 0..20 {
@@ -181,7 +182,7 @@ async fn test_chaos_timeout_simulation() {
             jsonrpc: "2.0".to_string(),
             method: "health.ping".to_string(),
             params: json!({"timeout_sim": i * 10}),
-            id: i as i64,
+            id: Value::from(i as i64),
         };
 
         // Even with "timeout" params, should still respond
@@ -192,7 +193,8 @@ async fn test_chaos_timeout_simulation() {
 
 #[tokio::test]
 async fn test_chaos_race_conditions() {
-    let handler = Arc::new(NestGateRpcHandler::new());
+    let handler = JsonRpcHandler::new(NestGateRpcHandler::new());
+    let handler = Arc::new(handler);
 
     let mut handles = vec![];
 
@@ -209,7 +211,7 @@ async fn test_chaos_race_conditions() {
                 jsonrpc: "2.0".to_string(),
                 method: "health.status".to_string(),
                 params: json!({"race_id": i}),
-                id: i as i64,
+                id: Value::from(i as i64),
             };
             h.handle_request(request).await
         });
@@ -229,7 +231,7 @@ async fn test_chaos_race_conditions() {
 
 #[tokio::test]
 async fn test_chaos_mixed_valid_invalid_requests() {
-    let handler = NestGateRpcHandler::new();
+    let handler = JsonRpcHandler::new(NestGateRpcHandler::new());
 
     for i in 0..50 {
         let method = if i % 3 == 0 {
@@ -242,19 +244,19 @@ async fn test_chaos_mixed_valid_invalid_requests() {
             jsonrpc: "2.0".to_string(),
             method,
             params: json!({}),
-            id: i as i64,
+            id: Value::from(i as i64),
         };
 
         let response = handler.handle_request(request).await;
 
         // Should always return a response, even for invalid methods
-        assert_eq!(response.id, i as i64);
+        assert_eq!(response.id, Value::from(i as i64));
     }
 }
 
 #[tokio::test]
 async fn test_chaos_malformed_params() {
-    let handler = NestGateRpcHandler::new();
+    let handler = JsonRpcHandler::new(NestGateRpcHandler::new());
 
     let malformed_params = vec![
         json!(null),
@@ -268,19 +270,19 @@ async fn test_chaos_malformed_params() {
             jsonrpc: "2.0".to_string(),
             method: "health.ping".to_string(),
             params,
-            id: i as i64,
+            id: Value::from(i as i64),
         };
 
         let response = handler.handle_request(request).await;
 
         // Should handle gracefully, not panic
-        assert_eq!(response.id, i as i64);
+        assert_eq!(response.id, Value::from(i as i64));
     }
 }
 
 #[tokio::test]
 async fn test_chaos_extreme_request_ids() {
-    let handler = NestGateRpcHandler::new();
+    let handler = JsonRpcHandler::new(NestGateRpcHandler::new());
 
     let extreme_ids = vec![i64::MIN, i64::MAX, 0, -1, 1000000000];
 
@@ -289,11 +291,11 @@ async fn test_chaos_extreme_request_ids() {
             jsonrpc: "2.0".to_string(),
             method: "health.ping".to_string(),
             params: json!({}),
-            id,
+            id: Value::from(id),
         };
 
         let response = handler.handle_request(request).await;
-        assert_eq!(response.id, id);
+        assert_eq!(response.id, Value::from(id));
     }
 }
 
@@ -303,7 +305,7 @@ async fn test_chaos_extreme_request_ids() {
 
 #[tokio::test]
 async fn test_chaos_error_recovery() {
-    let handler = NestGateRpcHandler::new();
+    let handler = JsonRpcHandler::new(NestGateRpcHandler::new());
 
     // Pattern: fail, succeed, fail, succeed
     for i in 0..20 {
@@ -317,7 +319,7 @@ async fn test_chaos_error_recovery() {
             jsonrpc: "2.0".to_string(),
             method: method.to_string(),
             params: json!({}),
-            id: i as i64,
+            id: Value::from(i as i64),
         };
 
         let response = handler.handle_request(request).await;
@@ -340,7 +342,7 @@ async fn test_chaos_error_recovery() {
 
 #[tokio::test]
 async fn test_chaos_sustained_failure_recovery() {
-    let handler = NestGateRpcHandler::new();
+    let handler = JsonRpcHandler::new(NestGateRpcHandler::new());
 
     // 10 failures in a row
     for i in 0..10 {
@@ -348,7 +350,7 @@ async fn test_chaos_sustained_failure_recovery() {
             jsonrpc: "2.0".to_string(),
             method: "invalid.method".to_string(),
             params: json!({}),
-            id: i,
+            id: Value::from(i),
         };
 
         let response = handler.handle_request(request).await;
@@ -361,7 +363,7 @@ async fn test_chaos_sustained_failure_recovery() {
             jsonrpc: "2.0".to_string(),
             method: "health.ping".to_string(),
             params: json!({}),
-            id: i,
+            id: Value::from(i),
         };
 
         let response = handler.handle_request(request).await;

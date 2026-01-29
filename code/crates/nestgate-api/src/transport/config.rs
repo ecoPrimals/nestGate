@@ -3,6 +3,7 @@
 //! Environment-driven configuration for TRUE PRIMAL transport.
 
 use nestgate_core::error::{NestGateError, Result};
+use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 
 /// **TRANSPORT CONFIGURATION**
@@ -27,7 +28,7 @@ use std::path::{Path, PathBuf};
 ///     .with_socket_path("/tmp/nestgate-nat0.sock")
 ///     .with_security_provider("/tmp/beardog-nat0-default.sock");
 /// ```
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TransportConfig {
     /// Family ID for this primal instance
     pub family_id: String,

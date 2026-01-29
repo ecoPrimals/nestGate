@@ -3,9 +3,10 @@
 //! Tests for transport + protocol + handlers integration.
 
 use nestgate_api::transport::{
+    JsonRpcHandler, 
     JsonRpcHandler, JsonRpcRequest, NestGateRpcHandler, TransportConfig,
 };
-use serde_json::json;
+use serde_json::{json, Value};
 use std::sync::Arc;
 use tempfile::TempDir;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -17,14 +18,14 @@ use tokio::net::UnixStream;
 
 #[tokio::test]
 async fn test_handler_request_response_flow() {
-    let handler = NestGateRpcHandler::new();
+    let handler = JsonRpcHandler::new(NestGateRpcHandler::new());
 
     // Create request
     let request = JsonRpcRequest {
         jsonrpc: "2.0".to_string(),
         method: "health.ping".to_string(),
         params: json!({}),
-        id: 1,
+        id: Value::from(1),
     };
 
     // Handle request
@@ -48,14 +49,14 @@ async fn test_config_to_handler_integration() {
 
     assert!(config.validate().is_ok());
 
-    let handler = NestGateRpcHandler::new();
+    let handler = JsonRpcHandler::new(NestGateRpcHandler::new());
 
     // Handler should work with any config
     let request = JsonRpcRequest {
         jsonrpc: "2.0".to_string(),
         method: "identity.get".to_string(),
         params: json!({}),
-        id: 2,
+        id: Value::from(2),
     };
 
     let response = handler.handle_request(request).await;
@@ -64,7 +65,7 @@ async fn test_config_to_handler_integration() {
 
 #[tokio::test]
 async fn test_multiple_handlers_concurrent() {
-    let handler = Arc::new(NestGateRpcHandler::new());
+    let handler = Arc::new(JsonRpcHandler::new(NestGateRpcHandler::new()));
 
     let mut handles = vec![];
 
@@ -75,7 +76,7 @@ async fn test_multiple_handlers_concurrent() {
                 jsonrpc: "2.0".to_string(),
                 method: "health.ping".to_string(),
                 params: json!({"id": i}),
-                id: i as i64,
+                id: Value::from(i as i64),
             };
             h.handle_request(request).await
         });
@@ -138,13 +139,13 @@ async fn test_config_precedence() {
 
 #[tokio::test]
 async fn test_invalid_method_error_flow() {
-    let handler = NestGateRpcHandler::new();
+    let handler = JsonRpcHandler::new(NestGateRpcHandler::new());
 
     let request = JsonRpcRequest {
         jsonrpc: "2.0".to_string(),
         method: "invalid.nonexistent.method".to_string(),
         params: json!({}),
-        id: 100,
+        id: Value::from(100),
     };
 
     let response = handler.handle_request(request).await;
@@ -158,14 +159,14 @@ async fn test_invalid_method_error_flow() {
 
 #[tokio::test]
 async fn test_error_recovery_and_next_request() {
-    let handler = NestGateRpcHandler::new();
+    let handler = JsonRpcHandler::new(NestGateRpcHandler::new());
 
     // First request fails
     let bad_request = JsonRpcRequest {
         jsonrpc: "2.0".to_string(),
         method: "bad.method".to_string(),
         params: json!({}),
-        id: 1,
+        id: Value::from(1),
     };
 
     let error_response = handler.handle_request(bad_request).await;
@@ -176,7 +177,7 @@ async fn test_error_recovery_and_next_request() {
         jsonrpc: "2.0".to_string(),
         method: "health.ping".to_string(),
         params: json!({}),
-        id: 2,
+        id: Value::from(2),
     };
 
     let success_response = handler.handle_request(good_request).await;
@@ -190,14 +191,14 @@ async fn test_error_recovery_and_next_request() {
 
 #[tokio::test]
 async fn test_e2e_health_check_flow() {
-    let handler = NestGateRpcHandler::new();
+    let handler = JsonRpcHandler::new(NestGateRpcHandler::new());
 
     // 1. Ping
     let ping_req = JsonRpcRequest {
         jsonrpc: "2.0".to_string(),
         method: "health.ping".to_string(),
         params: json!({}),
-        id: 1,
+        id: Value::from(1),
     };
     let ping_resp = handler.handle_request(ping_req).await;
     assert_eq!(ping_resp.result.unwrap()["status"], "pong");
@@ -207,7 +208,7 @@ async fn test_e2e_health_check_flow() {
         jsonrpc: "2.0".to_string(),
         method: "health.status".to_string(),
         params: json!({}),
-        id: 2,
+        id: Value::from(2),
     };
     let status_resp = handler.handle_request(status_req).await;
     assert!(status_resp.result.is_some());
@@ -217,7 +218,7 @@ async fn test_e2e_health_check_flow() {
         jsonrpc: "2.0".to_string(),
         method: "identity.get".to_string(),
         params: json!({}),
-        id: 3,
+        id: Value::from(3),
     };
     let identity_resp = handler.handle_request(identity_req).await;
     assert!(identity_resp.result.is_some());
@@ -234,14 +235,14 @@ async fn test_e2e_config_handler_lifecycle() {
     assert!(config.validate().is_ok());
 
     // 3. Create handler
-    let handler = NestGateRpcHandler::new();
+    let handler = JsonRpcHandler::new(NestGateRpcHandler::new());
 
     // 4. Send request
     let request = JsonRpcRequest {
         jsonrpc: "2.0".to_string(),
         method: "health.ping".to_string(),
         params: json!({}),
-        id: 1,
+        id: Value::from(1),
     };
 
     // 5. Get response
@@ -254,14 +255,14 @@ async fn test_e2e_config_handler_lifecycle() {
 
 #[tokio::test]
 async fn test_e2e_stress_sequential_requests() {
-    let handler = NestGateRpcHandler::new();
+    let handler = JsonRpcHandler::new(NestGateRpcHandler::new());
 
     for i in 0..100 {
         let request = JsonRpcRequest {
             jsonrpc: "2.0".to_string(),
             method: "health.ping".to_string(),
             params: json!({"iteration": i}),
-            id: i as i64,
+            id: Value::from(i as i64),
         };
 
         let response = handler.handle_request(request).await;
@@ -277,7 +278,7 @@ async fn test_e2e_stress_sequential_requests() {
 
 #[tokio::test]
 async fn test_concurrent_load() {
-    let handler = Arc::new(NestGateRpcHandler::new());
+    let handler = Arc::new(JsonRpcHandler::new(NestGateRpcHandler::new()));
 
     let mut handles = vec![];
 
@@ -295,7 +296,7 @@ async fn test_concurrent_load() {
                     "identity.get".to_string()
                 },
                 params: json!({"id": i}),
-                id: i as i64,
+                id: Value::from(i as i64),
             };
             h.handle_request(request).await
         });
@@ -311,7 +312,7 @@ async fn test_concurrent_load() {
 
 #[tokio::test]
 async fn test_rapid_fire_requests() {
-    let handler = NestGateRpcHandler::new();
+    let handler = JsonRpcHandler::new(NestGateRpcHandler::new());
 
     let start = std::time::Instant::now();
 
@@ -320,7 +321,7 @@ async fn test_rapid_fire_requests() {
             jsonrpc: "2.0".to_string(),
             method: "health.ping".to_string(),
             params: json!({}),
-            id: i,
+            id: Value::from(i),
         };
 
         let response = handler.handle_request(request).await;

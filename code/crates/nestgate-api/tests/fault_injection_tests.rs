@@ -3,12 +3,11 @@
 //! Tests for system behavior under injected faults.
 
 use nestgate_api::transport::{
-    JsonRpcError, JsonRpcHandler, JsonRpcRequest, JsonRpcResponse, NestGateRpcHandler,
-    TransportConfig,
+    JsonRpcHandler, JsonRpcRequest, JsonRpcResponse, NestGateRpcHandler, TransportConfig,
 };
-use serde_json::json;
+use nestgate_api::transport::jsonrpc::JsonRpcError;
+use serde_json::{json, Value};
 use std::sync::Arc;
-use tokio::time::{sleep, Duration};
 
 // ============================================================================
 // Protocol Fault Injection (3 tests)
@@ -16,14 +15,14 @@ use tokio::time::{sleep, Duration};
 
 #[tokio::test]
 async fn test_fault_wrong_jsonrpc_version() {
-    let handler = NestGateRpcHandler::new();
+    let handler = JsonRpcHandler::new(NestGateRpcHandler::new());
 
     // Inject fault: wrong version
     let request = JsonRpcRequest {
         jsonrpc: "1.0".to_string(), // Wrong version
         method: "health.ping".to_string(),
         params: json!({}),
-        id: 1,
+        id: Value::from(1),
     };
 
     let response = handler.handle_request(request).await;
@@ -34,13 +33,13 @@ async fn test_fault_wrong_jsonrpc_version() {
 
 #[tokio::test]
 async fn test_fault_empty_method_name() {
-    let handler = NestGateRpcHandler::new();
+    let handler = JsonRpcHandler::new(NestGateRpcHandler::new());
 
     let request = JsonRpcRequest {
         jsonrpc: "2.0".to_string(),
         method: "".to_string(), // Empty method
         params: json!({}),
-        id: 2,
+        id: Value::from(2),
     };
 
     let response = handler.handle_request(request).await;
@@ -51,13 +50,13 @@ async fn test_fault_empty_method_name() {
 
 #[tokio::test]
 async fn test_fault_null_params() {
-    let handler = NestGateRpcHandler::new();
+    let handler = JsonRpcHandler::new(NestGateRpcHandler::new());
 
     let request = JsonRpcRequest {
         jsonrpc: "2.0".to_string(),
         method: "health.ping".to_string(),
         params: json!(null), // Null params
-        id: 3,
+        id: Value::from(3),
     };
 
     let response = handler.handle_request(request).await;
@@ -108,7 +107,7 @@ async fn test_fault_conflicting_config() {
 
 #[tokio::test]
 async fn test_fault_concurrent_conflicting_requests() {
-    let handler = Arc::new(NestGateRpcHandler::new());
+    let handler = Arc::new(JsonRpcHandler::new(NestGateRpcHandler::new()));
 
     let mut handles = vec![];
 
@@ -120,7 +119,7 @@ async fn test_fault_concurrent_conflicting_requests() {
                 jsonrpc: "2.0".to_string(),
                 method: "health.ping".to_string(),
                 params: json!({"task": i}),
-                id: 1, // Same ID for all!
+                id: Value::from(1), // Same ID for all!
             };
             h.handle_request(request).await
         });
@@ -136,7 +135,7 @@ async fn test_fault_concurrent_conflicting_requests() {
 
 #[tokio::test]
 async fn test_fault_handler_under_extreme_load() {
-    let handler = Arc::new(NestGateRpcHandler::new());
+    let handler = Arc::new(JsonRpcHandler::new(NestGateRpcHandler::new()));
 
     let mut handles = vec![];
 
@@ -148,7 +147,7 @@ async fn test_fault_handler_under_extreme_load() {
                 jsonrpc: "2.0".to_string(),
                 method: "health.ping".to_string(),
                 params: json!({"load_test": i}),
-                id: i as i64,
+                id: Value::from(i as i64),
             };
             h.handle_request(request).await
         });
@@ -178,7 +177,7 @@ async fn test_fault_handler_under_extreme_load() {
 
 #[tokio::test]
 async fn test_fault_extremely_large_payload() {
-    let handler = NestGateRpcHandler::new();
+    let handler = JsonRpcHandler::new(NestGateRpcHandler::new());
 
     // 1MB of data
     let large_data: Vec<String> = (0..100000).map(|i| format!("data_{}", i)).collect();
@@ -187,7 +186,7 @@ async fn test_fault_extremely_large_payload() {
         jsonrpc: "2.0".to_string(),
         method: "health.ping".to_string(),
         params: json!({"large_data": large_data}),
-        id: 1,
+        id: Value::from(1),
     };
 
     let response = handler.handle_request(request).await;
@@ -198,7 +197,7 @@ async fn test_fault_extremely_large_payload() {
 
 #[tokio::test]
 async fn test_fault_deeply_nested_json() {
-    let handler = NestGateRpcHandler::new();
+    let handler = JsonRpcHandler::new(NestGateRpcHandler::new());
 
     // Create deeply nested JSON
     let mut nested = json!({"deepest": "value"});
@@ -210,7 +209,7 @@ async fn test_fault_deeply_nested_json() {
         jsonrpc: "2.0".to_string(),
         method: "health.ping".to_string(),
         params: nested,
-        id: 2,
+        id: Value::from(2),
     };
 
     let response = handler.handle_request(request).await;
@@ -221,7 +220,7 @@ async fn test_fault_deeply_nested_json() {
 
 #[tokio::test]
 async fn test_fault_special_unicode_characters() {
-    let handler = NestGateRpcHandler::new();
+    let handler = JsonRpcHandler::new(NestGateRpcHandler::new());
 
     let special_chars = vec![
         "🚀💎🎊",
@@ -237,7 +236,7 @@ async fn test_fault_special_unicode_characters() {
             jsonrpc: "2.0".to_string(),
             method: "health.ping".to_string(),
             params: json!({"special": chars}),
-            id: i as i64,
+            id: Value::from(i as i64),
         };
 
         let response = handler.handle_request(request).await;
@@ -251,7 +250,7 @@ async fn test_fault_special_unicode_characters() {
 
 #[tokio::test]
 async fn test_fault_simultaneous_requests() {
-    let handler = Arc::new(NestGateRpcHandler::new());
+    let handler = Arc::new(JsonRpcHandler::new(NestGateRpcHandler::new()));
 
     // Launch all at exactly the same time
     let handles: Vec<_> = (0..50)
@@ -262,7 +261,7 @@ async fn test_fault_simultaneous_requests() {
                     jsonrpc: "2.0".to_string(),
                     method: "health.ping".to_string(),
                     params: json!({}),
-                    id: i,
+                    id: Value::from(i),
                 };
                 h.handle_request(request).await
             })
@@ -278,7 +277,7 @@ async fn test_fault_simultaneous_requests() {
 
 #[tokio::test]
 async fn test_fault_request_during_high_cpu() {
-    let handler = NestGateRpcHandler::new();
+    let handler = JsonRpcHandler::new(NestGateRpcHandler::new());
 
     // Simulate high CPU with busy work
     let busy_work = tokio::spawn(async {
@@ -292,7 +291,7 @@ async fn test_fault_request_during_high_cpu() {
         jsonrpc: "2.0".to_string(),
         method: "health.ping".to_string(),
         params: json!({}),
-        id: 1,
+        id: Value::from(1),
     };
 
     let response = handler.handle_request(request).await;
@@ -309,15 +308,9 @@ async fn test_fault_request_during_high_cpu() {
 
 #[tokio::test]
 async fn test_fault_error_response_structure() {
-    let error = JsonRpcError {
-        code: -32600,
-        message: "Invalid Request".to_string(),
-        data: Some(json!({"fault": "injected"})),
-    };
+    let response = JsonRpcResponse::error(Value::from(1), -32600, "Invalid Request");
 
-    let response = JsonRpcResponse::error(1, error);
-
-    assert_eq!(response.id, 1);
+    assert_eq!(response.id, Value::from(1));
     assert!(response.result.is_none());
     assert!(response.error.is_some());
 
@@ -327,7 +320,7 @@ async fn test_fault_error_response_structure() {
 
 #[tokio::test]
 async fn test_fault_multiple_errors_in_sequence() {
-    let handler = NestGateRpcHandler::new();
+    let handler = JsonRpcHandler::new(NestGateRpcHandler::new());
 
     // Send 20 invalid requests in a row
     for i in 0..20 {
@@ -335,7 +328,7 @@ async fn test_fault_multiple_errors_in_sequence() {
             jsonrpc: "2.0".to_string(),
             method: format!("invalid.method.{}", i),
             params: json!({}),
-            id: i as i64,
+            id: Value::from(i as i64),
         };
 
         let response = handler.handle_request(request).await;
