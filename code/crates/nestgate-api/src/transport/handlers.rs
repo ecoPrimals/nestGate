@@ -19,6 +19,7 @@ use tracing::{debug, info};
 /// - `health.*` - Health and status checks
 /// - `identity.*` - Primal identity and discovery
 /// - `system.*` - System information and capabilities
+#[derive(Clone)]
 pub struct NestGateRpcHandler {
     /// Optional storage backend
     storage: Option<Arc<dyn StorageBackend>>,
