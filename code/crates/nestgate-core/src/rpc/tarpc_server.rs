@@ -34,7 +34,7 @@
 use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::sync::Arc;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::SystemTime;
 
 use futures_util::StreamExt;
 use tarpc::context::Context;
@@ -101,14 +101,6 @@ impl NestGateRpcService {
         })
     }
 
-    /// Get current timestamp
-    fn current_timestamp() -> i64 {
-        SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_secs() as i64
-    }
-
     /// Get uptime in seconds
     fn uptime_seconds(&self) -> u64 {
         self.start_time.elapsed().unwrap_or_default().as_secs()
@@ -116,35 +108,30 @@ impl NestGateRpcService {
 
     /// Convert NestGateError to NestGateRpcError
     fn convert_error(err: NestGateError) -> NestGateRpcError {
-        match err {
-            NestGateError::NotFound { resource, .. } => {
-                if resource.contains("dataset") {
-                    NestGateRpcError::DatasetNotFound {
-                        dataset: resource.clone(),
-                    }
-                } else {
-                    // Extract dataset and key from "object dataset/key"
-                    let parts: Vec<&str> = resource.split('/').collect();
-                    if parts.len() >= 2 {
-                        NestGateRpcError::ObjectNotFound {
-                            dataset: parts[parts.len() - 2].to_string(),
-                            key: parts[parts.len() - 1].to_string(),
-                        }
-                    } else {
-                        NestGateRpcError::InternalError {
-                            message: err.to_string(),
-                        }
-                    }
+        // Simple conversion: wrap error message in InternalError
+        // Can enhance later with pattern matching on error types
+        let message = err.to_string();
+        
+        // Try to infer specific error types from message
+        if message.contains("not found") || message.contains("Not found") {
+            if message.contains("dataset") {
+                NestGateRpcError::DatasetNotFound {
+                    dataset: "unknown".to_string(),
                 }
-            }
-            NestGateError::AlreadyExists { resource, .. } => {
-                NestGateRpcError::DatasetAlreadyExists {
-                    dataset: resource.clone(),
+            } else if message.contains("object") {
+                NestGateRpcError::ObjectNotFound {
+                    dataset: "unknown".to_string(),
+                    key: "unknown".to_string(),
                 }
+            } else {
+                NestGateRpcError::InternalError { message }
             }
-            _ => NestGateRpcError::InternalError {
-                message: err.to_string(),
-            },
+        } else if message.contains("already exists") || message.contains("Already exists") {
+            NestGateRpcError::DatasetAlreadyExists {
+                dataset: "unknown".to_string(),
+            }
+        } else {
+            NestGateRpcError::InternalError { message }
         }
     }
 
@@ -259,38 +246,20 @@ impl NestGateRpc for NestGateRpcService {
         data: Vec<u8>,
         metadata: Option<HashMap<String, String>>,
     ) -> std::result::Result<ObjectInfo, NestGateRpcError> {
-        debug!("RPC: store_object({}/{})", dataset, key);
+        debug!("RPC: store_object({}/{}) → StorageManagerService [v2]", dataset, key);
 
-        // Verify dataset exists (lock-free!)
-        if !self.datasets.contains_key(&dataset) {
-            return Err(NestGateRpcError::DatasetNotFound { dataset });
-        }
+        // Delegate to storage manager
+        let mut object_info = self.storage_manager
+            .store_object(&dataset, &key, data)
+            .await
+            .map_err(|e| {
+                warn!("Storage manager store_object failed: {}", e);
+                Self::convert_error(e)
+            })?;
 
-        let now = Self::current_timestamp();
-        let object_info = ObjectInfo {
-            key: key.clone(),
-            dataset: dataset.clone(),
-            size_bytes: data.len() as u64,
-            created_at: now,
-            modified_at: now,
-            content_type: None,
-            checksum: None,
-            encrypted: false,
-            compressed: false,
-            metadata: metadata.unwrap_or_default(),
-        };
-
-        // DashMap: Lock-free entry and insert!
-        self.objects
-            .entry(dataset.clone())
-            .or_default()
-            .insert(key.clone(), (data, object_info.clone()));
-
-        // Update dataset stats (lock-free!)
-        if let Some(mut ds) = self.datasets.get_mut(&dataset) {
-            ds.object_count += 1;
-            ds.size_bytes += object_info.size_bytes;
-            ds.modified_at = now;
+        // Add metadata from params (storage manager returns base info)
+        if let Some(meta) = metadata {
+            object_info.metadata = meta;
         }
 
         info!("✅ Stored object: {}/{}", dataset, key);
@@ -320,20 +289,15 @@ impl NestGateRpc for NestGateRpcService {
         dataset: String,
         key: String,
     ) -> std::result::Result<ObjectInfo, NestGateRpcError> {
-        debug!("RPC: get_object_metadata({}/{})", dataset, key);
+        debug!("RPC: get_object_metadata({}/{}) → StorageManagerService", dataset, key);
 
-        // DashMap: Lock-free get!
-        let dataset_objects =
-            self.objects
-                .get(&dataset)
-                .ok_or_else(|| NestGateRpcError::DatasetNotFound {
-                    dataset: dataset.clone(),
-                })?;
+        // Delegate to storage manager (retrieve to get metadata)
+        let (_data, object_info) = self.storage_manager
+            .retrieve_object(&dataset, &key)
+            .await
+            .map_err(|e| Self::convert_error(e))?;
 
-        dataset_objects
-            .get(&key)
-            .map(|(_, info)| info.clone())
-            .ok_or(NestGateRpcError::ObjectNotFound { dataset, key })
+        Ok(object_info)
     }
 
     async fn list_objects(
@@ -343,30 +307,41 @@ impl NestGateRpc for NestGateRpcService {
         prefix: Option<String>,
         limit: Option<usize>,
     ) -> std::result::Result<Vec<ObjectInfo>, NestGateRpcError> {
-        debug!("RPC: list_objects({}, {:?}, {:?})", dataset, prefix, limit);
+        use std::path::PathBuf;
+        
+        debug!("RPC: list_objects({}, {:?}, {:?}) → StorageManagerService", dataset, prefix, limit);
 
-        // DashMap: Lock-free get!
-        let dataset_objects =
-            self.objects
-                .get(&dataset)
-                .ok_or_else(|| NestGateRpcError::DatasetNotFound {
-                    dataset: dataset.clone(),
-                })?;
-
-        let mut results: Vec<ObjectInfo> = dataset_objects
-            .iter()
-            .filter(|(key, _)| {
-                if let Some(ref prefix) = prefix {
-                    key.starts_with(prefix)
-                } else {
-                    true
+        // Read dataset directory
+        let base_path = PathBuf::from(&self.storage_manager.config().base_path);
+        let dataset_path = base_path.join("datasets").join(&dataset);
+        
+        let mut results = Vec::new();
+        
+        if let Ok(mut entries) = tokio::fs::read_dir(&dataset_path).await {
+            while let Ok(Some(entry)) = entries.next_entry().await {
+                if let Ok(file_name) = entry.file_name().into_string() {
+                    // Filter by prefix if provided
+                    if let Some(ref pfx) = prefix {
+                        if !file_name.starts_with(pfx) {
+                            continue;
+                        }
+                    }
+                    
+                    // Get object info
+                    if let Ok((_data, info)) = self.storage_manager
+                        .retrieve_object(&dataset, &file_name)
+                        .await {
+                        results.push(info);
+                        
+                        // Apply limit if provided
+                        if let Some(lim) = limit {
+                            if results.len() >= lim {
+                                break;
+                            }
+                        }
+                    }
                 }
-            })
-            .map(|(_, (_, info))| info.clone())
-            .collect();
-
-        if let Some(limit) = limit {
-            results.truncate(limit);
+            }
         }
 
         Ok(results)
@@ -482,14 +457,14 @@ impl NestGateRpc for NestGateRpcService {
     async fn health(self, _context: Context) -> HealthStatus {
         debug!("RPC: health()");
 
-        // DashMap: Lock-free len!
+        // Get metrics from real storage
         let metrics = self.calculate_metrics().await;
 
         HealthStatus {
             status: "healthy".to_string(),
             version: "0.2.0".to_string(),
             uptime_seconds: self.uptime_seconds(),
-            total_datasets: self.datasets.len(),
+            total_datasets: metrics.dataset_count,
             total_objects: metrics.object_count,
             storage_used_bytes: metrics.used_space_bytes,
             metrics: HashMap::new(),

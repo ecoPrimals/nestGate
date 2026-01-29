@@ -640,11 +640,15 @@ impl StorageManagerService {
         let now = Self::current_timestamp();
         let object_info = crate::rpc::tarpc_types::ObjectInfo {
             key: key.to_string(),
+            dataset: dataset.to_string(),
             size_bytes: data.len() as u64,
             created_at: now,
             modified_at: now,
-            content_type: "application/octet-stream".to_string(),
-            checksum: String::new(), // TODO: Calculate checksum
+            content_type: Some("application/octet-stream".to_string()),
+            checksum: Some(String::new()), // TODO: Calculate checksum
+            encrypted: false,
+            compressed: false,
+            metadata: std::collections::HashMap::new(),
         };
         
         info!("✅ Object stored: {}/{}", dataset, key);
@@ -701,11 +705,15 @@ impl StorageManagerService {
         
         let object_info = crate::rpc::tarpc_types::ObjectInfo {
             key: key.to_string(),
+            dataset: dataset.to_string(),
             size_bytes: data.len() as u64,
             created_at: modified_at,
             modified_at,
-            content_type: "application/octet-stream".to_string(),
-            checksum: String::new(),
+            content_type: Some("application/octet-stream".to_string()),
+            checksum: Some(String::new()),
+            encrypted: false,
+            compressed: false,
+            metadata: std::collections::HashMap::new(),
         };
         
         info!("✅ Object retrieved: {}/{} ({} bytes)", dataset, key, data.len());

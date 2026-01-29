@@ -85,6 +85,8 @@ pub enum EvictionPolicy {
 )]
 /// Configuration for StorageService
 pub struct StorageServiceConfig {
+    /// Base path for storage (filesystem backend)
+    pub base_path: String,
     /// ZFS configuration
     pub zfs: ZfsConfig,
     /// Enable automatic pool discovery
@@ -112,6 +114,7 @@ impl Default for StorageServiceConfig {
     /// Returns the default instance
     fn default() -> Self {
         Self {
+            base_path: "/var/lib/nestgate/storage".to_string(),
             zfs: ZfsConfig::default(),
             auto_discover_pools: true,
             discovery_interval: 300, // 5 minutes
