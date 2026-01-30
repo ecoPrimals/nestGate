@@ -5,15 +5,17 @@
 //! Implements the biomeOS socket configuration standard with robust
 //! fallback logic and comprehensive error handling.
 //!
-//! ## Configuration Priority (3-tier)
+//! ## Configuration Priority (4-tier)
 //!
 //! 1. **`NESTGATE_SOCKET`** env var (explicit override, highest priority)
-//! 2. **XDG Runtime Directory**: `/run/user/{uid}/nestgate-{family}.sock` (recommended)
-//! 3. **Temp Directory**: `/tmp/nestgate-{family}-{node}.sock` (fallback, least secure)
+//! 2. **`BIOMEOS_SOCKET_DIR`** + `nestgate.sock` (biomeOS standard)
+//! 3. **XDG Runtime Directory**: `/run/user/{uid}/biomeos/nestgate.sock` (recommended)
+//! 4. **Temp Directory**: `/tmp/nestgate-{family}-{node}.sock` (fallback, least secure)
 //!
 //! ## Environment Variables
 //!
-//! - `NESTGATE_SOCKET`: Absolute path to socket (optional)
+//! - `NESTGATE_SOCKET`: Absolute path to socket (optional, highest priority)
+//! - `BIOMEOS_SOCKET_DIR`: biomeOS shared socket directory (optional, e.g., `/run/user/1000/biomeos`)
 //! - `NESTGATE_FAMILY_ID`: Family identifier (required)
 //! - `NESTGATE_NODE_ID`: Node identifier for multi-instance (optional, default: "default")
 //!
@@ -47,7 +49,9 @@ pub struct SocketConfig {
 pub enum SocketConfigSource {
     /// Explicit environment variable (NESTGATE_SOCKET)
     Environment,
-    /// XDG runtime directory (/run/user/{uid})
+    /// biomeOS shared socket directory (BIOMEOS_SOCKET_DIR)
+    BiomeOSDirectory,
+    /// XDG runtime directory (/run/user/{uid}/biomeos)
     XdgRuntime,
     /// Temporary directory fallback (/tmp)
     TempDirectory,
@@ -75,10 +79,10 @@ impl SocketConfig {
         // Get node_id (optional, for multi-instance)
         let node_id = std::env::var("NESTGATE_NODE_ID").unwrap_or_else(|_| "default".to_string());
 
-        // Tier 1: Check for explicit NESTGATE_SOCKET env var
+        // Tier 1: Check for explicit NESTGATE_SOCKET env var (highest priority)
         if let Ok(socket_path) = std::env::var("NESTGATE_SOCKET") {
             info!(
-                "Using explicit socket path from NESTGATE_SOCKET: {}",
+                "🔌 Using explicit socket path from NESTGATE_SOCKET: {}",
                 socket_path
             );
             return Ok(Self {
@@ -89,17 +93,35 @@ impl SocketConfig {
             });
         }
 
+        // Tier 2: Check for biomeOS shared directory (biomeOS standard)
+        if let Ok(biomeos_dir) = std::env::var("BIOMEOS_SOCKET_DIR") {
+            let socket_path = PathBuf::from(biomeos_dir).join("nestgate.sock");
+            
+            info!(
+                "🔌 Using biomeOS socket directory: {} (family: {}, node: {})",
+                socket_path.display(),
+                family_id,
+                node_id
+            );
+            
+            return Ok(Self {
+                socket_path,
+                family_id,
+                node_id,
+                source: SocketConfigSource::BiomeOSDirectory,
+            });
+        }
+
         // Get UID for XDG path
         let uid = crate::platform::get_current_uid();
 
-        // Tier 2: Try XDG runtime directory (preferred, more secure)
-        let xdg_runtime_dir = format!("/run/user/{}", uid);
-        if Path::new(&xdg_runtime_dir).exists() {
-            let socket_path =
-                PathBuf::from(format!("{}/nestgate-{}.sock", xdg_runtime_dir, family_id));
+        // Tier 3: Try XDG runtime directory with biomeOS subdirectory (preferred, more secure)
+        let xdg_runtime_dir = format!("/run/user/{}/biomeos", uid);
+        if Path::new(&format!("/run/user/{}", uid)).exists() {
+            let socket_path = PathBuf::from(format!("{}/nestgate.sock", xdg_runtime_dir));
 
             info!(
-                "Using XDG runtime directory socket: {} (family: {}, node: {})",
+                "🔌 Using XDG runtime directory with biomeOS standard: {} (family: {}, node: {})",
                 socket_path.display(),
                 family_id,
                 node_id
@@ -113,11 +135,11 @@ impl SocketConfig {
             });
         }
 
-        // Tier 3: Fallback to /tmp (least secure, but always available)
+        // Tier 4: Fallback to /tmp (least secure, but always available)
         let socket_path = PathBuf::from(format!("/tmp/nestgate-{}-{}.sock", family_id, node_id));
 
         warn!(
-            "XDG runtime directory not available, falling back to /tmp: {}",
+            "⚠️  XDG runtime directory not available, falling back to /tmp: {}",
             socket_path.display()
         );
         warn!(
@@ -190,16 +212,17 @@ impl SocketConfig {
     /// Log configuration summary
     pub fn log_summary(&self) {
         info!("═══════════════════════════════════════════════════════════");
-        info!("Socket Configuration:");
+        info!("🔌 Socket Configuration:");
         info!("  Path:      {}", self.socket_path.display());
         info!("  Family ID: {}", self.family_id);
         info!("  Node ID:   {}", self.node_id);
         info!(
-            "  Source:    {:?}",
+            "  Source:    {}",
             match self.source {
-                SocketConfigSource::Environment => "NESTGATE_SOCKET env var",
-                SocketConfigSource::XdgRuntime => "XDG runtime directory",
-                SocketConfigSource::TempDirectory => "/tmp fallback",
+                SocketConfigSource::Environment => "NESTGATE_SOCKET env var (explicit)",
+                SocketConfigSource::BiomeOSDirectory => "BIOMEOS_SOCKET_DIR (biomeOS standard)",
+                SocketConfigSource::XdgRuntime => "XDG runtime directory (/run/user/{uid}/biomeos)",
+                SocketConfigSource::TempDirectory => "/tmp fallback (insecure)",
             }
         );
         info!("═══════════════════════════════════════════════════════════");
@@ -220,6 +243,7 @@ mod tests {
     fn test_explicit_socket_path_has_highest_priority() {
         std::env::set_var("NESTGATE_SOCKET", "/tmp/explicit.sock");
         std::env::set_var("NESTGATE_FAMILY_ID", "test");
+        std::env::remove_var("BIOMEOS_SOCKET_DIR");
 
         let config = SocketConfig::from_environment().unwrap();
 
@@ -234,15 +258,16 @@ mod tests {
     #[test]
     fn test_xdg_runtime_path_second_priority() {
         std::env::remove_var("NESTGATE_SOCKET");
+        std::env::remove_var("BIOMEOS_SOCKET_DIR");
         std::env::set_var("NESTGATE_FAMILY_ID", "xdgtest");
 
         let config = SocketConfig::from_environment().unwrap();
 
-        // Should use XDG if available, /tmp otherwise
+        // Should use XDG with biomeOS subdirectory if available, /tmp otherwise
         let path_str = config.socket_path.to_str().unwrap();
         assert!(
-            path_str.contains("nestgate-xdgtest.sock"),
-            "Socket path should contain family ID"
+            path_str.contains("nestgate.sock") || path_str.contains("nestgate-xdgtest"),
+            "Socket path should be nestgate.sock (biomeOS standard) or nestgate-xdgtest.sock (fallback)"
         );
 
         std::env::remove_var("NESTGATE_FAMILY_ID");
@@ -251,6 +276,7 @@ mod tests {
     #[test]
     fn test_tmp_fallback_with_node_id() {
         std::env::remove_var("NESTGATE_SOCKET");
+        std::env::remove_var("BIOMEOS_SOCKET_DIR");
         std::env::set_var("NESTGATE_FAMILY_ID", "tmptest");
         std::env::set_var("NESTGATE_NODE_ID", "node42");
 

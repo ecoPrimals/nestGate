@@ -197,7 +197,10 @@ impl JsonRpcUnixServer {
         // Use standardized socket configuration
         let socket_config = crate::rpc::socket_config::SocketConfig::from_environment()?;
 
-        // Log configuration for debugging
+        // Log configuration before preparing
+        info!("═══════════════════════════════════════════════════════════");
+        info!("🏰 NestGate JSON-RPC Unix Socket Server");
+        info!("═══════════════════════════════════════════════════════════");
         socket_config.log_summary();
 
         // Prepare socket path (create dirs, remove old socket)
@@ -205,14 +208,10 @@ impl JsonRpcUnixServer {
 
         let socket_path = socket_config.socket_path;
 
-        info!("Initializing JSON-RPC Unix socket server");
-        info!("  Socket path: {:?}", socket_path);
-        info!("  Family ID: {}", family_id);
-
         // Initialize persistent storage backend
+        info!("📦 Initializing persistent storage backend...");
         let state = StorageState::new().await?;
-
-        info!("✅ Unix socket server initialized with persistent storage");
+        info!("✅ Storage backend initialized");
 
         Ok(Self {
             socket_path,
@@ -233,8 +232,13 @@ impl JsonRpcUnixServer {
             )
         })?;
 
-        info!("🔌 JSON-RPC Unix socket server listening");
-        info!("   Ready for biomeOS IPC connections");
+        info!("═══════════════════════════════════════════════════════════");
+        info!("✅ NestGate ready!");
+        info!("   Socket: {}", self.socket_path.display());
+        info!("   Family: {}", self.family_id);
+        info!("   Protocol: JSON-RPC 2.0 over Unix socket");
+        info!("═══════════════════════════════════════════════════════════");
+        info!("💡 Test with: echo '{{\"jsonrpc\":\"2.0\",\"method\":\"storage.list\",\"id\":1}}' | nc -U {}", self.socket_path.display());
 
         let state = Arc::new(self.state.clone());
 
