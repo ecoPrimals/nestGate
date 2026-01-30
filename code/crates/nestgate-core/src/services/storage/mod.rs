@@ -16,6 +16,13 @@ pub mod service;
 /// Storage type definitions
 pub mod types;
 
+/// Storage operations (Phase 3: Smart Refactoring - extracted for logical cohesion)
+///
+/// Separated operations into focused modules:
+/// - `datasets`: Dataset management (create, list, delete)
+/// - `objects`: Object storage (store, retrieve, delete)
+pub mod operations;
+
 #[cfg(test)]
 mod mock_tests;
 #[cfg(test)]
