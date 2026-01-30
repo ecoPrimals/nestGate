@@ -545,7 +545,8 @@ async fn storage_list(params: &Option<Value>, _state: &StorageState) -> Result<V
     let dataset = family_id;
 
     // Read directly from storage filesystem
-    let base_path = PathBuf::from("/var/lib/nestgate/storage") // TODO: Get from config
+    // ✅ EVOLVED: Use XDG-compliant storage path (Phase 4)
+    let base_path = crate::config::storage_paths::get_storage_base_path()
         .join("datasets")
         .join(dataset)
         .join("objects");

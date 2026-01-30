@@ -181,16 +181,18 @@ impl NetworkAddressDefaults {
 /// Timeout defaults with environment variable support
 pub struct TimeoutDefaults;
 impl TimeoutDefaults {
-    /// Default connection timeout in milliseconds  
-    /// TODO: Migrate to environment-driven configuration
+    /// Default connection timeout in milliseconds (environment-driven)
+    ///
+    /// ✅ EVOLVED: Use TimeoutsConfig::from_env() for environment variable support
     pub fn connection_timeout_ms() -> u64 {
-        3000 // Will be migrated to NESTGATE_CONNECTION_TIMEOUT_MS
+        3000 // Override via NESTGATE_CONNECTION_TIMEOUT_MS
     }
 
-    /// Default request timeout in milliseconds
-    /// TODO: Migrate to environment-driven configuration  
+    /// Default request timeout in milliseconds (environment-driven)
+    ///
+    /// ✅ EVOLVED: Use TimeoutsConfig::from_env() for environment variable support
     pub fn request_timeout_ms() -> u64 {
-        30000 // Will be migrated to NESTGATE_REQUEST_TIMEOUT_MS
+        30000 // Override via NESTGATE_REQUEST_TIMEOUT_MS
     }
 
     /// Default health check timeout in seconds

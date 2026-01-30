@@ -642,7 +642,8 @@ impl StorageManagerService {
             created_at: now,
             modified_at: now,
             content_type: Some("application/octet-stream".to_string()),
-            checksum: Some(String::new()), // TODO: Calculate checksum
+            // ✅ EVOLVED: Calculate SHA-256 checksum for data integrity
+            checksum: Some(Self::calculate_checksum(&data)),
             encrypted: false,
             compressed: false,
             metadata: std::collections::HashMap::new(),
@@ -650,6 +651,14 @@ impl StorageManagerService {
 
         info!("✅ Object stored: {}/{}", dataset, key);
         Ok(object_info)
+    }
+
+    /// Calculate SHA-256 checksum for data integrity
+    fn calculate_checksum(data: &[u8]) -> String {
+        use sha2::{Digest, Sha256};
+        let mut hasher = Sha256::new();
+        hasher.update(data);
+        format!("{:x}", hasher.finalize())
     }
 
     /// Retrieve an object from a dataset
