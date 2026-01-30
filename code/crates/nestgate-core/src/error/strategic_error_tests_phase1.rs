@@ -155,7 +155,7 @@ mod strategic_error_tests {
     }
 
     #[test]
-    #[ignore] // TODO: Fix test logic - recursion depth check needs review
+    // ✅ FIXED: Proper recursion depth test - verifies controlled recursion
     fn test_stack_overflow_prevention() {
         fn recursive_call(depth: usize, max: usize) -> Result<usize, String> {
             if depth >= max {
@@ -168,10 +168,13 @@ mod strategic_error_tests {
             }
         }
 
-        // Should complete without stack overflow
-        // Note: Test logic needs review - currently returns Ok(100) not Err
-        let result = recursive_call(0, 1000);
-        assert!(result.is_ok() || result.is_err(), "Should complete");
+        // Test 1: Should complete successfully with depth < 100
+        let result_success = recursive_call(0, 1000);
+        assert_eq!(result_success, Ok(100), "Should stop at depth 100");
+        
+        // Test 2: Should fail when max depth is lower than recursion target
+        let result_fail = recursive_call(0, 50);
+        assert!(result_fail.is_err(), "Should fail when max < 100");
     }
 
     // ==================== PERMISSION ERROR PATHS ====================
@@ -226,13 +229,15 @@ mod strategic_error_tests {
     }
 
     #[test]
-    #[ignore] // TODO: Fix character count assertion - actual count differs from expected
+    // ✅ FIXED: Proper Unicode character counting (graphemes vs chars)
     fn test_unicode_input_handling() {
         let unicode = "Hello 世界 🚀 مرحبا";
-        // Note: Actual character count needs to be verified
+        // Character count: "Hello " (6) + "世界" (2) + " " (1) + "🚀" (1) + " " (1) + "مرحبا" (5) = 16
         let char_count = unicode.chars().count();
-        assert!(char_count > 0, "Should have characters"); // More lenient assertion
-        assert!(unicode.len() >= char_count); // Byte count >= character count
+        assert_eq!(char_count, 16, "Should have 16 Unicode characters");
+        
+        // Byte count is different due to multi-byte UTF-8 encoding
+        assert!(unicode.len() > char_count, "Byte length > character count for Unicode");
 
         // Should handle unicode safely
         let trimmed = unicode.trim();
