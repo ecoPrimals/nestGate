@@ -29,7 +29,7 @@
 | `unix_socket_server.rs` | 1,067 | Skip (Phase 3) | N/A |
 | **`discovery_mechanism.rs`** | **973** | **✅ COMPLETE** | **🔴 HIGH** |
 | `zero_copy_networking.rs` | 961 | Pending | 🟡 MEDIUM |
-| `semantic_router.rs` | 929 | Pending | 🟡 MEDIUM |
+| `semantic_router.rs` | 929 | ✅ COMPLETE | 🟡 MEDIUM |
 | `consolidated_canonical.rs` | 928 | Pending | 🟡 MEDIUM |
 | `unified_api_config/handlers.rs` | 921 | Pending | 🟡 MEDIUM |
 | `auto_configurator.rs` | 917 | Pending | 🟡 MEDIUM |
@@ -210,7 +210,7 @@ After `discovery_mechanism.rs`:
 | File | Lines | Modules | Status |
 |------|-------|---------|--------|
 | `discovery_mechanism.rs` | 973→322 max | 7 | ✅ Complete |
-| `semantic_router.rs` | 929 | TBD | ⏳ Pending |
+| `semantic_router.rs` | 929→216 max | 7 | ✅ Complete |
 | `zero_copy_networking.rs` | 961 | TBD | ⏳ Pending |
 
 **Goal**: Refactor 3-5 large files in Phase 2

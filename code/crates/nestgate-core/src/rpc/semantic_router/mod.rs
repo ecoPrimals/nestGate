@@ -1,0 +1,210 @@
+//! # Semantic Method Router - TRUE PRIMAL Compliance
+//!
+//! **Routes semantic method names to internal implementations**
+//!
+//! ## Philosophy
+//!
+//! - **TRUE PRIMAL**: External primals use semantic names (`storage.put`)
+//! - **Internal Flexibility**: Internal code uses descriptive names (`store_object`)
+//! - **Zero Breaking Changes**: Existing code continues to work
+//! - **Neural API Ready**: biomeOS can route by capability
+//!
+//! ## Architecture
+//!
+//! ```text
+//! External Primal
+//!   ↓
+//! "storage.put" (semantic)
+//!   ↓
+//! SemanticRouter::route()
+//!   ↓
+//! NestGateRpcService::store_object() (internal)
+//! ```
+//!
+//! ## Usage
+//!
+//! ```rust,ignore
+//! use nestgate_core::rpc::SemanticRouter;
+//! use serde_json::json;
+//!
+//! let router = SemanticRouter::new(service);
+//!
+//! // External primal calls with semantic name
+//! let result = router.call_method("storage.put", json!({
+//!     "dataset": "my-dataset",
+//!     "key": "my-key",
+//!     "data": "base64-encoded-data"
+//! })).await?;
+//! ```
+//!
+//! ## Semantic Methods Supported
+//!
+//! ### Storage Domain (`storage.*`)
+//! - `storage.put` → `store_object`
+//! - `storage.get` → `retrieve_object`
+//! - `storage.delete` → `delete_object`
+//! - `storage.list` → `list_objects`
+//! - `storage.dataset.create` → `create_dataset`
+//! - `storage.dataset.get` → `get_dataset`
+//! - `storage.dataset.list` → `list_datasets`
+//! - `storage.dataset.delete` → `delete_dataset`
+//!
+//! ### Discovery Domain (`discovery.*`)
+//! - `discovery.announce` → register service metadata
+//! - `discovery.query` → find services by capability
+//! - `discovery.list` → list all services
+//! - `discovery.capabilities` → get own capabilities
+//!
+//! ### Metadata Domain (`metadata.*`)
+//! - `metadata.store` → store service metadata
+//! - `metadata.retrieve` → get service metadata by name
+//! - `metadata.search` → search services by capability
+//!
+//! ### Crypto Domain (`crypto.*`)
+//! - `crypto.encrypt` → delegate to BearDog (capability discovery!)
+//! - `crypto.decrypt` → delegate to BearDog
+//! - `crypto.generate_key` → delegate to BearDog
+//! - `crypto.generate_nonce` → delegate to BearDog
+//! - `crypto.hash` → delegate to BearDog
+//! - `crypto.verify_hash` → delegate to BearDog
+//!
+//! ### Health Domain (`health.*`)
+//! - `health.check` → `health_check`
+//! - `health.metrics` → `get_metrics`
+//! - `health.info` → `get_info`
+//! - `health.ready` → readiness check
+//!
+//! ## References
+//!
+//! - wateringHole/SEMANTIC_METHOD_NAMING_STANDARD.md v2.0
+//! - wateringHole/PRIMAL_IPC_PROTOCOL.md v1.0
+//! - CAPABILITY_MAPPINGS.md
+
+use crate::error::{NestGateError, Result};
+use crate::rpc::tarpc_types::NestGateRpcClient;
+use serde_json::Value;
+use std::sync::Arc;
+use tracing::{debug, warn};
+
+// Domain modules
+pub mod crypto;
+pub mod discovery;
+pub mod health;
+pub mod metadata;
+pub mod storage;
+
+#[cfg(test)]
+mod tests;
+
+/// Semantic method router for TRUE PRIMAL compliance
+///
+/// Routes semantic method names (e.g., `storage.put`) to internal
+/// implementations, enabling Neural API integration and capability-based
+/// discovery.
+pub struct SemanticRouter {
+    /// Internal RPC client for delegation
+    pub(crate) client: Arc<NestGateRpcClient>,
+}
+
+impl SemanticRouter {
+    /// Create new semantic router
+    ///
+    /// # Arguments
+    /// * `client` - Internal RPC client for method delegation
+    ///
+    /// # Example
+    /// ```no_run
+    /// use nestgate_core::rpc::{SemanticRouter, NestGateRpcClient};
+    /// use std::sync::Arc;
+    ///
+    /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+    /// let client = NestGateRpcClient::new("tarpc://localhost:8091")?;
+    /// let router = SemanticRouter::new(Arc::new(client));
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn new(client: Arc<NestGateRpcClient>) -> Self {
+        debug!("🌐 Creating semantic method router (TRUE PRIMAL compliance)");
+        Self { client }
+    }
+
+    /// Route semantic method call to internal implementation
+    ///
+    /// # Arguments
+    /// * `method` - Semantic method name (e.g., "storage.put")
+    /// * `params` - Method parameters as JSON value
+    ///
+    /// # Returns
+    /// Result value from the internal method
+    ///
+    /// # Errors
+    /// Returns error if:
+    /// - Method not found
+    /// - Invalid parameters
+    /// - Internal method fails
+    ///
+    /// # Example
+    /// ```no_run
+    /// use nestgate_core::rpc::SemanticRouter;
+    /// use serde_json::json;
+    ///
+    /// # async fn example(router: SemanticRouter) -> Result<(), Box<dyn std::error::Error>> {
+    /// let result = router.call_method("storage.put", json!({
+    ///     "dataset": "my-dataset",
+    ///     "key": "my-key",
+    ///     "data": "aGVsbG8gd29ybGQ=" // base64("hello world")
+    /// })).await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn call_method(&self, method: &str, params: Value) -> Result<Value> {
+        debug!("🔀 Routing semantic method: {}", method);
+
+        match method {
+            // ==================== STORAGE DOMAIN ====================
+            "storage.put" => storage::storage_put(self, params).await,
+            "storage.get" => storage::storage_get(self, params).await,
+            "storage.delete" => storage::storage_delete(self, params).await,
+            "storage.list" => storage::storage_list(self, params).await,
+            "storage.exists" => storage::storage_exists(self, params).await,
+            "storage.metadata" => storage::storage_metadata(self, params).await,
+
+            // Dataset operations
+            "storage.dataset.create" => storage::dataset_create(self, params).await,
+            "storage.dataset.get" => storage::dataset_get(self, params).await,
+            "storage.dataset.list" => storage::dataset_list(self, params).await,
+            "storage.dataset.delete" => storage::dataset_delete(self, params).await,
+
+            // ==================== DISCOVERY DOMAIN ====================
+            "discovery.announce" => discovery::discovery_announce(self, params).await,
+            "discovery.query" => discovery::discovery_query(self, params).await,
+            "discovery.list" => discovery::discovery_list(self, params).await,
+            "discovery.capabilities" => discovery::discovery_capabilities(self, params).await,
+
+            // ==================== HEALTH DOMAIN ====================
+            "health.check" => health::health_check(self, params).await,
+            "health.metrics" => health::health_metrics(self, params).await,
+            "health.info" => health::health_info(self, params).await,
+            "health.ready" => health::health_ready(self, params).await,
+
+            // ==================== METADATA DOMAIN ====================
+            "metadata.store" => metadata::metadata_store(self, params).await,
+            "metadata.retrieve" => metadata::metadata_retrieve(self, params).await,
+            "metadata.search" => metadata::metadata_search(self, params).await,
+
+            // ==================== CRYPTO DOMAIN ====================
+            "crypto.encrypt" => crypto::crypto_encrypt(self, params).await,
+            "crypto.decrypt" => crypto::crypto_decrypt(self, params).await,
+            "crypto.generate_key" => crypto::crypto_generate_key(self, params).await,
+            "crypto.generate_nonce" => crypto::crypto_generate_nonce(self, params).await,
+            "crypto.hash" => crypto::crypto_hash(self, params).await,
+            "crypto.verify_hash" => crypto::crypto_verify_hash(self, params).await,
+
+            // Unknown method
+            _ => {
+                warn!("❌ Unknown semantic method: {}", method);
+                Err(NestGateError::method_not_found(method))
+            }
+        }
+    }
+}
