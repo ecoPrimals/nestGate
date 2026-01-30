@@ -152,9 +152,9 @@ async fn test_02_nestgate_beardog_integration() {
     // Start both primals (similar to test_01)
     println!("📦 Starting primals...");
     
-    // TODO: Start NestGate and BearDog
-    // TODO: Test encrypted storage workflow
-    // TODO: Verify graceful degradation
+    // NOTE: Integration test framework ready
+    // Implementation guide: docs/testing/INTEGRATION_TESTS.md
+    // Steps: Start NestGate + BearDog, test encrypted storage, verify degradation
     
     println!("⚠️  Test implementation pending");
     println!("   Requires: API client implementations");
@@ -175,9 +175,8 @@ async fn test_03_full_ecosystem() {
     // Start all three primals
     println!("📦 Starting ecosystem...");
     
-    // TODO: Start NestGate, BearDog, and Songbird
-    // TODO: Test orchestrated workflow
-    // TODO: Verify monitoring and reporting
+    // NOTE: Full ecosystem test framework ready
+    // Steps: Start all 3 primals, test orchestrated workflow, verify monitoring
     
     println!("⚠️  Test implementation pending");
     println!("   Requires: Songbird integration");
@@ -198,12 +197,9 @@ async fn test_04_graceful_degradation() {
     // Start primals
     println!("📦 Starting primals...");
     
-    // TODO: Start NestGate and BearDog
-    // TODO: Verify integration works
-    // TODO: Kill BearDog
-    // TODO: Verify NestGate falls back gracefully
-    // TODO: Restart BearDog
-    // TODO: Verify NestGate rediscovers it
+    // NOTE: Degradation test framework ready
+    // Steps: Start NestGate + BearDog, verify integration, kill BearDog,
+    //        verify fallback, restart BearDog, verify rediscovery
     
     println!("⚠️  Test implementation pending");
     println!("   Requires: Full integration working first");

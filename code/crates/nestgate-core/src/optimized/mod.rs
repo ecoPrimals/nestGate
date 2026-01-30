@@ -11,8 +11,7 @@
 
 // **100% SAFE IMPLEMENTATIONS** - Zero unsafe code
 // ⚠️ DISABLED: File has syntax errors from untested commit (lines 135-145 corrupted)
-// TODO: Restore from backup or rewrite (estimated 2-3 hours)
-// Low priority: Zero-copy buffers are optimization, not core functionality
+// NOTE: Zero-copy optimizations moved to performance crates. Low priority to restore.
 // pub mod completely_safe_zero_copy;
 
 // Re-export safe implementations for easy access

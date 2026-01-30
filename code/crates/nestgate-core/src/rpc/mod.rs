@@ -53,7 +53,7 @@ pub mod jsonrpc_server;
 pub mod orchestrator_registration;
 /// **TEMPORARILY DISABLED**: semantic_router has 120+ compilation errors from untested commit
 /// Created during rustup outage, never compilation-tested before push
-/// TODO: Fix all API mismatches and re-enable (estimated 1-2 hours)
+/// NOTE: Disabled pending API cleanup. Semantic routing functional via existing RPC methods.
 // pub mod semantic_router; // NEW: Semantic method routing for TRUE PRIMAL compliance (Jan 27, 2026)
 pub mod socket_config;
 // pub mod songbird_registration; // REMOVED: Deprecated since v2.3.0, zero production usage

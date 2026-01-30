@@ -185,7 +185,6 @@ impl ServiceManager {
         // NOTE: tarpc server implementation is planned for v0.2.0
         // Current: Protocol capabilities advertise tarpc endpoint for discovery
         // Future: Actual tarpc server will listen on this port for high-performance RPC
-        // See: https://github.com/your-org/nestgate/issues/XXX (tarpc server tracking)
         info!(
             "⚡ tarpc endpoint available via discovery (port {})",
             tarpc_port

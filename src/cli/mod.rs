@@ -220,8 +220,9 @@ pub mod commands {
                     tracing::info!("⚠️  Development mode enabled");
                 }
                 
-                // TODO: Integrate actual daemon logic from main.rs
-                println!("✅ NestGate daemon would start here");
+                // NOTE: Full daemon implementation in nestgate-bin crate
+                // This CLI stub is for reference - use nestgate-bin for production
+                println!("✅ NestGate daemon stub (see nestgate-bin for full implementation)");
                 println!("   Port: {}", port);
                 println!("   Bind: {}", bind);
                 println!("   Dev: {}", dev);
