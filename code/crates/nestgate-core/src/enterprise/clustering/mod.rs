@@ -1,67 +1,55 @@
-//! Clustering module
+//! Clustering module for high-availability NestGate deployments
+//!
+//! This module provides clustering capabilities including leader election,
+//! node discovery, heartbeat management, and automatic failover.
 
-use crate::error::NestGateError;
-use std::collections::HashMap;
-//
-// High-availability clustering for enterprise NestGate deployments
-// with automatic leader election, node discovery, and failover capabilities.
-
-use crate::{Result};
+use crate::{Result, error::NestGateError};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
-use std::net::{IpAddr, SocketAddr};
+use std::net::SocketAddr;
 use std::sync::Arc;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::{Duration, SystemTime};
 use tokio::sync::{RwLock, broadcast, mpsc};
 use tokio::time::{interval, sleep};
 use uuid::Uuid;
 
-/// Cluster configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for Cluster
-pub struct ClusterConfig {
-    /// Cluster name
-    pub cluster_name: String,
-    /// Node identifier
-    pub node_id: String,
-    /// Bind Endpoint
-    pub bind_endpoint: SocketAddr,
-    /// Nodes
-    pub nodes: Vec<ClusterNodeConfig>,
-    /// Election Timeout Ms
-    pub election_timeout_ms: u64,
-    /// Heartbeat Interval Ms
-    pub heartbeat_interval_ms: u64,
-    /// Max Missed Heartbeats
-    pub max_missed_heartbeats: u32,
-    /// Discovery Enabled
-    pub discovery_enabled: bool,
-    /// Discovery Multicast Endpoint
-    pub discovery_multicast_endpoint: String,
-    /// Discovery Port
-    pub discovery_port: u16,
-    /// Encryption Enabled
-    pub encryption_enabled: bool,
-    /// Cluster Secret
-    pub cluster_secret: Option<String>,
-}
-/// Individual cluster node configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ClusterNode
-pub struct ClusterNodeConfig {
-    /// Node identifier
-    pub node_id: String,
-    /// Endpoint
-    pub endpoint: SocketAddr,
-    /// Region
-    pub region: Option<String>,
-    /// Zone
-    pub zone: Option<String>,
-    /// Weight
-    pub weight: u32,
-    /// Tags
-    pub tags: HashMap<String, String>,
-}
+// ==================== MODULE DECLARATIONS ====================
+
+pub mod config;
+pub mod enums;
+pub mod types;
+pub mod events;
+pub mod components;
+
+#[cfg(test)]
+mod tests;
+
+// ==================== RE-EXPORTS ====================
+
+// Config re-exports
+pub use config::{ClusterConfig, ClusterNodeConfig};
+
+// Enum re-exports
+pub use enums::{
+    NodeStatus, NodeRole, NodeCapability,
+    ClusterHealthStatus, ConsistencyStatus, ElectionState,
+};
+
+// Type re-exports
+pub use types::{
+    ClusterNode, NodeMetadata, NodeResources,
+    ClusterState, ClusterHealth, PartitionInfo, Partition,
+    DiscoveredNode, HeartbeatInfo, ClusterStatus,
+};
+
+// Event re-exports
+pub use events::ClusterEvent;
+
+// Component re-exports (for internal use)
+use components::{LeaderElection, NodeDiscovery, HeartbeatManager};
+
+// ==================== CLUSTER MANAGER ====================
+
 /// Cluster manager for coordinating multiple NestGate instances
 pub struct ClusterManager {
     config: Arc<ClusterConfig>,
@@ -74,299 +62,7 @@ pub struct ClusterManager {
     shutdown_sender: mpsc::Sender<()>,
     shutdown_receiver: Arc<RwLock<Option<mpsc::Receiver<()>>>>,
 }
-/// Individual cluster node
-#[derive(Debug, Clone, Serialize, Deserialize)]
-/// Clusternode
-pub struct ClusterNode {
-    /// Node identifier
-    pub node_id: String,
-    /// Endpoint
-    pub endpoint: SocketAddr,
-    /// Status
-    pub status: NodeStatus,
-    /// Role
-    pub role: NodeRole,
-    /// Last Heartbeat
-    pub last_heartbeat: SystemTime,
-    /// Additional metadata key-value pairs
-    pub metadata: NodeMetadata,
-    /// Capabilities
-    pub capabilities: Vec<NodeCapability>,
-}
-/// Node status enumeration
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-/// Status values for Node
-pub enum NodeStatus {
-    /// Starting
-    Starting,
-    /// Active
-    Active,
-    /// Degraded
-    Degraded,
-    /// Unhealthy
-    Unhealthy,
-    /// Leaving
-    Leaving,
-    /// Failed
-    Failed,
-}
-/// Node role in cluster
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-/// Noderole
-pub enum NodeRole {
-    /// Leader
-    Leader,
-    /// Follower
-    Follower,
-    /// Candidate
-    Candidate,
-    /// Observer
-    Observer,
-}
-/// Node metadata
-#[derive(Debug, Clone, Serialize, Deserialize)]
-/// Nodemetadata
-pub struct NodeMetadata {
-    /// Version
-    pub version: String,
-    /// Started At
-    pub started_at: SystemTime,
-    /// Region
-    pub region: Option<String>,
-    /// Zone
-    pub zone: Option<String>,
-    /// Weight
-    pub weight: u32,
-    /// Tags
-    pub tags: HashMap<String, String>,
-    /// Resources
-    pub resources: NodeResources,
-}
-/// Node resource information
-#[derive(Debug, Clone, Serialize, Deserialize)]
-/// Noderesources
-pub struct NodeResources {
-    /// Cpu Cores
-    pub cpu_cores: u32,
-    /// Memory in gigabytes
-    pub memory_gb: u32,
-    /// Storage in gigabytes
-    pub storage_gb: u64,
-    /// Network Bandwidth Mbps
-    pub network_bandwidth_mbps: u32,
-    /// Load Average
-    pub load_average: f64,
-    /// Memory Usage Percent
-    pub memory_usage_percent: f64,
-    /// Storage Usage Percent
-    pub storage_usage_percent: f64,
-}
-/// Node capabilities
-#[derive(Debug, Clone, Serialize, Deserialize)]
-/// Nodecapability
-pub enum NodeCapability {
-    /// Storage
-    Storage,
-    /// Compute
-    Compute,
-    /// Gateway
-    Gateway,
-    /// Monitoring
-    Monitoring,
-    /// Analytics
-    Analytics,
-    /// Backup
-    Backup,
-}
-/// Overall cluster state
-#[derive(Debug, Clone, Serialize, Deserialize)]
-/// Clusterstate
-pub struct ClusterState {
-    /// Cluster identifier
-    pub cluster_id: String,
-    /// Nodes
-    pub nodes: HashMap<String, ClusterNode>,
-    /// Leader identifier
-    pub leader_id: Option<String>,
-    /// Election Term
-    pub election_term: u64,
-    /// Cluster Health
-    pub cluster_health: ClusterHealth,
-    /// Partition Info
-    pub partition_info: PartitionInfo,
-    /// Last Updated
-    pub last_updated: SystemTime,
-}
-/// Cluster health assessment
-#[derive(Debug, Clone, Serialize, Deserialize)]
-/// Clusterhealth
-pub struct ClusterHealth {
-    /// Overall Status
-    pub overall_status: ClusterHealthStatus,
-    /// Active Nodes
-    pub active_nodes: u32,
-    /// Failed Nodes
-    pub failed_nodes: u32,
-    /// Degraded Nodes
-    pub degraded_nodes: u32,
-    /// Quorum Available
-    pub quorum_available: bool,
-    /// Leader Available
-    pub leader_available: bool,
-    /// Data Consistency
-    pub data_consistency: ConsistencyStatus,
-}
-/// Cluster health status
-#[derive(Debug, Clone, Serialize, Deserialize)]
-/// Status values for ClusterHealth
-pub enum ClusterHealthStatus {
-    /// Healthy
-    Healthy,
-    /// Degraded
-    Degraded,
-    /// Critical
-    Critical,
-    /// Failed
-    Failed,
-}
-/// Data consistency status
-#[derive(Debug, Clone, Serialize, Deserialize)]
-/// Status values for Consistency
-pub enum ConsistencyStatus {
-    /// Consistent
-    Consistent,
-    /// Inconsistent
-    Inconsistent,
-    /// Repairing
-    Repairing,
-    /// Unknown
-    Unknown,
-}
-/// Partition information for network splits
-#[derive(Debug, Clone, Serialize, Deserialize)]
-/// Partitioninfo
-pub struct PartitionInfo {
-    /// Partitions
-    pub partitions: Vec<Partition>,
-    /// Majority Partition
-    pub majority_partition: Option<String>,
-    /// Split Brain Detected
-    pub split_brain_detected: bool,
-}
-/// Network partition
-#[derive(Debug, Clone, Serialize, Deserialize)]
-/// Partition
-pub struct Partition {
-    /// Partition identifier
-    pub partition_id: String,
-    /// Nodes
-    pub nodes: Vec<String>,
-    /// Whether this has leader
-    pub has_leader: bool,
-    /// Size of quorum
-    pub quorum_size: u32,
-}
-/// Leader election manager
-pub struct LeaderElection {
-    current_term: u64,
-    voted_for: Option<String>,
-    election_timeout: Duration,
-    last_election: Option<SystemTime>,
-    votes_received: HashSet<String>,
-    election_state: ElectionState,
-}
-/// Election state
-#[derive(Debug, Clone, PartialEq)]
-/// Electionstate
-pub enum ElectionState {
-    /// Follower
-    Follower,
-    /// Candidate
-    Candidate,
-    /// Leader
-    Leader,
-}
-/// Node discovery manager
-pub struct NodeDiscovery {
-    discovery_enabled: bool,
-    multicast_endpoint: String,
-    discovery_port: u16,
-    discovered_nodes: HashMap<String, DiscoveredNode>,
-    last_discovery: SystemTime,
-}
-/// Discovered node information
-#[derive(Debug, Clone)]
-/// Discoverednode
-pub struct DiscoveredNode {
-    /// Node identifier
-    pub node_id: String,
-    /// Endpoint
-    pub endpoint: SocketAddr,
-    /// Discovered At
-    pub discovered_at: SystemTime,
-    /// Capabilities
-    pub capabilities: Vec<NodeCapability>,
-    /// Additional metadata key-value pairs
-    pub metadata: HashMap<String, String>,
-}
-/// Heartbeat manager
-pub struct HeartbeatManager {
-    heartbeat_interval: Duration,
-    max_missed_heartbeats: u32,
-    node_heartbeats: HashMap<String, HeartbeatInfo>,
-    last_heartbeat_sent: Option<SystemTime>,
-}
-/// Heartbeat information
-#[derive(Debug, Clone)]
-/// Heartbeatinfo
-pub struct HeartbeatInfo {
-    /// Last Received
-    pub last_received: SystemTime,
-    /// Count of missed
-    pub missed_count: u32,
-    /// Rtt Ms
-    pub rtt_ms: u64,
-}
-/// Cluster events
-#[derive(Debug, Clone, Serialize, Deserialize)]
-/// Clusterevent
-pub enum ClusterEvent {
-    NodeJoined(String),
-    NodeLeft(String),
-    NodeFailed(String),
-    LeaderElected(String),
-    /// Leaderlost
-    LeaderLost,
-    PartitionDetected(Vec<String>),
-    /// Partitionhealed
-    PartitionHealed,
-    ClusterHealthChanged(ClusterHealthStatus),
-}
-/// Cluster status for external reporting
-#[derive(Debug, Clone, Serialize, Deserialize)]
-/// Clusterstatus
-pub struct ClusterStatus {
-    /// Cluster name
-    pub cluster_name: String,
-    /// Cluster identifier
-    pub cluster_id: String,
-    /// Total Nodes
-    pub total_nodes: u32,
-    /// Active Nodes
-    pub active_nodes: u32,
-    /// Leader identifier
-    pub leader_id: Option<String>,
-    /// Local Node identifier
-    pub local_node_id: String,
-    /// Local Node Role
-    pub local_node_role: NodeRole,
-    /// Cluster Health
-    pub cluster_health: ClusterHealthStatus,
-    /// Quorum Available
-    pub quorum_available: bool,
-    /// Last Updated
-    pub last_updated: SystemTime,
-}
+
 impl ClusterManager {
     /// Create new cluster manager
     ///
@@ -449,7 +145,7 @@ impl ClusterManager {
         
         let node_discovery = NodeDiscovery {
             discovery_enabled: config.discovery_enabled,
-            multicast_endpoint: config.discovery_multicast_address.clone(),
+            multicast_endpoint: config.discovery_multicast_endpoint.clone(),
             discovery_port: config.discovery_port,
             discovered_nodes: HashMap::new(),
             last_discovery: SystemTime::now(),
@@ -787,106 +483,3 @@ impl ClusterManager {
     }
 }
 
-impl Default for ClusterConfig {
-    fn default() -> Self {
-        // Use environment variable or default
-        use crate::config::environment::EnvironmentConfig;
-        
-        let env_config = EnvironmentConfig::from_env()
-            .unwrap_or_else(|_| EnvironmentConfig::default());
-        
-        let bind_addr = env_config.network.host.clone();
-        let port = env_config.network.port.get();
-        let default_bind = format!("{}:{}", bind_addr, port);
-        
-        let bind_addr_str = std::env::var("NESTGATE_CLUSTER_BIND")
-            .unwrap_or(default_bind);
-        // Parse with fallback to default if invalid
-        let bind_endpoint = bind_addr_str.parse().unwrap_or_else(|_| {
-            tracing::warn!("Invalid NESTGATE_CLUSTER_BIND address '{}', using default", bind_addr_str);
-            format!("{}:{}", bind_addr, port).parse().unwrap_or_else(|_| {
-                // Final fallback using environment-driven defaults
-                let fallback_host = std::env::var("NESTGATE_FALLBACK_HOST")
-                    .unwrap_or_else(|_| bind_addr.clone());
-                format!("{}:{}", fallback_host, port)
-                    .parse()
-                    .unwrap_or_else(|_| {
-                        // Last resort: use loopback
-                        format!("127.0.0.1:{}", port)
-                            .parse()
-                            .expect("Localhost fallback must be valid")
-                    })
-            })
-        });
-        
-        let discovery_port = std::env::var("NESTGATE_DISCOVERY_PORT")
-            .ok()
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(ports::DISCOVERY_SERVICE);
-        
-        Self {
-            cluster_name: "nestgate-cluster".to_string(),
-            node_id: Uuid::new_v4().to_string(),
-            bind_endpoint,
-            nodes: vec![],
-            election_timeout_ms: 5000,
-            heartbeat_interval_ms: 1000,
-            max_missed_heartbeats: 3,
-            discovery_enabled: true,
-            discovery_multicast_endpoint: std::env::var("NESTGATE_MULTICAST_ADDR")
-                .unwrap_or_else(|_| "224.0.0.1".to_string()),
-            discovery_port,
-            encryption_enabled: true,
-            cluster_secret: None,
-        }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    
-    #[tokio::test]
-    async fn test_cluster_manager_creation() -> Result<()> {
-        let config = ClusterConfig::default();
-        let manager = ClusterManager::new(config).await?;
-        
-        let status = manager.get_status().await?;
-        assert_eq!(status.total_nodes, 1);
-        assert_eq!(status.active_nodes, 1);
-        assert!(status.leader_id.is_none()); // No leader initially
-        
-        println!("✅ Cluster manager creation test passed");
-        Ok(())
-    }
-    
-    #[tokio::test]
-    async fn test_cluster_lifecycle() -> Result<()> {
-        let config = ClusterConfig::default();
-        let manager = ClusterManager::new(config).await?;
-        
-        // Test start
-        manager.start().await?;
-        
-        // Modern pattern: Poll for leader election completion
-        // Leader election should be deterministic, not timing-based
-        let mut attempts = 0;
-        let status = loop {
-            let status = manager.get_status().await?;
-            if status.local_node_role == NodeRole::Leader || attempts >= 50 {
-                break status;
-            }
-            attempts += 1;
-            tokio::task::yield_now().await; // Allow other tasks to run
-        };
-        
-        assert_eq!(status.local_node_role, NodeRole::Leader); // Should become leader
-        assert!(status.leader_id.is_some());
-        
-        // Test stop
-        manager.stop().await?;
-        
-        println!("✅ Cluster lifecycle test passed");
-        Ok(())
-    }
-} 
