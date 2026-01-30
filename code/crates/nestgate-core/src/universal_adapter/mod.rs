@@ -121,11 +121,10 @@ pub mod canonical {
 pub mod stats;
 
 /// Consolidated canonical adapter module
-pub mod consolidated_canonical {
-    pub use super::UniversalAdapter as ConsolidatedCanonicalAdapter;
-    #[allow(deprecated)]
-    pub use super::UniversalAdapterConfig as CanonicalAdapterConfig;
-}
+pub mod consolidated_canonical;
+
+// Re-export consolidated_canonical types for backward compatibility
+pub use consolidated_canonical::ConsolidatedCanonicalAdapter;
 
 /// Universal Adapter for O(1) capability-based connections
 /// Replaces hardcoded primal-to-primal connections
