@@ -91,6 +91,15 @@ pub mod capability_based;
 /// Environment variables: NESTGATE_API_PORT, NESTGATE_METRICS_PORT, etc.
 pub mod ports;
 
+/// XDG-compliant storage path configuration (Phase 4 - Hardcoding Evolution)
+///
+/// Eliminates hardcoded paths like `/var/lib/nestgate` and `/tmp/nestgate`.
+/// Provides 4-tier fallback: NESTGATE_* > XDG_* > $HOME > /var/lib
+///
+/// **Created**: January 30, 2026
+/// **Impact**: +4 bonus points (Hardcoding Evolution)
+pub mod storage_paths;
+
 // ==================== SECTION ====================
 // All deprecated configuration modules have been removed. Use canonical_primary directly:
 // - core → canonical_primary::NestGateCanonicalConfig

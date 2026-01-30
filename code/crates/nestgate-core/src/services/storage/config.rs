@@ -17,11 +17,24 @@ pub struct ZfsConfig {
     pub command_timeout: Duration,
 }
 impl Default for ZfsConfig {
-    /// Returns the default instance
+    /// Returns the default instance with environment-aware binary paths
+    ///
+    /// **Evolution** (Jan 30, 2026): Now uses environment variables for binary paths.
     fn default() -> Self {
+        // ✅ EVOLVED: Use environment-aware paths instead of hardcoded /usr/sbin/
+        let zfs_binary = crate::config::storage_paths::get_storage_paths()
+            .zfs_binary_path()
+            .to_string_lossy()
+            .to_string();
+        
+        let zpool_binary = crate::config::storage_paths::get_storage_paths()
+            .zpool_binary_path()
+            .to_string_lossy()
+            .to_string();
+
         Self {
-            zfs_binary: "/usr/sbin/zfs".to_string(),
-            zpool_binary: "/usr/sbin/zpool".to_string(),
+            zfs_binary,
+            zpool_binary,
             use_sudo: true,
             command_timeout: Duration::from_secs(30),
         }
@@ -111,10 +124,18 @@ pub struct StorageServiceConfig {
     pub monitoring_interval: u64,
 }
 impl Default for StorageServiceConfig {
-    /// Returns the default instance
+    /// Returns the default instance with XDG-compliant paths
+    ///
+    /// **Evolution** (Jan 30, 2026): Now uses XDG-compliant storage paths
+    /// instead of hardcoded `/var/lib/nestgate/storage`.
     fn default() -> Self {
+        // ✅ EVOLVED: Use XDG-compliant storage path instead of hardcoded /var/lib/
+        let base_path = crate::config::storage_paths::get_storage_base_path()
+            .to_string_lossy()
+            .to_string();
+
         Self {
-            base_path: "/var/lib/nestgate/storage".to_string(),
+            base_path,
             zfs: ZfsConfig::default(),
             auto_discover_pools: true,
             discovery_interval: 300, // 5 minutes

@@ -330,16 +330,21 @@ impl ServiceRuntimeConfig {
 }
 
 impl StorageRuntimeConfig {
-    /// Creates from Environment
+    /// Creates from Environment with XDG-compliant paths
+    ///
+    /// **Evolution** (Jan 30, 2026): Now uses XDG-compliant storage paths
+    /// instead of hardcoded `/var/lib/nestgate` and `/tmp/nestgate`.
     fn from_environment() -> Self {
         let zfs_backend = env::var("NESTGATE_ZFS_BACKEND").unwrap_or_else(|_| "auto".to_string());
 
-        let storage_path =
-            env::var("NESTGATE_STORAGE_PATH").unwrap_or_else(|_| "/var/lib/nestgate".to_string());
+        // ✅ EVOLVED: Use XDG-compliant paths with fallback hierarchy
+        let storage_path = crate::config::storage_paths::get_data_dir()
+            .to_string_lossy()
+            .to_string();
 
-        let temp_dir = env::var("NESTGATE_TEMP_DIR")
-            .or_else(|_| env::var("TMPDIR"))
-            .unwrap_or_else(|_| "/tmp/nestgate".to_string());
+        let temp_dir = crate::config::storage_paths::get_temp_dir()
+            .to_string_lossy()
+            .to_string();
 
         Self {
             zfs_backend,
@@ -515,6 +520,6 @@ mod tests {
     fn test_secure_defaults() {
         env::remove_var("NESTGATE_ALLOW_EXTERNAL");
         let config = NetworkRuntimeConfig::from_environment();
-        assert_eq!(config.bind_endpoint, "127.0.0.1");
+        assert_eq!(config.bind_address, "127.0.0.1");
     }
 }
