@@ -1,24 +1,31 @@
-//! Safe UID retrieval - Zero unsafe code required
+//! Safe UID retrieval - 100% Pure Rust, Zero unsafe code
 //!
 //! Provides safe abstractions for getting the current user ID across platforms.
 //!
-//! ## Why This Exists
-//! Eliminates `unsafe { libc::getuid() }` calls throughout the codebase.
-//!
-//! ## Evolution: Unsafe → Safe
+//! ## Evolution: Unsafe C → Safe Pure Rust
 //! ```rust
-//! // ❌ OLD (unsafe):
+//! // ❌ OLD (unsafe C via libc):
 //! let uid = unsafe { libc::getuid() };
 //!
-//! // ✅ NEW (safe):
+//! // ✅ NEW (safe pure Rust via uzers):
 //! let uid = nestgate_core::platform::get_current_uid();
 //! ```
+//!
+//! ## Pure Rust Evolution
+//! - **Before**: `libc::getuid()` (unsafe C binding)
+//! - **After**: `uzers::get_current_uid()` (100% safe Rust)
+//! - **Result**: Zero unsafe blocks, better cross-platform support
 
-/// Get the current user ID (safe, cross-platform)
+/// Get the current user ID (100% safe pure Rust, cross-platform)
 ///
 /// # Platform Support
-/// - **Unix**: Uses `libc::getuid()` internally but safely
-/// - **Windows**: Returns a placeholder (0) - not applicable
+/// - **Unix/Linux**: Uses `uzers` crate (pure Rust)
+/// - **macOS**: Uses `uzers` crate (pure Rust)
+/// - **Windows**: Returns a placeholder (0) - SIDs out of scope
+///
+/// # Pure Rust Evolution
+/// This function has been evolved from `unsafe { libc::getuid() }` to
+/// pure Rust using the `uzers` crate. Zero unsafe code!
 ///
 /// # Examples
 /// ```
@@ -31,9 +38,9 @@
 pub fn get_current_uid() -> u32 {
     #[cfg(unix)]
     {
-        // SAFETY: getuid() is always safe - it just reads a value from the kernel
-        // It has no preconditions and cannot fail
-        unsafe { libc::getuid() }
+        // ✅ PURE RUST! No unsafe code!
+        // Uses uzers crate for safe UID retrieval
+        uzers::get_current_uid()
     }
 
     #[cfg(not(unix))]
@@ -50,10 +57,11 @@ mod tests {
 
     #[test]
     fn test_get_current_uid() {
-        let uid = get_current_uid();
-        // On Unix, UID should be >= 0 (always true for u32)
-        // On Windows, we get 0
-        assert!(uid >= 0);
+        let _uid = get_current_uid();
+        // UID retrieval should not panic
+        // On Unix: Returns actual UID (u32)
+        // On Windows: Returns 0 (placeholder)
+        // Success if no panic!
     }
 
     #[test]
