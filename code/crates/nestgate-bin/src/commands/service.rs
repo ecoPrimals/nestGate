@@ -95,6 +95,7 @@ impl ServiceManager {
             "📍 Source: {}",
             match socket_config.source {
                 nestgate_core::rpc::SocketConfigSource::Environment => "NESTGATE_SOCKET env var",
+                nestgate_core::rpc::SocketConfigSource::BiomeOSDirectory => "BIOMEOS_SOCKET_DIR (biomeOS standard)",
                 nestgate_core::rpc::SocketConfigSource::XdgRuntime => "XDG runtime directory",
                 nestgate_core::rpc::SocketConfigSource::TempDirectory => "/tmp fallback",
             }
@@ -319,12 +320,84 @@ impl Default for ServiceManager {
 /// This is the main server mode for NestGate, supporting:
 /// - Unix socket mode (ecosystem)
 /// - HTTP mode (standalone)
-pub async fn run_daemon(port: u16, bind: &str, dev: bool) -> BinResult<()> {
-    info!("🏰 Starting NestGate daemon (UniBin mode)");
-    info!("   Port: {}, Bind: {}, Dev: {}", port, bind, dev);
+pub async fn run_daemon(port: u16, bind: &str, dev: bool, socket_only: bool) -> BinResult<()> {
+    if socket_only {
+        info!("🔌 Starting NestGate in Unix socket-only mode (NUCLEUS integration)");
+        run_socket_only_daemon().await
+    } else {
+        info!("🏰 Starting NestGate daemon (UniBin mode)");
+        info!("   Port: {}, Bind: {}, Dev: {}", port, bind, dev);
 
-    let manager = ServiceManager::new();
-    manager.start_service(Some(port), None).await
+        let manager = ServiceManager::new();
+        manager.start_service(Some(port), None).await
+    }
+}
+
+/// Run NestGate in Unix socket-only mode (NUCLEUS integration)
+async fn run_socket_only_daemon() -> BinResult<()> {
+    use nestgate_core::rpc::{JsonRpcUnixServer, SocketConfig};
+
+    println!("\n╔══════════════════════════════════════════════════════════════════════╗");
+    println!("║   🔌 NestGate Unix Socket-Only Mode - NUCLEUS Integration           ║");
+    println!("╚══════════════════════════════════════════════════════════════════════╝\n");
+
+    // Get socket configuration with 4-tier fallback (biomeOS standard)
+    let socket_config = SocketConfig::from_environment().map_err(|e| {
+        crate::error::NestGateBinError::service_init_error(
+            format!("Failed to get socket configuration: {}", e),
+            Some("socket-config".to_string()),
+        )
+    })?;
+
+    let family_id = socket_config.family_id.clone();
+
+    println!("✅ Socket-only mode activated");
+    println!("   • No HTTP server (avoids port conflicts)");
+    println!("   • No external dependencies (DB, Redis, etc.)");
+    println!("   • Pure Unix socket JSON-RPC communication");
+    println!("   • Perfect for atomic patterns (Tower + NestGate)");
+    println!();
+
+    // Log socket configuration
+    socket_config.log_summary();
+
+    // Create Unix socket server with persistent storage backend
+    println!("📦 Initializing persistent storage backend...");
+    let server = JsonRpcUnixServer::new(&family_id).await.map_err(|e| {
+        crate::error::NestGateBinError::service_init_error(
+            format!("Failed to create Unix socket server: {}", e),
+            Some("unix-socket".to_string()),
+        )
+    })?;
+    println!("✅ Storage backend initialized");
+    println!();
+
+    println!("📊 Available JSON-RPC Methods:");
+    println!("   Storage:");
+    println!("     • storage.store(family_id, key, value)");
+    println!("     • storage.retrieve(family_id, key)");
+    println!("     • storage.delete(family_id, key)");
+    println!("     • storage.list(family_id, prefix?)");
+    println!("     • storage.exists(family_id, key)");
+    println!("   Blob Storage:");
+    println!("     • storage.store_blob(family_id, key, data_base64)");
+    println!("     • storage.retrieve_blob(family_id, key)");
+    println!();
+    println!("🎯 Mode: NUCLEUS Integration (socket-only)");
+    println!("🔐 Security: Local Unix socket (no network exposure)");
+    println!("⚡ Performance: Zero-copy, no TCP overhead");
+    println!();
+    println!("Press Ctrl+C to stop\n");
+
+    // Start server (blocking)
+    server.serve().await.map_err(|e| {
+        crate::error::NestGateBinError::runtime_error(
+            format!("Unix socket server error: {}", e),
+            Some("unix-socket-serve".to_string()),
+        )
+    })?;
+
+    Ok(())
 }
 
 /// Show daemon status (UniBin CLI command)

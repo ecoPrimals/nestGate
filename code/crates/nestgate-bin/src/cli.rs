@@ -67,15 +67,19 @@ pub enum Commands {
     #[command(name = "daemon", alias = "server")]
     #[command(about = "Run NestGate daemon (server mode)")]
     Daemon {
-        /// Port to bind to
+        /// Port to bind to (ignored in socket-only mode)
         #[arg(short, long, default_value_t = nestgate_core::defaults::network::DEFAULT_API_PORT)]
         port: u16,
-        /// Bind address
+        /// Bind address (ignored in socket-only mode)
         #[arg(long, default_value = nestgate_core::defaults::network::DEFAULT_BIND_ADDRESS)]
         bind: String,
         /// Enable development mode
         #[arg(long)]
         dev: bool,
+        /// Run in Unix socket-only mode (no HTTP server, no external dependencies)
+        /// Perfect for NUCLEUS atomic patterns and inter-primal communication
+        #[arg(long)]
+        socket_only: bool,
     },
 
     /// Show daemon status (UniBin)
@@ -290,9 +294,13 @@ impl Cli {
         // Handle commands
         match self.command {
             // UniBin: Daemon mode command
-            Commands::Daemon { port, bind, dev } => {
-                tracing::info!("🏰 Starting NestGate daemon (UniBin mode)");
-                crate::commands::service::run_daemon(port, &bind, dev)
+            Commands::Daemon { port, bind, dev, socket_only } => {
+                if socket_only {
+                    tracing::info!("🔌 Starting NestGate in Unix socket-only mode (NUCLEUS integration)");
+                } else {
+                    tracing::info!("🏰 Starting NestGate daemon (UniBin mode)");
+                }
+                crate::commands::service::run_daemon(port, &bind, dev, socket_only)
                     .await
                     .map_err(|e| {
                         BinErrorHelper::runtime_error(e.to_string(), Some("daemon".to_string()))

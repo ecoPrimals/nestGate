@@ -51,17 +51,22 @@ pub enum Commands {
     /// Run NestGate as a daemon (server mode)
     #[command(alias = "server")]
     Daemon {
-        /// Port to bind to
+        /// Port to bind to (ignored in socket-only mode)
         #[arg(short, long, default_value = "8080")]
         port: u16,
 
-        /// Bind address
+        /// Bind address (ignored in socket-only mode)
         #[arg(short, long, default_value = "127.0.0.1")]
         bind: String,
 
         /// Enable development mode
         #[arg(long)]
         dev: bool,
+
+        /// Run in Unix socket-only mode (no HTTP server, no external dependencies)
+        /// Perfect for NUCLEUS atomic patterns and inter-primal communication
+        #[arg(long)]
+        socket_only: bool,
     },
 
     /// Show daemon status
@@ -173,10 +178,10 @@ pub mod commands {
             None => {
                 // No subcommand: default to daemon mode
                 tracing::info!("🏰 No subcommand provided, starting daemon mode");
-                commands::daemon::run(8080, "127.0.0.1", false).await
+                commands::daemon::run(8080, "127.0.0.1", false, false).await
             }
-            Some(Commands::Daemon { port, bind, dev }) => {
-                commands::daemon::run(*port, bind, *dev).await
+            Some(Commands::Daemon { port, bind, dev, socket_only }) => {
+                commands::daemon::run(*port, bind, *dev, *socket_only).await
             }
             Some(Commands::Status) => {
                 commands::status::show().await
@@ -205,18 +210,73 @@ pub mod commands {
     pub mod daemon {
         use nestgate_core::Result;
         
-        pub async fn run(port: u16, bind: &str, dev: bool) -> Result<()> {
-            tracing::info!("🏰 Starting NestGate daemon on {}:{}", bind, port);
-            if dev {
-                tracing::info!("⚠️  Development mode enabled");
+        pub async fn run(port: u16, bind: &str, dev: bool, socket_only: bool) -> Result<()> {
+            if socket_only {
+                tracing::info!("🔌 Starting NestGate in Unix socket-only mode (NUCLEUS integration)");
+                run_socket_only().await
+            } else {
+                tracing::info!("🏰 Starting NestGate daemon on {}:{}", bind, port);
+                if dev {
+                    tracing::info!("⚠️  Development mode enabled");
+                }
+                
+                // TODO: Integrate actual daemon logic from main.rs
+                println!("✅ NestGate daemon would start here");
+                println!("   Port: {}", port);
+                println!("   Bind: {}", bind);
+                println!("   Dev: {}", dev);
+                
+                Ok(())
             }
-            
-            // TODO: Integrate actual daemon logic from main.rs
-            println!("✅ NestGate daemon would start here");
-            println!("   Port: {}", port);
-            println!("   Bind: {}", bind);
-            println!("   Dev: {}", dev);
-            
+        }
+
+        async fn run_socket_only() -> Result<()> {
+            use nestgate_core::rpc::{JsonRpcUnixServer, SocketConfig};
+
+            println!("\n╔══════════════════════════════════════════════════════════════════════╗");
+            println!("║   🔌 NestGate Unix Socket-Only Mode - NUCLEUS Integration           ║");
+            println!("╚══════════════════════════════════════════════════════════════════════╝\n");
+
+            // Get socket configuration with 4-tier fallback (biomeOS standard)
+            let socket_config = SocketConfig::from_environment()?;
+            let family_id = socket_config.family_id.clone();
+
+            println!("✅ Socket-only mode activated");
+            println!("   • No HTTP server (avoids port conflicts)");
+            println!("   • No external dependencies (DB, Redis, etc.)");
+            println!("   • Pure Unix socket JSON-RPC communication");
+            println!("   • Perfect for atomic patterns (Tower + NestGate)");
+            println!();
+
+            // Log socket configuration
+            socket_config.log_summary();
+
+            // Create Unix socket server with persistent storage backend
+            println!("📦 Initializing persistent storage backend...");
+            let server = JsonRpcUnixServer::new(&family_id).await?;
+            println!("✅ Storage backend initialized");
+            println!();
+
+            println!("📊 Available JSON-RPC Methods:");
+            println!("   Storage:");
+            println!("     • storage.store(family_id, key, value)");
+            println!("     • storage.retrieve(family_id, key)");
+            println!("     • storage.delete(family_id, key)");
+            println!("     • storage.list(family_id, prefix?)");
+            println!("     • storage.exists(family_id, key)");
+            println!("   Blob Storage:");
+            println!("     • storage.store_blob(family_id, key, data_base64)");
+            println!("     • storage.retrieve_blob(family_id, key)");
+            println!();
+            println!("🎯 Mode: NUCLEUS Integration (socket-only)");
+            println!("🔐 Security: Local Unix socket (no network exposure)");
+            println!("⚡ Performance: Zero-copy, no TCP overhead");
+            println!();
+            println!("Press Ctrl+C to stop\n");
+
+            // Start server (blocking)
+            server.serve().await?;
+
             Ok(())
         }
     }
