@@ -10,9 +10,8 @@
 pub mod config;
 /// Storage service implementation
 pub mod service;
-// TODO: Re-enable service_integration once storage module is fixed
-// /// Service integration bridge (old and new storage systems)
-// pub mod service_integration;
+// NOTE: service_integration was experimental - migrated to unified storage architecture
+// See: code/crates/nestgate-core/src/universal_storage/ for production implementation
 /// Storage type definitions
 pub mod types;
 
@@ -33,8 +32,8 @@ pub use config::CachePolicies;
 // ZfsConfig moved to unified_types
 pub use crate::config::canonical_primary::StorageConfig;
 pub use service::StorageManagerService;
-// TODO: Re-enable when service_integration is fixed
-// pub use service_integration::{AdaptiveStorageService, DataAnalysisResult, MetricsSnapshot, StorageReceipt};
+// NOTE: service_integration types moved to universal_storage module
+// See: crate::universal_storage::universal::adapter::UniversalStorageAdapter
 pub use types::{
     CacheConfig, CacheType, EvictionPolicy, PoolHealth, QuotaEnforcement, StorageOperationResult,
     StorageOperationType, StoragePool, StoragePoolType, StorageQuota, StorageServiceStats,

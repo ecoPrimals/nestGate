@@ -43,5 +43,5 @@ pub struct StoragePerformanceRequirements {
     pub max_latency_ms: Option<f64>,
 }
 
-// Type alias removed - NetworkConfigPhase2C doesn't exist yet
-// TODO: Re-enable when canonical config is fully unified
+// NOTE: This module is deprecated - use canonical_primary::domains::network instead
+// All network configuration has been unified in the canonical config system
