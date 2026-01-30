@@ -209,8 +209,8 @@ ls -a | grep "^\." | grep -v "^\.git"
 - [x] Create archive README.md
 - [x] Verify clean root (17 docs, down from 20)
 - [x] Ready to commit
-- [ ] Commit changes
-- [ ] Push to origin/main (via ssh)
+- [x] Commit changes
+- [x] Push to origin/main (via ssh)
 
 ---
 
