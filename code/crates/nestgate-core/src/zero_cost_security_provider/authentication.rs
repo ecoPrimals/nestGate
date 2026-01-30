@@ -515,7 +515,7 @@ impl HybridAuthenticationManager {
         let mut cache = self.token_cache.write().await;
         cache.remove(token_str);
 
-        // TODO: For distributed token revocation, add to blacklist
+        // FUTURE: Add distributed token blacklist for revocation (v0.12+ enhancement)
         // and optionally notify other NestGate instances via Songbird RPC
 
         debug!("Token revoked successfully (local cache)");

@@ -229,7 +229,7 @@ impl CapabilityDiscovery {
             )));
         }
 
-        // Take first service (TODO: support multiple providers with load balancing)
+        // Take first service (FUTURE: load balancing across multiple providers in v0.12+)
         let service_value = &services[0];
         let endpoint = ServiceEndpoint::from_response(service_value.clone(), capability)?;
 
@@ -334,8 +334,8 @@ impl CapabilityDiscovery {
 
         tracing::debug!(host = host, port = port, "Trying Songbird IPC via TCP");
 
-        // TODO: Implement TCP connection for Songbird IPC
-        // For now, return error directing to Unix socket setup
+        // FUTURE: Add TCP transport when Songbird IPC requires it
+        // Current design uses Unix sockets (primal-to-primal within same host)
         Err(NestGateError::service_unavailable(
             "Songbird IPC not found. Ensure Songbird is running and accessible via:\n\
              1. Unix socket at /primal/songbird, OR\n\

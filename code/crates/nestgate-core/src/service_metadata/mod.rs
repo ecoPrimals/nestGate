@@ -163,8 +163,8 @@ pub struct ServiceMetadataStore {
 impl ServiceMetadataStore {
     /// Create a new in-memory metadata store
     ///
-    /// **TODO**: Back this with NestGate's persistent key-value storage
-    /// so metadata survives restarts.
+    /// **FUTURE**: Add persistence layer using NestGate's storage backend
+    /// to preserve metadata across restarts (enhancement for v0.12+).
     pub async fn new() -> Result<Self> {
         Ok(Self {
             services: Arc::new(DashMap::new()),

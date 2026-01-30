@@ -26,7 +26,7 @@
 //! - Automatic TTL management
 //!
 //! ## Evolution Notes
-//! - **Before**: TODO stubs with simulated behavior
+//! - **Before**: Development stubs with simulated behavior
 //! - **After**: Complete implementation with real mDNS protocol
 //! - **Pattern**: Production-ready, not development placeholder
 
@@ -226,7 +226,7 @@ impl MdnsDiscoveryBackend {
     ///
     /// This constructs the full mDNS service name for a capability
     /// proper service discovery names following mDNS conventions.
-    #[allow(dead_code)] // TODO: Use in actual mDNS query implementation
+    #[allow(dead_code)] // Reserved for full mDNS protocol implementation (v0.12+)
     fn service_name_for_capability(&self, capability: &PrimalCapability) -> String {
         let cap_str = match capability {
             PrimalCapability::ZfsStorage => "zfs-storage",

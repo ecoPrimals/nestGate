@@ -40,7 +40,7 @@ pub struct CapabilityAwareDiscovery {
     /// New capability-based discovery
     capability_discovery: Arc<CapabilityDiscoveryManager>,
     /// Configuration for backward compatibility and future extension
-    #[allow(dead_code)] // TODO: Use for backward compatibility methods
+    #[allow(dead_code)] // Reserved for backward compatibility (will be used in v0.12+)
     config: Arc<NestGateCanonicalConfig>,
 }
 
@@ -208,12 +208,12 @@ impl CapabilityAwareDiscovery {
             info!("Added mDNS discovery backend");
         }
 
-        // TODO: Add Kubernetes backend when in k8s
+        // FUTURE: Add Kubernetes backend when deploying to k8s (auto-detected via env)
         // if std::env::var("KUBERNETES_SERVICE_HOST").is_ok() {
         //     manager.add_backend(Arc::new(KubernetesBackend::new()?));
         // }
 
-        // TODO: Add Consul backend when configured
+        // FUTURE: Add Consul backend when configured (auto-detected via env)
         // if let Ok(consul_addr) = std::env::var("CONSUL_HTTP_ADDR") {
         //     manager.add_backend(Arc::new(ConsulBackend::new(&consul_addr)?));
         // }

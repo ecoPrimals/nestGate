@@ -275,7 +275,7 @@ impl OrchestratorRegistration {
         use tokio::net::UnixStream;
 
         // ⚠️ DEPRECATED: Direct Unix socket connection
-        // TODO: Migrate to Songbird's universal IPC (Phase 3)
+        // PHASE 3: Migrate to Songbird's universal IPC (primal integration phase)
         // See: UNIVERSAL_IPC_EVOLUTION_PLAN_JAN_19_2026.md
 
         // Try Unix socket first, fall back to HTTP

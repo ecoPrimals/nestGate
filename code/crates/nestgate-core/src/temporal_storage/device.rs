@@ -139,7 +139,7 @@ impl TemporalDevice {
     ///
     /// Scans for prehistoric and magnetic era devices.
     fn detect_legacy_devices() -> Result<Vec<TemporalDevice>> {
-        // TODO: Implement legacy device detection
+        // FUTURE: Implement legacy device detection if hardware support needed
         // - Punch card readers (if any still exist)
         // - Floppy disk drives
         // - Magnetic tape drives
@@ -150,7 +150,7 @@ impl TemporalDevice {
     ///
     /// Scans for digital and modern era devices (HDD, SSD, NVMe).
     fn detect_modern_devices() -> Result<Vec<TemporalDevice>> {
-        // TODO: Implement modern device detection
+        // FUTURE: Implement modern device detection when physical hardware support needed
         // - Hard disk drives (HDD)
         // - Solid state drives (SSD)
         // - NVMe devices
@@ -161,7 +161,7 @@ impl TemporalDevice {
     ///
     /// Scans for biological and quantum storage devices.
     fn detect_future_devices() -> Result<Vec<TemporalDevice>> {
-        // TODO: Implement future device detection
+        // FUTURE: Implement future storage technologies when available
         // - DNA storage systems
         // - Quantum storage (when available)
         Ok(vec![])

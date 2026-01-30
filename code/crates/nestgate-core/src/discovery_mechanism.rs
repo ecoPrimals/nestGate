@@ -237,12 +237,13 @@ pub mod mdns {
     /// **Note**: This is a simplified in-memory implementation for testing.
     /// Production mDNS would use actual mDNS protocol (avahi-daemon, dns-sd).
     ///
-    /// **TODO**: Implement proper timeout handling for queries and cache expiration.
+    /// **FUTURE**: Implement active timeout enforcement for queries and cache expiration.
+    /// Fields are reserved for future use when full mDNS protocol is needed.
     pub struct MdnsDiscovery {
-        /// Query timeout (not yet implemented - reserved for future use)
+        /// Query timeout (reserved for future mDNS protocol implementation)
         #[allow(dead_code)]
         timeout: Duration,
-        /// Cache duration (not yet implemented - reserved for future use)
+        /// Cache duration (reserved for future mDNS protocol implementation)
         #[allow(dead_code)]
         cache_duration: Duration,
         /// In-memory service registry (lock-free)

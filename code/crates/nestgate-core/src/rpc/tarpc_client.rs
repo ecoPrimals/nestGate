@@ -147,10 +147,24 @@ impl NestGateRpcClient {
     /// # Ok(())
     /// # }
     /// ```
-    pub async fn discover_by_capability(_capability: &str) -> Result<Self> {
-        // TODO: Integrate with universal adapter discovery
-        // For now, return error indicating implementation needed
-        Err(NestGateError::api_internal_error("Capability discovery not yet integrated with universal adapter. Use new() with explicit endpoint."))
+    pub async fn discover_by_capability(capability: &str) -> Result<Self> {
+        // ✅ EVOLVED: Integrate with universal primal discovery
+        use crate::primal_discovery::RuntimeDiscovery;
+        
+        let discovery = RuntimeDiscovery::new().await?;
+        
+        // Discover primal by capability
+        let connection = match capability {
+            "storage" => discovery.find_storage_primal().await?,
+            "security" => discovery.find_security_primal().await?,
+            "orchestration" => discovery.find_orchestrator().await?,
+            _ => return Err(NestGateError::api_internal_error(
+                format!("Unknown capability for discovery: {}", capability)
+            )),
+        };
+        
+        // Use discovered endpoint
+        Self::new(&connection.endpoint)
     }
 
     /// Set request timeout

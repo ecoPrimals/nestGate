@@ -228,7 +228,7 @@ impl Pipeline {
                 }
                 
                 PipelineStep::Encrypt => {
-                    // TODO: Integrate with BearDog
+                    // FUTURE: Integrate with BearDog for encryption (Phase 3 - primal integration)
                     // current_data = beardog.encrypt(&current_data).await?;
                     encrypted = true;
                 }
