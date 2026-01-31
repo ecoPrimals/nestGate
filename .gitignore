@@ -116,7 +116,7 @@ nestgate-port-manager-*.tar.gz
 /config-migration-backup/
 
 # IDE specific
-.cargo/
+# .cargo/ - REMOVED: Now contains cross-compilation config for genomeBin
 .rustfmt.toml.bak
 
 # Local development

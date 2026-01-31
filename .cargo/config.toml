@@ -1,0 +1,141 @@
+# NestGate Cross-Compilation Configuration
+# genomeBin Multi-Architecture Support
+# Created: January 31, 2026
+
+[build]
+target-dir = "target"
+
+# ============================================================================
+# ARM64 Targets (Primary genomeBin Focus)
+# ============================================================================
+
+# ARM64 Linux (musl - static linking, fully portable)
+# Used for: USB LiveSpore, standalone Linux deployments
+[target.aarch64-unknown-linux-musl]
+linker = "aarch64-linux-musl-gcc"
+rustflags = [
+    "-C", "target-feature=+crt-static",
+    "-C", "link-arg=-static",
+]
+
+# ARM64 Android (via NDK)
+# Used for: Android deployments (Pixel, GrapheneOS)
+# Requires: ANDROID_NDK_HOME environment variable
+[target.aarch64-linux-android]
+ar = "${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar"
+linker = "${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android33-clang"
+rustflags = [
+    "-C", "link-arg=-lm",
+    "-C", "link-arg=-llog",
+]
+
+# ARM64 Linux (gnu - for testing and development)
+[target.aarch64-unknown-linux-gnu]
+linker = "aarch64-linux-gnu-gcc"
+
+# ============================================================================
+# x86_64 Targets (Current Production)
+# ============================================================================
+
+# x86_64 Linux (musl - static linking)
+# Current primary deployment target
+[target.x86_64-unknown-linux-musl]
+linker = "x86_64-linux-musl-gcc"
+rustflags = [
+    "-C", "target-feature=+crt-static",
+    "-C", "link-arg=-static",
+]
+
+# x86_64 Linux (gnu - for development)
+[target.x86_64-unknown-linux-gnu]
+linker = "x86_64-linux-gnu-gcc"
+
+# ============================================================================
+# macOS Targets (Optional, for completeness)
+# ============================================================================
+
+# Apple Silicon (ARM64)
+[target.aarch64-apple-darwin]
+rustflags = ["-C", "link-arg=-undefined", "-C", "link-arg=dynamic_lookup"]
+
+# Intel Mac (x86_64)
+[target.x86_64-apple-darwin]
+rustflags = ["-C", "link-arg=-undefined", "-C", "link-arg=dynamic_lookup"]
+
+# ============================================================================
+# RISC-V Targets (Future - Phase 2)
+# ============================================================================
+
+# RISC-V 64-bit (for future hardware)
+# Uncomment when ready to test
+# [target.riscv64gc-unknown-linux-gnu]
+# linker = "riscv64-linux-gnu-gcc"
+
+# ============================================================================
+# WebAssembly Targets (Future - Phase 3)
+# ============================================================================
+
+# WASM for browser deployment (future)
+# Uncomment when ready to test
+# [target.wasm32-unknown-unknown]
+# rustflags = ["-C", "target-feature=+simd128"]
+
+# ============================================================================
+# Performance Optimizations (All Targets)
+# ============================================================================
+
+[profile.release]
+opt-level = 3              # Maximum optimization
+lto = true                 # Link-time optimization
+codegen-units = 1          # Single codegen unit for better optimization
+panic = "abort"            # Smaller binaries
+strip = true               # Remove debug symbols
+
+# Size-optimized profile (for embedded/constrained devices)
+[profile.release-small]
+inherits = "release"
+opt-level = "z"            # Optimize for size
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+# ============================================================================
+# Cargo Configuration
+# ============================================================================
+
+[cargo-new]
+vcs = "git"
+
+[alias]
+# Convenience aliases for genomeBin builds
+build-all-genomes = "build --release --target x86_64-unknown-linux-musl --target aarch64-unknown-linux-musl --target aarch64-linux-android"
+build-arm64 = "build --release --target aarch64-unknown-linux-musl"
+build-android = "build --release --target aarch64-linux-android"
+build-x64 = "build --release --target x86_64-unknown-linux-musl"
+
+# ============================================================================
+# Notes
+# ============================================================================
+# 
+# To use this configuration:
+# 1. Install target toolchains:
+#    rustup target add aarch64-unknown-linux-musl
+#    rustup target add aarch64-linux-android
+#    rustup target add x86_64-unknown-linux-musl
+#
+# 2. Install cross-compilation linkers:
+#    # Debian/Ubuntu:
+#    sudo apt install gcc-aarch64-linux-gnu musl-tools
+#    
+#    # Android NDK:
+#    export ANDROID_NDK_HOME="$HOME/Android/Sdk/ndk/26.0.10792818"
+#
+# 3. Build for specific target:
+#    cargo build --release --target aarch64-unknown-linux-musl
+#    cargo build --release --target aarch64-linux-android
+#
+# 4. Use convenience aliases:
+#    cargo build-arm64
+#    cargo build-android
+#    cargo build-all-genomes

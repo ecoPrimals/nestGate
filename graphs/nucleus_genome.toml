@@ -1,0 +1,91 @@
+# NUCLEUS Deployment (All 5 Primals via genomeBin)
+# BearDog + Songbird + Squirrel + Toadstool + NestGate
+# Use: biomeos deploy --graph graphs/nucleus_genome.toml --target any
+
+[[nodes]]
+id = "deploy_beardog"
+type = "genome.deploy"
+description = "Deploy BearDog (Security Foundation)"
+config = { 
+    genome = "beardog.genome", 
+    target = "auto",
+    priority = "critical"
+}
+
+[[nodes]]
+id = "deploy_songbird"
+type = "genome.deploy"
+description = "Deploy Songbird (Discovery & Federation)"
+config = { 
+    genome = "songbird.genome", 
+    target = "auto",
+    priority = "high"
+}
+depends_on = ["deploy_beardog"]
+
+[[nodes]]
+id = "deploy_nestgate"
+type = "genome.deploy"
+description = "Deploy NestGate (Storage & Persistence)"
+config = { 
+    genome = "nestgate.genome", 
+    target = "auto",
+    priority = "high"
+}
+depends_on = ["deploy_beardog"]
+
+[[nodes]]
+id = "deploy_squirrel"
+type = "genome.deploy"
+description = "Deploy Squirrel (AI Coordination)"
+config = { 
+    genome = "squirrel.genome", 
+    target = "auto",
+    priority = "medium"
+}
+depends_on = ["deploy_beardog", "deploy_nestgate"]
+
+[[nodes]]
+id = "deploy_toadstool"
+type = "genome.deploy"
+description = "Deploy Toadstool (GPU Compute)"
+config = { 
+    genome = "toadstool.genome", 
+    target = "auto",
+    priority = "medium"
+}
+depends_on = ["deploy_beardog", "deploy_nestgate"]
+
+[[nodes]]
+id = "verify_nucleus"
+type = "health.check_composite"
+description = "Verify complete NUCLEUS health"
+config = { 
+    nucleus_components = ["beardog", "songbird", "nestgate", "squirrel", "toadstool"],
+    checks = ["connectivity", "auth_flow", "discovery", "storage", "ai_coordination", "gpu_compute"],
+    timeout = 120
+}
+depends_on = ["deploy_songbird", "deploy_nestgate", "deploy_squirrel", "deploy_toadstool"]
+
+[[nodes]]
+id = "establish_nucleus_mesh"
+type = "discovery.mesh"
+description = "Establish secure mesh between all NUCLEUS components"
+config = { 
+    primals = ["beardog", "songbird", "nestgate", "squirrel", "toadstool"],
+    mesh_type = "full",
+    auth_provider = "beardog",
+    discovery_provider = "songbird"
+}
+depends_on = ["verify_nucleus"]
+
+[[nodes]]
+id = "announce_nucleus_ready"
+type = "primal.announce_composite"
+description = "Announce complete NUCLEUS to ecosystem"
+config = { 
+    nucleus_id = "nucleus-001",
+    components = ["beardog", "songbird", "nestgate", "squirrel", "toadstool"],
+    capabilities_aggregate = true
+}
+depends_on = ["establish_nucleus_mesh"]

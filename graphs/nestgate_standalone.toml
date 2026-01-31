@@ -1,0 +1,76 @@
+# NestGate Standalone Deployment
+# Deploys NestGate with storage initialization and health check
+# Use: biomeos deploy --graph graphs/nestgate_standalone.toml
+
+[[nodes]]
+id = "deploy_nestgate"
+type = "genome.deploy"
+description = "Deploy NestGate genomeBin with auto-detection"
+config = { 
+    genome = "nestgate.genome", 
+    target = "auto",
+    source = "plasmidBin/stable/genomes/"
+}
+
+[[nodes]]
+id = "verify_nestgate"
+type = "health.check_atomic"
+description = "Verify NestGate is running and responsive"
+config = { 
+    primals = ["nestgate"], 
+    timeout = 30,
+    retry = 3,
+    checks = ["version", "ping", "capabilities"]
+}
+depends_on = ["deploy_nestgate"]
+
+[[nodes]]
+id = "initialize_storage"
+type = "storage.initialize"
+description = "Initialize NestGate storage backends"
+config = { 
+    primal = "nestgate",
+    backends = ["rocksdb", "sqlite"],
+    path = "/opt/biomeos/nestgate/storage",
+    auto_create = true
+}
+depends_on = ["verify_nestgate"]
+
+[[nodes]]
+id = "register_capabilities"
+type = "discovery.register"
+description = "Register NestGate capabilities with ecosystem"
+config = { 
+    primal = "nestgate",
+    capabilities = [
+        "storage.rocksdb",
+        "storage.sqlite",
+        "storage.zfs",
+        "storage.object"
+    ],
+    discovery_port = 7878
+}
+depends_on = ["initialize_storage"]
+
+[[nodes]]
+id = "announce_ready"
+type = "primal.announce"
+description = "Announce NestGate to other primals via Songbird"
+config = { 
+    primal = "nestgate",
+    discovery_backend = "songbird",
+    capabilities_file = "/opt/biomeos/nestgate/capabilities.toml"
+}
+depends_on = ["register_capabilities"]
+
+# Rollback on failure
+[[nodes]]
+id = "rollback_on_failure"
+type = "genome.rollback"
+description = "Rollback deployment if any step fails"
+config = { 
+    targets = ["deploy_nestgate"],
+    cleanup_storage = false,  # Preserve data on rollback
+    log_failure = true
+}
+on_failure_of = ["verify_nestgate", "initialize_storage", "register_capabilities"]

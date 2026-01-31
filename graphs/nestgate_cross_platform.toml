@@ -1,0 +1,93 @@
+# Cross-Platform Deployment (USB LiveSpore + Android)
+# Demonstrates NestGate working on multiple architectures simultaneously
+# Use: biomeos deploy --graph graphs/nestgate_cross_platform.toml
+
+[[nodes]]
+id = "deploy_nestgate_usb"
+type = "genome.deploy"
+description = "Deploy NestGate on USB LiveSpore (x86_64)"
+config = { 
+    genome = "nestgate.genome", 
+    target = "usb:///dev/sdb1",  # LiveSpore USB device
+    source = "plasmidBin/stable/genomes/",
+    expected_arch = "x86_64"
+}
+
+[[nodes]]
+id = "verify_nestgate_usb"
+type = "health.check_atomic"
+description = "Verify NestGate on USB LiveSpore"
+config = { 
+    primals = ["nestgate-usb"], 
+    timeout = 30,
+    target = "usb:///dev/sdb1"
+}
+depends_on = ["deploy_nestgate_usb"]
+
+[[nodes]]
+id = "deploy_nestgate_android"
+type = "genome.deploy"
+description = "Deploy NestGate on Android (ARM64)"
+config = { 
+    genome = "nestgate.genome", 
+    target = "android://pixel8a",  # Android device via ADB
+    source = "plasmidBin/stable/genomes/",
+    expected_arch = "aarch64"
+}
+
+[[nodes]]
+id = "verify_nestgate_android"
+type = "health.check_atomic"
+description = "Verify NestGate on Android device"
+config = { 
+    primals = ["nestgate-android"], 
+    timeout = 30,
+    target = "android://pixel8a"
+}
+depends_on = ["deploy_nestgate_android"]
+
+[[nodes]]
+id = "establish_handshake"
+type = "discovery.handshake"
+description = "Establish secure handshake between USB and Android"
+config = { 
+    primals = ["nestgate-usb", "nestgate-android"],
+    discovery_method = "songbird",
+    auth_method = "beardog",
+    timeout = 60
+}
+depends_on = ["verify_nestgate_usb", "verify_nestgate_android"]
+
+[[nodes]]
+id = "test_cross_platform_sync"
+type = "storage.sync_test"
+description = "Test storage sync between USB and Android"
+config = { 
+    source = "nestgate-usb",
+    destination = "nestgate-android",
+    test_data_size = "10MB",
+    verify_integrity = true
+}
+depends_on = ["establish_handshake"]
+
+[[nodes]]
+id = "verify_cross_platform_health"
+type = "health.check_composite"
+description = "Verify cross-platform deployment health"
+config = { 
+    targets = ["nestgate-usb", "nestgate-android"],
+    checks = ["connectivity", "sync", "performance"],
+    timeout = 90
+}
+depends_on = ["test_cross_platform_sync"]
+
+# Rollback both deployments on failure
+[[nodes]]
+id = "rollback_cross_platform"
+type = "genome.rollback_composite"
+description = "Rollback both deployments on failure"
+config = { 
+    targets = ["deploy_nestgate_usb", "deploy_nestgate_android"],
+    cascade = true
+}
+on_failure_of = ["verify_cross_platform_health"]

@@ -1,0 +1,107 @@
+# TOWER Deployment (BearDog + Songbird + NestGate)
+# Core security + discovery + storage foundation
+# Use: biomeos deploy --graph graphs/tower_genome.toml
+
+[[nodes]]
+id = "deploy_beardog"
+type = "genome.deploy"
+description = "Deploy BearDog (Security Foundation)"
+config = { 
+    genome = "beardog.genome", 
+    target = "auto",
+    source = "plasmidBin/stable/genomes/",
+    priority = "critical"
+}
+
+[[nodes]]
+id = "verify_beardog"
+type = "health.check_atomic"
+description = "Verify BearDog security foundation"
+config = { 
+    primals = ["beardog"], 
+    timeout = 30,
+    checks = ["hsm", "entropy", "auth"]
+}
+depends_on = ["deploy_beardog"]
+
+[[nodes]]
+id = "deploy_songbird"
+type = "genome.deploy"
+description = "Deploy Songbird (Discovery & Federation)"
+config = { 
+    genome = "songbird.genome", 
+    target = "auto",
+    source = "plasmidBin/stable/genomes/",
+    priority = "high"
+}
+depends_on = ["verify_beardog"]
+
+[[nodes]]
+id = "verify_songbird"
+type = "health.check_atomic"
+description = "Verify Songbird discovery services"
+config = { 
+    primals = ["songbird"], 
+    timeout = 30,
+    checks = ["mdns", "federation", "dark_forest"]
+}
+depends_on = ["deploy_songbird"]
+
+[[nodes]]
+id = "deploy_nestgate"
+type = "genome.deploy"
+description = "Deploy NestGate (Storage & Persistence)"
+config = { 
+    genome = "nestgate.genome", 
+    target = "auto",
+    source = "plasmidBin/stable/genomes/",
+    priority = "high"
+}
+depends_on = ["verify_beardog"]  # Can deploy in parallel with Songbird
+
+[[nodes]]
+id = "verify_nestgate"
+type = "health.check_atomic"
+description = "Verify NestGate storage backends"
+config = { 
+    primals = ["nestgate"], 
+    timeout = 30,
+    checks = ["rocksdb", "sqlite", "capabilities"]
+}
+depends_on = ["deploy_nestgate"]
+
+[[nodes]]
+id = "establish_tower_mesh"
+type = "discovery.mesh"
+description = "Establish secure mesh between TOWER components"
+config = { 
+    primals = ["beardog", "songbird", "nestgate"],
+    auth_provider = "beardog",
+    discovery_provider = "songbird",
+    storage_provider = "nestgate",
+    mesh_type = "secure"
+}
+depends_on = ["verify_beardog", "verify_songbird", "verify_nestgate"]
+
+[[nodes]]
+id = "verify_tower_health"
+type = "health.check_composite"
+description = "Verify complete TOWER health"
+config = { 
+    tower_components = ["beardog", "songbird", "nestgate"],
+    checks = ["connectivity", "auth_flow", "discovery", "storage"],
+    timeout = 60
+}
+depends_on = ["establish_tower_mesh"]
+
+# Rollback entire TOWER on any failure
+[[nodes]]
+id = "rollback_tower"
+type = "genome.rollback_composite"
+description = "Rollback entire TOWER deployment on failure"
+config = { 
+    targets = ["deploy_beardog", "deploy_songbird", "deploy_nestgate"],
+    cascade = true,
+    preserve_data = true
+}
+on_failure_of = ["verify_tower_health"]
