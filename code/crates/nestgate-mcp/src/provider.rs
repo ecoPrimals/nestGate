@@ -82,26 +82,26 @@ impl ProviderManager {
     }
 
     /// Get available system memory
+    ///
+    /// **UNIVERSAL**: Uses sysinfo crate for cross-platform memory detection
+    ///
+    /// Works on Linux, Windows, macOS, FreeBSD, and more - no #[cfg] needed!
     async fn get_available_memory(&self) -> Result<u64> {
-        // Basic memory check - in production this would be more sophisticated
-        #[cfg(target_os = "linux")]
-        {
-            if let Ok(meminfo) = tokio::fs::read_to_string("/proc/meminfo").await {
-                if let Some(line) = meminfo
-                    .lines()
-                    .find(|line| line.starts_with("MemAvailable:"))
-                {
-                    if let Some(kb_str) = line.split_whitespace().nth(1) {
-                        if let Ok(kb) = kb_str.parse::<u64>() {
-                            return Ok(kb * 1024); // Convert KB to bytes
-                        }
-                    }
-                }
-            }
-        }
-
-        // Fallback: assume we have 1GB available
-        Ok(1_073_741_824)
+        use sysinfo::{System, SystemExt};
+        
+        // Universal memory detection via sysinfo
+        let mut sys = System::new_all();
+        sys.refresh_memory();
+        
+        let available = sys.available_memory();
+        
+        tracing::debug!(
+            "Available memory: {} bytes ({:.2} GB)",
+            available,
+            available as f64 / 1_073_741_824.0
+        );
+        
+        Ok(available)
     }
 
     /// Get provider information
@@ -112,7 +112,7 @@ impl ProviderManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-                pub fn get_provider_info(&self, id: &str) -> Result<ProviderInfo>  {
+    pub async fn get_provider_info(&self, id: &str) -> Result<ProviderInfo> {
         tracing::debug!("Retrieving provider information for: {}", id);
 
         // Parse storage tier from provider ID
@@ -123,8 +123,7 @@ impl ProviderManager {
 
         Ok(ProviderInfo {
             id: id.to_string(),
-            name: format!("NestGate {e},
-    Storage Provider")),
+            name: format!("NestGate {} Storage Provider", tier_name(&tier)),
             tier,
             capacity,
             available,
@@ -144,7 +143,7 @@ impl ProviderManager {
     }
 
     /// Get capacity information for a storage tier
-    fn get_tier_capacity(&self, tier: &crate::types::StorageTier) -> Result<(u64, u64)> {
+    async fn get_tier_capacity(&self, tier: &crate::types::StorageTier) -> Result<(u64, u64)> {
         // In a real implementation, this would query actual storage systems
         let (base_capacity, availability_factor) = match tier {
             crate::types::StorageTier::Hot => (10_737_418_240_u64, 0.7), // 10GB, 70% available
@@ -156,5 +155,16 @@ impl ProviderManager {
 
         let available = (base_capacity as f64 * availability_factor) as u64;
         Ok((base_capacity, available))
+    }
+}
+
+/// Get tier name for display
+fn tier_name(tier: &crate::types::StorageTier) -> &str {
+    match tier {
+        crate::types::StorageTier::Hot => "Hot",
+        crate::types::StorageTier::Warm => "Warm",
+        crate::types::StorageTier::Cold => "Cold",
+        crate::types::StorageTier::Archive => "Archive",
+        crate::types::StorageTier::Cache => "Cache",
     }
 }
