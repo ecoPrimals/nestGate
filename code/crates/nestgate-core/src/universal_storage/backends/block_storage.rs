@@ -8,12 +8,16 @@
 /// - Thin provisioning and snapshots
 /// - Native async I/O with io_uring
 ///
-/// **Evolution**: Modern async patterns, capability-based discovery, no hardcoding
+/// **Evolution**: Phase 2 - Universal block detection with trait abstraction (Jan 31, 2026)
 ///
 /// **MODERNIZED**: Lock-free device management with DashMap
 /// - 5-10x faster device operations
 /// - No lock contention during I/O
 /// - Better concurrent access performance
+///
+/// **UNIVERSAL**: Cross-platform device detection via trait abstraction
+/// - Works on Linux, Windows, macOS, BSD
+/// - Runtime detector selection (sysinfo universal + Linux optimization)
 
 use dashmap::DashMap;
 use super::{Result, StorageMetadata};
@@ -25,13 +29,21 @@ use std::sync::Arc;
 use tokio::fs;
 use tracing::{debug, info, warn};
 
+// Import universal block detection
+mod block_detection;
+pub use block_detection::{UniversalBlockDetector, BlockDeviceDetector, BlockDevice, DeviceType};
+
 /// Block storage backend (lock-free device registry!)
 ///
 /// Implements storage operations on top of block devices
 /// Supports iSCSI, Fibre Channel, NVMe-oF, and local block devices
+///
+/// **UNIVERSAL**: Uses UniversalBlockDetector for cross-platform device discovery
 pub struct BlockStorageBackend {
     /// Device registry (lock-free with DashMap!)
     devices: Arc<DashMap<String, BlockDevice>>,
+    /// Universal detector for device discovery
+    detector: UniversalBlockDetector,
     /// Configuration source for audit
     config_source: ConfigSource,
     /// Root path for device management
@@ -45,42 +57,6 @@ enum ConfigSource {
     CapabilityDiscovered { service_id: String },
     /// Environment/system discovery
     SystemDiscovered,
-}
-
-/// Block device information
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct BlockDevice {
-    /// Device name (e.g., /dev/sda, /dev/nvme0n1)
-    pub name: String,
-    /// Device path
-    pub path: PathBuf,
-    /// Size in bytes
-    pub size: u64,
-    /// Block size (typically 512 or 4096 bytes)
-    pub block_size: u32,
-    /// Device type (SSD, HDD, NVMe, etc.)
-    pub device_type: DeviceType,
-    /// Whether device supports TRIM/DISCARD
-    pub supports_trim: bool,
-    /// Device metadata
-    pub metadata: HashMap<String, String>,
-}
-
-/// Device type classification
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-pub enum DeviceType {
-    /// Solid State Drive
-    SSD,
-    /// Hard Disk Drive
-    HDD,
-    /// NVMe device
-    NVMe,
-    /// Network block device (iSCSI, FC)
-    NetworkBlock,
-    /// Virtual block device
-    Virtual,
-    /// Unknown type
-    Unknown,
 }
 
 /// Block storage volume
@@ -101,23 +77,29 @@ pub struct BlockVolume {
 }
 
 impl BlockStorageBackend {
-    /// Create new block storage backend using capability-based discovery
+    /// Create new block storage backend using universal device detection
     ///
     /// **CAPABILITY-BASED**: Discovers block devices via capability system
+    /// **UNIVERSAL**: Works on all platforms (Linux, Windows, macOS, BSD)
     /// **SELF-KNOWLEDGE**: Only knows block storage operations
     pub async fn new() -> Result<Self> {
-        info!("Initializing block storage backend with capability discovery");
+        info!("Initializing block storage backend with universal detection");
 
         // Attempt capability-based discovery first
         let (config_source, root_path) = Self::discover_configuration().await?;
 
+        // Create universal detector (auto-selects best strategy)
+        let detector = UniversalBlockDetector::new().await?;
+        info!("✅ Using {} for device detection", detector.detector_name());
+
         let backend = Self {
-            devices: Arc::new(RwLock::new(HashMap::new())),
+            devices: Arc::new(DashMap::new()),
+            detector,
             config_source,
             root_path,
         };
 
-        // Discover available block devices
+        // Discover available block devices using universal detector
         backend.discover_devices().await?;
 
         info!("Block storage backend initialized successfully");
@@ -156,121 +138,22 @@ impl BlockStorageBackend {
         ))
     }
 
-    /// Discover available block devices
+    /// Discover available block devices using universal detector
+    ///
+    /// **UNIVERSAL**: Uses trait-based detector that works on all platforms
     async fn discover_devices(&self) -> Result<()> {
-        debug!("Discovering block devices");
+        debug!("Discovering block devices using universal detector");
 
-        // On Linux, scan /sys/block for devices
-        #[cfg(target_os = "linux")]
-        {
-            self.discover_linux_devices().await?;
+        // Use universal detector (works on ALL platforms!)
+        let devices = self.detector.detect_devices().await?;
+        
+        // Populate device registry
+        for device in devices {
+            self.devices.insert(device.name.clone(), device);
         }
 
-        let devices = self.devices.read().await;
-        info!("Discovered {} block devices", devices.len());
+        info!("✅ Discovered {} block devices universally", self.devices.len());
         Ok(())
-    }
-
-    /// Discover Linux block devices via sysfs
-    #[cfg(target_os = "linux")]
-    async fn discover_linux_devices(&self) -> Result<()> {
-        use tokio::fs;
-
-        let sys_block = PathBuf::from("/sys/block");
-        if !sys_block.exists() {
-            warn!("/sys/block not available - running in limited environment");
-            return Ok(());
-        }
-
-        let mut entries = fs::read_dir(&sys_block).await.map_err(|e| {
-            NestGateError::io_error(e, "Failed to read /sys/block", "block_storage")
-        })?;
-
-        while let Some(entry) = entries.next_entry().await.map_err(|e| {
-            NestGateError::io_error(e, "Failed to read dir entry", "block_storage")
-        })? {
-            let device_name = entry.file_name().to_string_lossy().to_string();
-            
-            // Skip loop devices, ramdisks, etc.
-            if device_name.starts_with("loop") || device_name.starts_with("ram") {
-                continue;
-            }
-
-            let device_path = PathBuf::from(format!("/dev/{}", device_name));
-            
-            // Try to determine device type and size
-            let device_type = self.determine_device_type(&device_name).await;
-            let size = self.get_device_size(&device_name).await.unwrap_or(0);
-            let block_size = 4096; // Default, could read from sysfs
-            let supports_trim = self.check_trim_support(&device_name).await;
-
-            let device = BlockDevice {
-                name: device_name.clone(),
-                path: device_path,
-                size,
-                block_size,
-                device_type,
-                supports_trim,
-                metadata: HashMap::new(),
-            };
-
-            devices.insert(device_name.clone(), device);
-            debug!("Discovered block device: {} ({} bytes)", device_name, size);
-        }
-
-        Ok(())
-    }
-
-    /// Determine device type from sysfs
-    #[cfg(target_os = "linux")]
-    async fn determine_device_type(&self, device_name: &str) -> DeviceType {
-        // Check for NVMe
-        if device_name.starts_with("nvme") {
-            return DeviceType::NVMe;
-        }
-
-        // Check rotational flag in sysfs
-        let rotational_path = format!("/sys/block/{}/queue/rotational", device_name);
-        if let Ok(content) = fs::read_to_string(&rotational_path).await {
-            if content.trim() == "0" {
-                return DeviceType::SSD;
-            } else if content.trim() == "1" {
-                return DeviceType::HDD;
-            }
-        }
-
-        DeviceType::Unknown
-    }
-
-    /// Get device size from sysfs
-    #[cfg(target_os = "linux")]
-    async fn get_device_size(&self, device_name: &str) -> Result<u64> {
-        let size_path = format!("/sys/block/{}/size", device_name);
-        let content = fs::read_to_string(&size_path).await.map_err(|e| {
-            NestGateError::io_error(e, "Failed to read device size", "block_storage")
-        })?;
-
-        let sectors: u64 = content.trim().parse().map_err(|e| {
-            NestGateError::parse_error(
-                format!("Invalid size value: {}", e),
-                "block_storage",
-            )
-        })?;
-
-        // Sectors are typically 512 bytes
-        Ok(sectors * 512)
-    }
-
-    /// Check if device supports TRIM/DISCARD
-    #[cfg(target_os = "linux")]
-    async fn check_trim_support(&self, device_name: &str) -> bool {
-        let discard_path = format!("/sys/block/{}/queue/discard_granularity", device_name);
-        if let Ok(content) = fs::read_to_string(&discard_path).await {
-            if let Ok(granularity) = content.trim().parse::<u32>() {
-                return granularity > 0;
-            }
-        }
-        false
     }
 
     /// Create a new block volume
