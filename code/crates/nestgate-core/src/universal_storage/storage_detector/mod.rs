@@ -27,6 +27,8 @@ pub mod config;
 pub mod core;
 /// Detection algorithms and strategies
 pub mod detection;
+/// Universal filesystem detection (Phase 3 evolution)
+pub mod filesystem_detection;
 /// Storage profiling capabilities
 pub mod profiling;
 /// Type definitions for storage detection
@@ -37,6 +39,7 @@ pub use analysis::*;
 pub use config::*;
 pub use core::*;
 pub use detection::*;
+pub use filesystem_detection::*;
 pub use profiling::*;
 pub use types::*;
 
