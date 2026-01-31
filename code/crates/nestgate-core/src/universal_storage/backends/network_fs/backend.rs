@@ -1,17 +1,20 @@
 /// Network Filesystem Backend (NFS, CIFS/SMB)
 ///
-/// **Production-ready implementation** for network filesystem storage
+/// **UNIVERSAL ARCHITECTURE** - Runtime mount discovery, no platform-specific code
+/// **EVOLUTION**: Phase 2 Task 3 - Deep Debt Evolution (Jan 31, 2026)
 /// 
 /// Supports:
 /// - NFS v3, v4, v4.1, v4.2
 /// - CIFS/SMB 2.x, 3.x
 /// - Automatic mount management
 /// - Native async I/O
+/// - **Universal mount detection** (Linux, macOS, Windows, BSD)
 ///
 /// **Evolution**: Modern async patterns, capability-based discovery, no hardcoding
 
-use super::{Result, StorageMetadata};
+use super::super::{Result, StorageMetadata};
 use crate::error::NestGateError;
+use super::mount_detection::UniversalMountDetector;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -217,80 +220,29 @@ impl NetworkFsBackend {
         ))
     }
 
-    /// Discover existing network mounts
+    /// Discover existing network mounts using universal detection
+    ///
+    /// **UNIVERSAL**: Works on Linux, macOS, Windows, BSD via runtime detection
     async fn discover_mounts(&self) -> Result<()> {
-        debug!("Discovering existing network mounts");
+        info!("🔍 Discovering existing network mounts (universal detector)");
 
-        // On Linux, read /proc/mounts
-        #[cfg(target_os = "linux")]
-        {
-            self.discover_linux_mounts().await?;
-        }
+        // Use universal mount detector (no platform-specific code!)
+        let detector = UniversalMountDetector::new();
+        let discovered = detector.discover().unwrap_or_default();
+        
+        debug!("Detector: {} | Discovered: {} mounts", detector.detector_name(), discovered.len());
 
-        let mounts = self.mounts.read().await;
-        info!("Discovered {} network mounts", mounts.len());
-        Ok(())
-    }
-
-    /// Discover Linux network mounts from /proc/mounts
-    #[cfg(target_os = "linux")]
-    async fn discover_linux_mounts(&self) -> Result<()> {
-        let mounts_content = match fs::read_to_string("/proc/mounts").await {
-            Ok(content) => content,
-            Err(e) => {
-                warn!("Failed to read /proc/mounts: {}", e);
-                return Ok(()); // Non-fatal in limited environments
-            }
-        };
-
+        // Convert to NetworkMount format and register
+        let network_mounts = detector.to_network_mounts(discovered);
         let mut mounts = self.mounts.write().await;
-
-        for line in mounts_content.lines() {
-            let parts: Vec<&str> = line.split_whitespace().collect();
-            if parts.len() < 3 {
-                continue;
-            }
-
-            let device = parts[0];
-            let mount_point = parts[1];
-            let fs_type = parts[2];
-
-            // Check if it's a network filesystem
-            let protocol = match fs_type {
-                "nfs" => Some(NetworkProtocol::NFSv3),
-                "nfs4" => Some(NetworkProtocol::NFSv4),
-                "cifs" | "smb3" => Some(NetworkProtocol::CIFS3),
-                _ => None,
-            };
-
-            if let Some(protocol) = protocol {
-                // Parse server and remote path from device (e.g., "server:/path")
-                let (server, remote_path) = if let Some(colon_pos) = device.find(':') {
-                    (
-                        device[..colon_pos].to_string(),
-                        device[colon_pos + 1..].to_string(),
-                    )
-                } else {
-                    (device.to_string(), String::from("/"))
-                };
-
-                let mount = NetworkMount {
-                    id: uuid::Uuid::new_v4().to_string(),
-                    name: format!("mount_{}", mounts.len()),
-                    server,
-                    remote_path,
-                    local_path: PathBuf::from(mount_point),
-                    protocol,
-                    options: MountOptions::default(),
-                    status: MountStatus::Active,
-                    created_at: SystemTime::now(),
-                };
-
-                mounts.insert(mount.id.clone(), mount);
-                debug!("Discovered network mount: {} at {}", device, mount_point);
-            }
+        
+        for mount in network_mounts {
+            debug!("✅ Discovered network mount: {} → {:?} ({})", 
+                   mount.server, mount.local_path, mount.protocol as u8);
+            mounts.insert(mount.id.clone(), mount);
         }
 
+        info!("✅ Discovered {} network mounts using {}", mounts.len(), detector.detector_name());
         Ok(())
     }
 
