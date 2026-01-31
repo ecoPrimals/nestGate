@@ -233,8 +233,7 @@ impl PrimalSelfKnowledge {
             metadata: std::collections::HashMap::new(),
         });
 
-        // Check if ZFS is available
-        #[cfg(target_os = "linux")]
+        // Check if ZFS is available (runtime capability detection - universal!)
         if Self::check_zfs_available().await {
             capabilities.push(Capability {
                 name: "zfs".to_string(),
@@ -251,13 +250,31 @@ impl PrimalSelfKnowledge {
     }
 
     /// Check if ZFS is available on this system
-    #[cfg(target_os = "linux")]
+    ///
+    /// **UNIVERSAL**: Works on ALL platforms (runtime capability detection)
+    ///
+    /// Tries to execute `zfs --version` command. If it succeeds, ZFS is available.
+    /// This works regardless of platform - no #[cfg] needed!
     async fn check_zfs_available() -> bool {
-        tokio::process::Command::new("zfs")
+        match tokio::process::Command::new("zfs")
             .arg("--version")
             .output()
             .await
-            .is_ok()
+        {
+            Ok(output) => {
+                let available = output.status.success();
+                if available {
+                    debug!("✅ ZFS capability detected (zfs command available)");
+                } else {
+                    debug!("ℹ️  ZFS command found but returned error");
+                }
+                available
+            }
+            Err(e) => {
+                debug!("ℹ️  ZFS not available: {}", e);
+                false
+            }
+        }
     }
 
     /// Build endpoints from environment (no hardcoded values)
