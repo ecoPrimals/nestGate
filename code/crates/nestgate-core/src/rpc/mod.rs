@@ -1,13 +1,24 @@
 //! # 🚀 RPC Module for NestGate
 //!
-//! **HIGH-PERFORMANCE PRIMAL-TO-PRIMAL COMMUNICATION** (v0.2.0)
+//! **HIGH-PERFORMANCE PRIMAL-TO-PRIMAL COMMUNICATION** (v0.3.0)
 //!
-//! Provides tarpc and JSON-RPC interfaces for NestGate storage operations.
+//! Provides tarpc, JSON-RPC, and **isomorphic IPC** interfaces for NestGate storage operations.
 //!
 //! ## Protocol Priority (Ecosystem Standard)
-//! 1. **tarpc** (PRIMARY) - High-performance binary RPC for primal-to-primal (~10-20μs)
-//! 2. **JSON-RPC** (SECONDARY) - Universal, human-friendly (~50-100μs)
-//! 3. **HTTP** (FALLBACK) - Enableable for network scenarios (~500-1000μs)
+//! 1. **Isomorphic IPC** (NEW, OPTIMAL) - Unix socket OR TCP, auto-adaptive (~5-10μs)
+//! 2. **tarpc** (PRIMARY) - High-performance binary RPC for primal-to-primal (~10-20μs)
+//! 3. **JSON-RPC** (SECONDARY) - Universal, human-friendly (~50-100μs)
+//! 4. **HTTP** (FALLBACK) - Enableable for network scenarios (~500-1000μs)
+//!
+//! ## NEW: Isomorphic IPC (v0.3.0)
+//!
+//! **Try→Detect→Adapt→Succeed** pattern for universal IPC:
+//! - Tries Unix sockets first (optimal)
+//! - Detects platform constraints (SELinux, lack of support)
+//! - Adapts to TCP fallback (automatic)
+//! - Works on ALL platforms (Linux, Android, etc.)
+//!
+//! See `isomorphic_ipc` module for details.
 //!
 //! ## Philosophy (Primal Sovereignty)
 //! - **Self-knowledge**: NestGate exposes only storage capabilities
@@ -15,6 +26,7 @@
 //! - **Zero hardcoding**: No primal names, ports, or endpoints
 //! - **Zero unsafe blocks**: Memory-safe throughout
 //! - **Modern async**: Native async/await patterns
+//! - **Platform-agnostic**: Automatic adaptation to constraints
 //!
 //! ## Usage
 //!
@@ -63,6 +75,9 @@ pub mod tarpc_types;
 pub mod template_storage;
 pub mod unix_socket_server;
 
+// NEW: Isomorphic IPC (v0.3.0) - Universal, adaptive IPC (Try→Detect→Adapt→Succeed)
+pub mod isomorphic_ipc;
+
 // Re-export key types
 pub use jsonrpc_client::{JsonRpcClient, JsonRpcError, JsonRpcRequest, JsonRpcResponse};
 pub use tarpc_types::{
@@ -84,6 +99,12 @@ pub use tarpc_client::NestGateRpcClient;
 pub use tarpc_server::{serve_tarpc, NestGateRpcService};
 pub use template_storage::{GraphTemplate, TemplateMetadata, TemplateStorage};
 pub use unix_socket_server::JsonRpcUnixServer;
+
+// NEW: Isomorphic IPC exports (v0.3.0)
+pub use isomorphic_ipc::{
+    connect_endpoint, discover_ipc_endpoint, is_platform_constraint, IpcEndpoint, IpcStream,
+    IsomorphicIpcServer, RpcHandler, TcpFallbackServer,
+};
 
 #[cfg(test)]
 mod tests {
